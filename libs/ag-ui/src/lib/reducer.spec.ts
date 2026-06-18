@@ -432,4 +432,25 @@ describe('ACTIVITY events (F5 subagent activities)', () => {
     // merge: status updated, text preserved
     expect(store.activities().get('tc-1')?.content()).toEqual({ status: 'complete', text: 'hello' });
   });
+
+  it('ACTIVITY_DELTA with a malformed patch (non-existent path) does not throw and leaves content unchanged', () => {
+    // Regression guard: an out-of-order ACTIVITY_DELTA (e.g. replace /messages/5/content
+    // when there are 0 messages) must be dropped — not thrown — so the stream stays usable.
+    const store = makeStore();
+    reduceEvent({ type: 'ACTIVITY_SNAPSHOT', messageId: 'tc-1', activityType: 'subagent',
+      content: { status: 'running', text: 'prior' } } as any, store);
+    // Send a patch that targets a non-existent array index — applyPatch throws without the guard.
+    expect(() =>
+      reduceEvent({ type: 'ACTIVITY_DELTA', messageId: 'tc-1', activityType: 'subagent',
+        patch: [{ op: 'replace', path: '/messages/5/content', value: 'x' }] } as any, store),
+    ).not.toThrow();
+    // Prior content must be preserved unchanged.
+    const content = store.activities().get('tc-1')?.content();
+    expect(content?.['text']).toBe('prior');
+    expect(content?.['status']).toBe('running');
+    // Subsequent valid patches must still apply (store remains usable).
+    reduceEvent({ type: 'ACTIVITY_DELTA', messageId: 'tc-1', activityType: 'subagent',
+      patch: [{ op: 'replace', path: '/text', value: 'updated' }] } as any, store);
+    expect(store.activities().get('tc-1')?.content()['text']).toBe('updated');
+  });
 });
