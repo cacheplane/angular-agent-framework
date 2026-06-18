@@ -109,6 +109,8 @@ export class RenderElementComponent implements OnInit {
   readonly parentInjector = inject(Injector);
   private readonly destroyRef = inject(DestroyRef);
 
+  private destroyed = false;
+
   constructor() {
     this.destroyRef.onDestroy(() => {
       const el = this.element();
@@ -121,6 +123,7 @@ export class RenderElementComponent implements OnInit {
           elementType: el.type,
         });
       }
+      this.destroyed = true;
     });
 
     // Latch mountedReal=true once the real component is selected. Lives in
@@ -238,10 +241,9 @@ export class RenderElementComponent implements OnInit {
    * injectRenderHost(). `set` writes the store; `emit` routes element
    * handlers; `result` surfaces a RenderResultEvent for this element. */
   readonly host: RenderHost = {
-    set: (path: string, value: unknown) => this.ctx.store?.set(path, value),
-    emit: (event: string, payload?: Record<string, unknown>) => this.invokeHandlers(event, payload),
-    result: (value: unknown) =>
-      this.ctx.emitEvent?.({ type: 'result', value, elementKey: this.elementKey() }),
+    set: (path: string, value: unknown) => { if (this.destroyed) return; this.ctx.store?.set(path, value); },
+    emit: (event: string, payload?: Record<string, unknown>) => { if (this.destroyed) return; this.invokeHandlers(event, payload); },
+    result: (value: unknown) => { if (this.destroyed) return; this.ctx.emitEvent?.({ type: 'result', value, elementKey: this.elementKey() }); },
   };
 
   /** Emit function passed to mounted view components as the `emit` framework

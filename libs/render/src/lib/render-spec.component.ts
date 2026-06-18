@@ -22,6 +22,7 @@ import type { AngularRegistry } from './render.types';
 import { signalStateStore } from './signal-state-store';
 import type { RenderEvent } from './render-event';
 import { RenderLifecycleService } from './render-lifecycle.service';
+import { makeGuardedEmit } from './internals/guarded-emit';
 
 /**
  * Top-level entry point for rendering a json-render spec.
@@ -68,6 +69,14 @@ export class RenderSpecComponent implements OnInit {
   private readonly viewRegistry = inject(VIEW_REGISTRY, { optional: true });
   private readonly destroyRef = inject(DestroyRef);
   private readonly lifecycle = inject(RenderLifecycleService, { optional: true });
+
+  private destroyed = false;
+
+  /** Guarded OutputRef emit — no-ops after destroy (NG0953). */
+  private readonly guardedEmit = makeGuardedEmit<RenderEvent>(
+    (e) => this.events.emit(e),
+    () => this.destroyed,
+  );
 
   /** Internal store, lazily created once and reused across spec changes. */
   private _internalStore: StateStore | undefined;
@@ -128,8 +137,8 @@ export class RenderSpecComponent implements OnInit {
   /** Emits a RenderEvent through the events output and notifies the
    * lifecycle service (single tap point — all events flow through here). */
   private readonly emitTapped = (event: RenderEvent): void => {
-    this.events.emit(event);
-    if (!this.lifecycle) return;
+    this.guardedEmit(event);
+    if (this.destroyed || !this.lifecycle) return;
     switch (event.type) {
       case 'lifecycle':
         this.lifecycle.notifyLifecycle({
@@ -180,6 +189,7 @@ export class RenderSpecComponent implements OnInit {
 
     this.destroyRef.onDestroy(() => {
       this.emitTapped({ type: 'lifecycle', event: 'destroyed', scope: 'spec' });
+      this.destroyed = true;
     });
   }
 
