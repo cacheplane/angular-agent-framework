@@ -1,0 +1,55 @@
+name: Release provenance (SLSA)
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  build-artifacts:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # gh release upload attaches tarballs to the release
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+    env:
+      NPM_PUBLISHABLE_PROJECTS: chat,langgraph,ag-ui,render,a2ui,licensing,telemetry
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Build publishable projects
+        env:
+          CACHEPLANE_LICENSE_PUBLIC_KEY: ${{ secrets.CACHEPLANE_LICENSE_PUBLIC_KEY }}
+        run: npx nx run-many -t build --projects="$NPM_PUBLISHABLE_PROJECTS" --skip-nx-cache
+      - name: Pack tarballs
+        run: |
+          mkdir -p release-artifacts
+          for p in chat langgraph ag-ui render a2ui licensing telemetry; do
+            npm pack "dist/libs/$p" --pack-destination release-artifacts
+          done
+      - name: Generate subject hashes
+        id: hash
+        run: |
+          cd release-artifacts
+          echo "hashes=$(sha256sum ./*.tgz | base64 -w0)" >> "$GITHUB_OUTPUT"
+      - name: Upload tarballs to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" -- release-artifacts/*.tgz --clobber
+
+  provenance:
+    needs: [build-artifacts]
+    permissions:
+      actions: read
+      id-token: write
+      contents: write
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    with:
+      base64-subjects: ${{ needs.build-artifacts.outputs.hashes }}
+      upload-assets: true
