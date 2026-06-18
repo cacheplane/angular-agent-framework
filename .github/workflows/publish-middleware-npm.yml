@@ -48,6 +48,9 @@ concurrency:
 env:
   DO_NOT_TRACK: '1'
 
+permissions:
+  contents: read
+
 jobs:
   build-and-publish:
     name: Build and publish @threadplane/middleware

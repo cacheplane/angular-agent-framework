@@ -39,6 +39,9 @@ concurrency:
   group: publish-middleware-python
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   build-and-publish:
     name: Build and publish threadplane-middleware
