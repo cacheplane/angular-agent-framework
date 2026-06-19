@@ -18,8 +18,7 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
-      pull-requests: write
-      id-token: write # claude-code-action mints its GitHub token via OIDC
+      pull-requests: write # posts review comments via the default GITHUB_TOKEN
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -30,6 +29,11 @@ jobs:
         uses: anthropics/claude-code-action@806af32823ef69c8ef357086c573a902af641307 # v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Post as the workflow's own GITHUB_TOKEN. Without this the action
+          # falls back to minting a GitHub App token via OIDC, which requires
+          # the Claude GitHub App installed on the repo and fails otherwise
+          # ("Could not fetch an OIDC token").
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           track_progress: true
           prompt: |
             REPO: ${{ github.repository }}
