@@ -78,13 +78,22 @@ const threads = inject(LangGraphThreadsAdapter);
 injectThreadRouting({ threadId: ACTIVE_THREAD, validate: (id) => threads.getThread(id).then(Boolean) });
 ```
 
+## The consistency principle (corrected during implementation)
+
+The audit initially read the cockpit demos as "lagging." Investigation during implementation corrected this: **the cockpit demos are iframe-embedded** inside the docs site (`apps/cockpit` renders each as a `ThemedFrame`; the demo's own URL is never in the user's address bar and is never bookmarked/shared). They also have **no Angular Router** by design. URL-as-source-of-truth is therefore the *wrong* model for them — adding it would be dead, confusing UI.
+
+So the consistent story is not "every demo persists threads identically." It is:
+
+- **Standalone, router-owning apps with a user-shareable URL** (`examples/*`) → use `injectThreadRouting` (URL-as-source-of-truth: survives reload, shareable, validated).
+- **Embedded docs demos** (`cockpit/*`) → an in-memory active-thread signal is correct; their job is to teach one capability, not to be a shareable app. `cockpit/langgraph/persistence`'s manual `onThreadId` thread-list tracking is **intentional pedagogy** (its guide teaches that exact pattern), not a divergence to "fix."
+
+The helper exists so any *future* standalone app gets URL persistence in a few lines instead of ~100 — and so the doctrine is documented rather than living only in one demo's shell.
+
 ## Adoption
 
-- **`examples/chat`** — refactor the shell onto `injectThreadRouting` using `toCommands`/`threadIdFromUrl` for the mode-prefixed paths; delete the hand-rolled effects + `parseUrl`. Behavior identical (proven by the existing thread-routing e2e). This is the reference adoption.
-- **`cockpit/chat/threads`** — replace the in-memory `activeThreadIdState` wiring with the helper (gains reload-survival + shareable URLs). Add a route param if the app currently has none.
-- **`cockpit/langgraph/persistence`** — adopt the helper AND switch from ad-hoc `onThreadId` list tracking to `LangGraphThreadsAdapter.threads()`, so it stops modeling a divergent list pattern.
-- **Feature-focused demos** (`cockpit/chat/messages`, `cockpit/langgraph/memory`) — unchanged (single-session is correct).
-- **`examples/ag-ui` (spike)** — first verify the itinerary AG-UI server restores a conversation when `HttpAgent` is constructed with a prior `threadId` (check `examples/ag-ui/python` + the AG-UI protocol/thread handling). If it does: wire `examples/ag-ui` onto the same helper (`provideAgent({ url, threadId, ... })` + `injectThreadRouting`). If it does not: leave it ephemeral and add a one-paragraph note in the app/docs stating the server doesn't persist by thread, so the choice is intentional.
+- **`examples/chat`** — refactor the shell onto `injectThreadRouting` using `toCommands`/`threadIdFromUrl` for the mode-prefixed paths; delete the hand-rolled effects. Behavior identical (proven by the existing `url-routing` e2e). This is the reference adoption. ✅ done
+- **`cockpit/*` demos** — **intentionally unchanged** (iframe-embedded, no router; in-memory is correct). Documented as a deliberate distinction, not an oversight.
+- **`examples/ag-ui` (spike)** — `examples/ag-ui` IS a standalone app, so it's the one remaining adoption candidate. First verify the itinerary AG-UI server restores a conversation when `HttpAgent` is constructed with a prior `threadId` (check `examples/ag-ui/python` + the AG-UI protocol/thread handling). If it does: wire `examples/ag-ui` onto the helper. If it does not: leave it ephemeral and add a one-paragraph note stating the server doesn't persist by thread, so the choice is intentional.
 
 ## Docs
 
