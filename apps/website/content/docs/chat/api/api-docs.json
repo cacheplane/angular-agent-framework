@@ -6927,6 +6927,44 @@
     "examples": []
   },
   {
+    "name": "ThreadRoutingConfig",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "navigationExtras",
+        "type": "NavigationExtras",
+        "description": "Extras merged into every navigate (default `{ queryParamsHandling: 'preserve' }`).",
+        "optional": true
+      },
+      {
+        "name": "threadId",
+        "type": "WritableSignal<string | null>",
+        "description": "The app-owned source-of-truth signal for the active thread id.",
+        "optional": false
+      },
+      {
+        "name": "threadIdFromUrl",
+        "type": "(url: string) => string | null",
+        "description": "Extract the thread id from a URL (null = bare). Default: last non-empty path segment.",
+        "optional": true
+      },
+      {
+        "name": "toCommands",
+        "type": "(id: string | null) => unknown[]",
+        "description": "Router commands for a thread id (or the bare/welcome path when null).\n Default: `(id) => (id ? ['/', id] : ['/'])`.",
+        "optional": true
+      },
+      {
+        "name": "validate",
+        "type": "(id: string) => Promise<boolean>",
+        "description": "Optional async validity check; on `false` the helper redirects to the bare path\n (`replaceUrl: true`). LangGraph apps pass `id => threads.getThread(id).then(Boolean)`.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "ToolCall",
     "kind": "interface",
     "description": "",
@@ -7662,6 +7700,27 @@
       "description": ""
     },
     "examples": []
+  },
+  {
+    "name": "injectThreadRouting",
+    "kind": "function",
+    "description": "Bind an app-owned `activeThreadId` signal to the URL — restore on load, stamp on change,\nvalidate-or-redirect, with a bare URL meaning \"no thread\" (welcome). URL is the source of\ntruth; nothing is written to localStorage. Must be called in an injection context.",
+    "signature": "injectThreadRouting(config: ThreadRoutingConfig): void",
+    "params": [
+      {
+        "name": "config",
+        "type": "ThreadRoutingConfig",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "void",
+      "description": ""
+    },
+    "examples": [
+      "```ts\nexport const ACTIVE_THREAD = signal<string | null>(null);\n// providers: provideAgent({ threadId: ACTIVE_THREAD, onThreadId: id => ACTIVE_THREAD.set(id) })\nconst threads = inject(LangGraphThreadsAdapter);\ninjectThreadRouting({ threadId: ACTIVE_THREAD, validate: id => threads.getThread(id).then(Boolean) });\n```"
+    ]
   },
   {
     "name": "isAbortError",

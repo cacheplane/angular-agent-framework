@@ -17,6 +17,7 @@
     "@angular/core": "^20.0.0 || ^21.0.0",
     "@angular/common": "^20.0.0 || ^21.0.0",
     "@angular/platform-browser": "^20.0.0 || ^21.0.0",
+    "@angular/router": "^20.0.0 || ^21.0.0",
     "@threadplane/licensing": "*",
     "@threadplane/render": "*",
     "@threadplane/a2ui": "*",

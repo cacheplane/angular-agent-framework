@@ -166,6 +166,7 @@ export const docsConfig: DocsLibrary[] = [
           { title: 'Streaming', slug: 'streaming', section: 'guides' },
           { title: 'Configuration', slug: 'configuration', section: 'guides' },
           { title: 'Writing an Adapter', slug: 'writing-an-adapter', section: 'guides' },
+          { title: 'Thread Routing', slug: 'thread-routing', section: 'guides' },
           { title: 'Lifecycle Signals', slug: 'lifecycle', section: 'guides' },
         ],
       },
