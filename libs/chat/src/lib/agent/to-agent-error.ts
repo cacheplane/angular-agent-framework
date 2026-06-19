@@ -1,7 +1,14 @@
 // SPDX-License-Identifier: MIT
 import { AgentError, AGENT_ERROR_MESSAGES, type AgentErrorKind } from './agent-error';
 
-/** True when `raw` represents a user-requested abort. Shared by adapters + classifier. */
+/**
+ * Whether `raw` represents an abort (a `DOMException`/`Error` named `AbortError`,
+ * or an abort-ish message). Shared by the runtime adapters and {@link toAgentError}
+ * so a user-requested stop settles to idle instead of surfacing as an error.
+ *
+ * @param raw Any thrown/rejected value.
+ * @returns `true` if it looks like an abort.
+ */
 export function isAbortError(raw: unknown): boolean {
   return raw instanceof Error && (raw.name === 'AbortError' || /\babort/i.test(raw.message));
 }
@@ -63,7 +70,26 @@ function classifyByStatus(status: number, raw: unknown): AgentError {
   return make('server', true, raw, undefined, 'Something went wrong. You can try again.');
 }
 
-/** Classify any raw error into a structured {@link AgentError}. Idempotent. */
+/**
+ * Classify any raw error into a structured {@link AgentError}.
+ *
+ * Resolution order (first match wins): an existing `AgentError` is returned
+ * unchanged (idempotent) → a user abort → a structured `status`/`cause.status`
+ * → network/connection markers → an HTTP-shaped status in the message → a
+ * `server` + retryable fallback. The original error is always preserved on
+ * `cause`. Runtime adapters call this before setting `Agent.error`; custom
+ * backends can call it too (or throw an `AgentError` directly).
+ *
+ * @param raw Any thrown/rejected value — an `Error`, a `{ status }` object, a string, etc.
+ * @returns The classified {@link AgentError} (kind, retryable, status?, cause).
+ * @example
+ * ```ts
+ * const e = toAgentError(new Error('HTTP 500: Internal Server Error'));
+ * e.kind;      // 'server'
+ * e.retryable; // true
+ * e.status;    // 500
+ * ```
+ */
 export function toAgentError(raw: unknown): AgentError {
   if (raw instanceof AgentError) return raw;
   if (isAbortError(raw)) return make('aborted', false, raw);
