@@ -3,6 +3,8 @@
 **Date:** 2026-06-19 · **Scope:** `@threadplane/chat`, `ag-ui`, `langgraph`, `render` (302 public exports)
 **Method:** TypeDoc extraction (`api-docs.json`) for JSDoc/signature grading across all exports + real `tsserver` quick-info probing for hover/inference on the authoring surface + source confirmation. See `2026-06-19-ts-dx-audit-design.md`.
 
+> **Re-baselined 2026-06-19 (post #685).** The original grades were extracted from `api-docs.json` generated *before* PR #685 ("TypeScript DX pass") merged. #685 already implemented the headline items: `view`/`ask` are now generic with `AcceptComponent<S,C>` so component inputs are checked against the schema (**F4 done**), and `tools`/`action`/`view`/`ask` carry full `@param`/`@example`/`@returns` JSDoc (**F1/F2 done for client-tools**); `provideChat` and `AgentError`/`toAgentError` were documented too. The remaining gap is narrower — undocumented secondary functions (message type-guards, `getInterrupt`, `mockAgent`, `provideViews`, `signalStateStore`, `bridgeCitationsState`, `extractCitations`) and `@example`-less wiring APIs (`provideAgent`/`injectAgent` on both adapters, `injectRenderHost`). PR 1 on this branch (`docs/ts-dx-audit`) closes the missing-summary holes first.
+
 ## Executive summary
 
 The public **type shapes and hovers are in good condition** — the IDE quick-info for the headline authoring APIs is clean and readable, and generic inference works where it's been wired (`action<S>`). The gap is almost entirely **inline guidance (JSDoc)** and a few **surface-hygiene + inference** items.

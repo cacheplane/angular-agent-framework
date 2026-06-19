@@ -7793,13 +7793,13 @@
   {
     "name": "getInterrupt",
     "kind": "function",
-    "description": "",
+    "description": "Read the agent's current human-in-the-loop interrupt, if any.",
     "signature": "getInterrupt(agent: Agent<>): AgentInterrupt | undefined",
     "params": [
       {
         "name": "agent",
         "type": "Agent<>",
-        "description": "",
+        "description": "The agent to inspect.",
         "optional": false
       }
     ],
@@ -7807,7 +7807,9 @@
       "type": "AgentInterrupt | undefined",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst interrupt = getInterrupt(agent);\nif (interrupt) agent.resume('approved');\n```"
+    ]
   },
   {
     "name": "getMessageType",
@@ -7871,13 +7873,13 @@
   {
     "name": "isAssistantMessage",
     "kind": "function",
-    "description": "",
+    "description": "Type guard narrowing a Message to `role: 'assistant'`.",
     "signature": "isAssistantMessage(m: Message): m is Message & { role: \"assistant\" }",
     "params": [
       {
         "name": "m",
         "type": "Message",
-        "description": "",
+        "description": "The message to test.",
         "optional": false
       }
     ],
@@ -7885,18 +7887,20 @@
       "type": "m is Message & { role: \"assistant\" }",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst reply = agent.messages().findLast(isAssistantMessage);\n```"
+    ]
   },
   {
     "name": "isSystemMessage",
     "kind": "function",
-    "description": "",
+    "description": "Type guard narrowing a Message to `role: 'system'`.",
     "signature": "isSystemMessage(m: Message): m is Message & { role: \"system\" }",
     "params": [
       {
         "name": "m",
         "type": "Message",
-        "description": "",
+        "description": "The message to test.",
         "optional": false
       }
     ],
@@ -7904,18 +7908,20 @@
       "type": "m is Message & { role: \"system\" }",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst visible = agent.messages().filter((m) => !isSystemMessage(m));\n```"
+    ]
   },
   {
     "name": "isToolMessage",
     "kind": "function",
-    "description": "",
+    "description": "Type guard narrowing a Message to `role: 'tool'` (a tool result turn).",
     "signature": "isToolMessage(m: Message): m is Message & { role: \"tool\" }",
     "params": [
       {
         "name": "m",
         "type": "Message",
-        "description": "",
+        "description": "The message to test.",
         "optional": false
       }
     ],
@@ -7923,18 +7929,20 @@
       "type": "m is Message & { role: \"tool\" }",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nif (isToolMessage(m)) console.log(m.toolCallId);\n```"
+    ]
   },
   {
     "name": "isTyping",
     "kind": "function",
-    "description": "",
+    "description": "Whether the agent should show a \"typing\" indicator — it is loading and has\nnot yet started streaming the assistant's reply.",
     "signature": "isTyping(agent: Agent<>): boolean",
     "params": [
       {
         "name": "agent",
         "type": "Agent<>",
-        "description": "",
+        "description": "The agent to inspect.",
         "optional": false
       }
     ],
@@ -7942,18 +7950,20 @@
       "type": "boolean",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\n\\@if (isTyping(agent)) { <chat-typing-indicator [agent]=\"agent\" /> }\n```"
+    ]
   },
   {
     "name": "isUserMessage",
     "kind": "function",
-    "description": "",
+    "description": "Type guard narrowing a Message to `role: 'user'`.",
     "signature": "isUserMessage(m: Message): m is Message & { role: \"user\" }",
     "params": [
       {
         "name": "m",
         "type": "Message",
-        "description": "",
+        "description": "The message to test.",
         "optional": false
       }
     ],
@@ -7961,7 +7971,9 @@
       "type": "m is Message & { role: \"user\" }",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst userTurns = agent.messages().filter(isUserMessage);\n```"
+    ]
   },
   {
     "name": "messageContent",
@@ -7985,13 +7997,13 @@
   {
     "name": "mockAgent",
     "kind": "function",
-    "description": "",
+    "description": "Build an in-memory Agent for tests and stories — no transport, no\nnetwork. Every field is a writable signal so a test can drive UI states\n(loading, error, interrupts, tool calls, subagents) deterministically.",
     "signature": "mockAgent(opts: MockAgentOptions): MockAgent<>",
     "params": [
       {
         "name": "opts",
         "type": "MockAgentOptions",
-        "description": "",
+        "description": "Initial values for the mock's signals; all optional.",
         "optional": true
       }
     ],
@@ -7999,7 +8011,9 @@
       "type": "MockAgent<>",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst agent = mockAgent({\n  messages: [{ id: '1', role: 'assistant', content: 'Hi' }],\n  isLoading: true,\n});\n```"
+    ]
   },
   {
     "name": "normalizeEnvelopeArgs",

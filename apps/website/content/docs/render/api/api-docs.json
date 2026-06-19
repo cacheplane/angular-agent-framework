@@ -781,13 +781,13 @@
   {
     "name": "provideViews",
     "kind": "function",
-    "description": "",
+    "description": "Register a ViewRegistry for the render engine so generative-UI specs\ncan resolve element `type`s to Angular components. Provide at the application\n(or a feature route's) environment injector.",
     "signature": "provideViews(registry: ViewRegistry): EnvironmentProviders",
     "params": [
       {
         "name": "registry",
         "type": "ViewRegistry",
-        "description": "",
+        "description": "Map of spec element types to the components that render them,\n  typically built with `views()` / `withViews()`.",
         "optional": false
       }
     ],
@@ -795,18 +795,20 @@
       "type": "EnvironmentProviders",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nbootstrapApplication(App, {\n  providers: [provideViews(views({ metric: MetricCardComponent }))],\n});\n```"
+    ]
   },
   {
     "name": "signalStateStore",
     "kind": "function",
-    "description": "",
+    "description": "Create a signal-backed StateStore for a generative-UI surface —\nholds the bound state that spec `$bindState` paths read and interactive\nelements write, with path-addressable get/set and change subscriptions.",
     "signature": "signalStateStore(initialState: StateModel): StateStore",
     "params": [
       {
         "name": "initialState",
         "type": "StateModel",
-        "description": "",
+        "description": "Optional starting state object.",
         "optional": true
       }
     ],
@@ -814,7 +816,9 @@
       "type": "StateStore",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst store = signalStateStore({ count: 0 });\nstore.set('count', 1);\n```"
+    ]
   },
   {
     "name": "toRenderRegistry",
