@@ -6,6 +6,19 @@ interface KwargsLike {
   additional_kwargs?: Record<string, unknown> | undefined;
 }
 
+/**
+ * Normalize {@link Citation}s out of a message's `additional_kwargs` (reading
+ * `citations` or `sources`). Exposed for advanced consumers building custom
+ * adapters or bridging non-LangGraph message shapes into the neutral
+ * `Citation[]` form.
+ *
+ * @param msg Any object with an `additional_kwargs` bag (e.g. a LangChain message).
+ * @returns The normalized citations, or `undefined` when none are present.
+ * @example
+ * ```ts
+ * const citations = extractCitations(lcMessage);
+ * ```
+ */
 export function extractCitations(msg: KwargsLike): Citation[] | undefined {
   const raw = msg.additional_kwargs?.['citations'] ?? msg.additional_kwargs?.['sources'];
   if (!Array.isArray(raw) || raw.length === 0) return undefined;

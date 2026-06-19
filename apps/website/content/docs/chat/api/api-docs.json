@@ -7391,62 +7391,6 @@
     "examples": []
   },
   {
-    "name": "CHAT_MARKDOWN_STYLES",
-    "kind": "const",
-    "description": "",
-    "signature": "\"\\n  chat-streaming-md { display: block; color: var(--ngaf-chat-text); line-height: var(--ngaf-chat-line-height); }\\n\\n  /* Headings */\\n  chat-streaming-md h1, chat-streaming-md h2, chat-streaming-md h3, chat-streaming-md h4, chat-streaming-md h5, chat-streaming-md h6 {\\n    font-weight: 600;\\n    line-height: 1.25;\\n    margin: 1.25rem 0 0.75rem;\\n  }\\n  chat-streaming-md h1:first-child, chat-streaming-md h2:first-child, chat-streaming-md h3:first-child,\\n  chat-streaming-md h4:first-child, chat-streaming-md h5:first-child, chat-streaming-md h6:first-child { margin-top: 0; }\\n  chat-streaming-md h1 { font-size: 1.5em; font-weight: 700; }\\n  chat-streaming-md h2 { font-size: 1.25em; }\\n  chat-streaming-md h3 { font-size: 1.1em; }\\n  chat-streaming-md h4 { font-size: 1em; }\\n  chat-streaming-md h5, chat-streaming-md h6 { font-size: 0.95em; color: var(--ngaf-chat-text-muted); }\\n\\n  /* Paragraphs and inline emphasis */\\n  chat-streaming-md p { margin: 0 0 0.75rem; line-height: 1.6; font-size: var(--ngaf-chat-font-size); }\\n  chat-streaming-md p:last-child { margin-bottom: 0; }\\n  chat-streaming-md strong, chat-streaming-md b { font-weight: 700; }\\n  chat-streaming-md em, chat-streaming-md i { font-style: italic; }\\n  chat-streaming-md del, chat-streaming-md s { text-decoration: line-through; color: var(--ngaf-chat-text-muted); }\\n  chat-streaming-md mark { background: var(--ngaf-chat-surface-alt); padding: 0 2px; border-radius: 2px; }\\n  chat-streaming-md sub { font-size: 0.75em; vertical-align: sub; }\\n  chat-streaming-md sup { font-size: 0.75em; vertical-align: super; }\\n\\n  /* Links */\\n  chat-streaming-md a { color: var(--ngaf-chat-primary); text-decoration: underline; text-underline-offset: 2px; }\\n  chat-streaming-md a:hover { text-decoration-thickness: 2px; }\\n\\n  /* Lists (CommonMark + GFM task lists) */\\n  chat-streaming-md ul, chat-streaming-md ol { margin: 0 0 0.75rem; padding-left: 1.5rem; }\\n  chat-streaming-md ul { list-style: disc outside; }\\n  chat-streaming-md ol { list-style: decimal outside; }\\n  chat-streaming-md ul ul { list-style: circle outside; }\\n  chat-streaming-md ul ul ul { list-style: square outside; }\\n  chat-streaming-md li { margin: 0.2rem 0; }\\n  chat-streaming-md li::marker { color: var(--ngaf-chat-text-muted); }\\n  chat-streaming-md li > p { margin: 0 0 0.25rem; }\\n  chat-streaming-md li > ul, chat-streaming-md li > ol { margin: 0.25rem 0 0; }\\n  /* GFM task lists: marked emits <li><input type=\\\"checkbox\\\" disabled> ... */\\n  chat-streaming-md li:has(> input[type=\\\"checkbox\\\"]) { list-style: none; margin-left: -1.25rem; }\\n  chat-streaming-md li > input[type=\\\"checkbox\\\"] { margin-right: 0.5rem; vertical-align: middle; }\\n\\n  /* Code (inline + fenced) */\\n  chat-streaming-md code {\\n    background: var(--ngaf-chat-surface-alt);\\n    color: var(--ngaf-chat-text);\\n    padding: 1px 5px;\\n    border-radius: 4px;\\n    font-family: var(--ngaf-chat-font-mono);\\n    font-size: 0.9em;\\n  }\\n  chat-streaming-md pre {\\n    background: var(--ngaf-chat-surface-alt);\\n    color: var(--ngaf-chat-text);\\n    padding: 12px 14px;\\n    border-radius: var(--ngaf-chat-radius-card);\\n    overflow-x: auto;\\n    font-family: var(--ngaf-chat-font-mono);\\n    font-size: var(--ngaf-chat-font-size-sm);\\n    line-height: 1.5;\\n    margin: 0 0 0.75rem;\\n  }\\n  chat-streaming-md pre code { background: transparent; padding: 0; border-radius: 0; font-size: inherit; }\\n\\n  /* Blockquote */\\n  chat-streaming-md blockquote {\\n    border-left: 3px solid var(--ngaf-chat-separator);\\n    padding: 0.25rem 0 0.25rem 12px;\\n    margin: 0 0 0.75rem;\\n    color: var(--ngaf-chat-text-muted);\\n  }\\n  chat-streaming-md blockquote > :last-child { margin-bottom: 0; }\\n\\n  /* Horizontal rule */\\n  chat-streaming-md hr {\\n    border: none;\\n    border-top: 1px solid var(--ngaf-chat-separator);\\n    margin: 1rem 0;\\n  }\\n\\n  /* Tables (GFM) */\\n  chat-streaming-md table {\\n    border-collapse: collapse;\\n    margin: 0 0 0.75rem;\\n    width: 100%;\\n    font-size: 0.95em;\\n  }\\n  chat-streaming-md thead { background: var(--ngaf-chat-surface-alt); }\\n  chat-streaming-md th, chat-streaming-md td {\\n    border: 1px solid var(--ngaf-chat-separator);\\n    padding: 6px 10px;\\n    text-align: left;\\n    vertical-align: top;\\n  }\\n  chat-streaming-md th { font-weight: 600; }\\n  /* Component-rendered table: chat-md-table becomes a horizontally-scrollable\\n     wrapper for the inner <table>; row/cell elements stay layout-transparent\\n     so the browser's table layout takes over. Without this overflow wrapper,\\n     wide tables push their parent container past the viewport horizontally. */\\n  chat-streaming-md chat-md-table {\\n    display: block;\\n    overflow-x: auto;\\n    max-width: 100%;\\n    margin: 0 0 0.75rem;\\n  }\\n  chat-streaming-md chat-md-table-row { display: contents; }\\n  chat-streaming-md chat-md-table-cell { display: contents; }\\n  chat-streaming-md chat-md-table > table { margin: 0; }\\n  /* Task-list items: checkbox + first paragraph render inline; subsequent\\n     blocks (sub-lists, multi-paragraph items) flow normally below. */\\n  chat-streaming-md li.chat-md-list-item--task {\\n    list-style: none;\\n    margin-left: -1.25rem;\\n    display: flex;\\n    flex-wrap: wrap;\\n    align-items: baseline;\\n    gap: 0.5rem;\\n  }\\n  chat-streaming-md li.chat-md-list-item--task > input[type=\\\"checkbox\\\"] {\\n    margin: 0;\\n    flex: 0 0 auto;\\n    transform: translateY(2px);\\n  }\\n  /* The chat-md-children wrapper around list-item content takes remaining width */\\n  chat-streaming-md li.chat-md-list-item--task > chat-md-children {\\n    flex: 1 1 auto;\\n    min-width: 0;\\n  }\\n  /* Tight task items: only the FIRST paragraph aligns inline with the\\n     checkbox (margin collapsed). Subsequent paragraphs/blocks keep their\\n     normal vertical spacing so multi-block items render readably. */\\n  chat-streaming-md li.chat-md-list-item--task > chat-md-children > chat-md-paragraph:first-child > p {\\n    margin: 0;\\n  }\\n\\n  /* Media */\\n  chat-streaming-md img { max-width: 100%; height: auto; border-radius: 6px; }\\n  /* Broken-image fallback: muted pill showing alt text + icon. Triggered\\n     when <img> fires (error). Caught by live browser smoke — prior impl\\n     showed only the browser's broken-image icon with no readable alt. */\\n  chat-streaming-md .chat-md-image--broken {\\n    display: inline-flex;\\n    align-items: center;\\n    gap: 0.4rem;\\n    padding: 0.25rem 0.5rem;\\n    background: var(--ngaf-chat-surface-alt);\\n    border: 1px dashed var(--ngaf-chat-separator);\\n    border-radius: 6px;\\n    font-size: 0.9em;\\n    color: var(--ngaf-chat-text-muted, currentColor);\\n    opacity: 0.85;\\n  }\\n  chat-streaming-md .chat-md-image__icon { font-size: 1em; line-height: 1; }\\n  chat-streaming-md .chat-md-image__alt { font-style: italic; }\\n\"",
-    "examples": []
-  },
-  {
-    "name": "ICON_AGENT",
-    "kind": "const",
-    "description": "Robot/agent icon (replacement). 14x14.",
-    "signature": "\"<svg xmlns=\\\"http://www.w3.org/2000/svg\\\" width=\\\"14\\\" height=\\\"14\\\" viewBox=\\\"0 0 24 24\\\" fill=\\\"none\\\" stroke=\\\"currentColor\\\" stroke-width=\\\"2\\\" stroke-linecap=\\\"round\\\" stroke-linejoin=\\\"round\\\"><rect x=\\\"3\\\" y=\\\"11\\\" width=\\\"18\\\" height=\\\"10\\\" rx=\\\"2\\\"/><circle cx=\\\"12\\\" cy=\\\"5\\\" r=\\\"2\\\"/><path d=\\\"M12 7v4\\\"/><line x1=\\\"8\\\" y1=\\\"16\\\" x2=\\\"8\\\" y2=\\\"16\\\"/><line x1=\\\"16\\\" y1=\\\"16\\\" x2=\\\"16\\\" y2=\\\"16\\\"/></svg>\"",
-    "examples": []
-  },
-  {
-    "name": "ICON_CHECK",
-    "kind": "const",
-    "description": "Check mark replacement. 12x12.",
-    "signature": "\"<svg xmlns=\\\"http://www.w3.org/2000/svg\\\" width=\\\"12\\\" height=\\\"12\\\" viewBox=\\\"0 0 12 12\\\" fill=\\\"none\\\" stroke=\\\"currentColor\\\" stroke-width=\\\"2\\\" stroke-linecap=\\\"round\\\" stroke-linejoin=\\\"round\\\"><path d=\\\"M2.5 6L5 8.5L9.5 3.5\\\"/></svg>\"",
-    "examples": []
-  },
-  {
-    "name": "ICON_CHEVRON_DOWN",
-    "kind": "const",
-    "description": "Chevron down (▼ replacement). 12x12, stroke-based.",
-    "signature": "\"<svg xmlns=\\\"http://www.w3.org/2000/svg\\\" width=\\\"12\\\" height=\\\"12\\\" viewBox=\\\"0 0 12 12\\\" fill=\\\"none\\\" stroke=\\\"currentColor\\\" stroke-width=\\\"2\\\" stroke-linecap=\\\"round\\\" stroke-linejoin=\\\"round\\\"><path d=\\\"M3 4.5L6 7.5L9 4.5\\\"/></svg>\"",
-    "examples": []
-  },
-  {
-    "name": "ICON_CHEVRON_UP",
-    "kind": "const",
-    "description": "Chevron up (▲ replacement). 12x12, stroke-based.",
-    "signature": "\"<svg xmlns=\\\"http://www.w3.org/2000/svg\\\" width=\\\"12\\\" height=\\\"12\\\" viewBox=\\\"0 0 12 12\\\" fill=\\\"none\\\" stroke=\\\"currentColor\\\" stroke-width=\\\"2\\\" stroke-linecap=\\\"round\\\" stroke-linejoin=\\\"round\\\"><path d=\\\"M3 7.5L6 4.5L9 7.5\\\"/></svg>\"",
-    "examples": []
-  },
-  {
-    "name": "ICON_SEND",
-    "kind": "const",
-    "description": "Send arrow (for chat input). 16x16.",
-    "signature": "\"<svg xmlns=\\\"http://www.w3.org/2000/svg\\\" width=\\\"16\\\" height=\\\"16\\\" viewBox=\\\"0 0 16 16\\\" fill=\\\"none\\\" stroke=\\\"currentColor\\\" stroke-width=\\\"2\\\" stroke-linecap=\\\"round\\\" stroke-linejoin=\\\"round\\\"><path d=\\\"M8 12V4M8 4L4 8M8 4L12 8\\\"/></svg>\"",
-    "examples": []
-  },
-  {
-    "name": "ICON_TOOL",
-    "kind": "const",
-    "description": "Gear icon (⚙ replacement). 14x14.",
-    "signature": "\"<svg xmlns=\\\"http://www.w3.org/2000/svg\\\" width=\\\"14\\\" height=\\\"14\\\" viewBox=\\\"0 0 24 24\\\" fill=\\\"none\\\" stroke=\\\"currentColor\\\" stroke-width=\\\"2\\\" stroke-linecap=\\\"round\\\" stroke-linejoin=\\\"round\\\"><circle cx=\\\"12\\\" cy=\\\"12\\\" r=\\\"3\\\"/><path d=\\\"M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42\\\"/></svg>\"",
-    "examples": []
-  },
-  {
-    "name": "ICON_WARNING",
-    "kind": "const",
-    "description": "Warning triangle (⚠ replacement). 18x18.",
-    "signature": "\"<svg xmlns=\\\"http://www.w3.org/2000/svg\\\" width=\\\"18\\\" height=\\\"18\\\" viewBox=\\\"0 0 24 24\\\" fill=\\\"none\\\" stroke=\\\"currentColor\\\" stroke-width=\\\"2\\\" stroke-linecap=\\\"round\\\" stroke-linejoin=\\\"round\\\"><path d=\\\"M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z\\\"/><line x1=\\\"12\\\" y1=\\\"9\\\" x2=\\\"12\\\" y2=\\\"13\\\"/><line x1=\\\"12\\\" y1=\\\"17\\\" x2=\\\"12.01\\\" y2=\\\"17\\\"/></svg>\"",
-    "examples": []
-  },
-  {
     "name": "IS_HEADER_ROW",
     "kind": "const",
     "description": "Provided by MarkdownTableRowComponent for header rows so that\nMarkdownTableCellComponent can render <th> instead of <td>.\nThe value is a Signal<boolean> so that it tracks the row's isHeader reactively.",
@@ -7463,14 +7407,16 @@
   {
     "name": "a2uiBasicCatalog",
     "kind": "function",
-    "description": "",
+    "description": "Build the built-in A2UI component catalog — a ViewRegistry mapping\nthe standard A2UI element types (Card, Button, TextField, Image, AudioPlayer,\nVideo, …) to their Angular renderers. Spread it into `provideViews` (with any\nof your own views) so an agent's A2UI surface specs render.",
     "signature": "a2uiBasicCatalog(): ViewRegistry",
     "params": [],
     "returns": {
       "type": "ViewRegistry",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nproviders: [provideViews({ ...a2uiBasicCatalog(), MyWidget: MyWidgetComponent })]\n```"
+    ]
   },
   {
     "name": "action",
@@ -7566,14 +7512,16 @@
   {
     "name": "createA2uiSurfaceStore",
     "kind": "function",
-    "description": "",
+    "description": "Create an A2uiSurfaceStore — the per-conversation store that buffers\nstreamed A2UI surface updates, tracks each surface's data model + lifecycle\nstate, and exposes them as signals for rendering. One store backs a chat\nthread's A2UI surfaces.",
     "signature": "createA2uiSurfaceStore(): A2uiSurfaceStore",
     "params": [],
     "returns": {
       "type": "A2uiSurfaceStore",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst store = createA2uiSurfaceStore();\nconst surfaces = store.surfaces; // Signal<Map<string, A2uiSurface>>\n```"
+    ]
   },
   {
     "name": "createAgentRef",
@@ -7597,46 +7545,29 @@
     ]
   },
   {
-    "name": "createClientToolsCoordinator",
-    "kind": "function",
-    "description": "",
-    "signature": "createClientToolsCoordinator(registry: ClientToolRegistry): ClientToolsCoordinator",
-    "params": [
-      {
-        "name": "registry",
-        "type": "ClientToolRegistry",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "returns": {
-      "type": "ClientToolsCoordinator",
-      "description": ""
-    },
-    "examples": []
-  },
-  {
     "name": "createContentClassifier",
     "kind": "function",
-    "description": "",
+    "description": "Create a ContentClassifier — the streaming accumulator that inspects\nan assistant message's content as it arrives and classifies it (markdown vs a\ngenerative-UI/A2UI spec), exposing the parsed result and per-element state as\nsignals so the renderer can switch modes mid-stream.",
     "signature": "createContentClassifier(): ContentClassifier",
     "params": [],
     "returns": {
       "type": "ContentClassifier",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst cc = createContentClassifier();\neffect(() => console.log(cc.type())); // 'pending' | 'markdown' | 'spec'\n```"
+    ]
   },
   {
     "name": "createParseTreeStore",
     "kind": "function",
-    "description": "",
+    "description": "Create a ParseTreeStore — feeds streamed JSON chunks through a\npartial-JSON parser and exposes the progressively-materialized spec and\nper-element accumulation state as signals, so a generative-UI surface can\nrender while the spec is still arriving.",
     "signature": "createParseTreeStore(parser: PartialJsonParser): ParseTreeStore",
     "params": [
       {
         "name": "parser",
         "type": "PartialJsonParser",
-        "description": "",
+        "description": "The partial-JSON parser used to incrementally materialize chunks.",
         "optional": false
       }
     ],
@@ -7644,7 +7575,9 @@
       "type": "ParseTreeStore",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst store = createParseTreeStore(parser);\nstore.push('{\"type\":\"Car');\nstore.spec(); // best-effort Spec | null\n```"
+    ]
   },
   {
     "name": "createPartialArgsBridge",
@@ -8164,25 +8097,6 @@
     ],
     "returns": {
       "type": "string | null",
-      "description": ""
-    },
-    "examples": []
-  },
-  {
-    "name": "surfaceToSpec",
-    "kind": "function",
-    "description": "",
-    "signature": "surfaceToSpec(surface: A2uiSurface): Spec | null",
-    "params": [
-      {
-        "name": "surface",
-        "type": "A2uiSurface",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "returns": {
-      "type": "Spec | null",
       "description": ""
     },
     "examples": []

@@ -537,19 +537,19 @@
   {
     "name": "bridgeCitationsState",
     "kind": "function",
-    "description": "",
+    "description": "Attach per-message Citations carried in an AG-UI thread's `state`\n(`state.citations`, keyed by message id) onto the corresponding assistant\nMessages — for advanced consumers wiring citations from STATE events\ninto the neutral chat contract.",
     "signature": "bridgeCitationsState(thread: ThreadStateLike, messages: Message[]): Message[]",
     "params": [
       {
         "name": "thread",
         "type": "ThreadStateLike",
-        "description": "",
+        "description": "The thread-state container holding `state.citations`.",
         "optional": false
       },
       {
         "name": "messages",
         "type": "Message[]",
-        "description": "",
+        "description": "The messages to enrich.",
         "optional": false
       }
     ],
@@ -557,7 +557,9 @@
       "type": "Message[]",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst enriched = bridgeCitationsState(threadState, agent.messages());\n```"
+    ]
   },
   {
     "name": "injectAgent",

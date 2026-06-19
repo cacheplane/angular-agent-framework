@@ -2425,13 +2425,13 @@
   {
     "name": "extractCitations",
     "kind": "function",
-    "description": "",
+    "description": "Normalize Citations out of a message's `additional_kwargs` (reading\n`citations` or `sources`). Exposed for advanced consumers building custom\nadapters or bridging non-LangGraph message shapes into the neutral\n`Citation[]` form.",
     "signature": "extractCitations(msg: KwargsLike): Citation[] | undefined",
     "params": [
       {
         "name": "msg",
         "type": "KwargsLike",
-        "description": "",
+        "description": "Any object with an `additional_kwargs` bag (e.g. a LangChain message).",
         "optional": false
       }
     ],
@@ -2439,7 +2439,9 @@
       "type": "Citation[] | undefined",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst citations = extractCitations(lcMessage);\n```"
+    ]
   },
   {
     "name": "injectAgent",
