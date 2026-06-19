@@ -11,6 +11,7 @@ import {
 } from '@threadplane/chat';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
 import { injectAgent } from '@threadplane/langgraph';
+import { MESSAGES_AGENT, type MessagesState } from './agent-ref';
 
 /**
  * MessagesComponent demonstrates the chat message primitives from @threadplane/chat.
@@ -84,7 +85,9 @@ import { injectAgent } from '@threadplane/langgraph';
   `,
 })
 export class MessagesComponent {
-  protected readonly agent = injectAgent();
+  protected readonly agent = injectAgent(MESSAGES_AGENT);
+  // Typed read: prove MessagesState flows through DI.
+  protected readonly _typedState: MessagesState = this.agent.value();
 
   protected readonly messageContent = messageContent;
 

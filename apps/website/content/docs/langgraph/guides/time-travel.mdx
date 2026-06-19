@@ -102,8 +102,12 @@ export class HistoryViewerComponent {
 The `history()` signal contains runtime-neutral `AgentCheckpoint` entries for the thread. For LangGraph-specific checkpoint metadata, `langGraphHistory()` exposes the raw `ThreadState[]`. The framework loads this history with `threads.getHistory()` when a thread is selected and refreshes it after a run completes.
 
 ```typescript
-// Configured globally in app.config.ts via provideAgent({ ... threadId, assistantId }).
-const agent = injectAgent<AgentState>();
+// agent.ts (shared):
+// import { createAgentRef } from '@threadplane/chat';
+// export const MY_AGENT = createAgentRef<AgentState>('my-agent');
+
+// Configured globally in app.config.ts via provideAgent(MY_AGENT, { ... threadId }).
+const agent = injectAgent(MY_AGENT);
 
 // Runtime-neutral execution timeline
 const checkpoints = computed(() => agent.history());
@@ -249,13 +253,17 @@ Use the comparison result to render a diff view, highlight changed fields in you
 Combine forking with new input to explore how the agent would have responded differently. This is the core of the undo/redo experience.
 
 ```typescript
+// agent.ts (shared):
+// import { createAgentRef } from '@threadplane/chat';
+// export const MY_AGENT = createAgentRef<AgentState>('my-agent');
+
 @Component({
   selector: 'app-replay',
   templateUrl: './replay.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ReplayComponent {
-  protected readonly agent = injectAgent<AgentState>();
+  protected readonly agent = injectAgent(MY_AGENT);
 
   readonly history = computed(() => this.agent.history());
   readonly rawHistory = computed(() => this.agent.langGraphHistory());

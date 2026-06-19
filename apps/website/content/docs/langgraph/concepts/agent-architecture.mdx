@@ -173,7 +173,7 @@ interface AgentState {
   `,
 })
 export class ReactAgentComponent {
-  protected readonly agent = injectAgent<AgentState>();
+  protected readonly agent = injectAgent();
 
   messages = this.agent.messages;
 
@@ -242,7 +242,7 @@ When the agent calls a tool, `injectAgent()` exposes the execution lifecycle thr
 // toolCalls() — tool calls with status, args, and results
 // Updates in real time as tools start and complete
 
-const agent = injectAgent<AgentState>();
+const agent = injectAgent();
 
 // Each entry has: id, name, args, status, and optional result
 const activeTools = computed(() =>
@@ -435,7 +435,7 @@ interface OrchestratorState {
   `,
 })
 export class MultiAgentComponent {
-  protected readonly orchestrator = injectAgent<OrchestratorState>();
+  protected readonly orchestrator = injectAgent();
 
   messages = this.orchestrator.messages;
 
@@ -488,7 +488,7 @@ When `handle_tool_error=True` is set, LangGraph catches `ToolException` and feed
 ### How Errors Surface in Angular
 
 ```typescript
-const agent = injectAgent<AgentState>();
+const agent = injectAgent();
 
 // The error() signal captures both transport and agent errors
 const error = computed(() => agent.error());
@@ -555,7 +555,7 @@ provideAgent({
 });
 
 // component.ts
-const agent = injectAgent<AgentState>();
+const agent = injectAgent();
 
 // Full checkpoint timeline — every state snapshot
 const timeline = computed(() => agent.history());

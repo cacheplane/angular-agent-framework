@@ -16,3 +16,6 @@ export type Equal<A, B> =
 
 /** Causes a compile error when T is not `true`. */
 export type Expect<T extends true> = T;
+
+/** True if `A` is assignable to `B`. */
+export type Assignable<A, B> = A extends B ? true : false;

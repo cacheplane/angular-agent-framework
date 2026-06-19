@@ -81,6 +81,7 @@ graph = builder.compile()
 ```typescript
 import { Component, computed, ChangeDetectionStrategy } from '@angular/core';
 import { injectAgent } from '@threadplane/langgraph';
+import { createAgentRef } from '@threadplane/chat';
 import type { BaseMessage } from '@langchain/core/messages';
 
 interface AgentState {
@@ -90,10 +91,11 @@ interface AgentState {
   mentioned_topics: string[];
 }
 
+export const MEMORY_AGENT = createAgentRef<AgentState>('memory_agent');
+
 // Configure in app.config.ts:
-// provideAgent({
+// provideAgent(MEMORY_AGENT, {
 //   apiUrl: '...',
-//   assistantId: 'memory_agent',
 //   threadId: signal(localStorage.getItem('memory-thread')),
 //   onThreadId: (id) => localStorage.setItem('memory-thread', id),
 // });
@@ -104,7 +106,7 @@ interface AgentState {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MemoryChatComponent {
-  protected readonly agent = injectAgent<AgentState>();
+  protected readonly agent = injectAgent(MEMORY_AGENT);
 
   // Reactive memory signals derived from agent state
   preferences = computed(() => this.agent.value()?.user_preferences ?? {});
@@ -196,15 +198,17 @@ result = graph.invoke(
 On the Angular side, thread-scoped memory requires no extra code. The `threadId` signal handles it — configure it once in `provideAgent({...})`:
 
 ```typescript
+// agent.ts (shared)
+// export const MEMORY_AGENT = createAgentRef<AgentState>('memory_agent');
+
 // app.config.ts
-provideAgent({
+provideAgent(MEMORY_AGENT, {
   apiUrl: '...',
-  assistantId: 'memory_agent',
   threadId: signal(userId()),  // Same user = same thread = same memory
 });
 
 // component.ts
-const chat = injectAgent<AgentState>();
+const chat = injectAgent(MEMORY_AGENT);
 
 // chat.messages() restores full history on reconnect
 // chat.value() restores all custom state fields

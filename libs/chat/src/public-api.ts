@@ -34,11 +34,13 @@ export {
   isAssistantMessage,
   isToolMessage,
   isSystemMessage,
+  createAgentRef,
   AgentError,
   AGENT_ERROR_MESSAGES,
   toAgentError,
   isAbortError,
 } from './lib/agent';
+export type { AgentRef } from './lib/agent';
 export type { AgentErrorKind } from './lib/agent';
 
 // Primitives
@@ -217,7 +219,10 @@ export { isPathRef, isLiteralString, isLiteralNumber, isLiteralBoolean } from '@
 // Client tools (declaration API — tools/action/view/ask + JSON-schema derivation)
 export { tools, action, view, ask } from './lib/client-tools/tools';
 export { deriveJsonSchema } from './lib/client-tools/to-json-schema';
-export type { ClientToolDef, FunctionToolDef, ViewToolDef, AskToolDef, ClientToolRegistry } from './lib/client-tools/tool-def';
+export type { ClientToolDef, AnyFunctionToolDef, FunctionToolDef, ViewToolDef, AskToolDef, ClientToolRegistry, StandardSchemaV1, StandardSchemaInferInput, StandardSchemaInferOutput } from './lib/client-tools/tool-def';
+export type { ViewProps } from './lib/client-tools/component-inputs';
+/** Inferred argument type for a schema (alias of StandardSchemaInferOutput). */
+export type ToolArgs<S extends import('./lib/client-tools/tool-def').StandardSchemaV1> = import('./lib/client-tools/tool-def').StandardSchemaInferOutput<S>;
 export type { ClientToolSpec } from './lib/client-tools/to-json-schema';
 export type { ClientToolsCapability, ClientToolResult } from './lib/client-tools/client-tools-capability';
 export { validateArgs, executeFunctionTool } from './lib/client-tools/execute';

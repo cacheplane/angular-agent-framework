@@ -6,6 +6,7 @@ import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
 import { z } from 'zod/v4';
 import { WeatherCardComponent } from './weather-card.component';
 import { ConfirmBookingComponent } from './confirm-booking.component';
+import { weatherCardSchema, confirmBookingSchema } from './schemas';
 
 /**
  * Client-tools demo — tools declared in the browser that the model calls and
@@ -15,6 +16,10 @@ import { ConfirmBookingComponent } from './confirm-booking.component';
  * component whose emitted value becomes the result). The catalog is shipped to
  * the model via the AG-UI adapter; the backend graph binds the client stubs
  * (no server implementation) and ends the turn so the browser executes them.
+ *
+ * Under `strict: true` the typed `view`/`ask` overloads verify at compile time
+ * that every field the schema produces is a declared `input()` on the paired
+ * component. Mismatches become errors here, not silent runtime failures.
  */
 const clientTools = tools({
   get_weather: action(
@@ -24,18 +29,12 @@ const clientTools = tools({
   ),
   weather_card: view(
     'Display a weather card for a location with the given readings.',
-    z.object({
-      location: z.string(),
-      temperatureF: z.number(),
-      conditions: z.string(),
-      humidity: z.number(),
-      windMph: z.number(),
-    }),
+    weatherCardSchema,
     WeatherCardComponent,
   ),
   confirm_booking: ask(
     'Ask the user to confirm a booking before finalizing it.',
-    z.object({ summary: z.string() }),
+    confirmBookingSchema,
     ConfirmBookingComponent,
   ),
 });

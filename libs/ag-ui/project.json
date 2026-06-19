@@ -47,6 +47,12 @@
       "options": {
         "configFile": "libs/ag-ui/vite.config.mts"
       }
+    },
+    "type-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsc --noEmit -p libs/ag-ui/tsconfig.type-tests.json"
+      }
     }
   }
 }

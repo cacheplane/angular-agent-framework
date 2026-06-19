@@ -14,6 +14,7 @@ import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs/operators';
 import { injectAgent, provideAgent, LangGraphThreadsAdapter, refreshOnRunEnd } from '@threadplane/langgraph';
+import { DEMO_AGENT_REF, type DemoState } from './agent-ref';
 import { ThreadplaneTelemetryService } from '@threadplane/telemetry/browser';
 import {
   ChatInterruptPanelComponent,
@@ -86,7 +87,10 @@ function parseUrl(url: string): { mode: DemoMode; threadId: string | null } {
     // model selection — all per-instance. The telemetry sink delegates to the
     // shell-built sink (populated in the constructor) since the real sink needs
     // the injected telemetry service + live model() read.
-    provideAgent({
+    // Typed via DEMO_AGENT_REF so injectAgent(DEMO_AGENT_REF) returns a
+    // LangGraphAgent<DemoState>. Static config: client retry options are
+    // single-sourced in the adapter, so no lazy factory is needed here.
+    provideAgent(DEMO_AGENT_REF, {
       apiUrl: environment.langGraphApiUrl,
       assistantId: environment.assistantId,
       threadId: threadIdState,
@@ -398,7 +402,7 @@ export class DemoShell {
       this.telemetry,
       () => this.model(),
     );
-    const a = injectAgent();
+    const a = injectAgent(DEMO_AGENT_REF);
     void this.telemetry.capture('ngaf:browser_chat_init', { surface: TELEMETRY_SURFACE });
     const orig = a.submit.bind(a);
     (a as { submit: typeof a.submit }).submit = (async (
@@ -420,6 +424,9 @@ export class DemoShell {
     }) as typeof a.submit;
     return a;
   })();
+
+  /** Typed read: proves DemoState flows through DI. Not used at runtime. */
+  protected readonly _demoState: DemoState = this.agent.value();
 
   protected onModeChange(next: DemoMode | string): void {
     // Preserve the active thread across mode switches: /embed/abc →

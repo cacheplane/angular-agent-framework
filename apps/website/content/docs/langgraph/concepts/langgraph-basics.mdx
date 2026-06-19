@@ -163,7 +163,7 @@ graph = builder.compile()
 
 **Angular connection:** Track tool execution in real-time:
 ```typescript
-const agent = injectAgent<AgentState>();
+const agent = injectAgent();
 
 // Watch tools execute
 const activeTools = computed(() => agent.toolCalls());
@@ -200,7 +200,7 @@ def execute_action(state: State) -> dict:
 
 **Angular connection:** The interrupt surfaces automatically:
 ```typescript
-const agent = injectAgent<AgentState>();
+const agent = injectAgent();
 
 // Show approval UI when agent pauses
 const pendingAction = computed(() => agent.interrupt());
@@ -242,7 +242,7 @@ provideAgent({
 
 Then consume from any component:
 ```typescript
-const orchestrator = injectAgent<OrchestratorState>();
+const orchestrator = injectAgent();
 
 const workers = computed(() => [...orchestrator.subagents().values()]);
 const workerCount = computed(() => workers().length);
@@ -276,7 +276,7 @@ provideAgent({
 });
 
 // component.ts
-const chat = injectAgent<ChatState>();
+const chat = injectAgent();
 
 // User returns tomorrow — same thread, full history restored
 // No code needed — the adapter handles it
