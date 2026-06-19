@@ -1,5 +1,5 @@
 # Multi-stage build for the ag-ui demo backend (examples/ag-ui).
-FROM python:3.12-slim AS builder
+FROM python:3.12-slim@sha256:d764629ce0ddd8c71fd371e9901efb324a95789d2315a47db7e4d27e78f1b0e9 AS builder
 WORKDIR /build
 COPY requirements.txt .
 # Strip uv's editable self-reference (`-e .` / local file:// paths): the build
@@ -10,7 +10,7 @@ COPY requirements.txt .
 RUN grep -vE '^-e |^\. |^\.$|file://' requirements.txt > /tmp/deps.txt \
   && pip install --user --no-cache-dir -r /tmp/deps.txt
 
-FROM python:3.12-slim
+FROM python:3.12-slim@sha256:d764629ce0ddd8c71fd371e9901efb324a95789d2315a47db7e4d27e78f1b0e9
 WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends curl \
   && rm -rf /var/lib/apt/lists/*
