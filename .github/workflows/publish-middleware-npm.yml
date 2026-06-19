@@ -78,7 +78,8 @@ jobs:
 
       # Trusted publishing requires npm CLI 11.5.1+.
       - name: Upgrade npm to support trusted publishing
-        run: npm install -g npm@latest
+        # Pinned (Scorecard Pinned-Dependencies); must stay >= 11.5.1. Bump as needed.
+        run: npm install -g npm@11.17.0
 
       - name: Lint, test, build middleware
         run: npx nx run-many -t lint,test,build --projects=middleware --skip-nx-cache
