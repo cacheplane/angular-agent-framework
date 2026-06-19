@@ -23,6 +23,7 @@ import {
   ChatSidenavScrimComponent,
   ChatHistorySearchPaletteComponent,
   ChatSelectComponent,
+  injectThreadRouting,
   type ChatSidenavMode,
   type InterruptAction,
   type ThreadMatch,
@@ -154,22 +155,15 @@ export class DemoShell {
       void this.threadsSvc.refresh();
     });
 
-    // URL → signal. When the URL's threadId changes (paste link, back/
-    // forward, programmatic navigation), reflect it into threadIdSignal.
-    // Tracks ONLY the URL — the signal read is untracked so this effect
-    // does not re-fire when the signal is set imperatively (e.g. by the
-    // agent's onThreadId callback during the stamp-in-progress async gap
-    // before the URL catches up).
-    //
-    // No localStorage fallback: URL is the source of truth. Bare-mode URLs
-    // (`/embed`, `/popup`, `/sidebar`) explicitly mean "no active thread"
-    // — the welcome state. Mode-switch UI uses `onModeChange` to preserve
-    // the active thread across mode boundaries via URL navigation.
-    effect(() => {
-      const urlId = this.urlThreadId();
-      if (urlId !== untracked(() => this.threadIdSignal())) {
-        this.threadIdSignal.set(urlId);
-      }
+    // Thread routing: binds threadIdState ↔ URL. Restores id from URL on
+    // load, stamps signal changes into the URL, and validates thread ids
+    // (redirecting to the bare mode path on 404). Replaces the three
+    // hand-rolled effects that previously lived here.
+    injectThreadRouting({
+      threadId: threadIdState,
+      threadIdFromUrl: (u) => parseUrl(u).threadId,
+      toCommands: (id) => (id ? ['/', this.mode(), id] : ['/', this.mode()]),
+      validate: (id) => this.threadsSvc.getThread(id).then(Boolean),
     });
 
     // URL → knob signals. Tracks urlState() so it re-fires on every
@@ -180,34 +174,6 @@ export class DemoShell {
     effect(() => {
       void this.urlState();
       untracked(() => this.hydrateFromQuery());
-    });
-
-    // Validate URL thread ids whenever they appear. Decoupled from the
-    // sync effect above: on initial load the signal is hydrated from
-    // the URL synchronously (field initializer), so the sync guard
-    // would skip validation. This effect runs once per distinct id,
-    // including the initial one. Cache last-validated to avoid
-    // re-hitting the server on signal flips that round-trip the same
-    // id back through.
-    let lastValidated: string | null = null;
-    effect(() => {
-      const urlId = this.urlThreadId();
-      if (urlId && urlId !== lastValidated) {
-        lastValidated = urlId;
-        void this.validateUrlThreadId(urlId);
-      }
-    });
-
-    // signal → URL. When the agent auto-creates a thread, the sidenav
-    // switches threads, or onNewThread fires, push the new id into the
-    // URL. Skips when the URL already matches (also breaks the loop).
-    // Preserves query params so knob state survives the thread hop.
-    effect(() => {
-      const sigId = this.threadIdSignal();
-      const { mode, threadId: urlId } = this.urlState();
-      if (sigId === urlId) return;
-      const cmds: unknown[] = sigId ? ['/', mode, sigId] : ['/', mode];
-      void this.router.navigate(cmds as string[], { queryParamsHandling: 'preserve' });
     });
 
     // Refresh threads list when an agent run completes. The backend writes
@@ -245,7 +211,6 @@ export class DemoShell {
   );
 
   protected readonly mode = computed<DemoMode>(() => this.urlState().mode);
-  private readonly urlThreadId = computed<string | null>(() => this.urlState().threadId);
 
   /**
    * Source of truth for the model picker. The shell owns it; the
@@ -363,20 +328,14 @@ export class DemoShell {
     { value: 'material-light', label: 'Material light' },
   ]);
 
-  /** Active thread id. URL is the sole source of truth (see urlState
-   *  above); this signal initialises from the URL on construction and is
-   *  kept in sync by the bidirectional effects in the constructor. The
-   *  agent watches this signal directly.
+  /** Active thread id. URL is the sole source of truth; seeded from the
+   *  URL on construction and kept in sync by `injectThreadRouting` (called
+   *  in the constructor). The agent watches this signal via the module-level
+   *  `threadIdState` reference in `provideAgent({...})`.
    *
    *  Mode switches that should preserve the active thread go through
    *  `onModeChange`, which navigates to `/<next-mode>/<id>` directly. */
-  // Alias the module-level signal the agent provider watches (see
-  // @Component providers), so the component's URL-sync logic and the agent
-  // share one source of truth. Seed it from the current URL.
-  protected readonly threadIdSignal = ((): typeof threadIdState => {
-    threadIdState.set(parseUrl(this.router.url).threadId);
-    return threadIdState;
-  })();
+  protected readonly threadIdSignal = threadIdState;
 
   /** Title of the currently-selected thread, or 'New chat' if none. The
    *  Python graph writes thread.metadata.title from the first user message
@@ -539,20 +498,6 @@ export class DemoShell {
     if (project !== null && project !== this.selectedProjectId()) {
       this.selectedProjectId.set(project);
     }
-  }
-
-  /** Silently redirect to the bare mode path when the URL's threadId
-   *  resolves to a 404. Uses `replaceUrl: true` so the back button
-   *  doesn't reload the broken link. Non-404 errors propagate from
-   *  the adapter as-is (genuine transport failures shouldn't be
-   *  swallowed). */
-  private async validateUrlThreadId(threadId: string): Promise<void> {
-    const thread = await this.threadsSvc.getThread(threadId);
-    if (thread) return;
-    if (this.threadIdSignal() === threadId) {
-      this.threadIdSignal.set(null);
-    }
-    await this.router.navigate(['/', this.mode()], { replaceUrl: true });
   }
 
   onModelChange(next: string): void {

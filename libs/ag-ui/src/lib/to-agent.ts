@@ -251,7 +251,7 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
           if (Array.isArray(raw)) {
             return (raw as Array<Record<string, unknown>>).map((m, i) => ({
               id: (m['id'] as string) ?? `${id}-${i}`,
-              role: (m['role'] as Message['role']) ?? 'assistant',
+              role: 'assistant' as Message['role'],
               content: typeof m['content'] === 'string' ? (m['content'] as string) : (m['content'] as Message['content']) ?? '',
               ...(Array.isArray(m['toolCallIds']) ? { toolCallIds: m['toolCallIds'] as string[] } : {}),
               ...(typeof m['reasoning'] === 'string' ? { reasoning: m['reasoning'] as string } : {}),

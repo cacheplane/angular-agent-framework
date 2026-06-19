@@ -353,7 +353,15 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
       };
       const entry = store.activities().get(e.messageId);
       if (!entry) return;          // unknown activity — ignore
-      entry.content.update((c) => applyPatch(c, e.patch));  // inner signal → live, no map churn
+      entry.content.update((c) => {
+        try {
+          return applyPatch(c, e.patch);
+        } catch (err) {
+          // A malformed/out-of-order ACTIVITY_DELTA must not break the stream — drop it.
+          if (typeof console !== 'undefined') console.warn('[ag-ui] dropping malformed ACTIVITY_DELTA patch', err);
+          return c;
+        }
+      });  // inner signal → live, no map churn
       return;
     }
     default: {
