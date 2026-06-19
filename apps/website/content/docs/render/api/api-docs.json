@@ -251,30 +251,30 @@
   {
     "name": "RenderConfig",
     "kind": "interface",
-    "description": "",
+    "description": "Options for provideRender — the registry, state, computed functions,\nand action handlers the render engine uses to turn a spec into live Angular\ncomponents. Every field is optional.",
     "properties": [
       {
         "name": "functions",
         "type": "Record<string, ComputedFunction>",
-        "description": "",
+        "description": "Named computed functions a spec can reference (e.g. via `$compute`) to derive values from state.",
         "optional": true
       },
       {
         "name": "handlers",
         "type": "Record<string, (params: Record<string, unknown>) => unknown>",
-        "description": "",
+        "description": "Named action handlers invoked when interactive elements fire (e.g. a Button's `onClick`).",
         "optional": true
       },
       {
         "name": "registry",
         "type": "AngularRegistry",
-        "description": "",
+        "description": "Component registry mapping spec element `type`s to Angular components.",
         "optional": true
       },
       {
         "name": "store",
         "type": "StateStore",
-        "description": "",
+        "description": "Backing state store that `$bindState` paths read from and interactive elements write to.",
         "optional": true
       }
     ],

@@ -5,17 +5,18 @@ import type { AgentRef, AgentRuntimeTelemetrySink } from '@threadplane/chat';
 import { toAgent, type AgUiAgent } from './to-agent';
 
 /**
- * Configuration for the AG-UI agent provider.
- * HttpAgentConfig shape (from @ag-ui/client@0.0.52):
- *   - url: string (required) — endpoint for the HTTP agent
- *   - agentId: string (optional) — agent identifier
- *   - threadId: string (optional) — thread identifier
- *   - headers: Record<string, string> (optional) — custom HTTP headers
+ * Connection options for the AG-UI agent provider, passed to {@link provideAgent}.
+ * Mirrors the underlying `HttpAgent` config (`@ag-ui/client`) plus an optional
+ * telemetry sink.
  */
 export interface AgentConfig {
+  /** Endpoint URL of the AG-UI HTTP agent (e.g. `'http://localhost:8000/agent'`). Required. */
   url: string;
+  /** Agent identifier, when the endpoint serves more than one agent. */
   agentId?: string;
+  /** Thread to connect to on start; omit to begin a fresh conversation. */
   threadId?: string;
+  /** Extra HTTP headers sent with every request (e.g. auth tokens). */
   headers?: Record<string, string>;
   /** Optional app-owned telemetry sink. No telemetry is emitted unless this is provided. */
   telemetry?: AgentRuntimeTelemetrySink | false;

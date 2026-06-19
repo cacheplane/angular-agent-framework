@@ -5887,7 +5887,7 @@
   {
     "name": "ChatConfig",
     "kind": "interface",
-    "description": "",
+    "description": "Application-wide options for provideChat. Every field is optional;\nthe values are exposed to all chat components in the tree via the\n`CHAT_CONFIG` injection token, so you set them once at bootstrap instead of\nthreading props through every component.",
     "properties": [
       {
         "name": "__licenseEnvHint",
