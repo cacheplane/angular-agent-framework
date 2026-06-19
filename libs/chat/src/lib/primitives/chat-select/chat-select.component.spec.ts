@@ -63,6 +63,19 @@ describe('ChatSelectComponent', () => {
     expect(opts.length).toBe(3);
   });
 
+  it('renders an option description as a subtitle, and omits it when absent', () => {
+    setSignalInput(fixture, 'options', [
+      { value: 'a', label: 'Alpha', description: 'The first letter' },
+      { value: 'b', label: 'Bravo' },
+    ] as readonly ChatSelectOption[]);
+    fixture.detectChanges();
+    host.querySelector<HTMLButtonElement>('.chat-select__trigger')!.click();
+    fixture.detectChanges();
+    const opts = host.querySelectorAll('.chat-select__option');
+    expect(opts[0].querySelector('.chat-select__option-desc')?.textContent).toContain('The first letter');
+    expect(opts[1].querySelector('.chat-select__option-desc')).toBeNull();
+  });
+
   it('emits valueChange and closes the menu on option click', () => {
     let emitted: string | undefined;
     fixture.componentInstance.value.subscribe((v) => { emitted = v; });

@@ -52,7 +52,10 @@ export const CHAT_SELECT_STYLES = `
     z-index: 10;
   }
   .chat-select__option {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
     width: 100%;
     text-align: left;
     border: 0;
@@ -63,6 +66,12 @@ export const CHAT_SELECT_STYLES = `
     font: inherit;
     font-size: var(--ngaf-chat-font-size-sm);
     cursor: pointer;
+  }
+  .chat-select__option-desc {
+    font-size: var(--ngaf-chat-font-size-xs);
+    color: var(--ngaf-chat-text-muted);
+    line-height: 1.3;
+    white-space: normal;
   }
   .chat-select__option:hover:not(:disabled),
   .chat-select__option:focus-visible {
