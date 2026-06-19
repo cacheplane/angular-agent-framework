@@ -5,17 +5,18 @@ import type { AgentRef, AgentRuntimeTelemetrySink } from '@threadplane/chat';
 import { toAgent, type AgUiAgent } from './to-agent';
 
 /**
- * Configuration for the AG-UI agent provider.
- * HttpAgentConfig shape (from @ag-ui/client@0.0.52):
- *   - url: string (required) — endpoint for the HTTP agent
- *   - agentId: string (optional) — agent identifier
- *   - threadId: string (optional) — thread identifier
- *   - headers: Record<string, string> (optional) — custom HTTP headers
+ * Connection options for the AG-UI agent provider, passed to {@link provideAgent}.
+ * Mirrors the underlying `HttpAgent` config (`@ag-ui/client`) plus an optional
+ * telemetry sink.
  */
 export interface AgentConfig {
+  /** Endpoint URL of the AG-UI HTTP agent (e.g. `'http://localhost:8000/agent'`). Required. */
   url: string;
+  /** Agent identifier, when the endpoint serves more than one agent. */
   agentId?: string;
+  /** Thread to connect to on start; omit to begin a fresh conversation. */
   threadId?: string;
+  /** Extra HTTP headers sent with every request (e.g. auth tokens). */
   headers?: Record<string, string>;
   /** Optional app-owned telemetry sink. No telemetry is emitted unless this is provided. */
   telemetry?: AgentRuntimeTelemetrySink | false;
@@ -60,8 +61,9 @@ function isAgentRef<T>(x: unknown): x is AgentRef<T> {
  *
  * **Typed state via AgentRef.** Pass a typed ref as the first argument to flow
  * the state shape from `provideAgent` to `injectAgent` without repeating the
- * generic at every call site:
+ * generic at every call site.
  *
+ * @example Typed state via AgentRef
  * ```ts
  * interface TripState { day: number; places: string[]; }
  * export const TRIP = createAgentRef<TripState>('trip');
@@ -102,13 +104,13 @@ export function provideAgent<T = Record<string, unknown>>(
  *
  * **Typed state via AgentRef.** Pass the same ref that was supplied to
  * `provideAgent(ref, …)` to carry the state type through DI without repeating
- * the generic at every call site:
+ * the generic at every call site. The no-arg form defaults to
+ * `AgUiAgent<Record<string, unknown>>`.
  *
+ * @example Typed state via AgentRef
  * ```ts
  * const agent = injectAgent(TRIP); // AgUiAgent<TripState>
  * ```
- *
- * The no-arg form defaults to `AgUiAgent<Record<string, unknown>>`.
  */
 export function injectAgent(): AgUiAgent;
 export function injectAgent<T>(ref: AgentRef<T>): AgUiAgent<T>;

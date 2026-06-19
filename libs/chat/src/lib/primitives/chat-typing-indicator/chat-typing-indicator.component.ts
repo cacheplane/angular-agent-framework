@@ -5,6 +5,18 @@ import type { Agent } from '../../agent';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 import { CHAT_TYPING_INDICATOR_STYLES } from '../../styles/chat-typing-indicator.styles';
 
+/**
+ * Whether the agent should show a "typing" indicator — it is loading and has
+ * not yet started streaming the assistant's reply.
+ *
+ * @param agent The agent to inspect.
+ * @returns `true` while the agent is awaiting a response but no assistant text
+ *   has streamed yet; `false` once tokens arrive or the agent is idle.
+ * @example
+ * ```ts
+ * \@if (isTyping(agent)) { <chat-typing-indicator [agent]="agent" /> }
+ * ```
+ */
 export function isTyping(agent: Agent): boolean {
   if (!agent.isLoading()) return false;
   const msgs = agent.messages();

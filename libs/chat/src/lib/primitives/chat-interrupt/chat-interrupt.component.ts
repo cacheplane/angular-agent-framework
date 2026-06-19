@@ -14,6 +14,18 @@ import type { AgentInterrupt } from '../../agent/agent-interrupt';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 import { CHAT_INTERRUPT_STYLES } from '../../styles/chat-interrupt.styles';
 
+/**
+ * Read the agent's current human-in-the-loop interrupt, if any.
+ *
+ * @param agent The agent to inspect.
+ * @returns The pending {@link AgentInterrupt}, or `undefined` when the agent is
+ *   not currently waiting on an interrupt.
+ * @example
+ * ```ts
+ * const interrupt = getInterrupt(agent);
+ * if (interrupt) agent.resume('approved');
+ * ```
+ */
 export function getInterrupt(agent: Agent): AgentInterrupt | undefined {
   return agent.interrupt?.();
 }

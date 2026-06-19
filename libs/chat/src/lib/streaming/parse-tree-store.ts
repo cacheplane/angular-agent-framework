@@ -17,6 +17,21 @@ export interface ParseTreeStore {
   readonly elementStates: Signal<Map<string, ElementAccumulationState>>;
 }
 
+/**
+ * Create a {@link ParseTreeStore} — feeds streamed JSON chunks through a
+ * partial-JSON parser and exposes the progressively-materialized spec and
+ * per-element accumulation state as signals, so a generative-UI surface can
+ * render while the spec is still arriving.
+ *
+ * @param parser The partial-JSON parser used to incrementally materialize chunks.
+ * @returns A {@link ParseTreeStore}; call `push(chunk)` as bytes stream in.
+ * @example
+ * ```ts
+ * const store = createParseTreeStore(parser);
+ * store.push('{"type":"Car');
+ * store.spec(); // best-effort Spec | null
+ * ```
+ */
 export function createParseTreeStore(parser: PartialJsonParser): ParseTreeStore {
   const specSignal = signal<Spec | null>(null);
   const elementStatesSignal = signal<Map<string, ElementAccumulationState>>(new Map());

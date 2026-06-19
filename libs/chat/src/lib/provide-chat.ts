@@ -9,6 +9,12 @@ import type { AngularRegistry } from '@threadplane/render';
 
 const PACKAGE_NAME = '@threadplane/chat';
 
+/**
+ * Application-wide options for {@link provideChat}. Every field is optional;
+ * the values are exposed to all chat components in the tree via the
+ * `CHAT_CONFIG` injection token, so you set them once at bootstrap instead of
+ * threading props through every component.
+ */
 export interface ChatConfig {
   /** Shared render registry for consumers that read CHAT_CONFIG. */
   renderRegistry?: AngularRegistry;

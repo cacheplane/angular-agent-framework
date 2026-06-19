@@ -25,6 +25,19 @@ export interface ContentClassifier {
   dispose(): void;
 }
 
+/**
+ * Create a {@link ContentClassifier} — the streaming accumulator that inspects
+ * an assistant message's content as it arrives and classifies it (markdown vs a
+ * generative-UI/A2UI spec), exposing the parsed result and per-element state as
+ * signals so the renderer can switch modes mid-stream.
+ *
+ * @returns A fresh {@link ContentClassifier}; call `dispose()` when done.
+ * @example
+ * ```ts
+ * const cc = createContentClassifier();
+ * effect(() => console.log(cc.type())); // 'pending' | 'markdown' | 'spec'
+ * ```
+ */
 export function createContentClassifier(): ContentClassifier {
   const typeSignal = signal<ContentType>('pending');
   const markdownSignal = signal<string>('');

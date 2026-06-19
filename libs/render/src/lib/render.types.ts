@@ -58,9 +58,18 @@ export interface AngularRegistry {
   names(): string[];
 }
 
+/**
+ * Options for {@link provideRender} — the registry, state, computed functions,
+ * and action handlers the render engine uses to turn a spec into live Angular
+ * components. Every field is optional.
+ */
 export interface RenderConfig {
+  /** Component registry mapping spec element `type`s to Angular components. */
   registry?: AngularRegistry;
+  /** Backing state store that `$bindState` paths read from and interactive elements write to. */
   store?: StateStore;
+  /** Named computed functions a spec can reference (e.g. via `$compute`) to derive values from state. */
   functions?: Record<string, ComputedFunction>;
+  /** Named action handlers invoked when interactive elements fire (e.g. a Button's `onClick`). */
   handlers?: Record<string, (params: Record<string, unknown>) => unknown | Promise<unknown>>;
 }
