@@ -51,4 +51,18 @@ describe('ChatWelcomeSuggestionComponent', () => {
     button!.click();
     expect(emitted).toBe('tell-me');
   });
+
+  it('exposes description as a title + aria-description tooltip when set', () => {
+    setSignalInput(fixture.componentInstance.description, 'What this prompt demonstrates');
+    fixture.detectChanges();
+    const button = (fixture.nativeElement as HTMLElement).querySelector('button')!;
+    expect(button.getAttribute('title')).toBe('What this prompt demonstrates');
+    expect(button.getAttribute('aria-description')).toBe('What this prompt demonstrates');
+  });
+
+  it('omits the tooltip attributes when no description is provided', () => {
+    const button = (fixture.nativeElement as HTMLElement).querySelector('button')!;
+    expect(button.getAttribute('title')).toBeNull();
+    expect(button.getAttribute('aria-description')).toBeNull();
+  });
 });

@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: MIT
 export type { Agent } from './agent';
+export { AgentError, AGENT_ERROR_MESSAGES } from './agent-error';
+export type { AgentErrorKind } from './agent-error';
+export { toAgentError, isAbortError } from './to-agent-error';
 export type { Citation } from './citation';
 export type { Message, Role } from './message';
 export { isUserMessage, isAssistantMessage, isToolMessage, isSystemMessage } from './message';
@@ -16,6 +19,8 @@ export type {
 } from './agent-event';
 export type { AgentCheckpoint } from './agent-checkpoint';
 export type { AgentWithHistory } from './agent-with-history';
+export type { AgentRef } from './agent-ref';
+export { createAgentRef } from './agent-ref';
 export type {
   AgentRuntimeTelemetryEvent,
   AgentRuntimeTelemetryPayload,

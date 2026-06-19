@@ -2,6 +2,7 @@
 import { computed, signal, type Signal } from '@angular/core';
 import { Subject } from 'rxjs';
 import type { AbstractAgent } from '@ag-ui/client';
+import { toAgentError, isAbortError, type AgentError } from '@threadplane/chat';
 import type {
   Agent, Message, AgentStatus, ToolCall, AgentEvent,
   AgentInterrupt,
@@ -53,7 +54,7 @@ function agentRuntimeTelemetryErrorClass(error: unknown): string {
  * live a2ui streaming) and the optional `clientTools` capability.
  * Mirrors langgraph's LangGraphAgent extension.
  */
-export interface AgUiAgent extends Agent {
+export interface AgUiAgent<TState = Record<string, unknown>> extends Agent<TState> {
   customEvents: Signal<CustomStreamEvent[]>;
   clientTools: ClientToolsCapability;
   /** Subagent activities (activityType==='subagent') projected to the neutral
@@ -81,7 +82,7 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     messages:     signal<Message[]>([]),
     status:       signal<AgentStatus>('idle'),
     isLoading:    signal<boolean>(false),
-    error:        signal<unknown>(null),
+    error:        signal<AgentError | undefined>(undefined),
     toolCalls:    signal<ToolCall[]>([]),
     state:        signal<Record<string, unknown>>({}),
     interrupt:    signal<AgentInterrupt | undefined>(undefined),
@@ -104,10 +105,9 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
   // submit() so the next run starts clean.
   let abortSettled = false;
 
-  function isAbortError(error: unknown): boolean {
-    return error instanceof Error
-      && (error.name === 'AbortError' || /abort/i.test(error.message));
-  }
+  // Tracks the last AgentSubmitInput so retry() can re-run it without
+  // duplicating the user message. Set at the top of submit()'s message path.
+  let lastInput: AgentSubmitInput | undefined;
 
   /** Settles the store as idle for stop()-induced failures; returns true if handled. */
   function settleIfAborted(error: unknown): boolean {
@@ -192,6 +192,27 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     if (activeRun === run) activeRun = null;
   }
 
+  /**
+   * Fires the current message list against the source agent (no append).
+   * Both submit() and retry() share this path; submit() appends the user
+   * message first, retry() skips the append and calls this directly.
+   */
+  async function runCurrentMessages(): Promise<void> {
+    const run = startRunTelemetry('submit');
+    const tools = clientToolsCap.catalogAsAgUiTools();
+    try {
+      await source.runAgent(tools.length > 0 ? { tools } : undefined);
+      finishRunTelemetry(run);
+    } catch (err) {
+      if (!settleIfAborted(err)) {
+        store.status.set('error');
+        store.isLoading.set(false);
+        store.error.set(toAgentError(err));
+        failRunTelemetry(err, run);
+      }
+    }
+  }
+
   // Tap all events from the source agent via the AgentSubscriber API.
   // This subscription lives for the lifetime of `source`.
   source.subscribe({
@@ -209,7 +230,7 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
       if (settleIfAborted(error)) return;
       store.status.set('error');
       store.isLoading.set(false);
-      store.error.set(error);
+      store.error.set(toAgentError(error));
       failRunTelemetry(error);
     },
   });
@@ -224,9 +245,24 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
         toolCallId: (entry.content()['toolCallId'] as string) ?? id,
         name: entry.content()['name'] as string | undefined,
         status: computed(() => (entry.content()['status'] as SubagentStatus) ?? 'running'),
-        messages: computed<Message[]>(() => [
-          { id, role: 'assistant', content: String(entry.content()['text'] ?? '') },
-        ]),
+        messages: computed<Message[]>(() => {
+          const c = entry.content();
+          const raw = c['messages'];
+          if (Array.isArray(raw)) {
+            return (raw as Array<Record<string, unknown>>).map((m, i) => ({
+              id: (m['id'] as string) ?? `${id}-${i}`,
+              role: 'assistant' as Message['role'],
+              content: typeof m['content'] === 'string' ? (m['content'] as string) : (m['content'] as Message['content']) ?? '',
+              ...(Array.isArray(m['toolCallIds']) ? { toolCallIds: m['toolCallIds'] as string[] } : {}),
+              ...(typeof m['reasoning'] === 'string' ? { reasoning: m['reasoning'] as string } : {}),
+            }));
+          }
+          return [{ id, role: 'assistant', content: String(c['text'] ?? '') }];
+        }),
+        toolCalls: computed<ToolCall[]>(() => {
+          const raw = entry.content()['toolCalls'];
+          return Array.isArray(raw) ? (raw as ToolCall[]) : [];
+        }),
         state: computed(() => (entry.content()['state'] as Record<string, unknown>) ?? {}),
       };
       subagentWrappers.set(id, w);
@@ -283,7 +319,7 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
           if (!settleIfAborted(err)) {
             store.status.set('error');
             store.isLoading.set(false);
-            store.error.set(err);
+            store.error.set(toAgentError(err));
             failRunTelemetry(err, run);
           }
         }
@@ -301,19 +337,21 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
         source.addMessage(userMsg as Parameters<typeof source.addMessage>[0]);
       }
 
-      const run = startRunTelemetry('submit');
-      const tools = clientToolsCap.catalogAsAgUiTools();
-      try {
-        await source.runAgent(tools.length > 0 ? { tools } : undefined);
-        finishRunTelemetry(run);
-      } catch (err) {
-        if (!settleIfAborted(err)) {
-          store.status.set('error');
-          store.isLoading.set(false);
-          store.error.set(err);
-          failRunTelemetry(err, run);
-        }
-      }
+      // Record the input so retry() can re-run it without re-appending the
+      // user message (the message is already in the list by this point).
+      lastInput = input;
+
+      await runCurrentMessages();
+    },
+
+    retry: async () => {
+      if (store.isLoading()) return;   // no-op while a run is in flight
+      if (lastInput === undefined) return; // nothing to retry
+      store.error.set(undefined);
+      // Re-run the same message list against the source without appending a
+      // duplicate user message — the message is already in store.messages and
+      // source's internal list from the original submit().
+      await runCurrentMessages();
     },
 
     stop: async () => {
@@ -369,7 +407,7 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
         if (!settleIfAborted(err)) {
           store.status.set('error');
           store.isLoading.set(false);
-          store.error.set(err);
+          store.error.set(toAgentError(err));
           failRunTelemetry(err, run);
         }
       }

@@ -61,6 +61,7 @@ const status = toSignal(status$, { initialValue: 'idle' });
 
 ```typescript
 import { injectAgent } from '@threadplane/langgraph';
+import { createAgentRef } from '@threadplane/chat';
 import type { BaseMessage } from '@langchain/core/messages';
 
 // The type parameter mirrors your graph's state schema — see State Management.
@@ -68,9 +69,11 @@ interface ChatState {
   messages: BaseMessage[];
 }
 
+export const CHAT_AGENT = createAgentRef<ChatState>('chat');
+
 // You never touch BehaviorSubjects or toSignal() yourself.
-// injectAgent() hands you clean Signals (config comes from provideAgent):
-protected readonly chat = injectAgent<ChatState>();
+// injectAgent(ref) hands you clean Signals (config comes from provideAgent):
+protected readonly chat = injectAgent(CHAT_AGENT);
 
 chat.messages();   // Signal<Message[]>
 chat.status();     // Signal<'idle' | 'running' | 'error'>
@@ -101,7 +104,7 @@ Every `injectAgent()` instance moves through a lifecycle: **idle**, **running** 
 The resource has been created but no request has been submitted yet. All Signals hold their initial values.
 
 ```typescript
-protected readonly chat = injectAgent<ChatState>();
+protected readonly chat = injectAgent();
 
 console.log(chat.status());     // 'idle'
 console.log(chat.messages());   // []
@@ -164,7 +167,7 @@ console.log(chat.isLoading());  // false
 import { computed } from '@angular/core';
 import { injectAgent } from '@threadplane/langgraph';
 
-protected readonly chat = injectAgent<ChatState>();
+protected readonly chat = injectAgent();
 
 // Count all messages in the conversation
 const messageCount = computed(() => chat.messages().length);
@@ -332,7 +335,7 @@ import { injectAgent } from '@threadplane/langgraph';
 export class ChatComponent {
   @ViewChild('chatContainer') chatContainer!: ElementRef<HTMLElement>;
 
-  protected readonly chat = injectAgent<ChatState>();
+  protected readonly chat = injectAgent();
 
   errorDisplay = computed(() => {
     const err = this.chat.error();
@@ -396,7 +399,7 @@ Since `injectAgent()` exposes Signals, condition 3 handles everything. When a ne
   `,
 })
 export class ChatComponent {
-  protected readonly chat = injectAgent<ChatState>();
+  protected readonly chat = injectAgent();
 }
 ```
 
@@ -483,7 +486,7 @@ import { injectAgent } from '@threadplane/langgraph';
   `,
 })
 export class ChatComponent {
-  protected readonly chat = injectAgent<ChatState>();
+  protected readonly chat = injectAgent();
 
   // Derived state from the Python agent's output
   toolsUsed = computed(() =>

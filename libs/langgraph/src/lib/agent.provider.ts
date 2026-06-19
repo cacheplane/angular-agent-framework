@@ -2,7 +2,7 @@
 import { InjectionToken, inject, type Provider, type Signal } from '@angular/core';
 import type { BaseMessage } from '@langchain/core/messages';
 import type { BagTemplate } from '@langchain/langgraph-sdk';
-import type { AgentRuntimeTelemetrySink } from '@threadplane/chat';
+import type { AgentRef, AgentRuntimeTelemetrySink } from '@threadplane/chat';
 import { agent } from './agent.fn';
 import type {
   AgentTransport,
@@ -61,6 +61,36 @@ export const AGENT_CONFIG = new InjectionToken<AgentConfig>('AGENT_CONFIG');
  */
 export const AGENT = new InjectionToken<LangGraphAgent>('AGENT');
 
+/** @internal — shared factory that reads AGENT_CONFIG and constructs the singleton. */
+function agentFactory<T>(): LangGraphAgent<T> {
+  // useFactory runs in an injection context, so the legacy `agent()`
+  // factory's `inject(DestroyRef)` calls work.
+  const config = inject(AGENT_CONFIG) as AgentConfig<T>;
+  if (config.assistantId === undefined) {
+    throw new Error(
+      'provideAgent: `assistantId` is required to construct the AGENT singleton.',
+    );
+  }
+  return agent<T>({
+    assistantId: config.assistantId,
+    ...(config.apiUrl !== undefined ? { apiUrl: config.apiUrl } : {}),
+    ...(config.threadId !== undefined ? { threadId: config.threadId } : {}),
+    ...(config.onThreadId !== undefined ? { onThreadId: config.onThreadId } : {}),
+    ...(config.initialValues !== undefined ? { initialValues: config.initialValues } : {}),
+    ...(config.throttle !== undefined ? { throttle: config.throttle } : {}),
+    ...(config.toMessage !== undefined ? { toMessage: config.toMessage } : {}),
+    ...(config.transport !== undefined ? { transport: config.transport } : {}),
+    ...(config.clientOptions !== undefined ? { clientOptions: config.clientOptions } : {}),
+    ...(config.telemetry !== undefined ? { telemetry: config.telemetry } : {}),
+    ...(config.filterSubagentMessages !== undefined ? { filterSubagentMessages: config.filterSubagentMessages } : {}),
+    ...(config.subagentToolNames !== undefined ? { subagentToolNames: config.subagentToolNames } : {}),
+  });
+}
+
+function isAgentRef<T>(x: unknown): x is AgentRef<T> {
+  return typeof x === 'object' && x !== null && 'token' in x;
+}
+
 /**
  * Wire the LangGraph adapter into Angular's dependency injection.
  *
@@ -86,46 +116,47 @@ export const AGENT = new InjectionToken<LangGraphAgent>('AGENT');
  *   }),
  * ];
  * ```
+ *
+ * **Typed state via AgentRef.** Pass a typed ref as the first argument to flow
+ * the state shape from `provideAgent` to `injectAgent` without repeating the
+ * generic at every call site:
+ *
+ * ```ts
+ * export const TRIP = createAgentRef<TripState>('trip');
+ * // app.config.ts:
+ * providers: [provideAgent(TRIP, { assistantId: 'trip-graph' })]
+ * // component:
+ * const agent = injectAgent(TRIP); // LangGraphAgent<TripState>
+ * ```
  */
 export function provideAgent<T = Record<string, unknown>>(
+  ref: AgentRef<T>,
   configOrFactory: AgentConfig<T> | (() => AgentConfig<T>),
+): Provider[];
+export function provideAgent<T = Record<string, unknown>>(
+  configOrFactory: AgentConfig<T> | (() => AgentConfig<T>),
+): Provider[];
+export function provideAgent<T = Record<string, unknown>>(
+  refOrConfig: AgentRef<T> | AgentConfig<T> | (() => AgentConfig<T>),
+  maybeConfig?: AgentConfig<T> | (() => AgentConfig<T>),
 ): Provider[] {
+  const ref = isAgentRef<T>(refOrConfig) ? refOrConfig : undefined;
+  const configOrFactory = (ref ? maybeConfig : refOrConfig) as
+    | AgentConfig<T>
+    | (() => AgentConfig<T>);
+
   // Resolve the factory (if any) lazily, inside the injection context of the
   // AGENT_CONFIG useFactory below — never at decoration time.
   const resolveConfig = (): AgentConfig<T> =>
-    typeof configOrFactory === 'function' ? configOrFactory() : configOrFactory;
+    typeof configOrFactory === 'function' ? (configOrFactory as () => AgentConfig<T>)() : configOrFactory;
 
-  return [
+  const providers: Provider[] = [
     // AGENT_CONFIG resolves the config once (running the factory in an
     // injection context if a factory was passed). AGENT reads the resolved
     // config from here, so the factory is invoked exactly once.
     { provide: AGENT_CONFIG, useFactory: resolveConfig },
-    {
-      provide: AGENT,
-      useFactory: () => {
-        // useFactory runs in an injection context, so the legacy `agent()`
-        // factory's `inject(DestroyRef)` calls work.
-        const config = inject(AGENT_CONFIG) as AgentConfig<T>;
-        if (config.assistantId === undefined) {
-          throw new Error(
-            'provideAgent: `assistantId` is required to construct the AGENT singleton.',
-          );
-        }
-        return agent<T>({
-          assistantId: config.assistantId,
-          ...(config.apiUrl !== undefined ? { apiUrl: config.apiUrl } : {}),
-          ...(config.threadId !== undefined ? { threadId: config.threadId } : {}),
-          ...(config.onThreadId !== undefined ? { onThreadId: config.onThreadId } : {}),
-          ...(config.initialValues !== undefined ? { initialValues: config.initialValues } : {}),
-          ...(config.throttle !== undefined ? { throttle: config.throttle } : {}),
-          ...(config.toMessage !== undefined ? { toMessage: config.toMessage } : {}),
-          ...(config.transport !== undefined ? { transport: config.transport } : {}),
-          ...(config.clientOptions !== undefined ? { clientOptions: config.clientOptions } : {}),
-          ...(config.telemetry !== undefined ? { telemetry: config.telemetry } : {}),
-          ...(config.filterSubagentMessages !== undefined ? { filterSubagentMessages: config.filterSubagentMessages } : {}),
-          ...(config.subagentToolNames !== undefined ? { subagentToolNames: config.subagentToolNames } : {}),
-        });
-      },
-    },
+    { provide: AGENT, useFactory: agentFactory<T> },
   ];
+  if (ref) providers.push({ provide: ref.token, useExisting: AGENT });
+  return providers;
 }

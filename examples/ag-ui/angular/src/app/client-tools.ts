@@ -1,10 +1,34 @@
 // SPDX-License-Identifier: MIT
 import { inject } from '@angular/core';
-import { tools, action, view, ask, type ClientToolRegistry } from '@threadplane/chat';
+import { tools, action, view, ask, type ClientToolRegistry, createAgentRef } from '@threadplane/chat';
 import { z } from 'zod/v4';
 import { ItineraryStore } from './itinerary-store';
-import { DayCardComponent } from './day-card.component';
+import { DayCardComponent, DAY_CARD_SCHEMA } from './day-card.component';
 import { ClearDayConfirmComponent } from './clear-day-confirm.component';
+
+/**
+ * Shape of the state the itinerary agent reads from `RunAgentInput.state`.
+ * The Python graph's `State` TypedDict defines these three optional keys;
+ * the Angular shell writes them into every `submit()` call so the backend
+ * can pick up the user's palette choices.
+ */
+export interface ItineraryState {
+  model?: string;
+  reasoning_effort?: string;
+  gen_ui_mode?: string;
+}
+
+/**
+ * Typed DI handle for the itinerary AG-UI agent.
+ * Pass to `provideAgent(ITINERARY_AGENT, config)` in app.config and
+ * `injectAgent(ITINERARY_AGENT)` at the inject site for a typed
+ * `AgUiAgent<ItineraryState>` without repeating the generic everywhere.
+ */
+export const ITINERARY_AGENT = createAgentRef<ItineraryState>('ItineraryAgent');
+
+/** Schema for the `clear_day` ask tool — exported in case consumers want to
+ *  derive types from it (e.g. `ViewProps<typeof CLEAR_DAY_SCHEMA>`). */
+export const CLEAR_DAY_SCHEMA = z.object({ day: z.number().int().min(1) });
 
 /** Client tools over the frontend-owned itinerary. Call inside an injection
  *  context (e.g. a field initializer in App). The descriptions are the ONLY
@@ -34,12 +58,12 @@ export function itineraryClientTools(): ClientToolRegistry {
     ),
     clear_day: ask(
       'Ask the user to confirm clearing every stop on a day, then clear it if they accept.',
-      z.object({ day: z.number().int().min(1) }),
+      CLEAR_DAY_SCHEMA,
       ClearDayConfirmComponent,
     ),
     day_card: view(
       "Show the user a visual recap card for one itinerary day. Call it after add_stop or move_stop with the day's full updated place list.",
-      z.object({ day: z.number().int().min(1), places: z.array(z.string()) }),
+      DAY_CARD_SCHEMA,
       DayCardComponent,
     ),
   });

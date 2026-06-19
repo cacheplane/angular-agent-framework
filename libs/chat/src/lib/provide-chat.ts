@@ -33,6 +33,46 @@ export interface ChatConfig {
 
 export const CHAT_CONFIG = new InjectionToken<ChatConfig>('CHAT_CONFIG');
 
+/**
+ * Bootstrap `@threadplane/chat` in an Angular application or standalone
+ * component tree.
+ *
+ * Call this once inside `bootstrapApplication` (or the `providers` array of a
+ * root `ApplicationConfig`). It registers the shared {@link ChatConfig} token
+ * so every chat component in the tree can read the render registry, avatar
+ * label, and assistant display name without explicit prop threading.
+ *
+ * A license check is fired asynchronously on every call (it never throws; a
+ * watermark is shown in non-commercial builds when no valid token is supplied).
+ *
+ * @param config Options bag that controls the chat feature set:
+ *   - `renderRegistry` — shared {@link AngularRegistry} wiring tool-view
+ *     components to their names; pass the value returned by
+ *     `defineAngularRegistry` from `\@threadplane/render`.
+ *   - `avatarLabel` — short label shown in the AI avatar bubble (default `"A"`).
+ *   - `assistantName` — display name shown above assistant messages
+ *     (default `"Assistant"`).
+ *   - `license` — signed token from threadplane.ai; omit in development.
+ * @returns An `EnvironmentProviders` value suitable for the `providers` array
+ *   of `bootstrapApplication` or `ApplicationConfig`.
+ * @example
+ * ```ts
+ * // main.ts
+ * import { bootstrapApplication } from '@angular/platform-browser';
+ * import { provideChat } from '@threadplane/chat';
+ * import { defineAngularRegistry, provideRender } from '@threadplane/render';
+ * import { DayCardComponent } from './day-card.component';
+ *
+ * const registry = defineAngularRegistry({ day_card: DayCardComponent });
+ *
+ * bootstrapApplication(AppComponent, {
+ *   providers: [
+ *     provideChat({ renderRegistry: registry, avatarLabel: 'AI' }),
+ *     provideRender({ registry }),
+ *   ],
+ * });
+ * ```
+ */
 export function provideChat(config: ChatConfig) {
   void runLicenseCheck({
     package: PACKAGE_NAME,

@@ -28,6 +28,7 @@ import { FEATURED_SUGGESTIONS, MORE_SUGGESTIONS } from './welcome-suggestions';
         class="welcome-suggestions__featured"
         [label]="featuredOne.label"
         [value]="featuredOne.value"
+        [description]="featuredOne.description"
         (selected)="selected.emit($event)"
       />
       <chat-select
@@ -113,5 +114,5 @@ export class WelcomeSuggestionsComponent {
   protected readonly moreOptions: readonly ChatSelectOption[] = [
     ...FEATURED_SUGGESTIONS.slice(1),
     ...MORE_SUGGESTIONS,
-  ].map((s) => ({ value: s.value, label: s.label }));
+  ].map((s) => ({ value: s.value, label: s.label, description: s.description }));
 }

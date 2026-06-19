@@ -19,6 +19,7 @@ import { CHAT_SELECT_STYLES } from '../../styles/chat-select.styles';
 export interface ChatSelectOption {
   value: string;
   label: string;
+  description?: string;
   disabled?: boolean;
 }
 
@@ -72,7 +73,10 @@ export interface ChatSelectOption {
             [attr.aria-selected]="opt.value === value()"
             (click)="selectOption(opt)"
           >
-            {{ opt.label }}
+            <span class="chat-select__option-label">{{ opt.label }}</span>
+            @if (opt.description) {
+              <span class="chat-select__option-desc">{{ opt.description }}</span>
+            }
           </button>
         }
       </div>

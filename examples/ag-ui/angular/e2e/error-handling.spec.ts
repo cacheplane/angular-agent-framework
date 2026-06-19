@@ -13,7 +13,10 @@ test('error handling: failed stream surfaces an alert and the next send recovers
 
   await messageInput(page).fill('say hi briefly');
   await sendButton(page).click();
-  await expect(page.getByRole('alert')).toContainText(/fail|error/i, { timeout: 15_000 });
+  await expect(page.getByRole('alert')).toContainText(
+    /can't reach|connection|server|interrupted|try again/i,
+    { timeout: 15_000 },
+  );
 
   await page.unroute('**/agent');
   await expect(messageInput(page)).toBeEnabled();

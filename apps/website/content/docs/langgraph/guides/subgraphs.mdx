@@ -76,6 +76,14 @@ graph = builder.compile()
 ```typescript
 import { Component, computed, inject, effect, ChangeDetectionStrategy } from '@angular/core';
 import { injectAgent } from '@threadplane/langgraph';
+import { createAgentRef } from '@threadplane/chat';
+
+export interface OrchestratorState {
+  messages: BaseMessage[];
+  // add your subgraph output fields here
+}
+
+export const ORCHESTRATOR = createAgentRef<OrchestratorState>('orchestrator');
 
 @Component({
   selector: 'app-orchestrator',
@@ -83,7 +91,7 @@ import { injectAgent } from '@threadplane/langgraph';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OrchestratorComponent {
-  protected readonly orchestrator = injectAgent<OrchestratorState>();
+  protected readonly orchestrator = injectAgent(ORCHESTRATOR);
 
   readonly messages = computed(() => this.orchestrator.messages());
   readonly isRunning = computed(() => this.orchestrator.isLoading());
@@ -98,7 +106,7 @@ export class OrchestratorComponent {
 </Tabs>
 
 <Callout type="info" title="State type parameters">
-`OrchestratorState` and `PipelineState` below are placeholders for your own graph's state schema — the shape your subgraph's `StateGraph` produces. They mirror the Python state the same way `ChatState` does on the [State Management](/docs/langgraph/concepts/state-management) page. A `messages`-only graph is just `injectAgent<{ messages: BaseMessage[] }>()`.
+`OrchestratorState` and `PipelineState` below are placeholders for your own graph's state schema — the shape your subgraph's `StateGraph` produces. They mirror the Python state the same way `ChatState` does on the [State Management](/docs/langgraph/concepts/state-management) page. Use `createAgentRef<YourState>('your-assistant-id')` to create a typed ref, then pass it to both `provideAgent()` and `injectAgent()`.
 </Callout>
 
 ## Tracking delegated subagent execution
@@ -106,14 +114,17 @@ export class OrchestratorComponent {
 The `subagents()` signal contains a Map of active delegated subagent streams. Use it when your graph delegates through tool calls, such as Deep Agents' default `task` tool or your own delegation tools. Plain subgraph nodes do not appear in this map.
 
 ```typescript
+// In a shared file (e.g. agent.ts):
+// import { createAgentRef } from '@threadplane/chat';
+// export const ORCHESTRATOR = createAgentRef<OrchestratorState>('orchestrator');
+
 // Configure in app.config.ts:
-// provideAgent({
+// provideAgent(ORCHESTRATOR, {
 //   apiUrl: '...',
-//   assistantId: 'orchestrator',
 //   subagentToolNames: ['task', 'delegate_to_researcher'],
 // });
 
-const orchestrator = injectAgent<OrchestratorState>();
+const orchestrator = injectAgent(ORCHESTRATOR);
 
 // All subagent streams (active and completed)
 const subagents = computed(() => orchestrator.subagents());
@@ -164,15 +175,18 @@ const researchMessages = computed(() => researchAgent()?.messages() ?? []);
 The orchestrator pattern delegates specialised work to subagents and merges their results. Each subagent runs its own graph independently while the parent coordinates the whole.
 
 ```typescript
+// In a shared file (e.g. agent.ts):
+// import { createAgentRef } from '@threadplane/chat';
+// export const PIPELINE = createAgentRef<PipelineState>('pipeline-orchestrator');
+
 // Configure in app.config.ts:
-// provideAgent({
+// provideAgent(PIPELINE, {
 //   apiUrl: '...',
-//   assistantId: 'pipeline-orchestrator',
 //   subagentToolNames: ['task'],
 //   filterSubagentMessages: true,
 // });
 
-const pipeline = injectAgent<PipelineState>();
+const pipeline = injectAgent(PIPELINE);
 
 // Derive a summary of all subagent states
 const pipelineStatus = computed(() => {
@@ -198,6 +212,7 @@ Render live progress for each subagent using the signals above.
 ```typescript
 import { Component, computed, ChangeDetectionStrategy } from '@angular/core';
 import { injectAgent } from '@threadplane/langgraph';
+import { ORCHESTRATOR } from './agent'; // createAgentRef<OrchestratorState>('orchestrator')
 
 @Component({
   selector: 'app-subagent-progress',
@@ -205,7 +220,7 @@ import { injectAgent } from '@threadplane/langgraph';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SubagentProgressComponent {
-  protected readonly orchestrator = injectAgent<OrchestratorState>();
+  protected readonly orchestrator = injectAgent(ORCHESTRATOR);
 
   subagentEntries = computed(() =>
     [...this.orchestrator.subagents().entries()]
@@ -240,15 +255,18 @@ export class SubagentProgressComponent {
 By default, subagent messages appear in the parent's `messages()` signal. Filter them out for a cleaner parent view.
 
 ```typescript
+// In a shared file (e.g. agent.ts):
+// import { createAgentRef } from '@threadplane/chat';
+// export const ORCHESTRATOR = createAgentRef<OrchestratorState>('orchestrator');
+
 // Configure in app.config.ts:
-// provideAgent({
+// provideAgent(ORCHESTRATOR, {
 //   apiUrl: '...',
-//   assistantId: 'orchestrator',
 //   filterSubagentMessages: true,  // Hide subagent messages from parent
 //   subagentToolNames: ['task'],
 // });
 
-const orchestrator = injectAgent<OrchestratorState>();
+const orchestrator = injectAgent(ORCHESTRATOR);
 
 // Parent messages only (no subagent chatter)
 const parentMessages = computed(() => orchestrator.messages());

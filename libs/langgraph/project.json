@@ -47,6 +47,10 @@
       "options": {
         "configFile": "libs/langgraph/vite.config.mts"
       }
+    },
+    "type-tests": {
+      "executor": "nx:run-commands",
+      "options": { "command": "npx tsc --noEmit -p libs/langgraph/tsconfig.type-tests.json" }
     }
   }
 }

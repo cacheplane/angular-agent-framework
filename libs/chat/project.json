@@ -47,6 +47,12 @@
       "options": {
         "configFile": "libs/chat/vite.config.mts"
       }
+    },
+    "type-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsc --project libs/chat/tsconfig.type-tests.json --noEmit"
+      }
     }
   }
 }

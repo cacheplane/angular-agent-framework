@@ -13,12 +13,13 @@ import type {
   AgentEvent,
   AgentCheckpoint,
 } from '../agent';
+import type { AgentError } from '../agent/agent-error';
 
 export interface MockAgent extends Agent {
   messages:      WritableSignal<Message[]>;
   status:        WritableSignal<AgentStatus>;
   isLoading:     WritableSignal<boolean>;
-  error:         WritableSignal<unknown>;
+  error:         WritableSignal<AgentError | undefined>;
   toolCalls:     WritableSignal<ToolCall[]>;
   state:         WritableSignal<Record<string, unknown>>;
   interrupt?:    WritableSignal<AgentInterrupt | undefined>;
@@ -53,7 +54,7 @@ export interface MockAgentOptions {
   messages?: Message[];
   status?: AgentStatus;
   isLoading?: boolean;
-  error?: unknown;
+  error?: AgentError;
   toolCalls?: ToolCall[];
   state?: Record<string, unknown>;
   withInterrupt?: boolean;
@@ -66,7 +67,7 @@ export function mockAgent(opts: MockAgentOptions = {}): MockAgent {
   const messages  = signal<Message[]>(opts.messages ?? []);
   const status    = signal<AgentStatus>(opts.status ?? 'idle');
   const isLoading = signal<boolean>(opts.isLoading ?? false);
-  const error     = signal<unknown>(opts.error ?? null);
+  const error     = signal<AgentError | undefined>(opts.error ?? undefined);
   const toolCalls = signal<ToolCall[]>(opts.toolCalls ?? []);
   const state     = signal<Record<string, unknown>>(opts.state ?? {});
 
@@ -95,6 +96,7 @@ export function mockAgent(opts: MockAgentOptions = {}): MockAgent {
     events$: opts.events$ ?? EMPTY,
     submit: async (input, submitOpts) => { submitCalls.push({ input, opts: submitOpts }); },
     stop: async () => { stopCount++; },
+    retry: async () => { return; },
     regenerate: async (assistantMessageIndex: number) => {
       // Truncate messages [N..end] and record the call as a synthetic submit so
       // tests can assert regenerate behavior via the same submitCalls log.

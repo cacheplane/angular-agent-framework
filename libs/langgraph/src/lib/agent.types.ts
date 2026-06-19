@@ -312,7 +312,7 @@ export interface SubagentStreamRef {
  * `langGraph` to avoid collision with the runtime-neutral names.
  */
 export interface LangGraphAgent<T = unknown, ResolvedBag extends BagTemplate = BagTemplate>
-  extends AgentWithHistory {
+  extends AgentWithHistory<T> {
   // ── Raw LangGraph signals ────────────────────────────────────────────────
 
   /** Raw LangChain BaseMessage list. Use `messages` for chat rendering. */

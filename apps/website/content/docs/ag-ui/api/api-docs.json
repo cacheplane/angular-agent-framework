@@ -421,7 +421,7 @@
       },
       {
         "name": "error",
-        "type": "Signal<unknown>",
+        "type": "Signal<AgentError<> | undefined>",
         "description": "",
         "optional": false
       },
@@ -456,8 +456,14 @@
         "optional": false
       },
       {
+        "name": "retry",
+        "type": "() => Promise<void>",
+        "description": "Re-run the last submitted input after a failure. No-op if a run is already\n in flight or there is nothing to retry. Clears `error` and sets loading.",
+        "optional": false
+      },
+      {
         "name": "state",
-        "type": "Signal<Record<string, unknown>>",
+        "type": "Signal<TState>",
         "description": "",
         "optional": false
       },
@@ -556,11 +562,11 @@
   {
     "name": "injectAgent",
     "kind": "function",
-    "description": "Injects the AG-UI agent from Angular's dependency injection container.\nUse this in components or services provided via `provideAgent()` (or\n`provideFakeAgent()`).\n\nReturns an `AgUiAgent` — the runtime-neutral `Agent` contract plus the\nAG-UI-specific `customEvents` signal — so `customEvents` is reachable\ndirectly, without casting.",
-    "signature": "injectAgent(): AgUiAgent",
+    "description": "Injects the AG-UI agent from Angular's dependency injection container.\nUse this in components or services provided via `provideAgent()` (or\n`provideFakeAgent()`).\n\nReturns an `AgUiAgent` — the runtime-neutral `Agent` contract plus the\nAG-UI-specific `customEvents` signal — so `customEvents` is reachable\ndirectly, without casting.\n\n**Typed state via AgentRef.** Pass the same ref that was supplied to\n`provideAgent(ref, …)` to carry the state type through DI without repeating\nthe generic at every call site:\n\n```ts\nconst agent = injectAgent(TRIP); // AgUiAgent<TripState>\n```\n\nThe no-arg form defaults to `AgUiAgent<Record<string, unknown>>`.",
+    "signature": "injectAgent(): AgUiAgent<>",
     "params": [],
     "returns": {
-      "type": "AgUiAgent",
+      "type": "AgUiAgent<>",
       "description": ""
     },
     "examples": []
@@ -568,9 +574,15 @@
   {
     "name": "provideAgent",
     "kind": "function",
-    "description": "Provides an Agent instance wired through HttpAgent and toAgent.\nConstructs an HttpAgent from config and wraps it in the runtime-neutral\nAgent contract via toAgent(). Returns a provider array suitable for\nbootstrapApplication or TestBed.configureTestingModule().\n\n**Static vs factory config.** Pass a plain `AgentConfig` object when the\nconfig is known up front. Pass a `() => AgentConfig` factory when the config\ndepends on runtime/DI state — the factory runs inside an Angular injection\ncontext, so it may call `inject()` to read services or route params.",
-    "signature": "provideAgent(configOrFactory: AgentConfig | () => AgentConfig): Provider[]",
+    "description": "Provides an Agent instance wired through HttpAgent and toAgent.\nConstructs an HttpAgent from config and wraps it in the runtime-neutral\nAgent contract via toAgent(). Returns a provider array suitable for\nbootstrapApplication or TestBed.configureTestingModule().\n\n**Static vs factory config.** Pass a plain `AgentConfig` object when the\nconfig is known up front. Pass a `() => AgentConfig` factory when the config\ndepends on runtime/DI state — the factory runs inside an Angular injection\ncontext, so it may call `inject()` to read services or route params.\n\n**Typed state via AgentRef.** Pass a typed ref as the first argument to flow\nthe state shape from `provideAgent` to `injectAgent` without repeating the\ngeneric at every call site:\n\n```ts\ninterface TripState { day: number; places: string[]; }\nexport const TRIP = createAgentRef<TripState>('trip');\n// app.config.ts:\nproviders: [provideAgent(TRIP, { url: 'http://localhost:8000/agent' })]\n// component:\nconst agent = injectAgent(TRIP); // AgUiAgent<TripState>\n```",
+    "signature": "provideAgent(ref: AgentRef<T>, configOrFactory: AgentConfig | () => AgentConfig): Provider[]",
     "params": [
+      {
+        "name": "ref",
+        "type": "AgentRef<T>",
+        "description": "",
+        "optional": false
+      },
       {
         "name": "configOrFactory",
         "type": "AgentConfig | () => AgentConfig",
@@ -607,7 +619,7 @@
     "name": "toAgent",
     "kind": "function",
     "description": "Wraps an AG-UI AbstractAgent into the runtime-neutral Agent contract.\n\nThe adapter subscribes to source.subscribe({ onEvent }) and reduces every\nevent into the produced Agent's signals. submit() optimistically appends the\nuser message to both our signals and the source agent's internal message\nlist, then calls source.runAgent(). stop() calls source.abortRun().\n\nSubscription cleanup: the returned Agent does NOT manage its own lifetime.\nCallers using DI should rely on the provider's destroy hook; direct callers\nof toAgent() should treat the returned object's lifecycle as tied to the\nagent instance they constructed. The subscriber registered via\nsource.subscribe() will fire for the lifetime of source.",
-    "signature": "toAgent(source: AbstractAgent<>, options: ToAgentOptions): AgUiAgent",
+    "signature": "toAgent(source: AbstractAgent<>, options: ToAgentOptions): AgUiAgent<>",
     "params": [
       {
         "name": "source",
@@ -623,7 +635,7 @@
       }
     ],
     "returns": {
-      "type": "AgUiAgent",
+      "type": "AgUiAgent<>",
       "description": ""
     },
     "examples": []

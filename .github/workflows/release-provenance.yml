@@ -1,8 +1,22 @@
 name: Release provenance (SLSA)
 
+# Attaches npm-pack tarballs + a signed SLSA provenance (*.intoto.jsonl) to a
+# GitHub Release so OSSF Scorecard's Signed-Releases check can verify them.
+# Runs automatically on a published release, and can be dispatched manually
+# against an existing tag. `upload-tag-name` lets the dispatch path upload to
+# the right release even though github.ref is a branch, not the tag — which
+# also sidesteps the "release events run the workflow from the tag commit"
+# trap (a fix on main can be exercised by dispatching it against an old tag).
+
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to attest (e.g. v0.0.50)"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -17,10 +31,16 @@ jobs:
       contents: write # gh release upload attaches tarballs to the release
     outputs:
       hashes: ${{ steps.hash.outputs.hashes }}
+      tag: ${{ steps.tag.outputs.tag }}
     env:
       NPM_PUBLISHABLE_PROJECTS: chat,langgraph,ag-ui,render,a2ui,licensing,telemetry
     steps:
+      - name: Resolve target tag
+        id: tag
+        run: echo "tag=${{ github.event.release.tag_name || inputs.tag }}" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ steps.tag.outputs.tag }}
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: 24
@@ -44,7 +64,7 @@ jobs:
       - name: Upload tarballs to the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ github.event.release.tag_name }}" -- release-artifacts/*.tgz --clobber
+        run: gh release upload "${{ steps.tag.outputs.tag }}" --clobber -- release-artifacts/*.tgz
 
   provenance:
     needs: [build-artifacts]
@@ -56,3 +76,4 @@ jobs:
     with:
       base64-subjects: ${{ needs.build-artifacts.outputs.hashes }}
       upload-assets: true
+      upload-tag-name: ${{ needs.build-artifacts.outputs.tag }}

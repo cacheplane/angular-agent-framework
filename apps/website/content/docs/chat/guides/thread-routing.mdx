@@ -1,0 +1,186 @@
+# Thread Routing
+
+`injectThreadRouting()` binds an app-owned active-thread signal to the Angular Router: it restores the thread id from the URL on load, stamps signal changes back into the URL, validates stale links, and treats a bare URL as "no thread" (the welcome state). **The URL is the sole source of truth — nothing is written to localStorage**, so links remain shareable without any extra plumbing.
+
+<Callout type="info" title="Prerequisites">
+  Call `injectThreadRouting()` from an injection context (a component constructor or field initializer), and declare the active-thread signal at module scope so your `provideAgent({ threadId })` provider can reference it.
+</Callout>
+
+## What it does
+
+| Behavior | Detail |
+|---|---|
+| Restore on load | Reads the thread id from the URL on startup and seeds the signal |
+| Signal → URL | When the signal changes (e.g. after the agent allocates a new thread), navigates to the matching URL |
+| URL → signal | On every `NavigationEnd` keeps the signal in sync with the current URL |
+| Validate stale links | If `validate` returns `false`, redirects to the bare path (`replaceUrl: true`) |
+| Bare URL = welcome | When the URL holds no thread segment, the signal is `null` and the chat shows its welcome state |
+
+Because the URL carries the id, browser reload, forward/back, and shared links all land in the correct conversation — as long as the backend has a durable store (see [When to use it](#when-to-use-it) below).
+
+## Canonical usage
+
+The `examples/chat` app is the reference implementation. The pattern has three moving pieces:
+
+**1. A module-scope signal**
+
+```typescript
+// app.config.ts (or a shared token file)
+import { signal } from '@angular/core';
+
+export const ACTIVE_THREAD = signal<string | null>(null);
+```
+
+The signal lives at module scope (outside any class) so `provideAgent()` — which runs at provider registration time, before component construction — can reference it directly. A component-class field would not exist yet when the provider config is evaluated.
+
+**2. `provideAgent()` wires the signal**
+
+```typescript
+// app.config.ts
+import { ApplicationConfig } from '@angular/core';
+import { provideAgent } from '@threadplane/langgraph';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({
+      apiUrl: 'https://your-langgraph-server/api',
+      assistantId: 'chat',
+      threadId: ACTIVE_THREAD,
+      onThreadId: (id) => ACTIVE_THREAD.set(id),
+    }),
+  ],
+};
+```
+
+- `threadId: ACTIVE_THREAD` — the adapter watches this signal; changing it switches threads.
+- `onThreadId` — called when the adapter auto-creates a new thread. Setting the signal here lets the `signal → URL` effect in `injectThreadRouting` pick up the new id and stamp it into the URL automatically.
+
+**3. `injectThreadRouting()` in the shell component**
+
+```typescript
+// shell.component.ts
+import { Component, inject } from '@angular/core';
+import { LangGraphThreadsAdapter } from '@threadplane/langgraph';
+import { injectThreadRouting } from '@threadplane/chat';
+import { ACTIVE_THREAD } from '../app.config';
+
+@Component({ /* ... */ })
+export class ShellComponent {
+  private readonly threads = inject(LangGraphThreadsAdapter);
+
+  constructor() {
+    injectThreadRouting({
+      threadId: ACTIVE_THREAD,
+      validate: (id) => this.threads.getThread(id).then(Boolean),
+    });
+  }
+}
+```
+
+Call `injectThreadRouting()` inside the constructor (or any injection context such as a factory function). It must run in an injection context because it calls `inject(Router)` internally.
+
+The `validate` callback receives a candidate id whenever one appears in the URL. If the thread no longer exists on the server (deleted, expired, or from a different environment) the helper redirects to the bare path with `replaceUrl: true`, which replaces the stale URL in history rather than pushing a new entry.
+
+## Custom URL shapes
+
+The defaults (`/` for welcome, `/<threadId>` for a thread) work for simple apps. For mode-prefixed or nested paths, supply `toCommands` and `threadIdFromUrl`:
+
+```typescript
+// examples/chat pattern: /embed, /embed/<id>, /popup/<id>, /sidebar/<id>
+const MODES = ['embed', 'popup', 'sidebar'] as const;
+type DemoMode = (typeof MODES)[number];
+
+function parseUrl(url: string): { mode: DemoMode; threadId: string | null } {
+  const segs = url.split('?')[0].split('#')[0].split('/').filter(Boolean);
+  const mode = (MODES as readonly string[]).includes(segs[0])
+    ? (segs[0] as DemoMode)
+    : 'embed';
+  const threadId = segs[1]?.length ? segs[1] : null;
+  return { mode, threadId };
+}
+
+// Inside the shell constructor — `this.mode()` reads the current mode signal:
+injectThreadRouting({
+  threadId: ACTIVE_THREAD,
+  threadIdFromUrl: (url) => parseUrl(url).threadId,
+  toCommands: (id) => (id ? ['/', this.mode(), id] : ['/', this.mode()]),
+  validate: (id) => this.threads.getThread(id).then(Boolean),
+});
+```
+
+`threadIdFromUrl` extracts the id from any URL the router lands on. `toCommands` builds the router-navigate command array for a given id (or `null` for the bare path). Both receive the current URL string and thread id respectively; neither needs to touch the router directly.
+
+## Full API reference
+
+```typescript
+import { injectThreadRouting, type ThreadRoutingConfig } from '@threadplane/chat';
+
+export interface ThreadRoutingConfig {
+  /** App-owned signal that is the source of truth for the active thread. */
+  threadId: WritableSignal<string | null>;
+  /** Build router commands for a thread id (null = welcome/bare path).
+   *  Default: (id) => id ? ['/', id] : ['/'] */
+  toCommands?: (id: string | null) => unknown[];
+  /** Extract a thread id from a URL string (null = no thread).
+   *  Default: the last non-empty path segment. */
+  threadIdFromUrl?: (url: string) => string | null;
+  /** Async check; on false, redirect to the bare path (replaceUrl: true).
+   *  Omit when the backend has no thread-lookup endpoint. */
+  validate?: (id: string) => Promise<boolean>;
+  /** Extras merged into every navigate call.
+   *  Default: { queryParamsHandling: 'preserve' } */
+  navigationExtras?: NavigationExtras;
+}
+
+function injectThreadRouting(config: ThreadRoutingConfig): void;
+```
+
+## When to use it
+
+URL-as-source-of-truth thread routing is the right choice when two conditions are both true:
+
+1. **The user sees and can share the URL.** A standalone app at its own domain or route is the typical case. If the app runs inside an iframe (e.g. an embedded docs widget) and the URL is never surfaced to the user, URL persistence adds friction without benefit — keep the active thread in an in-memory signal instead.
+
+2. **The backend can actually restore the conversation from the id.** LangGraph with a Postgres or Redis checkpointer satisfies this. An in-process `MemorySaver` does not — a restored id points at ephemeral state that disappears on server restart, so the UI would show an empty welcome surface even though the URL looks correct.
+
+The underlying principle: **persistence UI should match what the backend can actually restore.** When the backend is stateless, don't surface stateful affordances like bookmarkable thread URLs.
+
+**Use `injectThreadRouting()` when:**
+- Building a standalone chat app at a user-visible URL
+- The backend uses a durable checkpointer (Postgres, Redis, Neon, etc.)
+- You want reload-survival, shareable links, and validated stale-link redirects for free
+
+**Keep threads in memory / ephemeral when:**
+- The app is embedded and the URL is not user-visible
+- The server is stateless or uses an in-memory `MemorySaver`
+- The chat is a short-lived session and persistence would be surprising to users
+
+<Callout type="info" title="AG-UI backends">
+The AG-UI protocol is event-stream-only — it does not define a server-side thread-lookup endpoint, so `validate` is not available. When using `@threadplane/ag-ui`, pass no `validate` callback and manage thread switching at the host-service level before the agent boots. See [AG-UI architecture](/docs/ag-ui/concepts/architecture) for details.
+</Callout>
+
+## What's next
+
+<CardGroup cols={3}>
+  <Card
+    title="LangGraph Persistence"
+    icon="database"
+    href="/docs/langgraph/guides/persistence"
+  >
+    Server-side thread store and checkpoint configuration.
+  </Card>
+  <Card
+    title="Writing an Adapter"
+    icon="plug"
+    href="/docs/chat/guides/writing-an-adapter"
+  >
+    Implement custom adapters that support thread switching.
+  </Card>
+  <Card
+    title="Lifecycle Signals"
+    icon="activity"
+    href="/docs/chat/guides/lifecycle"
+  >
+    Per-instance signals for debugging and telemetry.
+  </Card>
+</CardGroup>

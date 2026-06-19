@@ -10,7 +10,7 @@ describe('mockLangGraphAgent', () => {
     expect(ref.langGraphMessages()).toEqual([]);
     expect(ref.status()).toBe('idle');
     expect(ref.isLoading()).toBe(false);
-    expect(ref.error()).toBeNull();
+    expect(ref.error()).toBeUndefined();
     expect(ref.hasValue()).toBe(false);
     expect(ref.isThreadLoading()).toBe(false);
     expect(ref.interrupt()).toBeUndefined();

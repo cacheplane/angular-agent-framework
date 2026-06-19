@@ -11,7 +11,11 @@ import { injectAgent } from '@threadplane/langgraph';
 
 const SUGGESTIONS = [
   // value matches cockpit/chat/subagents/angular/e2e/c-subagents.spec.ts PROMPT.
-  { label: 'Plan a trip', value: 'Plan a trip from LAX to JFK' },
+  {
+    label: 'Plan a trip from LAX to JFK',
+    value: 'Plan a trip from LAX to JFK',
+    description: 'Orchestrator fans out to research, analysis, and summary subagents in parallel.',
+  },
 ] as const;
 
 /**
@@ -39,6 +43,7 @@ const SUGGESTIONS = [
             <chat-welcome-suggestion
               [label]="s.label"
               [value]="s.value"
+              [description]="s.description"
               (selected)="send($event)"
             />
           }

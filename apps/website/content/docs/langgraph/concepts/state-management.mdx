@@ -154,6 +154,8 @@ class ProjectState(MessagesState):
 
 ```typescript
 import { BaseMessage } from '@langchain/core/messages';
+import { injectAgent } from '@threadplane/langgraph';
+import { createAgentRef } from '@threadplane/chat';
 
 interface ProjectState {
   // Maps from MessagesState.messages
@@ -167,7 +169,12 @@ interface ProjectState {
   error: string | null;
 }
 
-const agent = injectAgent<ProjectState>();
+export const PROJECT_AGENT = createAgentRef<ProjectState>('project_agent');
+
+// Configure in app.config.ts:
+// provideAgent(PROJECT_AGENT, { apiUrl: '...', assistantId: 'project_agent' });
+
+const agent = injectAgent(PROJECT_AGENT);
 ```
 
 </Tab>
@@ -212,7 +219,7 @@ The agent doesn't wait until it's finished to send state updates. It streams par
 `injectAgent()` requests the stream modes it needs to populate its public signals by default: `['values', 'messages-tuple', 'updates', 'custom']`. Those feed state snapshots, streamed message tokens, per-node update events, and custom events respectively. Passing your own `streamMode` *replaces* that default set, so narrowing to a single mode means giving up the signals the others populate. Use `values` when you only need state snapshots, and `messages-tuple` when you only need individual message tokens.
 
 ```typescript
-const agent = injectAgent<ProjectState>();
+const agent = injectAgent(PROJECT_AGENT);
 
 agent.submit(
   { message: 'Update the project plan.' },
@@ -246,7 +253,7 @@ Because every state update is a new signal value, your templates reflect the age
   `
 })
 export class ProjectComponent {
-  protected readonly agent = injectAgent<ProjectState>();
+  protected readonly agent = injectAgent(PROJECT_AGENT);
 }
 ```
 
@@ -283,12 +290,15 @@ There are two kinds of state in a LangGraph Angular app, and keeping them separa
 **Application state** is owned by your Angular component or service. It's UI-only: sidebar visibility, active tab, selected message, form input values. It has nothing to do with the agent.
 
 ```typescript
+// Defined once (e.g. in agent.ts):
+// export const CHAT_AGENT = createAgentRef<ChatState>('chat');
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatComponent {
   // --- Thread state (from injectAgent(), read-only) ---
-  protected readonly agent = injectAgent<ChatState>();
+  protected readonly agent = injectAgent(CHAT_AGENT);
 
   // Convenience computed values from thread state
   readonly messages = this.agent.messages;           // Signal<Message[]>
@@ -342,9 +352,9 @@ Thread: "user_123_session"
 
 ```typescript
 // app.config.ts — configure threadId/onThreadId on the provider
-provideAgent({
+// (CHAT_AGENT = createAgentRef<ChatState>('chat'), declared in agent.ts)
+provideAgent(CHAT_AGENT, {
   apiUrl: '...',
-  assistantId: 'chat',
 
   // Same threadId = restored conversation history
   threadId: signal(this.route.snapshot.params['threadId']),
@@ -354,7 +364,7 @@ provideAgent({
 });
 
 // component.ts
-const agent = injectAgent<ChatState>();
+const agent = injectAgent(CHAT_AGENT);
 
 // Read checkpoint history for time-travel UI
 const history = agent.history();             // Signal<AgentCheckpoint[]>
@@ -424,6 +434,7 @@ def researcher_node(state: ResearchState) -> dict:
 ```typescript
 import { BaseMessage } from '@langchain/core/messages';
 import { injectAgent } from '@threadplane/langgraph';
+import { createAgentRef } from '@threadplane/chat';
 
 interface ResearchState {
   messages: BaseMessage[];
@@ -440,11 +451,13 @@ interface ResearchState {
   model_used: string;
 }
 
+export const RESEARCH_AGENT = createAgentRef<ResearchState>('research_agent');
+
 // Configured globally in app.config.ts:
-// provideAgent({ apiUrl: '...', assistantId: 'research_agent' });
+// provideAgent(RESEARCH_AGENT, { apiUrl: '...' });
 
 // In your component:
-protected readonly agent = injectAgent<ResearchState>();
+protected readonly agent = injectAgent(RESEARCH_AGENT);
 ```
 
 </Tab>
@@ -490,7 +503,7 @@ protected readonly agent = injectAgent<ResearchState>();
   `
 })
 export class ResearchComponent {
-  protected readonly agent = injectAgent<ResearchState>();
+  protected readonly agent = injectAgent(RESEARCH_AGENT);
 
   startResearch(query: string) {
     this.agent.submit({ message: query });
@@ -506,7 +519,7 @@ export class ResearchComponent {
 You rarely need to consume `agent.value()` raw in your template. Use `computed()` to derive clean, focused values:
 
 ```typescript
-protected readonly agent = injectAgent<ResearchState>();
+protected readonly agent = injectAgent(RESEARCH_AGENT);
 
 // Derived signals — recalculate only when their dependencies change
 readonly progress = computed(() => this.agent.value().progress);

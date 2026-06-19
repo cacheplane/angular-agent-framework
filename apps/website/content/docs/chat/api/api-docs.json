@@ -1427,6 +1427,67 @@
     "methods": []
   },
   {
+    "name": "AgentError",
+    "kind": "class",
+    "description": "Structured, classified failure surfaced on `Agent.error`. Extends `Error`, so\nexisting `.message` / `instanceof Error` reads keep working — but adds a\nmachine-readable AgentErrorKind, a `retryable` flag, an optional HTTP\n`status`, and the original `cause`.\n\nYou rarely construct one yourself; adapters normalize raw failures via\ntoAgentError. Read it off the agent to render legible, cause-specific UI:",
+    "params": [
+      {
+        "name": "init",
+        "type": "object",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": [
+      "```ts\nconst err = agent.error();            // AgentError | undefined\nif (err) {\n  console.warn(err.message);          // legible, per-kind copy\n  if (err.kind === 'auth') showApiKeyHelp();\n  if (err.retryable) showRetryButton(); // → agent.retry()\n}\n```"
+    ],
+    "properties": [
+      {
+        "name": "cause",
+        "type": "unknown",
+        "description": "The original raw error this was classified from, preserved for debugging/telemetry.",
+        "optional": false
+      },
+      {
+        "name": "kind",
+        "type": "AgentErrorKind",
+        "description": "The classified failure type. See AgentErrorKind.",
+        "optional": false
+      },
+      {
+        "name": "message",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "retryable",
+        "type": "boolean",
+        "description": "Whether retrying the same request could plausibly succeed:\n `connection` | `server` (5xx) | `interrupted` → true; `auth` | `aborted` | non-auth `4xx` → false.",
+        "optional": false
+      },
+      {
+        "name": "stack",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "status",
+        "type": "number",
+        "description": "The HTTP status code when the failure came from an HTTP response.",
+        "optional": true
+      }
+    ],
+    "methods": []
+  },
+  {
     "name": "ChatApprovalCardComponent",
     "kind": "class",
     "description": "",
@@ -1441,7 +1502,7 @@
       },
       {
         "name": "agent",
-        "type": "InputSignal<Agent>",
+        "type": "InputSignal<Agent<Record<string, unknown>>>",
         "description": "",
         "optional": false
       },
@@ -1592,7 +1653,7 @@
       },
       {
         "name": "agent",
-        "type": "InputSignal<Agent>",
+        "type": "InputSignal<Agent<Record<string, unknown>>>",
         "description": "",
         "optional": false
       },
@@ -2115,13 +2176,7 @@
     "properties": [
       {
         "name": "agent",
-        "type": "InputSignal<Agent>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "errorMessage",
-        "type": "Signal<string | null>",
+        "type": "InputSignal<Agent<Record<string, unknown>>>",
         "description": "",
         "optional": false
       }
@@ -2321,7 +2376,7 @@
     "properties": [
       {
         "name": "agent",
-        "type": "InputSignal<Agent>",
+        "type": "InputSignal<Agent<Record<string, unknown>>>",
         "description": "",
         "optional": false
       },
@@ -2448,7 +2503,7 @@
     "properties": [
       {
         "name": "agent",
-        "type": "InputSignal<Agent>",
+        "type": "InputSignal<Agent<Record<string, unknown>>>",
         "description": "",
         "optional": false
       },
@@ -2496,7 +2551,7 @@
       },
       {
         "name": "agent",
-        "type": "InputSignal<Agent>",
+        "type": "InputSignal<Agent<Record<string, unknown>>>",
         "description": "",
         "optional": false
       },
@@ -2670,7 +2725,7 @@
     "properties": [
       {
         "name": "agent",
-        "type": "InputSignal<Agent>",
+        "type": "InputSignal<Agent<Record<string, unknown>>>",
         "description": "",
         "optional": false
       },
@@ -2797,7 +2852,7 @@
     "properties": [
       {
         "name": "agent",
-        "type": "InputSignal<Agent>",
+        "type": "InputSignal<Agent<Record<string, unknown>>>",
         "description": "",
         "optional": false
       },
@@ -3298,7 +3353,7 @@
     "properties": [
       {
         "name": "agent",
-        "type": "InputSignal<Agent>",
+        "type": "InputSignal<Agent<Record<string, unknown>>>",
         "description": "",
         "optional": false
       },
@@ -3393,7 +3448,7 @@
       },
       {
         "name": "agent",
-        "type": "InputSignal<Agent | AgentWithHistory | null>",
+        "type": "InputSignal<Agent<Record<string, unknown>> | AgentWithHistory<Record<string, unknown>> | null>",
         "description": "",
         "optional": false
       },
@@ -3604,12 +3659,6 @@
     "examples": [],
     "properties": [
       {
-        "name": "latestMessageContent",
-        "type": "Signal<string>",
-        "description": "",
-        "optional": false
-      },
-      {
         "name": "state",
         "type": "Signal<TraceState>",
         "description": "",
@@ -3622,7 +3671,47 @@
         "optional": false
       }
     ],
-    "methods": []
+    "methods": [
+      {
+        "name": "textOf",
+        "signature": "textOf(m: Message): string",
+        "description": "",
+        "params": [
+          {
+            "name": "m",
+            "type": "Message",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "toolCallsFor",
+        "signature": "toolCallsFor(m: Message): ToolCall[]",
+        "description": "",
+        "params": [
+          {
+            "name": "m",
+            "type": "Message",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "toToolCallInfo",
+        "signature": "toToolCallInfo(tc: ToolCall): ToolCallInfo",
+        "description": "",
+        "params": [
+          {
+            "name": "tc",
+            "type": "ToolCall",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
   },
   {
     "name": "ChatSubagentsComponent",
@@ -3639,7 +3728,7 @@
       },
       {
         "name": "agent",
-        "type": "InputSignal<Agent>",
+        "type": "InputSignal<Agent<Record<string, unknown>>>",
         "description": "",
         "optional": false
       },
@@ -4191,7 +4280,7 @@
     "properties": [
       {
         "name": "agent",
-        "type": "InputSignal<AgentWithHistory>",
+        "type": "InputSignal<AgentWithHistory<Record<string, unknown>>>",
         "description": "",
         "optional": false
       },
@@ -4239,7 +4328,7 @@
     "properties": [
       {
         "name": "agent",
-        "type": "InputSignal<AgentWithHistory>",
+        "type": "InputSignal<AgentWithHistory<Record<string, unknown>>>",
         "description": "",
         "optional": false
       },
@@ -4372,7 +4461,7 @@
     "properties": [
       {
         "name": "agent",
-        "type": "InputSignal<Agent>",
+        "type": "InputSignal<Agent<Record<string, unknown>>>",
         "description": "",
         "optional": false
       },
@@ -4504,7 +4593,7 @@
     "properties": [
       {
         "name": "agent",
-        "type": "InputSignal<Agent>",
+        "type": "InputSignal<Agent<Record<string, unknown>>>",
         "description": "",
         "optional": false
       },
@@ -4603,7 +4692,7 @@
     "properties": [
       {
         "name": "agent",
-        "type": "InputSignal<Agent>",
+        "type": "InputSignal<Agent<Record<string, unknown>>>",
         "description": "",
         "optional": false
       },
@@ -4632,6 +4721,12 @@
     "params": [],
     "examples": [],
     "properties": [
+      {
+        "name": "description",
+        "type": "InputSignal<string | undefined>",
+        "description": "Optional short description, surfaced as a hover/focus tooltip on the chip.",
+        "optional": false
+      },
       {
         "name": "label",
         "type": "InputSignal<string>",
@@ -5320,7 +5415,7 @@
       },
       {
         "name": "error",
-        "type": "Signal<unknown>",
+        "type": "Signal<AgentError<> | undefined>",
         "description": "",
         "optional": false
       },
@@ -5355,8 +5450,14 @@
         "optional": false
       },
       {
+        "name": "retry",
+        "type": "() => Promise<void>",
+        "description": "Re-run the last submitted input after a failure. No-op if a run is already\n in flight or there is nothing to retry. Clears `error` and sets loading.",
+        "optional": false
+      },
+      {
         "name": "state",
-        "type": "Signal<Record<string, unknown>>",
+        "type": "Signal<TState>",
         "description": "",
         "optional": false
       },
@@ -5466,6 +5567,20 @@
         "name": "value",
         "type": "unknown",
         "description": "Opaque payload the app renders. Runtime-specific shape.",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "AgentRef",
+    "kind": "interface",
+    "description": "A typed handle that threads a state shape through Angular DI from\n `provideAgent(ref, …)` to `injectAgent(ref)` without per-call-site\n restatement of the generic.",
+    "properties": [
+      {
+        "name": "token",
+        "type": "InjectionToken<Agent<TState>>",
+        "description": "",
         "optional": false
       }
     ],
@@ -5614,7 +5729,7 @@
       },
       {
         "name": "error",
-        "type": "Signal<unknown>",
+        "type": "Signal<AgentError<> | undefined>",
         "description": "",
         "optional": false
       },
@@ -5661,8 +5776,14 @@
         "optional": false
       },
       {
+        "name": "retry",
+        "type": "() => Promise<void>",
+        "description": "Re-run the last submitted input after a failure. No-op if a run is already\n in flight or there is nothing to retry. Clears `error` and sets loading.",
+        "optional": false
+      },
+      {
         "name": "state",
-        "type": "Signal<Record<string, unknown>>",
+        "type": "Signal<TState>",
         "description": "",
         "optional": false
       },
@@ -5700,13 +5821,45 @@
     "examples": []
   },
   {
+    "name": "AnyFunctionToolDef",
+    "kind": "interface",
+    "description": "Bivariant union member used only for registry storage/iteration. The handler\n param is `any` (NOT `never`): `any` is simultaneously a supertype any precise\n `FunctionToolDef<S,R>` is assignable to under `strictFunctionTypes`, AND\n callable by internal code that has narrowed by `kind` and parsed runtime args.\n A `never` param would satisfy the former but break the latter.",
+    "properties": [
+      {
+        "name": "description",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "handler",
+        "type": "(args: any) => unknown",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "kind",
+        "type": "\"function\"",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "schema",
+        "type": "StandardSchemaV1<>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "AskToolDef",
     "kind": "interface",
     "description": "",
     "properties": [
       {
         "name": "component",
-        "type": "Type<unknown>",
+        "type": "Type<C>",
         "description": "",
         "optional": false
       },
@@ -5724,7 +5877,7 @@
       },
       {
         "name": "schema",
-        "type": "StandardSchemaV1<>",
+        "type": "S",
         "description": "",
         "optional": false
       }
@@ -5838,6 +5991,12 @@
     "kind": "interface",
     "description": "",
     "properties": [
+      {
+        "name": "description",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
       {
         "name": "disabled",
         "type": "boolean",
@@ -5986,12 +6145,12 @@
     "methods": [
       {
         "name": "connect",
-        "signature": "connect(agent: Agent): void",
+        "signature": "connect(agent: Agent<>): void",
         "description": "Wire the coordinator to an agent: ship the catalog, run function tools, auto-ack view tools.\n MUST be called inside an injection context (sets up effects). Safe no-op if the agent lacks\n the clientTools capability.",
         "params": [
           {
             "name": "agent",
-            "type": "Agent",
+            "type": "Agent<>",
             "description": "",
             "optional": false
           }
@@ -5999,12 +6158,12 @@
       },
       {
         "name": "handleRenderEvent",
-        "signature": "handleRenderEvent(agent: Agent, event: RenderEvent): void",
+        "signature": "handleRenderEvent(agent: Agent<>, event: RenderEvent): void",
         "description": "Handle a render event bubbled up from a mounted view/ask component (resolves `ask` results).",
         "params": [
           {
             "name": "agent",
-            "type": "Agent",
+            "type": "Agent<>",
             "description": "",
             "optional": false
           },
@@ -6157,7 +6316,7 @@
   {
     "name": "FunctionToolDef",
     "kind": "interface",
-    "description": "",
+    "description": "Precise authored function tool — what `action()` returns. Carries the schema\n `S` and the handler's resolved return type `R`.",
     "properties": [
       {
         "name": "description",
@@ -6167,7 +6326,7 @@
       },
       {
         "name": "handler",
-        "type": "(args: StandardSchemaInferOutput<S>) => unknown",
+        "type": "(args: StandardSchemaInferOutput<S>) => R | Promise<R>",
         "description": "",
         "optional": false
       },
@@ -6273,7 +6432,7 @@
       },
       {
         "name": "error",
-        "type": "WritableSignal<unknown>",
+        "type": "WritableSignal<AgentError<> | undefined>",
         "description": "",
         "optional": false
       },
@@ -6317,6 +6476,12 @@
         "name": "regenerate",
         "type": "(assistantMessageIndex: number) => Promise<void>",
         "description": "Discards the assistant message at the given index AND all messages after\nit, then re-runs the agent against the trimmed conversation tail. The\npreceding user message (at index - 1) is preserved and re-submitted as\nthe agent's input. No new user message is added to the history.\n\nThrows if the message at `index` is not 'assistant' role, or if the\nagent is currently loading another response.",
+        "optional": false
+      },
+      {
+        "name": "retry",
+        "type": "() => Promise<void>",
+        "description": "Re-run the last submitted input after a failure. No-op if a run is already\n in flight or there is nothing to retry. Clears `error` and sets loading.",
         "optional": false
       },
       {
@@ -6377,7 +6542,7 @@
     "properties": [
       {
         "name": "error",
-        "type": "unknown",
+        "type": "AgentError<>",
         "description": "",
         "optional": true
       },
@@ -6621,6 +6786,20 @@
     "examples": []
   },
   {
+    "name": "StandardSchemaV1",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "~standard",
+        "type": "StandardSchemaProps<Input, Output>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "Subagent",
     "kind": "interface",
     "description": "",
@@ -6654,6 +6833,12 @@
         "type": "string",
         "description": "Tool call ID that spawned this subagent.",
         "optional": false
+      },
+      {
+        "name": "toolCalls",
+        "type": "Signal<ToolCall[]>",
+        "description": "The subagent's own tool calls (name/args/result), referenced by\n`Message.toolCallIds` in `messages`. Optional: adapters that don't surface\nsubagent tool calls omit it; consumers default to `[]`.",
+        "optional": true
       }
     ],
     "examples": []
@@ -6816,6 +7001,44 @@
     "examples": []
   },
   {
+    "name": "ThreadRoutingConfig",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "navigationExtras",
+        "type": "NavigationExtras",
+        "description": "Extras merged into every navigate (default `{ queryParamsHandling: 'preserve' }`).",
+        "optional": true
+      },
+      {
+        "name": "threadId",
+        "type": "WritableSignal<string | null>",
+        "description": "The app-owned source-of-truth signal for the active thread id.",
+        "optional": false
+      },
+      {
+        "name": "threadIdFromUrl",
+        "type": "(url: string) => string | null",
+        "description": "Extract the thread id from a URL (null = bare). Default: last non-empty path segment.",
+        "optional": true
+      },
+      {
+        "name": "toCommands",
+        "type": "(id: string | null) => unknown[]",
+        "description": "Router commands for a thread id (or the bare/welcome path when null).\n Default: `(id) => (id ? ['/', id] : ['/'])`.",
+        "optional": true
+      },
+      {
+        "name": "validate",
+        "type": "(id: string) => Promise<boolean>",
+        "description": "Optional async validity check; on `false` the helper redirects to the bare path\n (`replaceUrl: true`). LangGraph apps pass `id => threads.getThread(id).then(Boolean)`.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "ToolCall",
     "kind": "interface",
     "description": "",
@@ -6904,7 +7127,7 @@
     "properties": [
       {
         "name": "component",
-        "type": "Type<unknown>",
+        "type": "Type<C>",
         "description": "",
         "optional": false
       },
@@ -6922,7 +7145,7 @@
       },
       {
         "name": "schema",
-        "type": "StandardSchemaV1<>",
+        "type": "S",
         "description": "",
         "optional": false
       }
@@ -6948,6 +7171,13 @@
     "kind": "type",
     "description": "Catalog shape accepted by `<a2ui-surface>`. Each entry is either a\nbare `Type<unknown>` (legacy shape — no per-component fallback) or\nan `A2uiViewEntry`.",
     "signature": "Readonly<Record<string, Type<unknown> | A2uiViewEntry>>",
+    "examples": []
+  },
+  {
+    "name": "AgentErrorKind",
+    "kind": "type",
+    "description": "The failure class of an AgentError, used to drive UI and retry logic:\n\n- `connection` — offline / DNS / connection refused / `fetch` failed. Retryable.\n- `auth` — `401` / `403`; credentials or API key are wrong. Not retryable.\n- `server` — a `5xx` (retryable) or a non-auth `4xx` like `400`/`404`/`429` (not retryable).\n- `interrupted` — the stream closed mid-response after a run had started. Retryable.\n- `aborted` — the user pressed stop; treated as a graceful idle, not surfaced as an error.",
+    "signature": "\"connection\" | \"auth\" | \"server\" | \"interrupted\" | \"aborted\"",
     "examples": []
   },
   {
@@ -7010,7 +7240,7 @@
     "name": "ClientToolDef",
     "kind": "type",
     "description": "A client tool the model can call; executed in the browser.",
-    "signature": "FunctionToolDef | ViewToolDef | AskToolDef",
+    "signature": "AnyFunctionToolDef | ViewToolDef | AskToolDef",
     "examples": []
   },
   {
@@ -7070,6 +7300,20 @@
     "examples": []
   },
   {
+    "name": "StandardSchemaInferInput",
+    "kind": "type",
+    "description": "",
+    "signature": "NonNullable<Schema[\"~standard\"][\"types\"]>[\"input\"]",
+    "examples": []
+  },
+  {
+    "name": "StandardSchemaInferOutput",
+    "kind": "type",
+    "description": "",
+    "signature": "NonNullable<Schema[\"~standard\"][\"types\"]>[\"output\"]",
+    "examples": []
+  },
+  {
     "name": "SubagentStatus",
     "kind": "type",
     "description": "",
@@ -7081,6 +7325,13 @@
     "kind": "type",
     "description": "",
     "signature": "unknown",
+    "examples": []
+  },
+  {
+    "name": "ToolArgs",
+    "kind": "type",
+    "description": "Inferred argument type for a schema (alias of StandardSchemaInferOutput).",
+    "signature": "StandardSchemaInferOutput",
     "examples": []
   },
   {
@@ -7098,10 +7349,24 @@
     "examples": []
   },
   {
+    "name": "ViewProps",
+    "kind": "type",
+    "description": "Reverse helper: derive a component's input prop types FROM a schema, so a\n component authored straight from the schema is guaranteed compatible.",
+    "signature": "Prettify<StandardSchemaInferOutput<S>>",
+    "examples": []
+  },
+  {
     "name": "ViewRegistry",
     "kind": "type",
     "description": "A registry of view components available for generative UI rendering.\nEach entry is either a bare component Type (legacy shape) or a\n`RenderViewEntry` { component, fallback? }.",
     "signature": "Readonly<Record<string, Type<unknown> | RenderViewEntry>>",
+    "examples": []
+  },
+  {
+    "name": "AGENT_ERROR_MESSAGES",
+    "kind": "const",
+    "description": "Default, human-facing copy per AgentErrorKind. Used as the message when\na classified error has no better text. Override by mapping `error.kind` to your\nown strings in a custom error component.",
+    "signature": "Record<AgentErrorKind, string>",
     "examples": []
   },
   {
@@ -7210,64 +7475,68 @@
   {
     "name": "action",
     "kind": "function",
-    "description": "Async function tool — its resolved return value becomes the tool result.",
-    "signature": "action(description: string, schema: S, handler: (args: StandardSchemaInferOutput<S>) => unknown): FunctionToolDef<S>",
+    "description": "Declare an async function tool the model can call; its resolved return value\nbecomes the tool result shipped back to the model.",
+    "signature": "action(description: string, schema: S, handler: (args: StandardSchemaInferOutput<S>) => R | Promise<R>): FunctionToolDef<S, R>",
     "params": [
       {
         "name": "description",
         "type": "string",
-        "description": "",
+        "description": "Natural-language description the model sees.",
         "optional": false
       },
       {
         "name": "schema",
         "type": "S",
-        "description": "",
+        "description": "Standard Schema (e.g. a Zod object) for the arguments; the\n  handler's argument type is inferred from it.",
         "optional": false
       },
       {
         "name": "handler",
-        "type": "(args: StandardSchemaInferOutput<S>) => unknown",
-        "description": "",
+        "type": "(args: StandardSchemaInferOutput<S>) => R | Promise<R>",
+        "description": "Runs in the browser when the model calls the tool; its return\n  type `R` is carried on the resulting FunctionToolDef.",
         "optional": false
       }
     ],
     "returns": {
-      "type": "FunctionToolDef<S>",
+      "type": "FunctionToolDef<S, R>",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst move = action('Move a stop', z.object({ fromDay: z.number() }), (a) => a.fromDay);\nconst registry = tools({ move_stop: move });\n```"
+    ]
   },
   {
     "name": "ask",
     "kind": "function",
-    "description": "Interactive (HITL) component tool — the value it emits becomes the result.",
-    "signature": "ask(description: string, schema: StandardSchemaV1<>, component: Type<unknown>): ClientToolDef",
+    "description": "Interactive (human-in-the-loop) component tool — the model fills the\ncomponent's props from the schema's output; the value the component emits\nback to the framework becomes the tool result sent to the model.\n\nThe component's signal inputs are checked against the schema output type\n(strict-but-flexible: every schema key must be a declared input with an\nassignable type; the component may declare extra inputs the schema doesn't\nfill). Author the component with `ViewProps<typeof schema>` to derive input\nprop types directly from the schema.",
+    "signature": "ask(description: string, schema: S, component: AcceptComponent<S, C>): AskToolDef<S, C>",
     "params": [
       {
         "name": "description",
         "type": "string",
-        "description": "",
+        "description": "Natural-language description the model sees.",
         "optional": false
       },
       {
         "name": "schema",
-        "type": "StandardSchemaV1<>",
-        "description": "",
+        "type": "S",
+        "description": "Standard Schema defining the props the model must supply.",
         "optional": false
       },
       {
         "name": "component",
-        "type": "Type<unknown>",
-        "description": "",
+        "type": "AcceptComponent<S, C>",
+        "description": "Angular component whose signal inputs must be compatible with\n  the schema output. A type-level error is reported here when they diverge.",
         "optional": false
       }
     ],
     "returns": {
-      "type": "ClientToolDef",
+      "type": "AskToolDef<S, C>",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst schema = z.object({ question: z.string(), options: z.array(z.string()) });\ntype Inputs = ViewProps<typeof schema>;\n\n\\@Component({ ... })\nclass ChoiceCardComponent {\n  question = input.required<string>();\n  options  = input.required<string[]>();\n  // Emits the chosen option back to the model.\n}\n\nconst choice = ask('Ask the user to choose', schema, ChoiceCardComponent);\nconst registry = tools({ pick_option: choice });\n```"
+    ]
   },
   {
     "name": "buildA2uiActionMessage",
@@ -7305,6 +7574,27 @@
       "description": ""
     },
     "examples": []
+  },
+  {
+    "name": "createAgentRef",
+    "kind": "function",
+    "description": "Create a typed agent handle.",
+    "signature": "createAgentRef(debugName: string): AgentRef<TState>",
+    "params": [
+      {
+        "name": "debugName",
+        "type": "string",
+        "description": "Optional name shown in Angular DI error messages.",
+        "optional": true
+      }
+    ],
+    "returns": {
+      "type": "AgentRef<TState>",
+      "description": ""
+    },
+    "examples": [
+      "```ts\ninterface TripState { day: number; places: string[]; }\nexport const TRIP = createAgentRef<TripState>('trip');\n// app.config.ts: provideAgent(TRIP, { assistantId: 'trip' })\n// component:     const agent = injectAgent(TRIP); // LangGraphAgent<TripState>\n```"
+    ]
   },
   {
     "name": "createClientToolsCoordinator",
@@ -7441,11 +7731,11 @@
     "name": "executeFunctionTool",
     "kind": "function",
     "description": "Validate args, run the handler, and normalize the outcome to a ClientToolResult.",
-    "signature": "executeFunctionTool(def: FunctionToolDef<>, rawArgs: unknown): Promise<ClientToolResult>",
+    "signature": "executeFunctionTool(def: AnyFunctionToolDef, rawArgs: unknown): Promise<ClientToolResult>",
     "params": [
       {
         "name": "def",
-        "type": "FunctionToolDef<>",
+        "type": "AnyFunctionToolDef",
         "description": "",
         "optional": false
       },
@@ -7504,11 +7794,11 @@
     "name": "getInterrupt",
     "kind": "function",
     "description": "",
-    "signature": "getInterrupt(agent: Agent): AgentInterrupt | undefined",
+    "signature": "getInterrupt(agent: Agent<>): AgentInterrupt | undefined",
     "params": [
       {
         "name": "agent",
-        "type": "Agent",
+        "type": "Agent<>",
         "description": "",
         "optional": false
       }
@@ -7534,6 +7824,46 @@
     ],
     "returns": {
       "type": "MessageTemplateType",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "injectThreadRouting",
+    "kind": "function",
+    "description": "Bind an app-owned `activeThreadId` signal to the URL — restore on load, stamp on change,\nvalidate-or-redirect, with a bare URL meaning \"no thread\" (welcome). URL is the source of\ntruth; nothing is written to localStorage. Must be called in an injection context.",
+    "signature": "injectThreadRouting(config: ThreadRoutingConfig): void",
+    "params": [
+      {
+        "name": "config",
+        "type": "ThreadRoutingConfig",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "void",
+      "description": ""
+    },
+    "examples": [
+      "```ts\nexport const ACTIVE_THREAD = signal<string | null>(null);\n// providers: provideAgent({ threadId: ACTIVE_THREAD, onThreadId: id => ACTIVE_THREAD.set(id) })\nconst threads = inject(LangGraphThreadsAdapter);\ninjectThreadRouting({ threadId: ACTIVE_THREAD, validate: id => threads.getThread(id).then(Boolean) });\n```"
+    ]
+  },
+  {
+    "name": "isAbortError",
+    "kind": "function",
+    "description": "Whether `raw` represents an abort (a `DOMException`/`Error` named `AbortError`,\nor an abort-ish message). Shared by the runtime adapters and toAgentError\nso a user-requested stop settles to idle instead of surfacing as an error.",
+    "signature": "isAbortError(raw: unknown): boolean",
+    "params": [
+      {
+        "name": "raw",
+        "type": "unknown",
+        "description": "Any thrown/rejected value.",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "boolean",
       "description": ""
     },
     "examples": []
@@ -7599,11 +7929,11 @@
     "name": "isTyping",
     "kind": "function",
     "description": "",
-    "signature": "isTyping(agent: Agent): boolean",
+    "signature": "isTyping(agent: Agent<>): boolean",
     "params": [
       {
         "name": "agent",
-        "type": "Agent",
+        "type": "Agent<>",
         "description": "",
         "optional": false
       }
@@ -7656,7 +7986,7 @@
     "name": "mockAgent",
     "kind": "function",
     "description": "",
-    "signature": "mockAgent(opts: MockAgentOptions): MockAgent",
+    "signature": "mockAgent(opts: MockAgentOptions): MockAgent<>",
     "params": [
       {
         "name": "opts",
@@ -7666,7 +7996,7 @@
       }
     ],
     "returns": {
-      "type": "MockAgent",
+      "type": "MockAgent<>",
       "description": ""
     },
     "examples": []
@@ -7712,13 +8042,13 @@
   {
     "name": "provideChat",
     "kind": "function",
-    "description": "",
+    "description": "Bootstrap `@threadplane/chat` in an Angular application or standalone\ncomponent tree.\n\nCall this once inside `bootstrapApplication` (or the `providers` array of a\nroot `ApplicationConfig`). It registers the shared ChatConfig token\nso every chat component in the tree can read the render registry, avatar\nlabel, and assistant display name without explicit prop threading.\n\nA license check is fired asynchronously on every call (it never throws; a\nwatermark is shown in non-commercial builds when no valid token is supplied).",
     "signature": "provideChat(config: ChatConfig): EnvironmentProviders",
     "params": [
       {
         "name": "config",
         "type": "ChatConfig",
-        "description": "",
+        "description": "Options bag that controls the chat feature set:\n  - `renderRegistry` — shared AngularRegistry wiring tool-view\n    components to their names; pass the value returned by\n    `defineAngularRegistry` from `\\@threadplane/render`.\n  - `avatarLabel` — short label shown in the AI avatar bubble (default `\"A\"`).\n  - `assistantName` — display name shown above assistant messages\n    (default `\"Assistant\"`).\n  - `license` — signed token from threadplane.ai; omit in development.",
         "optional": false
       }
     ],
@@ -7726,7 +8056,9 @@
       "type": "EnvironmentProviders",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\n// main.ts\nimport { bootstrapApplication } from '@angular/platform-browser';\nimport { provideChat } from '@threadplane/chat';\nimport { defineAngularRegistry, provideRender } from '@threadplane/render';\nimport { DayCardComponent } from './day-card.component';\n\nconst registry = defineAngularRegistry({ day_card: DayCardComponent });\n\nbootstrapApplication(AppComponent, {\n  providers: [\n    provideChat({ renderRegistry: registry, avatarLabel: 'AI' }),\n    provideRender({ registry }),\n  ],\n});\n```"
+    ]
   },
   {
     "name": "renderMarkdown",
@@ -7757,11 +8089,11 @@
     "name": "startClientToolExecutor",
     "kind": "function",
     "description": "Watches the agent's pending client tool calls and auto-runs FUNCTION tools,\nresolving each with its result. View/ask (component) tools are handled by the\nrendering layer, not here. No-op if the agent lacks the clientTools\ncapability. MUST be called in an injection context (sets up an effect).",
-    "signature": "startClientToolExecutor(agent: Agent, registry: ClientToolRegistry): void",
+    "signature": "startClientToolExecutor(agent: Agent<>, registry: ClientToolRegistry): void",
     "params": [
       {
         "name": "agent",
-        "type": "Agent",
+        "type": "Agent<>",
         "description": "",
         "optional": false
       },
@@ -7801,11 +8133,11 @@
     "name": "submitMessage",
     "kind": "function",
     "description": "Submits a trimmed message to the agent.\nReturns the trimmed string on success, or `null` if the input was empty.",
-    "signature": "submitMessage(agent: Agent, text: string): string | null",
+    "signature": "submitMessage(agent: Agent<>, text: string): string | null",
     "params": [
       {
         "name": "agent",
-        "type": "Agent",
+        "type": "Agent<>",
         "description": "",
         "optional": false
       },
@@ -7842,6 +8174,27 @@
     "examples": []
   },
   {
+    "name": "toAgentError",
+    "kind": "function",
+    "description": "Classify any raw error into a structured AgentError.\n\nResolution order (first match wins): an existing `AgentError` is returned\nunchanged (idempotent) → a user abort → a structured `status`/`cause.status`\n→ network/connection markers → an HTTP-shaped status in the message → a\n`server` + retryable fallback. The original error is always preserved on\n`cause`. Runtime adapters call this before setting `Agent.error`; custom\nbackends can call it too (or throw an `AgentError` directly).",
+    "signature": "toAgentError(raw: unknown): AgentError<>",
+    "params": [
+      {
+        "name": "raw",
+        "type": "unknown",
+        "description": "Any thrown/rejected value — an `Error`, a `{ status }` object, a string, etc.",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "AgentError<>",
+      "description": ""
+    },
+    "examples": [
+      "```ts\nconst e = toAgentError(new Error('HTTP 500: Internal Server Error'));\ne.kind;      // 'server'\ne.retryable; // true\ne.status;    // 500\n```"
+    ]
+  },
+  {
     "name": "toClientToolSpecs",
     "kind": "function",
     "description": "Build the catalog spec list shipped to the model.",
@@ -7863,21 +8216,23 @@
   {
     "name": "tools",
     "kind": "function",
-    "description": "Collect named client tools into a frozen registry (the key is the tool name).",
-    "signature": "tools(map: Record<string, ClientToolDef>): ClientToolRegistry",
+    "description": "Collect named client tools into a frozen, name-keyed registry.\n\nThe overload is generic over the entire map (`const M`) so that each tool's\nprecise type (FunctionToolDef`<S,R>`, ViewToolDef`<S,C>`, or\nAskToolDef`<S,C>`) and every literal key are preserved in the\nClientToolRegistry passed to `provideChat`. This lets downstream\nconsumers look up individual tools without losing generic information.",
+    "signature": "tools(map: M): Readonly<M>",
     "params": [
       {
         "name": "map",
-        "type": "Record<string, ClientToolDef>",
-        "description": "",
+        "type": "M",
+        "description": "An object literal mapping tool names to tool definitions created\n  by action, view, or ask.",
         "optional": false
       }
     ],
     "returns": {
-      "type": "ClientToolRegistry",
+      "type": "Readonly<M>",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst move = action('Move a stop', z.object({ fromDay: z.number() }), (a) => a.fromDay);\nconst dayCard = view('Show a day card', z.object({ label: z.string() }), DayCardComponent);\n\nconst registry = tools({ move_stop: move, day_card: dayCard });\n// registry.move_stop is FunctionToolDef<...>\n// registry.day_card  is ViewToolDef<...>\n```"
+    ]
   },
   {
     "name": "toRenderRegistry",
@@ -7926,33 +8281,35 @@
   {
     "name": "view",
     "kind": "function",
-    "description": "Render-only component tool — the model fills its props; auto-acknowledged.",
-    "signature": "view(description: string, schema: StandardSchemaV1<>, component: Type<unknown>): ClientToolDef",
+    "description": "Render-only component tool — the model fills the component's props from the\nschema's output; the tool call is auto-acknowledged once the component mounts.\n\nThe component's signal inputs are checked against the schema output type\n(strict-but-flexible: every schema key must be a declared input with an\nassignable type; the component may declare extra inputs the schema doesn't fill).\nAuthor the component with `ViewProps<typeof schema>` as the input type set to\nguarantee the shapes stay aligned.",
+    "signature": "view(description: string, schema: S, component: AcceptComponent<S, C>): ViewToolDef<S, C>",
     "params": [
       {
         "name": "description",
         "type": "string",
-        "description": "",
+        "description": "Natural-language description the model sees.",
         "optional": false
       },
       {
         "name": "schema",
-        "type": "StandardSchemaV1<>",
-        "description": "",
+        "type": "S",
+        "description": "Standard Schema defining the props the model must supply.",
         "optional": false
       },
       {
         "name": "component",
-        "type": "Type<unknown>",
-        "description": "",
+        "type": "AcceptComponent<S, C>",
+        "description": "Angular component whose signal inputs must be compatible with\n  the schema output. A type-level error is reported here when they diverge.",
         "optional": false
       }
     ],
     "returns": {
-      "type": "ClientToolDef",
+      "type": "ViewToolDef<S, C>",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst schema = z.object({ label: z.string(), day: z.number() });\ntype Inputs = ViewProps<typeof schema>; // { label: string; day: number }\n\n\\@Component({ ... })\nclass DayCardComponent {\n  label = input.required<string>();\n  day   = input.required<number>();\n}\n\nconst dayCard = view('Show a day card', schema, DayCardComponent);\nconst registry = tools({ day_card: dayCard });\n```"
+    ]
   },
   {
     "name": "views",
@@ -8120,7 +8477,7 @@
     "name": "runAgentConformance",
     "kind": "function",
     "description": "Runs a suite of contract conformance assertions against a factory that\nproduces a fresh Agent. Adapter packages should call this in their\nown test suites to verify the contract is satisfied.",
-    "signature": "runAgentConformance(label: string, factory: () => Agent): void",
+    "signature": "runAgentConformance(label: string, factory: () => Agent<>): void",
     "params": [
       {
         "name": "label",
@@ -8130,7 +8487,7 @@
       },
       {
         "name": "factory",
-        "type": "() => Agent",
+        "type": "() => Agent<>",
         "description": "",
         "optional": false
       }
@@ -8145,7 +8502,7 @@
     "name": "runAgentWithHistoryConformance",
     "kind": "function",
     "description": "Conformance suite for AgentWithHistory implementations.\n\nRuns the base Agent conformance suite, then verifies the history\nsignal is present and returns an array of AgentCheckpoint-shaped entries.",
-    "signature": "runAgentWithHistoryConformance(label: string, factory: (seed: object) => AgentWithHistory): void",
+    "signature": "runAgentWithHistoryConformance(label: string, factory: (seed: object) => AgentWithHistory<>): void",
     "params": [
       {
         "name": "label",
@@ -8155,7 +8512,7 @@
       },
       {
         "name": "factory",
-        "type": "(seed: object) => AgentWithHistory",
+        "type": "(seed: object) => AgentWithHistory<>",
         "description": "",
         "optional": false
       }

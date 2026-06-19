@@ -215,7 +215,9 @@ function httpStatus(err: unknown): number | undefined {
   `,
 })
 export class ChatComponent {
-  protected readonly chat = injectAgent<MessagesState>();
+  // injectAgent() without a ref returns the default-typed agent (state/value are Record<string, unknown>).
+  // This component only uses status() and error(), so the no-arg form is sufficient.
+  protected readonly chat = injectAgent();
 
   hasError = computed(() => this.chat.status() === 'error');
 

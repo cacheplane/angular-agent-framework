@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import type { ViewProps } from '@threadplane/chat';
 import { injectRenderHost } from '@threadplane/render';
+import { confirmBookingSchema } from './schemas';
 
 /**
  * The interactive component for the `confirm_booking` client tool (an `ask`).
@@ -13,7 +15,14 @@ import { injectRenderHost } from '@threadplane/render';
  * prop (chat-tool-views spreads `{...args, ...result, status}` into it). When
  * `confirmed()` is defined we render a FROZEN line with no buttons; the live
  * interactive card only shows while `confirmed()` is still undefined.
+ *
+ * Input types for schema-derived props are anchored to `ViewProps<typeof
+ * confirmBookingSchema>` — a schema change is a compile error here.
  */
+
+/** Props this component receives from the `confirm_booking` schema. */
+type ConfirmBookingProps = ViewProps<typeof confirmBookingSchema>;
+
 @Component({
   selector: 'app-confirm-booking',
   standalone: true,
@@ -47,7 +56,8 @@ import { injectRenderHost } from '@threadplane/render';
   `],
 })
 export class ConfirmBookingComponent {
-  readonly summary = input<string>();
+  // Schema-derived input — type anchored to ConfirmBookingProps.
+  readonly summary = input<ConfirmBookingProps['summary']>();
   /** Spread back onto props after the ask resolves (undefined while interactive). */
   readonly confirmed = input<boolean | undefined>(undefined);
   private readonly host = injectRenderHost();

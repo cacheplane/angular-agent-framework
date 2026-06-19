@@ -2,11 +2,20 @@
 import { Component } from '@angular/core';
 import { ChatComponent, ChatWelcomeSuggestionComponent } from '@threadplane/chat';
 import { injectAgent } from '@threadplane/langgraph';
+import { STREAMING_AGENT, type StreamingState } from './agent-ref';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
 
 const WELCOME_SUGGESTIONS = [
-  { label: 'Stream a long answer',             value: 'Explain LangGraph checkpointing in 200 words.' },
-  { label: 'Walk me through agent tool calls', value: 'Show me how an agent decides which tool to use.' },
+  {
+    label: 'Stream a long answer',
+    value: 'Explain LangGraph checkpointing in 200 words.',
+    description: 'Watch tokens arrive incrementally — the simplest @threadplane/chat integration.',
+  },
+  {
+    label: 'How agents pick tools',
+    value: 'Show me how an agent decides which tool to use.',
+    description: 'Explains tool-selection reasoning; good entry point for the tool-calls demo.',
+  },
 ] as const;
 
 /**
@@ -28,6 +37,7 @@ const WELCOME_SUGGESTIONS = [
             <chat-welcome-suggestion
               [label]="s.label"
               [value]="s.value"
+              [description]="s.description"
               (selected)="send($event)"
             />
           }
@@ -37,7 +47,9 @@ const WELCOME_SUGGESTIONS = [
   `,
 })
 export class StreamingComponent {
-  protected readonly agent = injectAgent();
+  protected readonly agent = injectAgent(STREAMING_AGENT);
+  // Typed read: prove StreamingState flows through DI.
+  protected readonly _typedState: StreamingState = this.agent.value();
   protected readonly suggestions = WELCOME_SUGGESTIONS;
 
   protected send(text: string): void {

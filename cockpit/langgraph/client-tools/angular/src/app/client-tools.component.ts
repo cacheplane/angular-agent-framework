@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
-import { Component } from '@angular/core';
+import { Component, computed } from '@angular/core';
 import { ChatComponent, tools, action, view, ask } from '@threadplane/chat';
 import { injectAgent } from '@threadplane/langgraph';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
 import { z } from 'zod/v4';
 import { WeatherCardComponent } from './weather-card.component';
 import { ConfirmBookingComponent } from './confirm-booking.component';
+import { weatherCardSchema, confirmBookingSchema } from './schemas';
+import { CLIENT_TOOLS_AGENT_REF, type ClientToolsState } from './agent-ref';
 
 /**
  * Client-tools demo — tools declared in the browser that the model calls and
@@ -16,6 +18,10 @@ import { ConfirmBookingComponent } from './confirm-booking.component';
  * the model via the LangGraph adapter (as `input.client_tools`); the backend
  * graph binds the client stubs (no server implementation) and ends the turn so
  * the browser executes them.
+ *
+ * Under `strict: true` the typed `view`/`ask` overloads verify at compile time
+ * that every field the schema produces is a declared `input()` on the paired
+ * component. Mismatches become errors here, not silent runtime failures.
  */
 const clientTools = tools({
   get_weather: action(
@@ -25,18 +31,12 @@ const clientTools = tools({
   ),
   weather_card: view(
     'Display a weather card for a location with the given readings.',
-    z.object({
-      location: z.string(),
-      temperatureF: z.number(),
-      conditions: z.string(),
-      humidity: z.number(),
-      windMph: z.number(),
-    }),
+    weatherCardSchema,
     WeatherCardComponent,
   ),
   confirm_booking: ask(
     'Ask the user to confirm a booking before finalizing it.',
-    z.object({ summary: z.string() }),
+    confirmBookingSchema,
     ConfirmBookingComponent,
   ),
 });
@@ -52,6 +52,17 @@ const clientTools = tools({
   `,
 })
 export class ClientToolsComponent {
-  protected readonly agent = injectAgent();
+  /** Typed agent: state() and value() are ClientToolsState. */
+  protected readonly agent = injectAgent(CLIENT_TOOLS_AGENT_REF);
   protected readonly clientTools = clientTools;
+
+  /**
+   * Typed state read — proves the typed DI path compiles under strict: true.
+   * `messages` and `client_tools` are read from the strongly-typed
+   * `ClientToolsState` shape; the compiler errors if the field does not exist.
+   */
+  protected readonly messageCount = computed((): number => {
+    const s: ClientToolsState = this.agent.value();
+    return s.messages.length;
+  });
 }
