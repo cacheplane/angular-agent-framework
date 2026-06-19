@@ -5,8 +5,9 @@ import {
   computed, contentChildren, input, signal,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import type { Agent, Message, ToolCall } from '../../agent';
+import type { Agent, Message, ToolCall, Subagent } from '../../agent';
 import { ChatToolCallCardComponent, type ToolCallInfo } from '../../compositions/chat-tool-call-card/chat-tool-call-card.component';
+import { ChatSubagentCardComponent } from '../../compositions/chat-subagent-card/chat-subagent-card.component';
 import { ChatToolCallTemplateDirective } from './chat-tool-call-template.directive';
 import { summarizeGroup as defaultSummarizeGroup } from './group-summary';
 import { resolveMessageToolCalls } from './resolve-message-tool-calls';
@@ -15,12 +16,14 @@ interface Group {
   name: string;
   calls: ToolCall[];
   templateRef?: ChatToolCallTemplateDirective;
+  /** Present when this group anchors a subagent spawned by its (single) task call. */
+  subagent?: Subagent;
 }
 
 @Component({
   selector: 'chat-tool-calls',
   standalone: true,
-  imports: [NgTemplateOutlet, ChatToolCallCardComponent],
+  imports: [NgTemplateOutlet, ChatToolCallCardComponent, ChatSubagentCardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
     :host { display: block; margin-bottom: 20px; }
@@ -54,7 +57,9 @@ interface Group {
   `],
   template: `
     @for (group of groups(); track $index) {
-      @if (group.calls.length > 1 && !group.templateRef) {
+      @if (group.subagent) {
+        <chat-subagent-card [subagent]="group.subagent" />
+      } @else if (group.calls.length > 1 && !group.templateRef) {
         <!-- Default grouped strip -->
         @let expanded = expandedGroups().has($index);
         <div class="ctc__group" [attr.data-group]="true" [attr.data-expanded]="expanded">
@@ -119,14 +124,23 @@ export class ChatToolCallsComponent {
   readonly groups = computed((): Group[] => {
     const excludeSet = new Set(this.excludeToolNames());
     const calls = this.toolCalls().filter(tc => !excludeSet.has(tc.name));
+    const subs = this.agent().subagents?.() ?? new Map<string, Subagent>();
     const groupingMode = this.grouping();
     const registry = this.templateRegistry();
     const wildcard = registry.get('*');
     const out: Group[] = [];
     for (const tc of calls) {
+      // A tool call that spawned a subagent renders as a standalone subagent
+      // card anchored to that call. It never groups with adjacent calls, on
+      // either side: it is its own group and carries a `subagent`, so the next
+      // call can't append to it (a subagent group is never a group target).
+      if (subs.has(tc.id)) {
+        out.push({ name: tc.name, calls: [tc], subagent: subs.get(tc.id) });
+        continue;
+      }
       const tpl = registry.get(tc.name) ?? wildcard;
       const last = out[out.length - 1];
-      const sameName = last && last.name === tc.name;
+      const sameName = last && !last.subagent && last.name === tc.name;
       const canGroup = groupingMode === 'auto' && sameName;
       if (canGroup) {
         last.calls.push(tc);
