@@ -564,19 +564,21 @@
   {
     "name": "injectAgent",
     "kind": "function",
-    "description": "Injects the AG-UI agent from Angular's dependency injection container.\nUse this in components or services provided via `provideAgent()` (or\n`provideFakeAgent()`).\n\nReturns an `AgUiAgent` — the runtime-neutral `Agent` contract plus the\nAG-UI-specific `customEvents` signal — so `customEvents` is reachable\ndirectly, without casting.\n\n**Typed state via AgentRef.** Pass the same ref that was supplied to\n`provideAgent(ref, …)` to carry the state type through DI without repeating\nthe generic at every call site:\n\n```ts\nconst agent = injectAgent(TRIP); // AgUiAgent<TripState>\n```\n\nThe no-arg form defaults to `AgUiAgent<Record<string, unknown>>`.",
+    "description": "Injects the AG-UI agent from Angular's dependency injection container.\nUse this in components or services provided via `provideAgent()` (or\n`provideFakeAgent()`).\n\nReturns an `AgUiAgent` — the runtime-neutral `Agent` contract plus the\nAG-UI-specific `customEvents` signal — so `customEvents` is reachable\ndirectly, without casting.\n\n**Typed state via AgentRef.** Pass the same ref that was supplied to\n`provideAgent(ref, …)` to carry the state type through DI without repeating\nthe generic at every call site. The no-arg form defaults to\n`AgUiAgent<Record<string, unknown>>`.",
     "signature": "injectAgent(): AgUiAgent<>",
     "params": [],
     "returns": {
       "type": "AgUiAgent<>",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst agent = injectAgent(TRIP); // AgUiAgent<TripState>\n```"
+    ]
   },
   {
     "name": "provideAgent",
     "kind": "function",
-    "description": "Provides an Agent instance wired through HttpAgent and toAgent.\nConstructs an HttpAgent from config and wraps it in the runtime-neutral\nAgent contract via toAgent(). Returns a provider array suitable for\nbootstrapApplication or TestBed.configureTestingModule().\n\n**Static vs factory config.** Pass a plain `AgentConfig` object when the\nconfig is known up front. Pass a `() => AgentConfig` factory when the config\ndepends on runtime/DI state — the factory runs inside an Angular injection\ncontext, so it may call `inject()` to read services or route params.\n\n**Typed state via AgentRef.** Pass a typed ref as the first argument to flow\nthe state shape from `provideAgent` to `injectAgent` without repeating the\ngeneric at every call site:\n\n```ts\ninterface TripState { day: number; places: string[]; }\nexport const TRIP = createAgentRef<TripState>('trip');\n// app.config.ts:\nproviders: [provideAgent(TRIP, { url: 'http://localhost:8000/agent' })]\n// component:\nconst agent = injectAgent(TRIP); // AgUiAgent<TripState>\n```",
+    "description": "Provides an Agent instance wired through HttpAgent and toAgent.\nConstructs an HttpAgent from config and wraps it in the runtime-neutral\nAgent contract via toAgent(). Returns a provider array suitable for\nbootstrapApplication or TestBed.configureTestingModule().\n\n**Static vs factory config.** Pass a plain `AgentConfig` object when the\nconfig is known up front. Pass a `() => AgentConfig` factory when the config\ndepends on runtime/DI state — the factory runs inside an Angular injection\ncontext, so it may call `inject()` to read services or route params.\n\n**Typed state via AgentRef.** Pass a typed ref as the first argument to flow\nthe state shape from `provideAgent` to `injectAgent` without repeating the\ngeneric at every call site.",
     "signature": "provideAgent(ref: AgentRef<T>, configOrFactory: AgentConfig | () => AgentConfig): Provider[]",
     "params": [
       {
@@ -596,7 +598,9 @@
       "type": "Provider[]",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\ninterface TripState { day: number; places: string[]; }\nexport const TRIP = createAgentRef<TripState>('trip');\n// app.config.ts:\nproviders: [provideAgent(TRIP, { url: 'http://localhost:8000/agent' })]\n// component:\nconst agent = injectAgent(TRIP); // AgUiAgent<TripState>\n```"
+    ]
   },
   {
     "name": "provideFakeAgent",

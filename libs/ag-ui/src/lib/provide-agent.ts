@@ -60,8 +60,9 @@ function isAgentRef<T>(x: unknown): x is AgentRef<T> {
  *
  * **Typed state via AgentRef.** Pass a typed ref as the first argument to flow
  * the state shape from `provideAgent` to `injectAgent` without repeating the
- * generic at every call site:
+ * generic at every call site.
  *
+ * @example Typed state via AgentRef
  * ```ts
  * interface TripState { day: number; places: string[]; }
  * export const TRIP = createAgentRef<TripState>('trip');
@@ -102,13 +103,13 @@ export function provideAgent<T = Record<string, unknown>>(
  *
  * **Typed state via AgentRef.** Pass the same ref that was supplied to
  * `provideAgent(ref, …)` to carry the state type through DI without repeating
- * the generic at every call site:
+ * the generic at every call site. The no-arg form defaults to
+ * `AgUiAgent<Record<string, unknown>>`.
  *
+ * @example Typed state via AgentRef
  * ```ts
  * const agent = injectAgent(TRIP); // AgUiAgent<TripState>
  * ```
- *
- * The no-arg form defaults to `AgUiAgent<Record<string, unknown>>`.
  */
 export function injectAgent(): AgUiAgent;
 export function injectAgent<T>(ref: AgentRef<T>): AgUiAgent<T>;
