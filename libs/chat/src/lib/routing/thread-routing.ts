@@ -69,12 +69,15 @@ export function injectThreadRouting(config: ThreadRoutingConfig): void {
     if (id !== urlId) void router.navigate(toCommands(id), extras);
   });
 
-  // validate stale ids → redirect to bare.
+  // validate stale ids → redirect to bare. Memoize the last id checked so
+  // re-visiting the same thread (A → B → A) doesn't re-hit the backend.
   if (config.validate) {
     const validate = config.validate;
+    let lastValidated: string | null = null;
     effect(() => {
       const id = urlThreadId();
-      if (!id) return;
+      if (!id || id === lastValidated) return;
+      lastValidated = id;
       void validate(id).then((ok) => {
         if (!ok && untracked(() => urlThreadId()) === id) {
           void router.navigate(toCommands(null), { ...extras, replaceUrl: true });
