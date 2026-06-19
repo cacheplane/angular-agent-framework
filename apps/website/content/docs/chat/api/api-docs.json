@@ -1429,7 +1429,7 @@
   {
     "name": "AgentError",
     "kind": "class",
-    "description": "Structured, classified failure surfaced on `Agent.error`. Extends `Error`\n so existing `.message` / `instanceof Error` reads keep working.",
+    "description": "Structured, classified failure surfaced on `Agent.error`. Extends `Error`, so\nexisting `.message` / `instanceof Error` reads keep working — but adds a\nmachine-readable AgentErrorKind, a `retryable` flag, an optional HTTP\n`status`, and the original `cause`.\n\nYou rarely construct one yourself; adapters normalize raw failures via\ntoAgentError. Read it off the agent to render legible, cause-specific UI:",
     "params": [
       {
         "name": "init",
@@ -1438,18 +1438,20 @@
         "optional": false
       }
     ],
-    "examples": [],
+    "examples": [
+      "```ts\nconst err = agent.error();            // AgentError | undefined\nif (err) {\n  console.warn(err.message);          // legible, per-kind copy\n  if (err.kind === 'auth') showApiKeyHelp();\n  if (err.retryable) showRetryButton(); // → agent.retry()\n}\n```"
+    ],
     "properties": [
       {
         "name": "cause",
         "type": "unknown",
-        "description": "",
+        "description": "The original raw error this was classified from, preserved for debugging/telemetry.",
         "optional": false
       },
       {
         "name": "kind",
         "type": "AgentErrorKind",
-        "description": "",
+        "description": "The classified failure type. See AgentErrorKind.",
         "optional": false
       },
       {
@@ -1467,7 +1469,7 @@
       {
         "name": "retryable",
         "type": "boolean",
-        "description": "connection | server | interrupted → true; auth | aborted | non-auth-4xx → false.",
+        "description": "Whether retrying the same request could plausibly succeed:\n `connection` | `server` (5xx) | `interrupted` → true; `auth` | `aborted` | non-auth `4xx` → false.",
         "optional": false
       },
       {
@@ -1479,7 +1481,7 @@
       {
         "name": "status",
         "type": "number",
-        "description": "",
+        "description": "The HTTP status code when the failure came from an HTTP response.",
         "optional": true
       }
     ],
@@ -7102,7 +7104,7 @@
   {
     "name": "AgentErrorKind",
     "kind": "type",
-    "description": "",
+    "description": "The failure class of an AgentError, used to drive UI and retry logic:\n\n- `connection` — offline / DNS / connection refused / `fetch` failed. Retryable.\n- `auth` — `401` / `403`; credentials or API key are wrong. Not retryable.\n- `server` — a `5xx` (retryable) or a non-auth `4xx` like `400`/`404`/`429` (not retryable).\n- `interrupted` — the stream closed mid-response after a run had started. Retryable.\n- `aborted` — the user pressed stop; treated as a graceful idle, not surfaced as an error.",
     "signature": "\"connection\" | \"auth\" | \"server\" | \"interrupted\" | \"aborted\"",
     "examples": []
   },
@@ -7263,7 +7265,7 @@
   {
     "name": "AGENT_ERROR_MESSAGES",
     "kind": "const",
-    "description": "Default human-facing copy per kind.",
+    "description": "Default, human-facing copy per AgentErrorKind. Used as the message when\na classified error has no better text. Override by mapping `error.kind` to your\nown strings in a custom error component.",
     "signature": "Record<AgentErrorKind, string>",
     "examples": []
   },
@@ -7725,13 +7727,13 @@
   {
     "name": "isAbortError",
     "kind": "function",
-    "description": "True when `raw` represents a user-requested abort. Shared by adapters + classifier.",
+    "description": "Whether `raw` represents an abort (a `DOMException`/`Error` named `AbortError`,\nor an abort-ish message). Shared by the runtime adapters and toAgentError\nso a user-requested stop settles to idle instead of surfacing as an error.",
     "signature": "isAbortError(raw: unknown): boolean",
     "params": [
       {
         "name": "raw",
         "type": "unknown",
-        "description": "",
+        "description": "Any thrown/rejected value.",
         "optional": false
       }
     ],
@@ -8047,13 +8049,13 @@
   {
     "name": "toAgentError",
     "kind": "function",
-    "description": "Classify any raw error into a structured AgentError. Idempotent.",
+    "description": "Classify any raw error into a structured AgentError.\n\nResolution order (first match wins): an existing `AgentError` is returned\nunchanged (idempotent) → a user abort → a structured `status`/`cause.status`\n→ network/connection markers → an HTTP-shaped status in the message → a\n`server` + retryable fallback. The original error is always preserved on\n`cause`. Runtime adapters call this before setting `Agent.error`; custom\nbackends can call it too (or throw an `AgentError` directly).",
     "signature": "toAgentError(raw: unknown): AgentError<>",
     "params": [
       {
         "name": "raw",
         "type": "unknown",
-        "description": "",
+        "description": "Any thrown/rejected value — an `Error`, a `{ status }` object, a string, etc.",
         "optional": false
       }
     ],
@@ -8061,7 +8063,9 @@
       "type": "AgentError<>",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst e = toAgentError(new Error('HTTP 500: Internal Server Error'));\ne.kind;      // 'server'\ne.retryable; // true\ne.status;    // 500\n```"
+    ]
   },
   {
     "name": "toClientToolSpecs",
