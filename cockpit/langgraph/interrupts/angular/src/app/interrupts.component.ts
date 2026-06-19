@@ -6,8 +6,17 @@ import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
 import { CurrencyPipe } from '@angular/common';
 
 const WELCOME_SUGGESTIONS = [
-  { label: 'Refund a duplicate charge', value: 'Refund $47.50 to customer cus_a8x2k — they were charged twice for the same order.' },
-  { label: 'Refund a chargeback', value: 'Refund $129.00 to customer cus_z19fp who opened a chargeback for unrecognized activity.' },
+  // label asserted by e2e (interrupts.spec.ts page.getByText) — do not change.
+  {
+    label: 'Refund a duplicate charge',
+    value: 'Refund $47.50 to customer cus_a8x2k — they were charged twice for the same order.',
+    description: 'Graph pauses at request_approval; approve or edit the amount in the modal.',
+  },
+  {
+    label: 'Refund a chargeback',
+    value: 'Refund $129.00 to customer cus_z19fp who opened a chargeback for unrecognized activity.',
+    description: 'Chargeback path — same interrupt pattern with a different reason string.',
+  },
 ] as const;
 
 /**
@@ -45,6 +54,7 @@ const WELCOME_SUGGESTIONS = [
               <chat-welcome-suggestion
                 [label]="s.label"
                 [value]="s.value"
+                [description]="s.description"
                 (selected)="send($event)"
               />
             }
