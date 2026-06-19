@@ -45,7 +45,7 @@ jobs:
           fi
 
       - name: Install Railway CLI
-        run: npm install -g @railway/cli@4
+        run: npm install -g @railway/cli@4.68.0
 
       - name: Deploy
         working-directory: deployments/ag-ui-dev
