@@ -2,6 +2,10 @@
 
 `injectThreadRouting()` binds an app-owned active-thread signal to the Angular Router: it restores the thread id from the URL on load, stamps signal changes back into the URL, validates stale links, and treats a bare URL as "no thread" (the welcome state). **The URL is the sole source of truth — nothing is written to localStorage**, so links remain shareable without any extra plumbing.
 
+<Callout type="info" title="Prerequisites">
+  Call `injectThreadRouting()` from an injection context (a component constructor or field initializer), and declare the active-thread signal at module scope so your `provideAgent({ threadId })` provider can reference it.
+</Callout>
+
 ## What it does
 
 | Behavior | Detail |
