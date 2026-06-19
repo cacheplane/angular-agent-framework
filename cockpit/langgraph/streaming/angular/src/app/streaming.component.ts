@@ -6,8 +6,16 @@ import { STREAMING_AGENT, type StreamingState } from './agent-ref';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
 
 const WELCOME_SUGGESTIONS = [
-  { label: 'Stream a long answer',             value: 'Explain LangGraph checkpointing in 200 words.' },
-  { label: 'Walk me through agent tool calls', value: 'Show me how an agent decides which tool to use.' },
+  {
+    label: 'Stream a long answer',
+    value: 'Explain LangGraph checkpointing in 200 words.',
+    description: 'Watch tokens arrive incrementally — the simplest @threadplane/chat integration.',
+  },
+  {
+    label: 'How agents pick tools',
+    value: 'Show me how an agent decides which tool to use.',
+    description: 'Explains tool-selection reasoning; good entry point for the tool-calls demo.',
+  },
 ] as const;
 
 /**
@@ -29,6 +37,7 @@ const WELCOME_SUGGESTIONS = [
             <chat-welcome-suggestion
               [label]="s.label"
               [value]="s.value"
+              [description]="s.description"
               (selected)="send($event)"
             />
           }

@@ -61,7 +61,7 @@ test('lifecycle: selecting a welcome suggestion submits and clears welcome state
 }) => {
   await openDemo(page, '/embed');
   await page
-    .getByRole('button', { name: /Demo: render a contact form/i })
+    .getByRole('button', { name: /Generative UI: contact form/i })
     .click();
 
   await expect(

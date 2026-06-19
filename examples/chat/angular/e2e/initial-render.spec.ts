@@ -19,7 +19,7 @@ test('initial render: root route redirects to welcome-state embed mode', async (
     page.getByRole('heading', { name: 'How can I help?' })
   ).toBeVisible();
   await expect(
-    page.getByRole('button', { name: /Demo: render a contact form/i })
+    page.getByRole('button', { name: /Generative UI: contact form/i })
   ).toBeVisible();
   await expect(
     page.getByRole('button', { name: 'More prompts' })

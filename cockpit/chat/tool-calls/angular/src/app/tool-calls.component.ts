@@ -11,7 +11,11 @@ import { injectAgent } from '@threadplane/langgraph';
 
 const SUGGESTIONS = [
   // value matches cockpit/chat/tool-calls/angular/e2e/c-tool-calls.spec.ts PROMPT.
-  { label: 'Look up flight UA123', value: "What's the status of UA123?" },
+  {
+    label: 'Check a flight status',
+    value: "What's the status of UA123?",
+    description: 'Calls a lookup_flight tool; watch the tool-call card stream in the sidebar.',
+  },
 ] as const;
 
 /**
@@ -38,6 +42,7 @@ const SUGGESTIONS = [
             <chat-welcome-suggestion
               [label]="s.label"
               [value]="s.value"
+              [description]="s.description"
               (selected)="send($event)"
             />
           }

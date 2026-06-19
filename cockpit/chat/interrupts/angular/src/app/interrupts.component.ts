@@ -13,9 +13,17 @@ import { injectAgent } from '@threadplane/langgraph';
 const SUGGESTIONS = [
   // values match cockpit/chat/interrupts/angular/e2e/c-interrupts.spec.ts.
   // Confirm flow: book + Accept → "Booked …"
-  { label: 'Book UA123 (confirm)', value: 'Book me on UA123.' },
+  {
+    label: 'Book a flight (you confirm)',
+    value: 'Book me on UA123.',
+    description: 'Agent pauses for approval; click Accept in the sidebar to complete the booking.',
+  },
   // Cancel flow: book + Ignore → "Booking cancelled."
-  { label: 'Book AA404 (cancel)', value: 'Book me on AA404.' },
+  {
+    label: 'Book a flight (you cancel)',
+    value: 'Book me on AA404.',
+    description: 'Same interrupt flow; click Ignore to see the cancellation path.',
+  },
 ] as const;
 
 /**
@@ -49,6 +57,7 @@ const SUGGESTIONS = [
             <chat-welcome-suggestion
               [label]="s.label"
               [value]="s.value"
+              [description]="s.description"
               (selected)="send($event)"
             />
           }

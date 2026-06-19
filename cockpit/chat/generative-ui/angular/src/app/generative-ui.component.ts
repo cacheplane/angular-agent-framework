@@ -22,8 +22,16 @@ const dashboardViews = views({
 });
 
 const WELCOME_SUGGESTIONS = [
-  { label: 'Airline operations dashboard', value: 'Show me a dashboard of airline operations.' },
-  { label: 'Filter to cancelled flights',  value: 'Filter to only the cancelled flights.' },
+  {
+    label: 'Airline operations dashboard',
+    value: 'Show me a dashboard of airline operations.',
+    description: 'Agent emits a render spec; charts and KPI cards appear inline in the chat.',
+  },
+  {
+    label: 'Filter to cancelled flights',
+    value: 'Filter to only the cancelled flights.',
+    description: 'Follow-up that updates the dashboard state — shows GenUI mutation in action.',
+  },
 ] as const;
 
 @Component({
@@ -38,6 +46,7 @@ const WELCOME_SUGGESTIONS = [
             <chat-welcome-suggestion
               [label]="s.label"
               [value]="s.value"
+              [description]="s.description"
               (selected)="send($event)"
             />
           }

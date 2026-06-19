@@ -5,8 +5,16 @@ import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
 import { injectAgent } from '@threadplane/ag-ui';
 
 const WELCOME_SUGGESTIONS = [
-  { label: 'LAX → JFK', value: 'I want to fly LAX to JFK' },
-  { label: 'SFO → SEA', value: 'I want to fly SFO to SEA' },
+  {
+    label: 'Book LAX → JFK',
+    value: 'I want to fly LAX to JFK',
+    description: 'Agent emits an A2UI form spec; watch the booking form render in-chat.',
+  },
+  {
+    label: 'Book SFO → SEA',
+    value: 'I want to fly SFO to SEA',
+    description: 'Same A2UI pattern on a different route — try both to compare.',
+  },
 ] as const;
 
 @Component({
@@ -18,7 +26,7 @@ const WELCOME_SUGGESTIONS = [
       <chat main [agent]="agent" [views]="catalog" class="flex-1 min-w-0">
         <div chatWelcomeSuggestions>
           @for (s of suggestions; track s.value) {
-            <chat-welcome-suggestion [label]="s.label" [value]="s.value" (selected)="send($event)" />
+            <chat-welcome-suggestion [label]="s.label" [value]="s.value" [description]="s.description" (selected)="send($event)" />
           }
         </div>
       </chat>

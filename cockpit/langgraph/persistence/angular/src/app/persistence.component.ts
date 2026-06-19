@@ -6,7 +6,11 @@ import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
 import { environment } from '../environments/environment';
 
 const WELCOME_SUGGESTIONS = [
-  { label: 'Save this thread for later', value: 'Help me draft a project brief I can revisit.' },
+  {
+    label: 'Start a saved thread',
+    value: 'Help me draft a project brief I can revisit.',
+    description: 'Each reply gets a thread ID; click the sidebar to switch between conversations.',
+  },
 ] as const;
 
 interface Thread {
@@ -67,6 +71,7 @@ let threadCounter = 0;
             <chat-welcome-suggestion
               [label]="s.label"
               [value]="s.value"
+              [description]="s.description"
               (selected)="send($event)"
             />
           }
