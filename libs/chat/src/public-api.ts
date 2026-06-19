@@ -86,6 +86,10 @@ export { ChatCitationsCardComponent } from './lib/primitives/chat-citations/chat
 // DI provider
 export { provideChat, CHAT_CONFIG } from './lib/provide-chat';
 
+// Routing utilities
+export { injectThreadRouting } from './lib/routing/thread-routing';
+export type { ThreadRoutingConfig } from './lib/routing/thread-routing';
+
 // Lifecycle
 export { CHAT_LIFECYCLE } from './lib/lifecycle';
 export type { ChatLifecycle } from './lib/lifecycle';
