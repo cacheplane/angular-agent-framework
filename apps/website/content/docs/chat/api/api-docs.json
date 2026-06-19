@@ -4722,6 +4722,12 @@
     "examples": [],
     "properties": [
       {
+        "name": "description",
+        "type": "InputSignal<string | undefined>",
+        "description": "Optional short description, surfaced as a hover/focus tooltip on the chip.",
+        "optional": false
+      },
+      {
         "name": "label",
         "type": "InputSignal<string>",
         "description": "",
@@ -5939,6 +5945,12 @@
     "kind": "interface",
     "description": "",
     "properties": [
+      {
+        "name": "description",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
       {
         "name": "disabled",
         "type": "boolean",
