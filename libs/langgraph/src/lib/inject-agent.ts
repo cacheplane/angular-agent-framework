@@ -16,13 +16,13 @@ import type { LangGraphAgent } from './agent.types';
  *
  * **Typed state via AgentRef.** Pass the same ref that was supplied to
  * `provideAgent(ref, …)` to carry the state type through DI without repeating
- * the generic at every call site:
+ * the generic at every call site. The no-arg form defaults to
+ * `LangGraphAgent<Record<string, unknown>>`.
  *
+ * @example Typed state via AgentRef
  * ```ts
  * const agent = injectAgent(TRIP); // LangGraphAgent<TripState>
  * ```
- *
- * The no-arg form defaults to `LangGraphAgent<Record<string, unknown>>`.
  */
 export function injectAgent(): LangGraphAgent<Record<string, unknown>>;
 export function injectAgent<T, ResolvedBag extends BagTemplate = BagTemplate>(

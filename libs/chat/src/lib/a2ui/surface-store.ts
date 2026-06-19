@@ -106,6 +106,19 @@ function resolveProps(value: unknown, dataModel: Record<string, unknown>): unkno
   return value;
 }
 
+/**
+ * Create an {@link A2uiSurfaceStore} — the per-conversation store that buffers
+ * streamed A2UI surface updates, tracks each surface's data model + lifecycle
+ * state, and exposes them as signals for rendering. One store backs a chat
+ * thread's A2UI surfaces.
+ *
+ * @returns A fresh, empty {@link A2uiSurfaceStore}.
+ * @example
+ * ```ts
+ * const store = createA2uiSurfaceStore();
+ * const surfaces = store.surfaces; // Signal<Map<string, A2uiSurface>>
+ * ```
+ */
 export function createA2uiSurfaceStore(): A2uiSurfaceStore {
   const surfacesSignal = signal<Map<string, A2uiSurface>>(new Map());
   const surfaceStatesSignal = signal<Map<string, A2uiSurfaceState>>(new Map());

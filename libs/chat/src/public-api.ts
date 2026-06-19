@@ -151,15 +151,13 @@ export { MarkdownTableRowComponent }          from './lib/markdown/views/markdow
 export { MarkdownTableCellComponent }         from './lib/markdown/views/markdown-table-cell.component';
 export { IS_HEADER_ROW }                      from './lib/markdown/markdown-table-row.token';
 
-// Shared styles & utilities
-export { CHAT_MARKDOWN_STYLES } from './lib/styles/chat-markdown.styles';
+// Shared utilities
+// (Internal styling constants CHAT_MARKDOWN_STYLES and ICON_* are intentionally
+//  NOT exported — they are implementation details consumed via relative imports
+//  inside the lib; theming is done through CSS custom properties, not these.)
 export { renderMarkdown } from './lib/streaming/markdown-render';
 export { messageContent } from './lib/compositions/shared/message-utils';
 export { formatDuration } from './lib/utils/format-duration';
-export {
-  ICON_CHEVRON_DOWN, ICON_CHEVRON_UP, ICON_TOOL,
-  ICON_WARNING, ICON_AGENT, ICON_CHECK, ICON_SEND,
-} from './lib/styles/chat-icons';
 
 // Views (re-exported from @threadplane/render for convenience)
 export { views, withViews, withoutViews, toRenderRegistry } from '@threadplane/render';
@@ -181,7 +179,7 @@ export { createPartialArgsBridge } from './lib/a2ui/partial-args-bridge';
 export type { PartialArgsBridge } from './lib/a2ui/partial-args-bridge';
 export { normalizeEnvelopeArgs } from './lib/a2ui/envelope-normalizer';
 export { A2uiSurfaceComponent } from './lib/a2ui/surface.component';
-export { surfaceToSpec } from './lib/a2ui/surface-to-spec';
+// surfaceToSpec: internal A2UI plumbing — consumed via relative imports, not public.
 export { buildA2uiActionMessage } from './lib/a2ui/build-action-message';
 export { a2uiBasicCatalog } from './lib/a2ui/catalog/index';
 export { emitBinding } from './lib/a2ui/catalog/emit-binding';
@@ -227,7 +225,8 @@ export type { ClientToolSpec } from './lib/client-tools/to-json-schema';
 export type { ClientToolsCapability, ClientToolResult } from './lib/client-tools/client-tools-capability';
 export { validateArgs, executeFunctionTool } from './lib/client-tools/execute';
 export { startClientToolExecutor } from './lib/client-tools/client-tool-executor';
-export { createClientToolsCoordinator, toClientToolSpecs } from './lib/client-tools/client-tools-coordinator';
+// createClientToolsCoordinator: internal — provideChat wires it; not public.
+export { toClientToolSpecs } from './lib/client-tools/client-tools-coordinator';
 export type { ClientToolsCoordinator } from './lib/client-tools/client-tools-coordinator';
 
 // Test utilities (no vitest dep — safe to ship in the main runtime bundle)

@@ -367,18 +367,18 @@
   {
     "name": "AgentConfig",
     "kind": "interface",
-    "description": "Configuration for the AG-UI agent provider.\nHttpAgentConfig shape (from @ag-ui/client@0.0.52):\n  - url: string (required) — endpoint for the HTTP agent\n  - agentId: string (optional) — agent identifier\n  - threadId: string (optional) — thread identifier\n  - headers: Record<string, string> (optional) — custom HTTP headers",
+    "description": "Connection options for the AG-UI agent provider, passed to provideAgent.\nMirrors the underlying `HttpAgent` config (`@ag-ui/client`) plus an optional\ntelemetry sink.",
     "properties": [
       {
         "name": "agentId",
         "type": "string",
-        "description": "",
+        "description": "Agent identifier, when the endpoint serves more than one agent.",
         "optional": true
       },
       {
         "name": "headers",
         "type": "Record<string, string>",
-        "description": "",
+        "description": "Extra HTTP headers sent with every request (e.g. auth tokens).",
         "optional": true
       },
       {
@@ -390,13 +390,13 @@
       {
         "name": "threadId",
         "type": "string",
-        "description": "",
+        "description": "Thread to connect to on start; omit to begin a fresh conversation.",
         "optional": true
       },
       {
         "name": "url",
         "type": "string",
-        "description": "",
+        "description": "Endpoint URL of the AG-UI HTTP agent (e.g. `'http://localhost:8000/agent'`). Required.",
         "optional": false
       }
     ],
@@ -537,19 +537,19 @@
   {
     "name": "bridgeCitationsState",
     "kind": "function",
-    "description": "",
+    "description": "Attach per-message Citations carried in an AG-UI thread's `state`\n(`state.citations`, keyed by message id) onto the corresponding assistant\nMessages — for advanced consumers wiring citations from STATE events\ninto the neutral chat contract.",
     "signature": "bridgeCitationsState(thread: ThreadStateLike, messages: Message[]): Message[]",
     "params": [
       {
         "name": "thread",
         "type": "ThreadStateLike",
-        "description": "",
+        "description": "The thread-state container holding `state.citations`.",
         "optional": false
       },
       {
         "name": "messages",
         "type": "Message[]",
-        "description": "",
+        "description": "The messages to enrich.",
         "optional": false
       }
     ],
@@ -557,24 +557,28 @@
       "type": "Message[]",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst enriched = bridgeCitationsState(threadState, agent.messages());\n```"
+    ]
   },
   {
     "name": "injectAgent",
     "kind": "function",
-    "description": "Injects the AG-UI agent from Angular's dependency injection container.\nUse this in components or services provided via `provideAgent()` (or\n`provideFakeAgent()`).\n\nReturns an `AgUiAgent` — the runtime-neutral `Agent` contract plus the\nAG-UI-specific `customEvents` signal — so `customEvents` is reachable\ndirectly, without casting.\n\n**Typed state via AgentRef.** Pass the same ref that was supplied to\n`provideAgent(ref, …)` to carry the state type through DI without repeating\nthe generic at every call site:\n\n```ts\nconst agent = injectAgent(TRIP); // AgUiAgent<TripState>\n```\n\nThe no-arg form defaults to `AgUiAgent<Record<string, unknown>>`.",
+    "description": "Injects the AG-UI agent from Angular's dependency injection container.\nUse this in components or services provided via `provideAgent()` (or\n`provideFakeAgent()`).\n\nReturns an `AgUiAgent` — the runtime-neutral `Agent` contract plus the\nAG-UI-specific `customEvents` signal — so `customEvents` is reachable\ndirectly, without casting.\n\n**Typed state via AgentRef.** Pass the same ref that was supplied to\n`provideAgent(ref, …)` to carry the state type through DI without repeating\nthe generic at every call site. The no-arg form defaults to\n`AgUiAgent<Record<string, unknown>>`.",
     "signature": "injectAgent(): AgUiAgent<>",
     "params": [],
     "returns": {
       "type": "AgUiAgent<>",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst agent = injectAgent(TRIP); // AgUiAgent<TripState>\n```"
+    ]
   },
   {
     "name": "provideAgent",
     "kind": "function",
-    "description": "Provides an Agent instance wired through HttpAgent and toAgent.\nConstructs an HttpAgent from config and wraps it in the runtime-neutral\nAgent contract via toAgent(). Returns a provider array suitable for\nbootstrapApplication or TestBed.configureTestingModule().\n\n**Static vs factory config.** Pass a plain `AgentConfig` object when the\nconfig is known up front. Pass a `() => AgentConfig` factory when the config\ndepends on runtime/DI state — the factory runs inside an Angular injection\ncontext, so it may call `inject()` to read services or route params.\n\n**Typed state via AgentRef.** Pass a typed ref as the first argument to flow\nthe state shape from `provideAgent` to `injectAgent` without repeating the\ngeneric at every call site:\n\n```ts\ninterface TripState { day: number; places: string[]; }\nexport const TRIP = createAgentRef<TripState>('trip');\n// app.config.ts:\nproviders: [provideAgent(TRIP, { url: 'http://localhost:8000/agent' })]\n// component:\nconst agent = injectAgent(TRIP); // AgUiAgent<TripState>\n```",
+    "description": "Provides an Agent instance wired through HttpAgent and toAgent.\nConstructs an HttpAgent from config and wraps it in the runtime-neutral\nAgent contract via toAgent(). Returns a provider array suitable for\nbootstrapApplication or TestBed.configureTestingModule().\n\n**Static vs factory config.** Pass a plain `AgentConfig` object when the\nconfig is known up front. Pass a `() => AgentConfig` factory when the config\ndepends on runtime/DI state — the factory runs inside an Angular injection\ncontext, so it may call `inject()` to read services or route params.\n\n**Typed state via AgentRef.** Pass a typed ref as the first argument to flow\nthe state shape from `provideAgent` to `injectAgent` without repeating the\ngeneric at every call site.",
     "signature": "provideAgent(ref: AgentRef<T>, configOrFactory: AgentConfig | () => AgentConfig): Provider[]",
     "params": [
       {
@@ -594,7 +598,9 @@
       "type": "Provider[]",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\ninterface TripState { day: number; places: string[]; }\nexport const TRIP = createAgentRef<TripState>('trip');\n// app.config.ts:\nproviders: [provideAgent(TRIP, { url: 'http://localhost:8000/agent' })]\n// component:\nconst agent = injectAgent(TRIP); // AgUiAgent<TripState>\n```"
+    ]
   },
   {
     "name": "provideFakeAgent",

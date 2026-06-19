@@ -63,6 +63,21 @@ export interface MockAgentOptions {
   events$?: Observable<AgentEvent>;
 }
 
+/**
+ * Build an in-memory {@link Agent} for tests and stories — no transport, no
+ * network. Every field is a writable signal so a test can drive UI states
+ * (loading, error, interrupts, tool calls, subagents) deterministically.
+ *
+ * @param opts Initial values for the mock's signals; all optional.
+ * @returns A {@link MockAgent} satisfying the full `Agent` contract.
+ * @example
+ * ```ts
+ * const agent = mockAgent({
+ *   messages: [{ id: '1', role: 'assistant', content: 'Hi' }],
+ *   isLoading: true,
+ * });
+ * ```
+ */
 export function mockAgent(opts: MockAgentOptions = {}): MockAgent {
   const messages  = signal<Message[]>(opts.messages ?? []);
   const status    = signal<AgentStatus>(opts.status ?? 'idle');

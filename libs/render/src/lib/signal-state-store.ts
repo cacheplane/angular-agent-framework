@@ -34,6 +34,19 @@ function setByPath(obj: unknown, segments: string[], value: unknown): unknown {
   return record;
 }
 
+/**
+ * Create a signal-backed {@link StateStore} for a generative-UI surface —
+ * holds the bound state that spec `$bindState` paths read and interactive
+ * elements write, with path-addressable get/set and change subscriptions.
+ *
+ * @param initialState Optional starting state object.
+ * @returns A {@link StateStore} bridging Angular signals to the render engine.
+ * @example
+ * ```ts
+ * const store = signalStateStore({ count: 0 });
+ * store.set('count', 1);
+ * ```
+ */
 export function signalStateStore(initialState: StateModel = {}): StateStore {
   const state = signal<StateModel>(initialState);
   const listeners = new Set<() => void>();

@@ -19,6 +19,18 @@ import { A2uiTextComponent } from './text.component';
 import { A2uiTextFieldComponent } from './text-field.component';
 import { A2uiVideoComponent } from './video.component';
 
+/**
+ * Build the built-in A2UI component catalog — a {@link ViewRegistry} mapping
+ * the standard A2UI element types (Card, Button, TextField, Image, AudioPlayer,
+ * Video, …) to their Angular renderers. Spread it into `provideViews` (with any
+ * of your own views) so an agent's A2UI surface specs render.
+ *
+ * @returns A {@link ViewRegistry} of the standard A2UI components.
+ * @example
+ * ```ts
+ * providers: [provideViews({ ...a2uiBasicCatalog(), MyWidget: MyWidgetComponent })]
+ * ```
+ */
 export function a2uiBasicCatalog(): ViewRegistry {
   return views({
     AudioPlayer: A2uiAudioPlayerComponent,

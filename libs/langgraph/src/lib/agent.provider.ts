@@ -106,8 +106,13 @@ function isAgentRef<T>(x: unknown): x is AgentRef<T> {
  * config is known up front. Pass a `() => AgentConfig` factory when the config
  * depends on runtime/DI state — the factory runs inside an Angular injection
  * context, so it may call `inject()` to read services, route params, or
- * component-scoped signals:
+ * component-scoped signals.
  *
+ * **Typed state via AgentRef.** Pass a typed ref as the first argument to flow
+ * the state shape from `provideAgent` to `injectAgent` without repeating the
+ * generic at every call site.
+ *
+ * @example Factory config reading route params
  * ```ts
  * providers: [
  *   provideAgent(() => {
@@ -116,11 +121,7 @@ function isAgentRef<T>(x: unknown): x is AgentRef<T> {
  *   }),
  * ];
  * ```
- *
- * **Typed state via AgentRef.** Pass a typed ref as the first argument to flow
- * the state shape from `provideAgent` to `injectAgent` without repeating the
- * generic at every call site:
- *
+ * @example Typed state via AgentRef
  * ```ts
  * export const TRIP = createAgentRef<TripState>('trip');
  * // app.config.ts:
