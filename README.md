@@ -23,6 +23,9 @@
   <a href="https://scorecard.dev/viewer/?uri=github.com/cacheplane/angular-agent-framework">
     <img alt="OpenSSF Scorecard" src="https://api.scorecard.dev/projects/github.com/cacheplane/angular-agent-framework/badge" />
   </a>
+  <a href="https://www.bestpractices.dev/projects/13316">
+    <img alt="OpenSSF Best Practices" src="https://www.bestpractices.dev/projects/13316/badge" />
+  </a>
 </p>
 
 ---
