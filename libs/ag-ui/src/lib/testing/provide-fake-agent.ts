@@ -11,6 +11,13 @@ import { FakeAgent } from './fake-agent';
  *
  * Use for offline demos and development. Drop-in replacement for
  * provideAgent({ url }) when no real backend is available.
+ *
+ * @example
+ * ```ts
+ * TestBed.configureTestingModule({
+ *   providers: [provideFakeAgent({ responses: ['Hello from the fake agent'] })],
+ * });
+ * ```
  */
 export function provideFakeAgent(config: FakeAgentConfig = {}): Provider[] {
   return [
