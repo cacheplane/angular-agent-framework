@@ -15,13 +15,11 @@ test('research subagent: parent dispatches research, subagent content surfaces i
   await input.fill(PROMPT);
   await page.getByRole('button', { name: /send/i }).click();
 
-  // The chat-tool-calls primitive renders a button/chip labeled "Called research"
-  // (or similar) once the parent dispatches the tool. With aimock the subagent
-  // runs essentially instantly, so we don't try to catch the transient
-  // <chat-subagents> panel — instead we assert on the durable
-  // tool-call-completion chip and on subagent-emitted content reaching the bubble.
-  const researchChip = page.getByRole('button', { name: /research/i }).first();
-  await expect(researchChip).toBeVisible({ timeout: 45_000 });
+  // The `research` tool call (a subagent dispatch via subagentToolNames) renders
+  // inline AS a <chat-subagent-card> — agent.subagents() populates from the
+  // research subgraph's tools:<id> namespace. The card PERSISTS (collapsed)
+  // after the subagent completes, so it is stable to assert at idle.
+  await expect(page.locator('chat-subagent-card').first()).toBeVisible({ timeout: 45_000 });
 
   // The captured subagent summary mentions standalone components and NgModule.
   // Assert one of those terms appears in the conversation body — proves the

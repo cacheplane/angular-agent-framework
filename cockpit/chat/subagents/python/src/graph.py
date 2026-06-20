@@ -7,20 +7,15 @@ copied into this module.
 
 import os
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal, TypedDict
 
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, MessagesState, END
+from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
 from langgraph_sdk import get_client
-
-from src.aviation_tools import (
-    get_airport_info,
-    find_routes,
-    lookup_flight,
-)
 
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 
@@ -75,87 +70,110 @@ async def generate_title(state: MessagesState, config) -> dict:
     return {}
 
 
-_RESEARCH_PROMPT = """You are a Research Agent for trip planning. Your job is to gather
-destination intel about airports the traveler is considering. Use the
-get_airport_info tool to look up airport details (city, weather, terminals,
-runways) for any airport codes mentioned in the task description.
+_RESEARCH_PROMPT = """You are a Research Agent for trip planning. Given a task
+describing one or more airports, return destination intel about them: city,
+typical weather, major terminals, and notable travel considerations. Draw on
+general knowledge of the airports named in the task.
 
-Return a concise 2-4 sentence summary of what you found. If a code isn't
-recognized, say so."""
+Return a concise 2-4 sentence summary. If an airport isn't recognizable, say so."""
 
-_BOOKING_PROMPT = """You are a Booking Agent for trip planning. Your job is to find
-flight options between the origin and destination airports in the task
-description. Use find_routes to list available flights, and lookup_flight
-if the user mentioned a specific flight number.
+_BOOKING_PROMPT = """You are a Booking Agent for trip planning. Given an origin and
+destination in the task description, describe realistic flight options between
+them: which major carriers fly the route nonstop, typical durations, and rough
+fare expectations.
 
-Return a concise summary listing 2-3 best flight options with airline,
-flight number, times, and price-or-aircraft info. If no flights are found,
-say so and suggest alternatives."""
+Return a concise summary listing 2-3 plausible options with airline, an example
+flight number, times, and price-or-aircraft info."""
 
-_ITINERARY_PROMPT = """You are an Itinerary Agent for trip planning. Your job is to
-synthesize a final trip plan from research + booking outputs you receive in
-the task description.
+_ITINERARY_PROMPT = """You are an Itinerary Agent for trip planning. Synthesize a
+final trip plan from the research + booking outputs you receive in the task
+description.
 
-Return a clean 3-5 sentence itinerary summarizing the recommended flight
-choice, what to expect on arrival (weather), and any practical tips
-(e.g., delays, terminal info). Be helpful and concise."""
+Return a clean 3-5 sentence itinerary summarizing the recommended flight choice,
+what to expect on arrival (weather), and any practical tips (e.g., terminal info,
+buffer time). Be helpful and concise."""
 
 
-async def _run_subagent(role: str, task_description: str, system_prompt: str, tools: list):
-    """Run a single subagent: LLM bound with role-specific tools, single tool loop."""
+# subagent_type → system prompt. Keyed by the same Literal the `task` tool
+# exposes, so one parameterized subgraph serves all three specialists.
+_SUBAGENT_PROMPTS: dict[str, str] = {
+    "research": _RESEARCH_PROMPT,
+    "booking": _BOOKING_PROMPT,
+    "itinerary": _ITINERARY_PROMPT,
+}
+
+
+class SubagentState(TypedDict):
+    """Child-graph state. `subagent_type` selects the system prompt."""
+    messages: Annotated[list, add_messages]
+    subagent_type: str
+    task_description: str
+
+
+async def _subagent_node(state: SubagentState) -> dict:
+    """Focused subagent: a single role-prompted LLM call. Kept to ONE LLM call
+    (no within-subagent tool loop) so each subagent's request has a unique,
+    stable discriminator (its role-specific task_description) — this lets the
+    aimock e2e replay match it deterministically. The within-subagent tool
+    calling is exercised by the dedicated tool-calls cap; here the focus is
+    subagent orchestration + the inline subagent card. The returned message
+    streams under this subgraph's `tools:<call_id>` namespace, which the
+    @threadplane/langgraph SubagentTracker matches to surface the card."""
+    subagent_type = state["subagent_type"]
+    task_description = state["task_description"]
+    system_prompt = _SUBAGENT_PROMPTS.get(subagent_type, _ITINERARY_PROMPT)
+
     llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
-    if tools:
-        llm = llm.bind_tools(tools)
-    messages = [
+    response = await llm.ainvoke([
         SystemMessage(content=system_prompt),
         HumanMessage(content=task_description),
-    ]
-    # Allow up to 3 tool-loop iterations
-    for _ in range(3):
-        response = await llm.ainvoke(messages)
-        messages.append(response)
-        tool_calls = getattr(response, "tool_calls", None)
-        if not tool_calls:
-            return response.content
-        # Execute tool calls inline
-        for tc in tool_calls:
-            tool_name = tc["name"]
-            tool_args = tc["args"]
-            target = next((t for t in tools if t.name == tool_name), None)
-            if target is None:
-                tool_result = f"Tool {tool_name} not available"
-            else:
-                tool_result = await target.ainvoke(tool_args)
-            from langchain_core.messages import ToolMessage
-            messages.append(ToolMessage(content=str(tool_result), tool_call_id=tc["id"]))
-    return response.content
+    ])
+    return {"messages": [response]}
+
+
+# Compiled child graph. Invoking it from inside the `task` tool makes LangGraph
+# nest its run under a `tools:<call_id>` namespace, which the @threadplane/langgraph
+# SubagentTracker matches to the registered `task` dispatch to surface a card.
+_subagent_builder = StateGraph(SubagentState)
+_subagent_builder.add_node("subagent", _subagent_node)
+_subagent_builder.set_entry_point("subagent")
+_subagent_builder.add_edge("subagent", END)
+subagent_subgraph = _subagent_builder.compile()
+
+
+def _final_text(messages: list) -> str:
+    """Last non-empty string content from the child graph's messages."""
+    for msg in reversed(messages or []):
+        content = getattr(msg, "content", None)
+        if isinstance(content, str) and content.strip():
+            return content
+        if isinstance(content, list):
+            parts = [b.get("text", "") for b in content if isinstance(b, dict) and b.get("type") == "text"]
+            if any(p.strip() for p in parts):
+                return "\n".join(parts)
+    return "(no subagent output)"
 
 
 @tool
-async def task(role: Literal["research", "booking", "itinerary"], task_description: str) -> str:
-    """Delegate a subtask to a specialized subagent.
-
-    Roles:
-      - research: gathers destination intel (airports, weather, conditions)
-      - booking: finds flight options between origin and destination
-      - itinerary: synthesizes a final trip plan combining research + bookings
+async def task(subagent_type: Literal["research", "booking", "itinerary"], task_description: str) -> str:
+    """Delegate a subtask to a specialized subagent subgraph.
 
     Args:
-        role: One of "research", "booking", "itinerary".
-        task_description: Plain-English description of what the subagent
-            should do (e.g., "Gather info on LAX and JFK airports", or
-            "Find morning flights from LAX to JFK").
+        subagent_type: Which specialist to dispatch — "research" (airport /
+            destination intel), "booking" (flight options between origin and
+            destination), or "itinerary" (final trip plan synthesizing research
+            + bookings). This label also identifies the subagent in the UI.
+        task_description: Plain-English description of what the subagent should
+            do (e.g., "Gather info on LAX and JFK airports").
 
     Returns:
         The subagent's final answer as a string.
     """
-    if role == "research":
-        return await _run_subagent(role, task_description, _RESEARCH_PROMPT, [get_airport_info])
-    if role == "booking":
-        return await _run_subagent(role, task_description, _BOOKING_PROMPT, [find_routes, lookup_flight])
-    if role == "itinerary":
-        return await _run_subagent(role, task_description, _ITINERARY_PROMPT, [])
-    return f"Unknown role: {role}"
+    result = await subagent_subgraph.ainvoke(
+        {"subagent_type": subagent_type, "task_description": task_description, "messages": []}
+    )
+    messages = result.get("messages") if isinstance(result, dict) else None
+    return _final_text(messages)
 
 
 def build_subagents_graph():
