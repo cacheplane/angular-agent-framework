@@ -173,6 +173,17 @@ Agents can emit surface specs via `buildA2uiActionMessage(...)`. Actions from ca
 
 The built-in catalog ships via `a2uiBasicCatalog`. Compose a custom catalog with `withViews()` and pass it to the surface.
 
+**Icons.** The catalog `Icon` component renders [Material Symbols](https://fonts.google.com/icons) by name (the A2UI canonical icon set — e.g. `check`, `trending_up`, `star`). For glyphs to render, include the Material Symbols Outlined stylesheet in your app's `<head>` (the library does not inject any web font):
+
+```html
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+/>
+```
+
+Without the font, the icon name falls back to plain text. Icons inherit `currentColor` and size via the `size` prop.
+
 ### Streaming markdown
 
 `<chat-streaming-md>` renders markdown token-by-token as the agent streams. The `cacheplaneMarkdownViews` registry maps each CommonMark node type to an Angular component.

@@ -6,14 +6,35 @@ import type { Spec } from '@json-render/core';
   selector: 'a2ui-icon',
   standalone: true,
   template: `
-    <span
-      class="a2ui-icon"
-      [style.font-size]="size() ? size() + 'px' : '1.125rem'"
-      [attr.aria-label]="effectiveName()"
-    >{{ effectiveName() }}</span>
+    @if (effectiveName(); as name) {
+      <span
+        class="a2ui-icon material-symbols-outlined"
+        [style.font-size]="size() ? size() + 'px' : '1.125rem'"
+        [attr.aria-label]="name"
+        role="img"
+      >{{ name }}</span>
+    }
   `,
   styles: [`
+    /* Renders Material Symbols by ligature name (A2UI's canonical icon set).
+       Relies only on the Material Symbols Outlined @font-face being present —
+       host apps load the stylesheet (see README). Unknown / not-yet-loaded
+       names fall back to the browser default glyph. */
     .a2ui-icon {
+      font-family: 'Material Symbols Outlined';
+      font-weight: normal;
+      font-style: normal;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      font-feature-settings: 'liga';
+      -webkit-font-feature-settings: 'liga';
+      -webkit-font-smoothing: antialiased;
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      color: currentColor;
       display: inline-flex;
       align-items: center;
       justify-content: center;
