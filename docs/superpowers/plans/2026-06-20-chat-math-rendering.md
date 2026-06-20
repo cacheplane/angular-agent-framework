@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-06-20-resilient-markdown-math-rendering-design.md` (Part A; corrected 2026-06-20 to add A.0). Part B (parser hardening) is out of scope here.
 
-**Open sub-decision (flag to human before/at Task 5):** KaTeX CSS/font delivery. This plan defaults to a lazy-injected pinned jsDelivr `<link>` with SRI. If the human prefers no runtime CDN (supply-chain stance), switch to self-hosted/inlined CSS — see Task 4, Step 4.
+**Resolved sub-decision:** KaTeX CSS/font delivery is **self-hosted** (human chose, 2026-06-20) — NO runtime CDN. The lib does not inject any stylesheet; consumers import `katex/dist/katex.min.css` themselves, and the example apps add it to their `styles`. See Task 4, Step 4.
 
 **Branch:** `feat/chat-math-rendering` (already checked out; spec already on it).
 
@@ -269,40 +269,24 @@ export const katexLoaded: Promise<void> = import('katex')
     katexRender = null;
   });
 
-// ── Lazy CSS injection (pinned jsDelivr + SRI) ──────────────────────────────
-// DEFAULT delivery; see plan Task 4 Step 4 for the self-hosted alternative.
-// Pin to the resolved katex version and compute SRI in Task 4 Step 4.
-const KATEX_CSS_HREF = '__KATEX_CSS_HREF__';
-const KATEX_CSS_SRI = '__KATEX_CSS_SRI__';
-let cssInjected = false;
-function ensureKatexCss(): void {
-  if (cssInjected || typeof document === 'undefined') return;
-  if (KATEX_CSS_HREF.startsWith('__')) return; // not configured (e.g. unit tests) — skip
-  cssInjected = true;
-  const link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.href = KATEX_CSS_HREF;
-  link.integrity = KATEX_CSS_SRI;
-  link.crossOrigin = 'anonymous';
-  document.head.appendChild(link);
-}
+// CSS: the KaTeX stylesheet (and its woff2 fonts) is the CONSUMER's
+// responsibility — the lib injects nothing at runtime (self-hosted by choice;
+// no third-party CDN fetch). Consumers import `katex/dist/katex.min.css`; math
+// renders without it (just unstyled), so unit tests don't need it.
 
 /**
  * Render LaTeX to a KaTeX HTML string, or null if KaTeX is unavailable or the
- * input throws. Injects the KaTeX stylesheet once on first successful render.
+ * input throws (invalid LaTeX) — the caller then renders the raw `$…$` source.
  */
 export function renderMath(latex: string, displayMode: boolean): string | null {
   if (!katexRender) return null;
   try {
-    const html = katexRender(latex, displayMode);
-    ensureKatexCss();
-    return html;
+    return katexRender(latex, displayMode);
   } catch {
     return null;
   }
 }
 ```
-(The `__KATEX_CSS_*__` sentinels are wired with real values in Task 4 Step 4; until then `ensureKatexCss` no-ops, which is correct for unit tests.)
 
 - [ ] **Step 4: Run the test to verify it passes**
 
@@ -459,23 +443,18 @@ export class MarkdownMathComponent {
 }
 ```
 
-- [ ] **Step 4: Configure KaTeX CSS delivery (resolve the open sub-decision)**
+- [ ] **Step 4: KaTeX CSS — self-hosted (documented, no runtime CDN)**
 
-**Default (CDN + SRI).** Pin to the installed KaTeX version and compute the SRI hash:
-```bash
-cd /Users/blove/repos/angular-agent-framework
-KV=$(node -e "console.log(require('katex/package.json').version)")
-echo "katex version: $KV"
-SRI=$(curl -sL "https://cdn.jsdelivr.net/npm/katex@${KV}/dist/katex.min.css" | openssl dgst -sha384 -binary | openssl base64 -A)
-echo "href: https://cdn.jsdelivr.net/npm/katex@${KV}/dist/katex.min.css"
-echo "integrity: sha384-${SRI}"
-```
-Then edit `libs/chat/src/lib/markdown/katex-loader.ts`, replacing the sentinels:
-```ts
-const KATEX_CSS_HREF = 'https://cdn.jsdelivr.net/npm/katex@<KV>/dist/katex.min.css';
-const KATEX_CSS_SRI = 'sha384-<SRI>';
-```
-(Substitute the printed `<KV>`/`<SRI>`.) **If the human vetoed the CDN:** instead leave the sentinels, and document in `libs/chat/README.md` that consumers must import `katex/dist/katex.min.css`; the example apps then add it to their `styles` array. (Math still renders without CSS — just unstyled — so tests are unaffected either way.)
+The lib injects no stylesheet (decision: self-host). Do two things:
+
+1. **Document it** in `libs/chat/README.md` — add a short "Math rendering (KaTeX)" note near the markdown section:
+   > Math (`$…$`, `$$…$$`, `\(…\)`, `\[…\]`) renders via KaTeX, an optional peer dependency loaded lazily only when a message contains math. To style it, install `katex` and import its stylesheet once in your app: `import 'katex/dist/katex.min.css';` (or add it to your Angular `styles`). Without the stylesheet, math still renders — just unstyled.
+
+2. **Add the CSS to the example apps** so the live smoke (Task 6) looks right. In `examples/ag-ui/angular/project.json` (and `examples/chat/angular/project.json` if it has the same markdown surface), add `"node_modules/katex/dist/katex.min.css"` to the build target's `options.styles` array. Verify the path key:
+   ```bash
+   grep -rn '"styles"' examples/ag-ui/angular/project.json examples/chat/angular/project.json
+   ```
+   If an example uses a `styles.css` entrypoint instead of `project.json` `styles[]`, add `@import 'katex/dist/katex.min.css';` there instead. (No KaTeX CSS is needed for unit tests — math renders unstyled, assertions check for `.katex`, not styling.)
 
 - [ ] **Step 5: Add minimal wrapper styles**
 
@@ -635,5 +614,5 @@ gh pr merge --squash --auto
 - **Co-ship constraint** (bump + view together) is enforced: Tasks 2 and 4 are in the same PR/branch; the streaming test (Task 5) would fail if either were missing. ✓
 - **Type consistency:** `MathNode = MarkdownMathInlineNode | MarkdownMathDisplayNode`; delimiter literals `'$' | '$$' | '\(\)' | '\[\]'` match `partial-markdown` source types; `renderMath(latex, displayMode)` signature consistent across loader + component + tests. ✓
 - **`throwOnError`:** intentionally `true` (not the spec's `false`) so invalid LaTeX throws → caught → raw fallback, matching the spec's *behavioral* requirement ("invalid LaTeX renders the raw source"). Noted in code + here. ✓
-- **No placeholders:** the only deferred values are the KaTeX CSS href/SRI, which Task 4 Step 4 computes with an exact command (a derived constant, not a code gap). ✓
+- **No placeholders:** CSS is self-hosted (no CDN constants to fill); Task 4 Step 4 is documentation + an example `styles[]` entry verified against the actual `project.json` key. ✓
 - **Irreversible-action gate:** the npm publish (Task 1) has an explicit human go-ahead step before the tag push. ✓
