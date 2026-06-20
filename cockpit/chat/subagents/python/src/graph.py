@@ -7,12 +7,13 @@ copied into this module.
 
 import os
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal, TypedDict
 
-from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.messages import SystemMessage, HumanMessage, ToolMessage
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, MessagesState, END
+from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
 from langgraph_sdk import get_client
 
@@ -101,61 +102,103 @@ choice, what to expect on arrival (weather), and any practical tips
 (e.g., delays, terminal info). Be helpful and concise."""
 
 
-async def _run_subagent(role: str, task_description: str, system_prompt: str, tools: list):
-    """Run a single subagent: LLM bound with role-specific tools, single tool loop."""
+# subagent_type → (system prompt, role-specific tools). Keyed by the same
+# Literal the `task` tool exposes, so one parameterized subgraph serves all
+# three specialists.
+_SUBAGENT_CONFIG: dict[str, tuple[str, list]] = {
+    "research": (_RESEARCH_PROMPT, [get_airport_info]),
+    "booking": (_BOOKING_PROMPT, [find_routes, lookup_flight]),
+    "itinerary": (_ITINERARY_PROMPT, []),
+}
+
+
+class SubagentState(TypedDict):
+    """Child-graph state. `subagent_type` selects the prompt + tools."""
+    messages: Annotated[list, add_messages]
+    subagent_type: str
+    task_description: str
+
+
+async def _subagent_node(state: SubagentState) -> dict:
+    """Focused subagent: role-specific prompt + tools, manual tool loop (<=3
+    rounds). Returns the messages it produced so they stream under this
+    subgraph's `tools:<call_id>` namespace and populate the subagent card."""
+    subagent_type = state["subagent_type"]
+    task_description = state["task_description"]
+    system_prompt, tools = _SUBAGENT_CONFIG.get(subagent_type, (_ITINERARY_PROMPT, []))
+
     llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
     if tools:
         llm = llm.bind_tools(tools)
-    messages = [
+
+    convo: list = [
         SystemMessage(content=system_prompt),
         HumanMessage(content=task_description),
     ]
-    # Allow up to 3 tool-loop iterations
+    emitted: list = []
     for _ in range(3):
-        response = await llm.ainvoke(messages)
-        messages.append(response)
+        response = await llm.ainvoke(convo)
+        convo.append(response)
+        emitted.append(response)
         tool_calls = getattr(response, "tool_calls", None)
         if not tool_calls:
-            return response.content
-        # Execute tool calls inline
+            break
         for tc in tool_calls:
-            tool_name = tc["name"]
-            tool_args = tc["args"]
-            target = next((t for t in tools if t.name == tool_name), None)
-            if target is None:
-                tool_result = f"Tool {tool_name} not available"
-            else:
-                tool_result = await target.ainvoke(tool_args)
-            from langchain_core.messages import ToolMessage
-            messages.append(ToolMessage(content=str(tool_result), tool_call_id=tc["id"]))
-    return response.content
+            target = next((t for t in tools if t.name == tc["name"]), None)
+            result = (
+                await target.ainvoke(tc["args"])
+                if target is not None
+                else f"Tool {tc['name']} not available"
+            )
+            tool_msg = ToolMessage(content=str(result), tool_call_id=tc["id"])
+            convo.append(tool_msg)
+            emitted.append(tool_msg)
+    return {"messages": emitted}
+
+
+# Compiled child graph. Invoking it from inside the `task` tool makes LangGraph
+# nest its run under a `tools:<call_id>` namespace, which the @threadplane/langgraph
+# SubagentTracker matches to the registered `task` dispatch to surface a card.
+_subagent_builder = StateGraph(SubagentState)
+_subagent_builder.add_node("subagent", _subagent_node)
+_subagent_builder.set_entry_point("subagent")
+_subagent_builder.add_edge("subagent", END)
+subagent_subgraph = _subagent_builder.compile()
+
+
+def _final_text(messages: list) -> str:
+    """Last non-empty string content from the child graph's messages."""
+    for msg in reversed(messages or []):
+        content = getattr(msg, "content", None)
+        if isinstance(content, str) and content.strip():
+            return content
+        if isinstance(content, list):
+            parts = [b.get("text", "") for b in content if isinstance(b, dict) and b.get("type") == "text"]
+            if any(p.strip() for p in parts):
+                return "\n".join(parts)
+    return "(no subagent output)"
 
 
 @tool
-async def task(role: Literal["research", "booking", "itinerary"], task_description: str) -> str:
-    """Delegate a subtask to a specialized subagent.
-
-    Roles:
-      - research: gathers destination intel (airports, weather, conditions)
-      - booking: finds flight options between origin and destination
-      - itinerary: synthesizes a final trip plan combining research + bookings
+async def task(subagent_type: Literal["research", "booking", "itinerary"], task_description: str) -> str:
+    """Delegate a subtask to a specialized subagent subgraph.
 
     Args:
-        role: One of "research", "booking", "itinerary".
-        task_description: Plain-English description of what the subagent
-            should do (e.g., "Gather info on LAX and JFK airports", or
-            "Find morning flights from LAX to JFK").
+        subagent_type: Which specialist to dispatch — "research" (airport /
+            destination intel), "booking" (flight options between origin and
+            destination), or "itinerary" (final trip plan synthesizing research
+            + bookings). This label also identifies the subagent in the UI.
+        task_description: Plain-English description of what the subagent should
+            do (e.g., "Gather info on LAX and JFK airports").
 
     Returns:
         The subagent's final answer as a string.
     """
-    if role == "research":
-        return await _run_subagent(role, task_description, _RESEARCH_PROMPT, [get_airport_info])
-    if role == "booking":
-        return await _run_subagent(role, task_description, _BOOKING_PROMPT, [find_routes, lookup_flight])
-    if role == "itinerary":
-        return await _run_subagent(role, task_description, _ITINERARY_PROMPT, [])
-    return f"Unknown role: {role}"
+    result = await subagent_subgraph.ainvoke(
+        {"subagent_type": subagent_type, "task_description": task_description, "messages": []}
+    )
+    messages = result.get("messages") if isinstance(result, dict) else None
+    return _final_text(messages)
 
 
 def build_subagents_graph():
