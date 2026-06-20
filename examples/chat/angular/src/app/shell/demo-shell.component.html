@@ -119,11 +119,6 @@
         <chat-interrupt-panel [agent]="agent" (action)="onInterruptAction($event)" />
       </div>
     }
-    @if (agent.subagents && agent.subagents().size > 0) {
-      <div class="demo-shell__subagents" role="region" aria-label="Active subagents">
-        <chat-subagents [agent]="agent" />
-      </div>
-    }
   </div>
 
   <chat-history-search-palette
