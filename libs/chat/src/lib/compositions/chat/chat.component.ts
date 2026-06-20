@@ -248,14 +248,21 @@ export function isPinned(
                       />
                     }
                   }
-                  <chat-message-actions
-                    chatMessageControls
-                    [content]="content"
-                    [disabled]="agent().isLoading()"
-                    (regenerate)="onRegenerate(i)"
-                    (rate)="onRate(message, $event)"
-                    (contentCopied)="onCopy(message, $event)"
-                  />
+                  <!-- Only show message actions when there is copyable assistant
+                       text. Content-less messages (a bare tool call or a subagent
+                       delegation card) have nothing to copy/regenerate/rate, so the
+                       actions panel is pure whitespace there — suppress it to keep
+                       the stream compact. -->
+                  @if (content.trim()) {
+                    <chat-message-actions
+                      chatMessageControls
+                      [content]="content"
+                      [disabled]="agent().isLoading()"
+                      (regenerate)="onRegenerate(i)"
+                      (rate)="onRate(message, $event)"
+                      (contentCopied)="onCopy(message, $event)"
+                    />
+                  }
                 </chat-message>
               </ng-template>
 
