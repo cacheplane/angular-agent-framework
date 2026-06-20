@@ -2069,6 +2069,32 @@
         ]
       },
       {
+        "name": "reasoningRun",
+        "signature": "reasoningRun(index: number): object",
+        "description": "Aggregate the reasoning RUN starting at `index`: joins each step's\nreasoning, sums durations, counts steps, and computes the streaming flag\nand the merged label (\"Thought for {total} · {N} steps\" when N > 1).",
+        "params": [
+          {
+            "name": "index",
+            "type": "number",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "reasoningRunStart",
+        "signature": "reasoningRunStart(index: number): boolean",
+        "description": "True when message[index] starts a reasoning RUN — a maximal sequence of\nconsecutive assistant reasoning steps separated only by (hidden) tool\nmessages. The merged reasoning pill renders once, here.",
+        "params": [
+          {
+            "name": "index",
+            "type": "number",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
         "name": "submitMessage",
         "signature": "submitMessage(text: string): void",
         "description": "Programmatic submit. Calls `agent.submit({ message: text })` and updates\nthe CHAT_LIFECYCLE signals. Trimmed-empty text is a no-op.",
