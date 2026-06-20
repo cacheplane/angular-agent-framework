@@ -1,0 +1,161 @@
+# Error Handling
+
+When a run fails, `@threadplane/chat` surfaces a structured `AgentError` on the agent's `error` signal instead of a bare `Error`. It carries a machine-readable failure `kind`, a `retryable` flag, an optional HTTP `status`, and the original `cause` — so you can render cause-specific copy, decide whether to offer a retry, and keep the raw error for telemetry.
+
+<Callout type="info" title="Zero-config by default">
+  `<chat>` already renders the built-in `<chat-error>` primitive, which shows legible per-kind copy and a **Retry** button for retryable failures. You only need this guide when you want custom error UI.
+</Callout>
+
+## The `AgentError` shape
+
+`agent.error()` returns an `AgentError | undefined`. `AgentError extends Error`, so existing `.message` / `instanceof Error` reads keep working:
+
+```typescript
+import { AgentError, type AgentErrorKind } from '@threadplane/chat';
+
+class AgentError extends Error {
+  readonly kind: AgentErrorKind;   // 'connection' | 'auth' | 'server' | 'interrupted' | 'aborted'
+  readonly retryable: boolean;     // could retrying the same request plausibly succeed?
+  readonly status?: number;        // HTTP status, when the failure came from a response
+  readonly cause: unknown;         // the original raw error, preserved for debugging/telemetry
+}
+```
+
+### Failure kinds
+
+| `kind` | Cause | `retryable` |
+|---|---|---|
+| `connection` | Offline / DNS / connection refused / `fetch` failed | `true` |
+| `auth` | `401` / `403` — credentials or API key are wrong | `false` |
+| `server` | `5xx` (retryable) or a non-auth `4xx` like `400`/`404`/`429` (not retryable) | varies |
+| `interrupted` | The stream closed mid-response after a run had started | `true` |
+| `aborted` | The user pressed stop — treated as a graceful idle, **not** surfaced as an error | `false` |
+
+The `retryable` flag is the value to branch on for UI: `connection`, `server` (5xx), and `interrupted` are retryable; `auth`, `aborted`, and non-auth `4xx` are not.
+
+## Reading the error
+
+```typescript
+const err = agent.error();          // AgentError | undefined
+if (err) {
+  console.warn(err.message);        // legible, per-kind copy
+  if (err.kind === 'auth') showApiKeyHelp();
+  if (err.retryable) showRetryButton();   // → agent.retry()
+}
+```
+
+`agent.retry()` re-runs the last request and clears `error`. It's a no-op when a run is in flight or there is nothing to retry.
+
+## The built-in error UI
+
+`<chat>` auto-renders `<chat-error>`, which reads the agent's error and shows the message plus a **Retry** button when `error.retryable` is true:
+
+```html
+<!-- Rendered automatically inside <chat>; use it standalone to place your own -->
+<chat-error [agent]="chatRef" />
+```
+
+The Retry button calls `agent().retry()` for you. For non-retryable failures (e.g. `auth`), no button is shown — retrying the same bad credential would just fail again.
+
+## Custom error UI
+
+Read `agent.error()` directly to render your own surface. Override the default copy by mapping `error.kind` to your own strings — `AGENT_ERROR_MESSAGES` holds the built-in defaults:
+
+```typescript
+import { Component } from '@angular/core';
+import { injectAgent } from '@threadplane/langgraph';
+import { AGENT_ERROR_MESSAGES, type AgentErrorKind } from '@threadplane/chat';
+
+const COPY: Record<AgentErrorKind, string> = {
+  ...AGENT_ERROR_MESSAGES,
+  auth: 'Your API key looks wrong — update it in Settings.',
+};
+
+@Component({
+  selector: 'app-chat',
+  template: `
+    @if (agent.error(); as err) {
+      <div role="alert" class="my-error">
+        <span>{{ COPY[err.kind] }}</span>
+        @if (err.retryable) {
+          <button (click)="agent.retry()">Try again</button>
+        }
+      </div>
+    }
+  `,
+})
+export class AppChatComponent {
+  readonly agent = injectAgent();
+  protected readonly COPY = COPY;
+}
+```
+
+`extractErrorMessage(value)` is also exported for coercing any unknown error value into a readable string when you render an error outside `<chat-error>`.
+
+## Classifying errors in a custom backend
+
+Runtime adapters normalize raw failures through `toAgentError()` before setting `agent.error()`. If you write a [custom adapter](/docs/chat/guides/writing-an-adapter), call it too — or throw an `AgentError` directly:
+
+```typescript
+import { toAgentError } from '@threadplane/chat';
+
+try {
+  await runMyBackend();
+} catch (raw) {
+  // Classifies by structured status → connection markers → HTTP-shaped message → server fallback.
+  // Idempotent: an existing AgentError passes through unchanged. User aborts settle to 'aborted'.
+  this.setError(toAgentError(raw));
+}
+```
+
+`isAbortError(raw)` is the shared predicate both adapters and `toAgentError()` use to recognize a user-requested stop (`AbortError`) so it settles to idle rather than surfacing as an error.
+
+## API reference
+
+```typescript
+import {
+  AgentError,
+  type AgentErrorKind,
+  AGENT_ERROR_MESSAGES,
+  toAgentError,
+  isAbortError,
+  ChatErrorComponent,
+  extractErrorMessage,
+} from '@threadplane/chat';
+```
+
+| Export | Purpose |
+|---|---|
+| `AgentError` | Structured error class on `agent.error()` (`kind`, `retryable`, `status?`, `cause`) |
+| `AgentErrorKind` | Union of the five failure classes |
+| `AGENT_ERROR_MESSAGES` | Default human-facing copy per kind |
+| `toAgentError(raw)` | Classify any raw value into an `AgentError` (idempotent) |
+| `isAbortError(raw)` | Predicate: is this a user-requested stop? |
+| `ChatErrorComponent` | The `<chat-error>` primitive (message + conditional Retry) |
+| `extractErrorMessage(value)` | Coerce any error value into a readable string |
+
+## What's next
+
+<CardGroup cols={3}>
+  <Card
+    title="Writing an Adapter"
+    icon="plug"
+    href="/docs/chat/guides/writing-an-adapter"
+  >
+    Normalize backend failures with `toAgentError()` in a custom adapter.
+  </Card>
+  <Card
+    title="Lifecycle Signals"
+    icon="activity"
+    href="/docs/chat/guides/lifecycle"
+  >
+    Per-instance signals for debugging, loading, and error states.
+  </Card>
+  <Card
+    title="Theming"
+    icon="palette"
+    href="/docs/chat/guides/theming"
+  >
+    Style the error surface with chat theme variables.
+  </Card>
+</CardGroup>

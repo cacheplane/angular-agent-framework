@@ -1,8 +1,28 @@
 # Changelog
 
 <Callout type="info" title="Highlight releases only">
-This changelog tracks selected highlight releases, not every patch. The published package is at `0.0.49` — see the entry below for the notable additions since `0.0.19`.
+This changelog tracks selected highlight releases, not every patch. The published package is at `0.0.52` — see the entry below for the notable additions since `0.0.19`.
 </Callout>
+
+## 0.0.52
+
+### Classified errors and Retry
+
+- New structured `AgentError` on the `Agent` contract: `agent.error()` now returns an `AgentError` (or `undefined`) carrying a machine-readable `kind` (`connection` | `auth` | `server` | `interrupted` | `aborted`), a `retryable` flag, an optional HTTP `status`, and the original `cause`. Both adapters normalize raw failures through `toAgentError()`.
+- New `agent.retry()` action re-runs the last request and clears `error`. The built-in `<chat-error>` primitive (auto-rendered by `<chat>`) shows cause-specific copy and a **Retry** button whenever `error.retryable` is true.
+- New exports from `@threadplane/chat`: `AgentError`, `AgentErrorKind`, `toAgentError`, `isAbortError`, `AGENT_ERROR_MESSAGES`, plus `ChatErrorComponent` and `extractErrorMessage`. See [Error Handling](/docs/chat/guides/error-handling).
+
+### Thread routing
+
+- New `injectThreadRouting()` helper binds an app-owned active-thread signal to the Angular Router — restoring the thread id from the URL on load, stamping changes back into the URL, and treating a bare URL as the welcome state, with no `localStorage`. See [Thread Routing](/docs/chat/guides/thread-routing).
+
+### Subagent cards
+
+- `<chat-subagent-card>` now renders the subagent's **full transcript** — every message as streaming markdown, with reasoning and the subagent's own tool-call cards — instead of only the latest message. Cards are inline and persistent, auto-expand while running, and collapse on completion. See [ChatSubagentCard](/docs/chat/components/chat-subagent-card).
+
+### TypeScript DX
+
+- Strict-safe, fully typed authoring surface for client tools, `view`, and `ask`, plus typed agent dependency injection. New type helpers exported from `@threadplane/chat`: `ToolArgs`, `ViewProps`, `AgentRef` / `createAgentRef`, and the `StandardSchemaV1` inference aliases.
 
 ## 0.0.49
 
