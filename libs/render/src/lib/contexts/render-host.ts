@@ -18,7 +18,20 @@ export interface RenderHost {
 
 export const RENDER_HOST = new InjectionToken<RenderHost>('RENDER_HOST');
 
-/** Obtain the element-scoped RenderHost from inside a mounted view component. */
+/**
+ * Obtain the element-scoped {@link RenderHost} from inside a mounted view
+ * component — use it to write state, emit events, or announce a result back to
+ * the render engine.
+ *
+ * @example
+ * ```ts
+ * \@Component({ ... })
+ * class ApproveButton {
+ *   private host = injectRenderHost();
+ *   approve() { this.host.result('approved'); }
+ * }
+ * ```
+ */
 export function injectRenderHost(): RenderHost {
   return inject(RENDER_HOST);
 }

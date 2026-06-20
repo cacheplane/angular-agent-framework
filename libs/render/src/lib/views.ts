@@ -12,6 +12,12 @@ export type ViewRegistry = Readonly<Record<string, Type<unknown> | RenderViewEnt
 
 /**
  * Creates a view registry from a name → component map.
+ *
+ * @example
+ * ```ts
+ * const registry = views({ metric: MetricCardComponent, chart: ChartComponent });
+ * // providers: [provideViews(registry)]
+ * ```
  */
 export function views(map: Record<string, Type<unknown> | RenderViewEntry>): ViewRegistry {
   return Object.freeze({ ...map });
@@ -20,6 +26,11 @@ export function views(map: Record<string, Type<unknown> | RenderViewEntry>): Vie
 /**
  * Adds views to a registry without overwriting existing entries.
  * New keys are added; keys that already exist in `base` are preserved.
+ *
+ * @example
+ * ```ts
+ * const extended = withViews(a2uiBasicCatalog(), { MyWidget: MyWidgetComponent });
+ * ```
  */
 export function withViews(
   base: ViewRegistry,
@@ -32,6 +43,11 @@ export function withViews(
  * Replaces views in a registry. Keys in `overrides` win over `base`.
  * Use this to swap an existing renderer; use `withViews` to add NEW
  * node types without touching existing entries.
+ *
+ * @example
+ * ```ts
+ * const themed = overrideViews(a2uiBasicCatalog(), { Card: MyCardComponent });
+ * ```
  */
 export function overrideViews(
   base: ViewRegistry,
@@ -42,6 +58,11 @@ export function overrideViews(
 
 /**
  * Removes views from a registry by name.
+ *
+ * @example
+ * ```ts
+ * const trimmed = withoutViews(a2uiBasicCatalog(), 'Video', 'AudioPlayer');
+ * ```
  */
 export function withoutViews(
   base: ViewRegistry,
@@ -54,6 +75,11 @@ export function withoutViews(
 
 /**
  * Converts a ViewRegistry to an AngularRegistry for use with RenderSpecComponent.
+ *
+ * @example
+ * ```ts
+ * const registry = toRenderRegistry(views({ metric: MetricCardComponent }));
+ * ```
  */
 export function toRenderRegistry(registry: ViewRegistry): AngularRegistry {
   return defineAngularRegistry(registry);
