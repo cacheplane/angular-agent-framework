@@ -2474,7 +2474,9 @@
       "type": "MockLangGraphAgent<>",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst agent = mockLangGraphAgent({ isThreadLoading: true });\nagent.messages.set([{ id: '1', role: 'assistant', content: 'Hi' }]);\n```"
+    ]
   },
   {
     "name": "provideAgent",
@@ -2521,7 +2523,9 @@
       "type": "Provider[]",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nTestBed.configureTestingModule({\n  providers: [provideFakeAgent({ responses: ['Hi from the fake LangGraph agent'] })],\n});\n```"
+    ]
   },
   {
     "name": "refreshOnRunEnd",

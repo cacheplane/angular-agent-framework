@@ -619,7 +619,9 @@
       "type": "Provider[]",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nTestBed.configureTestingModule({\n  providers: [provideFakeAgent({ responses: ['Hello from the fake agent'] })],\n});\n```"
+    ]
   },
   {
     "name": "toAgent",

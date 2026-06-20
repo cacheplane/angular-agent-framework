@@ -12,6 +12,13 @@ import { FakeStreamTransport } from './fake-stream.transport';
  * advanced manual scripting (tool calls, interrupts, multi-batch), provide
  * the agent yourself with
  * `provideAgent({ assistantId, transport: new MockAgentTransport(...) })`.
+ *
+ * @example
+ * ```ts
+ * TestBed.configureTestingModule({
+ *   providers: [provideFakeAgent({ responses: ['Hi from the fake LangGraph agent'] })],
+ * });
+ * ```
  */
 export function provideFakeAgent(config: FakeAgentConfig = {}): Provider[] {
   return provideAgent({

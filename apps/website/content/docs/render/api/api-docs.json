@@ -723,14 +723,16 @@
   {
     "name": "injectRenderHost",
     "kind": "function",
-    "description": "Obtain the element-scoped RenderHost from inside a mounted view component.",
+    "description": "Obtain the element-scoped RenderHost from inside a mounted view\ncomponent — use it to write state, emit events, or announce a result back to\nthe render engine.",
     "signature": "injectRenderHost(): RenderHost",
     "params": [],
     "returns": {
       "type": "RenderHost",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\n\\@Component({ ... })\nclass ApproveButton {\n  private host = injectRenderHost();\n  approve() { this.host.result('approved'); }\n}\n```"
+    ]
   },
   {
     "name": "overrideViews",
@@ -755,7 +757,9 @@
       "type": "ViewRegistry",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst themed = overrideViews(a2uiBasicCatalog(), { Card: MyCardComponent });\n```"
+    ]
   },
   {
     "name": "provideRender",
@@ -837,7 +841,9 @@
       "type": "AngularRegistry",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst registry = toRenderRegistry(views({ metric: MetricCardComponent }));\n```"
+    ]
   },
   {
     "name": "views",
@@ -856,7 +862,9 @@
       "type": "ViewRegistry",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst registry = views({ metric: MetricCardComponent, chart: ChartComponent });\n// providers: [provideViews(registry)]\n```"
+    ]
   },
   {
     "name": "withoutViews",
@@ -881,7 +889,9 @@
       "type": "ViewRegistry",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst trimmed = withoutViews(a2uiBasicCatalog(), 'Video', 'AudioPlayer');\n```"
+    ]
   },
   {
     "name": "withViews",
@@ -906,6 +916,8 @@
       "type": "ViewRegistry",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst extended = withViews(a2uiBasicCatalog(), { MyWidget: MyWidgetComponent });\n```"
+    ]
   }
 ]

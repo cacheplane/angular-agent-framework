@@ -8181,7 +8181,9 @@
       "type": "AngularRegistry",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst registry = toRenderRegistry(views({ metric: MetricCardComponent }));\n```"
+    ]
   },
   {
     "name": "validateArgs",
@@ -8258,7 +8260,9 @@
       "type": "ViewRegistry",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst registry = views({ metric: MetricCardComponent, chart: ChartComponent });\n// providers: [provideViews(registry)]\n```"
+    ]
   },
   {
     "name": "withoutViews",
@@ -8283,7 +8287,9 @@
       "type": "ViewRegistry",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst trimmed = withoutViews(a2uiBasicCatalog(), 'Video', 'AudioPlayer');\n```"
+    ]
   },
   {
     "name": "withViews",
@@ -8308,7 +8314,9 @@
       "type": "ViewRegistry",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst extended = withViews(a2uiBasicCatalog(), { MyWidget: MyWidgetComponent });\n```"
+    ]
   },
   {
     "name": "AbstractEvent",
