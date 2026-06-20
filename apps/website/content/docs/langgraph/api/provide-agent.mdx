@@ -37,6 +37,7 @@ bootstrapApplication(AppComponent, {
 | `throttle` | `number \| false` | Throttle signal updates in milliseconds. `false` to disable. (default 16) |
 | `toMessage` | `(msg: unknown) => BaseMessage` | Custom message deserializer for non-standard message formats. |
 | `transport` | `AgentTransport` | Optional transport instance. Defaults to `FetchStreamTransport` when omitted. |
+| `clientOptions` | `LangGraphClientOptions` | LangGraph SDK client tuning (e.g. `maxRetries`). See [Client tuning](#client-tuning-retry-budget) below. |
 | `telemetry` | `AgentRuntimeTelemetrySink \| false` | Optional app-owned telemetry sink. No telemetry is emitted unless this is provided. |
 | `filterSubagentMessages` | `boolean` | When true, subagent messages are filtered from the main messages signal. |
 | `subagentToolNames` | `string[]` | Tool names that indicate a subagent invocation. |
@@ -78,6 +79,71 @@ TestBed.configureTestingModule({
   the `transport` field on `provideAgent()`. `injectAgent()` call sites stay
   unchanged across environments.
 </Callout>
+
+## Client tuning (retry budget)
+
+The LangGraph SDK retries connection failures — including the run stream — before throwing. With the defaults, a hard connection failure can take several seconds (multiple retries) to surface as an error, which delays your error UI. Tune the retry budget with `clientOptions`:
+
+```ts
+provideAgent({
+  apiUrl: 'https://api.example.com',
+  assistantId: 'support-agent',
+  clientOptions: { maxRetries: 0 }, // fail fast — surface connection errors immediately
+});
+```
+
+To configure it once for the whole app, provide the `LANGGRAPH_CLIENT_OPTIONS` token. Both the default `FetchStreamTransport` and the `LangGraphThreadsAdapter` read it, so the retry budget is set in one place:
+
+```ts
+import { LANGGRAPH_CLIENT_OPTIONS } from '@threadplane/langgraph';
+
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideAgent({ apiUrl: '…', assistantId: 'support-agent' }),
+    { provide: LANGGRAPH_CLIENT_OPTIONS, useValue: { maxRetries: 0 } },
+  ],
+});
+```
+
+**Precedence (first defined wins, whole-object — no per-field merge):**
+
+1. A call-site `agent({ clientOptions })`
+2. The per-agent `provideAgent({ clientOptions })`
+3. The app-wide `LANGGRAPH_CLIENT_OPTIONS` token
+4. The SDK default
+
+<Callout type="info" title="Diagnosing slow error surfacing">
+  If a dropped connection takes ~15s to show an error, the SDK is exhausting its
+  retry budget. Set `maxRetries: 0` to fail fast, or a small number to keep a few
+  retries with quicker surfacing. The resulting failure is classified as a
+  retryable `connection` [AgentError](/docs/chat/guides/error-handling).
+</Callout>
+
+## Typed state via AgentRef
+
+By default `injectAgent()` returns an agent typed as `Record<string, unknown>`. To thread a concrete state shape through Angular DI without restating the generic at every call site, create a typed `AgentRef` with `createAgentRef<TState>()` and pass it as the **first argument** to both `provideAgent()` and `injectAgent()`:
+
+```ts
+import { createAgentRef } from '@threadplane/chat';
+import { provideAgent, injectAgent } from '@threadplane/langgraph';
+
+interface TripState {
+  day: number;
+  places: string[];
+}
+
+// Module scope — one typed handle, shared by providers and components.
+export const TRIP = createAgentRef<TripState>('trip');
+
+// app.config.ts
+provideAgent(TRIP, { assistantId: 'trip' });
+
+// component
+const agent = injectAgent(TRIP); // LangGraphAgent<TripState>
+agent.state().places;            // string[] — fully typed, no cast
+```
+
+The optional `debugName` (`'trip'` above) is surfaced in Angular DI error messages. `AgentRef` is exported from `@threadplane/chat`, so the same typed handle works across adapters.
 
 ## What's Next
 
