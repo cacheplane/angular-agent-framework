@@ -60,6 +60,40 @@ describe('ChatSubagentCardComponent', () => {
     const toolCallEls = fixture.debugElement.queryAll(By.css('chat-tool-call-card'));
     expect(toolCallEls.length).toBe(1);
   });
+
+  it('shows the message count in the collapsed summary when complete', async () => {
+    const fakeSubagent: Subagent = {
+      toolCallId: 'tc-root',
+      name: 'Research',
+      // 'complete' → chat-trace collapses; the transcript DOM is hidden.
+      status: signal('complete'),
+      messages: signal([
+        { id: 'm1', role: 'assistant', content: 'a' },
+        { id: 'm2', role: 'assistant', content: 'b' },
+      ]),
+      toolCalls: signal([]),
+      state: signal({}),
+    };
+
+    TestBed.configureTestingModule({
+      imports: [ChatSubagentCardComponent],
+    });
+
+    const fixture = TestBed.createComponent(ChatSubagentCardComponent);
+    fixture.componentRef.setInput('subagent', fakeSubagent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    // Collapsed: the per-message transcript must NOT be rendered.
+    const msgEls = fixture.debugElement.queryAll(By.css('.sac__msg'));
+    expect(msgEls.length).toBe(0);
+
+    // ...but the count lives in the always-visible meta slot.
+    const host = fixture.nativeElement as HTMLElement;
+    const text = host.textContent ?? '';
+    expect(text).toMatch(/2 message/);
+  });
 });
 
 describe('statusColor', () => {

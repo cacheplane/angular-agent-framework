@@ -17,15 +17,14 @@ interface SubagentProbe {
 }
 
 // Reads the live `agent.subagents()` projection off the cockpit host component
-// via Angular's dev-mode global. The chat-subagents primitive renders a
-// <chat-subagent-card> only while a subagent is pending/running, so the map IS
-// the data the card binds to. Under the aimock harness the run settles
-// near-instantly (started → finished within one SSE flush), so the live card
-// transits the RUNNING state below a render frame and is filtered out of the
-// DOM by the time the assistant turn finalizes — exactly the reason this spec
-// asserts on the durable projection rather than the card element. The map
-// proves the ACTIVITY snapshot/delta pipeline populated the subagent (name +
-// streamed child text) and that it settled to `complete`.
+// via Angular's dev-mode global. The spawning `task` tool call now renders
+// inline AS a <chat-subagent-card> anchored to its message, and the card
+// PERSISTS (collapsed) after the subagent completes — there is no separate
+// active-only mount, and the `task` call no longer renders a generic tool-call
+// chip. The map read here is the data the card binds to: it proves the ACTIVITY
+// snapshot/delta pipeline populated the subagent (name + streamed child text)
+// and that it settled to `complete`. The card element and this projection are
+// asserted together below (card presence/persistence + projection contents).
 async function readSubagents(page: Page): Promise<SubagentProbe> {
   return page.evaluate(() => {
     const ng = (window as unknown as { ng?: { getComponent?: (el: Element) => unknown } }).ng;
@@ -56,25 +55,25 @@ async function readSubagents(page: Page): Promise<SubagentProbe> {
 // `task` tool, the subagent LLM streams a summary, and the ag-ui server
 // converts the subagent_activity CUSTOM events into native ACTIVITY_SNAPSHOT/
 // ACTIVITY_DELTA. The @threadplane/ag-ui reducer projects the activity to
-// agent.subagents() (what chat-subagents renders as a live card) and the
-// child's research text must stay OUT of the parent's bubble.
+// agent.subagents(), which the inline <chat-subagent-card> (rendered in place of
+// the `task` tool call) binds to. The child's research text must stay OUT of the
+// parent's bubble.
 test('ag-ui subagents: orchestrator dispatches subagent cards that settle complete', async ({
   page,
 }) => {
   const bubble = await submitAndWaitForResponse(page, PROMPT);
 
-  // The orchestrator dispatched `task` subagents — the chat-tool-calls
-  // primitive renders a durable collapsible chip labeled with the tool name,
-  // unlike the active-only subagent card. Asserting it is in the DOM proves the
-  // orchestrator emitted real task tool_calls.
-  const taskChip = page.getByRole('button', { name: /called task|task/i }).first();
-  await expect(taskChip).toBeVisible({ timeout: 30_000 });
+  // The spawning `task` tool call renders inline AS a <chat-subagent-card>
+  // (replacing the generic tool-call chip), anchored to its message. Asserting
+  // the card is in the DOM proves the orchestrator emitted a real task dispatch
+  // and that it surfaced as the dedicated subagent card.
+  await expect(page.locator('chat-subagent-card').first()).toBeVisible({ timeout: 30_000 });
 
   // The live subagent-card data path populated and settled: agent.subagents()
   // carries the research subagent with its streamed child summary, now
-  // `complete`. This is the exact projection chat-subagents binds the card to.
-  // Poll until the research subagent reaches `complete` to avoid CI micro-races
-  // where signal propagation hasn't settled at the moment of the first read.
+  // `complete`. This is the exact projection the inline card binds to. Poll
+  // until the research subagent reaches `complete` to avoid CI micro-races where
+  // signal propagation hasn't settled at the moment of the first read.
   await expect
     .poll(
       async () => {
@@ -86,8 +85,18 @@ test('ag-ui subagents: orchestrator dispatches subagent cards that settle comple
     )
     .toBe('complete');
 
+  // The card PERSISTS after completion (collapsed) — there is no active-only
+  // mount, so it must still be present once the run has settled.
+  await expect(page.locator('chat-subagent-card').first()).toBeVisible();
+
   const subs = await readSubagents(page);
   expect(subs.size).toBeGreaterThan(0);
+
+  // No duplicate cards: exactly one <chat-subagent-card> per projected subagent.
+  // Under aimock the orchestrator may dispatch 1+ subagents; assert equality to
+  // the projected size rather than a hardcoded count.
+  expect(await page.locator('chat-subagent-card').count()).toBe(subs.size);
+
   const research = subs.entries.find((e) => e.name === 'research');
   expect(research, 'a research subagent should be projected').toBeTruthy();
   expect(research?.text).toContain(RESEARCH_SENTENCE);

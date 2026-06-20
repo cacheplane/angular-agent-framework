@@ -16,6 +16,8 @@ import { a2uiBasicCatalog } from '../../a2ui/catalog/index';
 import { ChatGenerativeUiComponent } from '../../primitives/chat-generative-ui/chat-generative-ui.component';
 import type { Spec, StateStore } from '@json-render/core';
 import type { AgentEvent } from '../../agent/agent-event';
+import type { Subagent } from '../../agent/subagent';
+import type { ToolCall } from '../../agent';
 
 describe('ChatComponent', () => {
   it('is defined as a class', () => {
@@ -600,5 +602,49 @@ describe('ChatComponent — json-render surface store binding (composition isola
     expect(textA).not.toContain('$9.9M');
     expect(textB).toContain('$9.9M');
     expect(textB).not.toContain('$1.2M');
+  });
+});
+
+describe('ChatComponent — subagent cards render once (no duplicate per-message mount)', () => {
+  // Regression for the duplicate-subagent bug: a single running subagent must
+  // render EXACTLY ONE <chat-subagent-card>, anchored (via <chat-tool-calls>)
+  // to the assistant message that emitted its `task` tool call. The composition
+  // previously ALSO mounted <chat-subagents [agent]> inside the per-assistant-
+  // message loop, which binds the whole agent's (message-agnostic) subagents()
+  // — so the same active card rendered once PER assistant message.
+  //
+  // Setup: two assistant messages, only the FIRST carries the task call's id in
+  // toolCallIds. The agent has ONE running subagent keyed by that call id. With
+  // the correct single render, exactly one card appears. With the redundant
+  // <chat-subagents> mount, TWO appear (once per assistant bubble).
+
+  function runningSubagent(): Subagent {
+    return {
+      toolCallId: 'call_t',
+      name: 'research',
+      status: signal<'running'>('running'),
+      messages: signal([{ id: 'm1', role: 'assistant', content: 'hi' } as never]),
+      state: signal({}),
+    };
+  }
+
+  it('renders exactly one chat-subagent-card for a single running subagent', () => {
+    TestBed.configureTestingModule({});
+    const agent = mockAgent({
+      messages: [
+        { id: 'a1', role: 'assistant', content: 'first', toolCallIds: ['call_t'], extra: {} } as never,
+        { id: 'a2', role: 'assistant', content: 'second', extra: {} } as never,
+      ],
+      toolCalls: [{ id: 'call_t', name: 'task', args: {}, status: 'success' } as ToolCall],
+      withSubagents: true,
+    });
+    agent.subagents!.set(new Map<string, Subagent>([['call_t', runningSubagent()]]));
+
+    const fixture = TestBed.createComponent(ChatComponent);
+    fixture.componentRef.setInput('agent', agent);
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelectorAll('chat-subagent-card').length).toBe(1);
   });
 });

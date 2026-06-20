@@ -229,6 +229,7 @@ jobs:
 
   cockpit-deploy-smoke:
     name: Cockpit — deploy smoke dry-run
+    timeout-minutes: 30 # fail fast instead of blocking the main concurrency group on a hang
     needs: ci-scope
     if: github.event_name == 'push' || needs.ci-scope.outputs.cockpit_deploy_smoke == 'true'
     runs-on: ubuntu-latest
@@ -595,6 +596,7 @@ jobs:
 
   deploy:
     name: Deploy → Vercel
+    timeout-minutes: 30 # fail fast instead of blocking the main concurrency group on a hang
     needs:
       [
         library,
@@ -783,6 +785,7 @@ jobs:
 
   demo-deploy:
     name: Canonical demo → Vercel
+    timeout-minutes: 30 # fail fast instead of blocking the main concurrency group on a hang
     needs: [examples-chat-smoke, examples-chat-e2e]
     runs-on: ubuntu-latest
     if: ${{ always() && !cancelled() && github.ref == 'refs/heads/main' && github.event_name == 'push' }}
@@ -859,6 +862,7 @@ jobs:
 
   ag-ui-demo-deploy:
     name: ag-ui demo → Vercel
+    timeout-minutes: 30 # fail fast instead of blocking the main concurrency group on a hang
     needs: [examples-ag-ui-e2e]
     runs-on: ubuntu-latest
     if: ${{ always() && !cancelled() && github.ref == 'refs/heads/main' && github.event_name == 'push' }}

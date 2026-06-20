@@ -69,7 +69,7 @@ function statusToTraceState(s: SubagentStatus): TraceState {
         <span class="sac__id">{{ subagent().toolCallId }}</span>
         <span class="sac__pill" [attr.data-status]="subagent().status()">{{ subagent().status() }}</span>
       </span>
-      <div class="sac__count">{{ subagent().messages().length }} message(s)</div>
+      <div class="sac__count" traceMeta>{{ subagent().messages().length }} message(s)</div>
       @for (m of subagent().messages(); track m.id) {
         <div class="sac__msg" [attr.data-role]="m.role">
           @if (m.reasoning) {
