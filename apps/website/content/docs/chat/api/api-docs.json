@@ -7688,13 +7688,13 @@
   {
     "name": "extractErrorMessage",
     "kind": "function",
-    "description": "",
+    "description": "Coerce an unknown error value into a human-readable message string — reads\n`.message` from `Error`s, returns strings as-is, and `String()`-casts the\nrest. Useful when rendering an agent's `error` outside the built-in\n`chat-error` component.",
     "signature": "extractErrorMessage(error: unknown): string | null",
     "params": [
       {
         "name": "error",
         "type": "unknown",
-        "description": "",
+        "description": "Any caught/agent error value.",
         "optional": false
       }
     ],
@@ -7702,7 +7702,9 @@
       "type": "string | null",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst msg = extractErrorMessage(agent.error());\n```"
+    ]
   },
   {
     "name": "formatDuration",

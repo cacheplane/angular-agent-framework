@@ -1,6 +1,6 @@
 {
   "name": "@threadplane/chat",
-  "version": "0.0.51",
+  "version": "0.0.52",
   "exports": {
     "./chat.css": "./chat.css",
     "./themes/default-dark.css": "./themes/default-dark.css",

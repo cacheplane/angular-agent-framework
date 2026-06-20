@@ -95,6 +95,8 @@ jobs:
       - run: npx nx run-many -t test --projects=$LIBS --coverage
       - run: npx nx run-many -t build --projects=$LIBS --configuration=production
       - run: node scripts/verify-release-versions.mjs
+      - name: DX-coverage — public dev-facing functions must have a JSDoc summary
+        run: node scripts/check-dx-coverage.mjs
 
   website:
     name: Website — lint / build
