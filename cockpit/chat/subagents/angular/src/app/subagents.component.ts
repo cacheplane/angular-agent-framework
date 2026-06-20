@@ -2,8 +2,6 @@
 import { Component } from '@angular/core';
 import {
   ChatComponent,
-  ChatSubagentsComponent,
-  ChatSubagentCardComponent,
   ChatWelcomeSuggestionComponent,
 } from '@threadplane/chat';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
@@ -14,14 +12,17 @@ const SUGGESTIONS = [
   {
     label: 'Plan a trip from LAX to JFK',
     value: 'Plan a trip from LAX to JFK',
-    description: 'Orchestrator fans out to research, analysis, and summary subagents in parallel.',
+    description: 'Orchestrator delegates to research, booking, and itinerary subagents in turn.',
   },
 ] as const;
 
 /**
- * SubagentsComponent demonstrates subagent orchestration with
- * ChatComponent and a sidebar showing ChatSubagentsComponent /
- * ChatSubagentCardComponent for tracking active subagents.
+ * SubagentsComponent demonstrates subagent orchestration: the orchestrator
+ * dispatches `task` subagents (research/booking/itinerary), each a real
+ * LangGraph subgraph. Each dispatch renders inline as a persistent
+ * chat-subagent-card in the conversation (via the <chat> composition), so no
+ * separate active-only sidebar tray is needed. The sidebar keeps a short
+ * static pipeline note for context.
  *
  * Welcome chip lets users one-click into the cap's recorded aimock flow.
  */
@@ -30,8 +31,6 @@ const SUGGESTIONS = [
   standalone: true,
   imports: [
     ChatComponent,
-    ChatSubagentsComponent,
-    ChatSubagentCardComponent,
     ChatWelcomeSuggestionComponent,
     ExampleChatLayoutComponent,
   ],
@@ -50,17 +49,14 @@ const SUGGESTIONS = [
         </div>
       </chat>
       <div sidebar class="p-4 space-y-4" style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">
-        <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--ngaf-chat-text-muted);">Active Subagents</h3>
-        <chat-subagents [agent]="agent" />
-        <div class="mt-4">
+        <div>
           <h4 class="text-xs font-semibold uppercase tracking-wide mb-2"
               style="color: var(--ngaf-chat-text-muted);">Agent Pipeline</h4>
           <ol class="text-xs space-y-1 list-decimal list-inside" style="color: var(--ngaf-chat-text-muted);">
             <li>Orchestrator</li>
-            <li>Research Agent</li>
-            <li>Analysis Agent</li>
-            <li>Summary Agent</li>
+            <li>Research subagent</li>
+            <li>Booking subagent</li>
+            <li>Itinerary subagent</li>
           </ol>
         </div>
       </div>
