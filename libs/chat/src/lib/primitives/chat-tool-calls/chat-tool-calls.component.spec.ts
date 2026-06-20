@@ -326,3 +326,105 @@ describe('ChatToolCallsComponent — breathing room before downstream content', 
     document.body.removeChild(host);
   });
 });
+
+import type { Message as ChatMessage } from '../../agent';
+import type { Subagent } from '../../agent/subagent';
+
+@Component({
+  standalone: true,
+  imports: [ChatToolCallsComponent],
+  template: `<chat-tool-calls [agent]="agent" [message]="message" />`,
+})
+class SubagentHost {
+  agent!: Agent;
+  message?: ChatMessage;
+}
+
+describe('ChatToolCallsComponent — subagent cards anchored to spawning task call', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({ imports: [SubagentHost] });
+  });
+
+  it('renders a subagent card for the spawning task call and a tool-call card for the sibling', () => {
+    const agent = mockAgent({
+      withSubagents: true,
+      toolCalls: [
+        { id: 'call_t', name: 'task', args: {}, status: 'success' as never },
+        { id: 'call_s', name: 'search', args: {}, status: 'success' as never },
+      ],
+    });
+    const sub: Subagent = {
+      toolCallId: 'call_t',
+      name: 'research',
+      status: signal('running'),
+      messages: signal([{ id: 'm1', role: 'assistant', content: 'hello from research' }]),
+      state: signal({}),
+    };
+    agent.subagents!.set(new Map([['call_t', sub]]));
+
+    const fixture = TestBed.createComponent(SubagentHost);
+    fixture.componentInstance.agent = agent;
+    fixture.componentInstance.message = {
+      id: 'a1',
+      role: 'assistant',
+      content: '',
+      toolCallIds: ['call_t', 'call_s'],
+    };
+    fixture.detectChanges();
+
+    const cards = fixture.nativeElement.querySelectorAll('chat-subagent-card');
+    expect(cards.length).toBe(1);
+    expect(cards[0].textContent).toContain('research');
+
+    // The sibling search call still renders a generic tool-call card.
+    const toolCards = fixture.nativeElement.querySelectorAll('chat-tool-call-card');
+    expect(toolCards.length).toBe(1);
+
+    // The task call does NOT render a generic tool-call card.
+    const fullText = fixture.nativeElement.textContent ?? '';
+    expect(fullText).toContain('search');
+  });
+
+  it('renders two separate subagent cards for two task calls (not collapsed into one strip)', () => {
+    const agent = mockAgent({
+      withSubagents: true,
+      toolCalls: [
+        { id: 'call_t1', name: 'task', args: {}, status: 'success' as never },
+        { id: 'call_t2', name: 'task', args: {}, status: 'success' as never },
+      ],
+    });
+    const sub1: Subagent = {
+      toolCallId: 'call_t1',
+      name: 'research_one',
+      status: signal('running'),
+      messages: signal([{ id: 'm1', role: 'assistant', content: 'one' }]),
+      state: signal({}),
+    };
+    const sub2: Subagent = {
+      toolCallId: 'call_t2',
+      name: 'research_two',
+      status: signal('running'),
+      messages: signal([{ id: 'm2', role: 'assistant', content: 'two' }]),
+      state: signal({}),
+    };
+    agent.subagents!.set(new Map([
+      ['call_t1', sub1],
+      ['call_t2', sub2],
+    ]));
+
+    const fixture = TestBed.createComponent(SubagentHost);
+    fixture.componentInstance.agent = agent;
+    fixture.componentInstance.message = {
+      id: 'a1',
+      role: 'assistant',
+      content: '',
+      toolCallIds: ['call_t1', 'call_t2'],
+    };
+    fixture.detectChanges();
+
+    const cards = fixture.nativeElement.querySelectorAll('chat-subagent-card');
+    expect(cards.length).toBe(2);
+    // Not collapsed into a grouped strip.
+    expect(fixture.nativeElement.querySelectorAll('[data-group="true"]').length).toBe(0);
+  });
+});

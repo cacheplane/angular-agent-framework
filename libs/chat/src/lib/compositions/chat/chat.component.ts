@@ -26,7 +26,6 @@ import { ChatGenerativeUiComponent } from '../../primitives/chat-generative-ui/c
 import { ChatToolViewsComponent } from '../../primitives/chat-tool-views/chat-tool-views.component';
 import { ChatStreamingMdComponent } from '../../streaming/streaming-markdown.component';
 import { ChatToolCallsComponent } from '../../primitives/chat-tool-calls/chat-tool-calls.component';
-import { ChatSubagentsComponent } from '../../primitives/chat-subagents/chat-subagents.component';
 import { ChatMessageActionsComponent } from '../../primitives/chat-message-actions/chat-message-actions.component';
 import { ChatWelcomeComponent } from '../../primitives/chat-welcome/chat-welcome.component';
 import { ChatSelectComponent, type ChatSelectOption } from '../../primitives/chat-select/chat-select.component';
@@ -90,7 +89,7 @@ export function isPinned(
     ChatWindowComponent, ChatMessageListComponent, MessageTemplateDirective, ChatMessageComponent,
     ChatInputComponent, ChatTypingIndicatorComponent, ChatErrorComponent,
     ChatThreadListComponent, ChatGenerativeUiComponent,
-    ChatStreamingMdComponent, ChatToolCallsComponent, ChatToolViewsComponent, ChatSubagentsComponent, A2uiSurfaceComponent,
+    ChatStreamingMdComponent, ChatToolCallsComponent, ChatToolViewsComponent, A2uiSurfaceComponent,
     ChatMessageActionsComponent, ChatWelcomeComponent, ChatSelectComponent, ChatReasoningComponent,
     ChatScrollBubbleComponent,
   ],
@@ -218,7 +217,6 @@ export function isPinned(
                     [handlers]="handlers()"
                     (events)="onClientToolEvent($event)"
                   />
-                  <chat-subagents [agent]="agent()" />
                   @if (classified.markdown(); as md) {
                     <chat-streaming-md [content]="md" [streaming]="agent().isLoading() && i === agent().messages().length - 1" />
                   }

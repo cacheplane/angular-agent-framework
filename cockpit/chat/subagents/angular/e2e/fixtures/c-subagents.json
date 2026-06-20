@@ -11,55 +11,28 @@
         "toolCalls": [
           {
             "name": "task",
-            "arguments": "{\"role\":\"research\",\"task_description\":\"Gather info on LAX (Los Angeles International Airport) and JFK (John F. Kennedy International Airport). Include: major terminals used by typical carriers, ground transportation options at each airport, typical weather/temperature and conditions in New York (JFK) year-round and what to expect this time of year (assume current date May 2026), and any travel advisories or common delays for LAX-JFK route.\"}",
-            "id": "call_ScDzZETqORD2oBYSW1qz7Mk2"
+            "arguments": "{\"subagent_type\":\"research\",\"task_description\":\"Gather destination intelligence for LAX (Los Angeles International Airport) and JFK (John F. Kennedy International Airport). For each airport, provide: major terminals and airlines serving them, typical ground-transport options (ride-shares, public transit, shuttles, parking), typical weather/conditions in June (current month), busiest times or common delays, TSA/security tips, and any local travel advisories. Keep notes concise and practical for a traveler planning a flight between LAX and JFK.\"}",
+            "id": "call_RZGFvbJqyQxFmltOOZmsPyzy"
           }
         ]
       },
       "metadata": {
-        "systemHash": "13e1b238",
-        "toolsHash": "bca09fd7"
+        "systemHash": "03217c65",
+        "toolsHash": "1ce7a06f"
       }
     },
     {
       "match": {
-        "userMessage": "Gather info on LAX (Los Angeles International Airport) and JFK (John F. Kennedy International Airport). Include: major terminals used by typical carriers, ground transportation options at each airport, typical weather/temperature and conditions in New York (JFK) year-round and what to expect this time of year (assume current date May 2026), and any travel advisories or common delays for LAX-JFK route.",
+        "userMessage": "Gather destination intelligence for LAX (Los Angeles International Airport) and JFK (John F. Kennedy International Airport). For each airport, provide: major terminals and airlines serving them, typical ground-transport options (ride-shares, public transit, shuttles, parking), typical weather/conditions in June (current month), busiest times or common delays, TSA/security tips, and any local travel advisories. Keep notes concise and practical for a traveler planning a flight between LAX and JFK.",
         "model": "gpt-5-mini",
         "turnIndex": 0,
         "hasToolResult": false
       },
       "response": {
-        "toolCalls": [
-          {
-            "name": "get_airport_info",
-            "arguments": "{\"airport_code\": \"LAX\"}",
-            "id": "call_jWLEa38IenhEVyK4O8qIcxtr"
-          },
-          {
-            "name": "get_airport_info",
-            "arguments": "{\"airport_code\": \"JFK\"}",
-            "id": "call_ijvxJqRmWdiOECD1wwOFSivZ"
-          }
-        ]
+        "content": "LAX \u2014 Los Angeles International Airport (Los Angeles)\nSummary: LAX is a large, multi-terminal airport just west of central Los Angeles with a big mix of domestic and international flights; expect summer crowds, traffic congestion to/from the airport, and a coastal marine layer that can cause cool, foggy mornings. Major carriers are split across Terminals 1\u20138 plus the Tom Bradley International Terminal (TBIT); terminal assignments can change, so always confirm with your airline.\n\n- Major terminals & airlines: Terminals 1\u20138 + Tom Bradley (TBIT). Typical assignments: Southwest (Terminal 1), Delta (T2/T3 and some international at TBIT), JetBlue (T5), Alaska (T6), United (T7\u2013T8), American (T4), most international carriers use TBIT. Verify on your ticket/airport site before travel.\n- Ground transport: LAX FlyAway buses to Union Station and other destinations; Metro C Line connection via the APM (people mover) to the Aviation/LAX station and rental car center; taxis and curbside ride\u2011hail (pickup moved to the LAX-it lot\u2014follow signs); hotel shuttles and many private shuttles; on-site short\u2011term, long\u2011term and economy parking plus a cell\u2011phone waiting lot.\n- Typical June weather: warm and mostly dry \u2014 coastal mornings often have a cool marine layer/fog that usually burns off midday, with daytime highs commonly mid\u201170s to low\u201180s\u00b0F (24\u201328\u00b0C); low rain risk but occasional haze or wildfire smoke can reduce air quality.\n- Busiest times & common delays: Summer travel peaks (holidays/weekends) and weekday evening departure peaks (~4\u20138 pm); ground\u2011traffic congestion, curbside pickup bottlenecks, and occasional air\u2011traffic delays are common. Allow extra time to navigate roadway congestion around the airport.\n- TSA/security tips: Expect long lines at peak hours\u2014TSA PreCheck strongly recommended; use the airline app for boarding pass and gate info; liquids/3\u20111\u20111 rules apply; bring Real ID or passport for domestic travel if required. Consider arriving 2 hours for domestic, 3 hours for international during summer peaks.\n- Local travel advisories: Heavy roadway congestion around Sepulveda/Lincoln/SoFi area; terminal/road construction projects and occasional protests/events can slow access; watch for wildfire smoke advisories in summer that affect visibility and air quality.\n\nJFK \u2014 John F. Kennedy International Airport (Queens, New York City)\nSummary: JFK is New York\u2019s primary international gateway with multiple large terminals spread across the field; June brings warm, humid weather and summer crowds, and international arrival processing (CBP) can be the biggest time sink. Terminals are often airport hubs (JetBlue, Delta, American, United), but check your itinerary for the exact terminal.\n\n- Major terminals & airlines: Active terminals include 1, 2, 4, 5, 7 and 8. Typical hubs: JetBlue (T5), Delta (primarily T4), American (T8), United (T7), many international carriers in T1 and T4. Terminal assignments can change \u2014 always confirm.\n- Ground transport: AirTrain connects terminals to the Long Island Rail Road (JFK/Archer Av\u2013Sutphin) and NYC Subway (Howard Beach and Sutphin Blvd) for fast access to Manhattan and Queens; yellow taxis (flat fare to Manhattan, plus tolls/tip), app-based ride\u2011hails at curbside pickup zones, express shuttle services, private car services, and terminal parking garages/long\u2011term lots.\n- Typical June weather: Warm and humid with highs in the mid\u201170s to low\u201180s\u00b0F (24\u201328\u00b0C); occasional afternoon thunderstorms and humidity; generally low chance of fog but watch for sudden showers.\n- Busiest times & common delays: Summer holiday travel and morning/evening peaks (early morning arrivals and late afternoon departures) cause crowds; international arrivals often face long Customs/CBP lines, especially at T4 and T1. Traffic to/from Manhattan can add substantial time.\n- TSA/security tips: Global Entry and TSA PreCheck strongly recommended (Global Entry speeds international reentry); Mobile Passport and CBP kiosks can help on arrival; aim to arrive 2 hours for domestic, 3 hours for international; keep travel documents handy for CBP.\n- Local travel advisories: Check AirTrain and MTA service alerts for maintenance or delays; construction projects and roadway congestion can affect access; in summer, thunderstorms can cause sudden delays \u2014 monitor airline and airport notifications.\n\nPractical tip for an LAX\u2194JFK trip: build extra buffer time on both ends for ground traffic and security/CBP lines, use trusted\u2011traveler lanes (TSA PreCheck/Global Entry) where possible, and confirm terminal and pickup/dropoff procedures (LAX-it at LAX; designated curb/ride\u2011hail zones and AirTrain access at JFK) before you leave."
       },
       "metadata": {
-        "systemHash": "bfabc0f4",
-        "toolsHash": "d00ddc0a"
-      }
-    },
-    {
-      "match": {
-        "userMessage": "Gather info on LAX (Los Angeles International Airport) and JFK (John F. Kennedy International Airport). Include: major terminals used by typical carriers, ground transportation options at each airport, typical weather/temperature and conditions in New York (JFK) year-round and what to expect this time of year (assume current date May 2026), and any travel advisories or common delays for LAX-JFK route.",
-        "model": "gpt-5-mini",
-        "turnIndex": 1,
-        "hasToolResult": true
-      },
-      "response": {
-        "content": "I looked up both airports: LAX (Los Angeles International) \u2014 9 terminals, current conditions about 72\u00b0F and partly cloudy \u2014 and JFK (John F. Kennedy International) \u2014 6 terminals, current conditions about 58\u00b0F and clear. Major carriers (typical terminal groupings) at LAX include American (Terminals 4\u20135), Delta (T2\u2013T3 and Tom Bradley for many intl. connections), United (T7\u2013T8), Southwest (primarily T1) and Tom Bradley/Terminal B handling most international carriers; at JFK, Delta is centered at T4, JetBlue at T5, American at T8, with many international carriers in T1/T7/T4. Ground transportation: LAX offers FlyAway buses to central LA, an on\u2011airport People Mover connection to Metro rail and the rental car center, taxis and designated rideshare areas; JFK is served by the AirTrain linking terminals to the LIRR (Jamaica) and NYC Subway (Howard Beach/Jamaica), plus taxis, app-based pick\u2011ups and shuttle/rental services. Typical NYC climate year\u2011round is cold, snowy winters and hot, humid summers with mild/transitional spring and fall; in May expect mild, springlike weather (roughly mid\u201150s to low\u201170s\u00b0F, occasional showers); the LAX\u2013JFK route is very busy and commonly sees ATC/airspace delays (NYC metro congestion), seasonal weather delays (winter snow nor\u2019easters or summer thunderstorms), and occasional long taxi/ground times at either airport \u2014 allow extra time, monitor status, and consider TSA PreCheck or earlier check\u2011in for smoother travel."
-      },
-      "metadata": {
-        "systemHash": "bfabc0f4",
-        "toolsHash": "d00ddc0a"
+        "systemHash": "0e27d266"
       }
     },
     {
@@ -73,55 +46,28 @@
         "toolCalls": [
           {
             "name": "task",
-            "arguments": "{\"role\":\"booking\",\"task_description\":\"Find flight options from LAX to JFK for one adult departing May 20, 2026, returning May 24, 2026. Provide 3 flight options: low-cost, balanced (good price and timing), and premium (more legroom or non\u2011stop at convenient times). Include airline, flight times (depart/arrive local), number of stops, total duration, and a rough price estimate in USD.\"}",
-            "id": "call_Q2EP65ATIaYLGdvQl0Ijj57K"
+            "arguments": "{\"subagent_type\":\"booking\",\"task_description\":\"Find nonstop flight options from LAX to JFK for travel on a typical June day (June 15). Provide 3 representative nonstop flights across different carriers (e.g., American, Delta, JetBlue, United, Southwest), each with departure time, arrival time, flight duration, typical fare estimate (economy basic/main), and any notable seat/amenity features (Wi\u2011Fi, seatback screens, extra legroom options). Assume one adult, economy cabin. Use typical schedules \u2014 exact flight numbers not required, but indicate carrier and approximate times.\"}",
+            "id": "call_L0C5G6jUJg5qn1f4eIdEHCKO"
           }
         ]
       },
       "metadata": {
-        "systemHash": "13e1b238",
-        "toolsHash": "bca09fd7"
+        "systemHash": "03217c65",
+        "toolsHash": "1ce7a06f"
       }
     },
     {
       "match": {
-        "userMessage": "Find flight options from LAX to JFK for one adult departing May 20, 2026, returning May 24, 2026. Provide 3 flight options: low-cost, balanced (good price and timing), and premium (more legroom or non\u2011stop at convenient times). Include airline, flight times (depart/arrive local), number of stops, total duration, and a rough price estimate in USD.",
+        "userMessage": "Find nonstop flight options from LAX to JFK for travel on a typical June day (June 15). Provide 3 representative nonstop flights across different carriers (e.g., American, Delta, JetBlue, United, Southwest), each with departure time, arrival time, flight duration, typical fare estimate (economy basic/main), and any notable seat/amenity features (Wi\u2011Fi, seatback screens, extra legroom options). Assume one adult, economy cabin. Use typical schedules \u2014 exact flight numbers not required, but indicate carrier and approximate times.",
         "model": "gpt-5-mini",
         "turnIndex": 0,
         "hasToolResult": false
       },
       "response": {
-        "toolCalls": [
-          {
-            "name": "find_routes",
-            "arguments": "{\"from_code\": \"LAX\", \"to_code\": \"JFK\", \"date_offset_days\": 0}",
-            "id": "call_U1N177nViX8Bt3o9jUm6C4aH"
-          },
-          {
-            "name": "find_routes",
-            "arguments": "{\"from_code\": \"JFK\", \"to_code\": \"LAX\", \"date_offset_days\": 4}",
-            "id": "call_NHAd49cqGK50CvOC948tXXgn"
-          }
-        ]
+        "content": "LAX \u2192 JFK \u2014 June 15 (one adult, economy) \u2014 3 representative nonstop options\n\nNote: times are local; LAX = PT, JFK = ET (ET = PT +3h). Durations and fares are typical estimates for a June travel day \u2014 actual flight numbers, times and prices will vary.\n\n1) JetBlue \u2014 example: B6 60 (midday)\n- Depart LAX ~10:00 PT \u2192 Arrive JFK ~18:30 ET  \n- Typical scheduled duration: ~5h30  \n- Aircraft/seat features: usually Airbus A321neo (many transcon A321s on this route); free high\u2011speed Fly\u2011Fi Wi\u2011Fi, seatback entertainment screens on most aircraft, USB/A/C power at seats. \u201cEven More Space\u201d seats available for extra legroom (for a fee).  \n- Typical fares (one adult, June): Basic/Blue Basic \u2248 $180\u2013260; Main Cabin/Blue \u2248 $300\u2013450.  \n- Notes: JetBlue\u2019s economy is known for more legroom than some competitors; Basic fares restrict changes/refunds and may limit seat selection.\n\n2) Delta \u2014 example: DL 128 (morning)\n- Depart LAX ~07:30 PT \u2192 Arrive JFK ~15:55 ET  \n- Typical scheduled duration: ~5h20\u20135h40  \n- Aircraft/seat features: equipment varies (A321, A321LR or widebody A330 on some flights); onboard Wi\u2011Fi (Delta Wi\u2011Fi/Gogo), seatback entertainment on many long\u2011haul aircraft or streaming to personal devices on narrowbodies, Delta Comfort+ available for extra pitch and priority boarding.  \n- Typical fares: Basic Economy \u2248 $160\u2013250; Main Cabin \u2248 $240\u2013420.  \n- Notes: Basic fares limit seat selection and changes; Comfort+ is a popular paid upgrade for more legroom and perks.\n\n3) American \u2014 example: AA 169 (redeye/evening)\n- Depart LAX ~21:15 PT \u2192 Arrive JFK ~05:55 ET (+1)  \n- Typical scheduled duration: ~5h30\u20135h50  \n- Aircraft/seat features: often A321 (including some transcon A321T equipment) or 737\u2011800; Wi\u2011Fi available on most aircraft, many A321s have seatback screens on transcon config, Main Cabin Extra seats offer extra legroom for a fee.  \n- Typical fares: Basic Economy \u2248 $150\u2013240; Main Cabin \u2248 $230\u2013400.  \n- Notes: Evening redeye options useful to maximize time; basic fares have tighter restrictions on seat selection/refunds.\n\nQuick reminders\n- Basic economy vs Main: Basic is cheaper but usually restricts seat selection, changes/refunds and sometimes overhead bag/boarding benefits (policy varies by carrier \u2014 check carrier rules).  \n- Prices fluctuate rapidly in June; book earlier for lower fares.  \n- For more exact flights and live prices/times for June 15, I can pull specific flight numbers and current fares if you\u2019d like."
       },
       "metadata": {
-        "systemHash": "33b52d2f",
-        "toolsHash": "b71efcf3"
-      }
-    },
-    {
-      "match": {
-        "userMessage": "Find flight options from LAX to JFK for one adult departing May 20, 2026, returning May 24, 2026. Provide 3 flight options: low-cost, balanced (good price and timing), and premium (more legroom or non\u2011stop at convenient times). Include airline, flight times (depart/arrive local), number of stops, total duration, and a rough price estimate in USD.",
-        "model": "gpt-5-mini",
-        "turnIndex": 1,
-        "hasToolResult": true
-      },
-      "response": {
-        "content": "Below are three round\u2011trip options I found for LAX \u2192 JFK departing May 20, returning May 24 (one adult). Flights come from the schedule data; prices are rough market estimates for economy/premium seats.\n\n1) Low\u2011cost (cheapest, still nonstop)\n- Outbound: UA 123 (United) \u2014 LAX 08:00 \u2192 JFK 16:30 (local)  \n  - Nonstop, duration 5h30, aircraft: Boeing 787  \n- Return: B6 6601 (JetBlue) \u2014 JFK 07:30 \u2192 LAX 10:55 (local)  \n  - Nonstop, duration 6h25, aircraft: Airbus A321  \n- Round\u2011trip total flying time: 11h55 (330 + 385 min)  \n- Rough price (economy, basic): ~USD 220\u2013280\n\n2) Balanced (good price + single\u2011carrier convenience)\n- Outbound: UA 123 (United) \u2014 LAX 08:00 \u2192 JFK 16:30 (local)  \n  - Nonstop, duration 5h30, Boeing 787  \n- Return: UA 456 (United) \u2014 JFK 10:00 \u2192 LAX 13:15 (local)  \n  - Nonstop, duration 6h15, Boeing 757 \u2014 note: schedule currently shows this leg as delayed in the data  \n- Round\u2011trip total flying time: 11h45 (330 + 375 min)  \n- Rough price (economy, standard): ~USD 320\u2013420\n\n3) Premium (more legroom / more comfortable cabin on convenient nonstop times)\n- Outbound: UA 123 (United) \u2014 LAX 08:00 \u2192 JFK 16:30 (local)  \n  - Nonstop, 5h30, Boeing 787 (widebody \u2014 better cabin space)  \n- Return: UA 456 (United) \u2014 JFK 10:00 \u2192 LAX 13:15 (local)  \n  - Nonstop, 6h15, Boeing 757  \n- Round\u2011trip total flying time: 11h45  \n- Rough price:  \n  - Premium Economy / Economy Plus seats: ~USD 700\u20131,000  \n  - Business / First class: ~USD 1,600\u20132,400\n\nNotes:\n- All options above are nonstop each leg. The dataset shows only these flights for your dates; if you want cheaper fares I can look for one\u2011stop itineraries or different carriers/dates.  \n- UA456 is flagged as \u201cdelayed\u201d in the schedule data \u2014 consider the earlier JetBlue return if tight connections or schedule certainty matter.  \n- Want me to pull live fares for any one of these options and check exact seat/price availability or preferences (flexible ticket, extra legroom, specific airline)?"
-      },
-      "metadata": {
-        "systemHash": "33b52d2f",
-        "toolsHash": "b71efcf3"
+        "systemHash": "a59c5c92"
       }
     },
     {
@@ -135,28 +81,28 @@
         "toolCalls": [
           {
             "name": "task",
-            "arguments": "{\"role\":\"itinerary\",\"task_description\":\"Using the research and booking outputs, synthesize a concise trip plan for one adult traveling LAX\u2192JFK, departing May 20, 2026 and returning May 24, 2026. Include: chosen flight option (pick the balanced option), terminals to use at LAX and JFK for those flights, recommended arrival times at the airport, ground transportation options to/from each airport, packing/weather notes for May in NYC, and simple tips to avoid common delays.\"}",
-            "id": "call_abvWLlynVR1RaX6VNBh21aGc"
+            "arguments": "{\"subagent_type\":\"itinerary\",\"task_description\":\"Using the research (LAX & JFK intel) and the representative nonstop flight options for June 15, synthesize a concise final trip plan for one adult flying LAX\u2192JFK on June 15. Include: chosen flight option (pick one of the representative flights), suggested arrival time at LAX before departure, recommended ground transport at both airports (to depart LAX and from arrival at JFK to Manhattan), packing/airport tips specific to June, and one-sentence overall summary. Keep it concise (about 6\u20138 short bullets + one-sentence summary).\"}",
+            "id": "call_fTsyWShnRpHNZ2bGLBbxkzCg"
           }
         ]
       },
       "metadata": {
-        "systemHash": "13e1b238",
-        "toolsHash": "bca09fd7"
+        "systemHash": "03217c65",
+        "toolsHash": "1ce7a06f"
       }
     },
     {
       "match": {
-        "userMessage": "Using the research and booking outputs, synthesize a concise trip plan for one adult traveling LAX\u2192JFK, departing May 20, 2026 and returning May 24, 2026. Include: chosen flight option (pick the balanced option), terminals to use at LAX and JFK for those flights, recommended arrival times at the airport, ground transportation options to/from each airport, packing/weather notes for May in NYC, and simple tips to avoid common delays.",
+        "userMessage": "Using the research (LAX & JFK intel) and the representative nonstop flight options for June 15, synthesize a concise final trip plan for one adult flying LAX\u2192JFK on June 15. Include: chosen flight option (pick one of the representative flights), suggested arrival time at LAX before departure, recommended ground transport at both airports (to depart LAX and from arrival at JFK to Manhattan), packing/airport tips specific to June, and one-sentence overall summary. Keep it concise (about 6\u20138 short bullets + one-sentence summary).",
         "model": "gpt-5-mini",
         "turnIndex": 0,
         "hasToolResult": false
       },
       "response": {
-        "content": "Pick the balanced nonstop: JetBlue LAX \u2192 JFK outbound May 20 and return May 24 (JetBlue operates at LAX Terminal 5 and arrives/departs JFK Terminal 5).  \nPlan to arrive at LAX 2\u20132.5 hours before departure (allow extra time for traffic and checked bags) and at JFK about 2 hours before your return; check in on the airline app and have your mobile boarding pass ready.  \nGround transport: at LAX use the FlyAway bus to/from downtown, rideshare/taxi pickups on the Lower (Arrivals) curb, or rental cars via the Rental Car Center shuttle; at JFK use the AirTrain (to Jamaica for LIRR or Howard Beach for the A subway), or door\u2011to\u2011door taxi/rideshare (allow 45\u201375 minutes to Manhattan depending on traffic).  \nMay in NYC is mild (highs ~65\u201372\u00b0F / 18\u201322\u00b0C, lows ~50\u201355\u00b0F / 10\u201313\u00b0C) so pack layers, a light jacket and a compact umbrella; to avoid delays, pick mid\u2011morning flights when possible, enroll in TSA PreCheck/CLEAR, check the airline app for real\u2011time updates, and leave extra time for LAX traffic and JFK security lines."
+        "content": "- Chosen flight: Delta nonstop (example) departing LAX Terminal 2 at 9:00 AM PDT and arriving JFK Terminal 4 at ~5:30 PM EDT.  \n- Arrive at LAX: plan to be at the terminal 90 minutes before departure (7:30 AM); use 2 hours if you need to check bags or don\u2019t have TSA PreCheck.  \n- Getting to LAX: rideshare/taxi is easiest\u2014allow 45\u201375 minutes for LA traffic; if driving, use long\u2011term parking (shuttle) or the terminal parking garages and factor shuttle/drop\u2011off time.  \n- LAX terminal/check\u2011in tip: Delta operates from Terminal 2 (confirm on app); drop off at the departures curb, have your mobile boarding pass/ID ready, and wear easy shoes for security.  \n- From JFK to Manhattan: fastest is AirTrain to Jamaica + LIRR to Penn Station (~35\u201345 minutes if light luggage); choose rideshare/taxi for door\u2011to\u2011door service with luggage (45\u201375 minutes depending on traffic).  \n- June packing/airport tips: pack lightweight, breathable clothes and sunscreen for NYC humidity, a light layer for the cabin, refillable water bottle (fill after security), and headphones/charger for the flight.  \n- Practical quick tips: enable mobile boarding pass and flight alerts, allow extra time for weekend/holiday traffic, and use TSA PreCheck if available to shorten security lines.\n\nSummary: Fly the morning Delta nonstop from LAX Terminal 2, arrive JFK Terminal 4 in the evening, plan to be at LAX ~90\u2013120 minutes early, take AirTrain+LIRR for the fastest trip into Manhattan, and pack light breathable clothes plus a light layer for the plane."
       },
       "metadata": {
-        "systemHash": "ec82747b"
+        "systemHash": "f2a7ad2c"
       }
     },
     {
@@ -167,11 +113,11 @@
         "hasToolResult": true
       },
       "response": {
-        "content": "All set \u2014 I gathered research, found flights, and prepared a concise itinerary.\n\nSummary plan (1\u20132 sentences):\n- Balanced option: round\u2011trip nonstop LAX \u2192 JFK departing May 20, returning May 24 using United (nonstop outbound/return) with a convenient schedule and moderate price. Arrive at LAX ~2\u20132.5 hours before departure and at JFK ~2 hours before your return; use LAX ground transportation (FlyAway, rideshare, rental shuttle) and JFK AirTrain/LIRR or rideshare to reach the city."
+        "content": "Trip plan ready \u2014 see below.\n\n- Chosen flight: Delta nonstop departing LAX (Terminal 2) ~09:00 AM PT \u2192 arriving JFK (Terminal 4) ~05:30 PM ET on June 15.\n- Arrive at LAX: be at the terminal ~90 minutes before departure (7:30 AM); use 2 hours if checking bags or without TSA PreCheck.\n- Getting to LAX: rideshare/taxi recommended\u2014allow 45\u201375 minutes for LA traffic; driving and parking are options but add shuttle/dropoff time.\n- LAX tips: confirm terminal in the Delta app, have mobile boarding pass/ID ready, and expect security lines\u2014TSA PreCheck speeds things up.\n- From JFK to Manhattan: AirTrain to Jamaica + LIRR to Penn Station is fastest (~35\u201345 min); taxi/rideshare is door\u2011to\u2011door but can take 45\u201375 min depending on traffic.\n- June packing/airport tips: lightweight breathable clothing and sunscreen, a light jacket for the plane, refillable water bottle (fill after security), chargers/headphones.\n- Practical: enable flight alerts, verify terminals before leaving, and allow extra buffer for ground traffic and possible summer delays.\n\nSummary: Morning Delta nonstop from LAX to JFK gives a full travel day\u2014arrive early at LAX, take AirTrain+LIRR into Manhattan on arrival, and pack light breathable clothes plus a layer for the flight."
       },
       "metadata": {
-        "systemHash": "13e1b238",
-        "toolsHash": "bca09fd7"
+        "systemHash": "03217c65",
+        "toolsHash": "1ce7a06f"
       }
     }
   ]
