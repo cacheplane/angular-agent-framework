@@ -9,17 +9,18 @@ test('c-subagents: orchestrator dispatches task subagents, summary surfaces in b
 }) => {
   const bubble = await submitAndWaitForResponse(page, PROMPT);
 
-  // The chat-tool-calls primitive renders a collapsible button labeled
-  // "Called task N times" for the orchestrator's task dispatches. Asserting
-  // it's in the DOM proves the orchestrator emitted real task tool_calls.
-  //
-  // We don't assert on <chat-subagent-card> because that primitive only
-  // renders while a subagent is in a RUNNING state — once all subagents
-  // complete (which is the state submitAndWaitForResponse returns at, since the
-  // agent is idle), the cards are filtered out of the DOM. The tool-call
-  // chip is the durable signal.
-  const taskChip = page.getByRole('button', { name: /called task|task/i }).first();
-  await expect(taskChip).toBeVisible({ timeout: 30_000 });
+  // The orchestrator dispatches `task` subagents, each a real LangGraph
+  // subgraph. With subagentToolNames:['task'] the SubagentTracker registers
+  // them (from the subagent_type arg) and matches the child subgraph's
+  // tools:<id> namespace, so agent.subagents() populates and each dispatch
+  // renders inline AS a <chat-subagent-card> (replacing the generic chip).
+  // The card PERSISTS after completion (collapsed), so it's stable to assert
+  // even though submitAndWaitForResponse returns at idle.
+  await expect(page.locator('chat-subagent-card').first()).toBeVisible({ timeout: 30_000 });
+
+  // One card per subagent dispatched (research/booking/itinerary), no
+  // duplicates — the orchestrator calls task three times in order.
+  await expect(page.locator('chat-subagent-card')).toHaveCount(3);
 
   // Final summary text contains an aviation-related phrase from the captured
   // continuation. Loose regex so refactors to the subagent prompts (research/

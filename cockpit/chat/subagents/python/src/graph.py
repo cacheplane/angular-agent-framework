@@ -9,19 +9,13 @@ import os
 from pathlib import Path
 from typing import Annotated, Literal, TypedDict
 
-from langchain_core.messages import SystemMessage, HumanMessage, ToolMessage
+from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, MessagesState, END
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
 from langgraph_sdk import get_client
-
-from src.aviation_tools import (
-    get_airport_info,
-    find_routes,
-    lookup_flight,
-)
 
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 
@@ -76,84 +70,65 @@ async def generate_title(state: MessagesState, config) -> dict:
     return {}
 
 
-_RESEARCH_PROMPT = """You are a Research Agent for trip planning. Your job is to gather
-destination intel about airports the traveler is considering. Use the
-get_airport_info tool to look up airport details (city, weather, terminals,
-runways) for any airport codes mentioned in the task description.
+_RESEARCH_PROMPT = """You are a Research Agent for trip planning. Given a task
+describing one or more airports, return destination intel about them: city,
+typical weather, major terminals, and notable travel considerations. Draw on
+general knowledge of the airports named in the task.
 
-Return a concise 2-4 sentence summary of what you found. If a code isn't
-recognized, say so."""
+Return a concise 2-4 sentence summary. If an airport isn't recognizable, say so."""
 
-_BOOKING_PROMPT = """You are a Booking Agent for trip planning. Your job is to find
-flight options between the origin and destination airports in the task
-description. Use find_routes to list available flights, and lookup_flight
-if the user mentioned a specific flight number.
+_BOOKING_PROMPT = """You are a Booking Agent for trip planning. Given an origin and
+destination in the task description, describe realistic flight options between
+them: which major carriers fly the route nonstop, typical durations, and rough
+fare expectations.
 
-Return a concise summary listing 2-3 best flight options with airline,
-flight number, times, and price-or-aircraft info. If no flights are found,
-say so and suggest alternatives."""
+Return a concise summary listing 2-3 plausible options with airline, an example
+flight number, times, and price-or-aircraft info."""
 
-_ITINERARY_PROMPT = """You are an Itinerary Agent for trip planning. Your job is to
-synthesize a final trip plan from research + booking outputs you receive in
-the task description.
+_ITINERARY_PROMPT = """You are an Itinerary Agent for trip planning. Synthesize a
+final trip plan from the research + booking outputs you receive in the task
+description.
 
-Return a clean 3-5 sentence itinerary summarizing the recommended flight
-choice, what to expect on arrival (weather), and any practical tips
-(e.g., delays, terminal info). Be helpful and concise."""
+Return a clean 3-5 sentence itinerary summarizing the recommended flight choice,
+what to expect on arrival (weather), and any practical tips (e.g., terminal info,
+buffer time). Be helpful and concise."""
 
 
-# subagent_type → (system prompt, role-specific tools). Keyed by the same
-# Literal the `task` tool exposes, so one parameterized subgraph serves all
-# three specialists.
-_SUBAGENT_CONFIG: dict[str, tuple[str, list]] = {
-    "research": (_RESEARCH_PROMPT, [get_airport_info]),
-    "booking": (_BOOKING_PROMPT, [find_routes, lookup_flight]),
-    "itinerary": (_ITINERARY_PROMPT, []),
+# subagent_type → system prompt. Keyed by the same Literal the `task` tool
+# exposes, so one parameterized subgraph serves all three specialists.
+_SUBAGENT_PROMPTS: dict[str, str] = {
+    "research": _RESEARCH_PROMPT,
+    "booking": _BOOKING_PROMPT,
+    "itinerary": _ITINERARY_PROMPT,
 }
 
 
 class SubagentState(TypedDict):
-    """Child-graph state. `subagent_type` selects the prompt + tools."""
+    """Child-graph state. `subagent_type` selects the system prompt."""
     messages: Annotated[list, add_messages]
     subagent_type: str
     task_description: str
 
 
 async def _subagent_node(state: SubagentState) -> dict:
-    """Focused subagent: role-specific prompt + tools, manual tool loop (<=3
-    rounds). Returns the messages it produced so they stream under this
-    subgraph's `tools:<call_id>` namespace and populate the subagent card."""
+    """Focused subagent: a single role-prompted LLM call. Kept to ONE LLM call
+    (no within-subagent tool loop) so each subagent's request has a unique,
+    stable discriminator (its role-specific task_description) — this lets the
+    aimock e2e replay match it deterministically. The within-subagent tool
+    calling is exercised by the dedicated tool-calls cap; here the focus is
+    subagent orchestration + the inline subagent card. The returned message
+    streams under this subgraph's `tools:<call_id>` namespace, which the
+    @threadplane/langgraph SubagentTracker matches to surface the card."""
     subagent_type = state["subagent_type"]
     task_description = state["task_description"]
-    system_prompt, tools = _SUBAGENT_CONFIG.get(subagent_type, (_ITINERARY_PROMPT, []))
+    system_prompt = _SUBAGENT_PROMPTS.get(subagent_type, _ITINERARY_PROMPT)
 
     llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
-    if tools:
-        llm = llm.bind_tools(tools)
-
-    convo: list = [
+    response = await llm.ainvoke([
         SystemMessage(content=system_prompt),
         HumanMessage(content=task_description),
-    ]
-    emitted: list = []
-    for _ in range(3):
-        response = await llm.ainvoke(convo)
-        convo.append(response)
-        emitted.append(response)
-        tool_calls = getattr(response, "tool_calls", None)
-        if not tool_calls:
-            break
-        for tc in tool_calls:
-            target = next((t for t in tools if t.name == tc["name"]), None)
-            result = (
-                await target.ainvoke(tc["args"])
-                if target is not None
-                else f"Tool {tc['name']} not available"
-            )
-            tool_msg = ToolMessage(content=str(result), tool_call_id=tc["id"])
-            convo.append(tool_msg)
-            emitted.append(tool_msg)
-    return {"messages": emitted}
+    ])
+    return {"messages": [response]}
 
 
 # Compiled child graph. Invoking it from inside the `task` tool makes LangGraph
