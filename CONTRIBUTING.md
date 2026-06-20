@@ -1,5 +1,27 @@
 # Contributing
 
+Threadplane is MIT-licensed and developed in the open. Contributions are welcome.
+
+## How to contribute
+
+1. **Found a bug or have a feature idea?** Open an issue at
+   <https://github.com/cacheplane/angular-agent-framework/issues> describing the
+   problem or proposal. Please search existing issues first.
+2. **Code changes:** fork the repository (or create a topic branch if you have
+   access), make your change on a branch, and open a pull request against `main`.
+   Keep pull requests focused on a single concern.
+3. Every pull request runs CI (lint, test, build) and receives an automated code
+   review; the maintainer reviews and merges.
+4. **Security issues:** do not open a public issue — see [SECURITY.md](SECURITY.md)
+   for the private vulnerability-reporting process.
+
+## Testing
+
+New functionality and bug fixes must include automated tests. Run a project's
+suite with `npx nx test <project>` (for example, `npx nx test chat`). CI runs
+`lint`, `test`, and `build` across the publishable libraries on every pull
+request, so changes that break or skip tests are caught before merge.
+
 ## Signed commits
 
 `main` requires signed commits. Configure SSH commit signing once:
