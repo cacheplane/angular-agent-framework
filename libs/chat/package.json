@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@cacheplane/partial-json": ">=0.1.1 <0.3.0",
-    "@cacheplane/partial-markdown": "^0.3.0"
+    "@cacheplane/partial-markdown": "^0.4.1"
   },
   "peerDependencies": {
     "zod": "^3.25.0",
@@ -24,7 +24,11 @@
     "@json-render/core": "^0.16.0",
     "@langchain/core": "^1.1.33",
     "rxjs": "~7.8.0",
-    "marked": "^15.0.0 || ^16.0.0"
+    "marked": "^15.0.0 || ^16.0.0",
+    "katex": "^0.16.0 || ^0.17.0"
+  },
+  "peerDependenciesMeta": {
+    "katex": { "optional": true }
   },
   "license": "PolyForm-Noncommercial-1.0.0 OR LicenseRef-Threadplane-Commercial",
   "repository": {

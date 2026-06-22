@@ -14,6 +14,7 @@ import { MarkdownEmphasisComponent } from './views/markdown-emphasis.component';
 import { MarkdownStrongComponent } from './views/markdown-strong.component';
 import { MarkdownStrikethroughComponent } from './views/markdown-strikethrough.component';
 import { MarkdownInlineCodeComponent } from './views/markdown-inline-code.component';
+import { MarkdownMathComponent } from './views/markdown-math.component';
 import { MarkdownLinkComponent } from './views/markdown-link.component';
 import { MarkdownAutolinkComponent } from './views/markdown-autolink.component';
 import { MarkdownImageComponent } from './views/markdown-image.component';
@@ -45,6 +46,8 @@ export const cacheplaneMarkdownViews: ViewRegistry = views({
   'strong':         MarkdownStrongComponent,
   'strikethrough':  MarkdownStrikethroughComponent,
   'inline-code':    MarkdownInlineCodeComponent,
+  'math-inline':    MarkdownMathComponent,
+  'math-display':   MarkdownMathComponent,
   'link':           MarkdownLinkComponent,
   'autolink':       MarkdownAutolinkComponent,
   'image':          MarkdownImageComponent,

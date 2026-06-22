@@ -4,6 +4,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Component, signal } from '@angular/core';
 import { ChatStreamingMdComponent } from './streaming-markdown.component';
+import { katexLoaded } from '../markdown/katex-loader';
 
 @Component({
   standalone: true,
@@ -99,4 +100,16 @@ describe('chat-streaming-md integration', () => {
       sample.assertDom(fixture.nativeElement);
     });
   }
+
+  it('renders inline math as KaTeX instead of leaking raw $ delimiters', async () => {
+    await katexLoaded;
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.componentInstance.content.set('Euler: $e^{i\\pi}+1=0$ done.\n');
+    fixture.componentInstance.streaming.set(false);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.katex')).toBeTruthy();
+    expect(el.textContent).toContain('Euler:');
+    expect(el.textContent).not.toContain('$e^{i');
+  });
 });

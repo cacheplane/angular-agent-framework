@@ -169,4 +169,9 @@ export const CHAT_MARKDOWN_STYLES = `
   }
   chat-streaming-md .chat-md-image__icon { font-size: 1em; line-height: 1; }
   chat-streaming-md .chat-md-image__alt { font-style: italic; }
+  /* Math (KaTeX). Display math is a centered block that scrolls horizontally
+     on overflow; the raw fallback (KaTeX missing or invalid LaTeX) reads as
+     monospace so the source delimiters look intentional. */
+  chat-streaming-md .chat-md-math--display { display: block; margin: 0.5em 0; overflow-x: auto; }
+  chat-streaming-md .chat-md-math--raw { font-family: var(--ngaf-chat-font-mono, ui-monospace, monospace); }
 `;
