@@ -2,6 +2,20 @@
 import { Component, computed, input } from '@angular/core';
 import type { Spec } from '@json-render/core';
 
+/**
+ * Convert an icon identifier to its Material Symbols ligature form.
+ *
+ * Material Symbols ligatures are snake_case (`account_circle`, `trending_up`),
+ * but A2UI catalogs commonly emit camelCase identifiers (`accountCircle`,
+ * `shoppingCart`). Splitting on lower→upper boundaries and lowercasing maps
+ * camelCase → the matching ligature. Already-snake_case names, single words,
+ * and non-identifier glyphs (emoji) have no boundaries to split and pass
+ * through unchanged. Unknown names still fall back to the browser default.
+ */
+export function toMaterialSymbolName(name: string): string {
+  return name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
+}
+
 @Component({
   selector: 'a2ui-icon',
   standalone: true,
@@ -12,7 +26,7 @@ import type { Spec } from '@json-render/core';
         [style.font-size]="size() ? size() + 'px' : '1.125rem'"
         [attr.aria-label]="name"
         role="img"
-      >{{ name }}</span>
+      >{{ glyphName() }}</span>
     }
   `,
   styles: [`
@@ -56,4 +70,7 @@ export class A2uiIconComponent {
   readonly spec = input<Spec | undefined>(undefined);
 
   protected readonly effectiveName = computed(() => this.name() ?? this.icon());
+
+  /** The effective name as a Material Symbols ligature (camelCase → snake_case). */
+  protected readonly glyphName = computed(() => toMaterialSymbolName(this.effectiveName()));
 }
