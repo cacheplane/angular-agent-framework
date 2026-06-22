@@ -5056,6 +5056,40 @@
     "methods": []
   },
   {
+    "name": "MarkdownMathComponent",
+    "kind": "class",
+    "description": "Renders a `math-inline` / `math-display` markdown node as KaTeX. KaTeX is\nlazy-loaded (see katex-loader); until it resolves, or if the LaTeX is\ninvalid, the raw `$…$` source is shown — never blank, never a crash.",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "display",
+        "type": "Signal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "html",
+        "type": "Signal<SafeHtml | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "node",
+        "type": "InputSignal<MathNode>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "raw",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
     "name": "MarkdownParagraphComponent",
     "kind": "class",
     "description": "",
