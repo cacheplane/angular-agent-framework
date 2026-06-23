@@ -1,0 +1,170 @@
+# Client Tools
+
+Client tools are tools you declare **in the browser** that the model calls and the browser executes — no server-side implementation. There are three kinds:
+
+| Helper | Kind | What it does |
+|---|---|---|
+| `action()` | function | Runs an async handler in the browser; its resolved return value becomes the tool result sent back to the model. |
+| `view()` | render-only component | The model fills the component's props from the schema; the card renders inline and the call is auto-acknowledged once it mounts. |
+| `ask()` | interactive component | The model fills the component's props; the value the component emits back becomes the tool result (human-in-the-loop). |
+
+Tools are arguments-typed by a [Standard Schema](https://standardschema.dev) (e.g. a Zod object). The catalog is shipped to the model by the adapter; the backend graph binds the client stubs and ends its turn so the browser executes them.
+
+<Callout type="info" title="Adapter-neutral">
+  The same declarations work with `@threadplane/langgraph` and `@threadplane/ag-ui` — only the `provideAgent`/`injectAgent` imports change.
+</Callout>
+
+## Declaring a registry
+
+`tools({...})` collects named tools into a frozen registry. Pass it to `<chat>` via `[clientTools]`:
+
+```typescript
+import { Component } from '@angular/core';
+import { ChatComponent, tools, action, view, ask } from '@threadplane/chat';
+import { injectAgent } from '@threadplane/langgraph';
+import { z } from 'zod/v4';
+import { WeatherCardComponent } from './weather-card.component';
+import { ConfirmBookingComponent } from './confirm-booking.component';
+
+const clientTools = tools({
+  get_weather: action(
+    'Look up the current weather for a location.',
+    z.object({ location: z.string() }),
+    async ({ location }) => ({ location, temperatureF: 68, conditions: 'Sunny' }),
+  ),
+  weather_card: view(
+    'Display a weather card for a location.',
+    z.object({ location: z.string(), temperatureF: z.number(), conditions: z.string() }),
+    WeatherCardComponent,
+  ),
+  confirm_booking: ask(
+    'Ask the user to confirm a booking before finalizing it.',
+    z.object({ summary: z.string() }),
+    ConfirmBookingComponent,
+  ),
+});
+
+@Component({
+  selector: 'app-client-tools',
+  standalone: true,
+  imports: [ChatComponent],
+  template: `<chat [agent]="agent" [clientTools]="clientTools" />`,
+})
+export class ClientToolsComponent {
+  protected readonly agent = injectAgent();
+  protected readonly clientTools = clientTools;
+}
+```
+
+The object keys (`get_weather`, `weather_card`, `confirm_booking`) are the tool names the model sees. `tools()` preserves each tool's precise generic type, so downstream lookups stay typed.
+
+## Typed component props with `ViewProps`
+
+For `view()` and `ask()`, the component's signal inputs are checked against the schema output at compile time — every field the schema produces must be a declared `input()` with an assignable type (the component may declare extra inputs the schema doesn't fill). Derive the input types directly from the schema with `ViewProps<typeof schema>` so the two never drift:
+
+```typescript
+import { Component, input } from '@angular/core';
+import type { ViewProps } from '@threadplane/chat';
+import { z } from 'zod/v4';
+
+export const weatherCardSchema = z.object({
+  location: z.string(),
+  temperatureF: z.number(),
+  conditions: z.string(),
+});
+
+// { location: string; temperatureF: number; conditions: string }
+type Inputs = ViewProps<typeof weatherCardSchema>;
+
+@Component({
+  selector: 'app-weather-card',
+  standalone: true,
+  template: `<div>{{ location() }}: {{ temperatureF() }}°F, {{ conditions() }}</div>`,
+})
+export class WeatherCardComponent {
+  location = input.required<string>();
+  temperatureF = input.required<number>();
+  conditions = input.required<string>();
+}
+```
+
+Under `strict: true`, the typed `view`/`ask` overloads report a compile error at the `view(...)`/`ask(...)` call site if the component's inputs diverge from the schema — mismatches become build errors, not silent runtime failures.
+
+## Typed handler args with `ToolArgs`
+
+For `action()`, the handler argument type is inferred from the schema automatically. When you want to name that type — e.g. to write the handler separately — use `ToolArgs<typeof schema>` (an alias of the schema's inferred output):
+
+```typescript
+import { action, type ToolArgs } from '@threadplane/chat';
+import { z } from 'zod/v4';
+
+const moveSchema = z.object({ fromDay: z.number(), toDay: z.number() });
+
+async function moveStop(args: ToolArgs<typeof moveSchema>) {
+  // args is { fromDay: number; toDay: number }
+  return reorder(args.fromDay, args.toDay);
+}
+
+const move = action('Move a stop to another day.', moveSchema, moveStop);
+```
+
+## Typed agent state
+
+Tool handlers and components often read agent state. Pair the registry with a typed `AgentRef` so `agent.state()` / `agent.value()` carry your state shape instead of `Record<string, unknown>` — see [Typed state via AgentRef](/docs/langgraph/api/provide-agent#typed-state-via-agentref):
+
+```typescript
+import { createAgentRef } from '@threadplane/chat';
+import { injectAgent } from '@threadplane/langgraph';
+
+interface ClientToolsState { messages: unknown[]; client_tools: unknown[]; }
+export const CLIENT_TOOLS = createAgentRef<ClientToolsState>('client-tools');
+
+// component
+protected readonly agent = injectAgent(CLIENT_TOOLS); // LangGraphAgent<ClientToolsState>
+```
+
+## API reference
+
+```typescript
+import {
+  tools, action, view, ask,
+  type ViewProps, type ToolArgs,
+  type ClientToolDef, type ClientToolRegistry,
+} from '@threadplane/chat';
+```
+
+| Export | Purpose |
+|---|---|
+| `action(description, schema, handler)` | Declare a function tool (handler return → result) |
+| `view(description, schema, component)` | Declare a render-only component tool (auto-acknowledged) |
+| `ask(description, schema, component)` | Declare an interactive component tool (emitted value → result) |
+| `tools(map)` | Freeze a name-keyed registry for `[clientTools]` |
+| `ViewProps<S>` | Component input prop bag inferred from a schema |
+| `ToolArgs<S>` | Handler argument type inferred from a schema |
+| `ClientToolDef` / `ClientToolRegistry` | The tool-definition union and frozen-registry types |
+
+## What's next
+
+<CardGroup cols={3}>
+  <Card
+    title="Generative UI"
+    icon="layout"
+    href="/docs/chat/guides/generative-ui"
+  >
+    Render agent-emitted UI specs with `[views]`, distinct from model-called tools.
+  </Card>
+  <Card
+    title="provideAgent()"
+    icon="code"
+    href="/docs/langgraph/api/provide-agent"
+  >
+    Typed agent state via `AgentRef` and client-tuning options.
+  </Card>
+  <Card
+    title="Error Handling"
+    icon="alert-triangle"
+    href="/docs/chat/guides/error-handling"
+  >
+    Classified errors and Retry when a tool call or run fails.
+  </Card>
+</CardGroup>

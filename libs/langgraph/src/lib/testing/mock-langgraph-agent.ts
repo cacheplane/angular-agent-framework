@@ -77,6 +77,12 @@ export interface MockLangGraphAgent extends LangGraphAgent<any, any> {
  *
  * Neutral `Agent`-contract signals come from {@link mockAgent}; LangGraph-specific
  * signals are declared here and layered on top.
+ *
+ * @example
+ * ```ts
+ * const agent = mockLangGraphAgent({ isThreadLoading: true });
+ * agent.messages.set([{ id: '1', role: 'assistant', content: 'Hi' }]);
+ * ```
  */
 export function mockLangGraphAgent(
   initial: MockAgentOptions & {
