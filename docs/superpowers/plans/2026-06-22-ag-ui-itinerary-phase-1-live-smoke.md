@@ -28,19 +28,16 @@ lsof -ti:4200 | xargs kill -9 2>/dev/null; lsof -ti:8000 | xargs kill -9 2>/dev/
 
 - [ ] **Step 0b: Start the AG-UI Python agent server (real OpenAI key)**
 
-The key already lives in the repo root `.env` (`OPENAI_API_KEY`). Start the server in the background:
+> **IMPORTANT — source ONLY `OPENAI_API_KEY`, not the whole `.env`.** The server enforces its `x-internal-token` auth middleware *only when `AG_UI_INTERNAL_TOKEN` is set* ([server.py](../../../examples/ag-ui/python/src/server.py) docstring: "works locally with no env beyond OPENAI_API_KEY"). The repo root `.env` contains a production `AG_UI_INTERNAL_TOKEN`; if you `source` the entire file, the local dev proxy (which does NOT send that header) gets a **401 Unauthorized** on every `/agent` call. Export only the OpenAI key:
 
 ```bash
-cd examples/ag-ui/python && set -a && . ../../../.env && set +a && uv run uvicorn src.server:app --port 8000
+cd examples/ag-ui/python && \
+  export OPENAI_API_KEY="$(grep -E '^OPENAI_API_KEY=' /ABSOLUTE/PATH/TO/REPO/.env | cut -d= -f2- | sed 's/^"//;s/"$//')" && \
+  unset AG_UI_INTERNAL_TOKEN && \
+  uv run uvicorn src.server:app --port 8000
 ```
 
-Run this with `run_in_background: true`. Wait for the uvicorn "Application startup complete" line. Sanity-check it's alive:
-
-```bash
-curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/ || echo "agent not up"
-```
-
-Expected: a 2xx/3xx/404 (any response means uvicorn is listening — the root path may 404, that's fine).
+Use the absolute path to the repo-root `.env` (relative paths break because the Bash tool's cwd is the worktree root, not the python dir). Run with `run_in_background: true`. Wait for the uvicorn "Application startup complete" line. The first POST to `/agent` returns 401 only if the token leaked in — verify the log shows `200`, not `401`, after the first real request.
 
 - [ ] **Step 0c: Start the Angular dev server (proxies /agent → :8000)**
 
@@ -173,18 +170,30 @@ Then **explicitly record in the Run Record** that scenario 5 was run as 5a + 5b 
 
 ## Run Record
 
-Fill this in as you go. One row per scenario. This makes the smoke reproducible and auditable.
+**Run 1 — 2026-06-22, gpt-5-mini, embed mode, local uvicorn :8000 + nx serve :4201 (4200 was bound, nx auto-picked 4201).**
 
-| # | Scenario | Result | Screenshot path | Notes (console/network anomalies, fallback taken) |
-|---|----------|--------|-----------------|----------------------------------------------------|
-| 1 | Cold seed | | | baseline console warnings recorded here |
-| 2 | Single streamed add | | | |
-| 3 | Multi-call turn | | | |
-| 4 | NL reorder + day_card | | | which tool the model picked |
-| 5 | Drag-while-stream | | | concurrent OR decoupled 5a/5b — state which |
-| 6 | Empty → chip → multi-stream | | | |
+| # | Scenario | Result | Notes (console/network anomalies, fallback taken) |
+|---|----------|--------|----------------------------------------------------|
+| 1 | Cold seed | ✅ PASS | Seed renders (3 stops, badges 1/2 + 1), Material Symbols glyphs render correctly, drag handles hidden until hover, dark theme tokens resolve. Network all 200 incl. the Material Symbols font request. No console errors/NG0956. |
+| 2 | Single streamed add | ✅ PASS | "Add the Pantheon to Day 1" → `get_itinerary ✓` + `add_stop ✓` mid-stream; Pantheon landed as Day 1 #3 with note; badges renumbered; incremental content render produced **no NG0956**. (Auth 401 on the very first attempt was an env mistake, not a code bug — see Findings.) |
+| 3 | Multi-call turn | ✅ PASS (covered) | Every add/reorder turn fired 2–3 tool calls in one turn (add_stop/reorder_stop + get_itinerary + day_card). The pulse-timer-reset race resolved to correct final DOM state each time; no console error across back-to-back calls. |
+| 4 | NL reorder + day_card | ✅ PASS | "Put Louvre last on day 1" → the live model picked the **new `reorder_stop`** tool → `get_itinerary ✓` → `day_card` recap rendered; panel reordered to Eiffel(1)/Sainte-Chapelle(2)/Louvre(3). |
+| 5 | Drag-while-stream | ✅ PASS (true concurrent) | Started a long non-tool markdown response; **while it was actively streaming** (reasoning blocks growing), dragged Sainte-Chapelle above Eiffel via the hover-revealed CDK handle. Drag applied, order held through stream completion, stream did not freeze, no state corruption. **No new console warning from the collision; no NG0956.** Decoupled 5a/5b fallback was NOT needed. |
+| 6 | Empty → chip → multi-stream | ✅ PASS | Empty state (luggage glyph + chips) renders cleanly at 0 stops. The "Plan a Paris weekend" chip submitted correctly. At `high` effort the model narrated a plan + asked to confirm rather than calling tools (see Findings — model steering); switching to `minimal` effort + an imperative add produced a **3× `add_stop` burst** that transitioned the panel empty→populated cleanly with rich notes and a day_card recap. No NG0956. |
 
-**Overall verdict:** ____  (all 6 PASS = Phase 1 cleared for merge)
+**Overall verdict: ✅ ALL 6 PASS — Phase 1 cleared for merge** (with two non-blocking findings below).
+
+### Findings
+
+1. **NG0953 (library-layer, NOT Phase 1) — recurring dev-mode WARNING.** Every turn that renders a `view` tool (the `day_card`) logs `NG0953: Unexpected emit for destroyed OutputRef`. Confirmed it reproduces on a fully clean add (not tied to any error) and that the Phase 1 example app declares **zero** `output()`/`EventEmitter` — the emit originates in `libs/render` (the view/spec host; a `guarded-emit.ts` util already exists but some path bypasses it). Dev-mode-only, not user-visible, not an error. Filed as a follow-up task for the render library. Aimock replay can't catch it (no mount/teardown churn). **Not a Phase 1 blocker.**
+
+2. **Model steering at high effort (observation, not a bug).** Under `high (visible reasoning)`, gpt-5-mini tends to *narrate* an itinerary as text and ask clarifying questions instead of calling `add_stop`/`reorder_stop`. At `minimal`/`low` it calls the tools directly. The tool catalog is the only steering (by design — no system-prompt coaching). The demo's "agent edits your UI live" story lands best at lower effort; worth noting for demo scripting / default-effort choice. Not a code defect.
+
+3. **Env footgun in the original Step 0b (now fixed in this doc).** Sourcing the entire repo-root `.env` exported the production `AG_UI_INTERNAL_TOKEN`, which switched on the server's auth middleware → 401 on every `/agent` call from the local dev proxy. Fix: export only `OPENAI_API_KEY` (Step 0b updated).
+
+### Positive headline
+
+**NG0956 — the `@for` re-creation warning this smoke specifically targets — never fired across any scenario**, including a very long multi-paragraph markdown stream with deeply nested bullet lists and a 3× rapid add burst. The incremental-render path is clean.
 
 ---
 
