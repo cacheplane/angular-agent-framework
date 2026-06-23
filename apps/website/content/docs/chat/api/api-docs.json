@@ -2077,7 +2077,7 @@
       {
         "name": "reasoningRun",
         "signature": "reasoningRun(index: number): object",
-        "description": "Aggregate the reasoning RUN starting at `index`: joins each step's\nreasoning, sums durations, counts steps, and computes the streaming flag\nand the merged label (\"Thought for {total} · {N} steps\" when N > 1).",
+        "description": "Aggregate the reasoning RUN starting at `index`: joins each step's\nreasoning, sums durations, counts steps, and computes the streaming flag\nand the merged label when N > 1 (\"Thought for {total} · {N} steps\", or\njust \"{N} steps\" when no step reported timing).",
         "params": [
           {
             "name": "index",
