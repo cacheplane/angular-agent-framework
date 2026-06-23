@@ -24,6 +24,7 @@ import { MarkdownCitationReferenceComponent } from './views/markdown-citation-re
 import { MarkdownTableComponent } from './views/markdown-table.component';
 import { MarkdownTableRowComponent } from './views/markdown-table-row.component';
 import { MarkdownTableCellComponent } from './views/markdown-table-cell.component';
+import { MarkdownHtmlComponent } from './views/markdown-html.component';
 
 /**
  * Default view registry consumed by <chat-streaming-md>. Maps every
@@ -57,4 +58,8 @@ export const cacheplaneMarkdownViews: ViewRegistry = views({
   'table':          MarkdownTableComponent,
   'table-row':      MarkdownTableRowComponent,
   'table-cell':     MarkdownTableCellComponent,
+  // Raw HTML (added by partial-markdown 0.4.x) renders as escaped literal text
+  // — XSS-safe, and matches the pre-0.4 behavior where HTML was plain text.
+  'html-block':     MarkdownHtmlComponent,
+  'html-inline':    MarkdownHtmlComponent,
 });

@@ -5,7 +5,7 @@ import { cacheplaneMarkdownViews } from './cacheplane-markdown-views';
 import { MarkdownMathComponent } from './views/markdown-math.component';
 
 describe('cacheplaneMarkdownViews', () => {
-  it('registers all 24 markdown node types (v0.4 adds math-inline, math-display)', () => {
+  it('registers all 26 markdown node types (v0.4 adds math + html nodes)', () => {
     expect(Object.keys(cacheplaneMarkdownViews).sort()).toEqual([
       'autolink',
       'blockquote',
@@ -15,6 +15,8 @@ describe('cacheplaneMarkdownViews', () => {
       'emphasis',
       'hard-break',
       'heading',
+      'html-block',
+      'html-inline',
       'image',
       'inline-code',
       'link',
