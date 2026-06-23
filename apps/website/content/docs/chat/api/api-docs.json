@@ -490,6 +490,12 @@
         "optional": false
       },
       {
+        "name": "glyphName",
+        "type": "Signal<string>",
+        "description": "The effective name as a Material Symbols ligature (camelCase → snake_case).",
+        "optional": false
+      },
+      {
         "name": "icon",
         "type": "InputSignal<string>",
         "description": "Pre-v1 alias retained for back-compat.",
