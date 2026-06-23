@@ -33,6 +33,14 @@
     {
       "match": { "userMessage": "Show me a recap card for day 1" },
       "response": { "toolCalls": [ { "name": "day_card", "arguments": { "day": 1, "places": ["Louvre", "Eiffel Tower"] } } ] }
+    },
+    {
+      "match": { "userMessage": "Put Louvre last on day 1.", "hasToolResult": true },
+      "response": { "content": "Done — Louvre is now last on day 1." }
+    },
+    {
+      "match": { "userMessage": "Put Louvre last on day 1." },
+      "response": { "toolCalls": [ { "name": "reorder_stop", "arguments": { "place": "Louvre", "toDay": 1, "toIndex": 1 } } ] }
     }
   ]
 }

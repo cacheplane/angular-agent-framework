@@ -168,3 +168,18 @@ test('user can drag-reorder stops within a day', async ({ page }) => {
   const day1Stops = panel.locator('[id="itin-day-1"] .itin__place-name');
   await expect(day1Stops.first()).toHaveText('Eiffel Tower');
 });
+
+test('reorder_stop: agent puts Louvre last on day 1', async ({ page }) => {
+  await openDemo(page);
+  const hygiene = attachBrowserHygiene(page);
+
+  await messageInput(page).fill('Put Louvre last on day 1.');
+  await sendButton(page).click();
+
+  const day1Stops = page
+    .getByRole('region', { name: 'Trip itinerary' })
+    .locator('[id="itin-day-1"] .itin__place-name');
+  await expect(day1Stops.last()).toHaveText('Louvre', { timeout: 30_000 });
+
+  expect(hygiene.consoleErrors).toEqual([]);
+});
