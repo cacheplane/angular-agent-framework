@@ -17,7 +17,7 @@ import { ChatGenerativeUiComponent } from '../../primitives/chat-generative-ui/c
 import type { Spec, StateStore } from '@json-render/core';
 import type { AgentEvent } from '../../agent/agent-event';
 import type { Subagent } from '../../agent/subagent';
-import type { ToolCall } from '../../agent';
+import type { ToolCall, Message } from '../../agent';
 
 describe('ChatComponent', () => {
   it('is defined as a class', () => {
@@ -646,5 +646,125 @@ describe('ChatComponent — subagent cards render once (no duplicate per-message
 
     const host = fixture.nativeElement as HTMLElement;
     expect(host.querySelectorAll('chat-subagent-card').length).toBe(1);
+  });
+});
+
+describe('ChatComponent — reasoning runs (merged pill)', () => {
+  // Unit coverage for reasoningRunStart() / reasoningRun() — the core of the
+  // merge-consecutive-reasoning-steps feature. These are plain class methods
+  // over agent.messages(), so we construct a real ChatComponent in an injection
+  // context and drive its `agent` signal input directly (same pattern as the
+  // welcome-branch tests above); no template compile needed.
+
+  interface ReasoningRun {
+    content: string;
+    durationMs: number | undefined;
+    streaming: boolean;
+    label: string | undefined;
+  }
+  interface ReasoningApi {
+    reasoningRunStart(index: number): boolean;
+    reasoningRun(index: number): ReasoningRun;
+  }
+
+  function api(messages: Message[], isLoading = false): ReasoningApi {
+    TestBed.configureTestingModule({});
+    const injector = TestBed.inject(Injector);
+    let comp!: ChatComponent;
+    runInInjectionContext(injector, () => {
+      comp = new ChatComponent();
+      setSignalInput(comp.agent, mockAgent({ messages, isLoading }));
+    });
+    return comp as unknown as ReasoningApi;
+  }
+
+  const user = (id: string, content = 'hi'): Message => ({ id, role: 'user', content });
+  const tool = (id: string): Message => ({ id, role: 'tool', content: 'result', toolCallId: 'c' });
+  const reasoning = (id: string, reasoning: string, durationMs?: number, content = ''): Message =>
+    ({ id, role: 'assistant', content, reasoning, reasoningDurationMs: durationMs });
+  const answer = (id: string, content: string): Message => ({ id, role: 'assistant', content });
+
+  describe('reasoningRunStart', () => {
+    it('is true for a reasoning step that follows a user message', () => {
+      const a = api([user('u1'), reasoning('a1', 'thinking', 1000)]);
+      expect(a.reasoningRunStart(1)).toBe(true);
+    });
+
+    it('is false for an assistant message with no reasoning', () => {
+      const a = api([user('u1'), answer('a1', 'done')]);
+      expect(a.reasoningRunStart(1)).toBe(false);
+    });
+
+    it('is false for the 2nd consecutive reasoning step (mid-run, even across a tool message)', () => {
+      const a = api([user('u1'), reasoning('a1', 'first', 1000), tool('t1'), reasoning('a2', 'second', 1000)]);
+      expect(a.reasoningRunStart(1)).toBe(true);  // run starts at the first step
+      expect(a.reasoningRunStart(3)).toBe(false); // the second step is NOT a new start
+    });
+  });
+
+  describe('reasoningRun', () => {
+    it('single step: no label, content from the one step, duration from the one step', () => {
+      const a = api([user('u1'), reasoning('a1', 'just this', 4000)]);
+      const run = a.reasoningRun(1);
+      expect(run.label).toBeUndefined();          // single step → no "· N steps" label
+      expect(run.content).toBe('just this');
+      expect(run.durationMs).toBe(4000);
+      expect(run.streaming).toBe(false);          // not loading
+    });
+
+    it('two steps separated by a tool message merge: joined content, summed duration, "N steps" label', () => {
+      const a = api([user('u1'), reasoning('a1', 'first', 3000), tool('t1'), reasoning('a2', 'second', 2000)]);
+      const run = a.reasoningRun(1);
+      expect(run.content).toBe('first\n\nsecond');
+      expect(run.durationMs).toBe(5000);                       // 3000 + 2000
+      expect(run.label).toBe('Thought for 5s · 2 steps');
+    });
+
+    it('the run ends when a non-reasoning assistant message follows (boundary excluded)', () => {
+      const a = api([
+        user('u1'),
+        reasoning('a1', 'first', 1000),
+        reasoning('a2', 'second', 1000),
+        answer('a3', 'the answer'),
+      ]);
+      const run = a.reasoningRun(1);
+      expect(run.content).toBe('first\n\nsecond'); // a3 terminates the run
+      expect(run.content).not.toContain('the answer');
+      expect(run.label).toBe('Thought for 2s · 2 steps');
+    });
+
+    it('all durations undefined → durationMs undefined; label falls back to "<1s" (documents current behavior)', () => {
+      // Flagged by review: "<1s" reads as "fast" when it really means "no timing
+      // data". This pins the CURRENT behavior so any intentional change is visible.
+      const a = api([user('u1'), reasoning('a1', 'first'), tool('t1'), reasoning('a2', 'second')]);
+      const run = a.reasoningRun(1);
+      expect(run.durationMs).toBeUndefined();
+      expect(run.label).toBe('Thought for <1s · 2 steps');
+    });
+
+    it('mixed defined/undefined durations sum only the numeric ones', () => {
+      const a = api([user('u1'), reasoning('a1', 'first', 3000), tool('t1'), reasoning('a2', 'second')]);
+      expect(a.reasoningRun(1).durationMs).toBe(3000);
+    });
+
+    it('streaming is true when the run’s last step is the loading tail with no response text yet', () => {
+      const a = api([user('u1'), reasoning('a1', 'thinking', undefined, '')], /* isLoading */ true);
+      const run = a.reasoningRun(1);
+      expect(run.streaming).toBe(true);
+      expect(run.label).toBeUndefined(); // still a single step
+    });
+
+    it('streaming reflects the LAST step of a multi-step run', () => {
+      // Two-step run whose final step is the loading tail (empty content).
+      const a = api([user('u1'), reasoning('a1', 'first', 2000), tool('t1'), reasoning('a2', 'second', undefined, '')], true);
+      const run = a.reasoningRun(1);
+      expect(run.streaming).toBe(true);
+      expect(run.label).toBe('Thought for 2s · 2 steps');
+    });
+
+    it('streaming is false once response text has arrived on the tail step', () => {
+      const a = api([user('u1'), reasoning('a1', 'thinking', 2000, 'here is the answer')], true);
+      expect(a.reasoningRun(1).streaming).toBe(false);
+    });
   });
 });
