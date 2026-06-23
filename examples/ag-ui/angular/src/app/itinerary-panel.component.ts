@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { ItineraryStore } from './itinerary-store';
 
@@ -10,6 +11,7 @@ import { ItineraryStore } from './itinerary-store';
 @Component({
   selector: 'app-itinerary-panel',
   standalone: true,
+  imports: [DragDropModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'itin', role: 'region', 'aria-label': 'Trip itinerary' },
   template: `
