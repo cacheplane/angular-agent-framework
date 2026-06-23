@@ -500,7 +500,8 @@ export class ChatComponent {
   /**
    * Aggregate the reasoning RUN starting at `index`: joins each step's
    * reasoning, sums durations, counts steps, and computes the streaming flag
-   * and the merged label ("Thought for {total} · {N} steps" when N > 1).
+   * and the merged label when N > 1 ("Thought for {total} · {N} steps", or
+   * just "{N} steps" when no step reported timing).
    */
   protected reasoningRun(index: number): {
     content: string;
@@ -523,9 +524,14 @@ export class ChatComponent {
     const durationMs = durations.length ? durations.reduce((a, b) => a + b, 0) : undefined;
     const last = steps[steps.length - 1];
     const streaming = last ? this.isReasoningStreaming(last.msg, last.idx) : false;
+    // Only claim a duration when at least one step reported timing. Otherwise
+    // "Thought for <1s" would read as "fast" when it really means "unknown", so
+    // drop the duration phrase and label by step count alone.
     const label =
       steps.length > 1
-        ? `Thought for ${formatDuration(durationMs ?? 0)} · ${steps.length} steps`
+        ? durationMs !== undefined
+          ? `Thought for ${formatDuration(durationMs)} · ${steps.length} steps`
+          : `${steps.length} steps`
         : undefined;
     return { content, durationMs, streaming, label };
   }

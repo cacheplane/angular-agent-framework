@@ -733,13 +733,13 @@ describe('ChatComponent — reasoning runs (merged pill)', () => {
       expect(run.label).toBe('Thought for 2s · 2 steps');
     });
 
-    it('all durations undefined → durationMs undefined; label falls back to "<1s" (documents current behavior)', () => {
-      // Flagged by review: "<1s" reads as "fast" when it really means "no timing
-      // data". This pins the CURRENT behavior so any intentional change is visible.
+    it('all durations undefined → durationMs undefined; label drops the duration phrase ("N steps")', () => {
+      // Per review: "Thought for <1s" reads as "fast" when timing is actually
+      // unknown. With no step reporting a duration, label by step count alone.
       const a = api([user('u1'), reasoning('a1', 'first'), tool('t1'), reasoning('a2', 'second')]);
       const run = a.reasoningRun(1);
       expect(run.durationMs).toBeUndefined();
-      expect(run.label).toBe('Thought for <1s · 2 steps');
+      expect(run.label).toBe('2 steps');
     });
 
     it('mixed defined/undefined durations sum only the numeric ones', () => {
