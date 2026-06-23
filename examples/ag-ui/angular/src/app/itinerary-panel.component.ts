@@ -55,8 +55,13 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
             (cdkDropListDropped)="onDrop($event, g.day)"
           >
             @for (s of g.stops; track s.id; let i = $index) {
-              <li class="itin__stop" cdkDrag [cdkDragData]="s">
-                <span class="itin__handle" cdkDragHandle>drag_indicator</span>
+              <li
+                class="itin__stop"
+                [class.itin__stop--pulse]="store.recentlyChangedId() === s.id"
+                cdkDrag
+                [cdkDragData]="s"
+              >
+                <span class="itin__handle" cdkDragHandle aria-label="Reorder">drag_indicator</span>
                 <span class="itin__index">{{ i + 1 }}</span>
                 <span class="itin__place">
                   <span class="itin__place-name">{{ s.place }}</span>
@@ -335,6 +340,21 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
       }
       .itin__stops.cdk-drop-list-dragging .itin__stop:not(.cdk-drag-placeholder) {
         transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+      }
+      @keyframes itinPulse {
+        0%   { box-shadow: 0 0 0 0 var(--ngaf-chat-primary); transform: scale(1); }
+        20%  { box-shadow: 0 0 0 3px color-mix(in srgb, var(--ngaf-chat-primary) 50%, transparent); transform: scale(1.015); }
+        100% { box-shadow: 0 0 0 0 transparent; transform: scale(1); }
+      }
+      .itin__stop--pulse {
+        animation: itinPulse 1600ms ease-out;
+      }
+      .itin__handle.cdk-keyboard-focused,
+      .itin__handle:focus-visible {
+        opacity: 1;
+        outline: 2px solid var(--ngaf-chat-text);
+        outline-offset: 2px;
+        border-radius: 4px;
       }
     `,
   ],
