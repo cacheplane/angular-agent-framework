@@ -143,18 +143,6 @@
   border-radius: var(--ngaf-chat-radius-card, 10px);
 }
 
-.demo-shell__subagents {
-  position: fixed;
-  left: 50%;
-  bottom: 96px;
-  transform: translateX(-50%);
-  z-index: 997;
-  width: min(640px, calc(100vw - 32px));
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
 .demo-shell__theme-toggle {
   width: 28px;
   height: 28px;

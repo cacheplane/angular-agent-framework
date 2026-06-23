@@ -18,7 +18,6 @@ import { DEMO_AGENT_REF, type DemoState } from './agent-ref';
 import { ThreadplaneTelemetryService } from '@threadplane/telemetry/browser';
 import {
   ChatInterruptPanelComponent,
-  ChatSubagentsComponent,
   ChatSidenavComponent,
   ChatSidenavScrimComponent,
   ChatHistorySearchPaletteComponent,
@@ -72,7 +71,6 @@ function parseUrl(url: string): { mode: DemoMode; threadId: string | null } {
   imports: [
     RouterOutlet,
     ChatInterruptPanelComponent,
-    ChatSubagentsComponent,
     ChatSidenavComponent,
     ChatSidenavScrimComponent,
     ChatHistorySearchPaletteComponent,

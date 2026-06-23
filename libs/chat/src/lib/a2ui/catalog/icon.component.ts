@@ -2,18 +2,53 @@
 import { Component, computed, input } from '@angular/core';
 import type { Spec } from '@json-render/core';
 
+/**
+ * Convert an icon identifier to its Material Symbols ligature form.
+ *
+ * Material Symbols ligatures are snake_case (`account_circle`, `trending_up`),
+ * but A2UI catalogs commonly emit camelCase identifiers (`accountCircle`,
+ * `shoppingCart`). Splitting on lower→upper boundaries and lowercasing maps
+ * camelCase → the matching ligature. Already-snake_case names, single words,
+ * and non-identifier glyphs (emoji) have no boundaries to split and pass
+ * through unchanged. Unknown names still fall back to the browser default.
+ */
+export function toMaterialSymbolName(name: string): string {
+  return name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
+}
+
 @Component({
   selector: 'a2ui-icon',
   standalone: true,
   template: `
-    <span
-      class="a2ui-icon"
-      [style.font-size]="size() ? size() + 'px' : '1.125rem'"
-      [attr.aria-label]="effectiveName()"
-    >{{ effectiveName() }}</span>
+    @if (effectiveName(); as name) {
+      <span
+        class="a2ui-icon material-symbols-outlined"
+        [style.font-size]="size() ? size() + 'px' : '1.125rem'"
+        [attr.aria-label]="name"
+        role="img"
+      >{{ glyphName() }}</span>
+    }
   `,
   styles: [`
+    /* Renders Material Symbols by ligature name (A2UI's canonical icon set).
+       Relies only on the Material Symbols Outlined @font-face being present —
+       host apps load the stylesheet (see README). Unknown / not-yet-loaded
+       names fall back to the browser default glyph. */
     .a2ui-icon {
+      font-family: 'Material Symbols Outlined';
+      font-weight: normal;
+      font-style: normal;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      font-feature-settings: 'liga';
+      -webkit-font-feature-settings: 'liga';
+      -webkit-font-smoothing: antialiased;
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      color: currentColor;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -35,4 +70,7 @@ export class A2uiIconComponent {
   readonly spec = input<Spec | undefined>(undefined);
 
   protected readonly effectiveName = computed(() => this.name() ?? this.icon());
+
+  /** The effective name as a Material Symbols ligature (camelCase → snake_case). */
+  protected readonly glyphName = computed(() => toMaterialSymbolName(this.effectiveName()));
 }

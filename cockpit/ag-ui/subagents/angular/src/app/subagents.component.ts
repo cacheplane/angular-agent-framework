@@ -12,8 +12,8 @@ import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
  * subagent-specific wiring is needed in the component: when the orchestrator
  * dispatches a `task` tool call, the backend converts the subagent_activity
  * CUSTOM events into native AG-UI ACTIVITY events, the @threadplane/ag-ui
- * reducer projects them onto `agent.subagents()`, and <chat> renders a
- * <chat-subagents> live card for each running subagent.
+ * reducer projects them onto `agent.subagents()`, and <chat> renders each
+ * dispatch inline as a persistent `chat-subagent-card`.
  *
  * Demonstrates the chat-runtime decoupling: same <chat> composition as the
  * LangGraph cockpit, AG-UI runtime instead of LangGraph.
