@@ -62,7 +62,10 @@ import { injectAgent } from '@threadplane/langgraph';
           </chat-message-list>
         </div>
         <div class="px-4 py-2" style="background: var(--ngaf-chat-bg);">
-          <chat-input [agent]="agent" placeholder="Try typing here..." (submitted)="submitMessage($event)" />
+          <!-- chat-input submits to [agent] itself; (submitted) is a
+               notification only — re-submitting it here would double the
+               user message. -->
+          <chat-input [agent]="agent" placeholder="Try typing here..." />
         </div>
       </div>
       <div sidebar class="p-4 space-y-4" style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">
@@ -94,8 +97,4 @@ export class InputComponent {
   protected readonly streamStatus = computed(() => this.agent.status());
   protected readonly isLoading = computed(() => this.agent.isLoading());
   protected readonly messageContent = messageContent;
-
-  submitMessage(content: string) {
-    this.agent.submit({ message: content });
-  }
 }
