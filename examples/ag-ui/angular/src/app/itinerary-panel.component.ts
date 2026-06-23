@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { DragDropModule } from '@angular/cdk/drag-drop';
-import { ItineraryStore } from './itinerary-store';
+import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
+import { ItineraryStop, ItineraryStore } from './itinerary-store';
 
 @Component({
   selector: 'app-itinerary-panel',
@@ -31,57 +31,65 @@ import { ItineraryStore } from './itinerary-store';
       }
     </div>
 
-    @for (g of store.days(); track g.day) {
-      <section class="itin__day">
-        <header class="itin__day-head">
-          <h3 class="itin__day-title">Day {{ g.day }}</h3>
-          <span class="itin__day-count">{{ g.stops.length }} stop{{ g.stops.length === 1 ? '' : 's' }}</span>
-          <button
-            type="button"
-            class="itin__day-add"
-            [class.is-active]="composer() === g.day"
-            (click)="openComposer(g.day)"
+    <div cdkDropListGroup>
+      @for (g of store.days(); track g.day) {
+        <section class="itin__day">
+          <header class="itin__day-head">
+            <h3 class="itin__day-title">Day {{ g.day }}</h3>
+            <span class="itin__day-count">{{ g.stops.length }} stop{{ g.stops.length === 1 ? '' : 's' }}</span>
+            <button
+              type="button"
+              class="itin__day-add"
+              [class.is-active]="composer() === g.day"
+              (click)="openComposer(g.day)"
+            >
+              <span class="itin__icon" aria-hidden="true">add</span>
+              <span>Add stop</span>
+            </button>
+          </header>
+          <ul
+            class="itin__stops"
+            cdkDropList
+            [cdkDropListData]="g.stops"
+            [id]="'itin-day-' + g.day"
+            (cdkDropListDropped)="onDrop($event, g.day)"
           >
-            <span class="itin__icon" aria-hidden="true">add</span>
-            <span>Add stop</span>
-          </button>
-        </header>
-        <ul class="itin__stops">
-          @for (s of g.stops; track s.id; let i = $index) {
-            <li class="itin__stop">
-              <span class="itin__handle" aria-hidden="true">drag_indicator</span>
-              <span class="itin__index">{{ i + 1 }}</span>
-              <span class="itin__place">
-                <span class="itin__place-name">{{ s.place }}</span>
-                @if (s.note) { <span class="itin__note">{{ s.note }}</span> }
-              </span>
-              <button
-                type="button"
-                class="itin__remove"
-                [attr.aria-label]="'Remove ' + s.place"
-                (click)="remove(s.id)"
-              >close</button>
-            </li>
+            @for (s of g.stops; track s.id; let i = $index) {
+              <li class="itin__stop" cdkDrag [cdkDragData]="s">
+                <span class="itin__handle" cdkDragHandle>drag_indicator</span>
+                <span class="itin__index">{{ i + 1 }}</span>
+                <span class="itin__place">
+                  <span class="itin__place-name">{{ s.place }}</span>
+                  @if (s.note) { <span class="itin__note">{{ s.note }}</span> }
+                </span>
+                <button
+                  type="button"
+                  class="itin__remove"
+                  [attr.aria-label]="'Remove ' + s.place"
+                  (click)="remove(s.id)"
+                >close</button>
+              </li>
+            }
+          </ul>
+          @if (composer() === g.day) {
+            <form class="itin__composer" (submit)="commitComposer($event, g.day)">
+              <input
+                class="itin__composer-input"
+                type="text"
+                placeholder="Add a place"
+                [value]="composerText()"
+                (input)="composerText.set($any($event.target).value)"
+                (blur)="commitComposer($event, g.day)"
+                aria-label="Add a place"
+                autofocus
+              />
+            </form>
           }
-        </ul>
-        @if (composer() === g.day) {
-          <form class="itin__composer" (submit)="commitComposer($event, g.day)">
-            <input
-              class="itin__composer-input"
-              type="text"
-              placeholder="Add a place"
-              [value]="composerText()"
-              (input)="composerText.set($any($event.target).value)"
-              (blur)="commitComposer($event, g.day)"
-              aria-label="Add a place"
-              autofocus
-            />
-          </form>
-        }
-      </section>
-    } @empty {
-      <p class="itin__empty">No stops planned yet.</p>
-    }
+        </section>
+      } @empty {
+        <p class="itin__empty">No stops planned yet.</p>
+      }
+    </div>
 
     @if (showFooterAdd()) {
       <button type="button" class="itin__add-day-btn" (click)="addNewDay()">
@@ -315,6 +323,19 @@ import { ItineraryStore } from './itinerary-store';
         color: var(--ngaf-chat-text-muted);
         margin: 8px 0;
       }
+      .itin__stop.cdk-drag-preview {
+        box-shadow:
+          0 5px 5px -3px rgba(0, 0, 0, 0.2),
+          0 8px 10px 1px rgba(0, 0, 0, 0.14),
+          0 3px 14px 2px rgba(0, 0, 0, 0.12);
+        background: var(--ngaf-chat-bg);
+      }
+      .itin__stop.cdk-drag-placeholder {
+        opacity: 0.3;
+      }
+      .itin__stops.cdk-drop-list-dragging .itin__stop:not(.cdk-drag-placeholder) {
+        transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+      }
     `,
   ],
 })
@@ -360,5 +381,10 @@ export class ItineraryPanelComponent {
 
   protected remove(id: string): void {
     this.store.remove(id, { source: 'user' });
+  }
+
+  protected onDrop(event: CdkDragDrop<ItineraryStop[]>, toDay: number): void {
+    const stop = event.item.data as ItineraryStop;
+    this.store.reorder(stop.id, toDay, event.currentIndex, { source: 'user' });
   }
 }
