@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ItineraryStore, ITINERARY_STORAGE_KEY } from './itinerary-store';
 
 describe('ItineraryStore', () => {
@@ -58,5 +58,65 @@ describe('ItineraryStore', () => {
     expect(s.stops().length).toBe(1);
     expect(s.stops()[0].place).toBe('Arc de Triomphe');
     expect(s.stops()[0].day).toBe(5);
+  });
+});
+
+describe('reorder', () => {
+  beforeEach(() => localStorage.clear());
+
+  it('moves a stop to a new index within the same day', () => {
+    const s = new ItineraryStore();
+    // seed: day 1 has [Louvre, Eiffel]
+    const eiffel = s.stops().find((x) => x.place === 'Eiffel Tower')!;
+    s.reorder(eiffel.id, 1, 0);
+    const day1 = s.days().find((g) => g.day === 1)!;
+    expect(day1.stops.map((x) => x.place)).toEqual(['Eiffel Tower', 'Louvre']);
+  });
+
+  it('moves a stop across days at a specific index', () => {
+    const s = new ItineraryStore();
+    const orsay = s.stops().find((x) => x.place === "Musée d'Orsay")!;
+    s.reorder(orsay.id, 1, 0);
+    const day1 = s.days().find((g) => g.day === 1)!;
+    expect(day1.stops[0].place).toBe("Musée d'Orsay");
+    expect(day1.stops[0].day).toBe(1);
+  });
+
+  it('reorder by unknown id is a no-op', () => {
+    const s = new ItineraryStore();
+    const before = s.stops();
+    s.reorder('does-not-exist', 1, 0);
+    expect(s.stops()).toEqual(before);
+  });
+});
+
+describe('recentlyChangedId', () => {
+  beforeEach(() => localStorage.clear());
+
+  it('is null initially', () => {
+    const s = new ItineraryStore();
+    expect(s.recentlyChangedId()).toBeNull();
+  });
+
+  it('is set after an agent-source add', () => {
+    const s = new ItineraryStore();
+    const added = s.add(3, 'Sacré-Cœur');
+    expect(s.recentlyChangedId()).toBe(added.id);
+  });
+
+  it('is NOT set after a user-source add', () => {
+    const s = new ItineraryStore();
+    s.add(3, 'Sacré-Cœur', undefined, { source: 'user' });
+    expect(s.recentlyChangedId()).toBeNull();
+  });
+
+  it('clears 1600ms after the change', async () => {
+    vi.useFakeTimers();
+    const s = new ItineraryStore();
+    s.add(3, 'Sacré-Cœur');
+    expect(s.recentlyChangedId()).not.toBeNull();
+    vi.advanceTimersByTime(1600);
+    expect(s.recentlyChangedId()).toBeNull();
+    vi.useRealTimers();
   });
 });
