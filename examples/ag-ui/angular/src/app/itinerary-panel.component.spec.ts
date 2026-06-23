@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
+import { provideAgent } from '@threadplane/ag-ui';
+import { ITINERARY_AGENT } from './client-tools';
 import { ItineraryPanelComponent } from './itinerary-panel.component';
 import { ItineraryStore } from './itinerary-store';
 
@@ -9,7 +11,10 @@ describe('ItineraryPanelComponent — agent-edit pulse', () => {
 
   it('applies .itin__stop--pulse to the row matching recentlyChangedId', async () => {
     TestBed.configureTestingModule({
-      providers: [ItineraryStore],
+      providers: [
+        ItineraryStore,
+        provideAgent(ITINERARY_AGENT, { url: '/__test__' }),
+      ],
     });
     const store = TestBed.inject(ItineraryStore);
     const added = store.add(3, 'Sacré-Cœur'); // agent source by default

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
+import { injectAgent } from '@threadplane/ag-ui';
+import { ITINERARY_AGENT } from './client-tools';
 import { ItineraryStop, ItineraryStore } from './itinerary-store';
 
 @Component({
@@ -92,7 +94,23 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
           }
         </section>
       } @empty {
-        <p class="itin__empty">No stops planned yet.</p>
+        <div class="itin__empty" role="status">
+          <span class="itin__empty-icon" aria-hidden="true">luggage</span>
+          <p class="itin__empty-title">Your trip is empty</p>
+          <p class="itin__empty-sub">Ask the agent to plan something, or add a stop yourself.</p>
+          <div class="itin__empty-chips">
+            <button
+              type="button"
+              class="itin__empty-chip"
+              (click)="suggestion('Plan a Paris weekend')"
+            >Plan a Paris weekend</button>
+            <button
+              type="button"
+              class="itin__empty-chip"
+              (click)="suggestion('Add a Day 1 stop')"
+            >Add a Day 1 stop</button>
+          </div>
+        </div>
       }
     </div>
 
@@ -325,8 +343,50 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
         border-color: var(--ngaf-chat-text);
       }
       .itin__empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 8px;
+        padding: 24px 8px;
         color: var(--ngaf-chat-text-muted);
-        margin: 8px 0;
+      }
+      .itin__empty-icon {
+        font-family: 'Material Symbols Outlined', sans-serif;
+        font-size: 48px;
+        color: var(--ngaf-chat-text-muted);
+        line-height: 1;
+      }
+      .itin__empty-title {
+        margin: 0;
+        font-size: 0.95rem;
+        color: var(--ngaf-chat-text);
+        font-weight: 500;
+      }
+      .itin__empty-sub {
+        margin: 0;
+        font-size: 0.8rem;
+      }
+      .itin__empty-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: center;
+        margin-top: 4px;
+      }
+      .itin__empty-chip {
+        font-family: inherit;
+        font-size: 0.8rem;
+        background: transparent;
+        border: 1px solid var(--ngaf-chat-separator);
+        color: var(--ngaf-chat-text);
+        border-radius: 999px;
+        padding: 4px 12px;
+        cursor: pointer;
+      }
+      .itin__empty-chip:hover {
+        background: var(--ngaf-chat-surface-alt);
+        border-color: var(--ngaf-chat-text);
       }
       .itin__stop.cdk-drag-preview {
         box-shadow:
@@ -349,6 +409,11 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
       .itin__stop--pulse {
         animation: itinPulse 1600ms ease-out;
       }
+      @media (prefers-reduced-motion: reduce) {
+        .itin__stop--pulse {
+          animation: none;
+        }
+      }
       .itin__handle.cdk-keyboard-focused,
       .itin__handle:focus-visible {
         opacity: 1;
@@ -369,6 +434,11 @@ export class ItineraryPanelComponent {
     return `${n} stop${n === 1 ? '' : 's'}`;
   });
   protected readonly showFooterAdd = computed(() => this.store.days().length > 0);
+  private readonly agent = injectAgent(ITINERARY_AGENT);
+
+  protected suggestion(prompt: string): void {
+    void this.agent.submit({ message: prompt });
+  }
 
   protected toggleMenu(): void {
     this.menuOpen.update((v) => !v);
