@@ -47,6 +47,12 @@ not a required check and never blocks a merge. A second workflow
 Scorecard's Code-Review check reads from the reviews API. The maintainer still
 merges every PR.
 
+Because the review is advisory, **handling its comments is a convention, not a
+gate**: before arming auto-merge, the author reads each AI comment and either
+addresses it in a follow-up commit or replies on the thread with the reason for
+deferring/declining. Don't merge past unread review comments — the check going
+green (or red) says nothing about whether the comments were considered.
+
 This credits Code-Review via automation rather than peer review, because the
 project is currently single-maintainer. OSSF documentation suggests
 automated/AI reviews may not be intended to count toward this check; the current
