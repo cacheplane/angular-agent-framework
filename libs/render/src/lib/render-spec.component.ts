@@ -72,10 +72,27 @@ export class RenderSpecComponent implements OnInit {
 
   private destroyed = false;
 
+  /**
+   * True once this component is destroyed OR mid-teardown. Reads the live
+   * `DestroyRef` state, which Angular flips at the very START of view
+   * teardown — BEFORE any `onDestroy` hook runs, and crucially before the
+   * `events` OutputEmitterRef's own destroy hook marks itself dead.
+   *
+   * The manual `destroyed` flag alone is set too late: it flips inside our
+   * own `onDestroy` callback (below), which runs AFTER the output's destroy
+   * hook. That left the final `destroyed`-lifecycle emit — and any late async
+   * handler/store emit racing teardown — slipping through to an already-dead
+   * OutputEmitterRef → dev-mode NG0953. Gating every emit on
+   * `destroyRef.destroyed` closes that window. See guarded-emit.ts.
+   */
+  private isDestroyed(): boolean {
+    return this.destroyed || this.destroyRef.destroyed;
+  }
+
   /** Guarded OutputRef emit — no-ops after destroy (NG0953). */
   private readonly guardedEmit = makeGuardedEmit<RenderEvent>(
     (e) => this.events.emit(e),
-    () => this.destroyed,
+    () => this.isDestroyed(),
   );
 
   /** Internal store, lazily created once and reused across spec changes. */
@@ -138,7 +155,7 @@ export class RenderSpecComponent implements OnInit {
    * lifecycle service (single tap point — all events flow through here). */
   private readonly emitTapped = (event: RenderEvent): void => {
     this.guardedEmit(event);
-    if (this.destroyed || !this.lifecycle) return;
+    if (this.isDestroyed() || !this.lifecycle) return;
     switch (event.type) {
       case 'lifecycle':
         this.lifecycle.notifyLifecycle({
@@ -188,8 +205,11 @@ export class RenderSpecComponent implements OnInit {
     });
 
     this.destroyRef.onDestroy(() => {
-      this.emitTapped({ type: 'lifecycle', event: 'destroyed', scope: 'spec' });
+      // Mark destroyed BEFORE emitting: by now Angular has already torn down
+      // the `events` output, so the guard must suppress this final emit too
+      // (otherwise NG0953). The lifecycle service ignores 'destroyed' anyway.
       this.destroyed = true;
+      this.emitTapped({ type: 'lifecycle', event: 'destroyed', scope: 'spec' });
     });
   }
 

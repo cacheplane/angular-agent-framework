@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Component, input } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import type { Spec } from '@json-render/core';
@@ -185,5 +185,89 @@ describe('RenderSpecComponent — event emission', () => {
       expect(events).toHaveLength(1);
       expect(events[0].type).toBe('stateChange');
     });
+  });
+});
+
+// --- NG0953 regression: emit-after-destroy during streaming view teardown ---
+
+import { Component as SpecCmp, input as specInput } from '@angular/core';
+import { RenderSpecComponent } from './render-spec.component';
+import { defineAngularRegistry as defineReg } from './define-angular-registry';
+
+/** A `view`-tool component shaped like the AG-UI itinerary `day_card`. */
+@SpecCmp({
+  selector: 'render-day-card-view',
+  standalone: true,
+  template: '<div class="day-card">Day {{ day() }}</div>',
+})
+class DayCardViewComponent {
+  readonly day = specInput<number>(0);
+  readonly places = specInput<string[]>([]);
+}
+
+@SpecCmp({
+  selector: 'streaming-view-host',
+  standalone: true,
+  imports: [RenderSpecComponent],
+  template: '<render-spec [spec]="spec" [registry]="registry" />',
+})
+class StreamingViewHost {
+  readonly registry = defineReg({ day_card: DayCardViewComponent });
+  spec: Spec = {
+    root: 'card',
+    elements: { card: { type: 'day_card', props: { day: 1, places: [] } } },
+  } as Spec;
+}
+
+/**
+ * During live-LLM streaming the chat tool-view host mounts and tears down the
+ * `render-spec` for a `view` tool repeatedly as tokens arrive. On teardown,
+ * RenderSpecComponent's `onDestroy` emits a `destroyed` spec-lifecycle event.
+ * If that emit reaches the `events` OutputEmitterRef AFTER Angular has marked
+ * it destroyed, dev mode logs NG0953. Aimock fixture-replay e2e renders the
+ * view as a single atomic snapshot, so it never exercises this mount/teardown
+ * churn — hence this unit-level regression.
+ *
+ * NG0953 is surfaced as a `console.error` (Angular's reactive error reporter),
+ * so we spy on BOTH console.error and console.warn to be implementation-robust.
+ */
+describe('RenderSpecComponent — NG0953 emit-after-destroy (streaming teardown)', () => {
+  let errorSpy: ReturnType<typeof vi.spyOn>;
+  let warnSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  });
+  afterEach(() => {
+    errorSpy.mockRestore();
+    warnSpy.mockRestore();
+  });
+
+  /** Any NG0953 (`destroyed OutputRef`) report across error/warn channels. */
+  function ng0953Reports(): string[] {
+    return [...errorSpy.mock.calls, ...warnSpy.mock.calls]
+      .map((call) => call.map((a) => (a instanceof Error ? a.message : String(a))).join(' '))
+      .filter(
+        (msg) => msg.includes('NG0953') || msg.includes('destroyed `OutputRef`'),
+      );
+  }
+
+  it('does not emit through the destroyed OutputRef when the view-tool host tears down', () => {
+    TestBed.configureTestingModule({ imports: [StreamingViewHost] });
+    const fx = TestBed.createComponent(StreamingViewHost);
+    fx.detectChanges(); // mounts render-spec → emits spec 'mounted'
+    fx.destroy(); // teardown → spec onDestroy emits 'destroyed'
+    expect(ng0953Reports()).toEqual([]);
+  });
+
+  it('survives repeated mount/teardown churn (token-stream re-materialization)', () => {
+    TestBed.configureTestingModule({ imports: [StreamingViewHost] });
+    for (let i = 0; i < 3; i++) {
+      const fx = TestBed.createComponent(StreamingViewHost);
+      fx.detectChanges();
+      fx.destroy();
+    }
+    expect(ng0953Reports()).toEqual([]);
   });
 });
