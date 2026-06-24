@@ -14,6 +14,7 @@ import { MarkdownEmphasisComponent } from './views/markdown-emphasis.component';
 import { MarkdownStrongComponent } from './views/markdown-strong.component';
 import { MarkdownStrikethroughComponent } from './views/markdown-strikethrough.component';
 import { MarkdownInlineCodeComponent } from './views/markdown-inline-code.component';
+import { MarkdownMathComponent } from './views/markdown-math.component';
 import { MarkdownLinkComponent } from './views/markdown-link.component';
 import { MarkdownAutolinkComponent } from './views/markdown-autolink.component';
 import { MarkdownImageComponent } from './views/markdown-image.component';
@@ -23,6 +24,7 @@ import { MarkdownCitationReferenceComponent } from './views/markdown-citation-re
 import { MarkdownTableComponent } from './views/markdown-table.component';
 import { MarkdownTableRowComponent } from './views/markdown-table-row.component';
 import { MarkdownTableCellComponent } from './views/markdown-table-cell.component';
+import { MarkdownHtmlComponent } from './views/markdown-html.component';
 
 /**
  * Default view registry consumed by <chat-streaming-md>. Maps every
@@ -45,6 +47,8 @@ export const cacheplaneMarkdownViews: ViewRegistry = views({
   'strong':         MarkdownStrongComponent,
   'strikethrough':  MarkdownStrikethroughComponent,
   'inline-code':    MarkdownInlineCodeComponent,
+  'math-inline':    MarkdownMathComponent,
+  'math-display':   MarkdownMathComponent,
   'link':           MarkdownLinkComponent,
   'autolink':       MarkdownAutolinkComponent,
   'image':          MarkdownImageComponent,
@@ -54,4 +58,8 @@ export const cacheplaneMarkdownViews: ViewRegistry = views({
   'table':          MarkdownTableComponent,
   'table-row':      MarkdownTableRowComponent,
   'table-cell':     MarkdownTableCellComponent,
+  // Raw HTML (added by partial-markdown 0.4.x) renders as escaped literal text
+  // — XSS-safe, and matches the pre-0.4 behavior where HTML was plain text.
+  'html-block':     MarkdownHtmlComponent,
+  'html-inline':    MarkdownHtmlComponent,
 });

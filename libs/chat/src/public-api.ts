@@ -140,6 +140,8 @@ export { MarkdownEmphasisComponent }       from './lib/markdown/views/markdown-e
 export { MarkdownStrongComponent }         from './lib/markdown/views/markdown-strong.component';
 export { MarkdownStrikethroughComponent }  from './lib/markdown/views/markdown-strikethrough.component';
 export { MarkdownInlineCodeComponent }     from './lib/markdown/views/markdown-inline-code.component';
+export { MarkdownMathComponent }           from './lib/markdown/views/markdown-math.component';
+export { MarkdownHtmlComponent }           from './lib/markdown/views/markdown-html.component';
 export { MarkdownLinkComponent }           from './lib/markdown/views/markdown-link.component';
 export { MarkdownAutolinkComponent }       from './lib/markdown/views/markdown-autolink.component';
 export { MarkdownImageComponent }          from './lib/markdown/views/markdown-image.component';

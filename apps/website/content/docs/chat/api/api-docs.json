@@ -5002,6 +5002,28 @@
     "methods": []
   },
   {
+    "name": "MarkdownHtmlComponent",
+    "kind": "class",
+    "description": "Renders a `html-block` / `html-inline` markdown node as **escaped text** —\nthe raw HTML is shown literally (Angular interpolation auto-escapes it),\nnever injected as live markup. This preserves the pre-0.4 behavior where\nraw HTML was plain text, and keeps the chat XSS-safe: model-emitted\n`<script>`, `<iframe>`, etc. are displayed as text and never executed.",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "node",
+        "type": "InputSignal<MarkdownHtmlBlockNode | MarkdownHtmlInlineNode>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "raw",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
     "name": "MarkdownImageComponent",
     "kind": "class",
     "description": "",
@@ -5081,6 +5103,40 @@
       {
         "name": "node",
         "type": "InputSignal<MarkdownListItemNode>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "MarkdownMathComponent",
+    "kind": "class",
+    "description": "Renders a `math-inline` / `math-display` markdown node as KaTeX. KaTeX is\nlazy-loaded (see katex-loader); until it resolves, or if the LaTeX is\ninvalid, the raw `$…$` source is shown — never blank, never a crash.",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "display",
+        "type": "Signal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "html",
+        "type": "Signal<SafeHtml | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "node",
+        "type": "InputSignal<MathNode>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "raw",
+        "type": "Signal<string>",
         "description": "",
         "optional": false
       }

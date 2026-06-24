@@ -207,6 +207,17 @@ Per-instance, bind the registry on `<chat-streaming-md [viewRegistry]="…" />` 
 
 The `renderMarkdown(md, options?)` function produces a parse tree for use outside streaming contexts.
 
+#### Math (KaTeX)
+
+LaTeX math — inline `$…$` / `\(…\)` and display `$$…$$` / `\[…\]` — renders via [KaTeX](https://katex.org), an **optional** peer dependency loaded lazily only when a message actually contains math (so non-math chats carry zero extra bundle weight). To enable styled math, install `katex` and import its stylesheet once in your app:
+
+```typescript
+// e.g. in your global styles or app bootstrap
+import 'katex/dist/katex.min.css';
+```
+
+Without `katex` installed, or without the stylesheet, math degrades gracefully — the raw `$…$` source is shown rather than breaking. Currency like `$5` is not treated as math.
+
 ### Theming
 
 `<a2ui-surface>` declares ~50 `--a2ui-*` CSS custom properties at `:host` with dark-theme defaults covering color, spacing, typography, shape radius, focus ring, motion, and elevation. Catalog components consume them via `var(--a2ui-*)`.
