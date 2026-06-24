@@ -1,7 +1,16 @@
 // SPDX-License-Identifier: MIT
 /// <reference types="google.maps" />
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { GoogleMap, MapMarker, MapPolyline } from '@angular/google-maps';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+  viewChild,
+  viewChildren,
+} from '@angular/core';
+import { GoogleMap, MapInfoWindow, MapMarker, MapPolyline } from '@angular/google-maps';
 import { ItineraryStop, ItineraryStore } from './itinerary-store';
 
 const DARK_STYLE: google.maps.MapTypeStyle[] = [
@@ -25,7 +34,7 @@ const PARIS_CENTER: google.maps.LatLngLiteral = { lat: 48.8566, lng: 2.3522 };
 @Component({
   selector: 'app-map-canvas',
   standalone: true,
-  imports: [GoogleMap, MapMarker, MapPolyline],
+  imports: [GoogleMap, MapInfoWindow, MapMarker, MapPolyline],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <google-map
@@ -36,14 +45,41 @@ const PARIS_CENTER: google.maps.LatLngLiteral = { lat: 48.8566, lng: 2.3522 };
       [options]="mapOptions"
     >
       @for (s of stopsWithCoords(); track s.id) {
-        <map-marker [position]="{ lat: s.lat!, lng: s.lng! }" [options]="markerOptions(s)" />
+        <map-marker
+          #marker
+          [position]="{ lat: s.lat!, lng: s.lng! }"
+          [options]="markerOptions(s)"
+          (mapClick)="onMarkerClick(s)"
+        />
       }
       @for (line of polylines(); track line.day) {
         <map-polyline [path]="line.path" [options]="polylineOptions(line.day)" />
       }
+      <map-info-window>
+        @if (focused(); as f) {
+          <div class="info">
+            <strong>{{ f.place }}</strong>
+            @if (f.note) {
+              <div class="info__note">{{ f.note }}</div>
+            }
+            <button type="button" class="info__remove" (click)="removeFocused()">Remove</button>
+          </div>
+        }
+      </map-info-window>
     </google-map>
   `,
-  styles: [`:host { display: block; width: 100%; height: 100%; }`],
+  styles: [
+    `
+      :host { display: block; width: 100%; height: 100%; }
+      .info { font-family: var(--ngaf-chat-font-family, sans-serif); font-size: 0.85rem; color: #111; }
+      .info__note { color: #555; margin: 4px 0 8px; }
+      .info__remove {
+        font: inherit; cursor: pointer; padding: 4px 10px;
+        border: 1px solid #ddd; border-radius: 6px; background: #fff; color: #111;
+      }
+      .info__remove:hover { background: #f4f4f4; }
+    `,
+  ],
 })
 export class MapCanvasComponent {
   protected readonly store = inject(ItineraryStore);
@@ -56,9 +92,42 @@ export class MapCanvasComponent {
     clickableIcons: false,
   };
 
+  private readonly infoWindow = viewChild(MapInfoWindow);
+  private readonly markers = viewChildren(MapMarker);
+
   protected readonly stopsWithCoords = computed(() =>
     this.store.stops().filter((s) => s.lat != null && s.lng != null),
   );
+
+  protected readonly focused = computed(
+    () => this.store.stops().find((s) => s.id === this.store.focusedStopId()) ?? null,
+  );
+
+  constructor() {
+    effect(() => {
+      const f = this.focused();
+      if (!f || f.lat == null || f.lng == null) return;
+      const idx = this.stopsWithCoords().findIndex((s) => s.id === f.id);
+      const marker = this.markers()[idx];
+      const win = this.infoWindow();
+      if (idx >= 0 && marker && win) {
+        this.center.set({ lat: f.lat, lng: f.lng });
+        win.open(marker);
+      }
+    });
+  }
+
+  protected onMarkerClick(s: ItineraryStop): void {
+    this.store.focus(s.id);
+  }
+
+  protected removeFocused(): void {
+    const f = this.focused();
+    if (!f) return;
+    this.store.remove(f.id, { source: 'user' });
+    this.store.focus(null);
+    this.infoWindow()?.close();
+  }
 
   protected readonly polylines = computed(() => {
     const byDay = new Map<number, ItineraryStop[]>();
