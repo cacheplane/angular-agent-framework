@@ -59,7 +59,8 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
             @for (s of g.stops; track s.id; let i = $index) {
               <li
                 class="itin__stop"
-                [class.itin__stop--pulse]="store.recentlyChangedId() === s.id"
+                [class.itin__stop--pulse]="store.recentlyChangedId() === s.id || store.focusedStopId() === s.id"
+                (click)="onRowClick(s.id, $event)"
                 cdkDrag
                 [cdkDragData]="s"
               >
@@ -471,6 +472,12 @@ export class ItineraryPanelComponent {
 
   protected remove(id: string): void {
     this.store.remove(id, { source: 'user' });
+  }
+
+  protected onRowClick(id: string, event: Event): void {
+    const target = event.target as HTMLElement;
+    if (target.closest('.itin__handle') || target.closest('.itin__remove')) return;
+    this.store.focus(id);
   }
 
   protected onDrop(event: CdkDragDrop<ItineraryStop[]>, toDay: number): void {

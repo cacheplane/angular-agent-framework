@@ -31,4 +31,25 @@ describe('ItineraryPanelComponent — agent-edit pulse', () => {
     // satisfy lint
     expect(added.id).toBeDefined();
   });
+
+  it('highlights the focused row', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        ItineraryStore,
+        provideAgent(ITINERARY_AGENT, { url: '/__test__' }),
+      ],
+    });
+    const store = TestBed.inject(ItineraryStore);
+    const stop = store.stops()[0];
+    store.focus(stop.id);
+
+    const fixture = TestBed.createComponent(ItineraryPanelComponent);
+    fixture.detectChanges();
+
+    const rows = fixture.nativeElement.querySelectorAll('.itin__stop');
+    const pulsing = Array.from(rows).filter((el: any) =>
+      el.classList.contains('itin__stop--pulse'),
+    );
+    expect(pulsing.length).toBe(1);
+  });
 });
