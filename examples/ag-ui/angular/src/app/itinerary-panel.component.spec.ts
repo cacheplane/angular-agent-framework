@@ -32,6 +32,32 @@ describe('ItineraryPanelComponent — agent-edit pulse', () => {
     expect(added.id).toBeDefined();
   });
 
+  it('toggles the itin--collapsed host class via the collapse button', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        ItineraryStore,
+        provideAgent(ITINERARY_AGENT, { url: '/__test__' }),
+      ],
+    });
+
+    const fixture = TestBed.createComponent(ItineraryPanelComponent);
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.classList.contains('itin--collapsed')).toBe(false);
+
+    const toggle = host.querySelector('.itin__collapse') as HTMLButtonElement;
+    expect(toggle).toBeTruthy();
+
+    toggle.click();
+    fixture.detectChanges();
+    expect(host.classList.contains('itin--collapsed')).toBe(true);
+
+    toggle.click();
+    fixture.detectChanges();
+    expect(host.classList.contains('itin--collapsed')).toBe(false);
+  });
+
   it('highlights the focused row', () => {
     TestBed.configureTestingModule({
       providers: [
