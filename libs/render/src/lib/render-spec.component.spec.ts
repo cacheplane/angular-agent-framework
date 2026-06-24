@@ -10,6 +10,7 @@ import { signalStateStore } from './signal-state-store';
 import { provideRender, RENDER_CONFIG } from './provide-render';
 import { provideViews, VIEW_REGISTRY } from './provide-views';
 import { views } from './views';
+import { RenderSpecComponent } from './render-spec.component';
 
 // --- Test component ---
 
@@ -190,29 +191,25 @@ describe('RenderSpecComponent — event emission', () => {
 
 // --- NG0953 regression: emit-after-destroy during streaming view teardown ---
 
-import { Component as SpecCmp, input as specInput } from '@angular/core';
-import { RenderSpecComponent } from './render-spec.component';
-import { defineAngularRegistry as defineReg } from './define-angular-registry';
-
 /** A `view`-tool component shaped like the AG-UI itinerary `day_card`. */
-@SpecCmp({
+@Component({
   selector: 'render-day-card-view',
   standalone: true,
   template: '<div class="day-card">Day {{ day() }}</div>',
 })
 class DayCardViewComponent {
-  readonly day = specInput<number>(0);
-  readonly places = specInput<string[]>([]);
+  readonly day = input<number>(0);
+  readonly places = input<string[]>([]);
 }
 
-@SpecCmp({
-  selector: 'streaming-view-host',
+@Component({
   standalone: true,
   imports: [RenderSpecComponent],
-  template: '<render-spec [spec]="spec" [registry]="registry" />',
+  template: '<render-spec [spec]="spec" [registry]="registry" (events)="events.push($event)" />',
 })
 class StreamingViewHost {
-  readonly registry = defineReg({ day_card: DayCardViewComponent });
+  readonly registry = defineAngularRegistry({ day_card: DayCardViewComponent });
+  readonly events: RenderEvent[] = [];
   spec: Spec = {
     root: 'card',
     elements: { card: { type: 'day_card', props: { day: 1, places: [] } } },
@@ -257,8 +254,25 @@ describe('RenderSpecComponent — NG0953 emit-after-destroy (streaming teardown)
     TestBed.configureTestingModule({ imports: [StreamingViewHost] });
     const fx = TestBed.createComponent(StreamingViewHost);
     fx.detectChanges(); // mounts render-spec → emits spec 'mounted'
-    fx.destroy(); // teardown → spec onDestroy emits 'destroyed'
+    fx.destroy(); // teardown → spec onDestroy tries to emit 'destroyed'
     expect(ng0953Reports()).toEqual([]);
+
+    // The spec 'destroyed' lifecycle event is emitted only from onDestroy,
+    // by which point Angular has torn down the `events` output. It was never
+    // deliverable (the emit is what produced NG0953) — so suppressing it is
+    // not a behavioral change. Assert it stays intentionally undelivered.
+    const host = fx.componentInstance;
+    expect(
+      host.events.filter(
+        (e) => e.type === 'lifecycle' && e.event === 'destroyed' && e.scope === 'spec',
+      ),
+    ).toEqual([]);
+    // The 'mounted' event, emitted while alive, still reaches consumers.
+    expect(
+      host.events.some(
+        (e) => e.type === 'lifecycle' && e.event === 'mounted' && e.scope === 'spec',
+      ),
+    ).toBe(true);
   });
 
   it('survives repeated mount/teardown churn (token-stream re-materialization)', () => {
