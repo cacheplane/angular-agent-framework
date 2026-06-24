@@ -62,3 +62,6 @@ libs/licensing/src/lib/license-public-key.generated.ts
 .superpowers/
 # TypeScript incremental build caches (any project)
 *.tsbuildinfo
+
+# AG-UI example generated API keys (injected from .env at build time)
+examples/ag-ui/angular/src/environments/generated-keys.local.ts
