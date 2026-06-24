@@ -121,6 +121,18 @@ describe('recentlyChangedId', () => {
   });
 });
 
+describe('focus', () => {
+  beforeEach(() => localStorage.clear());
+  it('focus sets and clears focusedStopId', () => {
+    const s = new ItineraryStore();
+    expect(s.focusedStopId()).toBeNull();
+    s.focus('seed-1');
+    expect(s.focusedStopId()).toBe('seed-1');
+    s.focus(null);
+    expect(s.focusedStopId()).toBeNull();
+  });
+});
+
 describe('coordinates', () => {
   beforeEach(() => localStorage.clear());
 

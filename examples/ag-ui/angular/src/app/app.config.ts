@@ -2,6 +2,7 @@
 import {
   ApplicationConfig,
   provideBrowserGlobalErrorListeners,
+  provideEnvironmentInitializer,
   provideZonelessChangeDetection,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
@@ -34,6 +35,21 @@ export const appConfig: ApplicationConfig = {
     // Typed agent provider: flows ItineraryState through DI so every
     // injectAgent(ITINERARY_AGENT) call returns AgUiAgent<ItineraryState>.
     provideAgent(ITINERARY_AGENT, { url: environment.agentUrl }),
+    // Load the Google Maps JS API once at bootstrap so the map canvas and the
+    // GeocodingService both run against the same loaded script. Skips cleanly
+    // when no key is configured (the googleMapsApiKey is '' in that case).
+    provideEnvironmentInitializer(() => {
+      const key = (environment.googleMapsApiKey as string) ?? '';
+      if (!key) return;
+      const g = globalThis as { google?: unknown };
+      if (g.google) return;
+      if (document.querySelector('script[data-google-maps]')) return;
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=geocoding`;
+      script.async = true;
+      script.setAttribute('data-google-maps', '');
+      document.head.appendChild(script);
+    }),
     provideChat({ license: environment.license }),
     // The frontend-owned itinerary is a single shared instance: the panel,
     // the App component, and the client-tool ask component all inject it, so

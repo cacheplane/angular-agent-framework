@@ -37,7 +37,12 @@ export class ItineraryStore {
       .map(([day, stops]) => ({ day, stops }));
   });
   readonly recentlyChangedId = signal<string | null>(null);
+  readonly focusedStopId = signal<string | null>(null);
   private pulseTimer: ReturnType<typeof setTimeout> | null = null;
+
+  focus(id: string | null): void {
+    this.focusedStopId.set(id);
+  }
 
   add(day: number, place: string, note?: string, opts?: MutationOptions): ItineraryStop {
     const stop: ItineraryStop = {
