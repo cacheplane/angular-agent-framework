@@ -50,10 +50,29 @@ export function itineraryClientTools(): ClientToolRegistry {
       'Move an existing stop (matched by place name) to another day. Afterwards, show the updated day with day_card.',
       z.object({ place: z.string(), toDay: z.number().int().min(1) }),
       async ({ place, toDay }) => {
-        const moved = store.move(place, toDay);
-        return moved
-          ? { moved }
-          : { error: `No stop named "${place}" — call get_itinerary to see what exists.` };
+        const target = store.stops().find((s) => s.place.toLowerCase() === place.toLowerCase());
+        if (!target) {
+          return { error: `No stop named "${place}" — call get_itinerary to see what exists.` };
+        }
+        const toDayStops = store.stops().filter((s) => s.day === toDay && s.id !== target.id);
+        store.reorder(target.id, toDay, toDayStops.length);
+        return { moved: { ...target, day: toDay } };
+      },
+    ),
+    reorder_stop: action(
+      'Reorder a stop within or across days. Use after the user describes a sequence change (e.g., "put Louvre first", "move Eiffel to day 2 second"). `toIndex` is zero-based within the target day.',
+      z.object({
+        place: z.string(),
+        toDay: z.number().int().min(1),
+        toIndex: z.number().int().min(0),
+      }),
+      async ({ place, toDay, toIndex }) => {
+        const target = store.stops().find((s) => s.place.toLowerCase() === place.toLowerCase());
+        if (!target) {
+          return { error: `No stop named "${place}" — call get_itinerary to see what exists.` };
+        }
+        store.reorder(target.id, toDay, toIndex);
+        return { reordered: { ...target, day: toDay, toIndex } };
       },
     ),
     clear_day: ask(

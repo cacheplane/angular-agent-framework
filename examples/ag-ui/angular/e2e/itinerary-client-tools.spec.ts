@@ -128,3 +128,58 @@ test('day_card view: component renders with model-filled props and run auto-cont
   // Continuation text confirms the second run finished.
   await expect(page.getByText("Here's your day 1 recap.")).toBeVisible({ timeout: 30_000 });
 });
+
+test('user can drag-reorder stops within a day', async ({ page }) => {
+  await openDemo(page);
+
+  const panel = page.getByRole('region', { name: 'Trip itinerary' });
+
+  // Seed order on day 1 is Louvre (index 0), then Eiffel Tower (index 1).
+  // Drag Eiffel above Louvre using the cdkDragHandle on each row. The handle is
+  // hidden until hover (opacity:0), so we drive the pointer directly via mouse
+  // coordinates rather than locator.hover() to keep the row hover state stable
+  // for the duration of the drag.
+  const eiffelRow = panel.locator('[id="itin-day-1"] li.itin__stop').filter({
+    hasText: 'Eiffel Tower',
+  });
+  const louvreRow = panel.locator('[id="itin-day-1"] li.itin__stop').filter({ hasText: 'Louvre' });
+
+  // Make the handle reachable by hovering the row first so opacity flips to 1.
+  await eiffelRow.hover();
+  const handle = eiffelRow.locator('.itin__handle');
+  const handleBox = await handle.boundingBox();
+  const targetBox = await louvreRow.boundingBox();
+  if (!handleBox || !targetBox) throw new Error('drag boxes missing');
+
+  const startX = handleBox.x + handleBox.width / 2;
+  const startY = handleBox.y + handleBox.height / 2;
+  const endX = targetBox.x + targetBox.width / 2;
+  const endY = targetBox.y + 2; // top edge of louvre row → drop above it
+
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  // CDK needs the pointer to actually move while down to start the drag gesture.
+  // Multiple steps make the drag-start heuristic reliable.
+  await page.mouse.move(startX, startY - 10, { steps: 5 });
+  await page.mouse.move(endX, endY, { steps: 10 });
+  await page.mouse.up();
+
+  // First text-content match in the day-1 list should now be Eiffel.
+  const day1Stops = panel.locator('[id="itin-day-1"] .itin__place-name');
+  await expect(day1Stops.first()).toHaveText('Eiffel Tower');
+});
+
+test('reorder_stop: agent puts Louvre last on day 1', async ({ page }) => {
+  await openDemo(page);
+  const hygiene = attachBrowserHygiene(page);
+
+  await messageInput(page).fill('Put Louvre last on day 1.');
+  await sendButton(page).click();
+
+  const day1Stops = page
+    .getByRole('region', { name: 'Trip itinerary' })
+    .locator('[id="itin-day-1"] .itin__place-name');
+  await expect(day1Stops.last()).toHaveText('Louvre', { timeout: 30_000 });
+
+  expect(hygiene.consoleErrors).toEqual([]);
+});
