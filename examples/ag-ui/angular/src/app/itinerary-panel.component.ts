@@ -10,20 +10,34 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
   standalone: true,
   imports: [DragDropModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'itin', role: 'region', 'aria-label': 'Trip itinerary' },
+  host: {
+    class: 'itin',
+    role: 'region',
+    'aria-label': 'Trip itinerary',
+    '[class.itin--collapsed]': 'collapsed()',
+  },
   template: `
     <div class="itin__head">
       <h2 class="itin__title">
         Trip itinerary
         <span class="itin__total">· {{ totalLabel() }}</span>
       </h2>
-      <button
-        type="button"
-        class="itin__overflow"
-        [attr.aria-expanded]="menuOpen()"
-        aria-label="Itinerary actions"
-        (click)="toggleMenu()"
-      >more_vert</button>
+      <div class="itin__head-actions">
+        <button
+          type="button"
+          class="itin__collapse"
+          [attr.aria-expanded]="!collapsed()"
+          aria-label="Toggle itinerary details"
+          (click)="toggleCollapsed()"
+        >{{ collapsed() ? 'expand_more' : 'expand_less' }}</button>
+        <button
+          type="button"
+          class="itin__overflow"
+          [attr.aria-expanded]="menuOpen()"
+          aria-label="Itinerary actions"
+          (click)="toggleMenu()"
+        >more_vert</button>
+      </div>
       @if (menuOpen()) {
         <div class="itin__menu" role="menu">
           <button type="button" class="itin__menu-item" role="menuitem" (click)="reset()">
@@ -59,7 +73,8 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
             @for (s of g.stops; track s.id; let i = $index) {
               <li
                 class="itin__stop"
-                [class.itin__stop--pulse]="store.recentlyChangedId() === s.id"
+                [class.itin__stop--pulse]="store.recentlyChangedId() === s.id || store.focusedStopId() === s.id"
+                (click)="onRowClick(s.id, $event)"
                 cdkDrag
                 [cdkDragData]="s"
               >
@@ -421,12 +436,40 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
         outline-offset: 2px;
         border-radius: 4px;
       }
+      .itin__head-actions {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+      }
+      .itin__collapse {
+        font-family: 'Material Symbols Outlined', sans-serif;
+        font-size: 18px;
+        background: transparent;
+        border: none;
+        color: var(--ngaf-chat-text-muted);
+        cursor: pointer;
+        padding: 4px;
+        line-height: 1;
+        border-radius: var(--ngaf-chat-radius-card);
+      }
+      .itin__collapse:hover {
+        background: var(--ngaf-chat-surface-alt);
+        color: var(--ngaf-chat-text);
+      }
+      :host(.itin--collapsed) [cdkDropListGroup],
+      :host(.itin--collapsed) .itin__add-day-btn {
+        display: none;
+      }
+      :host(.itin--collapsed) .itin__head {
+        margin-bottom: 0;
+      }
     `,
   ],
 })
 export class ItineraryPanelComponent {
   protected readonly store = inject(ItineraryStore);
   protected readonly menuOpen = signal(false);
+  protected readonly collapsed = signal(false);
   protected readonly composer = signal<number | null>(null);
   protected readonly composerText = signal('');
   protected readonly totalLabel = computed(() => {
@@ -442,6 +485,10 @@ export class ItineraryPanelComponent {
 
   protected toggleMenu(): void {
     this.menuOpen.update((v) => !v);
+  }
+
+  protected toggleCollapsed(): void {
+    this.collapsed.update((v) => !v);
   }
 
   protected reset(): void {
@@ -471,6 +518,12 @@ export class ItineraryPanelComponent {
 
   protected remove(id: string): void {
     this.store.remove(id, { source: 'user' });
+  }
+
+  protected onRowClick(id: string, event: Event): void {
+    const target = event.target as HTMLElement;
+    if (target.closest('.itin__handle') || target.closest('.itin__remove')) return;
+    this.store.focus(id);
   }
 
   protected onDrop(event: CdkDragDrop<ItineraryStop[]>, toDay: number): void {

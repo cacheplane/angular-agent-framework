@@ -9,6 +9,7 @@ interface PaletteState {
   genUiMode: string;
   theme: string;
   colorScheme: string;
+  appMode: 'on' | 'off';
 }
 
 type PaletteKey = keyof PaletteState;
@@ -26,6 +27,7 @@ const ALLOWED: Record<PaletteKey, ReadonlySet<string>> = {
   genUiMode:   new Set(['a2ui', 'json-render']),
   theme:       new Set(['default-dark', 'default-light', 'material-dark', 'material-light']),
   colorScheme: new Set(['light', 'dark']),
+  appMode:     new Set(['on', 'off']),
 };
 
 /**

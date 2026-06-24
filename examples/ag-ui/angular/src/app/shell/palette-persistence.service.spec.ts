@@ -108,4 +108,16 @@ describe('PalettePersistence (ag-ui)', () => {
     const svc = TestBed.runInInjectionContext(() => new PalettePersistence());
     expect(svc.read('colorScheme')).toBe('dark');
   });
+
+  it('round-trips a valid appMode value', () => {
+    const svc = TestBed.runInInjectionContext(() => new PalettePersistence());
+    svc.write('appMode', 'on');
+    expect(svc.read('appMode')).toBe('on');
+  });
+
+  it('returns null for a stale appMode value not in the allowed set', () => {
+    localStorage.setItem(KEY, JSON.stringify({ appMode: 'enabled' }));
+    const svc = TestBed.runInInjectionContext(() => new PalettePersistence());
+    expect(svc.read('appMode')).toBeNull();
+  });
 });
