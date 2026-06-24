@@ -16,6 +16,7 @@ import {
 } from '@threadplane/chat';
 import { PalettePersistence } from './palette-persistence.service';
 import { ItineraryPanelComponent } from '../itinerary-panel.component';
+import { MapCanvasComponent } from '../map-canvas.component';
 import { itineraryClientTools, ITINERARY_AGENT } from '../client-tools';
 import { environment } from '../../environments/environment';
 
@@ -35,7 +36,7 @@ const DEFAULTS = {
   selector: 'ag-ui-shell',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, ChatSelectComponent, ChatInterruptPanelComponent, ItineraryPanelComponent],
+  imports: [RouterOutlet, ChatSelectComponent, ChatInterruptPanelComponent, ItineraryPanelComponent, MapCanvasComponent],
   templateUrl: './ag-ui-shell.component.html',
   styleUrl: './ag-ui-shell.component.css',
   providers: [PalettePersistence],
