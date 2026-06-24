@@ -120,3 +120,30 @@ describe('recentlyChangedId', () => {
     vi.useRealTimers();
   });
 });
+
+describe('coordinates', () => {
+  beforeEach(() => localStorage.clear());
+
+  it('seed stops carry Paris coords', () => {
+    const s = new ItineraryStore();
+    const louvre = s.stops().find((x) => x.place === 'Louvre')!;
+    expect(louvre.lat).toBeCloseTo(48.8606, 3);
+    expect(louvre.lng).toBeCloseTo(2.3376, 3);
+  });
+
+  it('add accepts optional lat/lng via opts.coords', () => {
+    const s = new ItineraryStore();
+    const added = s.add(2, 'Sacré-Cœur', undefined, {
+      coords: { lat: 48.8867, lng: 2.3431 },
+    });
+    expect(added.lat).toBeCloseTo(48.8867, 3);
+    expect(added.lng).toBeCloseTo(2.3431, 3);
+  });
+
+  it('add without coords leaves lat/lng undefined', () => {
+    const s = new ItineraryStore();
+    const added = s.add(2, 'Somewhere');
+    expect(added.lat).toBeUndefined();
+    expect(added.lng).toBeUndefined();
+  });
+});

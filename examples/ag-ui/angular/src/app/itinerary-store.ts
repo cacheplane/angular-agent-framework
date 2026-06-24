@@ -6,19 +6,22 @@ export interface ItineraryStop {
   day: number;
   place: string;
   note?: string;
+  lat?: number;
+  lng?: number;
 }
 
 export interface MutationOptions {
   source?: 'user' | 'agent';
+  coords?: { lat: number; lng: number };
 }
 
 export const ITINERARY_STORAGE_KEY = 'ag-ui-demo:itinerary';
 const PULSE_MS = 1600;
 
 const SEED: ItineraryStop[] = [
-  { id: 'seed-1', day: 1, place: 'Louvre', note: 'book tickets' },
-  { id: 'seed-2', day: 1, place: 'Eiffel Tower' },
-  { id: 'seed-3', day: 2, place: "Musée d'Orsay" },
+  { id: 'seed-1', day: 1, place: 'Louvre', note: 'book tickets', lat: 48.8606, lng: 2.3376 },
+  { id: 'seed-2', day: 1, place: 'Eiffel Tower', lat: 48.8584, lng: 2.2945 },
+  { id: 'seed-3', day: 2, place: "Musée d'Orsay", lat: 48.86, lng: 2.3266 },
 ];
 
 /** Frontend-owned demo state: the user edits it in the panel, the agent edits
@@ -42,6 +45,7 @@ export class ItineraryStore {
       day,
       place,
       ...(note ? { note } : {}),
+      ...(opts?.coords ? { lat: opts.coords.lat, lng: opts.coords.lng } : {}),
     };
     this.update([...this.stops(), stop]);
     this.flagChanged(stop.id, opts);
