@@ -7,10 +7,26 @@
           class="ag-ui-shell__segmented-button"
           [class.is-active]="mode() === option.value"
           [attr.aria-pressed]="mode() === option.value"
+          [disabled]="appMode() === 'on' && option.value !== 'sidebar'"
+          [attr.title]="appMode() === 'on' && option.value !== 'sidebar' ? 'Sidebar mode while App mode is on' : null"
           (click)="onModeChange(option.value)"
         >{{ option.label }}</button>
       }
     </div>
+
+    <button
+      type="button"
+      class="ag-ui-shell__app-toggle"
+      [class.is-on]="appMode() === 'on'"
+      [attr.aria-pressed]="appMode() === 'on'"
+      [disabled]="!hasMapsKey"
+      [attr.title]="hasMapsKey ? null : 'Set GOOGLE_MAPS_API_KEY to enable'"
+      (click)="onAppModeChange(appMode() === 'on' ? 'off' : 'on')"
+    >
+      <span class="ag-ui-shell__app-toggle-icon" aria-hidden="true">map</span>
+      <span class="ag-ui-shell__app-toggle-label">App mode</span>
+      <span class="ag-ui-shell__app-toggle-thumb" aria-hidden="true"></span>
+    </button>
 
     <div class="ag-ui-shell__field ag-ui-shell__field--first" data-field="model">
       <chat-select [options]="modelOptions()" [value]="model()" menuLabel="Model" (valueChange)="onModelChange($event)" />

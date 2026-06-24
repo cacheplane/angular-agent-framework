@@ -17,6 +17,7 @@ import {
 import { PalettePersistence } from './palette-persistence.service';
 import { ItineraryPanelComponent } from '../itinerary-panel.component';
 import { itineraryClientTools, ITINERARY_AGENT } from '../client-tools';
+import { environment } from '../../environments/environment';
 
 export type DemoMode = 'embed' | 'popup' | 'sidebar';
 const MODES: readonly DemoMode[] = ['embed', 'popup', 'sidebar'] as const;
@@ -65,6 +66,7 @@ export class AgUiShell {
   readonly appMode = signal<'on' | 'off'>(
     ((this.urlKnob('appmode') ?? this.persistence.read('appMode')) as 'on' | 'off' | null) ?? 'off',
   );
+  readonly hasMapsKey = (environment.googleMapsApiKey as string).length > 0;
 
   // ── Mode from the active route ───────────────────────────────────────────
   readonly mode = signal<DemoMode>(this.parseMode(this.router.url));
