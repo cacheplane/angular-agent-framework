@@ -456,11 +456,11 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
         background: var(--ngaf-chat-surface-alt);
         color: var(--ngaf-chat-text);
       }
-      .itin--collapsed [cdkDropListGroup],
-      .itin--collapsed .itin__add-day-btn {
+      :host(.itin--collapsed) [cdkDropListGroup],
+      :host(.itin--collapsed) .itin__add-day-btn {
         display: none;
       }
-      .itin--collapsed .itin__head {
+      :host(.itin--collapsed) .itin__head {
         margin-bottom: 0;
       }
     `,
