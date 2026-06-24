@@ -9,7 +9,7 @@ export const brand = {
   inkSoft: '#555770',
   accent: '#004090',
   angular: '#DD0031',
-  wordmark: 'cacheplane.ai',
+  wordmark: 'threadplane.ai',
   serif: 'EB Garamond, Georgia, serif',
   sans: 'Inter, sans-serif',
   defaultEyebrow: 'Agent UI for Angular · MIT',

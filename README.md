@@ -26,6 +26,9 @@
   <a href="https://www.bestpractices.dev/projects/13316">
     <img alt="OpenSSF Best Practices" src="https://www.bestpractices.dev/projects/13316/badge" />
   </a>
+  <a href="https://hvtracker.net/agents/threadplane">
+    <img alt="HVTrust" src="https://hvtracker.net/badge/threadplane.svg" />
+  </a>
 </p>
 
 ---
