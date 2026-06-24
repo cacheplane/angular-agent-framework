@@ -217,3 +217,74 @@
     border-bottom: 1px solid var(--ngaf-chat-separator);
   }
 }
+
+.ag-ui-shell__app-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--ngaf-chat-separator);
+  background: transparent;
+  color: var(--ngaf-chat-text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--ngaf-chat-font-size-sm);
+  flex: 0 0 auto;
+}
+.ag-ui-shell__app-toggle:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.ag-ui-shell__app-toggle.is-on {
+  color: var(--ngaf-chat-on-primary);
+  background: var(--ngaf-chat-primary);
+  border-color: var(--ngaf-chat-primary);
+}
+.ag-ui-shell__app-toggle-icon {
+  font-family: 'Material Symbols Outlined', sans-serif;
+  font-size: 16px;
+  line-height: 1;
+}
+.ag-ui-shell__app-toggle-thumb {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ngaf-chat-text-muted);
+}
+.ag-ui-shell__app-toggle.is-on .ag-ui-shell__app-toggle-thumb {
+  background: var(--ngaf-chat-on-primary);
+}
+
+/* App-mode layout: full-bleed map with the itinerary panel floating as an
+ * overlay card (top-left) and the chat sidebar alongside via router-outlet. */
+.ag-ui-shell__app-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  position: relative;
+  display: flex;
+}
+.ag-ui-shell__map {
+  position: absolute;
+  inset: 0;
+}
+.ag-ui-shell__itinerary-overlay {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: min(360px, 36vw);
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  background: var(--ngaf-chat-bg);
+  border: 1px solid var(--ngaf-chat-separator);
+  border-radius: var(--ngaf-chat-radius-card);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  z-index: 10;
+}
+.ag-ui-shell__app-body .ag-ui-shell__main {
+  position: relative;
+  z-index: 5;
+  flex: 1 1 auto;
+  min-width: 0;
+}

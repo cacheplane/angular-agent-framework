@@ -16,7 +16,9 @@ import {
 } from '@threadplane/chat';
 import { PalettePersistence } from './palette-persistence.service';
 import { ItineraryPanelComponent } from '../itinerary-panel.component';
+import { MapCanvasComponent } from '../map-canvas.component';
 import { itineraryClientTools, ITINERARY_AGENT } from '../client-tools';
+import { environment } from '../../environments/environment';
 
 export type DemoMode = 'embed' | 'popup' | 'sidebar';
 const MODES: readonly DemoMode[] = ['embed', 'popup', 'sidebar'] as const;
@@ -34,7 +36,7 @@ const DEFAULTS = {
   selector: 'ag-ui-shell',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, ChatSelectComponent, ChatInterruptPanelComponent, ItineraryPanelComponent],
+  imports: [RouterOutlet, ChatSelectComponent, ChatInterruptPanelComponent, ItineraryPanelComponent, MapCanvasComponent],
   templateUrl: './ag-ui-shell.component.html',
   styleUrl: './ag-ui-shell.component.css',
   providers: [PalettePersistence],
@@ -62,6 +64,10 @@ export class AgUiShell {
   readonly colorScheme = signal<'light' | 'dark'>(
     ((this.urlKnob('scheme') ?? this.persistence.read('colorScheme')) as 'light' | 'dark' | null) ?? DEFAULTS.scheme,
   );
+  readonly appMode = signal<'on' | 'off'>(
+    ((this.urlKnob('appmode') ?? this.persistence.read('appMode')) as 'on' | 'off' | null) ?? 'off',
+  );
+  readonly hasMapsKey = (environment.googleMapsApiKey as string).length > 0;
 
   // ── Mode from the active route ───────────────────────────────────────────
   readonly mode = signal<DemoMode>(this.parseMode(this.router.url));
@@ -161,6 +167,7 @@ export class AgUiShell {
         genui: this.genUiMode() === DEFAULTS.genui ? null : this.genUiMode(),
         theme: this.theme() === DEFAULTS.theme ? null : this.theme(),
         scheme: this.colorScheme() === DEFAULTS.scheme ? null : this.colorScheme(),
+        appmode: this.appMode() === 'off' ? null : this.appMode(),
       };
       void this.router.navigate([], { queryParams: q, queryParamsHandling: 'merge', replaceUrl: true });
     });
@@ -169,6 +176,13 @@ export class AgUiShell {
   protected onModeChange(next: DemoMode | string): void {
     if (!(MODES as readonly string[]).includes(next as string)) return;
     void this.router.navigate(['/', next], { queryParamsHandling: 'preserve' });
+  }
+  onAppModeChange(v: 'on' | 'off'): void {
+    this.appMode.set(v);
+    this.persistence.write('appMode', v);
+    if (v === 'on' && this.mode() !== 'sidebar') {
+      void this.router.navigate(['/', 'sidebar'], { queryParamsHandling: 'preserve' });
+    }
   }
   onModelChange(v: string): void { this.model.set(v); this.persistence.write('model', v); }
   protected onEffortChange(v: string): void { this.effort.set(v); this.persistence.write('effort', v); }

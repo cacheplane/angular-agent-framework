@@ -5,8 +5,18 @@
   "projectType": "application",
   "prefix": "app",
   "targets": {
+    "inject-env": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node examples/ag-ui/angular/scripts/inject-env.mjs",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "build": {
       "executor": "@angular/build:application",
+      "dependsOn": [
+        "inject-env"
+      ],
       "outputs": [
         "{options.outputPath.base}"
       ],
@@ -53,6 +63,10 @@
             {
               "replace": "examples/ag-ui/angular/src/environments/environment.ts",
               "with": "examples/ag-ui/angular/src/environments/environment.development.ts"
+            },
+            {
+              "replace": "examples/ag-ui/angular/src/environments/generated-keys.ts",
+              "with": "examples/ag-ui/angular/src/environments/generated-keys.local.ts"
             }
           ]
         }
