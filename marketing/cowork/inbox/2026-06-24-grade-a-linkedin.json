@@ -1,0 +1,16 @@
+{
+  "_meta": {
+    "campaign": "grade-a-trust",
+    "channel_note": "Day 0. Brian's account. LinkedIn adapter is NOT built — post by hand. Enterprise/architect track. Attach the branded social card. No hashwall.",
+    "card_alt": "HVTrust leaderboard card: Threadplane ranked #7 of 75 agent frameworks, trust score 82.8 out of 100, Grade A, shown above CrewAI and LangChain.",
+    "review_status": "awaiting-brian"
+  },
+  "draft": {
+    "channel": "linkedin",
+    "text": "How much of your app are you willing to hand to code you didn't write?\n\nFor an agent framework, that isn't rhetorical. It runs models, calls tools, reaches for credentials, and acts on behalf of your users. The supply chain underneath it matters more than almost anything else you install.\n\nSo we had Threadplane independently evaluated. HVTracker graded it A — 82.8/100, #7 of 75 agent frameworks, and the only Angular one on the board. Ranked above CrewAI, AutoGen, and LangChain on trust.\n\nWhat earned it is unglamorous and, more to the point, verifiable: OSSF Scorecard 7.7/10, an MIT license, 82% of recent commits cryptographically signed, traceable npm provenance, active maintenance. Things you can check rather than take on faith.\n\nIt isn't a safety endorsement, and HVTracker says so plainly — it measures public signals, not whether a project fits your use case. That honesty is exactly why the grade is worth anything.\n\nIf you're evaluating an agent framework for an Angular app in a regulated or design-system-heavy environment, the full breakdown is public. Take their word, then verify it.\n\nListing → https://hvtracker.net/agents/threadplane/\nThe story → https://threadplane.ai/blog/threadplane-earns-grade-a-hvtrust?utm_source=linkedin&utm_medium=social&utm_campaign=grade-a-trust",
+    "link": {
+      "url": "https://threadplane.ai/blog/threadplane-earns-grade-a-hvtrust?utm_source=linkedin&utm_medium=social&utm_campaign=grade-a-trust",
+      "previewTitle": "Threadplane Earns a Grade A for Trust"
+    }
+  }
+}

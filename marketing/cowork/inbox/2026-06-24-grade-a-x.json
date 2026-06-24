@@ -1,0 +1,19 @@
+{
+  "_meta": {
+    "campaign": "grade-a-trust",
+    "channel_note": "Day 0. Brian's account. Attach the branded social card (PNG) to the FIRST tweet at post time — Draft.media needs a PNG Buffer, which can't live in JSON. Alt text below. DRY_RUN=1 smoke first.",
+    "card_alt": "HVTrust leaderboard card: Threadplane ranked #7 of 75 agent frameworks, trust score 82.8 out of 100, Grade A, shown above CrewAI and LangChain.",
+    "review_status": "awaiting-brian"
+  },
+  "draft": {
+    "channel": "x",
+    "threadParts": [
+      "We just got independently graded A for trust.\n\n82.8/100 — #7 of 75 agent frameworks on HVTracker, and the only Angular one.\n\nHere's the part that still surprises me 🧵",
+      "We rank above CrewAI, AutoGen, and LangChain on trust.\n\nWith 99 GitHub stars against their tens of thousands.\n\nThat's not a glitch. HVTrust weights supply-chain integrity and provenance — not popularity.",
+      "Why it matters: an agent framework runs models, calls tools, reaches for credentials, and acts on your users' behalf.\n\nThe blast radius of a bad dependency under an agent is bigger than almost anything else you install.",
+      "What earned the grade is unglamorous:\n\n• OSSF Scorecard 7.7/10\n• MIT license\n• 82% of recent commits signed\n• verifiable npm provenance\n• active maintenance\n\nBoring hygiene, done consistently. All of it public.",
+      "And I'll name our weak spot: adoption.\n\n99 stars is the one number we're behind on.\n\nIf the trust story lands for you, a star genuinely helps us close the gap we're honest about.",
+      "Read the full breakdown — and verify it yourself:\n\nBlog → https://threadplane.ai/blog/threadplane-earns-grade-a-hvtrust?utm_source=x&utm_medium=social&utm_campaign=grade-a-trust\n\nListing → https://hvtracker.net/agents/threadplane/"
+    ]
+  }
+}
