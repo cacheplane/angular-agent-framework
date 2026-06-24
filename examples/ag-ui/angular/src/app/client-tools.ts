@@ -3,6 +3,7 @@ import { inject } from '@angular/core';
 import { tools, action, view, ask, type ClientToolRegistry, createAgentRef } from '@threadplane/chat';
 import { z } from 'zod/v4';
 import { ItineraryStore } from './itinerary-store';
+import { GeocodingService } from './geocoding.service';
 import { DayCardComponent, DAY_CARD_SCHEMA } from './day-card.component';
 import { ClearDayConfirmComponent } from './clear-day-confirm.component';
 
@@ -35,6 +36,7 @@ export const CLEAR_DAY_SCHEMA = z.object({ day: z.number().int().min(1) });
  *  steering the model gets — no system-prompt coaching (by design). */
 export function itineraryClientTools(): ClientToolRegistry {
   const store = inject(ItineraryStore);
+  const geocoding = inject(GeocodingService);
   return tools({
     get_itinerary: action(
       "Read the user's trip itinerary: every planned stop grouped by day (with ids).",
@@ -44,7 +46,10 @@ export function itineraryClientTools(): ClientToolRegistry {
     add_stop: action(
       'Add a stop to a day of the trip itinerary. Afterwards, show the updated day with day_card.',
       z.object({ day: z.number().int().min(1), place: z.string(), note: z.string().optional() }),
-      async ({ day, place, note }) => ({ added: store.add(day, place, note) }),
+      async ({ day, place, note }) => {
+        const coords = (await geocoding.geocode(place)) ?? undefined;
+        return { added: store.add(day, place, note, coords ? { coords } : undefined) };
+      },
     ),
     move_stop: action(
       'Move an existing stop (matched by place name) to another day. Afterwards, show the updated day with day_card.',
