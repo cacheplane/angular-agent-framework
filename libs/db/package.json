@@ -12,10 +12,6 @@
     "url": "https://github.com/cacheplane/angular-agent-framework/issues"
   },
   "sideEffects": false,
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
-  },
   "peerDependencies": {
     "drizzle-orm": "^0.45.0",
     "postgres": "^3.4.0"
