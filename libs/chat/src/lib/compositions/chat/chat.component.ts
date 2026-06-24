@@ -36,6 +36,7 @@ import { createPartialArgsBridge, type PartialArgsBridge } from '../../a2ui/part
 import { createA2uiSurfaceStore, type A2uiSurfaceStore } from '../../a2ui/surface-store';
 import { a2uiActionLabel } from '../../a2ui/action-label';
 import { messageContent } from '../shared/message-utils';
+import { formatDuration } from '../../utils/format-duration';
 import { CHAT_HOST_TOKENS, ensureChatRootStyles } from '../../styles/chat-tokens';
 import type { ChatRenderEvent } from './chat-render-event';
 import { CHAT_LIFECYCLE, type ChatLifecycle } from '../../lifecycle';
@@ -197,11 +198,19 @@ export function isPinned(
                   [streaming]="agent().isLoading() && i === agent().messages().length - 1"
                   [current]="i === agent().messages().length - 1"
                 >
-                  @if (message.reasoning) {
+                  <!-- Reasoning is merged across a run of consecutive (tool-
+                       separated) reasoning steps and rendered ONCE at the run's
+                       first step as "Thought for {total} · {N} steps", so a
+                       multi-step agent shows one compact pill instead of a
+                       stack of "Thought for 1s" chips. Single-step turns render
+                       a normal "Thought for {duration}" pill. -->
+                  @if (message.reasoning && reasoningRunStart(i)) {
+                    @let run = reasoningRun(i);
                     <chat-reasoning
-                      [content]="message.reasoning"
-                      [isStreaming]="isReasoningStreaming(message, i)"
-                      [durationMs]="message.reasoningDurationMs"
+                      [content]="run.content"
+                      [isStreaming]="run.streaming"
+                      [durationMs]="run.durationMs"
+                      [label]="run.label"
                     />
                   }
                   <chat-tool-calls [agent]="agent()" [message]="message" [excludeToolNames]="excludedToolNames()">
@@ -466,6 +475,65 @@ export class ChatComponent {
     if (!message.reasoning || message.reasoning.length === 0) return false;
     const text = typeof message.content === 'string' ? message.content : '';
     return text.length === 0;
+  }
+
+  /** The nearest preceding assistant message (skipping hidden tool messages), or undefined. */
+  private prevAssistant(msgs: Message[], index: number): Message | undefined {
+    for (let j = index - 1; j >= 0; j--) {
+      if (msgs[j].role === 'tool') continue;
+      return msgs[j].role === 'assistant' ? msgs[j] : undefined;
+    }
+    return undefined;
+  }
+
+  /**
+   * True when message[index] starts a reasoning RUN — a maximal sequence of
+   * consecutive assistant reasoning steps separated only by (hidden) tool
+   * messages. The merged reasoning pill renders once, here.
+   */
+  protected reasoningRunStart(index: number): boolean {
+    const msgs = this.agent().messages();
+    if (!msgs[index]?.reasoning) return false;
+    return !this.prevAssistant(msgs, index)?.reasoning;
+  }
+
+  /**
+   * Aggregate the reasoning RUN starting at `index`: joins each step's
+   * reasoning, sums durations, counts steps, and computes the streaming flag
+   * and the merged label when N > 1 ("Thought for {total} · {N} steps", or
+   * just "{N} steps" when no step reported timing).
+   */
+  protected reasoningRun(index: number): {
+    content: string;
+    durationMs: number | undefined;
+    streaming: boolean;
+    label: string | undefined;
+  } {
+    const msgs = this.agent().messages();
+    const steps: { msg: Message; idx: number }[] = [];
+    for (let j = index; j < msgs.length; j++) {
+      const m = msgs[j];
+      if (m.role === 'tool') continue;            // skip hidden tool messages
+      if (m.role === 'assistant' && m.reasoning) { steps.push({ msg: m, idx: j }); continue; }
+      break;                                      // any other message ends the run
+    }
+    const content = steps.map((s) => s.msg.reasoning ?? '').filter(Boolean).join('\n\n');
+    const durations = steps
+      .map((s) => s.msg.reasoningDurationMs)
+      .filter((d): d is number => typeof d === 'number');
+    const durationMs = durations.length ? durations.reduce((a, b) => a + b, 0) : undefined;
+    const last = steps[steps.length - 1];
+    const streaming = last ? this.isReasoningStreaming(last.msg, last.idx) : false;
+    // Only claim a duration when at least one step reported timing. Otherwise
+    // "Thought for <1s" would read as "fast" when it really means "unknown", so
+    // drop the duration phrase and label by step count alone.
+    const label =
+      steps.length > 1
+        ? durationMs !== undefined
+          ? `Thought for ${formatDuration(durationMs)} · ${steps.length} steps`
+          : `${steps.length} steps`
+        : undefined;
+    return { content, durationMs, streaming, label };
   }
 
   private readonly classifiers = new Map<string, ContentClassifier>();

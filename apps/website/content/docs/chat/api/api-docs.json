@@ -490,6 +490,12 @@
         "optional": false
       },
       {
+        "name": "glyphName",
+        "type": "Signal<string>",
+        "description": "The effective name as a Material Symbols ligature (camelCase → snake_case).",
+        "optional": false
+      },
+      {
         "name": "icon",
         "type": "InputSignal<string>",
         "description": "Pre-v1 alias retained for back-compat.",
@@ -2059,6 +2065,32 @@
         "name": "prevRole",
         "signature": "prevRole(index: number): ChatMessageRole | undefined",
         "description": "",
+        "params": [
+          {
+            "name": "index",
+            "type": "number",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "reasoningRun",
+        "signature": "reasoningRun(index: number): object",
+        "description": "Aggregate the reasoning RUN starting at `index`: joins each step's\nreasoning, sums durations, counts steps, and computes the streaming flag\nand the merged label when N > 1 (\"Thought for {total} · {N} steps\", or\njust \"{N} steps\" when no step reported timing).",
+        "params": [
+          {
+            "name": "index",
+            "type": "number",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "reasoningRunStart",
+        "signature": "reasoningRunStart(index: number): boolean",
+        "description": "True when message[index] starts a reasoning RUN — a maximal sequence of\nconsecutive assistant reasoning steps separated only by (hidden) tool\nmessages. The merged reasoning pill renders once, here.",
         "params": [
           {
             "name": "index",
