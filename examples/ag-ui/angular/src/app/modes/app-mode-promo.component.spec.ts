@@ -34,5 +34,6 @@ describe('AppModePromoComponent', () => {
     const cta = el.querySelector<HTMLButtonElement>('.promo__cta');
     expect(cta!.disabled).toBe(true);
     expect(el.textContent).toContain('GOOGLE_MAPS_API_KEY');
+    expect(cta!.title).toBe('Set GOOGLE_MAPS_API_KEY to enable');
   });
 });

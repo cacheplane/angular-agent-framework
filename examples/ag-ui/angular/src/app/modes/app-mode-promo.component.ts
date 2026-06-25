@@ -103,6 +103,8 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
       padding: 11px 18px; border-radius: 8px; cursor: pointer;
     }
     .promo__cta:disabled { opacity: 0.5; cursor: not-allowed; }
+    .promo__cta:focus-visible { outline: 2px solid var(--ngaf-chat-text); outline-offset: 2px; }
+    .promo__cta:hover:not(:disabled) { filter: brightness(1.08); }
     .promo__note { font-size: 12px; color: #9aa6bd; margin: 0; }
     .promo__note code { font-family: var(--ngaf-chat-font-mono, monospace); }
     .promo__icon { font-family: 'Material Symbols Outlined', sans-serif; font-size: 18px; line-height: 1; }
