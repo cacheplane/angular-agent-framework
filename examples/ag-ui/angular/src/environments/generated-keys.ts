@@ -4,4 +4,5 @@
 // Ships empty (CI has no key); local/preview builds get the real value.
 export const GENERATED_KEYS = {
   googleMaps: '',
+  googleMapsMapId: '',
 } as const;
