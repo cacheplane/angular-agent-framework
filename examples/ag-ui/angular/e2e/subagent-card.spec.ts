@@ -20,19 +20,15 @@ interface SubagentProbe {
 }
 
 // Reads the live `agent.subagents()` projection off the shell component via
-// Angular's dev-mode global. The chat-subagents primitive renders a
-// <chat-subagent-card> for each subagent whose status is pending/running, and
-// the card binds the ORDERED transcript: `messages()` (the assistant turn(s)
-// the child streamed, each carrying `toolCallIds`/reasoning) and `toolCalls()`
-// (the child's own `lookup` calls, rendered as <chat-tool-call-card>). Under
-// the aimock harness the run settles near-instantly (started → finished within
-// one SSE flush), so the card transits the RUNNING state below a render frame
-// and is filtered out of the DOM by the time the assistant turn finalizes —
-// exactly the reason the cockpit subagents spec (and the original card spec)
-// asserts on durable signals rather than the card element. We read the
-// projected map directly: it IS the data the card renders, and it proves the
-// ACTIVITY snapshot/delta pipeline reconstructed the full reason→tool→answer
-// transcript and that it settled to `complete`.
+// Angular's dev-mode global. The chat-tool-calls primitive renders a durable
+// <chat-subagent-card> for each delegation tool call, and the card binds the
+// ORDERED transcript: `messages()` (the assistant turn(s) the child streamed,
+// each carrying `toolCallIds`/reasoning) and `toolCalls()` (the child's own
+// `lookup` calls, rendered as <chat-tool-call-card>). We read the projected map
+// directly rather than scraping the rendered card: it IS the data the card
+// renders, and asserting on it proves the ACTIVITY snapshot/delta pipeline
+// reconstructed the full reason→tool→answer transcript and settled to
+// `complete`, independent of card layout.
 async function readSubagents(page: Page): Promise<SubagentProbe> {
   return page.evaluate(() => {
     const ng = (window as unknown as { ng?: { getComponent?: (el: Element) => unknown } }).ng;
@@ -81,13 +77,16 @@ test('research delegation reconstructs the multi-message subagent transcript', a
   await input.fill('Research Angular signals and summarize');
   await page.getByRole('button', { name: /send/i }).click();
 
-  // The orchestrator dispatched the research subagent — its tool-call card is a
-  // durable DOM signal (renders the tool name verbatim), unlike the
-  // active-only subagent card.
-  const researchCall = page
-    .locator('chat-tool-call-card')
+  // The orchestrator dispatched the research subagent. A delegation tool call
+  // renders as a durable <chat-subagent-card> (the full child transcript)
+  // anchored to that call — it supersedes a bare tool-call card for the turn
+  // (see the chat-tool-calls grouping: a call with a matching subagent is its
+  // own subagent group). The card binds the subagent name verbatim, so it is a
+  // stable DOM signal to wait on.
+  const researchCard = page
+    .locator('chat-subagent-card')
     .filter({ hasText: /research/i });
-  await expect(researchCall.first()).toBeVisible({ timeout: 30_000 });
+  await expect(researchCard.first()).toBeVisible({ timeout: 30_000 });
 
   // Wait for the parent turn to finalize so the full run (delegation + child
   // reason/tool/answer loop + settle) has played out.
