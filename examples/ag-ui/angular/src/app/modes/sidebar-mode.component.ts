@@ -22,9 +22,13 @@ import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
       (selectedModelChange)="shell.onModelChange($event)"
     >
       <div class="sidebar-mode__background">
-        <p class="sidebar-mode__hint">
-          Use the launcher (right edge) to dismiss or re-open the chat panel.
-        </p>
+        <!-- In App mode the map is the background; this placeholder hint would
+             float unreadably over it, so only show it in plain sidebar mode. -->
+        @if (shell.appMode() !== 'on') {
+          <p class="sidebar-mode__hint">
+            Use the launcher (right edge) to dismiss or re-open the chat panel.
+          </p>
+        }
       </div>
       <welcome-suggestions chatWelcomeSuggestions (selected)="send($event)" />
     </chat-sidebar>
