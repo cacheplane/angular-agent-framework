@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { GoogleMap, MapInfoWindow, MapMarker, MapPolyline } from '@angular/google-maps';
 import { ItineraryStop, ItineraryStore } from './itinerary-store';
+import { computeBounds } from './map-bounds';
 import { GoogleMapsLoader } from './google-maps-loader';
 
 const DARK_STYLE: google.maps.MapTypeStyle[] = [
@@ -99,6 +100,7 @@ export class MapCanvasComponent {
     clickableIcons: false,
   };
 
+  private readonly googleMap = viewChild(GoogleMap);
   private readonly infoWindow = viewChild(MapInfoWindow);
   private readonly markers = viewChildren(MapMarker);
 
@@ -123,6 +125,28 @@ export class MapCanvasComponent {
         this.center.set({ lat: f.lat, lng: f.lng });
         win.open(marker);
       }
+    });
+
+    // Frame the map to all stops on structural change (add/remove/geocode).
+    // Reads googleMap() so it re-runs once the map mounts behind the loader gate.
+    // Keyed on stopsWithCoords() only — NOT focus — so panning to a focused stop
+    // and reframing to all stops never fight (they fire on different signals).
+    effect(() => {
+      const map = this.googleMap();
+      const stops = this.stopsWithCoords();
+      if (!map) return; // <google-map> is behind @if (loader.loaded()) — not mounted yet
+      if (stops.length === 0) {
+        this.center.set(PARIS_CENTER);
+        this.zoom.set(12);
+        return;
+      }
+      if (stops.length === 1) {
+        this.center.set({ lat: stops[0].lat!, lng: stops[0].lng! });
+        this.zoom.set(13);
+        return;
+      }
+      const b = computeBounds(stops);
+      if (b) map.fitBounds(b, 48); // >=2 stops: fitBounds overrides center/zoom imperatively
     });
   }
 
