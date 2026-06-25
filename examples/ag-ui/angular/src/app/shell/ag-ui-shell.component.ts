@@ -183,7 +183,17 @@ export class AgUiShell {
 
   protected onModeChange(next: DemoMode | string): void {
     if (!(MODES as readonly string[]).includes(next as string)) return;
-    void this.router.navigate(['/', next], { queryParamsHandling: 'preserve' });
+    const target = next as DemoMode;
+    // App mode only applies to the sidebar cockpit. Choosing a full-chat
+    // layout (embed/popup) turns it off and shows the full chat. Navigate
+    // first, THEN flip appMode off so the persist effect's route sync resolves
+    // against the new route (avoids a bounce back to /sidebar).
+    void this.router.navigate(['/', target], { queryParamsHandling: 'preserve' }).then(() => {
+      if (target !== 'sidebar' && this.appMode() === 'on') {
+        this.appMode.set('off');
+        this.persistence.write('appMode', 'off');
+      }
+    });
   }
   onAppModeChange(v: 'on' | 'off'): void {
     this.appMode.set(v);
