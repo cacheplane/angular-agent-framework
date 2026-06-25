@@ -17,10 +17,12 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
   template: `
     <div class="promo">
       <img
+        #promoImg
         class="promo__img"
         src="/app-mode-preview.webp"
         alt="Preview of the App-mode map cockpit"
         loading="lazy"
+        (error)="promoImg.style.display = 'none'"
       />
       <div class="promo__caption">
         <div class="promo__copy">

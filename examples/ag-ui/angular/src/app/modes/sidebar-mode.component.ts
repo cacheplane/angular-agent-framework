@@ -44,8 +44,6 @@ import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
       display: grid;
       place-items: center;
       min-height: calc(100dvh - var(--demo-toolbar-height, 51px));
-      color: #8a92a3;
-      font-size: 14px;
     }
     /* chat-sidebar's default content slot sets min-height: 100vh which,
      * combined with the demo's flex column, would otherwise overflow the
