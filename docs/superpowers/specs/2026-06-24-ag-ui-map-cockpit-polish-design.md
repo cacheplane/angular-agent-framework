@@ -3,7 +3,7 @@
 **Status:** Approved (brainstorm), pending spec review
 **Date:** 2026-06-24
 **Area:** `examples/ag-ui/angular` — App-mode Google Map cockpit (Phase 2 follow-up)
-**Related:** Phase 1 [#729], Phase 2 [#732]; redesign spec `2026-06-22-ag-ui-itinerary-redesign-design.md`
+**Related:** Phase 1 [#729], Phase 2 [#732]; PR-A = crash fix [#736] (open); redesign spec `2026-06-22-ag-ui-itinerary-redesign-design.md`
 
 ## Goal
 
@@ -23,17 +23,17 @@ Three findings reshaped the scope:
 
 The crash fix and the map-polish work both heavily rewrite `map-canvas.component.ts`, so they are split to keep diffs clean and land the finished fix without gating it behind new work.
 
-### PR-A — Land the crash fix (already built)
+### PR-A — Land the crash fix — **already open as [#736]**
 
-Rebase `189d04b9` onto current main and open it as a PR. No new code authored; this is bringing finished, verified work to main.
+This is the already-built, already-rebased crash-fix branch `worktree-ag-ui-app-mode-mapfix` (commit `189d04b9` + follow-ups), now open as **[#736]** against `main`. No new code is authored here; PR-B simply waits on / branches off it.
 
-- **Files:** `examples/ag-ui/angular/src/app/app.config.ts`, `examples/ag-ui/angular/src/app/google-maps-loader.ts` (new), `examples/ag-ui/angular/src/app/map-canvas.component.ts`.
-- **Companion fix (in the same branch):** App-mode-on reload forces `/sidebar` (the persist effect previously redirected to the default `/embed` route, covering the map with the opaque chat).
-- **Verify:** rebases clean; `nx lint`/`test`/`build` for `examples-ag-ui-angular` green (42 tests); live smoke — reload with App-mode persisted renders the shell (no blank page) and lands on `/sidebar`.
+- **Files (7):** `app.config.ts`, `google-maps-loader.ts` (new), `map-canvas.component.ts` (wraps `<google-map>` in `@if (loader.loaded())`, injects `GoogleMapsLoader`, keeps `MapMarker`/`DARK_STYLE`/`markerOptions`), plus the companion fixes — `modes/sidebar-mode.component.ts` (forces `/sidebar` on App-mode reload, previously redirected to `/embed` and covered the map), `e2e/itinerary-client-tools.spec.ts`, and `shell/ag-ui-shell.component.{css,html}` cleanup.
+- **Scope boundary confirmed:** #736 does **not** touch fit-to-bounds or AdvancedMarker — those are entirely PR-B. The grey-map base is left open in #736's body ("tracked separately"); this spec treats it as environmental tile-quota throttling and out of scope.
+- **Verify (already done on the branch):** `nx lint`/`test`/`build` for `examples-ag-ui-angular` green (42 tests); live smoke — reload with App-mode persisted renders the shell (no blank page) and lands on `/sidebar`.
 
 ### PR-B — Fit-to-bounds + AdvancedMarker migration + cloud dark style
 
-Built on top of PR-A's loader-gated map.
+Built on top of PR-A's loader-gated map. **Branches off [#736]'s head (or off `main` once #736 merges) — never off current `main`, which lacks the loader gate.** PR-B deletes the exact `DARK_STYLE` / `markerOptions` / `[options]` / `[center]` lines #736 carries; because it layers *on top of* #736 this is a clean sequential edit, not a merge conflict.
 
 #### Fit-to-bounds
 
