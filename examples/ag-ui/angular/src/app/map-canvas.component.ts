@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { GoogleMap, MapInfoWindow, MapMarker, MapPolyline } from '@angular/google-maps';
 import { ItineraryStop, ItineraryStore } from './itinerary-store';
+import { GoogleMapsLoader } from './google-maps-loader';
 
 const DARK_STYLE: google.maps.MapTypeStyle[] = [
   { elementType: 'geometry', stylers: [{ color: '#1d2c4d' }] },
@@ -37,36 +38,41 @@ const PARIS_CENTER: google.maps.LatLngLiteral = { lat: 48.8566, lng: 2.3522 };
   imports: [GoogleMap, MapInfoWindow, MapMarker, MapPolyline],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <google-map
-      width="100%"
-      height="100%"
-      [center]="center()"
-      [zoom]="zoom()"
-      [options]="mapOptions"
-    >
-      @for (s of stopsWithCoords(); track s.id) {
-        <map-marker
-          #marker
-          [position]="{ lat: s.lat!, lng: s.lng! }"
-          [options]="markerOptions(s)"
-          (mapClick)="onMarkerClick(s)"
-        />
-      }
-      @for (line of polylines(); track line.day) {
-        <map-polyline [path]="line.path" [options]="polylineOptions(line.day)" />
-      }
-      <map-info-window>
-        @if (focused(); as f) {
-          <div class="info">
-            <strong>{{ f.place }}</strong>
-            @if (f.note) {
-              <div class="info__note">{{ f.note }}</div>
-            }
-            <button type="button" class="info__remove" (click)="removeFocused()">Remove</button>
-          </div>
+    <!-- Render <google-map> ONLY after the Maps API has loaded. Its constructor
+         throws "Namespace google not found" when window.google is absent, which
+         would abort the host shell's render on a fresh load with App mode on. -->
+    @if (loader.loaded()) {
+      <google-map
+        width="100%"
+        height="100%"
+        [center]="center()"
+        [zoom]="zoom()"
+        [options]="mapOptions"
+      >
+        @for (s of stopsWithCoords(); track s.id) {
+          <map-marker
+            #marker
+            [position]="{ lat: s.lat!, lng: s.lng! }"
+            [options]="markerOptions(s)"
+            (mapClick)="onMarkerClick(s)"
+          />
         }
-      </map-info-window>
-    </google-map>
+        @for (line of polylines(); track line.day) {
+          <map-polyline [path]="line.path" [options]="polylineOptions(line.day)" />
+        }
+        <map-info-window>
+          @if (focused(); as f) {
+            <div class="info">
+              <strong>{{ f.place }}</strong>
+              @if (f.note) {
+                <div class="info__note">{{ f.note }}</div>
+              }
+              <button type="button" class="info__remove" (click)="removeFocused()">Remove</button>
+            </div>
+          }
+        </map-info-window>
+      </google-map>
+    }
   `,
   styles: [
     `
@@ -83,6 +89,7 @@ const PARIS_CENTER: google.maps.LatLngLiteral = { lat: 48.8566, lng: 2.3522 };
 })
 export class MapCanvasComponent {
   protected readonly store = inject(ItineraryStore);
+  protected readonly loader = inject(GoogleMapsLoader);
   protected readonly center = signal<google.maps.LatLngLiteral>(PARIS_CENTER);
   protected readonly zoom = signal<number>(12);
   protected readonly mapOptions: google.maps.MapOptions = {
@@ -104,6 +111,8 @@ export class MapCanvasComponent {
   );
 
   constructor() {
+    this.loader.ensureLoaded();
+
     effect(() => {
       const f = this.focused();
       if (!f || f.lat == null || f.lng == null) return;
@@ -140,7 +149,9 @@ export class MapCanvasComponent {
   protected markerOptions(s: ItineraryStop): google.maps.MarkerOptions {
     return {
       icon: {
-        path: google.maps.SymbolPath.CIRCLE,
+        // Numeric literal for google.maps.SymbolPath.CIRCLE (=0) — avoids an
+        // eager google.* value read (defense-in-depth alongside the loader gate).
+        path: 0,
         fillColor: DAY_COLORS[(s.day - 1) % DAY_COLORS.length],
         fillOpacity: 1,
         strokeColor: '#fff',

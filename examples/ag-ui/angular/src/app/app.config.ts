@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import {
   ApplicationConfig,
+  inject,
   provideBrowserGlobalErrorListeners,
   provideEnvironmentInitializer,
   provideZonelessChangeDetection,
@@ -13,6 +14,7 @@ import { environment } from '../environments/environment';
 import { routes } from './app.routes';
 import { ItineraryStore } from './itinerary-store';
 import { ITINERARY_AGENT } from './client-tools';
+import { GoogleMapsLoader } from './google-maps-loader';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -35,21 +37,12 @@ export const appConfig: ApplicationConfig = {
     // Typed agent provider: flows ItineraryState through DI so every
     // injectAgent(ITINERARY_AGENT) call returns AgUiAgent<ItineraryState>.
     provideAgent(ITINERARY_AGENT, { url: environment.agentUrl }),
-    // Load the Google Maps JS API once at bootstrap so the map canvas and the
-    // GeocodingService both run against the same loaded script. Skips cleanly
-    // when no key is configured (the googleMapsApiKey is '' in that case).
-    provideEnvironmentInitializer(() => {
-      const key = (environment.googleMapsApiKey as string) ?? '';
-      if (!key) return;
-      const g = globalThis as { google?: unknown };
-      if (g.google) return;
-      if (document.querySelector('script[data-google-maps]')) return;
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=geocoding`;
-      script.async = true;
-      script.setAttribute('data-google-maps', '');
-      document.head.appendChild(script);
-    }),
+    // Eagerly load the Google Maps JS API at bootstrap via the loader service,
+    // which owns the single `loaded` signal the map canvas gates its
+    // <google-map> on. Loading early lets the GeocodingService work before App
+    // mode is opened; the map still waits for `loaded()` so its component never
+    // constructs before the API is present. Skips cleanly with no key.
+    provideEnvironmentInitializer(() => inject(GoogleMapsLoader).ensureLoaded()),
     provideChat({ license: environment.license }),
     // The frontend-owned itinerary is a single shared instance: the panel,
     // the App component, and the client-tool ask component all inject it, so

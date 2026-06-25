@@ -195,28 +195,10 @@
 }
 .ag-ui-shell__theme-toggle--toolbar { margin-left: auto; }
 
-/* Two-column body: frontend-owned itinerary panel beside the routed chat
- * (ported from the pre-shell layout that #655 introduced). */
+/* Non-App-mode body: the routed chat fills the area below the toolbar.
+ * The itinerary lives only in App mode now, as the floating map overlay. */
 .ag-ui-shell__body { flex: 1 1 auto; min-height: 0; display: flex; }
-.ag-ui-shell__itinerary {
-  flex: 0 0 300px;
-  min-height: 0;
-  overflow-y: auto;
-  border-right: 1px solid var(--ngaf-chat-separator);
-}
 .ag-ui-shell__body > .ag-ui-shell__main { flex: 1 1 auto; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
-
-/* Stack to a single column on narrow viewports; the panel goes full-width
- * above the chat. */
-@media (max-width: 900px) {
-  .ag-ui-shell__body { flex-direction: column; }
-  .ag-ui-shell__itinerary {
-    flex: 0 0 auto;
-    max-height: 40dvh;
-    border-right: none;
-    border-bottom: 1px solid var(--ngaf-chat-separator);
-  }
-}
 
 .ag-ui-shell__app-toggle {
   display: inline-flex;
