@@ -169,7 +169,15 @@ export class AgUiShell {
         scheme: this.colorScheme() === DEFAULTS.scheme ? null : this.colorScheme(),
         appmode: this.appMode() === 'off' ? null : this.appMode(),
       };
-      void this.router.navigate([], { queryParams: q, queryParamsHandling: 'merge', replaceUrl: true });
+      // App mode's layout requires the sidebar route (chat as the right rail
+      // beside the map). On a fresh load with App mode persisted on, a
+      // route-relative navigate([]) resolves against the not-yet-settled
+      // initial navigation and lands on the default /embed — mounting
+      // EmbedMode over the map. Navigate to the absolute /sidebar whenever
+      // App mode is on so a reload restores the cockpit; otherwise keep the
+      // current route ([]) and just sync query params.
+      const commands = this.appMode() === 'on' ? ['/', 'sidebar'] : [];
+      void this.router.navigate(commands, { queryParams: q, queryParamsHandling: 'merge', replaceUrl: true });
     });
   }
 
@@ -180,9 +188,8 @@ export class AgUiShell {
   onAppModeChange(v: 'on' | 'off'): void {
     this.appMode.set(v);
     this.persistence.write('appMode', v);
-    if (v === 'on' && this.mode() !== 'sidebar') {
-      void this.router.navigate(['/', 'sidebar'], { queryParamsHandling: 'preserve' });
-    }
+    // Routing is handled by the persist effect, which forces /sidebar whenever
+    // App mode is on (toggle and reload alike) and keeps the current route off.
   }
   onModelChange(v: string): void { this.model.set(v); this.persistence.write('model', v); }
   protected onEffortChange(v: string): void { this.effort.set(v); this.persistence.write('effort', v); }
