@@ -50,7 +50,7 @@ export class GoogleMapsLoader {
     }
 
     const script = doc.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=geocoding`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=geocoding,marker`;
     script.async = true;
     script.setAttribute('data-google-maps', '');
     script.addEventListener('load', () => this.loaded.set(true));
