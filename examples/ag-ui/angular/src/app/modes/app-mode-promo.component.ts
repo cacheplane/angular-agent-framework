@@ -19,7 +19,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
       <img
         #promoImg
         class="promo__img"
-        src="/app-mode-preview.webp"
+        src="/app-mode-preview.jpg"
         alt="Preview of the App-mode map cockpit"
         loading="lazy"
         (error)="promoImg.style.display = 'none'"
