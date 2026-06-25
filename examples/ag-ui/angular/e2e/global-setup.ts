@@ -78,7 +78,9 @@ export default async function globalSetup(): Promise<void> {
   angular.stdout?.on('data', (b) => process.stdout.write(`[angular] ${b}`));
   angular.stderr?.on('data', (b) => process.stderr.write(`[angular] ${b}`));
 
-  await waitForPort('http://localhost:4201/', 120_000);
+  // 240s: a cold CI runner re-optimizes vite deps on first serve (especially
+  // after a lockfile change), which can exceed the old 120s ready window.
+  await waitForPort('http://localhost:4201/', 240_000);
   // eslint-disable-next-line no-console
   console.log('[aimock-e2e] angular ready on :4201');
 

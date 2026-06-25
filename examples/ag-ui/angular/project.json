@@ -76,6 +76,7 @@
     "serve": {
       "continuous": true,
       "executor": "@angular/build:dev-server",
+      "dependsOn": ["inject-env"],
       "options": {
         "port": 4201,
         "proxyConfig": "examples/ag-ui/angular/proxy.conf.mjs"
