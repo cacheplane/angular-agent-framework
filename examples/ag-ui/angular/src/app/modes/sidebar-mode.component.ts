@@ -2,12 +2,13 @@
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { ChatSidebarComponent, a2uiBasicCatalog } from '@threadplane/chat';
 import { AgUiShell } from '../shell/ag-ui-shell.component';
+import { AppModePromoComponent } from './app-mode-promo.component';
 import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
 
 @Component({
   selector: 'sidebar-mode',
   standalone: true,
-  imports: [ChatSidebarComponent, WelcomeSuggestionsComponent],
+  imports: [ChatSidebarComponent, AppModePromoComponent, WelcomeSuggestionsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <chat-sidebar
@@ -22,12 +23,13 @@ import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
       (selectedModelChange)="shell.onModelChange($event)"
     >
       <div class="sidebar-mode__background">
-        <!-- In App mode the map is the background; this placeholder hint would
-             float unreadably over it, so only show it in plain sidebar mode. -->
+        <!-- Plain sidebar mode (App mode off): market the App-mode cockpit and
+             the Threadplane primitives, with a CTA to turn it on. -->
         @if (shell.appMode() !== 'on') {
-          <p class="sidebar-mode__hint">
-            Use the launcher (right edge) to dismiss or re-open the chat panel.
-          </p>
+          <app-mode-promo
+            [hasMapsKey]="shell.hasMapsKey"
+            (enable)="shell.onAppModeChange('on')"
+          />
         }
       </div>
       <welcome-suggestions chatWelcomeSuggestions (selected)="send($event)" />

@@ -16,7 +16,7 @@ describe('AppModePromoComponent', () => {
     const el: HTMLElement = setup(true).nativeElement;
     expect(el.textContent).toContain('See your trip come alive on a live map');
     expect(el.querySelectorAll('.promo__pill').length).toBe(4);
-    const cta = el.querySelector<HTMLButtonElement>('.promo__cta');
+    const cta = el.querySelector('.promo__cta') as HTMLButtonElement | null;
     expect(cta).toBeTruthy();
     expect(cta!.disabled).toBe(false);
   });
@@ -25,13 +25,13 @@ describe('AppModePromoComponent', () => {
     const fixture = setup(true);
     let emitted = 0;
     fixture.componentInstance.enable.subscribe(() => (emitted += 1));
-    fixture.nativeElement.querySelector<HTMLButtonElement>('.promo__cta')!.click();
+    (fixture.nativeElement.querySelector('.promo__cta') as HTMLButtonElement).click();
     expect(emitted).toBe(1);
   });
 
   it('disables the CTA and shows the key note when hasMapsKey is false', () => {
     const el: HTMLElement = setup(false).nativeElement;
-    const cta = el.querySelector<HTMLButtonElement>('.promo__cta');
+    const cta = el.querySelector('.promo__cta') as HTMLButtonElement | null;
     expect(cta!.disabled).toBe(true);
     expect(el.textContent).toContain('GOOGLE_MAPS_API_KEY');
     expect(cta!.title).toBe('Set GOOGLE_MAPS_API_KEY to enable');
