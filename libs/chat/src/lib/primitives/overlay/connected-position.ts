@@ -85,11 +85,17 @@ function pushOnScreen(point: Point, size: Size, viewport: Rect): Point {
   };
 }
 
+/** Sensible fallback when no positions are supplied: below the origin, start-aligned. */
+const DEFAULT_POSITION: ConnectedPosition = { originX: 'start', originY: 'bottom', overlayX: 'start', overlayY: 'top' };
+
 export function computeConnectedPosition(args: ComputeArgs): OverlayPositionResult {
   const { originRect, overlaySize, viewport, positions } = args;
+  // An empty positions array (the directive's input default) must still anchor to
+  // the trigger rather than crash on best! / render at 0,0.
+  const list = positions.length ? positions : [DEFAULT_POSITION];
   let best: { point: Point; pos: ConnectedPosition; area: number } | null = null;
 
-  for (const pos of positions) {
+  for (const pos of list) {
     const point = overlayPoint(originPoint(originRect, pos), overlaySize, pos);
     const { area, fits } = fitArea(point, overlaySize, viewport);
     if (fits) {

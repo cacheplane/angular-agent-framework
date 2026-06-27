@@ -34,6 +34,12 @@ const VIEWPORT_MARGIN = 8;
  * positioned connected to `chatOverlayOrigin`, repositioning live on
  * scroll/resize. Closes on outside mousedown (via the `chatOverlayOutsideClick`
  * output) and Tab; returns focus to the origin when focus was inside the pane.
+ *
+ * NOTE: the directive does not own the open state — it only emits. To fully
+ * close the overlay, consumers MUST handle BOTH `(chatOverlayOutsideClick)` and
+ * `(chatOverlayDetach)`. Tab-close (and Escape, when the consumer routes it)
+ * surface through `chatOverlayDetach`, so wiring only `chatOverlayOutsideClick`
+ * leaves the overlay stuck open on Tab.
  */
 @Directive({
   selector: '[chatConnectedOverlay]',

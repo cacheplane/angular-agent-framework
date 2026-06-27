@@ -39,4 +39,14 @@ describe('computeConnectedPosition', () => {
     expect(r.left).toBe(592);
     expect(r.left).toBeGreaterThanOrEqual(8);
   });
+
+  it('does not throw on an empty positions array; anchors below-start at the origin', () => {
+    const origin = rect(600, 400, 120, 32); // mid-screen trigger
+    const r = computeConnectedPosition({ originRect: origin, overlaySize: { width: 200, height: 150 }, viewport, positions: [] });
+    expect(Number.isFinite(r.top)).toBe(true);
+    expect(Number.isFinite(r.left)).toBe(true);
+    // default fallback: below the origin (top = origin.bottom = 432), start-aligned (left = origin.left = 600)
+    expect(r.top).toBe(432);
+    expect(r.left).toBe(600);
+  });
 });
