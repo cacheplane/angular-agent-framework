@@ -103,10 +103,10 @@ export async function selectToolbarOption(
 ): Promise<void> {
   const trigger = toolbarSelect(page, label);
   await trigger.click();
-  // chat-select renders its menu through a CDK connected overlay (body portal),
-  // so the menu is in the overlay container, not inside <chat-select>. Only one
-  // select menu is open at a time in this flow, so this is unambiguous.
-  const menu = page.locator('.cdk-overlay-container .chat-select__menu');
+  // chat-select renders its menu through the chat connected-overlay primitive
+  // (body portal), so the menu is in .chat-overlay-container, not inside
+  // <chat-select>. Only one select menu is open at a time in this flow.
+  const menu = page.locator('.chat-overlay-container .chat-select__menu');
   await menu.waitFor({ state: 'visible' });
   const optionButton = menu
     .locator('.chat-select__option')
