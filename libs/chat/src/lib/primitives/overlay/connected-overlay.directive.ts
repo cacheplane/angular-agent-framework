@@ -1,5 +1,11 @@
 // libs/chat/src/lib/primitives/overlay/connected-overlay.directive.ts
 // SPDX-License-Identifier: MIT
+/* eslint-disable @angular-eslint/no-input-rename, @angular-eslint/no-output-rename --
+ * The `chatOverlay*` binding aliases ARE the intended public API: they namespace
+ * the directive's inputs/outputs under the `chatOverlay` prefix (mirroring Angular
+ * CDK's `cdkConnectedOverlay*` convention) rather than exposing bare names like
+ * `open`/`positions` on an `<ng-template>`. The internal property names stay
+ * concise, so aliasing here is deliberate, not a rename to avoid. */
 import {
   DestroyRef,
   Directive,
