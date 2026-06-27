@@ -43,7 +43,7 @@ import { ItineraryStore } from './itinerary-store';
   styles: [
     `
       .cdc {
-        border: 1px solid var(--ngaf-chat-separator, #e5e7eb);
+        border: 1px solid var(--tplane-chat-separator, #e5e7eb);
         border-radius: 12px;
         padding: 16px;
         max-width: 360px;
@@ -62,13 +62,13 @@ import { ItineraryStore } from './itinerary-store';
       .cdc__btn {
         padding: 6px 14px;
         border-radius: 8px;
-        border: 1px solid var(--ngaf-chat-separator, #e5e7eb);
+        border: 1px solid var(--tplane-chat-separator, #e5e7eb);
         background: transparent;
         color: inherit;
         cursor: pointer;
       }
       .cdc__btn--primary {
-        background: var(--ngaf-chat-accent, #2563eb);
+        background: var(--tplane-chat-accent, #2563eb);
         color: #fff;
         border-color: transparent;
       }

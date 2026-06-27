@@ -4758,7 +4758,7 @@
   {
     "name": "ChatWelcomeComponent",
     "kind": "class",
-    "description": "Empty-state owner. Renders a centered greeting + slot-projected input +\noptional vertical suggestion rows. Mounted only when the parent chat has\nno messages and welcome is not disabled.\n\nSlots:\n  [chatWelcomeTitle]       — replaces the default <h1> \"How can I help?\"\n  [chatWelcomeInput]       — projects the chat input into the center column\n  [chatWelcomeSuggestions] — projects suggestion rows below the input\n\nHost CSS variables (override on :host or any ancestor):\n  --ngaf-chat-welcome-max-width  default 36rem\n  --ngaf-chat-welcome-gap        default 1.25rem\n  --ngaf-chat-welcome-padding    default 24px",
+    "description": "Empty-state owner. Renders a centered greeting + slot-projected input +\noptional vertical suggestion rows. Mounted only when the parent chat has\nno messages and welcome is not disabled.\n\nSlots:\n  [chatWelcomeTitle]       — replaces the default <h1> \"How can I help?\"\n  [chatWelcomeInput]       — projects the chat input into the center column\n  [chatWelcomeSuggestions] — projects suggestion rows below the input\n\nHost CSS variables (override on :host or any ancestor):\n  --tplane-chat-welcome-max-width  default 36rem\n  --tplane-chat-welcome-gap        default 1.25rem\n  --tplane-chat-welcome-padding    default 24px",
     "params": [],
     "examples": [],
     "properties": [],
@@ -7297,7 +7297,7 @@
     "name": "AgentRuntimeTelemetryEvent",
     "kind": "type",
     "description": "",
-    "signature": "\"ngaf:runtime_instance_created\" | \"ngaf:runtime_request_created\" | \"ngaf:stream_started\" | \"ngaf:stream_ended\" | \"ngaf:stream_errored\"",
+    "signature": "\"tplane:runtime_instance_created\" | \"tplane:runtime_request_created\" | \"tplane:stream_started\" | \"tplane:stream_ended\" | \"tplane:stream_errored\"",
     "examples": []
   },
   {

@@ -30,7 +30,7 @@ export const ThemedFrame = forwardRef<HTMLIFrameElement, ThemedFrameProps>(
     // Push the current theme on mount and whenever it changes.
     useEffect(() => {
       ref.current?.contentWindow?.postMessage(
-        { type: 'ngaf:theme', theme },
+        { type: 'tplane:theme', theme },
         '*',
       );
     }, [theme]);
@@ -39,9 +39,9 @@ export const ThemedFrame = forwardRef<HTMLIFrameElement, ThemedFrameProps>(
     useEffect(() => {
       const handler = (e: MessageEvent) => {
         if (e.source !== ref.current?.contentWindow) return;
-        if (e.data?.type === 'ngaf:theme-request') {
+        if (e.data?.type === 'tplane:theme-request') {
           ref.current?.contentWindow?.postMessage(
-            { type: 'ngaf:theme', theme },
+            { type: 'tplane:theme', theme },
             '*',
           );
         }

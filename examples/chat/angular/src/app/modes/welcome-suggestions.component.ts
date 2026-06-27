@@ -87,16 +87,16 @@ import { FEATURED_SUGGESTIONS, MORE_SUGGESTIONS } from './welcome-suggestions';
       .welcome-suggestions__row ::ng-deep chat-select .chat-select__trigger {
         height: auto;
         padding: 10px 16px;
-        background: var(--ngaf-chat-surface);
-        color: var(--ngaf-chat-text);
-        border: 1px solid var(--ngaf-chat-separator);
+        background: var(--tplane-chat-surface);
+        color: var(--tplane-chat-text);
+        border: 1px solid var(--tplane-chat-separator);
         border-radius: 9999px;
-        font-size: var(--ngaf-chat-font-size-sm);
+        font-size: var(--tplane-chat-font-size-sm);
       }
       .welcome-suggestions__row ::ng-deep chat-select .chat-select__trigger:hover:not(:disabled) {
-        background: var(--ngaf-chat-surface-alt);
-        border-color: var(--ngaf-chat-text-muted);
-        color: var(--ngaf-chat-text);
+        background: var(--tplane-chat-surface-alt);
+        border-color: var(--tplane-chat-text-muted);
+        color: var(--tplane-chat-text);
       }
       /* The menu portals to a body-level CDK overlay pane, so it's no longer a
          descendant of <chat-select>. Target the overlay panelClass instead.

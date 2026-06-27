@@ -19,11 +19,11 @@ import { ELEMENT_RENDERING_SPECS } from './specs';
   standalone: true,
   template: `
     @if (displayContent()) {
-      <p class="text-[var(--ngaf-chat-text)] text-sm">{{ displayContent() }}</p>
+      <p class="text-[var(--tplane-chat-text)] text-sm">{{ displayContent() }}</p>
     } @else if (loading()) {
       <div class="space-y-1.5 py-1">
-        <div class="h-3 w-full bg-[var(--ngaf-chat-surface-alt)] rounded skeleton-shimmer"></div>
-        <div class="h-3 w-2/3 bg-[var(--ngaf-chat-surface-alt)] rounded skeleton-shimmer"></div>
+        <div class="h-3 w-full bg-[var(--tplane-chat-surface-alt)] rounded skeleton-shimmer"></div>
+        <div class="h-3 w-2/3 bg-[var(--tplane-chat-surface-alt)] rounded skeleton-shimmer"></div>
       </div>
     }
   `,
@@ -47,17 +47,17 @@ class DemoTextComponent {
   imports: [RenderElementComponent],
   template: `
     @if (displayContent()) {
-      <h2 class="text-lg font-bold text-[var(--ngaf-chat-text)] mb-2">{{ displayContent() }}</h2>
+      <h2 class="text-lg font-bold text-[var(--tplane-chat-text)] mb-2">{{ displayContent() }}</h2>
     } @else if (loading()) {
-      <div class="h-5 w-48 bg-[var(--ngaf-chat-separator)] rounded skeleton-shimmer mb-2"></div>
+      <div class="h-5 w-48 bg-[var(--tplane-chat-separator)] rounded skeleton-shimmer mb-2"></div>
     }
     @for (key of childKeys(); track key) {
       <render-element [elementKey]="key" [spec]="spec()!" />
     }
     @if (!childKeys().length && loading()) {
       <div class="space-y-2 mt-2">
-        <div class="h-3 w-full bg-[var(--ngaf-chat-surface-alt)] rounded skeleton-shimmer"></div>
-        <div class="h-3 w-5/6 bg-[var(--ngaf-chat-surface-alt)] rounded skeleton-shimmer"></div>
+        <div class="h-3 w-full bg-[var(--tplane-chat-surface-alt)] rounded skeleton-shimmer"></div>
+        <div class="h-3 w-5/6 bg-[var(--tplane-chat-surface-alt)] rounded skeleton-shimmer"></div>
       </div>
     }
   `,
@@ -80,12 +80,12 @@ class DemoHeadingComponent {
   standalone: true,
   imports: [RenderElementComponent],
   template: `
-    <div class="rounded-lg border border-[var(--ngaf-chat-separator)] bg-[var(--ngaf-chat-surface)] p-4 mb-3 transition-opacity"
+    <div class="rounded-lg border border-[var(--tplane-chat-separator)] bg-[var(--tplane-chat-surface)] p-4 mb-3 transition-opacity"
          [class.animate-pulse]="loading() && !childKeys().length">
       @if (title()) {
-        <h3 class="text-sm font-semibold text-[var(--ngaf-chat-text)] mb-2">{{ title() }}</h3>
+        <h3 class="text-sm font-semibold text-[var(--tplane-chat-text)] mb-2">{{ title() }}</h3>
       } @else if (loading()) {
-        <div class="h-4 w-32 bg-[var(--ngaf-chat-separator)] rounded skeleton-shimmer mb-2"></div>
+        <div class="h-4 w-32 bg-[var(--tplane-chat-separator)] rounded skeleton-shimmer mb-2"></div>
       }
       @if (childKeys().length) {
         @for (key of childKeys(); track key) {
@@ -93,8 +93,8 @@ class DemoHeadingComponent {
         }
       } @else if (loading()) {
         <div class="space-y-2">
-          <div class="h-3 w-full bg-[var(--ngaf-chat-surface-alt)] rounded skeleton-shimmer"></div>
-          <div class="h-3 w-3/4 bg-[var(--ngaf-chat-surface-alt)] rounded skeleton-shimmer"></div>
+          <div class="h-3 w-full bg-[var(--tplane-chat-surface-alt)] rounded skeleton-shimmer"></div>
+          <div class="h-3 w-3/4 bg-[var(--tplane-chat-surface-alt)] rounded skeleton-shimmer"></div>
         </div>
       }
     </div>
@@ -117,11 +117,11 @@ class DemoCardComponent {
     <example-split-layout>
       <!-- Spec picker -->
       <div header class="flex items-center gap-2 px-4 py-3">
-        <span class="text-xs text-[var(--ngaf-chat-text-muted)] uppercase tracking-wide font-semibold mr-2">Spec:</span>
+        <span class="text-xs text-[var(--tplane-chat-text-muted)] uppercase tracking-wide font-semibold mr-2">Spec:</span>
         @for (spec of specs; track spec.label; let i = $index) {
           <button
             class="text-xs px-3 py-1.5 rounded-md transition-colors"
-            [class]="i === activeIndex ? 'bg-indigo-500 text-white font-semibold' : 'bg-[var(--ngaf-chat-surface-alt)] text-[var(--ngaf-chat-text-muted)] hover:text-[var(--ngaf-chat-text)]'"
+            [class]="i === activeIndex ? 'bg-indigo-500 text-white font-semibold' : 'bg-[var(--tplane-chat-surface-alt)] text-[var(--tplane-chat-text-muted)] hover:text-[var(--tplane-chat-text)]'"
             (click)="selectSpec(i)">
             {{ spec.label }}
           </button>
@@ -130,11 +130,11 @@ class DemoCardComponent {
 
       <!-- Left: Live Render Output -->
       <div primary>
-        <div class="text-[10px] text-[var(--ngaf-chat-text-muted)] uppercase tracking-widest font-semibold mb-4">Live Render Output</div>
+        <div class="text-[10px] text-[var(--tplane-chat-text-muted)] uppercase tracking-widest font-semibold mb-4">Live Render Output</div>
         @if (simulator.spec(); as renderedSpec) {
           <render-spec [spec]="renderedSpec" [registry]="registry" [store]="store" [loading]="simulator.playing()" />
         } @else {
-          <div class="text-[var(--ngaf-chat-text-muted)] text-sm italic">Press play to start streaming...</div>
+          <div class="text-[var(--tplane-chat-text-muted)] text-sm italic">Press play to start streaming...</div>
         }
       </div>
 
@@ -142,26 +142,26 @@ class DemoCardComponent {
       <div secondary class="flex flex-col h-full">
         <!-- Streaming JSON (scrollable) -->
         <div class="flex-1 overflow-y-auto p-4" #jsonPane>
-          <div class="text-[10px] text-[var(--ngaf-chat-text-muted)] uppercase tracking-widest font-semibold mb-4">Streaming JSON</div>
-          <pre class="text-[11px] font-mono text-[var(--ngaf-chat-text-muted)] leading-relaxed whitespace-pre-wrap break-all">{{ simulator.rawJson() }}<span class="text-indigo-400 animate-pulse">|</span></pre>
+          <div class="text-[10px] text-[var(--tplane-chat-text-muted)] uppercase tracking-widest font-semibold mb-4">Streaming JSON</div>
+          <pre class="text-[11px] font-mono text-[var(--tplane-chat-text-muted)] leading-relaxed whitespace-pre-wrap break-all">{{ simulator.rawJson() }}<span class="text-indigo-400 animate-pulse">|</span></pre>
           <div class="mt-3 flex justify-between text-[10px]">
             <span class="text-indigo-400">{{ simulator.playing() ? 'Streaming...' : simulator.position() >= simulator.total() ? 'Complete' : 'Paused' }}</span>
-            <span class="text-[var(--ngaf-chat-text-muted)]">{{ percent() }}%</span>
+            <span class="text-[var(--tplane-chat-text-muted)]">{{ percent() }}%</span>
           </div>
         </div>
 
         <!-- Controls (pinned at bottom) -->
-        <div class="shrink-0 border-t border-[var(--ngaf-chat-separator)] p-4">
-          <div class="text-[10px] text-[var(--ngaf-chat-text-muted)] uppercase tracking-widest font-semibold mb-3">Controls</div>
+        <div class="shrink-0 border-t border-[var(--tplane-chat-separator)] p-4">
+          <div class="text-[10px] text-[var(--tplane-chat-text-muted)] uppercase tracking-widest font-semibold mb-3">Controls</div>
           <div class="space-y-3">
             <label class="flex items-center gap-2 cursor-pointer group">
               <input type="checkbox"
-                     class="w-4 h-4 rounded border-[var(--ngaf-chat-separator)] bg-[var(--ngaf-chat-surface-alt)] text-indigo-500 focus:ring-indigo-500 focus:ring-offset-0 cursor-pointer"
+                     class="w-4 h-4 rounded border-[var(--tplane-chat-separator)] bg-[var(--tplane-chat-surface-alt)] text-indigo-500 focus:ring-indigo-500 focus:ring-offset-0 cursor-pointer"
                      [checked]="showDetail()"
                      (change)="toggleShowDetail()" />
-              <span class="text-xs text-[var(--ngaf-chat-text-muted)] group-hover:text-[var(--ngaf-chat-text)] transition-colors">Show Detail</span>
+              <span class="text-xs text-[var(--tplane-chat-text-muted)] group-hover:text-[var(--tplane-chat-text)] transition-colors">Show Detail</span>
             </label>
-            <p class="text-[10px] text-[var(--ngaf-chat-text-muted)] leading-relaxed">
+            <p class="text-[10px] text-[var(--tplane-chat-text-muted)] leading-relaxed">
               Toggles <code class="text-indigo-400/70 font-mono">/showDetail</code> in the state store. Elements with <code class="text-indigo-400/70 font-mono">visible: bind</code> react instantly.
             </p>
           </div>
@@ -169,7 +169,7 @@ class DemoCardComponent {
       </div>
 
       <!-- Timeline bar -->
-      <streaming-timeline footer [simulator]="simulator" class="border-t border-[var(--ngaf-chat-separator)]" />
+      <streaming-timeline footer [simulator]="simulator" class="border-t border-[var(--tplane-chat-separator)]" />
     </example-split-layout>
   `,
 })

@@ -17,7 +17,7 @@ describe('ThreadplaneTelemetryService', () => {
       ],
     });
     const svc = TestBed.inject(ThreadplaneTelemetryService);
-    await expect(svc.capture('ngaf:browser_provided')).resolves.toBeUndefined();
+    await expect(svc.capture('tplane:browser_provided')).resolves.toBeUndefined();
   });
 
   test('capture() resolves without calling posthog when no config provided', async () => {
@@ -28,7 +28,7 @@ describe('ThreadplaneTelemetryService', () => {
       ],
     });
     const svc = TestBed.inject(ThreadplaneTelemetryService);
-    await expect(svc.capture('ngaf:browser_provided')).resolves.toBeUndefined();
+    await expect(svc.capture('tplane:browser_provided')).resolves.toBeUndefined();
   });
 
   test('capture() no-ops when posthogKey is missing even with enabled:true', async () => {
@@ -39,7 +39,7 @@ describe('ThreadplaneTelemetryService', () => {
       ],
     });
     const svc = TestBed.inject(ThreadplaneTelemetryService);
-    await expect(svc.capture('ngaf:browser_provided')).resolves.toBeUndefined();
+    await expect(svc.capture('tplane:browser_provided')).resolves.toBeUndefined();
   });
 
   test('capture() delivers events to a configured neutral sink', async () => {
@@ -59,7 +59,7 @@ describe('ThreadplaneTelemetryService', () => {
     });
 
     expect(sink).toHaveBeenCalledWith({
-      event: 'ngaf:runtime_instance_created',
+      event: 'tplane:runtime_instance_created',
       properties: {
         transport: 'langgraph',
         surface: 'canonical_demo',
@@ -86,7 +86,7 @@ describe('ThreadplaneTelemetryService', () => {
     });
 
     expect(sink).toHaveBeenCalledWith({
-      event: 'ngaf:runtime_request_created',
+      event: 'tplane:runtime_request_created',
       properties: {
         transport: 'langgraph',
         surface: 'canonical_demo',
@@ -107,7 +107,7 @@ describe('ThreadplaneTelemetryService', () => {
     });
     const svc = TestBed.inject(ThreadplaneTelemetryService);
 
-    await svc.capture('ngaf:browser_chat_init', { surface: 'canonical_demo' });
+    await svc.capture('tplane:browser_chat_init', { surface: 'canonical_demo' });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const call = fetchMock.mock.calls.at(0);
@@ -120,7 +120,7 @@ describe('ThreadplaneTelemetryService', () => {
       headers: { 'content-type': 'application/json' },
     }));
     expect(JSON.parse(String((init as RequestInit).body))).toEqual(expect.objectContaining({
-      event: 'ngaf:browser_chat_init',
+      event: 'tplane:browser_chat_init',
       distinctId: expect.stringMatching(/^browser:/),
       properties: {
         surface: 'canonical_demo',
@@ -146,7 +146,7 @@ describe('ThreadplaneTelemetryService', () => {
     });
 
     expect(sink).toHaveBeenCalledWith({
-      event: 'ngaf:stream_errored',
+      event: 'tplane:stream_errored',
       properties: {
         transport: 'langgraph',
         surface: 'canonical_demo',
@@ -167,7 +167,7 @@ describe('ThreadplaneTelemetryService', () => {
     });
     const svc = TestBed.inject(ThreadplaneTelemetryService);
 
-    await svc.capture('ngaf:browser_chat_init');
+    await svc.capture('tplane:browser_chat_init');
 
     expect(sink).not.toHaveBeenCalled();
   });

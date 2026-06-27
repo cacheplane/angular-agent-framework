@@ -55,7 +55,7 @@ describe('createProxyHandler', () => {
     });
     const res = makeRes();
     const body = {
-      event: 'ngaf:stream_started',
+      event: 'tplane:stream_started',
       distinctId: 'browser:test',
       properties: { surface: 'canonical_demo' },
     };
@@ -98,7 +98,7 @@ describe('createProxyHandler', () => {
       method: 'POST',
       headers: { host: 'demo.threadplane.ai', 'content-type': 'application/json' },
       body: {
-        event: 'ngaf:runtime_request_created',
+        event: 'tplane:runtime_request_created',
         distinctId: 'browser:test',
         properties: {
           transport: 'langgraph',
@@ -112,7 +112,7 @@ describe('createProxyHandler', () => {
 
     const forwarded = JSON.parse(String((fetchMock.mock.calls[0]![1] as RequestInit).body));
     expect(forwarded).toEqual({
-      event: 'ngaf:runtime_request_created',
+      event: 'tplane:runtime_request_created',
       distinctId: 'browser:test',
       properties: {
         transport: 'langgraph',

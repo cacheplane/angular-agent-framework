@@ -6,7 +6,7 @@ export const CHAT_HISTORY_SEARCH_PALETTE_STYLES = `
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.4);
-    z-index: var(--ngaf-chat-z-modal-scrim, 1100);
+    z-index: var(--tplane-chat-z-modal-scrim, 1100);
     border: 0;
     padding: 0;
     cursor: pointer;
@@ -18,11 +18,11 @@ export const CHAT_HISTORY_SEARCH_PALETTE_STYLES = `
     transform: translateX(-50%);
     width: min(560px, 90vw);
     max-height: 70vh;
-    background: var(--ngaf-chat-bg);
-    border: 1px solid var(--ngaf-chat-separator);
+    background: var(--tplane-chat-bg);
+    border: 1px solid var(--tplane-chat-separator);
     border-radius: 12px;
     box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25);
-    z-index: var(--ngaf-chat-z-modal, 1101);
+    z-index: var(--tplane-chat-z-modal, 1101);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -32,12 +32,12 @@ export const CHAT_HISTORY_SEARCH_PALETTE_STYLES = `
     align-items: center;
     gap: 8px;
     padding: 12px 16px;
-    border-bottom: 1px solid var(--ngaf-chat-separator);
+    border-bottom: 1px solid var(--tplane-chat-separator);
   }
   .chat-history-search-palette__icon {
     width: 18px;
     height: 18px;
-    color: var(--ngaf-chat-text-muted);
+    color: var(--tplane-chat-text-muted);
     flex-shrink: 0;
   }
   .chat-history-search-palette__input {
@@ -45,22 +45,22 @@ export const CHAT_HISTORY_SEARCH_PALETTE_STYLES = `
     border: 0;
     outline: none;
     background: transparent;
-    color: var(--ngaf-chat-text);
+    color: var(--tplane-chat-text);
     font: inherit;
     font-size: 1rem;
   }
   .chat-history-search-palette__input::placeholder {
-    color: var(--ngaf-chat-text-muted);
+    color: var(--tplane-chat-text-muted);
   }
   .chat-history-search-palette__close {
     background: transparent;
     border: 0;
     padding: 4px;
-    color: var(--ngaf-chat-text-muted);
+    color: var(--tplane-chat-text-muted);
     cursor: pointer;
     border-radius: 4px;
   }
-  .chat-history-search-palette__close:hover { color: var(--ngaf-chat-text); }
+  .chat-history-search-palette__close:hover { color: var(--tplane-chat-text); }
   .chat-history-search-palette__list {
     flex: 1 1 auto;
     overflow-y: auto;
@@ -76,23 +76,23 @@ export const CHAT_HISTORY_SEARCH_PALETTE_STYLES = `
     cursor: pointer;
   }
   .chat-history-search-palette__row[aria-selected="true"] {
-    background: var(--ngaf-chat-surface-alt);
+    background: var(--tplane-chat-surface-alt);
   }
   .chat-history-search-palette__row-title {
-    color: var(--ngaf-chat-text);
-    font-size: var(--ngaf-chat-font-size);
+    color: var(--tplane-chat-text);
+    font-size: var(--tplane-chat-font-size);
   }
   .chat-history-search-palette__row-subtitle {
-    color: var(--ngaf-chat-text-muted);
-    font-size: var(--ngaf-chat-font-size-sm);
+    color: var(--tplane-chat-text-muted);
+    font-size: var(--tplane-chat-font-size-sm);
     margin-top: 2px;
   }
   .chat-history-search-palette__empty,
   .chat-history-search-palette__hint {
     padding: 24px 16px;
-    color: var(--ngaf-chat-text-muted);
+    color: var(--tplane-chat-text-muted);
     text-align: center;
-    font-size: var(--ngaf-chat-font-size-sm);
+    font-size: var(--tplane-chat-font-size-sm);
   }
   .chat-history-search-palette__skeleton {
     padding: 8px 4px;
@@ -100,8 +100,8 @@ export const CHAT_HISTORY_SEARCH_PALETTE_STYLES = `
   .chat-history-search-palette__skeleton-row {
     height: 36px;
     margin: 4px 0;
-    background: var(--ngaf-chat-surface-alt);
+    background: var(--tplane-chat-surface-alt);
     border-radius: 8px;
-    animation: ngaf-chat-pulse 1.4s ease-in-out infinite;
+    animation: tplane-chat-pulse 1.4s ease-in-out infinite;
   }
 `;

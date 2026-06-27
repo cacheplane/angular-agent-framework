@@ -109,7 +109,7 @@ test('insight property filters are allowed by the event contract', async () => {
 });
 
 test('postinstall telemetry contract does not expose derived install context', () => {
-  const contract = TELEMETRY_EVENT_CONTRACT['ngaf:postinstall'];
+  const contract = TELEMETRY_EVENT_CONTRACT['tplane:postinstall'];
   assert(!contract.allowedProperties.includes('install_context'));
   assert(!contract.allowedBreakdowns.includes('install_context'));
 });
@@ -134,7 +134,7 @@ test('package telemetry dashboard does not filter by derived install context', a
     }>(join(INSIGHTS_DIR, `${tile.insight}.json`));
 
     for (const item of insight.events ?? []) {
-      if (item.event !== 'ngaf:postinstall') continue;
+      if (item.event !== 'tplane:postinstall') continue;
       const usesInstallContext = (item.properties ?? []).some(
         (property) => property.key === 'install_context'
       );

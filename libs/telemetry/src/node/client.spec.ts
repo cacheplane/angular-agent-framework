@@ -18,7 +18,7 @@ describe('node client', () => {
     _resetClientForTesting();
     _resetDisableForTesting();
     delete process.env.DO_NOT_TRACK;
-    delete process.env.NGAF_TELEMETRY_DISABLED;
+    delete process.env.TPLANE_TELEMETRY_DISABLED;
     delete process.env.npm_config_do_not_track;
     delete process.env.NPM_CONFIG_DO_NOT_TRACK;
     delete process.env.CI;
@@ -26,11 +26,11 @@ describe('node client', () => {
     delete process.env.CONTINUOUS_INTEGRATION;
     delete process.env.BUILDKITE;
     delete process.env.CIRCLECI;
-    delete process.env.NGAF_TELEMETRY_SAMPLE_RATE;
+    delete process.env.TPLANE_TELEMETRY_SAMPLE_RATE;
     delete process.env.npm_config_user_agent;
     delete process.env.npm_config_global;
     delete process.env.npm_config_location;
-    process.env.NGAF_TELEMETRY_INGEST_URL = 'https://test.example/api/ingest';
+    process.env.TPLANE_TELEMETRY_INGEST_URL = 'https://test.example/api/ingest';
   });
 
   test('capturePostinstall sends an event with pkg + version', async () => {
@@ -39,7 +39,7 @@ describe('node client', () => {
     ).resolves.toEqual({ sent: true });
     const body = JSON.parse(String(fetchMock.mock.calls[0][1].body));
     expect(body).toMatchObject({
-      event: 'ngaf:postinstall',
+      event: 'tplane:postinstall',
       properties: expect.objectContaining({
         pkg: '@threadplane/telemetry',
         version: '0.0.31',
@@ -63,8 +63,8 @@ describe('node client', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  test('capturePostinstall uses NGAF_TELEMETRY_INGEST_URL when set', async () => {
-    process.env.NGAF_TELEMETRY_INGEST_URL = 'https://custom.example/api/ingest';
+  test('capturePostinstall uses TPLANE_TELEMETRY_INGEST_URL when set', async () => {
+    process.env.TPLANE_TELEMETRY_INGEST_URL = 'https://custom.example/api/ingest';
     await capturePostinstall({ pkg: 'x', version: '1' });
     expect(fetchMock.mock.calls[0][0]).toBe(
       'https://custom.example/api/ingest'
@@ -72,7 +72,7 @@ describe('node client', () => {
   });
 
   test('capturePostinstall defaults to the live Threadplane ingest proxy', async () => {
-    delete process.env.NGAF_TELEMETRY_INGEST_URL;
+    delete process.env.TPLANE_TELEMETRY_INGEST_URL;
     await capturePostinstall({ pkg: 'x', version: '1' });
     expect(fetchMock.mock.calls[0][0]).toBe('https://threadplane.ai/api/ingest');
   });
@@ -149,14 +149,14 @@ describe('node client', () => {
 
   test('captureEvent reports failed sends instead of pretending success', async () => {
     fetchMock.mockRejectedValueOnce(new Error('network'));
-    await expect(captureEvent('ngaf:postinstall', {})).resolves.toEqual({
+    await expect(captureEvent('tplane:postinstall', {})).resolves.toEqual({
       sent: false,
       reason: 'failed',
     });
   });
 
   test('invalid sample rate falls back to 1 instead of silently dropping telemetry', async () => {
-    process.env.NGAF_TELEMETRY_SAMPLE_RATE = 'not-a-number';
+    process.env.TPLANE_TELEMETRY_SAMPLE_RATE = 'not-a-number';
     await expect(
       capturePostinstall({ pkg: 'x', version: '1' })
     ).resolves.toEqual({ sent: true });

@@ -38,7 +38,7 @@ type WeatherCardProps = ViewProps<typeof weatherCardSchema>;
     </div>
   `,
   styles: [`
-    .wc { border: 1px solid var(--ngaf-chat-separator, #e5e7eb); border-radius: 12px; padding: 16px; max-width: 320px; }
+    .wc { border: 1px solid var(--tplane-chat-separator, #e5e7eb); border-radius: 12px; padding: 16px; max-width: 320px; }
     .wc__head { display: flex; align-items: center; justify-content: space-between; }
     .wc__loc { font-weight: 600; }
     .wc__badge { font-size: 12px; opacity: 0.7; }

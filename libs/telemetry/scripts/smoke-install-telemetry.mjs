@@ -7,7 +7,7 @@ import { basename, join, resolve } from 'node:path';
 import { execFileSync, spawn } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 
-const POSTINSTALL_EVENT = 'ngaf:postinstall';
+const POSTINSTALL_EVENT = 'tplane:postinstall';
 
 export function expectedPostinstallPackages(packageRoots) {
   return packageRoots
@@ -28,7 +28,7 @@ export function assertObservedPostinstallEvents({ expectedPackages, events }) {
   );
   const missing = expectedPackages.filter((pkg) => !observed.has(pkg));
   if (missing.length > 0) {
-    throw new Error(`Missing ngaf:postinstall events for ${missing.join(', ')}`);
+    throw new Error(`Missing tplane:postinstall events for ${missing.join(', ')}`);
   }
 }
 
@@ -97,14 +97,14 @@ async function startIngestServer(events) {
 async function installTarballs({ tarballs, tempProject, ingestUrl }) {
   writeFileSync(join(tempProject, 'package.json'), JSON.stringify({
     private: true,
-    name: 'ngaf-install-telemetry-smoke',
+    name: 'tplane-install-telemetry-smoke',
     version: '0.0.0',
   }, null, 2) + '\n');
 
   const env = {
     ...process.env,
-    NGAF_TELEMETRY_INGEST_URL: ingestUrl,
-    NGAF_TELEMETRY_SAMPLE_RATE: '1',
+    TPLANE_TELEMETRY_INGEST_URL: ingestUrl,
+    TPLANE_TELEMETRY_SAMPLE_RATE: '1',
     DEBUG: process.env.DEBUG ?? '',
     CI: 'false',
     GITHUB_ACTIONS: 'false',
@@ -112,7 +112,7 @@ async function installTarballs({ tarballs, tempProject, ingestUrl }) {
     BUILDKITE: 'false',
     CIRCLECI: 'false',
     DO_NOT_TRACK: '0',
-    NGAF_TELEMETRY_DISABLED: '0',
+    TPLANE_TELEMETRY_DISABLED: '0',
   };
   delete env.npm_config_do_not_track;
   delete env.NPM_CONFIG_DO_NOT_TRACK;
@@ -153,7 +153,7 @@ export async function smokeInstallTelemetry(packageRootArgs) {
     throw new Error('No publishable @threadplane/* packages require postinstall telemetry in the provided roots');
   }
 
-  const tempRoot = await mkdtemp(join(tmpdir(), 'ngaf-install-telemetry-'));
+  const tempRoot = await mkdtemp(join(tmpdir(), 'tplane-install-telemetry-'));
   const tarballDir = join(tempRoot, 'tarballs');
   const tempProject = join(tempRoot, 'project');
   await Promise.all([
@@ -170,7 +170,7 @@ export async function smokeInstallTelemetry(packageRootArgs) {
     console.log(`[install-telemetry-smoke] observed ${POSTINSTALL_EVENT} for ${expectedPackages.join(', ')}`);
   } finally {
     await ingest.close();
-    if (process.env.NGAF_TELEMETRY_KEEP_SMOKE_TMP !== '1') {
+    if (process.env.TPLANE_TELEMETRY_KEEP_SMOKE_TMP !== '1') {
       await rm(tempRoot, { recursive: true, force: true });
     } else {
       console.log(`[install-telemetry-smoke] kept temp dir ${tempRoot}`);

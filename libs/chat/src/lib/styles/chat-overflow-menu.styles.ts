@@ -18,8 +18,8 @@ export const CHAT_OVERFLOW_MENU_STYLES = `
     padding: 4px;
     margin: 0;
     list-style: none;
-    background: var(--ngaf-chat-bg);
-    border: 1px solid var(--ngaf-chat-separator);
+    background: var(--tplane-chat-bg);
+    border: 1px solid var(--tplane-chat-separator);
     border-radius: 8px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   }
@@ -27,23 +27,23 @@ export const CHAT_OVERFLOW_MENU_STYLES = `
     display: block;
     padding: 8px 12px;
     border-radius: 4px;
-    color: var(--ngaf-chat-text);
-    font-size: var(--ngaf-chat-font-size-sm);
+    color: var(--tplane-chat-text);
+    font-size: var(--tplane-chat-font-size-sm);
     cursor: pointer;
     user-select: none;
   }
   .chat-overflow-menu__item:hover {
-    background: var(--ngaf-chat-surface-alt);
+    background: var(--tplane-chat-surface-alt);
   }
   .chat-overflow-menu__item:focus-visible {
-    outline: 2px solid var(--ngaf-chat-primary);
+    outline: 2px solid var(--tplane-chat-primary);
     outline-offset: -2px;
   }
   .chat-overflow-menu__item--destructive {
-    color: var(--ngaf-chat-error-text);
+    color: var(--tplane-chat-error-text);
   }
   .chat-overflow-menu__item--disabled {
-    color: var(--ngaf-chat-text-muted);
+    color: var(--tplane-chat-text-muted);
     cursor: not-allowed;
     pointer-events: none;
   }

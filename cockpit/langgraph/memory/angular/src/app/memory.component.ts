@@ -24,16 +24,16 @@ import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
     <example-chat-layout>
       <chat main [agent]="agent" class="flex-1 min-w-0" />
       <div sidebar class="p-4 space-y-2"
-           style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">
+           style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--ngaf-chat-text-muted);">Learned Facts</h3>
+            style="color: var(--tplane-chat-text-muted);">Learned Facts</h3>
         @if (memoryEntries().length === 0) {
-          <p class="text-sm italic" style="color: var(--ngaf-chat-text-muted);">No facts learned yet</p>
+          <p class="text-sm italic" style="color: var(--tplane-chat-text-muted);">No facts learned yet</p>
         }
         @for (entry of memoryEntries(); track entry[0]) {
           <div class="text-sm py-1">
-            <span class="font-medium" style="color: var(--ngaf-chat-text);">{{ entry[0] }}:</span>
-            <span style="color: var(--ngaf-chat-text-muted);"> {{ entry[1] }}</span>
+            <span class="font-medium" style="color: var(--tplane-chat-text);">{{ entry[0] }}:</span>
+            <span style="color: var(--tplane-chat-text-muted);"> {{ entry[1] }}</span>
           </div>
         }
       </div>

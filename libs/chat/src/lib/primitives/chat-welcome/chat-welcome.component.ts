@@ -14,9 +14,9 @@ import { CHAT_WELCOME_STYLES } from '../../styles/chat-welcome.styles';
  *   [chatWelcomeSuggestions] — projects suggestion rows below the input
  *
  * Host CSS variables (override on :host or any ancestor):
- *   --ngaf-chat-welcome-max-width  default 36rem
- *   --ngaf-chat-welcome-gap        default 1.25rem
- *   --ngaf-chat-welcome-padding    default 24px
+ *   --tplane-chat-welcome-max-width  default 36rem
+ *   --tplane-chat-welcome-gap        default 1.25rem
+ *   --tplane-chat-welcome-padding    default 24px
  */
 @Component({
   selector: 'chat-welcome',

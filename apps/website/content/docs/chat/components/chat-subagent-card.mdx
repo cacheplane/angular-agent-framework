@@ -66,10 +66,10 @@ The status pill is styled via a `data-status` attribute and CSS selectors (the e
 
 | Status | Background | Text Color |
 |--------|-----------|------------|
-| `pending` | `--ngaf-chat-surface-alt` | `--ngaf-chat-text-muted` |
-| `running` | `--ngaf-chat-warning-bg` | `--ngaf-chat-warning-text` |
-| `complete` | (none) | `--ngaf-chat-success` |
-| `error` | `--ngaf-chat-error-bg` | `--ngaf-chat-error-text` |
+| `pending` | `--tplane-chat-surface-alt` | `--tplane-chat-text-muted` |
+| `running` | `--tplane-chat-warning-bg` | `--tplane-chat-warning-text` |
+| `complete` | (none) | `--tplane-chat-success` |
+| `error` | `--tplane-chat-error-bg` | `--tplane-chat-error-text` |
 
 ## Using with ChatSubagentsComponent
 
@@ -130,13 +130,13 @@ The card uses the following CSS custom properties:
 
 | Variable | Applied To |
 |----------|-----------|
-| `--ngaf-chat-text` | Subagent name, message content |
-| `--ngaf-chat-text-muted` | Tool call ID, message count, reasoning line |
-| `--ngaf-chat-font-mono` | Tool call ID |
-| `--ngaf-chat-separator` | Divider between successive transcript messages |
-| `--ngaf-chat-warning-bg` / `--ngaf-chat-warning-text` | `running` status pill |
-| `--ngaf-chat-success` | `complete` status pill |
-| `--ngaf-chat-error-bg` / `--ngaf-chat-error-text` | `error` status pill |
+| `--tplane-chat-text` | Subagent name, message content |
+| `--tplane-chat-text-muted` | Tool call ID, message count, reasoning line |
+| `--tplane-chat-font-mono` | Tool call ID |
+| `--tplane-chat-separator` | Divider between successive transcript messages |
+| `--tplane-chat-warning-bg` / `--tplane-chat-warning-text` | `running` status pill |
+| `--tplane-chat-success` | `complete` status pill |
+| `--tplane-chat-error-bg` / `--tplane-chat-error-text` | `error` status pill |
 
 The outer card chrome (background, border, radius) comes from the wrapping [`<chat-trace>`](/docs/chat/components/chat-trace).
 

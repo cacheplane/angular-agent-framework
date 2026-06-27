@@ -55,32 +55,32 @@ function hasHistory(
         justify-content: center;
         width: 36px;
         height: 36px;
-        border-radius: var(--ngaf-chat-debug-radius-pill);
-        background: var(--ngaf-chat-debug-bg);
-        border: 1px solid var(--ngaf-chat-debug-border);
-        color: var(--ngaf-chat-debug-text);
+        border-radius: var(--tplane-chat-debug-radius-pill);
+        background: var(--tplane-chat-debug-bg);
+        border: 1px solid var(--tplane-chat-debug-border);
+        color: var(--tplane-chat-debug-text);
         cursor: pointer;
         z-index: 990;
-        box-shadow: var(--ngaf-chat-debug-shadow-pill);
+        box-shadow: var(--tplane-chat-debug-shadow-pill);
         transition: background 120ms ease, border-color 120ms ease;
         padding: 0;
       }
       .launcher:hover {
-        background: var(--ngaf-chat-debug-surface);
-        border-color: var(--ngaf-chat-debug-border-strong);
+        background: var(--tplane-chat-debug-surface);
+        border-color: var(--tplane-chat-debug-border-strong);
       }
       .launcher__dot {
         width: 8px;
         height: 8px;
         border-radius: 50%;
-        background: var(--ngaf-chat-debug-success);
+        background: var(--tplane-chat-debug-success);
         box-shadow: 0 0 8px
-          color-mix(in srgb, var(--ngaf-chat-debug-success) 60%, transparent);
+          color-mix(in srgb, var(--tplane-chat-debug-success) 60%, transparent);
       }
       .launcher__dot--streaming {
-        background: var(--ngaf-chat-debug-accent);
+        background: var(--tplane-chat-debug-accent);
         box-shadow: 0 0 8px
-          color-mix(in srgb, var(--ngaf-chat-debug-accent) 70%, transparent);
+          color-mix(in srgb, var(--tplane-chat-debug-accent) 70%, transparent);
         animation: chat-debug-pill-pulse 1.2s ease-in-out infinite;
       }
       @keyframes chat-debug-pill-pulse {
@@ -98,23 +98,23 @@ function hasHistory(
       /* ── Docked panel ─────────────────────────────────────────────── */
       .panel {
         position: fixed;
-        background: var(--ngaf-chat-debug-bg);
-        color: var(--ngaf-chat-debug-text);
-        border: 1px solid var(--ngaf-chat-debug-border);
+        background: var(--tplane-chat-debug-bg);
+        color: var(--tplane-chat-debug-text);
+        border: 1px solid var(--tplane-chat-debug-border);
         z-index: 991;
         display: flex;
         flex-direction: column;
-        box-shadow: var(--ngaf-chat-debug-shadow-panel);
+        box-shadow: var(--tplane-chat-debug-shadow-panel);
         animation: chat-debug-panel-enter 120ms ease;
       }
       .panel--right {
         top: 0;
-        right: var(--ngaf-chat-sidebar-claim-right, 0);
+        right: var(--tplane-chat-sidebar-claim-right, 0);
         bottom: 0;
         width: var(--panel-size, 420px);
         border-right: 0;
-        border-top-left-radius: var(--ngaf-chat-debug-radius-panel);
-        border-bottom-left-radius: var(--ngaf-chat-debug-radius-panel);
+        border-top-left-radius: var(--tplane-chat-debug-radius-panel);
+        border-bottom-left-radius: var(--tplane-chat-debug-radius-panel);
         transform-origin: bottom right;
         transition: right 200ms ease-out;
       }
@@ -124,18 +124,18 @@ function hasHistory(
         bottom: 0;
         width: var(--panel-size, 420px);
         border-left: 0;
-        border-top-right-radius: var(--ngaf-chat-debug-radius-panel);
-        border-bottom-right-radius: var(--ngaf-chat-debug-radius-panel);
+        border-top-right-radius: var(--tplane-chat-debug-radius-panel);
+        border-bottom-right-radius: var(--tplane-chat-debug-radius-panel);
         transform-origin: bottom left;
       }
       .panel--bottom {
         left: 0;
-        right: var(--ngaf-chat-sidebar-claim-right, 0);
+        right: var(--tplane-chat-sidebar-claim-right, 0);
         bottom: 0;
         height: var(--panel-size, 40vh);
         border-bottom: 0;
-        border-top-left-radius: var(--ngaf-chat-debug-radius-panel);
-        border-top-right-radius: var(--ngaf-chat-debug-radius-panel);
+        border-top-left-radius: var(--tplane-chat-debug-radius-panel);
+        border-top-right-radius: var(--tplane-chat-debug-radius-panel);
         transform-origin: bottom right;
         transition: right 200ms ease-out;
       }
@@ -164,7 +164,7 @@ function hasHistory(
         align-items: center;
         justify-content: space-between;
         padding: 12px 16px;
-        border-bottom: 1px solid var(--ngaf-chat-debug-border);
+        border-bottom: 1px solid var(--tplane-chat-debug-border);
         min-height: 44px;
         box-sizing: border-box;
       }
@@ -173,7 +173,7 @@ function hasHistory(
         font-size: 13px;
         font-weight: 600;
         letter-spacing: -0.01em;
-        color: var(--ngaf-chat-debug-text);
+        color: var(--tplane-chat-debug-text);
       }
       .panel__actions {
         display: flex;
@@ -185,8 +185,8 @@ function hasHistory(
         display: inline-flex;
         gap: 0;
         padding: 2px;
-        background: var(--ngaf-chat-debug-bg-deep);
-        border: 1px solid var(--ngaf-chat-debug-border);
+        background: var(--tplane-chat-debug-bg-deep);
+        border: 1px solid var(--tplane-chat-debug-border);
         border-radius: 6px;
       }
       .panel__dock-btn {
@@ -197,7 +197,7 @@ function hasHistory(
         width: 24px;
         height: 22px;
         padding: 0;
-        color: var(--ngaf-chat-debug-text-subtle);
+        color: var(--tplane-chat-debug-text-subtle);
         cursor: pointer;
         display: inline-flex;
         align-items: center;
@@ -205,11 +205,11 @@ function hasHistory(
         transition: background 120ms ease, color 120ms ease;
       }
       .panel__dock-btn:hover {
-        color: var(--ngaf-chat-debug-text);
+        color: var(--tplane-chat-debug-text);
       }
       .panel__dock-btn.is-active {
-        background: var(--ngaf-chat-debug-border);
-        color: var(--ngaf-chat-debug-text);
+        background: var(--tplane-chat-debug-border);
+        color: var(--tplane-chat-debug-text);
       }
       .panel__dock-btn svg {
         display: block;
@@ -223,7 +223,7 @@ function hasHistory(
         width: 26px;
         height: 26px;
         margin-left: 4px;
-        color: var(--ngaf-chat-debug-text-subtle);
+        color: var(--tplane-chat-debug-text-subtle);
         cursor: pointer;
         display: inline-flex;
         align-items: center;
@@ -231,15 +231,15 @@ function hasHistory(
         transition: background 120ms ease, color 120ms ease;
       }
       .panel__close:hover {
-        background: var(--ngaf-chat-debug-surface);
-        color: var(--ngaf-chat-debug-text);
+        background: var(--tplane-chat-debug-surface);
+        color: var(--tplane-chat-debug-text);
       }
 
       .panel__controls {
-        border-bottom: 1px solid var(--ngaf-chat-debug-border);
+        border-bottom: 1px solid var(--tplane-chat-debug-border);
         overflow-y: auto;
         max-height: 50%;
-        background: var(--ngaf-chat-debug-bg);
+        background: var(--tplane-chat-debug-bg);
       }
       .panel__controls:empty {
         display: none;
@@ -248,9 +248,9 @@ function hasHistory(
       .panel__tabs {
         display: flex;
         gap: 4px;
-        border-bottom: 1px solid var(--ngaf-chat-debug-border);
+        border-bottom: 1px solid var(--tplane-chat-debug-border);
         padding: 0 12px;
-        background: var(--ngaf-chat-debug-bg);
+        background: var(--tplane-chat-debug-bg);
       }
       .panel__tab {
         appearance: none;
@@ -261,17 +261,17 @@ function hasHistory(
         font: inherit;
         font-size: 13px;
         font-weight: 500;
-        color: var(--ngaf-chat-debug-text-muted);
+        color: var(--tplane-chat-debug-text-muted);
         cursor: pointer;
         transition: color 120ms ease, border-color 120ms ease;
         margin-bottom: -1px;
       }
       .panel__tab:hover {
-        color: var(--ngaf-chat-debug-text);
+        color: var(--tplane-chat-debug-text);
       }
       .panel__tab.is-active {
-        color: var(--ngaf-chat-debug-text);
-        border-bottom-color: var(--ngaf-chat-debug-accent);
+        color: var(--tplane-chat-debug-text);
+        border-bottom-color: var(--tplane-chat-debug-accent);
       }
 
       .panel__body {
@@ -280,7 +280,7 @@ function hasHistory(
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        background: var(--ngaf-chat-debug-bg);
+        background: var(--tplane-chat-debug-bg);
       }
     `,
   ],
@@ -531,7 +531,7 @@ export class ChatDebugComponent {
     });
 
     // Publish the dock the panel currently occupies. Peer panels
-    // (e.g. chat-sidebar) read --ngaf-chat-occupy-{right,bottom,left}
+    // (e.g. chat-sidebar) read --tplane-chat-occupy-{right,bottom,left}
     // to avoid overlap.
     effect(() => {
       if (typeof document === 'undefined') return;

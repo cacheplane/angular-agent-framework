@@ -29,20 +29,20 @@ export async function captureRuntimeInstanceCreated(input: RuntimeInstanceTeleme
   await safe(async () => {
     const { apiKey, ...rest } = input;
     void apiKey;
-    await captureEvent('ngaf:runtime_instance_created', { ...rest });
+    await captureEvent('tplane:runtime_instance_created', { ...rest });
   });
 }
 
 export async function captureRuntimeRequestCreated(input: RuntimeRequestTelemetry): Promise<void> {
-  await safe(() => captureEvent('ngaf:runtime_request_created', { ...input }));
+  await safe(() => captureEvent('tplane:runtime_request_created', { ...input }));
 }
 
 export async function captureStreamStarted(input: StreamTelemetry): Promise<void> {
-  await safe(() => captureEvent('ngaf:stream_started', { ...input }));
+  await safe(() => captureEvent('tplane:stream_started', { ...input }));
 }
 
 export async function captureStreamEnded(input: StreamTelemetry): Promise<void> {
-  await safe(() => captureEvent('ngaf:stream_ended', { ...input }));
+  await safe(() => captureEvent('tplane:stream_ended', { ...input }));
 }
 
 export async function captureStreamErrored(
@@ -51,6 +51,6 @@ export async function captureStreamErrored(
   await safe(async () => {
     const { error, ...rest } = input;
     const errorClass = error instanceof Error ? error.constructor.name : 'Unknown';
-    await captureEvent('ngaf:stream_errored', { ...rest, errorClass });
+    await captureEvent('tplane:stream_errored', { ...rest, errorClass });
   });
 }

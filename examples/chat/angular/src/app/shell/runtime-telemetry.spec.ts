@@ -10,7 +10,7 @@ describe('createCanonicalDemoRuntimeTelemetrySink', () => {
     );
 
     await sink({
-      event: 'ngaf:runtime_request_created',
+      event: 'tplane:runtime_request_created',
       properties: {
         transport: 'langgraph',
         surface: 'agent',
@@ -18,7 +18,7 @@ describe('createCanonicalDemoRuntimeTelemetrySink', () => {
       },
     });
 
-    expect(capture).toHaveBeenCalledWith('ngaf:runtime_request_created', {
+    expect(capture).toHaveBeenCalledWith('tplane:runtime_request_created', {
       transport: 'langgraph',
       surface: 'canonical_demo',
       requestType: 'submit',
@@ -44,7 +44,7 @@ describe('createCanonicalDemoRuntimeTelemetrySink', () => {
     } as Parameters<typeof sink>[0]['properties'] & Record<string, unknown>;
 
     await sink({
-      event: 'ngaf:runtime_request_created',
+      event: 'tplane:runtime_request_created',
       properties: propertiesWithUnexpectedContent,
     });
 

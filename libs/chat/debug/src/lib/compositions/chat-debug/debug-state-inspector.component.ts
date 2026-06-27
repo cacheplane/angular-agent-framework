@@ -20,9 +20,9 @@ import { CHAT_DEBUG_TOKENS } from './chat-debug-tokens';
       max-height: 256px;
     }
     .debug-state-inspector__pre {
-      font-size: var(--ngaf-chat-font-size-xs);
-      font-family: var(--ngaf-chat-font-mono);
-      color: var(--ngaf-chat-text);
+      font-size: var(--tplane-chat-font-size-xs);
+      font-family: var(--tplane-chat-font-mono);
+      color: var(--tplane-chat-text);
       white-space: pre-wrap;
       word-break: break-all;
       margin: 0;

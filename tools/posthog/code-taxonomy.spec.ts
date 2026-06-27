@@ -17,7 +17,7 @@ const SCAN_ROOTS = [
   'libs/telemetry/src',
 ];
 
-const EVENT_NAME_RE = /^(?:\$pageview|(?:marketing|cockpit|ngaf|docs):[a-z_]+)$/;
+const EVENT_NAME_RE = /^(?:\$pageview|(?:marketing|cockpit|tplane|docs):[a-z_]+)$/;
 
 const CAPTURE_PATTERNS: RegExp[] = [
   /posthog\.capture\(\s*['"]([^'"]+)['"]/g,
@@ -101,7 +101,7 @@ test('every event fired in code appears in docs/gtm/taxonomy.md', async () => {
 
   const taxonomy = await readFile(TAXONOMY_PATH, 'utf8');
   const documented = new Set<string>();
-  for (const m of taxonomy.matchAll(/`(\$pageview|(?:marketing|cockpit|ngaf|docs):[a-z_]+)`/g)) {
+  for (const m of taxonomy.matchAll(/`(\$pageview|(?:marketing|cockpit|tplane|docs):[a-z_]+)`/g)) {
     documented.add(m[1]);
   }
 
@@ -110,7 +110,7 @@ test('every event fired in code appears in docs/gtm/taxonomy.md', async () => {
     undocumented,
     [],
     `Events fired in code but missing from docs/gtm/taxonomy.md:\n${undocumented.join('\n')}\n\n` +
-      `Add a row to taxonomy.md (Marketing / Cockpit / ngaf / Docs section as appropriate) ` +
+      `Add a row to taxonomy.md (Marketing / Cockpit / tplane / Docs section as appropriate) ` +
       `so the dashboards-as-code guard knows the event is intentional.`,
   );
 });

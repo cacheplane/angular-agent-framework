@@ -77,24 +77,24 @@ export class ThreadplaneTelemetryService {
   }
 
   captureRuntimeInstanceCreated(input: ThreadplaneBrowserRuntimeTelemetry): Promise<void> {
-    return this.capture('ngaf:runtime_instance_created', { ...input });
+    return this.capture('tplane:runtime_instance_created', { ...input });
   }
 
   captureRuntimeRequestCreated(input: ThreadplaneBrowserRuntimeTelemetry & { requestType: string }): Promise<void> {
-    return this.capture('ngaf:runtime_request_created', { ...input });
+    return this.capture('tplane:runtime_request_created', { ...input });
   }
 
   captureStreamStarted(input: ThreadplaneBrowserStreamTelemetry): Promise<void> {
-    return this.capture('ngaf:stream_started', { ...input });
+    return this.capture('tplane:stream_started', { ...input });
   }
 
   captureStreamEnded(input: ThreadplaneBrowserStreamTelemetry): Promise<void> {
-    return this.capture('ngaf:stream_ended', { ...input });
+    return this.capture('tplane:stream_ended', { ...input });
   }
 
   captureStreamErrored(input: ThreadplaneBrowserStreamErrorTelemetry): Promise<void> {
     const { error, ...rest } = input;
-    return this.capture('ngaf:stream_errored', {
+    return this.capture('tplane:stream_errored', {
       ...rest,
       errorClass: errorClass(error),
     });

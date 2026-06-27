@@ -57,10 +57,10 @@ Customize input appearance using CSS custom properties:
 
 ```css
 :root {
-  --ngaf-chat-surface: #1a1a2e;
-  --ngaf-chat-separator: #333;
-  --ngaf-chat-text: #e0e0e0;
-  --ngaf-chat-text-muted: #9ca3af;
+  --tplane-chat-surface: #1a1a2e;
+  --tplane-chat-separator: #333;
+  --tplane-chat-text: #e0e0e0;
+  --tplane-chat-text-muted: #9ca3af;
 }
 ```
 

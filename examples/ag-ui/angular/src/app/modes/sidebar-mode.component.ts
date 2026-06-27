@@ -43,17 +43,7 @@ import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
     .sidebar-mode__background {
       display: grid;
       place-items: center;
-      min-height: calc(100dvh - var(--demo-toolbar-height, 51px));
-    }
-    /* chat-sidebar's default content slot sets min-height: 100vh which,
-     * combined with the demo's flex column, would otherwise overflow the
-     * page. The background div above provides the visible "page" so we
-     * cap the chat-sidebar__content height to the available space. */
-    :host ::ng-deep .chat-sidebar__content {
-      /* Important: lib sets min-height: 100vh on this slot which would
-       * push the page 51px below the viewport in our flex column under
-       * the 51px toolbar. Override here. */
-      min-height: 0 !important;
+      height: 100%;
     }
   `],
 })

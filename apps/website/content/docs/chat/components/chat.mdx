@@ -258,18 +258,18 @@ The component tracks message count and loading state to auto-scroll:
 
 `ChatComponent` renders messages using an asymmetric pattern:
 
-- **User messages** — right-aligned filled bubble using `--ngaf-chat-primary` background and `--ngaf-chat-on-primary` text
+- **User messages** — right-aligned filled bubble using `--tplane-chat-primary` background and `--tplane-chat-on-primary` text
 - **Assistant messages** — inline (no bubble), left-aligned, with hover controls (copy, thumbs up/down) that appear on pointer-over
 
 ## Styling
 
-Override any CSS custom property on the `chat` element or a parent. See the [Theming guide](/docs/chat/guides/theming) for the full `--ngaf-chat-*` token reference.
+Override any CSS custom property on the `chat` element or a parent. See the [Theming guide](/docs/chat/guides/theming) for the full `--tplane-chat-*` token reference.
 
 ```css
 /* Example: brand color override */
 chat {
-  --ngaf-chat-primary: #2563eb;
-  --ngaf-chat-on-primary: #ffffff;
+  --tplane-chat-primary: #2563eb;
+  --tplane-chat-on-primary: #ffffff;
 }
 ```
 

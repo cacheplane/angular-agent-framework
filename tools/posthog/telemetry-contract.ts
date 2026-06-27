@@ -10,11 +10,11 @@ export const TELEMETRY_FORBIDDEN_PROPERTIES = [
 ] as const;
 
 export const THREADPLANE_RUNTIME_EVENTS = [
-  'ngaf:runtime_instance_created',
-  'ngaf:runtime_request_created',
-  'ngaf:stream_started',
-  'ngaf:stream_ended',
-  'ngaf:stream_errored',
+  'tplane:runtime_instance_created',
+  'tplane:runtime_request_created',
+  'tplane:stream_started',
+  'tplane:stream_ended',
+  'tplane:stream_errored',
 ] as const;
 
 type TelemetryEventContract = {
@@ -134,17 +134,17 @@ export const TELEMETRY_EVENT_CONTRACT: Record<string, TelemetryEventContract> =
         'track',
       ],
     },
-    'ngaf:browser_chat_init': {
+    'tplane:browser_chat_init': {
       requiredProperties: ['surface'],
       allowedProperties: runtimeProperties,
       allowedBreakdowns: ['surface'],
     },
-    'ngaf:browser_provided': {
+    'tplane:browser_provided': {
       requiredProperties: [],
       allowedProperties: runtimeProperties,
       allowedBreakdowns: ['surface'],
     },
-    'ngaf:postinstall': {
+    'tplane:postinstall': {
       requiredProperties: ['pkg', 'version'],
       allowedProperties: installProperties,
       allowedBreakdowns: [
@@ -156,7 +156,7 @@ export const TELEMETRY_EVENT_CONTRACT: Record<string, TelemetryEventContract> =
         'pkg',
       ],
     },
-    'ngaf:runtime_instance_created': {
+    'tplane:runtime_instance_created': {
       requiredProperties: ['transport'],
       allowedProperties: runtimeProperties,
       allowedBreakdowns: [
@@ -167,7 +167,7 @@ export const TELEMETRY_EVENT_CONTRACT: Record<string, TelemetryEventContract> =
         'transport',
       ],
     },
-    'ngaf:runtime_request_created': {
+    'tplane:runtime_request_created': {
       requiredProperties: ['transport'],
       allowedProperties: runtimeProperties,
       allowedBreakdowns: [
@@ -178,7 +178,7 @@ export const TELEMETRY_EVENT_CONTRACT: Record<string, TelemetryEventContract> =
         'transport',
       ],
     },
-    'ngaf:stream_started': {
+    'tplane:stream_started': {
       requiredProperties: ['transport'],
       allowedProperties: runtimeProperties,
       allowedBreakdowns: [
@@ -189,7 +189,7 @@ export const TELEMETRY_EVENT_CONTRACT: Record<string, TelemetryEventContract> =
         'transport',
       ],
     },
-    'ngaf:stream_ended': {
+    'tplane:stream_ended': {
       requiredProperties: ['transport'],
       allowedProperties: runtimeProperties,
       allowedBreakdowns: [
@@ -200,7 +200,7 @@ export const TELEMETRY_EVENT_CONTRACT: Record<string, TelemetryEventContract> =
         'transport',
       ],
     },
-    'ngaf:stream_errored': {
+    'tplane:stream_errored': {
       requiredProperties: ['transport'],
       allowedProperties: runtimeProperties,
       allowedBreakdowns: [

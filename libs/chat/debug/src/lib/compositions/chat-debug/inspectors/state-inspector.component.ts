@@ -12,50 +12,50 @@ import { DebugStateInspectorComponent } from '../debug-state-inspector.component
   styles: [
     CHAT_DEBUG_TOKENS,
     `
-    :host { display: flex; flex-direction: column; height: 100%; background: var(--ngaf-chat-debug-bg); }
+    :host { display: flex; flex-direction: column; height: 100%; background: var(--tplane-chat-debug-bg); }
     .state__header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 10px 16px;
-      border-bottom: 1px solid var(--ngaf-chat-debug-border);
-      background: var(--ngaf-chat-debug-bg);
+      border-bottom: 1px solid var(--tplane-chat-debug-border);
+      background: var(--tplane-chat-debug-bg);
       font-size: 11px;
       font-weight: 600;
       letter-spacing: 0.04em;
       text-transform: uppercase;
-      color: var(--ngaf-chat-debug-text-subtle);
+      color: var(--tplane-chat-debug-text-subtle);
     }
     .state__copy {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: var(--ngaf-chat-debug-bg-deep);
-      border: 1px solid var(--ngaf-chat-debug-border);
+      background: var(--tplane-chat-debug-bg-deep);
+      border: 1px solid var(--tplane-chat-debug-border);
       border-radius: 6px;
       padding: 3px 8px;
       font: inherit;
       font-size: 11px;
       letter-spacing: 0;
       text-transform: none;
-      color: var(--ngaf-chat-debug-text-muted);
+      color: var(--tplane-chat-debug-text-muted);
       cursor: pointer;
       transition: color 120ms ease, border-color 120ms ease;
     }
     .state__copy:hover {
-      color: var(--ngaf-chat-debug-text);
-      border-color: var(--ngaf-chat-debug-border-strong);
+      color: var(--tplane-chat-debug-text);
+      border-color: var(--tplane-chat-debug-border-strong);
     }
     .state__copy.is-copied {
-      color: var(--ngaf-chat-debug-success);
-      border-color: var(--ngaf-chat-debug-success);
+      color: var(--tplane-chat-debug-success);
+      border-color: var(--tplane-chat-debug-success);
     }
     .state__copy svg { display: block; }
     .state__body {
       flex: 1;
       overflow-y: auto;
       padding: 12px 16px;
-      color: var(--ngaf-chat-debug-text);
+      color: var(--tplane-chat-debug-text);
     }
     `,
   ],

@@ -8,14 +8,14 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
   styles: [`
     :host { display: block; width: 100%; }
     .render-default-fallback {
-      border: 1px solid var(--ngaf-chat-separator, #303540);
+      border: 1px solid var(--tplane-chat-separator, #303540);
       border-radius: 10px;
       padding: 14px;
-      background: var(--ngaf-chat-surface-alt, #1a1d23);
+      background: var(--tplane-chat-surface-alt, #1a1d23);
     }
     .render-default-fallback__label {
       font-size: 12px;
-      color: var(--ngaf-chat-text-muted, #9aa0aa);
+      color: var(--tplane-chat-text-muted, #9aa0aa);
       margin-bottom: 10px;
       display: flex;
       align-items: center;
@@ -28,9 +28,9 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
       height: 10px; border-radius: 5px;
       background: linear-gradient(
         90deg,
-        var(--ngaf-chat-separator, #303540) 0%,
-        color-mix(in srgb, var(--ngaf-chat-separator, #303540) 70%, transparent) 50%,
-        var(--ngaf-chat-separator, #303540) 100%
+        var(--tplane-chat-separator, #303540) 0%,
+        color-mix(in srgb, var(--tplane-chat-separator, #303540) 70%, transparent) 50%,
+        var(--tplane-chat-separator, #303540) 100%
       );
       background-size: 200% 100%;
       animation: render-default-fallback-shimmer 1.4s ease-in-out infinite;

@@ -29,10 +29,10 @@ describe('ThemedFrame', () => {
         <ThemedFrame src="about:blank" data-testid="frame" />
       </ThemeProvider>
     );
-    expect(postMessage).toHaveBeenCalledWith({ type: 'ngaf:theme', theme: 'dark' }, '*');
+    expect(postMessage).toHaveBeenCalledWith({ type: 'tplane:theme', theme: 'dark' }, '*');
   });
 
-  it('replies to ngaf:theme-request only when e.source matches its own contentWindow', () => {
+  it('replies to tplane:theme-request only when e.source matches its own contentWindow', () => {
     const { postMessage } = makeIframeWithMockedContentWindow();
     const { container } = render(
       <ThemeProvider theme="light">
@@ -46,15 +46,15 @@ describe('ThemedFrame', () => {
 
     // Matching source — should reply
     window.dispatchEvent(
-      new MessageEvent('message', { data: { type: 'ngaf:theme-request' }, source: ownWindow as Window })
+      new MessageEvent('message', { data: { type: 'tplane:theme-request' }, source: ownWindow as Window })
     );
-    expect(postMessage).toHaveBeenCalledWith({ type: 'ngaf:theme', theme: 'light' }, '*');
+    expect(postMessage).toHaveBeenCalledWith({ type: 'tplane:theme', theme: 'light' }, '*');
 
     postMessage.mockClear();
 
     // Different source — should NOT reply
     window.dispatchEvent(
-      new MessageEvent('message', { data: { type: 'ngaf:theme-request' }, source: window })
+      new MessageEvent('message', { data: { type: 'tplane:theme-request' }, source: window })
     );
     expect(postMessage).not.toHaveBeenCalled();
   });

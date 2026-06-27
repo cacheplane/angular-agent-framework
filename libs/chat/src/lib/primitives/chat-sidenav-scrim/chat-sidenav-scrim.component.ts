@@ -32,7 +32,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
         position: fixed;
         inset: 0;
         background: rgba(0, 0, 0, 0.4);
-        z-index: var(--ngaf-chat-z-drawer-scrim, 1000);
+        z-index: var(--tplane-chat-z-drawer-scrim, 1000);
         border: 0;
         padding: 0;
         cursor: pointer;
