@@ -56,7 +56,12 @@
 
   @if (appMode() === 'on') {
     <div class="ag-ui-shell__app-body">
-      <app-map-canvas class="ag-ui-shell__map" />
+      <!-- Sidebar mode renders the map inside the chat-sidebar's flex content
+           slot (see SidebarMode). Popup mode has no content slot, so the map is
+           the full-bleed backdrop here, with the chat bubble floating over it. -->
+      @if (mode() === 'popup') {
+        <app-map-canvas class="ag-ui-shell__map" />
+      }
       <app-itinerary-panel class="ag-ui-shell__itinerary-overlay" />
       <div class="ag-ui-shell__main">
         <router-outlet />

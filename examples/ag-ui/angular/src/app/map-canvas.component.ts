@@ -3,7 +3,9 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
+  afterNextRender,
   computed,
   effect,
   inject,
@@ -80,6 +82,7 @@ export class MapCanvasComponent {
   protected readonly store = inject(ItineraryStore);
   protected readonly loader = inject(GoogleMapsLoader);
   private readonly hostRef = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly destroyRef = inject(DestroyRef);
   protected readonly center = signal<google.maps.LatLngLiteral>(PARIS_CENTER);
   protected readonly zoom = signal<number>(12);
   // A mapId is REQUIRED for advanced markers; a mapId map ignores inline JSON
@@ -138,21 +141,41 @@ export class MapCanvasComponent {
     // and reframing to all stops never fight (they fire on different signals).
     effect(() => {
       const map = this.googleMap();
-      const stops = this.stopsWithCoords();
-      if (!map) return; // <google-map> is behind @if (loader.loaded()) — not mounted yet
-      if (stops.length === 0) {
-        this.center.set(PARIS_CENTER);
-        this.zoom.set(12);
-        return;
-      }
-      if (stops.length === 1) {
-        this.center.set({ lat: stops[0].lat!, lng: stops[0].lng! });
-        this.zoom.set(13);
-        return;
-      }
-      const b = computeBounds(stops);
-      if (b) map.fitBounds(b, this.fitPadding()); // >=2 stops: fitBounds overrides center/zoom imperatively
+      this.stopsWithCoords(); // re-frame on structural change (add/remove/geocode)
+      if (map) this.frameToBounds(map); // null while <google-map> is behind the loader gate
     });
+
+    // The map lives in the chat-sidebar's flex content slot, whose width changes
+    // when the drawer pushes it (and on mode toggles). Google Maps caches its
+    // viewport size at construction, so without a resize event the tiles render
+    // grey and fitBounds frames the stale size. Re-sync on every container resize.
+    afterNextRender(() => {
+      const ro = new ResizeObserver(() => {
+        const map = this.googleMap();
+        if (!map?.googleMap) return;
+        google.maps.event.trigger(map.googleMap, 'resize');
+        this.frameToBounds(map);
+      });
+      ro.observe(this.hostRef.nativeElement);
+      this.destroyRef.onDestroy(() => ro.disconnect());
+    });
+  }
+
+  /** Frame the map to all coord'd stops (>=2: fitBounds; 1: center+zoom; 0: Paris). */
+  private frameToBounds(map: GoogleMap): void {
+    const stops = this.stopsWithCoords();
+    if (stops.length === 0) {
+      this.center.set(PARIS_CENTER);
+      this.zoom.set(12);
+      return;
+    }
+    if (stops.length === 1) {
+      this.center.set({ lat: stops[0].lat!, lng: stops[0].lng! });
+      this.zoom.set(13);
+      return;
+    }
+    const b = computeBounds(stops);
+    if (b) map.fitBounds(b, this.fitPadding());
   }
 
   /**
