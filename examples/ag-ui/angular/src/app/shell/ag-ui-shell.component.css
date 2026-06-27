@@ -247,9 +247,18 @@
   position: relative;
   display: flex;
 }
-.ag-ui-shell__map {
+/* In Sidebar mode the chat drawer is a solid right rail; shrink the map out
+   from under it so it occupies its own column (not the full browser width) and
+   markers frame within the visible area. The chat lib publishes the open
+   drawer's footprint as --ngaf-chat-occupy-right; in Popup mode no drawer
+   mounts so the var is unset (0) and the map stays full-bleed under the
+   floating bubble. The descendant selector + width:auto are required to beat
+   the map component's own `:host { width: 100% }` — otherwise an over-
+   constrained left/right/width keeps the full width and ignores the inset. */
+.ag-ui-shell__app-body .ag-ui-shell__map {
   position: absolute;
-  inset: 0;
+  inset: 0 var(--ngaf-chat-occupy-right, 0px) 0 0;
+  width: auto;
 }
 .ag-ui-shell__itinerary-overlay {
   position: absolute;
