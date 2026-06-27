@@ -3,6 +3,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   computed,
   effect,
   inject,
@@ -78,6 +79,7 @@ const PARIS_CENTER: google.maps.LatLngLiteral = { lat: 48.8566, lng: 2.3522 };
 export class MapCanvasComponent {
   protected readonly store = inject(ItineraryStore);
   protected readonly loader = inject(GoogleMapsLoader);
+  private readonly hostRef = inject<ElementRef<HTMLElement>>(ElementRef);
   protected readonly center = signal<google.maps.LatLngLiteral>(PARIS_CENTER);
   protected readonly zoom = signal<number>(12);
   // A mapId is REQUIRED for advanced markers; a mapId map ignores inline JSON
@@ -149,8 +151,41 @@ export class MapCanvasComponent {
         return;
       }
       const b = computeBounds(stops);
-      if (b) map.fitBounds(b, 48); // >=2 stops: fitBounds overrides center/zoom imperatively
+      if (b) map.fitBounds(b, this.fitPadding()); // >=2 stops: fitBounds overrides center/zoom imperatively
     });
+  }
+
+  /**
+   * fitBounds padding (px per side) that reserves the App-mode panels floating
+   * over the full-bleed map, so a stop never frames *underneath* them — the
+   * reported bug was the rightmost marker hiding under the open chat rail.
+   *
+   * Measured live (not hardcoded) so it adapts to the chat drawer's open/closed
+   * state and the responsive panel widths:
+   *  - left  = our floating itinerary overlay card's footprint
+   *  - right = the chat sidebar drawer's footprint (the gap its push leaves
+   *            between `.chat-sidebar__content` and the map's right edge)
+   * Falls back to a uniform base when the panels aren't present (unit tests,
+   * non-App-mode layouts), preserving the prior behavior.
+   */
+  private fitPadding(): google.maps.Padding {
+    const BASE = 48;
+    const GAP = 24;
+    const pad: google.maps.Padding = { top: BASE, right: BASE, bottom: BASE, left: BASE };
+    const mapRect = this.hostRef.nativeElement.getBoundingClientRect();
+    if (mapRect.width === 0) return pad; // not laid out (e.g. jsdom) — uniform
+
+    const overlay = document.querySelector('.ag-ui-shell__itinerary-overlay');
+    if (overlay) {
+      const r = overlay.getBoundingClientRect();
+      if (r.width > 0) pad.left = Math.max(BASE, Math.round(r.right - mapRect.left + GAP));
+    }
+    const content = document.querySelector('.chat-sidebar__content');
+    if (content) {
+      const occupied = mapRect.right - content.getBoundingClientRect().right;
+      if (occupied > 1) pad.right = Math.max(BASE, Math.round(occupied + GAP));
+    }
+    return pad;
   }
 
   protected onMarkerClick(s: ItineraryStop): void {
