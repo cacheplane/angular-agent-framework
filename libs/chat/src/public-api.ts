@@ -82,6 +82,8 @@ export { ChatWelcomeComponent } from './lib/primitives/chat-welcome/chat-welcome
 export { ChatWelcomeSuggestionComponent } from './lib/primitives/chat-welcome/chat-welcome-suggestion.component';
 export { ChatSelectComponent } from './lib/primitives/chat-select/chat-select.component';
 export type { ChatSelectOption } from './lib/primitives/chat-select/chat-select.component';
+export { ChatOverlayOriginDirective, ChatConnectedOverlayDirective } from './lib/primitives/overlay/connected-overlay.directive';
+export type { ConnectedPosition, OverlayPositionResult } from './lib/primitives/overlay/connected-position';
 export { ChatCitationsComponent, ChatCitationCardTemplateDirective } from './lib/primitives/chat-citations/chat-citations.component';
 export { ChatCitationsCardComponent } from './lib/primitives/chat-citations/chat-citations-card.component';
 

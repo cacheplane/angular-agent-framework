@@ -3,16 +3,16 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   ElementRef,
   computed,
-  effect,
   inject,
   input,
   model,
   signal,
   DOCUMENT,
 } from '@angular/core';
+import { ChatConnectedOverlayDirective, ChatOverlayOriginDirective } from '../overlay/connected-overlay.directive';
+import type { ConnectedPosition } from '../overlay/connected-position';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 import { CHAT_SELECT_STYLES } from '../../styles/chat-select.styles';
 
@@ -23,30 +23,35 @@ export interface ChatSelectOption {
   disabled?: boolean;
 }
 
+// Unique listbox id per instance, for aria-controls (multiple selects per page).
+let nextChatSelectId = 0;
+
 /**
- * Generic single-select dropdown. Designed to slot into the chat input pill
- * (via [chatInputModelSelect]) but usable anywhere.
+ * Generic single-select dropdown. The menu renders through the chat
+ * connected-overlay primitive (a body-level portal), so it is never clipped by
+ * an ancestor's `overflow` and never trapped by an ancestor `transform`.
  *
- * Inputs:
- *   options      — array of { value, label, disabled? }; required
- *   value        — currently selected value (two-way via model())
- *   placeholder  — trigger label when no option matches; default 'Select'
- *   disabled     — disables the trigger; default false
- *   menuLabel    — aria-label for the popover; defaults to placeholder
+ * Inputs: options (required), value (two-way), placeholder, disabled, menuLabel,
+ * panelClass (extra class(es) on the overlay pane — the menu is portaled, so
+ * `::ng-deep chat-select .chat-select__menu` no longer reaches it).
  */
 @Component({
   selector: 'chat-select',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [ChatConnectedOverlayDirective, ChatOverlayOriginDirective],
   styles: [CHAT_HOST_TOKENS, CHAT_SELECT_STYLES],
   template: `
     <button
       type="button"
       class="chat-select__trigger"
+      chatOverlayOrigin
+      #origin="chatOverlayOrigin"
       [class.is-open]="open()"
       [disabled]="disabled()"
       [attr.aria-haspopup]="'listbox'"
       [attr.aria-expanded]="open()"
+      [attr.aria-controls]="open() ? menuId : null"
       (click)="toggle()"
       (keydown)="onTriggerKeydown($event)"
     >
@@ -55,11 +60,21 @@ export interface ChatSelectOption {
         <path d="M4 6l4 4 4-4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
     </button>
-    @if (open()) {
+    <ng-template
+      chatConnectedOverlay
+      [chatOverlayOrigin]="origin"
+      [chatOverlayOpen]="open()"
+      [chatOverlayPositions]="overlayPositions"
+      [chatOverlayPanelClass]="panelClasses()"
+      (chatOverlayAttached)="onAttached($event)"
+      (chatOverlayOutsideClick)="open.set(false)"
+      (chatOverlayDetach)="open.set(false)"
+    >
       <div
         class="chat-select__menu"
         role="listbox"
         tabindex="-1"
+        [id]="menuId"
         [attr.aria-label]="menuLabel() ?? placeholder()"
         (keydown)="onMenuKeydown($event)"
       >
@@ -80,7 +95,7 @@ export interface ChatSelectOption {
           </button>
         }
       </div>
-    }
+    </ng-template>
   `,
 })
 export class ChatSelectComponent {
@@ -89,45 +104,40 @@ export class ChatSelectComponent {
   readonly placeholder = input<string>('Select');
   readonly disabled = input<boolean>(false);
   readonly menuLabel = input<string | undefined>(undefined);
+  readonly panelClass = input<string | string[]>('');
 
   protected readonly open = signal(false);
+  protected readonly menuId = `chat-select-menu-${nextChatSelectId++}`;
+
+  // Above-right preferred (input pill sits at the bottom), then below, then the
+  // left-aligned variants. The positioner flips/clamps to keep it in view.
+  protected readonly overlayPositions: ConnectedPosition[] = [
+    { originX: 'end', originY: 'top', overlayX: 'end', overlayY: 'bottom', offsetY: -8 },
+    { originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top', offsetY: 8 },
+    { originX: 'start', originY: 'top', overlayX: 'start', overlayY: 'bottom', offsetY: -8 },
+    { originX: 'start', originY: 'bottom', overlayX: 'start', overlayY: 'top', offsetY: 8 },
+  ];
+
+  protected readonly panelClasses = computed<string[]>(() => {
+    const extra = this.panelClass();
+    const list = Array.isArray(extra) ? extra : extra ? [extra] : [];
+    return ['chat-select__overlay', ...list];
+  });
 
   protected readonly currentLabel = computed(() => {
     const v = this.value();
-    const match = this.options().find((o) => o.value === v);
-    return match?.label ?? this.placeholder();
+    return this.options().find((o) => o.value === v)?.label ?? this.placeholder();
   });
 
   private readonly hostEl = inject(ElementRef).nativeElement as HTMLElement;
   private readonly document = inject(DOCUMENT);
-  private readonly destroyRef = inject(DestroyRef);
+  // The overlay primitive emits the pane element on attach; options live there
+  // (portaled out of the host), so option queries go through it.
+  private menuPane: HTMLElement | null = null;
 
-  constructor() {
-    let onDocClick: ((e: Event) => void) | null = null;
-    effect(() => {
-      const isOpen = this.open();
-      const win = this.document.defaultView;
-      if (!win) return;
-      if (isOpen && !onDocClick) {
-        onDocClick = (e) => {
-          const path = (e as Event & { composedPath?: () => EventTarget[] }).composedPath?.() ?? [];
-          if (!path.includes(this.hostEl as EventTarget)) {
-            this.open.set(false);
-          }
-        };
-        win.addEventListener('mousedown', onDocClick, true);
-      } else if (!isOpen && onDocClick) {
-        win.removeEventListener('mousedown', onDocClick, true);
-        onDocClick = null;
-      }
-    });
-    this.destroyRef.onDestroy(() => {
-      if (onDocClick) {
-        const win = this.document.defaultView;
-        win?.removeEventListener('mousedown', onDocClick, true);
-        onDocClick = null;
-      }
-    });
+  protected onAttached(pane: HTMLElement): void {
+    this.menuPane = pane;
+    this.focusOption(0);
   }
 
   protected toggle(): void {
@@ -143,10 +153,6 @@ export class ChatSelectComponent {
 
   protected onTriggerKeydown(e: KeyboardEvent): void {
     if (this.disabled()) return;
-    // Escape closes an open menu when focus is still on the trigger
-    // (e.g. user clicked to open, then pressed Escape without arrowing
-    // into the menu). Caught by live browser smoke — without this, click
-    // + Escape leaves the menu open until the user clicks outside.
     if (e.key === 'Escape' && this.open()) {
       e.preventDefault();
       this.open.set(false);
@@ -155,7 +161,7 @@ export class ChatSelectComponent {
     if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
       e.preventDefault();
       this.open.set(true);
-      requestAnimationFrame(() => this.focusOption(0));
+      // focus happens in onAttached once the pane is live
     }
   }
 
@@ -163,7 +169,7 @@ export class ChatSelectComponent {
     if (e.key === 'Escape') {
       e.preventDefault();
       this.open.set(false);
-      this.focusTrigger();
+      this.queryTrigger()?.focus();
       return;
     }
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
@@ -181,12 +187,7 @@ export class ChatSelectComponent {
   }
 
   private focusOption(index: number): void {
-    const opts = this.queryOptions();
-    opts[index]?.focus();
-  }
-
-  private focusTrigger(): void {
-    this.queryTrigger()?.focus();
+    this.queryOptions()[index]?.focus();
   }
 
   private moveFocus(dir: 1 | -1): void {
@@ -194,12 +195,12 @@ export class ChatSelectComponent {
     if (!opts.length) return;
     const active = this.document.activeElement as HTMLElement | null;
     const idx = active ? opts.indexOf(active as HTMLButtonElement) : -1;
-    const next = (idx + dir + opts.length) % opts.length;
-    opts[next]?.focus();
+    opts[(idx + dir + opts.length) % opts.length]?.focus();
   }
 
   private queryOptions(): HTMLButtonElement[] {
-    return Array.from(this.hostEl.querySelectorAll<HTMLButtonElement>('.chat-select__option'));
+    const root = this.menuPane;
+    return root ? Array.from(root.querySelectorAll<HTMLButtonElement>('.chat-select__option')) : [];
   }
 
   private queryTrigger(): HTMLButtonElement | null {

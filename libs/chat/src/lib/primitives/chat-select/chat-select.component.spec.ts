@@ -1,6 +1,6 @@
 // libs/chat/src/lib/primitives/chat-select/chat-select.component.spec.ts
 // SPDX-License-Identifier: MIT
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChatSelectComponent, type ChatSelectOption } from './chat-select.component';
 
@@ -34,6 +34,13 @@ function setSignalInput<T>(fixture: ComponentFixture<unknown>, name: string, val
 describe('ChatSelectComponent', () => {
   let fixture: ComponentFixture<ChatSelectComponent>;
   let host: HTMLElement;
+  // The menu renders through the chat connected-overlay primitive (a body-level
+  // portal), so it lives in .chat-overlay-container, NOT inside the component host.
+  const overlayRoot = () => document.querySelector('.chat-overlay-container') as HTMLElement | null;
+
+  const trigger = () => host.querySelector<HTMLButtonElement>('.chat-select__trigger')!;
+  const menu = () => overlayRoot()?.querySelector('.chat-select__menu') ?? null;
+  const optionEls = () => overlayRoot()?.querySelectorAll<HTMLButtonElement>('.chat-select__option') ?? ([] as unknown as NodeListOf<HTMLButtonElement>);
 
   beforeEach(() => {
     fixture = TestBed.createComponent(ChatSelectComponent);
@@ -41,6 +48,13 @@ describe('ChatSelectComponent', () => {
     setSignalInput(fixture, 'value', 'a');
     fixture.detectChanges();
     host = fixture.nativeElement as HTMLElement;
+  });
+
+  afterEach(() => {
+    // Destroying the fixture detaches the overlay, clearing the
+    // overlay container between tests.
+    fixture.destroy();
+    overlayRoot()?.remove();
   });
 
   it('renders the selected option label', () => {
@@ -55,12 +69,11 @@ describe('ChatSelectComponent', () => {
   });
 
   it('opens the menu on trigger click', () => {
-    expect(host.querySelector('.chat-select__menu')).toBeNull();
-    host.querySelector<HTMLButtonElement>('.chat-select__trigger')!.click();
+    expect(menu()).toBeNull();
+    trigger().click();
     fixture.detectChanges();
-    expect(host.querySelector('.chat-select__menu')).not.toBeNull();
-    const opts = host.querySelectorAll('.chat-select__option');
-    expect(opts.length).toBe(3);
+    expect(menu()).not.toBeNull();
+    expect(optionEls().length).toBe(3);
   });
 
   it('renders an option description as a subtitle, and omits it when absent', () => {
@@ -69,9 +82,9 @@ describe('ChatSelectComponent', () => {
       { value: 'b', label: 'Bravo' },
     ] as readonly ChatSelectOption[]);
     fixture.detectChanges();
-    host.querySelector<HTMLButtonElement>('.chat-select__trigger')!.click();
+    trigger().click();
     fixture.detectChanges();
-    const opts = host.querySelectorAll('.chat-select__option');
+    const opts = optionEls();
     expect(opts[0].querySelector('.chat-select__option-desc')?.textContent).toContain('The first letter');
     expect(opts[1].querySelector('.chat-select__option-desc')).toBeNull();
   });
@@ -79,21 +92,20 @@ describe('ChatSelectComponent', () => {
   it('emits valueChange and closes the menu on option click', () => {
     let emitted: string | undefined;
     fixture.componentInstance.value.subscribe((v) => { emitted = v; });
-    host.querySelector<HTMLButtonElement>('.chat-select__trigger')!.click();
+    trigger().click();
     fixture.detectChanges();
-    const bravo = host.querySelectorAll<HTMLButtonElement>('.chat-select__option')[1];
-    bravo.click();
+    optionEls()[1].click();
     fixture.detectChanges();
     expect(emitted).toBe('b');
-    expect(host.querySelector('.chat-select__menu')).toBeNull();
+    expect(menu()).toBeNull();
   });
 
   it('does not select a disabled option', () => {
     let emitted: string | undefined;
     fixture.componentInstance.value.subscribe((v) => { emitted = v; });
-    host.querySelector<HTMLButtonElement>('.chat-select__trigger')!.click();
+    trigger().click();
     fixture.detectChanges();
-    const charlie = host.querySelectorAll<HTMLButtonElement>('.chat-select__option')[2];
+    const charlie = optionEls()[2];
     expect(charlie.disabled).toBe(true);
     charlie.click();
     fixture.detectChanges();
@@ -101,13 +113,13 @@ describe('ChatSelectComponent', () => {
   });
 
   it('closes the menu on Escape', () => {
-    host.querySelector<HTMLButtonElement>('.chat-select__trigger')!.click();
+    trigger().click();
     fixture.detectChanges();
-    expect(host.querySelector('.chat-select__menu')).not.toBeNull();
+    expect(menu()).not.toBeNull();
     const evt = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true });
-    host.querySelector<HTMLElement>('.chat-select__menu')!.dispatchEvent(evt);
+    menu()!.dispatchEvent(evt);
     fixture.detectChanges();
-    expect(host.querySelector('.chat-select__menu')).toBeNull();
+    expect(menu()).toBeNull();
   });
 
   it('closes the menu on Escape when focus is still on the trigger — bug #198 regression', () => {
@@ -115,20 +127,19 @@ describe('ChatSelectComponent', () => {
     // focus on the trigger (not the menu). Pressing Escape there used to be
     // ignored — only Escape inside the menu was handled. Fix: handle Escape
     // in onTriggerKeydown when the menu is open.
-    const trigger = host.querySelector<HTMLButtonElement>('.chat-select__trigger')!;
-    trigger.click();
+    const t = trigger();
+    t.click();
     fixture.detectChanges();
-    expect(host.querySelector('.chat-select__menu')).not.toBeNull();
+    expect(menu()).not.toBeNull();
     const evt = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true });
-    trigger.dispatchEvent(evt);
+    t.dispatchEvent(evt);
     fixture.detectChanges();
-    expect(host.querySelector('.chat-select__menu')).toBeNull();
+    expect(menu()).toBeNull();
   });
 
   it('disables the trigger when [disabled]=true', () => {
     setSignalInput(fixture, 'disabled', true);
     fixture.detectChanges();
-    const btn = host.querySelector<HTMLButtonElement>('.chat-select__trigger')!;
-    expect(btn.disabled).toBe(true);
+    expect(trigger().disabled).toBe(true);
   });
 });

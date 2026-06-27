@@ -121,14 +121,10 @@
   background: color-mix(in srgb, var(--tplane-chat-text) 8%, transparent);
 }
 
-/* The toolbar lives at the top of the page; chat-select's default upward
- * popover (bottom: calc(100% + 8px)) renders offscreen here. Flip the
- * menus to open downward — scoped to the toolbar so the chat-input model
- * picker (which IS at the bottom) keeps its upward default. */
-.demo-shell__field ::ng-deep chat-select .chat-select__menu {
-  top: calc(100% + 8px);
-  bottom: auto;
-}
+/* (Removed the manual toolbar menu-flip workaround: chat-select now portals its
+ * menu through the connected-overlay primitive, which auto-flips downward when
+ * there's no room above — so top-toolbar selects open downward on their own,
+ * and the host-scoped ::ng-deep rule no longer reaches the portaled menu.) */
 
 
 .demo-shell__interrupt-panel {

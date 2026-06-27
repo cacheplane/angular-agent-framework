@@ -7,8 +7,6 @@
           class="ag-ui-shell__segmented-button"
           [class.is-active]="mode() === option.value"
           [attr.aria-pressed]="mode() === option.value"
-          [disabled]="appMode() === 'on' && option.value !== 'sidebar'"
-          [attr.title]="appMode() === 'on' && option.value !== 'sidebar' ? 'Sidebar mode while App mode is on' : null"
           (click)="onModeChange(option.value)"
         >{{ option.label }}</button>
       }
