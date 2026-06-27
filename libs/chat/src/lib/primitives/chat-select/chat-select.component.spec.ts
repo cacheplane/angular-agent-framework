@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { OverlayContainer } from '@angular/cdk/overlay';
 import { ChatSelectComponent, type ChatSelectOption } from './chat-select.component';
 
 const OPTS: readonly ChatSelectOption[] = [
@@ -35,13 +34,13 @@ function setSignalInput<T>(fixture: ComponentFixture<unknown>, name: string, val
 describe('ChatSelectComponent', () => {
   let fixture: ComponentFixture<ChatSelectComponent>;
   let host: HTMLElement;
-  // The menu renders through a CDK connected overlay (a body-level portal), so
-  // it lives in the overlay container, NOT inside the component host.
-  let overlay: HTMLElement;
+  // The menu renders through the chat connected-overlay primitive (a body-level
+  // portal), so it lives in .chat-overlay-container, NOT inside the component host.
+  const overlayRoot = () => document.querySelector('.chat-overlay-container') as HTMLElement | null;
 
   const trigger = () => host.querySelector<HTMLButtonElement>('.chat-select__trigger')!;
-  const menu = () => overlay.querySelector('.chat-select__menu');
-  const optionEls = () => overlay.querySelectorAll<HTMLButtonElement>('.chat-select__option');
+  const menu = () => overlayRoot()?.querySelector('.chat-select__menu') ?? null;
+  const optionEls = () => overlayRoot()?.querySelectorAll<HTMLButtonElement>('.chat-select__option') ?? ([] as unknown as NodeListOf<HTMLButtonElement>);
 
   beforeEach(() => {
     fixture = TestBed.createComponent(ChatSelectComponent);
@@ -49,13 +48,13 @@ describe('ChatSelectComponent', () => {
     setSignalInput(fixture, 'value', 'a');
     fixture.detectChanges();
     host = fixture.nativeElement as HTMLElement;
-    overlay = TestBed.inject(OverlayContainer).getContainerElement();
   });
 
   afterEach(() => {
-    // Destroying the fixture detaches the cdkConnectedOverlay, clearing the
+    // Destroying the fixture detaches the overlay, clearing the
     // overlay container between tests.
     fixture.destroy();
+    overlayRoot()?.remove();
   });
 
   it('renders the selected option label', () => {
