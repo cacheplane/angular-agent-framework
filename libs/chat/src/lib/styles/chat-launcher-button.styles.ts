@@ -5,15 +5,15 @@ export const CHAT_LAUNCHER_BUTTON_STYLES = `
   .chat-launcher-button {
     width: 56px;
     height: 56px;
-    border-radius: var(--ngaf-chat-radius-launcher);
-    background: var(--ngaf-chat-primary);
-    color: var(--ngaf-chat-on-primary);
+    border-radius: var(--tplane-chat-radius-launcher);
+    background: var(--tplane-chat-primary);
+    color: var(--tplane-chat-on-primary);
     border: 0;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: var(--ngaf-chat-shadow-md);
+    box-shadow: var(--tplane-chat-shadow-md);
     transition: transform 200ms ease;
   }
   .chat-launcher-button:hover { transform: scale(1.05); }

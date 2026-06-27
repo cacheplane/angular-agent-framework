@@ -41,8 +41,8 @@ import { MESSAGES_AGENT, type MessagesState } from './agent-ref';
   template: `
     <example-chat-layout sidebarWidth="w-72">
       <div main class="flex-1 flex flex-col min-w-0">
-        <header class="px-4 py-3 border-b" style="border-color: var(--ngaf-chat-separator); background: var(--ngaf-chat-bg);">
-          <h1 class="text-sm font-semibold" style="color: var(--ngaf-chat-text);">Chat Messages Primitives</h1>
+        <header class="px-4 py-3 border-b" style="border-color: var(--tplane-chat-separator); background: var(--tplane-chat-bg);">
+          <h1 class="text-sm font-semibold" style="color: var(--tplane-chat-text);">Chat Messages Primitives</h1>
         </header>
         <div class="flex-1 overflow-y-auto">
           <chat-message-list [agent]="agent">
@@ -67,15 +67,15 @@ import { MESSAGES_AGENT, type MessagesState } from './agent-ref';
             </ng-template>
           </chat-message-list>
         </div>
-        <div class="px-4 py-2" style="background: var(--ngaf-chat-bg);">
+        <div class="px-4 py-2" style="background: var(--tplane-chat-bg);">
           <chat-typing-indicator [agent]="agent" />
           <chat-input [agent]="agent" (submitted)="submitMessage($event)" />
         </div>
       </div>
-      <div sidebar class="p-4 space-y-4" style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">
+      <div sidebar class="p-4 space-y-4" style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--ngaf-chat-text-muted);">Primitives Used</h3>
-        <ul class="text-xs space-y-2" style="color: var(--ngaf-chat-text-muted);">
+            style="color: var(--tplane-chat-text-muted);">Primitives Used</h3>
+        <ul class="text-xs space-y-2" style="color: var(--tplane-chat-text-muted);">
           <li>ChatMessageListComponent</li>
           <li>ChatInputComponent</li>
           <li>ChatTypingIndicatorComponent</li>

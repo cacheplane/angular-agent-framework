@@ -24,24 +24,24 @@ export interface DebugCheckpoint {
     .debug-checkpoint-card {
       width: 100%;
       text-align: left;
-      border-radius: var(--ngaf-chat-radius-card);
-      border: 1px solid var(--ngaf-chat-separator);
+      border-radius: var(--tplane-chat-radius-card);
+      border: 1px solid var(--tplane-chat-separator);
       padding: 8px 12px;
       cursor: pointer;
-      background: var(--ngaf-chat-bg);
+      background: var(--tplane-chat-bg);
       transition: background 150ms ease, border-color 150ms ease;
     }
     .debug-checkpoint-card:hover {
-      background: color-mix(in srgb, var(--ngaf-chat-text) 5%, transparent);
+      background: color-mix(in srgb, var(--tplane-chat-text) 5%, transparent);
     }
     .debug-checkpoint-card--selected {
-      border-color: var(--ngaf-chat-text-muted);
-      background: color-mix(in srgb, var(--ngaf-chat-text) 5%, transparent);
+      border-color: var(--tplane-chat-text-muted);
+      background: color-mix(in srgb, var(--tplane-chat-text) 5%, transparent);
     }
     .debug-checkpoint-card__title {
-      font-size: var(--ngaf-chat-font-size-xs);
+      font-size: var(--tplane-chat-font-size-xs);
       font-weight: 500;
-      color: var(--ngaf-chat-text);
+      color: var(--tplane-chat-text);
       margin: 0;
       white-space: nowrap;
       overflow: hidden;
@@ -53,11 +53,11 @@ export interface DebugCheckpoint {
       margin-top: 4px;
     }
     .debug-checkpoint-card__badge {
-      font-size: var(--ngaf-chat-font-size-xs);
+      font-size: var(--tplane-chat-font-size-xs);
       padding: 2px 6px;
       border-radius: 4px;
-      background: var(--ngaf-chat-surface-alt);
-      color: var(--ngaf-chat-text-muted);
+      background: var(--tplane-chat-surface-alt);
+      color: var(--tplane-chat-text-muted);
     }
     `,
   ],

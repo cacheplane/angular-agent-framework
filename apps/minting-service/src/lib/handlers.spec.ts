@@ -50,7 +50,7 @@ function subscription(overrides: Partial<Stripe.Subscription> = {}): Stripe.Subs
         {
           quantity: 1,
           price: {
-            metadata: { ngaf_tier_slug: 'developer_seat' },
+            metadata: { tplane_tier_slug: 'developer_seat' },
           } as Stripe.Price,
         } as Stripe.SubscriptionItem,
       ],
@@ -143,14 +143,14 @@ describe('handleSubscriptionCreated', () => {
     );
   });
 
-  it('reads tier from subscription.metadata.ngaf_tier_slug, overriding price metadata', async () => {
+  it('reads tier from subscription.metadata.tplane_tier_slug, overriding price metadata', async () => {
     const sub = subscription({
-      metadata: { ngaf_tier_slug: 'team' },
+      metadata: { tplane_tier_slug: 'team' },
       items: {
         data: [
           {
             quantity: 5,
-            price: { metadata: { ngaf_tier_slug: 'developer_seat' } } as Stripe.Price,
+            price: { metadata: { tplane_tier_slug: 'developer_seat' } } as Stripe.Price,
           } as Stripe.SubscriptionItem,
         ],
       } as Stripe.ApiList<Stripe.SubscriptionItem>,
@@ -201,7 +201,7 @@ describe('handleSubscriptionUpdated', () => {
         data: [
           {
             quantity: 3,
-            price: { metadata: { ngaf_tier_slug: 'developer_seat' } } as Stripe.Price,
+            price: { metadata: { tplane_tier_slug: 'developer_seat' } } as Stripe.Price,
           } as Stripe.SubscriptionItem,
         ],
       } as Stripe.ApiList<Stripe.SubscriptionItem>,

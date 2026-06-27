@@ -5,15 +5,15 @@ import { CHAT_SIDENAV_STYLES } from './chat-sidenav.styles';
 describe('CHAT_SIDENAV_STYLES — New chat button', () => {
   const normalized = CHAT_SIDENAV_STYLES.replace(/\s+/g, ' ');
 
-  it('uses --ngaf-chat-text as the late-cascade fill (monochrome CTA, not brand-primary)', () => {
+  it('uses --tplane-chat-text as the late-cascade fill (monochrome CTA, not brand-primary)', () => {
     expect(normalized).toMatch(
-      /\.chat-sidenav__action\.chat-sidenav__action--new\s*\{[^}]*background:\s*var\(--ngaf-chat-text\)\s*;/,
+      /\.chat-sidenav__action\.chat-sidenav__action--new\s*\{[^}]*background:\s*var\(--tplane-chat-text\)\s*;/,
     );
   });
 
-  it('uses --ngaf-chat-bg as the late-cascade text color (inverse for contrast)', () => {
+  it('uses --tplane-chat-bg as the late-cascade text color (inverse for contrast)', () => {
     expect(normalized).toMatch(
-      /\.chat-sidenav__action\.chat-sidenav__action--new\s*\{[^}]*color:\s*var\(--ngaf-chat-bg\)\s*;/,
+      /\.chat-sidenav__action\.chat-sidenav__action--new\s*\{[^}]*color:\s*var\(--tplane-chat-bg\)\s*;/,
     );
   });
 
@@ -31,7 +31,7 @@ describe('CHAT_SIDENAV_STYLES — New chat button', () => {
 
   it('keeps the primary-color focus ring (a11y affordance, not chrome)', () => {
     expect(normalized).toMatch(
-      /\.chat-sidenav__action--new:focus-visible\s*\{[^}]*outline:\s*2px\s+solid\s+var\(--ngaf-chat-primary\)\s*;/,
+      /\.chat-sidenav__action--new:focus-visible\s*\{[^}]*outline:\s*2px\s+solid\s+var\(--tplane-chat-primary\)\s*;/,
     );
   });
 
@@ -60,15 +60,15 @@ describe('CHAT_SIDENAV_STYLES — action button font', () => {
     );
   });
 
-  it('generic .chat-sidenav__action has font-size: var(--ngaf-chat-font-size-sm)', () => {
+  it('generic .chat-sidenav__action has font-size: var(--tplane-chat-font-size-sm)', () => {
     expect(normalized).toMatch(
-      /\.chat-sidenav__action\s*\{[^}]*font-size:\s*var\(--ngaf-chat-font-size-sm\)\s*;/,
+      /\.chat-sidenav__action\s*\{[^}]*font-size:\s*var\(--tplane-chat-font-size-sm\)\s*;/,
     );
   });
 
-  it('late-cascade New chat uses font-size: var(--ngaf-chat-font-size-sm) (not 13px)', () => {
+  it('late-cascade New chat uses font-size: var(--tplane-chat-font-size-sm) (not 13px)', () => {
     expect(normalized).toMatch(
-      /\.chat-sidenav__action\.chat-sidenav__action--new\s*\{[^}]*font-size:\s*var\(--ngaf-chat-font-size-sm\)\s*;/,
+      /\.chat-sidenav__action\.chat-sidenav__action--new\s*\{[^}]*font-size:\s*var\(--tplane-chat-font-size-sm\)\s*;/,
     );
   });
 
@@ -81,9 +81,9 @@ describe('CHAT_SIDENAV_STYLES — action button font', () => {
 
 describe('CHAT_SIDENAV_STYLES — drawer elevation + z-index token', () => {
   const normalized = CHAT_SIDENAV_STYLES.replace(/\s+/g, ' ');
-  it('uses the --ngaf-chat-z-drawer token for the drawer host z-index', () => {
+  it('uses the --tplane-chat-z-drawer token for the drawer host z-index', () => {
     expect(normalized).toMatch(
-      /:host\(\[data-mode="drawer"\]\)\s*\{[^}]*z-index:\s*var\(--ngaf-chat-z-drawer,\s*1001\)\s*;/,
+      /:host\(\[data-mode="drawer"\]\)\s*\{[^}]*z-index:\s*var\(--tplane-chat-z-drawer,\s*1001\)\s*;/,
     );
   });
   it('applies a right-edge box-shadow when the drawer is open', () => {
@@ -111,15 +111,15 @@ describe('CHAT_SIDENAV_STYLES — Archived disclosure', () => {
     );
   });
 
-  it('uses --ngaf-chat-text color (full strength, not muted)', () => {
+  it('uses --tplane-chat-text color (full strength, not muted)', () => {
     expect(normalized).toMatch(
-      /\.chat-sidenav__archived-heading\s*\{[^}]*color:\s*var\(--ngaf-chat-text\)\s*;/,
+      /\.chat-sidenav__archived-heading\s*\{[^}]*color:\s*var\(--tplane-chat-text\)\s*;/,
     );
   });
 
   it('uses sm font-size — not the 11px label size', () => {
     expect(normalized).toMatch(
-      /\.chat-sidenav__archived-heading\s*\{[^}]*font-size:\s*var\(--ngaf-chat-font-size-sm\)\s*;/,
+      /\.chat-sidenav__archived-heading\s*\{[^}]*font-size:\s*var\(--tplane-chat-font-size-sm\)\s*;/,
     );
   });
 
@@ -131,7 +131,7 @@ describe('CHAT_SIDENAV_STYLES — Archived disclosure', () => {
 
   it('hovers to surface-alt (matching .chat-sidenav__action)', () => {
     expect(normalized).toMatch(
-      /\.chat-sidenav__archived-heading:hover\s*\{[^}]*background:\s*var\(--ngaf-chat-surface-alt\)/,
+      /\.chat-sidenav__archived-heading:hover\s*\{[^}]*background:\s*var\(--tplane-chat-surface-alt\)/,
     );
   });
 });

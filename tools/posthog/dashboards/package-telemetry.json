@@ -2,7 +2,7 @@
   "slug": "package-telemetry",
   "posthog_id": 1590768,
   "name": "GTM · Package telemetry",
-  "description": "Published @threadplane/* install telemetry from ngaf:postinstall.",
+  "description": "Published @threadplane/* install telemetry from tplane:postinstall.",
   "tags": ["gtm", "package-telemetry", "phase-1"],
   "tiles": [
     {

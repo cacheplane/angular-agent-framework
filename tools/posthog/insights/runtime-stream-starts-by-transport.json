@@ -5,7 +5,7 @@
   "name": "Runtime stream starts by transport",
   "events": [
     {
-      "event": "ngaf:stream_started",
+      "event": "tplane:stream_started",
       "math": "total"
     }
   ],

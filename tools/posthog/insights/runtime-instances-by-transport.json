@@ -5,7 +5,7 @@
   "name": "Runtime instances by transport",
   "events": [
     {
-      "event": "ngaf:runtime_instance_created",
+      "event": "tplane:runtime_instance_created",
       "math": "total"
     }
   ],

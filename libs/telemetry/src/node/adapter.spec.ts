@@ -24,7 +24,7 @@ describe('adapter helpers', () => {
       apiKey: 'secret-token-xyz',
     });
     const call = vi.mocked(captureEvent).mock.calls[0];
-    expect(call[0]).toBe('ngaf:runtime_instance_created');
+    expect(call[0]).toBe('tplane:runtime_instance_created');
     expect((call[1] as Record<string, unknown>).apiKey).toBeUndefined();  // raw key stripped
     expect((call[1] as Record<string, unknown>).apiKey_sha256).toBeUndefined();
   });
@@ -32,7 +32,7 @@ describe('adapter helpers', () => {
   test('captureStreamStarted records provider + model only', async () => {
     await captureStreamStarted({ provider: 'openai', model: 'gpt-4' });
     expect(captureEvent).toHaveBeenCalledWith(
-      'ngaf:stream_started',
+      'tplane:stream_started',
       expect.objectContaining({ provider: 'openai', model: 'gpt-4' }),
     );
   });
@@ -45,7 +45,7 @@ describe('adapter helpers', () => {
       model: 'gpt-4',
     });
     expect(captureEvent).toHaveBeenCalledWith(
-      'ngaf:runtime_request_created',
+      'tplane:runtime_request_created',
       expect.objectContaining({
         transport: 'langgraph',
         requestType: 'run',
@@ -58,7 +58,7 @@ describe('adapter helpers', () => {
   test('captureStreamEnded records duration', async () => {
     await captureStreamEnded({ provider: 'openai', model: 'gpt-4', durationMs: 1234 });
     expect(captureEvent).toHaveBeenCalledWith(
-      'ngaf:stream_ended',
+      'tplane:stream_ended',
       expect.objectContaining({ durationMs: 1234 }),
     );
   });

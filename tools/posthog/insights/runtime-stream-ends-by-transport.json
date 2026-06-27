@@ -5,7 +5,7 @@
   "name": "Runtime stream completions by transport",
   "events": [
     {
-      "event": "ngaf:stream_ended",
+      "event": "tplane:stream_ended",
       "math": "total"
     }
   ],

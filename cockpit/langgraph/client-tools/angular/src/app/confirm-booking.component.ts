@@ -47,12 +47,12 @@ type ConfirmBookingProps = ViewProps<typeof confirmBookingSchema>;
     }
   `,
   styles: [`
-    .cb { border: 1px solid var(--ngaf-chat-separator, #e5e7eb); border-radius: 12px; padding: 16px; max-width: 360px; }
+    .cb { border: 1px solid var(--tplane-chat-separator, #e5e7eb); border-radius: 12px; padding: 16px; max-width: 360px; }
     .cb__summary { margin: 0 0 12px; }
     .cb--resolved .cb__summary { margin: 0; opacity: 0.85; }
     .cb__actions { display: flex; gap: 8px; }
-    .cb__btn { padding: 6px 14px; border-radius: 8px; border: 1px solid var(--ngaf-chat-separator, #e5e7eb); background: transparent; color: inherit; cursor: pointer; }
-    .cb__btn--primary { background: var(--ngaf-chat-accent, #2563eb); color: #fff; border-color: transparent; }
+    .cb__btn { padding: 6px 14px; border-radius: 8px; border: 1px solid var(--tplane-chat-separator, #e5e7eb); background: transparent; color: inherit; cursor: pointer; }
+    .cb__btn--primary { background: var(--tplane-chat-accent, #2563eb); color: #fff; border-color: transparent; }
   `],
 })
 export class ConfirmBookingComponent {

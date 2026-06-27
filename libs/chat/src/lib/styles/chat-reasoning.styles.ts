@@ -15,16 +15,16 @@ export const CHAT_REASONING_STYLES = `
     align-items: center;
     gap: 0.5rem;
     padding: 4px 10px;
-    background: var(--ngaf-chat-surface-alt);
-    border: 1px solid var(--ngaf-chat-separator);
+    background: var(--tplane-chat-surface-alt);
+    border: 1px solid var(--tplane-chat-separator);
     border-radius: 9999px;
-    color: var(--ngaf-chat-text-muted);
-    font-size: var(--ngaf-chat-font-size-xs);
+    color: var(--tplane-chat-text-muted);
+    font-size: var(--tplane-chat-font-size-xs);
     font-family: inherit;
     cursor: pointer;
     line-height: 1.2;
   }
-  .chat-reasoning__header:hover { color: var(--ngaf-chat-text); }
+  .chat-reasoning__header:hover { color: var(--tplane-chat-text); }
 
   .chat-reasoning__chevron {
     width: 10px;
@@ -38,7 +38,7 @@ export const CHAT_REASONING_STYLES = `
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: var(--ngaf-chat-text-muted);
+    background: var(--tplane-chat-text-muted);
     animation: chat-reasoning-pulse 1.2s ease-in-out infinite;
   }
   @keyframes chat-reasoning-pulse {
@@ -49,8 +49,8 @@ export const CHAT_REASONING_STYLES = `
   .chat-reasoning__body {
     margin-top: 0.5rem;
     padding-left: 12px;
-    border-left: 2px solid var(--ngaf-chat-separator);
-    color: var(--ngaf-chat-text-muted);
+    border-left: 2px solid var(--tplane-chat-separator);
+    color: var(--tplane-chat-text-muted);
   }
   .chat-reasoning__body chat-streaming-md { font-size: 0.95em; }
 `;

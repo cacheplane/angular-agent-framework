@@ -41,9 +41,9 @@ const STEP_LABELS: Record<string, string> = {
     <example-chat-layout sidebarWidth="w-64">
       <chat main [agent]="agent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
       <div sidebar class="p-4"
-           style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">
+           style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
         <h3 class="text-xs font-semibold uppercase tracking-wide mb-6"
-            style="color: var(--ngaf-chat-text-muted);">Pipeline</h3>
+            style="color: var(--tplane-chat-text-muted);">Pipeline</h3>
 
         <div class="space-y-0">
           @for (step of steps(); track step.id; let last = $last) {
@@ -67,15 +67,15 @@ const STEP_LABELS: Record<string, string> = {
                   }
                   @default {
                     <div class="w-7 h-7 rounded-full border-2 flex items-center justify-center"
-                         style="border-color: var(--ngaf-chat-text-muted);">
-                      <div class="w-2 h-2 rounded-full" style="background: var(--ngaf-chat-text-muted);"></div>
+                         style="border-color: var(--tplane-chat-text-muted);">
+                      <div class="w-2 h-2 rounded-full" style="background: var(--tplane-chat-text-muted);"></div>
                     </div>
                   }
                 }
                 <!-- Connecting line -->
                 @if (!last) {
                   <div class="w-0.5 h-8"
-                       [style.background]="step.status === 'complete' ? '#16a34a' : 'var(--ngaf-chat-text-muted)'">
+                       [style.background]="step.status === 'complete' ? '#16a34a' : 'var(--tplane-chat-text-muted)'">
                   </div>
                 }
               </div>
@@ -83,7 +83,7 @@ const STEP_LABELS: Record<string, string> = {
               <!-- Label -->
               <span class="text-sm pt-1"
                     [class]="step.status === 'active' ? 'font-semibold text-amber-400' : step.status === 'complete' ? 'text-green-400' : ''"
-                    [style.color]="step.status === 'pending' ? 'var(--ngaf-chat-text-muted)' : ''">
+                    [style.color]="step.status === 'pending' ? 'var(--tplane-chat-text-muted)' : ''">
                 {{ step.label }}
               </span>
             </div>

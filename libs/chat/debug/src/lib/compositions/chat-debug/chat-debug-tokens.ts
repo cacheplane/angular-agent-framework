@@ -7,7 +7,7 @@
  * so the defaults are set on each `:host` element. Hosts override by
  * setting any token on `chat-debug` or any ancestor.
  *
- * Independent from `--ngaf-chat-*` (the chat library's theme tokens).
+ * Independent from `--tplane-chat-*` (the chat library's theme tokens).
  * Devtools chrome stays dark regardless of host theme by default —
  * matches Chrome DevTools / React DevTools / Redux DevTools convention.
  *
@@ -15,46 +15,46 @@
  */
 export const CHAT_DEBUG_TOKENS = `
   :host {
-    --ngaf-chat-debug-bg: #18181b;
-    --ngaf-chat-debug-bg-deep: #09090b;
-    --ngaf-chat-debug-surface: #1f1f23;
-    --ngaf-chat-debug-border: #27272a;
-    --ngaf-chat-debug-border-strong: #3f3f46;
-    --ngaf-chat-debug-text: #fafafa;
-    --ngaf-chat-debug-text-muted: #a1a1aa;
-    --ngaf-chat-debug-text-subtle: #71717a;
-    --ngaf-chat-debug-accent: #4f8df5;
-    --ngaf-chat-debug-success: #4ade80;
-    --ngaf-chat-debug-shadow-panel: 0 8px 32px rgba(0, 0, 0, 0.5);
-    --ngaf-chat-debug-shadow-pill: 0 6px 18px rgba(0, 0, 0, 0.4);
-    --ngaf-chat-debug-radius-panel: 12px;
-    --ngaf-chat-debug-radius-input: 8px;
-    --ngaf-chat-debug-radius-pill: 999px;
-    --ngaf-chat-debug-font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-    --ngaf-chat-debug-font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    font-family: var(--ngaf-chat-debug-font-sans);
-    color: var(--ngaf-chat-debug-text);
+    --tplane-chat-debug-bg: #18181b;
+    --tplane-chat-debug-bg-deep: #09090b;
+    --tplane-chat-debug-surface: #1f1f23;
+    --tplane-chat-debug-border: #27272a;
+    --tplane-chat-debug-border-strong: #3f3f46;
+    --tplane-chat-debug-text: #fafafa;
+    --tplane-chat-debug-text-muted: #a1a1aa;
+    --tplane-chat-debug-text-subtle: #71717a;
+    --tplane-chat-debug-accent: #4f8df5;
+    --tplane-chat-debug-success: #4ade80;
+    --tplane-chat-debug-shadow-panel: 0 8px 32px rgba(0, 0, 0, 0.5);
+    --tplane-chat-debug-shadow-pill: 0 6px 18px rgba(0, 0, 0, 0.4);
+    --tplane-chat-debug-radius-panel: 12px;
+    --tplane-chat-debug-radius-input: 8px;
+    --tplane-chat-debug-radius-pill: 999px;
+    --tplane-chat-debug-font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    --tplane-chat-debug-font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: var(--tplane-chat-debug-font-sans);
+    color: var(--tplane-chat-debug-text);
 
     /*
      * Cascade shim: rewire the chat library's color tokens to debug
-     * equivalents so embedded components that consume \`--ngaf-chat-*\`
+     * equivalents so embedded components that consume \`--tplane-chat-*\`
      * (debug-checkpoint-card, debug-state-diff, debug-state-inspector,
      * any host-projected slot content) pick up the dark devtools surface
      * without each one needing its own re-skin. Geometry / font tokens
      * are left alone — they're neutral.
      */
-    --ngaf-chat-bg: var(--ngaf-chat-debug-bg);
-    --ngaf-chat-text: var(--ngaf-chat-debug-text);
-    --ngaf-chat-text-muted: var(--ngaf-chat-debug-text-muted);
-    --ngaf-chat-separator: var(--ngaf-chat-debug-border);
-    --ngaf-chat-surface-alt: var(--ngaf-chat-debug-bg-deep);
-    --ngaf-chat-font-size-xs: 12px;
-    --ngaf-chat-font-mono: var(--ngaf-chat-debug-font-mono);
-    --ngaf-chat-radius-card: 8px;
-    --ngaf-chat-success: var(--ngaf-chat-debug-success);
-    --ngaf-chat-error-bg: color-mix(in srgb, #ef4444 18%, transparent);
-    --ngaf-chat-error-text: #fca5a5;
-    --ngaf-chat-warning-bg: color-mix(in srgb, #f59e0b 18%, transparent);
-    --ngaf-chat-warning-text: #fcd34d;
+    --tplane-chat-bg: var(--tplane-chat-debug-bg);
+    --tplane-chat-text: var(--tplane-chat-debug-text);
+    --tplane-chat-text-muted: var(--tplane-chat-debug-text-muted);
+    --tplane-chat-separator: var(--tplane-chat-debug-border);
+    --tplane-chat-surface-alt: var(--tplane-chat-debug-bg-deep);
+    --tplane-chat-font-size-xs: 12px;
+    --tplane-chat-font-mono: var(--tplane-chat-debug-font-mono);
+    --tplane-chat-radius-card: 8px;
+    --tplane-chat-success: var(--tplane-chat-debug-success);
+    --tplane-chat-error-bg: color-mix(in srgb, #ef4444 18%, transparent);
+    --tplane-chat-error-text: #fca5a5;
+    --tplane-chat-warning-bg: color-mix(in srgb, #f59e0b 18%, transparent);
+    --tplane-chat-warning-text: #fcd34d;
   }
 `;

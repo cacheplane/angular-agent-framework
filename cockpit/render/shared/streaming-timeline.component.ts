@@ -6,9 +6,9 @@ import { StreamingSimulator } from './streaming-simulator';
   selector: 'streaming-timeline',
   standalone: true,
   template: `
-    <div class="flex items-center gap-3 bg-[var(--ngaf-chat-surface)] rounded-lg px-4 py-3">
+    <div class="flex items-center gap-3 bg-[var(--tplane-chat-surface)] rounded-lg px-4 py-3">
       <button
-        class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-[var(--ngaf-chat-primary)] hover:bg-[var(--ngaf-chat-primary)] transition-colors"
+        class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-[var(--tplane-chat-primary)] hover:bg-[var(--tplane-chat-primary)] transition-colors"
         (click)="simulator().toggle()">
         @if (simulator().playing()) {
           <svg width="14" height="14" viewBox="0 0 14 14" fill="white">
@@ -24,7 +24,7 @@ import { StreamingSimulator } from './streaming-simulator';
 
       <div
         #track
-        class="flex-1 relative h-1.5 bg-[var(--ngaf-chat-surface-alt)] rounded-full cursor-pointer"
+        class="flex-1 relative h-1.5 bg-[var(--tplane-chat-surface-alt)] rounded-full cursor-pointer"
         (mousedown)="onTrackMouseDown($event)"
         (touchstart)="onTrackTouchStart($event)">
         <div
@@ -32,13 +32,13 @@ import { StreamingSimulator } from './streaming-simulator';
           [style.width.%]="simulator().progress() * 100">
         </div>
         <div
-          class="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full border-2 border-[var(--ngaf-chat-primary)] shadow-lg shadow-indigo-500/30 -translate-x-1/2 transition-[left] duration-75"
+          class="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full border-2 border-[var(--tplane-chat-primary)] shadow-lg shadow-indigo-500/30 -translate-x-1/2 transition-[left] duration-75"
           [style.left.%]="simulator().progress() * 100">
         </div>
       </div>
 
-      <div class="text-xs text-[var(--ngaf-chat-text-muted)] tabular-nums shrink-0 min-w-[100px] text-right">
-        <span class="text-[var(--ngaf-chat-text)] font-semibold">{{ simulator().position() }}</span>
+      <div class="text-xs text-[var(--tplane-chat-text-muted)] tabular-nums shrink-0 min-w-[100px] text-right">
+        <span class="text-[var(--tplane-chat-text)] font-semibold">{{ simulator().position() }}</span>
         / {{ simulator().total() }} chars
       </div>
 
@@ -46,7 +46,7 @@ import { StreamingSimulator } from './streaming-simulator';
         @for (s of speeds; track s) {
           <button
             class="text-[10px] px-2.5 py-1 rounded transition-colors"
-            [class]="simulator().speed() === s ? 'text-[var(--ngaf-chat-primary)] bg-[var(--ngaf-chat-surface-alt)] font-semibold' : 'text-[var(--ngaf-chat-text-muted)] bg-[var(--ngaf-chat-surface-alt)] hover:text-[var(--ngaf-chat-text-muted)]'"
+            [class]="simulator().speed() === s ? 'text-[var(--tplane-chat-primary)] bg-[var(--tplane-chat-surface-alt)] font-semibold' : 'text-[var(--tplane-chat-text-muted)] bg-[var(--tplane-chat-surface-alt)] hover:text-[var(--tplane-chat-text-muted)]'"
             (click)="simulator().setSpeed(s)">
             {{ s }}x
           </button>

@@ -127,10 +127,10 @@ describe('toAgent', () => {
     await a.submit({ message: 'hi' });
 
     expect(seen.map((payload) => payload.event)).toEqual([
-      'ngaf:runtime_instance_created',
-      'ngaf:runtime_request_created',
-      'ngaf:stream_started',
-      'ngaf:stream_ended',
+      'tplane:runtime_instance_created',
+      'tplane:runtime_request_created',
+      'tplane:stream_started',
+      'tplane:stream_ended',
     ]);
     expect(seen[0].properties).toEqual({ transport: 'ag-ui', surface: 'to_agent' });
     expect(seen[1].properties).toEqual({ transport: 'ag-ui', surface: 'to_agent', requestType: 'submit' });
@@ -152,7 +152,7 @@ describe('toAgent', () => {
 
     await a.submit({ message: 'hi' });
 
-    const errored = seen.find((payload) => payload.event === 'ngaf:stream_errored');
+    const errored = seen.find((payload) => payload.event === 'tplane:stream_errored');
     expect(errored?.properties).toEqual({
       transport: 'ag-ui',
       surface: 'to_agent',

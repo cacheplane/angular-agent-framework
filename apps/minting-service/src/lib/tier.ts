@@ -4,7 +4,7 @@ import type { LicenseTier } from '@threadplane/licensing';
 export type MintableTier = Extract<LicenseTier, 'developer_seat' | 'team'>;
 
 const VALID_TIERS: readonly MintableTier[] = ['developer_seat', 'team'] as const;
-const METADATA_KEY = 'ngaf_tier_slug';
+const METADATA_KEY = 'tplane_tier_slug';
 
 const TEAM_SEAT_COUNT = 5;
 

@@ -5,15 +5,15 @@ import { CHAT_PROJECT_LIST_STYLES } from './chat-project-list.styles';
 describe('CHAT_PROJECT_LIST_STYLES — New project button', () => {
   const normalized = CHAT_PROJECT_LIST_STYLES.replace(/\s+/g, ' ');
 
-  it('uses --ngaf-chat-surface-alt fill (solid secondary, not outlined)', () => {
+  it('uses --tplane-chat-surface-alt fill (solid secondary, not outlined)', () => {
     expect(normalized).toMatch(
-      /\.chat-project-list__new\s*\{[^}]*background:\s*var\(--ngaf-chat-surface-alt\)\s*;/,
+      /\.chat-project-list__new\s*\{[^}]*background:\s*var\(--tplane-chat-surface-alt\)\s*;/,
     );
   });
 
-  it('uses --ngaf-chat-text color (full strength, not muted)', () => {
+  it('uses --tplane-chat-text color (full strength, not muted)', () => {
     expect(normalized).toMatch(
-      /\.chat-project-list__new\s*\{[^}]*color:\s*var\(--ngaf-chat-text\)\s*;/,
+      /\.chat-project-list__new\s*\{[^}]*color:\s*var\(--tplane-chat-text\)\s*;/,
     );
   });
 
@@ -31,7 +31,7 @@ describe('CHAT_PROJECT_LIST_STYLES — New project button', () => {
 
   it('lifts hover via color-mix on top of surface-alt', () => {
     expect(normalized).toMatch(
-      /\.chat-project-list__new:hover\s*\{[^}]*background:\s*color-mix\(in srgb,\s*var\(--ngaf-chat-text\)\s*8%,\s*var\(--ngaf-chat-surface-alt\)\)\s*;/,
+      /\.chat-project-list__new:hover\s*\{[^}]*background:\s*color-mix\(in srgb,\s*var\(--tplane-chat-text\)\s*8%,\s*var\(--tplane-chat-surface-alt\)\)\s*;/,
     );
   });
 
@@ -51,9 +51,9 @@ describe('CHAT_PROJECT_LIST_STYLES — New project button font', () => {
     );
   });
 
-  it('uses font-size: var(--ngaf-chat-font-size-sm) (not hard-coded 12px)', () => {
+  it('uses font-size: var(--tplane-chat-font-size-sm) (not hard-coded 12px)', () => {
     expect(normalized).toMatch(
-      /\.chat-project-list__new\s*\{[^}]*font-size:\s*var\(--ngaf-chat-font-size-sm\)\s*;/,
+      /\.chat-project-list__new\s*\{[^}]*font-size:\s*var\(--tplane-chat-font-size-sm\)\s*;/,
     );
   });
 

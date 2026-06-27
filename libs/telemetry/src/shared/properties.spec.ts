@@ -22,7 +22,7 @@ describe('shared properties', () => {
   });
 
   it('normalizes source URLs to path, query, and hash only', () => {
-    expect(getSourcePage('https://ngaf.example/docs?utm_source=x#intro')).toBe('/docs?utm_source=x#intro');
+    expect(getSourcePage('https://tplane.example/docs?utm_source=x#intro')).toBe('/docs?utm_source=x#intro');
     expect(getSourcePage('/pricing')).toBe('/pricing');
     expect(getSourcePage('not a url')).toBe('/');
   });

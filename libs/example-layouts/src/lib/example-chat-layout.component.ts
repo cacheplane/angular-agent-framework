@@ -12,9 +12,9 @@ import { Component, ChangeDetectionStrategy, input } from '@angular/core';
       flex-direction: column;
       height: 100vh;
       height: 100dvh;
-      background: var(--ngaf-chat-bg, #fff);
-      color: var(--ngaf-chat-text, #1a1a1a);
-      font-family: var(--ngaf-chat-font-family, system-ui, sans-serif);
+      background: var(--tplane-chat-bg, #fff);
+      color: var(--tplane-chat-text, #1a1a1a);
+      font-family: var(--tplane-chat-font-family, system-ui, sans-serif);
     }
     .layout {
       display: flex;
@@ -26,7 +26,7 @@ import { Component, ChangeDetectionStrategy, input } from '@angular/core';
     .layout__sidebar {
       width: 100%;
       flex-shrink: 0;
-      border-top: 1px solid var(--ngaf-chat-separator, #e5e5e5);
+      border-top: 1px solid var(--tplane-chat-separator, #e5e5e5);
       overflow-y: auto;
     }
     .layout__sidebar:empty { display: none; }
@@ -36,11 +36,11 @@ import { Component, ChangeDetectionStrategy, input } from '@angular/core';
       .layout__sidebar {
         width: var(--example-layout-sidebar-width, 18rem);
         border-top: 0;
-        border-left: 1px solid var(--ngaf-chat-separator, #e5e5e5);
+        border-left: 1px solid var(--tplane-chat-separator, #e5e5e5);
       }
       .layout--sidebar-left .layout__sidebar {
         border-left: 0;
-        border-right: 1px solid var(--ngaf-chat-separator, #e5e5e5);
+        border-right: 1px solid var(--tplane-chat-separator, #e5e5e5);
       }
     }
   `,

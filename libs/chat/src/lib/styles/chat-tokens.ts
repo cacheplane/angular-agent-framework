@@ -2,25 +2,25 @@
 // SPDX-License-Identifier: MIT
 
 const LIGHT_TOKENS = `
-  --ngaf-chat-bg: rgb(255, 255, 255);
-  --ngaf-chat-surface: rgb(255, 255, 255);
-  --ngaf-chat-surface-alt: rgb(251, 251, 251);
-  --ngaf-chat-primary: rgb(28, 28, 28);
-  --ngaf-chat-on-primary: rgb(255, 255, 255);
-  --ngaf-chat-text: rgb(28, 28, 28);
-  --ngaf-chat-text-muted: rgb(115, 115, 115);
-  --ngaf-chat-separator: rgb(229, 229, 229);
-  --ngaf-chat-muted: rgb(200, 200, 200);
-  --ngaf-chat-error-bg: #fef2f2;
-  --ngaf-chat-error-border: #fecaca;
-  --ngaf-chat-error-text: #dc2626;
-  --ngaf-chat-destructive: #dc2626;
-  --ngaf-chat-warning-bg: #fffbeb;
-  --ngaf-chat-warning-text: #b45309;
-  --ngaf-chat-success: #16a34a;
-  --ngaf-chat-shadow-sm: 0 1px 2px rgba(0,0,0,.05);
-  --ngaf-chat-shadow-md: 0 4px 6px -1px rgba(0,0,0,.10), 0 2px 4px -1px rgba(0,0,0,.06);
-  --ngaf-chat-shadow-lg: 0 10px 15px -3px rgba(0,0,0,.10), 0 4px 6px -2px rgba(0,0,0,.05);
+  --tplane-chat-bg: rgb(255, 255, 255);
+  --tplane-chat-surface: rgb(255, 255, 255);
+  --tplane-chat-surface-alt: rgb(251, 251, 251);
+  --tplane-chat-primary: rgb(28, 28, 28);
+  --tplane-chat-on-primary: rgb(255, 255, 255);
+  --tplane-chat-text: rgb(28, 28, 28);
+  --tplane-chat-text-muted: rgb(115, 115, 115);
+  --tplane-chat-separator: rgb(229, 229, 229);
+  --tplane-chat-muted: rgb(200, 200, 200);
+  --tplane-chat-error-bg: #fef2f2;
+  --tplane-chat-error-border: #fecaca;
+  --tplane-chat-error-text: #dc2626;
+  --tplane-chat-destructive: #dc2626;
+  --tplane-chat-warning-bg: #fffbeb;
+  --tplane-chat-warning-text: #b45309;
+  --tplane-chat-success: #16a34a;
+  --tplane-chat-shadow-sm: 0 1px 2px rgba(0,0,0,.05);
+  --tplane-chat-shadow-md: 0 4px 6px -1px rgba(0,0,0,.10), 0 2px 4px -1px rgba(0,0,0,.06);
+  --tplane-chat-shadow-lg: 0 10px 15px -3px rgba(0,0,0,.10), 0 4px 6px -2px rgba(0,0,0,.05);
 
   /* --a2ui-* light variant */
   --a2ui-primary: #4f8df5;
@@ -46,22 +46,22 @@ const LIGHT_TOKENS = `
 `;
 
 const DARK_TOKENS = `
-  --ngaf-chat-bg: rgb(17, 17, 17);
-  --ngaf-chat-surface: rgb(28, 28, 28);
-  --ngaf-chat-surface-alt: rgb(44, 44, 44);
-  --ngaf-chat-primary: rgb(255, 255, 255);
-  --ngaf-chat-on-primary: rgb(28, 28, 28);
-  --ngaf-chat-text: rgb(245, 245, 245);
-  --ngaf-chat-text-muted: rgb(160, 160, 160);
-  --ngaf-chat-separator: rgb(45, 45, 45);
-  --ngaf-chat-muted: rgb(60, 60, 60);
-  --ngaf-chat-error-bg: rgb(45, 21, 21);
-  --ngaf-chat-error-border: #dc2626;
-  --ngaf-chat-error-text: #fca5a5;
-  --ngaf-chat-destructive: #ef4444;
-  --ngaf-chat-warning-bg: rgb(45, 35, 21);
-  --ngaf-chat-warning-text: #fbbf24;
-  --ngaf-chat-success: #4ade80;
+  --tplane-chat-bg: rgb(17, 17, 17);
+  --tplane-chat-surface: rgb(28, 28, 28);
+  --tplane-chat-surface-alt: rgb(44, 44, 44);
+  --tplane-chat-primary: rgb(255, 255, 255);
+  --tplane-chat-on-primary: rgb(28, 28, 28);
+  --tplane-chat-text: rgb(245, 245, 245);
+  --tplane-chat-text-muted: rgb(160, 160, 160);
+  --tplane-chat-separator: rgb(45, 45, 45);
+  --tplane-chat-muted: rgb(60, 60, 60);
+  --tplane-chat-error-bg: rgb(45, 21, 21);
+  --tplane-chat-error-border: #dc2626;
+  --tplane-chat-error-text: #fca5a5;
+  --tplane-chat-destructive: #ef4444;
+  --tplane-chat-warning-bg: rgb(45, 35, 21);
+  --tplane-chat-warning-text: #fbbf24;
+  --tplane-chat-success: #4ade80;
 
   /* --a2ui-* dark variant (preserves current chat.css values) */
   --a2ui-primary: #4f8df5;
@@ -87,37 +87,37 @@ const DARK_TOKENS = `
 `;
 
 const GEOMETRY_TOKENS = `
-  --ngaf-chat-radius-bubble: 15px;
-  --ngaf-chat-radius-input: 20px;
-  --ngaf-chat-radius-card: 8px;
-  --ngaf-chat-radius-button: 8px;
-  --ngaf-chat-radius-launcher: 9999px;
-  --ngaf-chat-max-width: 48rem;
+  --tplane-chat-radius-bubble: 15px;
+  --tplane-chat-radius-input: 20px;
+  --tplane-chat-radius-card: 8px;
+  --tplane-chat-radius-button: 8px;
+  --tplane-chat-radius-launcher: 9999px;
+  --tplane-chat-max-width: 48rem;
 `;
 
 const TYPOGRAPHY_TOKENS = `
-  --ngaf-chat-font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --ngaf-chat-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  --ngaf-chat-font-size: 1rem;
-  --ngaf-chat-font-size-sm: 0.875rem;
-  --ngaf-chat-font-size-xs: 0.75rem;
-  --ngaf-chat-line-height: 1.6;
-  --ngaf-chat-line-height-tight: 1.5;
+  --tplane-chat-font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --tplane-chat-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --tplane-chat-font-size: 1rem;
+  --tplane-chat-font-size-sm: 0.875rem;
+  --tplane-chat-font-size-xs: 0.75rem;
+  --tplane-chat-line-height: 1.6;
+  --tplane-chat-line-height-tight: 1.5;
 `;
 
 const SPACING_TOKENS = `
-  --ngaf-chat-space-1: 4px;
-  --ngaf-chat-space-2: 8px;
-  --ngaf-chat-space-3: 12px;
-  --ngaf-chat-space-4: 16px;
-  --ngaf-chat-space-5: 20px;
-  --ngaf-chat-space-6: 24px;
-  --ngaf-chat-space-8: 32px;
-  --ngaf-chat-edge-pad: 16px;
-  --ngaf-chat-input-gap: 0.75rem;
-  --ngaf-chat-sidenav-width-expanded: 280px;
-  --ngaf-chat-sidenav-width-collapsed: 56px;
-  --ngaf-chat-sidenav-width-drawer: 280px;
+  --tplane-chat-space-1: 4px;
+  --tplane-chat-space-2: 8px;
+  --tplane-chat-space-3: 12px;
+  --tplane-chat-space-4: 16px;
+  --tplane-chat-space-5: 20px;
+  --tplane-chat-space-6: 24px;
+  --tplane-chat-space-8: 32px;
+  --tplane-chat-edge-pad: 16px;
+  --tplane-chat-input-gap: 0.75rem;
+  --tplane-chat-sidenav-width-expanded: 280px;
+  --tplane-chat-sidenav-width-collapsed: 56px;
+  --tplane-chat-sidenav-width-drawer: 280px;
 `;
 
 const LAYER_TOKENS = `
@@ -125,11 +125,11 @@ const LAYER_TOKENS = `
    * Default values listed; overridable per-app via :root or :host.
    * Modal layers sit above drawer so palettes/dialogs stay reachable
    * when the drawer is open. */
-  --ngaf-chat-z-overlay-content: 30;   /* chat-sidebar panel, chat-popup window */
-  --ngaf-chat-z-drawer-scrim: 1000;    /* chat-sidenav-scrim backdrop */
-  --ngaf-chat-z-drawer: 1001;          /* chat-sidenav drawer mode host */
-  --ngaf-chat-z-modal-scrim: 1100;     /* chat-history-search-palette backdrop */
-  --ngaf-chat-z-modal: 1101;           /* chat-history-search-palette dialog */
+  --tplane-chat-z-overlay-content: 30;   /* chat-sidebar panel, chat-popup window */
+  --tplane-chat-z-drawer-scrim: 1000;    /* chat-sidenav-scrim backdrop */
+  --tplane-chat-z-drawer: 1001;          /* chat-sidenav drawer mode host */
+  --tplane-chat-z-modal-scrim: 1100;     /* chat-history-search-palette backdrop */
+  --tplane-chat-z-modal: 1101;           /* chat-history-search-palette dialog */
 `;
 
 const EDGE_CLAIM_TOKENS = `
@@ -140,52 +140,52 @@ const EDGE_CLAIM_TOKENS = `
      not using chat-sidebar/chat-debug see zero overhead.
 
      TWO LAYERS:
-     1. Per-component claim vars (--ngaf-chat-<component>-claim-<edge>)
+     1. Per-component claim vars (--tplane-chat-<component>-claim-<edge>)
         are read by PEERS only — never by the component that wrote
         them. This eliminates self-feedback (where a right-docked
         panel would offset itself by reading its own claim).
      2. Aggregate occupy-* vars are convenience reads for external
         consumers and for cases where any-panel-on-edge matters. */
-  --ngaf-chat-occupy-top:    0px;
-  --ngaf-chat-occupy-right:  0px;
-  --ngaf-chat-occupy-bottom: 0px;
-  --ngaf-chat-occupy-left:   0px;
+  --tplane-chat-occupy-top:    0px;
+  --tplane-chat-occupy-right:  0px;
+  --tplane-chat-occupy-bottom: 0px;
+  --tplane-chat-occupy-left:   0px;
 
   /* Per-component claims (peer-only reads). */
-  --ngaf-chat-sidebar-claim-right:  0px;
-  --ngaf-chat-debug-claim-top:      0px;
-  --ngaf-chat-debug-claim-right:    0px;
-  --ngaf-chat-debug-claim-bottom:   0px;
-  --ngaf-chat-debug-claim-left:     0px;
+  --tplane-chat-sidebar-claim-right:  0px;
+  --tplane-chat-debug-claim-top:      0px;
+  --tplane-chat-debug-claim-right:    0px;
+  --tplane-chat-debug-claim-bottom:   0px;
+  --tplane-chat-debug-claim-left:     0px;
 
   /* Sizes the chat-debug dock contributes when it claims an edge.
      Split by orientation so consumers can override independently. */
-  --ngaf-chat-debug-panel-size-h: 40vh;
-  --ngaf-chat-debug-panel-size-w: 420px;
+  --tplane-chat-debug-panel-size-h: 40vh;
+  --tplane-chat-debug-panel-size-w: 420px;
 `;
 
 const KEYFRAMES = `
-  @keyframes ngaf-chat-spin {
+  @keyframes tplane-chat-spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
   }
-  @keyframes ngaf-chat-typing-dot {
+  @keyframes tplane-chat-typing-dot {
     0%, 80%, 100% { transform: scale(0.5); opacity: 0.5; }
     40% { transform: scale(1); opacity: 1; }
   }
-  @keyframes ngaf-chat-pulse {
+  @keyframes tplane-chat-pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.6; }
   }
-  @keyframes ngaf-chat-caret-blink {
+  @keyframes tplane-chat-caret-blink {
     0%, 50% { opacity: 1; }
     50.01%, 100% { opacity: 0; }
   }
-  @keyframes ngaf-chat-caret-fade-in {
+  @keyframes tplane-chat-caret-fade-in {
     from { opacity: 0; }
     to   { opacity: 1; }
   }
-  @keyframes ngaf-chat-welcome-mount {
+  @keyframes tplane-chat-welcome-mount {
     from { opacity: 0; transform: translateY(-8px); }
     to   { opacity: 1; transform: translateY(0); }
   }
@@ -199,21 +199,21 @@ const KEYFRAMES = `
  *
  * Token *defaults* are NOT set on `:host` — they're set on `:root` via the
  * shared style element below (`ensureChatRootStyles()`). That shift is what
- * makes the documented `:root { --ngaf-chat-*: ... }` consumer override
+ * makes the documented `:root { --tplane-chat-*: ... }` consumer override
  * actually work, because direct-on-host token settings would shadow
  * inheritance regardless of CSS specificity.
  */
 export const CHAT_HOST_TOKENS = `
   :host {
-    font-family: var(--ngaf-chat-font-family);
-    color: var(--ngaf-chat-text);
+    font-family: var(--tplane-chat-font-family);
+    color: var(--tplane-chat-text);
   }
 `;
 // Note: @keyframes are NOT placed in CHAT_HOST_TOKENS. Angular's emulated
 // view encapsulation scopes @keyframes names per-component, which can
 // desynchronise from animation property references when styles are
 // concatenated across helper strings. They're injected globally via
-// ROOT_TOKEN_STYLES below so the names match what `animation: ngaf-chat-*`
+// ROOT_TOKEN_STYLES below so the names match what `animation: tplane-chat-*`
 // references in component styles (which Angular leaves untouched).
 
 /**
@@ -237,9 +237,9 @@ const REDUCED_MOTION_STYLES = `
   }
 
   .tcc__pill[data-status="running"] svg,
-  .ngaf-chat-typing-dot,
-  .ngaf-chat-caret,
-  .ngaf-chat-welcome__pulse,
+  .tplane-chat-typing-dot,
+  .tplane-chat-caret,
+  .tplane-chat-welcome__pulse,
   .chat-genui-skeleton,
   .chat-debug__pill--active {
     animation: none !important;
@@ -254,8 +254,8 @@ const REDUCED_MOTION_STYLES = `
 
 /**
  * Token defaults written to `<head>` once on first chat-component
- * construction. Wrapped in `@layer ngaf-chat` so the consumer's unlayered
- * `:root { --ngaf-chat-*: ... }` rule beats the lib's defaults regardless
+ * construction. Wrapped in `@layer tplane-chat` so the consumer's unlayered
+ * `:root { --tplane-chat-*: ... }` rule beats the lib's defaults regardless
  * of source order — the standard CSS pattern for framework defaults.
  *
  * Theme switching:
@@ -329,7 +329,7 @@ const A2UI_INVARIANT_TOKENS = `
 `;
 
 export const ROOT_TOKEN_STYLES = `
-@layer ngaf-chat {
+@layer tplane-chat {
   :root {
     ${LIGHT_TOKENS}
     ${GEOMETRY_TOKENS}
@@ -355,30 +355,30 @@ export const ROOT_TOKEN_STYLES = `
      chat-sidebar sets data-threadplane-chat-sidebar="open" while its panel is open.
      chat-debug sets data-threadplane-chat-debug to its current dock while open. */
   :root[data-threadplane-chat-sidebar="open"] {
-    --ngaf-chat-sidebar-claim-right: var(--ngaf-chat-sidebar-width-drawer, 28rem);
-    --ngaf-chat-occupy-right: var(--ngaf-chat-sidebar-width-drawer, 28rem);
+    --tplane-chat-sidebar-claim-right: var(--tplane-chat-sidebar-width-drawer, 28rem);
+    --tplane-chat-occupy-right: var(--tplane-chat-sidebar-width-drawer, 28rem);
   }
   :root[data-threadplane-chat-debug="bottom"] {
-    --ngaf-chat-debug-claim-bottom: var(--ngaf-chat-debug-panel-size-h, 40vh);
-    --ngaf-chat-occupy-bottom: var(--ngaf-chat-debug-panel-size-h, 40vh);
+    --tplane-chat-debug-claim-bottom: var(--tplane-chat-debug-panel-size-h, 40vh);
+    --tplane-chat-occupy-bottom: var(--tplane-chat-debug-panel-size-h, 40vh);
   }
   :root[data-threadplane-chat-debug="right"] {
-    --ngaf-chat-debug-claim-right: var(--ngaf-chat-debug-panel-size-w, 420px);
-    --ngaf-chat-occupy-right: var(--ngaf-chat-debug-panel-size-w, 420px);
+    --tplane-chat-debug-claim-right: var(--tplane-chat-debug-panel-size-w, 420px);
+    --tplane-chat-occupy-right: var(--tplane-chat-debug-panel-size-w, 420px);
   }
   :root[data-threadplane-chat-debug="left"] {
-    --ngaf-chat-debug-claim-left: var(--ngaf-chat-debug-panel-size-w, 420px);
-    --ngaf-chat-occupy-left: var(--ngaf-chat-debug-panel-size-w, 420px);
+    --tplane-chat-debug-claim-left: var(--tplane-chat-debug-panel-size-w, 420px);
+    --tplane-chat-occupy-left: var(--tplane-chat-debug-panel-size-w, 420px);
   }
 }
 ${KEYFRAMES}
 ${REDUCED_MOTION_STYLES}
 `;
 
-const STYLE_ELEMENT_ID = 'ngaf-chat-root-tokens';
+const STYLE_ELEMENT_ID = 'tplane-chat-root-tokens';
 
 /**
- * Idempotent: appends a `<style id="ngaf-chat-root-tokens">` to `<head>`
+ * Idempotent: appends a `<style id="tplane-chat-root-tokens">` to `<head>`
  * the first time it's called. Subsequent calls are no-ops.
  *
  * No-op outside the browser (server-side rendering).

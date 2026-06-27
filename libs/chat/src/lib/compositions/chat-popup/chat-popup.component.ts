@@ -15,7 +15,7 @@ import { CHAT_HOST_TOKENS, ensureChatRootStyles } from '../../styles/chat-tokens
   imports: [ChatComponent, ChatLauncherButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [CHAT_HOST_TOKENS, `
-    :host { position: fixed; bottom: 1rem; right: 1rem; z-index: var(--ngaf-chat-z-overlay-content, 30); }
+    :host { position: fixed; bottom: 1rem; right: 1rem; z-index: var(--tplane-chat-z-overlay-content, 30); }
     .chat-popup__launcher { position: relative; }
     .chat-popup__window {
       position: fixed;
@@ -24,8 +24,8 @@ import { CHAT_HOST_TOKENS, ensureChatRootStyles } from '../../styles/chat-tokens
       width: 24rem;
       height: 600px;
       max-height: calc(100vh - 6rem);
-      background: var(--ngaf-chat-bg);
-      border: 1px solid var(--ngaf-chat-separator);
+      background: var(--tplane-chat-bg);
+      border: 1px solid var(--tplane-chat-separator);
       border-radius: 0.75rem;
       box-shadow: 0 5px 40px rgba(0,0,0,.16);
       transform-origin: bottom right;
@@ -49,14 +49,14 @@ import { CHAT_HOST_TOKENS, ensureChatRootStyles } from '../../styles/chat-tokens
       position: absolute; top: 8px; right: 8px;
       width: 32px; height: 32px;
       background: transparent; border: 0; cursor: pointer;
-      color: var(--ngaf-chat-text-muted);
+      color: var(--tplane-chat-text-muted);
       border-radius: 50%;
       z-index: 1;
       display: flex;
       align-items: center;
       justify-content: center;
     }
-    .chat-popup__close:hover { background: var(--ngaf-chat-surface-alt); color: var(--ngaf-chat-text); }
+    .chat-popup__close:hover { background: var(--tplane-chat-surface-alt); color: var(--tplane-chat-text); }
   `],
   template: `
     <div class="chat-popup__launcher">

@@ -1,13 +1,13 @@
 import { InjectionToken } from '@angular/core';
 
 export type ThreadplaneTelemetryEvent =
-  | 'ngaf:browser_provided'
-  | 'ngaf:browser_chat_init'
-  | 'ngaf:runtime_instance_created'
-  | 'ngaf:runtime_request_created'
-  | 'ngaf:stream_started'
-  | 'ngaf:stream_ended'
-  | 'ngaf:stream_errored';
+  | 'tplane:browser_provided'
+  | 'tplane:browser_chat_init'
+  | 'tplane:runtime_instance_created'
+  | 'tplane:runtime_request_created'
+  | 'tplane:stream_started'
+  | 'tplane:stream_ended'
+  | 'tplane:stream_errored';
 
 export interface ThreadplaneTelemetryEventPayload {
   event: ThreadplaneTelemetryEvent;

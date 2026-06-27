@@ -40,7 +40,7 @@ type Inputs = ViewProps<typeof DAY_CARD_SCHEMA>;
   styles: [
     `
       .dc {
-        border: 1px solid var(--ngaf-chat-separator, #e5e7eb);
+        border: 1px solid var(--tplane-chat-separator, #e5e7eb);
         border-radius: 12px;
         padding: 16px;
         max-width: 280px;

@@ -24,6 +24,6 @@ export function isTraceEnabled(): boolean {
 export function trace(...args: unknown[]): void {
   if (isTraceEnabled()) {
     // eslint-disable-next-line no-console
-    console.debug('[ngaf-chat-stream]', ...args);
+    console.debug('[tplane-chat-stream]', ...args);
   }
 }

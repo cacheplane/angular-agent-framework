@@ -25,7 +25,7 @@ test('every event in any insight JSON appears in docs/gtm/taxonomy.md', async ()
 
   // 2. Collect events documented in taxonomy.md.
   const taxonomy = await readFile(TAXONOMY_PATH, 'utf8');
-  const matches = taxonomy.matchAll(/`(\$pageview|(?:marketing|cockpit|ngaf|docs):[a-z_]+)`/g);
+  const matches = taxonomy.matchAll(/`(\$pageview|(?:marketing|cockpit|tplane|docs):[a-z_]+)`/g);
   const documented = new Set<string>();
   for (const m of matches) documented.add(m[1]);
 

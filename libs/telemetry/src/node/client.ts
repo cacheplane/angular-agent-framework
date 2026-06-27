@@ -20,7 +20,7 @@ export interface PostinstallInput {
 }
 
 function getSampleRate(env: NodeJS.ProcessEnv = process.env): number {
-  const parsed = Number(env.NGAF_TELEMETRY_SAMPLE_RATE ?? '1');
+  const parsed = Number(env.TPLANE_TELEMETRY_SAMPLE_RATE ?? '1');
   if (!Number.isFinite(parsed)) return 1;
   return Math.max(0, Math.min(1, parsed));
 }
@@ -114,7 +114,7 @@ export async function captureEvent(
   const anonId = getAnonId();
   if (!shouldSample(rate, anonId)) return { sent: false, reason: 'sampled' };
   try {
-    await postJson(process.env.NGAF_TELEMETRY_INGEST_URL ?? DEFAULT_INGEST, {
+    await postJson(process.env.TPLANE_TELEMETRY_INGEST_URL ?? DEFAULT_INGEST, {
       key: PUBLIC_INGEST_KEY,
       distinctId: anonId,
       event,
@@ -132,7 +132,7 @@ export async function captureEvent(
 export async function capturePostinstall(
   input: PostinstallInput
 ): Promise<CaptureResult> {
-  return captureEvent('ngaf:postinstall', createPostinstallProperties(input));
+  return captureEvent('tplane:postinstall', createPostinstallProperties(input));
 }
 
 // @internal — tests only

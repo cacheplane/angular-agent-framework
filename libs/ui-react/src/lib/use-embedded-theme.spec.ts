@@ -12,17 +12,17 @@ describe('useEmbeddedTheme', () => {
     expect(result.current).toBe('dark');
   });
 
-  it('posts ngaf:theme-request to window.parent on mount', () => {
+  it('posts tplane:theme-request to window.parent on mount', () => {
     const postMessage = vi.spyOn(window.parent, 'postMessage');
     renderHook(() => useEmbeddedTheme());
-    expect(postMessage).toHaveBeenCalledWith({ type: 'ngaf:theme-request' }, '*');
+    expect(postMessage).toHaveBeenCalledWith({ type: 'tplane:theme-request' }, '*');
   });
 
-  it('updates when an ngaf:theme message arrives', () => {
+  it('updates when an tplane:theme message arrives', () => {
     const { result } = renderHook(() => useEmbeddedTheme());
     act(() => {
       window.dispatchEvent(
-        new MessageEvent('message', { data: { type: 'ngaf:theme', theme: 'light' } }),
+        new MessageEvent('message', { data: { type: 'tplane:theme', theme: 'light' } }),
       );
     });
     expect(result.current).toBe('light');

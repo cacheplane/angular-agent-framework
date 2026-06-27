@@ -203,7 +203,7 @@ providers: [
 ];
 ```
 
-Per-instance, bind the registry on `<chat-streaming-md [viewRegistry]="…" />` instead. Styling uses the existing `--ngaf-chat-*` / `--a2ui-*` tokens — see the [Theming](#theming) section.
+Per-instance, bind the registry on `<chat-streaming-md [viewRegistry]="…" />` instead. Styling uses the existing `--tplane-chat-*` / `--a2ui-*` tokens — see the [Theming](#theming) section.
 
 The `renderMarkdown(md, options?)` function produces a parse tree for use outside streaming contexts.
 

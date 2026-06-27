@@ -24,19 +24,19 @@ import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
     <example-chat-layout>
       <chat main [agent]="agent" class="flex-1 min-w-0" />
       <div sidebar class="p-4 space-y-2"
-           style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">
+           style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--ngaf-chat-text-muted);">Subagents</h3>
+            style="color: var(--tplane-chat-text-muted);">Subagents</h3>
         @if (subagentEntries().length === 0) {
-          <p class="text-sm italic" style="color: var(--ngaf-chat-text-muted);">No subagents active</p>
+          <p class="text-sm italic" style="color: var(--tplane-chat-text-muted);">No subagents active</p>
         }
         @for (entry of subagentEntries(); track entry.id) {
           <div class="flex items-center gap-2 text-sm py-1">
             <span class="w-2 h-2 rounded-full shrink-0"
-                  [style.background]="entry.status === 'complete' ? 'var(--ngaf-chat-success, #4ade80)' : entry.status === 'error' ? 'var(--ngaf-chat-error-text, #f87171)' : 'var(--ngaf-chat-warning-text, #fbbf24)'">
+                  [style.background]="entry.status === 'complete' ? 'var(--tplane-chat-success, #4ade80)' : entry.status === 'error' ? 'var(--tplane-chat-error-text, #f87171)' : 'var(--tplane-chat-warning-text, #fbbf24)'">
             </span>
-            <span class="font-mono text-xs truncate" style="color: var(--ngaf-chat-text);">{{ entry.id }}</span>
-            <span class="text-xs ml-auto" style="color: var(--ngaf-chat-text-muted);">{{ entry.msgCount }} msgs</span>
+            <span class="font-mono text-xs truncate" style="color: var(--tplane-chat-text);">{{ entry.id }}</span>
+            <span class="text-xs ml-auto" style="color: var(--tplane-chat-text-muted);">{{ entry.msgCount }} msgs</span>
           </div>
         }
       </div>

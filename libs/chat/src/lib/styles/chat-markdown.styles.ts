@@ -13,7 +13,7 @@
 // rules, tables, images, bold (`strong`), italic (`em`), strikethrough
 // (`del`/`s`).
 export const CHAT_MARKDOWN_STYLES = `
-  chat-streaming-md { display: block; color: var(--ngaf-chat-text); line-height: var(--ngaf-chat-line-height); }
+  chat-streaming-md { display: block; color: var(--tplane-chat-text); line-height: var(--tplane-chat-line-height); }
 
   /* Headings */
   chat-streaming-md h1, chat-streaming-md h2, chat-streaming-md h3, chat-streaming-md h4, chat-streaming-md h5, chat-streaming-md h6 {
@@ -27,20 +27,20 @@ export const CHAT_MARKDOWN_STYLES = `
   chat-streaming-md h2 { font-size: 1.25em; }
   chat-streaming-md h3 { font-size: 1.1em; }
   chat-streaming-md h4 { font-size: 1em; }
-  chat-streaming-md h5, chat-streaming-md h6 { font-size: 0.95em; color: var(--ngaf-chat-text-muted); }
+  chat-streaming-md h5, chat-streaming-md h6 { font-size: 0.95em; color: var(--tplane-chat-text-muted); }
 
   /* Paragraphs and inline emphasis */
-  chat-streaming-md p { margin: 0 0 0.75rem; line-height: 1.6; font-size: var(--ngaf-chat-font-size); }
+  chat-streaming-md p { margin: 0 0 0.75rem; line-height: 1.6; font-size: var(--tplane-chat-font-size); }
   chat-streaming-md p:last-child { margin-bottom: 0; }
   chat-streaming-md strong, chat-streaming-md b { font-weight: 700; }
   chat-streaming-md em, chat-streaming-md i { font-style: italic; }
-  chat-streaming-md del, chat-streaming-md s { text-decoration: line-through; color: var(--ngaf-chat-text-muted); }
-  chat-streaming-md mark { background: var(--ngaf-chat-surface-alt); padding: 0 2px; border-radius: 2px; }
+  chat-streaming-md del, chat-streaming-md s { text-decoration: line-through; color: var(--tplane-chat-text-muted); }
+  chat-streaming-md mark { background: var(--tplane-chat-surface-alt); padding: 0 2px; border-radius: 2px; }
   chat-streaming-md sub { font-size: 0.75em; vertical-align: sub; }
   chat-streaming-md sup { font-size: 0.75em; vertical-align: super; }
 
   /* Links */
-  chat-streaming-md a { color: var(--ngaf-chat-primary); text-decoration: underline; text-underline-offset: 2px; }
+  chat-streaming-md a { color: var(--tplane-chat-primary); text-decoration: underline; text-underline-offset: 2px; }
   chat-streaming-md a:hover { text-decoration-thickness: 2px; }
 
   /* Lists (CommonMark + GFM task lists) */
@@ -50,7 +50,7 @@ export const CHAT_MARKDOWN_STYLES = `
   chat-streaming-md ul ul { list-style: circle outside; }
   chat-streaming-md ul ul ul { list-style: square outside; }
   chat-streaming-md li { margin: 0.2rem 0; }
-  chat-streaming-md li::marker { color: var(--ngaf-chat-text-muted); }
+  chat-streaming-md li::marker { color: var(--tplane-chat-text-muted); }
   chat-streaming-md li > p { margin: 0 0 0.25rem; }
   chat-streaming-md li > ul, chat-streaming-md li > ol { margin: 0.25rem 0 0; }
   /* GFM task lists: marked emits <li><input type="checkbox" disabled> ... */
@@ -59,21 +59,21 @@ export const CHAT_MARKDOWN_STYLES = `
 
   /* Code (inline + fenced) */
   chat-streaming-md code {
-    background: var(--ngaf-chat-surface-alt);
-    color: var(--ngaf-chat-text);
+    background: var(--tplane-chat-surface-alt);
+    color: var(--tplane-chat-text);
     padding: 1px 5px;
     border-radius: 4px;
-    font-family: var(--ngaf-chat-font-mono);
+    font-family: var(--tplane-chat-font-mono);
     font-size: 0.9em;
   }
   chat-streaming-md pre {
-    background: var(--ngaf-chat-surface-alt);
-    color: var(--ngaf-chat-text);
+    background: var(--tplane-chat-surface-alt);
+    color: var(--tplane-chat-text);
     padding: 12px 14px;
-    border-radius: var(--ngaf-chat-radius-card);
+    border-radius: var(--tplane-chat-radius-card);
     overflow-x: auto;
-    font-family: var(--ngaf-chat-font-mono);
-    font-size: var(--ngaf-chat-font-size-sm);
+    font-family: var(--tplane-chat-font-mono);
+    font-size: var(--tplane-chat-font-size-sm);
     line-height: 1.5;
     margin: 0 0 0.75rem;
   }
@@ -81,17 +81,17 @@ export const CHAT_MARKDOWN_STYLES = `
 
   /* Blockquote */
   chat-streaming-md blockquote {
-    border-left: 3px solid var(--ngaf-chat-separator);
+    border-left: 3px solid var(--tplane-chat-separator);
     padding: 0.25rem 0 0.25rem 12px;
     margin: 0 0 0.75rem;
-    color: var(--ngaf-chat-text-muted);
+    color: var(--tplane-chat-text-muted);
   }
   chat-streaming-md blockquote > :last-child { margin-bottom: 0; }
 
   /* Horizontal rule */
   chat-streaming-md hr {
     border: none;
-    border-top: 1px solid var(--ngaf-chat-separator);
+    border-top: 1px solid var(--tplane-chat-separator);
     margin: 1rem 0;
   }
 
@@ -102,9 +102,9 @@ export const CHAT_MARKDOWN_STYLES = `
     width: 100%;
     font-size: 0.95em;
   }
-  chat-streaming-md thead { background: var(--ngaf-chat-surface-alt); }
+  chat-streaming-md thead { background: var(--tplane-chat-surface-alt); }
   chat-streaming-md th, chat-streaming-md td {
-    border: 1px solid var(--ngaf-chat-separator);
+    border: 1px solid var(--tplane-chat-separator);
     padding: 6px 10px;
     text-align: left;
     vertical-align: top;
@@ -160,11 +160,11 @@ export const CHAT_MARKDOWN_STYLES = `
     align-items: center;
     gap: 0.4rem;
     padding: 0.25rem 0.5rem;
-    background: var(--ngaf-chat-surface-alt);
-    border: 1px dashed var(--ngaf-chat-separator);
+    background: var(--tplane-chat-surface-alt);
+    border: 1px dashed var(--tplane-chat-separator);
     border-radius: 6px;
     font-size: 0.9em;
-    color: var(--ngaf-chat-text-muted, currentColor);
+    color: var(--tplane-chat-text-muted, currentColor);
     opacity: 0.85;
   }
   chat-streaming-md .chat-md-image__icon { font-size: 1em; line-height: 1; }
@@ -173,5 +173,5 @@ export const CHAT_MARKDOWN_STYLES = `
      on overflow; the raw fallback (KaTeX missing or invalid LaTeX) reads as
      monospace so the source delimiters look intentional. */
   chat-streaming-md .chat-md-math--display { display: block; margin: 0.5em 0; overflow-x: auto; }
-  chat-streaming-md .chat-md-math--raw { font-family: var(--ngaf-chat-font-mono, ui-monospace, monospace); }
+  chat-streaming-md .chat-md-math--raw { font-family: var(--tplane-chat-font-mono, ui-monospace, monospace); }
 `;

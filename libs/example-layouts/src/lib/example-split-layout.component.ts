@@ -12,13 +12,13 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
       flex-direction: column;
       height: 100vh;
       height: 100dvh;
-      background: var(--ngaf-chat-bg, #fff);
-      color: var(--ngaf-chat-text, #1a1a1a);
-      font-family: var(--ngaf-chat-font-family, system-ui, sans-serif);
+      background: var(--tplane-chat-bg, #fff);
+      color: var(--tplane-chat-text, #1a1a1a);
+      font-family: var(--tplane-chat-font-family, system-ui, sans-serif);
     }
     .split__header {
       flex-shrink: 0;
-      border-bottom: 1px solid var(--ngaf-chat-separator, #e5e5e5);
+      border-bottom: 1px solid var(--tplane-chat-separator, #e5e5e5);
     }
     .split__header:empty { display: none; }
     .split__body {
@@ -38,8 +38,8 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
       flex-shrink: 0;
       display: flex;
       flex-direction: column;
-      border-top: 1px solid var(--ngaf-chat-separator, #e5e5e5);
-      background: var(--ngaf-chat-surface-alt, #fafafa);
+      border-top: 1px solid var(--tplane-chat-separator, #e5e5e5);
+      background: var(--tplane-chat-surface-alt, #fafafa);
     }
     .split__secondary:empty { display: none; }
     .split__footer { flex-shrink: 0; }
@@ -50,7 +50,7 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
       .split__secondary {
         width: 20rem;
         border-top: 0;
-        border-left: 1px solid var(--ngaf-chat-separator, #e5e5e5);
+        border-left: 1px solid var(--tplane-chat-separator, #e5e5e5);
       }
     }
   `,

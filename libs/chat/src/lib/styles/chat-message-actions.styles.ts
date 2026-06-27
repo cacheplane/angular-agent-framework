@@ -40,22 +40,22 @@ export const CHAT_MESSAGE_ACTIONS_STYLES = `
     margin: 0;
     border-radius: 6px;
     background: transparent;
-    color: var(--ngaf-chat-text-muted);
+    color: var(--tplane-chat-text-muted);
     cursor: pointer;
     transition: color 150ms ease, transform 150ms ease, background 150ms ease;
   }
   .chat-message-actions__btn:hover {
-    color: var(--ngaf-chat-text);
+    color: var(--tplane-chat-text);
     transform: scale(1.05);
-    background: var(--ngaf-chat-surface-alt);
+    background: var(--tplane-chat-surface-alt);
   }
   .chat-message-actions__btn:focus-visible {
-    outline: 2px solid var(--ngaf-chat-text-muted);
+    outline: 2px solid var(--tplane-chat-text-muted);
     outline-offset: 2px;
   }
   .chat-message-actions__btn.is-active {
-    color: var(--ngaf-chat-text);
-    background: var(--ngaf-chat-surface-alt);
+    color: var(--tplane-chat-text);
+    background: var(--tplane-chat-surface-alt);
   }
   .chat-message-actions__btn svg {
     width: 16px;
@@ -66,6 +66,6 @@ export const CHAT_MESSAGE_ACTIONS_STYLES = `
     font-size: 14px;
     font-weight: 700;
     line-height: 1;
-    color: var(--ngaf-chat-success);
+    color: var(--tplane-chat-success);
   }
 `;
