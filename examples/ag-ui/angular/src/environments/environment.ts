@@ -7,4 +7,5 @@ export const environment = {
   telemetry: { enabled: false, sampleRate: 1 },
   license: undefined as string | undefined,
   googleMapsApiKey: GENERATED_KEYS.googleMaps,
+  googleMapsMapId: GENERATED_KEYS.googleMapsMapId,
 };

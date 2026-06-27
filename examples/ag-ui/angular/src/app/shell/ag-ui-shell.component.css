@@ -247,6 +247,9 @@
   position: relative;
   display: flex;
 }
+/* Popup mode only: the map is the full-bleed backdrop with the chat bubble
+   floating over it. (Sidebar mode renders the map inside the chat-sidebar's
+   flex content slot instead — see SidebarMode — so it gets its column there.) */
 .ag-ui-shell__map {
   position: absolute;
   inset: 0;
