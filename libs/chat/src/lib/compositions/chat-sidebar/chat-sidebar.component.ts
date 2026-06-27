@@ -27,9 +27,20 @@ import { CHAT_HOST_TOKENS, ensureChatRootStyles } from '../../styles/chat-tokens
     '[attr.data-open]': 'open() ? "true" : "false"',
   },
   styles: [CHAT_HOST_TOKENS, `
-    :host { display: block; }
-    .chat-sidebar__content { transition: margin-right 300ms ease; min-height: 100vh; }
-    :host([data-push="true"][data-open="true"]) .chat-sidebar__content { margin-right: 28rem; }
+    /* Flex row so the projected main content fills the area beside the panel
+       and inherits the host's height (no hardcoded 100vh). Consumers thread
+       height: 100% from their layout down to <chat-sidebar>; the content slot
+       then fills it via flex. */
+    :host { display: flex; height: 100%; min-height: 0; }
+    .chat-sidebar__content {
+      flex: 1 1 auto;
+      min-width: 0;
+      min-height: 0;
+      transition: margin-right 300ms ease;
+    }
+    :host([data-push="true"][data-open="true"]) .chat-sidebar__content {
+      margin-right: var(--ngaf-chat-sidebar-width-drawer, 28rem);
+    }
     @media (max-width: 640px) {
       :host([data-push="true"][data-open="true"]) .chat-sidebar__content { margin-right: 0; }
     }
@@ -37,7 +48,7 @@ import { CHAT_HOST_TOKENS, ensureChatRootStyles } from '../../styles/chat-tokens
       position: fixed;
       top: 0; right: 0;
       bottom: var(--ngaf-chat-debug-claim-bottom, 0);
-      width: 28rem;
+      width: var(--ngaf-chat-sidebar-width-drawer, 28rem);
       background: var(--ngaf-chat-bg);
       border-left: 1px solid var(--ngaf-chat-separator);
       box-shadow: -8px 0 32px rgba(0,0,0,.08);
@@ -156,7 +167,7 @@ export class ChatSidebarComponent {
     ensureChatRootStyles();
     // Publish the right-edge claim while the panel is open. Peer panels
     // (e.g. chat-debug) read --ngaf-chat-occupy-right to leave room.
-    effect(() => {
+    effect((onCleanup) => {
       if (typeof document === 'undefined') return;
       const html = document.documentElement;
       if (this.open()) {
@@ -164,6 +175,11 @@ export class ChatSidebarComponent {
       } else {
         delete html.dataset['threadplaneChatSidebar'];
       }
+      // Clear the global claim when the sidebar is destroyed (not just closed).
+      // Without this, unmounting while open (e.g. switching demo modes) leaves
+      // data-threadplane-chat-sidebar="open" stuck on <html>, so peer panels
+      // keep reserving --ngaf-chat-occupy-right and a phantom gap persists.
+      onCleanup(() => { delete html.dataset['threadplaneChatSidebar']; });
     });
     effect((onCleanup) => {
       const closeOnEscape = this.closeOnEscape();
