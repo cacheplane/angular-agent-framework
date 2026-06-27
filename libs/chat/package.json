@@ -15,7 +15,6 @@
   "peerDependencies": {
     "zod": "^3.25.0",
     "@angular/core": "^20.0.0 || ^21.0.0",
-    "@angular/cdk": "^20.0.0 || ^21.0.0",
     "@angular/common": "^20.0.0 || ^21.0.0",
     "@angular/platform-browser": "^20.0.0 || ^21.0.0",
     "@angular/router": "^20.0.0 || ^21.0.0",
