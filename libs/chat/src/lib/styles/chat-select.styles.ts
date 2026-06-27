@@ -37,10 +37,11 @@ export const CHAT_SELECT_STYLES = `
   .chat-select__trigger.is-open .chat-select__chevron {
     transform: rotate(180deg);
   }
+  /* The menu is rendered inside a CDK connected-overlay pane (a body-level
+     portal), so it no longer positions itself — CDK places the pane. It keeps
+     only its own box styling here. Min/max width can be overridden per consumer
+     via the overlay panelClass (see chat-select panelClass input). */
   .chat-select__menu {
-    position: absolute;
-    bottom: calc(100% + 8px);
-    right: 0;
     min-width: 180px;
     max-height: 320px;
     overflow-y: auto;
@@ -49,7 +50,7 @@ export const CHAT_SELECT_STYLES = `
     border-radius: 12px;
     box-shadow: var(--ngaf-chat-shadow-lg);
     padding: 4px;
-    z-index: 10;
+    box-sizing: border-box;
   }
   .chat-select__option {
     display: flex;

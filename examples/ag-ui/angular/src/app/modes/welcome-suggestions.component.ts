@@ -35,6 +35,7 @@ import { FEATURED_SUGGESTIONS, MORE_SUGGESTIONS } from './welcome-suggestions';
         [options]="moreOptions"
         placeholder="More prompts"
         menuLabel="More demo prompts"
+        panelClass="welcome-suggestions__menu-panel"
         (valueChange)="selected.emit($event)"
       />
     </div>
@@ -97,7 +98,11 @@ import { FEATURED_SUGGESTIONS, MORE_SUGGESTIONS } from './welcome-suggestions';
         border-color: var(--ngaf-chat-text-muted);
         color: var(--ngaf-chat-text);
       }
-      .welcome-suggestions__row ::ng-deep chat-select .chat-select__menu {
+      /* The menu portals to a body-level CDK overlay pane, so it's no longer a
+         descendant of <chat-select>. Target the overlay panelClass instead.
+         ::ng-deep here intentionally emits a global rule (the pane is outside
+         this component's view). */
+      ::ng-deep .welcome-suggestions__menu-panel .chat-select__menu {
         min-width: 320px;
         max-width: 480px;
         width: max-content;

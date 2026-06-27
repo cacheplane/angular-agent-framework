@@ -17,10 +17,10 @@ test('model picker: configured models render, persist, and reach backend state',
 
   const modelTrigger = toolbarSelect(page, 'Model');
   // Open the chat-select menu and assert the three model options are listed.
+  // The menu renders in the CDK overlay container (body portal), not inside
+  // <chat-select>; only one select menu is open at a time here.
   await modelTrigger.click();
-  const modelMenu = page
-    .locator('.demo-shell__field[data-field="model"]')
-    .locator('chat-select .chat-select__menu');
+  const modelMenu = page.locator('.cdk-overlay-container .chat-select__menu');
   await expect(modelMenu.locator('.chat-select__option')).toHaveText([
     'gpt-5',
     'gpt-5-mini',
