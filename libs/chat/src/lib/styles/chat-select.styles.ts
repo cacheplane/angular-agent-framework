@@ -11,9 +11,9 @@ export const CHAT_SELECT_STYLES = `
     border: 0;
     border-radius: 9999px;
     background: transparent;
-    color: var(--ngaf-chat-text-muted);
+    color: var(--tplane-chat-text-muted);
     font: inherit;
-    font-size: var(--ngaf-chat-font-size-sm);
+    font-size: var(--tplane-chat-font-size-sm);
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -21,8 +21,8 @@ export const CHAT_SELECT_STYLES = `
     transition: background 120ms ease, color 120ms ease;
   }
   .chat-select__trigger:hover:not(:disabled) {
-    background: var(--ngaf-chat-surface-alt);
-    color: var(--ngaf-chat-text);
+    background: var(--tplane-chat-surface-alt);
+    color: var(--tplane-chat-text);
   }
   .chat-select__trigger:disabled {
     opacity: 0.5;
@@ -44,10 +44,10 @@ export const CHAT_SELECT_STYLES = `
     min-width: 180px;
     max-height: 320px;
     overflow-y: auto;
-    background: var(--ngaf-chat-surface);
-    border: 1px solid var(--ngaf-chat-separator);
+    background: var(--tplane-chat-surface);
+    border: 1px solid var(--tplane-chat-separator);
     border-radius: 12px;
-    box-shadow: var(--ngaf-chat-shadow-lg);
+    box-shadow: var(--tplane-chat-shadow-lg);
     padding: 4px;
     z-index: 10;
   }
@@ -62,24 +62,24 @@ export const CHAT_SELECT_STYLES = `
     background: transparent;
     padding: 8px 10px;
     border-radius: 8px;
-    color: var(--ngaf-chat-text);
+    color: var(--tplane-chat-text);
     font: inherit;
-    font-size: var(--ngaf-chat-font-size-sm);
+    font-size: var(--tplane-chat-font-size-sm);
     cursor: pointer;
   }
   .chat-select__option-desc {
-    font-size: var(--ngaf-chat-font-size-xs);
-    color: var(--ngaf-chat-text-muted);
+    font-size: var(--tplane-chat-font-size-xs);
+    color: var(--tplane-chat-text-muted);
     line-height: 1.3;
     white-space: normal;
   }
   .chat-select__option:hover:not(:disabled),
   .chat-select__option:focus-visible {
-    background: var(--ngaf-chat-surface-alt);
+    background: var(--tplane-chat-surface-alt);
     outline: none;
   }
   .chat-select__option.is-active {
-    background: var(--ngaf-chat-surface-alt);
+    background: var(--tplane-chat-surface-alt);
     font-weight: 500;
   }
   .chat-select__option:disabled {

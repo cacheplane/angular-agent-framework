@@ -15,7 +15,7 @@ export { installEmbeddedTheme } from './lib/install-embedded-theme';
  * `installEmbeddedTheme()` is benign when not iframed: it sets
  * `data-theme="dark"` + applies cssVars on `<html>`, posts to
  * `window.parent` (which equals `window` standalone, so the message
- * goes to self), and listens for `ngaf:theme` events that don't
+ * goes to self), and listens for `tplane:theme` events that don't
  * arrive unless a host (cockpit's `<ThemedFrame>`) is broadcasting.
  *
  * Guarded on `typeof document` so SSR doesn't crash.

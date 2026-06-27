@@ -3,9 +3,9 @@
 html, body {
   height: 100%;
   margin: 0;
-  background: var(--ngaf-chat-bg);
-  color: var(--ngaf-chat-text);
-  font-family: var(--ngaf-chat-font-family);
+  background: var(--tplane-chat-bg);
+  color: var(--tplane-chat-text);
+  font-family: var(--tplane-chat-font-family);
 }
 
 @keyframes shimmer {
@@ -17,7 +17,7 @@ html, body {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    var(--ngaf-chat-surface-alt) 50%,
+    var(--tplane-chat-surface-alt) 50%,
     transparent 100%
   );
   background-size: 200% 100%;

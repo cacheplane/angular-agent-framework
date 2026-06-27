@@ -14,7 +14,7 @@ import { TELEMETRY_EVENT_CONTRACT } from './telemetry-contract.js';
 test('analyzeTelemetryEvents flags missing required and forbidden properties', () => {
   const findings = analyzeTelemetryEvents([
     {
-      event: 'ngaf:runtime_request_created',
+      event: 'tplane:runtime_request_created',
       timestamp: '2026-05-17T00:00:00Z',
       properties: { messages: [{ content: 'hello' }] },
     },
@@ -30,13 +30,13 @@ test('analyzeTelemetryEvents flags missing required and forbidden properties', (
     [
       {
         severity: 'error',
-        event: 'ngaf:runtime_request_created',
+        event: 'tplane:runtime_request_created',
         property: 'transport',
         kind: 'missing_required_property',
       },
       {
         severity: 'error',
-        event: 'ngaf:runtime_request_created',
+        event: 'tplane:runtime_request_created',
         property: 'messages',
         kind: 'forbidden_property',
       },
@@ -48,7 +48,7 @@ test('analyzeTelemetryEvents flags missing required and forbidden properties', (
 test('analyzeTelemetryEvents warns on non-contract properties but ignores PostHog metadata', () => {
   const findings = analyzeTelemetryEvents([
     {
-      event: 'ngaf:stream_started',
+      event: 'tplane:stream_started',
       timestamp: '2026-05-17T00:00:00Z',
       properties: {
         transport: 'langgraph',
@@ -97,7 +97,7 @@ test('analyzeTelemetryEvents ignores PostHog attribution metadata', () => {
 test('formatLiveQualityReport summarizes clean coverage and warnings', () => {
   const events: LiveTelemetryEvent[] = [
     {
-      event: 'ngaf:stream_started',
+      event: 'tplane:stream_started',
       timestamp: '2026-05-17T00:00:00Z',
       properties: { transport: 'langgraph', unexpected: true },
     },
@@ -108,26 +108,26 @@ test('formatLiveQualityReport summarizes clean coverage and warnings', () => {
     days: 1,
     events,
     findings,
-    checkedEvents: ['ngaf:stream_started', 'ngaf:stream_ended'],
+    checkedEvents: ['tplane:stream_started', 'tplane:stream_ended'],
   });
 
   assert.match(report, /Live telemetry quality — last 1 day/);
-  assert.match(report, /\| ngaf:stream_started \| 1 \|/);
-  assert.match(report, /\| ngaf:stream_ended \| 0 \|/);
+  assert.match(report, /\| tplane:stream_started \| 1 \|/);
+  assert.match(report, /\| tplane:stream_ended \| 0 \|/);
   assert.match(report, /Warnings/);
   assert.match(report, /unexpected/);
 });
 
 test('analyzeTelemetryCoverage flags required events with no recent samples', () => {
   const requirements: LiveCoverageRequirement[] = [
-    { event: 'ngaf:runtime_request_created', minCount: 1 },
-    { event: 'ngaf:stream_started', minCount: 2 },
+    { event: 'tplane:runtime_request_created', minCount: 1 },
+    { event: 'tplane:stream_started', minCount: 2 },
   ];
 
   const findings = analyzeTelemetryCoverage(
     [
       {
-        event: 'ngaf:stream_started',
+        event: 'tplane:stream_started',
         timestamp: '2026-05-17T00:00:00Z',
         properties: { transport: 'langgraph' },
       },
@@ -146,18 +146,18 @@ test('analyzeTelemetryCoverage flags required events with no recent samples', ()
     [
       {
         severity: 'error',
-        event: 'ngaf:runtime_request_created',
+        event: 'tplane:runtime_request_created',
         property: 'event_count',
         kind: 'insufficient_event_coverage',
         message:
-          'ngaf:runtime_request_created has 0 recent events; expected at least 1',
+          'tplane:runtime_request_created has 0 recent events; expected at least 1',
       },
       {
         severity: 'error',
-        event: 'ngaf:stream_started',
+        event: 'tplane:stream_started',
         property: 'event_count',
         kind: 'insufficient_event_coverage',
-        message: 'ngaf:stream_started has 1 recent event; expected at least 2',
+        message: 'tplane:stream_started has 1 recent event; expected at least 2',
       },
     ]
   );
@@ -170,14 +170,14 @@ test('formatLiveQualityReport includes coverage requirements', () => {
     events: [],
     findings: analyzeTelemetryCoverage(
       [],
-      [{ event: 'ngaf:postinstall', minCount: 1 }]
+      [{ event: 'tplane:postinstall', minCount: 1 }]
     ),
-    checkedEvents: ['ngaf:postinstall'],
-    coverageRequirements: [{ event: 'ngaf:postinstall', minCount: 1 }],
+    checkedEvents: ['tplane:postinstall'],
+    coverageRequirements: [{ event: 'tplane:postinstall', minCount: 1 }],
   });
 
   assert.match(report, /\| Event \| Sampled events \| Required minimum \|/);
-  assert.match(report, /\| ngaf:postinstall \| 0 \| 1 \|/);
+  assert.match(report, /\| tplane:postinstall \| 0 \| 1 \|/);
   assert.match(report, /insufficient_event_coverage/);
 });
 
@@ -190,7 +190,7 @@ test('fetchRecentContractEvents requests each contract event with bounded limits
         data: {
           results: [
             {
-              event: 'ngaf:stream_started',
+              event: 'tplane:stream_started',
               timestamp: '2026-05-17T00:00:00Z',
               properties: { transport: 'langgraph' },
             },
@@ -202,7 +202,7 @@ test('fetchRecentContractEvents requests each contract event with bounded limits
 
   const events = await fetchRecentContractEvents({
     client,
-    eventNames: ['ngaf:stream_started', 'ngaf:stream_ended'],
+    eventNames: ['tplane:stream_started', 'tplane:stream_ended'],
     after: '2026-05-16T00:00:00.000Z',
     limitPerEvent: 25,
   });
@@ -216,7 +216,7 @@ test('fetchRecentContractEvents requests each contract event with bounded limits
         params: {
           query: {
             after: '2026-05-16T00:00:00.000Z',
-            event: 'ngaf:stream_started',
+            event: 'tplane:stream_started',
             format: 'json',
             limit: 25,
           },
@@ -229,7 +229,7 @@ test('fetchRecentContractEvents requests each contract event with bounded limits
         params: {
           query: {
             after: '2026-05-16T00:00:00.000Z',
-            event: 'ngaf:stream_ended',
+            event: 'tplane:stream_ended',
             format: 'json',
             limit: 25,
           },

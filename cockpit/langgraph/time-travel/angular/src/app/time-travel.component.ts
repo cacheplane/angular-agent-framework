@@ -26,20 +26,20 @@ import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
       <!-- Checkpoint timeline sidebar -->
       <div sidebar
         class="flex flex-col overflow-hidden"
-        style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);"
+        style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);"
       >
-        <div class="px-4 py-3 border-b border-[var(--ngaf-chat-separator)]">
-          <h2 class="text-sm font-semibold text-[var(--ngaf-chat-text)] uppercase tracking-wide">
+        <div class="px-4 py-3 border-b border-[var(--tplane-chat-separator)]">
+          <h2 class="text-sm font-semibold text-[var(--tplane-chat-text)] uppercase tracking-wide">
             Timeline
           </h2>
-          <p class="text-xs text-[var(--ngaf-chat-text-muted)] mt-0.5">
+          <p class="text-xs text-[var(--tplane-chat-text-muted)] mt-0.5">
             {{ checkpoints().length }} checkpoint(s)
           </p>
         </div>
 
         <div class="flex-1 overflow-y-auto px-3 py-2 space-y-1.5">
           @if (checkpoints().length === 0) {
-            <p class="text-xs text-[var(--ngaf-chat-text-muted)] text-center py-6">
+            <p class="text-xs text-[var(--tplane-chat-text-muted)] text-center py-6">
               No checkpoints yet. Send a message to begin.
             </p>
           }
@@ -49,8 +49,8 @@ import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
               class="flex items-center gap-2 rounded-lg border px-3 py-2 transition-colors"
               [class]="
                 i === selectedIndex()
-                  ? 'border-[var(--ngaf-chat-primary)] bg-[var(--ngaf-chat-surface-alt)]'
-                  : 'border-[var(--ngaf-chat-separator)] bg-[var(--ngaf-chat-bg)] hover:bg-[var(--ngaf-chat-surface-alt)]'
+                  ? 'border-[var(--tplane-chat-primary)] bg-[var(--tplane-chat-surface-alt)]'
+                  : 'border-[var(--tplane-chat-separator)] bg-[var(--tplane-chat-bg)] hover:bg-[var(--tplane-chat-surface-alt)]'
               "
             >
               <!-- Numbered badge -->
@@ -58,8 +58,8 @@ import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
                 class="w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold shrink-0"
                 [class]="
                   i === selectedIndex()
-                    ? 'bg-[var(--ngaf-chat-primary)] text-[var(--ngaf-chat-on-primary)]'
-                    : 'bg-[var(--ngaf-chat-surface-alt)] text-[var(--ngaf-chat-text-muted)]'
+                    ? 'bg-[var(--tplane-chat-primary)] text-[var(--tplane-chat-on-primary)]'
+                    : 'bg-[var(--tplane-chat-surface-alt)] text-[var(--tplane-chat-text-muted)]'
                 "
               >
                 {{ i + 1 }}
@@ -67,11 +67,11 @@ import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
 
               <!-- Checkpoint info -->
               <div class="flex-1 min-w-0">
-                <p class="text-xs font-medium text-[var(--ngaf-chat-text)] truncate">
+                <p class="text-xs font-medium text-[var(--tplane-chat-text)] truncate">
                   {{ checkpointLabel(state, i) }}
                 </p>
                 @if (state.checkpoint?.checkpoint_id) {
-                  <p class="text-xs text-[var(--ngaf-chat-text-muted)] font-mono truncate">
+                  <p class="text-xs text-[var(--tplane-chat-text-muted)] font-mono truncate">
                     {{ state.checkpoint.checkpoint_id }}
                   </p>
                 }
@@ -80,14 +80,14 @@ import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
               <!-- Action buttons -->
               <div class="flex gap-1 shrink-0">
                 <button
-                  class="px-2 py-1 text-xs rounded bg-[var(--ngaf-chat-surface-alt)] text-[var(--ngaf-chat-text)] hover:bg-[var(--ngaf-chat-surface-alt)] transition-colors"
+                  class="px-2 py-1 text-xs rounded bg-[var(--tplane-chat-surface-alt)] text-[var(--tplane-chat-text)] hover:bg-[var(--tplane-chat-surface-alt)] transition-colors"
                   title="Replay from this checkpoint"
                   (click)="replay(state, i)"
                 >
                   Replay
                 </button>
                 <button
-                  class="px-2 py-1 text-xs rounded bg-[var(--ngaf-chat-surface-alt)] text-[var(--ngaf-chat-text)] hover:bg-[var(--ngaf-chat-surface-alt)] transition-colors"
+                  class="px-2 py-1 text-xs rounded bg-[var(--tplane-chat-surface-alt)] text-[var(--tplane-chat-text)] hover:bg-[var(--tplane-chat-surface-alt)] transition-colors"
                   title="Fork from this checkpoint"
                   (click)="fork(state, i)"
                 >

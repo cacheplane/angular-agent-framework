@@ -60,7 +60,7 @@ describe('ChatSidebarComponent — edge-claim attribute', () => {
   it('removes the <html> claim when the sidebar is DESTROYED while open', () => {
     // Regression: unmounting an open sidebar (e.g. switching demo modes) must
     // not leave data-threadplane-chat-sidebar="open" stuck on <html>, or peer
-    // panels keep reserving --ngaf-chat-occupy-right and a phantom gap persists.
+    // panels keep reserving --tplane-chat-occupy-right and a phantom gap persists.
     TestBed.configureTestingModule({});
     const parent = TestBed.inject(EnvironmentInjector);
     const child = createEnvironmentInjector([], parent);
@@ -87,17 +87,17 @@ describe('ChatSidebarComponent — edge-claim attribute', () => {
     expect(styles).not.toMatch(/min-height:\s*100vh/);
   });
 
-  it('panel CSS reads PEER --ngaf-chat-debug-claim-bottom (not aggregate)', () => {
+  it('panel CSS reads PEER --tplane-chat-debug-claim-bottom (not aggregate)', () => {
     // Components must read PEER per-component claim vars, never the
     // aggregate occupy-* (which they write to themselves). The aggregate
     // is for external consumer convenience; internal panels read
     // peer-specific to avoid self-feedback.
     const styles = (ChatSidebarComponent as unknown as { ɵcmp: { styles: string[] } }).ɵcmp.styles.join('\n');
-    expect(styles).toMatch(/\.chat-sidebar__panel[^{]*\{[^}]*bottom:\s*var\(--ngaf-chat-debug-claim-bottom/);
+    expect(styles).toMatch(/\.chat-sidebar__panel[^{]*\{[^}]*bottom:\s*var\(--tplane-chat-debug-claim-bottom/);
   });
 
-  it('launcher CSS reads PEER --ngaf-chat-debug-claim-bottom (not aggregate)', () => {
+  it('launcher CSS reads PEER --tplane-chat-debug-claim-bottom (not aggregate)', () => {
     const styles = (ChatSidebarComponent as unknown as { ɵcmp: { styles: string[] } }).ɵcmp.styles.join('\n');
-    expect(styles).toMatch(/\.chat-sidebar__launcher[^{]*\{[^}]*bottom:\s*calc\(1rem\s*\+\s*var\(--ngaf-chat-debug-claim-bottom/);
+    expect(styles).toMatch(/\.chat-sidebar__launcher[^{]*\{[^}]*bottom:\s*calc\(1rem\s*\+\s*var\(--tplane-chat-debug-claim-bottom/);
   });
 });

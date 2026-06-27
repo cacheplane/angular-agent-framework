@@ -4,7 +4,7 @@ import { isTelemetryDisabled, getDisableReason } from './env';
 describe('isTelemetryDisabled', () => {
   beforeEach(() => {
     delete process.env.DO_NOT_TRACK;
-    delete process.env.NGAF_TELEMETRY_DISABLED;
+    delete process.env.TPLANE_TELEMETRY_DISABLED;
     delete process.env.npm_config_do_not_track;
     delete process.env.NPM_CONFIG_DO_NOT_TRACK;
     delete process.env.CI;
@@ -29,10 +29,10 @@ describe('isTelemetryDisabled', () => {
     expect(isTelemetryDisabled()).toBe(true);
   });
 
-  test('NGAF_TELEMETRY_DISABLED=1 disables', () => {
-    process.env.NGAF_TELEMETRY_DISABLED = '1';
+  test('TPLANE_TELEMETRY_DISABLED=1 disables', () => {
+    process.env.TPLANE_TELEMETRY_DISABLED = '1';
     expect(isTelemetryDisabled()).toBe(true);
-    expect(getDisableReason()).toBe('NGAF_TELEMETRY_DISABLED');
+    expect(getDisableReason()).toBe('TPLANE_TELEMETRY_DISABLED');
   });
 
   test('npm do-not-track config disables', () => {
@@ -59,7 +59,7 @@ describe('isTelemetryDisabled', () => {
 
   test('precedence: DO_NOT_TRACK reported first when multiple match', () => {
     process.env.DO_NOT_TRACK = '1';
-    process.env.NGAF_TELEMETRY_DISABLED = '1';
+    process.env.TPLANE_TELEMETRY_DISABLED = '1';
     process.env.CI = 'true';
     expect(getDisableReason()).toBe('DO_NOT_TRACK');
   });

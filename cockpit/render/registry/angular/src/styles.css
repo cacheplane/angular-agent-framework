@@ -3,9 +3,9 @@
 html, body {
   height: 100%;
   margin: 0;
-  background: var(--ngaf-chat-bg);
-  color: var(--ngaf-chat-text);
-  font-family: var(--ngaf-chat-font-family);
+  background: var(--tplane-chat-bg);
+  color: var(--tplane-chat-text);
+  font-family: var(--tplane-chat-font-family);
 }
 
 /* Skeleton shimmer for streaming render skeletons */

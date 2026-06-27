@@ -107,7 +107,7 @@ export function isPinned(
       min-height: 0;
       max-height: 100%;
       overflow: hidden;
-      background: var(--ngaf-chat-bg);
+      background: var(--tplane-chat-bg);
     }
     :host > chat-welcome {
       display: flex;
@@ -118,8 +118,8 @@ export function isPinned(
     .chat-shell__sidebar {
       width: 240px;
       flex-shrink: 0;
-      border-right: 1px solid var(--ngaf-chat-separator);
-      background: var(--ngaf-chat-surface-alt);
+      border-right: 1px solid var(--tplane-chat-separator);
+      background: var(--tplane-chat-surface-alt);
       overflow-y: auto;
       display: none;
     }
@@ -132,21 +132,21 @@ export function isPinned(
       justify-content: center;
       gap: 12px;
       padding: 60px 20px;
-      color: var(--ngaf-chat-text-muted);
+      color: var(--tplane-chat-text-muted);
       text-align: center;
       flex: 1;
       min-height: 0;
     }
     .chat-empty[hidden] { display: none; }
-    .chat-empty__title { font-size: 1.125rem; font-weight: 500; color: var(--ngaf-chat-text); margin: 0; }
-    .chat-empty__sub { margin: 0; font-size: var(--ngaf-chat-font-size-sm); }
-    .chat-empty__title { font-size: 1.125rem; font-weight: 500; color: var(--ngaf-chat-text); margin: 0; }
-    .chat-empty__sub { margin: 0; font-size: var(--ngaf-chat-font-size-sm); }
-    .chat-scroll { flex: 1; min-height: 0; overflow-y: auto; padding-top: var(--ngaf-chat-edge-pad); }
+    .chat-empty__title { font-size: 1.125rem; font-weight: 500; color: var(--tplane-chat-text); margin: 0; }
+    .chat-empty__sub { margin: 0; font-size: var(--tplane-chat-font-size-sm); }
+    .chat-empty__title { font-size: 1.125rem; font-weight: 500; color: var(--tplane-chat-text); margin: 0; }
+    .chat-empty__sub { margin: 0; font-size: var(--tplane-chat-font-size-sm); }
+    .chat-scroll { flex: 1; min-height: 0; overflow-y: auto; padding-top: var(--tplane-chat-edge-pad); }
     .chat-scroll::-webkit-scrollbar { width: 6px; }
-    .chat-scroll::-webkit-scrollbar-thumb { background: var(--ngaf-chat-separator); border-radius: 10px; }
+    .chat-scroll::-webkit-scrollbar-thumb { background: var(--tplane-chat-separator); border-radius: 10px; }
     [chatFooter] {
-      padding-bottom: var(--ngaf-chat-edge-pad);
+      padding-bottom: var(--tplane-chat-edge-pad);
     }
     .chat-footer-wrap { position: relative; }
   `],
@@ -586,8 +586,8 @@ export class ChatComponent {
   });
 
   constructor() {
-    // Inject the chat lib's root CSS custom properties (--ngaf-chat-bg,
-    // --ngaf-chat-surface, --ngaf-chat-radius-input, etc.) the first
+    // Inject the chat lib's root CSS custom properties (--tplane-chat-bg,
+    // --tplane-chat-surface, --tplane-chat-radius-input, etc.) the first
     // time any chat composition is constructed. The module-eval side
     // effect that previously handled this is unreliable under
     // aggressive production tree-shaking — bundlers that don't see

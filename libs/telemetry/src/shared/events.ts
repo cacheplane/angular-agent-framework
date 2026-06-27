@@ -1,13 +1,13 @@
 export type ThreadplaneNodeEvent =
-  | 'ngaf:postinstall'
-  | 'ngaf:runtime_instance_created'
-  | 'ngaf:runtime_request_created'
-  | 'ngaf:stream_started'
-  | 'ngaf:stream_ended'
-  | 'ngaf:stream_errored';
+  | 'tplane:postinstall'
+  | 'tplane:runtime_instance_created'
+  | 'tplane:runtime_request_created'
+  | 'tplane:stream_started'
+  | 'tplane:stream_ended'
+  | 'tplane:stream_errored';
 
 export type ThreadplaneBrowserEvent =
-  | 'ngaf:browser_provided'
-  | 'ngaf:browser_chat_init';
+  | 'tplane:browser_provided'
+  | 'tplane:browser_chat_init';
 
 export type ThreadplaneEvent = ThreadplaneNodeEvent | ThreadplaneBrowserEvent;

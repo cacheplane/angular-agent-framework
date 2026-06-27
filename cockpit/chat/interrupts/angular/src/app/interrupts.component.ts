@@ -63,14 +63,14 @@ const SUGGESTIONS = [
           }
         </div>
       </chat>
-      <div sidebar class="p-4 space-y-4" style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">
+      <div sidebar class="p-4 space-y-4" style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--ngaf-chat-text-muted);">Interrupt Panel</h3>
+            style="color: var(--tplane-chat-text-muted);">Interrupt Panel</h3>
         <chat-interrupt-panel [agent]="agent" (action)="onInterruptAction($event)" />
         <div class="mt-4">
           <h4 class="text-xs font-semibold uppercase tracking-wide mb-2"
-              style="color: var(--ngaf-chat-text-muted);">Stream Status</h4>
-          <p class="text-xs font-mono" style="color: var(--ngaf-chat-text-muted);">{{ streamStatus() }}</p>
+              style="color: var(--tplane-chat-text-muted);">Stream Status</h4>
+          <p class="text-xs font-mono" style="color: var(--tplane-chat-text-muted);">{{ streamStatus() }}</p>
         </div>
       </div>
     </example-chat-layout>

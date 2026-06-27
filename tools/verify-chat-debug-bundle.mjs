@@ -15,7 +15,7 @@ const sentinels = [
   'Chat Debug',
   'chat-debug-state-inspector',
   'chat-debug-timeline-inspector',
-  'ngaf-chat-debug-root-styles',
+  'tplane-chat-debug-root-styles',
 ];
 
 function files(dir) {

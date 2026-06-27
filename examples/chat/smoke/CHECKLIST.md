@@ -235,8 +235,8 @@ renders correctly both during streaming and after completion.
 - [ ] After tool completes: card collapses to "complete" pill
 - [ ] Click the card — args + result panels expand
 - [ ] AI response references documents inline (e.g. "Signals are... [1]")
-- [ ] Tool call card name (`.tcc__name`) is rendered in `--ngaf-chat-text-muted` color and `font-size-sm` (NOT full-brightness text)
-- [ ] Tool call status pill (`.tcc__pill`) uses muted monochrome (`--ngaf-chat-text-muted`) regardless of status — NO saturated green/red for complete/error states
+- [ ] Tool call card name (`.tcc__name`) is rendered in `--tplane-chat-text-muted` color and `font-size-sm` (NOT full-brightness text)
+- [ ] Tool call status pill (`.tcc__pill`) uses muted monochrome (`--tplane-chat-text-muted`) regardless of status — NO saturated green/red for complete/error states
 - [ ] `<chat-tool-calls>` host has `margin-bottom >= 16px` so the next sibling (A2UI surface or markdown) has clear breathing room
 
 ## Interrupts / human-in-the-loop

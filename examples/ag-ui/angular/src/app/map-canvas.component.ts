@@ -77,7 +77,7 @@ const PARIS_CENTER: google.maps.LatLngLiteral = { lat: 48.8566, lng: 2.3522 };
   styles: [
     `
       :host { display: block; width: 100%; height: 100%; }
-      .info { font-family: var(--ngaf-chat-font-family, sans-serif); font-size: 0.85rem; color: #111; }
+      .info { font-family: var(--tplane-chat-font-family, sans-serif); font-size: 0.85rem; color: #111; }
       .info__note { color: #555; margin: 4px 0 8px; }
       .info__remove {
         font: inherit; cursor: pointer; padding: 4px 10px;

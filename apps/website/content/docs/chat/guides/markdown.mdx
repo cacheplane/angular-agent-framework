@@ -65,8 +65,8 @@ The stylesheet covers the following markdown elements:
 | Element | Styling |
 |---------|---------|
 | `p` | Bottom margin of `0.75em`, last child has no bottom margin |
-| `code` (inline) | Background `var(--ngaf-chat-surface-alt)`, padding, `4px` radius, monospace font |
-| `pre` | Background `var(--ngaf-chat-surface-alt)`, `12px 16px` padding, horizontal scroll |
+| `code` (inline) | Background `var(--tplane-chat-surface-alt)`, padding, `4px` radius, monospace font |
+| `pre` | Background `var(--tplane-chat-surface-alt)`, `12px 16px` padding, horizontal scroll |
 | `pre code` | No extra background or padding (inherits from `pre`) |
 | `ul`, `ol` | `0.5em` vertical margin, `1.5em` left padding |
 | `li` | `0.25em` vertical margin |
@@ -80,7 +80,7 @@ The stylesheet covers the following markdown elements:
 | `th` | Alt background, bold, `0.875em` |
 | `td` | Standard border and padding |
 
-All colors reference `--ngaf-chat-*` CSS custom properties, so markdown elements automatically respect the active chat theme.
+All colors reference `--tplane-chat-*` CSS custom properties, so markdown elements automatically respect the active chat theme.
 
 ## Using Markdown in Custom Components
 
@@ -228,7 +228,7 @@ The most common mistake is providing `'code'` as an override key — it does not
 
 ## Theming Markdown Components
 
-All built-in markdown view components consume the same `--ngaf-chat-*` and `--a2ui-*` CSS custom properties as the rest of the chat UI. No extra tokens are needed — changing the active theme automatically re-styles markdown output. See the [chat theming guide](/docs/chat/guides/theming) for the full token reference.
+All built-in markdown view components consume the same `--tplane-chat-*` and `--a2ui-*` CSS custom properties as the rest of the chat UI. No extra tokens are needed — changing the active theme automatically re-styles markdown output. See the [chat theming guide](/docs/chat/guides/theming) for the full token reference.
 
 ## Without marked
 

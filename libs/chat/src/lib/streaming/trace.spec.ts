@@ -40,6 +40,6 @@ describe('trace', () => {
   it('calls console.debug with prefix when enabled', () => {
     (globalThis as any).window = { ...((globalThis as any).window ?? {}), __threadplaneChatTrace: true };
     trace('hello', { foo: 1 });
-    expect(consoleSpy).toHaveBeenCalledWith('[ngaf-chat-stream]', 'hello', { foo: 1 });
+    expect(consoleSpy).toHaveBeenCalledWith('[tplane-chat-stream]', 'hello', { foo: 1 });
   });
 });

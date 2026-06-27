@@ -28,8 +28,8 @@ interface Group {
   styles: [`
     :host { display: block; margin-bottom: 20px; }
     .ctc__group {
-      border: 1px solid var(--ngaf-chat-separator);
-      border-radius: var(--ngaf-chat-radius-card);
+      border: 1px solid var(--tplane-chat-separator);
+      border-radius: var(--tplane-chat-radius-card);
       margin: 0 0 4px;
     }
     .ctc__group-header {
@@ -41,7 +41,7 @@ interface Group {
       background: transparent;
       border: 0;
       font: inherit;
-      color: var(--ngaf-chat-text);
+      color: var(--tplane-chat-text);
       cursor: pointer;
       text-align: left;
     }
@@ -52,7 +52,7 @@ interface Group {
     .ctc__group[data-expanded="true"] .ctc__group-chevron { transform: rotate(90deg); }
     .ctc__group-body {
       padding: 0 12px 8px;
-      border-top: 1px solid var(--ngaf-chat-separator);
+      border-top: 1px solid var(--tplane-chat-separator);
     }
   `],
   template: `

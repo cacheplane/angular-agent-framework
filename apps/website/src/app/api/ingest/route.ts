@@ -36,7 +36,7 @@ function readPayload(value: unknown): {
 
   const distinctId = toSafeAnalyticsString(payload.distinctId, 200);
   const event = toSafeAnalyticsString(payload.event, 100);
-  if (!distinctId || !event?.startsWith('ngaf:')) return null;
+  if (!distinctId || !event?.startsWith('tplane:')) return null;
 
   return {
     distinctId,

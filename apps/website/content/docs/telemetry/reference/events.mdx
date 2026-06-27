@@ -10,22 +10,22 @@ type ThreadplaneEvent = ThreadplaneNodeEvent | ThreadplaneBrowserEvent;
 
 ```ts
 type ThreadplaneNodeEvent =
-  | 'ngaf:postinstall'
-  | 'ngaf:runtime_instance_created'
-  | 'ngaf:runtime_request_created'
-  | 'ngaf:stream_started'
-  | 'ngaf:stream_ended'
-  | 'ngaf:stream_errored';
+  | 'tplane:postinstall'
+  | 'tplane:runtime_instance_created'
+  | 'tplane:runtime_request_created'
+  | 'tplane:stream_started'
+  | 'tplane:stream_ended'
+  | 'tplane:stream_errored';
 ```
 
 | Event                           | Source                     | Properties from source                                                                                                 |
 | ------------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `ngaf:postinstall`              | package postinstall script | `pkg`, `version`, `node`, `node_version`, `os`, `arch`, `global_install`, package-manager fields when npm exposes them |
-| `ngaf:runtime_instance_created` | Node adapter helper        | `transport`, `provider`, `model`, `angularVersion`; `apiKey` is removed                                                |
-| `ngaf:runtime_request_created`  | Node adapter helper        | `transport`, `requestType`, `provider`, `model` (`provider` and `model` optional)                                     |
-| `ngaf:stream_started`           | Node adapter helper        | `provider`, `model`, optional fields in the input object                                                               |
-| `ngaf:stream_ended`             | Node adapter helper        | `provider`, `model`, `durationMs` when supplied                                                                        |
-| `ngaf:stream_errored`           | Node adapter helper        | stream properties plus `errorClass`                                                                                    |
+| `tplane:postinstall`              | package postinstall script | `pkg`, `version`, `node`, `node_version`, `os`, `arch`, `global_install`, package-manager fields when npm exposes them |
+| `tplane:runtime_instance_created` | Node adapter helper        | `transport`, `provider`, `model`, `angularVersion`; `apiKey` is removed                                                |
+| `tplane:runtime_request_created`  | Node adapter helper        | `transport`, `requestType`, `provider`, `model` (`provider` and `model` optional)                                     |
+| `tplane:stream_started`           | Node adapter helper        | `provider`, `model`, optional fields in the input object                                                               |
+| `tplane:stream_ended`             | Node adapter helper        | `provider`, `model`, `durationMs` when supplied                                                                        |
+| `tplane:stream_errored`           | Node adapter helper        | stream properties plus `errorClass`                                                                                    |
 
 `captureEvent()` also adds `sample_weight` to sent event properties.
 
@@ -34,20 +34,20 @@ type ThreadplaneNodeEvent =
 The shared event file lists these browser-only events:
 
 ```ts
-type ThreadplaneBrowserEvent = 'ngaf:browser_provided' | 'ngaf:browser_chat_init';
+type ThreadplaneBrowserEvent = 'tplane:browser_provided' | 'tplane:browser_chat_init';
 ```
 
 The browser Angular token broadens the local service event type to:
 
 ```ts
 type ThreadplaneTelemetryEvent =
-  | 'ngaf:browser_provided'
-  | 'ngaf:browser_chat_init'
-  | 'ngaf:runtime_instance_created'
-  | 'ngaf:runtime_request_created'
-  | 'ngaf:stream_started'
-  | 'ngaf:stream_ended'
-  | 'ngaf:stream_errored';
+  | 'tplane:browser_provided'
+  | 'tplane:browser_chat_init'
+  | 'tplane:runtime_instance_created'
+  | 'tplane:runtime_request_created'
+  | 'tplane:stream_started'
+  | 'tplane:stream_ended'
+  | 'tplane:stream_errored';
 ```
 
 That means browser code can capture the browser-specific events plus runtime lifecycle events when telemetry is enabled.
@@ -58,7 +58,7 @@ Endpoint delivery sends:
 
 ```json
 {
-  "event": "ngaf:stream_ended",
+  "event": "tplane:stream_ended",
   "distinctId": "browser:<ephemeral-id>",
   "properties": {
     "transport": "langgraph",
@@ -80,7 +80,7 @@ Node delivery sends:
 {
   "key": "phc_public_cacheplane_telemetry",
   "distinctId": "anon_<uuid>",
-  "event": "ngaf:stream_started",
+  "event": "tplane:stream_started",
   "properties": {
     "provider": "openai",
     "model": "gpt-4.1",

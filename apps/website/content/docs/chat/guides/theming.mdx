@@ -1,6 +1,6 @@
 # Theming
 
-`@threadplane/chat` styles everything with CSS custom properties (variables). Every color, radius, font, and spacing value is controlled by a variable prefixed with `--ngaf-chat-`, so matching your app's design system is straightforward.
+`@threadplane/chat` styles everything with CSS custom properties (variables). Every color, radius, font, and spacing value is controlled by a variable prefixed with `--tplane-chat-`, so matching your app's design system is straightforward.
 
 ## How Theming Works
 
@@ -14,43 +14,43 @@ You don't need to import a stylesheet — each component's encapsulated styles a
 
 | Token | Light | Dark | Purpose |
 |---|---|---|---|
-| `--ngaf-chat-bg` | `rgb(255 255 255)` | `rgb(17 17 17)` | Page/window background |
-| `--ngaf-chat-surface` | `rgb(255 255 255)` | `rgb(28 28 28)` | Cards, elevated surfaces |
-| `--ngaf-chat-surface-alt` | `rgb(251 251 251)` | `rgb(44 44 44)` | Input bg, subtle fills |
-| `--ngaf-chat-primary` | `rgb(28 28 28)` | `rgb(255 255 255)` | User-bubble bg, button fg |
-| `--ngaf-chat-on-primary` | `rgb(255 255 255)` | `rgb(28 28 28)` | User-bubble text, button bg |
-| `--ngaf-chat-text` | `rgb(28 28 28)` | `rgb(245 245 245)` | Assistant text, headings |
-| `--ngaf-chat-text-muted` | `rgb(115 115 115)` | `rgb(160 160 160)` | Labels, placeholders |
-| `--ngaf-chat-separator` | `rgb(229 229 229)` | `rgb(45 45 45)` | Hairlines, borders |
-| `--ngaf-chat-muted` | `rgb(200 200 200)` | `rgb(60 60 60)` | Disabled state |
-| `--ngaf-chat-error-bg` | `#fef2f2` | `rgb(45 21 21)` | Error background |
-| `--ngaf-chat-error-text` | `#dc2626` | `#fca5a5` | Error text |
-| `--ngaf-chat-warning-bg` | `#fffbeb` | `rgb(45 35 21)` | Warning background |
-| `--ngaf-chat-warning-text` | `#b45309` | `#fbbf24` | Warning text |
-| `--ngaf-chat-success` | `#16a34a` | `#4ade80` | Success state |
+| `--tplane-chat-bg` | `rgb(255 255 255)` | `rgb(17 17 17)` | Page/window background |
+| `--tplane-chat-surface` | `rgb(255 255 255)` | `rgb(28 28 28)` | Cards, elevated surfaces |
+| `--tplane-chat-surface-alt` | `rgb(251 251 251)` | `rgb(44 44 44)` | Input bg, subtle fills |
+| `--tplane-chat-primary` | `rgb(28 28 28)` | `rgb(255 255 255)` | User-bubble bg, button fg |
+| `--tplane-chat-on-primary` | `rgb(255 255 255)` | `rgb(28 28 28)` | User-bubble text, button bg |
+| `--tplane-chat-text` | `rgb(28 28 28)` | `rgb(245 245 245)` | Assistant text, headings |
+| `--tplane-chat-text-muted` | `rgb(115 115 115)` | `rgb(160 160 160)` | Labels, placeholders |
+| `--tplane-chat-separator` | `rgb(229 229 229)` | `rgb(45 45 45)` | Hairlines, borders |
+| `--tplane-chat-muted` | `rgb(200 200 200)` | `rgb(60 60 60)` | Disabled state |
+| `--tplane-chat-error-bg` | `#fef2f2` | `rgb(45 21 21)` | Error background |
+| `--tplane-chat-error-text` | `#dc2626` | `#fca5a5` | Error text |
+| `--tplane-chat-warning-bg` | `#fffbeb` | `rgb(45 35 21)` | Warning background |
+| `--tplane-chat-warning-text` | `#b45309` | `#fbbf24` | Warning text |
+| `--tplane-chat-success` | `#16a34a` | `#4ade80` | Success state |
 
 ### Shape & Layout
 
 | Token | Light | Dark | Purpose |
 |---|---|---|---|
-| `--ngaf-chat-radius-bubble` | `15px` | - | User message bubble radius |
-| `--ngaf-chat-radius-input` | `20px` | - | Input pill radius |
-| `--ngaf-chat-radius-card` | `8px` | - | Card / trace radius |
-| `--ngaf-chat-radius-button` | `8px` | - | Button radius |
-| `--ngaf-chat-radius-launcher` | `9999px` | - | Circular launcher button |
-| `--ngaf-chat-max-width` | `48rem` | - | Message column max width |
+| `--tplane-chat-radius-bubble` | `15px` | - | User message bubble radius |
+| `--tplane-chat-radius-input` | `20px` | - | Input pill radius |
+| `--tplane-chat-radius-card` | `8px` | - | Card / trace radius |
+| `--tplane-chat-radius-button` | `8px` | - | Button radius |
+| `--tplane-chat-radius-launcher` | `9999px` | - | Circular launcher button |
+| `--tplane-chat-max-width` | `48rem` | - | Message column max width |
 
 ### Typography
 
 | Token | Light | Dark | Purpose |
 |---|---|---|---|
-| `--ngaf-chat-font-family` | system stack | - | Default font |
-| `--ngaf-chat-font-mono` | mono stack | - | Code blocks |
-| `--ngaf-chat-font-size` | `1rem` | - | Message text |
-| `--ngaf-chat-font-size-sm` | `0.875rem` | - | UI controls |
-| `--ngaf-chat-font-size-xs` | `0.75rem` | - | Labels, metadata |
-| `--ngaf-chat-line-height` | `1.6` | - | Assistant text |
-| `--ngaf-chat-line-height-tight` | `1.5` | - | User bubble |
+| `--tplane-chat-font-family` | system stack | - | Default font |
+| `--tplane-chat-font-mono` | mono stack | - | Code blocks |
+| `--tplane-chat-font-size` | `1rem` | - | Message text |
+| `--tplane-chat-font-size-sm` | `0.875rem` | - | UI controls |
+| `--tplane-chat-font-size-xs` | `0.75rem` | - | Labels, metadata |
+| `--tplane-chat-line-height` | `1.6` | - | Assistant text |
+| `--tplane-chat-line-height-tight` | `1.5` | - | User bubble |
 
 ## Light and Dark Mode
 
@@ -69,7 +69,7 @@ The switching logic is:
 ```css
 /* src/styles.css */
 :root {
-  --ngaf-chat-primary: oklch(0.55 0.22 264);
+  --tplane-chat-primary: oklch(0.55 0.22 264);
 }
 ```
 
@@ -92,8 +92,8 @@ Import `@threadplane/chat/chat.css` in your global styles to get a `:root`-level
 @import '@threadplane/chat/chat.css';
 
 :root {
-  --ngaf-chat-primary: oklch(0.55 0.22 264);
-  --ngaf-chat-radius-bubble: 10px;
+  --tplane-chat-primary: oklch(0.55 0.22 264);
+  --tplane-chat-radius-bubble: 10px;
 }
 ```
 
@@ -102,37 +102,37 @@ Import `@threadplane/chat/chat.css` in your global styles to get a `:root`-level
 ```css
 :root {
   /* Brand blues */
-  --ngaf-chat-primary: #2563eb;
-  --ngaf-chat-on-primary: #ffffff;
+  --tplane-chat-primary: #2563eb;
+  --tplane-chat-on-primary: #ffffff;
 
   /* Softer corners */
-  --ngaf-chat-radius-bubble: 12px;
-  --ngaf-chat-radius-input: 16px;
+  --tplane-chat-radius-bubble: 12px;
+  --tplane-chat-radius-input: 16px;
 
   /* Wider content area */
-  --ngaf-chat-max-width: 56rem;
+  --tplane-chat-max-width: 56rem;
 }
 ```
 
 ## Migration from `--chat-*` Tokens
 
-If you previously customized `--chat-*` tokens, rename them to `--ngaf-chat-*`. Examples:
+If you previously customized `--chat-*` tokens, rename them to `--tplane-chat-*`. Examples:
 
 | Old token | New token |
 |---|---|
-| `--chat-bg` | `--ngaf-chat-bg` |
-| `--chat-text` | `--ngaf-chat-text` |
-| `--chat-user-bg` | `--ngaf-chat-primary` |
-| `--chat-user-text` | `--ngaf-chat-on-primary` |
-| `--chat-radius-message` | `--ngaf-chat-radius-bubble` |
-| `--chat-radius-input` | `--ngaf-chat-radius-input` |
-| `--chat-radius-card` | `--ngaf-chat-radius-card` |
-| `--chat-max-width` | `--ngaf-chat-max-width` |
-| `--chat-error-bg` | `--ngaf-chat-error-bg` |
-| `--chat-error-text` | `--ngaf-chat-error-text` |
-| `--chat-warning-bg` | `--ngaf-chat-warning-bg` |
-| `--chat-warning-text` | `--ngaf-chat-warning-text` |
-| `--chat-success` | `--ngaf-chat-success` |
+| `--chat-bg` | `--tplane-chat-bg` |
+| `--chat-text` | `--tplane-chat-text` |
+| `--chat-user-bg` | `--tplane-chat-primary` |
+| `--chat-user-text` | `--tplane-chat-on-primary` |
+| `--chat-radius-message` | `--tplane-chat-radius-bubble` |
+| `--chat-radius-input` | `--tplane-chat-radius-input` |
+| `--chat-radius-card` | `--tplane-chat-radius-card` |
+| `--chat-max-width` | `--tplane-chat-max-width` |
+| `--chat-error-bg` | `--tplane-chat-error-bg` |
+| `--chat-error-text` | `--tplane-chat-error-text` |
+| `--chat-warning-bg` | `--tplane-chat-warning-bg` |
+| `--chat-warning-text` | `--tplane-chat-warning-text` |
+| `--chat-success` | `--tplane-chat-success` |
 
 <Callout type="warning" title="CHAT_THEME_STYLES removed">
 The `CHAT_THEME_STYLES` named export no longer exists in `@threadplane/chat`. Remove imports of that constant - theme tokens are now applied automatically by each component. `CHAT_MARKDOWN_STYLES` remains available for custom markdown renderers.

@@ -45,12 +45,12 @@ export function interruptReasonText(interrupt: AgentInterrupt | undefined): stri
     CHAT_HOST_TOKENS,
     `
     .chat-interrupt-panel {
-      background: var(--ngaf-chat-surface);
-      color: var(--ngaf-chat-text);
-      border: 1px solid var(--ngaf-chat-separator);
-      border-radius: var(--ngaf-chat-radius-card);
+      background: var(--tplane-chat-surface);
+      color: var(--tplane-chat-text);
+      border: 1px solid var(--tplane-chat-separator);
+      border-radius: var(--tplane-chat-radius-card);
       padding: 14px 16px;
-      font-size: var(--ngaf-chat-font-size-sm);
+      font-size: var(--tplane-chat-font-size-sm);
     }
     .chat-interrupt-panel__eyebrow {
       font-family: ui-monospace, Menlo, Consolas, monospace;
@@ -58,7 +58,7 @@ export function interruptReasonText(interrupt: AgentInterrupt | undefined): stri
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.12em;
-      color: var(--ngaf-chat-warning-text);
+      color: var(--tplane-chat-warning-text);
       margin: 0 0 8px;
       display: flex;
       align-items: center;
@@ -68,12 +68,12 @@ export function interruptReasonText(interrupt: AgentInterrupt | undefined): stri
       width: 6px;
       height: 6px;
       border-radius: 999px;
-      background: var(--ngaf-chat-warning-text);
+      background: var(--tplane-chat-warning-text);
       flex: 0 0 6px;
     }
     .chat-interrupt-panel__body {
       margin: 0 0 12px;
-      color: var(--ngaf-chat-text);
+      color: var(--tplane-chat-text);
       white-space: pre-wrap;
     }
     .chat-interrupt-panel__actions {
@@ -85,21 +85,21 @@ export function interruptReasonText(interrupt: AgentInterrupt | undefined): stri
     .btn {
       border: 0;
       padding: 6px 14px;
-      border-radius: var(--ngaf-chat-radius-button);
+      border-radius: var(--tplane-chat-radius-button);
       font-size: 12px;
       font-weight: 500;
       cursor: pointer;
       transition: transform 200ms ease, opacity 200ms ease;
     }
     .btn:hover { transform: scale(1.03); }
-    .btn-primary { background: var(--ngaf-chat-primary); color: var(--ngaf-chat-on-primary); }
-    .btn-secondary { background: transparent; color: var(--ngaf-chat-text); border: 1px solid var(--ngaf-chat-separator); }
+    .btn-primary { background: var(--tplane-chat-primary); color: var(--tplane-chat-on-primary); }
+    .btn-secondary { background: transparent; color: var(--tplane-chat-text); border: 1px solid var(--tplane-chat-separator); }
     .btn-text {
       background: transparent;
-      color: var(--ngaf-chat-text-muted);
+      color: var(--tplane-chat-text-muted);
       padding: 6px 10px;
     }
-    .btn-text:hover { color: var(--ngaf-chat-text); }
+    .btn-text:hover { color: var(--tplane-chat-text); }
     `,
   ],
   template: `

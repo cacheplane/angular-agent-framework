@@ -401,7 +401,7 @@ export class DemoShell {
       () => this.model(),
     );
     const a = injectAgent(DEMO_AGENT_REF);
-    void this.telemetry.capture('ngaf:browser_chat_init', { surface: TELEMETRY_SURFACE });
+    void this.telemetry.capture('tplane:browser_chat_init', { surface: TELEMETRY_SURFACE });
     const orig = a.submit.bind(a);
     (a as { submit: typeof a.submit }).submit = (async (
       input: Parameters<typeof a.submit>[0],

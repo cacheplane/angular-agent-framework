@@ -19,9 +19,9 @@ export const CHAT_SCROLL_BUBBLE_STYLES = `
     height: 36px;
     padding: 0 12px;
     border-radius: 9999px;
-    background: var(--ngaf-chat-surface);
-    border: 1px solid var(--ngaf-chat-separator);
-    color: var(--ngaf-chat-text);
+    background: var(--tplane-chat-surface);
+    border: 1px solid var(--tplane-chat-separator);
+    color: var(--tplane-chat-text);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
     cursor: pointer;
     transition: transform 150ms ease, box-shadow 150ms ease;
@@ -32,8 +32,8 @@ export const CHAT_SCROLL_BUBBLE_STYLES = `
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: var(--ngaf-chat-text-muted);
-    animation: ngaf-chat-typing-dot 1.4s ease-in-out infinite both;
+    background: var(--tplane-chat-text-muted);
+    animation: tplane-chat-typing-dot 1.4s ease-in-out infinite both;
   }
   .chat-scroll-bubble__dot:nth-child(2) { animation-delay: 0.2s; }
   .chat-scroll-bubble__dot:nth-child(3) { animation-delay: 0.4s; }

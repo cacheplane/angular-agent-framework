@@ -35,8 +35,8 @@ export type ChatApprovalAction = 'approve' | 'edit' | 'cancel';
       padding: 0;
       border: 0;
       border-radius: 12px;
-      background: var(--ngaf-chat-surface);
-      color: var(--ngaf-chat-text);
+      background: var(--tplane-chat-surface);
+      color: var(--tplane-chat-text);
       box-shadow: 0 20px 50px rgba(0,0,0,0.18);
     }
     dialog.chat-approval-card::backdrop {
@@ -49,24 +49,24 @@ export type ChatApprovalAction = 'approve' | 'edit' | 'cancel';
       display: flex;
       align-items: center;
       gap: 8px;
-      border-bottom: 1px solid var(--ngaf-chat-separator);
+      border-bottom: 1px solid var(--tplane-chat-separator);
     }
     .chat-approval-card__header h4 {
       margin: 0;
       font-size: 14px;
       font-weight: 600;
-      color: var(--ngaf-chat-text);
+      color: var(--tplane-chat-text);
     }
     .chat-approval-card__header svg {
-      color: var(--ngaf-chat-warning-text);
+      color: var(--tplane-chat-warning-text);
       width: 16px;
       height: 16px;
       flex: 0 0 16px;
     }
     .chat-approval-card__body {
       padding: 14px 16px;
-      font-size: var(--ngaf-chat-font-size-sm, 13px);
-      color: var(--ngaf-chat-text);
+      font-size: var(--tplane-chat-font-size-sm, 13px);
+      color: var(--tplane-chat-text);
     }
     .chat-approval-card__actions {
       padding: 8px 16px 14px;
@@ -85,14 +85,14 @@ export type ChatApprovalAction = 'approve' | 'edit' | 'cancel';
       transition: transform 200ms ease, opacity 200ms ease;
     }
     .btn:hover { transform: scale(1.03); }
-    .btn-primary { background: var(--ngaf-chat-primary); color: var(--ngaf-chat-on-primary); }
-    .btn-secondary { background: transparent; color: var(--ngaf-chat-text); border: 1px solid var(--ngaf-chat-separator); }
+    .btn-primary { background: var(--tplane-chat-primary); color: var(--tplane-chat-on-primary); }
+    .btn-secondary { background: transparent; color: var(--tplane-chat-text); border: 1px solid var(--tplane-chat-separator); }
     .btn-text {
       background: transparent;
-      color: var(--ngaf-chat-text-muted);
+      color: var(--tplane-chat-text-muted);
       padding: 6px 10px;
     }
-    .btn-text:hover { color: var(--ngaf-chat-text); }
+    .btn-text:hover { color: var(--tplane-chat-text); }
     `,
   ],
   template: `

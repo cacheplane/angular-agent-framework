@@ -23,7 +23,7 @@ describe('/api/ingest', () => {
     const response = await POST(new Request('https://threadplane.ai/api/ingest', {
       method: 'POST',
       body: JSON.stringify({
-        event: 'ngaf:browser_chat_init',
+        event: 'tplane:browser_chat_init',
         distinctId: 'browser:test',
         properties: { surface: 'canonical_demo' },
       }),
@@ -32,7 +32,7 @@ describe('/api/ingest', () => {
     expect(response.status).toBe(202);
     expect(capture).toHaveBeenCalledWith({
       distinctId: 'browser:test',
-      event: 'ngaf:browser_chat_init',
+      event: 'tplane:browser_chat_init',
       properties: {
         surface: 'canonical_demo',
         $ip: null,

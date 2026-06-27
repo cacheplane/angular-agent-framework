@@ -42,7 +42,7 @@ A short string (typically one or two characters) for wrappers or components that
 provideChat({ avatarLabel: 'AI' });
 ```
 
-There is no avatar-specific CSS token. Use the shared `--ngaf-chat-*` tokens such as `--ngaf-chat-surface`, `--ngaf-chat-text`, and `--ngaf-chat-text-muted` to align chat surfaces with your app theme.
+There is no avatar-specific CSS token. Use the shared `--tplane-chat-*` tokens such as `--tplane-chat-surface`, `--tplane-chat-text`, and `--tplane-chat-text-muted` to align chat surfaces with your app theme.
 
 ### assistantName
 
@@ -85,7 +85,7 @@ A signed license token from threadplane.ai. It is optional in development and sh
 **Example:**
 
 ```typescript
-provideChat({ license: environment.ngafLicense });
+provideChat({ license: environment.tplaneLicense });
 ```
 
 ## Accessing ChatConfig at Runtime

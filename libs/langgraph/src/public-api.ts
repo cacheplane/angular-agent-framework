@@ -49,7 +49,7 @@ export { provideFakeAgent } from './lib/testing/provide-fake-agent';
 export { FakeStreamTransport } from './lib/testing/fake-stream.transport';
 
 // Citation normalizer — useful for advanced consumers building custom adapters
-// or bridging non-LangGraph message shapes into ngaf Citation[].
+// or bridging non-LangGraph message shapes into tplane Citation[].
 export { extractCitations } from './lib/internals/extract-citations';
 
 // SDK Client helper — handles the SDK's absolute-URL requirement so

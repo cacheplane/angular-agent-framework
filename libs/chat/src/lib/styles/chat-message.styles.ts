@@ -22,9 +22,9 @@ export const CHAT_MESSAGE_STYLES = `
     display: block;
     position: relative;
     margin-top: 1.5rem;
-    color: var(--ngaf-chat-text);
+    color: var(--tplane-chat-text);
     line-height: 1.55;
-    font-size: var(--ngaf-chat-font-size);
+    font-size: var(--tplane-chat-font-size);
     max-width: 100%;
   }
   :host([data-role="assistant"]):first-child { margin-top: 0; }
@@ -32,12 +32,12 @@ export const CHAT_MESSAGE_STYLES = `
   .chat-message__bubble {
     width: fit-content;
     padding: 8px 12px;
-    border-radius: var(--ngaf-chat-radius-bubble);
-    background: var(--ngaf-chat-primary);
-    color: var(--ngaf-chat-on-primary);
+    border-radius: var(--tplane-chat-radius-bubble);
+    background: var(--tplane-chat-primary);
+    color: var(--tplane-chat-on-primary);
     white-space: pre-wrap;
-    line-height: var(--ngaf-chat-line-height-tight);
-    font-size: var(--ngaf-chat-font-size);
+    line-height: var(--tplane-chat-line-height-tight);
+    font-size: var(--tplane-chat-font-size);
     overflow-wrap: break-word;
   }
 
@@ -55,12 +55,12 @@ export const CHAT_MESSAGE_STYLES = `
     margin-left: 4px;
     margin-bottom: 2px;
     background: radial-gradient(circle at 30% 30%,
-      var(--ngaf-chat-text) 0%,
-      var(--ngaf-chat-text-muted) 70%,
+      var(--tplane-chat-text) 0%,
+      var(--tplane-chat-text-muted) 70%,
       transparent 100%);
-    box-shadow: 0 0 6px var(--ngaf-chat-text-muted);
-    animation: ngaf-chat-caret-fade-in 200ms ease-out 300ms forwards,
-               ngaf-chat-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) 500ms infinite;
+    box-shadow: 0 0 6px var(--tplane-chat-text-muted);
+    animation: tplane-chat-caret-fade-in 200ms ease-out 300ms forwards,
+               tplane-chat-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) 500ms infinite;
     opacity: 0;
   }
   :host([data-role="assistant"][data-current="true"][data-streaming="true"]) .chat-message__caret {
@@ -93,14 +93,14 @@ export const CHAT_MESSAGE_STYLES = `
     height: 20px;
     border: 0;
     background: transparent;
-    color: var(--ngaf-chat-primary);
+    color: var(--tplane-chat-primary);
     cursor: pointer;
     padding: 0;
     transition: transform 200ms ease;
   }
   .chat-message__control-btn:hover { transform: scale(1.05); }
   .chat-message__control-btn:focus-visible {
-    outline: 2px solid var(--ngaf-chat-primary);
+    outline: 2px solid var(--tplane-chat-primary);
     outline-offset: 2px;
     border-radius: 4px;
   }

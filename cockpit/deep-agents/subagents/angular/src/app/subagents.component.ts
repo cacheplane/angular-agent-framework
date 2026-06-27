@@ -31,19 +31,19 @@ interface Delegation {
   template: `
     <example-chat-layout sidebarWidth="w-72">
       <chat main [agent]="agent" class="flex-1 min-w-0" />
-      <div sidebar class="p-4 space-y-2" style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">
+      <div sidebar class="p-4 space-y-2" style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--ngaf-chat-text-muted);">Delegations</h3>
+            style="color: var(--tplane-chat-text-muted);">Delegations</h3>
         @if (delegations().length === 0) {
-          <p class="text-sm italic" style="color: var(--ngaf-chat-text-muted);">No delegations yet</p>
+          <p class="text-sm italic" style="color: var(--tplane-chat-text-muted);">No delegations yet</p>
         }
         @for (d of delegations(); track d.id) {
           <div class="flex items-center gap-2 text-sm py-1">
             <span class="w-2 h-2 rounded-full shrink-0"
-                  [style.background]="d.status === 'complete' ? 'var(--ngaf-chat-success)' : d.status === 'error' ? 'var(--ngaf-chat-error-text)' : 'var(--ngaf-chat-warning-text)'">
+                  [style.background]="d.status === 'complete' ? 'var(--tplane-chat-success)' : d.status === 'error' ? 'var(--tplane-chat-error-text)' : 'var(--tplane-chat-warning-text)'">
             </span>
-            <span class="font-medium truncate" style="color: var(--ngaf-chat-text);">{{ d.agent }}</span>
-            <span class="text-xs ml-auto" style="color: var(--ngaf-chat-text-muted);">{{ d.statusText }}</span>
+            <span class="font-medium truncate" style="color: var(--tplane-chat-text);">{{ d.agent }}</span>
+            <span class="text-xs ml-auto" style="color: var(--tplane-chat-text-muted);">{{ d.statusText }}</span>
           </div>
         }
       </div>

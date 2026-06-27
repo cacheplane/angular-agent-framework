@@ -11,7 +11,7 @@ async function writeJson(path, value) {
 }
 
 async function createWorkspace(projectVersions) {
-  const workspaceRoot = await mkdtemp(join(tmpdir(), 'ngaf-release-versions-'));
+  const workspaceRoot = await mkdtemp(join(tmpdir(), 'tplane-release-versions-'));
   const projects = Object.keys(projectVersions);
 
   await writeJson(join(workspaceRoot, 'nx.json'), {

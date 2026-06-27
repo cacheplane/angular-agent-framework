@@ -5,7 +5,7 @@
   "name": "Package installs by installer OS",
   "events": [
     {
-      "event": "ngaf:postinstall",
+      "event": "tplane:postinstall",
       "math": "total"
     }
   ],

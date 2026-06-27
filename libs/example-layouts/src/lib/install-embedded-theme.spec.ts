@@ -21,16 +21,16 @@ describe('installEmbeddedTheme', () => {
     expect(document.documentElement.style.getPropertyValue('--ds-canvas').trim()).toBe('rgb(255, 255, 255)');
   });
 
-  it('posts ngaf:theme-request to window.parent on call', () => {
+  it('posts tplane:theme-request to window.parent on call', () => {
     const spy = vi.spyOn(window.parent, 'postMessage');
     installEmbeddedTheme();
-    expect(spy).toHaveBeenCalledWith({ type: 'ngaf:theme-request' }, '*');
+    expect(spy).toHaveBeenCalledWith({ type: 'tplane:theme-request' }, '*');
   });
 
-  it('updates theme on ngaf:theme message receipt', () => {
+  it('updates theme on tplane:theme message receipt', () => {
     installEmbeddedTheme();
     window.dispatchEvent(
-      new MessageEvent('message', { data: { type: 'ngaf:theme', theme: 'light' } })
+      new MessageEvent('message', { data: { type: 'tplane:theme', theme: 'light' } })
     );
     expect(document.documentElement.dataset.theme).toBe('light');
     expect(document.documentElement.style.getPropertyValue('--ds-canvas').trim()).toBe('rgb(255, 255, 255)');
@@ -39,7 +39,7 @@ describe('installEmbeddedTheme', () => {
   it('ignores malformed messages', () => {
     installEmbeddedTheme();
     window.dispatchEvent(
-      new MessageEvent('message', { data: { type: 'ngaf:theme', theme: 'banana' } })
+      new MessageEvent('message', { data: { type: 'tplane:theme', theme: 'banana' } })
     );
     expect(document.documentElement.dataset.theme).toBe('dark'); // unchanged
   });
