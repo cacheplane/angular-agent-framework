@@ -70,7 +70,11 @@ export class AgUiShell {
   readonly hasMapsKey = (environment.googleMapsApiKey as string).length > 0;
 
   // ── Mode from the active route ───────────────────────────────────────────
-  readonly mode = signal<DemoMode>(this.parseMode(this.router.url));
+  // Seed from the real browser path (router.url isn't settled at bootstrap, so
+  // a fresh reload of e.g. /popup would otherwise read as the default /embed).
+  readonly mode = signal<DemoMode>(
+    this.parseMode(this.document.defaultView?.location?.pathname ?? this.router.url),
+  );
   protected readonly modeOptions: readonly { value: DemoMode; label: string }[] = [
     { value: 'embed', label: 'Embed' },
     { value: 'popup', label: 'Popup' },
@@ -169,27 +173,37 @@ export class AgUiShell {
         scheme: this.colorScheme() === DEFAULTS.scheme ? null : this.colorScheme(),
         appmode: this.appMode() === 'off' ? null : this.appMode(),
       };
-      // App mode's layout requires the sidebar route (chat as the right rail
-      // beside the map). On a fresh load with App mode persisted on, a
-      // route-relative navigate([]) resolves against the not-yet-settled
-      // initial navigation and lands on the default /embed — mounting
-      // EmbedMode over the map. Navigate to the absolute /sidebar whenever
-      // App mode is on so a reload restores the cockpit; otherwise keep the
-      // current route ([]) and just sync query params.
-      const commands = this.appMode() === 'on' ? ['/', 'sidebar'] : [];
+      // App mode is compatible with the sidebar AND popup routes (chat as a
+      // right rail / floating bubble over the map) but mutually exclusive with
+      // embed (full-bleed chat would cover the map). When App mode is on,
+      // navigate to the ABSOLUTE current mode so a fresh reload restores the
+      // cockpit (a route-relative [] resolves against the not-yet-settled
+      // initial navigation and lands on /embed); coerce a stray embed (e.g. a
+      // direct /embed?appmode=on) to the default sidebar layout. App mode off:
+      // keep the current route ([]) and just sync query params.
+      const m = this.mode();
+      const commands = this.appMode() === 'on' ? ['/', m === 'embed' ? 'sidebar' : m] : [];
       void this.router.navigate(commands, { queryParams: q, queryParamsHandling: 'merge', replaceUrl: true });
     });
   }
 
   protected onModeChange(next: DemoMode | string): void {
     if (!(MODES as readonly string[]).includes(next as string)) return;
+    // Embed can't coexist with App mode (its full-bleed chat covers the map),
+    // so selecting Embed while App mode is on turns App mode off. Popup and
+    // Sidebar layer over the map, so they leave App mode untouched.
+    if (next === 'embed' && this.appMode() === 'on') {
+      this.appMode.set('off');
+      this.persistence.write('appMode', 'off');
+    }
     void this.router.navigate(['/', next], { queryParamsHandling: 'preserve' });
   }
   onAppModeChange(v: 'on' | 'off'): void {
     this.appMode.set(v);
     this.persistence.write('appMode', v);
-    // Routing is handled by the persist effect, which forces /sidebar whenever
-    // App mode is on (toggle and reload alike) and keeps the current route off.
+    // Routing is handled by the persist effect: turning App mode on navigates to
+    // the current map-compatible mode (coercing embed → sidebar); turning it off
+    // keeps the current route.
   }
   onModelChange(v: string): void { this.model.set(v); this.persistence.write('model', v); }
   protected onEffortChange(v: string): void { this.effort.set(v); this.persistence.write('effort', v); }
