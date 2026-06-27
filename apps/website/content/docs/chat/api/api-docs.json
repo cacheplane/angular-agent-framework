@@ -3281,7 +3281,7 @@
   {
     "name": "ChatSelectComponent",
     "kind": "class",
-    "description": "Generic single-select dropdown. Designed to slot into the chat input pill\n(via [chatInputModelSelect]) but usable anywhere.\n\nInputs:\n  options      — array of { value, label, disabled? }; required\n  value        — currently selected value (two-way via model())\n  placeholder  — trigger label when no option matches; default 'Select'\n  disabled     — disables the trigger; default false\n  menuLabel    — aria-label for the popover; defaults to placeholder",
+    "description": "Generic single-select dropdown. Designed to slot into the chat input pill\n(via [chatInputModelSelect]) but usable anywhere.\n\nThe popover is rendered through a CDK connected overlay (a body-level portal)\nrather than an absolutely-positioned child, so it is never clipped by an\nancestor's `overflow` and never trapped by an ancestor `transform` (e.g. a\nsliding chat-sidebar panel). CDK's flexible position strategy flips and\nshifts the menu to keep it inside the viewport.\n\nInputs:\n  options      — array of { value, label, disabled? }; required\n  value        — currently selected value (two-way via model())\n  placeholder  — trigger label when no option matches; default 'Select'\n  disabled     — disables the trigger; default false\n  menuLabel    — aria-label for the popover; defaults to placeholder\n  panelClass   — extra class(es) on the overlay panel, for consumer styling\n                 (the menu is portaled to the body, so `::ng-deep chat-select\n                 .chat-select__menu` no longer reaches it — target the panel\n                 class instead).",
     "params": [],
     "examples": [],
     "properties": [
@@ -3312,6 +3312,24 @@
       {
         "name": "options",
         "type": "InputSignal<readonly ChatSelectOption[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "overlayPositions",
+        "type": "ConnectedPosition[]",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "panelClass",
+        "type": "InputSignal<string | string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "panelClasses",
+        "type": "Signal<string[]>",
         "description": "",
         "optional": false
       },
