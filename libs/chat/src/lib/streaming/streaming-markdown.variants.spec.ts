@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Component, signal } from '@angular/core';
 import { ChatStreamingMdComponent } from './streaming-markdown.component';
@@ -76,14 +76,24 @@ const midStreamRows: MidStreamRow[] = [
 
 describe('ChatStreamingMdComponent — mid-stream input variance', () => {
   it.each(midStreamRows)('$name', (row) => {
-    TestBed.configureTestingModule({ imports: [HostComponent] });
-    const fixture = TestBed.createComponent(HostComponent);
-    fixture.componentInstance.content.set(row.midStream);
-    fixture.componentInstance.streaming.set(true);
-    fixture.detectChanges();
-    fixture.componentInstance.content.set(row.onFinish ?? row.midStream);
-    fixture.componentInstance.streaming.set(false);
-    fixture.detectChanges();
-    expect(normalize(fixture.nativeElement.textContent ?? '')).toBe(row.expectedText);
+    // Finalization is debounced (the component must not finalize on a transient
+    // streaming=false), so an unclosed construct only reverts to its literal
+    // CommonMark form once the debounce elapses. Drive fake timers to settle.
+    vi.useFakeTimers();
+    try {
+      TestBed.configureTestingModule({ imports: [HostComponent] });
+      const fixture = TestBed.createComponent(HostComponent);
+      fixture.componentInstance.content.set(row.midStream);
+      fixture.componentInstance.streaming.set(true);
+      fixture.detectChanges();
+      fixture.componentInstance.content.set(row.onFinish ?? row.midStream);
+      fixture.componentInstance.streaming.set(false);
+      fixture.detectChanges();
+      vi.advanceTimersByTime(800); // elapse the finalize debounce
+      fixture.detectChanges();
+      expect(normalize(fixture.nativeElement.textContent ?? '')).toBe(row.expectedText);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

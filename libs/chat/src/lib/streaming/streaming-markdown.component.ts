@@ -8,6 +8,7 @@ import {
   effect,
   inject,
   input,
+  signal,
 } from '@angular/core';
 import {
   createPartialMarkdownParser,
@@ -21,6 +22,16 @@ import { MARKDOWN_VIEW_REGISTRY } from '../markdown/markdown-view-registry';
 import { MarkdownChildrenComponent } from '../markdown/markdown-children.component';
 import { cacheplaneMarkdownViews } from '../markdown/cacheplane-markdown-views';
 import { CitationsResolverService } from '../markdown/citations-resolver.service';
+
+// How long streaming must be false AND content stable before we finalize the
+// parser. finish() is only needed to mark final node status (not used visually)
+// and to revert a genuinely-truncated trailing construct to CommonMark — the
+// live `parser.root` projection already renders everything during streaming, so
+// this delay has NO visual cost. It must comfortably exceed real inter-chunk
+// gaps (e.g. the pause between a table's header row and its delimiter row) and
+// any `streaming` flag flap, so finalize never fires mid-stream and reverts an
+// in-progress table to raw "| a | b |" text.
+const FINALIZE_DEBOUNCE_MS = 600;
 
 /**
  * Renders streaming markdown by walking a @cacheplane/partial-markdown AST
@@ -77,6 +88,42 @@ export class ChatStreamingMdComponent {
         this.resolver.markdownDefs.set(r.citations ?? new Map());
       }
     });
+
+    // Debounced finalization. `finish()` is terminal and DESTRUCTIVE: it reverts
+    // an incomplete trailing construct to its CommonMark fallback — e.g. a table
+    // header before its delimiter row becomes raw "| a | b |" paragraph text. We
+    // must therefore never finalize while tokens are still arriving. The
+    // `streaming` input is not a reliable "still arriving" signal — it can flap
+    // false mid-stream, and at cold start it can read false for an entire live
+    // stream — so we finalize only once streaming is false AND no new content
+    // has arrived for a short, imperceptible window. Any new content or a
+    // streaming=true flap re-arms the timer, so finalize fires exactly once,
+    // after the stream truly stops. Until then the live `parser.root` projection
+    // (0.5.x) renders the in-progress content, including streaming tables.
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    effect((onCleanup) => {
+      const isStreaming = this.streaming();
+      this.content(); // re-arm whenever new content arrives
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      if (isStreaming || this.finished) return;
+      timer = setTimeout(() => {
+        timer = null;
+        if (this.streaming() || this.finished) return;
+        if (!this.prior.endsWith('\n')) this.parser.push('\n');
+        this.parser.finish();
+        this.finished = true;
+        this.finalizeTick.update((v) => v + 1);
+      }, FINALIZE_DEBOUNCE_MS);
+      onCleanup(() => {
+        if (timer) {
+          clearTimeout(timer);
+          timer = null;
+        }
+      });
+    });
   }
 
   // Parser instance is rebuilt only when content diverges from the prior
@@ -85,36 +132,27 @@ export class ChatStreamingMdComponent {
   private parser: PartialMarkdownParser = createPartialMarkdownParser();
   private prior = '';
   private finished = false;
+  // Bumped by the debounced finalizer so the `root` computed re-materializes
+  // the now-finished parser tree.
+  private readonly finalizeTick = signal(0);
 
   readonly root = computed<MarkdownDocumentNode | null>(() => {
     const c = this.content();
-    const isStreaming = this.streaming();
+    this.finalizeTick(); // re-materialize after a debounced finalize
     if (c !== this.prior) {
-      if (c.startsWith(this.prior)) {
+      // Re-parse from scratch when the content diverged from the prior prefix,
+      // OR when the parser was already finalized — finish() is terminal, so
+      // pushing further deltas into a finished parser corrupts its state. A
+      // transient `streaming=false` mid-stream that finalized early thus
+      // recovers here: new content rebuilds an open, projecting parser.
+      if (c.startsWith(this.prior) && !this.finished) {
         this.parser.push(c.slice(this.prior.length));
       } else {
-        // Content shrank or diverged — reset.
         this.parser = createPartialMarkdownParser();
         this.finished = false;
         if (c.length > 0) this.parser.push(c);
       }
-      if (!isStreaming && !this.finished) {
-        // @cacheplane/partial-markdown@0.3 does not flush trailing text on
-        // finish() unless the buffer ends with a newline. Plain LLM
-        // responses often omit the trailing newline, which causes the
-        // parser to emit a document with zero children — i.e. the message
-        // renders empty. Push a sentinel newline first to force the open
-        // paragraph closed before we finalize.
-        if (!c.endsWith('\n')) this.parser.push('\n');
-        this.parser.finish();
-        this.finished = true;
-      }
       this.prior = c;
-    } else if (!isStreaming && !this.finished) {
-      // Streaming flipped to false without new content; ensure parser is finalized.
-      if (!this.prior.endsWith('\n')) this.parser.push('\n');
-      this.parser.finish();
-      this.finished = true;
     }
     // Materialize for Angular reactivity: produces a NEW root reference when
     // any descendant subtree changed; same reference when nothing changed
