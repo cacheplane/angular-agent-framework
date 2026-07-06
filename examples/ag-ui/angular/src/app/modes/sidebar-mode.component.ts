@@ -32,7 +32,7 @@ import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
           />
         }
       </div>
-      <welcome-suggestions chatWelcomeSuggestions (selected)="send($event)" />
+      <welcome-suggestions chatWelcomeSuggestions [appModeOn]="shell.appMode() === 'on'" (selected)="send($event)" />
     </chat-sidebar>
   `,
   styles: [`
