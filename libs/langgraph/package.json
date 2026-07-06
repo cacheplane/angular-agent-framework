@@ -1,6 +1,6 @@
 {
   "name": "@threadplane/langgraph",
-  "version": "0.0.54",
+  "version": "0.0.55",
   "description": "LangGraph adapter for @threadplane/chat — Angular bindings for LangGraph Platform.",
   "keywords": ["angular", "langgraph", "langchain", "agent", "adapter", "threadplane"],
   "peerDependencies": {
