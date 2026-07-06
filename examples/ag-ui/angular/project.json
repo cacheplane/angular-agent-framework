@@ -53,7 +53,13 @@
               "maximumError": "16kb"
             }
           ],
-          "outputHashing": "all"
+          "outputHashing": "all",
+          "fileReplacements": [
+            {
+              "replace": "examples/ag-ui/angular/src/environments/generated-keys.ts",
+              "with": "examples/ag-ui/angular/src/environments/generated-keys.local.ts"
+            }
+          ]
         },
         "development": {
           "optimization": false,
