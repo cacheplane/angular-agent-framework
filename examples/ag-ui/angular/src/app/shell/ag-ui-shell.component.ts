@@ -69,7 +69,11 @@ export class AgUiShell {
   readonly hasMapsKey = (environment.googleMapsApiKey as string).length > 0;
 
   // ── Mode from the active route ───────────────────────────────────────────
-  readonly mode = signal<DemoMode>(this.locationMode());
+  // Seed from the real browser path (router.url isn't settled at bootstrap, so
+  // a fresh reload of e.g. /popup would otherwise read as the default /embed).
+  readonly mode = signal<DemoMode>(
+    this.parseMode(this.document.defaultView?.location?.pathname ?? this.router.url),
+  );
   protected readonly modeOptions: readonly { value: DemoMode; label: string }[] = [
     { value: 'embed', label: 'Embed' },
     { value: 'popup', label: 'Popup' },
@@ -186,31 +190,30 @@ export class AgUiShell {
         scheme: this.colorScheme() === DEFAULTS.scheme ? null : this.colorScheme(),
         appmode: this.appMode() === 'off' ? null : this.appMode(),
       };
-      // App mode is now just a query param: the route (embed/popup/sidebar) is
-      // the chat presentation, and App mode toggles the map cockpit background
-      // behind popup/sidebar. Navigate to the EXPLICIT current mode — read
-      // untracked so this effect fires on knob changes, not on navigation
-      // (which onModeChange/onAppModeChange drive). The explicit route also
-      // restores the persisted mode on reload, instead of a route-relative []
-      // resolving against the unsettled initial navigation (→ /embed).
-      const target = untracked(() => this.mode());
+      // App mode is compatible with the sidebar AND popup routes (chat as a
+      // right rail / floating bubble over the map) but mutually exclusive with
+      // embed (full-bleed chat would cover the map). Always navigate to the
+      // EXPLICIT current mode — a route-relative [] resolves against the
+      // not-yet-settled initial navigation on a fresh load and bounces to
+      // /embed. Read mode untracked so this effect fires on knob changes, not
+      // on navigation (which onModeChange drives). Coerce a stray embed while
+      // App mode is on (e.g. a direct /embed?appmode=on) to the sidebar cockpit.
+      const m = untracked(() => this.mode());
+      const target = this.appMode() === 'on' && m === 'embed' ? 'sidebar' : m;
       void this.router.navigate(['/', target], { queryParams: q, queryParamsHandling: 'merge', replaceUrl: true });
     });
   }
 
   protected onModeChange(next: DemoMode | string): void {
     if (!(MODES as readonly string[]).includes(next as string)) return;
-    const target = next as DemoMode;
-    // App mode runs in popup or sidebar (the map fills the background behind the
-    // chat). Embed is full-chat with no background, so switching to embed turns
-    // App mode off; popup ↔ sidebar preserve it. Navigate first, THEN flip the
-    // signal so the param-sync effect resolves against the new route.
-    void this.router.navigate(['/', target], { queryParamsHandling: 'preserve' }).then(() => {
-      if (target === 'embed' && this.appMode() === 'on') {
-        this.appMode.set('off');
-        this.persistence.write('appMode', 'off');
-      }
-    });
+    // Embed can't coexist with App mode (its full-bleed chat covers the map),
+    // so selecting Embed while App mode is on turns App mode off. Popup and
+    // Sidebar layer over the map, so they leave App mode untouched.
+    if (next === 'embed' && this.appMode() === 'on') {
+      this.appMode.set('off');
+      this.persistence.write('appMode', 'off');
+    }
+    void this.router.navigate(['/', next], { queryParamsHandling: 'preserve' });
   }
   onAppModeChange(v: 'on' | 'off'): void {
     // Enabling App mode needs a background area for the map. Embed has none, so
@@ -226,7 +229,9 @@ export class AgUiShell {
     }
     this.appMode.set(v);
     this.persistence.write('appMode', v);
-    // The param-sync effect writes the appmode query param on the current route.
+    // Routing is handled by the persist effect: turning App mode on navigates to
+    // the current map-compatible mode (coercing embed → sidebar); turning it off
+    // keeps the current route.
   }
   onModelChange(v: string): void { this.model.set(v); this.persistence.write('model', v); }
   protected onEffortChange(v: string): void { this.effort.set(v); this.persistence.write('effort', v); }

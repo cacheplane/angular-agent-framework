@@ -3,6 +3,9 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
+  ElementRef,
+  afterNextRender,
   computed,
   effect,
   inject,
@@ -12,6 +15,7 @@ import {
 } from '@angular/core';
 import { GoogleMap, MapInfoWindow, MapAdvancedMarker, MapPolyline } from '@angular/google-maps';
 import { ItineraryStop, ItineraryStore } from './itinerary-store';
+import { computeBounds } from './map-bounds';
 import { GoogleMapsLoader } from './google-maps-loader';
 import { environment } from '../environments/environment';
 
@@ -77,6 +81,8 @@ const PARIS_CENTER: google.maps.LatLngLiteral = { lat: 48.8566, lng: 2.3522 };
 export class MapCanvasComponent {
   protected readonly store = inject(ItineraryStore);
   protected readonly loader = inject(GoogleMapsLoader);
+  private readonly hostRef = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly destroyRef = inject(DestroyRef);
   protected readonly center = signal<google.maps.LatLngLiteral>(PARIS_CENTER);
   protected readonly zoom = signal<number>(12);
   // A mapId is REQUIRED for advanced markers; a mapId map ignores inline JSON
@@ -90,6 +96,7 @@ export class MapCanvasComponent {
     clickableIcons: false,
   };
 
+  private readonly googleMap = viewChild(GoogleMap);
   private readonly infoWindow = viewChild(MapInfoWindow);
   private readonly markers = viewChildren(MapAdvancedMarker);
 
@@ -127,6 +134,81 @@ export class MapCanvasComponent {
         win.open(marker);
       }
     });
+
+    // Frame the map to all stops on structural change (add/remove/geocode).
+    // Reads googleMap() so it re-runs once the map mounts behind the loader gate.
+    // Keyed on stopsWithCoords() only — NOT focus — so panning to a focused stop
+    // and reframing to all stops never fight (they fire on different signals).
+    effect(() => {
+      const map = this.googleMap();
+      this.stopsWithCoords(); // re-frame on structural change (add/remove/geocode)
+      if (map) this.frameToBounds(map); // null while <google-map> is behind the loader gate
+    });
+
+    // The map lives in the chat-sidebar's flex content slot, whose width changes
+    // when the drawer pushes it (and on mode toggles). Google Maps caches its
+    // viewport size at construction, so without a resize event the tiles render
+    // grey and fitBounds frames the stale size. Re-sync on every container resize.
+    afterNextRender(() => {
+      const ro = new ResizeObserver(() => {
+        const map = this.googleMap();
+        if (!map?.googleMap) return;
+        google.maps.event.trigger(map.googleMap, 'resize');
+        this.frameToBounds(map);
+      });
+      ro.observe(this.hostRef.nativeElement);
+      this.destroyRef.onDestroy(() => ro.disconnect());
+    });
+  }
+
+  /** Frame the map to all coord'd stops (>=2: fitBounds; 1: center+zoom; 0: Paris). */
+  private frameToBounds(map: GoogleMap): void {
+    const stops = this.stopsWithCoords();
+    if (stops.length === 0) {
+      this.center.set(PARIS_CENTER);
+      this.zoom.set(12);
+      return;
+    }
+    if (stops.length === 1) {
+      this.center.set({ lat: stops[0].lat!, lng: stops[0].lng! });
+      this.zoom.set(13);
+      return;
+    }
+    const b = computeBounds(stops);
+    if (b) map.fitBounds(b, this.fitPadding());
+  }
+
+  /**
+   * fitBounds padding (px per side) that reserves the App-mode panels floating
+   * over the full-bleed map, so a stop never frames *underneath* them — the
+   * reported bug was the rightmost marker hiding under the open chat rail.
+   *
+   * Measured live (not hardcoded) so it adapts to the chat drawer's open/closed
+   * state and the responsive panel widths:
+   *  - left  = our floating itinerary overlay card's footprint
+   *  - right = the chat sidebar drawer's footprint (the gap its push leaves
+   *            between `.chat-sidebar__content` and the map's right edge)
+   * Falls back to a uniform base when the panels aren't present (unit tests,
+   * non-App-mode layouts), preserving the prior behavior.
+   */
+  private fitPadding(): google.maps.Padding {
+    const BASE = 48;
+    const GAP = 24;
+    const pad: google.maps.Padding = { top: BASE, right: BASE, bottom: BASE, left: BASE };
+    const mapRect = this.hostRef.nativeElement.getBoundingClientRect();
+    if (mapRect.width === 0) return pad; // not laid out (e.g. jsdom) — uniform
+
+    const overlay = document.querySelector('.ag-ui-shell__itinerary-overlay');
+    if (overlay) {
+      const r = overlay.getBoundingClientRect();
+      if (r.width > 0) pad.left = Math.max(BASE, Math.round(r.right - mapRect.left + GAP));
+    }
+    const content = document.querySelector('.chat-sidebar__content');
+    if (content) {
+      const occupied = mapRect.right - content.getBoundingClientRect().right;
+      if (occupied > 1) pad.right = Math.max(BASE, Math.round(occupied + GAP));
+    }
+    return pad;
   }
 
   protected onMarkerClick(s: ItineraryStop): void {

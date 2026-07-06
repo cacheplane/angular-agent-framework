@@ -2,13 +2,14 @@
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { ChatSidebarComponent, a2uiBasicCatalog } from '@threadplane/chat';
 import { AgUiShell } from '../shell/ag-ui-shell.component';
+import { MapCanvasComponent } from '../map-canvas.component';
 import { AppModePromoComponent } from './app-mode-promo.component';
 import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
 
 @Component({
   selector: 'sidebar-mode',
   standalone: true,
-  imports: [ChatSidebarComponent, AppModePromoComponent, WelcomeSuggestionsComponent],
+  imports: [ChatSidebarComponent, MapCanvasComponent, AppModePromoComponent, WelcomeSuggestionsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <chat-sidebar
@@ -22,24 +23,28 @@ import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
       [pushContent]="true"
       (selectedModelChange)="shell.onModelChange($event)"
     >
-      <div class="sidebar-mode__background">
-        <!-- Plain sidebar mode (App mode off): market the App-mode cockpit and
-             the Threadplane primitives, with a CTA to turn it on. -->
-        @if (shell.appMode() !== 'on') {
+      <!-- In App mode the map IS the main content — projected into the sidebar's
+           flex content slot so it fills the area left of the drawer (no absolute
+           positioning / occupy-var inset in the shell). Plain sidebar mode
+           markets the cockpit instead (#737), with a CTA to turn it on. -->
+      @if (shell.appMode() === 'on') {
+        <app-map-canvas class="sidebar-mode__map" />
+      } @else {
+        <div class="sidebar-mode__background">
           <app-mode-promo
             [hasMapsKey]="shell.hasMapsKey"
             (enable)="shell.onAppModeChange('on')"
           />
-        }
-      </div>
-      <welcome-suggestions chatWelcomeSuggestions (selected)="send($event)" />
+        </div>
+      }
+      <welcome-suggestions chatWelcomeSuggestions [appModeOn]="shell.appMode() === 'on'" (selected)="send($event)" />
     </chat-sidebar>
   `,
   styles: [`
     :host { display: block; flex: 1; min-height: 0; position: relative; }
-    /* Projected into chat-sidebar's default content slot so [pushContent]
-     * applies its right-margin push to this background when the panel
-     * opens. Sized to fill the visible area below the toolbar. */
+    /* The map fills the chat-sidebar content slot (which is flex:1 at threaded
+     * height); [pushContent] applies the right-margin push for the open drawer. */
+    .sidebar-mode__map { display: block; height: 100%; }
     .sidebar-mode__background {
       display: grid;
       place-items: center;
