@@ -6,6 +6,7 @@ import {
   effect,
   inject,
   signal,
+  untracked,
 } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { injectAgent } from '@threadplane/ag-ui';
@@ -175,15 +176,15 @@ export class AgUiShell {
       };
       // App mode is compatible with the sidebar AND popup routes (chat as a
       // right rail / floating bubble over the map) but mutually exclusive with
-      // embed (full-bleed chat would cover the map). When App mode is on,
-      // navigate to the ABSOLUTE current mode so a fresh reload restores the
-      // cockpit (a route-relative [] resolves against the not-yet-settled
-      // initial navigation and lands on /embed); coerce a stray embed (e.g. a
-      // direct /embed?appmode=on) to the default sidebar layout. App mode off:
-      // keep the current route ([]) and just sync query params.
-      const m = this.mode();
-      const commands = this.appMode() === 'on' ? ['/', m === 'embed' ? 'sidebar' : m] : [];
-      void this.router.navigate(commands, { queryParams: q, queryParamsHandling: 'merge', replaceUrl: true });
+      // embed (full-bleed chat would cover the map). Always navigate to the
+      // EXPLICIT current mode — a route-relative [] resolves against the
+      // not-yet-settled initial navigation on a fresh load and bounces to
+      // /embed. Read mode untracked so this effect fires on knob changes, not
+      // on navigation (which onModeChange drives). Coerce a stray embed while
+      // App mode is on (e.g. a direct /embed?appmode=on) to the sidebar cockpit.
+      const m = untracked(() => this.mode());
+      const target = this.appMode() === 'on' && m === 'embed' ? 'sidebar' : m;
+      void this.router.navigate(['/', target], { queryParams: q, queryParamsHandling: 'merge', replaceUrl: true });
     });
   }
 
