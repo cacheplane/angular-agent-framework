@@ -994,6 +994,10 @@ describe('createStreamManagerBridge', () => {
     });
 
     bridge.submit({ messages: [{ type: 'human', content: 'hello' }] });
+    // Tuple/messages events with messageMetadata are declared deltas — each
+    // chunk carries only its incremental slice of text, never the
+    // message-so-far. 'hel' + 'lo' (not a resent 'hello') reflects real
+    // wire behavior and merges into the same transcript entry by id.
     transport.emit([{
       type: 'messages',
       messages: [{ id: 'ai-1', type: 'ai', content: 'hel' }],
@@ -1001,7 +1005,7 @@ describe('createStreamManagerBridge', () => {
     } satisfies StreamEvent]);
     transport.emit([{
       type: 'messages',
-      messages: [{ id: 'ai-1', type: 'ai', content: 'hello' }],
+      messages: [{ id: 'ai-1', type: 'ai', content: 'lo' }],
       messageMetadata: { langgraph_node: 'model' },
     } satisfies StreamEvent]);
     transport.close();
