@@ -45,6 +45,7 @@ const PARIS_CENTER: google.maps.LatLngLiteral = { lat: 48.8566, lng: 2.3522 };
             [position]="m.position"
             [content]="m.content"
             [title]="m.stop.place"
+            [options]="advancedMarkerOptions"
             (mapClick)="onMarkerClick(m.stop)"
           />
         }
@@ -94,6 +95,12 @@ export class MapCanvasComponent {
     disableDefaultUI: true,
     zoomControl: true,
     clickableIcons: false,
+  };
+  // AdvancedMarkerElement is NOT clickable by default (unlike the legacy
+  // Marker) — without gmpClickable it never fires click/gmp-click, so the
+  // wrapper's (mapClick) output stays silent and the info window can't open.
+  protected readonly advancedMarkerOptions: google.maps.marker.AdvancedMarkerElementOptions = {
+    gmpClickable: true,
   };
 
   private readonly googleMap = viewChild(GoogleMap);
