@@ -16,6 +16,27 @@ interface SearchablePage {
   libraryTitle: string;
 }
 
+const SEARCH_STOP_WORDS = new Set(['a', 'an', 'and', 'for', 'in', 'of', 'on', 'or', 'the', 'to', 'with']);
+
+function searchTokens(value: string): string[] {
+  return value
+    .toLowerCase()
+    .split(/[^a-z0-9@.-]+/)
+    .filter((token) => token.length > 0 && !SEARCH_STOP_WORDS.has(token));
+}
+
+function searchableText(page: SearchablePage): string {
+  return [page.title, page.description, page.slug, page.section, page.libraryTitle].filter(Boolean).join(' ');
+}
+
+function matchesQuery(page: SearchablePage, query: string): boolean {
+  const queryTokens = searchTokens(query);
+  if (queryTokens.length === 0) return false;
+
+  const pageText = searchableText(page).toLowerCase();
+  return queryTokens.every((token) => pageText.includes(token));
+}
+
 const allSearchablePages: SearchablePage[] = [
   ...specialDocsPages.map((page) => ({
     title: page.title,
@@ -43,13 +64,7 @@ export function DocsSearch({ library }: { library?: LibraryId }) {
   const router = useRouter();
 
   const results = query.length > 0
-    ? allSearchablePages.filter((p) =>
-        p.title.toLowerCase().includes(query.toLowerCase()) ||
-        p.description?.toLowerCase().includes(query.toLowerCase()) ||
-        p.slug?.toLowerCase().includes(query.toLowerCase()) ||
-        p.section?.toLowerCase().includes(query.toLowerCase()) ||
-        p.libraryTitle.toLowerCase().includes(query.toLowerCase())
-      ).slice(0, 8)
+    ? allSearchablePages.filter((p) => matchesQuery(p, query)).slice(0, 8)
     : allSearchablePages.filter((p) => !library || !p.library || p.library === library).slice(0, 6);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {

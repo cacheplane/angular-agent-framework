@@ -86,7 +86,7 @@ export function DemoShowcase() {
         </Button>
       </div>
       <p style={{ fontFamily: tokens.typography.caption.family, fontSize: tokens.typography.caption.size, color: tokens.colors.textMuted, margin: '14px 0 0' }}>
-        Video loops instantly · click Launch to open the live, interactive demo · MIT · no signup
+        Video loops instantly · click Launch to open the live, interactive demo · no signup
       </p>
       <DemoModal
         open={modalOpen}

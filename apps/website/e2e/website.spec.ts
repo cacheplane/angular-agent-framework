@@ -21,6 +21,17 @@ test('landing page renders feature blocks (Stream/Render/Ship)', async ({ page }
   await expect(page.locator('#ship-heading')).toBeVisible();
 });
 
+test('landing page license copy distinguishes MIT packages from commercially licensed chat', async ({ page }) => {
+  await page.goto('/');
+  const main = page.locator('main');
+
+  await expect(main).toContainText('Most packages are MIT');
+  await expect(main).toContainText('@threadplane/chat');
+  await expect(main).toContainText('commercially licensed for production use');
+  await expect(main).not.toContainText('MIT today, MIT tomorrow');
+  await expect(main).not.toContainText('MIT · No signup required · App telemetry off by default');
+});
+
 test('pricing page shows plan cards', async ({ page }) => {
   await page.goto('/pricing');
   await expect(page.getByText('Community').first()).toBeVisible();

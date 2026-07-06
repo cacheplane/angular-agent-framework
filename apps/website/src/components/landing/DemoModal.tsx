@@ -119,7 +119,7 @@ export function DemoModal({ open, onClose, tabs, active, onActive }: DemoModalPr
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 14px', borderTop: `1px solid ${tokens.surfaces.border}`, background: tokens.surfaces.surface }}>
-          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: tokens.colors.textMuted }}>Esc or click outside to close &middot; MIT &middot; no signup</span>
+          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: tokens.colors.textMuted }}>Esc or click outside to close &middot; no signup</span>
           <a href={tab.href} target="_blank" rel="noopener noreferrer"
             onClick={() => trackExternalLinkClick(tab.href, { surface: 'home_demo', cta_id: `home_demo_full_${tab.key.replace(/-/g, '_')}`, cta_text: 'Open the full demo' })}
             style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, fontWeight: 600, color: tokens.colors.accent, textDecoration: 'none' }}>Open the full demo &#8599;</a>
