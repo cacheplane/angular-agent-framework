@@ -1,10 +1,14 @@
 import { tokens } from '@threadplane/design-tokens';
 import { HighlightedCode } from '../HighlightedCode';
 
-const SNIPPET_1 = `import { agent } from '@threadplane/langgraph';
+const SNIPPET_1 = `import { injectAgent, provideAgent } from '@threadplane/langgraph';
 import { ChatComponent, a2uiBasicCatalog } from '@threadplane/chat';
 
 @Component({
+  imports: [ChatComponent],
+  providers: [
+    provideAgent({ apiUrl: 'http://localhost:2024', assistantId: 'chat_agent' }),
+  ],
   template: \`
     <chat
       [agent]="agent"
@@ -13,7 +17,7 @@ import { ChatComponent, a2uiBasicCatalog } from '@threadplane/chat';
   \`,
 })
 export class MyChatPage {
-  protected readonly agent = agent({ apiUrl: 'http://localhost:2024', assistantId: 'chat_agent' });
+  protected readonly agent = injectAgent();
   protected readonly views = a2uiBasicCatalog();
 }`;
 

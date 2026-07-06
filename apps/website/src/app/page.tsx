@@ -43,7 +43,7 @@ export default async function HomePage() {
         headline="Build the Angular UI layer for production agents."
         body={
           <>
-            <code style={{ fontFamily: tokens.typography.fontMono }}>provideAgent</code> + <code style={{ fontFamily: tokens.typography.fontMono }}>agent()</code> give you headless chat, durable threads, interrupts, tool progress, and generative UI. LangGraph and AG-UI adapters share the contract, so teams can swap runtimes without rewriting the Angular surface.
+            <code style={{ fontFamily: tokens.typography.fontMono }}>provideAgent</code> + <code style={{ fontFamily: tokens.typography.fontMono }}>injectAgent()</code> give you headless chat, durable threads, interrupts, tool progress, and generative UI. LangGraph and AG-UI adapters share the contract, so teams can swap runtimes without rewriting the Angular surface.
           </>
         }
         bullets={[
@@ -53,9 +53,9 @@ export default async function HomePage() {
           'One Angular UI layer, swappable runtimes',
         ]}
         supportingCards={[
-          { title: 'provideAgent', description: 'Wire the agent into your app.config.ts.' },
-          { title: 'AgUiAdapter', description: 'Any AG-UI compliant backend.' },
-          { title: 'LangGraphAdapter', description: 'Native LangGraph streaming.' },
+          { title: 'provideAgent', description: 'Wire the agent into Angular DI.' },
+          { title: '@threadplane/ag-ui', description: 'Any AG-UI compliant backend.' },
+          { title: '@threadplane/langgraph', description: 'Native LangGraph streaming.' },
         ]}
         cta={{ label: 'Read the streaming guide', href: '/docs/langgraph/guides/streaming' }}
         visual={
@@ -108,12 +108,12 @@ export default async function HomePage() {
         id="ship"
         eyebrow="Ship"
         headline="Patterns built for production, not demos."
-        body="Error boundaries, observability hooks, fallback strategies — the stuff that turns a demo into a real app. MIT-licensed, so the code is yours forever."
+        body="Error boundaries, observability hooks, fallback strategies — the stuff that turns a demo into a real app. Most packages are MIT; the drop-in chat package is commercially licensed for production use."
         bullets={[
           'error() / status() / reload() signals',
           'Readiness gate + per-component fallback',
           'Thread persistence patterns',
-          'MIT licensed — own it forever',
+          'Clear package licensing',
         ]}
         supportingCards={[
           { title: 'error/status/reload', description: 'Boundary signals for every agent.' },

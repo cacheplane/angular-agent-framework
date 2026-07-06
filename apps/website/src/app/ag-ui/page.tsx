@@ -51,7 +51,7 @@ export default async function AgUiPage() {
                 maxWidth: 680,
               }}
             >
-              Build an Angular agent UI on any AG-UI-compatible runtime — LangGraph, CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit. Same primitives, same chat surface, same testing story.
+              Build an Angular agent UI on any AG-UI-compatible runtime — CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit, or LangGraph fronted by AG-UI. Same Agent contract and chat surface; runtime-specific history and checkpoint behavior stays with the backend.
             </p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
               <Button variant="primary" size="lg" href="/docs/ag-ui/getting-started/quickstart">Get started</Button>
@@ -111,10 +111,10 @@ export default async function AgUiPage() {
         id="primitives"
         eyebrow="Same primitives"
         headline="Drop-in for everything @threadplane/chat ships."
-        body="provideAgent registers an AG-UI client and exposes the same Agent contract that @threadplane/langgraph provides. Every chat primitive — durable threads, interrupts, subagents, generative UI, citations — works against any AG-UI runtime."
+        body="provideAgent registers an AG-UI client and exposes the same Agent contract that @threadplane/langgraph provides. Chat rendering, status, tool calls, generative UI, and citations use the same Angular primitives; durable checkpointed threads and history depend on the backend protocol, so use @threadplane/langgraph when you need the native LangGraph thread API."
         bullets={[
           'provideAgent + injectAgent — same names across adapters',
-          'Identical Agent contract: messages() / status() / interrupt() / reload()',
+          'Shared Agent contract: messages() / status() / reload()',
           'Same A2UI surface, themes, and citations rendering',
           'MockAgentTransport works the same way for tests',
         ]}

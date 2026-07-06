@@ -101,7 +101,7 @@ For me, this is the lowest-friction path for a small team — the tradeoff is th
 
 ## 3. Wire `provideChat()` and `provideAgent()`
 
-Register both providers in your application config. Below is a minimal `app.config.ts` for a LangGraph backend (swap `@threadplane/langgraph` for `@threadplane/ag-ui` if you picked that adapter — the API surface is identical).
+Register both providers in your application config. Below is a minimal `app.config.ts` for a LangGraph backend. If you picked AG-UI, component calls stay the same, but the provider import and config shape change (`apiUrl`/`assistantId` for LangGraph, `url` for AG-UI).
 
 ```ts
 // src/app/app.config.ts

@@ -12,7 +12,7 @@ import { track } from '../../lib/analytics/client';
 import { analyticsEvents } from '../../lib/analytics/events';
 import { HERO_SUBHEAD, POSITIONING_PROOF_POINTS } from '../../lib/positioning';
 
-const INSTALL_COMMAND = 'npm install @threadplane/chat';
+const INSTALL_COMMAND = 'npm install @threadplane/chat @threadplane/langgraph';
 const COPY_FEEDBACK_MS = 1500;
 
 function PrimaryInstallButton() {
@@ -35,7 +35,7 @@ function PrimaryInstallButton() {
 
   return (
     <Button variant="primary" size="lg" onClick={onClick}>
-      {copied ? 'Copied ✓' : 'Install @threadplane/chat'}
+      {copied ? 'Copied ✓' : 'Install LangGraph starter'}
     </Button>
   );
 }
@@ -77,7 +77,7 @@ export function Hero() {
           {/* Left column */}
           <div>
             <Eyebrow tone="accent" style={{ marginBottom: 16 }}>
-              Threadplane · MIT framework
+              Threadplane · Angular agent UI
             </Eyebrow>
             <h1
               id="hero-heading"

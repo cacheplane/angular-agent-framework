@@ -85,9 +85,9 @@ Context: Angular teams building AI agent applications must wire streaming transp
 
 Cover:
 - Why streaming state is hard in Angular (zone.js, change detection, timing)
-- The Angular signals approach: how agent() exposes messages() as Signal<Message[]>
+- The Angular signals approach: how injectAgent() exposes messages() as Signal<Message[]>
 - How isLoading() lets developers drive loading UI without polling
-- Code example: minimal agent() setup (TypeScript snippet, 8-12 lines)
+- Code example: minimal provideAgent() plus injectAgent() setup (TypeScript snippet, 8-12 lines)
 - Production checklist item: "Are your message signals OnPush-compatible?"
 
 Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engineers.`,
@@ -106,7 +106,7 @@ Cover:
 - The threadId signal and onThreadId callback pattern
 - How to persist threadId to localStorage and restore on mount
 - Thread list UI and switching between conversations
-- Code example: provideAgent() plus agent({ threadId }) with thread persistence (8-12 lines)
+- Code example: provideAgent() with a threadId signal plus injectAgent() in the component (8-12 lines)
 - Production checklist item: "Does your agent UI resume threads correctly after a browser refresh?"
 
 Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engineers.`,
@@ -142,7 +142,7 @@ Context: Production agents that take consequential actions — sending emails, d
 Cover:
 - The LangGraph interrupt() and Command.RESUME pattern
 - Why polling and custom websocket approaches are brittle
-- The interrupt() signal in agent() and how it maps to approval state
+- The interrupt() signal returned by injectAgent() and how it maps to approval state
 - <chat-interrupt> headless and <chat-interrupt-panel> prebuilt
 - The three approval actions: approve, edit, cancel — and how each maps to a resume command
 - Code example: interrupt signal binding (8-12 lines)
@@ -221,20 +221,20 @@ Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engi
       },
       {
         id: 'agent-api',
-        title: 'The agent() API',
+        title: 'The injectAgent() API',
         prompt: `Write a 400-600 word chapter for an engineering white paper titled "The Enterprise Guide to Agent UI in Angular".
 
-Chapter topic: The agent() API
+Chapter topic: The injectAgent() API
 
-Context: @threadplane/langgraph exposes an Angular signals-based API for connecting LangGraph agents to Angular components. The core primitive is agent() — a function that returns reactive signals wired directly to the agent stream, with no manual subscription management, no zone-patching, and no token accumulation logic.
+Context: @threadplane/langgraph exposes an Angular signals-based API for connecting LangGraph agents to Angular components. The core primitive is injectAgent() — an Angular DI helper that returns reactive signals wired directly to the configured agent stream, with no manual subscription management, no zone-patching, and no token accumulation logic.
 
 Cover:
-- How agent() returns a LangGraphAgent with typed signals: messages(), isLoading(), error(), interrupt(), and langGraph* raw signals
+- How injectAgent() returns a LangGraphAgent with typed signals: messages(), isLoading(), error(), interrupt(), and langGraph* raw signals
 - The provideAgent() provider and how it configures the agent endpoint and stream transport
 - Why the Angular signals design works with OnPush change detection out of the box
 - How to bind agent state directly in Angular templates without async pipe or manual subscriptions
-- Code example: minimal agent() setup with template binding (10-14 lines)
-- The contrast: what the equivalent hand-rolled code looks like vs. agent() in 3 lines
+- Code example: minimal provideAgent() setup with injectAgent() template binding (10-14 lines)
+- The contrast: what the equivalent hand-rolled code looks like vs. injectAgent() in 3 lines
 
 Tone: Direct, technical, peer-to-peer. No fluff. Audience is senior Angular engineers.`,
       },

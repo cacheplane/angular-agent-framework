@@ -35,12 +35,16 @@ export interface DocsLibrary {
 export interface SpecialDocsPage {
   path: string;
   contentPath: string;
+  title: string;
+  description: string;
 }
 
 export const specialDocsPages: SpecialDocsPage[] = [
   {
     path: '/docs/choosing-an-adapter',
     contentPath: 'choosing-an-adapter/index.mdx',
+    title: 'Choosing an adapter',
+    description: 'Decide between @threadplane/langgraph and @threadplane/ag-ui for your Angular agent UI.',
   },
 ];
 

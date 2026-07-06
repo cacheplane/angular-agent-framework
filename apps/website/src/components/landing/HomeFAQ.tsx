@@ -23,11 +23,11 @@ const ITEMS: FAQItem[] = [
   },
   {
     q: 'Is the Pilot-to-Prod program required?',
-    a: 'No. The libraries are MIT-licensed and complete on their own. Pilot-to-Prod is for teams who want concierge delivery, not a paywall.',
+    a: 'No. Most packages are MIT-licensed and complete on their own; @threadplane/chat is free for noncommercial use and commercially licensed for production. Pilot-to-Prod is for teams who want concierge delivery, not a paywall.',
   },
   {
     q: 'What does it cost?',
-    a: 'Libraries: free, MIT. Pilot-to-Prod: scoped per engagement — see the pricing page.',
+    a: 'Most libraries: free, MIT. @threadplane/chat: free for noncommercial/evaluation use and commercially licensed for production. Pilot-to-Prod: scoped per engagement — see the pricing page.',
   },
   {
     q: 'Is this production-ready today?',

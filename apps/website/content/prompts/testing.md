@@ -7,6 +7,8 @@ const transport = new MockAgentTransport();
 providers: [provideAgent({ transport, assistantId: 'test', apiUrl: '' })]
 const chat = injectAgent();
 
+In Angular tests, put the provider in TestBed.configureTestingModule({ providers: [...] }) or the component's providers array, then read chat with injectAgent() from an Angular injection context.
+
 To emit a streaming response:
 transport.emit([
   { type: 'values', values: { messages: [] } },

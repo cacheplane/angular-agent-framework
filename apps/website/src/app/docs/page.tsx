@@ -30,7 +30,7 @@ const BACKENDS: Backend[] = [
   {
     title: 'LangGraph',
     blurb: 'For LangChain & LangGraph backends.',
-    install: 'npm i @threadplane/langgraph',
+    install: 'npm i @threadplane/chat @threadplane/langgraph',
     href: '/docs/langgraph/getting-started/quickstart',
     logoSrc: '/logos/langgraph.svg',
     attribution: 'LangChain',
@@ -38,7 +38,7 @@ const BACKENDS: Backend[] = [
   {
     title: 'AG-UI',
     blurb: 'For CrewAI, Mastra, Pydantic AI, Strands, and more.',
-    install: 'npm i @threadplane/ag-ui',
+    install: 'npm i @threadplane/chat @threadplane/ag-ui @ag-ui/client @ag-ui/core',
     href: '/docs/ag-ui/getting-started/quickstart',
     logoSrc: '/logos/runtimes/copilotkit.svg',
     attribution: 'AG-UI · CopilotKit',
@@ -347,8 +347,9 @@ export default function DocsLandingPage() {
                 maxWidth: '52ch',
               }}
             >
-              A suite of MIT-licensed libraries for streaming agent interfaces.
-              Pick your backend to get started.
+              Streaming agent interfaces with runtime adapters, a shared Agent contract,
+              and a drop-in chat surface. Most packages are MIT; @threadplane/chat is
+              dual-licensed for noncommercial/evaluation and commercial production use.
             </p>
           </div>
         </Container>
@@ -374,7 +375,7 @@ export default function DocsLandingPage() {
                     <code style={snippetCodeStyle}>{b.install}</code>
                     <CopyButton text={b.install} />
                   </div>
-                  <span style={ctaStyle}>Quickstart →</span>
+                  <span style={ctaStyle}>Adapter quickstart →</span>
                 </Card>
               </Link>
             ))}
@@ -383,6 +384,10 @@ export default function DocsLandingPage() {
             Not sure which to use?{' '}
             <Link href="/docs/choosing-an-adapter" style={helperLinkStyle}>
               Choosing an adapter →
+            </Link>
+            {' '}Want the drop-in UI first?{' '}
+            <Link href="/docs/chat/getting-started/quickstart" style={helperLinkStyle}>
+              Chat quickstart →
             </Link>
           </p>
         </Container>

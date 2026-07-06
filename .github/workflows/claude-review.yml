@@ -27,6 +27,7 @@ jobs:
 
       - name: Claude review
         uses: anthropics/claude-code-action@806af32823ef69c8ef357086c573a902af641307 # v1
+        continue-on-error: true
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           # Post as the workflow's own GITHUB_TOKEN. Without this the action
@@ -51,10 +52,17 @@ jobs:
             - Public API / DX regressions on the published `@threadplane/*` surface
             - Missing or weak test coverage for the change
 
+            For docs-heavy PRs, skip generated or bulky derived files unless
+            they are the only evidence for a problem. In particular, do not
+            spend review budget on `api-docs.json`, generated public context
+            files, build artifacts, or lockfile-sized output. Prefer reviewing
+            the source templates, generators, route code, docs config, and MDX
+            pages that produce or consume those artifacts.
+
             Post a concise top-level summary via `gh pr comment`. Post specific
             issues as inline comments. Be brief; skip nitpicks and style unless
             they affect correctness. If the PR looks good, say so briefly.
           claude_args: |
             --model claude-sonnet-4-6
-            --max-turns 15
+            --max-turns 30
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"

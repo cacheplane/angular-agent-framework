@@ -59,9 +59,9 @@ const PRODUCTION_ROWS: ProductionRow[] = [
     primitive: 'event hooks, opt-in only',
   },
   {
-    need: 'MIT + self-hosted',
+    need: 'Open adapters + self-hosted',
     description: 'Own the primitives long-term, no vendor lock-in.',
-    primitive: 'MIT-licensed, no runtime SaaS dependency',
+    primitive: 'MIT adapters, no runtime SaaS dependency',
   },
 ];
 
