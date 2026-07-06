@@ -83,7 +83,7 @@ import { provideChat } from '@threadplane/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideAgent({ apiUrl: 'http://localhost:2024' }),
+    provideAgent({ apiUrl: 'http://localhost:2024', assistantId: 'chat' }),
     provideChat({
       avatarLabel: 'B',
       assistantName: 'Bot',

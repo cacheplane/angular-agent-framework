@@ -39,7 +39,7 @@ decision = interrupt({
 `injectAgent()` exposes a `interrupt()` signal that is populated whenever the adapter receives an `on_interrupt` CUSTOM event. Pair it with `<chat-approval-card>` from `@threadplane/chat` to render an approval dialog without manual event wiring:
 
 ```typescript
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ChatComponent, ChatApprovalCardComponent } from '@threadplane/chat';
 import { injectAgent } from '@threadplane/ag-ui';
 import type { ChatApprovalAction } from '@threadplane/chat';
