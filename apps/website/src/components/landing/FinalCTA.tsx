@@ -13,7 +13,7 @@ interface FinalCTAProps {
   primary?: { label: string; href: string; external?: boolean } | null;
   /** Optional secondary CTA. Defaults to "See each feature in action →" → cockpit. */
   secondary?: { label: string; href: string; external?: boolean } | null;
-  /** Optional trailing caption. Defaults to MIT line. Pass null to hide. */
+  /** Optional trailing caption. Defaults to licensing and telemetry line. Pass null to hide. */
   caption?: string | null;
 }
 
@@ -24,7 +24,7 @@ export function FinalCTA({
   subtext = 'Install the framework, read the docs, and have a streaming chat in your app this afternoon.',
   primary = null,
   secondary = DEFAULT_SECONDARY,
-  caption = 'MIT · No signup required · App telemetry off by default',
+  caption = 'Most packages are MIT · @threadplane/chat requires a production license · App telemetry off by default',
 }: FinalCTAProps = {}) {
   return (
     <Section surface="tinted" ariaLabelledBy="final-cta-heading">

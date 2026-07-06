@@ -120,4 +120,16 @@ test.describe('Docs search', () => {
     // The modal mounts somewhere — assert by visible input role with placeholder text.
     await expect(page.locator('input[placeholder*="Search"], input[type="search"]').first()).toBeVisible({ timeout: 3000 });
   });
+
+  test('matches docs pages when query omits small connector words', async ({ page, browserName }) => {
+    await page.goto('/docs/langgraph/getting-started/introduction');
+    const modifier = browserName === 'webkit' ? 'Meta' : 'Control';
+    await page.keyboard.press(`${modifier}+KeyK`);
+
+    const searchInput = page.locator('input[placeholder*="Search"], input[type="search"]').first();
+    await searchInput.fill('choosing adapter');
+
+    await expect(page.getByRole('button', { name: /Choosing an adapter/i })).toBeVisible();
+    await expect(page.getByText('No results found')).toHaveCount(0);
+  });
 });

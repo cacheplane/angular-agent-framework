@@ -6,8 +6,8 @@ import { Card } from '../ui/Card';
 
 const PROMISES = [
   {
-    title: 'No closed core',
-    body: 'MIT today, MIT tomorrow. Primitives and compositions both stay in the open repo. Pilot-to-Prod is the only paid thing.',
+    title: 'No runtime lock-in',
+    body: 'MIT adapters and render primitives stay open. @threadplane/chat is free for noncommercial use and commercially licensed for production.',
   },
   {
     title: 'No abandoned majors',
