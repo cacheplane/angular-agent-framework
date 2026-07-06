@@ -97,4 +97,17 @@ describe('ChatStreamingMdComponent — streaming table rendering', () => {
       vi.useRealTimers();
     }
   });
+
+  it('streams body rows inside the table — no paragraph, no second table (0.5.3)', () => {
+    host.streaming.set(true);
+    grow('| A | B |\n| - | - |\n');
+    for (const c of ['|', '| x1', '| x1 | y', '| x1 | y1 |', '| x1 | y1 |\n']) {
+      grow('| A | B |\n| - | - |\n' + c);
+      expect(el.querySelectorAll('table').length, `one table at ${JSON.stringify(c)}`).toBe(1);
+      expect(
+        [...el.querySelectorAll('p')].some((p) => (p.textContent || '').includes('|')),
+        `no raw-pipe paragraph at ${JSON.stringify(c)}`,
+      ).toBe(false);
+    }
+  });
 });
