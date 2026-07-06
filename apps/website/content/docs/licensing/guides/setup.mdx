@@ -108,7 +108,7 @@ It's only a default hint. Callers can pass `isNoncommercial` explicitly.
 
 ## Gotchas
 
-`runLicenseCheck()` is idempotent for identical `package` and `token` values. A repeated call with the same key returns `licensed` without re-running the check.
+`runLicenseCheck()` is idempotent for identical `package` and `token` values. A repeated call with the same key returns the same status computed on the first call without re-running the check.
 
 That keeps repeated provider initialization quiet, but it means package authors shouldn't use repeated calls with identical inputs to poll for status.
 

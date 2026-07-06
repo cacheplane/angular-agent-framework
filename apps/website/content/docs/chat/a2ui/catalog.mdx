@@ -132,7 +132,7 @@ Renders children in a scrollable vertical list (max height 24rem).
 | `spec` | `Spec` | Injected automatically by the render engine |
 
 <Callout type="info" title="Template children">
-For data-driven lists, use the `A2uiChildTemplate` form instead of static `childKeys`. Set `children` to `{"path": "/items", "componentId": "item-template"}` and the surface component will expand the template once per array item. See the [Surface Component](/docs/chat/a2ui/surface-component) page for details.
+For data-driven lists, use the `A2uiChildTemplate` form instead of static `childKeys`. Set `children` to `{"template": {"componentId": "item-template", "dataBinding": "/items"}}` and the surface component will expand the template once per array item. See the [Surface Component](/docs/chat/a2ui/surface-component) page for details.
 </Callout>
 
 ## Interactive Components
@@ -155,8 +155,8 @@ Renders a button that dispatches an action when clicked.
 | `childKeys` | `string[]` | Child component IDs whose rendered output is the button's content (e.g., a `Text` label) |
 | `primary` | `boolean` | Renders the primary visual style. Defaults to `true` |
 | `disabled` | `boolean` | Disables the button when `true` |
-| `action` | `A2uiAction` | Action to execute on click (event or function call) |
-| `validationResult` | `A2uiValidationResult` | Pre-computed validation result — button is disabled if `valid` is `false` |
+| `action` | `A2uiAction` | Agent-bound action to emit on click |
+| `validationResult` | `A2uiValidationResult` | Pre-computed validation result. The button is disabled if `valid` is `false` |
 | `emit` | injected | Event emitter provided by the render engine |
 
 <Callout type="info" title="child vs childKeys">
@@ -166,18 +166,19 @@ The Angular `A2uiButtonComponent` input is `childKeys` (an array) — that's the
 **Action types:**
 
 ```json
-// Emit a named event with resolved context (sent back to the agent as v1 action)
-{"action": {"event": {"name": "submit", "context": {"email": {"path": "/email"}, "formId": "contact"}}}}
-
-// Execute a local function (e.g., open a URL) — agent never sees this
-{"action": {"functionCall": {"call": "openUrl", "args": {"url": "https://example.com"}}}}
+// Emit a named action with resolved context (sent back to the agent as v1 action)
+{
+  "action": {
+    "name": "submit",
+    "context": [
+      { "key": "email", "value": { "path": "/email" } },
+      { "key": "formId", "value": { "literalString": "contact" } }
+    ]
+  }
+}
 ```
 
-**Validation checks** reference built-in validators by name. If any check fails, the button is automatically disabled:
-
-```json
-{"checks": [{"call": "required", "args": {"value": {"path": "/email"}}, "message": "Email is required"}]}
-```
+Validation is data-driven. Send a resolved `validationResult` on the component when the backend has already evaluated validity.
 
 ### TextField
 

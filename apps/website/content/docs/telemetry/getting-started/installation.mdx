@@ -1,0 +1,66 @@
+# Installation
+
+Install the telemetry package:
+
+```bash
+npm install @threadplane/telemetry
+```
+
+The package publishes separate entry points for browser, Node, and shared utilities:
+
+```ts
+import { provideThreadplaneTelemetry } from '@threadplane/telemetry/browser';
+import { captureEvent, disableTelemetry } from '@threadplane/telemetry/node';
+import { isTelemetryDisabled } from '@threadplane/telemetry';
+```
+
+## Optional peers
+
+`@angular/core` and `posthog-js` are optional peer dependencies.
+
+Install `@angular/core` when you use the browser Angular provider and service:
+
+```bash
+npm install @threadplane/telemetry @angular/core
+```
+
+Install `posthog-js` only when you use direct browser PostHog delivery through `posthogKey`. New integrations should prefer `sink` or `endpoint`, because those keep delivery inside your application's analytics boundary.
+
+```bash
+npm install @threadplane/telemetry posthog-js
+```
+
+## Browser entry point
+
+Browser telemetry is opt-in. Calling `provideThreadplaneTelemetry({ enabled: true, ... })` is what activates capture.
+
+```ts
+import { provideThreadplaneTelemetry } from '@threadplane/telemetry/browser';
+
+provideThreadplaneTelemetry({
+  enabled: true,
+  endpoint: '/api/telemetry',
+});
+```
+
+## Node entry point
+
+Node helpers live under `@threadplane/telemetry/node`.
+
+```ts
+import { captureRuntimeInstanceCreated } from '@threadplane/telemetry/node';
+
+await captureRuntimeInstanceCreated({
+  transport: 'langgraph',
+  provider: 'openai',
+  model: 'gpt-4.1',
+});
+```
+
+Node telemetry respects the environment opt-out variables documented in [Privacy and Opt-Out](/docs/telemetry/guides/privacy-and-opt-out).
+
+## Next steps
+
+- [Browser Telemetry](/docs/telemetry/guides/browser) - configure an Angular provider and runtime sink.
+- [Node Telemetry](/docs/telemetry/guides/node) - capture helpers for lifecycle and stream events.
+- [Events](/docs/telemetry/reference/events) - event names and payload shapes.

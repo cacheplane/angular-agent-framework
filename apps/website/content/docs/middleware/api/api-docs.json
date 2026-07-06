@@ -1,0 +1,476 @@
+[
+  {
+    "name": "BaseMessage",
+    "kind": "interface",
+    "description": "Base class for all types of messages in a conversation. It includes\nproperties like `content`, `name`, and `additional_kwargs`. It also\nincludes methods like `toDict()` and `_getType()`.",
+    "properties": [
+      {
+        "name": "additional_kwargs",
+        "type": "object",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "content",
+        "type": "$InferMessageContent<TStructure, TRole>",
+        "description": "Array of content blocks that make up the message content",
+        "optional": false
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "Unique identifier for this message",
+        "optional": true
+      },
+      {
+        "name": "lc_kwargs",
+        "type": "SerializedFields",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "lc_namespace",
+        "type": "string[]",
+        "description": "A path to the module that contains the class, eg. [\"langchain\", \"llms\"]\nUsually should be the same as the entrypoint the class is exported from.",
+        "optional": false
+      },
+      {
+        "name": "lc_serializable",
+        "type": "boolean",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "response_metadata",
+        "type": "NonNullable<BaseMessageFields<TStructure, TRole>[\"response_metadata\"]>",
+        "description": "Metadata about the message",
+        "optional": false
+      },
+      {
+        "name": "type",
+        "type": "TRole",
+        "description": "The message type/role",
+        "optional": false
+      },
+      {
+        "name": "_printableFields",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "[toStringTag]",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "contentBlocks",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "lc_aliases",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "lc_attributes",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "lc_id",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "lc_secrets",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "lc_serializable_keys",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "text",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "_getType",
+        "signature": "_getType(): MessageType",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "_updateId",
+        "signature": "_updateId(value: string | undefined): void",
+        "description": "",
+        "params": [
+          {
+            "name": "value",
+            "type": "string | undefined",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "getType",
+        "signature": "getType(): MessageType",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "toDict",
+        "signature": "toDict(): StoredMessage",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "toFormattedString",
+        "signature": "toFormattedString(format: \"pretty\"): string",
+        "description": "",
+        "params": [
+          {
+            "name": "format",
+            "type": "\"pretty\"",
+            "description": "",
+            "optional": true
+          }
+        ]
+      },
+      {
+        "name": "toJSON",
+        "signature": "toJSON(): Serialized",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "toJSONNotImplemented",
+        "signature": "toJSONNotImplemented(): SerializedNotImplemented<>",
+        "description": "",
+        "params": []
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "BindableModel",
+    "kind": "interface",
+    "description": "A chat model that can bind tools (the LangChain `Runnable.bindTools` surface).",
+    "properties": [],
+    "methods": [
+      {
+        "name": "bindTools",
+        "signature": "bindTools(tools: unknown[], kwargs: unknown): unknown",
+        "description": "",
+        "params": [
+          {
+            "name": "tools",
+            "type": "unknown[]",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "kwargs",
+            "type": "unknown",
+            "description": "",
+            "optional": true
+          }
+        ]
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ClientToolSpec",
+    "kind": "interface",
+    "description": "A frontend-declared client tool: name + description + JSON-Schema parameters.",
+    "properties": [
+      {
+        "name": "description",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "parameters",
+        "type": "Record<string, unknown>",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ClientToolsState",
+    "kind": "interface",
+    "description": "The slice of graph state this middleware reads.",
+    "properties": [
+      {
+        "name": "client_tools",
+        "type": "ClientToolSpec[]",
+        "description": "Fallback channel — the raw run input key.",
+        "optional": true
+      },
+      {
+        "name": "messages",
+        "type": "BaseMessage<MessageStructure<MessageToolSet>, MessageType>[]",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "tools",
+        "type": "ClientToolSpec[]",
+        "description": "Primary channel — AG-UI/LangGraph merges RunAgentInput.tools here.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "OpenAIFunctionTool",
+    "kind": "interface",
+    "description": "The explicit OpenAI function-tool shape accepted by ChatModel.bindTools across versions.",
+    "properties": [
+      {
+        "name": "function",
+        "type": "object",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "type",
+        "type": "\"function\"",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "bindClientTools",
+    "kind": "function",
+    "description": "Bind server tools + the client catalog stubs onto `llm`. Call this INSIDE the\nagent node (per-run) — the client catalog arrives in state and may differ per run.",
+    "signature": "bindClientTools(llm: M, serverTools: unknown[], state: ClientToolsState): ReturnType<M[\"bindTools\"]>",
+    "params": [
+      {
+        "name": "llm",
+        "type": "M",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "serverTools",
+        "type": "unknown[]",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "state",
+        "type": "ClientToolsState",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "ReturnType<M[\"bindTools\"]>",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "clientToolNames",
+    "kind": "function",
+    "description": "The set of tool names declared by the client in this run.",
+    "signature": "clientToolNames(state: ClientToolsState): Set<string>",
+    "params": [
+      {
+        "name": "state",
+        "type": "ClientToolsState",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Set<string>",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "clientToolsChannel",
+    "kind": "function",
+    "description": "State channels for the client-tools catalog. Spread into Annotation.Root so a graph\ndeclares the `tools` (primary) and `client_tools` (fallback) slices in one line:\n\n  const State = Annotation.Root({ ...MessagesAnnotation.spec, ...clientToolsChannel() });\n\nBoth are last-value-wins channels (the catalog is replaced per run, not accumulated).",
+    "signature": "clientToolsChannel(): object",
+    "params": [],
+    "returns": {
+      "type": "object",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "clientToolSpecs",
+    "kind": "function",
+    "description": "The client catalog as OpenAI function-tool dicts for `model.bindTools`.",
+    "signature": "clientToolSpecs(state: ClientToolsState): OpenAIFunctionTool[]",
+    "params": [
+      {
+        "name": "state",
+        "type": "ClientToolsState",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "OpenAIFunctionTool[]",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "clientToolsRouter",
+    "kind": "function",
+    "description": "A prebuilt conditional-edge callback. serverToolNames is bound once at construction;\nthe returned function takes only state.\n\n  graph.addConditionalEdges('agent', clientToolsRouter([]), ['tools', END]);",
+    "signature": "clientToolsRouter(serverToolNames: Iterable<string>, opts: object): (state: ClientToolsState) => string",
+    "params": [
+      {
+        "name": "serverToolNames",
+        "type": "Iterable<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "opts",
+        "type": "object",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "returns": {
+      "type": "(state: ClientToolsState) => string",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "hasClientToolCall",
+    "kind": "function",
+    "description": "True if the last message calls at least one client tool.",
+    "signature": "hasClientToolCall(state: ClientToolsState): boolean",
+    "params": [
+      {
+        "name": "state",
+        "type": "ClientToolsState",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "boolean",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "hasServerToolCall",
+    "kind": "function",
+    "description": "True if the last message calls at least one server (non-client) tool.\nA call is server-side when its name is in serverToolNames OR is not a known\nclient tool (unknown tools are assumed server-side).",
+    "signature": "hasServerToolCall(state: ClientToolsState, serverToolNames: Iterable<string>): boolean",
+    "params": [
+      {
+        "name": "state",
+        "type": "ClientToolsState",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "serverToolNames",
+        "type": "Iterable<string>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "boolean",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "lastMessage",
+    "kind": "function",
+    "description": "The last message from state.messages, or undefined.",
+    "signature": "lastMessage(state: ClientToolsState): BaseMessage<MessageStructure<MessageToolSet>, MessageType> | undefined",
+    "params": [
+      {
+        "name": "state",
+        "type": "ClientToolsState",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "BaseMessage<MessageStructure<MessageToolSet>, MessageType> | undefined",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "routeAfterAgent",
+    "kind": "function",
+    "description": "Routing helper for a LangGraph conditional edge. Returns `toolsNode` when the last\nmessage has a server tool call (dispatch to the server ToolNode); otherwise `end`\n(client-only calls — the browser executes them — and no-tool-call turns both end).",
+    "signature": "routeAfterAgent(state: ClientToolsState, serverToolNames: Iterable<string>, opts: object): string",
+    "params": [
+      {
+        "name": "state",
+        "type": "ClientToolsState",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "serverToolNames",
+        "type": "Iterable<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "opts",
+        "type": "object",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "returns": {
+      "type": "string",
+      "description": ""
+    },
+    "examples": []
+  }
+]

@@ -27,7 +27,7 @@ import { ChatSidebarComponent } from '@threadplane/chat';
   selector: 'app-shell',
   standalone: true,
   imports: [ChatSidebarComponent],
-  providers: [provideAgent({ assistantId: 'chat', threadId: signal(null) })],
+  providers: [provideAgent({ apiUrl: 'http://localhost:2024', assistantId: 'chat', threadId: signal(null) })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <chat-sidebar [agent]="chatAgent">
@@ -66,7 +66,13 @@ In push-content mode, `ChatSidebarComponent` uses `display: flex` on its host. T
 | Input | Type | Default | Description |
 |-------|------|---------|-------------|
 | `agent` | `Agent` | **Required** | The agent providing streaming state |
+| `views` | `ViewRegistry \| undefined` | `undefined` | A2UI/json-render component registry forwarded to the inner `<chat>` |
+| `clientTools` | `ClientToolRegistry \| undefined` | `undefined` | Frontend-declared client tools forwarded to the inner `<chat>` |
+| `modelOptions` | `readonly ChatSelectOption[]` | `[]` | Options for the chat input model picker |
+| `showModelPicker` | `boolean` | `true` | Hides the model picker when `false`, even when `modelOptions` is non-empty |
+| `selectedModel` | `string` (two-way) | `''` | Current selected model value |
 | `open` | `boolean` (two-way) | `false` | Two-way bindable. Controls whether the sidebar is open |
+| `closeOnEscape` | `boolean` | `true` | Closes the sidebar when Escape is pressed |
 | `pushContent` | `boolean` | `false` | When `true`, the sidebar shifts projected content rather than overlaying it |
 
 ### Outputs
@@ -105,12 +111,26 @@ In push-content mode, `ChatSidebarComponent` uses `display: flex` on its host. T
       <main><router-outlet /></main>
     </chat-sidebar>
   `,
-  providers: [provideAgent({ assistantId: 'chat', threadId: signal(null) })],
+  providers: [provideAgent({ apiUrl: 'http://localhost:2024', assistantId: 'chat', threadId: signal(null) })],
 })
 export class AppShellComponent {
   sidebarOpen = signal(false);
   chatAgent = injectAgent();
 }
+```
+
+## A2UI and Client Tools
+
+`ChatSidebarComponent` forwards `views` and `clientTools` to the inner `<chat>`. Use these inputs when the sidebar should render A2UI surfaces or expose browser-declared tools to the agent:
+
+```html
+<chat-sidebar
+  [agent]="chatAgent"
+  [views]="a2uiViews"
+  [clientTools]="clientTools"
+>
+  <main><router-outlet /></main>
+</chat-sidebar>
 ```
 
 ## Styling

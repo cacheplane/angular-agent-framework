@@ -42,10 +42,10 @@ Here's what the first release handles:
 - `toolCalls` (streaming tool calls via `TOOL_CALL_*` events)
 - `state` (snapshots and JSON-Patch deltas)
 - `events$` (custom events; discriminates `state_update`)
+- Interrupts (from `CUSTOM` events named `on_interrupt`)
+- Subagent/activity progress (from `ACTIVITY_*` events)
 
-Out of scope for now (use `@threadplane/langgraph` if you need these):
-- Interrupts
-- Subagents
+Out of scope for now (use `@threadplane/langgraph` if you need LangGraph Platform-specific APIs):
 - History / time-travel
 
 ## Next steps

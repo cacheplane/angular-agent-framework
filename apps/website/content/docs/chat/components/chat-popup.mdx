@@ -27,7 +27,7 @@ import { ChatPopupComponent } from '@threadplane/chat';
   selector: 'app-root',
   standalone: true,
   imports: [ChatPopupComponent],
-  providers: [provideAgent({ assistantId: 'chat', threadId: signal(null) })],
+  providers: [provideAgent({ apiUrl: 'http://localhost:2024', assistantId: 'chat', threadId: signal(null) })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!-- your app content here -->
@@ -50,7 +50,14 @@ export class AppComponent {
 | Input | Type | Default | Description |
 |-------|------|---------|-------------|
 | `agent` | `Agent` | **Required** | The agent providing streaming state |
+| `views` | `ViewRegistry \| undefined` | `undefined` | A2UI/json-render component registry forwarded to the inner `<chat>` |
+| `clientTools` | `ClientToolRegistry \| undefined` | `undefined` | Frontend-declared client tools forwarded to the inner `<chat>` |
+| `modelOptions` | `readonly ChatSelectOption[]` | `[]` | Options for the chat input model picker |
+| `showModelPicker` | `boolean` | `true` | Hides the model picker when `false`, even when `modelOptions` is non-empty |
+| `selectedModel` | `string` (two-way) | `''` | Current selected model value |
 | `open` | `boolean` (two-way) | `false` | Two-way bindable. Controls whether the chat window is open |
+| `shortcut` | `string \| null` | `'k'` | Single key toggled with Cmd/Ctrl. Set to `null` to disable |
+| `closeOnEscape` | `boolean` | `true` | Closes the popup when Escape is pressed |
 
 ### Outputs
 
@@ -82,7 +89,7 @@ Control the open state from your component:
     <button (click)="popup.openWindow()">Open Chat</button>
     <chat-popup [(open)]="chatOpen" [agent]="chatAgent" #popup />
   `,
-  providers: [provideAgent({ assistantId: 'chat', threadId: signal(null) })],
+  providers: [provideAgent({ apiUrl: 'http://localhost:2024', assistantId: 'chat', threadId: signal(null) })],
 })
 export class AppComponent {
   chatOpen = false;
@@ -98,6 +105,18 @@ Project content into the window header with the `[chatHeader]` slot:
 <chat-popup [agent]="chatAgent">
   <span chatHeader>Support Chat</span>
 </chat-popup>
+```
+
+## A2UI and Client Tools
+
+`ChatPopupComponent` forwards `views` and `clientTools` to the inner `<chat>` composition. Pass the same registries you would pass to `<chat>` when the popup needs generative UI surfaces or browser-executed tools:
+
+```html
+<chat-popup
+  [agent]="chatAgent"
+  [views]="a2uiViews"
+  [clientTools]="clientTools"
+/>
 ```
 
 ## Styling

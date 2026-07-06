@@ -1,0 +1,98 @@
+# Quick Start
+
+Install the middleware package and its LangGraph peer dependencies:
+
+```bash
+npm install @threadplane/middleware @langchain/core @langchain/langgraph
+```
+
+The package exposes its JavaScript API from `@threadplane/middleware/langgraph`.
+
+## Add client-tool state channels
+
+```ts
+import { Annotation, END, MessagesAnnotation, StateGraph } from '@langchain/langgraph';
+import {
+  bindClientTools,
+  clientToolsChannel,
+  clientToolsRouter,
+} from '@threadplane/middleware/langgraph';
+
+const State = Annotation.Root({
+  ...MessagesAnnotation.spec,
+  ...clientToolsChannel(),
+});
+```
+
+`clientToolsChannel()` adds both `tools` and `client_tools`. The middleware reads `tools` first and falls back to `client_tools`.
+
+## Bind tools per run
+
+Call `bindClientTools()` inside the graph node, not once at module load. The browser sends the catalog with each run, so the tool list is request-scoped.
+
+```ts
+const SERVER_TOOLS: unknown[] = [];
+const serverToolNames: string[] = [];
+
+async function agent(state: typeof State.State) {
+  const llm = bindClientTools(baseLlm, SERVER_TOOLS, state);
+  const response = await llm.invoke(state.messages);
+  return { messages: [response] };
+}
+```
+
+`SERVER_TOOLS` is where your server-owned LangChain tools go. Client tools from state are appended as model-visible function stubs.
+
+## Route after the agent
+
+```ts
+const graph = new StateGraph(State)
+  .addNode('agent', agent)
+  .addEdge('__start__', 'agent')
+  .addConditionalEdges('agent', clientToolsRouter(serverToolNames), ['tools', END])
+  .compile();
+```
+
+When the last model message calls a server tool, the router returns the server tools node. When the last model message calls only browser-declared client tools, the router returns `END` so the frontend can execute the call and resume.
+
+## Complete skeleton
+
+```ts
+import { Annotation, END, MessagesAnnotation, StateGraph } from '@langchain/langgraph';
+import { ChatOpenAI } from '@langchain/openai';
+import {
+  bindClientTools,
+  clientToolsChannel,
+  clientToolsRouter,
+} from '@threadplane/middleware/langgraph';
+
+const State = Annotation.Root({
+  ...MessagesAnnotation.spec,
+  ...clientToolsChannel(),
+});
+
+const baseLlm = new ChatOpenAI({ model: 'gpt-4o-mini' });
+const serverTools: unknown[] = [];
+const serverToolNames: string[] = [];
+
+async function agent(state: typeof State.State) {
+  const llm = bindClientTools(baseLlm, serverTools, state);
+  const response = await llm.invoke(state.messages);
+  return { messages: [response] };
+}
+
+export const graph = new StateGraph(State)
+  .addNode('agent', agent)
+  .addEdge('__start__', 'agent')
+  .addConditionalEdges('agent', clientToolsRouter(serverToolNames), ['tools', END])
+  .compile();
+```
+
+## Frontend pairing
+
+On the frontend, declare client tools with `@threadplane/chat` and send them through an adapter that forwards the tool specs into the run input. The middleware consumes those specs on the backend; the browser remains responsible for executing the actual local function, view, or ask tool.
+
+## Next steps
+
+- [LangGraph Client Tools](/docs/middleware/guides/langgraph-client-tools) - mixed server/client routing and helper behavior.
+- [Client Tool Helpers](/docs/middleware/api/client-tool-helpers) - generated API details.

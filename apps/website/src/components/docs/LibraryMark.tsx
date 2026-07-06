@@ -1,7 +1,7 @@
 import { tokens } from '@threadplane/design-tokens';
 import type { LibraryId } from '../../lib/docs-config';
 
-type GlyphKey = 'chat' | 'key' | 'pulse';
+type GlyphKey = 'chat' | 'key' | 'middleware' | 'pulse';
 
 type MarkEntry =
   | { kind: 'logo'; src: string }
@@ -13,6 +13,7 @@ const MARKS: Record<LibraryId, MarkEntry> = {
   a2ui: { kind: 'logo', src: '/logos/providers/google.svg' },
   render: { kind: 'logo', src: '/logos/surface/vercel.svg' },
   chat: { kind: 'glyph', glyph: 'chat' },
+  middleware: { kind: 'glyph', glyph: 'middleware' },
   licensing: { kind: 'glyph', glyph: 'key' },
   telemetry: { kind: 'glyph', glyph: 'pulse' },
 };
@@ -34,6 +35,15 @@ function KeyGlyph({ s }: { s: number }) {
   );
 }
 
+function MiddlewareGlyph({ s }: { s: number }) {
+  return (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 7h16M4 17h16" />
+      <path d="M7 4v6M17 14v6" />
+    </svg>
+  );
+}
+
 function PulseGlyph({ s }: { s: number }) {
   return (
     <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -45,6 +55,7 @@ function PulseGlyph({ s }: { s: number }) {
 const GLYPHS: Record<GlyphKey, (props: { s: number }) => React.JSX.Element> = {
   chat: ChatGlyph,
   key: KeyGlyph,
+  middleware: MiddlewareGlyph,
   pulse: PulseGlyph,
 };
 

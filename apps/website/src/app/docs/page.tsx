@@ -76,10 +76,16 @@ interface SupportingLib {
   title: string;
   blurb: string;
   href: string;
-  glyph: 'key' | 'pulse';
+  glyph: 'key' | 'middleware' | 'pulse';
 }
 
 const SUPPORTING: SupportingLib[] = [
+  {
+    title: 'Middleware',
+    blurb: 'Backend client-tool routing',
+    href: '/docs/middleware/getting-started/introduction',
+    glyph: 'middleware',
+  },
   {
     title: 'Licensing',
     blurb: 'Token verification',
@@ -119,7 +125,16 @@ function PulseGlyph() {
   );
 }
 
-const GLYPHS = { key: KeyGlyph, pulse: PulseGlyph } as const;
+function MiddlewareGlyph() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 7h16M4 17h16" />
+      <path d="M7 4v6M17 14v6" />
+    </svg>
+  );
+}
+
+const GLYPHS = { key: KeyGlyph, middleware: MiddlewareGlyph, pulse: PulseGlyph } as const;
 
 const stepLabelStyle = {
   fontFamily: tokens.typography.eyebrow.family,

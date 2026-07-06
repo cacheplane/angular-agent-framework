@@ -47,16 +47,14 @@ Before the spec is emitted, each component prop is evaluated against the surface
 
 - A literal value — passed through as-is
 - A path reference `{ path: '/some/pointer' }` — resolved via JSON Pointer against `dataModel`
-- A function call `{ call: 'formatCurrency', args: { ... } }` — executed by the built-in function registry
-- A template string `"Hello ${/name}"` — interpolated with values from `dataModel`
 
 **3. Map actions to `on` bindings**
 
-The internal conversion maps each component's A2UI `action` prop into a render-spec `on` binding on the corresponding element. Event actions map to the `a2ui:event` handler, and function call actions map to the `a2ui:localAction` handler. This bridges the A2UI interaction model to the render-lib event system.
+The internal conversion maps each component's A2UI `action` prop into a render-spec `on` binding on the corresponding element. Actions map to the `a2ui:event` handler, which builds an `A2uiActionMessage` for the `(action)` output.
 
 **4. Expand template children**
 
-When a component's `children` field is an `A2uiChildTemplate` (`{ path, componentId }`), the surface component expands it over the array at `path` in the data model. Each array item gets its own cloned element with props resolved in that item's scope.
+When a component's `children` field is an `A2uiChildTemplate` (`{ template: { componentId, dataBinding } }`), the surface component expands it over the array at the `dataBinding` JSON Pointer in the data model. Each array item gets its own cloned element with props resolved in that item's scope.
 
 **5. Render via RenderSpecComponent**
 

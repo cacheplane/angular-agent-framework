@@ -1,13 +1,13 @@
 # Markdown Rendering
 
-AI messages in `@threadplane/chat` can render full markdown -- headings, code blocks, tables, lists, blockquotes, and inline formatting. The `renderMarkdown()` utility does the work, and `CHAT_MARKDOWN_STYLES` handles the styling.
+AI messages in `@threadplane/chat` can render full markdown -- headings, code blocks, tables, lists, blockquotes, math, HTML nodes, and inline formatting. Use `<chat-streaming-md>` for the live node-based renderer. Use `renderMarkdown()` only when you need a small sanitized-HTML helper in a custom template.
 
 ## How It Works
 
 The markdown pipeline has two stages:
 
-1. **Parse**: The `renderMarkdown()` function converts markdown text to sanitized HTML using the `marked` library (dynamically imported). If `marked` is not installed, it falls back to plain text with `<br>` newline conversion.
-2. **Style**: The `CHAT_MARKDOWN_STYLES` constant provides CSS rules scoped under the `.chat-md` class, targeting all common markdown elements.
+1. **Streaming renderer**: `<chat-streaming-md>` parses markdown into node keys and renders those keys through `cacheplaneMarkdownViews`.
+2. **Sanitized HTML helper**: `renderMarkdown()` converts markdown text to sanitized HTML using `marked` when it is installed, falling back to escaped plain text with `<br>` newline conversion.
 
 ## The renderMarkdown() Function
 
@@ -44,89 +44,54 @@ function renderMarkdown(content: string, sanitizer: DomSanitizer): SafeHtml
 The `marked` library is loaded via a dynamic `import('marked')` at module initialization time. This means it does not block initial bundle loading and resolves before the first render in most cases.
 </Callout>
 
-## CHAT_MARKDOWN_STYLES
-
-The `CHAT_MARKDOWN_STYLES` constant provides CSS rules for all standard markdown elements. It targets the `.chat-md` class using `::ng-deep` for view encapsulation compatibility.
-
-```typescript
-import { CHAT_MARKDOWN_STYLES } from '@threadplane/chat';
-
-@Component({
-  styles: [CHAT_MARKDOWN_STYLES],
-  // ...
-})
-export class MyComponent {}
-```
-
-### Styled Elements
-
-The stylesheet covers the following markdown elements:
-
-| Element | Styling |
-|---------|---------|
-| `p` | Bottom margin of `0.75em`, last child has no bottom margin |
-| `code` (inline) | Background `var(--tplane-chat-surface-alt)`, padding, `4px` radius, monospace font |
-| `pre` | Background `var(--tplane-chat-surface-alt)`, `12px 16px` padding, horizontal scroll |
-| `pre code` | No extra background or padding (inherits from `pre`) |
-| `ul`, `ol` | `0.5em` vertical margin, `1.5em` left padding |
-| `li` | `0.25em` vertical margin |
-| `a` | Text color with underline |
-| `strong` | Font weight `600` |
-| `blockquote` | Left border `3px solid`, left padding `12px`, muted text color |
-| `h1` | `1.25em` font size, weight `600` |
-| `h2` | `1.125em` font size, weight `600` |
-| `h3` | `1em` font size, weight `600` |
-| `table` | Collapsed borders, full width |
-| `th` | Alt background, bold, `0.875em` |
-| `td` | Standard border and padding |
-
-All colors reference `--tplane-chat-*` CSS custom properties, so markdown elements automatically respect the active chat theme.
-
 ## Using Markdown in Custom Components
 
-Let's render markdown in a custom message template. Apply both the styles and the `.chat-md` class:
+For custom message templates, prefer `<chat-streaming-md>` so you get the same node registry, math, citation, table, and code-block behavior as the built-in chat components:
 
 ```typescript
-import { Component, inject } from '@angular/core';
-import { DomSanitizer } from '@angular/platform-browser';
 import {
+  ChatStreamingMdComponent,
   ChatMessageListComponent,
   MessageTemplateDirective,
-  CHAT_MARKDOWN_STYLES,
-  renderMarkdown,
 } from '@threadplane/chat';
 
 @Component({
   selector: 'app-chat-view',
   standalone: true,
-  imports: [ChatMessageListComponent, MessageTemplateDirective],
-  styles: [CHAT_MARKDOWN_STYLES],
+  imports: [ChatMessageListComponent, MessageTemplateDirective, ChatStreamingMdComponent],
   template: `
     <chat-message-list [agent]="chatRef">
       <ng-template chatMessageTemplate="ai" let-message>
-        <div
-          class="chat-md"
-          [innerHTML]="renderMd(message.content)"
-        ></div>
+        <chat-streaming-md [content]="message.content" />
       </ng-template>
     </chat-message-list>
   `,
 })
 export class ChatViewComponent {
-  private sanitizer = inject(DomSanitizer);
-
   // chatRef = injectAgent(); // with provideAgent({...}) in the component's providers
+}
+```
 
+If you only need sanitized HTML, call `renderMarkdown()` directly and provide your own styling for the host element:
+
+```typescript
+import { Component, inject } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
+import { renderMarkdown } from '@threadplane/chat';
+
+@Component({
+  selector: 'app-markdown-html',
+  template: `<div class="markdown-body" [innerHTML]="renderMd(content)" />`,
+})
+export class MarkdownHtmlComponent {
+  private sanitizer = inject(DomSanitizer);
+  content = '';
   renderMd(content: string | unknown) {
     if (typeof content !== 'string') return '';
     return renderMarkdown(content, this.sanitizer);
   }
 }
 ```
-
-<Callout type="tip" title="The .chat-md class is required">
-The markdown styles are scoped to `.chat-md`. Make sure the container element receiving `[innerHTML]` has this class, otherwise the rendered HTML will appear unstyled.
-</Callout>
 
 ## Streaming Markdown with chat-streaming-md
 
@@ -216,6 +181,10 @@ The most common mistake is providing `'code'` as an override key — it does not
 | `'strong'` | Bold emphasis (`<strong>`) |
 | `'strikethrough'` | Strikethrough text (`<del>`) |
 | `'inline-code'` | Inline code span (`<code>`) |
+| `'math-inline'` | Inline math |
+| `'math-display'` | Display math block |
+| `'html-inline'` | Inline HTML node |
+| `'html-block'` | Block HTML node |
 | `'link'` | Hyperlink (`<a>`) |
 | `'autolink'` | Auto-detected URL or email link |
 | `'image'` | Image (`<img>`) |

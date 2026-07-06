@@ -77,21 +77,22 @@ agent.error();
 
 ## Tool call args are empty
 
-`TOOL_CALL_ARGS` parses the event `delta` as JSON.
+`TOOL_CALL_ARGS` appends each event `delta` to the tool call's accumulated argument buffer. When the accumulated buffer is valid JSON, the reducer stores the parsed object as the current args.
 
-This works:
+This can arrive as one complete payload:
 
 ```ts
 { type: 'TOOL_CALL_ARGS', toolCallId: 't1', delta: '{"query":"Angular"}' }
 ```
 
-This becomes `{}`:
+Or as fragments:
 
 ```ts
 { type: 'TOOL_CALL_ARGS', toolCallId: 't1', delta: '{"query":' }
+{ type: 'TOOL_CALL_ARGS', toolCallId: 't1', delta: '"Angular"}' }
 ```
 
-The current reducer replaces args with each parsed payload. It does not assemble partial JSON fragments across multiple `TOOL_CALL_ARGS` events. Emit complete JSON for each args event.
+While the buffer is incomplete, the previously parsed args remain in place. If the final buffer still cannot be parsed at `TOOL_CALL_END`, the adapter leaves the last-good parsed args instead of throwing.
 
 ## Citations do not show up
 
@@ -132,13 +133,13 @@ Cancellation depends on the AG-UI source implementation. `HttpAgent` supports ab
 
 Pass the index of the assistant message you want to replace, not the user message.
 
-## Interrupts, subagents, or history do not work
+## History or time-travel does not work
 
-Those flows are not implemented by the AG-UI adapter today.
+History and time-travel are not implemented by the AG-UI adapter today.
 
-Current scope is messages, status/loading/error, tool calls, state/custom events, reasoning messages, message snapshots, and citations from state.
+Current scope is messages, status/loading/error, tool calls, state/custom events, reasoning messages, message snapshots, interrupts from `CUSTOM` `on_interrupt` events, subagent/activity progress from `ACTIVITY_*` events, and citations from state.
 
-Use `@threadplane/langgraph` for the richer LangGraph-specific surface, or write a custom adapter against the `@threadplane/chat` `Agent` contract if you need AG-UI plus product-specific behavior.
+Use `@threadplane/langgraph` if you need LangGraph Platform thread history APIs, or write a custom adapter against the `@threadplane/chat` `Agent` contract if you need AG-UI plus product-specific behavior.
 
 ## Isolate with FakeAgent
 

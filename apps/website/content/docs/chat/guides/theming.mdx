@@ -135,5 +135,5 @@ If you previously customized `--chat-*` tokens, rename them to `--tplane-chat-*`
 | `--chat-success` | `--tplane-chat-success` |
 
 <Callout type="warning" title="CHAT_THEME_STYLES removed">
-The `CHAT_THEME_STYLES` named export no longer exists in `@threadplane/chat`. Remove imports of that constant - theme tokens are now applied automatically by each component. `CHAT_MARKDOWN_STYLES` remains available for custom markdown renderers.
+The `CHAT_THEME_STYLES` and `CHAT_MARKDOWN_STYLES` named exports do not exist in `@threadplane/chat`. Remove imports of those constants - theme tokens are applied automatically by each component, and custom markdown rendering should use `<chat-streaming-md>` or your own host styles around `renderMarkdown()`.
 </Callout>

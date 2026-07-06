@@ -19,7 +19,7 @@ This page is the compatibility map. If your backend emits these events with the 
 | `REASONING_MESSAGE_CHUNK` | `messages` | Treated the same as `REASONING_MESSAGE_CONTENT`. |
 | `REASONING_MESSAGE_END` | `messages` | Adds `reasoningDurationMs` when timing is available. |
 | `TOOL_CALL_START` | `toolCalls`, `messages` | Adds a running tool call; also links the call to its parent assistant message (via `parentMessageId`), creating a message slot if needed. |
-| `TOOL_CALL_ARGS` | `toolCalls` | Parses `delta` as JSON and replaces args on the matching tool call. |
+| `TOOL_CALL_ARGS` | `toolCalls` | Accumulates partial JSON fragments, keeps the last-good parsed args, and finalizes parsing on `TOOL_CALL_END`. |
 | `TOOL_CALL_RESULT` | `toolCalls` | Stores the tool result on the matching tool call. |
 | `TOOL_CALL_END` | `toolCalls` | Marks the matching tool call complete. |
 | `STATE_SNAPSHOT` | `state`, `messages` | Replaces state and merges citations from `state.citations`. |
@@ -113,7 +113,9 @@ The resulting tool call is:
 }
 ```
 
-`TOOL_CALL_ARGS` expects the `delta` value to be parseable JSON. If parsing fails, args become `{}`. The current reducer replaces args with each parsed payload; it does not merge partial JSON fragments.
+`TOOL_CALL_ARGS` accepts partial JSON fragments. The reducer appends each `delta` to an internal buffer for the tool call, parses whenever the buffer becomes valid JSON, and keeps the last-good args while more fragments arrive. On `TOOL_CALL_END`, it performs one final parse before marking the call complete.
+
+If the accumulated buffer never parses, args stay at the last-good value or `{}`.
 
 ## State
 
@@ -171,6 +173,10 @@ If `message` is omitted, no user message is appended, but `runAgent()` still run
 
 `agent.stop()` calls `source.abortRun()`. Cancellation depends on the AG-UI source implementation.
 
+## Activity and subagents
+
+`ACTIVITY_SNAPSHOT` and `ACTIVITY_DELTA` events project into the AG-UI-specific `subagents()` signal. Use that signal for progress cards and nested task views backed by AG-UI activity streams.
+
 ## Unsupported protocol areas
 
-Beyond the `on_interrupt` -> `interrupt` mapping documented above (and its `submit({ resume })` reply), the adapter implements no richer interrupt UI flow — no subagents, history, or time-travel. Unknown protocol events are ignored rather than treated as errors.
+The adapter supports `CUSTOM` `on_interrupt` events for the runtime-neutral `interrupt()` signal, and it supports ACTIVITY-backed subagent progress. It does not implement history or time-travel. Unknown protocol events are ignored rather than treated as errors.

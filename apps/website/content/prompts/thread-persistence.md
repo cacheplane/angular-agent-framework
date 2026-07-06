@@ -4,10 +4,10 @@ Add thread persistence to my Angular component that uses angular, so conversatio
 
 2. Create a signal: threadId = signal<string | null>(storedId).
 
-3. Pass it to agent: agent({ ..., threadId: this.threadId, onThreadId: (id) => { this.threadId.set(id); localStorage.setItem('chat-thread-id', id); } }).
+3. Pass it to provideAgent: provideAgent({ assistantId: 'chat', threadId: this.threadId, onThreadId: (id) => { this.threadId.set(id); localStorage.setItem('chat-thread-id', id); } }).
 
 4. The onThreadId callback fires once when the server creates a new thread. After that, the same thread ID is reused and the full conversation history is restored from the LangGraph server.
 
-5. To start a new conversation, call this.threadId.set(null) — this causes agent to create a fresh thread on the next submit.
+5. To start a new conversation, call this.threadId.set(null) — this causes the injected agent to create a fresh thread on the next submit.
 
 No changes to the template are needed.

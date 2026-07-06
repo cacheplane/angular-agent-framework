@@ -27,15 +27,6 @@ function loadApiDocs(library: string): ApiDocEntry[] {
   return [];
 }
 
-const API_NAME_MAP: Record<string, Record<string, string>> = {
-  langgraph: {
-    'inject-agent': 'injectAgent',
-    'provide-agent': 'provideAgent',
-    'fetch-stream-transport': 'FetchStreamTransport',
-    'mock-stream-transport': 'MockAgentTransport',
-  },
-};
-
 interface DocsRouteProps {
   params: Promise<{ library: string; section: string; slug: string }>;
 }
@@ -92,9 +83,8 @@ export default async function DocsPage({ params }: DocsRouteProps) {
           </article>
           {section === 'api' && (() => {
             const entries = loadApiDocs(library);
-            const nameMap = API_NAME_MAP[library] ?? {};
-            const target = nameMap[slug];
-            const apiEntry = target ? entries.find((e: ApiDocEntry) => e.name === target) : null;
+            const target = doc.title.replace(/\(\)$/, '');
+            const apiEntry = entries.find((e: ApiDocEntry) => e.name === target || e.name === doc.title);
             return apiEntry ? (
               <div className="px-6 md:px-12 max-w-3xl pb-8">
                 <ApiDocRenderer entry={apiEntry} />

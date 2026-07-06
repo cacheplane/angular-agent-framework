@@ -18,7 +18,7 @@ The main entry point exports:
 | `inferNoncommercial()` | returns a default noncommercial hint from `NODE_ENV` |
 | `LICENSE_PUBLIC_KEY` | bundled public key |
 
-This table covers the functions and the bundled key, not the full export list. The package also exports the supporting types — `LicenseClaims`, `LicenseTier`, `LicenseStatus`, `VerifyResult`/`VerifyReason`, `EvaluateResult`/`EvaluateOptions`, `RunLicenseCheckOptions`, and `EmitNagOptions`. See the [API reference](../reference/api.mdx) for the full type surface.
+This table covers the functions and the bundled key, not the full export list. The package also exports the supporting types — `LicenseClaims`, `LicenseTier`, `LicenseStatus`, `VerifyResult`/`VerifyReason`, `EvaluateResult`/`EvaluateOptions`, `RunLicenseCheckOptions`, and `EmitNagOptions`. See the [API reference](/docs/licensing/reference/api) for the full type surface.
 
 `@noble/ed25519` is the only peer dependency.
 
@@ -73,6 +73,6 @@ The code returns statuses instead of throwing for normal license states. For me,
 
 ## Next steps
 
-- [Quickstart](./quickstart.mdx) — a runnable round-trip: sign, verify, and evaluate a token end to end.
-- [Setup](../guides/setup.mdx) — consume the check via `provideChat()` or call `runLicenseCheck()` directly.
-- [API reference](../reference/api.mdx) — the full type surface.
+- [Quickstart](/docs/licensing/getting-started/quickstart) — a runnable round-trip: sign, verify, and evaluate a token end to end.
+- [Setup](/docs/licensing/guides/setup) — consume the check via `provideChat()` or call `runLicenseCheck()` directly.
+- [API reference](/docs/licensing/reference/api) — the full type surface.
