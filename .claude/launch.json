@@ -2,47 +2,80 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "ag-ui-itinerary",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["-c", "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && export GOOGLE_MAPS_API_KEY=$(grep -E '^GOOGLE_MAPS_API_KEY=' /Users/blove/repos/angular-agent-framework/.env | head -1 | cut -d= -f2- | tr -d '\"' | tr -d \"'\") && export GOOGLE_MAPS_MAP_ID=86d464ea7d5306034fe2a254 && npx nx serve examples-ag-ui-angular --port 4222"],
+      "port": 4222
+    },
+    {
+      "name": "ag-ui-backend",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["-c", "cd examples/ag-ui/python && export OPENAI_API_KEY=$(grep -E '^OPENAI_API_KEY=' /Users/blove/repos/angular-agent-framework/.env | head -1 | cut -d= -f2- | tr -d '\"' | tr -d \"'\") && unset AG_UI_INTERNAL_TOKEN && uv run uvicorn src.server:app --port 8000"],
+      "port": 8000
+    },
+    {
       "name": "website-dev",
       "runtimeExecutable": "/bin/bash",
-      "runtimeArgs": ["-c", "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && npx nx serve website --port $PORT"],
+      "runtimeArgs": [
+        "-c",
+        "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && npx nx serve website --port $PORT"
+      ],
       "port": 3000,
       "autoPort": true
     },
     {
       "name": "cockpit",
       "runtimeExecutable": "/bin/bash",
-      "runtimeArgs": ["-c", "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && npx nx serve cockpit --port 4201"],
+      "runtimeArgs": [
+        "-c",
+        "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && npx nx serve cockpit --port 4201"
+      ],
       "port": 4201
     },
     {
       "name": "streaming",
       "runtimeExecutable": "/bin/bash",
-      "runtimeArgs": ["-c", "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && npx nx serve cockpit-langgraph-streaming-angular --port 4300"],
+      "runtimeArgs": [
+        "-c",
+        "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && npx nx serve cockpit-langgraph-streaming-angular --port 4300"
+      ],
       "port": 4300
     },
     {
       "name": "ag-ui-streaming",
       "runtimeExecutable": "/bin/bash",
-      "runtimeArgs": ["-c", "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && npx nx serve cockpit-ag-ui-streaming-angular --port $PORT"],
+      "runtimeArgs": [
+        "-c",
+        "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && npx nx serve cockpit-ag-ui-streaming-angular --port $PORT"
+      ],
       "port": 4350,
       "autoPort": true
     },
     {
       "name": "examples-chat",
       "runtimeExecutable": "/bin/bash",
-      "runtimeArgs": ["-c", "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && npx nx serve examples-chat-angular --port 4400"],
+      "runtimeArgs": [
+        "-c",
+        "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && npx nx serve examples-chat-angular --port 4400"
+      ],
       "port": 4400
     },
     {
       "name": "genui-python",
       "runtimeExecutable": "/bin/bash",
-      "runtimeArgs": ["-c", "set -a && source /Users/blove/repos/angular-agent-framework/.env && set +a && cd cockpit/chat/generative-ui/python && uv run langgraph dev --port 5508 --no-browser"],
+      "runtimeArgs": [
+        "-c",
+        "set -a && source /Users/blove/repos/angular-agent-framework/.env && set +a && cd cockpit/chat/generative-ui/python && uv run langgraph dev --port 5508 --no-browser"
+      ],
       "port": 5508
     },
     {
       "name": "genui-angular",
       "runtimeExecutable": "/bin/bash",
-      "runtimeArgs": ["-c", "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && npx nx serve cockpit-chat-generative-ui-angular --port 4500"],
+      "runtimeArgs": [
+        "-c",
+        "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && npx nx serve cockpit-chat-generative-ui-angular --port 4500"
+      ],
       "port": 4500
     }
   ]
