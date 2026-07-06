@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { tokens } from '@threadplane/design-tokens';
-import { docsConfig } from '../../lib/docs-config';
+import { docsConfig, specialDocsPages } from '../../lib/docs-config';
 import { trackCtaClick, trackExternalLinkClick } from '../../lib/analytics/client';
 import { LogoMark } from '../ui/LogoMark';
 import { Button } from '../ui/Button';
@@ -88,6 +88,7 @@ export function Nav() {
   const activeLibrary = isDocsPage && pathParts.length >= 2 ? pathParts[1] : '';
   const activeSection = isDocsPage && pathParts.length >= 3 ? pathParts[2] : '';
   const activeSlug = isDocsPage && pathParts.length >= 4 ? pathParts[3] : '';
+  const initialMobileLibrary = docsConfig.find((lib) => lib.id === activeLibrary)?.id ?? 'langgraph';
 
   const [mobileTab, setMobileTab] = useState<'site' | 'docs'>(isDocsPage ? 'docs' : 'site');
 
@@ -100,8 +101,13 @@ export function Nav() {
     }
     return () => { document.body.style.overflow = ''; };
   }, [open]);
-  const [mobileLibrary, setMobileLibrary] = useState(activeLibrary || 'langgraph');
+  const [mobileLibrary, setMobileLibrary] = useState(initialMobileLibrary);
   const [openSections, setOpenSections] = useState<Set<string>>(() => new Set(activeSection ? [activeSection] : []));
+
+  useEffect(() => {
+    const nextLibrary = docsConfig.find((lib) => lib.id === activeLibrary)?.id;
+    if (nextLibrary) setMobileLibrary(nextLibrary);
+  }, [activeLibrary]);
 
   const toggleSection = (id: string) => {
     setOpenSections(prev => {
@@ -257,12 +263,44 @@ export function Nav() {
 
             {/* Library sub-tabs — only when Docs tab active */}
             {isDocsPage && mobileTab === 'docs' && (
-              <div style={{ display: 'flex', gap: 4, padding: '3px', background: 'rgba(0,0,0,0.03)', borderRadius: 8 }}>
-                {docsConfig.map(lib => (
-                  <button key={lib.id} onClick={() => setMobileLibrary(lib.id)} style={subTabStyle(mobileLibrary === lib.id)}>
-                    {lib.title}
-                  </button>
-                ))}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {specialDocsPages.map((page) => {
+                    const isActive = pathname === page.path;
+                    return (
+                      <Link
+                        key={page.path}
+                        href={page.path}
+                        onClick={() => {
+                          trackCtaClick({
+                            surface: 'mobile_nav',
+                            destination_url: page.path,
+                            cta_id: 'mobile_nav_docs_page',
+                            cta_text: page.title,
+                            library: 'unknown',
+                          });
+                          setOpen(false);
+                        }}
+                        style={{
+                          display: 'block', padding: '12px 14px', borderRadius: 8,
+                          fontSize: 16, lineHeight: '24px', minHeight: 44,
+                          color: isActive ? tokens.colors.accent : tokens.colors.textSecondary,
+                          background: isActive ? tokens.colors.accentSurface : 'transparent',
+                          textDecoration: 'none', fontFamily: 'Inter, sans-serif', fontWeight: 600,
+                        }}
+                      >
+                        {page.title}
+                      </Link>
+                    );
+                  })}
+                </div>
+                <div style={{ display: 'flex', gap: 4, padding: '3px', background: 'rgba(0,0,0,0.03)', borderRadius: 8 }}>
+                  {docsConfig.map(lib => (
+                    <button key={lib.id} onClick={() => setMobileLibrary(lib.id)} style={subTabStyle(mobileLibrary === lib.id)}>
+                      {lib.title}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -271,7 +309,12 @@ export function Nav() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {currentLib.demoUrl && (
                   <a href={currentLib.demoUrl} target="_blank" rel="noopener noreferrer"
-                    onClick={() => { trackExternalLinkClick(currentLib.demoUrl!, { surface: 'mobile_nav', cta_id: `mobile_nav_docs_demo_${currentLib.id}`, cta_text: currentLib.demoLabel ?? 'Live demo' }); setOpen(false); }}
+                    onClick={() => {
+                      const demoUrl = currentLib.demoUrl;
+                      if (!demoUrl) return;
+                      trackExternalLinkClick(demoUrl, { surface: 'mobile_nav', cta_id: `mobile_nav_docs_demo_${currentLib.id}`, cta_text: currentLib.demoLabel ?? 'Live demo' });
+                      setOpen(false);
+                    }}
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 8, minHeight: 44, color: tokens.colors.accent, background: tokens.colors.accentSurface, textDecoration: 'none', fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
                     <span>{currentLib.demoLabel ?? 'Live demo'}</span><span aria-hidden="true">↗</span>
                   </a>

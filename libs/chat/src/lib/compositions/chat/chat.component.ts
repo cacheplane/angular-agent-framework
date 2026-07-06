@@ -570,8 +570,8 @@ export class ChatComponent {
    *
    * Matches the same `streaming + current` condition the bubble uses
    * to enable `.chat-message__caret`:
-   *   `agent().isLoading() && i === agent().messages().length - 1`
-   *   `i === agent().messages().length - 1`
+   *   `this.agent().isLoading() && i === this.agent().messages().length - 1`
+   *   `i === this.agent().messages().length - 1`
    *
    * Restricted to assistant role because the caret only renders on
    * assistant bubbles (`:host([data-role="assistant"][data-current=...

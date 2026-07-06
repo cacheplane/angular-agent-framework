@@ -55,7 +55,7 @@ if (err) {
 <chat-error [agent]="chatRef" />
 ```
 
-The Retry button calls `agent().retry()` for you. For non-retryable failures (e.g. `auth`), no button is shown — retrying the same bad credential would just fail again.
+The Retry button calls the bound Agent's `retry()` method for you. For non-retryable failures (e.g. `auth`), no button is shown — retrying the same bad credential would just fail again.
 
 ## Custom error UI
 

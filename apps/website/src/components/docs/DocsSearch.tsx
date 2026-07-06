@@ -1,28 +1,39 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { docsConfig, type LibraryId } from '../../lib/docs-config';
+import { docsConfig, specialDocsPages, type LibraryId } from '../../lib/docs-config';
 import { tokens } from '@threadplane/design-tokens';
 import { analyticsEvents } from '../../lib/analytics/events';
 import { track } from '../../lib/analytics/client';
 
 interface SearchablePage {
   title: string;
-  slug: string;
-  section: string;
-  library: LibraryId;
+  description?: string;
+  href: string;
+  slug?: string;
+  section?: string;
+  library?: LibraryId;
   libraryTitle: string;
 }
 
-const allSearchablePages: SearchablePage[] = docsConfig.flatMap((lib) =>
-  lib.sections.flatMap((s) =>
-    s.pages.map((p) => ({
-      ...p,
-      library: lib.id,
-      libraryTitle: lib.title,
-    }))
-  )
-);
+const allSearchablePages: SearchablePage[] = [
+  ...specialDocsPages.map((page) => ({
+    title: page.title,
+    description: page.description,
+    href: page.path,
+    libraryTitle: 'Start here',
+  })),
+  ...docsConfig.flatMap((lib) =>
+    lib.sections.flatMap((s) =>
+      s.pages.map((p) => ({
+        ...p,
+        href: `/docs/${lib.id}/${p.section}/${p.slug}`,
+        library: lib.id,
+        libraryTitle: lib.title,
+      }))
+    )
+  ),
+];
 
 export function DocsSearch({ library }: { library?: LibraryId }) {
   const [open, setOpen] = useState(false);
@@ -34,11 +45,12 @@ export function DocsSearch({ library }: { library?: LibraryId }) {
   const results = query.length > 0
     ? allSearchablePages.filter((p) =>
         p.title.toLowerCase().includes(query.toLowerCase()) ||
-        p.slug.toLowerCase().includes(query.toLowerCase()) ||
-        p.section.toLowerCase().includes(query.toLowerCase()) ||
+        p.description?.toLowerCase().includes(query.toLowerCase()) ||
+        p.slug?.toLowerCase().includes(query.toLowerCase()) ||
+        p.section?.toLowerCase().includes(query.toLowerCase()) ||
         p.libraryTitle.toLowerCase().includes(query.toLowerCase())
       ).slice(0, 8)
-    : allSearchablePages.filter((p) => !library || p.library === library).slice(0, 6);
+    : allSearchablePages.filter((p) => !library || !p.library || p.library === library).slice(0, 6);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -64,12 +76,12 @@ export function DocsSearch({ library }: { library?: LibraryId }) {
   const navigate = (page: SearchablePage) => {
     track(analyticsEvents.docsSearchResultClick, {
       surface: 'docs',
-      destination_url: `/docs/${page.library}/${page.section}/${page.slug}`,
+      destination_url: page.href,
       library: page.library === 'langgraph' || page.library === 'render' || page.library === 'chat' ? page.library : 'unknown',
       query_length: query.length,
       result_count: results.length,
     });
-    router.push(`/docs/${page.library}/${page.section}/${page.slug}`);
+    router.push(page.href);
     setOpen(false);
   };
 
@@ -125,7 +137,7 @@ export function DocsSearch({ library }: { library?: LibraryId }) {
         <div style={{ maxHeight: 320, overflowY: 'auto', padding: 8 }}>
           {results.map((page, i) => (
             <button
-              key={`${page.library}/${page.section}/${page.slug}`}
+              key={page.href}
               onClick={() => navigate(page)}
               className="w-full text-left"
               style={{

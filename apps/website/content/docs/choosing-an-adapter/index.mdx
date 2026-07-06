@@ -16,7 +16,7 @@ Threadplane ships two adapters that connect a backend agent runtime to `<chat>` 
 
 ## Code comparison
 
-The two adapters share the same public surface — `provideAgent`, `injectAgent`, `AgentConfig`. Swapping is a one-line import change.
+The two adapters share the same public surface — `provideAgent`, `injectAgent`, and an adapter-specific `AgentConfig`. Component code stays the same; the provider import and config shape change.
 
 ### LangGraph adapter
 
@@ -92,3 +92,9 @@ The `Agent` contract from `@threadplane/chat` is intentionally runtime-neutral. 
 - `@threadplane/ag-ui` consumes the AG-UI event protocol. Any backend that emits AG-UI events plugs in, regardless of what graph engine sits behind it.
 
 Both adapters are MIT-licensed and live in the same monorepo.
+
+## Next steps
+
+- [LangGraph quickstart](/docs/langgraph/getting-started/quickstart) if your backend is LangGraph Platform and you want native streaming, checkpoints, threads, interrupts, and history APIs.
+- [AG-UI quickstart](/docs/ag-ui/getting-started/quickstart) if your backend emits the AG-UI protocol from CrewAI, Mastra, CopilotKit runtime, or another compatible runtime.
+- [Chat quickstart](/docs/chat/getting-started/quickstart) if you want to start from the drop-in `<chat>` surface and wire the adapter afterward.

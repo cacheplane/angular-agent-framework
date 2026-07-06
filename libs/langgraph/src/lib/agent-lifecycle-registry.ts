@@ -7,8 +7,8 @@ import type { AgentLifecycle } from './lifecycle';
  * an Angular injection context. External instrumentation packages
  * (e.g. cockpit-telemetry) provide this token and read from it.
  *
- * `@threadplane/langgraph` does NOT provide this itself — `agent()` writes to
- * the registry only when an external consumer has provided it.
+ * `@threadplane/langgraph` does NOT provide this itself — the configured agent
+ * instance writes to the registry only when an external consumer has provided it.
  */
 @Injectable()
 export class AgentLifecycleRegistry {

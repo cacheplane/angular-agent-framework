@@ -2,7 +2,7 @@
   {
     "name": "AgentLifecycleRegistry",
     "kind": "class",
-    "description": "Optional registry that collects per-instance agent lifecycles within\nan Angular injection context. External instrumentation packages\n(e.g. cockpit-telemetry) provide this token and read from it.\n\n`@threadplane/langgraph` does NOT provide this itself — `agent()` writes to\nthe registry only when an external consumer has provided it.",
+    "description": "Optional registry that collects per-instance agent lifecycles within\nan Angular injection context. External instrumentation packages\n(e.g. cockpit-telemetry) provide this token and read from it.\n\n`@threadplane/langgraph` does NOT provide this itself — the configured agent\ninstance writes to the registry only when an external consumer has provided it.",
     "params": [],
     "examples": [],
     "properties": [

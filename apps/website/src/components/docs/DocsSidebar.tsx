@@ -1,8 +1,8 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { docsConfig, getLibraryConfig, type DocsSection, type LibraryId } from '../../lib/docs-config';
+import { usePathname, useRouter } from 'next/navigation';
+import { docsConfig, getLibraryConfig, specialDocsPages, type DocsSection, type LibraryId } from '../../lib/docs-config';
 import { tokens } from '@threadplane/design-tokens';
 import { Pill } from '../ui/Pill';
 import { LibraryMark } from './LibraryMark';
@@ -172,6 +172,7 @@ function SectionGroup({
 
 export function DocsSidebar({ activeLibrary, activeSection, activeSlug }: Props) {
   const libConfig = getLibraryConfig(activeLibrary);
+  const pathname = usePathname();
 
   return (
     <aside
@@ -214,6 +215,21 @@ export function DocsSidebar({ activeLibrary, activeSection, activeSlug }: Props)
           <Pill variant="neutral" style={{ fontSize: '0.65rem', padding: '2px 8px' }}>⌘K</Pill>
         </button>
       </div>
+
+      <nav className="flex flex-col mb-4">
+        {specialDocsPages.map((page) => (
+          <Link
+            key={page.path}
+            href={page.path}
+            data-docs-navlink
+            data-active={pathname === page.path || undefined}
+            className="px-4 py-1.5 text-sm mx-2 rounded-md transition-all"
+            style={{ fontSize: '0.825rem', fontWeight: 600 }}
+          >
+            {page.title}
+          </Link>
+        ))}
+      </nav>
 
       <LibraryDropdown activeLibrary={activeLibrary} />
 

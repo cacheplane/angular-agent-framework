@@ -9,7 +9,7 @@ export interface PositioningProofPoint {
 }
 
 export const POSITIONING_PROOF_POINTS: readonly PositioningProofPoint[] = [
-  { label: 'LangGraph + AG-UI', href: '/docs/langgraph/concepts/langgraph-basics' },
+  { label: 'LangGraph + AG-UI', href: '/docs/choosing-an-adapter' },
   { label: 'Durable threads', href: '/docs/langgraph/guides/persistence' },
   { label: 'Interrupts', href: '/docs/langgraph/guides/interrupts' },
   { label: 'Subagents', href: '/docs/langgraph/guides/subgraphs' },
