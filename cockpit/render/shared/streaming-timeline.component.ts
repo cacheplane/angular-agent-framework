@@ -5,48 +5,124 @@ import { StreamingSimulator } from './streaming-simulator';
 @Component({
   selector: 'streaming-timeline',
   standalone: true,
+  styles: `
+    :host {
+      --tl-green: var(--ds-render-green, #1a7a40);
+      --tl-green-bright: #35b06a;
+      display: block;
+    }
+    .tl {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: var(--ds-surface, #1c1c1c);
+      border-top: 1px solid var(--ds-border, #2d2d2d);
+    }
+    .tl__play {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 0;
+      flex-shrink: 0;
+      color: #eafff2;
+      background: var(--tl-green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 12px rgba(26, 122, 64, 0.5);
+      transition: transform 0.1s ease, box-shadow 0.15s ease;
+    }
+    .tl__play:hover { box-shadow: 0 3px 16px rgba(53, 176, 106, 0.6); }
+    .tl__play:active { transform: scale(0.94); }
+    .tl__track {
+      flex: 1;
+      position: relative;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--ds-surface-tinted, #2c2c2c);
+      cursor: pointer;
+    }
+    .tl__fill {
+      position: absolute;
+      inset: 0 auto 0 0;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--tl-green), var(--tl-green-bright));
+    }
+    .tl__handle {
+      position: absolute;
+      top: 50%;
+      width: 15px;
+      height: 15px;
+      border-radius: 999px;
+      background: #fff;
+      border: 2px solid var(--tl-green-bright);
+      transform: translate(-50%, -50%);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+      transition: left 0.075s linear;
+    }
+    .tl__count {
+      flex-shrink: 0;
+      min-width: 100px;
+      text-align: right;
+      font-family: var(--ds-font-mono, ui-monospace, monospace);
+      font-size: 11px;
+      color: var(--ds-text-muted, #a0a0a0);
+      font-variant-numeric: tabular-nums;
+    }
+    .tl__count b { color: var(--ds-text-primary, #f5f5f5); font-weight: 600; }
+    .tl__speeds { display: flex; gap: 4px; flex-shrink: 0; }
+    .tl__speed {
+      font-size: 10.5px;
+      padding: 5px 10px;
+      border-radius: 7px;
+      border: 1px solid var(--ds-border, #2d2d2d);
+      background: var(--ds-surface-dim, #0a0a0a);
+      color: var(--ds-text-muted, #a0a0a0);
+      cursor: pointer;
+      transition: color 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+    }
+    .tl__speed:hover { color: var(--ds-text-secondary, #c8c8c8); }
+    .tl__speed--on {
+      color: var(--tl-green-bright);
+      border-color: rgba(53, 176, 106, 0.35);
+      background: rgba(53, 176, 106, 0.12);
+      font-weight: 600;
+    }
+  `,
   template: `
-    <div class="flex items-center gap-3 bg-[var(--tplane-chat-surface)] rounded-lg px-4 py-3">
-      <button
-        class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-[var(--tplane-chat-primary)] hover:bg-[var(--tplane-chat-primary)] transition-colors"
-        (click)="simulator().toggle()">
+    <div class="tl">
+      <button class="tl__play" type="button" aria-label="Play or pause" (click)="simulator().toggle()">
         @if (simulator().playing()) {
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="white">
-            <rect x="3" y="2" width="3" height="10" rx="1"/>
-            <rect x="8" y="2" width="3" height="10" rx="1"/>
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
+            <rect x="3" y="2" width="3" height="10" rx="1" />
+            <rect x="8" y="2" width="3" height="10" rx="1" />
           </svg>
         } @else {
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="white">
-            <polygon points="4,2 12,7 4,12"/>
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
+            <polygon points="4,2 12,7 4,12" />
           </svg>
         }
       </button>
 
       <div
         #track
-        class="flex-1 relative h-1.5 bg-[var(--tplane-chat-surface-alt)] rounded-full cursor-pointer"
+        class="tl__track"
         (mousedown)="onTrackMouseDown($event)"
         (touchstart)="onTrackTouchStart($event)">
-        <div
-          class="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-400"
-          [style.width.%]="simulator().progress() * 100">
-        </div>
-        <div
-          class="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full border-2 border-[var(--tplane-chat-primary)] shadow-lg shadow-indigo-500/30 -translate-x-1/2 transition-[left] duration-75"
-          [style.left.%]="simulator().progress() * 100">
-        </div>
+        <div class="tl__fill" [style.width.%]="simulator().progress() * 100"></div>
+        <div class="tl__handle" [style.left.%]="simulator().progress() * 100"></div>
       </div>
 
-      <div class="text-xs text-[var(--tplane-chat-text-muted)] tabular-nums shrink-0 min-w-[100px] text-right">
-        <span class="text-[var(--tplane-chat-text)] font-semibold">{{ simulator().position() }}</span>
-        / {{ simulator().total() }} chars
-      </div>
+      <div class="tl__count"><b>{{ simulator().position() }}</b> / {{ simulator().total() }} chars</div>
 
-      <div class="flex gap-1 shrink-0">
+      <div class="tl__speeds">
         @for (s of speeds; track s) {
           <button
-            class="text-[10px] px-2.5 py-1 rounded transition-colors"
-            [class]="simulator().speed() === s ? 'text-[var(--tplane-chat-primary)] bg-[var(--tplane-chat-surface-alt)] font-semibold' : 'text-[var(--tplane-chat-text-muted)] bg-[var(--tplane-chat-surface-alt)] hover:text-[var(--tplane-chat-text-muted)]'"
+            type="button"
+            class="tl__speed"
+            [class.tl__speed--on]="simulator().speed() === s"
             (click)="simulator().setSpeed(s)">
             {{ s }}x
           </button>
