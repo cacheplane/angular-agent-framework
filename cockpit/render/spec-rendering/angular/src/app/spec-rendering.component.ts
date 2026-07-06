@@ -11,7 +11,7 @@ import { StreamingSimulator } from '../../../../shared/streaming-simulator';
 import { StreamingTimelineComponent } from '../../../../shared/streaming-timeline.component';
 import { ExampleSplitLayoutComponent } from '@threadplane/example-layouts';
 import { SPEC_RENDERING_SPECS } from './specs';
-import { highlightJson } from './json-highlight';
+import { highlightJson } from '../../../../shared/json-highlight';
 
 // --- Inline view components registered in the demo registry ---
 
