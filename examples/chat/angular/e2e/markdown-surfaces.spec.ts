@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { test, expect } from '@playwright/test';
+import { test, expect, type Locator } from '@playwright/test';
 import { sendPromptAndWait } from './test-helpers';
 
 test('heading: assistant bubble renders an <h1>', async ({ page }) => {
@@ -43,6 +43,7 @@ test('markdown checklist matrix: rich markdown renders with escaped html', async
   await expect(bubble.locator('table')).toBeVisible();
   await expect(bubble.locator('thead th')).toHaveText(['Name', 'Mental model', 'When to use']);
   await expect(bubble.locator('tbody tr')).toHaveCount(2);
+  await expect.poll(async () => tableColumnsAlign(bubble)).toBe(true);
   await expect(bubble.locator('blockquote')).toBeVisible();
   await expect(bubble).toContainText('This is a blockquote.');
   await expect(bubble.locator('a', { hasText: 'Angular' })).toHaveAttribute(
@@ -53,3 +54,21 @@ test('markdown checklist matrix: rich markdown renders with escaped html', async
   await expect(bubble.locator('script')).toHaveCount(0);
   await expect(bubble).toContainText("<script>alert('xss')</script>");
 });
+
+async function tableColumnsAlign(bubble: Locator): Promise<boolean> {
+  const table = bubble.locator('table').first();
+  return table.evaluate((el) => {
+    const headerCells = Array.from(el.querySelectorAll('thead th'));
+    const rows = Array.from(el.querySelectorAll('tbody tr'));
+    if (headerCells.length === 0 || rows.length === 0) return false;
+
+    const headerLefts = headerCells.map((cell) => cell.getBoundingClientRect().left);
+    return rows.every((row) => {
+      const cells = Array.from(row.querySelectorAll('td'));
+      if (cells.length !== headerLefts.length) return false;
+      return cells.every((cell, index) => (
+        Math.abs(cell.getBoundingClientRect().left - headerLefts[index]) <= 1
+      ));
+    });
+  });
+}

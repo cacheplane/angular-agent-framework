@@ -1,18 +1,25 @@
 // libs/chat/src/lib/markdown/views/markdown-table-row.component.ts
 // SPDX-License-Identifier: MIT
-import { Component, ChangeDetectionStrategy, input, computed, inject } from '@angular/core';
-import type { MarkdownTableRowNode } from '@cacheplane/partial-markdown';
-import { MarkdownChildrenComponent } from '../markdown-children.component';
+import { NgComponentOutlet } from '@angular/common';
+import { Component, ChangeDetectionStrategy, input, computed, inject, type Type } from '@angular/core';
+import type { ViewRegistry } from '@threadplane/render';
+import type { MarkdownNode, MarkdownTableRowNode } from '@cacheplane/partial-markdown';
+import { MARKDOWN_VIEW_REGISTRY } from '../markdown-view-registry';
 import { IS_HEADER_ROW } from '../markdown-table-row.token';
 
 @Component({
   selector: 'chat-md-table-row',
   standalone: true,
-  imports: [MarkdownChildrenComponent],
+  imports: [NgComponentOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <tr class="chat-md-table-row" [class.chat-md-table-row--header]="node().isHeader">
-      <chat-md-children [parent]="node()" />
+      @for (child of node().children; track $index) {
+        @let comp = resolve(child);
+        @if (comp) {
+          <ng-container *ngComponentOutlet="comp; inputs: { node: child }" />
+        }
+      }
     </tr>
   `,
   providers: [
@@ -27,4 +34,11 @@ import { IS_HEADER_ROW } from '../markdown-table-row.token';
 })
 export class MarkdownTableRowComponent {
   readonly node = input.required<MarkdownTableRowNode>();
+  private readonly registry = inject<ViewRegistry>(MARKDOWN_VIEW_REGISTRY);
+
+  protected resolve(child: MarkdownNode): Type<unknown> | null {
+    const entry = this.registry[child.type];
+    if (!entry) return null;
+    return typeof entry === 'function' ? entry : entry.component;
+  }
 }
