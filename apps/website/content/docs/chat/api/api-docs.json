@@ -5382,7 +5382,21 @@
         "optional": false
       }
     ],
-    "methods": []
+    "methods": [
+      {
+        "name": "resolve",
+        "signature": "resolve(child: MarkdownNode): Type<unknown> | null",
+        "description": "",
+        "params": [
+          {
+            "name": "child",
+            "type": "MarkdownNode",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
   },
   {
     "name": "MarkdownTextComponent",

@@ -994,6 +994,10 @@ describe('createStreamManagerBridge', () => {
     });
 
     bridge.submit({ messages: [{ type: 'human', content: 'hello' }] });
+    // Tuple/messages events with messageMetadata are declared deltas — each
+    // chunk carries only its incremental slice of text, never the
+    // message-so-far. 'hel' + 'lo' (not a resent 'hello') reflects real
+    // wire behavior and merges into the same transcript entry by id.
     transport.emit([{
       type: 'messages',
       messages: [{ id: 'ai-1', type: 'ai', content: 'hel' }],
@@ -1001,7 +1005,7 @@ describe('createStreamManagerBridge', () => {
     } satisfies StreamEvent]);
     transport.emit([{
       type: 'messages',
-      messages: [{ id: 'ai-1', type: 'ai', content: 'hello' }],
+      messages: [{ id: 'ai-1', type: 'ai', content: 'lo' }],
       messageMetadata: { langgraph_node: 'model' },
     } satisfies StreamEvent]);
     transport.close();
@@ -1449,5 +1453,154 @@ describe('stream-manager.bridge — captured streaming replay (Finding C)', () =
     const expected = FIXTURE.canonical_text_length;
     expect(visible.length).toBeGreaterThanOrEqual(expected - 20);
     expect(visible.length).toBeLessThanOrEqual(expected + 20);
+  });
+});
+
+describe('identity-based delta merge (messages-tuple)', () => {
+  const META = { langgraph_node: 'chatbot' };
+
+  function setup() {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport },
+      subjects,
+      threadId$: of(null),
+      destroy$: destroy$.asObservable(),
+    });
+    return { transport, subjects, destroy$, bridge };
+  }
+
+  function tupleEvent(id: string, content: unknown) {
+    return {
+      type: 'messages',
+      data: [{ id, type: 'ai', content }, META],
+      messageMetadata: META,
+    } as any;
+  }
+
+  function lastAiContent(subjects: ReturnType<typeof makeSubjects>): string {
+    // Select the last AI message specifically (not just the last array
+    // entry): mergeMessages/preserveIds do not guarantee human messages
+    // sort before AI messages once a values-sync event appends an
+    // out-of-order human entry after an already-accumulating AI entry.
+    const msgs = subjects.messages$.value as Array<{ type?: string; content?: unknown }>;
+    const lastAi = [...msgs].reverse().find(m => m?.type === 'ai');
+    return typeof lastAi?.content === 'string' ? lastAi.content : JSON.stringify(lastAi?.content);
+  }
+
+  it('preserves every delta chunk, including ones that prefix the message (table pipes)', async () => {
+    const { transport, subjects, destroy$, bridge } = setup();
+    bridge.submit({});
+    const deltas = ['|', ' Gem', ' |', ' Color', ' |', '\n', '|', '---', '|', '---', '|', '\n', '|', ' Ruby', ' |', ' red', ' |'];
+    for (const d of deltas) transport.emit([tupleEvent('ai-1', d)]);
+    transport.close();
+    await new Promise(r => setTimeout(r, 10));
+    expect(lastAiContent(subjects)).toBe(deltas.join(''));
+    destroy$.next();
+  });
+
+  it('appends a multi-char delta that begins with the accumulated text', async () => {
+    const { transport, subjects, destroy$, bridge } = setup();
+    bridge.submit({});
+    transport.emit([tupleEvent('ai-1', '|')]);
+    transport.emit([tupleEvent('ai-1', '| Gem')]); // delta, NOT a superset echo
+    transport.close();
+    await new Promise(r => setTimeout(r, 10));
+    expect(lastAiContent(subjects)).toBe('|| Gem');
+    destroy$.next();
+  });
+
+  it('final canonical reasoning+text array replaces the accumulation and blocks late deltas', async () => {
+    const { transport, subjects, destroy$, bridge } = setup();
+    bridge.submit({});
+    transport.emit([tupleEvent('ai-1', '| a |')]);
+    transport.emit([tupleEvent('ai-1', ' | b |')]);
+    transport.emit([tupleEvent('ai-1', [
+      { type: 'reasoning', text: 'thought' },
+      { type: 'text', text: '| a | | b | done' },
+    ])]);
+    transport.emit([tupleEvent('ai-1', '|')]); // straggler after canonical — must be ignored
+    transport.close();
+    await new Promise(r => setTimeout(r, 10));
+    expect(lastAiContent(subjects)).toBe('| a | | b | done');
+    destroy$.next();
+  });
+
+  it('a new run resets canonical marking (fresh-id deltas accumulate again)', async () => {
+    // NOTE: MockAgentTransport.closed is permanent once close() is called —
+    // its stream() generator checks `!this.closed` on every fresh invocation,
+    // so a second submit() through the SAME instance would fall straight
+    // through to an immediate drain-and-return, never seeing events emitted
+    // after the second submit. Use a second transport/bridge instance for the
+    // second run, same pattern as the existing 'clears custom$ on a new
+    // submit' test above, which shares `subjects` but not the transport.
+    const { transport, subjects, destroy$, bridge } = setup();
+    bridge.submit({});
+    transport.emit([tupleEvent('ai-1', [
+      { type: 'reasoning', text: 'r' },
+      { type: 'text', text: 'final one' },
+    ])]);
+    transport.close();
+    await new Promise(r => setTimeout(r, 10));
+
+    const transport2 = new MockAgentTransport();
+    const destroy2$ = new Subject<void>();
+    const bridge2 = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport: transport2 },
+      subjects,
+      threadId$: of(null),
+      destroy$: destroy2$.asObservable(),
+    });
+    // Real "new run" submits carry a human message, which runStream()
+    // optimistically injects into messages$ before streaming starts. That
+    // human message is what gives mergeMessages' trailing-AI fallback a
+    // boundary to stop at (see mergeMessages: it walks backward from the
+    // tail and stops at the first human/tool/system message) — without it,
+    // a fresh id with no content overlap would keep accumulating onto the
+    // previous run's AI slot since nothing marks the run boundary.
+    bridge2.submit({ messages: [{ type: 'human', content: 'second question' }] });
+    transport2.emit([tupleEvent('ai-2', 'fresh')]);
+    transport2.emit([tupleEvent('ai-2', ' text')]);
+    transport2.close();
+    await new Promise(r => setTimeout(r, 10));
+    expect(lastAiContent(subjects)).toBe('fresh text');
+    destroy$.next();
+    destroy2$.next();
+  });
+
+  it('messages/partial snapshots still reconcile by prefix (regression)', async () => {
+    const { transport, subjects, destroy$, bridge } = setup();
+    bridge.submit({});
+    const partial = (content: string) => ({
+      type: 'messages/partial',
+      data: [{ id: 'ai-1', type: 'ai', content }],
+    } as any);
+    transport.emit([partial('| Gem')]);
+    transport.emit([partial('| Gem | Color |')]); // superset → replace
+    transport.emit([partial('| Gem')]);            // stale shorter snapshot → keep longer
+    transport.close();
+    await new Promise(r => setTimeout(r, 10));
+    expect(lastAiContent(subjects)).toBe('| Gem | Color |');
+    destroy$.next();
+  });
+
+  it('values-sync mid-run keeps snapshot semantics (lagging state does not rewind)', async () => {
+    const { transport, subjects, destroy$, bridge } = setup();
+    bridge.submit({});
+    transport.emit([tupleEvent('ai-1', '| a | b |')]);
+    transport.emit([tupleEvent('ai-1', ' | c |')]);
+    transport.emit([{
+      type: 'values',
+      data: { messages: [
+        { id: 'h-1', type: 'human', content: 'hi' },
+        { id: 'ai-1', type: 'ai', content: '| a | b |' },
+      ] },
+    } as any]);
+    transport.close();
+    await new Promise(r => setTimeout(r, 10));
+    expect(lastAiContent(subjects)).toBe('| a | b | | c |');
+    destroy$.next();
   });
 });

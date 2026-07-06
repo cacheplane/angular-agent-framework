@@ -116,6 +116,10 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
   /** True when the current abort was user-initiated (via stop()). Reset at the start of every new runStream(). */
   let userAbortRequested = false;
   const toolProgressMap = new Map<string, ToolProgress>();
+  // Message ids whose content is known-final (installed by a canonical
+  // replacement). Late streamed deltas for these ids are stale stragglers and
+  // are ignored — decided by identity, never by comparing text to text.
+  const canonicalMessageIds = new Set<string>();
   const queuedRuns: AgentQueueEntry[] = [];
   let drainingQueue = false;
   const subagentManager = new SubagentTracker({
@@ -162,6 +166,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     toolProgressMap.clear();
     subagentManager.clear();
     reasoningTimingMap.clear();
+    canonicalMessageIds.clear();
   }
 
   function setThreadId(id: string | null, resetState: boolean): void {
@@ -390,6 +395,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     subjects.custom$.next([]);
     subjects.toolProgress$.next([]);
     toolProgressMap.clear();
+    canonicalMessageIds.clear();
     lastPayload = payload;
     lastOptions = opts;
 
@@ -500,7 +506,8 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       // Partial and message-tuple events are incremental. Merge them by id
       // so optimistic human messages and earlier tool messages are preserved.
       if (event.type === 'messages/partial' || event.messageMetadata) {
-        subjects.messages$.next(mergeMessages(subjects.messages$.value, normalized, reasoningTimingMap));
+        const mode: MergeMode = event.messageMetadata ? 'delta' : 'snapshot';
+        subjects.messages$.next(mergeMessages(subjects.messages$.value, normalized, reasoningTimingMap, mode, canonicalMessageIds));
         if (isLgTraceEnabled()) {
           const msgs = subjects.messages$.value;
           const last = msgs[msgs.length - 1];
@@ -568,7 +575,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
             // drop the partial AI (or even the optimistic human) and
             // tear down their DOM mid-stream. Merge by id keeps both,
             // updates content where ids match, preserves the rest.
-            subjects.messages$.next(mergeMessages(subjects.messages$.value, remapped, reasoningTimingMap));
+            subjects.messages$.next(mergeMessages(subjects.messages$.value, remapped, reasoningTimingMap, 'snapshot', canonicalMessageIds));
             if (isLgTraceEnabled()) {
               lgTrace('bridge.values-sync', {
                 incomingLength: stateMessages.length,
@@ -1029,10 +1036,14 @@ function collapseAdjacentAi(messages: BaseMessage[]): BaseMessage[] {
   return out;
 }
 
+type MergeMode = 'delta' | 'snapshot';
+
 function mergeMessages(
   existing: BaseMessage[],
   incoming: BaseMessage[],
   reasoningTimingMap?: Map<string, { startedAt: number; endedAt?: number }>,
+  mode: MergeMode = 'snapshot',
+  canonicalMessageIds?: Set<string>,
 ): BaseMessage[] {
   const merged = [...existing];
   for (const msg of incoming) {
@@ -1071,6 +1082,13 @@ function mergeMessages(
       const existing = merged[idx];
       const existingId = (existing as unknown as Record<string, unknown>)['id'];
       const incomingRaw = msg as unknown as Record<string, unknown>;
+      const targetId = (existingId ?? incomingRaw['id']) as string | undefined;
+      // Identity backstop: once a message's content is known-final, late
+      // streamed deltas for it are stale stragglers — ignore them outright.
+      if (mode === 'delta' && targetId && canonicalMessageIds?.has(targetId)
+          && !isFinalCanonicalReasoningContent(incomingRaw['content'])) {
+        continue;
+      }
       // Keep the *existing* id so downstream track-by-id sees stable identity.
       // For complex-content streaming (OpenAI gpt-5/o-series, Anthropic) the
       // SDK emits per-chunk *delta* arrays — not accumulated arrays — so a
@@ -1081,7 +1099,11 @@ function mergeMessages(
       const accumulatedContent = accumulateContent(
         existing.content as unknown,
         incomingRaw['content'],
+        mode,
       );
+      if (targetId && isFinalCanonicalReasoningContent(incomingRaw['content'])) {
+        canonicalMessageIds?.add(targetId);
+      }
       // Only accumulate reasoning when the incoming message explicitly carries
       // a `reasoning` field or complex-content array blocks with
       // type='reasoning'/'thinking'. Never use a plain string content value
@@ -1132,12 +1154,22 @@ function mergeMessages(
 
 /**
  * Merge an incoming chunk's content into prior accumulated content for the
- * same message id.
+ * same message id. Behavior is governed by `mode`, which reflects the
+ * DECLARED kind of the source event rather than a guess from comparing text:
  *
- * - string + string → concat (delta append)
- * - array + array  → concat extracted text from existing + incoming blocks
- * - array + string → use the string (server final-id swap)
- * - empty existing → use incoming as-is
+ * - mode 'delta' (messages-tuple / `event.messageMetadata` truthy): the
+ *   payload is a genuine per-chunk delta. Append unconditionally — a
+ *   prefix-comparison "dedupe" here would silently drop legitimate tokens
+ *   that coincide with the message-so-far (e.g. every bare "|" while
+ *   streaming a markdown table). Staleness after the message goes canonical
+ *   is instead handled by identity in `mergeMessages` (canonicalMessageIds).
+ * - mode 'snapshot' (messages/partial, values-sync): the payload carries the
+ *   message-so-far, not a delta, so mutual prefix comparison picks the
+ *   longer state and ignores stale shorter snapshots.
+ *
+ * In both modes, a "final canonical" reasoning+text array (see
+ * `isFinalCanonicalReasoningContent`) always replaces whatever was
+ * accumulated — it's the authoritative final message, not another chunk.
  *
  * We deliberately collapse complex content arrays to a string at this layer.
  * The langgraph-sdk client does not accumulate complex-content arrays the
@@ -1166,7 +1198,7 @@ function isFinalCanonicalReasoningContent(content: unknown): boolean {
   return hasReasoning && hasText;
 }
 
-function accumulateContent(existing: unknown, incoming: unknown): string {
+function accumulateContent(existing: unknown, incoming: unknown, mode: MergeMode = 'snapshot'): string {
   const existingText = extractText(existing);
   const incomingText = extractText(incoming);
 
@@ -1176,20 +1208,21 @@ function accumulateContent(existing: unknown, incoming: unknown): string {
   // dedupe from matching the streamed-chunk message after a partial chunk.
   if (existingText.length === 0) return incomingText;
   if (incomingText.length === 0) return existingText;
-  // Incoming is a strict-superset of accumulated (final-id swap with full content).
-  if (incomingText.startsWith(existingText)) return incomingText;
-  // Existing already a strict-superset — chunk arrived after the canonical
-  // message merged in via values-sync. Keep what we have.
-  if (existingText.startsWith(incomingText)) return existingText;
-  // Final-canonical detection: when incoming is the "reasoning + text"
-  // array shape that ships the authoritative final message after a
-  // streaming run, replace the partial streamed accumulator with the
-  // canonical text instead of appending. Without this branch a small
-  // formatting difference between the streamed accumulator and the
-  // canonical text breaks the prefix checks above and visible content
-  // is duplicated (`existingText + incomingText`).
+  // Final-canonical detection applies in both modes: the authoritative
+  // "reasoning + text" array replaces whatever was accumulated.
   if (isFinalCanonicalReasoningContent(incoming)) return incomingText;
-  // Otherwise treat incoming as a delta and append.
+  if (mode === 'delta') {
+    // Tuple chunks are declared deltas. Append unconditionally — any
+    // text-comparison "dedupe" here can silently drop legitimate tokens
+    // that coincide with the message prefix (e.g. every bare "|" in a
+    // markdown table). Staleness is handled by identity in mergeMessages.
+    return existingText + incomingText;
+  }
+  // Snapshot mode (messages/partial, values-sync): payloads carry the
+  // message-so-far, so mutual prefix comparison picks the longer state and
+  // ignores stale shorter snapshots.
+  if (incomingText.startsWith(existingText)) return incomingText;
+  if (existingText.startsWith(incomingText)) return existingText;
   return existingText + incomingText;
 }
 

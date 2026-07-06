@@ -4,7 +4,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Component, signal } from '@angular/core';
 import { views } from '@threadplane/render';
-import type { MarkdownTableRowNode } from '@cacheplane/partial-markdown';
+import type { MarkdownTableCellNode, MarkdownTableRowNode } from '@cacheplane/partial-markdown';
 import { MarkdownTableRowComponent } from './markdown-table-row.component';
 import { MarkdownTableCellComponent } from './markdown-table-cell.component';
 import { MARKDOWN_VIEW_REGISTRY } from '../markdown-view-registry';
@@ -16,6 +16,15 @@ function makeRowNode(isHeader: boolean, children: MarkdownTableRowNode['children
     isHeader,
     children,
   } as MarkdownTableRowNode;
+}
+
+function makeCellNode(id: number): MarkdownTableCellNode {
+  return {
+    id, type: 'table-cell', status: 'complete',
+    parent: null, index: null,
+    alignment: null,
+    children: [],
+  } as MarkdownTableCellNode;
 }
 
 @Component({
@@ -63,5 +72,18 @@ describe('MarkdownTableRowComponent', () => {
     fixture.detectChanges();
     const tr = fixture.nativeElement.querySelector('tr');
     expect(tr.classList.contains('chat-md-table-row--header')).toBe(true);
+  });
+
+  it('renders table-cell components directly under the table row', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.componentInstance.node.set(makeRowNode(false, [
+      makeCellNode(3),
+      makeCellNode(4),
+    ] as MarkdownTableRowNode['children']));
+    fixture.detectChanges();
+
+    const tr = fixture.nativeElement.querySelector('tr');
+    expect(tr.querySelector(':scope > chat-md-children')).toBeNull();
+    expect(tr.querySelectorAll(':scope > chat-md-table-cell').length).toBe(2);
   });
 });
