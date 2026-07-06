@@ -1,6 +1,6 @@
 {
   "name": "@threadplane/render",
-  "version": "0.0.53",
+  "version": "0.0.54",
   "peerDependencies": {
     "@angular/core": "^20.0.0 || ^21.0.0",
     "@angular/common": "^20.0.0 || ^21.0.0",
