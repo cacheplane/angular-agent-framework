@@ -80,11 +80,11 @@ let threadCounter = 0;
 
       <div sidebar
         class="flex flex-col"
-        style="background: var(--ngaf-chat-surface-alt); color: var(--ngaf-chat-text);"
+        style="background: var(--tplane-chat-surface-alt); color: var(--tplane-chat-text);"
       >
         <div
           class="px-3 py-2 text-xs font-semibold uppercase tracking-wide border-b"
-          style="border-color: var(--ngaf-chat-separator); color: var(--ngaf-chat-text-muted)"
+          style="border-color: var(--tplane-chat-separator); color: var(--tplane-chat-text-muted)"
         >
           Threads
         </div>
@@ -94,9 +94,9 @@ let threadCounter = 0;
             <button
               class="w-full text-left px-3 py-2 text-sm truncate transition-colors"
               [class.font-semibold]="thread.id === activeThreadId()"
-              [style.background]="thread.id === activeThreadId() ? 'var(--ngaf-chat-surface-alt)' : 'transparent'"
-              (mouseenter)="$event.currentTarget.style.background = 'var(--ngaf-chat-surface-alt)'"
-              (mouseleave)="$event.currentTarget.style.background = thread.id === activeThreadId() ? 'var(--ngaf-chat-surface-alt)' : 'transparent'"
+              [style.background]="thread.id === activeThreadId() ? 'var(--tplane-chat-surface-alt)' : 'transparent'"
+              (mouseenter)="$event.currentTarget.style.background = 'var(--tplane-chat-surface-alt)'"
+              (mouseleave)="$event.currentTarget.style.background = thread.id === activeThreadId() ? 'var(--tplane-chat-surface-alt)' : 'transparent'"
               (click)="switchThread(thread.id)"
             >
               {{ thread.label }}
@@ -104,10 +104,10 @@ let threadCounter = 0;
           }
         </div>
 
-        <div class="p-2 border-t" style="border-color: var(--ngaf-chat-separator)">
+        <div class="p-2 border-t" style="border-color: var(--tplane-chat-separator)">
           <button
             class="w-full rounded px-3 py-1.5 text-sm font-medium transition-colors"
-            style="background: var(--ngaf-chat-surface-alt); color: var(--ngaf-chat-text);"
+            style="background: var(--tplane-chat-surface-alt); color: var(--tplane-chat-text);"
             (mouseenter)="$event.currentTarget.style.opacity = '0.8'"
             (mouseleave)="$event.currentTarget.style.opacity = '1'"
             (click)="newThread()"

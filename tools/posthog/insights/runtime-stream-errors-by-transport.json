@@ -5,7 +5,7 @@
   "name": "Runtime stream errors by transport",
   "events": [
     {
-      "event": "ngaf:stream_errored",
+      "event": "tplane:stream_errored",
       "math": "total"
     }
   ],

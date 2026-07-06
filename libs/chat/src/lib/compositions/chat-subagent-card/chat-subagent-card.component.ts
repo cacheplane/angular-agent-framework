@@ -16,10 +16,10 @@ import type { Message, ToolCall } from '../../agent';
  */
 export function statusColor(status: SubagentStatus): string {
   switch (status) {
-    case 'pending':  return 'background: var(--ngaf-chat-surface-alt); color: var(--ngaf-chat-text-muted);';
-    case 'running':  return 'background: var(--ngaf-chat-warning-bg); color: var(--ngaf-chat-warning-text);';
-    case 'complete': return 'color: var(--ngaf-chat-success);';
-    case 'error':    return 'background: var(--ngaf-chat-error-bg); color: var(--ngaf-chat-error-text);';
+    case 'pending':  return 'background: var(--tplane-chat-surface-alt); color: var(--tplane-chat-text-muted);';
+    case 'running':  return 'background: var(--tplane-chat-warning-bg); color: var(--tplane-chat-warning-text);';
+    case 'complete': return 'color: var(--tplane-chat-success);';
+    case 'error':    return 'background: var(--tplane-chat-error-bg); color: var(--tplane-chat-error-text);';
   }
 }
 
@@ -39,8 +39,8 @@ function statusToTraceState(s: SubagentStatus): TraceState {
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [CHAT_HOST_TOKENS, `
     :host { display: block; }
-    .sac__name { color: var(--ngaf-chat-text); font-weight: 500; font-size: var(--ngaf-chat-font-size-sm); }
-    .sac__id { font-family: var(--ngaf-chat-font-mono); font-size: var(--ngaf-chat-font-size-xs); color: var(--ngaf-chat-text-muted); margin-left: 4px; }
+    .sac__name { color: var(--tplane-chat-text); font-weight: 500; font-size: var(--tplane-chat-font-size-sm); }
+    .sac__id { font-family: var(--tplane-chat-font-mono); font-size: var(--tplane-chat-font-size-xs); color: var(--tplane-chat-text-muted); margin-left: 4px; }
     .sac__pill {
       padding: 1px 8px;
       border-radius: 9999px;
@@ -48,16 +48,16 @@ function statusToTraceState(s: SubagentStatus): TraceState {
       font-weight: 500;
       margin-left: 4px;
     }
-    .sac__pill[data-status="pending"] { background: var(--ngaf-chat-surface-alt); color: var(--ngaf-chat-text-muted); }
-    .sac__pill[data-status="running"] { background: var(--ngaf-chat-warning-bg); color: var(--ngaf-chat-warning-text); }
-    .sac__pill[data-status="complete"] { color: var(--ngaf-chat-success); }
-    .sac__pill[data-status="error"] { background: var(--ngaf-chat-error-bg); color: var(--ngaf-chat-error-text); }
-    .sac__count { font-size: var(--ngaf-chat-font-size-xs); color: var(--ngaf-chat-text-muted); }
+    .sac__pill[data-status="pending"] { background: var(--tplane-chat-surface-alt); color: var(--tplane-chat-text-muted); }
+    .sac__pill[data-status="running"] { background: var(--tplane-chat-warning-bg); color: var(--tplane-chat-warning-text); }
+    .sac__pill[data-status="complete"] { color: var(--tplane-chat-success); }
+    .sac__pill[data-status="error"] { background: var(--tplane-chat-error-bg); color: var(--tplane-chat-error-text); }
+    .sac__count { font-size: var(--tplane-chat-font-size-xs); color: var(--tplane-chat-text-muted); }
     .sac__msg { padding: 6px 0; }
-    .sac__msg + .sac__msg { border-top: 1px solid var(--ngaf-chat-separator); }
+    .sac__msg + .sac__msg { border-top: 1px solid var(--tplane-chat-separator); }
     .sac__reasoning {
-      font-size: var(--ngaf-chat-font-size-xs);
-      color: var(--ngaf-chat-text-muted);
+      font-size: var(--tplane-chat-font-size-xs);
+      color: var(--tplane-chat-text-muted);
       font-style: italic;
       margin-bottom: 4px;
     }

@@ -22,9 +22,9 @@ export interface ToolCallInfo {
   styles: [CHAT_HOST_TOKENS, `
     :host { display: block; }
     .tcc__name {
-      font-family: var(--ngaf-chat-font-mono);
-      font-size: var(--ngaf-chat-font-size-sm, 13px);
-      color: var(--ngaf-chat-text-muted);
+      font-family: var(--tplane-chat-font-mono);
+      font-size: var(--tplane-chat-font-size-sm, 13px);
+      color: var(--tplane-chat-text-muted);
       font-weight: 400;
       padding-left: 2px;
     }
@@ -34,8 +34,8 @@ export interface ToolCallInfo {
       gap: 3px;
       padding: 1px 6px;
       border-radius: 9999px;
-      background: var(--ngaf-chat-surface-alt);
-      color: var(--ngaf-chat-text-muted);
+      background: var(--tplane-chat-surface-alt);
+      color: var(--tplane-chat-text-muted);
       font-size: 10px;
       font-weight: 500;
       margin-left: 6px;
@@ -45,19 +45,19 @@ export interface ToolCallInfo {
     .tcc__pill[data-status="running"] svg { animation: tcc-spin 0.8s linear infinite; }
     @keyframes tcc-spin { to { transform: rotate(360deg); } }
     .tcc__section { padding: 8px 0; }
-    .tcc__section + .tcc__section { border-top: 1px solid var(--ngaf-chat-separator); }
+    .tcc__section + .tcc__section { border-top: 1px solid var(--tplane-chat-separator); }
     .tcc__section-label {
       font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: var(--ngaf-chat-text-muted);
+      color: var(--tplane-chat-text-muted);
       margin: 0 0 4px;
     }
     .tcc__section-body {
-      font-family: var(--ngaf-chat-font-mono);
-      font-size: var(--ngaf-chat-font-size-xs);
-      color: var(--ngaf-chat-text);
+      font-family: var(--tplane-chat-font-mono);
+      font-size: var(--tplane-chat-font-size-xs);
+      color: var(--tplane-chat-text);
       white-space: pre-wrap;
       overflow-x: auto;
       margin: 0;

@@ -3,7 +3,7 @@
     "name": "ThreadplaneBrowserEvent",
     "kind": "type",
     "description": "",
-    "signature": "\"ngaf:browser_provided\" | \"ngaf:browser_chat_init\"",
+    "signature": "\"tplane:browser_provided\" | \"tplane:browser_chat_init\"",
     "examples": []
   },
   {
@@ -17,7 +17,7 @@
     "name": "ThreadplaneNodeEvent",
     "kind": "type",
     "description": "",
-    "signature": "\"ngaf:postinstall\" | \"ngaf:runtime_instance_created\" | \"ngaf:runtime_request_created\" | \"ngaf:stream_started\" | \"ngaf:stream_ended\" | \"ngaf:stream_errored\"",
+    "signature": "\"tplane:postinstall\" | \"tplane:runtime_instance_created\" | \"tplane:runtime_request_created\" | \"tplane:stream_started\" | \"tplane:stream_ended\" | \"tplane:stream_errored\"",
     "examples": []
   },
   {

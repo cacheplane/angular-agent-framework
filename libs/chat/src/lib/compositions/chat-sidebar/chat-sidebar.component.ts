@@ -39,7 +39,7 @@ import { CHAT_HOST_TOKENS, ensureChatRootStyles } from '../../styles/chat-tokens
       transition: margin-right 300ms ease;
     }
     :host([data-push="true"][data-open="true"]) .chat-sidebar__content {
-      margin-right: var(--ngaf-chat-sidebar-width-drawer, 28rem);
+      margin-right: var(--tplane-chat-sidebar-width-drawer, 28rem);
     }
     @media (max-width: 640px) {
       :host([data-push="true"][data-open="true"]) .chat-sidebar__content { margin-right: 0; }
@@ -47,14 +47,14 @@ import { CHAT_HOST_TOKENS, ensureChatRootStyles } from '../../styles/chat-tokens
     .chat-sidebar__panel {
       position: fixed;
       top: 0; right: 0;
-      bottom: var(--ngaf-chat-debug-claim-bottom, 0);
-      width: var(--ngaf-chat-sidebar-width-drawer, 28rem);
-      background: var(--ngaf-chat-bg);
-      border-left: 1px solid var(--ngaf-chat-separator);
+      bottom: var(--tplane-chat-debug-claim-bottom, 0);
+      width: var(--tplane-chat-sidebar-width-drawer, 28rem);
+      background: var(--tplane-chat-bg);
+      border-left: 1px solid var(--tplane-chat-separator);
       box-shadow: -8px 0 32px rgba(0,0,0,.08);
       transform: translateX(100%);
       transition: transform 200ms ease-out, bottom 200ms ease-out;
-      z-index: var(--ngaf-chat-z-overlay-content, 30);
+      z-index: var(--tplane-chat-z-overlay-content, 30);
       display: flex;
       flex-direction: column;
     }
@@ -69,7 +69,7 @@ import { CHAT_HOST_TOKENS, ensureChatRootStyles } from '../../styles/chat-tokens
       justify-content: space-between;
       gap: 12px;
       padding: 8px 12px;
-      border-bottom: 1px solid var(--ngaf-chat-separator);
+      border-bottom: 1px solid var(--tplane-chat-separator);
       min-height: 48px;
     }
     .chat-sidebar__panel-title {
@@ -78,26 +78,26 @@ import { CHAT_HOST_TOKENS, ensureChatRootStyles } from '../../styles/chat-tokens
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
-      color: var(--ngaf-chat-text);
+      color: var(--tplane-chat-text);
       font-weight: 500;
-      font-size: var(--ngaf-chat-font-size-sm);
+      font-size: var(--tplane-chat-font-size-sm);
     }
     .chat-sidebar__close {
       flex: 0 0 auto;
       width: 32px; height: 32px;
       background: transparent; border: 0; cursor: pointer;
-      color: var(--ngaf-chat-text-muted);
+      color: var(--tplane-chat-text-muted);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
     }
-    .chat-sidebar__close:hover { background: var(--ngaf-chat-surface-alt); color: var(--ngaf-chat-text); }
+    .chat-sidebar__close:hover { background: var(--tplane-chat-surface-alt); color: var(--tplane-chat-text); }
     .chat-sidebar__launcher {
       position: fixed;
-      bottom: calc(1rem + var(--ngaf-chat-debug-claim-bottom, 0));
+      bottom: calc(1rem + var(--tplane-chat-debug-claim-bottom, 0));
       right: 1rem;
-      z-index: var(--ngaf-chat-z-overlay-content, 30);
+      z-index: var(--tplane-chat-z-overlay-content, 30);
       transition: bottom 200ms ease-out;
     }
     /* Hide the launcher when the sidebar is open — the close button on the
@@ -166,7 +166,7 @@ export class ChatSidebarComponent {
     // for the full rationale. Idempotent + lifecycle-guaranteed.
     ensureChatRootStyles();
     // Publish the right-edge claim while the panel is open. Peer panels
-    // (e.g. chat-debug) read --ngaf-chat-occupy-right to leave room.
+    // (e.g. chat-debug) read --tplane-chat-occupy-right to leave room.
     effect((onCleanup) => {
       if (typeof document === 'undefined') return;
       const html = document.documentElement;
@@ -178,7 +178,7 @@ export class ChatSidebarComponent {
       // Clear the global claim when the sidebar is destroyed (not just closed).
       // Without this, unmounting while open (e.g. switching demo modes) leaves
       // data-threadplane-chat-sidebar="open" stuck on <html>, so peer panels
-      // keep reserving --ngaf-chat-occupy-right and a phantom gap persists.
+      // keep reserving --tplane-chat-occupy-right and a phantom gap persists.
       onCleanup(() => { delete html.dataset['threadplaneChatSidebar']; });
     });
     effect((onCleanup) => {

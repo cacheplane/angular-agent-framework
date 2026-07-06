@@ -19,8 +19,8 @@ import { CHAT_DEBUG_TOKENS } from './chat-debug-tokens';
     CHAT_DEBUG_TOKENS,
     `
     .debug-state-diff__empty {
-      font-size: var(--ngaf-chat-font-size-xs);
-      color: var(--ngaf-chat-text-muted);
+      font-size: var(--tplane-chat-font-size-xs);
+      color: var(--tplane-chat-text-muted);
       font-style: italic;
       margin: 0;
     }
@@ -30,28 +30,28 @@ import { CHAT_DEBUG_TOKENS } from './chat-debug-tokens';
       gap: 4px;
     }
     .debug-state-diff__entry {
-      font-size: var(--ngaf-chat-font-size-xs);
-      font-family: var(--ngaf-chat-font-mono);
+      font-size: var(--tplane-chat-font-size-xs);
+      font-family: var(--tplane-chat-font-mono);
       padding: 4px 8px;
       border-radius: 4px;
     }
     .debug-state-diff__entry--added {
-      background: var(--ngaf-chat-surface-alt);
-      color: var(--ngaf-chat-success);
+      background: var(--tplane-chat-surface-alt);
+      color: var(--tplane-chat-success);
     }
     .debug-state-diff__entry--removed {
-      background: var(--ngaf-chat-error-bg);
-      color: var(--ngaf-chat-error-text);
+      background: var(--tplane-chat-error-bg);
+      color: var(--tplane-chat-error-text);
     }
     .debug-state-diff__entry--changed {
-      background: var(--ngaf-chat-warning-bg);
-      color: var(--ngaf-chat-warning-text);
+      background: var(--tplane-chat-warning-bg);
+      color: var(--tplane-chat-warning-text);
     }
     .debug-state-diff__key { font-weight: 600; }
     .debug-state-diff__value {
       display: block;
       padding-left: 16px;
-      color: var(--ngaf-chat-text-muted);
+      color: var(--tplane-chat-text-muted);
     }
     `,
   ],

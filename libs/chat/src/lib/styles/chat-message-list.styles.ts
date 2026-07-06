@@ -5,8 +5,8 @@ export const CHAT_MESSAGE_LIST_STYLES = `
     display: flex;
     flex-direction: column;
     gap: 0;
-    padding: var(--ngaf-chat-space-4) var(--ngaf-chat-space-6);
-    max-width: var(--ngaf-chat-max-width);
+    padding: var(--tplane-chat-space-4) var(--tplane-chat-space-6);
+    max-width: var(--tplane-chat-max-width);
     margin: 0 auto;
     width: 100%;
     box-sizing: border-box;

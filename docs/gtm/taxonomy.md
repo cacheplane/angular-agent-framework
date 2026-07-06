@@ -10,7 +10,7 @@ Single PostHog project. Three event-name prefixes:
 | ------------ | ----------------------------- | -------------------------------------------------------------------------------------------------------- |
 | `marketing:` | `apps/website`                | Carried forward from May-2 instrumentation plan.                                                         |
 | `cockpit:`   | `apps/cockpit`                | Activation surface. New in Spec 1.                                                                       |
-| `ngaf:`      | `libs/telemetry`              | Library telemetry. Opt-out node, opt-in browser.                                                         |
+| `tplane:`      | `libs/telemetry`              | Library telemetry. Opt-out node, opt-in browser.                                                         |
 | `docs:`      | `apps/website` (docs surface) | Subset of website events scoped to docs interactions. Distinguished by prefix for filtering convenience. |
 
 The standard PostHog `$pageview` event is used as-is across all three surfaces.
@@ -68,25 +68,25 @@ The five activation signals (whose union fires `cockpit:activation_complete`) ar
 and `generative_component_rendered`. The shell events (`recipe_opened`,
 `mode_switched`, `code_copied`) are context for the funnel — they fire before
 or alongside the activation signals but are not part of the five-step rollup.
-`ngaf:postinstall` is a separate top-of-funnel chart, uncorrelated to cockpit
+`tplane:postinstall` is a separate top-of-funnel chart, uncorrelated to cockpit
 sessions by design.
 
-## ngaf (library telemetry)
+## tplane (library telemetry)
 
 | Event                           | When                                                       | Surface        | Default                                    |
 | ------------------------------- | ---------------------------------------------------------- | -------------- | ------------------------------------------ |
-| `ngaf:postinstall`              | Dependency/global install of a published `@threadplane/*` package | Node (script)  | **Opt-out**                                |
-| `ngaf:runtime_instance_created` | Runtime adapter init                                       | Node / Browser | **Opt-out** on Node, **Opt-in** in Browser |
-| `ngaf:runtime_request_created`  | Runtime adapter request created                            | Node / Browser | **Opt-out** on Node, **Opt-in** in Browser |
-| `ngaf:stream_started`           | Stream begins                                              | Node / Browser | **Opt-out** on Node, **Opt-in** in Browser |
-| `ngaf:stream_ended`             | Stream ends normally                                       | Node / Browser | **Opt-out** on Node, **Opt-in** in Browser |
-| `ngaf:stream_errored`           | Stream errors                                              | Node / Browser | **Opt-out** on Node, **Opt-in** in Browser |
-| `ngaf:browser_provided`         | `provideThreadplaneTelemetry({enabled:true})`                     | Browser        | **Opt-in**                                 |
-| `ngaf:browser_chat_init`        | Browser chat surface initialized                           | Browser        | **Opt-in**                                 |
+| `tplane:postinstall`              | Dependency/global install of a published `@threadplane/*` package | Node (script)  | **Opt-out**                                |
+| `tplane:runtime_instance_created` | Runtime adapter init                                       | Node / Browser | **Opt-out** on Node, **Opt-in** in Browser |
+| `tplane:runtime_request_created`  | Runtime adapter request created                            | Node / Browser | **Opt-out** on Node, **Opt-in** in Browser |
+| `tplane:stream_started`           | Stream begins                                              | Node / Browser | **Opt-out** on Node, **Opt-in** in Browser |
+| `tplane:stream_ended`             | Stream ends normally                                       | Node / Browser | **Opt-out** on Node, **Opt-in** in Browser |
+| `tplane:stream_errored`           | Stream errors                                              | Node / Browser | **Opt-out** on Node, **Opt-in** in Browser |
+| `tplane:browser_provided`         | `provideThreadplaneTelemetry({enabled:true})`                     | Browser        | **Opt-in**                                 |
+| `tplane:browser_chat_init`        | Browser chat surface initialized                           | Browser        | **Opt-in**                                 |
 
 Browser events never fire unless the consumer explicitly opts in. See `libs/telemetry/README.md` for the trust contract.
 
-### `ngaf:postinstall` properties
+### `tplane:postinstall` properties
 
 | Property                       | Type   | Notes                                                        |
 | ------------------------------ | ------ | ------------------------------------------------------------ |

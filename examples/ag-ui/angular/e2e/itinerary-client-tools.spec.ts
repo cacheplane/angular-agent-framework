@@ -10,11 +10,12 @@ import { attachBrowserHygiene, messageInput, openDemo, sendButton } from './test
 // d'Orsay) by clearing the persisted key before the page hydrates.
 //
 // The itinerary panel only renders in App mode (it's the floating map overlay;
-// plain embed/sidebar no longer shows it), so these tests open the demo with
-// `?appmode=on`. App mode is driven from the URL regardless of the key-gated
-// toolbar toggle, and the overlay panel renders independent of the map — so the
-// same panel DOM (region "Trip itinerary", section.itin__day, .itin__handle …)
-// is present even without a GOOGLE_MAPS_API_KEY in CI.
+// plain embed/popup/sidebar no longer shows it), so these tests open the demo at
+// `/sidebar?appmode=on`. App mode now runs in popup OR sidebar (not embed, which
+// has no background for the map), is driven from the URL regardless of the
+// key-gated toolbar toggle, and the overlay panel renders independent of the map
+// — so the same panel DOM (region "Trip itinerary", section.itin__day,
+// .itin__handle …) is present even without a GOOGLE_MAPS_API_KEY in CI.
 const STORAGE_KEY = 'ag-ui-demo:itinerary';
 
 test.beforeEach(async ({ page }) => {
@@ -26,7 +27,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('panel renders the seeded itinerary', async ({ page }) => {
-  await openDemo(page, '/?appmode=on');
+  await openDemo(page, '/sidebar?appmode=on');
 
   const panel = page.getByRole('region', { name: 'Trip itinerary' });
   await expect(panel).toBeVisible();
@@ -38,7 +39,7 @@ test('panel renders the seeded itinerary', async ({ page }) => {
 test('read round-trip: get_itinerary executes in the browser and the run continues', async ({
   page,
 }) => {
-  await openDemo(page, '/?appmode=on');
+  await openDemo(page, '/sidebar?appmode=on');
   const hygiene = attachBrowserHygiene(page);
 
   await messageInput(page).fill("What's on my itinerary?");
@@ -53,7 +54,7 @@ test('read round-trip: get_itinerary executes in the browser and the run continu
 });
 
 test('ask chain: clear_day confirm mutates the panel and resumes the run', async ({ page }) => {
-  await openDemo(page, '/?appmode=on');
+  await openDemo(page, '/sidebar?appmode=on');
 
   await messageInput(page).fill('Clear my day 2 plans');
   await sendButton(page).click();
@@ -86,7 +87,7 @@ test('ask chain: clear_day confirm mutates the panel and resumes the run', async
 test('move_stop action: panel mutates — Eiffel Tower moves from day 1 to day 2', async ({
   page,
 }) => {
-  await openDemo(page, '/?appmode=on');
+  await openDemo(page, '/sidebar?appmode=on');
 
   // Seed has Eiffel Tower under Day 1 — verify it's there before sending.
   const panel = page.getByRole('region', { name: 'Trip itinerary' });
@@ -119,7 +120,7 @@ test('move_stop action: panel mutates — Eiffel Tower moves from day 1 to day 2
 test('day_card view: component renders with model-filled props and run auto-continues', async ({
   page,
 }) => {
-  await openDemo(page, '/?appmode=on');
+  await openDemo(page, '/sidebar?appmode=on');
 
   await messageInput(page).fill('Show me a recap card for day 1');
   await sendButton(page).click();
@@ -137,7 +138,7 @@ test('day_card view: component renders with model-filled props and run auto-cont
 });
 
 test('user can drag-reorder stops within a day', async ({ page }) => {
-  await openDemo(page, '/?appmode=on');
+  await openDemo(page, '/sidebar?appmode=on');
 
   const panel = page.getByRole('region', { name: 'Trip itinerary' });
 
@@ -177,7 +178,7 @@ test('user can drag-reorder stops within a day', async ({ page }) => {
 });
 
 test('reorder_stop: agent puts Louvre last on day 1', async ({ page }) => {
-  await openDemo(page, '/?appmode=on');
+  await openDemo(page, '/sidebar?appmode=on');
   const hygiene = attachBrowserHygiene(page);
 
   await messageInput(page).fill('Put Louvre last on day 1.');

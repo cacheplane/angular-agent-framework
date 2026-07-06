@@ -26,7 +26,7 @@ describe('postinstall script', () => {
     delete process.env.npm_config_do_not_track;
     delete process.env.NPM_CONFIG_DO_NOT_TRACK;
     delete process.env.DEBUG;
-    delete process.env.NGAF_TELEMETRY_DISABLED;
+    delete process.env.TPLANE_TELEMETRY_DISABLED;
   });
 
   test('calls capturePostinstall with the package name + version', async () => {
@@ -111,7 +111,7 @@ describe('postinstall script', () => {
   });
 
   test('skips local top-level installs when INIT_CWD and cwd differ only by symlink', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'ngaf-postinstall-'));
+    const root = mkdtempSync(join(tmpdir(), 'tplane-postinstall-'));
     const link = `${root}-link`;
     try {
       mkdirSync(join(root, 'pkg'), { recursive: true });
@@ -139,14 +139,14 @@ describe('postinstall script', () => {
     expect(capturePostinstall).toHaveBeenCalledWith({ pkg: '@threadplane/chat', version: '0.0.31' });
   });
 
-  test('prints exact payload when DEBUG includes ngaf:telemetry', async () => {
+  test('prints exact payload when DEBUG includes tplane:telemetry', async () => {
     const stdout: string[] = [];
     await capturePostinstallScript({
       readPackageJson: () => ({ name: '@threadplane/chat', version: '0.0.31' }),
       write: (s: string) => stdout.push(s),
       env: {
         ...process.env,
-        DEBUG: 'foo,ngaf:telemetry',
+        DEBUG: 'foo,tplane:telemetry',
         npm_config_user_agent: 'npm/10.9.2 node/v22.14.0 darwin arm64 workspaces/false',
       },
       cwd: () => '/tmp/project/node_modules/@threadplane/chat',

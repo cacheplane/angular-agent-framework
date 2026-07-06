@@ -141,9 +141,9 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
       :host {
         display: block;
         padding: 16px;
-        font-size: var(--ngaf-chat-font-size-sm);
-        color: var(--ngaf-chat-text);
-        font-family: var(--ngaf-chat-font-family);
+        font-size: var(--tplane-chat-font-size-sm);
+        color: var(--tplane-chat-text);
+        font-family: var(--tplane-chat-font-family);
         position: relative;
       }
       .itin__head {
@@ -157,14 +157,14 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
       .itin__title {
         margin: 0;
         font-size: 1rem;
-        color: var(--ngaf-chat-text);
+        color: var(--tplane-chat-text);
         display: flex;
         align-items: baseline;
         gap: 6px;
       }
       .itin__total {
         font-size: 0.8rem;
-        color: var(--ngaf-chat-text-muted);
+        color: var(--tplane-chat-text-muted);
         font-weight: normal;
       }
       .itin__overflow {
@@ -172,23 +172,23 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
         font-size: 18px;
         background: transparent;
         border: none;
-        color: var(--ngaf-chat-text-muted);
+        color: var(--tplane-chat-text-muted);
         cursor: pointer;
         padding: 4px;
-        border-radius: var(--ngaf-chat-radius-card);
+        border-radius: var(--tplane-chat-radius-card);
         line-height: 1;
       }
       .itin__overflow:hover {
-        background: var(--ngaf-chat-surface-alt);
-        color: var(--ngaf-chat-text);
+        background: var(--tplane-chat-surface-alt);
+        color: var(--tplane-chat-text);
       }
       .itin__menu {
         position: absolute;
         top: 100%;
         right: 0;
-        background: var(--ngaf-chat-bg);
-        border: 1px solid var(--ngaf-chat-separator);
-        border-radius: var(--ngaf-chat-radius-card);
+        background: var(--tplane-chat-bg);
+        border: 1px solid var(--tplane-chat-separator);
+        border-radius: var(--tplane-chat-radius-card);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         z-index: 10;
         min-width: 160px;
@@ -199,13 +199,13 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
         text-align: left;
         background: transparent;
         border: none;
-        color: var(--ngaf-chat-text);
+        color: var(--tplane-chat-text);
         padding: 8px 12px;
         cursor: pointer;
         font: inherit;
       }
       .itin__menu-item:hover {
-        background: var(--ngaf-chat-surface-alt);
+        background: var(--tplane-chat-surface-alt);
       }
       .itin__day {
         margin-bottom: 14px;
@@ -220,19 +220,19 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
         margin: 0;
         font-size: 0.85rem;
         font-weight: 600;
-        color: var(--ngaf-chat-text);
+        color: var(--tplane-chat-text);
       }
       .itin__day-count {
         font-size: 0.75rem;
-        color: var(--ngaf-chat-text-muted);
+        color: var(--tplane-chat-text-muted);
       }
       .itin__day-add {
         font-family: inherit;
         font-size: 0.75rem;
         background: transparent;
-        border: 1px dashed var(--ngaf-chat-separator);
-        color: var(--ngaf-chat-text-muted);
-        border-radius: var(--ngaf-chat-radius-card);
+        border: 1px dashed var(--tplane-chat-separator);
+        color: var(--tplane-chat-text-muted);
+        border-radius: var(--tplane-chat-radius-card);
         padding: 2px 8px;
         cursor: pointer;
         margin-left: auto;
@@ -241,8 +241,8 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
         gap: 4px;
       }
       .itin__day-add:hover, .itin__day-add.is-active {
-        color: var(--ngaf-chat-text);
-        border-color: var(--ngaf-chat-text);
+        color: var(--tplane-chat-text);
+        border-color: var(--tplane-chat-text);
       }
       .itin__icon {
         font-family: 'Material Symbols Outlined', sans-serif;
@@ -263,15 +263,15 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
         align-items: center;
         gap: 6px;
         padding: 8px 10px;
-        border: 1px solid var(--ngaf-chat-separator);
-        border-radius: var(--ngaf-chat-radius-card);
-        background: var(--ngaf-chat-bg);
+        border: 1px solid var(--tplane-chat-separator);
+        border-radius: var(--tplane-chat-radius-card);
+        background: var(--tplane-chat-bg);
         transition: box-shadow 200ms ease, transform 200ms ease;
       }
       .itin__handle {
         font-family: 'Material Symbols Outlined', sans-serif;
         font-size: 16px;
-        color: var(--ngaf-chat-text-muted);
+        color: var(--tplane-chat-text-muted);
         cursor: grab;
         opacity: 0;
         transition: opacity 100ms ease;
@@ -284,8 +284,8 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
         width: 22px;
         height: 22px;
         border-radius: 6px;
-        background: var(--ngaf-chat-text);
-        color: var(--ngaf-chat-bg);
+        background: var(--tplane-chat-text);
+        color: var(--tplane-chat-bg);
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -300,11 +300,11 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
         gap: 1px;
       }
       .itin__place-name {
-        color: var(--ngaf-chat-text);
+        color: var(--tplane-chat-text);
         font-weight: 500;
       }
       .itin__note {
-        color: var(--ngaf-chat-text-muted);
+        color: var(--tplane-chat-text-muted);
         font-size: 0.8rem;
       }
       .itin__remove {
@@ -313,7 +313,7 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
         font-size: 16px;
         background: transparent;
         border: none;
-        color: var(--ngaf-chat-text-muted);
+        color: var(--tplane-chat-text-muted);
         cursor: pointer;
         padding: 4px;
         line-height: 1;
@@ -322,17 +322,17 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
         border-radius: 4px;
       }
       .itin__stop:hover .itin__remove { opacity: 0.7; }
-      .itin__remove:hover { opacity: 1 !important; color: var(--ngaf-chat-text); }
+      .itin__remove:hover { opacity: 1 !important; color: var(--tplane-chat-text); }
       .itin__composer {
         margin-top: 6px;
       }
       .itin__composer-input {
         width: 100%;
         padding: 8px 10px;
-        border: 1px solid var(--ngaf-chat-text);
-        border-radius: var(--ngaf-chat-radius-card);
-        background: var(--ngaf-chat-bg);
-        color: var(--ngaf-chat-text);
+        border: 1px solid var(--tplane-chat-text);
+        border-radius: var(--tplane-chat-radius-card);
+        background: var(--tplane-chat-bg);
+        color: var(--tplane-chat-text);
         font-family: inherit;
         font-size: inherit;
         box-sizing: border-box;
@@ -342,9 +342,9 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
         font-family: inherit;
         font-size: 0.8rem;
         background: transparent;
-        border: 1px dashed var(--ngaf-chat-separator);
-        color: var(--ngaf-chat-text-muted);
-        border-radius: var(--ngaf-chat-radius-card);
+        border: 1px dashed var(--tplane-chat-separator);
+        color: var(--tplane-chat-text-muted);
+        border-radius: var(--tplane-chat-radius-card);
         padding: 6px 12px;
         cursor: pointer;
         width: 100%;
@@ -354,8 +354,8 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
         gap: 4px;
       }
       .itin__add-day-btn:hover {
-        color: var(--ngaf-chat-text);
-        border-color: var(--ngaf-chat-text);
+        color: var(--tplane-chat-text);
+        border-color: var(--tplane-chat-text);
       }
       .itin__empty {
         display: flex;
@@ -364,18 +364,18 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
         text-align: center;
         gap: 8px;
         padding: 24px 8px;
-        color: var(--ngaf-chat-text-muted);
+        color: var(--tplane-chat-text-muted);
       }
       .itin__empty-icon {
         font-family: 'Material Symbols Outlined', sans-serif;
         font-size: 48px;
-        color: var(--ngaf-chat-text-muted);
+        color: var(--tplane-chat-text-muted);
         line-height: 1;
       }
       .itin__empty-title {
         margin: 0;
         font-size: 0.95rem;
-        color: var(--ngaf-chat-text);
+        color: var(--tplane-chat-text);
         font-weight: 500;
       }
       .itin__empty-sub {
@@ -393,22 +393,22 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
         font-family: inherit;
         font-size: 0.8rem;
         background: transparent;
-        border: 1px solid var(--ngaf-chat-separator);
-        color: var(--ngaf-chat-text);
+        border: 1px solid var(--tplane-chat-separator);
+        color: var(--tplane-chat-text);
         border-radius: 999px;
         padding: 4px 12px;
         cursor: pointer;
       }
       .itin__empty-chip:hover {
-        background: var(--ngaf-chat-surface-alt);
-        border-color: var(--ngaf-chat-text);
+        background: var(--tplane-chat-surface-alt);
+        border-color: var(--tplane-chat-text);
       }
       .itin__stop.cdk-drag-preview {
         box-shadow:
           0 5px 5px -3px rgba(0, 0, 0, 0.2),
           0 8px 10px 1px rgba(0, 0, 0, 0.14),
           0 3px 14px 2px rgba(0, 0, 0, 0.12);
-        background: var(--ngaf-chat-bg);
+        background: var(--tplane-chat-bg);
       }
       .itin__stop.cdk-drag-placeholder {
         opacity: 0.3;
@@ -417,8 +417,8 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
         transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
       }
       @keyframes itinPulse {
-        0%   { box-shadow: 0 0 0 0 var(--ngaf-chat-primary); transform: scale(1); }
-        20%  { box-shadow: 0 0 0 3px color-mix(in srgb, var(--ngaf-chat-primary) 50%, transparent); transform: scale(1.015); }
+        0%   { box-shadow: 0 0 0 0 var(--tplane-chat-primary); transform: scale(1); }
+        20%  { box-shadow: 0 0 0 3px color-mix(in srgb, var(--tplane-chat-primary) 50%, transparent); transform: scale(1.015); }
         100% { box-shadow: 0 0 0 0 transparent; transform: scale(1); }
       }
       .itin__stop--pulse {
@@ -432,7 +432,7 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
       .itin__handle.cdk-keyboard-focused,
       .itin__handle:focus-visible {
         opacity: 1;
-        outline: 2px solid var(--ngaf-chat-text);
+        outline: 2px solid var(--tplane-chat-text);
         outline-offset: 2px;
         border-radius: 4px;
       }
@@ -446,15 +446,15 @@ import { ItineraryStop, ItineraryStore } from './itinerary-store';
         font-size: 18px;
         background: transparent;
         border: none;
-        color: var(--ngaf-chat-text-muted);
+        color: var(--tplane-chat-text-muted);
         cursor: pointer;
         padding: 4px;
         line-height: 1;
-        border-radius: var(--ngaf-chat-radius-card);
+        border-radius: var(--tplane-chat-radius-card);
       }
       .itin__collapse:hover {
-        background: var(--ngaf-chat-surface-alt);
-        color: var(--ngaf-chat-text);
+        background: var(--tplane-chat-surface-alt);
+        color: var(--tplane-chat-text);
       }
       :host(.itin--collapsed) [cdkDropListGroup],
       :host(.itin--collapsed) .itin__add-day-btn {

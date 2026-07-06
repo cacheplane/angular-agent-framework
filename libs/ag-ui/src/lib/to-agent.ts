@@ -157,24 +157,24 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
 
   captureAgentRuntimeTelemetry(
     options.telemetry,
-    'ngaf:runtime_instance_created',
+    'tplane:runtime_instance_created',
     telemetryProperties,
   );
 
   function startRunTelemetry(requestType: string): { startedAt: number; errored: boolean } {
     const run = { startedAt: Date.now(), errored: false };
     activeRun = run;
-    captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:runtime_request_created', {
+    captureAgentRuntimeTelemetry(options.telemetry, 'tplane:runtime_request_created', {
       ...telemetryProperties,
       requestType,
     });
-    captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_started', telemetryProperties);
+    captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_started', telemetryProperties);
     return run;
   }
 
   function finishRunTelemetry(run: { startedAt: number; errored: boolean }): void {
     if (run.errored) return;
-    captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_ended', {
+    captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_ended', {
       ...telemetryProperties,
       durationMs: Date.now() - run.startedAt,
     });
@@ -184,7 +184,7 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
   function failRunTelemetry(error: unknown, run = activeRun): void {
     if (!run || run.errored) return;
     run.errored = true;
-    captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_errored', {
+    captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_errored', {
       ...telemetryProperties,
       durationMs: Date.now() - run.startedAt,
       errorClass: agentRuntimeTelemetryErrorClass(error),

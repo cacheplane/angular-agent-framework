@@ -1,7 +1,7 @@
 // libs/chat/src/lib/styles/chat-project-list.styles.ts
 // SPDX-License-Identifier: MIT
 export const CHAT_PROJECT_LIST_STYLES = `
-  :host { display: block; padding: var(--ngaf-chat-space-2); }
+  :host { display: block; padding: var(--tplane-chat-space-2); }
   .chat-project-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 2px; }
   .chat-project-list__item-wrap {
     position: relative;
@@ -14,10 +14,10 @@ export const CHAT_PROJECT_LIST_STYLES = `
     min-width: 0;
     min-height: 32px;
     padding: 6px 12px;
-    border-radius: var(--ngaf-chat-radius-button);
+    border-radius: var(--tplane-chat-radius-button);
     cursor: pointer;
-    color: var(--ngaf-chat-text);
-    font-size: var(--ngaf-chat-font-size-sm);
+    color: var(--tplane-chat-text);
+    font-size: var(--tplane-chat-font-size-sm);
     background: transparent;
     border: 0;
     text-align: left;
@@ -27,9 +27,9 @@ export const CHAT_PROJECT_LIST_STYLES = `
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .chat-project-list__item:hover { background: color-mix(in srgb, var(--ngaf-chat-text) 5%, transparent); }
+  .chat-project-list__item:hover { background: color-mix(in srgb, var(--tplane-chat-text) 5%, transparent); }
   .chat-project-list__item[data-active="true"] {
-    background: var(--ngaf-chat-surface-alt);
+    background: var(--tplane-chat-surface-alt);
     font-weight: 500;
   }
   .chat-project-list__kebab {
@@ -38,7 +38,7 @@ export const CHAT_PROJECT_LIST_STYLES = `
     height: 28px;
     border: 0;
     background: transparent;
-    color: var(--ngaf-chat-text-muted);
+    color: var(--tplane-chat-text-muted);
     border-radius: 4px;
     cursor: pointer;
     opacity: 0;
@@ -52,35 +52,35 @@ export const CHAT_PROJECT_LIST_STYLES = `
     opacity: 1;
   }
   .chat-project-list__kebab:hover {
-    background: var(--ngaf-chat-surface-alt);
-    color: var(--ngaf-chat-text);
+    background: var(--tplane-chat-surface-alt);
+    color: var(--tplane-chat-text);
   }
   .chat-project-list__kebab:focus-visible {
     opacity: 1;
-    outline: 2px solid var(--ngaf-chat-primary);
+    outline: 2px solid var(--tplane-chat-primary);
     outline-offset: 2px;
   }
   .chat-project-list__edit {
     flex: 1 1 auto;
-    border: 1px solid var(--ngaf-chat-primary);
-    border-radius: var(--ngaf-chat-radius-button);
-    background: var(--ngaf-chat-bg);
-    color: var(--ngaf-chat-text);
+    border: 1px solid var(--tplane-chat-primary);
+    border-radius: var(--tplane-chat-radius-button);
+    background: var(--tplane-chat-bg);
+    color: var(--tplane-chat-text);
     font: inherit;
-    font-size: var(--ngaf-chat-font-size-sm);
+    font-size: var(--tplane-chat-font-size-sm);
     padding: 6px 10px;
     min-height: 32px;
     outline: none;
     box-sizing: border-box;
   }
   .chat-project-list__new {
-    background: var(--ngaf-chat-surface-alt);
-    color: var(--ngaf-chat-text);
+    background: var(--tplane-chat-surface-alt);
+    color: var(--tplane-chat-text);
     border: 0;
     padding: 10px 16px;
     border-radius: 8px;
     font-family: inherit;
-    font-size: var(--ngaf-chat-font-size-sm);
+    font-size: var(--tplane-chat-font-size-sm);
     font-weight: 400;
     display: flex;
     align-items: center;
@@ -89,7 +89,7 @@ export const CHAT_PROJECT_LIST_STYLES = `
     width: 100%;
   }
   .chat-project-list__new:hover {
-    background: color-mix(in srgb, var(--ngaf-chat-text) 8%, var(--ngaf-chat-surface-alt));
-    color: var(--ngaf-chat-text);
+    background: color-mix(in srgb, var(--tplane-chat-text) 8%, var(--tplane-chat-surface-alt));
+    color: var(--tplane-chat-text);
   }
 `;

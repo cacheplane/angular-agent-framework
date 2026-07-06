@@ -3,19 +3,19 @@ import { extractTier, computeSeats } from './tier.js';
 
 describe('extractTier', () => {
   it('returns developer_seat from price metadata', () => {
-    expect(extractTier({ ngaf_tier_slug: 'developer_seat' })).toBe('developer_seat');
+    expect(extractTier({ tplane_tier_slug: 'developer_seat' })).toBe('developer_seat');
   });
 
   it('returns team from price metadata', () => {
-    expect(extractTier({ ngaf_tier_slug: 'team' })).toBe('team');
+    expect(extractTier({ tplane_tier_slug: 'team' })).toBe('team');
   });
 
-  it('throws when ngaf_tier_slug is missing', () => {
-    expect(() => extractTier({})).toThrow(/ngaf_tier_slug/);
+  it('throws when tplane_tier_slug is missing', () => {
+    expect(() => extractTier({})).toThrow(/tplane_tier_slug/);
   });
 
-  it('throws when ngaf_tier_slug is an unknown value', () => {
-    expect(() => extractTier({ ngaf_tier_slug: 'bogus' })).toThrow(/bogus/);
+  it('throws when tplane_tier_slug is an unknown value', () => {
+    expect(() => extractTier({ tplane_tier_slug: 'bogus' })).toThrow(/bogus/);
   });
 
   it('throws when metadata is null', () => {

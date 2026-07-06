@@ -65,9 +65,7 @@ export class AgUiShell {
   readonly colorScheme = signal<'light' | 'dark'>(
     ((this.urlKnob('scheme') ?? this.persistence.read('colorScheme')) as 'light' | 'dark' | null) ?? DEFAULTS.scheme,
   );
-  readonly appMode = signal<'on' | 'off'>(
-    ((this.urlKnob('appmode') ?? this.persistence.read('appMode')) as 'on' | 'off' | null) ?? 'off',
-  );
+  readonly appMode = signal<'on' | 'off'>(this.initialAppMode());
   readonly hasMapsKey = (environment.googleMapsApiKey as string).length > 0;
 
   // ── Mode from the active route ───────────────────────────────────────────
@@ -85,6 +83,24 @@ export class AgUiShell {
   private parseMode(url: string): DemoMode {
     const seg = url.split('?')[0].split('/').filter(Boolean)[0];
     return (MODES as readonly string[]).includes(seg) ? (seg as DemoMode) : 'embed';
+  }
+
+  /** Mode parsed from the real browser path. Available immediately at bootstrap
+   *  (unlike router.url, which reads '/' before the initial navigation settles),
+   *  so the param-sync effect restores the right route on reload. */
+  private locationMode(): DemoMode {
+    const path = this.document.defaultView?.location.pathname ?? '';
+    const seg = path.split('/').filter(Boolean)[0];
+    return (MODES as readonly string[]).includes(seg) ? (seg as DemoMode) : 'embed';
+  }
+
+  /** App mode persists across reloads, but it can only run in popup/sidebar —
+   *  embed is full-chat with no background for the map. Start off if the route
+   *  is embed (e.g. a hand-typed /embed?appmode=on). */
+  private initialAppMode(): 'on' | 'off' {
+    const raw = (this.urlKnob('appmode') ?? this.persistence.read('appMode')) as 'on' | 'off' | null;
+    if (raw !== 'on') return 'off';
+    return this.locationMode() === 'embed' ? 'off' : 'on';
   }
 
   // ── Select options (canonical lists) ─────────────────────────────────────
@@ -200,6 +216,17 @@ export class AgUiShell {
     void this.router.navigate(['/', next], { queryParamsHandling: 'preserve' });
   }
   onAppModeChange(v: 'on' | 'off'): void {
+    // Enabling App mode needs a background area for the map. Embed has none, so
+    // it auto-switches to the sidebar cockpit; popup/sidebar keep their current
+    // presentation. Navigate first, then flip the signal so the param-sync
+    // effect resolves against the new route.
+    if (v === 'on' && this.mode() === 'embed') {
+      void this.router.navigate(['/', 'sidebar'], { queryParamsHandling: 'preserve' }).then(() => {
+        this.appMode.set('on');
+        this.persistence.write('appMode', 'on');
+      });
+      return;
+    }
     this.appMode.set(v);
     this.persistence.write('appMode', v);
     // Routing is handled by the persist effect: turning App mode on navigates to

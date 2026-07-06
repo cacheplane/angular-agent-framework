@@ -5,7 +5,7 @@
   "name": "Runtime requests by transport",
   "events": [
     {
-      "event": "ngaf:runtime_request_created",
+      "event": "tplane:runtime_request_created",
       "math": "total"
     }
   ],

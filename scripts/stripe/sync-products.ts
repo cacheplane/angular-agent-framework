@@ -3,7 +3,7 @@
  * Idempotent Stripe products + prices sync.
  *
  * Reads pricing/tiers.config.ts and ensures each `stripeBuyable: true` tier
- * has a Stripe product (matched by metadata.ngaf_tier_slug) and two active
+ * has a Stripe product (matched by metadata.tplane_tier_slug) and two active
  * recurring prices: one monthly and one annual. Writes the resulting price
  * IDs to pricing/tiers.generated.ts.
  *
@@ -23,8 +23,8 @@ import {
   type BillingCycle,
 } from '../../pricing/tiers.config';
 
-const METADATA_KEY = 'ngaf_tier_slug';
-const CYCLE_KEY = 'ngaf_billing_cycle';
+const METADATA_KEY = 'tplane_tier_slug';
+const CYCLE_KEY = 'tplane_billing_cycle';
 
 interface SyncedPriceIds {
   monthly: string;

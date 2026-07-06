@@ -90,7 +90,7 @@ describe('ChatConfirmDialogComponent', () => {
     expect(confirm.classList.contains('chat-confirm-dialog__confirm--destructive')).toBe(true);
   });
 
-  it('destructive confirm button uses the new --ngaf-chat-destructive token, not --ngaf-chat-error-text', () => {
+  it('destructive confirm button uses the new --tplane-chat-destructive token, not --tplane-chat-error-text', () => {
     // Regression guard: error-text is light pink (#fca5a5) in dark mode, which gave
     // white-text-on-pink unreadable contrast. The destructive button must use a
     // dedicated token that resolves to a saturated red on both themes.
@@ -99,8 +99,8 @@ describe('ChatConfirmDialogComponent', () => {
       .split('.chat-confirm-dialog__confirm--destructive')
       .slice(1)
       .join('.chat-confirm-dialog__confirm--destructive');
-    expect(destructiveBlock).toContain('var(--ngaf-chat-destructive)');
-    expect(destructiveBlock).not.toContain('var(--ngaf-chat-error-text)');
+    expect(destructiveBlock).toContain('var(--tplane-chat-destructive)');
+    expect(destructiveBlock).not.toContain('var(--tplane-chat-error-text)');
   });
 
   it('confirm button has labelled text from confirmLabel input', () => {

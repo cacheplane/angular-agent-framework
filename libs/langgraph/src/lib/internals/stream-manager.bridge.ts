@@ -42,7 +42,7 @@ function isLgTraceEnabled(): boolean {
 function lgTrace(...args: unknown[]): void {
   if (isLgTraceEnabled()) {
     // eslint-disable-next-line no-console
-    console.debug('[ngaf-chat-stream]', ...args);
+    console.debug('[tplane-chat-stream]', ...args);
   }
 }
 
@@ -125,12 +125,12 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
   const telemetryProperties = { transport: 'langgraph' as const, surface: 'agent' };
   captureAgentRuntimeTelemetry(
     options.telemetry,
-    'ngaf:runtime_instance_created',
+    'tplane:runtime_instance_created',
     telemetryProperties,
   );
 
   function captureRuntimeRequestTelemetry(requestType: string): void {
-    captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:runtime_request_created', {
+    captureAgentRuntimeTelemetry(options.telemetry, 'tplane:runtime_request_created', {
       ...telemetryProperties,
       requestType,
     });
@@ -337,7 +337,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     abortController = new AbortController();
     const startedAt = Date.now();
     captureRuntimeRequestTelemetry('join_queued');
-    captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_started', telemetryProperties);
+    captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_started', telemetryProperties);
     subjects.custom$.next([]);
     subjects.toolProgress$.next([]);
     toolProgressMap.clear();
@@ -357,7 +357,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         // post-process node mutations (RemoveMessage, id-match content
         // replacement) reflected on the server are picked up client-side.
         await refreshHistory(true);
-        captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_ended', {
+        captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_ended', {
           ...telemetryProperties,
           durationMs: Date.now() - startedAt,
         });
@@ -365,7 +365,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     } catch (err) {
       subjects.error$.next(toAgentError(err));
       subjects.status$.next(ResourceStatus.Error);
-      captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_errored', {
+      captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_errored', {
         ...telemetryProperties,
         durationMs: Date.now() - startedAt,
         errorClass: agentRuntimeTelemetryErrorClass(err),
@@ -383,7 +383,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     userAbortRequested = false;
     const startedAt = Date.now();
     captureRuntimeRequestTelemetry(requestType);
-    captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_started', telemetryProperties);
+    captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_started', telemetryProperties);
 
     subjects.status$.next(ResourceStatus.Loading);
     subjects.error$.next(undefined);
@@ -437,7 +437,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         // authoritative after run completion.
         await refreshHistory(true);
         await drainQueue();
-        captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_ended', {
+        captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_ended', {
           ...telemetryProperties,
           durationMs: Date.now() - startedAt,
         });
@@ -454,7 +454,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
           : new AgentError({ kind: 'connection', message: AGENT_ERROR_MESSAGES.connection, retryable: true, cause: err });
         subjects.error$.next(e);
         subjects.status$.next(ResourceStatus.Error);
-        captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_errored', {
+        captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_errored', {
           ...telemetryProperties,
           durationMs: Date.now() - startedAt,
           errorClass: agentRuntimeTelemetryErrorClass(err),
@@ -462,7 +462,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       } else {
         subjects.error$.next(toAgentError(err));
         subjects.status$.next(ResourceStatus.Error);
-        captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_errored', {
+        captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_errored', {
           ...telemetryProperties,
           durationMs: Date.now() - startedAt,
           errorClass: agentRuntimeTelemetryErrorClass(err),
@@ -782,7 +782,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       abortController = new AbortController();
       const startedAt = Date.now();
       captureRuntimeRequestTelemetry('join');
-      captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_started', telemetryProperties);
+      captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_started', telemetryProperties);
       subjects.custom$.next([]);
       subjects.toolProgress$.next([]);
       toolProgressMap.clear();
@@ -796,14 +796,14 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         }
         subjects.status$.next(ResourceStatus.Resolved);
         await refreshHistory();
-        captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_ended', {
+        captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_ended', {
           ...telemetryProperties,
           durationMs: Date.now() - startedAt,
         });
       } catch (err) {
         subjects.error$.next(toAgentError(err));
         subjects.status$.next(ResourceStatus.Error);
-        captureAgentRuntimeTelemetry(options.telemetry, 'ngaf:stream_errored', {
+        captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_errored', {
           ...telemetryProperties,
           durationMs: Date.now() - startedAt,
           errorClass: agentRuntimeTelemetryErrorClass(err),

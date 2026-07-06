@@ -4,13 +4,13 @@ export const CHAT_INPUT_STYLES = `
 :host {
   display: block;
   width: 100%;
-  padding: 0 var(--ngaf-chat-edge-pad);
+  padding: 0 var(--tplane-chat-edge-pad);
   box-sizing: border-box;
 }
 
 .chat-input__container {
   width: 100%;
-  max-width: var(--ngaf-chat-max-width);
+  max-width: var(--tplane-chat-max-width);
   margin: 0 auto;
 }
 
@@ -18,8 +18,8 @@ export const CHAT_INPUT_STYLES = `
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--ngaf-chat-surface);
-  border: 1px solid var(--ngaf-chat-separator);
+  background: var(--tplane-chat-surface);
+  border: 1px solid var(--tplane-chat-separator);
   border-radius: 9999px;
   padding: 8px 8px 8px 16px;
   min-height: 56px;
@@ -32,7 +32,7 @@ export const CHAT_INPUT_STYLES = `
   outline: none;
   resize: none;
   background: transparent;
-  color: var(--ngaf-chat-text);
+  color: var(--tplane-chat-text);
   font: inherit;
   font-size: 1rem;
   line-height: 1.5;
@@ -40,9 +40,9 @@ export const CHAT_INPUT_STYLES = `
   field-sizing: content;
   overflow-y: auto;
 }
-.chat-input__textarea::placeholder { color: var(--ngaf-chat-text-muted); }
+.chat-input__textarea::placeholder { color: var(--tplane-chat-text-muted); }
 .chat-input__textarea::-webkit-scrollbar { width: 4px; }
-.chat-input__textarea::-webkit-scrollbar-thumb { background: var(--ngaf-chat-separator); border-radius: 4px; }
+.chat-input__textarea::-webkit-scrollbar-thumb { background: var(--tplane-chat-separator); border-radius: 4px; }
 
 .chat-input__controls {
   display: flex;
@@ -65,20 +65,20 @@ export const CHAT_INPUT_STYLES = `
   padding: 0;
 }
 .chat-input__send {
-  background: var(--ngaf-chat-text);
-  color: var(--ngaf-chat-bg);
+  background: var(--tplane-chat-text);
+  color: var(--tplane-chat-bg);
 }
 .chat-input__send:disabled {
   opacity: 0.35;
   cursor: not-allowed;
-  background: var(--ngaf-chat-text-muted);
+  background: var(--tplane-chat-text-muted);
 }
 .chat-input__send:not(:disabled):hover { transform: scale(1.05); }
 .chat-input__send svg { width: 16px; height: 16px; }
 
 .chat-input__send--stop {
-  background: var(--ngaf-chat-text-muted);
-  color: var(--ngaf-chat-bg);
+  background: var(--tplane-chat-text-muted);
+  color: var(--tplane-chat-bg);
 }
 .chat-input__send--stop:hover { transform: scale(1.05); }
 .chat-input__send--stop svg { width: 14px; height: 14px; }

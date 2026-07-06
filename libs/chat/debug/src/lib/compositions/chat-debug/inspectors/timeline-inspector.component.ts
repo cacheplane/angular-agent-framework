@@ -44,13 +44,13 @@ export function stepSelection(dir: Direction, current: number, count: number): n
       align-items: center;
       justify-content: space-between;
       padding: 10px 16px;
-      border-bottom: 1px solid var(--ngaf-chat-debug-border);
+      border-bottom: 1px solid var(--tplane-chat-debug-border);
       font-size: 11px;
       font-weight: 600;
       letter-spacing: 0.04em;
       text-transform: uppercase;
-      color: var(--ngaf-chat-debug-text-subtle);
-      background: var(--ngaf-chat-debug-bg);
+      color: var(--tplane-chat-debug-text-subtle);
+      background: var(--tplane-chat-debug-bg);
     }
     .timeline__count { display: inline-flex; align-items: center; gap: 6px; }
     .timeline__count-badge {
@@ -61,9 +61,9 @@ export function stepSelection(dir: Direction, current: number, count: number): n
       height: 18px;
       padding: 0 6px;
       border-radius: 9px;
-      background: var(--ngaf-chat-debug-surface);
-      border: 1px solid var(--ngaf-chat-debug-border);
-      color: var(--ngaf-chat-debug-text);
+      background: var(--tplane-chat-debug-surface);
+      border: 1px solid var(--tplane-chat-debug-border);
+      color: var(--tplane-chat-debug-text);
       font-size: 11px;
       font-weight: 500;
       letter-spacing: 0;
@@ -74,7 +74,7 @@ export function stepSelection(dir: Direction, current: number, count: number): n
       background: transparent;
       border: 0;
       cursor: pointer;
-      color: var(--ngaf-chat-debug-text-subtle);
+      color: var(--tplane-chat-debug-text-subtle);
       font: inherit;
       font-size: 11px;
       letter-spacing: 0;
@@ -84,8 +84,8 @@ export function stepSelection(dir: Direction, current: number, count: number): n
       transition: color 120ms ease, background 120ms ease;
     }
     .timeline__clear:hover:not(:disabled) {
-      color: var(--ngaf-chat-debug-text);
-      background: var(--ngaf-chat-debug-surface);
+      color: var(--tplane-chat-debug-text);
+      background: var(--tplane-chat-debug-surface);
     }
     .timeline__clear:disabled { opacity: 0.4; cursor: default; }
     .timeline__list {
@@ -95,12 +95,12 @@ export function stepSelection(dir: Direction, current: number, count: number): n
       display: flex;
       flex-direction: column;
       gap: 8px;
-      background: var(--ngaf-chat-debug-bg);
+      background: var(--tplane-chat-debug-bg);
     }
     .timeline__empty {
       padding: 24px 16px;
       text-align: center;
-      color: var(--ngaf-chat-debug-text-subtle);
+      color: var(--tplane-chat-debug-text-subtle);
       font-size: 13px;
     }
     .timeline__row { display: flex; flex-direction: column; gap: 8px; }
@@ -111,26 +111,26 @@ export function stepSelection(dir: Direction, current: number, count: number): n
     }
     .timeline__row:hover .timeline__row-actions { display: flex; }
     .timeline__row button.row-action {
-      background: var(--ngaf-chat-debug-bg-deep);
-      border: 1px solid var(--ngaf-chat-debug-border);
+      background: var(--tplane-chat-debug-bg-deep);
+      border: 1px solid var(--tplane-chat-debug-border);
       border-radius: 6px;
       padding: 3px 8px;
       font: inherit;
       font-size: 11px;
-      color: var(--ngaf-chat-debug-text-muted);
+      color: var(--tplane-chat-debug-text-muted);
       cursor: pointer;
       transition: color 120ms ease, border-color 120ms ease;
     }
     .timeline__row button.row-action:hover {
-      color: var(--ngaf-chat-debug-text);
-      border-color: var(--ngaf-chat-debug-border-strong);
+      color: var(--tplane-chat-debug-text);
+      border-color: var(--tplane-chat-debug-border-strong);
     }
     .timeline__diff {
       padding: 12px;
-      background: var(--ngaf-chat-debug-bg-deep);
-      border: 1px solid var(--ngaf-chat-debug-border);
-      border-radius: var(--ngaf-chat-debug-radius-input);
-      color: var(--ngaf-chat-debug-text);
+      background: var(--tplane-chat-debug-bg-deep);
+      border: 1px solid var(--tplane-chat-debug-border);
+      border-radius: var(--tplane-chat-debug-radius-input);
+      color: var(--tplane-chat-debug-text);
     }
     `,
   ],

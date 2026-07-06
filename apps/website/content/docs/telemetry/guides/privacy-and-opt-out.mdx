@@ -12,7 +12,7 @@ Any of these environment signals disables Node telemetry:
 DO_NOT_TRACK=1
 npm_config_do_not_track=true
 NPM_CONFIG_DO_NOT_TRACK=true
-NGAF_TELEMETRY_DISABLED=1
+TPLANE_TELEMETRY_DISABLED=1
 CI=true
 GITHUB_ACTIONS=true
 CONTINUOUS_INTEGRATION=true
@@ -33,7 +33,7 @@ disableTelemetry();
 `getDisableReason()` reports one of:
 
 ```ts
-'DO_NOT_TRACK' | 'NGAF_TELEMETRY_DISABLED' | 'CI' | null
+'DO_NOT_TRACK' | 'TPLANE_TELEMETRY_DISABLED' | 'CI' | null
 ```
 
 ## Browser opt-in
@@ -71,7 +71,7 @@ No source path sends prompts, completions, message content, tool call arguments,
 Set a custom Node ingest URL with:
 
 ```bash
-NGAF_TELEMETRY_INGEST_URL=https://telemetry.example.com/api/ingest
+TPLANE_TELEMETRY_INGEST_URL=https://telemetry.example.com/api/ingest
 ```
 
 For browser apps, prefer `sink` or `endpoint` so telemetry remains inside your application's analytics boundary.

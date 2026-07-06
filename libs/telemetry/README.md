@@ -28,12 +28,12 @@ Transparent, opt-out anonymous usage telemetry for the Threadplane framework. Is
 
 | Event | What is sent |
 |-------|-------------|
-| `ngaf:postinstall` | Package name, package version, Node version, OS, CPU architecture, package manager name/version, workspace/global install flags when npm exposes them, sample weight. Per-process anonymous id. No project path, no raw environment variables, no dependency tree, no installer IP address. |
-| `ngaf:runtime_instance_created` | Which transport, which model provider (string), Angular peer version. No API keys, no endpoint hostnames, no user data. |
-| `ngaf:runtime_request_created` | Transport, request type, provider, model. No prompts, thread IDs, assistant IDs, endpoint URLs, or headers. |
-| `ngaf:stream_started` | Provider, model name. No prompts, no message content. |
-| `ngaf:stream_ended` | Provider, model name, duration. No prompts, no completions, no message content. |
-| `ngaf:stream_errored` | Provider, model name, error class. No prompts, no completions, no message content. |
+| `tplane:postinstall` | Package name, package version, Node version, OS, CPU architecture, package manager name/version, workspace/global install flags when npm exposes them, sample weight. Per-process anonymous id. No project path, no raw environment variables, no dependency tree, no installer IP address. |
+| `tplane:runtime_instance_created` | Which transport, which model provider (string), Angular peer version. No API keys, no endpoint hostnames, no user data. |
+| `tplane:runtime_request_created` | Transport, request type, provider, model. No prompts, thread IDs, assistant IDs, endpoint URLs, or headers. |
+| `tplane:stream_started` | Provider, model name. No prompts, no message content. |
+| `tplane:stream_ended` | Provider, model name, duration. No prompts, no completions, no message content. |
+| `tplane:stream_errored` | Provider, model name, error class. No prompts, no completions, no message content. |
 
 ### Browser events (opt-in, off by default)
 
@@ -41,10 +41,10 @@ Nothing fires unless `provideThreadplaneTelemetry({ enabled: true, ... })` is ca
 
 | Event | What is sent |
 |-------|-------------|
-| `ngaf:browser_provided` | Telemetry initialized; surface name, sample weight. Anonymous, no user data. |
-| `ngaf:browser_chat_init` | Chat component initialized; surface name, sample weight. Anonymous, no message content. |
+| `tplane:browser_provided` | Telemetry initialized; surface name, sample weight. Anonymous, no user data. |
+| `tplane:browser_chat_init` | Chat component initialized; surface name, sample weight. Anonymous, no message content. |
 
-Browser-side runtime lifecycle events (`ngaf:runtime_instance_created`, `ngaf:runtime_request_created`, `ngaf:stream_started`, `ngaf:stream_ended`, `ngaf:stream_errored`) may also be sent when the app captures them explicitly. Same payload constraints as Node.
+Browser-side runtime lifecycle events (`tplane:runtime_instance_created`, `tplane:runtime_request_created`, `tplane:stream_started`, `tplane:stream_ended`, `tplane:stream_errored`) may also be sent when the app captures them explicitly. Same payload constraints as Node.
 
 ### Never collected — by anyone, at any time
 
@@ -73,7 +73,7 @@ Node telemetry is on by default. Any one of the following turns it off entirely.
 
 | Variable | Value | Notes |
 |----------|-------|-------|
-| `NGAF_TELEMETRY_DISABLED` | `1` or `true` | Package-level kill-switch |
+| `TPLANE_TELEMETRY_DISABLED` | `1` or `true` | Package-level kill-switch |
 | `DO_NOT_TRACK` | `1` or `true` | Cross-vendor standard; `npm_config_do_not_track` and `NPM_CONFIG_DO_NOT_TRACK` are also respected |
 
 ### CI auto-disable
@@ -98,7 +98,7 @@ disableTelemetry();
 Default sample rate is **1.0** (100%). Reduce it via:
 
 ```bash
-NGAF_TELEMETRY_SAMPLE_RATE=0.1   # sample 10% of events
+TPLANE_TELEMETRY_SAMPLE_RATE=0.1   # sample 10% of events
 ```
 
 Every event carries a `sample_weight` property so de-sampling at query time works correctly.
@@ -108,10 +108,10 @@ Every event carries a `sample_weight` property so de-sampling at query time work
 Redirect all Node telemetry to your own endpoint:
 
 ```bash
-NGAF_TELEMETRY_INGEST_URL=https://telemetry.acme-internal.example.com/api/ingest
+TPLANE_TELEMETRY_INGEST_URL=https://telemetry.acme-internal.example.com/api/ingest
 ```
 
-The default ingest (when unset) is a thin proxy at `https://threadplane.ai/api/ingest` that accepts the `@threadplane/telemetry` JSON payload, forwards `ngaf:*` events to the project PostHog instance, and does not forward installer IP addresses. Source lives in `apps/website/src/app/api/ingest/`.
+The default ingest (when unset) is a thin proxy at `https://threadplane.ai/api/ingest` that accepts the `@threadplane/telemetry` JSON payload, forwards `tplane:*` events to the project PostHog instance, and does not forward installer IP addresses. Source lives in `apps/website/src/app/api/ingest/`.
 
 ## Usage
 
@@ -175,7 +175,7 @@ import {
 } from '@threadplane/telemetry';
 ```
 
-`getDisableReason()` returns `'DO_NOT_TRACK' | 'NGAF_TELEMETRY_DISABLED' | 'CI' | null`.
+`getDisableReason()` returns `'DO_NOT_TRACK' | 'TPLANE_TELEMETRY_DISABLED' | 'CI' | null`.
 
 ## Reliability and transparency
 
@@ -184,10 +184,10 @@ import {
 Inspect payloads locally without sending them:
 
 ```bash
-DEBUG=ngaf:telemetry npm install
+DEBUG=tplane:telemetry npm install
 ```
 
-`ngaf:telemetry` is the debug namespace — it is not an event name and is never sent to the ingest endpoint.
+`tplane:telemetry` is the debug namespace — it is not an event name and is never sent to the ingest endpoint.
 
 ### Anonymous id strategy
 

@@ -48,11 +48,11 @@ const SUGGESTIONS = [
           }
         </div>
       </chat>
-      <div sidebar class="p-4 space-y-4" style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">
+      <div sidebar class="p-4 space-y-4" style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
         <div>
           <h4 class="text-xs font-semibold uppercase tracking-wide mb-2"
-              style="color: var(--ngaf-chat-text-muted);">Agent Pipeline</h4>
-          <ol class="text-xs space-y-1 list-decimal list-inside" style="color: var(--ngaf-chat-text-muted);">
+              style="color: var(--tplane-chat-text-muted);">Agent Pipeline</h4>
+          <ol class="text-xs space-y-1 list-decimal list-inside" style="color: var(--tplane-chat-text-muted);">
             <li>Orchestrator</li>
             <li>Research subagent</li>
             <li>Booking subagent</li>

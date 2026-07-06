@@ -273,7 +273,7 @@
       },
       {
         "name": "distribution",
-        "type": "InputSignal<\"center\" | \"start\" | \"end\" | \"spaceBetween\" | \"spaceAround\" | \"spaceEvenly\">",
+        "type": "InputSignal<\"start\" | \"center\" | \"end\" | \"spaceBetween\" | \"spaceAround\" | \"spaceEvenly\">",
         "description": "",
         "optional": false
       },
@@ -632,7 +632,7 @@
     "properties": [
       {
         "name": "alignment",
-        "type": "InputSignal<\"center\" | \"start\" | \"end\" | \"stretch\" | undefined>",
+        "type": "InputSignal<\"start\" | \"center\" | \"end\" | \"stretch\" | undefined>",
         "description": "v1 canonical prop: cross-axis alignment.",
         "optional": false
       },
@@ -2200,6 +2200,58 @@
     ]
   },
   {
+    "name": "ChatConnectedOverlayDirective",
+    "kind": "class",
+    "description": "Applied to an `<ng-template>`. When `chatOverlayOpen` is true, the template\ncontent is portaled into the shared body-level overlay container and\npositioned connected to `chatOverlayOrigin`, repositioning live on\nscroll/resize. Closes on outside mousedown (via the `chatOverlayOutsideClick`\noutput) and Tab; returns focus to the origin when focus was inside the pane.\n\nNOTE: the directive does not own the open state — it only emits. To fully\nclose the overlay, consumers MUST handle BOTH `(chatOverlayOutsideClick)` and\n`(chatOverlayDetach)`. Tab-close (and Escape, when the consumer routes it)\nsurface through `chatOverlayDetach`, so wiring only `chatOverlayOutsideClick`\nleaves the overlay stuck open on Tab.",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "attached",
+        "type": "OutputEmitterRef<HTMLElement>",
+        "description": "Emits the pane element once attached (consumers focus content from it).",
+        "optional": false
+      },
+      {
+        "name": "detached",
+        "type": "OutputEmitterRef<void>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "open",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "origin",
+        "type": "InputSignal<ChatOverlayOriginDirective<>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "outsideClick",
+        "type": "OutputEmitterRef<MouseEvent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "panelClass",
+        "type": "InputSignal<string | string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "positions",
+        "type": "InputSignal<ConnectedPosition[]>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
     "name": "ChatErrorComponent",
     "kind": "class",
     "description": "",
@@ -2876,6 +2928,22 @@
     ]
   },
   {
+    "name": "ChatOverlayOriginDirective",
+    "kind": "class",
+    "description": "Marks the anchor element a connected overlay positions against.",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "elementRef",
+        "type": "ElementRef<HTMLElement>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
     "name": "ChatPopupComponent",
     "kind": "class",
     "description": "",
@@ -3281,7 +3349,7 @@
   {
     "name": "ChatSelectComponent",
     "kind": "class",
-    "description": "Generic single-select dropdown. Designed to slot into the chat input pill\n(via [chatInputModelSelect]) but usable anywhere.\n\nInputs:\n  options      — array of { value, label, disabled? }; required\n  value        — currently selected value (two-way via model())\n  placeholder  — trigger label when no option matches; default 'Select'\n  disabled     — disables the trigger; default false\n  menuLabel    — aria-label for the popover; defaults to placeholder",
+    "description": "Generic single-select dropdown. The menu renders through the chat\nconnected-overlay primitive (a body-level portal), so it is never clipped by\nan ancestor's `overflow` and never trapped by an ancestor `transform`.\n\nInputs: options (required), value (two-way), placeholder, disabled, menuLabel,\npanelClass (extra class(es) on the overlay pane — the menu is portaled, so\n`::ng-deep chat-select .chat-select__menu` no longer reaches it).",
     "params": [],
     "examples": [],
     "properties": [
@@ -3294,6 +3362,12 @@
       {
         "name": "disabled",
         "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "menuId",
+        "type": "string",
         "description": "",
         "optional": false
       },
@@ -3316,6 +3390,24 @@
         "optional": false
       },
       {
+        "name": "overlayPositions",
+        "type": "ConnectedPosition[]",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "panelClass",
+        "type": "InputSignal<string | string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "panelClasses",
+        "type": "Signal<string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "placeholder",
         "type": "InputSignal<string>",
         "description": "",
@@ -3329,6 +3421,19 @@
       }
     ],
     "methods": [
+      {
+        "name": "onAttached",
+        "signature": "onAttached(pane: HTMLElement): void",
+        "description": "",
+        "params": [
+          {
+            "name": "pane",
+            "type": "HTMLElement",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
       {
         "name": "onMenuKeydown",
         "signature": "onMenuKeydown(e: KeyboardEvent): void",
@@ -4740,7 +4845,7 @@
   {
     "name": "ChatWelcomeComponent",
     "kind": "class",
-    "description": "Empty-state owner. Renders a centered greeting + slot-projected input +\noptional vertical suggestion rows. Mounted only when the parent chat has\nno messages and welcome is not disabled.\n\nSlots:\n  [chatWelcomeTitle]       — replaces the default <h1> \"How can I help?\"\n  [chatWelcomeInput]       — projects the chat input into the center column\n  [chatWelcomeSuggestions] — projects suggestion rows below the input\n\nHost CSS variables (override on :host or any ancestor):\n  --ngaf-chat-welcome-max-width  default 36rem\n  --ngaf-chat-welcome-gap        default 1.25rem\n  --ngaf-chat-welcome-padding    default 24px",
+    "description": "Empty-state owner. Renders a centered greeting + slot-projected input +\noptional vertical suggestion rows. Mounted only when the parent chat has\nno messages and welcome is not disabled.\n\nSlots:\n  [chatWelcomeTitle]       — replaces the default <h1> \"How can I help?\"\n  [chatWelcomeInput]       — projects the chat input into the center column\n  [chatWelcomeSuggestions] — projects suggestion rows below the input\n\nHost CSS variables (override on :host or any ancestor):\n  --tplane-chat-welcome-max-width  default 36rem\n  --tplane-chat-welcome-gap        default 1.25rem\n  --tplane-chat-welcome-padding    default 24px",
     "params": [],
     "examples": [],
     "properties": [],
@@ -6293,6 +6398,50 @@
     "examples": []
   },
   {
+    "name": "ConnectedPosition",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "offsetX",
+        "type": "number",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "offsetY",
+        "type": "number",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "originX",
+        "type": "HorizontalConnectionPos",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "originY",
+        "type": "VerticalConnectionPos",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "overlayX",
+        "type": "HorizontalConnectionPos",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "overlayY",
+        "type": "VerticalConnectionPos",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "ContentClassifier",
     "kind": "interface",
     "description": "",
@@ -6719,6 +6868,32 @@
         "type": "\"normal\" | \"destructive\"",
         "description": "'destructive' renders the label in red. Default 'normal'.",
         "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "OverlayPositionResult",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "left",
+        "type": "number",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "position",
+        "type": "ConnectedPosition",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "top",
+        "type": "number",
+        "description": "",
+        "optional": false
       }
     ],
     "examples": []
@@ -7279,7 +7454,7 @@
     "name": "AgentRuntimeTelemetryEvent",
     "kind": "type",
     "description": "",
-    "signature": "\"ngaf:runtime_instance_created\" | \"ngaf:runtime_request_created\" | \"ngaf:stream_started\" | \"ngaf:stream_ended\" | \"ngaf:stream_errored\"",
+    "signature": "\"tplane:runtime_instance_created\" | \"tplane:runtime_request_created\" | \"tplane:stream_started\" | \"tplane:stream_ended\" | \"tplane:stream_errored\"",
     "examples": []
   },
   {

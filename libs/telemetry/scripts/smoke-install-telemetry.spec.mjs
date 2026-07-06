@@ -19,17 +19,17 @@ describe('smoke-install-telemetry', () => {
     expect(() => assertObservedPostinstallEvents({
       expectedPackages: ['@threadplane/chat', '@threadplane/langgraph'],
       events: [
-        { event: 'ngaf:postinstall', properties: { pkg: '@threadplane/chat' } },
+        { event: 'tplane:postinstall', properties: { pkg: '@threadplane/chat' } },
       ],
-    })).toThrow(/Missing ngaf:postinstall events for @threadplane\/langgraph/);
+    })).toThrow(/Missing tplane:postinstall events for @threadplane\/langgraph/);
   });
 
   it('ignores non-postinstall events when proving package coverage', () => {
     expect(() => assertObservedPostinstallEvents({
       expectedPackages: ['@threadplane/chat'],
       events: [
-        { event: 'ngaf:runtime_request_created', properties: { pkg: '@threadplane/chat' } },
+        { event: 'tplane:runtime_request_created', properties: { pkg: '@threadplane/chat' } },
       ],
-    })).toThrow(/Missing ngaf:postinstall events for @threadplane\/chat/);
+    })).toThrow(/Missing tplane:postinstall events for @threadplane\/chat/);
   });
 });

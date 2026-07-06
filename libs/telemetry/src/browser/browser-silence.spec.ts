@@ -30,7 +30,7 @@ describe('browser silence (permanent contract)', () => {
       providers: [provideThreadplaneTelemetry({ enabled: false })],
     });
     const svc = TestBed.inject(ThreadplaneTelemetryService);
-    await svc.capture('ngaf:browser_provided');
+    await svc.capture('tplane:browser_provided');
     expect(svc).toBeInstanceOf(ThreadplaneTelemetryService);
   });
 });

@@ -81,7 +81,7 @@ function readSubscriptionFacts(subscription: Stripe.Subscription): SubscriptionL
   const priceMetadata = (item.price?.metadata ?? {}) as Record<string, string>;
   const merged: Record<string, string> = {
     ...priceMetadata,
-    ...(subMetadata['ngaf_tier_slug'] ? { ngaf_tier_slug: subMetadata['ngaf_tier_slug'] } : {}),
+    ...(subMetadata['tplane_tier_slug'] ? { tplane_tier_slug: subMetadata['tplane_tier_slug'] } : {}),
   };
   const tier = extractTier(merged);
   const quantity = item.quantity ?? 1;

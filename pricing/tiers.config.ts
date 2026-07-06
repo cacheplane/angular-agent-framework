@@ -5,7 +5,7 @@
  *   - apps/website/src/components/pricing/CompareTable.tsx (display)
  *   - scripts/stripe/sync-products.ts (Stripe-side products + prices)
  *
- * Stripe products are identified by `metadata.ngaf_tier_slug = slug`. Never
+ * Stripe products are identified by `metadata.tplane_tier_slug = slug`. Never
  * rely on product name to match — names are display copy and may change.
  *
  * Pricing model: every paid tier has BOTH a monthly and an annual recurring

@@ -101,12 +101,12 @@ export async function selectToolbarOption(
   label: string,
   option: string
 ): Promise<void> {
-  const field = labelToFieldAttr(label);
   const trigger = toolbarSelect(page, label);
   await trigger.click();
-  const menu = page
-    .locator(`.demo-shell__field[data-field="${field}"]`)
-    .locator('chat-select .chat-select__menu');
+  // chat-select renders its menu through the chat connected-overlay primitive
+  // (body portal), so the menu is in .chat-overlay-container, not inside
+  // <chat-select>. Only one select menu is open at a time in this flow.
+  const menu = page.locator('.chat-overlay-container .chat-select__menu');
   await menu.waitFor({ state: 'visible' });
   const optionButton = menu
     .locator('.chat-select__option')

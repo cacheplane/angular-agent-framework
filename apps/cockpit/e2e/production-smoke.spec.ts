@@ -160,9 +160,9 @@ test.describe('Production: canonical demo sends runtime telemetry', () => {
     });
 
     for (const event of [
-      'ngaf:runtime_request_created',
-      'ngaf:stream_started',
-      'ngaf:stream_ended',
+      'tplane:runtime_request_created',
+      'tplane:stream_started',
+      'tplane:stream_ended',
     ]) {
       await expect
         .poll(

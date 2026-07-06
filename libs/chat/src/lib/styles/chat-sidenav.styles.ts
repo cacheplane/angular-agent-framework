@@ -21,10 +21,10 @@ export const CHAT_SIDENAV_STYLES = `
     z-index: 100;
   }
   :host([data-mode="expanded"]) {
-    width: var(--ngaf-chat-sidenav-width-expanded);
+    width: var(--tplane-chat-sidenav-width-expanded);
   }
   :host([data-mode="collapsed"]) {
-    width: var(--ngaf-chat-sidenav-width-collapsed);
+    width: var(--tplane-chat-sidenav-width-collapsed);
   }
   :host([data-mode="expanded"]) .chat-sidenav {
     width: 100%;
@@ -37,8 +37,8 @@ export const CHAT_SIDENAV_STYLES = `
     top: 0;
     left: 0;
     bottom: 0;
-    width: var(--ngaf-chat-sidenav-width-drawer);
-    z-index: var(--ngaf-chat-z-drawer, 1001);
+    width: var(--tplane-chat-sidenav-width-drawer);
+    z-index: var(--tplane-chat-z-drawer, 1001);
   }
   :host([data-mode="drawer"][data-open="true"]) {
     box-shadow: 8px 0 32px rgba(0, 0, 0, 0.18);
@@ -47,8 +47,8 @@ export const CHAT_SIDENAV_STYLES = `
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: var(--ngaf-chat-bg);
-    border-right: 1px solid var(--ngaf-chat-separator);
+    background: var(--tplane-chat-bg);
+    border-right: 1px solid var(--tplane-chat-separator);
     box-sizing: border-box;
     overflow: hidden;
   }
@@ -63,7 +63,7 @@ export const CHAT_SIDENAV_STYLES = `
   }
   .chat-sidenav__header {
     flex-shrink: 0;
-    padding: var(--ngaf-chat-space-3);
+    padding: var(--tplane-chat-space-3);
   }
   /* Collapse the header slot when the consumer doesn't project content
    * — matches the chat-window pattern. Avoids 24px of dead space above
@@ -76,15 +76,15 @@ export const CHAT_SIDENAV_STYLES = `
     align-items: center;
     justify-content: space-between;
     gap: 4px;
-    padding: var(--ngaf-chat-space-2) var(--ngaf-chat-space-3);
-    border-bottom: 1px solid var(--ngaf-chat-separator);
+    padding: var(--tplane-chat-space-2) var(--tplane-chat-space-3);
+    border-bottom: 1px solid var(--tplane-chat-separator);
   }
   :host([data-mode="collapsed"]) .chat-sidenav__topbar {
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 4px;
-    padding: var(--ngaf-chat-space-2) 0;
+    padding: var(--tplane-chat-space-2) 0;
   }
   .chat-sidenav__topbar .chat-sidenav__action--close {
     width: 36px;
@@ -102,7 +102,7 @@ export const CHAT_SIDENAV_STYLES = `
     border: 0;
     padding: 12px 18px;
     border-radius: 8px;
-    font-size: var(--ngaf-chat-font-size-sm);
+    font-size: var(--tplane-chat-font-size-sm);
     font-weight: 600;
     display: flex;
     align-items: center;
@@ -111,7 +111,7 @@ export const CHAT_SIDENAV_STYLES = `
     width: 100%;
   }
   .chat-sidenav__action--new:focus-visible {
-    outline: 2px solid var(--ngaf-chat-primary);
+    outline: 2px solid var(--tplane-chat-primary);
     outline-offset: 2px;
   }
   /* Collapsed mode: shrink to 32×32 icon-only square. */
@@ -130,11 +130,11 @@ export const CHAT_SIDENAV_STYLES = `
     display: flex;
     flex-direction: column;
     gap: 4px;
-    padding: var(--ngaf-chat-space-3);
+    padding: var(--tplane-chat-space-3);
   }
   :host([data-mode="collapsed"]) .chat-sidenav__actions {
     align-items: center;
-    padding: var(--ngaf-chat-space-2);
+    padding: var(--tplane-chat-space-2);
   }
   .chat-sidenav__action {
     display: flex;
@@ -144,17 +144,17 @@ export const CHAT_SIDENAV_STYLES = `
     padding: 8px 12px;
     border: 0;
     background: transparent;
-    color: var(--ngaf-chat-text);
+    color: var(--tplane-chat-text);
     border-radius: 8px;
     cursor: pointer;
     font-family: inherit;
-    font-size: var(--ngaf-chat-font-size-sm);
+    font-size: var(--tplane-chat-font-size-sm);
     font-weight: 400;
     text-align: left;
   }
-  .chat-sidenav__action:hover { background: var(--ngaf-chat-surface-alt); }
+  .chat-sidenav__action:hover { background: var(--tplane-chat-surface-alt); }
   .chat-sidenav__action:focus-visible {
-    outline: 2px solid var(--ngaf-chat-primary);
+    outline: 2px solid var(--tplane-chat-primary);
     outline-offset: 2px;
   }
   :host([data-mode="collapsed"]) .chat-sidenav__action {
@@ -172,15 +172,15 @@ export const CHAT_SIDENAV_STYLES = `
      collapsed-mode overrides (which are :host-prefixed, higher
      specificity, so they still apply). */
   .chat-sidenav__action.chat-sidenav__action--new {
-    background: var(--ngaf-chat-text);
-    color: var(--ngaf-chat-bg);
+    background: var(--tplane-chat-text);
+    color: var(--tplane-chat-bg);
     border-radius: 8px;
     padding: 12px 18px;
     font-weight: 600;
-    font-size: var(--ngaf-chat-font-size-sm);
+    font-size: var(--tplane-chat-font-size-sm);
   }
   .chat-sidenav__action.chat-sidenav__action--new:hover {
-    background: var(--ngaf-chat-text);
+    background: var(--tplane-chat-text);
     filter: brightness(0.92);
   }
   .chat-sidenav__action-icon {
@@ -200,7 +200,7 @@ export const CHAT_SIDENAV_STYLES = `
   .chat-sidenav__threads-heading {
     padding: 8px 12px 4px;
     font-size: 11px;
-    color: var(--ngaf-chat-text-muted);
+    color: var(--tplane-chat-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.4px;
   }
@@ -212,7 +212,7 @@ export const CHAT_SIDENAV_STYLES = `
     align-items: center;
     justify-content: space-between;
     padding: 10px 12px;
-    border-top: 1px solid var(--ngaf-chat-separator);
+    border-top: 1px solid var(--tplane-chat-separator);
     gap: 8px;
     flex-shrink: 0;
   }
@@ -233,18 +233,18 @@ export const CHAT_SIDENAV_STYLES = `
     border: 0;
     border-radius: 8px;
     background: transparent;
-    color: var(--ngaf-chat-text-muted);
+    color: var(--tplane-chat-text-muted);
     cursor: pointer;
     font: inherit;
     font-size: 12px;
     font-weight: 500;
   }
   .chat-sidenav__debug:hover {
-    background: var(--ngaf-chat-surface-alt);
-    color: var(--ngaf-chat-text);
+    background: var(--tplane-chat-surface-alt);
+    color: var(--tplane-chat-text);
   }
   .chat-sidenav__debug:focus-visible {
-    outline: 2px solid var(--ngaf-chat-primary);
+    outline: 2px solid var(--tplane-chat-primary);
     outline-offset: 2px;
   }
   .chat-sidenav__debug-dot {
@@ -275,15 +275,15 @@ export const CHAT_SIDENAV_STYLES = `
     border-radius: 8px;
     border: 0;
     background: transparent;
-    color: var(--ngaf-chat-text-muted);
+    color: var(--tplane-chat-text-muted);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
   }
   .chat-sidenav__toggle:hover {
-    background: var(--ngaf-chat-surface-alt);
-    color: var(--ngaf-chat-text);
+    background: var(--tplane-chat-surface-alt);
+    color: var(--tplane-chat-text);
   }
   /* Collapsed mode: footer becomes a vertical stack; debug stays visible. */
   :host([data-mode="collapsed"]) .chat-sidenav__footer {
@@ -329,18 +329,18 @@ export const CHAT_SIDENAV_STYLES = `
     border: 0;
     border-radius: 8px;
     background: transparent;
-    color: var(--ngaf-chat-text);
+    color: var(--tplane-chat-text);
     font: inherit;
-    font-size: var(--ngaf-chat-font-size-sm);
+    font-size: var(--tplane-chat-font-size-sm);
     text-align: left;
     cursor: pointer;
   }
   .chat-sidenav__archived-heading:hover {
-    background: var(--ngaf-chat-surface-alt);
-    color: var(--ngaf-chat-text);
+    background: var(--tplane-chat-surface-alt);
+    color: var(--tplane-chat-text);
   }
   .chat-sidenav__archived-heading:focus-visible {
-    outline: 2px solid var(--ngaf-chat-primary);
+    outline: 2px solid var(--tplane-chat-primary);
     outline-offset: 2px;
   }
   .chat-sidenav__archived-chevron {
@@ -354,8 +354,8 @@ export const CHAT_SIDENAV_STYLES = `
   }
   .chat-sidenav__archived-empty {
     padding: 8px 12px;
-    color: var(--ngaf-chat-text-muted);
-    font-size: var(--ngaf-chat-font-size-sm);
+    color: var(--tplane-chat-text-muted);
+    font-size: var(--tplane-chat-font-size-sm);
   }
   :host([data-mode="collapsed"]) .chat-sidenav__archived { display: none; }
   .chat-sidenav__projects { flex-shrink: 0; }

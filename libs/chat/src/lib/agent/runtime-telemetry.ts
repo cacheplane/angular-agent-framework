@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 
 export type AgentRuntimeTelemetryEvent =
-  | 'ngaf:runtime_instance_created'
-  | 'ngaf:runtime_request_created'
-  | 'ngaf:stream_started'
-  | 'ngaf:stream_ended'
-  | 'ngaf:stream_errored';
+  | 'tplane:runtime_instance_created'
+  | 'tplane:runtime_request_created'
+  | 'tplane:stream_started'
+  | 'tplane:stream_ended'
+  | 'tplane:stream_errored';
 
 export interface AgentRuntimeTelemetryProperties {
   transport: 'langgraph' | 'ag-ui' | 'custom' | string;

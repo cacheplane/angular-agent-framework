@@ -1,11 +1,11 @@
 # Chat Theming with @threadplane/chat
 
 <Summary>
-Customize chat appearance using `--ngaf-chat-*` CSS custom properties. Create theme presets and build a theme picker for runtime theme switching.
+Customize chat appearance using `--tplane-chat-*` CSS custom properties. Create theme presets and build a theme picker for runtime theme switching.
 </Summary>
 
 <Prompt>
-Add theming to your chat interface using `--ngaf-chat-*` CSS custom properties. Create theme presets and a theme picker for switching themes at runtime.
+Add theming to your chat interface using `--tplane-chat-*` CSS custom properties. Create theme presets and a theme picker for switching themes at runtime.
 </Prompt>
 
 <Steps>
@@ -14,12 +14,12 @@ Add theming to your chat interface using `--ngaf-chat-*` CSS custom properties. 
 Chat components use CSS custom properties for visual styling:
 
 ```css
---ngaf-chat-bg: #171717;
---ngaf-chat-text: #e0e0e0;
---ngaf-chat-accent: #3b82f6;
---ngaf-chat-surface-alt: #222;
---ngaf-chat-separator: #333;
---ngaf-chat-text-muted: #777;
+--tplane-chat-bg: #171717;
+--tplane-chat-text: #e0e0e0;
+--tplane-chat-accent: #3b82f6;
+--tplane-chat-surface-alt: #222;
+--tplane-chat-separator: #333;
+--tplane-chat-text-muted: #777;
 ```
 
 </Step>
@@ -30,16 +30,16 @@ Define theme presets as objects mapping CSS custom properties:
 ```typescript
 const themes = {
   dark: {
-    '--ngaf-chat-bg': '#171717',
-    '--ngaf-chat-text': '#e0e0e0',
+    '--tplane-chat-bg': '#171717',
+    '--tplane-chat-text': '#e0e0e0',
   },
   light: {
-    '--ngaf-chat-bg': '#ffffff',
-    '--ngaf-chat-text': '#1a1a1a',
+    '--tplane-chat-bg': '#ffffff',
+    '--tplane-chat-text': '#1a1a1a',
   },
   ocean: {
-    '--ngaf-chat-bg': '#0c1426',
-    '--ngaf-chat-text': '#c8d6e5',
+    '--tplane-chat-bg': '#0c1426',
+    '--tplane-chat-text': '#c8d6e5',
   },
 };
 ```
@@ -65,7 +65,7 @@ Override specific component styles without affecting the global theme:
 
 ```css
 chat-input {
-  --ngaf-chat-input-bg: #1a1a2e;
+  --tplane-chat-input-bg: #1a1a2e;
 }
 ```
 
@@ -73,5 +73,5 @@ chat-input {
 </Steps>
 
 <Tip>
-Chat components provide sensible defaults. Override only the `--ngaf-chat-*` properties you need to change for your brand.
+Chat components provide sensible defaults. Override only the `--tplane-chat-*` properties you need to change for your brand.
 </Tip>

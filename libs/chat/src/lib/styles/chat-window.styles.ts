@@ -6,8 +6,8 @@ export const CHAT_WINDOW_STYLES = `
     flex-direction: column;
     min-height: 0;
     height: 100%;
-    background: var(--ngaf-chat-bg);
-    color: var(--ngaf-chat-text);
+    background: var(--tplane-chat-bg);
+    color: var(--tplane-chat-text);
   }
   .chat-window__header {
     height: 56px;
@@ -15,16 +15,16 @@ export const CHAT_WINDOW_STYLES = `
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 var(--ngaf-chat-space-6);
-    border-bottom: 1px solid var(--ngaf-chat-separator);
+    padding: 0 var(--tplane-chat-space-6);
+    border-bottom: 1px solid var(--tplane-chat-separator);
     font-weight: 500;
-    color: var(--ngaf-chat-primary);
+    color: var(--tplane-chat-primary);
   }
   .chat-window__header:empty { display: none; }
   /* When the consumer doesn't project a header, balance the chat content
    * with breathing room at the top equivalent to the input gap at the bottom. */
   .chat-window__header:empty + .chat-window__body {
-    padding-top: var(--ngaf-chat-input-gap);
+    padding-top: var(--tplane-chat-input-gap);
   }
   .chat-window__body {
     flex: 1;
@@ -36,7 +36,7 @@ export const CHAT_WINDOW_STYLES = `
   .chat-window__footer {
     position: relative;
     flex-shrink: 0;
-    margin-top: var(--ngaf-chat-input-gap);
+    margin-top: var(--tplane-chat-input-gap);
   }
   .chat-window__footer:empty { display: none; }
   .chat-window__scroll-fade {
@@ -45,7 +45,7 @@ export const CHAT_WINDOW_STYLES = `
     right: 0;
     bottom: 100%;
     height: 32px;
-    background: linear-gradient(180deg, transparent 0%, var(--ngaf-chat-bg) 100%);
+    background: linear-gradient(180deg, transparent 0%, var(--tplane-chat-bg) 100%);
     pointer-events: none;
   }
 `;

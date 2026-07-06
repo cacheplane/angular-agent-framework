@@ -9,14 +9,14 @@ import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
   styles: [CHAT_HOST_TOKENS, `
     :host { display: block; width: 100%; }
     .chat-genui-skeleton {
-      border: 1px solid var(--ngaf-chat-separator);
+      border: 1px solid var(--tplane-chat-separator);
       border-radius: 10px;
       padding: 14px;
-      background: var(--ngaf-chat-surface-alt);
+      background: var(--tplane-chat-surface-alt);
     }
     .chat-genui-skeleton__label {
       font-size: 12px;
-      color: var(--ngaf-chat-text-muted);
+      color: var(--tplane-chat-text-muted);
       margin-bottom: 10px;
       display: flex;
       align-items: center;
@@ -32,9 +32,9 @@ import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
       border-radius: 5px;
       background: linear-gradient(
         90deg,
-        var(--ngaf-chat-separator) 0%,
-        color-mix(in srgb, var(--ngaf-chat-separator) 70%, transparent) 50%,
-        var(--ngaf-chat-separator) 100%
+        var(--tplane-chat-separator) 0%,
+        color-mix(in srgb, var(--tplane-chat-separator) 70%, transparent) 50%,
+        var(--tplane-chat-separator) 100%
       );
       background-size: 200% 100%;
       animation: chat-genui-skeleton-shimmer 1.4s ease-in-out infinite;

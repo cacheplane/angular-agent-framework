@@ -7,43 +7,43 @@ import { injectAgent } from '@threadplane/langgraph';
 
 const THEMES: Record<string, Record<string, string>> = {
   dark: {
-    '--ngaf-chat-bg': '#171717',
-    '--ngaf-chat-text': '#e0e0e0',
-    '--ngaf-chat-accent': '#3b82f6',
-    '--ngaf-chat-surface-alt': '#222',
-    '--ngaf-chat-separator': '#333',
-    '--ngaf-chat-text-muted': '#777',
+    '--tplane-chat-bg': '#171717',
+    '--tplane-chat-text': '#e0e0e0',
+    '--tplane-chat-accent': '#3b82f6',
+    '--tplane-chat-surface-alt': '#222',
+    '--tplane-chat-separator': '#333',
+    '--tplane-chat-text-muted': '#777',
   },
   light: {
-    '--ngaf-chat-bg': '#ffffff',
-    '--ngaf-chat-text': '#1a1a1a',
-    '--ngaf-chat-accent': '#2563eb',
-    '--ngaf-chat-surface-alt': '#f3f4f6',
-    '--ngaf-chat-separator': '#d1d5db',
-    '--ngaf-chat-text-muted': '#6b7280',
+    '--tplane-chat-bg': '#ffffff',
+    '--tplane-chat-text': '#1a1a1a',
+    '--tplane-chat-accent': '#2563eb',
+    '--tplane-chat-surface-alt': '#f3f4f6',
+    '--tplane-chat-separator': '#d1d5db',
+    '--tplane-chat-text-muted': '#6b7280',
   },
   ocean: {
-    '--ngaf-chat-bg': '#0c1426',
-    '--ngaf-chat-text': '#c8d6e5',
-    '--ngaf-chat-accent': '#0abde3',
-    '--ngaf-chat-surface-alt': '#152238',
-    '--ngaf-chat-separator': '#1e3a5f',
-    '--ngaf-chat-text-muted': '#576574',
+    '--tplane-chat-bg': '#0c1426',
+    '--tplane-chat-text': '#c8d6e5',
+    '--tplane-chat-accent': '#0abde3',
+    '--tplane-chat-surface-alt': '#152238',
+    '--tplane-chat-separator': '#1e3a5f',
+    '--tplane-chat-text-muted': '#576574',
   },
   forest: {
-    '--ngaf-chat-bg': '#1a2e1a',
-    '--ngaf-chat-text': '#d4e6d4',
-    '--ngaf-chat-accent': '#4ade80',
-    '--ngaf-chat-surface-alt': '#243524',
-    '--ngaf-chat-separator': '#2d4a2d',
-    '--ngaf-chat-text-muted': '#6b8f6b',
+    '--tplane-chat-bg': '#1a2e1a',
+    '--tplane-chat-text': '#d4e6d4',
+    '--tplane-chat-accent': '#4ade80',
+    '--tplane-chat-surface-alt': '#243524',
+    '--tplane-chat-separator': '#2d4a2d',
+    '--tplane-chat-text-muted': '#6b8f6b',
   },
 };
 
 /**
  * ThemingComponent demonstrates chat theming with CSS custom properties.
  * A sidebar with theme picker buttons swaps CSS variables at runtime,
- * showcasing the --ngaf-chat-* token system and custom theme presets.
+ * showcasing the --tplane-chat-* token system and custom theme presets.
  */
 @Component({
   selector: 'app-theming',
@@ -52,15 +52,15 @@ const THEMES: Record<string, Record<string, string>> = {
   template: `
     <example-chat-layout sidebarWidth="w-72">
       <chat main [agent]="agent" class="flex-1 min-w-0" />
-      <div sidebar class="p-4 space-y-4" style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">
+      <div sidebar class="p-4 space-y-4" style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--ngaf-chat-text-muted);">Theme Picker</h3>
+            style="color: var(--tplane-chat-text-muted);">Theme Picker</h3>
         <div class="space-y-2">
           @for (name of themeNames; track name) {
             <button
               class="w-full px-3 py-2 rounded text-xs font-medium transition-colors"
-              [style.background]="activeTheme() === name ? 'var(--ngaf-chat-accent)' : 'var(--ngaf-chat-surface-alt)'"
-              [style.color]="activeTheme() === name ? '#fff' : 'var(--ngaf-chat-text)'"
+              [style.background]="activeTheme() === name ? 'var(--tplane-chat-accent)' : 'var(--tplane-chat-surface-alt)'"
+              [style.color]="activeTheme() === name ? '#fff' : 'var(--tplane-chat-text)'"
               (click)="setTheme(name)">
               {{ name | titlecase }}
             </button>
@@ -68,14 +68,14 @@ const THEMES: Record<string, Record<string, string>> = {
         </div>
         <div class="mt-4">
           <h4 class="text-xs font-semibold uppercase tracking-wide mb-2"
-              style="color: var(--ngaf-chat-text-muted);">CSS Variables</h4>
-          <ul class="text-xs space-y-1 font-mono" style="color: var(--ngaf-chat-text-muted);">
-            <li>--ngaf-chat-bg</li>
-            <li>--ngaf-chat-text</li>
-            <li>--ngaf-chat-accent</li>
-            <li>--ngaf-chat-surface-alt</li>
-            <li>--ngaf-chat-separator</li>
-            <li>--ngaf-chat-text-muted</li>
+              style="color: var(--tplane-chat-text-muted);">CSS Variables</h4>
+          <ul class="text-xs space-y-1 font-mono" style="color: var(--tplane-chat-text-muted);">
+            <li>--tplane-chat-bg</li>
+            <li>--tplane-chat-text</li>
+            <li>--tplane-chat-accent</li>
+            <li>--tplane-chat-surface-alt</li>
+            <li>--tplane-chat-separator</li>
+            <li>--tplane-chat-text-muted</li>
           </ul>
         </div>
       </div>

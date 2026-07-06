@@ -56,21 +56,21 @@ describe('POST /api/checkout/session', () => {
     const args = stripeCreate.mock.calls[0]?.[0];
     expect(args.mode).toBe('subscription');
     expect(args.line_items[0].price).toBe('price_seat_annual');
-    expect(args.metadata.ngaf_billing_cycle).toBe('annual');
+    expect(args.metadata.tplane_billing_cycle).toBe('annual');
   });
 
   it('routes to the monthly price when billing_cycle=monthly', async () => {
     await POST(makeReq({ tier: 'developer_seat', billing_cycle: 'monthly' }));
     const args = stripeCreate.mock.calls[0]?.[0];
     expect(args.line_items[0].price).toBe('price_seat_monthly');
-    expect(args.metadata.ngaf_billing_cycle).toBe('monthly');
+    expect(args.metadata.tplane_billing_cycle).toBe('monthly');
   });
 
   it('routes Team to the team annual price by default', async () => {
     await POST(makeReq({ tier: 'team' }));
     const args = stripeCreate.mock.calls[0]?.[0];
     expect(args.line_items[0].price).toBe('price_team_annual');
-    expect(args.metadata.ngaf_tier_slug).toBe('team');
+    expect(args.metadata.tplane_tier_slug).toBe('team');
   });
 
   it('enables adjustable_quantity only for developer_seat', async () => {

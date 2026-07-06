@@ -157,7 +157,7 @@ import {
     <chat-message-list [agent]="chatAgent">
       <ng-template chatMessageTemplate="human" let-message let-idx="index">
         <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
-          <div style="background: var(--ngaf-chat-primary); color: var(--ngaf-chat-on-primary); border-radius: var(--ngaf-chat-radius-bubble); padding: 0.5rem 1rem; max-width: 70%;" [attr.data-message-index]="idx">
+          <div style="background: var(--tplane-chat-primary); color: var(--tplane-chat-on-primary); border-radius: var(--tplane-chat-radius-bubble); padding: 0.5rem 1rem; max-width: 70%;" [attr.data-message-index]="idx">
             {{ message.content }}
           </div>
         </div>
@@ -170,13 +170,13 @@ import {
       </ng-template>
 
       <ng-template chatMessageTemplate="tool" let-message>
-        <div style="background: var(--ngaf-chat-surface-alt); border-radius: var(--ngaf-chat-radius-card); padding: 0.75rem; font-family: var(--ngaf-chat-font-mono); font-size: var(--ngaf-chat-font-size-sm); margin-bottom: 1rem;">
+        <div style="background: var(--tplane-chat-surface-alt); border-radius: var(--tplane-chat-radius-card); padding: 0.75rem; font-family: var(--tplane-chat-font-mono); font-size: var(--tplane-chat-font-size-sm); margin-bottom: 1rem;">
           {{ message.content }}
         </div>
       </ng-template>
 
       <ng-template chatMessageTemplate="system" let-message>
-        <div style="text-align: center; color: var(--ngaf-chat-text-muted); font-size: var(--ngaf-chat-font-size-xs); font-style: italic; margin-bottom: 1rem;">
+        <div style="text-align: center; color: var(--tplane-chat-text-muted); font-size: var(--tplane-chat-font-size-xs); font-style: italic; margin-bottom: 1rem;">
           {{ message.content }}
         </div>
       </ng-template>

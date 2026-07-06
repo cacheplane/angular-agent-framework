@@ -3,12 +3,13 @@ import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { ChatSidebarComponent, a2uiBasicCatalog } from '@threadplane/chat';
 import { AgUiShell } from '../shell/ag-ui-shell.component';
 import { MapCanvasComponent } from '../map-canvas.component';
+import { AppModePromoComponent } from './app-mode-promo.component';
 import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
 
 @Component({
   selector: 'sidebar-mode',
   standalone: true,
-  imports: [ChatSidebarComponent, MapCanvasComponent, WelcomeSuggestionsComponent],
+  imports: [ChatSidebarComponent, MapCanvasComponent, AppModePromoComponent, WelcomeSuggestionsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <chat-sidebar
@@ -24,15 +25,16 @@ import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
     >
       <!-- In App mode the map IS the main content — projected into the sidebar's
            flex content slot so it fills the area left of the drawer (no absolute
-           positioning / occupy-var inset in the shell). Plain sidebar mode shows
-           the launcher hint instead. -->
+           positioning / occupy-var inset in the shell). Plain sidebar mode
+           markets the cockpit instead (#737), with a CTA to turn it on. -->
       @if (shell.appMode() === 'on') {
         <app-map-canvas class="sidebar-mode__map" />
       } @else {
         <div class="sidebar-mode__background">
-          <p class="sidebar-mode__hint">
-            Use the launcher (right edge) to dismiss or re-open the chat panel.
-          </p>
+          <app-mode-promo
+            [hasMapsKey]="shell.hasMapsKey"
+            (enable)="shell.onAppModeChange('on')"
+          />
         </div>
       }
       <welcome-suggestions chatWelcomeSuggestions [appModeOn]="shell.appMode() === 'on'" (selected)="send($event)" />
@@ -47,8 +49,6 @@ import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
       display: grid;
       place-items: center;
       height: 100%;
-      color: #8a92a3;
-      font-size: 14px;
     }
   `],
 })

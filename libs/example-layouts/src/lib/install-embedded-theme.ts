@@ -9,10 +9,10 @@ import { cssVars, type Theme } from '@threadplane/design-tokens';
  *      `<html>` (which both `@threadplane/design-tokens`-aware code and
  *      `@threadplane/chat` honor) plus every `--ds-*` CSS variable on the
  *      same element.
- *   2. Posts `{ type: 'ngaf:theme-request' }` to `window.parent` so the
+ *   2. Posts `{ type: 'tplane:theme-request' }` to `window.parent` so the
  *      host (cockpit's `<ThemedFrame>`) replies with the current theme
  *      even if its broadcast ran before this iframe mounted.
- *   3. Listens for `ngaf:theme` messages and re-applies on receipt.
+ *   3. Listens for `tplane:theme` messages and re-applies on receipt.
  *
  * Idempotent: subsequent identical messages are no-ops visually.
  */
@@ -32,12 +32,12 @@ export function installEmbeddedTheme(defaultTheme: Theme = 'dark'): void {
     if (
       data &&
       typeof data === 'object' &&
-      data.type === 'ngaf:theme' &&
+      data.type === 'tplane:theme' &&
       (data.theme === 'light' || data.theme === 'dark')
     ) {
       apply(data.theme);
     }
   });
 
-  window.parent?.postMessage({ type: 'ngaf:theme-request' }, '*');
+  window.parent?.postMessage({ type: 'tplane:theme-request' }, '*');
 }

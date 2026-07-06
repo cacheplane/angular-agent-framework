@@ -21,7 +21,7 @@ function truthy(value: string | undefined): boolean {
 function debugEnabled(env: NodeJS.ProcessEnv): boolean {
   return (env.DEBUG ?? '')
     .split(/[\s,]+/)
-    .some((part) => part === '*' || part === 'ngaf:*' || part === 'ngaf:telemetry');
+    .some((part) => part === '*' || part === 'tplane:*' || part === 'tplane:telemetry');
 }
 
 function isGlobalInstall(env: NodeJS.ProcessEnv): boolean {
@@ -56,7 +56,7 @@ function readLifecyclePackageJson(env: NodeJS.ProcessEnv, cwd: string): { name: 
 
 export async function capturePostinstallScript(deps: PostinstallDeps): Promise<void> {
   // Single opt-out gate. DO_NOT_TRACK, npm_config_do_not_track,
-  // NGAF_TELEMETRY_DISABLED, and CI envs all return early: no event, no notice.
+  // TPLANE_TELEMETRY_DISABLED, and CI envs all return early: no event, no notice.
   if (isTelemetryDisabled(deps.env)) return;
   const cwd = deps.cwd?.() ?? process.cwd();
   if (shouldSkipLocalTopLevelInstall(deps.env, cwd)) return;
@@ -72,7 +72,7 @@ export async function capturePostinstallScript(deps: PostinstallDeps): Promise<v
       deps.write(
         `@threadplane/telemetry payload: ${
           JSON.stringify({
-            event: 'ngaf:postinstall',
+            event: 'tplane:postinstall',
             properties: createPostinstallProperties({ pkg: pkg.name, version: pkg.version }, deps.env),
           })
         }\n`,
@@ -81,7 +81,7 @@ export async function capturePostinstallScript(deps: PostinstallDeps): Promise<v
     if (result.sent) {
       deps.write(
         `@threadplane/telemetry: install telemetry sent (${pkg.name}@${pkg.version}). ` +
-        `Disable: DO_NOT_TRACK=1 or NGAF_TELEMETRY_DISABLED=1. ` +
+        `Disable: DO_NOT_TRACK=1 or TPLANE_TELEMETRY_DISABLED=1. ` +
         `See https://github.com/cacheplane/angular-agent-framework/blob/main/libs/telemetry/README.md\n`,
       );
     }

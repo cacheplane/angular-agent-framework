@@ -23,7 +23,7 @@ The endpoint receives:
 
 ```json
 {
-  "event": "ngaf:stream_started",
+  "event": "tplane:stream_started",
   "distinctId": "browser:<ephemeral-id>",
   "properties": {
     "transport": "langgraph",
@@ -130,7 +130,7 @@ provideAgent(() => ({
 }));
 ```
 
-Now `ngaf:stream_started`, `ngaf:stream_ended`, and the other runtime events reach your sink or endpoint automatically — no per-event `capture()` call in your component.
+Now `tplane:stream_started`, `tplane:stream_ended`, and the other runtime events reach your sink or endpoint automatically — no per-event `capture()` call in your component.
 
 ## Sampling
 
@@ -217,7 +217,7 @@ export class TelemetryDemoComponent {
 Clicking the button logs:
 
 ```text
-telemetry ngaf:stream_started { transport: 'langgraph', provider: 'openai', model: 'gpt-4.1', sample_weight: 1 }
+telemetry tplane:stream_started { transport: 'langgraph', provider: 'openai', model: 'gpt-4.1', sample_weight: 1 }
 ```
 
 `sample_weight` is added by the service from `sampleRate` (default `1`). In production you'd point `sink` at your analytics boundary instead of `console.log`, or use `endpoint` and the handler above.

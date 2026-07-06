@@ -87,9 +87,9 @@ export async function POST(req: NextRequest) {
     ],
     success_url: `${origin}/thanks?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/pricing`,
-    metadata: { ngaf_tier_slug: tierSlug, ngaf_billing_cycle: cycle },
+    metadata: { tplane_tier_slug: tierSlug, tplane_billing_cycle: cycle },
     subscription_data: {
-      metadata: { ngaf_tier_slug: tierSlug, ngaf_billing_cycle: cycle },
+      metadata: { tplane_tier_slug: tierSlug, tplane_billing_cycle: cycle },
     },
   });
 

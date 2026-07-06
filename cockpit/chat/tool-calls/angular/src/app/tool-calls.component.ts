@@ -48,14 +48,14 @@ const SUGGESTIONS = [
           }
         </div>
       </chat>
-      <div sidebar class="p-4 space-y-4" style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">
+      <div sidebar class="p-4 space-y-4" style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--ngaf-chat-text-muted);">Tool Calls</h3>
+            style="color: var(--tplane-chat-text-muted);">Tool Calls</h3>
         <chat-tool-calls [agent]="agent" />
         <div class="mt-4 space-y-2">
           <h4 class="text-xs font-semibold uppercase tracking-wide"
-              style="color: var(--ngaf-chat-text-muted);">Available Tools</h4>
-          <ul class="text-xs space-y-1 list-disc list-inside" style="color: var(--ngaf-chat-text-muted);">
+              style="color: var(--tplane-chat-text-muted);">Available Tools</h4>
+          <ul class="text-xs space-y-1 list-disc list-inside" style="color: var(--tplane-chat-text-muted);">
             <li>search — Web search</li>
             <li>calculator — Math expressions</li>
             <li>weather — City weather</li>

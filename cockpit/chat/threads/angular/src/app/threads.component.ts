@@ -52,13 +52,13 @@ const activeThreadIdState = signal<string | null>(null);
         (threadSelected)="onThreadSelected($event)"
         class="flex-1 min-w-0" />
       <div sidebar class="p-4 space-y-4"
-           style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">
+           style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
         <div class="flex items-center justify-between">
           <h3 class="text-xs font-semibold uppercase tracking-wide"
-              style="color: var(--ngaf-chat-text-muted);">Threads</h3>
+              style="color: var(--tplane-chat-text-muted);">Threads</h3>
           <button type="button"
                   class="text-xs underline"
-                  style="color: var(--ngaf-chat-text-muted);"
+                  style="color: var(--tplane-chat-text-muted);"
                   (click)="onNewThread()">+ New</button>
         </div>
         <chat-thread-list

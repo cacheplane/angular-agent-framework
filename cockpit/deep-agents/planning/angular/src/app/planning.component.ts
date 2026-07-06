@@ -34,25 +34,25 @@ interface PlanStep {
   template: `
     <example-chat-layout sidebarWidth="w-72">
       <chat main [agent]="agent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
-      <div sidebar class="p-4 space-y-2" style="background: var(--ngaf-chat-bg); color: var(--ngaf-chat-text);">
+      <div sidebar class="p-4 space-y-2" style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--ngaf-chat-text-muted);">Plan</h3>
+            style="color: var(--tplane-chat-text-muted);">Plan</h3>
         @if (planSteps().length === 0) {
-          <p class="text-sm italic" style="color: var(--ngaf-chat-text-muted);">No plan yet</p>
+          <p class="text-sm italic" style="color: var(--tplane-chat-text-muted);">No plan yet</p>
         }
         @for (step of planSteps(); track step.title) {
           <div class="flex items-start gap-2 rounded-md px-2 py-1.5 text-sm"
-               style="background: var(--ngaf-chat-surface-alt);">
+               style="background: var(--tplane-chat-surface-alt);">
             <span class="mt-0.5 shrink-0 text-base leading-none">
               @if (step.status === 'complete') {
-                <span style="color: var(--ngaf-chat-success);">&#10003;</span>
+                <span style="color: var(--tplane-chat-success);">&#10003;</span>
               } @else if (step.status === 'in_progress') {
-                <span class="inline-block animate-spin" style="color: var(--ngaf-chat-text-muted);">&#9696;</span>
+                <span class="inline-block animate-spin" style="color: var(--tplane-chat-text-muted);">&#9696;</span>
               } @else {
-                <span style="color: var(--ngaf-chat-separator);">&#9675;</span>
+                <span style="color: var(--tplane-chat-separator);">&#9675;</span>
               }
             </span>
-            <span style="color: var(--ngaf-chat-text);">{{ step.title }}</span>
+            <span style="color: var(--tplane-chat-text);">{{ step.title }}</span>
           </div>
         }
       </div>
