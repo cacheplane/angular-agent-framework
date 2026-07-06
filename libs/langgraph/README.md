@@ -147,7 +147,7 @@ import { provideAgent, LangGraphThreadsAdapter, LANGGRAPH_THREADS_CONFIG } from 
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideAgent({ apiUrl: 'https://your-langgraph-platform.com' }),
+    provideAgent({ apiUrl: 'https://your-langgraph-platform.com', assistantId: 'my-agent' }),
     { provide: LANGGRAPH_THREADS_CONFIG, useValue: { apiUrl: 'https://your-langgraph-platform.com' } },
     LangGraphThreadsAdapter,
   ],

@@ -28,7 +28,7 @@ Part of [Threadplane](https://github.com/cacheplane/angular-agent-framework).
 ## Install
 
 ```bash
-npm install @threadplane/chat
+npm install @threadplane/chat @threadplane/langgraph marked
 ```
 
 **Peer dependencies:**
@@ -37,6 +37,7 @@ npm install @threadplane/chat
 @angular/core              ^20.0.0 || ^21.0.0
 @angular/common            ^20.0.0 || ^21.0.0
 @angular/platform-browser  ^20.0.0 || ^21.0.0
+@angular/router            ^20.0.0 || ^21.0.0
 @threadplane/licensing     *
 @threadplane/render        *
 @threadplane/a2ui          *
@@ -44,6 +45,8 @@ npm install @threadplane/chat
 @langchain/core            ^1.1.33
 rxjs                       ~7.8.0
 marked                     ^15.0.0 || ^16.0.0
+zod                        ^3.25.0
+katex                      ^0.16.0 || ^0.17.0 (optional)
 ```
 
 ---
@@ -54,9 +57,13 @@ marked                     ^15.0.0 || ^16.0.0
 // app.config.ts
 import { ApplicationConfig } from '@angular/core';
 import { provideChat } from '@threadplane/chat';
+import { provideAgent } from '@threadplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideChat({ license: 'eyJ…' })],
+  providers: [
+    provideAgent({ apiUrl: '/api/langgraph', assistantId: 'agent' }),
+    provideChat({ license: 'eyJ…' }),
+  ],
 };
 ```
 
@@ -64,7 +71,7 @@ export const appConfig: ApplicationConfig = {
 // my.component.ts
 import { Component } from '@angular/core';
 import { ChatComponent } from '@threadplane/chat';
-import { agent } from '@threadplane/langgraph';
+import { injectAgent } from '@threadplane/langgraph';
 
 @Component({
   selector: 'app-root',
@@ -72,11 +79,11 @@ import { agent } from '@threadplane/langgraph';
   template: `<chat [agent]="myAgent" />`,
 })
 export class AppComponent {
-  myAgent = agent({ apiUrl: '/api/langgraph', graphId: 'agent' });
+  protected readonly myAgent = injectAgent();
 }
 ```
 
-Get the `agent` signal from `@threadplane/langgraph` (for LangGraph Platform backends) or `@threadplane/ag-ui` (for AG-UI-compatible backends). See those packages for setup details.
+Get the agent from `@threadplane/langgraph` (for LangGraph Platform backends) or `@threadplane/ag-ui` (for AG-UI-compatible backends). See those packages for setup details.
 
 ---
 

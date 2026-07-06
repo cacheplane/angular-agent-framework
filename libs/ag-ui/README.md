@@ -32,10 +32,10 @@ Part of [Threadplane](https://github.com/cacheplane/angular-agent-framework).
 ## Install
 
 ```bash
-npm install @threadplane/ag-ui @threadplane/chat @ag-ui/client
+npm install @threadplane/ag-ui @threadplane/chat @ag-ui/client @ag-ui/core
 ```
 
-**Peer dependencies:** `@threadplane/chat: *`, `@angular/core: ^20.0.0 || ^21.0.0`, `@ag-ui/client: *`, `rxjs: ~7.8.0`
+**Peer dependencies:** `@threadplane/chat: *`, `@angular/core: ^20.0.0 || ^21.0.0`, `@ag-ui/client: *`, `@ag-ui/core: *`, `rxjs: ~7.8.0`
 
 ---
 

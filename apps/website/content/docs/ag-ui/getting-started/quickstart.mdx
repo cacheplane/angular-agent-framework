@@ -14,7 +14,7 @@ Want to see the finished result before you build? Open the live [AG-UI demo](htt
 <Step title="Install the packages">
 
 ```bash
-npm install @threadplane/chat @threadplane/ag-ui @ag-ui/client
+npm install @threadplane/chat @threadplane/ag-ui @ag-ui/client @ag-ui/core
 ```
 
 </Step>
@@ -77,7 +77,7 @@ So swapping backends is a one-line change in `app.config.ts`, and the component 
 
 ```diff
 - import { provideAgent } from '@threadplane/langgraph';
-- providers: [provideAgent({ apiUrl: '...' })],   // LangGraph
+- providers: [provideAgent({ apiUrl: '...', assistantId: '...' })],   // LangGraph
 + import { provideAgent } from '@threadplane/ag-ui';
 + providers: [provideAgent({ url: '...' })],  // AG-UI
 ```

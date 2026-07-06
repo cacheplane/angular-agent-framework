@@ -39,7 +39,7 @@ The `events` output forwards all `RenderEvent` emissions from the render engine.
 
 **1. Convert surface to Spec (`surfaceToSpec`)**
 
-The `surfaceToSpec()` function walks the flat component map and produces a json-render `Spec`. It requires a component with `id: 'root'` to be present — if no root exists, nothing renders.
+The internal surface-to-spec conversion walks the flat component map and produces a json-render `Spec`. It uses a component with `id: 'root'` when present; otherwise it uses the first component in the map as the render root. Empty component maps render nothing.
 
 **2. Resolve dynamic values**
 
@@ -52,7 +52,7 @@ Before the spec is emitted, each component prop is evaluated against the surface
 
 **3. Map actions to `on` bindings**
 
-`surfaceToSpec()` converts each component's A2UI `action` prop into a render-spec `on` binding on the corresponding element. Event actions map to the `a2ui:event` handler, and function call actions map to the `a2ui:localAction` handler. This bridges the A2UI interaction model to the render-lib event system.
+The internal conversion maps each component's A2UI `action` prop into a render-spec `on` binding on the corresponding element. Event actions map to the `a2ui:event` handler, and function call actions map to the `a2ui:localAction` handler. This bridges the A2UI interaction model to the render-lib event system.
 
 **4. Expand template children**
 
@@ -94,8 +94,8 @@ export class AgentPanelComponent {
 }
 ```
 
-<Callout type="info" title="Root component required">
-The surface must contain a component with `id: 'root'`. If no root component has been received yet (for example, while the agent is still streaming), `A2uiSurfaceComponent` renders nothing until one arrives.
+<Callout type="info" title="Root component selection">
+`A2uiSurfaceComponent` prefers a component with `id: 'root'` when one exists. If the surface has components but no `root`, it renders from the first component ID. Empty component maps render nothing.
 </Callout>
 
 ### Wiring handlers and actions
@@ -149,23 +149,11 @@ export class InteractiveSurfaceComponent {
 }
 ```
 
-## surfaceToSpec()
+## Internal conversion
 
-The conversion function is exported for testing or custom rendering pipelines.
+`A2uiSurfaceComponent` handles surface-to-spec conversion internally when it receives a legacy `surface` input. That conversion returns no rendered output for an empty component map. Otherwise it produces a complete json-render `Spec`, preferring a `root` component when present and falling back to the first component ID.
 
-**Import:**
-
-```typescript
-import { surfaceToSpec } from '@threadplane/chat';
-```
-
-**Signature:**
-
-```typescript
-function surfaceToSpec(surface: A2uiSurface): Spec | null
-```
-
-Returns `null` when the surface has no `root` component. Otherwise returns a complete json-render `Spec` with all dynamic values resolved against the current `dataModel`.
+The conversion helper is not part of the public `@threadplane/chat` API. Use `A2uiSurfaceComponent` or `createA2uiSurfaceStore()` for supported integration points.
 
 ## What's Next
 
