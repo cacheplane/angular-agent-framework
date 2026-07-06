@@ -11,23 +11,37 @@ import { StreamingSimulator } from '../../../../shared/streaming-simulator';
 import { StreamingTimelineComponent } from '../../../../shared/streaming-timeline.component';
 import { ExampleSplitLayoutComponent } from '@threadplane/example-layouts';
 import { COMPUTED_FUNCTIONS_SPECS } from './specs';
+import { highlightJson } from '../../../../shared/json-highlight';
 
-// --- Inline view components ---
+// --- Inline view components registered in the demo registry ---
 
 @Component({
   selector: 'demo-value',
   standalone: true,
+  styles: `
+    .row { display: flex; align-items: center; gap: 0.5rem; padding: 4px 0; }
+    .row__label {
+      min-width: 120px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--ds-text-muted, #a0a0a0);
+    }
+    .row__value {
+      font-family: var(--ds-font-mono, ui-monospace, monospace);
+      font-size: 13px;
+      color: var(--ds-text-primary, #f5f5f5);
+    }
+  `,
   template: `
     @if (label() || value()) {
-      <div class="flex items-center gap-2 py-1">
-        <span class="text-[var(--tplane-chat-text-muted)] text-xs uppercase font-semibold min-w-[120px]">{{ label() }}:</span>
-        <span class="text-[var(--tplane-chat-text)] text-sm font-mono">{{ value() }}</span>
+      <div class="row">
+        <span class="row__label">{{ label() }}:</span>
+        <span class="row__value">{{ value() }}</span>
       </div>
     } @else if (loading()) {
-      <div class="space-y-1.5 py-1">
-        <div class="h-3 w-full bg-[var(--tplane-chat-surface-alt)] rounded skeleton-shimmer"></div>
-        <div class="h-3 w-2/3 bg-[var(--tplane-chat-surface-alt)] rounded skeleton-shimmer"></div>
-      </div>
+      <div class="sr-skeleton" style="height: 11px; width: 100%; margin: 3px 0;"></div>
+      <div class="sr-skeleton" style="height: 11px; width: 66%; margin: 3px 0;"></div>
     }
   `,
 })
@@ -45,20 +59,15 @@ class DemoValueComponent {
   selector: 'demo-heading',
   standalone: true,
   imports: [RenderElementComponent],
+  styles: `.h { margin: 0 0 0.5rem; font-size: 1.05rem; font-weight: 700; color: var(--ds-text-primary, #f5f5f5); }`,
   template: `
     @if (displayContent()) {
-      <h2 class="text-lg font-bold text-[var(--tplane-chat-text)] mb-2">{{ displayContent() }}</h2>
+      <h2 class="h">{{ displayContent() }}</h2>
     } @else if (loading()) {
-      <div class="h-5 w-48 bg-[var(--tplane-chat-surface-alt)] rounded skeleton-shimmer mb-2"></div>
+      <div class="sr-skeleton" style="height: 18px; width: 12rem; margin-bottom: 0.5rem;"></div>
     }
     @for (key of childKeys(); track key) {
       <render-element [elementKey]="key" [spec]="spec()!" />
-    }
-    @if (!childKeys().length && loading()) {
-      <div class="space-y-2 mt-2">
-        <div class="h-3 w-full bg-[var(--tplane-chat-surface-alt)] rounded skeleton-shimmer"></div>
-        <div class="h-3 w-5/6 bg-[var(--tplane-chat-surface-alt)] rounded skeleton-shimmer"></div>
-      </div>
     }
   `,
 })
@@ -79,23 +88,36 @@ class DemoHeadingComponent {
   selector: 'demo-card',
   standalone: true,
   imports: [RenderElementComponent],
+  styles: `
+    .card {
+      margin-bottom: 0.75rem;
+      padding: 16px;
+      background: var(--ds-surface, #1c1c1c);
+      border: 1px solid var(--ds-border, #2d2d2d);
+      border-radius: var(--ds-radius-lg, 14px);
+      box-shadow: var(--ds-shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.3));
+    }
+    .card__title {
+      margin: 0 0 0.625rem;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ds-text-primary, #f5f5f5);
+    }
+  `,
   template: `
-    <div class="rounded-lg border border-[var(--tplane-chat-separator)] bg-[var(--tplane-chat-surface-alt)] p-4 mb-3 transition-opacity"
-         [class.animate-pulse]="loading() && !childKeys().length">
+    <div class="card">
       @if (title()) {
-        <h3 class="text-sm font-semibold text-[var(--tplane-chat-text)] mb-2">{{ title() }}</h3>
+        <div class="card__title">{{ title() }}</div>
       } @else if (loading()) {
-        <div class="h-4 w-32 bg-[var(--tplane-chat-surface-alt)] rounded skeleton-shimmer mb-2"></div>
+        <div class="sr-skeleton" style="height: 14px; width: 8rem; margin-bottom: 0.625rem;"></div>
       }
       @if (childKeys().length) {
         @for (key of childKeys(); track key) {
           <render-element [elementKey]="key" [spec]="spec()!" />
         }
       } @else if (loading()) {
-        <div class="space-y-2">
-          <div class="h-3 w-full bg-[var(--tplane-chat-surface-alt)] rounded skeleton-shimmer"></div>
-          <div class="h-3 w-3/4 bg-[var(--tplane-chat-surface-alt)] rounded skeleton-shimmer"></div>
-        </div>
+        <div class="sr-skeleton" style="height: 11px; width: 100%; margin: 4px 0;"></div>
+        <div class="sr-skeleton" style="height: 11px; width: 75%; margin: 4px 0;"></div>
       }
     </div>
   `,
@@ -113,46 +135,160 @@ class DemoCardComponent {
   selector: 'app-computed-functions',
   standalone: true,
   imports: [RenderSpecComponent, StreamingTimelineComponent, ExampleSplitLayoutComponent],
+  styles: `
+    .bar { display: flex; align-items: center; gap: 0.875rem; padding: 0.75rem 1rem; }
+    .bar__lbl {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--ds-text-muted, #a0a0a0);
+    }
+    .tabs {
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      border-radius: 999px;
+      background: var(--ds-surface-dim, #0a0a0a);
+      border: 1px solid var(--ds-border, #2d2d2d);
+    }
+    .tab {
+      padding: 6px 14px;
+      font-size: 12px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--ds-text-muted, #a0a0a0);
+      cursor: pointer;
+      transition: color 0.15s ease, background 0.15s ease;
+    }
+    .tab:hover { color: var(--ds-text-secondary, #c8c8c8); }
+    .tab--on {
+      background: var(--ds-render-green, #1a7a40);
+      color: #eafff2;
+      font-weight: 600;
+      box-shadow: 0 1px 8px rgba(26, 122, 64, 0.5);
+    }
+    .status {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11px;
+      color: var(--ds-text-muted, #a0a0a0);
+    }
+    .status__dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #35b06a;
+      box-shadow: 0 0 0 4px rgba(53, 176, 106, 0.13);
+    }
+    .status__dot--live { animation: sr-pulse 1.6s ease-in-out infinite; }
+    @keyframes sr-pulse { 50% { opacity: 0.4; } }
+    .cap {
+      margin-bottom: 1rem;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--ds-text-muted, #a0a0a0);
+    }
+    .placeholder { font-size: 13px; font-style: italic; color: var(--ds-text-muted, #a0a0a0); }
+    /* The JSON viewer is a code console: pin it to a dark surface with a
+       fixed palette in BOTH themes so the syntax colors stay legible. */
+    .json-pane {
+      --code-fg: rgb(200, 200, 200);
+      --code-muted: rgb(150, 150, 150);
+      --code-border: rgba(255, 255, 255, 0.09);
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      padding: 1rem;
+      background: #0b0b0b;
+    }
+    .json-pane .cap { color: var(--code-muted); }
+    .json {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      margin: 0;
+      font-family: var(--ds-font-mono, ui-monospace, monospace);
+      font-size: 11.5px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: var(--code-fg);
+    }
+    .json .j-key { color: #7fe0a3; }
+    .json .j-string { color: #c9c17f; }
+    .json .j-number { color: #e6b673; }
+    .json .j-literal { color: #7fd6ff; }
+    .json .j-punct { color: var(--code-muted); }
+    .json__cursor {
+      display: inline-block;
+      width: 7px;
+      height: 14px;
+      vertical-align: -2px;
+      background: #35b06a;
+      animation: sr-blink 1s step-end infinite;
+    }
+    @keyframes sr-blink { 50% { opacity: 0; } }
+    .json__foot {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.75rem;
+      padding-top: 0.625rem;
+      font-size: 10.5px;
+      border-top: 1px solid var(--code-border);
+    }
+    .json__foot .state { color: #35b06a; font-weight: 600; }
+    .json__foot .state--idle { color: var(--code-muted); font-weight: 400; }
+    .json__foot .pct { color: var(--code-muted); font-variant-numeric: tabular-nums; }
+  `,
   template: `
     <example-split-layout>
-      <!-- Spec picker -->
-      <div header class="flex items-center gap-2 px-4 py-3">
-        <span class="text-xs text-[var(--tplane-chat-text-muted)] uppercase tracking-wide font-semibold mr-2">Spec:</span>
-        @for (spec of specs; track spec.label; let i = $index) {
-          <button
-            class="text-xs px-3 py-1.5 rounded-md transition-colors"
-            [class]="i === activeIndex ? 'bg-[var(--tplane-chat-primary)] text-[var(--tplane-chat-on-primary)] font-semibold' : 'bg-[var(--tplane-chat-surface-alt)] text-[var(--tplane-chat-text-muted)] hover:text-[var(--tplane-chat-text)]'"
-            (click)="selectSpec(i)">
-            {{ spec.label }}
-          </button>
-        }
+      <!-- Spec picker + streaming status -->
+      <div header class="bar">
+        <span class="bar__lbl">Spec</span>
+        <div class="tabs">
+          @for (spec of specs; track spec.label; let i = $index) {
+            <button type="button" class="tab" [class.tab--on]="i === activeIndex" (click)="selectSpec(i)">
+              {{ spec.label }}
+            </button>
+          }
+        </div>
+        <span class="status">
+          <span class="status__dot" [class.status__dot--live]="simulator.playing()"></span>
+          {{ statusLabel() }}
+        </span>
       </div>
 
-      <!-- Left: Live Render Output -->
+      <!-- Left: live render output -->
       <div primary>
-        <div class="text-[10px] text-[var(--tplane-chat-text-muted)] uppercase tracking-widest font-semibold mb-4">Live Render Output</div>
+        <div class="cap">Live Render Output</div>
         @if (simulator.spec(); as renderedSpec) {
           <render-spec [spec]="renderedSpec" [registry]="registry" [store]="store" [loading]="simulator.playing()" />
         } @else {
-          <div class="text-[var(--tplane-chat-text-muted)] text-sm italic">Press play to start streaming...</div>
+          <div class="placeholder">Press play to start streaming…</div>
         }
       </div>
 
-      <!-- Right: JSON + Controls -->
-      <div secondary class="flex flex-col h-full">
-        <!-- Streaming JSON (scrollable) -->
-        <div class="flex-1 overflow-y-auto p-4" #jsonPane>
-          <div class="text-[10px] text-[var(--tplane-chat-text-muted)] uppercase tracking-widest font-semibold mb-4">Streaming JSON</div>
-          <pre class="text-[11px] font-mono text-[var(--tplane-chat-text)] leading-relaxed whitespace-pre-wrap break-all">{{ simulator.rawJson() }}<span class="text-[var(--tplane-chat-primary)] animate-pulse">|</span></pre>
-          <div class="mt-3 flex justify-between text-[10px]">
-            <span class="text-[var(--tplane-chat-primary)]">{{ simulator.playing() ? 'Streaming...' : simulator.position() >= simulator.total() ? 'Complete' : 'Paused' }}</span>
-            <span class="text-[var(--tplane-chat-text-muted)]">{{ percent() }}%</span>
+      <!-- Right: syntax-colored streaming JSON -->
+      <div secondary>
+        <div class="json-pane">
+          <div class="cap">Streaming JSON</div>
+          <pre class="json" #jsonScroll>@for (tok of jsonTokens(); track $index) {<span [class]="'j-' + tok.kind">{{ tok.text }}</span>}<span class="json__cursor"></span></pre>
+          <div class="json__foot">
+            <span class="state" [class.state--idle]="!simulator.playing()">{{ streamStateLabel() }}</span>
+            <span class="pct">{{ percent() }}%</span>
           </div>
         </div>
       </div>
 
-      <!-- Timeline bar -->
-      <streaming-timeline footer [simulator]="simulator" class="border-t border-[var(--tplane-chat-separator)]" />
+      <!-- Transport -->
+      <streaming-timeline footer [simulator]="simulator" />
     </example-split-layout>
   `,
 })
@@ -162,12 +298,14 @@ export class ComputedFunctionsComponent implements OnDestroy {
 
   protected readonly simulator = new StreamingSimulator(this.specs[0].json);
 
-  private readonly jsonPane = viewChild<ElementRef<HTMLElement>>('jsonPane');
+  protected readonly jsonTokens = computed(() => highlightJson(this.simulator.rawJson()));
+
+  private readonly jsonScroll = viewChild<ElementRef<HTMLElement>>('jsonScroll');
 
   constructor() {
     effect(() => {
       this.simulator.rawJson();
-      const el = this.jsonPane()?.nativeElement;
+      const el = this.jsonScroll()?.nativeElement;
       if (el) {
         requestAnimationFrame(() => {
           el.scrollTop = el.scrollHeight;
@@ -186,6 +324,16 @@ export class ComputedFunctionsComponent implements OnDestroy {
 
   protected percent(): number {
     return Math.round(this.simulator.progress() * 100);
+  }
+
+  protected statusLabel(): string {
+    if (this.simulator.playing()) return 'Streaming';
+    return this.simulator.position() >= this.simulator.total() ? 'Complete' : 'Paused';
+  }
+
+  protected streamStateLabel(): string {
+    if (this.simulator.playing()) return 'Streaming…';
+    return this.simulator.position() >= this.simulator.total() ? 'Complete' : 'Paused';
   }
 
   protected selectSpec(index: number): void {
