@@ -46,7 +46,8 @@ The event system already declares what each event is: messages-tuple events (`ev
    - Both `startsWith` guards are removed from the delta path.
 
 3. **Canonical-id backstop (identity-based version of what the dropped guard was for).** The bridge keeps a `canonicalMessageIds: Set<string>`:
-   - values-sync (the `'values'` case that projects `state.messages` into `messages$`) adds each synced assistant message id to the set; the `isFinalCanonicalReasoningContent` replacement adds the message's id too.
+   - The `isFinalCanonicalReasoningContent` replacement adds the message's id — the one point where finality is *certain*.
+   - Values-sync does NOT mark ids: mid-run values events carry **lagging** state (the code comments document this), so treating them as final would suppress legitimate later deltas. Values-sync instead merges with **snapshot semantics** (see 2), which is lag-safe: a shorter stale snapshot never rewinds a longer accumulation.
    - In `mergeMessages`, a **delta** whose target message id is in the set is ignored (a straggler token after canonical text landed — the scenario the old guard guessed at, now decided by identity).
    - The set is cleared at the start of every `runStream` and on thread switch (same lifecycle as the other per-run maps, e.g. `toolProgressMap`).
 
@@ -65,7 +66,7 @@ The event system already declares what each event is: messages-tuple events (`ev
 
 1. **Pipe-preservation (red first):** feed tuple delta events `['|', ' Gem', ' |', ' Color', ' |', '\n', '|', '---', '|', '---', '|', '\n', '|', ' Ruby', ' |', ' red', ' |']` for one message id; assert the accumulated content equals the exact concatenation (fails today: bare `|` deltas vanish).
 2. **Prefix-delta append:** accumulation `'|'` + delta `'| Gem'` → `'|| Gem'` (guards the first `startsWith` misfire).
-3. **Straggler-after-canonical:** deltas accumulate → values-sync installs canonical full text for the id → one more late delta for that id → content unchanged (no duplicate, no loss).
+3. **Straggler-after-canonical:** deltas accumulate → the final-canonical reasoning+text array replaces the accumulation (and marks the id) → one more late delta for that id → content unchanged (no duplicate, no loss). Separately, a lagging mid-run values-sync (shorter state for the same id) must not rewind the accumulation (snapshot semantics regression).
 4. **Final-canonical replacement:** streamed accumulation + final reasoning+text array → replaced by canonical text (existing behavior preserved).
 5. **Snapshot regression:** `messages/partial` snapshots (each a prefix-extension of the last, then a shorter stale one) reconcile exactly as today.
 6. **Per-run reset:** after a new `runStream` on the same thread, deltas for a fresh message id accumulate normally even if a prior run marked ids canonical.
