@@ -181,13 +181,11 @@
    * viewport minus the toolbar. */
   height: calc(100% - var(--demo-toolbar-height));
 }
-/* chat-sidebar panel renders top-aligned with the page, NOT under the
- * toolbar — so the panel's close button sits at the same viewport-y as
- * the hamburger inside the toolbar (both at surface-top + 8 padding).
- * The panel's z-index is below the toolbar's so the toolbar still
- * renders above it where they overlap on the right edge. */
+/* Keep the sidebar panel below the toolbar. The toolbar has the higher z-index
+ * for portaled select menus, so a top-aligned panel leaves its close button
+ * visually present but intercepted by toolbar controls. */
 .ag-ui-shell ::ng-deep .chat-sidebar__panel {
-  top: 0;
+  top: var(--demo-toolbar-height);
 }
 .ag-ui-shell__theme-toggle--toolbar { margin-left: auto; }
 
@@ -243,6 +241,9 @@
   position: relative;
   display: flex;
 }
+/* Popup mode only: the map is the full-bleed backdrop with the chat bubble
+   floating over it. (Sidebar mode renders the map inside the chat-sidebar's
+   flex content slot instead — see SidebarMode — so it gets its column there.) */
 .ag-ui-shell__map {
   position: absolute;
   inset: 0;

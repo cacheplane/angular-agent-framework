@@ -912,6 +912,13 @@ jobs:
         run: npm ci
       - name: Build and assemble ag-ui demo
         if: steps.ag_ui_changed.outputs.changed == 'true'
+        env:
+          # Baked into the SPA bundle by inject-env at build time. Without the
+          # key the App-mode map toggle is disabled in prod. The key ships in
+          # the public bundle (normal for Maps JS) — restrict it by HTTP
+          # referrer in the Google Cloud console. The Map ID is not a secret.
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          GOOGLE_MAPS_MAP_ID: 86d464ea7d5306034fe2a254
         run: npx tsx scripts/assemble-ag-ui-demo.ts
       - name: Deploy ag-ui demo SPA to Vercel (production)
         if: steps.ag_ui_changed.outputs.changed == 'true'

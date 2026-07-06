@@ -3,6 +3,9 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
+  ElementRef,
+  afterNextRender,
   computed,
   effect,
   inject,
@@ -10,24 +13,11 @@ import {
   viewChild,
   viewChildren,
 } from '@angular/core';
-import { GoogleMap, MapInfoWindow, MapMarker, MapPolyline } from '@angular/google-maps';
+import { GoogleMap, MapInfoWindow, MapAdvancedMarker, MapPolyline } from '@angular/google-maps';
 import { ItineraryStop, ItineraryStore } from './itinerary-store';
+import { computeBounds } from './map-bounds';
 import { GoogleMapsLoader } from './google-maps-loader';
-
-const DARK_STYLE: google.maps.MapTypeStyle[] = [
-  { elementType: 'geometry', stylers: [{ color: '#1d2c4d' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#8ec3b9' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#1a3646' }] },
-  { featureType: 'administrative.country', elementType: 'geometry.stroke', stylers: [{ color: '#4b6878' }] },
-  { featureType: 'landscape.man_made', elementType: 'geometry.stroke', stylers: [{ color: '#334e87' }] },
-  { featureType: 'landscape.natural', elementType: 'geometry', stylers: [{ color: '#023e58' }] },
-  { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#283d6a' }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#304a7d' }] },
-  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#98a5be' }] },
-  { featureType: 'transit', elementType: 'geometry', stylers: [{ color: '#283d6a' }] },
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0e1626' }] },
-  { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#4e6d70' }] },
-];
+import { environment } from '../environments/environment';
 
 const DAY_COLORS = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
 const PARIS_CENTER: google.maps.LatLngLiteral = { lat: 48.8566, lng: 2.3522 };
@@ -35,7 +25,7 @@ const PARIS_CENTER: google.maps.LatLngLiteral = { lat: 48.8566, lng: 2.3522 };
 @Component({
   selector: 'app-map-canvas',
   standalone: true,
-  imports: [GoogleMap, MapInfoWindow, MapMarker, MapPolyline],
+  imports: [GoogleMap, MapInfoWindow, MapAdvancedMarker, MapPolyline],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!-- Render <google-map> ONLY after the Maps API has loaded. Its constructor
@@ -49,12 +39,14 @@ const PARIS_CENTER: google.maps.LatLngLiteral = { lat: 48.8566, lng: 2.3522 };
         [zoom]="zoom()"
         [options]="mapOptions"
       >
-        @for (s of stopsWithCoords(); track s.id) {
-          <map-marker
+        @for (m of markerViews(); track m.id) {
+          <map-advanced-marker
             #marker
-            [position]="{ lat: s.lat!, lng: s.lng! }"
-            [options]="markerOptions(s)"
-            (mapClick)="onMarkerClick(s)"
+            [position]="m.position"
+            [content]="m.content"
+            [title]="m.stop.place"
+            [options]="advancedMarkerOptions"
+            (mapClick)="onMarkerClick(m.stop)"
           />
         }
         @for (line of polylines(); track line.day) {
@@ -90,20 +82,45 @@ const PARIS_CENTER: google.maps.LatLngLiteral = { lat: 48.8566, lng: 2.3522 };
 export class MapCanvasComponent {
   protected readonly store = inject(ItineraryStore);
   protected readonly loader = inject(GoogleMapsLoader);
+  private readonly hostRef = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly destroyRef = inject(DestroyRef);
   protected readonly center = signal<google.maps.LatLngLiteral>(PARIS_CENTER);
   protected readonly zoom = signal<number>(12);
+  // A mapId is REQUIRED for advanced markers; a mapId map ignores inline JSON
+  // `styles`, so the dark theme is a cloud-based map style tied to this id.
+  // DEMO_MAP_ID lets a fresh clone run (light map) with no Console setup.
+  protected readonly mapId = environment.googleMapsMapId || 'DEMO_MAP_ID';
   protected readonly mapOptions: google.maps.MapOptions = {
-    styles: DARK_STYLE,
+    mapId: this.mapId,
     disableDefaultUI: true,
     zoomControl: true,
     clickableIcons: false,
   };
+  // AdvancedMarkerElement is NOT clickable by default (unlike the legacy
+  // Marker) — without gmpClickable it never fires click/gmp-click, so the
+  // wrapper's (mapClick) output stays silent and the info window can't open.
+  protected readonly advancedMarkerOptions: google.maps.marker.AdvancedMarkerElementOptions = {
+    gmpClickable: true,
+  };
 
+  private readonly googleMap = viewChild(GoogleMap);
   private readonly infoWindow = viewChild(MapInfoWindow);
-  private readonly markers = viewChildren(MapMarker);
+  private readonly markers = viewChildren(MapAdvancedMarker);
 
   protected readonly stopsWithCoords = computed(() =>
     this.store.stops().filter((s) => s.lat != null && s.lng != null),
+  );
+
+  /** One marker view per coord'd stop. The pin <div> is built here (not in a
+   *  template method) so it is recreated only when stops change — not on every
+   *  change-detection pass (e.g. focus pans), which would cause flicker. */
+  protected readonly markerViews = computed(() =>
+    this.stopsWithCoords().map((s) => ({
+      id: s.id,
+      stop: s,
+      position: { lat: s.lat!, lng: s.lng! },
+      content: this.makePin(s.day),
+    })),
   );
 
   protected readonly focused = computed(
@@ -124,6 +141,81 @@ export class MapCanvasComponent {
         win.open(marker);
       }
     });
+
+    // Frame the map to all stops on structural change (add/remove/geocode).
+    // Reads googleMap() so it re-runs once the map mounts behind the loader gate.
+    // Keyed on stopsWithCoords() only — NOT focus — so panning to a focused stop
+    // and reframing to all stops never fight (they fire on different signals).
+    effect(() => {
+      const map = this.googleMap();
+      this.stopsWithCoords(); // re-frame on structural change (add/remove/geocode)
+      if (map) this.frameToBounds(map); // null while <google-map> is behind the loader gate
+    });
+
+    // The map lives in the chat-sidebar's flex content slot, whose width changes
+    // when the drawer pushes it (and on mode toggles). Google Maps caches its
+    // viewport size at construction, so without a resize event the tiles render
+    // grey and fitBounds frames the stale size. Re-sync on every container resize.
+    afterNextRender(() => {
+      const ro = new ResizeObserver(() => {
+        const map = this.googleMap();
+        if (!map?.googleMap) return;
+        google.maps.event.trigger(map.googleMap, 'resize');
+        this.frameToBounds(map);
+      });
+      ro.observe(this.hostRef.nativeElement);
+      this.destroyRef.onDestroy(() => ro.disconnect());
+    });
+  }
+
+  /** Frame the map to all coord'd stops (>=2: fitBounds; 1: center+zoom; 0: Paris). */
+  private frameToBounds(map: GoogleMap): void {
+    const stops = this.stopsWithCoords();
+    if (stops.length === 0) {
+      this.center.set(PARIS_CENTER);
+      this.zoom.set(12);
+      return;
+    }
+    if (stops.length === 1) {
+      this.center.set({ lat: stops[0].lat!, lng: stops[0].lng! });
+      this.zoom.set(13);
+      return;
+    }
+    const b = computeBounds(stops);
+    if (b) map.fitBounds(b, this.fitPadding());
+  }
+
+  /**
+   * fitBounds padding (px per side) that reserves the App-mode panels floating
+   * over the full-bleed map, so a stop never frames *underneath* them — the
+   * reported bug was the rightmost marker hiding under the open chat rail.
+   *
+   * Measured live (not hardcoded) so it adapts to the chat drawer's open/closed
+   * state and the responsive panel widths:
+   *  - left  = our floating itinerary overlay card's footprint
+   *  - right = the chat sidebar drawer's footprint (the gap its push leaves
+   *            between `.chat-sidebar__content` and the map's right edge)
+   * Falls back to a uniform base when the panels aren't present (unit tests,
+   * non-App-mode layouts), preserving the prior behavior.
+   */
+  private fitPadding(): google.maps.Padding {
+    const BASE = 48;
+    const GAP = 24;
+    const pad: google.maps.Padding = { top: BASE, right: BASE, bottom: BASE, left: BASE };
+    const mapRect = this.hostRef.nativeElement.getBoundingClientRect();
+    if (mapRect.width === 0) return pad; // not laid out (e.g. jsdom) — uniform
+
+    const overlay = document.querySelector('.ag-ui-shell__itinerary-overlay');
+    if (overlay) {
+      const r = overlay.getBoundingClientRect();
+      if (r.width > 0) pad.left = Math.max(BASE, Math.round(r.right - mapRect.left + GAP));
+    }
+    const content = document.querySelector('.chat-sidebar__content');
+    if (content) {
+      const occupied = mapRect.right - content.getBoundingClientRect().right;
+      if (occupied > 1) pad.right = Math.max(BASE, Math.round(occupied + GAP));
+    }
+    return pad;
   }
 
   protected onMarkerClick(s: ItineraryStop): void {
@@ -146,20 +238,12 @@ export class MapCanvasComponent {
       .map(([day, stops]) => ({ day, path: stops.map((s) => ({ lat: s.lat!, lng: s.lng! })) }));
   });
 
-  protected markerOptions(s: ItineraryStop): google.maps.MarkerOptions {
-    return {
-      icon: {
-        // Numeric literal for google.maps.SymbolPath.CIRCLE (=0) — avoids an
-        // eager google.* value read (defense-in-depth alongside the loader gate).
-        path: 0,
-        fillColor: DAY_COLORS[(s.day - 1) % DAY_COLORS.length],
-        fillOpacity: 1,
-        strokeColor: '#fff',
-        strokeWeight: 2,
-        scale: 8,
-      },
-      title: s.place,
-    };
+  private makePin(day: number): HTMLElement {
+    const el = document.createElement('div');
+    el.style.cssText =
+      'width:16px;height:16px;border-radius:50%;border:2px solid #fff;' +
+      `box-shadow:0 1px 3px rgba(0,0,0,.4);background:${DAY_COLORS[(day - 1) % DAY_COLORS.length]};`;
+    return el;
   }
 
   protected polylineOptions(day: number): google.maps.PolylineOptions {

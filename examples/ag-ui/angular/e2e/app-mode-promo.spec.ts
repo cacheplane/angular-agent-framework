@@ -53,6 +53,84 @@ test('switching between popup and sidebar preserves App mode', async ({ page }) 
   await expect(page.locator('popup-mode')).toBeVisible();
 });
 
+test('sidebar App mode keeps the map framed when the chat rail closes and reopens', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await openDemo(page, '/sidebar?appmode=on');
+
+  const sidebar = page.locator('chat-sidebar');
+  const map = page.locator('sidebar-mode app-map-canvas');
+  const panel = page.locator('.chat-sidebar__panel');
+
+  await expect(sidebar).toHaveAttribute('data-open', 'true');
+  await expect(panel).toHaveAttribute('data-open', 'true');
+  await expect(map).toBeVisible();
+
+  async function layoutState(): Promise<{
+    contentWidth: number;
+    contentRight: number;
+    mapWidth: number;
+    mapRight: number;
+    marginRight: string;
+    rootClaim: string | null;
+    occupyRight: string;
+  }> {
+    return page.evaluate(() => {
+      const contentEl = document.querySelector('.chat-sidebar__content');
+      const mapEl = document.querySelector('sidebar-mode app-map-canvas');
+      if (!contentEl || !mapEl) throw new Error('App-mode map layout elements missing');
+      const contentRect = contentEl.getBoundingClientRect();
+      const mapRect = mapEl.getBoundingClientRect();
+      const contentStyle = getComputedStyle(contentEl);
+      const root = document.documentElement;
+      const rootStyle = getComputedStyle(root);
+      return {
+        contentWidth: contentRect.width,
+        contentRight: contentRect.right,
+        mapWidth: mapRect.width,
+        mapRight: mapRect.right,
+        marginRight: contentStyle.marginRight,
+        rootClaim: root.getAttribute('data-threadplane-chat-sidebar'),
+        occupyRight: rootStyle.getPropertyValue('--tplane-chat-occupy-right').trim(),
+      };
+    });
+  }
+
+  await expect.poll(async () => parseFloat((await layoutState()).marginRight)).toBeGreaterThan(300);
+  const openLayout = await layoutState();
+  expect(openLayout.rootClaim).toBe('open');
+  expect(parseFloat(openLayout.marginRight)).toBeGreaterThan(300);
+  expect(openLayout.contentWidth).toBeGreaterThan(500);
+  expect(openLayout.mapWidth).toBeCloseTo(openLayout.contentWidth, 0);
+  expect(openLayout.mapRight).toBeCloseTo(openLayout.contentRight, 0);
+
+  await page.getByRole('button', { name: 'Close chat' }).click();
+  await expect(sidebar).toHaveAttribute('data-open', 'false');
+  await expect(panel).toHaveAttribute('data-open', 'false');
+  await expect(page.getByRole('button', { name: 'Open chat' })).toBeVisible();
+  await expect.poll(async () => parseFloat((await layoutState()).marginRight)).toBe(0);
+
+  const closedLayout = await layoutState();
+  expect(closedLayout.rootClaim).toBeNull();
+  expect(closedLayout.occupyRight).toBe('0px');
+  expect(parseFloat(closedLayout.marginRight)).toBe(0);
+  expect(closedLayout.contentWidth).toBeGreaterThan(openLayout.contentWidth);
+  expect(closedLayout.mapWidth).toBeCloseTo(closedLayout.contentWidth, 0);
+  expect(closedLayout.mapRight).toBeCloseTo(closedLayout.contentRight, 0);
+
+  await page.getByRole('button', { name: 'Open chat' }).click();
+  await expect(sidebar).toHaveAttribute('data-open', 'true');
+  await expect(panel).toHaveAttribute('data-open', 'true');
+  await expect.poll(async () => parseFloat((await layoutState()).marginRight)).toBeGreaterThan(300);
+
+  const reopenedLayout = await layoutState();
+  expect(reopenedLayout.rootClaim).toBe('open');
+  expect(parseFloat(reopenedLayout.marginRight)).toBeGreaterThan(300);
+  expect(reopenedLayout.contentWidth).toBeGreaterThan(500);
+  expect(reopenedLayout.contentWidth).toBeLessThan(closedLayout.contentWidth);
+  expect(reopenedLayout.mapWidth).toBeCloseTo(reopenedLayout.contentWidth, 0);
+  expect(reopenedLayout.mapRight).toBeCloseTo(reopenedLayout.contentRight, 0);
+});
+
 // Embed is full-chat with no background, so it can't host App mode: choosing
 // Embed from App mode turns App mode off.
 test('choosing embed from App mode turns App mode off and shows the full chat', async ({ page }) => {
