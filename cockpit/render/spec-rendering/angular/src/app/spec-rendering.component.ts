@@ -208,14 +208,20 @@ class DemoCardComponent {
       color: var(--ds-text-muted, #a0a0a0);
     }
     .placeholder { font-size: 13px; font-style: italic; color: var(--ds-text-muted, #a0a0a0); }
+    /* The JSON viewer is a code console: pin it to a dark surface with a
+       fixed palette in BOTH themes so the syntax colors stay legible. */
     .json-pane {
+      --code-fg: rgb(200, 200, 200);
+      --code-muted: rgb(150, 150, 150);
+      --code-border: rgba(255, 255, 255, 0.09);
       display: flex;
       flex-direction: column;
       flex: 1;
       min-height: 0;
       padding: 1rem;
-      background: var(--ds-surface-dim, #0a0a0a);
+      background: #0b0b0b;
     }
+    .json-pane .cap { color: var(--code-muted); }
     .json {
       flex: 1;
       min-height: 0;
@@ -226,13 +232,13 @@ class DemoCardComponent {
       line-height: 1.7;
       white-space: pre-wrap;
       word-break: break-all;
-      color: var(--ds-text-secondary, #c8c8c8);
+      color: var(--code-fg);
     }
     .json .j-key { color: #7fe0a3; }
     .json .j-string { color: #c9c17f; }
     .json .j-number { color: #e6b673; }
     .json .j-literal { color: #7fd6ff; }
-    .json .j-punct { color: var(--ds-text-muted, #a0a0a0); }
+    .json .j-punct { color: var(--code-muted); }
     .json__cursor {
       display: inline-block;
       width: 7px;
@@ -248,11 +254,11 @@ class DemoCardComponent {
       margin-top: 0.75rem;
       padding-top: 0.625rem;
       font-size: 10.5px;
-      border-top: 1px solid var(--ds-border, #2d2d2d);
+      border-top: 1px solid var(--code-border);
     }
     .json__foot .state { color: #35b06a; font-weight: 600; }
-    .json__foot .state--idle { color: var(--ds-text-muted, #a0a0a0); font-weight: 400; }
-    .json__foot .pct { color: var(--ds-text-muted, #a0a0a0); font-variant-numeric: tabular-nums; }
+    .json__foot .state--idle { color: var(--code-muted); font-weight: 400; }
+    .json__foot .pct { color: var(--code-muted); font-variant-numeric: tabular-nums; }
   `,
   template: `
     <example-split-layout>
