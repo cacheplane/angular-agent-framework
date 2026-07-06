@@ -2,9 +2,9 @@ Add angular to my Angular 20+ application.
 
 Install: npm install @threadplane/langgraph@latest
 
-1. In app.config.ts, add provideAgent({ apiUrl: 'http://localhost:2024' }) to the providers array. Import it from '@threadplane/langgraph'.
+1. In app.config.ts, add provideAgent({ apiUrl: 'http://localhost:2024', assistantId: 'chat' }) to the providers array. Import it from '@threadplane/langgraph'.
 
-2. Create a ChatComponent that calls agent({ assistantId: 'chat' }) in the constructor or as a field initializer. agent() MUST be called inside an Angular injection context — constructor or field initializer is correct; ngOnInit is not.
+2. Create a ChatComponent that calls injectAgent() in the constructor or as a field initializer. injectAgent() MUST be called inside an Angular injection context — constructor or field initializer is correct; ngOnInit is not.
 
 3. The component template should loop over chat.messages() using @for and render each message's content. Add an input field and a button that calls chat.submit({ message: inputValue }).
 

@@ -4,6 +4,7 @@ export type LibraryId =
   | 'chat'
   | 'ag-ui'
   | 'a2ui'
+  | 'middleware'
   | 'licensing'
   | 'telemetry';
 
@@ -30,6 +31,18 @@ export interface DocsLibrary {
   demoLabel?: string;
   sections: DocsSection[];
 }
+
+export interface SpecialDocsPage {
+  path: string;
+  contentPath: string;
+}
+
+export const specialDocsPages: SpecialDocsPage[] = [
+  {
+    path: '/docs/choosing-an-adapter',
+    contentPath: 'choosing-an-adapter/index.mdx',
+  },
+];
 
 export const docsConfig: DocsLibrary[] = [
   {
@@ -84,6 +97,7 @@ export const docsConfig: DocsLibrary[] = [
           { title: 'provideAgent()', slug: 'provide-agent', section: 'api' },
           { title: 'FetchStreamTransport', slug: 'fetch-stream-transport', section: 'api' },
           { title: 'MockAgentTransport', slug: 'mock-stream-transport', section: 'api' },
+          { title: 'LangGraphThreadsAdapter', slug: 'langgraph-threads-adapter', section: 'api' },
         ],
       },
     ],
@@ -321,6 +335,38 @@ export const docsConfig: DocsLibrary[] = [
     ],
   },
   {
+    id: 'middleware',
+    title: 'Middleware',
+    description: 'Backend helpers for browser-executed client tools',
+    sections: [
+      {
+        title: 'Getting Started',
+        id: 'getting-started',
+        color: 'blue',
+        pages: [
+          { title: 'Introduction', slug: 'introduction', section: 'getting-started' },
+          { title: 'Quick Start', slug: 'quickstart', section: 'getting-started' },
+        ],
+      },
+      {
+        title: 'Guides',
+        id: 'guides',
+        color: 'blue',
+        pages: [
+          { title: 'LangGraph Client Tools', slug: 'langgraph-client-tools', section: 'guides' },
+        ],
+      },
+      {
+        title: 'API Reference',
+        id: 'api',
+        color: 'blue',
+        pages: [
+          { title: 'bindClientTools()', slug: 'client-tool-helpers', section: 'api' },
+        ],
+      },
+    ],
+  },
+  {
     id: 'licensing',
     title: 'Licensing',
     description: 'License token verification and package check behavior',
@@ -364,6 +410,7 @@ export const docsConfig: DocsLibrary[] = [
         color: 'blue',
         pages: [
           { title: 'Introduction', slug: 'introduction', section: 'getting-started' },
+          { title: 'Installation', slug: 'installation', section: 'getting-started' },
         ],
       },
       {

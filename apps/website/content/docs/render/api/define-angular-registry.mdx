@@ -28,10 +28,12 @@ function defineAngularRegistry(
 interface RenderViewEntry {
   component: AngularComponentRenderer;
   fallback?: AngularComponentRenderer;
+  schema?: StandardSchemaV1;
+  description?: string;
 }
 ```
 
-Use the object form to configure a custom per-entry fallback (see [Per-Component Fallbacks](#per-component-fallbacks) below). A bare component class is shorthand for `{ component }` paired with the library's default fallback.
+Use the object form to configure a custom per-entry fallback, a Standard Schema validator, or a description for higher-level tooling. A bare component class is shorthand for `{ component }` paired with the library's default fallback.
 
 ### Returns
 
@@ -129,6 +131,29 @@ registry.getEntry('Missing');        // undefined (not registered)
 ```
 
 An entry that omits `fallback` -- including every bare-component entry like `Text` above -- falls back to the library's `DefaultFallbackComponent`. Once the real component mounts, the choice is monotonic for that element instance: a later prop resolving to `undefined` never reverts it to the fallback.
+
+### Schema-Gated Mounting
+
+Add `schema` when a component should mount only after resolved props satisfy a Standard Schema validator such as Zod:
+
+```typescript
+import { z } from 'zod';
+import { defineAngularRegistry } from '@threadplane/render';
+
+const registry = defineAngularRegistry({
+  WeatherCard: {
+    component: WeatherCardComponent,
+    fallback: WeatherCardSkeletonComponent,
+    schema: z.object({
+      city: z.string(),
+      temperature: z.number(),
+    }),
+    description: 'Shows current weather for a city.',
+  },
+});
+```
+
+While props are missing or fail validation, the fallback renders. Once the props pass validation and the component mounts, later updates do not move that element back to the fallback.
 
 ## Internal Behavior
 

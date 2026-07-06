@@ -173,6 +173,8 @@ interface LibraryEntryConfig {
   docSlug: string;
   /** TypeDoc entry points — usually libs/<name>/src/public-api.ts. */
   entryPoints: string[];
+  /** Optional TypeScript config override when a package has multiple published entrypoint groups. */
+  tsconfig?: string;
 }
 
 const LIBRARIES: LibraryEntryConfig[] = [
@@ -181,6 +183,7 @@ const LIBRARIES: LibraryEntryConfig[] = [
   { docSlug: 'render',    entryPoints: ['libs/render/src/public-api.ts'] },
   { docSlug: 'ag-ui',     entryPoints: ['libs/ag-ui/src/public-api.ts'] },
   { docSlug: 'a2ui',      entryPoints: ['libs/a2ui/src/index.ts'] },
+  { docSlug: 'middleware', entryPoints: ['libs/middleware/src/langgraph/index.ts'] },
   { docSlug: 'licensing', entryPoints: ['libs/licensing/src/index.ts'] },
   {
     docSlug: 'telemetry',
@@ -190,6 +193,7 @@ const LIBRARIES: LibraryEntryConfig[] = [
       'libs/telemetry/src/node/index.ts',
       'libs/telemetry/src/shared/public-api.ts',
     ],
+    tsconfig: 'libs/telemetry/tsconfig.spec.json',
   },
 ];
 
@@ -203,10 +207,10 @@ async function generateForLibrary(cfg: LibraryEntryConfig): Promise<void> {
     return;
   }
 
-  const libDir = path.dirname(path.dirname(cfg.entryPoints[0]));
-  const libTsconfig = fs.existsSync(path.join(libDir, 'tsconfig.lib.json'))
+  const libDir = findPackageRoot(cfg.entryPoints[0]);
+  const libTsconfig = cfg.tsconfig ?? (fs.existsSync(path.join(libDir, 'tsconfig.lib.json'))
     ? path.join(libDir, 'tsconfig.lib.json')
-    : undefined;
+    : undefined);
 
   const app = await Application.bootstrapWithPlugins({
     entryPoints: cfg.entryPoints,
@@ -222,6 +226,15 @@ async function generateForLibrary(cfg: LibraryEntryConfig): Promise<void> {
   fs.mkdirSync(outDir, { recursive: true });
   fs.writeFileSync(path.join(outDir, 'api-docs.json'), JSON.stringify(entries, null, 2));
   console.log(`✓ ${cfg.docSlug}/api/api-docs.json (${entries.length} entries)`);
+}
+
+function findPackageRoot(entryPoint: string): string {
+  let dir = path.dirname(entryPoint);
+  while (dir !== path.dirname(dir)) {
+    if (fs.existsSync(path.join(dir, 'package.json'))) return dir;
+    dir = path.dirname(dir);
+  }
+  return path.dirname(path.dirname(entryPoint));
 }
 
 async function main() {

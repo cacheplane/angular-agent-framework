@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { getAllSolutionSlugs } from './solutions-data';
-import { docsConfig } from './docs-config';
+import { docsConfig, specialDocsPages } from './docs-config';
 import { getAllPosts } from './blog';
 import { SITE_ORIGIN } from './site-origin';
 
@@ -69,7 +69,8 @@ export function getSitemapRoutes(): string[] {
       section.pages.map((page) => `/docs/${library.id}/${page.section}/${page.slug}`),
     ),
   );
+  const specialDocsRoutes = specialDocsPages.map((page) => page.path);
   const blogRoutes = getAllPosts().map((p) => `/blog/${p.slug}`);
 
-  return [...staticRoutes, ...solutionRoutes, ...docsRoutes, ...blogRoutes];
+  return [...staticRoutes, ...solutionRoutes, ...docsRoutes, ...specialDocsRoutes, ...blogRoutes];
 }

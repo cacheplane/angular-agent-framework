@@ -1,5 +1,369 @@
 [
   {
+    "name": "ThreadplaneTelemetryService",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [],
+    "methods": [
+      {
+        "name": "capture",
+        "signature": "capture(event: ThreadplaneTelemetryEvent, properties: Record<string, unknown>): Promise<void>",
+        "description": "",
+        "params": [
+          {
+            "name": "event",
+            "type": "ThreadplaneTelemetryEvent",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "properties",
+            "type": "Record<string, unknown>",
+            "description": "",
+            "optional": true
+          }
+        ]
+      },
+      {
+        "name": "captureRuntimeInstanceCreated",
+        "signature": "captureRuntimeInstanceCreated(input: ThreadplaneBrowserRuntimeTelemetry): Promise<void>",
+        "description": "",
+        "params": [
+          {
+            "name": "input",
+            "type": "ThreadplaneBrowserRuntimeTelemetry",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "captureRuntimeRequestCreated",
+        "signature": "captureRuntimeRequestCreated(input: ThreadplaneBrowserRuntimeTelemetry & { requestType: string }): Promise<void>",
+        "description": "",
+        "params": [
+          {
+            "name": "input",
+            "type": "ThreadplaneBrowserRuntimeTelemetry & { requestType: string }",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "captureStreamEnded",
+        "signature": "captureStreamEnded(input: ThreadplaneBrowserStreamTelemetry): Promise<void>",
+        "description": "",
+        "params": [
+          {
+            "name": "input",
+            "type": "ThreadplaneBrowserStreamTelemetry",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "captureStreamErrored",
+        "signature": "captureStreamErrored(input: ThreadplaneBrowserStreamErrorTelemetry): Promise<void>",
+        "description": "",
+        "params": [
+          {
+            "name": "input",
+            "type": "ThreadplaneBrowserStreamErrorTelemetry",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "captureStreamStarted",
+        "signature": "captureStreamStarted(input: ThreadplaneBrowserStreamTelemetry): Promise<void>",
+        "description": "",
+        "params": [
+          {
+            "name": "input",
+            "type": "ThreadplaneBrowserStreamTelemetry",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ThreadplaneBrowserRuntimeTelemetry",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "model",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "provider",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "surface",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "transport",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ThreadplaneBrowserStreamErrorTelemetry",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "durationMs",
+        "type": "number",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "error",
+        "type": "unknown",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "model",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "provider",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "surface",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "transport",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ThreadplaneBrowserStreamTelemetry",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "durationMs",
+        "type": "number",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "model",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "provider",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "surface",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "transport",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ThreadplaneTelemetryConfig",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "enabled",
+        "type": "boolean",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "endpoint",
+        "type": "string",
+        "description": "Preferred app-owned ingest URL. The browser service POSTs neutral event\npayloads here; the endpoint decides where they ultimately go.",
+        "optional": true
+      },
+      {
+        "name": "posthogHost",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "posthogKey",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "sampleRate",
+        "type": "number",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "sink",
+        "type": "ThreadplaneTelemetrySink",
+        "description": "Preferred app-owned delivery hook. Use this when the consuming app wants\nto forward events through its own analytics boundary.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ThreadplaneTelemetryEventPayload",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "event",
+        "type": "ThreadplaneTelemetryEvent",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "properties",
+        "type": "Record<string, unknown>",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "CaptureConfig",
+    "kind": "type",
+    "description": "",
+    "signature": "unknown",
+    "examples": []
+  },
+  {
+    "name": "ThreadplaneBrowserEvent",
+    "kind": "type",
+    "description": "",
+    "signature": "ThreadplaneTelemetryEvent",
+    "examples": []
+  },
+  {
+    "name": "ThreadplaneTelemetryEvent",
+    "kind": "type",
+    "description": "",
+    "signature": "\"tplane:browser_provided\" | \"tplane:browser_chat_init\" | \"tplane:runtime_instance_created\" | \"tplane:runtime_request_created\" | \"tplane:stream_started\" | \"tplane:stream_ended\" | \"tplane:stream_errored\"",
+    "examples": []
+  },
+  {
+    "name": "ThreadplaneTelemetrySink",
+    "kind": "type",
+    "description": "",
+    "signature": "(payload: ThreadplaneTelemetryEventPayload) => void | Promise<void>",
+    "examples": []
+  },
+  {
+    "name": "THREADPLANE_TELEMETRY_CONFIG",
+    "kind": "const",
+    "description": "",
+    "signature": "InjectionToken<ThreadplaneTelemetryConfig | null>",
+    "examples": []
+  },
+  {
+    "name": "isLocalAnalyticsHost",
+    "kind": "function",
+    "description": "",
+    "signature": "isLocalAnalyticsHost(host: unknown): boolean",
+    "params": [
+      {
+        "name": "host",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "boolean",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "provideThreadplaneTelemetry",
+    "kind": "function",
+    "description": "",
+    "signature": "provideThreadplaneTelemetry(config: ThreadplaneTelemetryConfig): EnvironmentProviders",
+    "params": [
+      {
+        "name": "config",
+        "type": "ThreadplaneTelemetryConfig",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "EnvironmentProviders",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "shouldCaptureAnalytics",
+    "kind": "function",
+    "description": "",
+    "signature": "shouldCaptureAnalytics(__namedParameters: CaptureConfig): boolean",
+    "params": [
+      {
+        "name": "__namedParameters",
+        "type": "CaptureConfig",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "boolean",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
     "name": "ThreadplaneBrowserEvent",
     "kind": "type",
     "description": "",

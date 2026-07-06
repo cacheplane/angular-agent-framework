@@ -189,15 +189,15 @@ The AG-UI adapter currently covers:
 - Shared state from `STATE_SNAPSHOT` and `STATE_DELTA`.
 - Message replacement from `MESSAGES_SNAPSHOT`.
 - Custom events from `CUSTOM`.
+- Interrupts from `CUSTOM` events named `on_interrupt`.
+- Subagent/activity progress from `ACTIVITY_SNAPSHOT` and `ACTIVITY_DELTA`.
 - Citations stored under `state.citations`.
 
 These features are intentionally out of scope for the AG-UI adapter today:
 
-- Interrupt workflows.
-- Subagents.
 - **History and time-travel.** AG-UI is an event-stream protocol — it doesn't define a server-side "fetch state of thread X" endpoint, so the adapter can't hydrate prior messages on a `threadId` change the way a checkpoint-aware runtime can. The [Provider choices](#provider-choices) section above describes the two patterns AG-UI consumers use to work around this.
 
-If those are central to your product, use the LangGraph adapter for that surface or build a custom adapter against the `@threadplane/chat` `Agent` contract. The [Writing an Adapter guide](/docs/chat/guides/writing-an-adapter#hydrating-from-a-server-stored-thread) walks through the thread-loading design choice in detail.
+If server-side history or time-travel is central to your product, use the LangGraph adapter for that surface or build a custom adapter against the `@threadplane/chat` `Agent` contract. The [Writing an Adapter guide](/docs/chat/guides/writing-an-adapter#hydrating-from-a-server-stored-thread) walks through the thread-loading design choice in detail.
 
 ## Next steps
 

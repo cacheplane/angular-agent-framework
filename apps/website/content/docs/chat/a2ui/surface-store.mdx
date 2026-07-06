@@ -38,7 +38,7 @@ Processes one `A2uiMessage` and updates the internal surfaces signal. All four m
 | Message type | Behavior |
 |--------------|----------|
 | `surfaceUpdate` | Delivers a surface's components — merges the provided components into the surface's component map by `id` so existing components are replaced and others are kept |
-| `dataModelUpdate` | Applies a JSON Pointer patch to the surface's data model (see below) |
+| `dataModelUpdate` | Applies typed `contents` entries to the surface's data model, optionally under a JSON Pointer `path` (see below) |
 | `beginRendering` | Marks the surface root and commits the buffered components and data model into a live surface |
 | `deleteSurface` | Removes the surface from the map entirely |
 
@@ -63,24 +63,36 @@ The surface's `dataModel` is synchronized into the render-lib `StateStore` when 
 
 ## dataModelUpdate Semantics
 
-The `dataModelUpdate` message uses JSON Pointer (RFC 6901) paths to address values in the data model.
+The `dataModelUpdate` message carries a `contents` array of typed data-model entries. When `path` is omitted or `'/'`, those entries update the root data model. When `path` points at a nested object, the entries update that nested object.
 
-| `path` | `value` | Effect |
-|--------|---------|--------|
-| `undefined` or `'/'` | Object | Replaces the entire data model |
-| `/some/path` | Any value | Sets `dataModel[some][path]` to `value` |
-| `/some/path` | `undefined` | Deletes the value at that path |
+Each entry chooses one typed value field: `valueString`, `valueNumber`, `valueBoolean`, or `valueMap`. `valueMap` is a nested array of `A2uiDataModelEntry` objects.
 
 ```json
-// Replace entire model
-{"dataModelUpdate": {"surfaceId": "s1", "value": {"name": "Alice", "score": 42}}}
+// Update root fields
+{
+  "dataModelUpdate": {
+    "surfaceId": "s1",
+    "contents": [
+      { "key": "name", "valueString": "Alice" },
+      { "key": "score", "valueNumber": 42 }
+    ]
+  }
+}
 
-// Set a single field
-{"dataModelUpdate": {"surfaceId": "s1", "path": "/score", "value": 99}}
-
-// Delete a field
-{"dataModelUpdate": {"surfaceId": "s1", "path": "/score"}}
+// Update fields under /profile
+{
+  "dataModelUpdate": {
+    "surfaceId": "s1",
+    "path": "/profile",
+    "contents": [
+      { "key": "approved", "valueBoolean": true },
+      { "key": "meta", "valueMap": [{ "key": "source", "valueString": "agent" }] }
+    ]
+  }
+}
 ```
+
+Current merge semantics are additive. Entries replace values at their keys, but missing keys are left alone. A `dataModelUpdate` does not delete a key by omitting it.
 
 ## Usage with createA2uiMessageParser
 

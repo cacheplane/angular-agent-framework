@@ -1,13 +1,13 @@
 Configure angular globally and per-component in my Angular application.
 
-Global config (applies to all agent() calls in the app):
-In app.config.ts, provideAgent({ apiUrl: 'https://my-langgraph-server.com', }) — import provideAgent from '@threadplane/langgraph'.
+Global config:
+In app.config.ts, call provideAgent({ apiUrl: 'https://my-langgraph-server.com', assistantId: 'my-agent' }) in the providers array. Import provideAgent from '@threadplane/langgraph'.
 
-Per-call override (overrides global config for one component):
-Pass apiUrl directly to agent({ apiUrl: 'https://other-server.com', assistantId: 'my-agent' }) — per-call options take precedence over global config.
+Scoped override for one component subtree:
+Add providers: [provideAgent({ apiUrl: 'https://other-server.com', assistantId: 'other-agent' })] on that component. Components under that subtree call injectAgent() and receive the scoped singleton.
 
 Custom transport (for auth headers, logging, or testing):
-Implement the AgentTransport interface from @threadplane/langgraph. Its required method is stream(assistantId, threadId, payload, signal, options), and optional methods cover queued runs, cancellation, history, and updateState. Pass an AgentTransport instance as transport: myTransport to either provideAgent() or agent(). FetchStreamTransport is the default.
+Implement the AgentTransport interface from @threadplane/langgraph. Its required method is stream(assistantId, threadId, payload, signal, options), and optional methods cover queued runs, cancellation, history, and updateState. Pass an AgentTransport instance as transport: myTransport to provideAgent(). FetchStreamTransport is the default.
 
-To pass a system prompt to the LangGraph agent per-thread, use the config option:
-agent({ config: { configurable: { system_prompt: 'You are a helpful assistant.' } } })
+To pass per-run LangGraph config, pass it when submitting:
+chat.submit({ message }, { config: { configurable: { system_prompt: 'You are a helpful assistant.' } } })

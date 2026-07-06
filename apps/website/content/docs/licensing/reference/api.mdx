@@ -142,3 +142,13 @@ function signLicense(
 ```
 
 Signs claims with an Ed25519 private key and returns the compact token consumed by `verifyLicense()`.
+
+## LICENSE_PUBLIC_KEY
+
+```ts
+const LICENSE_PUBLIC_KEY: Uint8Array;
+```
+
+The bundled Ed25519 public key used by Threadplane package checks. Use it when verifying a real issued license token.
+
+Use a throwaway public key only in tests or examples where you also create the matching private key with `signLicense()`.

@@ -3,10 +3,11 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { getAllDocSlugs, getDocBySlug, getDocMetadata } from './docs';
-import { allDocsPages } from './docs-config';
+import { allDocsPages, specialDocsPages } from './docs-config';
 import { getCanonicalUrl, getSitemapRoutes } from './site-metadata';
 
 const internalDocsLinkPattern = /(?:href=["']|\]\()(?<href>\/docs\/[^"')#\s]+)/g;
+const mdxLinkPattern = /(?:href=["']|\]\()(?<href>[^"')\s]+\.mdx(?:#[^"')\s]+)?)/g;
 
 function findInternalDocsLinks(content: string): string[] {
   return Array.from(content.matchAll(internalDocsLinkPattern), (match) => match.groups?.href)
@@ -28,6 +29,26 @@ function walkMdxFiles(dir: string): string[] {
 
 function getConfiguredDocPath({ library, section, slug }: { library: string; section: string; slug: string }): string {
   return path.join(contentRoot, library, section, `${slug}.mdx`);
+}
+
+function getAllConfiguredDocFiles(): Array<{ id: string; filePath: string; content: string }> {
+  const configured = getAllDocSlugs().map(({ library, section, slug }) => {
+    const filePath = getConfiguredDocPath({ library, section, slug });
+    return {
+      id: `${library}/${section}/${slug}`,
+      filePath,
+      content: fs.readFileSync(filePath, 'utf8'),
+    };
+  });
+  const special = specialDocsPages.map((page) => {
+    const filePath = path.join(contentRoot, page.contentPath);
+    return {
+      id: page.path,
+      filePath,
+      content: fs.readFileSync(filePath, 'utf8'),
+    };
+  });
+  return [...configured, ...special];
 }
 
 function findPackageImports(content: string): string[] {
@@ -58,6 +79,9 @@ describe('website docs bindings', () => {
 
   it('does not leave tracked MDX docs outside the configured docs inventory', () => {
     const configuredPaths = new Set(getAllDocSlugs().map((slug) => getConfiguredDocPath(slug)));
+    for (const page of specialDocsPages) {
+      configuredPaths.add(path.join(contentRoot, page.contentPath));
+    }
     const unconfigured = walkMdxFiles(contentRoot)
       .filter((filePath) => !configuredPaths.has(filePath))
       .map((filePath) => path.relative(contentRoot, filePath));
@@ -133,6 +157,19 @@ describe('website docs bindings', () => {
     expect(brokenLinks).toEqual([]);
   });
 
+  it('does not link directly to source MDX files', () => {
+    const mdxLinks: string[] = [];
+
+    for (const doc of getAllConfiguredDocFiles()) {
+      for (const match of doc.content.matchAll(mdxLinkPattern)) {
+        const href = match.groups?.href;
+        if (href) mdxLinks.push(`${doc.id} -> ${href}`);
+      }
+    }
+
+    expect(mdxLinks).toEqual([]);
+  });
+
   it('uses package imports that match published package entry points', () => {
     const validPackages = new Set([
       '@threadplane/a2ui',
@@ -142,6 +179,7 @@ describe('website docs bindings', () => {
       '@threadplane/chat/testing',
       '@threadplane/langgraph',
       '@threadplane/licensing',
+      '@threadplane/middleware/langgraph',
       '@threadplane/render',
       '@threadplane/telemetry',
       '@threadplane/telemetry/browser',
@@ -166,7 +204,7 @@ describe('website docs bindings', () => {
   });
 
   it('has generated API docs for every documented package surface', () => {
-    const librariesWithApiDocs = ['langgraph', 'chat', 'render', 'ag-ui', 'a2ui', 'licensing', 'telemetry'];
+    const librariesWithApiDocs = ['langgraph', 'chat', 'render', 'ag-ui', 'a2ui', 'middleware', 'licensing', 'telemetry'];
     const missingApiDocs = librariesWithApiDocs.filter((library) => {
       const apiDocsPath = path.join(contentRoot, library, 'api', 'api-docs.json');
       if (!fs.existsSync(apiDocsPath)) return true;
@@ -176,6 +214,26 @@ describe('website docs bindings', () => {
     });
 
     expect(missingApiDocs).toEqual([]);
+  });
+
+  it('auto-rendered API pages resolve generated entries', () => {
+    const unresolvedApiPages: string[] = [];
+
+    for (const { library, section, slug } of getAllDocSlugs()) {
+      if (section !== 'api') continue;
+      const doc = getDocBySlug(library, section, slug);
+      if (!doc?.content.includes('Auto-rendered from api-docs.json')) continue;
+
+      const apiDocsPath = path.join(contentRoot, library, 'api', 'api-docs.json');
+      const entries = JSON.parse(fs.readFileSync(apiDocsPath, 'utf8')) as Array<{ name: string }>;
+      const pageTitle = doc.title.replace(/\(\)$/, '');
+      const candidates = [pageTitle, doc.title];
+      if (!entries.some((entry) => candidates.includes(entry.name))) {
+        unresolvedApiPages.push(`${library}/api/${slug}`);
+      }
+    }
+
+    expect(unresolvedApiPages).toEqual([]);
   });
 
   it('returns null for non-existent doc', () => {

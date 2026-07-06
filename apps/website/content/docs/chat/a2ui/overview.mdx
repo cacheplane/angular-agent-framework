@@ -17,9 +17,7 @@ assistant text starts with ---a2ui_JSON---
   -> A2uiSurfaceComponent renders progressive state through your catalog
 ```
 
-This is why A2UI sits between chat and render. Chat owns message streaming. A2UI owns the protocol shapes. The normal chat path uses progressive surface state and `a2uiSlot` so components can appear as their required data arrives.
-
-There is also a compatibility path: when `A2uiSurfaceComponent` receives a `surface` without a `state`, it calls `surfaceToSpec()` and renders through `@threadplane/render`. That fallback is where render-spec handlers, render events, and json-render state bindings apply.
+This is why A2UI sits between chat and render. Chat owns message streaming. A2UI owns the protocol shapes. `A2uiSurfaceComponent` turns the accumulated surface state into a render spec and delegates to `@threadplane/render`, so handlers, render events, and json-render state bindings use the same path for both the preferred `state` input and the legacy `surface` input.
 
 ## Message Envelopes
 
@@ -145,7 +143,7 @@ Components use keyed union definitions:
 
 This is different from a flat `component: "Text"` shape. The current source expects the keyed union form.
 
-This stream demonstrates the protocol boundary, not a guarantee that every built-in catalog component is fully wired in the progressive chat renderer. The current chat path renders surface state first and pushes resolved `A2uiComponentView.props` directly into Angular components. The richer projection work - unwrapping component definitions, mapping children, creating render state bindings, and turning actions into handlers - lives in the render-spec compatibility path.
+This stream demonstrates the protocol boundary. The chat path accumulates the surface state as JSONL arrives, then `A2uiSurfaceComponent` converts the current surface into a render spec: it unwraps keyed component definitions, maps children, creates render state bindings, and turns actions into handlers.
 
 ## Data Model
 
@@ -163,7 +161,7 @@ A2UI component props can point at the surface data model.
 }
 ```
 
-In the render-spec compatibility path, `surfaceToSpec()` converts path references into json-render state bindings. Catalog input components can use `emitBinding()` to write back through the render event pipeline.
+`surfaceToSpec()` converts path references into json-render state bindings. Catalog input components can use `emitBinding()` to write back through the render event pipeline.
 
 ```ts
 import { emitBinding } from '@threadplane/chat';
@@ -189,7 +187,7 @@ Buttons carry an `A2uiAction`:
 }
 ```
 
-In the render-spec compatibility path, `surfaceToSpec()` turns this into a render `click` binding that calls the built-in `a2ui:event` handler. `A2uiSurfaceComponent` then emits an `A2uiActionMessage`.
+`surfaceToSpec()` turns this into a render `click` binding that calls the built-in `a2ui:event` handler. `A2uiSurfaceComponent` then emits an `A2uiActionMessage`.
 
 ```json
 {
@@ -208,11 +206,11 @@ In the render-spec compatibility path, `surfaceToSpec()` turns this into a rende
 
 If the internal surface object has `sendDataModel: true`, the emitted message also includes `metadata.a2uiClientDataModel` with the current surface data model snapshot. Streamed protocol surfaces created by the current surface store do not set that flag.
 
-In the progressive chat path, `A2uiSurfaceComponent` renders the surface state first. Catalog components receive resolved props as Angular inputs. The current `a2uiSlot` implementation does not wire render-spec handlers, child spec context, or render events into those mounted components. Treat agent-bound action messages as a render-spec compatibility behavior unless your catalog explicitly handles its own event wiring.
+Catalog components receive resolved props as Angular inputs from the render engine. Bind `(action)` when you want agent-bound events, and bind `(events)` when you want the lower-level render stream.
 
 ## Local Handlers
 
-In the render-spec compatibility path, `A2uiSurfaceComponent` also registers an `a2ui:localAction` handler. Consumer handlers take priority, and the built-in fallback currently supports `openUrl`.
+`A2uiSurfaceComponent` also registers an `a2ui:localAction` handler. Consumer handlers take priority, and the built-in fallback currently supports `openUrl`.
 
 Use local handlers for client-owned behavior. Use A2UI actions for agent-bound events.
 
@@ -244,7 +242,7 @@ Both paths render structured UI, but they optimize for different jobs.
 | State | Surface data model | Spec state |
 | Best fit | Incremental agent-owned surfaces; protocol-level A2UI streams | One-shot rendered content |
 | Detection | `---a2ui_JSON---` prefix | JSON object content |
-| Rendering | Progressive surface state in chat; render-spec fallback when no state is supplied | json-render spec directly |
+| Rendering | Surface state converted to a render spec | json-render spec directly |
 
 Use A2UI when the agent needs to keep updating a surface and you are working at the protocol boundary. Use json-render when the agent needs a stable, directly rendered structured result. For production interaction that depends on component handlers, state bindings, and child projection, verify the exact A2UI rendering path you are using.
 

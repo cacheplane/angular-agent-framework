@@ -35,7 +35,7 @@ uiRegistry.names();                     // ['Text', 'Card', 'Button', 'Container
 
 ### Fallback Rendering
 
-When an element's type isn't registered, it renders that type's configured fallback if one exists, and otherwise renders nothing. Fallbacks also fill a transient gap during rendering: while an element's state-bound props are still resolving, the library can render a fallback to give visual feedback until the real component is ready. Once the real component mounts, it stays mounted -- later re-renders never revert to the fallback.
+Fallbacks belong to registered entries. When an element's type is not registered, there is no entry to read and the element renders nothing. When the type is registered, the entry's configured fallback can fill a transient gap while state-bound props are still resolving. Once the real component mounts, it stays mounted -- later re-renders never revert to the fallback.
 
 ## The Component Input Contract
 
@@ -160,6 +160,34 @@ export class InputComponent {
   }
 }
 ```
+
+## RenderHost
+
+Inside a mounted view component, `injectRenderHost()` exposes the element-scoped host:
+
+```typescript
+import { Component, inject } from '@angular/core';
+import { injectRenderHost } from '@threadplane/render';
+
+@Component({
+  selector: 'app-approval',
+  standalone: true,
+  template: `
+    <button (click)="approve()">Approve</button>
+  `,
+})
+export class ApprovalComponent {
+  private readonly host = injectRenderHost();
+
+  approve() {
+    this.host.set('/approved', true);
+    this.host.emit('approved');
+    this.host.result({ approved: true });
+  }
+}
+```
+
+Use `set(path, value)` for state writes, `emit(event, payload?)` for spec `on` handlers, and `result(value)` when the component has produced a value that the host should observe as a `RenderResultEvent`.
 
 ## Recursive Children
 

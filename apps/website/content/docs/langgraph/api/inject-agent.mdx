@@ -31,6 +31,7 @@ injectAgent<T>(ref: AgentRef<T>): LangGraphAgent<T>
 Pass a typed ref handle created with `createAgentRef<T>()` from `@threadplane/chat`. Returns a `LangGraphAgent<T>` where `state()` and `value()` are typed as `T`. The same ref is passed to `provideAgent()` to bind the configuration.
 
 ```ts
+import { signal } from '@angular/core';
 import { createAgentRef } from '@threadplane/chat';
 import { injectAgent, provideAgent } from '@threadplane/langgraph';
 import type { BaseMessage } from '@langchain/core/messages';
@@ -41,13 +42,17 @@ export interface MyState {
   summary: string;
 }
 export const MY_AGENT = createAgentRef<MyState>('my-agent');
+export const activeThreadId = signal<string | null>(localStorage.getItem('threadId'));
 
 // Register in app.config.ts providers:
 provideAgent(MY_AGENT, {
   apiUrl: 'http://localhost:2024',
   assistantId: 'my-graph',
-  threadId: () => localStorage.getItem('threadId') ?? undefined,
-  onThreadId: (id) => localStorage.setItem('threadId', id),
+  threadId: activeThreadId,
+  onThreadId: (id) => {
+    activeThreadId.set(id);
+    localStorage.setItem('threadId', id);
+  },
 });
 
 // Inject in a component or service:
@@ -64,17 +69,22 @@ Pair it with `provideAgent()` at bootstrap to configure the API URL, assistant i
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideAgent } from '@threadplane/langgraph';
 import { createAgentRef } from '@threadplane/chat';
+import { signal } from '@angular/core';
 import { AppComponent } from './app/app.component';
 
 export const MY_AGENT = createAgentRef('my-agent');
+export const activeThreadId = signal<string | null>(localStorage.getItem('threadId'));
 
 bootstrapApplication(AppComponent, {
   providers: [
     provideAgent(MY_AGENT, {
       apiUrl: 'http://localhost:2024',
       assistantId: 'my-graph',
-      threadId: () => localStorage.getItem('threadId') ?? undefined,
-      onThreadId: (id) => localStorage.setItem('threadId', id),
+      threadId: activeThreadId,
+      onThreadId: (id) => {
+        activeThreadId.set(id);
+        localStorage.setItem('threadId', id);
+      },
     }),
   ],
 });

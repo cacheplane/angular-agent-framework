@@ -1,0 +1,70 @@
+# LangGraphThreadsAdapter
+
+SDK-backed thread CRUD for LangGraph Platform threads. Use it with chat thread components instead of hand-rolling local thread lists.
+
+## Configure
+
+```ts
+import {
+  LANGGRAPH_THREADS_CONFIG,
+  LangGraphThreadsAdapter,
+  refreshOnRunEnd,
+} from '@threadplane/langgraph';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    {
+      provide: LANGGRAPH_THREADS_CONFIG,
+      useValue: { apiUrl: 'http://localhost:2024' },
+    },
+    LangGraphThreadsAdapter,
+  ],
+};
+```
+
+`LANGGRAPH_THREADS_CONFIG.apiUrl` accepts the same absolute or relative LangGraph API URLs as `provideAgent()`.
+
+## Pair with chat thread UI
+
+```ts
+import { Component, inject } from '@angular/core';
+import { ChatThreadListComponent, type ThreadActionAdapter } from '@threadplane/chat';
+import { injectAgent, LangGraphThreadsAdapter, refreshOnRunEnd } from '@threadplane/langgraph';
+
+@Component({
+  standalone: true,
+  imports: [ChatThreadListComponent],
+  template: `
+    <chat-thread-list
+      [threads]="threads.threads()"
+      [activeThreadId]="agent.threadId?.() ?? null"
+      [actions]="actions"
+      (selectThread)="agent.switchThread($event)"
+    />
+  `,
+})
+export class ThreadsPanel {
+  protected readonly agent = injectAgent();
+  protected readonly threads = inject(LangGraphThreadsAdapter);
+
+  protected readonly actions: ThreadActionAdapter = {
+    rename: (id, title) => this.threads.rename(id, title),
+    delete: (id) => this.threads.delete(id),
+    archive: (id) => this.threads.archive(id),
+    pin: (id) => this.threads.pin(id),
+  };
+
+  constructor() {
+    void this.threads.refresh();
+    refreshOnRunEnd(this.agent, () => this.threads.refresh());
+  }
+}
+```
+
+The adapter maps SDK threads to the `Thread` type consumed by `ChatThreadListComponent` and `ChatSidenavComponent`. It expects titles in `metadata.title`.
+
+## Shared SDK client
+
+Provide `LANGGRAPH_CLIENT` when you want to share an SDK `Client` instance or inject a test double. Provide `LANGGRAPH_CLIENT_OPTIONS` once at the app root to tune the SDK retry budget used by both `FetchStreamTransport` and the threads adapter.
+
+{/* Auto-rendered from api-docs.json — see page component */}

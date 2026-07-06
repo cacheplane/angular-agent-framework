@@ -4,7 +4,8 @@ Use MockAgentTransport from '@threadplane/langgraph'. It implements AgentTranspo
 
 Test setup:
 const transport = new MockAgentTransport();
-const chat = agent({ transport, assistantId: 'test', apiUrl: '' });
+providers: [provideAgent({ transport, assistantId: 'test', apiUrl: '' })]
+const chat = injectAgent();
 
 To emit a streaming response:
 transport.emit([
@@ -21,4 +22,4 @@ transport.emitError(new Error('Network failure'));
 expect(chat.status()).toBe('error');
 expect(chat.error()).toBeInstanceOf(Error);
 
-Never mock agent() itself — always use MockAgentTransport and test through the real function.
+Never mock injectAgent() itself — always use MockAgentTransport and test through the real provider.

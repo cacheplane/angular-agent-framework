@@ -269,19 +269,23 @@ onEvent(event: RenderEvent) {
     case 'lifecycle':
       console.log('lifecycle:', event.event, event.scope, event.elementType);
       break;
+    case 'result':
+      console.log('component result:', event.elementKey, event.value);
+      break;
   }
 }
 ```
 
-`RenderEvent` is a discriminated union of three variants, keyed by `type`:
+`RenderEvent` is a discriminated union of four variants, keyed by `type`:
 
 | `type` | Interface | Fires when | Notable fields |
 |--------|-----------|------------|----------------|
 | `'handler'` | `RenderHandlerEvent` | A handler finishes running | `action`, `params`, `result?` |
 | `'stateChange'` | `RenderStateChangeEvent` | The store value changes | `path`, `value`, `snapshot` |
 | `'lifecycle'` | `RenderLifecycleEvent` | A spec or element mounts/destroys | `event` (`'mounted'` \| `'destroyed'`), `scope` (`'spec'` \| `'element'`), `elementKey?`, `elementType?` |
+| `'result'` | `RenderResultEvent` | A mounted view component calls `injectRenderHost().result(value)` | `value`, `elementKey?` |
 
-All three interfaces are exported from `@threadplane/render`. This output is the single source the [Lifecycle guide](/docs/render/guides/lifecycle) builds its `RENDER_LIFECYCLE` signals on top of -- both observe the same stream, so there's no double-counting.
+All four interfaces are exported from `@threadplane/render`. This output is the single source the [Lifecycle guide](/docs/render/guides/lifecycle) builds its `RENDER_LIFECYCLE` signals on top of -- both observe the same stream, so there's no double-counting.
 
 ## Next Steps
 
