@@ -10,18 +10,27 @@ import {
 // Keep this type in sync with shared/events.ts.
 export type ThreadplaneBrowserEvent = ThreadplaneTelemetryEvent;
 
+/** Runtime lifecycle properties captured from browser-side agent adapters. */
 export interface ThreadplaneBrowserRuntimeTelemetry {
+  /** Runtime transport, such as `langgraph` or `ag-ui`. */
   transport: string;
+  /** Optional product or app surface tag. */
   surface?: string;
+  /** Optional model provider name. */
   provider?: string;
+  /** Optional model name. */
   model?: string;
 }
 
+/** Stream telemetry properties captured from browser-side agent adapters. */
 export interface ThreadplaneBrowserStreamTelemetry extends ThreadplaneBrowserRuntimeTelemetry {
+  /** Stream duration in milliseconds, when known. */
   durationMs?: number;
 }
 
+/** Stream error telemetry. The raw error is reduced to an error class. */
 export interface ThreadplaneBrowserStreamErrorTelemetry extends ThreadplaneBrowserStreamTelemetry {
+  /** Raw error object or value; capture sends only `errorClass`. */
   error?: unknown;
 }
 
@@ -41,12 +50,20 @@ function errorClass(error: unknown): string {
   return 'UnknownError';
 }
 
+/**
+ * Browser-side telemetry service.
+ *
+ * The service no-ops unless `provideThreadplaneTelemetry({ enabled: true })`
+ * configured it. It enriches sent events with `sample_weight`, then delivers
+ * them through `sink`, `endpoint`, or legacy PostHog configuration.
+ */
 @Injectable({ providedIn: 'root' })
 export class ThreadplaneTelemetryService {
   private config: ThreadplaneTelemetryConfig | null = inject(THREADPLANE_TELEMETRY_CONFIG, { optional: true });
   private postHogPromise: Promise<typeof import('posthog-js')['default'] | null> | null = null;
   private distinctId: string | null = null;
 
+  /** Capture an arbitrary enabled browser telemetry event. */
   async capture(event: ThreadplaneTelemetryEvent, properties?: Record<string, unknown>): Promise<void> {
     if (!this.config?.enabled) return;
     const sampleRate = normalizeSampleRate(this.config.sampleRate);
@@ -76,22 +93,27 @@ export class ThreadplaneTelemetryService {
     }
   }
 
+  /** Capture a runtime construction event. */
   captureRuntimeInstanceCreated(input: ThreadplaneBrowserRuntimeTelemetry): Promise<void> {
     return this.capture('tplane:runtime_instance_created', { ...input });
   }
 
+  /** Capture a runtime request creation event. */
   captureRuntimeRequestCreated(input: ThreadplaneBrowserRuntimeTelemetry & { requestType: string }): Promise<void> {
     return this.capture('tplane:runtime_request_created', { ...input });
   }
 
+  /** Capture a stream-start event. */
   captureStreamStarted(input: ThreadplaneBrowserStreamTelemetry): Promise<void> {
     return this.capture('tplane:stream_started', { ...input });
   }
 
+  /** Capture a stream-end event. */
   captureStreamEnded(input: ThreadplaneBrowserStreamTelemetry): Promise<void> {
     return this.capture('tplane:stream_ended', { ...input });
   }
 
+  /** Capture a stream-error event, sending only the derived error class. */
   captureStreamErrored(input: ThreadplaneBrowserStreamErrorTelemetry): Promise<void> {
     const { error, ...rest } = input;
     return this.capture('tplane:stream_errored', {

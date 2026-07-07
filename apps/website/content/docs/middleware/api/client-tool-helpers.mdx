@@ -1,4 +1,4 @@
-# bindClientTools()
+# LangGraph.js client-tool helpers
 
 `bindClientTools()` is the main helper from `@threadplane/middleware/langgraph`. It binds your server tools plus the current run's client-tool catalog onto a LangChain chat model.
 
@@ -10,7 +10,7 @@ import {
 } from '@threadplane/middleware/langgraph';
 ```
 
-There is no root JavaScript entry point for `@threadplane/middleware`; import from the `/langgraph` subpath.
+There is no root JavaScript entry point for `@threadplane/middleware`; import from the `/langgraph` subpath. The Python package exposes equivalent snake_case helpers from `threadplane.middleware.langgraph`.
 
 Related helpers in the same entry point include `clientToolsChannel()`, `clientToolsRouter()`, `clientToolSpecs()`, `clientToolNames()`, `hasClientToolCall()`, `hasServerToolCall()`, `routeAfterAgent()`, and `lastMessage()`.
 

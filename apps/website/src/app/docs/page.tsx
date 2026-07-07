@@ -82,7 +82,7 @@ interface SupportingLib {
 const SUPPORTING: SupportingLib[] = [
   {
     title: 'Middleware',
-    blurb: 'Backend client-tool routing',
+    blurb: 'JS & Python client-tool routing',
     href: '/docs/middleware/getting-started/introduction',
     glyph: 'middleware',
   },
