@@ -530,20 +530,16 @@ class CapturingTransport extends FakeStreamTransport {
 }
 
 describe('shouldSyncCheckpoint — push-gate predicate', () => {
-  it('pushes when settled, has a thread, and content changed', () => {
-    expect(shouldSyncCheckpoint(false, 'thread-1', '[1]', '[0]')).toBe(true);
-  });
-
-  it('never pushes while a run is loading (mid-run guard)', () => {
-    expect(shouldSyncCheckpoint(true, 'thread-1', '[1]', '[0]')).toBe(false);
+  it('pushes when a thread exists and content changed', () => {
+    expect(shouldSyncCheckpoint('thread-1', '[1]', '[0]')).toBe(true);
   });
 
   it('never pushes without a thread id', () => {
-    expect(shouldSyncCheckpoint(false, null, '[1]', '[0]')).toBe(false);
+    expect(shouldSyncCheckpoint(null, '[1]', '[0]')).toBe(false);
   });
 
   it('skips when the content already matches lastSynced (echo-loop guard)', () => {
-    expect(shouldSyncCheckpoint(false, 'thread-1', '[1]', '[1]')).toBe(false);
+    expect(shouldSyncCheckpoint('thread-1', '[1]', '[1]')).toBe(false);
   });
 });
 

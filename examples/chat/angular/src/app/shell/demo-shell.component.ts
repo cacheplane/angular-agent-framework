@@ -83,19 +83,21 @@ function parseUrl(url: string): { mode: DemoMode; threadId: string | null } {
 
 /**
  * Decide whether to push the working itinerary to the durable checkpoint.
- * Returns true only when a run has SETTLED (not loading), a thread exists,
- * and the content actually changed since the last sync. The `json === lastJson`
- * check is the echo-loop guard: hydration stamps `lastSyncedItinerary` with the
- * incoming server JSON, so the re-fired push effect sees "no change" and skips —
- * making hydrate→push→hydrate converge immediately.
+ * Returns true when a thread exists and the itinerary changed since the last
+ * sync. The `json === lastJson` check is the echo-loop guard: hydration stamps
+ * `lastSyncedItinerary` with the incoming server JSON, so the re-fired push
+ * effect sees "no change" and skips — making hydrate→push→hydrate converge.
+ *
+ * Run-state is intentionally NOT gated. The client-tool resume loop keeps the
+ * agent loading for the whole plan, so a run-gated push never fires with the
+ * final itinerary; instead the push attempts anyway and retries on the 409 a
+ * mid-run `updateState` returns, until the run settles (see the push effect).
  */
 export function shouldSyncCheckpoint(
-  isLoading: boolean,
   threadId: string | null,
   json: string,
   lastJson: string,
 ): boolean {
-  if (isLoading) return false;
   if (!threadId) return false;
   return json !== lastJson;
 }
@@ -259,6 +261,11 @@ export class DemoShell {
     effect(() => {
       const incoming = extractItinerary(this.agent.value());
       if (incoming === null) return;
+      // Don't let a behind/empty server snapshot wipe a populated local working
+      // copy: during a plan the client tools fill the store before the checkpoint
+      // catches up via the push below. Adopt an empty server itinerary only when
+      // the store is itself empty (a genuine thread switch / fresh load).
+      if (incoming.length === 0 && untracked(() => this.itinerary.stops()).length > 0) return;
       const json = JSON.stringify(incoming);
       if (json === this.lastSyncedItinerary) return;
       this.lastSyncedItinerary = json;
@@ -271,23 +278,29 @@ export class DemoShell {
     // threadIdState(). Errors are swallowed — this is a best-effort sync.
     effect((onCleanup) => {
       const stops = this.itinerary.stops();
-      const isLoading = this.agent.isLoading();
       const tid = threadIdState();
       const json = JSON.stringify(stops);
-      if (!shouldSyncCheckpoint(isLoading, tid, json, this.lastSyncedItinerary)) return;
-      const timer = setTimeout(() => {
-        void (async () => {
-          try {
-            await this.lgClient.threads.updateState(tid as string, {
-              values: { itinerary: stops },
-            });
-            this.lastSyncedItinerary = json;
-          } catch {
-            // best-effort: a failed checkpoint push must not break the UI.
-          }
-        })();
-      }, 500);
-      onCleanup(() => clearTimeout(timer));
+      if (!shouldSyncCheckpoint(tid, json, this.lastSyncedItinerary)) return;
+      // Debounce, then push. A mid-run write returns 409 (the client-tool resume
+      // loop is streaming); retry until the run settles so the FINAL itinerary
+      // always lands in the checkpoint. onCleanup cancels a superseded attempt.
+      let cancelled = false;
+      const attempt = async (): Promise<void> => {
+        if (cancelled) return;
+        try {
+          await this.lgClient.threads.updateState(tid as string, {
+            values: { itinerary: stops },
+          });
+          this.lastSyncedItinerary = json;
+        } catch {
+          if (!cancelled) setTimeout(() => void attempt(), 1500);
+        }
+      };
+      const timer = setTimeout(() => void attempt(), 1200);
+      onCleanup(() => {
+        cancelled = true;
+        clearTimeout(timer);
+      });
     });
 
     if (typeof window !== 'undefined') {
