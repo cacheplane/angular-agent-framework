@@ -8006,6 +8006,25 @@
     "examples": []
   },
   {
+    "name": "citationTypeLabel",
+    "kind": "function",
+    "description": "Human label for the source-type badge; null when type is 'unknown'.",
+    "signature": "citationTypeLabel(c: Citation): string | null",
+    "params": [
+      {
+        "name": "c",
+        "type": "Citation",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "string | null",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
     "name": "createA2uiSurfaceStore",
     "kind": "function",
     "description": "Create an A2uiSurfaceStore — the per-conversation store that buffers\nstreamed A2UI surface updates, tracks each surface's data model + lifecycle\nstate, and exposes them as signals for rendering. One store backs a chat\nthread's A2UI surfaces.",
@@ -8095,6 +8114,25 @@
     "examples": []
   },
   {
+    "name": "deriveDomain",
+    "kind": "function",
+    "description": "Hostname of `url` with a leading `www.` removed; null if absent/malformed.",
+    "signature": "deriveDomain(url: string): string | null",
+    "params": [
+      {
+        "name": "url",
+        "type": "string",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "returns": {
+      "type": "string | null",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
     "name": "deriveJsonSchema",
     "kind": "function",
     "description": "Convert a Standard Schema to a JSON Schema for the model's `parameters`.\nUses Zod's converter; throws a clear error for non-Zod validators (callers\nshould supply a Zod schema — see the client-tools docs).",
@@ -8115,6 +8153,44 @@
     ],
     "returns": {
       "type": "Record<string, unknown>",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "deriveMonogram",
+    "kind": "function",
+    "description": "Uppercased first letter of the domain (or title) for the monogram chip.",
+    "signature": "deriveMonogram(c: Citation): string",
+    "params": [
+      {
+        "name": "c",
+        "type": "Citation",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "string",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "deriveSourceType",
+    "kind": "function",
+    "description": "Explicit `sourceType`, else 'web' inferred from a url, else 'unknown'.",
+    "signature": "deriveSourceType(c: Citation): string",
+    "params": [
+      {
+        "name": "c",
+        "type": "Citation",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "string",
       "description": ""
     },
     "examples": []
@@ -8217,6 +8293,25 @@
     ],
     "returns": {
       "type": "string",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "formatPublished",
+    "kind": "function",
+    "description": "Short freshness label (e.g. \"Apr 2024\"); null when absent or unparseable.",
+    "signature": "formatPublished(value: string | number | Date): string | null",
+    "params": [
+      {
+        "name": "value",
+        "type": "string | number | Date",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "returns": {
+      "type": "string | null",
       "description": ""
     },
     "examples": []
@@ -8445,6 +8540,44 @@
     "examples": [
       "```ts\nconst agent = mockAgent({\n  messages: [{ id: '1', role: 'assistant', content: 'Hi' }],\n  isLoading: true,\n});\n```"
     ]
+  },
+  {
+    "name": "monogramColor",
+    "kind": "function",
+    "description": "Deterministic monogram-chip background color (stable per source).",
+    "signature": "monogramColor(c: Citation): string",
+    "params": [
+      {
+        "name": "c",
+        "type": "Citation",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "string",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "monogramHue",
+    "kind": "function",
+    "description": "Deterministic hue in [0,360) from a seed string (stable monogram color).",
+    "signature": "monogramHue(seed: string): number",
+    "params": [
+      {
+        "name": "seed",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "number",
+      "description": ""
+    },
+    "examples": []
   },
   {
     "name": "normalizeEnvelopeArgs",

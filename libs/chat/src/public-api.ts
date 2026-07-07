@@ -87,6 +87,9 @@ export type { ConnectedPosition, OverlayPositionResult } from './lib/primitives/
 export { ChatCitationsComponent, ChatCitationCardTemplateDirective } from './lib/primitives/chat-citations/chat-citations.component';
 export { ChatCitationsCardComponent } from './lib/primitives/chat-citations/chat-citations-card.component';
 export { ChatCitationPreviewComponent } from './lib/primitives/chat-citations/chat-citation-preview.component';
+export {
+  deriveDomain, deriveSourceType, deriveMonogram, monogramHue, monogramColor, citationTypeLabel, formatPublished,
+} from './lib/agent/citation-display';
 
 // DI provider
 export { provideChat, CHAT_CONFIG } from './lib/provide-chat';
