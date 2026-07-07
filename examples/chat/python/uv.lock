@@ -288,6 +288,7 @@ dependencies = [
     { name = "langgraph" },
     { name = "langgraph-api" },
     { name = "python-dotenv" },
+    { name = "threadplane-middleware" },
 ]
 
 [package.dev-dependencies]
@@ -303,6 +304,7 @@ requires-dist = [
     { name = "langgraph", specifier = ">=0.3" },
     { name = "langgraph-api", specifier = ">=0.8.7" },
     { name = "python-dotenv", specifier = ">=1.0" },
+    { name = "threadplane-middleware", specifier = ">=0.0.1" },
 ]
 
 [package.metadata.requires-dev]
@@ -1486,6 +1488,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/47/c6/ee486fd809e357697ee8a44d3d69222b344920433d3b6666ccd9b374630c/tenacity-9.1.4.tar.gz", hash = "sha256:adb31d4c263f2bd041081ab33b498309a57c77f9acf2db65aadf0898179cf93a", size = 49413, upload-time = "2026-02-07T10:45:33.841Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d7/c1/eb8f9debc45d3b7918a32ab756658a0904732f75e555402972246b0b8e71/tenacity-9.1.4-py3-none-any.whl", hash = "sha256:6095a360c919085f28c6527de529e76a06ad89b23659fa881ae0649b867a9d55", size = 28926, upload-time = "2026-02-07T10:45:32.24Z" },
+]
+
+[[package]]
+name = "threadplane-middleware"
+version = "0.0.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "langchain-core" },
+    { name = "langgraph" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/01/5f/fee360e3547bede9388bb72a9ad20ca811935582b989c78dafeaae57558a/threadplane_middleware-0.0.1.tar.gz", hash = "sha256:60c931d0248ed2e701a3aa1330c6fd647e611a949500269c5ba82f3607102cef", size = 95505, upload-time = "2026-06-16T20:55:18.335Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/72/55/28e6b752f3f53f2c5d2c2fa3ef27ac62a255a3b29376384f2dfc96d8acb0/threadplane_middleware-0.0.1-py3-none-any.whl", hash = "sha256:c14e49d506e8bd3078f54df381c150d390f2d129f844694d8f5154a2cd8710ea", size = 4315, upload-time = "2026-06-16T20:55:19.044Z" },
 ]
 
 [[package]]

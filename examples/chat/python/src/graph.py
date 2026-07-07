@@ -42,6 +42,8 @@ from langchain_core.tools import tool
 from langgraph_sdk import get_client
 from langsmith import traceable
 
+from threadplane.middleware.langgraph import bind_client_tools, client_tool_names
+
 from src.streaming.a2ui_partial_handler import A2uiPartialHandler
 from src.streaming.envelope_tool import render_a2ui_surface
 from src.streaming.envelope_normalizer import normalize_envelope_args
@@ -367,6 +369,18 @@ class State(TypedDict):
     model: Optional[str]
     reasoning_effort: Optional[str]
     gen_ui_mode: Optional[str]
+    # Frontend client-tool catalog. The @threadplane/langgraph SDK path
+    # (mergeClientTools) sends the browser-declared tool stubs under
+    # ``client_tools`` in the run payload; the threadplane-middleware
+    # ``_catalog`` reads ``state["tools"]`` first and falls back to
+    # ``state["client_tools"]`` — so this channel name feeds the middleware
+    # directly with no normalization needed. The channel must exist here so
+    # the catalog survives the generate → should_continue path.
+    client_tools: Optional[list]
+    # Trip itinerary the frontend client tools (add_stop/move_stop/...)
+    # mutate. Declared now so the channel exists; typed properly in a
+    # later task.
+    itinerary: list
 
 
 async def generate(state: State, config: RunnableConfig) -> dict:
@@ -402,8 +416,14 @@ async def generate(state: State, config: RunnableConfig) -> dict:
     # libs/chat/src/lib/a2ui/envelope-normalizer.ts) to canonicalize the
     # four observed argument shapes (envelopes / envelope / positional /
     # flat). The spike showed 80-93% canonical even without strict.
-    llm = ChatOpenAI(**kwargs).bind_tools(
+    # bind_client_tools appends the frontend client-tool catalog stubs (read
+    # from state["client_tools"], sent by the @threadplane/langgraph SDK
+    # mergeClientTools path) to the server tool list so the model can call any
+    # browser-declared tool by name (add_stop/move_stop/clear_day/day_card).
+    llm = bind_client_tools(
+        ChatOpenAI(**kwargs),
         [search_documents, request_approval, research, gen_ui_tool],
+        state,
     )
     # Append A2UI v1 schema to system prompt when in a2ui mode, so the parent
     # LLM knows how to construct the envelopes directly.
@@ -427,13 +447,23 @@ async def generate(state: State, config: RunnableConfig) -> dict:
 
 
 def should_continue(state: State) -> Literal["tools", "attach_citations"]:
-    """Conditional edge from generate: route to tools node when any
-    tool_call is present (GenUI tools, search, approval, research),
-    otherwise route to attach_citations terminal post-process."""
+    """Conditional edge from generate: route to the server ToolNode when any
+    SERVER tool_call is present (GenUI tools, search, approval, research).
+
+    A turn whose calls are ALL frontend client tools must END (route to the
+    terminal attach_citations post-process) so the browser can execute them
+    and re-run with the resulting ToolMessage — the server ToolNode has no
+    implementation for client tools and would otherwise error. Turns with no
+    tool calls also terminate at attach_citations (a no-op without search
+    results). Mixed server+client turns keep the 'tools' route.
+    """
     last = state["messages"][-1]
-    if isinstance(last, AIMessage) and last.tool_calls:
-        return "tools"
-    return "attach_citations"
+    if not (isinstance(last, AIMessage) and last.tool_calls):
+        return "attach_citations"
+    client = client_tool_names(state)
+    if all(tc["name"] in client for tc in last.tool_calls):
+        return "attach_citations"
+    return "tools"
 
 
 def after_tools(state: State) -> Literal["emit_generated_surface", "generate"]:
