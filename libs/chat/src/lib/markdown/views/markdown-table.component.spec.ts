@@ -4,7 +4,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Component, signal } from '@angular/core';
 import { views } from '@threadplane/render';
-import type { MarkdownTableNode } from '@cacheplane/partial-markdown';
+import type { MarkdownTableCellNode, MarkdownTableNode, MarkdownTableRowNode } from '@cacheplane/partial-markdown';
 import { MarkdownTableComponent } from './markdown-table.component';
 import { MarkdownTableRowComponent } from './markdown-table-row.component';
 import { MarkdownTableCellComponent } from './markdown-table-cell.component';
@@ -18,6 +18,28 @@ function makeTableNode(overrides: Partial<MarkdownTableNode> = {}): MarkdownTabl
     children: [],
     ...overrides,
   } as MarkdownTableNode;
+}
+
+function makeCellNode(id: number, alignment: MarkdownTableCellNode['alignment'] = null): MarkdownTableCellNode {
+  return {
+    id, type: 'table-cell', status: 'complete',
+    parent: null, index: null,
+    alignment,
+    children: [],
+  } as MarkdownTableCellNode;
+}
+
+function makeRowNode(
+  id: number,
+  isHeader: boolean,
+  children: MarkdownTableRowNode['children'] = [makeCellNode(id * 10), makeCellNode(id * 10 + 1)],
+): MarkdownTableRowNode {
+  return {
+    id, type: 'table-row', status: 'complete',
+    parent: null, index: null,
+    isHeader,
+    children,
+  } as MarkdownTableRowNode;
 }
 
 @Component({
@@ -62,28 +84,27 @@ describe('MarkdownTableComponent', () => {
     expect(fixture.nativeElement.querySelector('tbody')).toBeTruthy();
   });
 
-  it('dispatches each row through chat-md-table-row component', () => {
-    // Regression: prior impl used <chat-md-children [parent]="row"> which
-    // walked row.children (cells) directly and skipped the row wrapper. Cells
-    // appeared bare under <thead>/<tbody>, no <chat-md-table-row> elements
-    // existed. Live browser smoke caught this; the test below pins the fix.
+  it('renders native table rows and cells directly under table sections', () => {
+    // Keep the browser's table layout tree native. Custom element hosts between
+    // <thead>/<tbody> and <tr>, or between <tr> and <td>/<th>, rely on
+    // display: contents and can make a just-streamed row appear detached.
     const fixture = TestBed.createComponent(HostComponent);
     fixture.componentInstance.node.set(makeTableNode({
       alignments: [null, null],
       children: [
-        { id: 2, type: 'table-row', status: 'complete', parent: null, index: 0,
-          isHeader: true, children: [] } as never,
-        { id: 3, type: 'table-row', status: 'complete', parent: null, index: 1,
-          isHeader: false, children: [] } as never,
-        { id: 4, type: 'table-row', status: 'complete', parent: null, index: 2,
-          isHeader: false, children: [] } as never,
+        makeRowNode(2, true),
+        makeRowNode(3, false),
+        makeRowNode(4, false),
       ],
     }));
     fixture.detectChanges();
-    const rows = fixture.nativeElement.querySelectorAll('chat-md-table-row');
-    expect(rows.length).toBe(3);
-    // Header row goes in <thead>; body rows in <tbody>.
-    expect(fixture.nativeElement.querySelectorAll('thead chat-md-table-row').length).toBe(1);
-    expect(fixture.nativeElement.querySelectorAll('tbody chat-md-table-row').length).toBe(2);
+    const table = fixture.nativeElement.querySelector('table') as HTMLTableElement;
+
+    expect(table.querySelectorAll(':scope > thead > tr').length).toBe(1);
+    expect(table.querySelectorAll(':scope > tbody > tr').length).toBe(2);
+    expect(table.querySelectorAll('chat-md-table-row').length).toBe(0);
+    expect(table.querySelectorAll('chat-md-table-cell').length).toBe(0);
+    expect(table.querySelectorAll(':scope > thead > tr > th').length).toBe(2);
+    expect(table.querySelectorAll(':scope > tbody > tr > td').length).toBe(4);
   });
 });
