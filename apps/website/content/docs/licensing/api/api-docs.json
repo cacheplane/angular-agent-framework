@@ -185,7 +185,7 @@
   {
     "name": "emitNag",
     "kind": "function",
-    "description": "",
+    "description": "Emit one non-blocking license warning for a package/status pair.\n\n`licensed` and `noncommercial` statuses are silent. Other statuses warn once\nper package and status so repeated initialization does not spam logs.",
     "signature": "emitNag(result: Pick<EvaluateResult, \"status\">, options: EmitNagOptions): void",
     "params": [
       {
@@ -210,7 +210,7 @@
   {
     "name": "evaluateLicense",
     "kind": "function",
-    "description": "",
+    "description": "Convert a verified token result into a license status.\n\n`verifyResult` may be undefined when no token was supplied. In that case a\ncaller-provided `isNoncommercial` hint returns `noncommercial`; otherwise the\nstatus is `missing`. Signature failures return `tampered`, and valid claims\nare evaluated against `exp` plus the optional grace window.",
     "signature": "evaluateLicense(verifyResult: VerifyResult | undefined, options: EvaluateOptions): EvaluateResult",
     "params": [
       {
@@ -247,7 +247,7 @@
   {
     "name": "runLicenseCheck",
     "kind": "function",
-    "description": "",
+    "description": "Run the full package license check.\n\nThe helper verifies an optional token, evaluates the status, emits the\npackage nag warning when appropriate, and memoizes identical package/token\npairs so repeated provider initialization stays quiet.",
     "signature": "runLicenseCheck(options: RunLicenseCheckOptions): Promise<LicenseStatus>",
     "params": [
       {

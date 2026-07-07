@@ -3,6 +3,9 @@
 LangGraph middleware for binding client-declared tool stubs and routing
 client tool calls to `END` so the browser executes them.
 
+This is the Python LangGraph package. For LangGraph.js, use
+`@threadplane/middleware` from npm and import `@threadplane/middleware/langgraph`.
+
 ## How it works
 
 When a browser client sends a tool catalog (`{name, description, parameters}`
@@ -72,6 +75,5 @@ from threadplane.middleware.langgraph import (
 
 ```bash
 uv venv
-uv pip install -e '.[test]'
-uv run pytest -q
+uv run --extra test python -m pytest -q
 ```

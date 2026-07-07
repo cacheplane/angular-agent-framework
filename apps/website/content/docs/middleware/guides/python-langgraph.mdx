@@ -1,0 +1,95 @@
+# Python LangGraph Middleware
+
+The Python package is `threadplane-middleware`. It is the Python LangGraph twin of `@threadplane/middleware/langgraph`: it binds browser-declared client-tool stubs onto a chat model and routes client-tool-only turns to `END`.
+
+## Install
+
+```bash
+pip install threadplane-middleware
+```
+
+The package depends on `langchain-core>=0.3.0` and `langgraph>=0.3.0`.
+
+Install your model provider package separately, for example `langchain-openai` when using `ChatOpenAI`.
+
+## Bind tools per run
+
+Call `bind_client_tools()` inside your agent node. The browser sends the tool catalog with each run, so the model-visible tool list is request-scoped.
+
+```python
+from langchain_openai import ChatOpenAI
+from threadplane.middleware.langgraph import bind_client_tools
+
+SERVER_TOOLS = [search_tool]
+base_llm = ChatOpenAI(model="gpt-4o-mini")
+
+def agent_node(state):
+    llm = bind_client_tools(base_llm, SERVER_TOOLS, state)
+    response = llm.invoke(state["messages"])
+    return {"messages": [response]}
+```
+
+The helper reads `state["tools"]` first and falls back to `state["client_tools"]`. It appends each client tool as an explicit OpenAI function-tool dict:
+
+```python
+{
+    "type": "function",
+    "function": {
+        "name": "get_weather",
+        "description": "Read local weather",
+        "parameters": {"type": "object"},
+    },
+}
+```
+
+## Route after the agent
+
+Use `route_after_agent()` from a LangGraph conditional edge. It returns the server tools node name when the last model message contains a server or unknown tool call. It returns `__end__` when the turn has only client tool calls or no tool calls.
+
+```python
+from langgraph.graph import END, StateGraph
+from langgraph.prebuilt import ToolNode
+from threadplane.middleware.langgraph import route_after_agent
+
+server_tool_names = [tool.name for tool in SERVER_TOOLS]
+
+def router(state):
+    return route_after_agent(state, server_tool_names)
+
+graph = StateGraph(...)
+graph.add_node("agent", agent_node)
+graph.add_node("tools", ToolNode(SERVER_TOOLS))
+graph.add_conditional_edges("agent", router, {"tools": "tools", "__end__": END})
+```
+
+You can override the returned route labels:
+
+```python
+route_after_agent(state, server_tool_names, tools_node="server_tools", end="done")
+```
+
+## Helper surface
+
+```python
+from threadplane.middleware.langgraph import (
+    bind_client_tools,
+    client_tool_specs,
+    client_tool_names,
+    has_client_tool_call,
+    has_server_tool_call,
+    last_message,
+    route_after_agent,
+)
+```
+
+| Helper | Purpose |
+|--------|---------|
+| `client_tool_specs(state)` | Convert the run catalog into OpenAI function-tool dicts. |
+| `client_tool_names(state)` | Return the set of client-declared tool names. |
+| `has_client_tool_call(state)` | Check whether the last message calls a known client tool. |
+| `has_server_tool_call(state, server_tool_names)` | Check whether the last message calls a server or unknown tool. |
+| `last_message(state)` | Return the last message from `state["messages"]`, or `None`. |
+
+## Frontend contract
+
+The middleware does not execute browser tools. The frontend still needs to send the catalog, observe the model tool call, execute the local function or UI interaction, and resume the graph with a `ToolMessage` containing the result.

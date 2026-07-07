@@ -357,7 +357,8 @@ export const docsConfig: DocsLibrary[] = [
         id: 'guides',
         color: 'blue',
         pages: [
-          { title: 'LangGraph Client Tools', slug: 'langgraph-client-tools', section: 'guides' },
+          { title: 'LangGraph.js Client Tools', slug: 'langgraph-client-tools', section: 'guides' },
+          { title: 'Python LangGraph Middleware', slug: 'python-langgraph', section: 'guides' },
         ],
       },
       {
@@ -365,7 +366,7 @@ export const docsConfig: DocsLibrary[] = [
         id: 'api',
         color: 'blue',
         pages: [
-          { title: 'bindClientTools()', slug: 'client-tool-helpers', section: 'api' },
+          { title: 'LangGraph.js Helpers', slug: 'client-tool-helpers', section: 'api' },
         ],
       },
     ],

@@ -27,6 +27,14 @@ export interface EvaluateResult {
 
 const FOURTEEN_DAYS_SEC = 14 * 24 * 60 * 60;
 
+/**
+ * Convert a verified token result into a license status.
+ *
+ * `verifyResult` may be undefined when no token was supplied. In that case a
+ * caller-provided `isNoncommercial` hint returns `noncommercial`; otherwise the
+ * status is `missing`. Signature failures return `tampered`, and valid claims
+ * are evaluated against `exp` plus the optional grace window.
+ */
 export function evaluateLicense(
   verifyResult: VerifyResult | undefined,
   options: EvaluateOptions,
