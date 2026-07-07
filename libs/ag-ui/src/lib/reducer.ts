@@ -295,7 +295,13 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
         const { toolCalls: _dropped, ...rest } = m;
         return { ...rest, toolCallIds: ids } as unknown as Message;
       });
-      store.messages.set(messages);
+      // Re-apply per-message citations from the already-received STATE. A
+      // MESSAGES_SNAPSHOT replaces the streamed messages wholesale — and the
+      // final snapshot message id (str(AIMessage.id), e.g. "resp-…") differs
+      // from the streaming chunk id the earlier STATE_SNAPSHOT bridged against,
+      // so without re-bridging here the citations (keyed by the final id) would
+      // be dropped on the message swap.
+      store.messages.set(bridgeCitationsState({ state: store.state() }, messages));
       if (snapshotToolCalls.length > 0) {
         store.toolCalls.update((prev) => {
           // Merge: keep existing entries (they may carry richer state from
