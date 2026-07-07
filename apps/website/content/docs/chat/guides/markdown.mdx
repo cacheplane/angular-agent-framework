@@ -7,7 +7,7 @@ AI messages in `@threadplane/chat` can render full markdown -- headings, code bl
 The markdown pipeline has two stages:
 
 1. **Streaming renderer**: `<chat-streaming-md>` parses markdown into node keys and renders those keys through `cacheplaneMarkdownViews`.
-2. **Sanitized HTML helper**: `renderMarkdown()` converts markdown text to sanitized HTML using `marked` when it is installed, falling back to escaped plain text with `<br>` newline conversion.
+2. **Sanitized HTML helper**: `renderMarkdown()` converts markdown text to sanitized HTML using the required `marked` peer dependency. If `marked` cannot be loaded at runtime, it falls back to escaped plain text with `<br>` newline conversion.
 
 ## The renderMarkdown() Function
 
@@ -37,8 +37,8 @@ function renderMarkdown(content: string, sanitizer: DomSanitizer): SafeHtml
 **Returns:** `SafeHtml` -- sanitized HTML that can be bound via `[innerHTML]`.
 
 **Behavior:**
-- When `marked` is installed, parses markdown to HTML, sanitizes it through Angular's `SecurityContext.HTML`, then marks the result as trusted.
-- When `marked` is not available, escapes HTML entities (`&`, `<`, `>`) and converts newlines to `<br>` tags.
+- Parses markdown to HTML with `marked`, sanitizes it through Angular's `SecurityContext.HTML`, then marks the result as trusted.
+- If the dynamic `marked` import fails at runtime, escapes HTML entities (`&`, `<`, `>`) and converts newlines to `<br>` tags as a defensive fallback.
 
 <Callout type="info" title="Dynamic import">
 The `marked` library is loaded via a dynamic `import('marked')` at module initialization time. This means it does not block initial bundle loading and resolves before the first render in most cases.
@@ -199,13 +199,12 @@ The most common mistake is providing `'code'` as an override key — it does not
 
 All built-in markdown view components consume the same `--tplane-chat-*` and `--a2ui-*` CSS custom properties as the rest of the chat UI. No extra tokens are needed — changing the active theme automatically re-styles markdown output. See the [chat theming guide](/docs/chat/guides/theming) for the full token reference.
 
-## Without marked
+## Defensive Plain-Text Fallback
 
-If you skip installing `marked`, markdown content renders as plain text with line breaks preserved. That's fine for simple chat apps that don't need rich formatting.
+`marked` is a required peer dependency for supported `@threadplane/chat` installs:
 
 ```bash
-# Full markdown support:
 npm install marked
-
-# Or skip it -- plain text fallback works automatically
 ```
+
+If the dynamic `import('marked')` still fails at runtime, `renderMarkdown()` falls back to escaped plain text with line breaks preserved. Treat that fallback as a resilience path, not as the recommended installation mode; the built-in chat experience expects `marked` to be present for rich markdown.

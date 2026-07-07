@@ -36,10 +36,10 @@ Install `@threadplane/chat`, your chosen runtime adapter, and the `marked` markd
 npm install @threadplane/chat @threadplane/langgraph marked
 
 # AG-UI compatible backends
-npm install @threadplane/chat @threadplane/ag-ui marked
+npm install @threadplane/chat @threadplane/ag-ui @ag-ui/client @ag-ui/core marked
 ```
 
-`marked` is a required peer dependency used to render assistant message markdown (code blocks, tables, headings). The chat components ship with their own design tokens and component-scoped styles — no Tailwind, PostCSS, or global stylesheet import is required.
+`marked` is a required peer dependency used to render assistant message markdown (code blocks, tables, headings). The AG-UI adapter also needs the protocol packages `@ag-ui/client` and `@ag-ui/core`. The chat components ship with their own design tokens and component-scoped styles — no Tailwind, PostCSS, or global stylesheet import is required.
 
 <Callout type="info" title="Full peer dependency list">
 `@threadplane/chat` declares peers on `@angular/core`, `@angular/common`, `@angular/platform-browser`, `@angular/router` (all `^20.0.0 || ^21.0.0`), plus `@threadplane/licensing`, `@threadplane/render`, `@threadplane/a2ui`, `@json-render/core` (`^0.16.0`), `@langchain/core` (`^1.1.33`), `rxjs` (`~7.8.0`), `marked` (`^15 || ^16`), `zod` (`^3.25.0`), and optional `katex` (`^0.16.0 || ^0.17.0`). npm 7+ installs all required peers automatically.
