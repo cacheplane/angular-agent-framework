@@ -19,10 +19,10 @@ A running LangGraph agent reachable over HTTP. Local (`langgraph dev`) or deploy
 ## Install the package
 
 ```bash
-npm install @threadplane/langgraph @threadplane/chat
+npm install @threadplane/langgraph @threadplane/chat @langchain/core @langchain/langgraph-sdk
 ```
 
-`@threadplane/langgraph` provides `injectAgent()` and `provideAgent()`. `@threadplane/chat` provides the runtime-neutral chat UI consumed by the LangGraph adapter.
+`@threadplane/langgraph` provides `injectAgent()` and `provideAgent()`. `@threadplane/chat` provides the runtime-neutral chat UI consumed by the LangGraph adapter. The LangChain packages are required peers used by the adapter's message types and LangGraph SDK client.
 
 ## Peer Dependencies
 
