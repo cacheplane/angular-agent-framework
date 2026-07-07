@@ -46,6 +46,9 @@ export const CHAT_CITATION_MARKER_STYLES = `
     border-color: var(--tplane-chat-citation-marker-border);
     color: var(--tplane-chat-text-muted);
   }
+  .chat-citation-marker--no-url {
+    cursor: help;
+  }
 `;
 
 /** Provenance preview card (chat-citation-preview), portaled into the overlay pane. */
@@ -112,7 +115,7 @@ export const CHAT_CITATION_PREVIEW_STYLES = `
     text-decoration: none;
   }
   .chat-citation-preview__open:hover { text-decoration: underline; }
-  .chat-citation-preview__meta { font-size: 11px; color: var(--tplane-chat-muted); }
+  .chat-citation-preview__meta { font-size: 11px; color: var(--tplane-chat-text-muted); }
 `;
 
 /** Sources panel (chat-citations) + detail card (chat-citations-card). */
@@ -203,7 +206,7 @@ export const CHAT_CITATIONS_PANEL_STYLES = `
     color: #fff; font-size: 8px; font-weight: 700;
   }
   .chat-citations-card__domain { font-size: 11.5px; color: var(--tplane-chat-text-muted); }
-  .chat-citations-card__type { margin-left: auto; font-size: 10.5px; color: var(--tplane-chat-muted); }
+  .chat-citations-card__type { margin-left: auto; font-size: 10.5px; color: var(--tplane-chat-text-muted); }
   .chat-citations-card__title {
     font-size: 13.5px; font-weight: 600; line-height: 1.35;
     margin: 0 0 2px;
