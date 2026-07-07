@@ -13,8 +13,17 @@ import {
 import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs/operators';
-import { injectAgent, provideAgent, LangGraphThreadsAdapter, refreshOnRunEnd } from '@threadplane/langgraph';
+import {
+  injectAgent,
+  provideAgent,
+  LangGraphThreadsAdapter,
+  LANGGRAPH_THREADS_CONFIG,
+  createLangGraphClient,
+  refreshOnRunEnd,
+} from '@threadplane/langgraph';
 import { DEMO_AGENT_REF, type DemoState } from './agent-ref';
+import { ItineraryStore, type ItineraryStop } from '../itinerary-store';
+import { itineraryClientTools } from '../client-tools';
 import { ThreadplaneTelemetryService } from '@threadplane/telemetry/browser';
 import {
   ChatInterruptPanelComponent,
@@ -33,6 +42,8 @@ import {
 } from '@threadplane/chat';
 import { PalettePersistence } from './palette-persistence.service';
 import { ProjectsService } from './projects.service';
+import { MapCanvasComponent } from '../map-canvas.component';
+import { ItineraryPanelComponent } from '../itinerary-panel.component';
 import { DEMO_AGENT } from './shell-tokens';
 import { createCanonicalDemoRuntimeTelemetrySink } from './runtime-telemetry';
 import { environment } from '../../environments/environment';
@@ -65,6 +76,55 @@ function parseUrl(url: string): { mode: DemoMode; threadId: string | null } {
   return { mode, threadId };
 }
 
+// ── Itinerary ↔ checkpoint sync helpers (Task 9) ────────────────────────────
+// Extracted as pure functions so the sync decisions are unit-testable without
+// driving the agent's derived `value()`/`isLoading()` signals (which the fake
+// transport harness can't emit). The effects below stay thin wrappers.
+
+/**
+ * Decide whether to push the working itinerary to the durable checkpoint.
+ * Returns true when a thread exists and the itinerary changed since the last
+ * sync. The `json === lastJson` check is the echo-loop guard: hydration stamps
+ * `lastSyncedItinerary` with the incoming server JSON, so the re-fired push
+ * effect sees "no change" and skips — making hydrate→push→hydrate converge.
+ *
+ * Run-state is intentionally NOT gated. The client-tool resume loop keeps the
+ * agent loading for the whole plan, so a run-gated push never fires with the
+ * final itinerary; instead the push attempts anyway and retries on the 409 a
+ * mid-run `updateState` returns, until the run settles (see the push effect).
+ */
+export function shouldSyncCheckpoint(
+  threadId: string | null,
+  json: string,
+  lastJson: string,
+): boolean {
+  if (!threadId) return false;
+  return json !== lastJson;
+}
+
+/** Pull the itinerary array out of a graph-state `value()` snapshot, or null
+ *  when the state has no (well-formed) itinerary to hydrate from. */
+export function extractItinerary(value: unknown): ItineraryStop[] | null {
+  if (value && typeof value === 'object') {
+    const itin = (value as { itinerary?: unknown }).itinerary;
+    if (Array.isArray(itin)) return itin as ItineraryStop[];
+  }
+  return null;
+}
+
+/** Cap on checkpoint-push retries — a backstop so a persistently-failing thread
+ *  can't spin an unbounded background retry loop. */
+export const MAX_PUSH_RETRIES = 20;
+
+/** A mid-run `updateState` returns HTTP 409 (the client-tool resume loop is
+ *  streaming); that is the ONLY error worth retrying. Any other failure
+ *  (404/auth/500) is terminal for this best-effort sync. */
+export function isConflict(err: unknown): boolean {
+  const status = (err as { status?: number })?.status;
+  if (status === 409) return true;
+  return /\b409\b|conflict/i.test(String((err as { message?: string })?.message ?? err));
+}
+
 @Component({
   selector: 'demo-shell',
   standalone: true,
@@ -75,6 +135,8 @@ function parseUrl(url: string): { mode: DemoMode; threadId: string | null } {
     ChatSidenavScrimComponent,
     ChatHistorySearchPaletteComponent,
     ChatSelectComponent,
+    MapCanvasComponent,
+    ItineraryPanelComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './demo-shell.component.html',
@@ -114,6 +176,26 @@ export class DemoShell {
   protected readonly threadsSvc = inject(LangGraphThreadsAdapter);
   protected readonly projectsSvc = inject(ProjectsService);
   private readonly telemetry = inject(ThreadplaneTelemetryService);
+
+  /** Shared working copy of the itinerary — an app-wide singleton (provided in
+   *  app.config.ts) so this shell, the panel, and the map read/write ONE store. */
+  protected readonly itinerary = inject(ItineraryStore);
+
+  /** Frontend-owned itinerary client tools, forwarded to the chat mode
+   *  components (`[clientTools]`) so the agent can read/mutate the panel.
+   *  Built here (an injection context) since the registry injects the store. */
+  readonly clientTools = itineraryClientTools();
+
+  /** Out-of-band SDK client used to push the working itinerary to the durable
+   *  checkpoint (`threads.updateState`) between runs. `LANGGRAPH_THREADS_CONFIG`
+   *  is optional so knob/routing unit tests that don't provide it still run. */
+  private readonly lgClient = createLangGraphClient(
+    inject(LANGGRAPH_THREADS_CONFIG, { optional: true })?.apiUrl ?? environment.langGraphApiUrl,
+  );
+
+  /** JSON of the last itinerary we synced (either pushed OR hydrated). Breaks
+   *  the hydrate→push→hydrate echo loop — see `shouldSyncCheckpoint`. */
+  private lastSyncedItinerary = '';
 
   constructor() {
     // Reflect the chosen theme onto <html data-theme="..."> so the
@@ -180,6 +262,63 @@ export class DemoShell {
     // needing a manual thread switch or reload.
     refreshOnRunEnd(this.agent, () => this.threadsSvc.refresh());
 
+    // ── Itinerary ↔ checkpoint sync (Task 9) ────────────────────────────────
+    // The checkpoint (per-thread graph state) is the durable record; the
+    // ItineraryStore is the live working copy. We sync client-authoritatively.
+
+    // (2) Hydrate the store from the checkpoint on reload / thread switch.
+    // Reads the agent's graph-state value(); when it carries an itinerary
+    // array, replaces the working copy. Stamps lastSyncedItinerary with the
+    // incoming JSON so the push effect below sees "no change" and skips —
+    // this is the other half of the echo-loop guard.
+    effect(() => {
+      const incoming = extractItinerary(this.agent.value());
+      if (incoming === null) return;
+      // Don't let a behind/empty server snapshot wipe a populated local working
+      // copy: during a plan the client tools fill the store before the checkpoint
+      // catches up via the push below. Adopt an empty server itinerary only when
+      // the store is itself empty (a genuine thread switch / fresh load).
+      if (incoming.length === 0 && untracked(() => this.itinerary.stops()).length > 0) return;
+      const json = JSON.stringify(incoming);
+      if (json === this.lastSyncedItinerary) return;
+      this.lastSyncedItinerary = json;
+      this.itinerary.hydrate(incoming);
+    });
+
+    // (3) Push the working copy to the durable checkpoint on every change.
+    // NOT run-gated: the client-tool resume loop keeps the agent loading for
+    // the whole plan, so a mid-run write returns 409 — retry ONLY that (bounded
+    // by MAX_PUSH_RETRIES) until the run settles so the final itinerary always
+    // lands. Debounced ~1200ms; onCleanup cancels a superseded attempt. Any
+    // non-conflict error is terminal — this is a best-effort sync, not a queue.
+    effect((onCleanup) => {
+      const stops = this.itinerary.stops();
+      const tid = threadIdState();
+      const json = JSON.stringify(stops);
+      if (!shouldSyncCheckpoint(tid, json, this.lastSyncedItinerary)) return;
+      let cancelled = false;
+      let retries = 0;
+      let timer: ReturnType<typeof setTimeout>;
+      const attempt = async (): Promise<void> => {
+        if (cancelled) return;
+        try {
+          await this.lgClient.threads.updateState(tid as string, {
+            values: { itinerary: stops },
+          });
+          this.lastSyncedItinerary = json;
+        } catch (err) {
+          if (!cancelled && isConflict(err) && retries++ < MAX_PUSH_RETRIES) {
+            timer = setTimeout(() => void attempt(), 1500);
+          }
+        }
+      };
+      timer = setTimeout(() => void attempt(), 1200);
+      onCleanup(() => {
+        cancelled = true;
+        clearTimeout(timer);
+      });
+    });
+
     if (typeof window !== 'undefined') {
       const onResize = () => this.viewportWidth.set(window.innerWidth);
       window.addEventListener('resize', onResize);
@@ -209,6 +348,38 @@ export class DemoShell {
   );
 
   protected readonly mode = computed<DemoMode>(() => this.urlState().mode);
+
+  /** Whether the Google Maps key is configured — App mode needs the map,
+   *  so the toggle is disabled without it. */
+  readonly hasMapsKey = (environment.googleMapsApiKey as string).length > 0;
+
+  /** App mode: a presentational layer valid only in popup/sidebar (embed's
+   *  full-bleed chat would cover the map). Persisted across reloads and
+   *  mirrored to the `appmode` query param so shared links restore it. */
+  readonly appMode = signal<'on' | 'off'>(this.initialAppMode());
+
+  /** Mode parsed from the REAL browser path. Available immediately at
+   *  bootstrap (unlike router.url, which reads '/' before the initial
+   *  navigation settles), so App mode restores against the right route. */
+  private locationMode(): DemoMode {
+    const path = this.document.defaultView?.location.pathname ?? '';
+    const seg = path.split('/').filter(Boolean)[0];
+    return (MODES as readonly string[]).includes(seg) ? (seg as DemoMode) : 'embed';
+  }
+
+  /** App mode persists across reloads, but it can only run in popup/sidebar —
+   *  embed is full-chat with no background for the map. Reads the `appmode`
+   *  query param from the real browser URL (available at bootstrap, unlike
+   *  ActivatedRoute), falling back to persistence. Starts off when the value
+   *  isn't 'on' OR the current route is embed (e.g. a hand-typed
+   *  /embed?appmode=on). */
+  private initialAppMode(): 'on' | 'off' {
+    const search = this.document.defaultView?.location.search ?? '';
+    const raw = (new URLSearchParams(search).get('appmode') ??
+      this.persistence.read('appMode')) as 'on' | 'off' | null;
+    if (raw !== 'on') return 'off';
+    return this.locationMode() === 'embed' ? 'off' : 'on';
+  }
 
   /**
    * Source of truth for the model picker. The shell owns it; the
@@ -270,10 +441,13 @@ export class DemoShell {
     (this.persistence.read('sidenavMode') as 'expanded' | 'collapsed' | null) ?? 'expanded',
   );
 
-  /** Computed sidenav mode: viewport forces drawer below 768px, else user preference. */
-  protected readonly sidenavMode = computed<ChatSidenavMode>(() =>
-    this.viewportWidth() >= 768 ? this.storedDesktopMode() : 'drawer',
-  );
+  /** Computed sidenav mode: App mode forces drawer (the cockpit reclaims the
+   *  full width for the map + overlay), then viewport forces drawer below
+   *  768px, else user preference. */
+  protected readonly sidenavMode = computed<ChatSidenavMode>(() => {
+    if (this.appMode() === 'on') return 'drawer';
+    return this.viewportWidth() >= 768 ? this.storedDesktopMode() : 'drawer';
+  });
 
   /** Active threads filtered by the selected project (or all when none selected). */
   protected readonly visibleThreads = computed<Thread[]>(() => {
@@ -415,6 +589,7 @@ export class DemoShell {
             model: this.model(),
             reasoning_effort: this.effort(),
             gen_ui_mode: this.genUiMode(),
+            itinerary: this.itinerary.stops(),
           },
         },
         opts,
@@ -427,6 +602,13 @@ export class DemoShell {
   protected readonly _demoState: DemoState = this.agent.value();
 
   protected onModeChange(next: DemoMode | string): void {
+    // Embed can't coexist with App mode (its full-bleed chat covers the
+    // map), so selecting Embed while App mode is on turns App mode off.
+    // Popup and Sidebar layer over the map, so they leave App mode alone.
+    if (next === 'embed' && this.appMode() === 'on') {
+      this.appMode.set('off');
+      this.persistence.write('appMode', 'off');
+    }
     // Preserve the active thread across mode switches: /embed/abc →
     // /popup/abc keeps the conversation visible in the new chrome.
     // Preserve query params so knob state survives the mode hop.
@@ -435,6 +617,45 @@ export class DemoShell {
       id ? ['/', next, id] : ['/', next],
       { queryParamsHandling: 'preserve' },
     );
+  }
+
+  /**
+   * Toggle App mode. Enabling it needs a background area for the map —
+   * embed has none, so it coerces to the sidebar cockpit; popup/sidebar
+   * keep their current presentation. Unlike ag-ui-shell (which has a
+   * knob→URL effect that resolves routing), demo-shell is URL-as-truth,
+   * so this handler both navigates AND writes `appmode` to the query
+   * itself (merging so knob params survive).
+   */
+  onAppModeChange(v: 'on' | 'off'): void {
+    this.persistence.write('appMode', v);
+    if (v === 'on' && this.mode() === 'embed') {
+      // Navigate to the sidebar cockpit first (preserving query so the
+      // active thread + knobs survive), then flip the signal + stamp
+      // appmode=on into the URL.
+      const id = this.threadIdSignal();
+      void this.router
+        .navigate(id ? ['/', 'sidebar', id] : ['/', 'sidebar'], {
+          queryParamsHandling: 'preserve',
+        })
+        .then(() => {
+          this.appMode.set('on');
+          void this.router.navigate([], {
+            queryParams: { appmode: 'on' },
+            queryParamsHandling: 'merge',
+            replaceUrl: true,
+          });
+        });
+      return;
+    }
+    // popup/sidebar (or turning off): keep the current route, just update
+    // the appmode query param. 'off' → null drops it from the URL.
+    this.appMode.set(v);
+    void this.router.navigate([], {
+      queryParams: { appmode: v === 'off' ? null : 'on' },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   /** Build the full knob → URL-value mapping. Default values become

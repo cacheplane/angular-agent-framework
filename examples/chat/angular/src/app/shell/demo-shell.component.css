@@ -177,3 +177,80 @@
 .demo-shell ::ng-deep .chat-sidebar__panel {
   top: 0;
 }
+
+/* App-mode toggle: pill button in the toolbar. Enabled only when a Google
+ * Maps key is configured (App mode renders the map cockpit). */
+.demo-shell__app-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--tplane-chat-separator);
+  background: transparent;
+  color: var(--tplane-chat-text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--tplane-chat-font-size-sm);
+  flex: 0 0 auto;
+}
+.demo-shell__app-toggle:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.demo-shell__app-toggle.is-on {
+  color: var(--tplane-chat-on-primary);
+  background: var(--tplane-chat-primary);
+  border-color: var(--tplane-chat-primary);
+}
+.demo-shell__app-toggle-icon {
+  font-family: 'Material Symbols Outlined', sans-serif;
+  font-size: 16px;
+  line-height: 1;
+}
+.demo-shell__app-toggle-thumb {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tplane-chat-text-muted);
+}
+.demo-shell__app-toggle.is-on .demo-shell__app-toggle-thumb {
+  background: var(--tplane-chat-on-primary);
+}
+
+/* App-mode layout: full-bleed map with the itinerary panel floating as an
+ * overlay card (top-left) and the chat sidebar alongside via router-outlet. */
+.demo-shell__app-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  position: relative;
+  display: flex;
+}
+/* Popup mode only: the map is the full-bleed backdrop with the chat bubble
+   floating over it. (Sidebar mode renders the map inside the chat-sidebar's
+   flex content slot instead — see SidebarMode, Task 12 — so it gets its
+   column there.) */
+.demo-shell__map {
+  position: absolute;
+  inset: 0;
+}
+.demo-shell__itinerary-overlay {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: min(360px, 36vw);
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  background: var(--tplane-chat-bg);
+  border: 1px solid var(--tplane-chat-separator);
+  border-radius: var(--tplane-chat-radius-card);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  z-index: 10;
+}
+.demo-shell__app-body .demo-shell__main {
+  position: relative;
+  z-index: 5;
+  flex: 1 1 auto;
+  min-width: 0;
+}

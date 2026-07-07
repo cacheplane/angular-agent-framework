@@ -12,6 +12,7 @@ interface PaletteState {
   sidenavMode?: 'expanded' | 'collapsed' | null;
   selectedProjectId?: string | null;
   colorScheme?: 'light' | 'dark' | null;
+  appMode?: 'on' | 'off' | null;
 }
 
 type PaletteKey = keyof PaletteState;
@@ -30,6 +31,7 @@ const ALLOWED = {
   theme:       new Set(['default-dark', 'default-light', 'material-dark', 'material-light']),
   colorScheme: new Set<string>(['light', 'dark']),
   sidenavMode: new Set<string>(['expanded', 'collapsed']),
+  appMode:     new Set<string>(['on', 'off']),
 } as const satisfies Partial<Record<PaletteKey, ReadonlySet<string>>>;
 
 type EnumKey = keyof typeof ALLOWED;

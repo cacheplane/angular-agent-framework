@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
-import { FEATURED_SUGGESTIONS, MORE_SUGGESTIONS } from './welcome-suggestions';
+import { FEATURED_SUGGESTIONS, MORE_SUGGESTIONS, ITINERARY_SUGGESTIONS } from './welcome-suggestions';
 
 describe('WelcomeSuggestionsComponent', () => {
   let fx: ComponentFixture<WelcomeSuggestionsComponent>;
@@ -32,14 +32,31 @@ describe('WelcomeSuggestionsComponent', () => {
     expect(trigger.textContent).toContain('More prompts');
   });
 
-  it('merges FEATURED_SUGGESTIONS[1..] + MORE_SUGGESTIONS into dropdown options', () => {
-    const opts = fx.componentInstance['moreOptions'] as { value: string; label: string }[];
+  it('merges FEATURED_SUGGESTIONS[1..] + MORE_SUGGESTIONS into dropdown options (appModeOn=false)', () => {
+    const opts = fx.componentInstance['moreOptions']() as { value: string; label: string }[];
     const expectedLen = FEATURED_SUGGESTIONS.length - 1 + MORE_SUGGESTIONS.length;
     expect(opts.length).toBe(expectedLen);
     expect(opts[0].label).toBe(FEATURED_SUGGESTIONS[1].label);
     expect(opts[0].value).toBe(FEATURED_SUGGESTIONS[1].value);
     const moreStart = FEATURED_SUGGESTIONS.length - 1;
     expect(opts[moreStart].label).toBe(MORE_SUGGESTIONS[0].label);
+  });
+
+  it('features the trip-planning starters when appModeOn is true', () => {
+    fx.componentRef.setInput('appModeOn', true);
+    fx.detectChanges();
+    // Featured chip becomes the first itinerary prompt.
+    const label = fx.nativeElement.querySelector(
+      'chat-welcome-suggestion .chat-welcome-suggestion__label',
+    ) as HTMLElement;
+    expect(label.textContent?.trim()).toBe(ITINERARY_SUGGESTIONS[0].label);
+    // The remaining itinerary prompts lead the "More prompts" set, followed by
+    // this demo's existing capability prompts (preserved, not replaced).
+    const opts = fx.componentInstance['moreOptions']() as { value: string; label: string }[];
+    expect(opts[0].label).toBe(ITINERARY_SUGGESTIONS[1].label);
+    const labels = opts.map((o) => o.label);
+    expect(labels).toContain(FEATURED_SUGGESTIONS[0].label);
+    expect(labels).toContain(MORE_SUGGESTIONS[0].label);
   });
 
   it('emits (selected) with the featured value when the chip is clicked', () => {

@@ -13,12 +13,13 @@ import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
   template: `
     <chat
       [agent]="agent"
+      [clientTools]="shell.clientTools"
       [views]="catalog"
       [modelOptions]="shell.modelOptions()"
       [selectedModel]="shell.model()"
       (selectedModelChange)="shell.onModelChange($event)"
     >
-      <welcome-suggestions chatWelcomeSuggestions (selected)="send($event)" />
+      <welcome-suggestions chatWelcomeSuggestions [appModeOn]="shell.appMode() === 'on'" (selected)="send($event)" />
     </chat>
   `,
   styles: [`

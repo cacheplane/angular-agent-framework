@@ -7,6 +7,8 @@
  * which injects x-api-key server-side and proxies to the shared
  * cockpit-dev LangGraph Cloud assistant.
  */
+import { GENERATED_KEYS } from './generated-keys';
+
 export const environment = {
   production: true,
   langGraphApiUrl: '/api',
@@ -17,4 +19,6 @@ export const environment = {
     sampleRate: 1,
   },
   license: undefined as string | undefined,
+  googleMapsApiKey: GENERATED_KEYS.googleMaps,
+  googleMapsMapId: GENERATED_KEYS.googleMapsMapId,
 };

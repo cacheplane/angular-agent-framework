@@ -21,6 +21,20 @@
       }
     </div>
 
+    <button
+      type="button"
+      class="demo-shell__app-toggle"
+      [class.is-on]="appMode() === 'on'"
+      [attr.aria-pressed]="appMode() === 'on'"
+      [disabled]="!hasMapsKey"
+      [attr.title]="hasMapsKey ? null : 'Set GOOGLE_MAPS_API_KEY to enable'"
+      (click)="onAppModeChange(appMode() === 'on' ? 'off' : 'on')"
+    >
+      <span class="demo-shell__app-toggle-icon" aria-hidden="true">map</span>
+      <span class="demo-shell__app-toggle-label">App mode</span>
+      <span class="demo-shell__app-toggle-thumb" aria-hidden="true"></span>
+    </button>
+
     <div class="demo-shell__field demo-shell__field--first" data-field="model">
       <chat-select
         [options]="modelOptions()"
@@ -109,17 +123,38 @@
     </button>
   </chat-sidenav>
 
-  <div
-    class="demo-shell__main"
-    [attr.data-sidenav-mode]="sidenavMode() !== 'drawer' ? sidenavMode() : null"
-  >
-    <router-outlet />
-    @if (agent.interrupt && agent.interrupt()) {
-      <div class="demo-shell__interrupt-panel" role="region" aria-label="Approval required">
-        <chat-interrupt-panel [agent]="agent" (action)="onInterruptAction($event)" />
+  @if (appMode() === 'on') {
+    <div class="demo-shell__app-body">
+      <!-- Sidebar mode renders the map inside the chat-sidebar's flex content
+           slot (see SidebarMode, Task 12). Popup mode has no content slot, so
+           the map is the full-bleed backdrop here, with the chat bubble
+           floating over it. -->
+      @if (mode() === 'popup') {
+        <app-map-canvas class="demo-shell__map" />
+      }
+      <app-itinerary-panel class="demo-shell__itinerary-overlay" />
+      <div class="demo-shell__main">
+        <router-outlet />
+        @if (agent.interrupt && agent.interrupt()) {
+          <div class="demo-shell__interrupt-panel" role="region" aria-label="Approval required">
+            <chat-interrupt-panel [agent]="agent" (action)="onInterruptAction($event)" />
+          </div>
+        }
       </div>
-    }
-  </div>
+    </div>
+  } @else {
+    <div
+      class="demo-shell__main"
+      [attr.data-sidenav-mode]="sidenavMode() !== 'drawer' ? sidenavMode() : null"
+    >
+      <router-outlet />
+      @if (agent.interrupt && agent.interrupt()) {
+        <div class="demo-shell__interrupt-panel" role="region" aria-label="Approval required">
+          <chat-interrupt-panel [agent]="agent" (action)="onInterruptAction($event)" />
+        </div>
+      }
+    </div>
+  }
 
   <chat-history-search-palette
     [(open)]="paletteOpen"

@@ -141,3 +141,52 @@ export const WELCOME_SUGGESTIONS: readonly WelcomeSuggestion[] = [
   ...FEATURED_SUGGESTIONS,
   ...MORE_SUGGESTIONS,
 ];
+
+/**
+ * Trip-planning starters featured when App mode is on (the map cockpit is on
+ * screen) — they seed an itinerary the agent then builds out via the frontend
+ * client tools, so they match what the user is looking at. Plain chat keeps the
+ * broad capability prompts above (see `suggestionsForAppMode`).
+ */
+export const ITINERARY_SUGGESTIONS: readonly WelcomeSuggestion[] = [
+  {
+    label: 'Plan a long weekend in Paris',
+    value: 'Plan a long weekend in Paris',
+    description: 'Agent builds a day-by-day itinerary you watch appear on the map.',
+  },
+  {
+    label: '3 days in Tokyo with great food',
+    value: '3 days in Tokyo with great food',
+    description: 'Streams a food-forward trip and plots each stop live.',
+  },
+  {
+    label: 'A week on the California coast',
+    value: 'A week on the California coast',
+    description: 'Lays out a multi-day route the agent edits on the cockpit map.',
+  },
+];
+
+/**
+ * Pick the featured chip + "More prompts" set for the current context.
+ *
+ * - App mode ON (map cockpit visible): feature the trip-planning starters —
+ *   they drive the itinerary panel + map. The broad capability prompts trail.
+ * - App mode OFF (plain chat): keep this demo's EXISTING capability surface
+ *   (GenUI / streaming / tool-use + citations, then the "More prompts" set).
+ */
+export function suggestionsForAppMode(appModeOn: boolean): {
+  readonly featured: WelcomeSuggestion;
+  readonly more: readonly WelcomeSuggestion[];
+} {
+  if (appModeOn) {
+    const [featured, ...restItinerary] = ITINERARY_SUGGESTIONS;
+    return {
+      featured,
+      more: [...restItinerary, ...FEATURED_SUGGESTIONS, ...MORE_SUGGESTIONS],
+    };
+  }
+  return {
+    featured: FEATURED_SUGGESTIONS[0],
+    more: [...FEATURED_SUGGESTIONS.slice(1), ...MORE_SUGGESTIONS],
+  };
+}

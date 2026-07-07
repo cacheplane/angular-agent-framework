@@ -23,7 +23,7 @@ track-by-id stable.
 import json
 import os
 from typing import Annotated, Literal, Optional
-from typing_extensions import TypedDict
+from typing_extensions import TypedDict, NotRequired
 
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
@@ -41,6 +41,8 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langgraph_sdk import get_client
 from langsmith import traceable
+
+from threadplane.middleware.langgraph import bind_client_tools, client_tool_names
 
 from src.streaming.a2ui_partial_handler import A2uiPartialHandler
 from src.streaming.envelope_tool import render_a2ui_surface
@@ -178,6 +180,16 @@ SYSTEM_PROMPT = (
     "user is having a casual conversation or asking factual questions, "
     "do NOT dispatch the UI tool — only dispatch when they explicitly "
     "ask for a UI / form / card / interactive surface."
+)
+
+_PLANNER_FRAMING = (
+    "\n\n--- APP MODE: TRIP PLANNER ---\n"
+    "You are a trip-planning assistant driving a live map cockpit. When the user "
+    "asks for a plan, RECOMMEND concrete places (a short note each) grouped into "
+    "days, and POPULATE the itinerary by calling `add_stop` for each recommendation "
+    "(then `day_card` to recap a day). Revise with `move_stop`/`reorder_stop`/`clear_day`. "
+    "Do NOT just describe the plan in prose — call the tools so the map and panel update. "
+    "Only add stops that are not already present."
 )
 
 # Reasoning-capable model prefixes. We only attach the ``reasoning``
@@ -362,11 +374,50 @@ def _as_text(content) -> str:
     return ""
 
 
+class Stop(TypedDict):
+    id: str
+    day: int
+    place: str
+    note: NotRequired[str]
+    lat: NotRequired[float]
+    lng: NotRequired[float]
+
+
 class State(TypedDict):
     messages: Annotated[list, add_messages]
     model: Optional[str]
     reasoning_effort: Optional[str]
     gen_ui_mode: Optional[str]
+    # Frontend client-tool catalog. The @threadplane/langgraph SDK path
+    # (mergeClientTools) sends the browser-declared tool stubs under
+    # ``client_tools`` in the run payload; the threadplane-middleware
+    # ``_catalog`` reads ``state["tools"]`` first and falls back to
+    # ``state["client_tools"]`` — so this channel name feeds the middleware
+    # directly with no normalization needed. The channel must exist here so
+    # the catalog survives the generate → should_continue path.
+    client_tools: Optional[list[dict]]
+    # Trip itinerary the frontend client tools (add_stop/move_stop/...)
+    # mutate. per-thread checkpoint; last-write-wins (plain key)
+    itinerary: list[Stop]
+
+
+def build_system_prompt(gen_ui_mode: str, client_tools: list, itinerary: list) -> str:
+    system = SYSTEM_PROMPT
+    if gen_ui_mode == "a2ui":
+        system = system + "\n\n--- A2UI v1 SCHEMA ---\n" + A2UI_V1_SCHEMA_PROMPT + (
+            "\n\nWhen rendering UI in a2ui mode, emit envelopes in this order: "
+            "surfaceUpdate FIRST, then beginRendering, then any dataModelUpdate "
+            "entries. This lets the client mount the surface as early as possible."
+        )
+    if client_tools:
+        system = system + _PLANNER_FRAMING
+        if itinerary:
+            import json as _json
+            system = system + (
+                "\n\nCURRENT ITINERARY (do not re-add existing stops):\n"
+                + _json.dumps(itinerary, ensure_ascii=False)
+            )
+    return system
 
 
 async def generate(state: State, config: RunnableConfig) -> dict:
@@ -402,18 +453,24 @@ async def generate(state: State, config: RunnableConfig) -> dict:
     # libs/chat/src/lib/a2ui/envelope-normalizer.ts) to canonicalize the
     # four observed argument shapes (envelopes / envelope / positional /
     # flat). The spike showed 80-93% canonical even without strict.
-    llm = ChatOpenAI(**kwargs).bind_tools(
+    # bind_client_tools appends the frontend client-tool catalog stubs (read
+    # from state["client_tools"], sent by the @threadplane/langgraph SDK
+    # mergeClientTools path) to the server tool list so the model can call any
+    # browser-declared tool by name (add_stop/move_stop/clear_day/day_card).
+    llm = bind_client_tools(
+        ChatOpenAI(**kwargs),
         [search_documents, request_approval, research, gen_ui_tool],
+        state,
     )
     # Append A2UI v1 schema to system prompt when in a2ui mode, so the parent
-    # LLM knows how to construct the envelopes directly.
-    system = SYSTEM_PROMPT
-    if gen_ui_mode == "a2ui":
-        system = SYSTEM_PROMPT + "\n\n--- A2UI v1 SCHEMA ---\n" + A2UI_V1_SCHEMA_PROMPT + (
-            "\n\nWhen rendering UI in a2ui mode, emit envelopes in this order: "
-            "surfaceUpdate FIRST, then beginRendering, then any dataModelUpdate "
-            "entries. This lets the client mount the surface as early as possible."
-        )
+    # LLM knows how to construct the envelopes directly. When the frontend
+    # client-tool catalog is present (App mode), also inject the trip-planner
+    # framing + the current itinerary so the model populates state via the tools.
+    system = build_system_prompt(
+        gen_ui_mode=gen_ui_mode,
+        client_tools=state.get("client_tools") or [],
+        itinerary=state.get("itinerary") or [],
+    )
     messages = [SystemMessage(content=system)] + state["messages"]
     # When in a2ui mode, attach the partial-envelope sideband handler so
     # the parent LLM's tool_call_chunks for render_a2ui_surface are
@@ -427,13 +484,23 @@ async def generate(state: State, config: RunnableConfig) -> dict:
 
 
 def should_continue(state: State) -> Literal["tools", "attach_citations"]:
-    """Conditional edge from generate: route to tools node when any
-    tool_call is present (GenUI tools, search, approval, research),
-    otherwise route to attach_citations terminal post-process."""
+    """Conditional edge from generate: route to the server ToolNode when any
+    SERVER tool_call is present (GenUI tools, search, approval, research).
+
+    A turn whose calls are ALL frontend client tools must END (route to the
+    terminal attach_citations post-process) so the browser can execute them
+    and re-run with the resulting ToolMessage — the server ToolNode has no
+    implementation for client tools and would otherwise error. Turns with no
+    tool calls also terminate at attach_citations (a no-op without search
+    results). Mixed server+client turns keep the 'tools' route.
+    """
     last = state["messages"][-1]
-    if isinstance(last, AIMessage) and last.tool_calls:
-        return "tools"
-    return "attach_citations"
+    if not (isinstance(last, AIMessage) and last.tool_calls):
+        return "attach_citations"
+    client = client_tool_names(state)
+    if all(tc["name"] in client for tc in last.tool_calls):
+        return "attach_citations"
+    return "tools"
 
 
 def after_tools(state: State) -> Literal["emit_generated_surface", "generate"]:

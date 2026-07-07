@@ -4,27 +4,36 @@ import { ChatPopupComponent, a2uiBasicCatalog } from '@threadplane/chat';
 import { DemoShell } from '../shell/demo-shell.component';
 import { DEMO_AGENT } from '../shell/shell-tokens';
 import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
+import { AppModePromoComponent } from './app-mode-promo.component';
 
 @Component({
   selector: 'popup-mode',
   standalone: true,
-  imports: [ChatPopupComponent, WelcomeSuggestionsComponent],
+  imports: [ChatPopupComponent, WelcomeSuggestionsComponent, AppModePromoComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="popup-mode__background">
-      <p class="popup-mode__hint">
-        Click the launcher button (bottom-right) to open the chat.
-      </p>
+      <!-- The chat is a floating launcher here, so the area behind it markets
+           App mode (same hero as sidebar mode). App mode forces sidebar, so in
+           popup mode it is effectively always off — gate it the same way for
+           symmetry with sidebar mode. -->
+      @if (shell.appMode() !== 'on') {
+        <app-mode-promo
+          [hasMapsKey]="shell.hasMapsKey"
+          (enable)="shell.onAppModeChange('on')"
+        />
+      }
     </div>
     <chat-popup
       [agent]="agent"
+      [clientTools]="shell.clientTools"
       [views]="catalog"
       [modelOptions]="shell.modelOptions()"
       [selectedModel]="shell.model()"
       [showModelPicker]="false"
       (selectedModelChange)="shell.onModelChange($event)"
     >
-      <welcome-suggestions chatWelcomeSuggestions (selected)="send($event)" />
+      <welcome-suggestions chatWelcomeSuggestions [appModeOn]="shell.appMode() === 'on'" (selected)="send($event)" />
     </chat-popup>
   `,
   styles: [`
@@ -33,8 +42,6 @@ import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
       display: grid;
       place-items: center;
       height: 100%;
-      color: #8a92a3;
-      font-size: 14px;
     }
   `],
 })

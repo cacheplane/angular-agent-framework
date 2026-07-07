@@ -65,3 +65,5 @@ libs/licensing/src/lib/license-public-key.generated.ts
 
 # AG-UI example generated API keys (injected from .env at build time)
 examples/ag-ui/angular/src/environments/generated-keys.local.ts
+# Chat example generated API keys (injected from .env at build time)
+examples/chat/angular/src/environments/generated-keys.local.ts

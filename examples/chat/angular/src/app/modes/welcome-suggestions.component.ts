@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-import { ChangeDetectionStrategy, Component, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import {
   ChatWelcomeSuggestionComponent,
   ChatSelectComponent,
   type ChatSelectOption,
 } from '@threadplane/chat';
-import { FEATURED_SUGGESTIONS, MORE_SUGGESTIONS } from './welcome-suggestions';
+import { suggestionsForAppMode } from './welcome-suggestions';
 
 /**
  * Demo-side composition that renders the welcome-state suggestion surface
@@ -26,13 +26,13 @@ import { FEATURED_SUGGESTIONS, MORE_SUGGESTIONS } from './welcome-suggestions';
     <div class="welcome-suggestions__row">
       <chat-welcome-suggestion
         class="welcome-suggestions__featured"
-        [label]="featuredOne.label"
-        [value]="featuredOne.value"
-        [description]="featuredOne.description"
+        [label]="featuredOne().label"
+        [value]="featuredOne().value"
+        [description]="featuredOne().description"
         (selected)="selected.emit($event)"
       />
       <chat-select
-        [options]="moreOptions"
+        [options]="moreOptions()"
         placeholder="More prompts"
         menuLabel="More demo prompts"
         panelClass="welcome-suggestions__menu-panel"
@@ -115,9 +115,16 @@ import { FEATURED_SUGGESTIONS, MORE_SUGGESTIONS } from './welcome-suggestions';
 })
 export class WelcomeSuggestionsComponent {
   readonly selected = output<string>();
-  protected readonly featuredOne = FEATURED_SUGGESTIONS[0];
-  protected readonly moreOptions: readonly ChatSelectOption[] = [
-    ...FEATURED_SUGGESTIONS.slice(1),
-    ...MORE_SUGGESTIONS,
-  ].map((s) => ({ value: s.value, label: s.label, description: s.description }));
+  /**
+   * When true, lead with the trip-planning starters (App mode / map cockpit on
+   * screen). When false, keep this demo's broad capability prompts (plain chat).
+   * Passed by each mode from `shell.appMode()`.
+   */
+  readonly appModeOn = input<boolean>(false);
+
+  private readonly suggestions = computed(() => suggestionsForAppMode(this.appModeOn()));
+  protected readonly featuredOne = computed(() => this.suggestions().featured);
+  protected readonly moreOptions = computed<readonly ChatSelectOption[]>(() =>
+    this.suggestions().more.map((s) => ({ value: s.value, label: s.label, description: s.description })),
+  );
 }
