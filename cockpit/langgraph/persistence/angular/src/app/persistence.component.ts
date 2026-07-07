@@ -63,8 +63,74 @@ let threadCounter = 0;
       },
     }),
   ],
+  styles: `
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: var(--ds-surface, #1c1c1c);
+      color: var(--ds-text-primary, #f5f5f5);
+    }
+    .cap {
+      padding: 0.625rem 0.75rem;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--ds-text-muted, #a0a0a0);
+      border-bottom: 1px solid var(--ds-border, #2d2d2d);
+    }
+    .thread-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+    .thread {
+      display: block;
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      font-size: 13px;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      border: 0;
+      background: transparent;
+      color: var(--ds-text-primary, #f5f5f5);
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .thread:hover {
+      background: var(--ds-surface-tinted, rgba(255, 255, 255, 0.04));
+    }
+    .thread--active {
+      font-weight: 600;
+      background: var(--ds-accent-surface, rgba(100, 195, 253, 0.08));
+    }
+    .thread--active:hover {
+      background: var(--ds-accent-surface, rgba(100, 195, 253, 0.08));
+    }
+    .footer {
+      padding: 0.5rem;
+      border-top: 1px solid var(--ds-border, #2d2d2d);
+    }
+    .btn--primary {
+      width: 100%;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 0;
+      border-radius: var(--ds-radius-sm, 6px);
+      background: var(--ds-accent, #64c3fd);
+      color: #08243a;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .btn--primary:hover {
+      background: var(--ds-accent-hover, #8dd4ff);
+    }
+  `,
   template: `
-    <example-chat-layout sidebarWidth="w-56">
+    <example-chat-layout sidebarWidth="14rem">
       <chat main [agent]="agent" class="block flex-1 min-w-0">
         <div chatWelcomeSuggestions>
           @for (s of suggestions; track s.value) {
@@ -78,25 +144,15 @@ let threadCounter = 0;
         </div>
       </chat>
 
-      <div sidebar
-        class="flex flex-col"
-        style="background: var(--tplane-chat-surface-alt); color: var(--tplane-chat-text);"
-      >
-        <div
-          class="px-3 py-2 text-xs font-semibold uppercase tracking-wide border-b"
-          style="border-color: var(--tplane-chat-separator); color: var(--tplane-chat-text-muted)"
-        >
-          Threads
-        </div>
+      <div sidebar class="sidebar">
+        <div class="cap">Threads</div>
 
-        <div class="flex-1 overflow-y-auto">
+        <div class="thread-list">
           @for (thread of threads(); track thread.id) {
             <button
-              class="w-full text-left px-3 py-2 text-sm truncate transition-colors"
-              [class.font-semibold]="thread.id === activeThreadId()"
-              [style.background]="thread.id === activeThreadId() ? 'var(--tplane-chat-surface-alt)' : 'transparent'"
-              (mouseenter)="$event.currentTarget.style.background = 'var(--tplane-chat-surface-alt)'"
-              (mouseleave)="$event.currentTarget.style.background = thread.id === activeThreadId() ? 'var(--tplane-chat-surface-alt)' : 'transparent'"
+              type="button"
+              class="thread"
+              [class.thread--active]="thread.id === activeThreadId()"
               (click)="switchThread(thread.id)"
             >
               {{ thread.label }}
@@ -104,16 +160,8 @@ let threadCounter = 0;
           }
         </div>
 
-        <div class="p-2 border-t" style="border-color: var(--tplane-chat-separator)">
-          <button
-            class="w-full rounded px-3 py-1.5 text-sm font-medium transition-colors"
-            style="background: var(--tplane-chat-surface-alt); color: var(--tplane-chat-text);"
-            (mouseenter)="$event.currentTarget.style.opacity = '0.8'"
-            (mouseleave)="$event.currentTarget.style.opacity = '1'"
-            (click)="newThread()"
-          >
-            + New Thread
-          </button>
+        <div class="footer">
+          <button type="button" class="btn--primary" (click)="newThread()">+ New Thread</button>
         </div>
       </div>
     </example-chat-layout>

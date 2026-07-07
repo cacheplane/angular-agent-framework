@@ -8,54 +8,139 @@ interface PipelineStep {
 @Component({
   selector: 'step-pipeline',
   standalone: true,
+  styles: `
+    :host {
+      --st-done: #2ea567;
+      --st-active: #e0a850;
+      --st-error: #e0645a;
+    }
+    .pipeline {
+      border: 1px solid var(--ds-border, #2d2d2d);
+      border-radius: var(--ds-radius-xl, 18px);
+      padding: 1rem;
+      margin: 0.5rem 0;
+      background: var(--ds-surface, #1c1c1c);
+      overflow-x: auto;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      min-width: max-content;
+    }
+    .node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .circle--complete {
+      background: var(--st-done);
+    }
+    .circle--complete svg {
+      width: 16px;
+      height: 16px;
+      color: #fff;
+    }
+    .circle--active {
+      border: 2px solid var(--st-active);
+      animation: sp-spin 1.2s linear infinite;
+    }
+    .circle--pending {
+      border: 2px solid var(--ds-border, #2d2d2d);
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+    }
+    .dot--active {
+      background: var(--st-active);
+    }
+    .dot--pending {
+      background: var(--ds-text-muted, #a0a0a0);
+    }
+    @keyframes sp-spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    .label {
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .label--active {
+      font-weight: 600;
+      color: var(--st-active);
+    }
+    .label--complete {
+      color: var(--st-done);
+    }
+    .label--pending {
+      color: var(--ds-text-muted, #a0a0a0);
+    }
+    .line {
+      width: 2.5rem;
+      height: 2px;
+      margin: 0 4px;
+      margin-top: -20px;
+    }
+    .line--done {
+      background: var(--st-done);
+    }
+    .line--pending {
+      background: var(--ds-border, #2d2d2d);
+    }
+  `,
   template: `
-    <div class="border rounded-xl p-4 my-2 overflow-x-auto" style="border-color: var(--tplane-chat-separator); background: var(--tplane-chat-surface-alt);">
-      <div class="flex items-center gap-0 min-w-max">
+    <div class="pipeline">
+      <div class="row">
         @for (step of steps(); track step.label; let i = $index; let last = $last) {
           <!-- Step node -->
-          <div class="flex flex-col items-center gap-1.5">
+          <div class="node">
             <!-- Status circle -->
             @switch (step.status) {
               @case ('complete') {
-                <div class="w-8 h-8 rounded-full flex items-center justify-center"
-                     style="background: var(--tplane-chat-success, #16a34a);">
-                  <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                <div class="circle circle--complete">
+                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
               }
               @case ('active') {
-                <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center animate-spin"
-                     style="border-color: var(--tplane-chat-warning-text, #f59e0b); animation-duration: 1.2s;">
-                  <div class="w-2 h-2 rounded-full" style="background: var(--tplane-chat-warning-text, #f59e0b);"></div>
+                <div class="circle circle--active">
+                  <div class="dot dot--active"></div>
                 </div>
               }
               @default {
-                <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center"
-                     style="border-color: var(--tplane-chat-text-muted, #555);">
-                  <div class="w-2 h-2 rounded-full" style="background: var(--tplane-chat-text-muted, #555);"></div>
+                <div class="circle circle--pending">
+                  <div class="dot dot--pending"></div>
                 </div>
               }
             }
             <!-- Label -->
-            <span class="text-xs whitespace-nowrap"
-                  [style.color]="step.status === 'active'
-                    ? 'var(--tplane-chat-warning-text, #f59e0b)'
-                    : step.status === 'complete'
-                      ? 'var(--tplane-chat-success, #16a34a)'
-                      : 'var(--tplane-chat-text-muted, #777)'"
-                  [class.font-semibold]="step.status === 'active'">
+            <span
+              class="label"
+              [class.label--active]="step.status === 'active'"
+              [class.label--complete]="step.status === 'complete'"
+              [class.label--pending]="step.status === 'pending'"
+            >
               {{ step.label }}
             </span>
           </div>
 
           <!-- Connecting line -->
           @if (!last) {
-            <div class="w-10 h-0.5 -mt-5 mx-1"
-                 [style.background]="step.status === 'complete'
-                   ? 'var(--tplane-chat-success, #16a34a)'
-                   : 'var(--tplane-chat-text-muted, #555)'">
-            </div>
+            <div class="line" [class.line--done]="step.status === 'complete'" [class.line--pending]="step.status !== 'complete'"></div>
           }
         }
       </div>
