@@ -112,6 +112,19 @@ export function extractItinerary(value: unknown): ItineraryStop[] | null {
   return null;
 }
 
+/** Cap on checkpoint-push retries — a backstop so a persistently-failing thread
+ *  can't spin an unbounded background retry loop. */
+export const MAX_PUSH_RETRIES = 20;
+
+/** A mid-run `updateState` returns HTTP 409 (the client-tool resume loop is
+ *  streaming); that is the ONLY error worth retrying. Any other failure
+ *  (404/auth/500) is terminal for this best-effort sync. */
+export function isConflict(err: unknown): boolean {
+  const status = (err as { status?: number })?.status;
+  if (status === 409) return true;
+  return /\b409\b|conflict/i.test(String((err as { message?: string })?.message ?? err));
+}
+
 @Component({
   selector: 'demo-shell',
   standalone: true,
@@ -272,19 +285,20 @@ export class DemoShell {
       this.itinerary.hydrate(incoming);
     });
 
-    // (3) Push the working copy to the checkpoint at run-settle and on user
-    // edits between runs. Run-gated (never mid-run) + debounced (~500ms).
-    // Depends on stops(), isLoading() (so it re-fires when a run SETTLES), and
-    // threadIdState(). Errors are swallowed — this is a best-effort sync.
+    // (3) Push the working copy to the durable checkpoint on every change.
+    // NOT run-gated: the client-tool resume loop keeps the agent loading for
+    // the whole plan, so a mid-run write returns 409 — retry ONLY that (bounded
+    // by MAX_PUSH_RETRIES) until the run settles so the final itinerary always
+    // lands. Debounced ~1200ms; onCleanup cancels a superseded attempt. Any
+    // non-conflict error is terminal — this is a best-effort sync, not a queue.
     effect((onCleanup) => {
       const stops = this.itinerary.stops();
       const tid = threadIdState();
       const json = JSON.stringify(stops);
       if (!shouldSyncCheckpoint(tid, json, this.lastSyncedItinerary)) return;
-      // Debounce, then push. A mid-run write returns 409 (the client-tool resume
-      // loop is streaming); retry until the run settles so the FINAL itinerary
-      // always lands in the checkpoint. onCleanup cancels a superseded attempt.
       let cancelled = false;
+      let retries = 0;
+      let timer: ReturnType<typeof setTimeout>;
       const attempt = async (): Promise<void> => {
         if (cancelled) return;
         try {
@@ -292,11 +306,13 @@ export class DemoShell {
             values: { itinerary: stops },
           });
           this.lastSyncedItinerary = json;
-        } catch {
-          if (!cancelled) setTimeout(() => void attempt(), 1500);
+        } catch (err) {
+          if (!cancelled && isConflict(err) && retries++ < MAX_PUSH_RETRIES) {
+            timer = setTimeout(() => void attempt(), 1500);
+          }
         }
       };
-      const timer = setTimeout(() => void attempt(), 1200);
+      timer = setTimeout(() => void attempt(), 1200);
       onCleanup(() => {
         cancelled = true;
         clearTimeout(timer);

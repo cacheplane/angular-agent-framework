@@ -9,7 +9,7 @@ import {
   FakeStreamTransport,
   type AgentTransport,
 } from '@threadplane/langgraph';
-import { DemoShell, shouldSyncCheckpoint, extractItinerary } from './demo-shell.component';
+import { DemoShell, shouldSyncCheckpoint, extractItinerary, isConflict } from './demo-shell.component';
 import { DEMO_AGENT_REF } from './agent-ref';
 import { ItineraryStore, type ItineraryStop } from '../itinerary-store';
 
@@ -540,6 +540,22 @@ describe('shouldSyncCheckpoint — push-gate predicate', () => {
 
   it('skips when the content already matches lastSynced (echo-loop guard)', () => {
     expect(shouldSyncCheckpoint('thread-1', '[1]', '[1]')).toBe(false);
+  });
+});
+
+describe('isConflict — retry only the mid-run 409', () => {
+  it('is true for a 409 status', () => {
+    expect(isConflict({ status: 409 })).toBe(true);
+  });
+
+  it('is true when the message mentions 409/conflict', () => {
+    expect(isConflict(new Error('Request failed: 409 Conflict'))).toBe(true);
+  });
+
+  it('is false for other errors (terminal — do not retry)', () => {
+    expect(isConflict({ status: 404 })).toBe(false);
+    expect(isConflict(new Error('Unauthorized'))).toBe(false);
+    expect(isConflict(null)).toBe(false);
   });
 });
 
