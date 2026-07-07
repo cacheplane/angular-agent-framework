@@ -182,6 +182,16 @@ SYSTEM_PROMPT = (
     "ask for a UI / form / card / interactive surface."
 )
 
+_PLANNER_FRAMING = (
+    "\n\n--- APP MODE: TRIP PLANNER ---\n"
+    "You are a trip-planning assistant driving a live map cockpit. When the user "
+    "asks for a plan, RECOMMEND concrete places (a short note each) grouped into "
+    "days, and POPULATE the itinerary by calling `add_stop` for each recommendation "
+    "(then `day_card` to recap a day). Revise with `move_stop`/`reorder_stop`/`clear_day`. "
+    "Do NOT just describe the plan in prose — call the tools so the map and panel update. "
+    "Only add stops that are not already present."
+)
+
 # Reasoning-capable model prefixes. We only attach the ``reasoning``
 # parameter when the model name suggests reasoning support; setting it
 # on a non-reasoning model would be ignored anyway.
@@ -391,6 +401,25 @@ class State(TypedDict):
     itinerary: list[Stop]
 
 
+def build_system_prompt(gen_ui_mode: str, client_tools: list, itinerary: list) -> str:
+    system = SYSTEM_PROMPT
+    if gen_ui_mode == "a2ui":
+        system = system + "\n\n--- A2UI v1 SCHEMA ---\n" + A2UI_V1_SCHEMA_PROMPT + (
+            "\n\nWhen rendering UI in a2ui mode, emit envelopes in this order: "
+            "surfaceUpdate FIRST, then beginRendering, then any dataModelUpdate "
+            "entries. This lets the client mount the surface as early as possible."
+        )
+    if client_tools:
+        system = system + _PLANNER_FRAMING
+        if itinerary:
+            import json as _json
+            system = system + (
+                "\n\nCURRENT ITINERARY (do not re-add existing stops):\n"
+                + _json.dumps(itinerary, ensure_ascii=False)
+            )
+    return system
+
+
 async def generate(state: State, config: RunnableConfig) -> dict:
     model_name = state.get("model") or "gpt-5-mini"
     kwargs = {"model": model_name, "streaming": True}
@@ -434,14 +463,14 @@ async def generate(state: State, config: RunnableConfig) -> dict:
         state,
     )
     # Append A2UI v1 schema to system prompt when in a2ui mode, so the parent
-    # LLM knows how to construct the envelopes directly.
-    system = SYSTEM_PROMPT
-    if gen_ui_mode == "a2ui":
-        system = SYSTEM_PROMPT + "\n\n--- A2UI v1 SCHEMA ---\n" + A2UI_V1_SCHEMA_PROMPT + (
-            "\n\nWhen rendering UI in a2ui mode, emit envelopes in this order: "
-            "surfaceUpdate FIRST, then beginRendering, then any dataModelUpdate "
-            "entries. This lets the client mount the surface as early as possible."
-        )
+    # LLM knows how to construct the envelopes directly. When the frontend
+    # client-tool catalog is present (App mode), also inject the trip-planner
+    # framing + the current itinerary so the model populates state via the tools.
+    system = build_system_prompt(
+        gen_ui_mode=gen_ui_mode,
+        client_tools=state.get("client_tools") or [],
+        itinerary=state.get("itinerary") or [],
+    )
     messages = [SystemMessage(content=system)] + state["messages"]
     # When in a2ui mode, attach the partial-envelope sideband handler so
     # the parent LLM's tool_call_chunks for render_a2ui_surface are
