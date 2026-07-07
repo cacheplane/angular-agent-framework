@@ -1,6 +1,6 @@
 Add angular to my Angular 20+ application.
 
-Install: npm install @threadplane/chat @threadplane/langgraph
+Install: npm install @threadplane/chat @threadplane/langgraph @langchain/core @langchain/langgraph-sdk marked
 
 1. In app.config.ts, add provideAgent({ apiUrl: 'http://localhost:2024', assistantId: 'chat' }) to the providers array. Import it from '@threadplane/langgraph'.
 

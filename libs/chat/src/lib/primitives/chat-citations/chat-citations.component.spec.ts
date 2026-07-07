@@ -1,12 +1,18 @@
 // libs/chat/src/lib/primitives/chat-citations/chat-citations.component.spec.ts
 // SPDX-License-Identifier: MIT
 import { Component, signal } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
+import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { ChatCitationsComponent, ChatCitationCardTemplateDirective } from './chat-citations.component';
 import type { Message } from '../../agent/message';
 
 function msg(citations: Message['citations']): Message {
   return { id: 'm1', role: 'assistant', content: 'x', citations };
+}
+
+/** The Sources panel is collapsed by default; open it to inspect the cards. */
+function expand(fixture: ComponentFixture<unknown>): void {
+  fixture.nativeElement.querySelector('.chat-citations__header')?.click();
+  fixture.detectChanges();
 }
 
 @Component({
@@ -32,19 +38,30 @@ describe('ChatCitationsComponent', () => {
     expect(fixture.nativeElement.querySelector('.chat-citations')).toBeNull();
   });
 
-  it('renders citations sorted by index', () => {
+  it('is collapsed by default — header shows, list hidden', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.componentInstance.message.set(msg([{ id: 'a', index: 1, title: 'A' }]));
+    fixture.detectChanges();
+    const header = fixture.nativeElement.querySelector('.chat-citations__header') as HTMLButtonElement;
+    expect(header).toBeTruthy();
+    expect(header.getAttribute('aria-expanded')).toBe('false');
+    expect(fixture.nativeElement.querySelector('.chat-citations__list')).toBeNull();
+  });
+
+  it('renders citations sorted by index (once expanded)', () => {
     const fixture = TestBed.createComponent(HostComponent);
     fixture.componentInstance.message.set(msg([
       { id: 'b', index: 2, title: 'B' },
       { id: 'a', index: 1, title: 'A' },
     ]));
     fixture.detectChanges();
+    expand(fixture);
     const titles = Array.from(fixture.nativeElement.querySelectorAll('.chat-citations-card__title'))
       .map((el: any) => el.textContent.trim());
     expect(titles).toEqual(['A', 'B']);
   });
 
-  it('uses ContentChild template slot when provided', () => {
+  it('uses ContentChild template slot when provided (once expanded)', () => {
     @Component({
       standalone: true,
       imports: [ChatCitationsComponent, ChatCitationCardTemplateDirective],
@@ -61,6 +78,7 @@ describe('ChatCitationsComponent', () => {
     }
     const fixture = TestBed.createComponent(CustomHost);
     fixture.detectChanges();
+    expand(fixture);
     expect(fixture.nativeElement.querySelector('.custom-card')?.textContent.trim()).toBe('Custom');
     expect(fixture.nativeElement.querySelector('.chat-citations-card')).toBeNull();
   });
@@ -93,6 +111,7 @@ describe('ChatCitationsComponent', () => {
       } as never],
     ]));
     fixture.detectChanges();
+    expand(fixture);
     const cards = fixture.nativeElement.querySelectorAll('.chat-citations-card');
     expect(cards.length).toBe(1);
     expect(fixture.nativeElement.textContent).toContain('Wikipedia');
@@ -117,9 +136,41 @@ describe('ChatCitationsComponent', () => {
       } as never],
     ]));
     fixture.detectChanges();
+    expand(fixture);
     const cards = fixture.nativeElement.querySelectorAll('.chat-citations-card');
     expect(cards.length).toBe(1);
     expect(fixture.nativeElement.textContent).toContain('From message');
     expect(fixture.nativeElement.textContent).not.toContain('From markdown');
+  });
+
+  it('shows a Sources header with the citation count', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.componentInstance.message.set(msg([
+      { id: 'a', index: 1, title: 'A' },
+      { id: 'b', index: 2, title: 'B' },
+    ]));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.chat-citations__heading')?.textContent).toContain('Sources');
+    expect(fixture.nativeElement.querySelector('.chat-citations__count')?.textContent?.trim()).toBe('2');
+  });
+
+  it('expands and collapses the list when the header is toggled', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.componentInstance.message.set(msg([{ id: 'a', index: 1, title: 'A' }]));
+    fixture.detectChanges();
+    const header = fixture.nativeElement.querySelector('.chat-citations__header') as HTMLButtonElement;
+    // collapsed by default
+    expect(header.getAttribute('aria-expanded')).toBe('false');
+    expect(fixture.nativeElement.querySelector('.chat-citations__list')).toBeNull();
+
+    header.click();
+    fixture.detectChanges();
+    expect(header.getAttribute('aria-expanded')).toBe('true');
+    expect(fixture.nativeElement.querySelector('.chat-citations__list')).toBeTruthy();
+
+    header.click();
+    fixture.detectChanges();
+    expect(header.getAttribute('aria-expanded')).toBe('false');
+    expect(fixture.nativeElement.querySelector('.chat-citations__list')).toBeNull();
   });
 });

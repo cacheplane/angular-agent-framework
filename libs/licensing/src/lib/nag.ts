@@ -21,6 +21,12 @@ const MESSAGES: Record<string, string> = {
     'license signature is invalid or malformed. Download a fresh key from https://threadplane.ai/pricing',
 };
 
+/**
+ * Emit one non-blocking license warning for a package/status pair.
+ *
+ * `licensed` and `noncommercial` statuses are silent. Other statuses warn once
+ * per package and status so repeated initialization does not spam logs.
+ */
 export function emitNag(
   result: Pick<EvaluateResult, 'status'>,
   options: EmitNagOptions,

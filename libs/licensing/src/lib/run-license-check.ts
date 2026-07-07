@@ -20,6 +20,13 @@ export interface RunLicenseCheckOptions {
 
 const done = new Map<string, LicenseStatus>();
 
+/**
+ * Run the full package license check.
+ *
+ * The helper verifies an optional token, evaluates the status, emits the
+ * package nag warning when appropriate, and memoizes identical package/token
+ * pairs so repeated provider initialization stays quiet.
+ */
 export async function runLicenseCheck(
   options: RunLicenseCheckOptions,
 ): Promise<LicenseStatus> {

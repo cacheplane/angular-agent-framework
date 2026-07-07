@@ -1,0 +1,221 @@
+// libs/chat/src/lib/styles/chat-citations.styles.ts
+// SPDX-License-Identifier: MIT
+
+/** Inline pill marker (chat-md-citation-reference). */
+export const CHAT_CITATION_MARKER_STYLES = `
+  :host { display: inline; }
+  .chat-citation-marker {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 5px;
+    margin: 0 1px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--tplane-chat-citation-marker-fg);
+    background: var(--tplane-chat-citation-marker-bg);
+    border: 1px solid var(--tplane-chat-citation-marker-border);
+    border-radius: var(--tplane-chat-citation-radius);
+    translate: 0 -1px;
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+  }
+  .chat-citation-marker:hover,
+  .chat-citation-marker:focus-visible {
+    background: var(--tplane-chat-citation-accent-soft);
+    border-color: var(--tplane-chat-citation-accent-border);
+    color: var(--tplane-chat-citation-accent);
+    outline: none;
+  }
+  .chat-citation-marker:focus-visible {
+    box-shadow: 0 0 0 2px var(--tplane-chat-citation-accent-border);
+  }
+  .chat-citation-marker--unresolved {
+    color: var(--tplane-chat-text-muted);
+    background: transparent;
+    border-style: dashed;
+    cursor: default;
+  }
+  .chat-citation-marker--unresolved:hover {
+    background: transparent;
+    border-color: var(--tplane-chat-citation-marker-border);
+    color: var(--tplane-chat-text-muted);
+  }
+  .chat-citation-marker--no-url {
+    cursor: help;
+  }
+`;
+
+/** Provenance preview card (chat-citation-preview), portaled into the overlay pane. */
+export const CHAT_CITATION_PREVIEW_STYLES = `
+  :host { display: block; }
+  .chat-citation-preview {
+    width: 320px;
+    max-width: calc(100vw - 24px);
+    box-sizing: border-box;
+    background: var(--tplane-chat-surface);
+    border: 1px solid var(--tplane-chat-separator);
+    border-radius: var(--tplane-chat-radius-card);
+    box-shadow: var(--tplane-chat-shadow-md);
+    padding: 12px 13px;
+    text-align: left;
+    color: var(--tplane-chat-text);
+  }
+  .chat-citation-preview__head {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 7px;
+  }
+  .chat-citation-preview__fav {
+    width: 16px; height: 16px;
+    border-radius: 4px;
+    flex: 0 0 auto;
+    object-fit: cover;
+  }
+  .chat-citation-preview__fav--mono {
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 10px; font-weight: 700;
+  }
+  .chat-citation-preview__domain {
+    font-size: 12px;
+    color: var(--tplane-chat-text-muted);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .chat-citation-preview__type {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--tplane-chat-text-muted);
+    flex: 0 0 auto;
+  }
+  .chat-citation-preview__title {
+    font-size: 14px; font-weight: 600; line-height: 1.35;
+    margin: 0 0 5px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .chat-citation-preview__snippet {
+    font-size: 12.5px; color: var(--tplane-chat-text-muted); line-height: 1.5;
+    margin: 0;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .chat-citation-preview__foot {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 10px; padding-top: 9px;
+    border-top: 1px solid var(--tplane-chat-separator);
+  }
+  .chat-citation-preview__open {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12px; font-weight: 600;
+    color: var(--tplane-chat-citation-accent);
+    text-decoration: none;
+  }
+  .chat-citation-preview__open:hover { text-decoration: underline; }
+  .chat-citation-preview__meta { font-size: 11px; color: var(--tplane-chat-text-muted); }
+`;
+
+/** Sources panel (chat-citations) + detail card (chat-citations-card). */
+export const CHAT_CITATIONS_PANEL_STYLES = `
+  :host { display: block; }
+  .chat-citations {
+    margin-top: var(--tplane-chat-space-5);
+    padding-top: var(--tplane-chat-space-4);
+    border-top: 1px solid var(--tplane-chat-separator);
+  }
+  .chat-citations__header {
+    display: flex; align-items: center; gap: 9px;
+    width: 100%;
+    padding: 0 0 11px;
+    background: none; border: 0;
+    font: inherit; color: inherit;
+    cursor: pointer; text-align: left;
+  }
+  .chat-citations__heading { font-size: 13px; font-weight: 600; }
+  .chat-citations__count {
+    font-size: 11px; font-weight: 600;
+    color: var(--tplane-chat-text-muted);
+    background: var(--tplane-chat-surface-alt);
+    border: 1px solid var(--tplane-chat-separator);
+    border-radius: 20px;
+    padding: 1px 7px;
+  }
+  .chat-citations__favstack { display: flex; margin-left: 2px; }
+  .chat-citations__fav {
+    width: 16px; height: 16px;
+    border-radius: 4px;
+    margin-left: -5px;
+    border: 1.5px solid var(--tplane-chat-surface);
+    object-fit: cover;
+  }
+  .chat-citations__fav:first-child { margin-left: 0; }
+  .chat-citations__fav--mono {
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 9px; font-weight: 700;
+  }
+  .chat-citations__chevron {
+    margin-left: auto;
+    color: var(--tplane-chat-text-muted);
+    transition: transform 120ms ease;
+  }
+  .chat-citations__chevron.is-open { transform: rotate(180deg); }
+  .chat-citations__list {
+    list-style: none; margin: 0; padding: 0;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .chat-citations__item { margin: 0; }
+
+  .chat-citations-card {
+    display: flex; gap: 10px;
+    padding: 10px 11px;
+    background: var(--tplane-chat-surface);
+    border: 1px solid var(--tplane-chat-separator);
+    border-radius: var(--tplane-chat-radius-card);
+    text-decoration: none; color: inherit;
+    cursor: pointer;
+    transition: border-color 120ms ease, background 120ms ease;
+  }
+  .chat-citations-card:hover,
+  .chat-citations-card:focus-visible {
+    border-color: var(--tplane-chat-citation-accent-border);
+    outline: none;
+  }
+  .chat-citations-card__index {
+    flex: 0 0 auto;
+    width: 18px; height: 18px;
+    border-radius: 5px;
+    background: var(--tplane-chat-surface-alt);
+    border: 1px solid var(--tplane-chat-separator);
+    color: var(--tplane-chat-text-muted);
+    font-size: 11px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 1px;
+  }
+  .chat-citations-card__body { min-width: 0; flex: 1; }
+  .chat-citations-card__top {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 3px;
+  }
+  .chat-citations-card__fav {
+    width: 14px; height: 14px; border-radius: 3px; flex: 0 0 auto; object-fit: cover;
+  }
+  .chat-citations-card__fav--mono {
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 8px; font-weight: 700;
+  }
+  .chat-citations-card__domain { font-size: 11.5px; color: var(--tplane-chat-text-muted); }
+  .chat-citations-card__type { margin-left: auto; font-size: 10.5px; color: var(--tplane-chat-text-muted); }
+  .chat-citations-card__title {
+    font-size: 13.5px; font-weight: 600; line-height: 1.35;
+    margin: 0 0 2px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .chat-citations-card:hover .chat-citations-card__title { color: var(--tplane-chat-citation-accent); }
+  .chat-citations-card__snippet {
+    font-size: 12px; color: var(--tplane-chat-text-muted); line-height: 1.45;
+    margin: 0;
+    display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+  }
+`;

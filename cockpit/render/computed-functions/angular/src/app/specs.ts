@@ -16,14 +16,14 @@ export const COMPUTED_FUNCTIONS_SPECS: DemoSpec[] = [
           type: 'Value',
           props: {
             label: 'Uppercase',
-            value: { $fn: 'uppercase', args: { value: 'hello world' } },
+            value: { $computed: 'uppercase', args: { value: 'hello world' } },
           },
         },
         reversed: {
           type: 'Value',
           props: {
             label: 'Reversed',
-            value: { $fn: 'reverse', args: { value: 'streaming' } },
+            value: { $computed: 'reverse', args: { value: 'streaming' } },
           },
         },
       },
@@ -43,14 +43,14 @@ export const COMPUTED_FUNCTIONS_SPECS: DemoSpec[] = [
           type: 'Value',
           props: {
             label: 'Formatted Date',
-            value: { $fn: 'formatDate', args: { value: '2024-06-15T12:00:00Z' } },
+            value: { $computed: 'formatDate', args: { value: '2024-06-15T12:00:00Z' } },
           },
         },
         product: {
           type: 'Value',
           props: {
             label: 'Multiply 7 x 6',
-            value: { $fn: 'multiply', args: { a: 7, b: 6 } },
+            value: { $computed: 'multiply', args: { a: 7, b: 6 } },
           },
         },
       },
@@ -70,21 +70,21 @@ export const COMPUTED_FUNCTIONS_SPECS: DemoSpec[] = [
           type: 'Value',
           props: {
             label: 'Multiply 12 x 5',
-            value: { $fn: 'multiply', args: { a: 12, b: 5 } },
+            value: { $computed: 'multiply', args: { a: 12, b: 5 } },
           },
         },
         transform: {
           type: 'Value',
           props: {
             label: 'Uppercase',
-            value: { $fn: 'uppercase', args: { value: 'computed functions' } },
+            value: { $computed: 'uppercase', args: { value: 'computed functions' } },
           },
         },
         format: {
           type: 'Value',
           props: {
             label: 'Date',
-            value: { $fn: 'formatDate', args: { value: '2025-01-01T00:00:00Z' } },
+            value: { $computed: 'formatDate', args: { value: '2025-01-01T00:00:00Z' } },
           },
         },
       },

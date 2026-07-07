@@ -15,7 +15,7 @@ import { FakeAgent } from './fake-agent';
  * @example
  * ```ts
  * TestBed.configureTestingModule({
- *   providers: [provideFakeAgent({ responses: ['Hello from the fake agent'] })],
+ *   providers: [provideFakeAgent({ tokens: ['Hello from the fake agent'] })],
  * });
  * ```
  */

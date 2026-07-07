@@ -43,6 +43,14 @@ const LIGHT_TOKENS = `
   --a2ui-elevation-3: 0 4px 8px rgba(0, 0, 0, 0.10);
   --a2ui-elevation-4: 0 8px 16px rgba(0, 0, 0, 0.14);
   --a2ui-elevation-5: 0 16px 32px rgba(0, 0, 0, 0.18);
+
+  /* --tplane-chat-citation-* — inline markers, preview card, sources panel */
+  --tplane-chat-citation-accent: #2f6fe0;
+  --tplane-chat-citation-accent-soft: #eaf1fd;
+  --tplane-chat-citation-accent-border: #c9def8;
+  --tplane-chat-citation-marker-bg: #f1f2f4;
+  --tplane-chat-citation-marker-border: var(--tplane-chat-separator);
+  --tplane-chat-citation-marker-fg: #4b5563;
 `;
 
 const DARK_TOKENS = `
@@ -84,6 +92,14 @@ const DARK_TOKENS = `
   --a2ui-elevation-3: 0 4px 8px rgba(0, 0, 0, 0.4);
   --a2ui-elevation-4: 0 8px 16px rgba(0, 0, 0, 0.45);
   --a2ui-elevation-5: 0 16px 32px rgba(0, 0, 0, 0.5);
+
+  /* --tplane-chat-citation-* dark variant */
+  --tplane-chat-citation-accent: #6ea8ff;
+  --tplane-chat-citation-accent-soft: rgba(79, 141, 245, 0.16);
+  --tplane-chat-citation-accent-border: rgba(79, 141, 245, 0.38);
+  --tplane-chat-citation-marker-bg: rgba(255, 255, 255, 0.08);
+  --tplane-chat-citation-marker-border: var(--tplane-chat-separator);
+  --tplane-chat-citation-marker-fg: #c9ccd1;
 `;
 
 const GEOMETRY_TOKENS = `
@@ -93,6 +109,7 @@ const GEOMETRY_TOKENS = `
   --tplane-chat-radius-button: 8px;
   --tplane-chat-radius-launcher: 9999px;
   --tplane-chat-max-width: 48rem;
+  --tplane-chat-citation-radius: 6px;
 `;
 
 const TYPOGRAPHY_TOKENS = `

@@ -17,4 +17,19 @@ export interface Citation {
   snippet?: string;
   /** Provider-specific extras (retrieval score, source type, etc.). */
   extra?: Record<string, unknown>;
+
+  /**
+   * Source classification driving the type badge. Free-form and extensible:
+   * 'web' (default-inferred from an http(s) url) | 'file' | 'app' | 'memory'
+   * | any custom string. Optional — display derives 'web' from the url when absent.
+   */
+  sourceType?: string;
+  /**
+   * Provider-supplied favicon/logo (absolute URL or `data:` URI). NEVER
+   * auto-fetched by the library — supply this from your own resolver if you
+   * want real favicons; otherwise a monogram is rendered.
+   */
+  iconUrl?: string;
+  /** Freshness signal shown in the preview-card footer. */
+  publishedAt?: string | number | Date;
 }

@@ -110,4 +110,27 @@ describe('ChatStreamingMdComponent — streaming table rendering', () => {
       ).toBe(false);
     }
   });
+
+  it('keeps a finalized partial body row in the table when the stream pauses', () => {
+    vi.useFakeTimers();
+    try {
+      host.streaming.set(false);
+      grow(
+        '| Name | Mental model | When to use |\n' +
+        '| --- | --- | --- |\n' +
+        '| Angular signals | Fine-grained values | Local state |\n' +
+        '| RxJS (Observables) [',
+      );
+      vi.advanceTimersByTime(650);
+      fixture.detectChanges();
+      expect(el.querySelectorAll('table').length).toBe(1);
+      expect(el.querySelectorAll('tbody tr').length).toBe(2);
+      expect(
+        [...el.querySelectorAll('p')].some((p) => (p.textContent || '').includes('| RxJS')),
+        'no raw-pipe paragraph after finalizing a partial body row',
+      ).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

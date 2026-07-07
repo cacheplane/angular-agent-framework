@@ -2,7 +2,7 @@
   {
     "name": "ThreadplaneTelemetryService",
     "kind": "class",
-    "description": "",
+    "description": "Browser-side telemetry service.\n\nThe service no-ops unless `provideThreadplaneTelemetry({ enabled: true })`\nconfigured it. It enriches sent events with `sample_weight`, then delivers\nthem through `sink`, `endpoint`, or legacy PostHog configuration.",
     "params": [],
     "examples": [],
     "properties": [],
@@ -10,7 +10,7 @@
       {
         "name": "capture",
         "signature": "capture(event: ThreadplaneTelemetryEvent, properties: Record<string, unknown>): Promise<void>",
-        "description": "",
+        "description": "Capture an arbitrary enabled browser telemetry event.",
         "params": [
           {
             "name": "event",
@@ -29,7 +29,7 @@
       {
         "name": "captureRuntimeInstanceCreated",
         "signature": "captureRuntimeInstanceCreated(input: ThreadplaneBrowserRuntimeTelemetry): Promise<void>",
-        "description": "",
+        "description": "Capture a runtime construction event.",
         "params": [
           {
             "name": "input",
@@ -42,7 +42,7 @@
       {
         "name": "captureRuntimeRequestCreated",
         "signature": "captureRuntimeRequestCreated(input: ThreadplaneBrowserRuntimeTelemetry & { requestType: string }): Promise<void>",
-        "description": "",
+        "description": "Capture a runtime request creation event.",
         "params": [
           {
             "name": "input",
@@ -55,7 +55,7 @@
       {
         "name": "captureStreamEnded",
         "signature": "captureStreamEnded(input: ThreadplaneBrowserStreamTelemetry): Promise<void>",
-        "description": "",
+        "description": "Capture a stream-end event.",
         "params": [
           {
             "name": "input",
@@ -68,7 +68,7 @@
       {
         "name": "captureStreamErrored",
         "signature": "captureStreamErrored(input: ThreadplaneBrowserStreamErrorTelemetry): Promise<void>",
-        "description": "",
+        "description": "Capture a stream-error event, sending only the derived error class.",
         "params": [
           {
             "name": "input",
@@ -81,7 +81,7 @@
       {
         "name": "captureStreamStarted",
         "signature": "captureStreamStarted(input: ThreadplaneBrowserStreamTelemetry): Promise<void>",
-        "description": "",
+        "description": "Capture a stream-start event.",
         "params": [
           {
             "name": "input",
@@ -96,30 +96,30 @@
   {
     "name": "ThreadplaneBrowserRuntimeTelemetry",
     "kind": "interface",
-    "description": "",
+    "description": "Runtime lifecycle properties captured from browser-side agent adapters.",
     "properties": [
       {
         "name": "model",
         "type": "string",
-        "description": "",
+        "description": "Optional model name.",
         "optional": true
       },
       {
         "name": "provider",
         "type": "string",
-        "description": "",
+        "description": "Optional model provider name.",
         "optional": true
       },
       {
         "name": "surface",
         "type": "string",
-        "description": "",
+        "description": "Optional product or app surface tag.",
         "optional": true
       },
       {
         "name": "transport",
         "type": "string",
-        "description": "",
+        "description": "Runtime transport, such as `langgraph` or `ag-ui`.",
         "optional": false
       }
     ],
@@ -128,42 +128,42 @@
   {
     "name": "ThreadplaneBrowserStreamErrorTelemetry",
     "kind": "interface",
-    "description": "",
+    "description": "Stream error telemetry. The raw error is reduced to an error class.",
     "properties": [
       {
         "name": "durationMs",
         "type": "number",
-        "description": "",
+        "description": "Stream duration in milliseconds, when known.",
         "optional": true
       },
       {
         "name": "error",
         "type": "unknown",
-        "description": "",
+        "description": "Raw error object or value; capture sends only `errorClass`.",
         "optional": true
       },
       {
         "name": "model",
         "type": "string",
-        "description": "",
+        "description": "Optional model name.",
         "optional": true
       },
       {
         "name": "provider",
         "type": "string",
-        "description": "",
+        "description": "Optional model provider name.",
         "optional": true
       },
       {
         "name": "surface",
         "type": "string",
-        "description": "",
+        "description": "Optional product or app surface tag.",
         "optional": true
       },
       {
         "name": "transport",
         "type": "string",
-        "description": "",
+        "description": "Runtime transport, such as `langgraph` or `ag-ui`.",
         "optional": false
       }
     ],
@@ -172,36 +172,36 @@
   {
     "name": "ThreadplaneBrowserStreamTelemetry",
     "kind": "interface",
-    "description": "",
+    "description": "Stream telemetry properties captured from browser-side agent adapters.",
     "properties": [
       {
         "name": "durationMs",
         "type": "number",
-        "description": "",
+        "description": "Stream duration in milliseconds, when known.",
         "optional": true
       },
       {
         "name": "model",
         "type": "string",
-        "description": "",
+        "description": "Optional model name.",
         "optional": true
       },
       {
         "name": "provider",
         "type": "string",
-        "description": "",
+        "description": "Optional model provider name.",
         "optional": true
       },
       {
         "name": "surface",
         "type": "string",
-        "description": "",
+        "description": "Optional product or app surface tag.",
         "optional": true
       },
       {
         "name": "transport",
         "type": "string",
-        "description": "",
+        "description": "Runtime transport, such as `langgraph` or `ag-ui`.",
         "optional": false
       }
     ],
@@ -328,7 +328,7 @@
   {
     "name": "provideThreadplaneTelemetry",
     "kind": "function",
-    "description": "",
+    "description": "Provide browser telemetry configuration for an Angular app.\n\nBrowser telemetry remains off unless this provider is installed with\n`enabled: true`. Delivery goes through `sink`, `endpoint`, or the legacy\nPostHog options configured on `ThreadplaneTelemetryConfig`.",
     "signature": "provideThreadplaneTelemetry(config: ThreadplaneTelemetryConfig): EnvironmentProviders",
     "params": [
       {

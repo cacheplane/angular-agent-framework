@@ -28,7 +28,7 @@ Part of [Threadplane](https://github.com/cacheplane/angular-agent-framework).
 ## Install
 
 ```bash
-npm install @threadplane/chat @threadplane/langgraph marked
+npm install @threadplane/chat @threadplane/langgraph @langchain/core @langchain/langgraph-sdk marked
 ```
 
 **Peer dependencies:**

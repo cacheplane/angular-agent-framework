@@ -30,7 +30,7 @@ const BACKENDS: Backend[] = [
   {
     title: 'LangGraph',
     blurb: 'For LangChain & LangGraph backends.',
-    install: 'npm i @threadplane/chat @threadplane/langgraph',
+    install: 'npm i @threadplane/chat @threadplane/langgraph @langchain/core @langchain/langgraph-sdk marked',
     href: '/docs/langgraph/getting-started/quickstart',
     logoSrc: '/logos/langgraph.svg',
     attribution: 'LangChain',
@@ -38,7 +38,7 @@ const BACKENDS: Backend[] = [
   {
     title: 'AG-UI',
     blurb: 'For CrewAI, Mastra, Pydantic AI, Strands, and more.',
-    install: 'npm i @threadplane/chat @threadplane/ag-ui @ag-ui/client @ag-ui/core',
+    install: 'npm i @threadplane/chat @threadplane/ag-ui @ag-ui/client @ag-ui/core marked',
     href: '/docs/ag-ui/getting-started/quickstart',
     logoSrc: '/logos/runtimes/copilotkit.svg',
     attribution: 'AG-UI · CopilotKit',
@@ -82,7 +82,7 @@ interface SupportingLib {
 const SUPPORTING: SupportingLib[] = [
   {
     title: 'Middleware',
-    blurb: 'Backend client-tool routing',
+    blurb: 'JS & Python client-tool routing',
     href: '/docs/middleware/getting-started/introduction',
     glyph: 'middleware',
   },

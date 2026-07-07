@@ -60,7 +60,6 @@ import { StreamingSimulator } from './streaming-simulator';
       border: 2px solid var(--tl-green-bright);
       transform: translate(-50%, -50%);
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-      transition: left 0.075s linear;
     }
     .tl__count {
       flex-shrink: 0;

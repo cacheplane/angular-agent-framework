@@ -69,7 +69,7 @@ The higher-level check is built not to block app startup:
 - warning output goes through `console.warn` unless a custom `warn` function is supplied;
 - no network request is made by the licensing check.
 
-The code returns statuses instead of throwing for normal license states. For me, that's the right default here: you get to decide what a missing or expired license means for your app instead of having the check make that call for you. The tradeoff is that nothing stops a consumer from ignoring the status entirely. `@threadplane/chat` treats it as a warning and visibility mechanism, not an app kill switch.
+The code returns statuses instead of throwing for normal license states. That keeps policy decisions in the host package or application: a missing or expired license can be logged, surfaced, or enforced by the caller instead of being decided by initialization code. `@threadplane/chat` treats the status as a warning and visibility mechanism, not an app kill switch.
 
 ## Next steps
 

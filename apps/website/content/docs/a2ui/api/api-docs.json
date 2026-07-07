@@ -460,7 +460,7 @@
       {
         "name": "push",
         "signature": "push(chunk: string): A2uiMessage[]",
-        "description": "",
+        "description": "Push a JSONL stream chunk and return every complete A2UI envelope parsed from it.",
         "params": [
           {
             "name": "chunk",
@@ -881,19 +881,21 @@
   {
     "name": "createA2uiMessageParser",
     "kind": "function",
-    "description": "",
+    "description": "Creates a stateful parser for newline-delimited A2UI message streams.\n\nThe parser buffers incomplete lines, skips malformed JSON, and returns only\nrecognized A2UI envelopes: `surfaceUpdate`, `dataModelUpdate`,\n`beginRendering`, and `deleteSurface`.",
     "signature": "createA2uiMessageParser(): A2uiMessageParser",
     "params": [],
     "returns": {
       "type": "A2uiMessageParser",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst parser = createA2uiMessageParser();\nconst messages = parser.push('{\"beginRendering\":{\"surfaceId\":\"s1\",\"root\":\"root\"}}\\n');\n```"
+    ]
   },
   {
     "name": "deleteByPointer",
     "kind": "function",
-    "description": "",
+    "description": "Returns a new model with the key at `pointer` removed.\n\nEmpty string and `/` clear the whole model. Missing parent paths leave the\ninput model unchanged.",
     "signature": "deleteByPointer(model: Record<string, unknown>, pointer: string): Record<string, unknown>",
     "params": [
       {
@@ -913,12 +915,14 @@
       "type": "Record<string, unknown>",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst next = deleteByPointer({ user: { name: 'Ada' } }, '/user/name');\n```"
+    ]
   },
   {
     "name": "getByPointer",
     "kind": "function",
-    "description": "",
+    "description": "Reads a value from a model using the package's simple slash-separated pointer syntax.\n\nEmpty string and `/` target the root. Segments are not RFC 6901-unescaped;\nnormalize keys before using pointers that would require `~0` or `~1`.",
     "signature": "getByPointer(model: Record<string, unknown>, pointer: string): unknown",
     "params": [
       {
@@ -938,12 +942,14 @@
       "type": "unknown",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\ngetByPointer({ user: { name: 'Ada' } }, '/user/name'); // 'Ada'\n```"
+    ]
   },
   {
     "name": "isLiteralBoolean",
     "kind": "function",
-    "description": "",
+    "description": "Returns true when `value` is an A2UI boolean literal wrapper.",
     "signature": "isLiteralBoolean(value: unknown): value is { literalBoolean: boolean }",
     "params": [
       {
@@ -962,7 +968,7 @@
   {
     "name": "isLiteralNumber",
     "kind": "function",
-    "description": "",
+    "description": "Returns true when `value` is an A2UI number literal wrapper.",
     "signature": "isLiteralNumber(value: unknown): value is { literalNumber: number }",
     "params": [
       {
@@ -981,7 +987,7 @@
   {
     "name": "isLiteralString",
     "kind": "function",
-    "description": "",
+    "description": "Returns true when `value` is an A2UI string literal wrapper.",
     "signature": "isLiteralString(value: unknown): value is { literalString: string }",
     "params": [
       {
@@ -1000,7 +1006,7 @@
   {
     "name": "isPathRef",
     "kind": "function",
-    "description": "",
+    "description": "Returns true when `value` is an A2UI dynamic path reference.",
     "signature": "isPathRef(value: unknown): value is { path: string }",
     "params": [
       {
@@ -1019,7 +1025,7 @@
   {
     "name": "resolveDynamic",
     "kind": "function",
-    "description": "",
+    "description": "Resolves an A2UI dynamic value against a client data model.\n\nLiteral wrappers unwrap to their inner values, `{ path }` references read\nfrom the model by JSON-pointer path, arrays resolve recursively, and\nunrecognized plain values pass through unchanged.",
     "signature": "resolveDynamic(value: unknown, model: Record<string, unknown>, scope: A2uiScope): unknown",
     "params": [
       {
@@ -1045,12 +1051,14 @@
       "type": "unknown",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst model = { customer: { name: 'Ada' } };\nresolveDynamic({ path: '/customer/name' }, model); // 'Ada'\nresolveDynamic({ literalString: 'Checkout' }, model); // 'Checkout'\n```"
+    ]
   },
   {
     "name": "setByPointer",
     "kind": "function",
-    "description": "",
+    "description": "Returns a new model with `value` written at `pointer`.\n\nThe input model is not mutated. Missing intermediate objects are created.",
     "signature": "setByPointer(model: Record<string, unknown>, pointer: string, value: unknown): Record<string, unknown>",
     "params": [
       {
@@ -1076,6 +1084,8 @@
       "type": "Record<string, unknown>",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nconst next = setByPointer({}, '/user/name', 'Ada');\n```"
+    ]
   }
 ]

@@ -12,6 +12,7 @@ import { StreamingTimelineComponent } from '../../../../shared/streaming-timelin
 import { ExampleSplitLayoutComponent } from '@threadplane/example-layouts';
 import { COMPUTED_FUNCTIONS_SPECS } from './specs';
 import { highlightJson } from '../../../../shared/json-highlight';
+import { toDisplayText } from '../../../../shared/to-display-text';
 
 // --- Inline view components registered in the demo registry ---
 
@@ -34,10 +35,10 @@ import { highlightJson } from '../../../../shared/json-highlight';
     }
   `,
   template: `
-    @if (label() || value()) {
+    @if (displayValue()) {
       <div class="row">
         <span class="row__label">{{ label() }}:</span>
-        <span class="row__value">{{ value() }}</span>
+        <span class="row__value">{{ displayValue() }}</span>
       </div>
     } @else if (loading()) {
       <div class="sr-skeleton" style="height: 11px; width: 100%; margin: 3px 0;"></div>
@@ -48,6 +49,9 @@ import { highlightJson } from '../../../../shared/json-highlight';
 class DemoValueComponent {
   readonly label = input('');
   readonly value = input<unknown>('');
+  // Coerce through toDisplayText so an unresolved binding object mid-stream
+  // (e.g. a partial `$computed` value) renders as the skeleton, not `[object Object]`.
+  readonly displayValue = computed(() => toDisplayText(this.value()));
   readonly childKeys = input<string[]>([]);
   readonly spec = input<Spec | null>(null);
   readonly bindings = input<Record<string, string>>({});
@@ -73,10 +77,7 @@ class DemoValueComponent {
 })
 class DemoHeadingComponent {
   readonly content = input<unknown>('');
-  readonly displayContent = computed(() => {
-    const c = this.content();
-    return typeof c === 'string' ? c : '';
-  });
+  readonly displayContent = computed(() => toDisplayText(this.content()));
   readonly childKeys = input<string[]>([]);
   readonly spec = input<Spec | null>(null);
   readonly bindings = input<Record<string, string>>({});
