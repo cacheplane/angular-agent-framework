@@ -45,6 +45,39 @@ const WELCOME_SUGGESTIONS = [
     CurrencyPipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: `
+    .body { display: flex; flex-direction: column; gap: 6px; }
+    .field { font-size: 13px; }
+    .field__label { color: var(--ds-text-muted); margin-right: 6px; }
+    .field__value { color: var(--ds-text-primary); }
+    .reason { font-style: italic; color: var(--ds-text-muted); margin-top: 4px; font-size: 13px; }
+    .edit-form { margin-top: 10px; display: flex; gap: 6px; align-items: center; }
+    .edit-form__label { color: var(--ds-text-muted); font-size: 12px; }
+    .control-input {
+      background: var(--ds-surface-dim);
+      border: 1px solid var(--ds-border);
+      border-radius: var(--ds-radius-sm);
+      color: var(--ds-text-primary);
+      padding: 5px 8px;
+      width: 120px;
+      font-size: 13px;
+    }
+    .control-input:focus {
+      outline: none;
+      border-color: var(--ds-accent);
+      box-shadow: 0 0 0 3px var(--ds-accent-glow);
+    }
+    .btn--primary {
+      background: var(--ds-accent);
+      color: #08243a;
+      border: 0;
+      border-radius: var(--ds-radius-sm);
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  `,
   template: `
     <example-chat-layout>
       <div main class="flex flex-col h-full">
@@ -69,17 +102,17 @@ const WELCOME_SUGGESTIONS = [
           (action)="onAction($event)"
         >
           <ng-template #body let-payload>
-            <div style="display:flex; flex-direction:column; gap:6px;">
-              <div><span style="color:var(--tplane-chat-text-muted); margin-right:6px;">Amount</span><strong>{{ payload.amount | currency }}</strong></div>
-              <div><span style="color:var(--tplane-chat-text-muted); margin-right:6px;">Customer</span><code>{{ payload.customer_id }}</code></div>
+            <div class="body">
+              <div class="field"><span class="field__label">Amount</span><strong class="field__value">{{ payload.amount | currency }}</strong></div>
+              <div class="field"><span class="field__label">Customer</span><code>{{ payload.customer_id }}</code></div>
               @if (payload.reason) {
-                <div style="font-style:italic; color:var(--tplane-chat-text-muted); margin-top:4px;">{{ payload.reason }}</div>
+                <div class="reason">{{ payload.reason }}</div>
               }
               @if (editing()) {
-                <div style="margin-top:10px; display:flex; gap:6px; align-items:center;">
-                  <label style="color:var(--tplane-chat-text-muted); font-size:12px;">Edit amount</label>
-                  <input type="number" step="0.01" [value]="editAmount() ?? payload.amount" (input)="editAmount.set(+($any($event.target).value))" style="padding:4px 8px; border:1px solid var(--tplane-chat-separator); border-radius:6px; width:120px;" />
-                  <button type="button" (click)="submitEdit(payload)" style="padding:4px 10px; background:var(--tplane-chat-primary); color:var(--tplane-chat-on-primary); border:0; border-radius:6px; font-size:12px; cursor:pointer;">Save</button>
+                <div class="edit-form">
+                  <label class="edit-form__label">Edit amount</label>
+                  <input type="number" step="0.01" [value]="editAmount() ?? payload.amount" (input)="editAmount.set(+($any($event.target).value))" class="control-input" />
+                  <button type="button" (click)="submitEdit(payload)" class="btn--primary">Save</button>
                 </div>
               }
             </div>
