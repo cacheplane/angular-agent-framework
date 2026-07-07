@@ -105,6 +105,20 @@ describe('ROOT_TOKEN_STYLES — edge-claim primitive', () => {
   });
 });
 
+describe('ROOT_TOKEN_STYLES — citation tokens', () => {
+  it.each([
+    '--tplane-chat-citation-accent:',
+    '--tplane-chat-citation-accent-soft:',
+    '--tplane-chat-citation-accent-border:',
+    '--tplane-chat-citation-marker-bg:',
+    '--tplane-chat-citation-marker-border:',
+    '--tplane-chat-citation-marker-fg:',
+    '--tplane-chat-citation-radius:',
+  ])('defines %s', (decl) => {
+    expect(ROOT_TOKEN_STYLES).toContain(decl);
+  });
+});
+
 describe('ROOT_TOKEN_STYLES — theme attribute selectors', () => {
   it.each([
     '[data-theme="light"]',
