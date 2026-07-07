@@ -35,6 +35,20 @@ function resolvePathRef(ref: PathRef, model: Record<string, unknown>, scope?: A2
   return getByPointer(model, '/' + path);
 }
 
+/**
+ * Resolves an A2UI dynamic value against a client data model.
+ *
+ * Literal wrappers unwrap to their inner values, `{ path }` references read
+ * from the model by JSON-pointer path, arrays resolve recursively, and
+ * unrecognized plain values pass through unchanged.
+ *
+ * @example
+ * ```ts
+ * const model = { customer: { name: 'Ada' } };
+ * resolveDynamic({ path: '/customer/name' }, model); // 'Ada'
+ * resolveDynamic({ literalString: 'Checkout' }, model); // 'Checkout'
+ * ```
+ */
 export function resolveDynamic(
   value: unknown,
   model: Record<string, unknown>,

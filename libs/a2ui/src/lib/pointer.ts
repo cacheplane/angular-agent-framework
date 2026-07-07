@@ -5,6 +5,17 @@ function parsePointer(pointer: string): string[] {
   return pointer.split('/').filter(Boolean);
 }
 
+/**
+ * Reads a value from a model using the package's simple slash-separated pointer syntax.
+ *
+ * Empty string and `/` target the root. Segments are not RFC 6901-unescaped;
+ * normalize keys before using pointers that would require `~0` or `~1`.
+ *
+ * @example
+ * ```ts
+ * getByPointer({ user: { name: 'Ada' } }, '/user/name'); // 'Ada'
+ * ```
+ */
 export function getByPointer(model: Record<string, unknown>, pointer: string): unknown {
   const segments = parsePointer(pointer);
   let current: unknown = model;
@@ -15,6 +26,16 @@ export function getByPointer(model: Record<string, unknown>, pointer: string): u
   return current;
 }
 
+/**
+ * Returns a new model with `value` written at `pointer`.
+ *
+ * The input model is not mutated. Missing intermediate objects are created.
+ *
+ * @example
+ * ```ts
+ * const next = setByPointer({}, '/user/name', 'Ada');
+ * ```
+ */
 export function setByPointer(
   model: Record<string, unknown>,
   pointer: string,
@@ -40,6 +61,17 @@ export function setByPointer(
   return clone(model, segments, value) as Record<string, unknown>;
 }
 
+/**
+ * Returns a new model with the key at `pointer` removed.
+ *
+ * Empty string and `/` clear the whole model. Missing parent paths leave the
+ * input model unchanged.
+ *
+ * @example
+ * ```ts
+ * const next = deleteByPointer({ user: { name: 'Ada' } }, '/user/name');
+ * ```
+ */
 export function deleteByPointer(
   model: Record<string, unknown>,
   pointer: string,
