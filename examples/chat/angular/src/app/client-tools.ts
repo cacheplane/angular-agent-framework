@@ -32,7 +32,7 @@ export function itineraryClientTools(): ClientToolRegistry {
       async ({ place, toDay }) => {
         const target = store.stops().find((s) => s.place.toLowerCase() === place.toLowerCase());
         if (!target) {
-          return { error: `No stop named "${place}" — call get_itinerary to see what exists.` };
+          return { error: `No stop named "${place}" — check the current itinerary.` };
         }
         const toDayStops = store.stops().filter((s) => s.day === toDay && s.id !== target.id);
         store.reorder(target.id, toDay, toDayStops.length);
@@ -49,7 +49,7 @@ export function itineraryClientTools(): ClientToolRegistry {
       async ({ place, toDay, toIndex }) => {
         const target = store.stops().find((s) => s.place.toLowerCase() === place.toLowerCase());
         if (!target) {
-          return { error: `No stop named "${place}" — call get_itinerary to see what exists.` };
+          return { error: `No stop named "${place}" — check the current itinerary.` };
         }
         store.reorder(target.id, toDay, toIndex);
         return { reordered: { ...target, day: toDay, toIndex } };
