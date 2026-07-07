@@ -11,6 +11,8 @@ Bring the App-mode map cockpit — the travel-itinerary trip planner currently e
 
 The one deliberate architectural divergence from ag-ui: **the itinerary lives in the langgraph graph state (checkpointed per thread) alongside `messages`**, rather than in a frontend-only store. This showcases langgraph's durable per-thread state.
 
+The demo starts **empty** — there is no seed data. Users explore and prompt the agent (typically via a welcome suggestion) to generate a trip plan; the agent both **recommends** places and **populates the app state** as it goes, building the itinerary/map live.
+
 ## Scope
 
 **In scope (this effort — local parity):**
@@ -42,7 +44,7 @@ User / Agent edits ──▶ ItineraryStore (signals, live)
         updateState({ itinerary }) after run / on edit     ─┴─▶ langgraph checkpoint (durable, per thread)
                           ▲
         thread switch ────┘  hydrate store from agent.values().itinerary
-        new thread ───────── initialValues seed (Paris)
+        new thread ───────── empty itinerary → prompt-to-plan (agent populates live)
 ```
 
 ## State Design (the core decision)
@@ -73,7 +75,7 @@ class State(TypedDict):
 
 - **Flat list, day-as-field.** Grouping-by-day stays a pure frontend view (`days()` computed). Matches the store's canonical shape.
 - **Plain (non-`Annotated`) key → last-write-wins.** The client always sends the full list (via `input.state` and `updateState`), so an append-style reducer would only duplicate entries. Overwrite is correct for a single agent.
-- **Seed** (3 Paris stops) moves server-side conceptually but is delivered through the frontend `initialValues` for a new thread; the graph tolerates an absent/empty `itinerary`.
+- **No seed data, no seeding concept.** A fresh thread starts with an empty `itinerary` (`[]`). The user drives plan creation by prompting the agent; the agent populates the itinerary via the client tools. The graph tolerates an absent/empty `itinerary` everywhere.
 
 ### Ownership & mutation model: client tools + state sync
 
@@ -82,9 +84,9 @@ Mutations run in the **browser** (reusing the ag-ui client tools almost verbatim
 1. **Turn start** — the shell's `submit` wrapper injects `state.itinerary = store.stops()` (the identical mechanism already used for `model`/`reasoning_effort`/`gen_ui_mode`). The `generate` node folds a compact summary into context, so the model always sees the current trip. **`get_itinerary` is removed** (no read round-trip).
 2. **During a turn** — the model calls `add_stop` / `move_stop` / `clear_day` (client tools). The browser executes them: geocodes, updates the `ItineraryStore` (live map/panel), returns the result as the tool message.
 3. **Sync to checkpoint** — after a run settles, the shell calls `agent.updateState({ itinerary: store.stops() })` to capture the agent's edits. Direct user panel edits (drag-reorder, add, clear) between runs call the same `updateState` immediately (no active run to conflict with).
-4. **Hydration** — switching threads seeds the store from `agent.values().itinerary` (server truth). A brand-new thread uses `provideAgent`'s `initialValues` (the Paris seed).
+4. **Hydration** — switching threads loads the store from `agent.values().itinerary` (server truth). A brand-new thread starts **empty** (no seed) and shows the prompt-to-plan empty state until the user asks the agent to build a plan.
 
-**localStorage is dropped** — the checkpoint is now the durable store; `initialValues` covers first paint. Consequence: a brand-new thread always opens on the Paris seed (predictable for a demo), and the itinerary is **per thread** — switching threads swaps the map.
+**localStorage is dropped** — the checkpoint is now the durable store. Consequence: a brand-new thread opens on an **empty** map + itinerary with a prompt-to-plan empty state, and the itinerary is **per thread** — switching threads swaps the map to that thread's plan.
 
 ### Ephemeral UI state stays frontend
 
@@ -94,7 +96,7 @@ Mutations run in the **browser** (reusing the ag-ui client tools almost verbatim
 
 - `agent.values(): Signal<T>` — current graph state values (the `values` stream mode is already enabled). Frontend renders the itinerary from `values().itinerary`.
 - `agent.updateState(values, signal, { asNode })` — writes a checkpoint as if a node produced the values. Used for the client → checkpoint sync.
-- `provideAgent(..., { initialValues })` — first-paint seed before `values` streams.
+- `provideAgent(..., { initialValues })` — available for first-paint defaults; here it is omitted or `{ itinerary: [] }` (no seed data).
 - `mergeClientTools` / `createClientToolsCapability` (TS) + `threadplane.middleware.langgraph.bind_client_tools` (Python) — the frontend-client-tool binding path, already used by ag-ui.
 
 ## Backend Changes (`examples/chat/python`)
@@ -107,12 +109,21 @@ Additive to the existing `chat` graph — plain chat is unaffected when no clien
 - `generate` node: bind the frontend client-tool catalog via `bind_client_tools` (only affects runs where the App-mode frontend sends the catalog), composing with the existing server tools (`search_documents`, `request_approval`, `research`, `gen_ui_tool`).
 - No new graph, no new `graph_id` in `langgraph.json`.
 
+### Planner behavior & prompt tuning
+
+With no seed data, the whole experience depends on the agent turning a request into a populated plan. The prompt/tool tuning is a first-class deliverable, not an afterthought:
+
+- **System prompt (App-mode / planner framing):** when the itinerary client tools are bound, the `generate` node's system context casts the agent as a trip-planning assistant that, given a request, (1) **recommends** concrete places (with a one-line note each) grouped into days, and (2) **populates the app state** by calling `add_stop` for each recommendation and `day_card` to surface a day — rather than only describing the plan in prose. It revises via `move_stop` / `clear_day` when the user asks. The current `state["itinerary"]` (possibly empty) is injected so the agent knows what already exists and only adds what's missing.
+- **Tool descriptions:** tuned so the model reliably *acts* (calls `add_stop` as it recommends) instead of narrating. Descriptions are the primary steering; the system framing above is light supplemental coaching, warranted here because there is no seed to imply the pattern.
+- **Welcome suggestions** are concrete trip-planning starters that both invite exploration and trigger plan generation — e.g. "Plan a long weekend in Paris", "3 days in Tokyo with great food", "A week on the California coast". Selecting one sends the prompt and the agent builds the plan live.
+- **Definition of done for the prompt:** a cold thread + one welcome suggestion yields multiple `add_stop` calls that populate the map + panel with recommended, geocoded stops across days — verified in the live Chrome-MCP gate.
+
 ## Frontend Changes (`examples/chat/angular`)
 
 ### Duplicated surface (ported from `examples/ag-ui`, `@threadplane/ag-ui` → `@threadplane/langgraph`)
 
 ~1,300 LOC copied and re-wired (agent import, `submit` state field, `values`/`updateState` sync):
-`map-canvas.component`, `itinerary-panel.component` (+spec), `itinerary-store` (localStorage removed; hydrate-from-values added), `map-bounds` (+spec), `geocoding.service` (+spec), `google-maps-loader`, `client-tools` (get_itinerary dropped; results sync to checkpoint), `day-card.component`, `clear-day-confirm.component`, plus `modes/app-mode-promo.component` and `modes/welcome-suggestions` App-mode variants.
+`map-canvas.component` (neutral default view when empty; fit-to-bounds once stops exist), `itinerary-panel.component` (+spec; **empty-state CTA** — "Ask the assistant to plan a trip" — shown when there are no stops), `itinerary-store` (localStorage **and** the `SEED` constant removed; empty initial state; hydrate-from-`values` added), `map-bounds` (+spec), `geocoding.service` (+spec), `google-maps-loader`, `client-tools` (get_itinerary dropped; results sync to checkpoint), `day-card.component`, `clear-day-confirm.component`, plus `modes/app-mode-promo.component` and `modes/welcome-suggestions` retuned to trip-planning starters.
 
 ### Shell reconciliation (`shell/demo-shell.component`) — layout ①
 
@@ -124,14 +135,14 @@ Additive to the existing `chat` graph — plain chat is unaffected when no clien
 ### Config
 
 - `environment.ts` / `environment.development.ts`: add `googleMapsApiKey` + `googleMapsMapId` from `GENERATED_KEYS` (port the `inject-env` wiring from ag-ui). Local `.env` only.
-- `app.config.ts`: `provideAgent(...)` gains `initialValues: { itinerary: SEED }`; wire the itinerary client-tools registry.
+- `app.config.ts`: `provideAgent(...)` wires the itinerary client-tools registry; **no seed** (omit `initialValues`, or pass `{ itinerary: [] }`).
 
 ## Testing Strategy
 
-- **Unit (vitest):** `itinerary-store` hydrate-from-values + no-localStorage; `map-bounds`; `geocoding.service`; the `submit`-wrapper injects `state.itinerary`; `updateState` called on run-settle and on user edit; App-mode routing coercion (`embed → sidebar`).
-- **Backend (pytest):** `generate` binds client tools when catalog present and not otherwise; itinerary context injected when `state["itinerary"]` non-empty; plain-chat path unchanged.
-- **e2e (`examples/chat` Playwright):** App-mode cockpit renders (map + overlay + right-rail chat); sidenav collapses to drawer in App mode; per-thread itinerary swaps on thread switch. (Map tiles gated on a local Maps key — assert DOM/layout, not tile pixels, per the Maps-canvas harness lesson.)
-- **Live gate (Chrome MCP):** against the running `:4200` + `:2024` stack with a real LLM — drive "add the Eiffel Tower to day 2", confirm the pin + panel update live, reload mid-thread and confirm the trip restores from the checkpoint.
+- **Unit (vitest):** `itinerary-store` starts empty (no `SEED`) + hydrate-from-`values` + no-localStorage; `map-bounds`; `geocoding.service`; the `submit`-wrapper injects `state.itinerary`; `updateState` called on run-settle and on user edit; empty-state CTA renders with zero stops; App-mode routing coercion (`embed → sidebar`).
+- **Backend (pytest):** `generate` binds client tools when catalog present and not otherwise; itinerary context injected when `state["itinerary"]` non-empty and tolerated when empty/absent; the planner framing is applied only when the catalog is bound; plain-chat path unchanged.
+- **e2e (`examples/chat` Playwright):** App-mode cockpit renders (map + overlay + right-rail chat); a fresh thread shows the empty-state prompt-to-plan; sidenav collapses to drawer in App mode; per-thread itinerary swaps on thread switch. (Map tiles gated on a local Maps key — assert DOM/layout, not tile pixels, per the Maps-canvas harness lesson.)
+- **Live gate (Chrome MCP):** against the running `:4200` + `:2024` stack with a real LLM — start from an **empty** thread, send a planning suggestion ("plan 3 days in Tokyo"), confirm the agent recommends stops and populates the map/panel live via multiple `add_stop` calls, then reload mid-thread and confirm the plan restores from the checkpoint.
 
 ## Risks & Mitigations
 
