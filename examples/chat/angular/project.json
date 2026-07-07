@@ -5,8 +5,18 @@
   "projectType": "application",
   "prefix": "app",
   "targets": {
+    "inject-env": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node examples/chat/angular/scripts/inject-env.mjs",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "build": {
       "executor": "@angular/build:application",
+      "dependsOn": [
+        "inject-env"
+      ],
       "outputs": [
         "{options.outputPath.base}"
       ],
@@ -49,7 +59,13 @@
               "maximumError": "16kb"
             }
           ],
-          "outputHashing": "all"
+          "outputHashing": "all",
+          "fileReplacements": [
+            {
+              "replace": "examples/chat/angular/src/environments/generated-keys.ts",
+              "with": "examples/chat/angular/src/environments/generated-keys.local.ts"
+            }
+          ]
         },
         "production-debug": {
           "define": {
@@ -80,6 +96,10 @@
             {
               "replace": "examples/chat/angular/src/environments/environment.ts",
               "with": "examples/chat/angular/src/environments/environment.development.ts"
+            },
+            {
+              "replace": "examples/chat/angular/src/environments/generated-keys.ts",
+              "with": "examples/chat/angular/src/environments/generated-keys.local.ts"
             }
           ]
         }
@@ -89,6 +109,9 @@
     "serve": {
       "continuous": true,
       "executor": "@angular/build:dev-server",
+      "dependsOn": [
+        "inject-env"
+      ],
       "options": {
         "port": 4200
       },

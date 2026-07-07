@@ -5,6 +5,8 @@
  * Points to a local LangGraph server started with:
  *   cd examples/chat/python && langgraph dev
  */
+import { GENERATED_KEYS } from './generated-keys';
+
 export const environment = {
   production: false,
   langGraphApiUrl: 'http://localhost:2024',
@@ -14,4 +16,6 @@ export const environment = {
     sampleRate: 1,
   },
   license: undefined as string | undefined,
+  googleMapsApiKey: GENERATED_KEYS.googleMaps,
+  googleMapsMapId: GENERATED_KEYS.googleMapsMapId,
 };
