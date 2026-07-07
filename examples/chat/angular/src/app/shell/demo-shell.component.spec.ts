@@ -2,8 +2,16 @@ import { signal } from '@angular/core';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, NavigationEnd } from '@angular/router';
-import { LangGraphThreadsAdapter } from '@threadplane/langgraph';
-import { DemoShell } from './demo-shell.component';
+import {
+  LangGraphThreadsAdapter,
+  LANGGRAPH_THREADS_CONFIG,
+  provideAgent,
+  FakeStreamTransport,
+  type AgentTransport,
+} from '@threadplane/langgraph';
+import { DemoShell, shouldSyncCheckpoint, extractItinerary } from './demo-shell.component';
+import { DEMO_AGENT_REF } from './agent-ref';
+import { ItineraryStore, type ItineraryStop } from '../itinerary-store';
 
 function createThreadsAdapterMock() {
   const threads = signal([]);
@@ -35,6 +43,7 @@ describe('DemoShell — mode signal', () => {
     TestBed.configureTestingModule({
       providers: [
         threadsAdapterProvider,
+        ItineraryStore,
         provideRouter([
           { path: 'embed', component: DemoShell },
           { path: 'popup', component: DemoShell },
@@ -77,6 +86,7 @@ describe('DemoShell — toolbar layout', () => {
     TestBed.configureTestingModule({
       providers: [
         threadsAdapterProvider,
+        ItineraryStore,
         provideRouter([
           { path: 'embed', component: DemoShell },
           { path: '', pathMatch: 'full', redirectTo: 'embed' },
@@ -93,6 +103,7 @@ describe('DemoShell — toolbar layout', () => {
     TestBed.configureTestingModule({
       providers: [
         threadsAdapterProvider,
+        ItineraryStore,
         provideRouter([
           { path: 'embed', component: DemoShell },
           { path: '', pathMatch: 'full', redirectTo: 'embed' },
@@ -116,6 +127,7 @@ describe('DemoShell — toolbar dropdowns use chat-select', () => {
     TestBed.configureTestingModule({
       providers: [
         threadsAdapterProvider,
+        ItineraryStore,
         provideRouter([
           { path: 'embed', component: DemoShell },
           { path: '', pathMatch: 'full', redirectTo: 'embed' },
@@ -143,6 +155,7 @@ describe('DemoShell — URL thread sync', () => {
     TestBed.configureTestingModule({
       providers: [
         threadsAdapterProvider,
+        ItineraryStore,
         provideRouter([
           { path: 'embed', component: DemoShell },
           { path: 'embed/:threadId', component: DemoShell },
@@ -255,6 +268,7 @@ describe('DemoShell — URL knob hydration', () => {
     TestBed.configureTestingModule({
       providers: [
         threadsAdapterProvider,
+        ItineraryStore,
         provideRouter([
           { path: 'embed', component: DemoShell },
           { path: 'embed/:threadId', component: DemoShell },
@@ -370,5 +384,103 @@ describe('DemoShell — URL knob hydration', () => {
 
     expect(router.url).toContain('/embed/xyz123');
     expect(router.url).toContain('model=gpt-5-nano');
+  });
+});
+
+// ── Itinerary ↔ checkpoint sync (Task 9) ────────────────────────────────────
+
+/** A FakeStreamTransport that records the payload of the most recent
+ *  submit so a spec can assert the shell's state injection. */
+class CapturingTransport extends FakeStreamTransport {
+  lastPayload: unknown = undefined;
+  override async *stream(
+    assistantId: string,
+    threadId: string | null,
+    payload: unknown,
+    signal: AbortSignal,
+    options?: Parameters<AgentTransport['stream']>[4],
+  ) {
+    this.lastPayload = payload;
+    yield* super.stream(assistantId, threadId, payload, signal, options);
+  }
+}
+
+describe('shouldSyncCheckpoint — push-gate predicate', () => {
+  it('pushes when settled, has a thread, and content changed', () => {
+    expect(shouldSyncCheckpoint(false, 'thread-1', '[1]', '[0]')).toBe(true);
+  });
+
+  it('never pushes while a run is loading (mid-run guard)', () => {
+    expect(shouldSyncCheckpoint(true, 'thread-1', '[1]', '[0]')).toBe(false);
+  });
+
+  it('never pushes without a thread id', () => {
+    expect(shouldSyncCheckpoint(false, null, '[1]', '[0]')).toBe(false);
+  });
+
+  it('skips when the content already matches lastSynced (echo-loop guard)', () => {
+    expect(shouldSyncCheckpoint(false, 'thread-1', '[1]', '[1]')).toBe(false);
+  });
+});
+
+describe('extractItinerary — value → stops', () => {
+  it('returns the itinerary array from a state value', () => {
+    const stops: ItineraryStop[] = [{ id: 'x', day: 1, place: 'Louvre' }];
+    expect(extractItinerary({ itinerary: stops })).toEqual(stops);
+  });
+
+  it('returns null when no itinerary present', () => {
+    expect(extractItinerary({ messages: [] })).toBeNull();
+    expect(extractItinerary(undefined)).toBeNull();
+    expect(extractItinerary({ itinerary: 'not-an-array' })).toBeNull();
+  });
+});
+
+describe('DemoShell — submit injects itinerary into state', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    TestBed.configureTestingModule({
+      providers: [
+        threadsAdapterProvider,
+        ItineraryStore,
+        { provide: LANGGRAPH_THREADS_CONFIG, useValue: { apiUrl: 'http://localhost:2024' } },
+        provideRouter([
+          { path: 'embed', component: DemoShell },
+          { path: '', pathMatch: 'full', redirectTo: 'embed' },
+          { path: '**', redirectTo: 'embed' },
+        ]),
+      ],
+    });
+  });
+
+  it('forwards store.stops() as state.itinerary on submit', async () => {
+    const capturing = new CapturingTransport();
+    const store = new ItineraryStore();
+    // Override the component-scoped agent so its transport is capturable,
+    // and share the SAME store instance the shell injects.
+    TestBed.overrideComponent(DemoShell, {
+      set: {
+        providers: [
+          { provide: ItineraryStore, useValue: store },
+          ...provideAgent(DEMO_AGENT_REF, {
+            assistantId: 'fake',
+            transport: capturing,
+          }),
+        ],
+      },
+    });
+
+    const fx = TestBed.createComponent(DemoShell);
+    fx.detectChanges();
+    const shell = fx.componentInstance as unknown as {
+      agent: { submit: (i: unknown) => Promise<void> };
+    };
+
+    store.add(1, 'Louvre');
+    await shell.agent.submit({ messages: [{ role: 'user', content: 'hi' }] });
+
+    const payload = capturing.lastPayload as { itinerary?: ItineraryStop[] };
+    expect(payload.itinerary).toEqual(store.stops());
+    expect(payload.itinerary?.[0].place).toBe('Louvre');
   });
 });

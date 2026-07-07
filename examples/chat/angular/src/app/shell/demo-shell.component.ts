@@ -13,8 +13,16 @@ import {
 import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs/operators';
-import { injectAgent, provideAgent, LangGraphThreadsAdapter, refreshOnRunEnd } from '@threadplane/langgraph';
+import {
+  injectAgent,
+  provideAgent,
+  LangGraphThreadsAdapter,
+  LANGGRAPH_THREADS_CONFIG,
+  createLangGraphClient,
+  refreshOnRunEnd,
+} from '@threadplane/langgraph';
 import { DEMO_AGENT_REF, type DemoState } from './agent-ref';
+import { ItineraryStore, type ItineraryStop } from '../itinerary-store';
 import { ThreadplaneTelemetryService } from '@threadplane/telemetry/browser';
 import {
   ChatInterruptPanelComponent,
@@ -63,6 +71,40 @@ function parseUrl(url: string): { mode: DemoMode; threadId: string | null } {
   const mode = (MODES as readonly string[]).includes(segs[0]) ? (segs[0] as DemoMode) : 'embed';
   const threadId = segs[1] && segs[1].length > 0 ? segs[1] : null;
   return { mode, threadId };
+}
+
+// ── Itinerary ↔ checkpoint sync helpers (Task 9) ────────────────────────────
+// Extracted as pure functions so the sync decisions are unit-testable without
+// driving the agent's derived `value()`/`isLoading()` signals (which the fake
+// transport harness can't emit). The effects below stay thin wrappers.
+
+/**
+ * Decide whether to push the working itinerary to the durable checkpoint.
+ * Returns true only when a run has SETTLED (not loading), a thread exists,
+ * and the content actually changed since the last sync. The `json === lastJson`
+ * check is the echo-loop guard: hydration stamps `lastSyncedItinerary` with the
+ * incoming server JSON, so the re-fired push effect sees "no change" and skips —
+ * making hydrate→push→hydrate converge immediately.
+ */
+export function shouldSyncCheckpoint(
+  isLoading: boolean,
+  threadId: string | null,
+  json: string,
+  lastJson: string,
+): boolean {
+  if (isLoading) return false;
+  if (!threadId) return false;
+  return json !== lastJson;
+}
+
+/** Pull the itinerary array out of a graph-state `value()` snapshot, or null
+ *  when the state has no (well-formed) itinerary to hydrate from. */
+export function extractItinerary(value: unknown): ItineraryStop[] | null {
+  if (value && typeof value === 'object') {
+    const itin = (value as { itinerary?: unknown }).itinerary;
+    if (Array.isArray(itin)) return itin as ItineraryStop[];
+  }
+  return null;
 }
 
 @Component({
@@ -114,6 +156,21 @@ export class DemoShell {
   protected readonly threadsSvc = inject(LangGraphThreadsAdapter);
   protected readonly projectsSvc = inject(ProjectsService);
   private readonly telemetry = inject(ThreadplaneTelemetryService);
+
+  /** Shared working copy of the itinerary — an app-wide singleton (provided in
+   *  app.config.ts) so this shell, the panel, and the map read/write ONE store. */
+  protected readonly itinerary = inject(ItineraryStore);
+
+  /** Out-of-band SDK client used to push the working itinerary to the durable
+   *  checkpoint (`threads.updateState`) between runs. `LANGGRAPH_THREADS_CONFIG`
+   *  is optional so knob/routing unit tests that don't provide it still run. */
+  private readonly lgClient = createLangGraphClient(
+    inject(LANGGRAPH_THREADS_CONFIG, { optional: true })?.apiUrl ?? environment.langGraphApiUrl,
+  );
+
+  /** JSON of the last itinerary we synced (either pushed OR hydrated). Breaks
+   *  the hydrate→push→hydrate echo loop — see `shouldSyncCheckpoint`. */
+  private lastSyncedItinerary = '';
 
   constructor() {
     // Reflect the chosen theme onto <html data-theme="..."> so the
@@ -179,6 +236,49 @@ export class DemoShell {
     // a refresh after run-end picks up the new title in the drawer without
     // needing a manual thread switch or reload.
     refreshOnRunEnd(this.agent, () => this.threadsSvc.refresh());
+
+    // ── Itinerary ↔ checkpoint sync (Task 9) ────────────────────────────────
+    // The checkpoint (per-thread graph state) is the durable record; the
+    // ItineraryStore is the live working copy. We sync client-authoritatively.
+
+    // (2) Hydrate the store from the checkpoint on reload / thread switch.
+    // Reads the agent's graph-state value(); when it carries an itinerary
+    // array, replaces the working copy. Stamps lastSyncedItinerary with the
+    // incoming JSON so the push effect below sees "no change" and skips —
+    // this is the other half of the echo-loop guard.
+    effect(() => {
+      const incoming = extractItinerary(this.agent.value());
+      if (incoming === null) return;
+      const json = JSON.stringify(incoming);
+      if (json === this.lastSyncedItinerary) return;
+      this.lastSyncedItinerary = json;
+      this.itinerary.hydrate(incoming);
+    });
+
+    // (3) Push the working copy to the checkpoint at run-settle and on user
+    // edits between runs. Run-gated (never mid-run) + debounced (~500ms).
+    // Depends on stops(), isLoading() (so it re-fires when a run SETTLES), and
+    // threadIdState(). Errors are swallowed — this is a best-effort sync.
+    effect((onCleanup) => {
+      const stops = this.itinerary.stops();
+      const isLoading = this.agent.isLoading();
+      const tid = threadIdState();
+      const json = JSON.stringify(stops);
+      if (!shouldSyncCheckpoint(isLoading, tid, json, this.lastSyncedItinerary)) return;
+      const timer = setTimeout(() => {
+        void (async () => {
+          try {
+            await this.lgClient.threads.updateState(tid as string, {
+              values: { itinerary: stops },
+            });
+            this.lastSyncedItinerary = json;
+          } catch {
+            // best-effort: a failed checkpoint push must not break the UI.
+          }
+        })();
+      }, 500);
+      onCleanup(() => clearTimeout(timer));
+    });
 
     if (typeof window !== 'undefined') {
       const onResize = () => this.viewportWidth.set(window.innerWidth);
@@ -415,6 +515,7 @@ export class DemoShell {
             model: this.model(),
             reasoning_effort: this.effort(),
             gen_ui_mode: this.genUiMode(),
+            itinerary: this.itinerary.stops(),
           },
         },
         opts,
