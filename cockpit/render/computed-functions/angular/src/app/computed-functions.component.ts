@@ -12,6 +12,7 @@ import { StreamingTimelineComponent } from '../../../../shared/streaming-timelin
 import { ExampleSplitLayoutComponent } from '@threadplane/example-layouts';
 import { COMPUTED_FUNCTIONS_SPECS } from './specs';
 import { highlightJson } from '../../../../shared/json-highlight';
+import { toDisplayText } from '../../../../shared/to-display-text';
 
 // --- Inline view components registered in the demo registry ---
 
@@ -73,10 +74,7 @@ class DemoValueComponent {
 })
 class DemoHeadingComponent {
   readonly content = input<unknown>('');
-  readonly displayContent = computed(() => {
-    const c = this.content();
-    return typeof c === 'string' ? c : '';
-  });
+  readonly displayContent = computed(() => toDisplayText(this.content()));
   readonly childKeys = input<string[]>([]);
   readonly spec = input<Spec | null>(null);
   readonly bindings = input<Record<string, string>>({});
