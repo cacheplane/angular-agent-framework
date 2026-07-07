@@ -41,6 +41,8 @@ import {
 } from '@threadplane/chat';
 import { PalettePersistence } from './palette-persistence.service';
 import { ProjectsService } from './projects.service';
+import { MapCanvasComponent } from '../map-canvas.component';
+import { ItineraryPanelComponent } from '../itinerary-panel.component';
 import { DEMO_AGENT } from './shell-tokens';
 import { createCanonicalDemoRuntimeTelemetrySink } from './runtime-telemetry';
 import { environment } from '../../environments/environment';
@@ -117,6 +119,8 @@ export function extractItinerary(value: unknown): ItineraryStop[] | null {
     ChatSidenavScrimComponent,
     ChatHistorySearchPaletteComponent,
     ChatSelectComponent,
+    MapCanvasComponent,
+    ItineraryPanelComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './demo-shell.component.html',
@@ -402,10 +406,13 @@ export class DemoShell {
     (this.persistence.read('sidenavMode') as 'expanded' | 'collapsed' | null) ?? 'expanded',
   );
 
-  /** Computed sidenav mode: viewport forces drawer below 768px, else user preference. */
-  protected readonly sidenavMode = computed<ChatSidenavMode>(() =>
-    this.viewportWidth() >= 768 ? this.storedDesktopMode() : 'drawer',
-  );
+  /** Computed sidenav mode: App mode forces drawer (the cockpit reclaims the
+   *  full width for the map + overlay), then viewport forces drawer below
+   *  768px, else user preference. */
+  protected readonly sidenavMode = computed<ChatSidenavMode>(() => {
+    if (this.appMode() === 'on') return 'drawer';
+    return this.viewportWidth() >= 768 ? this.storedDesktopMode() : 'drawer';
+  });
 
   /** Active threads filtered by the selected project (or all when none selected). */
   protected readonly visibleThreads = computed<Thread[]>(() => {

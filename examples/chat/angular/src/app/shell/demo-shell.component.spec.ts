@@ -468,6 +468,49 @@ describe('DemoShell — App mode routing', () => {
   });
 });
 
+describe('DemoShell — App-mode cockpit layout', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    TestBed.configureTestingModule({
+      providers: [
+        threadsAdapterProvider,
+        ItineraryStore,
+        provideRouter([
+          { path: 'embed', component: DemoShell },
+          { path: 'popup', component: DemoShell },
+          { path: 'sidebar', component: DemoShell },
+          { path: '', pathMatch: 'full', redirectTo: 'embed' },
+          { path: '**', redirectTo: 'embed' },
+        ]),
+      ],
+    });
+  });
+
+  it('renders the map backdrop + itinerary overlay and forces drawer sidenav in popup App mode', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/popup');
+    const fx = TestBed.createComponent(DemoShell);
+    fx.detectChanges();
+
+    const cmp = fx.componentInstance as unknown as {
+      appMode: { (): 'on' | 'off'; set(v: 'on' | 'off'): void };
+      sidenavMode: () => string;
+    };
+
+    cmp.appMode.set('on');
+    fx.detectChanges();
+
+    // App mode collapses the sidenav to its hamburger drawer.
+    expect(cmp.sidenavMode()).toBe('drawer');
+
+    // Popup App mode renders the full-bleed map backdrop + floating itinerary.
+    const el = fx.nativeElement as HTMLElement;
+    expect(el.querySelector('.demo-shell__app-body')).toBeTruthy();
+    expect(el.querySelector('app-map-canvas')).toBeTruthy();
+    expect(el.querySelector('app-itinerary-panel')).toBeTruthy();
+  });
+});
+
 // ── Itinerary ↔ checkpoint sync (Task 9) ────────────────────────────────────
 
 /** A FakeStreamTransport that records the payload of the most recent
