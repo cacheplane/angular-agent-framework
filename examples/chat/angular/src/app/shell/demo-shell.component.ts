@@ -23,6 +23,7 @@ import {
 } from '@threadplane/langgraph';
 import { DEMO_AGENT_REF, type DemoState } from './agent-ref';
 import { ItineraryStore, type ItineraryStop } from '../itinerary-store';
+import { itineraryClientTools } from '../client-tools';
 import { ThreadplaneTelemetryService } from '@threadplane/telemetry/browser';
 import {
   ChatInterruptPanelComponent,
@@ -164,6 +165,11 @@ export class DemoShell {
   /** Shared working copy of the itinerary — an app-wide singleton (provided in
    *  app.config.ts) so this shell, the panel, and the map read/write ONE store. */
   protected readonly itinerary = inject(ItineraryStore);
+
+  /** Frontend-owned itinerary client tools, forwarded to the chat mode
+   *  components (`[clientTools]`) so the agent can read/mutate the panel.
+   *  Built here (an injection context) since the registry injects the store. */
+  readonly clientTools = itineraryClientTools();
 
   /** Out-of-band SDK client used to push the working itinerary to the durable
    *  checkpoint (`threads.updateState`) between runs. `LANGGRAPH_THREADS_CONFIG`
