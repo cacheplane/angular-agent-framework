@@ -3,7 +3,7 @@
 Production-ready chat, durable threads, interrupts, subagents, planning, memory, and generative UI for Angular agent apps.
 
 ## Install
-npm install @threadplane/chat @threadplane/langgraph
+npm install @threadplane/chat @threadplane/langgraph @langchain/core @langchain/langgraph-sdk marked
 
 ## Key requirement
 `injectAgent()` MUST be called within an Angular injection context (component constructor or field initializer). Calling it in ngOnInit or any async context throws "NG0203: inject() must be called from an injection context".

@@ -10,10 +10,10 @@ Angular 20+ project with Node.js 18+. If you need setup help, see the [Installat
 <Step title="Install the package">
 
 ```bash
-npm install @threadplane/langgraph @threadplane/chat
+npm install @threadplane/langgraph @threadplane/chat @langchain/core @langchain/langgraph-sdk
 ```
 
-Most npm clients install peer dependencies automatically. Strict package managers may also ask you to install the Angular, LangChain, and LangGraph SDK peers listed in the [Installation](/docs/langgraph/getting-started/installation) guide.
+Most npm clients install peer dependencies automatically. Listing the LangChain peers explicitly keeps strict package managers quiet. They may still ask you to install the Angular and RxJS peers listed in the [Installation](/docs/langgraph/getting-started/installation) guide if your app does not already provide them.
 
 </Step>
 <Step title="Configure the provider">

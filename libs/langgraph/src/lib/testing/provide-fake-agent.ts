@@ -16,7 +16,7 @@ import { FakeStreamTransport } from './fake-stream.transport';
  * @example
  * ```ts
  * TestBed.configureTestingModule({
- *   providers: [provideFakeAgent({ responses: ['Hi from the fake LangGraph agent'] })],
+ *   providers: [provideFakeAgent({ tokens: ['Hi from the fake LangGraph agent'] })],
  * });
  * ```
  */

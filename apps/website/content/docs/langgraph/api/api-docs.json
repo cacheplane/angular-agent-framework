@@ -2524,7 +2524,7 @@
       "description": ""
     },
     "examples": [
-      "```ts\nTestBed.configureTestingModule({\n  providers: [provideFakeAgent({ responses: ['Hi from the fake LangGraph agent'] })],\n});\n```"
+      "```ts\nTestBed.configureTestingModule({\n  providers: [provideFakeAgent({ tokens: ['Hi from the fake LangGraph agent'] })],\n});\n```"
     ]
   },
   {

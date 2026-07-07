@@ -30,7 +30,7 @@ const BACKENDS: Backend[] = [
   {
     title: 'LangGraph',
     blurb: 'For LangChain & LangGraph backends.',
-    install: 'npm i @threadplane/chat @threadplane/langgraph',
+    install: 'npm i @threadplane/chat @threadplane/langgraph @langchain/core @langchain/langgraph-sdk marked',
     href: '/docs/langgraph/getting-started/quickstart',
     logoSrc: '/logos/langgraph.svg',
     attribution: 'LangChain',

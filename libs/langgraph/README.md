@@ -27,7 +27,7 @@ Adapter that wraps a LangGraph agent into the runtime-neutral `Agent` contract f
 ## Install
 
 ```bash
-npm install @threadplane/langgraph @threadplane/chat
+npm install @threadplane/langgraph @threadplane/chat @langchain/core @langchain/langgraph-sdk
 ```
 
 **Peer dependencies:**
@@ -159,7 +159,7 @@ Pair it with the lifecycle helpers to keep your thread list fresh:
 ```ts
 import { refreshOnRunEnd, refreshOnTransition } from '@threadplane/langgraph';
 
-refreshOnRunEnd(chat, () => threadsAdapter.loadThreads());
+refreshOnRunEnd(chat, () => threadsAdapter.refresh());
 ```
 
 ### Citations
