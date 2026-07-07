@@ -1,6 +1,6 @@
 {
   "name": "@threadplane/chat",
-  "version": "0.0.55",
+  "version": "0.0.56",
   "exports": {
     "./chat.css": "./chat.css",
     "./themes/default-dark.css": "./themes/default-dark.css",
@@ -28,7 +28,9 @@
     "katex": "^0.16.0 || ^0.17.0"
   },
   "peerDependenciesMeta": {
-    "katex": { "optional": true }
+    "katex": {
+      "optional": true
+    }
   },
   "license": "PolyForm-Noncommercial-1.0.0 OR LicenseRef-Threadplane-Commercial",
   "repository": {
