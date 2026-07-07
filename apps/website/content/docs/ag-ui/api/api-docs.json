@@ -405,7 +405,7 @@
   {
     "name": "AgUiAgent",
     "kind": "interface",
-    "description": "The neutral Agent contract, widened with the AG-UI adapter's optional\n`customEvents` signal (the chat composition feature-detects it to enable\nlive a2ui streaming) and the optional `clientTools` capability.\nMirrors langgraph's LangGraphAgent extension.",
+    "description": "The neutral Agent contract, widened with the AG-UI adapter's\n`customEvents` signal (the chat composition feature-detects it to enable\nlive a2ui streaming), the browser client-tools capability, and concrete\nACTIVITY-backed `subagents`.\nMirrors langgraph's LangGraphAgent extension where the protocol surfaces\noverlap.",
     "properties": [
       {
         "name": "clientTools",
@@ -620,7 +620,7 @@
       "description": ""
     },
     "examples": [
-      "```ts\nTestBed.configureTestingModule({\n  providers: [provideFakeAgent({ responses: ['Hello from the fake agent'] })],\n});\n```"
+      "```ts\nTestBed.configureTestingModule({\n  providers: [provideFakeAgent({ tokens: ['Hello from the fake agent'] })],\n});\n```"
     ]
   },
   {
@@ -646,6 +646,8 @@
       "type": "AgUiAgent<>",
       "description": ""
     },
-    "examples": []
+    "examples": [
+      "```ts\nimport { HttpAgent } from '@ag-ui/client';\nimport { toAgent } from '@threadplane/ag-ui';\n\nconst agent = toAgent(new HttpAgent({ url: '/api/agent' }));\n```"
+    ]
   }
 ]

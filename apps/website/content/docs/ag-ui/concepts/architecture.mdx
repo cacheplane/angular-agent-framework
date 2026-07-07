@@ -88,7 +88,9 @@ Every AG-UI event is passed through the reducer. The reducer updates Angular sig
 - `toolCalls` for tool call starts, arguments, results, and completion.
 - `state` for AG-UI state snapshots and JSON Patch deltas.
 - `interrupt` cleared on `RUN_STARTED` and set by the `CUSTOM` `on_interrupt` event.
-- `events$` for custom events.
+- `events$` for runtime-neutral custom-event side effects.
+- `customEvents` for accumulated non-`on_interrupt` `CUSTOM` events used by live a2ui and app-specific reactive UI.
+- `subagents` for `ACTIVITY_*` events with `activityType: 'subagent'`.
 
 When the user submits input, the adapter builds a user message, appends it locally, adds it to the AG-UI source with `source.addMessage()`, then calls `source.runAgent()`.
 
@@ -105,6 +107,12 @@ events — matching the LangGraph adapter. Without it, a2ui still renders from
 the final tool-call surface; with it, surfaces build up live.
 
 The consuming side — how the chat composition turns these events into rendered surfaces — lives in chat's [A2UI overview](/docs/chat/a2ui/overview).
+
+## Browser client tools
+
+`AgUiAgent.clientTools` is the browser-tool bridge consumed by `<chat [clientTools]>`. The chat composition registers the browser catalog on the agent; the adapter threads that catalog into every `source.runAgent({ tools })` call, exposes unresolved browser-owned tool calls through `clientTools.pending()`, and sends the browser result back as a tool message before continuing the run.
+
+See chat's [Client Tools guide](/docs/chat/guides/client-tools) for declaring `action()`, `view()`, and `ask()` tools. With AG-UI, the backend must bind the supplied AG-UI tool specs and finish the turn without emitting `TOOL_CALL_RESULT` for browser-owned tools so the client can resolve them.
 
 ## Provider choices
 
@@ -188,9 +196,10 @@ The AG-UI adapter currently covers:
 - Tool calls from `TOOL_CALL_*`.
 - Shared state from `STATE_SNAPSHOT` and `STATE_DELTA`.
 - Message replacement from `MESSAGES_SNAPSHOT`.
-- Custom events from `CUSTOM`.
+- Custom events from non-`on_interrupt` `CUSTOM` events, surfaced through both `events$` and `customEvents`.
 - Interrupts from `CUSTOM` events named `on_interrupt`.
-- Subagent/activity progress from `ACTIVITY_SNAPSHOT` and `ACTIVITY_DELTA`.
+- Browser client tools via `AgUiAgent.clientTools`.
+- Subagent progress from `ACTIVITY_SNAPSHOT` and `ACTIVITY_DELTA` events whose `activityType` is `subagent`.
 - Citations stored under `state.citations`.
 
 These features are intentionally out of scope for the AG-UI adapter today:

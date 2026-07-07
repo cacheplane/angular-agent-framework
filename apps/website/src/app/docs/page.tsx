@@ -38,7 +38,7 @@ const BACKENDS: Backend[] = [
   {
     title: 'AG-UI',
     blurb: 'For CrewAI, Mastra, Pydantic AI, Strands, and more.',
-    install: 'npm i @threadplane/chat @threadplane/ag-ui @ag-ui/client @ag-ui/core',
+    install: 'npm i @threadplane/chat @threadplane/ag-ui @ag-ui/client @ag-ui/core marked',
     href: '/docs/ag-ui/getting-started/quickstart',
     logoSrc: '/logos/runtimes/copilotkit.svg',
     attribution: 'AG-UI · CopilotKit',

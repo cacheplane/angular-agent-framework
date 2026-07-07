@@ -32,10 +32,12 @@ Part of [Threadplane](https://github.com/cacheplane/angular-agent-framework).
 ## Install
 
 ```bash
-npm install @threadplane/ag-ui @threadplane/chat @ag-ui/client @ag-ui/core
+npm install @threadplane/ag-ui @threadplane/chat @ag-ui/client @ag-ui/core marked
 ```
 
 **Peer dependencies:** `@threadplane/chat: *`, `@angular/core: ^20.0.0 || ^21.0.0`, `@ag-ui/client: *`, `@ag-ui/core: *`, `rxjs: ~7.8.0`
+
+`marked` is the required markdown parser peer used by `@threadplane/chat` when you render assistant messages through `<chat>`.
 
 ---
 
@@ -83,6 +85,9 @@ Both `@threadplane/langgraph` and `@threadplane/ag-ui` expose `provideAgent`/`in
 | `toolCalls()` | In-progress and completed tool calls |
 | `error()` | Last run error, if any |
 | `state()` | Raw AG-UI state snapshot |
+| `customEvents()` | Non-`on_interrupt` `CUSTOM` events for live a2ui and app-specific side effects |
+| `subagents()` | `ACTIVITY_*` entries with `activityType: 'subagent'`, projected to the neutral subagent contract |
+| `clientTools` | Browser client-tool catalog, pending calls, and result resolution used by `<chat [clientTools]>` |
 
 Which capabilities populate depends on the events the AG-UI backend emits. `submit()`, `stop()`, and `regenerate()` are supported.
 
