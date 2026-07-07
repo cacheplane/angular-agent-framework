@@ -83,10 +83,10 @@ class DemoHeadingComponent {
     }
   `,
   template: `
-    @if (label() || value()) {
+    @if (displayValue()) {
       <div class="row">
         <span class="row__label">{{ label() }}:</span>
-        <span class="row__value">{{ value() }}</span>
+        <span class="row__value">{{ displayValue() }}</span>
       </div>
     } @else if (loading()) {
       <div class="sr-skeleton" style="height: 11px; width: 100%; margin: 3px 0;"></div>
@@ -97,6 +97,7 @@ class DemoHeadingComponent {
 class DemoLabelComponent {
   readonly label = input('');
   readonly value = input('');
+  readonly displayValue = computed(() => toDisplayText(this.value()));
   readonly childKeys = input<string[]>([]);
   readonly spec = input<Spec | null>(null);
   readonly bindings = input<Record<string, string>>({});
