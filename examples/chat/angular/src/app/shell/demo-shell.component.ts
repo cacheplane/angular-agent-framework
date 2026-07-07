@@ -310,6 +310,38 @@ export class DemoShell {
 
   protected readonly mode = computed<DemoMode>(() => this.urlState().mode);
 
+  /** Whether the Google Maps key is configured — App mode needs the map,
+   *  so the toggle is disabled without it. */
+  readonly hasMapsKey = (environment.googleMapsApiKey as string).length > 0;
+
+  /** App mode: a presentational layer valid only in popup/sidebar (embed's
+   *  full-bleed chat would cover the map). Persisted across reloads and
+   *  mirrored to the `appmode` query param so shared links restore it. */
+  readonly appMode = signal<'on' | 'off'>(this.initialAppMode());
+
+  /** Mode parsed from the REAL browser path. Available immediately at
+   *  bootstrap (unlike router.url, which reads '/' before the initial
+   *  navigation settles), so App mode restores against the right route. */
+  private locationMode(): DemoMode {
+    const path = this.document.defaultView?.location.pathname ?? '';
+    const seg = path.split('/').filter(Boolean)[0];
+    return (MODES as readonly string[]).includes(seg) ? (seg as DemoMode) : 'embed';
+  }
+
+  /** App mode persists across reloads, but it can only run in popup/sidebar —
+   *  embed is full-chat with no background for the map. Reads the `appmode`
+   *  query param from the real browser URL (available at bootstrap, unlike
+   *  ActivatedRoute), falling back to persistence. Starts off when the value
+   *  isn't 'on' OR the current route is embed (e.g. a hand-typed
+   *  /embed?appmode=on). */
+  private initialAppMode(): 'on' | 'off' {
+    const search = this.document.defaultView?.location.search ?? '';
+    const raw = (new URLSearchParams(search).get('appmode') ??
+      this.persistence.read('appMode')) as 'on' | 'off' | null;
+    if (raw !== 'on') return 'off';
+    return this.locationMode() === 'embed' ? 'off' : 'on';
+  }
+
   /**
    * Source of truth for the model picker. The shell owns it; the
    * patched submit injects it into state on every send.
@@ -528,6 +560,13 @@ export class DemoShell {
   protected readonly _demoState: DemoState = this.agent.value();
 
   protected onModeChange(next: DemoMode | string): void {
+    // Embed can't coexist with App mode (its full-bleed chat covers the
+    // map), so selecting Embed while App mode is on turns App mode off.
+    // Popup and Sidebar layer over the map, so they leave App mode alone.
+    if (next === 'embed' && this.appMode() === 'on') {
+      this.appMode.set('off');
+      this.persistence.write('appMode', 'off');
+    }
     // Preserve the active thread across mode switches: /embed/abc →
     // /popup/abc keeps the conversation visible in the new chrome.
     // Preserve query params so knob state survives the mode hop.
@@ -536,6 +575,45 @@ export class DemoShell {
       id ? ['/', next, id] : ['/', next],
       { queryParamsHandling: 'preserve' },
     );
+  }
+
+  /**
+   * Toggle App mode. Enabling it needs a background area for the map —
+   * embed has none, so it coerces to the sidebar cockpit; popup/sidebar
+   * keep their current presentation. Unlike ag-ui-shell (which has a
+   * knob→URL effect that resolves routing), demo-shell is URL-as-truth,
+   * so this handler both navigates AND writes `appmode` to the query
+   * itself (merging so knob params survive).
+   */
+  onAppModeChange(v: 'on' | 'off'): void {
+    this.persistence.write('appMode', v);
+    if (v === 'on' && this.mode() === 'embed') {
+      // Navigate to the sidebar cockpit first (preserving query so the
+      // active thread + knobs survive), then flip the signal + stamp
+      // appmode=on into the URL.
+      const id = this.threadIdSignal();
+      void this.router
+        .navigate(id ? ['/', 'sidebar', id] : ['/', 'sidebar'], {
+          queryParamsHandling: 'preserve',
+        })
+        .then(() => {
+          this.appMode.set('on');
+          void this.router.navigate([], {
+            queryParams: { appmode: 'on' },
+            queryParamsHandling: 'merge',
+            replaceUrl: true,
+          });
+        });
+      return;
+    }
+    // popup/sidebar (or turning off): keep the current route, just update
+    // the appmode query param. 'off' → null drops it from the URL.
+    this.appMode.set(v);
+    void this.router.navigate([], {
+      queryParams: { appmode: v === 'off' ? null : 'on' },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   /** Build the full knob → URL-value mapping. Default values become

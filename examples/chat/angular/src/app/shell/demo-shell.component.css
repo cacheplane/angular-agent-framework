@@ -177,3 +177,44 @@
 .demo-shell ::ng-deep .chat-sidebar__panel {
   top: 0;
 }
+
+/* App-mode toggle: pill button in the toolbar. Enabled only when a Google
+ * Maps key is configured (App mode renders the map cockpit). */
+.demo-shell__app-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--tplane-chat-separator);
+  background: transparent;
+  color: var(--tplane-chat-text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--tplane-chat-font-size-sm);
+  flex: 0 0 auto;
+}
+.demo-shell__app-toggle:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.demo-shell__app-toggle.is-on {
+  color: var(--tplane-chat-on-primary);
+  background: var(--tplane-chat-primary);
+  border-color: var(--tplane-chat-primary);
+}
+.demo-shell__app-toggle-icon {
+  font-family: 'Material Symbols Outlined', sans-serif;
+  font-size: 16px;
+  line-height: 1;
+}
+.demo-shell__app-toggle-thumb {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tplane-chat-text-muted);
+}
+.demo-shell__app-toggle.is-on .demo-shell__app-toggle-thumb {
+  background: var(--tplane-chat-on-primary);
+}

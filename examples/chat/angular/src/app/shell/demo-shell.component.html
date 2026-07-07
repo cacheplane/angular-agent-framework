@@ -21,6 +21,20 @@
       }
     </div>
 
+    <button
+      type="button"
+      class="demo-shell__app-toggle"
+      [class.is-on]="appMode() === 'on'"
+      [attr.aria-pressed]="appMode() === 'on'"
+      [disabled]="!hasMapsKey"
+      [attr.title]="hasMapsKey ? null : 'Set GOOGLE_MAPS_API_KEY to enable'"
+      (click)="onAppModeChange(appMode() === 'on' ? 'off' : 'on')"
+    >
+      <span class="demo-shell__app-toggle-icon" aria-hidden="true">map</span>
+      <span class="demo-shell__app-toggle-label">App mode</span>
+      <span class="demo-shell__app-toggle-thumb" aria-hidden="true"></span>
+    </button>
+
     <div class="demo-shell__field demo-shell__field--first" data-field="model">
       <chat-select
         [options]="modelOptions()"

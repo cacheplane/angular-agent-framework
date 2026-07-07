@@ -387,6 +387,87 @@ describe('DemoShell — URL knob hydration', () => {
   });
 });
 
+describe('DemoShell — App mode routing', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    TestBed.configureTestingModule({
+      providers: [
+        threadsAdapterProvider,
+        ItineraryStore,
+        provideRouter([
+          { path: 'embed', component: DemoShell },
+          { path: 'popup', component: DemoShell },
+          { path: 'sidebar', component: DemoShell },
+          { path: '', pathMatch: 'full', redirectTo: 'embed' },
+          { path: '**', redirectTo: 'embed' },
+        ]),
+      ],
+    });
+  });
+
+  it('coerces embed → sidebar when App mode turns on', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/embed');
+    const fx = TestBed.createComponent(DemoShell);
+    fx.detectChanges();
+
+    const cmp = fx.componentInstance as unknown as {
+      appMode: () => 'on' | 'off';
+      onAppModeChange(v: 'on' | 'off'): void;
+    };
+    expect(cmp.appMode()).toBe('off');
+
+    cmp.onAppModeChange('on');
+    fx.detectChanges();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+    expect(cmp.appMode()).toBe('on');
+    expect(router.url).toContain('/sidebar');
+  });
+
+  it('turning App mode off keeps the current route', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/sidebar');
+    const fx = TestBed.createComponent(DemoShell);
+    fx.detectChanges();
+
+    const cmp = fx.componentInstance as unknown as {
+      appMode: { (): 'on' | 'off'; set(v: 'on' | 'off'): void };
+      onAppModeChange(v: 'on' | 'off'): void;
+    };
+    cmp.appMode.set('on');
+    fx.detectChanges();
+
+    cmp.onAppModeChange('off');
+    fx.detectChanges();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+    expect(cmp.appMode()).toBe('off');
+    expect(router.url).toContain('/sidebar');
+    expect(router.url).not.toContain('/embed');
+  });
+
+  it('selecting embed while App mode on turns App mode off', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/sidebar');
+    const fx = TestBed.createComponent(DemoShell);
+    fx.detectChanges();
+
+    const cmp = fx.componentInstance as unknown as {
+      appMode: { (): 'on' | 'off'; set(v: 'on' | 'off'): void };
+      onModeChange(next: string): void;
+    };
+    cmp.appMode.set('on');
+    fx.detectChanges();
+
+    cmp.onModeChange('embed');
+    fx.detectChanges();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+    expect(cmp.appMode()).toBe('off');
+  });
+});
+
 // ── Itinerary ↔ checkpoint sync (Task 9) ────────────────────────────────────
 
 /** A FakeStreamTransport that records the payload of the most recent
