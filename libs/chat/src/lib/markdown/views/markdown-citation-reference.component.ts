@@ -88,12 +88,15 @@ export class MarkdownCitationReferenceComponent {
     { originX: 'start', originY: 'top', overlayX: 'start', overlayY: 'bottom', offsetY: -6 },
   ];
 
-  private readonly hoverCapable =
-    this.document.defaultView?.matchMedia?.('(hover: hover) and (pointer: fine)').matches ?? false;
+  /** Read fresh each time: SSR renders with no window, and hybrid devices change. */
+  private get hoverCapable(): boolean {
+    return this.document.defaultView?.matchMedia?.('(hover: hover) and (pointer: fine)').matches ?? false;
+  }
 
   private openTimer = 0;
   private closeTimer = 0;
   private pane: HTMLElement | null = null;
+  private justOpenedByFocus = false;
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this.clearTimers());
@@ -123,9 +126,11 @@ export class MarkdownCitationReferenceComponent {
 
   protected onFocus(): void {
     this.open.set(true);
+    this.justOpenedByFocus = true;
   }
 
   protected onBlur(): void {
+    this.justOpenedByFocus = false;
     const active = this.document.activeElement;
     if (this.pane && active && this.pane.contains(active)) return; // focus moved into card
     this.close();
@@ -136,6 +141,11 @@ export class MarkdownCitationReferenceComponent {
     if (this.hoverCapable && c.url) return;
     // No url, or touch device: preview instead of navigating.
     e.preventDefault();
+    if (this.justOpenedByFocus) {
+      // focus (fired first in this tap/gesture) already opened it — don't toggle closed
+      this.justOpenedByFocus = false;
+      return;
+    }
     this.open.update((v) => !v);
   }
 
@@ -144,10 +154,10 @@ export class MarkdownCitationReferenceComponent {
       this.close();
       return;
     }
-    // A no-url marker is a button: Enter/Space toggles the preview.
+    // A no-url marker is a button: Enter/Space reveals the preview (Escape/blur close it).
     if (!c.url && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault();
-      this.open.update((v) => !v);
+      this.open.set(true);
     }
   }
 
@@ -159,6 +169,7 @@ export class MarkdownCitationReferenceComponent {
 
   protected close(): void {
     this.clearTimers();
+    this.justOpenedByFocus = false;
     this.open.set(false);
     this.pane = null; // directive removes the pane element on detach
   }

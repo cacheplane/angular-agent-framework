@@ -67,4 +67,26 @@ describe('MarkdownCitationReferenceComponent', () => {
     expect(a.getAttribute('tabindex')).toBe('0');
     expect(a.textContent).toContain('1');
   });
+
+  it('does NOT self-close when focus is immediately followed by click (tap gesture)', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    const svc = fixture.debugElement.injector.get(CitationsResolverService);
+    svc.message.set({
+      id: 'm1', role: 'assistant', content: 'x',
+      citations: [{ id: 'src1', index: 1, title: 'Title only, no URL' }],
+    });
+    fixture.componentInstance.node.set(makeNode('src1', 1, true));
+    fixture.detectChanges();
+    const a = fixture.nativeElement.querySelector('a.chat-citation-marker--no-url') as HTMLElement;
+
+    a.dispatchEvent(new FocusEvent('focus'));
+    a.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    fixture.detectChanges();
+    expect(a.getAttribute('aria-expanded')).toBe('true'); // stayed open
+
+    // A subsequent independent click (no new focus) toggles it closed.
+    a.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    fixture.detectChanges();
+    expect(a.getAttribute('aria-expanded')).toBe('false');
+  });
 });
