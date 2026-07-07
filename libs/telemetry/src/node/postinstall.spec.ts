@@ -80,7 +80,7 @@ describe('postinstall script', () => {
     await expect(
       capturePostinstallScript({
         readPackageJson: () => { throw new Error('not found'); },
-        write: (_s: string) => undefined,
+        write: () => undefined,
         env: { ...process.env },
         cwd: () => '/tmp/project/node_modules/@threadplane/telemetry',
       }),
@@ -103,7 +103,7 @@ describe('postinstall script', () => {
   test('skips local top-level installs by default', async () => {
     await capturePostinstallScript({
       readPackageJson: () => ({ name: '@threadplane/chat', version: '0.0.31' }),
-      write: (_s: string) => undefined,
+      write: () => undefined,
       env: { ...process.env, INIT_CWD: '/repo/libs/chat' },
       cwd: () => '/repo/libs/chat',
     });
@@ -118,7 +118,7 @@ describe('postinstall script', () => {
       symlinkSync(root, link, 'dir');
       await capturePostinstallScript({
         readPackageJson: () => ({ name: '@threadplane/chat', version: '0.0.31' }),
-        write: (_s: string) => undefined,
+        write: () => undefined,
         env: { ...process.env, INIT_CWD: join(link, 'pkg') },
         cwd: () => join(root, 'pkg'),
       });
@@ -132,7 +132,7 @@ describe('postinstall script', () => {
   test('allows global installs even when INIT_CWD matches cwd', async () => {
     await capturePostinstallScript({
       readPackageJson: () => ({ name: '@threadplane/chat', version: '0.0.31' }),
-      write: (_s: string) => undefined,
+      write: () => undefined,
       env: { ...process.env, INIT_CWD: '/repo/libs/chat', npm_config_global: 'true' },
       cwd: () => '/repo/libs/chat',
     });

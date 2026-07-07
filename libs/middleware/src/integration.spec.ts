@@ -9,7 +9,8 @@ class FakeModel {
   bound: unknown[] = [];
   private turn = 0;
   bindTools(tools: unknown[]) { this.bound = tools; return this; }
-  async invoke(_messages: unknown[]) {
+  async invoke(messages: unknown[]) {
+    void messages;
     this.turn += 1;
     if (this.turn === 1) {
       return new AIMessage({ content: '', tool_calls: [{ name: 'get_weather', args: { city: 'SF' }, id: 'call_1' }] });
