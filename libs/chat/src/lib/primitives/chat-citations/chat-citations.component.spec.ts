@@ -122,4 +122,29 @@ describe('ChatCitationsComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('From message');
     expect(fixture.nativeElement.textContent).not.toContain('From markdown');
   });
+
+  it('shows a Sources header with the citation count', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.componentInstance.message.set(msg([
+      { id: 'a', index: 1, title: 'A' },
+      { id: 'b', index: 2, title: 'B' },
+    ]));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.chat-citations__heading')?.textContent).toContain('Sources');
+    expect(fixture.nativeElement.querySelector('.chat-citations__count')?.textContent?.trim()).toBe('2');
+  });
+
+  it('collapses and expands the list when the header is toggled', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.componentInstance.message.set(msg([{ id: 'a', index: 1, title: 'A' }]));
+    fixture.detectChanges();
+    const header = fixture.nativeElement.querySelector('.chat-citations__header') as HTMLButtonElement;
+    expect(header.getAttribute('aria-expanded')).toBe('true');
+    expect(fixture.nativeElement.querySelector('.chat-citations__list')).toBeTruthy();
+
+    header.click();
+    fixture.detectChanges();
+    expect(header.getAttribute('aria-expanded')).toBe('false');
+    expect(fixture.nativeElement.querySelector('.chat-citations__list')).toBeNull();
+  });
 });
