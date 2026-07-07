@@ -1595,15 +1595,91 @@
     "methods": []
   },
   {
-    "name": "ChatCitationsCardComponent",
+    "name": "ChatCitationPreviewComponent",
     "kind": "class",
-    "description": "",
+    "description": "Presentational provenance card for a single Citation. Rendered inside the\ninline marker's connected-overlay pane (hover/tap preview) — self-contained\nso its encapsulated styles apply even when portaled to the body-level pane.",
     "params": [],
     "examples": [],
     "properties": [
       {
         "name": "citation",
         "type": "InputSignal<Citation>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "domain",
+        "type": "Signal<string | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "monoColor",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "monogram",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "published",
+        "type": "Signal<string | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "typeLabel",
+        "type": "Signal<string | null>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "ChatCitationsCardComponent",
+    "kind": "class",
+    "description": "Sources-panel detail card: index badge, favicon/monogram + domain + type,\ntitle, one-line snippet. Renders as an <a> (opens the source) when a url is\npresent, otherwise a non-interactive <div>. Shares the panel style module.",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "citation",
+        "type": "InputSignal<Citation>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "domain",
+        "type": "Signal<string | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "monoColor",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "monogram",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "title",
+        "type": "Signal<string | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "typeLabel",
+        "type": "Signal<string | null>",
         "description": "",
         "optional": false
       }
@@ -1626,12 +1702,30 @@
       {
         "name": "citations",
         "type": "Signal<Citation[]>",
-        "description": "Combined citation list:\n  1. Message.citations (provider-populated, takes precedence by id)\n  2. Markdown sidecar defs (Pandoc-formatted [^id]: lines), merged in\n     for any id not already present.\n\nSorted by index ascending. This guarantees the sources panel surfaces\ncitations whether they come from message metadata, content syntax, or\nboth — matching the same precedence as inline-marker resolution.",
+        "description": "Combined citation list:\n  1. Message.citations (provider-populated, takes precedence by id)\n  2. Markdown sidecar defs (Pandoc [^id]: lines), merged for unseen ids.\nSorted by index ascending.",
+        "optional": false
+      },
+      {
+        "name": "expanded",
+        "type": "WritableSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "favstack",
+        "type": "Signal<FavEntry[]>",
+        "description": "First 3 sources, mapped to favicon/monogram chips for the header preview.",
         "optional": false
       },
       {
         "name": "heading",
         "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "listId",
+        "type": "string",
         "description": "",
         "optional": false
       },
@@ -5001,7 +5095,7 @@
   {
     "name": "MarkdownCitationReferenceComponent",
     "kind": "class",
-    "description": "",
+    "description": "Inline citation marker. Renders a numbered pill and reveals a provenance\npreview card (portaled via the connected-overlay primitive) on hover/focus\n(desktop) or tap (touch). Click navigates on desktop when a url exists;\non touch it previews instead of navigating.",
     "params": [],
     "examples": [],
     "properties": [
@@ -5012,13 +5106,120 @@
         "optional": false
       },
       {
+        "name": "open",
+        "type": "WritableSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "positions",
+        "type": "ConnectedPosition[]",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "resolved",
         "type": "Signal<ResolvedCitation | null>",
         "description": "",
         "optional": false
       }
     ],
-    "methods": []
+    "methods": [
+      {
+        "name": "ariaLabel",
+        "signature": "ariaLabel(c: Citation): string",
+        "description": "",
+        "params": [
+          {
+            "name": "c",
+            "type": "Citation",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "close",
+        "signature": "close(): void",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "onAttached",
+        "signature": "onAttached(pane: HTMLElement): void",
+        "description": "",
+        "params": [
+          {
+            "name": "pane",
+            "type": "HTMLElement",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onBlur",
+        "signature": "onBlur(): void",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "onClick",
+        "signature": "onClick(e: MouseEvent, c: Citation): void",
+        "description": "",
+        "params": [
+          {
+            "name": "e",
+            "type": "MouseEvent",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "c",
+            "type": "Citation",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onEnter",
+        "signature": "onEnter(): void",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "onFocus",
+        "signature": "onFocus(): void",
+        "description": "",
+        "params": []
+      },
+      {
+        "name": "onKeydown",
+        "signature": "onKeydown(e: KeyboardEvent, c: Citation): void",
+        "description": "",
+        "params": [
+          {
+            "name": "e",
+            "type": "KeyboardEvent",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "c",
+            "type": "Citation",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onLeave",
+        "signature": "onLeave(): void",
+        "description": "",
+        "params": []
+      }
+    ]
   },
   {
     "name": "MarkdownCodeBlockComponent",
@@ -6257,6 +6458,12 @@
         "optional": true
       },
       {
+        "name": "iconUrl",
+        "type": "string",
+        "description": "Provider-supplied favicon/logo (absolute URL or `data:` URI). NEVER\nauto-fetched by the library — supply this from your own resolver if you\nwant real favicons; otherwise a monogram is rendered.",
+        "optional": true
+      },
+      {
         "name": "id",
         "type": "string",
         "description": "Stable id used to match `[^id]` markers in Pandoc-formatted content.",
@@ -6269,9 +6476,21 @@
         "optional": false
       },
       {
+        "name": "publishedAt",
+        "type": "string | number | Date",
+        "description": "Freshness signal shown in the preview-card footer.",
+        "optional": true
+      },
+      {
         "name": "snippet",
         "type": "string",
         "description": "",
+        "optional": true
+      },
+      {
+        "name": "sourceType",
+        "type": "string",
+        "description": "Source classification driving the type badge. Free-form and extensible:\n'web' (default-inferred from an http(s) url) | 'file' | 'app' | 'memory'\n| any custom string. Optional — display derives 'web' from the url when absent.",
         "optional": true
       },
       {

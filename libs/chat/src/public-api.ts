@@ -86,6 +86,7 @@ export { ChatOverlayOriginDirective, ChatConnectedOverlayDirective } from './lib
 export type { ConnectedPosition, OverlayPositionResult } from './lib/primitives/overlay/connected-position';
 export { ChatCitationsComponent, ChatCitationCardTemplateDirective } from './lib/primitives/chat-citations/chat-citations.component';
 export { ChatCitationsCardComponent } from './lib/primitives/chat-citations/chat-citations-card.component';
+export { ChatCitationPreviewComponent } from './lib/primitives/chat-citations/chat-citation-preview.component';
 
 // DI provider
 export { provideChat, CHAT_CONFIG } from './lib/provide-chat';
