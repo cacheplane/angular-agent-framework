@@ -534,6 +534,13 @@ class State(TypedDict):
     # channel must exist here so the graph retains the client catalog across
     # the generate → should_continue → attach_citations path.
     tools: Optional[list]
+    # Per-message citations, keyed by AI message id. Unlike the LangGraph
+    # transport (which reads AIMessage.additional_kwargs.citations directly),
+    # the ag-ui protocol streams message TEXT without additional_kwargs, so
+    # citations must travel as STATE. The ag-ui-langgraph adapter mirrors this
+    # channel to the client, where bridgeCitationsState() reads
+    # state.citations[messageId] onto Message.citations for rendering.
+    citations: Optional[dict]
 
 
 async def generate(state: State, config: RunnableConfig) -> dict:
@@ -830,7 +837,12 @@ async def attach_citations(state: State) -> dict:
                 tool_calls=getattr(last, "tool_calls", []) or [],
                 response_metadata=getattr(last, "response_metadata", {}) or {},
             ),
-        ]
+        ],
+        # Also surface citations as STATE, keyed by the AI message id. The
+        # ag-ui protocol drops additional_kwargs when streaming message text,
+        # so this STATE channel is the only path by which the ag-ui client
+        # (via bridgeCitationsState) can render them.
+        "citations": {last.id: citations},
     }
 
 
