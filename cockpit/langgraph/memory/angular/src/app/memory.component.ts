@@ -20,20 +20,38 @@ import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
   selector: 'app-memory',
   standalone: true,
   imports: [ChatComponent, ExampleChatLayoutComponent],
+  styles: `
+    .panel { padding: 1rem; }
+    .cap {
+      margin-bottom: 1rem;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--ds-text-muted, #a0a0a0);
+    }
+    .empty { font-size: 13px; font-style: italic; color: var(--ds-text-muted, #a0a0a0); }
+    .fact {
+      padding: 6px 0;
+      font-size: 13px;
+      border-bottom: 1px solid var(--ds-border, #2d2d2d);
+    }
+    .fact:last-child { border-bottom: none; }
+    .fact__key { font-weight: 600; color: var(--ds-text-primary, #f5f5f5); }
+    .fact__value { color: var(--ds-text-secondary, #c8c8c8); }
+  `,
   template: `
     <example-chat-layout>
       <chat main [agent]="agent" class="flex-1 min-w-0" />
-      <div sidebar class="p-4 space-y-2"
-           style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
-        <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--tplane-chat-text-muted);">Learned Facts</h3>
+      <div sidebar class="panel">
+        <h3 class="cap">Learned Facts</h3>
         @if (memoryEntries().length === 0) {
-          <p class="text-sm italic" style="color: var(--tplane-chat-text-muted);">No facts learned yet</p>
+          <p class="empty">No facts learned yet</p>
         }
         @for (entry of memoryEntries(); track entry[0]) {
-          <div class="text-sm py-1">
-            <span class="font-medium" style="color: var(--tplane-chat-text);">{{ entry[0] }}:</span>
-            <span style="color: var(--tplane-chat-text-muted);"> {{ entry[1] }}</span>
+          <div class="fact">
+            <span class="fact__key">{{ entry[0] }}:</span>
+            <span class="fact__value"> {{ entry[1] }}</span>
           </div>
         }
       </div>
