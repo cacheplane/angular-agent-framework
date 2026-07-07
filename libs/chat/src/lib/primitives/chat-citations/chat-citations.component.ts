@@ -80,7 +80,7 @@ export class ChatCitationsComponent {
   readonly message = input.required<Message>();
   readonly heading = input<string>('Sources');
 
-  protected readonly expanded = signal(true);
+  protected readonly expanded = signal(false);
   protected readonly listId = `chat-citations-list-${nextCitationsId++}`;
 
   @ContentChild(ChatCitationCardTemplateDirective) cardTpl: ChatCitationCardTemplateDirective | null = null;

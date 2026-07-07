@@ -79,9 +79,10 @@ Branch on `matchMedia('(hover: hover) and (pointer: fine)')`:
 This matches the reference's "hover is desktop-first, tap-equivalent on touch" and its
 "clear distinction between previewing and opening."
 
-### Decision 4 — Panel default state: expanded
-The Sources panel renders **expanded** by default (provenance stays visible) and is
-collapsible via its header. State is component-local, not persisted.
+### Decision 4 — Panel default state: collapsed
+The Sources panel renders **collapsed** by default — the `Sources · N` header (with its
+stacked-favicon preview) keeps provenance discoverable without spending vertical space in
+the message flow; the user expands it on demand. State is component-local, not persisted.
 
 ### Decision 5 — Marker states (graceful degradation)
 The existing three resolver states map to three visual states:
