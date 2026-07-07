@@ -86,16 +86,24 @@ export class MapCanvasComponent {
   private readonly destroyRef = inject(DestroyRef);
   protected readonly center = signal<google.maps.LatLngLiteral>(PARIS_CENTER);
   protected readonly zoom = signal<number>(12);
-  // A mapId is REQUIRED for advanced markers; a mapId map ignores inline JSON
-  // `styles`, so the dark theme is a cloud-based map style tied to this id.
-  // DEMO_MAP_ID lets a fresh clone run (light map) with no Console setup.
+  // A mapId is REQUIRED for advanced markers. The dark theme is applied IN CODE
+  // via `colorScheme: DARK` below — NOT a cloud-based map style — so there is no
+  // Google Cloud Console style setup to maintain and ANY mapId works.
+  // DEMO_MAP_ID lets a fresh clone run with no Console setup at all.
   protected readonly mapId = environment.googleMapsMapId || 'DEMO_MAP_ID';
-  protected readonly mapOptions: google.maps.MapOptions = {
+  protected readonly mapOptions = {
     mapId: this.mapId,
+    // Dark map in code — no cloud-style dependency. 'DARK' is the runtime value
+    // of the google.maps.ColorScheme enum; kept as a plain string so this field
+    // initializer holds no runtime `google.maps` reference (map-canvas builds
+    // under jsdom in the shell specs, before the Maps API loads). The whole
+    // literal is cast so it typechecks regardless of the installed
+    // @types/google.maps version; the live Maps JS from Google's CDN honors it.
+    colorScheme: 'DARK',
     disableDefaultUI: true,
     zoomControl: true,
     clickableIcons: false,
-  };
+  } as google.maps.MapOptions;
   // AdvancedMarkerElement is NOT clickable by default (unlike the legacy
   // Marker) — without gmpClickable it never fires click/gmp-click, so the
   // wrapper's (mapClick) output stays silent and the info window can't open.
