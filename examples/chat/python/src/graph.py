@@ -23,7 +23,7 @@ track-by-id stable.
 import json
 import os
 from typing import Annotated, Literal, Optional
-from typing_extensions import TypedDict
+from typing_extensions import TypedDict, NotRequired
 
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
@@ -364,6 +364,15 @@ def _as_text(content) -> str:
     return ""
 
 
+class Stop(TypedDict):
+    id: str
+    day: int
+    place: str
+    note: NotRequired[str]
+    lat: NotRequired[float]
+    lng: NotRequired[float]
+
+
 class State(TypedDict):
     messages: Annotated[list, add_messages]
     model: Optional[str]
@@ -376,11 +385,10 @@ class State(TypedDict):
     # ``state["client_tools"]`` — so this channel name feeds the middleware
     # directly with no normalization needed. The channel must exist here so
     # the catalog survives the generate → should_continue path.
-    client_tools: Optional[list]
+    client_tools: Optional[list[dict]]
     # Trip itinerary the frontend client tools (add_stop/move_stop/...)
-    # mutate. Declared now so the channel exists; typed properly in a
-    # later task.
-    itinerary: list
+    # mutate. per-thread checkpoint; last-write-wins (plain key)
+    itinerary: list[Stop]
 
 
 async def generate(state: State, config: RunnableConfig) -> dict:
