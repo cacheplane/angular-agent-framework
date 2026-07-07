@@ -22,6 +22,13 @@ import { environment } from '../environments/environment';
 const DAY_COLORS = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
 const PARIS_CENTER: google.maps.LatLngLiteral = { lat: 48.8566, lng: 2.3522 };
 
+/** The app's active light/dark scheme, read from the `<html data-color-scheme>`
+ *  attribute the demo shell reflects (NOT the gen-UI mode). Defaults to 'dark'
+ *  (the app default) when the attribute is absent. */
+export function readAppColorScheme(): 'light' | 'dark' {
+  return document.documentElement.getAttribute('data-color-scheme') === 'light' ? 'light' : 'dark';
+}
+
 @Component({
   selector: 'app-map-canvas',
   standalone: true,
@@ -32,12 +39,15 @@ const PARIS_CENTER: google.maps.LatLngLiteral = { lat: 48.8566, lng: 2.3522 };
          throws "Namespace google not found" when window.google is absent, which
          would abort the host shell's render on a fresh load with App mode on. -->
     @if (loader.loaded()) {
+      <!-- Keyed on mapColorScheme() so a light/dark toggle REMOUNTS the map —
+           Google's colorScheme option is init-only, unchangeable on a live map. -->
+      @for (scheme of [mapColorScheme()]; track scheme) {
       <google-map
         width="100%"
         height="100%"
         [center]="center()"
         [zoom]="zoom()"
-        [options]="mapOptions"
+        [options]="mapOptions()"
       >
         @for (m of markerViews(); track m.id) {
           <map-advanced-marker
@@ -64,6 +74,7 @@ const PARIS_CENTER: google.maps.LatLngLiteral = { lat: 48.8566, lng: 2.3522 };
           }
         </map-info-window>
       </google-map>
+      }
     }
   `,
   styles: [
@@ -86,24 +97,32 @@ export class MapCanvasComponent {
   private readonly destroyRef = inject(DestroyRef);
   protected readonly center = signal<google.maps.LatLngLiteral>(PARIS_CENTER);
   protected readonly zoom = signal<number>(12);
-  // A mapId is REQUIRED for advanced markers. The dark theme is applied IN CODE
-  // via `colorScheme: DARK` below — NOT a cloud-based map style — so there is no
-  // Google Cloud Console style setup to maintain and ANY mapId works.
-  // DEMO_MAP_ID lets a fresh clone run with no Console setup at all.
+  // A mapId is REQUIRED for advanced markers. The map theme is applied IN CODE
+  // via `colorScheme` — NOT a cloud-based map style — so there is no Google Cloud
+  // Console style to maintain and ANY mapId works. DEMO_MAP_ID lets a fresh clone
+  // run with no Console setup at all.
   protected readonly mapId = environment.googleMapsMapId || 'DEMO_MAP_ID';
-  protected readonly mapOptions = {
+
+  // Follow the app's light/dark toggle (the <html data-color-scheme> the shell
+  // reflects) — NOT the gen-UI mode. Seeded synchronously so the first paint
+  // themes correctly; a MutationObserver (afterNextRender) keeps it live.
+  private readonly appColorScheme = signal<'light' | 'dark'>(readAppColorScheme());
+  protected readonly mapColorScheme = computed<'LIGHT' | 'DARK'>(() =>
+    this.appColorScheme() === 'light' ? 'LIGHT' : 'DARK',
+  );
+
+  protected readonly mapOptions = computed(() => ({
     mapId: this.mapId,
-    // Dark map in code — no cloud-style dependency. 'DARK' is the runtime value
-    // of the google.maps.ColorScheme enum; kept as a plain string so this field
-    // initializer holds no runtime `google.maps` reference (map-canvas builds
-    // under jsdom in the shell specs, before the Maps API loads). The whole
-    // literal is cast so it typechecks regardless of the installed
-    // @types/google.maps version; the live Maps JS from Google's CDN honors it.
-    colorScheme: 'DARK',
+    // colorScheme is INIT-ONLY on a Google map, so the template remounts
+    // <google-map> when mapColorScheme() flips (see the keyed @for). Plain string
+    // = the google.maps.ColorScheme enum's runtime value, so this holds no
+    // runtime `google.maps` reference (map-canvas builds under jsdom). Cast for
+    // @types/google.maps version independence; the live Maps JS honors it.
+    colorScheme: this.mapColorScheme(),
     disableDefaultUI: true,
     zoomControl: true,
     clickableIcons: false,
-  } as google.maps.MapOptions;
+  } as google.maps.MapOptions));
   // AdvancedMarkerElement is NOT clickable by default (unlike the legacy
   // Marker) — without gmpClickable it never fires click/gmp-click, so the
   // wrapper's (mapClick) output stays silent and the info window can't open.
@@ -173,6 +192,12 @@ export class MapCanvasComponent {
       });
       ro.observe(this.hostRef.nativeElement);
       this.destroyRef.onDestroy(() => ro.disconnect());
+
+      // Live-follow the app's light/dark toggle. colorScheme is init-only, so the
+      // template @for remounts <google-map> when this signal flips.
+      const mo = new MutationObserver(() => this.appColorScheme.set(readAppColorScheme()));
+      mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-color-scheme'] });
+      this.destroyRef.onDestroy(() => mo.disconnect());
     });
   }
 
