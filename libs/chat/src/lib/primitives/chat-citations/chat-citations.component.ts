@@ -9,7 +9,7 @@ import type { Message } from '../../agent/message';
 import type { Citation } from '../../agent/citation';
 import { ChatCitationsCardComponent } from './chat-citations-card.component';
 import { CitationsResolverService, mdDefToCitation } from '../../markdown/citations-resolver.service';
-import { deriveDomain, deriveMonogram, monogramHue } from '../../agent/citation-display';
+import { deriveMonogram, monogramColor } from '../../agent/citation-display';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 import { CHAT_CITATIONS_PANEL_STYLES } from '../../styles/chat-citations.styles';
 
@@ -108,9 +108,8 @@ export class ChatCitationsComponent {
 
   /** First 3 sources, mapped to favicon/monogram chips for the header preview. */
   protected readonly favstack = computed<FavEntry[]>(() =>
-    this.citations().slice(0, 3).map((c) => {
-      const seed = deriveDomain(c.url) ?? c.title ?? '?';
-      return { id: c.id, iconUrl: c.iconUrl, mono: deriveMonogram(c), color: `hsl(${monogramHue(seed)} 60% 45%)` };
-    }),
+    this.citations().slice(0, 3).map((c) => ({
+      id: c.id, iconUrl: c.iconUrl, mono: deriveMonogram(c), color: monogramColor(c),
+    })),
   );
 }

@@ -42,3 +42,16 @@ export function formatPublished(value?: string | number | Date): string | null {
   if (Number.isNaN(d.getTime())) return null;
   return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short' });
 }
+
+/** Deterministic monogram-chip background color (stable per source). */
+export function monogramColor(c: Citation): string {
+  const seed = deriveDomain(c.url) ?? c.title ?? '?';
+  return `hsl(${monogramHue(seed)} 60% 45%)`;
+}
+
+/** Human label for the source-type badge; null when type is 'unknown'. */
+export function citationTypeLabel(c: Citation): string | null {
+  const t = deriveSourceType(c);
+  if (t === 'unknown') return null;
+  return t === 'web' ? 'Web' : t.charAt(0).toUpperCase() + t.slice(1);
+}

@@ -3,7 +3,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import type { Citation } from '../../agent/citation';
 import {
-  deriveDomain, deriveMonogram, deriveSourceType, formatPublished, monogramHue,
+  deriveDomain, deriveMonogram, monogramColor, citationTypeLabel, formatPublished,
 } from '../../agent/citation-display';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 import { CHAT_CITATION_PREVIEW_STYLES } from '../../styles/chat-citations.styles';
@@ -55,14 +55,7 @@ export class ChatCitationPreviewComponent {
 
   protected readonly domain = computed(() => deriveDomain(this.citation().url));
   protected readonly monogram = computed(() => deriveMonogram(this.citation()));
-  protected readonly monoColor = computed(() => {
-    const seed = this.domain() ?? this.citation().title ?? '?';
-    return `hsl(${monogramHue(seed)} 60% 45%)`;
-  });
-  protected readonly typeLabel = computed(() => {
-    const t = deriveSourceType(this.citation());
-    if (t === 'unknown') return null;
-    return t === 'web' ? 'Web' : t.charAt(0).toUpperCase() + t.slice(1);
-  });
+  protected readonly monoColor = computed(() => monogramColor(this.citation()));
+  protected readonly typeLabel = computed(() => citationTypeLabel(this.citation()));
   protected readonly published = computed(() => formatPublished(this.citation().publishedAt));
 }

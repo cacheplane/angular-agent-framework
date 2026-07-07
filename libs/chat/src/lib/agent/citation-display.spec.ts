@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   deriveDomain, deriveSourceType, deriveMonogram, monogramHue, formatPublished,
+  monogramColor, citationTypeLabel,
 } from './citation-display';
 import type { Citation } from './citation';
 
@@ -60,5 +61,25 @@ describe('formatPublished', () => {
   it('returns null for missing or unparseable values', () => {
     expect(formatPublished(undefined)).toBeNull();
     expect(formatPublished('banana')).toBeNull();
+  });
+});
+
+describe('monogramColor', () => {
+  it('is deterministic and an hsl() string', () => {
+    const a = monogramColor(c({ url: 'https://rxjs.dev' }));
+    expect(a).toMatch(/^hsl\(/);
+    expect(a).toBe(monogramColor(c({ url: 'https://rxjs.dev' })));
+  });
+});
+
+describe('citationTypeLabel', () => {
+  it('returns "Web" for a web source', () => {
+    expect(citationTypeLabel(c({ url: 'https://a.com' }))).toBe('Web');
+  });
+  it('capitalizes a custom sourceType', () => {
+    expect(citationTypeLabel(c({ sourceType: 'file', url: 'https://a.com' }))).toBe('File');
+  });
+  it('returns null when type is unknown', () => {
+    expect(citationTypeLabel(c({}))).toBeNull();
   });
 });
