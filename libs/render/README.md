@@ -17,16 +17,18 @@
 ## What it does
 
 - Renders a JSON spec tree to Angular components via a named view registry (`<render-spec>`) or a single node (`<render-element>`).
-- Registry composition utilities (`views`, `withViews`, `withoutViews`) let you build, extend, and trim registries without mutation.
+- Registry composition utilities (`views`, `withViews`, `overrideViews`, `withoutViews`) let you build, extend, replace, and trim registries without mutation.
 - Signal-based state store (`signalStateStore`) and per-component fallback support keep UI consistent during streaming.
 
 ## Install
 
 ```bash
-npm install @threadplane/render
+npm install @threadplane/render @json-render/core
 ```
 
 **Peer dependencies:** `@angular/core ^20.0.0 || ^21.0.0`, `@angular/common ^20.0.0 || ^21.0.0`, `@json-render/core ^0.16.0`
+
+`@json-render/core` supplies the spec types and evaluation engine that `@threadplane/render` adapts to Angular.
 
 ## Quick start
 

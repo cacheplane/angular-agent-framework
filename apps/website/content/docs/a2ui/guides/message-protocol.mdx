@@ -15,7 +15,7 @@ Every envelope carries that `surfaceId`. A `dataModelUpdate` for `"booking"` onl
 As an **id-keyed adjacency list**. A `surfaceUpdate` carries a flat `components` array. Each entry has an `id` and a single `component` definition. Parent-child links are by id reference, not by nesting.
 
 ```json
-{"surfaceUpdate":{"surfaceId":"booking","components":[{"id":"root","component":{"Column":{"children":{"explicitList":["title","origin","submit"]}}}},{"id":"title","component":{"Text":{"text":"Book a flight","usageHint":"h2"}}}]}}
+{"surfaceUpdate":{"surfaceId":"booking","components":[{"id":"root","component":{"Column":{"children":{"explicitList":["title","origin","submit"]}}}},{"id":"title","component":{"Text":{"text":{"literalString":"Book a flight"},"usageHint":"h2"}}}]}}
 ```
 
 The `component` value is a **keyed union**: a single-key object where the key names the component type and the value holds its props — `{ "<Name>": { props } }`. `{ "Text": { ... } }` is a Text, `{ "Column": { ... } }` is a Column. There's no separate `type` field; the key *is* the type.
@@ -69,7 +69,7 @@ The stream is a sequence of single-key envelope objects. The parser recognizes e
 Defines (or replaces) the components for a surface.
 
 ```json
-{"surfaceUpdate":{"surfaceId":"booking","components":[{"id":"submit_label","component":{"Text":{"text":"Search flights"}}},{"id":"submit","component":{"Button":{"child":"submit_label","primary":true,"action":{"name":"bookingSubmit","context":[{"key":"origin","value":{"path":"/origin"}},{"key":"dest","value":{"path":"/dest"}}]}}}}]}}
+{"surfaceUpdate":{"surfaceId":"booking","components":[{"id":"submit_label","component":{"Text":{"text":{"literalString":"Search flights"}}}},{"id":"submit","component":{"Button":{"child":"submit_label","primary":true,"action":{"name":"bookingSubmit","context":[{"key":"origin","value":{"path":"/origin"}},{"key":"dest","value":{"path":"/dest"}}]}}}}]}}
 ```
 
 ### `dataModelUpdate`
