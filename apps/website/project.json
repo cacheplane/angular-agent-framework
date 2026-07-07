@@ -64,6 +64,12 @@
       ]
     },
     "e2e": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsx apps/website/scripts/run-e2e-with-next-env-restore.ts -- npx nx run website:e2e-playwright --skip-nx-cache"
+      }
+    },
+    "e2e-playwright": {
       "executor": "@nx/playwright:playwright",
       "options": {
         "config": "apps/website/playwright.config.ts"
