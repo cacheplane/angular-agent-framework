@@ -65,19 +65,22 @@ These fields are stable across runtime adapters and are what chat components con
 
 ## AG-UI-specific surface
 
-The AG-UI adapter extends the neutral `Agent` contract with one additional signal:
+The AG-UI adapter extends the neutral `Agent` contract with AG-UI-specific protocol surfaces:
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `customEvents()` | `CustomStreamEvent[]` | Custom events emitted by the backend during a run. Accumulates per run; resets on each new `submit()`. |
+| `clientTools` | `ClientToolsCapability` | Browser client-tool catalog, pending calls, and result resolution used by `<chat [clientTools]>`. |
+| `subagents()` | `Map<string, Subagent>` | `ACTIVITY_*` entries with `activityType: 'subagent'`, projected to the neutral subagent contract and keyed by `messageId`. |
 
-`injectAgent()` returns the `AgUiAgent` type — the neutral `Agent` contract plus `customEvents` — so the signal is reachable directly, no cast required:
+`injectAgent()` returns the `AgUiAgent` type — the neutral `Agent` contract plus these AG-UI-specific fields — so they are reachable directly, no cast required:
 
 ```ts
 import { injectAgent } from '@threadplane/ag-ui';
 
 const chat = injectAgent();
-chat.customEvents(); // Signal<CustomStreamEvent[]>
+chat.customEvents(); // CustomStreamEvent[]
+chat.subagents(); // Map<string, Subagent>
 ```
 
 The chat a2ui bridge reads `customEvents` to light up live generative-UI streaming when your backend emits `a2ui-partial` events. The consuming side is documented in chat's [A2UI overview](/docs/chat/a2ui/overview). See the [Custom Events guide](/docs/ag-ui/guides/custom-events) for backend wiring details.

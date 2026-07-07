@@ -36,7 +36,7 @@ function buildLlmsTxt(): string {
     '# LangGraph backend with browser client tools:',
     'npm install @threadplane/chat @threadplane/langgraph @langchain/core @langchain/langgraph-sdk @threadplane/middleware marked',
     '# AG-UI backend:',
-    'npm install @threadplane/chat @threadplane/ag-ui @ag-ui/client @ag-ui/core',
+    'npm install @threadplane/chat @threadplane/ag-ui @ag-ui/client @ag-ui/core marked',
     '',
     '## Key API (symmetric across adapters)',
     '- provideAgent(config) — wires the adapter into Angular DI. Same name across @threadplane/langgraph and @threadplane/ag-ui.',

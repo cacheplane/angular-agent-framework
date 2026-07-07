@@ -24,11 +24,13 @@ const agent = toAgent(source, { telemetry: myTelemetrySink });
 
 ## AgUiAgent
 
-`toAgent()` returns an `AgUiAgent`, which extends the neutral `Agent` contract with one additional signal:
+`toAgent()` returns an `AgUiAgent`, which extends the neutral `Agent` contract with AG-UI-specific protocol surfaces:
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `customEvents()` | `Signal<CustomStreamEvent[]>` | Custom events accumulated during a run. Resets at the start of each new run. |
+| `clientTools` | `ClientToolsCapability` | Browser client-tool catalog, pending calls, and result resolution. The chat composition uses this when you pass `<chat [clientTools]>`. |
+| `subagents()` | `Signal<Map<string, Subagent>>` | `ACTIVITY_*` events with `activityType: 'subagent'`, projected to the neutral subagent contract and keyed by `messageId`. |
 
 The standard `Agent` signals (`messages`, `status`, `isLoading`, `error`, `toolCalls`, `state`, `interrupt`) and actions (`submit`, `stop`, `regenerate`) are all present.
 

@@ -49,10 +49,12 @@ function agentRuntimeTelemetryErrorClass(error: unknown): string {
 }
 
 /**
- * The neutral Agent contract, widened with the AG-UI adapter's optional
+ * The neutral Agent contract, widened with the AG-UI adapter's
  * `customEvents` signal (the chat composition feature-detects it to enable
- * live a2ui streaming) and the optional `clientTools` capability.
- * Mirrors langgraph's LangGraphAgent extension.
+ * live a2ui streaming), the browser client-tools capability, and concrete
+ * ACTIVITY-backed `subagents`.
+ * Mirrors langgraph's LangGraphAgent extension where the protocol surfaces
+ * overlap.
  */
 export interface AgUiAgent<TState = Record<string, unknown>> extends Agent<TState> {
   customEvents: Signal<CustomStreamEvent[]>;
@@ -76,6 +78,14 @@ export interface AgUiAgent<TState = Record<string, unknown>> extends Agent<TStat
  * of toAgent() should treat the returned object's lifecycle as tied to the
  * agent instance they constructed. The subscriber registered via
  * source.subscribe() will fire for the lifetime of source.
+ *
+ * @example
+ * ```ts
+ * import { HttpAgent } from '@ag-ui/client';
+ * import { toAgent } from '@threadplane/ag-ui';
+ *
+ * const agent = toAgent(new HttpAgent({ url: '/api/agent' }));
+ * ```
  */
 export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): AgUiAgent {
   const store: ReducerStore = {

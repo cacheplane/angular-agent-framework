@@ -9,10 +9,11 @@
 ## Install packages
 
 ```bash
-npm install @threadplane/chat @threadplane/ag-ui @ag-ui/client @ag-ui/core
+npm install @threadplane/chat @threadplane/ag-ui @ag-ui/client @ag-ui/core marked
 ```
 
 `@threadplane/chat` provides the chat UI primitives. `@threadplane/ag-ui` provides the adapter that wires an AG-UI backend into the `Agent` contract those primitives consume.
+`marked` is the required markdown parser peer used by `@threadplane/chat` when assistant messages render through `<chat>`.
 
 ## Peer Dependencies
 
