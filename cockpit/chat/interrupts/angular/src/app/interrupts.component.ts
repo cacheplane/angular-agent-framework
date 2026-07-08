@@ -50,7 +50,7 @@ const SUGGESTIONS = [
     ExampleChatLayoutComponent,
   ],
   template: `
-    <example-chat-layout sidebarWidth="w-80">
+    <example-chat-layout sidebarWidth="20rem">
       <chat main [agent]="agent" class="flex-1 min-w-0">
         <div chatWelcomeSuggestions>
           @for (s of suggestions; track s.value) {

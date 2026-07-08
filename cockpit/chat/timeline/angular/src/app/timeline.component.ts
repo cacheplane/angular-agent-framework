@@ -14,7 +14,7 @@ import { injectAgent } from '@threadplane/langgraph';
   standalone: true,
   imports: [ChatComponent, ChatTimelineSliderComponent, ExampleChatLayoutComponent],
   template: `
-    <example-chat-layout sidebarWidth="w-80">
+    <example-chat-layout sidebarWidth="20rem">
       <chat main [agent]="agent" class="flex-1 min-w-0" />
       <div sidebar class="p-4 space-y-4" style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"

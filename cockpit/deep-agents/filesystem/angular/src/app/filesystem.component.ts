@@ -31,7 +31,7 @@ interface FileOperation {
   standalone: true,
   imports: [ChatComponent, ExampleChatLayoutComponent],
   template: `
-    <example-chat-layout sidebarWidth="w-72">
+    <example-chat-layout sidebarWidth="18rem">
       <chat main [agent]="agent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
       <div sidebar class="p-4 space-y-2" style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
         <h3 class="text-xs font-semibold uppercase tracking-wide"

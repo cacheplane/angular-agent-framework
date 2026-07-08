@@ -44,7 +44,7 @@ const activeThreadIdState = signal<string | null>(null);
     }),
   ],
   template: `
-    <example-chat-layout sidebarPosition="left" sidebarWidth="w-64">
+    <example-chat-layout sidebarPosition="left" sidebarWidth="16rem">
       <chat main
         [agent]="agent"
         [threads]="threadsSvc.threads()"
