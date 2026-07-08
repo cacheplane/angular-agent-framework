@@ -48,20 +48,49 @@ const SUGGESTIONS = [
           }
         </div>
       </chat>
-      <div sidebar class="p-4 space-y-4" style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
-        <div>
-          <h4 class="text-xs font-semibold uppercase tracking-wide mb-2"
-              style="color: var(--tplane-chat-text-muted);">Agent Pipeline</h4>
-          <ol class="text-xs space-y-1 list-decimal list-inside" style="color: var(--tplane-chat-text-muted);">
-            <li>Orchestrator</li>
-            <li>Research subagent</li>
-            <li>Booking subagent</li>
-            <li>Itinerary subagent</li>
-          </ol>
-        </div>
+      <div sidebar class="panel">
+        <h3 class="cap">Agent Pipeline</h3>
+        <ol class="info-list">
+          <li>Orchestrator</li>
+          <li>Research subagent</li>
+          <li>Booking subagent</li>
+          <li>Itinerary subagent</li>
+        </ol>
       </div>
     </example-chat-layout>
   `,
+  styles: [`
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: var(--tplane-chat-bg);
+      color: var(--tplane-chat-text);
+    }
+
+    .cap {
+      margin: 0;
+      color: var(--tplane-chat-text-muted);
+      font-size: var(--tplane-chat-font-size-xs);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      line-height: var(--tplane-chat-line-height-tight);
+      text-transform: uppercase;
+    }
+
+    .info-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      margin: 0;
+      padding: 0;
+      color: var(--tplane-chat-text-muted);
+      font-size: var(--tplane-chat-font-size-xs);
+      line-height: var(--tplane-chat-line-height);
+      list-style: none;
+    }
+  `],
 })
 export class SubagentsComponent {
   protected readonly agent = injectAgent();

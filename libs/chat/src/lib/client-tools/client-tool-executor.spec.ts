@@ -6,6 +6,11 @@ import { z } from 'zod/v4';
 import { action, view, tools } from './tools';
 import { startClientToolExecutor } from './client-tool-executor';
 import type { ClientToolsCapability, ClientToolResult } from './client-tools-capability';
+import type {
+  ClientToolExecutionGuard,
+  ClientToolExecutionRecord,
+  ClientToolExecutionStore,
+} from './client-tool-execution-guard';
 import type { Agent } from '../agent/agent';
 import type { ToolCall } from '../agent/tool-call';
 
@@ -49,6 +54,24 @@ function makeFakeAgent(capability: ClientToolsCapability): Agent {
     regenerate: vi.fn(),
     clientTools: capability,
   };
+}
+
+function makeGuardStore(
+  claimResult: 'claimed' | ClientToolExecutionRecord = 'claimed',
+): ClientToolExecutionStore & {
+  claim: ReturnType<typeof vi.fn<[Parameters<ClientToolExecutionStore['claim']>[0]], Promise<'claimed' | ClientToolExecutionRecord>>>;
+  record: ReturnType<typeof vi.fn<Parameters<ClientToolExecutionStore['record']>, Promise<void>>>;
+  lookup: ReturnType<typeof vi.fn<Parameters<ClientToolExecutionStore['lookup']>, Promise<Record<string, ClientToolExecutionRecord>>>>;
+} {
+  return {
+    claim: vi.fn(async () => claimResult),
+    record: vi.fn(async () => undefined),
+    lookup: vi.fn(async () => ({})),
+  };
+}
+
+function makeGuard(store: ClientToolExecutionStore): ClientToolExecutionGuard {
+  return { threadId: 'thread-1', store };
 }
 
 // ── registry ──────────────────────────────────────────────────────────────────
@@ -166,6 +189,268 @@ describe('startClientToolExecutor()', () => {
     await drainMicrotasks();
 
     expect(resolve).toHaveBeenCalledOnce();
+  });
+
+  it('passes a non-aborted signal to function tool handlers', async () => {
+    const seen: AbortSignal[] = [];
+    const registry = tools({
+      read: action('read', z.object({}), async (_args, context) => {
+        seen.push(context.signal);
+        return 'done';
+      }),
+    });
+    const { pending, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+
+    TestBed.runInInjectionContext(() => {
+      startClientToolExecutor(agent, registry);
+    });
+
+    pending.set([{ id: 's1', name: 'read', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(seen).toHaveLength(1);
+    expect(seen[0].aborted).toBe(false);
+  });
+
+  it('aborts in-flight function tools on stop and does not resolve them', async () => {
+    let complete!: (value: string) => void;
+    const completion = new Promise<string>((resolve) => {
+      complete = resolve;
+    });
+    const seen: AbortSignal[] = [];
+    const registry = tools({
+      slow: action('slow', z.object({}), async (_args, context) => {
+        seen.push(context.signal);
+        return completion;
+      }),
+    });
+    const { pending, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+
+    TestBed.runInInjectionContext(() => {
+      startClientToolExecutor(agent, registry);
+    });
+
+    pending.set([{ id: 'slow-1', name: 'slow', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    await agent.stop();
+    expect(seen[0].aborted).toBe(true);
+
+    complete('late result');
+    await drainMicrotasks();
+
+    expect(resolve).not.toHaveBeenCalled();
+  });
+
+  it('aborts in-flight function tools when the injection context is destroyed', async () => {
+    const seen: AbortSignal[] = [];
+    const registry = tools({
+      slow: action('slow', z.object({}), async (_args, context) => {
+        seen.push(context.signal);
+        return new Promise(() => undefined);
+      }),
+    });
+    const { pending, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+
+    TestBed.runInInjectionContext(() => {
+      startClientToolExecutor(agent, registry);
+    });
+
+    pending.set([{ id: 'slow-2', name: 'slow', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    TestBed.resetTestingModule();
+
+    expect(seen[0].aborted).toBe(true);
+  });
+
+  it('claims before executing guarded function tools and records before resolving', async () => {
+    const order: string[] = [];
+    const handler = vi.fn(async () => {
+      order.push('handler');
+      return 'charged';
+    });
+    const registry = tools({
+      charge: action('Charge a card', z.object({}), handler),
+    });
+    const store = makeGuardStore('claimed');
+    store.claim.mockImplementation(async () => {
+      order.push('claim');
+      return 'claimed';
+    });
+    store.record.mockImplementation(async () => {
+      order.push('record');
+    });
+    const { pending, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+
+    TestBed.runInInjectionContext(() => {
+      startClientToolExecutor(agent, registry, { executionGuard: makeGuard(store) });
+    });
+
+    pending.set([{ id: 'charge-1', name: 'charge', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks(8);
+
+    expect(store.claim).toHaveBeenCalledWith({ threadId: 'thread-1', toolCallId: 'charge-1' });
+    expect(store.record).toHaveBeenCalledWith(
+      { threadId: 'thread-1', toolCallId: 'charge-1' },
+      { ok: true, value: 'charged' },
+    );
+    expect(resolve).toHaveBeenCalledWith('charge-1', { ok: true, value: 'charged' });
+    expect(order).toEqual(['claim', 'handler', 'record']);
+  });
+
+  it('replays a prior done result without re-running the handler', async () => {
+    const handler = vi.fn(async () => 'new-value');
+    const registry = tools({
+      charge: action('Charge a card', z.object({}), handler),
+    });
+    const prior: ClientToolResult = { ok: true, value: 'stored-value' };
+    const store = makeGuardStore({ status: 'done', result: prior });
+    const { pending, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+
+    TestBed.runInInjectionContext(() => {
+      startClientToolExecutor(agent, registry, { executionGuard: makeGuard(store) });
+    });
+
+    pending.set([{ id: 'charge-2', name: 'charge', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(handler).not.toHaveBeenCalled();
+    expect(store.record).not.toHaveBeenCalled();
+    expect(resolve).toHaveBeenCalledWith('charge-2', prior);
+  });
+
+  it('fails closed for stale executing records', async () => {
+    const handler = vi.fn(async () => 'new-value');
+    const registry = tools({
+      charge: action('Charge a card', z.object({}), handler),
+    });
+    const store = makeGuardStore({ status: 'executing' });
+    const { pending, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+
+    TestBed.runInInjectionContext(() => {
+      startClientToolExecutor(agent, registry, { executionGuard: makeGuard(store) });
+    });
+
+    pending.set([{ id: 'charge-3', name: 'charge', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(handler).not.toHaveBeenCalled();
+    expect(store.record).toHaveBeenCalledOnce();
+    const result = store.record.mock.calls[0][1];
+    expect(result.ok).toBe(false);
+    expect((result as { error: string }).error).toContain('charge-3');
+    expect(resolve).toHaveBeenCalledWith('charge-3', result);
+  });
+
+  it('fails closed for failed records without a stored result', async () => {
+    const handler = vi.fn(async () => 'new-value');
+    const registry = tools({
+      charge: action('Charge a card', z.object({}), handler),
+    });
+    const store = makeGuardStore({ status: 'failed' });
+    const { pending, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+
+    TestBed.runInInjectionContext(() => {
+      startClientToolExecutor(agent, registry, { executionGuard: makeGuard(store) });
+    });
+
+    pending.set([{ id: 'charge-4', name: 'charge', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(handler).not.toHaveBeenCalled();
+    expect(store.record).toHaveBeenCalledOnce();
+    expect(resolve.mock.calls[0][1].ok).toBe(false);
+  });
+
+  it('fails closed when the guard claim fails', async () => {
+    const handler = vi.fn(async () => 'new-value');
+    const registry = tools({
+      charge: action('Charge a card', z.object({}), handler),
+    });
+    const store = makeGuardStore('claimed');
+    store.claim.mockRejectedValue(new Error('store unavailable'));
+    const { pending, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+
+    TestBed.runInInjectionContext(() => {
+      startClientToolExecutor(agent, registry, { executionGuard: makeGuard(store) });
+    });
+
+    pending.set([{ id: 'charge-5', name: 'charge', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(handler).not.toHaveBeenCalled();
+    expect(store.record).not.toHaveBeenCalled();
+    expect(resolve.mock.calls[0][1].ok).toBe(false);
+    expect((resolve.mock.calls[0][1] as { error: string }).error).toContain('guard failed');
+  });
+
+  it('bypasses the guard for idempotent function tools', async () => {
+    const handler = vi.fn(async () => 'cached');
+    const registry = tools({
+      read: action('Read cached data', z.object({}), handler, { idempotent: true }),
+    });
+    const store = makeGuardStore('claimed');
+    const { pending, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+
+    TestBed.runInInjectionContext(() => {
+      startClientToolExecutor(agent, registry, { executionGuard: makeGuard(store) });
+    });
+
+    pending.set([{ id: 'read-1', name: 'read', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(store.claim).not.toHaveBeenCalled();
+    expect(handler).toHaveBeenCalledOnce();
+    expect(resolve).toHaveBeenCalledWith('read-1', { ok: true, value: 'cached' });
+  });
+
+  it('does not execute or resolve when stopped before a delayed claim resolves', async () => {
+    let resolveClaim!: (value: 'claimed') => void;
+    const claim = new Promise<'claimed'>((resolve) => {
+      resolveClaim = resolve;
+    });
+    const handler = vi.fn(async () => 'late');
+    const registry = tools({
+      charge: action('Charge a card', z.object({}), handler),
+    });
+    const store = makeGuardStore('claimed');
+    store.claim.mockReturnValue(claim);
+    const { pending, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+
+    TestBed.runInInjectionContext(() => {
+      startClientToolExecutor(agent, registry, { executionGuard: makeGuard(store) });
+    });
+
+    pending.set([{ id: 'charge-6', name: 'charge', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    await agent.stop();
+    resolveClaim('claimed');
+    await drainMicrotasks();
+
+    expect(handler).not.toHaveBeenCalled();
+    expect(resolve).not.toHaveBeenCalled();
   });
 
   it('ignores view/ask tool calls (only function tools are auto-executed)', async () => {

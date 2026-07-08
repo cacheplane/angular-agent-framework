@@ -1,5 +1,10 @@
 .skeleton {
-  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--tplane-chat-text) 5%, transparent) 25%,
+    color-mix(in srgb, var(--tplane-chat-text) 10%, transparent) 50%,
+    color-mix(in srgb, var(--tplane-chat-text) 5%, transparent) 75%
+  );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 4px;
@@ -13,6 +18,10 @@
 .skeleton-text {
   height: 1em;
   width: 60%;
+}
+
+.skeleton-text--short {
+  width: 30%;
 }
 
 .skeleton-value {

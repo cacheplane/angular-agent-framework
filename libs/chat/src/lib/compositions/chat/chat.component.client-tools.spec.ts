@@ -7,6 +7,11 @@ import { ChatComponent } from './chat.component';
 import { mockAgent, type MockAgent } from '../../testing/mock-agent';
 import { tools, action, view, ask } from '../../client-tools/tools';
 import type { ClientToolsCapability, ClientToolResult } from '../../client-tools/client-tools-capability';
+import type {
+  ClientToolExecutionGuard,
+  ClientToolExecutionRecord,
+  ClientToolExecutionStore,
+} from '../../client-tools/client-tool-execution-guard';
 import type { ClientToolSpec } from '../../client-tools/to-json-schema';
 import type { ToolCall } from '../../agent/tool-call';
 
@@ -46,6 +51,22 @@ function makeFakeCapability(): FakeCap {
   const setCatalog = vi.fn<[readonly ClientToolSpec[]], void>();
   const capability: ClientToolsCapability = { setCatalog, pending, resolve };
   return { pending, resolve, setCatalog, capability };
+}
+
+function makeGuardStore(): ClientToolExecutionStore & {
+  claim: ReturnType<typeof vi.fn<[Parameters<ClientToolExecutionStore['claim']>[0]], Promise<'claimed' | ClientToolExecutionRecord>>>;
+  record: ReturnType<typeof vi.fn<Parameters<ClientToolExecutionStore['record']>, Promise<void>>>;
+  lookup: ReturnType<typeof vi.fn<Parameters<ClientToolExecutionStore['lookup']>, Promise<Record<string, ClientToolExecutionRecord>>>>;
+} {
+  return {
+    claim: vi.fn(async () => 'claimed'),
+    record: vi.fn(async () => undefined),
+    lookup: vi.fn(async () => ({})),
+  };
+}
+
+function makeGuard(store: ClientToolExecutionStore): ClientToolExecutionGuard {
+  return { threadId: 'thread-1', store };
 }
 
 /** A mockAgent augmented with a clientTools capability. */
@@ -161,6 +182,40 @@ describe('ChatComponent — client-tools wiring', () => {
     await drainMicrotasks();
 
     expect(cap.resolve).toHaveBeenCalledWith('f1', {
+      ok: true,
+      value: { temp: 70, city: 'SF' },
+    });
+    void comp;
+  });
+
+  it('wires clientToolExecutionGuard into function-tool execution', async () => {
+    const cap = makeFakeCapability();
+    const store = makeGuardStore();
+    let comp!: ChatComponent;
+    runInInjectionContext(injector, () => {
+      comp = new ChatComponent();
+      setSignalInput(comp.clientTools, clientToolRegistry);
+      setSignalInput(comp.clientToolExecutionGuard, makeGuard(store));
+      setSignalInput(comp.agent, agentWithClientTools(cap.capability));
+      TestBed.flushEffects();
+    });
+    await drainMicrotasks();
+
+    cap.pending.set([
+      { id: 'guarded-action', name: 'get_weather', args: { city: 'SF' }, status: 'running' },
+    ]);
+    TestBed.flushEffects();
+    await drainMicrotasks(8);
+
+    expect(store.claim).toHaveBeenCalledWith({
+      threadId: 'thread-1',
+      toolCallId: 'guarded-action',
+    });
+    expect(store.record).toHaveBeenCalledWith(
+      { threadId: 'thread-1', toolCallId: 'guarded-action' },
+      { ok: true, value: { temp: 70, city: 'SF' } },
+    );
+    expect(cap.resolve).toHaveBeenCalledWith('guarded-action', {
       ok: true,
       value: { temp: 70, city: 'SF' },
     });

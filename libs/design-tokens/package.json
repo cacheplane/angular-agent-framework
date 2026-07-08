@@ -3,6 +3,10 @@
   "version": "0.0.35",
   "license": "MIT",
   "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
     "./theme.css": "./src/lib/theme.css"
   },
   "repository": {

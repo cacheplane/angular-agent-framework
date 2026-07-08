@@ -1,7 +1,14 @@
 // SPDX-License-Identifier: MIT
 import type { Type } from '@angular/core';
 import type { StandardSchemaV1, StandardSchemaInferOutput } from '@threadplane/render';
-import type { ClientToolDef, FunctionToolDef, ViewToolDef, AskToolDef } from './tool-def';
+import type {
+  AskToolDef,
+  ClientToolDef,
+  ClientToolExecutionOptions,
+  FunctionToolDef,
+  FunctionToolHandlerContext,
+  ViewToolDef,
+} from './tool-def';
 import type { AcceptComponent } from './component-inputs';
 export type { ViewProps } from './component-inputs';
 
@@ -12,8 +19,11 @@ export type { ViewProps } from './component-inputs';
  * @param description Natural-language description the model sees.
  * @param schema Standard Schema (e.g. a Zod object) for the arguments; the
  *   handler's argument type is inferred from it.
- * @param handler Runs in the browser when the model calls the tool; its return
- *   type `R` is carried on the resulting {@link FunctionToolDef}.
+ * @param handler Runs in the browser when the model calls the tool. The second
+ *   argument carries an `AbortSignal`; its return type `R` is carried on the
+ *   resulting {@link FunctionToolDef}.
+ * @param options Execution policy options, including `idempotent: true` to skip
+ *   durable pre-execution claims when a guard is configured.
  * @returns A {@link FunctionToolDef} for inclusion in {@link tools}.
  * @example
  * ```ts
@@ -24,9 +34,13 @@ export type { ViewProps } from './component-inputs';
 export function action<S extends StandardSchemaV1, R>(
   description: string,
   schema: S,
-  handler: (args: StandardSchemaInferOutput<S>) => R | Promise<R>,
+  handler: (
+    args: StandardSchemaInferOutput<S>,
+    context: FunctionToolHandlerContext,
+  ) => R | Promise<R>,
+  options: ClientToolExecutionOptions = {},
 ): FunctionToolDef<S, R> {
-  return { kind: 'function', description, schema, handler };
+  return { kind: 'function', description, schema, handler, ...options };
 }
 
 /**

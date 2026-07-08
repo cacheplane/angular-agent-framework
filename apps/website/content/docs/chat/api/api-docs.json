@@ -1822,6 +1822,12 @@
         "optional": false
       },
       {
+        "name": "clientToolExecutionGuard",
+        "type": "InputSignal<ClientToolExecutionGuard | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "clientTools",
         "type": "InputSignal<Readonly<Record<string, ClientToolDef>> | undefined>",
         "description": "Client-declared tools (`view`/`ask`/`function`) the model may call. When\nprovided, a coordinator ships their catalog to the agent, runs `function`\ntools in the browser, and renders/resolves `view`/`ask` tools through the\nsame tool-views pipeline as `views`. Additive — leave undefined for the\nclassic server-tools-only experience.",
@@ -6305,9 +6311,15 @@
       },
       {
         "name": "handler",
-        "type": "(args: any) => unknown",
+        "type": "(args: any, context: FunctionToolHandlerContext) => unknown",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "idempotent",
+        "type": "boolean",
+        "description": "",
+        "optional": true
       },
       {
         "name": "kind",
@@ -6689,6 +6701,134 @@
     "examples": []
   },
   {
+    "name": "ClientToolExecutionGuard",
+    "kind": "interface",
+    "description": "Opt-in guard configuration for claim-before-execute client tools.",
+    "properties": [
+      {
+        "name": "store",
+        "type": "ClientToolExecutionStore",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "threadId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ClientToolExecutionKey",
+    "kind": "interface",
+    "description": "Durable identity for one client-tool execution on one thread.",
+    "properties": [
+      {
+        "name": "threadId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "toolCallId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ClientToolExecutionOptions",
+    "kind": "interface",
+    "description": "Execution policy options for browser-executed function tools.",
+    "properties": [
+      {
+        "name": "idempotent",
+        "type": "boolean",
+        "description": "True when the handler may safely re-run and should skip durable pre-claims.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ClientToolExecutionStore",
+    "kind": "interface",
+    "description": "Structural store contract for guarded browser client-tool execution.",
+    "properties": [],
+    "methods": [
+      {
+        "name": "claim",
+        "signature": "claim(key: ClientToolExecutionKey): Promise<\"claimed\" | ClientToolExecutionRecord>",
+        "description": "Atomically claim a tool-call execution. Returns prior state when present.",
+        "params": [
+          {
+            "name": "key",
+            "type": "ClientToolExecutionKey",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "lookup",
+        "signature": "lookup(threadId: string, toolCallIds: readonly string[]): Promise<Record<string, ClientToolExecutionRecord>>",
+        "description": "Lookup prior execution states for pending tool calls on a thread.",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "toolCallIds",
+            "type": "readonly string[]",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "record",
+        "signature": "record(key: ClientToolExecutionKey, result: ClientToolResult): Promise<void>",
+        "description": "Record the final client-tool result for a claimed execution.",
+        "params": [
+          {
+            "name": "key",
+            "type": "ClientToolExecutionKey",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "result",
+            "type": "ClientToolResult",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ClientToolExecutorOptions",
+    "kind": "interface",
+    "description": "Options for wiring automatic browser function-tool execution.",
+    "properties": [
+      {
+        "name": "executionGuard",
+        "type": "ClientToolExecutionGuard",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "ClientToolsCapability",
     "kind": "interface",
     "description": "Optional Agent capability that lets the client declare tools to the model\nand return their results. Implemented per-transport by each adapter\n(AG-UI: native RunAgentInput.tools + addMessage/re-run; LangGraph: catalog\nvia run input + ToolMessage re-run).",
@@ -6976,9 +7116,15 @@
       },
       {
         "name": "handler",
-        "type": "(args: StandardSchemaInferOutput<S>) => R | Promise<R>",
+        "type": "(args: StandardSchemaInferOutput<S>, context: FunctionToolHandlerContext) => R | Promise<R>",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "idempotent",
+        "type": "boolean",
+        "description": "",
+        "optional": true
       },
       {
         "name": "kind",
@@ -6990,6 +7136,20 @@
         "name": "schema",
         "type": "S",
         "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "FunctionToolHandlerContext",
+    "kind": "interface",
+    "description": "Runtime context passed to browser-executed function tool handlers.",
+    "properties": [
+      {
+        "name": "signal",
+        "type": "AbortSignal",
+        "description": "Aborts when the client tool execution should stop without resolving.",
         "optional": false
       }
     ],
@@ -7456,6 +7616,38 @@
         "name": "source",
         "type": "\"message\" | \"markdown\"",
         "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "SelectPendingClientToolCallsInput",
+    "kind": "interface",
+    "description": "Inputs for selectPendingClientToolCalls.",
+    "properties": [
+      {
+        "name": "catalogNames",
+        "type": "ReadonlySet<string>",
+        "description": "Client-declared tool names that should be handled in the browser.",
+        "optional": false
+      },
+      {
+        "name": "isLoading",
+        "type": "boolean",
+        "description": "Whether the agent is currently streaming a run. Pending client tools are hidden while loading.",
+        "optional": false
+      },
+      {
+        "name": "resolvedIds",
+        "type": "ReadonlySet<string>",
+        "description": "Tool-call ids already resolved by the local client instance.",
+        "optional": false
+      },
+      {
+        "name": "toolCalls",
+        "type": "readonly ToolCall[]",
+        "description": "Tool calls observed from the current agent state.",
         "optional": false
       }
     ],
@@ -7934,6 +8126,13 @@
     "examples": []
   },
   {
+    "name": "ClientToolExecutionRecord",
+    "kind": "type",
+    "description": "Prior durable execution state returned by a client-tool execution store.",
+    "signature": "object | object | object",
+    "examples": []
+  },
+  {
     "name": "ClientToolRegistry",
     "kind": "type",
     "description": "A frozen, name-keyed registry of client tools.",
@@ -8112,7 +8311,7 @@
     "name": "action",
     "kind": "function",
     "description": "Declare an async function tool the model can call; its resolved return value\nbecomes the tool result shipped back to the model.",
-    "signature": "action(description: string, schema: S, handler: (args: StandardSchemaInferOutput<S>) => R | Promise<R>): FunctionToolDef<S, R>",
+    "signature": "action(description: string, schema: S, handler: (args: StandardSchemaInferOutput<S>, context: FunctionToolHandlerContext) => R | Promise<R>, options: ClientToolExecutionOptions): FunctionToolDef<S, R>",
     "params": [
       {
         "name": "description",
@@ -8128,9 +8327,15 @@
       },
       {
         "name": "handler",
-        "type": "(args: StandardSchemaInferOutput<S>) => R | Promise<R>",
-        "description": "Runs in the browser when the model calls the tool; its return\n  type `R` is carried on the resulting FunctionToolDef.",
+        "type": "(args: StandardSchemaInferOutput<S>, context: FunctionToolHandlerContext) => R | Promise<R>",
+        "description": "Runs in the browser when the model calls the tool. The second\n  argument carries an `AbortSignal`; its return type `R` is carried on the\n  resulting FunctionToolDef.",
         "optional": false
+      },
+      {
+        "name": "options",
+        "type": "ClientToolExecutionOptions",
+        "description": "Execution policy options, including `idempotent: true` to skip\n  durable pre-execution claims when a guard is configured.",
+        "optional": true
       }
     ],
     "returns": {
@@ -8257,6 +8462,31 @@
     "examples": []
   },
   {
+    "name": "clientToolGuardFailureResult",
+    "kind": "function",
+    "description": "Default fail-closed result when the execution guard itself cannot be reached.",
+    "signature": "clientToolGuardFailureResult(toolCallId: string, error: unknown): ClientToolResult",
+    "params": [
+      {
+        "name": "toolCallId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "error",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "ClientToolResult",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
     "name": "createA2uiSurfaceStore",
     "kind": "function",
     "description": "Create an A2uiSurfaceStore — the per-conversation store that buffers\nstreamed A2UI surface updates, tracks each surface's data model + lifecycle\nstate, and exposes them as signals for rendering. One store backs a chat\nthread's A2UI surfaces.",
@@ -8341,6 +8571,25 @@
     ],
     "returns": {
       "type": "PartialArgsBridge",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "defaultInterruptedClientToolResult",
+    "kind": "function",
+    "description": "Default fail-closed result for a stale in-progress client-tool execution.",
+    "signature": "defaultInterruptedClientToolResult(toolCallId: string): ClientToolResult",
+    "params": [
+      {
+        "name": "toolCallId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "ClientToolResult",
       "description": ""
     },
     "examples": []
@@ -8468,7 +8717,7 @@
     "name": "executeFunctionTool",
     "kind": "function",
     "description": "Validate args, run the handler, and normalize the outcome to a ClientToolResult.",
-    "signature": "executeFunctionTool(def: AnyFunctionToolDef, rawArgs: unknown): Promise<ClientToolResult>",
+    "signature": "executeFunctionTool(def: AnyFunctionToolDef, rawArgs: unknown, context: FunctionToolHandlerContext): Promise<ClientToolResult>",
     "params": [
       {
         "name": "def",
@@ -8481,6 +8730,12 @@
         "type": "unknown",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "context",
+        "type": "FunctionToolHandlerContext",
+        "description": "",
+        "optional": true
       }
     ],
     "returns": {
@@ -8896,10 +9151,48 @@
     "examples": []
   },
   {
+    "name": "selectPendingClientToolCalls",
+    "kind": "function",
+    "description": "Select client tool calls that are ready for browser-side resolution.",
+    "signature": "selectPendingClientToolCalls(input: SelectPendingClientToolCallsInput): readonly ToolCall[]",
+    "params": [
+      {
+        "name": "input",
+        "type": "SelectPendingClientToolCallsInput",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "readonly ToolCall[]",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "shouldClaimBeforeExecute",
+    "kind": "function",
+    "description": "Return whether this function tool should claim before browser execution.",
+    "signature": "shouldClaimBeforeExecute(def: AnyFunctionToolDef): boolean",
+    "params": [
+      {
+        "name": "def",
+        "type": "AnyFunctionToolDef",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "boolean",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
     "name": "startClientToolExecutor",
     "kind": "function",
     "description": "Watches the agent's pending client tool calls and auto-runs FUNCTION tools,\nresolving each with its result. View/ask (component) tools are handled by the\nrendering layer, not here. No-op if the agent lacks the clientTools\ncapability. MUST be called in an injection context (sets up an effect).",
-    "signature": "startClientToolExecutor(agent: Agent<>, registry: ClientToolRegistry): void",
+    "signature": "startClientToolExecutor(agent: Agent<>, registry: ClientToolRegistry, options: ClientToolExecutorOptions): void",
     "params": [
       {
         "name": "agent",
@@ -8912,6 +9205,12 @@
         "type": "ClientToolRegistry",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "options",
+        "type": "ClientToolExecutorOptions",
+        "description": "",
+        "optional": true
       }
     ],
     "returns": {

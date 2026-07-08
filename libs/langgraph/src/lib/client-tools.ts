@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: MIT
 import { computed, signal } from '@angular/core';
 import type { Signal } from '@angular/core';
-import type { ClientToolsCapability, ClientToolResult, ClientToolSpec } from '@threadplane/chat';
+import {
+  selectPendingClientToolCalls,
+  type ClientToolsCapability,
+  type ClientToolResult,
+  type ClientToolSpec,
+} from '@threadplane/chat';
 import type { ToolCall } from '@threadplane/chat';
 import type { LangGraphSubmitOptions } from './agent.types';
 
@@ -109,12 +114,12 @@ export function createClientToolsCapability(
     // Client tools are only actionable after the run ends (the backend
     // signals this by ending the run WITHOUT emitting a ToolMessage result
     // for client tools).
-    if (store.isLoading()) return [];
-    const names = new Set(catalog().map((s) => s.name));
-    const done = resolvedIds();
-    return store.toolCalls().filter(
-      (tc) => names.has(tc.name) && tc.result === undefined && !done.has(tc.id),
-    );
+    return selectPendingClientToolCalls({
+      isLoading: store.isLoading(),
+      toolCalls: store.toolCalls(),
+      catalogNames: new Set(catalog().map((s) => s.name)),
+      resolvedIds: resolvedIds(),
+    });
   });
 
   const capability: ClientToolsCapability & { catalog: Signal<readonly ClientToolSpec[]> } = {
