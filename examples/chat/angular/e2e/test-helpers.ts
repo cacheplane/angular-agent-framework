@@ -21,11 +21,17 @@ export function attachBrowserHygiene(page: Page): {
   page.on('requestfailed', (request) => {
     const failure = request.failure()?.errorText ?? '';
     const url = request.url();
-    if (/runs\/stream/.test(url) && /abort|ERR_ABORTED/i.test(failure)) return;
+    if (isBenignAbortedRequest(url, failure)) return;
     failedRequests.push(`${request.method()} ${url} ${failure}`.trim());
   });
 
   return { consoleErrors, failedRequests };
+}
+
+function isBenignAbortedRequest(url: string, failure: string): boolean {
+  if (!/abort|ERR_ABORTED/i.test(failure)) return false;
+  if (/runs\/stream/.test(url)) return true;
+  return /fonts\.gstatic\.com\/s\/materialsymbolsoutlined\/.+\.woff2/.test(url);
 }
 
 export async function openDemo(page: Page, path = '/embed'): Promise<void> {
