@@ -236,6 +236,8 @@ export type { ViewProps } from './lib/client-tools/component-inputs';
 export type ToolArgs<S extends import('./lib/client-tools/tool-def').StandardSchemaV1> = import('./lib/client-tools/tool-def').StandardSchemaInferOutput<S>;
 export type { ClientToolSpec } from './lib/client-tools/to-json-schema';
 export type { ClientToolsCapability, ClientToolResult } from './lib/client-tools/client-tools-capability';
+export { selectPendingClientToolCalls } from './lib/client-tools/select-pending-client-tool-calls';
+export type { SelectPendingClientToolCallsInput } from './lib/client-tools/select-pending-client-tool-calls';
 export { validateArgs, executeFunctionTool } from './lib/client-tools/execute';
 export { startClientToolExecutor } from './lib/client-tools/client-tool-executor';
 // createClientToolsCoordinator: internal — provideChat wires it; not public.
