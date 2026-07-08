@@ -12,6 +12,7 @@ import type {
   ClientToolExecutionStore,
 } from './client-tool-execution-guard';
 import type { Agent } from '../agent/agent';
+import type { Message } from '../agent/message';
 import type { ToolCall } from '../agent/tool-call';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -365,6 +366,159 @@ describe('createClientToolsCoordinator()', () => {
       { ok: true, value: { temp: 72, city: 'SF' } },
     );
     expect(resolve).toHaveBeenCalledWith('f2', { ok: true, value: { temp: 72, city: 'SF' } });
+  });
+
+  it('stops settling pending tools after the configured max continuation turn count is hit', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const onLimit = vi.fn();
+    const handler = vi.fn(async () => 'again');
+    const registry = tools({
+      loop: action('Loop', z.object({}), handler),
+    });
+    const { pending, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry, {
+      continuationPolicy: { maxTurns: 2, onLimit },
+    });
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    pending.set([{ id: 'c1', name: 'loop', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+    pending.set([{ id: 'c2', name: 'loop', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+    pending.set([{ id: 'c3', name: 'loop', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(resolve).toHaveBeenCalledTimes(2);
+    expect(handler).toHaveBeenCalledTimes(2);
+    expect(onLimit).toHaveBeenCalledOnce();
+    expect(onLimit).toHaveBeenCalledWith({
+      maxTurns: 2,
+      attemptedTurn: 3,
+      toolCallIds: ['c3'],
+      toolNames: ['loop'],
+    });
+    expect(error).toHaveBeenCalledOnce();
+    error.mockRestore();
+  });
+
+  it('uses a default max of 10 continuation turns when no policy is provided', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const registry = tools({
+      loop: action('Loop', z.object({}), async () => 'again'),
+    });
+    const { pending, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry);
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    for (let i = 1; i <= 11; i++) {
+      pending.set([{ id: `c${i}`, name: 'loop', args: {}, status: 'complete' }]);
+      TestBed.flushEffects();
+      await drainMicrotasks();
+    }
+
+    expect(resolve).toHaveBeenCalledTimes(10);
+    expect(error).toHaveBeenCalledOnce();
+    error.mockRestore();
+  });
+
+  it('treats maxTurns 0 as an explicit unlimited continuation policy', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const registry = tools({
+      loop: action('Loop', z.object({}), async () => 'again'),
+    });
+    const { pending, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry, {
+      continuationPolicy: { maxTurns: 0 },
+    });
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    for (let i = 1; i <= 12; i++) {
+      pending.set([{ id: `c${i}`, name: 'loop', args: {}, status: 'complete' }]);
+      TestBed.flushEffects();
+      await drainMicrotasks();
+    }
+
+    expect(resolve).toHaveBeenCalledTimes(12);
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it('resets the continuation turn count when a new user turn appears', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const registry = tools({
+      loop: action('Loop', z.object({}), async () => 'again'),
+    });
+    const { pending, resolve, capability } = makeFakeCapability();
+    const messages = signal<Message[]>([{ id: 'u1', role: 'user', content: 'start' }]);
+    const agent: Agent = { ...makeFakeAgent(capability), messages };
+    const coordinator = createClientToolsCoordinator(registry, {
+      continuationPolicy: { maxTurns: 1 },
+    });
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    pending.set([{ id: 'c1', name: 'loop', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    messages.set([{ id: 'u1', role: 'user', content: 'start' }, { id: 'u2', role: 'user', content: 'next' }]);
+    pending.set([{ id: 'c2', name: 'loop', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(resolve).toHaveBeenCalledTimes(2);
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it('does not reset the continuation turn count only because pending tools become empty', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const registry = tools({
+      loop: action('Loop', z.object({}), async () => 'again'),
+    });
+    const { pending, resolve, capability } = makeFakeCapability();
+    const messages = signal<Message[]>([{ id: 'u1', role: 'user', content: 'start' }]);
+    const agent: Agent = { ...makeFakeAgent(capability), messages };
+    const coordinator = createClientToolsCoordinator(registry, {
+      continuationPolicy: { maxTurns: 1 },
+    });
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    pending.set([{ id: 'c1', name: 'loop', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    pending.set([]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    pending.set([{ id: 'c2', name: 'loop', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(resolve).toHaveBeenCalledTimes(1);
+    expect(error).toHaveBeenCalledOnce();
+    error.mockRestore();
   });
 
   it('handleRenderEvent() resolves pending ask tool call by elementKey (tool name)', () => {

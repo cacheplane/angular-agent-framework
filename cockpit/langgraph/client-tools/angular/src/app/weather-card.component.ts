@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import type { ViewProps } from '@threadplane/chat';
+import type { ClientToolViewProps } from '@threadplane/chat';
 import { weatherCardSchema } from './schemas';
 
 /**
@@ -10,12 +10,12 @@ import { weatherCardSchema } from './schemas';
  * `status` of 'running' | 'complete'. Renders a loading affordance until the
  * result arrives.
  *
- * Input types are derived from {@link weatherCardSchema} via `ViewProps` so
+ * Input types are derived from {@link weatherCardSchema} via `ClientToolViewProps` so
  * that a schema change is a compile error here under `strict: true`.
  */
 
 /** Props this component receives from the `weather_card` schema. */
-type WeatherCardProps = ViewProps<typeof weatherCardSchema>;
+type WeatherCardProps = ClientToolViewProps<typeof weatherCardSchema>;
 
 @Component({
   selector: 'app-weather-card',
@@ -59,7 +59,8 @@ export class WeatherCardComponent {
   readonly humidity    = input<WeatherCardProps['humidity']>();
   readonly windMph     = input<WeatherCardProps['windMph']>();
   /** Extra input not in the schema: injected by the framework for rendering state. */
-  readonly status = input<'running' | 'complete'>();
+  readonly status = input<WeatherCardProps['status']>();
+  readonly clientTool = input<WeatherCardProps['clientTool']>();
 
-  readonly pending = computed(() => this.status() !== 'complete' || this.temperatureF() === undefined);
+  readonly pending = computed(() => this.clientTool()?.phase !== 'complete' || this.temperatureF() === undefined);
 }

@@ -18,6 +18,7 @@ import {
 export interface ClientToolExecutorOptions {
   readonly executionGuard?: ClientToolExecutionGuard;
   readonly settleToolCall?: (toolCall: ToolCall, result: ClientToolResult) => void;
+  readonly shouldExecuteToolCall?: (toolCall: ToolCall) => boolean;
 }
 
 /**
@@ -58,6 +59,7 @@ export function startClientToolExecutor(
       // calls that have a result or were resolved; `inFlight` prevents a
       // double-dispatch within a render cycle.
       if (inFlight.has(tc.id)) continue;
+      if (options.shouldExecuteToolCall && !options.shouldExecuteToolCall(tc)) continue;
       const controller = new AbortController();
       inFlight.set(tc.id, controller);
       void runFunctionTool({

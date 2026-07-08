@@ -222,6 +222,46 @@ describe('ChatComponent — client-tools wiring', () => {
     void comp;
   });
 
+  it('passes clientToolContinuationPolicy into the coordinator and emits limit diagnostics', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const cap = makeFakeCapability();
+    const limitEvents: unknown[] = [];
+    let comp!: ChatComponent;
+    runInInjectionContext(injector, () => {
+      comp = new ChatComponent();
+      setSignalInput(comp.clientTools, clientToolRegistry);
+      setSignalInput(comp.clientToolContinuationPolicy, { maxTurns: 1 });
+      comp.clientToolContinuationLimit.subscribe((event) => limitEvents.push(event));
+      setSignalInput(comp.agent, agentWithClientTools(cap.capability));
+      TestBed.flushEffects();
+    });
+    await drainMicrotasks();
+
+    cap.pending.set([
+      { id: 'first', name: 'get_weather', args: { city: 'SF' }, status: 'complete' },
+    ]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+    cap.pending.set([
+      { id: 'second', name: 'get_weather', args: { city: 'LA' }, status: 'complete' },
+    ]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(cap.resolve).toHaveBeenCalledTimes(1);
+    expect(limitEvents).toEqual([
+      {
+        maxTurns: 1,
+        attemptedTurn: 2,
+        toolCallIds: ['second'],
+        toolNames: ['get_weather'],
+      },
+    ]);
+    expect(error).toHaveBeenCalledOnce();
+    error.mockRestore();
+    void comp;
+  });
+
   it('routes a RenderResultEvent through onClientToolEvent to resolve a pending ask', async () => {
     const cap = makeFakeCapability();
     let comp!: ChatComponent;

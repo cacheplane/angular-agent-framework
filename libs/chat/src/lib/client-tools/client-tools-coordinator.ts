@@ -3,7 +3,12 @@ import { effect } from '@angular/core';
 import { views, type ViewRegistry } from '@threadplane/render';
 import type { RenderEvent, RenderViewEntry } from '@threadplane/render';
 import type { Agent, ToolCall } from '../agent';
-import type { ClientToolRegistry, ClientToolDef } from './tool-def';
+import type {
+  ClientToolRegistry,
+  ClientToolDef,
+  ClientToolContinuationLimitEvent,
+  ClientToolContinuationPolicy,
+} from './tool-def';
 import type { ClientToolExecutionGuard } from './client-tool-execution-guard';
 import type { ClientToolSpec } from './to-json-schema';
 import { deriveJsonSchema } from './to-json-schema';
@@ -24,13 +29,17 @@ export interface ClientToolsCoordinator {
 /** Options for creating a client-tools coordinator. */
 export interface ClientToolsCoordinatorOptions {
   readonly executionGuard?: ClientToolExecutionGuard;
+  readonly continuationPolicy?: ClientToolContinuationPolicy;
 }
 
 interface PendingToolGroup {
   readonly ids: ReadonlySet<string>;
   readonly hasFollowUp: boolean;
   readonly settledIds: Set<string>;
+  readonly allowed: boolean;
 }
+
+const DEFAULT_MAX_CONTINUATION_TURNS = 10;
 
 /** Build the catalog spec list shipped to the model. */
 export function toClientToolSpecs(registry: ClientToolRegistry): ClientToolSpec[] {
@@ -62,27 +71,73 @@ export function createClientToolsCoordinator(
   const viewRegistry = views(viewComponents(registry));
   const ackedViews = new Set<string>();
   let currentGroup: PendingToolGroup | undefined;
+  let currentUserTurnKey = '';
+  let continuationTurns = 0;
 
   function toolWantsFollowUp(tc: ToolCall): boolean {
     return registry[tc.name]?.followUp !== false;
   }
 
-  function createGroup(calls: readonly ToolCall[]): PendingToolGroup {
+  function latestUserTurnKey(agent: Agent): string {
+    const messages = agent.messages();
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i] as { id?: string; role?: string };
+      if (msg.role === 'user' || msg.role === 'human') return msg.id ?? `index:${i}`;
+    }
+    return 'no-user-turn';
+  }
+
+  function continuationLimit(calls: readonly ToolCall[]): ClientToolContinuationLimitEvent | undefined {
+    const maxTurns = options.continuationPolicy?.maxTurns ?? DEFAULT_MAX_CONTINUATION_TURNS;
+    if (maxTurns === 0) return undefined;
+    const attemptedTurn = continuationTurns + 1;
+    if (attemptedTurn <= maxTurns) {
+      continuationTurns = attemptedTurn;
+      return undefined;
+    }
+    return {
+      maxTurns,
+      attemptedTurn,
+      toolCallIds: calls.map((tc) => tc.id),
+      toolNames: calls.map((tc) => tc.name),
+    };
+  }
+
+  function emitContinuationLimit(event: ClientToolContinuationLimitEvent): void {
+    console.error(
+      `Client tool continuation stopped after ${event.maxTurns} turn(s); pending tool calls: ${event.toolCallIds.join(', ')}`,
+    );
+    options.continuationPolicy?.onLimit?.(event);
+  }
+
+  function createGroup(agent: Agent, calls: readonly ToolCall[]): PendingToolGroup {
+    const userTurnKey = latestUserTurnKey(agent);
+    if (userTurnKey !== currentUserTurnKey) {
+      currentUserTurnKey = userTurnKey;
+      continuationTurns = 0;
+    }
+    const limit = continuationLimit(calls);
+    if (limit) emitContinuationLimit(limit);
     return {
       ids: new Set(calls.map((tc) => tc.id)),
       hasFollowUp: calls.some(toolWantsFollowUp),
       settledIds: new Set<string>(),
+      allowed: !limit,
     };
   }
 
-  function groupFor(cap: ClientToolsCapability, tc: ToolCall): PendingToolGroup {
+  function groupFor(agent: Agent, cap: ClientToolsCapability, tc: ToolCall): PendingToolGroup {
     if (currentGroup?.ids.has(tc.id)) return currentGroup;
     const pending = cap.pending();
     const calls = pending.some((pendingCall) => pendingCall.id === tc.id)
       ? pending
       : [tc];
-    currentGroup = createGroup(calls);
+    currentGroup = createGroup(agent, calls);
     return currentGroup;
+  }
+
+  function shouldHandleClientToolCall(agent: Agent, cap: ClientToolsCapability, tc: ToolCall): boolean {
+    return groupFor(agent, cap, tc).allowed;
   }
 
   function warnMissingSettle(tc: ToolCall): void {
@@ -93,10 +148,12 @@ export function createClientToolsCoordinator(
 
   function settleClientToolCall(
     cap: ClientToolsCapability,
+    agent: Agent,
     tc: ToolCall,
     result: ClientToolResult,
   ): void {
-    const group = groupFor(cap, tc);
+    const group = groupFor(agent, cap, tc);
+    if (!group.allowed) return;
     if (group.settledIds.has(tc.id)) return;
     group.settledIds.add(tc.id);
 
@@ -126,7 +183,8 @@ export function createClientToolsCoordinator(
       cap.setCatalog(toClientToolSpecs(registry));
       startClientToolExecutor(agent, registry, {
         executionGuard: options.executionGuard,
-        settleToolCall: (tc, result) => settleClientToolCall(cap, tc, result),
+        shouldExecuteToolCall: (tc) => shouldHandleClientToolCall(agent, cap, tc),
+        settleToolCall: (tc, result) => settleClientToolCall(cap, agent, tc, result),
       }); // function tools
       // Auto-ack `view` tools: they render but produce no user value.
       effect(() => {
@@ -135,7 +193,7 @@ export function createClientToolsCoordinator(
           if (!def || def.kind !== 'view') continue;
           if (ackedViews.has(tc.id)) continue;
           ackedViews.add(tc.id);
-          settleClientToolCall(cap, tc, { ok: true, value: { shown: true } });
+          settleClientToolCall(cap, agent, tc, { ok: true, value: { shown: true } });
         }
       });
     },
@@ -149,7 +207,7 @@ export function createClientToolsCoordinator(
       const pending = cap.pending().find(
         (tc: ToolCall) => tc.name === name && registry[tc.name]?.kind === 'ask',
       );
-      if (pending) settleClientToolCall(cap, pending, { ok: true, value: event.value });
+      if (pending) settleClientToolCall(cap, agent, pending, { ok: true, value: event.value });
     },
   };
 }

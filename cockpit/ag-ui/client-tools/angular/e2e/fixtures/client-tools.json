@@ -17,6 +17,10 @@
       "response": { "toolCalls": [ { "name": "weather_card", "arguments": { "location": "Tokyo", "temperatureF": 72, "conditions": "Clear", "humidity": 50, "windMph": 6 } } ] }
     },
     {
+      "match": { "userMessage": "Show me a quiet weather snapshot for Oslo" },
+      "response": { "toolCalls": [ { "name": "weather_snapshot", "arguments": { "location": "Oslo", "temperatureF": 41, "conditions": "Cloudy", "humidity": 64, "windMph": 9 } } ] }
+    },
+    {
       "match": { "userMessage": "Book a table for two at 7pm", "hasToolResult": true },
       "response": { "content": "Your booking is confirmed — see you at 7pm." }
     },
