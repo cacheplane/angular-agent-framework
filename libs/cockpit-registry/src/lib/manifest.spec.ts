@@ -132,7 +132,7 @@ describe('cockpitManifest', () => {
     expect(aguiTopics).toEqual(expect.arrayContaining(['streaming', 'interrupts']));
   });
 
-  it('marks secret-gated integration explicitly for deployment runtime', () => {
+  it('does not advertise placeholder integration coverage for deployment runtime', () => {
     const deploymentRuntimeEntry = cockpitManifest.find(
       (entry) =>
         entry.product === 'langgraph' &&
@@ -144,8 +144,8 @@ describe('cockpitManifest', () => {
       runtimeClass: 'deployed-service',
       testingContract: {
         smokeTarget: 'cockpit-langgraph-deployment-runtime-python:smoke',
-        integrationTarget: 'cockpit-langgraph-deployment-runtime-python:integration',
-        integrationMode: 'secret-gated',
+        integrationTarget: null,
+        integrationMode: 'none',
         deploySmokePath:
           '/langgraph/core-capabilities/deployment-runtime/overview/python',
       },

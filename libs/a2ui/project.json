@@ -8,7 +8,6 @@
     "scope:cockpit-deploy-smoke",
     "scope:cockpit-e2e",
     "scope:cockpit-examples",
-    "scope:cockpit-secret",
     "scope:cockpit-smoke",
     "scope:examples-chat",
     "scope:library",

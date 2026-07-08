@@ -176,7 +176,6 @@ describe('CI workflow', () => {
       'cockpit',
       'cockpit-examples-build',
       'cockpit-smoke',
-      'cockpit-secret-integration',
       'cockpit-deploy-smoke',
       'examples-chat-smoke',
       'examples-chat-e2e',
