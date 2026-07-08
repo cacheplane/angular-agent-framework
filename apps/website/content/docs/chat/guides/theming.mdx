@@ -97,6 +97,35 @@ Import `@threadplane/chat/chat.css` in your global styles to get a `:root`-level
 }
 ```
 
+### Bridge from your design system
+
+If your app already has design-system tokens, keep those tokens as the source of truth and map them into the chat public API. This gives your app a stable `--tplane-chat-*` control surface without coupling chat internals to your design-system namespace.
+
+```css
+:root {
+  /* App-owned design tokens */
+  --ds-canvas: #ffffff;
+  --ds-surface: #f8fafc;
+  --ds-border: #e2e8f0;
+  --ds-text-primary: #0f172a;
+  --ds-text-muted: #64748b;
+  --ds-accent: #2563eb;
+  --ds-font-sans: Inter, system-ui, sans-serif;
+
+  /* Chat-owned public API */
+  --tplane-chat-bg: var(--ds-canvas);
+  --tplane-chat-surface: var(--ds-surface);
+  --tplane-chat-surface-alt: var(--ds-surface);
+  --tplane-chat-separator: var(--ds-border);
+  --tplane-chat-text: var(--ds-text-primary);
+  --tplane-chat-text-muted: var(--ds-text-muted);
+  --tplane-chat-primary: var(--ds-accent);
+  --tplane-chat-font-family: var(--ds-font-sans);
+}
+```
+
+Use the `--tplane-chat-*` names at chat boundaries and custom chat-adjacent views. Use your app tokens everywhere else. The bridge is useful because chat token names describe component semantics (`primary`, `surface-alt`, `separator`, `radius-bubble`) while your design-system tokens can stay product-wide and evolve independently.
+
 ## Brand Color Example
 
 ```css
