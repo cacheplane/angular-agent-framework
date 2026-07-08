@@ -164,6 +164,9 @@ export function isConflict(err: unknown): boolean {
       // subagent dispatches and to materialize agent.subagents() from the
       // resulting tools:<id>-namespaced stream events.
       subagentToolNames: ['research'],
+      // The canonical graph has side-effect LLM nodes such as generate_title;
+      // only the generate node's token stream belongs in the chat transcript.
+      transcriptNodeNames: ['generate'],
       telemetry: (event) => telemetrySink?.(event),
     }),
     { provide: DEMO_AGENT, useFactory: () => inject(DemoShell).agent },

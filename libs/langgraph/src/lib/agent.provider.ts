@@ -47,6 +47,11 @@ export interface AgentConfig<
   filterSubagentMessages?: boolean;
   /** Tool names that indicate a subagent invocation. */
   subagentToolNames?: string[];
+  /**
+   * LangGraph node names whose `messages-tuple` LLM chunks should be projected
+   * into the main chat transcript. Omit to accept all top-level message chunks.
+   */
+  transcriptNodeNames?: string[];
 }
 
 /**
@@ -84,6 +89,7 @@ function agentFactory<T>(): LangGraphAgent<T> {
     ...(config.telemetry !== undefined ? { telemetry: config.telemetry } : {}),
     ...(config.filterSubagentMessages !== undefined ? { filterSubagentMessages: config.filterSubagentMessages } : {}),
     ...(config.subagentToolNames !== undefined ? { subagentToolNames: config.subagentToolNames } : {}),
+    ...(config.transcriptNodeNames !== undefined ? { transcriptNodeNames: config.transcriptNodeNames } : {}),
   });
 }
 
