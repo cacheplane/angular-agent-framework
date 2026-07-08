@@ -168,6 +168,85 @@ describe('startClientToolExecutor()', () => {
     expect(resolve).toHaveBeenCalledOnce();
   });
 
+  it('passes a non-aborted signal to function tool handlers', async () => {
+    const seen: AbortSignal[] = [];
+    const registry = tools({
+      read: action('read', z.object({}), async (_args, context) => {
+        seen.push(context.signal);
+        return 'done';
+      }),
+    });
+    const { pending, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+
+    TestBed.runInInjectionContext(() => {
+      startClientToolExecutor(agent, registry);
+    });
+
+    pending.set([{ id: 's1', name: 'read', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(seen).toHaveLength(1);
+    expect(seen[0].aborted).toBe(false);
+  });
+
+  it('aborts in-flight function tools on stop and does not resolve them', async () => {
+    let complete!: (value: string) => void;
+    const completion = new Promise<string>((resolve) => {
+      complete = resolve;
+    });
+    const seen: AbortSignal[] = [];
+    const registry = tools({
+      slow: action('slow', z.object({}), async (_args, context) => {
+        seen.push(context.signal);
+        return completion;
+      }),
+    });
+    const { pending, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+
+    TestBed.runInInjectionContext(() => {
+      startClientToolExecutor(agent, registry);
+    });
+
+    pending.set([{ id: 'slow-1', name: 'slow', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    await agent.stop();
+    expect(seen[0].aborted).toBe(true);
+
+    complete('late result');
+    await drainMicrotasks();
+
+    expect(resolve).not.toHaveBeenCalled();
+  });
+
+  it('aborts in-flight function tools when the injection context is destroyed', async () => {
+    const seen: AbortSignal[] = [];
+    const registry = tools({
+      slow: action('slow', z.object({}), async (_args, context) => {
+        seen.push(context.signal);
+        return new Promise(() => undefined);
+      }),
+    });
+    const { pending, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+
+    TestBed.runInInjectionContext(() => {
+      startClientToolExecutor(agent, registry);
+    });
+
+    pending.set([{ id: 'slow-2', name: 'slow', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    TestBed.resetTestingModule();
+
+    expect(seen[0].aborted).toBe(true);
+  });
+
   it('ignores view/ask tool calls (only function tools are auto-executed)', async () => {
     const { pending, resolve, capability } = makeFakeCapability();
     const agent = makeFakeAgent(capability);

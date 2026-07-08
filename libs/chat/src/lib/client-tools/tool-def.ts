@@ -4,13 +4,22 @@ import type { StandardSchemaV1, StandardSchemaInferInput, StandardSchemaInferOut
 
 export type { StandardSchemaV1, StandardSchemaInferInput, StandardSchemaInferOutput };
 
+/** Runtime context passed to browser-executed function tool handlers. */
+export interface FunctionToolHandlerContext {
+  /** Aborts when the client tool execution should stop without resolving. */
+  readonly signal: AbortSignal;
+}
+
 /** Precise authored function tool — what `action()` returns. Carries the schema
  *  `S` and the handler's resolved return type `R`. */
 export interface FunctionToolDef<S extends StandardSchemaV1 = StandardSchemaV1, R = unknown> {
   readonly kind: 'function';
   readonly description: string;
   readonly schema: S;
-  readonly handler: (args: StandardSchemaInferOutput<S>) => R | Promise<R>;
+  readonly handler: (
+    args: StandardSchemaInferOutput<S>,
+    context: FunctionToolHandlerContext,
+  ) => R | Promise<R>;
 }
 
 /** Bivariant union member used only for registry storage/iteration. The handler
@@ -23,7 +32,7 @@ export interface AnyFunctionToolDef {
   readonly description: string;
   readonly schema: StandardSchemaV1;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- bivariance escape hatch; see note above
-  readonly handler: (args: any) => unknown | Promise<unknown>;
+  readonly handler: (args: any, context: FunctionToolHandlerContext) => unknown | Promise<unknown>;
 }
 
 export interface ViewToolDef<S extends StandardSchemaV1 = StandardSchemaV1, C = unknown> {

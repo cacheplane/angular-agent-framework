@@ -6305,7 +6305,7 @@
       },
       {
         "name": "handler",
-        "type": "(args: any) => unknown",
+        "type": "(args: any, context: FunctionToolHandlerContext) => unknown",
         "description": "",
         "optional": false
       },
@@ -6976,7 +6976,7 @@
       },
       {
         "name": "handler",
-        "type": "(args: StandardSchemaInferOutput<S>) => R | Promise<R>",
+        "type": "(args: StandardSchemaInferOutput<S>, context: FunctionToolHandlerContext) => R | Promise<R>",
         "description": "",
         "optional": false
       },
@@ -6990,6 +6990,20 @@
         "name": "schema",
         "type": "S",
         "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "FunctionToolHandlerContext",
+    "kind": "interface",
+    "description": "Runtime context passed to browser-executed function tool handlers.",
+    "properties": [
+      {
+        "name": "signal",
+        "type": "AbortSignal",
+        "description": "Aborts when the client tool execution should stop without resolving.",
         "optional": false
       }
     ],
@@ -8144,7 +8158,7 @@
     "name": "action",
     "kind": "function",
     "description": "Declare an async function tool the model can call; its resolved return value\nbecomes the tool result shipped back to the model.",
-    "signature": "action(description: string, schema: S, handler: (args: StandardSchemaInferOutput<S>) => R | Promise<R>): FunctionToolDef<S, R>",
+    "signature": "action(description: string, schema: S, handler: (args: StandardSchemaInferOutput<S>, context: FunctionToolHandlerContext) => R | Promise<R>): FunctionToolDef<S, R>",
     "params": [
       {
         "name": "description",
@@ -8160,8 +8174,8 @@
       },
       {
         "name": "handler",
-        "type": "(args: StandardSchemaInferOutput<S>) => R | Promise<R>",
-        "description": "Runs in the browser when the model calls the tool; its return\n  type `R` is carried on the resulting FunctionToolDef.",
+        "type": "(args: StandardSchemaInferOutput<S>, context: FunctionToolHandlerContext) => R | Promise<R>",
+        "description": "Runs in the browser when the model calls the tool. The second\n  argument carries an `AbortSignal`; its return type `R` is carried on the\n  resulting FunctionToolDef.",
         "optional": false
       }
     ],
@@ -8500,7 +8514,7 @@
     "name": "executeFunctionTool",
     "kind": "function",
     "description": "Validate args, run the handler, and normalize the outcome to a ClientToolResult.",
-    "signature": "executeFunctionTool(def: AnyFunctionToolDef, rawArgs: unknown): Promise<ClientToolResult>",
+    "signature": "executeFunctionTool(def: AnyFunctionToolDef, rawArgs: unknown, context: FunctionToolHandlerContext): Promise<ClientToolResult>",
     "params": [
       {
         "name": "def",
@@ -8513,6 +8527,12 @@
         "type": "unknown",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "context",
+        "type": "FunctionToolHandlerContext",
+        "description": "",
+        "optional": true
       }
     ],
     "returns": {
