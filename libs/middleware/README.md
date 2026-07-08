@@ -82,6 +82,59 @@ import {
 } from '@threadplane/middleware/langgraph';
 ```
 
+## Durable client-tool result guard
+
+Tier 1 durable dedup records inbound client-tool `ToolMessage` results by
+`tool_call_id` before the graph continues. A duplicate redelivery can then be
+filtered before server continuation logic sees it.
+
+```ts
+import {
+  createInMemoryClientToolExecutionStore,
+  filterDuplicateClientToolResultMessages,
+  recordClientToolResults,
+} from '@threadplane/middleware/langgraph';
+
+const clientToolExecutions = createInMemoryClientToolExecutionStore();
+
+async function agent(state: typeof State.State, config: { configurable?: { thread_id?: string } }) {
+  const threadId = config.configurable?.thread_id ?? 'default-thread';
+  const guard = await recordClientToolResults({
+    threadId,
+    messages: state.messages,
+    store: clientToolExecutions,
+  });
+  const messages = filterDuplicateClientToolResultMessages({
+    messages: state.messages,
+    duplicateToolCallIds: new Set(guard.duplicateToolCallIds),
+  });
+
+  const llm = bindClientTools(baseLlm, SERVER_TOOLS, state);
+  const response = await llm.invoke(messages);
+  return { messages: [response] };
+}
+```
+
+For persistent storage, create the table once and pass a `postgres`-style SQL
+tag to the Postgres store:
+
+```ts
+import postgres from 'postgres';
+import {
+  THREADPLANE_CLIENT_TOOL_EXECUTIONS_SCHEMA,
+  createPostgresClientToolExecutionStore,
+} from '@threadplane/middleware/langgraph';
+
+const sql = postgres(process.env.DATABASE_URL!);
+await sql.unsafe(THREADPLANE_CLIENT_TOOL_EXECUTIONS_SCHEMA);
+
+const clientToolExecutions = createPostgresClientToolExecutionStore(sql);
+```
+
+M3 is server-side Tier 1 only: it dedups delivered client-tool results and
+supports lookup-based reload reconciliation. Pre-execution claims for
+non-idempotent browser effects are a later opt-in layer.
+
 ## Peer dependencies
 
 `@langchain/core` and `@langchain/langgraph`. The package has no runtime dependencies of its
