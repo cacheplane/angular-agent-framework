@@ -22,26 +22,70 @@ import { injectAgent } from '@threadplane/langgraph';
   template: `
     <example-chat-layout sidebarWidth="18rem">
       <chat main [agent]="agent" class="flex-1 min-w-0" />
-      <div sidebar class="p-4 space-y-2" style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
-        <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--tplane-chat-text-muted);">
+      <aside sidebar class="panel">
+        <h3 class="cap">
           Learned Facts
           @if (memoryEntries().length > 0) {
-            <span class="ml-1 tabular-nums">({{ memoryEntries().length }})</span>
+            <span class="count">({{ memoryEntries().length }})</span>
           }
         </h3>
         @if (memoryEntries().length === 0) {
-          <p class="text-sm italic" style="color: var(--tplane-chat-text-muted);">No facts learned yet</p>
+          <p class="empty">No facts learned yet</p>
         }
         @for (entry of memoryEntries(); track entry[0]) {
-          <div class="text-sm py-1">
-            <span class="font-medium" style="color: var(--tplane-chat-text);">{{ entry[0] }}:</span>
-            <span style="color: var(--tplane-chat-text-muted);"> {{ entry[1] }}</span>
+          <div class="fact-row">
+            <span class="fact-key">{{ entry[0] }}:</span>
+            <span class="fact-value"> {{ entry[1] }}</span>
           </div>
         }
-      </div>
+      </aside>
     </example-chat-layout>
   `,
+  styles: [`
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 1rem;
+      background: var(--tplane-chat-bg);
+      color: var(--tplane-chat-text);
+    }
+
+    .cap {
+      margin: 0;
+      font-size: var(--tplane-chat-font-size-xs);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--tplane-chat-text-muted);
+    }
+
+    .empty {
+      margin: 0;
+      font-size: var(--tplane-chat-font-size-sm);
+      font-style: italic;
+      color: var(--tplane-chat-text-muted);
+    }
+
+    .fact-row {
+      padding: 0.25rem 0;
+      font-size: var(--tplane-chat-font-size-sm);
+    }
+
+    .fact-key {
+      color: var(--tplane-chat-text);
+      font-weight: 600;
+    }
+
+    .fact-value {
+      color: var(--tplane-chat-text-muted);
+    }
+
+    .count {
+      margin-left: 0.25rem;
+      font-variant-numeric: tabular-nums;
+    }
+  `],
 })
 export class MemoryComponent {
   /**
