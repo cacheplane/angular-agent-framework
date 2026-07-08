@@ -217,6 +217,7 @@ DOCUMENTS = [
         "id": "ng-control-flow",
         "title": "Built-in control flow — @if, @for, @switch",
         "url": "https://angular.dev/guide/templates/control-flow",
+        "sourceType": "file",
         "snippet": "Native template control flow replaces structural directives like *ngIf and *ngFor with built-in syntax.",
     },
     {
@@ -534,6 +535,13 @@ class State(TypedDict):
     # channel must exist here so the graph retains the client catalog across
     # the generate → should_continue → attach_citations path.
     tools: Optional[list]
+    # Per-message citations, keyed by AI message id. Unlike the LangGraph
+    # transport (which reads AIMessage.additional_kwargs.citations directly),
+    # the ag-ui protocol streams message TEXT without additional_kwargs, so
+    # citations must travel as STATE. The ag-ui-langgraph adapter mirrors this
+    # channel to the client, where bridgeCitationsState() reads
+    # state.citations[messageId] onto Message.citations for rendering.
+    citations: Optional[dict]
 
 
 async def generate(state: State, config: RunnableConfig) -> dict:
@@ -802,15 +810,20 @@ async def attach_citations(state: State) -> dict:
                     # search_documents tool would never produce.
                     if not any(k in h for k in ("title", "url", "snippet")):
                         continue
-                    citations.append(
-                        {
-                            "id": h.get("id") or f"c{i+1}",
-                            "index": i + 1,
-                            "title": h.get("title"),
-                            "url": h.get("url"),
-                            "snippet": h.get("snippet"),
-                        }
-                    )
+                    citation = {
+                        "id": h.get("id") or f"c{i+1}",
+                        "index": i + 1,
+                        "title": h.get("title"),
+                        "url": h.get("url"),
+                        "snippet": h.get("snippet"),
+                    }
+                    if "sourceType" in h and h["sourceType"] is not None:
+                        citation["sourceType"] = h["sourceType"]
+                    if "iconUrl" in h and h["iconUrl"] is not None:
+                        citation["iconUrl"] = h["iconUrl"]
+                    if "publishedAt" in h and h["publishedAt"] is not None:
+                        citation["publishedAt"] = h["publishedAt"]
+                    citations.append(citation)
             break  # only the most recent ToolMessage batch
         elif isinstance(m, AIMessage):
             break
@@ -830,7 +843,12 @@ async def attach_citations(state: State) -> dict:
                 tool_calls=getattr(last, "tool_calls", []) or [],
                 response_metadata=getattr(last, "response_metadata", {}) or {},
             ),
-        ]
+        ],
+        # Also surface citations as STATE, keyed by the AI message id. The
+        # ag-ui protocol drops additional_kwargs when streaming message text,
+        # so this STATE channel is the only path by which the ag-ui client
+        # (via bridgeCitationsState) can render them.
+        "citations": {last.id: citations},
     }
 
 

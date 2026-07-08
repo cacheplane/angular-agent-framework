@@ -38,14 +38,14 @@ type WeatherCardProps = ViewProps<typeof weatherCardSchema>;
     </div>
   `,
   styles: [`
-    .wc { border: 1px solid var(--tplane-chat-separator, #e5e7eb); border-radius: 12px; padding: 16px; max-width: 320px; }
+    .wc { border: 1px solid var(--ds-border, #e5e7eb); border-radius: 12px; padding: 16px; max-width: 320px; background: var(--ds-surface); color: var(--ds-text-primary); }
     .wc__head { display: flex; align-items: center; justify-content: space-between; }
     .wc__loc { font-weight: 600; }
-    .wc__badge { font-size: 12px; opacity: 0.7; }
+    .wc__badge { font-size: 12px; color: var(--ds-text-muted); }
     .wc__temp { font-size: 32px; font-weight: 700; margin-top: 8px; }
-    .wc__cond { opacity: 0.8; }
+    .wc__cond { color: var(--ds-text-secondary); }
     .wc__meta { display: flex; gap: 24px; margin: 12px 0 0; }
-    .wc__meta dt { font-size: 11px; text-transform: uppercase; opacity: 0.6; }
+    .wc__meta dt { font-size: 11px; text-transform: uppercase; color: var(--ds-text-muted); }
     .wc__meta dd { margin: 0; font-weight: 600; }
   `],
 })

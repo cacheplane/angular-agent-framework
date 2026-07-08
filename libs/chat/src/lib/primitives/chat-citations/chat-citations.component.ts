@@ -9,7 +9,8 @@ import type { Message } from '../../agent/message';
 import type { Citation } from '../../agent/citation';
 import { ChatCitationsCardComponent } from './chat-citations-card.component';
 import { CitationsResolverService, mdDefToCitation } from '../../markdown/citations-resolver.service';
-import { deriveMonogram, monogramColor } from '../../agent/citation-display';
+import { citationSourceVisual } from '../../agent/citation-display';
+import type { CitationTypeIcon } from '../../agent/citation-display';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 import { CHAT_CITATIONS_PANEL_STYLES } from '../../styles/chat-citations.styles';
 
@@ -22,7 +23,15 @@ export class ChatCitationCardTemplateDirective {
   readonly tpl = inject<TemplateRef<{ $implicit: Citation }>>(TemplateRef);
 }
 
-interface FavEntry { id: string; iconUrl?: string; mono: string; color: string; }
+interface FavEntry {
+  id: string;
+  kind: 'image' | 'type-icon' | 'monogram';
+  iconUrl?: string;
+  icon?: CitationTypeIcon;
+  tone?: CitationTypeIcon;
+  monogram?: string;
+  color?: string;
+}
 
 let nextCitationsId = 0;
 
@@ -46,11 +55,48 @@ let nextCitationsId = 0;
           <span class="chat-citations__count">{{ citations().length }}</span>
           <span class="chat-citations__favstack" aria-hidden="true">
             @for (f of favstack(); track f.id) {
-              @if (f.iconUrl) {
+              @if (f.kind === 'image' && f.iconUrl) {
                 <img class="chat-citations__fav" [src]="f.iconUrl" alt="" width="16" height="16" />
+              } @else if (f.kind === 'type-icon' && f.icon) {
+                <span class="chat-citation-source-icon chat-citations__source-icon"
+                      [class.chat-citation-source-icon--web]="f.tone === 'web'"
+                      [class.chat-citation-source-icon--file]="f.tone === 'file'"
+                      [class.chat-citation-source-icon--app]="f.tone === 'app'"
+                      [class.chat-citation-source-icon--memory]="f.tone === 'memory'"
+                      [class.chat-citation-source-icon--generic]="f.tone === 'generic'"
+                      [class.chat-citations__source-icon--web]="f.icon === 'web'"
+                      [class.chat-citations__source-icon--file]="f.icon === 'file'"
+                      [class.chat-citations__source-icon--app]="f.icon === 'app'"
+                      [class.chat-citations__source-icon--memory]="f.icon === 'memory'"
+                      [class.chat-citations__source-icon--generic]="f.icon === 'generic'">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    @switch (f.icon) {
+                      @case ('file') {
+                        <path d="M7 3.5h6.5L18 8v12.5H7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+                        <path d="M13.5 3.5V8H18M9.5 13h5M9.5 16h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                      }
+                      @case ('app') {
+                        <rect x="4" y="5" width="16" height="14" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8" />
+                        <path d="M8 9h.01M11.5 9h.01M15 9h.01M8 12.5h8M8 16h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                      }
+                      @case ('memory') {
+                        <path d="M8 7.5a4 4 0 0 1 8 0v9a4 4 0 0 1-8 0z" fill="none" stroke="currentColor" stroke-width="1.8" />
+                        <path d="M12 4v16M8 10h8M8 14h8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                      }
+                      @case ('web') {
+                        <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.8" />
+                        <path d="M4.5 12h15M12 4a12 12 0 0 1 0 16M12 4a12 12 0 0 0 0 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                      }
+                      @default {
+                        <path d="M6 5.5h12v13H6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+                        <path d="M9 9h6M9 12h6M9 15h3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                      }
+                    }
+                  </svg>
+                </span>
               } @else {
                 <span class="chat-citations__fav chat-citations__fav--mono"
-                      [style.background]="f.color">{{ f.mono }}</span>
+                      [style.background]="f.color">{{ f.monogram }}</span>
               }
             }
           </span>
@@ -108,8 +154,6 @@ export class ChatCitationsComponent {
 
   /** First 3 sources, mapped to favicon/monogram chips for the header preview. */
   protected readonly favstack = computed<FavEntry[]>(() =>
-    this.citations().slice(0, 3).map((c) => ({
-      id: c.id, iconUrl: c.iconUrl, mono: deriveMonogram(c), color: monogramColor(c),
-    })),
+    this.citations().slice(0, 3).map((c) => ({ id: c.id, ...citationSourceVisual(c) })),
   );
 }

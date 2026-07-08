@@ -30,4 +30,15 @@ describe('toDisplayText', () => {
     expect(toDisplayText({ a: 1 })).toBe('');
     expect(toDisplayText([1, 2])).toBe('');
   });
+
+  it('never leaks "[object Object]" for any object-ish value (the headline bug)', () => {
+    for (const v of [{ a: 1 }, [1, 2], new Date(), () => 0, { toString: () => 'x' }]) {
+      expect(toDisplayText(v)).not.toContain('[object');
+      expect(toDisplayText(v)).toBe('');
+    }
+  });
+
+  it('stringifies bigint', () => {
+    expect(toDisplayText(10n)).toBe('10');
+  });
 });

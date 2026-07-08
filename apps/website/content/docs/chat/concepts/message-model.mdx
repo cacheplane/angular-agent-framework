@@ -138,11 +138,16 @@ interface Citation {
   title?: string;
   url?: string;
   snippet?: string;
+  sourceType?: string; // 'web' | 'file' | 'app' | 'memory' | custom
+  iconUrl?: string;    // provider-supplied favicon/logo URL or data URI
+  publishedAt?: string | number | Date;
   extra?: Record<string, unknown>; // provider-specific extras
 }
 ```
 
 `@threadplane/langgraph` exports `extractCitations()` for advanced adapters that need to normalize nonstandard citation payloads. Chat markdown views can render citation markers against the message citation list.
+
+Citation display derives a type badge from `sourceType`; when it is absent and `url` is present, the source is treated as `web`. `iconUrl` takes precedence over generated source icons and monograms.
 
 The resolve path from a `[^id]` marker to a rendered citation runs through `CitationsResolverService` (exported from `@threadplane/chat`). A custom citation renderer provides the service, sets the current message, then calls `lookup(refId)` — which returns a reactive `Signal<ResolvedCitation | null>` matching the marker id against `message.citations` (falling back to inline markdown definitions):
 

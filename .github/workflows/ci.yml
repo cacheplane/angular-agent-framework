@@ -809,6 +809,14 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Build and assemble canonical demo
+        env:
+          # Baked into the SPA bundle by inject-env at build time (assemble-demo.ts
+          # runs `nx build examples-chat-angular`, whose build target dependsOn
+          # inject-env). Without the key the App-mode map toggle is disabled in
+          # prod. The key ships in the public bundle (normal for Maps JS) — restrict
+          # it by HTTP referrer in the Google Cloud console. The Map ID is not a secret.
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          GOOGLE_MAPS_MAP_ID: 86d464ea7d5306034fe2a254
         run: npx tsx scripts/assemble-demo.ts
       - name: Deploy canonical demo to Vercel (production)
         working-directory: deploy/demo

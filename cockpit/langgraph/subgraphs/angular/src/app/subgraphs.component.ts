@@ -20,23 +20,76 @@ import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
   selector: 'app-subgraphs',
   standalone: true,
   imports: [ChatComponent, ExampleChatLayoutComponent],
+  styles: `
+    :host {
+      --st-done: #2ea567;
+      --st-active: #e0a850;
+      --st-error: #e0645a;
+    }
+    .panel {
+      padding: 1rem;
+    }
+    .cap {
+      margin-bottom: 1rem;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--ds-text-muted);
+    }
+    .empty {
+      font-size: 13px;
+      font-style: italic;
+      color: var(--ds-text-muted);
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 6px 0;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      flex-shrink: 0;
+      background: var(--ds-text-muted);
+    }
+    .dot--complete { background: var(--st-done); }
+    .dot--error { background: var(--st-error); }
+    .dot--running { background: var(--st-active); }
+    .id {
+      font-family: var(--ds-font-mono);
+      font-size: 11px;
+      color: var(--ds-text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
+    .count {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--ds-text-muted);
+      flex-shrink: 0;
+    }
+  `,
   template: `
     <example-chat-layout>
       <chat main [agent]="agent" class="flex-1 min-w-0" />
-      <div sidebar class="p-4 space-y-2"
-           style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
-        <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--tplane-chat-text-muted);">Subagents</h3>
+      <div sidebar class="panel">
+        <h3 class="cap">Subagents</h3>
         @if (subagentEntries().length === 0) {
-          <p class="text-sm italic" style="color: var(--tplane-chat-text-muted);">No subagents active</p>
+          <p class="empty">No subagents active</p>
         }
         @for (entry of subagentEntries(); track entry.id) {
-          <div class="flex items-center gap-2 text-sm py-1">
-            <span class="w-2 h-2 rounded-full shrink-0"
-                  [style.background]="entry.status === 'complete' ? 'var(--tplane-chat-success, #4ade80)' : entry.status === 'error' ? 'var(--tplane-chat-error-text, #f87171)' : 'var(--tplane-chat-warning-text, #fbbf24)'">
-            </span>
-            <span class="font-mono text-xs truncate" style="color: var(--tplane-chat-text);">{{ entry.id }}</span>
-            <span class="text-xs ml-auto" style="color: var(--tplane-chat-text-muted);">{{ entry.msgCount }} msgs</span>
+          <div class="row">
+            <span class="dot"
+                  [class.dot--complete]="entry.status === 'complete'"
+                  [class.dot--error]="entry.status === 'error'"
+                  [class.dot--running]="entry.status !== 'complete' && entry.status !== 'error'"></span>
+            <span class="id">{{ entry.id }}</span>
+            <span class="count">{{ entry.msgCount }} msgs</span>
           </div>
         }
       </div>
