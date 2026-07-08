@@ -54,4 +54,18 @@ describe('executeFunctionTool()', () => {
     }
     expect(handlerSpy).not.toHaveBeenCalled();
   });
+
+  it('passes the handler context signal to the handler', async () => {
+    const controller = new AbortController();
+    const handler = vi.fn(async (_args: { city: string }, context: { signal: AbortSignal }) => {
+      expect(context.signal).toBe(controller.signal);
+      return 'ok';
+    });
+    const def = action('ctx', z.object({ city: z.string() }), handler);
+
+    const result = await executeFunctionTool(def, { city: 'SF' }, { signal: controller.signal });
+
+    expect(result).toEqual({ ok: true, value: 'ok' });
+    expect(handler).toHaveBeenCalledOnce();
+  });
 });

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { effect } from '@angular/core';
+import { DestroyRef, effect, inject } from '@angular/core';
 import type { Agent } from '../agent';
 import type { ClientToolRegistry } from './tool-def';
 import { executeFunctionTool } from './execute';
@@ -13,7 +13,21 @@ import { executeFunctionTool } from './execute';
 export function startClientToolExecutor(agent: Agent, registry: ClientToolRegistry): void {
   const cap = agent.clientTools;
   if (!cap) return;
-  const inFlight = new Set<string>();
+  const destroyRef = inject(DestroyRef);
+  const inFlight = new Map<string, AbortController>();
+  const abortAll = (): void => {
+    for (const controller of inFlight.values()) {
+      controller.abort();
+    }
+  };
+
+  const originalStop = agent.stop.bind(agent);
+  agent.stop = async (): Promise<void> => {
+    abortAll();
+    await originalStop();
+  };
+  destroyRef.onDestroy(abortAll);
+
   effect(() => {
     for (const tc of cap.pending()) {
       const def = registry[tc.name];
@@ -24,9 +38,13 @@ export function startClientToolExecutor(agent: Agent, registry: ClientToolRegist
       // calls that have a result or were resolved; `inFlight` prevents a
       // double-dispatch within a render cycle.
       if (inFlight.has(tc.id)) continue;
-      inFlight.add(tc.id);
-      void executeFunctionTool(def, tc.args).then((result) => {
-        cap.resolve(tc.id, result);
+      const controller = new AbortController();
+      inFlight.set(tc.id, controller);
+      void executeFunctionTool(def, tc.args, { signal: controller.signal }).then((result) => {
+        if (!controller.signal.aborted) {
+          cap.resolve(tc.id, result);
+        }
+      }).finally(() => {
         inFlight.delete(tc.id);
       });
     }
