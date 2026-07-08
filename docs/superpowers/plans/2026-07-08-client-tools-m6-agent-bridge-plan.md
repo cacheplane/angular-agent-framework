@@ -26,7 +26,7 @@ Do not begin runtime implementation until at least one of these is true:
 - An approved dependency addition identifies the exact package, version, exported event/provider types, and bundle target.
 - A pinned upstream source snapshot or fixture corpus is committed under an approved testing/documentation location.
 
-Current repo audit on 2026-07-08 found no local provider source package or dependency for this M6 bridge. The only references are in the continuation spec and handoff. That means implementation is blocked until the provider event shape is supplied or approved.
+Initial repo audit on 2026-07-08 found no local provider source package or dependency for this M6 bridge. A local provider source pointer was later supplied at `/Users/blove/repos/hashbrown`; discovery notes live at `docs/superpowers/context/2026-07-08-client-tools-m6-provider-contract-notes.md`.
 
 ## Scope Guard
 
@@ -63,7 +63,7 @@ Implementation PR, once entry criteria are met:
 **Files:**
 - Optional add: `docs/superpowers/context/2026-07-08-client-tools-m6-provider-contract-notes.md`
 
-- [ ] **Step 1: Capture provider source and version**
+- [x] **Step 1: Capture provider source and version**
 
 Record:
 
@@ -75,7 +75,7 @@ Record:
 - stop/abort API;
 - message history mutation API, if any.
 
-- [ ] **Step 2: Capture event fixtures**
+- [x] **Step 2: Capture event fixtures**
 
 Collect minimal real or source-derived fixtures for:
 
@@ -91,7 +91,7 @@ Collect minimal real or source-derived fixtures for:
 - activity/subagent equivalent, if available;
 - abort/cancel delivery.
 
-- [ ] **Step 3: Compare against AG-UI reducer coverage**
+- [x] **Step 3: Compare against AG-UI reducer coverage**
 
 Produce a table with three columns:
 
@@ -104,6 +104,8 @@ Decision gate:
 - If events are AG-UI-compatible, implement a thin provider wrapper that feeds `toAgent()`.
 - If events are not AG-UI-compatible, implement a bespoke reducer that writes the neutral `Agent` signals directly.
 - If tool/message mutation APIs are missing, do not implement `submit`, `retry`, `regenerate`, or `stop` until equivalent APIs are confirmed.
+
+Discovery result: the inspected provider exposes a stateful chat/resource API plus internal transport frames, not an AG-UI `AbstractAgent`-style public event subscriber. First implementation should therefore use a bespoke provider-state-to-`Agent` adapter proof, not the existing AG-UI reducer.
 
 ## Task 2: Adapter Boundary Decision
 
