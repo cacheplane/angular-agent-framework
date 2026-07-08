@@ -10,12 +10,19 @@ export interface FunctionToolHandlerContext {
   readonly signal: AbortSignal;
 }
 
+/** Execution policy options for browser-executed function tools. */
+export interface ClientToolExecutionOptions {
+  /** True when the handler may safely re-run and should skip durable pre-claims. */
+  readonly idempotent?: boolean;
+}
+
 /** Precise authored function tool — what `action()` returns. Carries the schema
  *  `S` and the handler's resolved return type `R`. */
 export interface FunctionToolDef<S extends StandardSchemaV1 = StandardSchemaV1, R = unknown> {
   readonly kind: 'function';
   readonly description: string;
   readonly schema: S;
+  readonly idempotent?: boolean;
   readonly handler: (
     args: StandardSchemaInferOutput<S>,
     context: FunctionToolHandlerContext,
@@ -31,6 +38,7 @@ export interface AnyFunctionToolDef {
   readonly kind: 'function';
   readonly description: string;
   readonly schema: StandardSchemaV1;
+  readonly idempotent?: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- bivariance escape hatch; see note above
   readonly handler: (args: any, context: FunctionToolHandlerContext) => unknown | Promise<unknown>;
 }

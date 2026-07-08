@@ -4,6 +4,7 @@ import type { StandardSchemaV1, StandardSchemaInferOutput } from '@threadplane/r
 import type {
   AskToolDef,
   ClientToolDef,
+  ClientToolExecutionOptions,
   FunctionToolDef,
   FunctionToolHandlerContext,
   ViewToolDef,
@@ -21,6 +22,8 @@ export type { ViewProps } from './component-inputs';
  * @param handler Runs in the browser when the model calls the tool. The second
  *   argument carries an `AbortSignal`; its return type `R` is carried on the
  *   resulting {@link FunctionToolDef}.
+ * @param options Execution policy options, including `idempotent: true` to skip
+ *   durable pre-execution claims when a guard is configured.
  * @returns A {@link FunctionToolDef} for inclusion in {@link tools}.
  * @example
  * ```ts
@@ -35,8 +38,9 @@ export function action<S extends StandardSchemaV1, R>(
     args: StandardSchemaInferOutput<S>,
     context: FunctionToolHandlerContext,
   ) => R | Promise<R>,
+  options: ClientToolExecutionOptions = {},
 ): FunctionToolDef<S, R> {
-  return { kind: 'function', description, schema, handler };
+  return { kind: 'function', description, schema, handler, ...options };
 }
 
 /**

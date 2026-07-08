@@ -6,6 +6,11 @@ import { z } from 'zod/v4';
 import { action, view, ask, tools } from './tools';
 import { toClientToolSpecs, createClientToolsCoordinator } from './client-tools-coordinator';
 import type { ClientToolsCapability, ClientToolResult } from './client-tools-capability';
+import type {
+  ClientToolExecutionGuard,
+  ClientToolExecutionRecord,
+  ClientToolExecutionStore,
+} from './client-tool-execution-guard';
 import type { Agent } from '../agent/agent';
 import type { ToolCall } from '../agent/tool-call';
 
@@ -51,6 +56,22 @@ function makeFakeAgent(capability: ClientToolsCapability | undefined): Agent {
     regenerate: vi.fn(),
     clientTools: capability,
   };
+}
+
+function makeGuardStore(): ClientToolExecutionStore & {
+  claim: ReturnType<typeof vi.fn<[Parameters<ClientToolExecutionStore['claim']>[0]], Promise<'claimed' | ClientToolExecutionRecord>>>;
+  record: ReturnType<typeof vi.fn<Parameters<ClientToolExecutionStore['record']>, Promise<void>>>;
+  lookup: ReturnType<typeof vi.fn<Parameters<ClientToolExecutionStore['lookup']>, Promise<Record<string, ClientToolExecutionRecord>>>>;
+} {
+  return {
+    claim: vi.fn(async () => 'claimed'),
+    record: vi.fn(async () => undefined),
+    lookup: vi.fn(async () => ({})),
+  };
+}
+
+function makeGuard(store: ClientToolExecutionStore): ClientToolExecutionGuard {
+  return { threadId: 'thread-1', store };
 }
 
 // ── registry ──────────────────────────────────────────────────────────────────
@@ -194,6 +215,30 @@ describe('createClientToolsCoordinator()', () => {
     await drainMicrotasks();
 
     expect(resolve).toHaveBeenCalledWith('f1', { ok: true, value: { temp: 72, city: 'SF' } });
+  });
+
+  it('passes an execution guard to function-tool execution', async () => {
+    const { pending, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const store = makeGuardStore();
+    const coordinator = createClientToolsCoordinator(testRegistry, {
+      executionGuard: makeGuard(store),
+    });
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    pending.set([{ id: 'f2', name: 'get_weather', args: { city: 'SF' }, status: 'running' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks(8);
+
+    expect(store.claim).toHaveBeenCalledWith({ threadId: 'thread-1', toolCallId: 'f2' });
+    expect(store.record).toHaveBeenCalledWith(
+      { threadId: 'thread-1', toolCallId: 'f2' },
+      { ok: true, value: { temp: 72, city: 'SF' } },
+    );
+    expect(resolve).toHaveBeenCalledWith('f2', { ok: true, value: { temp: 72, city: 'SF' } });
   });
 
   it('handleRenderEvent() resolves pending ask tool call by elementKey (tool name)', () => {
