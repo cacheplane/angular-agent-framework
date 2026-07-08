@@ -283,6 +283,14 @@ export interface AgentOptions<T, _ResolvedBag extends BagTemplate> {
   filterSubagentMessages?: boolean;
   /** Tool names that indicate a subagent invocation. */
   subagentToolNames?: string[];
+  /**
+   * LangGraph node names whose `messages-tuple` LLM chunks should be projected
+   * into the main chat transcript. Omit to accept all top-level message chunks.
+   *
+   * Use this when a graph has side-effect LLM nodes, such as title generation,
+   * whose streamed model output should not render as assistant chat content.
+   */
+  transcriptNodeNames?: string[];
 }
 
 // ── SubagentStreamRef ────────────────────────────────────────────────────────

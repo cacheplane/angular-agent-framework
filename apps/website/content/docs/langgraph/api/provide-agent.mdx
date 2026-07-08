@@ -41,6 +41,7 @@ bootstrapApplication(AppComponent, {
 | `telemetry` | `AgentRuntimeTelemetrySink \| false` | Optional app-owned telemetry sink. No telemetry is emitted unless this is provided. |
 | `filterSubagentMessages` | `boolean` | When true, subagent messages are filtered from the main messages signal. |
 | `subagentToolNames` | `string[]` | Tool names that indicate a subagent invocation. |
+| `transcriptNodeNames` | `string[]` | LangGraph node names whose `messages-tuple` chunks should stream into the main chat transcript. Omit to accept all top-level chunks. |
 
 ## Singleton model
 
@@ -54,6 +55,18 @@ provideAgent({
 
 // Elsewhere, inside an injection context:
 const chat = injectAgent();
+```
+
+## Transcript node filtering
+
+LangGraph streams `messages-tuple` chunks for every LLM node in a run. If your graph has side-effect LLM nodes, such as a title generator or evaluator, set `transcriptNodeNames` so only your conversational node updates `messages()`.
+
+```ts
+provideAgent({
+  apiUrl: 'https://api.example.com',
+  assistantId: 'support-agent',
+  transcriptNodeNames: ['generate'],
+});
 ```
 
 ## Test transports

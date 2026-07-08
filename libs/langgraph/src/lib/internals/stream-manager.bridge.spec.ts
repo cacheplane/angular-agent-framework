@@ -1459,12 +1459,12 @@ describe('stream-manager.bridge — captured streaming replay (Finding C)', () =
 describe('identity-based delta merge (messages-tuple)', () => {
   const META = { langgraph_node: 'chatbot' };
 
-  function setup() {
+  function setup(extraOptions: Record<string, unknown> = {}) {
     const transport = new MockAgentTransport();
     const subjects = makeSubjects();
     const destroy$ = new Subject<void>();
     const bridge = createStreamManagerBridge({
-      options: { apiUrl: '', assistantId: 'test', transport },
+      options: { apiUrl: '', assistantId: 'test', transport, ...extraOptions },
       subjects,
       threadId$: of(null),
       destroy$: destroy$.asObservable(),
@@ -1583,6 +1583,28 @@ describe('identity-based delta merge (messages-tuple)', () => {
     transport.close();
     await new Promise(r => setTimeout(r, 10));
     expect(lastAiContent(subjects)).toBe('| Gem | Color |');
+    destroy$.next();
+  });
+
+  it('ignores message tuple chunks from non-transcript nodes when configured', async () => {
+    const { transport, subjects, destroy$, bridge } = setup({
+      transcriptNodeNames: ['chatbot'],
+    });
+    bridge.submit({});
+    transport.emit([
+      tupleEvent('ai-1', 'Here is the answer.'),
+      {
+        type: 'messages',
+        data: [
+          { id: 'title-1', type: 'ai', content: 'This title must not render.' },
+          { langgraph_node: 'generate_title' },
+        ],
+        messageMetadata: { langgraph_node: 'generate_title' },
+      } as any,
+    ]);
+    transport.close();
+    await new Promise(r => setTimeout(r, 10));
+    expect(lastAiContent(subjects)).toBe('Here is the answer.');
     destroy$.next();
   });
 

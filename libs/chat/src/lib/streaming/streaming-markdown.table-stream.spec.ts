@@ -111,6 +111,30 @@ describe('ChatStreamingMdComponent — streaming table rendering', () => {
     }
   });
 
+  it('streams a realistic comparison table as one table across small chunks', () => {
+    host.streaming.set(true);
+    const content =
+      'Here is the comparison:\n\n' +
+      '| Name | Mental model | When to use |\n' +
+      '| --- | --- | --- |\n' +
+      '| Angular Signals | Synchronous value graph | Local component state |\n' +
+      '| RxJS | Event stream | Async flows and cancellation |\n' +
+      '| zone.js | Async task patching | Zone-based change detection |\n\n' +
+      'Done.';
+
+    for (let i = 6; i <= content.length; i += 6) {
+      grow(content.slice(0, i));
+      const tableCount = el.querySelectorAll('table').length;
+      if (tableCount > 0) {
+        expect(tableCount, `one table at ${JSON.stringify(content.slice(0, i).slice(-40))}`).toBe(1);
+      }
+      expect(
+        [...el.querySelectorAll('p')].some((p) => (p.textContent || '').includes('| zone.js')),
+        `no detached row paragraph at ${JSON.stringify(content.slice(0, i).slice(-40))}`,
+      ).toBe(false);
+    }
+  });
+
   it('keeps a finalized partial body row in the table when the stream pauses', () => {
     vi.useFakeTimers();
     try {

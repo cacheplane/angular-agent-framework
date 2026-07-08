@@ -1,0 +1,28 @@
+{
+  "fixtures": [
+    {
+      "match": { "userMessage": "stream a markdown comparison table regression" },
+      "response": {
+        "content": "Here is the comparison:\n\n| Name | Mental model | When to use |\n| --- | --- | --- |\n| Angular Signals | Synchronous value graph | Local component state |\n| RxJS | Event stream | Async flows and cancellation |\n| zone.js | Async task patching | Zone-based change detection |\n\nDone."
+      },
+      "chunkSize": 4,
+      "latency": 75
+    },
+    {
+      "match": { "userMessage": "stream a blockquote then a markdown table regression" },
+      "response": {
+        "content": "> First line of the quote.\n> Second line of the quote.\n\n| Issue | Expected behavior | Verification |\n| --- | --- | --- |\n| Button click does not update UI | UI reflects new state immediately | Click button and observe state |\n| Slow initial render | Main content appears within target | Measure first meaningful paint |"
+      },
+      "chunkSize": 6,
+      "latency": 25
+    },
+    {
+      "match": { "userMessage": "stream a TypeScript code fence regression" },
+      "response": {
+        "content": "Here is the snippet:\n\n```typescript\nconst answer = 42;\n```\n\nThe constant is available for later use."
+      },
+      "chunkSize": 3,
+      "latency": 35
+    }
+  ]
+}

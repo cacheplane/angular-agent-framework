@@ -947,6 +947,12 @@
         "optional": true
       },
       {
+        "name": "transcriptNodeNames",
+        "type": "string[]",
+        "description": "LangGraph node names whose `messages-tuple` LLM chunks should be projected\ninto the main chat transcript. Omit to accept all top-level message chunks.",
+        "optional": true
+      },
+      {
         "name": "transport",
         "type": "AgentTransport",
         "description": "Custom transport. Defaults to FetchStreamTransport.",
@@ -1080,6 +1086,12 @@
         "name": "toMessage",
         "type": "(msg: unknown) => BaseMessage<>",
         "description": "Custom message deserializer for non-standard message formats.",
+        "optional": true
+      },
+      {
+        "name": "transcriptNodeNames",
+        "type": "string[]",
+        "description": "LangGraph node names whose `messages-tuple` LLM chunks should be projected\ninto the main chat transcript. Omit to accept all top-level message chunks.\n\nUse this when a graph has side-effect LLM nodes, such as title generation,\nwhose streamed model output should not render as assistant chat content.",
         "optional": true
       },
       {
