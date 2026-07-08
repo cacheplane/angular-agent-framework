@@ -231,6 +231,41 @@ Without `katex` installed, or without the stylesheet, math degrades gracefully â
 
 ### Theming
 
+Chat compositions and primitives expose a `--tplane-chat-*` CSS variable API for colors, typography, spacing, radii, and z-index layers. Override those variables on `:root`, on the `<chat>` host, or on any ancestor:
+
+```css
+:root {
+  --tplane-chat-primary: #2563eb;
+  --tplane-chat-on-primary: #ffffff;
+  --tplane-chat-radius-bubble: 12px;
+}
+```
+
+If your app already has design-system tokens, keep them as the source of truth and bridge them into the chat API:
+
+```css
+:root {
+  --ds-canvas: #ffffff;
+  --ds-surface: #f8fafc;
+  --ds-border: #e2e8f0;
+  --ds-text-primary: #0f172a;
+  --ds-text-muted: #64748b;
+  --ds-accent: #2563eb;
+  --ds-font-sans: Inter, system-ui, sans-serif;
+
+  --tplane-chat-bg: var(--ds-canvas);
+  --tplane-chat-surface: var(--ds-surface);
+  --tplane-chat-surface-alt: var(--ds-surface);
+  --tplane-chat-separator: var(--ds-border);
+  --tplane-chat-text: var(--ds-text-primary);
+  --tplane-chat-text-muted: var(--ds-text-muted);
+  --tplane-chat-primary: var(--ds-accent);
+  --tplane-chat-font-family: var(--ds-font-sans);
+}
+```
+
+Use app tokens for app layout and `--tplane-chat-*` tokens at chat boundaries or custom chat-adjacent views. That keeps chat's public theming surface stable even if your app design-system token names change.
+
 `<a2ui-surface>` declares ~50 `--a2ui-*` CSS custom properties at `:host` with dark-theme defaults covering color, spacing, typography, shape radius, focus ring, motion, and elevation. Catalog components consume them via `var(--a2ui-*)`.
 
 **Built-in presets** â€” import one in your global stylesheet:
