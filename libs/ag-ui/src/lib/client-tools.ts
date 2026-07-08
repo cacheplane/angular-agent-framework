@@ -40,11 +40,14 @@ function safeStringify(v: unknown): string {
  *    have no backend result, and haven't been resolved client-side yet — but ONLY
  *    when the run is not in progress (isLoading===false). The backend ends the run
  *    without emitting TOOL_CALL_RESULT for client tools, so result stays undefined.
- *  - resolve(id, result): marks the call as resolved, writes the outcome onto
+ *  - settle(id, result): marks the call as resolved, writes the outcome onto
  *    the local ToolCall in the store (so the transcript freezes: the mounted
  *    ask component re-renders with its emitted value as props and can branch to
- *    a frozen state), adds a ToolMessage via source.addMessage, then re-runs
- *    the agent with the catalog tools attached.
+ *    a frozen state), and adds a ToolMessage via source.addMessage without
+ *    starting a run.
+ *  - resolve(id, result): settles the result, then re-runs the agent with the
+ *    catalog tools attached. Any ToolMessages previously settled into the
+ *    source are flushed by that single run.
  *
  * Call catalogAsAgUiTools() to get the current catalog as AG-UI Tool[] for
  * threading into runAgent().
@@ -58,6 +61,47 @@ export function createClientToolsCapability(
 
   function catalogAsAgUiTools(): Tool[] {
     return catalog().map(toAgUiTool);
+  }
+
+  function settleResult(id: string, result: ClientToolResult): void {
+    // Mark as resolved first so pending() drops it immediately.
+    resolvedIds.update((s) => new Set(s).add(id));
+
+    // Write the outcome onto the LOCAL ToolCall in the store. The client tool
+    // DID produce a result client-side, so this is semantically correct — and
+    // it freezes the transcript card: toToolViewSpec spreads `{...args,
+    // ...result, status}` into the mounted ask component, so the component
+    // re-renders with its own emitted value as props and can branch to a
+    // resolved/frozen state. The backend ToolMessage never reaches this local
+    // ToolCall, so without this write the card stays interactive forever.
+    const ok = result.ok;
+    const value = (result as { value: unknown }).value;
+    const error = (result as { error: string }).error;
+    store.toolCalls.update((calls) =>
+      calls.map((tc) =>
+        tc.id === id
+          ? {
+              ...tc,
+              result: ok ? value : { error },
+              ...(ok ? {} : { error, status: 'error' as const }),
+            }
+          : tc,
+      ),
+    );
+
+    // Cast rather than rely on discriminant narrowing: consumer apps that
+    // compile this source with `strictNullChecks: false` don't narrow the
+    // ClientToolResult union in a ternary.
+    const content = ok
+      ? safeStringify(value)
+      : `Error: ${error}`;
+
+    source.addMessage({
+      id: `tool-${id}`,
+      role: 'tool',
+      toolCallId: id,
+      content,
+    } as Message);
   }
 
   const clientTools: ClientToolsCapability & { catalogAsAgUiTools(): Tool[] } = {
@@ -76,46 +120,12 @@ export function createClientToolsCapability(
       });
     }),
 
+    settle(id: string, result: ClientToolResult): void {
+      settleResult(id, result);
+    },
+
     resolve(id: string, result: ClientToolResult): void {
-      // Mark as resolved first so pending() drops it immediately.
-      resolvedIds.update((s) => new Set(s).add(id));
-
-      // Write the outcome onto the LOCAL ToolCall in the store. The client tool
-      // DID produce a result client-side, so this is semantically correct — and
-      // it freezes the transcript card: toToolViewSpec spreads `{...args,
-      // ...result, status}` into the mounted ask component, so the component
-      // re-renders with its own emitted value as props and can branch to a
-      // resolved/frozen state. The backend ToolMessage never reaches this local
-      // ToolCall, so without this write the card stays interactive forever.
-      const ok = result.ok;
-      const value = (result as { value: unknown }).value;
-      const error = (result as { error: string }).error;
-      store.toolCalls.update((calls) =>
-        calls.map((tc) =>
-          tc.id === id
-            ? {
-                ...tc,
-                result: ok ? value : { error },
-                ...(ok ? {} : { error, status: 'error' as const }),
-              }
-            : tc,
-        ),
-      );
-
-      // Cast rather than rely on discriminant narrowing: consumer apps that
-      // compile this source with `strictNullChecks: false` don't narrow the
-      // ClientToolResult union in a ternary.
-      const content = ok
-        ? safeStringify(value)
-        : `Error: ${error}`;
-
-      source.addMessage({
-        id: `tool-${id}`,
-        role: 'tool',
-        toolCallId: id,
-        content,
-      } as Message);
-
+      settleResult(id, result);
       void source.runAgent({ tools: catalogAsAgUiTools() });
     },
 

@@ -11,8 +11,7 @@ import {
 const PUBLISHABLE_LIB_TAGS = [
   'scope:library', 'scope:website', 'scope:website-e2e',
   'scope:cockpit', 'scope:cockpit-examples', 'scope:cockpit-smoke',
-  'scope:cockpit-secret', 'scope:cockpit-deploy-smoke',
-  'scope:cockpit-e2e', 'scope:examples-chat',
+  'scope:cockpit-deploy-smoke', 'scope:cockpit-e2e', 'scope:examples-chat',
 ];
 const COCKPIT_CAP_ANGULAR_TAGS = ['scope:cockpit-examples', 'scope:cockpit-e2e'];
 const COCKPIT_CAP_PYTHON_TAGS = ['scope:cockpit-examples', 'scope:cockpit-e2e', 'scope:cockpit-smoke'];
@@ -44,12 +43,11 @@ describe('classifyFromAffected — lint-only files', () => {
     assert.equal(scope.cockpit, true);
     assert.equal(scope.website, true);
     assert.equal(scope.examples_chat, true);
-    // E2e / smoke / deploy / secret / posthog scopes: false
+    // E2e / smoke / deploy / posthog scopes: false
     assert.equal(scope.website_e2e, false);
     assert.equal(scope.cockpit_e2e, false);
     assert.equal(scope.cockpit_smoke, false);
     assert.equal(scope.cockpit_examples, false);
-    assert.equal(scope.cockpit_secret, false);
     assert.equal(scope.cockpit_deploy_smoke, false);
     assert.equal(scope.posthog, false);
   });
@@ -77,7 +75,6 @@ describe('classifyFromAffected — publishable lib broadcast', () => {
     assert.equal(scope.cockpit, true);
     assert.equal(scope.cockpit_examples, true);
     assert.equal(scope.cockpit_smoke, true);
-    assert.equal(scope.cockpit_secret, true);
     assert.equal(scope.cockpit_deploy_smoke, true);
     assert.equal(scope.cockpit_e2e, true);
     assert.equal(scope.examples_chat, true);
@@ -166,11 +163,11 @@ describe('classifyFromAffected — tag isolation', () => {
 });
 
 describe('SCOPE_KEYS export', () => {
-  it('contains the 11 documented scope keys', () => {
+  it('contains the 10 documented scope keys', () => {
     assert.deepEqual(SCOPE_KEYS, [
       'library', 'website', 'website_e2e',
       'cockpit', 'cockpit_examples', 'cockpit_smoke',
-      'cockpit_secret', 'cockpit_deploy_smoke', 'cockpit_e2e',
+      'cockpit_deploy_smoke', 'cockpit_e2e',
       'examples_chat', 'posthog',
     ]);
   });

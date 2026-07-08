@@ -125,6 +125,27 @@ describe('startClientToolExecutor()', () => {
     expect(resolve).toHaveBeenCalledWith('c1', { ok: true, value: { temp: 70, city: 'SF' } });
   });
 
+  it('uses a custom settlement handler when provided', async () => {
+    const { pending, resolve, capability } = makeFakeCapability();
+    const settleToolCall = vi.fn<[ToolCall, ClientToolResult], void>();
+    const agent = makeFakeAgent(capability);
+
+    TestBed.runInInjectionContext(() => {
+      startClientToolExecutor(agent, weatherRegistry, { settleToolCall });
+    });
+
+    pending.set([{ id: 'c1', name: 'get_weather', args: { city: 'SF' }, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(settleToolCall).toHaveBeenCalledOnce();
+    expect(settleToolCall).toHaveBeenCalledWith(
+      { id: 'c1', name: 'get_weather', args: { city: 'SF' }, status: 'complete' },
+      { ok: true, value: { temp: 70, city: 'SF' } },
+    );
+    expect(resolve).not.toHaveBeenCalled();
+  });
+
   it('normalizes handler throws to an error result', async () => {
     const { pending, resolve, capability } = makeFakeCapability();
     const agent = makeFakeAgent(capability);

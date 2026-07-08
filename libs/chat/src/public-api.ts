@@ -230,7 +230,7 @@ export { isPathRef, isLiteralString, isLiteralNumber, isLiteralBoolean } from '@
 // Client tools (declaration API — tools/action/view/ask + JSON-schema derivation)
 export { tools, action, view, ask } from './lib/client-tools/tools';
 export { deriveJsonSchema } from './lib/client-tools/to-json-schema';
-export type { ClientToolDef, ClientToolExecutionOptions, AnyFunctionToolDef, FunctionToolDef, FunctionToolHandlerContext, ViewToolDef, AskToolDef, ClientToolRegistry, StandardSchemaV1, StandardSchemaInferInput, StandardSchemaInferOutput } from './lib/client-tools/tool-def';
+export type { ClientToolContinuationOptions, ClientToolDef, ClientToolExecutionOptions, AnyFunctionToolDef, FunctionToolDef, FunctionToolHandlerContext, ViewToolDef, AskToolDef, ClientToolRegistry, StandardSchemaV1, StandardSchemaInferInput, StandardSchemaInferOutput } from './lib/client-tools/tool-def';
 export type { ViewProps } from './lib/client-tools/component-inputs';
 /** Inferred argument type for a schema (alias of StandardSchemaInferOutput). */
 export type ToolArgs<S extends import('./lib/client-tools/tool-def').StandardSchemaV1> = import('./lib/client-tools/tool-def').StandardSchemaInferOutput<S>;

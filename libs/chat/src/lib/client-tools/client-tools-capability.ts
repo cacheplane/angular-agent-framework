@@ -19,6 +19,8 @@ export interface ClientToolsCapability {
   setCatalog(specs: readonly ClientToolSpec[]): void;
   /** Tool calls the model made for client tools that await a client result. */
   readonly pending: Signal<readonly ToolCall[]>;
+  /** Record a client tool's result without continuing the run. */
+  settle?(toolCallId: string, result: ClientToolResult): void;
   /** Return a client tool's result (or error) and continue the run. */
   resolve(toolCallId: string, result: ClientToolResult): void;
 }

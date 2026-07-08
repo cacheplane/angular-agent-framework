@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 export const SCOPE_KEYS = [
   'library', 'website', 'website_e2e',
   'cockpit', 'cockpit_examples', 'cockpit_smoke',
-  'cockpit_secret', 'cockpit_deploy_smoke', 'cockpit_e2e',
+  'cockpit_deploy_smoke', 'cockpit_e2e',
   'examples_chat', 'posthog',
 ];
 

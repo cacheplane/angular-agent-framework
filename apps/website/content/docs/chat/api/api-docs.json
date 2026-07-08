@@ -6310,6 +6310,12 @@
         "optional": false
       },
       {
+        "name": "followUp",
+        "type": "boolean",
+        "description": "",
+        "optional": true
+      },
+      {
         "name": "handler",
         "type": "(args: any, context: FunctionToolHandlerContext) => unknown",
         "description": "",
@@ -6352,6 +6358,12 @@
         "type": "string",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "followUp",
+        "type": "boolean",
+        "description": "",
+        "optional": true
       },
       {
         "name": "kind",
@@ -6701,6 +6713,20 @@
     "examples": []
   },
   {
+    "name": "ClientToolContinuationOptions",
+    "kind": "interface",
+    "description": "Execution policy options for browser-executed function tools.",
+    "properties": [
+      {
+        "name": "followUp",
+        "type": "boolean",
+        "description": "False when the tool result should be recorded without forcing a continuation.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "ClientToolExecutionGuard",
     "kind": "interface",
     "description": "Opt-in guard configuration for claim-before-execute client tools.",
@@ -6745,6 +6771,12 @@
     "kind": "interface",
     "description": "Execution policy options for browser-executed function tools.",
     "properties": [
+      {
+        "name": "followUp",
+        "type": "boolean",
+        "description": "False when the tool result should be recorded without forcing a continuation.",
+        "optional": true
+      },
       {
         "name": "idempotent",
         "type": "boolean",
@@ -6824,6 +6856,12 @@
         "type": "ClientToolExecutionGuard",
         "description": "",
         "optional": true
+      },
+      {
+        "name": "settleToolCall",
+        "type": "(toolCall: ToolCall, result: ClientToolResult) => void",
+        "description": "",
+        "optional": true
       }
     ],
     "examples": []
@@ -6868,6 +6906,25 @@
           {
             "name": "specs",
             "type": "readonly ClientToolSpec[]",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "settle",
+        "signature": "settle(toolCallId: string, result: ClientToolResult): void",
+        "description": "Record a client tool's result without continuing the run.",
+        "params": [
+          {
+            "name": "toolCallId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "result",
+            "type": "ClientToolResult",
             "description": "",
             "optional": false
           }
@@ -7113,6 +7170,12 @@
         "type": "string",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "followUp",
+        "type": "boolean",
+        "description": "",
+        "optional": true
       },
       {
         "name": "handler",
@@ -8006,6 +8069,12 @@
         "optional": false
       },
       {
+        "name": "followUp",
+        "type": "boolean",
+        "description": "",
+        "optional": true
+      },
+      {
         "name": "kind",
         "type": "\"view\"",
         "description": "",
@@ -8350,7 +8419,7 @@
     "name": "ask",
     "kind": "function",
     "description": "Interactive (human-in-the-loop) component tool — the model fills the\ncomponent's props from the schema's output; the value the component emits\nback to the framework becomes the tool result sent to the model.\n\nThe component's signal inputs are checked against the schema output type\n(strict-but-flexible: every schema key must be a declared input with an\nassignable type; the component may declare extra inputs the schema doesn't\nfill). Author the component with `ViewProps<typeof schema>` to derive input\nprop types directly from the schema.",
-    "signature": "ask(description: string, schema: S, component: AcceptComponent<S, C>): AskToolDef<S, C>",
+    "signature": "ask(description: string, schema: S, component: AcceptComponent<S, C>, options: ClientToolContinuationOptions): AskToolDef<S, C>",
     "params": [
       {
         "name": "description",
@@ -8369,6 +8438,12 @@
         "type": "AcceptComponent<S, C>",
         "description": "Angular component whose signal inputs must be compatible with\n  the schema output. A type-level error is reported here when they diverge.",
         "optional": false
+      },
+      {
+        "name": "options",
+        "type": "ClientToolContinuationOptions",
+        "description": "",
+        "optional": true
       }
     ],
     "returns": {
@@ -9374,7 +9449,7 @@
     "name": "view",
     "kind": "function",
     "description": "Render-only component tool — the model fills the component's props from the\nschema's output; the tool call is auto-acknowledged once the component mounts.\n\nThe component's signal inputs are checked against the schema output type\n(strict-but-flexible: every schema key must be a declared input with an\nassignable type; the component may declare extra inputs the schema doesn't fill).\nAuthor the component with `ViewProps<typeof schema>` as the input type set to\nguarantee the shapes stay aligned.",
-    "signature": "view(description: string, schema: S, component: AcceptComponent<S, C>): ViewToolDef<S, C>",
+    "signature": "view(description: string, schema: S, component: AcceptComponent<S, C>, options: ClientToolContinuationOptions): ViewToolDef<S, C>",
     "params": [
       {
         "name": "description",
@@ -9393,6 +9468,12 @@
         "type": "AcceptComponent<S, C>",
         "description": "Angular component whose signal inputs must be compatible with\n  the schema output. A type-level error is reported here when they diverge.",
         "optional": false
+      },
+      {
+        "name": "options",
+        "type": "ClientToolContinuationOptions",
+        "description": "",
+        "optional": true
       }
     ],
     "returns": {

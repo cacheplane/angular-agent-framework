@@ -11,7 +11,13 @@ export interface FunctionToolHandlerContext {
 }
 
 /** Execution policy options for browser-executed function tools. */
-export interface ClientToolExecutionOptions {
+export interface ClientToolContinuationOptions {
+  /** False when the tool result should be recorded without forcing a continuation. */
+  readonly followUp?: boolean;
+}
+
+/** Execution policy options for browser-executed function tools. */
+export interface ClientToolExecutionOptions extends ClientToolContinuationOptions {
   /** True when the handler may safely re-run and should skip durable pre-claims. */
   readonly idempotent?: boolean;
 }
@@ -22,6 +28,7 @@ export interface FunctionToolDef<S extends StandardSchemaV1 = StandardSchemaV1, 
   readonly kind: 'function';
   readonly description: string;
   readonly schema: S;
+  readonly followUp?: boolean;
   readonly idempotent?: boolean;
   readonly handler: (
     args: StandardSchemaInferOutput<S>,
@@ -38,6 +45,7 @@ export interface AnyFunctionToolDef {
   readonly kind: 'function';
   readonly description: string;
   readonly schema: StandardSchemaV1;
+  readonly followUp?: boolean;
   readonly idempotent?: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- bivariance escape hatch; see note above
   readonly handler: (args: any, context: FunctionToolHandlerContext) => unknown | Promise<unknown>;
@@ -47,6 +55,7 @@ export interface ViewToolDef<S extends StandardSchemaV1 = StandardSchemaV1, C = 
   readonly kind: 'view';
   readonly description: string;
   readonly schema: S;
+  readonly followUp?: boolean;
   readonly component: Type<C>;
 }
 
@@ -54,6 +63,7 @@ export interface AskToolDef<S extends StandardSchemaV1 = StandardSchemaV1, C = u
   readonly kind: 'ask';
   readonly description: string;
   readonly schema: S;
+  readonly followUp?: boolean;
   readonly component: Type<C>;
 }
 

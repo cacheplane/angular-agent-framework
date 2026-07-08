@@ -1,7 +1,17 @@
 // SPDX-License-Identifier: MIT
 export { action, view, ask, tools } from './tools';
 export { deriveJsonSchema } from './to-json-schema';
-export type { ClientToolDef, ClientToolExecutionOptions, FunctionToolDef, FunctionToolHandlerContext, AnyFunctionToolDef, ViewToolDef, AskToolDef, ClientToolRegistry } from './tool-def';
+export type {
+  ClientToolContinuationOptions,
+  ClientToolDef,
+  ClientToolExecutionOptions,
+  FunctionToolDef,
+  FunctionToolHandlerContext,
+  AnyFunctionToolDef,
+  ViewToolDef,
+  AskToolDef,
+  ClientToolRegistry,
+} from './tool-def';
 export type { ClientToolSpec } from './to-json-schema';
 export type { ClientToolsCapability, ClientToolResult } from './client-tools-capability';
 export { validateArgs, executeFunctionTool } from './execute';
