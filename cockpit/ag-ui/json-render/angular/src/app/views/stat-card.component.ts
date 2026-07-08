@@ -9,7 +9,7 @@ import { Component, computed, input } from '@angular/core';
       <div class="stat-card__label">{{ label() }}</div>
       @if (isSkeleton()) {
         <div class="skeleton skeleton-value"></div>
-        <div class="skeleton skeleton-text" style="width: 30%"></div>
+        <div class="skeleton skeleton-text skeleton-text--short"></div>
       } @else {
         <div class="stat-card__value">{{ formattedValue() }}</div>
         @if (delta()) {
@@ -27,9 +27,9 @@ import { Component, computed, input } from '@angular/core';
       flex-direction: column;
       gap: 6px;
       padding: 16px 18px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--tplane-chat-separator);
+      border-radius: var(--tplane-chat-radius-card);
+      background: var(--tplane-chat-surface-alt);
       backdrop-filter: blur(4px);
       min-width: 0;
     }
@@ -38,23 +38,23 @@ import { Component, computed, input } from '@angular/core';
       font-weight: 600;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.45);
+      color: var(--tplane-chat-text-muted);
     }
     .stat-card__value {
       font-size: 24px;
       font-weight: 600;
       line-height: 1.1;
-      color: rgba(255, 255, 255, 0.95);
+      color: var(--tplane-chat-text);
       font-variant-numeric: tabular-nums;
     }
     .stat-card__delta {
       font-size: 12px;
       font-weight: 500;
       font-variant-numeric: tabular-nums;
-      color: rgba(255, 255, 255, 0.55);
+      color: var(--tplane-chat-text-muted);
     }
-    .stat-card__delta[data-trend="up"] { color: #5cd393; }
-    .stat-card__delta[data-trend="down"] { color: #f08585; }
+    .stat-card__delta[data-trend="up"] { color: var(--tplane-chat-success); }
+    .stat-card__delta[data-trend="down"] { color: var(--tplane-chat-error-text); }
   `],
 })
 export class StatCardComponent {
