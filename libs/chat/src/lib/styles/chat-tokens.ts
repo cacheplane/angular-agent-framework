@@ -45,9 +45,24 @@ const LIGHT_TOKENS = `
   --a2ui-elevation-5: 0 16px 32px rgba(0, 0, 0, 0.18);
 
   /* --tplane-chat-citation-* — inline markers, preview card, sources panel */
-  --tplane-chat-citation-accent: #2f6fe0;
+  --tplane-chat-citation-accent: #1d4ed8;
   --tplane-chat-citation-accent-soft: #eaf1fd;
   --tplane-chat-citation-accent-border: #c9def8;
+  --tplane-chat-citation-type-web-fg: var(--tplane-chat-citation-accent);
+  --tplane-chat-citation-type-web-bg: var(--tplane-chat-citation-accent-soft);
+  --tplane-chat-citation-type-web-border: var(--tplane-chat-citation-accent-border);
+  --tplane-chat-citation-type-file-fg: #2f684c;
+  --tplane-chat-citation-type-file-bg: #edf7f1;
+  --tplane-chat-citation-type-file-border: #c8e4d2;
+  --tplane-chat-citation-type-app-fg: #7a4d12;
+  --tplane-chat-citation-type-app-bg: #fff5e3;
+  --tplane-chat-citation-type-app-border: #f0d69f;
+  --tplane-chat-citation-type-memory-fg: #67508f;
+  --tplane-chat-citation-type-memory-bg: #f3effb;
+  --tplane-chat-citation-type-memory-border: #ddd2f1;
+  --tplane-chat-citation-type-generic-fg: #526071;
+  --tplane-chat-citation-type-generic-bg: #f4f6f8;
+  --tplane-chat-citation-type-generic-border: #dfe5ec;
   --tplane-chat-citation-marker-bg: #f1f2f4;
   --tplane-chat-citation-marker-border: var(--tplane-chat-separator);
   --tplane-chat-citation-marker-fg: #4b5563;
@@ -97,6 +112,21 @@ const DARK_TOKENS = `
   --tplane-chat-citation-accent: #6ea8ff;
   --tplane-chat-citation-accent-soft: rgba(79, 141, 245, 0.16);
   --tplane-chat-citation-accent-border: rgba(79, 141, 245, 0.38);
+  --tplane-chat-citation-type-web-fg: var(--tplane-chat-citation-accent);
+  --tplane-chat-citation-type-web-bg: var(--tplane-chat-citation-accent-soft);
+  --tplane-chat-citation-type-web-border: var(--tplane-chat-citation-accent-border);
+  --tplane-chat-citation-type-file-fg: #8bd3a9;
+  --tplane-chat-citation-type-file-bg: rgba(47, 104, 76, 0.20);
+  --tplane-chat-citation-type-file-border: rgba(139, 211, 169, 0.32);
+  --tplane-chat-citation-type-app-fg: #f2c36f;
+  --tplane-chat-citation-type-app-bg: rgba(122, 77, 18, 0.22);
+  --tplane-chat-citation-type-app-border: rgba(242, 195, 111, 0.34);
+  --tplane-chat-citation-type-memory-fg: #c4b5fd;
+  --tplane-chat-citation-type-memory-bg: rgba(103, 80, 143, 0.26);
+  --tplane-chat-citation-type-memory-border: rgba(196, 181, 253, 0.32);
+  --tplane-chat-citation-type-generic-fg: #c9ccd1;
+  --tplane-chat-citation-type-generic-bg: rgba(255,255,255,0.08);
+  --tplane-chat-citation-type-generic-border: rgba(255,255,255,0.14);
   --tplane-chat-citation-marker-bg: rgba(255, 255, 255, 0.08);
   --tplane-chat-citation-marker-border: var(--tplane-chat-separator);
   --tplane-chat-citation-marker-fg: #c9ccd1;

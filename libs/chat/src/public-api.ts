@@ -88,7 +88,12 @@ export { ChatCitationsComponent, ChatCitationCardTemplateDirective } from './lib
 export { ChatCitationsCardComponent } from './lib/primitives/chat-citations/chat-citations-card.component';
 export { ChatCitationPreviewComponent } from './lib/primitives/chat-citations/chat-citation-preview.component';
 export {
-  deriveDomain, deriveSourceType, deriveMonogram, monogramHue, monogramColor, citationTypeLabel, formatPublished,
+  deriveDomain, deriveSourceType, deriveMonogram, monogramHue, monogramColor, citationTypeLabel,
+  citationTypeMeta, citationSourceVisual, formatPublished,
+} from './lib/agent/citation-display';
+export type {
+  CitationTypeIcon, CitationTypeMeta, CitationSourceVisual,
+  CitationImageVisual, CitationTypeIconVisual, CitationMonogramVisual,
 } from './lib/agent/citation-display';
 
 // DI provider
