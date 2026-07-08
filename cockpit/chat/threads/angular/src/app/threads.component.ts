@@ -51,14 +51,11 @@ const activeThreadIdState = signal<string | null>(null);
         [activeThreadId]="activeThreadId() ?? ''"
         (threadSelected)="onThreadSelected($event)"
         class="flex-1 min-w-0" />
-      <div sidebar class="p-4 space-y-4"
-           style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
-        <div class="flex items-center justify-between">
-          <h3 class="text-xs font-semibold uppercase tracking-wide"
-              style="color: var(--tplane-chat-text-muted);">Threads</h3>
+      <div sidebar class="panel">
+        <div class="panel-header">
+          <h3 class="cap">Threads</h3>
           <button type="button"
-                  class="text-xs underline"
-                  style="color: var(--tplane-chat-text-muted);"
+                  class="action-button"
                   (click)="onNewThread()">+ New</button>
         </div>
         <chat-thread-list
@@ -69,6 +66,50 @@ const activeThreadIdState = signal<string | null>(null);
       </div>
     </example-chat-layout>
   `,
+  styles: [`
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: var(--tplane-chat-bg);
+      color: var(--tplane-chat-text);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .cap {
+      margin: 0;
+      color: var(--tplane-chat-text-muted);
+      font-size: var(--tplane-chat-font-size-xs);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      line-height: var(--tplane-chat-line-height-tight);
+      text-transform: uppercase;
+    }
+
+    .action-button {
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--tplane-chat-text-muted);
+      cursor: pointer;
+      font: inherit;
+      font-size: var(--tplane-chat-font-size-xs);
+      line-height: var(--tplane-chat-line-height-tight);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .action-button:hover {
+      color: var(--tplane-chat-text);
+    }
+  `],
 })
 export class ThreadsComponent {
   protected readonly threadsSvc = inject(LangGraphThreadsAdapter);

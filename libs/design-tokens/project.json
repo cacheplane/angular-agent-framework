@@ -20,7 +20,14 @@
       "options": {
         "outputPath": "dist/libs/design-tokens",
         "main": "libs/design-tokens/src/index.ts",
-        "tsConfig": "libs/design-tokens/tsconfig.lib.json"
+        "tsConfig": "libs/design-tokens/tsconfig.lib.json",
+        "assets": [
+          {
+            "input": "libs/design-tokens/src/lib",
+            "glob": "theme.css",
+            "output": "src/lib"
+          }
+        ]
       }
     },
     "lint": {

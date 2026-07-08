@@ -3,5 +3,12 @@
   "dest": "../../dist/libs/example-layouts",
   "lib": {
     "entryFile": "src/public-api.ts"
-  }
+  },
+  "assets": [
+    {
+      "input": "src",
+      "glob": "theme.css",
+      "output": "src"
+    }
+  ]
 }

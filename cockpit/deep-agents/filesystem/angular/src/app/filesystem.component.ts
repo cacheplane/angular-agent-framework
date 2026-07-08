@@ -33,31 +33,110 @@ interface FileOperation {
   template: `
     <example-chat-layout sidebarWidth="18rem">
       <chat main [agent]="agent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
-      <div sidebar class="p-4 space-y-2" style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
-        <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--tplane-chat-text-muted);">File Operations</h3>
+      <div sidebar class="panel">
+        <h3 class="cap">File Operations</h3>
         @if (fileOps().length === 0) {
-          <p class="text-sm italic" style="color: var(--tplane-chat-text-muted);">No file operations yet</p>
+          <p class="empty">No file operations yet</p>
         }
         @for (op of fileOps(); track $index) {
-          <div class="rounded-md px-2 py-1.5 text-sm space-y-1"
-               style="background: var(--tplane-chat-surface-alt);">
-            <div class="flex items-center gap-2">
-              <span class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium"
-                    [style.background]="op.type === 'read' ? 'rgba(59,130,246,0.15)' : 'rgba(234,179,8,0.15)'"
-                    [style.color]="op.type === 'read' ? '#60a5fa' : '#facc15'">
+          <div class="file-op">
+            <div class="file-op__head">
+              <span class="op-badge"
+                    [class.op-badge--read]="op.type === 'read'"
+                    [class.op-badge--write]="op.type === 'write'">
                 {{ op.type === 'read' ? 'READ' : 'WRITE' }}
               </span>
-              <span class="truncate text-xs" style="color: var(--tplane-chat-text);">{{ op.path }}</span>
+              <span class="file-path">{{ op.path }}</span>
             </div>
             @if (op.preview) {
-              <p class="truncate text-xs" style="color: var(--tplane-chat-text-muted);">{{ op.preview }}</p>
+              <p class="preview">{{ op.preview }}</p>
             }
           </div>
         }
       </div>
     </example-chat-layout>
   `,
+  styles: [`
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 1rem;
+      background: var(--tplane-chat-bg);
+      color: var(--tplane-chat-text);
+    }
+
+    .cap {
+      margin: 0;
+      font-size: var(--tplane-chat-font-size-xs);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--tplane-chat-text-muted);
+    }
+
+    .empty {
+      margin: 0;
+      font-size: var(--tplane-chat-font-size-sm);
+      font-style: italic;
+      color: var(--tplane-chat-text-muted);
+    }
+
+    .file-op {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      padding: 0.375rem 0.5rem;
+      border-radius: var(--tplane-chat-radius-card);
+      background: var(--tplane-chat-surface-alt);
+      font-size: var(--tplane-chat-font-size-sm);
+    }
+
+    .file-op__head {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-width: 0;
+    }
+
+    .op-badge {
+      display: inline-flex;
+      align-items: center;
+      flex: 0 0 auto;
+      border-radius: var(--tplane-chat-radius-button);
+      padding: 0.125rem 0.375rem;
+      font-size: var(--tplane-chat-font-size-xs);
+      font-weight: 600;
+    }
+
+    .op-badge--read {
+      background: color-mix(in srgb, var(--tplane-chat-primary) 12%, var(--tplane-chat-surface));
+      color: var(--tplane-chat-primary);
+    }
+
+    .op-badge--write {
+      background: var(--tplane-chat-warning-bg);
+      color: var(--tplane-chat-warning-text);
+    }
+
+    .file-path {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--tplane-chat-text);
+      font-size: var(--tplane-chat-font-size-xs);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .preview {
+      margin: 0;
+      overflow: hidden;
+      color: var(--tplane-chat-text-muted);
+      font-size: var(--tplane-chat-font-size-xs);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  `],
 })
 export class FilesystemComponent {
   readonly ui = views({ 'file-preview': FilePreviewComponent });

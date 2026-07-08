@@ -1,7 +1,7 @@
-import { typography } from './typography';
-import { space } from './space';
-import { radius } from './radius';
-import { shadows } from './shadows';
+import { typography } from './typography.ts';
+import { space } from './space.ts';
+import { radius } from './radius.ts';
+import { shadows } from './shadows.ts';
 
 /**
  * Theme-invariant tokens. Same values in light and dark.
