@@ -230,7 +230,7 @@ export { isPathRef, isLiteralString, isLiteralNumber, isLiteralBoolean } from '@
 // Client tools (declaration API — tools/action/view/ask + JSON-schema derivation)
 export { tools, action, view, ask } from './lib/client-tools/tools';
 export { deriveJsonSchema } from './lib/client-tools/to-json-schema';
-export type { ClientToolDef, AnyFunctionToolDef, FunctionToolDef, FunctionToolHandlerContext, ViewToolDef, AskToolDef, ClientToolRegistry, StandardSchemaV1, StandardSchemaInferInput, StandardSchemaInferOutput } from './lib/client-tools/tool-def';
+export type { ClientToolDef, ClientToolExecutionOptions, AnyFunctionToolDef, FunctionToolDef, FunctionToolHandlerContext, ViewToolDef, AskToolDef, ClientToolRegistry, StandardSchemaV1, StandardSchemaInferInput, StandardSchemaInferOutput } from './lib/client-tools/tool-def';
 export type { ViewProps } from './lib/client-tools/component-inputs';
 /** Inferred argument type for a schema (alias of StandardSchemaInferOutput). */
 export type ToolArgs<S extends import('./lib/client-tools/tool-def').StandardSchemaV1> = import('./lib/client-tools/tool-def').StandardSchemaInferOutput<S>;
@@ -240,6 +240,18 @@ export { selectPendingClientToolCalls } from './lib/client-tools/select-pending-
 export type { SelectPendingClientToolCallsInput } from './lib/client-tools/select-pending-client-tool-calls';
 export { validateArgs, executeFunctionTool } from './lib/client-tools/execute';
 export { startClientToolExecutor } from './lib/client-tools/client-tool-executor';
+export type { ClientToolExecutorOptions } from './lib/client-tools/client-tool-executor';
+export {
+  clientToolGuardFailureResult,
+  defaultInterruptedClientToolResult,
+  shouldClaimBeforeExecute,
+} from './lib/client-tools/client-tool-execution-guard';
+export type {
+  ClientToolExecutionGuard,
+  ClientToolExecutionKey,
+  ClientToolExecutionRecord,
+  ClientToolExecutionStore,
+} from './lib/client-tools/client-tool-execution-guard';
 // createClientToolsCoordinator: internal — provideChat wires it; not public.
 export { toClientToolSpecs } from './lib/client-tools/client-tools-coordinator';
 export type { ClientToolsCoordinator } from './lib/client-tools/client-tools-coordinator';
