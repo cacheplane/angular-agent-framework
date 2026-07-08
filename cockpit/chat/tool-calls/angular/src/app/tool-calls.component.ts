@@ -3,7 +3,6 @@ import { Component } from '@angular/core';
 import {
   ChatComponent,
   ChatToolCallsComponent,
-  ChatToolCallCardComponent,
   ChatWelcomeSuggestionComponent,
 } from '@threadplane/chat';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
@@ -20,7 +19,7 @@ const SUGGESTIONS = [
 
 /**
  * ToolCallsComponent demonstrates tool calling with ChatComponent
- * and a sidebar showing ChatToolCallsComponent / ChatToolCallCardComponent.
+ * and a sidebar showing ChatToolCallsComponent.
  *
  * Welcome chip lets users one-click into the cap's recorded aimock flow.
  */
@@ -30,7 +29,6 @@ const SUGGESTIONS = [
   imports: [
     ChatComponent,
     ChatToolCallsComponent,
-    ChatToolCallCardComponent,
     ChatWelcomeSuggestionComponent,
     ExampleChatLayoutComponent,
   ],
@@ -48,14 +46,12 @@ const SUGGESTIONS = [
           }
         </div>
       </chat>
-      <div sidebar class="p-4 space-y-4" style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
-        <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--tplane-chat-text-muted);">Tool Calls</h3>
+      <div sidebar class="panel">
+        <h3 class="cap">Tool Calls</h3>
         <chat-tool-calls [agent]="agent" />
-        <div class="mt-4 space-y-2">
-          <h4 class="text-xs font-semibold uppercase tracking-wide"
-              style="color: var(--tplane-chat-text-muted);">Available Tools</h4>
-          <ul class="text-xs space-y-1 list-disc list-inside" style="color: var(--tplane-chat-text-muted);">
+        <div>
+          <h4 class="cap">Available Tools</h4>
+          <ul class="info-list">
             <li>search — Web search</li>
             <li>calculator — Math expressions</li>
             <li>weather — City weather</li>
@@ -64,6 +60,38 @@ const SUGGESTIONS = [
       </div>
     </example-chat-layout>
   `,
+  styles: [`
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: var(--tplane-chat-bg);
+      color: var(--tplane-chat-text);
+    }
+
+    .cap {
+      margin: 0;
+      color: var(--tplane-chat-text-muted);
+      font-size: var(--tplane-chat-font-size-xs);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      line-height: var(--tplane-chat-line-height-tight);
+      text-transform: uppercase;
+    }
+
+    .info-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      margin: 0.5rem 0 0;
+      padding: 0;
+      color: var(--tplane-chat-text-muted);
+      font-size: var(--tplane-chat-font-size-xs);
+      line-height: var(--tplane-chat-line-height);
+      list-style: none;
+    }
+  `],
 })
 export class ToolCallsComponent {
   protected readonly agent = injectAgent();

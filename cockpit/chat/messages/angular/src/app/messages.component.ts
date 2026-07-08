@@ -40,11 +40,11 @@ import { MESSAGES_AGENT, type MessagesState } from './agent-ref';
   ],
   template: `
     <example-chat-layout sidebarWidth="18rem">
-      <div main class="flex-1 flex flex-col min-w-0">
-        <header class="px-4 py-3 border-b" style="border-color: var(--tplane-chat-separator); background: var(--tplane-chat-bg);">
-          <h1 class="text-sm font-semibold" style="color: var(--tplane-chat-text);">Chat Messages Primitives</h1>
+      <section main class="chat-demo">
+        <header class="demo-header">
+          <h1 class="demo-title">Chat Messages Primitives</h1>
         </header>
-        <div class="flex-1 overflow-y-auto">
+        <div class="message-scroll">
           <chat-message-list [agent]="agent">
             <ng-template chatMessageTemplate="human" let-message>
               <chat-message [role]="'user'">{{ messageContent(message) }}</chat-message>
@@ -67,15 +67,14 @@ import { MESSAGES_AGENT, type MessagesState } from './agent-ref';
             </ng-template>
           </chat-message-list>
         </div>
-        <div class="px-4 py-2" style="background: var(--tplane-chat-bg);">
+        <div class="input-strip">
           <chat-typing-indicator [agent]="agent" />
           <chat-input [agent]="agent" (submitted)="submitMessage($event)" />
         </div>
-      </div>
-      <div sidebar class="p-4 space-y-4" style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
-        <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--tplane-chat-text-muted);">Primitives Used</h3>
-        <ul class="text-xs space-y-2" style="color: var(--tplane-chat-text-muted);">
+      </section>
+      <div sidebar class="panel">
+        <h3 class="cap">Primitives Used</h3>
+        <ul class="info-list">
           <li>ChatMessageListComponent</li>
           <li>ChatInputComponent</li>
           <li>ChatTypingIndicatorComponent</li>
@@ -83,6 +82,74 @@ import { MESSAGES_AGENT, type MessagesState } from './agent-ref';
       </div>
     </example-chat-layout>
   `,
+  styles: [`
+    .chat-demo {
+      display: flex;
+      flex: 1 1 auto;
+      min-width: 0;
+      flex-direction: column;
+      background: var(--tplane-chat-bg);
+      color: var(--tplane-chat-text);
+    }
+
+    .demo-header {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--tplane-chat-separator);
+      background: var(--tplane-chat-surface);
+    }
+
+    .demo-title {
+      margin: 0;
+      color: var(--tplane-chat-text);
+      font-size: var(--tplane-chat-font-size-sm);
+      font-weight: 700;
+      line-height: var(--tplane-chat-line-height-tight);
+    }
+
+    .message-scroll {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      background: var(--tplane-chat-bg);
+    }
+
+    .input-strip {
+      padding: 0.5rem 1rem;
+      border-top: 1px solid var(--tplane-chat-separator);
+      background: var(--tplane-chat-surface);
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: var(--tplane-chat-bg);
+      color: var(--tplane-chat-text);
+    }
+
+    .cap {
+      margin: 0;
+      color: var(--tplane-chat-text-muted);
+      font-size: var(--tplane-chat-font-size-xs);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      line-height: var(--tplane-chat-line-height-tight);
+      text-transform: uppercase;
+    }
+
+    .info-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin: 0;
+      padding: 0;
+      color: var(--tplane-chat-text-muted);
+      font-size: var(--tplane-chat-font-size-xs);
+      line-height: var(--tplane-chat-line-height);
+      list-style: none;
+    }
+  `],
 })
 export class MessagesComponent {
   protected readonly agent = injectAgent(MESSAGES_AGENT);
