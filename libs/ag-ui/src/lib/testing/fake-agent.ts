@@ -64,7 +64,6 @@ export class FakeAgent extends AbstractAgent {
 
     const tokens = this.tokens;
     const reasoningTokens = this.reasoningTokens;
-    const delayMs = this.delayMs;
     const messageId = `fake-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
     const sequence: BaseEvent[] = [
