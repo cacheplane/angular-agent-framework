@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 import { DestroyRef, effect, inject } from '@angular/core';
 import type { Agent } from '../agent';
+import type { ToolCall } from '../agent/tool-call';
 import type { ClientToolRegistry, AnyFunctionToolDef } from './tool-def';
-import type { ClientToolsCapability, ClientToolResult } from './client-tools-capability';
+import type { ClientToolResult } from './client-tools-capability';
 import { executeFunctionTool } from './execute';
 import {
   clientToolGuardFailureResult,
@@ -16,6 +17,7 @@ import {
 /** Options for wiring automatic browser function-tool execution. */
 export interface ClientToolExecutorOptions {
   readonly executionGuard?: ClientToolExecutionGuard;
+  readonly settleToolCall?: (toolCall: ToolCall, result: ClientToolResult) => void;
 }
 
 /**
@@ -59,12 +61,13 @@ export function startClientToolExecutor(
       const controller = new AbortController();
       inFlight.set(tc.id, controller);
       void runFunctionTool({
-        cap,
         def,
+        toolCall: tc,
         rawArgs: tc.args,
         toolCallId: tc.id,
         controller,
         executionGuard: options.executionGuard,
+        settleToolCall: options.settleToolCall ?? ((toolCall, result) => cap.resolve(toolCall.id, result)),
       }).finally(() => {
         inFlight.delete(tc.id);
       });
@@ -73,18 +76,19 @@ export function startClientToolExecutor(
 }
 
 async function runFunctionTool(input: {
-  readonly cap: ClientToolsCapability;
   readonly def: AnyFunctionToolDef;
+  readonly toolCall: ToolCall;
   readonly rawArgs: unknown;
   readonly toolCallId: string;
   readonly controller: AbortController;
   readonly executionGuard?: ClientToolExecutionGuard;
+  readonly settleToolCall: (toolCall: ToolCall, result: ClientToolResult) => void;
 }): Promise<void> {
-  const { cap, def, rawArgs, toolCallId, controller, executionGuard } = input;
+  const { def, toolCall, rawArgs, toolCallId, controller, executionGuard, settleToolCall } = input;
   const signal = controller.signal;
   if (!executionGuard || !shouldClaimBeforeExecute(def)) {
     const result = await executeFunctionTool(def, rawArgs, { signal });
-    if (!signal.aborted) cap.resolve(toolCallId, result);
+    if (!signal.aborted) settleToolCall(toolCall, result);
     return;
   }
 
@@ -93,7 +97,7 @@ async function runFunctionTool(input: {
   try {
     claim = await executionGuard.store.claim(key);
   } catch (err) {
-    if (!signal.aborted) cap.resolve(toolCallId, clientToolGuardFailureResult(toolCallId, err));
+    if (!signal.aborted) settleToolCall(toolCall, clientToolGuardFailureResult(toolCallId, err));
     return;
   }
   if (signal.aborted) return;
@@ -101,34 +105,51 @@ async function runFunctionTool(input: {
   if (claim === 'claimed') {
     const result = await executeFunctionTool(def, rawArgs, { signal });
     if (signal.aborted) return;
-    await recordOrResolveGuardFailure(executionGuard, key, result, cap, toolCallId, signal);
+    await recordOrResolveGuardFailure(
+      executionGuard,
+      key,
+      result,
+      toolCall,
+      toolCallId,
+      signal,
+      settleToolCall,
+    );
     return;
   }
 
   if (claim.status === 'done') {
-    cap.resolve(toolCallId, claim.result);
+    settleToolCall(toolCall, claim.result);
     return;
   }
 
   const result = claim.status === 'failed' && claim.result
     ? claim.result
     : defaultInterruptedClientToolResult(toolCallId);
-  await recordOrResolveGuardFailure(executionGuard, key, result, cap, toolCallId, signal);
+  await recordOrResolveGuardFailure(
+    executionGuard,
+    key,
+    result,
+    toolCall,
+    toolCallId,
+    signal,
+    settleToolCall,
+  );
 }
 
 async function recordOrResolveGuardFailure(
   executionGuard: ClientToolExecutionGuard,
   key: ClientToolExecutionKey,
   result: ClientToolResult,
-  cap: ClientToolsCapability,
+  toolCall: ToolCall,
   toolCallId: string,
   signal: AbortSignal,
+  settleToolCall: (toolCall: ToolCall, result: ClientToolResult) => void,
 ): Promise<void> {
   try {
     await executionGuard.store.record(key, result);
   } catch (err) {
-    if (!signal.aborted) cap.resolve(toolCallId, clientToolGuardFailureResult(toolCallId, err));
+    if (!signal.aborted) settleToolCall(toolCall, clientToolGuardFailureResult(toolCallId, err));
     return;
   }
-  if (!signal.aborted) cap.resolve(toolCallId, result);
+  if (!signal.aborted) settleToolCall(toolCall, result);
 }

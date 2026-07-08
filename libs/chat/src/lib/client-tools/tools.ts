@@ -4,6 +4,7 @@ import type { StandardSchemaV1, StandardSchemaInferOutput } from '@threadplane/r
 import type {
   AskToolDef,
   ClientToolDef,
+  ClientToolContinuationOptions,
   ClientToolExecutionOptions,
   FunctionToolDef,
   FunctionToolHandlerContext,
@@ -77,8 +78,9 @@ export function view<S extends StandardSchemaV1, C>(
   description: string,
   schema: S,
   component: AcceptComponent<S, C>,
+  options: ClientToolContinuationOptions = {},
 ): ViewToolDef<S, C> {
-  return { kind: 'view', description, schema, component: component as Type<C> };
+  return { kind: 'view', description, schema, component: component as Type<C>, ...options };
 }
 
 /**
@@ -117,8 +119,9 @@ export function ask<S extends StandardSchemaV1, C>(
   description: string,
   schema: S,
   component: AcceptComponent<S, C>,
+  options: ClientToolContinuationOptions = {},
 ): AskToolDef<S, C> {
-  return { kind: 'ask', description, schema, component: component as Type<C> };
+  return { kind: 'ask', description, schema, component: component as Type<C>, ...options };
 }
 
 /**

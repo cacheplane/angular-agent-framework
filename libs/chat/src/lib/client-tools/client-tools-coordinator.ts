@@ -8,6 +8,7 @@ import type { ClientToolExecutionGuard } from './client-tool-execution-guard';
 import type { ClientToolSpec } from './to-json-schema';
 import { deriveJsonSchema } from './to-json-schema';
 import { startClientToolExecutor } from './client-tool-executor';
+import type { ClientToolsCapability, ClientToolResult } from './client-tools-capability';
 
 export interface ClientToolsCoordinator {
   /** Components for `view`/`ask` tools, keyed by tool name — merge into the chat `views`. */
@@ -23,6 +24,12 @@ export interface ClientToolsCoordinator {
 /** Options for creating a client-tools coordinator. */
 export interface ClientToolsCoordinatorOptions {
   readonly executionGuard?: ClientToolExecutionGuard;
+}
+
+interface PendingToolGroup {
+  readonly ids: ReadonlySet<string>;
+  readonly hasFollowUp: boolean;
+  readonly settledIds: Set<string>;
 }
 
 /** Build the catalog spec list shipped to the model. */
@@ -54,6 +61,62 @@ export function createClientToolsCoordinator(
 ): ClientToolsCoordinator {
   const viewRegistry = views(viewComponents(registry));
   const ackedViews = new Set<string>();
+  let currentGroup: PendingToolGroup | undefined;
+
+  function toolWantsFollowUp(tc: ToolCall): boolean {
+    return registry[tc.name]?.followUp !== false;
+  }
+
+  function createGroup(calls: readonly ToolCall[]): PendingToolGroup {
+    return {
+      ids: new Set(calls.map((tc) => tc.id)),
+      hasFollowUp: calls.some(toolWantsFollowUp),
+      settledIds: new Set<string>(),
+    };
+  }
+
+  function groupFor(cap: ClientToolsCapability, tc: ToolCall): PendingToolGroup {
+    if (currentGroup?.ids.has(tc.id)) return currentGroup;
+    const pending = cap.pending();
+    const calls = pending.some((pendingCall) => pendingCall.id === tc.id)
+      ? pending
+      : [tc];
+    currentGroup = createGroup(calls);
+    return currentGroup;
+  }
+
+  function warnMissingSettle(tc: ToolCall): void {
+    console.warn(
+      `Client tool "${tc.name}" requested batched or terminal settlement, but the agent capability does not implement settle(); falling back to resolve().`,
+    );
+  }
+
+  function settleClientToolCall(
+    cap: ClientToolsCapability,
+    tc: ToolCall,
+    result: ClientToolResult,
+  ): void {
+    const group = groupFor(cap, tc);
+    if (group.settledIds.has(tc.id)) return;
+    group.settledIds.add(tc.id);
+
+    const groupComplete = Array.from(group.ids).every((id) => group.settledIds.has(id));
+    if (!cap.settle) {
+      if (group.ids.size > 1 || registry[tc.name]?.followUp === false) warnMissingSettle(tc);
+      cap.resolve(tc.id, result);
+      if (groupComplete) currentGroup = undefined;
+      return;
+    }
+
+    if (groupComplete && group.hasFollowUp) {
+      cap.resolve(tc.id, result);
+      currentGroup = undefined;
+      return;
+    }
+
+    cap.settle(tc.id, result);
+    if (groupComplete) currentGroup = undefined;
+  }
 
   return {
     viewRegistry,
@@ -61,7 +124,10 @@ export function createClientToolsCoordinator(
       const cap = agent.clientTools;
       if (!cap) return;
       cap.setCatalog(toClientToolSpecs(registry));
-      startClientToolExecutor(agent, registry, { executionGuard: options.executionGuard }); // function tools
+      startClientToolExecutor(agent, registry, {
+        executionGuard: options.executionGuard,
+        settleToolCall: (tc, result) => settleClientToolCall(cap, tc, result),
+      }); // function tools
       // Auto-ack `view` tools: they render but produce no user value.
       effect(() => {
         for (const tc of cap.pending()) {
@@ -69,7 +135,7 @@ export function createClientToolsCoordinator(
           if (!def || def.kind !== 'view') continue;
           if (ackedViews.has(tc.id)) continue;
           ackedViews.add(tc.id);
-          cap.resolve(tc.id, { ok: true, value: { shown: true } });
+          settleClientToolCall(cap, tc, { ok: true, value: { shown: true } });
         }
       });
     },
@@ -83,7 +149,7 @@ export function createClientToolsCoordinator(
       const pending = cap.pending().find(
         (tc: ToolCall) => tc.name === name && registry[tc.name]?.kind === 'ask',
       );
-      if (pending) cap.resolve(pending.id, { ok: true, value: event.value });
+      if (pending) settleClientToolCall(cap, pending, { ok: true, value: event.value });
     },
   };
 }

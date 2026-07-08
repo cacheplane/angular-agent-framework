@@ -31,6 +31,20 @@ class FakeAskComponent {}
 
 function makeFakeCapability() {
   const pending = signal<readonly ToolCall[]>([]);
+  const settle = vi.fn<[string, ClientToolResult], void>();
+  const resolve = vi.fn<[string, ClientToolResult], void>();
+  const setCatalog = vi.fn<[readonly unknown[]], void>();
+  const capability: ClientToolsCapability = {
+    setCatalog,
+    pending,
+    settle,
+    resolve,
+  };
+  return { pending, settle, resolve, setCatalog, capability };
+}
+
+function makeFakeCapabilityWithoutSettle() {
+  const pending = signal<readonly ToolCall[]>([]);
   const resolve = vi.fn<[string, ClientToolResult], void>();
   const setCatalog = vi.fn<[readonly unknown[]], void>();
   const capability: ClientToolsCapability = {
@@ -217,6 +231,118 @@ describe('createClientToolsCoordinator()', () => {
     expect(resolve).toHaveBeenCalledWith('f1', { ok: true, value: { temp: 72, city: 'SF' } });
   });
 
+  it('batches two pending function tools into one group flush', async () => {
+    const registry = tools({
+      weather_a: action('Get weather A', z.object({ city: z.string() }), async (a) => `A:${a.city}`),
+      weather_b: action('Get weather B', z.object({ city: z.string() }), async (a) => `B:${a.city}`),
+    });
+    const { pending, settle, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry);
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    pending.set([
+      { id: 'f1', name: 'weather_a', args: { city: 'SF' }, status: 'running' },
+      { id: 'f2', name: 'weather_b', args: { city: 'LA' }, status: 'running' },
+    ]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(settle).toHaveBeenCalledOnce();
+    expect(settle).toHaveBeenCalledWith('f1', { ok: true, value: 'A:SF' });
+    expect(resolve).toHaveBeenCalledOnce();
+    expect(resolve).toHaveBeenCalledWith('f2', { ok: true, value: 'B:LA' });
+  });
+
+  it('settles terminal tools and flushes once when a mixed group completes', async () => {
+    const registry = tools({
+      terminal_card: view(
+        'Show terminal card',
+        z.object({ city: z.string() }),
+        FakeViewComponent as never,
+        { followUp: false },
+      ),
+      get_weather: action(
+        'Get weather',
+        z.object({ city: z.string() }),
+        async (a) => ({ temp: 72, city: a.city }),
+      ),
+    });
+    const { pending, settle, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry);
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    pending.set([
+      { id: 'v1', name: 'terminal_card', args: { city: 'LA' }, status: 'running' },
+      { id: 'f1', name: 'get_weather', args: { city: 'SF' }, status: 'running' },
+    ]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(settle).toHaveBeenCalledWith('v1', { ok: true, value: { shown: true } });
+    expect(resolve).toHaveBeenCalledOnce();
+    expect(resolve).toHaveBeenCalledWith('f1', { ok: true, value: { temp: 72, city: 'SF' } });
+  });
+
+  it('settles a fully-terminal group without resolving', () => {
+    const registry = tools({
+      terminal_card: view(
+        'Show terminal card',
+        z.object({ city: z.string() }),
+        FakeViewComponent as never,
+        { followUp: false },
+      ),
+    });
+    const { pending, settle, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry);
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    pending.set([{ id: 'v1', name: 'terminal_card', args: { city: 'LA' }, status: 'running' }]);
+    TestBed.flushEffects();
+
+    expect(settle).toHaveBeenCalledOnce();
+    expect(settle).toHaveBeenCalledWith('v1', { ok: true, value: { shown: true } });
+    expect(resolve).not.toHaveBeenCalled();
+  });
+
+  it('falls back to resolve when followUp:false cannot be honored without settle', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const registry = tools({
+      terminal_card: view(
+        'Show terminal card',
+        z.object({ city: z.string() }),
+        FakeViewComponent as never,
+        { followUp: false },
+      ),
+    });
+    const { pending, resolve, capability } = makeFakeCapabilityWithoutSettle();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry);
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    pending.set([{ id: 'v1', name: 'terminal_card', args: { city: 'LA' }, status: 'running' }]);
+    TestBed.flushEffects();
+
+    expect(resolve).toHaveBeenCalledOnce();
+    expect(resolve).toHaveBeenCalledWith('v1', { ok: true, value: { shown: true } });
+    expect(warn).toHaveBeenCalledOnce();
+    warn.mockRestore();
+  });
+
   it('passes an execution guard to function-tool execution', async () => {
     const { pending, resolve, capability } = makeFakeCapability();
     const agent = makeFakeAgent(capability);
@@ -259,6 +385,44 @@ describe('createClientToolsCoordinator()', () => {
     });
 
     expect(resolve).toHaveBeenCalledWith('a1', { ok: true, value: { picked: 2 } });
+  });
+
+  it('batches ask results with the pending group before flushing', async () => {
+    const registry = tools({
+      confirm_booking: ask(
+        'Ask user to confirm a booking',
+        z.object({ flight: z.string() }),
+        FakeAskComponent as never,
+      ),
+      get_weather: action(
+        'Get weather',
+        z.object({ city: z.string() }),
+        async (a) => ({ temp: 72, city: a.city }),
+      ),
+    });
+    const { pending, settle, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry);
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    pending.set([
+      { id: 'a1', name: 'confirm_booking', args: { flight: 'UA1' }, status: 'running' },
+      { id: 'f1', name: 'get_weather', args: { city: 'SF' }, status: 'running' },
+    ]);
+    TestBed.flushEffects();
+    coordinator.handleRenderEvent(agent, {
+      type: 'result',
+      value: { confirmed: true },
+      elementKey: 'confirm_booking',
+    });
+    await drainMicrotasks();
+
+    expect(settle).toHaveBeenCalledWith('a1', { ok: true, value: { confirmed: true } });
+    expect(resolve).toHaveBeenCalledOnce();
+    expect(resolve).toHaveBeenCalledWith('f1', { ok: true, value: { temp: 72, city: 'SF' } });
   });
 
   it('handleRenderEvent() does NOT resolve a view tool via handleRenderEvent (views auto-ack separately)', () => {

@@ -30,6 +30,11 @@ describe('action()', () => {
     });
     expect(t.kind).toBe('function');
   });
+
+  it('carries followUp:false from options', () => {
+    const def = action('no follow-up', z.object({}), async () => undefined, { followUp: false });
+    expect(def.followUp).toBe(false);
+  });
 });
 
 describe('view()', () => {
@@ -42,6 +47,16 @@ describe('view()', () => {
     expect(def.schema).toBe(schema);
     expect((def as { component: unknown }).component).toBe(FakeComponent);
   });
+
+  it('carries followUp:false from options', () => {
+    const def = view(
+      'terminal view',
+      z.object({}),
+      FakeComponent as unknown as import('@angular/core').Type<unknown>,
+      { followUp: false },
+    );
+    expect(def.followUp).toBe(false);
+  });
 });
 
 describe('ask()', () => {
@@ -53,6 +68,16 @@ describe('ask()', () => {
     expect(def.description).toBe('ask user');
     expect(def.schema).toBe(schema);
     expect((def as { component: unknown }).component).toBe(FakeComponent);
+  });
+
+  it('carries followUp:false from options', () => {
+    const def = ask(
+      'terminal ask',
+      z.object({}),
+      FakeComponent as unknown as import('@angular/core').Type<unknown>,
+      { followUp: false },
+    );
+    expect(def.followUp).toBe(false);
   });
 });
 
