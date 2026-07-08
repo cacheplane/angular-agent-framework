@@ -100,6 +100,9 @@ function readableSourceTypeLabel(type: string): string | null {
   return words ? words.charAt(0).toUpperCase() + words.slice(1) : null;
 }
 
+/**
+ * Derive normalized source-type metadata for badges, icons, and tone tokens.
+ */
 export function citationTypeMeta(c: Citation): CitationTypeMeta {
   const type = deriveSourceType(c);
   const canonicalType = type.toLowerCase();
@@ -122,6 +125,9 @@ export function citationTypeMeta(c: Citation): CitationTypeMeta {
   };
 }
 
+/**
+ * Choose the visual source marker for a citation: provider image, type icon, or monogram.
+ */
 export function citationSourceVisual(c: Citation): CitationSourceVisual {
   const iconUrl = c.iconUrl?.trim();
   if (iconUrl) {
