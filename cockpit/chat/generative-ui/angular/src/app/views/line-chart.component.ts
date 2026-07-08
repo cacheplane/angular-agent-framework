@@ -24,14 +24,14 @@ import { Component, computed, input } from '@angular/core';
               [attr.y1]="y.y"
               [attr.x2]="width - padding.right"
               [attr.y2]="y.y"
-              stroke="rgba(255,255,255,0.06)"
+              stroke="var(--tplane-chat-separator)"
               stroke-width="1"
             />
             <text
               [attr.x]="padding.left - 8"
               [attr.y]="y.y + 4"
               text-anchor="end"
-              fill="rgba(255,255,255,0.45)"
+              fill="var(--tplane-chat-text-muted)"
               font-size="11"
             >{{ y.label }}</text>
           }
@@ -45,14 +45,14 @@ import { Component, computed, input } from '@angular/core';
           <polyline
             [attr.points]="polylinePoints()"
             fill="none"
-            stroke="#d4aa6a"
+            stroke="var(--tplane-chat-primary)"
             stroke-width="2"
             stroke-linejoin="round"
             stroke-linecap="round"
           />
           <!-- Data points -->
           @for (pt of points(); track $index) {
-            <circle [attr.cx]="pt.x" [attr.cy]="pt.y" r="3" fill="#1a1a1a" stroke="#d4aa6a" stroke-width="2" />
+            <circle [attr.cx]="pt.x" [attr.cy]="pt.y" r="3" fill="var(--tplane-chat-surface)" stroke="var(--tplane-chat-primary)" stroke-width="2" />
           }
           <!-- X-axis labels -->
           @for (pt of xLabels(); track $index) {
@@ -60,14 +60,14 @@ import { Component, computed, input } from '@angular/core';
               [attr.x]="pt.x"
               [attr.y]="height - 6"
               text-anchor="middle"
-              fill="rgba(255,255,255,0.45)"
+              fill="var(--tplane-chat-text-muted)"
               font-size="11"
             >{{ pt.label }}</text>
           }
           <defs>
             <linearGradient id="line-area-gradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#d4aa6a" stop-opacity="0.28"/>
-              <stop offset="100%" stop-color="#d4aa6a" stop-opacity="0"/>
+              <stop offset="0%" stop-color="var(--tplane-chat-primary)" stop-opacity="0.28"/>
+              <stop offset="100%" stop-color="var(--tplane-chat-primary)" stop-opacity="0"/>
             </linearGradient>
           </defs>
         </svg>
@@ -81,15 +81,15 @@ import { Component, computed, input } from '@angular/core';
       flex-direction: column;
       gap: 12px;
       padding: 16px 18px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--tplane-chat-separator);
+      border-radius: var(--tplane-chat-radius-card);
+      background: var(--tplane-chat-surface-alt);
       backdrop-filter: blur(4px);
     }
     .chart-card__title {
       font-size: 13px;
       font-weight: 600;
-      color: rgba(255, 255, 255, 0.65);
+      color: var(--tplane-chat-text-muted);
       letter-spacing: 0.01em;
     }
     .chart-card__svg {

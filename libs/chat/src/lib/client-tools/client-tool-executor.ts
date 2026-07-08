@@ -1,8 +1,22 @@
 // SPDX-License-Identifier: MIT
-import { effect } from '@angular/core';
+import { DestroyRef, effect, inject } from '@angular/core';
 import type { Agent } from '../agent';
-import type { ClientToolRegistry } from './tool-def';
+import type { ClientToolRegistry, AnyFunctionToolDef } from './tool-def';
+import type { ClientToolsCapability, ClientToolResult } from './client-tools-capability';
 import { executeFunctionTool } from './execute';
+import {
+  clientToolGuardFailureResult,
+  defaultInterruptedClientToolResult,
+  shouldClaimBeforeExecute,
+  type ClientToolExecutionGuard,
+  type ClientToolExecutionKey,
+  type ClientToolExecutionRecord,
+} from './client-tool-execution-guard';
+
+/** Options for wiring automatic browser function-tool execution. */
+export interface ClientToolExecutorOptions {
+  readonly executionGuard?: ClientToolExecutionGuard;
+}
 
 /**
  * Watches the agent's pending client tool calls and auto-runs FUNCTION tools,
@@ -10,10 +24,28 @@ import { executeFunctionTool } from './execute';
  * rendering layer, not here. No-op if the agent lacks the clientTools
  * capability. MUST be called in an injection context (sets up an effect).
  */
-export function startClientToolExecutor(agent: Agent, registry: ClientToolRegistry): void {
+export function startClientToolExecutor(
+  agent: Agent,
+  registry: ClientToolRegistry,
+  options: ClientToolExecutorOptions = {},
+): void {
   const cap = agent.clientTools;
   if (!cap) return;
-  const inFlight = new Set<string>();
+  const destroyRef = inject(DestroyRef);
+  const inFlight = new Map<string, AbortController>();
+  const abortAll = (): void => {
+    for (const controller of inFlight.values()) {
+      controller.abort();
+    }
+  };
+
+  const originalStop = agent.stop.bind(agent);
+  agent.stop = async (): Promise<void> => {
+    abortAll();
+    await originalStop();
+  };
+  destroyRef.onDestroy(abortAll);
+
   effect(() => {
     for (const tc of cap.pending()) {
       const def = registry[tc.name];
@@ -24,11 +56,79 @@ export function startClientToolExecutor(agent: Agent, registry: ClientToolRegist
       // calls that have a result or were resolved; `inFlight` prevents a
       // double-dispatch within a render cycle.
       if (inFlight.has(tc.id)) continue;
-      inFlight.add(tc.id);
-      void executeFunctionTool(def, tc.args).then((result) => {
-        cap.resolve(tc.id, result);
+      const controller = new AbortController();
+      inFlight.set(tc.id, controller);
+      void runFunctionTool({
+        cap,
+        def,
+        rawArgs: tc.args,
+        toolCallId: tc.id,
+        controller,
+        executionGuard: options.executionGuard,
+      }).finally(() => {
         inFlight.delete(tc.id);
       });
     }
   });
+}
+
+async function runFunctionTool(input: {
+  readonly cap: ClientToolsCapability;
+  readonly def: AnyFunctionToolDef;
+  readonly rawArgs: unknown;
+  readonly toolCallId: string;
+  readonly controller: AbortController;
+  readonly executionGuard?: ClientToolExecutionGuard;
+}): Promise<void> {
+  const { cap, def, rawArgs, toolCallId, controller, executionGuard } = input;
+  const signal = controller.signal;
+  if (!executionGuard || !shouldClaimBeforeExecute(def)) {
+    const result = await executeFunctionTool(def, rawArgs, { signal });
+    if (!signal.aborted) cap.resolve(toolCallId, result);
+    return;
+  }
+
+  const key = { threadId: executionGuard.threadId, toolCallId };
+  let claim: 'claimed' | ClientToolExecutionRecord;
+  try {
+    claim = await executionGuard.store.claim(key);
+  } catch (err) {
+    if (!signal.aborted) cap.resolve(toolCallId, clientToolGuardFailureResult(toolCallId, err));
+    return;
+  }
+  if (signal.aborted) return;
+
+  if (claim === 'claimed') {
+    const result = await executeFunctionTool(def, rawArgs, { signal });
+    if (signal.aborted) return;
+    await recordOrResolveGuardFailure(executionGuard, key, result, cap, toolCallId, signal);
+    return;
+  }
+
+  if (claim.status === 'done') {
+    cap.resolve(toolCallId, claim.result);
+    return;
+  }
+
+  const result = claim.status === 'failed' && claim.result
+    ? claim.result
+    : defaultInterruptedClientToolResult(toolCallId);
+  await recordOrResolveGuardFailure(executionGuard, key, result, cap, toolCallId, signal);
+}
+
+async function recordOrResolveGuardFailure(
+  executionGuard: ClientToolExecutionGuard,
+  key: ClientToolExecutionKey,
+  result: ClientToolResult,
+  cap: ClientToolsCapability,
+  toolCallId: string,
+  signal: AbortSignal,
+): Promise<void> {
+  try {
+    await executionGuard.store.record(key, result);
+  } catch (err) {
+    if (!signal.aborted) cap.resolve(toolCallId, clientToolGuardFailureResult(toolCallId, err));
+    return;
+  }
+  if (!signal.aborted) cap.resolve(toolCallId, result);
 }

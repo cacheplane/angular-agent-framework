@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 import type { StandardSchemaV1 } from '@threadplane/render';
-import type { AnyFunctionToolDef } from './tool-def';
+import type { AnyFunctionToolDef, FunctionToolHandlerContext } from './tool-def';
 import type { ClientToolResult } from './client-tools-capability';
+
+const defaultSignal = new AbortController().signal;
 
 /** Validate raw model args against a Standard Schema. */
 export async function validateArgs(
@@ -22,11 +24,12 @@ export async function validateArgs(
 export async function executeFunctionTool(
   def: AnyFunctionToolDef,
   rawArgs: unknown,
+  context: FunctionToolHandlerContext = { signal: defaultSignal },
 ): Promise<ClientToolResult> {
   const v = await validateArgs(def.schema, rawArgs);
   if (!v.ok) return { ok: false, error: `invalid arguments: ${(v as { error: string }).error}` };
   try {
-    const value = await def.handler((v as { value: unknown }).value as never);
+    const value = await def.handler((v as { value: unknown }).value as never, context);
     return { ok: true, value };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };

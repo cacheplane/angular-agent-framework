@@ -31,24 +31,93 @@ interface Delegation {
   template: `
     <example-chat-layout sidebarWidth="18rem">
       <chat main [agent]="agent" class="flex-1 min-w-0" />
-      <div sidebar class="p-4 space-y-2" style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
-        <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--tplane-chat-text-muted);">Delegations</h3>
+      <div sidebar class="panel">
+        <h3 class="cap">Delegations</h3>
         @if (delegations().length === 0) {
-          <p class="text-sm italic" style="color: var(--tplane-chat-text-muted);">No delegations yet</p>
+          <p class="empty">No delegations yet</p>
         }
         @for (d of delegations(); track d.id) {
-          <div class="flex items-center gap-2 text-sm py-1">
-            <span class="w-2 h-2 rounded-full shrink-0"
-                  [style.background]="d.status === 'complete' ? 'var(--tplane-chat-success)' : d.status === 'error' ? 'var(--tplane-chat-error-text)' : 'var(--tplane-chat-warning-text)'">
+          <div class="delegation">
+            <span class="dot"
+                  [class.dot--running]="d.status === 'running'"
+                  [class.dot--complete]="d.status === 'complete'"
+                  [class.dot--error]="d.status === 'error'">
             </span>
-            <span class="font-medium truncate" style="color: var(--tplane-chat-text);">{{ d.agent }}</span>
-            <span class="text-xs ml-auto" style="color: var(--tplane-chat-text-muted);">{{ d.statusText }}</span>
+            <span class="agent">{{ d.agent }}</span>
+            <span class="status">{{ d.statusText }}</span>
           </div>
         }
       </div>
     </example-chat-layout>
   `,
+  styles: [`
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 1rem;
+      background: var(--tplane-chat-bg);
+      color: var(--tplane-chat-text);
+    }
+
+    .cap {
+      margin: 0;
+      font-size: var(--tplane-chat-font-size-xs);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--tplane-chat-text-muted);
+    }
+
+    .empty {
+      margin: 0;
+      font-size: var(--tplane-chat-font-size-sm);
+      font-style: italic;
+      color: var(--tplane-chat-text-muted);
+    }
+
+    .delegation {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.25rem 0;
+      font-size: var(--tplane-chat-font-size-sm);
+    }
+
+    .dot {
+      flex: 0 0 auto;
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: var(--tplane-chat-radius-launcher);
+    }
+
+    .dot--running {
+      background: var(--tplane-chat-warning-text);
+    }
+
+    .dot--complete {
+      background: var(--tplane-chat-success);
+    }
+
+    .dot--error {
+      background: var(--tplane-chat-error-text);
+    }
+
+    .agent {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--tplane-chat-text);
+      font-weight: 600;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .status {
+      margin-left: auto;
+      color: var(--tplane-chat-text-muted);
+      font-size: var(--tplane-chat-font-size-xs);
+    }
+  `],
 })
 export class SubagentsComponent {
   /**

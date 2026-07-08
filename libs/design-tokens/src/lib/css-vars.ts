@@ -1,7 +1,7 @@
-import { baseTokens } from './base';
-import { lightOverrides } from './light';
-import { darkOverrides } from './dark';
-import type { Theme } from './theme';
+import { baseTokens } from './base.ts';
+import { lightOverrides } from './light.ts';
+import { darkOverrides } from './dark.ts';
+import type { Theme } from './theme.ts';
 
 const overridesByTheme = {
   light: lightOverrides,

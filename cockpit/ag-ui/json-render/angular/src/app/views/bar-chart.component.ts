@@ -23,7 +23,7 @@ import { Component, computed, input } from '@angular/core';
             [attr.x2]="width - padding.right"
             [attr.y1]="height - padding.bottom"
             [attr.y2]="height - padding.bottom"
-            stroke="rgba(255,255,255,0.08)"
+            stroke="var(--tplane-chat-separator)"
             stroke-width="1"
           />
           @for (bar of bars(); track $index) {
@@ -40,7 +40,7 @@ import { Component, computed, input } from '@angular/core';
               [attr.x]="bar.x + bar.w / 2"
               [attr.y]="bar.y - 6"
               text-anchor="middle"
-              fill="rgba(255,255,255,0.7)"
+              fill="var(--tplane-chat-text-muted)"
               font-size="11"
               font-weight="500"
             >{{ bar.value }}</text>
@@ -48,14 +48,14 @@ import { Component, computed, input } from '@angular/core';
               [attr.x]="bar.x + bar.w / 2"
               [attr.y]="height - padding.bottom + 16"
               text-anchor="middle"
-              fill="rgba(255,255,255,0.5)"
+              fill="var(--tplane-chat-text-muted)"
               font-size="11"
             >{{ bar.label }}</text>
           }
           <defs>
             <linearGradient id="bar-gradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#e0b87a" stop-opacity="1"/>
-              <stop offset="100%" stop-color="#d4aa6a" stop-opacity="0.75"/>
+              <stop offset="0%" stop-color="var(--tplane-chat-primary)" stop-opacity="1"/>
+              <stop offset="100%" stop-color="var(--tplane-chat-primary)" stop-opacity="0.75"/>
             </linearGradient>
           </defs>
         </svg>
@@ -69,15 +69,15 @@ import { Component, computed, input } from '@angular/core';
       flex-direction: column;
       gap: 12px;
       padding: 16px 18px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--tplane-chat-separator);
+      border-radius: var(--tplane-chat-radius-card);
+      background: var(--tplane-chat-surface-alt);
       backdrop-filter: blur(4px);
     }
     .chart-card__title {
       font-size: 13px;
       font-weight: 600;
-      color: rgba(255, 255, 255, 0.65);
+      color: var(--tplane-chat-text-muted);
       letter-spacing: 0.01em;
     }
     .chart-card__svg {

@@ -13,6 +13,7 @@ import type { A2uiActionMessage } from '@threadplane/a2ui';
 import type { StateStore } from '@json-render/core';
 import { toRenderRegistry, signalStateStore, withViews } from '@threadplane/render';
 import type { ClientToolRegistry } from '../../client-tools/tool-def';
+import type { ClientToolExecutionGuard } from '../../client-tools/client-tool-execution-guard';
 import { createClientToolsCoordinator } from '../../client-tools/client-tools-coordinator';
 import { ChatWindowComponent } from '../../primitives/chat-window/chat-window.component';
 import { ChatMessageListComponent } from '../../primitives/chat-message-list/chat-message-list.component';
@@ -370,6 +371,7 @@ export class ChatComponent {
     'generate_json_render_spec',
     'render_spec',
   ]);
+  readonly clientToolExecutionGuard = input<ClientToolExecutionGuard | undefined>(undefined);
 
   readonly showWelcome = computed(() => {
     if (this.welcomeDisabled()) return false;
@@ -403,7 +405,9 @@ export class ChatComponent {
    */
   private readonly coordinator = computed(() => {
     const reg = this.clientTools();
-    return reg ? createClientToolsCoordinator(reg) : undefined;
+    return reg ? createClientToolsCoordinator(reg, {
+      executionGuard: this.clientToolExecutionGuard(),
+    }) : undefined;
   });
 
   /**

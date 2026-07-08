@@ -4,6 +4,7 @@ import { views, type ViewRegistry } from '@threadplane/render';
 import type { RenderEvent, RenderViewEntry } from '@threadplane/render';
 import type { Agent, ToolCall } from '../agent';
 import type { ClientToolRegistry, ClientToolDef } from './tool-def';
+import type { ClientToolExecutionGuard } from './client-tool-execution-guard';
 import type { ClientToolSpec } from './to-json-schema';
 import { deriveJsonSchema } from './to-json-schema';
 import { startClientToolExecutor } from './client-tool-executor';
@@ -17,6 +18,11 @@ export interface ClientToolsCoordinator {
   connect(agent: Agent): void;
   /** Handle a render event bubbled up from a mounted view/ask component (resolves `ask` results). */
   handleRenderEvent(agent: Agent, event: RenderEvent): void;
+}
+
+/** Options for creating a client-tools coordinator. */
+export interface ClientToolsCoordinatorOptions {
+  readonly executionGuard?: ClientToolExecutionGuard;
 }
 
 /** Build the catalog spec list shipped to the model. */
@@ -42,7 +48,10 @@ function viewComponents(registry: ClientToolRegistry): Record<string, RenderView
   return out;
 }
 
-export function createClientToolsCoordinator(registry: ClientToolRegistry): ClientToolsCoordinator {
+export function createClientToolsCoordinator(
+  registry: ClientToolRegistry,
+  options: ClientToolsCoordinatorOptions = {},
+): ClientToolsCoordinator {
   const viewRegistry = views(viewComponents(registry));
   const ackedViews = new Set<string>();
 
@@ -52,7 +61,7 @@ export function createClientToolsCoordinator(registry: ClientToolRegistry): Clie
       const cap = agent.clientTools;
       if (!cap) return;
       cap.setCatalog(toClientToolSpecs(registry));
-      startClientToolExecutor(agent, registry); // function tools
+      startClientToolExecutor(agent, registry, { executionGuard: options.executionGuard }); // function tools
       // Auto-ack `view` tools: they render but produce no user value.
       effect(() => {
         for (const tc of cap.pending()) {
