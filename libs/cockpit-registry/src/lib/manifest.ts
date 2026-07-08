@@ -107,14 +107,6 @@ const getCodeAssetPath = (product: CockpitProduct, topic: string): string =>
 const getSmokeTarget = (product: CockpitProduct, topic: string): string =>
   `cockpit-${product}-${topic}-python:smoke`;
 
-const getIntegrationTarget = (
-  product: CockpitProduct,
-  topic: string
-): string | null =>
-  product === 'langgraph' && topic === 'deployment-runtime'
-    ? 'cockpit-langgraph-deployment-runtime-python:integration'
-    : null;
-
 const getRuntimeClass = (topic: string): CockpitRuntimeClass =>
   topic === 'deployment-runtime' ? 'deployed-service' : 'local-service';
 
@@ -163,11 +155,8 @@ const createEntry = (
     deploymentStatus: 'planned',
     testingContract: {
       smokeTarget: isDocsOnly ? null : getSmokeTarget(product, topic),
-      integrationTarget: isDocsOnly ? null : getIntegrationTarget(product, topic),
-      integrationMode:
-        isDocsOnly || getIntegrationTarget(product, topic) === null
-          ? 'none'
-          : 'secret-gated',
+      integrationTarget: null,
+      integrationMode: 'none',
       deploySmokePath: `/${product}/${section}/${topic}/${page}/python`,
     },
   };

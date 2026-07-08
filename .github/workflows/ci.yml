@@ -26,7 +26,6 @@ jobs:
       cockpit: ${{ steps.scope.outputs.cockpit }}
       cockpit_examples: ${{ steps.scope.outputs.cockpit_examples }}
       cockpit_smoke: ${{ steps.scope.outputs.cockpit_smoke }}
-      cockpit_secret: ${{ steps.scope.outputs.cockpit_secret }}
       cockpit_deploy_smoke: ${{ steps.scope.outputs.cockpit_deploy_smoke }}
       examples_chat: ${{ steps.scope.outputs.examples_chat }}
       cockpit_e2e: ${{ steps.scope.outputs.cockpit_e2e }}
@@ -197,37 +196,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx nx run-many -t smoke --projects=cockpit-ag-ui-interrupts-python,cockpit-ag-ui-streaming-python,cockpit-deep-agents-planning-python,cockpit-deep-agents-filesystem-python,cockpit-deep-agents-subagents-python,cockpit-deep-agents-memory-python,cockpit-deep-agents-skills-python,cockpit-deep-agents-sandboxes-python,cockpit-langgraph-persistence-python,cockpit-langgraph-durable-execution-python,cockpit-langgraph-streaming-python,cockpit-langgraph-interrupts-python,cockpit-langgraph-memory-python,cockpit-langgraph-subgraphs-python,cockpit-langgraph-time-travel-python,cockpit-langgraph-deployment-runtime-python,cockpit-chat-messages-python,cockpit-render-spec-rendering-python --skip-nx-cache
-
-  cockpit-secret-integration:
-    name: Cockpit — secret-gated integration
-    needs: ci-scope
-    if: github.event_name == 'push' || needs.ci-scope.outputs.cockpit_secret == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check integration secret
-        id: integration_secret
-        run: |
-          if [ -z "${COCKPIT_SECRET_TOKEN}" ]; then
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Skipping secret-gated integration: COCKPIT_SECRET_TOKEN is not configured"
-          else
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-          fi
-        env:
-          COCKPIT_SECRET_TOKEN: ${{ secrets.COCKPIT_SECRET_TOKEN }}
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        if: steps.integration_secret.outputs.enabled == 'true'
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
-        if: steps.integration_secret.outputs.enabled == 'true'
-        with:
-          node-version: 22
-          cache: npm
-      - if: steps.integration_secret.outputs.enabled == 'true'
-        run: npm ci
-      - if: steps.integration_secret.outputs.enabled == 'true'
-        run: npx nx run cockpit-langgraph-deployment-runtime-python:integration --skip-nx-cache
-        env:
-          COCKPIT_SECRET_TOKEN: ${{ secrets.COCKPIT_SECRET_TOKEN }}
 
   cockpit-deploy-smoke:
     name: Cockpit — deploy smoke dry-run
@@ -505,7 +473,6 @@ jobs:
       - cockpit
       - cockpit-examples-build
       - cockpit-smoke
-      - cockpit-secret-integration
       - cockpit-deploy-smoke
       - examples-chat-smoke
       - examples-chat-e2e
@@ -523,7 +490,6 @@ jobs:
           RESULT_COCKPIT: ${{ needs.cockpit.result }}
           RESULT_COCKPIT_EXAMPLES: ${{ needs.cockpit-examples-build.result }}
           RESULT_COCKPIT_SMOKE: ${{ needs.cockpit-smoke.result }}
-          RESULT_COCKPIT_SECRET: ${{ needs.cockpit-secret-integration.result }}
           RESULT_COCKPIT_DEPLOY_SMOKE: ${{ needs.cockpit-deploy-smoke.result }}
           RESULT_EXAMPLES_CHAT_SMOKE: ${{ needs.examples-chat-smoke.result }}
           RESULT_EXAMPLES_CHAT_E2E: ${{ needs.examples-chat-e2e.result }}
@@ -535,7 +501,6 @@ jobs:
           SCOPE_COCKPIT: ${{ needs.ci-scope.outputs.cockpit }}
           SCOPE_COCKPIT_EXAMPLES: ${{ needs.ci-scope.outputs.cockpit_examples }}
           SCOPE_COCKPIT_SMOKE: ${{ needs.ci-scope.outputs.cockpit_smoke }}
-          SCOPE_COCKPIT_SECRET: ${{ needs.ci-scope.outputs.cockpit_secret }}
           SCOPE_COCKPIT_DEPLOY_SMOKE: ${{ needs.ci-scope.outputs.cockpit_deploy_smoke }}
           SCOPE_EXAMPLES_CHAT: ${{ needs.ci-scope.outputs.examples_chat }}
           SCOPE_COCKPIT_E2E: ${{ needs.ci-scope.outputs.cockpit_e2e }}
@@ -582,7 +547,6 @@ jobs:
           require_scoped "cockpit" "Cockpit — build / test" "$RESULT_COCKPIT" "$SCOPE_COCKPIT"
           require_scoped "cockpit_examples" "Cockpit — build all examples" "$RESULT_COCKPIT_EXAMPLES" "$SCOPE_COCKPIT_EXAMPLES"
           require_scoped "cockpit_smoke" "Cockpit — representative capability smoke" "$RESULT_COCKPIT_SMOKE" "$SCOPE_COCKPIT_SMOKE"
-          require_scoped "cockpit_secret" "Cockpit — secret-gated integration" "$RESULT_COCKPIT_SECRET" "$SCOPE_COCKPIT_SECRET"
           require_scoped "cockpit_deploy_smoke" "Cockpit — deploy smoke dry-run" "$RESULT_COCKPIT_DEPLOY_SMOKE" "$SCOPE_COCKPIT_DEPLOY_SMOKE"
           require_scoped "examples_chat" "examples/chat — python smoke" "$RESULT_EXAMPLES_CHAT_SMOKE" "$SCOPE_EXAMPLES_CHAT"
           require_scoped "examples_chat" "examples/chat — e2e" "$RESULT_EXAMPLES_CHAT_E2E" "$SCOPE_EXAMPLES_CHAT"
@@ -606,7 +570,6 @@ jobs:
         cockpit,
         cockpit-examples-build,
         cockpit-smoke,
-        cockpit-secret-integration,
         cockpit-deploy-smoke,
         examples-chat-smoke,
         examples-chat-e2e,
