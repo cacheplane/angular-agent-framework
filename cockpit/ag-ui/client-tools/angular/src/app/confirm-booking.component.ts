@@ -47,12 +47,13 @@ type ConfirmBookingProps = ViewProps<typeof confirmBookingSchema>;
     }
   `,
   styles: [`
-    .cb { border: 1px solid var(--tplane-chat-separator, #e5e7eb); border-radius: 12px; padding: 16px; max-width: 360px; }
-    .cb__summary { margin: 0 0 12px; }
-    .cb--resolved .cb__summary { margin: 0; opacity: 0.85; }
+    .cb { max-width: 360px; padding: 16px; border: 1px solid var(--tplane-chat-separator); border-radius: var(--tplane-chat-radius-card); background: var(--tplane-chat-surface-alt); color: var(--tplane-chat-text); }
+    .cb__summary { margin: 0 0 12px; color: var(--tplane-chat-text); }
+    .cb--resolved .cb__summary { margin: 0; color: var(--tplane-chat-text-muted); }
     .cb__actions { display: flex; gap: 8px; }
-    .cb__btn { padding: 6px 14px; border-radius: 8px; border: 1px solid var(--tplane-chat-separator, #e5e7eb); background: transparent; color: inherit; cursor: pointer; }
-    .cb__btn--primary { background: var(--tplane-chat-accent, #2563eb); color: #fff; border-color: transparent; }
+    .cb__btn { padding: 6px 14px; border: 1px solid var(--tplane-chat-separator); border-radius: var(--tplane-chat-radius-button); background: var(--tplane-chat-surface-alt); color: var(--tplane-chat-text); cursor: pointer; }
+    .cb__btn:focus-visible { outline: 2px solid var(--tplane-chat-primary); outline-offset: 2px; }
+    .cb__btn--primary { border-color: var(--tplane-chat-primary); background: var(--tplane-chat-primary); color: var(--tplane-chat-on-primary); }
   `],
 })
 export class ConfirmBookingComponent {
