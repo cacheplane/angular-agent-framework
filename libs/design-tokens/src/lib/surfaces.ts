@@ -7,7 +7,7 @@
  * light-theme resolved values. Existing website consumers (light-only)
  * continue to work without modification.
  */
-import { lightOverrides } from './light';
+import { lightOverrides } from './light.js';
 
 export const surfaces = Object.freeze({
   canvas: lightOverrides.canvas,

@@ -8,8 +8,8 @@
  * resolved values from `lightOverrides`. Existing website consumers
  * (which are light-only) continue to work without modification.
  */
-import { baseTokens } from './base';
-import { lightOverrides } from './light';
+import { baseTokens } from './base.js';
+import { lightOverrides } from './light.js';
 
 export const colors = Object.freeze({
   // Theme-invariant brand identity
