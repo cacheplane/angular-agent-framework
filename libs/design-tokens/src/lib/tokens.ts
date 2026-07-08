@@ -1,8 +1,8 @@
-import { baseTokens } from './base.js';
-import { lightOverrides } from './light.js';
-import { darkOverrides } from './dark.js';
-import { colors } from './colors.js';
-import { surfaces } from './surfaces.js';
+import { baseTokens } from './base.ts';
+import { lightOverrides } from './light.ts';
+import { darkOverrides } from './dark.ts';
+import { colors } from './colors.ts';
+import { surfaces } from './surfaces.ts';
 
 /**
  * Combined token shape. Consumers that need theme resolution should
@@ -23,6 +23,6 @@ export const tokens = Object.freeze({
 
 export type Tokens = typeof tokens;
 
-export { baseTokens } from './base.js';
-export { lightOverrides } from './light.js';
-export { darkOverrides } from './dark.js';
+export { baseTokens } from './base.ts';
+export { lightOverrides } from './light.ts';
+export { darkOverrides } from './dark.ts';
