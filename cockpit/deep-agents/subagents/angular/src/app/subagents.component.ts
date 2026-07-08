@@ -31,7 +31,7 @@ interface Delegation {
   template: `
     <example-chat-layout sidebarWidth="18rem">
       <chat main [agent]="agent" class="flex-1 min-w-0" />
-      <aside sidebar class="panel">
+      <div sidebar class="panel">
         <h3 class="cap">Delegations</h3>
         @if (delegations().length === 0) {
           <p class="empty">No delegations yet</p>
@@ -47,7 +47,7 @@ interface Delegation {
             <span class="status">{{ d.statusText }}</span>
           </div>
         }
-      </aside>
+      </div>
     </example-chat-layout>
   `,
   styles: [`

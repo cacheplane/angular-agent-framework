@@ -33,7 +33,7 @@ interface FileOperation {
   template: `
     <example-chat-layout sidebarWidth="18rem">
       <chat main [agent]="agent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
-      <aside sidebar class="panel">
+      <div sidebar class="panel">
         <h3 class="cap">File Operations</h3>
         @if (fileOps().length === 0) {
           <p class="empty">No file operations yet</p>
@@ -53,7 +53,7 @@ interface FileOperation {
             }
           </div>
         }
-      </aside>
+      </div>
     </example-chat-layout>
   `,
   styles: [`

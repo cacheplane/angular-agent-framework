@@ -31,7 +31,7 @@ interface CodeExecution {
   template: `
     <example-chat-layout sidebarWidth="20rem">
       <chat main [agent]="agent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
-      <aside sidebar class="panel">
+      <div sidebar class="panel">
         <h3 class="cap">Execution Output</h3>
         @if (executions().length === 0) {
           <p class="empty">No code executed yet</p>
@@ -50,7 +50,7 @@ interface CodeExecution {
             }
           </div>
         }
-      </aside>
+      </div>
     </example-chat-layout>
   `,
   styles: [`

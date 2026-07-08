@@ -22,7 +22,7 @@ import { injectAgent } from '@threadplane/langgraph';
   template: `
     <example-chat-layout sidebarWidth="18rem">
       <chat main [agent]="agent" class="flex-1 min-w-0" />
-      <aside sidebar class="panel">
+      <div sidebar class="panel">
         <h3 class="cap">
           Learned Facts
           @if (memoryEntries().length > 0) {
@@ -38,7 +38,7 @@ import { injectAgent } from '@threadplane/langgraph';
             <span class="fact-value"> {{ entry[1] }}</span>
           </div>
         }
-      </aside>
+      </div>
     </example-chat-layout>
   `,
   styles: [`

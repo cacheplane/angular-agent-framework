@@ -33,7 +33,7 @@ interface SkillInvocation {
   template: `
     <example-chat-layout sidebarWidth="18rem">
       <chat main [agent]="agent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
-      <aside sidebar class="panel">
+      <div sidebar class="panel">
         <h3 class="cap">Skill Invocations</h3>
         @if (invocations().length === 0) {
           <p class="empty">No skills invoked yet</p>
@@ -57,7 +57,7 @@ interface SkillInvocation {
             }
           </div>
         }
-      </aside>
+      </div>
     </example-chat-layout>
   `,
   styles: [`

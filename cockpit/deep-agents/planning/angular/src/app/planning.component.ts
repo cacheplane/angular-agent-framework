@@ -34,7 +34,7 @@ interface PlanStep {
   template: `
     <example-chat-layout sidebarWidth="18rem">
       <chat main [agent]="agent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
-      <aside sidebar class="panel">
+      <div sidebar class="panel">
         <h3 class="cap">Plan</h3>
         @if (planSteps().length === 0) {
           <p class="empty">No plan yet</p>
@@ -53,7 +53,7 @@ interface PlanStep {
             <span class="plan-title">{{ step.title }}</span>
           </div>
         }
-      </aside>
+      </div>
     </example-chat-layout>
   `,
   styles: [`
