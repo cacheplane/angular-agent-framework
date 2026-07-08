@@ -112,7 +112,7 @@ Discovery result: the inspected provider exposes a stateful chat/resource API pl
 **Files:**
 - Modify this plan or add contract notes if the decision is made before implementation.
 
-- [ ] **Step 1: Choose package boundary**
+- [x] **Step 1: Choose package boundary**
 
 Pick one:
 
@@ -120,7 +120,9 @@ Pick one:
 - private/internal adapter, if this is only a migration bridge;
 - no code, if provider APIs are unstable or unavailable.
 
-- [ ] **Step 2: Decide public API shape**
+Decision: add a private/internal adapter proof under `libs/chat` first. Do not create a new published package or public export until the package boundary is approved.
+
+- [x] **Step 2: Decide public API shape**
 
 If public, mirror existing adapter ergonomics:
 
@@ -132,7 +134,9 @@ injectAgent(ref?)
 
 Use a provider-specific prefix internally if needed to avoid collisions with existing adapter types, but keep the consumer mental model aligned with AG-UI and LangGraph.
 
-- [ ] **Step 3: Decide client-tools mapping**
+Decision: no public API in the adapter-proof PR. A future public package should mirror `toAgent(source, options?)` and DI provider ergonomics only after API shape review.
+
+- [x] **Step 3: Decide client-tools mapping**
 
 Confirm whether provider tools are:
 
@@ -142,13 +146,15 @@ Confirm whether provider tools are:
 
 Only map browser-executed tools into Threadplane `action`/`view`/`ask` when the provider supplies stable pending-call identifiers and a result-return API.
 
+Decision: do not map provider tools into `ClientToolsCapability` in the adapter-proof PR. The inspected source exposes provider-owned tool execution without a stable browser result-return API for Threadplane client tools.
+
 ## Task 3: Contract Tests First
 
 **Files:**
 - Add: adapter conformance spec path TBD.
 - Add: provider fake/test fixture path TBD.
 
-- [ ] **Step 1: Build a scriptable provider fake**
+- [x] **Step 1: Build a scriptable provider fake**
 
 Create a test-only fake from the captured event contract. It must support:
 
@@ -157,7 +163,9 @@ Create a test-only fake from the captured event contract. It must support:
 - message/tool history inspection;
 - branch-on-tool-result behavior if the provider supports continuation.
 
-- [ ] **Step 2: Write failing `Agent` conformance tests**
+Implementation note: the first adapter-proof PR uses a scriptable signal-resource fake scoped to the observed public resource surface, not transport-frame scripts.
+
+- [x] **Step 2: Write failing `Agent` conformance tests**
 
 Cover:
 
@@ -171,7 +179,7 @@ Cover:
 - regenerate trims at the selected assistant message and reruns;
 - custom events flow through `events$` or adapter-specific signal if supported.
 
-- [ ] **Step 3: Write client-tools bridge tests only if supported**
+- [x] **Step 3: Write client-tools bridge tests only if supported**
 
 If provider has stable browser tool primitives, cover:
 
@@ -184,16 +192,20 @@ If provider has stable browser tool primitives, cover:
 
 Do not implement client-tools mapping if the provider lacks stable tool-call IDs or result APIs.
 
+Decision: not supported for this proof. The adapter tests cover tool-call projection only; no client-tools bridge tests are added.
+
 ## Task 4: Minimal Adapter Implementation
 
 **Files:**
 - Add/modify only after Tasks 1-3 pass their decision gates.
 
-- [ ] **Step 1: Implement event reduction**
+- [x] **Step 1: Implement event reduction**
 
 Prefer the AG-UI reducer path if compatible. Otherwise implement only the reducer cases proven by fixtures. Unknown events must be ignored or surfaced as neutral custom events; they must not crash the stream.
 
-- [ ] **Step 2: Implement actions**
+Implementation note: the proof uses resource-state projection rather than event reduction because the inspected public API exposes resource state, not a public event subscriber.
+
+- [x] **Step 2: Implement actions**
 
 Map:
 
@@ -204,11 +216,13 @@ Map:
 
 to provider APIs only where semantics match the existing `Agent` contract. Throwing is acceptable for programmer misuse, but normal unsupported provider features should be absent or no-op only if that matches existing adapter precedent.
 
-- [ ] **Step 3: Add Angular provider wiring**
+- [x] **Step 3: Add Angular provider wiring**
 
 If public or DI-supported, mirror the existing typed `AgentRef` overloads and factory config pattern from AG-UI/LangGraph.
 
-- [ ] **Step 4: Add public exports and docs only after approval**
+Decision: not applicable to the private proof. No DI/provider helper is added.
+
+- [x] **Step 4: Add public exports and docs only after approval**
 
 If the adapter is public:
 
@@ -218,16 +232,24 @@ npm run generate-api-docs
 
 Expected: generated API docs include the new bridge types. Commit generated docs with the public export.
 
+Decision: not applicable to the private proof. No public export is added, so API docs are unchanged.
+
 ## Task 5: Verification
 
 **Files:**
 - No additional files.
 
-- [ ] **Step 1: Run focused adapter tests**
+- [x] **Step 1: Run focused adapter tests**
 
 Run the new adapter test target or focused Vitest spec.
 
-- [ ] **Step 2: Run affected existing adapter/chat tests**
+Verified:
+
+```bash
+NX_DAEMON=false npx nx test chat --skip-nx-cache --outputStyle=static --testFile=src/lib/agent/signal-chat-resource-agent.spec.ts
+```
+
+- [x] **Step 2: Run affected existing adapter/chat tests**
 
 Run:
 
@@ -239,17 +261,36 @@ NX_DAEMON=false npx nx test chat --skip-nx-cache --outputStyle=static
 
 Expected: all pass. If the new bridge is in its own project, run its test/lint/build target as well.
 
-- [ ] **Step 3: Lint and build affected projects**
+Verified:
+
+```bash
+NX_DAEMON=false npx nx test ag-ui --skip-nx-cache --outputStyle=static
+NX_DAEMON=false npx nx test langgraph --skip-nx-cache --outputStyle=static
+NX_DAEMON=false npx nx test chat --skip-nx-cache --outputStyle=static
+```
+
+- [x] **Step 3: Lint and build affected projects**
 
 Run the smallest affected Nx lint/build targets. If API docs changed, verify generated docs are committed.
 
-- [ ] **Step 4: Forbidden-reference scan**
+Verified:
+
+```bash
+NX_DAEMON=false npx nx lint chat --skip-nx-cache --outputStyle=static
+NX_DAEMON=false npx nx build chat --skip-nx-cache --outputStyle=static
+```
+
+- [x] **Step 4: Forbidden-reference scan**
 
 Before committing code, run a staged diff scan excluding `docs/superpowers/**` and confirm no forbidden external framework names appear in code, comments, commit text, or PR text.
 
-- [ ] **Step 5: Diff audit**
+Verified with a staged diff scan excluding `docs/superpowers/**`; no forbidden references appeared in code or comments.
+
+- [x] **Step 5: Diff audit**
 
 Confirm the diff contains no unrelated refactors, no package dependency changes unless explicitly approved, and no behavior changes to existing AG-UI or LangGraph adapters.
+
+Verified: diff is limited to the private adapter proof, its tests, and this plan status update.
 
 ---
 
