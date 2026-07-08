@@ -3,6 +3,11 @@ export { action, view, ask, tools } from './tools';
 export { deriveJsonSchema } from './to-json-schema';
 export type {
   ClientToolContinuationOptions,
+  ClientToolContinuationLimitEvent,
+  ClientToolContinuationPolicy,
+  ClientToolLifecycle,
+  ClientToolLifecyclePhase,
+  ClientToolViewProps,
   ClientToolDef,
   ClientToolExecutionOptions,
   FunctionToolDef,

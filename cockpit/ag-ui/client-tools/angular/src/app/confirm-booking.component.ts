@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import type { ViewProps } from '@threadplane/chat';
+import type { ClientToolViewProps } from '@threadplane/chat';
 import { injectRenderHost } from '@threadplane/render';
 import { confirmBookingSchema } from './schemas';
 
@@ -16,12 +16,12 @@ import { confirmBookingSchema } from './schemas';
  * `confirmed()` is defined we render a FROZEN line with no buttons; the live
  * interactive card only shows while `confirmed()` is still undefined.
  *
- * Input types for schema-derived props are anchored to `ViewProps<typeof
+ * Input types for schema-derived props are anchored to `ClientToolViewProps<typeof
  * confirmBookingSchema>` — a schema change is a compile error here.
  */
 
 /** Props this component receives from the `confirm_booking` schema. */
-type ConfirmBookingProps = ViewProps<typeof confirmBookingSchema>;
+type ConfirmBookingProps = ClientToolViewProps<typeof confirmBookingSchema>;
 
 @Component({
   selector: 'app-confirm-booking',
@@ -29,7 +29,7 @@ type ConfirmBookingProps = ViewProps<typeof confirmBookingSchema>;
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (confirmed() === undefined) {
-      <div class="cb">
+      <div class="cb" [attr.data-phase]="clientTool()?.phase">
         <p class="cb__summary">{{ summary() }}</p>
         <div class="cb__actions">
           <button type="button" class="cb__btn cb__btn--primary" (click)="respond(true)">Confirm</button>
@@ -37,11 +37,11 @@ type ConfirmBookingProps = ViewProps<typeof confirmBookingSchema>;
         </div>
       </div>
     } @else if (confirmed() === true) {
-      <div class="cb cb--resolved">
+      <div class="cb cb--resolved" [attr.data-phase]="clientTool()?.phase">
         <p class="cb__summary">Booking confirmed ✓</p>
       </div>
     } @else {
-      <div class="cb cb--resolved">
+      <div class="cb cb--resolved" [attr.data-phase]="clientTool()?.phase">
         <p class="cb__summary">Booking cancelled</p>
       </div>
     }
@@ -61,6 +61,7 @@ export class ConfirmBookingComponent {
   readonly summary = input<ConfirmBookingProps['summary']>();
   /** Spread back onto props after the ask resolves (undefined while interactive). */
   readonly confirmed = input<boolean | undefined>(undefined);
+  readonly clientTool = input<ConfirmBookingProps['clientTool']>();
   private readonly host = injectRenderHost();
   protected respond(confirmed: boolean): void {
     this.host.result({ confirmed });

@@ -5,6 +5,7 @@ import type { Spec, StateStore } from '@json-render/core';
 import type { RenderEvent, ViewRegistry } from '@threadplane/render';
 import { toRenderRegistry } from '@threadplane/render';
 import type { Agent, Message, ToolCall } from '../../agent';
+import type { ClientToolLifecycle } from '../../client-tools/tool-def';
 import { resolveMessageToolCalls } from '../chat-tool-calls/resolve-message-tool-calls';
 import { ChatGenerativeUiComponent } from '../chat-generative-ui/chat-generative-ui.component';
 
@@ -71,9 +72,22 @@ function toToolViewSpec(tc: ToolCall): Spec {
     elements: {
       [tc.name]: {
         type: tc.name,
-        props: { ...args, ...result, status: tc.status },
+        props: { ...args, ...result, status: tc.status, clientTool: toClientToolLifecycle(tc) },
       },
     },
+  };
+}
+
+function toClientToolLifecycle(tc: ToolCall): ClientToolLifecycle {
+  const hasResult = tc.result !== undefined;
+  return {
+    id: tc.id,
+    name: tc.name,
+    status: tc.status,
+    phase: tc.status === 'error' ? 'error' : tc.status === 'complete' ? 'complete' : 'running',
+    hasResult,
+    ...(hasResult ? { result: tc.result } : {}),
+    ...(tc.error !== undefined ? { error: tc.error } : {}),
   };
 }
 

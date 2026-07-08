@@ -1822,6 +1822,18 @@
         "optional": false
       },
       {
+        "name": "clientToolContinuationLimit",
+        "type": "OutputEmitterRef<ClientToolContinuationLimitEvent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "clientToolContinuationPolicy",
+        "type": "InputSignal<ClientToolContinuationPolicy | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "clientToolExecutionGuard",
         "type": "InputSignal<ClientToolExecutionGuard | undefined>",
         "description": "",
@@ -6713,6 +6725,38 @@
     "examples": []
   },
   {
+    "name": "ClientToolContinuationLimitEvent",
+    "kind": "interface",
+    "description": "Diagnostic emitted when client-tool continuation would exceed the configured max turn count.",
+    "properties": [
+      {
+        "name": "attemptedTurn",
+        "type": "number",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "maxTurns",
+        "type": "number",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "toolCallIds",
+        "type": "readonly string[]",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "toolNames",
+        "type": "readonly string[]",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "ClientToolContinuationOptions",
     "kind": "interface",
     "description": "Execution policy options for browser-executed function tools.",
@@ -6721,6 +6765,26 @@
         "name": "followUp",
         "type": "boolean",
         "description": "False when the tool result should be recorded without forcing a continuation.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ClientToolContinuationPolicy",
+    "kind": "interface",
+    "description": "Policy for automatic client-tool continuation.",
+    "properties": [
+      {
+        "name": "maxTurns",
+        "type": "number",
+        "description": "Maximum consecutive client-tool continuation groups per user turn. Default: 10. Use 0 for unlimited.",
+        "optional": true
+      },
+      {
+        "name": "onLimit",
+        "type": "(event: ClientToolContinuationLimitEvent) => void",
+        "description": "Called when the max-turn guard stops a continuation group.",
         "optional": true
       }
     ],
@@ -6862,6 +6926,62 @@
         "type": "(toolCall: ToolCall, result: ClientToolResult) => void",
         "description": "",
         "optional": true
+      },
+      {
+        "name": "shouldExecuteToolCall",
+        "type": "(toolCall: ToolCall) => boolean",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ClientToolLifecycle",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "error",
+        "type": "unknown",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "hasResult",
+        "type": "boolean",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "phase",
+        "type": "ClientToolLifecyclePhase",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "result",
+        "type": "unknown",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "status",
+        "type": "ToolCallStatus",
+        "description": "",
+        "optional": false
       }
     ],
     "examples": []
@@ -8202,6 +8322,13 @@
     "examples": []
   },
   {
+    "name": "ClientToolLifecyclePhase",
+    "kind": "type",
+    "description": "",
+    "signature": "\"running\" | \"complete\" | \"error\"",
+    "examples": []
+  },
+  {
     "name": "ClientToolRegistry",
     "kind": "type",
     "description": "A frozen, name-keyed registry of client tools.",
@@ -8213,6 +8340,13 @@
     "kind": "type",
     "description": "The outcome of running a client tool.",
     "signature": "object | object",
+    "examples": []
+  },
+  {
+    "name": "ClientToolViewProps",
+    "kind": "type",
+    "description": "",
+    "signature": "StandardSchemaInferOutput<S> & { clientTool?: ClientToolLifecycle; status?: ToolCallStatus }",
     "examples": []
   },
   {

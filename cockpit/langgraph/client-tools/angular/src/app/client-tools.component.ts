@@ -29,10 +29,24 @@ const clientTools = tools({
     z.object({ location: z.string() }),
     async ({ location }) => ({ location, temperatureF: 68, conditions: 'Sunny', humidity: 55, windMph: 8 }),
   ),
+  slow_status_check: action(
+    'Run a cancellable local status check. Use when the user asks to test stopping a slow browser tool.',
+    z.object({ label: z.string().default('status check') }),
+    async ({ label }, { signal }) => {
+      await waitForAbortableDelay(3000, signal);
+      return { label, status: 'complete' };
+    },
+  ),
   weather_card: view(
     'Display a weather card for a location with the given readings.',
     weatherCardSchema,
     WeatherCardComponent,
+  ),
+  weather_snapshot: view(
+    'Display a weather card as a terminal snapshot without asking the assistant to summarize afterwards.',
+    weatherCardSchema,
+    WeatherCardComponent,
+    { followUp: false },
   ),
   confirm_booking: ask(
     'Ask the user to confirm a booking before finalizing it.',
@@ -40,6 +54,24 @@ const clientTools = tools({
     ConfirmBookingComponent,
   ),
 });
+
+function waitForAbortableDelay(ms: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal.aborted) {
+      reject(new DOMException('Aborted', 'AbortError'));
+      return;
+    }
+    const timeout = window.setTimeout(resolve, ms);
+    signal.addEventListener(
+      'abort',
+      () => {
+        window.clearTimeout(timeout);
+        reject(new DOMException('Aborted', 'AbortError'));
+      },
+      { once: true },
+    );
+  });
+}
 
 @Component({
   selector: 'app-client-tools',
