@@ -94,3 +94,135 @@ describe('FakeAgent — reasoningTokens', () => {
     expect(types).not.toContain('REASONING_MESSAGE_END');
   });
 });
+
+describe('FakeAgent — scripted streams', () => {
+  it('emits scripted tool-call events between RUN_STARTED and RUN_FINISHED', async () => {
+    const agent = new FakeAgent({
+      delayMs: 0,
+      script: [{
+        when: 'initial',
+        events: [
+          {
+            type: 'TOOL_CALL_START',
+            toolCallId: 'tool-1',
+            toolCallName: 'get_weather',
+            parentMessageId: 'assistant-1',
+          },
+          { type: 'TOOL_CALL_ARGS', toolCallId: 'tool-1', delta: '{"city":"SF"}' },
+          { type: 'TOOL_CALL_END', toolCallId: 'tool-1' },
+        ],
+      }],
+    });
+
+    const events = await lastValueFrom(
+      agent.run({ ...minimalInput, threadId: 'thread-script', runId: 'run-script' }).pipe(toArray()),
+    );
+
+    expect(events.map((e) => e.type)).toEqual([
+      EventType.RUN_STARTED,
+      'TOOL_CALL_START',
+      'TOOL_CALL_ARGS',
+      'TOOL_CALL_END',
+      EventType.RUN_FINISHED,
+    ]);
+    expect(events[0]).toMatchObject({ threadId: 'thread-script', runId: 'run-script' });
+    expect(events[1]).toMatchObject({
+      toolCallId: 'tool-1',
+      toolCallName: 'get_weather',
+      parentMessageId: 'assistant-1',
+    });
+    expect(events[4]).toMatchObject({ threadId: 'thread-script', runId: 'run-script' });
+  });
+
+  it('selects a continuation branch when history contains a matching tool message', async () => {
+    const agent = new FakeAgent({
+      delayMs: 0,
+      script: [
+        {
+          when: 'initial',
+          events: [
+            { type: 'TOOL_CALL_START', toolCallId: 'tool-1', toolCallName: 'get_weather' } as BaseEvent,
+            { type: 'TOOL_CALL_END', toolCallId: 'tool-1' } as BaseEvent,
+          ],
+        },
+        {
+          when: { toolMessageFor: 'tool-1' },
+          events: [
+            { type: EventType.TEXT_MESSAGE_START, messageId: 'assistant-2', role: 'assistant' } as BaseEvent,
+            { type: EventType.TEXT_MESSAGE_CONTENT, messageId: 'assistant-2', delta: 'continued' } as BaseEvent,
+            { type: EventType.TEXT_MESSAGE_END, messageId: 'assistant-2' } as BaseEvent,
+          ],
+        },
+      ],
+    });
+
+    const events = await lastValueFrom(
+      agent.run({
+        ...minimalInput,
+        messages: [{ role: 'tool', toolCallId: 'tool-1', content: '{"temp":70}' }] as never,
+      }).pipe(toArray()),
+    );
+
+    expect(events.map((e) => e.type)).toEqual([
+      EventType.RUN_STARTED,
+      EventType.TEXT_MESSAGE_START,
+      EventType.TEXT_MESSAGE_CONTENT,
+      EventType.TEXT_MESSAGE_END,
+      EventType.RUN_FINISHED,
+    ]);
+    expect(events[2]).toMatchObject({ delta: 'continued' });
+  });
+
+  it('emits scripted RUN_ERROR, STATE_SNAPSHOT, and CUSTOM interrupt events', async () => {
+    const interrupt = { kind: 'approval', amount: 42 };
+    const agent = new FakeAgent({
+      delayMs: 0,
+      script: [{
+        when: 'initial',
+        events: [
+          { type: EventType.STATE_SNAPSHOT, snapshot: { fresh: 1 } } as BaseEvent,
+          { type: EventType.CUSTOM, name: 'on_interrupt', value: interrupt } as BaseEvent,
+          { type: EventType.RUN_ERROR, message: 'boom' } as BaseEvent,
+        ],
+      }],
+    });
+
+    const events = await lastValueFrom(agent.run(minimalInput).pipe(toArray()));
+
+    expect(events.map((e) => e.type)).toEqual([
+      EventType.RUN_STARTED,
+      EventType.STATE_SNAPSHOT,
+      EventType.CUSTOM,
+      EventType.RUN_ERROR,
+      EventType.RUN_FINISHED,
+    ]);
+    expect(events[1]).toMatchObject({ snapshot: { fresh: 1 } });
+    expect(events[2]).toMatchObject({ name: 'on_interrupt', value: interrupt });
+    expect(events[3]).toMatchObject({ message: 'boom' });
+  });
+
+  it('cancels scripted emissions when unsubscribed', async () => {
+    vi.useFakeTimers();
+    const agent = new FakeAgent({
+      delayMs: 100,
+      script: [{
+        when: 'initial',
+        events: [
+          { type: 'TOOL_CALL_START', toolCallId: 'tool-1', toolCallName: 'get_weather' } as BaseEvent,
+          { type: 'TOOL_CALL_ARGS', toolCallId: 'tool-1', delta: '{"city":"SF"}' } as BaseEvent,
+          { type: 'TOOL_CALL_END', toolCallId: 'tool-1' } as BaseEvent,
+        ],
+      }],
+    });
+    const seen: BaseEvent[] = [];
+
+    const sub = agent.run(minimalInput).subscribe((e) => seen.push(e));
+    vi.advanceTimersByTime(50);
+    sub.unsubscribe();
+    vi.advanceTimersByTime(1000);
+
+    expect(seen).toHaveLength(1);
+    expect(seen[0].type).toBe(EventType.RUN_STARTED);
+    vi.useRealTimers();
+  });
+});

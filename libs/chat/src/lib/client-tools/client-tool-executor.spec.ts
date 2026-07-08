@@ -66,6 +66,16 @@ const weatherRegistry = tools({
   ),
 });
 
+const failingRegistry = tools({
+  explode: action(
+    'Throw from the handler',
+    z.object({ value: z.string() }),
+    async () => {
+      throw new Error('handler exploded');
+    },
+  ),
+});
+
 // ── tests ─────────────────────────────────────────────────────────────────────
 
 describe('startClientToolExecutor()', () => {
@@ -90,6 +100,51 @@ describe('startClientToolExecutor()', () => {
 
     expect(resolve).toHaveBeenCalledOnce();
     expect(resolve).toHaveBeenCalledWith('c1', { ok: true, value: { temp: 70, city: 'SF' } });
+  });
+
+  it('normalizes handler throws to an error result', async () => {
+    const { pending, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+
+    TestBed.runInInjectionContext(() => {
+      startClientToolExecutor(agent, failingRegistry);
+    });
+
+    pending.set([{ id: 'e1', name: 'explode', args: { value: 'x' }, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(resolve).toHaveBeenCalledWith('e1', {
+      ok: false,
+      error: 'handler exploded',
+    });
+  });
+
+  it('normalizes invalid arguments to an error result without calling the handler', async () => {
+    const handler = vi.fn(async (a: { city: string }) => ({ temp: 70, city: a.city }));
+    const registry = tools({
+      get_weather: action(
+        'Get the weather for a city',
+        z.object({ city: z.string() }),
+        handler,
+      ),
+    });
+    const { pending, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+
+    TestBed.runInInjectionContext(() => {
+      startClientToolExecutor(agent, registry);
+    });
+
+    pending.set([{ id: 'bad-args', name: 'get_weather', args: { city: 123 }, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(handler).not.toHaveBeenCalled();
+    expect(resolve).toHaveBeenCalledOnce();
+    expect(resolve.mock.calls[0][0]).toBe('bad-args');
+    expect(resolve.mock.calls[0][1].ok).toBe(false);
+    expect((resolve.mock.calls[0][1] as { error: string }).error).toContain('invalid arguments:');
   });
 
   it('does not double-resolve the same call id (in-flight guard)', async () => {

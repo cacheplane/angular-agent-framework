@@ -266,6 +266,28 @@ describe('createClientToolsCapability', () => {
     expect(remaining[0].id).toBe('c2');
   });
 
+  it('resolving multiple pending calls issues one submit per resolve', async () => {
+    const submitFn = makeSubmitFn();
+    const store    = makeStore({ isLoading: false });
+    const cap      = createClientToolsCapability(submitFn, store);
+    cap.setCatalog([WEATHER_SPEC]);
+    store.toolCallsSig.set([
+      { id: 'c1', name: 'get_weather', args: {}, status: 'complete' },
+      { id: 'c2', name: 'get_weather', args: {}, status: 'complete' },
+    ]);
+
+    cap.resolve('c1', { ok: true, value: { temp: 70 } });
+    cap.resolve('c2', { ok: true, value: { temp: 71 } });
+    await Promise.resolve();
+
+    expect(submitFn).toHaveBeenCalledTimes(2);
+    const payloads = (submitFn as unknown as ReturnType<typeof vi.fn>).mock.calls
+      .map(([payload]) => payload as Record<string, unknown>);
+    expect(payloads.map((payload) => (
+      (payload['messages'] as Record<string, unknown>[])[0]['tool_call_id']
+    ))).toEqual(['c1', 'c2']);
+  });
+
   // ── resolve — error result ──────────────────────────────────────────────────
 
   it('resolve(error) issues a run whose tool message content contains the error', async () => {
