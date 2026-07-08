@@ -2,7 +2,12 @@
 import { computed, signal } from '@angular/core';
 import type { AbstractAgent } from '@ag-ui/client';
 import type { Tool, Message } from '@ag-ui/core';
-import type { ClientToolsCapability, ClientToolResult, ClientToolSpec } from '@threadplane/chat';
+import {
+  selectPendingClientToolCalls,
+  type ClientToolsCapability,
+  type ClientToolResult,
+  type ClientToolSpec,
+} from '@threadplane/chat';
 import type { ReducerStore } from './reducer';
 
 /**
@@ -63,12 +68,12 @@ export function createClientToolsCapability(
     pending: computed(() => {
       // Client tools are only actionable after the run ends (backend signals it
       // by ending the run WITHOUT emitting TOOL_CALL_RESULT for client tools).
-      if (store.isLoading()) return [];
-      const names = new Set(catalog().map((s) => s.name));
-      const done = resolvedIds();
-      return store.toolCalls().filter(
-        (tc) => names.has(tc.name) && tc.result === undefined && !done.has(tc.id),
-      );
+      return selectPendingClientToolCalls({
+        isLoading: store.isLoading(),
+        toolCalls: store.toolCalls(),
+        catalogNames: new Set(catalog().map((s) => s.name)),
+        resolvedIds: resolvedIds(),
+      });
     }),
 
     resolve(id: string, result: ClientToolResult): void {
