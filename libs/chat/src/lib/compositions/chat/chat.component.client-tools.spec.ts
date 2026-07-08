@@ -5,7 +5,7 @@ import { Injector, runInInjectionContext, signal, type WritableSignal } from '@a
 import { z } from 'zod/v4';
 import { ChatComponent } from './chat.component';
 import { mockAgent, type MockAgent } from '../../testing/mock-agent';
-import { tools, action, ask } from '../../client-tools/tools';
+import { tools, action, view, ask } from '../../client-tools/tools';
 import type { ClientToolsCapability, ClientToolResult } from '../../client-tools/client-tools-capability';
 import type { ClientToolSpec } from '../../client-tools/to-json-schema';
 import type { ToolCall } from '../../agent/tool-call';
@@ -31,6 +31,7 @@ function setSignalInput<T>(sig: unknown, value: T): void {
 }
 
 class FakeAskComponent {}
+class FakeViewComponent {}
 
 interface FakeCap {
   pending: WritableSignal<readonly ToolCall[]>;
@@ -54,11 +55,40 @@ function agentWithClientTools(cap: ClientToolsCapability): MockAgent {
   return agent;
 }
 
+interface ScriptedAgent {
+  agent: MockAgent;
+  emitPending(call: ToolCall): void;
+  resolve: ReturnType<typeof vi.fn<[string, ClientToolResult], void>>;
+  setCatalog: ReturnType<typeof vi.fn<[readonly ClientToolSpec[]], void>>;
+}
+
+function makeScriptedClientToolAgent(): ScriptedAgent {
+  const pending = signal<readonly ToolCall[]>([]);
+  const resolve = vi.fn<[string, ClientToolResult], void>((id) => {
+    pending.update((calls) => calls.filter((call) => call.id !== id));
+  });
+  const setCatalog = vi.fn<[readonly ClientToolSpec[]], void>();
+  const capability: ClientToolsCapability = { setCatalog, pending, resolve };
+  return {
+    agent: agentWithClientTools(capability),
+    emitPending(call: ToolCall): void {
+      pending.set([call]);
+    },
+    resolve,
+    setCatalog,
+  };
+}
+
 const clientToolRegistry = tools({
   get_weather: action(
     'Get the weather',
     z.object({ city: z.string() }),
     async (a) => ({ temp: 70, city: a.city }),
+  ),
+  weather_card: view(
+    'Show weather details',
+    z.object({ city: z.string() }),
+    FakeViewComponent as never,
   ),
   confirm: ask(
     'Confirm an action',
@@ -94,6 +124,7 @@ describe('ChatComponent — client-tools wiring', () => {
     expect(cap.setCatalog).toHaveBeenCalledOnce();
     const names = (cap.setCatalog.mock.calls[0][0] as ClientToolSpec[]).map((s) => s.name);
     expect(names).toContain('get_weather');
+    expect(names).toContain('weather_card');
     expect(names).toContain('confirm');
   });
 
@@ -103,7 +134,9 @@ describe('ChatComponent — client-tools wiring', () => {
       setSignalInput(c.clientTools, clientToolRegistry);
       setSignalInput(c.agent, agentWithClientTools(makeFakeCapability().capability));
       // ask-kind tool is a view component → excluded; function tools are not.
+      expect(c.viewToolNames()).toContain('weather_card');
       expect(c.viewToolNames()).toContain('confirm');
+      expect(c.excludedToolNames()).toContain('weather_card');
       expect(c.excludedToolNames()).toContain('confirm');
       expect(c.viewToolNames()).not.toContain('get_weather');
     });
@@ -157,6 +190,64 @@ describe('ChatComponent — client-tools wiring', () => {
     });
 
     expect(cap.resolve).toHaveBeenCalledWith('a1', { ok: true, value: { confirmed: true } });
+  });
+
+  it('drives action, view, and ask client tools through the coordinator with a scripted agent', async () => {
+    const scripted = makeScriptedClientToolAgent();
+    let comp!: ChatComponent;
+    runInInjectionContext(injector, () => {
+      comp = new ChatComponent();
+      setSignalInput(comp.clientTools, clientToolRegistry);
+      setSignalInput(comp.agent, scripted.agent);
+      TestBed.flushEffects();
+    });
+    await drainMicrotasks();
+
+    expect(scripted.setCatalog).toHaveBeenCalledOnce();
+
+    scripted.emitPending({
+      id: 'script-action',
+      name: 'get_weather',
+      args: { city: 'SF' },
+      status: 'complete',
+    });
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(scripted.resolve).toHaveBeenCalledWith('script-action', {
+      ok: true,
+      value: { temp: 70, city: 'SF' },
+    });
+
+    scripted.emitPending({
+      id: 'script-view',
+      name: 'weather_card',
+      args: { city: 'LA' },
+      status: 'complete',
+    });
+    TestBed.flushEffects();
+
+    expect(scripted.resolve).toHaveBeenCalledWith('script-view', {
+      ok: true,
+      value: { shown: true },
+    });
+
+    scripted.emitPending({
+      id: 'script-ask',
+      name: 'confirm',
+      args: {},
+      status: 'complete',
+    });
+    (comp as unknown as { onClientToolEvent: (e: unknown) => void }).onClientToolEvent({
+      type: 'result',
+      value: { confirmed: true },
+      elementKey: 'confirm',
+    });
+
+    expect(scripted.resolve).toHaveBeenCalledWith('script-ask', {
+      ok: true,
+      value: { confirmed: true },
+    });
   });
 
   it('is a no-op when no clientTools registry is provided', async () => {
