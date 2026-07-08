@@ -39,6 +39,14 @@ export const CHAT_SIDENAV_STYLES = `
     bottom: 0;
     width: var(--tplane-chat-sidenav-width-drawer);
     z-index: var(--tplane-chat-z-drawer, 1001);
+    /* The host is a fixed, drawer-width, full-height box at z-index 1001 that
+     * stays put whether or not the drawer is open — only the inner .chat-sidenav
+     * PANEL slides off-screen (translateX(-100%)) when closed. Without this, the
+     * transparent closed host still intercepts clicks over the left strip of the
+     * content beneath it (e.g. App-mode forces drawer on desktop, so it covered
+     * the itinerary overlay + welcome suggestions). Make the host inert; the
+     * on-screen panel re-enables pointer events below. */
+    pointer-events: none;
   }
   :host([data-mode="drawer"][data-open="true"]) {
     box-shadow: 8px 0 32px rgba(0, 0, 0, 0.18);
@@ -57,6 +65,10 @@ export const CHAT_SIDENAV_STYLES = `
     height: 100%;
     transition: transform 200ms ease;
     transform: translateX(-100%);
+    /* Re-enable pointer events on the panel itself (host is inert above). When
+     * closed the panel is translated off-screen so this is harmless; when open
+     * it covers the host box and stays fully interactive. */
+    pointer-events: auto;
   }
   :host([data-mode="drawer"][data-open="true"]) .chat-sidenav {
     transform: translateX(0);
