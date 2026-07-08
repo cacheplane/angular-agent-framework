@@ -35,6 +35,8 @@ test('sources panel is collapsed by default and expands to the cited sources', a
   await expect(cards.nth(0)).toContainText('Signals');
   await expect(cards.nth(1)).toContainText('RxJS interop');
   await expect(cards.nth(2)).toContainText('control flow');
+  await expect(cards.nth(2).locator('.chat-citation-type-badge')).toContainText('File');
+  await expect(cards.nth(2).locator('.chat-citation-source-icon--file')).toBeVisible();
   // Cards are links to the source (the card element itself is the <a>).
   await expect(cards.nth(0)).toHaveAttribute('href', /angular\.dev\/guide\/signals/);
 });
@@ -42,12 +44,15 @@ test('sources panel is collapsed by default and expands to the cited sources', a
 test('focusing a marker opens the portaled provenance preview card', async ({ page }) => {
   const bubble = await sendPromptAndWait(page, PROMPT);
 
-  // Focus (deterministic across pointer types) opens the preview.
-  await bubble.locator('a.chat-citation-marker').first().focus();
+  const fileMarker = bubble.locator('a.chat-citation-marker').filter({ hasText: '3' });
+  await expect(fileMarker).toHaveCount(1);
+  await fileMarker.focus();
 
   // The preview is portaled to the body-level overlay container, not the bubble.
   const preview = page.locator('.chat-citation-preview');
   await expect(preview).toBeVisible();
+  await expect(preview.locator('.chat-citation-type-badge')).toContainText('File');
+  await expect(preview.locator('.chat-citation-source-icon--file')).toBeVisible();
   await expect(preview.locator('.chat-citation-preview__domain')).toContainText('angular.dev');
   await expect(preview.locator('.chat-citation-preview__open')).toBeVisible();
 });

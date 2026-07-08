@@ -217,6 +217,7 @@ DOCUMENTS = [
         "id": "ng-control-flow",
         "title": "Built-in control flow — @if, @for, @switch",
         "url": "https://angular.dev/guide/templates/control-flow",
+        "sourceType": "file",
         "snippet": "Native template control flow replaces structural directives like *ngIf and *ngFor with built-in syntax.",
     },
     {
@@ -809,15 +810,20 @@ async def attach_citations(state: State) -> dict:
                     # search_documents tool would never produce.
                     if not any(k in h for k in ("title", "url", "snippet")):
                         continue
-                    citations.append(
-                        {
-                            "id": h.get("id") or f"c{i+1}",
-                            "index": i + 1,
-                            "title": h.get("title"),
-                            "url": h.get("url"),
-                            "snippet": h.get("snippet"),
-                        }
-                    )
+                    citation = {
+                        "id": h.get("id") or f"c{i+1}",
+                        "index": i + 1,
+                        "title": h.get("title"),
+                        "url": h.get("url"),
+                        "snippet": h.get("snippet"),
+                    }
+                    if "sourceType" in h and h["sourceType"] is not None:
+                        citation["sourceType"] = h["sourceType"]
+                    if "iconUrl" in h and h["iconUrl"] is not None:
+                        citation["iconUrl"] = h["iconUrl"]
+                    if "publishedAt" in h and h["publishedAt"] is not None:
+                        citation["publishedAt"] = h["publishedAt"]
+                    citations.append(citation)
             break  # only the most recent ToolMessage batch
         elif isinstance(m, AIMessage):
             break

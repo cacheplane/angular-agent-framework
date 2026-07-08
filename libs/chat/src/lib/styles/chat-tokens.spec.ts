@@ -114,10 +114,54 @@ describe('ROOT_TOKEN_STYLES — citation tokens', () => {
     '--tplane-chat-citation-marker-border:',
     '--tplane-chat-citation-marker-fg:',
     '--tplane-chat-citation-radius:',
+    '--tplane-chat-citation-type-web-fg:',
+    '--tplane-chat-citation-type-web-bg:',
+    '--tplane-chat-citation-type-web-border:',
+    '--tplane-chat-citation-type-file-fg:',
+    '--tplane-chat-citation-type-file-bg:',
+    '--tplane-chat-citation-type-file-border:',
+    '--tplane-chat-citation-type-app-fg:',
+    '--tplane-chat-citation-type-app-bg:',
+    '--tplane-chat-citation-type-app-border:',
+    '--tplane-chat-citation-type-memory-fg:',
+    '--tplane-chat-citation-type-memory-bg:',
+    '--tplane-chat-citation-type-memory-border:',
+    '--tplane-chat-citation-type-generic-fg:',
+    '--tplane-chat-citation-type-generic-bg:',
+    '--tplane-chat-citation-type-generic-border:',
   ])('defines %s', (decl) => {
     expect(ROOT_TOKEN_STYLES).toContain(decl);
   });
+
+  it.each([
+    ['web', '#1d4ed8', '#eaf1fd'],
+    ['file', '#2f684c', '#edf7f1'],
+    ['app', '#7a4d12', '#fff5e3'],
+    ['memory', '#67508f', '#f3effb'],
+    ['generic', '#526071', '#f4f6f8'],
+  ])('keeps light %s citation type text at AA contrast', (_type, fg, bg) => {
+    expect(contrastRatio(fg, bg)).toBeGreaterThanOrEqual(4.5);
+  });
 });
+
+function relativeLuminance(hex: string): number {
+  const [r, g, b] = hex
+    .replace('#', '')
+    .match(/../g)!
+    .map((part) => {
+      const channel = parseInt(part, 16) / 255;
+      return channel <= 0.03928
+        ? channel / 12.92
+        : ((channel + 0.055) / 1.055) ** 2.4;
+    });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function contrastRatio(foreground: string, background: string): number {
+  const fg = relativeLuminance(foreground);
+  const bg = relativeLuminance(background);
+  return (Math.max(fg, bg) + 0.05) / (Math.min(fg, bg) + 0.05);
+}
 
 describe('ROOT_TOKEN_STYLES — theme attribute selectors', () => {
   it.each([

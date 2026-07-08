@@ -39,6 +39,53 @@ describe('bridgeCitationsState', () => {
     ]);
   });
 
+  it('preserves sourceType, iconUrl and publishedAt object fields', () => {
+    const result = bridgeCitationsState(
+      {
+        state: {
+          citations: {
+            m1: [
+              {
+                id: 'file1',
+                title: 'Local file',
+                sourceType: 'file',
+                iconUrl: 'data:image/svg+xml;base64,AAA',
+                publishedAt: '2024-04-10',
+              },
+            ],
+          },
+        },
+      },
+      [baseMsg('m1')],
+    );
+    expect(result[0].citations?.[0]).toMatchObject({
+      id: 'file1',
+      index: 1,
+      title: 'Local file',
+      sourceType: 'file',
+      iconUrl: 'data:image/svg+xml;base64,AAA',
+      publishedAt: '2024-04-10',
+    });
+  });
+
+  it('preserves numeric publishedAt and omits invalid publishedAt objects', () => {
+    const result = bridgeCitationsState(
+      {
+        state: {
+          citations: {
+            m1: [
+              { id: 'n', publishedAt: 1712707200000 },
+              { id: 'bad', publishedAt: {} },
+            ],
+          },
+        },
+      },
+      [baseMsg('m1')],
+    );
+    expect(result[0].citations?.[0].publishedAt).toBe(1712707200000);
+    expect(result[0].citations?.[1].publishedAt).toBeUndefined();
+  });
+
   it('handles string entries', () => {
     const result = bridgeCitationsState(
       { state: { citations: { m1: ['https://x'] } } },

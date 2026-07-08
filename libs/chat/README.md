@@ -149,6 +149,9 @@ interface Citation {
   title?: string;
   url?: string;
   snippet?: string;
+  sourceType?: string; // 'web' | 'file' | 'app' | 'memory' | custom
+  iconUrl?: string;    // provider-supplied favicon/logo URL or data URI
+  publishedAt?: string | number | Date;
   extra?: unknown;    // adapter-specific fields
 }
 ```
@@ -167,6 +170,7 @@ Use `<chat-citations>` to render a collapsible sources panel under assistant mes
 Inline citation markers are rendered automatically by `MarkdownCitationReferenceComponent` inside streaming markdown output — superscript indices link to the corresponding card in the sources panel.
 
 `CitationsResolverService` resolves raw `Citation` references into `ResolvedCitation` objects with full source metadata.
+Citation display helpers derive the visible source type badge from `sourceType` and fall back to `web` when a URL is present.
 
 **Adapter integration:**
 - **LangGraph** — reads from `message.additional_kwargs.citations` (preferred) or `.sources` (fallback).

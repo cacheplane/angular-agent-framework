@@ -46,12 +46,20 @@ function normalizeCitation(entry: unknown, fallbackIndex: number): Citation {
     }
     return undefined;
   };
+  const publishedAt = e['publishedAt'];
+  const normalizedPublishedAt =
+    typeof publishedAt === 'string' || typeof publishedAt === 'number' || publishedAt instanceof Date
+      ? publishedAt
+      : undefined;
   return {
     id: str('id') ?? str('refId') ?? `c${fallbackIndex}`,
     index: typeof e['index'] === 'number' ? (e['index'] as number) : fallbackIndex,
     title: firstStr('title', 'name'),
     url: firstStr('url', 'href', 'source'),
     snippet: firstStr('snippet', 'content', 'excerpt'),
+    sourceType: str('sourceType'),
+    iconUrl: str('iconUrl'),
+    publishedAt: normalizedPublishedAt,
     extra:
       typeof e['extra'] === 'object' && e['extra'] !== null
         ? (e['extra'] as Record<string, unknown>)

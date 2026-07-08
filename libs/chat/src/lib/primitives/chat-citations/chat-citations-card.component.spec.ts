@@ -47,4 +47,31 @@ describe('ChatCitationsCardComponent', () => {
     const el = render({ id: 'a', index: 1, url: 'https://angular.dev' });
     expect(el.querySelector('.chat-citations-card__fav--mono')?.textContent?.trim()).toBe('A');
   });
+
+  it('renders a known non-web source type icon and badge', () => {
+    const el = render({ id: 'a', index: 1, title: 'Local file', sourceType: 'file' });
+    const sourceIcon = el.querySelector('.chat-citation-source-icon--file');
+    expect(sourceIcon).toBeTruthy();
+    expect(sourceIcon?.getAttribute('aria-hidden')).toBe('true');
+    expect(el.querySelector('.chat-citations-card__type')?.textContent?.trim()).toBe('File');
+  });
+
+  it('renders a generic source type icon and readable badge for custom types', () => {
+    const el = render({ id: 'a', index: 1, title: 'Company memo', sourceType: 'company-knowledge' });
+    expect(el.querySelector('.chat-citation-source-icon--generic')).toBeTruthy();
+    expect(el.querySelector('.chat-citations-card__type')?.textContent?.trim()).toBe('Company knowledge');
+  });
+
+  it('keeps web sources without iconUrl on the monogram fallback', () => {
+    const el = render({ id: 'a', index: 1, url: 'https://angular.dev' });
+    expect(el.querySelector('.chat-citations-card__fav--mono')?.textContent?.trim()).toBe('A');
+    expect(el.querySelector('.chat-citation-source-icon--web')).toBeNull();
+  });
+
+  it('renders an <img> favicon when iconUrl is supplied', () => {
+    const el = render({ id: 'a', index: 1, url: 'https://angular.dev', iconUrl: 'data:image/png;base64,AAA' });
+    expect(el.querySelector('img.chat-citations-card__fav')).toBeTruthy();
+    expect(el.querySelector('.chat-citations-card__fav--mono')).toBeNull();
+    expect(el.querySelector('.chat-citation-source-icon')).toBeNull();
+  });
 });
