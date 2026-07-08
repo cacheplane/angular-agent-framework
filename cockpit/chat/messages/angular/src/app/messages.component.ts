@@ -39,7 +39,7 @@ import { MESSAGES_AGENT, type MessagesState } from './agent-ref';
     ExampleChatLayoutComponent,
   ],
   template: `
-    <example-chat-layout sidebarWidth="w-72">
+    <example-chat-layout sidebarWidth="18rem">
       <div main class="flex-1 flex flex-col min-w-0">
         <header class="px-4 py-3 border-b" style="border-color: var(--tplane-chat-separator); background: var(--tplane-chat-bg);">
           <h1 class="text-sm font-semibold" style="color: var(--tplane-chat-text);">Chat Messages Primitives</h1>

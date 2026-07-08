@@ -4,7 +4,7 @@
 // bindings dropped, PR #773 "[object Object]" flash for unresolved bindings).
 //
 // The demo view components in every render/* example bind element props
-// (`content`, `value`) that resolve — via $state/$fn — to non-string values
+// (`content`, `value`) that resolve — via $state/$computed — to non-string values
 // (numbers, or, mid-stream, unresolved objects). Displaying those raw either
 // dropped the value (string-only coercion) or rendered "[object Object]".
 // The fix routes them through the shared `toDisplayText` helper.
