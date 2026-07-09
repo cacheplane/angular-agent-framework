@@ -195,6 +195,10 @@ The most common mistake is providing `'code'` as an override key — it does not
 | `'table-row'` | Table row (`<tr>`) |
 | `'table-cell'` | Table header or data cell (`<th>` / `<td>`) |
 
+<Callout type="info" title="Table row and cell overrides">
+The built-in `'table'` renderer emits native `<tr>`, `<th>`, and `<td>` elements directly so streamed rows stay attached to the same browser table. Override the `'table'` key when you need to change the built-in table structure. The `'table-row'` and `'table-cell'` keys remain available for custom renderers or direct row/cell rendering, but the default table renderer does not dispatch its child rows through those registry entries.
+</Callout>
+
 ## Theming Markdown Components
 
 All built-in markdown view components consume the same `--tplane-chat-*` and `--a2ui-*` CSS custom properties as the rest of the chat UI. No extra tokens are needed — changing the active theme automatically re-styles markdown output. See the [chat theming guide](/docs/chat/guides/theming) for the full token reference.
