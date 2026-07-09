@@ -6,8 +6,6 @@ import { Component, signal } from '@angular/core';
 import { views } from '@threadplane/render';
 import type { MarkdownTableCellNode, MarkdownTableNode, MarkdownTableRowNode } from '@cacheplane/partial-markdown';
 import { MarkdownTableComponent } from './markdown-table.component';
-import { MarkdownTableRowComponent } from './markdown-table-row.component';
-import { MarkdownTableCellComponent } from './markdown-table-cell.component';
 import { MARKDOWN_VIEW_REGISTRY } from '../markdown-view-registry';
 
 function makeTableNode(overrides: Partial<MarkdownTableNode> = {}): MarkdownTableNode {
@@ -55,13 +53,7 @@ describe('MarkdownTableComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HostComponent],
-      providers: [{
-        provide: MARKDOWN_VIEW_REGISTRY,
-        useValue: views({
-          'table-row': MarkdownTableRowComponent,
-          'table-cell': MarkdownTableCellComponent,
-        }),
-      }],
+      providers: [{ provide: MARKDOWN_VIEW_REGISTRY, useValue: views({}) }],
     });
   });
 
