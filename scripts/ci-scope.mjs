@@ -59,9 +59,10 @@ function tagToScopeKey(tag) {
  * @returns {Record<string, boolean>} scope booleans keyed by SCOPE_KEYS
  */
 export function classifyFromAffected(changedFiles, affectedProjects) {
-  for (const f of changedFiles) {
-    if (GLOBAL_CI_FILES.has(f)) return fullScope();
+  if (hasGlobalCiFileChange(changedFiles)) {
+    return fullScope();
   }
+
   const scope = emptyScope();
   for (const project of affectedProjects) {
     for (const tag of project.tags ?? []) {
@@ -74,6 +75,10 @@ export function classifyFromAffected(changedFiles, affectedProjects) {
     for (const key of LINT_SCOPE_KEYS) scope[key] = true;
   }
   return scope;
+}
+
+export function hasGlobalCiFileChange(changedFiles) {
+  return changedFiles.some((f) => GLOBAL_CI_FILES.has(f));
 }
 
 function changedFilesBetween(base, head, workspaceRoot) {
@@ -135,6 +140,14 @@ function main() {
   }
 
   const changedFiles = changedFilesBetween(args.base, args.head, workspaceRoot);
+  if (hasGlobalCiFileChange(changedFiles)) {
+    console.log('Changed files:');
+    for (const f of changedFiles) console.log(`  ${f}`);
+    writeOutputs(fullScope(), args.output);
+    console.log('Global CI file changed; running the full CI suite.');
+    return;
+  }
+
   const affectedProjects = loadAffectedProjects(args.base, args.head, workspaceRoot);
   const scope = classifyFromAffected(changedFiles, affectedProjects);
 

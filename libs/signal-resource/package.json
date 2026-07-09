@@ -1,0 +1,28 @@
+{
+  "name": "@threadplane/signal-resource",
+  "version": "0.0.56",
+  "description": "Signal-backed chat resource adapter for @threadplane/chat.",
+  "keywords": [
+    "angular",
+    "signals",
+    "agent",
+    "adapter",
+    "threadplane"
+  ],
+  "peerDependencies": {
+    "@threadplane/chat": "*",
+    "@angular/core": "^20.0.0 || ^21.0.0",
+    "rxjs": "~7.8.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cacheplane/angular-agent-framework.git",
+    "directory": "libs/signal-resource"
+  },
+  "homepage": "https://github.com/cacheplane/angular-agent-framework#readme",
+  "bugs": {
+    "url": "https://github.com/cacheplane/angular-agent-framework/issues"
+  },
+  "sideEffects": false
+}

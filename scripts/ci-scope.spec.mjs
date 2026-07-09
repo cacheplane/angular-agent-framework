@@ -5,6 +5,7 @@ import {
   classifyFromAffected,
   emptyScope,
   fullScope,
+  hasGlobalCiFileChange,
   SCOPE_KEYS,
 } from './ci-scope.mjs';
 
@@ -21,6 +22,11 @@ const EXAMPLES_CHAT_TAGS = ['scope:examples-chat'];
 const POSTHOG_TAGS = ['scope:posthog'];
 
 describe('classifyFromAffected — short-circuit', () => {
+  it('detects global CI files before affected project lookup is needed', () => {
+    assert.equal(hasGlobalCiFileChange(['nx.json']), true);
+    assert.equal(hasGlobalCiFileChange(['libs/chat/src/foo.ts']), false);
+  });
+
   it('returns full scope when a global CI file changes', () => {
     const scope = classifyFromAffected(['.github/workflows/ci.yml'], []);
     assert.deepEqual(scope, fullScope());

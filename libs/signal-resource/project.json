@@ -1,0 +1,57 @@
+{
+  "name": "signal-resource",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/signal-resource/src",
+  "prefix": "signal-resource",
+  "projectType": "library",
+  "tags": [
+    "scope:cockpit",
+    "scope:cockpit-deploy-smoke",
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples",
+    "scope:cockpit-smoke",
+    "scope:examples-chat",
+    "scope:library",
+    "scope:website",
+    "scope:website-e2e"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:package",
+      "outputs": [
+        "{workspaceRoot}/dist/{projectRoot}"
+      ],
+      "options": {
+        "project": "libs/signal-resource/ng-package.json",
+        "tsConfig": "libs/signal-resource/tsconfig.lib.json"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "libs/signal-resource/tsconfig.lib.prod.json"
+        },
+        "development": {}
+      },
+      "defaultConfiguration": "production"
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "dist/{projectRoot}"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "options": {
+        "configFile": "libs/signal-resource/vite.config.mts"
+      }
+    },
+    "type-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsc --noEmit -p libs/signal-resource/tsconfig.type-tests.json"
+      }
+    }
+  }
+}
