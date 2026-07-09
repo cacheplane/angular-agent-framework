@@ -65,13 +65,14 @@ export const CHAT_SIDENAV_STYLES = `
     height: 100%;
     transition: transform 200ms ease;
     transform: translateX(-100%);
-    /* Re-enable pointer events on the panel itself (host is inert above). When
-     * closed the panel is translated off-screen so this is harmless; when open
-     * it covers the host box and stays fully interactive. */
-    pointer-events: auto;
+    /* Keep the closed/closing panel inert. The host is inert above, and the
+     * panel can still be hit during its transform transition unless pointer
+     * events are restored only for the open state below. */
+    pointer-events: none;
   }
   :host([data-mode="drawer"][data-open="true"]) .chat-sidenav {
     transform: translateX(0);
+    pointer-events: auto;
   }
   .chat-sidenav__header {
     flex-shrink: 0;

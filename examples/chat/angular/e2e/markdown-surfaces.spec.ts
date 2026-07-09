@@ -62,6 +62,29 @@ test('markdown checklist matrix: rich markdown renders with escaped html', async
   await expect(bubble).toContainText("<script>alert('xss')</script>");
 });
 
+test('blockquote followed by table stays in one rendered markdown surface', async ({ page }) => {
+  const bubble = await sendPromptAndWait(
+    page,
+    'Give me a blockquote with two lines, then a markdown table with columns issue, expected behavior, verification.',
+  );
+
+  await expect(bubble.locator('blockquote')).toHaveCount(1);
+  await expect(bubble.locator('blockquote')).toContainText('First quoted line');
+  await expect(bubble.locator('blockquote')).toContainText('Second quoted line');
+  await expect(bubble.locator('table')).toHaveCount(1);
+  await expect(bubble.locator('thead th')).toHaveText([
+    'Issue',
+    'Expected behavior',
+    'Verification',
+  ]);
+  await expect(bubble.locator('tbody tr')).toHaveCount(3);
+  await expect.poll(async () => tableColumnsAlign(bubble)).toBe(true);
+  await expect(
+    bubble.locator('p').filter({ hasText: /\|/ }),
+    'table rows should not render as raw pipe paragraphs',
+  ).toHaveCount(0);
+});
+
 test('streaming markdown table: keeps in-progress rows inside one table', async ({ page }) => {
   const hygiene = attachBrowserHygiene(page);
   await sendPrompt(page, 'stream a markdown comparison table regression');
@@ -94,6 +117,7 @@ test('streaming markdown table: blockquote followed by table does not throw', as
   const bubble = await waitForFinalAssistant(page);
   await expect(bubble.locator('blockquote')).toBeVisible();
   await expect(bubble.locator('blockquote')).toContainText('First line of the quote.');
+  await expect(bubble.locator('blockquote')).toContainText('Second line of the quote.');
   await expect(bubble.locator('table')).toHaveCount(1);
   await expect(bubble.locator('thead th')).toHaveText([
     'Issue',
@@ -101,6 +125,11 @@ test('streaming markdown table: blockquote followed by table does not throw', as
     'Verification',
   ]);
   await expect(bubble.locator('tbody tr')).toHaveCount(2);
+  await expect.poll(async () => tableColumnsAlign(bubble)).toBe(true);
+  await expect(
+    bubble.locator('p').filter({ hasText: /\|/ }),
+    'table rows should not render as raw pipe paragraphs',
+  ).toHaveCount(0);
   expect(hygiene.consoleErrors).toEqual([]);
   expect(hygiene.failedRequests).toEqual([]);
 });
