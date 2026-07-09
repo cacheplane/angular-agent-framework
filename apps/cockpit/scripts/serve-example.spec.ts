@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { backendCommand, COCKPIT_RUNTIME_ENV } from './serve-example';
-import { findCapability, type Capability } from './capability-registry';
+import { backendCommand, COCKPIT_RUNTIME_ENV, formatAllModeSummary } from './serve-example';
+import { capabilities, findCapability, type Capability } from './capability-registry';
 
 describe('backendCommand', () => {
   it('uses uvicorn on the registry pythonPort for ag-ui caps', () => {
@@ -35,5 +35,10 @@ describe('backendCommand', () => {
 
   it('exposes an empty runtime base URL so the cockpit iframe targets localhost', () => {
     expect(COCKPIT_RUNTIME_ENV).toEqual({ NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL: '' });
+  });
+
+  it('formats the all-mode startup summary from the registry count', () => {
+    expect(formatAllModeSummary()).toBe(`\nStarting cockpit + all ${capabilities.length} examples\n`);
+    expect(formatAllModeSummary()).not.toContain('14 examples');
   });
 });

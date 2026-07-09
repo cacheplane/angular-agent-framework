@@ -113,4 +113,21 @@ describe('cockpit/ports.mjs registry', () => {
     }
     assert.deepEqual(mismatches, []);
   });
+
+  test('render cockpit examples have target-backed e2e suites', () => {
+    const missing = [];
+    for (const { name, dir, meta } of projects.filter((p) => p.name.startsWith('cockpit-render-'))) {
+      const e2eDir = join(dir, 'e2e');
+      const config = join(e2eDir, 'playwright.config.ts');
+      const setup = join(e2eDir, 'global-setup-impl.ts');
+      const spec = join(e2eDir, `${name.replace(/^cockpit-render-/, 'r-').replace(/-angular$/, '')}.spec.ts`);
+
+      if (!meta.targets?.e2e) missing.push(`${name}: missing e2e target`);
+      if (!existsSync(config)) missing.push(`${name}: missing e2e/playwright.config.ts`);
+      if (!existsSync(setup)) missing.push(`${name}: missing e2e/global-setup-impl.ts`);
+      if (!existsSync(spec)) missing.push(`${name}: missing ${spec}`);
+    }
+
+    assert.deepEqual(missing, []);
+  });
 });

@@ -87,6 +87,12 @@
         "cwd": "cockpit/render/element-rendering/angular",
         "command": "npx tsx -e \"import { renderElementRenderingAngularModule } from './src/index.ts'; const module = renderElementRenderingAngularModule; if (module.id !== 'render-element-rendering-angular' || module.title !== 'Render Element Rendering (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "cockpit/render/element-rendering/angular/e2e/playwright.config.ts"
+      }
     }
   },
   "tags": [
