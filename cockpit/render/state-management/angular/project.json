@@ -87,6 +87,12 @@
         "cwd": "cockpit/render/state-management/angular",
         "command": "npx tsx -e \"import { renderStateManagementAngularModule } from './src/index.ts'; const module = renderStateManagementAngularModule; if (module.id !== 'render-state-management-angular' || module.title !== 'Render State Management (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "cockpit/render/state-management/angular/e2e/playwright.config.ts"
+      }
     }
   },
   "tags": [

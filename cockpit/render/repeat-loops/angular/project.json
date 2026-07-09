@@ -87,6 +87,12 @@
         "cwd": "cockpit/render/repeat-loops/angular",
         "command": "npx tsx -e \"import { renderRepeatLoopsAngularModule } from './src/index.ts'; const module = renderRepeatLoopsAngularModule; if (module.id !== 'render-repeat-loops-angular' || module.title !== 'Render Repeat Loops (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "cockpit/render/repeat-loops/angular/e2e/playwright.config.ts"
+      }
     }
   },
   "tags": [

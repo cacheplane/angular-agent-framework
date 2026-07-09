@@ -15,6 +15,10 @@ export function backendCommand(cap: Capability): string | null {
   return `${enter} && uv run langgraph dev --port ${cap.pythonPort} --no-browser`;
 }
 
+export function formatAllModeSummary(): string {
+  return `\nStarting cockpit + all ${capabilities.length} examples\n`;
+}
+
 // Guard: only execute CLI/orchestration logic when run directly (not imported by tests).
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const args = process.argv.slice(2);
@@ -47,7 +51,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
 
   if (allMode) {
     capabilities.forEach((c) => run(c.id, `npx nx run ${c.angularProject}:serve:cockpit --port ${c.port}`, '33'));
-    console.log('\n🚀 Starting cockpit + all 14 examples\n');
+    console.log(formatAllModeSummary());
   } else {
     const cap = findCapability(capabilityArg!);
     if (!cap) { console.error(`Unknown: ${capabilityArg}`); process.exit(1); }

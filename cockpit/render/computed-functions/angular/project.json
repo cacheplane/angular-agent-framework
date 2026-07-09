@@ -87,6 +87,12 @@
         "cwd": "cockpit/render/computed-functions/angular",
         "command": "npx tsx -e \"import { renderComputedFunctionsAngularModule } from './src/index.ts'; const module = renderComputedFunctionsAngularModule; if (module.id !== 'render-computed-functions-angular' || module.title !== 'Render Computed Functions (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "cockpit/render/computed-functions/angular/e2e/playwright.config.ts"
+      }
     }
   },
   "tags": [
