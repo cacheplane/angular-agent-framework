@@ -13,6 +13,14 @@
       "response": { "content": "Three things:\n\n- alpha\n- beta\n- gamma" }
     },
     {
+      "match": {
+        "userMessage": "Give me a blockquote with two lines, then a markdown table with columns issue, expected behavior, verification."
+      },
+      "response": {
+        "content": "> First quoted line\n> Second quoted line\n\n| Issue | Expected behavior | Verification |\n| --- | --- | --- |\n| Blockquote nesting | Both quoted lines render inside one blockquote | Inspect for one `<blockquote>` with no stray quoted paragraph |\n| Table streaming | Rows remain inside the same table while content streams | Inspect for one `<table>` with body rows |\n| Parser recovery | Final DOM has no raw pipe paragraphs | Confirm no paragraph text contains `|` delimiters |"
+      }
+    },
+    {
       "match": { "userMessage": "respond with the markdown checklist kitchen sink" },
       "response": {
         "content": "# Heading One\n\n## Heading Two\n\n### Heading Three\n\nA paragraph with **bold text**, *italic text*, and `inline code`.\n\n- parent item\n  - nested child\n- second parent\n\n1. first ordered\n2. second ordered\n\n- [ ] unchecked task\n- [x] checked task\n\n```typescript\nconst answer = 42;\n```\n\n| Name | Mental model | When to use |\n| --- | --- | --- |\n| Signals | value graph | local state |\n| RxJS | event stream | async events |\n\n> This is a blockquote.\n\n[Angular](https://angular.dev)\n\n---\n\n<script>alert('xss')</script>"
