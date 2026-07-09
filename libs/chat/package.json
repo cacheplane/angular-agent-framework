@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@cacheplane/partial-json": ">=0.1.1 <0.3.0",
-    "@cacheplane/partial-markdown": "^0.5.5"
+    "@cacheplane/partial-markdown": "^0.5.7"
   },
   "peerDependencies": {
     "zod": "^3.25.0",
