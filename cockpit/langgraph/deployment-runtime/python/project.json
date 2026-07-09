@@ -21,13 +21,6 @@
         "cwd": "cockpit/langgraph/deployment-runtime/python",
         "command": "npx tsx -e \"import { langgraphDeploymentRuntimePythonModule } from './src/index.ts'; const module = langgraphDeploymentRuntimePythonModule; if (module.id !== 'langgraph-deployment-runtime-python' || module.title !== 'LangGraph Deployment Runtime (Python)') { throw new Error('Unexpected module shape for ' + module.id); }\""
       }
-    },
-    "integration": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "cockpit/langgraph/deployment-runtime/python",
-        "command": "npx tsx -e \"const token = process.env.COCKPIT_SECRET_TOKEN; if (!token) { throw new Error('Missing COCKPIT_SECRET_TOKEN'); } console.log('secret-gated integration ready');\""
-      }
     }
   },
   "tags": [

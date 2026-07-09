@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: MIT
 import { computed, signal } from '@angular/core';
 import type { Signal } from '@angular/core';
-import type { ClientToolsCapability, ClientToolResult, ClientToolSpec } from '@threadplane/chat';
+import {
+  selectPendingClientToolCalls,
+  type ClientToolsCapability,
+  type ClientToolResult,
+  type ClientToolSpec,
+} from '@threadplane/chat';
 import type { ToolCall } from '@threadplane/chat';
 import type { LangGraphSubmitOptions } from './agent.types';
 
@@ -81,8 +86,10 @@ export function mergeClientTools(
  *    yet — but ONLY when the run is not in progress (isLoading===false).
  *    The backend ends the run without emitting a ToolMessage result for
  *    client tools, so `result` stays undefined on those entries.
- *  - resolve(id, result): marks the call as resolved, then issues a NEW
- *    run on the SAME thread by calling submitFn with:
+ *  - settle(id, result): marks the call as resolved, writes the local result,
+ *    and buffers a ToolMessage without issuing a run.
+ *  - resolve(id, result): settles the result, then issues a NEW run on the SAME
+ *    thread by calling submitFn with the full buffered ToolMessage group:
  *      input: {
  *        messages: [{ type: 'tool', role: 'tool', tool_call_id: id, content }],
  *        client_tools: catalog(),
@@ -104,18 +111,54 @@ export function createClientToolsCapability(
 ): ClientToolsCapability & { catalog: Signal<readonly ClientToolSpec[]> } {
   const catalog = signal<readonly ClientToolSpec[]>([]);
   const resolvedIds = signal<ReadonlySet<string>>(new Set());
+  const toolMessageBuffer: Array<{ type: 'tool'; role: 'tool'; tool_call_id: string; content: string }> = [];
 
   const pending = computed<readonly ToolCall[]>(() => {
     // Client tools are only actionable after the run ends (the backend
     // signals this by ending the run WITHOUT emitting a ToolMessage result
     // for client tools).
-    if (store.isLoading()) return [];
-    const names = new Set(catalog().map((s) => s.name));
-    const done = resolvedIds();
-    return store.toolCalls().filter(
-      (tc) => names.has(tc.name) && tc.result === undefined && !done.has(tc.id),
-    );
+    return selectPendingClientToolCalls({
+      isLoading: store.isLoading(),
+      toolCalls: store.toolCalls(),
+      catalogNames: new Set(catalog().map((s) => s.name)),
+      resolvedIds: resolvedIds(),
+    });
   });
+
+  function settleResult(id: string, result: ClientToolResult): void {
+    // Mark as resolved first so pending() drops it immediately.
+    resolvedIds.update((s) => new Set(s).add(id));
+
+    // Cast rather than rely on discriminant narrowing: consumer apps that
+    // compile this source with `strictNullChecks: false` don't narrow the
+    // ClientToolResult union in a ternary.
+    const ok = result.ok;
+    const value = (result as { value: unknown }).value;
+    const error = (result as { error: string }).error;
+
+    // Write the outcome onto the LOCAL ToolCall (via the adapter's override
+    // layer). The client tool DID produce a result client-side, so this is
+    // semantically correct — and it freezes the transcript card: the mounted
+    // ask component re-renders with its own emitted value as props and can
+    // branch to a resolved/frozen state. Without this, the LOCAL tool call
+    // never gets a result (only the backend ToolMessage does) so the card
+    // stays interactive forever.
+    store.applyClientResult(id, {
+      result: ok ? value : { error },
+      ...(ok ? {} : { error, status: 'error' as const }),
+    });
+
+    const content = ok
+      ? safeStringify(value)
+      : `Error: ${error}`;
+
+    // Message shape: both `type` and `role` are set for compatibility —
+    // the LangGraph server's add_messages coercion reads `role` (Python
+    // side), while the bridge's local optimistic-message path reads `type`
+    // (via toMessage's normalizeMessageType). This mirrors the human-message
+    // shape used in buildSubmitUpdate (agent.fn.ts line 732).
+    toolMessageBuffer.push({ type: 'tool', role: 'tool', tool_call_id: id, content });
+  }
 
   const capability: ClientToolsCapability & { catalog: Signal<readonly ClientToolSpec[]> } = {
     catalog,
@@ -126,46 +169,20 @@ export function createClientToolsCapability(
 
     pending,
 
+    settle(id: string, result: ClientToolResult): void {
+      settleResult(id, result);
+    },
+
     resolve(id: string, result: ClientToolResult): void {
-      // Mark as resolved first so pending() drops it immediately.
-      resolvedIds.update((s) => new Set(s).add(id));
-
-      // Cast rather than rely on discriminant narrowing: consumer apps that
-      // compile this source with `strictNullChecks: false` don't narrow the
-      // ClientToolResult union in a ternary.
-      const ok = result.ok;
-      const value = (result as { value: unknown }).value;
-      const error = (result as { error: string }).error;
-
-      // Write the outcome onto the LOCAL ToolCall (via the adapter's override
-      // layer). The client tool DID produce a result client-side, so this is
-      // semantically correct — and it freezes the transcript card: the mounted
-      // ask component re-renders with its own emitted value as props and can
-      // branch to a resolved/frozen state. Without this, the LOCAL tool call
-      // never gets a result (only the backend ToolMessage does) so the card
-      // stays interactive forever.
-      store.applyClientResult(id, {
-        result: ok ? value : { error },
-        ...(ok ? {} : { error, status: 'error' as const }),
-      });
-
-      const content = ok
-        ? safeStringify(value)
-        : `Error: ${error}`;
-
+      settleResult(id, result);
       // Issue a new run on the same thread. LangGraph's add_messages reducer
-      // appends the ToolMessage to the thread state. `client_tools` is
+      // appends the ToolMessages to the thread state. `client_tools` is
       // included so the model sees the full tool catalog on the continuation.
-      //
-      // Message shape: both `type` and `role` are set for compatibility —
-      // the LangGraph server's add_messages coercion reads `role` (Python
-      // side), while the bridge's local optimistic-message path reads `type`
-      // (via toMessage's normalizeMessageType). This mirrors the human-message
-      // shape used in buildSubmitUpdate (agent.fn.ts line 732).
       const toolPayload = {
-        messages: [{ type: 'tool', role: 'tool', tool_call_id: id, content }],
+        messages: [...toolMessageBuffer],
         client_tools: catalog(),
       };
+      toolMessageBuffer.length = 0;
 
       void submitFn(toolPayload);
     },

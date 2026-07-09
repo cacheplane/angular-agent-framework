@@ -184,6 +184,63 @@ describe('createClientToolsCapability', () => {
     expect(tc?.error).toBeUndefined();
   });
 
+  it('resolve(ok) does not affect other pending calls', () => {
+    const source = makeSource();
+    const store  = makeStore();
+    const cap    = createClientToolsCapability(source, store);
+    cap.setCatalog([WEATHER_SPEC]);
+    store.isLoading.set(false);
+    store.toolCalls.set([
+      { id: 'c1', name: 'get_weather', args: {}, status: 'complete' },
+      { id: 'c2', name: 'get_weather', args: {}, status: 'complete' },
+    ]);
+
+    expect(cap.pending().map((tc) => tc.id)).toEqual(['c1', 'c2']);
+    cap.resolve('c1', { ok: true, value: { temp: 70 } });
+
+    expect(cap.pending().map((tc) => tc.id)).toEqual(['c2']);
+    expect(store.toolCalls().find((tc) => tc.id === 'c2')?.result).toBeUndefined();
+  });
+
+  it('settle(ok) drops the id from pending and records the result without running', async () => {
+    const source = makeSource();
+    const store  = makeStore();
+    const cap    = createClientToolsCapability(source, store);
+    cap.setCatalog([WEATHER_SPEC]);
+    store.isLoading.set(false);
+    store.toolCalls.set([{ id: 'c1', name: 'get_weather', args: {}, status: 'complete' }]);
+
+    cap.settle?.('c1', { ok: true, value: { temp: 70 } });
+    await Promise.resolve();
+
+    expect(cap.pending()).toHaveLength(0);
+    expect(store.toolCalls().find((tc) => tc.id === 'c1')?.result).toEqual({ temp: 70 });
+    expect(source.addMessage).toHaveBeenCalledOnce();
+    expect(source.runAgent).not.toHaveBeenCalled();
+  });
+
+  it('settle plus resolve flushes multiple pending results in one run', async () => {
+    const source = makeSource();
+    const store  = makeStore();
+    const cap    = createClientToolsCapability(source, store);
+    cap.setCatalog([WEATHER_SPEC]);
+    store.isLoading.set(false);
+    store.toolCalls.set([
+      { id: 'c1', name: 'get_weather', args: {}, status: 'complete' },
+      { id: 'c2', name: 'get_weather', args: {}, status: 'complete' },
+    ]);
+
+    cap.settle?.('c1', { ok: true, value: { temp: 70 } });
+    cap.resolve('c2', { ok: true, value: { temp: 71 } });
+    await Promise.resolve();
+
+    expect(source.addMessage).toHaveBeenCalledTimes(2);
+    expect(source.runAgent).toHaveBeenCalledTimes(1);
+    expect(source.addMessage.mock.calls.map(([message]) => (
+      message as { toolCallId: string }
+    ).toolCallId)).toEqual(['c1', 'c2']);
+  });
+
   // ---- resolve — error result ------------------------------------------------
 
   it('resolve(error) writes { error } result + error + status=error onto the store tool call', () => {

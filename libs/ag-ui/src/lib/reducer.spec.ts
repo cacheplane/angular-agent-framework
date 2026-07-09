@@ -63,6 +63,33 @@ describe('reduceEvent', () => {
     expect(store.messages()[0].content).toBe('hi there');
   });
 
+  it('MESSAGES_SNAPSHOT re-applies citations from prior STATE onto the final message', () => {
+    // Reproduces the ag-ui citation-delivery ordering: STATE_SNAPSHOT carries
+    // citations keyed by the final AI message id, but arrives BEFORE the
+    // MESSAGES_SNAPSHOT that swaps the streamed chunk-id message for the final
+    // one. Without re-bridging in the MESSAGES_SNAPSHOT handler the citations
+    // are dropped on the swap.
+    const store = makeStore();
+    reduceEvent({
+      type: 'STATE_SNAPSHOT',
+      snapshot: {
+        citations: {
+          'resp-final': [
+            { id: 'ng-signals-overview', index: 1, title: 'Signals — Angular guide', url: 'https://angular.dev/guide/signals' },
+          ],
+        },
+      },
+    } as any, store);
+    reduceEvent({
+      type: 'MESSAGES_SNAPSHOT',
+      messages: [{ id: 'resp-final', role: 'assistant', content: 'Signals are reactive [^ng-signals-overview].' }],
+    } as any, store);
+
+    const msg = store.messages().find((m) => m.id === 'resp-final');
+    expect(msg?.citations?.length).toBe(1);
+    expect(msg?.citations?.[0]).toMatchObject({ id: 'ng-signals-overview', title: 'Signals — Angular guide' });
+  });
+
   it('TOOL_CALL_START appends a running tool call', () => {
     const store = makeStore();
     reduceEvent({ type: 'TOOL_CALL_START', toolCallId: 't1', toolCallName: 'search' } as any, store);

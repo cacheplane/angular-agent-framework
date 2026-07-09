@@ -33,12 +33,12 @@ import { injectAgent } from '@threadplane/langgraph';
     ExampleChatLayoutComponent,
   ],
   template: `
-    <example-chat-layout sidebarWidth="w-72">
-      <div main class="flex-1 flex flex-col min-w-0">
-        <header class="px-4 py-3 border-b" style="border-color: var(--tplane-chat-separator); background: var(--tplane-chat-bg);">
-          <h1 class="text-sm font-semibold" style="color: var(--tplane-chat-text);">Chat Input Demo</h1>
+    <example-chat-layout sidebarWidth="18rem">
+      <section main class="chat-demo">
+        <header class="demo-header">
+          <h1 class="demo-title">Chat Input Demo</h1>
         </header>
-        <div class="flex-1 overflow-y-auto">
+        <div class="message-scroll">
           <chat-message-list [agent]="agent">
             <ng-template chatMessageTemplate="human" let-message>
               <chat-message [role]="'user'">{{ messageContent(message) }}</chat-message>
@@ -61,26 +61,24 @@ import { injectAgent } from '@threadplane/langgraph';
             </ng-template>
           </chat-message-list>
         </div>
-        <div class="px-4 py-2" style="background: var(--tplane-chat-bg);">
+        <div class="input-strip">
           <!-- chat-input submits to [agent] itself; (submitted) is a
                notification only — re-submitting it here would double the
                user message. -->
           <chat-input [agent]="agent" placeholder="Try typing here..." />
         </div>
-      </div>
-      <div sidebar class="p-4 space-y-4" style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
-        <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--tplane-chat-text-muted);">Input State</h3>
-        <dl class="text-xs space-y-2" style="color: var(--tplane-chat-text-muted);">
-          <dt class="font-semibold">Stream Status</dt>
-          <dd class="font-mono">{{ streamStatus() }}</dd>
-          <dt class="font-semibold">Is Loading</dt>
-          <dd class="font-mono">{{ isLoading() }}</dd>
+      </section>
+      <div sidebar class="panel">
+        <h3 class="cap">Input State</h3>
+        <dl class="metric-list">
+          <dt class="metric-label">Stream Status</dt>
+          <dd class="metric-value">{{ streamStatus() }}</dd>
+          <dt class="metric-label">Is Loading</dt>
+          <dd class="metric-value">{{ isLoading() }}</dd>
         </dl>
-        <div class="mt-4">
-          <h4 class="text-xs font-semibold uppercase tracking-wide mb-2"
-              style="color: var(--tplane-chat-text-muted);">Features</h4>
-          <ul class="text-xs space-y-1 list-disc list-inside" style="color: var(--tplane-chat-text-muted);">
+        <div>
+          <h4 class="cap">Features</h4>
+          <ul class="info-list">
             <li>Custom placeholder text</li>
             <li>Enter to send</li>
             <li>Shift+Enter for newline</li>
@@ -90,6 +88,95 @@ import { injectAgent } from '@threadplane/langgraph';
       </div>
     </example-chat-layout>
   `,
+  styles: [`
+    .chat-demo {
+      display: flex;
+      flex: 1 1 auto;
+      min-width: 0;
+      flex-direction: column;
+      background: var(--tplane-chat-bg);
+      color: var(--tplane-chat-text);
+    }
+
+    .demo-header {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--tplane-chat-separator);
+      background: var(--tplane-chat-surface);
+    }
+
+    .demo-title {
+      margin: 0;
+      color: var(--tplane-chat-text);
+      font-size: var(--tplane-chat-font-size-sm);
+      font-weight: 700;
+      line-height: var(--tplane-chat-line-height-tight);
+    }
+
+    .message-scroll {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      background: var(--tplane-chat-bg);
+    }
+
+    .input-strip {
+      padding: 0.5rem 1rem;
+      border-top: 1px solid var(--tplane-chat-separator);
+      background: var(--tplane-chat-surface);
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: var(--tplane-chat-bg);
+      color: var(--tplane-chat-text);
+    }
+
+    .cap {
+      margin: 0;
+      color: var(--tplane-chat-text-muted);
+      font-size: var(--tplane-chat-font-size-xs);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      line-height: var(--tplane-chat-line-height-tight);
+      text-transform: uppercase;
+    }
+
+    .info-list,
+    .metric-list {
+      margin: 0;
+      padding: 0;
+      color: var(--tplane-chat-text-muted);
+      font-size: var(--tplane-chat-font-size-xs);
+      line-height: var(--tplane-chat-line-height);
+      list-style: none;
+    }
+
+    .info-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      margin-top: 0.5rem;
+    }
+
+    .metric-list {
+      display: grid;
+      gap: 0.25rem;
+    }
+
+    .metric-label {
+      color: var(--tplane-chat-text-muted);
+      font-weight: 700;
+    }
+
+    .metric-value {
+      margin: 0 0 0.5rem;
+      color: var(--tplane-chat-text);
+      font-family: var(--tplane-chat-font-mono);
+    }
+  `],
 })
 export class InputComponent {
   protected readonly agent = injectAgent();

@@ -31,33 +31,28 @@ interface SkillInvocation {
   standalone: true,
   imports: [ChatComponent, ExampleChatLayoutComponent],
   template: `
-    <example-chat-layout sidebarWidth="w-72">
+    <example-chat-layout sidebarWidth="18rem">
       <chat main [agent]="agent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
-      <div sidebar class="p-4 space-y-3" style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
-        <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--tplane-chat-text-muted);">Skill Invocations</h3>
+      <div sidebar class="panel">
+        <h3 class="cap">Skill Invocations</h3>
         @if (invocations().length === 0) {
-          <p class="text-sm italic" style="color: var(--tplane-chat-text-muted);">No skills invoked yet</p>
+          <p class="empty">No skills invoked yet</p>
         }
         @for (inv of invocations(); track inv.id) {
-          <div class="rounded-lg p-3 space-y-2"
-               style="background: var(--tplane-chat-surface-alt); border: 1px solid var(--tplane-chat-separator);">
-            <div class="flex items-center gap-2">
-              <span class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold"
-                    style="background: var(--tplane-chat-primary); color: var(--tplane-chat-on-primary);">
+          <div class="skill-card">
+            <div>
+              <span class="badge">
                 {{ inv.name }}
               </span>
             </div>
-            <div class="text-xs space-y-1" style="color: var(--tplane-chat-text-muted);">
-              <p class="font-semibold" style="color: var(--tplane-chat-text);">Input</p>
-              <pre class="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed p-1.5 rounded"
-                   style="background: var(--tplane-chat-bg);">{{ formatArgs(inv.args) }}</pre>
+            <div class="kv">
+              <p class="kv__label">Input</p>
+              <pre class="code">{{ formatArgs(inv.args) }}</pre>
             </div>
             @if (inv.result !== undefined) {
-              <div class="text-xs space-y-1" style="color: var(--tplane-chat-text-muted);">
-                <p class="font-semibold" style="color: var(--tplane-chat-success);">Output</p>
-                <pre class="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed p-1.5 rounded"
-                     style="background: var(--tplane-chat-bg);">{{ inv.result }}</pre>
+              <div class="kv">
+                <p class="kv__label kv__label--success">Output</p>
+                <pre class="code">{{ inv.result }}</pre>
               </div>
             }
           </div>
@@ -65,6 +60,84 @@ interface SkillInvocation {
       </div>
     </example-chat-layout>
   `,
+  styles: [`
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: var(--tplane-chat-bg);
+      color: var(--tplane-chat-text);
+    }
+
+    .cap {
+      margin: 0;
+      font-size: var(--tplane-chat-font-size-xs);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--tplane-chat-text-muted);
+    }
+
+    .empty {
+      margin: 0;
+      font-size: var(--tplane-chat-font-size-sm);
+      font-style: italic;
+      color: var(--tplane-chat-text-muted);
+    }
+
+    .skill-card {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      border: 1px solid var(--tplane-chat-separator);
+      border-radius: var(--tplane-chat-radius-card);
+      background: var(--tplane-chat-surface-alt);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      border-radius: var(--tplane-chat-radius-launcher);
+      padding: 0.125rem 0.5rem;
+      background: var(--tplane-chat-primary);
+      color: var(--tplane-chat-on-primary);
+      font-size: var(--tplane-chat-font-size-xs);
+      font-weight: 700;
+    }
+
+    .kv {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      color: var(--tplane-chat-text-muted);
+      font-size: var(--tplane-chat-font-size-xs);
+    }
+
+    .kv__label {
+      margin: 0;
+      color: var(--tplane-chat-text);
+      font-weight: 700;
+    }
+
+    .kv__label--success {
+      color: var(--tplane-chat-success);
+    }
+
+    .code {
+      margin: 0;
+      padding: 0.5rem;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      border-radius: var(--tplane-chat-radius-card);
+      background: var(--tplane-chat-surface);
+      color: var(--tplane-chat-text);
+      font: var(--tplane-chat-font-size-xs) / 1.5 var(--tplane-chat-font-mono);
+    }
+  `],
 })
 export class SkillsComponent {
   readonly ui = views({ 'calculator-result': CalculatorResultComponent, 'word-count-result': WordCountResultComponent });

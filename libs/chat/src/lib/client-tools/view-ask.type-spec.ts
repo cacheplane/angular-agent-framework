@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: MIT
 import { Component, input } from '@angular/core';
 import { z } from 'zod/v4';
-import type { ClientToolDef, ViewToolDef } from './tool-def';
+import type {
+  ClientToolDef,
+  ClientToolLifecycle,
+  ClientToolViewProps,
+  ViewToolDef,
+} from './tool-def';
+import type { ToolCallStatus } from '../agent';
 import { view, ask, tools } from './tools';
 
 @Component({ template: '' })
@@ -27,6 +33,10 @@ const _reg = tools({ day_card: view('Show a day', daySchema, DayCardComponent) }
 
 // the result carries the component type.
 const _carries: ViewToolDef<typeof daySchema, DayCardComponent> = dayView;
+
+type DayClientToolViewProps = ClientToolViewProps<typeof daySchema>;
+const _status: ToolCallStatus | undefined = ({} as DayClientToolViewProps).status;
+const _clientTool: ClientToolLifecycle | undefined = ({} as DayClientToolViewProps).clientTool;
 
 // ❌ typo prop the component can't receive.
 const typoSchema = z.object({ dayz: z.number() });

@@ -1,0 +1,24 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "module": "preserve",
+    "emitDeclarationOnly": false,
+    "composite": false,
+    "declaration": false,
+    "lib": ["es2022", "dom"],
+    "types": ["vitest/globals"]
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
+  },
+  "include": [
+    "shared/**/*.ts",
+    "*/angular/src/**/*.ts",
+    "../../libs/render/src/**/*.ts"
+  ]
+}

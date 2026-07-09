@@ -1,0 +1,21 @@
+{
+  "fixtures": [
+    {
+      "match": { "userMessage": "cite your sources on angular signals", "hasToolResult": true },
+      "response": {
+        "content": "Angular signals are a reactivity primitive that tracks reads and notifies consumers on change [^ng-signals-overview]. They interoperate with RxJS through `toSignal()` and `toObservable()` [^ng-signals-rxjs], and modern templates express reactive UI with built-in control flow like `@if` and `@for` [^ng-control-flow]. Signals pair naturally with that control flow for local state [^ng-signals-overview]."
+      }
+    },
+    {
+      "match": { "userMessage": "cite your sources on angular signals" },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "search_documents",
+            "arguments": { "query": "authoritative overview of angular signals reactivity and control flow" }
+          }
+        ]
+      }
+    }
+  ]
+}

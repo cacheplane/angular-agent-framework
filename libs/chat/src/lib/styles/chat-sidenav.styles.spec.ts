@@ -94,6 +94,14 @@ describe('CHAT_SIDENAV_STYLES — drawer elevation + z-index token', () => {
   it('no longer declares the .chat-sidenav__scrim selector', () => {
     expect(normalized).not.toMatch(/\.chat-sidenav__scrim\s*\{/);
   });
+  it('keeps the closed drawer panel inert until the drawer is open', () => {
+    expect(normalized).toMatch(
+      /:host\(\[data-mode="drawer"\]\) \.chat-sidenav\s*\{[^}]*pointer-events:\s*none\s*;/,
+    );
+    expect(normalized).toMatch(
+      /:host\(\[data-mode="drawer"\]\[data-open="true"\]\) \.chat-sidenav\s*\{[^}]*pointer-events:\s*auto\s*;/,
+    );
+  });
 });
 
 describe('CHAT_SIDENAV_STYLES — Archived disclosure', () => {

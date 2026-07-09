@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 import { Component, computed } from '@angular/core';
-import { JsonPipe } from '@angular/common';
 import {
   ChatComponent,
   ChatInterruptPanelComponent,
@@ -46,11 +45,10 @@ const SUGGESTIONS = [
     ChatComponent,
     ChatInterruptPanelComponent,
     ChatWelcomeSuggestionComponent,
-    JsonPipe,
     ExampleChatLayoutComponent,
   ],
   template: `
-    <example-chat-layout sidebarWidth="w-80">
+    <example-chat-layout sidebarWidth="20rem">
       <chat main [agent]="agent" class="flex-1 min-w-0">
         <div chatWelcomeSuggestions>
           @for (s of suggestions; track s.value) {
@@ -63,18 +61,44 @@ const SUGGESTIONS = [
           }
         </div>
       </chat>
-      <div sidebar class="p-4 space-y-4" style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
-        <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--tplane-chat-text-muted);">Interrupt Panel</h3>
+      <div sidebar class="panel">
+        <h3 class="cap">Interrupt Panel</h3>
         <chat-interrupt-panel [agent]="agent" (action)="onInterruptAction($event)" />
-        <div class="mt-4">
-          <h4 class="text-xs font-semibold uppercase tracking-wide mb-2"
-              style="color: var(--tplane-chat-text-muted);">Stream Status</h4>
-          <p class="text-xs font-mono" style="color: var(--tplane-chat-text-muted);">{{ streamStatus() }}</p>
+        <div>
+          <h4 class="cap">Stream Status</h4>
+          <p class="metric-value">{{ streamStatus() }}</p>
         </div>
       </div>
     </example-chat-layout>
   `,
+  styles: [`
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: var(--tplane-chat-bg);
+      color: var(--tplane-chat-text);
+    }
+
+    .cap {
+      margin: 0;
+      color: var(--tplane-chat-text-muted);
+      font-size: var(--tplane-chat-font-size-xs);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      line-height: var(--tplane-chat-line-height-tight);
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      margin: 0.5rem 0 0;
+      color: var(--tplane-chat-text);
+      font-family: var(--tplane-chat-font-mono);
+      font-size: var(--tplane-chat-font-size-xs);
+      line-height: var(--tplane-chat-line-height);
+    }
+  `],
 })
 export class InterruptsComponent {
   protected readonly agent = injectAgent();

@@ -18,6 +18,19 @@ test('client-tools: view tool renders the model-filled component', async ({ page
   await expect(page.getByText("Here's the weather card for Tokyo")).toBeVisible({ timeout: 30000 });
 });
 
+test('client-tools: terminal view tool renders without a follow-up assistant run', async ({ page }) => {
+  await page.goto('/');
+  const input = page.getByRole('textbox', { name: /message|prompt/i });
+  await input.fill('Show me a quiet weather snapshot for Oslo');
+  await page.getByRole('button', { name: /send message/i }).click();
+
+  const card = page.locator('app-weather-card');
+  await expect(card).toBeVisible({ timeout: 30000 });
+  await expect(card).toContainText('Oslo');
+  await expect(page.getByText(/quiet weather snapshot/i)).toHaveCount(1);
+  await expect(page.getByText(/Here's the weather card for Oslo/i)).toHaveCount(0);
+});
+
 // ask tool (HITL): confirm_booking renders, the user confirms, the emitted value resumes the run.
 // This test does NOT use submitAndWaitForResponse because that helper awaits a finalized assistant
 // message — but the first run ends with only a tool call, so the helper would block until the user

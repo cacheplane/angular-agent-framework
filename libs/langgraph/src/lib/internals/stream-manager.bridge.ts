@@ -506,6 +506,11 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       // Partial and message-tuple events are incremental. Merge them by id
       // so optimistic human messages and earlier tool messages are preserved.
       if (event.type === 'messages/partial' || event.messageMetadata) {
+        if (!isTranscriptMessageEvent(event, options.transcriptNodeNames)) {
+          storeMessageMetadata(normalized, event);
+          syncSubagentsFromMessages(normalized);
+          return;
+        }
         const mode: MergeMode = event.messageMetadata ? 'delta' : 'snapshot';
         subjects.messages$.next(mergeMessages(subjects.messages$.value, normalized, reasoningTimingMap, mode, canonicalMessageIds));
         if (isLgTraceEnabled()) {
@@ -852,6 +857,16 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       return currentThreadId;
     },
   };
+}
+
+function isTranscriptMessageEvent(
+  event: StreamEvent,
+  transcriptNodeNames: readonly string[] | undefined,
+): boolean {
+  if (!transcriptNodeNames || transcriptNodeNames.length === 0) return true;
+  const node = event.messageMetadata?.['langgraph_node'];
+  if (typeof node !== 'string') return true;
+  return transcriptNodeNames.includes(node);
 }
 
 /**

@@ -29,35 +29,100 @@ interface CodeExecution {
   standalone: true,
   imports: [ChatComponent, ExampleChatLayoutComponent],
   template: `
-    <example-chat-layout sidebarWidth="w-80">
+    <example-chat-layout sidebarWidth="20rem">
       <chat main [agent]="agent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
-      <div sidebar class="p-4 space-y-3" style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">
-        <h3 class="text-xs font-semibold uppercase tracking-wide"
-            style="color: var(--tplane-chat-text-muted);">Execution Output</h3>
+      <div sidebar class="panel">
+        <h3 class="cap">Execution Output</h3>
         @if (executions().length === 0) {
-          <p class="text-sm italic" style="color: var(--tplane-chat-text-muted);">No code executed yet</p>
+          <p class="empty">No code executed yet</p>
         }
         @for (exec of executions(); track exec.id) {
-          <div class="rounded-lg p-3 space-y-2"
-               style="background: var(--tplane-chat-surface-alt); border: 1px solid var(--tplane-chat-separator);">
-            <div class="text-xs font-semibold" style="color: var(--tplane-chat-text-muted);">Code</div>
-            <pre class="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed p-2 rounded overflow-x-auto"
-                 style="background: var(--tplane-chat-bg); color: var(--tplane-chat-text);">{{ exec.code }}</pre>
+          <div class="exec-card">
+            <div class="exec-label">Code</div>
+            <pre class="code">{{ exec.code }}</pre>
             @if (exec.stdout) {
-              <div class="text-xs font-semibold" style="color: var(--tplane-chat-success);">stdout</div>
-              <pre class="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed p-2 rounded"
-                   style="background: var(--tplane-chat-bg); color: var(--tplane-chat-success);">{{ exec.stdout }}</pre>
+              <div class="exec-label exec-label--success">stdout</div>
+              <pre class="code code--success">{{ exec.stdout }}</pre>
             }
             @if (exec.stderr) {
-              <div class="text-xs font-semibold" style="color: var(--tplane-chat-error-text);">stderr</div>
-              <pre class="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed p-2 rounded"
-                   style="background: var(--tplane-chat-bg); color: var(--tplane-chat-error-text);">{{ exec.stderr }}</pre>
+              <div class="exec-label exec-label--error">stderr</div>
+              <pre class="code code--error">{{ exec.stderr }}</pre>
             }
           </div>
         }
       </div>
     </example-chat-layout>
   `,
+  styles: [`
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: var(--tplane-chat-bg);
+      color: var(--tplane-chat-text);
+    }
+
+    .cap {
+      margin: 0;
+      font-size: var(--tplane-chat-font-size-xs);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--tplane-chat-text-muted);
+    }
+
+    .empty {
+      margin: 0;
+      font-size: var(--tplane-chat-font-size-sm);
+      font-style: italic;
+      color: var(--tplane-chat-text-muted);
+    }
+
+    .exec-card {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      border: 1px solid var(--tplane-chat-separator);
+      border-radius: var(--tplane-chat-radius-card);
+      background: var(--tplane-chat-surface-alt);
+    }
+
+    .exec-label {
+      color: var(--tplane-chat-text-muted);
+      font-size: var(--tplane-chat-font-size-xs);
+      font-weight: 700;
+    }
+
+    .exec-label--success {
+      color: var(--tplane-chat-success);
+    }
+
+    .exec-label--error {
+      color: var(--tplane-chat-error-text);
+    }
+
+    .code {
+      margin: 0;
+      padding: 0.5rem;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      border-radius: var(--tplane-chat-radius-card);
+      background: var(--tplane-chat-surface);
+      color: var(--tplane-chat-text);
+      font: var(--tplane-chat-font-size-xs) / 1.5 var(--tplane-chat-font-mono);
+    }
+
+    .code--success {
+      color: var(--tplane-chat-success);
+    }
+
+    .code--error {
+      color: var(--tplane-chat-error-text);
+    }
+  `],
 })
 export class SandboxesComponent {
   readonly ui = views({ 'code-execution': CodeExecutionComponent });

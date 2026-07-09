@@ -6,7 +6,13 @@ import { z } from 'zod/v4';
 import { action, view, ask, tools } from './tools';
 import { toClientToolSpecs, createClientToolsCoordinator } from './client-tools-coordinator';
 import type { ClientToolsCapability, ClientToolResult } from './client-tools-capability';
+import type {
+  ClientToolExecutionGuard,
+  ClientToolExecutionRecord,
+  ClientToolExecutionStore,
+} from './client-tool-execution-guard';
 import type { Agent } from '../agent/agent';
+import type { Message } from '../agent/message';
 import type { ToolCall } from '../agent/tool-call';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -25,6 +31,20 @@ class FakeAskComponent {}
 // ── factory helpers ───────────────────────────────────────────────────────────
 
 function makeFakeCapability() {
+  const pending = signal<readonly ToolCall[]>([]);
+  const settle = vi.fn<[string, ClientToolResult], void>();
+  const resolve = vi.fn<[string, ClientToolResult], void>();
+  const setCatalog = vi.fn<[readonly unknown[]], void>();
+  const capability: ClientToolsCapability = {
+    setCatalog,
+    pending,
+    settle,
+    resolve,
+  };
+  return { pending, settle, resolve, setCatalog, capability };
+}
+
+function makeFakeCapabilityWithoutSettle() {
   const pending = signal<readonly ToolCall[]>([]);
   const resolve = vi.fn<[string, ClientToolResult], void>();
   const setCatalog = vi.fn<[readonly unknown[]], void>();
@@ -51,6 +71,22 @@ function makeFakeAgent(capability: ClientToolsCapability | undefined): Agent {
     regenerate: vi.fn(),
     clientTools: capability,
   };
+}
+
+function makeGuardStore(): ClientToolExecutionStore & {
+  claim: ReturnType<typeof vi.fn<[Parameters<ClientToolExecutionStore['claim']>[0]], Promise<'claimed' | ClientToolExecutionRecord>>>;
+  record: ReturnType<typeof vi.fn<Parameters<ClientToolExecutionStore['record']>, Promise<void>>>;
+  lookup: ReturnType<typeof vi.fn<Parameters<ClientToolExecutionStore['lookup']>, Promise<Record<string, ClientToolExecutionRecord>>>>;
+} {
+  return {
+    claim: vi.fn(async () => 'claimed'),
+    record: vi.fn(async () => undefined),
+    lookup: vi.fn(async () => ({})),
+  };
+}
+
+function makeGuard(store: ClientToolExecutionStore): ClientToolExecutionGuard {
+  return { threadId: 'thread-1', store };
 }
 
 // ── registry ──────────────────────────────────────────────────────────────────
@@ -196,6 +232,295 @@ describe('createClientToolsCoordinator()', () => {
     expect(resolve).toHaveBeenCalledWith('f1', { ok: true, value: { temp: 72, city: 'SF' } });
   });
 
+  it('batches two pending function tools into one group flush', async () => {
+    const registry = tools({
+      weather_a: action('Get weather A', z.object({ city: z.string() }), async (a) => `A:${a.city}`),
+      weather_b: action('Get weather B', z.object({ city: z.string() }), async (a) => `B:${a.city}`),
+    });
+    const { pending, settle, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry);
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    pending.set([
+      { id: 'f1', name: 'weather_a', args: { city: 'SF' }, status: 'running' },
+      { id: 'f2', name: 'weather_b', args: { city: 'LA' }, status: 'running' },
+    ]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(settle).toHaveBeenCalledOnce();
+    expect(settle).toHaveBeenCalledWith('f1', { ok: true, value: 'A:SF' });
+    expect(resolve).toHaveBeenCalledOnce();
+    expect(resolve).toHaveBeenCalledWith('f2', { ok: true, value: 'B:LA' });
+  });
+
+  it('settles terminal tools and flushes once when a mixed group completes', async () => {
+    const registry = tools({
+      terminal_card: view(
+        'Show terminal card',
+        z.object({ city: z.string() }),
+        FakeViewComponent as never,
+        { followUp: false },
+      ),
+      get_weather: action(
+        'Get weather',
+        z.object({ city: z.string() }),
+        async (a) => ({ temp: 72, city: a.city }),
+      ),
+    });
+    const { pending, settle, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry);
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    pending.set([
+      { id: 'v1', name: 'terminal_card', args: { city: 'LA' }, status: 'running' },
+      { id: 'f1', name: 'get_weather', args: { city: 'SF' }, status: 'running' },
+    ]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(settle).toHaveBeenCalledWith('v1', { ok: true, value: { shown: true } });
+    expect(resolve).toHaveBeenCalledOnce();
+    expect(resolve).toHaveBeenCalledWith('f1', { ok: true, value: { temp: 72, city: 'SF' } });
+  });
+
+  it('settles a fully-terminal group without resolving', () => {
+    const registry = tools({
+      terminal_card: view(
+        'Show terminal card',
+        z.object({ city: z.string() }),
+        FakeViewComponent as never,
+        { followUp: false },
+      ),
+    });
+    const { pending, settle, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry);
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    pending.set([{ id: 'v1', name: 'terminal_card', args: { city: 'LA' }, status: 'running' }]);
+    TestBed.flushEffects();
+
+    expect(settle).toHaveBeenCalledOnce();
+    expect(settle).toHaveBeenCalledWith('v1', { ok: true, value: { shown: true } });
+    expect(resolve).not.toHaveBeenCalled();
+  });
+
+  it('falls back to resolve when followUp:false cannot be honored without settle', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const registry = tools({
+      terminal_card: view(
+        'Show terminal card',
+        z.object({ city: z.string() }),
+        FakeViewComponent as never,
+        { followUp: false },
+      ),
+    });
+    const { pending, resolve, capability } = makeFakeCapabilityWithoutSettle();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry);
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    pending.set([{ id: 'v1', name: 'terminal_card', args: { city: 'LA' }, status: 'running' }]);
+    TestBed.flushEffects();
+
+    expect(resolve).toHaveBeenCalledOnce();
+    expect(resolve).toHaveBeenCalledWith('v1', { ok: true, value: { shown: true } });
+    expect(warn).toHaveBeenCalledOnce();
+    warn.mockRestore();
+  });
+
+  it('passes an execution guard to function-tool execution', async () => {
+    const { pending, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const store = makeGuardStore();
+    const coordinator = createClientToolsCoordinator(testRegistry, {
+      executionGuard: makeGuard(store),
+    });
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    pending.set([{ id: 'f2', name: 'get_weather', args: { city: 'SF' }, status: 'running' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks(8);
+
+    expect(store.claim).toHaveBeenCalledWith({ threadId: 'thread-1', toolCallId: 'f2' });
+    expect(store.record).toHaveBeenCalledWith(
+      { threadId: 'thread-1', toolCallId: 'f2' },
+      { ok: true, value: { temp: 72, city: 'SF' } },
+    );
+    expect(resolve).toHaveBeenCalledWith('f2', { ok: true, value: { temp: 72, city: 'SF' } });
+  });
+
+  it('stops settling pending tools after the configured max continuation turn count is hit', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const onLimit = vi.fn();
+    const handler = vi.fn(async () => 'again');
+    const registry = tools({
+      loop: action('Loop', z.object({}), handler),
+    });
+    const { pending, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry, {
+      continuationPolicy: { maxTurns: 2, onLimit },
+    });
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    pending.set([{ id: 'c1', name: 'loop', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+    pending.set([{ id: 'c2', name: 'loop', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+    pending.set([{ id: 'c3', name: 'loop', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(resolve).toHaveBeenCalledTimes(2);
+    expect(handler).toHaveBeenCalledTimes(2);
+    expect(onLimit).toHaveBeenCalledOnce();
+    expect(onLimit).toHaveBeenCalledWith({
+      maxTurns: 2,
+      attemptedTurn: 3,
+      toolCallIds: ['c3'],
+      toolNames: ['loop'],
+    });
+    expect(error).toHaveBeenCalledOnce();
+    error.mockRestore();
+  });
+
+  it('uses a default max of 10 continuation turns when no policy is provided', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const registry = tools({
+      loop: action('Loop', z.object({}), async () => 'again'),
+    });
+    const { pending, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry);
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    for (let i = 1; i <= 11; i++) {
+      pending.set([{ id: `c${i}`, name: 'loop', args: {}, status: 'complete' }]);
+      TestBed.flushEffects();
+      await drainMicrotasks();
+    }
+
+    expect(resolve).toHaveBeenCalledTimes(10);
+    expect(error).toHaveBeenCalledOnce();
+    error.mockRestore();
+  });
+
+  it('treats maxTurns 0 as an explicit unlimited continuation policy', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const registry = tools({
+      loop: action('Loop', z.object({}), async () => 'again'),
+    });
+    const { pending, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry, {
+      continuationPolicy: { maxTurns: 0 },
+    });
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    for (let i = 1; i <= 12; i++) {
+      pending.set([{ id: `c${i}`, name: 'loop', args: {}, status: 'complete' }]);
+      TestBed.flushEffects();
+      await drainMicrotasks();
+    }
+
+    expect(resolve).toHaveBeenCalledTimes(12);
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it('resets the continuation turn count when a new user turn appears', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const registry = tools({
+      loop: action('Loop', z.object({}), async () => 'again'),
+    });
+    const { pending, resolve, capability } = makeFakeCapability();
+    const messages = signal<Message[]>([{ id: 'u1', role: 'user', content: 'start' }]);
+    const agent: Agent = { ...makeFakeAgent(capability), messages };
+    const coordinator = createClientToolsCoordinator(registry, {
+      continuationPolicy: { maxTurns: 1 },
+    });
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    pending.set([{ id: 'c1', name: 'loop', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    messages.set([{ id: 'u1', role: 'user', content: 'start' }, { id: 'u2', role: 'user', content: 'next' }]);
+    pending.set([{ id: 'c2', name: 'loop', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(resolve).toHaveBeenCalledTimes(2);
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it('does not reset the continuation turn count only because pending tools become empty', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const registry = tools({
+      loop: action('Loop', z.object({}), async () => 'again'),
+    });
+    const { pending, resolve, capability } = makeFakeCapability();
+    const messages = signal<Message[]>([{ id: 'u1', role: 'user', content: 'start' }]);
+    const agent: Agent = { ...makeFakeAgent(capability), messages };
+    const coordinator = createClientToolsCoordinator(registry, {
+      continuationPolicy: { maxTurns: 1 },
+    });
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    pending.set([{ id: 'c1', name: 'loop', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    pending.set([]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    pending.set([{ id: 'c2', name: 'loop', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(resolve).toHaveBeenCalledTimes(1);
+    expect(error).toHaveBeenCalledOnce();
+    error.mockRestore();
+  });
+
   it('handleRenderEvent() resolves pending ask tool call by elementKey (tool name)', () => {
     const { pending, resolve, capability } = makeFakeCapability();
     const agent = makeFakeAgent(capability);
@@ -214,6 +539,44 @@ describe('createClientToolsCoordinator()', () => {
     });
 
     expect(resolve).toHaveBeenCalledWith('a1', { ok: true, value: { picked: 2 } });
+  });
+
+  it('batches ask results with the pending group before flushing', async () => {
+    const registry = tools({
+      confirm_booking: ask(
+        'Ask user to confirm a booking',
+        z.object({ flight: z.string() }),
+        FakeAskComponent as never,
+      ),
+      get_weather: action(
+        'Get weather',
+        z.object({ city: z.string() }),
+        async (a) => ({ temp: 72, city: a.city }),
+      ),
+    });
+    const { pending, settle, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry);
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    pending.set([
+      { id: 'a1', name: 'confirm_booking', args: { flight: 'UA1' }, status: 'running' },
+      { id: 'f1', name: 'get_weather', args: { city: 'SF' }, status: 'running' },
+    ]);
+    TestBed.flushEffects();
+    coordinator.handleRenderEvent(agent, {
+      type: 'result',
+      value: { confirmed: true },
+      elementKey: 'confirm_booking',
+    });
+    await drainMicrotasks();
+
+    expect(settle).toHaveBeenCalledWith('a1', { ok: true, value: { confirmed: true } });
+    expect(resolve).toHaveBeenCalledOnce();
+    expect(resolve).toHaveBeenCalledWith('f1', { ok: true, value: { temp: 72, city: 'SF' } });
   });
 
   it('handleRenderEvent() does NOT resolve a view tool via handleRenderEvent (views auto-ack separately)', () => {

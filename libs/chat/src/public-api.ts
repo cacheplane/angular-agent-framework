@@ -88,7 +88,12 @@ export { ChatCitationsComponent, ChatCitationCardTemplateDirective } from './lib
 export { ChatCitationsCardComponent } from './lib/primitives/chat-citations/chat-citations-card.component';
 export { ChatCitationPreviewComponent } from './lib/primitives/chat-citations/chat-citation-preview.component';
 export {
-  deriveDomain, deriveSourceType, deriveMonogram, monogramHue, monogramColor, citationTypeLabel, formatPublished,
+  deriveDomain, deriveSourceType, deriveMonogram, monogramHue, monogramColor, citationTypeLabel,
+  citationTypeMeta, citationSourceVisual, formatPublished,
+} from './lib/agent/citation-display';
+export type {
+  CitationTypeIcon, CitationTypeMeta, CitationSourceVisual,
+  CitationImageVisual, CitationTypeIconVisual, CitationMonogramVisual,
 } from './lib/agent/citation-display';
 
 // DI provider
@@ -225,14 +230,46 @@ export { isPathRef, isLiteralString, isLiteralNumber, isLiteralBoolean } from '@
 // Client tools (declaration API — tools/action/view/ask + JSON-schema derivation)
 export { tools, action, view, ask } from './lib/client-tools/tools';
 export { deriveJsonSchema } from './lib/client-tools/to-json-schema';
-export type { ClientToolDef, AnyFunctionToolDef, FunctionToolDef, ViewToolDef, AskToolDef, ClientToolRegistry, StandardSchemaV1, StandardSchemaInferInput, StandardSchemaInferOutput } from './lib/client-tools/tool-def';
+export type {
+  ClientToolContinuationOptions,
+  ClientToolContinuationLimitEvent,
+  ClientToolContinuationPolicy,
+  ClientToolDef,
+  ClientToolExecutionOptions,
+  ClientToolLifecycle,
+  ClientToolLifecyclePhase,
+  ClientToolViewProps,
+  AnyFunctionToolDef,
+  FunctionToolDef,
+  FunctionToolHandlerContext,
+  ViewToolDef,
+  AskToolDef,
+  ClientToolRegistry,
+  StandardSchemaV1,
+  StandardSchemaInferInput,
+  StandardSchemaInferOutput,
+} from './lib/client-tools/tool-def';
 export type { ViewProps } from './lib/client-tools/component-inputs';
 /** Inferred argument type for a schema (alias of StandardSchemaInferOutput). */
 export type ToolArgs<S extends import('./lib/client-tools/tool-def').StandardSchemaV1> = import('./lib/client-tools/tool-def').StandardSchemaInferOutput<S>;
 export type { ClientToolSpec } from './lib/client-tools/to-json-schema';
 export type { ClientToolsCapability, ClientToolResult } from './lib/client-tools/client-tools-capability';
+export { selectPendingClientToolCalls } from './lib/client-tools/select-pending-client-tool-calls';
+export type { SelectPendingClientToolCallsInput } from './lib/client-tools/select-pending-client-tool-calls';
 export { validateArgs, executeFunctionTool } from './lib/client-tools/execute';
 export { startClientToolExecutor } from './lib/client-tools/client-tool-executor';
+export type { ClientToolExecutorOptions } from './lib/client-tools/client-tool-executor';
+export {
+  clientToolGuardFailureResult,
+  defaultInterruptedClientToolResult,
+  shouldClaimBeforeExecute,
+} from './lib/client-tools/client-tool-execution-guard';
+export type {
+  ClientToolExecutionGuard,
+  ClientToolExecutionKey,
+  ClientToolExecutionRecord,
+  ClientToolExecutionStore,
+} from './lib/client-tools/client-tool-execution-guard';
 // createClientToolsCoordinator: internal — provideChat wires it; not public.
 export { toClientToolSpecs } from './lib/client-tools/client-tools-coordinator';
 export type { ClientToolsCoordinator } from './lib/client-tools/client-tools-coordinator';

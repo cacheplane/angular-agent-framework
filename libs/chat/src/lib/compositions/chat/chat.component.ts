@@ -13,6 +13,11 @@ import type { A2uiActionMessage } from '@threadplane/a2ui';
 import type { StateStore } from '@json-render/core';
 import { toRenderRegistry, signalStateStore, withViews } from '@threadplane/render';
 import type { ClientToolRegistry } from '../../client-tools/tool-def';
+import type {
+  ClientToolContinuationLimitEvent,
+  ClientToolContinuationPolicy,
+} from '../../client-tools/tool-def';
+import type { ClientToolExecutionGuard } from '../../client-tools/client-tool-execution-guard';
 import { createClientToolsCoordinator } from '../../client-tools/client-tools-coordinator';
 import { ChatWindowComponent } from '../../primitives/chat-window/chat-window.component';
 import { ChatMessageListComponent } from '../../primitives/chat-message-list/chat-message-list.component';
@@ -370,6 +375,8 @@ export class ChatComponent {
     'generate_json_render_spec',
     'render_spec',
   ]);
+  readonly clientToolExecutionGuard = input<ClientToolExecutionGuard | undefined>(undefined);
+  readonly clientToolContinuationPolicy = input<ClientToolContinuationPolicy | undefined>(undefined);
 
   readonly showWelcome = computed(() => {
     if (this.welcomeDisabled()) return false;
@@ -379,6 +386,7 @@ export class ChatComponent {
   });
   readonly threadSelected = output<string>();
   readonly renderEvent = output<ChatRenderEvent>();
+  readonly clientToolContinuationLimit = output<ClientToolContinuationLimitEvent>();
   /** Emitted when the user clicks the regenerate button on an assistant message. */
   readonly regenerate = output<void>();
   /** Emitted when the user rates an assistant message. */
@@ -403,7 +411,17 @@ export class ChatComponent {
    */
   private readonly coordinator = computed(() => {
     const reg = this.clientTools();
-    return reg ? createClientToolsCoordinator(reg) : undefined;
+    const policy = this.clientToolContinuationPolicy();
+    return reg ? createClientToolsCoordinator(reg, {
+      executionGuard: this.clientToolExecutionGuard(),
+      continuationPolicy: {
+        ...policy,
+        onLimit: (event) => {
+          policy?.onLimit?.(event);
+          this.clientToolContinuationLimit.emit(event);
+        },
+      },
+    }) : undefined;
   });
 
   /**

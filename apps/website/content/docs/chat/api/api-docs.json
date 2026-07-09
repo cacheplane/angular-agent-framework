@@ -1614,19 +1614,31 @@
         "optional": false
       },
       {
-        "name": "monoColor",
-        "type": "Signal<string>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "monogram",
-        "type": "Signal<string>",
-        "description": "",
-        "optional": false
-      },
-      {
         "name": "published",
+        "type": "Signal<string | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "sourceIcon",
+        "type": "Signal<CitationTypeIcon | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "sourceIconUrl",
+        "type": "Signal<string | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "sourceMonoColor",
+        "type": "Signal<string | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "sourceMonogram",
         "type": "Signal<string | null>",
         "description": "",
         "optional": false
@@ -1636,9 +1648,29 @@
         "type": "Signal<string | null>",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "typeTone",
+        "type": "Signal<CitationTypeIcon>",
+        "description": "",
+        "optional": false
       }
     ],
-    "methods": []
+    "methods": [
+      {
+        "name": "isTypeTone",
+        "signature": "isTypeTone(tone: CitationTypeIcon): boolean",
+        "description": "",
+        "params": [
+          {
+            "name": "tone",
+            "type": "CitationTypeIcon",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
   },
   {
     "name": "ChatCitationsCardComponent",
@@ -1660,14 +1692,26 @@
         "optional": false
       },
       {
-        "name": "monoColor",
-        "type": "Signal<string>",
+        "name": "sourceIcon",
+        "type": "Signal<CitationTypeIcon | null>",
         "description": "",
         "optional": false
       },
       {
-        "name": "monogram",
-        "type": "Signal<string>",
+        "name": "sourceIconUrl",
+        "type": "Signal<string | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "sourceMonoColor",
+        "type": "Signal<string | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "sourceMonogram",
+        "type": "Signal<string | null>",
         "description": "",
         "optional": false
       },
@@ -1682,9 +1726,29 @@
         "type": "Signal<string | null>",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "typeTone",
+        "type": "Signal<CitationTypeIcon>",
+        "description": "",
+        "optional": false
       }
     ],
-    "methods": []
+    "methods": [
+      {
+        "name": "isTypeTone",
+        "signature": "isTypeTone(tone: CitationTypeIcon): boolean",
+        "description": "",
+        "params": [
+          {
+            "name": "tone",
+            "type": "CitationTypeIcon",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
   },
   {
     "name": "ChatCitationsComponent",
@@ -1754,6 +1818,24 @@
       {
         "name": "agent",
         "type": "InputSignal<Agent<Record<string, unknown>>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "clientToolContinuationLimit",
+        "type": "OutputEmitterRef<ClientToolContinuationLimitEvent>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "clientToolContinuationPolicy",
+        "type": "InputSignal<ClientToolContinuationPolicy | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "clientToolExecutionGuard",
+        "type": "InputSignal<ClientToolExecutionGuard | undefined>",
         "description": "",
         "optional": false
       },
@@ -6240,10 +6322,22 @@
         "optional": false
       },
       {
+        "name": "followUp",
+        "type": "boolean",
+        "description": "",
+        "optional": true
+      },
+      {
         "name": "handler",
-        "type": "(args: any) => unknown",
+        "type": "(args: any, context: FunctionToolHandlerContext) => unknown",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "idempotent",
+        "type": "boolean",
+        "description": "",
+        "optional": true
       },
       {
         "name": "kind",
@@ -6276,6 +6370,12 @@
         "type": "string",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "followUp",
+        "type": "boolean",
+        "description": "",
+        "optional": true
       },
       {
         "name": "kind",
@@ -6509,6 +6609,384 @@
     "examples": []
   },
   {
+    "name": "CitationImageVisual",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "iconUrl",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "kind",
+        "type": "\"image\"",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "CitationMonogramVisual",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "color",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "kind",
+        "type": "\"monogram\"",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "monogram",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "CitationTypeIconVisual",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "icon",
+        "type": "CitationTypeIcon",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "kind",
+        "type": "\"type-icon\"",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "label",
+        "type": "string | null",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "tone",
+        "type": "CitationTypeIcon",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "CitationTypeMeta",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "icon",
+        "type": "CitationTypeIcon",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "isKnown",
+        "type": "boolean",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "label",
+        "type": "string | null",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "tone",
+        "type": "CitationTypeIcon",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ClientToolContinuationLimitEvent",
+    "kind": "interface",
+    "description": "Diagnostic emitted when client-tool continuation would exceed the configured max turn count.",
+    "properties": [
+      {
+        "name": "attemptedTurn",
+        "type": "number",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "maxTurns",
+        "type": "number",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "toolCallIds",
+        "type": "readonly string[]",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "toolNames",
+        "type": "readonly string[]",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ClientToolContinuationOptions",
+    "kind": "interface",
+    "description": "Execution policy options for browser-executed function tools.",
+    "properties": [
+      {
+        "name": "followUp",
+        "type": "boolean",
+        "description": "False when the tool result should be recorded without forcing a continuation.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ClientToolContinuationPolicy",
+    "kind": "interface",
+    "description": "Policy for automatic client-tool continuation.",
+    "properties": [
+      {
+        "name": "maxTurns",
+        "type": "number",
+        "description": "Maximum consecutive client-tool continuation groups per user turn. Default: 10. Use 0 for unlimited.",
+        "optional": true
+      },
+      {
+        "name": "onLimit",
+        "type": "(event: ClientToolContinuationLimitEvent) => void",
+        "description": "Called when the max-turn guard stops a continuation group.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ClientToolExecutionGuard",
+    "kind": "interface",
+    "description": "Opt-in guard configuration for claim-before-execute client tools.",
+    "properties": [
+      {
+        "name": "store",
+        "type": "ClientToolExecutionStore",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "threadId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ClientToolExecutionKey",
+    "kind": "interface",
+    "description": "Durable identity for one client-tool execution on one thread.",
+    "properties": [
+      {
+        "name": "threadId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "toolCallId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ClientToolExecutionOptions",
+    "kind": "interface",
+    "description": "Execution policy options for browser-executed function tools.",
+    "properties": [
+      {
+        "name": "followUp",
+        "type": "boolean",
+        "description": "False when the tool result should be recorded without forcing a continuation.",
+        "optional": true
+      },
+      {
+        "name": "idempotent",
+        "type": "boolean",
+        "description": "True when the handler may safely re-run and should skip durable pre-claims.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ClientToolExecutionStore",
+    "kind": "interface",
+    "description": "Structural store contract for guarded browser client-tool execution.",
+    "properties": [],
+    "methods": [
+      {
+        "name": "claim",
+        "signature": "claim(key: ClientToolExecutionKey): Promise<\"claimed\" | ClientToolExecutionRecord>",
+        "description": "Atomically claim a tool-call execution. Returns prior state when present.",
+        "params": [
+          {
+            "name": "key",
+            "type": "ClientToolExecutionKey",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "lookup",
+        "signature": "lookup(threadId: string, toolCallIds: readonly string[]): Promise<Record<string, ClientToolExecutionRecord>>",
+        "description": "Lookup prior execution states for pending tool calls on a thread.",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "toolCallIds",
+            "type": "readonly string[]",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "record",
+        "signature": "record(key: ClientToolExecutionKey, result: ClientToolResult): Promise<void>",
+        "description": "Record the final client-tool result for a claimed execution.",
+        "params": [
+          {
+            "name": "key",
+            "type": "ClientToolExecutionKey",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "result",
+            "type": "ClientToolResult",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ClientToolExecutorOptions",
+    "kind": "interface",
+    "description": "Options for wiring automatic browser function-tool execution.",
+    "properties": [
+      {
+        "name": "executionGuard",
+        "type": "ClientToolExecutionGuard",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "settleToolCall",
+        "type": "(toolCall: ToolCall, result: ClientToolResult) => void",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "shouldExecuteToolCall",
+        "type": "(toolCall: ToolCall) => boolean",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ClientToolLifecycle",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "error",
+        "type": "unknown",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "hasResult",
+        "type": "boolean",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "phase",
+        "type": "ClientToolLifecyclePhase",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "result",
+        "type": "unknown",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "status",
+        "type": "ToolCallStatus",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "ClientToolsCapability",
     "kind": "interface",
     "description": "Optional Agent capability that lets the client declare tools to the model\nand return their results. Implemented per-transport by each adapter\n(AG-UI: native RunAgentInput.tools + addMessage/re-run; LangGraph: catalog\nvia run input + ToolMessage re-run).",
@@ -6548,6 +7026,25 @@
           {
             "name": "specs",
             "type": "readonly ClientToolSpec[]",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "settle",
+        "signature": "settle(toolCallId: string, result: ClientToolResult): void",
+        "description": "Record a client tool's result without continuing the run.",
+        "params": [
+          {
+            "name": "toolCallId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "result",
+            "type": "ClientToolResult",
             "description": "",
             "optional": false
           }
@@ -6795,10 +7292,22 @@
         "optional": false
       },
       {
+        "name": "followUp",
+        "type": "boolean",
+        "description": "",
+        "optional": true
+      },
+      {
         "name": "handler",
-        "type": "(args: StandardSchemaInferOutput<S>) => R | Promise<R>",
+        "type": "(args: StandardSchemaInferOutput<S>, context: FunctionToolHandlerContext) => R | Promise<R>",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "idempotent",
+        "type": "boolean",
+        "description": "",
+        "optional": true
       },
       {
         "name": "kind",
@@ -6810,6 +7319,20 @@
         "name": "schema",
         "type": "S",
         "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "FunctionToolHandlerContext",
+    "kind": "interface",
+    "description": "Runtime context passed to browser-executed function tool handlers.",
+    "properties": [
+      {
+        "name": "signal",
+        "type": "AbortSignal",
+        "description": "Aborts when the client tool execution should stop without resolving.",
         "optional": false
       }
     ],
@@ -7282,6 +7805,38 @@
     "examples": []
   },
   {
+    "name": "SelectPendingClientToolCallsInput",
+    "kind": "interface",
+    "description": "Inputs for selectPendingClientToolCalls.",
+    "properties": [
+      {
+        "name": "catalogNames",
+        "type": "ReadonlySet<string>",
+        "description": "Client-declared tool names that should be handled in the browser.",
+        "optional": false
+      },
+      {
+        "name": "isLoading",
+        "type": "boolean",
+        "description": "Whether the agent is currently streaming a run. Pending client tools are hidden while loading.",
+        "optional": false
+      },
+      {
+        "name": "resolvedIds",
+        "type": "ReadonlySet<string>",
+        "description": "Tool-call ids already resolved by the local client instance.",
+        "optional": false
+      },
+      {
+        "name": "toolCalls",
+        "type": "readonly ToolCall[]",
+        "description": "Tool calls observed from the current agent state.",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "StandardSchemaV1",
     "kind": "interface",
     "description": "",
@@ -7634,6 +8189,12 @@
         "optional": false
       },
       {
+        "name": "followUp",
+        "type": "boolean",
+        "description": "",
+        "optional": true
+      },
+      {
         "name": "kind",
         "type": "\"view\"",
         "description": "",
@@ -7733,10 +8294,38 @@
     "examples": []
   },
   {
+    "name": "CitationSourceVisual",
+    "kind": "type",
+    "description": "",
+    "signature": "CitationImageVisual | CitationTypeIconVisual | CitationMonogramVisual",
+    "examples": []
+  },
+  {
+    "name": "CitationTypeIcon",
+    "kind": "type",
+    "description": "",
+    "signature": "\"web\" | \"file\" | \"app\" | \"memory\" | \"generic\"",
+    "examples": []
+  },
+  {
     "name": "ClientToolDef",
     "kind": "type",
     "description": "A client tool the model can call; executed in the browser.",
     "signature": "AnyFunctionToolDef | ViewToolDef | AskToolDef",
+    "examples": []
+  },
+  {
+    "name": "ClientToolExecutionRecord",
+    "kind": "type",
+    "description": "Prior durable execution state returned by a client-tool execution store.",
+    "signature": "object | object | object",
+    "examples": []
+  },
+  {
+    "name": "ClientToolLifecyclePhase",
+    "kind": "type",
+    "description": "",
+    "signature": "\"running\" | \"complete\" | \"error\"",
     "examples": []
   },
   {
@@ -7751,6 +8340,13 @@
     "kind": "type",
     "description": "The outcome of running a client tool.",
     "signature": "object | object",
+    "examples": []
+  },
+  {
+    "name": "ClientToolViewProps",
+    "kind": "type",
+    "description": "",
+    "signature": "StandardSchemaInferOutput<S> & { clientTool?: ClientToolLifecycle; status?: ToolCallStatus }",
     "examples": []
   },
   {
@@ -7918,7 +8514,7 @@
     "name": "action",
     "kind": "function",
     "description": "Declare an async function tool the model can call; its resolved return value\nbecomes the tool result shipped back to the model.",
-    "signature": "action(description: string, schema: S, handler: (args: StandardSchemaInferOutput<S>) => R | Promise<R>): FunctionToolDef<S, R>",
+    "signature": "action(description: string, schema: S, handler: (args: StandardSchemaInferOutput<S>, context: FunctionToolHandlerContext) => R | Promise<R>, options: ClientToolExecutionOptions): FunctionToolDef<S, R>",
     "params": [
       {
         "name": "description",
@@ -7934,9 +8530,15 @@
       },
       {
         "name": "handler",
-        "type": "(args: StandardSchemaInferOutput<S>) => R | Promise<R>",
-        "description": "Runs in the browser when the model calls the tool; its return\n  type `R` is carried on the resulting FunctionToolDef.",
+        "type": "(args: StandardSchemaInferOutput<S>, context: FunctionToolHandlerContext) => R | Promise<R>",
+        "description": "Runs in the browser when the model calls the tool. The second\n  argument carries an `AbortSignal`; its return type `R` is carried on the\n  resulting FunctionToolDef.",
         "optional": false
+      },
+      {
+        "name": "options",
+        "type": "ClientToolExecutionOptions",
+        "description": "Execution policy options, including `idempotent: true` to skip\n  durable pre-execution claims when a guard is configured.",
+        "optional": true
       }
     ],
     "returns": {
@@ -7951,7 +8553,7 @@
     "name": "ask",
     "kind": "function",
     "description": "Interactive (human-in-the-loop) component tool — the model fills the\ncomponent's props from the schema's output; the value the component emits\nback to the framework becomes the tool result sent to the model.\n\nThe component's signal inputs are checked against the schema output type\n(strict-but-flexible: every schema key must be a declared input with an\nassignable type; the component may declare extra inputs the schema doesn't\nfill). Author the component with `ViewProps<typeof schema>` to derive input\nprop types directly from the schema.",
-    "signature": "ask(description: string, schema: S, component: AcceptComponent<S, C>): AskToolDef<S, C>",
+    "signature": "ask(description: string, schema: S, component: AcceptComponent<S, C>, options: ClientToolContinuationOptions): AskToolDef<S, C>",
     "params": [
       {
         "name": "description",
@@ -7970,6 +8572,12 @@
         "type": "AcceptComponent<S, C>",
         "description": "Angular component whose signal inputs must be compatible with\n  the schema output. A type-level error is reported here when they diverge.",
         "optional": false
+      },
+      {
+        "name": "options",
+        "type": "ClientToolContinuationOptions",
+        "description": "",
+        "optional": true
       }
     ],
     "returns": {
@@ -8006,6 +8614,25 @@
     "examples": []
   },
   {
+    "name": "citationSourceVisual",
+    "kind": "function",
+    "description": "Choose the visual source marker for a citation: provider image, type icon, or monogram.",
+    "signature": "citationSourceVisual(c: Citation): CitationSourceVisual",
+    "params": [
+      {
+        "name": "c",
+        "type": "Citation",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "CitationSourceVisual",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
     "name": "citationTypeLabel",
     "kind": "function",
     "description": "Human label for the source-type badge; null when type is 'unknown'.",
@@ -8020,6 +8647,50 @@
     ],
     "returns": {
       "type": "string | null",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "citationTypeMeta",
+    "kind": "function",
+    "description": "Derive normalized source-type metadata for badges, icons, and tone tokens.",
+    "signature": "citationTypeMeta(c: Citation): CitationTypeMeta",
+    "params": [
+      {
+        "name": "c",
+        "type": "Citation",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "CitationTypeMeta",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "clientToolGuardFailureResult",
+    "kind": "function",
+    "description": "Default fail-closed result when the execution guard itself cannot be reached.",
+    "signature": "clientToolGuardFailureResult(toolCallId: string, error: unknown): ClientToolResult",
+    "params": [
+      {
+        "name": "toolCallId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "error",
+        "type": "unknown",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "ClientToolResult",
       "description": ""
     },
     "examples": []
@@ -8109,6 +8780,25 @@
     ],
     "returns": {
       "type": "PartialArgsBridge",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "defaultInterruptedClientToolResult",
+    "kind": "function",
+    "description": "Default fail-closed result for a stale in-progress client-tool execution.",
+    "signature": "defaultInterruptedClientToolResult(toolCallId: string): ClientToolResult",
+    "params": [
+      {
+        "name": "toolCallId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "ClientToolResult",
       "description": ""
     },
     "examples": []
@@ -8236,7 +8926,7 @@
     "name": "executeFunctionTool",
     "kind": "function",
     "description": "Validate args, run the handler, and normalize the outcome to a ClientToolResult.",
-    "signature": "executeFunctionTool(def: AnyFunctionToolDef, rawArgs: unknown): Promise<ClientToolResult>",
+    "signature": "executeFunctionTool(def: AnyFunctionToolDef, rawArgs: unknown, context: FunctionToolHandlerContext): Promise<ClientToolResult>",
     "params": [
       {
         "name": "def",
@@ -8249,6 +8939,12 @@
         "type": "unknown",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "context",
+        "type": "FunctionToolHandlerContext",
+        "description": "",
+        "optional": true
       }
     ],
     "returns": {
@@ -8664,10 +9360,48 @@
     "examples": []
   },
   {
+    "name": "selectPendingClientToolCalls",
+    "kind": "function",
+    "description": "Select client tool calls that are ready for browser-side resolution.",
+    "signature": "selectPendingClientToolCalls(input: SelectPendingClientToolCallsInput): readonly ToolCall[]",
+    "params": [
+      {
+        "name": "input",
+        "type": "SelectPendingClientToolCallsInput",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "readonly ToolCall[]",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "shouldClaimBeforeExecute",
+    "kind": "function",
+    "description": "Return whether this function tool should claim before browser execution.",
+    "signature": "shouldClaimBeforeExecute(def: AnyFunctionToolDef): boolean",
+    "params": [
+      {
+        "name": "def",
+        "type": "AnyFunctionToolDef",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "boolean",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
     "name": "startClientToolExecutor",
     "kind": "function",
     "description": "Watches the agent's pending client tool calls and auto-runs FUNCTION tools,\nresolving each with its result. View/ask (component) tools are handled by the\nrendering layer, not here. No-op if the agent lacks the clientTools\ncapability. MUST be called in an injection context (sets up an effect).",
-    "signature": "startClientToolExecutor(agent: Agent<>, registry: ClientToolRegistry): void",
+    "signature": "startClientToolExecutor(agent: Agent<>, registry: ClientToolRegistry, options: ClientToolExecutorOptions): void",
     "params": [
       {
         "name": "agent",
@@ -8680,6 +9414,12 @@
         "type": "ClientToolRegistry",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "options",
+        "type": "ClientToolExecutorOptions",
+        "description": "",
+        "optional": true
       }
     ],
     "returns": {
@@ -8843,7 +9583,7 @@
     "name": "view",
     "kind": "function",
     "description": "Render-only component tool — the model fills the component's props from the\nschema's output; the tool call is auto-acknowledged once the component mounts.\n\nThe component's signal inputs are checked against the schema output type\n(strict-but-flexible: every schema key must be a declared input with an\nassignable type; the component may declare extra inputs the schema doesn't fill).\nAuthor the component with `ViewProps<typeof schema>` as the input type set to\nguarantee the shapes stay aligned.",
-    "signature": "view(description: string, schema: S, component: AcceptComponent<S, C>): ViewToolDef<S, C>",
+    "signature": "view(description: string, schema: S, component: AcceptComponent<S, C>, options: ClientToolContinuationOptions): ViewToolDef<S, C>",
     "params": [
       {
         "name": "description",
@@ -8862,6 +9602,12 @@
         "type": "AcceptComponent<S, C>",
         "description": "Angular component whose signal inputs must be compatible with\n  the schema output. A type-level error is reported here when they diverge.",
         "optional": false
+      },
+      {
+        "name": "options",
+        "type": "ClientToolContinuationOptions",
+        "description": "",
+        "optional": true
       }
     ],
     "returns": {

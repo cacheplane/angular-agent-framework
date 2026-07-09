@@ -52,13 +52,14 @@
           "render",
           "a2ui",
           "licensing",
+          "signal-resource",
           "telemetry"
         ],
         "projectsRelationship": "fixed"
       }
     },
     "version": {
-      "preVersionCommand": "npx nx run-many -t build --projects=chat,langgraph,ag-ui,render,a2ui,licensing,telemetry && node libs/telemetry/scripts/apply-install-telemetry.mjs dist/libs/chat dist/libs/langgraph dist/libs/ag-ui dist/libs/render dist/libs/a2ui dist/libs/licensing && node libs/telemetry/scripts/verify-install-telemetry.mjs dist/libs/chat dist/libs/langgraph dist/libs/ag-ui dist/libs/render dist/libs/a2ui dist/libs/licensing dist/libs/telemetry && node libs/telemetry/scripts/smoke-install-telemetry.mjs dist/libs/chat dist/libs/langgraph dist/libs/ag-ui dist/libs/render dist/libs/a2ui dist/libs/licensing dist/libs/telemetry",
+      "preVersionCommand": "npx nx run-many -t build --projects=chat,langgraph,ag-ui,render,a2ui,licensing,signal-resource,telemetry && node libs/telemetry/scripts/apply-install-telemetry.mjs dist/libs/chat dist/libs/langgraph dist/libs/ag-ui dist/libs/render dist/libs/a2ui dist/libs/licensing dist/libs/signal-resource && node libs/telemetry/scripts/verify-install-telemetry.mjs dist/libs/chat dist/libs/langgraph dist/libs/ag-ui dist/libs/render dist/libs/a2ui dist/libs/licensing dist/libs/signal-resource dist/libs/telemetry && node libs/telemetry/scripts/smoke-install-telemetry.mjs dist/libs/chat dist/libs/langgraph dist/libs/ag-ui dist/libs/render dist/libs/a2ui dist/libs/licensing dist/libs/signal-resource dist/libs/telemetry",
       "updateDependents": "auto",
       "preserveLocalDependencyProtocols": true,
       "currentVersionResolver": "git-tag",

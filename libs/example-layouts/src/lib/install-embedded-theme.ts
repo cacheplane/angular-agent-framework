@@ -18,7 +18,7 @@ import { cssVars, type Theme } from '@threadplane/design-tokens';
  */
 export function installEmbeddedTheme(defaultTheme: Theme = 'dark'): void {
   const apply = (theme: Theme) => {
-    document.documentElement.dataset.theme = theme;
+    document.documentElement.dataset['theme'] = theme;
     const vars = cssVars(theme) as Record<string, string>;
     for (const [key, value] of Object.entries(vars)) {
       document.documentElement.style.setProperty(key, value);

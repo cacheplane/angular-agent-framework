@@ -8,6 +8,15 @@ import {
 } from '@ag-ui/client';
 import { Observable } from 'rxjs';
 
+type FakeAgentScriptWhen =
+  | 'initial'
+  | { toolMessageFor: string };
+
+interface FakeAgentScriptBranch {
+  when: FakeAgentScriptWhen;
+  events: readonly BaseEvent[];
+}
+
 /**
  * In-process AG-UI agent that emits a canned streaming response.
  *
@@ -29,11 +38,15 @@ export class FakeAgent extends AbstractAgent {
   /** Milliseconds between successive token emissions. */
   private readonly delayMs: number;
 
+  /** Optional deterministic event branches for tests that need exact streams. */
+  private readonly script: readonly FakeAgentScriptBranch[];
+
   constructor(opts: {
     tokens?: string[];
     /** Optional reasoning chunks emitted before the text reply. */
     reasoningTokens?: string[];
     delayMs?: number;
+    script?: readonly FakeAgentScriptBranch[];
   } = {}) {
     super();
     this.tokens = opts.tokens ?? [
@@ -42,12 +55,15 @@ export class FakeAgent extends AbstractAgent {
     ];
     this.reasoningTokens = opts.reasoningTokens ?? [];
     this.delayMs = opts.delayMs ?? 60;
+    this.script = opts.script ?? [];
   }
 
   run(input: RunAgentInput): Observable<BaseEvent> {
+    const scripted = this.scriptedSequence(input);
+    if (scripted) return this.emitSequence(scripted, 30);
+
     const tokens = this.tokens;
     const reasoningTokens = this.reasoningTokens;
-    const delayMs = this.delayMs;
     const messageId = `fake-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
     const sequence: BaseEvent[] = [
@@ -69,6 +85,22 @@ export class FakeAgent extends AbstractAgent {
     sequence.push({ type: EventType.TEXT_MESSAGE_END, messageId } as BaseEvent);
     sequence.push({ type: EventType.RUN_FINISHED, threadId: input.threadId, runId: input.runId } as BaseEvent);
 
+    return this.emitSequence(sequence, 30);
+  }
+
+  private scriptedSequence(input: RunAgentInput): BaseEvent[] | undefined {
+    if (this.script.length === 0) return undefined;
+    const branch = this.script.find((candidate) => matchesBranch(candidate.when, input));
+    if (!branch) return undefined;
+    return [
+      { type: EventType.RUN_STARTED, threadId: input.threadId, runId: input.runId } as BaseEvent,
+      ...branch.events,
+      { type: EventType.RUN_FINISHED, threadId: input.threadId, runId: input.runId } as BaseEvent,
+    ];
+  }
+
+  private emitSequence(sequence: readonly BaseEvent[], initialDelayMs: number): Observable<BaseEvent> {
+    const delayMs = this.delayMs;
     return new Observable<BaseEvent>((observer) => {
       let cancelled = false;
       let timer: ReturnType<typeof setTimeout> | undefined;
@@ -86,7 +118,7 @@ export class FakeAgent extends AbstractAgent {
         timer = setTimeout(emitNext, delayMs);
       };
 
-      timer = setTimeout(emitNext, 30);
+      timer = setTimeout(emitNext, initialDelayMs);
 
       return () => {
         cancelled = true;
@@ -94,4 +126,26 @@ export class FakeAgent extends AbstractAgent {
       };
     });
   }
+}
+
+function matchesBranch(when: FakeAgentScriptWhen, input: RunAgentInput): boolean {
+  if (when === 'initial') return !hasToolMessages(input);
+  return hasToolMessageFor(input, when.toolMessageFor);
+}
+
+function hasToolMessages(input: RunAgentInput): boolean {
+  return (input.messages ?? []).some((message) => isToolMessage(message));
+}
+
+function hasToolMessageFor(input: RunAgentInput, toolCallId: string): boolean {
+  return (input.messages ?? []).some((message) => {
+    if (!isToolMessage(message)) return false;
+    const record = message as Record<string, unknown>;
+    return record['toolCallId'] === toolCallId || record['tool_call_id'] === toolCallId;
+  });
+}
+
+function isToolMessage(message: unknown): boolean {
+  const record = message as Record<string, unknown>;
+  return record['role'] === 'tool' || record['type'] === 'tool';
 }

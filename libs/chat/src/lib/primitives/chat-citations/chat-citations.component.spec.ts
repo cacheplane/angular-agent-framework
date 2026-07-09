@@ -154,6 +154,33 @@ describe('ChatCitationsComponent', () => {
     expect(fixture.nativeElement.querySelector('.chat-citations__count')?.textContent?.trim()).toBe('2');
   });
 
+  it('uses source visual precedence in the header stack', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.componentInstance.message.set(msg([
+      { id: 'file', index: 1, title: 'File', sourceType: 'file' },
+      { id: 'web', index: 2, title: 'Web', url: 'https://angular.dev' },
+    ]));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.chat-citations__source-icon--file')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.chat-citations__fav--mono')?.textContent?.trim()).toBe('A');
+  });
+
+  it('prefers provider iconUrl over source type icons in the header stack', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.componentInstance.message.set(msg([
+      {
+        id: 'provider-icon',
+        index: 1,
+        title: 'File with provider icon',
+        sourceType: 'file',
+        iconUrl: 'data:image/png;base64,AAA',
+      },
+    ]));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('img.chat-citations__fav')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.chat-citations__source-icon--file')).toBeNull();
+  });
+
   it('expands and collapses the list when the header is toggled', () => {
     const fixture = TestBed.createComponent(HostComponent);
     fixture.componentInstance.message.set(msg([{ id: 'a', index: 1, title: 'A' }]));

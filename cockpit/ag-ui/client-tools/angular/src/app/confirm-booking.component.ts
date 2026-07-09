@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import type { ViewProps } from '@threadplane/chat';
+import type { ClientToolViewProps } from '@threadplane/chat';
 import { injectRenderHost } from '@threadplane/render';
 import { confirmBookingSchema } from './schemas';
 
@@ -16,12 +16,12 @@ import { confirmBookingSchema } from './schemas';
  * `confirmed()` is defined we render a FROZEN line with no buttons; the live
  * interactive card only shows while `confirmed()` is still undefined.
  *
- * Input types for schema-derived props are anchored to `ViewProps<typeof
+ * Input types for schema-derived props are anchored to `ClientToolViewProps<typeof
  * confirmBookingSchema>` — a schema change is a compile error here.
  */
 
 /** Props this component receives from the `confirm_booking` schema. */
-type ConfirmBookingProps = ViewProps<typeof confirmBookingSchema>;
+type ConfirmBookingProps = ClientToolViewProps<typeof confirmBookingSchema>;
 
 @Component({
   selector: 'app-confirm-booking',
@@ -29,7 +29,7 @@ type ConfirmBookingProps = ViewProps<typeof confirmBookingSchema>;
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (confirmed() === undefined) {
-      <div class="cb">
+      <div class="cb" [attr.data-phase]="clientTool()?.phase">
         <p class="cb__summary">{{ summary() }}</p>
         <div class="cb__actions">
           <button type="button" class="cb__btn cb__btn--primary" (click)="respond(true)">Confirm</button>
@@ -37,22 +37,23 @@ type ConfirmBookingProps = ViewProps<typeof confirmBookingSchema>;
         </div>
       </div>
     } @else if (confirmed() === true) {
-      <div class="cb cb--resolved">
+      <div class="cb cb--resolved" [attr.data-phase]="clientTool()?.phase">
         <p class="cb__summary">Booking confirmed ✓</p>
       </div>
     } @else {
-      <div class="cb cb--resolved">
+      <div class="cb cb--resolved" [attr.data-phase]="clientTool()?.phase">
         <p class="cb__summary">Booking cancelled</p>
       </div>
     }
   `,
   styles: [`
-    .cb { border: 1px solid var(--tplane-chat-separator, #e5e7eb); border-radius: 12px; padding: 16px; max-width: 360px; }
-    .cb__summary { margin: 0 0 12px; }
-    .cb--resolved .cb__summary { margin: 0; opacity: 0.85; }
+    .cb { max-width: 360px; padding: 16px; border: 1px solid var(--tplane-chat-separator); border-radius: var(--tplane-chat-radius-card); background: var(--tplane-chat-surface-alt); color: var(--tplane-chat-text); }
+    .cb__summary { margin: 0 0 12px; color: var(--tplane-chat-text); }
+    .cb--resolved .cb__summary { margin: 0; color: var(--tplane-chat-text-muted); }
     .cb__actions { display: flex; gap: 8px; }
-    .cb__btn { padding: 6px 14px; border-radius: 8px; border: 1px solid var(--tplane-chat-separator, #e5e7eb); background: transparent; color: inherit; cursor: pointer; }
-    .cb__btn--primary { background: var(--tplane-chat-accent, #2563eb); color: #fff; border-color: transparent; }
+    .cb__btn { padding: 6px 14px; border: 1px solid var(--tplane-chat-separator); border-radius: var(--tplane-chat-radius-button); background: var(--tplane-chat-surface-alt); color: var(--tplane-chat-text); cursor: pointer; }
+    .cb__btn:focus-visible { outline: 2px solid var(--tplane-chat-primary); outline-offset: 2px; }
+    .cb__btn--primary { border-color: var(--tplane-chat-primary); background: var(--tplane-chat-primary); color: var(--tplane-chat-on-primary); }
   `],
 })
 export class ConfirmBookingComponent {
@@ -60,6 +61,7 @@ export class ConfirmBookingComponent {
   readonly summary = input<ConfirmBookingProps['summary']>();
   /** Spread back onto props after the ask resolves (undefined while interactive). */
   readonly confirmed = input<boolean | undefined>(undefined);
+  readonly clientTool = input<ConfirmBookingProps['clientTool']>();
   private readonly host = injectRenderHost();
   protected respond(confirmed: boolean): void {
     this.host.result({ confirmed });

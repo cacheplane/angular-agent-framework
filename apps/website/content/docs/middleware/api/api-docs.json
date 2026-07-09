@@ -202,6 +202,106 @@
     "examples": []
   },
   {
+    "name": "ClientToolExecutionKey",
+    "kind": "interface",
+    "description": "Durable identity for one client-tool execution on one thread.",
+    "properties": [
+      {
+        "name": "threadId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "toolCallId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ClientToolExecutionStore",
+    "kind": "interface",
+    "description": "Backend-authoritative store for client-tool execution deduplication.",
+    "properties": [],
+    "methods": [
+      {
+        "name": "claim",
+        "signature": "claim(key: ClientToolExecutionKey): Promise<\"claimed\" | ClientToolExecutionRecord>",
+        "description": "Atomically claim a tool-call execution. Returns prior state when present.",
+        "params": [
+          {
+            "name": "key",
+            "type": "ClientToolExecutionKey",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "lookup",
+        "signature": "lookup(threadId: string, toolCallIds: readonly string[]): Promise<Record<string, ClientToolExecutionRecord>>",
+        "description": "Reload reconciliation: statuses/results for selected tool calls on a thread.",
+        "params": [
+          {
+            "name": "threadId",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "toolCallIds",
+            "type": "readonly string[]",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "record",
+        "signature": "record(key: ClientToolExecutionKey, result: ClientToolResult): Promise<void>",
+        "description": "Record the final client-tool result for a claimed or first-seen execution.",
+        "params": [
+          {
+            "name": "key",
+            "type": "ClientToolExecutionKey",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "result",
+            "type": "ClientToolResult",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ClientToolResultMessage",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "result",
+        "type": "ClientToolResult",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "toolCallId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "ClientToolSpec",
     "kind": "interface",
     "description": "A frontend-declared client tool: name + description + JSON-Schema parameters.",
@@ -271,6 +371,108 @@
         "optional": false
       }
     ],
+    "examples": []
+  },
+  {
+    "name": "PostgresClientToolExecutionStoreOptions",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "tenantId",
+        "type": "string | null",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "RecordClientToolResultsInput",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "messages",
+        "type": "readonly BaseMessage<MessageStructure<MessageToolSet>, MessageType>[]",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "store",
+        "type": "ClientToolExecutionStore",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "threadId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "RecordClientToolResultsResult",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "duplicateToolCallIds",
+        "type": "string[]",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "recordedToolCallIds",
+        "type": "string[]",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "ClientToolExecutionRecord",
+    "kind": "type",
+    "description": "",
+    "signature": "object | object | object",
+    "examples": []
+  },
+  {
+    "name": "ClientToolExecutionStatus",
+    "kind": "type",
+    "description": "",
+    "signature": "\"executing\" | \"done\" | \"failed\"",
+    "examples": []
+  },
+  {
+    "name": "ClientToolResult",
+    "kind": "type",
+    "description": "Serialized result for a browser-executed client tool.",
+    "signature": "object | object",
+    "examples": []
+  },
+  {
+    "name": "PostgresRow",
+    "kind": "type",
+    "description": "",
+    "signature": "Record<string, unknown>",
+    "examples": []
+  },
+  {
+    "name": "PostgresTaggedSql",
+    "kind": "type",
+    "description": "",
+    "signature": "(strings: TemplateStringsArray, ...values: unknown[]) => Promise<readonly PostgresRow[]>",
+    "examples": []
+  },
+  {
+    "name": "THREADPLANE_CLIENT_TOOL_EXECUTIONS_SCHEMA",
+    "kind": "const",
+    "description": "",
+    "signature": "\"\\nCREATE TABLE IF NOT EXISTS threadplane_client_tool_executions (\\n  tenant_id     text,\\n  thread_id     text        NOT NULL,\\n  tool_call_id  text        NOT NULL,\\n  status        text        NOT NULL,\\n  result        jsonb,\\n  created_at    timestamptz NOT NULL DEFAULT now(),\\n  updated_at    timestamptz NOT NULL DEFAULT now(),\\n  PRIMARY KEY (thread_id, tool_call_id)\\n);\\n\"",
     "examples": []
   },
   {
@@ -380,6 +582,81 @@
     "examples": []
   },
   {
+    "name": "createInMemoryClientToolExecutionStore",
+    "kind": "function",
+    "description": "Non-persistent store useful for tests and Tier-0/Tier-1 local backends.",
+    "signature": "createInMemoryClientToolExecutionStore(): ClientToolExecutionStore",
+    "params": [],
+    "returns": {
+      "type": "ClientToolExecutionStore",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "createPostgresClientToolExecutionStore",
+    "kind": "function",
+    "description": "Create a Postgres-backed client-tool execution store from a supplied SQL tag.",
+    "signature": "createPostgresClientToolExecutionStore(sql: PostgresTaggedSql, opts: PostgresClientToolExecutionStoreOptions): ClientToolExecutionStore",
+    "params": [
+      {
+        "name": "sql",
+        "type": "PostgresTaggedSql",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "opts",
+        "type": "PostgresClientToolExecutionStoreOptions",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "returns": {
+      "type": "ClientToolExecutionStore",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "extractClientToolResultMessages",
+    "kind": "function",
+    "description": "Extract serialized client-tool results from LangGraph ToolMessages.",
+    "signature": "extractClientToolResultMessages(messages: readonly BaseMessage<MessageStructure<MessageToolSet>, MessageType>[]): ClientToolResultMessage[]",
+    "params": [
+      {
+        "name": "messages",
+        "type": "readonly BaseMessage<MessageStructure<MessageToolSet>, MessageType>[]",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "ClientToolResultMessage[]",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "filterDuplicateClientToolResultMessages",
+    "kind": "function",
+    "description": "Remove duplicate client-tool result messages before server continuation logic sees them.",
+    "signature": "filterDuplicateClientToolResultMessages(input: object): BaseMessage<MessageStructure<MessageToolSet>, MessageType>[]",
+    "params": [
+      {
+        "name": "input",
+        "type": "object",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "BaseMessage<MessageStructure<MessageToolSet>, MessageType>[]",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
     "name": "hasClientToolCall",
     "kind": "function",
     "description": "True if the last message calls at least one client tool.",
@@ -438,6 +715,44 @@
     ],
     "returns": {
       "type": "BaseMessage<MessageStructure<MessageToolSet>, MessageType> | undefined",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "lookupClientToolExecutions",
+    "kind": "function",
+    "description": "Lookup prior client-tool executions for reload reconciliation.",
+    "signature": "lookupClientToolExecutions(input: object): Promise<Record<string, ClientToolExecutionRecord>>",
+    "params": [
+      {
+        "name": "input",
+        "type": "object",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Promise<Record<string, ClientToolExecutionRecord>>",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "recordClientToolResults",
+    "kind": "function",
+    "description": "Record first-seen client-tool results and identify duplicate redeliveries.",
+    "signature": "recordClientToolResults(input: RecordClientToolResultsInput): Promise<RecordClientToolResultsResult>",
+    "params": [
+      {
+        "name": "input",
+        "type": "RecordClientToolResultsInput",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Promise<RecordClientToolResultsResult>",
       "description": ""
     },
     "examples": []

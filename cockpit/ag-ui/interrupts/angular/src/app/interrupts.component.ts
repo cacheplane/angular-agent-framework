@@ -47,8 +47,8 @@ const WELCOME_SUGGESTIONS = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <example-chat-layout>
-      <div main class="flex flex-col h-full">
-        <chat [agent]="agent" class="flex-1 min-w-0">
+      <div main class="interrupts-shell">
+        <chat [agent]="agent" class="interrupts-chat">
           <div chatWelcomeSuggestions>
             @for (s of suggestions; track s.value) {
               <chat-welcome-suggestion
@@ -69,17 +69,29 @@ const WELCOME_SUGGESTIONS = [
           (action)="onAction($event)"
         >
           <ng-template #body let-payload>
-            <div style="display:flex; flex-direction:column; gap:6px;">
-              <div><span style="color:var(--tplane-chat-text-muted); margin-right:6px;">Amount</span><strong>{{ payload.amount | currency }}</strong></div>
-              <div><span style="color:var(--tplane-chat-text-muted); margin-right:6px;">Customer</span><code>{{ payload.customer_id }}</code></div>
+            <div class="approval-body">
+              <div class="approval-row">
+                <span class="approval-label">Amount</span>
+                <strong>{{ payload.amount | currency }}</strong>
+              </div>
+              <div class="approval-row">
+                <span class="approval-label">Customer</span>
+                <code class="approval-code">{{ payload.customer_id }}</code>
+              </div>
               @if (payload.reason) {
-                <div style="font-style:italic; color:var(--tplane-chat-text-muted); margin-top:4px;">{{ payload.reason }}</div>
+                <div class="approval-reason">{{ payload.reason }}</div>
               }
               @if (editing()) {
-                <div style="margin-top:10px; display:flex; gap:6px; align-items:center;">
-                  <label style="color:var(--tplane-chat-text-muted); font-size:12px;">Edit amount</label>
-                  <input type="number" step="0.01" [value]="editAmount() ?? payload.amount" (input)="editAmount.set(+($any($event.target).value))" style="padding:4px 8px; border:1px solid var(--tplane-chat-separator); border-radius:6px; width:120px;" />
-                  <button type="button" (click)="submitEdit(payload)" style="padding:4px 10px; background:var(--tplane-chat-primary); color:var(--tplane-chat-on-primary); border:0; border-radius:6px; font-size:12px; cursor:pointer;">Save</button>
+                <div class="approval-edit">
+                  <label class="approval-label">Edit amount</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    class="approval-input"
+                    [value]="editAmount() ?? payload.amount"
+                    (input)="editAmount.set(+($any($event.target).value))"
+                  />
+                  <button type="button" class="approval-save" (click)="submitEdit(payload)">Save</button>
                 </div>
               }
             </div>
@@ -88,6 +100,85 @@ const WELCOME_SUGGESTIONS = [
       </div>
     </example-chat-layout>
   `,
+  styles: [`
+    .interrupts-shell {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .interrupts-chat {
+      flex: 1 1 0%;
+      min-width: 0;
+    }
+
+    .approval-body {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      color: var(--tplane-chat-text);
+    }
+
+    .approval-row {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .approval-label {
+      color: var(--tplane-chat-text-muted);
+      font-size: var(--tplane-chat-font-size-xs);
+    }
+
+    .approval-code {
+      color: var(--tplane-chat-text);
+      font-family: var(--tplane-chat-font-mono);
+    }
+
+    .approval-reason {
+      margin-top: 4px;
+      color: var(--tplane-chat-text-muted);
+      font-style: italic;
+    }
+
+    .approval-edit {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .approval-input {
+      width: 120px;
+      padding: 4px 8px;
+      border: 1px solid var(--tplane-chat-separator);
+      border-radius: var(--tplane-chat-radius-input);
+      background: var(--tplane-chat-surface);
+      color: var(--tplane-chat-text);
+      font: inherit;
+    }
+
+    .approval-input:focus {
+      outline: 2px solid var(--tplane-chat-primary);
+      outline-offset: 2px;
+    }
+
+    .approval-save {
+      padding: 4px 10px;
+      border: 0;
+      border-radius: var(--tplane-chat-radius-button);
+      background: var(--tplane-chat-primary);
+      color: var(--tplane-chat-on-primary);
+      font: inherit;
+      font-size: var(--tplane-chat-font-size-xs);
+      cursor: pointer;
+    }
+
+    .approval-save:focus-visible {
+      outline: 2px solid var(--tplane-chat-primary);
+      outline-offset: 2px;
+    }
+  `],
 })
 export class InterruptsComponent {
   protected readonly suggestions = WELCOME_SUGGESTIONS;

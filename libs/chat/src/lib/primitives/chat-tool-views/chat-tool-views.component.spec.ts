@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { views } from '@threadplane/render';
 import type { RenderEvent } from '@threadplane/render';
 import { mockAgent, type MockAgent } from '../../testing/mock-agent';
 import type { Message, ToolCall } from '../../agent';
+import type { ClientToolLifecycle } from '../../client-tools/tool-def';
 import { ChatToolViewsComponent } from './chat-tool-views.component';
 
 // A minimal view component that renders the props it receives so the test
@@ -14,12 +15,21 @@ import { ChatToolViewsComponent } from './chat-tool-views.component';
   selector: 'chat-test-weather-card',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<div class="loc">{{ location() }}</div><div class="temp">{{ temperatureF() }}</div><div class="st">{{ status() }}</div>`,
+  template: `
+    <div class="loc">{{ location() }}</div>
+    <div class="temp">{{ temperatureF() }}</div>
+    <div class="st">{{ status() }}</div>
+    <div class="tool-id">{{ clientTool()?.id }}</div>
+    <div class="tool-phase">{{ clientTool()?.phase }}</div>
+    <div class="tool-result">{{ clientTool()?.hasResult }}</div>
+    <div class="tool-error">{{ clientTool()?.error }}</div>
+  `,
 })
 class TestWeatherCardComponent {
   readonly location = input<string | undefined>(undefined);
   readonly temperatureF = input<number | undefined>(undefined);
   readonly status = input<string | undefined>(undefined);
+  readonly clientTool = input<ClientToolLifecycle | undefined>(undefined);
 }
 
 function mountHost(agent: MockAgent, message: Message | undefined) {
@@ -55,6 +65,9 @@ describe('ChatToolViewsComponent', () => {
     expect(el.querySelector('chat-test-weather-card')).toBeTruthy();
     expect(el.querySelector('.loc')?.textContent).toContain('San Francisco');
     expect(el.querySelector('.st')?.textContent).toContain('running');
+    expect(el.querySelector('.tool-id')?.textContent).toContain('c1');
+    expect(el.querySelector('.tool-phase')?.textContent).toContain('running');
+    expect(el.querySelector('.tool-result')?.textContent).toContain('false');
   });
 
   it('merges result fields on completion', () => {
@@ -70,6 +83,26 @@ describe('ChatToolViewsComponent', () => {
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('.temp')?.textContent).toContain('68');
     expect(el.querySelector('.st')?.textContent).toContain('complete');
+    expect(el.querySelector('.tool-phase')?.textContent).toContain('complete');
+    expect(el.querySelector('.tool-result')?.textContent).toContain('true');
+  });
+
+  it('passes error lifecycle state to the registered view', () => {
+    agent.toolCalls.set([
+      {
+        id: 'c1',
+        name: 'weather_card',
+        args: { location: 'San Francisco' },
+        status: 'error',
+        error: 'handler failed',
+        result: { error: 'handler failed' },
+      },
+    ] as ToolCall[]);
+    const fixture = mountHost(agent, msg);
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.tool-phase')?.textContent).toContain('error');
+    expect(el.querySelector('.tool-result')?.textContent).toContain('true');
+    expect(el.querySelector('.tool-error')?.textContent).toContain('handler failed');
   });
 
   it('renders nothing for an unregistered tool name', () => {

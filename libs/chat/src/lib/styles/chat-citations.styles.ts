@@ -1,6 +1,99 @@
 // libs/chat/src/lib/styles/chat-citations.styles.ts
 // SPDX-License-Identifier: MIT
 
+const CHAT_CITATION_SOURCE_VISUAL_STYLES = `
+  .chat-citation-source-icon {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+    border: 1px solid currentColor;
+  }
+  .chat-citation-source-icon svg {
+    width: 12px;
+    height: 12px;
+    display: block;
+  }
+  .chat-citation-source-icon--sm {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+  }
+  .chat-citation-source-icon--sm svg {
+    width: 9px;
+    height: 9px;
+  }
+  .chat-citation-source-icon--web {
+    color: var(--tplane-chat-citation-type-web-fg);
+    background: var(--tplane-chat-citation-type-web-bg);
+    border-color: var(--tplane-chat-citation-type-web-border);
+  }
+  .chat-citation-source-icon--file {
+    color: var(--tplane-chat-citation-type-file-fg);
+    background: var(--tplane-chat-citation-type-file-bg);
+    border-color: var(--tplane-chat-citation-type-file-border);
+  }
+  .chat-citation-source-icon--app {
+    color: var(--tplane-chat-citation-type-app-fg);
+    background: var(--tplane-chat-citation-type-app-bg);
+    border-color: var(--tplane-chat-citation-type-app-border);
+  }
+  .chat-citation-source-icon--memory {
+    color: var(--tplane-chat-citation-type-memory-fg);
+    background: var(--tplane-chat-citation-type-memory-bg);
+    border-color: var(--tplane-chat-citation-type-memory-border);
+  }
+  .chat-citation-source-icon--generic {
+    color: var(--tplane-chat-citation-type-generic-fg);
+    background: var(--tplane-chat-citation-type-generic-bg);
+    border-color: var(--tplane-chat-citation-type-generic-border);
+  }
+  .chat-citation-type-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    max-width: 120px;
+    box-sizing: border-box;
+    padding: 1px 6px;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.35;
+  }
+  .chat-citation-type-badge--web {
+    color: var(--tplane-chat-citation-type-web-fg);
+    background: var(--tplane-chat-citation-type-web-bg);
+    border-color: var(--tplane-chat-citation-type-web-border);
+  }
+  .chat-citation-type-badge--file {
+    color: var(--tplane-chat-citation-type-file-fg);
+    background: var(--tplane-chat-citation-type-file-bg);
+    border-color: var(--tplane-chat-citation-type-file-border);
+  }
+  .chat-citation-type-badge--app {
+    color: var(--tplane-chat-citation-type-app-fg);
+    background: var(--tplane-chat-citation-type-app-bg);
+    border-color: var(--tplane-chat-citation-type-app-border);
+  }
+  .chat-citation-type-badge--memory {
+    color: var(--tplane-chat-citation-type-memory-fg);
+    background: var(--tplane-chat-citation-type-memory-bg);
+    border-color: var(--tplane-chat-citation-type-memory-border);
+  }
+  .chat-citation-type-badge--generic {
+    color: var(--tplane-chat-citation-type-generic-fg);
+    background: var(--tplane-chat-citation-type-generic-bg);
+    border-color: var(--tplane-chat-citation-type-generic-border);
+  }
+`;
+
 /** Inline pill marker (chat-md-citation-reference). */
 export const CHAT_CITATION_MARKER_STYLES = `
   :host { display: inline; }
@@ -53,6 +146,7 @@ export const CHAT_CITATION_MARKER_STYLES = `
 
 /** Provenance preview card (chat-citation-preview), portaled into the overlay pane. */
 export const CHAT_CITATION_PREVIEW_STYLES = `
+  ${CHAT_CITATION_SOURCE_VISUAL_STYLES}
   :host { display: block; }
   .chat-citation-preview {
     width: 320px;
@@ -90,7 +184,6 @@ export const CHAT_CITATION_PREVIEW_STYLES = `
   .chat-citation-preview__type {
     margin-left: auto;
     font-size: 11px;
-    color: var(--tplane-chat-text-muted);
     flex: 0 0 auto;
   }
   .chat-citation-preview__title {
@@ -120,6 +213,7 @@ export const CHAT_CITATION_PREVIEW_STYLES = `
 
 /** Sources panel (chat-citations) + detail card (chat-citations-card). */
 export const CHAT_CITATIONS_PANEL_STYLES = `
+  ${CHAT_CITATION_SOURCE_VISUAL_STYLES}
   :host { display: block; }
   .chat-citations {
     margin-top: var(--tplane-chat-space-5);
@@ -155,6 +249,16 @@ export const CHAT_CITATIONS_PANEL_STYLES = `
   .chat-citations__fav--mono {
     display: flex; align-items: center; justify-content: center;
     color: #fff; font-size: 9px; font-weight: 700;
+  }
+  .chat-citations__source-icon {
+    width: 16px; height: 16px;
+    border-radius: 4px;
+    margin-left: -5px;
+    border-width: 1.5px;
+  }
+  .chat-citations__source-icon:first-child { margin-left: 0; }
+  .chat-citations__source-icon svg {
+    width: 10px; height: 10px;
   }
   .chat-citations__chevron {
     margin-left: auto;
@@ -206,7 +310,7 @@ export const CHAT_CITATIONS_PANEL_STYLES = `
     color: #fff; font-size: 8px; font-weight: 700;
   }
   .chat-citations-card__domain { font-size: 11.5px; color: var(--tplane-chat-text-muted); }
-  .chat-citations-card__type { margin-left: auto; font-size: 10.5px; color: var(--tplane-chat-text-muted); }
+  .chat-citations-card__type { margin-left: auto; font-size: 10.5px; }
   .chat-citations-card__title {
     font-size: 13.5px; font-weight: 600; line-height: 1.35;
     margin: 0 0 2px;

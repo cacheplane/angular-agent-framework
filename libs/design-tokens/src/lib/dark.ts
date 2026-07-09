@@ -1,4 +1,4 @@
-import { baseTokens } from './base';
+import { baseTokens } from './base.ts';
 
 /**
  * Theme-variant tokens resolved for the dark theme.

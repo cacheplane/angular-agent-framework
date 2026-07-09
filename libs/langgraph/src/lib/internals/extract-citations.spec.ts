@@ -47,6 +47,37 @@ describe('extractCitations', () => {
     })).toEqual([{ id: 'a', index: 5, title: 'A' }]);
   });
 
+  it('preserves sourceType, iconUrl and primitive publishedAt fields', () => {
+    expect(extractCitations({
+      additional_kwargs: {
+        citations: [
+          {
+            id: 'a',
+            title: 'A',
+            sourceType: 'file',
+            iconUrl: 'https://example.com/icon.svg',
+            publishedAt: '2024-04-10',
+          },
+          {
+            id: 'b',
+            title: 'B',
+            publishedAt: { date: '2024-04-10' },
+          },
+        ],
+      },
+    })).toEqual([
+      {
+        id: 'a',
+        index: 1,
+        title: 'A',
+        sourceType: 'file',
+        iconUrl: 'https://example.com/icon.svg',
+        publishedAt: '2024-04-10',
+      },
+      { id: 'b', index: 2, title: 'B', publishedAt: undefined },
+    ]);
+  });
+
   it('returns undefined for empty array', () => {
     expect(extractCitations({ additional_kwargs: { citations: [] } })).toBeUndefined();
   });

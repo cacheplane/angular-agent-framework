@@ -42,15 +42,15 @@ import { Component, computed, input } from '@angular/core';
       flex-direction: column;
       gap: 12px;
       padding: 16px 18px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--tplane-chat-separator);
+      border-radius: var(--tplane-chat-radius-card);
+      background: var(--tplane-chat-surface-alt);
       backdrop-filter: blur(4px);
     }
     .data-grid__title {
       font-size: 13px;
       font-weight: 600;
-      color: rgba(255, 255, 255, 0.65);
+      color: var(--tplane-chat-text-muted);
       letter-spacing: 0.01em;
     }
     .data-grid__scroll {
@@ -70,18 +70,18 @@ import { Component, computed, input } from '@angular/core';
       font-weight: 600;
       letter-spacing: 0.06em;
       text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.45);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--tplane-chat-text-muted);
+      border-bottom: 1px solid var(--tplane-chat-separator);
       white-space: nowrap;
     }
     .data-grid__table td {
       padding: 10px;
-      color: rgba(255, 255, 255, 0.85);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--tplane-chat-text);
+      border-bottom: 1px solid var(--tplane-chat-separator);
       white-space: nowrap;
     }
     .data-grid__table tbody tr:nth-child(even) td {
-      background: rgba(255, 255, 255, 0.02);
+      background: var(--tplane-chat-surface);
     }
     .data-grid__table tbody tr:last-child td {
       border-bottom: none;

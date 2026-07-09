@@ -266,6 +266,43 @@ describe('createClientToolsCapability', () => {
     expect(remaining[0].id).toBe('c2');
   });
 
+  it('settle(ok) drops the id from pending and records the result without submitting', async () => {
+    const submitFn = makeSubmitFn();
+    const store    = makeStore({ isLoading: false });
+    const cap      = createClientToolsCapability(submitFn, store);
+    cap.setCatalog([WEATHER_SPEC]);
+    store.toolCallsSig.set([
+      { id: 'c1', name: 'get_weather', args: {}, status: 'complete' },
+    ]);
+
+    cap.settle?.('c1', { ok: true, value: { temp: 70 } });
+    await Promise.resolve();
+
+    expect(cap.pending()).toHaveLength(0);
+    expect(store.toolCalls().find((tc) => tc.id === 'c1')?.result).toEqual({ temp: 70 });
+    expect(submitFn).not.toHaveBeenCalled();
+  });
+
+  it('settle plus resolve flushes multiple pending results in one submit', async () => {
+    const submitFn = makeSubmitFn();
+    const store    = makeStore({ isLoading: false });
+    const cap      = createClientToolsCapability(submitFn, store);
+    cap.setCatalog([WEATHER_SPEC]);
+    store.toolCallsSig.set([
+      { id: 'c1', name: 'get_weather', args: {}, status: 'complete' },
+      { id: 'c2', name: 'get_weather', args: {}, status: 'complete' },
+    ]);
+
+    cap.settle?.('c1', { ok: true, value: { temp: 70 } });
+    cap.resolve('c2', { ok: true, value: { temp: 71 } });
+    await Promise.resolve();
+
+    expect(submitFn).toHaveBeenCalledTimes(1);
+    const payload = (submitFn as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0] as Record<string, unknown>;
+    const messages = payload['messages'] as Record<string, unknown>[];
+    expect(messages.map((message) => message['tool_call_id'])).toEqual(['c1', 'c2']);
+  });
+
   // ── resolve — error result ──────────────────────────────────────────────────
 
   it('resolve(error) issues a run whose tool message content contains the error', async () => {
