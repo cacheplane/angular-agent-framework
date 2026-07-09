@@ -1,0 +1,172 @@
+[
+  {
+    "name": "SignalChatResourceLike",
+    "kind": "interface",
+    "description": "Minimal structural contract required to adapt a signal-backed chat resource.",
+    "properties": [
+      {
+        "name": "error",
+        "type": "Signal<Error | undefined>",
+        "description": "Current resource error, if any.",
+        "optional": false
+      },
+      {
+        "name": "isLoading",
+        "type": "Signal<boolean>",
+        "description": "Whether the resource is currently producing a response.",
+        "optional": false
+      },
+      {
+        "name": "reload",
+        "type": "() => boolean",
+        "description": "Reload the resource, used as a fallback for `Agent.regenerate()`.",
+        "optional": true
+      },
+      {
+        "name": "resendMessages",
+        "type": "() => void",
+        "description": "Re-run against the current history, if supported by the resource.",
+        "optional": true
+      },
+      {
+        "name": "sendMessage",
+        "type": "(message: object) => void",
+        "description": "Send a new user message.",
+        "optional": false
+      },
+      {
+        "name": "setMessages",
+        "type": "(messages: SignalChatResourceMessage[]) => void",
+        "description": "Replace resource message history. Used by `Agent.regenerate()`.",
+        "optional": false
+      },
+      {
+        "name": "stop",
+        "type": "() => void",
+        "description": "Stop the current response. Called only while `isLoading()` is true.",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "Signal<SignalChatResourceMessage[]>",
+        "description": "Current resource message history.",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "SignalChatResourceToolCall",
+    "kind": "interface",
+    "description": "Tool-call shape exposed by a signal-backed chat resource.",
+    "properties": [
+      {
+        "name": "args",
+        "type": "unknown",
+        "description": "Parsed tool arguments.",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "description": "Tool name shown in Threadplane tool-call UI.",
+        "optional": false
+      },
+      {
+        "name": "result",
+        "type": "PromiseSettledResult<unknown>",
+        "description": "Settled tool result, when the resource exposes one.",
+        "optional": true
+      },
+      {
+        "name": "status",
+        "type": "\"pending\" | \"done\"",
+        "description": "Resource-specific lifecycle state for the tool call.",
+        "optional": false
+      },
+      {
+        "name": "toolCallId",
+        "type": "string",
+        "description": "Stable identifier for linking assistant messages to tool-call details.",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "SignalChatResourceMessage",
+    "kind": "type",
+    "description": "Message shape consumed by the signal-resource adapter.",
+    "signature": "object | object | object",
+    "examples": []
+  },
+  {
+    "name": "SignalResourceAgentSource",
+    "kind": "type",
+    "description": "Resource instance or factory accepted by `provideAgent()`.",
+    "signature": "SignalChatResourceLike | () => SignalChatResourceLike",
+    "examples": []
+  },
+  {
+    "name": "injectAgent",
+    "kind": "function",
+    "description": "Injects the signal-resource-backed Agent registered by provideAgent().",
+    "signature": "injectAgent(): Agent<>",
+    "params": [],
+    "returns": {
+      "type": "Agent<>",
+      "description": ""
+    },
+    "examples": [
+      "```ts\nimport { injectAgent } from '@threadplane/signal-resource';\n\nconst agent = injectAgent();\n```"
+    ]
+  },
+  {
+    "name": "provideAgent",
+    "kind": "function",
+    "description": "Provides a signal-resource-backed Agent through Angular dependency injection.",
+    "signature": "provideAgent(ref: AgentRef<T>, sourceOrFactory: SignalResourceAgentSource): Provider[]",
+    "params": [
+      {
+        "name": "ref",
+        "type": "AgentRef<T>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "sourceOrFactory",
+        "type": "SignalResourceAgentSource",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Provider[]",
+      "description": ""
+    },
+    "examples": [
+      "```ts\nimport { provideAgent } from '@threadplane/signal-resource';\n\nbootstrapApplication(AppComponent, {\n  providers: [provideAgent(() => resource)],\n});\n```"
+    ]
+  },
+  {
+    "name": "toAgent",
+    "kind": "function",
+    "description": "Wrap a signal-backed chat resource in the runtime-neutral Agent contract.",
+    "signature": "toAgent(resource: SignalChatResourceLike): Agent<>",
+    "params": [
+      {
+        "name": "resource",
+        "type": "SignalChatResourceLike",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "Agent<>",
+      "description": ""
+    },
+    "examples": [
+      "```ts\nimport { toAgent } from '@threadplane/signal-resource';\n\nconst agent = toAgent(resource);\n```"
+    ]
+  }
+]
