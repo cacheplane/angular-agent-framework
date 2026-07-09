@@ -182,7 +182,6 @@ const LIBRARIES: LibraryEntryConfig[] = [
   { docSlug: 'chat',      entryPoints: ['libs/chat/src/public-api.ts', 'libs/chat/testing/public-api.ts'] },
   { docSlug: 'render',    entryPoints: ['libs/render/src/public-api.ts'] },
   { docSlug: 'ag-ui',     entryPoints: ['libs/ag-ui/src/public-api.ts'] },
-  { docSlug: 'signal-resource', entryPoints: ['libs/signal-resource/src/public-api.ts'] },
   { docSlug: 'a2ui',      entryPoints: ['libs/a2ui/src/index.ts'] },
   { docSlug: 'middleware', entryPoints: ['libs/middleware/src/langgraph/index.ts'] },
   { docSlug: 'licensing', entryPoints: ['libs/licensing/src/index.ts'] },

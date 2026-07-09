@@ -42,7 +42,6 @@
       "@threadplane/marketing-channels": ["marketing/channels/src/index.ts"],
       "@threadplane/marketing-metrics": ["marketing/metrics/src/index.ts"],
       "@threadplane/render": ["libs/render/src/public-api.ts"],
-      "@threadplane/signal-resource": ["libs/signal-resource/src/public-api.ts"],
       "@threadplane/telemetry": ["libs/telemetry/src/index.ts"],
       "@threadplane/telemetry/browser": ["libs/telemetry/src/browser/public-api.ts"],
       "@threadplane/telemetry/node": ["libs/telemetry/src/node/index.ts"],
