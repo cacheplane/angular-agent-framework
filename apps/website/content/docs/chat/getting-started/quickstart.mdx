@@ -79,7 +79,7 @@ No LangGraph server yet? Bind `<chat>` to `mockAgent()` from `@threadplane/chat`
 ```ts
 // chat-page.component.ts
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { ChatComponent, mockAgent } from '@threadplane/chat';
+import { ChatComponent, mockAgent, staticDelivery } from '@threadplane/chat';
 
 @Component({
   selector: 'app-chat-page',
@@ -95,8 +95,13 @@ import { ChatComponent, mockAgent } from '@threadplane/chat';
 export class ChatPageComponent {
   protected readonly chatAgent = mockAgent({
     messages: [
-      { id: 'm1', role: 'user', content: 'Hello' },
-      { id: 'm2', role: 'assistant', content: 'Hi there — I am a mock agent.' },
+      { id: 'm1', role: 'user', content: 'Hello', delivery: staticDelivery('m1') },
+      {
+        id: 'm2',
+        role: 'assistant',
+        content: 'Hi there — I am a mock agent.',
+        delivery: staticDelivery('m2'),
+      },
     ],
   });
 }

@@ -1,4 +1,4 @@
-# Threadplane v0.0.55
+# Threadplane v0.0.56
 
 Production-ready chat, durable threads, interrupts, subagents, planning, memory, and generative UI for Angular agent apps.
 

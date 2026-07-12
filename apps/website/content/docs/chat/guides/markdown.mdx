@@ -53,6 +53,9 @@ import {
   ChatStreamingMdComponent,
   ChatMessageListComponent,
   MessageTemplateDirective,
+  markdownDocument,
+  type Message,
+  type StreamingMarkdownDocument,
 } from '@threadplane/chat';
 
 @Component({
@@ -62,13 +65,23 @@ import {
   template: `
     <chat-message-list [agent]="chatRef">
       <ng-template chatMessageTemplate="ai" let-message>
-        <chat-streaming-md [content]="message.content" />
+        <chat-streaming-md [document]="documentFor(message)" />
       </ng-template>
     </chat-message-list>
   `,
 })
 export class ChatViewComponent {
   // chatRef = injectAgent(); // with provideAgent({...}) in the component's providers
+
+  documentFor(message: Message): StreamingMarkdownDocument {
+    const content = typeof message.content === 'string'
+      ? message.content
+      : message.content
+          .filter((block) => block.type === 'text')
+          .map((block) => block.text)
+          .join('');
+    return markdownDocument(content, message.delivery);
+  }
 }
 ```
 
@@ -95,7 +108,19 @@ export class MarkdownHtmlComponent {
 
 ## Streaming Markdown with chat-streaming-md
 
-`<chat-streaming-md>` is the component that renders AI message content token-by-token using the node-based rendering pipeline. It resolves each markdown node type against `MARKDOWN_VIEW_REGISTRY` — a chat-internal DI token exported from `@threadplane/chat`.
+`<chat-streaming-md>` is the component that renders AI message content token-by-token using the node-based rendering pipeline. It requires one atomic `[document]` input with this shape:
+
+```typescript
+interface StreamingMarkdownDocument {
+  generation: string;
+  phase: 'streaming' | 'complete';
+  content: string;
+}
+```
+
+Use the exported `markdownDocument(content, delivery)` helper to derive it from message content and the adapter-owned `Message.delivery`. Within one generation, streaming content must be append-only. Complete the same generation once, then leave its content unchanged. A retry or replacement starts a new generation. The component uses those guarantees to preserve parser and rendered-node identity while chunks arrive.
+
+It resolves each markdown node type against `MARKDOWN_VIEW_REGISTRY` — a chat-internal DI token exported from `@threadplane/chat`.
 
 By default the component provides `cacheplaneMarkdownViews` (the full 22-node registry) on its own component injector. You can override this at two levels:
 
@@ -138,7 +163,12 @@ Pass a `ViewRegistry` directly to a single `<chat-streaming-md>` via its `[viewR
 
 ```typescript
 import { Component } from '@angular/core';
-import { ChatStreamingMdComponent, cacheplaneMarkdownViews } from '@threadplane/chat';
+import {
+  ChatStreamingMdComponent,
+  cacheplaneMarkdownViews,
+  markdownDocument,
+  staticDelivery,
+} from '@threadplane/chat';
 import { overrideViews } from '@threadplane/render';
 import { MyCodeBlockComponent } from './my-code-block.component';
 
@@ -147,11 +177,14 @@ import { MyCodeBlockComponent } from './my-code-block.component';
   standalone: true,
   imports: [ChatStreamingMdComponent],
   template: `
-    <chat-streaming-md [content]="content" [viewRegistry]="myRegistry" />
+    <chat-streaming-md [document]="document" [viewRegistry]="myRegistry" />
   `,
 })
 export class CustomChatComponent {
-  content = '';
+  document = markdownDocument(
+    '# Custom renderer\n\nThis document is already complete.',
+    staticDelivery('custom-preview'),
+  );
   myRegistry = overrideViews(cacheplaneMarkdownViews, {
     'code-block': MyCodeBlockComponent,
   });

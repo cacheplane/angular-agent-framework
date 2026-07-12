@@ -114,7 +114,20 @@ test('streaming markdown table: blockquote followed by table does not throw', as
   const hygiene = attachBrowserHygiene(page);
   await sendPrompt(page, 'stream a blockquote then a markdown table regression');
 
+  const streamingAssistant = latestAssistant(page);
+  await expect(streamingAssistant).toBeAttached({ timeout: 15_000 });
+  await waitForStreamingContent(streamingAssistant);
+
+  const samples = await collectStreamingSamples(page, streamingAssistant, 2_000);
   const bubble = await waitForFinalAssistant(page);
+
+  expect(contentChangedAcross(samples)).toBe(true);
+  const firstTableSample = samples.findIndex((sample) => sample.tableCount > 0);
+  expect(firstTableSample).toBeGreaterThanOrEqual(0);
+  const samplesAfterTableAppears = samples.slice(firstTableSample);
+  expect(samplesAfterTableAppears.length).toBeGreaterThan(2);
+  expect(tableBoundaryViolations(samplesAfterTableAppears)).toEqual([]);
+
   await expect(bubble.locator('blockquote')).toBeVisible();
   await expect(bubble.locator('blockquote')).toContainText('First line of the quote.');
   await expect(bubble.locator('blockquote')).toContainText('Second line of the quote.');
@@ -130,6 +143,60 @@ test('streaming markdown table: blockquote followed by table does not throw', as
     bubble.locator('p').filter({ hasText: /\|/ }),
     'table rows should not render as raw pipe paragraphs',
   ).toHaveCount(0);
+  expect(hygiene.consoleErrors).toEqual([]);
+  expect(hygiene.failedRequests).toEqual([]);
+});
+
+test('streaming markdown table: long pause after header has no detached table state', async ({
+  page,
+}) => {
+  const hygiene = attachBrowserHygiene(page);
+  await sendPrompt(page, 'stream a markdown table with a long header pause regression');
+
+  const streamingAssistant = latestAssistant(page);
+  await expect(streamingAssistant).toBeAttached({ timeout: 15_000 });
+  await waitForStreamingContent(streamingAssistant);
+
+  const samples = await collectStreamingSamples(page, streamingAssistant, 2_000);
+  const bubble = await waitForFinalAssistant(page);
+
+  expect(samples.length).toBeGreaterThan(20);
+  expect(samples[0]?.contentTextLength).toBeGreaterThan(0);
+  expect(samples.every((sample) => sample.tableCount <= 1)).toBe(true);
+  expect(samples.every((sample) => sample.tableElementsOutsideTable === 0)).toBe(true);
+  expect(samples.every((sample) => sample.detachedTableCellText.length === 0)).toBe(true);
+  expect(samples.every((sample) => sample.rawPipeTextOutsideTable.length === 0)).toBe(true);
+
+  await expect(bubble.locator('table')).toHaveCount(1);
+  await expect(bubble.locator('thead th')).toHaveText(['Name', 'Value']);
+  await expect(bubble.locator('tbody tr')).toHaveCount(2);
+  await expect(bubble.locator('tbody tr')).toContainText(['alpha', 'beta']);
+  expect(hygiene.consoleErrors).toEqual([]);
+  expect(hygiene.failedRequests).toEqual([]);
+});
+
+test('streaming thematic break suppresses the live markdown delimiter', async ({ page }) => {
+  const hygiene = attachBrowserHygiene(page);
+  await sendPrompt(page, 'stream a thematic break regression');
+
+  const streamingAssistant = latestAssistant(page);
+  await expect(streamingAssistant).toBeAttached({ timeout: 15_000 });
+  await waitForStreamingContent(streamingAssistant);
+
+  const samples = await collectStreamingSamples(page, streamingAssistant, 1_200);
+  const bubble = await waitForFinalAssistant(page);
+
+  expect(samples.length).toBeGreaterThan(2);
+  expect(samples.some((sample) => sample.thematicBreakCount > 0)).toBe(true);
+  expect(
+    samples.every(
+      (sample) => sample.rawThematicBreakTextOutsideCode.length === 0,
+    ),
+  ).toBe(true);
+
+  await expect(bubble.locator('hr')).toHaveCount(1);
+  await expect(bubble).toContainText('Before the break.');
+  await expect(bubble).toContainText('After the break.');
   expect(hygiene.consoleErrors).toEqual([]);
   expect(hygiene.failedRequests).toEqual([]);
 });
@@ -188,8 +255,14 @@ interface StreamingMarkdownSample {
   readonly tableCount: number;
   readonly rowsOutsideTable: number;
   readonly detachedTableCellText: string[];
+  readonly tableElementsOutsideTable: number;
+  readonly rawPipeTextOutsideTable: string[];
+  readonly tableFollowsBlockquote: boolean;
+  readonly tableNestedInBlockquote: boolean;
   readonly codeBlockCount: number;
   readonly hasRawFenceMarker: boolean;
+  readonly thematicBreakCount: number;
+  readonly rawThematicBreakTextOutsideCode: string[];
 }
 
 async function collectStreamingSamples(
@@ -208,16 +281,32 @@ async function collectStreamingSamples(
   return samples;
 }
 
+async function waitForStreamingContent(bubble: Locator): Promise<void> {
+  await expect.poll(async () => (
+    await sampleStreamingMarkdown(bubble)
+  ).contentTextLength, {
+    intervals: [25],
+    timeout: 15_000,
+  }).toBeGreaterThan(0);
+}
+
 async function sampleStreamingMarkdown(bubble: Locator): Promise<StreamingMarkdownSample> {
   return bubble.evaluate((el) => {
     const looksLikeTableRowFragment = (text: string): boolean => (
       /\|/.test(text) || /Angular Signals|RxJS|zone\.js/.test(text)
     );
     const tables = Array.from(el.querySelectorAll('table'));
+    const blockquote = el.querySelector('blockquote');
+    const table = tables[0];
     const rowsOutsideTable = Array.from(el.querySelectorAll('tr')).filter(
       (row) => !row.closest('table'),
     ).length;
+    const tableElementsOutsideTable = Array.from(el.querySelectorAll('tr, th, td')).filter(
+      (tableElement) => !tableElement.closest('table'),
+    ).length;
     const detachedTableCellText: string[] = [];
+    const rawPipeTextOutsideTable: string[] = [];
+    const rawThematicBreakTextOutsideCode: string[] = [];
     const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
     let node = walker.nextNode();
     while (node) {
@@ -225,6 +314,15 @@ async function sampleStreamingMarkdown(bubble: Locator): Promise<StreamingMarkdo
       const text = node.textContent?.trim() ?? '';
       if (text && !parent?.closest('table') && looksLikeTableRowFragment(text)) {
         detachedTableCellText.push(text);
+      }
+      if (text.includes('|') && !parent?.closest('table, pre, code')) {
+        rawPipeTextOutsideTable.push(text);
+      }
+      if (
+        !parent?.closest('pre, code')
+        && /(^|\n)\s*(?:-{3,}|\*{3,}|_{3,})\s*(?=\n|$)/.test(node.textContent ?? '')
+      ) {
+        rawThematicBreakTextOutsideCode.push(text);
       }
       node = walker.nextNode();
     }
@@ -234,8 +332,18 @@ async function sampleStreamingMarkdown(bubble: Locator): Promise<StreamingMarkdo
       tableCount: tables.length,
       rowsOutsideTable,
       detachedTableCellText,
+      tableElementsOutsideTable,
+      rawPipeTextOutsideTable,
+      tableFollowsBlockquote: Boolean(
+        blockquote
+        && table
+        && Boolean(blockquote.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING),
+      ),
+      tableNestedInBlockquote: Boolean(table?.closest('blockquote')),
       codeBlockCount: el.querySelectorAll('pre code').length,
       hasRawFenceMarker: el.textContent?.includes('```') ?? false,
+      thematicBreakCount: el.querySelectorAll('hr').length,
+      rawThematicBreakTextOutsideCode,
     };
   });
 }
@@ -246,4 +354,24 @@ async function bubbleContainsRawFenceMarker(bubble: Locator): Promise<boolean> {
 
 function contentChangedAcross(samples: StreamingMarkdownSample[]): boolean {
   return new Set(samples.map((sample) => sample.contentTextLength)).size > 2;
+}
+
+function tableBoundaryViolations(samples: StreamingMarkdownSample[]): object[] {
+  return samples.flatMap((sample, index) => {
+    const valid = sample.tableCount === 1
+      && sample.tableElementsOutsideTable === 0
+      && sample.rawPipeTextOutsideTable.length === 0
+      && sample.tableFollowsBlockquote
+      && !sample.tableNestedInBlockquote;
+    if (valid) return [];
+
+    return [{
+      sampleIndex: index,
+      tableCount: sample.tableCount,
+      tableElementsOutsideTable: sample.tableElementsOutsideTable,
+      rawPipeTextOutsideTable: sample.rawPipeTextOutsideTable,
+      tableFollowsBlockquote: sample.tableFollowsBlockquote,
+      tableNestedInBlockquote: sample.tableNestedInBlockquote,
+    }];
+  });
 }

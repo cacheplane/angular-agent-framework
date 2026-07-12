@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { signal } from '@angular/core';
+import { signal, type Signal } from '@angular/core';
 import { Observable, takeUntil } from 'rxjs';
 import {
   ResourceStatus,
@@ -20,7 +20,17 @@ import type {
   AgentRuntimeTelemetryProperties,
   AgentRuntimeTelemetrySink,
 } from '@threadplane/chat';
-import { AgentError, AGENT_ERROR_MESSAGES, toAgentError, isAbortError } from '@threadplane/chat';
+import {
+  AgentError,
+  AGENT_ERROR_MESSAGES,
+  completeDelivery,
+  isAbortError,
+  staticDelivery,
+  streamingDelivery,
+  toAgentError,
+  type CompleteOutcome,
+  type MessageDelivery,
+} from '@threadplane/chat';
 import {
   SubagentTracker,
   TrackedSubagent,
@@ -87,6 +97,9 @@ export interface StreamManagerBridge {
   joinStream:            (runId: string, lastEventId?: string) => Promise<void>;
   resubmitLast:          () => Promise<void>;
   getReasoningDurationMs:(id: string) => number | undefined;
+  getMessageDelivery:    (id: string) => MessageDelivery;
+  getSubagentMessageDelivery: (toolCallId: string, message: BaseMessage) => MessageDelivery;
+  deliveryRevision:      Signal<number>;
   /** Update server-side thread state (e.g. RemoveMessage for regenerate rollback). */
   updateState:           (values: Record<string, unknown>, opts?: { asNode?: string }) => Promise<void>;
   /** The current thread ID tracked by the bridge (null if not yet known). */
@@ -113,15 +126,31 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
   let abortController: AbortController | null = null;
   let historyAbortController: AbortController | null = null;
   let hasSeenThreadId = false;
-  /** True when the current abort was user-initiated (via stop()). Reset at the start of every new runStream(). */
-  let userAbortRequested = false;
+  const userAbortedControllers = new WeakSet<AbortController>();
   const toolProgressMap = new Map<string, ToolProgress>();
   // Message ids whose content is known-final (installed by a canonical
   // replacement). Late streamed deltas for these ids are stale stragglers and
   // are ignored — decided by identity, never by comparing text to text.
   const canonicalMessageIds = new Set<string>();
   const queuedRuns: AgentQueueEntry[] = [];
-  let drainingQueue = false;
+  let queueDrainEpoch = 0;
+  let activeQueueDrainEpoch: number | null = null;
+  let attemptSequence = 0;
+  const messageDeliveries = new Map<string, MessageDelivery>();
+  const deliveryRevision = signal(0);
+  type DeliveryAttempt = {
+    generation: string;
+    messageIds: Set<string>;
+    finalizedMessageIds: Set<string>;
+    baselineMessageIds: Set<string>;
+    eligibleBaselineAssistantId?: string;
+    currentAssistantMessageId?: string;
+    sawAssistantChunk: boolean;
+    currentStepHasTerminalEvidence: boolean;
+    awaitingFinalSync: boolean;
+    terminalOutcome?: CompleteOutcome;
+  };
+  let activeAttempt: DeliveryAttempt | null = null;
   const subagentManager = new SubagentTracker({
     subagentToolNames: options.subagentToolNames,
     onSubagentChange: publishSubagents,
@@ -148,6 +177,156 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
    */
   const reasoningTimingMap = new Map<string, { startedAt: number; endedAt?: number }>();
 
+  function notifyDeliveryChange(): void {
+    deliveryRevision.update(revision => revision + 1);
+  }
+
+  function beginAttempt(allowBaselineTail = false): DeliveryAttempt {
+    if (activeAttempt?.awaitingFinalSync) {
+      historyAbortController?.abort();
+    }
+    if (activeAttempt && !activeAttempt.terminalOutcome) {
+      finalizeAttempt(activeAttempt, 'interrupted');
+    }
+    const baselineMessageIds = new Set<string>();
+    for (const message of subjects.messages$.value) {
+      const id = (message as unknown as Record<string, unknown>)['id'];
+      if (typeof id === 'string') baselineMessageIds.add(id);
+    }
+    attemptSequence += 1;
+    const attempt: DeliveryAttempt = {
+      generation: `attempt-${attemptSequence}-${Math.random().toString(36).slice(2, 10)}`,
+      messageIds: new Set(),
+      finalizedMessageIds: new Set(),
+      baselineMessageIds,
+      eligibleBaselineAssistantId: allowBaselineTail
+        ? getTailAssistantMessageId(subjects.messages$.value)
+        : undefined,
+      sawAssistantChunk: false,
+      currentStepHasTerminalEvidence: false,
+      awaitingFinalSync: false,
+    };
+    activeAttempt = attempt;
+    return attempt;
+  }
+
+  function isCurrentExecution(controller: AbortController, attempt: DeliveryAttempt): boolean {
+    return abortController === controller && activeAttempt === attempt;
+  }
+
+  function setDelivery(id: string, delivery: MessageDelivery): void {
+    const previous = messageDeliveries.get(id);
+    if (
+      previous?.generation === delivery.generation
+      && previous.phase === delivery.phase
+      && (previous.phase !== 'complete' || delivery.phase !== 'complete' || previous.outcome === delivery.outcome)
+    ) {
+      return;
+    }
+    messageDeliveries.set(id, delivery);
+    notifyDeliveryChange();
+  }
+
+  function finalizeMessage(attempt: DeliveryAttempt, id: string, outcome: CompleteOutcome): void {
+    setDelivery(id, completeDelivery(attempt.generation, outcome));
+    attempt.finalizedMessageIds.add(id);
+  }
+
+  function finalizeAttempt(attempt: DeliveryAttempt, outcome: CompleteOutcome): void {
+    if (attempt.terminalOutcome) return;
+    attempt.terminalOutcome = outcome;
+    for (const id of attempt.messageIds) {
+      if (attempt.finalizedMessageIds.has(id)) continue;
+      finalizeMessage(attempt, id, outcome);
+    }
+  }
+
+  function finishOutcome(attempt: DeliveryAttempt): CompleteOutcome {
+    return attempt.terminalOutcome
+      ?? (attempt.currentStepHasTerminalEvidence || !attempt.sawAssistantChunk ? 'success' : 'interrupted');
+  }
+
+  async function finalizeClosedAttempt(
+    controller: AbortController,
+    attempt: DeliveryAttempt,
+  ): Promise<CompleteOutcome | null> {
+    if (attempt.terminalOutcome) return attempt.terminalOutcome;
+
+    const outcome = finishOutcome(attempt);
+    attempt.awaitingFinalSync = true;
+    try {
+      await refreshHistory(
+        true,
+        () => isCurrentExecution(controller, attempt) && !attempt.terminalOutcome,
+      );
+    } finally {
+      attempt.awaitingFinalSync = false;
+    }
+
+    if (!isCurrentExecution(controller, attempt)) return null;
+    if (!attempt.terminalOutcome) finalizeAttempt(attempt, outcome);
+    return attempt.terminalOutcome ?? outcome;
+  }
+
+  function trackAssistantMessages(messages: BaseMessage[]): void {
+    const attempt = activeAttempt;
+    if (!attempt || attempt.terminalOutcome) return;
+
+    const assistantMessages = messages.filter(message => {
+      const raw = message as unknown as Record<string, unknown>;
+      const type = normalizeMessageType(
+        typeof message._getType === 'function' ? message._getType() : raw['type'] as string | undefined,
+      );
+      const id = typeof raw['id'] === 'string' ? raw['id'] : undefined;
+      return type === 'ai' && id && !attempt.finalizedMessageIds.has(id);
+    });
+    const newAssistantMessages = assistantMessages.filter(message => {
+      const id = (message as unknown as Record<string, unknown>)['id'];
+      return typeof id === 'string' && !attempt.baselineMessageIds.has(id);
+    });
+    const currentStepMessages = newAssistantMessages.length > 0
+      ? newAssistantMessages
+      : assistantMessages.filter(message =>
+          (message as unknown as Record<string, unknown>)['id'] === attempt.eligibleBaselineAssistantId
+        );
+
+    for (const message of currentStepMessages) {
+      const id = (message as unknown as Record<string, unknown>)['id'] as string;
+
+      if (attempt.currentAssistantMessageId && attempt.currentAssistantMessageId !== id) {
+        finalizeMessage(attempt, attempt.currentAssistantMessageId, 'success');
+        attempt.currentStepHasTerminalEvidence = false;
+      }
+      attempt.currentAssistantMessageId = id;
+      attempt.messageIds.add(id);
+      attempt.sawAssistantChunk = true;
+      setDelivery(id, streamingDelivery(attempt.generation));
+    }
+  }
+
+  function invalidateQueueDrain(): void {
+    queueDrainEpoch += 1;
+    activeQueueDrainEpoch = null;
+  }
+
+  function markNormalTerminal(event: StreamEvent): void {
+    const attempt = activeAttempt;
+    if (
+      !attempt
+      || attempt.terminalOutcome
+      || !attempt.sawAssistantChunk
+      || (getEventNamespace(event)?.length ?? 0) > 0
+    ) return;
+    const baseType = getBaseEventType(event.type);
+    // These are the canonical state/snapshot signals available in the current
+    // transport contract. Iterator close alone is deliberately not terminal
+    // evidence: after assistant chunks, a close without one of these markers
+    // is classified as interrupted.
+    if (baseType === 'values' || baseType === 'messages/complete' || baseType === 'checkpoints') {
+      attempt.currentStepHasTerminalEvidence = true;
+    }
+  }
+
   function resetThreadState(): void {
     historyAbortController?.abort();
     subjects.values$.next({} as T);
@@ -167,10 +346,17 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     subagentManager.clear();
     reasoningTimingMap.clear();
     canonicalMessageIds.clear();
+    if (activeAttempt && !activeAttempt.terminalOutcome) {
+      finalizeAttempt(activeAttempt, 'interrupted');
+    }
+    messageDeliveries.clear();
+    activeAttempt = null;
+    notifyDeliveryChange();
   }
 
   function setThreadId(id: string | null, resetState: boolean): void {
     if (resetState) {
+      invalidateQueueDrain();
       abortController?.abort();
     }
     currentThreadId = id;
@@ -188,12 +374,19 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
   });
 
   destroy$.subscribe(() => {
+    invalidateQueueDrain();
     abortController?.abort();
     historyAbortController?.abort();
     reasoningTimingMap.clear();
+    if (activeAttempt && !activeAttempt.terminalOutcome) {
+      finalizeAttempt(activeAttempt, 'interrupted');
+    }
+    messageDeliveries.clear();
+    activeAttempt = null;
+    notifyDeliveryChange();
   });
 
-  async function refreshHistory(force = false): Promise<void> {
+  async function refreshHistory(force = false, isRelevant: () => boolean = () => true): Promise<void> {
     const getHistory = transport.getHistory?.bind(transport);
     if (!currentThreadId || !getHistory) return;
 
@@ -204,8 +397,8 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     subjects.isThreadLoading$.next(true);
 
     try {
-      const history = await getHistory(threadId, controller.signal);
-      if (!controller.signal.aborted && currentThreadId === threadId) {
+      const history = await waitForHistory(getHistory(threadId, controller.signal), controller.signal);
+      if (!controller.signal.aborted && currentThreadId === threadId && isRelevant()) {
         subjects.history$.next(history as ThreadState<T>[]);
 
         // Project the latest checkpoint into messages$ + values$:
@@ -227,7 +420,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
           // canonical surface for them; keeping a duplicate in values$
           // would confuse downstream consumers reading both subjects.
           delete (restoredValues as { messages?: unknown }).messages;
-          subjects.messages$.next(restoredMessages);
+          subjects.messages$.next(preserveIds(subjects.messages$.value, restoredMessages));
           subjects.values$.next(restoredValues);
           // Rebuild derived subjects from the new authoritative messages$.
           // Tool-call results displayed by chat-tool-calls come from
@@ -244,7 +437,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         hydrateInterruptsFromHistory(history as ThreadState<T>[], subjects);
       }
     } catch (err) {
-      if (!controller.signal.aborted && (err as Error)?.name !== 'AbortError') {
+      if (!controller.signal.aborted && isRelevant() && (err as Error)?.name !== 'AbortError') {
         subjects.error$.next(toAgentError(err));
       }
     } finally {
@@ -253,6 +446,35 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         subjects.isThreadLoading$.next(false);
       }
     }
+  }
+
+  function waitForHistory<R>(history: Promise<R>, signal: AbortSignal): Promise<R> {
+    if (signal.aborted) return Promise.reject(createHistoryAbortError());
+
+    return new Promise<R>((resolve, reject) => {
+      const onAbort = () => {
+        cleanup();
+        reject(createHistoryAbortError());
+      };
+      const cleanup = () => signal.removeEventListener('abort', onAbort);
+      signal.addEventListener('abort', onAbort, { once: true });
+      history.then(
+        value => {
+          cleanup();
+          resolve(value);
+        },
+        error => {
+          cleanup();
+          reject(error);
+        },
+      );
+    });
+  }
+
+  function createHistoryAbortError(): Error {
+    const error = new Error('History refresh aborted.');
+    error.name = 'AbortError';
+    return error;
   }
 
   function publishQueue(): void {
@@ -324,22 +546,28 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
   }
 
   async function drainQueue(): Promise<void> {
-    if (drainingQueue || queuedRuns.length === 0) return;
-    drainingQueue = true;
+    if (activeQueueDrainEpoch !== null || queuedRuns.length === 0) return;
+    queueDrainEpoch += 1;
+    const drainEpoch = queueDrainEpoch;
+    activeQueueDrainEpoch = drainEpoch;
     try {
       while (queuedRuns.length > 0) {
+        if (activeQueueDrainEpoch !== drainEpoch) return;
         const entry = queuedRuns.shift();
         publishQueue();
         if (!entry || !transport.joinStream) continue;
-        await joinQueuedRun(entry);
+        await joinQueuedRun(entry, drainEpoch);
       }
     } finally {
-      drainingQueue = false;
+      if (activeQueueDrainEpoch === drainEpoch) activeQueueDrainEpoch = null;
     }
   }
 
-  async function joinQueuedRun(entry: AgentQueueEntry): Promise<void> {
-    abortController = new AbortController();
+  async function joinQueuedRun(entry: AgentQueueEntry, drainEpoch: number): Promise<void> {
+    if (activeQueueDrainEpoch !== drainEpoch) return;
+    const controller = new AbortController();
+    abortController = controller;
+    const attempt = beginAttempt(true);
     const startedAt = Date.now();
     captureRuntimeRequestTelemetry('join_queued');
     captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_started', telemetryProperties);
@@ -350,31 +578,43 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
 
     try {
       const iter = transport.joinStream
-        ? transport.joinStream(entry.threadId, entry.id, undefined, abortController.signal)
+        ? transport.joinStream(entry.threadId, entry.id, undefined, controller.signal)
         : [];
       for await (const event of iter) {
-        if (abortController.signal.aborted) break;
+        if (controller.signal.aborted || !isCurrentExecution(controller, attempt)) break;
         processEvent(event);
       }
-      if (!abortController.signal.aborted) {
-        subjects.status$.next(ResourceStatus.Resolved);
-        // force=true: rehydrate from server-authoritative state so any
-        // post-process node mutations (RemoveMessage, id-match content
-        // replacement) reflected on the server are picked up client-side.
-        await refreshHistory(true);
+      if (!isCurrentExecution(controller, attempt)) return;
+      const outcome = await finalizeClosedAttempt(controller, attempt);
+      if (outcome === null) return;
+      if (!controller.signal.aborted) {
+        if (outcome !== 'error') {
+          subjects.status$.next(ResourceStatus.Resolved);
+        }
         captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_ended', {
           ...telemetryProperties,
           durationMs: Date.now() - startedAt,
         });
       }
     } catch (err) {
-      subjects.error$.next(toAgentError(err));
-      subjects.status$.next(ResourceStatus.Error);
-      captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_errored', {
-        ...telemetryProperties,
-        durationMs: Date.now() - startedAt,
-        errorClass: agentRuntimeTelemetryErrorClass(err),
-      });
+      if (!isCurrentExecution(controller, attempt)) return;
+      if (attempt.terminalOutcome) return;
+      if (isAbortError(err) && userAbortedControllers.has(controller)) {
+        finalizeAttempt(attempt, 'aborted');
+        subjects.error$.next(undefined);
+        subjects.status$.next(ResourceStatus.Idle);
+      } else {
+        finalizeAttempt(attempt, attempt.sawAssistantChunk ? 'interrupted' : 'error');
+        subjects.error$.next(toAgentError(err));
+        subjects.status$.next(ResourceStatus.Error);
+        captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_errored', {
+          ...telemetryProperties,
+          durationMs: Date.now() - startedAt,
+          errorClass: agentRuntimeTelemetryErrorClass(err),
+        });
+      }
+    } finally {
+      if (abortController === controller) abortController = null;
     }
   }
 
@@ -383,9 +623,13 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     opts?: LangGraphSubmitOptions,
     requestType = 'submit',
   ): Promise<void> {
+    invalidateQueueDrain();
     abortController?.abort();
-    abortController = new AbortController();
-    userAbortRequested = false;
+    const controller = new AbortController();
+    abortController = controller;
+    const attempt = beginAttempt(
+      requestType === 'resubmit' || (isRecord(opts?.command) && 'resume' in opts.command),
+    );
     const startedAt = Date.now();
     captureRuntimeRequestTelemetry(requestType);
     captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_started', telemetryProperties);
@@ -427,21 +671,24 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         options.assistantId,
         currentThreadId,
         payload,
-        opts?.signal ?? abortController.signal,
+        opts?.signal ?? controller.signal,
         opts,
       );
 
       for await (const event of iter) {
-        if (abortController.signal.aborted) break;
+        if (controller.signal.aborted || !isCurrentExecution(controller, attempt)) break;
         streamingStarted = true;
         processEvent(event);
       }
 
-      if (!abortController.signal.aborted) {
-        subjects.status$.next(ResourceStatus.Resolved);
-        // force=true: see refreshHistory comment — server state is
-        // authoritative after run completion.
-        await refreshHistory(true);
+      if (!isCurrentExecution(controller, attempt)) return;
+      const outcome = await finalizeClosedAttempt(controller, attempt);
+      if (outcome === null) return;
+
+      if (!controller.signal.aborted) {
+        if (outcome !== 'error') {
+          subjects.status$.next(ResourceStatus.Resolved);
+        }
         await drainQueue();
         captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_ended', {
           ...telemetryProperties,
@@ -449,10 +696,15 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         });
       }
     } catch (err) {
-      if (isAbortError(err) && userAbortRequested) {
+      if (!isCurrentExecution(controller, attempt)) return;
+      if (attempt.terminalOutcome) return;
+      if (isAbortError(err) && userAbortedControllers.has(controller)) {
+        finalizeAttempt(attempt, 'aborted');
         // User explicitly called stop() — treat as graceful idle, not an error.
+        subjects.error$.next(undefined);
         subjects.status$.next(ResourceStatus.Idle);
       } else if (isAbortError(err)) {
+        finalizeAttempt(attempt, attempt.sawAssistantChunk ? 'interrupted' : 'error');
         // A non-user-requested abort: interrupted if a stream had started, else a
         // connect-phase failure. Never "aborted" (that's reserved for user stop).
         const e = streamingStarted
@@ -466,6 +718,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
           errorClass: agentRuntimeTelemetryErrorClass(err),
         });
       } else {
+        finalizeAttempt(attempt, attempt.sawAssistantChunk ? 'interrupted' : 'error');
         subjects.error$.next(toAgentError(err));
         subjects.status$.next(ResourceStatus.Error);
         captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_errored', {
@@ -474,12 +727,18 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
           errorClass: agentRuntimeTelemetryErrorClass(err),
         });
       }
+    } finally {
+      if (abortController === controller) abortController = null;
     }
   }
 
   function processEvent(event: StreamEvent): void {
     const baseType = getBaseEventType(event.type);
     const namespace = getEventNamespace(event);
+
+    if (baseType === 'checkpoints' || baseType === 'messages/complete') {
+      markNormalTerminal(event);
+    }
 
     if (isMessagesEvent(event.type)) {
       const msgs = normalizeMessages(event);
@@ -512,7 +771,24 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
           return;
         }
         const mode: MergeMode = event.messageMetadata ? 'delta' : 'snapshot';
-        subjects.messages$.next(mergeMessages(subjects.messages$.value, normalized, reasoningTimingMap, mode, canonicalMessageIds));
+        const affectedMessageIds = new Set<string>();
+        const merged = mergeMessages(
+          subjects.messages$.value,
+          normalized,
+          reasoningTimingMap,
+          mode,
+          canonicalMessageIds,
+          affectedMessageIds,
+          activeAttempt?.currentAssistantMessageId !== undefined
+            && activeAttempt.currentStepHasTerminalEvidence !== true,
+        );
+        subjects.messages$.next(merged);
+        if (!isSubagentNamespace(namespace)) {
+          trackAssistantMessages(merged.filter(message => {
+            const id = (message as unknown as Record<string, unknown>)['id'];
+            return typeof id === 'string' && affectedMessageIds.has(id);
+          }));
+        }
         if (isLgTraceEnabled()) {
           const msgs = subjects.messages$.value;
           const last = msgs[msgs.length - 1];
@@ -525,8 +801,17 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       } else {
         // Preserve existing ids by content so the final-id swap doesn't
         // tear down the chat-message DOM (and its streaming-md renderer).
-        subjects.messages$.next(preserveIds(subjects.messages$.value, normalized));
+        const affectedMessageIds = new Set<string>();
+        const preserved = preserveIds(subjects.messages$.value, normalized, affectedMessageIds);
+        subjects.messages$.next(preserved);
+        if (!isSubagentNamespace(namespace)) {
+          trackAssistantMessages(preserved.filter(message => {
+            const id = (message as unknown as Record<string, unknown>)['id'];
+            return typeof id === 'string' && affectedMessageIds.has(id);
+          }));
+        }
       }
+      markNormalTerminal(event);
       storeMessageMetadata(normalized, event);
       syncSubagentsFromMessages(normalized);
       syncToolCallsFromMessages();
@@ -542,6 +827,13 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         if (isSubagentNamespace(namespace) && isRecord(vals)) {
           updateSubagentValues(namespace, vals);
           break;
+        }
+        if ((namespace?.length ?? 0) === 0) {
+          if (hasInterrupts(vals)) {
+            if (activeAttempt) finalizeAttempt(activeAttempt, 'paused');
+          } else {
+            markNormalTerminal(event);
+          }
         }
         if (vals != null) {
           extractInterrupts(vals, subjects);
@@ -614,13 +906,16 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         break;
       }
       case 'error':
+        if (activeAttempt) finalizeAttempt(activeAttempt, 'error');
         subjects.error$.next(toAgentError(event['error']));
         subjects.status$.next(ResourceStatus.Error);
         break;
       case 'interrupt':
+        if (activeAttempt) finalizeAttempt(activeAttempt, 'paused');
         subjects.interrupt$.next(event['interrupt'] as Interrupt);
         break;
       case 'interrupts':
+        if (activeAttempt) finalizeAttempt(activeAttempt, 'paused');
         subjects.interrupts$.next(event['interrupts'] as Interrupt[]);
         break;
       case 'custom': {
@@ -772,14 +1067,18 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     },
 
     stop: async () => {
-      userAbortRequested = true;
+      invalidateQueueDrain();
+      const shouldAbortAttempt = Boolean(
+        abortController && activeAttempt && !activeAttempt.terminalOutcome
+      );
+      if (shouldAbortAttempt && abortController) userAbortedControllers.add(abortController);
+      if (shouldAbortAttempt && activeAttempt) finalizeAttempt(activeAttempt, 'aborted');
       abortController?.abort();
+      if (activeAttempt?.awaitingFinalSync) historyAbortController?.abort();
       await clearQueue();
-      // Note: status is set to Idle by the runStream() catch when it sees
-      // isAbortError && userAbortRequested. The explicit set here handles
-      // the case where stop() is called when no stream is active (so the
-      // catch never fires) or when clearQueue() raised an error.
-      if (subjects.status$.value !== ResourceStatus.Idle) {
+      // Set Idle synchronously for an active user cancellation. Attempts that
+      // already reached a terminal outcome retain their existing status.
+      if (shouldAbortAttempt && subjects.status$.value !== ResourceStatus.Idle) {
         subjects.status$.next(ResourceStatus.Idle);
       }
     },
@@ -790,8 +1089,12 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
 
     joinStream: async (runId, lastEventId) => {
       if (!currentThreadId) return;
+      invalidateQueueDrain();
       abortController?.abort();
-      abortController = new AbortController();
+      const controller = new AbortController();
+      abortController = controller;
+      const attempt = beginAttempt(true);
+      const threadId = currentThreadId;
       const startedAt = Date.now();
       captureRuntimeRequestTelemetry('join');
       captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_started', telemetryProperties);
@@ -799,27 +1102,46 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       subjects.toolProgress$.next([]);
       toolProgressMap.clear();
       subjects.status$.next(ResourceStatus.Loading);
+      subjects.error$.next(undefined);
       try {
         const iter = transport.joinStream
-          ? transport.joinStream(currentThreadId, runId, lastEventId, abortController.signal)
+          ? transport.joinStream(threadId, runId, lastEventId, controller.signal)
           : [];
         for await (const event of iter) {
+          if (controller.signal.aborted || !isCurrentExecution(controller, attempt)) break;
           processEvent(event);
         }
-        subjects.status$.next(ResourceStatus.Resolved);
-        await refreshHistory();
-        captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_ended', {
-          ...telemetryProperties,
-          durationMs: Date.now() - startedAt,
-        });
+        if (!isCurrentExecution(controller, attempt)) return;
+        const outcome = await finalizeClosedAttempt(controller, attempt);
+        if (outcome === null) return;
+        if (!controller.signal.aborted) {
+          if (outcome !== 'error') {
+            subjects.status$.next(ResourceStatus.Resolved);
+          }
+          captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_ended', {
+            ...telemetryProperties,
+            durationMs: Date.now() - startedAt,
+          });
+        }
       } catch (err) {
-        subjects.error$.next(toAgentError(err));
-        subjects.status$.next(ResourceStatus.Error);
-        captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_errored', {
-          ...telemetryProperties,
-          durationMs: Date.now() - startedAt,
-          errorClass: agentRuntimeTelemetryErrorClass(err),
-        });
+        if (!isCurrentExecution(controller, attempt)) return;
+        if (attempt.terminalOutcome) return;
+        if (isAbortError(err) && userAbortedControllers.has(controller)) {
+          finalizeAttempt(attempt, 'aborted');
+          subjects.error$.next(undefined);
+          subjects.status$.next(ResourceStatus.Idle);
+        } else {
+          finalizeAttempt(attempt, attempt.sawAssistantChunk ? 'interrupted' : 'error');
+          subjects.error$.next(toAgentError(err));
+          subjects.status$.next(ResourceStatus.Error);
+          captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_errored', {
+            ...telemetryProperties,
+            durationMs: Date.now() - startedAt,
+            errorClass: agentRuntimeTelemetryErrorClass(err),
+          });
+        }
+      } finally {
+        if (abortController === controller) abortController = null;
       }
     },
 
@@ -835,6 +1157,14 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       if (entry.endedAt === undefined) return undefined;
       return entry.endedAt - entry.startedAt;
     },
+
+    getMessageDelivery: (id: string): MessageDelivery =>
+      messageDeliveries.get(id) ?? staticDelivery(id),
+
+    getSubagentMessageDelivery: (toolCallId: string, message: BaseMessage): MessageDelivery =>
+      subagentManager.getMessageDelivery(toolCallId, message),
+
+    deliveryRevision,
 
     updateState: async (
       values: Record<string, unknown>,
@@ -904,6 +1234,12 @@ function extractInterrupts<T, B extends BagTemplate>(
     subjects.interrupt$.next(undefined);
     subjects.interrupts$.next([]);
   }
+}
+
+function hasInterrupts(payload: unknown): boolean {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return false;
+  const raw = (payload as Record<string, unknown>)['__interrupt__'];
+  return Array.isArray(raw) && raw.length > 0;
 }
 
 /**
@@ -1020,7 +1356,11 @@ function normalizeMessages(event: StreamEvent): unknown[] | null {
  * carry the full text we collapse them, keeping the older slot's id so
  * track-by-id stays stable in the chat list.
  */
-function collapseAdjacentAi(messages: BaseMessage[]): BaseMessage[] {
+function collapseAdjacentAi(
+  messages: BaseMessage[],
+  affectedMessageIds?: Set<string>,
+  allowCrossIdAiMerge = true,
+): BaseMessage[] {
   if (messages.length < 2) return messages;
   const out: BaseMessage[] = [];
   for (const msg of messages) {
@@ -1035,13 +1375,21 @@ function collapseAdjacentAi(messages: BaseMessage[]): BaseMessage[] {
     if (lastType === 'ai' && msgType === 'ai') {
       const lastText = extractText(last.content);
       const msgText = extractText(msg.content);
-      if (lastText.length === 0
+      const lastRaw = last as unknown as Record<string, unknown>;
+      const msgRaw = msg as unknown as Record<string, unknown>;
+      const differentIds = lastRaw['id'] !== msgRaw['id'];
+      if (!(differentIds && !allowCrossIdAiMerge) && (lastText.length === 0
           || msgText.length === 0
           || lastText === msgText
           || lastText.startsWith(msgText)
-          || msgText.startsWith(lastText)) {
+          || msgText.startsWith(lastText))) {
         // Keep the longer content; preserve last (older) id and metadata.
         const longerText = msgText.length >= lastText.length ? msgText : lastText;
+        const lastId = (last as unknown as Record<string, unknown>)['id'];
+        const msgId = (msg as unknown as Record<string, unknown>)['id'];
+        if (typeof msgId === 'string' && affectedMessageIds?.delete(msgId) && typeof lastId === 'string') {
+          affectedMessageIds.add(lastId);
+        }
         out[out.length - 1] = { ...(last as object), content: longerText } as BaseMessage;
         continue;
       }
@@ -1059,6 +1407,8 @@ function mergeMessages(
   reasoningTimingMap?: Map<string, { startedAt: number; endedAt?: number }>,
   mode: MergeMode = 'snapshot',
   canonicalMessageIds?: Set<string>,
+  affectedMessageIds?: Set<string>,
+  allowCrossIdAiMerge = true,
 ): BaseMessage[] {
   const merged = [...existing];
   for (const msg of incoming) {
@@ -1073,6 +1423,9 @@ function mergeMessages(
     // prevents DOM teardown + animation restarts mid-stream.
     if (idx < 0) {
       idx = findContentMatch(merged, msg);
+      if (idx >= 0 && !canMergeCrossIdAi(merged[idx], msg, allowCrossIdAiMerge)) {
+        idx = -1;
+      }
     }
     // When an AIMessageChunk arrives without an id-match or content-prefix
     // match, treat the trailing AI message as its accumulator. The
@@ -1088,7 +1441,11 @@ function mergeMessages(
               ? (merged[i] as BaseMessage)._getType()
               : (merged[i] as unknown as Record<string, unknown>)['type'] as string | undefined,
           );
-          if (t === 'ai') { idx = i; break; }
+          if (t === 'ai') {
+            if (!canMergeCrossIdAi(merged[i], msg, allowCrossIdAiMerge)) break;
+            idx = i;
+            break;
+          }
           if (t === 'human' || t === 'tool' || t === 'system') break;
         }
       }
@@ -1146,7 +1503,9 @@ function mergeMessages(
       if (existingId) {
         (next as unknown as Record<string, unknown>)['id'] = existingId;
       }
+      const changed = mode === 'delta' || messageChangedForDelivery(existing, next);
       merged[idx] = next;
+      if (targetId && changed) affectedMessageIds?.add(targetId);
     } else {
       const incomingRaw = msg as unknown as Record<string, unknown>;
       const initialReasoningSource = 'reasoning' in incomingRaw
@@ -1162,9 +1521,22 @@ function mergeMessages(
       const next = { ...(msg as object) } as BaseMessage;
       (next as unknown as Record<string, unknown>)['reasoning'] = initialReasoning;
       merged.push(next);
+      const nextId = (next as unknown as Record<string, unknown>)['id'];
+      if (typeof nextId === 'string') affectedMessageIds?.add(nextId);
     }
   }
-  return collapseAdjacentAi(merged);
+  return collapseAdjacentAi(merged, affectedMessageIds, allowCrossIdAiMerge);
+}
+
+function canMergeCrossIdAi(
+  candidate: BaseMessage,
+  incoming: BaseMessage,
+  allowCrossIdAiMerge: boolean,
+): boolean {
+  const candidateRaw = candidate as unknown as Record<string, unknown>;
+  const incomingRaw = incoming as unknown as Record<string, unknown>;
+  if (candidateRaw['id'] === incomingRaw['id']) return true;
+  return allowCrossIdAiMerge;
 }
 
 /**
@@ -1303,8 +1675,18 @@ function accumulateReasoning(existing: unknown, incoming: unknown): string {
  * (role, content) matches positionally and the existing id differs. Keeps
  * track-by-id stable across server echoes and final-id swaps.
  */
-function preserveIds(existing: BaseMessage[], incoming: BaseMessage[]): BaseMessage[] {
-  if (existing.length === 0) return collapseAdjacentAi(incoming);
+function preserveIds(
+  existing: BaseMessage[],
+  incoming: BaseMessage[],
+  affectedMessageIds?: Set<string>,
+): BaseMessage[] {
+  if (existing.length === 0) {
+    for (const message of incoming) {
+      const id = (message as unknown as Record<string, unknown>)['id'];
+      if (typeof id === 'string') affectedMessageIds?.add(id);
+    }
+    return collapseAdjacentAi(incoming, affectedMessageIds);
+  }
   const usedExisting = new Set<number>();
   const remapped = incoming.map((msg, i) => {
     const inRaw = msg as unknown as Record<string, unknown>;
@@ -1317,13 +1699,43 @@ function preserveIds(existing: BaseMessage[], incoming: BaseMessage[]): BaseMess
       // Fallback: any unused existing message with matching role+content.
       matchIdx = existing.findIndex((m, j) => !usedExisting.has(j) && sameRoleAndContent(m, msg));
     }
-    if (matchIdx < 0) return msg;
+    if (matchIdx < 0) {
+      if (typeof inId === 'string') affectedMessageIds?.add(inId);
+      return msg;
+    }
     usedExisting.add(matchIdx);
     const existingId = (existing[matchIdx] as unknown as Record<string, unknown>)['id'];
-    if (!existingId || existingId === inId) return msg;
-    return { ...(msg as object), id: existingId } as BaseMessage;
+    const remappedMessage = !existingId || existingId === inId
+      ? msg
+      : { ...(msg as object), id: existingId } as BaseMessage;
+    if (typeof existingId === 'string' && messageChangedForDelivery(existing[matchIdx], remappedMessage)) {
+      affectedMessageIds?.add(existingId);
+    }
+    return remappedMessage;
   });
-  return collapseAdjacentAi(remapped);
+  return collapseAdjacentAi(remapped, affectedMessageIds);
+}
+
+function messageChangedForDelivery(existing: BaseMessage, incoming: BaseMessage): boolean {
+  const existingRaw = existing as unknown as Record<string, unknown>;
+  const incomingRaw = incoming as unknown as Record<string, unknown>;
+  const existingType = normalizeMessageType(
+    typeof existing._getType === 'function' ? existing._getType() : existingRaw['type'] as string | undefined,
+  );
+  const incomingType = normalizeMessageType(
+    typeof incoming._getType === 'function' ? incoming._getType() : incomingRaw['type'] as string | undefined,
+  );
+  if (existingType !== incomingType || extractText(existing.content) !== extractText(incoming.content)) {
+    return true;
+  }
+  const existingReasoning = typeof existingRaw['reasoning'] === 'string'
+    ? existingRaw['reasoning']
+    : extractReasoning(existingRaw['reasoning']);
+  const incomingReasoning = typeof incomingRaw['reasoning'] === 'string'
+    ? incomingRaw['reasoning']
+    : extractReasoning(incomingRaw['reasoning']);
+  if (existingReasoning !== incomingReasoning) return true;
+  return JSON.stringify(existingRaw['tool_calls'] ?? null) !== JSON.stringify(incomingRaw['tool_calls'] ?? null);
 }
 
 function sameRoleAndContent(a: BaseMessage, b: BaseMessage): boolean {
@@ -1394,6 +1806,16 @@ function normalizeMessageType(t: string | undefined): string | undefined {
   if (t === 'ToolMessage') return 'tool';
   if (t === 'SystemMessage') return 'system';
   return t;
+}
+
+function getTailAssistantMessageId(messages: BaseMessage[]): string | undefined {
+  const tail = messages[messages.length - 1];
+  if (!tail) return undefined;
+  const raw = tail as unknown as Record<string, unknown>;
+  const type = normalizeMessageType(
+    typeof tail._getType === 'function' ? tail._getType() : raw['type'] as string | undefined,
+  );
+  return type === 'ai' && typeof raw['id'] === 'string' ? raw['id'] : undefined;
 }
 
 function toSubagentRefs(

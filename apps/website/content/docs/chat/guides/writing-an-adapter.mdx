@@ -50,7 +50,7 @@ The design invariant is: **state lives on signals; `events$` carries only things
 
 Below is a complete `EchoAgent` factory — roughly 80 lines — that satisfies the full `Agent` contract without any network call. It shows the signal pattern clearly and is a solid starting point for your own adapter.
 
-On `submit`, the factory optimistically appends the user message, then after a short delay appends an assistant message that echoes the input back. There are no tool calls, no custom events, and no interrupts.
+On `submit`, the factory appends a complete user message and starts an assistant delivery generation. After a short delay it completes that same generation with a successful echo; stopping early completes it as aborted. There are no tool calls, custom events, or interrupts.
 
 ```typescript
 import { signal, type Signal } from '@angular/core';
@@ -58,6 +58,11 @@ import { EMPTY, type Observable } from 'rxjs';
 import type {
   Agent, Message, AgentStatus, ToolCall,
   AgentEvent, AgentSubmitInput, AgentSubmitOptions,
+} from '@threadplane/chat';
+import {
+  completeDelivery,
+  staticDelivery,
+  streamingDelivery,
 } from '@threadplane/chat';
 
 export interface EchoAgentOptions {
@@ -73,6 +78,7 @@ export function createEchoAgent(opts: EchoAgentOptions = {}): Agent {
   const toolCalls = signal<ToolCall[]>([]);
   const state = signal<Record<string, unknown>>({});
   let pending: ReturnType<typeof setTimeout> | undefined;
+  let activeReply: { id: string; generation: string } | undefined;
 
   const submit = async (input: AgentSubmitInput, _opts?: AgentSubmitOptions) => {
     if (input.message === undefined) return;
@@ -81,30 +87,62 @@ export function createEchoAgent(opts: EchoAgentOptions = {}): Agent {
       ? input.message
       : input.message.map((b) => b.type === 'text' ? b.text : '').join('');
 
-    // Optimistic user message
+    const userId = cryptoRandomId();
+    const assistantId = cryptoRandomId();
+    const generation = cryptoRandomId();
+
+    // Static user input is already complete. The assistant owns a new
+    // generation that remains stable until this attempt reaches an outcome.
     messages.update((prev) => [
       ...prev,
-      { id: cryptoRandomId(), role: 'user', content: text },
+      {
+        id: userId,
+        role: 'user',
+        content: text,
+        delivery: staticDelivery(userId),
+      },
+      {
+        id: assistantId,
+        role: 'assistant',
+        content: '',
+        delivery: streamingDelivery(generation),
+      },
     ]);
+    activeReply = { id: assistantId, generation };
 
     status.set('running');
     isLoading.set(true);
     error.set(null);
 
     pending = setTimeout(() => {
-      messages.update((prev) => [
-        ...prev,
-        { id: cryptoRandomId(), role: 'assistant', content: `You said: ${text}` },
-      ]);
+      messages.update((prev) => prev.map((message) =>
+        message.id === assistantId
+          ? {
+              ...message,
+              content: `You said: ${text}`,
+              delivery: completeDelivery(generation, 'success'),
+            }
+          : message
+      ));
       status.set('idle');
       isLoading.set(false);
       pending = undefined;
+      activeReply = undefined;
     }, opts.delayMs ?? 400);
   };
 
   const stop = async () => {
     if (pending !== undefined) clearTimeout(pending);
+    if (activeReply) {
+      const { id, generation } = activeReply;
+      messages.update((prev) => prev.map((message) =>
+        message.id === id
+          ? { ...message, delivery: completeDelivery(generation, 'aborted') }
+          : message
+      ));
+    }
     pending = undefined;
+    activeReply = undefined;
     status.set('idle');
     isLoading.set(false);
   };

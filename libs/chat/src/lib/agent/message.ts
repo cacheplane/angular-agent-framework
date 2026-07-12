@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: MIT
 import type { ContentBlock } from './content-block';
 import type { Citation } from './citation';
+import type { MessageDelivery } from './message-delivery';
 
 export type Role = 'user' | 'assistant' | 'system' | 'tool';
 
 export interface Message {
   id: string;
+  /** Adapter-owned authoritative delivery lifecycle state for this message. */
+  delivery: MessageDelivery;
   role: Role;
   /** Plain text, or a list of structured content blocks. */
   content: string | ContentBlock[];

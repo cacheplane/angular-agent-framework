@@ -3,29 +3,45 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Component, signal } from '@angular/core';
-import { ChatStreamingMdComponent } from './streaming-markdown.component';
+import {
+  ChatStreamingMdComponent,
+  type StreamingMarkdownDocument,
+} from './streaming-markdown.component';
 
 @Component({
   standalone: true,
   imports: [ChatStreamingMdComponent],
-  template: `<chat-streaming-md [content]="content()" [streaming]="streaming()" />`,
+  template: `<chat-streaming-md [document]="document()" />`,
 })
 class HostComponent {
-  content = signal<string>('');
-  streaming = signal<boolean>(true);
+  document = signal<StreamingMarkdownDocument>({
+    generation: 'test',
+    phase: 'streaming',
+    content: '',
+  });
 }
 
 describe('chat-streaming-md — identity preservation', () => {
-  beforeEach(() => TestBed.configureTestingModule({ imports: [HostComponent] }));
+  beforeEach(() =>
+    TestBed.configureTestingModule({ imports: [HostComponent] })
+  );
 
   it('keeps the first paragraph DOM stable when a second paragraph is appended', () => {
     const fixture = TestBed.createComponent(HostComponent);
-    fixture.componentInstance.content.set('First.\n\n');
+    fixture.componentInstance.document.set({
+      generation: 'test',
+      phase: 'streaming',
+      content: 'First.\n\n',
+    });
     fixture.detectChanges();
     const firstP = fixture.nativeElement.querySelector('p');
     expect(firstP?.textContent?.trim()).toBe('First.');
 
-    fixture.componentInstance.content.set('First.\n\nSecond.\n\n');
+    fixture.componentInstance.document.set({
+      generation: 'test',
+      phase: 'streaming',
+      content: 'First.\n\nSecond.\n\n',
+    });
     fixture.detectChanges();
 
     const allPs = fixture.nativeElement.querySelectorAll('p');
@@ -37,11 +53,19 @@ describe('chat-streaming-md — identity preservation', () => {
 
   it('keeps the heading DOM stable when subsequent paragraphs stream in', () => {
     const fixture = TestBed.createComponent(HostComponent);
-    fixture.componentInstance.content.set('# Title\n\n');
+    fixture.componentInstance.document.set({
+      generation: 'test',
+      phase: 'streaming',
+      content: '# Title\n\n',
+    });
     fixture.detectChanges();
     const h1 = fixture.nativeElement.querySelector('h1');
 
-    fixture.componentInstance.content.set('# Title\n\nA paragraph.\n\n');
+    fixture.componentInstance.document.set({
+      generation: 'test',
+      phase: 'streaming',
+      content: '# Title\n\nA paragraph.\n\n',
+    });
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('h1')).toBe(h1);

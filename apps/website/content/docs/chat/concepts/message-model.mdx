@@ -9,6 +9,7 @@ This matters because provider message formats aren't stable enough to build cust
 ```ts
 interface Message {
   id: string;
+  delivery: MessageDelivery;
   role: 'user' | 'assistant' | 'system' | 'tool';
   content: string | ContentBlock[];
   toolCallId?: string;
@@ -23,7 +24,39 @@ interface Message {
 }
 ```
 
-The fields are intentionally small. Put portable UI state in known fields. Put runtime-specific data in `extra`.
+The fields are intentionally small. Put portable UI state in known fields. Put runtime-specific data in `extra`. The adapter must provide `delivery` for every message.
+
+## Delivery Lifecycle
+
+`Message.delivery` is the adapter's authoritative lifecycle state for one response attempt:
+
+```ts
+type MessageDelivery =
+  | { generation: string; phase: 'streaming' }
+  | {
+      generation: string;
+      phase: 'complete';
+      outcome: 'success' | 'error' | 'aborted' | 'interrupted' | 'paused';
+    };
+```
+
+Use the public helpers rather than repeating these object literals:
+
+```ts
+import {
+  completeDelivery,
+  staticDelivery,
+  streamingDelivery,
+} from '@threadplane/chat';
+
+const partial = streamingDelivery('attempt-7');
+const finished = completeDelivery('attempt-7', 'success');
+const historical = staticDelivery('message-42');
+```
+
+Keep `generation` stable while an attempt streams and transitions to complete. Streaming content is append-only; after completion, content and delivery are immutable. Retries and replacement attempts use a new generation. `staticDelivery(messageId)` is the concise choice for user messages, tool results, and already-complete history.
+
+Components consume this field directly. Do not derive a message's phase from agent-wide loading state: concurrent work, interruptions, retries, and restored history can all make that inference wrong.
 
 ## Roles
 

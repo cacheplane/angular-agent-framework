@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: MIT
 import type { BaseMessage } from '@langchain/core/messages';
+import {
+  completeDelivery,
+  staticDelivery,
+  streamingDelivery,
+  type MessageDelivery,
+} from '@threadplane/chat';
 
 export interface TrackedToolCall {
   id?: string;
@@ -9,6 +15,7 @@ export interface TrackedToolCall {
 
 export interface TrackedSubagent {
   id: string;
+  generation: string;
   status: 'pending' | 'running' | 'complete' | 'error';
   toolCall: {
     id: string;
@@ -25,6 +32,12 @@ export interface SubagentTrackerOptions {
 }
 
 const DEFAULT_SUBAGENT_TOOL_NAMES = ['task'];
+let subagentGenerationSequence = 0;
+
+function createSubagentGeneration(): string {
+  subagentGenerationSequence += 1;
+  return `subagent-${subagentGenerationSequence}-${Math.random().toString(36).slice(2, 10)}`;
+}
 
 /**
  * Lightweight Angular adapter for LangGraph subagent stream state.
@@ -76,6 +89,7 @@ export class SubagentTracker {
       const existing = this.subagents.get(id);
       this.subagents.set(id, {
         id,
+        generation: existing?.generation ?? createSubagentGeneration(),
         status: existing?.status ?? 'pending',
         toolCall: {
           id,
@@ -218,6 +232,21 @@ export class SubagentTracker {
       },
     });
     this.onSubagentChange?.();
+  }
+
+  getMessageDelivery(toolCallId: string, message: BaseMessage): MessageDelivery {
+    const id = getMessageId(message) ?? toolCallId;
+    const raw = message as unknown as Record<string, unknown>;
+    const type = typeof message._getType === 'function' ? message._getType() : raw['type'];
+    if (type !== 'ai' && type !== 'assistant' && type !== 'AIMessage' && type !== 'AIMessageChunk') {
+      return staticDelivery(id);
+    }
+
+    const subagent = this.subagents.get(toolCallId);
+    if (!subagent) return staticDelivery(id);
+    if (subagent.status === 'error') return completeDelivery(subagent.generation, 'error');
+    if (subagent.status === 'complete') return completeDelivery(subagent.generation, 'success');
+    return streamingDelivery(subagent.generation);
   }
 
   private retryPendingMatches(): void {

@@ -6,7 +6,8 @@ import {
 } from '@angular/core';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 import { CHAT_REASONING_STYLES } from '../../styles/chat-reasoning.styles';
-import { ChatStreamingMdComponent } from '../../streaming/streaming-markdown.component';
+import type { MessageDelivery } from '../../agent';
+import { ChatStreamingMdComponent, markdownDocument } from '../../streaming/streaming-markdown.component';
 import { formatDuration } from '../../utils/format-duration';
 
 /**
@@ -24,7 +25,7 @@ import { formatDuration } from '../../utils/format-duration';
  * step labels often appear in reasoning output).
  *
  * Internal state: a tristate "expanded" — null means follow auto state-
- * driven logic (force-expand on isStreaming, otherwise honor
+ * driven logic (force-expand while delivery is streaming, otherwise honor
  * defaultExpanded), boolean is a manual user choice that wins for the
  * lifetime of the instance.
  */
@@ -56,19 +57,23 @@ import { formatDuration } from '../../utils/format-duration';
     </button>
     @if (expanded()) {
       <div class="chat-reasoning__body">
-        <chat-streaming-md [content]="content()" [streaming]="isStreaming()" />
+        <chat-streaming-md [document]="document()" />
       </div>
     }
   `,
 })
 export class ChatReasoningComponent {
   readonly content = input<string>('');
-  readonly isStreaming = input<boolean>(false);
+  readonly delivery = input.required<MessageDelivery>();
   readonly durationMs = input<number | undefined>(undefined);
   readonly label = input<string | undefined>(undefined);
   readonly defaultExpanded = input<boolean>(false);
 
   readonly hasContent = computed(() => (this.content() ?? '').length > 0);
+  readonly isStreaming = computed(() => this.delivery().phase === 'streaming');
+  readonly document = computed(() =>
+    markdownDocument(this.content(), this.delivery(), ':reasoning')
+  );
 
   /** null = follow auto logic (streaming → expanded, else defaultExpanded). */
   private readonly _expandedOverride = signal<boolean | null>(null);

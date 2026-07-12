@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { mockAgent } from './mock-agent';
-import type { AgentWithHistory } from '../agent';
+import { staticDelivery, type AgentWithHistory } from '../agent';
 
 describe('mockAgent', () => {
   it('starts in idle state with empty messages', () => {
@@ -14,7 +14,7 @@ describe('mockAgent', () => {
 
   it('exposes writable signals for test control', () => {
     const agent = mockAgent();
-    agent.messages.set([{ id: '1', role: 'user', content: 'hi' }]);
+    agent.messages.set([{ id: '1', role: 'user', content: 'hi', delivery: staticDelivery('1') }]);
     expect(agent.messages().length).toBe(1);
   });
 
@@ -27,7 +27,7 @@ describe('mockAgent', () => {
   it('accepts initial state overrides', () => {
     const agent = mockAgent({
       status: 'running',
-      messages: [{ id: '1', role: 'user', content: 'hi' }],
+      messages: [{ id: '1', role: 'user', content: 'hi', delivery: staticDelivery('1') }],
     });
     expect(agent.status()).toBe('running');
     expect(agent.messages().length).toBe(1);

@@ -76,7 +76,16 @@ describe('AG-UI reducer — reasoning-fixture conformance', () => {
       error:     signal<AgentError | undefined>(undefined),
       toolCalls: signal<ToolCall[]>([]),
       state:     signal<Record<string, unknown>>({}),
+      interrupt: signal(undefined),
       events$:   new Subject<AgentEvent>(),
+      customEvents: signal([]),
+      activities: signal(new Map()),
+      deliveryRun: {
+        generation: 'reasoning-fixture-run',
+        baselineMessageIds: new Set<string>(),
+        ownedMessageIds: new Set<string>(),
+      },
+      allocateDeliveryGeneration: (scope: string) => `reasoning-fixture:${scope}`,
     };
     for (const evt of REASONING_FIXTURE_EVENTS) {
       reduceEvent(abstractToAgUi(evt, REASONING_FIXTURE_MESSAGE_ID), store);
