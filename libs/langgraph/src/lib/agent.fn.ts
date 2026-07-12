@@ -47,7 +47,9 @@ import type {
   ContentBlock,
   AgentSubmitInput,
   AgentSubmitOptions,
+  MessageDelivery,
 } from '@threadplane/chat';
+import { staticDelivery } from '@threadplane/chat';
 
 import {
   AgentOptions,
@@ -355,9 +357,12 @@ export function agent<
   // `@let content = messageContent(message)` short-circuits — DOM never
   // updates per token. DOM stability is provided by `track message.id`
   // in chat-message-list, not by Message identity.
-  const messagesNeutral = computed<Message[]>(() =>
-    rawMessages().map((m) => toMessage(m, manager.getReasoningDurationMs)),
-  );
+  const messagesNeutral = computed<Message[]>(() => {
+    manager.deliveryRevision();
+    return rawMessages().map((m) =>
+      toMessage(m, manager.getReasoningDurationMs, manager.getMessageDelivery)
+    );
+  });
 
   // Client-tool resolutions written client-side. The raw `toolCalls$` stream
   // (and thus `rawToolCalls`) only ever carries backend results — a resolved
@@ -390,7 +395,7 @@ export function agent<
 
   const subagentsNeutral = computed<Map<string, Subagent>>(() => {
     const out = new Map<string, Subagent>();
-    subagentsSig().forEach((sa, key) => out.set(key, toSubagent(sa)));
+    subagentsSig().forEach((sa, key) => out.set(key, toSubagent(sa, manager)));
     return out;
   });
 
@@ -622,6 +627,7 @@ function mapStatus(s: ResourceStatus): AgentStatus {
 function toMessage(
   m: BaseMessage,
   getReasoningDurationMs?: (id: string) => number | undefined,
+  getDelivery?: (id: string) => MessageDelivery,
 ): Message {
   const raw = m as unknown as Record<string, unknown>;
   const typeVal = typeof m._getType === 'function'
@@ -642,6 +648,7 @@ function toMessage(
   const result: Message = {
     id,
     role,
+    delivery: getDelivery?.(id) ?? staticDelivery(id),
     content: extractTextContent(m.content),
     toolCallId: raw['tool_call_id'] as string | undefined,
     name: raw['name'] as string | undefined,
@@ -716,12 +723,24 @@ function toInterrupt(ix: Interrupt<unknown>): AgentInterrupt {
   };
 }
 
-function toSubagent(sa: SubagentStreamRef): Subagent {
+function toSubagent(
+  sa: SubagentStreamRef,
+  manager: ReturnType<typeof createStreamManagerBridge>,
+): Subagent {
   return {
     toolCallId: sa.toolCallId,
     name: sa.name,
     status: sa.status,
-    messages: computed(() => sa.messages().map((m) => toMessage(m))) as Signal<Message[]>,
+    messages: computed(() => {
+      manager.deliveryRevision();
+      return sa.messages().map((m) =>
+        toMessage(
+          m,
+          undefined,
+          () => manager.getSubagentMessageDelivery(sa.toolCallId, m),
+        )
+      );
+    }) as Signal<Message[]>,
     state: sa.values as Signal<Record<string, unknown>>,
   };
 }

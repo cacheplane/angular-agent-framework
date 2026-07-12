@@ -4,7 +4,7 @@ import { signal } from '@angular/core';
 import type { AIMessage as CoreAIMessage } from '@langchain/core/messages';
 import { agent } from './agent.fn';
 import { MockAgentTransport } from './transport/mock-stream.transport';
-import type { StreamEvent } from './agent.types';
+import type { AgentTransport, StreamEvent } from './agent.types';
 import type { ThreadState } from '@langchain/langgraph-sdk';
 import { createLangGraphClient } from './client/create-langgraph-client';
 import { LANGGRAPH_CLIENT_OPTIONS } from './client/client-options';
@@ -74,6 +74,157 @@ describe('agent', () => {
       })
     );
     expect((ref.value() as any).count).toBe(99);
+  });
+
+  describe('neutral message delivery', () => {
+    it('projects restored assistant, user, tool, and system messages as static success', async () => {
+      const transport = new MockAgentTransport();
+      transport.history = [{
+        values: {
+          messages: [
+            { id: 'system-1', type: 'system', content: 'rules' },
+            { id: 'user-1', type: 'human', content: 'question' },
+            { id: 'assistant-1', type: 'ai', content: 'answer' },
+            { id: 'tool-1', type: 'tool', tool_call_id: 'call-1', content: 'result' },
+          ],
+        },
+        next: [],
+        checkpoint: { thread_id: 'thread-1', checkpoint_ns: '', checkpoint_id: 'cp-1', checkpoint_map: null },
+        metadata: null,
+        created_at: '2026-07-11T00:00:00.000Z',
+        parent_checkpoint: null,
+        tasks: [],
+      } as never];
+      const ref = withInjectionContext(() =>
+        agent({ apiUrl: '', assistantId: 'a', transport, threadId: 'thread-1', throttle: false })
+      );
+
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      expect(ref.messages().map(message => message.delivery)).toEqual([
+        { generation: 'system-1', phase: 'complete', outcome: 'success' },
+        { generation: 'user-1', phase: 'complete', outcome: 'success' },
+        { generation: 'assistant-1', phase: 'complete', outcome: 'success' },
+        { generation: 'tool-1', phase: 'complete', outcome: 'success' },
+      ]);
+    });
+
+    it('reactively projects assistant streaming and terminal success without content changing', async () => {
+      const transport = new MockAgentTransport();
+      const ref = withInjectionContext(() =>
+        agent({ apiUrl: '', assistantId: 'a', transport, throttle: false })
+      );
+
+      const submitted = ref.submit({ message: 'hello' });
+      transport.emit([{
+        type: 'messages',
+        messages: [{ id: 'ai-live', type: 'ai', content: 'answer' }],
+        messageMetadata: { langgraph_node: 'model' },
+      }]);
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      const streaming = ref.messages().find(message => message.id === 'ai-live')?.delivery;
+      expect(streaming).toEqual({ generation: expect.any(String), phase: 'streaming' });
+
+      transport.emit([{ type: 'values', values: { done: true } }]);
+      transport.close();
+      await submitted;
+
+      expect(ref.messages().find(message => message.id === 'ai-live')?.delivery).toEqual({
+        generation: streaming?.generation,
+        phase: 'complete',
+        outcome: 'success',
+      });
+    });
+
+    it('allocates a new generation for a regenerated assistant response', async () => {
+      let run = 0;
+      const transport: AgentTransport = {
+        async *stream() {
+          run += 1;
+          yield {
+            type: 'messages',
+            messages: run === 1
+              ? [{ id: 'user-regen', type: 'human', content: 'question' }, { id: 'ai-old', type: 'ai', content: 'old' }]
+              : [{ id: 'ai-new', type: 'ai', content: 'new' }],
+          };
+          yield { type: 'values', values: { done: true } };
+        },
+        async updateState() {},
+      };
+      const ref = withInjectionContext(() =>
+        agent({ apiUrl: '', assistantId: 'a', transport, threadId: 'thread-1', throttle: false })
+      );
+
+      await ref.submit({ message: 'question' });
+      const oldGeneration = ref.messages().find(message => message.id === 'ai-old')?.delivery.generation;
+      expect(oldGeneration).not.toBe('ai-old');
+      await ref.regenerate(ref.messages().findIndex(message => message.id === 'ai-old'));
+      const regenerated = ref.messages().find(message => message.id === 'ai-new')?.delivery;
+
+      expect(regenerated).toMatchObject({ phase: 'complete', outcome: 'success' });
+      expect(regenerated?.generation).not.toBe('ai-new');
+      expect(regenerated?.generation).not.toBe(oldGeneration);
+    });
+
+    it('uses each subagent invocation generation and terminalizes success and error', async () => {
+      const transport = new MockAgentTransport();
+      const ref = withInjectionContext(() =>
+        agent({
+          apiUrl: '', assistantId: 'a', transport, throttle: false,
+          subagentToolNames: ['task'], filterSubagentMessages: true,
+        })
+      );
+
+      void ref.submit({ message: 'delegate' });
+      transport.emit([{
+        type: 'messages',
+        messages: [{
+          id: 'ai-parent', type: 'ai', content: '',
+          tool_calls: [
+            { id: 'call-success', name: 'task', args: { subagent_type: 'researcher', description: 'research' } },
+            { id: 'call-error', name: 'task', args: { subagent_type: 'reviewer', description: 'review' } },
+          ],
+        }],
+      }]);
+      transport.emit([{
+        type: 'messages|tools:call-success', namespace: ['tools:call-success'],
+        messages: [{ id: 'sub-success', type: 'ai', content: 'result' }],
+        messageMetadata: { checkpoint_ns: 'tools:call-success|model' },
+      }, {
+        type: 'messages|tools:call-error', namespace: ['tools:call-error'],
+        messages: [{ id: 'sub-error', type: 'ai', content: 'partial' }],
+        messageMetadata: { checkpoint_ns: 'tools:call-error|model' },
+      }]);
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      const successStreaming = ref.subagents().get('call-success')?.messages()[0].delivery;
+      const errorStreaming = ref.subagents().get('call-error')?.messages()[0].delivery;
+      expect(successStreaming).toMatchObject({ phase: 'streaming' });
+      expect(errorStreaming).toMatchObject({ phase: 'streaming' });
+      expect(successStreaming?.generation).not.toBe(errorStreaming?.generation);
+
+      transport.emit([{
+        type: 'messages',
+        messages: [
+          { id: 'tool-success', type: 'tool', tool_call_id: 'call-success', content: 'done', status: 'success' },
+          { id: 'tool-error', type: 'tool', tool_call_id: 'call-error', content: 'failed', status: 'error' },
+        ],
+      }]);
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(ref.subagents().get('call-success')?.messages()[0].delivery).toEqual({
+        generation: successStreaming?.generation,
+        phase: 'complete',
+        outcome: 'success',
+      });
+      expect(ref.subagents().get('call-error')?.messages()[0].delivery).toEqual({
+        generation: errorStreaming?.generation,
+        phase: 'complete',
+        outcome: 'error',
+      });
+      await ref.stop();
+    });
   });
 
   it('status transitions to running (isLoading) on submit()', async () => {

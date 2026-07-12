@@ -90,6 +90,994 @@ describe('createStreamManagerBridge', () => {
     expect(typeof bridge.submit).toBe('function');
     expect(typeof bridge.stop).toBe('function');
     expect(typeof bridge.resubmitLast).toBe('function');
+    expect(typeof bridge.getMessageDelivery).toBe('function');
+  });
+
+  describe('message delivery lifecycle', () => {
+    it('projects the first assistant chunk as streaming and normal completion as success', async () => {
+      const transport = new MockAgentTransport();
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of(null),
+        destroy$: destroy$.asObservable(),
+      });
+
+      const submitted = bridge.submit({});
+      transport.emit([{
+        type: 'messages',
+        messages: [{ id: 'ai-1', type: 'ai', content: 'hel' }],
+        messageMetadata: { langgraph_node: 'model' },
+      }]);
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      const streaming = bridge.getMessageDelivery('ai-1');
+      expect(streaming).toEqual({
+        generation: expect.any(String),
+        phase: 'streaming',
+      });
+
+      transport.emit([{ type: 'values', values: { answer: 'hello' } }]);
+      transport.close();
+      await submitted;
+
+      expect(bridge.getMessageDelivery('ai-1')).toEqual({
+        generation: streaming.generation,
+        phase: 'complete',
+        outcome: 'success',
+      });
+      destroy$.next();
+    });
+
+    it('does not advance delivery revision for ordinary same-message token publication', async () => {
+      const transport = new MockAgentTransport();
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of(null),
+        destroy$: destroy$.asObservable(),
+      });
+
+      void bridge.submit({});
+      transport.emit([{
+        type: 'messages',
+        messages: [{ id: 'revision-ai', type: 'ai', content: 'a' }],
+        messageMetadata: { langgraph_node: 'model' },
+      }]);
+      await new Promise(resolve => setTimeout(resolve, 0));
+      const afterFirstChunk = bridge.deliveryRevision();
+
+      transport.emit([{
+        type: 'messages',
+        messages: [{ id: 'revision-ai', type: 'ai', content: 'b' }],
+        messageMetadata: { langgraph_node: 'model' },
+      }]);
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(bridge.deliveryRevision()).toBe(afterFirstChunk);
+      await bridge.stop();
+      destroy$.next();
+    });
+
+    it('preserves streamed identity and generation across a canonical history id swap', async () => {
+      const transport = new MockAgentTransport();
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of('thread-1'),
+        destroy$: destroy$.asObservable(),
+      });
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      const submitted = bridge.submit({});
+      transport.emit([{
+        type: 'messages',
+        messages: [{ id: 'streamed-id', type: 'ai', content: 'final answer' }],
+        messageMetadata: { langgraph_node: 'model' },
+      }]);
+      await new Promise(resolve => setTimeout(resolve, 0));
+      const streaming = bridge.getMessageDelivery('streamed-id');
+
+      transport.history = [{
+        values: {
+          messages: [{ id: 'canonical-id', type: 'ai', content: 'final answer' }],
+        },
+        next: [],
+        checkpoint: {
+          thread_id: 'thread-1', checkpoint_ns: '', checkpoint_id: 'cp-final', checkpoint_map: null,
+        },
+        metadata: null,
+        created_at: '2026-07-11T00:00:00.000Z',
+        parent_checkpoint: null,
+        tasks: [],
+      } as never];
+      transport.emit([{ type: 'values', values: { done: true } }]);
+      transport.close();
+      await submitted;
+
+      expect(subjects.messages$.value).toEqual([
+        expect.objectContaining({ id: 'streamed-id', content: 'final answer' }),
+      ]);
+      expect(bridge.getMessageDelivery('streamed-id')).toEqual({
+        generation: streaming.generation,
+        phase: 'complete',
+        outcome: 'success',
+      });
+      destroy$.next();
+    });
+
+    it('accepts an empty messages/complete event as normal terminal evidence', async () => {
+      const transport = new MockAgentTransport();
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of(null),
+        destroy$: destroy$.asObservable(),
+      });
+
+      const submitted = bridge.submit({});
+      transport.emit([{
+        type: 'messages',
+        messages: [{ id: 'ai-complete-marker', type: 'ai', content: 'answer' }],
+        messageMetadata: { langgraph_node: 'model' },
+      }, {
+        type: 'messages/complete',
+        messages: [],
+      }]);
+      transport.close();
+      await submitted;
+
+      expect(bridge.getMessageDelivery('ai-complete-marker')).toMatchObject({
+        phase: 'complete',
+        outcome: 'success',
+      });
+      destroy$.next();
+    });
+
+    it.each([
+      { type: 'values|child:node' as StreamEvent['type'], data: { done: true } },
+      { type: 'messages/complete|child:node' as StreamEvent['type'], messages: [] },
+      { type: 'checkpoints|child:node' as StreamEvent['type'], data: { checkpoint: 'cp-1' } },
+    ])('does not accept namespaced $type as top-level terminal evidence', async (terminalEvent) => {
+      const transport: AgentTransport = {
+        async *stream() {
+          yield {
+            type: 'messages',
+            messages: [{ id: 'ai-namespaced-marker', type: 'ai', content: 'partial' }],
+            messageMetadata: { langgraph_node: 'model' },
+          };
+          yield terminalEvent;
+        },
+      };
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of('thread-1'),
+        destroy$: destroy$.asObservable(),
+      });
+
+      await bridge.submit({});
+
+      expect(bridge.getMessageDelivery('ai-namespaced-marker')).toMatchObject({
+        phase: 'complete',
+        outcome: 'interrupted',
+      });
+      destroy$.next();
+    });
+
+    it('accepts a null-payload top-level values event as terminal evidence', async () => {
+      const transport: AgentTransport = {
+        async *stream() {
+          yield {
+            type: 'messages',
+            messages: [{ id: 'ai-null-values', type: 'ai', content: 'answer' }],
+            messageMetadata: { langgraph_node: 'model' },
+          };
+          yield { type: 'values', data: null };
+        },
+      };
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of('thread-1'),
+        destroy$: destroy$.asObservable(),
+      });
+
+      await bridge.submit({});
+
+      expect(bridge.getMessageDelivery('ai-null-values')).toMatchObject({
+        phase: 'complete',
+        outcome: 'success',
+      });
+      destroy$.next();
+    });
+
+    it('keeps interrupt-bearing top-level values paused', async () => {
+      const transport: AgentTransport = {
+        async *stream() {
+          yield {
+            type: 'messages',
+            messages: [{ id: 'ai-values-interrupt', type: 'ai', content: 'waiting' }],
+            messageMetadata: { langgraph_node: 'model' },
+          };
+          yield {
+            type: 'values',
+            values: { __interrupt__: [{ id: 'approval', value: 'approve?' }] },
+          };
+        },
+      };
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of('thread-1'),
+        destroy$: destroy$.asObservable(),
+      });
+
+      await bridge.submit({});
+
+      expect(bridge.getMessageDelivery('ai-values-interrupt')).toMatchObject({
+        phase: 'complete',
+        outcome: 'paused',
+      });
+      destroy$.next();
+    });
+
+    it('marks an explicit runtime error event as complete/error', async () => {
+      const transport = new MockAgentTransport();
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of(null),
+        destroy$: destroy$.asObservable(),
+      });
+
+      const submitted = bridge.submit({});
+      transport.emit([{
+        type: 'messages',
+        messages: [{ id: 'ai-error', type: 'ai', content: 'partial' }],
+        messageMetadata: { langgraph_node: 'model' },
+      }, { type: 'error', error: new Error('rejected') }]);
+      transport.close();
+      await submitted;
+
+      expect(bridge.getMessageDelivery('ai-error')).toEqual({
+        generation: expect.any(String),
+        phase: 'complete',
+        outcome: 'error',
+      });
+      destroy$.next();
+    });
+
+    it('marks a transport close after a chunk without a terminal event as interrupted', async () => {
+      const transport = new MockAgentTransport();
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of(null),
+        destroy$: destroy$.asObservable(),
+      });
+
+      const submitted = bridge.submit({});
+      transport.emit([{
+        type: 'messages',
+        messages: [{ id: 'ai-interrupted', type: 'ai', content: 'partial' }],
+        messageMetadata: { langgraph_node: 'model' },
+      }]);
+      transport.close();
+      await submitted;
+
+      expect(bridge.getMessageDelivery('ai-interrupted')).toEqual({
+        generation: expect.any(String),
+        phase: 'complete',
+        outcome: 'interrupted',
+      });
+      destroy$.next();
+    });
+
+    it('does not treat a values snapshot before the first chunk as terminal evidence', async () => {
+      const transport = new MockAgentTransport();
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of(null),
+        destroy$: destroy$.asObservable(),
+      });
+
+      const submitted = bridge.submit({});
+      transport.emit([
+        { type: 'values', values: { initialized: true } },
+        {
+          type: 'messages',
+          messages: [{ id: 'ai-after-initial-values', type: 'ai', content: 'partial' }],
+          messageMetadata: { langgraph_node: 'model' },
+        },
+      ]);
+      transport.close();
+      await submitted;
+
+      expect(bridge.getMessageDelivery('ai-after-initial-values')).toMatchObject({
+        phase: 'complete',
+        outcome: 'interrupted',
+      });
+      destroy$.next();
+    });
+
+    it('requires new terminal evidence after a new assistant step starts', async () => {
+      const transport: AgentTransport = {
+        async *stream() {
+          yield {
+            type: 'messages',
+            messages: [{ id: 'ai-step-a', type: 'ai', content: 'partial' }],
+            messageMetadata: { langgraph_node: 'model' },
+          };
+          yield { type: 'values', values: { step: 'a-complete' } };
+          yield {
+            type: 'messages',
+            messages: [{ id: 'ai-step-b', type: 'ai', content: 'partial answer' }],
+            messageMetadata: { langgraph_node: 'model' },
+          };
+        },
+      };
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of('thread-1'),
+        destroy$: destroy$.asObservable(),
+      });
+
+      await bridge.submit({});
+
+      expect(bridge.getMessageDelivery('ai-step-b')).toMatchObject({
+        phase: 'complete',
+        outcome: 'interrupted',
+      });
+      destroy$.next();
+    });
+
+    it('marks a transport error after a chunk as interrupted without changing AgentError classification', async () => {
+      const transport: AgentTransport = {
+        async *stream() {
+          yield {
+            type: 'messages',
+            messages: [{ id: 'ai-transport-error', type: 'ai', content: 'partial' }],
+            messageMetadata: { langgraph_node: 'model' },
+          };
+          throw new Error('HTTP 500: failed');
+        },
+      };
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of('thread-1'),
+        destroy$: destroy$.asObservable(),
+      });
+
+      await bridge.submit({});
+
+      expect(bridge.getMessageDelivery('ai-transport-error')).toMatchObject({
+        phase: 'complete',
+        outcome: 'interrupted',
+      });
+      expect(subjects.error$.value).toBeInstanceOf(AgentError);
+      expect((subjects.error$.value as AgentError).kind).toBe('server');
+      destroy$.next();
+    });
+
+    it('marks user stop as complete/aborted', async () => {
+      const transport = new MockAgentTransport();
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of(null),
+        destroy$: destroy$.asObservable(),
+      });
+
+      void bridge.submit({});
+      transport.emit([{
+        type: 'messages',
+        messages: [{ id: 'ai-aborted', type: 'ai', content: 'partial' }],
+        messageMetadata: { langgraph_node: 'model' },
+      }]);
+      await new Promise(resolve => setTimeout(resolve, 0));
+      await bridge.stop();
+
+      expect(bridge.getMessageDelivery('ai-aborted')).toEqual({
+        generation: expect.any(String),
+        phase: 'complete',
+        outcome: 'aborted',
+      });
+      destroy$.next();
+    });
+
+    it('marks HITL interruption as paused and allocates a new generation on resume', async () => {
+      let run = 0;
+      const transport: AgentTransport = {
+        async *stream() {
+          run += 1;
+          yield {
+            type: 'messages',
+            messages: [{ id: 'ai-resume', type: 'ai', content: `partial-${run}` }],
+            messageMetadata: { langgraph_node: 'model' },
+          };
+          if (run === 1) {
+            yield { type: 'interrupt', interrupt: { id: 'approval', value: 'approve?' } };
+          } else {
+            yield { type: 'values', values: { done: true } };
+          }
+        },
+      };
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of('thread-1'),
+        destroy$: destroy$.asObservable(),
+      });
+
+      await bridge.submit({});
+      const paused = bridge.getMessageDelivery('ai-resume');
+      expect(paused).toEqual({
+        generation: expect.any(String),
+        phase: 'complete',
+        outcome: 'paused',
+      });
+
+      await bridge.submit(null, { command: { resume: true } });
+      const resumed = bridge.getMessageDelivery('ai-resume');
+      expect(resumed).toEqual({
+        generation: expect.any(String),
+        phase: 'complete',
+        outcome: 'success',
+      });
+      expect(resumed.generation).not.toBe(paused.generation);
+      destroy$.next();
+    });
+
+    it('allocates a new generation when retrying the same message id', async () => {
+      let run = 0;
+      const transport: AgentTransport = {
+        async *stream() {
+          run += 1;
+          yield {
+            type: 'messages',
+            messages: [{ id: 'ai-retry', type: 'ai', content: `attempt-${run}` }],
+            messageMetadata: { langgraph_node: 'model' },
+          };
+          if (run === 1) {
+            yield { type: 'error', error: new Error('retry me') };
+          } else {
+            yield { type: 'values', values: { done: true } };
+          }
+        },
+      };
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of('thread-1'),
+        destroy$: destroy$.asObservable(),
+      });
+
+      await bridge.submit({ retry: true });
+      const first = bridge.getMessageDelivery('ai-retry');
+      await bridge.resubmitLast();
+      const second = bridge.getMessageDelivery('ai-retry');
+
+      expect(first).toMatchObject({ phase: 'complete', outcome: 'error' });
+      expect(second).toMatchObject({ phase: 'complete', outcome: 'success' });
+      expect(second.generation).not.toBe(first.generation);
+      destroy$.next();
+    });
+
+    it('allocates fresh generations for direct and queued joined runs', async () => {
+      const transport = new MockAgentTransport();
+      transport.joinStream = async function* (threadId, runId) {
+        this.joinedRuns.push({ threadId, runId });
+        yield {
+          type: 'messages',
+          messages: [{ id: 'ai-joined-tail', type: 'ai', content: runId }],
+          messageMetadata: { langgraph_node: 'model' },
+        };
+        yield { type: 'values', values: { runId } };
+      };
+      const subjects = makeSubjects();
+      subjects.messages$.next([
+        { id: 'ai-joined-tail', type: 'ai', content: 'prior partial' } as never,
+      ]);
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of('thread-1'),
+        destroy$: destroy$.asObservable(),
+      });
+
+      await bridge.joinStream('direct-run');
+      const direct = bridge.getMessageDelivery('ai-joined-tail');
+
+      const active = bridge.submit({ active: true });
+      await bridge.submit(
+        { queued: true },
+        { multitaskStrategy: 'enqueue' },
+      );
+      transport.emit([{ type: 'values', values: { active: true } }]);
+      transport.close();
+      await active;
+
+      const queued = bridge.getMessageDelivery('ai-joined-tail');
+      expect(direct).toMatchObject({ phase: 'complete', outcome: 'success' });
+      expect(queued).toMatchObject({ phase: 'complete', outcome: 'success' });
+      expect(direct.generation).not.toBe('ai-joined-tail');
+      expect(queued.generation).not.toBe(direct.generation);
+      destroy$.next();
+    });
+
+    it('keeps direct join explicit errors terminal', async () => {
+      const transport: AgentTransport = {
+        async *stream() { yield* []; },
+        async *joinStream() {
+          yield {
+            type: 'messages',
+            messages: [{ id: 'direct-error-ai', type: 'ai', content: 'partial' }],
+            messageMetadata: { langgraph_node: 'model' },
+          };
+          yield { type: 'error', error: new Error('rejected') };
+        },
+      };
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of('thread-1'),
+        destroy$: destroy$.asObservable(),
+      });
+
+      await bridge.joinStream('direct-error-run');
+
+      expect(bridge.getMessageDelivery('direct-error-ai')).toMatchObject({
+        phase: 'complete', outcome: 'error',
+      });
+      expect(subjects.status$.value).toBe(ResourceStatus.Error);
+      destroy$.next();
+    });
+
+    it('keeps queued join explicit errors terminal', async () => {
+      const transport = new MockAgentTransport();
+      transport.joinStream = async function* (threadId, runId) {
+        this.joinedRuns.push({ threadId, runId });
+        yield {
+          type: 'messages',
+          messages: [{ id: 'queued-error-ai', type: 'ai', content: 'partial' }],
+          messageMetadata: { langgraph_node: 'model' },
+        };
+        yield { type: 'error', error: new Error('queued rejected') };
+      };
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of('thread-1'),
+        destroy$: destroy$.asObservable(),
+      });
+
+      const active = bridge.submit({ messages: [{ type: 'human', content: 'active' }] });
+      await bridge.submit(
+        { messages: [{ type: 'human', content: 'queued' }] },
+        { multitaskStrategy: 'enqueue' },
+      );
+      transport.emit([{ type: 'values', values: { active: true } }]);
+      transport.close();
+      await active;
+
+      expect(bridge.getMessageDelivery('queued-error-ai')).toMatchObject({
+        phase: 'complete', outcome: 'error',
+      });
+      expect(subjects.status$.value).toBe(ResourceStatus.Error);
+      destroy$.next();
+    });
+
+    it('preserves submit error delivery and status when stopped before iterator close', async () => {
+      let markErrorProcessed = () => undefined;
+      const errorProcessed = new Promise<void>(resolve => { markErrorProcessed = resolve; });
+      const transport: AgentTransport = {
+        async *stream(_assistantId, _threadId, _payload, signal) {
+          yield {
+            type: 'messages',
+            messages: [{ id: 'submit-error-stop-ai', type: 'ai', content: 'partial' }],
+            messageMetadata: { langgraph_node: 'model' },
+          };
+          yield { type: 'error', error: new Error('submit rejected') };
+          markErrorProcessed();
+          await new Promise<void>(resolve => {
+            if (signal.aborted) resolve();
+            else signal.addEventListener('abort', () => resolve(), { once: true });
+          });
+        },
+      };
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of('thread-1'),
+        destroy$: destroy$.asObservable(),
+      });
+
+      const submitted = bridge.submit({});
+      await errorProcessed;
+      await new Promise(resolve => setTimeout(resolve, 0));
+      const errored = bridge.getMessageDelivery('submit-error-stop-ai');
+      await bridge.stop();
+      await submitted;
+
+      expect(errored).toMatchObject({ phase: 'complete', outcome: 'error' });
+      expect(bridge.getMessageDelivery('submit-error-stop-ai')).toEqual(errored);
+      expect(subjects.status$.value).toBe(ResourceStatus.Error);
+      destroy$.next();
+    });
+
+    it('preserves direct join error delivery and status when stopped before iterator close', async () => {
+      let markErrorProcessed = () => undefined;
+      const errorProcessed = new Promise<void>(resolve => { markErrorProcessed = resolve; });
+      const transport: AgentTransport = {
+        async *stream() { yield* []; },
+        async *joinStream(_threadId, _runId, _lastEventId, signal) {
+          yield {
+            type: 'messages',
+            messages: [{ id: 'direct-error-stop-ai', type: 'ai', content: 'partial' }],
+            messageMetadata: { langgraph_node: 'model' },
+          };
+          yield { type: 'error', error: new Error('direct join rejected') };
+          markErrorProcessed();
+          await new Promise<void>(resolve => {
+            if (signal.aborted) resolve();
+            else signal.addEventListener('abort', () => resolve(), { once: true });
+          });
+        },
+      };
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of('thread-1'),
+        destroy$: destroy$.asObservable(),
+      });
+
+      const joined = bridge.joinStream('direct-error-stop-run');
+      await errorProcessed;
+      await new Promise(resolve => setTimeout(resolve, 0));
+      const errored = bridge.getMessageDelivery('direct-error-stop-ai');
+      await bridge.stop();
+      await joined;
+
+      expect(errored).toMatchObject({ phase: 'complete', outcome: 'error' });
+      expect(bridge.getMessageDelivery('direct-error-stop-ai')).toEqual(errored);
+      expect(subjects.status$.value).toBe(ResourceStatus.Error);
+      destroy$.next();
+    });
+
+    it('preserves queued join error delivery and status when stopped before iterator close', async () => {
+      let releaseInitial = () => undefined;
+      let markErrorProcessed = () => undefined;
+      const initialGate = new Promise<void>(resolve => { releaseInitial = resolve; });
+      const errorProcessed = new Promise<void>(resolve => { markErrorProcessed = resolve; });
+      const transport: AgentTransport = {
+        async *stream() {
+          await initialGate;
+          yield { type: 'values', values: { initial: true } };
+        },
+        async createQueuedRun(_assistantId, threadId, values, _signal, options) {
+          return { id: 'queued-error-stop-run', threadId, values, options, createdAt: new Date() };
+        },
+        async *joinStream(_threadId, _runId, _lastEventId, signal) {
+          yield {
+            type: 'messages',
+            messages: [{ id: 'queued-error-stop-ai', type: 'ai', content: 'partial' }],
+            messageMetadata: { langgraph_node: 'model' },
+          };
+          yield { type: 'error', error: new Error('queued join rejected') };
+          markErrorProcessed();
+          await new Promise<void>(resolve => {
+            if (signal.aborted) resolve();
+            else signal.addEventListener('abort', () => resolve(), { once: true });
+          });
+        },
+      };
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of('thread-1'),
+        destroy$: destroy$.asObservable(),
+      });
+
+      const initial = bridge.submit({ run: 'initial' });
+      await bridge.submit({ run: 'queued' }, { multitaskStrategy: 'enqueue' });
+      releaseInitial();
+      await errorProcessed;
+      await new Promise(resolve => setTimeout(resolve, 0));
+      const errored = bridge.getMessageDelivery('queued-error-stop-ai');
+      await bridge.stop();
+      await initial;
+
+      expect(errored).toMatchObject({ phase: 'complete', outcome: 'error' });
+      expect(bridge.getMessageDelivery('queued-error-stop-ai')).toEqual(errored);
+      expect(subjects.status$.value).toBe(ResourceStatus.Error);
+      destroy$.next();
+    });
+
+    it.each([false, true])(
+      'treats direct join user stop as aborted when transport throws=%s',
+      async (throwOnAbort) => {
+        const transport: AgentTransport = {
+          async *stream() { yield* []; },
+          async *joinStream(_threadId, _runId, _lastEventId, signal) {
+            yield {
+              type: 'messages',
+              messages: [{ id: 'direct-abort-ai', type: 'ai', content: 'partial' }],
+              messageMetadata: { langgraph_node: 'model' },
+            };
+            await new Promise<void>(resolve => {
+              if (signal.aborted) resolve();
+              else signal.addEventListener('abort', () => resolve(), { once: true });
+            });
+            if (throwOnAbort) {
+              const error = new Error('aborted');
+              error.name = 'AbortError';
+              throw error;
+            }
+          },
+        };
+        const subjects = makeSubjects();
+        const destroy$ = new Subject<void>();
+        const bridge = createStreamManagerBridge({
+          options: { apiUrl: '', assistantId: 'test', transport },
+          subjects,
+          threadId$: of('thread-1'),
+          destroy$: destroy$.asObservable(),
+        });
+
+        const joined = bridge.joinStream('direct-abort-run');
+        await new Promise(resolve => setTimeout(resolve, 0));
+        await bridge.stop();
+        await joined;
+
+        expect(bridge.getMessageDelivery('direct-abort-ai')).toMatchObject({
+          phase: 'complete', outcome: 'aborted',
+        });
+        expect(subjects.status$.value).toBe(ResourceStatus.Idle);
+        expect(subjects.error$.value).toBeUndefined();
+        destroy$.next();
+      },
+    );
+
+    it('finalizes the earlier tool-loop assistant step before exposing the next step', async () => {
+      const transport = new MockAgentTransport();
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of(null),
+        destroy$: destroy$.asObservable(),
+      });
+
+      void bridge.submit({});
+      transport.emit([{
+        type: 'messages',
+        messages: [{ id: 'ai-tool-call', type: 'ai', content: 'search', tool_calls: [{ id: 'call-1', name: 'search', args: {} }] }],
+        messageMetadata: { langgraph_node: 'model' },
+      }]);
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(bridge.getMessageDelivery('ai-tool-call').phase).toBe('streaming');
+
+      transport.emit([{ type: 'values', values: { toolStepComplete: true } }]);
+      transport.emit([{
+        type: 'messages',
+        messages: [{ id: 'ai-final', type: 'ai', content: 'search complete' }],
+        messageMetadata: { langgraph_node: 'model' },
+      }]);
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(bridge.getMessageDelivery('ai-tool-call')).toMatchObject({
+        phase: 'complete',
+        outcome: 'success',
+      });
+      expect(bridge.getMessageDelivery('ai-final')).toMatchObject({ phase: 'streaming' });
+      await bridge.stop();
+      destroy$.next();
+    });
+
+    it('merges cross-id chunks within the same tool-calling assistant step', async () => {
+      const transport = new MockAgentTransport();
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of(null),
+        destroy$: destroy$.asObservable(),
+      });
+
+      void bridge.submit({});
+      transport.emit([{
+        type: 'messages',
+        messages: [{
+          id: 'tool-chunk-a', type: 'ai', content: 'hel',
+          tool_calls: [{ id: 'call-1', name: 'search', args: { q: 'ang' } }],
+        }],
+        messageMetadata: { langgraph_node: 'model' },
+      }, {
+        type: 'messages',
+        messages: [{
+          id: 'tool-chunk-b', type: 'ai', content: 'lo',
+          tool_calls: [{ id: 'call-1', name: 'search', args: { q: 'angular' } }],
+        }],
+        messageMetadata: { langgraph_node: 'model' },
+      }]);
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(subjects.messages$.value).toEqual([
+        expect.objectContaining({
+          id: 'tool-chunk-a',
+          content: 'hello',
+          tool_calls: [{ id: 'call-1', name: 'search', args: { q: 'angular' } }],
+        }),
+      ]);
+      expect(bridge.getMessageDelivery('tool-chunk-a')).toEqual({
+        generation: expect.any(String),
+        phase: 'streaming',
+      });
+      expect(bridge.getMessageDelivery('tool-chunk-b')).toEqual({
+        generation: 'tool-chunk-b',
+        phase: 'complete',
+        outcome: 'success',
+      });
+
+      await bridge.stop();
+      destroy$.next();
+    });
+
+    it('tracks delivery on the displayed id when per-chunk event ids are merged', async () => {
+      const transport = new MockAgentTransport();
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of(null),
+        destroy$: destroy$.asObservable(),
+      });
+
+      const submitted = bridge.submit({});
+      transport.emit([{
+        type: 'messages',
+        messages: [{ id: 'chunk-event-1', type: 'ai', content: 'hel' }],
+        messageMetadata: { langgraph_node: 'model' },
+      }, {
+        type: 'messages',
+        messages: [{ id: 'chunk-event-2', type: 'ai', content: 'lo' }],
+        messageMetadata: { langgraph_node: 'model' },
+      }]);
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(subjects.messages$.value).toEqual([
+        expect.objectContaining({ id: 'chunk-event-1', content: 'hello' }),
+      ]);
+      const streaming = bridge.getMessageDelivery('chunk-event-1');
+      expect(streaming).toEqual({
+        generation: expect.any(String),
+        phase: 'streaming',
+      });
+      expect(bridge.getMessageDelivery('chunk-event-2')).toEqual({
+        generation: 'chunk-event-2',
+        phase: 'complete',
+        outcome: 'success',
+      });
+
+      transport.emit([{ type: 'values', values: { done: true } }]);
+      transport.close();
+      await submitted;
+
+      expect(bridge.getMessageDelivery('chunk-event-1')).toEqual({
+        generation: streaming.generation,
+        phase: 'complete',
+        outcome: 'success',
+      });
+      destroy$.next();
+    });
+
+    it.each(['error', 'paused', 'aborted', 'interrupted'] as const)(
+      'preserves an earlier tool-loop step success when the active step ends %s',
+      async (outcome) => {
+        const transport = new MockAgentTransport();
+        const subjects = makeSubjects();
+        const destroy$ = new Subject<void>();
+        const bridge = createStreamManagerBridge({
+          options: { apiUrl: '', assistantId: 'test', transport },
+          subjects,
+          threadId$: of(null),
+          destroy$: destroy$.asObservable(),
+        });
+
+        const submitted = bridge.submit({});
+        transport.emit([{
+          type: 'messages',
+          messages: [{
+            id: 'ai-earlier', type: 'ai', content: '',
+            tool_calls: [{ id: 'call-boundary', name: 'search', args: {} }],
+          }],
+          messageMetadata: { langgraph_node: 'model' },
+        }, {
+          type: 'messages',
+          messages: [{
+            id: 'tool-boundary', type: 'tool', tool_call_id: 'call-boundary', content: 'result',
+          }],
+          messageMetadata: { langgraph_node: 'tools' },
+        }, {
+          type: 'messages',
+          messages: [{ id: 'ai-active', type: 'ai', content: 'partial' }],
+          messageMetadata: { langgraph_node: 'model' },
+        }]);
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        if (outcome === 'error') {
+          transport.emit([{ type: 'error', error: new Error('failed') }]);
+          transport.close();
+        } else if (outcome === 'paused') {
+          transport.emit([{ type: 'interrupt', interrupt: { id: 'approval', value: 'approve?' } }]);
+          transport.close();
+        } else if (outcome === 'aborted') {
+          await bridge.stop();
+          transport.close();
+        } else {
+          transport.close();
+        }
+        await submitted;
+
+        expect(bridge.getMessageDelivery('ai-earlier')).toMatchObject({
+          phase: 'complete',
+          outcome: 'success',
+        });
+        expect(bridge.getMessageDelivery('ai-active')).toMatchObject({
+          phase: 'complete',
+          outcome,
+        });
+        destroy$.next();
+      },
+    );
   });
 
   it('sets status to Loading when submit is called', async () => {
@@ -535,6 +1523,90 @@ describe('createStreamManagerBridge', () => {
     destroy$.next();
   });
 
+  it('does not let a stale queue drain interrupt a replacement submit', async () => {
+    let releaseInitial = () => undefined;
+    let releaseFirstJoin = () => undefined;
+    let releaseReplacement = () => undefined;
+    let markFirstJoinStarted = () => undefined;
+    const initialGate = new Promise<void>(resolve => { releaseInitial = resolve; });
+    const firstJoinGate = new Promise<void>(resolve => { releaseFirstJoin = resolve; });
+    const replacementGate = new Promise<void>(resolve => { releaseReplacement = resolve; });
+    const firstJoinStarted = new Promise<void>(resolve => { markFirstJoinStarted = resolve; });
+    let queuedRun = 0;
+    const joinedRuns: string[] = [];
+    const transport: AgentTransport = {
+      async *stream(_assistantId, _threadId, payload, signal) {
+        if ((payload as { run: string }).run === 'initial') {
+          await initialGate;
+          yield { type: 'values', values: { initial: true } };
+          return;
+        }
+        yield {
+          type: 'messages',
+          messages: [{ id: 'replacement-ai', type: 'ai', content: 'replacement' }],
+          messageMetadata: { langgraph_node: 'model' },
+        };
+        await replacementGate;
+        if (!signal.aborted) yield { type: 'values', values: { replacement: true } };
+      },
+      async createQueuedRun(_assistantId, threadId, values, _signal, options) {
+        queuedRun += 1;
+        return {
+          id: `queued-${queuedRun}`,
+          threadId,
+          values,
+          options,
+          createdAt: new Date(),
+        };
+      },
+      async *joinStream(_threadId, runId) {
+        joinedRuns.push(runId);
+        if (runId === 'queued-1') {
+          yield {
+            type: 'messages',
+            messages: [{ id: 'queued-one-ai', type: 'ai', content: 'queued one' }],
+            messageMetadata: { langgraph_node: 'model' },
+          };
+          markFirstJoinStarted();
+          await firstJoinGate;
+          return;
+        }
+        yield { type: 'values', values: { queuedTwo: true } };
+      },
+    };
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport },
+      subjects,
+      threadId$: of('thread-1'),
+      destroy$: destroy$.asObservable(),
+    });
+
+    const initial = bridge.submit({ run: 'initial' });
+    await bridge.submit({ run: 'queued-1' }, { multitaskStrategy: 'enqueue' });
+    await bridge.submit({ run: 'queued-2' }, { multitaskStrategy: 'enqueue' });
+    releaseInitial();
+    await firstJoinStarted;
+
+    const replacement = bridge.submit({ run: 'replacement' });
+    await new Promise(resolve => setTimeout(resolve, 0));
+    const replacementStreaming = bridge.getMessageDelivery('replacement-ai');
+    releaseFirstJoin();
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    expect(joinedRuns).toEqual(['queued-1']);
+    expect(bridge.getMessageDelivery('replacement-ai')).toEqual(replacementStreaming);
+    expect(replacementStreaming).toMatchObject({ phase: 'streaming' });
+    expect(subjects.status$.value).toBe(ResourceStatus.Loading);
+
+    releaseReplacement();
+    await replacement;
+    await initial;
+    expect(joinedRuns).toEqual(['queued-1', 'queued-2']);
+    destroy$.next();
+  });
+
   it('sets status to Resolved when stream completes', async () => {
     const transport = new MockAgentTransport([
       [{ type: 'values', values: { count: 1 } }],
@@ -659,7 +1731,7 @@ describe('createStreamManagerBridge', () => {
     }
   );
 
-  it('does not accumulate metadata across multiple messages/partial events', async () => {
+    it('does not accumulate metadata across multiple messages/partial events', async () => {
     const transport = new MockAgentTransport();
     const subjects = makeSubjects();
     const destroy$ = new Subject<void>();
@@ -700,10 +1772,104 @@ describe('createStreamManagerBridge', () => {
     expect(subjects.messages$.value).toHaveLength(2);
     expect(subjects.messages$.value[0]).toMatchObject({ id: 'h-1', content: 'hi' });
     expect(subjects.messages$.value[1]).toMatchObject({ id: 'ai-1', content: 'Hello' });
-    destroy$.next();
-  });
+      destroy$.next();
+    });
 
-  it('ignores late events from the previous stream after threadId changes', async () => {
+    it.each(['messages/partial', 'messages/complete'] as const)(
+      'does not retag historical assistants from a full %s snapshot',
+      async (type) => {
+        const transport = new MockAgentTransport();
+        const subjects = makeSubjects();
+        subjects.messages$.next([
+          { id: 'historical-ai', type: 'ai', content: 'old answer' } as never,
+          { id: 'historical-user', type: 'human', content: 'new question' } as never,
+        ]);
+        const destroy$ = new Subject<void>();
+        const bridge = createStreamManagerBridge({
+          options: { apiUrl: '', assistantId: 'test', transport },
+          subjects,
+          threadId$: of(null),
+          destroy$: destroy$.asObservable(),
+        });
+
+        void bridge.submit({});
+        transport.emit([{
+          type,
+          messages: [
+            { id: 'historical-ai', type: 'ai', content: 'old answer' },
+            { id: 'historical-user', type: 'human', content: 'new question' },
+            { id: 'active-ai', type: 'ai', content: 'new answer' },
+          ],
+        }]);
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        expect(bridge.getMessageDelivery('historical-ai')).toEqual({
+          generation: 'historical-ai',
+          phase: 'complete',
+          outcome: 'success',
+        });
+        expect(bridge.getMessageDelivery('active-ai')).toEqual({
+          generation: expect.any(String),
+          phase: 'streaming',
+        });
+        await bridge.stop();
+        destroy$.next();
+      },
+    );
+
+    it.each(['messages/partial', 'messages/complete'] as const)(
+      'does not retag an enriched historical assistant from a full %s snapshot',
+      async (type) => {
+        const transport = new MockAgentTransport();
+        const subjects = makeSubjects();
+        subjects.messages$.next([
+          { id: 'historical-enriched-ai', type: 'ai', content: 'old answer' } as never,
+          { id: 'historical-enriched-user', type: 'human', content: 'new question' } as never,
+        ]);
+        const destroy$ = new Subject<void>();
+        const bridge = createStreamManagerBridge({
+          options: { apiUrl: '', assistantId: 'test', transport },
+          subjects,
+          threadId$: of(null),
+          destroy$: destroy$.asObservable(),
+        });
+        const historicalDelivery = bridge.getMessageDelivery('historical-enriched-ai');
+
+        void bridge.submit({});
+        transport.emit([{
+          type,
+          messages: [
+            {
+              id: 'historical-enriched-ai',
+              type: 'ai',
+              content: 'old answer enriched',
+              reasoning: 'retrospective reasoning',
+              tool_calls: [{ id: 'historical-call', name: 'lookup', args: { query: 'old' } }],
+            },
+            { id: 'historical-enriched-user', type: 'human', content: 'new question' },
+            { id: 'active-enriched-ai', type: 'ai', content: 'new answer' },
+          ],
+        }]);
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        expect(subjects.messages$.value.find(message =>
+          (message as unknown as { id?: string }).id === 'historical-enriched-ai'
+        )).toMatchObject({
+          content: 'old answer enriched',
+          reasoning: 'retrospective reasoning',
+          tool_calls: [{ id: 'historical-call', name: 'lookup', args: { query: 'old' } }],
+        });
+        expect(bridge.getMessageDelivery('historical-enriched-ai')).toEqual(historicalDelivery);
+        expect(bridge.getMessageDelivery('active-enriched-ai')).toEqual({
+          generation: expect.any(String),
+          phase: 'streaming',
+        });
+        await bridge.stop();
+        destroy$.next();
+      },
+    );
+
+    it('ignores late events from the previous stream after threadId changes', async () => {
     const transport = new MockAgentTransport();
     const subjects = makeSubjects();
     const destroy$ = new Subject<void>();
@@ -783,7 +1949,7 @@ describe('createStreamManagerBridge', () => {
     destroy$.next();
   });
 
-  it('classifies a non-user AbortError thrown BEFORE streaming as connection (kind:connection, retryable:true)', async () => {
+    it('classifies a non-user AbortError thrown BEFORE streaming as connection (kind:connection, retryable:true)', async () => {
     // Simulate an SDK that surfaces a connect-phase failure as an AbortError-like
     // error (name === 'AbortError') even though the user never called stop().
     // The bridge must NOT classify this as 'aborted' (user stop) — it must
@@ -813,10 +1979,90 @@ describe('createStreamManagerBridge', () => {
     expect(err).toBeInstanceOf(AgentError);
     expect((err as AgentError).kind).toBe('connection');
     expect((err as AgentError).retryable).toBe(true);
-    destroy$.next();
-  });
+      destroy$.next();
+    });
 
-  it('routes custom events to custom$ subject', async () => {
+    it('isolates a replacement execution from buffered events emitted by the old stream', async () => {
+      let releaseOld = () => undefined;
+      let releaseNew = () => undefined;
+      const oldGate = new Promise<void>(resolve => { releaseOld = resolve; });
+      const newGate = new Promise<void>(resolve => { releaseNew = resolve; });
+      const transport: AgentTransport = {
+        async *stream(_assistantId, _threadId, payload) {
+          const run = (payload as { run: number }).run;
+          if (run === 1) {
+            await oldGate;
+            yield {
+              type: 'messages',
+              messages: [{
+                id: 'old-ai', type: 'ai', content: 'old',
+                tool_calls: [{
+                  id: 'old-call', name: 'task',
+                  args: { subagent_type: 'researcher', description: 'old work' },
+                }],
+              }],
+              messageMetadata: { langgraph_node: 'model' },
+            };
+            yield {
+              type: 'values|tools:old-call', namespace: ['tools:old-call'],
+              data: { messages: [{ type: 'human', content: 'old work' }] },
+            };
+            yield { type: 'error', error: new Error('old failure') };
+            return;
+          }
+
+          yield {
+            type: 'messages',
+            messages: [{ id: 'new-ai', type: 'ai', content: 'new' }],
+            messageMetadata: { langgraph_node: 'model' },
+          };
+          await newGate;
+          yield { type: 'values', values: { done: true } };
+        },
+      };
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: {
+          apiUrl: '', assistantId: 'test', transport,
+          subagentToolNames: ['task'], filterSubagentMessages: true,
+        },
+        subjects,
+        threadId$: of('thread-1'),
+        destroy$: destroy$.asObservable(),
+      });
+
+      const first = bridge.submit({ run: 1 });
+      await new Promise(resolve => setTimeout(resolve, 0));
+      const second = bridge.submit({ run: 2 });
+      await new Promise(resolve => setTimeout(resolve, 0));
+      const newStreaming = bridge.getMessageDelivery('new-ai');
+
+      releaseOld();
+      await first;
+
+      expect(subjects.messages$.value).toEqual([
+        expect.objectContaining({ id: 'new-ai', content: 'new' }),
+      ]);
+      expect(bridge.getMessageDelivery('new-ai')).toEqual(newStreaming);
+      expect(bridge.getMessageDelivery('old-ai')).toEqual({
+        generation: 'old-ai', phase: 'complete', outcome: 'success',
+      });
+      expect(subjects.subagents$.value.size).toBe(0);
+      expect(subjects.status$.value).toBe(ResourceStatus.Loading);
+      expect(subjects.error$.value).toBeUndefined();
+
+      releaseNew();
+      await second;
+      expect(bridge.getMessageDelivery('new-ai')).toEqual({
+        generation: newStreaming.generation,
+        phase: 'complete',
+        outcome: 'success',
+      });
+      destroy$.next();
+    });
+
+    it('routes custom events to custom$ subject', async () => {
     const transport = new MockAgentTransport();
     const subjects = makeSubjects();
     const destroy$ = new Subject<void>();
