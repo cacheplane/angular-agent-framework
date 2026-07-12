@@ -8783,7 +8783,7 @@
   {
     "name": "completeDelivery",
     "kind": "function",
-    "description": "",
+    "description": "Creates a terminal delivery state for an existing response-attempt generation.",
     "signature": "completeDelivery(generation: string, outcome: TOutcome): object",
     "params": [
       {
@@ -9310,7 +9310,7 @@
   {
     "name": "markdownDocument",
     "kind": "function",
-    "description": "",
+    "description": "Creates the atomic document consumed by the streaming Markdown renderer.",
     "signature": "markdownDocument(content: string, delivery: MessageDelivery, suffix: string): StreamingMarkdownDocument",
     "params": [
       {
@@ -9572,7 +9572,7 @@
   {
     "name": "staticDelivery",
     "kind": "function",
-    "description": "",
+    "description": "Creates a successful terminal delivery state for an already-complete message.",
     "signature": "staticDelivery(messageId: string): object",
     "params": [
       {
@@ -9610,7 +9610,7 @@
   {
     "name": "streamingDelivery",
     "kind": "function",
-    "description": "",
+    "description": "Creates the active delivery state for one response-attempt generation.",
     "signature": "streamingDelivery(generation: string): object",
     "params": [
       {

@@ -22,10 +22,12 @@ export type MessageDelivery =
       readonly outcome: CompleteOutcome;
     };
 
+/** Creates the active delivery state for one response-attempt generation. */
 export function streamingDelivery(generation: string) {
   return { generation, phase: 'streaming' } as const satisfies MessageDelivery;
 }
 
+/** Creates a terminal delivery state for an existing response-attempt generation. */
 export function completeDelivery<const TOutcome extends CompleteOutcome>(
   generation: string,
   outcome: TOutcome,
@@ -34,6 +36,7 @@ export function completeDelivery<const TOutcome extends CompleteOutcome>(
   return delivery satisfies MessageDelivery;
 }
 
+/** Creates a successful terminal delivery state for an already-complete message. */
 export function staticDelivery(messageId: string) {
   return completeDelivery(messageId, 'success');
 }
