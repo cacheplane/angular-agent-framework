@@ -23,6 +23,22 @@
       },
       "chunkSize": 3,
       "latency": 35
+    },
+    {
+      "match": { "userMessage": "stream a markdown table with a long header pause regression" },
+      "response": {
+        "content": "Long pause table:\n\n| Name | Value |\n| --- | --- |\n| alpha | one |\n| beta | two |\n"
+      },
+      "chunkSize": 36,
+      "latency": 750
+    },
+    {
+      "match": { "userMessage": "stream a thematic break regression" },
+      "response": {
+        "content": "Before the break.\n\n---\n\nAfter the break."
+      },
+      "chunkSize": 23,
+      "latency": 200
     }
   ]
 }
