@@ -1,6 +1,14 @@
 {
   "fixtures": [
     {
+      "match": {
+        "userMessage": "Give me a blockquote with two lines, then a markdown table with columns issue, expected behavior, verification."
+      },
+      "response": {
+        "content": "> First quoted line\n> Second quoted line\n\n| Issue | Expected behavior | Verification |\n| --- | --- | --- |\n| Blockquote nesting | Both quoted lines render inside one blockquote | Inspect for one `<blockquote>` with no stray quoted paragraph |\n| Table streaming | Rows remain inside the same table while content streams | Inspect for one `<table>` with body rows |\n| Parser recovery | Final DOM has no raw pipe paragraphs | Confirm no paragraph text contains `|` delimiters |"
+      }
+    },
+    {
       "match": { "userMessage": "stream a markdown comparison table regression" },
       "response": {
         "content": "Here is the comparison:\n\n| Name | Mental model | When to use |\n| --- | --- | --- |\n| Angular Signals | Synchronous value graph | Local component state |\n| RxJS | Event stream | Async flows and cancellation |\n| zone.js | Async task patching | Zone-based change detection |\n\nDone."
