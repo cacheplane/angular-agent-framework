@@ -117,11 +117,11 @@ expect(commitEvents.filter(e => e.type === 'node-created')).toEqual([]);
 expect(projected.status).toBe('complete');
 ```
 
-For replacement, assert old descendants complete post-order before new nodes are created pre-order. For representative chunk partitions, replay events into an ID-indexed model and compare it with normalized `parser.root`.
+For replacement, assert old descendants complete post-order before new nodes are created pre-order. For representative chunk partitions, replay each event stream into its own ID-indexed model and compare it with that parser's normalized `root`.
 
 Assert the complete per-operation order explicitly: removed descendants complete post-order; replacement nodes are created pre-order; scalar updates and status transitions follow in pre-order. Model lifecycle by node incarnation, where an incarnation is the public object identity plus `(id, type, parent ID, sibling index)`. Reject duplicate creation, updates while non-live, or duplicate completion for the same incarnation. Permit a reused numeric ID only for an explicit grammar-reinterpretation replacement within the same reconciliation operation: the old incarnation must be removed and completed before the replacement is created at a different type or position. Track that replacement as a distinct incarnation; reject numeric-ID reuse in every other circumstance.
 
-Add a fast-check property using the existing adversarial Markdown corpus plus generated text. For every input, compare a one-chunk push with character-by-character pushes. Normalized roots must have identical IDs, types, values, statuses, and hierarchy. Normalized lifecycle summaries must have one creation and at most one completion per incarnation, updates only while that incarnation is live, and exactly one completion whenever a retained node transitions from streaming to complete. `delta` segmentation and event batch boundaries are intentionally ignored.
+Add a fast-check property using the existing adversarial Markdown corpus plus generated text. For every input, compare a one-chunk push with character-by-character pushes. Normalize away parser-session-local numeric IDs and compare types, values, statuses, and hierarchy. Independently validate each parser's lifecycle summary: one creation and at most one completion per incarnation, updates only while that incarnation is live, and exactly one completion whenever a retained node transitions from streaming to complete. `delta` segmentation and event batch boundaries are intentionally ignored. Do not replay a multi-character push one character at a time merely to manufacture cross-parser ID equality.
 
 - [ ] **Step 4: Re-run and confirm the new assertions fail for the intended reasons**
 
@@ -140,7 +140,7 @@ Delete `PENDING_TEXT_ID`, `pendingTextNode`, `pendingTextLen`, `syncPendingText`
 
 - [ ] **Step 2: Add projected reconciliation state**
 
-Maintain a public-node map for the currently visible projected AST and reconcile using `(id, kind, parentId, siblingIndex)`. Implement focused helpers in `parser.ts`:
+Maintain a public-node map for the currently visible projected AST and reconcile using internal `(id, kind, parentId, siblingIndex)` within that parser session. Public numeric IDs are nonnegative session-local labels and are not compared across independent parser instances. Implement focused helpers in `parser.ts`:
 
 ```ts
 type VisibleKey = `${number}:${AstNodeKind}:${number | 'root'}:${number}`;

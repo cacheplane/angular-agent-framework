@@ -39,7 +39,7 @@ Nodes match when parser ID, node type, parent ID, and sibling index match. A pro
 
 Every event node must be reachable from the current root, except a `node-completed` event for a node removed during that operation. No negative or reserved public node IDs are used.
 
-Event and root behavior must be partition-invariant. Feeding a prefix as one chunk or character by character must produce normalized trees with the same IDs, types, values, status, and hierarchy. Event batching and `delta` segmentation may differ by chunk partition, but replaying each event stream must end with that same graph; each ID may be created once, updated only while live, and completed at most once unless a grammar reinterpretation explicitly replaces it with a different type or position.
+Event and root behavior must be semantically partition-invariant. Feeding a prefix as one chunk or character by character must produce normalized trees with the same types, values, status, and hierarchy. Numeric IDs are parser-session-local and are intentionally excluded when comparing independent parser instances; requiring cross-instance ID equality would couple correctness to chunk boundaries and force replay work. Within one parser session, every ID must be nonnegative and stable for a continuing logical node. Event batching and `delta` segmentation may differ by chunk partition, but replaying each event stream must end with its parser's root; each node incarnation may be created once, updated only while live, and completed at most once unless a grammar reinterpretation explicitly replaces it.
 
 ### Structural coverage
 
