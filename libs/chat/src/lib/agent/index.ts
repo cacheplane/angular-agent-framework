@@ -6,6 +6,8 @@ export { toAgentError, isAbortError } from './to-agent-error';
 export type { Citation } from './citation';
 export type { Message, Role } from './message';
 export { isUserMessage, isAssistantMessage, isToolMessage, isSystemMessage } from './message';
+export type { CompleteOutcome, MessageDelivery } from './message-delivery';
+export { streamingDelivery, completeDelivery, staticDelivery } from './message-delivery';
 export type { ContentBlock } from './content-block';
 export type { ToolCall, ToolCallStatus } from './tool-call';
 export type { AgentStatus } from './agent-status';
