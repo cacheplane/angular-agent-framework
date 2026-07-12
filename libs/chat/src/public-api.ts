@@ -136,6 +136,7 @@ export type { ResolvedCitation } from './lib/markdown/citations-resolver.service
 // Streaming
 export {
   ChatStreamingMdComponent,
+  markdownDocument,
   STREAMING_MARKDOWN_CONTRACT_VIOLATION_POLICY,
 } from './lib/streaming/streaming-markdown.component';
 export type {

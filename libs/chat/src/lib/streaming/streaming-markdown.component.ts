@@ -18,6 +18,7 @@ import {
   type PartialMarkdownParser,
 } from '@cacheplane/partial-markdown';
 import type { ViewRegistry } from '@threadplane/render';
+import type { MessageDelivery } from '../agent';
 import { CitationsResolverService } from '../markdown/citations-resolver.service';
 import { MarkdownChildrenComponent } from '../markdown/markdown-children.component';
 import { MARKDOWN_VIEW_REGISTRY } from '../markdown/markdown-view-registry';
@@ -28,6 +29,18 @@ export interface StreamingMarkdownDocument {
   readonly generation: string;
   readonly phase: 'streaming' | 'complete';
   readonly content: string;
+}
+
+export function markdownDocument(
+  content: string,
+  delivery: MessageDelivery,
+  suffix = '',
+): StreamingMarkdownDocument {
+  return {
+    generation: delivery.generation + suffix,
+    phase: delivery.phase,
+    content,
+  };
 }
 
 export type StreamingMarkdownContractViolationPolicy = 'throw' | 'rebuild';

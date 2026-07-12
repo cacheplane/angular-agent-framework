@@ -6,7 +6,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { KeyValuePipe } from '@angular/common';
-import type { Agent, Message } from '../../agent';
+import type { Agent, Message, MessageDelivery } from '../../agent';
 import { ChatReasoningComponent } from '../../primitives/chat-reasoning/chat-reasoning.component';
 import type { ViewRegistry, RenderEvent } from '@threadplane/render';
 import type { A2uiActionMessage } from '@threadplane/a2ui';
@@ -29,7 +29,11 @@ import { ChatErrorComponent } from '../../primitives/chat-error/chat-error.compo
 import { ChatThreadListComponent, type Thread } from '../../primitives/chat-thread-list/chat-thread-list.component';
 import { ChatGenerativeUiComponent } from '../../primitives/chat-generative-ui/chat-generative-ui.component';
 import { ChatToolViewsComponent } from '../../primitives/chat-tool-views/chat-tool-views.component';
-import { ChatStreamingMdComponent } from '../../streaming/streaming-markdown.component';
+import {
+  ChatStreamingMdComponent,
+  markdownDocument,
+  type StreamingMarkdownDocument,
+} from '../../streaming/streaming-markdown.component';
 import { ChatToolCallsComponent } from '../../primitives/chat-tool-calls/chat-tool-calls.component';
 import { ChatMessageActionsComponent } from '../../primitives/chat-message-actions/chat-message-actions.component';
 import { ChatWelcomeComponent } from '../../primitives/chat-welcome/chat-welcome.component';
@@ -213,7 +217,7 @@ export function isPinned(
                     @let run = reasoningRun(i);
                     <chat-reasoning
                       [content]="run.content"
-                      [isStreaming]="run.streaming"
+                      [delivery]="run.delivery"
                       [durationMs]="run.durationMs"
                       [label]="run.label"
                     />
@@ -232,7 +236,7 @@ export function isPinned(
                     (events)="onClientToolEvent($event)"
                   />
                   @if (classified.markdown(); as md) {
-                    <chat-streaming-md [content]="md" [streaming]="agent().isLoading() && i === agent().messages().length - 1" />
+                    <chat-streaming-md [document]="markdownDocumentFor(md, message)" />
                   }
                   @if (classified.spec(); as spec) {
                     <!-- Pass ONLY the explicit consumer store (may be
@@ -480,21 +484,6 @@ export class ChatComponent {
     return a2uiActionLabel(raw) ?? raw;
   }
 
-  /**
-   * True while a message's reasoning is mid-stream — i.e. it's the latest
-   * message, the agent is loading, the message has reasoning content, and
-   * no response text has arrived yet. Once the response text begins, the
-   * reasoning pill collapses (per its internal logic).
-   */
-  protected isReasoningStreaming(message: Message, index: number): boolean {
-    const agent = this.agent();
-    const isTail = index === agent.messages().length - 1;
-    if (!isTail || !agent.isLoading()) return false;
-    if (!message.reasoning || message.reasoning.length === 0) return false;
-    const text = typeof message.content === 'string' ? message.content : '';
-    return text.length === 0;
-  }
-
   /** The nearest preceding assistant message (skipping hidden tool messages), or undefined. */
   private prevAssistant(msgs: Message[], index: number): Message | undefined {
     for (let j = index - 1; j >= 0; j--) {
@@ -517,31 +506,32 @@ export class ChatComponent {
 
   /**
    * Aggregate the reasoning RUN starting at `index`: joins each step's
-   * reasoning, sums durations, counts steps, and computes the streaming flag
-   * and the merged label when N > 1 ("Thought for {total} · {N} steps", or
-   * just "{N} steps" when no step reported timing).
+   * reasoning, sums durations, counts steps, and returns the last step's
+   * delivery because that step owns the current aggregate snapshot. Also
+   * computes the merged label when N > 1 ("Thought for {total} · {N} steps",
+   * or just "{N} steps" when no step reported timing).
    */
   protected reasoningRun(index: number): {
     content: string;
     durationMs: number | undefined;
-    streaming: boolean;
+    delivery: MessageDelivery;
     label: string | undefined;
   } {
     const msgs = this.agent().messages();
-    const steps: { msg: Message; idx: number }[] = [];
+    const steps: Message[] = [];
     for (let j = index; j < msgs.length; j++) {
       const m = msgs[j];
       if (m.role === 'tool') continue;            // skip hidden tool messages
-      if (m.role === 'assistant' && m.reasoning) { steps.push({ msg: m, idx: j }); continue; }
+      if (m.role === 'assistant' && m.reasoning) { steps.push(m); continue; }
       break;                                      // any other message ends the run
     }
-    const content = steps.map((s) => s.msg.reasoning ?? '').filter(Boolean).join('\n\n');
+    const content = steps.map((step) => step.reasoning ?? '').filter(Boolean).join('\n\n');
     const durations = steps
-      .map((s) => s.msg.reasoningDurationMs)
+      .map((step) => step.reasoningDurationMs)
       .filter((d): d is number => typeof d === 'number');
     const durationMs = durations.length ? durations.reduce((a, b) => a + b, 0) : undefined;
     const last = steps[steps.length - 1];
-    const streaming = last ? this.isReasoningStreaming(last.msg, last.idx) : false;
+    const delivery = last?.delivery ?? msgs[index].delivery;
     // Only claim a duration when at least one step reported timing. Otherwise
     // "Thought for <1s" would read as "fast" when it really means "unknown", so
     // drop the duration phrase and label by step count alone.
@@ -551,10 +541,14 @@ export class ChatComponent {
           ? `Thought for ${formatDuration(durationMs)} · ${steps.length} steps`
           : `${steps.length} steps`
         : undefined;
-    return { content, durationMs, streaming, label };
+    return { content, durationMs, delivery, label };
   }
 
-  private readonly classifiers = new Map<string, ContentClassifier>();
+  private readonly classifiers = new Map<
+    string,
+    { generation: string; classifier: ContentClassifier }
+  >();
+  private readonly markdownDocuments = new Map<string, StreamingMarkdownDocument>();
   private readonly destroyRef = inject(DestroyRef);
   private readonly injector = inject(Injector);
   // Resolved against the component's own `providers` in normal use. The fallback
@@ -778,9 +772,12 @@ export class ChatComponent {
       } catch { return; }
       for (const key of [...this.classifiers.keys()]) {
         if (!liveIds.has(key)) {
-          this.classifiers.get(key)?.dispose();
+          this.classifiers.get(key)?.classifier.dispose();
           this.classifiers.delete(key);
         }
+      }
+      for (const key of [...this.markdownDocuments.keys()]) {
+        if (!liveIds.has(key)) this.markdownDocuments.delete(key);
       }
     });
   }
@@ -960,22 +957,45 @@ export class ChatComponent {
     return false;
   }
 
-  classifyMessage(content: string, message: { id?: string }): ContentClassifier {
-    const id = message.id ?? '';
-    let c = this.classifiers.get(id);
-    if (!c) {
-      c = createContentClassifier();
-      this.classifiers.set(id, c);
+  classifyMessage(
+    content: string,
+    message: Pick<Message, 'id' | 'delivery'>,
+  ): ContentClassifier {
+    const generation = message.delivery.generation;
+    let entry = this.classifiers.get(message.id);
+    if (!entry || entry.generation !== generation) {
+      entry?.classifier.dispose();
+      entry = { generation, classifier: createContentClassifier() };
+      this.classifiers.set(message.id, entry);
     }
-    c.update(content);
-    return c;
+    entry.classifier.update(content);
+    return entry.classifier;
+  }
+
+  protected markdownDocumentFor(
+    content: string,
+    message: Pick<Message, 'id' | 'delivery'>,
+  ): StreamingMarkdownDocument {
+    const prior = this.markdownDocuments.get(message.id);
+    const delivery = message.delivery;
+    if (
+      prior?.generation === delivery.generation &&
+      prior.phase === delivery.phase &&
+      prior.content === content
+    ) {
+      return prior;
+    }
+    const document = markdownDocument(content, delivery);
+    this.markdownDocuments.set(message.id, document);
+    return document;
   }
 
   clearClassifiers(): void {
-    for (const [, c] of this.classifiers) {
-      c.dispose();
+    for (const [, entry] of this.classifiers) {
+      entry.classifier.dispose();
     }
     this.classifiers.clear();
+    this.markdownDocuments.clear();
   }
 
   onSpecEvent(event: RenderEvent, messageIndex: number): void {

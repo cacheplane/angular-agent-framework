@@ -1,9 +1,13 @@
 // libs/chat/src/lib/compositions/chat-subagent-card/chat-subagent-card.component.ts
 // SPDX-License-Identifier: MIT
-import { Component, ChangeDetectionStrategy, input, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, computed, effect } from '@angular/core';
 import { ChatTraceComponent, type TraceState } from '../../primitives/chat-trace/chat-trace.component';
 import { ChatToolCallCardComponent, type ToolCallInfo } from '../chat-tool-call-card/chat-tool-call-card.component';
-import { ChatStreamingMdComponent } from '../../streaming/streaming-markdown.component';
+import {
+  ChatStreamingMdComponent,
+  markdownDocument,
+  type StreamingMarkdownDocument,
+} from '../../streaming/streaming-markdown.component';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 import type { Subagent, SubagentStatus } from '../../agent/subagent';
 import type { Message, ToolCall } from '../../agent';
@@ -76,7 +80,7 @@ function statusToTraceState(s: SubagentStatus): TraceState {
             <div class="sac__reasoning">{{ m.reasoning }}</div>
           }
           @if (textOf(m); as t) {
-            <chat-streaming-md [content]="t" />
+            <chat-streaming-md [document]="markdownDocumentFor(t, m)" />
           }
           @for (tc of toolCallsFor(m); track tc.id) {
             <chat-tool-call-card [toolCall]="toToolCallInfo(tc)" />
@@ -89,6 +93,39 @@ function statusToTraceState(s: SubagentStatus): TraceState {
 export class ChatSubagentCardComponent {
   readonly subagent = input.required<Subagent>();
   readonly state = computed<TraceState>(() => statusToTraceState(this.subagent().status()));
+  private readonly markdownDocuments = new Map<string, StreamingMarkdownDocument>();
+
+  constructor() {
+    effect(() => {
+      let liveIds: Set<string>;
+      try {
+        liveIds = new Set(this.subagent().messages().map((message) => message.id));
+      } catch {
+        return;
+      }
+      for (const id of [...this.markdownDocuments.keys()]) {
+        if (!liveIds.has(id)) this.markdownDocuments.delete(id);
+      }
+    });
+  }
+
+  protected markdownDocumentFor(
+    content: string,
+    message: Message,
+  ): StreamingMarkdownDocument {
+    const prior = this.markdownDocuments.get(message.id);
+    const delivery = message.delivery;
+    if (
+      prior?.generation === delivery.generation &&
+      prior.phase === delivery.phase &&
+      prior.content === content
+    ) {
+      return prior;
+    }
+    const document = markdownDocument(content, delivery);
+    this.markdownDocuments.set(message.id, document);
+    return document;
+  }
 
   protected textOf(m: Message): string {
     const c = m.content;

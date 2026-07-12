@@ -4,6 +4,7 @@ import { signal, computed, Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { mockAgent } from '../../testing/mock-agent';
 import type { Agent, Message, ToolCall } from '../../agent';
+import { staticDelivery } from '../../agent';
 import { ChatToolCallsComponent } from './chat-tool-calls.component';
 import { ChatToolCallTemplateDirective } from './chat-tool-call-template.directive';
 
@@ -23,7 +24,12 @@ describe('ToolCallsComponent — toolCalls computed', () => {
 
   it('returns agent.toolCalls() when message is a user message (no tool_use blocks)', () => {
     const agent = mockAgent();
-    const msg: Message = { id: '1', role: 'user', content: 'hello' };
+    const msg: Message = {
+      id: '1',
+      role: 'user',
+      content: 'hello',
+      delivery: staticDelivery('1'),
+    };
 
     const agent$ = signal(agent);
     const message$ = signal<Message | undefined>(msg);
@@ -55,6 +61,7 @@ describe('ToolCallsComponent — toolCalls computed', () => {
       id: '2',
       role: 'assistant',
       content: [{ type: 'tool_use', id: 'call_2', name: 'search', args: { query: 'test' } }],
+      delivery: staticDelivery('2'),
     };
 
     const agent$ = signal(agent);
@@ -357,7 +364,12 @@ describe('ChatToolCallsComponent — subagent cards anchored to spawning task ca
       toolCallId: 'call_t',
       name: 'research',
       status: signal('running'),
-      messages: signal([{ id: 'm1', role: 'assistant', content: 'hello from research' }]),
+      messages: signal([{
+        id: 'm1',
+        role: 'assistant',
+        content: 'hello from research',
+        delivery: staticDelivery('m1'),
+      }]),
       state: signal({}),
     };
     agent.subagents!.set(new Map([['call_t', sub]]));
@@ -369,6 +381,7 @@ describe('ChatToolCallsComponent — subagent cards anchored to spawning task ca
       role: 'assistant',
       content: '',
       toolCallIds: ['call_t', 'call_s'],
+      delivery: staticDelivery('a1'),
     };
     fixture.detectChanges();
 
@@ -397,14 +410,24 @@ describe('ChatToolCallsComponent — subagent cards anchored to spawning task ca
       toolCallId: 'call_t1',
       name: 'research_one',
       status: signal('running'),
-      messages: signal([{ id: 'm1', role: 'assistant', content: 'one' }]),
+      messages: signal([{
+        id: 'm1',
+        role: 'assistant',
+        content: 'one',
+        delivery: staticDelivery('m1'),
+      }]),
       state: signal({}),
     };
     const sub2: Subagent = {
       toolCallId: 'call_t2',
       name: 'research_two',
       status: signal('running'),
-      messages: signal([{ id: 'm2', role: 'assistant', content: 'two' }]),
+      messages: signal([{
+        id: 'm2',
+        role: 'assistant',
+        content: 'two',
+        delivery: staticDelivery('m2'),
+      }]),
       state: signal({}),
     };
     agent.subagents!.set(new Map([
@@ -419,6 +442,7 @@ describe('ChatToolCallsComponent — subagent cards anchored to spawning task ca
       role: 'assistant',
       content: '',
       toolCallIds: ['call_t1', 'call_t2'],
+      delivery: staticDelivery('a1'),
     };
     fixture.detectChanges();
 

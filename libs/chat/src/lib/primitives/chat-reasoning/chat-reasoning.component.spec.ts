@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: MIT
 import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { Component, signal } from '@angular/core';
 import { ChatReasoningComponent } from './chat-reasoning.component';
+import { ChatStreamingMdComponent } from '../../streaming/streaming-markdown.component';
+import { completeDelivery, streamingDelivery, type MessageDelivery } from '../../agent';
 
 @Component({
   standalone: true,
@@ -10,7 +13,7 @@ import { ChatReasoningComponent } from './chat-reasoning.component';
   template: `
     <chat-reasoning
       [content]="content()"
-      [isStreaming]="streaming()"
+      [delivery]="delivery()"
       [durationMs]="durationMs()"
       [defaultExpanded]="defaultExpanded()"
     />
@@ -18,7 +21,7 @@ import { ChatReasoningComponent } from './chat-reasoning.component';
 })
 class HostComponent {
   content = signal<string>('I considered the problem.');
-  streaming = signal<boolean>(false);
+  delivery = signal<MessageDelivery>(completeDelivery('reasoning-1', 'success'));
   durationMs = signal<number | undefined>(undefined);
   defaultExpanded = signal<boolean>(false);
 }
@@ -60,14 +63,14 @@ describe('ChatReasoningComponent', () => {
 
   it('renders "Thinking…" while streaming', () => {
     const fixture = makeFixture();
-    fixture.componentInstance.streaming.set(true);
+    fixture.componentInstance.delivery.set(streamingDelivery('reasoning-1'));
     fixture.detectChanges();
     expect(getLabelText(fixture)).toContain('Thinking');
   });
 
   it('renders "Thought for Ns" when idle with durationMs', () => {
     const fixture = makeFixture();
-    fixture.componentInstance.streaming.set(false);
+    fixture.componentInstance.delivery.set(completeDelivery('reasoning-1', 'success'));
     fixture.componentInstance.durationMs.set(4000);
     fixture.detectChanges();
     expect(getLabelText(fixture)).toContain('Thought for 4s');
@@ -75,7 +78,7 @@ describe('ChatReasoningComponent', () => {
 
   it('renders "Show reasoning" when idle without durationMs', () => {
     const fixture = makeFixture();
-    fixture.componentInstance.streaming.set(false);
+    fixture.componentInstance.delivery.set(completeDelivery('reasoning-1', 'success'));
     fixture.componentInstance.durationMs.set(undefined);
     fixture.detectChanges();
     expect(getLabelText(fixture)).toContain('Show reasoning');
@@ -95,7 +98,7 @@ describe('ChatReasoningComponent', () => {
 
   it('force-expands while streaming', () => {
     const fixture = makeFixture();
-    fixture.componentInstance.streaming.set(true);
+    fixture.componentInstance.delivery.set(streamingDelivery('reasoning-1'));
     fixture.detectChanges();
     expect(getEl(fixture).getAttribute('data-expanded')).toBe('true');
   });
@@ -113,27 +116,27 @@ describe('ChatReasoningComponent', () => {
 
   it('does not force-collapse when streaming ends (user-open persists past true → false)', () => {
     const fixture = makeFixture();
-    fixture.componentInstance.streaming.set(true);
+    fixture.componentInstance.delivery.set(streamingDelivery('reasoning-1'));
     fixture.detectChanges();
     expect(getEl(fixture).getAttribute('data-expanded')).toBe('true');
     // User clicks to keep it open (already open, but the click captures intent)
     getHeader(fixture).click();
     getHeader(fixture).click(); // toggle back to expanded
     fixture.detectChanges();
-    fixture.componentInstance.streaming.set(false);
+    fixture.componentInstance.delivery.set(completeDelivery('reasoning-1', 'success'));
     fixture.detectChanges();
     expect(getEl(fixture).getAttribute('data-expanded')).toBe('true');
   });
 
   it('does not force-collapse on true → false when user explicitly collapsed before streaming ended', () => {
     const fixture = makeFixture();
-    fixture.componentInstance.streaming.set(true);
+    fixture.componentInstance.delivery.set(streamingDelivery('reasoning-1'));
     fixture.detectChanges();
     expect(getEl(fixture).getAttribute('data-expanded')).toBe('true');
     getHeader(fixture).click(); // user collapses mid-stream
     fixture.detectChanges();
     expect(getEl(fixture).getAttribute('data-expanded')).toBe('false');
-    fixture.componentInstance.streaming.set(false);
+    fixture.componentInstance.delivery.set(completeDelivery('reasoning-1', 'success'));
     fixture.detectChanges();
     expect(getEl(fixture).getAttribute('data-expanded')).toBe('false');
   });
@@ -141,16 +144,16 @@ describe('ChatReasoningComponent', () => {
   it('auto-resets to expanded when streaming re-engages on a follow-up turn', () => {
     const fixture = makeFixture();
     // Round 1: streaming → user collapses → streaming ends
-    fixture.componentInstance.streaming.set(true);
+    fixture.componentInstance.delivery.set(streamingDelivery('reasoning-1'));
     fixture.detectChanges();
     getHeader(fixture).click();
     fixture.detectChanges();
     expect(getEl(fixture).getAttribute('data-expanded')).toBe('false');
-    fixture.componentInstance.streaming.set(false);
+    fixture.componentInstance.delivery.set(completeDelivery('reasoning-1', 'success'));
     fixture.detectChanges();
     expect(getEl(fixture).getAttribute('data-expanded')).toBe('false');
     // Round 2: streaming re-engages — should auto-expand again
-    fixture.componentInstance.streaming.set(true);
+    fixture.componentInstance.delivery.set(streamingDelivery('reasoning-2'));
     fixture.detectChanges();
     expect(getEl(fixture).getAttribute('data-expanded')).toBe('true');
   });
@@ -161,5 +164,31 @@ describe('ChatReasoningComponent', () => {
     fixture.detectChanges();
     const md = fixture.nativeElement.querySelector('chat-reasoning chat-streaming-md');
     expect(md).not.toBeNull();
+  });
+
+  it('binds reasoning markdown to delivery with the reasoning generation suffix', () => {
+    const fixture = makeFixture();
+    fixture.componentInstance.content.set('first\n\nsecond');
+    fixture.componentInstance.delivery.set(streamingDelivery('step-2'));
+    fixture.detectChanges();
+
+    const md = fixture.debugElement.query(By.directive(ChatStreamingMdComponent));
+    expect(md.componentInstance.document()).toEqual({
+      generation: 'step-2:reasoning',
+      phase: 'streaming',
+      content: 'first\n\nsecond',
+    });
+  });
+
+  it('derives reasoning UI streaming state only from delivery phase', () => {
+    const fixture = makeFixture();
+    fixture.componentInstance.delivery.set(completeDelivery('reasoning-1', 'paused'));
+    fixture.detectChanges();
+    expect(getEl(fixture).getAttribute('data-streaming')).toBe('false');
+
+    fixture.componentInstance.delivery.set(streamingDelivery('reasoning-2'));
+    fixture.detectChanges();
+    expect(getEl(fixture).getAttribute('data-streaming')).toBe('true');
+    expect(getLabelText(fixture)).toContain('Thinking');
   });
 });

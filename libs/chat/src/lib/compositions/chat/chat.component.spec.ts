@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { Subject } from 'rxjs';
 import { signal, effect, DestroyRef, inject, Injector, runInInjectionContext } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -14,10 +15,47 @@ import { createA2uiSurfaceStore } from '../../a2ui/surface-store';
 import { signalStateStore, toRenderRegistry, views } from '@threadplane/render';
 import { a2uiBasicCatalog } from '../../a2ui/catalog/index';
 import { ChatGenerativeUiComponent } from '../../primitives/chat-generative-ui/chat-generative-ui.component';
+import { ChatStreamingMdComponent, markdownDocument } from '../../streaming/streaming-markdown.component';
 import type { Spec, StateStore } from '@json-render/core';
 import type { AgentEvent } from '../../agent/agent-event';
 import type { Subagent } from '../../agent/subagent';
-import type { ToolCall, Message } from '../../agent';
+import {
+  completeDelivery,
+  staticDelivery,
+  streamingDelivery,
+  type CompleteOutcome,
+  type ToolCall,
+  type Message,
+} from '../../agent';
+
+describe('markdownDocument', () => {
+  it('maps streaming delivery generation, phase, and content', () => {
+    expect(markdownDocument('partial', streamingDelivery('attempt-1'))).toEqual({
+      generation: 'attempt-1',
+      phase: 'streaming',
+      content: 'partial',
+    });
+  });
+
+  it.each<CompleteOutcome>(['success', 'error', 'aborted', 'interrupted', 'paused'])(
+    'maps complete delivery with %s outcome without exposing the outcome',
+    (outcome) => {
+      expect(markdownDocument('final', completeDelivery('attempt-2', outcome))).toEqual({
+        generation: 'attempt-2',
+        phase: 'complete',
+        content: 'final',
+      });
+    },
+  );
+
+  it('appends the suffix exactly', () => {
+    expect(markdownDocument('thought', streamingDelivery('attempt-3'), ':reasoning')).toEqual({
+      generation: 'attempt-3:reasoning',
+      phase: 'streaming',
+      content: 'thought',
+    });
+  });
+});
 
 describe('ChatComponent', () => {
   it('is defined as a class', () => {
@@ -623,7 +661,9 @@ describe('ChatComponent — subagent cards render once (no duplicate per-message
       toolCallId: 'call_t',
       name: 'research',
       status: signal<'running'>('running'),
-      messages: signal([{ id: 'm1', role: 'assistant', content: 'hi' } as never]),
+      messages: signal([{
+        id: 'm1', role: 'assistant', content: 'hi', delivery: staticDelivery('m1'),
+      } as never]),
       state: signal({}),
     };
   }
@@ -632,8 +672,14 @@ describe('ChatComponent — subagent cards render once (no duplicate per-message
     TestBed.configureTestingModule({});
     const agent = mockAgent({
       messages: [
-        { id: 'a1', role: 'assistant', content: 'first', toolCallIds: ['call_t'], extra: {} } as never,
-        { id: 'a2', role: 'assistant', content: 'second', extra: {} } as never,
+        {
+          id: 'a1', role: 'assistant', content: 'first', toolCallIds: ['call_t'],
+          extra: {}, delivery: staticDelivery('a1'),
+        } as never,
+        {
+          id: 'a2', role: 'assistant', content: 'second', extra: {},
+          delivery: staticDelivery('a2'),
+        } as never,
       ],
       toolCalls: [{ id: 'call_t', name: 'task', args: {}, status: 'success' } as ToolCall],
       withSubagents: true,
@@ -659,7 +705,7 @@ describe('ChatComponent — reasoning runs (merged pill)', () => {
   interface ReasoningRun {
     content: string;
     durationMs: number | undefined;
-    streaming: boolean;
+    delivery: Message['delivery'];
     label: string | undefined;
   }
   interface ReasoningApi {
@@ -678,11 +724,20 @@ describe('ChatComponent — reasoning runs (merged pill)', () => {
     return comp as unknown as ReasoningApi;
   }
 
-  const user = (id: string, content = 'hi'): Message => ({ id, role: 'user', content });
-  const tool = (id: string): Message => ({ id, role: 'tool', content: 'result', toolCallId: 'c' });
-  const reasoning = (id: string, reasoning: string, durationMs?: number, content = ''): Message =>
-    ({ id, role: 'assistant', content, reasoning, reasoningDurationMs: durationMs });
-  const answer = (id: string, content: string): Message => ({ id, role: 'assistant', content });
+  const user = (id: string, content = 'hi'): Message =>
+    ({ id, role: 'user', content, delivery: staticDelivery(id) });
+  const tool = (id: string): Message =>
+    ({ id, role: 'tool', content: 'result', toolCallId: 'c', delivery: staticDelivery(id) });
+  const reasoning = (
+    id: string,
+    reasoning: string,
+    durationMs?: number,
+    content = '',
+    delivery: Message['delivery'] = staticDelivery(id),
+  ): Message =>
+    ({ id, role: 'assistant', content, reasoning, reasoningDurationMs: durationMs, delivery });
+  const answer = (id: string, content: string): Message =>
+    ({ id, role: 'assistant', content, delivery: staticDelivery(id) });
 
   describe('reasoningRunStart', () => {
     it('is true for a reasoning step that follows a user message', () => {
@@ -709,7 +764,7 @@ describe('ChatComponent — reasoning runs (merged pill)', () => {
       expect(run.label).toBeUndefined();          // single step → no "· N steps" label
       expect(run.content).toBe('just this');
       expect(run.durationMs).toBe(4000);
-      expect(run.streaming).toBe(false);          // not loading
+      expect(run.delivery).toEqual(staticDelivery('a1'));
     });
 
     it('two steps separated by a tool message merge: joined content, summed duration, "N steps" label', () => {
@@ -747,24 +802,251 @@ describe('ChatComponent — reasoning runs (merged pill)', () => {
       expect(a.reasoningRun(1).durationMs).toBe(3000);
     });
 
-    it('streaming is true when the run’s last step is the loading tail with no response text yet', () => {
-      const a = api([user('u1'), reasoning('a1', 'thinking', undefined, '')], /* isLoading */ true);
+    it('uses the reasoning step delivery even when the agent is not loading', () => {
+      const delivery = streamingDelivery('attempt-1');
+      const a = api([user('u1'), reasoning('a1', 'thinking', undefined, '', delivery)]);
       const run = a.reasoningRun(1);
-      expect(run.streaming).toBe(true);
+      expect(run.delivery).toBe(delivery);
       expect(run.label).toBeUndefined(); // still a single step
     });
 
-    it('streaming reflects the LAST step of a multi-step run', () => {
-      // Two-step run whose final step is the loading tail (empty content).
-      const a = api([user('u1'), reasoning('a1', 'first', 2000), tool('t1'), reasoning('a2', 'second', undefined, '')], true);
+    it('uses the LAST step delivery for a multi-step run', () => {
+      const firstDelivery = completeDelivery('attempt-1', 'success');
+      const lastDelivery = streamingDelivery('attempt-2');
+      const a = api([
+        user('u1'),
+        reasoning('a1', 'first', 2000, '', firstDelivery),
+        tool('t1'),
+        reasoning('a2', 'second', undefined, '', lastDelivery),
+      ]);
       const run = a.reasoningRun(1);
-      expect(run.streaming).toBe(true);
+      expect(run.delivery).toBe(lastDelivery);
+      expect(markdownDocument(run.content, run.delivery, ':reasoning')).toEqual({
+        generation: 'attempt-2:reasoning',
+        phase: 'streaming',
+        content: 'first\n\nsecond',
+      });
       expect(run.label).toBe('Thought for 2s · 2 steps');
     });
 
-    it('streaming is false once response text has arrived on the tail step', () => {
-      const a = api([user('u1'), reasoning('a1', 'thinking', 2000, 'here is the answer')], true);
-      expect(a.reasoningRun(1).streaming).toBe(false);
+    it('ignores global loading and tail position when selecting delivery', () => {
+      const delivery = completeDelivery('attempt-1', 'paused');
+      const messages = [
+        user('u1'),
+        reasoning('a1', 'thinking', 2000, '', delivery),
+        answer('a2', 'later message'),
+      ];
+      expect(api(messages, true).reasoningRun(1).delivery).toBe(delivery);
     });
+  });
+});
+
+describe('ChatComponent — markdown delivery', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({ imports: [ChatComponent] });
+  });
+
+  it('binds the classified markdown document to the message delivery', () => {
+    const delivery = streamingDelivery('answer-attempt');
+    const agent = mockAgent({
+      messages: [
+        { id: 'a1', role: 'assistant', content: '**partial**', delivery },
+      ],
+    });
+    const fixture = TestBed.createComponent(ChatComponent);
+    fixture.componentRef.setInput('agent', agent);
+    fixture.detectChanges();
+
+    const markdown = fixture.debugElement.query(By.directive(ChatStreamingMdComponent));
+    expect(markdown.componentInstance.document()).toEqual({
+      generation: 'answer-attempt',
+      phase: 'streaming',
+      content: '**partial**',
+    });
+  });
+
+  it('keeps the markdown document stable when loading and tail position change', () => {
+    const delivery = completeDelivery('answer-attempt', 'paused');
+    const message: Message = {
+      id: 'a1', role: 'assistant', content: 'paused answer', delivery,
+    };
+    const agent = mockAgent({ messages: [message], isLoading: false });
+    const fixture = TestBed.createComponent(ChatComponent);
+    fixture.componentRef.setInput('agent', agent);
+    fixture.detectChanges();
+
+    let markdown = fixture.debugElement.query(By.directive(ChatStreamingMdComponent));
+    const document = markdown.componentInstance.document();
+
+    agent.isLoading.set(true);
+    fixture.detectChanges();
+    markdown = fixture.debugElement.query(By.directive(ChatStreamingMdComponent));
+    expect(markdown.componentInstance.document()).toBe(document);
+    expect(markdown.componentInstance.document()).toEqual({
+      generation: 'answer-attempt',
+      phase: 'complete',
+      content: 'paused answer',
+    });
+
+    agent.messages.set([
+      message,
+      { id: 'u2', role: 'user', content: 'next', delivery: staticDelivery('u2') },
+    ]);
+    fixture.detectChanges();
+
+    markdown = fixture.debugElement.query(By.directive(ChatStreamingMdComponent));
+    expect(markdown.componentInstance.document()).toBe(document);
+    expect(markdown.componentInstance.document()).toEqual({
+      generation: 'answer-attempt',
+      phase: 'complete',
+      content: 'paused answer',
+    });
+  });
+
+  it('reclassifies equal-length markdown when delivery generation changes', () => {
+    const agent = mockAgent({
+      messages: [{
+        id: 'a1',
+        role: 'assistant',
+        content: 'alpha',
+        delivery: completeDelivery('g1', 'success'),
+      }],
+    });
+    const fixture = TestBed.createComponent(ChatComponent);
+    fixture.componentRef.setInput('agent', agent);
+    fixture.detectChanges();
+
+    let markdown = fixture.debugElement.query(By.directive(ChatStreamingMdComponent));
+    expect(markdown.componentInstance.document()).toEqual({
+      generation: 'g1',
+      phase: 'complete',
+      content: 'alpha',
+    });
+
+    agent.messages.set([{
+      id: 'a1',
+      role: 'assistant',
+      content: 'bravo',
+      delivery: completeDelivery('g2', 'success'),
+    }]);
+    fixture.detectChanges();
+
+    markdown = fixture.debugElement.query(By.directive(ChatStreamingMdComponent));
+    expect(markdown.componentInstance.document()).toEqual({
+      generation: 'g2',
+      phase: 'complete',
+      content: 'bravo',
+    });
+  });
+
+  it('reclassifies content type when delivery generation changes', () => {
+    const agent = mockAgent({
+      messages: [{
+        id: 'a1',
+        role: 'assistant',
+        content: 'plain markdown',
+        delivery: completeDelivery('g1', 'success'),
+      }],
+    });
+    const fixture = TestBed.createComponent(ChatComponent);
+    fixture.componentRef.setInput('agent', agent);
+    fixture.detectChanges();
+
+    expect(fixture.debugElement.query(By.directive(ChatStreamingMdComponent))).not.toBeNull();
+    expect(fixture.debugElement.query(By.directive(ChatGenerativeUiComponent))).toBeNull();
+
+    agent.messages.set([{
+      id: 'a1',
+      role: 'assistant',
+      content: JSON.stringify({
+        root: 'r1',
+        elements: { r1: { type: 'Text', props: { label: 'Structured' } } },
+      }),
+      delivery: completeDelivery('g2', 'success'),
+    }]);
+    fixture.detectChanges();
+
+    expect(fixture.debugElement.query(By.directive(ChatStreamingMdComponent))).toBeNull();
+    expect(fixture.debugElement.query(By.directive(ChatGenerativeUiComponent))).not.toBeNull();
+  });
+
+  it('binds merged reasoning markdown to the last step delivery', () => {
+    const first: Message = {
+      id: 'a1',
+      role: 'assistant',
+      content: '',
+      reasoning: 'first thought',
+      delivery: streamingDelivery('g1'),
+    };
+    const agent = mockAgent({
+      messages: [
+        { id: 'u1', role: 'user', content: 'question', delivery: staticDelivery('u1') },
+        first,
+      ],
+      isLoading: false,
+    });
+    const fixture = TestBed.createComponent(ChatComponent);
+    fixture.componentRef.setInput('agent', agent);
+    fixture.detectChanges();
+
+    let markdown = fixture.debugElement.query(
+      By.css('chat-reasoning chat-streaming-md'),
+    );
+    expect(markdown.componentInstance.document()).toEqual({
+      generation: 'g1:reasoning',
+      phase: 'streaming',
+      content: 'first thought',
+    });
+
+    const reasoningHeader = fixture.nativeElement.querySelector(
+      'chat-reasoning .chat-reasoning__header',
+    ) as HTMLButtonElement;
+    reasoningHeader.click();
+    reasoningHeader.click();
+    fixture.detectChanges();
+
+    agent.messages.update((messages) => [
+      ...messages,
+      {
+        id: 't1',
+        role: 'tool',
+        content: 'result',
+        toolCallId: 'call-1',
+        delivery: staticDelivery('t1'),
+      },
+      {
+        id: 'a2',
+        role: 'assistant',
+        content: '',
+        reasoning: 'second thought',
+        delivery: completeDelivery('g2', 'paused'),
+      },
+    ]);
+    fixture.detectChanges();
+
+    markdown = fixture.debugElement.query(
+      By.css('chat-reasoning chat-streaming-md'),
+    );
+    const expected = {
+      generation: 'g2:reasoning',
+      phase: 'complete',
+      content: 'first thought\n\nsecond thought',
+    } as const;
+    expect(markdown.componentInstance.document()).toEqual(expected);
+
+    agent.isLoading.set(true);
+    fixture.detectChanges();
+    expect(markdown.componentInstance.document()).toEqual(expected);
+
+    agent.messages.update((messages) => [
+      ...messages,
+      { id: 'u2', role: 'user', content: 'next', delivery: staticDelivery('u2') },
+    ]);
+    fixture.detectChanges();
+
+    markdown = fixture.debugElement.query(
+      By.css('chat-reasoning chat-streaming-md'),
+    );
+    expect(markdown.componentInstance.document()).toEqual(expected);
   });
 });

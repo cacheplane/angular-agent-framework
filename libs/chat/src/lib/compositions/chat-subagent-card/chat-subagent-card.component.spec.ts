@@ -5,6 +5,8 @@ import { signal } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { ChatSubagentCardComponent, statusColor } from './chat-subagent-card.component';
 import type { Subagent } from '../../agent/subagent';
+import { ChatStreamingMdComponent } from '../../streaming/streaming-markdown.component';
+import { completeDelivery, staticDelivery, streamingDelivery } from '../../agent';
 
 describe('ChatSubagentCardComponent', () => {
   it('is defined', () => {
@@ -25,11 +27,13 @@ describe('ChatSubagentCardComponent', () => {
           content: 'searching',
           reasoning: 'plan',
           toolCallIds: ['t1'],
+          delivery: streamingDelivery('nested-1'),
         },
         {
           id: 'm2',
           role: 'assistant',
           content: 'done',
+          delivery: completeDelivery('nested-2', 'error'),
         },
       ]),
       toolCalls: signal([
@@ -59,6 +63,12 @@ describe('ChatSubagentCardComponent', () => {
 
     const toolCallEls = fixture.debugElement.queryAll(By.css('chat-tool-call-card'));
     expect(toolCallEls.length).toBe(1);
+
+    const markdown = fixture.debugElement.queryAll(By.directive(ChatStreamingMdComponent));
+    expect(markdown.map((el) => el.componentInstance.document())).toEqual([
+      { generation: 'nested-1', phase: 'streaming', content: 'searching' },
+      { generation: 'nested-2', phase: 'complete', content: 'done' },
+    ]);
   });
 
   it('shows the message count in the collapsed summary when complete', async () => {
@@ -68,8 +78,8 @@ describe('ChatSubagentCardComponent', () => {
       // 'complete' → chat-trace collapses; the transcript DOM is hidden.
       status: signal('complete'),
       messages: signal([
-        { id: 'm1', role: 'assistant', content: 'a' },
-        { id: 'm2', role: 'assistant', content: 'b' },
+        { id: 'm1', role: 'assistant', content: 'a', delivery: staticDelivery('m1') },
+        { id: 'm2', role: 'assistant', content: 'b', delivery: staticDelivery('m2') },
       ]),
       toolCalls: signal([]),
       state: signal({}),
@@ -93,6 +103,36 @@ describe('ChatSubagentCardComponent', () => {
     const host = fixture.nativeElement as HTMLElement;
     const text = host.textContent ?? '';
     expect(text).toMatch(/2 message/);
+  });
+
+  it('preserves nested markdown document identity across unrelated parent updates', () => {
+    const messages = signal([{
+      id: 'm1',
+      role: 'assistant' as const,
+      content: 'stable',
+      delivery: staticDelivery('m1'),
+    }]);
+    const fakeSubagent: Subagent = {
+      toolCallId: 'tc-root',
+      name: 'Research',
+      status: signal('running'),
+      messages,
+      toolCalls: signal([]),
+      state: signal({}),
+    };
+    TestBed.configureTestingModule({ imports: [ChatSubagentCardComponent] });
+    const fixture = TestBed.createComponent(ChatSubagentCardComponent);
+    fixture.componentRef.setInput('subagent', fakeSubagent);
+    fixture.detectChanges();
+
+    let markdown = fixture.debugElement.query(By.directive(ChatStreamingMdComponent));
+    const document = markdown.componentInstance.document();
+
+    messages.set([...messages()]);
+    fixture.detectChanges();
+
+    markdown = fixture.debugElement.query(By.directive(ChatStreamingMdComponent));
+    expect(markdown.componentInstance.document()).toBe(document);
   });
 });
 
