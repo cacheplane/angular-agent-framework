@@ -17,7 +17,7 @@ const streamingState: MessageDelivery = {
   phase: 'streaming',
 };
 // @ts-expect-error Streaming delivery does not expose an outcome.
-streamingState.outcome;
+void streamingState.outcome;
 
 type _completeParameters = Expect<
   Equal<Parameters<typeof completeDelivery>, [generation: string, outcome: TerminalOutcome]>

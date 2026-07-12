@@ -150,7 +150,9 @@ describe('agent', () => {
           };
           yield { type: 'values', values: { done: true } };
         },
-        async updateState() {},
+        async updateState() {
+          return;
+        },
       };
       const ref = withInjectionContext(() =>
         agent({ apiUrl: '', assistantId: 'a', transport, threadId: 'thread-1', throttle: false })

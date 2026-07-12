@@ -1999,7 +1999,7 @@
     "methods": [
       {
         "name": "classifyMessage",
-        "signature": "classifyMessage(content: string, message: object): ContentClassifier",
+        "signature": "classifyMessage(content: string, message: Pick<Message, \"id\" | \"delivery\">): ContentClassifier",
         "description": "",
         "params": [
           {
@@ -2010,7 +2010,7 @@
           },
           {
             "name": "message",
-            "type": "object",
+            "type": "Pick<Message, \"id\" | \"delivery\">",
             "description": "",
             "optional": false
           }
@@ -2067,19 +2067,19 @@
         ]
       },
       {
-        "name": "isReasoningStreaming",
-        "signature": "isReasoningStreaming(message: Message, index: number): boolean",
-        "description": "True while a message's reasoning is mid-stream — i.e. it's the latest\nmessage, the agent is loading, the message has reasoning content, and\nno response text has arrived yet. Once the response text begins, the\nreasoning pill collapses (per its internal logic).",
+        "name": "markdownDocumentFor",
+        "signature": "markdownDocumentFor(content: string, message: Pick<Message, \"id\" | \"delivery\">): StreamingMarkdownDocument",
+        "description": "",
         "params": [
           {
-            "name": "message",
-            "type": "Message",
+            "name": "content",
+            "type": "string",
             "description": "",
             "optional": false
           },
           {
-            "name": "index",
-            "type": "number",
+            "name": "message",
+            "type": "Pick<Message, \"id\" | \"delivery\">",
             "description": "",
             "optional": false
           }
@@ -2253,7 +2253,7 @@
       {
         "name": "reasoningRun",
         "signature": "reasoningRun(index: number): object",
-        "description": "Aggregate the reasoning RUN starting at `index`: joins each step's\nreasoning, sums durations, counts steps, and computes the streaming flag\nand the merged label when N > 1 (\"Thought for {total} · {N} steps\", or\njust \"{N} steps\" when no step reported timing).",
+        "description": "Aggregate the reasoning RUN starting at `index`: joins each step's\nreasoning, sums durations, counts steps, and returns the last step's\ndelivery because that step owns the current aggregate snapshot. Also\ncomputes the merged label when N > 1 (\"Thought for {total} · {N} steps\",\nor just \"{N} steps\" when no step reported timing).",
         "params": [
           {
             "name": "index",
@@ -3426,7 +3426,7 @@
   {
     "name": "ChatReasoningComponent",
     "kind": "class",
-    "description": "Renders an assistant's reasoning content as a compact pill that\nexpands to reveal the underlying text. Three visual states:\n\n- Streaming: pill shows \"Thinking…\" with a pulsing dot; auto-expanded\n  so the user sees reasoning stream in real time.\n- Idle, with durationMs known: pill shows \"Thought for {duration}\";\n  collapsed by default, expand on click.\n- Idle, no duration: pill shows \"Show reasoning\"; collapsed by default.\n\nThe body re-uses chat-streaming-md so reasoning content gets the same\nmarkdown rendering pipeline as the visible response (lists, code,\nstep labels often appear in reasoning output).\n\nInternal state: a tristate \"expanded\" — null means follow auto state-\ndriven logic (force-expand on isStreaming, otherwise honor\ndefaultExpanded), boolean is a manual user choice that wins for the\nlifetime of the instance.",
+    "description": "Renders an assistant's reasoning content as a compact pill that\nexpands to reveal the underlying text. Three visual states:\n\n- Streaming: pill shows \"Thinking…\" with a pulsing dot; auto-expanded\n  so the user sees reasoning stream in real time.\n- Idle, with durationMs known: pill shows \"Thought for {duration}\";\n  collapsed by default, expand on click.\n- Idle, no duration: pill shows \"Show reasoning\"; collapsed by default.\n\nThe body re-uses chat-streaming-md so reasoning content gets the same\nmarkdown rendering pipeline as the visible response (lists, code,\nstep labels often appear in reasoning output).\n\nInternal state: a tristate \"expanded\" — null means follow auto state-\ndriven logic (force-expand while delivery is streaming, otherwise honor\ndefaultExpanded), boolean is a manual user choice that wins for the\nlifetime of the instance.",
     "params": [],
     "examples": [],
     "properties": [
@@ -3439,6 +3439,18 @@
       {
         "name": "defaultExpanded",
         "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "delivery",
+        "type": "InputSignal<MessageDelivery>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "document",
+        "type": "Signal<StreamingMarkdownDocument>",
         "description": "",
         "optional": false
       },
@@ -3468,7 +3480,7 @@
       },
       {
         "name": "isStreaming",
-        "type": "InputSignal<boolean>",
+        "type": "Signal<boolean>",
         "description": "",
         "optional": false
       },
@@ -3927,13 +3939,13 @@
   {
     "name": "ChatStreamingMdComponent",
     "kind": "class",
-    "description": "Renders streaming markdown by walking a @cacheplane/partial-markdown AST\nthrough @threadplane/render's view registry.\n\nReactivity model: the live `parser.root` keeps a stable JS reference\nacross pushes (partial-markdown's identity guarantee). To make Angular\nsignals propagate downstream when the underlying tree changes, we surface\na materialized snapshot via `materialize()`. The snapshot shares\nstructurally — unchanged subtrees keep the SAME reference, and any\ndescendant change yields a NEW root reference. This lets Angular's\n`Object.is` equality check both detect changes (root reference differs)\nand short-circuit unchanged subtrees (per-node references stable).\n\nOverride per-node-type renderers via the `[viewRegistry]` input or by\nsupplying a different `MARKDOWN_VIEW_REGISTRY` provider in the injector\ntree.",
+    "description": "Renders one explicitly-versioned markdown document through the shared view\nregistry. A generation owns one parser session; append-only updates preserve\nparser and subtree identity, while generation changes replace the session.",
     "params": [],
     "examples": [],
     "properties": [
       {
-        "name": "content",
-        "type": "InputSignal<string>",
+        "name": "document",
+        "type": "InputSignal<StreamingMarkdownDocument>",
         "description": "",
         "optional": false
       },
@@ -3946,12 +3958,6 @@
       {
         "name": "root",
         "type": "Signal<MarkdownDocumentNode | null>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "streaming",
-        "type": "InputSignal<boolean>",
         "description": "",
         "optional": false
       },
@@ -3985,6 +3991,25 @@
       }
     ],
     "methods": [
+      {
+        "name": "markdownDocumentFor",
+        "signature": "markdownDocumentFor(content: string, message: Message): StreamingMarkdownDocument",
+        "description": "",
+        "params": [
+          {
+            "name": "content",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "message",
+            "type": "Message",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
       {
         "name": "textOf",
         "signature": "textOf(m: Message): string",
@@ -7356,6 +7381,12 @@
         "optional": false
       },
       {
+        "name": "delivery",
+        "type": "MessageDelivery",
+        "description": "Adapter-owned authoritative delivery lifecycle state for this message.",
+        "optional": false
+      },
+      {
         "name": "extra",
         "type": "Record<string, unknown>",
         "description": "Runtime-specific extras; do not rely on shape in portable code.",
@@ -7844,6 +7875,32 @@
       {
         "name": "~standard",
         "type": "StandardSchemaProps<Input, Output>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "StreamingMarkdownDocument",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "content",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "generation",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "phase",
+        "type": "\"streaming\" | \"complete\"",
         "description": "",
         "optional": false
       }
@@ -8350,6 +8407,13 @@
     "examples": []
   },
   {
+    "name": "CompleteOutcome",
+    "kind": "type",
+    "description": "Terminal result of one response attempt.\n\n`paused` is an intentional stop awaiting resumable input; `interrupted` means\nthe response stream ended unexpectedly. The other outcomes indicate normal\ncompletion, failure, or caller cancellation.",
+    "signature": "\"success\" | \"error\" | \"aborted\" | \"interrupted\" | \"paused\"",
+    "examples": []
+  },
+  {
     "name": "ContentBlock",
     "kind": "type",
     "description": "",
@@ -8368,6 +8432,13 @@
     "kind": "type",
     "description": "",
     "signature": "\"accept\" | \"edit\" | \"respond\" | \"ignore\"",
+    "examples": []
+  },
+  {
+    "name": "MessageDelivery",
+    "kind": "type",
+    "description": "Delivery lifecycle for one response attempt. `generation` identifies that\nattempt and is stable only for its lifetime. `streaming` means chunks may\nstill arrive; `complete` means the attempt has stopped with a terminal outcome.",
+    "signature": "object | object",
     "examples": []
   },
   {
@@ -8403,6 +8474,13 @@
     "kind": "type",
     "description": "",
     "signature": "NonNullable<Schema[\"~standard\"][\"types\"]>[\"output\"]",
+    "examples": []
+  },
+  {
+    "name": "StreamingMarkdownContractViolationPolicy",
+    "kind": "type",
+    "description": "",
+    "signature": "\"throw\" | \"rebuild\"",
     "examples": []
   },
   {
@@ -8494,6 +8572,13 @@
     "kind": "const",
     "description": "DI token for the markdown view registry consumed by <chat-streaming-md>\nand <md-children>. Maps MarkdownNode.type strings (e.g. \"paragraph\",\n\"heading\") to Angular components that render that node type.\n\n`<chat-streaming-md>` provides the runtime registry on its component-level\ninjector — either the consumer-supplied [viewRegistry] input, or\n`cacheplaneMarkdownViews` (the default) — so descendant <md-children>\ncomponents resolve the right components for each node.",
     "signature": "InjectionToken<Readonly<Record<string, Type<unknown> | RenderViewEntry>>>",
+    "examples": []
+  },
+  {
+    "name": "STREAMING_MARKDOWN_CONTRACT_VIOLATION_POLICY",
+    "kind": "const",
+    "description": "",
+    "signature": "InjectionToken<StreamingMarkdownContractViolationPolicy>",
     "examples": []
   },
   {
@@ -8691,6 +8776,31 @@
     ],
     "returns": {
       "type": "ClientToolResult",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "completeDelivery",
+    "kind": "function",
+    "description": "",
+    "signature": "completeDelivery(generation: string, outcome: TOutcome): object",
+    "params": [
+      {
+        "name": "generation",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "outcome",
+        "type": "TOutcome",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "object",
       "description": ""
     },
     "examples": []
@@ -9198,6 +9308,37 @@
     ]
   },
   {
+    "name": "markdownDocument",
+    "kind": "function",
+    "description": "",
+    "signature": "markdownDocument(content: string, delivery: MessageDelivery, suffix: string): StreamingMarkdownDocument",
+    "params": [
+      {
+        "name": "content",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "delivery",
+        "type": "MessageDelivery",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "suffix",
+        "type": "string",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "returns": {
+      "type": "StreamingMarkdownDocument",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
     "name": "messageContent",
     "kind": "function",
     "description": "Extracts a human-readable string from a message's content.\n\n`BaseMessage.content` is `string | MessageContentComplex[]`. Reasoning-\ncapable models (OpenAI gpt-5/o-series, Anthropic) emit complex arrays of\ntyped blocks: `{type:'text',text}`, `{type:'reasoning',...}`, tool-use\nblocks, etc. We render only the visible text portions and skip anything\nelse. Stringifying the whole array would dump raw JSON like\n`[{\"type\":\"text\",...}]` into the chat bubble.",
@@ -9234,7 +9375,7 @@
       "description": ""
     },
     "examples": [
-      "```ts\nconst agent = mockAgent({\n  messages: [{ id: '1', role: 'assistant', content: 'Hi' }],\n  isLoading: true,\n});\n```"
+      "```ts\nimport { staticDelivery } from '@threadplane/chat';\n\nconst agent = mockAgent({\n  messages: [{ id: '1', role: 'assistant', content: 'Hi', delivery: staticDelivery('1') }],\n  isLoading: true,\n});\n```"
     ]
   },
   {
@@ -9429,6 +9570,25 @@
     "examples": []
   },
   {
+    "name": "staticDelivery",
+    "kind": "function",
+    "description": "",
+    "signature": "staticDelivery(messageId: string): object",
+    "params": [
+      {
+        "name": "messageId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "object",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
     "name": "statusColor",
     "kind": "function",
     "description": "Returns a CSS style string for a subagent's status badge.\nKept exported for backward compatibility with existing consumers; the\npreferred way to style status visually is via the `data-status` attribute\n+ CSS selectors (see component styles below).",
@@ -9443,6 +9603,25 @@
     ],
     "returns": {
       "type": "string",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "streamingDelivery",
+    "kind": "function",
+    "description": "",
+    "signature": "streamingDelivery(generation: string): object",
+    "params": [
+      {
+        "name": "generation",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "object",
       "description": ""
     },
     "examples": []
