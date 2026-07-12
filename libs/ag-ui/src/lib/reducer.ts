@@ -5,7 +5,14 @@
 // file has no runtime dependency on the EventType enum import.
 import { signal, type WritableSignal } from '@angular/core';
 import type { Subject } from 'rxjs';
-import { toAgentError, type AgentError } from '@threadplane/chat';
+import {
+  completeDelivery,
+  staticDelivery,
+  streamingDelivery,
+  toAgentError,
+  type AgentError,
+  type CompleteOutcome,
+} from '@threadplane/chat';
 import type {
   Message, AgentStatus, ToolCall, AgentEvent, AgentInterrupt,
 } from '@threadplane/chat';
@@ -50,7 +57,18 @@ export interface CustomStreamEvent {
 export interface ActivityEntry {
   messageId: string;
   activityType: string;
+  generation: string;
   content: WritableSignal<Record<string, unknown>>;
+}
+
+export interface ReducerDeliveryRun {
+  generation: string;
+  baselineMessageIds: Set<string>;
+  ownedMessageIds: Set<string>;
+  eligibleBaselineAssistantId?: string;
+  currentAssistantMessageId?: string;
+  protocolRunId?: string;
+  outcome?: CompleteOutcome;
 }
 
 export interface ReducerStore {
@@ -64,6 +82,8 @@ export interface ReducerStore {
   events$:      Subject<AgentEvent>;
   customEvents: WritableSignal<CustomStreamEvent[]>;
   activities: WritableSignal<Map<string, ActivityEntry>>;
+  deliveryRun: ReducerDeliveryRun | null;
+  allocateDeliveryGeneration(scope: string): string;
   /** Accumulated raw TOOL_CALL_ARGS text per toolCallId. A live model streams
    *  args as many partial-JSON fragments, so each delta must be appended here
    *  and the ACCUMULATED buffer parsed — parsing a lone delta only succeeds
@@ -71,6 +91,22 @@ export interface ReducerStore {
    *  fixtures). Lazily created by the reducer; entries dropped on
    *  TOOL_CALL_END. */
   argsBuffers?: Map<string, string>;
+}
+
+/** Finalize one run without touching messages owned by another generation. */
+export function finalizeDeliveryRun(
+  store: ReducerStore,
+  run: ReducerDeliveryRun,
+  outcome: CompleteOutcome,
+): boolean {
+  if (run.outcome !== undefined) return false;
+  run.outcome = outcome;
+  store.messages.update(messages => messages.map(message =>
+    message.delivery.generation === run.generation
+      ? { ...message, delivery: completeDelivery(run.generation, outcome) }
+      : message,
+  ));
+  return true;
 }
 
 /**
@@ -100,6 +136,8 @@ function resolveReasoningDurationMs(messageId: string): number | undefined {
 export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
   switch (event.type) {
     case 'RUN_STARTED': {
+      const run = store.deliveryRun;
+      if (!run || run.outcome !== undefined || !bindRunId(event, run)) return;
       store.status.set('running');
       store.isLoading.set(true);
       store.error.set(undefined);
@@ -109,11 +147,15 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
       return;
     }
     case 'RUN_FINISHED': {
+      const run = currentRunForEvent(event, store);
+      if (!run || !finalizeDeliveryRun(store, run, 'success')) return;
       store.status.set('idle');
       store.isLoading.set(false);
       return;
     }
     case 'RUN_ERROR': {
+      const run = currentRunForEvent(event, store);
+      if (!run || !finalizeDeliveryRun(store, run, 'error')) return;
       store.status.set('error');
       store.isLoading.set(false);
       const runErrorMsg = (event as { message?: unknown }).message;
@@ -124,33 +166,39 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
     }
     case 'TEXT_MESSAGE_START': {
       const id = messageIdFrom(event);
+      const delivery = ownAssistantMessage(store, id);
+      if (!delivery) return;
       store.messages.update((prev) =>
         prev.some((m) => m.id === id)
-          ? prev.map((m) => m.id === id ? { ...m, content: m.content ?? '' } : m)
-          : [...prev, { id, role: 'assistant', content: '' }],
+          ? prev.map((m) => m.id === id ? { ...m, content: m.content ?? '', delivery } : m)
+          : [...prev, { id, role: 'assistant', content: '', delivery }],
       );
       return;
     }
     case 'REASONING_MESSAGE_START': {
       const id = messageIdFrom(event);
+      const delivery = ownAssistantMessage(store, id);
+      if (!delivery) return;
       reasoningTimingMap.set(id, { startedAt: Date.now() });
       // Initialize an assistant slot with empty reasoning if it doesn't already exist.
       store.messages.update((prev) =>
         prev.some((m) => m.id === id)
           ? prev.map((m) => m.id === id
-              ? { ...m, reasoning: m.reasoning ?? '' }
+              ? { ...m, reasoning: m.reasoning ?? '', delivery }
               : m)
-          : [...prev, { id, role: 'assistant', content: '', reasoning: '' }],
+          : [...prev, { id, role: 'assistant', content: '', reasoning: '', delivery }],
       );
       return;
     }
     case 'REASONING_MESSAGE_CONTENT':
     case 'REASONING_MESSAGE_CHUNK': {
       const id = messageIdFrom(event);
+      const delivery = ownAssistantMessage(store, id);
+      if (!delivery) return;
       const delta = (event as { delta?: string }).delta ?? '';
       store.messages.update((prev) =>
         prev.map((m) => m.id === id
-          ? { ...m, reasoning: (m.reasoning ?? '') + delta }
+          ? { ...m, reasoning: (m.reasoning ?? '') + delta, delivery }
           : m),
       );
       return;
@@ -172,9 +220,11 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
     }
     case 'TEXT_MESSAGE_CONTENT': {
       const id = messageIdFrom(event);
+      const delivery = ownAssistantMessage(store, id);
+      if (!delivery) return;
       const delta = (event as { delta?: string }).delta ?? '';
       store.messages.update((prev) =>
-        prev.map((m) => m.id === id ? { ...m, content: m.content + delta } : m),
+        prev.map((m) => m.id === id ? { ...m, content: m.content + delta, delivery } : m),
       );
       return;
     }
@@ -196,16 +246,18 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
       // tool-call-only turn emits no TEXT_MESSAGE_START), create a slot.
       const parentId = e.parentMessageId;
       if (parentId) {
+        const delivery = ownAssistantMessage(store, parentId);
+        if (!delivery) return;
         store.messages.update((prev) => {
           const existing = prev.find((m) => m.id === parentId);
           if (existing) {
             return prev.map((m) =>
               m.id === parentId
-                ? { ...m, toolCallIds: [...(m.toolCallIds ?? []), e.toolCallId] }
+                ? { ...m, toolCallIds: [...(m.toolCallIds ?? []), e.toolCallId], delivery }
                 : m,
             );
           }
-          return [...prev, { id: parentId, role: 'assistant', content: '', toolCallIds: [e.toolCallId] }];
+          return [...prev, { id: parentId, role: 'assistant', content: '', toolCallIds: [e.toolCallId], delivery }];
         });
       }
       return;
@@ -272,6 +324,9 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
     case 'MESSAGES_SNAPSHOT': {
       const e = event as unknown as { messages: AgUiSnapshotMessage[] };
       const raw = e.messages ?? [];
+      const previousById = new Map(store.messages().map(message => [message.id, message]));
+      const run = store.deliveryRun?.outcome === undefined ? store.deliveryRun : null;
+      const canonicalAssistantId = resolveCanonicalAssistantId(raw, run);
       // AG-UI AssistantMessage carries `toolCalls` (ToolCall objects) on the
       // snapshot wire. Bridge them to `toolCallIds` so that the chat lib's
       // per-message tool-call resolution (resolveMessageToolCalls) can scope
@@ -279,8 +334,14 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
       // so the data is visible to <chat-tool-views>.
       const snapshotToolCalls: ToolCall[] = [];
       const messages: Message[] = raw.map((m) => {
+        let delivery = previousById.get(m.id)?.delivery ?? staticDelivery(m.id);
+        if (run && (run.ownedMessageIds.has(m.id) || m.id === canonicalAssistantId)) {
+          delivery = streamingDelivery(run.generation);
+          run.ownedMessageIds.add(m.id);
+          run.currentAssistantMessageId = m.id;
+        }
         if (m.role !== 'assistant' || !m.toolCalls || m.toolCalls.length === 0) {
-          return m as unknown as Message;
+          return { ...m, delivery } as unknown as Message;
         }
         const ids: string[] = [];
         for (const tc of m.toolCalls) {
@@ -293,7 +354,7 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
           });
         }
         const { toolCalls: _dropped, ...rest } = m;
-        return { ...rest, toolCallIds: ids } as unknown as Message;
+        return { ...rest, toolCallIds: ids, delivery } as unknown as Message;
       });
       // Re-apply per-message citations from the already-received STATE. A
       // MESSAGES_SNAPSHOT replaces the streamed messages wholesale — and the
@@ -341,12 +402,14 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
       };
       const map = new Map(store.activities());
       const existing = map.get(e.messageId);
-      if (existing && existing.activityType === e.activityType && !e.replace) {
-        existing.content.update((c) => ({ ...c, ...e.content }));
+      if (existing && existing.activityType === e.activityType) {
+        if (e.replace) existing.content.set(e.content ?? {});
+        else existing.content.update((c) => ({ ...c, ...e.content }));
       } else {
         map.set(e.messageId, {
           messageId: e.messageId,
           activityType: e.activityType,
+          generation: store.allocateDeliveryGeneration(`activity:${e.messageId}`),
           content: signal<Record<string, unknown>>(e.content ?? {}),
         });
       }
@@ -381,6 +444,58 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
 
 function randomId(): string {
   return Math.random().toString(36).slice(2);
+}
+
+function eventRunId(event: BaseEvent): string | undefined {
+  const runId = (event as { runId?: unknown }).runId;
+  return typeof runId === 'string' ? runId : undefined;
+}
+
+function bindRunId(event: BaseEvent, run: ReducerDeliveryRun): boolean {
+  const runId = eventRunId(event);
+  if (!runId) return true;
+  if (run.protocolRunId && run.protocolRunId !== runId) return false;
+  run.protocolRunId = runId;
+  return true;
+}
+
+function currentRunForEvent(event: BaseEvent, store: ReducerStore): ReducerDeliveryRun | null {
+  const run = store.deliveryRun;
+  if (!run || !bindRunId(event, run)) return null;
+  return run;
+}
+
+function ownAssistantMessage(store: ReducerStore, id: string) {
+  const run = store.deliveryRun;
+  if (!run || run.outcome !== undefined) return undefined;
+  run.ownedMessageIds.add(id);
+  run.currentAssistantMessageId = id;
+  return streamingDelivery(run.generation);
+}
+
+function resolveCanonicalAssistantId(
+  messages: readonly AgUiSnapshotMessage[],
+  run: ReducerDeliveryRun | null,
+): string | undefined {
+  if (!run) return undefined;
+  if (
+    run.currentAssistantMessageId
+    && messages.some(message => message.id === run.currentAssistantMessageId)
+  ) {
+    return run.currentAssistantMessageId;
+  }
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index];
+    if (message.role === 'assistant' && !run.baselineMessageIds.has(message.id)) {
+      return message.id;
+    }
+  }
+  return run.eligibleBaselineAssistantId
+    && messages.some(message =>
+      message.role === 'assistant' && message.id === run.eligibleBaselineAssistantId
+    )
+      ? run.eligibleBaselineAssistantId
+      : undefined;
 }
 
 function messageIdFrom(event: BaseEvent): string {

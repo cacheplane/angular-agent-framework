@@ -3,7 +3,12 @@ import { describe, it, expect, vi } from 'vitest';
 import { Observable, Subject } from 'rxjs';
 import type { AbstractAgent, BaseEvent } from '@ag-ui/client';
 import type { RunAgentInput } from '@ag-ui/core';
-import { AgentError, type AgentRuntimeTelemetryPayload } from '@threadplane/chat';
+import {
+  AgentError,
+  completeDelivery,
+  staticDelivery,
+  type AgentRuntimeTelemetryPayload,
+} from '@threadplane/chat';
 import { toAgent } from './to-agent';
 
 /**
@@ -27,24 +32,38 @@ class StubAgent {
   state: Record<string, unknown> = {};
 
   // Simulate subscriber list just like AbstractAgent does
-  private readonly _subscribers: Array<{ onEvent?: (p: { event: BaseEvent }) => void; onRunFailed?: (p: { error: Error }) => void }> = [];
+  private readonly _subscribers: Array<{
+    onRunInitialized?: (p: { input: { runId?: string } }) => void;
+    onEvent?: (p: { event: BaseEvent; input: { runId?: string } }) => void;
+    onRunFailed?: (p: { error: Error; input: { runId?: string } }) => void;
+  }> = [];
 
-  subscribe(sub: { onEvent?: (p: { event: BaseEvent }) => void; onRunFailed?: (p: { error: Error }) => void }) {
+  subscribe(sub: {
+    onRunInitialized?: (p: { input: { runId?: string } }) => void;
+    onEvent?: (p: { event: BaseEvent; input: { runId?: string } }) => void;
+    onRunFailed?: (p: { error: Error; input: { runId?: string } }) => void;
+  }) {
     this._subscribers.push(sub);
     return { unsubscribe: () => { /* no-op for tests */ } };
   }
 
-  /** Convenience: push an event to all subscribers. */
-  emit(event: BaseEvent): void {
+  initializeRun(runId: string): void {
     for (const sub of this._subscribers) {
-      sub.onEvent?.({ event });
+      sub.onRunInitialized?.({ input: { runId } });
+    }
+  }
+
+  /** Convenience: push an event to all subscribers. */
+  emit(event: BaseEvent, callbackRunId?: string): void {
+    for (const sub of this._subscribers) {
+      sub.onEvent?.({ event, input: { runId: callbackRunId } });
     }
   }
 
   /** Convenience: fail the run by calling onRunFailed on all subscribers. */
-  failRun(error: Error): void {
+  failRun(error: Error, callbackRunId?: string): void {
     for (const sub of this._subscribers) {
-      sub.onRunFailed?.({ error });
+      sub.onRunFailed?.({ error, input: { runId: callbackRunId } });
     }
   }
 
@@ -68,6 +87,18 @@ class StubAgent {
   }
 }
 
+function deferNextRun(source: StubAgent): { resolve: () => void; reject: (error: Error) => void } {
+  let resolve!: () => void;
+  let reject!: (error: Error) => void;
+  source.runAgent.mockImplementationOnce(
+    () => new Promise((done, fail) => {
+      resolve = () => done({ result: undefined, newMessages: [] });
+      reject = fail;
+    }),
+  );
+  return { resolve: () => resolve(), reject: error => reject(error) };
+}
+
 describe('toAgent', () => {
   it('starts with idle status and no messages', () => {
     const stub = new StubAgent();
@@ -80,6 +111,7 @@ describe('toAgent', () => {
   it('reduces RUN_STARTED into running status', () => {
     const stub = new StubAgent();
     const a = toAgent(stub as unknown as AbstractAgent);
+    void a.submit({});
     stub.emit({ type: 'RUN_STARTED' } as BaseEvent);
     expect(a.status()).toBe('running');
     expect(a.isLoading()).toBe(true);
@@ -88,6 +120,7 @@ describe('toAgent', () => {
   it('reduces RUN_FINISHED into idle status', () => {
     const stub = new StubAgent();
     const a = toAgent(stub as unknown as AbstractAgent);
+    void a.submit({});
     stub.emit({ type: 'RUN_STARTED' } as BaseEvent);
     stub.emit({ type: 'RUN_FINISHED' } as BaseEvent);
     expect(a.status()).toBe('idle');
@@ -99,6 +132,7 @@ describe('toAgent', () => {
     const a = toAgent(stub as unknown as AbstractAgent);
     void a.submit({ message: 'hello' });
     expect(a.messages()[0]).toEqual(expect.objectContaining({ role: 'user', content: 'hello' }));
+    expect(a.messages()[0].delivery).toEqual(staticDelivery(a.messages()[0].id));
   });
 
   it('syncs user message to source.addMessage()', async () => {
@@ -161,6 +195,56 @@ describe('toAgent', () => {
     });
     expect(JSON.stringify(seen)).not.toContain('private app state');
   });
+
+  it.each(['resolve', 'reject'] as const)(
+    'reports a superseded run as stream_errored exactly once when it later %s',
+    async (lateOutcome) => {
+      const source = new StubAgent();
+      const seen: AgentRuntimeTelemetryPayload[] = [];
+      const runA = deferNextRun(source);
+      const agent = toAgent(source as never, { telemetry: payload => seen.push(payload) });
+      const pendingA = agent.submit({ message: 'first' });
+      source.initializeRun('telemetry-a');
+      source.emit({ type: 'RUN_STARTED' } as BaseEvent, 'telemetry-a');
+      source.emit({ type: 'TEXT_MESSAGE_START', messageId: 'ai-a', role: 'assistant' } as never, 'telemetry-a');
+
+      const runB = deferNextRun(source);
+      const pendingB = agent.submit({ message: 'second' });
+      source.initializeRun('telemetry-b');
+      source.emit({ type: 'RUN_STARTED' } as BaseEvent, 'telemetry-b');
+      source.emit({ type: 'TEXT_MESSAGE_START', messageId: 'ai-b', role: 'assistant' } as never, 'telemetry-b');
+      const runBDelivery = agent.messages().find(message => message.id === 'ai-b')!.delivery;
+
+      const terminalEvents = () => seen.filter(payload =>
+        payload.event === 'tplane:stream_ended' || payload.event === 'tplane:stream_errored'
+      );
+      expect(terminalEvents()).toEqual([
+        expect.objectContaining({
+          event: 'tplane:stream_errored',
+          properties: expect.objectContaining({ errorClass: 'InterruptedError' }),
+        }),
+      ]);
+
+      if (lateOutcome === 'resolve') runA.resolve();
+      else runA.reject(new Error('late rejection'));
+      await pendingA;
+      source.emit({ type: 'RUN_ERROR', message: 'late run error' } as never, 'telemetry-a');
+      source.failRun(new Error('late onRunFailed'), 'telemetry-a');
+
+      expect(terminalEvents()).toHaveLength(1);
+      expect(agent.status()).toBe('running');
+      expect(agent.error()).toBeUndefined();
+      expect(agent.messages().find(message => message.id === 'ai-b')?.delivery).toEqual(runBDelivery);
+
+      source.emit({ type: 'RUN_FINISHED' } as BaseEvent, 'telemetry-b');
+      runB.resolve();
+      await pendingB;
+      expect(terminalEvents().map(payload => payload.event)).toEqual([
+        'tplane:stream_errored',
+        'tplane:stream_ended',
+      ]);
+    },
+  );
 
   it('stop() calls source.abortRun()', async () => {
     const stub = new StubAgent();
@@ -271,7 +355,311 @@ describe('toAgent', () => {
     });
   });
 
+  describe('message delivery lifecycle', () => {
+    it.each(['submit', 'retry', 'resume', 'regenerate'] as const)(
+      '%s finalizes streamed messages as interrupted when transport resolves without a terminal event',
+      async (operation) => {
+        const source = new StubAgent();
+        const agent = toAgent(source as never);
+
+        if (operation === 'retry') {
+          await agent.submit({ message: 'seed retry' });
+        } else if (operation === 'regenerate') {
+          const seedRun = deferNextRun(source);
+          const seedPending = agent.submit({ message: 'seed regenerate' });
+          source.emit({ type: 'RUN_STARTED' } as BaseEvent, 'seed-run');
+          source.emit({ type: 'TEXT_MESSAGE_START', messageId: 'seed-ai', role: 'assistant' } as never, 'seed-run');
+          source.emit({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'seed-ai', delta: 'seed' } as never, 'seed-run');
+          source.emit({ type: 'RUN_FINISHED' } as BaseEvent, 'seed-run');
+          seedRun.resolve();
+          await seedPending;
+        }
+
+        const deferred = deferNextRun(source);
+        const pending = operation === 'submit'
+          ? agent.submit({ message: 'hello' })
+          : operation === 'retry'
+            ? agent.retry()
+            : operation === 'resume'
+              ? agent.submit({ resume: { approved: true } })
+              : agent.regenerate(1);
+        const runId = `close-${operation}`;
+        const messageId = `ai-${operation}`;
+        source.emit({ type: 'RUN_STARTED' } as BaseEvent, runId);
+        source.emit({ type: 'TEXT_MESSAGE_START', messageId, role: 'assistant' } as never, runId);
+        source.emit({ type: 'TEXT_MESSAGE_CONTENT', messageId, delta: 'partial' } as never, runId);
+        const generation = agent.messages().find(message => message.id === messageId)!.delivery.generation;
+
+        deferred.resolve();
+        await pending;
+
+        expect(agent.messages().find(message => message.id === messageId)?.delivery)
+          .toEqual(completeDelivery(generation, 'interrupted'));
+        expect(agent.status()).toBe('idle');
+        expect(agent.isLoading()).toBe(false);
+        expect(agent.error()).toBeUndefined();
+      },
+    );
+
+    it('settles a terminal-event-free run with no assistant chunks as successful and idle', async () => {
+      const source = new StubAgent();
+      const deferred = deferNextRun(source);
+      const agent = toAgent(source as never);
+      const pending = agent.submit({ message: 'hello' });
+      source.emit({ type: 'RUN_STARTED' } as BaseEvent, 'empty-close');
+
+      deferred.resolve();
+      await pending;
+
+      expect(agent.status()).toBe('idle');
+      expect(agent.isLoading()).toBe(false);
+      expect(agent.error()).toBeUndefined();
+      expect(agent.messages().filter(message => message.role === 'assistant')).toEqual([]);
+    });
+
+    it('does not let an old transport resolution settle a newer run', async () => {
+      const source = new StubAgent();
+      const runA = deferNextRun(source);
+      const agent = toAgent(source as never);
+      const pendingA = agent.submit({ message: 'first' });
+      source.emit({ type: 'RUN_STARTED' } as BaseEvent, 'late-a');
+      source.emit({ type: 'TEXT_MESSAGE_START', messageId: 'ai-a', role: 'assistant' } as never, 'late-a');
+
+      const runB = deferNextRun(source);
+      const pendingB = agent.submit({ message: 'second' });
+      source.emit({ type: 'RUN_STARTED' } as BaseEvent, 'current-b');
+      source.emit({ type: 'TEXT_MESSAGE_START', messageId: 'ai-b', role: 'assistant' } as never, 'current-b');
+      const before = agent.messages().find(message => message.id === 'ai-b')!.delivery;
+
+      runA.resolve();
+      await pendingA;
+
+      expect(agent.status()).toBe('running');
+      expect(agent.isLoading()).toBe(true);
+      expect(agent.messages().find(message => message.id === 'ai-b')?.delivery).toEqual(before);
+      runB.resolve();
+      await pendingB;
+    });
+
+    it('onRunFailed finalizes the active generation as error', async () => {
+      const source = new StubAgent();
+      const deferred = deferNextRun(source);
+      const agent = toAgent(source as never);
+      const pending = agent.submit({ message: 'hello' });
+      source.emit({ type: 'RUN_STARTED', runId: 'run-1' } as BaseEvent);
+      source.emit({ type: 'TEXT_MESSAGE_START', messageId: 'ai-1', role: 'assistant' } as never);
+      source.emit({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'ai-1', delta: 'partial' } as never);
+      const generation = agent.messages().find(message => message.id === 'ai-1')!.delivery.generation;
+
+      source.failRun(new Error('transport failed'));
+      deferred.resolve();
+      await pending;
+
+      expect(agent.messages().find(message => message.id === 'ai-1')?.delivery)
+        .toEqual(completeDelivery(generation, 'error'));
+      expect(agent.status()).toBe('error');
+    });
+
+    it('deduplicates RUN_ERROR followed by onRunFailed without changing the terminal outcome', async () => {
+      const source = new StubAgent();
+      const deferred = deferNextRun(source);
+      const agent = toAgent(source as never);
+      const pending = agent.submit({ message: 'hello' });
+      source.emit({ type: 'RUN_STARTED', runId: 'run-1' } as BaseEvent);
+      source.emit({ type: 'TEXT_MESSAGE_START', messageId: 'ai-1', role: 'assistant' } as never);
+      const generation = agent.messages().find(message => message.id === 'ai-1')!.delivery.generation;
+
+      source.emit({ type: 'RUN_ERROR', runId: 'run-1', message: 'first failure' } as never);
+      source.failRun(new Error('duplicate failure'));
+      deferred.resolve();
+      await pending;
+
+      expect(agent.messages().find(message => message.id === 'ai-1')?.delivery)
+        .toEqual(completeDelivery(generation, 'error'));
+      expect(agent.error()?.message).toContain('first failure');
+    });
+
+    it('does not let a stale onRunFailed duplicate corrupt a newer run', async () => {
+      const source = new StubAgent();
+      const agent = toAgent(source as never);
+      const runA = deferNextRun(source);
+      const pendingA = agent.submit({ message: 'first' });
+      source.emit({ type: 'RUN_STARTED', runId: 'run-1' } as BaseEvent);
+      source.emit({ type: 'TEXT_MESSAGE_START', messageId: 'ai-1', role: 'assistant' } as never);
+      source.emit({ type: 'RUN_ERROR', runId: 'run-1', message: 'old failure' } as never);
+      runA.resolve();
+      await pendingA;
+
+      const runB = deferNextRun(source);
+      const pendingB = agent.submit({ message: 'second' });
+      source.emit({ type: 'RUN_STARTED', runId: 'run-2' } as BaseEvent);
+      source.emit({ type: 'TEXT_MESSAGE_START', messageId: 'ai-2', role: 'assistant' } as never);
+      const runBDelivery = agent.messages().find(message => message.id === 'ai-2')!.delivery;
+
+      source.failRun(new Error('duplicate old failure'), 'run-1');
+
+      expect(agent.status()).toBe('running');
+      expect(agent.isLoading()).toBe(true);
+      expect(agent.messages().find(message => message.id === 'ai-2')?.delivery).toEqual(runBDelivery);
+      runB.resolve();
+      await pendingB;
+    });
+
+    it('routes every stale callback to its originating protocol run', async () => {
+      const source = new StubAgent();
+      const agent = toAgent(source as never);
+      const runA = deferNextRun(source);
+      const pendingA = agent.submit({ message: 'first' });
+      source.emit({ type: 'RUN_STARTED' } as BaseEvent, 'run-a');
+      source.emit({ type: 'TEXT_MESSAGE_START', messageId: 'ai-a', role: 'assistant' } as never, 'run-a');
+      source.emit({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'ai-a', delta: 'old' } as never, 'run-a');
+      source.emit({ type: 'RUN_ERROR', message: 'old failure' } as never, 'run-a');
+      runA.resolve();
+      await pendingA;
+
+      const runB = deferNextRun(source);
+      const pendingB = agent.submit({ message: 'second' });
+      source.emit({ type: 'RUN_STARTED' } as BaseEvent, 'run-b');
+      source.emit({ type: 'TEXT_MESSAGE_START', messageId: 'ai-b', role: 'assistant' } as never, 'run-b');
+      source.emit({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'ai-b', delta: 'current' } as never, 'run-b');
+      const beforeMessages = agent.messages();
+      const beforeDelivery = beforeMessages.find(message => message.id === 'ai-b')!.delivery;
+
+      source.emit({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'late-a', delta: 'stale' } as never, 'run-a');
+      source.emit({ type: 'RUN_ERROR', message: 'duplicate old failure' } as never, 'run-a');
+      source.emit({ type: 'RUN_ERROR', message: 'extra duplicate old failure' } as never, 'run-a');
+      source.failRun(new Error('duplicate old failure'), 'run-a');
+      source.failRun(new Error('extra duplicate old failure'), 'run-a');
+
+      expect(agent.messages()).toEqual(beforeMessages);
+      expect(agent.messages().find(message => message.id === 'ai-b')?.delivery).toEqual(beforeDelivery);
+      expect(agent.status()).toBe('running');
+      expect(agent.isLoading()).toBe(true);
+      expect(agent.error()).toBeUndefined();
+      runB.resolve();
+      await pendingB;
+    });
+
+    it('binds eventless runs during initialization before a lone stale failure', async () => {
+      const source = new StubAgent();
+      const runA = deferNextRun(source);
+      const agent = toAgent(source as never);
+      const pendingA = agent.submit({ message: 'first' });
+      source.initializeRun('eventless-a');
+
+      const runB = deferNextRun(source);
+      const pendingB = agent.submit({ message: 'second' });
+      source.initializeRun('eventless-b');
+      const beforeMessages = agent.messages();
+
+      source.failRun(new Error('late eventless failure'), 'eventless-a');
+
+      expect(agent.messages()).toEqual(beforeMessages);
+      expect(agent.status()).toBe('idle');
+      expect(agent.error()).toBeUndefined();
+      runA.resolve();
+      runB.resolve();
+      await Promise.all([pendingA, pendingB]);
+    });
+
+    it.each(['retry', 'regenerate', 'resume'] as const)(
+      '%s allocates a fresh generation when an assistant message id is reused',
+      async (operation) => {
+        const source = new StubAgent();
+        const agent = toAgent(source as never);
+        const firstRun = deferNextRun(source);
+        const firstPending = agent.submit({ message: 'hello' });
+        source.emit({ type: 'RUN_STARTED', runId: 'run-1' } as BaseEvent);
+        source.emit({ type: 'TEXT_MESSAGE_START', messageId: 'ai-reused', role: 'assistant' } as never);
+        source.emit({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'ai-reused', delta: 'first' } as never);
+        source.emit({ type: 'RUN_FINISHED', runId: 'run-1' } as BaseEvent);
+        firstRun.resolve();
+        await firstPending;
+        const firstGeneration = agent.messages().find(message => message.id === 'ai-reused')!.delivery.generation;
+
+        const secondRun = deferNextRun(source);
+        const secondPending = operation === 'retry'
+          ? agent.retry()
+          : operation === 'regenerate'
+            ? agent.regenerate(1)
+            : agent.submit({ resume: { approved: true } });
+        source.emit({ type: 'RUN_STARTED', runId: 'run-2' } as BaseEvent);
+        source.emit({ type: 'TEXT_MESSAGE_START', messageId: 'ai-reused', role: 'assistant' } as never);
+        const nextDelivery = agent.messages().find(message => message.id === 'ai-reused')!.delivery;
+
+        expect(nextDelivery.phase).toBe('streaming');
+        expect(nextDelivery.generation).not.toBe(firstGeneration);
+        secondRun.resolve();
+        await secondPending;
+      },
+    );
+
+    it.each(['retry', 'resume'] as const)(
+      '%s gives a reused canonical snapshot tail a fresh generation',
+      async (operation) => {
+        const source = new StubAgent();
+        const seedRun = deferNextRun(source);
+        const agent = toAgent(source as never);
+        const seedPending = agent.submit({ message: 'hello' });
+        const userId = agent.messages().find(message => message.role === 'user')!.id;
+        source.emit({ type: 'RUN_STARTED' } as BaseEvent, 'seed-snapshot');
+        source.emit({ type: 'TEXT_MESSAGE_START', messageId: 'reused-ai', role: 'assistant' } as never, 'seed-snapshot');
+        source.emit({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'reused-ai', delta: 'prior' } as never, 'seed-snapshot');
+        source.emit({ type: 'RUN_FINISHED' } as BaseEvent, 'seed-snapshot');
+        seedRun.resolve();
+        await seedPending;
+        const priorGeneration = agent.messages().find(message => message.id === 'reused-ai')!.delivery.generation;
+
+        const nextRun = deferNextRun(source);
+        const pending = operation === 'retry'
+          ? agent.retry()
+          : agent.submit({ resume: { approved: true } });
+        source.emit({ type: 'RUN_STARTED' } as BaseEvent, `snapshot-${operation}`);
+        source.emit({
+          type: 'MESSAGES_SNAPSHOT',
+          messages: [
+            { id: userId, role: 'user', content: 'hello' },
+            { id: 'reused-ai', role: 'assistant', content: 'replacement' },
+          ],
+        } as never, `snapshot-${operation}`);
+        const replacement = agent.messages().find(message => message.id === 'reused-ai')!.delivery;
+
+        expect(replacement.phase).toBe('streaming');
+        expect(replacement.generation).not.toBe(priorGeneration);
+        source.emit({ type: 'RUN_FINISHED' } as BaseEvent, `snapshot-${operation}`);
+        nextRun.resolve();
+        await pending;
+        expect(agent.messages().find(message => message.id === 'reused-ai')?.delivery)
+          .toEqual(completeDelivery(replacement.generation, 'success'));
+      },
+    );
+  });
+
   describe('stop() — graceful cancellation (F3)', () => {
+    it('stop immediately finalizes the active generation as aborted', async () => {
+      const source = new StubAgent();
+      let resolveRun!: () => void;
+      source.runAgent.mockImplementation(
+        () => new Promise((resolve) => {
+          resolveRun = () => resolve({ result: undefined, newMessages: [] });
+        }),
+      );
+      const agent = toAgent(source as never);
+      const pending = agent.submit({ message: 'long story' });
+      source.emit({ type: 'RUN_STARTED', runId: 'run-1' } as BaseEvent);
+      source.emit({ type: 'TEXT_MESSAGE_START', messageId: 'ai-1', role: 'assistant' } as never);
+      const generation = agent.messages().find(message => message.id === 'ai-1')!.delivery.generation;
+
+      await agent.stop!();
+
+      expect(agent.messages().find(message => message.id === 'ai-1')?.delivery)
+        .toEqual(completeDelivery(generation, 'aborted'));
+      expect(agent.status()).toBe('idle');
+      expect(agent.isLoading()).toBe(false);
+      resolveRun();
+      await pending;
+    });
+
     it('treats an abort-induced onRunFailed as cancellation, not error', async () => {
       const source = new StubAgent();
       // Keep the run in flight so stop() races it like a real stream.
@@ -288,7 +676,7 @@ describe('toAgent', () => {
       expect(source.abortRun).toHaveBeenCalledTimes(1);
 
       // HttpAgent surfaces the abort as a run failure.
-      source.failRun(new Error('BodyStreamBuffer was aborted'));
+      source.failRun(new Error('BodyStreamBuffer was aborted'), 'run-a');
       resolveRun();
       await pending;
 
@@ -347,14 +735,52 @@ describe('toAgent', () => {
       expect(agent.isLoading()).toBe(false);
     });
 
+    it('ignores a stale duplicate abort after a new run has started', async () => {
+      const source = new StubAgent();
+      let resolveRunA!: () => void;
+      let resolveRunB!: () => void;
+      source.runAgent
+        .mockImplementationOnce(() => new Promise((resolve) => {
+          resolveRunA = () => resolve({ result: undefined, newMessages: [] });
+        }))
+        .mockImplementationOnce(() => new Promise((resolve) => {
+          resolveRunB = () => resolve({ result: undefined, newMessages: [] });
+        }));
+      const agent = toAgent(source as never);
+
+      const pendingA = agent.submit({ message: 'first' });
+      source.emit({ type: 'RUN_STARTED', runId: 'run-a' } as BaseEvent);
+      source.emit({ type: 'TEXT_MESSAGE_START', messageId: 'ai-reused', role: 'assistant' } as never);
+      await agent.stop!();
+      resolveRunA();
+      await pendingA;
+
+      const pendingB = agent.submit({ message: 'second' });
+      source.emit({ type: 'RUN_STARTED', runId: 'run-b' } as BaseEvent);
+      source.emit({ type: 'TEXT_MESSAGE_START', messageId: 'ai-reused', role: 'assistant' } as never);
+      const runBDelivery = agent.messages().find(message => message.id === 'ai-reused')!.delivery;
+
+      source.failRun(new Error('BodyStreamBuffer was aborted'), 'run-a');
+
+      expect(agent.status()).toBe('running');
+      expect(agent.isLoading()).toBe(true);
+      expect(agent.messages().find(message => message.id === 'ai-reused')?.delivery).toEqual(runBDelivery);
+      resolveRunB();
+      await pendingB;
+    });
+
     it('still surfaces real failures as errors after a previous stop', async () => {
       const source = new StubAgent();
       const agent = toAgent(source as never);
 
       // A stop on an earlier run must not swallow later genuine failures.
       await agent.stop!();
-      await agent.submit({ message: 'hi' }); // submit resets the abort flag
+      const deferred = deferNextRun(source);
+      const pending = agent.submit({ message: 'hi' });
+      source.emit({ type: 'RUN_STARTED' } as BaseEvent, 'real-failure');
       source.failRun(new Error('boom'));
+      deferred.resolve();
+      await pending;
 
       expect(agent.status()).toBe('error');
       expect(agent.error()).toBeInstanceOf(Error);
@@ -427,11 +853,14 @@ describe('toAgent', () => {
       const a = toAgent(stub as unknown as AbstractAgent);
 
       // Seed 2 messages: user then assistant
-      await a.submit({ message: 'hello' });
+      const seedRun = deferNextRun(stub);
+      const seedPending = a.submit({ message: 'hello' });
       stub.emit({ type: 'TEXT_MESSAGE_START', messageId: 'ai-1', role: 'assistant' } as unknown as BaseEvent);
       stub.emit({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'ai-1', delta: 'hi there' } as unknown as BaseEvent);
       stub.emit({ type: 'TEXT_MESSAGE_END', messageId: 'ai-1' } as unknown as BaseEvent);
       stub.emit({ type: 'RUN_FINISHED' } as BaseEvent);
+      seedRun.resolve();
+      await seedPending;
       stub.runAgent.mockResolvedValue({ result: undefined, newMessages: [] });
 
       expect(a.messages()).toHaveLength(2);
@@ -465,6 +894,7 @@ describe('toAgent', () => {
     it('throws when agent is loading', async () => {
       const stub = new StubAgent();
       const a = toAgent(stub as unknown as AbstractAgent);
+      void a.submit({ message: 'seed' });
       stub.emit({ type: 'RUN_STARTED' } as BaseEvent);
       // isLoading is now true
       await expect(a.regenerate(0)).rejects.toThrow(/loading/);
@@ -535,12 +965,15 @@ describe('toAgent', () => {
       const a = toAgent(stub as unknown as AbstractAgent);
 
       // Initial submit appends a user message and runs.
-      await a.submit({ message: 'hello' });
+      const deferred = deferNextRun(stub);
+      const pending = a.submit({ message: 'hello' });
       const countAfterSubmit = a.messages().length;
       expect(stub.runAgent).toHaveBeenCalledTimes(1);
 
       // Simulate a failure.
       stub.failRun(new Error('HTTP 503 Service Unavailable'));
+      deferred.resolve();
+      await pending;
       expect(a.error()).toBeInstanceOf(AgentError);
 
       // Retry: should clear error and call runAgent again, no new user message.
@@ -557,11 +990,12 @@ describe('toAgent', () => {
       const stub = new StubAgent();
       const a = toAgent(stub as unknown as AbstractAgent);
       // Simulate a run in progress.
+      void a.submit({ message: 'seed' });
       stub.emit({ type: 'RUN_STARTED' } as BaseEvent);
       expect(a.isLoading()).toBe(true);
       void a.retry();
-      // runAgent should NOT have been called (nothing submitted, and loading guard).
-      expect(stub.runAgent).not.toHaveBeenCalled();
+      // retry must not add another runAgent call while the submit is loading.
+      expect(stub.runAgent).toHaveBeenCalledTimes(1);
     });
 
     it('retry() is a no-op when no prior input exists', async () => {
@@ -587,7 +1021,9 @@ describe('subagents projection (F5)', () => {
     expect(sa?.toolCallId).toBe('tc-1');
     expect(sa?.name).toBe('research');
     expect(sa?.status()).toBe('running');
-    expect(sa?.messages()).toEqual([{ id: 'tc-1', role: 'assistant', content: '' }]);
+    expect(sa?.messages()).toEqual([
+      { id: 'tc-1', role: 'assistant', content: '', delivery: expect.objectContaining({ phase: 'streaming' }) },
+    ]);
   });
   it('text deltas flow into the subagent message; finished flips status', () => {
     const source = new StubAgent();
@@ -600,7 +1036,36 @@ describe('subagents projection (F5)', () => {
     source.emit({ type: 'ACTIVITY_DELTA', messageId: 'tc-1', activityType: 'subagent',
       patch: [{ op: 'replace', path: '/status', value: 'complete' }] } as never);
     expect(agent.subagents!().get('tc-1')?.status()).toBe('complete');
+    const completed = agent.subagents!().get('tc-1')?.messages()[0].delivery;
+    expect(completed).toEqual(completeDelivery(completed!.generation, 'success'));
     expect(agent.subagents!().get('tc-1')).toBe(before);  // stable identity across deltas
+  });
+  it('finalizes assistant subagent messages as error', () => {
+    const source = new StubAgent();
+    const agent = toAgent(source as never);
+    source.emit(snapshot('tc-1', 'research') as never);
+    const generation = agent.subagents!().get('tc-1')!.messages()[0].delivery.generation;
+    source.emit({ type: 'ACTIVITY_DELTA', messageId: 'tc-1', activityType: 'subagent',
+      patch: [{ op: 'replace', path: '/status', value: 'error' }] } as never);
+    expect(agent.subagents!().get('tc-1')?.messages()[0].delivery)
+      .toEqual(completeDelivery(generation, 'error'));
+  });
+  it('keeps one invocation generation across replacement snapshots', () => {
+    const source = new StubAgent();
+    const agent = toAgent(source as never);
+    source.emit(snapshot('tc-1', 'research') as never);
+    const before = agent.subagents!().get('tc-1');
+    const generation = before!.messages()[0].delivery.generation;
+
+    source.emit({
+      ...snapshot('tc-1', 'research'),
+      content: { toolCallId: 'tc-1', name: 'research', status: 'running', text: 'replacement' },
+    } as never);
+
+    const after = agent.subagents!().get('tc-1');
+    expect(after).toBe(before);
+    expect(after?.messages()[0].content).toBe('replacement');
+    expect(after?.messages()[0].delivery.generation).toBe(generation);
   });
   it('ignores non-subagent activityTypes', () => {
     const source = new StubAgent();
@@ -613,15 +1078,36 @@ describe('subagents projection (F5)', () => {
     const source = new StubAgent();
     const agent = toAgent(source as never);
     source.emit(snapshot('tc-1', 'research') as never);
+    const firstGeneration = agent.subagents!().get('tc-1')!.messages()[0].delivery.generation;
     source.emit({ type: 'ACTIVITY_DELTA', messageId: 'tc-1', activityType: 'subagent',
       patch: [{ op: 'replace', path: '/text', value: 'old run text' }] } as never);
     expect(agent.subagents!().get('tc-1')?.messages()[0].content).toBe('old run text');
     // New run resets activities; reuse the same id.
+    void agent.submit({});
     source.emit({ type: 'RUN_STARTED' } as never);
     expect(agent.subagents!().size).toBe(0);   // pruned
     source.emit(snapshot('tc-1', 'research') as never);
     // Fresh wrapper bound to the NEW content signal — no stale 'old run text'.
     expect(agent.subagents!().get('tc-1')?.messages()[0].content).toBe('');
+    expect(agent.subagents!().get('tc-1')?.messages()[0].delivery.generation).not.toBe(firstGeneration);
+  });
+  it('rebuilds a same-id wrapper after reset even when the empty map was never observed', () => {
+    const source = new StubAgent();
+    const agent = toAgent(source as never);
+    source.emit(snapshot('tc-1', 'research') as never);
+    source.emit({ type: 'ACTIVITY_DELTA', messageId: 'tc-1', activityType: 'subagent',
+      patch: [{ op: 'replace', path: '/text', value: 'old invocation' }] } as never);
+    const oldWrapper = agent.subagents!().get('tc-1')!;
+    const oldGeneration = oldWrapper.messages()[0].delivery.generation;
+
+    void agent.submit({});
+    source.emit({ type: 'RUN_STARTED' } as never);
+    source.emit(snapshot('tc-1', 'research') as never);
+
+    const freshWrapper = agent.subagents!().get('tc-1')!;
+    expect(freshWrapper).not.toBe(oldWrapper);
+    expect(freshWrapper.messages()[0].content).toBe('');
+    expect(freshWrapper.messages()[0].delivery.generation).not.toBe(oldGeneration);
   });
 });
 
@@ -647,7 +1133,10 @@ describe('subagents transcript projection (F5-transcript)', () => {
     }) as never);
     const sa = agent.subagents!().get('tc-1');
     expect(sa?.messages()).toEqual([
-      { id: 'm1', role: 'assistant', content: 'hi', toolCallIds: ['t1'], reasoning: 'think' },
+      {
+        id: 'm1', role: 'assistant', content: 'hi', toolCallIds: ['t1'], reasoning: 'think',
+        delivery: expect.objectContaining({ phase: 'streaming' }),
+      },
     ]);
   });
 
@@ -674,7 +1163,9 @@ describe('subagents transcript projection (F5-transcript)', () => {
       text: 'partial',
     }) as never);
     const sa = agent.subagents!().get('sub-1');
-    expect(sa?.messages()).toEqual([{ id: 'sub-1', role: 'assistant', content: 'partial' }]);
+    expect(sa?.messages()).toEqual([
+      { id: 'sub-1', role: 'assistant', content: 'partial', delivery: expect.objectContaining({ phase: 'streaming' }) },
+    ]);
     expect(sa?.toolCalls!()).toEqual([]);
   });
 
@@ -693,5 +1184,6 @@ describe('subagents transcript projection (F5-transcript)', () => {
     // Content and id must pass through unchanged.
     expect(sa?.messages()[0].content).toBe('leak');
     expect(sa?.messages()[0].id).toBe('m1');
+    expect(sa?.messages()[0].delivery).toEqual(staticDelivery('m1'));
   });
 });

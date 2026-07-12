@@ -72,8 +72,10 @@ export interface MockAgentOptions {
  * @returns A {@link MockAgent} satisfying the full `Agent` contract.
  * @example
  * ```ts
+ * import { staticDelivery } from '@threadplane/chat';
+ *
  * const agent = mockAgent({
- *   messages: [{ id: '1', role: 'assistant', content: 'Hi' }],
+ *   messages: [{ id: '1', role: 'assistant', content: 'Hi', delivery: staticDelivery('1') }],
  *   isLoading: true,
  * });
  * ```

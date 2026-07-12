@@ -2,10 +2,35 @@
 import { describe, it, expect } from 'vitest';
 import { signal } from '@angular/core';
 import { Subject } from 'rxjs';
-import { AgentError, type AgentStatus, type Message, type ToolCall, type AgentEvent } from '@threadplane/chat';
+import {
+  AgentError,
+  completeDelivery,
+  staticDelivery,
+  streamingDelivery,
+  type AgentStatus,
+  type Message,
+  type ToolCall,
+  type AgentEvent,
+} from '@threadplane/chat';
 import { reduceEvent, type ReducerStore, type CustomStreamEvent, type ActivityEntry } from './reducer';
 
-function makeStore(): ReducerStore {
+interface TestDeliveryRun {
+  generation: string;
+  baselineMessageIds: Set<string>;
+  ownedMessageIds: Set<string>;
+  currentAssistantMessageId?: string;
+  eligibleBaselineAssistantId?: string;
+  protocolRunId?: string;
+  outcome?: 'success' | 'error' | 'aborted';
+}
+
+type TestStore = ReducerStore & {
+  deliveryRun: TestDeliveryRun | null;
+  allocateDeliveryGeneration: (scope: string) => string;
+};
+
+function makeStore(generation = 'run-generation-1'): TestStore {
+  let activitySequence = 0;
   return {
     messages:  signal<Message[]>([]),
     status:    signal<AgentStatus>('idle'),
@@ -17,42 +42,66 @@ function makeStore(): ReducerStore {
     events$:   new Subject<AgentEvent>(),
     customEvents: signal<CustomStreamEvent[]>([]),
     activities: signal<Map<string, ActivityEntry>>(new Map()),
-  };
+    deliveryRun: {
+      generation,
+      baselineMessageIds: new Set(),
+      ownedMessageIds: new Set(),
+    },
+    allocateDeliveryGeneration: (scope: string) => `${generation}:${scope}:${++activitySequence}`,
+  } as TestStore;
 }
 
 describe('reduceEvent', () => {
-  it('RUN_STARTED sets status running, isLoading true, clears error', () => {
+  it('RUN_STARTED establishes running state for the already-allocated generation', () => {
     const store = makeStore();
+    const allocatedRun = store.deliveryRun;
     // Seed a previous AgentError so the clear can be observed.
     store.error.set(new AgentError({ kind: 'server', message: 'previous', retryable: true }));
-    reduceEvent({ type: 'RUN_STARTED' } as any, store);
+    reduceEvent({ type: 'RUN_STARTED', runId: 'protocol-run-1' } as any, store);
     expect(store.status()).toBe('running');
     expect(store.isLoading()).toBe(true);
     expect(store.error()).toBeUndefined();
+    expect(store.deliveryRun).toBe(allocatedRun);
+    expect(store.deliveryRun?.generation).toBe('run-generation-1');
+    expect(store.deliveryRun?.protocolRunId).toBe('protocol-run-1');
   });
 
-  it('RUN_FINISHED sets status idle, isLoading false', () => {
+  it('RUN_FINISHED finalizes only active-generation messages as successful', () => {
     const store = makeStore();
     store.status.set('running');
     store.isLoading.set(true);
+    store.messages.set([
+      { id: 'historical', role: 'assistant', content: 'old', delivery: staticDelivery('historical') },
+      { id: 'active', role: 'assistant', content: 'new', delivery: streamingDelivery('run-generation-1') },
+    ]);
+    store.deliveryRun!.ownedMessageIds.add('active');
     reduceEvent({ type: 'RUN_FINISHED' } as any, store);
     expect(store.status()).toBe('idle');
     expect(store.isLoading()).toBe(false);
+    expect(store.messages()[0].delivery).toEqual(staticDelivery('historical'));
+    expect(store.messages()[1].delivery).toEqual(completeDelivery('run-generation-1', 'success'));
   });
 
-  it('RUN_ERROR sets status error, normalizes to AgentError', () => {
+  it('RUN_ERROR finalizes active-generation messages as error', () => {
     const store = makeStore();
+    store.messages.set([
+      { id: 'active', role: 'assistant', content: 'partial', delivery: streamingDelivery('run-generation-1') },
+    ]);
+    store.deliveryRun!.ownedMessageIds.add('active');
     reduceEvent({ type: 'RUN_ERROR', message: 'boom' } as any, store);
     expect(store.status()).toBe('error');
     const err = store.error();
     expect(err).toBeInstanceOf(AgentError);
     expect(err?.message).toContain('boom');
+    expect(store.messages()[0].delivery).toEqual(completeDelivery('run-generation-1', 'error'));
   });
 
-  it('TEXT_MESSAGE_START appends an empty assistant message', () => {
+  it('TEXT_MESSAGE_START appends an empty assistant message owned by the active generation', () => {
     const store = makeStore();
     reduceEvent({ type: 'TEXT_MESSAGE_START', messageId: 'm1' } as any, store);
-    expect(store.messages()).toEqual([{ id: 'm1', role: 'assistant', content: '' }]);
+    expect(store.messages()).toEqual([
+      { id: 'm1', role: 'assistant', content: '', delivery: streamingDelivery('run-generation-1') },
+    ]);
   });
 
   it('TEXT_MESSAGE_CONTENT appends delta to in-flight message', () => {
@@ -61,6 +110,15 @@ describe('reduceEvent', () => {
     reduceEvent({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: 'hi ' } as any, store);
     reduceEvent({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: 'there' } as any, store);
     expect(store.messages()[0].content).toBe('hi there');
+    expect(store.messages()[0].delivery).toEqual(streamingDelivery('run-generation-1'));
+  });
+
+  it('TOOL_CALL_START creates a tool-call-only assistant slot owned by the active generation', () => {
+    const store = makeStore();
+    reduceEvent({
+      type: 'TOOL_CALL_START', toolCallId: 't1', toolCallName: 'search', parentMessageId: 'tool-parent',
+    } as any, store);
+    expect(store.messages()[0].delivery).toEqual(streamingDelivery('run-generation-1'));
   });
 
   it('MESSAGES_SNAPSHOT re-applies citations from prior STATE onto the final message', () => {
@@ -88,6 +146,115 @@ describe('reduceEvent', () => {
     const msg = store.messages().find((m) => m.id === 'resp-final');
     expect(msg?.citations?.length).toBe(1);
     expect(msg?.citations?.[0]).toMatchObject({ id: 'ng-signals-overview', title: 'Signals — Angular guide' });
+  });
+
+  it('restored MESSAGES_SNAPSHOT messages are static complete/success', () => {
+    const store = makeStore();
+    store.deliveryRun = null;
+    reduceEvent({
+      type: 'MESSAGES_SNAPSHOT',
+      messages: [
+        { id: 'u1', role: 'user', content: 'hello' },
+        { id: 'a1', role: 'assistant', content: 'restored' },
+      ],
+    } as any, store);
+    expect(store.messages().map(message => message.delivery)).toEqual([
+      staticDelivery('u1'),
+      staticDelivery('a1'),
+    ]);
+  });
+
+  it('in-run canonical snapshot preserves the current attempt generation without retagging history', () => {
+    const store = makeStore();
+    store.messages.set([
+      { id: 'u-old', role: 'user', content: 'old', delivery: staticDelivery('u-old') },
+      { id: 'a-old', role: 'assistant', content: 'history', delivery: completeDelivery('prior-run', 'success') },
+      { id: 'u-current', role: 'user', content: 'new', delivery: staticDelivery('u-current') },
+      { id: 'chunk-id', role: 'assistant', content: 'streamed', delivery: streamingDelivery('run-generation-1') },
+    ]);
+    store.deliveryRun!.baselineMessageIds = new Set(['u-old', 'a-old', 'u-current']);
+    store.deliveryRun!.ownedMessageIds.add('chunk-id');
+    store.deliveryRun!.currentAssistantMessageId = 'chunk-id';
+
+    reduceEvent({
+      type: 'MESSAGES_SNAPSHOT',
+      messages: [
+        { id: 'u-old', role: 'user', content: 'old' },
+        { id: 'a-old', role: 'assistant', content: 'history enriched' },
+        { id: 'u-current', role: 'user', content: 'new' },
+        { id: 'canonical-id', role: 'assistant', content: 'canonical' },
+      ],
+    } as any, store);
+
+    expect(store.messages().find(message => message.id === 'a-old')?.delivery)
+      .toEqual(completeDelivery('prior-run', 'success'));
+    expect(store.messages().find(message => message.id === 'canonical-id')?.delivery)
+      .toEqual(streamingDelivery('run-generation-1'));
+    expect(store.deliveryRun?.ownedMessageIds.has('canonical-id')).toBe(true);
+    expect(store.deliveryRun?.currentAssistantMessageId).toBe('canonical-id');
+  });
+
+  it('owns a snapshot-only active assistant and finalizes it on RUN_FINISHED', () => {
+    const store = makeStore();
+    store.messages.set([
+      { id: 'u1', role: 'user', content: 'hello', delivery: staticDelivery('u1') },
+    ]);
+    store.deliveryRun!.baselineMessageIds = new Set(['u1']);
+    reduceEvent({ type: 'RUN_STARTED', runId: 'run-1' } as any, store);
+
+    reduceEvent({
+      type: 'MESSAGES_SNAPSHOT',
+      messages: [
+        { id: 'u1', role: 'user', content: 'hello' },
+        { id: 'snapshot-ai', role: 'assistant', content: 'snapshot only' },
+      ],
+    } as any, store);
+
+    expect(store.messages().find(message => message.id === 'snapshot-ai')?.delivery)
+      .toEqual(streamingDelivery('run-generation-1'));
+    reduceEvent({ type: 'RUN_FINISHED', runId: 'run-1' } as any, store);
+    expect(store.messages().find(message => message.id === 'snapshot-ai')?.delivery)
+      .toEqual(completeDelivery('run-generation-1', 'success'));
+  });
+
+  it('retags only an explicitly eligible reused baseline tail', () => {
+    const store = makeStore();
+    store.messages.set([
+      { id: 'historical-ai', role: 'assistant', content: 'history', delivery: staticDelivery('historical-ai') },
+      { id: 'u1', role: 'user', content: 'hello', delivery: staticDelivery('u1') },
+      { id: 'tail-ai', role: 'assistant', content: 'prior', delivery: completeDelivery('prior-run', 'success') },
+    ]);
+    store.deliveryRun!.baselineMessageIds = new Set(['historical-ai', 'u1', 'tail-ai']);
+    store.deliveryRun!.eligibleBaselineAssistantId = 'tail-ai';
+
+    reduceEvent({
+      type: 'MESSAGES_SNAPSHOT',
+      messages: [
+        { id: 'historical-ai', role: 'assistant', content: 'history enriched' },
+        { id: 'u1', role: 'user', content: 'hello' },
+        { id: 'tail-ai', role: 'assistant', content: 'replacement' },
+      ],
+    } as any, store);
+
+    expect(store.messages().find(message => message.id === 'historical-ai')?.delivery)
+      .toEqual(staticDelivery('historical-ai'));
+    expect(store.messages().find(message => message.id === 'tail-ai')?.delivery)
+      .toEqual(streamingDelivery('run-generation-1'));
+  });
+
+  it('does not retag baseline assistant history without continuation permission', () => {
+    const store = makeStore();
+    store.messages.set([
+      { id: 'tail-ai', role: 'assistant', content: 'prior', delivery: completeDelivery('prior-run', 'success') },
+    ]);
+    store.deliveryRun!.baselineMessageIds = new Set(['tail-ai']);
+
+    reduceEvent({
+      type: 'MESSAGES_SNAPSHOT',
+      messages: [{ id: 'tail-ai', role: 'assistant', content: 'same history' }],
+    } as any, store);
+
+    expect(store.messages()[0].delivery).toEqual(completeDelivery('prior-run', 'success'));
   });
 
   it('TOOL_CALL_START appends a running tool call', () => {
@@ -214,12 +381,15 @@ describe('reduceEvent', () => {
 
   it('MESSAGES_SNAPSHOT replaces messages wholesale', () => {
     const store = makeStore();
+    store.deliveryRun = null;
     store.messages.set([{ id: 'old', role: 'user', content: 'old' }]);
     reduceEvent({
       type: 'MESSAGES_SNAPSHOT',
       messages: [{ id: 'new', role: 'assistant', content: 'fresh' }],
     } as any, store);
-    expect(store.messages()).toEqual([{ id: 'new', role: 'assistant', content: 'fresh' }]);
+    expect(store.messages()).toEqual([
+      { id: 'new', role: 'assistant', content: 'fresh', delivery: staticDelivery('new') },
+    ]);
   });
 
   it('MESSAGES_SNAPSHOT bridges assistant toolCalls to toolCallIds', () => {
@@ -327,6 +497,7 @@ describe('reduceEvent — REASONING_MESSAGE_*', () => {
     expect(msgs[0].id).toBe('m1');
     expect(msgs[0].role).toBe('assistant');
     expect(msgs[0].reasoning).toBe('');
+    expect(msgs[0].delivery).toEqual(streamingDelivery('run-generation-1'));
   });
 
   it('REASONING_MESSAGE_CONTENT appends to the existing reasoning string', () => {
@@ -335,6 +506,7 @@ describe('reduceEvent — REASONING_MESSAGE_*', () => {
     reduceEvent({ type: 'REASONING_MESSAGE_CONTENT', messageId: 'm1', delta: 'first ' } as any, store);
     reduceEvent({ type: 'REASONING_MESSAGE_CONTENT', messageId: 'm1', delta: 'then second' } as any, store);
     expect(store.messages()[0].reasoning).toBe('first then second');
+    expect(store.messages()[0].delivery).toEqual(streamingDelivery('run-generation-1'));
   });
 
   it('REASONING_MESSAGE_CHUNK is treated identically to CONTENT', () => {

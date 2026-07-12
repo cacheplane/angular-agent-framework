@@ -2,7 +2,14 @@
 import { computed, signal, type Signal } from '@angular/core';
 import { Subject } from 'rxjs';
 import type { AbstractAgent } from '@ag-ui/client';
-import { toAgentError, isAbortError, type AgentError } from '@threadplane/chat';
+import {
+  completeDelivery,
+  staticDelivery,
+  streamingDelivery,
+  toAgentError,
+  isAbortError,
+  type AgentError,
+} from '@threadplane/chat';
 import type {
   Agent, Message, AgentStatus, ToolCall, AgentEvent,
   AgentInterrupt,
@@ -13,7 +20,14 @@ import type {
   ClientToolsCapability,
   Subagent, SubagentStatus,
 } from '@threadplane/chat';
-import { reduceEvent, type ReducerStore, type CustomStreamEvent, type ActivityEntry } from './reducer';
+import {
+  finalizeDeliveryRun,
+  reduceEvent,
+  type ReducerDeliveryRun,
+  type ReducerStore,
+  type CustomStreamEvent,
+  type ActivityEntry,
+} from './reducer';
 import { createClientToolsCapability } from './client-tools';
 
 export interface ToAgentOptions {
@@ -88,6 +102,9 @@ export interface AgUiAgent<TState = Record<string, unknown>> extends Agent<TStat
  * ```
  */
 export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): AgUiAgent {
+  let generationSequence = 0;
+  const allocateDeliveryGeneration = (scope: string): string =>
+    `${scope}-${++generationSequence}-${Math.random().toString(36).slice(2, 10)}`;
   const store: ReducerStore = {
     messages:     signal<Message[]>([]),
     status:       signal<AgentStatus>('idle'),
@@ -99,55 +116,40 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     events$:      new Subject<AgentEvent>(),
     customEvents: signal<CustomStreamEvent[]>([]),
     activities:   signal<Map<string, ActivityEntry>>(new Map()),
+    deliveryRun: null,
+    allocateDeliveryGeneration,
   };
   const telemetryProperties = { transport: 'ag-ui' as const, surface: 'to_agent' };
-  let activeRun: { startedAt: number; errored: boolean } | null = null;
-
-  // Set by stop(); lets run-failure handlers distinguish a user-initiated
-  // abort (graceful cancel) from a genuine stream failure.
-  let abortRequested = false;
-
-  // Set to true the first time settleIfAborted() handles an abort error for the
-  // current run. The AG-UI client can surface the same abort via both the event
-  // stream (RUN_ERROR event) AND onRunFailed — abortSettled lets the second
-  // delivery see through as a no-op rather than re-writing store state or
-  // triggering a real error path. Both flags are reset together at the top of
-  // submit() so the next run starts clean.
-  let abortSettled = false;
+  interface AdapterRun extends ReducerDeliveryRun {
+    startedAt: number;
+    telemetrySettled: boolean;
+  }
+  let activeRun: AdapterRun | null = null;
+  const runsByProtocolId = new Map<string, AdapterRun>();
 
   // Tracks the last AgentSubmitInput so retry() can re-run it without
   // duplicating the user message. Set at the top of submit()'s message path.
   let lastInput: AgentSubmitInput | undefined;
 
-  /** Settles the store as idle for stop()-induced failures; returns true if handled. */
-  function settleIfAborted(error: unknown): boolean {
-    // If we already settled this abort (duplicate delivery — e.g. RUN_ERROR
-    // event THEN onRunFailed), defensively re-apply the idle settle so any
-    // state written between the two deliveries (e.g. RUN_STARTED from a new
-    // run that started before flags were reset) is corrected. Telemetry is
-    // not re-emitted — the guard returns true to suppress further processing.
-    if (abortSettled && isAbortError(error)) {
-      store.status.set('idle');
-      store.isLoading.set(false);
-      return true;
+  function resolveCallbackRun(protocolRunId: string | undefined): AdapterRun | null {
+    if (!protocolRunId) return activeRun;
+    const known = runsByProtocolId.get(protocolRunId);
+    if (known) return known;
+    if (!activeRun || activeRun.protocolRunId) return null;
+    activeRun.protocolRunId = protocolRunId;
+    runsByProtocolId.set(protocolRunId, activeRun);
+    while (runsByProtocolId.size > 16) {
+      const oldestId = runsByProtocolId.keys().next().value as string | undefined;
+      if (!oldestId) break;
+      if (runsByProtocolId.get(oldestId) === activeRun) {
+        const current = runsByProtocolId.get(oldestId)!;
+        runsByProtocolId.delete(oldestId);
+        runsByProtocolId.set(oldestId, current);
+        continue;
+      }
+      runsByProtocolId.delete(oldestId);
     }
-
-    if (!abortRequested || !isAbortError(error)) return false;
-    abortRequested = false;
-    abortSettled = true;
-    store.status.set('idle');
-    store.isLoading.set(false);
-    // Not a failure: leave store.error null and close out telemetry as a
-    // normal finish so the aborted run doesn't count as errored.
-    const run = activeRun;
-    if (run) {
-      finishRunTelemetry(run);
-      // Mark errored so any subsequent finishRunTelemetry/failRunTelemetry
-      // call on the same run object (e.g. from submit's try block resolving
-      // after the abort) is a no-op — telemetry fires at most once per run.
-      run.errored = true;
-    }
-    return true;
+    return activeRun;
   }
 
   // Build the client-tools capability. catalogAsAgUiTools() is used below to
@@ -171,9 +173,26 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     telemetryProperties,
   );
 
-  function startRunTelemetry(requestType: string): { startedAt: number; errored: boolean } {
-    const run = { startedAt: Date.now(), errored: false };
+  function beginRun(requestType: string, allowBaselineTail = false): AdapterRun {
+    if (activeRun && activeRun.outcome === undefined) {
+      const supersededRun = activeRun;
+      finalizeDeliveryRun(store, supersededRun, 'interrupted');
+      const interruption = new Error('Run superseded by a newer request');
+      interruption.name = 'InterruptedError';
+      failRunTelemetry(interruption, supersededRun);
+    }
+    const run: AdapterRun = {
+      generation: allocateDeliveryGeneration('run'),
+      baselineMessageIds: new Set(store.messages().map(message => message.id)),
+      ownedMessageIds: new Set(),
+      eligibleBaselineAssistantId: allowBaselineTail
+        ? getTailAssistantMessageId(store.messages())
+        : undefined,
+      startedAt: Date.now(),
+      telemetrySettled: false,
+    };
     activeRun = run;
+    store.deliveryRun = run;
     captureAgentRuntimeTelemetry(options.telemetry, 'tplane:runtime_request_created', {
       ...telemetryProperties,
       requestType,
@@ -182,24 +201,46 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     return run;
   }
 
-  function finishRunTelemetry(run: { startedAt: number; errored: boolean }): void {
-    if (run.errored) return;
+  function finishRunTelemetry(run: AdapterRun): void {
+    if (run.telemetrySettled) return;
+    run.telemetrySettled = true;
     captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_ended', {
       ...telemetryProperties,
       durationMs: Date.now() - run.startedAt,
     });
-    if (activeRun === run) activeRun = null;
   }
 
-  function failRunTelemetry(error: unknown, run = activeRun): void {
-    if (!run || run.errored) return;
-    run.errored = true;
+  function failRunTelemetry(error: unknown, run: AdapterRun | null = activeRun): void {
+    if (!run || run.telemetrySettled) return;
+    run.telemetrySettled = true;
     captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_errored', {
       ...telemetryProperties,
       durationMs: Date.now() - run.startedAt,
       errorClass: agentRuntimeTelemetryErrorClass(error),
     });
-    if (activeRun === run) activeRun = null;
+  }
+
+  function failRun(run: AdapterRun, error: unknown): void {
+    if (run.outcome !== undefined) return;
+    finalizeDeliveryRun(store, run, 'error');
+    if (activeRun === run) {
+      store.status.set('error');
+      store.isLoading.set(false);
+      store.error.set(toAgentError(error));
+    }
+    failRunTelemetry(error, run);
+  }
+
+  function settleTransportClose(run: AdapterRun): void {
+    if (run.outcome === undefined) {
+      finalizeDeliveryRun(store, run, run.ownedMessageIds.size > 0 ? 'interrupted' : 'success');
+      if (activeRun === run) {
+        store.status.set('idle');
+        store.isLoading.set(false);
+        store.error.set(undefined);
+      }
+    }
+    finishRunTelemetry(run);
   }
 
   /**
@@ -207,49 +248,64 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
    * Both submit() and retry() share this path; submit() appends the user
    * message first, retry() skips the append and calls this directly.
    */
-  async function runCurrentMessages(): Promise<void> {
-    const run = startRunTelemetry('submit');
+  async function runCurrentMessages(requestType = 'submit', allowBaselineTail = false): Promise<void> {
+    const run = beginRun(requestType, allowBaselineTail);
     const tools = clientToolsCap.catalogAsAgUiTools();
     try {
       await source.runAgent(tools.length > 0 ? { tools } : undefined);
-      finishRunTelemetry(run);
+      settleTransportClose(run);
     } catch (err) {
-      if (!settleIfAborted(err)) {
-        store.status.set('error');
-        store.isLoading.set(false);
-        store.error.set(toAgentError(err));
-        failRunTelemetry(err, run);
-      }
+      if (run.outcome === 'aborted' && isAbortError(err)) return;
+      failRun(run, err);
     }
   }
 
   // Tap all events from the source agent via the AgentSubscriber API.
   // This subscription lives for the lifetime of `source`.
   source.subscribe({
-    onEvent({ event }) {
-      // The AG-UI client surfaces a user-initiated abort both as a
-      // RUN_ERROR event (here) and via onRunFailed; guard the event path too
-      // so the reducer never marks a deliberate stop as an error.
-      if (event.type === 'RUN_ERROR') {
-        const message = (event as { message?: string }).message ?? '';
-        if (settleIfAborted(new Error(message))) return;
-      }
-      reduceEvent(event, store);
+    onRunInitialized({ input }) {
+      resolveCallbackRun(input.runId);
     },
-    onRunFailed({ error }) {
-      if (settleIfAborted(error)) return;
+    onEvent({ event, input }) {
+      const callbackRunId = input?.runId ?? (event as { runId?: string }).runId;
+      const run = resolveCallbackRun(callbackRunId);
+      if (!run) {
+        if (!callbackRunId) reduceEvent(event, store);
+        return;
+      }
+      if (run !== activeRun) {
+        if (event.type === 'RUN_FINISHED') finalizeDeliveryRun(store, run, 'success');
+        else if (event.type === 'RUN_ERROR') finalizeDeliveryRun(store, run, 'error');
+        return;
+      }
+      if (event.type === 'RUN_ERROR' && run.outcome === 'aborted') return;
+      reduceEvent(event, store);
+      if (run && event.type === 'RUN_FINISHED' && run.outcome === 'success') {
+        finishRunTelemetry(run);
+      } else if (run && event.type === 'RUN_ERROR' && run.outcome === 'error') {
+        failRunTelemetry((event as { message?: unknown }).message ?? event, run);
+      }
+    },
+    onRunFailed({ error, input }) {
+      const run = resolveCallbackRun(input?.runId);
+      if (run) {
+        if (run.outcome === 'aborted' && isAbortError(error)) return;
+        failRun(run, error);
+        return;
+      }
+      if (input?.runId) return;
       store.status.set('error');
       store.isLoading.set(false);
       store.error.set(toAgentError(error));
-      failRunTelemetry(error);
     },
   });
 
   // Stable Subagent wrappers per messageId so chat-subagents (tracks by
   // toolCallId) doesn't churn as activity content streams.
-  const subagentWrappers = new Map<string, Subagent>();
+  const subagentWrappers = new Map<string, { generation: string; wrapper: Subagent }>();
   function subagentFor(id: string, entry: ActivityEntry): Subagent {
-    let w = subagentWrappers.get(id);
+    const cached = subagentWrappers.get(id);
+    let w = cached?.generation === entry.generation ? cached.wrapper : undefined;
     if (!w) {
       w = {
         toolCallId: (entry.content()['toolCallId'] as string) ?? id,
@@ -257,17 +313,27 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
         status: computed(() => (entry.content()['status'] as SubagentStatus) ?? 'running'),
         messages: computed<Message[]>(() => {
           const c = entry.content();
+          const status = (c['status'] as SubagentStatus) ?? 'running';
+          const assistantDelivery = status === 'error'
+            ? completeDelivery(entry.generation, 'error')
+            : status === 'complete'
+              ? completeDelivery(entry.generation, 'success')
+              : streamingDelivery(entry.generation);
           const raw = c['messages'];
           if (Array.isArray(raw)) {
-            return (raw as Array<Record<string, unknown>>).map((m, i) => ({
-              id: (m['id'] as string) ?? `${id}-${i}`,
-              role: 'assistant' as Message['role'],
-              content: typeof m['content'] === 'string' ? (m['content'] as string) : (m['content'] as Message['content']) ?? '',
-              ...(Array.isArray(m['toolCallIds']) ? { toolCallIds: m['toolCallIds'] as string[] } : {}),
-              ...(typeof m['reasoning'] === 'string' ? { reasoning: m['reasoning'] as string } : {}),
-            }));
+            return (raw as Array<Record<string, unknown>>).map((m, i) => {
+              const messageId = (m['id'] as string) ?? `${id}-${i}`;
+              return {
+                id: messageId,
+                role: 'assistant' as Message['role'],
+                content: typeof m['content'] === 'string' ? (m['content'] as string) : (m['content'] as Message['content']) ?? '',
+                delivery: m['role'] === 'assistant' ? assistantDelivery : staticDelivery(messageId),
+                ...(Array.isArray(m['toolCallIds']) ? { toolCallIds: m['toolCallIds'] as string[] } : {}),
+                ...(typeof m['reasoning'] === 'string' ? { reasoning: m['reasoning'] as string } : {}),
+              };
+            });
           }
-          return [{ id, role: 'assistant', content: String(c['text'] ?? '') }];
+          return [{ id, role: 'assistant', content: String(c['text'] ?? ''), delivery: assistantDelivery }];
         }),
         toolCalls: computed<ToolCall[]>(() => {
           const raw = entry.content()['toolCalls'];
@@ -275,7 +341,7 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
         }),
         state: computed(() => (entry.content()['state'] as Record<string, unknown>) ?? {}),
       };
-      subagentWrappers.set(id, w);
+      subagentWrappers.set(id, { generation: entry.generation, wrapper: w });
     }
     return w;
   }
@@ -306,32 +372,23 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     clientTools:  clientToolsCap,
 
     submit: async (input: AgentSubmitInput, _opts?: AgentSubmitOptions) => {
-      // Reset both abort flags so a new submit starts clean and genuine
-      // failures after a previous stop are never swallowed.
-      abortRequested = false;
-      abortSettled = false;
-
       if (input.resume !== undefined) {
         // Resume path: clear the pending interrupt and replay the run with the
         // resume payload forwarded to the LangGraph backend via AG-UI's
         // forwardedProps.command.resume mechanism.
         applyStatePatch(input.state);
         store.interrupt.set(undefined);
-        const run = startRunTelemetry('resume');
+        const run = beginRun('resume', true);
         const tools = clientToolsCap.catalogAsAgUiTools();
         try {
           await source.runAgent({
             forwardedProps: { command: { resume: input.resume } },
             ...(tools.length > 0 ? { tools } : {}),
           });
-          finishRunTelemetry(run);
+          settleTransportClose(run);
         } catch (err) {
-          if (!settleIfAborted(err)) {
-            store.status.set('error');
-            store.isLoading.set(false);
-            store.error.set(toAgentError(err));
-            failRunTelemetry(err, run);
-          }
+          if (run.outcome === 'aborted' && isAbortError(err)) return;
+          failRun(run, err);
         }
         return;
       }
@@ -361,11 +418,18 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
       // Re-run the same message list against the source without appending a
       // duplicate user message — the message is already in store.messages and
       // source's internal list from the original submit().
-      await runCurrentMessages();
+      await runCurrentMessages('retry', true);
     },
 
     stop: async () => {
-      abortRequested = true;
+      const run = activeRun;
+      if (run && run.outcome === undefined) {
+        finalizeDeliveryRun(store, run, 'aborted');
+        store.status.set('idle');
+        store.isLoading.set(false);
+        store.error.set(undefined);
+        finishRunTelemetry(run);
+      }
       source.abortRun();
     },
 
@@ -373,12 +437,6 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
       if (store.isLoading()) {
         throw new Error('Cannot regenerate while agent is loading another response');
       }
-      // Reset abort flags so a regenerate starts clean, exactly like submit().
-      // Without this, flags left over from a prior stop() would cause the
-      // duplicate-delivery guard in settleIfAborted() to silently swallow the
-      // abort error without settling, wedging the store in streaming/running.
-      abortRequested = false;
-      abortSettled = false;
       const msgs = store.messages();
       const target = msgs[assistantMessageIndex];
       if (!target || target.role !== 'assistant') {
@@ -408,18 +466,14 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
       // message in `trimmed` becomes the active prompt for the next run.
       source.setMessages(trimmed as Parameters<typeof source.setMessages>[0]);
 
-      const run = startRunTelemetry('regenerate');
+      const run = beginRun('regenerate');
       const regenTools = clientToolsCap.catalogAsAgUiTools();
       try {
         await source.runAgent(regenTools.length > 0 ? { tools: regenTools } : undefined);
-        finishRunTelemetry(run);
+        settleTransportClose(run);
       } catch (err) {
-        if (!settleIfAborted(err)) {
-          store.status.set('error');
-          store.isLoading.set(false);
-          store.error.set(toAgentError(err));
-          failRunTelemetry(err, run);
-        }
+        if (run.outcome === 'aborted' && isAbortError(err)) return;
+        failRun(run, err);
       }
     },
   };
@@ -430,9 +484,15 @@ function buildUserMessage(input: AgentSubmitInput): Message | undefined {
   const content = typeof input.message === 'string'
     ? input.message
     : input.message.map((b) => b.type === 'text' ? b.text : JSON.stringify(b)).join('');
-  return { id: randomId(), role: 'user', content };
+  const id = randomId();
+  return { id, role: 'user', content, delivery: staticDelivery(id) };
 }
 
 function randomId(): string {
   return Math.random().toString(36).slice(2);
+}
+
+function getTailAssistantMessageId(messages: readonly Message[]): string | undefined {
+  const tail = messages[messages.length - 1];
+  return tail?.role === 'assistant' ? tail.id : undefined;
 }
