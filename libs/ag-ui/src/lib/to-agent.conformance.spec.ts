@@ -84,6 +84,7 @@ describe('AG-UI reducer — reasoning-fixture conformance', () => {
         generation: 'reasoning-fixture-run',
         baselineMessageIds: new Set<string>(),
         ownedMessageIds: new Set<string>(),
+        snapshotReplacementIds: new Set<string>(),
       },
       allocateDeliveryGeneration: (scope: string) => `reasoning-fixture:${scope}`,
     };

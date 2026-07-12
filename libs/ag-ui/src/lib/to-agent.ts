@@ -185,6 +185,7 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
       generation: allocateDeliveryGeneration('run'),
       baselineMessageIds: new Set(store.messages().map(message => message.id)),
       ownedMessageIds: new Set(),
+      snapshotReplacementIds: new Set(),
       eligibleBaselineAssistantId: allowBaselineTail
         ? getTailAssistantMessageId(store.messages())
         : undefined,

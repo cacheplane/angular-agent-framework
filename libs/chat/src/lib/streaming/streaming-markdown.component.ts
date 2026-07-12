@@ -31,6 +31,7 @@ export interface StreamingMarkdownDocument {
   readonly content: string;
 }
 
+/** Creates the atomic document consumed by the streaming Markdown renderer. */
 export function markdownDocument(
   content: string,
   delivery: MessageDelivery,

@@ -18,6 +18,7 @@ interface TestDeliveryRun {
   generation: string;
   baselineMessageIds: Set<string>;
   ownedMessageIds: Set<string>;
+  snapshotReplacementIds: Set<string>;
   currentAssistantMessageId?: string;
   eligibleBaselineAssistantId?: string;
   protocolRunId?: string;
@@ -46,6 +47,7 @@ function makeStore(generation = 'run-generation-1'): TestStore {
       generation,
       baselineMessageIds: new Set(),
       ownedMessageIds: new Set(),
+      snapshotReplacementIds: new Set(),
     },
     allocateDeliveryGeneration: (scope: string) => `${generation}:${scope}:${++activitySequence}`,
   } as TestStore;
@@ -150,7 +152,7 @@ describe('reduceEvent', () => {
     expect(store.deliveryRun?.currentAssistantMessageId).toBe('m2');
   });
 
-  it('does not mutate completed prior assistant content from a stale snapshot', () => {
+  it('publishes an authoritative rewrite of a completed step as a new completed generation', () => {
     const store = makeStore();
     reduceEvent({ type: 'TEXT_MESSAGE_START', messageId: 'm1' } as any, store);
     reduceEvent({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: 'first step' } as any, store);
@@ -159,19 +161,52 @@ describe('reduceEvent', () => {
     reduceEvent({
       type: 'MESSAGES_SNAPSHOT',
       messages: [
-        { id: 'm1', role: 'assistant', content: 'stale rewrite' },
+        { id: 'm1', role: 'assistant', content: 'authoritative rewrite' },
         { id: 'm2', role: 'assistant', content: 'current snapshot' },
       ],
     } as any, store);
 
-    expect(store.messages().find(message => message.id === 'm1')).toMatchObject({
-      content: 'first step',
-      delivery: completeDelivery('run-generation-1', 'success'),
+    const replacement = store.messages().find(message => message.id === 'm1');
+    expect(replacement).toMatchObject({
+      content: 'authoritative rewrite',
+      delivery: { phase: 'complete', outcome: 'success' },
     });
+    const replacementGeneration = replacement?.delivery.generation;
+    expect(replacementGeneration).not.toBe('run-generation-1');
     expect(store.messages().find(message => message.id === 'm2')).toMatchObject({
       content: 'current snapshot',
       delivery: streamingDelivery('run-generation-1'),
     });
+
+    reduceEvent({ type: 'TEXT_MESSAGE_START', messageId: 'm1' } as any, store);
+    reduceEvent({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: ' stale' } as any, store);
+    expect(store.messages().find(message => message.id === 'm1')).toMatchObject({
+      content: 'authoritative rewrite',
+      delivery: { generation: replacementGeneration, phase: 'complete', outcome: 'success' },
+    });
+
+    const rewrittenSnapshot = {
+      type: 'MESSAGES_SNAPSHOT',
+      messages: [
+        { id: 'm1', role: 'assistant', content: 'second authoritative rewrite' },
+      ],
+    } as any;
+    reduceEvent(rewrittenSnapshot, store);
+
+    const secondReplacement = store.messages().find(message => message.id === 'm1');
+    expect(secondReplacement).toMatchObject({
+      content: 'second authoritative rewrite',
+      delivery: { phase: 'complete', outcome: 'success' },
+    });
+    expect(secondReplacement?.delivery.generation).not.toBe(replacementGeneration);
+    expect(store.messages().find(message => message.id === 'm2')).toMatchObject({
+      content: 'current snapshot',
+      delivery: streamingDelivery('run-generation-1'),
+    });
+
+    reduceEvent(rewrittenSnapshot, store);
+    expect(store.messages().find(message => message.id === 'm1')?.delivery.generation)
+      .toBe(secondReplacement?.delivery.generation);
   });
 
   it('preserves an omitted current assistant so later deltas still apply', () => {

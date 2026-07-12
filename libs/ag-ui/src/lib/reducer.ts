@@ -65,6 +65,7 @@ export interface ReducerDeliveryRun {
   generation: string;
   baselineMessageIds: Set<string>;
   ownedMessageIds: Set<string>;
+  snapshotReplacementIds: Set<string>;
   eligibleBaselineAssistantId?: string;
   currentAssistantMessageId?: string;
   protocolRunId?: string;
@@ -339,10 +340,13 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
       const snapshotToolCalls: ToolCall[] = [];
       const messages: Message[] = raw.map((m) => {
         const previous = previousById.get(m.id);
-        const completedOwnedMessage = run
-          && run.ownedMessageIds.has(m.id)
-          && previous?.delivery.generation === run.generation
-          && previous.delivery.phase === 'complete'
+        const completedMessage = m.id !== activeCanonicalAssistantId
+          && previous?.delivery.phase === 'complete'
+          && (
+            !run
+            || run.ownedMessageIds.has(m.id)
+            || run.snapshotReplacementIds.has(m.id)
+          )
           ? previous
           : undefined;
         let delivery = previous?.delivery ?? staticDelivery(m.id);
@@ -363,7 +367,21 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
           const { toolCalls: _dropped, ...rest } = m;
           snapshotMessage = { ...rest, toolCallIds: ids } as unknown as Omit<Message, 'delivery'>;
         }
-        if (completedOwnedMessage) return completedOwnedMessage;
+        if (completedMessage) {
+          const snapshotChanged = completedMessage.content !== snapshotMessage.content
+            || !sameStringArray(completedMessage.toolCallIds, snapshotMessage.toolCallIds);
+          if (!snapshotChanged) return completedMessage;
+
+          run?.snapshotReplacementIds.add(m.id);
+          return {
+            ...completedMessage,
+            ...snapshotMessage,
+            delivery: completeDelivery(
+              store.allocateDeliveryGeneration(`snapshot:${m.id}`),
+              'success',
+            ),
+          } as Message;
+        }
         if (run && (run.ownedMessageIds.has(m.id) || m.id === canonicalAssistantId)) {
           delivery = delivery.generation === run.generation && delivery.phase === 'complete'
             ? delivery
@@ -516,6 +534,12 @@ function ownAssistantMessage(store: ReducerStore, id: string) {
   run.ownedMessageIds.add(id);
   run.currentAssistantMessageId = id;
   return streamingDelivery(run.generation);
+}
+
+function sameStringArray(left?: string[], right?: string[]): boolean {
+  if (left === right) return true;
+  if (!left || !right || left.length !== right.length) return false;
+  return left.every((value, index) => value === right[index]);
 }
 
 function resolveCanonicalAssistantId(
