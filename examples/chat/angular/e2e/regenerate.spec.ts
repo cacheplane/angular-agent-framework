@@ -1,12 +1,52 @@
 // SPDX-License-Identifier: MIT
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { activeThreadIdFromUrl, sendPromptAndWait } from './test-helpers';
+
+async function regenerateAndWait(page: Page): Promise<void> {
+  const assistantMessages = page.locator(
+    'chat-message[data-role="assistant"]',
+  );
+  await expect(assistantMessages).toHaveCount(1);
+
+  // Keep a handle to the exact finalized response that existed before the
+  // click. A locator alone could silently resolve to that response and let the
+  // terminal-state assertion pass before regeneration has started.
+  const originalAssistant = await assistantMessages.elementHandle();
+  if (!originalAssistant) {
+    throw new Error('Expected a finalized assistant response before regenerate');
+  }
+
+  await page.getByRole('button', { name: 'Regenerate response' }).click();
+
+  // Regenerate truncates the old assistant before streaming its replacement.
+  // Requiring the original DOM node to disconnect ties the wait to this click,
+  // even when aimock completes too quickly to sample data-streaming="true".
+  await expect
+    .poll(
+      () => originalAssistant.evaluate((element) => element.isConnected),
+      { timeout: 45_000 },
+    )
+    .toBe(false);
+
+  const regeneratedAssistant = page.locator(
+    'chat-message[data-role="assistant"][data-streaming="false"]',
+  );
+  await expect(regeneratedAssistant).toHaveCount(1, { timeout: 45_000 });
+  await expect
+    .poll(async () => (await regeneratedAssistant.innerText()).trim().length, {
+      timeout: 30_000,
+    })
+    .toBeGreaterThan(0);
+
+  await expect(page.locator('chat-message[data-role="user"]')).toHaveCount(1);
+  await expect(assistantMessages).toHaveCount(1);
+}
 
 test('regenerate: re-running keeps 1 user / 1 assistant in the conversation', async ({
   page,
 }) => {
   // Reuse the smoke 'say hi briefly' fixture — aimock returns the same
-  // response on regenerate; the invariant we care about is the count.
+  // response on regenerate, so DOM replacement proves a new run occurred.
   await sendPromptAndWait(page, 'say hi briefly');
 
   const userMessages = page.locator('chat-message[data-role="user"]');
@@ -14,27 +54,7 @@ test('regenerate: re-running keeps 1 user / 1 assistant in the conversation', as
   await expect(userMessages).toHaveCount(1);
   await expect(assistantMessages).toHaveCount(1);
 
-  // Click Regenerate on the assistant message (aria-label is the durable hook).
-  await page.getByRole('button', { name: 'Regenerate response' }).first().click();
-
-  // Wait for the regenerated assistant turn to finalize (data-streaming flips
-  // back to true then false). We can't reuse sendPromptAndWait here because
-  // there's no fresh prompt to send — instead poll until exactly one
-  // finalized assistant is present and the count holds at 1/1.
-  await expect
-    .poll(
-      async () =>
-        page
-          .locator('chat-message[data-role="assistant"][data-streaming="false"]')
-          .count(),
-      { timeout: 45_000 },
-    )
-    .toBeGreaterThan(0);
-
-  // Single-turn invariant: after regenerate, conversation stays at 1u/1a
-  // (the assistant message is replaced in place, not appended).
-  await expect(userMessages).toHaveCount(1);
-  await expect(assistantMessages).toHaveCount(1);
+  await regenerateAndWait(page);
 
   const threadId = await activeThreadIdFromUrl(page);
   expect(threadId).toBeTruthy();
@@ -51,17 +71,6 @@ test('regenerate: repeated regenerate keeps the same 1 user / 1 assistant shape'
   await sendPromptAndWait(page, 'say hi briefly');
 
   for (let i = 0; i < 3; i++) {
-    await page.getByRole('button', { name: 'Regenerate response' }).first().click();
-    await expect
-      .poll(
-        async () =>
-          page
-            .locator('chat-message[data-role="assistant"][data-streaming="false"]')
-            .count(),
-        { timeout: 45_000 },
-      )
-      .toBeGreaterThan(0);
-    await expect(page.locator('chat-message[data-role="user"]')).toHaveCount(1);
-    await expect(page.locator('chat-message[data-role="assistant"]')).toHaveCount(1);
+    await regenerateAndWait(page);
   }
 });

@@ -5,7 +5,12 @@
 **Import:**
 
 ```typescript
-import { mockAgent } from '@threadplane/chat';
+import {
+  completeDelivery,
+  mockAgent,
+  staticDelivery,
+  streamingDelivery,
+} from '@threadplane/chat';
 import type { MockAgent } from '@threadplane/chat';
 ```
 
@@ -34,13 +39,13 @@ function mockAgent(opts?: MockAgentOptions): MockAgent
 
 ```typescript
 import { TestBed } from '@angular/core/testing';
-import { ChatComponent, mockAgent } from '@threadplane/chat';
+import { ChatComponent, mockAgent, staticDelivery } from '@threadplane/chat';
 
 it('renders messages from an agent', async () => {
   const agent = mockAgent({
     messages: [
-      { id: 'm1', role: 'user', content: 'Hello' },
-      { id: 'm2', role: 'assistant', content: 'Hi there' },
+      { id: 'm1', role: 'user', content: 'Hello', delivery: staticDelivery('m1') },
+      { id: 'm2', role: 'assistant', content: 'Hi there', delivery: staticDelivery('m2') },
     ],
   });
 
@@ -63,10 +68,26 @@ The returned mock exposes writable signals, so tests can update state directly:
 
 ```typescript
 const agent = mockAgent();
+const generation = 'attempt-1';
 
+agent.status.set('running');
 agent.isLoading.set(true);
+agent.messages.set([{
+  id: 'm1',
+  role: 'assistant',
+  content: 'Ret',
+  delivery: streamingDelivery(generation),
+}]);
+
+agent.status.set('error');
+agent.isLoading.set(false);
 agent.error.set(new Error('Connection failed'));
-agent.messages.set([{ id: 'm1', role: 'assistant', content: 'Retry?' }]);
+agent.messages.set([{
+  id: 'm1',
+  role: 'assistant',
+  content: 'Retry?',
+  delivery: completeDelivery(generation, 'error'),
+}]);
 ```
 
 ## Spying on Actions

@@ -21,7 +21,7 @@ interface TestDeliveryRun {
   currentAssistantMessageId?: string;
   eligibleBaselineAssistantId?: string;
   protocolRunId?: string;
-  outcome?: 'success' | 'error' | 'aborted';
+  outcome?: 'success' | 'error' | 'aborted' | 'interrupted' | 'paused';
 }
 
 type TestStore = ReducerStore & {
@@ -111,6 +111,87 @@ describe('reduceEvent', () => {
     reduceEvent({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: 'there' } as any, store);
     expect(store.messages()[0].content).toBe('hi there');
     expect(store.messages()[0].delivery).toEqual(streamingDelivery('run-generation-1'));
+  });
+
+  it.each([
+    ['TEXT_MESSAGE_START', { type: 'TEXT_MESSAGE_START', messageId: 'm2' }],
+    ['REASONING_MESSAGE_START', { type: 'REASONING_MESSAGE_START', messageId: 'm2' }],
+    ['TOOL_CALL_START', {
+      type: 'TOOL_CALL_START', toolCallId: 't2', toolCallName: 'search', parentMessageId: 'm2',
+    }],
+  ])('%s starts a new assistant step and completes the previous one in the same generation', (_type, event) => {
+    const store = makeStore();
+    reduceEvent({ type: 'TEXT_MESSAGE_START', messageId: 'm1' } as any, store);
+    reduceEvent({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: 'first step' } as any, store);
+
+    reduceEvent(event as any, store);
+
+    expect(store.messages().find(message => message.id === 'm1')?.delivery)
+      .toEqual(completeDelivery('run-generation-1', 'success'));
+    expect(store.messages().find(message => message.id === 'm2')?.delivery)
+      .toEqual(streamingDelivery('run-generation-1'));
+    expect(store.deliveryRun?.currentAssistantMessageId).toBe('m2');
+  });
+
+  it('ignores stale content for a completed prior assistant step', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'TEXT_MESSAGE_START', messageId: 'm1' } as any, store);
+    reduceEvent({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: 'first step' } as any, store);
+    reduceEvent({ type: 'TEXT_MESSAGE_START', messageId: 'm2' } as any, store);
+
+    reduceEvent({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: ' stale' } as any, store);
+
+    expect(store.messages().find(message => message.id === 'm1')).toMatchObject({
+      content: 'first step',
+      delivery: completeDelivery('run-generation-1', 'success'),
+    });
+    expect(store.messages().find(message => message.id === 'm2')?.delivery)
+      .toEqual(streamingDelivery('run-generation-1'));
+    expect(store.deliveryRun?.currentAssistantMessageId).toBe('m2');
+  });
+
+  it('does not mutate completed prior assistant content from a stale snapshot', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'TEXT_MESSAGE_START', messageId: 'm1' } as any, store);
+    reduceEvent({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: 'first step' } as any, store);
+    reduceEvent({ type: 'TEXT_MESSAGE_START', messageId: 'm2' } as any, store);
+
+    reduceEvent({
+      type: 'MESSAGES_SNAPSHOT',
+      messages: [
+        { id: 'm1', role: 'assistant', content: 'stale rewrite' },
+        { id: 'm2', role: 'assistant', content: 'current snapshot' },
+      ],
+    } as any, store);
+
+    expect(store.messages().find(message => message.id === 'm1')).toMatchObject({
+      content: 'first step',
+      delivery: completeDelivery('run-generation-1', 'success'),
+    });
+    expect(store.messages().find(message => message.id === 'm2')).toMatchObject({
+      content: 'current snapshot',
+      delivery: streamingDelivery('run-generation-1'),
+    });
+  });
+
+  it('preserves an omitted current assistant so later deltas still apply', () => {
+    const store = makeStore();
+    reduceEvent({ type: 'TEXT_MESSAGE_START', messageId: 'm1' } as any, store);
+    reduceEvent({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: 'first step' } as any, store);
+    reduceEvent({ type: 'TEXT_MESSAGE_START', messageId: 'm2' } as any, store);
+    reduceEvent({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm2', delta: 'second step' } as any, store);
+
+    reduceEvent({
+      type: 'MESSAGES_SNAPSHOT',
+      messages: [{ id: 'm1', role: 'assistant', content: 'first step' }],
+    } as any, store);
+    reduceEvent({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm2', delta: ' continued' } as any, store);
+
+    expect(store.messages().find(message => message.id === 'm2')).toMatchObject({
+      content: 'second step continued',
+      delivery: streamingDelivery('run-generation-1'),
+    });
+    expect(store.deliveryRun?.currentAssistantMessageId).toBe('m2');
   });
 
   it('TOOL_CALL_START creates a tool-call-only assistant slot owned by the active generation', () => {
@@ -471,6 +552,27 @@ describe('reduceEvent — interrupt', () => {
     expect(ix!.value).toEqual({ kind: 'refund_approval', amount: 42 });
     expect(ix!.resumable).toBe(true);
     expect(typeof ix!.id).toBe('string');
+  });
+  it('terminalizes the active generation as paused and ignores a later RUN_FINISHED', () => {
+    const store = makeStore();
+    store.status.set('running');
+    store.isLoading.set(true);
+    reduceEvent({ type: 'RUN_STARTED', runId: 'run-1' } as any, store);
+    reduceEvent({ type: 'TEXT_MESSAGE_START', messageId: 'm1', runId: 'run-1' } as any, store);
+
+    reduceEvent({
+      type: 'CUSTOM', name: 'on_interrupt', value: { kind: 'approval' }, runId: 'run-1',
+    } as any, store);
+
+    expect(store.messages()[0].delivery).toEqual(completeDelivery('run-generation-1', 'paused'));
+    expect(store.deliveryRun?.outcome).toBe('paused');
+    expect(store.status()).toBe('idle');
+    expect(store.isLoading()).toBe(false);
+
+    reduceEvent({ type: 'RUN_FINISHED', runId: 'run-1' } as any, store);
+
+    expect(store.messages()[0].delivery).toEqual(completeDelivery('run-generation-1', 'paused'));
+    expect(store.deliveryRun?.outcome).toBe('paused');
   });
   it('clears interrupt on RUN_STARTED', () => {
     const store = makeStore();

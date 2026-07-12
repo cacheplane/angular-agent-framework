@@ -147,6 +147,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     currentAssistantMessageId?: string;
     sawAssistantChunk: boolean;
     currentStepHasTerminalEvidence: boolean;
+    awaitingFinalSync: boolean;
     terminalOutcome?: CompleteOutcome;
   };
   let activeAttempt: DeliveryAttempt | null = null;
@@ -181,6 +182,9 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
   }
 
   function beginAttempt(allowBaselineTail = false): DeliveryAttempt {
+    if (activeAttempt?.awaitingFinalSync) {
+      historyAbortController?.abort();
+    }
     if (activeAttempt && !activeAttempt.terminalOutcome) {
       finalizeAttempt(activeAttempt, 'interrupted');
     }
@@ -200,6 +204,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         : undefined,
       sawAssistantChunk: false,
       currentStepHasTerminalEvidence: false,
+      awaitingFinalSync: false,
     };
     activeAttempt = attempt;
     return attempt;
@@ -236,12 +241,31 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     }
   }
 
-  function finishAttempt(attempt: DeliveryAttempt): void {
-    if (attempt.terminalOutcome) return;
-    finalizeAttempt(
-      attempt,
-      attempt.currentStepHasTerminalEvidence || !attempt.sawAssistantChunk ? 'success' : 'interrupted',
-    );
+  function finishOutcome(attempt: DeliveryAttempt): CompleteOutcome {
+    return attempt.terminalOutcome
+      ?? (attempt.currentStepHasTerminalEvidence || !attempt.sawAssistantChunk ? 'success' : 'interrupted');
+  }
+
+  async function finalizeClosedAttempt(
+    controller: AbortController,
+    attempt: DeliveryAttempt,
+  ): Promise<CompleteOutcome | null> {
+    if (attempt.terminalOutcome) return attempt.terminalOutcome;
+
+    const outcome = finishOutcome(attempt);
+    attempt.awaitingFinalSync = true;
+    try {
+      await refreshHistory(
+        true,
+        () => isCurrentExecution(controller, attempt) && !attempt.terminalOutcome,
+      );
+    } finally {
+      attempt.awaitingFinalSync = false;
+    }
+
+    if (!isCurrentExecution(controller, attempt)) return null;
+    if (!attempt.terminalOutcome) finalizeAttempt(attempt, outcome);
+    return attempt.terminalOutcome ?? outcome;
   }
 
   function trackAssistantMessages(messages: BaseMessage[]): void {
@@ -362,7 +386,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     notifyDeliveryChange();
   });
 
-  async function refreshHistory(force = false): Promise<void> {
+  async function refreshHistory(force = false, isRelevant: () => boolean = () => true): Promise<void> {
     const getHistory = transport.getHistory?.bind(transport);
     if (!currentThreadId || !getHistory) return;
 
@@ -373,8 +397,8 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     subjects.isThreadLoading$.next(true);
 
     try {
-      const history = await getHistory(threadId, controller.signal);
-      if (!controller.signal.aborted && currentThreadId === threadId) {
+      const history = await waitForHistory(getHistory(threadId, controller.signal), controller.signal);
+      if (!controller.signal.aborted && currentThreadId === threadId && isRelevant()) {
         subjects.history$.next(history as ThreadState<T>[]);
 
         // Project the latest checkpoint into messages$ + values$:
@@ -413,7 +437,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         hydrateInterruptsFromHistory(history as ThreadState<T>[], subjects);
       }
     } catch (err) {
-      if (!controller.signal.aborted && (err as Error)?.name !== 'AbortError') {
+      if (!controller.signal.aborted && isRelevant() && (err as Error)?.name !== 'AbortError') {
         subjects.error$.next(toAgentError(err));
       }
     } finally {
@@ -422,6 +446,35 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         subjects.isThreadLoading$.next(false);
       }
     }
+  }
+
+  function waitForHistory<R>(history: Promise<R>, signal: AbortSignal): Promise<R> {
+    if (signal.aborted) return Promise.reject(createHistoryAbortError());
+
+    return new Promise<R>((resolve, reject) => {
+      const onAbort = () => {
+        cleanup();
+        reject(createHistoryAbortError());
+      };
+      const cleanup = () => signal.removeEventListener('abort', onAbort);
+      signal.addEventListener('abort', onAbort, { once: true });
+      history.then(
+        value => {
+          cleanup();
+          resolve(value);
+        },
+        error => {
+          cleanup();
+          reject(error);
+        },
+      );
+    });
+  }
+
+  function createHistoryAbortError(): Error {
+    const error = new Error('History refresh aborted.');
+    error.name = 'AbortError';
+    return error;
   }
 
   function publishQueue(): void {
@@ -532,15 +585,12 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         processEvent(event);
       }
       if (!isCurrentExecution(controller, attempt)) return;
-      finishAttempt(attempt);
+      const outcome = await finalizeClosedAttempt(controller, attempt);
+      if (outcome === null) return;
       if (!controller.signal.aborted) {
-        if (attempt.terminalOutcome !== 'error') {
+        if (outcome !== 'error') {
           subjects.status$.next(ResourceStatus.Resolved);
         }
-        // force=true: rehydrate from server-authoritative state so any
-        // post-process node mutations (RemoveMessage, id-match content
-        // replacement) reflected on the server are picked up client-side.
-        await refreshHistory(true);
         captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_ended', {
           ...telemetryProperties,
           durationMs: Date.now() - startedAt,
@@ -632,16 +682,13 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       }
 
       if (!isCurrentExecution(controller, attempt)) return;
-
-      finishAttempt(attempt);
+      const outcome = await finalizeClosedAttempt(controller, attempt);
+      if (outcome === null) return;
 
       if (!controller.signal.aborted) {
-        if (attempt.terminalOutcome !== 'error') {
+        if (outcome !== 'error') {
           subjects.status$.next(ResourceStatus.Resolved);
         }
-        // force=true: see refreshHistory comment — server state is
-        // authoritative after run completion.
-        await refreshHistory(true);
         await drainQueue();
         captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_ended', {
           ...telemetryProperties,
@@ -1027,6 +1074,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       if (shouldAbortAttempt && abortController) userAbortedControllers.add(abortController);
       if (shouldAbortAttempt && activeAttempt) finalizeAttempt(activeAttempt, 'aborted');
       abortController?.abort();
+      if (activeAttempt?.awaitingFinalSync) historyAbortController?.abort();
       await clearQueue();
       // Set Idle synchronously for an active user cancellation. Attempts that
       // already reached a terminal outcome retain their existing status.
@@ -1064,12 +1112,12 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
           processEvent(event);
         }
         if (!isCurrentExecution(controller, attempt)) return;
-        finishAttempt(attempt);
+        const outcome = await finalizeClosedAttempt(controller, attempt);
+        if (outcome === null) return;
         if (!controller.signal.aborted) {
-          if (attempt.terminalOutcome !== 'error') {
+          if (outcome !== 'error') {
             subjects.status$.next(ResourceStatus.Resolved);
           }
-          await refreshHistory();
           captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_ended', {
             ...telemetryProperties,
             durationMs: Date.now() - startedAt,

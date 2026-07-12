@@ -212,6 +212,235 @@ describe('createStreamManagerBridge', () => {
       destroy$.next();
     });
 
+    it('projects authoritative same-id content before publishing successful completion', async () => {
+      let resolveFinalHistory!: (history: ThreadState<Record<string, unknown>>[]) => void;
+      let historyCalls = 0;
+      const finalHistory = new Promise<ThreadState<Record<string, unknown>>[]>(resolve => {
+        resolveFinalHistory = resolve;
+      });
+      const transport: AgentTransport = {
+        async *stream() {
+          yield {
+            type: 'messages',
+            messages: [{ id: 'ai-authoritative', type: 'ai', content: 'streamed draft' }],
+            messageMetadata: { langgraph_node: 'model' },
+          };
+          yield { type: 'values', values: { done: true } };
+        },
+        async getHistory() {
+          historyCalls += 1;
+          return historyCalls === 1 ? [] : finalHistory;
+        },
+      };
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of('thread-1'),
+        destroy$: destroy$.asObservable(),
+      });
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      const observations: Array<{
+        content: unknown;
+        generation: string;
+        phase: string;
+      }> = [];
+      const recordObservation = () => {
+        const message = subjects.messages$.value.find(candidate =>
+          (candidate as unknown as { id?: string }).id === 'ai-authoritative'
+        );
+        if (!message) return;
+        const delivery = bridge.getMessageDelivery('ai-authoritative');
+        observations.push({
+          content: (message as unknown as { content: unknown }).content,
+          generation: delivery.generation,
+          phase: delivery.phase,
+        });
+      };
+      const messagesSubscription = subjects.messages$.subscribe(recordObservation);
+
+      const submitted = bridge.submit({});
+      await new Promise(resolve => setTimeout(resolve, 0));
+      recordObservation();
+      const attemptGeneration = bridge.getMessageDelivery('ai-authoritative').generation;
+
+      resolveFinalHistory([{
+        values: {
+          messages: [{ id: 'ai-authoritative', type: 'ai', content: 'authoritative final' }],
+        },
+        next: [],
+        checkpoint: {
+          thread_id: 'thread-1', checkpoint_ns: '', checkpoint_id: 'cp-final', checkpoint_map: null,
+        },
+        metadata: null,
+        created_at: '2026-07-12T00:00:00.000Z',
+        parent_checkpoint: null,
+        tasks: [],
+      } as never]);
+      await submitted;
+      recordObservation();
+
+      const completeContents = new Set(
+        observations
+          .filter(observation =>
+            observation.generation === attemptGeneration && observation.phase === 'complete'
+          )
+          .map(observation => observation.content)
+      );
+      expect([...completeContents]).toEqual(['authoritative final']);
+
+      messagesSubscription.unsubscribe();
+      destroy$.next();
+    });
+
+    it('projects authoritative same-id content before publishing interrupted completion', async () => {
+      let resolveFinalHistory!: (history: ThreadState<Record<string, unknown>>[]) => void;
+      let historyCalls = 0;
+      const finalHistory = new Promise<ThreadState<Record<string, unknown>>[]>(resolve => {
+        resolveFinalHistory = resolve;
+      });
+      const transport: AgentTransport = {
+        async *stream() {
+          yield {
+            type: 'messages',
+            messages: [{ id: 'ai-interrupted-authoritative', type: 'ai', content: 'partial draft' }],
+            messageMetadata: { langgraph_node: 'model' },
+          };
+        },
+        async getHistory() {
+          historyCalls += 1;
+          return historyCalls === 1 ? [] : finalHistory;
+        },
+      };
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of('thread-1'),
+        destroy$: destroy$.asObservable(),
+      });
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      const observations: Array<{ content: unknown; generation: string; phase: string }> = [];
+      const recordObservation = () => {
+        const message = subjects.messages$.value.find(candidate =>
+          (candidate as unknown as { id?: string }).id === 'ai-interrupted-authoritative'
+        );
+        if (!message) return;
+        const delivery = bridge.getMessageDelivery('ai-interrupted-authoritative');
+        observations.push({
+          content: (message as unknown as { content: unknown }).content,
+          generation: delivery.generation,
+          phase: delivery.phase,
+        });
+      };
+      const messagesSubscription = subjects.messages$.subscribe(recordObservation);
+
+      const submitted = bridge.submit({});
+      await new Promise(resolve => setTimeout(resolve, 0));
+      recordObservation();
+      const attemptGeneration = bridge.getMessageDelivery('ai-interrupted-authoritative').generation;
+
+      resolveFinalHistory([{
+        values: {
+          messages: [{
+            id: 'ai-interrupted-authoritative',
+            type: 'ai',
+            content: 'authoritative partial',
+          }],
+        },
+        next: [],
+        checkpoint: {
+          thread_id: 'thread-1', checkpoint_ns: '', checkpoint_id: 'cp-interrupted', checkpoint_map: null,
+        },
+        metadata: null,
+        created_at: '2026-07-12T00:00:00.000Z',
+        parent_checkpoint: null,
+        tasks: [],
+      } as never]);
+      await submitted;
+      recordObservation();
+
+      const completeContents = new Set(
+        observations
+          .filter(observation =>
+            observation.generation === attemptGeneration && observation.phase === 'complete'
+          )
+          .map(observation => observation.content)
+      );
+      expect([...completeContents]).toEqual(['authoritative partial']);
+      expect(bridge.getMessageDelivery('ai-interrupted-authoritative')).toMatchObject({
+        generation: attemptGeneration,
+        phase: 'complete',
+        outcome: 'interrupted',
+      });
+
+      messagesSubscription.unsubscribe();
+      destroy$.next();
+    });
+
+    it('stops an attempt waiting for authoritative history finalization', async () => {
+      let historyCalls = 0;
+      let finalHistorySignal: AbortSignal | undefined;
+      let markFinalHistoryStarted = () => undefined;
+      let releaseFinalHistory: ((history: ThreadState<Record<string, unknown>>[]) => void) | undefined;
+      const finalHistoryStarted = new Promise<void>(resolve => { markFinalHistoryStarted = resolve; });
+      const finalHistory = new Promise<ThreadState<Record<string, unknown>>[]>(resolve => {
+        releaseFinalHistory = resolve;
+      });
+      const transport: AgentTransport = {
+        async *stream() {
+          yield {
+            type: 'messages',
+            messages: [{ id: 'ai-stop-final-sync', type: 'ai', content: 'answer' }],
+            messageMetadata: { langgraph_node: 'model' },
+          };
+          yield { type: 'values', values: { done: true } };
+        },
+        async getHistory(_threadId, signal) {
+          historyCalls += 1;
+          if (historyCalls === 1) return [];
+          finalHistorySignal = signal;
+          markFinalHistoryStarted();
+          return finalHistory;
+        },
+      };
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of('thread-1'),
+        destroy$: destroy$.asObservable(),
+      });
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      const submitted = bridge.submit({});
+      await finalHistoryStarted;
+      const generation = bridge.getMessageDelivery('ai-stop-final-sync').generation;
+
+      await bridge.stop();
+      const historyWasAborted = finalHistorySignal?.aborted;
+      const submitResult = await Promise.race([
+        submitted.then(() => 'resolved'),
+        new Promise<'timed-out'>(resolve => setTimeout(() => resolve('timed-out'), 100)),
+      ]);
+      releaseFinalHistory?.([]);
+
+      expect(historyWasAborted).toBe(true);
+      expect(submitResult).toBe('resolved');
+      expect(bridge.getMessageDelivery('ai-stop-final-sync')).toEqual({
+        generation,
+        phase: 'complete',
+        outcome: 'aborted',
+      });
+      expect(subjects.status$.value).toBe(ResourceStatus.Idle);
+      destroy$.next();
+    });
+
     it('accepts an empty messages/complete event as normal terminal evidence', async () => {
       const transport = new MockAgentTransport();
       const subjects = makeSubjects();

@@ -324,9 +324,13 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
     case 'MESSAGES_SNAPSHOT': {
       const e = event as unknown as { messages: AgUiSnapshotMessage[] };
       const raw = e.messages ?? [];
-      const previousById = new Map(store.messages().map(message => [message.id, message]));
       const run = store.deliveryRun?.outcome === undefined ? store.deliveryRun : null;
       const canonicalAssistantId = resolveCanonicalAssistantId(raw, run);
+      const activeCanonicalAssistantId = canonicalAssistantId
+        && ownAssistantMessage(store, canonicalAssistantId)
+        ? canonicalAssistantId
+        : undefined;
+      const previousById = new Map(store.messages().map(message => [message.id, message]));
       // AG-UI AssistantMessage carries `toolCalls` (ToolCall objects) on the
       // snapshot wire. Bridge them to `toolCallIds` so that the chat lib's
       // per-message tool-call resolution (resolveMessageToolCalls) can scope
@@ -334,28 +338,52 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
       // so the data is visible to <chat-tool-views>.
       const snapshotToolCalls: ToolCall[] = [];
       const messages: Message[] = raw.map((m) => {
-        let delivery = previousById.get(m.id)?.delivery ?? staticDelivery(m.id);
-        if (run && (run.ownedMessageIds.has(m.id) || m.id === canonicalAssistantId)) {
-          delivery = streamingDelivery(run.generation);
-          run.ownedMessageIds.add(m.id);
-          run.currentAssistantMessageId = m.id;
-        }
+        const previous = previousById.get(m.id);
+        const completedOwnedMessage = run
+          && run.ownedMessageIds.has(m.id)
+          && previous?.delivery.generation === run.generation
+          && previous.delivery.phase === 'complete'
+          ? previous
+          : undefined;
+        let delivery = previous?.delivery ?? staticDelivery(m.id);
+        let snapshotMessage: Omit<Message, 'delivery'>;
         if (m.role !== 'assistant' || !m.toolCalls || m.toolCalls.length === 0) {
-          return { ...m, delivery } as unknown as Message;
+          snapshotMessage = m as unknown as Omit<Message, 'delivery'>;
+        } else {
+          const ids: string[] = [];
+          for (const tc of m.toolCalls) {
+            ids.push(tc.id);
+            snapshotToolCalls.push({
+              id: tc.id,
+              name: tc.function.name,
+              args: safeParseArgs(tc.function.arguments),
+              status: 'complete',
+            });
+          }
+          const { toolCalls: _dropped, ...rest } = m;
+          snapshotMessage = { ...rest, toolCallIds: ids } as unknown as Omit<Message, 'delivery'>;
         }
-        const ids: string[] = [];
-        for (const tc of m.toolCalls) {
-          ids.push(tc.id);
-          snapshotToolCalls.push({
-            id: tc.id,
-            name: tc.function.name,
-            args: safeParseArgs(tc.function.arguments),
-            status: 'complete',
-          });
+        if (completedOwnedMessage) return completedOwnedMessage;
+        if (run && (run.ownedMessageIds.has(m.id) || m.id === canonicalAssistantId)) {
+          delivery = delivery.generation === run.generation && delivery.phase === 'complete'
+            ? delivery
+            : streamingDelivery(run.generation);
+          run.ownedMessageIds.add(m.id);
+          if (m.id === activeCanonicalAssistantId) run.currentAssistantMessageId = m.id;
         }
-        const { toolCalls: _dropped, ...rest } = m;
-        return { ...rest, toolCallIds: ids, delivery } as unknown as Message;
+        return { ...snapshotMessage, delivery } as Message;
       });
+      const currentAssistant = run?.currentAssistantMessageId
+        ? previousById.get(run.currentAssistantMessageId)
+        : undefined;
+      if (
+        run
+        && currentAssistant?.delivery.generation === run.generation
+        && currentAssistant.delivery.phase === 'streaming'
+        && !messages.some(message => message.id === currentAssistant.id)
+      ) {
+        messages.push(currentAssistant);
+      }
       // Re-apply per-message citations from the already-received STATE. A
       // MESSAGES_SNAPSHOT replaces the streamed messages wholesale — and the
       // final snapshot message id (str(AIMessage.id), e.g. "resp-…") differs
@@ -381,7 +409,13 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
       // (e.g. ChatApprovalCardComponent) receive a plain object, not a string.
       const parsedValue = typeof e.value === 'string' ? safeParseJson(e.value) : e.value;
       if (e.name === 'on_interrupt') {
+        const run = currentRunForEvent(event, store);
+        if (store.deliveryRun && !run) return;
         store.interrupt.set({ id: randomId(), value: parsedValue, resumable: true });
+        if (run && finalizeDeliveryRun(store, run, 'paused')) {
+          store.status.set('idle');
+          store.isLoading.set(false);
+        }
         return;
       }
       // Surface every other custom event on the customEvents signal so the
@@ -468,6 +502,17 @@ function currentRunForEvent(event: BaseEvent, store: ReducerStore): ReducerDeliv
 function ownAssistantMessage(store: ReducerStore, id: string) {
   const run = store.deliveryRun;
   if (!run || run.outcome !== undefined) return undefined;
+  const currentId = run.currentAssistantMessageId;
+  if (currentId && currentId !== id) {
+    if (run.ownedMessageIds.has(id)) return undefined;
+    store.messages.update(messages => messages.map(message =>
+      message.id === currentId
+        && message.delivery.generation === run.generation
+        && message.delivery.phase === 'streaming'
+        ? { ...message, delivery: completeDelivery(run.generation, 'success') }
+        : message,
+    ));
+  }
   run.ownedMessageIds.add(id);
   run.currentAssistantMessageId = id;
   return streamingDelivery(run.generation);
