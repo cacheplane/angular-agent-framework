@@ -3,29 +3,41 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Component, signal } from '@angular/core';
-import { ChatStreamingMdComponent } from './streaming-markdown.component';
+import {
+  ChatStreamingMdComponent,
+  type StreamingMarkdownDocument,
+} from './streaming-markdown.component';
 import { katexLoaded } from '../markdown/katex-loader';
 
 @Component({
   standalone: true,
   imports: [ChatStreamingMdComponent],
-  template: `<chat-streaming-md [content]="content()" [streaming]="streaming()" />`,
+  template: `<chat-streaming-md [document]="document()" />`,
 })
 class HostComponent {
-  content = signal<string>('');
-  streaming = signal<boolean>(false);
+  document = signal<StreamingMarkdownDocument>({
+    generation: 'test',
+    phase: 'complete',
+    content: '',
+  });
 }
 
-const samples: { name: string; markdown: string; assertDom: (el: HTMLElement) => void }[] = [
+const samples: {
+  name: string;
+  markdown: string;
+  assertDom: (el: HTMLElement) => void;
+}[] = [
   {
     name: 'paragraph',
     markdown: 'Hello world.\n',
-    assertDom: (el) => expect(el.querySelector('p')?.textContent?.trim()).toBe('Hello world.'),
+    assertDom: (el) =>
+      expect(el.querySelector('p')?.textContent?.trim()).toBe('Hello world.'),
   },
   {
     name: 'h1 heading',
     markdown: '# Title\n',
-    assertDom: (el) => expect(el.querySelector('h1')?.textContent?.trim()).toBe('Title'),
+    assertDom: (el) =>
+      expect(el.querySelector('h1')?.textContent?.trim()).toBe('Title'),
   },
   {
     name: 'unordered list',
@@ -75,27 +87,39 @@ const samples: { name: string; markdown: string; assertDom: (el: HTMLElement) =>
 ];
 
 describe('chat-streaming-md integration', () => {
-  beforeEach(() => TestBed.configureTestingModule({ imports: [HostComponent] }));
+  beforeEach(() =>
+    TestBed.configureTestingModule({ imports: [HostComponent] })
+  );
 
   for (const sample of samples) {
     it(`renders ${sample.name} (whole-string)`, () => {
       const fixture = TestBed.createComponent(HostComponent);
-      fixture.componentInstance.content.set(sample.markdown);
-      fixture.componentInstance.streaming.set(false);
+      fixture.componentInstance.document.set({
+        generation: 'test',
+        phase: 'complete',
+        content: sample.markdown,
+      });
       fixture.detectChanges();
       sample.assertDom(fixture.nativeElement);
     });
 
     it(`renders ${sample.name} (chunked with per-chunk CD)`, () => {
       const fixture = TestBed.createComponent(HostComponent);
-      fixture.componentInstance.streaming.set(true);
       let acc = '';
       for (const ch of sample.markdown) {
         acc += ch;
-        fixture.componentInstance.content.set(acc);
-        fixture.detectChanges();  // per-chunk CD must work — materialize() gives new root ref when tree changes
+        fixture.componentInstance.document.set({
+          generation: 'test',
+          phase: 'streaming',
+          content: acc,
+        });
+        fixture.detectChanges(); // per-chunk CD must work — materialize() gives new root ref when tree changes
       }
-      fixture.componentInstance.streaming.set(false);
+      fixture.componentInstance.document.set({
+        generation: 'test',
+        phase: 'complete',
+        content: acc,
+      });
       fixture.detectChanges();
       sample.assertDom(fixture.nativeElement);
     });
@@ -104,8 +128,11 @@ describe('chat-streaming-md integration', () => {
   it('renders inline math as KaTeX instead of leaking raw $ delimiters', async () => {
     await katexLoaded;
     const fixture = TestBed.createComponent(HostComponent);
-    fixture.componentInstance.content.set('Euler: $e^{i\\pi}+1=0$ done.\n');
-    fixture.componentInstance.streaming.set(false);
+    fixture.componentInstance.document.set({
+      generation: 'test',
+      phase: 'complete',
+      content: 'Euler: $e^{i\\pi}+1=0$ done.\n',
+    });
     fixture.detectChanges();
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('.katex')).toBeTruthy();

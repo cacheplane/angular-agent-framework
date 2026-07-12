@@ -2,26 +2,27 @@
 // SPDX-License-Identifier: MIT
 //
 // Regression: a streaming table must render as a <table> as it arrives, not as
-// raw "| a | b |" paragraph text. The bug was that ChatStreamingMdComponent
-// called parser.finish() on every render where [streaming] was false — and
-// finish() reverts an incomplete table (header with no delimiter row yet) to a
-// CommonMark paragraph (raw pipes). Because the [streaming] flag is unreliable
-// (observed false for an entire live stream at cold start), the whole table
-// rendered as raw pipes until the message completed. The fix: do not finalize
-// the parser while content is still growing; finalize only once it settles.
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+// raw "| a | b |" paragraph text. Explicit document phases keep the parser open
+// until the producer atomically marks the generation complete.
+import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Component, signal } from '@angular/core';
-import { ChatStreamingMdComponent } from './streaming-markdown.component';
+import {
+  ChatStreamingMdComponent,
+  type StreamingMarkdownDocument,
+} from './streaming-markdown.component';
 
 @Component({
   standalone: true,
   imports: [ChatStreamingMdComponent],
-  template: `<chat-streaming-md [content]="content()" [streaming]="streaming()" />`,
+  template: `<chat-streaming-md [document]="document()" />`,
 })
 class HostComponent {
-  content = signal<string>('');
-  streaming = signal<boolean>(true);
+  document = signal<StreamingMarkdownDocument>({
+    generation: 'test',
+    phase: 'streaming',
+    content: '',
+  });
 }
 
 describe('ChatStreamingMdComponent — streaming table rendering', () => {
@@ -34,17 +35,26 @@ describe('ChatStreamingMdComponent — streaming table rendering', () => {
     host = fixture.componentInstance;
     el = fixture.nativeElement as HTMLElement;
   });
-  const grow = (c: string) => { host.content.set(c); fixture.detectChanges(); };
+  const grow = (
+    content: string,
+    phase: StreamingMarkdownDocument['phase'] = 'streaming'
+  ) => {
+    host.document.set({ generation: 'test', phase, content });
+    fixture.detectChanges();
+  };
 
-  it('renders a <table> as a table streams in even when [streaming] lags false', () => {
-    // The cold-start race: content is actively growing but streaming is false.
-    host.streaming.set(false);
+  it('renders a <table> from an explicitly streaming document', () => {
     grow('Here is a table:\n\n| Name ');
     grow('Here is a table:\n\n| Name | Age |'); // header on the open line, no delimiter
-    // Before the fix: finish() reverted this to raw-pipe paragraphs.
-    expect(el.querySelector('table'), 'header should render as a table, not raw pipes').toBeTruthy();
+    expect(
+      el.querySelector('table'),
+      'header should render as a table, not raw pipes'
+    ).toBeTruthy();
     const paras = [...el.querySelectorAll('p')].map((p) => p.textContent || '');
-    expect(paras.some((t) => t.includes('| Name | Age |')), 'no raw-pipe paragraph').toBe(false);
+    expect(
+      paras.some((t) => t.includes('| Name | Age |')),
+      'no raw-pipe paragraph'
+    ).toBe(false);
   });
 
   it('renders a <table> while streaming (flag true), through the delimiter wait', () => {
@@ -55,11 +65,10 @@ describe('ChatStreamingMdComponent — streaming table rendering', () => {
   });
 
   it('finalizes the table once the stream settles (streaming -> false)', () => {
-    host.streaming.set(true);
-    grow('| Name | Age |\n| --- | --- |\n| Ada | 36 |\n');
+    const content = '| Name | Age |\n| --- | --- |\n| Ada | 36 |\n';
+    grow(content);
     expect(el.querySelector('table')).toBeTruthy();
-    host.streaming.set(false); // settle
-    fixture.detectChanges();
+    grow(content, 'complete');
     const table = el.querySelector('table');
     expect(table).toBeTruthy();
     expect(el.querySelectorAll('thead th').length).toBe(2);
@@ -67,52 +76,48 @@ describe('ChatStreamingMdComponent — streaming table rendering', () => {
   });
 
   it('renders a complete one-shot (non-streaming) table message', () => {
-    host.streaming.set(false);
-    grow('| Name | Age |\n| --- | --- |\n| Ada | 36 |\n');
+    grow('| Name | Age |\n| --- | --- |\n| Ada | 36 |\n', 'complete');
     expect(el.querySelector('table')).toBeTruthy();
     expect(el.querySelectorAll('thead th').length).toBe(2);
   });
 
-  it('does not flash raw pipes when [streaming] flaps false mid-stream', () => {
-    vi.useFakeTimers();
-    try {
-      host.streaming.set(true);
-      grow('| Name | Age |'); // streaming header → table
-      expect(el.querySelector('table')).toBeTruthy();
-      // Flap: streaming reads false for a moment with no new content.
-      host.streaming.set(false);
-      fixture.detectChanges();
-      vi.advanceTimersByTime(60); // less than the debounce — must NOT finalize
-      expect(el.querySelector('table'), 'table must survive the flap').toBeTruthy();
-      expect(
-        [...el.querySelectorAll('p')].some((p) => (p.textContent || '').includes('|')),
-        'no raw-pipe paragraph during the flap',
-      ).toBe(false);
-      // Flap recovers: streaming true again + more content arrives.
-      host.streaming.set(true);
-      grow('| Name | Age |\n| --- | --- |\n');
-      vi.advanceTimersByTime(300);
-      expect(el.querySelector('table')).toBeTruthy();
-    } finally {
-      vi.useRealTimers();
-    }
+  it('does not finalize or flash raw pipes while the document remains streaming', () => {
+    grow('| Name | Age |');
+    expect(el.querySelector('table')).toBeTruthy();
+    fixture.detectChanges();
+    fixture.detectChanges();
+    expect(
+      el.querySelector('table'),
+      'table must survive unchanged change detection'
+    ).toBeTruthy();
+    expect(
+      [...el.querySelectorAll('p')].some((p) =>
+        (p.textContent || '').includes('|')
+      ),
+      'no raw-pipe paragraph while streaming'
+    ).toBe(false);
+    grow('| Name | Age |\n| --- | --- |\n');
+    expect(el.querySelector('table')).toBeTruthy();
   });
 
   it('streams body rows inside the table — no paragraph, no second table (0.5.3)', () => {
-    host.streaming.set(true);
     grow('| A | B |\n| - | - |\n');
     for (const c of ['|', '| x1', '| x1 | y', '| x1 | y1 |', '| x1 | y1 |\n']) {
       grow('| A | B |\n| - | - |\n' + c);
-      expect(el.querySelectorAll('table').length, `one table at ${JSON.stringify(c)}`).toBe(1);
       expect(
-        [...el.querySelectorAll('p')].some((p) => (p.textContent || '').includes('|')),
-        `no raw-pipe paragraph at ${JSON.stringify(c)}`,
+        el.querySelectorAll('table').length,
+        `one table at ${JSON.stringify(c)}`
+      ).toBe(1);
+      expect(
+        [...el.querySelectorAll('p')].some((p) =>
+          (p.textContent || '').includes('|')
+        ),
+        `no raw-pipe paragraph at ${JSON.stringify(c)}`
       ).toBe(false);
     }
   });
 
   it('streams a realistic comparison table as one table across small chunks', () => {
-    host.streaming.set(true);
     const content =
       'Here is the comparison:\n\n' +
       '| Name | Mental model | When to use |\n' +
@@ -126,35 +131,37 @@ describe('ChatStreamingMdComponent — streaming table rendering', () => {
       grow(content.slice(0, i));
       const tableCount = el.querySelectorAll('table').length;
       if (tableCount > 0) {
-        expect(tableCount, `one table at ${JSON.stringify(content.slice(0, i).slice(-40))}`).toBe(1);
+        expect(
+          tableCount,
+          `one table at ${JSON.stringify(content.slice(0, i).slice(-40))}`
+        ).toBe(1);
       }
       expect(
-        [...el.querySelectorAll('p')].some((p) => (p.textContent || '').includes('| zone.js')),
-        `no detached row paragraph at ${JSON.stringify(content.slice(0, i).slice(-40))}`,
+        [...el.querySelectorAll('p')].some((p) =>
+          (p.textContent || '').includes('| zone.js')
+        ),
+        `no detached row paragraph at ${JSON.stringify(
+          content.slice(0, i).slice(-40)
+        )}`
       ).toBe(false);
     }
   });
 
-  it('keeps a finalized partial body row in the table when the stream pauses', () => {
-    vi.useFakeTimers();
-    try {
-      host.streaming.set(false);
-      grow(
-        '| Name | Mental model | When to use |\n' +
+  it('keeps a partial body row in the table when the document completes', () => {
+    grow(
+      '| Name | Mental model | When to use |\n' +
         '| --- | --- | --- |\n' +
         '| Angular signals | Fine-grained values | Local state |\n' +
         '| RxJS (Observables) [',
-      );
-      vi.advanceTimersByTime(650);
-      fixture.detectChanges();
-      expect(el.querySelectorAll('table').length).toBe(1);
-      expect(el.querySelectorAll('tbody tr').length).toBe(2);
-      expect(
-        [...el.querySelectorAll('p')].some((p) => (p.textContent || '').includes('| RxJS')),
-        'no raw-pipe paragraph after finalizing a partial body row',
-      ).toBe(false);
-    } finally {
-      vi.useRealTimers();
-    }
+      'complete'
+    );
+    expect(el.querySelectorAll('table').length).toBe(1);
+    expect(el.querySelectorAll('tbody tr').length).toBe(2);
+    expect(
+      [...el.querySelectorAll('p')].some((p) =>
+        (p.textContent || '').includes('| RxJS')
+      ),
+      'no raw-pipe paragraph after finalizing a partial body row'
+    ).toBe(false);
   });
 });

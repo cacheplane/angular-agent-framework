@@ -17,10 +17,20 @@
 // The first test is a NEGATIVE CONTROL proving the capture mechanism actually
 // observes NG0956 in this environment — without it, the assertions below could
 // pass simply because nothing ever emits the warning.
-import { describe, it, expect, beforeEach, vi, type MockInstance } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  vi,
+  type MockInstance,
+} from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Component, signal } from '@angular/core';
-import { ChatStreamingMdComponent } from './streaming-markdown.component';
+import {
+  ChatStreamingMdComponent,
+  type StreamingMarkdownDocument,
+} from './streaming-markdown.component';
 
 /** Spy console.warn + console.error; collect any NG0956 messages. */
 function captureNg0956(): { hits: string[]; restore: () => void } {
@@ -40,7 +50,8 @@ function captureNg0956(): { hits: string[]; restore: () => void } {
 // are replaced with fresh refs each cycle — the canonical NG0956 trigger.
 @Component({
   standalone: true,
-  template: `@for (item of items(); track item) {<span>{{ item.v }}</span>}`,
+  template: `@for (item of items(); track item) {<span>{{ item.v }}</span
+    >}`,
 })
 class IdentityTrackHost {
   readonly items = signal<{ v: number }[]>([]);
@@ -55,16 +66,21 @@ class IdentityTrackHost {
 @Component({
   standalone: true,
   imports: [ChatStreamingMdComponent],
-  template: `<chat-streaming-md [content]="content()" [streaming]="streaming()" />`,
+  template: `<chat-streaming-md [document]="document()" />`,
 })
 class MarkdownHost {
-  readonly content = signal('');
-  readonly streaming = signal(true);
+  readonly document = signal<StreamingMarkdownDocument>({
+    generation: 'initial',
+    phase: 'streaming',
+    content: '',
+  });
 }
 
 describe('NG0956 streaming regression guard', () => {
   describe('negative control (proves NG0956 is observable here)', () => {
-    beforeEach(() => TestBed.configureTestingModule({ imports: [IdentityTrackHost] }));
+    beforeEach(() =>
+      TestBed.configureTestingModule({ imports: [IdentityTrackHost] })
+    );
 
     it('captures NG0956 when a fixed-length @for tracks by churning identity', () => {
       const cap = captureNg0956();
@@ -82,7 +98,9 @@ describe('NG0956 streaming regression guard', () => {
   });
 
   describe('streaming markdown emits no NG0956 across re-materialization', () => {
-    beforeEach(() => TestBed.configureTestingModule({ imports: [MarkdownHost] }));
+    beforeEach(() =>
+      TestBed.configureTestingModule({ imports: [MarkdownHost] })
+    );
 
     it('a re-parsing fixed-length list does not warn NG0956', () => {
       const cap = captureNg0956();
@@ -97,8 +115,12 @@ describe('NG0956 streaming regression guard', () => {
           '- alpha 1\n- beta 2\n- gamma 3\n',
           '- alpha one!\n- beta two!\n- gamma three!\n',
         ];
-        for (const s of steps) {
-          fixture.componentInstance.content.set(s);
+        for (const [index, content] of steps.entries()) {
+          fixture.componentInstance.document.set({
+            generation: `list-${index}`,
+            phase: 'streaming',
+            content,
+          });
           fixture.detectChanges();
         }
         expect(cap.hits).toEqual([]);
@@ -119,8 +141,12 @@ describe('NG0956 streaming regression guard', () => {
           table('a', 'b', 'c'),
           table('one', 'two', 'three'),
         ];
-        for (const s of steps) {
-          fixture.componentInstance.content.set(s);
+        for (const [index, content] of steps.entries()) {
+          fixture.componentInstance.document.set({
+            generation: `table-${index}`,
+            phase: 'streaming',
+            content,
+          });
           fixture.detectChanges();
         }
         expect(cap.hits).toEqual([]);

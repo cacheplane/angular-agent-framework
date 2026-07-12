@@ -134,7 +134,14 @@ export { CitationsResolverService } from './lib/markdown/citations-resolver.serv
 export type { ResolvedCitation } from './lib/markdown/citations-resolver.service';
 
 // Streaming
-export { ChatStreamingMdComponent } from './lib/streaming/streaming-markdown.component';
+export {
+  ChatStreamingMdComponent,
+  STREAMING_MARKDOWN_CONTRACT_VIOLATION_POLICY,
+} from './lib/streaming/streaming-markdown.component';
+export type {
+  StreamingMarkdownContractViolationPolicy,
+  StreamingMarkdownDocument,
+} from './lib/streaming/streaming-markdown.component';
 
 // Markdown rendering primitives + registry
 export { MARKDOWN_VIEW_REGISTRY } from './lib/markdown/markdown-view-registry';
