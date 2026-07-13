@@ -15,6 +15,7 @@ import { createA2uiSurfaceStore } from '../../a2ui/surface-store';
 import { signalStateStore, toRenderRegistry, views } from '@threadplane/render';
 import { a2uiBasicCatalog } from '../../a2ui/catalog/index';
 import { ChatGenerativeUiComponent } from '../../primitives/chat-generative-ui/chat-generative-ui.component';
+import { ChatMessageComponent } from '../../primitives/chat-message/chat-message.component';
 import { ChatStreamingMdComponent, markdownDocument } from '../../streaming/streaming-markdown.component';
 import type { Spec, StateStore } from '@json-render/core';
 import type { AgentEvent } from '../../agent/agent-event';
@@ -844,6 +845,32 @@ describe('ChatComponent — reasoning runs (merged pill)', () => {
 describe('ChatComponent — markdown delivery', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({ imports: [ChatComponent] });
+  });
+
+  it.each([
+    {
+      name: 'streams when message delivery is streaming even while the agent is not loading',
+      delivery: streamingDelivery('answer-attempt'),
+      isLoading: false,
+      expected: true,
+    },
+    {
+      name: 'does not stream when message delivery is complete even while the agent is loading',
+      delivery: completeDelivery('answer-attempt', 'success'),
+      isLoading: true,
+      expected: false,
+    },
+  ])('$name', ({ delivery, isLoading, expected }) => {
+    const agent = mockAgent({
+      messages: [{ id: 'a1', role: 'assistant', content: 'answer', delivery }],
+      isLoading,
+    });
+    const fixture = TestBed.createComponent(ChatComponent);
+    fixture.componentRef.setInput('agent', agent);
+    fixture.detectChanges();
+
+    const message = fixture.debugElement.query(By.directive(ChatMessageComponent));
+    expect(message.componentInstance.streaming()).toBe(expected);
   });
 
   it('binds the classified markdown document to the message delivery', () => {

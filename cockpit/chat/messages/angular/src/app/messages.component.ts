@@ -7,6 +7,7 @@ import {
   ChatMessageComponent,
   ChatStreamingMdComponent,
   MessageTemplateDirective,
+  markdownDocument,
   messageContent,
 } from '@threadplane/chat';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
@@ -52,12 +53,11 @@ import { MESSAGES_AGENT, type MessagesState } from './agent-ref';
             <ng-template chatMessageTemplate="ai" let-message let-i="index">
               <chat-message
                 [role]="'assistant'"
-                [streaming]="agent.isLoading() && i === agent.messages().length - 1"
+                [streaming]="message.delivery.phase === 'streaming'"
                 [current]="i === agent.messages().length - 1"
               >
                 <chat-streaming-md
-                  [content]="messageContent(message)"
-                  [streaming]="agent.isLoading() && i === agent.messages().length - 1"
+                  [document]="markdownDocument(messageContent(message), message.delivery)"
                 />
               </chat-message>
             </ng-template>
@@ -157,6 +157,7 @@ export class MessagesComponent {
   protected readonly _typedState: MessagesState = this.agent.value();
 
   protected readonly messageContent = messageContent;
+  protected readonly markdownDocument = markdownDocument;
 
   submitMessage(content: string) {
     this.agent.submit({ message: content });

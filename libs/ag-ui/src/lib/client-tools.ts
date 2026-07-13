@@ -16,8 +16,9 @@ import type { ReducerStore } from './reducer';
  */
 export interface ClientToolsSource {
   addMessage(message: Parameters<AbstractAgent['addMessage']>[0]): void;
-  runAgent(parameters?: { tools?: Tool[] }): Promise<unknown>;
 }
+
+export type ContinueClientToolRun = () => Promise<void>;
 
 /** Convert a ClientToolSpec to the AG-UI Tool wire shape. */
 function toAgUiTool(spec: ClientToolSpec): Tool {
@@ -45,16 +46,17 @@ function safeStringify(v: unknown): string {
  *    ask component re-renders with its emitted value as props and can branch to
  *    a frozen state), and adds a ToolMessage via source.addMessage without
  *    starting a run.
- *  - resolve(id, result): settles the result, then re-runs the agent with the
- *    catalog tools attached. Any ToolMessages previously settled into the
- *    source are flushed by that single run.
+ *  - resolve(id, result): settles the result, then requests a continuation
+ *    through the adapter-owned run gateway. Any ToolMessages previously
+ *    settled into the source are flushed by that single run.
  *
  * Call catalogAsAgUiTools() to get the current catalog as AG-UI Tool[] for
- * threading into runAgent().
+ * attaching to each adapter-owned run.
  */
 export function createClientToolsCapability(
   source: ClientToolsSource,
   store: ReducerStore,
+  continueRun: ContinueClientToolRun,
 ): ClientToolsCapability & { catalogAsAgUiTools(): Tool[] } {
   const catalog = signal<readonly ClientToolSpec[]>([]);
   const resolvedIds = signal<ReadonlySet<string>>(new Set());
@@ -126,7 +128,7 @@ export function createClientToolsCapability(
 
     resolve(id: string, result: ClientToolResult): void {
       settleResult(id, result);
-      void source.runAgent({ tools: catalogAsAgUiTools() });
+      void continueRun();
     },
 
     catalogAsAgUiTools,

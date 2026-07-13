@@ -24,7 +24,7 @@ import type { AgentError } from './agent-error';
  * Invariant: state lives on signals; `events$` carries only things that are
  * not derivable from signals.
  */
-export interface Agent<TState = Record<string, unknown>> {
+export interface Agent<TState = unknown> {
   // Core state
   messages:  Signal<Message[]>;
   status:    Signal<AgentStatus>;

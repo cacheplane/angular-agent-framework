@@ -152,10 +152,6 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     return activeRun;
   }
 
-  // Build the client-tools capability. catalogAsAgUiTools() is used below to
-  // thread the catalog into every runAgent() call.
-  const clientToolsCap = createClientToolsCapability(source, store);
-
   /** Forward a neutral-contract state patch onto the AG-UI run input.
    *  Mirrors the canonical demo's `input.state` mechanism: the patch is
    *  merged into the source agent's client state (carried on
@@ -244,22 +240,32 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     finishRunTelemetry(run);
   }
 
-  /**
-   * Fires the current message list against the source agent (no append).
-   * Both submit() and retry() share this path; submit() appends the user
-   * message first, retry() skips the append and calls this directly.
-   */
-  async function runCurrentMessages(requestType = 'submit', allowBaselineTail = false): Promise<void> {
+  type RunParameters = Parameters<AbstractAgent['runAgent']>[0];
+
+  async function executeRun(
+    requestType: string,
+    parameters?: RunParameters,
+    allowBaselineTail = false,
+  ): Promise<void> {
     const run = beginRun(requestType, allowBaselineTail);
     const tools = clientToolsCap.catalogAsAgUiTools();
+    const runParameters = parameters === undefined && tools.length === 0
+      ? undefined
+      : { ...parameters, ...(tools.length > 0 ? { tools } : {}) };
     try {
-      await source.runAgent(tools.length > 0 ? { tools } : undefined);
+      await source.runAgent(runParameters);
       settleTransportClose(run);
     } catch (err) {
       if (run.outcome === 'aborted' && isAbortError(err)) return;
       failRun(run, err);
     }
   }
+
+  const clientToolsCap = createClientToolsCapability(
+    source,
+    store,
+    () => executeRun('client-tool-continuation', undefined, true),
+  );
 
   // Tap all events from the source agent via the AgentSubscriber API.
   // This subscription lives for the lifetime of `source`.
@@ -379,18 +385,11 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
         // forwardedProps.command.resume mechanism.
         applyStatePatch(input.state);
         store.interrupt.set(undefined);
-        const run = beginRun('resume', true);
-        const tools = clientToolsCap.catalogAsAgUiTools();
-        try {
-          await source.runAgent({
-            forwardedProps: { command: { resume: input.resume } },
-            ...(tools.length > 0 ? { tools } : {}),
-          });
-          settleTransportClose(run);
-        } catch (err) {
-          if (run.outcome === 'aborted' && isAbortError(err)) return;
-          failRun(run, err);
-        }
+        await executeRun(
+          'resume',
+          { forwardedProps: { command: { resume: input.resume } } },
+          true,
+        );
         return;
       }
 
@@ -409,7 +408,7 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
       // user message (the message is already in the list by this point).
       lastInput = input;
 
-      await runCurrentMessages();
+      await executeRun('submit');
     },
 
     retry: async () => {
@@ -419,7 +418,7 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
       // Re-run the same message list against the source without appending a
       // duplicate user message — the message is already in store.messages and
       // source's internal list from the original submit().
-      await runCurrentMessages('retry', true);
+      await executeRun('retry', undefined, true);
     },
 
     stop: async () => {
@@ -467,15 +466,7 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
       // message in `trimmed` becomes the active prompt for the next run.
       source.setMessages(trimmed as Parameters<typeof source.setMessages>[0]);
 
-      const run = beginRun('regenerate');
-      const regenTools = clientToolsCap.catalogAsAgUiTools();
-      try {
-        await source.runAgent(regenTools.length > 0 ? { tools: regenTools } : undefined);
-        settleTransportClose(run);
-      } catch (err) {
-        if (run.outcome === 'aborted' && isAbortError(err)) return;
-        failRun(run, err);
-      }
+      await executeRun('regenerate');
     },
   };
 }
