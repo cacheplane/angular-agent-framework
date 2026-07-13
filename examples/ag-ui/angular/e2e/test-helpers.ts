@@ -11,7 +11,10 @@ export function attachBrowserHygiene(page: Page): {
   page.on('console', (msg) => {
     if (msg.type() !== 'error') return;
     const text = msg.text();
-    if (/PostHog|ERR_NAME_NOT_RESOLVED|ERR_CONNECTION_RESET|license/i.test(text)) return;
+    if (
+      /PostHog|ERR_NAME_NOT_RESOLVED|ERR_CONNECTION_RESET|license/i.test(text)
+    )
+      return;
     consoleErrors.push(text);
   });
   page.on('pageerror', (err) => {
@@ -20,7 +23,8 @@ export function attachBrowserHygiene(page: Page): {
   page.on('requestfailed', (request) => {
     const failure = request.failure()?.errorText ?? '';
     const url = request.url();
-    if (/runs\/stream|\/agent/.test(url) && /abort|ERR_ABORTED/i.test(failure)) return;
+    if (/runs\/stream|\/agent/.test(url) && /abort|ERR_ABORTED/i.test(failure))
+      return;
     failedRequests.push(`${request.method()} ${url} ${failure}`.trim());
   });
 
@@ -52,7 +56,9 @@ export function sendButton(page: Page): Locator {
  * Use this in place of `JSON.parse(localStorage.getItem(...)).threadId`,
  * which no longer exists.
  */
-export async function activeThreadIdFromUrl(page: Page): Promise<string | null> {
+export async function activeThreadIdFromUrl(
+  page: Page
+): Promise<string | null> {
   const url = new URL(page.url());
   const segments = url.pathname.split('/').filter(Boolean);
   return segments.length >= 2 ? segments[1] : null;
@@ -189,14 +195,12 @@ export async function waitForFinalAssistant(page: Page): Promise<Locator> {
 /**
  * Send a user prompt and wait for the assistant bubble to finalize.
  *
- * "Finalized" means `chat-message[data-role="assistant"][data-streaming="false"]`:
- * the chat composition wires `[streaming]` to the message delivery phase
- * on the latest assistant `<chat-message>`, so the attribute flips to `"false"`
- * once the agent stops loading and the markdown render has settled.
+ * "Finalized" means `chat-message[data-role="assistant"][data-streaming="false"]`.
+ * The attribute reflects the message's authoritative delivery phase and flips
+ * only when the adapter completes that message generation.
  *
- * Asserting on intermediate streaming-state DOM (partial `<ul>`, in-flight
- * code fences, etc.) is the source of e2e flake — always wait on this
- * attribute before counting or text-matching downstream of the assistant turn.
+ * Use this helper for final-state assertions. Tests that intentionally verify
+ * progressive rendering should sample the streaming message directly.
  */
 export async function sendPromptAndWait(
   page: Page,
