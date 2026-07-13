@@ -190,7 +190,7 @@ export async function waitForFinalAssistant(page: Page): Promise<Locator> {
  * Send a user prompt and wait for the assistant bubble to finalize.
  *
  * "Finalized" means `chat-message[data-role="assistant"][data-streaming="false"]`:
- * the chat composition wires `[streaming]` to `agent.isLoading() && i === lastIndex`
+ * the chat composition wires `[streaming]` to the message delivery phase
  * on the latest assistant `<chat-message>`, so the attribute flips to `"false"`
  * once the agent stops loading and the markdown render has settled.
  *

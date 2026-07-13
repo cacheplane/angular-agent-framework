@@ -199,12 +199,11 @@ export function isPinned(
               <ng-template chatMessageTemplate="ai" let-message let-i="index">
                 @let content = messageContent(message);
                 @let classified = classifyMessage(content, message);
-                @let pending = classified.type() === 'pending';
                 <chat-message
                   [role]="'assistant'"
                   [message]="message"
                   [prevRole]="prevRole(i)"
-                  [streaming]="agent().isLoading() && i === agent().messages().length - 1"
+                  [streaming]="message.delivery.phase === 'streaming'"
                   [current]="i === agent().messages().length - 1"
                 >
                   <!-- Reasoning is merged across a run of consecutive (tool-
@@ -575,26 +574,23 @@ export class ChatComponent {
   private static readonly PIN_TOLERANCE_PX = 150;
 
   /**
-   * True iff there's a current (last-index) assistant message that's
-   * still streaming. The bubble's own caret already signals loading;
+   * True iff the current (last-index) assistant message owns an active
+   * delivery generation. The bubble's own caret already signals loading;
    * we suppress the floor typing-indicator in that case so the user
    * doesn't see two loading affordances at once.
    *
    * Matches the same `streaming + current` condition the bubble uses
-   * to enable `.chat-message__caret`:
-   *   `this.agent().isLoading() && i === this.agent().messages().length - 1`
-   *   `i === this.agent().messages().length - 1`
+   * to enable `.chat-message__caret`.
    *
    * Restricted to assistant role because the caret only renders on
    * assistant bubbles (`:host([data-role="assistant"][data-current=...
    *  ][data-streaming=...])`).
    */
   protected readonly currentAssistantStreaming = computed(() => {
-    if (!this.agent().isLoading()) return false;
     const msgs = this.agent().messages();
     if (msgs.length === 0) return false;
     const last = msgs[msgs.length - 1];
-    return last?.role === 'assistant';
+    return last?.role === 'assistant' && last.delivery.phase === 'streaming';
   });
 
   constructor() {

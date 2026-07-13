@@ -1508,7 +1508,7 @@
       },
       {
         "name": "agent",
-        "type": "InputSignal<Agent<Record<string, unknown>>>",
+        "type": "InputSignal<Agent<unknown>>",
         "description": "",
         "optional": false
       },
@@ -1817,7 +1817,7 @@
       },
       {
         "name": "agent",
-        "type": "InputSignal<Agent<Record<string, unknown>>>",
+        "type": "InputSignal<Agent<unknown>>",
         "description": "",
         "optional": false
       },
@@ -1848,7 +1848,7 @@
       {
         "name": "currentAssistantStreaming",
         "type": "Signal<boolean>",
-        "description": "True iff there's a current (last-index) assistant message that's\nstill streaming. The bubble's own caret already signals loading;\nwe suppress the floor typing-indicator in that case so the user\ndoesn't see two loading affordances at once.\n\nMatches the same `streaming + current` condition the bubble uses\nto enable `.chat-message__caret`:\n  `this.agent().isLoading() && i === this.agent().messages().length - 1`\n  `i === this.agent().messages().length - 1`\n\nRestricted to assistant role because the caret only renders on\nassistant bubbles (`:host([data-role=\"assistant\"][data-current=...\n ][data-streaming=...])`).",
+        "description": "True iff the current (last-index) assistant message owns an active\ndelivery generation. The bubble's own caret already signals loading;\nwe suppress the floor typing-indicator in that case so the user\ndoesn't see two loading affordances at once.\n\nMatches the same `streaming + current` condition the bubble uses\nto enable `.chat-message__caret`.\n\nRestricted to assistant role because the caret only renders on\nassistant bubbles (`:host([data-role=\"assistant\"][data-current=...\n ][data-streaming=...])`).",
         "optional": false
       },
       {
@@ -2436,7 +2436,7 @@
     "properties": [
       {
         "name": "agent",
-        "type": "InputSignal<Agent<Record<string, unknown>>>",
+        "type": "InputSignal<Agent<unknown>>",
         "description": "",
         "optional": false
       }
@@ -2636,7 +2636,7 @@
     "properties": [
       {
         "name": "agent",
-        "type": "InputSignal<Agent<Record<string, unknown>>>",
+        "type": "InputSignal<Agent<unknown>>",
         "description": "",
         "optional": false
       },
@@ -2763,7 +2763,7 @@
     "properties": [
       {
         "name": "agent",
-        "type": "InputSignal<Agent<Record<string, unknown>>>",
+        "type": "InputSignal<Agent<unknown>>",
         "description": "",
         "optional": false
       },
@@ -2811,7 +2811,7 @@
       },
       {
         "name": "agent",
-        "type": "InputSignal<Agent<Record<string, unknown>>>",
+        "type": "InputSignal<Agent<unknown>>",
         "description": "",
         "optional": false
       },
@@ -2985,7 +2985,7 @@
     "properties": [
       {
         "name": "agent",
-        "type": "InputSignal<Agent<Record<string, unknown>>>",
+        "type": "InputSignal<Agent<unknown>>",
         "description": "",
         "optional": false
       },
@@ -3128,7 +3128,7 @@
     "properties": [
       {
         "name": "agent",
-        "type": "InputSignal<Agent<Record<string, unknown>>>",
+        "type": "InputSignal<Agent<unknown>>",
         "description": "",
         "optional": false
       },
@@ -3678,7 +3678,7 @@
     "properties": [
       {
         "name": "agent",
-        "type": "InputSignal<Agent<Record<string, unknown>>>",
+        "type": "InputSignal<Agent<unknown>>",
         "description": "",
         "optional": false
       },
@@ -3773,7 +3773,7 @@
       },
       {
         "name": "agent",
-        "type": "InputSignal<Agent<Record<string, unknown>> | AgentWithHistory<Record<string, unknown>> | null>",
+        "type": "InputSignal<Agent<unknown> | AgentWithHistory<unknown> | null>",
         "description": "",
         "optional": false
       },
@@ -4066,7 +4066,7 @@
       },
       {
         "name": "agent",
-        "type": "InputSignal<Agent<Record<string, unknown>>>",
+        "type": "InputSignal<Agent<unknown>>",
         "description": "",
         "optional": false
       },
@@ -4618,7 +4618,7 @@
     "properties": [
       {
         "name": "agent",
-        "type": "InputSignal<AgentWithHistory<Record<string, unknown>>>",
+        "type": "InputSignal<AgentWithHistory<unknown>>",
         "description": "",
         "optional": false
       },
@@ -4666,7 +4666,7 @@
     "properties": [
       {
         "name": "agent",
-        "type": "InputSignal<AgentWithHistory<Record<string, unknown>>>",
+        "type": "InputSignal<AgentWithHistory<unknown>>",
         "description": "",
         "optional": false
       },
@@ -4799,7 +4799,7 @@
     "properties": [
       {
         "name": "agent",
-        "type": "InputSignal<Agent<Record<string, unknown>>>",
+        "type": "InputSignal<Agent<unknown>>",
         "description": "",
         "optional": false
       },
@@ -4931,7 +4931,7 @@
     "properties": [
       {
         "name": "agent",
-        "type": "InputSignal<Agent<Record<string, unknown>>>",
+        "type": "InputSignal<Agent<unknown>>",
         "description": "",
         "optional": false
       },
@@ -5030,7 +5030,7 @@
     "properties": [
       {
         "name": "agent",
-        "type": "InputSignal<Agent<Record<string, unknown>>>",
+        "type": "InputSignal<Agent<unknown>>",
         "description": "",
         "optional": false
       },

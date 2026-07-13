@@ -5,7 +5,7 @@ import { Subject } from 'rxjs';
 import { type AgentError } from '@threadplane/chat';
 import type { AgentEvent, AgentStatus, Message, ToolCall } from '@threadplane/chat';
 import type { ReducerStore, CustomStreamEvent } from './reducer';
-import { createClientToolsCapability } from './client-tools';
+import { createClientToolsCapability as createCapability } from './client-tools';
 
 /** Build a minimal ReducerStore backed by writable signals — mirrors reducer.spec.ts. */
 function makeStore(): ReducerStore {
@@ -26,8 +26,15 @@ function makeStore(): ReducerStore {
 function makeSource() {
   return {
     addMessage: vi.fn(),
-    runAgent:   vi.fn(async () => ({ result: undefined, newMessages: [] })),
+    continueRun: vi.fn(async () => undefined),
   };
+}
+
+function createClientToolsCapability(
+  source: ReturnType<typeof makeSource>,
+  store: ReducerStore,
+) {
+  return createCapability(source, store, source.continueRun);
 }
 
 const WEATHER_SPEC = {
@@ -147,7 +154,7 @@ describe('createClientToolsCapability', () => {
     expect(msg.content).toBe('plain string');
   });
 
-  it('resolve(ok) calls source.runAgent with tools attached', async () => {
+  it('resolve(ok) requests continuation through the injected port', async () => {
     const source = makeSource();
     const store  = makeStore();
     const cap    = createClientToolsCapability(source, store);
@@ -159,10 +166,7 @@ describe('createClientToolsCapability', () => {
     // Allow the void promise to flush
     await Promise.resolve();
 
-    expect(source.runAgent).toHaveBeenCalledOnce();
-    const args = source.runAgent.mock.calls[0][0] as { tools: unknown[] };
-    expect(args.tools).toHaveLength(1);
-    expect((args.tools[0] as { name: string }).name).toBe('get_weather');
+    expect(source.continueRun).toHaveBeenCalledOnce();
   });
 
   it('resolve(ok) drops the id from pending() and writes the result onto the store tool call', () => {
@@ -216,7 +220,7 @@ describe('createClientToolsCapability', () => {
     expect(cap.pending()).toHaveLength(0);
     expect(store.toolCalls().find((tc) => tc.id === 'c1')?.result).toEqual({ temp: 70 });
     expect(source.addMessage).toHaveBeenCalledOnce();
-    expect(source.runAgent).not.toHaveBeenCalled();
+    expect(source.continueRun).not.toHaveBeenCalled();
   });
 
   it('settle plus resolve flushes multiple pending results in one run', async () => {
@@ -235,7 +239,7 @@ describe('createClientToolsCapability', () => {
     await Promise.resolve();
 
     expect(source.addMessage).toHaveBeenCalledTimes(2);
-    expect(source.runAgent).toHaveBeenCalledTimes(1);
+    expect(source.continueRun).toHaveBeenCalledTimes(1);
     expect(source.addMessage.mock.calls.map(([message]) => (
       message as { toolCallId: string }
     ).toolCallId)).toEqual(['c1', 'c2']);
@@ -271,7 +275,7 @@ describe('createClientToolsCapability', () => {
     expect(msg.content).toContain('boom');
   });
 
-  it('resolve(error) still calls source.runAgent', async () => {
+  it('resolve(error) still requests continuation', async () => {
     const source = makeSource();
     const store  = makeStore();
     const cap    = createClientToolsCapability(source, store);
@@ -280,7 +284,7 @@ describe('createClientToolsCapability', () => {
     cap.resolve('c2', { ok: false, error: 'network timeout' });
 
     await Promise.resolve();
-    expect(source.runAgent).toHaveBeenCalledOnce();
+    expect(source.continueRun).toHaveBeenCalledOnce();
   });
 });
 

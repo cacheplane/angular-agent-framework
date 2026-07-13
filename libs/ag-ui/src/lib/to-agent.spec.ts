@@ -356,6 +356,62 @@ describe('toAgent', () => {
   });
 
   describe('message delivery lifecycle', () => {
+    it('owns assistant messages emitted by a client-tool continuation run', async () => {
+      const source = new StubAgent();
+      const firstRun = deferNextRun(source);
+      const agent = toAgent(source as never);
+      agent.clientTools.setCatalog([{
+        name: 'confirm_action',
+        description: 'Confirm an action.',
+        parameters: { type: 'object', properties: {} },
+      }]);
+
+      const firstPending = agent.submit({ message: 'start' });
+      source.emit({ type: 'RUN_STARTED' } as BaseEvent, 'initial-run');
+      source.emit({
+        type: 'TOOL_CALL_START',
+        toolCallId: 'confirmation-1',
+        toolCallName: 'confirm_action',
+        parentMessageId: 'tool-parent',
+      } as never, 'initial-run');
+      source.emit({
+        type: 'TOOL_CALL_ARGS',
+        toolCallId: 'confirmation-1',
+        delta: '{}',
+      } as never, 'initial-run');
+      source.emit({ type: 'TOOL_CALL_END', toolCallId: 'confirmation-1' } as never, 'initial-run');
+      source.emit({ type: 'RUN_FINISHED' } as BaseEvent, 'initial-run');
+      firstRun.resolve();
+      await firstPending;
+
+      expect(agent.clientTools.pending().map(call => call.id)).toEqual(['confirmation-1']);
+
+      const continuationRun = deferNextRun(source);
+      agent.clientTools.resolve('confirmation-1', { ok: true, value: { confirmed: true } });
+      source.emit({ type: 'RUN_STARTED' } as BaseEvent, 'continuation-run');
+      source.emit({
+        type: 'TEXT_MESSAGE_START',
+        messageId: 'continuation-answer',
+        role: 'assistant',
+      } as never, 'continuation-run');
+      source.emit({
+        type: 'TEXT_MESSAGE_CONTENT',
+        messageId: 'continuation-answer',
+        delta: 'Confirmed.',
+      } as never, 'continuation-run');
+
+      const continuedMessage = agent.messages().find(message => message.id === 'continuation-answer');
+      expect(continuedMessage?.content).toBe('Confirmed.');
+      expect(continuedMessage?.delivery.phase).toBe('streaming');
+
+      source.emit({ type: 'RUN_FINISHED' } as BaseEvent, 'continuation-run');
+      continuationRun.resolve();
+      await Promise.resolve();
+
+      expect(agent.messages().find(message => message.id === 'continuation-answer')?.delivery)
+        .toEqual(completeDelivery(continuedMessage!.delivery.generation, 'success'));
+    });
+
     it.each(['submit', 'retry', 'resume', 'regenerate'] as const)(
       '%s finalizes streamed messages as interrupted when transport resolves without a terminal event',
       async (operation) => {
