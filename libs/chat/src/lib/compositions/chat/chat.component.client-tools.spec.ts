@@ -118,7 +118,11 @@ const clientToolRegistry = tools({
   ),
 });
 
-async function drainMicrotasks(rounds = 4): Promise<void> {
+/**
+ * The executor races each handler against its abort signal, so a settlement is
+ * several ticks deep — keep this comfortably above the longest chain.
+ */
+async function drainMicrotasks(rounds = 12): Promise<void> {
   for (let i = 0; i < rounds; i++) await Promise.resolve();
 }
 

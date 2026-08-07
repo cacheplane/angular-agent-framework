@@ -146,6 +146,13 @@ export function createClientToolsCoordinator(
     );
   }
 
+  /** No settle() and the run must not continue — the result cannot be recorded. */
+  function warnUnrecordableWithoutSettle(tc: ToolCall): void {
+    console.warn(
+      `Client tool "${tc.name}" must not continue the run, but the agent capability does not implement settle(); the result cannot be recorded without starting a run.`,
+    );
+  }
+
   function flushSettledResults(cap: ClientToolsCapability): void {
     if (!cap.flush) {
       console.warn(
@@ -163,6 +170,7 @@ export function createClientToolsCoordinator(
     agent: Agent,
     tc: ToolCall,
     result: ClientToolResult,
+    mayContinue = true,
   ): void {
     const group = groupFor(agent, cap, tc);
     if (group.settledIds.has(tc.id)) return;
@@ -170,20 +178,27 @@ export function createClientToolsCoordinator(
 
     const groupComplete = Array.from(group.ids).every((id) => group.settledIds.has(id));
 
-    // Over the continuation limit: still record the result so the server never
-    // keeps an unanswered tool call, but never continue the run. Keep the group
-    // as `currentGroup` so repeated effect passes over the same calls short-
-    // circuit on `settledIds` above.
-    if (!group.allowed) {
+    // Over the continuation limit, or cancelled by the user (stop / teardown):
+    // still record the result so the server never keeps an unanswered tool
+    // call, but never continue the run — `resolve()` submits a new run, which
+    // for a cancelled call would undo the very stop the user asked for.
+    if (!group.allowed || !mayContinue) {
       if (!cap.settle) {
-        warnMissingSettle(tc);
+        warnUnrecordableWithoutSettle(tc);
         return;
       }
       cap.settle(tc.id, result);
-      // Flush ONCE, when the last blocked call settles. Adapters coalesce
+      // Flush ONCE, when the last call in the group settles. Adapters coalesce
       // concurrent flushes (returning the in-flight promise), so flushing per
       // call would strand every batch after the first.
-      if (groupComplete) flushSettledResults(cap);
+      if (groupComplete) {
+        flushSettledResults(cap);
+        // A limit-blocked group must stay `currentGroup` so repeated effect
+        // passes over the same never-executed calls keep short-circuiting on
+        // `settledIds`. Cancelled calls leave `pending()` once settled, so
+        // their group can be retired normally.
+        if (group.allowed) currentGroup = undefined;
+      }
       return;
     }
     if (!cap.settle) {
@@ -227,6 +242,10 @@ export function createClientToolsCoordinator(
           return false;
         },
         settleToolCall: (tc, result) => settleClientToolCall(cap, agent, tc, result),
+        // Cancelled calls reuse the same group bookkeeping (so the flush-once-
+        // per-group property holds) but are forced down the settle+flush path.
+        settleWithoutContinuing: (tc, result) =>
+          settleClientToolCall(cap, agent, tc, result, false),
       }); // function tools
       // Auto-ack `view` tools: they render but produce no user value.
       effect(() => {

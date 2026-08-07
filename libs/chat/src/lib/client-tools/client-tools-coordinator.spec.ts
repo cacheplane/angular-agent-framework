@@ -17,8 +17,12 @@ import type { ToolCall } from '../agent/tool-call';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-/** Drain the microtask queue a handful of times to let Promise chains settle. */
-async function drainMicrotasks(rounds = 4): Promise<void> {
+/**
+ * Drain the microtask queue a handful of times to let Promise chains settle.
+ * The executor races each handler against its abort signal, so a settlement is
+ * several ticks deep — keep this comfortably above the longest chain.
+ */
+async function drainMicrotasks(rounds = 12): Promise<void> {
   for (let i = 0; i < rounds; i++) {
     await Promise.resolve();
   }
@@ -275,6 +279,65 @@ describe('createClientToolsCoordinator()', () => {
     expect(settle).toHaveBeenCalledWith('f1', { ok: true, value: 'A:SF' });
     expect(resolve).toHaveBeenCalledOnce();
     expect(resolve).toHaveBeenCalledWith('f2', { ok: true, value: 'B:LA' });
+  });
+
+  it('settles cancelled function tools without submitting a follow-up run', async () => {
+    const registry = tools({
+      slow: action('Slow', z.object({}), async () => new Promise<string>(() => undefined)),
+    });
+    const { pending, settle, flush, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry);
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    pending.set([{ id: 'c1', name: 'slow', args: {}, status: 'running' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    await agent.stop();
+    await drainMicrotasks();
+
+    // A single-call group with default followUp would normally resolve(), which
+    // submits a new run. A cancelled call must never take that path.
+    expect(resolve).not.toHaveBeenCalled();
+    expect(agent.submit).not.toHaveBeenCalled();
+    expect(settle).toHaveBeenCalledOnce();
+    expect(settle.mock.calls[0][0]).toBe('c1');
+    expect(settle.mock.calls[0][1].ok).toBe(false);
+    expect(flush).toHaveBeenCalledOnce();
+  });
+
+  it('flushes a cancelled two-call group exactly once', async () => {
+    const registry = tools({
+      slow_a: action('Slow A', z.object({}), async () => new Promise<string>(() => undefined)),
+      slow_b: action('Slow B', z.object({}), async () => new Promise<string>(() => undefined)),
+    });
+    const { pending, settle, flush, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry);
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    pending.set([
+      { id: 'c1', name: 'slow_a', args: {}, status: 'running' },
+      { id: 'c2', name: 'slow_b', args: {}, status: 'running' },
+    ]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    await agent.stop();
+    await drainMicrotasks();
+
+    expect(resolve).not.toHaveBeenCalled();
+    expect(settle).toHaveBeenCalledTimes(2);
+    // Adapters coalesce concurrent flushes, so a per-call flush would strand
+    // every batch after the first: flush ONCE, when the last call settles.
+    expect(flush).toHaveBeenCalledOnce();
   });
 
   it('settles terminal tools and flushes once when a mixed group completes', async () => {

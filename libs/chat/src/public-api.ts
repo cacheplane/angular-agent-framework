@@ -273,6 +273,7 @@ export { validateArgs, executeFunctionTool } from './lib/client-tools/execute';
 export { startClientToolExecutor } from './lib/client-tools/client-tool-executor';
 export type { ClientToolExecutorOptions } from './lib/client-tools/client-tool-executor';
 export {
+  cancelledClientToolResult,
   clientToolGuardFailureResult,
   defaultInterruptedClientToolResult,
   shouldClaimBeforeExecute,
