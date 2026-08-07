@@ -70,12 +70,6 @@ export function createClientToolsCoordinator(
 ): ClientToolsCoordinator {
   const viewRegistry = views(viewComponents(registry));
   const ackedViews = new Set<string>();
-  // Tool calls already settled with a continuation-limit result. Tracked outside
-  // the pending group because a blocked call can outlive the group it was
-  // blocked in: a later call joining `pending` reforms the group with empty
-  // settle bookkeeping, and the executor effect re-runs the predicate for every
-  // still-pending call.
-  const blockedIds = new Set<string>();
   let currentGroup: PendingToolGroup | undefined;
   let currentUserTurnKey = '';
   let continuationTurns = 0;
@@ -155,7 +149,7 @@ export function createClientToolsCoordinator(
   function flushSettledResults(cap: ClientToolsCapability): void {
     if (!cap.flush) {
       console.warn(
-        'Client tool group settled with no follow-up, but the agent capability does not implement flush(); results may not reach the server.',
+        'Client tool results were settled with no follow-up run, but the agent capability does not implement flush(); results may not reach the server.',
       );
       return;
     }
@@ -171,22 +165,27 @@ export function createClientToolsCoordinator(
     result: ClientToolResult,
   ): void {
     const group = groupFor(agent, cap, tc);
-    // Over the continuation limit: still record the result so the server never
-    // keeps an unanswered tool call, but never continue the run.
-    if (!group.allowed) {
-      if (group.settledIds.has(tc.id) || blockedIds.has(tc.id)) return;
-      group.settledIds.add(tc.id);
-      blockedIds.add(tc.id);
-      if (cap.settle) {
-        cap.settle(tc.id, result);
-        flushSettledResults(cap);
-      }
-      return;
-    }
     if (group.settledIds.has(tc.id)) return;
     group.settledIds.add(tc.id);
 
     const groupComplete = Array.from(group.ids).every((id) => group.settledIds.has(id));
+
+    // Over the continuation limit: still record the result so the server never
+    // keeps an unanswered tool call, but never continue the run. Keep the group
+    // as `currentGroup` so repeated effect passes over the same calls short-
+    // circuit on `settledIds` above.
+    if (!group.allowed) {
+      if (!cap.settle) {
+        warnMissingSettle(tc);
+        return;
+      }
+      cap.settle(tc.id, result);
+      // Flush ONCE, when the last blocked call settles. Adapters coalesce
+      // concurrent flushes (returning the in-flight promise), so flushing per
+      // call would strand every batch after the first.
+      if (groupComplete) flushSettledResults(cap);
+      return;
+    }
     if (!cap.settle) {
       if (group.ids.size > 1 || registry[tc.name]?.followUp === false) warnMissingSettle(tc);
       cap.resolve(tc.id, result);
