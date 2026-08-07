@@ -264,6 +264,46 @@ How adapters in this repo answer the question:
 
 If your protocol does store thread state, follow the LangGraph adapter's pattern: react to `threadId` changes, fetch the latest checkpoint, and surface a `isThreadLoading` signal so the UI can show a skeleton while the fetch runs. If it doesn't, follow AG-UI and be explicit in your docs that consumers own the load step.
 
+## Client Tools (Optional)
+
+If your runtime lets the browser declare tools the model can call, implement the optional `clientTools` capability. Consumers then get [client tools](/docs/chat/guides/client-tools) with no further work.
+
+```typescript
+import type { ClientToolsCapability } from '@threadplane/chat';
+```
+
+| Member | Required | What you supply |
+|---|---|---|
+| `setCatalog(specs)` | yes | Store the catalog; ship it with every outbound run |
+| `pending` | yes | `Signal<ToolCall[]>` — calls awaiting a browser result |
+| `resolve(id, result)` | yes | Record the result **and continue the run** |
+| `settle?(id, result)` | no | Record the result **without** continuing |
+| `flush?()` | no | Make everything recorded via `settle` durable, still without continuing |
+
+Use `selectPendingClientToolCalls` from `@threadplane/chat` for `pending` rather than hand-rolling the predicate — a call is pending when the run is **not** in flight, its name is in the catalog, it has no backend result, and it has not already been settled locally.
+
+### The invariant
+
+> **The server thread must never hold a client tool call without a corresponding tool result.**
+
+Violate it and the thread carries an assistant message with `tool_calls` and no matching tool message; most providers reject that history outright on the next user turn.
+
+`resolve()` alone cannot uphold this, because some groups never continue — every tool in them is terminal (`followUp: false`), the user pressed stop, or a continuation limit tripped. That is what `settle` + `flush` are for.
+
+<Callout type="warning" title="flush() is where durability actually happens">
+  If your `settle()` only records locally, you **must** implement `flush()` to write those results to the server. `@threadplane/ag-ui` gets this for free — its `settle()` calls `addMessage()`, which places the message in the outgoing list, so `flush()` is a no-op. `@threadplane/langgraph` buffers instead, so its `flush()` writes the whole batch in one `threads.updateState` call. Omitting `flush()` when your `settle()` is not already durable silently drops results.
+</Callout>
+
+### Implementation rules
+
+Three rules, each learned from a real defect:
+
+1. **Take ownership of the batch when the write starts, not when it finishes.** Remove the buffered entries up front and re-stage them only if the write fails. Leaving them in place across the `await` lets a concurrent `resolve()` re-send what you are already writing (two tool messages for one call) and lets your completion handler remove the wrong entries.
+2. **Coalesce concurrent flushes by chaining, not short-circuiting.** Returning an in-flight promise to a second caller resolves *their* `flush()` without ever writing *their* batch.
+3. **Discard staged results on a thread switch.** A tool message only makes sense against the thread whose assistant message produced its `tool_call_id`. Note that a thread id captured at settle time may already be the *new* thread if your `setThreadId` is synchronous — key the check on something that survives the switch.
+
+Adapters without a durable write path can fall back to attaching staged results to the next outbound run. That is correct in the normal path but loses them across a reload, so document the limitation.
+
 ## Publishing Your Adapter
 
 Want to distribute your adapter as an npm package? Keep the following in mind.
