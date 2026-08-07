@@ -6,6 +6,7 @@ import { ItineraryStore } from './itinerary-store';
 import { GeocodingService } from './geocoding.service';
 import { DayCardComponent, DAY_CARD_SCHEMA } from './day-card.component';
 import { ClearDayConfirmComponent } from './clear-day-confirm.component';
+import { TripSummaryCardComponent, TRIP_SUMMARY_SCHEMA } from './trip-summary-card.component';
 
 /** Schema for the `clear_day` ask tool — exported in case consumers want to
  *  derive types from it (e.g. `ViewProps<typeof CLEAR_DAY_SCHEMA>`). */
@@ -64,6 +65,16 @@ export function itineraryClientTools(): ClientToolRegistry {
       "Show the user a visual recap card for one itinerary day. Call it after add_stop or move_stop with the day's full updated place list.",
       DAY_CARD_SCHEMA,
       DayCardComponent,
+    ),
+    // The demo's TERMINAL client tool. `followUp: false` means the tool result
+    // is recorded without forcing a continuation run — the turn ends when the
+    // card mounts. The result is still flushed to the durable thread, so the
+    // next user message doesn't hit a dangling-tool-call provider error.
+    show_trip_summary: view(
+      'Show a final trip summary card recapping every day of the itinerary. Call this last — it ends the turn and needs no follow-up.',
+      TRIP_SUMMARY_SCHEMA,
+      TripSummaryCardComponent,
+      { followUp: false },
     ),
   });
 }

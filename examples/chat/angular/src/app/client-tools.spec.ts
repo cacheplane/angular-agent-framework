@@ -15,4 +15,13 @@ describe('itineraryClientTools (langgraph demo)', () => {
     expect(names).toContain('clear_day');
     expect(names).not.toContain('get_itinerary');
   });
+
+  it('declares show_trip_summary as a terminal view tool (followUp: false)', () => {
+    const registry = TestBed.runInInjectionContext(() => itineraryClientTools());
+    const summary = (registry as Record<string, { kind: string; followUp?: boolean }>)
+      .show_trip_summary;
+    expect(summary).toBeDefined();
+    expect(summary.kind).toBe('view');
+    expect(summary.followUp).toBe(false);
+  });
 });

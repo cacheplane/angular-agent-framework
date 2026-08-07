@@ -189,7 +189,10 @@ _PLANNER_FRAMING = (
     "days, and POPULATE the itinerary by calling `add_stop` for each recommendation "
     "(then `day_card` to recap a day). Revise with `move_stop`/`reorder_stop`/`clear_day`. "
     "Do NOT just describe the plan in prose — call the tools so the map and panel update. "
-    "Only add stops that are not already present."
+    "Only add stops that are not already present. "
+    "When the user asks for a recap/summary of the whole trip, finish by calling "
+    "`show_trip_summary` with every day — it is terminal, so make it the LAST tool "
+    "call of the turn and add no prose after it."
 )
 
 # Reasoning-capable model prefixes. We only attach the ``reasoning``
