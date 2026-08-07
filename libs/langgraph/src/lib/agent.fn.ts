@@ -193,10 +193,11 @@ export function agent<
   const custom$          = new BehaviorSubject<CustomStreamEvent[]>([]);
   const hasValue$        = new BehaviorSubject<boolean>(false);
 
-  // Assigned once the client-tools capability exists (further down — the
-  // capability needs `manager`, which needs these subjects). Called through a
-  // forward reference so the thread-change seam below stays in one place.
-  let clearStagedToolMessages: (() => void) | undefined;
+  // Forward reference. The client-tools capability is built much further down
+  // (it needs `manager`, which needs these subjects), but the thread-change
+  // seam lives here. A holder keeps the binding itself a `const` while its
+  // member is filled in later.
+  const clientToolStaging: { clear?: () => void } = {};
 
   function resetDerivedThreadState(): void {
     status$.next(ResourceStatus.Idle);
@@ -205,7 +206,9 @@ export function agent<
     // Staged client-tool results belong to the thread whose AIMessage produced
     // their tool_call_ids. Carrying them into a different thread would prepend
     // a ToolMessage that matches no tool call there — a 400 on that turn.
-    clearStagedToolMessages?.();
+    // Runs BEFORE manager.switchThread resets the store, so the capability can
+    // still read the outgoing thread's tool calls.
+    clientToolStaging.clear?.();
   }
 
   // Track hasValue — becomes true once values or messages arrive
@@ -457,8 +460,11 @@ export function agent<
           await manager.updateState({ messages: [...messages] });
         }
       : undefined,
+    // Stamps each staged result with the thread it was settled on, so a write
+    // can never land on a thread the user has since moved to.
+    () => manager.currentThreadId,
   );
-  clearStagedToolMessages = () => clientToolsCap.clearStagedToolMessages();
+  clientToolStaging.clear = () => clientToolsCap.clearStagedToolMessages();
 
   return {
     // ── Runtime-neutral surface (AgentWithHistory) ────────────────────────

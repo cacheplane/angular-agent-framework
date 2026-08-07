@@ -511,6 +511,34 @@ describe('flush', () => {
     expect(cap.drainToolMessages().map((m) => m.tool_call_id)).toEqual(['t3']);
   });
 
+  it('persists a batch staged while an earlier flush is still in flight', async () => {
+    // The abort path in startClientToolExecutor flushes once PER settled call,
+    // so two adjacent flushes are routine. The second must not be swallowed by
+    // the in-flight guard — its batch was staged after the first took its
+    // snapshot, so returning the first promise would leave it unwritten.
+    const releases: Array<() => void> = [];
+    const persist = vi.fn(
+      () => new Promise<void>((resolve) => { releases.push(resolve); }),
+    );
+    const { cap } = setup(persist);
+
+    cap.settle?.('t1', { ok: true, value: 'a' });
+    const first = cap.flush?.();
+    cap.settle?.('t2', { ok: true, value: 'b' });
+    const second = cap.flush?.();
+
+    releases[0]();
+    for (let i = 0; i < 50 && releases.length < 2; i++) await Promise.resolve();
+    releases[1]?.();
+    await Promise.all([first, second]);
+
+    const persisted = (persist as unknown as ReturnType<typeof vi.fn>).mock.calls
+      .flatMap((call) => (call[0] as Array<{ tool_call_id: string }>)
+        .map((m) => m.tool_call_id));
+    expect(persisted).toEqual(['t1', 't2']);
+    expect(cap.drainToolMessages()).toEqual([]);
+  });
+
   it('coalesces overlapping flush calls into a single persist call', async () => {
     let releasePersist!: () => void;
     const persist = vi.fn(

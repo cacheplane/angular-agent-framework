@@ -1428,3 +1428,77 @@ describe('agent — client tool staging', () => {
     expect(cap.drainToolMessages()).toEqual([]);
   });
 });
+
+// ── Stale-thread guard ───────────────────────────────────────────────────────
+// A tool handler still in flight when the user clicks another thread settles
+// AFTER the switch. Its ToolMessage belongs to the thread whose AIMessage
+// produced the tool_call_id, so it must never reach the new thread.
+
+describe('agent — client tool results settled after a thread switch', () => {
+  beforeEach(() => TestBed.configureTestingModule({}));
+
+  const SPEC = { name: 'get_weather', description: 'w', parameters: {} };
+
+  function staging(ref: { clientTools: unknown }) {
+    return ref.clientTools as {
+      setCatalog(specs: unknown[]): void;
+      settle(id: string, result: { ok: true; value: unknown }): void;
+      flush(): Promise<void>;
+      drainToolMessages(): Array<{ tool_call_id: string }>;
+    };
+  }
+
+  /** Agent on t-1 whose transcript holds one pending client tool call. */
+  async function agentWithPendingToolCall(transport: MockAgentTransport) {
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', threadId: 't-1', transport, throttle: false })
+    );
+    const cap = staging(ref);
+    cap.setCatalog([SPEC]);
+    ref.submit({ message: 'weather?' });
+    transport.emit([{
+      type: 'messages',
+      messages: [{
+        id: 'ai-1', type: 'ai', content: '',
+        tool_calls: [{ id: 'tc-1', name: 'get_weather', args: {} }],
+      }],
+    }]);
+    transport.close();
+    await new Promise(r => setTimeout(r, 30));
+    return { ref, cap };
+  }
+
+  it('drops a result settled after a thread switch instead of writing it to the new thread', async () => {
+    const transport = new MockAgentTransport();
+    const updateCalls: Array<{ threadId: string; values: Record<string, unknown> }> = [];
+    (transport as unknown as {
+      updateState: (t: string, v: Record<string, unknown>, s: AbortSignal) => Promise<void>;
+    }).updateState = async (threadId, values) => { updateCalls.push({ threadId, values }); };
+
+    const { ref, cap } = await agentWithPendingToolCall(transport);
+    ref.switchThread('t-2');
+    cap.settle('tc-1', { ok: true, value: 'sunny' });
+    await cap.flush();
+
+    // Writing here would give t-2 a ToolMessage matching no AIMessage → 400.
+    expect(updateCalls).toHaveLength(0);
+    expect(cap.drainToolMessages()).toEqual([]);
+  });
+
+  it('does not drain a result settled after a thread switch into the new thread submit', async () => {
+    const transport = new MockAgentTransport();
+    const { ref, cap } = await agentWithPendingToolCall(transport);
+    const streamsBefore = transport.streams.length;
+
+    ref.switchThread('t-2');
+    cap.settle('tc-1', { ok: true, value: 'sunny' });
+    ref.submit({ message: 'hello on the new thread' });
+
+    const payload = transport.streams[streamsBefore]?.payload as {
+      messages: Array<Record<string, unknown>>;
+    };
+    expect(payload.messages).toHaveLength(1);
+    expect(payload.messages[0]).toMatchObject({ type: 'human' });
+    expect(cap.drainToolMessages()).toEqual([]);
+  });
+});
