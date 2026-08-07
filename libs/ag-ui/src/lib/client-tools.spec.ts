@@ -245,6 +245,25 @@ describe('createClientToolsCapability', () => {
     ).toolCallId)).toEqual(['c1', 'c2']);
   });
 
+  // ---- flush -----------------------------------------------------------------
+
+  it('exposes a no-op flush that does not start a run', async () => {
+    const source = makeSource();
+    const store  = makeStore();
+    const cap    = createClientToolsCapability(source, store);
+    cap.setCatalog([WEATHER_SPEC]);
+
+    // Assert presence explicitly: `cap.flush?.()` short-circuits when the
+    // member is missing, so the optional call alone cannot fail the test.
+    expect(typeof cap.flush).toBe('function');
+
+    cap.settle?.('t1', { ok: true, value: 'sunny' });
+    await cap.flush?.();
+
+    expect(source.addMessage).toHaveBeenCalledTimes(1);
+    expect(source.continueRun).not.toHaveBeenCalled();
+  });
+
   // ---- resolve — error result ------------------------------------------------
 
   it('resolve(error) writes { error } result + error + status=error onto the store tool call', () => {

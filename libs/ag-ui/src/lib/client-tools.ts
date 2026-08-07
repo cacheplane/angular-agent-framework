@@ -46,6 +46,8 @@ function safeStringify(v: unknown): string {
  *    ask component re-renders with its emitted value as props and can branch to
  *    a frozen state), and adds a ToolMessage via source.addMessage without
  *    starting a run.
+ *  - flush(): no-op. settle() already made the result durable by adding it to
+ *    the source's message list, so there is nothing left to write.
  *  - resolve(id, result): settles the result, then requests a continuation
  *    through the adapter-owned run gateway. Any ToolMessages previously
  *    settled into the source are flushed by that single run.
@@ -124,6 +126,13 @@ export function createClientToolsCapability(
 
     settle(id: string, result: ClientToolResult): void {
       settleResult(id, result);
+    },
+
+    // AG-UI's settle() already calls source.addMessage(), which places the
+    // ToolMessage in the outgoing message list. Nothing further is needed to
+    // make it durable — the next run carries it.
+    flush(): void {
+      /* no-op: settle() is already durable */
     },
 
     resolve(id: string, result: ClientToolResult): void {
