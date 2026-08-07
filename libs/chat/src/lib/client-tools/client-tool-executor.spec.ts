@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { signal } from '@angular/core';
+import { computed, signal } from '@angular/core';
 import { z } from 'zod/v4';
 import { action, view, tools } from './tools';
 import { startClientToolExecutor } from './client-tool-executor';
@@ -37,6 +37,26 @@ function makeFakeCapability() {
     resolve,
   };
   return { pending, resolve, capability };
+}
+
+/**
+ * Capability that mirrors the adapters' real `pending` contract: `resolve()`
+ * marks the id resolved and `pending` drops resolved calls. Needed to prove a
+ * settled (incl. cancelled) call is never re-dispatched on a later effect pass.
+ */
+function makeResolvingCapability() {
+  const raw = signal<readonly ToolCall[]>([]);
+  const resolvedIds = signal<ReadonlySet<string>>(new Set<string>());
+  const pending = computed(() => raw().filter((tc) => !resolvedIds().has(tc.id)));
+  const resolve = vi.fn<[string, ClientToolResult], void>((id) => {
+    resolvedIds.update((s) => new Set(s).add(id));
+  });
+  const capability: ClientToolsCapability = {
+    setCatalog: vi.fn(),
+    pending,
+    resolve,
+  };
+  return { raw, resolve, capability };
 }
 
 function makeFakeAgent(capability: ClientToolsCapability): Agent {
@@ -235,7 +255,7 @@ describe('startClientToolExecutor()', () => {
     expect(seen[0].aborted).toBe(false);
   });
 
-  it('aborts in-flight function tools on stop and does not resolve them', async () => {
+  it('aborts in-flight function tools on stop and settles them as cancelled', async () => {
     let complete!: (value: string) => void;
     const completion = new Promise<string>((resolve) => {
       complete = resolve;
@@ -264,7 +284,81 @@ describe('startClientToolExecutor()', () => {
     complete('late result');
     await drainMicrotasks();
 
-    expect(resolve).not.toHaveBeenCalled();
+    // The server thread must never hold a client tool call without a result:
+    // an aborted call settles with a cancelled error rather than dangling.
+    expect(resolve).toHaveBeenCalledOnce();
+    expect(resolve.mock.calls[0][0]).toBe('slow-1');
+    expect(resolve.mock.calls[0][1].ok).toBe(false);
+    expect((resolve.mock.calls[0][1] as { error: string }).error).toContain('cancelled');
+  });
+
+  it('settles an aborted handler so it cannot re-execute', async () => {
+    const settled: Array<[string, ClientToolResult]> = [];
+    let release!: () => void;
+    const registry = tools({
+      slow: action('Slow', z.object({}), async () => {
+        await new Promise<void>((r) => {
+          release = r;
+        });
+        return 'done';
+      }),
+    });
+    const { pending, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+
+    TestBed.runInInjectionContext(() => {
+      startClientToolExecutor(agent, registry, {
+        settleToolCall: (tc, result) => settled.push([tc.id, result]),
+      });
+    });
+
+    pending.set([{ id: 'slow-1', name: 'slow', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    await agent.stop();
+    release();
+    await drainMicrotasks();
+
+    expect(settled).toHaveLength(1);
+    expect(settled[0][0]).toBe('slow-1');
+    expect(settled[0][1].ok).toBe(false);
+  });
+
+  it('does not re-dispatch an aborted client tool on a later effect pass', async () => {
+    const handler = vi.fn(async () => {
+      await new Promise<void>((r) => {
+        release = r;
+      });
+      return 'done';
+    });
+    let release!: () => void;
+    const registry = tools({
+      slow: action('Slow', z.object({}), handler),
+    });
+    const { raw, resolve, capability } = makeResolvingCapability();
+    const agent = makeFakeAgent(capability);
+
+    TestBed.runInInjectionContext(() => {
+      startClientToolExecutor(agent, registry);
+    });
+
+    raw.set([{ id: 'slow-2', name: 'slow', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    await agent.stop();
+    release();
+    await drainMicrotasks();
+
+    // The next run re-emits the same tool call list; the cancelled call is now
+    // resolved, so it must not be dispatched to the handler a second time.
+    raw.set([{ id: 'slow-2', name: 'slow', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(handler).toHaveBeenCalledOnce();
+    expect(resolve).toHaveBeenCalledOnce();
   });
 
   it('aborts in-flight function tools when the injection context is destroyed', async () => {
@@ -444,7 +538,7 @@ describe('startClientToolExecutor()', () => {
     expect(resolve).toHaveBeenCalledWith('read-1', { ok: true, value: 'cached' });
   });
 
-  it('does not execute or resolve when stopped before a delayed claim resolves', async () => {
+  it('does not execute but still settles when stopped before a delayed claim resolves', async () => {
     let resolveClaim!: (value: 'claimed') => void;
     const claim = new Promise<'claimed'>((resolve) => {
       resolveClaim = resolve;
@@ -471,7 +565,107 @@ describe('startClientToolExecutor()', () => {
     await drainMicrotasks();
 
     expect(handler).not.toHaveBeenCalled();
-    expect(resolve).not.toHaveBeenCalled();
+    expect(resolve).toHaveBeenCalledOnce();
+    expect(resolve.mock.calls[0][1].ok).toBe(false);
+    expect((resolve.mock.calls[0][1] as { error: string }).error).toContain('cancelled');
+  });
+
+  it('records the cancelled result when stopped after claiming', async () => {
+    let release!: () => void;
+    const handler = vi.fn(async () => {
+      await new Promise<void>((r) => {
+        release = r;
+      });
+      return 'charged';
+    });
+    const registry = tools({
+      charge: action('Charge a card', z.object({}), handler),
+    });
+    const store = makeGuardStore('claimed');
+    const { pending, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+
+    TestBed.runInInjectionContext(() => {
+      startClientToolExecutor(agent, registry, { executionGuard: makeGuard(store) });
+    });
+
+    pending.set([{ id: 'charge-7', name: 'charge', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    await agent.stop();
+    release();
+    await drainMicrotasks(8);
+
+    // The store must not be left at 'executing' — a later reload would then
+    // fail closed with a misleading "interrupted" message.
+    expect(store.record).toHaveBeenCalledOnce();
+    expect(store.record.mock.calls[0][1].ok).toBe(false);
+    expect(resolve).toHaveBeenCalledOnce();
+    expect(resolve.mock.calls[0][1].ok).toBe(false);
+  });
+
+  it('wraps agent.stop once across repeated executor starts', () => {
+    const registry = tools({ noop: action('n', z.object({}), async () => 'x') });
+    const { capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const original = agent.stop;
+
+    TestBed.runInInjectionContext(() => {
+      startClientToolExecutor(agent, registry);
+      startClientToolExecutor(agent, registry);
+    });
+
+    expect(agent.stop).not.toBe(original);
+    const afterFirstWrap = agent.stop;
+    TestBed.runInInjectionContext(() => {
+      startClientToolExecutor(agent, registry);
+    });
+    expect(agent.stop).toBe(afterFirstWrap);
+  });
+
+  it('restores agent.stop once every executor is destroyed', () => {
+    const registry = tools({ noop: action('n', z.object({}), async () => 'x') });
+    const { capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const original = agent.stop;
+
+    TestBed.runInInjectionContext(() => {
+      startClientToolExecutor(agent, registry);
+      startClientToolExecutor(agent, registry);
+    });
+    expect(agent.stop).not.toBe(original);
+
+    TestBed.resetTestingModule();
+
+    expect(agent.stop).toBe(original);
+  });
+
+  it('aborts every live executor on the same agent when stop is called', async () => {
+    const seen: AbortSignal[] = [];
+    const registry = tools({
+      slow: action('slow', z.object({}), async (_args, context) => {
+        seen.push(context.signal);
+        return new Promise<string>(() => undefined);
+      }),
+    });
+    const { pending, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+
+    TestBed.runInInjectionContext(() => {
+      startClientToolExecutor(agent, registry);
+      // A second coordinator wired to the same long-lived (root-provided) agent.
+      startClientToolExecutor(agent, registry);
+    });
+
+    pending.set([{ id: 'a1', name: 'slow', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    await agent.stop();
+
+    expect(seen).toHaveLength(2);
+    expect(seen.map((s) => s.aborted)).toEqual([true, true]);
   });
 
   it('ignores view/ask tool calls (only function tools are auto-executed)', async () => {

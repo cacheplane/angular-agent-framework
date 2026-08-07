@@ -27,6 +27,7 @@ export type { ClientToolExecutorOptions } from './client-tool-executor';
 export { createClientToolsCoordinator, toClientToolSpecs } from './client-tools-coordinator';
 export type { ClientToolsCoordinator, ClientToolsCoordinatorOptions } from './client-tools-coordinator';
 export {
+  cancelledClientToolResult,
   clientToolGuardFailureResult,
   defaultInterruptedClientToolResult,
   shouldClaimBeforeExecute,

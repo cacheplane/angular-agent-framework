@@ -46,6 +46,14 @@ export function defaultInterruptedClientToolResult(toolCallId: string): ClientTo
   };
 }
 
+/** Result recorded when the user stops a run while a client tool is running. */
+export function cancelledClientToolResult(toolCallId: string): ClientToolResult {
+  return {
+    ok: false,
+    error: `client tool execution cancelled before completion: ${toolCallId}`,
+  };
+}
+
 /** Default fail-closed result when the execution guard itself cannot be reached. */
 export function clientToolGuardFailureResult(toolCallId: string, error: unknown): ClientToolResult {
   const message = error instanceof Error ? error.message : String(error);
