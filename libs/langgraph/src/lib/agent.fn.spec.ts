@@ -1298,3 +1298,133 @@ describe('computeMessageCheckpoints', () => {
     expect(computeMessageCheckpoints(history).size).toBe(0);
   });
 });
+
+// ── Client-tool staging wiring ───────────────────────────────────────────────
+// The capability is unit-tested in client-tools.spec.ts; these cover the
+// agent.fn.ts seam: which persist function is supplied, the null-payload
+// drain guard, and discarding staged results on a thread switch.
+
+describe('agent — client tool staging', () => {
+  beforeEach(() => TestBed.configureTestingModule({}));
+
+  const SPEC = { name: 'get_weather', description: 'w', parameters: {} };
+
+  /** MockAgentTransport has no updateState; add one that records its calls. */
+  function withUpdateState(transport: MockAgentTransport) {
+    const updateCalls: Array<{ threadId: string; values: Record<string, unknown> }> = [];
+    (transport as unknown as {
+      updateState: (
+        threadId: string,
+        values: Record<string, unknown>,
+        signal: AbortSignal,
+      ) => Promise<void>;
+    }).updateState = async (threadId, values) => {
+      updateCalls.push({ threadId, values });
+    };
+    return updateCalls;
+  }
+
+  /** The langgraph capability exposes staging members beyond the neutral contract. */
+  function staging(ref: { clientTools: unknown }) {
+    return ref.clientTools as {
+      setCatalog(specs: unknown[]): void;
+      settle(id: string, result: { ok: true; value: unknown }): void;
+      flush(): Promise<void>;
+      drainToolMessages(): Array<{ tool_call_id: string }>;
+    };
+  }
+
+  it('flush() writes staged tool messages via updateState without starting a run', async () => {
+    const transport = new MockAgentTransport();
+    const updateCalls = withUpdateState(transport);
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', threadId: 't-1', transport, throttle: false })
+    );
+    const cap = staging(ref);
+    cap.setCatalog([SPEC]);
+
+    cap.settle('tc-1', { ok: true, value: 'sunny' });
+    await cap.flush();
+
+    expect(updateCalls).toHaveLength(1);
+    expect(updateCalls[0]?.threadId).toBe('t-1');
+    expect(updateCalls[0]?.values?.['messages']).toEqual([
+      { type: 'tool', role: 'tool', tool_call_id: 'tc-1', content: 'sunny' },
+    ]);
+    // A durable write must not issue a run.
+    expect(transport.streams).toHaveLength(0);
+    expect(cap.drainToolMessages()).toEqual([]);
+  });
+
+  it('flush() keeps the buffer when there is no thread to write to', async () => {
+    const transport = new MockAgentTransport();
+    const updateCalls = withUpdateState(transport);
+    // No threadId and no run yet → the bridge has no currentThreadId, so the
+    // persist function must throw rather than let updateState silently no-op.
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', transport, throttle: false })
+    );
+    const cap = staging(ref);
+    cap.setCatalog([SPEC]);
+
+    cap.settle('tc-1', { ok: true, value: 'sunny' });
+    await cap.flush();
+
+    expect(updateCalls).toHaveLength(0);
+    expect(cap.drainToolMessages().map((m) => m.tool_call_id)).toEqual(['tc-1']);
+  });
+
+  it('submit drains staged tool messages ahead of the payload messages', async () => {
+    // No updateState on the transport → flush() cannot persist, so the staged
+    // result must ride along with the next ordinary submit instead.
+    const transport = new MockAgentTransport();
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', threadId: 't-1', transport, throttle: false })
+    );
+    const cap = staging(ref);
+    cap.setCatalog([SPEC]);
+
+    cap.settle('tc-1', { ok: true, value: 'sunny' });
+    await cap.flush();
+    ref.submit({ message: 'and tomorrow?' });
+
+    const payload = transport.streams[0]?.payload as { messages: Array<Record<string, unknown>> };
+    expect(payload.messages[0]).toMatchObject({ type: 'tool', tool_call_id: 'tc-1' });
+    expect(payload.messages[1]).toMatchObject({ type: 'human' });
+    // Drained exactly once — a second submit must not re-send it.
+    expect(cap.drainToolMessages()).toEqual([]);
+  });
+
+  it('submit(null) does not drain staged tool messages', async () => {
+    const transport = new MockAgentTransport();
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', threadId: 't-1', transport, throttle: false })
+    );
+    const cap = staging(ref);
+    cap.setCatalog([SPEC]);
+
+    cap.settle('tc-1', { ok: true, value: 'sunny' });
+    ref.submit(null);
+
+    // A null payload signals a no-input resume and cannot carry messages;
+    // draining into it would discard the result silently.
+    expect(transport.streams[0]?.payload).toBeNull();
+    expect(cap.drainToolMessages().map((m) => m.tool_call_id)).toEqual(['tc-1']);
+  });
+
+  it('switchThread discards staged tool messages', () => {
+    const transport = new MockAgentTransport();
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', threadId: 't-1', transport, throttle: false })
+    );
+    const cap = staging(ref);
+    cap.setCatalog([SPEC]);
+
+    cap.settle('tc-1', { ok: true, value: 'sunny' });
+    ref.switchThread('t-2');
+
+    // Carrying it over would prepend a ToolMessage whose tool_call_id matches
+    // no AIMessage on t-2 — turning one broken thread into two.
+    expect(cap.drainToolMessages()).toEqual([]);
+  });
+});

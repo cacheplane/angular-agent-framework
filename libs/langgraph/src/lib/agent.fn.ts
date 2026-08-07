@@ -193,10 +193,19 @@ export function agent<
   const custom$          = new BehaviorSubject<CustomStreamEvent[]>([]);
   const hasValue$        = new BehaviorSubject<boolean>(false);
 
+  // Assigned once the client-tools capability exists (further down — the
+  // capability needs `manager`, which needs these subjects). Called through a
+  // forward reference so the thread-change seam below stays in one place.
+  let clearStagedToolMessages: (() => void) | undefined;
+
   function resetDerivedThreadState(): void {
     status$.next(ResourceStatus.Idle);
     error$.next(undefined);
     hasValue$.next(false);
+    // Staged client-tool results belong to the thread whose AIMessage produced
+    // their tool_call_ids. Carrying them into a different thread would prepend
+    // a ToolMessage that matches no tool call there — a 400 on that turn.
+    clearStagedToolMessages?.();
   }
 
   // Track hasValue — becomes true once values or messages arrive
@@ -449,6 +458,7 @@ export function agent<
         }
       : undefined,
   );
+  clearStagedToolMessages = () => clientToolsCap.clearStagedToolMessages();
 
   return {
     // ── Runtime-neutral surface (AgentWithHistory) ────────────────────────

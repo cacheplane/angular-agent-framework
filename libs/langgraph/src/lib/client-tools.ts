@@ -121,9 +121,11 @@ export function mergeStagedToolMessages(
  *    and buffers a ToolMessage without issuing a run.
  *  - flush(): makes the whole buffer durable in ONE persistFn call without
  *    starting a run — the settlement path for tool groups that never continue.
- *    The buffer is cleared only on a successful write, so a failure (or an
- *    absent persistFn) leaves the results staged for the next flush or for the
- *    drainToolMessages() fallback in the submit wrapper.
+ *    The batch leaves the buffer at snapshot time and is re-staged only if the
+ *    write fails, so a failure (or an absent persistFn) still degrades to the
+ *    next flush or to the drainToolMessages() fallback in the submit wrapper,
+ *    while a concurrent resolve()/drain can never re-send an in-flight batch.
+ *  - clearStagedToolMessages(): discards the buffer on a thread switch.
  *  - resolve(id, result): settles the result, then issues a NEW run on the SAME
  *    thread by calling submitFn with the full buffered ToolMessage group:
  *      input: {
@@ -148,11 +150,15 @@ export function createClientToolsCapability(
 ): ClientToolsCapability & {
   catalog: Signal<readonly ClientToolSpec[]>;
   drainToolMessages(): BufferedToolMessage[];
+  clearStagedToolMessages(): void;
 } {
   const catalog = signal<readonly ClientToolSpec[]>([]);
   const resolvedIds = signal<ReadonlySet<string>>(new Set());
   const toolMessageBuffer: BufferedToolMessage[] = [];
   let flushInFlight: Promise<void> | undefined;
+  // Bumped whenever the buffer is discarded, so an in-flight flush can tell
+  // whether its batch still belongs to the current thread.
+  let bufferGeneration = 0;
 
   const pending = computed<readonly ToolCall[]>(() => {
     // Client tools are only actionable after the run ends (the backend
@@ -204,6 +210,7 @@ export function createClientToolsCapability(
   const capability: ClientToolsCapability & {
     catalog: Signal<readonly ClientToolSpec[]>;
     drainToolMessages(): BufferedToolMessage[];
+    clearStagedToolMessages(): void;
   } = {
     catalog,
 
@@ -224,19 +231,39 @@ export function createClientToolsCapability(
       return drained;
     },
 
+    /**
+     * Discard everything staged. Called when the active thread changes: a
+     * ToolMessage only makes sense against the thread whose AIMessage produced
+     * its tool_call_id, so carrying it over would poison the new thread.
+     */
+    clearStagedToolMessages(): void {
+      toolMessageBuffer.length = 0;
+      // Invalidate any in-flight flush so its failure path cannot re-stage the
+      // old thread's messages into the new thread's buffer.
+      bufferGeneration += 1;
+    },
+
     flush(): Promise<void> {
       if (flushInFlight) return flushInFlight;
       if (toolMessageBuffer.length === 0) return Promise.resolve();
       if (!persistFn) return Promise.resolve();
 
-      // Snapshot first: the buffer is cleared ONLY after a successful write, so
-      // a failure leaves the results staged for the next flush or submit drain.
-      const batch = [...toolMessageBuffer];
+      // Take ownership of the batch NOW. resolve() and drainToolMessages() both
+      // clear the buffer unconditionally and know nothing about an in-flight
+      // write, so leaving the batch in place across the await would let them
+      // re-send what this write already covers (a duplicate ToolMessage for one
+      // tool_call_id) and let the completion splice remove the wrong elements
+      // (dropping a result that was never persisted).
+      const batch = toolMessageBuffer.splice(0, toolMessageBuffer.length);
+      const generation = bufferGeneration;
       flushInFlight = persistFn(batch)
-        .then(() => {
-          toolMessageBuffer.splice(0, batch.length);
-        })
         .catch((err: unknown) => {
+          // Re-stage at the FRONT so ordering is preserved for the next drain —
+          // unless the buffer was cleared meanwhile (thread switch), in which
+          // case these results belong to a thread we have left.
+          if (generation === bufferGeneration) {
+            toolMessageBuffer.unshift(...batch);
+          }
           console.warn(
             `Client tool flush failed; ${batch.length} result(s) remain staged for the next run.`,
             err,

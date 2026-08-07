@@ -456,10 +456,103 @@ describe('flush', () => {
     expect(cap.drainToolMessages()).toHaveLength(1);
   });
 
-  it('drainToolMessages empties the buffer', async () => {
+  it('empties the buffer after a successful flush', async () => {
+    const persist = vi.fn(async () => undefined);
+    const { cap } = setup(persist);
+
+    cap.settle?.('t1', { ok: true, value: 'a' });
+    await cap.flush?.();
+
+    // The central invariant: a successful write must NOT leave the result
+    // staged, or the next submit would re-send it and the thread would carry
+    // two ToolMessages for one tool_call_id.
+    expect(cap.drainToolMessages()).toEqual([]);
+  });
+
+  it('drainToolMessages returns the buffer and then empties it', async () => {
     const { cap } = setup(undefined);
     cap.settle?.('t1', { ok: true, value: 'a' });
-    cap.drainToolMessages();
+    // Assert the FIRST drain returns the message: without this the test would
+    // pass against a drainToolMessages that always returns [].
+    expect(cap.drainToolMessages()).toEqual([
+      { type: 'tool', role: 'tool', tool_call_id: 't1', content: 'a' },
+    ]);
+    expect(cap.drainToolMessages()).toEqual([]);
+  });
+
+  // ── concurrency: the buffer has three mutators ──────────────────────────────
+  // flush() takes ownership of its batch at snapshot time. resolve() and
+  // drainToolMessages() clear the buffer unconditionally and know nothing about
+  // an in-flight write, so anything left in the buffer across the await is
+  // fair game for them.
+
+  it('does not drop or duplicate results when resolve and settle interleave with an in-flight flush', async () => {
+    let releasePersist!: () => void;
+    const persist = vi.fn(
+      () => new Promise<void>((resolve) => { releasePersist = resolve; }),
+    );
+    const { cap, submitFn } = setup(persist);
+
+    cap.settle?.('t1', { ok: true, value: 'a' });
+    const flushed = cap.flush?.();          // batch = [t1]; write in flight
+
+    cap.resolve('t2', { ok: true, value: 'b' });   // submits, then clears buffer
+    cap.settle?.('t3', { ok: true, value: 'c' }); // buffer = [t3]
+
+    releasePersist();
+    await flushed;
+
+    // t1 is being written by the flush, so resolve() must not re-send it.
+    const payload = (submitFn as unknown as ReturnType<typeof vi.fn>)
+      .mock.calls[0][0] as { messages: Array<{ tool_call_id: string }> };
+    expect(payload.messages.map((m) => m.tool_call_id)).toEqual(['t2']);
+
+    // t3 was never persisted nor submitted — it must survive for the next drain.
+    expect(cap.drainToolMessages().map((m) => m.tool_call_id)).toEqual(['t3']);
+  });
+
+  it('coalesces overlapping flush calls into a single persist call', async () => {
+    let releasePersist!: () => void;
+    const persist = vi.fn(
+      () => new Promise<void>((resolve) => { releasePersist = resolve; }),
+    );
+    const { cap } = setup(persist);
+
+    cap.settle?.('t1', { ok: true, value: 'a' });
+    const first  = cap.flush?.();
+    const second = cap.flush?.();
+
+    releasePersist();
+    await Promise.all([first, second]);
+
+    expect(persist).toHaveBeenCalledTimes(1);
+  });
+
+  // ── clearStagedToolMessages — thread switches must not leak ─────────────────
+
+  it('clearStagedToolMessages discards the buffer', () => {
+    const { cap } = setup(undefined);
+    cap.settle?.('t1', { ok: true, value: 'a' });
+    cap.clearStagedToolMessages();
+    expect(cap.drainToolMessages()).toEqual([]);
+  });
+
+  it('does not re-stage a failed batch that was cleared while in flight', async () => {
+    let rejectPersist!: (err: Error) => void;
+    const persist = vi.fn(
+      () => new Promise<void>((_resolve, reject) => { rejectPersist = reject; }),
+    );
+    const { cap } = setup(persist);
+
+    cap.settle?.('t1', { ok: true, value: 'a' });
+    const flushed = cap.flush?.();
+    // Thread switched away while the write was in flight.
+    cap.clearStagedToolMessages();
+    rejectPersist(new Error('boom'));
+    await flushed;
+
+    // Re-staging here would prepend the old thread's ToolMessage onto the NEW
+    // thread's next payload, where its tool_call_id matches no AIMessage.
     expect(cap.drainToolMessages()).toEqual([]);
   });
 });
