@@ -2,8 +2,16 @@
 import { describe, it, expect, vi } from 'vitest';
 import { signal } from '@angular/core';
 import type { ToolCall } from '@threadplane/chat';
-import { createClientToolsCapability, mergeClientTools } from './client-tools';
-import type { ClientToolsStore, SubmitFn } from './client-tools';
+import {
+  createClientToolsCapability,
+  mergeClientTools,
+  mergeStagedToolMessages,
+} from './client-tools';
+import type {
+  ClientToolsStore,
+  PersistToolMessagesFn,
+  SubmitFn,
+} from './client-tools';
 
 // ─── Fakes ───────────────────────────────────────────────────────────────────
 
@@ -382,5 +390,103 @@ describe('createClientToolsCapability', () => {
     };
     const result = mergeClientTools(humanPayload, []);
     expect(result).toBe(humanPayload);
+  });
+});
+
+// ─── flush — durable write without continuing the run ────────────────────────
+
+describe('flush', () => {
+  const spec = { name: 'get_weather', description: 'w', parameters: {} };
+
+  function setup(persist?: (m: readonly unknown[]) => Promise<void>) {
+    const submitFn = vi.fn(async () => undefined);
+    const store = {
+      toolCalls: signal([] as readonly ToolCall[]),
+      isLoading: signal(false),
+      applyClientResult: () => undefined,
+    };
+    const cap = createClientToolsCapability(
+      submitFn as unknown as SubmitFn,
+      store,
+      persist as unknown as PersistToolMessagesFn | undefined,
+    );
+    cap.setCatalog([spec]);
+    return { cap, submitFn };
+  }
+
+  it('writes all buffered messages in a single persist call', async () => {
+    const persist = vi.fn(async () => undefined);
+    const { cap, submitFn } = setup(persist);
+
+    cap.settle?.('t1', { ok: true, value: 'a' });
+    cap.settle?.('t2', { ok: true, value: 'b' });
+    await cap.flush?.();
+
+    expect(persist).toHaveBeenCalledTimes(1);
+    expect((persist as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0]).toEqual([
+      { type: 'tool', role: 'tool', tool_call_id: 't1', content: 'a' },
+      { type: 'tool', role: 'tool', tool_call_id: 't2', content: 'b' },
+    ]);
+    expect(submitFn).not.toHaveBeenCalled();
+  });
+
+  it('makes no call when the buffer is empty', async () => {
+    const persist = vi.fn(async () => undefined);
+    const { cap } = setup(persist);
+    await cap.flush?.();
+    expect(persist).not.toHaveBeenCalled();
+  });
+
+  it('keeps the buffer when persist fails so a later drain retries', async () => {
+    const persist = vi.fn(async () => { throw new Error('boom'); });
+    const { cap } = setup(persist);
+
+    cap.settle?.('t1', { ok: true, value: 'a' });
+    await cap.flush?.();
+
+    expect(cap.drainToolMessages()).toEqual([
+      { type: 'tool', role: 'tool', tool_call_id: 't1', content: 'a' },
+    ]);
+  });
+
+  it('keeps the buffer when no persist function is supplied', async () => {
+    const { cap } = setup(undefined);
+    cap.settle?.('t1', { ok: true, value: 'a' });
+    await cap.flush?.();
+    expect(cap.drainToolMessages()).toHaveLength(1);
+  });
+
+  it('drainToolMessages empties the buffer', async () => {
+    const { cap } = setup(undefined);
+    cap.settle?.('t1', { ok: true, value: 'a' });
+    cap.drainToolMessages();
+    expect(cap.drainToolMessages()).toEqual([]);
+  });
+});
+
+// ─── mergeStagedToolMessages helper ──────────────────────────────────────────
+
+describe('mergeStagedToolMessages', () => {
+  const staged = [
+    { type: 'tool', role: 'tool', tool_call_id: 't1', content: 'a' },
+  ] as const;
+
+  it('prepends staged messages ahead of the payload messages', () => {
+    const out = mergeStagedToolMessages({ messages: [{ type: 'human', content: 'hi' }] }, staged);
+    expect(out).toEqual({
+      messages: [
+        { type: 'tool', role: 'tool', tool_call_id: 't1', content: 'a' },
+        { type: 'human', content: 'hi' },
+      ],
+    });
+  });
+
+  it('leaves a null payload unchanged', () => {
+    expect(mergeStagedToolMessages(null, staged)).toBeNull();
+  });
+
+  it('returns the payload unchanged when nothing is staged', () => {
+    const payload = { messages: [] };
+    expect(mergeStagedToolMessages(payload, [])).toBe(payload);
   });
 });

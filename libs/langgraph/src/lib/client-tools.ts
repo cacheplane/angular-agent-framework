@@ -72,6 +72,37 @@ export function mergeClientTools(
   return { ...(payload as Record<string, unknown>), client_tools: catalog };
 }
 
+/** Wire shape for a settled client-tool result awaiting durability. */
+export interface BufferedToolMessage {
+  readonly type: 'tool';
+  readonly role: 'tool';
+  readonly tool_call_id: string;
+  readonly content: string;
+}
+
+/** Writes settled tool messages into server thread state without starting a run. */
+export type PersistToolMessagesFn = (
+  messages: readonly BufferedToolMessage[],
+) => Promise<void>;
+
+/**
+ * Prepend staged tool messages to a run payload's message list.
+ *
+ * Mirrors mergeClientTools: a null payload signals a no-input resume and must
+ * stay null, so staged messages cannot ride along and are left buffered.
+ */
+export function mergeStagedToolMessages(
+  payload: unknown,
+  staged: readonly BufferedToolMessage[],
+): unknown {
+  if (staged.length === 0) return payload;
+  if (payload === null || payload === undefined) return payload;
+  if (typeof payload !== 'object' || Array.isArray(payload)) return payload;
+  const record = payload as Record<string, unknown>;
+  const existing = Array.isArray(record['messages']) ? record['messages'] : [];
+  return { ...record, messages: [...staged, ...existing] };
+}
+
 /**
  * Creates a ClientToolsCapability backed by a LangGraph submit function and
  * a store of tool-call signals. Extracted into a factory so it can be
@@ -88,6 +119,11 @@ export function mergeClientTools(
  *    client tools, so `result` stays undefined on those entries.
  *  - settle(id, result): marks the call as resolved, writes the local result,
  *    and buffers a ToolMessage without issuing a run.
+ *  - flush(): makes the whole buffer durable in ONE persistFn call without
+ *    starting a run — the settlement path for tool groups that never continue.
+ *    The buffer is cleared only on a successful write, so a failure (or an
+ *    absent persistFn) leaves the results staged for the next flush or for the
+ *    drainToolMessages() fallback in the submit wrapper.
  *  - resolve(id, result): settles the result, then issues a NEW run on the SAME
  *    thread by calling submitFn with the full buffered ToolMessage group:
  *      input: {
@@ -108,10 +144,15 @@ export function mergeClientTools(
 export function createClientToolsCapability(
   submitFn: SubmitFn,
   store: ClientToolsStore,
-): ClientToolsCapability & { catalog: Signal<readonly ClientToolSpec[]> } {
+  persistFn?: PersistToolMessagesFn,
+): ClientToolsCapability & {
+  catalog: Signal<readonly ClientToolSpec[]>;
+  drainToolMessages(): BufferedToolMessage[];
+} {
   const catalog = signal<readonly ClientToolSpec[]>([]);
   const resolvedIds = signal<ReadonlySet<string>>(new Set());
-  const toolMessageBuffer: Array<{ type: 'tool'; role: 'tool'; tool_call_id: string; content: string }> = [];
+  const toolMessageBuffer: BufferedToolMessage[] = [];
+  let flushInFlight: Promise<void> | undefined;
 
   const pending = computed<readonly ToolCall[]>(() => {
     // Client tools are only actionable after the run ends (the backend
@@ -160,7 +201,10 @@ export function createClientToolsCapability(
     toolMessageBuffer.push({ type: 'tool', role: 'tool', tool_call_id: id, content });
   }
 
-  const capability: ClientToolsCapability & { catalog: Signal<readonly ClientToolSpec[]> } = {
+  const capability: ClientToolsCapability & {
+    catalog: Signal<readonly ClientToolSpec[]>;
+    drainToolMessages(): BufferedToolMessage[];
+  } = {
     catalog,
 
     setCatalog(specs: readonly ClientToolSpec[]): void {
@@ -171,6 +215,37 @@ export function createClientToolsCapability(
 
     settle(id: string, result: ClientToolResult): void {
       settleResult(id, result);
+    },
+
+    /** Remove and return every buffered tool message. */
+    drainToolMessages(): BufferedToolMessage[] {
+      const drained = [...toolMessageBuffer];
+      toolMessageBuffer.length = 0;
+      return drained;
+    },
+
+    flush(): Promise<void> {
+      if (flushInFlight) return flushInFlight;
+      if (toolMessageBuffer.length === 0) return Promise.resolve();
+      if (!persistFn) return Promise.resolve();
+
+      // Snapshot first: the buffer is cleared ONLY after a successful write, so
+      // a failure leaves the results staged for the next flush or submit drain.
+      const batch = [...toolMessageBuffer];
+      flushInFlight = persistFn(batch)
+        .then(() => {
+          toolMessageBuffer.splice(0, batch.length);
+        })
+        .catch((err: unknown) => {
+          console.warn(
+            `Client tool flush failed; ${batch.length} result(s) remain staged for the next run.`,
+            err,
+          );
+        })
+        .finally(() => {
+          flushInFlight = undefined;
+        });
+      return flushInFlight;
     },
 
     resolve(id: string, result: ClientToolResult): void {
