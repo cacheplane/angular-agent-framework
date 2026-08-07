@@ -33,15 +33,17 @@ class FakeAskComponent {}
 function makeFakeCapability() {
   const pending = signal<readonly ToolCall[]>([]);
   const settle = vi.fn<[string, ClientToolResult], void>();
+  const flush = vi.fn<[], void>();
   const resolve = vi.fn<[string, ClientToolResult], void>();
   const setCatalog = vi.fn<[readonly unknown[]], void>();
   const capability: ClientToolsCapability = {
     setCatalog,
     pending,
     settle,
+    flush,
     resolve,
   };
-  return { pending, settle, resolve, setCatalog, capability };
+  return { pending, settle, flush, resolve, setCatalog, capability };
 }
 
 function makeFakeCapabilityWithoutSettle() {
@@ -317,6 +319,31 @@ describe('createClientToolsCoordinator()', () => {
     expect(resolve).not.toHaveBeenCalled();
   });
 
+  it('flushes a fully-terminal group so results reach the server', () => {
+    const registry = tools({
+      terminal_card: view(
+        'Show terminal card',
+        z.object({ city: z.string() }),
+        FakeViewComponent as never,
+        { followUp: false },
+      ),
+    });
+    const { pending, settle, resolve, flush, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry);
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    pending.set([{ id: 'v1', name: 'terminal_card', args: { city: 'LA' }, status: 'running' }]);
+    TestBed.flushEffects();
+
+    expect(settle).toHaveBeenCalledWith('v1', { ok: true, value: { shown: true } });
+    expect(flush).toHaveBeenCalledTimes(1);
+    expect(resolve).not.toHaveBeenCalled();
+  });
+
   it('falls back to resolve when followUp:false cannot be honored without settle', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const registry = tools({
@@ -519,6 +546,142 @@ describe('createClientToolsCoordinator()', () => {
     expect(resolve).toHaveBeenCalledTimes(1);
     expect(error).toHaveBeenCalledOnce();
     error.mockRestore();
+  });
+
+  it('settles blocked calls with a limit error and preserves real ask results', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const registry = tools({
+      confirm: ask('Confirm', z.object({ q: z.string() }), FakeAskComponent as never),
+    });
+    const { pending, settle, resolve, flush, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry, {
+      continuationPolicy: { maxTurns: 1 },
+    });
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    // Turn 1 consumes the single allowed continuation.
+    pending.set([{ id: 'a1', name: 'confirm', args: { q: 'x' }, status: 'running' }]);
+    TestBed.flushEffects();
+    coordinator.handleRenderEvent(agent, {
+      type: 'result',
+      elementKey: 'confirm',
+      value: { confirmed: true },
+    } as never);
+
+    settle.mockClear();
+    resolve.mockClear();
+    flush.mockClear();
+
+    // Turn 2 exceeds maxTurns: the user's answer must still be recorded.
+    pending.set([{ id: 'a2', name: 'confirm', args: { q: 'y' }, status: 'running' }]);
+    TestBed.flushEffects();
+    coordinator.handleRenderEvent(agent, {
+      type: 'result',
+      elementKey: 'confirm',
+      value: { confirmed: false },
+    } as never);
+
+    expect(settle).toHaveBeenCalledWith('a2', { ok: true, value: { confirmed: false } });
+    expect(flush).toHaveBeenCalled();
+    expect(resolve).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it('settles a blocked function tool exactly once across effect re-runs', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const handler = vi.fn(async () => 'again');
+    const registry = tools({
+      loop: action('Loop', z.object({}), handler),
+    });
+    const { pending, settle, resolve, flush, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry, {
+      continuationPolicy: { maxTurns: 1 },
+    });
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    // Turn 1 consumes the single allowed continuation.
+    pending.set([{ id: 'c1', name: 'loop', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(handler).toHaveBeenCalledOnce();
+    settle.mockClear();
+    resolve.mockClear();
+    flush.mockClear();
+    handler.mockClear();
+
+    // Turn 2 is blocked. Re-emitting the same pending call must not re-settle it:
+    // the predicate that records the block runs on every effect pass.
+    const blocked: ToolCall = { id: 'c2', name: 'loop', args: {}, status: 'complete' };
+    pending.set([blocked]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+    pending.set([{ ...blocked }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(settle).toHaveBeenCalledTimes(1);
+    expect(settle).toHaveBeenCalledWith('c2', {
+      ok: false,
+      error: 'client tool continuation limit reached; loop was not executed',
+    });
+    expect(resolve).not.toHaveBeenCalled();
+    expect(handler).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it('settles a blocked call once even when a later call reforms the group', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const handler = vi.fn(async () => 'again');
+    const registry = tools({ loop: action('Loop', z.object({}), handler) });
+    const { pending, settle, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry, {
+      continuationPolicy: { maxTurns: 1 },
+    });
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+    pending.set([{ id: 'c1', name: 'loop', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+    settle.mockClear();
+
+    // c2 is blocked and settled with a limit error.
+    pending.set([{ id: 'c2', name: 'loop', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    // c2 is STILL pending when a new call joins, which reforms the group with
+    // empty settle bookkeeping. A further effect pass must not re-settle c2.
+    const reformed: readonly ToolCall[] = [
+      { id: 'c2', name: 'loop', args: {}, status: 'complete' },
+      { id: 'c9', name: 'loop', args: {}, status: 'complete' },
+    ];
+    pending.set(reformed);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+    pending.set(reformed.map((tc) => ({ ...tc })));
+    TestBed.flushEffects();
+    await drainMicrotasks();
+    error.mockRestore();
+
+    const limitError = {
+      ok: false,
+      error: 'client tool continuation limit reached; loop was not executed',
+    };
+    expect(settle.mock.calls).toEqual([
+      ['c2', limitError],
+      ['c9', limitError],
+    ]);
   });
 
   it('handleRenderEvent() resolves pending ask tool call by elementKey (tool name)', () => {

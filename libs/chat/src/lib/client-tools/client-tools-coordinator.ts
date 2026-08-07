@@ -70,6 +70,12 @@ export function createClientToolsCoordinator(
 ): ClientToolsCoordinator {
   const viewRegistry = views(viewComponents(registry));
   const ackedViews = new Set<string>();
+  // Tool calls already settled with a continuation-limit result. Tracked outside
+  // the pending group because a blocked call can outlive the group it was
+  // blocked in: a later call joining `pending` reforms the group with empty
+  // settle bookkeeping, and the executor effect re-runs the predicate for every
+  // still-pending call.
+  const blockedIds = new Set<string>();
   let currentGroup: PendingToolGroup | undefined;
   let currentUserTurnKey = '';
   let continuationTurns = 0;
@@ -146,6 +152,18 @@ export function createClientToolsCoordinator(
     );
   }
 
+  function flushSettledResults(cap: ClientToolsCapability): void {
+    if (!cap.flush) {
+      console.warn(
+        'Client tool group settled with no follow-up, but the agent capability does not implement flush(); results may not reach the server.',
+      );
+      return;
+    }
+    void Promise.resolve(cap.flush()).catch((err: unknown) => {
+      console.error('Client tool flush failed', err);
+    });
+  }
+
   function settleClientToolCall(
     cap: ClientToolsCapability,
     agent: Agent,
@@ -153,7 +171,18 @@ export function createClientToolsCoordinator(
     result: ClientToolResult,
   ): void {
     const group = groupFor(agent, cap, tc);
-    if (!group.allowed) return;
+    // Over the continuation limit: still record the result so the server never
+    // keeps an unanswered tool call, but never continue the run.
+    if (!group.allowed) {
+      if (group.settledIds.has(tc.id) || blockedIds.has(tc.id)) return;
+      group.settledIds.add(tc.id);
+      blockedIds.add(tc.id);
+      if (cap.settle) {
+        cap.settle(tc.id, result);
+        flushSettledResults(cap);
+      }
+      return;
+    }
     if (group.settledIds.has(tc.id)) return;
     group.settledIds.add(tc.id);
 
@@ -172,7 +201,12 @@ export function createClientToolsCoordinator(
     }
 
     cap.settle(tc.id, result);
-    if (groupComplete) currentGroup = undefined;
+    if (groupComplete) {
+      // Terminal group: nothing will continue the run, so make the settled
+      // results durable ourselves or the server keeps an unanswered tool call.
+      flushSettledResults(cap);
+      currentGroup = undefined;
+    }
   }
 
   return {
@@ -183,7 +217,16 @@ export function createClientToolsCoordinator(
       cap.setCatalog(toClientToolSpecs(registry));
       startClientToolExecutor(agent, registry, {
         executionGuard: options.executionGuard,
-        shouldExecuteToolCall: (tc) => shouldHandleClientToolCall(agent, cap, tc),
+        shouldExecuteToolCall: (tc) => {
+          if (shouldHandleClientToolCall(agent, cap, tc)) return true;
+          // Blocked before executing: record why, so the model sees a reason
+          // instead of an unanswered tool call.
+          settleClientToolCall(cap, agent, tc, {
+            ok: false,
+            error: `client tool continuation limit reached; ${tc.name} was not executed`,
+          });
+          return false;
+        },
         settleToolCall: (tc, result) => settleClientToolCall(cap, agent, tc, result),
       }); // function tools
       // Auto-ack `view` tools: they render but produce no user value.
