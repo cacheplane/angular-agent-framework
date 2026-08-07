@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { signal } from '@angular/core';
+import { computed, signal } from '@angular/core';
 import { z } from 'zod/v4';
 import { action, view, ask, tools } from './tools';
 import { toClientToolSpecs, createClientToolsCoordinator } from './client-tools-coordinator';
@@ -17,8 +17,12 @@ import type { ToolCall } from '../agent/tool-call';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-/** Drain the microtask queue a handful of times to let Promise chains settle. */
-async function drainMicrotasks(rounds = 4): Promise<void> {
+/**
+ * Drain the microtask queue a handful of times to let Promise chains settle.
+ * The executor races each handler against its abort signal, so a settlement is
+ * several ticks deep — keep this comfortably above the longest chain.
+ */
+async function drainMicrotasks(rounds = 12): Promise<void> {
   for (let i = 0; i < rounds; i++) {
     await Promise.resolve();
   }
@@ -30,27 +34,46 @@ class FakeAskComponent {}
 
 // ── factory helpers ───────────────────────────────────────────────────────────
 
+/** Both shipped adapters mark a call resolved inside settle()/resolve() so that
+ *  `pending()` drops it immediately — a settled call can never be re-presented
+ *  to the executor effect. The fakes below mirror that, otherwise they invite
+ *  guards against hazards the real adapters cannot produce. Tests drive the raw
+ *  list; the capability sees the filtered view. */
+function pendingView(
+  raw: ReturnType<typeof signal<readonly ToolCall[]>>,
+  resolvedIds: ReturnType<typeof signal<ReadonlySet<string>>>,
+) {
+  return computed<readonly ToolCall[]>(() => raw().filter((tc) => !resolvedIds().has(tc.id)));
+}
+
 function makeFakeCapability() {
   const pending = signal<readonly ToolCall[]>([]);
-  const settle = vi.fn<[string, ClientToolResult], void>();
-  const resolve = vi.fn<[string, ClientToolResult], void>();
+  const resolvedIds = signal<ReadonlySet<string>>(new Set());
+  const drop = (id: string): void => resolvedIds.update((s) => new Set(s).add(id));
+  const settle = vi.fn<[string, ClientToolResult], void>((id) => drop(id));
+  const flush = vi.fn<[], void>();
+  const resolve = vi.fn<[string, ClientToolResult], void>((id) => drop(id));
   const setCatalog = vi.fn<[readonly unknown[]], void>();
   const capability: ClientToolsCapability = {
     setCatalog,
-    pending,
+    pending: pendingView(pending, resolvedIds),
     settle,
+    flush,
     resolve,
   };
-  return { pending, settle, resolve, setCatalog, capability };
+  return { pending, settle, flush, resolve, setCatalog, capability };
 }
 
 function makeFakeCapabilityWithoutSettle() {
   const pending = signal<readonly ToolCall[]>([]);
-  const resolve = vi.fn<[string, ClientToolResult], void>();
+  const resolvedIds = signal<ReadonlySet<string>>(new Set());
+  const resolve = vi.fn<[string, ClientToolResult], void>((id) =>
+    resolvedIds.update((s) => new Set(s).add(id)),
+  );
   const setCatalog = vi.fn<[readonly unknown[]], void>();
   const capability: ClientToolsCapability = {
     setCatalog,
-    pending,
+    pending: pendingView(pending, resolvedIds),
     resolve,
   };
   return { pending, resolve, setCatalog, capability };
@@ -258,6 +281,65 @@ describe('createClientToolsCoordinator()', () => {
     expect(resolve).toHaveBeenCalledWith('f2', { ok: true, value: 'B:LA' });
   });
 
+  it('settles cancelled function tools without submitting a follow-up run', async () => {
+    const registry = tools({
+      slow: action('Slow', z.object({}), async () => new Promise<string>(() => undefined)),
+    });
+    const { pending, settle, flush, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry);
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    pending.set([{ id: 'c1', name: 'slow', args: {}, status: 'running' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    await agent.stop();
+    await drainMicrotasks();
+
+    // A single-call group with default followUp would normally resolve(), which
+    // submits a new run. A cancelled call must never take that path.
+    expect(resolve).not.toHaveBeenCalled();
+    expect(agent.submit).not.toHaveBeenCalled();
+    expect(settle).toHaveBeenCalledOnce();
+    expect(settle.mock.calls[0][0]).toBe('c1');
+    expect(settle.mock.calls[0][1].ok).toBe(false);
+    expect(flush).toHaveBeenCalledOnce();
+  });
+
+  it('flushes a cancelled two-call group exactly once', async () => {
+    const registry = tools({
+      slow_a: action('Slow A', z.object({}), async () => new Promise<string>(() => undefined)),
+      slow_b: action('Slow B', z.object({}), async () => new Promise<string>(() => undefined)),
+    });
+    const { pending, settle, flush, resolve, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry);
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    pending.set([
+      { id: 'c1', name: 'slow_a', args: {}, status: 'running' },
+      { id: 'c2', name: 'slow_b', args: {}, status: 'running' },
+    ]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    await agent.stop();
+    await drainMicrotasks();
+
+    expect(resolve).not.toHaveBeenCalled();
+    expect(settle).toHaveBeenCalledTimes(2);
+    // Adapters coalesce concurrent flushes, so a per-call flush would strand
+    // every batch after the first: flush ONCE, when the last call settles.
+    expect(flush).toHaveBeenCalledOnce();
+  });
+
   it('settles terminal tools and flushes once when a mixed group completes', async () => {
     const registry = tools({
       terminal_card: view(
@@ -292,7 +374,7 @@ describe('createClientToolsCoordinator()', () => {
     expect(resolve).toHaveBeenCalledWith('f1', { ok: true, value: { temp: 72, city: 'SF' } });
   });
 
-  it('settles a fully-terminal group without resolving', () => {
+  it('settles a fully-terminal group and flushes once, without resolving', () => {
     const registry = tools({
       terminal_card: view(
         'Show terminal card',
@@ -301,7 +383,7 @@ describe('createClientToolsCoordinator()', () => {
         { followUp: false },
       ),
     });
-    const { pending, settle, resolve, capability } = makeFakeCapability();
+    const { pending, settle, resolve, flush, capability } = makeFakeCapability();
     const agent = makeFakeAgent(capability);
     const coordinator = createClientToolsCoordinator(registry);
 
@@ -314,6 +396,42 @@ describe('createClientToolsCoordinator()', () => {
 
     expect(settle).toHaveBeenCalledOnce();
     expect(settle).toHaveBeenCalledWith('v1', { ok: true, value: { shown: true } });
+    // Nothing continues the run, so the coordinator must make the results durable.
+    expect(flush).toHaveBeenCalledTimes(1);
+    expect(resolve).not.toHaveBeenCalled();
+  });
+
+  it('flushes a multi-call terminal group exactly once', () => {
+    const registry = tools({
+      card_a: view('Card A', z.object({ city: z.string() }), FakeViewComponent as never, {
+        followUp: false,
+      }),
+      card_b: view('Card B', z.object({ city: z.string() }), FakeViewComponent as never, {
+        followUp: false,
+      }),
+      card_c: view('Card C', z.object({ city: z.string() }), FakeViewComponent as never, {
+        followUp: false,
+      }),
+    });
+    const { pending, settle, resolve, flush, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry);
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    pending.set([
+      { id: 't1', name: 'card_a', args: { city: 'LA' }, status: 'running' },
+      { id: 't2', name: 'card_b', args: { city: 'SF' }, status: 'running' },
+      { id: 't3', name: 'card_c', args: { city: 'NY' }, status: 'running' },
+    ]);
+    TestBed.flushEffects();
+
+    expect(settle.mock.calls.map((c) => c[0])).toEqual(['t1', 't2', 't3']);
+    // One flush for the whole group: adapters coalesce concurrent flushes, so a
+    // per-call flush would strand every batch after the first.
+    expect(flush).toHaveBeenCalledTimes(1);
     expect(resolve).not.toHaveBeenCalled();
   });
 
@@ -519,6 +637,217 @@ describe('createClientToolsCoordinator()', () => {
     expect(resolve).toHaveBeenCalledTimes(1);
     expect(error).toHaveBeenCalledOnce();
     error.mockRestore();
+  });
+
+  it('settles blocked calls with a limit error and preserves real ask results', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const registry = tools({
+      confirm: ask('Confirm', z.object({ q: z.string() }), FakeAskComponent as never),
+    });
+    const { pending, settle, resolve, flush, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry, {
+      continuationPolicy: { maxTurns: 1 },
+    });
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    // Turn 1 consumes the single allowed continuation.
+    pending.set([{ id: 'a1', name: 'confirm', args: { q: 'x' }, status: 'running' }]);
+    TestBed.flushEffects();
+    coordinator.handleRenderEvent(agent, {
+      type: 'result',
+      elementKey: 'confirm',
+      value: { confirmed: true },
+    } as never);
+
+    settle.mockClear();
+    resolve.mockClear();
+    flush.mockClear();
+
+    // Turn 2 exceeds maxTurns: the user's answer must still be recorded.
+    pending.set([{ id: 'a2', name: 'confirm', args: { q: 'y' }, status: 'running' }]);
+    TestBed.flushEffects();
+    coordinator.handleRenderEvent(agent, {
+      type: 'result',
+      elementKey: 'confirm',
+      value: { confirmed: false },
+    } as never);
+
+    expect(settle).toHaveBeenCalledWith('a2', { ok: true, value: { confirmed: false } });
+    expect(flush).toHaveBeenCalledTimes(1);
+    expect(resolve).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it('flushes a two-call blocked group once, after both calls settle', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const registry = tools({
+      loop_a: action('Loop A', z.object({}), async () => 'a'),
+      loop_b: action('Loop B', z.object({}), async () => 'b'),
+    });
+    const { pending, settle, resolve, flush, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry, {
+      continuationPolicy: { maxTurns: 1 },
+    });
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    // Turn 1 consumes the single allowed continuation.
+    pending.set([{ id: 'a1', name: 'loop_a', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    settle.mockClear();
+    resolve.mockClear();
+    flush.mockClear();
+
+    // Turn 2 trips the limit with TWO calls. Both must be settled, and the
+    // group must flush exactly once — adapters coalesce concurrent flushes, so
+    // a per-call flush strands b2's batch and leaves it unanswered on reload.
+    pending.set([
+      { id: 'b1', name: 'loop_a', args: {}, status: 'complete' },
+      { id: 'b2', name: 'loop_b', args: {}, status: 'complete' },
+    ]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(settle.mock.calls.map((c) => c[0])).toEqual(['b1', 'b2']);
+    expect(flush).toHaveBeenCalledTimes(1);
+    expect(resolve).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it('warns instead of silently discarding a blocked call when settle() is missing', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const registry = tools({
+      loop: action('Loop', z.object({}), async () => 'again'),
+    });
+    const { pending, resolve, capability } = makeFakeCapabilityWithoutSettle();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry, {
+      continuationPolicy: { maxTurns: 1 },
+    });
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    pending.set([{ id: 'c1', name: 'loop', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+    resolve.mockClear();
+
+    pending.set([{ id: 'c2', name: 'loop', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    // Cannot record the result without settle(), and must not continue the run —
+    // but the operator gets told, rather than the result vanishing silently.
+    expect(resolve).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledOnce();
+    warn.mockRestore();
+    error.mockRestore();
+  });
+
+  it('settles a blocked function tool exactly once across effect re-runs', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const handler = vi.fn(async () => 'again');
+    const registry = tools({
+      loop: action('Loop', z.object({}), handler),
+    });
+    const { pending, settle, resolve, flush, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry, {
+      continuationPolicy: { maxTurns: 1 },
+    });
+
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+
+    // Turn 1 consumes the single allowed continuation.
+    pending.set([{ id: 'c1', name: 'loop', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(handler).toHaveBeenCalledOnce();
+    settle.mockClear();
+    resolve.mockClear();
+    flush.mockClear();
+    handler.mockClear();
+
+    // Turn 2 is blocked. Re-emitting the same pending call must not re-settle it:
+    // the predicate that records the block runs on every effect pass.
+    const blocked: ToolCall = { id: 'c2', name: 'loop', args: {}, status: 'complete' };
+    pending.set([blocked]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+    pending.set([{ ...blocked }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    expect(settle).toHaveBeenCalledTimes(1);
+    expect(settle).toHaveBeenCalledWith('c2', {
+      ok: false,
+      error: 'client tool continuation limit reached; loop was not executed',
+    });
+    expect(resolve).not.toHaveBeenCalled();
+    expect(handler).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it('does not re-settle a blocked call when a later call reforms the group', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const handler = vi.fn(async () => 'again');
+    const registry = tools({ loop: action('Loop', z.object({}), handler) });
+    const { pending, settle, capability } = makeFakeCapability();
+    const agent = makeFakeAgent(capability);
+    const coordinator = createClientToolsCoordinator(registry, {
+      continuationPolicy: { maxTurns: 1 },
+    });
+    TestBed.runInInjectionContext(() => {
+      coordinator.connect(agent);
+    });
+    pending.set([{ id: 'c1', name: 'loop', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+    settle.mockClear();
+
+    // c2 is blocked and settled with a limit error.
+    pending.set([{ id: 'c2', name: 'loop', args: {}, status: 'complete' }]);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+
+    // A new call joins while c2 is still in the raw list. The group reforms with
+    // empty settle bookkeeping, but settle() already dropped c2 from pending(),
+    // so the effect never sees it again and it is not re-settled.
+    const reformed: readonly ToolCall[] = [
+      { id: 'c2', name: 'loop', args: {}, status: 'complete' },
+      { id: 'c9', name: 'loop', args: {}, status: 'complete' },
+    ];
+    pending.set(reformed);
+    TestBed.flushEffects();
+    await drainMicrotasks();
+    pending.set(reformed.map((tc) => ({ ...tc })));
+    TestBed.flushEffects();
+    await drainMicrotasks();
+    error.mockRestore();
+
+    const limitError = {
+      ok: false,
+      error: 'client tool continuation limit reached; loop was not executed',
+    };
+    expect(settle.mock.calls).toEqual([
+      ['c2', limitError],
+      ['c9', limitError],
+    ]);
   });
 
   it('handleRenderEvent() resolves pending ask tool call by elementKey (tool name)', () => {

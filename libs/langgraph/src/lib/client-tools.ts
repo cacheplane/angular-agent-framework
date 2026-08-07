@@ -72,6 +72,49 @@ export function mergeClientTools(
   return { ...(payload as Record<string, unknown>), client_tools: catalog };
 }
 
+/** Wire shape for a settled client-tool result awaiting durability. */
+export interface BufferedToolMessage {
+  readonly type: 'tool';
+  readonly role: 'tool';
+  readonly tool_call_id: string;
+  readonly content: string;
+}
+
+/** Writes settled tool messages into server thread state without starting a run. */
+export type PersistToolMessagesFn = (
+  messages: readonly BufferedToolMessage[],
+) => Promise<void>;
+
+/** Reads the thread a write would currently land on. */
+export type CurrentThreadIdFn = () => string | null;
+
+/**
+ * A buffered tool message plus the thread it was settled on. The stamp is
+ * internal bookkeeping and never reaches the wire — only `message` is sent.
+ */
+interface StagedToolMessage {
+  readonly threadId: string | null;
+  readonly message: BufferedToolMessage;
+}
+
+/**
+ * Prepend staged tool messages to a run payload's message list.
+ *
+ * Mirrors mergeClientTools: a null payload signals a no-input resume and must
+ * stay null, so staged messages cannot ride along and are left buffered.
+ */
+export function mergeStagedToolMessages(
+  payload: unknown,
+  staged: readonly BufferedToolMessage[],
+): unknown {
+  if (staged.length === 0) return payload;
+  if (payload === null || payload === undefined) return payload;
+  if (typeof payload !== 'object' || Array.isArray(payload)) return payload;
+  const record = payload as Record<string, unknown>;
+  const existing = Array.isArray(record['messages']) ? record['messages'] : [];
+  return { ...record, messages: [...staged, ...existing] };
+}
+
 /**
  * Creates a ClientToolsCapability backed by a LangGraph submit function and
  * a store of tool-call signals. Extracted into a factory so it can be
@@ -88,6 +131,13 @@ export function mergeClientTools(
  *    client tools, so `result` stays undefined on those entries.
  *  - settle(id, result): marks the call as resolved, writes the local result,
  *    and buffers a ToolMessage without issuing a run.
+ *  - flush(): makes the whole buffer durable in ONE persistFn call without
+ *    starting a run — the settlement path for tool groups that never continue.
+ *    The batch leaves the buffer at snapshot time and is re-staged only if the
+ *    write fails, so a failure (or an absent persistFn) still degrades to the
+ *    next flush or to the drainToolMessages() fallback in the submit wrapper,
+ *    while a concurrent resolve()/drain can never re-send an in-flight batch.
+ *  - clearStagedToolMessages(): discards the buffer on a thread switch.
  *  - resolve(id, result): settles the result, then issues a NEW run on the SAME
  *    thread by calling submitFn with the full buffered ToolMessage group:
  *      input: {
@@ -108,10 +158,25 @@ export function mergeClientTools(
 export function createClientToolsCapability(
   submitFn: SubmitFn,
   store: ClientToolsStore,
-): ClientToolsCapability & { catalog: Signal<readonly ClientToolSpec[]> } {
+  persistFn?: PersistToolMessagesFn,
+  currentThreadIdFn?: CurrentThreadIdFn,
+): ClientToolsCapability & {
+  catalog: Signal<readonly ClientToolSpec[]>;
+  drainToolMessages(): BufferedToolMessage[];
+  clearStagedToolMessages(): void;
+} {
   const catalog = signal<readonly ClientToolSpec[]>([]);
   const resolvedIds = signal<ReadonlySet<string>>(new Set());
-  const toolMessageBuffer: Array<{ type: 'tool'; role: 'tool'; tool_call_id: string; content: string }> = [];
+  const toolMessageBuffer: StagedToolMessage[] = [];
+  let flushInFlight: Promise<void> | undefined;
+  // Bumped whenever the buffer is discarded, so an in-flight flush can tell
+  // whether its batch still belongs to the current thread.
+  let bufferGeneration = 0;
+  // Tool calls belonging to threads we have left. A handler still running when
+  // the user switches threads settles AFTER the switch, by which point both the
+  // store and the current thread id already describe the NEW thread — the id is
+  // the only durable way left to recognise the result as stale.
+  const retiredToolCallIds = new Set<string>();
 
   const pending = computed<readonly ToolCall[]>(() => {
     // Client tools are only actionable after the run ends (the backend
@@ -152,15 +217,92 @@ export function createClientToolsCapability(
       ? safeStringify(value)
       : `Error: ${error}`;
 
+    // The tool call belongs to a thread the user has already left, so there is
+    // nowhere valid to send this result: the current thread has no matching
+    // tool call, and the old thread is no longer the write target.
+    if (retiredToolCallIds.has(id)) {
+      console.warn(
+        `Discarding client tool result for ${id}: its thread is no longer active.`,
+      );
+      return;
+    }
+
     // Message shape: both `type` and `role` are set for compatibility —
     // the LangGraph server's add_messages coercion reads `role` (Python
     // side), while the bridge's local optimistic-message path reads `type`
     // (via toMessage's normalizeMessageType). This mirrors the human-message
     // shape used in buildSubmitUpdate (agent.fn.ts line 732).
-    toolMessageBuffer.push({ type: 'tool', role: 'tool', tool_call_id: id, content });
+    toolMessageBuffer.push({
+      threadId: currentThreadIdFn?.() ?? null,
+      message: { type: 'tool', role: 'tool', tool_call_id: id, content },
+    });
   }
 
-  const capability: ClientToolsCapability & { catalog: Signal<readonly ClientToolSpec[]> } = {
+  /**
+   * Remove every staged entry, returning only those still valid for the thread
+   * a write would land on right now. An entry is stale when it was stamped with
+   * a different thread — dropped rather than misdelivered.
+   *
+   * A null on either side means "thread not tracked yet" (no threadId option
+   * and no run has reported one); those are kept, since there is no evidence of
+   * a switch and dropping them would lose results on untracked transports.
+   */
+  function takeStagedForCurrentThread(): StagedToolMessage[] {
+    const current = currentThreadIdFn?.() ?? null;
+    const taken = toolMessageBuffer.splice(0, toolMessageBuffer.length);
+    return taken.filter((entry) => {
+      const stale =
+        entry.threadId !== null && current !== null && entry.threadId !== current;
+      if (stale) {
+        console.warn(
+          `Discarding a client tool result staged for thread ${entry.threadId}; ` +
+            `the active thread is now ${current}.`,
+        );
+      }
+      return !stale;
+    });
+  }
+
+  /**
+   * Persist one batch. Takes ownership of the buffer at snapshot time:
+   * resolve() and drainToolMessages() clear the buffer unconditionally and know
+   * nothing about an in-flight write, so anything left staged across the await
+   * could be re-sent (a duplicate ToolMessage for one tool_call_id) or removed
+   * by the wrong index (dropping a result that was never persisted).
+   */
+  function runFlush(): Promise<void> {
+    if (!persistFn) return Promise.resolve();
+    const staged = takeStagedForCurrentThread();
+    if (staged.length === 0) return Promise.resolve();
+
+    const generation = bufferGeneration;
+    const batch = staged.map((entry) => entry.message);
+    const inFlight = persistFn(batch)
+      .catch((err: unknown) => {
+        // Re-stage at the FRONT so ordering is preserved for the next drain —
+        // unless the buffer was cleared meanwhile (thread switch), in which
+        // case these results belong to a thread we have left.
+        if (generation === bufferGeneration) {
+          toolMessageBuffer.unshift(...staged);
+        }
+        console.warn(
+          `Client tool flush failed; ${batch.length} result(s) remain staged for the next run.`,
+          err,
+        );
+      })
+      .finally(() => {
+        // Only clear if no later flush has already claimed the slot.
+        if (flushInFlight === inFlight) flushInFlight = undefined;
+      });
+    flushInFlight = inFlight;
+    return inFlight;
+  }
+
+  const capability: ClientToolsCapability & {
+    catalog: Signal<readonly ClientToolSpec[]>;
+    drainToolMessages(): BufferedToolMessage[];
+    clearStagedToolMessages(): void;
+  } = {
     catalog,
 
     setCatalog(specs: readonly ClientToolSpec[]): void {
@@ -173,16 +315,52 @@ export function createClientToolsCapability(
       settleResult(id, result);
     },
 
+    /** Remove and return every buffered tool message valid for this thread. */
+    drainToolMessages(): BufferedToolMessage[] {
+      return takeStagedForCurrentThread().map((entry) => entry.message);
+    },
+
+    /**
+     * Discard everything staged. Called when the active thread changes: a
+     * ToolMessage only makes sense against the thread whose AIMessage produced
+     * its tool_call_id, so carrying it over would poison the new thread.
+     */
+    clearStagedToolMessages(): void {
+      // Retire the outgoing thread's tool calls so a handler that settles after
+      // the switch is recognised as stale. Read the store BEFORE it resets —
+      // agent.fn.ts calls this ahead of manager.switchThread for that reason.
+      for (const toolCall of store.toolCalls()) retiredToolCallIds.add(toolCall.id);
+      toolMessageBuffer.length = 0;
+      // Invalidate any in-flight flush so its failure path cannot re-stage the
+      // old thread's messages into the new thread's buffer.
+      bufferGeneration += 1;
+    },
+
+    flush(): Promise<void> {
+      if (!persistFn) return Promise.resolve();
+      if (flushInFlight) {
+        // Chain rather than short-circuit. The caller's batch may have been
+        // staged AFTER the in-flight write took its snapshot, so returning that
+        // promise would resolve without ever persisting it — which is exactly
+        // what happens when an abort fires one flush per settled call. The
+        // chain terminates because runFlush() returns immediately once the
+        // buffer is empty.
+        const chained = flushInFlight.then(() => runFlush());
+        flushInFlight = chained;
+        return chained;
+      }
+      return runFlush();
+    },
+
     resolve(id: string, result: ClientToolResult): void {
       settleResult(id, result);
       // Issue a new run on the same thread. LangGraph's add_messages reducer
       // appends the ToolMessages to the thread state. `client_tools` is
       // included so the model sees the full tool catalog on the continuation.
       const toolPayload = {
-        messages: [...toolMessageBuffer],
+        messages: takeStagedForCurrentThread().map((entry) => entry.message),
         client_tools: catalog(),
       };
-      toolMessageBuffer.length = 0;
 
       void submitFn(toolPayload);
     },

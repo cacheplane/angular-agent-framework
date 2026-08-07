@@ -146,18 +146,61 @@ export function createClientToolsCoordinator(
     );
   }
 
+  /** No settle() and the run must not continue — the result cannot be recorded. */
+  function warnUnrecordableWithoutSettle(tc: ToolCall): void {
+    console.warn(
+      `Client tool "${tc.name}" must not continue the run, but the agent capability does not implement settle(); the result cannot be recorded without starting a run.`,
+    );
+  }
+
+  function flushSettledResults(cap: ClientToolsCapability): void {
+    if (!cap.flush) {
+      console.warn(
+        'Client tool results were settled with no follow-up run, but the agent capability does not implement flush(); results may not reach the server.',
+      );
+      return;
+    }
+    void Promise.resolve(cap.flush()).catch((err: unknown) => {
+      console.error('Client tool flush failed', err);
+    });
+  }
+
   function settleClientToolCall(
     cap: ClientToolsCapability,
     agent: Agent,
     tc: ToolCall,
     result: ClientToolResult,
+    mayContinue = true,
   ): void {
     const group = groupFor(agent, cap, tc);
-    if (!group.allowed) return;
     if (group.settledIds.has(tc.id)) return;
     group.settledIds.add(tc.id);
 
     const groupComplete = Array.from(group.ids).every((id) => group.settledIds.has(id));
+
+    // Over the continuation limit, or cancelled by the user (stop / teardown):
+    // still record the result so the server never keeps an unanswered tool
+    // call, but never continue the run — `resolve()` submits a new run, which
+    // for a cancelled call would undo the very stop the user asked for.
+    if (!group.allowed || !mayContinue) {
+      if (!cap.settle) {
+        warnUnrecordableWithoutSettle(tc);
+        return;
+      }
+      cap.settle(tc.id, result);
+      // Flush ONCE, when the last call in the group settles. Adapters coalesce
+      // concurrent flushes (returning the in-flight promise), so flushing per
+      // call would strand every batch after the first.
+      if (groupComplete) {
+        flushSettledResults(cap);
+        // A limit-blocked group must stay `currentGroup` so repeated effect
+        // passes over the same never-executed calls keep short-circuiting on
+        // `settledIds`. Cancelled calls leave `pending()` once settled, so
+        // their group can be retired normally.
+        if (group.allowed) currentGroup = undefined;
+      }
+      return;
+    }
     if (!cap.settle) {
       if (group.ids.size > 1 || registry[tc.name]?.followUp === false) warnMissingSettle(tc);
       cap.resolve(tc.id, result);
@@ -172,7 +215,12 @@ export function createClientToolsCoordinator(
     }
 
     cap.settle(tc.id, result);
-    if (groupComplete) currentGroup = undefined;
+    if (groupComplete) {
+      // Terminal group: nothing will continue the run, so make the settled
+      // results durable ourselves or the server keeps an unanswered tool call.
+      flushSettledResults(cap);
+      currentGroup = undefined;
+    }
   }
 
   return {
@@ -183,8 +231,21 @@ export function createClientToolsCoordinator(
       cap.setCatalog(toClientToolSpecs(registry));
       startClientToolExecutor(agent, registry, {
         executionGuard: options.executionGuard,
-        shouldExecuteToolCall: (tc) => shouldHandleClientToolCall(agent, cap, tc),
+        shouldExecuteToolCall: (tc) => {
+          if (shouldHandleClientToolCall(agent, cap, tc)) return true;
+          // Blocked before executing: record why, so the model sees a reason
+          // instead of an unanswered tool call.
+          settleClientToolCall(cap, agent, tc, {
+            ok: false,
+            error: `client tool continuation limit reached; ${tc.name} was not executed`,
+          });
+          return false;
+        },
         settleToolCall: (tc, result) => settleClientToolCall(cap, agent, tc, result),
+        // Cancelled calls reuse the same group bookkeeping (so the flush-once-
+        // per-group property holds) but are forced down the settle+flush path.
+        settleWithoutContinuing: (tc, result) =>
+          settleClientToolCall(cap, agent, tc, result, false),
       }); // function tools
       // Auto-ack `view` tools: they render but produce no user value.
       effect(() => {

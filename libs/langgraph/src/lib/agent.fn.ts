@@ -67,7 +67,11 @@ import { createStreamManagerBridge } from './internals/stream-manager.bridge';
 import { LANGGRAPH_CLIENT_OPTIONS, resolveClientOptions } from './client/client-options';
 import { buildBranchTree } from './internals/branch-tree';
 import { extractCitations } from './internals/extract-citations';
-import { createClientToolsCapability, mergeClientTools } from './client-tools';
+import {
+  createClientToolsCapability,
+  mergeClientTools,
+  mergeStagedToolMessages,
+} from './client-tools';
 import type { ClientToolResultPatch } from './client-tools';
 
 /**
@@ -189,10 +193,22 @@ export function agent<
   const custom$          = new BehaviorSubject<CustomStreamEvent[]>([]);
   const hasValue$        = new BehaviorSubject<boolean>(false);
 
+  // Forward reference. The client-tools capability is built much further down
+  // (it needs `manager`, which needs these subjects), but the thread-change
+  // seam lives here. A holder keeps the binding itself a `const` while its
+  // member is filled in later.
+  const clientToolStaging: { clear?: () => void } = {};
+
   function resetDerivedThreadState(): void {
     status$.next(ResourceStatus.Idle);
     error$.next(undefined);
     hasValue$.next(false);
+    // Staged client-tool results belong to the thread whose AIMessage produced
+    // their tool_call_ids. Carrying them into a different thread would prepend
+    // a ToolMessage that matches no tool call there — a 400 on that turn.
+    // Runs BEFORE manager.switchThread resets the store, so the capability can
+    // still read the outgoing thread's tool calls.
+    clientToolStaging.clear?.();
   }
 
   // Track hasValue — becomes true once values or messages arrive
@@ -416,6 +432,14 @@ export function agent<
   // follow-up runs (resolve) without going through the full submit() wrapper.
   // The catalog is injected into every outbound payload via mergeClientTools()
   // in the submit wrapper below and in the resolve path inside the capability.
+  //
+  // flush() needs a durable write that does NOT start a run. The bridge's
+  // updateState() silently no-ops when the transport has no updateState, so
+  // only supply a persist function when the effective transport supports it —
+  // an omitted transport means the bridge builds a FetchStreamTransport, which
+  // does. When persistFn is undefined, flush() keeps the buffer and the submit
+  // wrapper below drains it into the next run instead.
+  const canPersistToolMessages = !transport || typeof transport.updateState === 'function';
   const clientToolsCap = createClientToolsCapability(
     (payload, opts) => manager.submit(payload, opts),
     {
@@ -424,7 +448,23 @@ export function agent<
       applyClientResult: (id, patch) =>
         clientResultOverrides.update((m) => new Map(m).set(id, patch)),
     },
+    canPersistToolMessages
+      ? async (messages) => {
+          // Throw rather than let the bridge no-op: without a thread there is
+          // nothing to write to, and flush() must keep the buffer staged.
+          if (!manager.currentThreadId) {
+            throw new Error('no threadId for client tool flush');
+          }
+          // No asNode: add_messages appends the ToolMessages and the graph's
+          // resume point is left untouched, so no run is started.
+          await manager.updateState({ messages: [...messages] });
+        }
+      : undefined,
+    // Stamps each staged result with the thread it was settled on, so a write
+    // can never land on a thread the user has since moved to.
+    () => manager.currentThreadId,
   );
+  clientToolStaging.clear = () => clientToolsCap.clearStagedToolMessages();
 
   return {
     // ── Runtime-neutral surface (AgentWithHistory) ────────────────────────
@@ -452,7 +492,18 @@ export function agent<
       // Thread the client-tools catalog into every outbound payload so the
       // backend middleware can merge them into the model's tool list. Null
       // payloads (regenerate re-runs, command resumes) are left unchanged.
-      const payload = mergeClientTools(request.payload, clientToolsCap.catalog());
+      //
+      // Drain any results settled but not yet made durable (flush unavailable
+      // or a prior flush failed) so they ride along with this run. A null
+      // payload cannot carry them, so leave the buffer alone in that case
+      // rather than silently discarding the staged results.
+      const staged = request.payload === null || request.payload === undefined
+        ? []
+        : clientToolsCap.drainToolMessages();
+      const withStaged = staged.length > 0
+        ? mergeStagedToolMessages(request.payload, staged)
+        : request.payload;
+      const payload = mergeClientTools(withStaged, clientToolsCap.catalog());
       return manager.submit(payload, request.options);
     },
     stop: () => manager.stop(),

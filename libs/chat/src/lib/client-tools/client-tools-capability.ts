@@ -21,6 +21,13 @@ export interface ClientToolsCapability {
   readonly pending: Signal<readonly ToolCall[]>;
   /** Record a client tool's result without continuing the run. */
   settle?(toolCallId: string, result: ClientToolResult): void;
+  /**
+   * Make every result recorded via {@link settle} durable on the server
+   * WITHOUT continuing the run. No-op for adapters whose settle() is already
+   * durable. Adapters that buffer locally MUST clear their buffer only on a
+   * successful write, so a failure degrades to a later flush or submit.
+   */
+  flush?(): void | Promise<void>;
   /** Return a client tool's result (or error) and continue the run. */
   resolve(toolCallId: string, result: ClientToolResult): void;
 }

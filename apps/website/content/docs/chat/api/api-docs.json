@@ -6953,6 +6953,12 @@
         "optional": true
       },
       {
+        "name": "settleWithoutContinuing",
+        "type": "(toolCall: ToolCall, result: ClientToolResult) => void",
+        "description": "Settlement for calls that must NOT continue the run (user abort, teardown).",
+        "optional": true
+      },
+      {
         "name": "shouldExecuteToolCall",
         "type": "(toolCall: ToolCall) => boolean",
         "description": "",
@@ -7024,6 +7030,12 @@
       }
     ],
     "methods": [
+      {
+        "name": "flush",
+        "signature": "flush(): void | Promise<void>",
+        "description": "Make every result recorded via settle durable on the server\nWITHOUT continuing the run. No-op for adapters whose settle() is already\ndurable. Adapters that buffer locally MUST clear their buffer only on a\nsuccessful write, so a failure degrades to a later flush or submit.",
+        "params": []
+      },
       {
         "name": "resolve",
         "signature": "resolve(toolCallId: string, result: ClientToolResult): void",
@@ -8694,6 +8706,25 @@
     ],
     "returns": {
       "type": "A2uiActionMessage",
+      "description": ""
+    },
+    "examples": []
+  },
+  {
+    "name": "cancelledClientToolResult",
+    "kind": "function",
+    "description": "Result recorded when the user stops a run while a client tool is running.",
+    "signature": "cancelledClientToolResult(toolCallId: string): ClientToolResult",
+    "params": [
+      {
+        "name": "toolCallId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "returns": {
+      "type": "ClientToolResult",
       "description": ""
     },
     "examples": []
