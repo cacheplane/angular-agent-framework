@@ -14,18 +14,19 @@ export type PostgresTaggedSql = (
 
 export const THREADPLANE_CLIENT_TOOL_EXECUTIONS_SCHEMA = `
 CREATE TABLE IF NOT EXISTS threadplane_client_tool_executions (
-  tenant_id     text,
+  tenant_id     text        NOT NULL DEFAULT '',
   thread_id     text        NOT NULL,
   tool_call_id  text        NOT NULL,
   status        text        NOT NULL,
   result        jsonb,
   created_at    timestamptz NOT NULL DEFAULT now(),
   updated_at    timestamptz NOT NULL DEFAULT now(),
-  PRIMARY KEY (thread_id, tool_call_id)
+  PRIMARY KEY (tenant_id, thread_id, tool_call_id)
 );
 `;
 
 export interface PostgresClientToolExecutionStoreOptions {
+  /** Tenant scope for every read and write. Defaults to `''` (the single-tenant scope). */
   readonly tenantId?: string | null;
 }
 
@@ -34,7 +35,9 @@ export function createPostgresClientToolExecutionStore(
   sql: PostgresTaggedSql,
   opts: PostgresClientToolExecutionStoreOptions = {},
 ): ClientToolExecutionStore {
-  const tenantId = opts.tenantId ?? null;
+  // `tenant_id` participates in the primary key, so a missing tenant collapses to the
+  // empty scope rather than NULL (a nullable column cannot be part of a Postgres key).
+  const tenantId = opts.tenantId ?? '';
 
   return {
     async claim(key: ClientToolExecutionKey): Promise<'claimed' | ClientToolExecutionRecord> {
@@ -42,7 +45,7 @@ export function createPostgresClientToolExecutionStore(
         INSERT INTO threadplane_client_tool_executions
           (tenant_id, thread_id, tool_call_id, status)
         VALUES (${tenantId}, ${key.threadId}, ${key.toolCallId}, 'executing')
-        ON CONFLICT (thread_id, tool_call_id) DO NOTHING
+        ON CONFLICT (tenant_id, thread_id, tool_call_id) DO NOTHING
         RETURNING status, result
       `;
       if (inserted.length > 0) return 'claimed';
@@ -50,7 +53,8 @@ export function createPostgresClientToolExecutionStore(
       const existing = await sql`
         SELECT status, result
         FROM threadplane_client_tool_executions
-        WHERE thread_id = ${key.threadId}
+        WHERE tenant_id = ${tenantId}
+          AND thread_id = ${key.threadId}
           AND tool_call_id = ${key.toolCallId}
         LIMIT 1
       `;
@@ -62,7 +66,7 @@ export function createPostgresClientToolExecutionStore(
         INSERT INTO threadplane_client_tool_executions
           (tenant_id, thread_id, tool_call_id, status, result)
         VALUES (${tenantId}, ${key.threadId}, ${key.toolCallId}, 'done', ${JSON.stringify(result)}::jsonb)
-        ON CONFLICT (thread_id, tool_call_id) DO UPDATE
+        ON CONFLICT (tenant_id, thread_id, tool_call_id) DO UPDATE
         SET status = 'done',
             result = CASE
               WHEN threadplane_client_tool_executions.status = 'done'
@@ -81,7 +85,8 @@ export function createPostgresClientToolExecutionStore(
       const rows = await sql`
         SELECT tool_call_id, status, result
         FROM threadplane_client_tool_executions
-        WHERE thread_id = ${threadId}
+        WHERE tenant_id = ${tenantId}
+          AND thread_id = ${threadId}
           AND tool_call_id = ANY(${[...toolCallIds]})
       `;
       const out: Record<string, ClientToolExecutionRecord> = {};
