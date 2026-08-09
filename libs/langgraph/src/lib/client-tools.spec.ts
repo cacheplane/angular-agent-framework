@@ -437,6 +437,12 @@ describe('flush', () => {
     expect(persist).not.toHaveBeenCalled();
   });
 
+  it('resolves without persistence when the buffer is empty', async () => {
+    const { cap } = setup(undefined);
+
+    await expect(cap.flush?.()).resolves.toBeUndefined();
+  });
+
   it('keeps the buffer when persist fails so a later drain retries', async () => {
     const persist = vi.fn(async () => { throw new Error('boom'); });
     const { cap } = setup(persist);
@@ -449,11 +455,18 @@ describe('flush', () => {
     ]);
   });
 
-  it('keeps the buffer when no persist function is supplied', async () => {
+  it('rejects and keeps the buffer when staged results have no persistence function', async () => {
     const { cap } = setup(undefined);
     cap.settle?.('t1', { ok: true, value: 'a' });
-    await cap.flush?.();
-    expect(cap.drainToolMessages()).toHaveLength(1);
+    cap.settle?.('t2', { ok: true, value: 'b' });
+
+    await expect(cap.flush?.()).rejects.toThrow(
+      'Custom LangGraph transports using terminal client tools must implement updateState().',
+    );
+    expect(cap.drainToolMessages()).toEqual([
+      { type: 'tool', role: 'tool', tool_call_id: 't1', content: 'a' },
+      { type: 'tool', role: 'tool', tool_call_id: 't2', content: 'b' },
+    ]);
   });
 
   it('empties the buffer after a successful flush', async () => {
