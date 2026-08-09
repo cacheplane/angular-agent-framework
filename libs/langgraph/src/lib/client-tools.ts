@@ -134,9 +134,10 @@ export function mergeStagedToolMessages(
  *  - flush(): makes the whole buffer durable in ONE persistFn call without
  *    starting a run — the settlement path for tool groups that never continue.
  *    The batch leaves the buffer at snapshot time and is re-staged only if the
- *    write fails, so a failure (or an absent persistFn) still degrades to the
- *    next flush or to the drainToolMessages() fallback in the submit wrapper,
- *    while a concurrent resolve()/drain can never re-send an in-flight batch.
+ *    write fails. When persistFn is absent, a non-empty flush rejects without
+ *    taking ownership of the buffer, retaining it for explicit recovery through
+ *    the later-submit drainToolMessages() fallback. A concurrent resolve()/drain
+ *    can never re-send an in-flight batch.
  *  - clearStagedToolMessages(): discards the buffer on a thread switch.
  *  - resolve(id, result): settles the result, then issues a NEW run on the SAME
  *    thread by calling submitFn with the full buffered ToolMessage group:
@@ -271,7 +272,15 @@ export function createClientToolsCapability(
    * by the wrong index (dropping a result that was never persisted).
    */
   function runFlush(): Promise<void> {
-    if (!persistFn) return Promise.resolve();
+    if (toolMessageBuffer.length === 0) return Promise.resolve();
+    if (!persistFn) {
+      return Promise.reject(
+        new Error(
+          'Cannot flush staged client tool results. ' +
+            'Custom LangGraph transports using terminal client tools must implement updateState().',
+        ),
+      );
+    }
     const staged = takeStagedForCurrentThread();
     if (staged.length === 0) return Promise.resolve();
 
@@ -337,7 +346,6 @@ export function createClientToolsCapability(
     },
 
     flush(): Promise<void> {
-      if (!persistFn) return Promise.resolve();
       if (flushInFlight) {
         // Chain rather than short-circuit. The caller's batch may have been
         // staged AFTER the in-flight write took its snapshot, so returning that

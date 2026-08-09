@@ -1385,7 +1385,9 @@ describe('agent — client tool staging', () => {
     cap.setCatalog([SPEC]);
 
     cap.settle('tc-1', { ok: true, value: 'sunny' });
-    await cap.flush();
+    await expect(cap.flush()).rejects.toThrow(
+      'Custom LangGraph transports using terminal client tools must implement updateState().',
+    );
     ref.submit({ message: 'and tomorrow?' });
 
     const payload = transport.streams[0]?.payload as { messages: Array<Record<string, unknown>> };

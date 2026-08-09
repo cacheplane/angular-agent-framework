@@ -437,8 +437,8 @@ export function agent<
   // updateState() silently no-ops when the transport has no updateState, so
   // only supply a persist function when the effective transport supports it —
   // an omitted transport means the bridge builds a FetchStreamTransport, which
-  // does. When persistFn is undefined, flush() keeps the buffer and the submit
-  // wrapper below drains it into the next run instead.
+  // does. When persistFn is undefined, a non-empty flush() rejects and keeps the
+  // buffer staged; the submit wrapper below can still drain it into the next run.
   const canPersistToolMessages = !transport || typeof transport.updateState === 'function';
   const clientToolsCap = createClientToolsCapability(
     (payload, opts) => manager.submit(payload, opts),
