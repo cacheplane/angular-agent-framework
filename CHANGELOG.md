@@ -1,3 +1,47 @@
+## 0.0.57 (2026-08-09)
+
+### 🚀 Features
+
+- add client tool abort signal ([#786](https://github.com/cacheplane/angular-agent-framework/pull/786))
+- add client tool execution guard ([#788](https://github.com/cacheplane/angular-agent-framework/pull/788))
+- add client tool execution claims ([#789](https://github.com/cacheplane/angular-agent-framework/pull/789))
+- batch client tool continuations ([#792](https://github.com/cacheplane/angular-agent-framework/pull/792))
+- add signal resource agent proof ([448503dc](https://github.com/cacheplane/angular-agent-framework/commit/448503dc))
+- add signal resource adapter package ([7ee0b445](https://github.com/cacheplane/angular-agent-framework/commit/7ee0b445))
+- **chat-graph:** spike client-tool binding + client-tool-aware routing (#itinerary) ([74d45e2b](https://github.com/cacheplane/angular-agent-framework/commit/74d45e2b))
+- **chat-graph:** add itinerary Stop state channel ([e23fb54a](https://github.com/cacheplane/angular-agent-framework/commit/e23fb54a))
+- **chat-graph:** planner framing + itinerary context injection when client tools present ([cdaeeeac](https://github.com/cacheplane/angular-agent-framework/commit/cdaeeeac))
+- **cockpit-langgraph:** redesign 7 langgraph examples' bespoke UI (encapsulated CSS, sky-blue accent) ([#777](https://github.com/cacheplane/angular-agent-framework/pull/777))
+- **examples-chat:** wire Google Maps key via inject-env (local only) ([de8f706e](https://github.com/cacheplane/angular-agent-framework/commit/de8f706e))
+- **examples-chat:** port map-bounds, geocoding, google-maps-loader ([e55515c7](https://github.com/cacheplane/angular-agent-framework/commit/e55515c7))
+- **examples-chat:** port ItineraryStore — empty start, value hydration, no localStorage ([0f37460b](https://github.com/cacheplane/angular-agent-framework/commit/0f37460b))
+- **examples-chat:** port itinerary panel/map/day-card/clear-day UI (langgraph agent) ([662c94a4](https://github.com/cacheplane/angular-agent-framework/commit/662c94a4))
+- **examples-chat:** port itinerary client tools (drop get_itinerary, use demo agent) ([cc953105](https://github.com/cacheplane/angular-agent-framework/commit/cc953105))
+- **examples-chat:** sync itinerary — submit state + value hydration + SDK checkpoint push ([d5bae8ac](https://github.com/cacheplane/angular-agent-framework/commit/d5bae8ac))
+- **examples-chat:** App-mode toggle + map-compatible routing (embed↔sidebar coercion) ([62b456f7](https://github.com/cacheplane/angular-agent-framework/commit/62b456f7))
+- **examples-chat:** App-mode cockpit layout (map bg + itinerary overlay + sidenav→drawer) ([7d941ad6](https://github.com/cacheplane/angular-agent-framework/commit/7d941ad6))
+- **examples-chat:** wire client tools + cockpit into modes; context-aware welcome suggestions ([77ababf3](https://github.com/cacheplane/angular-agent-framework/commit/77ababf3))
+- **examples-chat:** dark map via colorScheme, drop cloud-style dependency ([f8e1383d](https://github.com/cacheplane/angular-agent-framework/commit/f8e1383d))
+- **examples-chat:** map light/dark follows the app color scheme ([eee067b5](https://github.com/cacheplane/angular-agent-framework/commit/eee067b5))
+
+### 🩹 Fixes
+
+- remove unused fake agent delay variable ([#787](https://github.com/cacheplane/angular-agent-framework/pull/787))
+- **ag-ui:** version authoritative snapshot rewrites ([#804](https://github.com/cacheplane/angular-agent-framework/pull/804))
+- **chat:** closed drawer sidenav must not intercept clicks on content ([#778](https://github.com/cacheplane/angular-agent-framework/pull/778))
+- **chat:** never leave a client tool call unanswered on the server ([#807](https://github.com/cacheplane/angular-agent-framework/pull/807), [#782](https://github.com/cacheplane/angular-agent-framework/issues/782), [#805](https://github.com/cacheplane/angular-agent-framework/issues/805))
+- **cockpit-examples:** use CSS sidebar widths ([496db8e8](https://github.com/cacheplane/angular-agent-framework/commit/496db8e8))
+- **examples-chat:** import vitest globals in client-tools.spec (build compiles specs) ([2ab792e0](https://github.com/cacheplane/angular-agent-framework/commit/2ab792e0))
+- **examples-chat:** drop dangling get_itinerary reference in client-tool error strings ([c81c7b87](https://github.com/cacheplane/angular-agent-framework/commit/c81c7b87))
+- **examples-chat:** reliably persist itinerary to checkpoint (retry mid-run 409) ([f3f29ede](https://github.com/cacheplane/angular-agent-framework/commit/f3f29ede))
+- **examples-chat:** retry checkpoint push only on 409, capped (review) ([3fb99b46](https://github.com/cacheplane/angular-agent-framework/commit/3fb99b46))
+
+### ❤️ Thank You
+
+- Brian Love @blove
+- Claude Opus 4.8
+- Claude Opus 5
+
 ## 0.0.47 (2026-05-26)
 
 ### 🚀 Features
