@@ -72,7 +72,7 @@ import {
   mergeClientTools,
   mergeStagedToolMessages,
 } from './client-tools';
-import type { ClientToolResultPatch } from './client-tools';
+import type { ClientToolResultPatch, StagedToolMessageBatch } from './client-tools';
 
 /**
  * Walk LangGraph history (newest-first) and pair each AIMessage id with
@@ -198,6 +198,7 @@ export function agent<
   // seam lives here. A holder keeps the binding itself a `const` while its
   // member is filled in later.
   const clientToolStaging: { clear?: () => void } = {};
+  let retryableToolMessageBatch: StagedToolMessageBatch | undefined;
 
   function resetDerivedThreadState(): void {
     status$.next(ResourceStatus.Idle);
@@ -437,11 +438,15 @@ export function agent<
   // updateState() silently no-ops when the transport has no updateState, so
   // only supply a persist function when the effective transport supports it —
   // an omitted transport means the bridge builds a FetchStreamTransport, which
-  // does. When persistFn is undefined, a non-empty flush() rejects and keeps the
-  // buffer staged; the submit wrapper below can still drain it into the next run.
+  // does. When persistFn is undefined, a non-empty flush() rejects while the
+  // results stay staged; an ordinary non-null submit remains their in-memory
+  // fallback path.
   const canPersistToolMessages = !transport || typeof transport.updateState === 'function';
   const clientToolsCap = createClientToolsCapability(
-    (payload, opts) => manager.submit(payload, opts),
+    (payload, opts, batch) => {
+      retryableToolMessageBatch = batch;
+      return manager.submit(payload, opts);
+    },
     {
       toolCalls: toolCallsNeutral,
       isLoading,
@@ -464,7 +469,16 @@ export function agent<
     // can never land on a thread the user has since moved to.
     () => manager.currentThreadId,
   );
-  clientToolStaging.clear = () => clientToolsCap.clearStagedToolMessages();
+  clientToolStaging.clear = () => {
+    retryableToolMessageBatch = undefined;
+    clientToolsCap.clearStagedToolMessages();
+  };
+
+  async function resubmitWithToolRecovery(): Promise<void> {
+    const batch = retryableToolMessageBatch;
+    const outcome = await manager.resubmitLast();
+    if (outcome === 'success') batch?.acknowledge();
+  }
 
   return {
     // ── Runtime-neutral surface (AgentWithHistory) ────────────────────────
@@ -479,7 +493,7 @@ export function agent<
     events$,
     history:            historyNeutral,
     messageCheckpoints: messageCheckpointsSig,
-    submit: (input: AgentSubmitInput | null | undefined, opts?: AgentSubmitOptions & LangGraphSubmitOptions) => {
+    submit: async (input: AgentSubmitInput | null | undefined, opts?: AgentSubmitOptions & LangGraphSubmitOptions) => {
       // Lifecycle: first submit with no existing threadId → thread create.
       if (lcThreadCreatedAt() === null && lastThreadId == null) {
         lcThreadCreatedAt.set(Date.now());
@@ -493,25 +507,33 @@ export function agent<
       // backend middleware can merge them into the model's tool list. Null
       // payloads (regenerate re-runs, command resumes) are left unchanged.
       //
-      // Drain any results settled but not yet made durable (flush unavailable
-      // or a prior flush failed) so they ride along with this run. A null
-      // payload cannot carry them, so leave the buffer alone in that case
-      // rather than silently discarding the staged results.
-      const staged = request.payload === null || request.payload === undefined
-        ? []
-        : clientToolsCap.drainToolMessages();
+      // Snapshot results settled but not yet durable (flush unavailable or a
+      // prior flush failed) so they ride along without being forgotten. The
+      // exact snapshot is acknowledged only when this operation succeeds;
+      // overlaps may safely carry the same deterministic message IDs. A null
+      // payload cannot carry results, so it leaves staging unchanged.
+      const batch = request.payload === null || request.payload === undefined
+        ? undefined
+        : clientToolsCap.snapshotToolMessages();
+      const staged = batch?.messages ?? [];
       const withStaged = staged.length > 0
         ? mergeStagedToolMessages(request.payload, staged)
         : request.payload;
       const payload = mergeClientTools(withStaged, clientToolsCap.catalog());
-      return manager.submit(payload, request.options);
+      const createsQueuedRun =
+        request.options?.multitaskStrategy === 'enqueue' && isLoading();
+      if (!createsQueuedRun) {
+        retryableToolMessageBatch = batch;
+      }
+      const outcome = await manager.submit(payload, request.options);
+      if (outcome === 'success') batch?.acknowledge();
     },
     stop: () => manager.stop(),
 
     retry: async () => {
       if (isLoading()) return;          // no-op while a run is in flight
       error$.next(undefined);           // clear the error before re-running
-      await manager.resubmitLast();
+      await resubmitWithToolRecovery();
     },
 
     clientTools: clientToolsCap,
@@ -579,6 +601,7 @@ export function agent<
       // at `__start__`, this resumes at the entry node and produces a fresh
       // assistant message — the trailing user message becomes the active
       // prompt without being re-appended.
+      retryableToolMessageBatch = undefined;
       await manager.submit(null, undefined);
     },
 
@@ -592,7 +615,9 @@ export function agent<
     // ── Other LangGraph-specific fields ──────────────────────────────────
     value:           value as Signal<T>,
     hasValue:        hasValueSig,
-    reload:          () => manager.resubmitLast(),
+    reload:          () => {
+      void resubmitWithToolRecovery();
+    },
     toolProgress:    toolProgSig,
     queue:           queueSig,
     activeSubagents,

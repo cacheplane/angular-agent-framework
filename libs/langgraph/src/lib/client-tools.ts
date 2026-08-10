@@ -3,6 +3,7 @@ import { computed, signal } from '@angular/core';
 import type { Signal } from '@angular/core';
 import {
   selectPendingClientToolCalls,
+  type CompleteOutcome,
   type ClientToolsCapability,
   type ClientToolResult,
   type ClientToolSpec,
@@ -43,7 +44,11 @@ export interface ClientToolsStore {
  * Accepts a payload (input) and optional LangGraph submit options.
  * Corresponds to StreamManagerBridge.submit.
  */
-export type SubmitFn = (payload: unknown, opts?: LangGraphSubmitOptions) => Promise<void>;
+export type SubmitFn = (
+  payload: unknown,
+  opts?: LangGraphSubmitOptions,
+  batch?: StagedToolMessageBatch,
+) => Promise<CompleteOutcome>;
 
 /** Serialize a tool result value to a string for the ToolMessage content. */
 function safeStringify(v: unknown): string {
@@ -72,12 +77,34 @@ export function mergeClientTools(
   return { ...(payload as Record<string, unknown>), client_tools: catalog };
 }
 
-/** Wire shape for a settled client-tool result awaiting durability. */
+/**
+ * Wire shape for a settled client-tool result awaiting durability. `id` is
+ * deterministic for the tool-call ID so overlapping handoffs and retries
+ * update the same logical ToolMessage.
+ */
 export interface BufferedToolMessage {
+  readonly id: string;
   readonly type: 'tool';
   readonly role: 'tool';
   readonly tool_call_id: string;
   readonly content: string;
+}
+
+/**
+ * Non-destructive snapshot of staged messages. Callers acknowledge only after
+ * the exact handoff succeeds; acknowledgment removes only captured entries and
+ * becomes a no-op after a thread-reset generation change.
+ */
+export interface StagedToolMessageBatch {
+  readonly generation: number;
+  readonly messages: readonly BufferedToolMessage[];
+  acknowledge(): void;
+}
+
+export interface LangGraphClientToolsCapability extends ClientToolsCapability {
+  readonly catalog: Signal<readonly ClientToolSpec[]>;
+  snapshotToolMessages(): StagedToolMessageBatch;
+  clearStagedToolMessages(): void;
 }
 
 /** Writes settled tool messages into server thread state without starting a run. */
@@ -130,23 +157,25 @@ export function mergeStagedToolMessages(
  *    The backend ends the run without emitting a ToolMessage result for
  *    client tools, so `result` stays undefined on those entries.
  *  - settle(id, result): marks the call as resolved, writes the local result,
- *    and buffers a ToolMessage without issuing a run.
- *  - flush(): makes the whole buffer durable in ONE persistFn call without
+ *    and stages a ToolMessage with a deterministic ID without issuing a run.
+ *  - flush(): snapshots the whole staged group into ONE persistFn call without
  *    starting a run — the settlement path for tool groups that never continue.
- *    The batch leaves the buffer at snapshot time and is re-staged only if the
- *    write fails. When persistFn is absent, a non-empty flush rejects without
- *    taking ownership of the buffer, retaining it for explicit recovery through
- *    the later-submit drainToolMessages() fallback. A concurrent resolve()/drain
- *    can never re-send an in-flight batch.
- *  - clearStagedToolMessages(): discards the buffer on a thread switch.
+ *    Successful persistence acknowledges the captured entries; failed writes
+ *    retain them. When persistFn is absent, a non-empty flush rejects without
+ *    changing the staged results. Flushes are chained so entries settled after
+ *    one snapshot receive their own write. Concurrent persistence,
+ *    continuation, and ordinary submits may safely carry the same stable IDs.
+ *  - clearStagedToolMessages(): discards staged results on a thread switch and
+ *    advances the generation so late acknowledgments cannot affect new state.
  *  - resolve(id, result): settles the result, then issues a NEW run on the SAME
- *    thread by calling submitFn with the full buffered ToolMessage group:
+ *    thread by calling submitFn with a non-destructive ToolMessage snapshot:
  *      input: {
  *        messages: [{ type: 'tool', role: 'tool', tool_call_id: id, content }],
  *        client_tools: catalog(),
  *      }
- *    The `add_messages` reducer on the Python side appends the ToolMessage
- *    to thread state. Including `client_tools` ensures the model sees the
+ *    The snapshot remains staged unless that continuation reports success.
+ *    LangGraph's `add_messages` reducer reuses each stable message ID on safe
+ *    overlap or replay. Including `client_tools` ensures the model sees the
  *    full tool catalog on the continuation run.
  *
  * Catalog shipping: the catalog is NOT injected by this factory's
@@ -161,17 +190,13 @@ export function createClientToolsCapability(
   store: ClientToolsStore,
   persistFn?: PersistToolMessagesFn,
   currentThreadIdFn?: CurrentThreadIdFn,
-): ClientToolsCapability & {
-  catalog: Signal<readonly ClientToolSpec[]>;
-  drainToolMessages(): BufferedToolMessage[];
-  clearStagedToolMessages(): void;
-} {
+): LangGraphClientToolsCapability {
   const catalog = signal<readonly ClientToolSpec[]>([]);
   const resolvedIds = signal<ReadonlySet<string>>(new Set());
   const toolMessageBuffer: StagedToolMessage[] = [];
   let flushInFlight: Promise<void> | undefined;
-  // Bumped whenever the buffer is discarded, so an in-flight flush can tell
-  // whether its batch still belongs to the current thread.
+  // Bumped whenever a thread reset discards staged state. Every snapshot keeps
+  // its generation, making acknowledgments from the prior thread no-ops.
   let bufferGeneration = 0;
   // Tool calls belonging to threads we have left. A handler still running when
   // the user switches threads settles AFTER the switch, by which point both the
@@ -235,23 +260,32 @@ export function createClientToolsCapability(
     // shape used in buildSubmitUpdate (agent.fn.ts line 732).
     toolMessageBuffer.push({
       threadId: currentThreadIdFn?.() ?? null,
-      message: { type: 'tool', role: 'tool', tool_call_id: id, content },
+      message: {
+        id: `client-tool-result-${id}`,
+        type: 'tool',
+        role: 'tool',
+        tool_call_id: id,
+        content,
+      },
     });
   }
 
   /**
-   * Remove every staged entry, returning only those still valid for the thread
-   * a write would land on right now. An entry is stale when it was stamped with
-   * a different thread — dropped rather than misdelivered.
+   * Returns a non-destructive snapshot of entries still valid for the thread a
+   * write would land on right now. Captured entries remain staged, so
+   * overlapping operations may carry the same deterministic message IDs.
+   * Acknowledgment removes only the exact captured entries while the snapshot
+   * generation is current. An entry stamped for another thread is dropped
+   * rather than misdelivered.
    *
    * A null on either side means "thread not tracked yet" (no threadId option
    * and no run has reported one); those are kept, since there is no evidence of
    * a switch and dropping them would lose results on untracked transports.
    */
-  function takeStagedForCurrentThread(): StagedToolMessage[] {
+  function snapshotToolMessages(): StagedToolMessageBatch {
     const current = currentThreadIdFn?.() ?? null;
-    const taken = toolMessageBuffer.splice(0, toolMessageBuffer.length);
-    return taken.filter((entry) => {
+    for (let index = toolMessageBuffer.length - 1; index >= 0; index -= 1) {
+      const entry = toolMessageBuffer[index];
       const stale =
         entry.threadId !== null && current !== null && entry.threadId !== current;
       if (stale) {
@@ -259,20 +293,36 @@ export function createClientToolsCapability(
           `Discarding a client tool result staged for thread ${entry.threadId}; ` +
             `the active thread is now ${current}.`,
         );
+        toolMessageBuffer.splice(index, 1);
       }
-      return !stale;
-    });
+    }
+
+    const generation = bufferGeneration;
+    const entries = [...toolMessageBuffer];
+    const messages = entries.map(({ message }) => ({ ...message }));
+    let acknowledged = false;
+
+    return {
+      generation,
+      messages,
+      acknowledge(): void {
+        if (acknowledged || generation !== bufferGeneration) return;
+        acknowledged = true;
+        for (const entry of entries) {
+          const index = toolMessageBuffer.indexOf(entry);
+          if (index !== -1) toolMessageBuffer.splice(index, 1);
+        }
+      },
+    };
   }
 
   /**
-   * Persist one batch. Takes ownership of the buffer at snapshot time:
-   * resolve() and drainToolMessages() clear the buffer unconditionally and know
-   * nothing about an in-flight write, so anything left staged across the await
-   * could be re-sent (a duplicate ToolMessage for one tool_call_id) or removed
-   * by the wrong index (dropping a result that was never persisted).
+   * Persist one snapshot. Only that snapshot is acknowledged after persistence
+   * succeeds; failure leaves its exact entries staged for retry or submit.
    */
   function runFlush(): Promise<void> {
-    if (toolMessageBuffer.length === 0) return Promise.resolve();
+    const batch = snapshotToolMessages();
+    if (batch.messages.length === 0) return Promise.resolve();
     if (!persistFn) {
       return Promise.reject(
         new Error(
@@ -281,37 +331,19 @@ export function createClientToolsCapability(
         ),
       );
     }
-    const staged = takeStagedForCurrentThread();
-    if (staged.length === 0) return Promise.resolve();
-
-    const generation = bufferGeneration;
-    const batch = staged.map((entry) => entry.message);
-    const inFlight = persistFn(batch)
+    return persistFn(batch.messages)
+      .then(() => {
+        batch.acknowledge();
+      })
       .catch((err: unknown) => {
-        // Re-stage at the FRONT so ordering is preserved for the next drain —
-        // unless the buffer was cleared meanwhile (thread switch), in which
-        // case these results belong to a thread we have left.
-        if (generation === bufferGeneration) {
-          toolMessageBuffer.unshift(...staged);
-        }
         console.warn(
-          `Client tool flush failed; ${batch.length} result(s) remain staged for the next run.`,
+          `Client tool flush failed; ${batch.messages.length} result(s) remain staged for the next run.`,
           err,
         );
-      })
-      .finally(() => {
-        // Only clear if no later flush has already claimed the slot.
-        if (flushInFlight === inFlight) flushInFlight = undefined;
       });
-    flushInFlight = inFlight;
-    return inFlight;
   }
 
-  const capability: ClientToolsCapability & {
-    catalog: Signal<readonly ClientToolSpec[]>;
-    drainToolMessages(): BufferedToolMessage[];
-    clearStagedToolMessages(): void;
-  } = {
+  const capability: LangGraphClientToolsCapability = {
     catalog,
 
     setCatalog(specs: readonly ClientToolSpec[]): void {
@@ -324,9 +356,8 @@ export function createClientToolsCapability(
       settleResult(id, result);
     },
 
-    /** Remove and return every buffered tool message valid for this thread. */
-    drainToolMessages(): BufferedToolMessage[] {
-      return takeStagedForCurrentThread().map((entry) => entry.message);
+    snapshotToolMessages(): StagedToolMessageBatch {
+      return snapshotToolMessages();
     },
 
     /**
@@ -340,37 +371,45 @@ export function createClientToolsCapability(
       // agent.fn.ts calls this ahead of manager.switchThread for that reason.
       for (const toolCall of store.toolCalls()) retiredToolCallIds.add(toolCall.id);
       toolMessageBuffer.length = 0;
-      // Invalidate any in-flight flush so its failure path cannot re-stage the
-      // old thread's messages into the new thread's buffer.
+      // Invalidate every outstanding snapshot acknowledgment from the old thread.
       bufferGeneration += 1;
     },
 
     flush(): Promise<void> {
-      if (flushInFlight) {
-        // Chain rather than short-circuit. The caller's batch may have been
-        // staged AFTER the in-flight write took its snapshot, so returning that
-        // promise would resolve without ever persisting it — which is exactly
-        // what happens when an abort fires one flush per settled call. The
-        // chain terminates because runFlush() returns immediately once the
-        // buffer is empty.
-        const chained = flushInFlight.then(() => runFlush());
-        flushInFlight = chained;
-        return chained;
-      }
-      return runFlush();
+      // Only this method owns the queue tail. Results settled after an active
+      // snapshot need their own write, and every caller must remain behind all
+      // callers already queued. The chain terminates when a fresh snapshot is
+      // empty.
+      const queued = flushInFlight
+        ? flushInFlight.then(() => runFlush(), () => runFlush())
+        : runFlush();
+      flushInFlight = queued;
+
+      const clearTail = (): void => {
+        if (flushInFlight === queued) flushInFlight = undefined;
+      };
+      // Both handlers return normally, so this bookkeeping branch cannot
+      // create an unhandled rejection when the caller observes `queued`.
+      void queued.then(clearTail, clearTail);
+      return queued;
     },
 
     resolve(id: string, result: ClientToolResult): void {
       settleResult(id, result);
-      // Issue a new run on the same thread. LangGraph's add_messages reducer
-      // appends the ToolMessages to the thread state. `client_tools` is
-      // included so the model sees the full tool catalog on the continuation.
+      // Issue a new run with a non-destructive snapshot. The exact batch is
+      // acknowledged only when that continuation succeeds; failures retain it
+      // for retry. Stable IDs make overlap with flush or submit safe under
+      // LangGraph's add_messages reducer. `client_tools` keeps the full catalog
+      // visible to the continuation.
+      const batch = snapshotToolMessages();
       const toolPayload = {
-        messages: takeStagedForCurrentThread().map((entry) => entry.message),
+        messages: batch.messages,
         client_tools: catalog(),
       };
 
-      void submitFn(toolPayload);
+      void submitFn(toolPayload, undefined, batch).then((outcome) => {
+        if (outcome === 'success') batch.acknowledge();
+      });
     },
   };
 
