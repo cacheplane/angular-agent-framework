@@ -90,12 +90,14 @@ export interface StreamManagerBridgeOptions<T, ResolvedBag extends BagTemplate =
   destroy$:  Observable<void>;
 }
 
+type ResubmitOutcome = CompleteOutcome | 'not-started';
+
 export interface StreamManagerBridge {
-  submit:                (values: unknown, opts?: LangGraphSubmitOptions) => Promise<void>;
+  submit:                (values: unknown, opts?: LangGraphSubmitOptions) => Promise<CompleteOutcome>;
   stop:                  () => Promise<void>;
   switchThread:          (id: string | null) => void;
   joinStream:            (runId: string, lastEventId?: string) => Promise<void>;
-  resubmitLast:          () => Promise<void>;
+  resubmitLast:          () => Promise<ResubmitOutcome>;
   getReasoningDurationMs:(id: string) => number | undefined;
   getMessageDelivery:    (id: string) => MessageDelivery;
   getSubagentMessageDelivery: (toolCallId: string, message: BaseMessage) => MessageDelivery;
@@ -358,6 +360,8 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     if (resetState) {
       invalidateQueueDrain();
       abortController?.abort();
+      lastPayload = null;
+      lastOptions = undefined;
     }
     currentThreadId = id;
     if (resetState) {
@@ -622,7 +626,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     payload: unknown,
     opts?: LangGraphSubmitOptions,
     requestType = 'submit',
-  ): Promise<void> {
+  ): Promise<CompleteOutcome> {
     invalidateQueueDrain();
     abortController?.abort();
     const controller = new AbortController();
@@ -640,7 +644,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     subjects.toolProgress$.next([]);
     toolProgressMap.clear();
     canonicalMessageIds.clear();
-    lastPayload = payload;
+    lastPayload = payload ?? null;
     lastOptions = opts;
 
     // Tracks whether at least one stream event has been processed this run.
@@ -681,9 +685,9 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         processEvent(event);
       }
 
-      if (!isCurrentExecution(controller, attempt)) return;
+      if (!isCurrentExecution(controller, attempt)) return finishOutcome(attempt);
       const outcome = await finalizeClosedAttempt(controller, attempt);
-      if (outcome === null) return;
+      if (outcome === null) return finishOutcome(attempt);
 
       if (!controller.signal.aborted) {
         if (outcome !== 'error') {
@@ -695,9 +699,10 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
           durationMs: Date.now() - startedAt,
         });
       }
+      return outcome;
     } catch (err) {
-      if (!isCurrentExecution(controller, attempt)) return;
-      if (attempt.terminalOutcome) return;
+      if (!isCurrentExecution(controller, attempt)) return finishOutcome(attempt);
+      if (attempt.terminalOutcome) return attempt.terminalOutcome;
       if (isAbortError(err) && userAbortedControllers.has(controller)) {
         finalizeAttempt(attempt, 'aborted');
         // User explicitly called stop() — treat as graceful idle, not an error.
@@ -727,6 +732,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
           errorClass: agentRuntimeTelemetryErrorClass(err),
         });
       }
+      return finishOutcome(attempt);
     } finally {
       if (abortController === controller) abortController = null;
     }
@@ -1061,9 +1067,9 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     submit: async (payload, opts) => {
       if (opts?.multitaskStrategy === 'enqueue' && subjects.status$.value === ResourceStatus.Loading) {
         await enqueueRun(payload, opts);
-        return;
+        return 'success';
       }
-      await runStream(payload, opts);
+      return runStream(payload, opts);
     },
 
     stop: async () => {
@@ -1146,9 +1152,8 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     },
 
     resubmitLast: async () => {
-      if (lastPayload !== null) {
-        await runStream(lastPayload, lastOptions, 'resubmit');
-      }
+      if (lastPayload === null) return 'not-started';
+      return runStream(lastPayload, lastOptions, 'resubmit');
     },
 
     getReasoningDurationMs: (id: string): number | undefined => {

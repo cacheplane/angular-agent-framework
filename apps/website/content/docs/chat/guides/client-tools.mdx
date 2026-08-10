@@ -126,7 +126,7 @@ const clientTools = tools({
 Follow-up is decided **per tool-call group**, not per tool. If the model calls three tools in one turn and any one of them wants a follow-up, the whole group continues in a single run once every result has settled. Only when *every* tool in the group is terminal does the turn end.
 
 <Callout type="warning" title="Your transport must support durable writes">
-  A terminal group has no follow-up run to carry its results, so the adapter writes them to the server directly. On `@threadplane/langgraph` that uses the transport's `updateState`. If a **custom transport does not implement `updateState`**, `flush()` rejects when terminal results are staged. The results stay buffered and an ordinary next message can still carry them, but a reload first loses them and leaves the server thread with an unanswered tool call. If you supply your own transport and use terminal tools, implement `updateState`.
+  A terminal group has no follow-up run to carry its results, so the adapter writes them to the server directly. On `@threadplane/langgraph` that uses the transport's `updateState`. If a **custom transport does not implement `updateState`**, `flush()` rejects when terminal results are staged. The results stay buffered and an ordinary next message can still carry them, but a browser page reload first loses that in-memory fallback and leaves the server thread with an unanswered tool call. If you supply your own transport and use terminal tools, implement `updateState`.
 </Callout>
 
 ## Re-running tools safely with `idempotent`

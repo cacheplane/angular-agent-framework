@@ -320,7 +320,8 @@ describe('agent', () => {
     transport.close();
     await submitted;
     await new Promise(r => setTimeout(r, 10));
-    ref.reload();
+    const reloaded = ref.reload();
+    expect(reloaded).toBeUndefined();
     expect(ref.isLoading()).toBe(true);
     await ref.stop();
   });
@@ -1302,7 +1303,7 @@ describe('computeMessageCheckpoints', () => {
 // ── Client-tool staging wiring ───────────────────────────────────────────────
 // The capability is unit-tested in client-tools.spec.ts; these cover the
 // agent.fn.ts seam: which persist function is supplied, the null-payload
-// drain guard, and discarding staged results on a thread switch.
+// staging guard, and discarding staged results on a thread switch.
 
 describe('agent — client tool staging', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
@@ -1329,8 +1330,143 @@ describe('agent — client tool staging', () => {
     return ref.clientTools as {
       setCatalog(specs: unknown[]): void;
       settle(id: string, result: { ok: true; value: unknown }): void;
+      resolve(id: string, result: { ok: true; value: unknown }): void;
       flush(): Promise<void>;
-      drainToolMessages(): Array<{ tool_call_id: string }>;
+      snapshotToolMessages(): {
+        messages: ReadonlyArray<{ id: string; tool_call_id: string }>;
+      };
+    };
+  }
+
+  type StreamScript = (signal: AbortSignal) => AsyncIterable<StreamEvent>;
+
+  class ScriptedAgentTransport implements AgentTransport {
+    readonly calls: Array<{
+      payload: unknown;
+      options: Parameters<AgentTransport['stream']>[4];
+    }> = [];
+    readonly queuedCalls: Array<{
+      payload: unknown;
+      options: Parameters<NonNullable<AgentTransport['createQueuedRun']>>[4];
+    }> = [];
+    readonly joinedCalls: Array<{
+      threadId: string;
+      runId: string;
+      lastEventId: string | undefined;
+    }> = [];
+
+    constructor(
+      private readonly scripts: readonly StreamScript[],
+      private readonly queueError?: Error,
+    ) {}
+
+    stream(
+      _assistantId: string,
+      _threadId: string | null,
+      payload: unknown,
+      signal: AbortSignal,
+      options?: Parameters<AgentTransport['stream']>[4],
+    ): AsyncIterable<StreamEvent> {
+      const script = this.scripts[this.calls.length];
+      this.calls.push({ payload, options });
+      if (!script) throw new Error('No stream script configured for this invocation.');
+      return script(signal);
+    }
+
+    async createQueuedRun(
+      _assistantId: string,
+      threadId: string,
+      payload: unknown,
+      _signal: AbortSignal,
+      options?: Parameters<NonNullable<AgentTransport['createQueuedRun']>>[4],
+    ) {
+      this.queuedCalls.push({ payload, options });
+      if (this.queueError) throw this.queueError;
+      return {
+        id: `queued-${this.queuedCalls.length}`,
+        threadId,
+        values: payload,
+        options,
+        createdAt: new Date(0),
+      };
+    }
+
+    async *joinStream(
+      threadId: string,
+      runId: string,
+      lastEventId: string | undefined,
+    ): AsyncIterable<StreamEvent> {
+      this.joinedCalls.push({ threadId, runId, lastEventId });
+      yield { type: 'values', values: { queued: true } };
+    }
+  }
+
+  function successfulStream(): StreamScript {
+    return () => (async function* () {
+      yield { type: 'values', values: { done: true } };
+    })();
+  }
+
+  function preStreamFailure(message: string): StreamScript {
+    return () => (async function* () {
+      yield* [];
+      throw new Error(message);
+    })();
+  }
+
+  function midStreamFailure(message: string): StreamScript {
+    return () => (async function* () {
+      yield {
+        type: 'messages',
+        messages: [{ id: 'ai-interrupted', type: 'ai', content: 'partial' }],
+      };
+      throw new Error(message);
+    })();
+  }
+
+  function deferred(): { promise: Promise<void>; resolve(): void } {
+    let resolve!: () => void;
+    const promise = new Promise<void>((done) => { resolve = done; });
+    return { promise, resolve };
+  }
+
+  function controlledSuccess(
+    release: Promise<void>,
+    onStarted: () => void,
+    onCompleted: () => void = () => undefined,
+  ): StreamScript {
+    return () => (async function* () {
+      onStarted();
+      await release;
+      yield { type: 'values', values: { done: true } };
+      onCompleted();
+    })();
+  }
+
+  function controlledFailure(
+    release: Promise<void>,
+    onStarted: () => void,
+    message: string,
+  ): StreamScript {
+    return () => (async function* () {
+      onStarted();
+      await release;
+      yield* [];
+      throw new Error(message);
+    })();
+  }
+
+  function messagesFrom(payload: unknown): Array<Record<string, unknown>> {
+    return (payload as { messages: Array<Record<string, unknown>> }).messages;
+  }
+
+  function stagedToolMessage(id: string, content: string): Record<string, unknown> {
+    return {
+      id: `client-tool-result-${id}`,
+      type: 'tool',
+      role: 'tool',
+      tool_call_id: id,
+      content,
     };
   }
 
@@ -1349,11 +1485,17 @@ describe('agent — client tool staging', () => {
     expect(updateCalls).toHaveLength(1);
     expect(updateCalls[0]?.threadId).toBe('t-1');
     expect(updateCalls[0]?.values?.['messages']).toEqual([
-      { type: 'tool', role: 'tool', tool_call_id: 'tc-1', content: 'sunny' },
+      {
+        id: 'client-tool-result-tc-1',
+        type: 'tool',
+        role: 'tool',
+        tool_call_id: 'tc-1',
+        content: 'sunny',
+      },
     ]);
     // A durable write must not issue a run.
     expect(transport.streams).toHaveLength(0);
-    expect(cap.drainToolMessages()).toEqual([]);
+    expect(cap.snapshotToolMessages().messages).toEqual([]);
   });
 
   it('flush() keeps the buffer when there is no thread to write to', async () => {
@@ -1371,12 +1513,654 @@ describe('agent — client tool staging', () => {
     await cap.flush();
 
     expect(updateCalls).toHaveLength(0);
-    expect(cap.drainToolMessages().map((m) => m.tool_call_id)).toEqual(['tc-1']);
+    expect(cap.snapshotToolMessages().messages).toEqual([
+      stagedToolMessage('tc-1', 'sunny'),
+    ]);
   });
 
-  it('submit drains staged tool messages ahead of the payload messages', async () => {
-    // No updateState on the transport → flush() cannot persist, so the staged
-    // result must ride along with the next ordinary submit instead.
+  it('submit acknowledges its deterministic staged batch only after terminal success', async () => {
+    const release = deferred();
+    let streamStarted = false;
+    const transport = new ScriptedAgentTransport([
+      controlledSuccess(release.promise, () => { streamStarted = true; }),
+      successfulStream(),
+    ]);
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', threadId: 't-1', transport, throttle: false })
+    );
+    const cap = staging(ref);
+    cap.setCatalog([SPEC]);
+
+    cap.settle('tc-1', { ok: true, value: 'sunny' });
+    const submitted = ref.submit({ message: 'and tomorrow?' });
+
+    try {
+      await vi.waitFor(() => expect(streamStarted).toBe(true), { timeout: 1000 });
+      expect(cap.snapshotToolMessages().messages).toEqual([
+        stagedToolMessage('tc-1', 'sunny'),
+      ]);
+      expect(messagesFrom(transport.calls[0]?.payload)[0]).toEqual(
+        stagedToolMessage('tc-1', 'sunny'),
+      );
+    } finally {
+      release.resolve();
+    }
+
+    await expect(submitted).resolves.toBeUndefined();
+    expect(cap.snapshotToolMessages().messages).toEqual([]);
+
+    await ref.submit({ message: 'unrelated' });
+    expect(messagesFrom(transport.calls[1]?.payload)).toEqual([
+      expect.objectContaining({ type: 'human', content: 'unrelated' }),
+    ]);
+  });
+
+  it('replays the same staged result after a pre-stream failure and acknowledges it on success', async () => {
+    const transport = new ScriptedAgentTransport([
+      preStreamFailure('connect failed'),
+      successfulStream(),
+      successfulStream(),
+    ]);
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', threadId: 't-1', transport, throttle: false })
+    );
+    const cap = staging(ref);
+    cap.setCatalog([SPEC]);
+    cap.settle('tc-1', { ok: true, value: 'sunny' });
+
+    await expect(ref.submit({ message: 'first' })).resolves.toBeUndefined();
+
+    expect(ref.status()).toBe('error');
+    expect(ref.error()).toBeInstanceOf(AgentError);
+    expect(cap.snapshotToolMessages().messages).toEqual([
+      stagedToolMessage('tc-1', 'sunny'),
+    ]);
+
+    await expect(ref.submit({ message: 'second' })).resolves.toBeUndefined();
+
+    expect(messagesFrom(transport.calls[0]?.payload)[0]).toEqual(
+      stagedToolMessage('tc-1', 'sunny'),
+    );
+    expect(messagesFrom(transport.calls[1]?.payload)[0]).toEqual(
+      stagedToolMessage('tc-1', 'sunny'),
+    );
+    expect(cap.snapshotToolMessages().messages).toEqual([]);
+
+    await ref.submit({ message: 'third' });
+    expect(messagesFrom(transport.calls[2]?.payload)).toEqual([
+      expect.objectContaining({ type: 'human', content: 'third' }),
+    ]);
+  });
+
+  it('replays the identical staged result after a mid-stream failure', async () => {
+    const transport = new ScriptedAgentTransport([
+      midStreamFailure('stream interrupted'),
+      successfulStream(),
+    ]);
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', threadId: 't-1', transport, throttle: false })
+    );
+    const cap = staging(ref);
+    cap.setCatalog([SPEC]);
+    cap.settle('tc-1', { ok: true, value: 'sunny' });
+
+    await ref.submit({ message: 'first' });
+
+    expect(ref.status()).toBe('error');
+    expect(ref.messages().find((message) => message.id === 'ai-interrupted')?.content).toBe('partial');
+    expect(cap.snapshotToolMessages().messages).toEqual([
+      stagedToolMessage('tc-1', 'sunny'),
+    ]);
+
+    await ref.submit({ message: 'second' });
+
+    expect(messagesFrom(transport.calls[0]?.payload)[0]).toEqual(
+      stagedToolMessage('tc-1', 'sunny'),
+    );
+    expect(messagesFrom(transport.calls[1]?.payload)[0]).toEqual(
+      stagedToolMessage('tc-1', 'sunny'),
+    );
+    expect(cap.snapshotToolMessages().messages).toEqual([]);
+  });
+
+  it('retry acknowledges the failed run batch after a successful resubmission', async () => {
+    const transport = new ScriptedAgentTransport([
+      preStreamFailure('connect failed'),
+      successfulStream(),
+    ]);
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', threadId: 't-1', transport, throttle: false })
+    );
+    const cap = staging(ref);
+    cap.setCatalog([SPEC]);
+    cap.settle('tc-1', { ok: true, value: 'sunny' });
+    await ref.submit({ message: 'first' });
+
+    await expect(ref.retry()).resolves.toBeUndefined();
+
+    expect(transport.calls[1]?.payload).toEqual(transport.calls[0]?.payload);
+    expect(messagesFrom(transport.calls[1]?.payload)[0]).toEqual(
+      stagedToolMessage('tc-1', 'sunny'),
+    );
+    expect(cap.snapshotToolMessages().messages).toEqual([]);
+  });
+
+  it('retry acknowledges only the failed payload batch when a newer result settles', async () => {
+    const transport = new ScriptedAgentTransport([
+      preStreamFailure('connect failed'),
+      successfulStream(),
+    ]);
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', threadId: 't-1', transport, throttle: false })
+    );
+    const cap = staging(ref);
+    cap.setCatalog([SPEC]);
+    cap.settle('tc-1', { ok: true, value: 'sunny' });
+    await ref.submit({ message: 'first' });
+    cap.settle('tc-2', { ok: true, value: 'rainy' });
+
+    await ref.retry();
+
+    expect(messagesFrom(transport.calls[1]?.payload)[0]).toEqual(
+      stagedToolMessage('tc-1', 'sunny'),
+    );
+    expect(messagesFrom(transport.calls[1]?.payload).some((message) =>
+      message['id'] === 'client-tool-result-tc-2'
+    )).toBe(false);
+    expect(cap.snapshotToolMessages().messages).toEqual([
+      stagedToolMessage('tc-2', 'rainy'),
+    ]);
+  });
+
+  it('an immediate null submit retains staging and clears the failed result batch from retry', async () => {
+    const transport = new ScriptedAgentTransport([
+      preStreamFailure('connect failed'),
+      successfulStream(),
+    ]);
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', threadId: 't-1', transport, throttle: false })
+    );
+    const cap = staging(ref);
+    cap.setCatalog([SPEC]);
+    cap.settle('tc-1', { ok: true, value: 'sunny' });
+
+    await ref.submit({ message: 'first' });
+    await ref.submit(null);
+
+    expect(transport.calls).toHaveLength(2);
+    expect(transport.calls[1]?.payload).toBeNull();
+    expect(cap.snapshotToolMessages().messages).toEqual([
+      stagedToolMessage('tc-1', 'sunny'),
+    ]);
+
+    await ref.retry();
+
+    expect(transport.calls).toHaveLength(2);
+    expect(cap.snapshotToolMessages().messages).toEqual([
+      stagedToolMessage('tc-1', 'sunny'),
+    ]);
+  });
+
+  it('treats enqueue options as an immediate retryable run while idle', async () => {
+    const transport = new ScriptedAgentTransport([
+      preStreamFailure('idle enqueue failed'),
+      successfulStream(),
+    ]);
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', threadId: 't-1', transport, throttle: false })
+    );
+    const cap = staging(ref);
+    cap.setCatalog([SPEC]);
+    cap.settle('tc-1', { ok: true, value: 'sunny' });
+
+    await ref.submit(
+      { message: 'run now' },
+      { multitaskStrategy: 'enqueue' },
+    );
+
+    expect(transport.calls).toHaveLength(1);
+    expect(transport.queuedCalls).toHaveLength(0);
+    expect(transport.calls[0]?.options).toMatchObject({
+      multitaskStrategy: 'enqueue',
+    });
+    expect(cap.snapshotToolMessages().messages).toEqual([
+      stagedToolMessage('tc-1', 'sunny'),
+    ]);
+
+    await ref.retry();
+
+    expect(transport.calls).toHaveLength(2);
+    expect(transport.calls[1]?.payload).toEqual(transport.calls[0]?.payload);
+    expect(cap.snapshotToolMessages().messages).toEqual([]);
+  });
+
+  it('clears the failed result batch association when regenerate submits null', async () => {
+    const failedTranscript: StreamScript = () => (async function* () {
+      yield {
+        type: 'messages',
+        messages: [
+          { id: 'user-before-regenerate', type: 'human', content: 'first' },
+          { id: 'ai-before-regenerate', type: 'ai', content: 'partial' },
+        ],
+      };
+      throw new Error('initial run failed');
+    })();
+    const transport = new ScriptedAgentTransport([
+      failedTranscript,
+      successfulStream(),
+    ]);
+    const releaseUpdate = deferred();
+    let updateStarted = false;
+    const updateCalls: Array<{
+      threadId: string;
+      values: Record<string, unknown>;
+      options?: { asNode?: string };
+    }> = [];
+    (transport as AgentTransport).updateState = async (
+      threadId,
+      values,
+      _signal,
+      options,
+    ) => {
+      updateCalls.push({ threadId, values, options });
+      updateStarted = true;
+      await releaseUpdate.promise;
+    };
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', threadId: 't-1', transport, throttle: false })
+    );
+    const cap = staging(ref);
+    cap.setCatalog([SPEC]);
+    cap.settle('tc-1', { ok: true, value: 'sunny' });
+
+    await ref.submit({ message: 'first' });
+    const assistantIndex = ref.messages().findIndex(message => message.id === 'ai-before-regenerate');
+    expect(assistantIndex).toBeGreaterThan(-1);
+
+    const regenerated = ref.regenerate(assistantIndex);
+
+    try {
+      await vi.waitFor(() => expect(updateStarted).toBe(true), { timeout: 1000 });
+      expect(updateCalls).toEqual([{
+        threadId: 't-1',
+        values: {
+          messages: [{
+            type: 'remove',
+            role: 'remove',
+            id: 'ai-before-regenerate',
+            content: '',
+          }],
+        },
+        options: { asNode: '__start__' },
+      }]);
+      expect(transport.calls).toHaveLength(1);
+    } finally {
+      releaseUpdate.resolve();
+      await regenerated;
+    }
+
+    expect(transport.calls).toHaveLength(2);
+    expect(transport.calls[1]?.payload).toBeNull();
+    expect(cap.snapshotToolMessages().messages).toEqual([
+      stagedToolMessage('tc-1', 'sunny'),
+    ]);
+
+    await ref.retry();
+
+    expect(transport.calls).toHaveLength(2);
+    expect(cap.snapshotToolMessages().messages).toEqual([
+      stagedToolMessage('tc-1', 'sunny'),
+    ]);
+  });
+
+  it('makes the second of two immediate ordinary submissions the exact retry batch', async () => {
+    const releaseFirst = deferred();
+    let firstStarted = false;
+    const transport = new ScriptedAgentTransport([
+      controlledSuccess(releaseFirst.promise, () => { firstStarted = true; }),
+      preStreamFailure('second submit failed'),
+      successfulStream(),
+    ]);
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', threadId: 't-1', transport, throttle: false })
+    );
+    const cap = staging(ref);
+    cap.setCatalog([SPEC]);
+
+    cap.settle('tc-1', { ok: true, value: 'sunny' });
+    const first = ref.submit({ message: 'first' });
+    cap.settle('tc-2', { ok: true, value: 'rainy' });
+    const second = ref.submit({ message: 'second' });
+
+    try {
+      await expect(second).resolves.toBeUndefined();
+      await vi.waitFor(() => expect(firstStarted).toBe(true), { timeout: 1000 });
+      expect(ref.status()).toBe('error');
+      expect(messagesFrom(transport.calls[0]?.payload)[0]).toEqual(
+        stagedToolMessage('tc-1', 'sunny'),
+      );
+      expect(messagesFrom(transport.calls[1]?.payload).slice(0, 2)).toEqual([
+        stagedToolMessage('tc-1', 'sunny'),
+        stagedToolMessage('tc-2', 'rainy'),
+      ]);
+    } finally {
+      releaseFirst.resolve();
+      await first;
+    }
+
+    cap.settle('tc-3', { ok: true, value: 'windy' });
+    await expect(ref.retry()).resolves.toBeUndefined();
+
+    expect(transport.calls[2]?.payload).toEqual(transport.calls[1]?.payload);
+    expect(messagesFrom(transport.calls[2]?.payload).slice(0, 2)).toEqual([
+      stagedToolMessage('tc-1', 'sunny'),
+      stagedToolMessage('tc-2', 'rainy'),
+    ]);
+    expect(messagesFrom(transport.calls[2]?.payload).some((message) =>
+      message['id'] === 'client-tool-result-tc-3'
+    )).toBe(false);
+    expect(cap.snapshotToolMessages().messages).toEqual([
+      stagedToolMessage('tc-3', 'windy'),
+    ]);
+  });
+
+  it('acknowledges a successful loading enqueue without replacing the active retry batch', async () => {
+    const releaseActive = deferred();
+    let activeStarted = false;
+    const transport = new ScriptedAgentTransport([
+      controlledFailure(
+        releaseActive.promise,
+        () => { activeStarted = true; },
+        'active submit failed',
+      ),
+      successfulStream(),
+    ]);
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', threadId: 't-1', transport, throttle: false })
+    );
+    const cap = staging(ref);
+    cap.setCatalog([SPEC]);
+
+    cap.settle('tc-1', { ok: true, value: 'sunny' });
+    const active = ref.submit({ message: 'active' });
+
+    try {
+      await vi.waitFor(() => expect(activeStarted).toBe(true), { timeout: 1000 });
+      expect(ref.isLoading()).toBe(true);
+      cap.settle('tc-2', { ok: true, value: 'rainy' });
+
+      await ref.submit(
+        { message: 'queued' },
+        { multitaskStrategy: 'enqueue' },
+      );
+
+      expect(transport.calls).toHaveLength(1);
+      expect(transport.queuedCalls).toHaveLength(1);
+      expect(ref.queue()).toMatchObject({
+        size: 1,
+        entries: [{ id: 'queued-1', threadId: 't-1' }],
+      });
+      expect(messagesFrom(transport.queuedCalls[0]?.payload).slice(0, 2)).toEqual([
+        stagedToolMessage('tc-1', 'sunny'),
+        stagedToolMessage('tc-2', 'rainy'),
+      ]);
+      expect(cap.snapshotToolMessages().messages).toEqual([]);
+
+      cap.settle('tc-3', { ok: true, value: 'windy' });
+    } finally {
+      releaseActive.resolve();
+      await active;
+    }
+
+    expect(ref.status()).toBe('error');
+    await ref.retry();
+
+    expect(transport.calls).toHaveLength(2);
+    expect(transport.calls[1]?.payload).toEqual(transport.calls[0]?.payload);
+    expect(messagesFrom(transport.calls[1]?.payload)[0]).toEqual(
+      stagedToolMessage('tc-1', 'sunny'),
+    );
+    expect(messagesFrom(transport.calls[1]?.payload).some((message) =>
+      message['id'] === 'client-tool-result-tc-2'
+        || message['id'] === 'client-tool-result-tc-3'
+    )).toBe(false);
+    expect(cap.snapshotToolMessages().messages).toEqual([
+      stagedToolMessage('tc-3', 'windy'),
+    ]);
+    expect(ref.queue().size).toBe(0);
+    expect(transport.joinedCalls).toEqual([{
+      threadId: 't-1',
+      runId: 'queued-1',
+      lastEventId: undefined,
+    }]);
+  });
+
+  it('does not replace the active retry batch when a loading enqueue is rejected', async () => {
+    const releaseActive = deferred();
+    let activeStarted = false;
+    const transport = new ScriptedAgentTransport(
+      [
+        controlledFailure(
+          releaseActive.promise,
+          () => { activeStarted = true; },
+          'active submit failed',
+        ),
+        successfulStream(),
+      ],
+      new Error('queue creation failed'),
+    );
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', threadId: 't-1', transport, throttle: false })
+    );
+    const cap = staging(ref);
+    cap.setCatalog([SPEC]);
+
+    cap.settle('tc-1', { ok: true, value: 'sunny' });
+    const active = ref.submit({ message: 'active' });
+
+    try {
+      await vi.waitFor(() => expect(activeStarted).toBe(true), { timeout: 1000 });
+      expect(ref.isLoading()).toBe(true);
+      cap.settle('tc-2', { ok: true, value: 'rainy' });
+      await expect(ref.submit(
+        { message: 'queued' },
+        { multitaskStrategy: 'enqueue' },
+      )).rejects.toThrow('queue creation failed');
+      expect(transport.calls).toHaveLength(1);
+      expect(transport.queuedCalls).toHaveLength(1);
+      expect(transport.queuedCalls[0]?.options).toMatchObject({
+        multitaskStrategy: 'enqueue',
+      });
+      expect(messagesFrom(transport.queuedCalls[0]?.payload).slice(0, 2)).toEqual([
+        stagedToolMessage('tc-1', 'sunny'),
+        stagedToolMessage('tc-2', 'rainy'),
+      ]);
+      expect(cap.snapshotToolMessages().messages).toEqual([
+        stagedToolMessage('tc-1', 'sunny'),
+        stagedToolMessage('tc-2', 'rainy'),
+      ]);
+    } finally {
+      releaseActive.resolve();
+      await active;
+    }
+    expect(ref.status()).toBe('error');
+
+    cap.settle('tc-3', { ok: true, value: 'windy' });
+    await expect(ref.retry()).resolves.toBeUndefined();
+
+    expect(transport.calls[1]?.payload).toEqual(transport.calls[0]?.payload);
+    expect(messagesFrom(transport.calls[1]?.payload)[0]).toEqual(
+      stagedToolMessage('tc-1', 'sunny'),
+    );
+    expect(messagesFrom(transport.calls[1]?.payload).some((message) =>
+      message['id'] === 'client-tool-result-tc-2'
+        || message['id'] === 'client-tool-result-tc-3'
+    )).toBe(false);
+    expect(cap.snapshotToolMessages().messages).toEqual([
+      stagedToolMessage('tc-2', 'rainy'),
+      stagedToolMessage('tc-3', 'windy'),
+    ]);
+  });
+
+  it('keeps the active retry batch when a loading enqueue carries null', async () => {
+    const releaseActive = deferred();
+    let activeStarted = false;
+    const transport = new ScriptedAgentTransport([
+      controlledFailure(
+        releaseActive.promise,
+        () => { activeStarted = true; },
+        'active submit failed',
+      ),
+      successfulStream(),
+    ]);
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', threadId: 't-1', transport, throttle: false })
+    );
+    const cap = staging(ref);
+    cap.setCatalog([SPEC]);
+
+    cap.settle('tc-1', { ok: true, value: 'sunny' });
+    const active = ref.submit({ message: 'active' });
+
+    try {
+      await vi.waitFor(() => expect(activeStarted).toBe(true), { timeout: 1000 });
+      expect(ref.isLoading()).toBe(true);
+
+      await ref.submit(null, { multitaskStrategy: 'enqueue' });
+
+      expect(transport.calls).toHaveLength(1);
+      expect(transport.queuedCalls).toHaveLength(1);
+      expect(transport.queuedCalls[0]?.payload).toBeNull();
+      expect(ref.queue()).toMatchObject({
+        size: 1,
+        entries: [{ id: 'queued-1', threadId: 't-1' }],
+      });
+      expect(cap.snapshotToolMessages().messages).toEqual([
+        stagedToolMessage('tc-1', 'sunny'),
+      ]);
+
+      cap.settle('tc-2', { ok: true, value: 'rainy' });
+    } finally {
+      releaseActive.resolve();
+      await active;
+    }
+
+    await ref.retry();
+
+    expect(transport.calls).toHaveLength(2);
+    expect(transport.calls[1]?.payload).toEqual(transport.calls[0]?.payload);
+    expect(cap.snapshotToolMessages().messages).toEqual([
+      stagedToolMessage('tc-2', 'rainy'),
+    ]);
+    expect(ref.queue().size).toBe(0);
+    expect(transport.joinedCalls).toEqual([{
+      threadId: 't-1',
+      runId: 'queued-1',
+      lastEventId: undefined,
+    }]);
+  });
+
+  it('reload starts a retry and acknowledges only its captured batch', async () => {
+    const release = deferred();
+    let retryStarted = false;
+    let retryCompleted = false;
+    const transport = new ScriptedAgentTransport([
+      preStreamFailure('connect failed'),
+      controlledSuccess(
+        release.promise,
+        () => { retryStarted = true; },
+        () => { retryCompleted = true; },
+      ),
+    ]);
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', threadId: 't-1', transport, throttle: false })
+    );
+    const cap = staging(ref);
+    cap.setCatalog([SPEC]);
+    cap.settle('tc-1', { ok: true, value: 'sunny' });
+    await ref.submit({ message: 'first' });
+    cap.settle('tc-2', { ok: true, value: 'rainy' });
+
+    const reloaded = ref.reload();
+
+    try {
+      expect(reloaded).toBeUndefined();
+      await vi.waitFor(() => expect(retryStarted).toBe(true), { timeout: 1000 });
+      expect(messagesFrom(transport.calls[1]?.payload)[0]).toEqual(
+        stagedToolMessage('tc-1', 'sunny'),
+      );
+    } finally {
+      release.resolve();
+    }
+    await vi.waitFor(() => expect(retryCompleted).toBe(true), { timeout: 1000 });
+    await vi.waitFor(() => {
+      expect(cap.snapshotToolMessages().messages).toEqual([
+        stagedToolMessage('tc-2', 'rainy'),
+      ]);
+    }, { timeout: 1000 });
+  });
+
+  it('keeps a failed resolve continuation batch for a later ordinary submit', async () => {
+    const transport = new ScriptedAgentTransport([
+      preStreamFailure('continuation failed'),
+      successfulStream(),
+    ]);
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', threadId: 't-1', transport, throttle: false })
+    );
+    const cap = staging(ref);
+    cap.setCatalog([SPEC]);
+
+    const resolved = cap.resolve('tc-1', { ok: true, value: 'sunny' });
+
+    expect(resolved).toBeUndefined();
+    await vi.waitFor(() => expect(ref.status()).toBe('error'), { timeout: 1000 });
+    expect(messagesFrom(transport.calls[0]?.payload)[0]).toEqual(
+      stagedToolMessage('tc-1', 'sunny'),
+    );
+    expect(cap.snapshotToolMessages().messages).toEqual([
+      stagedToolMessage('tc-1', 'sunny'),
+    ]);
+
+    await ref.submit({ message: 'recover' });
+
+    expect(messagesFrom(transport.calls[1]?.payload)[0]).toEqual(
+      stagedToolMessage('tc-1', 'sunny'),
+    );
+    expect(cap.snapshotToolMessages().messages).toEqual([]);
+  });
+
+  it('acknowledges the exact resolve continuation batch only after success', async () => {
+    const release = deferred();
+    let streamStarted = false;
+    const transport = new ScriptedAgentTransport([
+      controlledSuccess(release.promise, () => { streamStarted = true; }),
+    ]);
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', threadId: 't-1', transport, throttle: false })
+    );
+    const cap = staging(ref);
+    cap.setCatalog([SPEC]);
+
+    const resolved = cap.resolve('tc-1', { ok: true, value: 'sunny' });
+
+    try {
+      expect(resolved).toBeUndefined();
+      await vi.waitFor(() => expect(streamStarted).toBe(true), { timeout: 1000 });
+      expect(messagesFrom(transport.calls[0]?.payload)[0]).toEqual(
+        stagedToolMessage('tc-1', 'sunny'),
+      );
+      expect(cap.snapshotToolMessages().messages).toEqual([
+        stagedToolMessage('tc-1', 'sunny'),
+      ]);
+    } finally {
+      release.resolve();
+    }
+    await vi.waitFor(() => expect(ref.status()).toBe('idle'), { timeout: 1000 });
+    expect(cap.snapshotToolMessages().messages).toEqual([]);
+  });
+
+  it('submit(null) does not acknowledge staged tool messages', async () => {
     const transport = new MockAgentTransport();
     const ref = withInjectionContext(() =>
       agent({ apiUrl: '', assistantId: 'a', threadId: 't-1', transport, throttle: false })
@@ -1385,33 +2169,20 @@ describe('agent — client tool staging', () => {
     cap.setCatalog([SPEC]);
 
     cap.settle('tc-1', { ok: true, value: 'sunny' });
-    await expect(cap.flush()).rejects.toThrow(
-      'Custom LangGraph transports using terminal client tools must implement updateState().',
-    );
-    ref.submit({ message: 'and tomorrow?' });
+    const submitted = ref.submit(null);
 
-    const payload = transport.streams[0]?.payload as { messages: Array<Record<string, unknown>> };
-    expect(payload.messages[0]).toMatchObject({ type: 'tool', tool_call_id: 'tc-1' });
-    expect(payload.messages[1]).toMatchObject({ type: 'human' });
-    // Drained exactly once — a second submit must not re-send it.
-    expect(cap.drainToolMessages()).toEqual([]);
-  });
-
-  it('submit(null) does not drain staged tool messages', async () => {
-    const transport = new MockAgentTransport();
-    const ref = withInjectionContext(() =>
-      agent({ apiUrl: '', assistantId: 'a', threadId: 't-1', transport, throttle: false })
-    );
-    const cap = staging(ref);
-    cap.setCatalog([SPEC]);
-
-    cap.settle('tc-1', { ok: true, value: 'sunny' });
-    ref.submit(null);
-
-    // A null payload signals a no-input resume and cannot carry messages;
-    // draining into it would discard the result silently.
-    expect(transport.streams[0]?.payload).toBeNull();
-    expect(cap.drainToolMessages().map((m) => m.tool_call_id)).toEqual(['tc-1']);
+    try {
+      // A null payload signals a no-input resume and cannot carry messages;
+      // acknowledging here would discard the result silently.
+      expect(transport.streams[0]?.payload).toBeNull();
+      expect(cap.snapshotToolMessages().messages).toEqual([
+        stagedToolMessage('tc-1', 'sunny'),
+      ]);
+    } finally {
+      await ref.stop();
+      transport.close();
+      await submitted;
+    }
   });
 
   it('switchThread discards staged tool messages', () => {
@@ -1427,7 +2198,77 @@ describe('agent — client tool staging', () => {
 
     // Carrying it over would prepend a ToolMessage whose tool_call_id matches
     // no AIMessage on t-2 — turning one broken thread into two.
-    expect(cap.drainToolMessages()).toEqual([]);
+    expect(cap.snapshotToolMessages().messages).toEqual([]);
+  });
+
+  it('clears staged ownership and retry payloads when switching threads', async () => {
+    const transport = new ScriptedAgentTransport([
+      preStreamFailure('old thread failed'),
+    ]);
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', threadId: 't-1', transport, throttle: false })
+    );
+    const cap = staging(ref);
+    cap.setCatalog([SPEC]);
+    cap.settle('tc-old', { ok: true, value: 'old result' });
+    await ref.submit({ message: 'old thread run' });
+
+    expect(transport.calls).toHaveLength(1);
+    expect(cap.snapshotToolMessages().messages).toEqual([
+      stagedToolMessage('tc-old', 'old result'),
+    ]);
+
+    ref.switchThread('t-2');
+
+    expect(cap.snapshotToolMessages().messages).toEqual([]);
+    cap.settle('tc-new', { ok: true, value: 'new result' });
+
+    await ref.retry();
+    const reloaded = ref.reload();
+
+    expect(reloaded).toBeUndefined();
+    // A stale resubmit would invoke transport.stream synchronously before the
+    // fire-and-forget helper reaches its first await, so no timing flush is
+    // needed to prove reload did not start a new-thread stream.
+    expect(transport.calls).toHaveLength(1);
+    expect(cap.snapshotToolMessages().messages).toEqual([
+      stagedToolMessage('tc-new', 'new result'),
+    ]);
+  });
+
+  it('keeps a new-thread result when an old-thread stream completes after the switch', async () => {
+    const releaseOld = deferred();
+    let oldStarted = false;
+    const transport = new ScriptedAgentTransport([
+      controlledSuccess(releaseOld.promise, () => { oldStarted = true; }),
+    ]);
+    const ref = withInjectionContext(() =>
+      agent({ apiUrl: '', assistantId: 'a', threadId: 't-1', transport, throttle: false })
+    );
+    const cap = staging(ref);
+    cap.setCatalog([SPEC]);
+    cap.settle('tc-old', { ok: true, value: 'old result' });
+    const oldRun = ref.submit({ message: 'old thread run' });
+
+    try {
+      await vi.waitFor(() => expect(oldStarted).toBe(true), { timeout: 1000 });
+      ref.switchThread('t-2');
+      cap.settle('tc-new', { ok: true, value: 'new result' });
+      expect(cap.snapshotToolMessages().messages).toEqual([
+        stagedToolMessage('tc-new', 'new result'),
+      ]);
+    } finally {
+      releaseOld.resolve();
+      await oldRun;
+    }
+
+    // The bridge classifies the switched-away stream as interrupted even
+    // though its script later closes successfully. Generation-level stale
+    // acknowledge behavior is covered directly in client-tools.spec.ts; this
+    // seam proves the transition cannot disturb staging on the new thread.
+    expect(cap.snapshotToolMessages().messages).toEqual([
+      stagedToolMessage('tc-new', 'new result'),
+    ]);
   });
 });
 
@@ -1446,7 +2287,7 @@ describe('agent — client tool results settled after a thread switch', () => {
       setCatalog(specs: unknown[]): void;
       settle(id: string, result: { ok: true; value: unknown }): void;
       flush(): Promise<void>;
-      drainToolMessages(): Array<{ tool_call_id: string }>;
+      snapshotToolMessages(): { messages: ReadonlyArray<{ tool_call_id: string }> };
     };
   }
 
@@ -1484,10 +2325,10 @@ describe('agent — client tool results settled after a thread switch', () => {
 
     // Writing here would give t-2 a ToolMessage matching no AIMessage → 400.
     expect(updateCalls).toHaveLength(0);
-    expect(cap.drainToolMessages()).toEqual([]);
+    expect(cap.snapshotToolMessages().messages).toEqual([]);
   });
 
-  it('does not drain a result settled after a thread switch into the new thread submit', async () => {
+  it('does not carry a result settled after a thread switch into the new thread submit', async () => {
     const transport = new MockAgentTransport();
     const { ref, cap } = await agentWithPendingToolCall(transport);
     const streamsBefore = transport.streams.length;
@@ -1501,6 +2342,6 @@ describe('agent — client tool results settled after a thread switch', () => {
     };
     expect(payload.messages).toHaveLength(1);
     expect(payload.messages[0]).toMatchObject({ type: 'human' });
-    expect(cap.drainToolMessages()).toEqual([]);
+    expect(cap.snapshotToolMessages().messages).toEqual([]);
   });
 });

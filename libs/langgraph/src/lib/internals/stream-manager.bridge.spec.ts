@@ -121,7 +121,7 @@ describe('createStreamManagerBridge', () => {
 
       transport.emit([{ type: 'values', values: { answer: 'hello' } }]);
       transport.close();
-      await submitted;
+      expect(await submitted).toBe('success');
 
       expect(bridge.getMessageDelivery('ai-1')).toEqual({
         generation: streaming.generation,
@@ -556,7 +556,9 @@ describe('createStreamManagerBridge', () => {
         destroy$: destroy$.asObservable(),
       });
 
-      await bridge.submit({});
+      const submitted = bridge.submit({});
+
+      expect(await submitted).toBe('paused');
 
       expect(bridge.getMessageDelivery('ai-values-interrupt')).toMatchObject({
         phase: 'complete',
@@ -583,7 +585,7 @@ describe('createStreamManagerBridge', () => {
         messageMetadata: { langgraph_node: 'model' },
       }, { type: 'error', error: new Error('rejected') }]);
       transport.close();
-      await submitted;
+      expect(await submitted).toBe('error');
 
       expect(bridge.getMessageDelivery('ai-error')).toEqual({
         generation: expect.any(String),
@@ -611,7 +613,7 @@ describe('createStreamManagerBridge', () => {
         messageMetadata: { langgraph_node: 'model' },
       }]);
       transport.close();
-      await submitted;
+      expect(await submitted).toBe('interrupted');
 
       expect(bridge.getMessageDelivery('ai-interrupted')).toEqual({
         generation: expect.any(String),
@@ -727,7 +729,7 @@ describe('createStreamManagerBridge', () => {
         destroy$: destroy$.asObservable(),
       });
 
-      void bridge.submit({});
+      const submitted = bridge.submit({});
       transport.emit([{
         type: 'messages',
         messages: [{ id: 'ai-aborted', type: 'ai', content: 'partial' }],
@@ -735,6 +737,9 @@ describe('createStreamManagerBridge', () => {
       }]);
       await new Promise(resolve => setTimeout(resolve, 0));
       await bridge.stop();
+      transport.close();
+
+      expect(await submitted).toBe('aborted');
 
       expect(bridge.getMessageDelivery('ai-aborted')).toEqual({
         generation: expect.any(String),
@@ -815,9 +820,9 @@ describe('createStreamManagerBridge', () => {
         destroy$: destroy$.asObservable(),
       });
 
-      await bridge.submit({ retry: true });
+      expect(await bridge.submit({ retry: true })).toBe('error');
       const first = bridge.getMessageDelivery('ai-retry');
-      await bridge.resubmitLast();
+      expect(await bridge.resubmitLast()).toBe('success');
       const second = bridge.getMessageDelivery('ai-retry');
 
       expect(first).toMatchObject({ phase: 'complete', outcome: 'error' });
@@ -1307,6 +1312,219 @@ describe('createStreamManagerBridge', () => {
         destroy$.next();
       },
     );
+  });
+
+  describe('submit outcomes and retry state', () => {
+    it('returns not-started without a retained non-null payload', async () => {
+      let streamCalls = 0;
+      const transport: AgentTransport = {
+        async *stream() {
+          streamCalls += 1;
+          yield { type: 'values', values: { unexpected: true } };
+        },
+      };
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of('thread-1'),
+        destroy$: destroy$.asObservable(),
+      });
+
+      expect(await bridge.resubmitLast()).toBe('not-started');
+      expect(streamCalls).toBe(0);
+      destroy$.next();
+    });
+
+    it('clears retry state for immediate null and undefined submissions', async () => {
+      const streamPayloads: unknown[] = [];
+      const transport: AgentTransport = {
+        async *stream(_assistantId, _threadId, payload) {
+          streamPayloads.push(payload);
+          yield { type: 'values', values: { completed: streamPayloads.length } };
+        },
+      };
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of('thread-1'),
+        destroy$: destroy$.asObservable(),
+      });
+
+      const beforeNull = { run: 'before-null' };
+      expect(await bridge.submit(beforeNull)).toBe('success');
+      expect(await bridge.submit(null)).toBe('success');
+      expect(await bridge.resubmitLast()).toBe('not-started');
+
+      const beforeUndefined = { run: 'before-undefined' };
+      expect(await bridge.submit(beforeUndefined)).toBe('success');
+      expect(await bridge.submit(undefined)).toBe('success');
+      expect(await bridge.resubmitLast()).toBe('not-started');
+      expect(streamPayloads).toEqual([beforeNull, null, beforeUndefined, undefined]);
+      destroy$.next();
+    });
+
+    it('uses stream while idle for enqueue options and returns the stream outcome', async () => {
+      let streamCalls = 0;
+      const transport: AgentTransport = {
+        async *stream() {
+          streamCalls += 1;
+          yield { type: 'error', error: new Error('stream failed') };
+        },
+        async createQueuedRun() {
+          throw new Error('enqueue should not run while idle');
+        },
+      };
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of('thread-1'),
+        destroy$: destroy$.asObservable(),
+      });
+
+      expect(await bridge.submit({ run: 'idle' }, { multitaskStrategy: 'enqueue' })).toBe('error');
+      expect(streamCalls).toBe(1);
+      expect(subjects.queue$.value.size).toBe(0);
+      destroy$.next();
+    });
+
+    it('returns success for a queued active run without replacing the active retry input', async () => {
+      const calls: Array<{ payload: unknown; options: unknown }> = [];
+      let releaseActive!: () => void;
+      const activeGate = new Promise<void>(resolve => { releaseActive = resolve; });
+      const activePayload = { run: 'active' };
+      const activeOptions = { context: { source: 'active' } };
+      const transport: AgentTransport = {
+        async *stream(_assistantId, _threadId, payload, signal, options) {
+          calls.push({ payload, options });
+          if (calls.length === 1) {
+            const aborted = new Promise<void>(resolve => {
+              if (signal.aborted) resolve();
+              else signal.addEventListener('abort', () => resolve(), { once: true });
+            });
+            await Promise.race([activeGate, aborted]);
+            return;
+          }
+          yield { type: 'values', values: { retried: true } };
+        },
+        async createQueuedRun(_assistantId, threadId, values, _signal, options) {
+          return { id: 'queued-1', threadId, values, options, createdAt: new Date() };
+        },
+      };
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of('thread-1'),
+        destroy$: destroy$.asObservable(),
+      });
+
+      const active = bridge.submit(activePayload, activeOptions);
+      const queuedOutcome = await bridge.submit(
+        { run: 'queued' },
+        { multitaskStrategy: 'enqueue' },
+      );
+      const resubmitOutcome = await bridge.resubmitLast();
+      releaseActive();
+      const activeOutcome = await active;
+
+      expect(queuedOutcome).toBe('success');
+      expect(resubmitOutcome).toBe('success');
+      expect(activeOutcome).toBe('interrupted');
+      expect(calls).toEqual([
+        { payload: activePayload, options: activeOptions },
+        { payload: activePayload, options: activeOptions },
+      ]);
+      destroy$.next();
+    });
+
+    it('keeps the active retry input when queue creation fails', async () => {
+      const calls: Array<{ payload: unknown; options: unknown }> = [];
+      let releaseActive!: () => void;
+      const activeGate = new Promise<void>(resolve => { releaseActive = resolve; });
+      const activePayload = { run: 'active' };
+      const activeOptions = { context: { source: 'active' } };
+      const transport: AgentTransport = {
+        async *stream(_assistantId, _threadId, payload, signal, options) {
+          calls.push({ payload, options });
+          if (calls.length === 1) {
+            const aborted = new Promise<void>(resolve => {
+              if (signal.aborted) resolve();
+              else signal.addEventListener('abort', () => resolve(), { once: true });
+            });
+            await Promise.race([activeGate, aborted]);
+            return;
+          }
+          yield { type: 'values', values: { retried: true } };
+        },
+        async createQueuedRun() {
+          throw new Error('queue creation failed');
+        },
+      };
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of('thread-1'),
+        destroy$: destroy$.asObservable(),
+      });
+
+      const active = bridge.submit(activePayload, activeOptions);
+      const queueResult = await bridge.submit(
+        { run: 'queued' },
+        { multitaskStrategy: 'enqueue' },
+      ).then(
+        value => ({ status: 'fulfilled' as const, value }),
+        error => ({ status: 'rejected' as const, error }),
+      );
+      const resubmitOutcome = await bridge.resubmitLast();
+      releaseActive();
+      const activeOutcome = await active;
+
+      expect(queueResult).toMatchObject({
+        status: 'rejected',
+        error: new Error('queue creation failed'),
+      });
+      expect(resubmitOutcome).toBe('success');
+      expect(activeOutcome).toBe('interrupted');
+      expect(calls).toEqual([
+        { payload: activePayload, options: activeOptions },
+        { payload: activePayload, options: activeOptions },
+      ]);
+      destroy$.next();
+    });
+
+    it('clears retry state when switching threads', async () => {
+      let streamCalls = 0;
+      const transport: AgentTransport = {
+        async *stream() {
+          streamCalls += 1;
+          yield { type: 'values', values: { completed: true } };
+        },
+      };
+      const subjects = makeSubjects();
+      const destroy$ = new Subject<void>();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of('thread-1'),
+        destroy$: destroy$.asObservable(),
+      });
+
+      expect(await bridge.submit({ run: 'thread-1' })).toBe('success');
+      bridge.switchThread('thread-2');
+
+      expect(await bridge.resubmitLast()).toBe('not-started');
+      expect(streamCalls).toBe(1);
+      destroy$.next();
+    });
   });
 
   it('sets status to Loading when submit is called', async () => {
@@ -1830,7 +2048,7 @@ describe('createStreamManagerBridge', () => {
     expect(subjects.status$.value).toBe(ResourceStatus.Loading);
 
     releaseReplacement();
-    await replacement;
+    expect(await replacement).toBe('success');
     await initial;
     expect(joinedRuns).toEqual(['queued-1', 'queued-2']);
     destroy$.next();
@@ -2268,7 +2486,7 @@ describe('createStreamManagerBridge', () => {
       const newStreaming = bridge.getMessageDelivery('new-ai');
 
       releaseOld();
-      await first;
+      expect(await first).toBe('interrupted');
 
       expect(subjects.messages$.value).toEqual([
         expect.objectContaining({ id: 'new-ai', content: 'new' }),
