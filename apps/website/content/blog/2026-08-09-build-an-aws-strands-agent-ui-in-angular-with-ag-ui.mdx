@@ -1,0 +1,381 @@
+---
+title: 'Build an AWS Strands Agent UI in Angular with AG-UI'
+description: 'Connect an AWS Strands agent to an Angular chat over AG-UI SSE with Threadplane, then prepare the same server for optional AgentCore deployment.'
+date: 2026-08-09
+tags: [tutorial, aws-strands, ag-ui, angular, agentic-ui]
+author: brian
+featured: true
+draft: false
+---
+
+Build a Strands agent in Python, stream it over AG-UI, and render it in Angular with Threadplane.
+
+The useful boundary is straightforward.
+Strands owns the model loop and tools, AG-UI owns the wire, and your Angular app owns the experience.
+
+Amazon Bedrock AgentCore can host the same server later, but it isn't required for local development.
+Let's start with the smaller thing that works.
+
+## Goals
+
+- Create a tool-capable agent with the Strands Agents SDK.
+- Expose that agent as an AG-UI endpoint over Server-Sent Events (SSE).
+- Connect the endpoint to Angular with `@threadplane/ag-ui` and `@threadplane/chat`.
+- Keep local server wiring separate from optional AgentCore deployment.
+- Identify the authentication, session, proxy, and persistence work a production app still needs.
+
+## What are we building?
+
+Here is the complete path:
+
+```text
+Angular <chat>
+  -> @threadplane/ag-ui
+  -> @ag-ui/client HttpAgent
+  -> POST /invocations + AG-UI events over SSE
+  -> ag-ui-strands
+  -> Strands Agent
+  -> Amazon Bedrock
+```
+
+The Strands integration translates framework-specific streaming output into AG-UI lifecycle, text, tool-call, state, and reasoning events.
+The Angular side doesn't need to know how `Agent.stream_async()` works.
+It only needs the protocol contract.
+
+For me, that's the point of this split.
+The extra adapter is a small cost, and it keeps Strands internals out of the UI.
+
+<Callout type="info" title="AgentCore is optional">
+  The backend in this tutorial is an ordinary FastAPI application running with
+  Uvicorn. AgentCore becomes one deployment option after the local Strands AG-UI
+  path works; it is not part of the frontend contract.
+</Callout>
+
+If you want a broader tour of AG-UI events and Angular signals, read [Build Fullstack Agentic Angular Apps Using AG-UI](/blog/build-fullstack-agentic-angular-apps-using-ag-ui).
+This tutorial stays focused on the [official Strands integration](https://github.com/ag-ui-protocol/ag-ui/tree/main/integrations/aws-strands/python), the server boundary, and deployment.
+
+## Why put AG-UI between Strands and Angular?
+
+A Strands callback stream is useful inside a Python process.
+It isn't a frontend API by itself.
+
+The official `ag-ui-strands` package handles that translation.
+Its `StrandsAgent` wrapper consumes the Strands async stream and emits typed AG-UI events, while `create_strands_app()` adds a FastAPI POST endpoint that encodes those events for SSE.
+
+On the other side, AG-UI's `HttpAgent` sends a `RunAgentInput` payload and consumes the event stream.
+Threadplane wraps that client in an Angular-native, signal-shaped `Agent` contract.
+
+That leaves three clear responsibilities:
+
+- **Strands:** model selection, prompts, tools, and agent state.
+- **AG-UI:** run input and streaming event semantics.
+- **Threadplane:** Angular state and the user-facing chat composition.
+
+The [AG-UI architecture documentation](https://docs.ag-ui.com/concepts/architecture) describes the same HTTP client/server contract without tying it to a frontend framework.
+
+## How do we build the Strands AG-UI server?
+
+Let's build the backend first.
+Use Python 3.12 or 3.13 so the project satisfies both the current `ag-ui-strands` package constraint and the AgentCore guide.
+
+Strands uses Amazon Bedrock as its default model provider.
+Configure local AWS credentials with permission to invoke your chosen Bedrock model before starting the server.
+The [Strands Python quickstart](https://strandsagents.com/docs/user-guide/quickstart/python/) covers profiles, environment credentials, IAM roles, Bedrock API keys, and model access.
+
+### Install the backend packages
+
+Create and activate a virtual environment, then install the integration and server:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install "ag-ui-strands==0.2.4" "uvicorn[standard]"
+```
+
+I'm pinning `ag-ui-strands` because this tutorial uses the `0.2.4` helper API.
+That release declares FastAPI, the AG-UI Python protocol package, and `strands-agents>=1.15.0` as dependencies.
+Keep the resolved versions in your lockfile when you move beyond the tutorial.
+
+### Create the agent and endpoint
+
+Create `my_agui_server.py`:
+
+```python
+import uvicorn
+from ag_ui_strands import StrandsAgent, create_strands_app
+from strands import Agent, tool
+
+
+@tool
+def word_count(text: str) -> int:
+    """Count whitespace-separated words in a string."""
+    return len(text.split())
+
+
+strands_agent = Agent(
+    system_prompt=(
+        "You are a concise assistant. "
+        "Use the word_count tool whenever a user asks you to count words."
+    ),
+    tools=[word_count],
+    callback_handler=None,
+)
+
+agui_agent = StrandsAgent(
+    agent=strands_agent,
+    name="angular_assistant",
+    description="A Strands agent for an Angular chat UI",
+)
+
+app = create_strands_app(
+    agui_agent,
+    path="/invocations",
+    ping_path=None,
+    origins=["http://localhost:4200"],
+)
+
+
+@app.get("/ping")
+async def ping():
+    return {"status": "Healthy"}
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8080)
+```
+
+The `@tool` decorator and `Agent` constructor are standard Strands APIs.
+Setting `callback_handler=None` turns off Strands' default console output because the response is already traveling through the AG-UI stream.
+
+The important boundary is the next part:
+
+1. `StrandsAgent` wraps the Strands agent template.
+2. `create_strands_app()` registers `POST /invocations` and validates `RunAgentInput` before encoding each returned event for the response stream.
+3. The explicit `GET /ping` route returns the exact `Healthy` status value AgentCore currently requires.
+4. CORS is limited to the Angular development origin instead of using a wildcard.
+
+The path and port also match the [AgentCore AG-UI container contract](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-agui-protocol-contract.html), which saves a deployment-only rewrite later.
+
+### Run it locally
+
+Start the server:
+
+```bash
+python my_agui_server.py
+```
+
+Check the health route:
+
+```bash
+curl http://localhost:8080/ping
+```
+
+You should receive:
+
+```json
+{ "status": "Healthy" }
+```
+
+Then test the AG-UI stream directly:
+
+```bash
+curl -N -X POST http://localhost:8080/invocations \
+  -H "Accept: text/event-stream" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "threadId": "local-thread-1",
+    "runId": "local-run-1",
+    "state": {},
+    "messages": [
+      {
+        "id": "message-1",
+        "role": "user",
+        "content": "Count the words in: Angular agents need a clear protocol boundary."
+      }
+    ],
+    "tools": [],
+    "context": [],
+    "forwardedProps": {}
+  }'
+```
+
+With valid Bedrock credentials, the response is a stream of AG-UI events rather than one completed JSON document.
+You should see a run start, streamed message or tool-call events, and a run finish.
+
+Simple enough.
+Now we can give the agent a UI.
+
+## How do we connect the Angular agent UI?
+
+The Threadplane adapter supports Angular 20 and 21; use Node.js 22 or later for the documented setup.
+Install the chat surface, AG-UI adapter, official AG-UI client packages, and markdown renderer:
+
+<Callout type="info" title="Threadplane licensing">
+  `@threadplane/ag-ui` is MIT-licensed. `@threadplane/chat` is available for
+  noncommercial use under PolyForm Noncommercial 1.0.0; commercial production
+  use requires a Threadplane license. The [chat installation
+  guide](/docs/chat/getting-started/installation) covers activation.
+</Callout>
+
+```bash
+npm install @threadplane/chat @threadplane/ag-ui @ag-ui/client @ag-ui/core marked
+```
+
+`@threadplane/ag-ui` constructs the official `HttpAgent` for the endpoint you provide.
+`@threadplane/chat` consumes Threadplane's runtime-neutral `Agent` contract, so the component doesn't import Strands types or parse SSE.
+
+### Provide the agent
+
+Wire both packages into `app.config.ts`:
+
+```ts
+import { ApplicationConfig } from '@angular/core';
+import { provideAgent } from '@threadplane/ag-ui';
+import { provideChat } from '@threadplane/chat';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({
+      url: 'http://localhost:8080/invocations',
+    }),
+    provideChat({ assistantName: 'Strands Assistant' }),
+  ],
+};
+```
+
+The URL points to the local FastAPI route, not to Bedrock and not to AgentCore.
+Your AWS credentials stay in the backend process.
+
+### Render the chat
+
+Create a standalone page component:
+
+```ts
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { injectAgent } from '@threadplane/ag-ui';
+import { ChatComponent } from '@threadplane/chat';
+
+@Component({
+  selector: 'app-agent-page',
+  standalone: true,
+  imports: [ChatComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div style="height: 100dvh">
+      <chat [agent]="agent" />
+    </div>
+  `,
+})
+export class AgentPageComponent {
+  protected readonly agent = injectAgent();
+}
+```
+
+Start Angular, open the page, and ask the assistant to count words.
+The default chat composition can render the user message, streaming assistant output, run status, errors, and tool progress from the same agent binding.
+
+You can replace the composition with smaller chat primitives later.
+The [Threadplane AG-UI installation guide](/docs/ag-ui/getting-started/installation) documents the provider options, and the [chat component reference](/docs/chat/components/chat) covers the UI surface.
+
+## What happens when the user submits a message?
+
+Let's follow one turn across the seam.
+
+1. `<chat>` submits through the injected Threadplane `Agent`.
+2. `@threadplane/ag-ui` delegates to AG-UI's `HttpAgent`.
+3. `HttpAgent` sends a POST containing the thread ID, run ID, messages, state, tools, context, and forwarded properties.
+4. FastAPI validates that body as `RunAgentInput`.
+5. `StrandsAgent` gives the conversation to a per-thread Strands agent and consumes its async stream.
+6. The integration emits AG-UI lifecycle, text, tool, state, reasoning, or error events as the run progresses.
+7. Threadplane reduces those events into Angular signals, and `<chat>` updates from the shared `Agent` contract.
+
+No browser code knows which Bedrock model is running.
+No Python code knows which Angular components render the response.
+
+That separation is useful, but it isn't magic.
+The [Threadplane event mapping](/docs/ag-ui/reference/event-mapping) is the compatibility checklist when you add richer Strands behavior.
+
+## What still needs work before production?
+
+The local server keeps a Strands agent instance per AG-UI `threadId` in the running process.
+That is convenient for development, but process memory is not durable conversation storage.
+
+In `ag-ui-strands` 0.2.4, wire [Strands session management](https://strandsagents.com/docs/user-guide/concepts/agents/session-management/) through `StrandsAgentConfig(session_manager_provider=...)`.
+A session manager attached to the template `Agent` is intentionally ignored because every AG-UI thread would otherwise share one Strands session.
+The provider should return a distinct manager for a server-validated internal thread key, not blindly trust the client-provided `threadId`.
+
+There are a few more seams to make explicit:
+
+- **CORS:** `http://localhost:4200` is a development origin. Use your exact production origin, or remove cross-origin traffic by routing through the same application domain.
+- **Authentication:** protect `/invocations` before exposing it. Never put AWS access keys, Bedrock credentials, or SigV4 signing secrets in an Angular bundle.
+- **Remote content:** version 0.2.4 can fetch URL-backed image, document, and video inputs from the server. Reject URL sources if you don't need them. Otherwise, validate them before the adapter sees the request: allowlist schemes and hosts, block redirects to private, link-local, and metadata addresses, and cap response size and time.
+- **Proxy streaming:** if a gateway or backend-for-frontend sits in front of the agent, disable response buffering and preserve the streaming content type. A proxy that collects the whole response turns streaming chat back into a spinner.
+- **Authorization:** bind threads to the authenticated user on the server. A client-provided `threadId` is an identifier, not proof that the caller may access that conversation.
+- **Operations:** set timeouts intentionally, propagate cancellation where your stack supports it, rate-limit runs, and record errors without logging sensitive prompts or tool results by default.
+
+The local setup is deliberately small.
+Production is where identity, durability, and observability become part of the agent UI contract.
+
+## How does optional AgentCore deployment change the picture?
+
+It doesn't change the Angular-to-AG-UI contract.
+It changes where the Strands server runs and how requests reach it.
+
+AgentCore Runtime supports AG-UI servers as a proxy layer.
+For HTTP/SSE it expects the container on port `8080`, the agent endpoint at `/invocations`, and a health endpoint at `/ping` that reports `Healthy` or `HealthyBusy`.
+Our local server already has that shape.
+
+Record the backend dependencies in `requirements.txt`, then follow the current [AWS AgentCore AG-UI deployment guide](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-agui.html):
+
+```bash
+python -m pip install bedrock-agentcore-starter-toolkit
+agentcore configure -e my_agui_server.py --protocol AGUI
+agentcore deploy
+```
+
+Treat that as a development deployment path.
+AWS says the CLI-generated IAM policies are broad development defaults, so replace them with least-privilege execution and invocation policies before production.
+The [AgentCore Runtime security guide](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-security-best-practices.html) is the checklist.
+
+AgentCore is a reasonable choice when you want its authentication integration, runtime session isolation, and scaling.
+The tradeoff is an AWS-specific deployment and invocation layer around the open AG-UI endpoint.
+
+### Keep the production identities separate
+
+An AgentCore runtime version uses one inbound authorization method: JWT bearer tokens or IAM SigV4.
+It also uses the `X-Amzn-Bedrock-AgentCore-Runtime-Session-Id` header to keep related invocations in the same isolated runtime session.
+
+That runtime session ID is not the same thing as the AG-UI `threadId` in the POST body.
+
+| Identifier                              | Owner                                 | Purpose                                                                  |
+| --------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------ |
+| Authenticated user or service principal | Your identity layer                   | Decides who may invoke the agent and access a conversation.              |
+| AG-UI `threadId`                        | Your application and AG-UI client     | Identifies the logical conversation sent to the Strands integration.     |
+| AgentCore runtime session ID            | AgentCore client or server-side proxy | Keeps invocations routed to the same isolated AgentCore runtime session. |
+
+AWS notes that AgentCore does not enforce the mapping between a user and a runtime session ID.
+Your application backend must own that mapping.
+Follow the [AgentCore session requirements](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-sessions.html): create an ID of at least 33 characters for each user or conversation, persist it, reuse it for related invocations, and never accept a browser-selected runtime session ID as authoritative.
+
+For most enterprise Angular applications, I suggest a same-origin backend-for-frontend:
+
+```text
+Angular -> /api/strands -> authenticated server-side proxy -> AgentCore
+```
+
+The proxy can obtain or validate a short-lived credential, sign requests when using SigV4, attach the AgentCore runtime session header, enforce thread ownership, and pass the SSE stream through unchanged.
+The Angular `provideAgent()` URL becomes `/api/strands`; the component stays the same.
+
+Treat direct browser access as a separate security design, not a URL swap.
+Bearer-token refresh, endpoint CORS support, runtime-session headers, and user-to-session mapping would all need explicit validation and ownership.
+
+## Conclusion
+
+A useful Strands AG-UI architecture has one clean boundary: Strands runs the agent, the official integration emits AG-UI over SSE, and Threadplane turns those events into an Angular agent UI.
+
+Start with the local FastAPI server.
+Keep model credentials behind it, verify the event stream, and add durable sessions before you scale out.
+Deploy to AgentCore when its operational tradeoffs fit your system, not because the Angular UI requires it.
+
+Then spend your time on the tool views, approvals, and design-system details your users will actually see.
+Have fun!
