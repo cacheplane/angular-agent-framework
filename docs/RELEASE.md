@@ -2,48 +2,65 @@
 
 The seven publishable libraries (`@threadplane/chat`, `@threadplane/langgraph`, `@threadplane/ag-ui`, `@threadplane/render`, `@threadplane/a2ui`, `@threadplane/licensing`, `@threadplane/telemetry`) ship together at a synchronized version via Nx Release. During the `0.0.x` exploratory phase, only patch bumps are used.
 
-## One-shot release (recommended; second release onward)
+## Standard release (second release onward)
 
 > First release? See **[First `@threadplane` release](#first-threadplane-release)** below — the flow is different because there's no prior package under the new npm org yet.
+
+> [!WARNING]
+> **Do not use `nx release patch`.** The one-shot `nx release` command does not
+> work in this repo. `nx.json` configures git options under
+> `release.changelog.git`, and Nx rejects the top-level command whenever
+> granular git config is present:
+>
+> `NX  The "release" top level command cannot be used with granular git configuration.`
+>
+> Use the subcommands below instead.
 
 From a clean main branch:
 
 ```bash
 git checkout main && git pull
-npx nx release patch
-```
 
-This runs Nx Release in interactive mode, which:
+# 1. Version bump. Runs preVersionCommand (builds all seven projects and
+#    patches install telemetry into the dist manifests), rewrites every
+#    package.json, updates package-lock.json, and stages the result.
+npx nx release version --specifier=patch
 
-1. Builds all seven publishable projects and patches install telemetry into the publishable package manifests (preVersionCommand).
-2. Bumps every package.json version (e.g., `0.0.1` → `0.0.2`).
-3. Generates `CHANGELOG.md` from commits since the last tag.
-4. Creates a git commit `chore(release): publish v0.0.2`.
-5. Tags the commit `v0.0.2`.
-6. **Prompts for confirmation, then publishes to npm with provenance.**
+# 2. Changelog + commit + tag + GitHub Release.
+#    Pass the BARE version — see the warning below.
+npx nx release changelog 0.0.57
 
-After the prompt, push the commit and tag:
-
-```bash
+# 3. Push. The Publish workflow fires on the tag and publishes to npm
+#    with provenance via OIDC trusted publishing.
 git push origin main --tags
 ```
 
-The `Publish` GitHub Actions workflow fires on tag push and re-publishes (idempotent — npm rejects duplicate versions).
+> [!WARNING]
+> **Pass the bare version to `changelog`, not `vX.Y.Z`.** `releaseTagPattern` is
+> `v{version}`, so Nx prepends the `v` itself. Passing `v0.0.57` produces a
+> malformed **`vv0.0.57`** tag and a GitHub Release at
+> `/releases/tag/vv0.0.57`. Pass `0.0.57`.
+>
+> Always `--dry-run` step 2 first and check the printed tag URL before
+> committing to it.
 
-## Step-by-step (for debugging)
+Step 3 is what actually ships. You can also publish from your machine with
+`npx nx release publish --groups=publishable`, but preferring the tag-driven
+workflow means no local npm credentials are needed and provenance is attested
+by CI.
 
-If something goes wrong, run the steps individually:
+### Check the lockfile before pushing
+
+Step 1 regenerates `package-lock.json`. On macOS that can drop the Linux
+`@next/swc-*` bindings and break CI. The diff should be **only** the version
+lines for the seven libs:
 
 ```bash
-# 1. Version bump (writes new versions to package.json files)
-npx nx release version --specifier=patch
-
-# 2. Generate changelog (creates CHANGELOG.md, commits, tags)
-npx nx release changelog v0.0.2  # use the version produced by step 1
-
-# 3. Publish to npm
-npx nx release publish --groups=publishable
+git diff --cached package-lock.json | grep -E '^-' | grep -icE 'linux|darwin|musl|gnu'
+# must print 0
 ```
+
+If it prints anything else, revert the lockfile and re-apply the version lines by hand.
 
 ## First `@threadplane` release
 
@@ -87,13 +104,27 @@ After the first `@threadplane` release, configure npm trusted publishing for all
 
 ## Dry run
 
-Always sanity-check before a real release:
+Always sanity-check before a real release. Dry-run each subcommand — the
+one-shot `nx release patch --dry-run` fails the same way the real command does:
 
 ```bash
-npx nx release patch --dry-run
+npx nx release version --specifier=patch --dry-run
+npx nx release changelog 0.0.57 --dry-run   # bare version; check the printed tag URL
 ```
 
-This prints what would happen without modifying anything.
+These print what would happen without modifying anything.
+
+## Is a release actually needed?
+
+Version bumps on `main` do **not** publish — only a pushed `vX.Y.Z` tag does. Main
+routinely drifts ahead of npm, and the version on disk can match the version on
+npm while the code differs. Check before assuming:
+
+```bash
+git rev-list --count "v$(npm view @threadplane/chat version)"..origin/main
+```
+
+Anything above `0` means main has unpublished commits.
 
 ## Manual workflow trigger
 
