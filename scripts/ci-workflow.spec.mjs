@@ -15,6 +15,14 @@ describe('CI workflow', () => {
     );
   }
 
+  async function readCanonicalDemoJob() {
+    const workflow = await readWorkflow();
+    return workflow.slice(
+      workflow.indexOf('  demo-deploy:'),
+      workflow.indexOf('  production-smoke:')
+    );
+  }
+
   async function readProductionSmokeJob() {
     const workflow = await readWorkflow();
     return workflow.slice(
@@ -107,6 +115,33 @@ describe('CI workflow', () => {
     assert.match(productionSmokeJob, /BASE_URL:\s*https:\/\/cockpit\.threadplane\.ai/);
     assert.match(productionSmokeJob, /EXAMPLES_URL:\s*https:\/\/examples\.threadplane\.ai/);
     assert.match(productionSmokeJob, /DEMO_URL:\s*https:\/\/demo\.threadplane\.ai/);
+  });
+
+  it('guards every production promotion against a superseded commit', async () => {
+    // Pushes to main do not cancel in-progress runs, so a slower older run can
+    // reach a deploy job after a newer commit shipped. Without this guard it
+    // rebuilds --prod from its older checkout and overwrites production.
+    const workflow = await readWorkflow();
+
+    for (const job of [await readDeployJob(), await readCanonicalDemoJob()]) {
+      assert.match(job, /id:\s*freshness/);
+      assert.match(job, /git ls-remote origin refs\/heads\/main/);
+    }
+
+    // Each `vercel deploy --prod` must sit behind the freshness gate.
+    const promotions = workflow
+      .split(/^      - /m)
+      .filter((step) => /vercel deploy[^\n]*--prod/.test(step));
+
+    assert.ok(promotions.length >= 4, `expected the 4 known promotions, found ${promotions.length}`);
+    for (const step of promotions) {
+      const name = step.split('\n')[0];
+      assert.match(
+        step,
+        /if:[^\n]*steps\.freshness\.outputs\.stale\s*!=\s*'true'/,
+        `production promotion is not guarded by the freshness check: ${name}`
+      );
+    }
   });
 
   it('binds Vercel deploys to the renamed Threadplane projects', async () => {
