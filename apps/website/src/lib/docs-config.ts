@@ -207,6 +207,7 @@ export const docsConfig: DocsLibrary[] = [
           { title: 'ChatComponent', slug: 'chat', section: 'components' },
           { title: 'ChatPopup', slug: 'chat-popup', section: 'components' },
           { title: 'ChatSidebar', slug: 'chat-sidebar', section: 'components' },
+          { title: 'ChatSidenav', slug: 'chat-sidenav', section: 'components' },
           { title: 'ChatMessageList', slug: 'chat-message-list', section: 'components' },
           { title: 'ChatTrace', slug: 'chat-trace', section: 'components' },
           { title: 'ChatInput', slug: 'chat-input', section: 'components' },

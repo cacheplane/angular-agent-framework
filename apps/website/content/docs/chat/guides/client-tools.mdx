@@ -195,6 +195,45 @@ export class ClientToolsComponent {
 
 When the cap trips, tools that already produced a real result keep it; tools that never ran are recorded with a limit error so the thread stays valid. The run does not continue.
 
+## Reading client-tool results on the server
+
+When a client tool resolves, its result travels back to your graph as a **tool message keyed by tool-call id, with no tool name on it**. Both adapters send the same minimal shape:
+
+```json
+{ "id": "client-tool-result-call_abc", "role": "tool", "tool_call_id": "call_abc", "content": "{\"saved\":1}" }
+```
+
+That matters the moment a node tries to find those results. The intuitive filter is by name, and it fails silently — matching nothing, forever, with no error:
+
+```python
+# Wrong: client-tool results carry no name, so this is always empty.
+saved = [m for m in state["messages"] if isinstance(m, ToolMessage) and m.name == "add_link"]
+```
+
+Resolve the name through the AI message that requested the call, then match on the id:
+
+```python
+def results_for(messages: list, tool_name: str) -> list:
+    call_ids = {
+        call["id"]
+        for m in messages
+        for call in getattr(m, "tool_calls", None) or []
+        if call.get("name") == tool_name
+    }
+    return [
+        m for m in messages
+        if isinstance(m, ToolMessage) and m.tool_call_id in call_ids
+    ]
+```
+
+<Callout type="info" title="Why not just send the name?">
+  For AG-UI this is fixed by the protocol: `ToolMessageSchema` in `@ag-ui/core`
+  defines exactly `id`, `role`, `content`, `toolCallId`, and optional `error` /
+  `encryptedValue`, and parses in strip mode — an extra `name` would be dropped
+  on the wire. Matching on the call id is the portable approach across both
+  adapters.
+</Callout>
+
 ## Typed agent state
 
 Tool handlers and components often read agent state. Pair the registry with a typed `AgentRef` so `agent.state()` / `agent.value()` carry your state shape instead of `Record<string, unknown>` — see [Typed state via AgentRef](/docs/langgraph/api/provide-agent#typed-state-via-agentref):

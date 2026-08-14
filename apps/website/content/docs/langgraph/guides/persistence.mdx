@@ -12,7 +12,26 @@ LangGraph checkpoints agent state at every super-step. Each checkpoint is keyed 
 
 ## Python: Checkpointer Setup
 
-Every LangGraph agent needs a checkpointer to persist state between invocations. Which one you choose depends on your environment.
+Where the checkpointer comes from depends on how the graph is served, and getting this wrong is the fastest way to a server that won't boot.
+
+<Callout type="warning" title="Serving through langgraph dev or LangGraph Platform? Do not compile a checkpointer.">
+The platform provides persistence itself, and it rejects a graph that brings its own. Compile with `builder.compile()` and no argument.
+
+Passing one is not a soft warning — `langgraph dev` fails to load the graph and exits:
+
+```text
+ValueError: Heads up! Your graph 'graph' from './graph.py' includes a custom
+checkpointer (type <class 'langgraph.checkpoint.memory.InMemorySaver'>). With
+LangGraph API, persistence is handled automatically by the platform…
+Application startup failed. Exiting.
+```
+
+To point the platform at your own database, set the `POSTGRES_URI` environment variable rather than constructing a saver in code.
+</Callout>
+
+The checkpointers below apply when you **embed** the graph in your own process — a FastAPI app calling `graph.ainvoke()`, a worker, a script, or an AG-UI server built with `ag-ui-langgraph` (which needs a checkpointer to read state via `aget_state`).
+
+`@threadplane/langgraph` connects to a LangGraph *server*, so if you're following the [Quick Start](/docs/langgraph/getting-started/quickstart) and running `langgraph dev`, you're in the first case and can skip this section.
 
 <Tabs>
 <Tab label="MemorySaver (dev)">
