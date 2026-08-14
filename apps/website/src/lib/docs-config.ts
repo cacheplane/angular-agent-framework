@@ -12,6 +12,12 @@ export interface DocsPage {
   title: string;
   slug: string;
   section: string;
+  /**
+   * API pages auto-render the generated `api-docs.json` entry whose name
+   * matches the page's H1. Set this on a page that covers a *group* of exports
+   * instead — each named entry is rendered in order, below the page prose.
+   */
+  apiEntries?: string[];
 }
 
 export interface DocsSection {
@@ -367,7 +373,22 @@ export const docsConfig: DocsLibrary[] = [
         id: 'api',
         color: 'blue',
         pages: [
-          { title: 'LangGraph.js Helpers', slug: 'client-tool-helpers', section: 'api' },
+          {
+            title: 'LangGraph.js Helpers',
+            slug: 'client-tool-helpers',
+            section: 'api',
+            apiEntries: [
+              'bindClientTools',
+              'clientToolsChannel',
+              'clientToolsRouter',
+              'clientToolSpecs',
+              'clientToolNames',
+              'hasClientToolCall',
+              'hasServerToolCall',
+              'routeAfterAgent',
+              'lastMessage',
+            ],
+          },
         ],
       },
     ],
