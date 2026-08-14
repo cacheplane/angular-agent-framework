@@ -3755,9 +3755,11 @@
   {
     "name": "ChatSidenavComponent",
     "kind": "class",
-    "description": "",
+    "description": "The conversation sidebar: thread list, projects, search, and the new-chat\naction. Pair it with a runtime's thread store (e.g. `LangGraphThreadsAdapter`)\nand a ThreadActionAdapter for the per-row rename/delete/archive menu.\n\n**This component renders the sidebar only — it is not a layout wrapper.** Its\n`<ng-content>` slots are all named (`sidenavHeader`, `sidenavPrimary`,\n`sidenavSections`, `sidenavFooterLeft`, `sidenavFooterRight`,\n`sidenavAccount`) and target regions *inside* the sidebar. There is no default\nslot, so a `<chat>` placed between the tags is silently dropped. Render the\nchat as a sibling and lay the two out yourself:",
     "params": [],
-    "examples": [],
+    "examples": [
+      "```html\n<chat-sidenav\n  [threads]=\"threads.threads()\"\n  [activeThreadId]=\"activeThread()\"\n  [actions]=\"threadActions\"\n  [agent]=\"agent\"\n  (newChat)=\"activeThread.set(null)\"\n  (threadSelected)=\"activeThread.set($event)\"\n/>\n<main class=\"chat-pane\">\n  <chat [agent]=\"agent\" />\n</main>\n```\n```css\n:host { display: flex; height: 100dvh; }\n.chat-pane { flex: 1; min-width: 0; }\n```"
+    ],
     "properties": [
       {
         "name": "actions",
