@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { getAllDocSlugs, getDocBySlug, getDocMetadata } from './docs';
-import { allDocsPages, specialDocsPages } from './docs-config';
+import { allDocsPages, findDocsPage, specialDocsPages } from './docs-config';
 import { getCanonicalUrl, getSitemapRoutes } from './site-metadata';
 
 const internalDocsLinkPattern = /(?:href=["']|\]\()(?<href>\/docs\/[^"')#\s]+)/g;
@@ -226,9 +226,20 @@ describe('website docs bindings', () => {
 
       const apiDocsPath = path.join(contentRoot, library, 'api', 'api-docs.json');
       const entries = JSON.parse(fs.readFileSync(apiDocsPath, 'utf8')) as Array<{ name: string }>;
+      const names = new Set(entries.map((entry) => entry.name));
+
+      // Group pages declare the exports they cover; every one must exist.
+      const configured = findDocsPage(library, section, slug)?.apiEntries;
+      if (configured) {
+        const missing = configured.filter((name) => !names.has(name));
+        if (missing.length > 0) {
+          unresolvedApiPages.push(`${library}/api/${slug} → ${missing.join(', ')}`);
+        }
+        continue;
+      }
+
       const pageTitle = doc.title.replace(/\(\)$/, '');
-      const candidates = [pageTitle, doc.title];
-      if (!entries.some((entry) => candidates.includes(entry.name))) {
+      if (!names.has(pageTitle) && !names.has(doc.title)) {
         unresolvedApiPages.push(`${library}/api/${slug}`);
       }
     }

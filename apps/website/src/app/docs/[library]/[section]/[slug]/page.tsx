@@ -12,7 +12,7 @@ import { getDocBySlug, getAllDocSlugs, getDocMetadata } from '../../../../../lib
 import { ApiDocRenderer, type ApiDocEntry } from '../../../../../components/docs/ApiDocRenderer';
 import { DocsTOC } from '../../../../../components/docs/DocsTOC';
 import { extractHeadings } from '../../../../../lib/extract-headings';
-import { getLibraryConfig, type LibraryId } from '../../../../../lib/docs-config';
+import { findDocsPage, getLibraryConfig, type LibraryId } from '../../../../../lib/docs-config';
 import fs from 'fs';
 import path from 'path';
 
@@ -84,10 +84,21 @@ export default async function DocsPage({ params }: DocsRouteProps) {
           {section === 'api' && (() => {
             const entries = loadApiDocs(library);
             const target = doc.title.replace(/\(\)$/, '');
-            const apiEntry = entries.find((e: ApiDocEntry) => e.name === target || e.name === doc.title);
-            return apiEntry ? (
+            const byName = (name: string) =>
+              entries.find((e: ApiDocEntry) => e.name === name);
+
+            // A page normally documents the one export named by its H1. Pages
+            // covering a group of exports declare them via `apiEntries`.
+            const configured = findDocsPage(library, section, slug)?.apiEntries;
+            const rendered = configured
+              ? configured.map(byName).filter((e): e is ApiDocEntry => Boolean(e))
+              : [byName(target) ?? byName(doc.title)].filter((e): e is ApiDocEntry => Boolean(e));
+
+            return rendered.length > 0 ? (
               <div className="px-6 md:px-12 max-w-3xl pb-8">
-                <ApiDocRenderer entry={apiEntry} />
+                {rendered.map((entry) => (
+                  <ApiDocRenderer key={entry.name} entry={entry} />
+                ))}
               </div>
             ) : null;
           })()}
