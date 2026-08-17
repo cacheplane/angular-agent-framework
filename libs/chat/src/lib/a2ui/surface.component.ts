@@ -21,13 +21,11 @@ import type { A2uiViews } from './views';
     NgComponentOutlet,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  // The host applies the agent-set v1 styles (`beginRendering.styles`)
-  // as inline CSS custom properties + font-family. Catalog components
-  // consume `--a2ui-primary` for accents (buttons, sliders, focus,
-  // etc.); `font-family` cascades naturally from the host.
+  // The host applies the agent-set surface theme (`createSurface.theme`)
+  // as inline CSS custom properties. Catalog components consume
+  // `--a2ui-primary` for accents (buttons, sliders, focus, etc.).
   host: {
     '[style.--a2ui-primary]': 'primaryColor()',
-    '[style.font-family]': 'fontFamily()',
   },
   template: `
     @if (spec(); as s) {
@@ -71,28 +69,20 @@ export class A2uiSurfaceComponent {
   readonly events = output<RenderEvent>();
   readonly action = output<A2uiActionMessage>();
 
-  /** Agent-set primary color from `beginRendering.styles.primaryColor`.
+  /** Agent-set primary color from `createSurface.theme.primaryColor`.
    * Returns null when unset so the host binding doesn't override the
    * consumer's `:root`-level `--a2ui-primary` default. */
   readonly primaryColor = computed<string | null>(() =>
-    (this.state()?.surface ?? this.surface())?.styles?.primaryColor ?? null
+    (this.state()?.surface ?? this.surface())?.theme?.primaryColor ?? null
   );
 
-  /** Agent-set font family from `beginRendering.styles.font`. Returns
-   * null when unset so the host doesn't override consumer fonts. */
-  readonly fontFamily = computed<string | null>(() =>
-    (this.state()?.surface ?? this.surface())?.styles?.font ?? null
-  );
-
-  /** Roots from the surface state — components whose ids appear as
-   * children of no other component. The wire spec includes
-   * `beginRendering.root` as the single root; that path stays usable
-   * but we keep the renderer permissive in case future surfaces emit
-   * multiple top-level components.
+  /** Roots from the surface state. The v0.9 wire contract reserves the
+   * component id `root` as the single tree root; we keep the renderer
+   * permissive in case future surfaces emit multiple top-level
+   * components.
    *
    * Conservative: returns only the first key from componentViews
-   * insertion order. The wire format's beginRendering.root carries the
-   * true root id; plumbing it through A2uiSurfaceState is a follow-up. */
+   * insertion order. */
   readonly rootIds = computed<string[]>(() => {
     const st = this.state();
     if (!st) return [];
@@ -102,7 +92,7 @@ export class A2uiSurfaceComponent {
   /** Convert the A2UI surface to a json-render Spec for rendering.
    *  Prefers `state().surface` (the progressively-built wire surface)
    *  over the legacy `surface` input. surfaceToSpec handles
-   *  children.explicitList → spec.children translation + reserved-key
+   *  children-id-list → spec.children translation + reserved-key
    *  filtering + path-ref → $bindState rewriting; the rendered tree
    *  then uses render-element's standard input-mapping
    *  (`childKeys: el.children`) so catalog components receive the

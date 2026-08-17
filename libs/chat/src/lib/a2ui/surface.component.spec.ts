@@ -52,28 +52,24 @@ describe('A2uiSurfaceComponent — empty surface', () => {
 describe('A2uiSurfaceComponent — nested children with real catalog (regression)', () => {
   beforeEach(() => TestBed.configureTestingModule({ imports: [A2uiSurfaceComponent] }));
 
-  it('renders Column children defined via children.explicitList', () => {
-    // Reproduces the contact-form bug: a Column with explicitList children
+  it('renders Column children defined via a children id list', () => {
+    // Reproduces the contact-form bug: a Column with listed children
     // must actually render those children. Prior to the fix, the slot path
     // pushed wrapped wire-format props onto the catalog component which
     // had no matching `Column` input — so childKeys stayed empty and the
     // Column rendered as an empty <div>.
     const store = createA2uiSurfaceStore();
-    store.apply({ surfaceUpdate: {
+    store.apply({ version: 'v0.9', createSurface: {
+      surfaceId: 's1', catalogId: 'basic',
+    } } as never);
+    store.apply({ version: 'v0.9', updateComponents: {
       surfaceId: 's1',
       components: [
-        { id: 'root', component: { Column: {
-          children: { explicitList: ['leaf'] },
-          distribution: 'start',
-          alignment: 'stretch',
-        } } },
-        { id: 'leaf', component: { Text: {
-          text: { literalString: 'Hello' },
-          usageHint: 'h2',
-        } } },
+        { id: 'root', component: 'Column',
+          children: ['leaf'], justify: 'start', align: 'stretch' },
+        { id: 'leaf', component: 'Text', text: 'Hello', variant: 'h2' },
       ],
     } } as never);
-    store.apply({ beginRendering: { surfaceId: 's1', root: 'root' } } as never);
 
     const state = store.surfaceState('s1')();
     expect(state).toBeDefined();

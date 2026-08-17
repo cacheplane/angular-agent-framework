@@ -13,11 +13,13 @@ function makeSurface(
   return { surfaceId: 's1', catalogId: 'basic', sendDataModel, components: map, dataModel };
 }
 
+const c = (comp: Record<string, unknown>): A2uiComponent => comp as unknown as A2uiComponent;
+
 function makeTextComp(): A2uiComponent {
-  return { id: 'root', component: { Text: { text: { literalString: 'hi' } } } };
+  return c({ id: 'root', component: 'Text', text: 'hi' });
 }
 
-describe('buildA2uiActionMessage (v1)', () => {
+describe('buildA2uiActionMessage (v0.9)', () => {
   it('builds an action message with required fields', () => {
     const surface = makeSurface([makeTextComp()]);
     const params = {
@@ -27,7 +29,7 @@ describe('buildA2uiActionMessage (v1)', () => {
       context: {},
     };
     const msg = buildA2uiActionMessage(params, surface);
-    expect(msg.version).toBe('v1');
+    expect(msg.version).toBe('v0.9');
     expect(msg.action.name).toBe('formSubmit');
     expect(msg.action.surfaceId).toBe('s1');
     expect(msg.action.sourceComponentId).toBe('submit-btn');
@@ -35,40 +37,16 @@ describe('buildA2uiActionMessage (v1)', () => {
     expect(msg.metadata).toBeUndefined();
   });
 
-  it('wraps string context values as literalString DynamicValue', () => {
+  it('passes context values through unwrapped (v0.9 plain object)', () => {
     const surface = makeSurface([makeTextComp()]);
     const params = {
       surfaceId: 's1',
       sourceComponentId: 'btn',
       name: 'submit',
-      context: { surface: 'feedback' },
+      context: { surface: 'feedback', score: 5, checked: true },
     };
     const msg = buildA2uiActionMessage(params, surface);
-    expect(msg.action.context['surface']).toEqual({ literalString: 'feedback' });
-  });
-
-  it('wraps number context values as literalNumber DynamicValue', () => {
-    const surface = makeSurface([makeTextComp()]);
-    const params = {
-      surfaceId: 's1',
-      sourceComponentId: 'btn',
-      name: 'rate',
-      context: { score: 5 },
-    };
-    const msg = buildA2uiActionMessage(params, surface);
-    expect(msg.action.context['score']).toEqual({ literalNumber: 5 });
-  });
-
-  it('wraps boolean context values as literalBoolean DynamicValue', () => {
-    const surface = makeSurface([makeTextComp()]);
-    const params = {
-      surfaceId: 's1',
-      sourceComponentId: 'btn',
-      name: 'toggle',
-      context: { checked: true },
-    };
-    const msg = buildA2uiActionMessage(params, surface);
-    expect(msg.action.context['checked']).toEqual({ literalBoolean: true });
+    expect(msg.action.context).toEqual({ surface: 'feedback', score: 5, checked: true });
   });
 
   it('attaches data model when sendDataModel is true', () => {
@@ -80,8 +58,7 @@ describe('buildA2uiActionMessage (v1)', () => {
     const params = { surfaceId: 's1', sourceComponentId: 'btn', name: 'submit', context: {} };
     const msg = buildA2uiActionMessage(params, surface);
     expect(msg.metadata).toBeDefined();
-    expect(msg.metadata!.a2uiClientDataModel.version).toBe('v1');
-    expect(msg.metadata!.a2uiClientDataModel.surfaces['s1']).toEqual({ name: 'Alice', email: 'alice@co.com' });
+    expect(msg.metadata!.a2uiClientDataModel!.surfaces['s1']).toEqual({ name: 'Alice', email: 'alice@co.com' });
   });
 
   it('does not attach data model when sendDataModel is false', () => {
@@ -98,10 +75,11 @@ describe('buildA2uiActionMessage (v1)', () => {
     expect(msg.action.context).toEqual({});
   });
 
-  it('derives action.label from source Button child Text (wrapped literalString)', () => {
+  it('derives action.label from source Button child Text', () => {
     const components: A2uiComponent[] = [
-      { id: 'submit-btn', component: { Button: { child: 'submit-label', action: { name: 'formSubmit' } } } },
-      { id: 'submit-label', component: { Text: { text: { literalString: 'Search flights' } } } },
+      c({ id: 'submit-btn', component: 'Button', child: 'submit-label',
+        action: { event: { name: 'formSubmit' } } }),
+      c({ id: 'submit-label', component: 'Text', text: 'Search flights' }),
     ];
     const surface = makeSurface(components);
     const params = { surfaceId: 's1', sourceComponentId: 'submit-btn', name: 'formSubmit', context: {} };
@@ -109,23 +87,20 @@ describe('buildA2uiActionMessage (v1)', () => {
     expect(msg.action.label).toBe('Search flights');
   });
 
-  it('derives action.label from source Button child Text (raw string shorthand)', () => {
-    // The LLM sometimes authors `text` as a raw string (ergonomic shorthand)
-    // rather than the canonical `{ literalString }` shape. Both are valid in
-    // the wild — the derivation accepts both. Real example from c-a2ui.
+  it('leaves action.label undefined when Button child Text is a path binding', () => {
     const components: A2uiComponent[] = [
-      { id: 'submit', component: { Button: { child: 'submit_label', action: { name: 'bookingSubmit' } } } },
-      { id: 'submit_label', component: { Text: { text: 'Search flights' as unknown as { literalString: string } } } },
+      c({ id: 'btn', component: 'Button', child: 'lbl', action: { event: { name: 'go' } } }),
+      c({ id: 'lbl', component: 'Text', text: { path: '/cta' } }),
     ];
     const surface = makeSurface(components);
-    const params = { surfaceId: 's1', sourceComponentId: 'submit', name: 'bookingSubmit', context: {} };
+    const params = { surfaceId: 's1', sourceComponentId: 'btn', name: 'go', context: {} };
     const msg = buildA2uiActionMessage(params, surface);
-    expect(msg.action.label).toBe('Search flights');
+    expect(msg.action.label).toBeUndefined();
   });
 
   it('leaves action.label undefined when source is not a Button', () => {
     const components: A2uiComponent[] = [
-      { id: 'cb', component: { CheckBox: { label: { literalString: 'Agree' }, checked: { literalBoolean: false } } } },
+      c({ id: 'cb', component: 'CheckBox', label: 'Agree', value: false }),
     ];
     const surface = makeSurface(components);
     const params = { surfaceId: 's1', sourceComponentId: 'cb', name: 'agreeToggle', context: {} };
@@ -135,7 +110,7 @@ describe('buildA2uiActionMessage (v1)', () => {
 
   it('leaves action.label undefined when Button has no child Text id', () => {
     const components: A2uiComponent[] = [
-      { id: 'submit-btn', component: { Button: { action: { name: 'formSubmit' } } as unknown as { child: string; action: { name: string } } } },
+      c({ id: 'submit-btn', component: 'Button', action: { event: { name: 'formSubmit' } } }),
     ];
     const surface = makeSurface(components);
     const params = { surfaceId: 's1', sourceComponentId: 'submit-btn', name: 'formSubmit', context: {} };

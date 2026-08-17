@@ -2,7 +2,7 @@
 /**
  * Synthesize a short human-readable label for a serialized A2UI action
  * message, so the chat composition can render "Search flights" instead
- * of a raw `{"version":"v1","action":...}` JSON dump as a user bubble.
+ * of a raw `{"version":"v0.9","action":...}` JSON dump as a user bubble.
  *
  * Per the A2UI spec, action messages flow on the client → agent
  * return channel and are framed as typed events (closer to tool calls
@@ -19,7 +19,7 @@
  *      "Booking submit"). Used when no label was stamped — typically
  *      because the source component isn't a Button-with-Text-child.
  *
- * Returns null for any content that isn't a v1 A2UI action message;
+ * Returns null for any content that isn't an A2UI action message;
  * callers should fall back to the original content in that case.
  *
  * Design context: a previous iteration shipped a hardcoded
@@ -45,7 +45,8 @@ export function a2uiActionLabel(content: string): string | null {
     return null;
   }
   if (!isRecord(parsed)) return null;
-  if (parsed['version'] !== 'v1') return null;
+  const version = parsed['version'];
+  if (typeof version !== 'string' || !version.startsWith('v')) return null;
   const action = parsed['action'];
   if (!isRecord(action)) return null;
   const name = action['name'];

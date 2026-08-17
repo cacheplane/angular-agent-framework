@@ -214,7 +214,7 @@ export { emitBinding } from './lib/a2ui/catalog/emit-binding';
 export { A2uiTextFieldComponent } from './lib/a2ui/catalog/text-field.component';
 export { A2uiCheckBoxComponent } from './lib/a2ui/catalog/check-box.component';
 export { A2uiButtonComponent } from './lib/a2ui/catalog/button.component';
-export { A2uiMultipleChoiceComponent } from './lib/a2ui/catalog/multiple-choice.component';
+export { A2uiChoicePickerComponent } from './lib/a2ui/catalog/choice-picker.component';
 export { A2uiSliderComponent } from './lib/a2ui/catalog/slider.component';
 export { A2uiDateTimeInputComponent } from './lib/a2ui/catalog/date-time-input.component';
 export { A2uiTextComponent } from './lib/a2ui/catalog/text.component';
@@ -232,13 +232,16 @@ export { A2uiVideoComponent } from './lib/a2ui/catalog/video.component';
 
 // A2UI types (re-exported from @threadplane/a2ui for convenience)
 export type {
-  A2uiActionMessage, A2uiClientDataModel,
-  A2uiSurface, A2uiComponent, A2uiTheme,
-  DynamicString, DynamicNumber, DynamicBoolean,
-  A2uiChildren, A2uiAction, A2uiActionContextEntry,
-  A2uiComponentDef,
+  A2uiActionMessage, A2uiErrorMessage, A2uiClientDataModel, A2uiClientCapabilities,
+  A2uiSurface, A2uiComponent, A2uiComponentBase, A2uiCatalogComponent, A2uiTheme,
+  DynamicString, DynamicNumber, DynamicBoolean, DynamicStringList, DynamicValue,
+  A2uiChildren, A2uiAction, A2uiEventAction, A2uiFunctionAction, A2uiCheck,
+  A2uiPathRef, A2uiFunctionCall,
 } from '@threadplane/a2ui';
-export { isPathRef, isLiteralString, isLiteralNumber, isLiteralBoolean } from '@threadplane/a2ui';
+export {
+  isPathRef, isFunctionCall,
+  A2UI_WIRE_VERSION, A2UI_MIME_TYPE, A2UI_BASIC_CATALOG_ID,
+} from '@threadplane/a2ui';
 
 // Client tools (declaration API — tools/action/view/ask + JSON-schema derivation)
 export { tools, action, view, ask } from './lib/client-tools/tools';

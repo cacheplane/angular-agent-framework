@@ -902,10 +902,10 @@ export class ChatComponent {
     // A2UI/json-render markers in the content string.
     const projectedContent = (m as { content?: unknown }).content;
     if (typeof projectedContent === 'string' && projectedContent.length > 0) {
-      // A2UI v1 envelope keys (canonical Google shape).
-      if (projectedContent.includes('"surfaceUpdate"')
-          || projectedContent.includes('"beginRendering"')
-          || projectedContent.includes('"dataModelUpdate"')) {
+      // A2UI v0.9 envelope keys (canonical Google shape).
+      if (projectedContent.includes('"createSurface"')
+          || projectedContent.includes('"updateComponents"')
+          || projectedContent.includes('"updateDataModel"')) {
         return true;
       }
       // json-render spec shape — looks like `{ "root": "...", "elements": ... }`.
