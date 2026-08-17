@@ -75,7 +75,11 @@ evaluates checks against the LIVE data model (including user edits) when an
 event action fires: failing checks block the action, display "message" under
 the offending input, and send the agent an error message
 {"version":"v0.9","error":{"code":"VALIDATION_FAILED",...}} instead. Bind the
-checked value to the same {"path": ...} as the input's value. Example:
+checked value to the same {"path": ...} as the input's value.
+
+Set "sendDataModel": true on createSurface when the agent should receive the
+surface's full LIVE data model (including user edits) in the metadata of
+every action message ({"metadata":{"a2uiClientDataModel":{"surfaces":{...}}}}). Example:
 
   {"id": "email", "component": "TextField", "label": "Email",
    "value": {"path": "/email"},

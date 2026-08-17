@@ -120,7 +120,7 @@ Details worth pinning down:
 - **Context is resolved.** The inbound Button's `action.event.context` is a plain object whose values are dynamic values (often `{ path }` bindings). The outbound message's `action.context` is the same keys with each value already resolved against the current data model — here `{ "path": "/origin" }` became `["LAX"]`.
 - **`label` is a Threadplane extension.** It's derived from the source component's authored text — for a Button-with-Text-child, the child Text's bare literal string ("Search flights"). It's optional; the transcript renderer uses it to label the user bubble, and backends may ignore it.
 
-The client's current data model is only attached as `metadata.a2uiClientDataModel` when the surface's `createSurface` set `sendDataModel: true`. It's omitted otherwise. When present, it's an `A2uiClientDataModel` — `{ surfaces: Record<surfaceId, Record<string, unknown>> }`, the per-surface model keyed by `surfaceId`. See [the schema reference](/docs/a2ui/reference/schema#outbound-action-messages) for the full outbound shape.
+The client's current data model is only attached as `metadata.a2uiClientDataModel` when the surface's `createSurface` set `sendDataModel: true`. It's omitted otherwise. When present, it's an `A2uiClientDataModel` — `{ surfaces: Record<surfaceId, Record<string, unknown>> }`, the per-surface **live** model keyed by `surfaceId` — user edits included, renderer-internal keys stripped. See [the schema reference](/docs/a2ui/reference/schema#outbound-action-messages) for the full outbound shape.
 
 ## Relationship to Google's A2UI
 

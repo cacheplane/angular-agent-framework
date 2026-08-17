@@ -153,7 +153,7 @@ onInput(event: Event): void {
 }
 ```
 
-The write-back protocol is client-side state. If the surface's `createSurface` set `sendDataModel: true`, outgoing action messages also include the current surface data model snapshot under `metadata.a2uiClientDataModel`.
+The write-back protocol is client-side state. If the surface's `createSurface` set `sendDataModel: true`, outgoing action messages also include the current **live** surface data model (user edits included) under `metadata.a2uiClientDataModel`.
 
 ## Actions
 
@@ -186,7 +186,7 @@ The surface-to-spec conversion turns this into a render `click` binding that cal
 }
 ```
 
-`label` is a Threadplane extension, derived from the Button's child Text; transcripts use it to label the user bubble. If the surface has `sendDataModel: true`, the emitted message also includes `metadata.a2uiClientDataModel` with the current surface data model snapshot.
+`label` is a Threadplane extension, derived from the Button's child Text; transcripts use it to label the user bubble. If the surface has `sendDataModel: true`, the emitted message also includes `metadata.a2uiClientDataModel` with the live surface data model (user edits included).
 
 The other action form, `{ "functionCall": { "call": ..., "args": ... } }`, executes a client-side function locally instead of round-tripping to the agent — wired to the surface component's `a2ui:localAction` handler, with `openUrl` (new tab, `noopener`) built in.
 
