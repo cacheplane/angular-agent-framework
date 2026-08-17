@@ -194,7 +194,7 @@ Catalog components receive resolved props as Angular inputs from the render engi
 
 ## Theming
 
-`createSurface.theme` carries agent-supplied presentation hints. `primaryColor` flows to `<a2ui-surface>` as the `--a2ui-primary` CSS custom property, which catalog components consume for accents (buttons, sliders, focus rings). `iconUrl` and `agentDisplayName` identify the agent that owns the surface.
+`createSurface.theme` carries agent-supplied presentation hints. `primaryColor` flows to `<a2ui-surface>` as the `--a2ui-primary` CSS custom property, which catalog components consume for accents (buttons, sliders, focus rings). `iconUrl` and `agentDisplayName` identify the agent that owns the surface: when either is set, `<a2ui-surface>` renders a small identity header (a 16px round icon and the display name in muted label text) above the surface. Themeless surfaces render no header.
 
 ## Local Handlers
 

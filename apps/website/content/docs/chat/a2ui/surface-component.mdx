@@ -61,7 +61,7 @@ When a component's `children` field is a template (`{ path, componentId }`), the
 
 The final `Spec` is passed to `RenderSpecComponent` along with the `ViewRegistry` (converted to an Angular registry via `toRenderRegistry`). Rendering is fully reactive — when the surface signal updates, the spec recomputes and only affected elements re-render.
 
-**Theming.** The component host applies the agent-set surface theme from `createSurface.theme`: `primaryColor` becomes the `--a2ui-primary` CSS custom property, which catalog components consume for accents. When the agent sets no theme, your `:root`-level `--a2ui-primary` default wins.
+**Theming.** The component host applies the agent-set surface theme from `createSurface.theme`: `primaryColor` becomes the `--a2ui-primary` CSS custom property, which catalog components consume for accents. When the agent sets no theme, your `:root`-level `--a2ui-primary` default wins. If the theme carries `agentDisplayName` and/or `iconUrl`, the component also renders a small identity header above the surface — a 16px round icon and the display name in muted label text. Surfaces without those fields render no header.
 
 ## Usage Outside ChatComponent
 

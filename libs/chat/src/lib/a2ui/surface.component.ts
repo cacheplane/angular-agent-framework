@@ -30,7 +30,33 @@ import type { A2uiViews } from './views';
   host: {
     '[style.--a2ui-primary]': 'primaryColor()',
   },
+  styles: `
+    .a2ui-surface-chrome {
+      display: flex;
+      align-items: center;
+      gap: var(--a2ui-spacing-2);
+      margin-bottom: var(--a2ui-spacing-2);
+      color: var(--a2ui-label);
+      font-size: var(--a2ui-typography-label-size);
+    }
+    .a2ui-surface-chrome img {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+  `,
   template: `
+    @if (agentDisplayName() || iconUrl()) {
+      <div class="a2ui-surface-chrome">
+        @if (iconUrl(); as icon) {
+          <img [src]="icon" alt="" referrerpolicy="no-referrer" />
+        }
+        @if (agentDisplayName(); as name) {
+          <span>{{ name }}</span>
+        }
+      </div>
+    }
     @if (spec(); as s) {
       <render-spec
         [spec]="s"
@@ -113,6 +139,16 @@ export class A2uiSurfaceComponent {
    * consumer's `:root`-level `--a2ui-primary` default. */
   readonly primaryColor = computed<string | null>(() =>
     (this.state()?.surface ?? this.surface())?.theme?.primaryColor ?? null
+  );
+
+  /** Agent identity chrome from `createSurface.theme`. When neither
+   * `agentDisplayName` nor `iconUrl` is set, no header renders at all
+   * (zero layout impact for themeless surfaces — the common case). */
+  protected readonly agentDisplayName = computed<string | null>(() =>
+    (this.state()?.surface ?? this.surface())?.theme?.agentDisplayName ?? null
+  );
+  protected readonly iconUrl = computed<string | null>(() =>
+    (this.state()?.surface ?? this.surface())?.theme?.iconUrl ?? null
   );
 
   /** Roots from the surface state. The v0.9 wire contract reserves the
