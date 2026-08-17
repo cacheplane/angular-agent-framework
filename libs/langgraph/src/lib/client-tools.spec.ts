@@ -4,6 +4,7 @@ import { signal } from '@angular/core';
 import type { CompleteOutcome, ToolCall } from '@threadplane/chat';
 import {
   createClientToolsCapability,
+  mergeA2uiClientCapabilities,
   mergeClientTools,
   mergeStagedToolMessages,
 } from './client-tools';
@@ -66,6 +67,37 @@ const STOCK_SPEC = {
   description: 'Returns the current stock price.',
   parameters:  { type: 'object', properties: { ticker: { type: 'string' } } },
 } as const;
+
+// ─── mergeA2uiClientCapabilities helper ──────────────────────────────────────
+
+describe('mergeA2uiClientCapabilities', () => {
+  const CAPS = { supportedCatalogIds: ['https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json'] };
+
+  it('returns payload unchanged when capabilities are undefined', () => {
+    const payload = { messages: [] };
+    expect(mergeA2uiClientCapabilities(payload, undefined)).toBe(payload);
+  });
+
+  it('returns null unchanged (command resume) even with capabilities set', () => {
+    expect(mergeA2uiClientCapabilities(null, CAPS)).toBeNull();
+  });
+
+  it('merges a2ui_client_capabilities into a plain object payload without mutating it', () => {
+    const payload = { messages: [{ type: 'human', content: 'hi' }] };
+    const result = mergeA2uiClientCapabilities(payload, CAPS) as Record<string, unknown>;
+    expect(result).toEqual({
+      messages: [{ type: 'human', content: 'hi' }],
+      a2ui_client_capabilities: CAPS,
+    });
+    expect('a2ui_client_capabilities' in payload).toBe(false);
+  });
+
+  it('passes non-record payloads through unchanged', () => {
+    expect(mergeA2uiClientCapabilities('raw', CAPS)).toBe('raw');
+    const arr = [1];
+    expect(mergeA2uiClientCapabilities(arr, CAPS)).toBe(arr);
+  });
+});
 
 // ─── mergeClientTools helper ─────────────────────────────────────────────────
 

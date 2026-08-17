@@ -100,6 +100,20 @@ function deferNextRun(source: StubAgent): { resolve: () => void; reject: (error:
 }
 
 describe('toAgent', () => {
+  it('seeds a2ui_client_capabilities into the source state when configured', () => {
+    const stub = new StubAgent();
+    const caps = { supportedCatalogIds: ['https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json'] };
+    toAgent(stub as unknown as AbstractAgent, { a2uiClientCapabilities: caps });
+    expect((stub as unknown as { state: Record<string, unknown> }).state['a2ui_client_capabilities']).toEqual(caps);
+  });
+
+  it('leaves the source state untouched when capabilities are not configured', () => {
+    const stub = new StubAgent();
+    const before = (stub as unknown as { state?: Record<string, unknown> }).state;
+    toAgent(stub as unknown as AbstractAgent);
+    expect((stub as unknown as { state?: Record<string, unknown> }).state).toBe(before);
+  });
+
   it('starts with idle status and no messages', () => {
     const stub = new StubAgent();
     const a = toAgent(stub as unknown as AbstractAgent);

@@ -526,6 +526,12 @@
     "description": "",
     "properties": [
       {
+        "name": "a2uiClientCapabilities",
+        "type": "object",
+        "description": "A2UI client capabilities (catalog negotiation) to advertise to the agent.\nWhen set, they are seeded once into the AG-UI shared state under the\n`a2ui_client_capabilities` key, so every RunAgentInput.state carries them.\nUse `@threadplane/chat`'s `a2uiClientCapabilities()` for the renderer's\nstandard value.",
+        "optional": true
+      },
+      {
         "name": "telemetry",
         "type": "false | AgentRuntimeTelemetrySink",
         "description": "Optional app-owned telemetry sink. No telemetry is emitted unless this is provided.",

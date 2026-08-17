@@ -1023,6 +1023,12 @@
     "description": "",
     "properties": [
       {
+        "name": "a2uiClientCapabilities",
+        "type": "object",
+        "description": "A2UI client capabilities (catalog negotiation) to advertise to the graph.\nWhen set, every plain-object run payload carries them under the\n`a2ui_client_capabilities` state key — mirroring how `client_tools`\nrides the payload. Read server-side via threadplane-middleware's\n`a2ui_client_capabilities(state)`. Use `@threadplane/chat`'s\n`a2uiClientCapabilities()` for the renderer's standard value.",
+        "optional": true
+      },
+      {
         "name": "apiUrl",
         "type": "string",
         "description": "Base URL of the LangGraph Platform API. Defaults to `provideAgent({ apiUrl })` when omitted.",

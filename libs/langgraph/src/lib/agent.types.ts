@@ -284,6 +284,15 @@ export interface AgentOptions<T, _ResolvedBag extends BagTemplate> {
   /** Tool names that indicate a subagent invocation. */
   subagentToolNames?: string[];
   /**
+   * A2UI client capabilities (catalog negotiation) to advertise to the graph.
+   * When set, every plain-object run payload carries them under the
+   * `a2ui_client_capabilities` state key — mirroring how `client_tools`
+   * rides the payload. Read server-side via threadplane-middleware's
+   * `a2ui_client_capabilities(state)`. Use `@threadplane/chat`'s
+   * `a2uiClientCapabilities()` for the renderer's standard value.
+   */
+  a2uiClientCapabilities?: { supportedCatalogIds: string[]; inlineCatalogs?: unknown[] };
+  /**
    * LangGraph node names whose `messages-tuple` LLM chunks should be projected
    * into the main chat transcript. Omit to accept all top-level message chunks.
    *
