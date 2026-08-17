@@ -97,6 +97,24 @@ def bind_client_tools(llm: Any, server_tools: list, state: dict) -> Any:
     return llm.bind_tools([*server_tools, *client_tool_specs(state)])
 
 
+def a2ui_client_capabilities(state: dict) -> dict | None:
+    """Read the A2UI client capabilities advertised by the frontend.
+
+    ``@threadplane/langgraph`` merges them into run payloads under the
+    ``a2ui_client_capabilities`` state key when the host configures
+    ``a2uiClientCapabilities`` on the agent. Returns the capabilities dict
+    (``{"supportedCatalogIds": [...], "inlineCatalogs": [...]}``) or ``None``
+    when the client did not advertise any — use it to gate A2UI emission or
+    pick a catalog the renderer actually supports::
+
+        caps = a2ui_client_capabilities(state)
+        if caps and BASIC_CATALOG_ID in caps.get("supportedCatalogIds", []):
+            ...emit A2UI envelopes...
+    """
+    caps = state.get("a2ui_client_capabilities")
+    return caps if isinstance(caps, dict) else None
+
+
 def route_after_agent(
     state: dict,
     server_tool_names: Iterable[str],

@@ -69,6 +69,7 @@ import { buildBranchTree } from './internals/branch-tree';
 import { extractCitations } from './internals/extract-citations';
 import {
   createClientToolsCapability,
+  mergeA2uiClientCapabilities,
   mergeClientTools,
   mergeStagedToolMessages,
 } from './client-tools';
@@ -519,7 +520,10 @@ export function agent<
       const withStaged = staged.length > 0
         ? mergeStagedToolMessages(request.payload, staged)
         : request.payload;
-      const payload = mergeClientTools(withStaged, clientToolsCap.catalog());
+      const payload = mergeA2uiClientCapabilities(
+        mergeClientTools(withStaged, clientToolsCap.catalog()),
+        options.a2uiClientCapabilities,
+      );
       const createsQueuedRun =
         request.options?.multitaskStrategy === 'enqueue' && isLoading();
       if (!createsQueuedRun) {

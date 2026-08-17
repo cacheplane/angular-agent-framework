@@ -78,6 +78,25 @@ export function mergeClientTools(
 }
 
 /**
+ * Merge A2UI client capabilities into a run payload under the
+ * `a2ui_client_capabilities` state key. Same payload semantics as
+ * {@link mergeClientTools}: null/undefined payloads (command resumes,
+ * regenerates) and non-record payloads pass through untouched, and the
+ * original object is never mutated. Because LangGraph thread state
+ * persists across runs, the capabilities stamped by any run remain
+ * readable by later runs on the same thread.
+ */
+export function mergeA2uiClientCapabilities(
+  payload: unknown,
+  capabilities: { supportedCatalogIds: string[]; inlineCatalogs?: unknown[] } | undefined,
+): unknown {
+  if (!capabilities) return payload;
+  if (payload === null || payload === undefined) return payload;
+  if (typeof payload !== 'object' || Array.isArray(payload)) return payload;
+  return { ...(payload as Record<string, unknown>), a2ui_client_capabilities: capabilities };
+}
+
+/**
  * Wire shape for a settled client-tool result awaiting durability. `id` is
  * deterministic for the tool-call ID so overlapping handoffs and retries
  * update the same logical ToolMessage.

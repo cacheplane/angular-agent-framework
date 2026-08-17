@@ -33,6 +33,14 @@ import { createClientToolsCapability } from './client-tools';
 export interface ToAgentOptions {
   /** Optional app-owned telemetry sink. No telemetry is emitted unless this is provided. */
   telemetry?: AgentRuntimeTelemetrySink | false;
+  /**
+   * A2UI client capabilities (catalog negotiation) to advertise to the agent.
+   * When set, they are seeded once into the AG-UI shared state under the
+   * `a2ui_client_capabilities` key, so every RunAgentInput.state carries them.
+   * Use `@threadplane/chat`'s `a2uiClientCapabilities()` for the renderer's
+   * standard value.
+   */
+  a2uiClientCapabilities?: { supportedCatalogIds: string[]; inlineCatalogs?: unknown[] };
 }
 
 function captureAgentRuntimeTelemetry(
@@ -102,6 +110,15 @@ export interface AgUiAgent<TState = Record<string, unknown>> extends Agent<TStat
  * ```
  */
 export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): AgUiAgent {
+  // Advertise A2UI capabilities via the AG-UI shared state so every
+  // RunAgentInput.state carries them (transport metadata, A2UI v0.9).
+  if (options.a2uiClientCapabilities) {
+    source.state = {
+      ...((source.state as Record<string, unknown>) ?? {}),
+      a2ui_client_capabilities: options.a2uiClientCapabilities,
+    };
+  }
+
   let generationSequence = 0;
   const allocateDeliveryGeneration = (scope: string): string =>
     `${scope}-${++generationSequence}-${Math.random().toString(36).slice(2, 10)}`;

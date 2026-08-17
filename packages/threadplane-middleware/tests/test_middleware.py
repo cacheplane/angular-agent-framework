@@ -350,3 +350,18 @@ def test_route_after_agent_pure_client_call_custom_end():
     }
     result = route_after_agent(state, [], end="END")
     assert result == "END"
+
+
+def test_a2ui_client_capabilities_reads_dict():
+    from threadplane.middleware.langgraph import a2ui_client_capabilities
+
+    caps = {"supportedCatalogIds": ["https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"]}
+    assert a2ui_client_capabilities({"a2ui_client_capabilities": caps}) == caps
+
+
+def test_a2ui_client_capabilities_missing_or_malformed_is_none():
+    from threadplane.middleware.langgraph import a2ui_client_capabilities
+
+    assert a2ui_client_capabilities({}) is None
+    assert a2ui_client_capabilities({"a2ui_client_capabilities": "nope"}) is None
+    assert a2ui_client_capabilities({"a2ui_client_capabilities": ["x"]}) is None
