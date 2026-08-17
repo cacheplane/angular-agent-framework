@@ -321,6 +321,53 @@ const STANDARD_FUNCTIONS: Record<string, A2uiFunctionImpl> = {
   not(args, ctx) {
     return ctx.resolveArg(args['value']) !== true;
   },
+  // --- Validators (check-rule conditions) ---
+  required(args, ctx) {
+    const value = ctx.resolveArg(args['value']);
+    if (value == null) return false;
+    if (typeof value === 'string') return value.length > 0;
+    if (Array.isArray(value)) return value.length > 0;
+    return true;
+  },
+  regex(args, ctx) {
+    const value = ctx.resolveArg(args['value']);
+    const pattern = ctx.resolveArg(args['pattern']);
+    if (typeof value !== 'string' || typeof pattern !== 'string') return false;
+    try {
+      return new RegExp(pattern).test(value);
+    } catch {
+      return false;
+    }
+  },
+  length(args, ctx) {
+    const value = ctx.resolveArg(args['value']);
+    if (typeof value !== 'string') return false;
+    const min = toNumber(ctx.resolveArg(args['min']));
+    const max = toNumber(ctx.resolveArg(args['max']));
+    if (min !== undefined && value.length < min) return false;
+    if (max !== undefined && value.length > max) return false;
+    return true;
+  },
+  numeric(args, ctx) {
+    const value = toNumber(ctx.resolveArg(args['value']));
+    if (value === undefined) return false;
+    const min = toNumber(ctx.resolveArg(args['min']));
+    const max = toNumber(ctx.resolveArg(args['max']));
+    if (min !== undefined && value < min) return false;
+    if (max !== undefined && value > max) return false;
+    return true;
+  },
+  email(args, ctx) {
+    const value = ctx.resolveArg(args['value']);
+    if (typeof value !== 'string') return false;
+    // Linear-time shape check: local@domain.tld with a dotted domain.
+    const at = value.indexOf('@');
+    if (at <= 0 || at !== value.lastIndexOf('@') || at === value.length - 1) return false;
+    const domain = value.slice(at + 1);
+    const dot = domain.lastIndexOf('.');
+    if (dot <= 0 || dot === domain.length - 1) return false;
+    return !/\s/.test(value);
+  },
 };
 
 // formatString needs the registry that owns it to evaluate nested calls;

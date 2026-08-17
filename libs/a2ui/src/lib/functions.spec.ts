@@ -178,3 +178,56 @@ describe('registry behavior', () => {
     expect(run('not', { value: { call: 'and', args: { values: [true, true] } } })).toBe(false);
   });
 });
+
+describe('validators', () => {
+  test('required', () => {
+    expect(run('required', { value: 'x' })).toBe(true);
+    expect(run('required', { value: { path: '/name' } })).toBe(true);
+    expect(run('required', { value: '' })).toBe(false);
+    expect(run('required', { value: null })).toBe(false);
+    expect(run('required', { value: { path: '/missing' } })).toBe(false);
+    expect(run('required', { value: [] })).toBe(false);
+    expect(run('required', { value: ['a'] })).toBe(true);
+    expect(run('required', { value: 0 })).toBe(true);
+    expect(run('required', { value: false })).toBe(true);
+  });
+
+  test('regex', () => {
+    expect(run('regex', { value: 'abc-12', pattern: '^[a-z]+-\\d+$' })).toBe(true);
+    expect(run('regex', { value: 'nope', pattern: '^[a-z]+-\\d+$' })).toBe(false);
+    expect(run('regex', { value: 42, pattern: '\\d+' })).toBe(false);
+    expect(run('regex', { value: 'x', pattern: '(' })).toBe(false); // invalid pattern
+  });
+
+  test('length', () => {
+    expect(run('length', { value: 'hello', min: 2 })).toBe(true);
+    expect(run('length', { value: 'h', min: 2 })).toBe(false);
+    expect(run('length', { value: 'hello', max: 4 })).toBe(false);
+    expect(run('length', { value: 'hi', min: 1, max: 4 })).toBe(true);
+    expect(run('length', { value: 7, min: 1 })).toBe(false);
+  });
+
+  test('numeric', () => {
+    expect(run('numeric', { value: 5, min: 1, max: 10 })).toBe(true);
+    expect(run('numeric', { value: '5', min: 1 })).toBe(true);
+    expect(run('numeric', { value: 0, min: 1 })).toBe(false);
+    expect(run('numeric', { value: 11, max: 10 })).toBe(false);
+    expect(run('numeric', { value: 'abc', min: 0 })).toBe(false);
+  });
+
+  test('email', () => {
+    expect(run('email', { value: 'ada@example.com' })).toBe(true);
+    expect(run('email', { value: 'ada@sub.example.co' })).toBe(true);
+    expect(run('email', { value: 'not-an-email' })).toBe(false);
+    expect(run('email', { value: 'a@b' })).toBe(false);
+    expect(run('email', { value: '' })).toBe(false);
+    expect(run('email', { value: 7 })).toBe(false);
+  });
+
+  test('validators compose with logic functions in check conditions', () => {
+    expect(run('and', { values: [
+      { call: 'required', args: { value: { path: '/name' } } },
+      { call: 'length', args: { value: { path: '/name' }, min: 2 } },
+    ] })).toBe(true);
+  });
+});

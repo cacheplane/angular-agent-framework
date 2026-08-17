@@ -55,12 +55,15 @@ export interface A2uiFunctionAction {
 
 export type A2uiAction = A2uiEventAction | A2uiFunctionAction;
 
-// --- Validation checks (typed in Phase 1, enforced in Phase 3) ---
+// --- Validation checks (spec `CheckRule`) ---
 
 export interface A2uiCheck {
-  call: string;
-  args?: Record<string, DynamicValue>;
-  message?: string;
+  /** A DynamicBoolean — typically a validator function call (`required`,
+   * `regex`, `length`, `numeric`, `email`) or a logic combinator. The rule
+   * passes when the condition resolves to `true`. */
+  condition: DynamicValue;
+  /** Error message displayed when the check fails. */
+  message: string;
 }
 
 // --- Components (flat, discriminated by the `component` string) ---
