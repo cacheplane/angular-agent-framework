@@ -59,6 +59,9 @@ interface ResolvedOption {
           }
         </div>
       }
+      @if (errorText()) {
+      <div class="a2ui-check-error" role="alert">{{ errorText() }}</div>
+    }
     </div>
   `,
   styles: [`
@@ -119,7 +122,11 @@ interface ResolvedOption {
       color: var(--a2ui-on-primary);
       border-color: var(--a2ui-primary);
     }
-  `],
+      .a2ui-check-error {
+      font-size: var(--a2ui-typography-label-size);
+      color: var(--a2ui-error, #d33d55);
+    }
+`],
 })
 export class A2uiChoicePickerComponent {
   private static _idCounter = 0;
@@ -141,6 +148,9 @@ export class A2uiChoicePickerComponent {
   readonly displayStyle = input<'checkbox' | 'chips'>('checkbox');
   /** v0.9 prop: when true, show a client-side option filter input. */
   readonly filterable = input<boolean>(false);
+  /** Live validation message written by the surface's check gate
+   * (bound to /_a2uiChecks/<id>); empty when valid. */
+  readonly errorText = input<string>('');
   readonly _bindings = input<Record<string, string>>({});
   // Framework inputs required by the render harness.
   readonly bindings = input<Record<string, string>>({});

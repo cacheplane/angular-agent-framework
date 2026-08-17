@@ -166,13 +166,16 @@ describe('surfaceToSpec (v0.9)', () => {
     });
   });
 
-  it('resolves action context path bindings against the data model', () => {
+  it('keeps action context path bindings as live $bindState markers', () => {
+    // The surface component substitutes the CURRENT store value at dispatch
+    // time so user edits reach the agent (build-time resolution would freeze
+    // the agent-seeded snapshot).
     const surface = makeSurface(
       [
         c({ id: 'root', component: 'Column', children: ['btn'] }),
         c({
           id: 'btn', component: 'Button', child: 'lbl',
-          action: { event: { name: 'submit', context: { email: { path: '/email' } } } },
+          action: { event: { name: 'submit', context: { email: { path: '/email' }, formId: 'signup' } } },
         }),
         c({ id: 'lbl', component: 'Text', text: 'Go' }),
       ],
@@ -180,7 +183,20 @@ describe('surfaceToSpec (v0.9)', () => {
     );
     const spec = surfaceToSpec(surface)!;
     const params = spec.elements['btn'].on!['click'].params;
-    expect(params['context']).toEqual({ email: 'alice@example.com' });
+    expect(params['context']).toEqual({ email: { $bindState: '/email' }, formId: 'signup' });
+  });
+
+  it('adds errorText bindings + state seeds for checkable components', () => {
+    const surface = makeSurface(
+      [c({
+        id: 'root', component: 'TextField', label: 'Email', value: { path: '/email' },
+        checks: [{ condition: { call: 'email', args: { value: { path: '/email' } } }, message: 'Invalid email' }],
+      })],
+      { email: '' },
+    );
+    const spec = surfaceToSpec(surface)!;
+    expect(spec.elements['root'].props['errorText']).toEqual({ $bindState: '/_a2uiChecks/root' });
+    expect((spec.state as Record<string, Record<string, unknown>>)['_a2uiChecks']).toEqual({ root: '' });
   });
 
   it('functionCall actions wire to the local-action handler', () => {
