@@ -103,7 +103,7 @@ resolveDynamic('Search flights', model);         // "Search flights"
 resolveDynamic({ path: '/missing' }, model);     // undefined
 ```
 
-A bare literal (string, number, boolean) passes through unchanged. A `{ path }` reads from the model by JSON pointer. A missing path resolves to `undefined` rather than throwing — same conservative posture as the parser. A `{ call }` function-call value resolves to `undefined` until client-side function execution ships.
+A bare literal (string, number, boolean) passes through unchanged. A `{ path }` reads from the model by JSON pointer. A missing path resolves to `undefined` rather than throwing — same conservative posture as the parser. A `{ call }` function-call value executes through a function registry (`createA2uiFunctionRegistry()`) when one is supplied; without one it resolves to `undefined`.
 
 ## Conclusion
 

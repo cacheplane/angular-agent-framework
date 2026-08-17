@@ -47,11 +47,11 @@ Before the spec is emitted, each component prop is evaluated against the surface
 
 - A bare literal value — passed through as-is
 - A path reference `{ path: '/some/pointer' }` — kept as a live json-render state binding against `dataModel` (so user input writes back through the render state store)
-- A function call `{ call: ... }` — omitted until client-side function execution ships
+- A function call `{ call: ... }` — executed through the standard function registry (formatString/formatters/logic); unknown functions omit the prop
 
 **3. Map actions to `on` bindings**
 
-The internal conversion maps each component's A2UI `event` action into a render-spec `on` binding on the corresponding element. Actions map to the `a2ui:event` handler, which builds an `A2uiActionMessage` (with the event's `context` resolved against the data model) for the `(action)` output. `functionCall` actions execute client-side and are not wired until function execution ships.
+The internal conversion maps each component's A2UI `event` action into a render-spec `on` binding on the corresponding element. Actions map to the `a2ui:event` handler, which builds an `A2uiActionMessage` (with the event's `context` resolved against the data model) for the `(action)` output. `functionCall` actions map to the built-in `a2ui:localAction` handler — consumer handlers take priority, and `openUrl` opens in a new tab with `noopener` as the built-in fallback.
 
 **4. Expand template children**
 

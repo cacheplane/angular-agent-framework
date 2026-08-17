@@ -188,7 +188,7 @@ The surface-to-spec conversion turns this into a render `click` binding that cal
 
 `label` is a Threadplane extension, derived from the Button's child Text; transcripts use it to label the user bubble. If the surface has `sendDataModel: true`, the emitted message also includes `metadata.a2uiClientDataModel` with the current surface data model snapshot.
 
-The other action form, `{ "functionCall": { "call": ..., "args": ... } }`, executes a client-side function locally instead of round-tripping to the agent; function execution ships in an upcoming release.
+The other action form, `{ "functionCall": { "call": ..., "args": ... } }`, executes a client-side function locally instead of round-tripping to the agent — wired to the surface component's `a2ui:localAction` handler, with `openUrl` (new tab, `noopener`) built in.
 
 Catalog components receive resolved props as Angular inputs from the render engine. Bind `(action)` when you want agent-bound events, and bind `(events)` when you want the lower-level render stream.
 

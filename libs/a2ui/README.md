@@ -101,7 +101,7 @@ const messages = parser.push(chunk); // A2uiMessage[]
 
 - Bare literals (string, number, boolean, string arrays, plain objects) — pass through unchanged.
 - `{ path: string }` — looked up in `model` via JSON pointer. If an `A2uiScope` is provided, relative paths resolve against `scope.basePath` (used inside `children` templates).
-- `{ call: string, args? }` — client-side function calls; typed today, executed in an upcoming release (currently resolve to `undefined`).
+- `{ call: string, args? }` — client-side function calls, executed through the registry passed as the fourth argument (`createA2uiFunctionRegistry()` provides the standard set: `formatString` with `${...}` interpolation, `formatNumber`, `formatCurrency`, `formatDate`, `pluralize`, `and`, `or`, `not`). Args resolve recursively. Without a registry, or for unknown names, calls resolve to `undefined`.
 
 Type guards:
 

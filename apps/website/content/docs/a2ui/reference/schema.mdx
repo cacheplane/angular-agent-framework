@@ -34,7 +34,7 @@ type DynamicBoolean = boolean | A2uiPathRef | A2uiFunctionCall;
 type DynamicStringList = string[] | A2uiPathRef | A2uiFunctionCall;
 ```
 
-Absolute paths start with `/` and are resolved from the model root. Relative paths are resolved from an optional `A2uiScope` (used inside children templates). Function calls are typed on the wire today; execution ships in an upcoming release, so `resolveDynamic` returns `undefined` for them.
+Absolute paths start with `/` and are resolved from the model root. Relative paths are resolved from an optional `A2uiScope` (used inside children templates). Function calls execute through an `A2uiFunctionRegistry` (see `createA2uiFunctionRegistry`); `resolveDynamic` returns `undefined` for them only when no registry is supplied or the name is unknown.
 
 ## Children
 

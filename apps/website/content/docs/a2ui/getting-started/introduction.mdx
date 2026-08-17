@@ -63,7 +63,7 @@ The parser and resolver are deliberately conservative:
 - unknown envelope keys are ignored (forward compatibility with future protocol versions);
 - missing data-model paths resolve to `undefined`;
 - unrecognized dynamic-value shapes pass through unchanged;
-- `{ call: ... }` function-call values resolve to `undefined` until client-side function execution ships.
+- `{ call: ... }` function-call values execute through the standard function registry when one is passed to `resolveDynamic`; without a registry (or for unknown names) they resolve to `undefined`.
 
 This makes the protocol layer suitable for streaming, but it is not a full schema validator. If you accept untrusted agent output, validate the payload at your boundary before wiring it to privileged handlers.
 

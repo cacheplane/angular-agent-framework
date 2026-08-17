@@ -94,7 +94,7 @@ Nesting is just JSON: `value: { name: 'Ada', address: { city: 'London' } }` writ
 
 1. `null` / `undefined` pass through as-is.
 2. Arrays are mapped recursively — each element resolved in turn.
-3. A `{ call }` function-call value resolves to `undefined` (client-side function execution ships in an upcoming release). Checked before path refs so a call's `args` never masquerade as a binding.
+3. A `{ call }` function-call value executes through the function registry passed to `resolveDynamic` (standard set: `formatString`, `formatNumber`, `formatCurrency`, `formatDate`, `pluralize`, `and`, `or`, `not`); args resolve recursively, so they may be bindings or nested calls. Without a registry, or for unknown names, the value resolves to `undefined`. Checked before path refs so a call's `args` never masquerade as a binding.
 4. A `{ path }` reference reads from the model.
 5. Anything else — a bare string, number, boolean, or plain object — passes through unchanged. Bare values *are* the v0.9 literal form; there are no wrapper objects.
 
