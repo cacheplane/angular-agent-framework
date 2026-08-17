@@ -44,57 +44,49 @@ deleteByPointer({ a: 1, b: 2 }, '/a'); // { b: 2 }
 
 If the parent of the target doesn't exist, `deleteByPointer` returns the original model unchanged rather than fabricating a path to delete from.
 
+One v0.9-specific rule: deleting an **array index** does not splice. The index is set to `undefined` and the array's length is preserved, so sibling indices stay stable for other bindings:
+
+```ts
+deleteByPointer({ items: ['a', 'b', 'c'] }, '/items/1');
+// { items: ['a', undefined, 'c'] } — length still 3
+```
+
 <Callout type="warning" title="No RFC-6901 escaping">
 These helpers use JSON-Pointer-style syntax but do **not** implement RFC 6901's `~0` / `~1` unescaping. A path is split on `/` and the segments are used as literal keys. So keys that themselves contain `/` or `~` aren't addressable — there's no escape sequence to reach them.
 </Callout>
 
-## From contents to model
+## Applying updateDataModel envelopes
 
-The pointer helpers are the primitives. The most common real task is one level up: turning a `dataModelUpdate`'s `contents` array into the plain object the resolver reads. The library doesn't ship that reducer — you write it. Each `A2uiDataModelEntry` has a `key` and exactly one of `valueString`, `valueNumber`, `valueBoolean`, or `valueMap` (a nested array of entries). Branch on which is set, and recurse on `valueMap`:
+The pointer helpers are the primitives. The most common real task is one level up: applying an `updateDataModel` envelope to the model. In v0.9 the envelope's `value` is **plain JSON** — no typed entry wrappers — so applying it is a direct mapping onto the helpers:
 
-```ts
-import type { A2uiDataModelEntry } from '@threadplane/a2ui';
-
-function entriesToObject(entries: A2uiDataModelEntry[]): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
-  for (const e of entries) {
-    if (e.valueString !== undefined) out[e.key] = e.valueString;
-    else if (e.valueNumber !== undefined) out[e.key] = e.valueNumber;
-    else if (e.valueBoolean !== undefined) out[e.key] = e.valueBoolean;
-    else if (e.valueMap !== undefined) out[e.key] = entriesToObject(e.valueMap);
-  }
-  return out;
-}
-
-entriesToObject([
-  { key: 'name', valueString: 'Ada' },
-  { key: 'address', valueMap: [{ key: 'city', valueString: 'London' }] },
-]);
-// { name: 'Ada', address: { city: 'London' } }
-```
-
-A `dataModelUpdate` may also carry an optional top-level `path`. It scopes where the reduced object lands in the model — without it the entries write at the root; with `path: '/customer'` they nest under `customer`. Honor it by reducing first, then writing the result with `setByPointer`:
+- `value` present, `path` present — `setByPointer(model, path, value)` replaces (or creates) the data at `path`.
+- `value` present, `path` omitted or `'/'` — the whole model is replaced by `value`.
+- `value` omitted — the key at `path` is deleted (`deleteByPointer`); with no `path`, the model resets to `{}`.
 
 ```ts
-import { setByPointer } from '@threadplane/a2ui';
-import type { A2uiDataModelUpdate } from '@threadplane/a2ui';
+import { setByPointer, deleteByPointer } from '@threadplane/a2ui';
+import type { A2uiUpdateDataModel } from '@threadplane/a2ui';
 
-function applyDataModelUpdate(
+function applyUpdateDataModel(
   model: Record<string, unknown>,
-  update: A2uiDataModelUpdate,
+  update: A2uiUpdateDataModel,
 ): Record<string, unknown> {
-  const obj = entriesToObject(update.contents);
-  return setByPointer(model, update.path ?? '/', obj);
+  const path = update.path && update.path !== '/' ? update.path : undefined;
+  if (!('value' in update) || update.value === undefined) {
+    return path ? deleteByPointer(model, path) : {};
+  }
+  if (!path) return update.value as Record<string, unknown>;
+  return setByPointer(model, path, update.value);
 }
 
-applyDataModelUpdate(
+applyUpdateDataModel(
   {},
-  { surfaceId: 's1', path: '/customer', contents: [{ key: 'name', valueString: 'Ada' }] },
+  { surfaceId: 's1', path: '/customer', value: { name: 'Ada' } },
 );
 // { customer: { name: 'Ada' } }
 ```
 
-When `path` is absent, `setByPointer(model, '/', obj)` replaces the root with the reduced object. Pass a pointer like `/customer` to merge under a key instead.
+Nesting is just JSON: `value: { name: 'Ada', address: { city: 'London' } }` writes the nested object as-is. There is no per-entry typing to reduce — the wire value is already the model shape.
 
 ## Resolving dynamic values
 
@@ -102,19 +94,19 @@ When `path` is absent, `setByPointer(model, '/', obj)` replaces the root with th
 
 1. `null` / `undefined` pass through as-is.
 2. Arrays are mapped recursively — each element resolved in turn.
-3. Literal wrappers unwrap first: `literalString`, `literalNumber`, `literalBoolean`, `literalArray`.
+3. A `{ call }` function-call value resolves to `undefined` (client-side function execution ships in an upcoming release). Checked before path refs so a call's `args` never masquerade as a binding.
 4. A `{ path }` reference reads from the model.
-5. Anything else — a plain string, number, or unrecognized object — passes through unchanged.
+5. Anything else — a bare string, number, boolean, or plain object — passes through unchanged. Bare values *are* the v0.9 literal form; there are no wrapper objects.
 
 ```ts
 import { resolveDynamic } from '@threadplane/a2ui';
 
 const model = { name: 'Brian', count: 7, active: true, tags: ['a', 'b'] };
 
-resolveDynamic({ literalString: 'hello' }, model); // "hello"
-resolveDynamic({ path: '/name' }, model);          // "Brian"
-resolveDynamic({ path: '/tags/0' }, model);        // "a"
-resolveDynamic({ path: '/missing' }, model);       // undefined
+resolveDynamic('hello', model);              // "hello"
+resolveDynamic({ path: '/name' }, model);    // "Brian"
+resolveDynamic({ path: '/tags/0' }, model);  // "a"
+resolveDynamic({ path: '/missing' }, model); // undefined
 ```
 
 A missing path resolves to `undefined`, never an error. That keeps a half-streamed surface renderable while data is still arriving.
@@ -141,7 +133,7 @@ Path resolution depends on the leading slash:
 resolveDynamic({ path: 'name' }, model, { basePath: '', item: undefined }); // "Brian"
 ```
 
-With `basePath: ''`, the relative path `name` resolves to `/name`. That's the lever the `template` / `dataBinding` pattern pulls. When a container repeats a template over the array at, say, `/items`, it resolves each instance's props with a per-item scope:
+With `basePath: ''`, the relative path `name` resolves to `/name`. That's the lever children **templates** pull. When a container's `children` is `{ "path": "/items", "componentId": "tpl" }`, it repeats the template component over the array at `/items` and resolves each instance's props with a per-item scope:
 
 ```ts
 items.forEach((_, i) => {

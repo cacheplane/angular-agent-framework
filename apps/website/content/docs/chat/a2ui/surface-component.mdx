@@ -45,20 +45,23 @@ The internal surface-to-spec conversion walks the flat component map and produce
 
 Before the spec is emitted, each component prop is evaluated against the surface's data model. A prop can be:
 
-- A literal value — passed through as-is
-- A path reference `{ path: '/some/pointer' }` — resolved via JSON Pointer against `dataModel`
+- A bare literal value — passed through as-is
+- A path reference `{ path: '/some/pointer' }` — kept as a live json-render state binding against `dataModel` (so user input writes back through the render state store)
+- A function call `{ call: ... }` — omitted until client-side function execution ships
 
 **3. Map actions to `on` bindings**
 
-The internal conversion maps each component's A2UI `action` prop into a render-spec `on` binding on the corresponding element. Actions map to the `a2ui:event` handler, which builds an `A2uiActionMessage` for the `(action)` output.
+The internal conversion maps each component's A2UI `event` action into a render-spec `on` binding on the corresponding element. Actions map to the `a2ui:event` handler, which builds an `A2uiActionMessage` (with the event's `context` resolved against the data model) for the `(action)` output. `functionCall` actions execute client-side and are not wired until function execution ships.
 
 **4. Expand template children**
 
-When a component's `children` field is an `A2uiChildTemplate` (`{ template: { componentId, dataBinding } }`), the surface component expands it over the array at the `dataBinding` JSON Pointer in the data model. Each array item gets its own cloned element with props resolved in that item's scope.
+When a component's `children` field is a template (`{ path, componentId }`), the surface component expands it over the array at the `path` JSON Pointer in the data model. Each array item gets its own cloned element with props resolved in that item's scope — relative paths inside the template resolve per item.
 
 **5. Render via RenderSpecComponent**
 
 The final `Spec` is passed to `RenderSpecComponent` along with the `ViewRegistry` (converted to an Angular registry via `toRenderRegistry`). Rendering is fully reactive — when the surface signal updates, the spec recomputes and only affected elements re-render.
+
+**Theming.** The component host applies the agent-set surface theme from `createSurface.theme`: `primaryColor` becomes the `--a2ui-primary` CSS custom property, which catalog components consume for accents. When the agent sets no theme, your `:root`-level `--a2ui-primary` default wins.
 
 ## Usage Outside ChatComponent
 

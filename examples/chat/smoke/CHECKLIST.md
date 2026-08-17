@@ -267,14 +267,14 @@ renders correctly both during streaming and after completion.
 
 ### Gen UI mode dropdown
 
-- [ ] Palette "Gen UI" dropdown lists 2 options: `A2UI v1-compatible` and `json-render`
-- [ ] Default value is `A2UI v1-compatible` on first load
+- [ ] Palette "Gen UI" dropdown lists 2 options: `A2UI` and `json-render`
+- [ ] Default value is `A2UI` on first load
 - [ ] Selection persists across reload and mode switches
 - [ ] Server-side: `curl localhost:2024/threads/<id>/state` shows `values.gen_ui_mode` matches the palette selection
 
-### Dynamic dispatch — A2UI v1-compatible mode
+### Dynamic dispatch — A2UI mode
 
-- [ ] With Gen UI = `A2UI v1-compatible`, click any GenUI welcome suggestion (e.g. "Demo: render a feedback form")
+- [ ] With Gen UI = `A2UI`, click any GenUI welcome suggestion (e.g. "Demo: render a feedback form")
 - [ ] **Single bubble** — exactly ONE assistant bubble per GenUI turn (no skeleton bubble followed by a separate surface bubble)
 - [ ] Parent LLM emits a tool_call to `render_a2ui_surface` (parent emits envelopes directly as typed args — there is no sub-LLM hop)
 - [ ] Final assistant AI message carries BOTH `tool_calls` AND `---a2ui_JSON---\n`-prefixed content (in-place replacement of the tool-call AI)
@@ -286,10 +286,10 @@ renders correctly both during streaming and after completion.
 
 ### Progressive A2UI streaming (per-component fallback transition)
 
-- [ ] DevTools Network → trigger any A2UI v1-compatible GenUI prompt; the `/runs/stream` SSE response contains `event: custom` frames carrying `a2ui-partial` payloads (`{name: 'a2ui-partial', data: {tool_call_id, args_so_far}}`)
+- [ ] DevTools Network → trigger any A2UI GenUI prompt; the `/runs/stream` SSE response contains `event: custom` frames carrying `a2ui-partial` payloads (`{name: 'a2ui-partial', data: {tool_call_id, args_so_far}}`)
 - [ ] At least several `a2ui-partial` frames stream as the parent LLM emits tool-call argument tokens (not all-at-once)
-- [ ] During streaming: `<a2ui-surface>` mounts before all `dataModelUpdate` envelopes arrive — components show `<render-default-fallback>` (shimmer card with "Building UI…" label) until their bound state populates
-- [ ] As each `dataModelUpdate` envelope arrives, exactly one component flips from fallback → real
+- [ ] During streaming: `<a2ui-surface>` mounts before all `updateDataModel` envelopes arrive — components show `<render-default-fallback>` (shimmer card with "Building UI…" label) until their bound state populates
+- [ ] As each `updateDataModel` envelope arrives, exactly one component flips from fallback → real
 - [ ] Monotonic latch: once a component renders real, a later prop becoming undefined does NOT revert it to fallback
 - [ ] After completion: zero `<render-default-fallback>` elements; all components rendered with their final props
 
@@ -304,7 +304,7 @@ renders correctly both during streaming and after completion.
 
 ### Server-side wire format
 
-- [ ] In A2UI v1-compatible mode: the final AI message content starts with `---a2ui_JSON---\n` followed by JSONL (one envelope per line); contains at minimum `surfaceUpdate` and `beginRendering` envelopes; envelopes are reordered so `beginRendering` follows the first `surfaceUpdate` regardless of LLM emission order
+- [ ] In A2UI mode: the final AI message content starts with `---a2ui_JSON---\n` followed by JSONL (one envelope per line, each with `"version":"v0.9"`); contains at minimum `createSurface` and `updateComponents` envelopes; envelopes are reordered so `createSurface` comes first regardless of LLM emission order (synthesized if the model forgot it)
 - [ ] The same AI message carries `tool_calls` set (single-bubble invariant)
 - [ ] In json-render mode: final AI message content is a bare JSON object starting with `{`
 - [ ] `curl localhost:2024/threads/<id>/state` confirms the above for both modes
@@ -313,9 +313,9 @@ renders correctly both during streaming and after completion.
 
 The 18 catalog components must render correctly when the LLM-generated surface includes them. After clicking each demo suggestion below, verify the rendered surface contains the listed component types and that each looks visually correct (no overflow, alignment intact, text legible, interactive controls functional).
 
-- [ ] "Demo: render a feedback form" — `Card` + `Column` + `Text` + `TextField` + (`MultipleChoice` or `Slider`) + `Button`
-- [ ] "Demo: render a settings card" — `Card` + `Column` + `Text` + `MultipleChoice` + `CheckBox` + `Button`
-- [ ] "Demo: render a poll" — `Card` + `Column` + `Text` + `MultipleChoice` + `Button`
+- [ ] "Demo: render a feedback form" — `Card` + `Column` + `Text` + `TextField` + (`ChoicePicker` or `Slider`) + `Button`
+- [ ] "Demo: render a settings card" — `Card` + `Column` + `Text` + `ChoicePicker` + `CheckBox` + `Button`
+- [ ] "Demo: render a poll" — `Card` + `Column` + `Text` + `ChoicePicker` + `Button`
 - [ ] "Demo: render a contact form" — `Card` + `Column` + `Text` + `TextField` + `Button`
 - [ ] "Demo: render a media-rich product card" — `Image` + `Tabs` + `Row` + `Icon` + `List` + `Button`
 - [ ] "Demo: render a booking surface with modal" — `DateTimeInput` + `Divider` + `Row` + `Card` + `TextField` + `Modal`

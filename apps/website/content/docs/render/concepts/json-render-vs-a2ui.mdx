@@ -15,7 +15,7 @@ This matters because the tradeoff is not "which renderer is better." The tradeof
   renders a Spec using an Angular registry, state store, functions, and handlers
 
 @threadplane/a2ui
-  defines A2UI v1 message and component types
+  defines A2UI v0.9 message and component types
 
 @threadplane/chat
   detects assistant content, manages streaming state, and mounts render or A2UI surfaces
@@ -65,17 +65,19 @@ The practical cost is that streaming and progressive surface updates are not the
 
 A2UI is a wire protocol for agent-built interfaces.
 
-The current exported message union is:
+The current exported message union is (every envelope also carries `version: 'v0.9'`):
 
 ```ts
-type A2uiMessage =
-  | { surfaceUpdate: A2uiSurfaceUpdate }
-  | { dataModelUpdate: A2uiDataModelUpdate }
-  | { beginRendering: A2uiBeginRendering }
-  | { deleteSurface: A2uiDeleteSurface };
+type A2uiMessage = { version: string } &
+  (
+    | { createSurface: A2uiCreateSurface }
+    | { updateComponents: A2uiUpdateComponents }
+    | { updateDataModel: A2uiUpdateDataModel }
+    | { deleteSurface: A2uiDeleteSurface }
+  );
 ```
 
-A surface has an id, catalog id, component map, data model, optional theme, optional styles, and optional `sendDataModel` behavior.
+A surface has an id, catalog id, component map, data model, optional theme, and optional `sendDataModel` behavior.
 
 ```ts
 interface A2uiSurface {
@@ -85,7 +87,6 @@ interface A2uiSurface {
   sendDataModel?: boolean;
   components: Map<string, A2uiComponent>;
   dataModel: Record<string, unknown>;
-  styles?: { font?: string; primaryColor?: string };
 }
 ```
 
@@ -142,7 +143,7 @@ const registry = views({
 
 `views()` produces a `ViewRegistry` -- the shape chat catalogs consume. `defineAngularRegistry()` produces the `AngularRegistry` that `<render-spec>` consumes directly. `toRenderRegistry()` converts the former into the latter, so a chat catalog and a direct render share one component map. Use `views()` when you're wiring components into chat; use `defineAngularRegistry()` when you're driving `<render-spec>` yourself. See the [Registry guide](/docs/render/guides/registry) for the low-level registry, and the [chat views guide](/docs/chat/guides/generative-ui) for the chat-facing path.
 
-A2UI catalogs use the same underlying registry shape in chat. Component names such as `Text`, `Button`, `Card`, `Column`, `Row`, `TextField`, `CheckBox`, `MultipleChoice`, and `Slider` resolve to Angular components.
+A2UI catalogs use the same underlying registry shape in chat. Component names such as `Text`, `Button`, `Card`, `Column`, `Row`, `TextField`, `CheckBox`, `ChoicePicker`, and `Slider` resolve to Angular components.
 
 You can compose registries with `withViews()` and pass the result to chat.
 
@@ -164,7 +165,7 @@ json-render can use a `StateStore`, computed functions, and handlers:
 
 That is application-owned state. You can validate the spec before rendering, restrict component names, and decide which handlers exist.
 
-A2UI carries a client data model in protocol messages. Components use dynamic values such as literal strings, numbers, booleans, arrays, or paths into the data model. The chat-side surface store applies data model updates and gates component readiness until bound values resolve.
+A2UI carries a client data model in protocol messages. Components use dynamic values — bare literals (strings, numbers, booleans, arrays), `{ path }` references into the data model, or typed client-side function calls. The chat-side surface store applies data model updates and gates component readiness until bound values resolve.
 
 Validation in A2UI is part of the component/action protocol. It is not the same as validating a json-render spec before mount. Treat it as user-interaction validation, not as a substitute for protocol validation at the boundary.
 
@@ -176,22 +177,22 @@ A2UI actions produce `A2uiActionMessage` objects:
 
 ```ts
 interface A2uiActionMessage {
-  version: 'v1';
+  version: string; // 'v0.9'
   action: {
     name: string;
     surfaceId: string;
     sourceComponentId: string;
     timestamp: string;
-    context: Record<string, unknown>;
+    context?: Record<string, unknown>;
     label?: string;
   };
   metadata?: {
-    a2uiClientDataModel: A2uiClientDataModel;
+    a2uiClientDataModel?: A2uiClientDataModel;
   };
 }
 ```
 
-If a surface asks to send the client data model, the action message can include `metadata.a2uiClientDataModel`.
+If a surface's `createSurface` set `sendDataModel: true`, the action message includes `metadata.a2uiClientDataModel`.
 
 In chat, standard A2UI action messages are routed back through the agent as structured user input. Local handlers still exist for client-side behavior, but executable behavior is explicit: only registered handlers run.
 

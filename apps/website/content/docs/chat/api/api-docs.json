@@ -7,12 +7,6 @@
     "examples": [],
     "properties": [
       {
-        "name": "autoPlay",
-        "type": "InputSignal<boolean>",
-        "description": "v1 prop name: autoPlay (camelCase).",
-        "optional": false
-      },
-      {
         "name": "bindings",
         "type": "InputSignal<Record<string, string>>",
         "description": "",
@@ -25,15 +19,9 @@
         "optional": false
       },
       {
-        "name": "controls",
-        "type": "InputSignal<boolean>",
-        "description": "",
-        "optional": false
-      },
-      {
         "name": "description",
         "type": "InputSignal<string>",
-        "description": "v1 canonical prop: short description / title rendered above the player.",
+        "description": "v0.9 prop: short description / title rendered above the player.",
         "optional": false
       },
       {
@@ -79,7 +67,7 @@
       {
         "name": "childKeys",
         "type": "InputSignal<string[]>",
-        "description": "v1: child Text component is rendered inside the button via childKeys.",
+        "description": "v0.9: child Text component is rendered inside the button via childKeys.",
         "optional": false
       },
       {
@@ -101,19 +89,25 @@
         "optional": false
       },
       {
-        "name": "primary",
-        "type": "InputSignal<boolean>",
-        "description": "",
-        "optional": false
-      },
-      {
         "name": "spec",
         "type": "InputSignal<Spec>",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "variant",
+        "type": "InputSignal<ButtonVariant>",
+        "description": "v0.9 prop: visual style (default 'default').",
+        "optional": false
       }
     ],
     "methods": [
+      {
+        "name": "cssClass",
+        "signature": "cssClass(): string",
+        "description": "",
+        "params": []
+      },
       {
         "name": "handleClick",
         "signature": "handleClick(): void",
@@ -182,20 +176,8 @@
         "optional": false
       },
       {
-        "name": "checked",
-        "type": "InputSignal<boolean>",
-        "description": "Pre-v1 alias retained for back-compat.",
-        "optional": false
-      },
-      {
         "name": "childKeys",
         "type": "InputSignal<string[]>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "effectiveValue",
-        "type": "Signal<boolean>",
         "description": "",
         "optional": false
       },
@@ -219,8 +201,8 @@
       },
       {
         "name": "value",
-        "type": "InputSignal<boolean | undefined>",
-        "description": "v1 canonical prop: boolean checked state.",
+        "type": "InputSignal<boolean>",
+        "description": "v0.9 prop: boolean checked state.",
         "optional": false
       }
     ],
@@ -241,6 +223,171 @@
     ]
   },
   {
+    "name": "A2uiChoicePickerComponent",
+    "kind": "class",
+    "description": "",
+    "params": [],
+    "examples": [],
+    "properties": [
+      {
+        "name": "_bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "_groupName",
+        "type": "string",
+        "description": "Groups the radio inputs of this instance (mutuallyExclusive mode).",
+        "optional": false
+      },
+      {
+        "name": "bindings",
+        "type": "InputSignal<Record<string, string>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "childKeys",
+        "type": "InputSignal<string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "displayStyle",
+        "type": "InputSignal<\"checkbox\" | \"chips\">",
+        "description": "v0.9 prop: render as 'checkbox' rows (default) or 'chips'.",
+        "optional": false
+      },
+      {
+        "name": "filterable",
+        "type": "InputSignal<boolean>",
+        "description": "v0.9 prop: when true, show a client-side option filter input.",
+        "optional": false
+      },
+      {
+        "name": "filterText",
+        "type": "WritableSignal<string>",
+        "description": "Local, client-side option filter (only rendered when filterable).",
+        "optional": false
+      },
+      {
+        "name": "isSingleSelect",
+        "type": "Signal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "label",
+        "type": "InputSignal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "loading",
+        "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "options",
+        "type": "InputSignal<ResolvedOption[]>",
+        "description": "Resolved options with plain string labels (surface-to-spec resolves DynamicString).",
+        "optional": false
+      },
+      {
+        "name": "spec",
+        "type": "InputSignal<Spec | undefined>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "InputSignal<string | string[] | undefined>",
+        "description": "v0.9 prop: current selection (string[]). Normalized in `valueArray`\nbecause LLMs sometimes seed the data model with a scalar (e.g. `\"5\"`)\ninstead of an array (`[\"5\"]`); we coerce so .includes() works either way.",
+        "optional": false
+      },
+      {
+        "name": "valueArray",
+        "type": "Signal<string[]>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "variant",
+        "type": "InputSignal<\"mutuallyExclusive\" | \"multipleSelection\">",
+        "description": "v0.9 prop: 'mutuallyExclusive' (single-select, default) or 'multipleSelection'.",
+        "optional": false
+      },
+      {
+        "name": "visibleOptions",
+        "type": "Signal<ResolvedOption[]>",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "methods": [
+      {
+        "name": "isSelected",
+        "signature": "isSelected(value: string): boolean",
+        "description": "",
+        "params": [
+          {
+            "name": "value",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onCheckChange",
+        "signature": "onCheckChange(value: string, event: Event): void",
+        "description": "",
+        "params": [
+          {
+            "name": "value",
+            "type": "string",
+            "description": "",
+            "optional": false
+          },
+          {
+            "name": "event",
+            "type": "Event",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onChipToggle",
+        "signature": "onChipToggle(value: string): void",
+        "description": "",
+        "params": [
+          {
+            "name": "value",
+            "type": "string",
+            "description": "",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "name": "onFilterInput",
+        "signature": "onFilterInput(event: Event): void",
+        "description": "",
+        "params": [
+          {
+            "name": "event",
+            "type": "Event",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  {
     "name": "A2uiColumnComponent",
     "kind": "class",
     "description": "",
@@ -248,14 +395,14 @@
     "examples": [],
     "properties": [
       {
-        "name": "alignItems",
-        "type": "Signal<string>",
-        "description": "",
+        "name": "align",
+        "type": "InputSignal<ColumnAlign>",
+        "description": "v0.9 prop: cross-axis alignment (default 'stretch').",
         "optional": false
       },
       {
-        "name": "alignment",
-        "type": "InputSignal<ColumnAlignment>",
+        "name": "alignItems",
+        "type": "Signal<string>",
         "description": "",
         "optional": false
       },
@@ -272,8 +419,8 @@
         "optional": false
       },
       {
-        "name": "distribution",
-        "type": "InputSignal<\"start\" | \"center\" | \"end\" | \"spaceBetween\" | \"spaceAround\" | \"spaceEvenly\">",
+        "name": "cssClass",
+        "type": "Signal<\"a2ui-col a2ui-col--justify-stretch\" | \"a2ui-col\">",
         "description": "",
         "optional": false
       },
@@ -285,14 +432,26 @@
       },
       {
         "name": "gap",
-        "type": "InputSignal<number>",
-        "description": "",
+        "type": "InputSignal<number | \"small\" | \"medium\" | \"large\" | undefined>",
+        "description": "Not part of the v0.9 catalog — kept for json-render generative-ui\nspecs, which may set a numeric spacing unit (multiples of 4px) or a\nnamed size. Unset falls back to the CSS default gap.",
         "optional": false
       },
       {
         "name": "gapPx",
-        "type": "Signal<number>",
-        "description": "Convert the Tailwind gap unit (multiples of 4px) to pixels.",
+        "type": "Signal<number | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "justify",
+        "type": "InputSignal<ColumnJustify>",
+        "description": "v0.9 prop: main-axis distribution (default 'start').",
+        "optional": false
+      },
+      {
+        "name": "justifyContent",
+        "type": "Signal<string>",
+        "description": "",
         "optional": false
       },
       {
@@ -344,13 +503,13 @@
       {
         "name": "enableDate",
         "type": "InputSignal<boolean>",
-        "description": "v1 prop: enableDate — include date portion.",
+        "description": "v0.9 prop: enableDate — include date portion.",
         "optional": false
       },
       {
         "name": "enableTime",
         "type": "InputSignal<boolean>",
-        "description": "v1 prop: enableTime — include time portion.",
+        "description": "v0.9 prop: enableTime — include time portion.",
         "optional": false
       },
       {
@@ -372,6 +531,18 @@
         "optional": false
       },
       {
+        "name": "max",
+        "type": "InputSignal<string | undefined>",
+        "description": "v0.9 prop: ISO upper bound mapped to the native input's max.",
+        "optional": false
+      },
+      {
+        "name": "min",
+        "type": "InputSignal<string | undefined>",
+        "description": "v0.9 prop: ISO lower bound mapped to the native input's min.",
+        "optional": false
+      },
+      {
         "name": "spec",
         "type": "InputSignal<Spec | undefined>",
         "description": "",
@@ -380,7 +551,7 @@
       {
         "name": "value",
         "type": "InputSignal<string>",
-        "description": "v1 prop: value (resolved DynamicString).",
+        "description": "v0.9 prop: ISO 8601 value (resolved DynamicString). Still renders when absent.",
         "optional": false
       }
     ],
@@ -409,8 +580,8 @@
     "properties": [
       {
         "name": "axis",
-        "type": "InputSignal<\"horizontal\" | \"vertical\" | undefined>",
-        "description": "Canonical v1 spec name. The LLM emits this.",
+        "type": "InputSignal<\"horizontal\" | \"vertical\">",
+        "description": "v0.9 prop: divider axis (default 'horizontal').",
         "optional": false
       },
       {
@@ -423,12 +594,6 @@
         "name": "childKeys",
         "type": "InputSignal<string[]>",
         "description": "",
-        "optional": false
-      },
-      {
-        "name": "direction",
-        "type": "InputSignal<\"horizontal\" | \"vertical\">",
-        "description": "Older alias retained for json-render usage and back-compat.",
         "optional": false
       },
       {
@@ -446,7 +611,7 @@
       {
         "name": "orientation",
         "type": "Signal<\"horizontal\" | \"vertical\">",
-        "description": "Effective axis — `axis` wins if provided, otherwise fall back to `direction`.",
+        "description": "",
         "optional": false
       },
       {
@@ -478,12 +643,6 @@
         "optional": false
       },
       {
-        "name": "effectiveName",
-        "type": "Signal<string>",
-        "description": "",
-        "optional": false
-      },
-      {
         "name": "emit",
         "type": "InputSignal<(event: string) => void>",
         "description": "",
@@ -496,9 +655,9 @@
         "optional": false
       },
       {
-        "name": "icon",
-        "type": "InputSignal<string>",
-        "description": "Pre-v1 alias retained for back-compat.",
+        "name": "ligatureName",
+        "type": "Signal<string>",
+        "description": "The string ligature name when `name` is a string.",
         "optional": false
       },
       {
@@ -509,20 +668,20 @@
       },
       {
         "name": "name",
-        "type": "InputSignal<string | undefined>",
-        "description": "v1 canonical prop.",
-        "optional": false
-      },
-      {
-        "name": "size",
-        "type": "InputSignal<number | null>",
-        "description": "",
+        "type": "InputSignal<string | object | undefined>",
+        "description": "v0.9 prop: a Material Symbols name (string) or an inline `{ svgPath }`.",
         "optional": false
       },
       {
         "name": "spec",
         "type": "InputSignal<Spec | undefined>",
         "description": "",
+        "optional": false
+      },
+      {
+        "name": "svgPath",
+        "type": "Signal<string | null>",
+        "description": "Inline SVG path when `name` is the `{ svgPath }` object form.",
         "optional": false
       }
     ],
@@ -536,12 +695,6 @@
     "examples": [],
     "properties": [
       {
-        "name": "alt",
-        "type": "InputSignal<string>",
-        "description": "",
-        "optional": false
-      },
-      {
         "name": "bindings",
         "type": "InputSignal<Record<string, string>>",
         "description": "",
@@ -554,6 +707,18 @@
         "optional": false
       },
       {
+        "name": "cssClass",
+        "type": "Signal<string>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "description",
+        "type": "InputSignal<string>",
+        "description": "v0.9 prop: alt text / accessible description.",
+        "optional": false
+      },
+      {
         "name": "emit",
         "type": "InputSignal<(event: string) => void>",
         "description": "",
@@ -561,19 +726,19 @@
       },
       {
         "name": "fit",
-        "type": "InputSignal<ImageFit | undefined>",
-        "description": "v1 prop: CSS object-fit equivalent.",
-        "optional": false
-      },
-      {
-        "name": "height",
-        "type": "InputSignal<number | null>",
-        "description": "",
+        "type": "InputSignal<ImageFit>",
+        "description": "v0.9 prop: CSS object-fit equivalent ('scaleDown' → 'scale-down').",
         "optional": false
       },
       {
         "name": "loading",
         "type": "InputSignal<boolean>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "objectFit",
+        "type": "Signal<string>",
         "description": "",
         "optional": false
       },
@@ -590,38 +755,13 @@
         "optional": false
       },
       {
-        "name": "usageHint",
-        "type": "InputSignal<ImageUsageHint | undefined>",
-        "description": "v1 prop: sizing preset.",
-        "optional": false
-      },
-      {
-        "name": "width",
-        "type": "InputSignal<number | null>",
-        "description": "",
+        "name": "variant",
+        "type": "InputSignal<ImageVariant>",
+        "description": "v0.9 prop: sizing preset.",
         "optional": false
       }
     ],
-    "methods": [
-      {
-        "name": "explicitHeight",
-        "signature": "explicitHeight(): string | null",
-        "description": "",
-        "params": []
-      },
-      {
-        "name": "explicitWidth",
-        "signature": "explicitWidth(): string | null",
-        "description": "",
-        "params": []
-      },
-      {
-        "name": "hintStyle",
-        "signature": "hintStyle(): object | null",
-        "description": "",
-        "params": []
-      }
-    ]
+    "methods": []
   },
   {
     "name": "A2uiListComponent",
@@ -631,14 +771,14 @@
     "examples": [],
     "properties": [
       {
-        "name": "alignment",
-        "type": "InputSignal<\"start\" | \"center\" | \"end\" | \"stretch\" | undefined>",
-        "description": "v1 canonical prop: cross-axis alignment.",
+        "name": "align",
+        "type": "InputSignal<\"start\" | \"center\" | \"end\" | \"stretch\">",
+        "description": "v0.9 prop: cross-axis alignment (default 'stretch').",
         "optional": false
       },
       {
         "name": "alignmentCss",
-        "type": "Signal<string | null>",
+        "type": "Signal<string>",
         "description": "",
         "optional": false
       },
@@ -703,7 +843,7 @@
       {
         "name": "childKeys",
         "type": "InputSignal<string[]>",
-        "description": "v1: childKeys[0] = entryPointChild (inline trigger),\n    childKeys[1] = contentChild (modal body).",
+        "description": "v0.9: childKeys[0] = trigger (inline entry point),\n      childKeys[1] = content (modal body).",
         "optional": false
       },
       {
@@ -741,137 +881,9 @@
         "type": "InputSignal<Spec>",
         "description": "",
         "optional": false
-      },
-      {
-        "name": "title",
-        "type": "InputSignal<string>",
-        "description": "Resolved title string (from optional title DynamicString).",
-        "optional": false
       }
     ],
     "methods": []
-  },
-  {
-    "name": "A2uiMultipleChoiceComponent",
-    "kind": "class",
-    "description": "",
-    "params": [],
-    "examples": [],
-    "properties": [
-      {
-        "name": "_bindings",
-        "type": "InputSignal<Record<string, string>>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "bindings",
-        "type": "InputSignal<Record<string, string>>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "childKeys",
-        "type": "InputSignal<string[]>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "isSingleSelect",
-        "type": "Signal<boolean>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "label",
-        "type": "InputSignal<string>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "loading",
-        "type": "InputSignal<boolean>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "maxAllowedSelections",
-        "type": "InputSignal<number>",
-        "description": "When ≤ 1 — render as single-select <select>; otherwise multi-select checkboxes.",
-        "optional": false
-      },
-      {
-        "name": "options",
-        "type": "InputSignal<ResolvedOption[]>",
-        "description": "Resolved options with plain string labels (surface-to-spec resolves DynamicString).",
-        "optional": false
-      },
-      {
-        "name": "selections",
-        "type": "InputSignal<string | string[] | undefined>",
-        "description": "Resolved current selections from surface-to-spec. Normalized in\n`selectionsArray` because LLMs sometimes seed the data model with a\nscalar (e.g. `\"5\"`) instead of an array (`[\"5\"]`); we coerce so\n.includes() works either way.",
-        "optional": false
-      },
-      {
-        "name": "selectionsArray",
-        "type": "Signal<string[]>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "spec",
-        "type": "InputSignal<Spec | undefined>",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "methods": [
-      {
-        "name": "isSelected",
-        "signature": "isSelected(value: string): boolean",
-        "description": "",
-        "params": [
-          {
-            "name": "value",
-            "type": "string",
-            "description": "",
-            "optional": false
-          }
-        ]
-      },
-      {
-        "name": "onCheckChange",
-        "signature": "onCheckChange(value: string, event: Event): void",
-        "description": "",
-        "params": [
-          {
-            "name": "value",
-            "type": "string",
-            "description": "",
-            "optional": false
-          },
-          {
-            "name": "event",
-            "type": "Event",
-            "description": "",
-            "optional": false
-          }
-        ]
-      },
-      {
-        "name": "onSelectChange",
-        "signature": "onSelectChange(event: Event): void",
-        "description": "",
-        "params": [
-          {
-            "name": "event",
-            "type": "Event",
-            "description": "",
-            "optional": false
-          }
-        ]
-      }
-    ]
   },
   {
     "name": "A2uiRowComponent",
@@ -881,14 +893,14 @@
     "examples": [],
     "properties": [
       {
-        "name": "alignItems",
-        "type": "Signal<string>",
-        "description": "",
+        "name": "align",
+        "type": "InputSignal<RowAlign>",
+        "description": "v0.9 prop: cross-axis alignment (default 'stretch').",
         "optional": false
       },
       {
-        "name": "alignment",
-        "type": "InputSignal<RowAlignment>",
+        "name": "alignItems",
+        "type": "Signal<string>",
         "description": "",
         "optional": false
       },
@@ -905,8 +917,8 @@
         "optional": false
       },
       {
-        "name": "distribution",
-        "type": "InputSignal<RowDistribution>",
+        "name": "cssClass",
+        "type": "Signal<\"a2ui-row a2ui-row--justify-stretch\" | \"a2ui-row\">",
         "description": "",
         "optional": false
       },
@@ -918,14 +930,20 @@
       },
       {
         "name": "gap",
-        "type": "InputSignal<number>",
-        "description": "",
+        "type": "InputSignal<number | \"small\" | \"medium\" | \"large\" | undefined>",
+        "description": "Not part of the v0.9 catalog — kept for json-render generative-ui\nspecs, which may set a numeric spacing unit (multiples of 4px) or a\nnamed size. Unset falls back to the CSS default gap.",
         "optional": false
       },
       {
         "name": "gapPx",
-        "type": "Signal<number>",
-        "description": "Convert the gap unit (multiples of 4px) to pixels.",
+        "type": "Signal<number | null>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "justify",
+        "type": "InputSignal<RowJustify>",
+        "description": "v0.9 prop: main-axis distribution (default 'start').",
         "optional": false
       },
       {
@@ -993,15 +1011,15 @@
         "optional": false
       },
       {
-        "name": "maxValue",
+        "name": "max",
         "type": "InputSignal<number>",
-        "description": "v1 prop: maxValue.",
+        "description": "v0.9 prop: upper bound.",
         "optional": false
       },
       {
-        "name": "minValue",
+        "name": "min",
         "type": "InputSignal<number>",
-        "description": "v1 prop: minValue.",
+        "description": "v0.9 prop: lower bound (default 0).",
         "optional": false
       },
       {
@@ -1011,15 +1029,9 @@
         "optional": false
       },
       {
-        "name": "step",
-        "type": "InputSignal<number>",
-        "description": "",
-        "optional": false
-      },
-      {
         "name": "value",
         "type": "InputSignal<number>",
-        "description": "v1 prop: value (resolved DynamicNumber).",
+        "description": "v0.9 prop: value (resolved DynamicNumber).",
         "optional": false
       }
     ],
@@ -1065,12 +1077,6 @@
         "optional": false
       },
       {
-        "name": "fontFamily",
-        "type": "Signal<string | null>",
-        "description": "Agent-set font family from `beginRendering.styles.font`. Returns\nnull when unset so the host doesn't override consumer fonts.",
-        "optional": false
-      },
-      {
         "name": "handlers",
         "type": "InputSignal<Record<string, (params: Record<string, unknown>) => unknown>>",
         "description": "",
@@ -1085,7 +1091,7 @@
       {
         "name": "primaryColor",
         "type": "Signal<string | null>",
-        "description": "Agent-set primary color from `beginRendering.styles.primaryColor`.\nReturns null when unset so the host binding doesn't override the\nconsumer's `:root`-level `--a2ui-primary` default.",
+        "description": "Agent-set primary color from `createSurface.theme.primaryColor`.\nReturns null when unset so the host binding doesn't override the\nconsumer's `:root`-level `--a2ui-primary` default.",
         "optional": false
       },
       {
@@ -1097,13 +1103,13 @@
       {
         "name": "rootIds",
         "type": "Signal<string[]>",
-        "description": "Roots from the surface state — components whose ids appear as\nchildren of no other component. The wire spec includes\n`beginRendering.root` as the single root; that path stays usable\nbut we keep the renderer permissive in case future surfaces emit\nmultiple top-level components.\n\nConservative: returns only the first key from componentViews\ninsertion order. The wire format's beginRendering.root carries the\ntrue root id; plumbing it through A2uiSurfaceState is a follow-up.",
+        "description": "Roots from the surface state. The v0.9 wire contract reserves the\ncomponent id `root` as the single tree root; we keep the renderer\npermissive in case future surfaces emit multiple top-level\ncomponents.\n\nConservative: returns only the first key from componentViews\ninsertion order.",
         "optional": false
       },
       {
         "name": "spec",
         "type": "Signal<Spec | null>",
-        "description": "Convert the A2UI surface to a json-render Spec for rendering.\n Prefers `state().surface` (the progressively-built wire surface)\n over the legacy `surface` input. surfaceToSpec handles\n children.explicitList → spec.children translation + reserved-key\n filtering + path-ref → $bindState rewriting; the rendered tree\n then uses render-element's standard input-mapping\n (`childKeys: el.children`) so catalog components receive the\n inputs they actually declare.\n\n This supersedes the earlier slot-based progressive renderer,\n which mounted root components but never populated their\n childKeys input — leaving Columns/Rows/etc. with no children.",
+        "description": "Convert the A2UI surface to a json-render Spec for rendering.\n Prefers `state().surface` (the progressively-built wire surface)\n over the legacy `surface` input. surfaceToSpec handles\n children-id-list → spec.children translation + reserved-key\n filtering + path-ref → $bindState rewriting; the rendered tree\n then uses render-element's standard input-mapping\n (`childKeys: el.children`) so catalog components receive the\n inputs they actually declare.\n\n This supersedes the earlier slot-based progressive renderer,\n which mounted root components but never populated their\n childKeys input — leaving Columns/Rows/etc. with no children.",
         "optional": false
       },
       {
@@ -1169,7 +1175,7 @@
       {
         "name": "childKeys",
         "type": "InputSignal<string[]>",
-        "description": "v1: each child key corresponds to a tab's contentChild (childKeys[i] ↔ tabTitles[i]).",
+        "description": "v0.9: each child key corresponds to a tab's child (childKeys[i] ↔ tabTitles[i]).",
         "optional": false
       },
       {
@@ -1193,7 +1199,7 @@
       {
         "name": "tabTitles",
         "type": "InputSignal<string[]>",
-        "description": "Resolved tab titles from tabItems[*].title — produced by surface-to-spec.",
+        "description": "Resolved tab titles from tabs[*].title — produced by surface-to-spec.",
         "optional": false
       }
     ],
@@ -1257,9 +1263,9 @@
         "optional": false
       },
       {
-        "name": "usageHint",
-        "type": "InputSignal<UsageHint>",
-        "description": "",
+        "name": "variant",
+        "type": "InputSignal<TextVariant>",
+        "description": "v0.9 prop: typography variant.",
         "optional": false
       }
     ],
@@ -1334,27 +1340,21 @@
         "optional": false
       },
       {
-        "name": "text",
-        "type": "InputSignal<string>",
-        "description": "v1 prop: text (resolved string value).",
-        "optional": false
-      },
-      {
-        "name": "textFieldType",
-        "type": "InputSignal<TextFieldType>",
-        "description": "",
-        "optional": false
-      },
-      {
         "name": "validationRegexp",
         "type": "InputSignal<string>",
-        "description": "",
+        "description": "Stored but not yet enforced beyond the native pattern attribute.",
         "optional": false
       },
       {
         "name": "value",
-        "type": "Signal<string>",
-        "description": "Back-compat alias: value. surface-to-spec resolves DynamicString → plain string.",
+        "type": "InputSignal<string>",
+        "description": "v0.9 prop: resolved string value.",
+        "optional": false
+      },
+      {
+        "name": "variant",
+        "type": "InputSignal<TextFieldVariant>",
+        "description": "v0.9 prop: input variant (default 'shortText').",
         "optional": false
       }
     ],
@@ -1382,12 +1382,6 @@
     "examples": [],
     "properties": [
       {
-        "name": "autoPlay",
-        "type": "InputSignal<boolean>",
-        "description": "v1 prop name: autoPlay (camelCase).",
-        "optional": false
-      },
-      {
         "name": "bindings",
         "type": "InputSignal<Record<string, string>>",
         "description": "",
@@ -1396,12 +1390,6 @@
       {
         "name": "childKeys",
         "type": "InputSignal<string[]>",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "controls",
-        "type": "InputSignal<boolean>",
         "description": "",
         "optional": false
       },
@@ -5765,18 +5753,18 @@
   {
     "name": "A2uiComponentView",
     "kind": "interface",
-    "description": "Chat-internal projection of an A2UI component, materialized by the\nsurface store. Distinct from the wire-format `A2uiComponent` in\n`@threadplane/a2ui` (which carries the raw `component: A2uiComponentDef`\npayload) — this type adds the per-component readiness fields the\nprogressive renderer consumes.",
+    "description": "Chat-internal projection of an A2UI component, materialized by the\nsurface store. Distinct from the wire-format `A2uiComponent` in\n`@threadplane/a2ui` — this type adds the per-component readiness fields\nthe progressive renderer consumes.",
     "properties": [
       {
         "name": "bindings",
         "type": "readonly string[]",
-        "description": "Data model paths this component references via its `{$.path}` prop\nexpressions. Extracted once on `surfaceUpdate` apply; immutable.",
+        "description": "Data model paths this component references via its `{$.path}` prop\nexpressions. Extracted once on `updateComponents` apply; immutable.",
         "optional": false
       },
       {
         "name": "def",
-        "type": "A2uiComponentDef",
-        "description": "The raw wire-format component def, retained so the slot directive\ncan look up the catalog entry by type and resolve nested children\non re-renders.",
+        "type": "A2uiComponent",
+        "description": "The raw wire-format component, retained so the slot directive\ncan look up the catalog entry by type and resolve nested children\non re-renders.",
         "optional": false
       },
       {
@@ -5788,19 +5776,19 @@
       {
         "name": "props",
         "type": "Readonly<Record<string, unknown>>",
-        "description": "Resolved property bag. Meaningful only when `ready === true`.",
+        "description": "Resolved property bag (reserved protocol keys stripped). Meaningful\nonly when `ready === true`.",
         "optional": false
       },
       {
         "name": "ready",
         "type": "boolean",
-        "description": "Monotonic: `false` until every binding has resolved at least once\nin the accumulated data model, then `true` forever. Once `true`,\nsubsequent `dataModelUpdate` envelopes push new prop values but do\nNOT flip this back to `false`.",
+        "description": "Monotonic: `false` until every binding has resolved at least once\nin the accumulated data model, then `true` forever. Once `true`,\nsubsequent `updateDataModel` envelopes push new prop values but do\nNOT flip this back to `false`.",
         "optional": false
       },
       {
         "name": "type",
         "type": "string",
-        "description": "The component type key — e.g. `'Button'`, `'TextField'` — matched\nagainst catalog `views` entries.",
+        "description": "The component type — e.g. `'Button'`, `'TextField'` — matched\nagainst catalog `views` entries. Mirrors the wire `component` string.",
         "optional": false
       }
     ],
@@ -8690,7 +8678,7 @@
   {
     "name": "buildA2uiActionMessage",
     "kind": "function",
-    "description": "Builds an A2uiActionMessage from handler params and the current surface.\n The action.context is serialized as v1 DynamicValue-wrapped entries.\n Sets action.label when the source component is a Button with a Text\n child whose literalString is non-empty.",
+    "description": "Builds a v0.9 A2uiActionMessage from handler params and the current\n surface. The action.context is the resolved plain object the renderer\n produced from the component's `action.event.context`. Sets action.label\n when the source component is a Button with a Text child whose text is a\n non-empty bare literal.",
     "signature": "buildA2uiActionMessage(params: Record<string, unknown>, surface: A2uiSurface): A2uiActionMessage",
     "params": [
       {
@@ -8841,7 +8829,7 @@
   {
     "name": "createA2uiSurfaceStore",
     "kind": "function",
-    "description": "Create an A2uiSurfaceStore — the per-conversation store that buffers\nstreamed A2UI surface updates, tracks each surface's data model + lifecycle\nstate, and exposes them as signals for rendering. One store backs a chat\nthread's A2UI surfaces.",
+    "description": "Create an A2uiSurfaceStore — the per-conversation store that buffers\nstreamed A2UI v0.9 envelopes, tracks each surface's data model + lifecycle\nstate, and exposes them as signals for rendering. One store backs a chat\nthread's A2UI surfaces.\n\nA surface becomes visible once its `createSurface` envelope has arrived AND\na component with id `root` has been defined (the v0.9 progressive-rendering\nrule). Everything received earlier is buffered; afterwards, components merge\nincrementally by id and data-model updates apply immediately.",
     "signature": "createA2uiSurfaceStore(): A2uiSurfaceStore",
     "params": [],
     "returns": {
@@ -8911,7 +8899,7 @@
   {
     "name": "createPartialArgsBridge",
     "kind": "function",
-    "description": "Subscribes to LangGraph custom events of name 'a2ui-partial' and feeds\nthe surface store envelope-by-envelope as the parent LLM streams its\ntool_call.arguments JSON. Uses @cacheplane/partial-json to extract\nstructurally-complete envelope objects from the growing args string.\n\nSynthesis safety net: if the first complete surfaceUpdate arrives and\nno beginRendering has been extracted yet, the bridge synthesises one\ntargeted at the surfaceUpdate's first component (preferring id='root'\nif present). This makes the surface mount IMMEDIATELY after the first\nsurfaceUpdate parses — without waiting for the LLM to emit beginRendering\nat the end of its envelope list — so the render-element fallback gate\n(PR #252) actually fires while dataModelUpdates flow in.\n\nThe store's apply() already treats repeated beginRendering for the same\nsurfaceId as idempotent (just re-applies styles), so the LLM's eventual\nbeginRendering (if any) is a no-op rather than a conflict.",
+    "description": "Subscribes to LangGraph custom events of name 'a2ui-partial' and feeds\nthe surface store envelope-by-envelope as the parent LLM streams its\ntool_call.arguments JSON. Uses @cacheplane/partial-json to extract\nstructurally-complete envelope objects from the growing args string.\n\nSynthesis safety net: v0.9 requires a `createSurface` envelope before\nany `updateComponents`. If a complete `updateComponents` arrives for a\nsurface with no `createSurface` seen yet this turn, the bridge\nsynthesises one (basic catalog) so the surface can mount as soon as its\n`root` component is defined — the store gates rendering on\ncreateSurface + root, and fills the tree in progressively after that.\n\nThe store treats a later \"real\" createSurface for the same surface as an\nidempotent refresh, so LLMs that emit one out of order are harmless.",
     "signature": "createPartialArgsBridge(store: A2uiSurfaceStore): PartialArgsBridge",
     "params": [
       {

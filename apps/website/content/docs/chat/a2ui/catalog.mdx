@@ -1,6 +1,6 @@
 # Component Catalog
 
-The built-in A2UI catalog provides 18 Angular components covering display, layout, interactive controls, media, and advanced inputs. Pass `a2uiBasicCatalog()` to the `ChatComponent` `views` input to enable A2UI rendering, or instantiate it directly for custom setups.
+The built-in A2UI catalog provides 18 Angular components implementing the A2UI v0.9 basic catalog — display, layout, interactive controls, media, and advanced inputs. Pass `a2uiBasicCatalog()` to the `ChatComponent` `views` input to enable A2UI rendering, or instantiate it directly for custom setups.
 
 **Import:**
 
@@ -20,6 +20,8 @@ Returns a `ViewRegistry` mapping 18 A2UI type names to their Angular component i
 const catalog = a2uiBasicCatalog();
 ```
 
+On the wire, components are flat objects: `id`, a `component` string naming the catalog type, and props at the same level. Dynamic props are bare literals or `{ "path": "/pointer" }` data-model bindings.
+
 ## Display Components
 
 ### Text
@@ -33,9 +35,10 @@ Renders a span of text.
 | Prop | Type | Description |
 |------|------|-------------|
 | `text` | `string` | The text content to display |
+| `variant` | `'h1' \| 'h2' \| 'h3' \| 'h4' \| 'h5' \| 'caption' \| 'body'` | Base text style hint. Defaults to `body` |
 
 ```json
-{"id": "greeting", "component": {"Text": {"text": {"literalString": "Hello, world!"}}}}
+{"id": "greeting", "component": "Text", "text": "Hello, world!", "variant": "h2"}
 ```
 
 ### Image
@@ -49,11 +52,13 @@ Renders an `<img>` element.
 | Prop | Type | Description |
 |------|------|-------------|
 | `url` | `string` | Image source URL |
-| `alt` | `string` | Alt text for accessibility |
+| `description` | `string` | Accessibility text for the image |
+| `fit` | `'contain' \| 'cover' \| 'fill' \| 'none' \| 'scaleDown'` | How the image resizes to its container (CSS `object-fit`). Defaults to `fill` |
+| `variant` | `'icon' \| 'avatar' \| 'smallFeature' \| 'mediumFeature' \| 'largeFeature' \| 'header'` | Size/style hint. Defaults to `mediumFeature` |
 
 ### Icon
 
-Renders an icon glyph as a text span. The `name` prop is displayed directly — use an emoji or a Unicode symbol.
+Renders a [Material Symbols](https://fonts.google.com/icons) glyph by name — A2UI's canonical icon set. The v0.9 catalog names are camelCase (`accountCircle`, `shoppingCart`); the component maps them to the matching ligature. An inline `{ "svgPath": "..." }` object renders a raw SVG path instead.
 
 | A2UI type | Angular component | Selector |
 |-----------|-------------------|----------|
@@ -61,19 +66,25 @@ Renders an icon glyph as a text span. The `name` prop is displayed directly — 
 
 | Prop | Type | Description |
 |------|------|-------------|
-| `name` | `string` | Glyph to render (e.g., `"✓"`, `"⚠️"`) |
+| `name` | `string \| { svgPath: string }` | Material Symbols name (e.g. `"check"`, `"locationOn"`) or an inline SVG path |
+
+Host apps must load the Material Symbols Outlined stylesheet for glyphs to render — see the `@threadplane/chat` README.
 
 ### Divider
 
-Renders a horizontal rule. Has no props.
+Renders a horizontal or vertical rule.
 
 | A2UI type | Angular component | Selector |
 |-----------|-------------------|----------|
 | `Divider` | `A2uiDividerComponent` | `a2ui-divider` |
 
+| Prop | Type | Description |
+|------|------|-------------|
+| `axis` | `'horizontal' \| 'vertical'` | Orientation. Defaults to `horizontal` |
+
 ## Layout Components
 
-Layout components receive `childKeys` — an array of component IDs — and render each child via json-render's `RenderElementComponent`. They also receive the full `spec` so that child elements can be looked up by key.
+Layout components receive `childKeys` — an array of component IDs — and render each child via json-render's `RenderElementComponent`. They also receive the full `spec` so that child elements can be looked up by key. On the wire, the `children` prop is a plain array of ids (or a `{ path, componentId }` template).
 
 <Callout type="info" title="Six layout components total">
 Row, Column, Card, and List are below. Two more layout components — [Tabs](#tabs) and [Modal](#modal) — live further down (after the Interactive section) because they also expose interactive state. All six share the same `childKeys` + `spec` rendering model.
@@ -89,7 +100,9 @@ Arranges children horizontally with a flex row layout.
 
 | Prop | Type | Description |
 |------|------|-------------|
-| `childKeys` | `string[]` | Ordered list of child component IDs |
+| `childKeys` | `string[]` | Ordered list of child component IDs (from the wire `children` array) |
+| `justify` | `'start' \| 'center' \| 'end' \| 'spaceAround' \| 'spaceBetween' \| 'spaceEvenly' \| 'stretch'` | Main-axis arrangement. Defaults to `start` |
+| `align` | `'start' \| 'center' \| 'end' \| 'stretch'` | Cross-axis alignment. Defaults to `stretch` |
 | `spec` | `Spec` | Injected automatically by the render engine |
 
 ### Column
@@ -103,11 +116,13 @@ Arranges children vertically with a flex column layout.
 | Prop | Type | Description |
 |------|------|-------------|
 | `childKeys` | `string[]` | Ordered list of child component IDs |
+| `justify` | `'start' \| 'center' \| 'end' \| 'spaceAround' \| 'spaceBetween' \| 'spaceEvenly' \| 'stretch'` | Main-axis arrangement. Defaults to `start` |
+| `align` | `'start' \| 'center' \| 'end' \| 'stretch'` | Cross-axis alignment. Defaults to `stretch` |
 | `spec` | `Spec` | Injected automatically by the render engine |
 
 ### Card
 
-Renders children inside a rounded bordered card container.
+Renders content inside a rounded bordered card container. On the wire, `Card` takes a single `child` id; wrap multiple elements in a `Column` or `Row` first.
 
 | A2UI type | Angular component | Selector |
 |-----------|-------------------|----------|
@@ -115,12 +130,12 @@ Renders children inside a rounded bordered card container.
 
 | Prop | Type | Description |
 |------|------|-------------|
-| `childKeys` | `string[]` | Ordered list of child component IDs |
+| `childKeys` | `string[]` | Child component IDs (the wire `child` id, normalized to an array) |
 | `spec` | `Spec` | Injected automatically by the render engine |
 
 ### List
 
-Renders children in a scrollable vertical list (max height 24rem).
+Renders children in a scrollable list.
 
 | A2UI type | Angular component | Selector |
 |-----------|-------------------|----------|
@@ -129,22 +144,24 @@ Renders children in a scrollable vertical list (max height 24rem).
 | Prop | Type | Description |
 |------|------|-------------|
 | `childKeys` | `string[]` | Ordered list of child component IDs |
+| `direction` | `'vertical' \| 'horizontal'` | Layout direction. Defaults to `vertical` |
+| `align` | `'start' \| 'center' \| 'end' \| 'stretch'` | Cross-axis alignment. Defaults to `stretch` |
 | `spec` | `Spec` | Injected automatically by the render engine |
 
 <Callout type="info" title="Template children">
-For data-driven lists, use the `A2uiChildTemplate` form instead of static `childKeys`. Set `children` to `{"template": {"componentId": "item-template", "dataBinding": "/items"}}` and the surface component will expand the template once per array item. See the [Surface Component](/docs/chat/a2ui/surface-component) page for details.
+For data-driven lists, use the template form instead of a static id array. Set `children` to `{"path": "/items", "componentId": "item-template"}` and the surface component will expand the template once per array item, resolving relative paths per item. See the [Surface Component](/docs/chat/a2ui/surface-component) page for details.
 </Callout>
 
 ## Interactive Components
 
 Interactive components support **two-way data binding** and **button actions**. They receive two special injected props:
 
-- `_bindings` — a `Record<string, string>` auto-populated by `surfaceToSpec()` from path references in the component definition. Maps prop names to JSON Pointer paths. When the user changes a bound value, the component emits an `a2ui:datamodel:` event. Agents do **not** write `_bindings` directly — they use path references (e.g., `{"path": "/name"}`) and the render pipeline extracts bindings automatically.
+- `_bindings` — a `Record<string, string>` auto-populated by the surface-to-spec conversion from `{ "path": ... }` references in the component definition. Maps prop names to JSON Pointer paths. When the user changes a bound value, the component writes it back through the render state store. Agents do **not** write `_bindings` directly — they use path references (e.g., `{"path": "/name"}`) and the render pipeline extracts bindings automatically.
 - `emit` — injected by the render engine; components call it to dispatch events back to the chat.
 
 ### Button
 
-Renders a button that dispatches an action when clicked.
+Renders a button that dispatches an action when clicked. On the wire, a Button has no text prop — its label is a `child` Text component referenced by id.
 
 | A2UI type | Angular component | Selector |
 |-----------|-------------------|----------|
@@ -152,37 +169,37 @@ Renders a button that dispatches an action when clicked.
 
 | Prop | Type | Description |
 |------|------|-------------|
-| `childKeys` | `string[]` | Child component IDs whose rendered output is the button's content (e.g., a `Text` label) |
-| `primary` | `boolean` | Renders the primary visual style. Defaults to `true` |
+| `childKeys` | `string[]` | Child component IDs whose rendered output is the button's content (the wire `child` id, normalized to an array) |
+| `variant` | `'default' \| 'primary' \| 'borderless'` | Visual style hint. Defaults to `default` |
 | `disabled` | `boolean` | Disables the button when `true` |
-| `action` | `A2uiAction` | Agent-bound action to emit on click |
-| `validationResult` | `A2uiValidationResult` | Pre-computed validation result. The button is disabled if `valid` is `false` |
+| `spec` | `Spec` | Injected automatically by the render engine |
 | `emit` | injected | Event emitter provided by the render engine |
 
-<Callout type="info" title="child vs childKeys">
-The Angular `A2uiButtonComponent` input is `childKeys` (an array) — that's the resolved shape your component code sees. On the A2UI wire, a Button definition may use the singular `child` field (e.g. `"child": "submit_label"`, as shown in the [overview](/docs/chat/a2ui/overview)); the surface pipeline normalizes that singular `child` into the `childKeys` array before the component renders. Author surfaces with whichever the agent emits; both resolve to `childKeys` here.
-</Callout>
-
-**Action types:**
+**Action wiring:** the wire `action` prop is protocol structure, not a component input. The surface pipeline converts an `event` action into a render `click` binding on the element:
 
 ```json
-// Emit a named action with resolved context (sent back to the agent as v1 action)
 {
+  "id": "submit",
+  "component": "Button",
+  "child": "submit_label",
+  "variant": "primary",
   "action": {
-    "name": "submit",
-    "context": [
-      { "key": "email", "value": { "path": "/email" } },
-      { "key": "formId", "value": { "literalString": "contact" } }
-    ]
+    "event": {
+      "name": "submit",
+      "context": {
+        "email": { "path": "/email" },
+        "formId": "contact"
+      }
+    }
   }
 }
 ```
 
-Validation is data-driven. Send a resolved `validationResult` on the component when the backend has already evaluated validity.
+Context values can be path references (resolved at click time) or bare literals. The resulting `A2uiActionMessage` is emitted on `<a2ui-surface>`'s `(action)` output.
 
 ### TextField
 
-A single-line text input with optional label and placeholder.
+A text input with optional label, supporting single-line, multi-line, numeric, and obscured variants.
 
 | A2UI type | Angular component | Selector |
 |-----------|-------------------|----------|
@@ -191,25 +208,23 @@ A single-line text input with optional label and placeholder.
 | Prop | Type | Description |
 |------|------|-------------|
 | `label` | `string` | Input label |
-| `text` | `string` | Current value (resolved from path reference). `value` is a read-only computed alias |
+| `value` | `string` | Current value (resolved from a path reference) |
+| `variant` | `'shortText' \| 'longText' \| 'number' \| 'obscured'` | Input type — `longText` renders a textarea, `number` a numeric input, `obscured` a password input. Defaults to `shortText` |
 | `placeholder` | `string` | Placeholder text |
-| `validationResult` | `A2uiValidationResult` | Validation state — shows errors below input when invalid |
-| `_bindings` | `Record<string, string>` | Auto-populated by `surfaceToSpec()` from path references |
+| `validationRegexp` | `string` | Client-side validation pattern |
+| `_bindings` | `Record<string, string>` | Auto-populated from path references |
 | `emit` | injected | Event emitter provided by the render engine |
 
 ```json
 {
   "id": "name-field",
-  "component": {
-    "TextField": {
-      "label": {"literalString": "Your name"},
-      "text": {"path": "/name"}
-    }
-  }
+  "component": "TextField",
+  "label": "Your name",
+  "value": {"path": "/name"}
 }
 ```
 
-The path reference `{"path": "/name"}` is resolved by `surfaceToSpec()`, which also populates `_bindings` automatically.
+The path reference `{"path": "/name"}` becomes a live state binding, and `_bindings` is populated automatically.
 
 ### CheckBox
 
@@ -222,28 +237,42 @@ A labeled checkbox with two-way binding for its checked state.
 | Prop | Type | Description |
 |------|------|-------------|
 | `label` | `string` | Checkbox label |
-| `value` | `boolean` | Current checked state (resolved from path reference) |
-| `checked` | `boolean` | Deprecated back-compat alias for `value` |
-| `validationResult` | `A2uiValidationResult` | Validation state — shows errors below checkbox when invalid |
-| `_bindings` | `Record<string, string>` | Auto-populated by `surfaceToSpec()` from path references |
+| `value` | `boolean` | Current checked state (resolved from a path reference) |
+| `_bindings` | `Record<string, string>` | Auto-populated from path references |
 | `emit` | injected | Event emitter provided by the render engine |
 
-### MultipleChoice
+### ChoicePicker
 
-A single-select dropdown or multi-select checkbox list. Set `maxAllowedSelections` to `1` or less for a dropdown; set it above `1` for a checkbox list.
+Selects one or more options from a list. Replaces the pre-v0.9 `MultipleChoice` component.
 
 | A2UI type | Angular component | Selector |
 |-----------|-------------------|----------|
-| `MultipleChoice` | `A2uiMultipleChoiceComponent` | `a2ui-multiple-choice` |
+| `ChoicePicker` | `A2uiChoicePickerComponent` | `a2ui-choice-picker` |
 
 | Prop | Type | Description |
 |------|------|-------------|
 | `label` | `string` | Field label |
 | `options` | `{ label: string; value: string }[]` | Resolved option labels and values |
-| `selections` | `string \| string[]` | Current selected value or values (resolved from path reference) |
-| `maxAllowedSelections` | `number` | `1` or less renders a dropdown; higher values render checkboxes |
-| `_bindings` | `Record<string, string>` | Auto-populated by `surfaceToSpec()` from path references |
+| `value` | `string \| string[]` | Current selection — bind to a string array in the data model |
+| `variant` | `'mutuallyExclusive' \| 'multipleSelection'` | Single-select (radio) vs multi-select. Defaults to `mutuallyExclusive` |
+| `displayStyle` | `'checkbox' \| 'chips'` | Visual style. Defaults to `checkbox` |
+| `filterable` | `boolean` | Shows a client-side option filter input when `true` |
+| `_bindings` | `Record<string, string>` | Auto-populated from path references |
 | `emit` | injected | Event emitter provided by the render engine |
+
+```json
+{
+  "id": "origin",
+  "component": "ChoicePicker",
+  "label": "Origin",
+  "options": [
+    {"label": "Los Angeles", "value": "LAX"},
+    {"label": "New York", "value": "JFK"}
+  ],
+  "value": {"path": "/origin"},
+  "variant": "mutuallyExclusive"
+}
+```
 
 ### DateTimeInput
 
@@ -256,13 +285,12 @@ A date, time, or datetime input with two-way binding.
 | Prop | Type | Description |
 |------|------|-------------|
 | `label` | `string` | Input label |
-| `value` | `string` | Current value (resolved from path reference) |
+| `value` | `string` | Current ISO 8601 value (resolved from a path reference) |
 | `enableDate` | `boolean` | Include the date portion. Defaults to `true` |
 | `enableTime` | `boolean` | Include the time portion. Defaults to `false` |
-| `min` | `string` | Minimum allowed value |
-| `max` | `string` | Maximum allowed value |
-| `validationResult` | `A2uiValidationResult` | Validation state — shows errors below input when invalid |
-| `_bindings` | `Record<string, string>` | Auto-populated by `surfaceToSpec()` from path references |
+| `min` | `string` | ISO 8601 lower bound (native `min`) |
+| `max` | `string` | ISO 8601 upper bound (native `max`) |
+| `_bindings` | `Record<string, string>` | Auto-populated from path references |
 | `emit` | injected | Event emitter provided by the render engine |
 
 The HTML input type (`date`, `time`, or `datetime-local`) is derived internally from `enableDate` and `enableTime`.
@@ -270,14 +298,11 @@ The HTML input type (`date`, `time`, or `datetime-local`) is derived internally 
 ```json
 {
   "id": "date-field",
-  "component": {
-    "DateTimeInput": {
-      "label": {"literalString": "Appointment date"},
-      "value": {"path": "/appointmentDate"},
-      "enableDate": true,
-      "enableTime": false
-    }
-  }
+  "component": "DateTimeInput",
+  "label": "Appointment date",
+  "value": {"path": "/appointmentDate"},
+  "enableDate": true,
+  "enableTime": false
 }
 ```
 
@@ -292,26 +317,20 @@ A range slider input with two-way binding.
 | Prop | Type | Description |
 |------|------|-------------|
 | `label` | `string` | Slider label |
-| `value` | `number` | Current value (bind via `_bindings`) |
-| `minValue` | `number` | Minimum value |
-| `maxValue` | `number` | Maximum value |
-| `step` | `number` | Step increment |
-| `validationResult` | `A2uiValidationResult` | Validation state — shows errors below slider when invalid |
-| `_bindings` | `Record<string, string>` | Auto-populated by `surfaceToSpec()` from path references |
+| `value` | `number` | Current value (bind via a path reference) |
+| `min` | `number` | Minimum value. Defaults to `0` |
+| `max` | `number` | Maximum value |
+| `_bindings` | `Record<string, string>` | Auto-populated from path references |
 | `emit` | injected | Event emitter provided by the render engine |
 
 ```json
 {
   "id": "volume",
-  "component": {
-    "Slider": {
-      "label": {"literalString": "Volume"},
-      "value": {"path": "/volume"},
-      "minValue": 0,
-      "maxValue": 100,
-      "step": 1
-    }
-  }
+  "component": "Slider",
+  "label": "Volume",
+  "value": {"path": "/volume"},
+  "min": 0,
+  "max": 100
 }
 ```
 
@@ -319,7 +338,7 @@ A range slider input with two-way binding.
 
 ### Tabs
 
-A tabbed container that shows one child panel at a time based on the selected tab index.
+A tabbed container that shows one child panel at a time. On the wire, `tabs` is an array of `{ title, child }` pairs; the surface pipeline resolves the titles into a `tabTitles` string array and the child ids into `childKeys`.
 
 | A2UI type | Angular component | Selector |
 |-----------|-------------------|----------|
@@ -327,30 +346,25 @@ A tabbed container that shows one child panel at a time based on the selected ta
 
 | Prop | Type | Description |
 |------|------|-------------|
-| `tabs` | `{label: string, childKeys: string[]}[]` | Tab definitions with labels and child component IDs |
-| `selected` | `number` | Currently selected tab index. Defaults to `0` |
-| `_bindings` | `Record<string, string>` | Auto-populated by `surfaceToSpec()` from path references |
+| `tabTitles` | `string[]` | Resolved tab titles, in order |
+| `childKeys` | `string[]` | One child component ID per tab |
 | `spec` | `Spec` | Injected automatically by the render engine |
 | `emit` | injected | Event emitter provided by the render engine |
 
 ```json
 {
   "id": "info-tabs",
-  "component": {
-    "Tabs": {
-      "tabs": [
-        {"label": "Overview", "childKeys": ["overview-content"]},
-        {"label": "Details", "childKeys": ["detail-list"]}
-      ],
-      "selected": {"path": "/activeTab"}
-    }
-  }
+  "component": "Tabs",
+  "tabs": [
+    {"title": "Overview", "child": "overview-content"},
+    {"title": "Details", "child": "detail-list"}
+  ]
 }
 ```
 
 ### Modal
 
-A dialog overlay that renders child content when open. Supports an optional title and dismissible close button.
+A dialog overlay. On the wire, `Modal` names a `trigger` component (rendered inline; clicking it opens the modal) and a `content` component (rendered inside the overlay). Clicking the backdrop dismisses it.
 
 | A2UI type | Angular component | Selector |
 |-----------|-------------------|----------|
@@ -358,25 +372,16 @@ A dialog overlay that renders child content when open. Supports an optional titl
 
 | Prop | Type | Description |
 |------|------|-------------|
-| `title` | `string` | Optional modal heading |
-| `open` | `boolean` | Whether the modal is visible |
-| `childKeys` | `string[]` | Child component IDs rendered inside the modal body |
-| `dismissible` | `boolean` | Shows a close button when `true`. Defaults to `true` |
-| `_bindings` | `Record<string, string>` | Bind `open` to a data model path |
+| `childKeys` | `string[]` | The wire `trigger` and `content` ids, in that order |
 | `spec` | `Spec` | Injected automatically by the render engine |
 | `emit` | injected | Event emitter provided by the render engine |
 
 ```json
 {
   "id": "confirm-dialog",
-  "component": {
-    "Modal": {
-      "title": {"literalString": "Confirm Action"},
-      "open": {"path": "/showConfirm"},
-      "childKeys": ["confirm-message", "confirm-buttons"],
-      "dismissible": true
-    }
-  }
+  "component": "Modal",
+  "trigger": "open-button",
+  "content": "confirm-content"
 }
 ```
 
@@ -384,7 +389,7 @@ A dialog overlay that renders child content when open. Supports an optional titl
 
 ### Video
 
-Renders an HTML5 `<video>` element.
+Renders an HTML5 `<video>` element with native controls.
 
 | A2UI type | Angular component | Selector |
 |-----------|-------------------|----------|
@@ -393,26 +398,18 @@ Renders an HTML5 `<video>` element.
 | Prop | Type | Description |
 |------|------|-------------|
 | `url` | `string` | **Required.** Video source URL |
-| `poster` | `string` | Poster image URL shown before playback |
-| `autoplay` | `boolean` | Start playback automatically. Defaults to `false` |
-| `controls` | `boolean` | Show native playback controls. Defaults to `true` |
 
 ```json
 {
   "id": "intro-video",
-  "component": {
-    "Video": {
-      "url": {"literalString": "https://example.com/intro.mp4"},
-      "poster": {"literalString": "https://example.com/poster.jpg"},
-      "controls": true
-    }
-  }
+  "component": "Video",
+  "url": "https://example.com/intro.mp4"
 }
 ```
 
 ### AudioPlayer
 
-Renders an HTML5 `<audio>` element.
+Renders an HTML5 `<audio>` element with native controls.
 
 | A2UI type | Angular component | Selector |
 |-----------|-------------------|----------|
@@ -421,35 +418,20 @@ Renders an HTML5 `<audio>` element.
 | Prop | Type | Description |
 |------|------|-------------|
 | `url` | `string` | **Required.** Audio source URL |
-| `autoplay` | `boolean` | Start playback automatically. Defaults to `false` |
-| `controls` | `boolean` | Show native playback controls. Defaults to `true` |
+| `description` | `string` | A description of the audio, such as a title or summary |
 
 ```json
 {
   "id": "podcast",
-  "component": {
-    "AudioPlayer": {
-      "url": {"literalString": "https://example.com/episode.mp3"},
-      "controls": true
-    }
-  }
+  "component": "AudioPlayer",
+  "url": "https://example.com/episode.mp3",
+  "description": "Episode 12"
 }
 ```
 
-## Built-in Functions
+## Client-Side Functions
 
-Props that use `A2uiFunctionCall` can reference these built-in functions:
-
-| Function | Args | Description |
-|----------|------|-------------|
-| `formatNumber` | `value`, `precision`, `grouping` | Formats a number with optional decimal places and thousands grouping |
-| `formatCurrency` | `value`, `locale`, `currency` | Formats a number as a currency string (default: `en-US` / `USD`) |
-| `formatDate` | `value`, `locale` | Formats an ISO date string using `toLocaleDateString` |
-| `pluralize` | `count`, `singular`, `plural` | Returns singular or plural form based on count |
-| `openUrl` | `url` | Opens a URL in a new tab (also usable as a button action) |
-| `and` | any named args | Returns `true` if all arg values are truthy |
-| `or` | any named args | Returns `true` if any arg value is truthy |
-| `not` | `value` | Negates a boolean value |
+The v0.9 basic catalog defines typed client-side functions that can appear in `{ "call": ... }` dynamic values and `checks` rules: validation (`required`, `regex`, `length`, `numeric`, `email`), formatting (`formatString`, `formatNumber`, `formatCurrency`, `formatDate`, `pluralize`), logic (`and`, `or`, `not`), and `openUrl`. Function values are part of the wire format today, but **execution ships in an upcoming release** — `resolveDynamic` currently returns `undefined` for them. The exception is `openUrl` used as a local action, which the surface component's built-in `a2ui:localAction` fallback already handles.
 
 ## Component Summary
 
@@ -466,7 +448,7 @@ Props that use `A2uiFunctionCall` can reference these built-in functions:
 | `Button` | `A2uiButtonComponent` | Interactive |
 | `TextField` | `A2uiTextFieldComponent` | Interactive |
 | `CheckBox` | `A2uiCheckBoxComponent` | Interactive |
-| `MultipleChoice` | `A2uiMultipleChoiceComponent` | Interactive |
+| `ChoicePicker` | `A2uiChoicePickerComponent` | Interactive |
 | `Tabs` | `A2uiTabsComponent` | Layout |
 | `Modal` | `A2uiModalComponent` | Layout |
 | `Video` | `A2uiVideoComponent` | Media |

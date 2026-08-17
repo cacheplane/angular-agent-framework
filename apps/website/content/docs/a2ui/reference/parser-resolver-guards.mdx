@@ -20,10 +20,11 @@ Important behavior from source:
 - CRLF works because each line is trimmed;
 - empty lines are ignored;
 - malformed lines are skipped silently;
-- unknown top-level envelopes are ignored;
+- unknown top-level envelopes are ignored (forward compatibility with future protocol versions, e.g. v1.0 message kinds);
+- a missing `version` field defaults to `'v0.9'`; a present `version` is preserved;
 - multiple messages can be returned from one chunk.
 
-The parser checks only for the known envelope key and a non-null object value. It does not validate each nested field.
+The recognized envelope keys are `createSurface`, `updateComponents`, `updateDataModel`, and `deleteSurface`. The parser checks only for a known envelope key and a non-null object value. It does not validate each nested field.
 
 ## resolveDynamic()
 
@@ -36,23 +37,21 @@ const model = {
 };
 
 resolveDynamic({ path: '/customer/name' }, model); // "Ada"
-resolveDynamic({ literalNumber: 2 }, model); // 2
+resolveDynamic(2, model); // 2
 ```
 
 `resolveDynamic(value, model, scope?)` handles:
 
 | Input shape | Result |
 |-------------|--------|
-| `{ literalString }` | the wrapped string |
-| `{ literalNumber }` | the wrapped number |
-| `{ literalBoolean }` | the wrapped boolean |
-| `{ literalArray }` | the wrapped array |
+| bare literal (string, number, boolean) | returned as-is |
 | `{ path }` | the value at that model path |
+| `{ call }` | `undefined` — client-side function execution ships in an upcoming release |
 | arrays | recursively resolved array values |
 | `null` or `undefined` | returned as-is |
-| unrecognized shapes | returned as-is |
+| unrecognized plain objects | returned as-is |
 
-Resolution order is fixed: literal wrappers are checked and unwrapped **first**, then a `{ path }` reference, then plain passthrough. So a value carrying both a literal key and a `path` key resolves as the literal — the `path` is never reached.
+Resolution order is fixed: `{ call }` function calls are checked **before** `{ path }` references (so a call's `args` never masquerade as a binding), then path refs resolve, then everything else passes through as a bare literal.
 
 Absolute paths start with `/`.
 
@@ -89,7 +88,8 @@ Current behavior is intentionally small:
 - empty pointer and `/` point at the root;
 - missing paths read as `undefined`;
 - `setByPointer()` returns a cloned object path rather than mutating the original root;
-- `deleteByPointer()` returns the original model when the parent path does not exist.
+- `deleteByPointer()` returns the original model when the parent path does not exist;
+- `deleteByPointer()` on an **array index** sets it to `undefined` and preserves the array's length (the v0.9 array-delete rule).
 
 These helpers do not implement full RFC 6901 escaping semantics. Avoid keys that require `~0` or `~1` escaping unless you normalize them before they enter A2UI state.
 
@@ -98,13 +98,11 @@ These helpers do not implement full RFC 6901 escaping semantics. Avoid keys that
 The public guards are:
 
 ```ts
-isLiteralString(value)
-isLiteralNumber(value)
-isLiteralBoolean(value)
-isPathRef(value)
+isPathRef(value)      // narrows to { path: string }
+isFunctionCall(value) // narrows to { call: string; args?: Record<string, unknown> }
 ```
 
-They are shape checks for dynamic wrapper objects. The literal guards check for the presence of the wrapper key. `isPathRef()` also verifies that `path` is a string.
+`isPathRef()` verifies the value is an object with a string `path`; `isFunctionCall()` verifies an object with a string `call`. Bare literals need no guard in v0.9 — a value that matches neither guard is a literal (or an unrecognized object that passes through unchanged).
 
 Use them when you need to branch on protocol values without importing internal renderer code.
 

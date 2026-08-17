@@ -10,10 +10,11 @@ The public entry point exports four groups of tools:
 
 | Area | Exports |
 |------|---------|
-| Wire types | `A2uiMessage`, `A2uiComponent`, component prop interfaces, data-model update types, action message types |
+| Wire types | `A2uiMessage`, `A2uiComponent`, component prop interfaces, envelope types, action message types |
+| Protocol constants | `A2UI_WIRE_VERSION` (`'v0.9'`), `A2UI_MIME_TYPE` (`'application/a2ui+json'`), `A2UI_BASIC_CATALOG_ID` |
 | Stream parsing | `createA2uiMessageParser()` |
 | Data access | `getByPointer()`, `setByPointer()`, `deleteByPointer()` |
-| Dynamic values | `resolveDynamic()`, `A2uiScope`, literal/path guards |
+| Dynamic values | `resolveDynamic()`, `A2uiScope`, `isPathRef` / `isFunctionCall` guards |
 
 Use this package when you are building an adapter, validating an agent stream, testing A2UI payloads, or integrating a custom renderer with the same protocol surface that `@threadplane/chat` uses.
 
@@ -22,13 +23,13 @@ Use this package when you are building an adapter, validating an agent stream, t
 The parser expects newline-delimited JSON. Each line is checked for one known envelope key:
 
 ```text
-surfaceUpdate
-dataModelUpdate
-beginRendering
+createSurface
+updateComponents
+updateDataModel
 deleteSurface
 ```
 
-When a line parses and has one of those envelope keys, it is returned as an `A2uiMessage`. Unknown envelopes are ignored. Malformed lines are skipped. Incomplete JSON waits in the internal buffer until a newline arrives.
+When a line parses and has one of those envelope keys, it is returned as an `A2uiMessage`. Every envelope carries `"version": "v0.9"`; a missing `version` defaults to `v0.9`. Unknown envelope keys — including future v1.0 messages — are ignored. Malformed lines are skipped. Incomplete JSON waits in the internal buffer until a newline arrives.
 
 ```ts
 import { createA2uiMessageParser } from '@threadplane/a2ui';
@@ -36,7 +37,7 @@ import { createA2uiMessageParser } from '@threadplane/a2ui';
 const parser = createA2uiMessageParser();
 
 const messages = parser.push(
-  '{"beginRendering":{"surfaceId":"checkout","root":"root"}}\n',
+  '{"version":"v0.9","createSurface":{"surfaceId":"checkout","catalogId":"https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"}}\n',
 );
 ```
 
@@ -59,9 +60,10 @@ That separation matters when debugging:
 The parser and resolver are deliberately conservative:
 
 - malformed JSONL lines are skipped;
-- unknown envelope keys are ignored;
+- unknown envelope keys are ignored (forward compatibility with future protocol versions);
 - missing data-model paths resolve to `undefined`;
-- unrecognized dynamic-value shapes pass through unchanged.
+- unrecognized dynamic-value shapes pass through unchanged;
+- `{ call: ... }` function-call values resolve to `undefined` until client-side function execution ships.
 
 This makes the protocol layer suitable for streaming, but it is not a full schema validator. If you accept untrusted agent output, validate the payload at your boundary before wiring it to privileged handlers.
 
