@@ -18,4 +18,6 @@ export { createA2uiMessageParser } from './lib/parser.js';
 export type { A2uiMessageParser } from './lib/parser.js';
 export { resolveDynamic } from './lib/resolve.js';
 export type { A2uiScope } from './lib/resolve.js';
+export { createA2uiFunctionRegistry } from './lib/functions.js';
+export type { A2uiFunctionRegistry, A2uiFunctionImpl, A2uiFunctionContext } from './lib/functions.js';
 export { isPathRef, isFunctionCall } from './lib/guards.js';
