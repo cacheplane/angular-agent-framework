@@ -13,8 +13,7 @@ import type { Spec } from '@json-render/core';
       <audio
         class="a2ui-audio"
         [src]="url()"
-        [autoplay]="autoPlay()"
-        [controls]="controls()"
+        controls
       ></audio>
     </div>
   `,
@@ -36,11 +35,8 @@ import type { Spec } from '@json-render/core';
 })
 export class A2uiAudioPlayerComponent {
   readonly url = input<string>('');
-  /** v1 canonical prop: short description / title rendered above the player. */
+  /** v0.9 prop: short description / title rendered above the player. */
   readonly description = input<string>('');
-  /** v1 prop name: autoPlay (camelCase). */
-  readonly autoPlay = input<boolean>(false);
-  readonly controls = input<boolean>(true);
   // Framework inputs required by the render harness.
   readonly bindings = input<Record<string, string>>({});
   readonly emit = input<(event: string) => void>(() => { /* noop */ });

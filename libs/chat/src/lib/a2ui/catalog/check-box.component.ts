@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import type { Spec } from '@json-render/core';
 import { injectRenderHost } from '@threadplane/render';
 import { emitBinding } from './emit-binding';
@@ -10,7 +10,7 @@ import { emitBinding } from './emit-binding';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <label class="a2ui-cb">
-      <input type="checkbox" [checked]="effectiveValue()" (change)="onChange($event)" class="a2ui-cb__input" />
+      <input type="checkbox" [checked]="value()" (change)="onChange($event)" class="a2ui-cb__input" />
       {{ label() }}
     </label>
   `,
@@ -35,10 +35,8 @@ export class A2uiCheckBoxComponent {
   private readonly host = injectRenderHost();
 
   readonly label = input<string>('');
-  /** v1 canonical prop: boolean checked state. */
-  readonly value = input<boolean | undefined>(undefined);
-  /** Pre-v1 alias retained for back-compat. */
-  readonly checked = input<boolean>(false);
+  /** v0.9 prop: boolean checked state. */
+  readonly value = input<boolean>(false);
   readonly _bindings = input<Record<string, string>>({});
   // Framework inputs required by the render harness.
   readonly bindings = input<Record<string, string>>({});
@@ -46,17 +44,8 @@ export class A2uiCheckBoxComponent {
   readonly childKeys = input<string[]>([]);
   readonly spec = input<Spec | undefined>(undefined);
 
-  protected readonly effectiveValue = computed(() => this.value() ?? this.checked());
-
   onChange(event: Event): void {
     const val = (event.target as HTMLInputElement).checked;
-    // Emit on whichever binding the surface declared. v1 surfaces use
-    // `value`; pre-v1 used `checked`.
-    const bound = this._bindings();
-    if (bound['value']) {
-      emitBinding(this.host, bound, 'value', val);
-    } else {
-      emitBinding(this.host, bound, 'checked', val);
-    }
+    emitBinding(this.host, this._bindings(), 'value', val);
   }
 }

@@ -34,8 +34,8 @@ export class A2uiListComponent {
   readonly childKeys = input<string[]>([]);
   readonly spec = input.required<Spec>();
   readonly direction = input<'vertical' | 'horizontal'>('vertical');
-  /** v1 canonical prop: cross-axis alignment. */
-  readonly alignment = input<'start' | 'center' | 'end' | 'stretch' | undefined>(undefined);
+  /** v0.9 prop: cross-axis alignment (default 'stretch'). */
+  readonly align = input<'start' | 'center' | 'end' | 'stretch'>('stretch');
   // Framework inputs required by the render harness.
   readonly bindings = input<Record<string, string>>({});
   readonly emit = input<(event: string) => void>(() => { /* noop */ });
@@ -47,9 +47,8 @@ export class A2uiListComponent {
       : 'a2ui-list--vertical';
   });
 
-  protected readonly alignmentCss = computed<string | null>(() => {
-    const a = this.alignment();
-    if (!a) return null;
+  protected readonly alignmentCss = computed<string>(() => {
+    const a = this.align();
     return a === 'start' ? 'flex-start'
          : a === 'end' ? 'flex-end'
          : a; // center / stretch are valid CSS values as-is

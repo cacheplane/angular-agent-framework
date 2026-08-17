@@ -1,22 +1,19 @@
 // SPDX-License-Identifier: MIT
-import { Component, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import type { Spec } from '@json-render/core';
 
-/** v1 fit values mapped 1:1 to CSS object-fit. */
-type ImageFit = 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
+/** v0.9 fit values; 'scaleDown' maps to CSS object-fit: scale-down. */
+type ImageFit = 'contain' | 'cover' | 'fill' | 'none' | 'scaleDown';
 
-/** v1 usageHint maps to a sizing preset. The component renders fluid by
- * default; usageHint sets a max-width / aspect-ratio to match common
- * intents. */
-type ImageUsageHint = 'icon' | 'avatar' | 'smallFeature' | 'mediumFeature' | 'largeFeature' | 'header';
+/** v0.9 variant maps to a sizing preset class. */
+type ImageVariant = 'icon' | 'avatar' | 'smallFeature' | 'mediumFeature' | 'largeFeature' | 'header';
 
-const USAGE_HINT_STYLE: Record<ImageUsageHint, { maxWidth: string; aspectRatio?: string; borderRadius?: string }> = {
-  icon:          { maxWidth: '24px', aspectRatio: '1 / 1' },
-  avatar:        { maxWidth: '48px', aspectRatio: '1 / 1', borderRadius: '50%' },
-  smallFeature:  { maxWidth: '160px' },
-  mediumFeature: { maxWidth: '320px' },
-  largeFeature:  { maxWidth: '480px' },
-  header:        { maxWidth: '100%', aspectRatio: '16 / 5' },
+const FIT_MAP: Record<ImageFit, string> = {
+  contain: 'contain',
+  cover: 'cover',
+  fill: 'fill',
+  none: 'none',
+  scaleDown: 'scale-down',
 };
 
 @Component({
@@ -24,15 +21,10 @@ const USAGE_HINT_STYLE: Record<ImageUsageHint, { maxWidth: string; aspectRatio?:
   standalone: true,
   template: `
     <img
-      class="a2ui-img"
+      [class]="cssClass()"
       [src]="url()"
-      [alt]="alt()"
-      [style.width]="explicitWidth()"
-      [style.height]="explicitHeight()"
-      [style.object-fit]="fit()"
-      [style.max-width]="hintStyle()?.maxWidth"
-      [style.aspect-ratio]="hintStyle()?.aspectRatio || null"
-      [style.border-radius]="hintStyle()?.borderRadius || null"
+      [alt]="description()"
+      [style.object-fit]="objectFit()"
     />
   `,
   styles: [`
@@ -41,17 +33,38 @@ const USAGE_HINT_STYLE: Record<ImageUsageHint, { maxWidth: string; aspectRatio?:
       max-width: 100%;
       border-radius: var(--a2ui-shape-extra-small);
     }
+    .a2ui-img--icon {
+      width: 24px;
+      height: 24px;
+    }
+    .a2ui-img--avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+    .a2ui-img--smallFeature {
+      width: 120px;
+    }
+    .a2ui-img--mediumFeature {
+      width: 240px;
+    }
+    .a2ui-img--largeFeature {
+      width: 400px;
+    }
+    .a2ui-img--header {
+      width: 100%;
+      aspect-ratio: 16 / 5;
+    }
   `],
 })
 export class A2uiImageComponent {
   readonly url = input<string>('');
-  readonly alt = input<string>('');
-  readonly width = input<number | null>(null);
-  readonly height = input<number | null>(null);
-  /** v1 prop: CSS object-fit equivalent. */
-  readonly fit = input<ImageFit | undefined>(undefined);
-  /** v1 prop: sizing preset. */
-  readonly usageHint = input<ImageUsageHint | undefined>(undefined);
+  /** v0.9 prop: alt text / accessible description. */
+  readonly description = input<string>('');
+  /** v0.9 prop: CSS object-fit equivalent ('scaleDown' → 'scale-down'). */
+  readonly fit = input<ImageFit>('fill');
+  /** v0.9 prop: sizing preset. */
+  readonly variant = input<ImageVariant>('mediumFeature');
   // Framework inputs required by the render harness.
   readonly bindings = input<Record<string, string>>({});
   readonly emit = input<(event: string) => void>(() => { /* noop */ });
@@ -59,14 +72,6 @@ export class A2uiImageComponent {
   readonly childKeys = input<string[]>([]);
   readonly spec = input<Spec | undefined>(undefined);
 
-  protected explicitWidth(): string | null {
-    return this.width() != null ? this.width() + 'px' : null;
-  }
-  protected explicitHeight(): string | null {
-    return this.height() != null ? this.height() + 'px' : null;
-  }
-  protected hintStyle(): { maxWidth: string; aspectRatio?: string; borderRadius?: string } | null {
-    const h = this.usageHint();
-    return h ? USAGE_HINT_STYLE[h] : null;
-  }
+  protected readonly objectFit = computed(() => FIT_MAP[this.fit()] ?? 'fill');
+  protected readonly cssClass = computed(() => `a2ui-img a2ui-img--${this.variant()}`);
 }

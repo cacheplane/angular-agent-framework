@@ -13,10 +13,10 @@ function makeHost(): { host: RenderHost; writes: Array<[string, unknown]> } {
   return { host, writes };
 }
 
-describe('A2uiSliderComponent — v1 protocol', () => {
+describe('A2uiSliderComponent — v0.9 protocol', () => {
   // NOTE: Angular signal-based inputs can't be tested via TestBed without the
-  // angular() vite plugin (NG0303). v1: min/max renamed to minValue/maxValue;
-  // validationResult was removed.
+  // angular() vite plugin (NG0303). v0.9: `min` (default 0) / `max` bound the
+  // range; `step` was removed; value writes back via the `value` binding.
 
   it('writes binding with numeric value from range input', () => {
     const { host, writes } = makeHost();

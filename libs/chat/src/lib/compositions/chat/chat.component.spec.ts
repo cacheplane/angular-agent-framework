@@ -499,12 +499,12 @@ describe('ChatComponent — partial-args bridge wiring', () => {
         name: 'a2ui-partial',
         data: {
           tool_call_id: 'tc-1',
-          args_so_far: '{"envelopes":[{"surfaceUpdate":{"surfaceId":"s","components":[{"id":"root","type":"text","props":{}}]}}]}',
+          args_so_far: '{"envelopes":[{"version":"v0.9","updateComponents":{"surfaceId":"s","components":[{"id":"root","component":"Text","text":"hi"}]}}]}',
         },
       }]);
       TestBed.tick();
 
-      // After effect flushes, surface is materialised via the synthesised beginRendering.
+      // After effect flushes, surface is materialised via the synthesised createSurface.
       const surface = store.surfaces().get('s');
       expect(surface).toBeTruthy();
       expect(surface!.components.has('root')).toBe(true);

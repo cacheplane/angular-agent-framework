@@ -17,6 +17,8 @@ import { emitBinding } from './emit-binding';
         [id]="_inputId"
         [type]="htmlInputType()"
         [value]="value()"
+        [attr.min]="min() || null"
+        [attr.max]="max() || null"
         class="a2ui-dti__input"
         (change)="onChange($event)"
       />
@@ -53,12 +55,16 @@ export class A2uiDateTimeInputComponent {
   private readonly host = injectRenderHost();
 
   readonly label = input<string>('');
-  /** v1 prop: value (resolved DynamicString). */
+  /** v0.9 prop: ISO 8601 value (resolved DynamicString). Still renders when absent. */
   readonly value = input<string>('');
-  /** v1 prop: enableDate — include date portion. */
+  /** v0.9 prop: enableDate — include date portion. */
   readonly enableDate = input<boolean>(true);
-  /** v1 prop: enableTime — include time portion. */
+  /** v0.9 prop: enableTime — include time portion. */
   readonly enableTime = input<boolean>(false);
+  /** v0.9 prop: ISO lower bound mapped to the native input's min. */
+  readonly min = input<string | undefined>(undefined);
+  /** v0.9 prop: ISO upper bound mapped to the native input's max. */
+  readonly max = input<string | undefined>(undefined);
   readonly _bindings = input<Record<string, string>>({});
   // Framework inputs required by the render harness.
   readonly bindings = input<Record<string, string>>({});

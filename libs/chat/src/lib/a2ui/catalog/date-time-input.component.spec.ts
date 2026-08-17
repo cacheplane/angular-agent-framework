@@ -13,10 +13,11 @@ function makeHost(): { host: RenderHost; writes: Array<[string, unknown]> } {
   return { host, writes };
 }
 
-describe('A2uiDateTimeInputComponent — v1 protocol', () => {
+describe('A2uiDateTimeInputComponent — v0.9 protocol', () => {
   // NOTE: Angular signal-based inputs can't be tested via TestBed without the
-  // angular() vite plugin (NG0303). v1: enableDate + enableTime booleans drive
-  // htmlInputType; validationResult was removed.
+  // angular() vite plugin (NG0303). v0.9: enableDate + enableTime booleans drive
+  // htmlInputType; optional `min`/`max` ISO strings map to the native input's
+  // min/max attributes (null when absent so the attribute is omitted).
 
   describe('htmlInputType logic', () => {
     const getType = (enableDate: boolean, enableTime: boolean): string => {
@@ -40,6 +41,15 @@ describe('A2uiDateTimeInputComponent — v1 protocol', () => {
     it('defaults to date when both are false', () => {
       expect(getType(false, false)).toBe('date');
     });
+  });
+
+  describe('min/max attribute logic', () => {
+    const attr = (v: string | undefined) => v || null;
+
+    it('passes an ISO min through', () => expect(attr('2026-01-01')).toBe('2026-01-01'));
+    it('passes an ISO max through', () => expect(attr('2026-12-31')).toBe('2026-12-31'));
+    it('omits the attribute when unset', () => expect(attr(undefined)).toBeNull());
+    it('omits the attribute when empty', () => expect(attr('')).toBeNull());
   });
 
   describe('onChange emit logic', () => {

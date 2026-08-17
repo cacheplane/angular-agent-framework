@@ -9,8 +9,7 @@ import type { Spec } from '@json-render/core';
     <video
       class="a2ui-video"
       [src]="url()"
-      [autoplay]="autoPlay()"
-      [controls]="controls()"
+      controls
     ></video>
   `,
   styles: [`
@@ -23,9 +22,6 @@ import type { Spec } from '@json-render/core';
 })
 export class A2uiVideoComponent {
   readonly url = input<string>('');
-  /** v1 prop name: autoPlay (camelCase). */
-  readonly autoPlay = input<boolean>(false);
-  readonly controls = input<boolean>(true);
   // Framework inputs required by the render harness.
   readonly bindings = input<Record<string, string>>({});
   readonly emit = input<(event: string) => void>(() => { /* noop */ });

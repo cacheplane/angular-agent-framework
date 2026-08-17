@@ -4,16 +4,15 @@ import type { Spec } from '@json-render/core';
 import { injectRenderHost } from '@threadplane/render';
 import { emitBinding } from './emit-binding';
 
-/** v1 textFieldType values from A2uiTextField. */
-type TextFieldType = 'date' | 'longText' | 'number' | 'shortText' | 'obscured';
+/** v0.9 TextField variant values ('date' was removed — DateTimeInput owns dates). */
+type TextFieldVariant = 'longText' | 'number' | 'shortText' | 'obscured';
 
-/** Maps v1 textFieldType to HTML input[type] or textarea. */
-const TYPE_MAP: Record<TextFieldType, string> = {
+/** Maps v0.9 variant to HTML input[type] or textarea. */
+const TYPE_MAP: Record<TextFieldVariant, string> = {
   shortText: 'text',
   longText: 'text',    // handled by textarea below
   number: 'number',
   obscured: 'password',
-  date: 'date',
 };
 
 @Component({
@@ -25,7 +24,7 @@ const TYPE_MAP: Record<TextFieldType, string> = {
       @if (label()) {
         <label [htmlFor]="_inputId" class="a2ui-tf__label">{{ label() }}</label>
       }
-      @if (textFieldType() === 'longText') {
+      @if (variant() === 'longText') {
         <textarea
           [id]="_inputId"
           [value]="value()"
@@ -79,12 +78,12 @@ export class A2uiTextFieldComponent {
   private readonly host = injectRenderHost();
 
   readonly label = input<string>('');
-  /** v1 prop: text (resolved string value). */
-  readonly text = input<string>('');
-  /** Back-compat alias: value. surface-to-spec resolves DynamicString → plain string. */
-  readonly value = computed(() => this.text() ?? '');
+  /** v0.9 prop: resolved string value. */
+  readonly value = input<string>('');
   readonly placeholder = input<string>('');
-  readonly textFieldType = input<TextFieldType>('shortText');
+  /** v0.9 prop: input variant (default 'shortText'). */
+  readonly variant = input<TextFieldVariant>('shortText');
+  /** Stored but not yet enforced beyond the native pattern attribute. */
   readonly validationRegexp = input<string>('');
   readonly _bindings = input<Record<string, string>>({});
   // Framework inputs required by the render harness.
@@ -94,17 +93,11 @@ export class A2uiTextFieldComponent {
   readonly spec = input<Spec | undefined>(undefined);
 
   protected readonly htmlInputType = computed(() =>
-    TYPE_MAP[this.textFieldType()] ?? 'text',
+    TYPE_MAP[this.variant()] ?? 'text',
   );
 
   onInput(event: Event): void {
     const val = (event.target as HTMLInputElement | HTMLTextAreaElement).value;
-    // Emit on 'text' binding (v1 prop name); also try 'value' for compat.
-    const bound = this._bindings();
-    if (bound['text']) {
-      emitBinding(this.host, bound, 'text', val);
-    } else {
-      emitBinding(this.host, bound, 'value', val);
-    }
+    emitBinding(this.host, this._bindings(), 'value', val);
   }
 }

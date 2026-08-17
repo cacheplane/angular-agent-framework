@@ -30,14 +30,9 @@ import type { Spec } from '@json-render/core';
   `],
 })
 export class A2uiDividerComponent {
-  /** Canonical v1 spec name. The LLM emits this. */
-  readonly axis = input<'horizontal' | 'vertical' | undefined>(undefined);
-  /** Older alias retained for json-render usage and back-compat. */
-  readonly direction = input<'horizontal' | 'vertical'>('horizontal');
-  /** Effective axis — `axis` wins if provided, otherwise fall back to `direction`. */
-  protected readonly orientation = computed<'horizontal' | 'vertical'>(() =>
-    this.axis() ?? this.direction()
-  );
+  /** v0.9 prop: divider axis (default 'horizontal'). */
+  readonly axis = input<'horizontal' | 'vertical'>('horizontal');
+  protected readonly orientation = computed<'horizontal' | 'vertical'>(() => this.axis());
   // Framework inputs required by the render harness.
   readonly bindings = input<Record<string, string>>({});
   readonly emit = input<(event: string) => void>(() => { /* noop */ });

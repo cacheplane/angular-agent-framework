@@ -40,9 +40,6 @@ import { RenderElementComponent } from '@threadplane/render';
           (keydown.space)="open.set(false)"
         ></div>
         <div class="a2ui-modal__panel">
-          @if (title()) {
-            <h2 class="a2ui-modal__title">{{ title() }}</h2>
-          }
           @if (contentKey(); as cKey) {
             <render-element [elementKey]="cKey" [spec]="spec()" />
           }
@@ -79,22 +76,15 @@ import { RenderElementComponent } from '@threadplane/render';
       margin: 0 var(--a2ui-spacing-4);
       box-shadow: var(--a2ui-elevation-4);
     }
-    .a2ui-modal__title {
-      font-size: var(--a2ui-typography-h4-size);
-      font-weight: var(--a2ui-typography-h4-weight);
-      margin: 0 0 var(--a2ui-spacing-4);
-    }
   `],
 })
 export class A2uiModalComponent {
   /**
-   * v1: childKeys[0] = entryPointChild (inline trigger),
-   *     childKeys[1] = contentChild (modal body).
+   * v0.9: childKeys[0] = trigger (inline entry point),
+   *       childKeys[1] = content (modal body).
    */
   readonly childKeys = input<string[]>([]);
   readonly spec = input.required<Spec>();
-  /** Resolved title string (from optional title DynamicString). */
-  readonly title = input<string>('');
   // Framework inputs required by the render harness.
   readonly bindings = input<Record<string, string>>({});
   readonly emit = input<(event: string) => void>(() => { /* noop */ });
