@@ -11,107 +11,72 @@
             "arguments": {
               "envelopes": [
                 {
-                  "surfaceUpdate": {
+                  "version": "v0.9",
+                  "createSurface": {
+                    "surfaceId": "feedback-form",
+                    "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+                  }
+                },
+                {
+                  "version": "v0.9",
+                  "updateComponents": {
                     "surfaceId": "feedback-form",
                     "components": [
                       {
                         "id": "root",
-                        "component": {
-                          "Column": {
-                            "children": {
-                              "explicitList": [
-                                "form-title",
-                                "name-field",
-                                "email-field",
-                                "feedback-field",
-                                "submit-button"
-                              ]
-                            },
-                            "alignment": "start"
-                          }
-                        }
+                        "component": "Column",
+                        "children": [
+                          "form-title",
+                          "name-field",
+                          "email-field",
+                          "feedback-field",
+                          "submit-button"
+                        ],
+                        "align": "start"
                       },
                       {
                         "id": "form-title",
-                        "component": {
-                          "Text": {
-                            "text": {
-                              "literalString": "Feedback Form"
-                            },
-                            "usageHint": "h1"
-                          }
-                        }
+                        "component": "Text",
+                        "text": "Feedback Form",
+                        "variant": "h1"
                       },
                       {
                         "id": "name-field",
-                        "component": {
-                          "TextField": {
-                            "label": {
-                              "literalString": "Name"
-                            },
-                            "text": {
-                              "literalString": ""
-                            },
-                            "textFieldType": "shortText"
-                          }
-                        }
+                        "component": "TextField",
+                        "label": "Name",
+                        "value": "",
+                        "variant": "shortText"
                       },
                       {
                         "id": "email-field",
-                        "component": {
-                          "TextField": {
-                            "label": {
-                              "literalString": "Email"
-                            },
-                            "text": {
-                              "literalString": ""
-                            },
-                            "textFieldType": "shortText"
-                          }
-                        }
+                        "component": "TextField",
+                        "label": "Email",
+                        "value": "",
+                        "variant": "shortText"
                       },
                       {
                         "id": "feedback-field",
-                        "component": {
-                          "TextField": {
-                            "label": {
-                              "literalString": "Feedback"
-                            },
-                            "text": {
-                              "literalString": ""
-                            },
-                            "textFieldType": "longText"
-                          }
-                        }
+                        "component": "TextField",
+                        "label": "Feedback",
+                        "value": "",
+                        "variant": "longText"
                       },
                       {
                         "id": "submit-button",
-                        "component": {
-                          "Button": {
-                            "child": "submit-text",
-                            "action": {
-                              "name": "submit_feedback"
-                            }
+                        "component": "Button",
+                        "child": "submit-text",
+                        "action": {
+                          "event": {
+                            "name": "submit_feedback"
                           }
                         }
                       },
                       {
                         "id": "submit-text",
-                        "component": {
-                          "Text": {
-                            "text": {
-                              "literalString": "Submit"
-                            }
-                          }
-                        }
+                        "component": "Text",
+                        "text": "Submit"
                       }
                     ]
-                  }
-                },
-                {
-                  "beginRendering": {
-                    "surfaceId": "feedback-form",
-                    "root": "root"
                   }
                 }
               ]
