@@ -724,6 +724,35 @@
     "examples": []
   },
   {
+    "name": "A2uiFunctionContext",
+    "kind": "interface",
+    "description": "Execution context handed to every function implementation.",
+    "properties": [
+      {
+        "name": "locale",
+        "type": "string",
+        "description": "BCP 47 locale for Intl-based formatting; host default when undefined.",
+        "optional": true
+      }
+    ],
+    "methods": [
+      {
+        "name": "resolveArg",
+        "signature": "resolveArg(value: unknown): unknown",
+        "description": "Resolve a (possibly dynamic) argument value — bare literal, `{ path }`\nbinding, or nested `{ call }` — against the current data model/scope.",
+        "params": [
+          {
+            "name": "value",
+            "type": "unknown",
+            "description": "",
+            "optional": false
+          }
+        ]
+      }
+    ],
+    "examples": []
+  },
+  {
     "name": "A2uiIcon",
     "kind": "interface",
     "description": "",
@@ -1466,6 +1495,20 @@
     "examples": []
   },
   {
+    "name": "A2uiFunctionImpl",
+    "kind": "type",
+    "description": "",
+    "signature": "(args: Record<string, unknown>, ctx: A2uiFunctionContext) => unknown",
+    "examples": []
+  },
+  {
+    "name": "A2uiFunctionRegistry",
+    "kind": "type",
+    "description": "",
+    "signature": "ReadonlyMap<string, A2uiFunctionImpl>",
+    "examples": []
+  },
+  {
     "name": "A2uiMessage",
     "kind": "type",
     "description": "",
@@ -1527,6 +1570,27 @@
     "description": "Wire version stamped on every A2UI v0.9-family envelope.",
     "signature": "\"v0.9\"",
     "examples": []
+  },
+  {
+    "name": "createA2uiFunctionRegistry",
+    "kind": "function",
+    "description": "Creates an A2UI client-side function registry containing the standard\nbasic-catalog functions (`formatString`, `formatNumber`, `formatCurrency`,\n`formatDate`, `pluralize`, `and`, `or`, `not`), optionally extended or\noverridden with custom implementations.",
+    "signature": "createA2uiFunctionRegistry(overrides: Record<string, A2uiFunctionImpl>): A2uiFunctionRegistry",
+    "params": [
+      {
+        "name": "overrides",
+        "type": "Record<string, A2uiFunctionImpl>",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "returns": {
+      "type": "A2uiFunctionRegistry",
+      "description": ""
+    },
+    "examples": [
+      "```ts\nconst registry = createA2uiFunctionRegistry();\nresolveDynamic({ call: 'formatCurrency', args: { value: 42, currency: 'USD' } }, {}, undefined, registry);\n```"
+    ]
   },
   {
     "name": "createA2uiMessageParser",
@@ -1637,8 +1701,8 @@
   {
     "name": "resolveDynamic",
     "kind": "function",
-    "description": "Resolves an A2UI v0.9 dynamic value against a client data model.\n\nBare literals (strings, numbers, booleans) pass through unchanged, `{ path }`\nreferences read from the model by JSON-pointer path, arrays resolve\nelement-wise, and client-side function calls (`{ call }`) resolve to\n`undefined` until function execution ships. Unrecognized plain objects pass\nthrough unchanged.",
-    "signature": "resolveDynamic(value: unknown, model: Record<string, unknown>, scope: A2uiScope): unknown",
+    "description": "Resolves an A2UI v0.9 dynamic value against a client data model.\n\nBare literals (strings, numbers, booleans) pass through unchanged, `{ path }`\nreferences read from the model by JSON-pointer path, arrays resolve\nelement-wise, and client-side function calls (`{ call }`) execute through the\nprovided function registry — argument values resolve recursively, so args may\nthemselves be bindings or nested calls. Without a registry (or for unknown\nfunction names) calls resolve to `undefined`. Unrecognized plain objects pass\nthrough unchanged.",
+    "signature": "resolveDynamic(value: unknown, model: Record<string, unknown>, scope: A2uiScope, registry: A2uiFunctionRegistry): unknown",
     "params": [
       {
         "name": "value",
@@ -1657,6 +1721,12 @@
         "type": "A2uiScope",
         "description": "",
         "optional": true
+      },
+      {
+        "name": "registry",
+        "type": "A2uiFunctionRegistry",
+        "description": "",
+        "optional": true
       }
     ],
     "returns": {
@@ -1664,7 +1734,7 @@
       "description": ""
     },
     "examples": [
-      "```ts\nconst model = { customer: { name: 'Ada' } };\nresolveDynamic({ path: '/customer/name' }, model); // 'Ada'\nresolveDynamic('Checkout', model); // 'Checkout'\n```"
+      "```ts\nconst model = { customer: { name: 'Ada' } };\nresolveDynamic({ path: '/customer/name' }, model); // 'Ada'\nresolveDynamic('Checkout', model); // 'Checkout'\nresolveDynamic(\n  { call: 'formatString', args: { value: 'Hi ${/customer/name}' } },\n  model, undefined, createA2uiFunctionRegistry(),\n); // 'Hi Ada'\n```"
     ]
   },
   {

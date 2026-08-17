@@ -134,7 +134,7 @@ export class A2uiSurfaceComponent {
 
         // Built-in fallback
         if (call === 'openUrl' && typeof globalThis.window !== 'undefined') {
-          globalThis.window.open(String(args['url'] ?? ''), '_blank');
+          globalThis.window.open(String(args['url'] ?? ''), '_blank', 'noopener');
         }
         return undefined;
       },

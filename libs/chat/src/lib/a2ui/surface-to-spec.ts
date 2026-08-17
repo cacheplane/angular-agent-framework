@@ -3,7 +3,13 @@ import type { Spec, UIElement } from '@json-render/core';
 import type {
   A2uiSurface, A2uiAction, A2uiChildren,
 } from '@threadplane/a2ui';
-import { resolveDynamic, getByPointer, isPathRef, isFunctionCall } from '@threadplane/a2ui';
+import {
+  resolveDynamic, getByPointer, isPathRef, isFunctionCall,
+  createA2uiFunctionRegistry,
+} from '@threadplane/a2ui';
+
+/** Shared standard-function registry (formatString, formatters, logic). */
+const A2UI_FUNCTIONS = createA2uiFunctionRegistry();
 
 /** Keys that are protocol structure (base fields + child/action wiring),
  * not renderable props. */
@@ -21,7 +27,20 @@ function resolveAction(
 ): RenderedAction | undefined {
   if (!action || typeof action !== 'object') return undefined;
   if (!('event' in action)) {
-    // functionCall actions execute client-side (Phase 2); nothing to wire yet.
+    // Local client-side function action — routed to the surface component's
+    // built-in `a2ui:localAction` handler (openUrl et al.).
+    if ('functionCall' in action && action.functionCall
+        && typeof action.functionCall.call === 'string') {
+      return {
+        click: {
+          action: 'a2ui:localAction',
+          params: {
+            call: action.functionCall.call,
+            args: action.functionCall.args ?? {},
+          },
+        },
+      } as RenderedAction;
+    }
     return undefined;
   }
   const event = action.event;
@@ -29,7 +48,7 @@ function resolveAction(
   const resolvedContext: Record<string, unknown> = {};
   if (event.context && typeof event.context === 'object') {
     for (const [key, value] of Object.entries(event.context)) {
-      resolvedContext[key] = resolveDynamic(value, surface.dataModel);
+      resolvedContext[key] = resolveDynamic(value, surface.dataModel, undefined, A2UI_FUNCTIONS);
     }
   }
   return {
@@ -89,10 +108,10 @@ export function surfaceToSpec(surface: A2uiSurface): Spec | null {
         bindings[key] = path;
         resolvedProps[key] = { $bindState: path };
       } else if (isFunctionCall(value)) {
-        // Client-side function values ship in Phase 2 — omit until then.
-        continue;
+        const resolved = resolveDynamic(value, surface.dataModel, undefined, A2UI_FUNCTIONS);
+        if (resolved !== undefined) resolvedProps[key] = resolved;
       } else {
-        resolvedProps[key] = resolveDynamic(value, surface.dataModel);
+        resolvedProps[key] = resolveDynamic(value, surface.dataModel, undefined, A2UI_FUNCTIONS);
       }
     }
     if (Object.keys(bindings).length > 0) {
@@ -116,13 +135,17 @@ export function surfaceToSpec(surface: A2uiSurface): Spec | null {
       children = items.map(t => t.child);
       // Resolve tab titles and pass them as a plain string array for the Tabs component's tab bar.
       resolvedProps['tabTitles'] = items.map(t =>
-        t.title !== undefined ? String(resolveDynamic(t.title, surface.dataModel)) : '',
+        t.title !== undefined
+          ? String(resolveDynamic(t.title, surface.dataModel, undefined, A2UI_FUNCTIONS))
+          : '',
       );
     } else if (type === 'ChoicePicker') {
       // Resolve options[*].label (DynamicString) so the component receives plain strings.
       const opts = (rawProps as { options?: { label?: unknown; value: string }[] }).options ?? [];
       resolvedProps['options'] = opts.map(o => ({
-        label: o.label !== undefined ? String(resolveDynamic(o.label, surface.dataModel)) : '',
+        label: o.label !== undefined
+          ? String(resolveDynamic(o.label, surface.dataModel, undefined, A2UI_FUNCTIONS))
+          : '',
         value: o.value,
       }));
     } else {
@@ -140,7 +163,7 @@ export function surfaceToSpec(surface: A2uiSurface): Spec | null {
               const itemProps: Record<string, unknown> = {};
               for (const [k, v] of Object.entries(tRaw)) {
                 if (RESERVED_PROP_KEYS.has(k)) continue;
-                itemProps[k] = resolveDynamic(v, surface.dataModel, scope);
+                itemProps[k] = resolveDynamic(v, surface.dataModel, scope, A2UI_FUNCTIONS);
               }
               elements[`${t.componentId}__${i}`] = { type: tType, props: itemProps };
             }

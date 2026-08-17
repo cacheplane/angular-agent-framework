@@ -39,10 +39,30 @@ object keyed by the type name):
 ### Dynamic values
 
 Properties documented as Dynamic (DynamicString / DynamicNumber /
-DynamicBoolean / DynamicStringList) accept either:
+DynamicBoolean / DynamicStringList) accept any of:
 - a bare literal ("Hello", 5, true, ["a", "b"]) — no wrapper objects, OR
 - a data-model binding {"path": "/some/pointer"} (JSON Pointer into the
-  surface's data model).
+  surface's data model), OR
+- a client-side function call {"call": "<fn>", "args": {...}} using one of
+  the catalog functions below. Function args are themselves Dynamic values.
+
+### Client-side functions
+
+Value functions (usable wherever a Dynamic value is accepted):
+- formatString: {"call": "formatString", "args": {"value": "Hi ${/user/name}"}}
+  — interpolates ${...} expressions: JSON-pointer paths (${/abs} or
+  ${relative} inside templates) and nested calls with NAMED args, e.g.
+  ${formatDate(value:${/date}, format:'yyyy-MM-dd')}. Escape a literal with \${.
+- formatNumber: args {value, decimals?, grouping?}
+- formatCurrency: args {value, currency (ISO 4217), decimals?, grouping?}
+- formatDate: args {value (ISO 8601 or epoch ms), format (TR35 pattern, e.g.
+  'yyyy-MM-dd', 'EEEE, MMMM d', 'h:mm a')}
+- pluralize: args {value, one?, other, zero?, two?, few?, many?} — 'other' is
+  the required fallback
+- and / or: args {values: [DynamicBoolean, DynamicBoolean, ...]} ; not: args {value}
+
+Action function (only inside {"functionCall": ...} actions): openUrl with
+args {url} — opens the URL in a new tab.
 
 ### Children
 

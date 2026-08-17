@@ -46,7 +46,7 @@ resolveDynamic(2, model); // 2
 |-------------|--------|
 | bare literal (string, number, boolean) | returned as-is |
 | `{ path }` | the value at that model path |
-| `{ call }` | `undefined` — client-side function execution ships in an upcoming release |
+| `{ call }` | executes via the `A2uiFunctionRegistry` passed as the fourth argument (`createA2uiFunctionRegistry()` provides the standard set); `undefined` without a registry or for unknown names |
 | arrays | recursively resolved array values |
 | `null` or `undefined` | returned as-is |
 | unrecognized plain objects | returned as-is |

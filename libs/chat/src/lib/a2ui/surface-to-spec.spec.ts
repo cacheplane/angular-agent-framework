@@ -37,9 +37,28 @@ describe('surfaceToSpec (v0.9)', () => {
     expect(spec.state).toEqual({ greeting: 'Hello World' });
   });
 
-  it('omits function-call props until Phase 2 ships execution', () => {
+  it('resolves function-call props through the standard registry', () => {
+    const surface = makeSurface(
+      [c({ id: 'root', component: 'Text', text: { call: 'formatString', args: { value: 'Total: ${/total}' } } })],
+      { total: 42 },
+    );
+    const spec = surfaceToSpec(surface)!;
+    expect(spec.elements['root'].props['text']).toBe('Total: 42');
+  });
+
+  it('resolves formatCurrency props against the data model', () => {
+    const surface = makeSurface(
+      [c({ id: 'root', component: 'Text', text: { call: 'formatCurrency', args: { value: { path: '/price' }, currency: 'USD' } } })],
+      { price: 10 },
+    );
+    const spec = surfaceToSpec(surface)!;
+    expect(spec.elements['root'].props['text'])
+      .toBe(new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(10));
+  });
+
+  it('omits props whose function call is unknown', () => {
     const surface = makeSurface([
-      c({ id: 'root', component: 'Text', text: { call: 'formatString', args: { value: 'x' } } }),
+      c({ id: 'root', component: 'Text', text: { call: 'mysteryFn', args: {} } }),
     ]);
     const spec = surfaceToSpec(surface)!;
     expect('text' in spec.elements['root'].props).toBe(false);
@@ -164,14 +183,17 @@ describe('surfaceToSpec (v0.9)', () => {
     expect(params['context']).toEqual({ email: 'alice@example.com' });
   });
 
-  it('functionCall actions emit no on binding (Phase 2)', () => {
+  it('functionCall actions wire to the local-action handler', () => {
     const surface = makeSurface([
       c({ id: 'root', component: 'Button', child: 'lbl',
         action: { functionCall: { call: 'openUrl', args: { url: 'https://x' } } } }),
       c({ id: 'lbl', component: 'Text', text: 'Open' }),
     ]);
     const spec = surfaceToSpec(surface)!;
-    expect(spec.elements['root'].on).toBeUndefined();
+    expect(spec.elements['root'].on!['click']).toEqual({
+      action: 'a2ui:localAction',
+      params: { call: 'openUrl', args: { url: 'https://x' } },
+    });
   });
 
   it('passes through elements without actions unchanged', () => {

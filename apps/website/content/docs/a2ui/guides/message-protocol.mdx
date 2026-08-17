@@ -54,7 +54,7 @@ A reference is `{"path":"/origin"}` — a JSON pointer into the surface's data m
 {"text":{"path":"/headline"}}
 ```
 
-A function call is `{"call":"formatDate","args":{...}}` — a typed invocation of a client-side catalog function (`formatString`, `formatCurrency`, `required`, ...). Function calls are part of the wire format today; `resolveDynamic` resolves them to `undefined` until function execution ships in an upcoming release.
+A function call is `{"call":"formatDate","args":{...}}` — a typed invocation of a client-side catalog function (`formatString`, `formatCurrency`, `required`, ...). Function calls execute client-side: pass `createA2uiFunctionRegistry()` as the fourth argument to `resolveDynamic` and the standard formatting/logic functions run with recursively-resolved args. Unknown names resolve to `undefined` (with a one-time console warning).
 
 ## What are the four envelopes?
 
