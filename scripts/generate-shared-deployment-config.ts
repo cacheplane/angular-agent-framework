@@ -1,4 +1,4 @@
-import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { dirname, resolve } from 'path';
 import { capabilities } from '../apps/cockpit/scripts/capability-registry';
 
@@ -40,6 +40,19 @@ const stageDependency = (sourceRoot: string, alias: string): string => {
   const sourceDir = resolve(rootDir, sourceRoot);
   const stagedDir = resolve(stagedDependenciesDir, alias);
   cpSync(sourceDir, stagedDir, { recursive: true });
+
+  // Every dep ships a `src/` package and they must all merge as PEP 420
+  // namespace portions on the deployment's sys.path. A single
+  // `src/__init__.py` turns that dep's `src` into a REGULAR package which
+  // wins exclusively, so every other dep's `from src.x import ...` raises
+  // ModuleNotFoundError at startup and the whole revision fails to deploy
+  // (this exact failure shipped in #642 and broke deploys from Aug 7).
+  const initPy = resolve(stagedDir, 'src/__init__.py');
+  if (existsSync(initPy)) {
+    throw new Error(
+      `${sourceRoot}/src/__init__.py breaks the shared deployment's namespace-package merge — delete it (deps' src dirs must be namespace packages)`,
+    );
+  }
 
   const relativePath = `./deps/${alias}`;
   stagedDependencyRoots.set(sourceRoot, relativePath);
