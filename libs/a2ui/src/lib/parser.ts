@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-import type { A2uiMessage } from './types.js';
+import { A2UI_WIRE_VERSION, type A2uiMessage } from './types.js';
 
-const ENVELOPE_KEYS = ['surfaceUpdate', 'dataModelUpdate', 'beginRendering', 'deleteSurface'] as const;
+const ENVELOPE_KEYS = ['createSurface', 'updateComponents', 'updateDataModel', 'deleteSurface'] as const;
 
 export interface A2uiMessageParser {
   /** Push a JSONL stream chunk and return every complete A2UI envelope parsed from it. */
@@ -9,16 +9,20 @@ export interface A2uiMessageParser {
 }
 
 /**
- * Creates a stateful parser for newline-delimited A2UI message streams.
+ * Creates a stateful parser for newline-delimited A2UI v0.9 message streams.
  *
  * The parser buffers incomplete lines, skips malformed JSON, and returns only
- * recognized A2UI envelopes: `surfaceUpdate`, `dataModelUpdate`,
- * `beginRendering`, and `deleteSurface`.
+ * recognized A2UI envelopes: `createSurface`, `updateComponents`,
+ * `updateDataModel`, and `deleteSurface`. Unknown envelope keys (e.g. future
+ * v1.0 messages) are skipped rather than treated as errors. A missing
+ * `version` field defaults to `v0.9`.
  *
  * @example
  * ```ts
  * const parser = createA2uiMessageParser();
- * const messages = parser.push('{"beginRendering":{"surfaceId":"s1","root":"root"}}\n');
+ * const messages = parser.push(
+ *   '{"version":"v0.9","createSurface":{"surfaceId":"s1","catalogId":"basic"}}\n',
+ * );
  * ```
  */
 export function createA2uiMessageParser(): A2uiMessageParser {
@@ -27,8 +31,9 @@ export function createA2uiMessageParser(): A2uiMessageParser {
   function parseEnvelope(json: Record<string, unknown>): A2uiMessage | null {
     for (const key of ENVELOPE_KEYS) {
       if (key in json && typeof json[key] === 'object' && json[key] !== null) {
-        // A2uiMessage is a discriminated union of single-key envelope objects.
-        return { [key]: json[key] } as unknown as A2uiMessage;
+        const version = typeof json['version'] === 'string' ? json['version'] : A2UI_WIRE_VERSION;
+        // A2uiMessage is a discriminated union of single-envelope-key objects.
+        return { version, [key]: json[key] } as unknown as A2uiMessage;
       }
     }
     return null;

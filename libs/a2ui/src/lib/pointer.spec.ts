@@ -72,4 +72,22 @@ describe('deleteByPointer', () => {
     const result = deleteByPointer({ user: { name: 'Alice', age: 30 } }, '/user/age');
     expect(result.user).toEqual({ name: 'Alice' });
   });
+
+  it('clears the whole model for root pointer', () => {
+    expect(deleteByPointer({ a: 1 }, '/')).toEqual({});
+  });
+
+  it('sets array index to undefined preserving length (v0.9 rule)', () => {
+    const result = deleteByPointer({ items: ['a', 'b', 'c'] }, '/items/1');
+    expect(Array.isArray(result.items)).toBe(true);
+    expect((result.items as unknown[]).length).toBe(3);
+    expect((result.items as unknown[])[0]).toBe('a');
+    expect((result.items as unknown[])[1]).toBeUndefined();
+    expect((result.items as unknown[])[2]).toBe('c');
+  });
+
+  it('leaves the model unchanged for a missing parent path', () => {
+    const model = { a: 1 };
+    expect(deleteByPointer(model, '/missing/deep')).toEqual({ a: 1 });
+  });
 });

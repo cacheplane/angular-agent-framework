@@ -90,6 +90,12 @@ export function deleteByPointer(
 
   const parent = getByPointer(model, '/' + parentPath.join('/'));
   if (parent == null || typeof parent !== 'object') return model;
+  if (Array.isArray(parent)) {
+    // v0.9 rule: deleting an array index sets it to undefined, preserving length.
+    const parentCopy = [...(parent as unknown[])];
+    parentCopy[Number(key)] = undefined;
+    return setByPointer(model, '/' + parentPath.join('/'), parentCopy);
+  }
   const parentCopy = { ...(parent as Record<string, unknown>) };
   delete parentCopy[key];
   return setByPointer(model, '/' + parentPath.join('/'), parentCopy);
