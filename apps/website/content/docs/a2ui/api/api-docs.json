@@ -181,22 +181,16 @@
     "description": "",
     "properties": [
       {
-        "name": "args",
-        "type": "Record<string, unknown>",
-        "description": "",
-        "optional": true
-      },
-      {
-        "name": "call",
-        "type": "string",
-        "description": "",
+        "name": "condition",
+        "type": "unknown",
+        "description": "A DynamicBoolean — typically a validator function call (`required`,\n`regex`, `length`, `numeric`, `email`) or a logic combinator. The rule\npasses when the condition resolves to `true`.",
         "optional": false
       },
       {
         "name": "message",
         "type": "string",
-        "description": "",
-        "optional": true
+        "description": "Error message displayed when the check fails.",
+        "optional": false
       }
     ],
     "examples": []

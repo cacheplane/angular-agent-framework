@@ -84,3 +84,114 @@ describe('A2uiSurfaceComponent — nested children with real catalog (regression
     expect(fx.nativeElement.textContent).toContain('Hello');
   });
 });
+
+describe('A2uiSurfaceComponent — validation gate + live context (Phase 3)', () => {
+  beforeEach(() => TestBed.configureTestingModule({ imports: [A2uiSurfaceComponent] }));
+
+  function makeCheckedSurfaceState() {
+    const store = createA2uiSurfaceStore();
+    store.apply({ version: 'v0.9', createSurface: { surfaceId: 's1', catalogId: 'basic' } } as never);
+    store.apply({ version: 'v0.9', updateComponents: {
+      surfaceId: 's1',
+      components: [
+        { id: 'root', component: 'Column', children: ['email', 'go'] },
+        { id: 'email', component: 'TextField', label: 'Email', value: { path: '/email' },
+          checks: [
+            { condition: { call: 'required', args: { value: { path: '/email' } } }, message: 'Email is required' },
+            { condition: { call: 'email', args: { value: { path: '/email' } } }, message: 'Invalid email' },
+          ] },
+        { id: 'go', component: 'Button', child: 'go-lbl',
+          action: { event: { name: 'submit', context: { email: { path: '/email' } } } } },
+        { id: 'go-lbl', component: 'Text', text: 'Send' },
+      ],
+    } } as never);
+    store.apply({ version: 'v0.9', updateDataModel: { surfaceId: 's1', path: '/email', value: '' } } as never);
+    return store.surfaceState('s1')()!;
+  }
+
+  it('blocks the action, writes the check message, and emits VALIDATION_FAILED when checks fail', () => {
+    const fx = TestBed.createComponent(A2uiSurfaceComponent);
+    fx.componentRef.setInput('state', makeCheckedSurfaceState());
+    fx.componentRef.setInput('catalog', a2uiBasicCatalog());
+    const actions: unknown[] = [];
+    const errors: { error: { code: string; message?: string } }[] = [];
+    fx.componentInstance.action.subscribe((a) => actions.push(a));
+    fx.componentInstance.validationError.subscribe((e) => errors.push(e));
+    fx.detectChanges();
+
+    const handler = fx.componentInstance.internalHandlers()['a2ui:event'];
+    const result = handler({
+      surfaceId: 's1', sourceComponentId: 'go', name: 'submit',
+      context: { email: { $bindState: '/email' } },
+    });
+
+    expect(result).toBeUndefined();
+    expect(actions).toHaveLength(0);
+    expect(errors).toHaveLength(1);
+    expect(errors[0].error.code).toBe('VALIDATION_FAILED');
+    expect(errors[0].error.message).toBe('Email is required');
+    expect(fx.componentInstance.liveStore.get('/_a2uiChecks/email')).toBe('Email is required');
+  });
+
+  it('emits the action with live-typed context values once checks pass', () => {
+    const fx = TestBed.createComponent(A2uiSurfaceComponent);
+    fx.componentRef.setInput('state', makeCheckedSurfaceState());
+    fx.componentRef.setInput('catalog', a2uiBasicCatalog());
+    const actions: { action: { context?: Record<string, unknown> } }[] = [];
+    fx.componentInstance.action.subscribe((a) => actions.push(a));
+    fx.detectChanges();
+
+    // Simulate the user typing into the bound TextField (writes the store).
+    fx.componentInstance.liveStore.set('/email', 'ada@example.com');
+
+    const handler = fx.componentInstance.internalHandlers()['a2ui:event'];
+    handler({
+      surfaceId: 's1', sourceComponentId: 'go', name: 'submit',
+      context: { email: { $bindState: '/email' } },
+    });
+
+    expect(actions).toHaveLength(1);
+    expect(actions[0].action.context).toEqual({ email: 'ada@example.com' });
+    expect(fx.componentInstance.liveStore.get('/_a2uiChecks/email')).toBe('');
+  });
+
+  it('enforces TextField validationRegexp as an implicit check', () => {
+    const store = createA2uiSurfaceStore();
+    store.apply({ version: 'v0.9', createSurface: { surfaceId: 's2', catalogId: 'basic' } } as never);
+    store.apply({ version: 'v0.9', updateComponents: {
+      surfaceId: 's2',
+      components: [
+        { id: 'root', component: 'Column', children: ['code'] },
+        { id: 'code', component: 'TextField', label: 'Code', value: { path: '/code' },
+          validationRegexp: '^[A-Z]{3}$' },
+      ],
+    } } as never);
+    store.apply({ version: 'v0.9', updateDataModel: { surfaceId: 's2', path: '/code', value: 'nope' } } as never);
+
+    const fx = TestBed.createComponent(A2uiSurfaceComponent);
+    fx.componentRef.setInput('state', store.surfaceState('s2')()!);
+    fx.componentRef.setInput('catalog', a2uiBasicCatalog());
+    const errors: { error: { code: string } }[] = [];
+    fx.componentInstance.validationError.subscribe((e) => errors.push(e));
+    fx.detectChanges();
+
+    const handler = fx.componentInstance.internalHandlers()['a2ui:event'];
+    const result = handler({ surfaceId: 's2', sourceComponentId: 'root', name: 'submit', context: {} });
+    expect(result).toBeUndefined();
+    expect(errors).toHaveLength(1);
+    expect(fx.componentInstance.liveStore.get('/_a2uiChecks/code')).toBe('Invalid format');
+  });
+
+  it('preserves user edits in the live store across spec re-emissions', () => {
+    const state = makeCheckedSurfaceState();
+    const fx = TestBed.createComponent(A2uiSurfaceComponent);
+    fx.componentRef.setInput('state', state);
+    fx.componentRef.setInput('catalog', a2uiBasicCatalog());
+    fx.detectChanges();
+    fx.componentInstance.liveStore.set('/email', 'user@typed.io');
+    // Re-emit the same state (streaming re-materializes surfaces).
+    fx.componentRef.setInput('state', { ...state });
+    fx.detectChanges();
+    expect(fx.componentInstance.liveStore.get('/email')).toBe('user@typed.io');
+  });
+});

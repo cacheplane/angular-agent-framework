@@ -13,6 +13,9 @@ import { emitBinding } from './emit-binding';
       <input type="checkbox" [checked]="value()" (change)="onChange($event)" class="a2ui-cb__input" />
       {{ label() }}
     </label>
+    @if (errorText()) {
+      <div class="a2ui-check-error" role="alert">{{ errorText() }}</div>
+    }
   `,
   styles: [`
     .a2ui-cb {
@@ -29,7 +32,11 @@ import { emitBinding } from './emit-binding';
       cursor: pointer;
       accent-color: var(--a2ui-primary);
     }
-  `],
+      .a2ui-check-error {
+      font-size: var(--a2ui-typography-label-size);
+      color: var(--a2ui-error, #d33d55);
+    }
+`],
 })
 export class A2uiCheckBoxComponent {
   private readonly host = injectRenderHost();
@@ -37,6 +44,9 @@ export class A2uiCheckBoxComponent {
   readonly label = input<string>('');
   /** v0.9 prop: boolean checked state. */
   readonly value = input<boolean>(false);
+  /** Live validation message written by the surface's check gate
+   * (bound to /_a2uiChecks/<id>); empty when valid. */
+  readonly errorText = input<string>('');
   readonly _bindings = input<Record<string, string>>({});
   // Framework inputs required by the render harness.
   readonly bindings = input<Record<string, string>>({});

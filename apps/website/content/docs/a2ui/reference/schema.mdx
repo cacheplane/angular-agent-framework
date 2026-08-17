@@ -83,7 +83,7 @@ interface A2uiComponentBase {
 }
 ```
 
-Input components additionally mix in `A2uiCheckable` (`checks?: A2uiCheck[]`) for client-side validation rules (typed now, enforced in a later phase).
+Input components additionally mix in `A2uiCheckable` (`checks?: A2uiCheck[]`). Each rule is the spec `CheckRule` shape — `{ condition: DynamicBoolean, message: string }` — where `condition` is typically a validator call (`required`, `regex`, `length`, `numeric`, `email`) or a logic combination. Renderers evaluate rules against the live data model and block event actions while any rule fails.
 
 The basic-catalog component shapes are:
 
@@ -130,7 +130,7 @@ Several fields are constrained to a fixed enum. Emit one of the listed values �
 
 The union of the basic-catalog shapes is exported as `A2uiCatalogComponent`. The broader `A2uiComponent` also admits non-basic-catalog components (`A2uiComponentBase & Record<string, unknown>`) — renderers treat unknown `component` strings as unrenderable and fall back gracefully.
 
-The schema exposes `validationRegexp` on `TextField` and `checks` on input components, but validation execution is not implemented in this package. Treat schema fields as protocol data until a renderer wires behavior.
+The schema exposes `validationRegexp` on `TextField` and `checks` on input components; this package supplies the validator functions in `createA2uiFunctionRegistry()`, and `@threadplane/chat`'s surface renderer enforces the rules (inline messages, blocked event actions, `VALIDATION_FAILED` error messages).
 
 ## Message envelopes
 

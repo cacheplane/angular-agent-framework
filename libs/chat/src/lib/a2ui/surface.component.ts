@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: MIT
 import {
-  Component, computed, input, output, ChangeDetectionStrategy, Type,
+  Component, computed, effect, input, output, untracked, ChangeDetectionStrategy, Type,
 } from '@angular/core';
 import { NgComponentOutlet } from '@angular/common';
-import type { A2uiSurface, A2uiActionMessage } from '@threadplane/a2ui';
-import { RenderSpecComponent, toRenderRegistry } from '@threadplane/render';
+import type { A2uiSurface, A2uiActionMessage, A2uiErrorMessage, A2uiCheck } from '@threadplane/a2ui';
+import {
+  A2UI_WIRE_VERSION, createA2uiFunctionRegistry, getByPointer, isPathRef, resolveDynamic,
+} from '@threadplane/a2ui';
+import { RenderSpecComponent, toRenderRegistry, signalStateStore } from '@threadplane/render';
 import type { ViewRegistry, RenderEvent } from '@threadplane/render';
-import { surfaceToSpec } from './surface-to-spec';
+import { surfaceToSpec, componentHasChecks } from './surface-to-spec';
 import { buildA2uiActionMessage } from './build-action-message';
 import { A2uiDefaultFallbackComponent } from './a2ui-default-fallback.component';
 import type { A2uiSurfaceState } from './surface-store';
@@ -32,6 +35,7 @@ import type { A2uiViews } from './views';
       <render-spec
         [spec]="s"
         [registry]="registry()"
+        [store]="liveStore"
         [handlers]="internalHandlers()"
         (events)="onRenderEvent($event)"
       />
@@ -68,6 +72,41 @@ export class A2uiSurfaceComponent {
   readonly surfaceFallback = input<Type<unknown> | undefined>(undefined);
   readonly events = output<RenderEvent>();
   readonly action = output<A2uiActionMessage>();
+  /** Emitted when a submit is blocked by failing validation checks —
+   * the spec client → agent error message (code VALIDATION_FAILED). */
+  readonly validationError = output<A2uiErrorMessage>();
+
+  /** Surface-owned live state store: `$bindState` props read it and input
+   * components write user edits into it, so event-time logic (checks,
+   * action context) sees CURRENT values instead of the agent-seeded
+   * snapshot. Seeded from spec.state with user edits preserved. Public so
+   * hosts (and tests) can read the live values of a rendered surface. */
+  readonly liveStore = signalStateStore({});
+
+  /** Last value this component seeded per state path (see chat-generative-ui:
+   * distinguishes "still our seed — safe to overwrite" from "user edited"). */
+  private readonly seeded = new Map<string, unknown>();
+
+  constructor() {
+    effect(() => {
+      const s = this.spec();
+      const state = s?.state as Record<string, unknown> | undefined;
+      if (!state) return;
+      untracked(() => {
+        for (const [key, value] of Object.entries(state)) {
+          const path = key.startsWith('/') ? key : `/${key}`;
+          const current = this.liveStore.get(path);
+          const untouched =
+            current === undefined ||
+            (this.seeded.has(path) && current === this.seeded.get(path));
+          if (untouched) {
+            if (current !== value) this.liveStore.set(path, value);
+            this.seeded.set(path, value);
+          }
+        }
+      });
+    });
+  }
 
   /** Agent-set primary color from `createSurface.theme.primaryColor`.
    * Returns null when unset so the host binding doesn't override the
@@ -119,7 +158,49 @@ export class A2uiSurfaceComponent {
         // a mismatched id is also bound.
         const surf = this.state()?.surface ?? this.surface();
         if (!surf) return undefined;
-        const message = buildA2uiActionMessage(params, surf);
+
+        // Live model: user edits in the store overlay the agent-seeded model.
+        const liveModel = this.mergedLiveModel(surf);
+
+        // Validation gate: every check rule on the surface must pass before
+        // an event action dispatches (spec CheckRule semantics).
+        const failures = evaluateSurfaceChecks(surf, liveModel);
+        if (failures.length > 0) {
+          for (const f of failures) {
+            this.liveStore.set(`/_a2uiChecks/${f.componentId}`, f.message);
+          }
+          const first = failures[0];
+          this.validationError.emit({
+            version: A2UI_WIRE_VERSION,
+            error: {
+              code: 'VALIDATION_FAILED',
+              surfaceId: surf.surfaceId,
+              ...(first.path ? { path: first.path } : {}),
+              message: first.message,
+            },
+          });
+          return undefined;
+        }
+        // Clear any stale messages from a previous failed submit.
+        for (const [id, comp] of surf.components) {
+          if (componentHasChecks(comp as unknown as Record<string, unknown>)) {
+            this.liveStore.set(`/_a2uiChecks/${id}`, '');
+          }
+        }
+
+        // Substitute live-context markers with current values.
+        const rawContext = (params['context'] as Record<string, unknown>) ?? {};
+        const context: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(rawContext)) {
+          if (v != null && typeof v === 'object' && '$bindState' in (v as Record<string, unknown>)) {
+            const path = String((v as Record<string, unknown>)['$bindState']);
+            context[k] = getByPointer(liveModel, path);
+          } else {
+            context[k] = v;
+          }
+        }
+
+        const message = buildA2uiActionMessage({ ...params, context }, surf);
         this.action.emit(message);
         return message;
       },
@@ -144,4 +225,74 @@ export class A2uiSurfaceComponent {
   onRenderEvent(event: RenderEvent): void {
     this.events.emit(event);
   }
+
+  /** Agent-seeded data model overlaid with the store's current state
+   * (user edits + check messages). Shallow per-key merge is sufficient:
+   * store snapshots hold whole top-level values written via pointers. */
+  private mergedLiveModel(surf: A2uiSurface): Record<string, unknown> {
+    const snapshot = this.liveStore.getSnapshot() as Record<string, unknown>;
+    return deepOverlay(surf.dataModel, snapshot);
+  }
+}
+
+/** Recursively overlay `top` onto `base` (plain objects merge; anything
+ * else in `top` wins). */
+function deepOverlay(
+  base: Record<string, unknown>,
+  top: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...base };
+  for (const [k, v] of Object.entries(top)) {
+    const prev = out[k];
+    if (
+      v != null && typeof v === 'object' && !Array.isArray(v)
+      && prev != null && typeof prev === 'object' && !Array.isArray(prev)
+    ) {
+      out[k] = deepOverlay(prev as Record<string, unknown>, v as Record<string, unknown>);
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
+const CHECK_FUNCTIONS = createA2uiFunctionRegistry();
+
+interface CheckFailure {
+  componentId: string;
+  message: string;
+  /** Data-model pointer of the checked value, when determinable. */
+  path?: string;
+}
+
+/** Evaluate every check rule on the surface against the live model.
+ * A rule passes when its condition resolves to exactly `true`. TextField
+ * `validationRegexp` (with a bound value) contributes an implicit rule. */
+function evaluateSurfaceChecks(
+  surf: A2uiSurface,
+  liveModel: Record<string, unknown>,
+): CheckFailure[] {
+  const failures: CheckFailure[] = [];
+  for (const [id, comp] of surf.components) {
+    const raw = comp as unknown as Record<string, unknown>;
+    const boundPath = isPathRef(raw['value']) ? (raw['value'] as { path: string }).path : undefined;
+    const rules: A2uiCheck[] = Array.isArray(raw['checks']) ? [...(raw['checks'] as A2uiCheck[])] : [];
+    if (
+      typeof raw['validationRegexp'] === 'string' && raw['validationRegexp'].length > 0 && boundPath
+    ) {
+      rules.push({
+        condition: { call: 'regex', args: { value: { path: boundPath }, pattern: raw['validationRegexp'] } },
+        message: 'Invalid format',
+      });
+    }
+    for (const rule of rules) {
+      if (!rule || typeof rule.message !== 'string') continue;
+      const passed = resolveDynamic(rule.condition, liveModel, undefined, CHECK_FUNCTIONS) === true;
+      if (!passed) {
+        failures.push({ componentId: id, message: rule.message, ...(boundPath ? { path: boundPath } : {}) });
+        break; // first failing rule per component
+      }
+    }
+  }
+  return failures;
 }

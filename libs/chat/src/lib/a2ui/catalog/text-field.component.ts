@@ -44,6 +44,9 @@ const TYPE_MAP: Record<TextFieldVariant, string> = {
           (input)="onInput($event)"
         />
       }
+      @if (errorText()) {
+        <div class="a2ui-check-error" role="alert">{{ errorText() }}</div>
+      }
     </div>
   `,
   styles: [`
@@ -69,7 +72,11 @@ const TYPE_MAP: Record<TextFieldVariant, string> = {
       outline-offset: 2px;
       border-color: var(--a2ui-primary);
     }
-  `],
+      .a2ui-check-error {
+      font-size: var(--a2ui-typography-label-size);
+      color: var(--a2ui-error, #d33d55);
+    }
+`],
 })
 export class A2uiTextFieldComponent {
   private static _idCounter = 0;
@@ -83,8 +90,11 @@ export class A2uiTextFieldComponent {
   readonly placeholder = input<string>('');
   /** v0.9 prop: input variant (default 'shortText'). */
   readonly variant = input<TextFieldVariant>('shortText');
-  /** Stored but not yet enforced beyond the native pattern attribute. */
+  /** Enforced by the surface's check gate as an implicit regex rule (plus the native pattern attribute). */
   readonly validationRegexp = input<string>('');
+  /** Live validation message written by the surface's check gate
+   * (bound to /_a2uiChecks/<id>); empty when valid. */
+  readonly errorText = input<string>('');
   readonly _bindings = input<Record<string, string>>({});
   // Framework inputs required by the render harness.
   readonly bindings = input<Record<string, string>>({});

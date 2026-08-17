@@ -22,6 +22,9 @@ import { emitBinding } from './emit-binding';
         [value]="value()"
         (input)="onInput($event)"
       />
+      @if (errorText()) {
+      <div class="a2ui-check-error" role="alert">{{ errorText() }}</div>
+    }
     </div>
   `,
   styles: [`
@@ -36,7 +39,11 @@ import { emitBinding } from './emit-binding';
       cursor: pointer;
       accent-color: var(--a2ui-primary);
     }
-  `],
+      .a2ui-check-error {
+      font-size: var(--a2ui-typography-label-size);
+      color: var(--a2ui-error, #d33d55);
+    }
+`],
 })
 export class A2uiSliderComponent {
   private static _idCounter = 0;
@@ -51,6 +58,9 @@ export class A2uiSliderComponent {
   readonly min = input<number>(0);
   /** v0.9 prop: upper bound. */
   readonly max = input<number>(100);
+  /** Live validation message written by the surface's check gate
+   * (bound to /_a2uiChecks/<id>); empty when valid. */
+  readonly errorText = input<string>('');
   readonly _bindings = input<Record<string, string>>({});
   // Framework inputs required by the render harness.
   readonly bindings = input<Record<string, string>>({});

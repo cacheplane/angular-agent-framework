@@ -48,7 +48,14 @@ function resolveAction(
   const resolvedContext: Record<string, unknown> = {};
   if (event.context && typeof event.context === 'object') {
     for (const [key, value] of Object.entries(event.context)) {
-      resolvedContext[key] = resolveDynamic(value, surface.dataModel, undefined, A2UI_FUNCTIONS);
+      if (isPathRef(value)) {
+        // Live marker: the surface component substitutes the CURRENT value
+        // (user edits included) from its state store at dispatch time —
+        // build-time resolution would freeze the agent-seeded snapshot.
+        resolvedContext[key] = { $bindState: value.path };
+      } else {
+        resolvedContext[key] = resolveDynamic(value, surface.dataModel, undefined, A2UI_FUNCTIONS);
+      }
     }
   }
   return {
@@ -118,6 +125,12 @@ export function surfaceToSpec(surface: A2uiSurface): Spec | null {
       resolvedProps['_bindings'] = bindings;
     }
 
+    // Checkable components surface their live validation message through a
+    // reserved store path the surface component writes on failed submits.
+    if (componentHasChecks(rawProps)) {
+      resolvedProps['errorText'] = { $bindState: `/_a2uiChecks/${id}` };
+    }
+
     const action = (rawProps as { action?: A2uiAction }).action;
     const on = resolveAction(action, surface, id);
 
@@ -185,5 +198,24 @@ export function surfaceToSpec(surface: A2uiSurface): Spec | null {
     ? 'root'
     : (surface.components.keys().next().value as string);
 
-  return { root, elements, state: surface.dataModel } as Spec;
+  // Seed empty check messages so errorText $bindState bindings resolve
+  // (render-element defers mounting while any bound prop is undefined).
+  const checkSeeds: Record<string, string> = {};
+  for (const [id, comp] of surface.components) {
+    if (componentHasChecks(comp as unknown as Record<string, unknown>)) checkSeeds[id] = '';
+  }
+  const state = Object.keys(checkSeeds).length > 0
+    ? { ...surface.dataModel, _a2uiChecks: { ...checkSeeds, ...(surface.dataModel['_a2uiChecks'] as Record<string, unknown> ?? {}) } }
+    : surface.dataModel;
+
+  return { root, elements, state } as Spec;
+}
+
+/** True when the component carries validation rules the renderer enforces:
+ * explicit `checks`, or a TextField `validationRegexp` with a bound value. */
+export function componentHasChecks(raw: Record<string, unknown>): boolean {
+  if (Array.isArray(raw['checks']) && raw['checks'].length > 0) return true;
+  return typeof raw['validationRegexp'] === 'string'
+    && raw['validationRegexp'].length > 0
+    && isPathRef(raw['value']);
 }
