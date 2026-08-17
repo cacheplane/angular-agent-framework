@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-"""Parent-LLM-bound tool that emits A2UI v1 envelopes as structured tool
+"""Parent-LLM-bound tool that emits A2UI v0.9 envelopes as structured tool
 arguments. Replaces the old two-LLM `generate_a2ui_schema` flow (parent
 calls a sub-LLM that produces envelopes); the parent now emits envelopes
 directly so the natural token stream IS the surface-rendering stream.
@@ -16,62 +16,65 @@ from langchain_core.tools import tool
 from pydantic import BaseModel, Field, model_validator
 
 
-class SurfaceUpdate(BaseModel):
-    """Component-tree envelope. Required first envelope per turn."""
-    surfaceId: str = Field(description="Stable identifier for this surface.")
-    components: list[dict] = Field(
-        description="Component tree as a list of {id, type, props} objects."
-    )
-
-
-class BeginRendering(BaseModel):
-    """Render-start envelope. Required; identifies the root component."""
-    surfaceId: str
-    root: str = Field(description="Component id of the surface root.")
-    styles: Optional[dict] = None
-
-
-class DataModelUpdate(BaseModel):
-    """Initial state envelope. Optional; one per state path the surface binds to."""
-    surfaceId: str
-    path: Optional[str] = None
-    contents: list[dict] = Field(
-        description="Entries: {key, valueString|valueNumber|valueBoolean|valueMap}."
-    )
-
-
 class A2uiEnvelope(BaseModel):
-    """Single A2UI v1 envelope. Exactly one of the three discriminators
-    is set per envelope — the model_validator below enforces this so the
-    parent LLM cannot emit ambiguous or empty envelopes."""
-    surfaceUpdate: Optional[SurfaceUpdate] = None
-    beginRendering: Optional[BeginRendering] = None
-    dataModelUpdate: Optional[DataModelUpdate] = None
+    """Single A2UI v0.9 envelope. Carries the protocol `version` plus
+    exactly one of the four discriminators — the model_validator below
+    enforces this so the parent LLM cannot emit ambiguous or empty
+    envelopes."""
+    version: str = Field(default="v0.9", description="A2UI protocol version.")
+    createSurface: Optional[dict] = Field(
+        default=None,
+        description="Surface-creation envelope: {surfaceId, catalogId, theme?, "
+        "sendDataModel?}. Required first envelope per surface.",
+    )
+    updateComponents: Optional[dict] = Field(
+        default=None,
+        description="Component-tree envelope: {surfaceId, components}. The first "
+        "one must include the component with id 'root'.",
+    )
+    updateDataModel: Optional[dict] = Field(
+        default=None,
+        description="Data-model envelope: {surfaceId, path?, value?}. path "
+        "defaults to '/' (whole-model replace); omitted value deletes at path.",
+    )
+    deleteSurface: Optional[dict] = Field(
+        default=None,
+        description="Surface-deletion envelope: {surfaceId}.",
+    )
 
     @model_validator(mode="after")
     def _exactly_one_discriminator(self) -> "A2uiEnvelope":
         present = sum(
-            1 for v in (self.surfaceUpdate, self.beginRendering, self.dataModelUpdate)
+            1 for v in (
+                self.createSurface,
+                self.updateComponents,
+                self.updateDataModel,
+                self.deleteSurface,
+            )
             if v is not None
         )
         if present != 1:
             raise ValueError(
                 f"A2uiEnvelope requires exactly one of "
-                f"surfaceUpdate / beginRendering / dataModelUpdate; got {present}"
+                f"createSurface / updateComponents / updateDataModel / "
+                f"deleteSurface; got {present}"
             )
         return self
 
 
 @tool
 def render_a2ui_surface(envelopes: list[A2uiEnvelope]) -> str:
-    """Render a UI surface using A2UI v1 envelopes. Emit:
-      - exactly one `surfaceUpdate` (component tree),
-      - exactly one `beginRendering` (root reference),
-      - zero or more `dataModelUpdate` entries (initial state).
+    """Render a UI surface using A2UI v0.9 envelopes. Emit:
+      - exactly one `createSurface` (surfaceId + catalogId) FIRST,
+      - one or more `updateComponents` (component tree; the FIRST one must
+        include the component with id "root" — rendering starts when the
+        root component is defined),
+      - zero or more `updateDataModel` entries (initial state).
 
-    Envelope order in this call should be: surfaceUpdate, beginRendering,
-    then any dataModelUpdate entries (so the surface mounts and per-component
-    placeholders show before initial state arrives).
+    Envelope order in this call must be: createSurface, then
+    updateComponents (root component first), then any updateDataModel
+    entries (so the surface mounts and per-component placeholders show
+    before initial state arrives).
     """
     if not envelopes:
         raise ValueError("render_a2ui_surface requires at least one envelope")

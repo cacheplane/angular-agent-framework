@@ -46,15 +46,15 @@ names match: `Card`, `Column`, `Row`, `List`, `Tabs`, `Modal`,
 
 Common props per component:
 - `Card`: no props (children is single id wrapped in array)
-- `Column` / `Row`: `{ gap?: 'small'|'medium'|'large', alignment?: 'start'|'center'|'end'|'stretch' }`
-- `Text`: `{ text: string, usageHint?: 'h1'|'h2'|'h3'|'h4'|'h5'|'caption'|'body' }`
+- `Column` / `Row`: `{ gap?: 'small'|'medium'|'large', align?: 'start'|'center'|'end'|'stretch', justify?: 'start'|'center'|'end'|'spaceAround'|'spaceBetween'|'spaceEvenly'|'stretch' }`
+- `Text`: `{ text: string, variant?: 'h1'|'h2'|'h3'|'h4'|'h5'|'caption'|'body' }`
 - `TextField`: `{ label: string, text: string | { statePath: '/path' }, placeholder?: string, textFieldType?: 'shortText'|'longText'|'number'|'date'|'obscured', validationRegexp?: string }`
 - `MultipleChoice`: `{ label: string, options: [{ label: string, value: string }, ...], selections: string[] | { statePath: '/path' }, maxAllowedSelections?: number }`
 - `CheckBox`: `{ label: string, value: boolean | { statePath: '/path' } }`
-- `Slider`: `{ label: string, value: number | { statePath: '/path' }, minValue: number, maxValue: number }`
+- `Slider`: `{ label: string, value: number | { statePath: '/path' }, min: number, max: number }`
 - `Button`: `{ label: string, primary?: boolean }` plus `on.click.action` for the action name
 - `DateTimeInput`: `{ label: string, value: string | { statePath: '/path' }, enableDate?: boolean, enableTime?: boolean }`
-- `Image` / `Video` / `AudioPlayer`: `{ url: string }` plus `Image.fit?: 'contain'|'cover'|'fill'|'none'|'scale-down'`, `Image.usageHint?: 'icon'|'avatar'|'smallFeature'|'mediumFeature'|'largeFeature'|'header'`
+- `Image` / `Video` / `AudioPlayer`: `{ url: string }` plus `Image.fit?: 'contain'|'cover'|'fill'|'none'|'scaleDown'`, `Image.variant?: 'icon'|'avatar'|'smallFeature'|'mediumFeature'|'largeFeature'|'header'`
 - `Icon`: `{ icon: string, size?: number }`
 - `Divider`: `{ direction?: 'horizontal'|'vertical' }`
 - `Tabs`: special — uses `tabTitles: string[]` and one child id per tab in `children`
@@ -70,7 +70,7 @@ A "Quick feedback" form:
   "elements": {
     "card": { "type": "Card", "children": ["body"] },
     "body": { "type": "Column", "props": { "gap": "medium" }, "children": ["title", "name", "rating", "submit"] },
-    "title": { "type": "Text", "props": { "text": "Quick feedback", "usageHint": "h3" } },
+    "title": { "type": "Text", "props": { "text": "Quick feedback", "variant": "h3" } },
     "name": { "type": "TextField", "props": { "label": "Your name", "text": { "statePath": "/name" }, "textFieldType": "shortText" } },
     "rating": { "type": "MultipleChoice", "props": { "label": "Rating", "options": [
       { "label": "1", "value": "1" }, { "label": "2", "value": "2" }, { "label": "3", "value": "3" }, { "label": "4", "value": "4" }, { "label": "5", "value": "5" }
