@@ -4,13 +4,19 @@
     {
       "name": "ag-ui-itinerary",
       "runtimeExecutable": "/bin/bash",
-      "runtimeArgs": ["-c", "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && export GOOGLE_MAPS_API_KEY=$(grep -E '^GOOGLE_MAPS_API_KEY=' /Users/blove/repos/angular-agent-framework/.env | head -1 | cut -d= -f2- | tr -d '\"' | tr -d \"'\") && export GOOGLE_MAPS_MAP_ID=86d464ea7d5306034fe2a254 && npx nx serve examples-ag-ui-angular --port 4222"],
+      "runtimeArgs": [
+        "-c",
+        "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && export GOOGLE_MAPS_API_KEY=$(grep -E '^GOOGLE_MAPS_API_KEY=' /Users/blove/repos/angular-agent-framework/.env | head -1 | cut -d= -f2- | tr -d '\"' | tr -d \"'\") && export GOOGLE_MAPS_MAP_ID=86d464ea7d5306034fe2a254 && npx nx serve examples-ag-ui-angular --port 4222"
+      ],
       "port": 4222
     },
     {
       "name": "ag-ui-backend",
       "runtimeExecutable": "/bin/bash",
-      "runtimeArgs": ["-c", "cd examples/ag-ui/python && export OPENAI_API_KEY=$(grep -E '^OPENAI_API_KEY=' /Users/blove/repos/angular-agent-framework/.env | head -1 | cut -d= -f2- | tr -d '\"' | tr -d \"'\") && unset AG_UI_INTERNAL_TOKEN && uv run uvicorn src.server:app --port 8000"],
+      "runtimeArgs": [
+        "-c",
+        "cd examples/ag-ui/python && export OPENAI_API_KEY=$(grep -E '^OPENAI_API_KEY=' /Users/blove/repos/angular-agent-framework/.env | head -1 | cut -d= -f2- | tr -d '\"' | tr -d \"'\") && unset AG_UI_INTERNAL_TOKEN && uv run uvicorn src.server:app --port 8000"
+      ],
       "port": 8000
     },
     {
@@ -77,6 +83,24 @@
         "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && npx nx serve cockpit-chat-generative-ui-angular --port 4500"
       ],
       "port": 4500
+    },
+    {
+      "name": "chat-backend",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": [
+        "-c",
+        "cd examples/chat/python && export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && export OPENAI_API_KEY=$(grep -E '^OPENAI_API_KEY=' /Users/blove/repos/angular-agent-framework/.env | head -1 | cut -d= -f2- | tr -d '\"' | tr -d \"'\") && uv run langgraph dev --port 2024 --no-browser"
+      ],
+      "port": 2024
+    },
+    {
+      "name": "chat-frontend",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": [
+        "-c",
+        "export PATH=/Users/blove/.nvm/versions/node/v22.14.0/bin:$PATH && npx nx serve examples-chat-angular --port 4200"
+      ],
+      "port": 4200
     }
   ]
 }
