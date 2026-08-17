@@ -200,7 +200,14 @@ export class A2uiSurfaceComponent {
           }
         }
 
-        const message = buildA2uiActionMessage({ ...params, context }, surf);
+        // sendDataModel metadata must carry the LIVE model (user edits
+        // included), minus renderer-internal keys.
+        const { _a2uiChecks, ...publicModel } = liveModel;
+        void _a2uiChecks;
+        const message = buildA2uiActionMessage(
+          { ...params, context },
+          { ...surf, dataModel: publicModel },
+        );
         this.action.emit(message);
         return message;
       },

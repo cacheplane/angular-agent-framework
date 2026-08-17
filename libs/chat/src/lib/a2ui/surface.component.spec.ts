@@ -195,3 +195,43 @@ describe('A2uiSurfaceComponent — validation gate + live context (Phase 3)', ()
     expect(fx.componentInstance.liveStore.get('/email')).toBe('user@typed.io');
   });
 });
+
+describe('A2uiSurfaceComponent — sendDataModel live round-trip (Phase 4)', () => {
+  beforeEach(() => TestBed.configureTestingModule({ imports: [A2uiSurfaceComponent] }));
+
+  it('attaches the live data model (internal keys stripped) when sendDataModel is true', () => {
+    const store = createA2uiSurfaceStore();
+    store.apply({ version: 'v0.9', createSurface: {
+      surfaceId: 's3', catalogId: 'basic', sendDataModel: true,
+    } } as never);
+    store.apply({ version: 'v0.9', updateComponents: {
+      surfaceId: 's3',
+      components: [
+        { id: 'root', component: 'Column', children: ['name', 'go'] },
+        { id: 'name', component: 'TextField', label: 'Name', value: { path: '/name' },
+          checks: [{ condition: { call: 'required', args: { value: { path: '/name' } } }, message: 'Required' }] },
+        { id: 'go', component: 'Button', child: 'go-lbl', action: { event: { name: 'save' } } },
+        { id: 'go-lbl', component: 'Text', text: 'Save' },
+      ],
+    } } as never);
+    store.apply({ version: 'v0.9', updateDataModel: { surfaceId: 's3', path: '/name', value: '' } } as never);
+
+    const fx = TestBed.createComponent(A2uiSurfaceComponent);
+    fx.componentRef.setInput('state', store.surfaceState('s3')()!);
+    fx.componentRef.setInput('catalog', a2uiBasicCatalog());
+    const actions: { metadata?: { a2uiClientDataModel?: { surfaces: Record<string, Record<string, unknown>> } } }[] = [];
+    fx.componentInstance.action.subscribe((a) => actions.push(a));
+    fx.detectChanges();
+
+    // User edits the bound field via the live store.
+    fx.componentInstance.liveStore.set('/name', 'Ada Lovelace');
+
+    const handler = fx.componentInstance.internalHandlers()['a2ui:event'];
+    handler({ surfaceId: 's3', sourceComponentId: 'go', name: 'save', context: {} });
+
+    expect(actions).toHaveLength(1);
+    const model = actions[0].metadata!.a2uiClientDataModel!.surfaces['s3'];
+    expect(model['name']).toBe('Ada Lovelace');
+    expect('_a2uiChecks' in model).toBe(false);
+  });
+});

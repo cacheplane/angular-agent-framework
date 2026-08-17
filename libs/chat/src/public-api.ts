@@ -209,6 +209,7 @@ export { A2uiSurfaceComponent } from './lib/a2ui/surface.component';
 export { buildA2uiActionMessage } from './lib/a2ui/build-action-message';
 export { a2uiBasicCatalog } from './lib/a2ui/catalog/index';
 export { emitBinding } from './lib/a2ui/catalog/emit-binding';
+export { a2uiClientCapabilities } from './lib/a2ui/capabilities';
 
 // A2UI catalog components (for custom catalog composition via withViews)
 export { A2uiTextFieldComponent } from './lib/a2ui/catalog/text-field.component';

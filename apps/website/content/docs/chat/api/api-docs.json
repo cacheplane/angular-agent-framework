@@ -8640,6 +8640,20 @@
     ]
   },
   {
+    "name": "a2uiClientCapabilities",
+    "kind": "function",
+    "description": "The A2UI client capabilities this renderer supports — the typed\n`a2uiClientCapabilities` metadata a host attaches to agent requests so\nthe agent knows which component catalogs it may target\n(catalog negotiation, A2UI v0.9 transport metadata).",
+    "signature": "a2uiClientCapabilities(): A2uiClientCapabilities",
+    "params": [],
+    "returns": {
+      "type": "A2uiClientCapabilities",
+      "description": ""
+    },
+    "examples": [
+      "```ts\nconst metadata = { a2uiClientCapabilities: a2uiClientCapabilities() };\n```"
+    ]
+  },
+  {
     "name": "action",
     "kind": "function",
     "description": "Declare an async function tool the model can call; its resolved return value\nbecomes the tool result shipped back to the model.",
