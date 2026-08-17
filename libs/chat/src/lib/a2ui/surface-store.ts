@@ -70,7 +70,7 @@ function isResolved(dataModel: Record<string, unknown>, path: string): boolean {
  * nested objects/arrays are recursed. */
 function resolveProps(value: unknown, dataModel: Record<string, unknown>): unknown {
   if (typeof value === 'string') {
-    const full = value.match(/^\{(\$\.[^}]+)\}$/);
+    const full = value.match(/^\{(\$\.[^{}]{1,512})\}$/);
     if (full) {
       const segs = full[1].slice(2).split('.');
       let cur: unknown = dataModel;
@@ -80,7 +80,9 @@ function resolveProps(value: unknown, dataModel: Record<string, unknown>): unkno
       }
       return cur;
     }
-    return value.replace(/\{(\$\.[^}]+)\}/g, (_, path: string) => {
+    // Bounded, brace-free class keeps the scan linear on adversarial
+    // LLM-authored strings (CodeQL js/polynomial-redos).
+    return value.replace(/\{(\$\.[^{}]{1,512})\}/g, (_, path: string) => {
       const segs = path.slice(2).split('.');
       let cur: unknown = dataModel;
       for (const s of segs) {

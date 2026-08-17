@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 import type { A2uiComponent } from '@threadplane/a2ui';
 
-const REF_PATTERN = /\{(\$\.[^}]+)\}/g;
+// `[^{}]` (no nested braces) + a length bound keep the scan linear on
+// adversarial LLM-authored strings (CodeQL js/polynomial-redos).
+const REF_PATTERN = /\{(\$\.[^{}]{1,512})\}/g;
 
 function walk(value: unknown, into: Set<string>): void {
   if (typeof value === 'string') {
