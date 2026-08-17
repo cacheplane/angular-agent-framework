@@ -1,185 +1,207 @@
 # A2UI Schema
 
-The `@threadplane/a2ui` schema is a TypeScript model of the protocol shapes the framework uses. It's a contract for agent output and custom integrations, but it's not a runtime validator.
+The `@threadplane/a2ui` schema is a TypeScript model of the A2UI v0.9 protocol shapes the framework uses. It's a contract for agent output and custom integrations, but it's not a runtime validator.
+
+## Protocol constants
+
+```ts
+const A2UI_WIRE_VERSION = 'v0.9';
+const A2UI_MIME_TYPE = 'application/a2ui+json';
+const A2UI_BASIC_CATALOG_ID =
+  'https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json';
+```
+
+`A2UI_WIRE_VERSION` is stamped on every envelope. `A2UI_MIME_TYPE` is the payload MIME type standardized in the v0.9.1 release. `A2UI_BASIC_CATALOG_ID` identifies the standard basic component catalog referenced by `createSurface.catalogId`.
 
 ## Dynamic values
 
-Dynamic values are wrapped objects. A value can be literal or resolved from the surface data model by path.
+Dynamic values are bare literals, JSON-pointer bindings, or client-side function calls. There are no literal wrapper objects in v0.9.
 
 ```ts
-type DynamicString =
-  | { literalString: string }
-  | { path: string };
+interface A2uiPathRef {
+  path: string;
+}
 
-type DynamicNumber =
-  | { literalNumber: number }
-  | { path: string };
+interface A2uiFunctionCall {
+  call: string;
+  args?: Record<string, unknown>;
+  returnType?: 'string' | 'number' | 'boolean' | 'array' | 'object' | 'any' | 'void';
+}
 
-type DynamicBoolean =
-  | { literalBoolean: boolean }
-  | { path: string };
-
-type DynamicStringList =
-  | { literalArray: string[] }
-  | { path: string };
+type DynamicString = string | A2uiPathRef | A2uiFunctionCall;
+type DynamicNumber = number | A2uiPathRef | A2uiFunctionCall;
+type DynamicBoolean = boolean | A2uiPathRef | A2uiFunctionCall;
+type DynamicStringList = string[] | A2uiPathRef | A2uiFunctionCall;
 ```
 
-Absolute paths start with `/` and are resolved from the model root. Relative paths are resolved from an optional `A2uiScope`.
+Absolute paths start with `/` and are resolved from the model root. Relative paths are resolved from an optional `A2uiScope` (used inside children templates). Function calls are typed on the wire today; execution ships in an upcoming release, so `resolveDynamic` returns `undefined` for them.
 
 ## Children
 
-Layout components use either explicit child IDs or a template declaration.
+Container components use either a static child-id list or a template declaration.
 
 ```ts
 type A2uiChildren =
-  | { explicitList: string[] }
-  | { template: { componentId: string; dataBinding: string } };
+  | string[]
+  | { path: string; componentId: string };
 ```
 
-The protocol layer only types this shape. Template expansion is renderer behavior.
+The template form stamps `componentId` once per element of the data-model array at `path`. The protocol layer only types this shape; template expansion is renderer behavior.
 
 ## Actions
 
-An action has a name and optional context entries. Context values use the same dynamic wrappers as component props.
+An action either dispatches a named event to the agent or executes a client-side function.
 
 ```ts
-interface A2uiAction {
-  name: string;
-  context?: A2uiActionContextEntry[];
+interface A2uiEventAction {
+  event: {
+    name: string;
+    context?: Record<string, DynamicValue>;
+  };
 }
+
+interface A2uiFunctionAction {
+  functionCall: A2uiFunctionCall;
+}
+
+type A2uiAction = A2uiEventAction | A2uiFunctionAction;
 ```
 
-`@threadplane/a2ui` does not execute actions. It only describes the payload that chat/render code can turn into an outbound `A2uiActionMessage`.
+`context` is a plain object; values can be literals or `{ path }` bindings resolved at interaction time. `@threadplane/a2ui` does not execute actions. It only describes the payload that chat/render code can turn into an outbound `A2uiActionMessage`.
 
 ## Components
 
-Every component has an `id`, optional `weight`, and a single-key `component` union.
+Components are flat objects discriminated by the `component` string. Props sit at the top level of the same object — there are no type-keyed wrappers.
 
 ```ts
-interface A2uiComponent {
+interface A2uiComponentBase {
   id: string;
-  weight?: number;
-  component: A2uiComponentDef;
+  component: string;
+  catalogId?: string;       // per-component catalog override
+  weight?: number;          // flex-grow-like; only inside Row/Column
+  accessibility?: Record<string, unknown>;
 }
 ```
 
-The exported component definitions are:
+Input components additionally mix in `A2uiCheckable` (`checks?: A2uiCheck[]`) for client-side validation rules (typed now, enforced in a later phase).
 
-| Definition | Main fields |
-|------------|-------------|
-| `Text` | `text`, `usageHint` |
-| `Image` | `url`, `alt`, `width`, `height` |
-| `Icon` | `icon`, `size` |
-| `Video` | `url`, `autoPlay`, `controls` |
-| `AudioPlayer` | `url`, `autoPlay`, `controls` |
-| `Row` | `children`, `gap`, `alignment`, `distribution` |
-| `Column` | `children`, `gap`, `alignment` |
-| `List` | `children`, `direction` |
+The basic-catalog component shapes are:
+
+| Component | Main fields |
+|-----------|-------------|
+| `Text` | `text`, `variant` |
+| `Image` | `url`, `description`, `fit`, `variant` |
+| `Icon` | `name` (string or `{ svgPath }`) |
+| `Video` | `url` |
+| `AudioPlayer` | `url`, `description` |
+| `Row` | `children`, `justify`, `align` |
+| `Column` | `children`, `justify`, `align` |
+| `List` | `children`, `direction`, `align` |
 | `Card` | `child` |
-| `Tabs` | `tabItems` |
-| `Divider` | `direction` |
-| `Modal` | `entryPointChild`, `contentChild`, `title` |
-| `Button` | `child`, `primary`, `action` |
-| `CheckBox` | `label`, `checked`, `action` |
-| `TextField` | `label`, `text`, `textFieldType`, `validationRegexp` |
-| `DateTimeInput` | `label`, `value`, `enableDate`, `enableTime` |
-| `MultipleChoice` | `selections`, `options`, `maxAllowedSelections`, `label` |
-| `Slider` | `value`, `minValue`, `maxValue`, `step`, `label` |
+| `Tabs` | `tabs` (array of `{ title, child }`) |
+| `Modal` | `trigger`, `content` |
+| `Divider` | `axis` |
+| `Button` | `child`, `variant`, `action` |
+| `CheckBox` | `label`, `value` |
+| `TextField` | `label`, `value`, `variant`, `validationRegexp` |
+| `DateTimeInput` | `value`, `enableDate`, `enableTime`, `min`, `max`, `label` |
+| `ChoicePicker` | `options` (array of `{ label, value }`), `value`, `variant`, `displayStyle`, `filterable`, `label` |
+| `Slider` | `value`, `max`, `min`, `label` |
 
-Several of these fields are constrained to a fixed enum. Emit one of the listed values — an unknown value isn't validated at the protocol layer, but a renderer may ignore it or fall back to a default:
+Note that `Button` has no text prop — its label is a `child` Text component referenced by id. `ChoicePicker` replaces the pre-v0.9 `MultipleChoice` component.
+
+Several fields are constrained to a fixed enum. Emit one of the listed values — an unknown value isn't validated at the protocol layer, but a renderer may ignore it or fall back to a default:
 
 | Field | On | Allowed values |
 |-------|----|----------------|
-| `usageHint` | `Text` | `'h1'` \| `'h2'` \| `'h3'` \| `'h4'` \| `'h5'` \| `'caption'` \| `'body'` |
-| `textFieldType` | `TextField` | `'date'` \| `'longText'` \| `'number'` \| `'shortText'` \| `'obscured'` |
-| `alignment` | `Row`, `Column` | `'start'` \| `'center'` \| `'end'` \| `'stretch'` |
-| `distribution` | `Row` | `'start'` \| `'center'` \| `'end'` \| `'space-between'` \| `'space-around'` |
+| `variant` | `Text` | `'h1'` \| `'h2'` \| `'h3'` \| `'h4'` \| `'h5'` \| `'caption'` \| `'body'` |
+| `variant` | `Image` | `'icon'` \| `'avatar'` \| `'smallFeature'` \| `'mediumFeature'` \| `'largeFeature'` \| `'header'` |
+| `fit` | `Image` | `'contain'` \| `'cover'` \| `'fill'` \| `'none'` \| `'scaleDown'` |
+| `variant` | `Button` | `'default'` \| `'primary'` \| `'borderless'` |
+| `variant` | `TextField` | `'shortText'` \| `'longText'` \| `'number'` \| `'obscured'` |
+| `variant` | `ChoicePicker` | `'mutuallyExclusive'` \| `'multipleSelection'` |
+| `displayStyle` | `ChoicePicker` | `'checkbox'` \| `'chips'` |
+| `justify` | `Row`, `Column` | `'start'` \| `'center'` \| `'end'` \| `'spaceAround'` \| `'spaceBetween'` \| `'spaceEvenly'` \| `'stretch'` |
+| `align` | `Row`, `Column`, `List` | `'start'` \| `'center'` \| `'end'` \| `'stretch'` |
 | `direction` | `List` | `'vertical'` \| `'horizontal'` |
-| `direction` | `Divider` | `'horizontal'` \| `'vertical'` |
+| `axis` | `Divider` | `'horizontal'` \| `'vertical'` |
 
-`Tabs` is the one container that doesn't use `A2uiChildren`. Its `tabItems` is an array of `A2uiTabItem`, each pairing a `title` (a `DynamicString`) with a single `child` id:
+`Tabs` is the one container that doesn't use `A2uiChildren`. Its `tabs` field is an array of `{ title: DynamicString; child: string }` pairs.
 
-```ts
-interface A2uiTabItem {
-  title: DynamicString;
-  child: string;
-}
-```
+The union of the basic-catalog shapes is exported as `A2uiCatalogComponent`. The broader `A2uiComponent` also admits non-basic-catalog components (`A2uiComponentBase & Record<string, unknown>`) — renderers treat unknown `component` strings as unrenderable and fall back gracefully.
 
-The schema exposes `validationRegexp` on `TextField`, but validation execution is not implemented in this package. Treat schema fields as protocol data until a renderer wires behavior.
+The schema exposes `validationRegexp` on `TextField` and `checks` on input components, but validation execution is not implemented in this package. Treat schema fields as protocol data until a renderer wires behavior.
 
 ## Message envelopes
 
-The parser recognizes four top-level envelopes:
+Every envelope carries a `version` (`'v0.9'` on the current wire) plus exactly one envelope key:
 
 ```ts
-type A2uiMessage =
-  | { surfaceUpdate: A2uiSurfaceUpdate }
-  | { dataModelUpdate: A2uiDataModelUpdate }
-  | { beginRendering: A2uiBeginRendering }
-  | { deleteSurface: A2uiDeleteSurface };
+type A2uiMessage = { version: string } &
+  (
+    | { createSurface: A2uiCreateSurface }
+    | { updateComponents: A2uiUpdateComponents }
+    | { updateDataModel: A2uiUpdateDataModel }
+    | { deleteSurface: A2uiDeleteSurface }
+  );
 ```
 
-### surfaceUpdate
+### createSurface
 
-Adds or replaces components for a surface.
+Creates a surface and declares its component catalog. Must be the first envelope for a surface.
 
 ```json
 {
-  "surfaceUpdate": {
+  "version": "v0.9",
+  "createSurface": {
+    "surfaceId": "checkout",
+    "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json",
+    "theme": { "primaryColor": "#2563eb" },
+    "sendDataModel": true
+  }
+}
+```
+
+`theme` and `sendDataModel` are optional. When `sendDataModel` is true, the client attaches the surface's full data model to every outbound message.
+
+### updateComponents
+
+Adds or replaces components for a surface, merged incrementally by `id`. Exactly one component across the surface must have `id: "root"`; rendering starts once it is defined.
+
+```json
+{
+  "version": "v0.9",
+  "updateComponents": {
     "surfaceId": "checkout",
     "components": [
-      { "id": "root", "component": { "Card": { "child": "title" } } },
-      { "id": "title", "component": { "Text": { "text": { "literalString": "Checkout" } } } }
+      { "id": "root", "component": "Card", "child": "title" },
+      { "id": "title", "component": "Text", "text": "Checkout" }
     ]
   }
 }
 ```
 
-### dataModelUpdate
+### updateDataModel
 
-Carries nested data-model entries. `path` is optional.
+Sets or deletes data at an optional JSON-pointer `path` (omitted or `"/"` targets the whole model). `value` is plain JSON; omitting it deletes the key at `path`.
 
 ```json
 {
-  "dataModelUpdate": {
+  "version": "v0.9",
+  "updateDataModel": {
     "surfaceId": "checkout",
     "path": "/customer",
-    "contents": [
-      { "key": "name", "valueString": "Ada" },
-      { "key": "active", "valueBoolean": true }
-    ]
+    "value": { "name": "Ada", "active": true }
   }
 }
 ```
-
-Each `A2uiDataModelEntry` has a `key` plus one of `valueString`, `valueNumber`, `valueBoolean`, or `valueMap`.
-
-### beginRendering
-
-Identifies the root component to render for a surface.
-
-```json
-{
-  "beginRendering": {
-    "surfaceId": "checkout",
-    "root": "root",
-    "styles": {
-      "font": "Inter",
-      "primaryColor": "#2563eb"
-    }
-  }
-}
-```
-
-The source comments describe `styles.font` and `styles.primaryColor` as the canonical style fields.
 
 ### deleteSurface
 
 Removes a surface by ID.
 
 ```json
-{ "deleteSurface": { "surfaceId": "checkout" } }
+{ "version": "v0.9", "deleteSurface": { "surfaceId": "checkout" } }
 ```
 
 ## Internal surface model
@@ -194,11 +216,10 @@ interface A2uiSurface {
   sendDataModel?: boolean;
   components: Map<string, A2uiComponent>;
   dataModel: Record<string, unknown>;
-  styles?: { font?: string; primaryColor?: string };
 }
 ```
 
-`A2uiTheme` carries optional, agent-supplied presentation hints:
+`A2uiTheme` carries the optional, agent-supplied presentation hints from `createSurface.theme`:
 
 ```ts
 interface A2uiTheme {
@@ -208,7 +229,7 @@ interface A2uiTheme {
 }
 ```
 
-This shape is not constrained to the wire format. Do not assume an agent sends it directly.
+The `A2uiSurface` shape is not the wire format. Do not assume an agent sends it directly.
 
 ## Outbound action messages
 
@@ -216,19 +237,23 @@ When a rendered surface sends an action back to the agent, the typed outbound sh
 
 ```ts
 interface A2uiActionMessage {
-  version: 'v1';
+  version: string; // 'v0.9'
   action: {
     name: string;
     surfaceId: string;
     sourceComponentId: string;
     timestamp: string;
-    context: Record<string, unknown>;
+    context?: Record<string, unknown>;
     label?: string;
   };
   metadata?: {
-    a2uiClientDataModel: A2uiClientDataModel;
+    a2uiClientDataModel?: A2uiClientDataModel;
   };
 }
 ```
 
-The outbound action version is `v1`. The optional `label` is a human-readable label derived from the source component's text (for example, a Button's child Text), used to describe the action in transcripts; backends may ignore it.
+`context` holds the action's context values already resolved against the current data model. The optional `label` is a Threadplane extension — a human-readable label derived from the source component's text (for example, a Button's child Text), used to describe the action in transcripts; backends may ignore it.
+
+`A2uiClientDataModel` is `{ surfaces: Record<surfaceId, Record<string, unknown>> }` — the per-surface data model snapshot, attached only when the surface's `createSurface` set `sendDataModel: true`.
+
+Two further client → agent shapes are typed: `A2uiErrorMessage` (`{ version, error: { code, surfaceId?, path?, message? } }`) for reporting client-side protocol errors, and `A2uiClientCapabilities` (`{ supportedCatalogIds, inlineCatalogs? }`) for advertising which catalogs the client can render.

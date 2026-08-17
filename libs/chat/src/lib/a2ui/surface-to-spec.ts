@@ -1,35 +1,35 @@
 // SPDX-License-Identifier: MIT
 import type { Spec, UIElement } from '@json-render/core';
 import type {
-  A2uiSurface, A2uiComponent, A2uiAction, A2uiChildren,
-  A2uiActionContextEntry,
+  A2uiSurface, A2uiAction, A2uiChildren,
 } from '@threadplane/a2ui';
-import { resolveDynamic, getByPointer, isPathRef } from '@threadplane/a2ui';
+import { resolveDynamic, getByPointer, isPathRef, isFunctionCall } from '@threadplane/a2ui';
 
-const RESERVED_PROP_KEYS = new Set(['child', 'children', 'action', 'tabItems', 'entryPointChild', 'contentChild']);
+/** Keys that are protocol structure (base fields + child/action wiring),
+ * not renderable props. */
+const RESERVED_PROP_KEYS = new Set([
+  'id', 'component', 'catalogId', 'weight', 'accessibility', 'checks',
+  'child', 'children', 'action', 'tabs', 'trigger', 'content',
+]);
 
 type RenderedAction = Record<string, { action: string; params: Record<string, unknown> }>;
-
-/** Pull the (single) component-type key + its props from a v1 ComponentDef wrapper. */
-function unwrapComponentDef(def: A2uiComponent['component']): { type: string; props: Record<string, unknown> } {
-  const entries = Object.entries(def as Record<string, unknown>);
-  if (entries.length !== 1) {
-    return { type: 'Text', props: {} };
-  }
-  const [type, props] = entries[0];
-  return { type, props: (props ?? {}) as Record<string, unknown> };
-}
 
 function resolveAction(
   action: A2uiAction | undefined,
   surface: A2uiSurface,
   sourceComponentId: string,
 ): RenderedAction | undefined {
-  if (!action) return undefined;
+  if (!action || typeof action !== 'object') return undefined;
+  if (!('event' in action)) {
+    // functionCall actions execute client-side (Phase 2); nothing to wire yet.
+    return undefined;
+  }
+  const event = action.event;
+  if (!event || typeof event.name !== 'string') return undefined;
   const resolvedContext: Record<string, unknown> = {};
-  if (Array.isArray(action.context)) {
-    for (const entry of action.context as A2uiActionContextEntry[]) {
-      resolvedContext[entry.key] = resolveDynamic(entry.value, surface.dataModel);
+  if (event.context && typeof event.context === 'object') {
+    for (const [key, value] of Object.entries(event.context)) {
+      resolvedContext[key] = resolveDynamic(value, surface.dataModel);
     }
   }
   return {
@@ -38,7 +38,7 @@ function resolveAction(
       params: {
         surfaceId: surface.surfaceId,
         sourceComponentId,
-        name: action.name,
+        name: event.name,
         context: resolvedContext,
       },
     },
@@ -50,15 +50,14 @@ function childrenToList(
   surface: A2uiSurface,
 ): { ids: string[]; templateExpand?: { componentId: string; arrPath: string; arr: unknown[] } } | undefined {
   if (!children) return undefined;
-  if ('explicitList' in children) {
-    return { ids: children.explicitList };
+  if (Array.isArray(children)) {
+    return { ids: children };
   }
-  if ('template' in children) {
-    const t = children.template;
-    const arr = getByPointer(surface.dataModel, t.dataBinding);
+  if (typeof children === 'object' && 'componentId' in children && 'path' in children) {
+    const arr = getByPointer(surface.dataModel, children.path);
     if (!Array.isArray(arr)) return { ids: [] };
-    const ids = arr.map((_, i) => `${t.componentId}__${i}`);
-    return { ids, templateExpand: { componentId: t.componentId, arrPath: t.dataBinding, arr } };
+    const ids = arr.map((_, i) => `${children.componentId}__${i}`);
+    return { ids, templateExpand: { componentId: children.componentId, arrPath: children.path, arr } };
   }
   return undefined;
 }
@@ -69,7 +68,8 @@ export function surfaceToSpec(surface: A2uiSurface): Spec | null {
   const elements: Record<string, UIElement> = {};
 
   for (const [id, comp] of surface.components) {
-    const { type, props: rawProps } = unwrapComponentDef(comp.component);
+    const type = typeof comp.component === 'string' ? comp.component : 'Text';
+    const rawProps = comp as unknown as Record<string, unknown>;
 
     const resolvedProps: Record<string, unknown> = {};
     const bindings: Record<string, string> = {};
@@ -88,6 +88,9 @@ export function surfaceToSpec(surface: A2uiSurface): Spec | null {
         const path = (value as { path: string }).path;
         bindings[key] = path;
         resolvedProps[key] = { $bindState: path };
+      } else if (isFunctionCall(value)) {
+        // Client-side function values ship in Phase 2 — omit until then.
+        continue;
       } else {
         resolvedProps[key] = resolveDynamic(value, surface.dataModel);
       }
@@ -99,26 +102,23 @@ export function surfaceToSpec(surface: A2uiSurface): Spec | null {
     const action = (rawProps as { action?: A2uiAction }).action;
     const on = resolveAction(action, surface, id);
 
-    // Map children — handle Card single child / Button single child / Modal entryPointChild+contentChild / Tabs tabItems
+    // Map children — Card/Button single child, Modal trigger+content, Tabs tabs[].
     let children: string[] | undefined;
-    if (type === 'Card' && typeof (rawProps as { child?: unknown }).child === 'string') {
-      children = [(rawProps as { child: string }).child];
-    } else if (type === 'Button' && typeof (rawProps as { child?: unknown }).child === 'string') {
-      children = [(rawProps as { child: string }).child];
+    if ((type === 'Card' || type === 'Button') && typeof rawProps['child'] === 'string') {
+      children = [rawProps['child'] as string];
     } else if (type === 'Modal') {
-      const m = rawProps as { entryPointChild?: string; contentChild?: string };
       const ids: string[] = [];
-      if (m.entryPointChild) ids.push(m.entryPointChild);
-      if (m.contentChild) ids.push(m.contentChild);
+      if (typeof rawProps['trigger'] === 'string') ids.push(rawProps['trigger'] as string);
+      if (typeof rawProps['content'] === 'string') ids.push(rawProps['content'] as string);
       children = ids;
     } else if (type === 'Tabs') {
-      const items = (rawProps as { tabItems?: { title?: unknown; child: string }[] }).tabItems ?? [];
+      const items = (rawProps as { tabs?: { title?: unknown; child: string }[] }).tabs ?? [];
       children = items.map(t => t.child);
       // Resolve tab titles and pass them as a plain string array for the Tabs component's tab bar.
       resolvedProps['tabTitles'] = items.map(t =>
         t.title !== undefined ? String(resolveDynamic(t.title, surface.dataModel)) : '',
       );
-    } else if (type === 'MultipleChoice') {
+    } else if (type === 'ChoicePicker') {
       // Resolve options[*].label (DynamicString) so the component receives plain strings.
       const opts = (rawProps as { options?: { label?: unknown; value: string }[] }).options ?? [];
       resolvedProps['options'] = opts.map(o => ({
@@ -126,14 +126,15 @@ export function surfaceToSpec(surface: A2uiSurface): Spec | null {
         value: o.value,
       }));
     } else {
-      const childInfo = childrenToList((rawProps as { children?: A2uiChildren }).children, surface);
+      const childInfo = childrenToList(rawProps['children'] as A2uiChildren | undefined, surface);
       if (childInfo) {
         children = childInfo.ids;
         if (childInfo.templateExpand) {
           const t = childInfo.templateExpand;
           const templateComp = surface.components.get(t.componentId);
           if (templateComp) {
-            const { type: tType, props: tRaw } = unwrapComponentDef(templateComp.component);
+            const tType = typeof templateComp.component === 'string' ? templateComp.component : 'Text';
+            const tRaw = templateComp as unknown as Record<string, unknown>;
             for (let i = 0; i < t.arr.length; i++) {
               const scope = { basePath: `${t.arrPath}/${i}`, item: t.arr[i] };
               const itemProps: Record<string, unknown> = {};

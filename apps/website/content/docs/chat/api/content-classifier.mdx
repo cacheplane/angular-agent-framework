@@ -69,7 +69,7 @@ type ContentType = 'pending' | 'markdown' | 'json-render' | 'a2ui' | 'mixed';
 
 ### a2uiSurfaces
 
-When the content type is `a2ui`, this signal contains all parsed A2UI surfaces with their components and data models. The map is keyed by surface ID and updates incrementally as JSONL lines arrive during streaming.
+When the content type is `a2ui`, this signal contains all parsed A2UI surfaces with their components and data models. The map is keyed by surface ID and updates incrementally as JSONL lines arrive during streaming. A surface appears once its `createSurface` envelope has arrived and a component with id `root` has been defined (the v0.9 progressive-rendering rule).
 
 ### errors
 
@@ -104,7 +104,8 @@ const a2uiClassifier = createContentClassifier();
 
 a2uiClassifier.update(
   '---a2ui_JSON---\n' +
-  '{"surfaceId":"s1","components":[{"id":"root","component":{"Text":{"text":{"literalString":"Hi"}}}}]}',
+  '{"version":"v0.9","createSurface":{"surfaceId":"s1","catalogId":"https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"}}\n' +
+  '{"version":"v0.9","updateComponents":{"surfaceId":"s1","components":[{"id":"root","component":"Text","text":"Hi"}]}}\n',
 );
 
 a2uiClassifier.type();          // 'a2ui'

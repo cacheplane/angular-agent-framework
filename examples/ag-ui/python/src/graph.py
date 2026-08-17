@@ -52,7 +52,7 @@ from src.streaming.subagent_stream_handler import (
 )
 from src.streaming.envelope_tool import render_a2ui_surface
 from src.streaming.envelope_normalizer import normalize_envelope_args
-from src.schemas.a2ui_v1 import A2UI_V1_SCHEMA_PROMPT
+from src.schemas.a2ui_v09 import A2UI_V09_SCHEMA_PROMPT
 
 
 _TITLE_PROMPT = (
@@ -495,6 +495,12 @@ async def research(
 # rendering when an AI message content begins with this prefix.
 A2UI_PREFIX = "---a2ui_JSON---"
 
+# Catalog id for the A2UI v0.9 basic catalog; used when synthesizing a
+# createSurface envelope for a surface the model forgot to create.
+A2UI_BASIC_CATALOG_ID = (
+    "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
+)
+
 
 @tool
 async def generate_json_render_spec(request: str) -> str:
@@ -571,7 +577,7 @@ async def generate(state: State, config: RunnableConfig) -> dict:
     # false. The envelope shape carries list[dict] for components/contents
     # (untyped inner objects), which strict mode rejects with a 400
     # ('additionalProperties is required to be supplied and to be false').
-    # Typing the inner shapes would over-couple this example to the A2UI v1
+    # Typing the inner shapes would over-couple this example to the A2UI v0.9
     # spec; instead we leave strict OFF and rely on the envelope-args
     # normalizer (Python: src/streaming/envelope_normalizer.py; TS:
     # libs/chat/src/lib/a2ui/envelope-normalizer.ts) to canonicalize the
@@ -586,13 +592,14 @@ async def generate(state: State, config: RunnableConfig) -> dict:
         [search_documents, request_approval, research, gen_ui_tool],
         state,
     )
-    # Append A2UI v1 schema to system prompt when in a2ui mode, so the parent
+    # Append A2UI v0.9 schema to system prompt when in a2ui mode, so the parent
     # LLM knows how to construct the envelopes directly.
     system = SYSTEM_PROMPT
     if gen_ui_mode == "a2ui":
-        system = SYSTEM_PROMPT + "\n\n--- A2UI v1 SCHEMA ---\n" + A2UI_V1_SCHEMA_PROMPT + (
+        system = SYSTEM_PROMPT + "\n\n--- A2UI v0.9 SCHEMA ---\n" + A2UI_V09_SCHEMA_PROMPT + (
             "\n\nWhen rendering UI in a2ui mode, emit envelopes in this order: "
-            "surfaceUpdate FIRST, then beginRendering, then any dataModelUpdate "
+            "createSurface FIRST, then updateComponents (the first one must "
+            "include the component with id 'root'), then any updateDataModel "
             "entries. This lets the client mount the surface as early as possible."
         )
     messages = [SystemMessage(content=system)] + state["messages"]
@@ -682,7 +689,7 @@ async def emit_generated_surface(state: State) -> dict:
         return {}
 
     if tool_name == "render_a2ui_surface":
-        # Sub-LLM returns a JSON array of v1 envelopes. Convert to JSONL
+        # Sub-LLM returns a JSON array of v0.9 envelopes. Convert to JSONL
         # (one envelope per line) and prepend the classifier sentinel.
         try:
             arr = json.loads(payload)
@@ -704,28 +711,41 @@ async def emit_generated_surface(state: State) -> dict:
                 arr = None
                 jsonl = payload  # let the parser deal with malformed lines
 
-        # Reorder envelopes so beginRendering lands in position 2 (right
-        # after the first surfaceUpdate). The surface store gates surface
-        # materialization on beginRendering; emitting it early lets the
-        # frontend mount the (initially empty) surface and reveal per-
-        # component fallbacks while dataModelUpdate envelopes flow.
+        # v0.9 ordering: createSurface MUST be the first envelope — the
+        # surface store materializes the surface on createSurface and starts
+        # rendering once a component with id "root" arrives. Stamp every
+        # envelope with version "v0.9", move the (first) createSurface to
+        # the front while leaving the rest in emission order, and synthesize
+        # a basic-catalog createSurface when the model didn't emit one.
         try:
             if isinstance(arr, list):
-                surface_updates = [e for e in arr if isinstance(e, dict) and "surfaceUpdate" in e]
-                begin_renderings = [e for e in arr if isinstance(e, dict) and "beginRendering" in e]
-                data_updates = [e for e in arr if isinstance(e, dict) and "dataModelUpdate" in e]
-                others = [
-                    e for e in arr
-                    if isinstance(e, dict)
-                    and not ("surfaceUpdate" in e or "beginRendering" in e or "dataModelUpdate" in e)
-                ]
-                reordered = (
-                    surface_updates
-                    + (begin_renderings[:1] if begin_renderings else [])
-                    + data_updates
-                    + others
-                    + begin_renderings[1:]
-                )
+                envelopes = [dict(e) for e in arr if isinstance(e, dict)]
+                for env in envelopes:
+                    env.setdefault("version", "v0.9")
+                creates = [e for e in envelopes if "createSurface" in e]
+                rest = [e for e in envelopes if "createSurface" not in e]
+                if creates:
+                    reordered = creates[:1] + rest + creates[1:]
+                else:
+                    surface_id = next(
+                        (
+                            body.get("surfaceId")
+                            for e in rest
+                            for body in e.values()
+                            if isinstance(body, dict) and body.get("surfaceId")
+                        ),
+                        None,
+                    )
+                    synthesized = []
+                    if surface_id:
+                        synthesized = [{
+                            "version": "v0.9",
+                            "createSurface": {
+                                "surfaceId": surface_id,
+                                "catalogId": A2UI_BASIC_CATALOG_ID,
+                            },
+                        }]
+                    reordered = synthesized + rest
                 jsonl = "\n".join(json.dumps(env) for env in reordered)
         except (TypeError, AttributeError, NameError):
             # arr may be unbound or unexpected shape — fall back to existing jsonl.

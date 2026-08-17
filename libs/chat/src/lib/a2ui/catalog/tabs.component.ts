@@ -54,9 +54,9 @@ import { RenderElementComponent } from '@threadplane/render';
   `],
 })
 export class A2uiTabsComponent {
-  /** Resolved tab titles from tabItems[*].title — produced by surface-to-spec. */
+  /** Resolved tab titles from tabs[*].title — produced by surface-to-spec. */
   readonly tabTitles = input<string[]>([]);
-  /** v1: each child key corresponds to a tab's contentChild (childKeys[i] ↔ tabTitles[i]). */
+  /** v0.9: each child key corresponds to a tab's child (childKeys[i] ↔ tabTitles[i]). */
   readonly childKeys = input<string[]>([]);
   readonly spec = input.required<Spec>();
   // Framework inputs required by the render harness.

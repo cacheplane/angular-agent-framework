@@ -1,7 +1,7 @@
 // libs/chat/src/lib/a2ui/partial-args-bridge.ts
 // SPDX-License-Identifier: MIT
 import { createPartialJsonParser, materialize } from '@cacheplane/partial-json';
-import type { A2uiMessage, A2uiSurfaceUpdate } from '@threadplane/a2ui';
+import { A2UI_BASIC_CATALOG_ID, A2UI_WIRE_VERSION, type A2uiMessage } from '@threadplane/a2ui';
 import type { A2uiSurfaceStore } from './surface-store';
 import { normalizeEnvelopeArgs } from './envelope-normalizer';
 
@@ -20,15 +20,10 @@ interface BridgeState {
   parser: ReturnType<typeof createPartialJsonParser>;
   /** Number of envelopes already dispatched to the store. */
   dispatchedCount: number;
-  /**
-   * Have we dispatched the initial surfaceUpdate + synthesised beginRendering
-   * pair for this turn yet? Until true, dispatch is deferred — we wait for
-   * the first surfaceUpdate to have at least one component with an `id` so
-   * `pickRoot` can target a real root and the surface actually mounts.
-   */
-  surfacePairDispatched: boolean;
-  /** surfaceId the synthesised beginRendering targets (to avoid double-mounting). */
-  synthesisedSurfaceId: string | null;
+  /** Surface ids for which a createSurface (real or synthesised) has been
+   * dispatched this turn — used to synthesise the missing createSurface
+   * exactly once per surface. */
+  createDispatched: Set<string>;
   /** Once true, all subsequent pushes are ignored. */
   poisoned: boolean;
 }
@@ -167,17 +162,15 @@ function isValidJsonPrefix(s: string): boolean {
  * tool_call.arguments JSON. Uses @cacheplane/partial-json to extract
  * structurally-complete envelope objects from the growing args string.
  *
- * Synthesis safety net: if the first complete surfaceUpdate arrives and
- * no beginRendering has been extracted yet, the bridge synthesises one
- * targeted at the surfaceUpdate's first component (preferring id='root'
- * if present). This makes the surface mount IMMEDIATELY after the first
- * surfaceUpdate parses — without waiting for the LLM to emit beginRendering
- * at the end of its envelope list — so the render-element fallback gate
- * (PR #252) actually fires while dataModelUpdates flow in.
+ * Synthesis safety net: v0.9 requires a `createSurface` envelope before
+ * any `updateComponents`. If a complete `updateComponents` arrives for a
+ * surface with no `createSurface` seen yet this turn, the bridge
+ * synthesises one (basic catalog) so the surface can mount as soon as its
+ * `root` component is defined — the store gates rendering on
+ * createSurface + root, and fills the tree in progressively after that.
  *
- * The store's apply() already treats repeated beginRendering for the same
- * surfaceId as idempotent (just re-applies styles), so the LLM's eventual
- * beginRendering (if any) is a no-op rather than a conflict.
+ * The store treats a later "real" createSurface for the same surface as an
+ * idempotent refresh, so LLMs that emit one out of order are harmless.
  */
 export function createPartialArgsBridge(store: A2uiSurfaceStore): PartialArgsBridge {
   const states = new Map<string, BridgeState>();
@@ -188,19 +181,12 @@ export function createPartialArgsBridge(store: A2uiSurfaceStore): PartialArgsBri
       s = {
         parser: createPartialJsonParser(),
         dispatchedCount: 0,
-        surfacePairDispatched: false,
-        synthesisedSurfaceId: null,
+        createDispatched: new Set(),
         poisoned: false,
       };
       states.set(toolCallId, s);
     }
     return s;
-  }
-
-  function pickRoot(components: readonly { id: string }[]): string | null {
-    if (components.length === 0) return null;
-    const explicitRoot = components.find((c) => c.id === 'root');
-    return explicitRoot ? explicitRoot.id : components[0].id;
   }
 
   function push(toolCallId: string, argsSoFar: string): void {
@@ -228,29 +214,8 @@ export function createPartialArgsBridge(store: A2uiSurfaceStore): PartialArgsBri
     const envelopes = normalizeEnvelopeArgs(materialised);
     if (!envelopes) return;
 
-    // Phase 1: defer initial dispatch until the first envelope is a complete
-    // surfaceUpdate whose components include at least one entry with an `id`
-    // — otherwise pickRoot returns null and synthesis silently no-ops, leaving
-    // the surface unmounted forever. Once we have a pickable root, dispatch
-    // the surfaceUpdate AND a synthesised beginRendering as an atomic pair.
-    if (!state.surfacePairDispatched) {
-      const firstEnv = envelopes[0] as A2uiMessage | undefined;
-      if (!firstEnv || !('surfaceUpdate' in firstEnv)) return;
-      if (!isStructurallyComplete(firstEnv)) return;
-      const upd = (firstEnv as { surfaceUpdate: A2uiSurfaceUpdate }).surfaceUpdate;
-      if (upd.components.length === 0) return;
-      const root = pickRoot(upd.components);
-      if (!root) return;
-      state.surfacePairDispatched = true;
-      state.dispatchedCount = 1; // index 0 = the surfaceUpdate we just sent
-      state.synthesisedSurfaceId = upd.surfaceId;
-      store.applyPartialArgs(toolCallId, [
-        firstEnv,
-        { beginRendering: { surfaceId: upd.surfaceId, root } },
-      ]);
-    }
-
-    // Phase 2: dispatch any newly-complete envelopes beyond the initial pair.
+    // Dispatch newly-complete envelopes in order, synthesising the missing
+    // createSurface when the stream leads with components.
     const newEnvelopes: A2uiMessage[] = [];
     for (let i = state.dispatchedCount; i < envelopes.length; i++) {
       const env = envelopes[i] as A2uiMessage;
@@ -259,16 +224,17 @@ export function createPartialArgsBridge(store: A2uiSurfaceStore): PartialArgsBri
         // exist before earlier ones complete (envelopes are an ordered list).
         break;
       }
-      // Skip a "real" beginRendering for the synthesised surface — the store
-      // already treats it as idempotent (just re-applies styles), but we
-      // advance past it so dispatchedCount stays in sync with the index.
-      if (
-        'beginRendering' in env &&
-        (env as { beginRendering: { surfaceId?: string } }).beginRendering.surfaceId ===
-          state.synthesisedSurfaceId
-      ) {
-        state.dispatchedCount = i + 1;
-        continue;
+      if ('createSurface' in env) {
+        state.createDispatched.add(env.createSurface.surfaceId);
+      } else if ('updateComponents' in env) {
+        const surfaceId = env.updateComponents.surfaceId;
+        if (!state.createDispatched.has(surfaceId)) {
+          state.createDispatched.add(surfaceId);
+          newEnvelopes.push({
+            version: A2UI_WIRE_VERSION,
+            createSurface: { surfaceId, catalogId: A2UI_BASIC_CATALOG_ID },
+          });
+        }
       }
       newEnvelopes.push(env);
       state.dispatchedCount = i + 1;
@@ -289,12 +255,28 @@ export function createPartialArgsBridge(store: A2uiSurfaceStore): PartialArgsBri
 function isStructurallyComplete(env: unknown): env is A2uiMessage {
   if (!env || typeof env !== 'object' || Array.isArray(env)) return false;
   const obj = env as Record<string, unknown>;
-  for (const k of ['surfaceUpdate', 'beginRendering', 'dataModelUpdate', 'deleteSurface']) {
+  for (const k of ['createSurface', 'updateComponents', 'updateDataModel', 'deleteSurface']) {
     if (k in obj && typeof obj[k] === 'object' && obj[k] !== null) {
-      // For surfaceUpdate, also require non-undefined surfaceId + components.
-      if (k === 'surfaceUpdate') {
-        const su = obj[k] as { surfaceId?: unknown; components?: unknown };
-        return typeof su.surfaceId === 'string' && Array.isArray(su.components);
+      // For updateComponents, require surfaceId + components where every
+      // component has at least parsed its `id` and `component` fields —
+      // a half-streamed component object materialises as `{}` and must not
+      // dispatch (it would consume the envelope index and drop the real
+      // components forever, since re-parses skip dispatched indices).
+      if (k === 'updateComponents') {
+        const uc = obj[k] as { surfaceId?: unknown; components?: unknown };
+        return typeof uc.surfaceId === 'string'
+          && Array.isArray(uc.components)
+          && uc.components.length > 0
+          && uc.components.every((c) =>
+            c != null && typeof c === 'object'
+            && typeof (c as { id?: unknown }).id === 'string'
+            && typeof (c as { component?: unknown }).component === 'string');
+      }
+      // For createSurface, require both ids so a half-streamed envelope
+      // doesn't commit with an undefined catalogId.
+      if (k === 'createSurface') {
+        const cs = obj[k] as { surfaceId?: unknown; catalogId?: unknown };
+        return typeof cs.surfaceId === 'string' && typeof cs.catalogId === 'string';
       }
       return true;
     }

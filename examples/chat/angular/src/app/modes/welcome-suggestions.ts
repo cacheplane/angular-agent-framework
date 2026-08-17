@@ -127,7 +127,7 @@ export const MORE_SUGGESTIONS: readonly WelcomeSuggestion[] = [
   {
     label: 'Smoke: interactive form kitchen sink',
     value:
-      'Render a Card titled "Profile setup" containing a Column with: a TextField for display name, a Slider for "experience years" (range 0-30), a CheckBox for "subscribe to newsletter", a DateTimeInput for birthday (date only), a MultipleChoice for "favorite frameworks" with options Angular, React, Vue, Svelte and maxAllowedSelections of 3 (multi-select), a horizontal Divider, a Row containing a primary "Save" Button and a secondary "Open details" Button whose action opens a Modal with a Column containing a Text summary and a Close Button.',
+      'Render a Card titled "Profile setup" containing a Column with: a TextField for display name, a Slider for "experience years" (range 0-30), a CheckBox for "subscribe to newsletter", a DateTimeInput for birthday (date only), a ChoicePicker for "favorite frameworks" with options Angular, React, Vue, Svelte using the multipleSelection variant, a horizontal Divider, a Row containing a primary "Save" Button and a secondary "Open details" Button whose action opens a Modal with a Column containing a Text summary and a Close Button.',
     description: 'Exercises every interactive input type plus a modal flow.',
   },
 ];

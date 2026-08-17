@@ -20,10 +20,17 @@ export function toMaterialSymbolName(name: string): string {
   selector: 'a2ui-icon',
   standalone: true,
   template: `
-    @if (effectiveName(); as name) {
+    @if (svgPath(); as path) {
+      <svg
+        class="a2ui-icon a2ui-icon--svg"
+        viewBox="0 -960 960 960"
+        fill="currentColor"
+        role="img"
+        aria-hidden="true"
+      ><path [attr.d]="path" /></svg>
+    } @else if (ligatureName(); as name) {
       <span
         class="a2ui-icon material-symbols-outlined"
-        [style.font-size]="size() ? size() + 'px' : '1.125rem'"
         [attr.aria-label]="name"
         role="img"
       >{{ glyphName() }}</span>
@@ -38,6 +45,7 @@ export function toMaterialSymbolName(name: string): string {
       font-family: 'Material Symbols Outlined';
       font-weight: normal;
       font-style: normal;
+      font-size: 1.125rem;
       line-height: 1;
       letter-spacing: normal;
       text-transform: none;
@@ -54,14 +62,15 @@ export function toMaterialSymbolName(name: string): string {
       justify-content: center;
       user-select: none;
     }
+    .a2ui-icon--svg {
+      width: 1.125rem;
+      height: 1.125rem;
+    }
   `],
 })
 export class A2uiIconComponent {
-  /** v1 canonical prop. */
-  readonly name = input<string | undefined>(undefined);
-  /** Pre-v1 alias retained for back-compat. */
-  readonly icon = input<string>('');
-  readonly size = input<number | null>(null);
+  /** v0.9 prop: a Material Symbols name (string) or an inline `{ svgPath }`. */
+  readonly name = input<string | { svgPath: string } | undefined>(undefined);
   // Framework inputs required by the render harness.
   readonly bindings = input<Record<string, string>>({});
   readonly emit = input<(event: string) => void>(() => { /* noop */ });
@@ -69,8 +78,19 @@ export class A2uiIconComponent {
   readonly childKeys = input<string[]>([]);
   readonly spec = input<Spec | undefined>(undefined);
 
-  protected readonly effectiveName = computed(() => this.name() ?? this.icon());
+  /** Inline SVG path when `name` is the `{ svgPath }` object form. */
+  protected readonly svgPath = computed<string | null>(() => {
+    const n = this.name();
+    return typeof n === 'object' && n !== null && typeof n.svgPath === 'string'
+      ? n.svgPath
+      : null;
+  });
+
+  /** The string ligature name when `name` is a string. */
+  protected readonly ligatureName = computed<string>(() =>
+    typeof this.name() === 'string' ? (this.name() as string) : '',
+  );
 
   /** The effective name as a Material Symbols ligature (camelCase → snake_case). */
-  protected readonly glyphName = computed(() => toMaterialSymbolName(this.effectiveName()));
+  protected readonly glyphName = computed(() => toMaterialSymbolName(this.ligatureName()));
 }

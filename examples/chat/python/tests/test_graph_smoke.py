@@ -232,8 +232,8 @@ class TestEmitGeneratedSurfaceCoalescing:
         tool_msg = ToolMessage(
             tool_call_id="call_1",
             name="render_a2ui_surface",
-            content='[{"surfaceUpdate":{"surfaceId":"s1","components":[]}},'
-                    '{"beginRendering":{"surfaceId":"s1","root":""}}]',
+            content='[{"version":"v0.9","createSurface":{"surfaceId":"s1","catalogId":"https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"}},'
+                    '{"version":"v0.9","updateComponents":{"surfaceId":"s1","components":[]}}]',
         )
         state = {
             "messages": [HumanMessage(content="render a card"), tool_call_ai, tool_msg],
@@ -254,9 +254,9 @@ class TestEmitGeneratedSurfaceCoalescing:
         # tool_calls is preserved so detection (frontend isGenuiTurn) still fires.
         assert any(tc.get("name") == "render_a2ui_surface" for tc in replacement_ai.tool_calls)
 
-    def test_beginRendering_envelope_ordering(self):
-        """emit reorders the wrapped envelopes so beginRendering lands
-        before any dataModelUpdate envelopes."""
+    def test_createSurface_envelope_ordering(self):
+        """emit reorders the wrapped envelopes so createSurface lands first,
+        leaving the rest in emission order."""
         from src.graph import emit_generated_surface
 
         tool_call_ai = AIMessage(
@@ -273,10 +273,10 @@ class TestEmitGeneratedSurfaceCoalescing:
             tool_call_id="call_2",
             name="render_a2ui_surface",
             content='['
-                    '{"surfaceUpdate":{"surfaceId":"s","components":[]}},'
-                    '{"dataModelUpdate":{"surfaceId":"s","contents":[]}},'
-                    '{"dataModelUpdate":{"surfaceId":"s","contents":[]}},'
-                    '{"beginRendering":{"surfaceId":"s","root":""}}'
+                    '{"version":"v0.9","updateComponents":{"surfaceId":"s","components":[]}},'
+                    '{"version":"v0.9","updateDataModel":{"surfaceId":"s","path":"/","value":{}}},'
+                    '{"version":"v0.9","updateDataModel":{"surfaceId":"s","path":"/x","value":1}},'
+                    '{"version":"v0.9","createSurface":{"surfaceId":"s","catalogId":"cat"}}'
                     ']',
         )
         state = {"messages": [HumanMessage(content="x"), tool_call_ai, tool_msg],
@@ -288,15 +288,56 @@ class TestEmitGeneratedSurfaceCoalescing:
         # Strip prefix + grab JSONL lines
         body = replacement_ai.content.split("---a2ui_JSON---\n", 1)[1].rstrip("\n")
         envelope_lines = body.split("\n")
-        # First envelope = surfaceUpdate, SECOND = beginRendering, then dataModelUpdates.
+        # First envelope = createSurface, then the rest in emission order.
         import json
         parsed = [json.loads(line) for line in envelope_lines]
-        assert "surfaceUpdate" in parsed[0]
-        assert "beginRendering" in parsed[1], \
-            f"beginRendering should follow surfaceUpdate; got {list(parsed[1].keys())}"
-        # The remaining dataModelUpdate envelopes follow.
-        assert "dataModelUpdate" in parsed[2]
-        assert "dataModelUpdate" in parsed[3]
+        assert "createSurface" in parsed[0], \
+            f"createSurface must be the first envelope; got {list(parsed[0].keys())}"
+        assert "updateComponents" in parsed[1]
+        assert "updateDataModel" in parsed[2]
+        assert "updateDataModel" in parsed[3]
+
+    def test_synthesizes_createSurface_when_model_omits_it(self):
+        """When the model never emits createSurface, emit synthesizes a
+        basic-catalog one from the first surfaceId named, stamps every
+        envelope with version v0.9, and puts the synthesized envelope first."""
+        from src.graph import emit_generated_surface, A2UI_BASIC_CATALOG_ID
+
+        tool_call_ai = AIMessage(
+            id="ai-3",
+            content=[],
+            tool_calls=[{
+                "id": "call_3",
+                "name": "render_a2ui_surface",
+                "args": {"request": "r"},
+                "type": "tool_call",
+            }],
+        )
+        tool_msg = ToolMessage(
+            tool_call_id="call_3",
+            name="render_a2ui_surface",
+            content='['
+                    '{"updateComponents":{"surfaceId":"s","components":[{"id":"root","component":"Text","text":"hi"}]}},'
+                    '{"updateDataModel":{"surfaceId":"s","path":"/","value":{}}}'
+                    ']',
+        )
+        state = {"messages": [HumanMessage(content="x"), tool_call_ai, tool_msg],
+                 "gen_ui_mode": "a2ui"}
+
+        result = asyncio.run(emit_generated_surface(state))
+        replacement_ai = next(m for m in result["messages"] if isinstance(m, AIMessage))
+
+        body = replacement_ai.content.split("---a2ui_JSON---\n", 1)[1].rstrip("\n")
+        import json
+        parsed = [json.loads(line) for line in body.split("\n")]
+        assert "createSurface" in parsed[0]
+        assert parsed[0]["createSurface"] == {
+            "surfaceId": "s",
+            "catalogId": A2UI_BASIC_CATALOG_ID,
+        }
+        assert all(env.get("version") == "v0.9" for env in parsed)
+        assert "updateComponents" in parsed[1]
+        assert "updateDataModel" in parsed[2]
 
 
 class TestParentEmitsEnvelopes:
@@ -327,8 +368,8 @@ class TestEmitInPlaceCoalescing:
     """Regression: emit_generated_surface MUST coalesce the GenUI turn
     into a single AI message (3-message thread, not 4), preserving the
     upstream tool-call AI's id, tool_calls, additional_kwargs, and
-    response_metadata. Envelopes inside the wrapped content MUST be
-    ordered surfaceUpdate -> beginRendering -> dataModelUpdate × N."""
+    response_metadata. Envelopes inside the wrapped content MUST lead
+    with createSurface, leaving the rest in emission order."""
 
     def _run(self, state):
         from src.graph import emit_generated_surface
@@ -338,9 +379,9 @@ class TestEmitInPlaceCoalescing:
         original_ai_id = str(uuid4())
         tool_call_id = "call_123"
         envelopes = [
-            {"dataModelUpdate": {"surfaceId": "s1", "contents": [{"key": "name", "valueString": "Ada"}]}},
-            {"surfaceUpdate": {"surfaceId": "s1", "components": [{"id": "c1", "component": {"TextField": {"value": "{$.name}"}}}]}},
-            {"beginRendering": {"surfaceId": "s1", "root": "c1"}},
+            {"version": "v0.9", "createSurface": {"surfaceId": "s1", "catalogId": "cat"}},
+            {"version": "v0.9", "updateDataModel": {"surfaceId": "s1", "path": "/name", "value": "Ada"}},
+            {"version": "v0.9", "updateComponents": {"surfaceId": "s1", "components": [{"id": "root", "component": "TextField", "label": "Name", "value": {"path": "/name"}}]}},
         ]
         tool_call_ai = AIMessage(
             id=original_ai_id,
@@ -376,8 +417,8 @@ class TestEmitInPlaceCoalescing:
         original_ai_id = str(uuid4())
         tool_call_id = "call_xyz"
         envelopes = [
-            {"surfaceUpdate": {"surfaceId": "s1", "components": []}},
-            {"beginRendering": {"surfaceId": "s1", "root": "c1"}},
+            {"version": "v0.9", "createSurface": {"surfaceId": "s1", "catalogId": "cat"}},
+            {"version": "v0.9", "updateComponents": {"surfaceId": "s1", "components": []}},
         ]
         tool_call_ai = AIMessage(
             id=original_ai_id,
@@ -395,13 +436,13 @@ class TestEmitInPlaceCoalescing:
         assert ai_replacement.additional_kwargs.get("reasoning") == "the user wants a card"
         assert ai_replacement.response_metadata.get("finish_reason") == "tool_calls"
 
-    def test_envelopes_reordered_to_surface_begin_data(self):
+    def test_envelopes_reordered_to_create_surface_first(self):
         tool_call_id = "call_r"
         envelopes_unordered = [
-            {"dataModelUpdate": {"surfaceId": "s1", "contents": [{"key": "n", "valueString": "1"}]}},
-            {"dataModelUpdate": {"surfaceId": "s1", "contents": [{"key": "m", "valueString": "2"}]}},
-            {"beginRendering": {"surfaceId": "s1", "root": "c1"}},
-            {"surfaceUpdate": {"surfaceId": "s1", "components": []}},
+            {"version": "v0.9", "updateDataModel": {"surfaceId": "s1", "path": "/n", "value": "1"}},
+            {"version": "v0.9", "updateDataModel": {"surfaceId": "s1", "path": "/m", "value": "2"}},
+            {"version": "v0.9", "createSurface": {"surfaceId": "s1", "catalogId": "cat"}},
+            {"version": "v0.9", "updateComponents": {"surfaceId": "s1", "components": []}},
         ]
         tool_call_ai = AIMessage(
             id="ai-1",
@@ -415,7 +456,7 @@ class TestEmitInPlaceCoalescing:
         ai = next(m for m in result["messages"] if isinstance(m, AIMessage))
         # Strip the A2UI_PREFIX wrapper before splitting JSONL.
         lines = [ln for ln in ai.content.split("\n") if ln.strip() and not ln.startswith("---a2ui_JSON---")]
-        keys = [list(json.loads(ln).keys())[0] for ln in lines]
-        assert keys == ["surfaceUpdate", "beginRendering", "dataModelUpdate", "dataModelUpdate"], (
-            f"expected surfaceUpdate -> beginRendering -> dataModelUpdate × N, got {keys}"
+        keys = [next(k for k in json.loads(ln) if k != "version") for ln in lines]
+        assert keys == ["createSurface", "updateDataModel", "updateDataModel", "updateComponents"], (
+            f"expected createSurface first, rest in emission order, got {keys}"
         )

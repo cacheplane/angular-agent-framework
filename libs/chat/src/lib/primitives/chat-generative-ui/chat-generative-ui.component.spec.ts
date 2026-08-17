@@ -67,14 +67,14 @@ const statePathSpec = {
   root: 'col',
   elements: {
     col: { type: 'Column', props: { gap: 'medium' }, children: ['kpi', 'min'] },
-    kpi: { type: 'Text', props: { text: { statePath: '/totalRevenue' }, usageHint: 'h3' } },
+    kpi: { type: 'Text', props: { text: { statePath: '/totalRevenue' }, variant: 'h3' } },
     min: {
       type: 'Slider',
       props: {
         label: 'Min revenue (USD)',
         value: { statePath: '/minRevenue' },
-        minValue: 0,
-        maxValue: 100000,
+        min: 0,
+        max: 100000,
       },
     },
   },
@@ -261,7 +261,7 @@ describe('normalizeJsonRenderSpec', () => {
     const out = normalizeJsonRenderSpec(statePathSpec);
     const min = out.elements['min'] as { props: Record<string, unknown> };
     expect(min.props['label']).toBe('Min revenue (USD)');
-    expect(min.props['minValue']).toBe(0);
+    expect(min.props['min']).toBe(0);
   });
 
   it('returns the same reference when no statePath props exist', () => {

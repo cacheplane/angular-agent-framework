@@ -1,6 +1,6 @@
 # @threadplane/a2ui
 
-The A2UI (Agent-to-UI) protocol type system and parsing/resolution utilities for TypeScript. Defines the wire format agents use to drive generative UI surfaces — framework-agnostic, no Angular dependency, runs in any TypeScript environment.
+The A2UI (Agent-to-UI) protocol type system and parsing/resolution utilities for TypeScript, targeting the **A2UI v0.9.1 stable release**. Defines the wire format agents use to drive generative UI surfaces — framework-agnostic, no Angular dependency, runs in any TypeScript environment.
 
 <p align="center">
   <a href="https://www.npmjs.com/package/@threadplane/a2ui">
@@ -13,10 +13,10 @@ The A2UI (Agent-to-UI) protocol type system and parsing/resolution utilities for
 
 ## What it does
 
-- **Protocol type system** — full TypeScript type vocabulary for every A2UI message, surface, component, layout, input, and media element an agent can emit.
+- **Protocol type system** — full TypeScript type vocabulary for every A2UI v0.9 message, component, dynamic value, action, and client→agent message.
 - **Streaming message parser** — `createA2uiMessageParser()` returns a stateful parser that accepts JSONL chunks from a streaming agent response and emits typed `A2uiMessage` values as lines complete.
-- **Dynamic value resolution** — `resolveDynamic()` resolves a dynamic value (literal wrapper or path-reference) against a client data model; four type guards (`isLiteralString`, `isLiteralNumber`, `isLiteralBoolean`, `isPathRef`) let you narrow dynamic values before passing them.
-- **JSON-pointer utilities** — `getByPointer`, `setByPointer`, and `deleteByPointer` navigate and mutate the A2UI client data model using JSON-pointer paths.
+- **Dynamic value resolution** — `resolveDynamic()` resolves a dynamic value (bare literal or `{ path }` binding) against a client data model; `isPathRef` / `isFunctionCall` guards narrow dynamic values before use.
+- **JSON-pointer utilities** — `getByPointer`, `setByPointer`, and `deleteByPointer` navigate and mutate the A2UI client data model using JSON-pointer paths, including the v0.9 array-delete rule (index set to `undefined`, length preserved).
 - **Runtime-neutral** — pure TypeScript, no runtime dependencies, works in browsers and Node.js alike. Consumed by `@threadplane/chat` to render agent-emitted generative UI.
 
 ## Install
@@ -41,12 +41,12 @@ const parser = createA2uiMessageParser();
 function onChunk(chunk: string): void {
   const messages: A2uiMessage[] = parser.push(chunk);
   for (const msg of messages) {
-    if ('beginRendering' in msg) {
-      console.log('New surface:', msg.beginRendering.surfaceId);
-    } else if ('surfaceUpdate' in msg) {
-      console.log('Surface update for:', msg.surfaceUpdate.surfaceId);
-    } else if ('dataModelUpdate' in msg) {
-      console.log('Data model delta:', msg.dataModelUpdate.contents);
+    if ('createSurface' in msg) {
+      console.log('New surface:', msg.createSurface.surfaceId);
+    } else if ('updateComponents' in msg) {
+      console.log('Components for:', msg.updateComponents.surfaceId);
+    } else if ('updateDataModel' in msg) {
+      console.log('Data model update at:', msg.updateDataModel.path ?? '/');
     } else if ('deleteSurface' in msg) {
       console.log('Delete surface:', msg.deleteSurface.surfaceId);
     }
@@ -54,22 +54,20 @@ function onChunk(chunk: string): void {
 }
 ```
 
+Every envelope carries `"version": "v0.9"`. The component whose `id` is `"root"` is the tree root — rendering can begin as soon as it arrives, and the tree fills in progressively.
+
 ### Resolve dynamic values against a data model
 
 ```typescript
-import {
-  resolveDynamic,
-  isPathRef,
-  isLiteralString,
-} from '@threadplane/a2ui';
+import { resolveDynamic } from '@threadplane/a2ui';
 
 const model = { user: { name: 'Alice' } };
 
-// Literal string wrapper
-const label = resolveDynamic({ literalString: 'Submit' }, model);
+// Bare literal — passes through unchanged
+const label = resolveDynamic('Submit', model);
 // => 'Submit'
 
-// Path reference — resolves against the model via JSON pointer
+// Path binding — resolves against the model via JSON pointer
 const name = resolveDynamic({ path: '/user/name' }, model);
 // => 'Alice'
 ```
@@ -90,7 +88,7 @@ const removed = deleteByPointer(updated, '/items/0/id');
 
 ### Protocol message parsing
 
-`createA2uiMessageParser()` returns an `A2uiMessageParser` with a single `push(chunk: string): A2uiMessage[]` method. The parser is stateful — it buffers partial lines between calls and emits complete messages as JSONL lines arrive. Malformed lines are silently skipped, which is safe for mid-stream partial JSON.
+`createA2uiMessageParser()` returns an `A2uiMessageParser` with a single `push(chunk: string): A2uiMessage[]` method. The parser is stateful — it buffers partial lines between calls and emits complete messages as JSONL lines arrive. Malformed lines are silently skipped (safe for mid-stream partial JSON), and unknown envelope keys — such as future v1.0 messages — are skipped rather than treated as errors.
 
 ```typescript
 const parser = createA2uiMessageParser();
@@ -99,20 +97,18 @@ const messages = parser.push(chunk); // A2uiMessage[]
 
 ### Dynamic value resolution
 
-`resolveDynamic(value, model, scope?)` unwraps A2UI dynamic values:
+`resolveDynamic(value, model, scope?)` resolves A2UI v0.9 dynamic values:
 
-- `{ literalString: string }`, `{ literalNumber: number }`, `{ literalBoolean: boolean }` — unwrap to the inner value.
-- `{ path: string }` — looked up in `model` via JSON pointer. If an `A2uiScope` is provided, relative paths resolve against `scope.basePath`.
-- Plain literals (string, number, boolean, `null`, plain objects) — passed through unchanged.
+- Bare literals (string, number, boolean, string arrays, plain objects) — pass through unchanged.
+- `{ path: string }` — looked up in `model` via JSON pointer. If an `A2uiScope` is provided, relative paths resolve against `scope.basePath` (used inside `children` templates).
+- `{ call: string, args? }` — client-side function calls; typed today, executed in an upcoming release (currently resolve to `undefined`).
 
-The four exported type guards narrow `unknown` values before use:
+Type guards:
 
 | Guard | Narrows to |
 |---|---|
-| `isLiteralString(v)` | `{ literalString: string }` |
-| `isLiteralNumber(v)` | `{ literalNumber: number }` |
-| `isLiteralBoolean(v)` | `{ literalBoolean: boolean }` |
 | `isPathRef(v)` | `{ path: string }` |
+| `isFunctionCall(v)` | `{ call: string; args?: Record<string, unknown> }` |
 
 ### JSON-pointer utilities
 
@@ -122,20 +118,21 @@ Three immutable helpers operate on `Record<string, unknown>` data models:
 |---|---|
 | `getByPointer(model, pointer)` | Read the value at `pointer`. Returns `undefined` if the path does not exist. |
 | `setByPointer(model, pointer, value)` | Return a new model with `value` written at `pointer`. |
-| `deleteByPointer(model, pointer)` | Return a new model with the key at `pointer` removed. |
+| `deleteByPointer(model, pointer)` | Return a new model with the key at `pointer` removed. Array indices are set to `undefined`, preserving length (v0.9 rule). |
 
 Pointers follow standard `/segment/segment` syntax. An empty pointer (`''` or `'/'`) targets the root.
 
 ### Type system
 
-`@threadplane/a2ui` exports the complete A2UI type vocabulary as TypeScript `export type` declarations. Categories include:
+`@threadplane/a2ui` exports the complete A2UI v0.9 type vocabulary. Categories include:
 
-- **Protocol messages** — `A2uiMessage`, `A2uiBeginRendering`, `A2uiSurfaceUpdate`, `A2uiDataModelUpdate`, `A2uiDeleteSurface`, `A2uiSurface`, `A2uiDataModelEntry`
-- **Components and layout** — `A2uiComponent`, `A2uiComponentDef`, `A2uiRow`, `A2uiColumn`, `A2uiCard`, `A2uiList`, `A2uiTabs`, `A2uiTabItem`, `A2uiModal`, `A2uiDivider`
-- **Input elements** — `A2uiButton`, `A2uiTextField`, `A2uiCheckBox`, `A2uiSlider`, `A2uiMultipleChoice`, `A2uiDateTimeInput`
-- **Media and display** — `A2uiText`, `A2uiImage`, `A2uiIcon`, `A2uiVideo`, `A2uiAudioPlayer`
-- **Dynamic values** — `DynamicString`, `DynamicNumber`, `DynamicBoolean`, `DynamicStringList`
-- **Actions and theming** — `A2uiAction`, `A2uiActionMessage`, `A2uiActionContextEntry`, `A2uiTheme`, `A2uiClientDataModel`
+- **Protocol constants** — `A2UI_WIRE_VERSION` (`'v0.9'`), `A2UI_MIME_TYPE` (`'application/a2ui+json'`), `A2UI_BASIC_CATALOG_ID`
+- **Envelopes** — `A2uiMessage`, `A2uiCreateSurface`, `A2uiUpdateComponents`, `A2uiUpdateDataModel`, `A2uiDeleteSurface`
+- **Components** — `A2uiComponent`, `A2uiComponentBase`, `A2uiCatalogComponent`, plus per-component shapes: `A2uiText`, `A2uiImage`, `A2uiIcon`, `A2uiVideo`, `A2uiAudioPlayer`, `A2uiRow`, `A2uiColumn`, `A2uiList`, `A2uiCard`, `A2uiTabs`, `A2uiModal`, `A2uiDivider`, `A2uiButton`, `A2uiCheckBox`, `A2uiTextField`, `A2uiDateTimeInput`, `A2uiChoicePicker`, `A2uiSlider`
+- **Dynamic values** — `DynamicString`, `DynamicNumber`, `DynamicBoolean`, `DynamicStringList`, `DynamicValue`, `A2uiPathRef`, `A2uiFunctionCall`
+- **Actions and checks** — `A2uiAction`, `A2uiEventAction`, `A2uiFunctionAction`, `A2uiCheck`, `A2uiCheckable`
+- **Client → agent** — `A2uiActionMessage`, `A2uiErrorMessage`, `A2uiClientDataModel`, `A2uiClientCapabilities`
+- **Theming** — `A2uiTheme`
 - **Parser and scope** — `A2uiMessageParser`, `A2uiScope`, `A2uiChildren`
 
 ## Reliability

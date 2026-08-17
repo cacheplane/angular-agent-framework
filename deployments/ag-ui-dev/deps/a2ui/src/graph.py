@@ -24,8 +24,8 @@ from typing import Any, Literal
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
-from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import StateGraph, MessagesState, END
+from langgraph.checkpoint.memory import MemorySaver
 from langgraph.types import Command
 from langgraph_sdk import get_client
 from pydantic import BaseModel, Field, ValidationError, field_validator
@@ -81,13 +81,13 @@ A2UI_PREFIX = "---a2ui_JSON---"
 AIRPORT_CODES = ["LAX", "JFK", "SFO", "ORD", "BOS", "ATL", "DFW", "SEA", "MIA", "DEN"]
 FARE_CLASSES = ["Economy", "Premium", "Business", "First"]
 
-# Catalog component names — must match libs/chat/src/lib/a2ui/catalog/index.ts.
-# The chat-lib's unwrapComponentDef() looks for ONE key from this set inside the
-# `component` field. Unknown / multiple keys fall through to a stub Text and
-# render nothing visible — silent failure mode, hence the field_validator below.
+# Catalog component names — A2UI v0.9 basic catalog
+# (https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json).
+# `component` must be one of these names; an unknown name renders nothing
+# visible — silent failure mode, hence the field_validator below.
 ALLOWED_COMPONENTS = frozenset({
-    "AudioPlayer", "Button", "Card", "CheckBox", "Column", "DateTimeInput",
-    "Divider", "Icon", "Image", "List", "Modal", "MultipleChoice", "Row",
+    "AudioPlayer", "Button", "Card", "CheckBox", "ChoicePicker", "Column",
+    "DateTimeInput", "Divider", "Icon", "Image", "List", "Modal", "Row",
     "Slider", "Tabs", "Text", "TextField", "Video",
 })
 
@@ -95,44 +95,45 @@ ALLOWED_COMPONENTS = frozenset({
 # ── Pydantic schemas ────────────────────────────────────────────────────────
 
 class A2uiComponent(BaseModel):
-    """Single A2UI v1 updateComponents entry.
+    """Single A2UI v0.9 updateComponents entry.
 
-    Format (from libs/chat/src/lib/a2ui/surface-to-spec.ts):
-        {id: "name_field",
-         component: {TextField: {label: "Name", text: {path: "/name"}}}}
+    Components are FLAT — the catalog component name is the `component`
+    string field and the per-component props sit at the top level of the
+    same object:
+        {id: "name_field", component: "TextField",
+         label: "Name", value: {path: "/name"}}
 
-    The `component` field MUST be a single-key dict whose key is one of
-    ALLOWED_COMPONENTS. The inner dict is the per-component props (see
-    libs/a2ui/src/lib/types.ts for the per-component shapes).
+    Dynamic values are bare literals or {"path": "/json/pointer"} bindings.
+    Children are plain id arrays (or {path, componentId} templates).
+    Actions are {"event": {"name": "...", "context": {...}}} where context
+    is a plain object.
 
     Key per-component notes the LLM must respect:
-      Card({child: "<id>"})                         — single child only
-      Button({child: "<id>", action: {...}})        — child is a Text id (label)
-      Column/Row/List({children: {explicitList:[id,...]}})
-      TextField({label, text: {path:"/p"}, textFieldType: "shortText"|"number"|"date"|...})
-      MultipleChoice({label, options:[{label,value}], selections:{path}, maxAllowedSelections:1})
-      Text({text: "literal or {path:'/p'}", usageHint?: "h1"|"h2"|"body"|...})
+      Card({child: "<id>"})                        — single child only
+      Button({child: "<text-id>", action: {...}})  — child is a Text id (label)
+      Column/Row/List({children: ["id1", "id2"]})
+      TextField({label, value: {path:"/p"}, variant: "shortText"|"number"|...})
+      ChoicePicker({label, options:[{label,value}], value:{path}, variant:"mutuallyExclusive"})
+      DateTimeInput({label, value:{path:"/p"}, enableDate: true})
+      Text({text: "literal or {path:'/p'}", variant?: "h1"|"h2"|"body"|...})
       Divider({})
     """
+    model_config = {"extra": "allow"}
+
     id: str
-    component: dict[str, dict[str, Any]] = Field(
+    component: str = Field(
         description=(
-            "Single-key map {ComponentName: {props}}. ComponentName must be "
-            "one of: " + ", ".join(sorted(ALLOWED_COMPONENTS))
+            "Catalog component name. Must be one of: "
+            + ", ".join(sorted(ALLOWED_COMPONENTS))
         ),
     )
 
     @field_validator("component")
     @classmethod
-    def _single_known_key(cls, v: dict[str, Any]) -> dict[str, Any]:
-        if not isinstance(v, dict) or len(v) != 1:
+    def _known_component(cls, v: str) -> str:
+        if v not in ALLOWED_COMPONENTS:
             raise ValueError(
-                f"component must be a single-key dict, got keys: {list(v) if isinstance(v, dict) else type(v)}"
-            )
-        key = next(iter(v))
-        if key not in ALLOWED_COMPONENTS:
-            raise ValueError(
-                f"component '{key}' not in catalog. Allowed: {sorted(ALLOWED_COMPONENTS)}"
+                f"component '{v}' not in catalog. Allowed: {sorted(ALLOWED_COMPONENTS)}"
             )
         return v
 
@@ -160,46 +161,33 @@ class ConfirmationSpec(_SurfaceSpec):
 
 # ── Envelope wrapping ───────────────────────────────────────────────────────
 
-# Chat-lib parser (libs/a2ui/src/lib/parser.ts) accepts exactly four envelope
-# keys: surfaceUpdate, dataModelUpdate, beginRendering, deleteSurface. Anything
-# else (e.g. createSurface, updateComponents) is silently dropped. Surface is
-# created implicitly on first surfaceUpdate; beginRendering is what actually
-# triggers mount and must include the root component id.
+# A2UI v0.9 wire format (a2ui.org server_to_client.json): every envelope
+# carries "version": "v0.9". Order matters: createSurface first (surfaceId +
+# catalogId), then updateComponents (flat components; exactly one has id
+# "root", which is the root of the tree), then updateDataModel (path + value)
+# as needed. There is no beginRendering envelope in v0.9.
 
-def _to_data_model_contents(model: dict[str, Any]) -> list[dict[str, Any]]:
-    """Convert a flat {key:value} dict to the typed A2uiDataModelEntry list shape."""
-    contents: list[dict[str, Any]] = []
-    for k, v in model.items():
-        if isinstance(v, bool):
-            contents.append({"key": k, "valueBoolean": v})
-        elif isinstance(v, (int, float)):
-            contents.append({"key": k, "valueNumber": float(v)})
-        elif isinstance(v, str):
-            contents.append({"key": k, "valueString": v})
-        # dict/list nested values not supported in this demo
-    return contents
+CATALOG_ID = "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
 
 
-def _wrap_envelopes(spec: _SurfaceSpec, root_id: str = "root") -> str:
-    """Wrap a validated SurfaceSpec into A2UI v1 JSONL.
-
-    Order matters: dataModelUpdate first (so bindings resolve), then
-    surfaceUpdate (components), then beginRendering (mount + root id).
-    """
+def _wrap_envelopes(spec: _SurfaceSpec) -> str:
+    """Wrap a validated SurfaceSpec into A2UI v0.9 JSONL."""
     lines = [
-        json.dumps({"dataModelUpdate": {
+        json.dumps({"version": "v0.9", "createSurface": {
             "surfaceId": spec.surface_id,
-            "contents": _to_data_model_contents(spec.data_model),
+            "catalogId": CATALOG_ID,
         }}),
-        json.dumps({"surfaceUpdate": {
+        json.dumps({"version": "v0.9", "updateComponents": {
             "surfaceId": spec.surface_id,
             "components": [c.model_dump(exclude_none=True) for c in spec.components],
         }}),
-        json.dumps({"beginRendering": {
-            "surfaceId": spec.surface_id,
-            "root": root_id,
-        }}),
     ]
+    if spec.data_model:
+        lines.append(json.dumps({"version": "v0.9", "updateDataModel": {
+            "surfaceId": spec.surface_id,
+            "path": "/",
+            "value": spec.data_model,
+        }}))
     return A2UI_PREFIX + "\n" + "\n".join(lines) + "\n"
 
 
@@ -275,50 +263,61 @@ _FARE_OPTIONS = [{"label": c, "value": c} for c in FARE_CLASSES]
 # passengers/fare_class already populated. `build_form` walks message history
 # via `_extract_prior_submit_context` and substitutes those values into
 # {data_model_json} below.
+# ChoicePicker values bind to string ARRAYS in the data model (v0.9
+# DynamicStringList), so the picker-backed keys hold lists; the server
+# scalarizes them back to plain strings on action receipt (_scalarize).
 _BLANK_FORM_DEFAULTS: dict[str, Any] = {
-    "origin": "", "dest": "", "date": "", "passengers": 1, "fare_class": "Economy",
+    "origin": [], "dest": [], "date": "", "passengers": 1, "fare_class": ["Economy"],
 }
+
+# Keys rendered by a ChoicePicker — their data_model values are string arrays.
+_CHOICE_KEYS = ("origin", "dest", "fare_class")
 
 # `__DATA_MODEL_DEFAULTS__` is a non-brace sentinel substituted at call-time
 # by `build_form()` via `str.replace()` — using `.format()` would conflict
 # with the many literal-brace JSON examples below.
-_BUILD_FORM_SYSTEM_TMPL = f"""You are an aviation booking-form designer. Emit an A2UI v1 booking form using the structured output schema.
+_BUILD_FORM_SYSTEM_TMPL = f"""You are an aviation booking-form designer. Emit an A2UI v0.9 booking form using the structured output schema.
 
-A2UI FORMAT (CRITICAL): each component is `{{"id": "...", "component": {{"<ComponentName>": {{<props>}}}}}}`. The component name is the SINGLE KEY of the inner dict. ComponentName must be one of:
-  Column, Row, Card, Text, TextField, MultipleChoice, DateTimeInput, CheckBox, Button, Divider, List, Image, Icon, Modal, Slider, Tabs
+A2UI FORMAT (CRITICAL): each component is FLAT — `{{"id": "...", "component": "<ComponentName>", <props...>}}`. The component name is a plain string and the props sit at the top level of the same object. ComponentName must be one of:
+  Column, Row, Card, Text, TextField, ChoicePicker, DateTimeInput, CheckBox, Button, Divider, List, Image, Icon, Modal, Slider, Tabs
+
+Dynamic values are bare literals ("LAX", 3, true) or data bindings `{{"path": "/json/pointer"}}`. Never wrap literals.
 
 Per-component shapes:
-  Column / Row / List: {{"children": {{"explicitList": ["id1", "id2"]}}}}
+  Column / Row / List: {{"children": ["id1", "id2"]}}
   Card:                {{"child": "<id>"}}            ← single child only
-  Button:              {{"child": "<text-id>", "primary": true, "action": {{"name": "<eventName>", "context": [{{"key":"formId","value":"booking"}}]}}}}
-  Text:                {{"text": "literal string", "usageHint": "h2"}}    (h1/h2/h3/h4/h5/caption/body)
-  TextField:           {{"label": "Field", "text": {{"path": "/p"}}, "textFieldType": "shortText"}}  (shortText/longText/number/date/obscured)
-  MultipleChoice:      {{"label": "Origin", "options": [{{"label":"LAX","value":"LAX"}}], "selections": {{"path":"/origin"}}, "maxAllowedSelections": 1}}
-  CheckBox:            {{"label": "...", "checked": {{"path":"/p"}}}}
+  Button:              {{"child": "<text-id>", "variant": "primary", "action": {{"event": {{"name": "<eventName>", "context": {{"formId": "booking"}}}}}}}}
+  Text:                {{"text": "literal string", "variant": "h2"}}    (h1/h2/h3/h4/h5/caption/body)
+  TextField:           {{"label": "Field", "value": {{"path": "/p"}}, "variant": "shortText"}}  (shortText/longText/number/obscured)
+  DateTimeInput:       {{"label": "Date", "value": {{"path": "/p"}}, "enableDate": true}}
+  ChoicePicker:        {{"label": "Origin", "options": [{{"label":"LAX","value":"LAX"}}], "value": {{"path":"/origin"}}, "variant": "mutuallyExclusive"}}
+  CheckBox:            {{"label": "...", "value": {{"path":"/p"}}}}
   Divider:             {{}}
+
+Exactly ONE component MUST have id "root" — it is the root of the tree.
 
 Required form composition for THIS task:
   surface_id MUST be "booking"
   data_model MUST be __DATA_MODEL_DEFAULTS__  ← use these values verbatim as the field defaults
 
   Build this component tree:
-    root (Column, children=[card])
+    root (Column, children=["card"])
     card (Card, child=card_col)
     card_col (Column, children=[title, origin, dest, date, passengers, fare, submit])
-    title (Text, text="Book a flight", usageHint="h2")
-    origin (MultipleChoice, label="Origin", options={_AIRPORT_OPTIONS}, selections={{"path":"/origin"}}, maxAllowedSelections=1)
-    dest (MultipleChoice, label="Destination", options={_AIRPORT_OPTIONS}, selections={{"path":"/dest"}}, maxAllowedSelections=1)
-    date (TextField, label="Departure date (YYYY-MM-DD)", text={{"path":"/date"}}, textFieldType="date")
-    passengers (TextField, label="Passengers", text={{"path":"/passengers"}}, textFieldType="number")
-    fare (MultipleChoice, label="Fare class", options={_FARE_OPTIONS}, selections={{"path":"/fare_class"}}, maxAllowedSelections=1)
-    submit (Button, child=submit_label, primary=true, action={{"name":"bookingSubmit","context":[
-                                                                  {{"key":"formId","value":"booking"}},
-                                                                  {{"key":"origin","value":{{"path":"/origin"}}}},
-                                                                  {{"key":"dest","value":{{"path":"/dest"}}}},
-                                                                  {{"key":"date","value":{{"path":"/date"}}}},
-                                                                  {{"key":"passengers","value":{{"path":"/passengers"}}}},
-                                                                  {{"key":"fare_class","value":{{"path":"/fare_class"}}}}
-                                                                ]}})
+    title (Text, text="Book a flight", variant="h2")
+    origin (ChoicePicker, label="Origin", options={_AIRPORT_OPTIONS}, value={{"path":"/origin"}}, variant="mutuallyExclusive")
+    dest (ChoicePicker, label="Destination", options={_AIRPORT_OPTIONS}, value={{"path":"/dest"}}, variant="mutuallyExclusive")
+    date (DateTimeInput, label="Departure date (YYYY-MM-DD)", value={{"path":"/date"}}, enableDate=true)
+    passengers (TextField, label="Passengers", value={{"path":"/passengers"}}, variant="number")
+    fare (ChoicePicker, label="Fare class", options={_FARE_OPTIONS}, value={{"path":"/fare_class"}}, variant="mutuallyExclusive")
+    submit (Button, child=submit_label, variant="primary", action={{"event":{{"name":"bookingSubmit","context":{{
+                                                                  "formId":"booking",
+                                                                  "origin":{{"path":"/origin"}},
+                                                                  "dest":{{"path":"/dest"}},
+                                                                  "date":{{"path":"/date"}},
+                                                                  "passengers":{{"path":"/passengers"}},
+                                                                  "fare_class":{{"path":"/fare_class"}}
+                                                                }}}}}})
     submit_label (Text, text="Search flights")
 
 Use these exact ids."""
@@ -326,17 +325,22 @@ Use these exact ids."""
 
 def _comp(id_: str, name: str, props: dict[str, Any]) -> A2uiComponent:
     """Tiny helper so the sentinels read naturally."""
-    return A2uiComponent(id=id_, component={name: props})
+    return A2uiComponent(id=id_, component=name, **props)
 
 
 def _form_defaults_from_prior(prior: dict[str, Any]) -> dict[str, Any]:
     """Project prior bookingSubmit context onto the form's data_model schema.
     Falls back to blanks for any missing key so the returned dict always has
-    the full {origin, dest, date, passengers, fare_class} shape."""
+    the full {origin, dest, date, passengers, fare_class} shape. Prior context
+    values are scalars; ChoicePicker-backed keys are re-wrapped into the
+    string-array shape their data-model binding expects."""
     defaults = dict(_BLANK_FORM_DEFAULTS)
     for key in defaults:
-        if key in prior and prior[key] not in (None, ""):
-            defaults[key] = prior[key]
+        if key in prior and prior[key] not in (None, "", []):
+            value = prior[key]
+            if key in _CHOICE_KEYS and not isinstance(value, list):
+                value = [value]
+            defaults[key] = value
     # Normalize passengers to an int (prior context may carry it as float).
     p = defaults.get("passengers")
     if isinstance(p, (int, float)):
@@ -352,31 +356,31 @@ def _build_sentinel_booking_form(defaults: dict[str, Any]) -> BookingFormSpec:
         surface_id="booking",
         data_model=defaults,
         components=[
-            _comp("root", "Column", {"children": {"explicitList": ["card"]}}),
+            _comp("root", "Column", {"children": ["card"]}),
             _comp("card", "Card", {"child": "card_col"}),
-            _comp("card_col", "Column", {"children": {"explicitList": [
+            _comp("card_col", "Column", {"children": [
                 "title", "origin", "dest", "date", "passengers", "fare", "submit",
-            ]}}),
-            _comp("title", "Text", {"text": "Book a flight (fallback)", "usageHint": "h2"}),
-            _comp("origin", "MultipleChoice", {"label": "Origin", "options": _AIRPORT_OPTIONS,
-                                                "selections": {"path": "/origin"}, "maxAllowedSelections": 1}),
-            _comp("dest", "MultipleChoice", {"label": "Destination", "options": _AIRPORT_OPTIONS,
-                                              "selections": {"path": "/dest"}, "maxAllowedSelections": 1}),
-            _comp("date", "TextField", {"label": "Departure date (YYYY-MM-DD)",
-                                         "text": {"path": "/date"}, "textFieldType": "date"}),
+            ]}),
+            _comp("title", "Text", {"text": "Book a flight (fallback)", "variant": "h2"}),
+            _comp("origin", "ChoicePicker", {"label": "Origin", "options": _AIRPORT_OPTIONS,
+                                              "value": {"path": "/origin"}, "variant": "mutuallyExclusive"}),
+            _comp("dest", "ChoicePicker", {"label": "Destination", "options": _AIRPORT_OPTIONS,
+                                            "value": {"path": "/dest"}, "variant": "mutuallyExclusive"}),
+            _comp("date", "DateTimeInput", {"label": "Departure date (YYYY-MM-DD)",
+                                             "value": {"path": "/date"}, "enableDate": True}),
             _comp("passengers", "TextField", {"label": "Passengers",
-                                               "text": {"path": "/passengers"}, "textFieldType": "number"}),
-            _comp("fare", "MultipleChoice", {"label": "Fare class", "options": _FARE_OPTIONS,
-                                              "selections": {"path": "/fare_class"}, "maxAllowedSelections": 1}),
-            _comp("submit", "Button", {"child": "submit_label", "primary": True,
-                                        "action": {"name": "bookingSubmit", "context": [
-                                            {"key": "formId", "value": "booking"},
-                                            {"key": "origin", "value": {"path": "/origin"}},
-                                            {"key": "dest", "value": {"path": "/dest"}},
-                                            {"key": "date", "value": {"path": "/date"}},
-                                            {"key": "passengers", "value": {"path": "/passengers"}},
-                                            {"key": "fare_class", "value": {"path": "/fare_class"}},
-                                        ]}}),
+                                               "value": {"path": "/passengers"}, "variant": "number"}),
+            _comp("fare", "ChoicePicker", {"label": "Fare class", "options": _FARE_OPTIONS,
+                                            "value": {"path": "/fare_class"}, "variant": "mutuallyExclusive"}),
+            _comp("submit", "Button", {"child": "submit_label", "variant": "primary",
+                                        "action": {"event": {"name": "bookingSubmit", "context": {
+                                            "formId": "booking",
+                                            "origin": {"path": "/origin"},
+                                            "dest": {"path": "/dest"},
+                                            "date": {"path": "/date"},
+                                            "passengers": {"path": "/passengers"},
+                                            "fare_class": {"path": "/fare_class"},
+                                        }}}}),
             _comp("submit_label", "Text", {"text": "Search flights"}),
         ],
     )
@@ -423,41 +427,41 @@ _SEARCH_FLIGHTS_SYSTEM = """You just received a booking submission. The find_rou
 
 Form data (for context): {form_json}
 
-Emit an A2UI v1 results surface using the FlightResultsSpec schema.
+Emit an A2UI v0.9 results surface using the FlightResultsSpec schema.
 
-A2UI format (CRITICAL): every component is `{{"id": "...", "component": {{"<ComponentName>": {{<props>}}}}}}`. The component name is the SINGLE KEY of the inner dict.
+A2UI format (CRITICAL): every component is FLAT — `{{"id": "...", "component": "<ComponentName>", <props...>}}`. The component name is a plain string; props sit at the top level of the same object. Dynamic values are bare literals or `{{"path": "/ptr"}}`.
 
 Allowed component names: Column, Row, Card, Text, TextField, Button, Divider, List.
 
 Per-component shapes you'll need:
-  Column / List: {{"children": {{"explicitList": ["id1", "id2"]}}}}
+  Column / List: {{"children": ["id1", "id2"]}}
   Card:          {{"child": "<single-id>"}}
-  Text:          {{"text": "literal", "usageHint": "h2"}}  (or h1/h3/body/caption)
-  Button:        {{"child": "<text-id>", "primary": true, "action": {{"name": "<event>", "context": [{{"key":"flightId","value":"<num>"}}]}}}}
+  Text:          {{"text": "literal", "variant": "h2"}}  (or h1/h3/body/caption)
+  Button:        {{"child": "<text-id>", "variant": "primary", "action": {{"event": {{"name": "<event>", "context": {{"flightId": "<num>"}}}}}}}}
   Divider:       {{}}
 
 Surface constraints:
   surface_id MUST be "results"
   data_model can be {{}}
-  Root = a Column whose explicitList lists every flight Card id (or just ["no_flights"] when empty)
+  Exactly ONE component MUST have id "root": a Column whose children lists every flight Card id (or just ["no_flights"] when empty)
 
 Build pattern (one per flight):
   card_<n>      (Card, child=col_<n>)
-  col_<n>       (Column, children explicitList = [title_<n>, route_<n>, time_<n>, btn_<n>])
-  title_<n>     (Text, text="<airline> flight <flight_number>", usageHint="h3")
-  route_<n>     (Text, text="<from> → <to>  •  <duration_min> min  •  <aircraft>", usageHint="body")
-  time_<n>      (Text, text="Depart <depart_local>  •  Arrive <arrive_local>  •  Gate <gate>", usageHint="caption")
-  btn_<n>       (Button, child=btn_label_<n>, primary=true,
-                 action={{"name":"flightSelect","context":[{{"key":"flightId","value":"<flight_number>"}}]}})
+  col_<n>       (Column, children = [title_<n>, route_<n>, time_<n>, btn_<n>])
+  title_<n>     (Text, text="<airline> flight <flight_number>", variant="h3")
+  route_<n>     (Text, text="<from> → <to>  •  <duration_min> min  •  <aircraft>", variant="body")
+  time_<n>      (Text, text="Depart <depart_local>  •  Arrive <arrive_local>  •  Gate <gate>", variant="caption")
+  btn_<n>       (Button, child=btn_label_<n>, variant="primary",
+                 action={{"event":{{"name":"flightSelect","context":{{"flightId":"<flight_number>"}}}}}})
   btn_label_<n> (Text, text="Select")
 
 Empty case: components = [
-  {{"id":"root", "component":{{"Column":{{"children":{{"explicitList":["no_flights"]}}}}}}}},
-  {{"id":"no_flights","component":{{"Card":{{"child":"empty_col"}}}}}},
-  {{"id":"empty_col","component":{{"Column":{{"children":{{"explicitList":["empty_msg","modify_btn"]}}}}}}}},
-  {{"id":"empty_msg","component":{{"Text":{{"text":"No flights found","usageHint":"h3"}}}}}},
-  {{"id":"modify_btn","component":{{"Button":{{"child":"modify_label","action":{{"name":"modifySearch","context":[{{"key":"formId","value":"booking"}}]}}}}}}}},
-  {{"id":"modify_label","component":{{"Text":{{"text":"Modify search"}}}}}}
+  {{"id":"root", "component":"Column", "children":["no_flights"]}},
+  {{"id":"no_flights", "component":"Card", "child":"empty_col"}},
+  {{"id":"empty_col", "component":"Column", "children":["empty_msg","modify_btn"]}},
+  {{"id":"empty_msg", "component":"Text", "text":"No flights found", "variant":"h3"}},
+  {{"id":"modify_btn", "component":"Button", "child":"modify_label", "action":{{"event":{{"name":"modifySearch","context":{{"formId":"booking"}}}}}}}},
+  {{"id":"modify_label", "component":"Text", "text":"Modify search"}}
 ]
 
 Use unique ids for every component."""
@@ -467,13 +471,13 @@ _SENTINEL_RESULTS = FlightResultsSpec(
     surface_id="results",
     data_model={},
     components=[
-        _comp("root", "Column", {"children": {"explicitList": ["msg"]}}),
+        _comp("root", "Column", {"children": ["msg"]}),
         _comp("msg", "Card", {"child": "msg_col"}),
-        _comp("msg_col", "Column", {"children": {"explicitList": ["msg_text", "modify"]}}),
-        _comp("msg_text", "Text", {"text": "Results unavailable", "usageHint": "h3"}),
+        _comp("msg_col", "Column", {"children": ["msg_text", "modify"]}),
+        _comp("msg_text", "Text", {"text": "Results unavailable", "variant": "h3"}),
         _comp("modify", "Button", {"child": "modify_label",
-                                    "action": {"name": "modifySearch",
-                                               "context": [{"key": "formId", "value": "booking"}]}}),
+                                    "action": {"event": {"name": "modifySearch",
+                                                         "context": {"formId": "booking"}}}}),
         _comp("modify_label", "Text", {"text": "Modify search"}),
     ],
 )
@@ -489,17 +493,17 @@ The user's prior search context (party_text, derived from passengers + fare_clas
 
 The selected flight number (from the Select button's action context, used in the fallback title if flight_json is null): {flight_id}
 
-Emit an A2UI v1 confirmation surface using the ConfirmationSpec schema.
+Emit an A2UI v0.9 confirmation surface using the ConfirmationSpec schema.
 
-A2UI format (CRITICAL): every component is `{{"id": "...", "component": {{"<ComponentName>": {{<props>}}}}}}`. The component name is the SINGLE KEY of the inner dict.
+A2UI format (CRITICAL): every component is FLAT — `{{"id": "...", "component": "<ComponentName>", <props...>}}`. The component name is a plain string; props sit at the top level of the same object. Dynamic values are bare literals or `{{"path": "/ptr"}}`. Exactly ONE component MUST have id "root".
 
 Allowed component names: Column, Card, Text, Button, Divider.
 
 Per-component shapes you'll need:
-  Column:        {{"children": {{"explicitList": ["id1","id2"]}}}}
+  Column:        {{"children": ["id1","id2"]}}
   Card:          {{"child": "<single-id>"}}
-  Text:          {{"text": "literal", "usageHint": "h2"}}  (h1/h2/h3/body/caption)
-  Button:        {{"child": "<text-id>", "primary": true, "action": {{"name": "<event>", "context": [{{"key":"formId","value":"booking"}}]}}}}
+  Text:          {{"text": "literal", "variant": "h2"}}  (h1/h2/h3/body/caption)
+  Button:        {{"child": "<text-id>", "variant": "primary", "action": {{"event": {{"name": "<event>", "context": {{"formId": "booking"}}}}}}}}
   Divider:       {{}}
 
 Surface constraints:
@@ -507,17 +511,17 @@ Surface constraints:
   data_model = {{}}
 
 Build this component tree exactly (use these ids):
-  root         (Column, children = explicitList=[card])
+  root         (Column, children = [card])
   card         (Card, child = card_col)
-  card_col     (Column, children = explicitList=[title, route_text, time_text, gate_text, divider, party_text, modify])
-  title        (Text, "<airline> flight <flight_number>", usageHint="h2")
-  route_text   (Text, "<from> → <to>  •  <duration_min> min  •  <aircraft>", usageHint="body")
-  time_text    (Text, "Depart <depart_local>  •  Arrive <arrive_local>", usageHint="caption")
-  gate_text    (Text, "Gate <gate>", usageHint="caption")
+  card_col     (Column, children = [title, route_text, time_text, gate_text, divider, party_text, modify])
+  title        (Text, "<airline> flight <flight_number>", variant="h2")
+  route_text   (Text, "<from> → <to>  •  <duration_min> min  •  <aircraft>", variant="body")
+  time_text    (Text, "Depart <depart_local>  •  Arrive <arrive_local>", variant="caption")
+  gate_text    (Text, "Gate <gate>", variant="caption")
   divider      (Divider, {{}})
-  party_text   (Text, "{party_text}", usageHint="body")  ← use the supplied string verbatim
-  modify       (Button, child=modify_label, primary=true,
-                action={{"name":"modifySearch","context":[{{"key":"formId","value":"booking"}}]}})
+  party_text   (Text, "{party_text}", variant="body")  ← use the supplied string verbatim
+  modify       (Button, child=modify_label, variant="primary",
+                action={{"event":{{"name":"modifySearch","context":{{"formId":"booking"}}}}}})
   modify_label (Text, "Modify search")
 
 If flight_json is null, omit route_text, time_text, gate_text from card_col's children and set the title to "Flight {flight_id} selected" (or "Booking selected" if {flight_id} is empty). Always include party_text + modify."""
@@ -530,14 +534,14 @@ def _build_sentinel_confirmation(flight_id: str, party_text: str) -> Confirmatio
         surface_id="confirmation",
         data_model={},
         components=[
-            _comp("root", "Column", {"children": {"explicitList": ["card"]}}),
+            _comp("root", "Column", {"children": ["card"]}),
             _comp("card", "Card", {"child": "card_col"}),
-            _comp("card_col", "Column", {"children": {"explicitList": ["title", "party", "modify"]}}),
-            _comp("title", "Text", {"text": title, "usageHint": "h2"}),
-            _comp("party", "Text", {"text": party_text, "usageHint": "body"}),
+            _comp("card_col", "Column", {"children": ["title", "party", "modify"]}),
+            _comp("title", "Text", {"text": title, "variant": "h2"}),
+            _comp("party", "Text", {"text": party_text, "variant": "body"}),
             _comp("modify", "Button", {"child": "modify_label",
-                                       "action": {"name": "modifySearch",
-                                                  "context": [{"key": "formId", "value": "booking"}]}}),
+                                       "action": {"event": {"name": "modifySearch",
+                                                            "context": {"formId": "booking"}}}}),
             _comp("modify_label", "Text", {"text": "Modify search"}),
         ],
     )
@@ -578,7 +582,8 @@ async def confirm_booking(state: MessagesState) -> dict:
 
 
 def _unwrap_literal(v: Any) -> Any:
-    """Unwrap a v1 literal wrapper ({literalString|literalNumber|literalBoolean: <v>})."""
+    """Unwrap a legacy literal wrapper ({literalString|literalNumber|literalBoolean: <v>}).
+    v0.9 context values arrive as bare literals, which pass through unchanged."""
     if isinstance(v, dict):
         for k in ("literalString", "literalNumber", "literalBoolean"):
             if k in v:
@@ -586,14 +591,25 @@ def _unwrap_literal(v: Any) -> Any:
     return v
 
 
+def _scalarize(v: Any) -> Any:
+    """Collapse a ChoicePicker string-array value ("['LAX']") to its first
+    element. v0.9 pickers bind to string arrays in the data model, so
+    path-bound action context values may arrive as single-element lists."""
+    if isinstance(v, list):
+        return v[0] if v else ""
+    return v
+
+
 def _parse_submit_payload(content: str) -> dict[str, Any] | None:
-    """Extract the form-data dict from a v1 A2uiActionMessage content.
+    """Extract the form-data dict from an A2UI action-message content.
 
     Chat-lib sends:
-      {"version":"v1","action":{"name":"...","surfaceId":"...",
-        "sourceComponentId":"...","timestamp":"...",
-        "context":{"formId":{"literalString":"booking"},
-                   "origin":{"literalString":"LAX"}, ...}}}
+      {"version":"v0.9","action":{"name":"...","surfaceId":"...",
+        "context":{"formId":"booking","origin":["LAX"], ...}}}
+
+    Context values are plain literals (path bindings are resolved
+    client-side); picker values arrive as string arrays and are
+    scalarized. Legacy literal wrappers are still unwrapped tolerantly.
     """
     try:
         payload = json.loads(content)
@@ -607,7 +623,7 @@ def _parse_submit_payload(content: str) -> dict[str, Any] | None:
     ctx = action.get("context", {})
     if not isinstance(ctx, dict):
         return None
-    return {k: _unwrap_literal(v) for k, v in ctx.items()}
+    return {k: _scalarize(_unwrap_literal(v)) for k, v in ctx.items()}
 
 
 async def search_flights(state: MessagesState) -> dict:
@@ -641,7 +657,7 @@ async def search_flights(state: MessagesState) -> dict:
 # ── Routing + compile ───────────────────────────────────────────────────────
 
 def _is_submit_event(content: str) -> bool:
-    """True iff the content is a v1 A2uiActionMessage named bookingSubmit."""
+    """True iff the content is an A2UI action message named bookingSubmit."""
     try:
         payload = json.loads(content)
     except (json.JSONDecodeError, TypeError):
@@ -656,7 +672,7 @@ def _is_submit_event(content: str) -> bool:
 
 
 def _is_flight_select_event(content: str) -> bool:
-    """True iff the content is a v1 A2uiActionMessage named flightSelect."""
+    """True iff the content is an A2UI action message named flightSelect."""
     try:
         payload = json.loads(content)
     except (json.JSONDecodeError, TypeError):
@@ -686,9 +702,10 @@ def _seed_airports_from_messages(messages: list[Any]) -> dict[str, str]:
     when the user's prompt explicitly mentions a route (e.g. the welcome
     chip "I want to fly LAX to JFK").
 
-    Returns {"origin": <CODE>, "dest": <CODE>} on a hit; {} when no
-    recognized pair appears. Both codes must be in AIRPORT_CODES; we
-    never seed an airport the form's dropdown can't render."""
+    Returns {"origin": [<CODE>], "dest": [<CODE>]} on a hit (string arrays,
+    matching the ChoicePicker data-model shape); {} when no recognized pair
+    appears. Both codes must be in AIRPORT_CODES; we never seed an airport
+    the form's dropdown can't render."""
     for msg in reversed(messages):
         # Only inspect human messages — AI surfaces and action JSON shouldn't
         # be parsed for seed values.
@@ -708,7 +725,7 @@ def _seed_airports_from_messages(messages: list[Any]) -> dict[str, str]:
             if origin == dest:
                 # Same-airport "route" can't possibly find flights; skip.
                 continue
-            return {"origin": origin, "dest": dest}
+            return {"origin": [origin], "dest": [dest]}
     return {}
 
 
@@ -732,7 +749,7 @@ def _extract_prior_submit_context(messages: list[Any]) -> dict[str, Any]:
             ctx = payload["action"].get("context", {})
             if not isinstance(ctx, dict):
                 return {}
-            return {k: _unwrap_literal(v) for k, v in ctx.items()}
+            return {k: _scalarize(_unwrap_literal(v)) for k, v in ctx.items()}
     return {}
 
 

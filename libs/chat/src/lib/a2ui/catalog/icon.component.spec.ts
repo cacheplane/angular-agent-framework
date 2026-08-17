@@ -2,13 +2,33 @@
 import { describe, it, expect } from 'vitest';
 import { A2uiIconComponent, toMaterialSymbolName } from './icon.component';
 
-describe('A2uiIconComponent', () => {
-  // Display-only component: renders name() input as a <span>.
-  // No methods, events, or bindings — purely declarative.
+describe('A2uiIconComponent — v0.9 protocol', () => {
+  // v0.9: the `name` input is either a string (Material Symbols ligature,
+  // camelCase converted to snake_case) or an object { svgPath } rendered as
+  // an inline <svg><path> (viewBox "0 -960 960 960").
   // Signal-based inputs require the angular() vite plugin for TestBed tests.
 
   it('exports the component class', () => {
     expect(A2uiIconComponent).toBeDefined();
+  });
+
+  describe('name shape discrimination', () => {
+    const svgPathOf = (name: string | { svgPath: string } | undefined): string | null =>
+      typeof name === 'object' && name !== null && typeof name.svgPath === 'string'
+        ? name.svgPath
+        : null;
+
+    it('treats a string name as a ligature (no svgPath)', () => {
+      expect(svgPathOf('check')).toBeNull();
+    });
+
+    it('extracts svgPath from an object name', () => {
+      expect(svgPathOf({ svgPath: 'M480-480Z' })).toBe('M480-480Z');
+    });
+
+    it('returns null for undefined', () => {
+      expect(svgPathOf(undefined)).toBeNull();
+    });
   });
 });
 

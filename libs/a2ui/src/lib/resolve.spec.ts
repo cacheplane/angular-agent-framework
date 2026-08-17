@@ -2,29 +2,14 @@
 import { describe, expect, test } from 'vitest';
 import { resolveDynamic } from './resolve';
 
-describe('resolveDynamic (v1)', () => {
+describe('resolveDynamic (v0.9)', () => {
   const model = { name: 'Brian', count: 7, active: true, tags: ['a', 'b'] };
 
-  test('passes through bare literals (e.g. plain strings without wrappers)', () => {
+  test('passes through bare literals', () => {
     expect(resolveDynamic('hello', model)).toBe('hello');
     expect(resolveDynamic(42, model)).toBe(42);
+    expect(resolveDynamic(true, model)).toBe(true);
     expect(resolveDynamic(null, model)).toBe(null);
-  });
-
-  test('unwraps literalString', () => {
-    expect(resolveDynamic({ literalString: 'hello' }, model)).toBe('hello');
-  });
-
-  test('unwraps literalNumber', () => {
-    expect(resolveDynamic({ literalNumber: 7 }, model)).toBe(7);
-  });
-
-  test('unwraps literalBoolean', () => {
-    expect(resolveDynamic({ literalBoolean: true }, model)).toBe(true);
-  });
-
-  test('unwraps literalArray', () => {
-    expect(resolveDynamic({ literalArray: ['x', 'y'] }, model)).toEqual(['x', 'y']);
   });
 
   test('resolves path against model', () => {
@@ -33,9 +18,18 @@ describe('resolveDynamic (v1)', () => {
     expect(resolveDynamic({ path: '/missing' }, model)).toBe(undefined);
   });
 
-  test('recurses into arrays', () => {
-    const out = resolveDynamic([{ literalString: 'a' }, { path: '/name' }], model);
+  test('function calls resolve to undefined until Phase 2 ships execution', () => {
+    expect(resolveDynamic({ call: 'formatString', args: { value: 'x' } }, model)).toBeUndefined();
+    expect(resolveDynamic({ call: 'required' }, model)).toBeUndefined();
+  });
+
+  test('recurses into arrays element-wise', () => {
+    const out = resolveDynamic(['a', { path: '/name' }], model);
     expect(out).toEqual(['a', 'Brian']);
+  });
+
+  test('bare string arrays pass through', () => {
+    expect(resolveDynamic(['x', 'y'], model)).toEqual(['x', 'y']);
   });
 
   test('returns plain object passthrough for unrecognized shapes', () => {
@@ -45,10 +39,6 @@ describe('resolveDynamic (v1)', () => {
 
   test('relative path resolves against scope basePath', () => {
     expect(resolveDynamic({ path: 'name' }, model, { basePath: '', item: undefined })).toBe('Brian');
-  });
-
-  test('returns undefined for non-existent paths', () => {
-    expect(resolveDynamic({ path: '/missing' }, model)).toBeUndefined();
   });
 
   test('resolves array index path', () => {

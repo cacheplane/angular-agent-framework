@@ -18,9 +18,9 @@ def _make_canned_stream() -> list[ChatGenerationChunk]:
     on_llm_new_token callback."""
     deltas = [
         '{"envelopes":[',
-        '{"surfaceUpdate":{"surfaceId":"s","components":[{"id":"root","type":"text","props":{}}]}},',
-        '{"beginRendering":{"surfaceId":"s","root":"root"}},',
-        '{"dataModelUpdate":{"surfaceId":"s","contents":[{"key":"text","valueString":"hi"}]}}',
+        '{"version":"v0.9","createSurface":{"surfaceId":"s","catalogId":"https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"}},',
+        '{"version":"v0.9","updateComponents":{"surfaceId":"s","components":[{"id":"root","component":"Text","text":{"path":"/text"}}]}},',
+        '{"version":"v0.9","updateDataModel":{"surfaceId":"s","path":"/text","value":"hi"}}',
         "]}",
     ]
     return [

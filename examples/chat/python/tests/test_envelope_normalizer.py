@@ -6,21 +6,25 @@ from src.streaming.envelope_normalizer import normalize_envelope_args
 
 class TestNormalizeEnvelopeArgs:
     def test_canonical_envelopes_shape(self):
-        args = {"envelopes": [{"surfaceUpdate": {"surfaceId": "s", "components": []}}]}
+        args = {"envelopes": [{"version": "v0.9", "updateComponents": {"surfaceId": "s", "components": []}}]}
         assert normalize_envelope_args(args) == args["envelopes"]
 
     def test_singular_envelope_typo_shape(self):
-        args = {"envelope": [{"beginRendering": {"surfaceId": "s", "root": "r"}}]}
+        args = {"envelope": [{"version": "v0.9", "createSurface": {"surfaceId": "s", "catalogId": "c"}}]}
         assert normalize_envelope_args(args) == args["envelope"]
 
     def test_positional_keys_unflattened_in_numeric_order(self):
-        e1 = {"surfaceUpdate": {"surfaceId": "s", "components": []}}
-        e2 = {"beginRendering": {"surfaceId": "s", "root": "r"}}
+        e1 = {"version": "v0.9", "createSurface": {"surfaceId": "s", "catalogId": "c"}}
+        e2 = {"version": "v0.9", "updateComponents": {"surfaceId": "s", "components": []}}
         args = {"1": e2, "0": e1}
         assert normalize_envelope_args(args) == [e1, e2]
 
     def test_flat_single_envelope_wrapped_in_list(self):
-        args = {"surfaceUpdate": {"surfaceId": "s", "components": []}}
+        args = {"updateComponents": {"surfaceId": "s", "components": []}}
+        assert normalize_envelope_args(args) == [args]
+
+    def test_flat_single_update_data_model_wrapped_in_list(self):
+        args = {"updateDataModel": {"surfaceId": "s", "path": "/", "value": {}}}
         assert normalize_envelope_args(args) == [args]
 
     def test_empty_object_returns_none(self):

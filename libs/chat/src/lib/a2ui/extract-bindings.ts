@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
-import type { A2uiComponentDef } from '@threadplane/a2ui';
+import type { A2uiComponent } from '@threadplane/a2ui';
 
-const REF_PATTERN = /\{(\$\.[^}]+)\}/g;
+// `[^{}]` (no nested braces) + a length bound keep the scan linear on
+// adversarial LLM-authored strings (CodeQL js/polynomial-redos).
+const REF_PATTERN = /\{(\$\.[^{}]{1,512})\}/g;
 
 function walk(value: unknown, into: Set<string>): void {
   if (typeof value === 'string') {
@@ -20,10 +22,10 @@ function walk(value: unknown, into: Set<string>): void {
 }
 
 /** Extracts the set of data-model paths (e.g. `$.form.name`) referenced
- * by `{$.path}` expressions inside a component's prop bag. Result is
+ * by `{$.path}` expressions inside a component's props. Result is
  * deduplicated and sorted for stable signal identity. */
-export function extractBindings(def: A2uiComponentDef): readonly string[] {
+export function extractBindings(component: A2uiComponent): readonly string[] {
   const out = new Set<string>();
-  walk(def, out);
+  walk(component, out);
   return [...out].sort();
 }

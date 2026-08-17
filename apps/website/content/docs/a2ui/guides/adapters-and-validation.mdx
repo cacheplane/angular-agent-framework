@@ -23,39 +23,35 @@ for await (const chunk of streamChunks) {
 The posture (straight from `parser.ts`) is conservative fallback:
 
 - Malformed lines are skipped silently — partial JSONL is normal mid-stream.
-- Lines whose object has no known envelope key are ignored.
+- Lines whose object has no known envelope key are ignored (including future v1.0 envelope kinds).
+- A missing `version` field defaults to `'v0.9'`.
 - Incomplete JSON buffers until a newline arrives.
 
 That last point in practice:
 
 ```ts
-parser.push('{"beginRendering":');                    // -> []  (buffers)
-parser.push('{"surfaceId":"s1","root":"root"}}\n');   // -> 1 message
+parser.push('{"version":"v0.9","deleteSurface":');  // -> []  (buffers)
+parser.push('{"surfaceId":"s1"}}\n');               // -> 1 message
 ```
 
 A line is only attempted once its trailing newline lands, so a split-mid-value chunk never throws.
 
 ## Validate and narrow values
 
-When you walk a component's props, you need to tell a literal from a path reference. The package exports four guards:
+When you walk a component's props, you need to tell a bare literal from a path reference or a function call. The package exports two guards:
 
 ```ts
-import {
-  isPathRef,
-  isLiteralString,
-  isLiteralNumber,
-  isLiteralBoolean,
-} from '@threadplane/a2ui';
+import { isPathRef, isFunctionCall } from '@threadplane/a2ui';
 
-isPathRef({ path: '/x' });               // true
-isLiteralString({ literalString: 'x' }); // true
+isPathRef({ path: '/x' });                  // true
+isFunctionCall({ call: 'formatString' });   // true
 ```
 
-<Callout type="warning" title="There is no isLiteralArray">
-The package exports `isPathRef`, `isLiteralString`, `isLiteralNumber`, and `isLiteralBoolean` — and no array guard. `resolveDynamic` unwraps `literalArray` internally, but there's no exported predicate for it. If you need to detect a `literalArray` shape yourself, check for the `literalArray` key directly.
+<Callout type="info" title="Literals need no guard">
+In v0.9, literals are bare JSON values — `"x"`, `5`, `true`, `["a", "b"]` — with no wrapper objects. A `typeof` check (or simply not matching either guard) is all it takes to identify one, so there are no literal guards to import.
 </Callout>
 
-For most rendering you don't branch on guards at all — `resolveDynamic` already handles literals, paths, arrays, and passthrough in one call. Reach for the guards when you need to *narrow a type* or make a decision before resolving.
+For most rendering you don't branch on guards at all — `resolveDynamic` already handles literals, paths, arrays, function calls, and passthrough in one call. Reach for the guards when you need to *narrow a type* or make a decision before resolving.
 
 ## Build payloads for tests
 
@@ -67,18 +63,18 @@ import { createA2uiMessageParser } from '@threadplane/a2ui';
 const parser = createA2uiMessageParser();
 
 const chunk = [
-  JSON.stringify({ surfaceUpdate: { surfaceId: 's1', components: [] } }),
-  JSON.stringify({ dataModelUpdate: { surfaceId: 's1', contents: [] } }),
-  JSON.stringify({ beginRendering: { surfaceId: 's1', root: 'root' } }),
+  JSON.stringify({ version: 'v0.9', createSurface: { surfaceId: 's1', catalogId: 'https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json' } }),
+  JSON.stringify({ version: 'v0.9', updateDataModel: { surfaceId: 's1', value: {} } }),
+  JSON.stringify({ version: 'v0.9', updateComponents: { surfaceId: 's1', components: [{ id: 'root', component: 'Column', children: [] }] } }),
 ].join('\n') + '\n';
 
 const messages = parser.push(chunk);
 
-messages.map(m => Object.keys(m)[0]);
-// ['surfaceUpdate', 'dataModelUpdate', 'beginRendering']
+messages.map(m => Object.keys(m).find(k => k !== 'version'));
+// ['createSurface', 'updateDataModel', 'updateComponents']
 ```
 
-Each `A2uiMessage` is a single-key envelope object, so `Object.keys(m)[0]` is the envelope kind — handy for assertions.
+Each `A2uiMessage` carries a `version` plus exactly one envelope key, so the non-`version` key is the envelope kind — handy for assertions.
 
 ## Build a custom renderer
 

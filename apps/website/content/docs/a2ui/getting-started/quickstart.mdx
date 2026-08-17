@@ -23,13 +23,13 @@ The package has no peer dependencies.
 
 ## Parse a stream
 
-Let's start with a real stream. An agent emits A2UI as newline-delimited JSON — one envelope per line. Here's a booking form, in emission order: data first, then the component tree, then the signal to render.
+Let's start with a real stream. An agent emits A2UI as newline-delimited JSON — one envelope per line, each stamped with `"version": "v0.9"`. Here's a booking form, in emission order: the surface is created first, then its data, then the component tree (whose first component is `root`).
 
 ```text
 ---a2ui_JSON---
-{"dataModelUpdate":{"surfaceId":"booking","contents":[{"key":"origin","valueString":"LAX"},{"key":"dest","valueString":"JFK"},{"key":"passengers","valueNumber":1}]}}
-{"surfaceUpdate":{"surfaceId":"booking","components":[{"id":"root","component":{"Column":{"children":{"explicitList":["title","origin","submit"]}}}},{"id":"title","component":{"Text":{"text":{"literalString":"Book a flight"},"usageHint":"h2"}}},{"id":"origin","component":{"MultipleChoice":{"label":{"literalString":"Origin"},"options":[{"label":{"literalString":"LAX"},"value":"LAX"},{"label":{"literalString":"JFK"},"value":"JFK"}],"selections":{"path":"/origin"},"maxAllowedSelections":1}}},{"id":"submit_label","component":{"Text":{"text":{"literalString":"Search flights"}}}},{"id":"submit","component":{"Button":{"child":"submit_label","primary":true,"action":{"name":"bookingSubmit","context":[{"key":"origin","value":{"path":"/origin"}},{"key":"dest","value":{"path":"/dest"}}]}}}}]}}
-{"beginRendering":{"surfaceId":"booking","root":"root"}}
+{"version":"v0.9","createSurface":{"surfaceId":"booking","catalogId":"https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"}}
+{"version":"v0.9","updateDataModel":{"surfaceId":"booking","value":{"origin":["LAX"],"dest":["JFK"],"passengers":1}}}
+{"version":"v0.9","updateComponents":{"surfaceId":"booking","components":[{"id":"root","component":"Column","children":["title","origin","submit"]},{"id":"title","component":"Text","text":"Book a flight","variant":"h2"},{"id":"origin","component":"ChoicePicker","label":"Origin","options":[{"label":"LAX","value":"LAX"},{"label":"JFK","value":"JFK"}],"value":{"path":"/origin"},"variant":"mutuallyExclusive"},{"id":"submit_label","component":"Text","text":"Search flights"},{"id":"submit","component":"Button","child":"submit_label","variant":"primary","action":{"event":{"name":"bookingSubmit","context":{"origin":{"path":"/origin"},"dest":{"path":"/dest"}}}}}]}}
 ```
 
 Feed each chunk to a parser. `push` returns the `A2uiMessage[]` it could complete from everything buffered so far.
@@ -40,82 +40,70 @@ import { createA2uiMessageParser } from '@threadplane/a2ui';
 const parser = createA2uiMessageParser();
 
 const messages = parser.push(
-  '{"beginRendering":{"surfaceId":"s1","root":"root"}}\n',
+  '{"version":"v0.9","createSurface":{"surfaceId":"s1","catalogId":"https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"}}\n',
 );
-// messages -> 1 message: { beginRendering: { surfaceId: 's1', root: 'root' } }
+// messages -> 1 message: { version: 'v0.9', createSurface: { surfaceId: 's1', catalogId: '...' } }
 ```
 
 The parser is line-oriented. A line is only parsed once a newline arrives, so partial JSON buffers until it's complete:
 
 ```ts
-parser.push('{"beginRendering":');           // -> []  (incomplete, buffered)
-parser.push('{"surfaceId":"s1","root":"root"}}\n'); // -> 1 message
+parser.push('{"version":"v0.9","deleteSurface":');  // -> []  (incomplete, buffered)
+parser.push('{"surfaceId":"s1"}}\n');               // -> 1 message
 ```
 
-That buffering is deliberate. Agent output streams in fragments, and a half-finished line shouldn't throw mid-render.
+That buffering is deliberate. Agent output streams in fragments, and a half-finished line shouldn't throw mid-render. A missing `version` field defaults to `v0.9`, and unknown envelope keys — such as future v1.0 messages — are skipped rather than treated as errors.
 
 ## Build the data model
 
-A `dataModelUpdate` carries `contents` — an array of typed entries, each with a `key` and one of `valueString` / `valueNumber` / `valueBoolean` / `valueMap`. The parser hands you those entries verbatim. Turning them into a plain object the resolver can read is your code.
+An `updateDataModel` envelope carries an optional `path` (a JSON pointer; omitted or `"/"` targets the whole model) and an optional `value` — plain JSON, no typed wrappers. If `value` is present, it replaces (or creates) the data at `path`. If `value` is omitted, the key at `path` is deleted.
 
-The library gives you the pointer helpers but doesn't ship a `contents` -> object reducer — assembling the model from `contents` (reading `valueString` vs `valueNumber`, recursing into `valueMap`) is the caller's job. Here's a small one that walks the entries and writes the reduced object at the envelope's optional `path` (defaulting to the root):
+Applying an update is just the pointer helpers:
 
 ```ts
-import { setByPointer } from '@threadplane/a2ui';
-import type { A2uiDataModelEntry, A2uiDataModelUpdate } from '@threadplane/a2ui';
+import { setByPointer, deleteByPointer } from '@threadplane/a2ui';
+import type { A2uiUpdateDataModel } from '@threadplane/a2ui';
 
-// Branch on the entry's value field; recurse into valueMap for nesting.
-function entriesToObject(entries: A2uiDataModelEntry[]): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
-  for (const e of entries) {
-    if (e.valueString !== undefined) out[e.key] = e.valueString;
-    else if (e.valueNumber !== undefined) out[e.key] = e.valueNumber;
-    else if (e.valueBoolean !== undefined) out[e.key] = e.valueBoolean;
-    else if (e.valueMap !== undefined) out[e.key] = entriesToObject(e.valueMap);
-  }
-  return out;
-}
-
-// Apply a dataModelUpdate to a model, honoring its optional `path`.
-function applyDataModelUpdate(
+function applyUpdateDataModel(
   model: Record<string, unknown>,
-  update: A2uiDataModelUpdate,
+  update: A2uiUpdateDataModel,
 ): Record<string, unknown> {
-  const obj = entriesToObject(update.contents);
-  return setByPointer(model, update.path ?? '/', obj);
+  const path = update.path && update.path !== '/' ? update.path : undefined;
+  if (!('value' in update) || update.value === undefined) {
+    // Omitted value = delete at path (whole-model reset when path is root).
+    return path ? deleteByPointer(model, path) : {};
+  }
+  if (!path) return update.value as Record<string, unknown>;
+  return setByPointer(model, path, update.value);
 }
 ```
 
-Run it against the booking stream's `dataModelUpdate` and you get the model back, derived from the entries you just parsed — not re-typed by hand:
+Run it against the booking stream's `updateDataModel` and you get the model back:
 
 ```ts
 let model: Record<string, unknown> = {};
-model = applyDataModelUpdate(model, {
+model = applyUpdateDataModel(model, {
   surfaceId: 'booking',
-  contents: [
-    { key: 'origin', valueString: 'LAX' },
-    { key: 'dest', valueString: 'JFK' },
-    { key: 'passengers', valueNumber: 1 },
-  ],
+  value: { origin: ['LAX'], dest: ['JFK'], passengers: 1 },
 });
-// model -> { origin: 'LAX', dest: 'JFK', passengers: 1 }
+// model -> { origin: ['LAX'], dest: ['JFK'], passengers: 1 }
 ```
 
-`setByPointer` builds the object immutably — each call returns a new object, the input is untouched. The [data model guide](/docs/a2ui/guides/data-model) covers the reducer, `path` scoping, and the pointer helpers in depth.
+`setByPointer` builds the object immutably — each call returns a new object, the input is untouched. The [data model guide](/docs/a2ui/guides/data-model) covers `path` scoping, deletes, and the pointer helpers in depth.
 
 ## Resolve a value
 
-A component's props can be literals or path references. `resolveDynamic` collapses both against the model.
+A component's props can be bare literals or path references. `resolveDynamic` collapses both against the model.
 
 ```ts
 import { resolveDynamic } from '@threadplane/a2ui';
 
-resolveDynamic({ path: '/origin' }, model);       // "LAX"
-resolveDynamic({ literalString: 'Search flights' }, model); // "Search flights"
-resolveDynamic({ path: '/missing' }, model);      // undefined
+resolveDynamic({ path: '/passengers' }, model);  // 1
+resolveDynamic('Search flights', model);         // "Search flights"
+resolveDynamic({ path: '/missing' }, model);     // undefined
 ```
 
-A literal wrapper unwraps to its value. A `{ path }` reads from the model by JSON-Pointer. A missing path resolves to `undefined` rather than throwing — same conservative posture as the parser.
+A bare literal (string, number, boolean) passes through unchanged. A `{ path }` reads from the model by JSON pointer. A missing path resolves to `undefined` rather than throwing — same conservative posture as the parser. A `{ call }` function-call value resolves to `undefined` until client-side function execution ships.
 
 ## Conclusion
 

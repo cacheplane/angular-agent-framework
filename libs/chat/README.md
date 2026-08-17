@@ -178,13 +178,13 @@ Citation display helpers derive the visible source type badge from `sourceType` 
 
 ### GenUI / A2UI surfaces
 
-`<chat-generative-ui>` renders A2UI surface specs emitted by agents. `<a2ui-surface>` is the underlying host that maps the spec to Angular catalog components (`A2uiButtonComponent`, `A2uiTextFieldComponent`, `A2uiCheckBoxComponent`, etc.).
+`<chat-generative-ui>` renders A2UI v0.9 surfaces emitted by agents. `<a2ui-surface>` is the underlying host that maps a surface to Angular catalog components (`A2uiButtonComponent`, `A2uiTextFieldComponent`, `A2uiChoicePickerComponent`, etc.).
 
-Agents can emit surface specs via `buildA2uiActionMessage(...)`. Actions from catalog components flow back to the agent as structured messages.
+Actions from catalog components flow back to the agent as structured `A2uiActionMessage`s (built via `buildA2uiActionMessage(...)`).
 
 The built-in catalog ships via `a2uiBasicCatalog`. Compose a custom catalog with `withViews()` and pass it to the surface.
 
-**Icons.** The catalog `Icon` component renders [Material Symbols](https://fonts.google.com/icons) by name (the A2UI canonical icon set — e.g. `check`, `trending_up`, `star`). For glyphs to render, include the Material Symbols Outlined stylesheet in your app's `<head>` (the library does not inject any web font):
+**Icons.** The catalog `Icon` component renders [Material Symbols](https://fonts.google.com/icons) by name (the A2UI canonical icon set — the v0.9 catalog's camelCase names such as `check`, `trendingUp`, `star` map to the matching ligature). For glyphs to render, include the Material Symbols Outlined stylesheet in your app's `<head>` (the library does not inject any web font):
 
 ```html
 <link
@@ -193,7 +193,7 @@ The built-in catalog ships via `a2uiBasicCatalog`. Compose a custom catalog with
 />
 ```
 
-Without the font, the icon name falls back to plain text. Icons inherit `currentColor` and size via the `size` prop.
+Without the font, the icon name falls back to plain text. Icons inherit `currentColor`; an inline `{ svgPath }` name renders a raw SVG path instead of a ligature.
 
 ### Streaming markdown
 
@@ -279,7 +279,7 @@ Use app tokens for app layout and `--tplane-chat-*` tokens at chat boundaries or
 
 Material presets map M3 color tokens to the `--a2ui-*` vocabulary with no `@angular/material` runtime dependency.
 
-**Agent-driven theming.** Agents control two knobs per the A2UI v1 wire format, set via `beginRendering.styles`: `font` (font family string) and `primaryColor` (hex `#RRGGBB`). These flow to `<a2ui-surface>` as inline styles and take precedence over `:root` defaults for that surface.
+**Agent-driven theming.** Agents set the surface theme per the A2UI v0.9 wire format via `createSurface.theme`: `primaryColor` (hex `#RRGGBB`) flows to `<a2ui-surface>` as the inline `--a2ui-primary` custom property and takes precedence over `:root` defaults for that surface. (`theme.iconUrl` and `theme.agentDisplayName` identify the agent that owns the surface.)
 
 **Custom themes.** Override any token at `:root`:
 

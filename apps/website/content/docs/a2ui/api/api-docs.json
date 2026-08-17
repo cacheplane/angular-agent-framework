@@ -1,45 +1,5 @@
 [
   {
-    "name": "A2uiAction",
-    "kind": "interface",
-    "description": "",
-    "properties": [
-      {
-        "name": "context",
-        "type": "A2uiActionContextEntry[]",
-        "description": "",
-        "optional": true
-      },
-      {
-        "name": "name",
-        "type": "string",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "examples": []
-  },
-  {
-    "name": "A2uiActionContextEntry",
-    "kind": "interface",
-    "description": "",
-    "properties": [
-      {
-        "name": "key",
-        "type": "string",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "value",
-        "type": "DynamicString | DynamicNumber | DynamicBoolean",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "examples": []
-  },
-  {
     "name": "A2uiActionMessage",
     "kind": "interface",
     "description": "",
@@ -58,7 +18,7 @@
       },
       {
         "name": "version",
-        "type": "\"v1\"",
+        "type": "string",
         "description": "",
         "optional": false
       }
@@ -71,48 +31,46 @@
     "description": "",
     "properties": [
       {
-        "name": "autoPlay",
-        "type": "boolean",
+        "name": "accessibility",
+        "type": "Record<string, unknown>",
+        "description": "Accessibility attributes (spec `AccessibilityAttributes`).",
+        "optional": true
+      },
+      {
+        "name": "catalogId",
+        "type": "string",
+        "description": "Overrides the surface's default catalog for this component.",
+        "optional": true
+      },
+      {
+        "name": "component",
+        "type": "\"AudioPlayer\"",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "description",
+        "type": "DynamicString",
         "description": "",
         "optional": true
       },
       {
-        "name": "controls",
-        "type": "boolean",
+        "name": "id",
+        "type": "string",
         "description": "",
-        "optional": true
+        "optional": false
       },
       {
         "name": "url",
         "type": "DynamicString",
         "description": "",
         "optional": false
-      }
-    ],
-    "examples": []
-  },
-  {
-    "name": "A2uiBeginRendering",
-    "kind": "interface",
-    "description": "",
-    "properties": [
-      {
-        "name": "root",
-        "type": "string",
-        "description": "",
-        "optional": false
       },
       {
-        "name": "styles",
-        "type": "object",
-        "description": "",
+        "name": "weight",
+        "type": "number",
+        "description": "Flex-grow-like weight; only valid as a direct child of Row/Column.",
         "optional": true
-      },
-      {
-        "name": "surfaceId",
-        "type": "string",
-        "description": "",
-        "optional": false
       }
     ],
     "examples": []
@@ -123,10 +81,22 @@
     "description": "",
     "properties": [
       {
+        "name": "accessibility",
+        "type": "Record<string, unknown>",
+        "description": "Accessibility attributes (spec `AccessibilityAttributes`).",
+        "optional": true
+      },
+      {
         "name": "action",
         "type": "A2uiAction",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "catalogId",
+        "type": "string",
+        "description": "Overrides the surface's default catalog for this component.",
+        "optional": true
       },
       {
         "name": "child",
@@ -135,9 +105,27 @@
         "optional": false
       },
       {
-        "name": "primary",
-        "type": "boolean",
+        "name": "component",
+        "type": "\"Button\"",
         "description": "",
+        "optional": false
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "variant",
+        "type": "\"default\" | \"primary\" | \"borderless\"",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "weight",
+        "type": "number",
+        "description": "Flex-grow-like weight; only valid as a direct child of Row/Column.",
         "optional": true
       }
     ],
@@ -149,10 +137,80 @@
     "description": "",
     "properties": [
       {
+        "name": "accessibility",
+        "type": "Record<string, unknown>",
+        "description": "Accessibility attributes (spec `AccessibilityAttributes`).",
+        "optional": true
+      },
+      {
+        "name": "catalogId",
+        "type": "string",
+        "description": "Overrides the surface's default catalog for this component.",
+        "optional": true
+      },
+      {
         "name": "child",
         "type": "string",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "component",
+        "type": "\"Card\"",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "weight",
+        "type": "number",
+        "description": "Flex-grow-like weight; only valid as a direct child of Row/Column.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiCheck",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "args",
+        "type": "Record<string, unknown>",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "call",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "message",
+        "type": "string",
+        "description": "",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiCheckable",
+    "kind": "interface",
+    "description": "Mixin for input components that support client-side validation checks.",
+    "properties": [
+      {
+        "name": "checks",
+        "type": "A2uiCheck[]",
+        "description": "",
+        "optional": true
       }
     ],
     "examples": []
@@ -160,23 +218,153 @@
   {
     "name": "A2uiCheckBox",
     "kind": "interface",
-    "description": "",
+    "description": "Mixin for input components that support client-side validation checks.",
     "properties": [
       {
-        "name": "action",
-        "type": "A2uiAction",
+        "name": "accessibility",
+        "type": "Record<string, unknown>",
+        "description": "Accessibility attributes (spec `AccessibilityAttributes`).",
+        "optional": true
+      },
+      {
+        "name": "catalogId",
+        "type": "string",
+        "description": "Overrides the surface's default catalog for this component.",
+        "optional": true
+      },
+      {
+        "name": "checks",
+        "type": "A2uiCheck[]",
         "description": "",
         "optional": true
       },
       {
-        "name": "checked",
-        "type": "DynamicBoolean",
+        "name": "component",
+        "type": "\"CheckBox\"",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "id",
+        "type": "string",
         "description": "",
         "optional": false
       },
       {
         "name": "label",
         "type": "DynamicString",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "DynamicBoolean",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "weight",
+        "type": "number",
+        "description": "Flex-grow-like weight; only valid as a direct child of Row/Column.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiChoicePicker",
+    "kind": "interface",
+    "description": "Mixin for input components that support client-side validation checks.",
+    "properties": [
+      {
+        "name": "accessibility",
+        "type": "Record<string, unknown>",
+        "description": "Accessibility attributes (spec `AccessibilityAttributes`).",
+        "optional": true
+      },
+      {
+        "name": "catalogId",
+        "type": "string",
+        "description": "Overrides the surface's default catalog for this component.",
+        "optional": true
+      },
+      {
+        "name": "checks",
+        "type": "A2uiCheck[]",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "component",
+        "type": "\"ChoicePicker\"",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "displayStyle",
+        "type": "\"checkbox\" | \"chips\"",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "filterable",
+        "type": "boolean",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "label",
+        "type": "DynamicString",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "options",
+        "type": "object[]",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "DynamicStringList",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "variant",
+        "type": "\"mutuallyExclusive\" | \"multipleSelection\"",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "weight",
+        "type": "number",
+        "description": "Flex-grow-like weight; only valid as a direct child of Row/Column.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiClientCapabilities",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "inlineCatalogs",
+        "type": "unknown[]",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "supportedCatalogIds",
+        "type": "string[]",
         "description": "",
         "optional": false
       }
@@ -193,12 +381,6 @@
         "type": "Record<string, Record<string, unknown>>",
         "description": "",
         "optional": false
-      },
-      {
-        "name": "version",
-        "type": "\"v1\"",
-        "description": "",
-        "optional": false
       }
     ],
     "examples": []
@@ -209,9 +391,21 @@
     "description": "",
     "properties": [
       {
-        "name": "alignment",
-        "type": "\"start\" | \"center\" | \"end\" | \"stretch\"",
+        "name": "accessibility",
+        "type": "Record<string, unknown>",
+        "description": "Accessibility attributes (spec `AccessibilityAttributes`).",
+        "optional": true
+      },
+      {
+        "name": "align",
+        "type": "A2uiAlign",
         "description": "",
+        "optional": true
+      },
+      {
+        "name": "catalogId",
+        "type": "string",
+        "description": "Overrides the surface's default catalog for this component.",
         "optional": true
       },
       {
@@ -221,22 +415,52 @@
         "optional": false
       },
       {
-        "name": "gap",
-        "type": "number",
+        "name": "component",
+        "type": "\"Column\"",
         "description": "",
+        "optional": false
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "justify",
+        "type": "A2uiJustify",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "weight",
+        "type": "number",
+        "description": "Flex-grow-like weight; only valid as a direct child of Row/Column.",
         "optional": true
       }
     ],
     "examples": []
   },
   {
-    "name": "A2uiComponent",
+    "name": "A2uiComponentBase",
     "kind": "interface",
     "description": "",
     "properties": [
       {
+        "name": "accessibility",
+        "type": "Record<string, unknown>",
+        "description": "Accessibility attributes (spec `AccessibilityAttributes`).",
+        "optional": true
+      },
+      {
+        "name": "catalogId",
+        "type": "string",
+        "description": "Overrides the surface's default catalog for this component.",
+        "optional": true
+      },
+      {
         "name": "component",
-        "type": "A2uiComponentDef",
+        "type": "string",
         "description": "",
         "optional": false
       },
@@ -249,65 +473,27 @@
       {
         "name": "weight",
         "type": "number",
-        "description": "",
+        "description": "Flex-grow-like weight; only valid as a direct child of Row/Column.",
         "optional": true
       }
     ],
     "examples": []
   },
   {
-    "name": "A2uiDataModelEntry",
+    "name": "A2uiCreateSurface",
     "kind": "interface",
     "description": "",
     "properties": [
       {
-        "name": "key",
+        "name": "catalogId",
         "type": "string",
         "description": "",
         "optional": false
       },
       {
-        "name": "valueBoolean",
+        "name": "sendDataModel",
         "type": "boolean",
-        "description": "",
-        "optional": true
-      },
-      {
-        "name": "valueMap",
-        "type": "A2uiDataModelEntry[]",
-        "description": "",
-        "optional": true
-      },
-      {
-        "name": "valueNumber",
-        "type": "number",
-        "description": "",
-        "optional": true
-      },
-      {
-        "name": "valueString",
-        "type": "string",
-        "description": "",
-        "optional": true
-      }
-    ],
-    "examples": []
-  },
-  {
-    "name": "A2uiDataModelUpdate",
-    "kind": "interface",
-    "description": "",
-    "properties": [
-      {
-        "name": "contents",
-        "type": "A2uiDataModelEntry[]",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "path",
-        "type": "string",
-        "description": "",
+        "description": "When true, the client attaches the surface's full data model to every outbound message.",
         "optional": true
       },
       {
@@ -315,6 +501,12 @@
         "type": "string",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "theme",
+        "type": "A2uiTheme",
+        "description": "",
+        "optional": true
       }
     ],
     "examples": []
@@ -322,8 +514,32 @@
   {
     "name": "A2uiDateTimeInput",
     "kind": "interface",
-    "description": "",
+    "description": "Mixin for input components that support client-side validation checks.",
     "properties": [
+      {
+        "name": "accessibility",
+        "type": "Record<string, unknown>",
+        "description": "Accessibility attributes (spec `AccessibilityAttributes`).",
+        "optional": true
+      },
+      {
+        "name": "catalogId",
+        "type": "string",
+        "description": "Overrides the surface's default catalog for this component.",
+        "optional": true
+      },
+      {
+        "name": "checks",
+        "type": "A2uiCheck[]",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "component",
+        "type": "\"DateTimeInput\"",
+        "description": "",
+        "optional": false
+      },
       {
         "name": "enableDate",
         "type": "boolean",
@@ -337,15 +553,39 @@
         "optional": true
       },
       {
-        "name": "label",
-        "type": "DynamicString",
+        "name": "id",
+        "type": "string",
         "description": "",
         "optional": false
       },
       {
-        "name": "value",
+        "name": "label",
         "type": "DynamicString",
         "description": "",
+        "optional": true
+      },
+      {
+        "name": "max",
+        "type": "DynamicString",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "min",
+        "type": "DynamicString",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "value",
+        "type": "DynamicString",
+        "description": "ISO 8601 value.",
+        "optional": false
+      },
+      {
+        "name": "weight",
+        "type": "number",
+        "description": "Flex-grow-like weight; only valid as a direct child of Row/Column.",
         "optional": true
       }
     ],
@@ -371,8 +611,112 @@
     "description": "",
     "properties": [
       {
-        "name": "direction",
+        "name": "accessibility",
+        "type": "Record<string, unknown>",
+        "description": "Accessibility attributes (spec `AccessibilityAttributes`).",
+        "optional": true
+      },
+      {
+        "name": "axis",
         "type": "\"vertical\" | \"horizontal\"",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "catalogId",
+        "type": "string",
+        "description": "Overrides the surface's default catalog for this component.",
+        "optional": true
+      },
+      {
+        "name": "component",
+        "type": "\"Divider\"",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "weight",
+        "type": "number",
+        "description": "Flex-grow-like weight; only valid as a direct child of Row/Column.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiErrorMessage",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "error",
+        "type": "object",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "version",
+        "type": "string",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiEventAction",
+    "kind": "interface",
+    "description": "Dispatches a named event (with optional context) to the agent.",
+    "properties": [
+      {
+        "name": "event",
+        "type": "object",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiFunctionAction",
+    "kind": "interface",
+    "description": "Executes a client-side function locally (e.g. `openUrl`).",
+    "properties": [
+      {
+        "name": "functionCall",
+        "type": "A2uiFunctionCall",
+        "description": "",
+        "optional": false
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiFunctionCall",
+    "kind": "interface",
+    "description": "Client-side function invocation (e.g. `formatString`, `required`).",
+    "properties": [
+      {
+        "name": "args",
+        "type": "Record<string, unknown>",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "call",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "returnType",
+        "type": "\"string\" | \"number\" | \"boolean\" | \"object\" | \"array\" | \"any\" | \"void\"",
         "description": "",
         "optional": true
       }
@@ -385,15 +729,39 @@
     "description": "",
     "properties": [
       {
-        "name": "icon",
-        "type": "DynamicString",
+        "name": "accessibility",
+        "type": "Record<string, unknown>",
+        "description": "Accessibility attributes (spec `AccessibilityAttributes`).",
+        "optional": true
+      },
+      {
+        "name": "catalogId",
+        "type": "string",
+        "description": "Overrides the surface's default catalog for this component.",
+        "optional": true
+      },
+      {
+        "name": "component",
+        "type": "\"Icon\"",
         "description": "",
         "optional": false
       },
       {
-        "name": "size",
-        "type": "number",
+        "name": "id",
+        "type": "string",
         "description": "",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "type": "DynamicString | object",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "weight",
+        "type": "number",
+        "description": "Flex-grow-like weight; only valid as a direct child of Row/Column.",
         "optional": true
       }
     ],
@@ -405,16 +773,40 @@
     "description": "",
     "properties": [
       {
-        "name": "alt",
+        "name": "accessibility",
+        "type": "Record<string, unknown>",
+        "description": "Accessibility attributes (spec `AccessibilityAttributes`).",
+        "optional": true
+      },
+      {
+        "name": "catalogId",
+        "type": "string",
+        "description": "Overrides the surface's default catalog for this component.",
+        "optional": true
+      },
+      {
+        "name": "component",
+        "type": "\"Image\"",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "description",
         "type": "DynamicString",
         "description": "",
         "optional": true
       },
       {
-        "name": "height",
-        "type": "number",
+        "name": "fit",
+        "type": "\"contain\" | \"cover\" | \"fill\" | \"none\" | \"scaleDown\"",
         "description": "",
         "optional": true
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "",
+        "optional": false
       },
       {
         "name": "url",
@@ -423,9 +815,15 @@
         "optional": false
       },
       {
-        "name": "width",
-        "type": "number",
+        "name": "variant",
+        "type": "\"icon\" | \"avatar\" | \"smallFeature\" | \"mediumFeature\" | \"largeFeature\" | \"header\"",
         "description": "",
+        "optional": true
+      },
+      {
+        "name": "weight",
+        "type": "number",
+        "description": "Flex-grow-like weight; only valid as a direct child of Row/Column.",
         "optional": true
       }
     ],
@@ -437,8 +835,32 @@
     "description": "",
     "properties": [
       {
+        "name": "accessibility",
+        "type": "Record<string, unknown>",
+        "description": "Accessibility attributes (spec `AccessibilityAttributes`).",
+        "optional": true
+      },
+      {
+        "name": "align",
+        "type": "A2uiAlign",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "catalogId",
+        "type": "string",
+        "description": "Overrides the surface's default catalog for this component.",
+        "optional": true
+      },
+      {
         "name": "children",
         "type": "A2uiChildren",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "component",
+        "type": "\"List\"",
         "description": "",
         "optional": false
       },
@@ -446,6 +868,18 @@
         "name": "direction",
         "type": "\"vertical\" | \"horizontal\"",
         "description": "",
+        "optional": true
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "weight",
+        "type": "number",
+        "description": "Flex-grow-like weight; only valid as a direct child of Row/Column.",
         "optional": true
       }
     ],
@@ -479,52 +913,58 @@
     "description": "",
     "properties": [
       {
-        "name": "contentChild",
+        "name": "accessibility",
+        "type": "Record<string, unknown>",
+        "description": "Accessibility attributes (spec `AccessibilityAttributes`).",
+        "optional": true
+      },
+      {
+        "name": "catalogId",
+        "type": "string",
+        "description": "Overrides the surface's default catalog for this component.",
+        "optional": true
+      },
+      {
+        "name": "component",
+        "type": "\"Modal\"",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "content",
         "type": "string",
         "description": "",
         "optional": false
       },
       {
-        "name": "entryPointChild",
+        "name": "id",
         "type": "string",
         "description": "",
         "optional": false
       },
       {
-        "name": "title",
-        "type": "DynamicString",
+        "name": "trigger",
+        "type": "string",
         "description": "",
+        "optional": false
+      },
+      {
+        "name": "weight",
+        "type": "number",
+        "description": "Flex-grow-like weight; only valid as a direct child of Row/Column.",
         "optional": true
       }
     ],
     "examples": []
   },
   {
-    "name": "A2uiMultipleChoice",
+    "name": "A2uiPathRef",
     "kind": "interface",
-    "description": "",
+    "description": "JSON-pointer data-model binding. Absolute (`/a/b`) or relative inside templates.",
     "properties": [
       {
-        "name": "label",
-        "type": "DynamicString",
-        "description": "",
-        "optional": true
-      },
-      {
-        "name": "maxAllowedSelections",
-        "type": "number",
-        "description": "",
-        "optional": true
-      },
-      {
-        "name": "options",
-        "type": "object[]",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "selections",
-        "type": "DynamicStringList",
+        "name": "path",
+        "type": "string",
         "description": "",
         "optional": false
       }
@@ -537,9 +977,21 @@
     "description": "",
     "properties": [
       {
-        "name": "alignment",
-        "type": "\"start\" | \"center\" | \"end\" | \"stretch\"",
+        "name": "accessibility",
+        "type": "Record<string, unknown>",
+        "description": "Accessibility attributes (spec `AccessibilityAttributes`).",
+        "optional": true
+      },
+      {
+        "name": "align",
+        "type": "A2uiAlign",
         "description": "",
+        "optional": true
+      },
+      {
+        "name": "catalogId",
+        "type": "string",
+        "description": "Overrides the surface's default catalog for this component.",
         "optional": true
       },
       {
@@ -549,15 +1001,27 @@
         "optional": false
       },
       {
-        "name": "distribution",
-        "type": "\"start\" | \"center\" | \"end\" | \"space-between\" | \"space-around\"",
+        "name": "component",
+        "type": "\"Row\"",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "justify",
+        "type": "A2uiJustify",
         "description": "",
         "optional": true
       },
       {
-        "name": "gap",
+        "name": "weight",
         "type": "number",
-        "description": "",
+        "description": "Flex-grow-like weight; only valid as a direct child of Row/Column.",
         "optional": true
       }
     ],
@@ -586,8 +1050,38 @@
   {
     "name": "A2uiSlider",
     "kind": "interface",
-    "description": "",
+    "description": "Mixin for input components that support client-side validation checks.",
     "properties": [
+      {
+        "name": "accessibility",
+        "type": "Record<string, unknown>",
+        "description": "Accessibility attributes (spec `AccessibilityAttributes`).",
+        "optional": true
+      },
+      {
+        "name": "catalogId",
+        "type": "string",
+        "description": "Overrides the surface's default catalog for this component.",
+        "optional": true
+      },
+      {
+        "name": "checks",
+        "type": "A2uiCheck[]",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "component",
+        "type": "\"Slider\"",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
       {
         "name": "label",
         "type": "DynamicString",
@@ -595,19 +1089,13 @@
         "optional": true
       },
       {
-        "name": "maxValue",
+        "name": "max",
         "type": "number",
         "description": "",
-        "optional": true
+        "optional": false
       },
       {
-        "name": "minValue",
-        "type": "number",
-        "description": "",
-        "optional": true
-      },
-      {
-        "name": "step",
+        "name": "min",
         "type": "number",
         "description": "",
         "optional": true
@@ -617,6 +1105,12 @@
         "type": "DynamicNumber",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "weight",
+        "type": "number",
+        "description": "Flex-grow-like weight; only valid as a direct child of Row/Column.",
+        "optional": true
       }
     ],
     "examples": []
@@ -651,12 +1145,6 @@
         "optional": true
       },
       {
-        "name": "styles",
-        "type": "object",
-        "description": "Styles set by the agent via `beginRendering.styles`. The\ncanonical v1 spec defines exactly two fields: `font` (primary\nfont for the UI) and `primaryColor` (hex `#RRGGBB`). The renderer\napplies these as CSS custom properties on the surface root,\noverriding any consumer-set defaults for the duration of the\nsurface's life. Anything richer (typography scale, spacing,\nelevation, etc.) is the renderer's private vocabulary and not\ncommunicated through this field.",
-        "optional": true
-      },
-      {
         "name": "surfaceId",
         "type": "string",
         "description": "",
@@ -672,55 +1160,45 @@
     "examples": []
   },
   {
-    "name": "A2uiSurfaceUpdate",
-    "kind": "interface",
-    "description": "",
-    "properties": [
-      {
-        "name": "components",
-        "type": "A2uiComponent[]",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "surfaceId",
-        "type": "string",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "examples": []
-  },
-  {
-    "name": "A2uiTabItem",
-    "kind": "interface",
-    "description": "",
-    "properties": [
-      {
-        "name": "child",
-        "type": "string",
-        "description": "",
-        "optional": false
-      },
-      {
-        "name": "title",
-        "type": "DynamicString",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "examples": []
-  },
-  {
     "name": "A2uiTabs",
     "kind": "interface",
     "description": "",
     "properties": [
       {
-        "name": "tabItems",
-        "type": "A2uiTabItem[]",
+        "name": "accessibility",
+        "type": "Record<string, unknown>",
+        "description": "Accessibility attributes (spec `AccessibilityAttributes`).",
+        "optional": true
+      },
+      {
+        "name": "catalogId",
+        "type": "string",
+        "description": "Overrides the surface's default catalog for this component.",
+        "optional": true
+      },
+      {
+        "name": "component",
+        "type": "\"Tabs\"",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "tabs",
+        "type": "object[]",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "weight",
+        "type": "number",
+        "description": "Flex-grow-like weight; only valid as a direct child of Row/Column.",
+        "optional": true
       }
     ],
     "examples": []
@@ -731,15 +1209,45 @@
     "description": "",
     "properties": [
       {
+        "name": "accessibility",
+        "type": "Record<string, unknown>",
+        "description": "Accessibility attributes (spec `AccessibilityAttributes`).",
+        "optional": true
+      },
+      {
+        "name": "catalogId",
+        "type": "string",
+        "description": "Overrides the surface's default catalog for this component.",
+        "optional": true
+      },
+      {
+        "name": "component",
+        "type": "\"Text\"",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
         "name": "text",
         "type": "DynamicString",
         "description": "",
         "optional": false
       },
       {
-        "name": "usageHint",
+        "name": "variant",
         "type": "\"h1\" | \"h2\" | \"h3\" | \"h4\" | \"h5\" | \"caption\" | \"body\"",
         "description": "",
+        "optional": true
+      },
+      {
+        "name": "weight",
+        "type": "number",
+        "description": "Flex-grow-like weight; only valid as a direct child of Row/Column.",
         "optional": true
       }
     ],
@@ -748,8 +1256,38 @@
   {
     "name": "A2uiTextField",
     "kind": "interface",
-    "description": "",
+    "description": "Mixin for input components that support client-side validation checks.",
     "properties": [
+      {
+        "name": "accessibility",
+        "type": "Record<string, unknown>",
+        "description": "Accessibility attributes (spec `AccessibilityAttributes`).",
+        "optional": true
+      },
+      {
+        "name": "catalogId",
+        "type": "string",
+        "description": "Overrides the surface's default catalog for this component.",
+        "optional": true
+      },
+      {
+        "name": "checks",
+        "type": "A2uiCheck[]",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "component",
+        "type": "\"TextField\"",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
       {
         "name": "label",
         "type": "DynamicString",
@@ -757,21 +1295,27 @@
         "optional": false
       },
       {
-        "name": "text",
+        "name": "validationRegexp",
+        "type": "string",
+        "description": "",
+        "optional": true
+      },
+      {
+        "name": "value",
         "type": "DynamicString",
         "description": "",
         "optional": true
       },
       {
-        "name": "textFieldType",
-        "type": "\"number\" | \"date\" | \"longText\" | \"shortText\" | \"obscured\"",
+        "name": "variant",
+        "type": "\"number\" | \"shortText\" | \"longText\" | \"obscured\"",
         "description": "",
         "optional": true
       },
       {
-        "name": "validationRegexp",
-        "type": "string",
-        "description": "",
+        "name": "weight",
+        "type": "number",
+        "description": "Flex-grow-like weight; only valid as a direct child of Row/Column.",
         "optional": true
       }
     ],
@@ -804,25 +1348,19 @@
     "examples": []
   },
   {
-    "name": "A2uiVideo",
+    "name": "A2uiUpdateComponents",
     "kind": "interface",
     "description": "",
     "properties": [
       {
-        "name": "autoPlay",
-        "type": "boolean",
+        "name": "components",
+        "type": "A2uiComponent[]",
         "description": "",
-        "optional": true
+        "optional": false
       },
       {
-        "name": "controls",
-        "type": "boolean",
-        "description": "",
-        "optional": true
-      },
-      {
-        "name": "url",
-        "type": "DynamicString",
+        "name": "surfaceId",
+        "type": "string",
         "description": "",
         "optional": false
       }
@@ -830,58 +1368,170 @@
     "examples": []
   },
   {
-    "name": "A2uiChildren",
-    "kind": "type",
+    "name": "A2uiUpdateDataModel",
+    "kind": "interface",
     "description": "",
-    "signature": "object | object",
+    "properties": [
+      {
+        "name": "path",
+        "type": "string",
+        "description": "JSON pointer into the data model. Omitted or `/` targets the whole model.",
+        "optional": true
+      },
+      {
+        "name": "surfaceId",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "type": "unknown",
+        "description": "Replacement value at `path`. Omitted value deletes the key at `path`.",
+        "optional": true
+      }
+    ],
     "examples": []
   },
   {
-    "name": "A2uiComponentDef",
+    "name": "A2uiVideo",
+    "kind": "interface",
+    "description": "",
+    "properties": [
+      {
+        "name": "accessibility",
+        "type": "Record<string, unknown>",
+        "description": "Accessibility attributes (spec `AccessibilityAttributes`).",
+        "optional": true
+      },
+      {
+        "name": "catalogId",
+        "type": "string",
+        "description": "Overrides the surface's default catalog for this component.",
+        "optional": true
+      },
+      {
+        "name": "component",
+        "type": "\"Video\"",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "url",
+        "type": "DynamicString",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "weight",
+        "type": "number",
+        "description": "Flex-grow-like weight; only valid as a direct child of Row/Column.",
+        "optional": true
+      }
+    ],
+    "examples": []
+  },
+  {
+    "name": "A2uiAction",
     "kind": "type",
     "description": "",
-    "signature": "object | object | object | object | object | object | object | object | object | object | object | object | object | object | object | object | object | object",
+    "signature": "A2uiEventAction | A2uiFunctionAction",
+    "examples": []
+  },
+  {
+    "name": "A2uiCatalogComponent",
+    "kind": "type",
+    "description": "Union of the basic-catalog component shapes.",
+    "signature": "A2uiText | A2uiImage | A2uiIcon | A2uiVideo | A2uiAudioPlayer | A2uiRow | A2uiColumn | A2uiList | A2uiCard | A2uiTabs | A2uiModal | A2uiDivider | A2uiButton | A2uiCheckBox | A2uiTextField | A2uiDateTimeInput | A2uiChoicePicker | A2uiSlider",
+    "examples": []
+  },
+  {
+    "name": "A2uiChildren",
+    "kind": "type",
+    "description": "Static child-id list, or a template stamped per element of a data-model list.",
+    "signature": "string[] | object",
+    "examples": []
+  },
+  {
+    "name": "A2uiComponent",
+    "kind": "type",
+    "description": "Any component, including non-basic-catalog types. Renderers treat unknown\n`component` strings as unrenderable and fall back gracefully.",
+    "signature": "A2uiCatalogComponent | A2uiComponentBase & Record<string, unknown>",
     "examples": []
   },
   {
     "name": "A2uiMessage",
     "kind": "type",
     "description": "",
-    "signature": "object | object | object | object",
+    "signature": "A2uiEnvelopeBase & ({ createSurface: A2uiCreateSurface } | { updateComponents: A2uiUpdateComponents } | { updateDataModel: A2uiUpdateDataModel } | { deleteSurface: A2uiDeleteSurface })",
     "examples": []
   },
   {
     "name": "DynamicBoolean",
     "kind": "type",
     "description": "",
-    "signature": "object | object",
+    "signature": "boolean | A2uiPathRef | A2uiFunctionCall",
     "examples": []
   },
   {
     "name": "DynamicNumber",
     "kind": "type",
     "description": "",
-    "signature": "object | object",
+    "signature": "number | A2uiPathRef | A2uiFunctionCall",
     "examples": []
   },
   {
     "name": "DynamicString",
     "kind": "type",
     "description": "",
-    "signature": "object | object",
+    "signature": "string | A2uiPathRef | A2uiFunctionCall",
     "examples": []
   },
   {
     "name": "DynamicStringList",
     "kind": "type",
     "description": "",
-    "signature": "object | object",
+    "signature": "string[] | A2uiPathRef | A2uiFunctionCall",
+    "examples": []
+  },
+  {
+    "name": "DynamicValue",
+    "kind": "type",
+    "description": "Any dynamic value position where the concrete type is component-defined.",
+    "signature": "unknown",
+    "examples": []
+  },
+  {
+    "name": "A2UI_BASIC_CATALOG_ID",
+    "kind": "const",
+    "description": "Catalog id of the standard A2UI basic component catalog.",
+    "signature": "\"https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json\"",
+    "examples": []
+  },
+  {
+    "name": "A2UI_MIME_TYPE",
+    "kind": "const",
+    "description": "MIME type for A2UI payloads, standardized in the v0.9.1 release.",
+    "signature": "\"application/a2ui+json\"",
+    "examples": []
+  },
+  {
+    "name": "A2UI_WIRE_VERSION",
+    "kind": "const",
+    "description": "Wire version stamped on every A2UI v0.9-family envelope.",
+    "signature": "\"v0.9\"",
     "examples": []
   },
   {
     "name": "createA2uiMessageParser",
     "kind": "function",
-    "description": "Creates a stateful parser for newline-delimited A2UI message streams.\n\nThe parser buffers incomplete lines, skips malformed JSON, and returns only\nrecognized A2UI envelopes: `surfaceUpdate`, `dataModelUpdate`,\n`beginRendering`, and `deleteSurface`.",
+    "description": "Creates a stateful parser for newline-delimited A2UI v0.9 message streams.\n\nThe parser buffers incomplete lines, skips malformed JSON, and returns only\nrecognized A2UI envelopes: `createSurface`, `updateComponents`,\n`updateDataModel`, and `deleteSurface`. Unknown envelope keys (e.g. future\nv1.0 messages) are skipped rather than treated as errors. A missing\n`version` field defaults to `v0.9`.",
     "signature": "createA2uiMessageParser(): A2uiMessageParser",
     "params": [],
     "returns": {
@@ -889,7 +1539,7 @@
       "description": ""
     },
     "examples": [
-      "```ts\nconst parser = createA2uiMessageParser();\nconst messages = parser.push('{\"beginRendering\":{\"surfaceId\":\"s1\",\"root\":\"root\"}}\\n');\n```"
+      "```ts\nconst parser = createA2uiMessageParser();\nconst messages = parser.push(\n  '{\"version\":\"v0.9\",\"createSurface\":{\"surfaceId\":\"s1\",\"catalogId\":\"basic\"}}\\n',\n);\n```"
     ]
   },
   {
@@ -947,10 +1597,10 @@
     ]
   },
   {
-    "name": "isLiteralBoolean",
+    "name": "isFunctionCall",
     "kind": "function",
-    "description": "Returns true when `value` is an A2UI boolean literal wrapper.",
-    "signature": "isLiteralBoolean(value: unknown): value is { literalBoolean: boolean }",
+    "description": "Returns true when `value` is an A2UI client-side function call.",
+    "signature": "isFunctionCall(value: unknown): value is { args?: Record<string, unknown>; call: string }",
     "params": [
       {
         "name": "value",
@@ -960,45 +1610,7 @@
       }
     ],
     "returns": {
-      "type": "value is { literalBoolean: boolean }",
-      "description": ""
-    },
-    "examples": []
-  },
-  {
-    "name": "isLiteralNumber",
-    "kind": "function",
-    "description": "Returns true when `value` is an A2UI number literal wrapper.",
-    "signature": "isLiteralNumber(value: unknown): value is { literalNumber: number }",
-    "params": [
-      {
-        "name": "value",
-        "type": "unknown",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "returns": {
-      "type": "value is { literalNumber: number }",
-      "description": ""
-    },
-    "examples": []
-  },
-  {
-    "name": "isLiteralString",
-    "kind": "function",
-    "description": "Returns true when `value` is an A2UI string literal wrapper.",
-    "signature": "isLiteralString(value: unknown): value is { literalString: string }",
-    "params": [
-      {
-        "name": "value",
-        "type": "unknown",
-        "description": "",
-        "optional": false
-      }
-    ],
-    "returns": {
-      "type": "value is { literalString: string }",
+      "type": "value is { args?: Record<string, unknown>; call: string }",
       "description": ""
     },
     "examples": []
@@ -1025,7 +1637,7 @@
   {
     "name": "resolveDynamic",
     "kind": "function",
-    "description": "Resolves an A2UI dynamic value against a client data model.\n\nLiteral wrappers unwrap to their inner values, `{ path }` references read\nfrom the model by JSON-pointer path, arrays resolve recursively, and\nunrecognized plain values pass through unchanged.",
+    "description": "Resolves an A2UI v0.9 dynamic value against a client data model.\n\nBare literals (strings, numbers, booleans) pass through unchanged, `{ path }`\nreferences read from the model by JSON-pointer path, arrays resolve\nelement-wise, and client-side function calls (`{ call }`) resolve to\n`undefined` until function execution ships. Unrecognized plain objects pass\nthrough unchanged.",
     "signature": "resolveDynamic(value: unknown, model: Record<string, unknown>, scope: A2uiScope): unknown",
     "params": [
       {
@@ -1052,7 +1664,7 @@
       "description": ""
     },
     "examples": [
-      "```ts\nconst model = { customer: { name: 'Ada' } };\nresolveDynamic({ path: '/customer/name' }, model); // 'Ada'\nresolveDynamic({ literalString: 'Checkout' }, model); // 'Checkout'\n```"
+      "```ts\nconst model = { customer: { name: 'Ada' } };\nresolveDynamic({ path: '/customer/name' }, model); // 'Ada'\nresolveDynamic('Checkout', model); // 'Checkout'\n```"
     ]
   },
   {

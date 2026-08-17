@@ -1,7 +1,7 @@
 // libs/chat/src/lib/a2ui/envelope-normalizer.ts
 // SPDX-License-Identifier: MIT
 
-const ENVELOPE_KEYS = ['surfaceUpdate', 'beginRendering', 'dataModelUpdate', 'deleteSurface'] as const;
+const ENVELOPE_KEYS = ['createSurface', 'updateComponents', 'updateDataModel', 'deleteSurface'] as const;
 
 /**
  * The parent LLM may emit envelope-tool arguments in four shapes (observed in
@@ -35,7 +35,7 @@ export function normalizeEnvelopeArgs(
       .sort((a, b) => a - b)
       .map((k) => (args as Record<string, unknown>)[String(k)]);
   }
-  // (d) flat single envelope: { surfaceUpdate: {...} } | { beginRendering: ... } | etc
+  // (d) flat single envelope: { createSurface: {...} } | { updateComponents: ... } | etc
   if (ENVELOPE_KEYS.some((k) => k in args)) {
     return [args];
   }

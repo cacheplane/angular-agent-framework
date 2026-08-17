@@ -2,7 +2,7 @@
 
 A2UI is the structured UI path for agent-built surfaces in chat.
 
-The important boundary is simple: the agent streams declarative messages, the client owns rendering, and Angular handlers stay inside your application. The model does not ship code. It emits a constrained surface description that `@threadplane/chat`, `@threadplane/a2ui`, and `@threadplane/render` turn into Angular UI.
+The important boundary is simple: the agent streams declarative messages, the client owns rendering, and Angular handlers stay inside your application. The model does not ship code. It emits a constrained surface description that `@threadplane/chat`, `@threadplane/a2ui`, and `@threadplane/render` turn into Angular UI. Threadplane implements the **A2UI v0.9.1 stable release** — every envelope carries `"version": "v0.9"`.
 
 When an assistant message starts with `---a2ui_JSON---`, the chat streaming pipeline treats the rest of the content as newline-delimited A2UI JSON.
 
@@ -25,80 +25,65 @@ The parser recognizes four envelope keys:
 
 | Envelope | Purpose |
 | --- | --- |
-| `surfaceUpdate` | Adds or replaces components on a surface. |
-| `dataModelUpdate` | Updates the surface data model. |
-| `beginRendering` | Marks the surface root and optional style hints. |
+| `createSurface` | Creates a surface and declares its component catalog, theme, and `sendDataModel` behavior. Must come first. |
+| `updateComponents` | Adds or replaces components on a surface, merged incrementally by `id`. One component must have `id: "root"`. |
+| `updateDataModel` | Sets (or deletes) data at a JSON-pointer `path` in the surface data model. |
 | `deleteSurface` | Removes a surface. |
 
-Unknown envelopes are ignored. Malformed JSONL lines are skipped. Incomplete JSON waits in the parser buffer until a newline arrives.
+Unknown envelope keys are ignored (future v1.0 messages included). Malformed JSONL lines are skipped. Incomplete JSON waits in the parser buffer until a newline arrives.
 
 That behavior is deliberate. Agent streams are partial. The parser should not crash the UI because one line is unfinished mid-token.
 
 ## Minimal Protocol Stream
 
-A surface usually needs three messages: components, data, and a root. On the wire, each envelope is one newline-delimited JSON object after the sentinel:
+A surface needs a `createSurface`, its data, and a component tree containing `root`. On the wire, each envelope is one newline-delimited JSON object after the sentinel:
 
 ```text
 ---a2ui_JSON---
-{"surfaceUpdate":{...}}
-{"dataModelUpdate":{...}}
-{"beginRendering":{...}}
+{"version":"v0.9","createSurface":{...}}
+{"version":"v0.9","updateDataModel":{...}}
+{"version":"v0.9","updateComponents":{...}}
 ```
 
-The same `surfaceUpdate` envelope, expanded for readability, looks like this:
+The same `updateComponents` envelope, expanded for readability, looks like this:
 
 ```json
 {
-  "surfaceUpdate": {
+  "version": "v0.9",
+  "updateComponents": {
     "surfaceId": "contact",
     "components": [
       {
         "id": "root",
-        "component": {
-          "Column": {
-            "children": { "explicitList": ["title", "name", "submit"] },
-            "gap": 12
-          }
-        }
+        "component": "Column",
+        "children": ["title", "name", "submit"]
       },
       {
         "id": "title",
-        "component": {
-          "Text": {
-            "text": { "literalString": "Contact us" },
-            "usageHint": "h2"
-          }
-        }
+        "component": "Text",
+        "text": "Contact us",
+        "variant": "h2"
       },
       {
         "id": "name",
-        "component": {
-          "TextField": {
-            "label": { "literalString": "Name" },
-            "text": { "path": "/name" }
-          }
-        }
+        "component": "TextField",
+        "label": "Name",
+        "value": { "path": "/name" }
       },
       {
         "id": "submit_label",
-        "component": {
-          "Text": {
-            "text": { "literalString": "Send" }
-          }
-        }
+        "component": "Text",
+        "text": "Send"
       },
       {
         "id": "submit",
-        "component": {
-          "Button": {
-            "child": "submit_label",
-            "primary": true,
-            "action": {
-              "name": "formSubmit",
-              "context": [
-                { "key": "name", "value": { "path": "/name" } }
-              ]
-            }
+        "component": "Button",
+        "child": "submit_label",
+        "variant": "primary",
+        "action": {
+          "event": {
+            "name": "formSubmit",
+            "context": { "name": { "path": "/name" } }
           }
         }
       }
@@ -107,43 +92,42 @@ The same `surfaceUpdate` envelope, expanded for readability, looks like this:
 }
 ```
 
-The data and root envelopes are smaller:
+The create and data envelopes are smaller:
 
 ```json
 {
-  "dataModelUpdate": {
+  "version": "v0.9",
+  "createSurface": {
     "surfaceId": "contact",
-    "contents": [{ "key": "name", "valueString": "" }]
+    "catalogId": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
   }
 }
 ```
 
 ```json
 {
-  "beginRendering": {
+  "version": "v0.9",
+  "updateDataModel": {
     "surfaceId": "contact",
-    "root": "root"
+    "value": { "name": "" }
   }
 }
 ```
 
-Components use keyed union definitions:
+Components are flat objects discriminated by the `component` string:
 
 ```json
 {
   "id": "title",
-  "component": {
-    "Text": {
-      "text": { "literalString": "Contact us" },
-      "usageHint": "h2"
-    }
-  }
+  "component": "Text",
+  "text": "Contact us",
+  "variant": "h2"
 }
 ```
 
-This is different from a flat `component: "Text"` shape. The current source expects the keyed union form.
+There is no type-keyed wrapper and no literal wrapper objects — `"Contact us"` is just a bare string, and `{ "path": "/name" }` is a data-model binding. Rendering starts as soon as `createSurface` has arrived and a component with id `root` is defined; the rest of the tree fills in progressively as more `updateComponents` envelopes merge by id.
 
-This stream demonstrates the protocol boundary. The chat path accumulates the surface state as JSONL arrives, then `A2uiSurfaceComponent` converts the current surface into a render spec: it unwraps keyed component definitions, maps children, creates render state bindings, and turns actions into handlers.
+This stream demonstrates the protocol boundary. The chat path accumulates the surface state as JSONL arrives, then `A2uiSurfaceComponent` converts the current surface into a render spec: it maps flat components onto catalog views, wires children, creates render state bindings, and turns actions into handlers.
 
 ## Data Model
 
@@ -152,16 +136,13 @@ A2UI component props can point at the surface data model.
 ```json
 {
   "id": "name",
-  "component": {
-    "TextField": {
-      "label": { "literalString": "Name" },
-      "text": { "path": "/name" }
-    }
-  }
+  "component": "TextField",
+  "label": "Name",
+  "value": { "path": "/name" }
 }
 ```
 
-`surfaceToSpec()` converts path references into json-render state bindings. Catalog input components can use `emitBinding()` to write back through the render event pipeline.
+The surface-to-spec conversion turns path references into json-render state bindings. Catalog input components can use `emitBinding()` to write back through the render event pipeline.
 
 ```ts
 import { emitBinding } from '@threadplane/chat';
@@ -172,47 +153,54 @@ onInput(event: Event): void {
 }
 ```
 
-The write-back protocol is client-side state. The current action-message builder does not re-read component state at click time. It serializes the action params it receives. If a caller provides an internal `A2uiSurface` with `sendDataModel: true`, the builder also includes the current surface data model snapshot under `metadata.a2uiClientDataModel`; the JSONL wire envelopes do not expose a `sendDataModel` field.
+The write-back protocol is client-side state. If the surface's `createSurface` set `sendDataModel: true`, outgoing action messages also include the current surface data model snapshot under `metadata.a2uiClientDataModel`.
 
 ## Actions
 
-Buttons carry an `A2uiAction`:
+Buttons carry an `A2uiAction`. The agent-bound form wraps an `event` with a name and a plain-object `context`:
 
 ```json
 {
-  "name": "formSubmit",
-  "context": [
-    { "key": "name", "value": { "path": "/name" } }
-  ]
-}
-```
-
-`surfaceToSpec()` turns this into a render `click` binding that calls the built-in `a2ui:event` handler. `A2uiSurfaceComponent` then emits an `A2uiActionMessage`.
-
-```json
-{
-  "version": "v1",
   "action": {
-    "name": "formSubmit",
-    "surfaceId": "contact",
-    "sourceComponentId": "submit",
-    "timestamp": "2026-04-10T14:30:00.000Z",
-    "context": {
-      "name": { "literalString": "Alice" }
+    "event": {
+      "name": "formSubmit",
+      "context": { "name": { "path": "/name" } }
     }
   }
 }
 ```
 
-If the internal surface object has `sendDataModel: true`, the emitted message also includes `metadata.a2uiClientDataModel` with the current surface data model snapshot. Streamed protocol surfaces created by the current surface store do not set that flag.
+The surface-to-spec conversion turns this into a render `click` binding that calls the built-in `a2ui:event` handler. `A2uiSurfaceComponent` then emits an `A2uiActionMessage` with the context values resolved against the current data model:
+
+```json
+{
+  "version": "v0.9",
+  "action": {
+    "name": "formSubmit",
+    "surfaceId": "contact",
+    "sourceComponentId": "submit",
+    "timestamp": "2026-04-10T14:30:00.000Z",
+    "context": { "name": "Alice" },
+    "label": "Send"
+  }
+}
+```
+
+`label` is a Threadplane extension, derived from the Button's child Text; transcripts use it to label the user bubble. If the surface has `sendDataModel: true`, the emitted message also includes `metadata.a2uiClientDataModel` with the current surface data model snapshot.
+
+The other action form, `{ "functionCall": { "call": ..., "args": ... } }`, executes a client-side function locally instead of round-tripping to the agent; function execution ships in an upcoming release.
 
 Catalog components receive resolved props as Angular inputs from the render engine. Bind `(action)` when you want agent-bound events, and bind `(events)` when you want the lower-level render stream.
+
+## Theming
+
+`createSurface.theme` carries agent-supplied presentation hints. `primaryColor` flows to `<a2ui-surface>` as the `--a2ui-primary` CSS custom property, which catalog components consume for accents (buttons, sliders, focus rings). `iconUrl` and `agentDisplayName` identify the agent that owns the surface.
 
 ## Local Handlers
 
 `A2uiSurfaceComponent` also registers an `a2ui:localAction` handler. Consumer handlers take priority, and the built-in fallback currently supports `openUrl`.
 
-Use local handlers for client-owned behavior. Use A2UI actions for agent-bound events.
+Use local handlers for client-owned behavior. Use A2UI event actions for agent-bound events.
 
 ```html
 <a2ui-surface
@@ -276,9 +264,9 @@ The A2UI parser is not a full schema validator. It recognizes envelope keys and 
 
 Schema-valid messages are not enough to make UI executable. Your catalog must contain components for the emitted types, and your handlers must exist for the actions you expect users to take.
 
-Do not use old envelope names such as `createSurface`, `updateComponents`, or `updateDataModel` with the current parser. They are ignored because the source recognizes `surfaceUpdate`, `dataModelUpdate`, `beginRendering`, and `deleteSurface`.
+Do not use pre-v0.9 envelope names such as `surfaceUpdate`, `dataModelUpdate`, or `beginRendering` — the current parser recognizes only `createSurface`, `updateComponents`, `updateDataModel`, and `deleteSurface`, and silently ignores anything else. Likewise, the pre-v0.9 type-keyed component wrappers and `literalString`-style value wrappers are gone: components are flat, and literals are bare values.
 
-Do not assume the progressive chat renderer and the render-spec compatibility path have identical capabilities. The compatibility path projects a surface through `surfaceToSpec()`. The progressive path mounts catalog components from `A2uiComponentView` state and pushes Angular inputs directly.
+Do not assume the progressive chat renderer and the render-spec compatibility path have identical capabilities. The compatibility path projects a surface through the surface-to-spec conversion. The progressive path tracks per-component readiness from `A2uiComponentView` state.
 
 ## What's Next
 

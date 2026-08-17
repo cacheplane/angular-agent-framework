@@ -23,11 +23,21 @@ interface A2uiSurfaceStore {
   /** Apply an A2UI message, updating surfaces reactively. */
   apply(message: A2uiMessage): void;
 
+  /** Live-stream entry point: applies a batch of envelopes for a tool call. */
+  applyPartialArgs(toolCallId: string, envelopes: readonly A2uiMessage[]): void;
+
+  /** True if a tool_call_id has produced live envelopes via applyPartialArgs. */
+  isPartialLive(toolCallId: string): boolean;
+
   /** Signal containing all current surfaces, keyed by surfaceId. */
   readonly surfaces: Signal<Map<string, A2uiSurface>>;
 
   /** Returns a computed signal for a single surface by ID. */
   surface(surfaceId: string): Signal<A2uiSurface | undefined>;
+
+  /** Chat-side projections with per-component readiness. */
+  readonly surfaceStates: Signal<Map<string, A2uiSurfaceState>>;
+  surfaceState(surfaceId: string): Signal<A2uiSurfaceState | undefined>;
 }
 ```
 
@@ -37,62 +47,70 @@ Processes one `A2uiMessage` and updates the internal surfaces signal. All four m
 
 | Message type | Behavior |
 |--------------|----------|
-| `surfaceUpdate` | Delivers a surface's components — merges the provided components into the surface's component map by `id` so existing components are replaced and others are kept |
-| `dataModelUpdate` | Applies typed `contents` entries to the surface's data model, optionally under a JSON Pointer `path` (see below) |
-| `beginRendering` | Marks the surface root and commits the buffered components and data model into a live surface |
-| `deleteSurface` | Removes the surface from the map entirely |
+| `createSurface` | Records the surface's catalog, theme, and `sendDataModel` flag. For an already-live surface, tolerated as an idempotent refresh of those create-time fields |
+| `updateComponents` | Merges the provided components into the surface's component map by `id` — existing components are replaced, others are kept |
+| `updateDataModel` | Applies the envelope's `value` at its JSON-pointer `path` (see below) |
+| `deleteSurface` | Removes the surface (and any buffered pre-commit state) entirely |
 
-Messages for unknown surface IDs are silently ignored until a `surfaceUpdate` introduces the surface and a `beginRendering` commits it.
+**The commit rule.** A surface becomes visible once its `createSurface` envelope has arrived **and** a component with id `root` has been defined — the v0.9 progressive-rendering condition. Everything received earlier (components, data-model deltas) is buffered and committed together at that point. Afterwards, components merge incrementally by id and data-model updates apply immediately.
+
+### `applyPartialArgs(toolCallId, envelopes)`
+
+The live-streaming entry point. Iterates envelopes and feeds each through `apply()`, recording the `tool_call_id` so the wrapped-content classifier can short-circuit duplicate dispatch when the final AI message arrives. Use `isPartialLive(toolCallId)` to check whether a tool call already streamed envelopes live.
 
 ### `surfaces`
 
-A readonly `Signal<Map<string, A2uiSurface>>` containing all active surfaces. Each map operation produces a new `Map` reference so that Angular's change detection triggers correctly.
+A readonly `Signal<Map<string, A2uiSurface>>` containing all committed surfaces. Each map operation produces a new `Map` reference so that Angular's change detection triggers correctly.
 
 ### `surface(surfaceId)`
 
-Returns a `computed` signal for a single surface. The signal emits `undefined` until a `beginRendering` message commits it, and `undefined` again after `deleteSurface` removes it.
+Returns a `computed` signal for a single surface. The signal emits `undefined` until the commit rule is met, and `undefined` again after `deleteSurface` removes it.
 
 ```typescript
 const dashboard = store.surface('dashboard');
 // dashboard() is A2uiSurface | undefined
 ```
 
-## Data Model and Render-Lib State Sync
+### `surfaceStates` / `surfaceState(surfaceId)`
 
-The surface's `dataModel` is synchronized into the render-lib `StateStore` when `surfaceToSpec()` converts the surface to a spec. The conversion sets `state: surface.dataModel` on the produced `Spec`, which initializes the render-lib's internal `StateStore` with the surface data. When components with `_bindings` update values (e.g., a text field changing), those updates flow through the render-lib `StateStore`, and each mutation emits a `RenderStateChangeEvent` through the render-lib event system. This means consumers observing the `events` output on `A2uiSurfaceComponent` see all data model changes as typed `RenderStateChangeEvent` objects with `path`, `value`, and `snapshot` fields.
+The chat-side projection consumed by the progressive renderer. Each `A2uiSurfaceState` pairs the wire-format `surface` with a `componentViews` map that tracks per-component readiness: a component's view flips `ready` once every data-model path it references has resolved, and readiness is **monotonic** — once ready, a later update clearing a referenced path does not revert it to a fallback.
 
-## dataModelUpdate Semantics
+## updateDataModel Semantics
 
-The `dataModelUpdate` message carries a `contents` array of typed data-model entries. When `path` is omitted or `'/'`, those entries update the root data model. When `path` points at a nested object, the entries update that nested object.
+The `updateDataModel` envelope carries an optional JSON-pointer `path` and an optional plain-JSON `value`:
 
-Each entry chooses one typed value field: `valueString`, `valueNumber`, `valueBoolean`, or `valueMap`. `valueMap` is a nested array of `A2uiDataModelEntry` objects.
+- `value` present — the data at `path` is replaced (or created). When `path` is omitted or `'/'`, the whole model is replaced by `value`.
+- `value` omitted — the key at `path` is deleted. With no `path`, the model resets to `{}`. Deleting an array index sets it to `undefined` and preserves the array's length (the v0.9 rule).
 
 ```json
-// Update root fields
+// Replace the whole model
 {
-  "dataModelUpdate": {
+  "version": "v0.9",
+  "updateDataModel": {
     "surfaceId": "s1",
-    "contents": [
-      { "key": "name", "valueString": "Alice" },
-      { "key": "score", "valueNumber": 42 }
-    ]
+    "value": { "name": "Alice", "score": 42 }
   }
 }
 
-// Update fields under /profile
+// Set a nested value
 {
-  "dataModelUpdate": {
+  "version": "v0.9",
+  "updateDataModel": {
     "surfaceId": "s1",
-    "path": "/profile",
-    "contents": [
-      { "key": "approved", "valueBoolean": true },
-      { "key": "meta", "valueMap": [{ "key": "source", "valueString": "agent" }] }
-    ]
+    "path": "/profile/approved",
+    "value": true
+  }
+}
+
+// Delete a key (no value field)
+{
+  "version": "v0.9",
+  "updateDataModel": {
+    "surfaceId": "s1",
+    "path": "/profile/draft"
   }
 }
 ```
-
-Current merge semantics are additive. Entries replace values at their keys, but missing keys are left alone. A `dataModelUpdate` does not delete a key by omitting it.
 
 ## Usage with createA2uiMessageParser
 
@@ -125,7 +143,7 @@ effect(() => {
 ```
 
 <Callout type="info" title="JSONL envelope format">
-The parser expects each line to be wrapped in an envelope object: `{"surfaceUpdate": {...}}`, `{"dataModelUpdate": {...}}`, etc. The envelope key determines the message type; its value is the message payload.
+The parser expects each line to carry a `version` plus one envelope key: `{"version":"v0.9","createSurface":{...}}`, `{"version":"v0.9","updateComponents":{...}}`, etc. The envelope key determines the message type; its value is the message payload.
 </Callout>
 
 ## A2uiSurface Shape
@@ -137,12 +155,13 @@ interface A2uiSurface {
   surfaceId: string;
   catalogId: string;
   theme?: A2uiTheme;
+  sendDataModel?: boolean;
   components: Map<string, A2uiComponent>;
   dataModel: Record<string, unknown>;
 }
 ```
 
-The `components` map is keyed by component ID. The `dataModel` is a plain object that components reference via JSON Pointer paths in their props.
+The `components` map is keyed by component ID. The `dataModel` is a plain object that components reference via JSON Pointer paths in their props. `catalogId`, `theme`, and `sendDataModel` come from the surface's `createSurface` envelope.
 
 ## What's Next
 

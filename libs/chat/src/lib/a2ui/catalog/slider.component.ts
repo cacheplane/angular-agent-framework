@@ -17,9 +17,8 @@ import { emitBinding } from './emit-binding';
         [id]="_inputId"
         type="range"
         class="a2ui-slider__input"
-        [min]="minValue()"
-        [max]="maxValue()"
-        [step]="step()"
+        [min]="min()"
+        [max]="max()"
         [value]="value()"
         (input)="onInput($event)"
       />
@@ -46,13 +45,12 @@ export class A2uiSliderComponent {
   private readonly host = injectRenderHost();
 
   readonly label = input<string>('');
-  /** v1 prop: value (resolved DynamicNumber). */
+  /** v0.9 prop: value (resolved DynamicNumber). */
   readonly value = input<number>(0);
-  /** v1 prop: minValue. */
-  readonly minValue = input<number>(0);
-  /** v1 prop: maxValue. */
-  readonly maxValue = input<number>(100);
-  readonly step = input<number>(1);
+  /** v0.9 prop: lower bound (default 0). */
+  readonly min = input<number>(0);
+  /** v0.9 prop: upper bound. */
+  readonly max = input<number>(100);
   readonly _bindings = input<Record<string, string>>({});
   // Framework inputs required by the render harness.
   readonly bindings = input<Record<string, string>>({});

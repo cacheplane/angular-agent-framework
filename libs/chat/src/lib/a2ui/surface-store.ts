@@ -2,20 +2,21 @@
 import { computed, signal, type Signal } from '@angular/core';
 import type {
   A2uiMessage, A2uiSurface, A2uiComponent,
-  A2uiSurfaceUpdate, A2uiDataModelUpdate, A2uiBeginRendering, A2uiDeleteSurface,
-  A2uiDataModelEntry,
+  A2uiCreateSurface, A2uiUpdateComponents, A2uiUpdateDataModel, A2uiDeleteSurface,
 } from '@threadplane/a2ui';
-import { setByPointer } from '@threadplane/a2ui';
+import { setByPointer, deleteByPointer } from '@threadplane/a2ui';
 import type { A2uiComponentView } from './component-view';
 import { extractBindings } from './extract-bindings';
 
+/** Pre-commit staging state for a surface: everything received before the
+ * commit condition (createSurface seen AND a `root` component defined). */
 interface SurfaceBuffer {
-  /** Pending component map (replaces on next beginRendering). */
-  components?: Map<string, A2uiComponent>;
-  /** Pending per-component views (replaces on next beginRendering). */
-  componentViews?: Map<string, A2uiComponentView>;
-  /** Pending data model deltas accumulated since last beginRendering. */
-  dataModelDeltas: { path?: string; contents: A2uiDataModelEntry[] }[];
+  create?: A2uiCreateSurface;
+  components: Map<string, A2uiComponent>;
+  componentViews: Map<string, A2uiComponentView>;
+  /** Pending data model deltas accumulated before commit. `del` marks a
+   * v0.9 delete (envelope with omitted `value`). */
+  dataModelDeltas: { path?: string; value?: unknown; del?: boolean }[];
 }
 
 /** Chat-side state for a surface — wraps the wire-format `A2uiSurface`
@@ -45,16 +46,10 @@ export interface A2uiSurfaceStore {
   surfaceState(surfaceId: string): Signal<A2uiSurfaceState | undefined>;
 }
 
-function entriesToObject(entries: A2uiDataModelEntry[]): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
-  for (const e of entries) {
-    if ('valueString' in e && e.valueString !== undefined) out[e.key] = e.valueString;
-    else if ('valueNumber' in e && e.valueNumber !== undefined) out[e.key] = e.valueNumber;
-    else if ('valueBoolean' in e && e.valueBoolean !== undefined) out[e.key] = e.valueBoolean;
-    else if ('valueMap' in e && Array.isArray(e.valueMap)) out[e.key] = entriesToObject(e.valueMap);
-  }
-  return out;
-}
+/** Component-envelope keys that are protocol structure, not renderable props. */
+const RESERVED_VIEW_PROP_KEYS = new Set([
+  'id', 'component', 'catalogId', 'weight', 'accessibility', 'checks',
+]);
 
 /** Returns true if `path` (in `$.a.b.c` form) resolves to a defined,
  * non-null value inside `dataModel`. Used to decide per-component
@@ -75,7 +70,7 @@ function isResolved(dataModel: Record<string, unknown>, path: string): boolean {
  * nested objects/arrays are recursed. */
 function resolveProps(value: unknown, dataModel: Record<string, unknown>): unknown {
   if (typeof value === 'string') {
-    const full = value.match(/^\{(\$\.[^}]+)\}$/);
+    const full = value.match(/^\{(\$\.[^{}]{1,512})\}$/);
     if (full) {
       const segs = full[1].slice(2).split('.');
       let cur: unknown = dataModel;
@@ -85,7 +80,9 @@ function resolveProps(value: unknown, dataModel: Record<string, unknown>): unkno
       }
       return cur;
     }
-    return value.replace(/\{(\$\.[^}]+)\}/g, (_, path: string) => {
+    // Bounded, brace-free class keeps the scan linear on adversarial
+    // LLM-authored strings (CodeQL js/polynomial-redos).
+    return value.replace(/\{(\$\.[^{}]{1,512})\}/g, (_, path: string) => {
       const segs = path.slice(2).split('.');
       let cur: unknown = dataModel;
       for (const s of segs) {
@@ -106,11 +103,57 @@ function resolveProps(value: unknown, dataModel: Record<string, unknown>): unkno
   return value;
 }
 
+/** Resolve a flat v0.9 component into the renderable prop bag: reserved
+ * protocol keys stripped, `{$.path}` references substituted. */
+function resolveViewProps(
+  component: A2uiComponent,
+  dataModel: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(component as unknown as Record<string, unknown>)) {
+    if (RESERVED_VIEW_PROP_KEYS.has(k)) continue;
+    out[k] = resolveProps(v, dataModel);
+  }
+  return out;
+}
+
+function projectView(component: A2uiComponent): A2uiComponentView {
+  return {
+    id: component.id,
+    type: typeof component.component === 'string' ? component.component : 'Unknown',
+    bindings: extractBindings(component),
+    ready: false,
+    props: {},
+    def: component,
+  };
+}
+
+/** Apply one v0.9 data-model mutation (set at path, whole-model replace,
+ * or delete-at-path when `value` is omitted). */
+function applyDataModelDelta(
+  dataModel: Record<string, unknown>,
+  delta: { path?: string; value?: unknown; del?: boolean },
+): Record<string, unknown> {
+  const path = delta.path && delta.path !== '/' ? delta.path : undefined;
+  if (delta.del) {
+    return path ? deleteByPointer(dataModel, path) : {};
+  }
+  if (!path) {
+    return (delta.value ?? {}) as Record<string, unknown>;
+  }
+  return setByPointer(dataModel, path, delta.value);
+}
+
 /**
  * Create an {@link A2uiSurfaceStore} — the per-conversation store that buffers
- * streamed A2UI surface updates, tracks each surface's data model + lifecycle
+ * streamed A2UI v0.9 envelopes, tracks each surface's data model + lifecycle
  * state, and exposes them as signals for rendering. One store backs a chat
  * thread's A2UI surfaces.
+ *
+ * A surface becomes visible once its `createSurface` envelope has arrived AND
+ * a component with id `root` has been defined (the v0.9 progressive-rendering
+ * rule). Everything received earlier is buffered; afterwards, components merge
+ * incrementally by id and data-model updates apply immediately.
  *
  * @returns A fresh, empty {@link A2uiSurfaceStore}.
  * @example
@@ -126,142 +169,123 @@ export function createA2uiSurfaceStore(): A2uiSurfaceStore {
 
   function bufferOf(surfaceId: string): SurfaceBuffer {
     let b = buffers.get(surfaceId);
-    if (!b) { b = { dataModelDeltas: [] }; buffers.set(surfaceId, b); }
+    if (!b) {
+      b = { components: new Map(), componentViews: new Map(), dataModelDeltas: [] };
+      buffers.set(surfaceId, b);
+    }
     return b;
   }
 
+  function publish(surface: A2uiSurface, views: Map<string, A2uiComponentView>): void {
+    const nextSurfaces = new Map(surfacesSignal());
+    nextSurfaces.set(surface.surfaceId, surface);
+    surfacesSignal.set(nextSurfaces);
+    const nextStates = new Map(surfaceStatesSignal());
+    nextStates.set(surface.surfaceId, { surface, componentViews: views });
+    surfaceStatesSignal.set(nextStates);
+  }
+
+  /** Recompute readiness/props for every view against `dataModel`,
+   * honoring the monotonic ready rule. */
+  function refreshViews(
+    views: ReadonlyMap<string, A2uiComponentView>,
+    dataModel: Record<string, unknown>,
+  ): Map<string, A2uiComponentView> {
+    const next = new Map<string, A2uiComponentView>();
+    for (const [id, v] of views) {
+      const allResolved = v.bindings.every((p) => isResolved(dataModel, p));
+      // Monotonic: once ready=true, stays true even if a later update
+      // clears a referenced path.
+      const nextReady = v.ready || allResolved;
+      next.set(id, {
+        ...v,
+        ready: nextReady,
+        props: nextReady ? resolveViewProps(v.def, dataModel) : v.props,
+      });
+    }
+    return next;
+  }
+
+  /** Commit the buffer to a live surface if the v0.9 render condition holds:
+   * createSurface seen AND a `root` component defined. */
+  function tryCommit(surfaceId: string): void {
+    const b = buffers.get(surfaceId);
+    if (!b || !b.create || !b.components.has('root')) return;
+
+    let dataModel: Record<string, unknown> = {};
+    for (const d of b.dataModelDeltas) {
+      dataModel = applyDataModelDelta(dataModel, d);
+    }
+
+    const surface: A2uiSurface = {
+      surfaceId,
+      catalogId: b.create.catalogId,
+      ...(b.create.theme ? { theme: b.create.theme } : {}),
+      ...(b.create.sendDataModel !== undefined ? { sendDataModel: b.create.sendDataModel } : {}),
+      components: new Map(b.components),
+      dataModel,
+    };
+    publish(surface, refreshViews(b.componentViews, dataModel));
+    buffers.delete(surfaceId);
+  }
+
   function apply(message: A2uiMessage): void {
-    if ('surfaceUpdate' in message) {
-      const upd = message.surfaceUpdate as A2uiSurfaceUpdate;
+    if ('createSurface' in message) {
+      const create = message.createSurface;
+      const live = surfacesSignal().get(create.surfaceId);
+      if (live) {
+        // v0.9 calls createSurface-on-existing an agent error; tolerate it
+        // as an idempotent refresh of the surface's create-time fields.
+        const state = surfaceStatesSignal().get(create.surfaceId);
+        const surface: A2uiSurface = {
+          ...live,
+          catalogId: create.catalogId,
+          ...(create.theme !== undefined ? { theme: create.theme } : {}),
+          ...(create.sendDataModel !== undefined ? { sendDataModel: create.sendDataModel } : {}),
+        };
+        publish(surface, new Map(state?.componentViews ?? []));
+        return;
+      }
+      bufferOf(create.surfaceId).create = create;
+      tryCommit(create.surfaceId);
+      return;
+    }
+    if ('updateComponents' in message) {
+      const upd = message.updateComponents as A2uiUpdateComponents;
+      const live = surfacesSignal().get(upd.surfaceId);
+      if (live) {
+        // Incremental merge by id into the live surface.
+        const components = new Map(live.components);
+        const state = surfaceStatesSignal().get(upd.surfaceId);
+        const views = new Map(state?.componentViews ?? []);
+        for (const c of upd.components) {
+          components.set(c.id, c);
+          views.set(c.id, projectView(c));
+        }
+        const surface: A2uiSurface = { ...live, components };
+        publish(surface, refreshViews(views, surface.dataModel));
+        return;
+      }
       const b = bufferOf(upd.surfaceId);
-      const map = new Map<string, A2uiComponent>();
-      for (const c of upd.components) map.set(c.id, c);
-      b.components = map;
-      // Project per-component views with bindings extracted from prop
-      // expressions. ready starts false; props starts empty.
-      const views = new Map<string, A2uiComponentView>();
       for (const c of upd.components) {
-        const def = c.component;
-        const typeKey = (def && typeof def === 'object')
-          ? (Object.keys(def)[0] ?? 'Unknown')
-          : 'Unknown';
-        views.set(c.id, {
-          id: c.id,
-          type: typeKey,
-          bindings: extractBindings(def),
-          ready: false,
-          props: {},
-          def,
-        });
+        b.components.set(c.id, c);
+        b.componentViews.set(c.id, projectView(c));
       }
-      b.componentViews = views;
+      tryCommit(upd.surfaceId);
       return;
     }
-    if ('dataModelUpdate' in message) {
-      const upd = message.dataModelUpdate as A2uiDataModelUpdate;
-      const surface = surfacesSignal().get(upd.surfaceId);
-      if (surface) {
-        // Already-rendered surface: apply incrementally.
-        let dataModel = surface.dataModel;
-        const obj = entriesToObject(upd.contents);
-        if (upd.path && upd.path !== '/') {
-          for (const [k, v] of Object.entries(obj)) {
-            dataModel = setByPointer(dataModel, `${upd.path}/${k}`, v);
-          }
-        } else {
-          dataModel = { ...dataModel, ...obj };
-        }
-        const next = new Map(surfacesSignal());
-        const nextSurface = { ...surface, dataModel };
-        next.set(upd.surfaceId, nextSurface);
-        surfacesSignal.set(next);
-
-        // Recompute per-component readiness with the monotonic rule.
-        const prevState = surfaceStatesSignal().get(upd.surfaceId);
-        if (prevState) {
-          const nextViews = new Map<string, A2uiComponentView>();
-          for (const [id, v] of prevState.componentViews) {
-            const allResolved = v.bindings.every((p) => isResolved(dataModel, p));
-            // Monotonic: once ready=true, stays true even if a later
-            // update clears a referenced path.
-            const nextReady = v.ready || allResolved;
-            nextViews.set(id, {
-              ...v,
-              ready: nextReady,
-              props: nextReady
-                ? (resolveProps(v.def, dataModel) as Record<string, unknown>)
-                : v.props,
-            });
-          }
-          const nextStatesMap = new Map(surfaceStatesSignal());
-          nextStatesMap.set(upd.surfaceId, { surface: nextSurface, componentViews: nextViews });
-          surfaceStatesSignal.set(nextStatesMap);
-        }
+    if ('updateDataModel' in message) {
+      const upd = message.updateDataModel as A2uiUpdateDataModel;
+      const delta = { path: upd.path, value: upd.value, del: !('value' in upd) || upd.value === undefined };
+      const live = surfacesSignal().get(upd.surfaceId);
+      if (live) {
+        const dataModel = applyDataModelDelta(live.dataModel, delta);
+        const surface: A2uiSurface = { ...live, dataModel };
+        const state = surfaceStatesSignal().get(upd.surfaceId);
+        publish(surface, refreshViews(state?.componentViews ?? new Map(), dataModel));
       } else {
-        // Pre-render: buffer the delta.
-        const b = bufferOf(upd.surfaceId);
-        b.dataModelDeltas.push({ path: upd.path, contents: upd.contents });
+        bufferOf(upd.surfaceId).dataModelDeltas.push(delta);
       }
-      return;
-    }
-    if ('beginRendering' in message) {
-      const begin = message.beginRendering as A2uiBeginRendering;
-      const b = buffers.get(begin.surfaceId);
-      if (!b || !b.components) return; // no surfaceUpdate yet — no-op
-      // Build initial data model from buffered deltas.
-      let dataModel: Record<string, unknown> = {};
-      for (const d of b.dataModelDeltas) {
-        const obj = entriesToObject(d.contents);
-        if (d.path && d.path !== '/') {
-          for (const [k, v] of Object.entries(obj)) {
-            dataModel = setByPointer(dataModel, `${d.path}/${k}`, v);
-          }
-        } else {
-          dataModel = { ...dataModel, ...obj };
-        }
-      }
-      // Merge with any existing surface's dataModel if this is a re-render.
-      const existing = surfacesSignal().get(begin.surfaceId);
-      if (existing) {
-        dataModel = { ...existing.dataModel, ...dataModel };
-      }
-      // Capture v1 styles (font, primaryColor) from beginRendering. A
-      // re-render keeps any prior styles unless the new beginRendering
-      // explicitly overrides them — this matches the agent's likely
-      // intent ("change the data, keep the look").
-      const nextStyles = begin.styles
-        ?? existing?.styles;
-      const surface: A2uiSurface = {
-        surfaceId: begin.surfaceId,
-        catalogId: 'basic',
-        components: b.components,
-        dataModel,
-        ...(nextStyles ? { styles: nextStyles } : {}),
-      };
-      const next = new Map(surfacesSignal());
-      next.set(begin.surfaceId, surface);
-      surfacesSignal.set(next);
-
-      // Project per-component views with initial readiness based on the
-      // accumulated data model.
-      const baseViews = b.componentViews ?? new Map<string, A2uiComponentView>();
-      const initialViews = new Map<string, A2uiComponentView>();
-      for (const [id, v] of baseViews) {
-        const allResolved = v.bindings.every((p) => isResolved(dataModel, p));
-        initialViews.set(id, {
-          ...v,
-          ready: allResolved,
-          props: allResolved
-            ? (resolveProps(v.def, dataModel) as Record<string, unknown>)
-            : {},
-        });
-      }
-      const nextStates = new Map(surfaceStatesSignal());
-      nextStates.set(begin.surfaceId, { surface, componentViews: initialViews });
-      surfaceStatesSignal.set(nextStates);
-
-      // Reset buffer so subsequent surfaceUpdate is the next round.
-      buffers.set(begin.surfaceId, { dataModelDeltas: [] });
       return;
     }
     if ('deleteSurface' in message) {

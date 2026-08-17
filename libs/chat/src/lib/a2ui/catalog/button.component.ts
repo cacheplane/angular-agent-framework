@@ -3,6 +3,14 @@ import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import type { Spec } from '@json-render/core';
 import { RenderElementComponent } from '@threadplane/render';
 
+type ButtonVariant = 'default' | 'primary' | 'borderless';
+
+const VARIANT_CLASS: Record<ButtonVariant, string> = {
+  default: 'a2ui-btn a2ui-btn--default',
+  primary: 'a2ui-btn a2ui-btn--primary',
+  borderless: 'a2ui-btn a2ui-btn--borderless',
+};
+
 @Component({
   selector: 'a2ui-button',
   standalone: true,
@@ -10,7 +18,7 @@ import { RenderElementComponent } from '@threadplane/render';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <button
-      [class]="primary() ? 'a2ui-btn a2ui-btn--primary' : 'a2ui-btn a2ui-btn--secondary'"
+      [class]="cssClass()"
       [disabled]="disabled()"
       (click)="handleClick()"
     >
@@ -39,24 +47,35 @@ import { RenderElementComponent } from '@threadplane/render';
       color: var(--a2ui-on-primary);
     }
     .a2ui-btn--primary:hover:not(:disabled) { background: var(--a2ui-primary-hover); }
-    .a2ui-btn--secondary {
+    .a2ui-btn--default {
       background: var(--a2ui-surface-variant);
       color: var(--a2ui-on-surface);
       border: 1px solid var(--a2ui-outline);
     }
-    .a2ui-btn--secondary:hover:not(:disabled) { background: var(--a2ui-outline); }
+    .a2ui-btn--default:hover:not(:disabled) { background: var(--a2ui-outline); }
+    .a2ui-btn--borderless {
+      background: transparent;
+      color: var(--a2ui-on-surface);
+      border: none;
+    }
+    .a2ui-btn--borderless:hover:not(:disabled) { background: var(--a2ui-surface-variant); }
   `],
 })
 export class A2uiButtonComponent {
-  /** v1: child Text component is rendered inside the button via childKeys. */
+  /** v0.9: child Text component is rendered inside the button via childKeys. */
   readonly childKeys = input<string[]>([]);
   readonly spec = input.required<Spec>();
-  readonly primary = input<boolean>(true);
+  /** v0.9 prop: visual style (default 'default'). */
+  readonly variant = input<ButtonVariant>('default');
   readonly disabled = input<boolean>(false);
   readonly emit = input<(event: string) => void>(() => { /* noop */ });
   // Framework inputs required by the render harness.
   readonly bindings = input<Record<string, string>>({});
   readonly loading = input<boolean>(false);
+
+  protected cssClass(): string {
+    return VARIANT_CLASS[this.variant()] ?? VARIANT_CLASS['default'];
+  }
 
   handleClick(): void {
     this.emit()('click');

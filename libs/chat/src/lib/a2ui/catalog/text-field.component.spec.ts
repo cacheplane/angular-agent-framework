@@ -13,16 +13,17 @@ function makeHost(): { host: RenderHost; writes: Array<[string, unknown]> } {
   return { host, writes };
 }
 
-describe('A2uiTextFieldComponent — v1 protocol', () => {
+describe('A2uiTextFieldComponent — v0.9 protocol', () => {
   // NOTE: Angular signal-based inputs can't be tested via TestBed without the
-  // angular() vite plugin (NG0303). v1: text replaces value prop; textFieldType
-  // drives htmlInputType; validationResult/checks were removed; validationRegexp
-  // is passed to the HTML pattern attribute.
+  // angular() vite plugin (NG0303). v0.9: `value` is the resolved string value;
+  // `variant` ('shortText'|'longText'|'number'|'obscured', default 'shortText')
+  // drives htmlInputType — the old 'date' option is gone (DateTimeInput owns
+  // dates); validationRegexp is passed to the HTML pattern attribute.
 
   describe('htmlInputType logic', () => {
     const TYPE_MAP: Record<string, string> = {
       shortText: 'text', longText: 'text', number: 'number',
-      obscured: 'password', date: 'date',
+      obscured: 'password',
     };
     const getType = (t: string) => TYPE_MAP[t] ?? 'text';
 
@@ -30,19 +31,13 @@ describe('A2uiTextFieldComponent — v1 protocol', () => {
     it('maps longText → text (textarea rendered)', () => expect(getType('longText')).toBe('text'));
     it('maps number → number', () => expect(getType('number')).toBe('number'));
     it('maps obscured → password', () => expect(getType('obscured')).toBe('password'));
-    it('maps date → date', () => expect(getType('date')).toBe('date'));
-    it('defaults unknown type → text', () => expect(getType('unknown')).toBe('text'));
+    it('no longer maps date (removed in v0.9) — falls back to text', () =>
+      expect(getType('date')).toBe('text'));
+    it('defaults unknown variant → text', () => expect(getType('unknown')).toBe('text'));
   });
 
   describe('onInput emit logic', () => {
-    it('writes text binding path with typed value when present', () => {
-      const { host, writes } = makeHost();
-      const bindings = { text: '/name' };
-      emitBinding(host, bindings, 'text', 'Alice');
-      expect(writes).toEqual([['/name', 'Alice']]);
-    });
-
-    it('writes value binding path as fallback', () => {
+    it('writes value binding path with typed value', () => {
       const { host, writes } = makeHost();
       const bindings = { value: '/name' };
       emitBinding(host, bindings, 'value', 'Alice');
@@ -51,14 +46,14 @@ describe('A2uiTextFieldComponent — v1 protocol', () => {
 
     it('writes empty string for cleared input', () => {
       const { host, writes } = makeHost();
-      const bindings = { text: '/name' };
-      emitBinding(host, bindings, 'text', '');
+      const bindings = { value: '/name' };
+      emitBinding(host, bindings, 'value', '');
       expect(writes).toEqual([['/name', '']]);
     });
 
     it('does not write when no binding exists', () => {
       const { host, writes } = makeHost();
-      emitBinding(host, {}, 'text', 'Alice');
+      emitBinding(host, {}, 'value', 'Alice');
       expect(writes).toHaveLength(0);
     });
   });

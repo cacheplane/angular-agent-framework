@@ -57,19 +57,20 @@ agent automatically.
 <Step title="Configure the agent to emit A2UI JSONL">
 
 The agent response must start with `---a2ui_JSON---` followed by
-newline-delimited JSON messages:
+newline-delimited JSON envelopes, each stamped `"version": "v0.9"`:
 
 ```
 ---a2ui_JSON---
-{"type":"createSurface","surfaceId":"s1","catalogId":"basic"}
-{"type":"updateDataModel","surfaceId":"s1","value":{"name":""}}
-{"type":"updateComponents","surfaceId":"s1","components":[...]}
+{"version":"v0.9","createSurface":{"surfaceId":"s1","catalogId":"https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"}}
+{"version":"v0.9","updateDataModel":{"surfaceId":"s1","value":{"name":""}}}
+{"version":"v0.9","updateComponents":{"surfaceId":"s1","components":[...]}}
 ```
 
-Three message types build a surface:
-1. `createSurface` - initializes the surface
+Three envelope kinds build a surface:
+1. `createSurface` - initializes the surface (must come first)
 2. `updateDataModel` - sets the initial data model state
-3. `updateComponents` - defines the component tree
+3. `updateComponents` - defines the flat component tree; exactly one
+   component has `id: "root"`, and rendering starts once it is defined
 
 </Step>
 <Step title="Understand the rendering pipeline">
@@ -104,11 +105,11 @@ sending a new `updateDataModel` message.
 </Step>
 <Step title="Event routing">
 
-Button actions with `event` type automatically route back to the agent
-as a human message containing JSON:
+Button `event` actions automatically route back to the agent as a
+structured `A2uiActionMessage`:
 
 ```json
-{"type": "a2ui_event", "surfaceId": "s1", "name": "formSubmit", "context": {"formId": "contact"}}
+{"version": "v0.9", "action": {"name": "formSubmit", "surfaceId": "s1", "sourceComponentId": "submit", "timestamp": "...", "context": {"formId": "contact"}}}
 ```
 
 The agent receives this and can respond with a new surface, markdown, or

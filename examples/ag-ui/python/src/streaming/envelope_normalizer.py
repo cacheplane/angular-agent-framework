@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import Any
 
-_ENVELOPE_KEYS = ("surfaceUpdate", "beginRendering", "dataModelUpdate", "deleteSurface")
+_ENVELOPE_KEYS = ("createSurface", "updateComponents", "updateDataModel", "deleteSurface")
 
 
 def normalize_envelope_args(args: Any) -> list[dict] | None:
