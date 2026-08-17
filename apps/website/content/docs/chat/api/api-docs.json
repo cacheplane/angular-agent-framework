@@ -182,6 +182,12 @@
         "optional": false
       },
       {
+        "name": "errorText",
+        "type": "InputSignal<string>",
+        "description": "Live validation message written by the surface's check gate\n(bound to /_a2uiChecks/<id>); empty when valid.",
+        "optional": false
+      },
+      {
         "name": "label",
         "type": "InputSignal<string>",
         "description": "",
@@ -257,6 +263,12 @@
         "name": "displayStyle",
         "type": "InputSignal<\"checkbox\" | \"chips\">",
         "description": "v0.9 prop: render as 'checkbox' rows (default) or 'chips'.",
+        "optional": false
+      },
+      {
+        "name": "errorText",
+        "type": "InputSignal<string>",
+        "description": "Live validation message written by the surface's check gate\n(bound to /_a2uiChecks/<id>); empty when valid.",
         "optional": false
       },
       {
@@ -510,6 +522,12 @@
         "name": "enableTime",
         "type": "InputSignal<boolean>",
         "description": "v0.9 prop: enableTime — include time portion.",
+        "optional": false
+      },
+      {
+        "name": "errorText",
+        "type": "InputSignal<string>",
+        "description": "Live validation message written by the surface's check gate\n(bound to /_a2uiChecks/<id>); empty when valid.",
         "optional": false
       },
       {
@@ -999,6 +1017,12 @@
         "optional": false
       },
       {
+        "name": "errorText",
+        "type": "InputSignal<string>",
+        "description": "Live validation message written by the surface's check gate\n(bound to /_a2uiChecks/<id>); empty when valid.",
+        "optional": false
+      },
+      {
         "name": "label",
         "type": "InputSignal<string>",
         "description": "",
@@ -1089,6 +1113,12 @@
         "optional": false
       },
       {
+        "name": "liveStore",
+        "type": "StateStore",
+        "description": "Surface-owned live state store: `$bindState` props read it and input\ncomponents write user edits into it, so event-time logic (checks,\naction context) sees CURRENT values instead of the agent-seeded\nsnapshot. Seeded from spec.state with user edits preserved. Public so\nhosts (and tests) can read the live values of a rendered surface.",
+        "optional": false
+      },
+      {
         "name": "primaryColor",
         "type": "Signal<string | null>",
         "description": "Agent-set primary color from `createSurface.theme.primaryColor`.\nReturns null when unset so the host binding doesn't override the\nconsumer's `:root`-level `--a2ui-primary` default.",
@@ -1128,6 +1158,12 @@
         "name": "surfaceFallback",
         "type": "InputSignal<Type<unknown> | undefined>",
         "description": "Optional top-level placeholder when the surface has no components\nyet. Defaults to A2uiDefaultFallbackComponent.",
+        "optional": false
+      },
+      {
+        "name": "validationError",
+        "type": "OutputEmitterRef<A2uiErrorMessage>",
+        "description": "Emitted when a submit is blocked by failing validation checks —\nthe spec client → agent error message (code VALIDATION_FAILED).",
         "optional": false
       }
     ],
@@ -1310,6 +1346,12 @@
         "optional": false
       },
       {
+        "name": "errorText",
+        "type": "InputSignal<string>",
+        "description": "Live validation message written by the surface's check gate\n(bound to /_a2uiChecks/<id>); empty when valid.",
+        "optional": false
+      },
+      {
         "name": "htmlInputType",
         "type": "Signal<string>",
         "description": "",
@@ -1342,7 +1384,7 @@
       {
         "name": "validationRegexp",
         "type": "InputSignal<string>",
-        "description": "Stored but not yet enforced beyond the native pattern attribute.",
+        "description": "Enforced by the surface's check gate as an implicit regex rule (plus the native pattern attribute).",
         "optional": false
       },
       {

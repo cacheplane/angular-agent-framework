@@ -64,6 +64,27 @@ Value functions (usable wherever a Dynamic value is accepted):
 Action function (only inside {"functionCall": ...} actions): openUrl with
 args {url} — opens the URL in a new tab.
 
+### Validation checks
+
+Input components (TextField, CheckBox, ChoicePicker, Slider, DateTimeInput)
+accept a "checks" array of rules {"condition": DynamicBoolean, "message": str}.
+The condition is typically a validator call — required {value}, regex {value,
+pattern}, length {value, min?, max?} (min and/or max required), numeric
+{value, min?, max?}, email {value} — or an and/or/not combination. The client
+evaluates checks against the LIVE data model (including user edits) when an
+event action fires: failing checks block the action, display "message" under
+the offending input, and send the agent an error message
+{"version":"v0.9","error":{"code":"VALIDATION_FAILED",...}} instead. Bind the
+checked value to the same {"path": ...} as the input's value. Example:
+
+  {"id": "email", "component": "TextField", "label": "Email",
+   "value": {"path": "/email"},
+   "checks": [
+     {"condition": {"call": "required", "args": {"value": {"path": "/email"}}},
+      "message": "Email is required"},
+     {"condition": {"call": "email", "args": {"value": {"path": "/email"}}},
+      "message": "Enter a valid email address"}]}
+
 ### Children
 
 Container components ("children" property) accept either:
