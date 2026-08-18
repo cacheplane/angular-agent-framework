@@ -196,6 +196,84 @@ describe('A2uiSurfaceComponent — validation gate + live context (Phase 3)', ()
   });
 });
 
+describe('A2uiSurfaceComponent — surface theme chrome', () => {
+  beforeEach(() => TestBed.configureTestingModule({ imports: [A2uiSurfaceComponent] }));
+
+  function makeThemedState(theme?: Record<string, unknown>) {
+    const store = createA2uiSurfaceStore();
+    store.apply({ version: 'v0.9', createSurface: {
+      surfaceId: 's1', catalogId: 'basic', ...(theme ? { theme } : {}),
+    } } as never);
+    store.apply({ version: 'v0.9', updateComponents: {
+      surfaceId: 's1',
+      components: [{ id: 'root', component: 'Text', text: 'Hello' }],
+    } } as never);
+    return store.surfaceState('s1')()!;
+  }
+
+  it('renders agentDisplayName and iconUrl as a header above the surface', () => {
+    const fx = TestBed.createComponent(A2uiSurfaceComponent);
+    fx.componentRef.setInput('state', makeThemedState({
+      agentDisplayName: 'Flight Bot', iconUrl: 'https://x/icon.png',
+    }));
+    fx.componentRef.setInput('catalog', a2uiBasicCatalog());
+    fx.detectChanges();
+
+    const chrome = fx.nativeElement.querySelector('.a2ui-surface-chrome');
+    expect(chrome).toBeTruthy();
+    expect(chrome.textContent).toContain('Flight Bot');
+    const img = chrome.querySelector('img');
+    expect(img).toBeTruthy();
+    expect(img.getAttribute('src')).toBe('https://x/icon.png');
+    expect(img.getAttribute('referrerpolicy')).toBe('no-referrer');
+    expect(img.getAttribute('alt')).toBe('');
+  });
+
+  it('renders the name alone when only agentDisplayName is set', () => {
+    const fx = TestBed.createComponent(A2uiSurfaceComponent);
+    fx.componentRef.setInput('state', makeThemedState({ agentDisplayName: 'Flight Bot' }));
+    fx.componentRef.setInput('catalog', a2uiBasicCatalog());
+    fx.detectChanges();
+
+    const chrome = fx.nativeElement.querySelector('.a2ui-surface-chrome');
+    expect(chrome).toBeTruthy();
+    expect(chrome.textContent).toContain('Flight Bot');
+    expect(chrome.querySelector('img')).toBeNull();
+  });
+
+  it('renders no chrome element at all for a themeless surface', () => {
+    const fx = TestBed.createComponent(A2uiSurfaceComponent);
+    fx.componentRef.setInput('state', makeThemedState());
+    fx.componentRef.setInput('catalog', a2uiBasicCatalog());
+    fx.detectChanges();
+
+    expect(fx.nativeElement.querySelector('.a2ui-surface-chrome')).toBeNull();
+    // The surface itself still renders.
+    expect(fx.nativeElement.textContent).toContain('Hello');
+  });
+
+  it('renders no chrome when the theme only carries primaryColor', () => {
+    const fx = TestBed.createComponent(A2uiSurfaceComponent);
+    fx.componentRef.setInput('state', makeThemedState({ primaryColor: '#ff0066' }));
+    fx.componentRef.setInput('catalog', a2uiBasicCatalog());
+    fx.detectChanges();
+
+    expect(fx.nativeElement.querySelector('.a2ui-surface-chrome')).toBeNull();
+  });
+
+  it('still applies primaryColor as the --a2ui-primary host style', () => {
+    const fx = TestBed.createComponent(A2uiSurfaceComponent);
+    fx.componentRef.setInput('state', makeThemedState({
+      primaryColor: '#ff0066', agentDisplayName: 'Flight Bot',
+    }));
+    fx.componentRef.setInput('catalog', a2uiBasicCatalog());
+    fx.detectChanges();
+
+    expect(fx.nativeElement.style.getPropertyValue('--a2ui-primary')).toBe('#ff0066');
+    expect(fx.nativeElement.querySelector('.a2ui-surface-chrome')).toBeTruthy();
+  });
+});
+
 describe('A2uiSurfaceComponent — sendDataModel live round-trip (Phase 4)', () => {
   beforeEach(() => TestBed.configureTestingModule({ imports: [A2uiSurfaceComponent] }));
 

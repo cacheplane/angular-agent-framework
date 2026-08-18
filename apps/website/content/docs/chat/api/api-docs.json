@@ -1089,6 +1089,12 @@
         "optional": false
       },
       {
+        "name": "agentDisplayName",
+        "type": "Signal<string | null>",
+        "description": "Agent identity chrome from `createSurface.theme`. When neither\n`agentDisplayName` nor `iconUrl` is set, no header renders at all\n(zero layout impact for themeless surfaces — the common case).",
+        "optional": false
+      },
+      {
         "name": "catalog",
         "type": "InputSignal<Readonly<Record<string, Type<unknown> | RenderViewEntry>> | Readonly<Record<string, Type<unknown> | RenderViewEntry>>>",
         "description": "",
@@ -1103,6 +1109,12 @@
       {
         "name": "handlers",
         "type": "InputSignal<Record<string, (params: Record<string, unknown>) => unknown>>",
+        "description": "",
+        "optional": false
+      },
+      {
+        "name": "iconUrl",
+        "type": "Signal<string | null>",
         "description": "",
         "optional": false
       },
