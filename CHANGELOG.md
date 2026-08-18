@@ -1,3 +1,33 @@
+## 0.0.58 (2026-08-18)
+
+### 🚀 Features
+
+- ⚠️  **a2ui:** migrate to A2UI v0.9.1 stable wire format ([#817](https://github.com/cacheplane/angular-agent-framework/pull/817))
+- **a2ui:** client-side functions (Phase 2 of the v0.9 migration) ([#818](https://github.com/cacheplane/angular-agent-framework/pull/818))
+- **a2ui:** validation checks + client error message (Phase 3 of the v0.9 migration) ([#819](https://github.com/cacheplane/angular-agent-framework/pull/819))
+- **a2ui:** live sendDataModel round-trip + capabilities helper (Phase 4 of the v0.9 migration) ([#820](https://github.com/cacheplane/angular-agent-framework/pull/820))
+- **a2ui:** advertise client capabilities through the transports ([#822](https://github.com/cacheplane/angular-agent-framework/pull/822))
+- **chat:** render A2UI surface theme chrome (agentDisplayName + iconUrl) ([#823](https://github.com/cacheplane/angular-agent-framework/pull/823))
+
+### 🩹 Fixes
+
+- **ci:** never promote a superseded commit to production ([#816](https://github.com/cacheplane/angular-agent-framework/pull/816), [#813](https://github.com/cacheplane/angular-agent-framework/issues/813), [#814](https://github.com/cacheplane/angular-agent-framework/issues/814))
+- **deploy:** restore shared-deployment namespace merge broken by src/__init__.py ([#825](https://github.com/cacheplane/angular-agent-framework/pull/825), [#642](https://github.com/cacheplane/angular-agent-framework/issues/642))
+- **examples:** raise ag-ui demo initial bundle budget to chat parity ([#821](https://github.com/cacheplane/angular-agent-framework/pull/821))
+- **langgraph:** reject non-durable client tool flushes ([#809](https://github.com/cacheplane/angular-agent-framework/pull/809))
+- **langgraph:** retain client tool results across failed runs ([#810](https://github.com/cacheplane/angular-agent-framework/pull/810))
+- **website:** render grouped API entries on middleware helpers page ([#815](https://github.com/cacheplane/angular-agent-framework/pull/815))
+
+### ⚠️  Breaking Changes
+
+- **a2ui:** migrate to A2UI v0.9.1 stable wire format  ([#817](https://github.com/cacheplane/angular-agent-framework/pull/817))
+
+### ❤️ Thank You
+
+- Brian Love @blove
+- Claude Fable 5
+- Claude Opus 5
+
 ## 0.0.57 (2026-08-09)
 
 ### 🚀 Features
