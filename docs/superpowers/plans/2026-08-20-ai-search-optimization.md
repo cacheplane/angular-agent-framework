@@ -522,7 +522,7 @@ describe('findUnindexed', () => {
 - [ ] **Step 3: Run it and confirm it fails**
 
 ```bash
-npx nx test website
+cd apps/website && npx vitest run --config vite.config.mts
 ```
 
 Expected: FAIL — `Failed to resolve import "./analysis"`.
@@ -593,7 +593,7 @@ export function findWeakCtr(
 - [ ] **Step 5: Run the tests and confirm they pass**
 
 ```bash
-npx nx test website
+cd apps/website && npx vitest run --config vite.config.mts
 ```
 
 Expected: PASS.
@@ -767,7 +767,7 @@ describe('getSitemapEntries', () => {
 - [ ] **Step 2: Run it and confirm it fails**
 
 ```bash
-npx nx test website
+cd apps/website && npx vitest run --config vite.config.mts
 ```
 
 Expected: FAIL — `getSitemapEntries is not a function`.
@@ -839,7 +839,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 - [ ] **Step 5: Run the tests and confirm they pass**
 
 ```bash
-npx nx test website
+cd apps/website && npx vitest run --config vite.config.mts
 ```
 
 Expected: PASS.
@@ -921,7 +921,7 @@ Add `SITE_NAME` to the existing import list at the top of that spec file.
 - [ ] **Step 2: Run it and confirm it fails**
 
 ```bash
-npx nx test website
+cd apps/website && npx vitest run --config vite.config.mts
 ```
 
 Expected: FAIL — `publishedTime` is `undefined`.
@@ -1043,7 +1043,7 @@ Expected: `0`.
 - [ ] **Step 7: Run the tests and confirm they pass**
 
 ```bash
-npx nx test website
+cd apps/website && npx vitest run --config vite.config.mts
 ```
 
 Expected: PASS.
@@ -1150,7 +1150,7 @@ describe('softwareSourceCodeJsonLd', () => {
 - [ ] **Step 2: Run it and confirm it fails**
 
 ```bash
-npx nx test website
+cd apps/website && npx vitest run --config vite.config.mts
 ```
 
 Expected: FAIL — `Failed to resolve import "./structured-data"`.
@@ -1281,7 +1281,7 @@ export function faqJsonLd(entries: { question: string; answer: string }[]): Json
 - [ ] **Step 4: Run the tests and confirm they pass**
 
 ```bash
-npx nx test website
+cd apps/website && npx vitest run --config vite.config.mts
 ```
 
 Expected: PASS. If `organizationJsonLd` fails on the logo path, run `ls apps/website/public/logos` and use the actual filename.
@@ -1684,7 +1684,7 @@ In `apps/website/src/components/shared/Footer.tsx`, add an `About` link to `/abo
 - [ ] **Step 4: Verify**
 
 ```bash
-npx nx test website && npx nx build website
+cd apps/website && npx vitest run --config vite.config.mts && npx nx build website
 ```
 
 Expected: PASS and a successful build. Then serve and confirm `curl -s http://localhost:3000/about | grep -c 'application/ld+json'` returns `2`.
@@ -1890,7 +1890,7 @@ describe('classifyAiReferrer', () => {
 - [ ] **Step 2: Run it and confirm it fails**
 
 ```bash
-npx nx test website
+cd apps/website && npx vitest run --config vite.config.mts
 ```
 
 Expected: FAIL — `Failed to resolve import "./ai-traffic"`.
@@ -1957,7 +1957,7 @@ export function classifyAiReferrer(referrer: string): string | null {
 - [ ] **Step 4: Run the tests and confirm they pass**
 
 ```bash
-npx nx test website
+cd apps/website && npx vitest run --config vite.config.mts
 ```
 
 Expected: PASS.
@@ -2134,7 +2134,7 @@ git commit -m "docs(gtm): ai search measurement runbook"
 - [ ] **Step 1: Full check**
 
 ```bash
-npx nx test website && npx nx lint website && npx nx build website --configuration=production
+cd apps/website && npx vitest run --config vite.config.mts && npx nx lint website && npx nx build website --configuration=production
 ```
 
 Expected: all three pass. Lint **warnings** are tolerated by CI; lint **errors** are not. To count errors, strip ANSI first — `grep -cE ' error '` on raw output silently returns 0:
