@@ -102,7 +102,12 @@ export function classifyAiReferrer(referrer: string | null | undefined): string 
   return null;
 }
 
-/** One event per crawler/path per hour. */
+/**
+ * Dedup window length. Buckets are fixed wall-clock slices, not a sliding
+ * window, so a hit at 10:59 and another at 11:01 both emit. That is fine for a
+ * "who is reading us" signal — the guarantee is "at most a handful per
+ * crawler/path per hour", not "exactly one".
+ */
 const CRAWLER_BUCKET_MS = 60 * 60 * 1000;
 
 /**
@@ -114,13 +119,15 @@ const CRAWLER_SEEN_MAX = 2000;
 
 /**
  * Best-effort, per-instance dedup so a crawler looping a single URL cannot turn
- * into an unbounded PostHog firehose. The sitemap is 141 URLs against ~14 known
- * crawlers, so the ceiling this imposes is ~2k events/hour worst case and, in
- * practice, a few hundred a day.
+ * into a PostHog firehose.
+ *
+ * This alone is NOT an abuse ceiling: it is keyed on crawler+path, so varying
+ * the path defeats it entirely. `takeEmissionToken` is the actual bound; this
+ * just removes the most common source of pointless duplicates.
  *
  * Serverless instances are short-lived and horizontally scaled, so this
- * deliberately does NOT guarantee exactly-once — it trims the tail. Under-count
- * is acceptable for a "who is reading us" signal; a hung request is not.
+ * deliberately does NOT guarantee exactly-once across the fleet — it trims the
+ * tail. Under-count is acceptable for this signal; a hung request is not.
  */
 export function shouldEmitCrawlerEvent({
   crawler,
@@ -134,9 +141,54 @@ export function shouldEmitCrawlerEvent({
   seen: Set<string>;
 }): boolean {
   const bucket = Math.floor(now / CRAWLER_BUCKET_MS);
-  const key = `${bucket}|${crawler}|${path}`;
+  // JSON encoding, not string concatenation: a path may legitimately contain
+  // any delimiter we might pick, and a collision would silently drop an event.
+  const key = JSON.stringify([bucket, crawler, path]);
   if (seen.has(key)) return false;
   if (seen.size >= CRAWLER_SEEN_MAX) seen.clear();
   seen.add(key);
+  return true;
+}
+
+/**
+ * Hard ceiling on TOTAL events emitted by one instance, across every event type
+ * and regardless of key variety.
+ *
+ * Why a total-emission bucket and not just the per-key dedup: both inputs to
+ * this feature are attacker-controlled. Anyone can send `Referer:
+ * https://chatgpt.com/...` or a `GPTBot` UA against an unlimited number of
+ * distinct paths, and without this they could bill the PostHog account
+ * arbitrarily or poison the very dataset the feature exists to produce.
+ *
+ * 500/hour is far above any honest volume: the sitemap is 141 URLs, the dedup
+ * already collapses repeats, and a simultaneous full-site sweep by three
+ * different crawlers landing entirely on one instance is ~423 events. Real
+ * traffic spreads across instances, so the honest path never reaches this.
+ * The burst capacity equals the hourly rate, so a legitimate fast sweep is not
+ * throttled partway through.
+ *
+ * Per-instance and therefore best-effort, exactly like the dedup: N instances
+ * means the fleet-wide ceiling is N x 500. It bounds the blast radius; it is not
+ * a global quota.
+ */
+export const EMISSION_BUCKET_CAPACITY = 500;
+const EMISSION_REFILL_PER_MS = EMISSION_BUCKET_CAPACITY / (60 * 60 * 1000);
+
+export type EmissionBudget = { tokens: number; updatedAt: number };
+
+export function createEmissionBudget(now = 0): EmissionBudget {
+  return { tokens: EMISSION_BUCKET_CAPACITY, updatedAt: now };
+}
+
+/**
+ * Classic token bucket with lazy refill. Returns false once the instance has
+ * spent its budget; callers must then drop the event rather than queue it.
+ */
+export function takeEmissionToken(budget: EmissionBudget, now: number): boolean {
+  const elapsed = Math.max(0, now - budget.updatedAt);
+  budget.tokens = Math.min(EMISSION_BUCKET_CAPACITY, budget.tokens + elapsed * EMISSION_REFILL_PER_MS);
+  budget.updatedAt = now;
+  if (budget.tokens < 1) return false;
+  budget.tokens -= 1;
   return true;
 }

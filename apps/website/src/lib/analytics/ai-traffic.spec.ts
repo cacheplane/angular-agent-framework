@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: MIT
 import { describe, expect, it } from 'vitest';
-import { classifyAiCrawler, classifyAiReferrer, shouldEmitCrawlerEvent } from './ai-traffic';
+import {
+  classifyAiCrawler,
+  classifyAiReferrer,
+  createEmissionBudget,
+  EMISSION_BUCKET_CAPACITY,
+  shouldEmitCrawlerEvent,
+  takeEmissionToken,
+} from './ai-traffic';
 
 describe('classifyAiCrawler', () => {
   it.each([
@@ -123,5 +130,54 @@ describe('shouldEmitCrawlerEvent', () => {
       shouldEmitCrawlerEvent({ crawler: 'gptbot', path: `/p/${i}`, now: 0, seen });
     }
     expect(seen.size).toBeLessThanOrEqual(2000);
+  });
+
+  it('does not confuse two keys that would collide under a delimiter-joined key', () => {
+    const seen = new Set<string>();
+    // Under `${bucket}|${crawler}|${path}` these two produce the same string.
+    expect(shouldEmitCrawlerEvent({ crawler: 'a|b', path: '/c', now: 0, seen })).toBe(true);
+    expect(shouldEmitCrawlerEvent({ crawler: 'a', path: 'b|/c', now: 0, seen })).toBe(true);
+  });
+});
+
+describe('takeEmissionToken', () => {
+  it('allows exactly the bucket capacity before throttling', () => {
+    const budget = createEmissionBudget(0);
+    let allowed = 0;
+    for (let i = 0; i < EMISSION_BUCKET_CAPACITY * 3; i++) {
+      if (takeEmissionToken(budget, 0)) allowed++;
+    }
+    expect(allowed).toBe(EMISSION_BUCKET_CAPACITY);
+  });
+
+  it('refills linearly with elapsed time', () => {
+    const budget = createEmissionBudget(0);
+    while (takeEmissionToken(budget, 0)) {
+      /* drain */
+    }
+    // Half an hour buys back half the capacity.
+    const halfHour = 30 * 60 * 1000;
+    let allowed = 0;
+    for (let i = 0; i < EMISSION_BUCKET_CAPACITY; i++) {
+      if (takeEmissionToken(budget, halfHour)) allowed++;
+    }
+    expect(allowed).toBe(EMISSION_BUCKET_CAPACITY / 2);
+  });
+
+  it('never accumulates more than the capacity while idle', () => {
+    const budget = createEmissionBudget(0);
+    takeEmissionToken(budget, 0);
+    let allowed = 0;
+    const aWeek = 7 * 24 * 60 * 60 * 1000;
+    for (let i = 0; i < EMISSION_BUCKET_CAPACITY * 2; i++) {
+      if (takeEmissionToken(budget, aWeek)) allowed++;
+    }
+    expect(allowed).toBe(EMISSION_BUCKET_CAPACITY);
+  });
+
+  it('is monotonic-safe if the clock goes backwards', () => {
+    const budget = createEmissionBudget(1_000_000);
+    expect(takeEmissionToken(budget, 0)).toBe(true);
+    expect(budget.tokens).toBeLessThanOrEqual(EMISSION_BUCKET_CAPACITY);
   });
 });

@@ -2,19 +2,26 @@
 import { NextResponse, type NextFetchEvent, type NextRequest } from 'next/server';
 import { normalizePostHogHost, toSafeAnalyticsString } from '@threadplane/telemetry/shared';
 import { analyticsEvents, type AnalyticsEventName, type AnalyticsProperties } from './lib/analytics/events';
-import { classifyAiCrawler, classifyAiReferrer, shouldEmitCrawlerEvent } from './lib/analytics/ai-traffic';
+import {
+  classifyAiCrawler,
+  classifyAiReferrer,
+  createEmissionBudget,
+  shouldEmitCrawlerEvent,
+  takeEmissionToken,
+  type EmissionBudget,
+} from './lib/analytics/ai-traffic';
 
 /**
  * Observe AI crawlers and AI-answer-engine referrals.
  *
  * Google Search Console's Generative AI report has no API, and AI crawlers never
  * run JavaScript — so `instrumentation-client.ts` cannot see either signal. This
- * middleware is the only place we can.
+ * proxy (formerly "middleware") is the only place we can.
  *
- * Deliberately written against Web-standard APIs only (`fetch`, `NextRequest`,
- * `FetchEvent#waitUntil`) so it behaves identically whether Next runs middleware
- * on the Edge or Node.js runtime. `posthog-node` is intentionally NOT used here:
- * it is a Node library, and the Edge bundle is size-constrained.
+ * Written against Web-standard APIs only (`fetch`, `NextRequest`,
+ * `FetchEvent#waitUntil`) so it behaves identically on the Edge and Node.js
+ * runtimes. `posthog-node` is intentionally NOT used: it is a Node library and
+ * this file was Edge-resident until the proxy rename.
  *
  * Capture goes DIRECT to the PostHog ingest host, not through the `/ingest/*`
  * rewrites in `next.config.ts`. Those exist so ad-blockers cannot intercept the
@@ -22,11 +29,13 @@ import { classifyAiCrawler, classifyAiReferrer, shouldEmitCrawlerEvent } from '.
  * deployment issue an HTTP request to itself.
  */
 
-/** Best-effort, per-instance dedup state. See `shouldEmitCrawlerEvent`. */
+/** Best-effort, per-instance dedup + abuse ceiling. See `ai-traffic.ts`. */
 const seenCrawlerKeys = new Set<string>();
+const emissionBudget = createEmissionBudget(Date.now());
 
 function isLocalAnalyticsHost(hostname: string): boolean {
-  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' || hostname === '[::1]';
+  // NextUrl#hostname is already unbracketed, so `[::1]` never appears here.
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
 }
 
 type PendingCapture = {
@@ -37,7 +46,8 @@ type PendingCapture = {
 
 /**
  * Classify the request. Returns the event to capture, or null when this is
- * ordinary human traffic (the overwhelmingly common case — keep it cheap).
+ * ordinary human traffic (the overwhelmingly common case — keep it cheap) or
+ * when the instance has exhausted its emission budget.
  */
 export function classifyRequest({
   userAgent,
@@ -45,17 +55,20 @@ export function classifyRequest({
   path,
   now,
   seen,
+  budget,
 }: {
   userAgent: string | null;
   referrer: string | null;
   path: string;
   now: number;
   seen: Set<string>;
+  budget: EmissionBudget;
 }): PendingCapture | null {
   const crawler = classifyAiCrawler(userAgent);
   if (crawler) {
     // A crawler that also carries a referrer is still a crawler — never both.
     if (!shouldEmitCrawlerEvent({ crawler, path, now, seen })) return null;
+    if (!takeEmissionToken(budget, now)) return null;
     return {
       event: analyticsEvents.marketingAiCrawlerVisit,
       distinctId: `ai_crawler:${crawler}`,
@@ -71,6 +84,9 @@ export function classifyRequest({
 
   const source = classifyAiReferrer(referrer);
   if (source) {
+    // The referrer header is trivially spoofable by anyone, so this path is the
+    // easiest to flood and gets the same ceiling.
+    if (!takeEmissionToken(budget, now)) return null;
     return {
       event: analyticsEvents.marketingAiReferralVisit,
       distinctId: `ai_referral:${source}`,
@@ -82,7 +98,30 @@ export function classifyRequest({
   return null;
 }
 
-async function sendToPostHog(capture: PendingCapture): Promise<void> {
+/**
+ * The exact wire payload. Split out from `sendToPostHog` so the privacy
+ * invariants — no person profile, no GeoIP, no query string, no referrer URL —
+ * are directly assertable in tests.
+ */
+export function buildCapturePayload(capture: PendingCapture, apiKey: string, timestamp: string) {
+  return {
+    api_key: apiKey,
+    event: capture.event,
+    distinct_id: capture.distinctId,
+    timestamp,
+    properties: {
+      ...capture.properties,
+      // Anonymous by construction: no person profile is created or updated,
+      // and `$ip: null` tells PostHog to skip GeoIP enrichment rather than
+      // geolocating our own server.
+      $process_person_profile: false,
+      $ip: null,
+      $lib: 'threadplane-website-proxy',
+    },
+  };
+}
+
+export async function sendToPostHog(capture: PendingCapture): Promise<void> {
   const token = toSafeAnalyticsString(process.env.NEXT_PUBLIC_POSTHOG_TOKEN, 500);
   if (!token) return;
 
@@ -91,31 +130,16 @@ async function sendToPostHog(capture: PendingCapture): Promise<void> {
     await fetch(`${host}/i/v0/e/`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        api_key: token,
-        event: capture.event,
-        distinct_id: capture.distinctId,
-        timestamp: new Date().toISOString(),
-        properties: {
-          ...capture.properties,
-          // Anonymous by construction: no person profile is created or updated,
-          // and `$ip: null` tells PostHog to skip GeoIP enrichment rather than
-          // geolocating our own edge node.
-          $process_person_profile: false,
-          $ip: null,
-          $lib: 'threadplane-website-middleware',
-        },
-      }),
+      body: JSON.stringify(buildCapturePayload(capture, token, new Date().toISOString())),
       // A dropped analytics event is acceptable; a hung request is not.
       signal: AbortSignal.timeout(2000),
-      keepalive: true,
     });
   } catch {
     // Swallow. Analytics must never surface to a visitor.
   }
 }
 
-export function middleware(request: NextRequest, event: NextFetchEvent) {
+export function proxy(request: NextRequest, event: NextFetchEvent) {
   const response = NextResponse.next();
 
   try {
@@ -130,6 +154,7 @@ export function middleware(request: NextRequest, event: NextFetchEvent) {
         path: request.nextUrl.pathname,
         now: Date.now(),
         seen: seenCrawlerKeys,
+        budget: emissionBudget,
       });
 
       // Fire-and-forget, but registered with the platform so the runtime keeps the
@@ -144,18 +169,30 @@ export function middleware(request: NextRequest, event: NextFetchEvent) {
 }
 
 /**
- * HTML routes only.
+ * Routes we want to observe.
  *
- * Excluded, and why:
+ * The first entry is HTML pages. The explicit entries after it are the files
+ * written FOR AI consumers plus the two strongest crawler-intent signals that
+ * exist — a hit on `llms.txt` or `sitemap.xml` is the clearest evidence that an
+ * AI engine is reading us, which is the whole point of this instrumentation.
+ * They would otherwise be lost to the blunt "has a file extension" rule.
+ *
+ * Excluded by the first entry, and why:
  * - `api`            — no HTML, and lead/checkout routes already capture server-side.
  * - `_next/static`, `_next/image` — build assets.
  * - `ingest`         — the PostHog proxy rewrites in `next.config.ts`; matching them
- *                      would put middleware in front of our own analytics traffic.
- * - `favicon.ico`, and any final segment containing a `.` — static files, plus
- *   `sitemap.xml`, `robots.txt`, `llms.txt`. (Trade-off: we therefore do not see
- *   crawler hits on `llms.txt`; server logs remain the source for those.)
+ *                      would put this in front of our own analytics traffic.
+ * - `favicon.ico`, and any final segment containing a `.` — static files.
  * - `opengraph-image` / `twitter-image` — prerendered PNG routes with no extension.
+ *   Anchored to a segment boundary so a page legitimately named
+ *   `/my-opengraph-image-guide` is still observed.
  */
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|ingest|favicon.ico|.*opengraph-image|.*twitter-image|.*\\.[^/]*$).*)'],
+  matcher: [
+    '/((?!api|_next/static|_next/image|ingest|favicon\\.ico|.*opengraph-image(?:/|$)|.*twitter-image(?:/|$)|.*\\.[^/]*$).*)',
+    '/llms.txt',
+    '/llms-full.txt',
+    '/sitemap.xml',
+    '/robots.txt',
+  ],
 };
