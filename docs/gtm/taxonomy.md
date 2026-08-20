@@ -40,8 +40,8 @@ The standard PostHog `$pageview` event is used as-is across all three surfaces.
 | `marketing:newsletter_signup_submit`  | Submit attempt                                                                                |
 | `marketing:newsletter_signup_success` | Server 2xx                                                                                    |
 | `marketing:newsletter_signup_fail`    | Failure                                                                                       |
-| `marketing:ai_crawler_visit`          | Proxy saw a known AI crawler UA on an observed route (HTML pages plus llms.txt / sitemap.xml / robots.txt). Props: `ai_crawler`, `source_page`, `user_agent`. Deduped per crawler/path/hour and capped by a per-instance emission ceiling. |
-| `marketing:ai_referral_visit`         | Proxy saw a referrer from an AI answer engine. Props: `ai_source`, `source_page`. Anonymous (no person profile). |
+| `marketing:ai_crawler_visit`          | Edge middleware saw a known AI crawler UA on an observed route (HTML pages plus llms.txt / sitemap.xml / robots.txt). Props: `ai_crawler`, `source_page`, `user_agent`. Deduped per crawler/path/hour and capped by a per-instance emission ceiling. |
+| `marketing:ai_referral_visit`         | Edge middleware saw a referrer from an AI answer engine. Props: `ai_source`, `source_page`. Anonymous (no person profile). |
 | `docs:search_submit`                  | Docs search invocation                                                                        |
 | `docs:search_result_click`            | Result click                                                                                  |
 | `docs:copy_prompt_click`              | Prompt-copy button                                                                            |

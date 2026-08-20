@@ -16,12 +16,27 @@ import {
  *
  * Google Search Console's Generative AI report has no API, and AI crawlers never
  * run JavaScript — so `instrumentation-client.ts` cannot see either signal. This
- * proxy (formerly "middleware") is the only place we can.
+ * middleware is the only place we can.
  *
  * Written against Web-standard APIs only (`fetch`, `NextRequest`,
  * `FetchEvent#waitUntil`) so it behaves identically on the Edge and Node.js
- * runtimes. `posthog-node` is intentionally NOT used: it is a Node library and
- * this file was Edge-resident until the proxy rename.
+ * runtimes. `posthog-node` is intentionally NOT used: it is a Node library, and
+ * this file runs on the Edge runtime.
+ *
+ * DEFERRED, DELIBERATELY: Next 16 deprecates the `middleware` file convention in
+ * favour of `proxy`, so the production build emits a deprecation warning. That
+ * warning is known, not overlooked. The rename is NOT cosmetic — a `proxy.ts`
+ * always runs on the Node.js runtime, so renaming this file silently moves every
+ * request on a public production site from Edge to Node, which has different
+ * cold-start and pricing characteristics on Vercel and cannot be validated from
+ * a local build. It belongs in its own change with a preview deploy behind it.
+ *
+ * When that happens the migration is mechanical — `git mv` to `proxy.ts`, rename
+ * the `middleware` export to `proxy` — precisely because everything here is
+ * Web-standard: `NextProxy` is a type alias for `NextMiddleware`, so the
+ * signature and `waitUntil` are unchanged. Verified on a throwaway branch: it
+ * works, and it additionally makes `process.env` runtime-read instead of
+ * build-inlined (so token rotation would stop needing a redeploy).
  *
  * Capture goes DIRECT to the PostHog ingest host, not through the `/ingest/*`
  * rewrites in `next.config.ts`. Those exist so ad-blockers cannot intercept the
@@ -116,7 +131,7 @@ export function buildCapturePayload(capture: PendingCapture, apiKey: string, tim
       // geolocating our own server.
       $process_person_profile: false,
       $ip: null,
-      $lib: 'threadplane-website-proxy',
+      $lib: 'threadplane-website-middleware',
     },
   };
 }
@@ -139,7 +154,7 @@ export async function sendToPostHog(capture: PendingCapture): Promise<void> {
   }
 }
 
-export function proxy(request: NextRequest, event: NextFetchEvent) {
+export function middleware(request: NextRequest, event: NextFetchEvent) {
   const response = NextResponse.next();
 
   try {

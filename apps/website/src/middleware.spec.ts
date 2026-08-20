@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { buildCapturePayload, classifyRequest, config, sendToPostHog } from './proxy';
+import { buildCapturePayload, classifyRequest, config, sendToPostHog } from './middleware';
 import { createEmissionBudget, EMISSION_BUCKET_CAPACITY } from './lib/analytics/ai-traffic';
 
 const MATCHERS = config.matcher.map((m) => new RegExp(`^${m}$`));
@@ -8,7 +8,7 @@ const matches = (path: string) => MATCHERS.some((re) => re.test(path));
 
 const budget = () => createEmissionBudget(0);
 
-describe('proxy matcher', () => {
+describe('middleware matcher', () => {
   it.each([
     '/',
     '/blog/x',
