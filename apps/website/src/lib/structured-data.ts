@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { getCanonicalUrl, ogImagePath, resolveModifiedTime, SITE_NAME } from './site-metadata';
 import { SHORT_POSITIONING_DESCRIPTION } from './positioning';
+import type { Author } from './blog-authors';
 
 /** A single schema.org node, ready to be serialized into a `ld+json` script. */
 export type JsonLdNode = Record<string, unknown>;
@@ -99,6 +100,65 @@ export function rootJsonLd() {
   };
 }
 
+/**
+ * The /about route, named once. `aboutPageJsonLd` mints the Person `@id` from
+ * it and `blogPostingJsonLd` points every author at it, so the attribution link
+ * and its target cannot drift apart.
+ */
+const ABOUT_PATH = '/about';
+
+/**
+ * Stable identity for the site's author node, so a BlogPosting author and the
+ * /about Person can be recognised as one entity.
+ */
+export const PERSON_ID = `${getCanonicalUrl(ABOUT_PATH)}#person`;
+
+/**
+ * The /about page and the Person it is about, as one `@graph`.
+ *
+ * Bundled for the same reason as {@link rootJsonLd}: the AboutPage's
+ * `mainEntity` reference cannot be orphaned if the Person travels with it.
+ *
+ * `worksFor` refers to the Organization by `@id` rather than repeating it,
+ * which resolves because the root layout mounts {@link rootJsonLd} — including
+ * the Organization node — on every page of the site.
+ *
+ * Every field is derived from the caller's {@link Author} record; nothing about
+ * the person is stated here.
+ */
+export function aboutPageJsonLd(author: Author, knowsAbout: readonly string[]) {
+  const url = getCanonicalUrl(ABOUT_PATH);
+  const person: JsonLdNode = {
+    '@type': 'Person',
+    '@id': PERSON_ID,
+    name: author.name,
+    url,
+    ...(author.role ? { jobTitle: author.role } : {}),
+    ...(author.bio ? { description: author.bio } : {}),
+    // Only profiles the repo actually knows about; `sameAs` is an identity
+    // claim, so a guessed profile is a false one.
+    ...(author.github ? { sameAs: [`https://github.com/${author.github}`] } : {}),
+    knowsAbout: [...knowsAbout],
+    worksFor: { '@id': ORGANIZATION_ID },
+  };
+
+  return {
+    '@context': SCHEMA_CONTEXT,
+    '@graph': [
+      {
+        '@type': 'AboutPage',
+        '@id': `${url}#webpage`,
+        url,
+        name: `About ${author.name}`,
+        mainEntity: { '@id': PERSON_ID },
+        isPartOf: { '@id': `${getCanonicalUrl('/')}#website` },
+        publisher: { '@id': ORGANIZATION_ID },
+      },
+      person,
+    ],
+  };
+}
+
 /** The subset of a blog post that schema.org cares about. */
 export interface BlogPostingInput {
   title: string;
@@ -127,9 +187,10 @@ export function blogPostingJsonLd(post: BlogPostingInput) {
     image: getCanonicalUrl(ogImagePath(post.slug)),
     // Omitted rather than left undefined, matching `dateModified` below.
     ...(post.tags?.length ? { keywords: post.tags } : {}),
-    // No `url` on the author until /about exists (task 11); a 404 author URL is
-    // worse than an unlinked name.
-    author: { '@type': 'Person', name: post.authorName },
+    // `url` points at /about, which renders the matching Person node. Keep the
+    // two together: an author URL is only a real attribution signal while the
+    // page it points at exists and identifies the same person.
+    author: { '@type': 'Person', name: post.authorName, url: getCanonicalUrl(ABOUT_PATH) },
     publisher: { '@id': ORGANIZATION_ID },
   };
 }

@@ -6,10 +6,13 @@ import {
   rootJsonLd,
   softwareSourceCodeJsonLd,
   techArticleJsonLd,
+  aboutPageJsonLd,
+  PERSON_ID,
   websiteJsonLd,
   blogPostingJsonLd,
   type JsonLdNode,
 } from './structured-data';
+import { blogAuthors } from './blog-authors';
 
 const ORGANIZATION_ID = 'https://threadplane.ai/#organization';
 
@@ -112,6 +115,9 @@ describe('blogPostingJsonLd', () => {
     expect(data['datePublished']).toBe('2026-08-13');
     expect(data['dateModified']).toBe('2026-08-13');
     expect(data['author']['name']).toBe('Brian Love');
+    // Attribution is only a real signal when the author resolves to a page. The
+    // /about route exists, so the byline links to it.
+    expect(data['author']['url']).toBe('https://threadplane.ai/about');
     expect(String(data['url'])).toBe('https://threadplane.ai/blog/a-post');
   });
 
@@ -194,6 +200,65 @@ describe('softwareSourceCodeJsonLd', () => {
 
   it('serializes to JSON', () => {
     expectSerializable(softwareSourceCodeJsonLd());
+  });
+});
+
+describe('aboutPageJsonLd', () => {
+  const AUTHOR = {
+    name: 'Brian Love',
+    role: 'Founder, Threadplane',
+    bio: 'Angular consultant and open-source maintainer.',
+    github: 'blove',
+  };
+
+  function nodes() {
+    return aboutPageJsonLd(AUTHOR, ['Angular'])['@graph'] as JsonLdNode[];
+  }
+
+  it('bundles an AboutPage whose mainEntity is the Person it ships with', () => {
+    const graph = nodes();
+    const about = graph.find((node) => node['@type'] === 'AboutPage');
+    const person = graph.find((node) => node['@type'] === 'Person');
+    expect(about).toBeDefined();
+    expect(person).toBeDefined();
+    // The reference resolves inside this same graph — that is the point of
+    // emitting them together.
+    expect((about?.['mainEntity'] as JsonLdNode)['@id']).toBe(person?.['@id']);
+    expect(person?.['@id']).toBe(PERSON_ID);
+  });
+
+  it('states nothing about the person that the author record does not', () => {
+    const person = nodes().find((node) => node['@type'] === 'Person') as JsonLdNode;
+    expect(person['name']).toBe(AUTHOR.name);
+    expect(person['jobTitle']).toBe(AUTHOR.role);
+    expect(person['description']).toBe(AUTHOR.bio);
+    expect(person['sameAs']).toEqual(['https://github.com/blove']);
+    expect(person['url']).toBe('https://threadplane.ai/about');
+  });
+
+  it('omits profile, title, and bio fields for an author record that lacks them', () => {
+    const graph = aboutPageJsonLd({ name: 'Anon' }, ['Angular'])['@graph'] as JsonLdNode[];
+    const person = graph.find((node) => node['@type'] === 'Person') as JsonLdNode;
+    expect('sameAs' in person).toBe(false);
+    expect('jobTitle' in person).toBe(false);
+    expect('description' in person).toBe(false);
+  });
+
+  it('references the Organization the root layout mounts', () => {
+    const person = nodes().find((node) => node['@type'] === 'Person') as JsonLdNode;
+    expect((person['worksFor'] as JsonLdNode)['@id']).toBe(ORGANIZATION_ID);
+  });
+
+  it('resolves the real site author to a real GitHub profile', () => {
+    // The page passes `blogAuthors['brian']`; `sameAs` is an identity claim, so
+    // this pins the profile the repo actually knows rather than the fixture's.
+    const graph = aboutPageJsonLd(blogAuthors['brian'], ['Angular'])['@graph'] as JsonLdNode[];
+    const person = graph.find((node) => node['@type'] === 'Person') as JsonLdNode;
+    expect(person['sameAs']).toEqual(['https://github.com/blove']);
+  });
+
+  it('serializes to JSON', () => {
+    expectSerializable(aboutPageJsonLd(AUTHOR, ['Angular']));
   });
 });
 

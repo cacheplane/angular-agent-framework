@@ -116,6 +116,14 @@ describe('getSitemapEntries', () => {
     expect(future.map((e) => e.route)).toEqual([]);
   });
 
+  it('indexes /about, dated from its committed page source', () => {
+    // The Person entity is only discoverable if the route is in the sitemap,
+    // and it dates from git like any other hand-written page.
+    const entry = getSitemapEntries().find((e) => e.route === '/about');
+    expect(entry).toBeDefined();
+    if (hasGitHistory()) expect(entry?.lastModified).toBeInstanceOf(Date);
+  });
+
   it('resolves the special docs pages whose route shape differs from library docs', () => {
     const entry = getSitemapEntries().find((e) => e.route === '/docs/choosing-an-adapter');
     if (hasGitHistory()) expect(entry?.lastModified).toBeInstanceOf(Date);
