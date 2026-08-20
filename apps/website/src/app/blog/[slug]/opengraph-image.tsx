@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
-import { getPostBySlug } from '../../../lib/blog';
+import { getAllPosts, getPostBySlug } from '../../../lib/blog';
 import { getAuthor } from '../../../lib/blog-authors';
-import { loadGoogleFont, loadLocalGaramond, satoriFonts } from '../../og-font';
+import { loadCardFonts } from '../../og-font';
 
 export const runtime = 'nodejs';
 export const alt = 'Threadplane blog post';
@@ -10,6 +10,22 @@ export const contentType = 'image/png';
 
 interface Params {
   params: Promise<{ slug: string }>;
+}
+
+/**
+ * Prerenders one card per published post at build time. Mirrors the
+ * `generateStaticParams` in this segment's `page.tsx`, so drafts are excluded.
+ *
+ * This is load-bearing beyond the obvious caching win. Satori rejects some
+ * markup at render time (a div with multiple children and no explicit
+ * `display`, for one) and a request-time route turns that into a production
+ * 500 on every post — which is exactly how the byline below shipped broken.
+ * Prerendering promotes that whole class of mistake into a build failure.
+ * It also keeps the MDX read and the Google Fonts round-trips on the build,
+ * where `resolveWebsiteDir()` is known to resolve, rather than per request.
+ */
+export function generateStaticParams() {
+  return getAllPosts().map((p) => ({ slug: p.slug }));
 }
 
 export default async function og({ params }: Params) {
@@ -39,18 +55,9 @@ export default async function og({ params }: Params) {
     );
   }
 
-  const [garamondBold, interRegular, interBold] = await Promise.all([
-    loadLocalGaramond(),
-    loadGoogleFont('Inter', 400),
-    loadGoogleFont('Inter', 600),
-  ]);
-  const fonts = satoriFonts([
-    garamondBold && { name: 'EB Garamond', data: garamondBold, weight: 700 as const, style: 'normal' as const },
-    interRegular && { name: 'Inter', data: interRegular, weight: 400 as const, style: 'normal' as const },
-    interBold && { name: 'Inter', data: interBold, weight: 600 as const, style: 'normal' as const },
-  ]);
-
+  const fonts = await loadCardFonts();
   const author = getAuthor(post.frontmatter.author);
+
   return new ImageResponse(
     (
       <div
@@ -68,7 +75,6 @@ export default async function og({ params }: Params) {
       >
         <div
           style={{
-            display: 'flex',
             fontSize: 24,
             textTransform: 'uppercase',
             letterSpacing: '0.12em',
@@ -79,7 +85,6 @@ export default async function og({ params }: Params) {
         </div>
         <div
           style={{
-            display: 'flex',
             fontFamily: 'EB Garamond, Georgia, serif',
             fontSize: 64,
             fontWeight: 700,
@@ -92,8 +97,10 @@ export default async function og({ params }: Params) {
         </div>
         {/*
           Satori requires an explicit `display` on any div with more than one
-          child node, and throws (→ HTTP 500) otherwise. This byline has three
-          (name, separator, date), so the `display: flex` is load-bearing.
+          child node, and throws otherwise. This byline has three (name,
+          separator, date), so the `display: flex` is load-bearing — its
+          absence is what 500ed every post's card. The two divs above have a
+          single child each and need no `display`.
         */}
         <div style={{ display: 'flex', fontSize: 24, opacity: 0.7 }}>
           {author.name} · {post.frontmatter.date}

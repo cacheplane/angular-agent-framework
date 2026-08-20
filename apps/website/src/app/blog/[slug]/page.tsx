@@ -9,7 +9,7 @@ import { Eyebrow } from '../../../components/ui/Eyebrow';
 import { getAllPosts, getPostBySlug, formatPostDate, readingTimeMin } from '../../../lib/blog';
 import { getAuthor } from '../../../lib/blog-authors';
 import { extractHeadings } from '../../../lib/extract-headings';
-import { createPageMetadata } from '../../../lib/site-metadata';
+import { createPageMetadata, ogImagePath } from '../../../lib/site-metadata';
 import { getPostLastModified, publishedDate } from '../../../lib/sitemap-dates';
 import { JsonLd } from '../../../components/shared/JsonLd';
 import { blogPostingJsonLd, breadcrumbJsonLd } from '../../../lib/structured-data';
@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     description: post.frontmatter.description,
     pathname,
     type: 'article',
-    image: `${pathname}/opengraph-image`,
+    image: ogImagePath(post.slug),
     article: published
       ? {
           publishedTime: published.toISOString(),

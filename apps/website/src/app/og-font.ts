@@ -24,10 +24,14 @@
  * from this server-side render path (never downloaded by browsers).
  */
 
+/** The CSS weight domain Satori accepts — wider than the weights we ship. */
+export type OgFontWeight = 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
+
 export interface OgFont {
   name: string;
   data: ArrayBuffer;
-  weight: 400 | 600 | 700;
+  /** Satori matches the closest available weight. */
+  weight: OgFontWeight;
   style: 'normal';
 }
 
@@ -83,4 +87,26 @@ export async function loadGoogleFont(family: string, weight: number): Promise<Ar
 export function satoriFonts(candidates: (OgFont | null)[]): OgFont[] | undefined {
   const fonts = candidates.filter((f): f is OgFont => f !== null);
   return fonts.length > 0 ? fonts : undefined;
+}
+
+/**
+ * Loads the shared card font set: bundled Garamond for headlines, Inter for
+ * body copy, and optionally JetBrains Mono for the eyebrow/pill lettering.
+ *
+ * Every load is best-effort, so this returns `undefined` (not `[]`) when the
+ * TTF is missing *and* Google Fonts is unreachable — see `satoriFonts`.
+ */
+export async function loadCardFonts(options: { mono?: boolean } = {}): Promise<OgFont[] | undefined> {
+  const [garamondBold, interRegular, interBold, monoBold] = await Promise.all([
+    loadLocalGaramond(),
+    loadGoogleFont('Inter', 400),
+    loadGoogleFont('Inter', 600),
+    options.mono ? loadGoogleFont('JetBrains+Mono', 700) : Promise.resolve(null),
+  ]);
+  return satoriFonts([
+    garamondBold && { name: 'EB Garamond', data: garamondBold, weight: 700, style: 'normal' },
+    interRegular && { name: 'Inter', data: interRegular, weight: 400, style: 'normal' },
+    interBold && { name: 'Inter', data: interBold, weight: 600, style: 'normal' },
+    monoBold && { name: 'JetBrains Mono', data: monoBold, weight: 700, style: 'normal' },
+  ]);
 }

@@ -7,7 +7,7 @@
  */
 import { ImageResponse } from 'next/og';
 import { POSITIONING_PROOF_POINTS, PRIMARY_TAGLINE, SHORT_POSITIONING_DESCRIPTION } from '../lib/positioning';
-import { loadGoogleFont, loadLocalGaramond, satoriFonts } from './og-font';
+import { loadCardFonts } from './og-font';
 
 // Node runtime (not edge) so we can read the bundled Garamond TTF off disk.
 // Font loading lives in ./og-font so the TTF stays statically traceable.
@@ -17,18 +17,7 @@ export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
 export default async function OpenGraphImage() {
-  const [garamondBold, interRegular, interBold, monoBold] = await Promise.all([
-    loadLocalGaramond(),
-    loadGoogleFont('Inter', 400),
-    loadGoogleFont('Inter', 600),
-    loadGoogleFont('JetBrains+Mono', 700),
-  ]);
-  const fonts = satoriFonts([
-    garamondBold && { name: 'EB Garamond', data: garamondBold, weight: 700 as const, style: 'normal' as const },
-    interRegular && { name: 'Inter', data: interRegular, weight: 400 as const, style: 'normal' as const },
-    interBold && { name: 'Inter', data: interBold, weight: 600 as const, style: 'normal' as const },
-    monoBold && { name: 'JetBrains Mono', data: monoBold, weight: 700 as const, style: 'normal' as const },
-  ]);
+  const fonts = await loadCardFonts({ mono: true });
 
   return new ImageResponse(
     (

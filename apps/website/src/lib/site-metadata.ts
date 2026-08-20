@@ -16,6 +16,18 @@ export {
   SHORT_POSITIONING_DESCRIPTION,
 } from './positioning';
 
+/**
+ * Path of a blog post's per-post OpenGraph card.
+ *
+ * Single source of truth: `blog/[slug]/page.tsx` feeds it to
+ * `createPageMetadata` (og:image / twitter:image) and `blogPostingJsonLd`
+ * feeds it to the BlogPosting `image`. Building the string in both places
+ * independently let them drift with both test suites still green.
+ */
+export function ogImagePath(slug: string): string {
+  return `/blog/${slug}/opengraph-image`;
+}
+
 export function getCanonicalPath(pathname: string): string {
   if (pathname === '/') return '/';
   return `/${pathname.replace(/^\/+|\/+$/g, '')}`;

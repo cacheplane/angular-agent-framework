@@ -121,8 +121,8 @@ describe('blogPostingJsonLd', () => {
   });
 
   it('points image at the per-post opengraph-image route', () => {
-    // Must stay in lockstep with the `image` that `blog/[slug]/page.tsx` hands
-    // `createPageMetadata`, so og:image and the BlogPosting agree.
+    // Shares `ogImagePath` with the `image` that `blog/[slug]/page.tsx` hands
+    // `createPageMetadata`, so og:image and the BlogPosting cannot drift.
     expect(blogPostingJsonLd(SAMPLE_POST)['image']).toBe(
       'https://threadplane.ai/blog/a-post/opengraph-image',
     );
