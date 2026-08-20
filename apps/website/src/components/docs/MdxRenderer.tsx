@@ -15,6 +15,10 @@ import rehypePrettyCode from 'rehype-pretty-code';
 import rehypeSlug from 'rehype-slug';
 import remarkGfm from 'remark-gfm';
 
+/** Intrinsic size of the SVG diagrams in `public/blog/diagrams`. */
+const DIAGRAM_WIDTH = 880;
+const DIAGRAM_HEIGHT = 480;
+
 const mdxComponents = {
   Callout,
   Steps,
@@ -28,6 +32,20 @@ const mdxComponents = {
   AgUiArchDiagram,
   FeatureChips,
   pre: Pre,
+  // Markdown image syntax carries no dimensions, so fall back to the size the
+  // in-repo diagrams are authored at. Explicit width/height let the browser
+  // reserve the box before the file loads, which keeps layout shift at zero.
+  img: ({ width, height, alt, ...rest }: React.ImgHTMLAttributes<HTMLImageElement>) => (
+    <img
+      {...rest}
+      alt={alt ?? ''}
+      width={width ?? DIAGRAM_WIDTH}
+      height={height ?? DIAGRAM_HEIGHT}
+      loading="lazy"
+      decoding="async"
+      style={{ maxWidth: '100%', height: 'auto', display: 'block', margin: '1.75rem 0' }}
+    />
+  ),
   table: ({ children, ...rest }: React.HTMLAttributes<HTMLTableElement>) => (
     <div className="docs-table-scroll">
       <table {...rest}>{children}</table>

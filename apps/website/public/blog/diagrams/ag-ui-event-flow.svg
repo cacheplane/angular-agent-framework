@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 480" width="880" height="480" role="img" aria-labelledby="d-title d-desc">
+  <title id="d-title">AG-UI client-tool round trip between an Angular browser app and the agent server</title>
+  <desc id="d-desc">The Angular chat component declares its action, view and ask client tools; the catalog travels to the FastAPI /agent endpoint, where bind_client_tools binds it to the model per run. The graph ends its turn and streams AG-UI events over SSE; the @threadplane/ag-ui adapter turns them into Angular signals, the browser executes the call, and the tool result starts the next run.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#004090"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    .t-eyebrow { font-size: 11px; font-weight: 700; fill: #737373; letter-spacing: 0.09em; }
+    .t-head { font-size: 16.5px; font-weight: 600; fill: #1c1c1c; }
+    .t-title { font-size: 14.5px; font-weight: 600; fill: #1c1c1c; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .t-meta { font-size: 12.5px; fill: #464646; }
+    .t-edge { font-size: 12px; font-weight: 600; fill: #004090; }
+    .edge { stroke: #004090; stroke-width: 1.6; fill: none; marker-end: url(#arrow); }
+  </style>
+
+  <rect x="0.5" y="0.5" width="879" height="479" rx="12" fill="#ffffff" stroke="#e5e5e5"/>
+  <text class="t-eyebrow" x="32" y="34">AG-UI · CLIENT TOOLS</text>
+  <text class="t-head" x="32" y="60">The browser declares the tools; the server streams the events</text>
+
+  <rect x="24" y="76" width="364" height="348" rx="10" fill="#fbfbfb" stroke="#f0f0f0"/>
+  <rect x="478" y="76" width="364" height="348" rx="10" fill="#fbfbfb" stroke="#f0f0f0"/>
+  <text class="t-eyebrow" x="44" y="98">BROWSER</text>
+  <text class="t-eyebrow" x="498" y="98">SERVER</text>
+
+  <rect x="44" y="106" width="324" height="86" rx="8" fill="#f2f5f9" stroke="#c3d1e2"/>
+  <text class="t-title" x="62" y="138">&lt;chat [clientTools]&gt;</text>
+  <text class="t-meta" x="62" y="162">declares action() · view()</text>
+  <text class="t-meta" x="62" y="180">and ask() tools</text>
+
+  <rect x="44" y="212" width="324" height="86" rx="8" fill="#ffffff" stroke="#d4d4d4"/>
+  <text class="t-title" x="62" y="244">@threadplane/ag-ui</text>
+  <text class="t-meta" x="62" y="268">reduces AG-UI events</text>
+  <text class="t-meta" x="62" y="286">into Angular signals</text>
+
+  <rect x="44" y="318" width="324" height="86" rx="8" fill="#ffffff" stroke="#d4d4d4"/>
+  <text class="t-title" x="62" y="350">the browser runs it</text>
+  <text class="t-meta" x="62" y="374">a handler returns, a component</text>
+  <text class="t-meta" x="62" y="392">mounts, or the user answers</text>
+
+  <rect x="498" y="106" width="324" height="86" rx="8" fill="#ffffff" stroke="#d4d4d4"/>
+  <text class="t-title" x="516" y="138">POST /agent</text>
+  <text class="t-meta" x="516" y="162">FastAPI + ag-ui-langgraph</text>
+
+  <rect x="498" y="212" width="324" height="86" rx="8" fill="#f2f5f9" stroke="#c3d1e2"/>
+  <text class="t-title" x="516" y="244">bind_client_tools()</text>
+  <text class="t-meta" x="516" y="268">binds the browser's catalog</text>
+  <text class="t-meta" x="516" y="286">to the model, per run</text>
+
+  <rect x="498" y="318" width="324" height="86" rx="8" fill="#ffffff" stroke="#d4d4d4"/>
+  <text class="t-title" x="516" y="350">the graph ends its turn</text>
+  <text class="t-meta" x="516" y="374">no server ToolNode — every</text>
+  <text class="t-meta" x="516" y="392">tool here is a client tool</text>
+
+  <path class="edge" d="M368,149 H494"/>
+  <text class="t-edge" x="433" y="140" text-anchor="middle">tool catalog</text>
+
+  <path class="edge" d="M206,192 V208"/>
+  <path class="edge" d="M660,192 V208"/>
+
+  <path class="edge" d="M498,255 H372"/>
+  <text class="t-edge" x="435" y="246" text-anchor="middle">SSE events</text>
+
+  <path class="edge" d="M206,298 V314"/>
+
+  <path class="edge" d="M206,404 V450 H862 V149 H826"/>
+  <text class="t-edge" x="534" y="442" text-anchor="middle">the tool result starts the next run</text>
+</svg>

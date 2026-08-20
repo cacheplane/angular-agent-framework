@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 480" width="880" height="480" role="img" aria-labelledby="d-title d-desc">
+  <title id="d-title">How one Angular signal switches the active LangGraph conversation</title>
+  <desc id="d-desc">chat-sidenav lists every thread from LangGraphThreadsAdapter, while chat renders one conversation from the @threadplane/langgraph agent. Selecting a row sets the ACTIVE_THREAD signal, the agent adapter watches that signal and switches conversations, and onThreadId writes a newly created thread id back into it.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#004090"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    .t-eyebrow { font-size: 11px; font-weight: 700; fill: #737373; letter-spacing: 0.09em; }
+    .t-head { font-size: 16.5px; font-weight: 600; fill: #1c1c1c; }
+    .t-title { font-size: 14.5px; font-weight: 600; fill: #1c1c1c; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .t-meta { font-size: 12.5px; fill: #464646; }
+    .t-edge { font-size: 12px; font-weight: 600; fill: #004090; }
+    .t-caption { font-size: 12.5px; fill: #737373; }
+    .edge { stroke: #004090; stroke-width: 1.6; fill: none; marker-end: url(#arrow); }
+    .edge-both { stroke: #004090; stroke-width: 1.6; fill: none; marker-end: url(#arrow); marker-start: url(#arrow); }
+  </style>
+
+  <rect x="0.5" y="0.5" width="879" height="479" rx="12" fill="#ffffff" stroke="#e5e5e5"/>
+  <text class="t-eyebrow" x="32" y="34">LANGGRAPH · THREADS AND RUNS</text>
+  <text class="t-head" x="32" y="60">One signal decides which conversation is on screen</text>
+
+  <text class="t-eyebrow" x="32" y="100">ANGULAR COMPONENTS</text>
+  <text class="t-eyebrow" x="624" y="100">@threadplane/langgraph</text>
+
+  <rect x="32" y="114" width="224" height="90" rx="8" fill="#ffffff" stroke="#d4d4d4"/>
+  <text class="t-title" x="50" y="146">&lt;chat-sidenav&gt;</text>
+  <text class="t-meta" x="50" y="170">every conversation,</text>
+  <text class="t-meta" x="50" y="188">titled by the server</text>
+
+  <rect x="32" y="312" width="224" height="90" rx="8" fill="#ffffff" stroke="#d4d4d4"/>
+  <text class="t-title" x="50" y="344">&lt;chat&gt;</text>
+  <text class="t-meta" x="50" y="368">the active conversation,</text>
+  <text class="t-meta" x="50" y="386">streaming</text>
+
+  <rect x="328" y="192" width="224" height="92" rx="8" fill="#f2f5f9" stroke="#c3d1e2"/>
+  <text class="t-title" x="346" y="224">ACTIVE_THREAD</text>
+  <text class="t-meta" x="346" y="248">signal&lt;string | null&gt;,</text>
+  <text class="t-meta" x="346" y="266">mirrored into the URL</text>
+
+  <rect x="624" y="114" width="224" height="90" rx="8" fill="#ffffff" stroke="#d4d4d4"/>
+  <text class="t-title" x="642" y="146">ThreadsAdapter</text>
+  <text class="t-meta" x="642" y="170">client.threads.* —</text>
+  <text class="t-meta" x="642" y="188">list, rename, archive</text>
+
+  <rect x="624" y="312" width="224" height="90" rx="8" fill="#ffffff" stroke="#d4d4d4"/>
+  <text class="t-title" x="642" y="344">provideAgent()</text>
+  <text class="t-meta" x="642" y="368">one thread's run stream</text>
+  <text class="t-meta" x="642" y="386">and checkpoint</text>
+
+  <path class="edge" d="M624,158 H260"/>
+  <text class="t-edge" x="442" y="149" text-anchor="middle">threads() · archivedThreads()</text>
+
+  <path class="edge" d="M624,356 H260"/>
+  <text class="t-edge" x="442" y="347" text-anchor="middle">messages() · status() · toolCalls()</text>
+
+  <path class="edge" d="M144,204 V238 H324"/>
+  <text class="t-edge" x="154" y="230">threadSelected</text>
+
+  <path class="edge-both" d="M556,238 H590 V334 H620"/>
+  <text class="t-edge" x="600" y="230">the adapter watches it,</text>
+  <text class="t-edge" x="600" y="248">onThreadId writes back</text>
+
+  <text class="t-caption" x="32" y="446">LangGraph owns the durable half — checkpoints and the thread store. Angular only owns which thread id is active.</text>
+</svg>

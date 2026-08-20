@@ -78,6 +78,8 @@ Let the adapter own accumulation, deduplication, and lifecycle transitions.
 Let the component read the result.
 The [Signals guide](/docs/langgraph/concepts/angular-signals) shows the boundary in practice.
 
+![LangGraph stream chunks and AG-UI SSE events both enter a runtime adapter that owns accumulation, deduplication and lifecycle transitions, and the adapter publishes one Agent contract of Angular signals - messages, status, toolCalls, state, error and interrupt - that chat components and an approved component registry read, with user intent travelling back through the same contract.](/blog/diagrams/agent-contract-boundary.svg)
+
 The tradeoff is that normalization can hide useful runtime detail.
 Keep an explicit event escape hatch for information that isn't durable UI state, but don't publish messages or tool calls through two competing sources.
 Two sources of truth create timing bugs that are difficult to reproduce and even harder to explain to a user.
