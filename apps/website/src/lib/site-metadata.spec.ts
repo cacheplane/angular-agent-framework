@@ -6,6 +6,7 @@ import {
   POSITIONING_PROOF_POINTS,
   PRIMARY_TAGLINE,
   SHORT_POSITIONING_DESCRIPTION,
+  SITE_NAME,
   createPageMetadata,
 } from './site-metadata';
 
@@ -47,5 +48,44 @@ describe('site positioning copy', () => {
     expect(metadata.description).toBe(DEFAULT_META_DESCRIPTION);
     expect(metadata.openGraph?.description).toBe(DEFAULT_META_DESCRIPTION);
     expect(metadata.twitter?.description).toBe(DEFAULT_META_DESCRIPTION);
+  });
+});
+
+describe('createPageMetadata article fields', () => {
+  it('emits openGraph article dates, authors, and tags', () => {
+    const metadata = createPageMetadata({
+      title: 'Post — Threadplane',
+      description: 'A post.',
+      pathname: '/blog/post',
+      type: 'article',
+      article: {
+        publishedTime: '2026-08-13',
+        modifiedTime: '2026-08-14',
+        authors: ['Brian Love'],
+        tags: ['angular', 'ag-ui'],
+      },
+    });
+    const openGraph = metadata.openGraph as Record<string, unknown>;
+    expect(openGraph['publishedTime']).toBe('2026-08-13');
+    expect(openGraph['modifiedTime']).toBe('2026-08-14');
+    expect(openGraph['authors']).toEqual(['Brian Love']);
+    expect(openGraph['tags']).toEqual(['angular', 'ag-ui']);
+  });
+
+  it('accepts a page-specific social image', () => {
+    const metadata = createPageMetadata({
+      title: 'Post — Threadplane',
+      description: 'A post.',
+      pathname: '/blog/post',
+      image: '/blog/post/opengraph-image',
+    });
+    const openGraph = metadata.openGraph as { images: string[] };
+    expect(openGraph.images).toEqual(['/blog/post/opengraph-image']);
+  });
+});
+
+describe('brand name', () => {
+  it('uses one canonical spelling', () => {
+    expect(SITE_NAME).toBe('Threadplane');
   });
 });

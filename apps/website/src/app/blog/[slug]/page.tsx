@@ -10,6 +10,7 @@ import { getAllPosts, getPostBySlug, formatPostDate, readingTimeMin } from '../.
 import { getAuthor } from '../../../lib/blog-authors';
 import { extractHeadings } from '../../../lib/extract-headings';
 import { createPageMetadata } from '../../../lib/site-metadata';
+import { getRouteLastModified } from '../../../lib/sitemap-dates';
 
 interface Params {
   params: Promise<{ slug: string }>;
@@ -23,13 +24,30 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const post = getPostBySlug(slug);
   if (!post || post.frontmatter.draft) {
-    return { title: 'Post not found — ThreadPlane' };
+    return { title: 'Post not found — Threadplane' };
   }
+  const author = getAuthor(post.frontmatter.author);
+  const pathname = `/blog/${post.slug}`;
+  // Only claim a modification when git actually shows the post was edited after
+  // its publish date; otherwise `createPageMetadata` reports it unmodified.
+  const published = new Date(`${post.frontmatter.date}T00:00:00Z`);
+  const lastModified = getRouteLastModified(pathname);
+  const modifiedTime =
+    lastModified && lastModified.getTime() > published.getTime() ? lastModified.toISOString() : undefined;
+
   return createPageMetadata({
-    title: `${post.frontmatter.title} — ThreadPlane`,
+    title: `${post.frontmatter.title} — Threadplane`,
     description: post.frontmatter.description,
-    pathname: `/blog/${post.slug}`,
+    pathname,
     type: 'article',
+    // TODO(task 9): point at `${pathname}/opengraph-image` once that route
+    // exists; naming it before then would emit an og:image URL that 404s.
+    article: {
+      publishedTime: post.frontmatter.date,
+      modifiedTime,
+      authors: [author.name],
+      tags: post.frontmatter.tags,
+    },
   });
 }
 

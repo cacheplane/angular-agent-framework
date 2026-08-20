@@ -25,16 +25,33 @@ export function getCanonicalUrl(pathname: string): string {
   return new URL(getCanonicalPath(pathname), SITE_ORIGIN).toString();
 }
 
+/** Article-specific OpenGraph fields (freshness + attribution signals). */
+export interface ArticleMetadata {
+  /** ISO 8601 publish date or timestamp. */
+  publishedTime: string;
+  /**
+   * ISO 8601 last-modified timestamp. Omit only when the content genuinely has
+   * not changed since publication — it then falls back to `publishedTime`.
+   */
+  modifiedTime?: string;
+  authors?: string[];
+  tags?: string[];
+}
+
 export function createPageMetadata({
   title,
   description,
   pathname,
   type = 'article',
+  image = DEFAULT_SOCIAL_IMAGE,
+  article,
 }: {
   title: string;
   description: string;
   pathname: string;
   type?: 'article' | 'website';
+  image?: string;
+  article?: ArticleMetadata;
 }): Metadata {
   const canonicalPath = getCanonicalPath(pathname);
 
@@ -50,13 +67,21 @@ export function createPageMetadata({
       url: canonicalPath,
       siteName: SITE_NAME,
       type,
-      images: [DEFAULT_SOCIAL_IMAGE],
+      images: [image],
+      ...(article
+        ? {
+            publishedTime: article.publishedTime,
+            modifiedTime: article.modifiedTime ?? article.publishedTime,
+            authors: article.authors,
+            tags: article.tags,
+          }
+        : {}),
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: [DEFAULT_SOCIAL_IMAGE],
+      images: [image],
     },
   };
 }

@@ -224,19 +224,32 @@ function publishedDate(post: Post): Date | undefined {
   return Number.isNaN(date.getTime()) ? undefined : date;
 }
 
+/**
+ * Honest last-modified time for one route, or undefined when nothing can date
+ * it. Shared by the sitemap and by article metadata (`og:modified_time`), so
+ * both surfaces make the same freshness claim.
+ *
+ * `postsBySlug` is an optional cache: callers walking every route build it once
+ * rather than re-reading the blog directory per route.
+ */
+export function getRouteLastModified(route: string, postsBySlug?: Map<string, Post>): Date | undefined {
+  const posts =
+    postsBySlug ??
+    new Map(getAllPosts({ includeDrafts: true }).map((post) => [`/blog/${post.slug}`, post]));
+  const committed = sourceModifiedTime(sourcePathsForRoute(route, posts));
+
+  // "Modified" means last *modified*, so an edited post outranks its own
+  // publish date; the frontmatter date still covers posts git cannot date.
+  const post = posts.get(route);
+  const published = post ? publishedDate(post) : undefined;
+  return committed && published ? (committed > published ? committed : published) : (committed ?? published);
+}
+
 export function getSitemapEntries(): SitemapEntry[] {
   const postsBySlug = new Map(getAllPosts().map((post) => [`/blog/${post.slug}`, post]));
 
   return getSitemapRoutes().map((route) => {
-    const committed = sourceModifiedTime(sourcePathsForRoute(route, postsBySlug));
-
-    // `lastmod` means last *modified*, so an edited post outranks its own
-    // publish date; the frontmatter date still covers posts git cannot date.
-    const post = postsBySlug.get(route);
-    const published = post ? publishedDate(post) : undefined;
-    const lastModified =
-      committed && published ? (committed > published ? committed : published) : (committed ?? published);
-
+    const lastModified = getRouteLastModified(route, postsBySlug);
     return lastModified ? { route, lastModified } : { route };
   });
 }

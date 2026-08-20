@@ -237,7 +237,7 @@ test('docs pages render canonical and social metadata', async ({ page }) => {
   );
   await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
     'content',
-    'Streaming - LangGraph Docs - Threadplane',
+    'Streaming — LangGraph Docs — Threadplane',
   );
   await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
     'content',
@@ -245,7 +245,7 @@ test('docs pages render canonical and social metadata', async ({ page }) => {
   );
   await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute(
     'content',
-    'Streaming - LangGraph Docs - Threadplane',
+    'Streaming — LangGraph Docs — Threadplane',
   );
 });
 

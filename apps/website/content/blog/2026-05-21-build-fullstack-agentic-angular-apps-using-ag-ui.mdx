@@ -57,7 +57,7 @@ Three boxes. Two seams.
 
 **The wire.** Server-Sent Events. Plain HTTP, no WebSocket gymnastics, no custom binary framing. Your firewall, load balancer, and reverse proxy already know what to do with it.
 
-**The Angular side.** This is what ThreadPlane provides. `@threadplane/ag-ui` is the adapter. It consumes the AG-UI event stream and exposes a runtime-neutral `Agent` contract built from signals. `@threadplane/chat` is the UI. It reads from that contract and renders. The two are decoupled on purpose. We'll get to why.
+**The Angular side.** This is what Threadplane provides. `@threadplane/ag-ui` is the adapter. It consumes the AG-UI event stream and exposes a runtime-neutral `Agent` contract built from signals. `@threadplane/chat` is the UI. It reads from that contract and renders. The two are decoupled on purpose. We'll get to why.
 
 ## Let's wire it up
 
@@ -164,7 +164,7 @@ The AG-UI protocol has seventeen event types, grouped into five families:
 
 The families each do specific work. Lifecycle answers "is something happening?" Text messages are the streaming triad familiar from chat UIs. Tool calls are deliberately incremental so you can render the *intent* before the arguments are fully formed. State sync uses RFC 6902 JSON Patch so the wire stays small even when the agent's state is large.
 
-ThreadPlane's `@threadplane/ag-ui` runs each event through a small reducer that updates a handful of signals on the `Agent` contract:
+Threadplane's `@threadplane/ag-ui` runs each event through a small reducer that updates a handful of signals on the `Agent` contract:
 
 - `messages()`: `Message[]`, the chat history. `TEXT_MESSAGE_CONTENT` appends a delta to the in-flight assistant message.
 - `status()`: `'idle' | 'running' | 'error' | 'paused'`. Driven by the `RUN_*` events.
@@ -300,6 +300,6 @@ Each of those is its own post. The point here is just that the protocol-to-signa
 
 ## Conclusion
 
-AG-UI standardizes the wire between the agent and the UI: it's small enough to hold in your head, and the event model maps onto Angular signals cleanly. With ThreadPlane (`@threadplane/ag-ui` and `@threadplane/chat` on npm), the wiring is three lines — a provider, an inject, and a `<chat>` — which leaves the interesting work (tool cards, interrupt flows, generative UI, your design system) as the part you spend the day on.
+AG-UI standardizes the wire between the agent and the UI: it's small enough to hold in your head, and the event model maps onto Angular signals cleanly. With Threadplane (`@threadplane/ag-ui` and `@threadplane/chat` on npm), the wiring is three lines — a provider, an inject, and a `<chat>` — which leaves the interesting work (tool cards, interrupt flows, generative UI, your design system) as the part you spend the day on.
 
 The adapters are MIT; `@threadplane/chat` is source-available with a free non-commercial tier. If you're building this inside an enterprise Angular app (design system, multi-tenant, regulated), [talk to us](/contact?source=blog_ag_ui_pillar&track=enterprise).

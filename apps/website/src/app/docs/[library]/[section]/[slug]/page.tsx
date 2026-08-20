@@ -38,7 +38,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: DocsRouteProps): Promise<Metadata> {
   const { library, section, slug } = await params;
   return getDocMetadata(library, section, slug) ?? {
-    title: 'Docs - Threadplane',
+    title: 'Docs — Threadplane',
     description: 'Threadplane documentation',
   };
 }
