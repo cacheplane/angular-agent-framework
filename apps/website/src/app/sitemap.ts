@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
-import { getCanonicalUrl, getSitemapEntries } from '../lib/site-metadata';
+import { getCanonicalUrl } from '../lib/site-metadata';
+import { getSitemapEntries } from '../lib/sitemap-dates';
 
 // `changefreq`/`priority` are ignored by Google; `lastmod` is used when it is
 // honest, so this emits only that.
