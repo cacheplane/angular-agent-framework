@@ -79,8 +79,8 @@ Both are emitted from Edge middleware, in `apps/website/src/lib/analytics/ai-tra
 
 Read these as directional:
 
-- Emission is **deduped** per crawler and path, hourly, per instance.
-- Emission is **rate-limited** to 500 events per hour per instance, as an abuse ceiling — both inputs are attacker-controlled headers.
+- Crawler events are **deduped** per crawler and path, hourly, per instance. Referral events are not deduped.
+- Both event types share one **rate limit**: 500 events per hour per instance, as an abuse ceiling — both inputs are attacker-controlled headers.
 - Instances are serverless and horizontally scaled, so neither bound is fleet-global. The dataset under-counts by design.
 - Only AI-specific crawler variants classify. Plain `Googlebot` and plain `Applebot` are classic search crawlers and are deliberately excluded; `Google-Extended` and `Applebot-Extended` are not.
 - Referrals are anonymous — no person profile — and many engines strip the referrer entirely, so this is a floor on AI-sourced clicks, never a total.
