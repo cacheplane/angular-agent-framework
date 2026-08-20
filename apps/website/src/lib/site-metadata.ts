@@ -38,6 +38,18 @@ export interface ArticleMetadata {
   tags?: string[];
 }
 
+/**
+ * The "unmodified" rule, in one place: a page with no known modification
+ * advertises its publish date as the modification date.
+ *
+ * Shared by `article:modified_time` here and by the BlogPosting `dateModified`
+ * in `structured-data.ts`. Those are two published claims about one fact, so
+ * they resolve it with one implementation rather than two that happen to agree.
+ */
+export function resolveModifiedTime(publishedTime: string, modifiedTime?: string): string {
+  return modifiedTime ?? publishedTime;
+}
+
 /** Options for {@link createPageMetadata}. */
 export interface PageMetadataOptions {
   title: string;
@@ -75,9 +87,7 @@ export function createPageMetadata({
       images: [image],
       ...(article && {
         publishedTime: article.publishedTime,
-        // The single place the "unmodified" rule lives: an article with no
-        // known modification advertises its publish date as the modification.
-        modifiedTime: article.modifiedTime ?? article.publishedTime,
+        modifiedTime: resolveModifiedTime(article.publishedTime, article.modifiedTime),
         authors: article.authors,
         tags: article.tags,
       }),

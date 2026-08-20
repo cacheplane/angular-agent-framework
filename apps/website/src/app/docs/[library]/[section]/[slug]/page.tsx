@@ -8,14 +8,20 @@ import { DocsBreadcrumb } from '../../../../../components/docs/DocsBreadcrumb';
 import { DocsPageHeader } from '../../../../../components/docs/DocsPageHeader';
 import { PageActions } from '../../../../../components/docs/PageActions';
 import { DocsPrevNext } from '../../../../../components/docs/DocsPrevNext';
-import { getDocBySlug, getAllDocSlugs, getDocMetadata, resolveDocDescription } from '../../../../../lib/docs';
+import {
+  DEFAULT_DOCS_DESCRIPTION,
+  getAllDocSlugs,
+  getDocBySlug,
+  getDocMetadata,
+  resolveDocDescription,
+} from '../../../../../lib/docs';
 import { JsonLd } from '../../../../../components/shared/JsonLd';
 import { breadcrumbJsonLd, techArticleJsonLd } from '../../../../../lib/structured-data';
-import { getRouteLastModified } from '../../../../../lib/sitemap-dates';
+import { getDocLastModified } from '../../../../../lib/sitemap-dates';
 import { ApiDocRenderer, type ApiDocEntry } from '../../../../../components/docs/ApiDocRenderer';
 import { DocsTOC } from '../../../../../components/docs/DocsTOC';
 import { extractHeadings } from '../../../../../lib/extract-headings';
-import { findDocsPage, getLibraryConfig, type LibraryId } from '../../../../../lib/docs-config';
+import { findDocsPage, getLibraryConfig, libraryIntroPath, type LibraryId } from '../../../../../lib/docs-config';
 import fs from 'fs';
 import path from 'path';
 
@@ -42,7 +48,7 @@ export async function generateMetadata({ params }: DocsRouteProps): Promise<Meta
   const { library, section, slug } = await params;
   return getDocMetadata(library, section, slug) ?? {
     title: 'Docs — Threadplane',
-    description: 'Threadplane documentation',
+    description: DEFAULT_DOCS_DESCRIPTION,
   };
 }
 
@@ -56,44 +62,36 @@ export default async function DocsPage({ params }: DocsRouteProps) {
   if (!doc) notFound();
 
   const pathname = `/docs/${library}/${section}/${slug}`;
-  // The empty post index is the honest one here: `getRouteLastModified` consults
-  // it only to recognise a blog route, and no /docs route is ever a post, so
-  // passing an index costs a blog-directory read and changes nothing. The
-  // sitemap resolves this same route through the same file-source path, so the
-  // two `dateModified` claims agree.
-  const lastModified = getRouteLastModified(pathname, new Map());
+
+  const articleData = techArticleJsonLd({
+    title: doc.title,
+    // Exactly the string `generateMetadata` puts in the meta description.
+    description: resolveDocDescription(doc, library),
+    pathname,
+    dateModified: getDocLastModified(pathname)?.toISOString(),
+  });
+
+  // Mirrors the visible <DocsBreadcrumb>, which links the library rung through
+  // the same `libraryIntroPath()` — there is no /docs/<library> route, so a
+  // crumb pointing there would 404.
+  //
+  // The section rung the visible trail shows between library and page is
+  // deliberately absent: it is plain text there because no section index route
+  // exists, and a non-final BreadcrumbList item with no `item` URL is invalid.
+  // Omitting it is closer to the visible trail than inventing a URL for it.
+  const breadcrumbs = breadcrumbJsonLd([
+    { name: 'Docs', pathname: '/docs' },
+    { name: libConfig.title, pathname: libraryIntroPath(library) },
+    { name: doc.title, pathname },
+  ]);
 
   return (
     <div
       className="flex min-h-screen overflow-x-hidden"
       style={{ background: tokens.surfaces.canvas, paddingTop: 80 }}
     >
-      <JsonLd
-        data={techArticleJsonLd({
-          title: doc.title,
-          // Exactly the string `generateMetadata` puts in the meta description.
-          description: resolveDocDescription(doc, library),
-          pathname,
-          dateModified: lastModified?.toISOString(),
-        })}
-      />
-      <JsonLd
-        data={breadcrumbJsonLd([
-          { name: 'Docs', pathname: '/docs' },
-          // Mirrors the visible <DocsBreadcrumb>, which links the library at its
-          // introduction page: there is no /docs/<library> route (no page.tsx
-          // under src/app/docs/[library], and it is absent from the sitemap), so
-          // the plan's `/docs/${library}` would point a crumb at a 404.
-          //
-          // The section rung the visible trail shows between library and page is
-          // deliberately absent: it is plain text there because no section index
-          // route exists, and a non-final BreadcrumbList item with no `item` URL
-          // is invalid. Omitting it is closer to the visible trail than inventing
-          // a URL for it.
-          { name: libConfig.title, pathname: `/docs/${library}/getting-started/introduction` },
-          { name: doc.title, pathname },
-        ])}
-      />
+      <JsonLd data={articleData} />
+      <JsonLd data={breadcrumbs} />
       <DocsSearch library={library as LibraryId} />
       <DocsSidebar activeLibrary={library as LibraryId} activeSection={section} activeSlug={slug} />
       <div

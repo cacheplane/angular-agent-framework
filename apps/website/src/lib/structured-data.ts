@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { DEFAULT_SOCIAL_IMAGE, getCanonicalUrl, SITE_NAME } from './site-metadata';
+import { DEFAULT_SOCIAL_IMAGE, getCanonicalUrl, resolveModifiedTime, SITE_NAME } from './site-metadata';
 import { SHORT_POSITIONING_DESCRIPTION } from './positioning';
 
 /** A single schema.org node, ready to be serialized into a `ld+json` script. */
@@ -122,9 +122,7 @@ export function blogPostingJsonLd(post: BlogPostingInput) {
     url,
     mainEntityOfPage: url,
     datePublished: post.datePublished,
-    // Same "unmodified" rule the OpenGraph metadata uses: a post with no known
-    // modification advertises its publish date.
-    dateModified: post.dateModified ?? post.datePublished,
+    dateModified: resolveModifiedTime(post.datePublished, post.dateModified),
     // TODO(task 9): switch to `<pathname>/opengraph-image` once that route
     // actually serves. It exists but currently 500s in production, and naming
     // it here would advertise a broken image — same call task 6 made for

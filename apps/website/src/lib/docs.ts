@@ -10,6 +10,9 @@ const resolveContentDir = (library: string): string => {
   return path.join(process.cwd(), 'content', 'docs', library);
 };
 
+/** Fallback description for a docs page whose library declares none. */
+export const DEFAULT_DOCS_DESCRIPTION = 'Threadplane documentation';
+
 export interface ResolvedDoc {
   page: DocsPage;
   content: string;
@@ -87,7 +90,7 @@ export function getDocBySlug(library: string, section: string, slug: string): Re
  */
 export function resolveDocDescription(doc: ResolvedDoc, library: string): string {
   const lib = getLibraryConfig(library);
-  return getDocDescription(doc.content, lib?.description ?? 'Threadplane documentation');
+  return getDocDescription(doc.content, lib?.description ?? DEFAULT_DOCS_DESCRIPTION);
 }
 
 export function getDocMetadata(

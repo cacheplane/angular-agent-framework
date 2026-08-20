@@ -67,29 +67,31 @@ export default async function BlogPostPage({ params }: Params) {
   // Same derivation `generateMetadata` uses for `article:modified_time`, and the
   // same one the sitemap uses for `<lastmod>`, so all three agree.
   const lastModified = getPostLastModified(post);
+  // Undefined for an unparseable frontmatter date; the BlogPosting is dropped
+  // rather than published without a `datePublished`, matching the metadata.
   const published = publishedDate(post);
+
+  const postData = published
+    ? blogPostingJsonLd({
+        title: post.frontmatter.title,
+        description: post.frontmatter.description,
+        slug: post.slug,
+        datePublished: published.toISOString(),
+        dateModified: lastModified?.toISOString(),
+        authorName: author.name,
+        tags: post.frontmatter.tags,
+      })
+    : null;
+
+  const breadcrumbs = breadcrumbJsonLd([
+    { name: 'Blog', pathname: '/blog' },
+    { name: post.frontmatter.title, pathname: `/blog/${post.slug}` },
+  ]);
 
   return (
     <div style={{ paddingTop: 80, background: tokens.surfaces.canvas, minHeight: '100vh' }}>
-      {published ? (
-        <JsonLd
-          data={blogPostingJsonLd({
-            title: post.frontmatter.title,
-            description: post.frontmatter.description,
-            slug: post.slug,
-            datePublished: published.toISOString(),
-            dateModified: lastModified?.toISOString(),
-            authorName: author.name,
-            tags: post.frontmatter.tags,
-          })}
-        />
-      ) : null}
-      <JsonLd
-        data={breadcrumbJsonLd([
-          { name: 'Blog', pathname: '/blog' },
-          { name: post.frontmatter.title, pathname: `/blog/${post.slug}` },
-        ])}
-      />
+      {postData ? <JsonLd data={postData} /> : null}
+      <JsonLd data={breadcrumbs} />
       <div
         style={{
           display: 'flex',

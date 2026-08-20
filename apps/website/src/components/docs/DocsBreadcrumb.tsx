@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { tokens } from '@threadplane/design-tokens';
-import { getLibraryConfig, type LibraryId } from '../../lib/docs-config';
+import { getLibraryConfig, libraryIntroPath, type LibraryId } from '../../lib/docs-config';
 
 interface Props {
   library: LibraryId;
@@ -38,7 +38,7 @@ export function DocsBreadcrumb({ library, section, slug: _slug, title }: Props) 
           <span style={sep} aria-hidden="true">/</span>
         </li>
         <li>
-          <Link href={`/docs/${library}/getting-started/introduction`} style={crumb}>{libraryTitle}</Link>
+          <Link href={libraryIntroPath(library)} style={crumb}>{libraryTitle}</Link>
           <span style={sep} aria-hidden="true">/</span>
         </li>
         <li style={crumb}>

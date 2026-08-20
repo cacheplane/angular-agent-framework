@@ -150,9 +150,15 @@ describe('getPostLastModified', () => {
 
     const entries = new Map(getSitemapEntries().map((entry) => [entry.route, entry.lastModified]));
     for (const post of posts) {
+      const route = `/blog/${post.slug}`;
+      // Without these, an absent route and an undateable post both read as
+      // `undefined` and the comparison below passes on nothing.
+      expect([route, entries.has(route)]).toEqual([route, true]);
+      expect([route, entries.get(route) instanceof Date]).toEqual([route, true]);
+
       expect([post.slug, getPostLastModified(post)?.toISOString()]).toEqual([
         post.slug,
-        entries.get(`/blog/${post.slug}`)?.toISOString(),
+        entries.get(route)?.toISOString(),
       ]);
     }
   });

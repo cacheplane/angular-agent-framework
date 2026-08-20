@@ -266,6 +266,19 @@ export function getPostLastModified(post: Post): Date | undefined {
   return getRouteLastModified(route, new Map([[route, post]]));
 }
 
+/**
+ * Honest last-modified time for a docs route.
+ *
+ * The empty post index is the honest argument: {@link getRouteLastModified}
+ * consults it only to recognise a blog route, and no /docs route is ever a post,
+ * so supplying a real index would cost a blog-directory read and change nothing.
+ * The route then dates itself from its MDX source — the same path the sitemap
+ * takes for the same route, so the two `lastmod`/`dateModified` claims agree.
+ */
+export function getDocLastModified(pathname: string): Date | undefined {
+  return getRouteLastModified(pathname, new Map());
+}
+
 export function getSitemapEntries(): SitemapEntry[] {
   // Drafts are not in `getSitemapRoutes()`, so they are not indexed either.
   const postsByRoute = getPostsByRoute();
