@@ -169,7 +169,12 @@ function computeGitTimes(): GitTimes | null {
     const root = git(['rev-parse', '--show-toplevel'], process.cwd()).trim();
     const graftedCommits = new Set<string>();
     if (git(['rev-parse', '--is-shallow-repository'], root).trim() === 'true') {
-      const shallowFile = path.join(git(['rev-parse', '--absolute-git-dir'], root).trim(), 'shallow');
+      // Must be the COMMON git dir, not `--absolute-git-dir`: in a linked
+      // worktree those differ (`.git/worktrees/<name>` vs `.git`) and `shallow`
+      // only ever lives in the common dir. Output can be relative, and git runs
+      // with cwd=root, so resolve it against root.
+      const commonDir = path.resolve(root, git(['rev-parse', '--git-common-dir'], root).trim());
+      const shallowFile = path.join(commonDir, 'shallow');
       if (!fs.existsSync(shallowFile)) return null;
       for (const sha of fs.readFileSync(shallowFile, 'utf8').split('\n')) {
         if (sha.trim()) graftedCommits.add(sha.trim());
