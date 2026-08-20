@@ -40,8 +40,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     description: post.frontmatter.description,
     pathname,
     type: 'article',
-    // TODO(task 9): set image to "<pathname>/opengraph-image" once that route
-    // exists; naming it before then would emit an og:image URL that 404s.
+    image: `${pathname}/opengraph-image`,
     article: published
       ? {
           publishedTime: published.toISOString(),

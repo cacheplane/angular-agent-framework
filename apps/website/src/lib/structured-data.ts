@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { DEFAULT_SOCIAL_IMAGE, getCanonicalUrl, resolveModifiedTime, SITE_NAME } from './site-metadata';
+import { getCanonicalUrl, resolveModifiedTime, SITE_NAME } from './site-metadata';
 import { SHORT_POSITIONING_DESCRIPTION } from './positioning';
 
 /** A single schema.org node, ready to be serialized into a `ld+json` script. */
@@ -113,7 +113,8 @@ export interface BlogPostingInput {
 }
 
 export function blogPostingJsonLd(post: BlogPostingInput) {
-  const url = getCanonicalUrl(`/blog/${post.slug}`);
+  const pathname = `/blog/${post.slug}`;
+  const url = getCanonicalUrl(pathname);
   return {
     '@context': SCHEMA_CONTEXT,
     '@type': 'BlogPosting',
@@ -123,11 +124,8 @@ export function blogPostingJsonLd(post: BlogPostingInput) {
     mainEntityOfPage: url,
     datePublished: post.datePublished,
     dateModified: resolveModifiedTime(post.datePublished, post.dateModified),
-    // TODO(task 9): switch to `<pathname>/opengraph-image` once that route
-    // actually serves. It exists but currently 500s in production, and naming
-    // it here would advertise a broken image — same call task 6 made for
-    // og:image, kept consistent on purpose.
-    image: getCanonicalUrl(DEFAULT_SOCIAL_IMAGE),
+    // Per-post card, matching the `og:image` that `generateMetadata` emits.
+    image: getCanonicalUrl(`${pathname}/opengraph-image`),
     // Omitted rather than left undefined, matching `dateModified` below.
     ...(post.tags?.length ? { keywords: post.tags } : {}),
     // No `url` on the author until /about exists (task 11); a 404 author URL is

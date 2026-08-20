@@ -120,8 +120,12 @@ describe('blogPostingJsonLd', () => {
     expect(data['dateModified']).toBe('2026-08-19');
   });
 
-  it('emits an absolute image url', () => {
-    expect(String(blogPostingJsonLd(SAMPLE_POST)['image'])).toMatch(/^https:\/\/threadplane\.ai\//);
+  it('points image at the per-post opengraph-image route', () => {
+    // Must stay in lockstep with the `image` that `blog/[slug]/page.tsx` hands
+    // `createPageMetadata`, so og:image and the BlogPosting agree.
+    expect(blogPostingJsonLd(SAMPLE_POST)['image']).toBe(
+      'https://threadplane.ai/blog/a-post/opengraph-image',
+    );
   });
 
   it('omits keywords entirely for an untagged post', () => {
