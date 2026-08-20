@@ -5,33 +5,17 @@ import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
 import { JsonLd } from '../../components/shared/JsonLd';
-import { aboutPageJsonLd } from '../../lib/structured-data';
-import { blogAuthors } from '../../lib/blog-authors';
+import { aboutPageJsonLd, REPOSITORY_URL } from '../../lib/structured-data';
+import { getAuthor } from '../../lib/blog-authors';
 import { createPageMetadata } from '../../lib/site-metadata';
 import { LONG_SUBHEAD } from '../../lib/positioning';
-
-const REPOSITORY_URL = 'https://github.com/cacheplane/angular-agent-framework';
 
 /**
  * The single author record the site already publishes (blog bylines read the
  * same object), so the Person node and every BlogPosting byline state one name
  * and one role rather than two that happen to agree.
  */
-const author = blogAuthors['brian'];
-
-/**
- * Topics this site actually publishes about — the libraries it ships and the
- * runtimes they adapt. `knowsAbout` is an expertise claim, so it lists only
- * subjects with docs and code behind them in this repository.
- */
-const KNOWS_ABOUT = [
-  'Angular',
-  'TypeScript',
-  'LangGraph',
-  'AG-UI',
-  'Generative UI',
-  'Agent user interfaces',
-] as const;
+const author = getAuthor('brian');
 
 export const metadata = createPageMetadata({
   title: 'About — Threadplane',
@@ -63,7 +47,7 @@ const linkStyle = { color: tokens.colors.accent } as const;
 export default function AboutPage() {
   return (
     <>
-      <JsonLd data={aboutPageJsonLd(author, KNOWS_ABOUT)} />
+      <JsonLd data={aboutPageJsonLd(author)} />
 
       <Section surface="canvas" ariaLabelledBy="about-heading">
         <Container>

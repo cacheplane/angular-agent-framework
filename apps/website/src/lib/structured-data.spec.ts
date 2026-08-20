@@ -209,10 +209,11 @@ describe('aboutPageJsonLd', () => {
     role: 'Founder, Threadplane',
     bio: 'Angular consultant and open-source maintainer.',
     github: 'blove',
+    knowsAbout: ['Angular'],
   };
 
   function nodes() {
-    return aboutPageJsonLd(AUTHOR, ['Angular'])['@graph'] as JsonLdNode[];
+    return aboutPageJsonLd(AUTHOR)['@graph'] as JsonLdNode[];
   }
 
   it('bundles an AboutPage whose mainEntity is the Person it ships with', () => {
@@ -237,11 +238,12 @@ describe('aboutPageJsonLd', () => {
   });
 
   it('omits profile, title, and bio fields for an author record that lacks them', () => {
-    const graph = aboutPageJsonLd({ name: 'Anon' }, ['Angular'])['@graph'] as JsonLdNode[];
+    const graph = aboutPageJsonLd({ name: 'Anon' })['@graph'] as JsonLdNode[];
     const person = graph.find((node) => node['@type'] === 'Person') as JsonLdNode;
     expect('sameAs' in person).toBe(false);
     expect('jobTitle' in person).toBe(false);
     expect('description' in person).toBe(false);
+    expect('knowsAbout' in person).toBe(false);
   });
 
   it('references the Organization the root layout mounts', () => {
@@ -252,13 +254,13 @@ describe('aboutPageJsonLd', () => {
   it('resolves the real site author to a real GitHub profile', () => {
     // The page passes `blogAuthors['brian']`; `sameAs` is an identity claim, so
     // this pins the profile the repo actually knows rather than the fixture's.
-    const graph = aboutPageJsonLd(blogAuthors['brian'], ['Angular'])['@graph'] as JsonLdNode[];
+    const graph = aboutPageJsonLd(blogAuthors['brian'])['@graph'] as JsonLdNode[];
     const person = graph.find((node) => node['@type'] === 'Person') as JsonLdNode;
     expect(person['sameAs']).toEqual(['https://github.com/blove']);
   });
 
   it('serializes to JSON', () => {
-    expectSerializable(aboutPageJsonLd(AUTHOR, ['Angular']));
+    expectSerializable(aboutPageJsonLd(AUTHOR));
   });
 });
 
@@ -296,6 +298,16 @@ describe('shared node invariants', () => {
 
   it.each(organizationReferences)('%s.%s references the Organization by @id', (_name, key, build) => {
     expect((build()[key] as JsonLdNode)['@id']).toBe(ORGANIZATION_ID);
+  });
+
+  // The byline and the /about page are the same person, and say so with the
+  // same `@id`. A shared name alone would leave a consumer two nodes to guess at.
+  it('gives a BlogPosting author the id the /about Person declares', () => {
+    const byline = blogPostingJsonLd(SAMPLE_POST)['author'] as JsonLdNode;
+    const graph = aboutPageJsonLd(blogAuthors['brian'])['@graph'] as JsonLdNode[];
+    const person = graph.find((node) => node['@type'] === 'Person') as JsonLdNode;
+    expect(byline['@id']).toBe(person['@id']);
+    expect(byline['@id']).toBe(PERSON_ID);
   });
 
   it('references the id the Organization node actually declares', () => {

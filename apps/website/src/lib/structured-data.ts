@@ -12,7 +12,7 @@ const SCHEMA_CONTEXT = 'https://schema.org';
  * The canonical repository. Verified public; the npm *organization* page is
  * member-gated, so `sameAs` links the public package page instead.
  */
-const REPOSITORY_URL = 'https://github.com/cacheplane/angular-agent-framework';
+export const REPOSITORY_URL = 'https://github.com/cacheplane/angular-agent-framework';
 
 /**
  * Stable identity for the publisher node. Every other node refers to the
@@ -108,8 +108,9 @@ export function rootJsonLd() {
 const ABOUT_PATH = '/about';
 
 /**
- * Stable identity for the site's author node, so a BlogPosting author and the
- * /about Person can be recognised as one entity.
+ * Stable identity for the site's author node. Both {@link aboutPageJsonLd} and
+ * every BlogPosting byline stamp it, which is what makes them one entity to a
+ * consumer rather than two nodes that merely share a name.
  */
 export const PERSON_ID = `${getCanonicalUrl(ABOUT_PATH)}#person`;
 
@@ -126,7 +127,7 @@ export const PERSON_ID = `${getCanonicalUrl(ABOUT_PATH)}#person`;
  * Every field is derived from the caller's {@link Author} record; nothing about
  * the person is stated here.
  */
-export function aboutPageJsonLd(author: Author, knowsAbout: readonly string[]) {
+export function aboutPageJsonLd(author: Author) {
   const url = getCanonicalUrl(ABOUT_PATH);
   const person: JsonLdNode = {
     '@type': 'Person',
@@ -138,7 +139,7 @@ export function aboutPageJsonLd(author: Author, knowsAbout: readonly string[]) {
     // Only profiles the repo actually knows about; `sameAs` is an identity
     // claim, so a guessed profile is a false one.
     ...(author.github ? { sameAs: [`https://github.com/${author.github}`] } : {}),
-    knowsAbout: [...knowsAbout],
+    ...(author.knowsAbout?.length ? { knowsAbout: [...author.knowsAbout] } : {}),
     worksFor: { '@id': ORGANIZATION_ID },
   };
 
@@ -187,10 +188,16 @@ export function blogPostingJsonLd(post: BlogPostingInput) {
     image: getCanonicalUrl(ogImagePath(post.slug)),
     // Omitted rather than left undefined, matching `dateModified` below.
     ...(post.tags?.length ? { keywords: post.tags } : {}),
-    // `url` points at /about, which renders the matching Person node. Keep the
-    // two together: an author URL is only a real attribution signal while the
-    // page it points at exists and identifies the same person.
-    author: { '@type': 'Person', name: post.authorName, url: getCanonicalUrl(ABOUT_PATH) },
+    // The same `@id` the /about Person declares, so a byline and that page are
+    // one entity rather than two similarly-named nodes. The node stays inline
+    // (rather than a bare `@id` reference) because nothing on a post page
+    // defines the Person, and `url` is what makes the identity followable.
+    author: {
+      '@type': 'Person',
+      '@id': PERSON_ID,
+      name: post.authorName,
+      url: getCanonicalUrl(ABOUT_PATH),
+    },
     publisher: { '@id': ORGANIZATION_ID },
   };
 }
