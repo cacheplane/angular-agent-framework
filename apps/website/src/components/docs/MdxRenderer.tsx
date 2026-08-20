@@ -15,9 +15,19 @@ import rehypePrettyCode from 'rehype-pretty-code';
 import rehypeSlug from 'rehype-slug';
 import remarkGfm from 'remark-gfm';
 
-/** Intrinsic size of the SVG diagrams in `public/blog/diagrams`. */
-const DIAGRAM_WIDTH = 880;
-const DIAGRAM_HEIGHT = 480;
+/**
+ * Intrinsic size of each SVG diagram in `public/blog/diagrams`.
+ *
+ * Markdown image syntax carries no dimensions and MDX gives us no build step
+ * that could measure the file, so the sizes live here. They only need to be
+ * right enough to reserve the correct box before the file loads; the rendered
+ * size comes from the SVG itself.
+ */
+const DIAGRAM_DIMENSIONS: Record<string, { width: number; height: number }> = {
+  '/blog/diagrams/ag-ui-event-flow.svg': { width: 700, height: 690 },
+  '/blog/diagrams/langgraph-threads-and-runs.svg': { width: 700, height: 560 },
+  '/blog/diagrams/agent-contract-boundary.svg': { width: 700, height: 700 },
+};
 
 const mdxComponents = {
   Callout,
@@ -32,20 +42,25 @@ const mdxComponents = {
   AgUiArchDiagram,
   FeatureChips,
   pre: Pre,
-  // Markdown image syntax carries no dimensions, so fall back to the size the
-  // in-repo diagrams are authored at. Explicit width/height let the browser
-  // reserve the box before the file loads, which keeps layout shift at zero.
-  img: ({ width, height, alt, ...rest }: React.ImgHTMLAttributes<HTMLImageElement>) => (
-    <img
-      {...rest}
-      alt={alt ?? ''}
-      width={width ?? DIAGRAM_WIDTH}
-      height={height ?? DIAGRAM_HEIGHT}
-      loading="lazy"
-      decoding="async"
-      style={{ maxWidth: '100%', height: 'auto', display: 'block', margin: '1.75rem 0' }}
-    />
-  ),
+  // Explicit width/height let the browser reserve the box before the file
+  // loads, which keeps layout shift at zero. Presentation stays in global.css
+  // so it cannot silently override the shared bare-image rule, and so an
+  // author-supplied `style` on a future image still wins.
+  img: ({ width, height, alt, src, className, ...rest }: React.ImgHTMLAttributes<HTMLImageElement>) => {
+    const diagram = typeof src === 'string' ? DIAGRAM_DIMENSIONS[src] : undefined;
+    return (
+      <img
+        {...rest}
+        src={src}
+        alt={alt ?? ''}
+        width={width ?? diagram?.width}
+        height={height ?? diagram?.height}
+        className={[className, diagram ? 'docs-diagram' : undefined].filter(Boolean).join(' ') || undefined}
+        loading="lazy"
+        decoding="async"
+      />
+    );
+  },
   table: ({ children, ...rest }: React.HTMLAttributes<HTMLTableElement>) => (
     <div className="docs-table-scroll">
       <table {...rest}>{children}</table>

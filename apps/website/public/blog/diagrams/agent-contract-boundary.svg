@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 480" width="880" height="480" role="img" aria-labelledby="d-title d-desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 700" width="700" height="700" role="img" aria-labelledby="d-title d-desc">
   <title id="d-title">The runtime-neutral Agent contract between agent backends and Angular components</title>
   <desc id="d-desc">LangGraph stream chunks and AG-UI SSE events both enter a runtime adapter that normalizes, deduplicates and accumulates them. The adapter publishes one Agent contract of Angular signals — messages, status, toolCalls, state, error and interrupt — which chat components and an approved component registry read. User intent travels back through the same contract.</desc>
   <defs>
@@ -8,66 +8,62 @@
   </defs>
   <style>
     text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
-    .t-eyebrow { font-size: 11px; font-weight: 700; fill: #737373; letter-spacing: 0.09em; }
-    .t-head { font-size: 16.5px; font-weight: 600; fill: #1c1c1c; }
-    .t-title { font-size: 14.5px; font-weight: 600; fill: #1c1c1c; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-    .t-meta { font-size: 12.5px; fill: #464646; }
-    .t-sig { font-size: 13px; fill: #004090; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-    .t-edge { font-size: 12px; font-weight: 600; fill: #004090; }
-    .t-caption { font-size: 12.5px; fill: #737373; }
-    .edge { stroke: #004090; stroke-width: 1.6; fill: none; marker-end: url(#arrow); }
+    .t-eyebrow { font-size: 11.5px; font-weight: 700; fill: #737373; letter-spacing: 0.09em; }
+    .t-head { font-size: 17px; font-weight: 600; fill: #1c1c1c; }
+    .t-title { font-size: 15px; font-weight: 600; fill: #1c1c1c; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .t-meta { font-size: 13px; fill: #464646; }
+    .t-sig { font-size: 13.5px; fill: #004090; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .t-edge { font-size: 12.5px; font-weight: 600; fill: #004090; }
+    .t-caption { font-size: 13px; fill: #737373; }
+    .edge { stroke: #004090; stroke-width: 1.7; fill: none; marker-end: url(#arrow); }
   </style>
 
-  <rect x="0.5" y="0.5" width="879" height="479" rx="12" fill="#ffffff" stroke="#e5e5e5"/>
-  <text class="t-eyebrow" x="32" y="34">AGENTIC UI · THE NEUTRAL BOUNDARY</text>
-  <text class="t-head" x="32" y="60">Runtime events go in, Angular signals come out</text>
+  <rect x="0.5" y="0.5" width="699" height="699" rx="12" fill="#ffffff" stroke="#e5e5e5"/>
+  <text class="t-eyebrow" x="40" y="36">AGENTIC UI · THE NEUTRAL BOUNDARY</text>
+  <text class="t-head" x="40" y="64">Runtime events go in, Angular signals come out</text>
 
-  <text class="t-eyebrow" x="32" y="106">RUNTIME</text>
-  <text class="t-eyebrow" x="242" y="106">ADAPTER</text>
-  <text class="t-eyebrow" x="452" y="106">AGENT CONTRACT</text>
-  <text class="t-eyebrow" x="680" y="106">COMPONENTS</text>
+  <text class="t-eyebrow" x="40" y="102">RUNTIME</text>
+  <rect x="40" y="114" width="300" height="70" rx="8" fill="#ffffff" stroke="#d4d4d4"/>
+  <text class="t-title" x="60" y="144">LangGraph</text>
+  <text class="t-meta" x="60" y="166">stream chunks</text>
 
-  <rect x="32" y="120" width="178" height="82" rx="8" fill="#ffffff" stroke="#d4d4d4"/>
-  <text class="t-title" x="50" y="154">LangGraph</text>
-  <text class="t-meta" x="50" y="178">stream chunks</text>
+  <rect x="360" y="114" width="300" height="70" rx="8" fill="#ffffff" stroke="#d4d4d4"/>
+  <text class="t-title" x="380" y="144">AG-UI</text>
+  <text class="t-meta" x="380" y="166">SSE events</text>
 
-  <rect x="32" y="228" width="178" height="82" rx="8" fill="#ffffff" stroke="#d4d4d4"/>
-  <text class="t-title" x="50" y="262">AG-UI</text>
-  <text class="t-meta" x="50" y="286">SSE events</text>
+  <path class="edge" d="M190,184 L336,256"/>
+  <path class="edge" d="M510,184 L364,256"/>
 
-  <rect x="242" y="120" width="178" height="190" rx="8" fill="#ffffff" stroke="#d4d4d4"/>
-  <text class="t-title" x="260" y="154">runtime adapter</text>
-  <text class="t-meta" x="260" y="184">accumulation</text>
-  <text class="t-meta" x="260" y="206">deduplication</text>
-  <text class="t-meta" x="260" y="228">lifecycle status</text>
-  <text class="t-meta" x="260" y="250">interrupt shape</text>
+  <text class="t-eyebrow" x="40" y="248">ADAPTER</text>
+  <rect x="40" y="260" width="620" height="70" rx="8" fill="#ffffff" stroke="#d4d4d4"/>
+  <text class="t-title" x="60" y="290">runtime adapter</text>
+  <text class="t-meta" x="60" y="312">accumulation · deduplication · lifecycle status · interrupt shape</text>
 
-  <rect x="452" y="120" width="196" height="190" rx="8" fill="#f2f5f9" stroke="#c3d1e2"/>
-  <text class="t-title" x="470" y="154">Agent</text>
-  <text class="t-sig" x="470" y="182">messages()</text>
-  <text class="t-sig" x="470" y="204">status()</text>
-  <text class="t-sig" x="470" y="226">toolCalls()</text>
-  <text class="t-sig" x="470" y="248">state()</text>
-  <text class="t-sig" x="470" y="270">error()</text>
-  <text class="t-sig" x="470" y="292">interrupt()</text>
+  <path class="edge" d="M350,330 V366"/>
 
-  <rect x="680" y="120" width="168" height="82" rx="8" fill="#ffffff" stroke="#d4d4d4"/>
-  <text class="t-title" x="698" y="154">&lt;chat&gt;</text>
-  <text class="t-meta" x="698" y="178">tool UI · approvals</text>
+  <text class="t-eyebrow" x="40" y="384">AGENT CONTRACT</text>
+  <rect x="40" y="396" width="620" height="98" rx="8" fill="#f2f5f9" stroke="#c3d1e2"/>
+  <text class="t-title" x="60" y="426">Agent</text>
+  <text class="t-sig" x="60" y="452">messages()</text>
+  <text class="t-sig" x="260" y="452">status()</text>
+  <text class="t-sig" x="460" y="452">toolCalls()</text>
+  <text class="t-sig" x="60" y="478">state()</text>
+  <text class="t-sig" x="260" y="478">error()</text>
+  <text class="t-sig" x="460" y="478">interrupt()</text>
 
-  <rect x="680" y="228" width="168" height="82" rx="8" fill="#ffffff" stroke="#d4d4d4"/>
-  <text class="t-title" x="698" y="262">ViewRegistry</text>
-  <text class="t-meta" x="698" y="286">approved components</text>
+  <path class="edge" d="M350,494 V530"/>
 
-  <path class="edge" d="M210,161 L238,182"/>
-  <path class="edge" d="M210,269 L238,248"/>
-  <path class="edge" d="M420,215 H448"/>
-  <path class="edge" d="M648,196 L676,163"/>
-  <path class="edge" d="M648,234 L676,267"/>
+  <rect x="40" y="534" width="300" height="66" rx="8" fill="#ffffff" stroke="#d4d4d4"/>
+  <text class="t-title" x="60" y="562">&lt;chat&gt;</text>
+  <text class="t-meta" x="60" y="584">tool progress · approvals</text>
 
-  <path class="edge" d="M764,310 V372 H331 V314"/>
-  <text class="t-edge" x="548" y="352" text-anchor="middle">submit · abort · retry · respond to an interrupt</text>
+  <rect x="360" y="534" width="300" height="66" rx="8" fill="#ffffff" stroke="#d4d4d4"/>
+  <text class="t-title" x="380" y="562">ViewRegistry</text>
+  <text class="t-meta" x="380" y="584">approved components only</text>
 
-  <text class="t-caption" x="32" y="424">Components never read a LangGraph chunk or an AG-UI event name. What differs between runtimes —</text>
-  <text class="t-caption" x="32" y="444">checkpoint history, branching, subagents — is feature-detected at a deliberate edge, not assumed.</text>
+  <path class="edge" d="M180,600 V632 H16 V295 H36"/>
+  <text class="t-edge" x="200" y="626">submit · abort · retry · respond to an interrupt</text>
+
+  <text class="t-caption" x="40" y="666">Components never read a LangGraph chunk or an AG-UI event name. What differs</text>
+  <text class="t-caption" x="40" y="686">between runtimes is feature-detected at a deliberate edge, not assumed.</text>
 </svg>
