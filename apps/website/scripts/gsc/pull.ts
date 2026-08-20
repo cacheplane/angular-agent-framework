@@ -18,8 +18,20 @@ function write(name: string, value: unknown): void {
 
 async function sitemapUrls(): Promise<string[]> {
   const response = await fetch('https://threadplane.ai/sitemap.xml');
+  if (!response.ok) {
+    throw new Error(`sitemap fetch failed: ${response.status} ${response.statusText}`);
+  }
   const xml = await response.text();
-  return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  const urls = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  if (urls.length === 0) {
+    throw new Error('sitemap.xml matched zero <loc> entries; treating as a broken fetch, not empty inventory.');
+  }
+  return urls;
+}
+
+interface InspectionFailure {
+  url: string;
+  error: string;
 }
 
 async function main(): Promise<void> {
@@ -42,13 +54,31 @@ async function main(): Promise<void> {
   write('sitemaps.json', await listSitemaps());
 
   // URL Inspection is quota-limited (2000/day, 600/min). Serialize with a small delay.
+  // Failures are collected separately rather than dropped or faked, so a partial
+  // sweep still yields a usable inspections.json plus a visible error trail.
   const urls = await sitemapUrls();
   const inspections: InspectionResult[] = [];
-  for (const url of urls) {
-    inspections.push(await inspectUrl(url));
+  const failures: InspectionFailure[] = [];
+  for (const [index, url] of urls.entries()) {
+    try {
+      inspections.push(await inspectUrl(url));
+    } catch (error) {
+      failures.push({ url, error: error instanceof Error ? error.message : String(error) });
+    }
+    const done = index + 1;
+    if (done % 25 === 0 || done === urls.length) {
+      console.log(`inspected ${done}/${urls.length} urls`);
+    }
     await new Promise((resolve) => setTimeout(resolve, 150));
   }
   write('inspections.json', inspections);
+  if (failures.length > 0) {
+    write('inspection-errors.json', failures);
+  }
+  console.log(
+    `inspected ${inspections.length}/${urls.length} urls, ${failures.length} failed` +
+      (failures.length > 0 ? ' (see .gsc/inspection-errors.json)' : ''),
+  );
 }
 
 main().catch((error: unknown) => {
