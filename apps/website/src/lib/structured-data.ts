@@ -5,6 +5,8 @@ import { SHORT_POSITIONING_DESCRIPTION } from './positioning';
 /** A single schema.org node, ready to be serialized into a `ld+json` script. */
 export type JsonLdNode = Record<string, unknown>;
 
+const SCHEMA_CONTEXT = 'https://schema.org';
+
 /**
  * The canonical repository. Verified public; the npm *organization* page is
  * member-gated, so `sameAs` links the public package page instead.
@@ -16,10 +18,10 @@ const REPOSITORY_URL = 'https://github.com/cacheplane/angular-agent-framework';
  * Organization by `@id` rather than repeating it, which is the schema.org way
  * to express "same entity" across nodes.
  *
- * COUPLING: those references only resolve if the Organization node itself is
- * present in the page's structured data. It is mounted once in the root layout
- * (task 8), so it is on every route; if that mount is ever removed, these
- * references become dangling.
+ * Those references only resolve if the Organization node is present in the same
+ * page's structured data. {@link rootJsonLd} is what guarantees that: it bundles
+ * Organization with the other root nodes into one `@graph`, so a caller cannot
+ * mount a referring node without its referent.
  *
  * Computed at module load, which is safe because {@link getCanonicalUrl}
  * resolves against a hardcoded `SITE_ORIGIN` constant — no env lookup, no
@@ -27,26 +29,27 @@ const REPOSITORY_URL = 'https://github.com/cacheplane/angular-agent-framework';
  */
 const ORGANIZATION_ID = `${getCanonicalUrl('/')}#organization`;
 
-export function organizationJsonLd(): JsonLdNode {
+export function organizationJsonLd() {
   return {
-    '@context': 'https://schema.org',
+    '@context': SCHEMA_CONTEXT,
     '@type': 'Organization',
     '@id': ORGANIZATION_ID,
     name: SITE_NAME,
     url: getCanonicalUrl('/'),
-    // No standalone brand mark exists yet (the in-app LogoMark is inline JSX),
-    // so this points at the generated site social card: a real, crawlable PNG
-    // carrying the wordmark. Swap in a dedicated mark when one ships.
-    logo: getCanonicalUrl(DEFAULT_SOCIAL_IMAGE),
+    // No `logo`: there is no square brand mark in the repo (the in-app LogoMark
+    // renders an emoji), and the generated social card is a 1200x630 marketing
+    // image, not a mark — it would satisfy Google's format floor while asserting
+    // something false about the brand. Restore this property once a real square
+    // mark ships in `public/logos/`.
     description:
       'Threadplane builds the Angular UI layer for production agent applications on LangGraph and AG-UI-compatible runtimes.',
     sameAs: [REPOSITORY_URL, 'https://www.npmjs.com/package/@threadplane/chat'],
   };
 }
 
-export function websiteJsonLd(): JsonLdNode {
+export function websiteJsonLd() {
   return {
-    '@context': 'https://schema.org',
+    '@context': SCHEMA_CONTEXT,
     '@type': 'WebSite',
     '@id': `${getCanonicalUrl('/')}#website`,
     name: SITE_NAME,
@@ -56,9 +59,9 @@ export function websiteJsonLd(): JsonLdNode {
   };
 }
 
-export function softwareSourceCodeJsonLd(): JsonLdNode {
+export function softwareSourceCodeJsonLd() {
   return {
-    '@context': 'https://schema.org',
+    '@context': SCHEMA_CONTEXT,
     '@type': 'SoftwareSourceCode',
     name: '@threadplane/chat',
     description:
@@ -68,6 +71,31 @@ export function softwareSourceCodeJsonLd(): JsonLdNode {
     codeRepository: REPOSITORY_URL,
     author: { '@id': ORGANIZATION_ID },
     license: getCanonicalUrl('/docs/licensing'),
+  };
+}
+
+/**
+ * The site-wide nodes, bundled into a single `@graph` so they are physically
+ * inseparable: mounting this cannot orphan the `@id` references that WebSite and
+ * SoftwareSourceCode make to the Organization, because the Organization travels
+ * with them. `@graph` is the conventional shape for a multi-entity page and
+ * consumers parse it identically to sibling nodes.
+ *
+ * Mounted once, in the root layout.
+ */
+export function rootJsonLd() {
+  // Annotated: the graph is deliberately heterogeneous, so `JsonLdNode[]` is the
+  // honest element type. The individual builders keep their inferred shapes.
+  const nodes: JsonLdNode[] = [organizationJsonLd(), websiteJsonLd(), softwareSourceCodeJsonLd()];
+  return {
+    '@context': SCHEMA_CONTEXT,
+    // One `@context` for the whole graph; repeating it per node is redundant.
+    // Per-route builders keep theirs, since they are mounted standalone.
+    '@graph': nodes.map((node) => {
+      const stripped = { ...node };
+      delete stripped['@context'];
+      return stripped;
+    }),
   };
 }
 
@@ -84,10 +112,10 @@ export interface BlogPostingInput {
   tags?: string[];
 }
 
-export function blogPostingJsonLd(post: BlogPostingInput): JsonLdNode {
+export function blogPostingJsonLd(post: BlogPostingInput) {
   const url = getCanonicalUrl(`/blog/${post.slug}`);
   return {
-    '@context': 'https://schema.org',
+    '@context': SCHEMA_CONTEXT,
     '@type': 'BlogPosting',
     headline: post.title,
     description: post.description,
@@ -102,7 +130,8 @@ export function blogPostingJsonLd(post: BlogPostingInput): JsonLdNode {
     // it here would advertise a broken image — same call task 6 made for
     // og:image, kept consistent on purpose.
     image: getCanonicalUrl(DEFAULT_SOCIAL_IMAGE),
-    keywords: post.tags,
+    // Omitted rather than left undefined, matching `dateModified` below.
+    ...(post.tags?.length ? { keywords: post.tags } : {}),
     // No `url` on the author until /about exists (task 11); a 404 author URL is
     // worse than an unlinked name.
     author: { '@type': 'Person', name: post.authorName },
@@ -119,10 +148,10 @@ export interface TechArticleInput {
   dateModified?: string;
 }
 
-export function techArticleJsonLd(doc: TechArticleInput): JsonLdNode {
+export function techArticleJsonLd(doc: TechArticleInput) {
   const url = getCanonicalUrl(doc.pathname);
   return {
-    '@context': 'https://schema.org',
+    '@context': SCHEMA_CONTEXT,
     '@type': 'TechArticle',
     headline: doc.title,
     description: doc.description,
@@ -135,9 +164,15 @@ export function techArticleJsonLd(doc: TechArticleInput): JsonLdNode {
   };
 }
 
-export function breadcrumbJsonLd(crumbs: { name: string; pathname: string }[]): JsonLdNode {
+/** One rung of a breadcrumb trail, from the site root down to the current page. */
+export interface BreadcrumbCrumb {
+  name: string;
+  pathname: string;
+}
+
+export function breadcrumbJsonLd(crumbs: BreadcrumbCrumb[]) {
   return {
-    '@context': 'https://schema.org',
+    '@context': SCHEMA_CONTEXT,
     '@type': 'BreadcrumbList',
     itemListElement: crumbs.map((crumb, index) => ({
       '@type': 'ListItem',
