@@ -36,12 +36,44 @@ describe('mdx heading components', () => {
 
     expect(anchor).not.toBeNull();
     expect(anchor?.getAttribute('href')).toBe('#prerequisites');
-    expect(anchor?.getAttribute('aria-label')).toBe('Link to prerequisites');
+    expect(anchor?.getAttribute('aria-label')).toBe('Link to Prerequisites');
     // Reachable by keyboard: not hidden from assistive tech, not removed from tab order.
     expect(anchor?.getAttribute('aria-hidden')).toBeNull();
     expect(anchor?.getAttribute('tabindex')).toBeNull();
     // The anchor is the last child, so reading order is text-then-permalink.
     expect(container.querySelector('h2')?.lastElementChild).toBe(anchor);
+  });
+
+  it('labels the permalink with the heading text, not the slug', () => {
+    const { container } = render(<H2 id="at-a-glance">At a glance</H2>);
+
+    expect(container.querySelector('a.heading-anchor')?.getAttribute('aria-label')).toBe(
+      'Link to At a glance',
+    );
+  });
+
+  it('derives the label from nested nodes, not [object Object]', () => {
+    const { container } = render(
+      <H3 id="wire-providechat">
+        Wire <code>provideChat()</code> first
+      </H3>,
+    );
+
+    expect(container.querySelector('a.heading-anchor')?.getAttribute('aria-label')).toBe(
+      'Link to Wire provideChat() first',
+    );
+  });
+
+  it('falls back to the id when no text can be derived from children', () => {
+    const { container } = render(
+      <H2 id="diagram">
+        <svg />
+      </H2>,
+    );
+
+    expect(container.querySelector('a.heading-anchor')?.getAttribute('aria-label')).toBe(
+      'Link to diagram',
+    );
   });
 
   it('omits the anchor when the heading has no id', () => {
