@@ -25,7 +25,7 @@ describe('site positioning copy', () => {
       'json-render + A2UI',
     ]);
     expect(POSITIONING_PROOF_POINTS.map((p) => p.href)).toEqual([
-      '/docs/langgraph/concepts/langgraph-basics',
+      '/docs/choosing-an-adapter',
       '/docs/langgraph/guides/persistence',
       '/docs/langgraph/guides/interrupts',
       '/docs/langgraph/guides/subgraphs',
