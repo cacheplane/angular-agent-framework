@@ -251,6 +251,21 @@ export function getRouteLastModified(route: string, postsByRoute: ReadonlyMap<st
   return committed && published ? (committed > published ? committed : published) : (committed ?? published);
 }
 
+/**
+ * Honest last-modified time for one already-resolved post.
+ *
+ * Both `generateMetadata` (for `article:modified_time`) and the page body (for
+ * the BlogPosting `dateModified`) need this, and they run as separate functions
+ * over the same request. Deriving it here — rather than each rebuilding the
+ * single-entry map — is what keeps the two surfaces from ever disagreeing about
+ * the same fact, and keeps both aligned with the sitemap's `<lastmod>`, which
+ * asks {@link getRouteLastModified} the same question via the full post index.
+ */
+export function getPostLastModified(post: Post): Date | undefined {
+  const route = `/blog/${post.slug}`;
+  return getRouteLastModified(route, new Map([[route, post]]));
+}
+
 export function getSitemapEntries(): SitemapEntry[] {
   // Drafts are not in `getSitemapRoutes()`, so they are not indexed either.
   const postsByRoute = getPostsByRoute();

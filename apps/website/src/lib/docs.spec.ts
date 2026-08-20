@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { getAllDocSlugs, getDocBySlug, getDocMetadata } from './docs';
-import { allDocsPages, findDocsPage, specialDocsPages } from './docs-config';
+import { getAllDocSlugs, getDocBySlug, getDocMetadata, resolveDocDescription } from './docs';
+import { allDocsPages, docsConfig, findDocsPage, specialDocsPages } from './docs-config';
 import { getCanonicalUrl, getSitemapRoutes } from './site-metadata';
 
 const internalDocsLinkPattern = /(?:href=["']|\]\()(?<href>\/docs\/[^"')#\s]+)/g;
@@ -257,5 +257,44 @@ describe('website docs bindings', () => {
 
   it('returns null metadata for non-existent docs', () => {
     expect(getDocMetadata('langgraph', 'guides', 'nonexistent')).toBeNull();
+  });
+});
+
+describe('docs structured-data inputs', () => {
+  // The docs page builds its TechArticle description from this accessor while
+  // `generateMetadata` builds the meta description from `getDocMetadata`. If
+  // they ever diverge the page tells crawlers two different things about itself.
+  it('resolves the same description the page metadata publishes', () => {
+    const mismatched: string[] = [];
+
+    for (const { library, section, slug } of getAllDocSlugs()) {
+      const doc = getDocBySlug(library, section, slug);
+      if (!doc) continue;
+      const description = resolveDocDescription(doc, library);
+      // Guards the comparison below from passing on two undefineds.
+      expect(typeof description === 'string' && description.length > 0).toBe(true);
+      if (description !== getDocMetadata(library, section, slug)?.description) {
+        mismatched.push(`${library}/${section}/${slug}`);
+      }
+    }
+
+    expect(mismatched).toEqual([]);
+  });
+
+  // The docs BreadcrumbList links its library rung at that library's
+  // introduction page, mirroring the visible <DocsBreadcrumb>. There is no
+  // `/docs/<library>` index route, so a crumb pointing there would 404 — this
+  // pins both halves of that: the intro page exists, and the bare library path
+  // does not.
+  it('links every library breadcrumb rung at a route that exists', () => {
+    const routes = new Set(getSitemapRoutes());
+
+    for (const library of docsConfig) {
+      expect([library.id, routes.has(`/docs/${library.id}/getting-started/introduction`)]).toEqual([
+        library.id,
+        true,
+      ]);
+      expect([library.id, routes.has(`/docs/${library.id}`)]).toEqual([library.id, false]);
+    }
   });
 });

@@ -10,7 +10,9 @@ import { getAllPosts, getPostBySlug, formatPostDate, readingTimeMin } from '../.
 import { getAuthor } from '../../../lib/blog-authors';
 import { extractHeadings } from '../../../lib/extract-headings';
 import { createPageMetadata } from '../../../lib/site-metadata';
-import { getRouteLastModified, publishedDate } from '../../../lib/sitemap-dates';
+import { getPostLastModified, publishedDate } from '../../../lib/sitemap-dates';
+import { JsonLd } from '../../../components/shared/JsonLd';
+import { blogPostingJsonLd, breadcrumbJsonLd } from '../../../lib/structured-data';
 
 interface Params {
   params: Promise<{ slug: string }>;
@@ -28,9 +30,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   }
   const author = getAuthor(post.frontmatter.author);
   const pathname = `/blog/${post.slug}`;
-  // The post is already resolved, so index just it: no drafts policy to inherit
-  // and no second read of the blog directory.
-  const lastModified = getRouteLastModified(pathname, new Map([[pathname, post]]));
+  const lastModified = getPostLastModified(post);
   // Undefined for an unparseable frontmatter date, which drops the article
   // block rather than shipping the bad string as `article:published_time`.
   const published = publishedDate(post);
@@ -64,9 +64,32 @@ export default async function BlogPostPage({ params }: Params) {
     ? post.frontmatter.tags[0].toUpperCase()
     : 'POST';
   const headings = extractHeadings(post.content);
+  // Same derivation `generateMetadata` uses for `article:modified_time`, and the
+  // same one the sitemap uses for `<lastmod>`, so all three agree.
+  const lastModified = getPostLastModified(post);
+  const published = publishedDate(post);
 
   return (
     <div style={{ paddingTop: 80, background: tokens.surfaces.canvas, minHeight: '100vh' }}>
+      {published ? (
+        <JsonLd
+          data={blogPostingJsonLd({
+            title: post.frontmatter.title,
+            description: post.frontmatter.description,
+            slug: post.slug,
+            datePublished: published.toISOString(),
+            dateModified: lastModified?.toISOString(),
+            authorName: author.name,
+            tags: post.frontmatter.tags,
+          })}
+        />
+      ) : null}
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: 'Blog', pathname: '/blog' },
+          { name: post.frontmatter.title, pathname: `/blog/${post.slug}` },
+        ])}
+      />
       <div
         style={{
           display: 'flex',

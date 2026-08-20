@@ -76,6 +76,20 @@ export function getDocBySlug(library: string, section: string, slug: string): Re
   };
 }
 
+/**
+ * The description a docs page advertises about itself: frontmatter when present,
+ * otherwise its first real paragraph, otherwise the library blurb.
+ *
+ * A `ResolvedDoc` carries no `description` field of its own — it is derived from
+ * the MDX body. Exported so the page's JSON-LD can state *exactly* the string
+ * that {@link getDocMetadata} puts in `<meta name="description">`; two surfaces
+ * describing the same page differently is a worse signal than either alone.
+ */
+export function resolveDocDescription(doc: ResolvedDoc, library: string): string {
+  const lib = getLibraryConfig(library);
+  return getDocDescription(doc.content, lib?.description ?? 'Threadplane documentation');
+}
+
 export function getDocMetadata(
   library: string,
   section: string,
@@ -87,7 +101,7 @@ export function getDocMetadata(
   const lib = getLibraryConfig(library);
   const libraryTitle = lib?.title ?? 'Docs';
   const title = `${doc.title} — ${libraryTitle} Docs — Threadplane`;
-  const description = getDocDescription(doc.content, lib?.description ?? 'Threadplane documentation');
+  const description = resolveDocDescription(doc, library);
   const pathname = `/docs/${library}/${section}/${slug}`;
 
   return createPageMetadata({ title, description, pathname });

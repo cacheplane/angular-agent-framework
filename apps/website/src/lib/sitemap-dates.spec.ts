@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import sitemap from '../app/sitemap';
-import { getSitemapEntries, hasGitHistory, parseGitLog } from './sitemap-dates';
+import { getAllPosts } from './blog';
+import { getPostLastModified, getSitemapEntries, hasGitHistory, parseGitLog } from './sitemap-dates';
 
 const SHA_A = 'a'.repeat(40);
 const SHA_B = 'b'.repeat(40);
@@ -134,6 +135,25 @@ describe('sitemap route', () => {
 
     if (hasGitHistory()) {
       expect(urls.every((url) => url.lastModified instanceof Date)).toBe(true);
+    }
+  });
+});
+
+describe('getPostLastModified', () => {
+  // The point of the helper: the blog page's JSON-LD `dateModified`, its
+  // `article:modified_time`, and the sitemap's `<lastmod>` are three published
+  // claims about one fact. They agree only if all three ask the same question,
+  // so this pins the single-post shortcut against the full sitemap index.
+  it('agrees with the sitemap entry for the same route', () => {
+    const posts = getAllPosts();
+    expect(posts.length).toBeGreaterThan(0);
+
+    const entries = new Map(getSitemapEntries().map((entry) => [entry.route, entry.lastModified]));
+    for (const post of posts) {
+      expect([post.slug, getPostLastModified(post)?.toISOString()]).toEqual([
+        post.slug,
+        entries.get(`/blog/${post.slug}`)?.toISOString(),
+      ]);
     }
   });
 });
