@@ -30,12 +30,24 @@ export interface ArticleMetadata {
   /** ISO 8601 publish date or timestamp. */
   publishedTime: string;
   /**
-   * ISO 8601 last-modified timestamp. Omit only when the content genuinely has
-   * not changed since publication — it then falls back to `publishedTime`.
+   * ISO 8601 last-modified timestamp. Omit when no modification is known; it
+   * then falls back to `publishedTime`.
    */
   modifiedTime?: string;
   authors?: string[];
   tags?: string[];
+}
+
+/** Options for {@link createPageMetadata}. */
+export interface PageMetadataOptions {
+  title: string;
+  description: string;
+  pathname: string;
+  type?: 'article' | 'website';
+  /** Social image path; resolved against `metadataBase` from the root layout. */
+  image?: string;
+  /** Present only for article-type pages; omitted entirely for landing pages. */
+  article?: ArticleMetadata;
 }
 
 export function createPageMetadata({
@@ -45,14 +57,7 @@ export function createPageMetadata({
   type = 'article',
   image = DEFAULT_SOCIAL_IMAGE,
   article,
-}: {
-  title: string;
-  description: string;
-  pathname: string;
-  type?: 'article' | 'website';
-  image?: string;
-  article?: ArticleMetadata;
-}): Metadata {
+}: PageMetadataOptions): Metadata {
   const canonicalPath = getCanonicalPath(pathname);
 
   return {
@@ -68,14 +73,14 @@ export function createPageMetadata({
       siteName: SITE_NAME,
       type,
       images: [image],
-      ...(article
-        ? {
-            publishedTime: article.publishedTime,
-            modifiedTime: article.modifiedTime ?? article.publishedTime,
-            authors: article.authors,
-            tags: article.tags,
-          }
-        : {}),
+      ...(article && {
+        publishedTime: article.publishedTime,
+        // The single place the "unmodified" rule lives: an article with no
+        // known modification advertises its publish date as the modification.
+        modifiedTime: article.modifiedTime ?? article.publishedTime,
+        authors: article.authors,
+        tags: article.tags,
+      }),
     },
     twitter: {
       card: 'summary_large_image',

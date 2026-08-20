@@ -20,8 +20,8 @@ export interface SitemapEntry {
 }
 
 /** Website-relative source paths that a route's content is rendered from. */
-function sourcePathsForRoute(route: string, postsBySlug: Map<string, Post>): string[] {
-  const post = postsBySlug.get(route);
+function sourcePathsForRoute(route: string, postsByRoute: ReadonlyMap<string, Post>): string[] {
+  const post = postsByRoute.get(route);
   if (post) return [path.join('content', 'blog', post.filename)];
 
   const special = specialDocsPages.find((page) => page.path === route);
@@ -219,37 +219,44 @@ function sourceModifiedTime(relativePaths: string[]): Date | undefined {
 }
 
 /** Frontmatter publish date as UTC midnight, or undefined when unparseable. */
-function publishedDate(post: Post): Date | undefined {
+export function publishedDate(post: Post): Date | undefined {
   const date = new Date(`${post.frontmatter.date}T00:00:00Z`);
   return Number.isNaN(date.getTime()) ? undefined : date;
 }
 
+/** Index the posts a caller wants visible, keyed by route path. */
+export function getPostsByRoute(options: { includeDrafts?: boolean } = {}): Map<string, Post> {
+  return new Map(getAllPosts(options).map((post) => [`/blog/${post.slug}`, post]));
+}
+
 /**
  * Honest last-modified time for one route, or undefined when nothing can date
- * it. Shared by the sitemap and by article metadata (`og:modified_time`), so
- * both surfaces make the same freshness claim.
+ * it. Shared by the sitemap and by article metadata (`article:modified_time`),
+ * so both surfaces make the same freshness claim for the same route.
  *
- * `postsBySlug` is an optional cache: callers walking every route build it once
- * rather than re-reading the blog directory per route.
+ * `postsByRoute` is required rather than defaulted: a route's answer depends on
+ * whether its post is visible in the map (a missing one loses its frontmatter
+ * date and falls through to a page source that does not exist for blog posts),
+ * so every caller states which posts it means instead of inheriting a drafts
+ * policy chosen here. Build it with {@link getPostsByRoute}, or pass a
+ * single-entry map when the post is already in hand.
  */
-export function getRouteLastModified(route: string, postsBySlug?: Map<string, Post>): Date | undefined {
-  const posts =
-    postsBySlug ??
-    new Map(getAllPosts({ includeDrafts: true }).map((post) => [`/blog/${post.slug}`, post]));
-  const committed = sourceModifiedTime(sourcePathsForRoute(route, posts));
+export function getRouteLastModified(route: string, postsByRoute: ReadonlyMap<string, Post>): Date | undefined {
+  const committed = sourceModifiedTime(sourcePathsForRoute(route, postsByRoute));
 
   // "Modified" means last *modified*, so an edited post outranks its own
   // publish date; the frontmatter date still covers posts git cannot date.
-  const post = posts.get(route);
+  const post = postsByRoute.get(route);
   const published = post ? publishedDate(post) : undefined;
   return committed && published ? (committed > published ? committed : published) : (committed ?? published);
 }
 
 export function getSitemapEntries(): SitemapEntry[] {
-  const postsBySlug = new Map(getAllPosts().map((post) => [`/blog/${post.slug}`, post]));
+  // Drafts are not in `getSitemapRoutes()`, so they are not indexed either.
+  const postsByRoute = getPostsByRoute();
 
   return getSitemapRoutes().map((route) => {
-    const lastModified = getRouteLastModified(route, postsBySlug);
+    const lastModified = getRouteLastModified(route, postsByRoute);
     return lastModified ? { route, lastModified } : { route };
   });
 }

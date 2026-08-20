@@ -10,7 +10,7 @@ import { getAllPosts, getPostBySlug, formatPostDate, readingTimeMin } from '../.
 import { getAuthor } from '../../../lib/blog-authors';
 import { extractHeadings } from '../../../lib/extract-headings';
 import { createPageMetadata } from '../../../lib/site-metadata';
-import { getRouteLastModified } from '../../../lib/sitemap-dates';
+import { getRouteLastModified, publishedDate } from '../../../lib/sitemap-dates';
 
 interface Params {
   params: Promise<{ slug: string }>;
@@ -28,26 +28,28 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   }
   const author = getAuthor(post.frontmatter.author);
   const pathname = `/blog/${post.slug}`;
-  // Only claim a modification when git actually shows the post was edited after
-  // its publish date; otherwise `createPageMetadata` reports it unmodified.
-  const published = new Date(`${post.frontmatter.date}T00:00:00Z`);
-  const lastModified = getRouteLastModified(pathname);
-  const modifiedTime =
-    lastModified && lastModified.getTime() > published.getTime() ? lastModified.toISOString() : undefined;
+  // The post is already resolved, so index just it: no drafts policy to inherit
+  // and no second read of the blog directory.
+  const lastModified = getRouteLastModified(pathname, new Map([[pathname, post]]));
+  // Undefined for an unparseable frontmatter date, which drops the article
+  // block rather than shipping the bad string as `article:published_time`.
+  const published = publishedDate(post);
 
   return createPageMetadata({
     title: `${post.frontmatter.title} — Threadplane`,
     description: post.frontmatter.description,
     pathname,
     type: 'article',
-    // TODO(task 9): point at `${pathname}/opengraph-image` once that route
+    // TODO(task 9): set image to "<pathname>/opengraph-image" once that route
     // exists; naming it before then would emit an og:image URL that 404s.
-    article: {
-      publishedTime: post.frontmatter.date,
-      modifiedTime,
-      authors: [author.name],
-      tags: post.frontmatter.tags,
-    },
+    article: published
+      ? {
+          publishedTime: published.toISOString(),
+          modifiedTime: lastModified?.toISOString(),
+          authors: [author.name],
+          tags: post.frontmatter.tags,
+        }
+      : undefined,
   });
 }
 
