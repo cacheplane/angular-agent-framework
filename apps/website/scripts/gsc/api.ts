@@ -89,6 +89,17 @@ export interface InspectionResult {
   userCanonical: string | null;
 }
 
+/**
+ * A URL Inspection call that failed during a pull. Serialization contract:
+ * `pull.ts` writes these to `.gsc/inspection-errors.json`, `report.ts` reads
+ * them back — so the shape lives here, next to InspectionResult, rather than
+ * being restated at each end.
+ */
+export interface InspectionFailure {
+  url: string;
+  error: string;
+}
+
 export async function inspectUrl(inspectionUrl: string): Promise<InspectionResult> {
   const token = await getAccessToken();
   const raw = (await authedFetch(INSPECT_URL, {

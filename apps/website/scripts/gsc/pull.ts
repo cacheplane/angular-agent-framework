@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: MIT
 import fs from 'node:fs';
 import path from 'node:path';
-import { inspectUrl, listSitemaps, querySearchAnalytics, type InspectionResult } from './api';
+import {
+  inspectUrl,
+  listSitemaps,
+  querySearchAnalytics,
+  type InspectionFailure,
+  type InspectionResult,
+} from './api';
 
 const OUT_DIR = path.join(process.cwd(), 'apps', 'website', '.gsc');
 
@@ -27,11 +33,6 @@ async function sitemapUrls(): Promise<string[]> {
     throw new Error('sitemap.xml matched zero <loc> entries; treating as a broken fetch, not empty inventory.');
   }
   return urls;
-}
-
-interface InspectionFailure {
-  url: string;
-  error: string;
 }
 
 async function main(): Promise<void> {

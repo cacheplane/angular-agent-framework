@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import fs from 'node:fs';
 import path from 'node:path';
-import type { InspectionResult, SearchAnalyticsRow } from './api';
+import type { InspectionFailure, InspectionResult, SearchAnalyticsRow } from './api';
 import {
   capList,
   describeInspectionCoverage,
@@ -11,30 +11,12 @@ import {
   findWeakCtr,
   findZeroImpressionPages,
 } from './analysis';
+import { read, readOptional } from './snapshots';
 
 const DIR = path.join(process.cwd(), 'apps', 'website', '.gsc');
 
-/** A URL Inspection call that failed during the pull, as recorded by pull.ts. */
-interface InspectionFailure {
-  url: string;
-  error: string;
-}
-
-function read<T>(name: string): T {
-  return JSON.parse(fs.readFileSync(path.join(DIR, name), 'utf8')) as T;
-}
-
-/** Like `read`, for a file the pull only writes on a partial sweep. Absent is null; nothing else is swallowed. */
-function readOptional<T>(name: string): T | null {
-  try {
-    return read<T>(name);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-      return null;
-    }
-    throw error;
-  }
-}
+/** Longest any bullet list in the report gets before it is trimmed with a count. */
+const LIST_LIMIT = 20;
 
 function table(rows: SearchAnalyticsRow[], headers: string[], limit = 30): string {
   const head = `| ${headers.join(' | ')} |\n| ${headers.map(() => '---').join(' | ')} |`;
@@ -48,12 +30,27 @@ function table(rows: SearchAnalyticsRow[], headers: string[], limit = 30): strin
   return `${head}\n${body}`;
 }
 
+/** A `###` heading over a capped bullet list, or `_none_` when there is nothing to say. */
+function bulletSection(heading: string, items: string[]): string[] {
+  if (items.length === 0) {
+    return [`### ${heading}`, ``, `_none_`, ``];
+  }
+  const { shown, remaining } = capList(items, LIST_LIMIT);
+  return [
+    `### ${heading}`,
+    ``,
+    shown.map((item) => `- ${item}`).join('\n'),
+    ...(remaining > 0 ? [``, `_…and ${remaining} more._`] : []),
+    ``,
+  ];
+}
+
 function main(): void {
-  const meta = read<{ startDate: string; endDate: string }>('meta.json');
-  const queries = read<SearchAnalyticsRow[]>('queries.json');
-  const pages = read<SearchAnalyticsRow[]>('pages.json');
-  const inspections = read<InspectionResult[]>('inspections.json');
-  const failures = readOptional<InspectionFailure[]>('inspection-errors.json') ?? [];
+  const meta = read<{ startDate: string; endDate: string }>(DIR, 'meta.json');
+  const queries = read<SearchAnalyticsRow[]>(DIR, 'queries.json');
+  const pages = read<SearchAnalyticsRow[]>(DIR, 'pages.json');
+  const inspections = read<InspectionResult[]>(DIR, 'inspections.json');
+  const failures = readOptional<InspectionFailure[]>(DIR, 'inspection-errors.json') ?? [];
   // Sitemap inventory = URLs we inspected PLUS URLs we failed to inspect, so a
   // failed URL still reaches the zero-impression analysis instead of vanishing.
   const sitemapUrls = [...inspections.map((i) => i.url), ...failures.map((f) => f.url)];
@@ -69,10 +66,6 @@ function main(): void {
   const unindexed = findUnindexed(inspections);
   const mismatches = findCanonicalMismatches(inspections);
   const orphans = findZeroImpressionPages(sitemapUrls, pages);
-  const failed = capList(
-    failures.map((failure) => `${failure.url} — ${failure.error}`),
-    20,
-  );
 
   const report = [
     `# threadplane.ai — Search Console report`,
@@ -92,29 +85,22 @@ function main(): void {
     `- Google canonical ≠ our canonical: ${mismatches.length}`,
     `- Zero-impression pages in window: ${orphans.length}`,
     ``,
+    // Only rendered on a partial sweep; a clean run should not carry an empty section.
     ...(failures.length > 0
-      ? [
-          `### Failed inspections`,
-          ``,
-          failed.shown.map((line) => `- ${line}`).join('\n'),
-          ...(failed.remaining > 0 ? [``, `_…and ${failed.remaining} more._`] : []),
-          ``,
-        ]
+      ? bulletSection(
+          'Failed inspections',
+          failures.map((failure) => `${failure.url} — ${failure.error}`),
+        )
       : []),
-    `### Not indexed`,
-    ``,
-    unindexed.length ? unindexed.map((i) => `- ${i.url} — ${i.coverageState}`).join('\n') : '_none_',
-    ``,
-    `### Canonical mismatches`,
-    ``,
-    mismatches.length
-      ? mismatches.map((i) => `- ${i.url} → Google chose ${i.googleCanonical}`).join('\n')
-      : '_none_',
-    ``,
-    `### Zero-impression pages`,
-    ``,
-    orphans.length ? orphans.map((url) => `- ${url}`).join('\n') : '_none_',
-    ``,
+    ...bulletSection(
+      'Not indexed',
+      unindexed.map((i) => `${i.url} — ${i.coverageState}`),
+    ),
+    ...bulletSection(
+      'Canonical mismatches',
+      mismatches.map((i) => `${i.url} → Google chose ${i.googleCanonical}`),
+    ),
+    ...bulletSection('Zero-impression pages', orphans),
     `## Striking distance (position 5–20, ≥50 impressions)`,
     ``,
     table(findStrikingDistance(queries, { minImpressions: 50 }), [
@@ -127,7 +113,7 @@ function main(): void {
     ``,
     `## Weak CTR on page one (≥100 impressions, CTR < 2%)`,
     ``,
-    `Title/description rewrite candidates.`,
+    `Title/description rewrite candidates. The threshold is flat across positions 1–10 — read the Pos column before acting.`,
     ``,
     table(findWeakCtr(queries, { minImpressions: 100, maxCtr: 0.02 }), [
       'Query',
@@ -139,7 +125,7 @@ function main(): void {
     ``,
     `## Top pages`,
     ``,
-    table(pages.slice(0, 30), ['Page', 'Clicks', 'Impr', 'CTR', 'Pos']),
+    table(pages, ['Page', 'Clicks', 'Impr', 'CTR', 'Pos']),
     ``,
   ].join('\n');
 
@@ -147,4 +133,11 @@ function main(): void {
   console.log('wrote .gsc/report.md');
 }
 
-main();
+try {
+  main();
+} catch (error) {
+  // The likely failures here are "you have not run the pull yet" and "a snapshot
+  // is corrupt", both of which read better as one line than as a stack trace.
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exitCode = 1;
+}

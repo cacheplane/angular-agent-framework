@@ -14,13 +14,41 @@ export function findStrikingDistance(
     .sort((a, b) => b.impressions - a.impressions);
 }
 
+/**
+ * Reduce a URL to the identity we compare on: no protocol, no `www.`, lowercased
+ * host, no trailing slash, no fragment, and NO QUERY STRING.
+ *
+ * Dropping the query string is a judgement call. Search Console's `page`
+ * dimension reports campaign- and referral-tagged URLs (`/blog/foo?ref=x`)
+ * that never appear in sitemap `<loc>` entries, and treating those as separate
+ * pages would report a page with real impressions as invisible. The cost is
+ * that a site where the query string genuinely selects content (`?page=2`,
+ * `?id=`) would collapse distinct pages together; threadplane.ai has no such
+ * routes. Total function — unparseable input falls back to a textual cleanup
+ * rather than throwing, since a single odd row must not kill the report.
+ */
+export function normalizeUrl(raw: string): string {
+  const trimmed = raw.trim();
+  try {
+    const url = new URL(trimmed);
+    return `${url.hostname.toLowerCase().replace(/^www\./, '')}${url.pathname.replace(/\/$/, '')}`;
+  } catch {
+    return trimmed
+      .toLowerCase()
+      .replace(/^[a-z][a-z0-9+.-]*:\/\//, '')
+      .replace(/^www\./, '')
+      .replace(/[?#].*$/, '')
+      .replace(/\/$/, '');
+  }
+}
+
 /** Sitemap URLs Google never showed for anything in the window. */
 export function findZeroImpressionPages(
   sitemapUrls: string[],
   pageRows: SearchAnalyticsRow[],
 ): string[] {
-  const seen = new Set(pageRows.map((row) => row.keys[0].replace(/\/$/, '')));
-  return sitemapUrls.filter((url) => !seen.has(url.replace(/\/$/, '')));
+  const seen = new Set(pageRows.map((row) => normalizeUrl(row.keys[0])));
+  return sitemapUrls.filter((url) => !seen.has(normalizeUrl(url)));
 }
 
 /** Inspections that are not cleanly indexed. */
@@ -28,7 +56,15 @@ export function findUnindexed(inspections: InspectionResult[]): InspectionResult
   return inspections.filter((inspection) => inspection.verdict !== 'PASS');
 }
 
-/** Pages Google canonicalized somewhere other than where we asked — duplicate-content smell. */
+/**
+ * Pages Google canonicalized somewhere other than where we asked — duplicate-content smell.
+ *
+ * Policy: BOTH canonicals must be present. A page where Google reports a
+ * canonical but `userCanonical` is null (i.e. we emitted no `<link rel=canonical>`)
+ * is deliberately NOT flagged here — it is a finding in its own right, but a
+ * different one, and folding it in would make "mismatch" mean two things. It is
+ * still visible in the raw `.gsc/inspections.json` snapshot.
+ */
 export function findCanonicalMismatches(inspections: InspectionResult[]): InspectionResult[] {
   return inspections.filter(
     (inspection) =>
@@ -38,7 +74,15 @@ export function findCanonicalMismatches(inspections: InspectionResult[]): Inspec
   );
 }
 
-/** Queries with strong impressions but a CTR well below the position-typical rate. */
+/**
+ * Queries with strong impressions that sit on page one yet convert below one
+ * flat CTR threshold.
+ *
+ * Limitation: the threshold does not vary with position, so a 1.9% CTR at
+ * position 1 (alarming) is reported identically to 1.9% at position 10
+ * (unremarkable). Read the Pos column before acting; ranking the output by
+ * position-relative expected CTR would need a baseline curve we do not have.
+ */
 export function findWeakCtr(
   rows: SearchAnalyticsRow[],
   options: { minImpressions: number; maxCtr: number },

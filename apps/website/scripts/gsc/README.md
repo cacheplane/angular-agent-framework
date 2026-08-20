@@ -17,8 +17,21 @@
 
 ## Usage
 
-    npx tsx apps/website/scripts/gsc/pull.ts        # writes apps/website/.gsc/*.json
-    npx tsx apps/website/scripts/gsc/report.ts      # writes apps/website/.gsc/report.md
+    npm run gsc:pull      # writes apps/website/.gsc/*.json
+    npm run gsc:report    # writes apps/website/.gsc/report.md
+
+`gsc:report` reads the snapshots `gsc:pull` wrote, so run the pull first.
+
+Both scripts resolve their `.gsc` directory relative to the current working
+directory (`<cwd>/apps/website/.gsc`), so the raw form must be invoked from the
+repo root:
+
+    npx tsx apps/website/scripts/gsc/pull.ts
+    npx tsx apps/website/scripts/gsc/report.ts
+
+If the URL Inspection sweep hits quota or transient errors, `pull.ts` also
+writes `.gsc/inspection-errors.json` and the report labels its index-health
+counts as lower bounds.
 
 ## What this CANNOT do
 
