@@ -15,6 +15,7 @@ import { Tabs, Tab } from '../../../components/docs/mdx/Tabs';
 import { Card, CardGroup } from '../../../components/docs/mdx/Card';
 import { CodeGroup } from '../../../components/docs/mdx/CodeGroup';
 import { Pre } from '../../../components/docs/mdx/CodeBlock';
+import { mdxHeadingComponents } from '../../../components/docs/mdx/headings';
 import { createPageMetadata } from '../../../lib/site-metadata';
 
 export const metadata = createPageMetadata({
@@ -39,26 +40,7 @@ const mdxComponents = {
       <table {...rest}>{children}</table>
     </div>
   ),
-  h2: ({ id, children, ...rest }: React.HTMLAttributes<HTMLHeadingElement>) => (
-    <h2 id={id} {...rest}>
-      {id ? (
-        <a href={`#${id}`} aria-label={`Link to ${id}`} className="heading-anchor">
-          #
-        </a>
-      ) : null}
-      {children}
-    </h2>
-  ),
-  h3: ({ id, children, ...rest }: React.HTMLAttributes<HTMLHeadingElement>) => (
-    <h3 id={id} {...rest}>
-      {id ? (
-        <a href={`#${id}`} aria-label={`Link to ${id}`} className="heading-anchor">
-          #
-        </a>
-      ) : null}
-      {children}
-    </h3>
-  ),
+  ...mdxHeadingComponents,
 };
 
 const rehypeOptions = {

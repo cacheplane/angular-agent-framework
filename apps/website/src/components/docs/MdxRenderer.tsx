@@ -7,6 +7,7 @@ import { Card, CardGroup } from './mdx/Card';
 import { CodeGroup } from './mdx/CodeGroup';
 import { Pre } from './mdx/CodeBlock';
 import { FeatureChips } from './mdx/FeatureChips';
+import { mdxHeadingComponents } from './mdx/headings';
 import { ArchFlowDiagram } from './ArchFlowDiagram';
 import { AgUiArchDiagram } from './AgUiArchDiagram';
 import { type LibraryId } from '../../lib/docs-config';
@@ -32,18 +33,7 @@ const mdxComponents = {
       <table {...rest}>{children}</table>
     </div>
   ),
-  h2: ({ id, children, ...rest }: React.HTMLAttributes<HTMLHeadingElement>) => (
-    <h2 id={id} {...rest}>
-      {id ? <a href={`#${id}`} aria-label={`Link to ${id}`} className="heading-anchor">#</a> : null}
-      {children}
-    </h2>
-  ),
-  h3: ({ id, children, ...rest }: React.HTMLAttributes<HTMLHeadingElement>) => (
-    <h3 id={id} {...rest}>
-      {id ? <a href={`#${id}`} aria-label={`Link to ${id}`} className="heading-anchor">#</a> : null}
-      {children}
-    </h3>
-  ),
+  ...mdxHeadingComponents,
 };
 
 const rehypeOptions = {

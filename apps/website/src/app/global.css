@@ -290,6 +290,15 @@ html {
   text-decoration: none;
   transition: opacity 120ms ease;
 }
+/*
+ * The `#` glyph is generated content, never a text node: that keeps it out of
+ * the heading's textContent so extracted headings ("Prerequisites") stay clean
+ * for search snippets, page outlines, and agents reading the DOM.
+ */
+.docs-prose h2 .heading-anchor::before,
+.docs-prose h3 .heading-anchor::before {
+  content: '#';
+}
 .docs-prose h2:hover .heading-anchor,
 .docs-prose h3:hover .heading-anchor,
 .docs-prose h2 .heading-anchor:focus-visible,
