@@ -17,7 +17,7 @@ Most AI chat features still ship without streaming — they buffer the full resp
 - Wire a real LangGraph backend to the UI without writing any transport code.
 - Cover the three production patterns that matter once the scaffold works: errors, threads, and generative UI.
 
-## Why streaming matters
+## Why does streaming matter?
 
 A user reads at roughly 200 to 300 words per minute; a modern model produces tokens faster than that. If you stream, the user starts reading before the model has finished. If you buffer, every response feels like a page load with no progress indicator.
 
@@ -160,7 +160,7 @@ The slot pattern is intentional: the chat doesn't set your welcome copy, pick yo
 
 Theming is a separate concern. The chat reads from CSS custom properties — `--chat-bg`, `--chat-fg`, `--chat-accent`, and a few dozen more. If you already use a design system, map your tokens onto theirs in a single stylesheet and the chat picks them up.
 
-## What's happening under the hood
+## What's happening under the hood?
 
 Let's peek at the contract. The adapter exposes a small surface, the chat consumes it, and everything else is implementation detail.
 

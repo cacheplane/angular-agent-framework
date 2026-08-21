@@ -16,6 +16,18 @@ export {
   SHORT_POSITIONING_DESCRIPTION,
 } from './positioning';
 
+/**
+ * Path of a blog post's per-post OpenGraph card.
+ *
+ * Single source of truth: `blog/[slug]/page.tsx` feeds it to
+ * `createPageMetadata` (og:image / twitter:image) and `blogPostingJsonLd`
+ * feeds it to the BlogPosting `image`. Building the string in both places
+ * independently let them drift with both test suites still green.
+ */
+export function ogImagePath(slug: string): string {
+  return `/blog/${slug}/opengraph-image`;
+}
+
 export function getCanonicalPath(pathname: string): string {
   if (pathname === '/') return '/';
   return `/${pathname.replace(/^\/+|\/+$/g, '')}`;
@@ -25,17 +37,51 @@ export function getCanonicalUrl(pathname: string): string {
   return new URL(getCanonicalPath(pathname), SITE_ORIGIN).toString();
 }
 
+/** Article-specific OpenGraph fields (freshness + attribution signals). */
+export interface ArticleMetadata {
+  /** ISO 8601 publish date or timestamp. */
+  publishedTime: string;
+  /**
+   * ISO 8601 last-modified timestamp. Omit when no modification is known; it
+   * then falls back to `publishedTime`.
+   */
+  modifiedTime?: string;
+  authors?: string[];
+  tags?: string[];
+}
+
+/**
+ * The "unmodified" rule, in one place: a page with no known modification
+ * advertises its publish date as the modification date.
+ *
+ * Shared by `article:modified_time` here and by the BlogPosting `dateModified`
+ * in `structured-data.ts`. Those are two published claims about one fact, so
+ * they resolve it with one implementation rather than two that happen to agree.
+ */
+export function resolveModifiedTime(publishedTime: string, modifiedTime?: string): string {
+  return modifiedTime ?? publishedTime;
+}
+
+/** Options for {@link createPageMetadata}. */
+export interface PageMetadataOptions {
+  title: string;
+  description: string;
+  pathname: string;
+  type?: 'article' | 'website';
+  /** Social image path; resolved against `metadataBase` from the root layout. */
+  image?: string;
+  /** Present only for article-type pages; omitted entirely for landing pages. */
+  article?: ArticleMetadata;
+}
+
 export function createPageMetadata({
   title,
   description,
   pathname,
   type = 'article',
-}: {
-  title: string;
-  description: string;
-  pathname: string;
-  type?: 'article' | 'website';
-}): Metadata {
+  image = DEFAULT_SOCIAL_IMAGE,
+  article,
+}: PageMetadataOptions): Metadata {
   const canonicalPath = getCanonicalPath(pathname);
 
   return {
@@ -50,19 +96,25 @@ export function createPageMetadata({
       url: canonicalPath,
       siteName: SITE_NAME,
       type,
-      images: [DEFAULT_SOCIAL_IMAGE],
+      images: [image],
+      ...(article && {
+        publishedTime: article.publishedTime,
+        modifiedTime: resolveModifiedTime(article.publishedTime, article.modifiedTime),
+        authors: article.authors,
+        tags: article.tags,
+      }),
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: [DEFAULT_SOCIAL_IMAGE],
+      images: [image],
     },
   };
 }
 
 export function getSitemapRoutes(): string[] {
-  const staticRoutes = ['/', '/langgraph', '/render', '/chat', '/ag-ui', '/pricing', '/solutions', '/pilot-to-prod', '/docs', '/blog', '/contact'];
+  const staticRoutes = ['/', '/langgraph', '/render', '/chat', '/ag-ui', '/pricing', '/solutions', '/pilot-to-prod', '/docs', '/blog', '/about', '/contact'];
   const solutionRoutes = getAllSolutionSlugs().map((slug) => `/solutions/${slug}`);
   const docsRoutes = docsConfig.flatMap((library) =>
     library.sections.flatMap((section) =>

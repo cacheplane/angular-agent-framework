@@ -20,6 +20,8 @@ export const analyticsEvents = {
   docsSidebarSectionToggle: 'docs:sidebar_section_toggle',
   blogCtaClick: 'blog:cta_click',
   blogCopyCodeClick: 'blog:copy_code_click',
+  marketingAiCrawlerVisit: 'marketing:ai_crawler_visit',
+  marketingAiReferralVisit: 'marketing:ai_referral_visit',
   marketingCheckoutStarted: 'marketing:checkout_started',
   marketingCheckoutSucceeded: 'marketing:checkout_succeeded',
 } as const;
@@ -106,5 +108,8 @@ export type AnalyticsProperties = {
   result_count?: number;
   query_length?: number;
   error_reason?: string;
+  ai_crawler?: string;
+  ai_source?: string;
+  user_agent?: string;
   [key: string]: string | number | boolean | undefined;
 };

@@ -8,7 +8,7 @@ import { BlogTagFilter } from '../../components/blog/BlogTagFilter';
 import { Eyebrow } from '../../components/ui/Eyebrow';
 
 export const metadata = createPageMetadata({
-  title: 'Blog — ThreadPlane',
+  title: 'Blog — Threadplane',
   description:
     'Long-form writing on agent UI for Angular: streaming, generative UI, threads, interrupts, production patterns.',
   pathname: '/blog',
@@ -51,7 +51,7 @@ export default async function BlogIndexPage({ searchParams }: Props) {
               margin: '0 0 16px',
             }}
           >
-            Articles from ThreadPlane
+            Articles from Threadplane
           </h1>
           <p
             style={{

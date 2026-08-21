@@ -89,6 +89,24 @@ test.describe('Docs slug page', () => {
     expect(id?.length).toBeGreaterThan(0);
   });
 
+  test('heading permalinks carry no glyph in the text, only a CSS ::before', async ({ page }) => {
+    await page.goto(route);
+    const h2 = page.locator('article h2').first();
+    await expect(h2).toBeVisible();
+
+    // The `#` must never be a text node: extracted heading text feeds search
+    // snippets, the page outline, and anything summarizing the DOM.
+    expect((await h2.textContent())?.trim()).not.toContain('#');
+
+    // ...which means the visible affordance hangs entirely on one CSS rule
+    // (`.docs-prose h2 .heading-anchor::before` in global.css). jsdom cannot
+    // resolve pseudo-element content, so this is the only place it is guarded.
+    const anchor = h2.locator('a.heading-anchor');
+    await expect(anchor).toHaveCount(1);
+    const glyph = await anchor.evaluate((el) => getComputedStyle(el, '::before').content);
+    expect(glyph).toBe('"#"');
+  });
+
   test('breadcrumb renders exactly once', async ({ page }) => {
     await page.goto('/docs/langgraph/getting-started/introduction');
     await expect(page.locator('nav[aria-label="Breadcrumb"]')).toHaveCount(1);

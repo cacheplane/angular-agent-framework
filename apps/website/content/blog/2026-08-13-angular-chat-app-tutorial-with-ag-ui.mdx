@@ -47,6 +47,8 @@ A reading list. The user asks the assistant to save something; the assistant cal
 
 Three tools, three different shapes, and the server implements none of them.
 
+![The Angular chat component declares its action, view and ask client tools; the catalog travels to the FastAPI /agent endpoint where bind_client_tools binds it to the model for that run, the graph ends its turn and streams AG-UI events back over SSE, the @threadplane/ag-ui adapter reduces them into Angular signals, and the tool result the browser produces starts the next run.](/blog/diagrams/ag-ui-event-flow.svg)
+
 ## How do we get an AG-UI endpoint running?
 
 Install the integration:

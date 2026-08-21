@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 560" width="700" height="560" role="img" aria-labelledby="d-title d-desc">
+  <title id="d-title">How one Angular signal switches the active LangGraph conversation</title>
+  <desc id="d-desc">chat-sidenav lists every thread from LangGraphThreadsAdapter, while chat renders one conversation from the @threadplane/langgraph agent. Selecting a row sets the ACTIVE_THREAD signal, the agent adapter watches that signal and switches conversations, and onThreadId writes a newly created thread id back into it.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0.5 L9.5,5 L0,9.5 z" fill="#004090"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    .t-eyebrow { font-size: 11.5px; font-weight: 700; fill: #737373; letter-spacing: 0.09em; }
+    .t-head { font-size: 17px; font-weight: 600; fill: #1c1c1c; }
+    .t-title { font-size: 15px; font-weight: 600; fill: #1c1c1c; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .t-meta { font-size: 13px; fill: #464646; }
+    .t-edge { font-size: 12.5px; font-weight: 600; fill: #004090; }
+    .t-caption { font-size: 13px; fill: #737373; }
+    .edge { stroke: #004090; stroke-width: 1.7; fill: none; marker-end: url(#arrow); }
+    .edge-both { stroke: #004090; stroke-width: 1.7; fill: none; marker-end: url(#arrow); marker-start: url(#arrow); }
+  </style>
+
+  <rect x="0.5" y="0.5" width="699" height="559" rx="12" fill="#ffffff" stroke="#e5e5e5"/>
+  <text class="t-eyebrow" x="40" y="36">LANGGRAPH · THREADS AND RUNS</text>
+  <text class="t-head" x="40" y="64">One signal decides which conversation is on screen</text>
+
+  <text class="t-edge" x="350" y="110" text-anchor="middle">threads() · archivedThreads()</text>
+
+  <rect x="40" y="122" width="280" height="86" rx="8" fill="#ffffff" stroke="#d4d4d4"/>
+  <text class="t-title" x="60" y="152">&lt;chat-sidenav&gt;</text>
+  <text class="t-meta" x="60" y="174">every conversation,</text>
+  <text class="t-meta" x="60" y="194">titled by the server</text>
+
+  <rect x="380" y="122" width="280" height="86" rx="8" fill="#ffffff" stroke="#d4d4d4"/>
+  <text class="t-title" x="400" y="152">ThreadsAdapter</text>
+  <text class="t-meta" x="400" y="174">client.threads.* —</text>
+  <text class="t-meta" x="400" y="194">list, rename, archive</text>
+
+  <path class="edge" d="M376,165 H324"/>
+
+  <rect x="170" y="252" width="340" height="90" rx="8" fill="#f2f5f9" stroke="#c3d1e2"/>
+  <text class="t-title" x="190" y="282">ACTIVE_THREAD</text>
+  <text class="t-meta" x="190" y="304">signal&lt;string | null&gt;,</text>
+  <text class="t-meta" x="190" y="324">mirrored into the URL</text>
+
+  <path class="edge" d="M200,208 V248"/>
+  <text class="t-edge" x="212" y="234">threadSelected</text>
+
+  <path class="edge-both" d="M480,342 V386"/>
+  <text class="t-edge" x="496" y="358">the adapter watches it,</text>
+  <text class="t-edge" x="496" y="376">onThreadId writes back</text>
+
+  <text class="t-edge" x="286" y="378" text-anchor="middle">messages() · status() · toolCalls()</text>
+
+  <rect x="40" y="390" width="280" height="86" rx="8" fill="#ffffff" stroke="#d4d4d4"/>
+  <text class="t-title" x="60" y="420">&lt;chat&gt;</text>
+  <text class="t-meta" x="60" y="442">the active conversation,</text>
+  <text class="t-meta" x="60" y="462">streaming</text>
+
+  <rect x="380" y="390" width="280" height="86" rx="8" fill="#ffffff" stroke="#d4d4d4"/>
+  <text class="t-title" x="400" y="420">provideAgent()</text>
+  <text class="t-meta" x="400" y="442">one thread's run stream</text>
+  <text class="t-meta" x="400" y="462">and checkpoint</text>
+
+  <path class="edge" d="M376,433 H324"/>
+
+  <text class="t-caption" x="40" y="512">LangGraph owns the durable half — checkpoints and the thread store.</text>
+  <text class="t-caption" x="40" y="532">Angular only owns which thread id is active.</text>
+</svg>

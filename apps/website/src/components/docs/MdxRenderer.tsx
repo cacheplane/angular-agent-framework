@@ -7,12 +7,27 @@ import { Card, CardGroup } from './mdx/Card';
 import { CodeGroup } from './mdx/CodeGroup';
 import { Pre } from './mdx/CodeBlock';
 import { FeatureChips } from './mdx/FeatureChips';
+import { mdxHeadingComponents } from './mdx/headings';
 import { ArchFlowDiagram } from './ArchFlowDiagram';
 import { AgUiArchDiagram } from './AgUiArchDiagram';
 import { type LibraryId } from '../../lib/docs-config';
 import rehypePrettyCode from 'rehype-pretty-code';
 import rehypeSlug from 'rehype-slug';
 import remarkGfm from 'remark-gfm';
+
+/**
+ * Intrinsic size of each SVG diagram in `public/blog/diagrams`.
+ *
+ * Markdown image syntax carries no dimensions and MDX gives us no build step
+ * that could measure the file, so the sizes live here. They only need to be
+ * right enough to reserve the correct box before the file loads; the rendered
+ * size comes from the SVG itself.
+ */
+const DIAGRAM_DIMENSIONS: Record<string, { width: number; height: number }> = {
+  '/blog/diagrams/ag-ui-event-flow.svg': { width: 700, height: 690 },
+  '/blog/diagrams/langgraph-threads-and-runs.svg': { width: 700, height: 560 },
+  '/blog/diagrams/agent-contract-boundary.svg': { width: 700, height: 700 },
+};
 
 const mdxComponents = {
   Callout,
@@ -27,23 +42,31 @@ const mdxComponents = {
   AgUiArchDiagram,
   FeatureChips,
   pre: Pre,
+  // Explicit width/height let the browser reserve the box before the file
+  // loads, which keeps layout shift at zero. Presentation stays in global.css
+  // so it cannot silently override the shared bare-image rule, and so an
+  // author-supplied `style` on a future image still wins.
+  img: ({ width, height, alt, src, className, ...rest }: React.ImgHTMLAttributes<HTMLImageElement>) => {
+    const diagram = typeof src === 'string' ? DIAGRAM_DIMENSIONS[src] : undefined;
+    return (
+      <img
+        {...rest}
+        src={src}
+        alt={alt ?? ''}
+        width={width ?? diagram?.width}
+        height={height ?? diagram?.height}
+        className={[className, diagram ? 'docs-diagram' : undefined].filter(Boolean).join(' ') || undefined}
+        loading="lazy"
+        decoding="async"
+      />
+    );
+  },
   table: ({ children, ...rest }: React.HTMLAttributes<HTMLTableElement>) => (
     <div className="docs-table-scroll">
       <table {...rest}>{children}</table>
     </div>
   ),
-  h2: ({ id, children, ...rest }: React.HTMLAttributes<HTMLHeadingElement>) => (
-    <h2 id={id} {...rest}>
-      {id ? <a href={`#${id}`} aria-label={`Link to ${id}`} className="heading-anchor">#</a> : null}
-      {children}
-    </h2>
-  ),
-  h3: ({ id, children, ...rest }: React.HTMLAttributes<HTMLHeadingElement>) => (
-    <h3 id={id} {...rest}>
-      {id ? <a href={`#${id}`} aria-label={`Link to ${id}`} className="heading-anchor">#</a> : null}
-      {children}
-    </h3>
-  ),
+  ...mdxHeadingComponents,
 };
 
 const rehypeOptions = {
