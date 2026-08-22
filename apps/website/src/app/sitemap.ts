@@ -1,10 +1,12 @@
 import type { MetadataRoute } from 'next';
-import { getCanonicalUrl, getSitemapRoutes } from '../lib/site-metadata';
+import { getCanonicalUrl } from '../lib/site-metadata';
+import { getSitemapEntries } from '../lib/sitemap-dates';
 
+// `changefreq`/`priority` are ignored by Google; `lastmod` is used when it is
+// honest, so this emits only that.
 export default function sitemap(): MetadataRoute.Sitemap {
-  return getSitemapRoutes().map((route) => ({
-    url: getCanonicalUrl(route),
-    changeFrequency: route.startsWith('/docs') ? 'weekly' : 'monthly',
-    priority: route === '/' ? 1 : route.startsWith('/docs') ? 0.8 : 0.7,
+  return getSitemapEntries().map((entry) => ({
+    url: getCanonicalUrl(entry.route),
+    ...(entry.lastModified ? { lastModified: entry.lastModified } : {}),
   }));
 }

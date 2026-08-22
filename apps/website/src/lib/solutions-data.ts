@@ -1,3 +1,22 @@
+/**
+ * Solutions pages are hand-written, not templated at scale.
+ *
+ * This file drives `/solutions/[slug]`, which makes it look like a page
+ * generator. It is not one, and it must not become one. Google's
+ * scaled-content-abuse policy targets exactly this shape: families of
+ * programmatically generated pages that differ only by keyword.
+ *
+ * The rule: every entry must carry genuinely distinct first-hand content —
+ * a real problem we have seen, a real architecture, real code. If a new
+ * entry would amount to a find-and-replace of an existing one (swap the
+ * vertical noun, keep the structure and the claims), do not add it. Write a
+ * blog post or a docs guide instead, where the thing you actually have to
+ * say can stand on its own.
+ *
+ * Adding an entry is an editorial decision, not a data-file edit.
+ *
+ * See https://developers.google.com/search/docs/fundamentals/ai-optimization-guide
+ */
 export interface SolutionPainPoint {
   title: string;
   description: string;

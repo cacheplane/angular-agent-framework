@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { getAllDocSlugs, getDocBySlug, getDocMetadata } from './docs';
-import { allDocsPages, findDocsPage, specialDocsPages } from './docs-config';
+import { allDocsPages, docsConfig, findDocsPage, libraryIntroPath, specialDocsPages } from './docs-config';
 import { getCanonicalUrl, getSitemapRoutes } from './site-metadata';
 
 const internalDocsLinkPattern = /(?:href=["']|\]\()(?<href>\/docs\/[^"')#\s]+)/g;
@@ -99,17 +99,17 @@ describe('website docs bindings', () => {
     const metadata = getDocMetadata('ag-ui', 'reference', 'event-mapping');
 
     expect(metadata).toMatchObject({
-      title: 'Event Mapping - AG-UI Docs - Threadplane',
+      title: 'Event Mapping — AG-UI Docs — Threadplane',
       alternates: {
         canonical: '/docs/ag-ui/reference/event-mapping',
       },
       openGraph: {
-        title: 'Event Mapping - AG-UI Docs - Threadplane',
+        title: 'Event Mapping — AG-UI Docs — Threadplane',
         url: '/docs/ag-ui/reference/event-mapping',
       },
       twitter: {
         card: 'summary_large_image',
-        title: 'Event Mapping - AG-UI Docs - Threadplane',
+        title: 'Event Mapping — AG-UI Docs — Threadplane',
       },
     });
     expect(metadata?.description).toContain('AG-UI protocol events');
@@ -257,5 +257,21 @@ describe('website docs bindings', () => {
 
   it('returns null metadata for non-existent docs', () => {
     expect(getDocMetadata('langgraph', 'guides', 'nonexistent')).toBeNull();
+  });
+});
+
+describe('docs breadcrumb routes', () => {
+  // The docs BreadcrumbList and the visible <DocsBreadcrumb> both link the
+  // library rung through `libraryIntroPath()`. This pins the property that path
+  // has to satisfy: it must be a real route, and the bare `/docs/<library>` it
+  // stands in for must remain absent (there is no index route for it, so a crumb
+  // pointing there would 404).
+  it('resolves the library intro path to a real route for every library', () => {
+    const routes = new Set(getSitemapRoutes());
+
+    for (const library of docsConfig) {
+      expect([library.id, routes.has(libraryIntroPath(library.id))]).toEqual([library.id, true]);
+      expect([library.id, routes.has(`/docs/${library.id}`)]).toEqual([library.id, false]);
+    }
   });
 });

@@ -9,7 +9,10 @@ import { Eyebrow } from '../../../components/ui/Eyebrow';
 import { getAllPosts, getPostBySlug, formatPostDate, readingTimeMin } from '../../../lib/blog';
 import { getAuthor } from '../../../lib/blog-authors';
 import { extractHeadings } from '../../../lib/extract-headings';
-import { createPageMetadata } from '../../../lib/site-metadata';
+import { createPageMetadata, ogImagePath } from '../../../lib/site-metadata';
+import { getPostLastModified, publishedDate } from '../../../lib/sitemap-dates';
+import { JsonLd } from '../../../components/shared/JsonLd';
+import { blogPostingJsonLd, breadcrumbJsonLd } from '../../../lib/structured-data';
 
 interface Params {
   params: Promise<{ slug: string }>;
@@ -23,13 +26,29 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const post = getPostBySlug(slug);
   if (!post || post.frontmatter.draft) {
-    return { title: 'Post not found — ThreadPlane' };
+    return { title: 'Post not found — Threadplane' };
   }
+  const author = getAuthor(post.frontmatter.author);
+  const pathname = `/blog/${post.slug}`;
+  const lastModified = getPostLastModified(post);
+  // Undefined for an unparseable frontmatter date, which drops the article
+  // block rather than shipping the bad string as `article:published_time`.
+  const published = publishedDate(post);
+
   return createPageMetadata({
-    title: `${post.frontmatter.title} — ThreadPlane`,
+    title: `${post.frontmatter.title} — Threadplane`,
     description: post.frontmatter.description,
-    pathname: `/blog/${post.slug}`,
+    pathname,
     type: 'article',
+    image: ogImagePath(post.slug),
+    article: published
+      ? {
+          publishedTime: published.toISOString(),
+          modifiedTime: lastModified?.toISOString(),
+          authors: [author.name],
+          tags: post.frontmatter.tags,
+        }
+      : undefined,
   });
 }
 
@@ -44,9 +63,34 @@ export default async function BlogPostPage({ params }: Params) {
     ? post.frontmatter.tags[0].toUpperCase()
     : 'POST';
   const headings = extractHeadings(post.content);
+  // Same derivation `generateMetadata` uses for `article:modified_time`, and the
+  // same one the sitemap uses for `<lastmod>`, so all three agree.
+  const lastModified = getPostLastModified(post);
+  // Undefined for an unparseable frontmatter date; the BlogPosting is dropped
+  // rather than published without a `datePublished`, matching the metadata.
+  const published = publishedDate(post);
+
+  const postData = published
+    ? blogPostingJsonLd({
+        title: post.frontmatter.title,
+        description: post.frontmatter.description,
+        slug: post.slug,
+        datePublished: published.toISOString(),
+        dateModified: lastModified?.toISOString(),
+        authorName: author.name,
+        tags: post.frontmatter.tags,
+      })
+    : null;
+
+  const breadcrumbs = breadcrumbJsonLd([
+    { name: 'Blog', pathname: '/blog' },
+    { name: post.frontmatter.title, pathname: `/blog/${post.slug}` },
+  ]);
 
   return (
     <div style={{ paddingTop: 80, background: tokens.surfaces.canvas, minHeight: '100vh' }}>
+      {postData ? <JsonLd data={postData} /> : null}
+      <JsonLd data={breadcrumbs} />
       <div
         style={{
           display: 'flex',

@@ -305,6 +305,12 @@ export function Footer() {
               onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
               npm Package
             </a>
+            <Link href="/about" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              onClick={() => trackFooterCta('About', '/about')}
+              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+              About
+            </Link>
             <Link href="/docs/licensing" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
               onClick={() => trackFooterCta('Licensing', '/docs/licensing')}
               onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}

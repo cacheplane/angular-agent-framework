@@ -7,71 +7,17 @@
  */
 import { ImageResponse } from 'next/og';
 import { POSITIONING_PROOF_POINTS, PRIMARY_TAGLINE, SHORT_POSITIONING_DESCRIPTION } from '../lib/positioning';
+import { loadCardFonts } from './og-font';
 
 // Node runtime (not edge) so we can read the bundled Garamond TTF off disk.
+// Font loading lives in ./og-font so the TTF stays statically traceable.
 export const runtime = 'nodejs';
 export const alt = PRIMARY_TAGLINE;
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-async function loadFont(family: string, weight: number): Promise<ArrayBuffer | null> {
-  try {
-    // Modern UA → woff2. Older UA → ttf. We ask for both and pick the first that resolves.
-    // ImageResponse wants the raw font binary; woff2 is fine (Satori decompresses internally).
-    const css = await fetch(
-      `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}:wght@${weight}&display=swap`,
-      { headers: { 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36' } },
-    ).then((res) => res.text());
-    // Grab any url(...) src — the first one is the woff2 the modern UA gets.
-    const match = css.match(/src:\s*url\((https?:\/\/[^)]+)\)/);
-    if (!match) return null;
-    const fontRes = await fetch(match[1]);
-    if (!fontRes.ok) return null;
-    return await fontRes.arrayBuffer();
-  } catch {
-    return null;
-  }
-}
-
-/**
- * EB Garamond is bundled as a static-weight TTF next to this file because:
- * 1. Google Fonts only serves Garamond as woff2 — Satori can't decode woff2.
- * 2. The variable-weight TTF in Google's fonts repo trips Satori's TTF parser
- *    ("Cannot read properties of undefined (reading '256')") on variable-font
- *    tables (fvar/STAT/MVAR/HVAR).
- *
- * The committed TTF was produced by instancing the upstream variable font to
- * wght=700 and stripping the now-unused variable tables — see
- * apps/website/scripts/instance-garamond.py. The file is ~500KB, served only
- * from this server-side render path (never downloaded by browsers).
- */
-async function loadLocalGaramond(): Promise<ArrayBuffer | null> {
-  try {
-    const { fileURLToPath } = await import('node:url');
-    const { readFile } = await import('node:fs/promises');
-    const { dirname, join } = await import('node:path');
-    const here = dirname(fileURLToPath(import.meta.url));
-    const buf = await readFile(join(here, 'EBGaramond-Bold.ttf'));
-    return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
-  } catch (err) {
-    console.warn('opengraph-image: failed to load local Garamond TTF', err);
-    return null;
-  }
-}
-
 export default async function OpenGraphImage() {
-  const [garamondBold, interRegular, interBold, monoBold] = await Promise.all([
-    loadLocalGaramond(),
-    loadFont('Inter', 400),
-    loadFont('Inter', 600),
-    loadFont('JetBrains+Mono', 700),
-  ]);
-  const fonts = [
-    garamondBold && { name: 'EB Garamond', data: garamondBold, weight: 700 as const, style: 'normal' as const },
-    interRegular && { name: 'Inter', data: interRegular, weight: 400 as const, style: 'normal' as const },
-    interBold && { name: 'Inter', data: interBold, weight: 600 as const, style: 'normal' as const },
-    monoBold && { name: 'JetBrains Mono', data: monoBold, weight: 700 as const, style: 'normal' as const },
-  ].filter((f): f is NonNullable<typeof f> => f !== null);
+  const fonts = await loadCardFonts({ mono: true });
 
   return new ImageResponse(
     (

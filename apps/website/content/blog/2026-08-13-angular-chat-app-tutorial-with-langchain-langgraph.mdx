@@ -51,6 +51,8 @@ Two Angular pieces, and they read from different places.
 
 That split is the thing to hold onto. The agent knows about one conversation. The thread adapter knows about all of them.
 
+![chat-sidenav renders every conversation from LangGraphThreadsAdapter while chat renders the active one from the @threadplane/langgraph agent; selecting a row sets the ACTIVE_THREAD signal, the agent adapter watches that signal and switches conversations, and onThreadId writes a newly created thread id back into it.](/blog/diagrams/langgraph-threads-and-runs.svg)
+
 ## How do we get a LangGraph server running?
 
 Let's do the backend first, because the Angular side has nothing to bind to without it.

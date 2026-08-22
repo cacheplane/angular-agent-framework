@@ -4,6 +4,8 @@ import './global.css';
 import { Nav } from '../components/shared/Nav';
 import { Footer } from '../components/shared/Footer';
 import { AnnouncementToast } from '../components/shared/AnnouncementToast';
+import { JsonLd } from '../components/shared/JsonLd';
+import { rootJsonLd } from '../lib/structured-data';
 import {
   DEFAULT_META_DESCRIPTION,
   DEFAULT_SOCIAL_IMAGE,
@@ -57,6 +59,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${garamond.variable} ${inter.variable} ${mono.variable}`}>
       <body>
+        {/*
+          Site-wide structured data, mounted once here so it is present on every
+          route. Per-route nodes (BlogPosting, TechArticle) reference the
+          Organization by `@id`; those references only resolve because this
+          renders alongside them. `rootJsonLd()` is a single `@graph` for that
+          reason — do not mount its component builders individually.
+        */}
+        <JsonLd data={rootJsonLd()} />
         <Nav />
         <main>{children}</main>
         <Footer />

@@ -2,9 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
-
-const BLOG_DIR_WORKSPACE = path.join(process.cwd(), 'apps', 'website', 'content', 'blog');
-const BLOG_DIR_LOCAL = path.join(process.cwd(), 'content', 'blog');
+import { resolveWebsiteDir } from './website-dir';
 
 export interface PostFrontmatter {
   title: string;
@@ -27,9 +25,7 @@ export interface Post {
 const FILENAME_RE = /^(\d{4}-\d{2}-\d{2})-(.+)\.mdx$/;
 
 function resolveBlogDir(): string {
-  if (fs.existsSync(BLOG_DIR_WORKSPACE)) return BLOG_DIR_WORKSPACE;
-  if (fs.existsSync(BLOG_DIR_LOCAL)) return BLOG_DIR_LOCAL;
-  return BLOG_DIR_WORKSPACE;
+  return path.join(resolveWebsiteDir(), 'content', 'blog');
 }
 
 function readPost(dir: string, filename: string): Post | null {
