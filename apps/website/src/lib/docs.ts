@@ -15,13 +15,44 @@ export const DEFAULT_DOCS_DESCRIPTION = 'Threadplane documentation';
 
 export interface ResolvedDoc {
   page: DocsPage;
+  /** Raw file contents, frontmatter included — the description is read from it. */
   content: string;
+  /** `content` with any frontmatter removed. This is what gets rendered. */
+  body: string;
   title: string;
 }
 
 export type ResolvedDocMetadata = Metadata;
 
-const FRONTMATTER_DESCRIPTION_PATTERN = /^---\s*\n[\s\S]*?\ndescription:\s*['"]?(?<description>[^'"\n]+)['"]?\s*\n[\s\S]*?\n---/;
+/**
+ * A leading `---` fence and its closing partner. Matched as a whole block, then
+ * searched for keys — the previous single pattern spliced the two together and
+ * required a key to FOLLOW `description:`, so the last key in a block never
+ * matched. Every real block in content/docs/ ends on `description:`.
+ */
+const FRONTMATTER_BLOCK_PATTERN = /^---\s*\n(?<body>[\s\S]*?)\n---\s*(?:\n|$)/;
+
+const FRONTMATTER_DESCRIPTION_PATTERN = /^description:\s*['"]?(?<description>[^'"\n]+?)['"]?\s*$/m;
+
+/**
+ * Remove a frontmatter block so the rest can be handed to the MDX pipeline.
+ *
+ * `next-mdx-remote` does not strip frontmatter unless asked, and Markdown reads
+ * an unstripped block as an `<hr>` followed by a setext `<h2>` — a junk heading
+ * above the page's real `<h1>`, in its table of contents and heading anchors.
+ *
+ * A body that merely opens with a thematic break is left alone: a leading `---`
+ * is only frontmatter when a closing fence follows it.
+ */
+export function stripFrontmatter(source: string): string {
+  return source.replace(FRONTMATTER_BLOCK_PATTERN, '');
+}
+
+function readFrontmatterDescription(content: string): string | null {
+  const body = content.match(FRONTMATTER_BLOCK_PATTERN)?.groups?.body;
+  if (!body) return null;
+  return body.match(FRONTMATTER_DESCRIPTION_PATTERN)?.groups?.description ?? null;
+}
 
 function normalizeDescription(description: string): string {
   return description
@@ -33,8 +64,7 @@ function normalizeDescription(description: string): string {
 }
 
 function extractFirstParagraph(content: string): string | null {
-  const withoutFrontmatter = content.replace(/^---\s*\n[\s\S]*?\n---\s*/, '');
-  const withoutImports = withoutFrontmatter.replace(/^import\s.+$/gm, '');
+  const withoutImports = stripFrontmatter(content).replace(/^import\s.+$/gm, '');
   const paragraphs = withoutImports.split(/\n{2,}/);
 
   for (const paragraph of paragraphs) {
@@ -56,7 +86,7 @@ function extractFirstParagraph(content: string): string | null {
 }
 
 function getDocDescription(content: string, fallback: string): string {
-  const frontmatterDescription = content.match(FRONTMATTER_DESCRIPTION_PATTERN)?.groups?.description;
+  const frontmatterDescription = readFrontmatterDescription(content);
   if (frontmatterDescription) return normalizeDescription(frontmatterDescription);
   return extractFirstParagraph(content) ?? fallback;
 }
@@ -75,6 +105,7 @@ export function getDocBySlug(library: string, section: string, slug: string): Re
   return {
     page,
     content,
+    body: stripFrontmatter(content),
     title: titleMatch?.[1] ?? page.title,
   };
 }

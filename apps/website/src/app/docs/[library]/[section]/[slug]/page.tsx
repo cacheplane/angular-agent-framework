@@ -109,7 +109,7 @@ export default async function DocsPage({ params }: DocsRouteProps) {
           </div>
           <article className="flex-1 py-8 px-4 sm:px-6 md:px-12 md:max-w-3xl overflow-x-hidden">
             <MdxRenderer
-              source={doc.content}
+              source={doc.body}
               library={library as LibraryId}
               section={section}
               slug={slug}
@@ -141,7 +141,7 @@ export default async function DocsPage({ params }: DocsRouteProps) {
             <DocsPrevNext library={library as LibraryId} section={section} slug={slug} />
           </div>
         </div>
-        <DocsTOC headings={extractHeadings(doc.content)} />
+        <DocsTOC headings={extractHeadings(doc.body)} />
       </div>
     </div>
   );
