@@ -9,6 +9,13 @@ import { aboutPageJsonLd, REPOSITORY_URL } from '../../lib/structured-data';
 import { getAuthor } from '../../lib/blog-authors';
 import { createPageMetadata } from '../../lib/site-metadata';
 import { LONG_SUBHEAD } from '../../lib/positioning';
+import {
+  ABOUT_HISTORY,
+  ABOUT_HISTORY_HEADING,
+  ABOUT_INTRO,
+  ABOUT_PERSONAL,
+  ABOUT_PRINCIPLES,
+} from '../../lib/about-content';
 
 /**
  * The single author record the site already publishes (blog bylines read the
@@ -68,10 +75,18 @@ export default function AboutPage() {
             >
               Who writes Threadplane
             </h1>
-            <p style={bodyStyle}>
-              Threadplane is written and maintained by {author.name}, {author.role}.
-            </p>
-            <p style={bodyStyle}>{author.bio}</p>
+            <p style={bodyStyle}>{ABOUT_INTRO}</p>
+
+            <h2 style={{ ...headingStyle, marginTop: 32 }}>{ABOUT_HISTORY_HEADING}</h2>
+            {ABOUT_HISTORY.map((paragraph) => (
+              <p key={paragraph} style={bodyStyle}>
+                {paragraph}
+              </p>
+            ))}
+
+            <p style={bodyStyle}>{ABOUT_PRINCIPLES}</p>
+            <p style={bodyStyle}>{ABOUT_PERSONAL}</p>
+
             <p style={{ ...bodyStyle, marginBottom: 0 }}>
               <a
                 href={`https://github.com/${author.github}`}
