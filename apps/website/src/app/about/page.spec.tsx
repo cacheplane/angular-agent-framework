@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import AboutPage from './page';
 import { getAuthor } from '../../lib/blog-authors';
+import { ABOUT_PARAGRAPHS } from '../../lib/about-content';
 
 vi.mock('../../components/ui/Container', () => ({
   Container: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -24,17 +25,36 @@ const author = getAuthor('brian');
  * claims back to the author record rather than restating the layout.
  */
 describe('AboutPage', () => {
-  it('renders the bio verbatim from the author record', () => {
+  it('renders each sourced paragraph verbatim', () => {
     render(<AboutPage />);
-    // Not a substring match: any editorial embellishment around the sourced
-    // sentence would still be a claim nothing in the repo supports.
-    expect(screen.getByText(author.bio as string).textContent).toBe(author.bio);
+    // Not substring matches: editorial embellishment around a sourced sentence
+    // would still be a claim nothing citable supports.
+    for (const paragraph of ABOUT_PARAGRAPHS) {
+      expect(screen.getByText(paragraph).textContent).toBe(paragraph);
+    }
   });
 
-  it('states the name and role the author record gives, and no other', () => {
+  it('adds no biographical prose beyond the sourced paragraphs', () => {
+    // The real guard. Every claim on this page has to trace to about-content.ts,
+    // whose provenance comment names the source; a paragraph appearing here that
+    // is not in that module is exactly the fabrication this page must not carry.
+    const { container } = render(<AboutPage />);
+    const sourced = new Set<string>(ABOUT_PARAGRAPHS);
+
+    const biography = container.querySelectorAll('section')[0];
+    const paragraphs = Array.from(biography.querySelectorAll('p'))
+      .map((node) => node.textContent ?? '')
+      .filter((text) => text.split(' ').length > 12);
+
+    expect(paragraphs.length).toBe(ABOUT_PARAGRAPHS.length);
+    for (const text of paragraphs) {
+      expect(sourced.has(text), text).toBe(true);
+    }
+  });
+
+  it('names the author the record gives', () => {
     render(<AboutPage />);
-    expect(screen.getByText(`Threadplane is written and maintained by ${author.name}, ${author.role}.`))
-      .toBeTruthy();
+    expect(screen.getByText(ABOUT_PARAGRAPHS[0]).textContent).toContain(author.name);
   });
 
   it('links the GitHub profile the record names', () => {

@@ -18,7 +18,7 @@ export const blogAuthors: Record<string, Author> = {
   brian: {
     name: 'Brian Love',
     role: 'Founder, Threadplane',
-    bio: 'Angular consultant and open-source maintainer. Building agent UI for Angular teams.',
+    bio: 'Agentic software architect building developer tooling for fullstack AI-powered web applications.',
     knowsAbout: ['Angular', 'TypeScript', 'LangGraph', 'AG-UI', 'Generative UI', 'Agent user interfaces'],
     github: 'blove',
   },
