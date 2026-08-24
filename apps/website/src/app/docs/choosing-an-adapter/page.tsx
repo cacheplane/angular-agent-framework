@@ -17,6 +17,7 @@ import { CodeGroup } from '../../../components/docs/mdx/CodeGroup';
 import { Pre } from '../../../components/docs/mdx/CodeBlock';
 import { mdxHeadingComponents } from '../../../components/docs/mdx/headings';
 import { createPageMetadata } from '../../../lib/site-metadata';
+import { stripFrontmatter } from '../../../lib/docs';
 
 export const metadata = createPageMetadata({
   title: 'Choosing an adapter — Threadplane',
@@ -57,10 +58,6 @@ function resolveContentFile(): string | null {
     if (fs.existsSync(p)) return p;
   }
   return null;
-}
-
-function stripFrontmatter(source: string): string {
-  return source.replace(/^---\s*\n[\s\S]*?\n---\s*\n?/, '');
 }
 
 export default function ChoosingAnAdapterPage() {

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { getAllDocSlugs, getDocBySlug, getDocMetadata } from './docs';
+import { getAllDocSlugs, getDocBySlug, getDocMetadata, stripFrontmatter } from './docs';
 import { allDocsPages, docsConfig, findDocsPage, libraryIntroPath, specialDocsPages } from './docs-config';
 import { getCanonicalUrl, getSitemapRoutes } from './site-metadata';
 
@@ -125,6 +125,46 @@ describe('website docs bindings', () => {
 
     const duplicateDescriptions = descriptions.filter((description, index) => descriptions.indexOf(description) !== index);
     expect(duplicateDescriptions).toHaveLength(0);
+  });
+
+  // Both regressions below shipped together and hid each other: the description
+  // regex silently ignored the frontmatter, so the only visible symptom was the
+  // block rendering as Markdown — an <hr> plus a setext <h2> above the real <h1>.
+  it('prefers a frontmatter description when `description` is the last key', () => {
+    // Every real frontmatter block in content/docs/ ends on `description:`.
+    const metadata = getDocMetadata('chat', 'guides', 'custom-catalogs');
+
+    expect(metadata?.description).toBe(
+      'Compose custom component catalogs for generative UI using ViewRegistry composition.',
+    );
+  });
+
+  it('never leaks frontmatter keys into a derived description', () => {
+    for (const { library, section, slug } of getAllDocSlugs()) {
+      const description = getDocMetadata(library, section, slug)?.description ?? '';
+      expect(description, `/docs/${library}/${section}/${slug}`).not.toMatch(/^title:/);
+    }
+  });
+
+  it('exposes a render body with no frontmatter for every doc page', () => {
+    for (const { library, section, slug } of getAllDocSlugs()) {
+      const doc = getDocBySlug(library, section, slug);
+
+      expect(doc?.body.startsWith('---'), `/docs/${library}/${section}/${slug}`).toBe(false);
+    }
+  });
+
+  it('strips a frontmatter block before the body is handed to MDX', () => {
+    const source = '---\ntitle: X\ndescription: D.\n---\n\n# Heading\n\nBody.\n';
+
+    expect(stripFrontmatter(source)).toBe('# Heading\n\nBody.\n');
+  });
+
+  it('leaves a body that merely starts with a thematic break alone', () => {
+    // A leading `---` is only frontmatter when a closing fence follows it.
+    const source = '---\n\n# Heading\n';
+
+    expect(stripFrontmatter(source)).toBe(source);
   });
 
   it('includes every configured doc page in the sitemap routes', () => {
