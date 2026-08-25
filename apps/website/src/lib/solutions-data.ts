@@ -13,6 +13,16 @@
  * blog post or a docs guide instead, where the thing you actually have to
  * say can stand on its own.
  *
+ * "Real code" is a required field, not an aspiration: `code` must be a working
+ * snippet against the published API, and each entry's snippet must show a
+ * DIFFERENT part of the stack from its siblings. Two entries that both reduce
+ * to "call interrupt(), then approve it" are the find-and-replace this rule
+ * exists to prevent, however different their prose is.
+ *
+ * `solutions-data.spec.ts` enforces what can be enforced mechanically —
+ * unique proof-point markers, a distinct code snippet per entry. The
+ * editorial judgement above is still yours.
+ *
  * Adding an entry is an editorial decision, not a data-file edit.
  *
  * See https://developers.google.com/search/docs/fundamentals/ai-optimization-guide
@@ -39,6 +49,17 @@ export interface ProofPoint {
   label: string;
 }
 
+/**
+ * A working snippet against the published API — see the file header. The
+ * `language` is a Shiki identifier; `label` names the file or layer it comes
+ * from so the reader knows where it belongs.
+ */
+export interface SolutionCode {
+  label: string;
+  language: 'typescript' | 'python' | 'html';
+  source: string;
+}
+
 export interface SolutionConfig {
   slug: string;
   color: string;
@@ -50,6 +71,7 @@ export interface SolutionConfig {
   architectureIntro: string;
   architectureLayers: ArchitectureLayer[];
   proofPoints: ProofPoint[];
+  code: SolutionCode;
   ctaHeadline: string;
   ctaSubtext: string;
   metaTitle: string;
@@ -98,9 +120,22 @@ export const SOLUTIONS: SolutionConfig[] = [
     ],
     proofPoints: [
       { metric: 'Every', label: 'Agent action recorded — tool calls, interrupts, and state transitions captured in the thread record' },
-      { metric: 'Required', label: 'Human approval before consequential actions — wired into LangGraph interrupts, not bolted on' },
+      { metric: 'Evidenced', label: 'Each approval is written into the checkpoint beside the action it gated — the decision and the proposal are one record' },
       { metric: 'Replayable', label: 'Thread persistence preserves the full decision path for review by auditors and your compliance team' },
     ],
+    code: {
+      label: 'audit-trail.component.ts — replaying a thread',
+      language: 'typescript',
+      source: `export class AuditTrailComponent {
+  private readonly agent = injectAgent(REVIEW_AGENT);
+
+  // Every checkpoint the thread passed through, oldest first.
+  readonly checkpoints = computed(() => this.agent.history());
+
+  // Raw LangGraph metadata, for the fields an auditor asks about.
+  readonly rawCheckpoints = computed(() => this.agent.langGraphHistory());
+}`,
+    },
     ctaHeadline: 'Ship compliant AI agents — without the compliance tax',
     ctaSubtext: 'Download the field report or start a pilot. Your compliance team will thank you.',
     metaTitle: 'Compliance & Audit — Threadplane Solutions',
@@ -150,6 +185,19 @@ export const SOLUTIONS: SolutionConfig[] = [
       { metric: 'Streaming', label: 'Token-level updates as the agent reasons over your data — first results visible before completion' },
       { metric: 'Inline', label: 'Charts, tables, and KPI cards rendered into the conversation as Angular components you already own' },
     ],
+    code: {
+      label: 'dashboard.component.ts — the view registry',
+      language: 'typescript',
+      source: `// The agent emits a json-render spec; your own components render it.
+const registry = defineAngularRegistry({
+  BarChart: BarChartComponent,
+  DataTable: DataTableComponent,
+  KpiCard: KpiCardComponent,
+});
+
+// In the template — the spec streams in and the view updates itself:
+// <render-spec [spec]="agentSpec()" [registry]="registry" />`,
+    },
     ctaHeadline: 'Turn your data into conversations',
     ctaSubtext: 'Download the field report or start a pilot. Ship a conversational BI experience in weeks, not quarters.',
     metaTitle: 'Analytics & BI — Threadplane Solutions',
@@ -196,9 +244,27 @@ export const SOLUTIONS: SolutionConfig[] = [
     ],
     proofPoints: [
       { metric: 'Preserved', label: 'Full conversation history across bot-to-human handoff — no repeating the question, no re-explaining the problem' },
-      { metric: 'Required', label: 'Human approval gates on sensitive actions (refunds, account changes, escalations) via LangGraph interrupts' },
+      { metric: 'Named', label: 'Refunds and account changes resume only with an identified approver — the agent cannot self-authorize' },
       { metric: 'Visible', label: 'Tool-call replay for human agents on escalation — see every step the AI took before the handoff' },
     ],
+    code: {
+      label: 'support-chat.component.ts — escalation',
+      language: 'typescript',
+      source: `export class SupportChatComponent {
+  private readonly agent = injectAgent(SUPPORT_AGENT);
+
+  // Populated when the graph pauses; null the rest of the time.
+  readonly pendingRefund = computed(() => this.agent.interrupt());
+
+  approveRefund(approver: string) {
+    this.agent.submit({ resume: { approved: true, approver } });
+  }
+
+  denyRefund(reason: string) {
+    this.agent.submit({ resume: { approved: false, reason } });
+  }
+}`,
+    },
     ctaHeadline: 'Support agents that make your team better',
     ctaSubtext: 'Download the field report or start a pilot. Resolve routine tickets, escalate the rest with full context, keep your customers happy.',
     metaTitle: 'Customer Support — Threadplane Solutions',
