@@ -233,6 +233,7 @@ describe('aboutPageJsonLd', () => {
     expect(person['name']).toBe(AUTHOR.name);
     expect(person['jobTitle']).toBe(AUTHOR.role);
     expect(person['description']).toBe(AUTHOR.bio);
+    // The fixture names only a GitHub handle, so only that profile may appear.
     expect(person['sameAs']).toEqual(['https://github.com/blove']);
     expect(person['url']).toBe('https://threadplane.ai/about');
   });
@@ -251,12 +252,24 @@ describe('aboutPageJsonLd', () => {
     expect((person['worksFor'] as JsonLdNode)['@id']).toBe(ORGANIZATION_ID);
   });
 
-  it('resolves the real site author to a real GitHub profile', () => {
+  it('omits a profile the author record does not name', () => {
+    // Each handle is opt-in per field: an author with only a GitHub handle must
+    // not acquire an invented X or LinkedIn URL.
+    const graph = aboutPageJsonLd({ name: 'Anon', github: 'anon' })['@graph'] as JsonLdNode[];
+    const person = graph.find((node) => node['@type'] === 'Person') as JsonLdNode;
+    expect(person['sameAs']).toEqual(['https://github.com/anon']);
+  });
+
+  it('resolves the real site author to real profiles', () => {
     // The page passes `blogAuthors['brian']`; `sameAs` is an identity claim, so
-    // this pins the profile the repo actually knows rather than the fixture's.
+    // this pins the profiles the repo actually knows rather than the fixture's.
     const graph = aboutPageJsonLd(blogAuthors['brian'])['@graph'] as JsonLdNode[];
     const person = graph.find((node) => node['@type'] === 'Person') as JsonLdNode;
-    expect(person['sameAs']).toEqual(['https://github.com/blove']);
+    expect(person['sameAs']).toEqual([
+      'https://github.com/blove',
+      'https://x.com/blovedev',
+      'https://www.linkedin.com/in/blove',
+    ]);
   });
 
   it('serializes to JSON', () => {

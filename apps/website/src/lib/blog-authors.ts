@@ -9,7 +9,12 @@ export interface Author {
    * with docs and code in this repository.
    */
   knowsAbout?: readonly string[];
+  /**
+   * Profile handles, not URLs. Each is opt-in: `sameAs` is an identity claim, so
+   * a handle the record does not name must never be synthesized from another.
+   */
   twitter?: string;
+  linkedin?: string;
   github?: string;
   avatar?: string;
 }
@@ -21,6 +26,8 @@ export const blogAuthors: Record<string, Author> = {
     bio: 'Agentic software architect building developer tooling for fullstack AI-powered web applications.',
     knowsAbout: ['Angular', 'TypeScript', 'LangGraph', 'AG-UI', 'Generative UI', 'Agent user interfaces'],
     github: 'blove',
+    twitter: 'blovedev',
+    linkedin: 'blove',
   },
 };
 
