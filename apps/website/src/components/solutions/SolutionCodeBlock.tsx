@@ -4,7 +4,7 @@ import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';
-import type { SolutionCode } from '../../lib/solutions-data';
+import type { SolutionCode, SolutionCodeBlocks } from '../../lib/solutions-data';
 
 /**
  * The `code` block on a solutions page.
@@ -17,11 +17,16 @@ import type { SolutionCode } from '../../lib/solutions-data';
  * This is an async Server Component, so highlighting happens at build time and
  * ships no Shiki payload to the browser.
  */
-export async function SolutionCodeBlock({ code, accent }: { code: SolutionCode; accent: string }) {
-  const html = await codeToHtml(code.source, {
-    lang: code.language,
-    theme: 'tokyo-night',
-  });
+async function highlight(block: SolutionCode) {
+  return codeToHtml(block.source, { lang: block.language, theme: 'tokyo-night' });
+}
+
+export async function SolutionCodeBlock({ code, accent }: { code: SolutionCodeBlocks; accent: string }) {
+  // Highlight every block up front: an async map inside JSX would give React
+  // promises to render rather than markup.
+  const rendered = await Promise.all(
+    code.map(async (block) => ({ ...block, html: await highlight(block) })),
+  );
 
   return (
     <Section surface="canvas" ariaLabelledBy="solution-code-heading">
@@ -43,17 +48,20 @@ export async function SolutionCodeBlock({ code, accent }: { code: SolutionCode; 
           >
             What it looks like in your codebase
           </h2>
-          <p
-            style={{
-              fontFamily: tokens.typography.body.family,
-              fontSize: tokens.typography.body.size,
-              lineHeight: tokens.typography.body.line,
-              color: tokens.colors.textSecondary,
-              margin: '0 0 20px',
-            }}
-          >
-            {code.label}
-          </p>
+          {rendered.map((block, index) => (
+            <div key={block.label} style={{ marginTop: index === 0 ? 0 : 24 }}>
+              <p
+                style={{
+                  fontFamily: tokens.typography.fontMono,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  letterSpacing: '0.04em',
+                  color: tokens.colors.textMuted,
+                  margin: '0 0 10px',
+                }}
+              >
+                {block.label}
+              </p>
           {/*
             Shiki emits a complete <pre> that already carries its own background,
             padding, and `overflow-x: auto`, so this wrapper owns only the frame.
@@ -61,16 +69,18 @@ export async function SolutionCodeBlock({ code, accent }: { code: SolutionCode; 
             must not be `auto`, which would nest a second scroll container around
             a element that already scrolls and can show two scrollbars.
           */}
-          <div
-            className="solution-code"
-            style={{
-              borderRadius: 12,
-              overflow: 'hidden',
-              border: `1px solid ${tokens.surfaces.border}`,
-              fontSize: 14,
-            }}
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
+              <div
+                className="solution-code"
+                style={{
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                  border: `1px solid ${tokens.surfaces.border}`,
+                  fontSize: 14,
+                }}
+                dangerouslySetInnerHTML={{ __html: block.html }}
+              />
+            </div>
+          ))}
         </div>
       </Container>
     </Section>

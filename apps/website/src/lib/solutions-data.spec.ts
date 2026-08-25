@@ -25,35 +25,41 @@ describe('SOLUTIONS', () => {
 
   it('gives every entry real code, not a placeholder', () => {
     for (const solution of SOLUTIONS) {
-      expect(solution.code.source.trim().length, solution.slug).toBeGreaterThan(80);
-      expect(solution.code.label.trim().length, solution.slug).toBeGreaterThan(0);
-      expect(solution.code.source, solution.slug).not.toMatch(/TODO|FIXME|\.\.\.$/);
+      expect(solution.code.length, solution.slug).toBeGreaterThan(0);
+      for (const block of solution.code) {
+        expect(block.source.trim().length, `${solution.slug}/${block.label}`).toBeGreaterThan(80);
+        expect(block.label.trim().length, solution.slug).toBeGreaterThan(0);
+        expect(block.source, `${solution.slug}/${block.label}`).not.toMatch(/TODO|FIXME|\.\.\.$/);
+      }
     }
   });
 
   it('shows a different part of the stack in each entry', () => {
-    // Not just "is the text different" — the snippets must not collapse to the
-    // same call. Compare the identifiers each one actually exercises.
+    // Compare the FRAMEWORK surface, not every identifier. An earlier version
+    // matched any `name(` and broke as soon as the snippets grew — two entries
+    // both calling `filter()` says nothing about which part of the stack they
+    // show. What matters is which agent methods and package entry points each
+    // one reaches for.
     //
-    // Framework entry points appear in every Angular snippet and carry no
-    // information about WHICH part of the stack is on show, so they are
-    // excluded. Keep this list to genuine boilerplate: adding a meaningful API
-    // here (`interrupt`, `history`, `submit`) would silence exactly the
-    // duplication this test exists to catch.
-    const UBIQUITOUS = new Set(['injectAgent(', 'computed(']);
-    const apiSurface = (source: string) =>
-      new Set(
-        (source.match(/\b[a-zA-Z_][a-zA-Z0-9_]{4,}\s*\(/g) ?? []).filter(
-          (call) => !UBIQUITOUS.has(call),
-        ),
-      );
+    // `injectAgent` is deliberately absent: every Angular snippet starts there.
+    const FRAMEWORK_ENTRY = /\b(views|defineAngularRegistry|provideAgent|provideRender|signalStateStore)\s*\(/g;
+    const AGENT_METHOD = /\bagent\.(\w+)\s*\(/g;
+
+    const surface = (solution: (typeof SOLUTIONS)[number]) => {
+      const all = solution.code.map((b) => b.source).join('\n');
+      return new Set([
+        ...(all.match(FRAMEWORK_ENTRY) ?? []).map((c) => c.replace(/\s*\($/, '')),
+        ...[...all.matchAll(AGENT_METHOD)].map((m) => `agent.${m[1]}`),
+      ]);
+    };
 
     for (const a of SOLUTIONS) {
       for (const b of SOLUTIONS) {
         if (a.slug >= b.slug) continue;
-        const [sa, sb] = [apiSurface(a.code.source), apiSurface(b.code.source)];
+        const [sa, sb] = [surface(a), surface(b)];
+        expect(sa.size, `${a.slug} exercises no framework API`).toBeGreaterThan(0);
         const shared = [...sa].filter((call) => sb.has(call));
-        expect(shared, `${a.slug} vs ${b.slug} call the same API`).toEqual([]);
+        expect(shared, `${a.slug} vs ${b.slug} exercise the same API`).toEqual([]);
       }
     }
   });
