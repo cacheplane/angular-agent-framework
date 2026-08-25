@@ -127,6 +127,19 @@ export const PERSON_ID = `${getCanonicalUrl(ABOUT_PATH)}#person`;
  * Every field is derived from the caller's {@link Author} record; nothing about
  * the person is stated here.
  */
+/**
+ * The external profiles an author record actually names, as absolute URLs.
+ *
+ * Order is stable so the emitted JSON-LD does not churn between builds.
+ */
+function personProfiles(author: Author): string[] {
+  return [
+    author.github && `https://github.com/${author.github}`,
+    author.twitter && `https://x.com/${author.twitter}`,
+    author.linkedin && `https://www.linkedin.com/in/${author.linkedin}`,
+  ].filter((url): url is string => Boolean(url));
+}
+
 export function aboutPageJsonLd(author: Author) {
   const url = getCanonicalUrl(ABOUT_PATH);
   const person: JsonLdNode = {
@@ -137,8 +150,9 @@ export function aboutPageJsonLd(author: Author) {
     ...(author.role ? { jobTitle: author.role } : {}),
     ...(author.bio ? { description: author.bio } : {}),
     // Only profiles the repo actually knows about; `sameAs` is an identity
-    // claim, so a guessed profile is a false one.
-    ...(author.github ? { sameAs: [`https://github.com/${author.github}`] } : {}),
+    // claim, so a guessed profile is a false one. Each handle is a separate
+    // opt-in field — one is never derived from another.
+    ...(personProfiles(author).length ? { sameAs: personProfiles(author) } : {}),
     ...(author.knowsAbout?.length ? { knowsAbout: [...author.knowsAbout] } : {}),
     worksFor: { '@id': ORGANIZATION_ID },
   };
