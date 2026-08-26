@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 'use client';
 import { useState, type ReactNode } from 'react';
+import { tokens } from '@threadplane/design-tokens';
 
 export interface MediumPane {
   key: 'video' | 'code' | 'live';
@@ -27,5 +28,49 @@ export function MediumSwitcher({ sectionId, panes }: MediumSwitcherProps) {
     return <>{panes[0]?.content ?? null}</>;
   }
 
-  return <>{panes[active].content}</>;
+  const tabId = (key: string) => `${sectionId}-tab-${key}`;
+  const panelId = (key: string) => `${sectionId}-panel-${key}`;
+
+  return (
+    <div>
+      <div role="tablist" aria-label="Choose how to view this" style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+        {panes.map((pane, index) => {
+          const selected = index === active;
+          return (
+            <button
+              key={pane.key}
+              id={tabId(pane.key)}
+              role="tab"
+              type="button"
+              aria-selected={selected}
+              aria-controls={panelId(pane.key)}
+              tabIndex={selected ? 0 : -1}
+              onClick={() => setActive(index)}
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontSize: 13,
+                fontWeight: 600,
+                padding: '8px 14px',
+                borderRadius: 8,
+                border: 'none',
+                cursor: 'pointer',
+                background: selected ? tokens.colors.accent : tokens.colors.accentSurface,
+                color: selected ? tokens.colors.textInverted : tokens.colors.textMuted,
+              }}
+            >
+              {pane.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div
+        id={panelId(panes[active].key)}
+        role="tabpanel"
+        aria-labelledby={tabId(panes[active].key)}
+      >
+        {panes[active].content}
+      </div>
+    </div>
+  );
 }
