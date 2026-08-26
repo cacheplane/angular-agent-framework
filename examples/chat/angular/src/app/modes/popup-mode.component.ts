@@ -33,7 +33,8 @@ import { AppModePromoComponent } from './app-mode-promo.component';
       [showModelPicker]="false"
       (selectedModelChange)="shell.onModelChange($event)"
     >
-      <welcome-suggestions chatWelcomeSuggestions [appModeOn]="shell.appMode() === 'on'" (selected)="send($event)" />
+      <welcome-suggestions chatWelcomeSuggestions [appModeOn]="shell.appMode() === 'on'"
+        [featuredId]="shell.featuredSuggestionId" (selected)="send($event)" />
     </chat-popup>
   `,
   styles: [`
