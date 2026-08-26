@@ -70,3 +70,6 @@ examples/chat/angular/src/environments/generated-keys.local.ts
 
 # Local service-account keys (GSC, etc). Never commit these.
 keys/
+
+# Playwright demo-recording output (large binaries; see apps/website/scripts/upload-demo-media.md)
+**/.record-output/

@@ -10,6 +10,8 @@ import {
 } from '../../../lib/solutions-data';
 import { Container } from '../../../components/ui/Container';
 import { Section } from '../../../components/ui/Section';
+import { SolutionCodeBlock } from '../../../components/solutions/SolutionCodeBlock';
+import { SolutionDemoBlock } from '../../../components/solutions/SolutionDemoBlock';
 import { Eyebrow } from '../../../components/ui/Eyebrow';
 import { Button } from '../../../components/ui/Button';
 import { Pill } from '../../../components/ui/Pill';
@@ -333,6 +335,8 @@ export default async function SolutionPage({ params }: PageProps) {
       <PainPoints items={solution.painPoints} accent={solution.color} />
       <Architecture intro={solution.architectureIntro} layers={solution.architectureLayers} accent={solution.color} />
       <Capabilities items={solution.proofPoints} accent={solution.color} />
+      <SolutionCodeBlock code={solution.code} accent={solution.color} />
+      {solution.demo && <SolutionDemoBlock clip={solution.demo} accent={solution.color} />}
       <WhitePaperBlock />
       <FinalCTA
         headline={solution.ctaHeadline}

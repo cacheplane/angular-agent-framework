@@ -3,6 +3,7 @@ import { EcosystemStrip } from '../components/landing/EcosystemStrip';
 import { Differentiator } from '../components/landing/Differentiator';
 import { FeatureBlock } from '../components/landing/FeatureBlock';
 import { BrowserFrame } from '../components/ui/BrowserFrame';
+import { HITL_CLIP } from '../lib/demo-media';
 import { DemoShowcase } from '../components/landing/DemoShowcase';
 import { PilotBlock } from '../components/landing/PilotBlock';
 import { WhitePaperBlock } from '../components/landing/WhitePaperBlock';
@@ -130,6 +131,58 @@ export default async function HomePage() {
               loading="lazy"
               decoding="async"
             />
+          </BrowserFrame>
+        }
+      />
+
+      {/*
+        The homepage claims human-in-the-loop in the Differentiator table and
+        mentions interrupts in the Stream block, but nothing here showed it.
+        This is the only section whose heading the approval clip actually
+        illustrates — the same rule the solutions pages follow.
+      */}
+      <FeatureBlock
+        id="approve"
+        eyebrow="Approve"
+        headline="Nothing irreversible happens without a human."
+        body={
+          <>
+            <code style={{ fontFamily: tokens.typography.fontMono }}>interrupt()</code> freezes the graph
+            mid-run and the pause lives in the checkpoint, not in component state. Your UI renders the
+            proposal, the human answers, and{' '}
+            <code style={{ fontFamily: tokens.typography.fontMono }}>submit({'{ resume }'})</code> continues
+            the run — with the decision written back beside the action it gated.
+          </>
+        }
+        bullets={[
+          'interrupt() pauses mid-run; submit({ resume }) continues it',
+          '<chat-interrupt-panel> renders the proposal',
+          'The pause is a checkpoint, not a modal',
+          'Decision and proposal land in one thread record',
+        ]}
+        supportingCards={[
+          { title: 'interrupt()', description: 'Freezes the graph before the action runs.' },
+          { title: 'resume', description: 'Carries the human decision back into the run.' },
+          { title: 'checkpoint', description: 'The pause survives; it is not UI state.' },
+        ]}
+        cta={{ label: 'Interrupt patterns', href: '/docs/langgraph/guides/interrupts' }}
+        visualLeft
+        visual={
+          <BrowserFrame url={HITL_CLIP.url} elevation="lg">
+            <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 10', background: '#15161f' }}>
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                poster={HITL_CLIP.poster}
+                aria-label={HITL_CLIP.caption}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              >
+                <source src={HITL_CLIP.videoWebm} type="video/webm" />
+                <source src={HITL_CLIP.videoMp4} type="video/mp4" />
+              </video>
+            </div>
           </BrowserFrame>
         }
       />
