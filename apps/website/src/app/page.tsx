@@ -42,6 +42,7 @@ async function buildPanes(media: SectionMedia, clipUrl: string): Promise<MediumP
   if (media.video) {
     const clip = media.video;
     panes.push({
+      id: 'video',
       key: 'video',
       label: 'Video',
       content: (
@@ -65,17 +66,19 @@ async function buildPanes(media: SectionMedia, clipUrl: string): Promise<MediumP
     });
   }
 
-  for (const block of media.code ?? []) {
+  const codeBlocks = media.code ?? [];
+  codeBlocks.forEach((block, index) => {
     panes.push({
+      id: `code-${index}`,
       key: 'code',
-      label: 'Code',
+      label: codeBlocks.length > 1 ? block.label : 'Code',
       content: (
         <div style={{ borderRadius: 14, overflow: 'hidden', border: `1px solid ${tokens.surfaces.border}` }}>
           <HighlightedCode code={block.source} lang={block.language} />
         </div>
       ),
     });
-  }
+  });
 
   return panes;
 }

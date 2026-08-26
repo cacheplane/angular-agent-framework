@@ -5,6 +5,9 @@ import { tokens } from '@threadplane/design-tokens';
 import { trackCtaClick } from '../../lib/analytics/client';
 
 export interface MediumPane {
+  /** Unique within a switcher — used for React keys and DOM ids. */
+  id: string;
+  /** Which medium this is; drives analytics, not identity. */
   key: 'video' | 'code' | 'live';
   label: string;
   /**
@@ -32,8 +35,8 @@ export function MediumSwitcher({ sectionId, panes }: MediumSwitcherProps) {
     return <>{panes[0]?.content ?? null}</>;
   }
 
-  const tabId = (key: string) => `${sectionId}-tab-${key}`;
-  const panelId = (key: string) => `${sectionId}-panel-${key}`;
+  const tabId = (id: string) => `${sectionId}-tab-${id}`;
+  const panelId = (id: string) => `${sectionId}-panel-${id}`;
 
   const select = (index: number) => {
     setActive(index);
@@ -62,7 +65,7 @@ export function MediumSwitcher({ sectionId, panes }: MediumSwitcherProps) {
     <div>
       <div
         role="tablist"
-        aria-label="Choose how to view this"
+        aria-label={`Choose how to view the ${sectionId} section`}
         onKeyDown={onKeyDown}
         style={{ display: 'flex', gap: 6, marginBottom: 12 }}
       >
@@ -70,15 +73,15 @@ export function MediumSwitcher({ sectionId, panes }: MediumSwitcherProps) {
           const selected = index === active;
           return (
             <button
-              key={pane.key}
+              key={pane.id}
               ref={(el) => {
                 tabRefs.current[index] = el;
               }}
-              id={tabId(pane.key)}
+              id={tabId(pane.id)}
               role="tab"
               type="button"
               aria-selected={selected}
-              aria-controls={panelId(pane.key)}
+              aria-controls={panelId(pane.id)}
               tabIndex={selected ? 0 : -1}
               onClick={() => select(index)}
               style={{
@@ -100,9 +103,9 @@ export function MediumSwitcher({ sectionId, panes }: MediumSwitcherProps) {
       </div>
 
       <div
-        id={panelId(panes[active].key)}
+        id={panelId(panes[active].id)}
         role="tabpanel"
-        aria-labelledby={tabId(panes[active].key)}
+        aria-labelledby={tabId(panes[active].id)}
       >
         {panes[active].content}
       </div>

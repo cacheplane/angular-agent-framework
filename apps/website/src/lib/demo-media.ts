@@ -41,8 +41,8 @@ export const HITL_CLIP: DemoClip = {
 
 /**
  * The LangGraph streaming demo, recorded on the canonical demo shell. Exported
- * rather than re-declared per consumer so the homepage showcase and the section
- * switcher cannot drift apart.
+ * so the section switcher does not add another hardcoded copy of these URLs.
+ * `DemoShowcase` still declares its own; consolidating it is tracked separately.
  */
 export const LANGGRAPH_CLIP: DemoClip = {
   caption: 'Tokens stream into the Angular surface as the agent produces them.',

@@ -13,7 +13,7 @@ describe('MediumSwitcher', () => {
     render(
       <MediumSwitcher
         sectionId="stream"
-        panes={[{ key: 'video', label: 'Video', content: <p>the clip</p> }]}
+        panes={[{ id: 'video', key: 'video', label: 'Video', content: <p>the clip</p> }]}
       />,
     );
 
@@ -21,8 +21,8 @@ describe('MediumSwitcher', () => {
     expect(screen.queryByRole('tablist')).toBeNull();
   });
   const twoPanes = [
-    { key: 'video' as const, label: 'Video', content: <p>the clip</p> },
-    { key: 'code' as const, label: 'Code', content: <p>the snippet</p> },
+    { id: 'video', key: 'video' as const, label: 'Video', content: <p>the clip</p> },
+    { id: 'code', key: 'code' as const, label: 'Code', content: <p>the snippet</p> },
   ];
 
   it('exposes a tab per medium with the first selected', () => {
@@ -104,5 +104,20 @@ describe('MediumSwitcher', () => {
 
     // Rendering is not a choice; only an explicit switch is.
     expect(trackCtaClickMock).not.toHaveBeenCalled();
+  });
+
+  it('keeps ids unique when a section has two code panes', () => {
+    render(
+      <MediumSwitcher
+        sectionId="stream"
+        panes={[
+          { id: 'code-0', key: 'code', label: 'Component', content: <p>first</p> },
+          { id: 'code-1', key: 'code', label: 'Template', content: <p>second</p> },
+        ]}
+      />,
+    );
+
+    const ids = screen.getAllByRole('tab').map((t) => t.getAttribute('id'));
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });
