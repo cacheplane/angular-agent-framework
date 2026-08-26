@@ -90,9 +90,7 @@ export type CtaId =
   | `final_cta_${string}`
   | `home_demo_${string}`
   // MediumSwitcher derives ids from section id + medium key at runtime
-  | `${string}_video`
-  | `${string}_code`
-  | `${string}_live`;
+  | `medium_${string}`;
 
 export type AnalyticsLibrary = 'langgraph' | 'render' | 'chat' | 'ag-ui' | 'unknown';
 

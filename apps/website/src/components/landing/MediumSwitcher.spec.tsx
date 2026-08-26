@@ -94,7 +94,7 @@ describe('MediumSwitcher', () => {
     fireEvent.click(screen.getAllByRole('tab')[1]);
 
     expect(trackCtaClickMock).toHaveBeenCalledWith(
-      expect.objectContaining({ surface: 'home_medium_switcher', cta_id: 'stream_code' }),
+      expect.objectContaining({ surface: 'home_medium_switcher', cta_id: 'medium_stream_code' }),
     );
   });
 

@@ -39,7 +39,7 @@ export function MediumSwitcher({ sectionId, panes }: MediumSwitcherProps) {
     setActive(index);
     trackCtaClick({
       surface: 'home_medium_switcher',
-      cta_id: `${sectionId}_${panes[index].key}`,
+      cta_id: `medium_${sectionId}_${panes[index].key}`,
       cta_text: panes[index].label,
     });
   };
