@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { describe, expect, it } from 'vitest';
 import { SOLUTIONS, getSolutionBySlug } from './solutions-data';
+import { DEMO_CDN } from './demo-media';
 
 /**
  * The file header of `solutions-data.ts` sets an editorial rule: no entry may
@@ -60,6 +61,25 @@ describe('SOLUTIONS', () => {
         expect(sa.size, `${a.slug} exercises no framework API`).toBeGreaterThan(0);
         const shared = [...sa].filter((call) => sb.has(call));
         expect(shared, `${a.slug} vs ${b.slug} exercise the same API`).toEqual([]);
+      }
+    }
+  });
+
+  it('only attaches a clip to an entry whose claim it shows', () => {
+    // The HITL clip illustrates an approval gate. `analytics` has no approval
+    // story, so reusing the footage there would be padding — the same asset
+    // under a heading it does not illustrate.
+    const withDemo = SOLUTIONS.filter((s) => s.demo).map((s) => s.slug).sort();
+
+    expect(withDemo).toEqual(['compliance', 'customer-support']);
+  });
+
+  it('serves every clip from the shared blob base', () => {
+    // A hardcoded URL here would drift the next time the store moves.
+    for (const solution of SOLUTIONS) {
+      if (!solution.demo) continue;
+      for (const url of [solution.demo.videoMp4, solution.demo.videoWebm, solution.demo.poster]) {
+        expect(url, solution.slug).toContain(DEMO_CDN);
       }
     }
   });

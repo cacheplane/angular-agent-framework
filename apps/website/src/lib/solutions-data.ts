@@ -27,6 +27,8 @@
  *
  * See https://developers.google.com/search/docs/fundamentals/ai-optimization-guide
  */
+import { HITL_CLIP, type DemoClip } from './demo-media';
+
 export interface SolutionPainPoint {
   title: string;
   description: string;
@@ -79,6 +81,13 @@ export interface SolutionConfig {
   architectureLayers: ArchitectureLayer[];
   proofPoints: ProofPoint[];
   code: SolutionCodeBlocks;
+  /**
+   * OPTIONAL, and it must stay optional. A clip belongs on an entry only when
+   * it shows that entry's actual claim — the same footage under a heading it
+   * does not illustrate is the padding this file's header warns about.
+   * `analytics` has no approval story, so it carries no clip.
+   */
+  demo?: DemoClip;
   ctaHeadline: string;
   ctaSubtext: string;
   metaTitle: string;
@@ -173,6 +182,7 @@ export const SOLUTIONS: SolutionConfig[] = [
 <p class="muted">{{ checkpoints().length }} checkpoints on this thread.</p>`,
       },
     ],
+    demo: HITL_CLIP,
     ctaHeadline: 'Ship compliant AI agents — without the compliance tax',
     ctaSubtext: 'Download the field report or start a pilot. Your compliance team will thank you.',
     metaTitle: 'Compliance & Audit — Threadplane Solutions',
@@ -342,6 +352,7 @@ export class DashboardComponent {
 }`,
       },
     ],
+    demo: HITL_CLIP,
     ctaHeadline: 'Support agents that make your team better',
     ctaSubtext: 'Download the field report or start a pilot. Resolve routine tickets, escalate the rest with full context, keep your customers happy.',
     metaTitle: 'Customer Support — Threadplane Solutions',
