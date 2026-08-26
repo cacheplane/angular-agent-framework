@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { tokens } from '@threadplane/design-tokens';
 import { BrowserFrame } from '../ui/BrowserFrame';
+import { TabGroup } from '../ui/TabGroup';
 import { Button } from '../ui/Button';
 import { DemoCtaPair } from './DemoCtaPair';
 import { DemoModal } from './DemoModal';
@@ -30,9 +31,9 @@ const MEDIA: DemoMedia[] = [
 export function DemoShowcase() {
   const [active, setActive] = useState<TabKey>('langgraph');
   const [modalOpen, setModalOpen] = useState(false);
-  const media = MEDIA.find((m) => m.key === active)!;
-  const launch = () => {
-    trackCtaClick({ surface: 'home_demo', destination_url: media.href, cta_id: `home_demo_launch_${active.replace(/-/g, '_')}`, cta_text: 'Launch live demo' });
+  const launch = (media: DemoMedia) => {
+    setActive(media.key);
+    trackCtaClick({ surface: 'home_demo', destination_url: media.href, cta_id: `home_demo_launch_${media.key.replace(/-/g, '_')}`, cta_text: 'Launch live demo' });
     setModalOpen(true);
   };
 
@@ -46,34 +47,39 @@ export function DemoShowcase() {
         The identical Threadplane chat surface, running live against a LangGraph backend and an AG-UI backend. Switch tabs to compare — the front end never changes.
       </p>
 
-      <div role="tablist" aria-label="Demo backend" style={{ display: 'flex', gap: 6, justifyContent: 'center', marginBottom: 12 }}>
-        {MEDIA.map((m) => {
-          const on = m.key === active;
-          return (
-            <button key={m.key} role="tab" aria-selected={on} onClick={() => setActive(m.key)}
-              style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: 600, padding: '9px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                background: on ? tokens.colors.accent : tokens.colors.accentSurface, color: on ? tokens.colors.textInverted : tokens.colors.textMuted }}>
-              {m.tabLabel}
-            </button>
-          );
-        })}
-      </div>
-
-      <BrowserFrame url={media.url} elevation="lg">
-        <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 10', background: '#15161f' }}>
-          <video key={media.key} autoPlay muted loop playsInline poster={media.poster}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}>
-            <source src={media.videoWebm} type="video/webm" />
-            <source src={media.videoMp4} type="video/mp4" />
-          </video>
-          <button onClick={launch} aria-label={`Launch ${media.tabLabel} live demo`}
-            style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10,
-              background: 'linear-gradient(180deg, rgba(16,18,32,.15), rgba(16,18,32,.45))', border: 'none', cursor: 'pointer' }}>
-            <span style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#15161f', fontSize: 22 }}>&#9654;</span>
-            <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 13, color: '#fff', background: 'rgba(0,0,0,.5)', padding: '8px 14px', borderRadius: 8 }}>Launch live demo</span>
-          </button>
-        </div>
-      </BrowserFrame>
+      {/*
+        Runtime tabs, not medium tabs — this section's whole argument is that the
+        SAME front end runs on two backends. `TabGroup` supplies the ARIA tabs
+        pattern (roving tabindex, arrow/Home/End keys, focus following
+        selection); previously this rendered tab roles with none of that
+        behaviour, which promised assistive tech a widget that did not respond.
+      */}
+      <TabGroup
+        groupId="home-demo"
+        label="Demo backend"
+        panes={MEDIA.map((m) => ({
+          id: m.key,
+          label: m.tabLabel,
+          content: (
+            <BrowserFrame url={m.url} elevation="lg">
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 10', background: '#15161f' }}>
+                <video autoPlay muted loop playsInline poster={m.poster}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}>
+                  <source src={m.videoWebm} type="video/webm" />
+                  <source src={m.videoMp4} type="video/mp4" />
+                </video>
+                <button onClick={() => launch(m)} aria-label={`Launch ${m.tabLabel} live demo`}
+                  style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10,
+                    background: 'linear-gradient(180deg, rgba(16,18,32,.15), rgba(16,18,32,.45))', border: 'none', cursor: 'pointer' }}>
+                  <span style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#15161f', fontSize: 22 }}>&#9654;</span>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 13, color: '#fff', background: 'rgba(0,0,0,.5)', padding: '8px 14px', borderRadius: 8 }}>Launch live demo</span>
+                </button>
+              </div>
+            </BrowserFrame>
+          ),
+        }))}
+        onSelect={(pane) => setActive(pane.id as TabKey)}
+      />
 
       <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap', marginTop: 18 }}>
         <DemoCtaPair surface="home_demo" size="lg" />
