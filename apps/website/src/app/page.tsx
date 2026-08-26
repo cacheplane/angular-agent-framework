@@ -80,12 +80,43 @@ async function buildPanes(media: SectionMedia, clipUrl: string): Promise<MediumP
     });
   });
 
+  if (media.live) {
+    const mode = media.live.mode ?? 'embed';
+    panes.push({
+      id: 'live',
+      key: 'live',
+      label: 'Live',
+      content: (
+        <BrowserFrame url={clipUrl} elevation="lg">
+          <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 10', background: '#15161f' }}>
+            {/*
+              Mounted only when its tab is selected — `MediumSwitcher` renders
+              one pane at a time, so this iframe is never requested on page load.
+              `?featured=` opens the demo on this section's own scenario; the id
+              is a key into the demo's curated list, so an unknown one falls back
+              rather than rendering anything this URL supplies.
+            */}
+            <iframe
+              src={`https://demo.threadplane.ai/${mode}?featured=${encodeURIComponent(media.live.featured)}`}
+              title="Threadplane live demo"
+              loading="lazy"
+              style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+            />
+          </div>
+        </BrowserFrame>
+      ),
+    });
+  }
+
   return panes;
 }
 
 export default async function HomePage() {
-  const streamPanes = await buildPanes(SECTION_MEDIA.stream, SECTION_MEDIA.stream.video?.url ?? '');
-  const approvePanes = await buildPanes(SECTION_MEDIA.approve, SECTION_MEDIA.approve.video?.url ?? '');
+  const [streamPanes, renderPanes, shipPanes, approvePanes] = await Promise.all(
+    (['stream', 'render', 'ship', 'approve'] as const).map((key) =>
+      buildPanes(SECTION_MEDIA[key], SECTION_MEDIA[key].video?.url ?? ''),
+    ),
+  );
 
   return (
     <>
@@ -144,17 +175,7 @@ export default async function HomePage() {
         ]}
         cta={{ label: 'See @threadplane/render', href: '/render' }}
         visualLeft
-        visual={
-          <BrowserFrame url="cockpit.threadplane.ai" elevation="md">
-            <img
-              src="/screenshots/cockpit-api.webp"
-              alt="Cockpit reference app — API reference rendered as structured cards"
-              style={{ display: 'block', width: '100%', height: 'auto' }}
-              loading="lazy"
-              decoding="async"
-            />
-          </BrowserFrame>
-        }
+        visual={<MediumSwitcher sectionId="render" panes={renderPanes} />}
       />
 
       {/* Ship — the live demo */}
@@ -175,17 +196,7 @@ export default async function HomePage() {
           { title: 'thread persistence', description: 'Restore conversations across sessions.' },
         ]}
         cta={{ label: 'Production patterns', href: '/docs/langgraph/guides/deployment' }}
-        visual={
-          <BrowserFrame url="demo.threadplane.ai" elevation="lg">
-            <img
-              src="/screenshots/canonical-demo-generative-ui.webp"
-              alt="Threadplane chat rendering a live generative-UI dashboard"
-              style={{ display: 'block', width: '100%', height: 'auto' }}
-              loading="lazy"
-              decoding="async"
-            />
-          </BrowserFrame>
-        }
+        visual={<MediumSwitcher sectionId="ship" panes={shipPanes} />}
       />
 
       {/*

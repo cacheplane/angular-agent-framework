@@ -51,3 +51,31 @@ export const LANGGRAPH_CLIP: DemoClip = {
   videoWebm: `${DEMO_CDN}/langgraph-demo.webm`,
   poster: `${DEMO_CDN}/langgraph-demo-poster.webp`,
 };
+
+/**
+ * Generative UI: the agent emits a json-render spec and the demo mounts it as
+ * real Angular components. Recorded by
+ * `examples/chat/angular/e2e/record-render.record.ts`.
+ */
+export const RENDER_CLIP: DemoClip = {
+  caption:
+    'The agent emits a spec and your own components render it — this form is Angular, not a screenshot.',
+  url: 'demo.threadplane.ai',
+  videoMp4: `${DEMO_CDN}/render-demo.mp4`,
+  videoWebm: `${DEMO_CDN}/render-demo.webm`,
+  poster: `${DEMO_CDN}/render-demo-poster.webp`,
+};
+
+/**
+ * Durability: send a message, reload the page, and the conversation is still
+ * there — the thread lives in a checkpoint, not in component state. Recorded by
+ * `examples/chat/angular/e2e/record-ship.record.ts`.
+ */
+export const SHIP_CLIP: DemoClip = {
+  caption:
+    'Reload the page mid-conversation and nothing is lost — the thread is restored from its checkpoint.',
+  url: 'demo.threadplane.ai',
+  videoMp4: `${DEMO_CDN}/ship-demo.mp4`,
+  videoWebm: `${DEMO_CDN}/ship-demo.webm`,
+  poster: `${DEMO_CDN}/ship-demo-poster.webp`,
+};
