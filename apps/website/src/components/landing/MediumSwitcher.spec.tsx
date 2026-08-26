@@ -5,7 +5,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MediumSwitcher } from './MediumSwitcher';
 
-vi.mock('../../lib/analytics/client', () => ({ trackCtaClick: vi.fn() }));
+const trackCtaClickMock = vi.hoisted(() => vi.fn());
+vi.mock('../../lib/analytics/client', () => ({ trackCtaClick: trackCtaClickMock }));
 
 describe('MediumSwitcher', () => {
   it('renders a lone medium with no tablist', () => {
@@ -72,5 +73,24 @@ describe('MediumSwitcher', () => {
 
     fireEvent.keyDown(tablist, { key: 'ArrowLeft' });
     expect(screen.getAllByRole('tab')[1].getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('reports the medium a reader switches to', () => {
+    trackCtaClickMock.mockClear();
+    render(<MediumSwitcher sectionId="stream" panes={twoPanes} />);
+
+    fireEvent.click(screen.getAllByRole('tab')[1]);
+
+    expect(trackCtaClickMock).toHaveBeenCalledWith(
+      expect.objectContaining({ surface: 'home_medium_switcher', cta_id: 'stream_code' }),
+    );
+  });
+
+  it('does not report the medium a reader never chose', () => {
+    trackCtaClickMock.mockClear();
+    render(<MediumSwitcher sectionId="stream" panes={twoPanes} />);
+
+    // Rendering is not a choice; only an explicit switch is.
+    expect(trackCtaClickMock).not.toHaveBeenCalled();
   });
 });

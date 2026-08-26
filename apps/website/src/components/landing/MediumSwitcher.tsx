@@ -2,6 +2,7 @@
 'use client';
 import { useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import { tokens } from '@threadplane/design-tokens';
+import { trackCtaClick } from '../../lib/analytics/client';
 
 export interface MediumPane {
   key: 'video' | 'code' | 'live';
@@ -31,11 +32,21 @@ export function MediumSwitcher({ sectionId, panes }: MediumSwitcherProps) {
   const tabId = (key: string) => `${sectionId}-tab-${key}`;
   const panelId = (key: string) => `${sectionId}-panel-${key}`;
 
+  const select = (index: number) => {
+    setActive(index);
+    trackCtaClick({
+      surface: 'home_medium_switcher',
+      cta_id: `${sectionId}_${panes[index].key}`,
+      cta_text: panes[index].label,
+    });
+  };
+
   const onKeyDown = (event: ReactKeyboardEvent) => {
     if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
     event.preventDefault();
     const delta = event.key === 'ArrowRight' ? 1 : -1;
-    setActive((current) => (current + delta + panes.length) % panes.length);
+    const next = (active + delta + panes.length) % panes.length;
+    select(next);
   };
 
   return (
@@ -57,7 +68,7 @@ export function MediumSwitcher({ sectionId, panes }: MediumSwitcherProps) {
               aria-selected={selected}
               aria-controls={panelId(pane.key)}
               tabIndex={selected ? 0 : -1}
-              onClick={() => setActive(index)}
+              onClick={() => select(index)}
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontSize: 13,
