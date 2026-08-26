@@ -2,7 +2,7 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { MediumSwitcher } from './MediumSwitcher';
 
 vi.mock('../../lib/analytics/client', () => ({ trackCtaClick: vi.fn() }));
@@ -40,5 +40,23 @@ describe('MediumSwitcher', () => {
     const panel = screen.getByRole('tabpanel');
     expect(tab.getAttribute('aria-controls')).toBe(panel.getAttribute('id'));
     expect(panel.getAttribute('aria-labelledby')).toBe(tab.getAttribute('id'));
+  });
+
+  it('mounts only the active pane', () => {
+    render(<MediumSwitcher sectionId="stream" panes={twoPanes} />);
+
+    // Not "hidden" — absent. A CSS-toggled implementation would still fetch the
+    // video and the iframe on page load, which is the cost this avoids.
+    expect(screen.getByText('the clip')).toBeTruthy();
+    expect(screen.queryByText('the snippet')).toBeNull();
+  });
+
+  it('swaps which pane is mounted when a tab is clicked', () => {
+    render(<MediumSwitcher sectionId="stream" panes={twoPanes} />);
+
+    fireEvent.click(screen.getAllByRole('tab')[1]);
+
+    expect(screen.queryByText('the clip')).toBeNull();
+    expect(screen.getByText('the snippet')).toBeTruthy();
   });
 });
