@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 'use client';
-import { useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
+import { useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import { tokens } from '@threadplane/design-tokens';
 import { trackCtaClick } from '../../lib/analytics/client';
 
@@ -22,7 +22,10 @@ interface MediumSwitcherProps {
 }
 
 export function MediumSwitcher({ sectionId, panes }: MediumSwitcherProps) {
+  // Call sites pass a static `panes` array, so the index cannot go stale. If a
+  // caller ever makes a medium conditional, this needs a clamp.
   const [active, setActive] = useState(0);
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   // One medium needs no control surface; chrome around a single option is noise.
   if (panes.length <= 1) {
@@ -42,11 +45,17 @@ export function MediumSwitcher({ sectionId, panes }: MediumSwitcherProps) {
   };
 
   const onKeyDown = (event: ReactKeyboardEvent) => {
-    if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+    const last = panes.length - 1;
+    let next: number;
+    if (event.key === 'ArrowRight') next = (active + 1) % panes.length;
+    else if (event.key === 'ArrowLeft') next = (active - 1 + panes.length) % panes.length;
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = last;
+    else return;
+
     event.preventDefault();
-    const delta = event.key === 'ArrowRight' ? 1 : -1;
-    const next = (active + delta + panes.length) % panes.length;
     select(next);
+    tabRefs.current[next]?.focus();
   };
 
   return (
@@ -62,6 +71,9 @@ export function MediumSwitcher({ sectionId, panes }: MediumSwitcherProps) {
           return (
             <button
               key={pane.key}
+              ref={(el) => {
+                tabRefs.current[index] = el;
+              }}
               id={tabId(pane.key)}
               role="tab"
               type="button"

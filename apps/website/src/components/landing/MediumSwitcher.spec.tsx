@@ -67,12 +67,24 @@ describe('MediumSwitcher', () => {
 
     fireEvent.keyDown(tablist, { key: 'ArrowRight' });
     expect(screen.getAllByRole('tab')[1].getAttribute('aria-selected')).toBe('true');
+    expect(document.activeElement).toBe(screen.getAllByRole('tab')[1]);
 
     fireEvent.keyDown(tablist, { key: 'ArrowRight' });
     expect(screen.getAllByRole('tab')[0].getAttribute('aria-selected')).toBe('true');
 
     fireEvent.keyDown(tablist, { key: 'ArrowLeft' });
     expect(screen.getAllByRole('tab')[1].getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('jumps to the first and last tab with Home and End', () => {
+    render(<MediumSwitcher sectionId="stream" panes={twoPanes} />);
+    const tablist = screen.getByRole('tablist');
+
+    fireEvent.keyDown(tablist, { key: 'End' });
+    expect(screen.getAllByRole('tab')[1].getAttribute('aria-selected')).toBe('true');
+
+    fireEvent.keyDown(tablist, { key: 'Home' });
+    expect(screen.getAllByRole('tab')[0].getAttribute('aria-selected')).toBe('true');
   });
 
   it('reports the medium a reader switches to', () => {
