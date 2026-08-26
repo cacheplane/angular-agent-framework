@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 'use client';
-import { useState, type ReactNode } from 'react';
+import { useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import { tokens } from '@threadplane/design-tokens';
 
 export interface MediumPane {
@@ -31,9 +31,21 @@ export function MediumSwitcher({ sectionId, panes }: MediumSwitcherProps) {
   const tabId = (key: string) => `${sectionId}-tab-${key}`;
   const panelId = (key: string) => `${sectionId}-panel-${key}`;
 
+  const onKeyDown = (event: ReactKeyboardEvent) => {
+    if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+    event.preventDefault();
+    const delta = event.key === 'ArrowRight' ? 1 : -1;
+    setActive((current) => (current + delta + panes.length) % panes.length);
+  };
+
   return (
     <div>
-      <div role="tablist" aria-label="Choose how to view this" style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+      <div
+        role="tablist"
+        aria-label="Choose how to view this"
+        onKeyDown={onKeyDown}
+        style={{ display: 'flex', gap: 6, marginBottom: 12 }}
+      >
         {panes.map((pane, index) => {
           const selected = index === active;
           return (

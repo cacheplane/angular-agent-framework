@@ -59,4 +59,18 @@ describe('MediumSwitcher', () => {
     expect(screen.queryByText('the clip')).toBeNull();
     expect(screen.getByText('the snippet')).toBeTruthy();
   });
+
+  it('moves between tabs with arrow keys, wrapping at the ends', () => {
+    render(<MediumSwitcher sectionId="stream" panes={twoPanes} />);
+    const tablist = screen.getByRole('tablist');
+
+    fireEvent.keyDown(tablist, { key: 'ArrowRight' });
+    expect(screen.getAllByRole('tab')[1].getAttribute('aria-selected')).toBe('true');
+
+    fireEvent.keyDown(tablist, { key: 'ArrowRight' });
+    expect(screen.getAllByRole('tab')[0].getAttribute('aria-selected')).toBe('true');
+
+    fireEvent.keyDown(tablist, { key: 'ArrowLeft' });
+    expect(screen.getAllByRole('tab')[1].getAttribute('aria-selected')).toBe('true');
+  });
 });
