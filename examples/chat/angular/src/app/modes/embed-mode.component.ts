@@ -19,7 +19,8 @@ import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
       [selectedModel]="shell.model()"
       (selectedModelChange)="shell.onModelChange($event)"
     >
-      <welcome-suggestions chatWelcomeSuggestions [appModeOn]="shell.appMode() === 'on'" (selected)="send($event)" />
+      <welcome-suggestions chatWelcomeSuggestions [appModeOn]="shell.appMode() === 'on'"
+        [featuredId]="shell.featuredSuggestionId" (selected)="send($event)" />
     </chat>
   `,
   styles: [`

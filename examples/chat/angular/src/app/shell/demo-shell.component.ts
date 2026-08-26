@@ -385,6 +385,26 @@ export class DemoShell {
   }
 
   /**
+   * The `?featured=` id, if the URL carries one.
+   *
+   * Read once at construction like `appmode`, not tracked reactively: this
+   * selects which welcome suggestion leads on a cold open (the website's live
+   * demo tabs link here per section), and re-reading it mid-session would let a
+   * later navigation reshuffle the chips under the user.
+   *
+   * Passed through untouched. `suggestionsForAppMode` treats it as a key and
+   * ignores anything it does not recognise, so no validation is needed here —
+   * and none should be added, since sanitising it here would imply it is ever
+   * rendered as content.
+   */
+  readonly featuredSuggestionId: string | undefined = this.initialFeaturedId();
+
+  private initialFeaturedId(): string | undefined {
+    const search = this.document.defaultView?.location.search ?? '';
+    return new URLSearchParams(search).get('featured') ?? undefined;
+  }
+
+  /**
    * Source of truth for the model picker. The shell owns it; the
    * patched submit injects it into state on every send.
    */

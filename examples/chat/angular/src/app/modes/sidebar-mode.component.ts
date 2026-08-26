@@ -39,7 +39,8 @@ import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
           />
         </div>
       }
-      <welcome-suggestions chatWelcomeSuggestions [appModeOn]="shell.appMode() === 'on'" (selected)="send($event)" />
+      <welcome-suggestions chatWelcomeSuggestions [appModeOn]="shell.appMode() === 'on'"
+        [featuredId]="shell.featuredSuggestionId" (selected)="send($event)" />
     </chat-sidebar>
   `,
   styles: [`

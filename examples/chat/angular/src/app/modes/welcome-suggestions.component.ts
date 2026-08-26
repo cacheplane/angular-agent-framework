@@ -122,7 +122,15 @@ export class WelcomeSuggestionsComponent {
    */
   readonly appModeOn = input<boolean>(false);
 
-  private readonly suggestions = computed(() => suggestionsForAppMode(this.appModeOn()));
+  /**
+   * Optional `?featured=` id. A KEY into the curated list, never free text —
+   * an unrecognised id falls back to the default rather than rendering it.
+   */
+  readonly featuredId = input<string | undefined>(undefined);
+
+  private readonly suggestions = computed(() =>
+    suggestionsForAppMode(this.appModeOn(), this.featuredId()),
+  );
   protected readonly featuredOne = computed(() => this.suggestions().featured);
   protected readonly moreOptions = computed<readonly ChatSelectOption[]>(() =>
     this.suggestions().more.map((s) => ({ value: s.value, label: s.label, description: s.description })),

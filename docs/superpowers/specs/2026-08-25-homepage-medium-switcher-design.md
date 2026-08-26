@@ -1,7 +1,7 @@
 # Homepage medium switcher — design
 
 **Date:** 2026-08-25
-**Status:** approved, not yet implemented
+**Status:** Phase 1 shipped (PR #831). Phase 2 revised 2026-08-26 — see `?featured=`.
 
 ## Problem
 
@@ -39,7 +39,7 @@ they came for — and so the homepage gains a code surface where it matters.
 interface SectionMedia {
   video?: DemoClip;              // from lib/demo-media.ts
   code?: SolutionCode[];         // reuse the solutions type
-  live?: { prompt: string; mode?: 'embed' | 'popup' | 'sidebar' };
+  live?: { featured: string; mode?: 'embed' | 'popup' | 'sidebar' };
 }
 ```
 
@@ -73,7 +73,7 @@ Four sections × three mediums = twelve panes.
 
 | Section | Video | Code | Live prompt |
 | --- | --- | --- | --- |
-| Stream | `langgraph-demo` (exists) | streaming snippet | stream a long answer |
+| Stream | `langgraph-demo` (exists) | streaming snippet | a markdown-streaming suggestion |
 | Render | **needs recording** — generative UI | `views()` + `<chat [views]>` | chart request |
 | Ship | **needs recording** — reload restores the thread | `error()` / `status()` / `reload()` | any prompt, then reload |
 | Approve | `hitl-demo` (exists) | `interrupt()` / `submit({ resume })` | the backups approval scenario |
@@ -87,23 +87,38 @@ Every code pane must be a working snippet against the published API, sourced
 from the docs rather than written from memory. The same rule
 `solutions-data.ts` already enforces applies here.
 
-## `?prompt=` in examples/chat
+## `?featured=` in examples/chat
 
-The demo app supports `/embed/:threadId`, `/popup/:threadId`,
-`/sidebar/:threadId` and an `?appmode=` flag, but has no way to open on a given
-scenario. Without one, every section's live tab is the same empty demo under a
-different heading — the find-and-replace pattern `solutions-data.ts` exists to
-prevent, and the weakest tab in every section.
+**Revised 2026-08-26.** The original design called for a free-text `?prompt=`
+that prefills the composer. Researching it before implementation showed two
+problems:
 
-Add `?prompt=` to `examples/chat`, which **prefills the composer and never
-auto-sends**. Auto-executing text from a URL would let any link run something on
-a visitor's behalf; prefilling keeps a human in the loop, which is the framework's
-own argument.
+1. `ChatComponent` has no draft input, so prefilling the composer means adding a
+   public input to `@threadplane/chat` — a commercially licensed published
+   package. That is a semver-relevant API addition requiring an api-docs
+   regeneration, for the sake of a marketing page.
+2. Free text in a URL means any link can display arbitrary attacker-chosen text
+   inside the Threadplane demo UI. The original design worried about
+   auto-execution but not about defacement.
 
-Rejected alternative: deep-linking pre-seeded threads via `/embed/:threadId`.
-It needs no app change, but the seeded threads must survive in production
-storage, and a checkpoint wipe would silently empty every live tab on the
-homepage with no failing test anywhere.
+The demo already has the mechanism needed. `welcome-suggestions` renders a
+featured chip plus a "More prompts" dropdown, and `suggestionsForAppMode()`
+decides which suggestion is featured. A **keyed** `?featured=<id>` param
+selecting from that curated list gets the same outcome:
+
+- No library change — the work is contained in `examples/chat`.
+- Never auto-sends: the chip still requires a click.
+- A link cannot inject text, because unknown ids fall back to the default
+  featured suggestion rather than rendering what the URL says.
+- Reuses UI that already exists and is already tested.
+
+The cost is that a live tab can only open on a curated scenario. For a marketing
+surface that is a feature, not a limitation.
+
+Each `SectionMedia.live` therefore carries a suggestion id, and the live tab
+frames `https://demo.threadplane.ai/embed?featured=<id>`. The demo sets no
+`X-Frame-Options` or frame-ancestors CSP, and `DemoModal` already frames it, so
+embedding works.
 
 ## Accessibility
 
@@ -123,20 +138,22 @@ readers actually reach for is measurable rather than assumed.
 - `MediumSwitcher`: tab roles and `aria-selected`; arrow-key movement; a single
   medium renders bare with no tablist; **only the active pane is in the DOM**;
   the live iframe is absent until its tab is selected.
-- Data: every section declares at least one medium; every live prompt is
-  non-empty; every video URL resolves through `DEMO_CDN`.
-- `?prompt=`: the composer is prefilled and **no run starts** — the important
-  assertion, since the failure mode is a URL that executes.
+- Data: every section declares at least one medium; every live entry names a
+  suggestion id that actually exists; every video URL resolves through `DEMO_CDN`.
+- `?featured=`: a known id features that suggestion; an UNKNOWN id falls back to
+  the default rather than rendering the URL's text — the important assertion,
+  since the failure mode being designed out is a link that controls the page.
+  And selecting a suggestion still requires a click: **no run starts on load**.
 
 ## Delivery
 
-Two PRs, so neither is unreviewable and half ships without waiting on
-recordings.
+Three PRs, so none is unreviewable and nothing waits on a recording session.
 
-1. `MediumSwitcher` + Stream and Approve (their videos already exist), with code
-   and video tabs. No live tab yet.
-2. `?prompt=` in `examples/chat`, the Render and Ship recordings, and the live
-   tab across all four sections.
+1. ✅ SHIPPED (PR #831). `MediumSwitcher` + Stream and Approve, video and code
+   tabs. No live tab yet.
+2. `?featured=` in `examples/chat`, then the live tab and the Render/Ship
+   switchers with code tabs.
+3. The Render and Ship recordings, added as video tabs once produced.
 
 ## Open questions
 
