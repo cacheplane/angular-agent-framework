@@ -3,7 +3,7 @@ import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';
-import { BrowserFrame } from '../ui/BrowserFrame';
+import { ClipPlayer } from '../ui/ClipPlayer';
 import type { DemoClip } from '../../lib/demo-media';
 
 /**
@@ -53,27 +53,7 @@ export function SolutionDemoBlock({ clip, accent }: { clip: DemoClip; accent: st
             {clip.caption}
           </p>
 
-          <BrowserFrame url={clip.url} elevation="lg">
-            <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 10', background: '#15161f' }}>
-              {/*
-                Silent, decorative loop. `aria-label` rather than captions: there
-                is no audio track and no narration to caption, and the prose
-                above already states what the clip shows.
-              */}
-              <video
-                autoPlay
-                muted
-                loop
-                playsInline
-                poster={clip.poster}
-                aria-label={clip.caption}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-              >
-                <source src={clip.videoWebm} type="video/webm" />
-                <source src={clip.videoMp4} type="video/mp4" />
-              </video>
-            </div>
-          </BrowserFrame>
+          <ClipPlayer clip={clip} />
 
           <p
             style={{
