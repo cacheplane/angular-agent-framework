@@ -3,6 +3,7 @@ import { EcosystemStrip } from '../components/landing/EcosystemStrip';
 import { Differentiator } from '../components/landing/Differentiator';
 import { FeatureBlock } from '../components/landing/FeatureBlock';
 import { BrowserFrame } from '../components/ui/BrowserFrame';
+import { ClipPlayer } from '../components/ui/ClipPlayer';
 import { DemoShowcase } from '../components/landing/DemoShowcase';
 import { MediumSwitcher } from '../components/landing/MediumSwitcher';
 import type { MediumPane } from '../components/landing/MediumSwitcher';
@@ -45,24 +46,7 @@ async function buildPanes(media: SectionMedia, clipUrl: string): Promise<MediumP
       id: 'video',
       key: 'video',
       label: 'Video',
-      content: (
-        <BrowserFrame url={clipUrl} elevation="lg">
-          <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 10', background: '#15161f' }}>
-            <video
-              autoPlay
-              muted
-              loop
-              playsInline
-              poster={clip.poster}
-              aria-label={clip.caption}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-            >
-              <source src={clip.videoWebm} type="video/webm" />
-              <source src={clip.videoMp4} type="video/mp4" />
-            </video>
-          </div>
-        </BrowserFrame>
-      ),
+      content: <ClipPlayer clip={clip} url={clipUrl} />,
     });
   }
 

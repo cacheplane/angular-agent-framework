@@ -41,8 +41,8 @@ export const HITL_CLIP: DemoClip = {
 
 /**
  * The LangGraph streaming demo, recorded on the canonical demo shell. Exported
- * so the section switcher does not add another hardcoded copy of these URLs.
- * `DemoShowcase` still declares its own; consolidating it is tracked separately.
+ * Shared by the homepage showcase and the section switcher, so a recut or a
+ * store move changes one place rather than three.
  */
 export const LANGGRAPH_CLIP: DemoClip = {
   caption: 'Tokens stream into the Angular surface as the agent produces them.',
@@ -50,6 +50,18 @@ export const LANGGRAPH_CLIP: DemoClip = {
   videoMp4: `${DEMO_CDN}/langgraph-demo.mp4`,
   videoWebm: `${DEMO_CDN}/langgraph-demo.webm`,
   poster: `${DEMO_CDN}/langgraph-demo-poster.webp`,
+};
+
+/**
+ * The AG-UI runtime demo. Paired with `LANGGRAPH_CLIP` so the homepage showcase
+ * can state "same front end, two runtimes" from one place.
+ */
+export const AG_UI_CLIP: DemoClip = {
+  caption: 'The same Threadplane chat surface, running against an AG-UI backend.',
+  url: 'ag-ui.threadplane.ai',
+  videoMp4: `${DEMO_CDN}/ag-ui-demo.mp4`,
+  videoWebm: `${DEMO_CDN}/ag-ui-demo.webm`,
+  poster: `${DEMO_CDN}/ag-ui-demo-poster.webp`,
 };
 
 /**

@@ -1,31 +1,28 @@
 'use client';
 import { useState } from 'react';
 import { tokens } from '@threadplane/design-tokens';
-import { BrowserFrame } from '../ui/BrowserFrame';
+import { ClipPlayer } from '../ui/ClipPlayer';
 import { TabGroup } from '../ui/TabGroup';
 import { Button } from '../ui/Button';
 import { DemoCtaPair } from './DemoCtaPair';
 import { DemoModal } from './DemoModal';
 import { trackCtaClick } from '../../lib/analytics/client';
 import { DEMOS } from '../../lib/demos';
-import { DEMO_CDN } from '../../lib/demo-media';
+import { AG_UI_CLIP, LANGGRAPH_CLIP, type DemoClip } from '../../lib/demo-media';
 
 type TabKey = (typeof DEMOS)[number]['key'];
 
-interface DemoMedia {
+/** A runtime tab: the shared clip plus how this section labels and links it. */
+interface DemoMedia extends DemoClip {
   key: TabKey;
   tabLabel: string;
-  url: string;
-  videoMp4: string;
-  videoWebm: string;
-  poster: string;
   href: string;
 }
 
 
 const MEDIA: DemoMedia[] = [
-  { key: 'langgraph', tabLabel: 'LangGraph', url: 'demo.threadplane.ai', videoMp4: `${DEMO_CDN}/langgraph-demo.mp4`, videoWebm: `${DEMO_CDN}/langgraph-demo.webm`, poster: `${DEMO_CDN}/langgraph-demo-poster.webp`, href: DEMOS.find((d) => d.key === 'langgraph')!.href },
-  { key: 'ag-ui', tabLabel: 'AG-UI', url: 'ag-ui.threadplane.ai', videoMp4: `${DEMO_CDN}/ag-ui-demo.mp4`, videoWebm: `${DEMO_CDN}/ag-ui-demo.webm`, poster: `${DEMO_CDN}/ag-ui-demo-poster.webp`, href: DEMOS.find((d) => d.key === 'ag-ui')!.href },
+  { ...LANGGRAPH_CLIP, key: 'langgraph', tabLabel: 'LangGraph', href: DEMOS.find((d) => d.key === 'langgraph')!.href },
+  { ...AG_UI_CLIP, key: 'ag-ui', tabLabel: 'AG-UI', href: DEMOS.find((d) => d.key === 'ag-ui')!.href },
 ];
 
 export function DemoShowcase() {
@@ -61,21 +58,17 @@ export function DemoShowcase() {
           id: m.key,
           label: m.tabLabel,
           content: (
-            <BrowserFrame url={m.url} elevation="lg">
-              <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 10', background: '#15161f' }}>
-                <video autoPlay muted loop playsInline poster={m.poster}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}>
-                  <source src={m.videoWebm} type="video/webm" />
-                  <source src={m.videoMp4} type="video/mp4" />
-                </video>
+            <ClipPlayer
+              clip={m}
+              overlay={
                 <button onClick={() => launch(m)} aria-label={`Launch ${m.tabLabel} live demo`}
                   style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10,
                     background: 'linear-gradient(180deg, rgba(16,18,32,.15), rgba(16,18,32,.45))', border: 'none', cursor: 'pointer' }}>
                   <span style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#15161f', fontSize: 22 }}>&#9654;</span>
                   <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 13, color: '#fff', background: 'rgba(0,0,0,.5)', padding: '8px 14px', borderRadius: 8 }}>Launch live demo</span>
                 </button>
-              </div>
-            </BrowserFrame>
+              }
+            />
           ),
         }))}
         onSelect={(pane) => setActive(pane.id as TabKey)}
