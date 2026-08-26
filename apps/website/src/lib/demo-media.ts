@@ -38,3 +38,16 @@ export const HITL_CLIP: DemoClip = {
   videoWebm: `${DEMO_CDN}/hitl-demo.webm`,
   poster: `${DEMO_CDN}/hitl-demo-poster.webp`,
 };
+
+/**
+ * The LangGraph streaming demo, recorded on the canonical demo shell. Exported
+ * so the section switcher does not add another hardcoded copy of these URLs.
+ * `DemoShowcase` still declares its own; consolidating it is tracked separately.
+ */
+export const LANGGRAPH_CLIP: DemoClip = {
+  caption: 'Tokens stream into the Angular surface as the agent produces them.',
+  url: 'demo.threadplane.ai',
+  videoMp4: `${DEMO_CDN}/langgraph-demo.mp4`,
+  videoWebm: `${DEMO_CDN}/langgraph-demo.webm`,
+  poster: `${DEMO_CDN}/langgraph-demo-poster.webp`,
+};

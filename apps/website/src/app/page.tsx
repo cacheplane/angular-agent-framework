@@ -3,8 +3,12 @@ import { EcosystemStrip } from '../components/landing/EcosystemStrip';
 import { Differentiator } from '../components/landing/Differentiator';
 import { FeatureBlock } from '../components/landing/FeatureBlock';
 import { BrowserFrame } from '../components/ui/BrowserFrame';
-import { HITL_CLIP } from '../lib/demo-media';
 import { DemoShowcase } from '../components/landing/DemoShowcase';
+import { MediumSwitcher } from '../components/landing/MediumSwitcher';
+import type { MediumPane } from '../components/landing/MediumSwitcher';
+import { HighlightedCode } from '../components/landing/HighlightedCode';
+import { SECTION_MEDIA } from '../lib/section-media';
+import type { SectionMedia } from '../lib/section-media';
 import { PilotBlock } from '../components/landing/PilotBlock';
 import { WhitePaperBlock } from '../components/landing/WhitePaperBlock';
 import { Promises } from '../components/landing/Promises';
@@ -23,7 +27,66 @@ export const metadata = createPageMetadata({
   type: 'website',
 });
 
+/**
+ * Builds the panes for a section on the SERVER.
+ *
+ * `HighlightedCode` is an async Server Component, so it cannot be rendered from
+ * inside the client `MediumSwitcher`. Highlighting here and passing the result
+ * as a prop is what makes the code tab possible at all.
+ */
+async function buildPanes(media: SectionMedia, clipUrl: string): Promise<MediumPane[]> {
+  // Typed, not inferred: `const panes = []` is `any[]` under this tsconfig and
+  // fails the production build's type check.
+  const panes: MediumPane[] = [];
+
+  if (media.video) {
+    const clip = media.video;
+    panes.push({
+      id: 'video',
+      key: 'video',
+      label: 'Video',
+      content: (
+        <BrowserFrame url={clipUrl} elevation="lg">
+          <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 10', background: '#15161f' }}>
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              poster={clip.poster}
+              aria-label={clip.caption}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            >
+              <source src={clip.videoWebm} type="video/webm" />
+              <source src={clip.videoMp4} type="video/mp4" />
+            </video>
+          </div>
+        </BrowserFrame>
+      ),
+    });
+  }
+
+  const codeBlocks = media.code ?? [];
+  codeBlocks.forEach((block, index) => {
+    panes.push({
+      id: `code-${index}`,
+      key: 'code',
+      label: codeBlocks.length > 1 ? block.label : 'Code',
+      content: (
+        <div style={{ borderRadius: 14, overflow: 'hidden', border: `1px solid ${tokens.surfaces.border}` }}>
+          <HighlightedCode code={block.source} lang={block.language} />
+        </div>
+      ),
+    });
+  });
+
+  return panes;
+}
+
 export default async function HomePage() {
+  const streamPanes = await buildPanes(SECTION_MEDIA.stream, SECTION_MEDIA.stream.video?.url ?? '');
+  const approvePanes = await buildPanes(SECTION_MEDIA.approve, SECTION_MEDIA.approve.video?.url ?? '');
+
   return (
     <>
       <Hero />
@@ -59,17 +122,7 @@ export default async function HomePage() {
           { title: '@threadplane/langgraph', description: 'Native LangGraph streaming.' },
         ]}
         cta={{ label: 'Read the streaming guide', href: '/docs/langgraph/guides/streaming' }}
-        visual={
-          <BrowserFrame url="cockpit.threadplane.ai/langgraph/core-capabilities/streaming/overview/python" elevation="md">
-            <img
-              src="/screenshots/cockpit-docs.webp"
-              alt="Cockpit reference app — Angular streaming guide with provideAgent setup"
-              style={{ display: 'block', width: '100%', height: 'auto' }}
-              loading="lazy"
-              decoding="async"
-            />
-          </BrowserFrame>
-        }
+        visual={<MediumSwitcher sectionId="stream" panes={streamPanes} />}
       />
 
       {/* Render */}
@@ -167,24 +220,7 @@ export default async function HomePage() {
         ]}
         cta={{ label: 'Interrupt patterns', href: '/docs/langgraph/guides/interrupts' }}
         visualLeft
-        visual={
-          <BrowserFrame url={HITL_CLIP.url} elevation="lg">
-            <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 10', background: '#15161f' }}>
-              <video
-                autoPlay
-                muted
-                loop
-                playsInline
-                poster={HITL_CLIP.poster}
-                aria-label={HITL_CLIP.caption}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-              >
-                <source src={HITL_CLIP.videoWebm} type="video/webm" />
-                <source src={HITL_CLIP.videoMp4} type="video/mp4" />
-              </video>
-            </div>
-          </BrowserFrame>
-        }
+        visual={<MediumSwitcher sectionId="approve" panes={approvePanes} />}
       />
 
       <PilotBlock />

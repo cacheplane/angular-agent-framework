@@ -35,6 +35,7 @@ export type AnalyticsSurface =
   | 'home'
   | 'home_demo'
   | 'home_whitepaper'
+  | 'home_medium_switcher'
   | 'pricing'
   | 'docs'
   | 'blog'
@@ -87,7 +88,9 @@ export type CtaId =
   | `footer_${string}`
   // Landing section CTAs derive ids from surface + demo key at runtime
   | `final_cta_${string}`
-  | `home_demo_${string}`;
+  | `home_demo_${string}`
+  // MediumSwitcher derives ids from section id + medium key at runtime
+  | `medium_${string}`;
 
 export type AnalyticsLibrary = 'langgraph' | 'render' | 'chat' | 'ag-ui' | 'unknown';
 
