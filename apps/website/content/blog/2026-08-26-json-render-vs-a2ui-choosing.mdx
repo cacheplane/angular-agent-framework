@@ -65,7 +65,7 @@ A _dashboard or results panel_ outside chat: your application already has the da
 Verdict: json-render again, driven directly through `<render-spec>`.
 The fixed contract is the feature here: explicit inputs on your own custom components, a schema you can lint, a spec you can snapshot in a test.
 
-One security note: in both paths, only registered component names render — the registry is doing allowlist duty.
+One security note: in both paths, the registry is doing allowlist duty.
 A component name the model emits that isn't registered falls back instead of executing — json-render and A2UI share that posture, so it's not a reason to pick either.
 
 ## When does the protocol win?
@@ -77,7 +77,7 @@ The agent proposes a three-day trip mid-conversation: the component structure ar
 That's not one spec becoming one component tree — it's a surface being edited over time, and that's exactly what the envelope stream models.
 
 Now a form the _agent_ needs back.
-A submit action always goes back to the agent as a structured action message; create the surface with `sendDataModel` and the current data model rides along.
+A _valid_ submit goes back to the agent as a structured action message on its own; create the surface with `sendDataModel` and the current data model rides along.
 Either way, user input flows back through the protocol, not through handlers you wire yourself.
 
 So the reasons to step up: incremental surfaces, data arriving separately from structure, and user actions as first-class protocol messages.
