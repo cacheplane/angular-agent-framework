@@ -1,61 +1,174 @@
 """
-LangGraph Subgraphs Graph
+LangGraph Subgraphs Graph — nested execution with a state boundary
 
-Demonstrates nested agent delegation using subgraphs. A parent orchestrator
-delegates research tasks to a specialized child subgraph. The parent graph
-controls the overall flow while the research subgraph handles deep-dive
-information gathering independently.
+Demonstrates LangGraph's composition primitive: a *compiled child graph added
+to a parent graph as a plain node*. Three things make this a real subgraph
+demo rather than a straight-line chain:
+
+1. **A conditional route.** The `orchestrate` node classifies the request and
+   the parent decides whether to enter the child graph at all. A greeting
+   answers directly; a factual question routes through `research` first.
+
+2. **A state boundary.** The parent state carries `messages`; the child state
+   (`ResearchState`) does not. LangGraph wires a subgraph node through the
+   keys the two schemas *share* — here `research_topic` and `research_brief` —
+   so the child receives a topic and returns a brief, and can neither read the
+   chat transcript nor append to it.
+
+3. **Nested execution.** The child runs as its own graph with its own step
+   sequence, and LangGraph emits its stream events under a namespace
+   (`research:<uuid>`) rather than flattening them into the parent's.
+
+**A plain subgraph node is not a tracked "subagent".** `agent.subagents()` in
+`@threadplane/langgraph` is populated only by delegation *tool calls* whose
+name matches `subagentToolNames` and whose args carry a `subagent_type` — that
+path emits `tools:<id>` namespaces, and it is demonstrated in
+`cockpit/chat/subagents`. This example therefore surfaces child activity by
+reading the parent graph's own state through `agent.value()`.
 """
 
 from pathlib import Path
-from langgraph.graph import StateGraph, MessagesState, END
+from typing import Annotated, TypedDict
+
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import SystemMessage
+from langgraph.graph import END, START, StateGraph
+from langgraph.graph.message import add_messages
+from pydantic import BaseModel, Field
 
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 
+# Gate phrase for the router's structured-output call. Kept distinct from the
+# other two system prompts so e2e fixture replay can tell the calls apart.
+ROUTER_PROMPT = (
+    "Delegation Router.\n"
+    "Decide whether answering the latest user turn requires a factual "
+    "deep dive that should be handed to the research subgraph.\n"
+    "Greetings, small talk, and questions about your own capabilities do "
+    "NOT require research. Questions about facts, comparisons, or how a "
+    "technology works DO.\n"
+    "When research is required, restate the request as one focused topic "
+    "line for the subgraph."
+)
+
+RESEARCH_PROMPT = (
+    "Research Subgraph.\n"
+    "You are a focused researcher running as a child graph. You are given a "
+    "topic and nothing else — you cannot see the chat transcript, so never "
+    "address the user or ask questions. Return 3-5 terse factual bullets. "
+    "Your output is an internal brief the parent orchestrator will use to "
+    "write the user-facing answer."
+)
+
+
+class DelegationDecision(BaseModel):
+    """Structured routing decision produced by the `orchestrate` node."""
+
+    needs_research: bool = Field(
+        description="True when answering requires a factual deep dive that the research subgraph should handle."
+    )
+    topic: str = Field(
+        default="",
+        description="One focused topic line for the subgraph. Empty string when needs_research is false.",
+    )
+
+
+class ResearchState(TypedDict):
+    """Child graph state — deliberately has no `messages` key.
+
+    The only keys here are the ones shared with the parent, which is exactly
+    the contract LangGraph uses to pass state into and out of a subgraph node.
+    """
+
+    research_topic: str
+    research_brief: str
+
+
+class OrchestratorState(TypedDict):
+    """Parent graph state — the transcript plus the shared subgraph channel."""
+
+    messages: Annotated[list, add_messages]
+    research_topic: str
+    research_brief: str
+
 
 def build_subgraphs_graph():
-    """
-    Constructs a parent graph that delegates to a child research subgraph.
-
-    The parent orchestrator decides when to delegate to the research subgraph.
-    The research subgraph runs independently and returns its results to the parent.
-    """
+    """Constructs a parent graph that conditionally enters a child subgraph."""
     llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
+    router = ChatOpenAI(model="gpt-5-mini").with_structured_output(DelegationDecision)
+    researcher = ChatOpenAI(model="gpt-5-mini")
 
     # ── Child: research subgraph ──────────────────────────────────────────────
 
-    async def research_node(state: MessagesState) -> dict:
-        """Specialized research agent — performs deep-dive information gathering."""
-        messages = state["messages"]
-        response = await llm.ainvoke(messages)
-        return {"messages": [response]}
+    async def research_node(state: ResearchState) -> dict:
+        """Turn a topic into an internal brief. No transcript access."""
+        response = await researcher.ainvoke(
+            [
+                SystemMessage(content=RESEARCH_PROMPT),
+                HumanMessage(content=f"Topic: {state['research_topic']}"),
+            ]
+        )
+        text = response.content
+        if isinstance(text, list):  # multi-part content
+            text = "".join(part.get("text", "") for part in text if isinstance(part, dict))
+        return {"research_brief": str(text).strip()}
 
-    research_graph = StateGraph(MessagesState)
+    research_graph = StateGraph(ResearchState)
     research_graph.add_node("research", research_node)
-    research_graph.set_entry_point("research")
+    research_graph.add_edge(START, "research")
     research_graph.add_edge("research", END)
     compiled_research = research_graph.compile()
 
     # ── Parent: orchestrator graph ────────────────────────────────────────────
 
-    async def orchestrate_node(state: MessagesState) -> dict:
+    async def orchestrate_node(state: OrchestratorState) -> dict:
+        """Classify the request. Writing a topic is what triggers delegation.
+
+        Both shared keys are reset every turn so a topic left over from an
+        earlier turn in the same thread can't re-trigger the subgraph.
         """
-        Orchestrator node — reviews the request and prepares context
-        before delegating to the research subgraph.
+        decision = await router.ainvoke(
+            [SystemMessage(content=ROUTER_PROMPT), *state["messages"]]
+        )
+        topic = decision.topic.strip() if decision.needs_research else ""
+        return {"research_topic": topic, "research_brief": ""}
+
+    def route_after_orchestrate(state: OrchestratorState) -> str:
+        """The parent's decision: enter the child graph, or skip it."""
+        return "research" if state.get("research_topic") else "answer"
+
+    async def answer_node(state: OrchestratorState) -> dict:
+        """The only node that writes to the transcript.
+
+        `transcriptNodeNames: ['answer']` on the Angular side mirrors this:
+        the router's and the subgraph's tokens never reach the chat UI.
         """
         system_prompt = (PROMPTS_DIR / "subgraphs.md").read_text()
-        messages = [SystemMessage(content=system_prompt)] + state["messages"]
-        response = await llm.ainvoke(messages)
+        brief = state.get("research_brief") or ""
+        context = (
+            [SystemMessage(content=f"Internal brief returned by the research subgraph:\n{brief}")]
+            if brief
+            else []
+        )
+        response = await llm.ainvoke(
+            [SystemMessage(content=system_prompt), *context, *state["messages"]]
+        )
         return {"messages": [response]}
 
-    parent_graph = StateGraph(MessagesState)
+    parent_graph = StateGraph(OrchestratorState)
     parent_graph.add_node("orchestrate", orchestrate_node)
+    # The compiled child graph IS the node — no wrapper function. This is what
+    # makes it a subgraph rather than an inline helper call.
     parent_graph.add_node("research", compiled_research)
-    parent_graph.set_entry_point("orchestrate")
-    parent_graph.add_edge("orchestrate", "research")
-    parent_graph.add_edge("research", END)
+    parent_graph.add_node("answer", answer_node)
+    parent_graph.add_edge(START, "orchestrate")
+    parent_graph.add_conditional_edges(
+        "orchestrate",
+        route_after_orchestrate,
+        {"research": "research", "answer": "answer"},
+    )
+    parent_graph.add_edge("research", "answer")
+    parent_graph.add_edge("answer", END)
     return parent_graph.compile()
 
 
