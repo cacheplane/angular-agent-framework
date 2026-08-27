@@ -23,7 +23,7 @@ This post answers the other one: what is each piece of the return value _for_, a
 
 ## What are the signals?
 
-Six core signals, and together they're the entire reactive picture of a conversation.
+Six core signals, and together they're the reactive picture most apps need.
 
 Let's take them one at a time:
 
@@ -33,6 +33,8 @@ Let's take them one at a time:
 - `error` — the last run's failure, or `undefined`. Render it; don't `try/catch` your template.
 - `toolCalls` — the tool calls the model has made, so you can show work-in-progress instead of dead air.
 - `state` — the graph's custom state, typed to your `T` when you use a typed agent ref.
+
+There's a little more on the contract: optional `interrupt` and `subagents` signals when the adapter supports those capabilities, and an `events$` observable for everything that doesn't fit a signal.
 
 That's the surface you bind templates to.
 No subscriptions, no `async` pipe bookkeeping, no manual change detection — a streaming token lands in `messages`, and Angular's reactivity does the rest.
@@ -54,13 +56,13 @@ Signals tell the template what's true; these methods are how the user changes it
 
 Because most of what you get back isn't LangGraph-shaped — and that's on purpose.
 
-`injectAgent()` from `@threadplane/langgraph` returns a `LangGraphAgent<T>`, which extends the runtime-neutral `Agent` contract (by way of `AgentWithHistory`, which adds a `history` signal).
+`injectAgent()` from `@threadplane/langgraph` returns a `LangGraphAgent<T>`, which extends the runtime-neutral `Agent` contract (by way of `AgentWithHistory`, which adds a `history` signal — a sub-contract, so don't count on `history` surviving a runtime swap; the AG-UI agent implements plain `Agent`).
 Everything above — the six signals, the four methods — lives on that neutral contract.
 
 The neutral slice is what `<chat>` and the other primitives consume.
 They don't know they're talking to LangGraph.
 
-Let's look at what sits on top: `LangGraphAgent` adds the runtime-specific members: raw `langGraph*`-prefixed signals that expose the underlying `BaseMessage` and thread-state shapes, plus things like `value`, `branch`/`setBranch`, `switchThread`, and `lifecycle`.
+Let's look at what sits on top. `LangGraphAgent` adds the runtime-specific members — raw `langGraph*`-prefixed signals that expose the underlying `BaseMessage` and thread-state shapes, plus things like `value`, `branch`/`setBranch`, `switchThread`, and `lifecycle`.
 They're additive. You reach for them when you need LangGraph itself; you ignore them when you don't.
 
 Here's the payoff: the AG-UI adapter's `injectAgent()` returns the same neutral slice.
@@ -88,13 +90,10 @@ import { injectAgent } from '@threadplane/langgraph';
 })
 export class SupportComponent {
   readonly chat = injectAgent();
-
-  async send(text: string) {
-    await this.chat.submit({ message: text });
-  }
 }
 ```
 
+Sending is the same object: a submit button calls `chat.submit({ message: text })`, and the response streams into `messages` on its own.
 This isn't the full setup — `injectAgent()` needs `provideAgent()` configured first, and the [quickstart](/docs/langgraph/getting-started/quickstart) covers that.
 
 ## Conclusion
