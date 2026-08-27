@@ -141,7 +141,7 @@ By id — and this is the part I find well-designed: the namespace segment _is_ 
 Marking a child running and routing its messages need no matching at all.
 
 There is also a description-comparison ladder — exact match on the tool call's `description` argument, then substring either direction, then a last-resort fallback to any unmapped subagent still pending or running.
-It only runs for children whose state opens with a human message, and neither graph we ship reaches it: both invoke the child with an empty message list, so the first message in child state is the AI response.
+It only runs for children whose state opens with a human message, and none of the graphs we ship on the LangGraph transport reach it: they invoke the child with an empty message list, so the first message in child state is the AI response.
 Treat that path as untested rather than as the mechanism.
 
 The general point survives, though, and it's the one worth carrying to any protocol.
@@ -165,8 +165,8 @@ Mirrors cockpit/chat/subagents' orchestrator + `task` tool + `_run_subagent`
 structure, but each dispatch emits `subagent_activity` CUSTOM events
 ```
 
-One variable changed between the two: whether the transport already carries a first-class delegation event.
-AG-UI's does, so the specialists stayed a flat `async` helper and progress reaches the frontend as a custom event dispatched from the tool body.
+The thing that differs is the transport: AG-UI's already carries a first-class delegation event.
+So so the specialists stayed a flat `async` helper and progress reaches the frontend as a custom event dispatched from the tool body.
 
 The subgraph was never required by the feature. It was required by the transport.
 
@@ -175,7 +175,7 @@ What namespaces buy is that you don't have to.
 The boundary emits its own identity for free, and a transport that reads it works against any graph rather than any graph that remembered to instrument itself.
 
 Staying flat wasn't free.
-That helper hand-rolls its own per-token streaming through a callback handler to emit progress, and there's no separate state schema to isolate anything into.
+There's no separate state schema to isolate anything into, and no child step sequence — every specialist gets the parent's shape, one LLM call wide.
 What it bought was one fewer graph for a feature that renders identically.
 
 That's the test I'd apply.
@@ -193,19 +193,22 @@ So it isn't buying observability; it already had it.
 It compiles a child graph anyway.
 
 Look at what the child is, though.
-Its own state schema — `topic` and an `iterations` counter alongside `messages`, not the parent's `MessagesState`.
-Its own `agent → tools → agent` loop with conditional edges and an iteration cap, which is a different control flow than the parent's, not a slice of it.
+It has its own `agent → tools → agent` loop with conditional edges and an iteration cap — a different control flow from the parent's, not a slice of it.
 
-That's the shape worth looking for.
-Two demos on one transport, same framework, same delegation events: one stayed flat, one split.
-What flipped wasn't the feature or the frontend — it was whether the child had its own state and its own control flow.
+And here's the part that took me a second read to see.
+A custom child state schema doesn't discriminate at all: the two graphs I just used as observability evidence _also_ define their own child `TypedDict`s.
+But both of those children are one node and a straight line, so the schema is really just an argument list with a type on it.
+
+So it's the control flow, not the schema.
+A child that carries a `topic` string is a function call wearing a graph costume.
+A child that loops until it's satisfied is a graph.
 
 ## Conclusion
 
 Split when something outside the graph needs to see the child run as its own thing — a card, a progress panel, per-child streaming.
-Split when the child genuinely needs a different state schema and you're willing to own the mapping at both edges.
-Don't split for tidiness, and don't assume the split isolated state, because with a shared `MessagesState` it didn't.
+Split when the child has its own control flow — a loop, a branch, a stopping condition the parent doesn't have — and you're willing to own the mapping at both edges.
+Don't split for tidiness, and don't assume the split isolated state: wire a child in as a node on a shared `MessagesState` and it appends straight to the transcript the parent is building.
 
 The [architecture matrix](/docs/langgraph/concepts/agent-architecture) covers the tiering question, the [subgraphs guide](/docs/langgraph/guides/subgraphs) has the composition and `subagents()` wiring, and [What injectAgent() Actually Returns](/blog/what-inject-agent-returns) walks the signal surface those child streams land in.
 
-If you've split a graph for a third reason — not observability, and not a child that's its own graph — I'd like to hear it. Those are the only two I've been able to justify.
+If you've split a graph for a third reason — not observability, and not a child that's genuinely its own graph — I'd like to hear it. Those are the two I've been able to justify; I doubt they're the only two that exist.
