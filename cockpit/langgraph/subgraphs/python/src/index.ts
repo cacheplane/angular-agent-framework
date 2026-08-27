@@ -30,6 +30,7 @@ export const langgraphSubgraphsPythonModule: CockpitCapabilityModule = {
   docsPath: '/docs/langgraph/core-capabilities/subgraphs/overview/python',
   promptAssetPaths: ['cockpit/langgraph/subgraphs/python/prompts/subgraphs.md'],
   codeAssetPaths: [
+    'cockpit/langgraph/subgraphs/angular/src/app/agent-ref.ts',
     'cockpit/langgraph/subgraphs/angular/src/app/subgraphs.component.ts',
   ],
   backendAssetPaths: [

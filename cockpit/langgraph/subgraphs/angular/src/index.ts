@@ -28,6 +28,6 @@ export const langgraphSubgraphsAngularModule: CockpitCapabilityModule = {
     'cockpit/langgraph/subgraphs/angular/prompts/subgraphs.md',
   ],
   codeAssetPaths: [
-    'cockpit/langgraph/subgraphs/angular/src/app.component.ts',
+    'cockpit/langgraph/subgraphs/angular/src/app/subgraphs.component.ts',
   ],
 };
