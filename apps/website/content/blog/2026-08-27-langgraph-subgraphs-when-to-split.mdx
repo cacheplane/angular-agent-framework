@@ -17,7 +17,8 @@ This post is about the layer underneath: what a subgraph actually changes at run
 
 Nested execution and namespaced stream events. That's the honest list.
 
-Let's start with the canonical pattern, which is small. Compile a child `StateGraph`, then add the compiled graph as a node in the parent:
+Let's start with the canonical pattern, which is small.
+Compile a child `StateGraph`, then add the compiled graph as a node in the parent:
 
 ```python
 research_builder = StateGraph(MessagesState)
@@ -29,28 +30,42 @@ builder = StateGraph(MessagesState)
 builder.add_node("research", research_subgraph)  # a compiled graph, used as a node
 ```
 
-Two things genuinely change. The child runs as its own graph, with its own nodes and its own step sequence rather than being flattened into the parent's. And LangGraph emits the child's stream events under a namespace, so a consumer can tell parent output from child output.
+Two things change.
+The child runs as its own graph, with its own nodes and its own step sequence rather than being flattened into the parent's.
+And LangGraph emits the child's stream events under a namespace, so a consumer can tell parent output from child output.
 
-Here's the part I think gets assumed and shouldn't: state isolation isn't one of them.
+Here's the part I think gets assumed and shouldn't: state isolation isn't a third.
 
-If parent and child share `MessagesState`, the child appends to the same message list the parent is building. Nothing about `add_node` fenced anything off. Isolation is something you design — give the child its own state schema, then map in at the boundary and map the result back out. That's a decision you make and maintain, not a property `compile()` hands you.
+If parent and child share `MessagesState`, the child appends to the same message list the parent is building.
+Nothing about `add_node` fenced anything off.
+
+Isolation is something you design — give the child its own state schema, then map in at the boundary and map the result back out.
+That's a decision you make and maintain, not a property `compile()` hands you.
 
 ### What about context windows and error boundaries?
 
-Those are real reasons to split, and I don't want to wave them away — our own docs lean on them. The [subgraphs guide](/docs/langgraph/guides/subgraphs) points at per-task context windows and failure containment as reasons to reach for subagents, and the docstring on our own research child's only node calls it "a focused contractor."
+Those are real reasons to split — our own docs lean on them.
+The [subgraphs guide](/docs/langgraph/guides/subgraphs) points at per-task context windows and failure containment as reasons to reach for subagents, and the docstring on our own research child's only node calls it "a focused contractor."
 
-But look at where each of those actually comes from. A narrow context window is a consequence of what you pass into the child's `ainvoke` — you get it by handing over a topic instead of a transcript. An error boundary is a consequence of how the parent handles a failed child call. Reuse across parents is a consequence of the child being a value you can reference twice.
+But look at where each one actually comes from.
+A narrow context window is a consequence of what you pass into the child's `ainvoke` — you get it by handing over a topic instead of a transcript.
+An error boundary is a consequence of how the parent handles a failed child call, and a node-level retry wraps any node, plain function or compiled graph alike.
+Reuse across parents is a consequence of the child being a value you can reference twice.
 
-You can have all three without ever compiling a child graph, and you can compile a child graph and get none of them. The one thing the compile step itself hands you that you can't get another way is the namespace.
+You can have all three without ever compiling a child graph, and you can compile a child graph and get none of them.
 
-So if you're splitting purely to keep state tidy, be honest that you're the one who has to keep it tidy.
+There is one more, and it's worth stating because it looks like a counterexample.
+Wire the child in as a node under a parent that has a checkpointer, and the child's steps get checkpointed under its namespace — which is what lets you interrupt and resume at child granularity.
+Notice that's the namespace again, doing a second job.
 
 ## Why do people really split?
 
 In our own repo, the honest answer is: so the frontend can see the delegation.
 
-That's a claim about four graphs in one codebase, not a law of the framework. But it's a natural experiment rather than a portfolio — nobody wrote these to prove a point about subgraphs, and the reasons got written down at the time.
+That's four graphs in one codebase, not a law of the framework.
+But it's a natural experiment rather than a portfolio — nobody wrote these to prove a point about subgraphs, and the constraint that drove them, a frontend that renders per-child progress, isn't specific to us.
 
+Let's look at what we wrote down at the time.
 Here's the comment sitting above the research subagent in our canonical `examples/chat` graph:
 
 ```python
@@ -61,15 +76,28 @@ Here's the comment sitting above the research subagent in our canonical `example
 # SubagentTracker keys on to populate `agent.subagents()`.
 ```
 
-That's not a state argument. That's a visibility argument.
+That's not a state argument. It's a visibility argument.
 
-The design doc for that feature is even more direct. It lists a plain `@tool` returning a synthesized "subagent" payload as an approach considered, and rejects it for exactly one reason: no subgraph runs, so no `tools:` namespace events are emitted, so the card renders empty.
+The design doc for that feature is blunter still. Here's the alternative it rejected:
 
-Then there's the conversion. Our `cockpit/chat/subagents` demo originally ran its three specialists as a flat in-process helper, and was rewritten to dispatch a real compiled child graph — because the flat version emitted no namespace events, so `subagents()` stayed empty and no card rendered. A working feature was restructured so a UI card would appear.
+```text
+Plain `@tool` returning a synthesized "subagent" payload — Simpler graph
+code but does not exercise the SubagentTracker code path: no `tools:`
+namespace events get emitted because no subgraph runs. The card would
+render empty. Rejected.
+```
 
-One nuance worth naming, since it cuts against the tidy mental model. In both of those graphs the compiled child is invoked from inside a `@tool` body, not wired in as a plain node. That's deliberate: the tool call is what the tracker registers, and our own docs are blunt that [plain subgraph nodes](/docs/langgraph/guides/subgraphs) don't show up in that map at all.
+Then there's the conversion.
+Our `cockpit/chat/subagents` demo originally ran its three specialists as a flat in-process helper, and was rewritten to dispatch a real compiled child graph — because the flat version emitted no namespace events, so `subagents()` stayed empty and no card rendered.
+A working feature was restructured so a UI card would appear.
 
-Which means the thesis is actually sharper for plain `add_node` subgraphs, not weaker. Those still get a namespace, so they're still observable in the raw stream — they just don't get a name, so nothing downstream can attribute them to anything. The subgraph is what makes the events observable; the tool call is what gives them an identity.
+In both of those graphs the compiled child is invoked from inside a `@tool` body, not wired in as a plain node.
+That's deliberate: the tool call is what the tracker registers, and our own docs are blunt that [plain subgraph nodes](/docs/langgraph/guides/subgraphs) don't show up in that map at all.
+
+Which cuts the other way from how it sounds — plain `add_node` subgraphs make the point sharper, not weaker.
+Those still get a namespace, so they're still observable in the raw stream.
+They just don't get a name, so nothing downstream can attribute them to anything.
+The subgraph is what makes the events observable; the tool call is what gives them an identity.
 
 ## What does the frontend see while a child runs?
 
@@ -77,6 +105,7 @@ Namespaced events — and nearly everything interesting downstream follows from 
 
 ### What the wire looks like
 
+Let's take it from the wire inward.
 The event type carries the namespace after a pipe, so the base type is the part before it:
 
 ```text
@@ -84,59 +113,83 @@ messages                 # parent
 messages|tools:call-1    # child run dispatched by tool call "call-1"
 ```
 
-Our transport requests those child streams by default: `streamSubgraphs` defaults to `true`, so it's opt-out, not opt-in. That's the LangGraph JS SDK's own option name, passed straight through — worth knowing if you're coming from the Python API, where the in-process `graph.stream()` equivalent is the `subgraphs=True` kwarg.
+Our transport requests those child streams by default — `streamSubgraphs` is `true` unless you turn it off.
+That's the LangGraph JS SDK's own option name, passed straight through, and worth knowing if you're coming from the Python API, where the in-process `graph.stream()` equivalent is the `subgraphs=True` kwarg.
 
 ### The terminal-event hazard
 
 A child graph terminates before the parent does, and a child's terminal event looks an awful lot like the parent's.
 
-Without a namespace guard, that child terminal marker gets read as "the run finished" and closes out the parent's still-streaming assistant message. We guard it by refusing namespaced events as top-level terminal evidence, and there's a test that feeds a namespaced terminal marker in and asserts the parent message settles with outcome `interrupted` rather than success.
+Without a namespace guard, that child terminal marker gets read as "the run finished" and closes out the parent's still-streaming assistant message.
+We guard it by refusing namespaced events as top-level terminal evidence, and there's a test that feeds a namespaced terminal marker in and asserts the parent message settles with outcome `interrupted` rather than success.
 
 If you ever write a transport against this stream yourself, that's the bug you'll hit, and it will look like truncation rather than a namespace bug.
 
 ### Where child text goes
 
-Into your main transcript, by default. Our `filterSubagentMessages` is off unless you set it, so a child's tokens flow into `messages()` alongside the parent's.
+Into your main transcript, by default.
+Our `filterSubagentMessages` is off unless you set it, so a child's tokens flow into `messages()` alongside the parent's.
 
-That's not really a config detail specific to us. Any consumer reading a namespaced stream has to decide what a child's tokens mean, and "append them like everything else" is the path of least resistance — so unless something opts out, child text lands in the parent transcript and the same content renders twice.
+That isn't a quirk of our config.
+Any consumer reading a namespaced stream has to decide what a child's tokens mean, and "append them like everything else" is the path of least resistance — so unless something opts out, child text lands in the parent transcript and the same content renders twice.
 
-### How a child gets attributed
+### How does a child get attributed?
 
-Structurally, and this is the part I find genuinely well-designed: the namespace segment _is_ the identifier.
+By id — and this is the part I find well-designed: the namespace segment _is_ the identifier.
 
-`tools:<id>` carries the parent tool call id, so the tracker slices the prefix off and looks the id up directly against what it recorded when the tool call came through. Marking a child running and routing its messages need no matching at all.
+`tools:<id>` carries the parent tool call id, so the tracker slices the prefix off and looks the id up directly against what it recorded when the tool call came through.
+Marking a child running and routing its messages need no matching at all.
 
-There is also a description-comparison ladder — exact match on the tool call's `description` argument, then substring either direction, then a last-resort fallback to any unmapped subagent still pending. It only runs for children whose state opens with a human message, and neither graph we ship reaches it: both invoke the child with an empty message list, so the first message in child state is the AI response. Treat that path as untested rather than as the mechanism.
+There is also a description-comparison ladder — exact match on the tool call's `description` argument, then substring either direction, then a last-resort fallback to any unmapped subagent still pending.
+It only runs for children whose state opens with a human message, and neither graph we ship reaches it: both invoke the child with an empty message list, so the first message in child state is the AI response.
+Treat that path as untested rather than as the mechanism.
 
-The general point survives, though, and it's the one worth carrying to any protocol: a consumer mapping child runs onto delegations is doing string matching unless the protocol gives it an id. LangGraph gives it an id. That's why the ladder is vestigial here and would be load-bearing in a fan-out graph with look-alike children.
+The general point survives, though, and it's the one worth carrying to any protocol.
+A consumer mapping child runs onto delegations is doing string matching unless the protocol gives it an id.
+LangGraph gives it an id — which is why the ladder is vestigial here and would be load-bearing in a fan-out graph with look-alike children.
 
-One more limit, stated plainly: only the _first_ `tools:` segment of a namespace is read. A subagent that itself delegates will have its inner events attributed to the outer tool call. Deeper nesting isn't exercised anywhere in this repo, so treat it as untested rather than supported.
+One limit, though: only the _first_ `tools:` segment of a namespace is read.
+A subagent that itself delegates will have its inner events attributed to the outer tool call.
+Nothing in this repo exercises deeper nesting, so don't build on it.
 
 ## When should you not split?
 
 When there's no observable boundary to draw and no genuinely divergent state.
 
-The cleanest evidence I have for that is a control group we didn't set out to build. Our AG-UI demo ships the same three-subagent feature as the LangGraph one — same team, same three roles, same cards in the UI — with no subgraph anywhere. Its module docstring says so outright:
+The cleanest evidence I have is a control group we didn't set out to build.
+Our AG-UI demo ships the same three-subagent feature as the LangGraph one — and it's a LangGraph `StateGraph` too, same framework, same orchestrator-plus-`task`-tool shape, same three roles, same cards in the UI — with no subgraph anywhere.
+Its module docstring says so outright:
 
-```python
+```text
 Mirrors cockpit/chat/subagents' orchestrator + `task` tool + `_run_subagent`
 structure, but each dispatch emits `subagent_activity` CUSTOM events
 ```
 
-One variable changed between the two: whether the transport already carries a first-class delegation event. AG-UI's does, so the specialists stayed a flat `async` helper and progress reaches the frontend as a custom event dispatched from the tool body.
+One variable changed between the two: whether the transport already carries a first-class delegation event.
+AG-UI's does, so the specialists stayed a flat `async` helper and progress reaches the frontend as a custom event dispatched from the tool body.
 
-So the subgraph was never required by the feature. It was required by the transport.
+The subgraph was never required by the feature. It was required by the transport.
 
-Staying flat wasn't free, to be fair. That helper hand-rolls its own per-token streaming to emit progress, the child gets no independent checkpointing, and there's no separate state schema to isolate anything into. What it bought was one fewer graph for a feature that renders identically.
+You could dispatch custom events from the LangGraph graph too — nothing stops you, and `adispatch_custom_event` is a LangChain primitive, not an AG-UI one.
+What namespaces buy is that you don't have to.
+The boundary emits its own identity for free, and a transport that reads it works against any graph rather than any graph that remembered to instrument itself.
 
-That's the test I'd apply. If your transport already has a way to say "a child is working right now," or your UI doesn't render per-child progress at all, then a subgraph is a boundary you now have to defend: an extra state schema, mapping at both edges, and one more place to look when a message goes missing.
+Staying flat wasn't free.
+That helper hand-rolls its own per-token streaming through a callback handler to emit progress, and there's no separate state schema to isolate anything into.
+What it bought was one fewer graph for a feature that renders identically.
 
-And splitting because a region of the graph _feels_ like a separate concern isn't a reason on its own. A node is already a unit. For me, the bar is whether something outside the graph needs to observe the child as a distinct run.
+That's the test I'd apply.
+If your transport already has a way to say "a child is working right now," or your UI doesn't render per-child progress at all, then a subgraph is a boundary you now have to defend: an extra state schema, mapping at both edges, and one more place to look when a message goes missing.
+
+And splitting because a region of the graph _feels_ like a separate concern isn't a reason on its own.
+A node is already a unit.
 
 ## Conclusion
 
-Here's the heuristic. Split when something outside the graph needs to see the child run as its own thing — a card, a progress panel, per-child streaming. Split when the child genuinely needs a different state schema and you're willing to own the mapping at both edges. Don't split for tidiness, and don't assume the split isolated state, because with a shared `MessagesState` it didn't.
+Split when something outside the graph needs to see the child run as its own thing — a card, a progress panel, per-child streaming.
+Split when the child genuinely needs a different state schema and you're willing to own the mapping at both edges.
+Don't split for tidiness, and don't assume the split isolated state, because with a shared `MessagesState` it didn't.
 
 The [architecture matrix](/docs/langgraph/concepts/agent-architecture) covers the tiering question, the [subgraphs guide](/docs/langgraph/guides/subgraphs) has the composition and `subagents()` wiring, and [What injectAgent() Actually Returns](/blog/what-inject-agent-returns) walks the signal surface those child streams land in.
 
-If you've got a graph where the split earned itself for a reason that isn't observability, I'd genuinely like to hear it — that's the case this post doesn't have.
+If you've split a graph for a reason that isn't observability, I'd like to hear it — that's the case I don't have.
