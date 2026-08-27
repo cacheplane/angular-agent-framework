@@ -18,76 +18,31 @@ The candidates doc lives at `docs/gtm/blog-topic-candidates.md` **on a different
 |---|---|---|
 | #11 | What `injectAgent()` Actually Returns | **Live** — [threadplane.ai/blog/what-inject-agent-returns](https://threadplane.ai/blog/what-inject-agent-returns), PR #836 |
 | #9 | json-render vs A2UI: Choosing a Generative UI Contract | **Live** — [threadplane.ai/blog/json-render-vs-a2ui-choosing](https://threadplane.ai/blog/json-render-vs-a2ui-choosing), PR #837 |
-| #1 | LangGraph Subgraphs: When to Split a Graph and When Not To | **Drafted, unpushed, reviews returned BLOCKING findings** — commit `850573e3` on this branch |
+| #1 | LangGraph Subgraphs: When to Split a Graph and When Not To | **Shipped** — see the section below for what the reviews changed |
 | #12 | Testing Agents Deterministically: Fixture-Replay for LLM UIs | **Not started** |
 
-## Immediate next step — post #1 needs real work before it ships
+## What the reviews changed in post #1
 
-Both reviews reported. **The post is NOT ready.** Two of the findings are factual errors, one is an argument hole. Fix these, re-review, then push/PR/merge/verify.
+Both reviews returned blocking findings and all were real. Recorded here because two of them are traps a future post could repeat.
 
-### Blocking: two false technical claims (spec review)
+**Attribution is structural, not heuristic.** The `tools:<id>` namespace segment *is* the parent tool call id (`extractToolCallIdFromNamespace` is `segment.slice(6)`; `resolveToolCallId` falls back to the namespace id itself). The description-comparison ladder exists but is unreachable in every shipped graph. Do not describe it as the mechanism.
 
-**A. The attribution paragraph is backwards.** The post says attribution "is a heuristic" and that the last-resort fallback is "doing real work in practice." Both wrong:
+**`streamSubgraphs` is the LangGraph JS SDK's own option name** (`@langchain/langgraph-sdk` `types.d.ts:148,187,240`), not a Threadplane rename. The `subgraphs=True` kwarg is the Python in-process `graph.stream()` API.
 
-- The **primary path is structural, not heuristic.** The namespace segment *is* the tool call id — `extractToolCallIdFromNamespace` is `segment.slice(6)` (`libs/langgraph/src/lib/internals/subagent-tracker.ts:271-277`), and `resolveToolCallId` falls back to the namespace id itself (:260-262), which is the key `registerFromToolCalls` already stored. So `markRunningFromNamespace` / `addMessageToSubagent` bind by id with no matching at all.
-- `matchSubgraphToSubagent` is called from exactly one place (`stream-manager.bridge.ts:968-976`), gated on the child's `values.messages[0]` being a **human** message.
-- **Neither shipped graph can satisfy that gate.** `examples/chat/python/src/graph.py:327` invokes with `messages: []`, and `cockpit/chat/subagents/python/src/graph.py:172-174` likewise. Both children start empty; the human message goes straight to `llm.ainvoke([...])` and never enters state. So the first message in child values is the AI response, and the ladder never runs in either demo. There is no `subagent-tracker.spec.ts` either.
+**The discriminator for an earned split is control flow, not state schema.** `examples/chat` and `cockpit/chat/subagents` both define custom child `TypedDict`s yet are single-node straight lines, so "the child has its own state schema" fails to separate an earned split from an observability split. Only `examples/ag-ui` — child with its own `agent → tools → agent` loop and iteration cap — earns it on the merits.
 
-Fix: invert the emphasis. Attribution normally rides the namespace, because `tools:<id>` carries the parent tool call id and the tracker resolves it directly. There *is* a description-comparison ladder (exact → substring → last-resort unmapped-pending) for children whose state opens with a human message, but nothing we ship reaches it — treat it as untested rather than as the mechanism. The closing warning survives and gets sharper: the ladder is what a fan-out graph would fall back on.
+**`examples/ag-ui` is a counterexample the first draft missed.** It compiles a child on a transport that already emits `subagent_activity`, so that split is not buying observability. The post now owns this rather than claiming no such case exists.
 
-**B. The `streamSubgraphs` "naming trap" isn't a trap.** `streamSubgraphs` **is** the LangGraph JS SDK's own option name (`node_modules/@langchain/langgraph-sdk/dist/types.d.ts:148,187,240`), passed straight through by `buildRunPayload` (`fetch-stream.transport.ts:152-155`). `subgraphs=True` is the *Python in-process* `graph.stream()` kwarg, not the SDK. Delete the sentence or re-aim it at the Python API. (The default-on half is correct: `streamSubgraphs ?? true` at :154.)
+**Checkpointing is a trap in both directions.** Both subgraph children compile bare (`.compile()`, no checkpointer) while the *flat* `cockpit/ag-ui/subagents` graph is the one using `MemorySaver`. So "compile() gives the child its own checkpoint lineage" is false, and so is listing "no independent checkpointing" as a cost of staying flat. An editorial reviewer proposed the first of those as a fix — verify reviewer suggestions in source before applying them.
 
-**C. Nit:** the test asserts `phase: 'complete'` with `outcome: 'interrupted'`. "Settles as `interrupted` rather than complete" reads as a phase claim — say "settles with outcome `interrupted` rather than success."
+## Two live defects — FIXED
 
-### Blocking: the argument has a hole a skeptic finds immediately (editorial review)
-
-The post never engages the **non-observability** reasons to split, and our own docs assert them: `docs/langgraph/guides/subgraphs.mdx:310` (own context window, isolated error boundaries), `agent-architecture.mdx:689` (State isolation: "Isolated per subagent"), and the post's own evidence file at `examples/chat/python/src/graph.py:288-291` ("the subagent is a focused contractor"). A LangGraph engineer dismisses the piece in one comment: context-window isolation, per-child error boundaries, reuse across parents, parallel fan-out.
-
-Fix (cheap, and it *strengthens* the thesis): a paragraph conceding these are real, then reframing — context isolation and error boundaries come from what you pass into `ainvoke` and how you handle child failures, not from `compile()`. The only thing the compile step itself hands you is the namespace.
-
-### Important, not blocking
-
-- **Show the evidence, don't paraphrase it.** An essay whose method is "we wrote it down" currently quotes nothing. Put the five-line `examples/chat/python/src/graph.py:277-281` comment in a `python` fence. Same for `cockpit/ag-ui/subagents/python/src/graph.py:5-6`, which literally declares itself the control group ("Mirrors `cockpit/chat/subagents`' … structure, but each dispatch emits `subagent_activity` CUSTOM events").
-- **The AG-UI control group is the strongest evidence and gets the least space** (200 words vs 301/404 for the other sections). It needs the controlled-experiment framing stated outright: same team, same feature, same three roles, one variable — whether the transport already carries a delegation primitive. Therefore the subgraph was never required by the feature, only by the transport. That keystone sentence isn't in the post. Fund the space by compressing the two duplicated design-doc paragraphs.
-- **"Nothing was compromised by staying flat" is unsupported** in the place the post can least afford it. Name the cost (hand-rolled per-token streaming in the tool body, no independent checkpointing, no separate state).
-- **`add_node` vs tool-body mismatch:** the canonical opening sample uses `builder.add_node(...)`, but all four pieces of evidence are children invoked via `ainvoke` from a `@tool` body. The post admits the gap but never says whether the thesis holds for plain `add_node` subgraphs. One sentence closes it.
-- **The streaming section is a wall** — 404 words, 30% of the post, no H3s, and the post uses no bullets anywhere (the injectAgent post uses ten). Add three H3s or a lead-in list naming the hazards.
-- **Audience bridge missing** where the post pivots to "in our own repo" — one sentence licensing the generalization (a natural experiment, not a portfolio) buys the next 300 words for a Python-first reader.
-- **Two hazards stop at the API name** where the best paragraph earns its specifics by generalizing. `filterSubagentMessages` → *child text lands in the parent transcript by default in any consumer*; the attribution ladder → *any consumer mapping namespaces to delegations is doing string matching unless the protocol gives it an id*. That second one is a real design insight currently phrased as a config caveat.
-
-### Minor
-
-Cut the structural self-narration ("That's the whole post, so let's start there and then earn it") — neither sibling announces its plan. Drop "says the quiet part out loud." Compress the two design-doc paragraphs that make the same point twice. Fix the elided verb in "gets assumed and shouldn't." The frontmatter description promises "how state crosses the boundary," which is survey-flavored and slightly at odds with a post arguing state largely *doesn't* get a boundary — there's room under the limit to make it carry the thesis. Add a closing invitation (voice.md calls for one; the json-render post ends "Pick a surface you're building this week… and let me know where it lands").
-
-### Verified clean — don't re-litigate
-
-Both reviews independently confirmed: no mention of `cockpit/langgraph/subgraphs` anywhere; no speculation about checkpointers, latency, performance, or parallel fan-out; no line numbers in prose; no emoji, hype, "Introduction" header, CTA, or licensing callout; exactly 2 code blocks; **zero 8-gram prose overlap with either docs page**; frontmatter correct at 127 chars; all links resolve; and every evidence claim about what the cited files say is true. Voice is a strong match to both siblings (five "Let's", H2-as-question, flagged opinions, italics-only emphasis).
-
-### One thing to raise with Brian
-
-The docs matrix row at `agent-architecture.mdx:689` reads "State isolation | … | Isolated per subagent," which sits in tension with this post's thesis. Not a blocker (the matrix is linked, not restated), but if the post lands, that row is arguably the next thing to fix.
-
-**Already verified locally for this post** (no need to redo unless the file changes): frontmatter valid, description 127 chars, renders 200 with correct `<title>` and meta description, both fences highlight (`python`, `text`), listed on `/blog`, working tree clean, and the website suite shows the same 5 pre-existing failures as before (unchanged by this post).
-
-### Post #1's thesis — do not let a reviewer flatten it
-
-The obvious "when to split" essay would co-rank against our own `apps/website/content/docs/langgraph/concepts/agent-architecture.mdx:626-696` decision matrix. Brian approved a sharper angle instead: **on LangGraph, a subgraph buys an *observable* boundary, not a state boundary.** Evidence, all first-hand:
-
-- `examples/chat/python/src/graph.py:276-281` — a code comment stating the motive outright: running it as a real subgraph "is what causes LangGraph to emit stream events under namespace prefix `tools:<id>`… which the SubagentTracker keys on."
-- `cockpit/ag-ui/subagents/python/src/graph.py` — the **strongest single piece**: the same three-subagent feature with no subgraph at all (flat `_run_subagent` at :107, `adispatch_custom_event("subagent_activity", …)` at :166-168), because AG-UI's transport has a first-class delegation event.
-- `docs/superpowers/specs/2026-05-08-*-subagents-design.md:23` — a plain `@tool` alternative rejected because with no subgraph, no `tools:` events fire and the card renders empty.
-- PR #718 (`docs/superpowers/specs/2026-06-19-cockpit-subagents-subgraph-design.md`) — `cockpit/chat/subagents` was converted flat→subgraph purely so a UI card would render.
-
-Full design rationale: `docs/superpowers/specs/2026-08-27-langgraph-subgraphs-post-design.md`. Task-level plan: `docs/superpowers/plans/2026-08-27-langgraph-subgraphs-post.md`.
-
-## Two live defects — NOT fixed
-
-Both were spawned as background tasks and **both sessions were deleted before landing anything**. No branch, no PR. They are still real:
+Both were real, and both were fixed by #838 (`cockpit/langgraph/subgraphs` now routes conditionally and gives the child a state schema with no `messages` key). Kept here for the record:
 
 1. **`cockpit/langgraph/subgraphs/python/docs/guide.md:112` states a falsehood** — claims subgraph events surface through `stream.subagents()`. For that example they cannot: it adds a compiled subgraph as a plain node (`python/src/graph.py:55`), emitting namespace `research:<uuid>`, but the tracker only routes `tools:`-prefixed namespaces (`libs/langgraph/src/lib/internals/subagent-tracker.ts:265-269`) and additionally requires `subagentToolNames` + `args.subagent_type` (:78-112). The Angular app sets no `subagentToolNames` and never has. Our published docs already say the opposite at `apps/website/content/docs/langgraph/guides/subgraphs.mdx:114`.
 2. **The example doesn't demonstrate what it advertises** — the docstring at `python/src/graph.py:22` claims the orchestrator "decides when to delegate," but the edge at :57-58 is unconditional. The subagent sidebar (`angular/src/app/subgraphs.component.ts:112-119`) can never populate, and `e2e/manual/subgraphs.manual.ts:12` asserts `text=No active subagents` as its only assertion — a test passing vacuously.
 
-Post #1 is written to neither depend on nor contradict either fix, so it can ship first. Re-spawn these if Brian still wants them.
+Post #1 was held until #838 landed, then re-checked against it — the fixed example is now cited in the post as first-hand evidence that state isolation is designed, not handed to you by `compile()`.
 
 ## Post #12 — research was in flight, results lost
 
