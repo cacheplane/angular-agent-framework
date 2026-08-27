@@ -42,6 +42,13 @@ Nothing about `add_node` fenced anything off.
 Isolation is something you design — give the child its own state schema, then map in at the boundary and map the result back out.
 That's a decision you make and maintain, not a property `compile()` hands you.
 
+We ship one graph that does exactly that, and because it's a capability demo built to show the primitive, it's a clean look at the shape.
+Its child state schema has no `messages` key at all.
+Parent and child share exactly two keys, `research_topic` and `research_brief`, so the child is handed a topic and hands back a brief — it can't read the transcript, and it can't append to one.
+
+That boundary is real, and none of it came from `compile()`.
+It came from writing two `TypedDict`s and being deliberate about what they share.
+
 ### What about context windows and error boundaries?
 
 Those are real reasons to split — our own docs lean on them.
@@ -141,7 +148,9 @@ By id — and this is the part I find well-designed: the namespace segment _is_ 
 Marking a child running and routing its messages need no matching at all.
 
 There is also a description-comparison ladder — exact match on the tool call's `description` argument, then substring either direction, then a last-resort fallback to any unmapped subagent still pending or running.
-It only runs for children whose state opens with a human message, and none of the graphs we ship on the LangGraph transport reach it: they invoke the child with an empty message list, so the first message in child state is the AI response.
+It only runs for children whose state opens with a human message, and none of the graphs we ship reach it.
+The ones dispatched through a tool call invoke the child with an empty message list, so the first message in child state is the AI response.
+The one wired in as a plain node doesn't keep a `messages` key in child state at all.
 Treat that path as untested rather than as the mechanism.
 
 The general point survives, though, and it's the one worth carrying to any protocol.
