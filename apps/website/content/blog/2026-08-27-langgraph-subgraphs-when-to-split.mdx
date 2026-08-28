@@ -140,6 +140,16 @@ Our `filterSubagentMessages` is off unless you set it, so a child's tokens flow 
 That isn't a quirk of our config.
 Any consumer reading a namespaced stream has to decide what a child's tokens mean, and "append them like everything else" is the path of least resistance — so unless something opts out, child text lands in the parent transcript and the same content renders twice.
 
+There's a trap in that option's name, and it bites the exact graph shape this post has been holding up.
+`filterSubagentMessages` only fires inside a branch guarded by the `tools:` namespace check.
+A plain subgraph node's namespace looks like `research:<uuid>`, never reaches that branch, and so ignores the option entirely — its tokens merge into the transcript however you set it.
+The lever for that shape is `transcriptNodeNames`, which whitelists the graph nodes whose messages count as transcript.
+
+It's also a mid-stream bug with a clean end state, which is the part that will waste your afternoon.
+The parent's final `values` event rewrites the message list from authoritative graph state, so the stray bubble disappears on its own once the run settles.
+Assert on the finished DOM and everything looks right; watch the streaming pass and you'll see the child's internal notes render as their own message and then vanish.
+A final-state test cannot catch it.
+
 ### How does a child get attributed?
 
 By id — and this is the part I find well-designed: the namespace segment _is_ the identifier.
