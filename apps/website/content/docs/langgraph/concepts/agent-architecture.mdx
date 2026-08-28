@@ -686,8 +686,10 @@ builder.add_conditional_edges("supervisor", route_to_agent)
 | Tool count | 1-10 | 1-10 | 10+ across specialists |
 | Task complexity | Single domain | Single domain, high stakes | Cross-domain |
 | Latency budget | Low | Medium (human wait) | Higher (multiple LLM calls) |
-| State isolation | Shared | Shared + interrupt | Isolated per subagent |
+| State isolation | Shared | Shared + interrupt | Only if you design it |
 | Angular complexity | Low | Medium | Higher |
+
+State isolation is the one row that is not automatic. Adding a compiled graph as a node — as in the supervisor example above — runs the child against the parent's state schema, so parent and child read and write the same channels. To actually isolate a specialist, give its `StateGraph` its own state schema and share only the keys you want crossing the boundary: LangGraph passes a subgraph node through the keys the two schemas have in common.
 
 <Callout type="tip" title="Start simple">
 Begin with a single agent and tools. Add human-in-the-loop when you need approval flows. Graduate to multi-agent only when a single agent's context window cannot hold all the tools and instructions it needs.
