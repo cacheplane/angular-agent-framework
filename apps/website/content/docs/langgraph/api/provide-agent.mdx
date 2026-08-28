@@ -61,6 +61,8 @@ const chat = injectAgent();
 
 LangGraph streams `messages-tuple` chunks for every LLM node in a run. If your graph has side-effect LLM nodes, such as a title generator or evaluator, set `transcriptNodeNames` so only your conversational node updates `messages()`.
 
+This is also the lever for a plain subgraph node. A compiled child added with `add_node` streams under a namespace like `research:<uuid>`, which is not a `tools:` subagent namespace, so `filterSubagentMessages` never applies to it and its tokens merge into the transcript. Naming your answering node here keeps the child's internal output out of the chat. See [Subgraphs](/docs/langgraph/guides/subgraphs).
+
 ```ts
 provideAgent({
   apiUrl: 'https://api.example.com',
