@@ -105,6 +105,62 @@ export class OrchestratorComponent {
 </Tab>
 </Tabs>
 
+<Callout type="warning" title="Child messages land in the parent transcript">
+Both graphs above share `MessagesState`, so the child appends to the same message list the parent is building — its intermediate output renders as its own chat bubble. `filterSubagentMessages` does not help here: that option is only consulted for `tools:`-namespaced streams, and a plain subgraph node emits `research:<uuid>`. The lever for this shape is [`transcriptNodeNames`](/docs/langgraph/api/provide-agent), which whitelists the graph nodes whose messages count as transcript.
+
+The leak is mid-stream with a clean end state — the parent's final `values` event rewrites the message list from authoritative graph state, so the stray bubble disappears once the run settles. A final-state test cannot catch it.
+</Callout>
+
+## Giving the child its own state
+
+Adding a compiled graph as a node does not isolate state. If you want a real boundary, design one: give the child its own state schema and share only the keys you want crossing it. LangGraph passes a subgraph node through the keys the two schemas have in common.
+
+```python
+from typing import Annotated, TypedDict
+from langgraph.graph import END, START, StateGraph
+from langgraph.graph.message import add_messages
+
+class ResearchState(TypedDict):
+    """Child state — deliberately has no `messages` key."""
+    research_topic: str
+    research_brief: str
+
+class OrchestratorState(TypedDict):
+    """Parent state — the transcript plus the shared channel."""
+    messages: Annotated[list, add_messages]
+    research_topic: str
+    research_brief: str
+
+async def research_node(state: ResearchState) -> dict:
+    # Receives a topic, returns a brief. No transcript access.
+    brief = await researcher.ainvoke(f"Topic: {state['research_topic']}")
+    return {"research_brief": brief.content}
+
+research_graph = StateGraph(ResearchState)
+research_graph.add_node("research", research_node)
+research_graph.add_edge(START, "research")
+research_graph.add_edge("research", END)
+compiled_research = research_graph.compile()
+
+def route_after_orchestrate(state: OrchestratorState) -> str:
+    # Writing a topic is what triggers delegation.
+    return "research" if state.get("research_topic") else "answer"
+
+parent = StateGraph(OrchestratorState)
+parent.add_node("orchestrate", orchestrate_node)
+parent.add_node("research", compiled_research)  # the compiled graph IS the node
+parent.add_node("answer", answer_node)          # the only node that writes messages
+parent.add_edge(START, "orchestrate")
+parent.add_conditional_edges(
+    "orchestrate", route_after_orchestrate, {"research": "research", "answer": "answer"}
+)
+parent.add_edge("research", "answer")
+parent.add_edge("answer", END)
+graph = parent.compile()
+```
+
+Because `ResearchState` has no `messages` key, the child cannot read the transcript or append to it — its brief reaches the parent through `research_brief` and never becomes a chat message. Pair it with `transcriptNodeNames: ['answer']` so only the parent's answering node streams into `messages()`.
+
 <Callout type="info" title="State type parameters">
 `OrchestratorState` and `PipelineState` below are placeholders for your own graph's state schema — the shape your subgraph's `StateGraph` produces. They mirror the Python state the same way `ChatState` does on the [State Management](/docs/langgraph/concepts/state-management) page. Use `createAgentRef<YourState>('your-assistant-id')` to create a typed ref, then pass it to both `provideAgent()` and `injectAgent()`.
 </Callout>
@@ -254,6 +310,8 @@ export class SubagentProgressComponent {
 
 By default, subagent messages appear in the parent's `messages()` signal. Filter them out for a cleaner parent view.
 
+This applies to tool-dispatched subagents — the `tools:`-namespaced streams that populate `subagents()`. For a plain subgraph node, use [`transcriptNodeNames`](/docs/langgraph/api/provide-agent) instead; `filterSubagentMessages` has no effect on that shape.
+
 ```typescript
 // In a shared file (e.g. agent.ts):
 // import { createAgentRef } from '@threadplane/chat';
@@ -273,7 +331,9 @@ const parentMessages = computed(() => orchestrator.messages());
 ```
 
 <Callout type="tip" title="Subagent tool names">
-Set `subagentToolNames` to the tool names that spawn subagents. `injectAgent()` uses this to identify tool calls that create subagent streams. Those tool calls must include a `subagent_type` argument for type-based lookup helpers such as `getSubagentsByType()`.
+Set `subagentToolNames` to the tool names that spawn subagents. `injectAgent()` uses this to identify tool calls that create subagent streams.
+
+Registration is skipped silently unless the tool call also carries a valid `subagent_type` argument: a string of 3-50 characters, starting with a letter, containing only letters, digits, `_`, or `-`. A value like `qa` (too short) or `2nd_pass` (leading digit) produces no subagent and no error, so `subagents()` stays empty with nothing in the console to explain it.
 </Callout>
 
 ## Error handling per subagent
@@ -281,24 +341,23 @@ Set `subagentToolNames` to the tool names that spawn subagents. `injectAgent()` 
 Each subagent exposes its own `status()` signal. A failure changes that subagent's status to `'error'` without necessarily stopping sibling delegates.
 
 ```typescript
-const agents = orchestrator.subagents();
-
-for (const [id, agent] of agents) {
-  effect(() => {
-    if (agent.status() === 'error') {
-      console.error(`Subagent ${id} failed`);
-      // Retry, surface to user, or fall back gracefully
-    }
-  });
-}
-
 // Collect all failed subagents reactively
 const failedAgents = computed(() =>
   [...orchestrator.subagents().entries()].filter(
     ([, agent]) => agent.status() === 'error'
   )
 );
+
+// One effect over the derived list — it re-runs as subagents appear and fail.
+effect(() => {
+  for (const [id] of failedAgents()) {
+    console.error(`Subagent ${id} failed`);
+    // Retry, surface to user, or fall back gracefully
+  }
+});
 ```
+
+Derive the list first, then react to it. Looping over a `subagents()` snapshot to create one `effect()` per entry does not work: the read happens outside a reactive context so it never re-runs, subagents that appear later never get an effect, and `effect()` needs an injection context.
 
 <Callout type="warning" title="Partial failures">
 Always check `failedAgents()` before presenting final results. A completed orchestrator can still have subagents that errored — success at the top level does not guarantee all delegates succeeded.
@@ -308,6 +367,8 @@ Always check `failedAgents()` before presenting final results. A completed orche
 
 <Callout type="info" title="Choosing your architecture">
 Use **subagents** when tasks are independent and can run in parallel, when each task needs its own context window, or when you want isolated error boundaries. Use a **single agent** for sequential reasoning, tasks that share tightly coupled state, or when latency from spawning subagents outweighs the parallelism benefit.
+
+None of those three come from compiling a child graph. A narrow context window follows from what you pass into the child, an error boundary from how the parent handles a failed delegation, and state isolation from giving the child its own schema. Compiling buys you nested execution and a namespace; the rest is yours to design. See the [decision matrix](/docs/langgraph/concepts/agent-architecture).
 </Callout>
 
 ## What's Next
