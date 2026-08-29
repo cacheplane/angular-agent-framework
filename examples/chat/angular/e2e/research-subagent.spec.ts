@@ -6,7 +6,7 @@ const PROMPT =
   'Use the research subagent to investigate the history and motivation behind ' +
   'Angular standalone components, then report back with a concise summary.';
 
-test('research subagent: parent dispatches research, subagent content surfaces in the bubble', async ({
+test('research subagent: parent dispatches research, subagent content surfaces in the bubble @drift', async ({
   page,
 }) => {
   await openDemo(page, '/embed');

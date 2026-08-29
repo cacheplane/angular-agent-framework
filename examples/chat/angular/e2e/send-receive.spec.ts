@@ -9,7 +9,7 @@ import {
   waitForFinalAssistant,
 } from './test-helpers';
 
-test('hi: assistant bubble renders non-empty text from the replayed fixture', async ({ page }) => {
+test('hi: assistant bubble renders non-empty text @drift', async ({ page }) => {
   const bubble = await sendPromptAndWait(page, 'say hi briefly');
   const finalText = await bubble.innerText();
   expect(finalText.trim()).toMatch(/hi/i);
