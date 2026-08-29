@@ -1,5 +1,4 @@
 import type { ReactNode, HTMLAttributes } from 'react';
-import { tokens } from '@threadplane/design-tokens';
 import { cn } from '../../lib/cn';
 
 interface ContainerProps extends HTMLAttributes<HTMLDivElement> {
@@ -15,20 +14,12 @@ export function Container({
   style,
   ...rest
 }: ContainerProps) {
-  const maxWidth = size === 'wide' ? '1320px' : tokens.space.containerMax;
   return (
     <div
       data-ui="container"
       data-size={size}
       className={cn(className)}
-      style={{
-        width: '100%',
-        maxWidth,
-        margin: '0 auto',
-        paddingLeft: tokens.space.containerX,
-        paddingRight: tokens.space.containerX,
-        ...style,
-      }}
+      style={style}
       {...rest}
     >
       {children}
