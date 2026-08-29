@@ -279,8 +279,6 @@ export interface AgentOptions<T, _ResolvedBag extends BagTemplate> {
   clientOptions?: LangGraphClientOptions;
   /** Optional app-owned telemetry sink. No telemetry is emitted unless this is provided. */
   telemetry?: AgentRuntimeTelemetrySink | false;
-  /** When true, subagent messages are filtered from the main messages signal. */
-  filterSubagentMessages?: boolean;
   /** Tool names that indicate a subagent invocation. */
   subagentToolNames?: string[];
   /**
@@ -295,6 +293,8 @@ export interface AgentOptions<T, _ResolvedBag extends BagTemplate> {
   /**
    * LangGraph node names whose `messages-tuple` LLM chunks should be projected
    * into the main chat transcript. Omit to accept all top-level message chunks.
+   * Child-graph (namespaced) chunks never reach the transcript regardless of
+   * this option — they belong to their child stream in `subagents()`.
    *
    * Use this when a graph has side-effect LLM nodes, such as title generation,
    * whose streamed model output should not render as assistant chat content.

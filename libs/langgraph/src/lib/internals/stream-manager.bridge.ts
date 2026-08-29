@@ -34,8 +34,8 @@ import {
 import {
   SubagentTracker,
   TrackedSubagent,
-  extractToolCallIdFromNamespace,
-  isSubagentNamespace,
+  childStreamRefFromNamespace,
+  isChildNamespace,
 } from './subagent-tracker';
 import type { BaseMessage } from '@langchain/core/messages';
 import type { Interrupt, Message as LangGraphMessage, ThreadState, ToolCallWithResult, ToolProgress } from '@langchain/langgraph-sdk';
@@ -240,6 +240,13 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     for (const id of attempt.messageIds) {
       if (attempt.finalizedMessageIds.has(id)) continue;
       finalizeMessage(attempt, id, outcome);
+    }
+    // Subgraph children have no tool result to settle them; the run's own
+    // terminal outcome is their completion signal. Paused/interrupted runs
+    // are excluded — a child can resume with the thread.
+    if (outcome === 'success' || outcome === 'error' || outcome === 'aborted') {
+      subagentManager.settleRunningSubgraphs(outcome === 'success' ? 'complete' : 'error');
+      publishSubagents();
     }
   }
 
@@ -754,18 +761,23 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         ? msgs.map(options.toMessage)
         : msgs as BaseMessage[];
 
-      if (isSubagentNamespace(namespace)) {
-        const namespaceId = namespace ? extractToolCallIdFromNamespace(namespace) : undefined;
-        if (namespaceId) {
+      // Any namespaced message event is child content. It feeds the child's
+      // stream and never merges into the parent transcript — the parent
+      // transcript is what the parent graph says. Shared-state children still
+      // surface at settle through the authoritative top-level `values` sync.
+      if (isChildNamespace(namespace)) {
+        const child = namespace ? childStreamRefFromNamespace(namespace) : undefined;
+        if (child) {
+          if (child.kind === 'subgraph') {
+            subagentManager.ensureSubgraphStream(child.key, child.name);
+          }
           for (const msg of normalized) {
-            subagentManager.addMessageToSubagent(namespaceId, msg);
+            subagentManager.addMessageToSubagent(child.key, msg);
           }
           publishSubagents();
         }
-
-        if (options.filterSubagentMessages) {
-          return;
-        }
+        storeMessageMetadata(normalized, event);
+        return;
       }
 
       // Partial and message-tuple events are incremental. Merge them by id
@@ -789,7 +801,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
             && activeAttempt.currentStepHasTerminalEvidence !== true,
         );
         subjects.messages$.next(merged);
-        if (!isSubagentNamespace(namespace)) {
+        {
           trackAssistantMessages(merged.filter(message => {
             const id = (message as unknown as Record<string, unknown>)['id'];
             return typeof id === 'string' && affectedMessageIds.has(id);
@@ -810,7 +822,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         const affectedMessageIds = new Set<string>();
         const preserved = preserveIds(subjects.messages$.value, normalized, affectedMessageIds);
         subjects.messages$.next(preserved);
-        if (!isSubagentNamespace(namespace)) {
+        {
           trackAssistantMessages(preserved.filter(message => {
             const id = (message as unknown as Record<string, unknown>)['id'];
             return typeof id === 'string' && affectedMessageIds.has(id);
@@ -830,8 +842,10 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     switch (baseType) {
       case 'values': {
         const vals = extractEventData(event);
-        if (isSubagentNamespace(namespace) && isRecord(vals)) {
-          updateSubagentValues(namespace, vals);
+        if (isChildNamespace(namespace)) {
+          // A child's state must not clobber the parent's `values$` — route it
+          // to the child stream and stop.
+          if (isRecord(vals)) updateSubagentValues(namespace, vals);
           break;
         }
         if ((namespace?.length ?? 0) === 0) {
@@ -898,7 +912,9 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       }
       case 'updates': {
         const upd = extractEventData(event);
-        if (isSubagentNamespace(namespace)) {
+        if (isChildNamespace(namespace)) {
+          // A child's updates must not spread-merge into the parent's
+          // `values$` — they only mark the child stream running.
           markSubagentRunning(namespace);
           break;
         }
@@ -966,24 +982,33 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
   }
 
   function updateSubagentValues(namespace: string[] | undefined, values: Record<string, unknown>): void {
-    const namespaceId = namespace ? extractToolCallIdFromNamespace(namespace) : undefined;
-    if (!namespaceId) return;
+    const child = namespace ? childStreamRefFromNamespace(namespace) : undefined;
+    if (!child) return;
 
-    const messages = values['messages'];
-    if (Array.isArray(messages) && messages.length > 0) {
-      const first = messages[0];
-      if (isRecord(first) && (first['type'] === 'human' || first['type'] === 'user') && typeof first['content'] === 'string') {
-        subagentManager.matchSubgraphToSubagent(namespaceId, first['content']);
+    if (child.kind === 'tool') {
+      // Attribution ladder applies to tool children only: their namespace id
+      // may need mapping onto a registered tool call.
+      const messages = values['messages'];
+      if (Array.isArray(messages) && messages.length > 0) {
+        const first = messages[0];
+        if (isRecord(first) && (first['type'] === 'human' || first['type'] === 'user') && typeof first['content'] === 'string') {
+          subagentManager.matchSubgraphToSubagent(child.key, first['content']);
+        }
       }
+    } else {
+      subagentManager.ensureSubgraphStream(child.key, child.name);
     }
-    subagentManager.updateSubagentValues(namespaceId, values);
+    subagentManager.updateSubagentValues(child.key, values);
     publishSubagents();
   }
 
   function markSubagentRunning(namespace: string[] | undefined): void {
-    const namespaceId = namespace ? extractToolCallIdFromNamespace(namespace) : undefined;
-    if (!namespaceId) return;
-    subagentManager.markRunningFromNamespace(namespaceId, namespace);
+    const child = namespace ? childStreamRefFromNamespace(namespace) : undefined;
+    if (!child) return;
+    if (child.kind === 'subgraph') {
+      subagentManager.ensureSubgraphStream(child.key, child.name);
+    }
+    subagentManager.markRunningFromNamespace(child.key, namespace);
     publishSubagents();
   }
 
@@ -1830,9 +1855,13 @@ function toSubagentRefs(
   subagents.forEach((subagent, key) => {
     refs.set(key, {
       toolCallId: subagent.id,
+      // Tool children are named by their `subagent_type` arg; subgraph
+      // children by their node name (stored as the synthetic toolCall name).
       name: typeof subagent.toolCall.args['subagent_type'] === 'string'
         ? subagent.toolCall.args['subagent_type']
-        : undefined,
+        : subagent.kind === 'subgraph'
+          ? subagent.toolCall.name
+          : undefined,
       status: signal(subagent.status),
       values: signal(subagent.values),
       messages: signal(subagent.messages as unknown as BaseMessage[]),
