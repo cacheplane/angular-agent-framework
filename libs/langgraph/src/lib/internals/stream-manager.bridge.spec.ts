@@ -2817,6 +2817,146 @@ describe('createStreamManagerBridge', () => {
     destroy$.next();
   });
 
+  it('replays child messages that streamed before the namespace was attributed', async () => {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport, subagentToolNames: ['task'] },
+      subjects,
+      threadId$: of(null),
+      destroy$: destroy$.asObservable(),
+    });
+
+    bridge.submit({});
+    // Parent registers the delegation under the TOOL CALL id.
+    transport.emit([{
+      type: 'messages',
+      messages: [{
+        id: 'ai-1', type: 'ai', content: '',
+        tool_calls: [{ id: 'call_abc', name: 'task', args: { subagent_type: 'researcher', description: 'Research signals' } }],
+      }],
+    } satisfies StreamEvent]);
+
+    // The child streams under an INTERNAL UUID namespace, not the tool-call id.
+    // This is what LangGraph actually emits — verified on the wire.
+    transport.emit([{
+      type: 'messages|tools:aa5c61a1-e3ee-ea36' as StreamEvent['type'],
+      namespace: ['tools:aa5c61a1-e3ee-ea36'],
+      messages: [{ id: 'sub-1', type: 'ai', content: 'early chunk' }],
+      messageMetadata: { checkpoint_ns: 'tools:aa5c61a1-e3ee-ea36|model' },
+    } satisfies StreamEvent]);
+
+    // Attribution only arrives later, via a values event carrying the child's
+    // first human message, which the description ladder matches on.
+    transport.emit([{
+      type: 'values|tools:aa5c61a1-e3ee-ea36' as StreamEvent['type'],
+      namespace: ['tools:aa5c61a1-e3ee-ea36'],
+      data: { messages: [{ type: 'human', content: 'Research signals' }] },
+    } as StreamEvent]);
+    transport.close();
+
+    await new Promise(r => setTimeout(r, 10));
+
+    // The pre-attribution chunk must not be lost — this is what made every
+    // subagent card render "0 message(s)".
+    expect(subjects.subagents$.value.get('call_abc')?.messages()).toEqual([
+      expect.objectContaining({ id: 'sub-1', content: 'early chunk' }),
+    ]);
+    destroy$.next();
+  });
+
+  it('accumulates a child\'s streamed delta chunks instead of keeping only the last', async () => {
+    // Child graphs stream AIMessageChunk deltas — ~14 chars each, hundreds per
+    // message (measured on the wire). Replacing by id keeps only the final
+    // delta, which rendered an attributed card as an empty message.
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport, subagentToolNames: ['task'] },
+      subjects,
+      threadId$: of(null),
+      destroy$: destroy$.asObservable(),
+    });
+
+    bridge.submit({});
+    transport.emit([{
+      type: 'messages',
+      messages: [{
+        id: 'ai-1', type: 'ai', content: '',
+        tool_calls: [{ id: 'call_x', name: 'task', args: { subagent_type: 'research', task_description: 'x' } }],
+      }],
+    } satisfies StreamEvent]);
+
+    for (const part of ['LAX ', 'is a ', 'large hub']) {
+      transport.emit([{
+        type: 'messages|tools:ns-1' as StreamEvent['type'],
+        namespace: ['tools:ns-1'],
+        messages: [{ id: 'chunk-1', type: 'AIMessageChunk', content: part }],
+        messageMetadata: { checkpoint_ns: 'tools:ns-1|model' },
+      } satisfies StreamEvent]);
+    }
+    transport.close();
+    await new Promise(r => setTimeout(r, 10));
+
+    const msgs = subjects.subagents$.value.get('call_x')?.messages() ?? [];
+    expect(msgs).toHaveLength(1);
+    expect((msgs[0] as unknown as { content: string }).content).toBe('LAX is a large hub');
+    destroy$.next();
+  });
+
+  it('attributes a tool child whose values carry no human first message', async () => {
+    // The real shape emitted by cockpit/chat/subagents, captured off the wire:
+    // the delegation tool takes `task_description` (not `description`), and the
+    // child's values.messages[0] is an AI message, never a human one. Both
+    // description rungs of the ladder are therefore unreachable, so attribution
+    // has to fall back to the unmapped pending/running child.
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport, subagentToolNames: ['task'] },
+      subjects,
+      threadId$: of(null),
+      destroy$: destroy$.asObservable(),
+    });
+
+    bridge.submit({});
+    transport.emit([{
+      type: 'messages',
+      messages: [{
+        id: 'ai-1', type: 'ai', content: '',
+        tool_calls: [{ id: 'call_kd4Q', name: 'task', args: { subagent_type: 'research', task_description: 'Airport details' } }],
+      }],
+    } satisfies StreamEvent]);
+
+    // Child streams under an internal UUID namespace.
+    transport.emit([{
+      type: 'messages|tools:f61899a8-459d' as StreamEvent['type'],
+      namespace: ['tools:f61899a8-459d'],
+      messages: [{ id: 'sub-1', type: 'ai', content: 'LAX is a large hub' }],
+      messageMetadata: { checkpoint_ns: 'tools:f61899a8-459d|model' },
+    } satisfies StreamEvent]);
+
+    // Its values carry an AI first message — no human anywhere.
+    transport.emit([{
+      type: 'values|tools:f61899a8-459d' as StreamEvent['type'],
+      namespace: ['tools:f61899a8-459d'],
+      data: { messages: [{ type: 'ai', content: 'LAX is a large hub' }] },
+    } as StreamEvent]);
+    transport.close();
+
+    await new Promise(r => setTimeout(r, 10));
+
+    // This is what the "0 message(s)" card bug looked like: status settled but
+    // the child's transcript never arrived.
+    expect(subjects.subagents$.value.get('call_kd4Q')?.messages()).toEqual([
+      expect.objectContaining({ id: 'sub-1', content: 'LAX is a large hub' }),
+    ]);
+    destroy$.next();
+  });
+
   it('routes plain-subgraph message tuples to a namespace-keyed child stream, never the transcript', async () => {
     const transport = new MockAgentTransport();
     const subjects = makeSubjects();

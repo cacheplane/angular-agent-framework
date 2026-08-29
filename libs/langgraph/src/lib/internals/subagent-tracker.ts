@@ -58,6 +58,18 @@ export class SubagentTracker {
   private readonly onSubagentChange?: () => void;
   private readonly subagents = new Map<string, TrackedSubagent>();
   private readonly namespaceToToolCallId = new Map<string, string>();
+  /**
+   * Child messages received under a namespace that is not yet attributed to a
+   * registered subagent. LangGraph's `tools:<id>` namespace carries an internal
+   * run UUID, not the parent's tool-call id, and the two are only reconciled
+   * once a `values` event arrives carrying the child's first human message. Any
+   * chunk streamed before that point would otherwise be dropped — which is what
+   * made subagent cards render "0 message(s)" despite a full child transcript.
+   *
+   * Merged by id like a real transcript, so this stays bounded by the child's
+   * distinct message count rather than by chunk volume.
+   */
+  private readonly unattributedMessages = new Map<string, BaseMessage[]>();
   private readonly pendingMatches = new Map<string, string>();
 
   constructor(options: SubagentTrackerOptions = {}) {
@@ -69,6 +81,7 @@ export class SubagentTracker {
     this.subagents.clear();
     this.namespaceToToolCallId.clear();
     this.pendingMatches.clear();
+    this.unattributedMessages.clear();
     this.onSubagentChange?.();
   }
 
@@ -145,10 +158,13 @@ export class SubagentTracker {
       this.namespaceToToolCallId.set(namespaceId, toolCallId);
       const subagent = this.subagents.get(toolCallId);
       if (subagent) {
+        const buffered = this.unattributedMessages.get(namespaceId);
         this.subagents.set(toolCallId, {
           ...subagent,
           status: subagent.status === 'complete' || subagent.status === 'error' ? subagent.status : 'running',
+          messages: buffered ? mergeMessages(subagent.messages, buffered) : subagent.messages,
         });
+        this.unattributedMessages.delete(namespaceId);
       }
       this.onSubagentChange?.();
       return toolCallId;
@@ -202,6 +218,27 @@ export class SubagentTracker {
       },
     });
     this.onSubagentChange?.();
+  }
+
+  /**
+   * Attribute a `tools:` child stream to its parent tool call as soon as the
+   * child is seen, without requiring a description to match on.
+   *
+   * The description ladder needs two things this repo's own graphs don't
+   * reliably provide: a delegation tool that names its argument `description`,
+   * and a child whose first message is the human task. `cockpit/chat/subagents`
+   * has neither — it uses `task_description`, and its child's messages begin
+   * with the AI reply. Attribution therefore never ran, so the child's
+   * transcript was never claimed and every card rendered "0 message(s)".
+   *
+   * Calling the ladder with no description skips both description rungs and
+   * lands on the positional fallback (first unmapped pending/running tool
+   * child), which is correct for sequential dispatch and is the same heuristic
+   * the ladder already relied on in practice.
+   */
+  ensureToolStreamAttribution(namespaceId: string): void {
+    if (this.namespaceToToolCallId.has(namespaceId)) return;
+    this.matchSubgraphToSubagent(namespaceId, '');
   }
 
   /**
@@ -259,7 +296,15 @@ export class SubagentTracker {
   addMessageToSubagent(namespaceId: string, message: BaseMessage): void {
     const toolCallId = this.resolveToolCallId(namespaceId);
     const subagent = this.subagents.get(toolCallId);
-    if (!subagent) return;
+    if (!subagent) {
+      // Not attributed yet — hold it rather than drop it. `establish()` will
+      // replay the buffer the moment this namespace is matched to a tool call.
+      this.unattributedMessages.set(
+        namespaceId,
+        mergeMessages(this.unattributedMessages.get(namespaceId) ?? [], [message]),
+      );
+      return;
+    }
 
     this.subagents.set(toolCallId, {
       ...subagent,
@@ -397,12 +442,56 @@ function mergeMessages(existing: BaseMessage[], incoming: BaseMessage[]): BaseMe
     const id = getMessageId(msg);
     const idx = id ? merged.findIndex(m => getMessageId(m) === id) : -1;
     if (idx >= 0) {
-      merged[idx] = msg;
+      merged[idx] = accumulateChunk(merged[idx], msg);
     } else {
       merged.push(msg);
     }
   }
   return merged;
+}
+
+/**
+ * Fold a streamed chunk into the message it belongs to.
+ *
+ * A child graph streams `AIMessageChunk`s that are *deltas* — a handful of
+ * characters each, hundreds per message. Replacing by id (the previous
+ * behavior) therefore kept only the final delta, so a fully attributed
+ * subagent still rendered a near-empty message. Snapshots, which carry the
+ * message-so-far, still replace.
+ *
+ * This mirrors the parent transcript's delta handling: append unconditionally
+ * rather than comparing text, because a prefix-style "dedupe" silently eats
+ * legitimate tokens that happen to repeat the accumulated prefix.
+ */
+function accumulateChunk(existing: BaseMessage, incoming: BaseMessage): BaseMessage {
+  if (!isChunkMessage(incoming)) return incoming;
+  const previousText = extractText((existing as unknown as Record<string, unknown>)['content']);
+  const incomingText = extractText((incoming as unknown as Record<string, unknown>)['content']);
+  if (!incomingText) return existing;
+  if (!previousText) return incoming;
+  return { ...(incoming as object), content: previousText + incomingText } as BaseMessage;
+}
+
+function isChunkMessage(message: BaseMessage): boolean {
+  const type = (message as unknown as Record<string, unknown>)['type'];
+  return typeof type === 'string' && type.endsWith('Chunk');
+}
+
+function extractText(content: unknown): string {
+  if (typeof content === 'string') return content;
+  if (!Array.isArray(content)) return '';
+  let out = '';
+  for (const block of content) {
+    if (typeof block === 'string') { out += block; continue; }
+    if (block == null || typeof block !== 'object') continue;
+    const record = block as Record<string, unknown>;
+    const blockType = record['type'];
+    if (blockType === 'text' || blockType === 'output_text' || blockType === undefined) {
+      const text = record['text'];
+      if (typeof text === 'string') out += text;
+    }
+  }
+  return out;
 }
 
 function getMessageId(message: BaseMessage): string | undefined {
