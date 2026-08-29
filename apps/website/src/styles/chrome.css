@@ -60,3 +60,242 @@
 .footer-legal-link:hover {
   color: var(--color-accent);
 }
+
+/* Nav */
+.nav-logo-link {
+  text-decoration: none;
+}
+.nav-link {
+  color: var(--color-text-secondary);
+}
+.nav-link:hover {
+  color: var(--color-accent);
+}
+.nav-demo-dropdown {
+  position: relative;
+}
+.nav-demo-trigger {
+  color: var(--color-text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.nav-demo-trigger:hover {
+  color: var(--color-accent);
+}
+.nav-demo-caret {
+  font-size: 10px;
+  transition: transform 0.2s;
+  transform: rotate(0);
+}
+.nav-demo-caret[data-open] {
+  transform: rotate(180deg);
+}
+.nav-demo-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  min-width: 180px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  z-index: 60;
+}
+.nav-demo-item {
+  display: block;
+  padding: 10px 14px;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+.nav-demo-item:hover {
+  color: var(--color-accent);
+}
+.nav-bar {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+.nav-hamburger {
+  color: var(--color-text-primary);
+  /* Expand hit area to >=44x44 without shifting visual layout.
+   * NOTE: display/centering live in the className (inline-flex
+   * items-center justify-center) so `lg:hidden` can win at >=lg.
+   * An inline `display` would override the utility and leak the
+   * hamburger onto desktop, pushing the nav links to center. */
+  padding: 12px;
+  margin: -12px;
+}
+.nav-mobile-overlay {
+  top: 57px;
+  z-index: 9999;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  box-shadow: var(--shadow-lg);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.nav-mobile-overlay-inner {
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 100%;
+}
+.nav-mtabs {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 10px;
+}
+.nav-mtab {
+  flex: 1;
+  text-align: center;
+  padding: 10px 0;
+  font-size: 15px;
+  font-weight: 500;
+  font-family: Inter, sans-serif;
+  background: transparent;
+  color: var(--color-text-muted);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  min-height: 44px;
+}
+.nav-mtab[data-active] {
+  background: var(--color-accent-surface);
+  color: var(--color-accent);
+}
+.nav-msubtabs-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.nav-mobile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.nav-mobile-content-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.nav-mobile-item {
+  display: block;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 16px;
+  line-height: 24px;
+  min-height: 44px;
+  text-decoration: none;
+  font-family: Inter, sans-serif;
+  color: var(--color-text-secondary);
+  background: transparent;
+}
+.nav-mobile-item[data-active] {
+  color: var(--color-accent);
+  background: var(--color-accent-surface);
+}
+.nav-mobile-item--strong {
+  font-weight: 600;
+}
+.nav-msubtabs {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 8px;
+}
+.nav-msubtab {
+  flex: 1;
+  text-align: center;
+  padding: 8px 0;
+  font-family: var(--font-mono,"JetBrains Mono",monospace);
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: transparent;
+  color: var(--color-text-muted);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  min-height: 36px;
+}
+.nav-msubtab[data-active] {
+  background: var(--color-accent-surface);
+  color: var(--color-accent);
+}
+.nav-mobile-demo-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: 8px;
+  min-height: 44px;
+  color: var(--color-accent);
+  background: var(--color-accent-surface);
+  text-decoration: none;
+  font-family: Inter, sans-serif;
+  font-weight: 600;
+}
+.nav-mobile-section-toggle {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 12px 14px;
+  min-height: 48px;
+  border-radius: 8px;
+  font-family: Inter, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--color-text-primary);
+}
+.nav-mobile-chevron {
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+  transform: rotate(0);
+}
+.nav-mobile-chevron[data-open] {
+  transform: rotate(180deg);
+}
+.nav-mobile-site-link {
+  display: block;
+  padding: 14px 14px;
+  border-radius: 8px;
+  font-size: 16px;
+  line-height: 24px;
+  min-height: 48px;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-family: Inter, sans-serif;
+}
+.nav-mobile-github-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 14px;
+  border-radius: 8px;
+  min-height: 48px;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-family: Inter, sans-serif;
+  font-size: 16px;
+}
+.nav-mobile-cta-wrap {
+  margin-top: 8px;
+}
+.nav-mobile-cta {
+  width: 100%;
+  justify-content: center;
+}
