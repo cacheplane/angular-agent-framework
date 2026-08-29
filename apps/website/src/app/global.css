@@ -11,9 +11,13 @@
  * The --docs-code-* group is coupled to `rehypeOptions.theme` ('tokyo-night')
  * in components/docs/MdxRenderer.tsx. Change the shiki theme and these must
  * change with it.
+ * --docs-code-title-fg is here rather than on --color-text-muted for the same
+ * reason: it sits on a dark surface, where the light-theme muted token drops
+ * to 3.6:1 contrast.
  */
 :root {
   --docs-code-bg: #1a1b26;
+  --docs-code-title-fg: #8b8fa3;
   --docs-code-border: rgba(0, 0, 0, 0.1);
   --docs-code-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   --docs-code-title-rule: rgba(255, 255, 255, 0.06);
@@ -122,7 +126,7 @@ html {
 .docs-prose [data-rehype-pretty-code-figure] [data-rehype-pretty-code-title] {
   font-family: var(--font-mono), monospace;
   font-size: 0.7rem;
-  color: var(--color-text-muted);
+  color: var(--docs-code-title-fg);
   padding: 0.5rem 1.5rem;
   background: var(--docs-code-bg);
   border-bottom: 1px solid var(--docs-code-title-rule);
