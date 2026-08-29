@@ -30,6 +30,13 @@
   --docs-accent-tint-line: color-mix(in srgb, var(--color-accent) 10%, transparent);
 }
 
+@import "../styles/ui.css";
+@import "../styles/chrome.css";
+@import "../styles/docs.css";
+@import "../styles/landing.css";
+@import "../styles/marketing.css";
+@import "../styles/pages.css";
+
 * {
   box-sizing: border-box;
 }
