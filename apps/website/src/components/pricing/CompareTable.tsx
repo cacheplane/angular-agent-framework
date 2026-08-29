@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { tokens } from '@threadplane/design-tokens';
 import { Button } from '../ui/Button';
 import { trackCtaClick } from '../../lib/analytics/client';
 import type { CtaId } from '../../lib/analytics/events';
@@ -100,16 +99,16 @@ function allInclusive(): Record<TierConfig['slug'], CellValue> {
 }
 
 const Check = () => (
-  <span style={{ color: tokens.colors.accent, fontWeight: 700 }} aria-label="included">✓</span>
+  <span className="pricing-compare-check" aria-label="included">✓</span>
 );
 const Dash = () => (
-  <span style={{ color: tokens.colors.textMuted }} aria-label="not included">—</span>
+  <span className="pricing-compare-dash" aria-label="not included">—</span>
 );
 
 function renderCell(value: CellValue): React.ReactNode {
   if (typeof value === 'boolean') return value ? <Check /> : <Dash />;
   if (value === '—') return <Dash />;
-  return <span style={{ color: tokens.colors.textSecondary }}>{value}</span>;
+  return <span className="pricing-compare-cell-text">{value}</span>;
 }
 
 function PlanButton({ tier, cycle }: { tier: TierConfig; cycle: BillingCycle }) {
@@ -118,7 +117,7 @@ function PlanButton({ tier, cycle }: { tier: TierConfig; cycle: BillingCycle }) 
   const common = {
     variant,
     size: 'md' as const,
-    style: { width: '100%' },
+    className: 'pricing-plan-btn',
   };
   if (cta.stripeBuyable) {
     return (
@@ -172,42 +171,15 @@ function BillingToggle({
   setCycle: (c: BillingCycle) => void;
   discountPct: number;
 }) {
-  const baseBtn = {
-    fontFamily: tokens.typography.fontSans,
-    fontSize: 13,
-    fontWeight: 600,
-    padding: '8px 16px',
-    border: 'none',
-    cursor: 'pointer',
-    transition: 'background 150ms ease, color 150ms ease',
-    background: 'transparent',
-    color: tokens.colors.textSecondary,
-    borderRadius: 999,
-  } as const;
-  const activeBtn = {
-    ...baseBtn,
-    background: tokens.colors.accent,
-    color: '#fff',
-  } as const;
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
-      <div
-        role="tablist"
-        aria-label="Billing cycle"
-        style={{
-          display: 'inline-flex',
-          padding: 4,
-          background: tokens.surfaces.surfaceTinted,
-          border: `1px solid ${tokens.surfaces.border}`,
-          borderRadius: 999,
-          gap: 4,
-        }}
-      >
+    <div className="pricing-billing-toggle-wrap">
+      <div role="tablist" aria-label="Billing cycle" className="pricing-billing-toggle">
         <button
           role="tab"
           aria-selected={cycle === 'monthly'}
           onClick={() => setCycle('monthly')}
-          style={cycle === 'monthly' ? activeBtn : baseBtn}
+          className="pricing-billing-tab"
+          data-active={cycle === 'monthly' || undefined}
         >
           Monthly
         </button>
@@ -215,7 +187,8 @@ function BillingToggle({
           role="tab"
           aria-selected={cycle === 'annual'}
           onClick={() => setCycle('annual')}
-          style={cycle === 'annual' ? activeBtn : baseBtn}
+          className="pricing-billing-tab"
+          data-active={cycle === 'annual' || undefined}
         >
           Annual{discountPct > 0 ? ` — save ${discountPct}%` : ''}
         </button>
@@ -236,83 +209,28 @@ function SectionTable({
   showPrice: boolean;
 }) {
   return (
-    <div style={{ overflowX: 'auto' }}>
-      <div
-        style={{
-          background: tokens.surfaces.surface,
-          border: `1px solid ${tokens.surfaces.border}`,
-          borderRadius: tokens.radius.lg,
-          overflow: 'hidden',
-          minWidth: 960,
-        }}
-      >
-        <table
-          style={{
-            width: '100%',
-            borderCollapse: 'collapse',
-            fontFamily: tokens.typography.fontSans,
-            fontSize: 14,
-          }}
-        >
+    <div className="pricing-compare-scroll">
+      <div className="pricing-compare-box">
+        <table className="pricing-compare-table">
           <thead>
             <tr>
-              <th
-                style={{
-                  textAlign: 'left',
-                  padding: '20px 18px 14px',
-                  color: tokens.colors.textMuted,
-                  fontFamily: tokens.typography.fontMono,
-                  fontSize: 11,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                  fontWeight: 600,
-                  width: LABEL_COL_WIDTH,
-                  background: tokens.surfaces.surface,
-                }}
-              >
+              <th className="pricing-compare-th-label">
                 {title}
               </th>
               {TIERS.map((tier) => (
                 <th
                   key={tier.slug}
-                  style={{
-                    textAlign: 'center',
-                    padding: '20px 14px 14px',
-                    background: tier.highlight ? tokens.surfaces.surfaceTinted : tokens.surfaces.surface,
-                    position: 'relative',
-                  }}
+                  className="pricing-compare-th-tier"
+                  data-highlight={tier.highlight || undefined}
                 >
                   {tier.highlight && (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: 6,
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        background: tokens.colors.accent,
-                        color: '#fff',
-                        fontFamily: tokens.typography.fontSans,
-                        fontSize: 9,
-                        fontWeight: 700,
-                        letterSpacing: '0.08em',
-                        padding: '2px 8px',
-                        borderRadius: 999,
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
+                    <div className="pricing-compare-badge">
                       MOST POPULAR
                     </div>
                   )}
                   <div
-                    style={{
-                      fontFamily: tokens.typography.fontSans,
-                      color: tokens.colors.accent,
-                      fontSize: 11,
-                      fontWeight: 700,
-                      letterSpacing: '0.08em',
-                      textTransform: 'uppercase',
-                      marginTop: tier.highlight ? 12 : 0,
-                    }}
+                    className="pricing-compare-tier-name"
+                    data-highlight={tier.highlight || undefined}
                   >
                     {tier.name}
                   </div>
@@ -321,19 +239,7 @@ function SectionTable({
             </tr>
             {showPrice ? (
               <tr>
-                <th
-                  scope="row"
-                  style={{
-                    textAlign: 'left',
-                    padding: '0 18px 20px',
-                    color: tokens.colors.textPrimary,
-                    fontFamily: tokens.typography.fontSans,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    background: tokens.surfaces.surface,
-                    borderBottom: `1px solid ${tokens.surfaces.border}`,
-                  }}
-                >
+                <th scope="row" className="pricing-compare-price-label-th">
                   Price
                 </th>
                 {TIERS.map((tier) => {
@@ -341,33 +247,15 @@ function SectionTable({
                   return (
                     <th
                       key={tier.slug}
-                      style={{
-                        textAlign: 'center',
-                        padding: '0 14px 20px',
-                        background: tier.highlight ? tokens.surfaces.surfaceTinted : tokens.surfaces.surface,
-                        borderBottom: `1px solid ${tokens.surfaces.border}`,
-                      }}
+                      className="pricing-compare-price-th"
+                      data-highlight={tier.highlight || undefined}
                     >
-                      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 4 }}>
-                        <span
-                          style={{
-                            fontFamily: tokens.typography.fontSerif,
-                            fontWeight: 700,
-                            fontSize: 28,
-                            color: tokens.colors.textPrimary,
-                            lineHeight: 1,
-                          }}
-                        >
+                      <div className="pricing-compare-price-row">
+                        <span className="pricing-compare-price-amount">
                           {p.display}
                         </span>
                         {p.period && (
-                          <span
-                            style={{
-                              fontFamily: tokens.typography.fontSans,
-                              fontSize: 12,
-                              color: tokens.colors.textMuted,
-                            }}
-                          >
+                          <span className="pricing-compare-price-period">
                             {p.period}
                           </span>
                         )}
@@ -378,21 +266,12 @@ function SectionTable({
               </tr>
             ) : (
               <tr>
-                <th
-                  style={{
-                    padding: '0 18px 12px',
-                    background: tokens.surfaces.surface,
-                    borderBottom: `1px solid ${tokens.surfaces.border}`,
-                  }}
-                />
+                <th className="pricing-compare-spacer-label-th" />
                 {TIERS.map((tier) => (
                   <th
                     key={tier.slug}
-                    style={{
-                      padding: '0 14px 12px',
-                      background: tier.highlight ? tokens.surfaces.surfaceTinted : tokens.surfaces.surface,
-                      borderBottom: `1px solid ${tokens.surfaces.border}`,
-                    }}
+                    className="pricing-compare-spacer-th"
+                    data-highlight={tier.highlight || undefined}
                   />
                 ))}
               </tr>
@@ -402,31 +281,17 @@ function SectionTable({
             {rows.map((row, i) => (
               <tr
                 key={row.feature}
-                style={{
-                  borderBottom: i === rows.length - 1 ? 'none' : `1px solid ${tokens.surfaces.border}`,
-                }}
+                className="pricing-compare-row"
+                data-last={i === rows.length - 1 || undefined}
               >
-                <td
-                  style={{
-                    padding: '14px 18px',
-                    color: tokens.colors.textPrimary,
-                    fontFamily: tokens.typography.fontSans,
-                    fontSize: 13,
-                    fontWeight: 500,
-                  }}
-                >
+                <td className="pricing-compare-td-label">
                   {row.feature}
                 </td>
                 {TIERS.map((tier) => (
                   <td
                     key={tier.slug}
-                    style={{
-                      padding: '14px 14px',
-                      textAlign: 'center',
-                      fontFamily: tokens.typography.fontSans,
-                      fontSize: 13,
-                      background: tier.highlight ? tokens.surfaces.surfaceTinted : 'transparent',
-                    }}
+                    className="pricing-compare-td"
+                    data-highlight={tier.highlight || undefined}
                   >
                     {renderCell(row.cells[tier.slug])}
                   </td>
@@ -454,15 +319,8 @@ function CtaStrip({ cycle }: { cycle: BillingCycle }) {
     >
       <div />
       {TIERS.map((tier) => (
-        <div
-          key={tier.slug}
-          style={{
-            padding: '0 14px',
-            display: 'flex',
-            justifyContent: 'center',
-          }}
-        >
-          <div style={{ width: '100%', maxWidth: 220 }}>
+        <div key={tier.slug} className="pricing-compare-cta-cell">
+          <div className="pricing-compare-cta-btn-wrap">
             <PlanButton tier={tier} cycle={cycle} />
           </div>
         </div>
@@ -476,25 +334,18 @@ export function CompareTable() {
   const discountPct = annualDiscountPercent();
 
   return (
-    <section
-      style={{
-        maxWidth: 1280,
-        margin: '0 auto',
-        padding: '32px 24px',
-      }}
-      aria-label="Pricing comparison"
-    >
+    <section className="pricing-compare-section" aria-label="Pricing comparison">
       <BillingToggle cycle={cycle} setCycle={setCycle} discountPct={discountPct} />
 
       <SectionTable title="Licensing" rows={LICENSING_ROWS} cycle={cycle} showPrice />
-      <div style={{ overflowX: 'auto' }}>
+      <div className="pricing-compare-scroll">
         <CtaStrip cycle={cycle} />
       </div>
 
-      <div style={{ height: 56 }} />
+      <div className="pricing-compare-spacer" />
 
       <SectionTable title="What's in the box" rows={FEATURE_ROWS} cycle={cycle} showPrice={false} />
-      <div style={{ overflowX: 'auto' }}>
+      <div className="pricing-compare-scroll">
         <CtaStrip cycle={cycle} />
       </div>
     </section>

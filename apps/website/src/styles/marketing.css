@@ -8,3 +8,436 @@
  *
  * Migration: docs/superpowers/plans/2026-08-29-inline-style-substrate-migration.md
  */
+
+/* CompareTable — components/pricing/CompareTable.tsx */
+.pricing-billing-toggle-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+.pricing-billing-toggle {
+  display: inline-flex;
+  padding: 4px;
+  background: var(--color-surface-tinted);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  gap: 4px;
+}
+.pricing-billing-tab {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border: none;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+  background: transparent;
+  color: var(--color-text-secondary);
+  border-radius: 999px;
+}
+.pricing-billing-tab[data-active] {
+  background: var(--color-accent);
+  color: #fff;
+}
+.pricing-compare-scroll {
+  overflow-x: auto;
+}
+.pricing-compare-box {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  min-width: 960px;
+}
+.pricing-compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 14px;
+}
+.pricing-compare-th-label {
+  text-align: left;
+  padding: 20px 18px 14px;
+  color: var(--color-text-muted);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  width: 22%;
+  background: var(--color-surface);
+}
+.pricing-compare-th-tier {
+  text-align: center;
+  padding: 20px 14px 14px;
+  background: var(--color-surface);
+  position: relative;
+}
+.pricing-compare-th-tier[data-highlight] {
+  background: var(--color-surface-tinted);
+}
+.pricing-compare-badge {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-accent);
+  color: #fff;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.pricing-compare-tier-name {
+  font-family: Inter, system-ui, sans-serif;
+  color: var(--color-accent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 0;
+}
+.pricing-compare-tier-name[data-highlight] {
+  margin-top: 12px;
+}
+.pricing-compare-price-label-th {
+  text-align: left;
+  padding: 0 18px 20px;
+  color: var(--color-text-primary);
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+.pricing-compare-price-th {
+  text-align: center;
+  padding: 0 14px 20px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+.pricing-compare-price-th[data-highlight] {
+  background: var(--color-surface-tinted);
+}
+.pricing-compare-price-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+}
+.pricing-compare-price-amount {
+  font-family: "EB Garamond", Georgia, serif;
+  font-weight: 700;
+  font-size: 28px;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+.pricing-compare-price-period {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+.pricing-compare-spacer-label-th {
+  padding: 0 18px 12px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+.pricing-compare-spacer-th {
+  padding: 0 14px 12px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+.pricing-compare-spacer-th[data-highlight] {
+  background: var(--color-surface-tinted);
+}
+.pricing-compare-row {
+  border-bottom: 1px solid var(--color-border);
+}
+.pricing-compare-row[data-last] {
+  border-bottom: none;
+}
+.pricing-compare-td-label {
+  padding: 14px 18px;
+  color: var(--color-text-primary);
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+}
+.pricing-compare-td {
+  padding: 14px 14px;
+  text-align: center;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 13px;
+  background: transparent;
+}
+.pricing-compare-td[data-highlight] {
+  background: var(--color-surface-tinted);
+}
+.pricing-compare-check {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+.pricing-compare-dash {
+  color: var(--color-text-muted);
+}
+.pricing-compare-cell-text {
+  color: var(--color-text-secondary);
+}
+.pricing-plan-btn {
+  width: 100%;
+}
+.pricing-compare-cta-cell {
+  padding: 0 14px;
+  display: flex;
+  justify-content: center;
+}
+.pricing-compare-cta-btn-wrap {
+  width: 100%;
+  max-width: 220px;
+}
+.pricing-compare-section {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+.pricing-compare-spacer {
+  height: 56px;
+}
+
+/* LeadForm — components/pricing/LeadForm.tsx */
+.lead-form-wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+.lead-form-header {
+  text-align: center;
+  margin-bottom: 48px;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.lead-form-eyebrow {
+  margin-bottom: 12px;
+}
+.lead-form-heading {
+  font-family: var(--font-garamond);
+  font-weight: 700;
+  font-size: clamp(28px, 3.5vw, 42px);
+  color: var(--color-text-primary);
+  margin-top: 0;
+  margin-bottom: 16px;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.lead-form-subhead {
+  font-family: var(--font-inter);
+  font-size: var(--text-body-lg);
+  line-height: var(--text-body-lg--line-height);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+.lead-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  align-items: start;
+}
+.lead-form-value-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.lead-form-value-item {
+  padding: 16px 18px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  display: flex;
+  gap: 12px;
+}
+.lead-form-value-item[data-highlight] {
+  background: var(--color-surface-tinted);
+  border-color: var(--color-accent);
+}
+.lead-form-value-check {
+  color: var(--color-accent);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+.lead-form-value-title {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+.lead-form-value-body {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+.lead-form-value-link {
+  display: inline-block;
+  margin-top: 6px;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 13px;
+  color: var(--color-accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+.lead-form-sent-message {
+  text-align: center;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+.lead-form-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.lead-form-input {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  width: 100%;
+  font-family: var(--font-inter);
+  font-size: 14px;
+  outline: none;
+}
+.lead-form-input:focus {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-focus);
+}
+.lead-form-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.lead-form-field-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+.lead-form-select {
+  padding: 9px 14px;
+}
+.lead-form-fieldset {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  margin: 0;
+}
+.lead-form-legend {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0 6px;
+}
+.lead-form-radio-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.lead-form-radio-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-family: Inter, system-ui, sans-serif;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.lead-form-textarea {
+  resize: vertical;
+}
+.lead-form-submit {
+  width: 100%;
+  justify-content: center;
+  margin-top: 4px;
+}
+.lead-form-error {
+  font-size: 13px;
+  text-align: center;
+  color: var(--color-angular-red);
+  margin: 0;
+}
+
+/* CompatibilityMatrix — components/pricing/CompatibilityMatrix.tsx */
+.compat-matrix {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.compat-matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.compat-matrix-head-row {
+  background: var(--color-surface);
+}
+.compat-matrix-th {
+  text-align: left;
+  padding: 12px 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: var(--text-body);
+  border-bottom: 1px solid var(--color-border);
+}
+.compat-matrix-td-label {
+  padding: 12px 16px;
+  font-size: var(--text-body);
+  font-weight: 500;
+  border-bottom: 1px solid var(--color-border);
+}
+.compat-matrix-td-label[data-tone="success"] { color: #16a34a; }
+.compat-matrix-td-label[data-tone="warn"] { color: #d97706; }
+.compat-matrix-td-label[data-tone="info"] { color: var(--color-accent); }
+.compat-matrix-td-label[data-tone="muted"] { color: var(--color-text-muted); }
+.compat-matrix-td-versions {
+  padding: 12px 16px;
+  font-size: var(--text-body);
+  color: var(--color-text-secondary);
+  font-family: "JetBrains Mono", monospace;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* PricingFAQ — components/pricing/PricingFAQ.tsx */
+.pricing-faq-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+.pricing-faq-eyebrow {
+  margin-bottom: 16px;
+}
+.pricing-faq-heading {
+  font-family: var(--font-garamond);
+  font-size: var(--text-h2);
+  line-height: var(--text-h2--line-height);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+  letter-spacing: -0.015em;
+}
+.pricing-faq-items {
+  max-width: 800px;
+  margin: 0 auto;
+}

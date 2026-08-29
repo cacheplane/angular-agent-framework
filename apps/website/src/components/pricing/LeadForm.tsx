@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import { tokens } from '@threadplane/design-tokens';
 import { analyticsEvents } from '../../lib/analytics/events';
 import { track } from '../../lib/analytics/client';
 import { Container } from '../ui/Container';
@@ -73,131 +72,41 @@ export function LeadForm() {
     }
   };
 
-  const inputStyle: React.CSSProperties = {
-    background: tokens.surfaces.surface,
-    border: `1px solid ${tokens.surfaces.border}`,
-    color: tokens.colors.textPrimary,
-    borderRadius: tokens.radius.md,
-    padding: '10px 14px',
-    width: '100%',
-    fontFamily: tokens.typography.body.family,
-    fontSize: 14,
-    outline: 'none',
-  };
-
-  const handleFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    e.target.style.borderColor = tokens.colors.accent;
-    e.target.style.boxShadow = tokens.shadows.focus;
-  };
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    e.target.style.borderColor = tokens.surfaces.border;
-    e.target.style.boxShadow = 'none';
-  };
-
   return (
     <Section id="lead-form" surface="canvas" ariaLabelledBy="lead-form-heading">
       <Container>
-        <div style={{ maxWidth: 1080, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 48, maxWidth: 720, marginLeft: 'auto', marginRight: 'auto' }}>
-            <Eyebrow tone="accent" style={{ marginBottom: 12 }}>Enterprise</Eyebrow>
-            <h2
-              id="lead-form-heading"
-              style={{
-                fontFamily: tokens.typography.h2.family,
-                fontWeight: 700,
-                fontSize: 'clamp(28px, 3.5vw, 42px)',
-                color: tokens.colors.textPrimary,
-                marginTop: 0,
-                marginBottom: 16,
-                letterSpacing: '-0.02em',
-                lineHeight: 1.1,
-              }}
-            >
+        <div className="lead-form-wrap">
+          <div className="lead-form-header">
+            <Eyebrow tone="accent" className="lead-form-eyebrow">Enterprise</Eyebrow>
+            <h2 id="lead-form-heading" className="lead-form-heading">
               Built for procurement.<br />Backed by delivery.
             </h2>
-            <p
-              style={{
-                fontFamily: tokens.typography.bodyLg.family,
-                fontSize: tokens.typography.bodyLg.size,
-                lineHeight: tokens.typography.bodyLg.line,
-                color: tokens.colors.textSecondary,
-                margin: 0,
-              }}
-            >
+            <p className="lead-form-subhead">
               Volume licensing, custom contract, and optional concierge delivery — so your first Angular agent ships, not just compiles.
             </p>
           </div>
 
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: 24,
-              alignItems: 'start',
-            }}
-          >
+          <div className="lead-form-grid">
             {/* Value props column */}
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <ul className="lead-form-value-list">
               {VALUE_PROPS.map((vp) => (
                 <li
                   key={vp.title}
-                  style={{
-                    padding: '16px 18px',
-                    background: vp.highlight ? tokens.surfaces.surfaceTinted : 'transparent',
-                    border: vp.highlight ? `1px solid ${tokens.colors.accent}` : `1px solid transparent`,
-                    borderRadius: tokens.radius.md,
-                    display: 'flex',
-                    gap: 12,
-                  }}
+                  className="lead-form-value-item"
+                  data-highlight={vp.highlight || undefined}
                 >
-                  <span
-                    aria-hidden="true"
-                    style={{
-                      color: tokens.colors.accent,
-                      fontSize: 18,
-                      fontWeight: 700,
-                      lineHeight: 1.4,
-                      flexShrink: 0,
-                    }}
-                  >
+                  <span aria-hidden="true" className="lead-form-value-check">
                     ✓
                   </span>
                   <div>
-                    <div
-                      style={{
-                        fontFamily: tokens.typography.fontSans,
-                        fontSize: 15,
-                        fontWeight: 600,
-                        color: tokens.colors.textPrimary,
-                        marginBottom: 4,
-                      }}
-                    >
+                    <div className="lead-form-value-title">
                       {vp.title}
                     </div>
-                    <p
-                      style={{
-                        fontFamily: tokens.typography.fontSans,
-                        fontSize: 14,
-                        lineHeight: 1.5,
-                        color: tokens.colors.textSecondary,
-                        margin: 0,
-                      }}
-                    >
+                    <p className="lead-form-value-body">
                       {vp.body}
                     </p>
                     {vp.link && (
-                      <a
-                        href={vp.link.href}
-                        style={{
-                          display: 'inline-block',
-                          marginTop: 6,
-                          fontFamily: tokens.typography.fontSans,
-                          fontSize: 13,
-                          color: tokens.colors.accent,
-                          textDecoration: 'none',
-                          fontWeight: 600,
-                        }}
-                      >
+                      <a href={vp.link.href} className="lead-form-value-link">
                         {vp.link.label}
                       </a>
                     )}
@@ -209,13 +118,13 @@ export function LeadForm() {
             {/* Form column */}
             {status === 'sent' ? (
               <Card padding="lg">
-                <p style={{ textAlign: 'center', color: tokens.colors.textSecondary, margin: 0 }}>
+                <p className="lead-form-sent-message">
                   Thanks &mdash; we&apos;ll be in touch within one business day.
                 </p>
               </Card>
             ) : (
               <Card padding="lg">
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <form onSubmit={handleSubmit} className="lead-form-form">
                   <label htmlFor="lf-name" className="sr-only">Name</label>
                   <input
                     id="lf-name"
@@ -224,9 +133,7 @@ export function LeadForm() {
                     aria-label="Name"
                     placeholder="Name"
                     required
-                    style={inputStyle}
-                    onFocus={handleFocus}
-                    onBlur={handleBlur}
+                    className="lead-form-input"
                   />
                   <label htmlFor="lf-email" className="sr-only">Work email</label>
                   <input
@@ -237,9 +144,7 @@ export function LeadForm() {
                     aria-label="Work email"
                     placeholder="Work email"
                     required
-                    style={inputStyle}
-                    onFocus={handleFocus}
-                    onBlur={handleBlur}
+                    className="lead-form-input"
                   />
                   <label htmlFor="lf-company" className="sr-only">Company</label>
                   <input
@@ -249,33 +154,18 @@ export function LeadForm() {
                     aria-label="Company"
                     placeholder="Company"
                     required
-                    style={inputStyle}
-                    onFocus={handleFocus}
-                    onBlur={handleBlur}
+                    className="lead-form-input"
                   />
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <div className="lead-form-field-row">
                     <div>
-                      <label
-                        htmlFor="lf-team-size"
-                        style={{
-                          display: 'block',
-                          fontSize: 11,
-                          fontWeight: 600,
-                          color: tokens.colors.textMuted,
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.06em',
-                          marginBottom: 4,
-                        }}
-                      >
+                      <label htmlFor="lf-team-size" className="lead-form-field-label">
                         Team size
                       </label>
                       <select
                         id="lf-team-size"
                         name="team_size"
-                        style={{ ...inputStyle, padding: '9px 14px' }}
-                        onFocus={handleFocus}
-                        onBlur={handleBlur}
+                        className="lead-form-input lead-form-select"
                         defaultValue=""
                       >
                         <option value="" disabled>Select…</option>
@@ -286,26 +176,13 @@ export function LeadForm() {
                       </select>
                     </div>
                     <div>
-                      <label
-                        htmlFor="lf-timeline"
-                        style={{
-                          display: 'block',
-                          fontSize: 11,
-                          fontWeight: 600,
-                          color: tokens.colors.textMuted,
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.06em',
-                          marginBottom: 4,
-                        }}
-                      >
+                      <label htmlFor="lf-timeline" className="lead-form-field-label">
                         Timeline
                       </label>
                       <select
                         id="lf-timeline"
                         name="timeline"
-                        style={{ ...inputStyle, padding: '9px 14px' }}
-                        onFocus={handleFocus}
-                        onBlur={handleBlur}
+                        className="lead-form-input lead-form-select"
                         defaultValue=""
                       >
                         <option value="" disabled>Select…</option>
@@ -317,40 +194,13 @@ export function LeadForm() {
                     </div>
                   </div>
 
-                  <fieldset
-                    style={{
-                      border: `1px solid ${tokens.surfaces.border}`,
-                      borderRadius: tokens.radius.md,
-                      padding: '10px 14px',
-                      margin: 0,
-                    }}
-                  >
-                    <legend
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 600,
-                        color: tokens.colors.textMuted,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.06em',
-                        padding: '0 6px',
-                      }}
-                    >
+                  <fieldset className="lead-form-fieldset">
+                    <legend className="lead-form-legend">
                       Pilot-to-Prod
                     </legend>
-                    <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 6 }}>
+                    <div className="lead-form-radio-row">
                       {(['yes', 'maybe', 'no'] as const).map((value) => (
-                        <label
-                          key={value}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 6,
-                            fontSize: 13,
-                            fontFamily: tokens.typography.fontSans,
-                            color: tokens.colors.textSecondary,
-                            cursor: 'pointer',
-                          }}
-                        >
+                        <label key={value} className="lead-form-radio-label">
                           <input
                             type="radio"
                             name="pilot_interest"
@@ -373,9 +223,7 @@ export function LeadForm() {
                     aria-label="Tell us about your use case"
                     placeholder="Tell us about your use case (optional)"
                     rows={3}
-                    style={{ ...inputStyle, resize: 'vertical' }}
-                    onFocus={handleFocus}
-                    onBlur={handleBlur}
+                    className="lead-form-input lead-form-textarea"
                   />
 
                   <Button
@@ -383,12 +231,12 @@ export function LeadForm() {
                     variant="primary"
                     size="md"
                     disabled={status === 'sending'}
-                    style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}
+                    className="lead-form-submit"
                   >
                     {status === 'sending' ? 'Sending…' : 'Request enterprise quote'}
                   </Button>
                   {status === 'error' && (
-                    <p style={{ fontSize: 13, textAlign: 'center', color: tokens.colors.angularRed, margin: 0 }}>
+                    <p className="lead-form-error">
                       Something went wrong &mdash; try again or email us directly.
                     </p>
                   )}
