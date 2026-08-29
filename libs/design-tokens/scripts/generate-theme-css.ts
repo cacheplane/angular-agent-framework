@@ -36,7 +36,7 @@ const HEADER = `/*
 `;
 
 function buildThemeBlock(): string {
-  const { typography, radius, shadows, brand } = baseTokens;
+  const { typography, space, radius, shadows, brand } = baseTokens;
 
   const lines: string[] = ['@theme {'];
 
@@ -138,6 +138,19 @@ function buildThemeBlock(): string {
   lines.push(`  --shadow-md: ${shadows.md};`);
   lines.push(`  --shadow-lg: ${shadows.lg};`);
   lines.push(`  --shadow-focus: ${shadows.focus};`);
+
+  // Space scale.
+  //
+  // `containerMax` goes to the --container-* namespace, not --spacing-*,
+  // because it is a max-width rather than a spacing step; that namespace is
+  // what generates the `max-w-container-page` utility the Container primitive
+  // wants.
+  lines.push('');
+  lines.push('  /* Space scale */');
+  lines.push(`  --spacing-section-y: ${space.sectionY};`);
+  lines.push(`  --spacing-section-y-tight: ${space.sectionYTight};`);
+  lines.push(`  --spacing-container-x: ${space.containerX};`);
+  lines.push(`  --container-page: ${space.containerMax};`);
 
   lines.push('}');
   return lines.join('\n') + '\n';
