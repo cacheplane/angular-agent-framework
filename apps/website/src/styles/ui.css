@@ -253,3 +253,112 @@
 [data-ui="logo-mark"][data-size="md"] > [data-ui="logo-mark-icon"] {
   font-size: 22px;
 }
+
+/* UI primitive — BrowserFrame.
+ * `transform` (rotate) and `max-width` are genuinely dynamic (unbounded
+ * caller props) and stay inline — see components/ui/BrowserFrame.tsx. */
+[data-ui="browser-frame"] {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+[data-ui="browser-frame"][data-elevation="sm"] {
+  box-shadow: var(--shadow-sm);
+}
+[data-ui="browser-frame"][data-elevation="md"] {
+  box-shadow: var(--shadow-md);
+}
+[data-ui="browser-frame"][data-elevation="lg"] {
+  box-shadow: var(--shadow-lg);
+}
+[data-ui="browser-frame-titlebar"] {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--color-surface-tinted);
+  border-bottom: 1px solid var(--color-border);
+}
+[data-ui="browser-frame-dots"] {
+  display: flex;
+  gap: 6px;
+}
+[data-ui="browser-frame-dots"] > span {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-full);
+}
+[data-ui="browser-frame-dots"] > span:nth-child(1) {
+  background: #FF5F57;
+}
+[data-ui="browser-frame-dots"] > span:nth-child(2) {
+  background: #FEBC2E;
+}
+[data-ui="browser-frame-dots"] > span:nth-child(3) {
+  background: #28C840;
+}
+[data-ui="browser-frame-url"] {
+  flex: 1;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  max-width: 360px;
+  margin: 0 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+[data-ui="browser-frame-spacer"] {
+  width: 54px;
+}
+[data-ui="browser-frame-body"] {
+  position: relative;
+  background: var(--color-surface);
+}
+
+/* UI primitive — ClipPlayer */
+[data-ui="clip-player"] {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: #15161f;
+}
+[data-ui="clip-player"] > video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* UI primitive — TabGroup.
+ * `font-family: Inter, sans-serif` and `border-radius: 8px` are copied
+ * verbatim from the original inline literals — they are NOT the
+ * `--font-inter` / `--radius-md` tokens (which resolve to different
+ * fallback stacks / 10px respectively), so mapping them to those vars
+ * would be a value change, not a verbatim move. */
+[data-ui="tab-group-list"] {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+[data-ui="tab-group-tab"] {
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: var(--color-accent-surface);
+  color: var(--color-text-muted);
+}
+[data-ui="tab-group-tab"][data-active] {
+  background: var(--color-accent);
+  color: var(--color-text-inverted);
+}
