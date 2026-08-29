@@ -150,8 +150,8 @@
     "drift": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "examples/chat/angular/e2e",
-        "command": "tsx scripts/drift.ts"
+        "cwd": "examples/chat/angular",
+        "command": "tsx e2e/scripts/drift.ts e2e/.aimock-recordings"
       }
     }
   },
