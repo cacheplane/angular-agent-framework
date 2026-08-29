@@ -63,6 +63,12 @@
         "{options.outputFile}"
       ]
     },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "options": {
+        "configFile": "apps/website/vite.config.mts"
+      }
+    },
     "e2e": {
       "executor": "nx:run-commands",
       "options": {
