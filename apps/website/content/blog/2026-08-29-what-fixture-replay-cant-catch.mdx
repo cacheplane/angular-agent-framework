@@ -126,18 +126,22 @@ So the class of defects a final-state suite cannot see isn't random — it's exa
 
 ## What runs alongside it?
 
-A live pass for what replay structurally can't see, and a drift check for the fixtures themselves.
+A live pass for what replay structurally can't see, and a weekly drift run for the model itself.
 
 The live pass is unglamorous: for anything whose failure mode is mid-stream, drive it against a real model in a real browser before it ships. That's how the bubble above got caught. There's no clever tooling in it — the point is just that the deterministic suite was never going to be the thing that found it.
 
-Drift is the other half, and here I have less to show. A recorded fixture is a claim about how a model behaved on one day, and models move. We have a check scaffolded for it — re-record against the live provider, compare to the copy on disk, open an issue past a threshold — and writing this post is how I found out it doesn't run. It shells out to a recorder flag that doesn't exist, so it fails before it ever compares anything.
+Drift is the other half, and writing this post is what got it built properly. Our first design re-recorded fixtures and compared byte size — which detects that a response changed *size* while saying nothing about whether it changed *meaning*. The same trade again, one layer up. A model that starts returning something equally long and completely different sails straight through a size check.
 
-Let's ask the same question of it anyway, because the answer is instructive even for the version that works.
-It compares byte size. That detects a response changing *size*; it says nothing about a response changing *meaning* — the same trade again, one layer up. A model that starts returning something equally long and completely different sails straight through.
+So we threw the metric away and kept the thing we already trusted.
+The drift run takes a tagged subset of the same e2e suite — contract assertions only: a reply renders, the research dispatch surfaces a subagent card, the interrupt panel appears — and points it at the *live* provider through the mock's record-proxy. No fixtures judged, no thresholds invented.
 
-So a fixture is a claim nobody is currently checking, and the checker we designed wouldn't have caught the interesting failure anyway.
+The assertions are the drift check.
+If today's model stops calling the research tool, or the graph's prompts stop eliciting the interrupt, a spec we already believe in goes red and a weekly job opens an issue. Meaning drift is caught by construction, because the contract is what's being asserted.
 
-None of which argues against the check. It argues for knowing its shape, the same way you'd want to know that your suite can't see the streaming.
+One rule makes the subset work: a tagged assertion may depend on *shape* — an element exists, a count is non-zero — never on the content of a canned response. A spec that expects the fixture's exact words fails against a live model whether or not anything drifted, so it stays in replay where it belongs.
+
+The first run promptly demonstrated the whole thesis in miniature.
+The diagnostic differ reported that both tool-calling responses had "drifted" to plain text — while the specs proving those tools fired were green. The recorder couldn't parse tool-call deltas out of the stream and had saved empty content, flagging it "fixture may be incomplete." The check's first finding was a blind spot in its own instrument, and it now reports that case in its own category instead of as drift.
 
 ## Conclusion
 
@@ -145,10 +149,10 @@ Push your seam as far out as you can afford. The further out it goes, the more o
 
 Then write down which dimension you deleted to make it deterministic, in the file where you deleted it. Not in a wiki. Six months later that comment is the difference between "the suite is green" and "the suite is green, and here is what green does not cover."
 
-Ours was written down, which is the only reason I could check it — and checking it is how I learned the deletion was a default two of our apps had already bought back, and that the drift check meant to cover the other gap has never once run.
+Ours was written down, which is the only reason I could check it — and checking it is how I learned the deletion was a default two of our apps had already bought back, and that our first drift design was measuring the wrong thing.
 
-For us the list is short and specific: anything whose failure mode is mid-stream on a capability that never opted back into real chunking, and any fixture whose meaning drifted without its length changing.
-The first has a plan — drive it live before it ships. The second doesn't yet.
+For us the list is short and specific: anything whose failure mode is mid-stream on a capability that never opted back into real chunking, and the model itself moving under the fixtures.
+Both are covered by the same move — run the assertions you already trust against the real thing, on a schedule for drift and before shipping for streams. Widening either is tagging more specs, not designing anything new.
 
 The [testing guide](/docs/langgraph/guides/testing) has the in-process tier, and [the subgraphs post](/blog/langgraph-subgraphs-when-to-split) has the bug that started this.
 
