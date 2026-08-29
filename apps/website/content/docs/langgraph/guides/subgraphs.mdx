@@ -3,7 +3,7 @@
 Subgraphs let you compose larger agents from smaller, focused units. `injectAgent()` streams their output through the same message, state, tool-call, and custom-event signals as the parent graph.
 
 <Callout type="info" title="Subgraphs vs subagents">
-LangGraph subgraphs are graph nodes. Deep Agents-style subagents are delegated tool calls. `injectAgent()` requests subgraph streams by default, but the `subagents()` signal is populated only for tool calls whose names match `subagentToolNames` and whose args include a `subagent_type`.
+LangGraph subgraphs are graph nodes. Deep Agents-style subagents are delegated tool calls. `injectAgent()` requests subgraph streams by default, and every namespaced child run appears in the `subagents()` signal — tool-dispatched children under their tool-call id (matched via `subagentToolNames` + `subagent_type`), plain subgraph nodes under their namespace key, named by node. A child's tokens live on its stream and never merge into the parent transcript.
 </Callout>
 
 ## How subgraph composition works
@@ -105,10 +105,10 @@ export class OrchestratorComponent {
 </Tab>
 </Tabs>
 
-<Callout type="warning" title="Child messages land in the parent transcript">
-Both graphs above share `MessagesState`, so the child appends to the same message list the parent is building — its intermediate output renders as its own chat bubble. `filterSubagentMessages` does not help here: that option is only consulted for `tools:`-namespaced streams, and a plain subgraph node emits `research:<uuid>`. The lever for this shape is [`transcriptNodeNames`](/docs/langgraph/api/provide-agent), which whitelists the graph nodes whose messages count as transcript.
+<Callout title="Where the child's tokens go">
+A child's streamed tokens never merge into the parent transcript — they land on the child's own stream in `subagents()`, keyed by the `research:<uuid>` namespace. What the transcript shows at settle is decided by state: because both graphs above share `MessagesState`, the child's message enters the parent's message list and arrives with the final `values` sync. Give the child its own schema (below) and it never does.
 
-The leak is mid-stream with a clean end state — the parent's final `values` event rewrites the message list from authoritative graph state, so the stray bubble disappears once the run settles. A final-state test cannot catch it.
+Streamed chunks from *top-level* side-effect nodes — a router, a title generator — are a separate concern: whitelist your conversational nodes with [`transcriptNodeNames`](/docs/langgraph/api/provide-agent).
 </Callout>
 
 ## Giving the child its own state
@@ -167,7 +167,7 @@ Because `ResearchState` has no `messages` key, the child cannot read the transcr
 
 ## Tracking delegated subagent execution
 
-The `subagents()` signal contains a Map of active delegated subagent streams. Use it when your graph delegates through tool calls, such as Deep Agents' default `task` tool or your own delegation tools. Plain subgraph nodes do not appear in this map.
+The `subagents()` signal contains a Map of active child streams. Tool-dispatched children — Deep Agents' default `task` tool or your own delegation tools — are keyed by tool-call id and named by their `subagent_type`. Plain subgraph nodes are keyed by their namespace segment and named by node; they register on their first streamed event and settle with the run.
 
 ```typescript
 // In a shared file (e.g. agent.ts):
@@ -239,7 +239,6 @@ The orchestrator pattern delegates specialised work to subagents and merges thei
 // provideAgent(PIPELINE, {
 //   apiUrl: '...',
 //   subagentToolNames: ['task'],
-//   filterSubagentMessages: true,
 // });
 
 const pipeline = injectAgent(PIPELINE);
@@ -306,11 +305,9 @@ export class SubagentProgressComponent {
 </Tab>
 </Tabs>
 
-## Filtering subagent messages
+## Child messages and the parent transcript
 
-By default, subagent messages appear in the parent's `messages()` signal. Filter them out for a cleaner parent view.
-
-This applies to tool-dispatched subagents — the `tools:`-namespaced streams that populate `subagents()`. For a plain subgraph node, use [`transcriptNodeNames`](/docs/langgraph/api/provide-agent) instead; `filterSubagentMessages` has no effect on that shape.
+Child messages never appear in the parent's `messages()` signal — a namespaced stream belongs to its child, and `messages()` is the parent's transcript. Render a child's live output from its own stream:
 
 ```typescript
 // In a shared file (e.g. agent.ts):
@@ -320,13 +317,12 @@ This applies to tool-dispatched subagents — the `tools:`-namespaced streams th
 // Configure in app.config.ts:
 // provideAgent(ORCHESTRATOR, {
 //   apiUrl: '...',
-//   filterSubagentMessages: true,  // Hide subagent messages from parent
 //   subagentToolNames: ['task'],
 // });
 
 const orchestrator = injectAgent(ORCHESTRATOR);
 
-// Parent messages only (no subagent chatter)
+// The parent's transcript — child chatter is structurally absent
 const parentMessages = computed(() => orchestrator.messages());
 ```
 

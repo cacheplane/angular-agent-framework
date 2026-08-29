@@ -174,7 +174,7 @@ describe('agent', () => {
       const ref = withInjectionContext(() =>
         agent({
           apiUrl: '', assistantId: 'a', transport, throttle: false,
-          subagentToolNames: ['task'], filterSubagentMessages: true,
+          subagentToolNames: ['task'],
         })
       );
 
@@ -792,7 +792,6 @@ describe('agent', () => {
         transport,
         throttle: false,
         subagentToolNames: ['task'],
-        filterSubagentMessages: true,
       })
     );
 

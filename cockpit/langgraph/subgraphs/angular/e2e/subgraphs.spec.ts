@@ -21,6 +21,11 @@ test.describe('cockpit subgraphs: conditional nesting', () => {
     await expect(panel.getByTestId('research-topic')).toContainText('checkpointer persists');
     await expect(panel.getByTestId('research-brief')).toContainText(BRIEF_MARKER);
     await expect(finalAssistant).toContainText('Checkpointing saves');
+
+    // The child also appears as a stream: plain subgraph children register in
+    // agent.subagents() under their namespace, named by node, and settle with
+    // the run.
+    await expect(panel.getByTestId('child-stream')).toContainText('research — complete');
   });
 
   test("the child's brief never reaches the transcript", async ({ page }) => {

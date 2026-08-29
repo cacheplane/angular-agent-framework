@@ -16,6 +16,13 @@ export interface TrackedToolCall {
 export interface TrackedSubagent {
   id: string;
   generation: string;
+  /**
+   * How this child stream came to exist. 'tool' children are delegation tool
+   * calls (registered from the parent's AI message, keyed by tool-call id);
+   * 'subgraph' children are plain compiled-graph nodes (registered from their
+   * first namespaced stream event, keyed by the namespace segment itself).
+   */
+  kind: 'tool' | 'subgraph';
   status: 'pending' | 'running' | 'complete' | 'error';
   toolCall: {
     id: string;
@@ -90,6 +97,7 @@ export class SubagentTracker {
       this.subagents.set(id, {
         id,
         generation: existing?.generation ?? createSubagentGeneration(),
+        kind: 'tool',
         status: existing?.status ?? 'pending',
         toolCall: {
           id,
@@ -147,14 +155,14 @@ export class SubagentTracker {
     };
 
     for (const [toolCallId, subagent] of this.subagents) {
-      if (mapped.has(toolCallId)) continue;
+      if (subagent.kind !== 'tool' || mapped.has(toolCallId)) continue;
       if (subagent.toolCall.args['description'] === description) {
         return establish(toolCallId);
       }
     }
 
     for (const [toolCallId, subagent] of this.subagents) {
-      if (mapped.has(toolCallId)) continue;
+      if (subagent.kind !== 'tool' || mapped.has(toolCallId)) continue;
       const subagentDescription = subagent.toolCall.args['description'];
       if (typeof subagentDescription !== 'string' || !subagentDescription) continue;
       if (description.includes(subagentDescription) || subagentDescription.includes(description)) {
@@ -162,7 +170,10 @@ export class SubagentTracker {
       }
     }
 
+    // Last-resort fallback — tool children only. A subgraph child is keyed by
+    // its own namespace and must never absorb an unrelated child's events.
     for (const [toolCallId, subagent] of this.subagents) {
+      if (subagent.kind !== 'tool') continue;
       if (!mapped.has(toolCallId) && (subagent.status === 'pending' || subagent.status === 'running')) {
         return establish(toolCallId);
       }
@@ -191,6 +202,45 @@ export class SubagentTracker {
       },
     });
     this.onSubagentChange?.();
+  }
+
+  /**
+   * Register a plain-subgraph child stream on its first namespaced event.
+   *
+   * Unlike tool children — announced ahead of time by the parent's tool call —
+   * a compiled child added as a plain node has no announcement: its existence
+   * is learned from the first event carrying its namespace. It starts
+   * 'running' because by the time we see an event, it is.
+   */
+  ensureSubgraphStream(key: string, name: string): void {
+    if (this.subagents.has(key)) return;
+    this.subagents.set(key, {
+      id: key,
+      generation: createSubagentGeneration(),
+      kind: 'subgraph',
+      status: 'running',
+      toolCall: { id: key, name, args: {} },
+      values: {},
+      messages: [],
+    });
+    this.onSubagentChange?.();
+  }
+
+  /**
+   * Settle still-running subgraph children when the run reaches a terminal
+   * outcome. Tool children settle through their tool result
+   * (`processToolMessage`); subgraph children have no result message, so the
+   * run's own settle is their completion signal. Paused/interrupted runs must
+   * NOT call this — a child can resume with the thread.
+   */
+  settleRunningSubgraphs(outcome: 'complete' | 'error'): void {
+    let changed = false;
+    for (const [key, subagent] of this.subagents) {
+      if (subagent.kind !== 'subgraph' || subagent.status !== 'running') continue;
+      this.subagents.set(key, { ...subagent, status: outcome });
+      changed = true;
+    }
+    if (changed) this.onSubagentChange?.();
   }
 
   updateSubagentValues(namespaceId: string, values: Record<string, unknown>): void {
@@ -262,10 +312,47 @@ export class SubagentTracker {
   }
 }
 
-export function isSubagentNamespace(namespace: string[] | string | undefined): boolean {
+/**
+ * True when a stream event belongs to a child graph rather than the parent —
+ * i.e. it carries any namespace at all. This is the single classification
+ * question; which child owns the event is a separate (attribution) question.
+ *
+ * Kept consistent with the terminal-evidence guard, which has always refused
+ * ANY namespaced event as proof the parent run finished.
+ */
+export function isChildNamespace(namespace: string[] | string | undefined): boolean {
   if (!namespace) return false;
-  if (typeof namespace === 'string') return namespace.includes('tools:');
-  return namespace.some(segment => segment.startsWith('tools:'));
+  if (typeof namespace === 'string') return namespace.length > 0;
+  return namespace.length > 0;
+}
+
+/** Resolved identity of a child stream, derived from its event namespace. */
+export interface ChildStreamRef {
+  /** Map key: the tool-call id for `tools:` namespaces, else the namespace segment itself. */
+  key: string;
+  /** Display name; for subgraph nodes, the node name. Unused on the tool path. */
+  name: string;
+  kind: 'tool' | 'subgraph';
+}
+
+/**
+ * Derive a child stream's identity from an event namespace.
+ *
+ * `tools:<id>` segments identify a tool-dispatched child by its tool-call id.
+ * Any other segment (e.g. `research:<uuid>` from a compiled graph added with
+ * `add_node`) identifies a plain subgraph child: the full segment is the key
+ * (unique per invocation) and the part before the first ':' is the node name.
+ */
+export function childStreamRefFromNamespace(namespace: string[]): ChildStreamRef | undefined {
+  for (const segment of namespace) {
+    if (segment.startsWith('tools:')) {
+      return { key: segment.slice(6), name: '', kind: 'tool' };
+    }
+  }
+  const first = namespace[0];
+  if (!first) return undefined;
+  const colon = first.indexOf(':');
+  return { key: first, name: colon > 0 ? first.slice(0, colon) : first, kind: 'subgraph' };
 }
 
 export function extractToolCallIdFromNamespace(namespace: string[] | undefined): string | undefined {

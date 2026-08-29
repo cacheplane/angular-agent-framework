@@ -2472,7 +2472,7 @@ describe('createStreamManagerBridge', () => {
       const bridge = createStreamManagerBridge({
         options: {
           apiUrl: '', assistantId: 'test', transport,
-          subagentToolNames: ['task'], filterSubagentMessages: true,
+          subagentToolNames: ['task'],
         },
         subjects,
         threadId$: of('thread-1'),
@@ -2769,7 +2769,7 @@ describe('createStreamManagerBridge', () => {
     destroy$.next();
   });
 
-  it('routes subagent message tuples out of main messages when filtering is enabled', async () => {
+  it('routes tool-child message tuples to the child stream, never the transcript', async () => {
     const transport = new MockAgentTransport();
     const subjects = makeSubjects();
     const destroy$ = new Subject<void>();
@@ -2779,7 +2779,6 @@ describe('createStreamManagerBridge', () => {
         assistantId: 'test',
         transport,
         subagentToolNames: ['task'],
-        filterSubagentMessages: true,
       },
       subjects,
       threadId$: of(null),
@@ -2815,6 +2814,155 @@ describe('createStreamManagerBridge', () => {
     expect(subjects.subagents$.value.get('call-1')?.messages()).toEqual([
       expect.objectContaining({ id: 'sub-ai-1', type: 'ai', content: 'Subagent note' }),
     ]);
+    destroy$.next();
+  });
+
+  it('routes plain-subgraph message tuples to a namespace-keyed child stream, never the transcript', async () => {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport },
+      subjects,
+      threadId$: of(null),
+      destroy$: destroy$.asObservable(),
+    });
+
+    bridge.submit({});
+    transport.emit([{
+      type: 'messages',
+      messages: [{ id: 'parent-ai', type: 'ai', content: 'routing' }],
+      messageMetadata: { langgraph_node: 'orchestrate' },
+    } satisfies StreamEvent]);
+    transport.emit([{
+      type: 'messages|research:abc123' as StreamEvent['type'],
+      namespace: ['research:abc123'],
+      messages: [{ id: 'child-ai', type: 'ai', content: 'internal brief' }],
+      messageMetadata: { checkpoint_ns: 'research:abc123', langgraph_node: 'research' },
+    } satisfies StreamEvent]);
+    transport.close();
+
+    await new Promise(r => setTimeout(r, 10));
+
+    // Transcript: parent only. The child's tokens never merge.
+    expect(subjects.messages$.value).toHaveLength(1);
+    expect(subjects.messages$.value[0]).toMatchObject({ id: 'parent-ai' });
+
+    // Child stream: keyed by the namespace segment, named by its node prefix.
+    const child = subjects.subagents$.value.get('research:abc123');
+    expect(child).toBeDefined();
+    expect(child?.name).toBe('research');
+    expect(child?.messages()).toEqual([
+      expect.objectContaining({ id: 'child-ai', content: 'internal brief' }),
+    ]);
+    destroy$.next();
+  });
+
+  it("keeps a plain child's values and updates out of the parent's values$", async () => {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport },
+      subjects,
+      threadId$: of(null),
+      destroy$: destroy$.asObservable(),
+    });
+
+    bridge.submit({});
+    transport.emit([
+      { type: 'values', data: { messages: [], research_topic: 'checkpointing' } },
+      {
+        type: 'values|research:abc123' as StreamEvent['type'],
+        namespace: ['research:abc123'],
+        data: { research_brief: 'child-only state' },
+      },
+      {
+        type: 'updates|research:abc123' as StreamEvent['type'],
+        namespace: ['research:abc123'],
+        data: { research: { research_brief: 'child-only state' } },
+      },
+    ] as StreamEvent[]);
+    transport.close();
+
+    await new Promise(r => setTimeout(r, 10));
+
+    // Parent values$ holds only what the parent emitted at top level — a
+    // child's values event must neither replace nor spread-merge into it.
+    expect(subjects.values$.value).toEqual({ messages: [], research_topic: 'checkpointing' });
+    // The child's state landed on its own stream.
+    expect(subjects.subagents$.value.get('research:abc123')?.values()).toMatchObject({
+      research_brief: 'child-only state',
+    });
+    destroy$.next();
+  });
+
+  it('settles running subgraph children when the run completes, but not on pause', async () => {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport },
+      subjects,
+      threadId$: of(null),
+      destroy$: destroy$.asObservable(),
+    });
+
+    const done = bridge.submit({});
+    transport.emit([{
+      type: 'messages|research:abc123' as StreamEvent['type'],
+      namespace: ['research:abc123'],
+      messages: [{ id: 'child-ai', type: 'ai', content: 'brief' }],
+      messageMetadata: { checkpoint_ns: 'research:abc123' },
+    } satisfies StreamEvent]);
+    await new Promise(r => setTimeout(r, 0));
+    expect(subjects.subagents$.value.get('research:abc123')?.status()).toBe('running');
+
+    transport.emit([{ type: 'values', data: { done: true } } as StreamEvent]);
+    transport.close();
+    await done;
+
+    expect(subjects.subagents$.value.get('research:abc123')?.status()).toBe('complete');
+    destroy$.next();
+  });
+
+  it('never attributes a plain child to a pending tool subagent via the fallback ladder', async () => {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport, subagentToolNames: ['task'] },
+      subjects,
+      threadId$: of(null),
+      destroy$: destroy$.asObservable(),
+    });
+
+    bridge.submit({});
+    // A pending tool child exists…
+    transport.emit([{
+      type: 'messages',
+      messages: [{
+        id: 'ai-1', type: 'ai', content: '',
+        tool_calls: [{ id: 'call-1', name: 'task', args: { subagent_type: 'researcher', description: 'tool work' } }],
+      }],
+    } satisfies StreamEvent]);
+    // …and a plain subgraph child streams values with a human first message —
+    // the shape the description ladder keys on.
+    transport.emit([{
+      type: 'values|research:abc123' as StreamEvent['type'],
+      namespace: ['research:abc123'],
+      data: { messages: [{ type: 'human', content: 'unrelated child input' }] },
+    } as StreamEvent]);
+    transport.close();
+
+    await new Promise(r => setTimeout(r, 10));
+
+    // The plain child is its own entry; the tool child absorbed nothing.
+    expect(subjects.subagents$.value.get('research:abc123')?.name).toBe('research');
+    // Before the ladder was scoped to tool children, the fallback would have
+    // mapped the namespace onto call-1 and flipped it to 'running', making it
+    // visible. It must remain pending — and pending entries stay hidden.
+    expect(subjects.subagents$.value.get('call-1')).toBeUndefined();
     destroy$.next();
   });
 

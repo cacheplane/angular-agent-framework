@@ -39,7 +39,6 @@ bootstrapApplication(AppComponent, {
 | `transport` | `AgentTransport` | Optional transport instance. Defaults to `FetchStreamTransport` when omitted. |
 | `clientOptions` | `LangGraphClientOptions` | LangGraph SDK client tuning (e.g. `maxRetries`). See [Client tuning](#client-tuning-retry-budget) below. |
 | `telemetry` | `AgentRuntimeTelemetrySink \| false` | Optional app-owned telemetry sink. No telemetry is emitted unless this is provided. |
-| `filterSubagentMessages` | `boolean` | When true, subagent messages are filtered from the main messages signal. |
 | `subagentToolNames` | `string[]` | Tool names that indicate a subagent invocation. |
 | `transcriptNodeNames` | `string[]` | LangGraph node names whose `messages-tuple` chunks should stream into the main chat transcript. Omit to accept all top-level chunks. |
 
@@ -61,7 +60,7 @@ const chat = injectAgent();
 
 LangGraph streams `messages-tuple` chunks for every LLM node in a run. If your graph has side-effect LLM nodes, such as a title generator or evaluator, set `transcriptNodeNames` so only your conversational node updates `messages()`.
 
-This is also the lever for a plain subgraph node. A compiled child added with `add_node` streams under a namespace like `research:<uuid>`, which is not a `tools:` subagent namespace, so `filterSubagentMessages` never applies to it and its tokens merge into the transcript. Naming your answering node here keeps the child's internal output out of the chat. See [Subgraphs](/docs/langgraph/guides/subgraphs).
+Child-graph streams are a separate concern and need no configuration: any namespaced event — a compiled child added with `add_node` (`research:<uuid>`) or a tool-dispatched subagent (`tools:<id>`) — belongs to its child stream in `subagents()` and never merges into the transcript. See [Subgraphs](/docs/langgraph/guides/subgraphs).
 
 ```ts
 provideAgent({

@@ -899,12 +899,6 @@
         "optional": true
       },
       {
-        "name": "filterSubagentMessages",
-        "type": "boolean",
-        "description": "When true, subagent messages are filtered from the main messages signal.",
-        "optional": true
-      },
-      {
         "name": "initialValues",
         "type": "Partial<T>",
         "description": "Initial state values before the first stream response arrives.",
@@ -949,7 +943,7 @@
       {
         "name": "transcriptNodeNames",
         "type": "string[]",
-        "description": "LangGraph node names whose `messages-tuple` LLM chunks should be projected\ninto the main chat transcript. Omit to accept all top-level message chunks.",
+        "description": "LangGraph node names whose `messages-tuple` LLM chunks should be projected\ninto the main chat transcript. Omit to accept all top-level message chunks.\nChild-graph (namespaced) chunks never reach the transcript regardless of\nthis option — they belong to their child stream in `subagents()`.",
         "optional": true
       },
       {
@@ -1047,12 +1041,6 @@
         "optional": true
       },
       {
-        "name": "filterSubagentMessages",
-        "type": "boolean",
-        "description": "When true, subagent messages are filtered from the main messages signal.",
-        "optional": true
-      },
-      {
         "name": "initialValues",
         "type": "Partial<T>",
         "description": "Initial state values before the first stream response arrives.",
@@ -1097,7 +1085,7 @@
       {
         "name": "transcriptNodeNames",
         "type": "string[]",
-        "description": "LangGraph node names whose `messages-tuple` LLM chunks should be projected\ninto the main chat transcript. Omit to accept all top-level message chunks.\n\nUse this when a graph has side-effect LLM nodes, such as title generation,\nwhose streamed model output should not render as assistant chat content.",
+        "description": "LangGraph node names whose `messages-tuple` LLM chunks should be projected\ninto the main chat transcript. Omit to accept all top-level message chunks.\nChild-graph (namespaced) chunks never reach the transcript regardless of\nthis option — they belong to their child stream in `subagents()`.\n\nUse this when a graph has side-effect LLM nodes, such as title generation,\nwhose streamed model output should not render as assistant chat content.",
         "optional": true
       },
       {
