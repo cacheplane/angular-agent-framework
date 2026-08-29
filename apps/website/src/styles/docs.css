@@ -189,6 +189,18 @@
   align-items: stretch;
   gap: 0;
 }
+/* Reunited with the .ag-ui-arch-arrow mobile override below — this base
+ * rule was migrated from AgUiArchDiagram.tsx's inline style, the media
+ * query pre-existed it. */
+.ag-ui-arch-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: var(--color-text-muted);
+  padding: 0 4px;
+}
 @media (max-width: 720px) {
   .ag-ui-arch-grid {
     grid-template-columns: 1fr;
@@ -198,6 +210,73 @@
     padding: 12px 0;
     margin: 4px auto;
   }
+}
+.ag-ui-arch-box {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 116px;
+}
+.ag-ui-arch-box[data-tone="accent"] {
+  background: var(--color-accent-surface);
+  border-color: #00409033;
+}
+.ag-ui-arch-box-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+.ag-ui-arch-box[data-tone="accent"] .ag-ui-arch-box-eyebrow {
+  color: var(--color-accent);
+}
+.ag-ui-arch-box-title {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.ag-ui-arch-box-meta {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+.ag-ui-arch-arrow-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  white-space: nowrap;
+}
+.ag-ui-arch-arrow-svg {
+  display: block;
+}
+.ag-ui-arch-arrow-sub {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+.ag-ui-arch-figure {
+  margin: 2rem 0;
+  padding: 28px 24px;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+.ag-ui-arch-caption {
+  margin-top: 16px;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  text-align: center;
+  font-style: italic;
 }
 
 /* Docs — readable column max-width */
@@ -965,4 +1044,416 @@
   width: var(--inner-size);
   height: var(--inner-size);
   object-fit: contain;
+}
+
+/* CopyButton */
+.docs-copy-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.docs-copy-button[data-copied] {
+  color: var(--color-accent);
+}
+
+/* CopyPromptButton */
+.docs-copy-prompt-button {
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: box-shadow 0.2s, border-color 0.2s, background 0.2s;
+}
+.docs-copy-prompt-button[data-variant="hero"] {
+  background: var(--color-accent);
+  border: none;
+  color: #fff;
+  font-size: 13px;
+  padding: 12px 24px;
+  border-radius: 8px;
+}
+.docs-copy-prompt-button[data-variant="docs"] {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  padding: 8px 16px;
+  border-radius: 6px;
+}
+.docs-copy-prompt-button[data-variant="docs"][data-copied] {
+  color: var(--color-accent);
+}
+.docs-copy-prompt-button[data-variant="docs"]:hover {
+  border-color: var(--color-border-strong);
+  background: var(--color-accent-surface);
+}
+
+/* ApiRefTable */
+.api-ref-card {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+.api-ref-name {
+  color: var(--color-accent);
+}
+.api-ref-type {
+  color: var(--color-text-secondary);
+}
+.api-ref-description {
+  color: var(--color-text-secondary);
+}
+.api-ref-table {
+  border-collapse: collapse;
+}
+.api-ref-table tr {
+  border-bottom: 1px solid var(--color-accent-border);
+}
+.api-ref-table-head {
+  color: var(--color-text-muted);
+}
+.api-ref-param-name {
+  color: var(--color-accent);
+}
+.api-ref-param-type {
+  color: var(--color-text-secondary);
+}
+.api-ref-param-desc {
+  color: var(--color-text-secondary);
+}
+
+/* ApiDocRenderer */
+.api-doc-kind-badge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--color-accent-surface);
+  color: var(--color-accent);
+  text-transform: uppercase;
+}
+.api-doc-param-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  margin-top: 8px;
+}
+.api-doc-param-table tr {
+  border-bottom: 1px solid var(--color-border);
+}
+.api-doc-param-table thead tr {
+  background: var(--color-surface-tinted);
+}
+.api-doc-param-table th {
+  text-align: left;
+  padding: 6px 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+}
+.api-doc-param-name {
+  padding: 6px 0;
+  font-family: var(--font-mono);
+  color: var(--color-accent);
+}
+.api-doc-param-type {
+  padding: 6px 0;
+  font-family: var(--font-mono);
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+}
+.api-doc-param-desc {
+  padding: 6px 0;
+  color: var(--color-text-secondary);
+}
+.api-doc-card {
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 24px;
+}
+.api-doc-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.api-doc-name {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--color-accent);
+}
+.api-doc-description {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+.api-doc-signature-wrap {
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.api-doc-example-wrap {
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.api-doc-code-pre {
+  padding: 16px;
+  background: #1a1b26;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #a9b1d6;
+  overflow-x: auto;
+  margin: 0;
+}
+.api-doc-section {
+  margin-bottom: 16px;
+}
+.api-doc-section-title {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+.api-doc-inline-code {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-accent);
+}
+.api-doc-method {
+  margin-bottom: 12px;
+  padding-left: 12px;
+  border-left: 2px solid var(--color-accent-border);
+}
+.api-doc-method-desc {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}
+
+/*
+ * ArchFlowDiagram — hoisted from its <style> tag (plain @keyframes, no
+ * ${tokens.*} interpolations to replace) plus its migrated inline styles.
+ */
+@keyframes blink { 0%,100% { opacity:0.5; } 50% { opacity:0; } }
+@keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+
+.arch-flow-card {
+  width: 100%;
+  margin: 28px 0 36px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  background: var(--color-surface);
+}
+.arch-flow-header {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-surface-tinted);
+}
+.arch-flow-dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.arch-flow-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.arch-flow-dot--red {
+  background: #FF5F57;
+}
+.arch-flow-dot--yellow {
+  background: #FEBC2E;
+}
+.arch-flow-dot--green {
+  background: #28C840;
+}
+.arch-flow-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+.arch-flow-url-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--color-text-muted);
+  background: rgba(0, 0, 0, 0.04);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.arch-flow-body {
+  display: flex;
+  min-height: 320px;
+}
+.arch-flow-chat-panel {
+  flex: 1;
+  padding: 16px;
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+}
+.arch-flow-panel-title {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.arch-flow-bubbles {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+}
+.arch-flow-bubble-row {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 6px;
+}
+.arch-flow-bubble-row[data-role="user"] {
+  justify-content: flex-end;
+}
+.arch-flow-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  background: rgba(0, 64, 144, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--color-accent);
+  font-weight: 700;
+}
+.arch-flow-bubble {
+  padding: 8px 12px;
+  border-radius: 10px;
+  max-width: 85%;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  background: rgba(0, 0, 0, 0.04);
+}
+.arch-flow-bubble[data-role="user"] {
+  color: #fff;
+  background: var(--color-accent);
+}
+.arch-flow-cursor {
+  opacity: 0.5;
+  animation: blink 0.6s infinite;
+}
+.arch-flow-console-panel {
+  flex: 1;
+  padding: 12px;
+  background: #1a1b26;
+  overflow: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+.arch-flow-console-title {
+  font-size: 9px;
+  color: #4A527A;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.arch-flow-log-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 4px;
+  align-items: flex-start;
+  animation: fadeIn 0.2s ease-out;
+}
+.arch-flow-log-time {
+  color: #4A527A;
+  flex-shrink: 0;
+  width: 36px;
+  text-align: right;
+}
+.arch-flow-log-source {
+  padding: 1px 5px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  font-size: 8px;
+  font-weight: 600;
+  min-width: 62px;
+  text-align: center;
+}
+.arch-flow-log-source[data-source="angular"] {
+  background: rgba(221, 0, 49, 0.08);
+  color: #c62828;
+}
+.arch-flow-log-source[data-source="transport"] {
+  background: rgba(100, 80, 200, 0.08);
+  color: #5e35b1;
+}
+.arch-flow-log-source[data-source="langgraph"] {
+  background: rgba(0, 64, 144, 0.08);
+  color: #004090;
+}
+.arch-flow-log-source[data-source="signal"] {
+  background: rgba(16, 185, 129, 0.08);
+  color: #059669;
+}
+.arch-flow-log-message {
+  color: #a9b1d6;
+  word-break: break-all;
+}
+.arch-flow-log-empty {
+  color: #4A527A;
+  font-style: italic;
+}
+
+/* DocsPrevNext */
+.docs-prevnext {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 48px;
+  margin-bottom: 16px;
+}
+.docs-prevnext-link {
+  text-decoration: none;
+}
+.docs-prevnext-card {
+  height: 100%;
+}
+.docs-prevnext-card--next {
+  text-align: right;
+}
+.docs-prevnext-eyebrow {
+  margin-bottom: 8px;
+}
+.docs-prevnext-title {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-accent);
 }

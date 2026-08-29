@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { tokens } from '@threadplane/design-tokens';
 import { Card } from '../ui/Card';
 import { Eyebrow } from '../ui/Eyebrow';
 import { getLibraryConfig, type LibraryId } from '../../lib/docs-config';
@@ -47,26 +46,13 @@ export function DocsPrevNext({ library, section, slug }: Props) {
   return (
     <nav
       aria-label="Previous and next page"
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-        gap: 16,
-        marginTop: 48,
-        marginBottom: 16,
-      }}
+      className="docs-prevnext"
     >
       {prev ? (
-        <Link href={prev.href} style={{ textDecoration: 'none' }}>
-          <Card padding="md" hoverable style={{ height: '100%' }}>
-            <Eyebrow style={{ marginBottom: 8 }}>← Previous</Eyebrow>
-            <div
-              style={{
-                fontFamily: tokens.typography.fontSans,
-                fontSize: 16,
-                fontWeight: 600,
-                color: tokens.colors.accent,
-              }}
-            >
+        <Link href={prev.href} className="docs-prevnext-link">
+          <Card padding="md" hoverable className="docs-prevnext-card">
+            <Eyebrow className="docs-prevnext-eyebrow">← Previous</Eyebrow>
+            <div className="docs-prevnext-title">
               {prev.title}
             </div>
           </Card>
@@ -75,17 +61,10 @@ export function DocsPrevNext({ library, section, slug }: Props) {
         <div />
       )}
       {next ? (
-        <Link href={next.href} style={{ textDecoration: 'none' }}>
-          <Card padding="md" hoverable style={{ height: '100%', textAlign: 'right' }}>
-            <Eyebrow style={{ marginBottom: 8 }}>Next →</Eyebrow>
-            <div
-              style={{
-                fontFamily: tokens.typography.fontSans,
-                fontSize: 16,
-                fontWeight: 600,
-                color: tokens.colors.accent,
-              }}
-            >
+        <Link href={next.href} className="docs-prevnext-link">
+          <Card padding="md" hoverable className="docs-prevnext-card docs-prevnext-card--next">
+            <Eyebrow className="docs-prevnext-eyebrow">Next →</Eyebrow>
+            <div className="docs-prevnext-title">
               {next.title}
             </div>
           </Card>

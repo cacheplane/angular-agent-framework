@@ -1,6 +1,5 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { tokens } from '@threadplane/design-tokens';
 
 interface LogEntry {
   time: string;
@@ -23,11 +22,11 @@ const SCENARIO: { delay: number; chatBubble?: { role: 'user' | 'assistant'; text
   { delay: 6000, log: { time: '2.12s', source: 'angular', message: 'Template re-rendered (OnPush) — 1 component' } },
 ];
 
-const SOURCE_COLORS: Record<string, { bg: string; text: string; label: string }> = {
-  angular: { bg: 'rgba(221,0,49,0.08)', text: '#c62828', label: 'ANGULAR' },
-  transport: { bg: 'rgba(100,80,200,0.08)', text: '#5e35b1', label: 'TRANSPORT' },
-  langgraph: { bg: 'rgba(0,64,144,0.08)', text: '#004090', label: 'LANGGRAPH' },
-  signal: { bg: 'rgba(16,185,129,0.08)', text: '#059669', label: 'SIGNAL' },
+const SOURCE_LABEL: Record<string, string> = {
+  angular: 'ANGULAR',
+  transport: 'TRANSPORT',
+  langgraph: 'LANGGRAPH',
+  signal: 'SIGNAL',
 };
 
 export function ArchFlowDiagram() {
@@ -73,58 +72,32 @@ export function ArchFlowDiagram() {
   }, [cycle]);
 
   return (
-    <div style={{
-      width: '100%',
-      margin: '28px 0 36px',
-      borderRadius: 14,
-      overflow: 'hidden',
-      border: `1px solid ${tokens.surfaces.border}`,
-      boxShadow: tokens.shadows.sm,
-      background: tokens.surfaces.surface,
-    }}>
+    <div className="arch-flow-card">
       {/* Header bar */}
-      <div style={{
-        padding: '10px 16px',
-        borderBottom: `1px solid ${tokens.surfaces.border}`,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        background: tokens.surfaces.surfaceTinted,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#FF5F57' }} />
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#FEBC2E' }} />
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#28C840' }} />
+      <div className="arch-flow-header">
+        <div className="arch-flow-dots">
+          <div className="arch-flow-dot arch-flow-dot--red" />
+          <div className="arch-flow-dot arch-flow-dot--yellow" />
+          <div className="arch-flow-dot arch-flow-dot--green" />
         </div>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: tokens.colors.textMuted }}>injectAgent() — live architecture flow</span>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: tokens.colors.textMuted, background: 'rgba(0,0,0,0.04)', padding: '2px 6px', borderRadius: 4 }}>localhost:4200</span>
+        <span className="arch-flow-label">injectAgent() — live architecture flow</span>
+        <span className="arch-flow-url-badge">localhost:4200</span>
       </div>
 
-      <div style={{ display: 'flex', minHeight: 320 }}>
+      <div className="arch-flow-body">
         {/* Left: Chat simulation */}
-        <div style={{ flex: 1, padding: 16, borderRight: `1px solid ${tokens.surfaces.border}`, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: tokens.colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10, fontWeight: 600 }}>Chat Interface</div>
+        <div className="arch-flow-chat-panel">
+          <div className="arch-flow-panel-title">Chat Interface</div>
 
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflow: 'hidden' }}>
+          <div className="arch-flow-bubbles">
             {bubbles.map((b, i) => (
-              <div key={`${b.role}-${i}`} style={{
-                display: 'flex',
-                justifyContent: b.role === 'user' ? 'flex-end' : 'flex-start',
-                alignItems: 'flex-start', gap: 6,
-              }}>
+              <div key={`${b.role}-${i}`} className="arch-flow-bubble-row" data-role={b.role}>
                 {b.role === 'assistant' && (
-                  <div style={{
-                    width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-                    background: 'rgba(0,64,144,0.1)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontFamily: 'var(--font-mono)', fontSize: 8, color: tokens.colors.accent, fontWeight: 700,
-                  }}>AI</div>
+                  <div className="arch-flow-avatar">AI</div>
                 )}
-                <div style={{
-                  padding: '8px 12px', borderRadius: 10, maxWidth: '85%',
-                  fontSize: 12, lineHeight: 1.5, color: b.role === 'user' ? '#fff' : tokens.colors.textPrimary,
-                  background: b.role === 'user' ? tokens.colors.accent : 'rgba(0,0,0,0.04)',
-                }}>
+                <div className="arch-flow-bubble" data-role={b.role}>
                   {b.text}
-                  {b.streaming && <span style={{ opacity: 0.5, animation: 'blink 0.6s infinite' }}>▊</span>}
+                  {b.streaming && <span className="arch-flow-cursor">▊</span>}
                 </div>
               </div>
             ))}
@@ -132,37 +105,22 @@ export function ArchFlowDiagram() {
         </div>
 
         {/* Right: Console log */}
-        <div ref={logRef} style={{ flex: 1, padding: 12, background: '#1a1b26', overflow: 'auto', fontFamily: 'var(--font-mono)', fontSize: 10 }}>
-          <div style={{ fontSize: 9, color: '#4A527A', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8, fontWeight: 600 }}>Developer Console</div>
+        <div ref={logRef} className="arch-flow-console-panel">
+          <div className="arch-flow-console-title">Developer Console</div>
 
-          {logs.map((log, i) => {
-            const sc = SOURCE_COLORS[log.source];
-            return (
-              <div key={i} style={{
-                display: 'flex', gap: 6, marginBottom: 4, alignItems: 'flex-start',
-                animation: 'fadeIn 0.2s ease-out',
-              }}>
-                <span style={{ color: '#4A527A', flexShrink: 0, width: 36, textAlign: 'right' }}>{log.time}</span>
-                <span style={{
-                  padding: '1px 5px', borderRadius: 3, flexShrink: 0,
-                  background: sc.bg, color: sc.text, fontSize: 8, fontWeight: 600,
-                  minWidth: 62, textAlign: 'center',
-                }}>{sc.label}</span>
-                <span style={{ color: '#a9b1d6', wordBreak: 'break-all' }}>{log.message}</span>
-              </div>
-            );
-          })}
+          {logs.map((log, i) => (
+            <div key={i} className="arch-flow-log-row">
+              <span className="arch-flow-log-time">{log.time}</span>
+              <span className="arch-flow-log-source" data-source={log.source}>{SOURCE_LABEL[log.source]}</span>
+              <span className="arch-flow-log-message">{log.message}</span>
+            </div>
+          ))}
 
           {logs.length === 0 && (
-            <div style={{ color: '#4A527A', fontStyle: 'italic' }}>Waiting for interaction...</div>
+            <div className="arch-flow-log-empty">Waiting for interaction...</div>
           )}
         </div>
       </div>
-
-      <style>{`
-        @keyframes blink { 0%,100% { opacity:0.5; } 50% { opacity:0; } }
-        @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
-      `}</style>
     </div>
   );
 }

@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import { tokens } from '@threadplane/design-tokens';
 import { analyticsEvents } from '../../lib/analytics/events';
 import { track } from '../../lib/analytics/client';
 
@@ -48,21 +47,8 @@ export function CopyButton({ text }: Props) {
       type="button"
       onClick={handleClick}
       aria-label={copied ? 'Copied' : 'Copy install command'}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: 28,
-        height: 28,
-        flex: '0 0 auto',
-        padding: 0,
-        border: `1px solid ${tokens.surfaces.border}`,
-        borderRadius: tokens.radius.sm,
-        background: tokens.surfaces.surface,
-        color: copied ? tokens.colors.accent : tokens.colors.textMuted,
-        cursor: 'pointer',
-        transition: 'color 0.15s, border-color 0.15s, background 0.15s',
-      }}
+      className="docs-copy-button"
+      data-copied={copied || undefined}
     >
       {copied ? <CheckIcon /> : <CopyIcon />}
     </button>
