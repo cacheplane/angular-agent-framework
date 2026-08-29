@@ -158,6 +158,23 @@ describe('token ↔ CSS var parity', () => {
     expect(unaccounted).toEqual([]);
   });
 
+  // The `light.` exclusion above rests on every light-theme value being
+  // reachable through the `colors.*` / `surfaces.*` aliases, which ARE mapped.
+  // Nothing enforced that, so a new token in light.ts could slip through the
+  // exclusion unmapped. This closes it.
+  it('every light.* value is reachable through a mapped colors/surfaces alias', () => {
+    const aliased = new Map(
+      leaves
+        .filter(([p]) => p.startsWith('colors.') || p.startsWith('surfaces.'))
+        .map(([, v]) => [v, true]),
+    );
+    const unreachable = leaves
+      .filter(([p]) => p.startsWith('light.'))
+      .filter(([, v]) => !aliased.has(v))
+      .map(([p]) => p);
+    expect(unreachable).toEqual([]);
+  });
+
   it.each(Object.entries(CSS_VAR_BY_PATH))(
     '%s has an identical value in theme.css as %s',
     (path, varName) => {
