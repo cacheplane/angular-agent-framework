@@ -1,3 +1,34 @@
+## 0.0.59 (2026-08-29)
+
+### 🚀 Features
+
+- **examples/chat:** open the demo on a chosen suggestion via ?featured= ([#832](https://github.com/cacheplane/angular-agent-framework/pull/832))
+- ⚠️  **langgraph:** classify any namespaced event as child content ([#844](https://github.com/cacheplane/angular-agent-framework/pull/844))
+- **website:** AI search optimization — Search Console harness, structured data, and measurement ([#826](https://github.com/cacheplane/angular-agent-framework/pull/826), [#1](https://github.com/cacheplane/angular-agent-framework/issues/1))
+- **website:** first-person /about prose, sourced and guarded ([#828](https://github.com/cacheplane/angular-agent-framework/pull/828), [#826](https://github.com/cacheplane/angular-agent-framework/issues/826))
+- **website:** link Brian's X and LinkedIn profiles from the Person node ([#829](https://github.com/cacheplane/angular-agent-framework/pull/829))
+- **website:** give each solutions page real code, and split the duplicated proof point ([#830](https://github.com/cacheplane/angular-agent-framework/pull/830))
+- **website:** let homepage sections switch between video and code ([#831](https://github.com/cacheplane/angular-agent-framework/pull/831))
+- **website:** finish the medium switcher — Render, Ship, and live tabs ([#833](https://github.com/cacheplane/angular-agent-framework/pull/833), [#832](https://github.com/cacheplane/angular-agent-framework/issues/832))
+- **website:** add 'What injectAgent() Actually Returns' blog post ([#836](https://github.com/cacheplane/angular-agent-framework/pull/836))
+- **website:** add 'json-render vs A2UI' blog post ([#837](https://github.com/cacheplane/angular-agent-framework/pull/837))
+- **website:** add 'LangGraph Subgraphs: When to Split a Graph and When Not To' blog post ([#839](https://github.com/cacheplane/angular-agent-framework/pull/839), [#838](https://github.com/cacheplane/angular-agent-framework/issues/838), [#1](https://github.com/cacheplane/angular-agent-framework/issues/1))
+
+### 🩹 Fixes
+
+- **cockpit-langgraph:** make the subgraphs example demonstrate real nesting ([#838](https://github.com/cacheplane/angular-agent-framework/pull/838))
+- **website:** repair frontmatter handling in docs, then use it for SERP descriptions ([#827](https://github.com/cacheplane/angular-agent-framework/pull/827))
+
+### ⚠️  Breaking Changes
+
+- **langgraph:** classify any namespaced event as child content  ([#844](https://github.com/cacheplane/angular-agent-framework/pull/844))
+
+### ❤️ Thank You
+
+- Brian Love @blove
+- Claude Fable 5
+- Claude Opus 5
+
 ## 0.0.58 (2026-08-18)
 
 ### 🚀 Features
