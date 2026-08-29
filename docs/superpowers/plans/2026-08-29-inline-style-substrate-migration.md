@@ -100,6 +100,17 @@ and this never bites.
    → `var(--text-h2)`, `tokens.space.sectionY` → `var(--spacing-section-y)`,
    `tokens.colors.accent` → `var(--color-accent)`, etc. `.family` values are
    already `var(--font-*)` strings — copy them through.
+
+   **⚠ EXCEPTION — the three font vars (found the hard way in Batch 1).**
+   `layout.tsx` loads fonts via next/font, which SHADOWS `--font-inter`,
+   `--font-mono`, and `--font-garamond` on `<html>` with its own stacks. So
+   `var(--font-inter)` resolves to next/font's value at runtime, NOT
+   `tokens.typography.fontSans` — migrating Button onto the var changed its
+   rendered font and shifted widths ~2.5px. Rule: a site whose inline value
+   was the **raw stack** (`fontSans`/`fontMono`/`fontSerif`) keeps that stack
+   as a **verbatim literal** in CSS; only sites already using a `.family`
+   value (which IS `'var(--font-*)'`) use the var. The rationale comment
+   lives at the top of `ui.css` — reference it, don't re-derive it.
 8. **Zero visual change.** Restyling urges get logged in the findings audit,
    not taken.
 

@@ -245,6 +245,31 @@ Consequences worth knowing:
 the `.shiki` rule would become live again if `keepBackground` were turned off.
 It belongs in the polish arc alongside the rest of the docs CSS work.
 
+## 10. next/font shadows the three token font vars
+
+Found during substrate-migration Batch 1 (2026-08-29), by computed-style diff.
+`layout.tsx` loads Inter, JetBrains Mono, and EB Garamond via next/font with
+`variable: '--font-inter'` etc. — the SAME custom-property names the design
+tokens' `theme.css` defines. next/font's `<html>`-level values win, so at
+runtime:
+
+| var | theme.css says | actually resolves to |
+|---|---|---|
+| `--font-inter` | `Inter, system-ui, sans-serif` | `Inter, "Inter Fallback"` (next/font) |
+| `--font-mono` | `"JetBrains Mono", monospace` | `"JetBrains Mono", "JetBrains Mono Fallback"` |
+| `--font-garamond` | `"EB Garamond", Georgia, serif` | `"EB Garamond", "EB Garamond Fallback"` |
+
+Consequences:
+
+- The token↔CSS parity guard is value-true against `theme.css` but
+  **runtime-false** for these three vars.
+- Components whose inline styles used the raw token stacks (`fontSans` etc.)
+  render a *different font stack* than components using `var(--font-*)` —
+  measured ~2.5px width differences on buttons. The site today is a mix.
+- Unifying everything onto the next/font vars (arguably the better end state —
+  size-adjusted fallbacks, no FOUT) is a **real visual change** and belongs to
+  the polish arc as its own decision, not to the migration.
+
 ---
 
 ## Reproducing
