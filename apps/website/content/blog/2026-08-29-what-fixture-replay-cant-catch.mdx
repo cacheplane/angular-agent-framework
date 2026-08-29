@@ -32,23 +32,24 @@ spawn('uv', ['run', 'langgraph', 'dev', '--port', String(langgraphPort)], {
 });
 ```
 
-Everything above that line is the genuine article.
-A real Angular app, the real streaming transport, a real LangGraph server, real Python graph nodes with their real edges and real conditional routing.
+Everything above that line is the real thing.
+A real Angular app, the real streaming transport, a real LangGraph server, real Python graph nodes with their edges and conditional routing.
 The model is the only stand-in.
 
-Let's be concrete about why that matters.
+Let's take the alternative.
 A test that mocks the agent at the app boundary proves your component renders what you handed it. It cannot tell you that your graph's conditional edge routes correctly, that your transport merges deltas in the right order, or that a tool call round-trips.
 Push the seam out to the provider and all of that is under test, because none of it was replaced.
 
-It's also what makes the harness affordable to run broadly. We have 50 fixture files holding 129 entries across 34 apps — 32 cockpit capabilities and two example apps — all on the same harness.
+Replacing the model — and only the model — is also what makes it cheap enough to run everywhere: no API spend, no rate limits, no coin flips.
+We have 50 fixture files holding 129 entries across 34 apps — 32 cockpit capabilities and two example apps — all on the same harness.
 
 This is the outer tier. For in-process fakes at the unit level, the [testing guide](/docs/langgraph/guides/testing) covers `provideFakeAgent()`, `mockLangGraphAgent()`, and `MockAgentTransport`, which are a different tool for a different job.
 
 ## What does a fixture match on?
 
-The shape of the request — and the order you list them decides which one wins.
+The shape of the request — and the order you list the entries decides which one wins.
 
-Each entry carries a `match` block. The obvious discriminator is the user message, but there are richer ones, and they exist for a reason: a parent LLM's first call and its continuation after a tool round have the same user message. Something has to tell them apart.
+Each entry carries a `match` block. The obvious discriminator is the user message, but there are richer ones: a parent LLM's first call and its continuation after a tool round carry the same user message. Something has to tell them apart.
 
 That something is `hasToolResult`, and matching is first-match-wins:
 
@@ -85,29 +86,38 @@ const mock = new LLMock({ port: 0, chunkSize: 4096 });
 
 The motivation was practical. Our markdown renderer parses incrementally, and with realistic chunking a triple-backtick fence sometimes gets split mid-token in a way the parser can't recover from — the final DOM ends up with an inline `<code>` where a `<pre><code>` belongs.
 
-That's a real rendering bug, but it's a *streaming* bug, and it was making structural assertions flaky for reasons that had nothing to do with what they were testing. Progressive behavior moved to unit-level variance tables instead.
+That's a real rendering bug, but it's a *streaming* bug, and it was making structural assertions flaky for reasons that had nothing to do with what they were testing.
 
-I think that's the right trade. What makes it defensible isn't that the flakiness went away — it's that somebody wrote down which property was being given up, in the file where it was given up.
+The tempting fix is to replay the recorded chunk boundaries instead of re-chunking, so you get the timing back for free.
+That doesn't buy what it looks like it buys. Faithful boundaries make the fence failure *deterministic* rather than absent — the parser bug is still there, and now every structural assertion in the suite fails for a reason none of them are about.
+The dimension gets deleted either way. This way it's deleted somewhere you can find it.
+
+I think that's the right trade, and the reason isn't that the flakiness went away — it's that the property didn't.
+Progressive rendering is still tested. It moved to a tier that can hold it still: unit-level variance tables that push partial content, then complete it, and assert on both.
+
+The comment is what makes the trade legible six months later. It isn't what makes it right.
 
 ## What does that hide?
 
 Bugs that exist only while the stream is open and fix themselves before it closes.
 
-We shipped one recently. A demo runs a child graph as a plain node, and a plain subgraph node's events aren't tagged as a delegated subagent — so the bridge merges the child's tokens into the transcript as they arrive.
+We shipped one recently and fixed it, and how we found it is the whole argument.
+
+A demo runs a child graph as a plain node — the shape [the subgraphs post](/blog/langgraph-subgraphs-when-to-split) ends on. A plain subgraph node's events aren't tagged as a delegated subagent, so the bridge merges the child's tokens into the transcript as they arrive.
 
 The child in that graph produces an internal research brief, meant for the parent to write its answer from. Without the option that whitelists which nodes count as transcript, that brief renders as its own chat bubble, and the message list transiently reaches three.
 
 Then the run settles. The parent publishes its authoritative state, the transcript is rebuilt from it, and the extra bubble vanishes.
 
 Read that sequence again from a test's point of view.
-The end state is correct. Two messages, the right two, correctly ordered.
-Assert on the finished DOM and it passes — not by luck, but reliably, every time.
+The end state is correct. Two messages, in the right order.
+Assert on the finished DOM and it passes — not by luck.
 
 Confirming the fix meant sampling the DOM every 60 milliseconds against a live model for the length of a full run, and checking the count never exceeded two. It didn't, across 56 samples.
 
 Let's generalize, because this isn't specific to us.
 Any assertion that runs after an `await` sees a settled system. A self-correcting bug is precisely one that settles.
-So the class of defects a final-state suite cannot see is not random — it's exactly the ones that repair themselves, which is also the class most likely to look fine in review.
+So the class of defects a final-state suite cannot see isn't random — it's exactly the ones that repair themselves.
 
 ## What runs alongside it?
 
@@ -117,18 +127,21 @@ The live pass is unglamorous: for anything whose failure mode is mid-stream, dri
 
 Drift is the other half. A recorded fixture is a claim about how a model behaved on one day. Models move. So there's a check that re-records each committed fixture against the live provider and compares it to the version on disk, flagging any whose size has diverged by more than twenty percent, and opening an issue when it trips.
 
-Let's ask the same question of that check, because the answer rhymes.
-Comparing byte size detects that a response changed *size*. It says nothing about whether it changed *meaning*.
+Let's ask the same question of that check.
+Comparing byte size detects that a response changed *size*. It says nothing about whether it changed *meaning* — the same trade again, one layer up. That check deletes meaning the way the harness deletes time.
 A model that starts returning something equally long and completely different sails through.
 
 None of which argues against the check. It argues for knowing its shape, the same way you'd want to know that your suite can't see the streaming.
 
 ## Conclusion
 
-Push your seam as far out as you can afford. The further out it goes, the more of your stack is under test rather than simulated, and provider base URL is remarkably far out for how little it costs.
+Push your seam as far out as you can afford. The further out it goes, the more of your stack is under test rather than simulated, and provider base URL is far out for how little it costs.
 
 Then write down which dimension you deleted to make it deterministic, in the file where you deleted it. Not in a wiki. Six months later that comment is the difference between "the suite is green" and "the suite is green, and here is what green does not cover."
 
-For us that list is short and specific: anything whose failure mode is mid-stream, and any fixture whose meaning drifted without its length changing. Both have a plan. Neither is covered by the thing we run on every commit.
+For us that list is short and specific: anything whose failure mode is mid-stream, and any fixture whose meaning drifted without its length changing.
+One has a plan — drive it live before it ships. The other is just known: nothing we run today would notice it.
 
-If your agent suite is green today, I'd genuinely like to know what you think it can't see — that answer is usually more interesting than the coverage number.
+The [testing guide](/docs/langgraph/guides/testing) has the in-process tier, and [the subgraphs post](/blog/langgraph-subgraphs-when-to-split) has the bug that started this.
+
+If your agent suite is green today, I'd like to know what you think it can't see.
