@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 import { codeToHtml } from 'shiki';
-import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';
@@ -31,35 +30,18 @@ export async function SolutionCodeBlock({ code, accent }: { code: SolutionCodeBl
   return (
     <Section surface="canvas" ariaLabelledBy="solution-code-heading">
       <Container>
-        <div style={{ maxWidth: 820, margin: '0 auto' }}>
+        <div className="sol-code-wrap">
           <Eyebrow style={{ color: accent, marginBottom: 12 }}>In practice</Eyebrow>
-          <h2
-            id="solution-code-heading"
-            style={{
-              fontFamily: tokens.typography.h2.family,
-              fontSize: tokens.typography.h2.size,
-              lineHeight: tokens.typography.h2.line,
-              fontWeight: 700,
-              color: tokens.colors.textPrimary,
-              margin: 0,
-              marginBottom: 12,
-              letterSpacing: '-0.015em',
-            }}
-          >
+          <h2 id="solution-code-heading" className="sol-code-heading">
             What it looks like in your codebase
           </h2>
           {rendered.map((block, index) => (
-            <div key={block.label} style={{ marginTop: index === 0 ? 0 : 24 }}>
-              <p
-                style={{
-                  fontFamily: tokens.typography.fontMono,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  letterSpacing: '0.04em',
-                  color: tokens.colors.textMuted,
-                  margin: '0 0 10px',
-                }}
-              >
+            <div
+              key={block.label}
+              className="sol-code-block-item"
+              data-first={index === 0 || undefined}
+            >
+              <p className="sol-code-block-label">
                 {block.label}
               </p>
           {/*
@@ -71,12 +53,6 @@ export async function SolutionCodeBlock({ code, accent }: { code: SolutionCodeBl
           */}
               <div
                 className="solution-code"
-                style={{
-                  borderRadius: 12,
-                  overflow: 'hidden',
-                  border: `1px solid ${tokens.surfaces.border}`,
-                  fontSize: 14,
-                }}
                 dangerouslySetInnerHTML={{ __html: block.html }}
               />
             </div>

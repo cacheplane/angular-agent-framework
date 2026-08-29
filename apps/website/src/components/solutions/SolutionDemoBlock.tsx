@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';
@@ -23,52 +22,24 @@ export function SolutionDemoBlock({ clip, accent }: { clip: DemoClip; accent: st
   return (
     <Section surface="tinted" ariaLabelledBy="solution-demo-heading">
       <Container>
-        <div style={{ maxWidth: 820, margin: '0 auto' }}>
+        <div className="sol-demo-wrap">
           <Eyebrow style={{ color: accent, marginBottom: 12 }}>See it running</Eyebrow>
-          <h2
-            id="solution-demo-heading"
-            style={{
-              fontFamily: tokens.typography.h2.family,
-              fontSize: tokens.typography.h2.size,
-              lineHeight: tokens.typography.h2.line,
-              fontWeight: 700,
-              color: tokens.colors.textPrimary,
-              margin: 0,
-              marginBottom: 12,
-              letterSpacing: '-0.015em',
-            }}
-          >
+          <h2 id="solution-demo-heading" className="sol-demo-heading">
             The approval gate, in the product
           </h2>
-          <p
-            style={{
-              fontFamily: tokens.typography.bodyLg.family,
-              fontSize: tokens.typography.bodyLg.size,
-              lineHeight: tokens.typography.bodyLg.line,
-              color: tokens.colors.textSecondary,
-              margin: '0 0 20px',
-              maxWidth: '62ch',
-            }}
-          >
+          <p className="sol-demo-caption">
             {clip.caption}
           </p>
 
           <ClipPlayer clip={clip} />
 
-          <p
-            style={{
-              fontFamily: tokens.typography.body.family,
-              fontSize: tokens.typography.body.size,
-              color: tokens.colors.textMuted,
-              margin: '14px 0 0',
-            }}
-          >
+          <p className="sol-demo-note">
             Recorded from the{' '}
             <a
               href="https://demo.threadplane.ai"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: tokens.colors.accent }}
+              className="sol-demo-note-link"
             >
               live demo
             </a>
