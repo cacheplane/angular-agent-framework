@@ -14,12 +14,19 @@ export interface EntrySummary {
   toolNames: string[];
   /** floor(log10(JSON length)) — order-of-magnitude only. */
   lengthBucket: number;
+  /** True when the response is empty text with no tool calls — the aimock
+   * recorder emits this ("fixture may be incomplete") when it cannot parse
+   * tool-call deltas out of a stream. A recorder artifact, not drift. */
+  incomplete: boolean;
 }
 
 export interface DriftReport {
   changed: Array<{ key: string; reason: string; committed: EntrySummary; recorded: EntrySummary }>;
   unmatchedCommitted: string[];
   unmatchedRecorded: string[];
+  /** Recorded entries the recorder itself marked as possibly incomplete
+   * (empty content, no tool calls). Compared against nothing. */
+  incompleteRecordings: string[];
 }
 
 function entryKey(e: FixtureEntry): string {
@@ -36,11 +43,13 @@ export function summarizeEntry(e: FixtureEntry): EntrySummary {
         .filter(Boolean)
         .sort()
     : [];
+  const content = e.response?.['content'];
   return {
     key: entryKey(e),
     kind: names.length > 0 ? 'toolCalls' : 'text',
     toolNames: names,
     lengthBucket: Math.floor(Math.log10(Math.max(1, JSON.stringify(e.response ?? {}).length))),
+    incomplete: names.length === 0 && (content === '' || content === undefined),
   };
 }
 
@@ -48,10 +57,11 @@ export function diffFixtures(committed: FixtureEntry[], recorded: FixtureEntry[]
   const byKey = (list: FixtureEntry[]) => new Map(list.map((e) => [entryKey(e), summarizeEntry(e)]));
   const c = byKey(committed);
   const r = byKey(recorded);
-  const report: DriftReport = { changed: [], unmatchedCommitted: [], unmatchedRecorded: [] };
+  const report: DriftReport = { changed: [], unmatchedCommitted: [], unmatchedRecorded: [], incompleteRecordings: [] };
   for (const [key, cs] of c) {
     const rs = r.get(key);
     if (!rs) { report.unmatchedCommitted.push(key); continue; }
+    if (rs.incomplete) { report.incompleteRecordings.push(key); continue; }
     const reasons: string[] = [];
     if (cs.kind !== rs.kind) reasons.push(`kind: ${cs.kind} -> ${rs.kind}`);
     if (cs.toolNames.join(',') !== rs.toolNames.join(',')) reasons.push(`toolNames: [${cs.toolNames}] -> [${rs.toolNames}]`);

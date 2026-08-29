@@ -27,5 +27,5 @@ if (!recordedDir) {
 const report = diffFixtures(loadDir(FIXTURES_DIR), loadDir(resolve(recordedDir)));
 console.log(JSON.stringify(report, null, 2));
 console.error(
-  `[drift] changed=${report.changed.length} unmatchedCommitted=${report.unmatchedCommitted.length} unmatchedRecorded=${report.unmatchedRecorded.length}`
+  `[drift] changed=${report.changed.length} incompleteRecordings=${report.incompleteRecordings.length} unmatchedCommitted=${report.unmatchedCommitted.length} unmatchedRecorded=${report.unmatchedRecorded.length}`
 );

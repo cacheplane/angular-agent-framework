@@ -42,6 +42,14 @@ test('diffFixtures: kind change is reported', () => {
   assert.match(d.changed[0].reason, /kind/);
 });
 
+test('diffFixtures: incomplete recording is reported separately, not as drift', () => {
+  // The aimock recorder emits { content: "" } when it cannot parse tool-call
+  // deltas from a stream; that is a recorder artifact, not model drift.
+  const d = diffFixtures([tool('plan', ['research'])], [text('plan', '')]);
+  assert.equal(d.changed.length, 0);
+  assert.deepEqual(d.incompleteRecordings, ['plan||']);
+});
+
 test('diffFixtures: unpairable entries are listed, not errored', () => {
   const d = diffFixtures([text('only-committed', 'x')], [text('only-recorded', 'y')]);
   assert.deepEqual(d.unmatchedCommitted, ['only-committed||']);
