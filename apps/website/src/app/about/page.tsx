@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 import Link from 'next/link';
-import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
@@ -31,26 +30,6 @@ export const metadata = createPageMetadata({
   type: 'website',
 });
 
-const bodyStyle = {
-  fontFamily: tokens.typography.bodyLg.family,
-  fontSize: tokens.typography.bodyLg.size,
-  lineHeight: tokens.typography.bodyLg.line,
-  color: tokens.colors.textSecondary,
-  margin: 0,
-  marginBottom: 16,
-  maxWidth: '60ch',
-} as const;
-
-const headingStyle = {
-  fontFamily: tokens.typography.h2.family,
-  fontSize: tokens.typography.h2.size,
-  color: tokens.colors.textPrimary,
-  margin: 0,
-  marginBottom: 12,
-} as const;
-
-const linkStyle = { color: tokens.colors.accent } as const;
-
 export default function AboutPage() {
   return (
     <>
@@ -58,41 +37,29 @@ export default function AboutPage() {
 
       <Section surface="canvas" ariaLabelledBy="about-heading">
         <Container>
-          <div style={{ maxWidth: 720 }}>
-            <Eyebrow tone="accent" style={{ marginBottom: 16 }}>About</Eyebrow>
-            <h1
-              id="about-heading"
-              style={{
-                fontFamily: tokens.typography.h1.family,
-                fontSize: tokens.typography.h1.size,
-                lineHeight: tokens.typography.h1.line,
-                fontWeight: 700,
-                color: tokens.colors.textPrimary,
-                margin: 0,
-                marginBottom: 16,
-                letterSpacing: '-0.02em',
-              }}
-            >
+          <div className="about-section-inner">
+            <Eyebrow tone="accent" className="about-eyebrow-spaced">About</Eyebrow>
+            <h1 id="about-heading" className="about-h1">
               Who writes Threadplane
             </h1>
-            <p style={bodyStyle}>{ABOUT_INTRO}</p>
+            <p className="about-body">{ABOUT_INTRO}</p>
 
-            <h2 style={{ ...headingStyle, marginTop: 32 }}>{ABOUT_HISTORY_HEADING}</h2>
+            <h2 className="about-h2 about-h2-spaced">{ABOUT_HISTORY_HEADING}</h2>
             {ABOUT_HISTORY.map((paragraph) => (
-              <p key={paragraph} style={bodyStyle}>
+              <p key={paragraph} className="about-body">
                 {paragraph}
               </p>
             ))}
 
-            <p style={bodyStyle}>{ABOUT_PRINCIPLES}</p>
-            <p style={bodyStyle}>{ABOUT_PERSONAL}</p>
+            <p className="about-body">{ABOUT_PRINCIPLES}</p>
+            <p className="about-body">{ABOUT_PERSONAL}</p>
 
-            <p style={{ ...bodyStyle, marginBottom: 0 }}>
+            <p className="about-body about-body-last">
               <a
                 href={`https://github.com/${author.github}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={linkStyle}
+                className="about-link"
               >
                 github.com/{author.github}
               </a>
@@ -103,12 +70,12 @@ export default function AboutPage() {
 
       <Section surface="tinted">
         <Container>
-          <div style={{ maxWidth: 720 }}>
-            <h2 style={headingStyle}>What Threadplane is</h2>
-            <p style={bodyStyle}>{LONG_SUBHEAD}</p>
-            <p style={{ ...bodyStyle, marginBottom: 0 }}>
+          <div className="about-section-inner">
+            <h2 className="about-h2">What Threadplane is</h2>
+            <p className="about-body">{LONG_SUBHEAD}</p>
+            <p className="about-body about-body-last">
               The source is public at{' '}
-              <a href={REPOSITORY_URL} target="_blank" rel="noopener noreferrer" style={linkStyle}>
+              <a href={REPOSITORY_URL} target="_blank" rel="noopener noreferrer" className="about-link">
                 github.com/cacheplane/angular-agent-framework
               </a>
               .
@@ -119,23 +86,23 @@ export default function AboutPage() {
 
       <Section surface="canvas">
         <Container>
-          <div style={{ maxWidth: 720 }}>
-            <h2 style={headingStyle}>How it is licensed</h2>
-            <p style={bodyStyle}>
+          <div className="about-section-inner">
+            <h2 className="about-h2">How it is licensed</h2>
+            <p className="about-body">
               <code>@threadplane/chat</code> is free for noncommercial use under PolyForm
               Noncommercial 1.0.0; commercial production use requires a Threadplane Commercial
               license. The other libraries are MIT. The{' '}
-              <Link href="/docs/licensing" style={linkStyle}>
+              <Link href="/docs/licensing" className="about-link">
                 licensing docs
               </Link>{' '}
-              and the <Link href="/pricing" style={linkStyle}>pricing page</Link> have the details.
+              and the <Link href="/pricing" className="about-link">pricing page</Link> have the details.
             </p>
-            <p style={{ ...bodyStyle, marginBottom: 0 }}>
+            <p className="about-body about-body-last">
               Questions about a specific build go to{' '}
-              <Link href="/contact" style={linkStyle}>
+              <Link href="/contact" className="about-link">
                 contact
               </Link>
-              ; ongoing writing is on the <Link href="/blog" style={linkStyle}>blog</Link>.
+              ; ongoing writing is on the <Link href="/blog" className="about-link">blog</Link>.
             </p>
           </div>
         </Container>

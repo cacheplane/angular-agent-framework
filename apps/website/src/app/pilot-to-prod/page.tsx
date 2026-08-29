@@ -1,4 +1,3 @@
-import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
@@ -25,40 +24,19 @@ export default function PilotToProdPage() {
       {/* Hero */}
       <Section surface="canvas" ariaLabelledBy="pilot-hero-heading">
         <Container>
-          <div style={{ maxWidth: 880, margin: '0 auto', textAlign: 'center' }}>
-            <Eyebrow tone="accent" style={{ marginBottom: 16 }}>Pilot to production</Eyebrow>
-            <h1
-              id="pilot-hero-heading"
-              style={{
-                fontFamily: tokens.typography.h1.family,
-                fontSize: tokens.typography.h1.size,
-                lineHeight: tokens.typography.h1.line,
-                fontWeight: 700,
-                color: tokens.colors.textPrimary,
-                margin: 0,
-                marginBottom: 24,
-                letterSpacing: '-0.02em',
-              }}
-            >
+          <div className="pilot-hero-inner">
+            <Eyebrow tone="accent" className="pilot-eyebrow-spaced">Pilot to production</Eyebrow>
+            <h1 id="pilot-hero-heading" className="pilot-h1">
               8 weeks. One working agent. Production-ready patterns.
             </h1>
-            <p
-              style={{
-                fontFamily: tokens.typography.bodyLg.family,
-                fontSize: tokens.typography.bodyLg.size,
-                lineHeight: tokens.typography.bodyLg.line,
-                color: tokens.colors.textSecondary,
-                margin: '0 auto 32px',
-                maxWidth: 640,
-              }}
-            >
+            <p className="pilot-hero-subtitle">
               Pilot-to-Prod is a concierge engagement. We ship your first Angular agent on your real data, in your real app — and your engineers own it at the end.
             </p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
+            <div className="pilot-hero-buttons">
               <Button variant="primary" size="lg" href="#whitepaper-block">Read the field report</Button>
               <Button variant="secondary" size="lg" href="#contact">Book a discovery call</Button>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <div className="pilot-hero-pills">
               <Pill variant="accent">Fixed scope</Pill>
               <Pill variant="neutral">Source delivered</Pill>
               <Pill variant="neutral">IP yours</Pill>
@@ -88,9 +66,9 @@ export default function PilotToProdPage() {
         cta={{ label: 'See sample roadmap', href: '#whitepaper-block' }}
         visual={
           <BrowserFrame url="discover · scope · plan" elevation="md">
-            <div style={{ padding: 28, minHeight: 320, background: tokens.surfaces.surface }}>
-              <Eyebrow tone="accent" style={{ marginBottom: 12 }}>Roadmap draft</Eyebrow>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="pilot-visual-panel">
+              <Eyebrow tone="accent" className="pilot-eyebrow-tight">Roadmap draft</Eyebrow>
+              <ul className="pilot-roadmap-list">
                 {[
                   ['W1', 'Stakeholder interviews + workflow audit'],
                   ['W2', 'Agent shortlist + integration plan'],
@@ -98,15 +76,9 @@ export default function PilotToProdPage() {
                   ['W6–7', 'Harden + observability + deploy'],
                   ['W8', 'Train your team · handoff'],
                 ].map(([w, desc]) => (
-                  <li key={w} style={{ display: 'flex', gap: 12, alignItems: 'baseline' }}>
-                    <span style={{
-                      fontFamily: tokens.typography.fontMono,
-                      fontSize: 11,
-                      color: tokens.colors.accent,
-                      fontWeight: 700,
-                      flex: '0 0 40px',
-                    }}>{w}</span>
-                    <span style={{ fontSize: 14, color: tokens.colors.textSecondary }}>{desc}</span>
+                  <li key={w} className="pilot-roadmap-item">
+                    <span className="pilot-roadmap-week">{w}</span>
+                    <span className="pilot-roadmap-desc">{desc}</span>
                   </li>
                 ))}
               </ul>
@@ -139,7 +111,7 @@ export default function PilotToProdPage() {
             <img
               src="/screenshots/cockpit-run.webp"
               alt="Cockpit reference app — live chat surface ready to receive a message"
-              style={{ display: 'block', width: '100%', height: 'auto' }}
+              className="pilot-screenshot"
               loading="lazy"
               decoding="async"
             />
@@ -168,9 +140,9 @@ export default function PilotToProdPage() {
         cta={{ label: 'Production patterns', href: '/docs/langgraph/guides/deployment' }}
         visual={
           <BrowserFrame url="grafana · agent dashboard" elevation="md">
-            <div style={{ padding: 28, minHeight: 320, background: tokens.surfaces.surface }}>
-              <Eyebrow tone="accent" style={{ marginBottom: 12 }}>Production checklist</Eyebrow>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div className="pilot-visual-panel">
+              <Eyebrow tone="accent" className="pilot-eyebrow-tight">Production checklist</Eyebrow>
+              <ul className="pilot-checklist-list">
                 {[
                   'Streaming latency budget defined',
                   'Tool-call error boundaries wired',
@@ -179,13 +151,8 @@ export default function PilotToProdPage() {
                   'On-call runbook delivered',
                   'Deploy + rollback tested',
                 ].map((item) => (
-                  <li key={item} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 14, color: tokens.colors.textSecondary }}>
-                    <span style={{
-                      width: 18, height: 18, borderRadius: tokens.radius.full,
-                      background: tokens.colors.accent, color: tokens.colors.textInverted,
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 11, fontWeight: 700,
-                    }}>✓</span>
+                  <li key={item} className="pilot-checklist-item">
+                    <span className="pilot-checklist-badge">✓</span>
                     {item}
                   </li>
                 ))}
@@ -198,32 +165,13 @@ export default function PilotToProdPage() {
       {/* Outcomes */}
       <Section surface="tinted" ariaLabelledBy="outcomes-heading">
         <Container>
-          <div style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center', marginBottom: 48 }}>
-            <Eyebrow tone="accent" style={{ marginBottom: 16 }}>What you walk away with</Eyebrow>
-            <h2
-              id="outcomes-heading"
-              style={{
-                fontFamily: tokens.typography.h2.family,
-                fontSize: tokens.typography.h2.size,
-                lineHeight: tokens.typography.h2.line,
-                fontWeight: 700,
-                color: tokens.colors.textPrimary,
-                margin: 0,
-                letterSpacing: '-0.015em',
-              }}
-            >
+          <div className="pilot-section-header">
+            <Eyebrow tone="accent" className="pilot-eyebrow-spaced">What you walk away with</Eyebrow>
+            <h2 id="outcomes-heading" className="pilot-h2">
               A working agent. A trained team. A runbook.
             </h2>
           </div>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-              gap: 16,
-              maxWidth: 1000,
-              margin: '0 auto',
-            }}
-          >
+          <div className="pilot-outcomes-grid">
             {[
               { t: 'Working demo', d: 'Live on your data, in your app — not in a sandbox.' },
               { t: 'Hardened patterns', d: 'Error/fallback/observability built in from the start.' },
@@ -231,24 +179,10 @@ export default function PilotToProdPage() {
               { t: 'Trained team', d: 'Your engineers own the framework and the runbook.' },
             ].map((o) => (
               <Card key={o.t} padding="lg">
-                <h3 style={{
-                  fontFamily: tokens.typography.h3.family,
-                  fontSize: 17,
-                  lineHeight: 1.3,
-                  fontWeight: 600,
-                  color: tokens.colors.textPrimary,
-                  margin: 0,
-                  marginBottom: 8,
-                }}>
+                <h3 className="pilot-outcome-h3">
                   {o.t}
                 </h3>
-                <p style={{
-                  fontFamily: tokens.typography.body.family,
-                  fontSize: 14,
-                  lineHeight: tokens.typography.body.line,
-                  color: tokens.colors.textSecondary,
-                  margin: 0,
-                }}>
+                <p className="pilot-outcome-body">
                   {o.d}
                 </p>
               </Card>
@@ -263,30 +197,12 @@ export default function PilotToProdPage() {
       {/* Contact anchor */}
       <Section id="contact" surface="white" ariaLabelledBy="contact-heading">
         <Container>
-          <div style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>
-            <Eyebrow tone="accent" style={{ marginBottom: 16 }}>Discovery call</Eyebrow>
-            <h2
-              id="contact-heading"
-              style={{
-                fontFamily: tokens.typography.h2.family,
-                fontSize: tokens.typography.h2.size,
-                lineHeight: tokens.typography.h2.line,
-                fontWeight: 700,
-                color: tokens.colors.textPrimary,
-                margin: 0,
-                marginBottom: 16,
-                letterSpacing: '-0.015em',
-              }}
-            >
+          <div className="pilot-contact-inner">
+            <Eyebrow tone="accent" className="pilot-eyebrow-spaced">Discovery call</Eyebrow>
+            <h2 id="contact-heading" className="pilot-h2 pilot-h2-spaced">
               Tell us about your stack.
             </h2>
-            <p style={{
-              fontFamily: tokens.typography.bodyLg.family,
-              fontSize: tokens.typography.bodyLg.size,
-              lineHeight: tokens.typography.bodyLg.line,
-              color: tokens.colors.textSecondary,
-              margin: '0 0 32px 0',
-            }}>
+            <p className="pilot-contact-body">
               30-minute discovery call. We&apos;ll dig into your Angular surface, your agent-eligible workflows, and whether Pilot-to-Prod is the right fit. No pitch deck.
             </p>
             <Button variant="primary" size="lg" href="/pricing#lead-form">

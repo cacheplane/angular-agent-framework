@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { tokens } from '@threadplane/design-tokens';
 import {
   getSolutionBySlug,
   getAllSolutionSlugs,
@@ -47,56 +46,19 @@ function PainPoints({ items, accent }: { items: SolutionPainPoint[]; accent: str
   return (
     <Section surface="canvas" ariaLabelledBy="problem-heading">
       <Container>
-        <div style={{ textAlign: 'center', maxWidth: 720, margin: '0 auto 48px' }}>
-          <Eyebrow style={{ color: accent, marginBottom: 12 }}>The problem</Eyebrow>
-          <h2
-            id="problem-heading"
-            style={{
-              fontFamily: tokens.typography.h2.family,
-              fontSize: tokens.typography.h2.size,
-              lineHeight: tokens.typography.h2.line,
-              fontWeight: 700,
-              color: tokens.colors.textPrimary,
-              margin: 0,
-              letterSpacing: '-0.015em',
-            }}
-          >
+        <div className="sol-page-section-header">
+          <Eyebrow style={{ color: accent }} className="sol-page-eyebrow-tight">The problem</Eyebrow>
+          <h2 id="problem-heading" className="sol-page-h2">
             Why this is hard today.
           </h2>
         </div>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-            gap: 16,
-            maxWidth: 1100,
-            margin: '0 auto',
-          }}
-        >
+        <div className="sol-page-grid-260">
           {items.map((p) => (
             <Card key={p.title} padding="lg">
-              <h3
-                style={{
-                  fontFamily: tokens.typography.h3.family,
-                  fontSize: 18,
-                  lineHeight: 1.3,
-                  fontWeight: 600,
-                  color: tokens.colors.textPrimary,
-                  margin: 0,
-                  marginBottom: 10,
-                }}
-              >
+              <h3 className="sol-page-card-h3">
                 {p.title}
               </h3>
-              <p
-                style={{
-                  fontFamily: tokens.typography.body.family,
-                  fontSize: tokens.typography.body.size,
-                  lineHeight: tokens.typography.body.line,
-                  color: tokens.colors.textSecondary,
-                  margin: 0,
-                }}
-              >
+              <p className="sol-page-card-body">
                 {p.description}
               </p>
             </Card>
@@ -119,90 +81,38 @@ function Architecture({
   return (
     <Section surface="tinted" ariaLabelledBy="arch-heading">
       <Container>
-        <div style={{ textAlign: 'center', maxWidth: 720, margin: '0 auto 48px' }}>
-          <Eyebrow style={{ color: accent, marginBottom: 12 }}>Architecture</Eyebrow>
-          <h2
-            id="arch-heading"
-            style={{
-              fontFamily: tokens.typography.h2.family,
-              fontSize: tokens.typography.h2.size,
-              lineHeight: tokens.typography.h2.line,
-              fontWeight: 700,
-              color: tokens.colors.textPrimary,
-              margin: 0,
-              marginBottom: 16,
-              letterSpacing: '-0.015em',
-            }}
-          >
+        <div className="sol-page-section-header">
+          <Eyebrow style={{ color: accent }} className="sol-page-eyebrow-tight">Architecture</Eyebrow>
+          <h2 id="arch-heading" className="sol-page-h2 sol-page-h2-spaced">
             How the three libraries compose.
           </h2>
-          <p
-            style={{
-              fontFamily: tokens.typography.bodyLg.family,
-              fontSize: tokens.typography.bodyLg.size,
-              lineHeight: tokens.typography.bodyLg.line,
-              color: tokens.colors.textSecondary,
-              margin: 0,
-            }}
-          >
+          <p className="sol-page-section-intro">
             {intro}
           </p>
         </div>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: 16,
-            maxWidth: 1100,
-            margin: '0 auto',
-          }}
-        >
+        <div className="sol-page-grid-280">
           {layers.map((l) => {
             const href = LIBRARY_HREF[l.library];
             const cardInner = (
-              <Card padding="lg" hoverable={!!href} style={{ height: '100%' }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 12 }}>
-                  <h3
-                    style={{
-                      fontFamily: tokens.typography.fontSerif,
-                      fontSize: 22,
-                      fontWeight: 700,
-                      color: tokens.colors.textPrimary,
-                      margin: 0,
-                    }}
-                  >
+              <Card padding="lg" hoverable={!!href} className="sol-page-arch-card">
+                <div className="sol-page-arch-card-header">
+                  <h3 className="sol-page-arch-title">
                     {l.library}
                   </h3>
                   <Pill variant="accent">{l.pkg}</Pill>
                 </div>
-                <p
-                  style={{
-                    fontFamily: tokens.typography.body.family,
-                    fontSize: tokens.typography.body.size,
-                    lineHeight: tokens.typography.body.line,
-                    color: tokens.colors.textSecondary,
-                    margin: 0,
-                    marginBottom: href ? 16 : 0,
-                  }}
-                >
+                <p className={href ? 'sol-page-role sol-page-role-linked' : 'sol-page-role'}>
                   {l.role}
                 </p>
                 {href ? (
-                  <span
-                    style={{
-                      fontFamily: tokens.typography.fontSans,
-                      fontSize: 14,
-                      fontWeight: 600,
-                      color: tokens.colors.accent,
-                    }}
-                  >
+                  <span className="sol-page-arch-cta">
                     See {l.library} docs →
                   </span>
                 ) : null}
               </Card>
             );
             return href ? (
-              <Link key={l.library} href={href} style={{ textDecoration: 'none' }}>
+              <Link key={l.library} href={href} className="sol-page-link-plain">
                 {cardInner}
               </Link>
             ) : (
@@ -219,57 +129,19 @@ function Capabilities({ items, accent }: { items: ProofPoint[]; accent: string }
   return (
     <Section surface="canvas" ariaLabelledBy="capabilities-heading">
       <Container>
-        <div style={{ textAlign: 'center', maxWidth: 720, margin: '0 auto 48px' }}>
-          <Eyebrow style={{ color: accent, marginBottom: 12 }}>What you ship</Eyebrow>
-          <h2
-            id="capabilities-heading"
-            style={{
-              fontFamily: tokens.typography.h2.family,
-              fontSize: tokens.typography.h2.size,
-              lineHeight: tokens.typography.h2.line,
-              fontWeight: 700,
-              color: tokens.colors.textPrimary,
-              margin: 0,
-              letterSpacing: '-0.015em',
-            }}
-          >
+        <div className="sol-page-section-header">
+          <Eyebrow style={{ color: accent }} className="sol-page-eyebrow-tight">What you ship</Eyebrow>
+          <h2 id="capabilities-heading" className="sol-page-h2">
             Capabilities the framework delivers.
           </h2>
         </div>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-            gap: 16,
-            maxWidth: 1100,
-            margin: '0 auto',
-          }}
-        >
+        <div className="sol-page-grid-260">
           {items.map((p) => (
             <Card key={p.metric + p.label} padding="lg">
-              <div
-                style={{
-                  fontFamily: tokens.typography.fontSerif,
-                  fontStyle: 'italic',
-                  fontSize: 32,
-                  fontWeight: 700,
-                  color: accent,
-                  lineHeight: 1.1,
-                  margin: 0,
-                  marginBottom: 12,
-                }}
-              >
+              <div style={{ color: accent }} className="sol-page-metric">
                 {p.metric}
               </div>
-              <p
-                style={{
-                  fontFamily: tokens.typography.body.family,
-                  fontSize: tokens.typography.body.size,
-                  lineHeight: tokens.typography.body.line,
-                  color: tokens.colors.textSecondary,
-                  margin: 0,
-                }}
-              >
+              <p className="sol-page-card-body">
                 {p.label}
               </p>
             </Card>
@@ -290,37 +162,15 @@ export default async function SolutionPage({ params }: PageProps) {
       {/* Hero — solution-tinted accent */}
       <Section surface="canvas" ariaLabelledBy="solution-hero-heading">
         <Container>
-          <div style={{ maxWidth: 820, margin: '0 auto', textAlign: 'center' }}>
-            <Eyebrow style={{ color: solution.color, marginBottom: 16 }}>{solution.eyebrow}</Eyebrow>
-            <h1
-              id="solution-hero-heading"
-              style={{
-                fontFamily: tokens.typography.h1.family,
-                fontSize: tokens.typography.h1.size,
-                lineHeight: tokens.typography.h1.line,
-                fontWeight: 700,
-                color: tokens.colors.textPrimary,
-                margin: 0,
-                marginBottom: 24,
-                letterSpacing: '-0.02em',
-                whiteSpace: 'pre-line',
-              }}
-            >
+          <div className="sol-page-hero-inner">
+            <Eyebrow style={{ color: solution.color }} className="sol-page-eyebrow-spaced">{solution.eyebrow}</Eyebrow>
+            <h1 id="solution-hero-heading" className="sol-page-h1">
               {solution.title}
             </h1>
-            <p
-              style={{
-                fontFamily: tokens.typography.bodyLg.family,
-                fontSize: tokens.typography.bodyLg.size,
-                lineHeight: tokens.typography.bodyLg.line,
-                color: tokens.colors.textSecondary,
-                margin: '0 auto 32px',
-                maxWidth: 640,
-              }}
-            >
+            <p className="sol-page-hero-subtitle">
               {solution.subtitle}
             </p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <div className="sol-page-hero-buttons">
               <Button variant="primary" size="lg" href="#whitepaper-block">
                 Read the field report
               </Button>
