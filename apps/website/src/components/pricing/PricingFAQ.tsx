@@ -1,4 +1,3 @@
-import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';
@@ -35,26 +34,15 @@ export function PricingFAQ() {
   return (
     <Section surface="white" ariaLabelledBy="pricing-faq-heading">
       <Container>
-        <div id="faq" style={{ textAlign: 'center', marginBottom: 48 }}>
-          <Eyebrow tone="accent" style={{ marginBottom: 16 }}>
+        <div id="faq" className="pricing-faq-header">
+          <Eyebrow tone="accent" className="pricing-faq-eyebrow">
             Questions
           </Eyebrow>
-          <h2
-            id="pricing-faq-heading"
-            style={{
-              fontFamily: tokens.typography.h2.family,
-              fontSize: tokens.typography.h2.size,
-              lineHeight: tokens.typography.h2.line,
-              fontWeight: 700,
-              color: tokens.colors.textPrimary,
-              margin: 0,
-              letterSpacing: '-0.015em',
-            }}
-          >
+          <h2 id="pricing-faq-heading" className="pricing-faq-heading">
             Licensing FAQ.
           </h2>
         </div>
-        <div style={{ maxWidth: 800, margin: '0 auto' }}>
+        <div className="pricing-faq-items">
           <FAQ items={ITEMS} />
         </div>
       </Container>

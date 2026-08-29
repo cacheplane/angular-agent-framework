@@ -14,7 +14,7 @@ export async function GitHubStarsPill() {
       href={REPO_URL}
       target="_blank"
       rel="noopener noreferrer"
-      style={{ textDecoration: 'none' }}
+      className="gh-stars-pill-link"
     >
       <Pill variant="neutral">{label}</Pill>
     </a>

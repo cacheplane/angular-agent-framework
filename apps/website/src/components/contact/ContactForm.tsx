@@ -3,7 +3,6 @@
 
 import React, { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { tokens } from '@threadplane/design-tokens';
 import { Button } from '../ui/Button';
 import { track } from '../../lib/analytics/client';
 import { analyticsEvents } from '../../lib/analytics/events';
@@ -82,28 +81,15 @@ export function ContactForm() {
 
   if (status === 'sent') {
     return (
-      <div role="status" style={{ color: tokens.colors.textPrimary, padding: 24 }}>
+      <div role="status" className="contact-form-sent">
         Thanks. We&apos;ll be in touch within one business day.
       </div>
     );
   }
 
-  const inputStyle: React.CSSProperties = {
-    display: 'block',
-    width: '100%',
-    padding: '10px 12px',
-    fontSize: tokens.typography.body.size,
-    fontFamily: tokens.typography.body.family,
-    color: tokens.colors.textPrimary,
-    background: tokens.surfaces.surface,
-    border: `1px solid ${tokens.surfaces.border}`,
-    borderRadius: 6,
-    marginTop: 4,
-  };
-
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 480 }}>
-      <label style={{ fontSize: tokens.typography.body.size, color: tokens.colors.textPrimary }}>
+    <form onSubmit={handleSubmit} className="contact-form">
+      <label className="contact-form-label">
         Email
         <input
           type="email"
@@ -111,44 +97,44 @@ export function ContactForm() {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          style={inputStyle}
+          className="contact-form-input"
         />
       </label>
-      <label style={{ fontSize: tokens.typography.body.size, color: tokens.colors.textPrimary }}>
-        Name <span style={{ color: tokens.colors.textMuted }}>(optional)</span>
+      <label className="contact-form-label">
+        Name <span className="contact-form-optional">(optional)</span>
         <input
           type="text"
           autoComplete="name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          style={inputStyle}
+          className="contact-form-input"
         />
       </label>
-      <label style={{ fontSize: tokens.typography.body.size, color: tokens.colors.textPrimary }}>
-        Company <span style={{ color: tokens.colors.textMuted }}>(optional)</span>
+      <label className="contact-form-label">
+        Company <span className="contact-form-optional">(optional)</span>
         <input
           type="text"
           autoComplete="organization"
           value={company}
           onChange={(e) => setCompany(e.target.value)}
-          style={inputStyle}
+          className="contact-form-input"
         />
       </label>
-      <label style={{ fontSize: tokens.typography.body.size, color: tokens.colors.textPrimary }}>
-        Message <span style={{ color: tokens.colors.textMuted }}>(optional)</span>
+      <label className="contact-form-label">
+        Message <span className="contact-form-optional">(optional)</span>
         <textarea
           rows={5}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="What are you shipping?"
-          style={{ ...inputStyle, resize: 'vertical' }}
+          className="contact-form-input contact-form-textarea"
         />
       </label>
       <Button variant="primary" size="lg" type="submit" disabled={status === 'sending'}>
         {status === 'sending' ? 'Sending…' : 'Send'}
       </Button>
       {status === 'error' && (
-        <div role="alert" style={{ color: '#c00' }}>
+        <div role="alert" className="contact-form-error">
           Something went wrong. Please try again or email us directly.
         </div>
       )}
