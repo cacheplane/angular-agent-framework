@@ -51,6 +51,25 @@
   --font-inter: Inter, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 
+  /* Type scale */
+  --text-h1: clamp(48px, 6vw, 72px);
+  --text-h1--line-height: 1.08;
+  --text-h2: clamp(36px, 4.5vw, 56px);
+  --text-h2--line-height: 1.12;
+  --text-h3: 28px;
+  --text-h3--line-height: 1.25;
+  --text-h3--font-weight: 600;
+  --text-eyebrow: 12px;
+  --text-eyebrow--line-height: 1.4;
+  --text-eyebrow--font-weight: 700;
+  --text-eyebrow--letter-spacing: 0.12em;
+  --text-body-lg: 20px;
+  --text-body-lg--line-height: 1.6;
+  --text-body: 16px;
+  --text-body--line-height: 1.6;
+  --text-caption: 14px;
+  --text-caption--line-height: 1.5;
+
   /* Radii */
   --radius-sm: 6px;
   --radius-md: 10px;

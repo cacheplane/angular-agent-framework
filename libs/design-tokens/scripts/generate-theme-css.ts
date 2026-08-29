@@ -88,6 +88,40 @@ function buildThemeBlock(): string {
   lines.push(`  --font-inter: ${typography.fontSans};`);
   lines.push(`  --font-mono: ${typography.fontMono};`);
 
+  // Type scale — Tailwind v4 composite text tokens.
+  //
+  // `--text-{name}` plus the optional `--line-height` / `--font-weight` /
+  // `--letter-spacing` sub-keys collapse a whole type step into a single
+  // `text-{name}` utility, which is an exact structural match for the
+  // composite objects in typography.ts.
+  //
+  // `family` is deliberately not emitted: those values are already
+  // `var(--font-garamond)` and friends, and Tailwind's --text-* bundle has no
+  // font-family sub-key. `eyebrow.transform` is likewise a plain
+  // `text-transform` keyword, not a token. Both are excluded in
+  // token-css-parity.spec.ts with that reasoning.
+  lines.push('');
+  lines.push('  /* Type scale */');
+  const typeSteps = [
+    ['h1', typography.h1],
+    ['h2', typography.h2],
+    ['h3', typography.h3],
+    ['eyebrow', typography.eyebrow],
+    ['body-lg', typography.bodyLg],
+    ['body', typography.body],
+    ['caption', typography.caption],
+  ] as const;
+  for (const [name, step] of typeSteps) {
+    lines.push(`  --text-${name}: ${step.size};`);
+    lines.push(`  --text-${name}--line-height: ${step.line};`);
+    if ('weight' in step) {
+      lines.push(`  --text-${name}--font-weight: ${step.weight};`);
+    }
+    if ('letterSpacing' in step) {
+      lines.push(`  --text-${name}--letter-spacing: ${step.letterSpacing};`);
+    }
+  }
+
   // Radii
   lines.push('');
   lines.push('  /* Radii */');
