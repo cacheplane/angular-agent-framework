@@ -9,7 +9,7 @@ test.describe('Deep Agents Planning Example', () => {
   test('renders the chat interface with plan sidebar', async ({ page }) => {
     await expect(page.locator('chat')).toBeVisible();
     await expect(page.locator('textarea[name="messageText"]')).toBeVisible();
-    await expect(page.locator('text=Ask a complex question to see the plan.')).toBeVisible();
+    await expect(page.locator('text=No plan yet')).toBeVisible();
   });
 
   test('sends a message and receives a response', async ({ page }) => {

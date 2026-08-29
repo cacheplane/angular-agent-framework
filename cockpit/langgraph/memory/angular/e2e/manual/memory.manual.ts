@@ -9,7 +9,7 @@ test.describe('LangGraph Memory Example', () => {
   test('renders the chat interface with memory sidebar', async ({ page }) => {
     await expect(page.locator('chat')).toBeVisible();
     await expect(page.locator('textarea[name="messageText"]')).toBeVisible();
-    await expect(page.locator('text=Agent Memory')).toBeVisible();
+    await expect(page.locator('text=Learned Facts')).toBeVisible();
   });
 
   test('sends a message and receives a response', async ({ page }) => {

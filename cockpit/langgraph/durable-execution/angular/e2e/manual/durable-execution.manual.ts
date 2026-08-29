@@ -9,7 +9,7 @@ test.describe('LangGraph Durable Execution Example', () => {
   test('renders the chat interface with execution status sidebar', async ({ page }) => {
     await expect(page.locator('chat')).toBeVisible();
     await expect(page.locator('textarea[name="messageText"]')).toBeVisible();
-    await expect(page.locator('text=Execution Status')).toBeVisible();
+    await expect(page.locator('text=Pipeline')).toBeVisible();
   });
 
   test('sends a message and receives a response', async ({ page }) => {

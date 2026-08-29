@@ -18,10 +18,10 @@ test.describe('AG-UI Interrupts Example', () => {
     await page.waitForSelector('app-interrupts', { state: 'attached' });
   });
 
-  test('renders the chat interface with approvals sidebar', async ({ page }) => {
+  test('renders the chat interface with refund suggestions', async ({ page }) => {
     await expect(page.locator('chat')).toBeVisible();
     await expect(page.locator('textarea[name="messageText"]')).toBeVisible();
-    await expect(page.locator('text=No pending approvals')).toBeVisible();
+    await expect(page.locator('text=Refund a duplicate charge')).toBeVisible();
   });
 
   test('sends a message and receives a response', async ({ page }) => {
