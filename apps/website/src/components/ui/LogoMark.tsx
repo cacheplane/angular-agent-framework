@@ -1,5 +1,4 @@
 import type { HTMLAttributes } from 'react';
-import { tokens } from '@threadplane/design-tokens';
 import { cn } from '../../lib/cn';
 
 type LogoSize = 'sm' | 'md';
@@ -10,11 +9,6 @@ interface LogoMarkProps extends HTMLAttributes<HTMLSpanElement> {
   iconOnly?: boolean;
 }
 
-const SIZE: Record<LogoSize, { icon: number; label: number }> = {
-  sm: { icon: 18, label: 14 },
-  md: { icon: 22, label: 16 },
-};
-
 export function LogoMark({
   size = 'md',
   iconOnly = false,
@@ -22,25 +16,15 @@ export function LogoMark({
   style,
   ...rest
 }: LogoMarkProps) {
-  const s = SIZE[size];
   return (
     <span
       data-ui="logo-mark"
+      data-size={size}
       className={cn(className)}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 8,
-        fontFamily: tokens.typography.fontSerif,
-        fontSize: s.label,
-        fontWeight: 700,
-        color: tokens.colors.textPrimary,
-        lineHeight: 1,
-        ...style,
-      }}
+      style={style}
       {...rest}
     >
-      <span aria-hidden="true" style={{ fontSize: s.icon, lineHeight: 1 }}>🛩️</span>
+      <span aria-hidden="true" data-ui="logo-mark-icon">🛩️</span>
       {iconOnly ? null : <span>Threadplane</span>}
     </span>
   );

@@ -141,3 +141,115 @@
 [data-ui="section"][data-surface="white"] {
   background: var(--color-surface);
 }
+
+/* UI primitive — Button */
+[data-ui="button"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-inter);
+  font-weight: 600;
+  line-height: 1;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+  white-space: nowrap;
+}
+[data-ui="button"][data-size="md"] {
+  height: 40px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+[data-ui="button"][data-size="lg"] {
+  height: 48px;
+  padding: 0 22px;
+  font-size: 16px;
+}
+[data-ui="button"][data-variant="primary"] {
+  background: var(--color-accent);
+  color: var(--color-text-inverted);
+  border: 1px solid var(--color-accent);
+  box-shadow: var(--shadow-sm);
+}
+[data-ui="button"][data-variant="secondary"] {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-strong);
+  box-shadow: none;
+}
+[data-ui="button"][data-variant="ghost"] {
+  background: transparent;
+  color: var(--color-accent);
+  border: 1px solid transparent;
+  box-shadow: none;
+}
+
+/* UI primitive — FAQ.
+ * The summary::-webkit-details-marker hide, open-state chevron rotation, and
+ * summary focus-visible rules are pre-existing and stay above (cut-pasted
+ * verbatim from global.css); these are the resting styles that were inline. */
+[data-ui="faq"] {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+[data-ui="faq-item"] {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 0 20px;
+}
+[data-ui="faq-item"] > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 0;
+  cursor: pointer;
+  font-family: var(--font-inter);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  list-style: none;
+}
+[data-ui="faq-chevron"] {
+  transition: transform 200ms ease;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+[data-ui="faq-item"] > div {
+  padding-bottom: 20px;
+  font-family: var(--font-inter);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+/* UI primitive — LogoMark */
+[data-ui="logo-mark"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-garamond);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+[data-ui="logo-mark"][data-size="sm"] {
+  font-size: 14px;
+}
+[data-ui="logo-mark"][data-size="md"] {
+  font-size: 16px;
+}
+[data-ui="logo-mark-icon"] {
+  line-height: 1;
+}
+[data-ui="logo-mark"][data-size="sm"] > [data-ui="logo-mark-icon"] {
+  font-size: 18px;
+}
+[data-ui="logo-mark"][data-size="md"] > [data-ui="logo-mark-icon"] {
+  font-size: 22px;
+}
