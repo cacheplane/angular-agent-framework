@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
@@ -24,61 +23,29 @@ export default async function AgUiPage() {
       {/* Hero */}
       <Section surface="canvas" ariaLabelledBy="ag-ui-hero-heading">
         <Container>
-          <div style={{ maxWidth: 820, margin: '0 auto', textAlign: 'center' }}>
-            <Eyebrow tone="accent" style={{ marginBottom: 16 }}>@threadplane/ag-ui</Eyebrow>
-            <h1
-              id="ag-ui-hero-heading"
-              style={{
-                fontFamily: tokens.typography.h1.family,
-                fontSize: tokens.typography.h1.size,
-                lineHeight: tokens.typography.h1.line,
-                fontWeight: 700,
-                color: tokens.colors.textPrimary,
-                margin: 0,
-                marginBottom: 24,
-                letterSpacing: '-0.02em',
-              }}
-            >
+          <div className="ag-ui-page-hero-inner">
+            <Eyebrow tone="accent" className="ag-ui-page-eyebrow-spaced">@threadplane/ag-ui</Eyebrow>
+            <h1 id="ag-ui-hero-heading" className="ag-ui-page-h1">
               One adapter. Eight backends.
             </h1>
-            <p
-              style={{
-                fontFamily: tokens.typography.bodyLg.family,
-                fontSize: tokens.typography.bodyLg.size,
-                lineHeight: tokens.typography.bodyLg.line,
-                color: tokens.colors.textSecondary,
-                margin: '0 auto 32px',
-                maxWidth: 680,
-              }}
-            >
+            <p className="ag-ui-page-hero-subtitle">
               Build an Angular agent UI on any AG-UI-compatible runtime — CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit, or LangGraph fronted by AG-UI. Same Agent contract and chat surface; runtime-specific history and checkpoint behavior stays with the backend.
             </p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
+            <div className="ag-ui-page-hero-buttons">
               <Button variant="primary" size="lg" href="/docs/ag-ui/getting-started/quickstart">Get started</Button>
               <Button variant="secondary" size="lg" href="https://github.com/cacheplane/angular-agent-framework" target="_blank" rel="noopener noreferrer">View source</Button>
             </div>
-            <p style={{ fontSize: 13, color: tokens.colors.textMuted, marginBottom: 20 }}>
-              Talking to LangGraph Platform directly? See <a href="/docs/choosing-an-adapter" style={{ color: tokens.colors.accent }}>Choosing an adapter</a>.
+            <p className="ag-ui-page-adapter-note">
+              Talking to LangGraph Platform directly? See <a href="/docs/choosing-an-adapter" className="ag-ui-page-adapter-link">Choosing an adapter</a>.
             </p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
+            <div className="ag-ui-page-hero-pills">
               <Pill variant="accent">MIT</Pill>
               <Pill variant="angular">Angular 20+</Pill>
               <Pill variant="neutral">AG-UI protocol</Pill>
             </div>
-            <p
-              style={{
-                fontFamily: tokens.typography.fontSans,
-                fontSize: 13,
-                color: tokens.colors.textMuted,
-                margin: '0 auto',
-                maxWidth: 520,
-              }}
-            >
+            <p className="ag-ui-page-langgraph-note">
               Already on LangGraph?{' '}
-              <Link
-                href="/langgraph"
-                style={{ color: tokens.colors.accent, textDecoration: 'none', fontWeight: 600 }}
-              >
+              <Link href="/langgraph" className="ag-ui-page-langgraph-link">
                 See @threadplane/langgraph
               </Link>{' '}
               for native streaming, checkpoints, and the typed LangGraph SDK path.
@@ -127,17 +94,7 @@ export default async function AgUiPage() {
         visualLeft
         visual={
           <BrowserFrame url="app.config.ts" elevation="md">
-            <pre style={{
-              margin: 0,
-              padding: '20px 22px',
-              background: '#1a1b26',
-              color: '#a9b1d6',
-              fontFamily: tokens.typography.fontMono,
-              fontSize: 13,
-              lineHeight: 1.6,
-              minHeight: 320,
-              overflow: 'auto',
-            }}>
+            <pre className="ag-ui-page-code-pre">
 {`import { provideAgent, injectAgent } from '@threadplane/ag-ui';
 import { ChatComponent } from '@threadplane/chat';
 

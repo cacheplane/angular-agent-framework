@@ -1,4 +1,3 @@
-import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
@@ -24,40 +23,19 @@ export default async function RenderPage() {
       {/* Hero */}
       <Section surface="canvas" ariaLabelledBy="render-hero-heading">
         <Container>
-          <div style={{ maxWidth: 820, margin: '0 auto', textAlign: 'center' }}>
-            <Eyebrow tone="accent" style={{ marginBottom: 16 }}>@threadplane/render</Eyebrow>
-            <h1
-              id="render-hero-heading"
-              style={{
-                fontFamily: tokens.typography.h1.family,
-                fontSize: tokens.typography.h1.size,
-                lineHeight: tokens.typography.h1.line,
-                fontWeight: 700,
-                color: tokens.colors.textPrimary,
-                margin: 0,
-                marginBottom: 24,
-                letterSpacing: '-0.02em',
-              }}
-            >
+          <div className="render-page-hero-inner">
+            <Eyebrow tone="accent" className="render-page-eyebrow-spaced">@threadplane/render</Eyebrow>
+            <h1 id="render-hero-heading" className="render-page-h1">
               Generative UI without a second framework.
             </h1>
-            <p
-              style={{
-                fontFamily: tokens.typography.bodyLg.family,
-                fontSize: tokens.typography.bodyLg.size,
-                lineHeight: tokens.typography.bodyLg.line,
-                color: tokens.colors.textSecondary,
-                margin: '0 auto 32px',
-                maxWidth: 640,
-              }}
-            >
+            <p className="render-page-hero-subtitle">
               Server-emitted JSON specs render into Angular components you already own. Vercel json-render and Google A2UI both supported. Per-component fallback, readiness gate, no surprises.
             </p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
+            <div className="render-page-hero-buttons">
               <Button variant="primary" size="lg" href="/docs/render/getting-started/introduction">Get started</Button>
               <Button variant="secondary" size="lg" href="https://github.com/cacheplane/angular-agent-framework" target="_blank" rel="noopener noreferrer">View source</Button>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <div className="render-page-hero-pills">
               <Pill variant="accent">MIT</Pill>
               <Pill variant="neutral">Vercel json-render</Pill>
               <Pill variant="neutral">Google A2UI</Pill>
@@ -85,18 +63,8 @@ export default async function RenderPage() {
         cta={{ label: 'See @threadplane/render docs', href: '/docs/render/getting-started/introduction' }}
         visual={
           <BrowserFrame url="render · spec → component" elevation="md">
-            <div style={{ padding: 24, minHeight: 320, background: tokens.surfaces.surface }}>
-              <div style={{
-                background: tokens.surfaces.surfaceTinted,
-                border: `1px solid ${tokens.surfaces.border}`,
-                borderRadius: tokens.radius.md,
-                padding: 12,
-                marginBottom: 12,
-                fontFamily: tokens.typography.fontMono,
-                fontSize: 11,
-                color: tokens.colors.textSecondary,
-                whiteSpace: 'pre',
-              }}>
+            <div className="render-page-visual-panel">
+              <div className="render-page-spec-block">
 {`{
   "type": "card",
   "props": {
@@ -106,19 +74,14 @@ export default async function RenderPage() {
   }
 }`}
               </div>
-              <div style={{
-                background: tokens.surfaces.surface,
-                border: `1px solid ${tokens.surfaces.border}`,
-                borderRadius: tokens.radius.md,
-                padding: 16,
-              }}>
-                <div style={{ fontFamily: tokens.typography.fontMono, fontSize: 11, color: tokens.colors.accent, marginBottom: 8 }}>
+              <div className="render-page-rendered-card">
+                <div className="render-page-ai-label">
                   AI-rendered · YourCardComponent
                 </div>
-                <div style={{ fontFamily: tokens.typography.fontSerif, fontSize: 18, fontWeight: 700, color: tokens.colors.textPrimary, marginBottom: 4 }}>
+                <div className="render-page-card-title">
                   Q3 revenue: $4.2M
                 </div>
-                <div style={{ fontSize: 13, color: tokens.colors.textSecondary }}>+18% vs Q2</div>
+                <div className="render-page-card-value">+18% vs Q2</div>
               </div>
             </div>
           </BrowserFrame>

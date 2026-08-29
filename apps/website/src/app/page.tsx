@@ -18,7 +18,6 @@ import { FinalCTA } from '../components/landing/FinalCTA';
 import { RecentArticles } from '../components/landing/RecentArticles';
 import { Section } from '../components/ui/Section';
 import { Container } from '../components/ui/Container';
-import { tokens } from '@threadplane/design-tokens';
 import { createPageMetadata, LONG_SUBHEAD, PRIMARY_TAGLINE } from '../lib/site-metadata';
 
 export const metadata = createPageMetadata({
@@ -57,7 +56,7 @@ async function buildPanes(media: SectionMedia, clipUrl: string): Promise<MediumP
       key: 'code',
       label: codeBlocks.length > 1 ? block.label : 'Code',
       content: (
-        <div style={{ borderRadius: 14, overflow: 'hidden', border: `1px solid ${tokens.surfaces.border}` }}>
+        <div className="home-code-frame">
           <HighlightedCode code={block.source} lang={block.language} />
         </div>
       ),
@@ -72,7 +71,7 @@ async function buildPanes(media: SectionMedia, clipUrl: string): Promise<MediumP
       label: 'Live',
       content: (
         <BrowserFrame url={clipUrl} elevation="lg">
-          <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 10', background: '#15161f' }}>
+          <div className="home-live-frame">
             {/*
               Mounted only when its tab is selected — `MediumSwitcher` renders
               one pane at a time, so this iframe is never requested on page load.
@@ -84,7 +83,7 @@ async function buildPanes(media: SectionMedia, clipUrl: string): Promise<MediumP
               src={`https://demo.threadplane.ai/${mode}?featured=${encodeURIComponent(media.live.featured)}`}
               title="Threadplane live demo"
               loading="lazy"
-              style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+              className="home-live-iframe"
             />
           </div>
         </BrowserFrame>
@@ -122,7 +121,7 @@ export default async function HomePage() {
         headline="Build the Angular UI layer for production agents."
         body={
           <>
-            <code style={{ fontFamily: tokens.typography.fontMono }}>provideAgent</code> + <code style={{ fontFamily: tokens.typography.fontMono }}>injectAgent()</code> give you headless chat, durable threads, interrupts, tool progress, and generative UI. LangGraph and AG-UI adapters share the contract, so teams can swap runtimes without rewriting the Angular surface.
+            <code className="home-code">provideAgent</code> + <code className="home-code">injectAgent()</code> give you headless chat, durable threads, interrupts, tool progress, and generative UI. LangGraph and AG-UI adapters share the contract, so teams can swap runtimes without rewriting the Angular surface.
           </>
         }
         bullets={[
@@ -195,10 +194,10 @@ export default async function HomePage() {
         headline="Nothing irreversible happens without a human."
         body={
           <>
-            <code style={{ fontFamily: tokens.typography.fontMono }}>interrupt()</code> freezes the graph
+            <code className="home-code">interrupt()</code> freezes the graph
             mid-run and the pause lives in the checkpoint, not in component state. Your UI renders the
             proposal, the human answers, and{' '}
-            <code style={{ fontFamily: tokens.typography.fontMono }}>submit({'{ resume }'})</code> continues
+            <code className="home-code">submit({'{ resume }'})</code> continues
             the run — with the decision written back beside the action it gated.
           </>
         }

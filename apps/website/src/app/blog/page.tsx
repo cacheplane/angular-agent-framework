@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { tokens } from '@threadplane/design-tokens';
 import { createPageMetadata } from '../../lib/site-metadata';
 import { getAllPosts, getFeaturedPost, getAllTags } from '../../lib/blog';
 import { FeaturedPostCard } from '../../components/blog/FeaturedPostCard';
@@ -34,35 +33,16 @@ export default async function BlogIndexPage({ searchParams }: Props) {
   const grid = featured ? filtered.filter((p) => p.slug !== featured.slug) : filtered;
 
   return (
-    <div style={{ paddingTop: 80, background: tokens.surfaces.canvas, minHeight: '100vh' }}>
-      <div style={{ maxWidth: 960, margin: '0 auto', padding: '35px 24px 64px' }}>
-        <header style={{ marginBottom: 32 }}>
-          <Eyebrow tone="accent" style={{ marginBottom: 16 }}>
+    <div className="blog-index-page">
+      <div className="blog-index-inner">
+        <header className="blog-index-header">
+          <Eyebrow tone="accent" className="blog-index-eyebrow-spaced">
             Blog
           </Eyebrow>
-          <h1
-            style={{
-              fontFamily: tokens.typography.h1.family,
-              fontSize: tokens.typography.h1.size,
-              lineHeight: tokens.typography.h1.line,
-              fontWeight: 700,
-              letterSpacing: '-0.02em',
-              color: tokens.colors.textPrimary,
-              margin: '0 0 16px',
-            }}
-          >
+          <h1 className="blog-index-h1">
             Articles from Threadplane
           </h1>
-          <p
-            style={{
-              fontFamily: tokens.typography.bodyLg.family,
-              fontSize: tokens.typography.bodyLg.size,
-              lineHeight: tokens.typography.bodyLg.line,
-              color: tokens.colors.textSecondary,
-              margin: 0,
-              maxWidth: '60ch',
-            }}
-          >
+          <p className="blog-index-subtitle">
             Writing on agent UI for Angular &mdash; production patterns, design
             choices, and what we&apos;re shipping.
           </p>
@@ -73,45 +53,16 @@ export default async function BlogIndexPage({ searchParams }: Props) {
         {featured ? <FeaturedPostCard post={featured} /> : null}
 
         {grid.length === 0 ? (
-          <div
-            style={{
-              padding: 48,
-              textAlign: 'center',
-              background: tokens.surfaces.surfaceTinted,
-              border: `1px solid ${tokens.surfaces.border}`,
-              borderRadius: 12,
-            }}
-          >
-            <p
-              style={{
-                fontFamily: tokens.typography.bodyLg.family,
-                fontSize: tokens.typography.bodyLg.size,
-                lineHeight: tokens.typography.bodyLg.line,
-                color: tokens.colors.textSecondary,
-                margin: '0 0 16px',
-              }}
-            >
+          <div className="blog-index-empty">
+            <p className="blog-index-empty-text">
               No posts tagged <em>{activeTag}</em> yet.
             </p>
-            <Link
-              href="/blog"
-              style={{
-                color: tokens.colors.accent,
-                textDecoration: 'underline',
-                fontWeight: 500,
-              }}
-            >
+            <Link href="/blog" className="blog-index-empty-link">
               View all posts
             </Link>
           </div>
         ) : (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-              gap: 16,
-            }}
-          >
+          <div className="blog-index-grid">
             {grid.map((p) => (
               <PostCard key={p.slug} post={p} />
             ))}

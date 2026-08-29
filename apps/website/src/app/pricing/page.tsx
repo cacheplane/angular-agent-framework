@@ -1,4 +1,3 @@
-import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
@@ -22,20 +21,9 @@ export default function PricingPage() {
     <>
       <Section surface="canvas" ariaLabelledBy="pricing-heading">
         <Container>
-          <div style={{ textAlign: 'center', maxWidth: 760, margin: '0 auto' }}>
-            <Eyebrow tone="accent" style={{ marginBottom: 16 }}>Pricing</Eyebrow>
-            <h1
-              id="pricing-heading"
-              style={{
-                fontFamily: tokens.typography.h1.family,
-                fontWeight: 700,
-                fontSize: tokens.typography.h1.size,
-                lineHeight: tokens.typography.h1.line,
-                color: tokens.colors.textPrimary,
-                margin: 0,
-                letterSpacing: '-0.02em',
-              }}
-            >
+          <div className="pricing-page-hero-inner">
+            <Eyebrow tone="accent" className="pricing-page-eyebrow-spaced">Pricing</Eyebrow>
+            <h1 id="pricing-heading" className="pricing-page-h1">
               Simple, transparent pricing
             </h1>
           </div>
@@ -46,26 +34,11 @@ export default function PricingPage() {
 
       <Section surface="canvas">
         <Container>
-          <Eyebrow style={{ marginBottom: 12 }}>Compatibility</Eyebrow>
-          <h2
-            style={{
-              fontFamily: tokens.typography.h2.family,
-              fontSize: tokens.typography.h2.size,
-              margin: 0,
-              marginBottom: 16,
-              color: tokens.colors.textPrimary,
-            }}
-          >
+          <Eyebrow className="pricing-page-eyebrow-tight">Compatibility</Eyebrow>
+          <h2 className="pricing-page-h2">
             Angular version support
           </h2>
-          <p
-            style={{
-              margin: 0,
-              marginBottom: 24,
-              color: tokens.colors.textSecondary,
-              maxWidth: '60ch',
-            }}
-          >
+          <p className="pricing-page-compat-body">
             We ship against the versions our CI tests. Other versions may work but aren&apos;t guaranteed.
           </p>
           <CompatibilityMatrix />

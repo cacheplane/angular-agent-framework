@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 import React, { Suspense } from 'react';
-import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
@@ -21,43 +20,21 @@ export default function ContactPage() {
   return (
     <Section surface="canvas" ariaLabelledBy="contact-heading">
       <Container>
-        <div style={{ maxWidth: 720 }}>
-          <Eyebrow tone="accent" style={{ marginBottom: 16 }}>Contact</Eyebrow>
-          <h1
-            id="contact-heading"
-            style={{
-              fontFamily: tokens.typography.h1.family,
-              fontSize: tokens.typography.h1.size,
-              lineHeight: tokens.typography.h1.line,
-              fontWeight: 700,
-              color: tokens.colors.textPrimary,
-              margin: 0,
-              marginBottom: 16,
-              letterSpacing: '-0.02em',
-            }}
-          >
+        <div className="contact-page-inner">
+          <Eyebrow tone="accent" className="contact-page-eyebrow-spaced">Contact</Eyebrow>
+          <h1 id="contact-heading" className="contact-page-h1">
             Talk to an engineer.
           </h1>
-          <p
-            style={{
-              fontFamily: tokens.typography.bodyLg.family,
-              fontSize: tokens.typography.bodyLg.size,
-              lineHeight: tokens.typography.bodyLg.line,
-              color: tokens.colors.textSecondary,
-              margin: 0,
-              marginBottom: 24,
-              maxWidth: '60ch',
-            }}
-          >
+          <p className="contact-page-subtitle">
             Tell us what you&apos;re shipping. We&apos;ll reply within one business day — usually with code, not a calendar invite.
           </p>
-          <div style={{ marginBottom: 24 }}>
+          <div className="contact-page-sla-wrap">
             <SlaCard />
           </div>
           <Suspense>
             <ContactForm />
           </Suspense>
-          <div style={{ marginTop: 32, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="contact-page-links-row">
             <GitHubStarsPill />
             <AltChannelRow />
           </div>

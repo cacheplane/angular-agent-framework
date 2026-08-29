@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { tokens } from '@threadplane/design-tokens';
 import { MdxRenderer } from '../../../components/docs/MdxRenderer';
 import { DocsTOC } from '../../../components/docs/DocsTOC';
 import { AuthorByline } from '../../../components/blog/AuthorByline';
@@ -88,50 +87,22 @@ export default async function BlogPostPage({ params }: Params) {
   ]);
 
   return (
-    <div style={{ paddingTop: 80, background: tokens.surfaces.canvas, minHeight: '100vh' }}>
+    <div className="blog-post-page">
       {postData ? <JsonLd data={postData} /> : null}
       <JsonLd data={breadcrumbs} />
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'flex-start',
-          maxWidth: 1280,
-          margin: '0 auto',
-          gap: 0,
-        }}
-      >
-      <article style={{ width: '100%', maxWidth: 768, padding: '64px 24px', flexShrink: 0 }}>
-        <header style={{ marginBottom: 48 }}>
-          <Eyebrow tone="accent" style={{ marginBottom: 24 }}>
+      <div className="blog-post-layout">
+      <article className="blog-post-article">
+        <header className="blog-post-header">
+          <Eyebrow tone="accent" className="blog-post-eyebrow-spaced">
             {primaryTag} · {formatPostDate(post.frontmatter.date)} · {minutes} min read
           </Eyebrow>
-          <h1
-            style={{
-              fontFamily: tokens.typography.h1.family,
-              fontSize: tokens.typography.h1.size,
-              lineHeight: tokens.typography.h1.line,
-              fontWeight: 700,
-              letterSpacing: '-0.02em',
-              color: tokens.colors.textPrimary,
-              margin: '0 0 24px',
-            }}
-          >
+          <h1 className="blog-post-h1">
             {post.frontmatter.title}
           </h1>
-          <p
-            style={{
-              fontFamily: tokens.typography.bodyLg.family,
-              fontSize: tokens.typography.bodyLg.size,
-              lineHeight: tokens.typography.bodyLg.line,
-              color: tokens.colors.textSecondary,
-              margin: '0 0 32px',
-              maxWidth: '60ch',
-            }}
-          >
+          <p className="blog-post-subtitle">
             {post.frontmatter.description}
           </p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap', marginBottom: 20 }}>
+          <div className="blog-post-byline-row">
             <AuthorByline author={author} />
           </div>
           {post.frontmatter.tags && post.frontmatter.tags.length > 0 ? (

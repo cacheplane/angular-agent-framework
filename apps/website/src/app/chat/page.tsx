@@ -1,4 +1,3 @@
-import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
@@ -24,42 +23,21 @@ export default async function ChatPage() {
       {/* Hero */}
       <Section surface="canvas" ariaLabelledBy="chat-hero-heading">
         <Container>
-          <div style={{ maxWidth: 820, margin: '0 auto', textAlign: 'center' }}>
-            <Eyebrow tone="accent" style={{ marginBottom: 16 }}>@threadplane/chat</Eyebrow>
-            <h1
-              id="chat-hero-heading"
-              style={{
-                fontFamily: tokens.typography.h1.family,
-                fontSize: tokens.typography.h1.size,
-                lineHeight: tokens.typography.h1.line,
-                fontWeight: 700,
-                color: tokens.colors.textPrimary,
-                margin: 0,
-                marginBottom: 24,
-                letterSpacing: '-0.02em',
-              }}
-            >
+          <div className="chat-page-hero-inner">
+            <Eyebrow tone="accent" className="chat-page-eyebrow-spaced">@threadplane/chat</Eyebrow>
+            <h1 id="chat-hero-heading" className="chat-page-h1">
               Drop-in chat for Angular agents.
             </h1>
-            <p
-              style={{
-                fontFamily: tokens.typography.bodyLg.family,
-                fontSize: tokens.typography.bodyLg.size,
-                lineHeight: tokens.typography.bodyLg.line,
-                color: tokens.colors.textSecondary,
-                margin: '0 auto 32px',
-                maxWidth: 640,
-              }}
-            >
+            <p className="chat-page-hero-subtitle">
               chat-timeline + chat-debug + GenUI surfaces. Production-shaped from day one, themable to your design system, or use the headless primitives if you want full control.
             </p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
+            <div className="chat-page-hero-buttons">
               <Button variant="primary" size="lg" href="/docs/chat/getting-started/introduction">Get started</Button>
               <Button variant="ghost" size="lg" href="https://cockpit.threadplane.ai" target="_blank" rel="noopener noreferrer">
                 See it live →
               </Button>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <div className="chat-page-hero-pills">
               <Pill variant="accent">MIT</Pill>
               <Pill variant="neutral">Vercel json-render</Pill>
               <Pill variant="neutral">Google A2UI</Pill>
@@ -87,27 +65,19 @@ export default async function ChatPage() {
         cta={{ label: 'See @threadplane/chat docs', href: '/docs/chat/getting-started/introduction' }}
         visual={
           <BrowserFrame url="cockpit.threadplane.ai/chat/core-capabilities/debug/overview/python" elevation="md">
-            <div style={{ padding: 24, minHeight: 320, background: 'linear-gradient(180deg, #fff, #f8fafc)' }}>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+            <div className="chat-page-visual-panel">
+              <div className="chat-page-visual-pills-row">
                 <Pill variant="accent">streaming</Pill>
                 <Pill variant="neutral">3 tools</Pill>
                 <Pill variant="neutral">1 interrupt</Pill>
               </div>
-              <div style={{ fontFamily: tokens.typography.fontMono, fontSize: 11, color: tokens.colors.textMuted, marginBottom: 8 }}>
+              <div className="chat-page-tool-label">
                 tool · query_inventory · 240ms
               </div>
-              <div style={{
-                background: tokens.surfaces.surfaceTinted,
-                border: `1px solid ${tokens.surfaces.border}`,
-                borderRadius: tokens.radius.md,
-                padding: 12,
-                fontFamily: tokens.typography.fontMono,
-                fontSize: 12,
-                color: tokens.colors.textPrimary,
-              }}>
+              <div className="chat-page-result-block">
                 {`{ items: 47, low_stock: 3, total_value: 12400 }`}
               </div>
-              <div style={{ marginTop: 16, paddingTop: 12, borderTop: `1px solid ${tokens.surfaces.border}`, fontFamily: tokens.typography.fontMono, fontSize: 11, color: tokens.colors.textSecondary }}>
+              <div className="chat-page-replay-footer">
                 replay · 0:24 · paused on interrupt
               </div>
             </div>
