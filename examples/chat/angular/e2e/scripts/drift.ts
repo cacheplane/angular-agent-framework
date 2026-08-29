@@ -1,60 +1,31 @@
 // SPDX-License-Identifier: MIT
-import { readFileSync, writeFileSync, mkdtempSync } from 'node:fs';
+// Diagnostic differ: compares recorded fixtures (arg 1: directory) against the
+// committed fixtures directory. Prints a JSON DriftReport to stdout and a
+// human summary to stderr. Exit code is ALWAYS 0 unless inputs are unreadable —
+// the @drift e2e subset is the gate, not this script.
+import { readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { tmpdir } from 'node:os';
-import { spawnSync } from 'node:child_process';
-import { readdirSync } from 'node:fs';
+import { diffFixtures, type FixtureEntry } from './drift-lib';
 
 const FIXTURES_DIR = resolve(__dirname, '../fixtures');
 
-if (!process.env.OPENAI_API_KEY) {
-  console.error('OPENAI_API_KEY required for drift detection');
+function loadDir(dir: string): FixtureEntry[] {
+  const out: FixtureEntry[] = [];
+  for (const f of readdirSync(dir).filter((x) => x.endsWith('.json')).sort()) {
+    const parsed = JSON.parse(readFileSync(join(dir, f), 'utf-8')) as { fixtures?: FixtureEntry[] };
+    for (const e of parsed.fixtures ?? []) out.push(e);
+  }
+  return out;
+}
+
+const recordedDir = process.argv[2];
+if (!recordedDir) {
+  console.error('usage: tsx drift.ts <recorded-fixtures-dir>');
   process.exit(1);
 }
 
-const fixtureFiles = readdirSync(FIXTURES_DIR).filter((f) => f.endsWith('.json'));
-if (fixtureFiles.length === 0) {
-  console.log('No fixtures to check.');
-  process.exit(0);
-}
-
-const tmpDir = mkdtempSync(join(tmpdir(), 'aimock-drift-'));
-const drifts: Array<{ name: string; bytesCommitted: number; bytesRecorded: number; diff: number }> = [];
-
-for (const file of fixtureFiles) {
-  const name = file.replace(/\.json$/, '');
-  const committedPath = join(FIXTURES_DIR, file);
-  const recordedPath = join(tmpDir, file);
-
-  const result = spawnSync(
-    'npx',
-    [
-      '-p', '@copilotkit/aimock',
-      'llmock',
-      '--record',
-      '--provider-openai', 'https://api.openai.com',
-      '--out', recordedPath,
-    ],
-    { stdio: 'inherit', env: process.env },
-  );
-
-  if (result.status !== 0) {
-    console.error(`Drift check failed to record ${name}`);
-    process.exit(result.status ?? 1);
-  }
-
-  const committed = readFileSync(committedPath);
-  const recorded = readFileSync(recordedPath);
-  const diff = Math.abs(committed.length - recorded.length);
-
-  drifts.push({ name, bytesCommitted: committed.length, bytesRecorded: recorded.length, diff });
-}
-
-console.log(JSON.stringify({ drifts }, null, 2));
-
-const THRESHOLD_PCT = 0.2;
-const significant = drifts.filter((d) => d.diff / Math.max(d.bytesCommitted, 1) > THRESHOLD_PCT);
-if (significant.length > 0) {
-  console.error(`::error::Drift exceeds threshold for: ${significant.map((d) => d.name).join(', ')}`);
-  process.exit(2);
-}
+const report = diffFixtures(loadDir(FIXTURES_DIR), loadDir(resolve(recordedDir)));
+console.log(JSON.stringify(report, null, 2));
+console.error(
+  `[drift] changed=${report.changed.length} unmatchedCommitted=${report.unmatchedCommitted.length} unmatchedRecorded=${report.unmatchedRecorded.length}`
+);
