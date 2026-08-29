@@ -472,7 +472,7 @@
   flex-direction: column;
 }
 .sol-index-card-title {
-  font-family: var(--font-garamond);
+  font-family: var(--font-inter);
   font-size: 22px;
   line-height: 1.25;
   font-weight: 600;
@@ -546,7 +546,7 @@
   margin: 0 auto;
 }
 .sol-page-card-h3 {
-  font-family: var(--font-garamond);
+  font-family: var(--font-inter);
   font-size: 18px;
   line-height: 1.3;
   font-weight: 600;
@@ -769,7 +769,7 @@
   margin: 0 auto;
 }
 .pilot-outcome-h3 {
-  font-family: var(--font-garamond);
+  font-family: var(--font-inter);
   font-size: 17px;
   line-height: 1.3;
   font-weight: 600;

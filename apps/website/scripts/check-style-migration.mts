@@ -64,8 +64,12 @@ function normProp(p: string): string {
   return p.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase());
 }
 function normValue(prop: string, raw: string): string {
-  let v = raw.trim().replace(/^['"`]|['"`]$/g, '');
-  const tok = v.match(/^tokens\.([a-zA-Z.]+)$/);
+  let v = raw.trim();
+  // Strip quotes only when one pair wraps the WHOLE value; stripping a lone
+  // leading quote mangled internally-quoted font stacks ('"X", monospace').
+  const q = v[0];
+  if ((q === '"' || q === "'" || q === '`') && v.endsWith(q)) v = v.slice(1, -1);
+  const tok = v.match(/^tokens\.([a-zA-Z0-9.]+)$/);
   if (tok) v = tokenValue(tok[1]) ?? v;
   v = v.replace(/var\((--[a-z0-9-]+)\)/g, (_, name) => cssVars.get(name) ?? _);
   if (/^-?\d+(\.\d+)?$/.test(v) && !UNITLESS.has(prop)) v = `${v}px`;
