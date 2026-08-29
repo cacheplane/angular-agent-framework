@@ -166,6 +166,27 @@ it only ever sees new code.
 
 Ships as `warn` for one release, then `error`.
 
+## Amendments from planning (2026-08-29)
+
+Facts found while writing the implementation plan
+(`plans/2026-08-29-inline-style-substrate-migration.md`), which supersede the
+corresponding text above:
+
+- **A third substrate exists.** 12 components embed a `<style>{`…`}</style>`
+  tag interpolating `${tokens.*}` (10 in landing, 2 in docs), one element per
+  component instance. They migrate in Batches 3–4: CSS text moves verbatim
+  into the batch file with interpolations replaced by `var(--*)`.
+- **Exclusions.** `app/opengraph-image.tsx` and `app/blog/[slug]/opengraph-image.tsx`
+  (14 sites) render through Satori, where inline styles are the only mechanism —
+  migrating them breaks OG images. `app/dev/primitives/page.tsx` (17 sites) is a
+  dev-only route documented as slated for deletion. In-scope is therefore
+  **~877 style-prop sites + 12 `<style>` tags across 88 files**, not 908.
+- **Batch 6 splits into 6a (docs-adjacent pages, ~115 sites) and 6b (remaining
+  routes, ~192)** — measured, `app/**` was too large for one review. The arc is
+  seven migration PRs plus the ESLint PR, not six.
+- **33 JS hover handlers** (`onMouseEnter` presentation writes — 23 in Footer
+  alone) convert to `:hover` rules as part of their component's batch.
+
 ## Risks
 
 - **Cascade and specificity.** Inline styles have the highest specificity; CSS
@@ -173,10 +194,14 @@ Ships as `warn` for one release, then `error`.
   rule once moved. This is the failure mode the text-level check cannot see and
   the spot check exists for.
 - **Tailwind utility collision.** Many components carry both `className`
-  utilities and inline styles. Moving a property into a `data-ui` rule can put
-  it in conflict with a utility on the same element; the utility wins or loses
-  depending on source order. Batch 1's review must establish the convention
-  (`@layer components` for the migrated rules, so utilities keep winning).
+  utilities and inline styles. Moving a property into a rule can put it in
+  conflict with a utility on the same element.
+  **Resolved at planning (2026-08-29), reversing this section's first guess:**
+  migrated rules are **unlayered**, like the existing `global.css` rules.
+  Tailwind v4 layers everything (`@layer theme, base, components, utilities`),
+  and unlayered author CSS beats all layers — which is the precedence inline
+  styles had. `@layer components` would invert the winner and change rendering;
+  unlayered preserves it. Verified against `node_modules/tailwindcss/index.css`.
 - **Six PRs of pure refactor** with no user-visible payoff, before Project 3
   delivers anything a reader sees. That was accepted when the arc was ordered.
 - **`app/**` at 263 sites is the largest batch** and may need splitting once
