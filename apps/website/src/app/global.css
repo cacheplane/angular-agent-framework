@@ -111,8 +111,8 @@ html {
 .docs-prose :not(pre) > code {
   font-family: var(--font-mono), monospace;
   font-size: 0.85em;
-  background: rgba(0, 64, 144, 0.06);
-  color: #004090;
+  background: var(--color-accent-surface);
+  color: var(--color-accent);
   padding: 0.15rem 0.4rem;
   border-radius: 0.25rem;
   font-weight: 400;
@@ -192,7 +192,7 @@ html {
 
 .docs-table-scroll { max-width: 100%; overflow-x: auto; margin: 1.5rem 0; }
 .docs-prose table { width: 100%; border-collapse: collapse; font-size: 0.875rem; margin: 0; }
-.docs-prose th { text-align: left; padding: 0.5rem 0.75rem; font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; color: #555770; border-bottom: 1px solid rgba(0, 64, 144, 0.15); }
+.docs-prose th { text-align: left; padding: 0.5rem 0.75rem; font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; color: #555770; border-bottom: 1px solid var(--color-accent-border); }
 .docs-prose td { padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(0, 64, 144, 0.08); color: #555770; }
 .docs-prose td code { font-size: 0.8em; }
 
