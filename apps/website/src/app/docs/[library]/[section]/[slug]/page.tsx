@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { tokens } from '@threadplane/design-tokens';
 import { DocsSidebar } from '../../../../../components/docs/DocsSidebar';
 import { MdxRenderer } from '../../../../../components/docs/MdxRenderer';
 import { DocsSearch } from '../../../../../components/docs/DocsSearch';
@@ -86,18 +85,12 @@ export default async function DocsPage({ params }: DocsRouteProps) {
   ]);
 
   return (
-    <div
-      className="flex min-h-screen overflow-x-hidden"
-      style={{ background: tokens.surfaces.canvas, paddingTop: 80 }}
-    >
+    <div className="flex min-h-screen overflow-x-hidden docs-shell-page">
       <JsonLd data={articleData} />
       <JsonLd data={breadcrumbs} />
       <DocsSearch library={library as LibraryId} />
       <DocsSidebar activeLibrary={library as LibraryId} activeSection={section} activeSlug={slug} />
-      <div
-        className="flex-1 flex min-w-0"
-        style={{ background: tokens.surfaces.surface }}
-      >
+      <div className="flex-1 flex min-w-0 docs-shell-body">
         <div className="flex-1 min-w-0">
           <div className="px-6 md:px-12 pt-6">
             <DocsBreadcrumb library={library as LibraryId} section={section} slug={slug} title={doc.title} />

@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
@@ -136,180 +135,35 @@ function MiddlewareGlyph() {
 
 const GLYPHS = { key: KeyGlyph, middleware: MiddlewareGlyph, pulse: PulseGlyph } as const;
 
-const stepLabelStyle = {
-  fontFamily: tokens.typography.eyebrow.family,
-  fontSize: tokens.typography.eyebrow.size,
-  fontWeight: tokens.typography.eyebrow.weight,
-  letterSpacing: tokens.typography.eyebrow.letterSpacing,
-  textTransform: tokens.typography.eyebrow.transform,
-  lineHeight: tokens.typography.eyebrow.line,
-  color: tokens.colors.textMuted,
-  margin: 0,
-  marginBottom: 16,
-  display: 'flex',
-  alignItems: 'center',
-  gap: 10,
-} as const;
-
-const stepBadgeStyle = {
-  width: 20,
-  height: 20,
-  borderRadius: tokens.radius.full,
-  background: tokens.colors.accent,
-  color: '#fff',
-  fontSize: 12,
-  fontWeight: 700,
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flex: '0 0 auto',
-} as const;
-
 function StepLabel({ id, step, children }: { id: string; step?: number; children: ReactNode }) {
   return (
-    <h2 id={id} style={stepLabelStyle}>
+    <h2 id={id} className="docs-index-step-label">
       {step != null ? (
-        <span aria-hidden="true" style={stepBadgeStyle}>{step}</span>
+        <span aria-hidden="true" className="docs-index-step-badge">{step}</span>
       ) : null}
       {children}
     </h2>
   );
 }
 
-const logoChipStyle = {
-  width: 30,
-  height: 30,
-  borderRadius: tokens.radius.md,
-  background: tokens.surfaces.surface,
-  border: `1px solid ${tokens.surfaces.border}`,
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flex: '0 0 auto',
-} as const;
-
-const glyphChipStyle = {
-  borderRadius: tokens.radius.md,
-  background: tokens.colors.accentSurface,
-  border: `1px solid ${tokens.colors.accentBorder}`,
-  color: tokens.colors.accent,
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flex: '0 0 auto',
-} as const;
-
 function LogoChip({ src }: { src: string }) {
   return (
-    <span style={logoChipStyle}>
+    <span className="docs-index-logo-chip">
       <img
         src={src}
         alt=""
         aria-hidden="true"
         loading="lazy"
         decoding="async"
-        style={{ width: 18, height: 18, objectFit: 'contain' }}
+        className="docs-index-logo-img"
       />
     </span>
   );
 }
 
 function GlyphChip({ size, children }: { size: number; children: ReactNode }) {
-  return <span style={{ ...glyphChipStyle, width: size, height: size }}>{children}</span>;
+  return <span className="docs-index-glyph-chip" style={{ width: size, height: size }}>{children}</span>;
 }
-
-const cardHeaderStyle = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 12,
-  marginBottom: 12,
-} as const;
-
-const cardTitleStyle = {
-  fontFamily: tokens.typography.h3.family,
-  fontSize: 18,
-  lineHeight: 1.3,
-  fontWeight: 600,
-  color: tokens.colors.textPrimary,
-  margin: 0,
-} as const;
-
-const attributionStyle = {
-  fontFamily: tokens.typography.fontMono,
-  fontSize: 10,
-  lineHeight: 1.4,
-  textTransform: 'uppercase',
-  letterSpacing: '0.08em',
-  color: tokens.colors.textMuted,
-  marginTop: 2,
-} as const;
-
-const cardBlurbStyle = {
-  fontFamily: tokens.typography.body.family,
-  fontSize: tokens.typography.body.size,
-  lineHeight: tokens.typography.body.line,
-  color: tokens.colors.textSecondary,
-  margin: 0,
-} as const;
-
-const ctaStyle = {
-  fontFamily: tokens.typography.fontSans,
-  fontSize: 14,
-  fontWeight: 600,
-  color: tokens.colors.accent,
-} as const;
-
-const snippetRowStyle = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  gap: 8,
-  background: tokens.surfaces.surface,
-  border: `1px solid ${tokens.surfaces.border}`,
-  borderRadius: tokens.radius.md,
-  padding: '5px 6px 5px 12px',
-  margin: '14px 0 16px',
-} as const;
-
-const snippetCodeStyle = {
-  fontFamily: tokens.typography.fontMono,
-  fontSize: 13,
-  color: tokens.colors.textSecondary,
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
-} as const;
-
-const gridStyle = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-  gap: 16,
-} as const;
-
-const helperStyle = {
-  fontFamily: tokens.typography.body.family,
-  fontSize: 14,
-  color: tokens.colors.textSecondary,
-  margin: 0,
-  marginTop: 16,
-  textAlign: 'center',
-} as const;
-
-const helperLinkStyle = {
-  color: tokens.colors.accent,
-  fontWeight: 600,
-} as const;
-
-const fillHeightStyle = {
-  height: '100%',
-} as const;
-
-const dividerStyle = {
-  height: 1,
-  background: tokens.surfaces.border,
-  border: 'none',
-  margin: '0 0 40px',
-} as const;
 
 export default function DocsLandingPage() {
   return (
@@ -318,35 +172,14 @@ export default function DocsLandingPage() {
       {/* Hero */}
       <Section surface="canvas" ariaLabelledBy="docs-heading">
         <Container>
-          <div style={{ maxWidth: 720 }}>
-            <Eyebrow tone="accent" style={{ marginBottom: 16 }}>
+          <div className="docs-index-hero-inner">
+            <Eyebrow tone="accent" className="docs-index-eyebrow-spaced">
               Documentation
             </Eyebrow>
-            <h1
-              id="docs-heading"
-              style={{
-                fontFamily: tokens.typography.h1.family,
-                fontSize: tokens.typography.h1.size,
-                lineHeight: tokens.typography.h1.line,
-                fontWeight: 700,
-                color: tokens.colors.textPrimary,
-                margin: 0,
-                marginBottom: 16,
-                letterSpacing: '-0.02em',
-              }}
-            >
+            <h1 id="docs-heading" className="docs-index-h1">
               Start building with Threadplane
             </h1>
-            <p
-              style={{
-                fontFamily: tokens.typography.bodyLg.family,
-                fontSize: tokens.typography.bodyLg.size,
-                lineHeight: tokens.typography.bodyLg.line,
-                color: tokens.colors.textSecondary,
-                margin: 0,
-                maxWidth: '52ch',
-              }}
-            >
+            <p className="docs-index-subtitle">
               Streaming agent interfaces with runtime adapters, a shared Agent contract,
               and a drop-in chat surface. Most packages are MIT; @threadplane/chat is
               dual-licensed for noncommercial/evaluation and commercial production use.
@@ -359,34 +192,34 @@ export default function DocsLandingPage() {
       <Section surface="canvas" tight ariaLabelledBy="backend-heading">
         <Container>
           <StepLabel id="backend-heading" step={1}>Pick your backend</StepLabel>
-          <div style={gridStyle}>
+          <div className="docs-index-grid">
             {BACKENDS.map((b) => (
-              <Link key={b.href} href={b.href} style={{ textDecoration: 'none' }}>
-                <Card padding="lg" hoverable accent style={fillHeightStyle}>
-                  <div style={cardHeaderStyle}>
+              <Link key={b.href} href={b.href} className="docs-index-card-link">
+                <Card padding="lg" hoverable accent className="docs-index-fill-height">
+                  <div className="docs-index-card-header">
                     <LogoChip src={b.logoSrc} />
                     <div>
-                      <h3 style={cardTitleStyle}>{b.title}</h3>
-                      <div style={attributionStyle}>{b.attribution}</div>
+                      <h3 className="docs-index-card-title">{b.title}</h3>
+                      <div className="docs-index-attribution">{b.attribution}</div>
                     </div>
                   </div>
-                  <p style={cardBlurbStyle}>{b.blurb}</p>
-                  <div style={snippetRowStyle}>
-                    <code style={snippetCodeStyle}>{b.install}</code>
+                  <p className="docs-index-card-blurb">{b.blurb}</p>
+                  <div className="docs-index-snippet-row">
+                    <code className="docs-index-snippet-code">{b.install}</code>
                     <CopyButton text={b.install} />
                   </div>
-                  <span style={ctaStyle}>Adapter quickstart →</span>
+                  <span className="docs-index-cta">Adapter quickstart →</span>
                 </Card>
               </Link>
             ))}
           </div>
-          <p style={helperStyle}>
+          <p className="docs-index-helper">
             Not sure which to use?{' '}
-            <Link href="/docs/choosing-an-adapter" style={helperLinkStyle}>
+            <Link href="/docs/choosing-an-adapter" className="docs-index-helper-link">
               Choosing an adapter →
             </Link>
             {' '}Want the drop-in UI first?{' '}
-            <Link href="/docs/chat/getting-started/quickstart" style={helperLinkStyle}>
+            <Link href="/docs/chat/getting-started/quickstart" className="docs-index-helper-link">
               Chat quickstart →
             </Link>
           </p>
@@ -396,28 +229,28 @@ export default function DocsLandingPage() {
       {/* Step 2 — generative UI */}
       <Section surface="canvas" tight ariaLabelledBy="genui-heading">
         <Container>
-          <div style={dividerStyle} />
+          <div className="docs-index-divider" />
           <StepLabel id="genui-heading" step={2}>Generative UI</StepLabel>
-          <div style={gridStyle}>
+          <div className="docs-index-grid">
             {GENERATIVE_UI.map((g) => (
-              <Link key={g.href} href={g.href} style={{ textDecoration: 'none' }}>
-                <Card padding="lg" hoverable accent style={fillHeightStyle}>
-                  <div style={cardHeaderStyle}>
+              <Link key={g.href} href={g.href} className="docs-index-card-link">
+                <Card padding="lg" hoverable accent className="docs-index-fill-height">
+                  <div className="docs-index-card-header">
                     <LogoChip src={g.logoSrc} />
                     <div>
-                      <h3 style={cardTitleStyle}>{g.title}</h3>
-                      <div style={attributionStyle}>{g.attribution}</div>
+                      <h3 className="docs-index-card-title">{g.title}</h3>
+                      <div className="docs-index-attribution">{g.attribution}</div>
                     </div>
                   </div>
-                  <p style={cardBlurbStyle}>{g.blurb}</p>
-                  <span style={{ ...ctaStyle, display: 'inline-block', marginTop: 14 }}>Get started →</span>
+                  <p className="docs-index-card-blurb">{g.blurb}</p>
+                  <span className="docs-index-cta docs-index-cta-block">Get started →</span>
                 </Card>
               </Link>
             ))}
           </div>
-          <p style={helperStyle}>
+          <p className="docs-index-helper">
             Which fits my use case?{' '}
-            <Link href="/docs/render/concepts/json-render-vs-a2ui" style={helperLinkStyle}>
+            <Link href="/docs/render/concepts/json-render-vs-a2ui" className="docs-index-helper-link">
               json-render vs A2UI →
             </Link>
           </p>
@@ -427,18 +260,18 @@ export default function DocsLandingPage() {
       {/* Step 3 — chat */}
       <Section surface="canvas" tight ariaLabelledBy="chat-heading">
         <Container>
-          <div style={dividerStyle} />
+          <div className="docs-index-divider" />
           <StepLabel id="chat-heading" step={3}>Chat UI</StepLabel>
-          <Link href="/docs/chat/getting-started/introduction" style={{ textDecoration: 'none' }}>
-            <Card padding="lg" hoverable style={fillHeightStyle}>
-              <div style={cardHeaderStyle}>
+          <Link href="/docs/chat/getting-started/introduction" className="docs-index-card-link">
+            <Card padding="lg" hoverable className="docs-index-fill-height">
+              <div className="docs-index-card-header">
                 <GlyphChip size={30}><ChatGlyph /></GlyphChip>
                 <div>
-                  <h3 style={cardTitleStyle}>Chat</h3>
-                  <div style={attributionStyle}>Threadplane</div>
+                  <h3 className="docs-index-card-title">Chat</h3>
+                  <div className="docs-index-attribution">Threadplane</div>
                 </div>
               </div>
-              <p style={cardBlurbStyle}>
+              <p className="docs-index-card-blurb">
                 Drop-in chat components — message list, input, streaming, tool
                 calls, interrupts, subagents. Renders A2UI & json-render surfaces
                 inline.
@@ -451,19 +284,19 @@ export default function DocsLandingPage() {
       {/* Supporting libraries */}
       <Section surface="canvas" tight ariaLabelledBy="supporting-heading">
         <Container>
-          <div style={dividerStyle} />
+          <div className="docs-index-divider" />
           <StepLabel id="supporting-heading">Supporting libraries</StepLabel>
-          <div style={gridStyle}>
+          <div className="docs-index-grid">
             {SUPPORTING.map((s) => {
               const Glyph = GLYPHS[s.glyph];
               return (
-                <Link key={s.href} href={s.href} style={{ textDecoration: 'none' }}>
-                  <Card padding="lg" hoverable style={fillHeightStyle}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <Link key={s.href} href={s.href} className="docs-index-card-link">
+                  <Card padding="lg" hoverable className="docs-index-fill-height">
+                    <div className="docs-index-card-header-inline">
                       <GlyphChip size={26}><Glyph /></GlyphChip>
                       <div>
-                        <h3 style={{ ...cardTitleStyle, fontSize: 16 }}>{s.title}</h3>
-                        <p style={{ ...cardBlurbStyle, fontSize: 13, marginTop: 2 }}>{s.blurb}</p>
+                        <h3 className="docs-index-card-title docs-index-card-title-sm">{s.title}</h3>
+                        <p className="docs-index-card-blurb docs-index-card-blurb-sm">{s.blurb}</p>
                       </div>
                     </div>
                   </Card>
@@ -477,33 +310,11 @@ export default function DocsLandingPage() {
       {/* Search prompt */}
       <Section surface="tinted" tight ariaLabelledBy="search-prompt-heading">
         <Container>
-          <div style={{ textAlign: 'center', maxWidth: 640, margin: '0 auto' }}>
-            <h2
-              id="search-prompt-heading"
-              style={{
-                fontFamily: tokens.typography.h3.family,
-                fontSize: 22,
-                lineHeight: 1.3,
-                fontWeight: 600,
-                color: tokens.colors.textPrimary,
-                margin: 0,
-                marginBottom: 12,
-              }}
-            >
+          <div className="docs-index-search-inner">
+            <h2 id="search-prompt-heading" className="docs-index-search-heading">
               Looking for something specific?
             </h2>
-            <p
-              style={{
-                fontFamily: tokens.typography.body.family,
-                fontSize: tokens.typography.body.size,
-                lineHeight: tokens.typography.body.line,
-                color: tokens.colors.textSecondary,
-                margin: 0,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-              }}
-            >
+            <p className="docs-index-search-copy">
               Press <Pill variant="neutral">⌘K</Pill> to search the docs.
             </p>
           </div>

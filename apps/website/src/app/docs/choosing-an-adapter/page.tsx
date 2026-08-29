@@ -71,8 +71,8 @@ export default function ChoosingAnAdapterPage() {
     <>
       <Section surface="canvas" ariaLabelledBy="choosing-an-adapter-heading">
         <Container>
-          <div style={{ maxWidth: 720 }}>
-            <Eyebrow tone="accent" style={{ marginBottom: 16 }}>
+          <div className="adapter-hero-inner">
+            <Eyebrow tone="accent" className="adapter-eyebrow-spaced">
               Documentation
             </Eyebrow>
             <div id="choosing-an-adapter-heading" />
@@ -83,10 +83,9 @@ export default function ChoosingAnAdapterPage() {
       <Section surface="canvas">
         <Container>
           <article
-            className="docs-prose prose prose-slate max-w-none"
+            className="docs-prose prose prose-slate max-w-none adapter-article"
             style={
               {
-                maxWidth: 760,
                 '--tw-prose-body': tokens.colors.textSecondary,
                 '--tw-prose-headings': tokens.colors.textPrimary,
                 '--tw-prose-code': tokens.colors.accent,
