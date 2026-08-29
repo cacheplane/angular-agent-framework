@@ -253,8 +253,13 @@ used 9×. This is why the 106 variable-shaped sites are cheap: one rule, not N.
  */
 ```
 
-- [ ] **Step 2: Wire imports.** In `global.css`, immediately after the two
-existing `@import` lines and the local `:root` block, add:
+- [ ] **Step 2: Wire imports.** ~~after the `:root` block~~ **CORRECTED IN
+BATCH 2: the imports MUST sit at the very top, directly after the two existing
+`@import` lines.** Late `@import` is invalid CSS; the production pipeline
+(Lightning CSS) forgives it by hoisting, but **turbopack dev silently DROPS
+the imported files** — no error, the rules just never load, intermittently
+across recompiles. It poisoned a verification baseline before being caught
+(the nav logo measured Inter 400 where ui.css says Garamond 700). Add:
 
 ```css
 @import "../styles/ui.css";

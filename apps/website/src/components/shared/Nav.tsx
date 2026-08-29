@@ -51,26 +51,20 @@ function DemoDropdown() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
+    <div ref={ref} className="nav-demo-dropdown">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="text-sm font-mono transition-colors"
-        style={{ color: tokens.colors.textSecondary, background: 'none', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}
-        onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-        onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}
+        className="text-sm font-mono transition-colors nav-demo-trigger"
         aria-haspopup="true" aria-expanded={open}
       >
-        Demo <span style={{ fontSize: 10, transition: 'transform .2s', transform: open ? 'rotate(180deg)' : 'rotate(0)' }}>&#9662;</span>
+        Demo <span className="nav-demo-caret" data-open={open || undefined}>&#9662;</span>
       </button>
       {open && (
-        <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 8, minWidth: 180, background: tokens.surfaces.surface, border: `1px solid ${tokens.surfaces.border}`, borderRadius: 8, boxShadow: tokens.shadows.md, overflow: 'hidden', zIndex: 60 }}>
+        <div className="nav-demo-menu">
           {DEMOS.map((demo) => (
             <a key={demo.key} href={demo.href} target="_blank" rel="noopener noreferrer"
               onClick={() => { setOpen(false); trackExternalLinkClick(demo.href, { surface: 'nav', cta_id: `nav_demo_${demoCtaSuffix(demo.key)}`, cta_text: demo.label }); }}
-              className="text-sm font-mono"
-              style={{ display: 'block', padding: '10px 14px', color: tokens.colors.textSecondary, textDecoration: 'none' }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+              className="text-sm font-mono nav-demo-item">
               {demo.label}
             </a>
           ))}
@@ -117,25 +111,6 @@ export function Nav() {
     });
   };
 
-  const tabStyle = (active: boolean): React.CSSProperties => ({
-    flex: 1, textAlign: 'center', padding: '10px 0',
-    fontSize: 15, fontWeight: 500, fontFamily: 'Inter, sans-serif',
-    background: active ? tokens.colors.accentSurface : 'transparent',
-    color: active ? tokens.colors.accent : tokens.colors.textMuted,
-    border: 'none', borderRadius: 8, cursor: 'pointer',
-    minHeight: 44,
-  });
-
-  const subTabStyle = (active: boolean): React.CSSProperties => ({
-    flex: 1, textAlign: 'center', padding: '8px 0',
-    fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
-    fontSize: '0.75rem', fontWeight: 600,
-    background: active ? tokens.colors.accentSurface : 'transparent',
-    color: active ? tokens.colors.accent : tokens.colors.textMuted,
-    border: 'none', borderRadius: 6, cursor: 'pointer',
-    minHeight: 36,
-  });
-
   const currentLib = docsConfig.find(lib => lib.id === mobileLibrary);
   const trackNavLink = (label: string, href: string, external: boolean, surface: 'nav' | 'mobile_nav') => {
     const slug = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
@@ -150,17 +125,10 @@ export function Nav() {
 
   return (
     <>
-    <nav
-      className="fixed top-0 left-0 right-0 z-50"
-      style={{
-        background: tokens.surfaces.surface,
-        borderBottom: `1px solid ${tokens.surfaces.border}`,
-        boxShadow: tokens.shadows.sm,
-      }}
-    >
+    <nav className="fixed top-0 left-0 right-0 z-50 nav-bar">
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 py-4 md:px-8 md:py-5">
-        <Link href="/" style={{ textDecoration: 'none' }}>
+        <Link href="/" className="nav-logo-link">
           <LogoMark size="md" />
         </Link>
 
@@ -171,19 +139,13 @@ export function Nav() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackNavLink(l.label, l.href, true, 'nav')}
-              className="text-sm font-mono transition-colors"
-              style={{ color: tokens.colors.textSecondary }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+              className="text-sm font-mono transition-colors nav-link">
               {l.label}
             </a>
           ) : (
             <Link key={l.href} href={l.href}
               onClick={() => trackNavLink(l.label, l.href, false, 'nav')}
-              className="text-sm font-mono transition-colors"
-              style={{ color: tokens.colors.textSecondary }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+              className="text-sm font-mono transition-colors nav-link">
               {l.label}
             </Link>
           ))}
@@ -196,10 +158,7 @@ export function Nav() {
               cta_id: 'nav_github',
               cta_text: 'GitHub',
             })}
-            className="transition-colors"
-            style={{ color: tokens.colors.textSecondary }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-            onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}
+            className="transition-colors nav-link"
             aria-label="GitHub repository">
             <GitHubIcon />
           </a>
@@ -220,19 +179,9 @@ export function Nav() {
 
         {/* Mobile hamburger */}
         <button
-          className="lg:hidden inline-flex items-center justify-center"
+          className="lg:hidden inline-flex items-center justify-center nav-hamburger"
           onClick={() => { setOpen(!open); if (!open) setMobileTab(isDocsPage ? 'docs' : 'site'); }}
-          aria-label={open ? 'Close menu' : 'Open menu'}
-          style={{
-            color: tokens.colors.textPrimary,
-            // Expand hit area to >=44x44 without shifting visual layout.
-            // NOTE: display/centering live in the className (inline-flex
-            // items-center justify-center) so `lg:hidden` can win at >=lg.
-            // An inline `display` would override the utility and leak the
-            // hamburger onto desktop, pushing the nav links to center.
-            padding: 12,
-            margin: -12,
-          }}>
+          aria-label={open ? 'Close menu' : 'Open menu'}>
           {open ? <CloseIcon /> : <MenuIcon />}
         </button>
       </div>
@@ -241,30 +190,21 @@ export function Nav() {
 
     {/* Mobile full-screen overlay — rendered outside nav to avoid stacking context issues */}
     {open && (
-      <div className="lg:hidden fixed left-0 right-0 bottom-0"
-        style={{
-          top: 57,
-          zIndex: 9999,
-          background: tokens.surfaces.surface,
-          borderTop: `1px solid ${tokens.surfaces.border}`,
-          boxShadow: tokens.shadows.lg,
-          overflowY: 'auto',
-          WebkitOverflowScrolling: 'touch',
-        }}>
-          <div style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 16, minHeight: '100%' }}>
+      <div className="lg:hidden fixed left-0 right-0 bottom-0 nav-mobile-overlay">
+          <div className="nav-mobile-overlay-inner">
 
             {/* Primary tabs — only on docs pages */}
             {isDocsPage && (
-              <div style={{ display: 'flex', gap: 6, padding: '4px', background: 'rgba(0,0,0,0.03)', borderRadius: 10 }}>
-                <button onClick={() => setMobileTab('site')} style={tabStyle(mobileTab === 'site')}>Site</button>
-                <button onClick={() => setMobileTab('docs')} style={tabStyle(mobileTab === 'docs')}>Docs</button>
+              <div className="nav-mtabs">
+                <button onClick={() => setMobileTab('site')} className="nav-mtab" data-active={mobileTab === 'site' || undefined}>Site</button>
+                <button onClick={() => setMobileTab('docs')} className="nav-mtab" data-active={mobileTab === 'docs' || undefined}>Docs</button>
               </div>
             )}
 
             {/* Library sub-tabs — only when Docs tab active */}
             {isDocsPage && mobileTab === 'docs' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <div className="nav-msubtabs-wrap">
+                <div className="nav-mobile-list">
                   {specialDocsPages.map((page) => {
                     const isActive = pathname === page.path;
                     return (
@@ -281,22 +221,17 @@ export function Nav() {
                           });
                           setOpen(false);
                         }}
-                        style={{
-                          display: 'block', padding: '12px 14px', borderRadius: 8,
-                          fontSize: 16, lineHeight: '24px', minHeight: 44,
-                          color: isActive ? tokens.colors.accent : tokens.colors.textSecondary,
-                          background: isActive ? tokens.colors.accentSurface : 'transparent',
-                          textDecoration: 'none', fontFamily: 'Inter, sans-serif', fontWeight: 600,
-                        }}
+                        className="nav-mobile-item nav-mobile-item--strong"
+                        data-active={isActive || undefined}
                       >
                         {page.title}
                       </Link>
                     );
                   })}
                 </div>
-                <div style={{ display: 'flex', gap: 4, padding: '3px', background: 'rgba(0,0,0,0.03)', borderRadius: 8 }}>
+                <div className="nav-msubtabs">
                   {docsConfig.map(lib => (
-                    <button key={lib.id} onClick={() => setMobileLibrary(lib.id)} style={subTabStyle(mobileLibrary === lib.id)}>
+                    <button key={lib.id} onClick={() => setMobileLibrary(lib.id)} className="nav-msubtab" data-active={mobileLibrary === lib.id || undefined}>
                       {lib.title}
                     </button>
                   ))}
@@ -306,7 +241,7 @@ export function Nav() {
 
             {/* Docs content */}
             {(mobileTab === 'docs' && isDocsPage && currentLib) && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div className="nav-mobile-content-list">
                 {currentLib.demoUrl && (
                   <a href={currentLib.demoUrl} target="_blank" rel="noopener noreferrer"
                     onClick={() => {
@@ -315,7 +250,7 @@ export function Nav() {
                       trackExternalLinkClick(demoUrl, { surface: 'mobile_nav', cta_id: `mobile_nav_docs_demo_${currentLib.id}`, cta_text: currentLib.demoLabel ?? 'Live demo' });
                       setOpen(false);
                     }}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 8, minHeight: 44, color: tokens.colors.accent, background: tokens.colors.accentSurface, textDecoration: 'none', fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>
+                    className="nav-mobile-demo-link">
                     <span>{currentLib.demoLabel ?? 'Live demo'}</span><span aria-hidden="true">↗</span>
                   </a>
                 )}
@@ -324,22 +259,16 @@ export function Nav() {
                     <div key={section.id}>
                       <button
                         onClick={() => toggleSection(section.id)}
-                        style={{
-                          width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                          background: 'none', border: 'none', cursor: 'pointer',
-                          padding: '12px 14px', minHeight: 48, borderRadius: 8,
-                          fontFamily: 'Inter, sans-serif', fontSize: 16, lineHeight: '24px',
-                          color: tokens.colors.textPrimary,
-                        }}
+                        className="nav-mobile-section-toggle"
                       >
                         {section.title}
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke={tokens.colors.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                          style={{ transition: 'transform 0.25s ease', transform: openSections.has(section.id) ? 'rotate(180deg)' : 'rotate(0)', flexShrink: 0 }}>
+                          className="nav-mobile-chevron" data-open={openSections.has(section.id) || undefined}>
                           <path d="M5 7.5l5 5 5-5" />
                         </svg>
                       </button>
                       {openSections.has(section.id) && (
-                        <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <nav className="nav-mobile-list">
                           {section.pages.map((page) => {
                             const isActive = page.section === activeSection && page.slug === activeSlug && mobileLibrary === activeLibrary;
                             return (
@@ -356,13 +285,8 @@ export function Nav() {
                                   });
                                   setOpen(false);
                                 }}
-                                style={{
-                                  display: 'block', padding: '12px 14px', borderRadius: 8,
-                                  fontSize: 16, lineHeight: '24px', minHeight: 44,
-                                  color: isActive ? tokens.colors.accent : tokens.colors.textSecondary,
-                                  background: isActive ? tokens.colors.accentSurface : 'transparent',
-                                  textDecoration: 'none', fontFamily: 'Inter, sans-serif',
-                                }}
+                                className="nav-mobile-item"
+                                data-active={isActive || undefined}
                               >
                                 {page.title}
                               </Link>
@@ -378,7 +302,7 @@ export function Nav() {
 
             {/* Site content */}
             {(mobileTab === 'site' || !isDocsPage) && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <div className="nav-mobile-list">
                 {links.map((l) => {
                   const LinkEl = l.external ? 'a' : Link;
                   const extraProps = l.external ? { target: '_blank', rel: 'noopener noreferrer' } : {};
@@ -388,12 +312,7 @@ export function Nav() {
                         trackNavLink(l.label, l.href, l.external, 'mobile_nav');
                         setOpen(false);
                       }}
-                      style={{
-                        display: 'block', padding: '14px 14px', borderRadius: 8,
-                        fontSize: 16, lineHeight: '24px', minHeight: 48,
-                        color: tokens.colors.textSecondary, textDecoration: 'none',
-                        fontFamily: 'Inter, sans-serif',
-                      }}
+                      className="nav-mobile-site-link"
                     >
                       {l.label}
                     </LinkEl>
@@ -402,7 +321,7 @@ export function Nav() {
                 {DEMOS.map((demo) => (
                   <a key={demo.key} href={demo.href} target="_blank" rel="noopener noreferrer"
                     onClick={() => { trackExternalLinkClick(demo.href, { surface: 'mobile_nav', cta_id: `mobile_nav_demo_${demoCtaSuffix(demo.key)}`, cta_text: demo.label }); setOpen(false); }}
-                    style={{ display: 'block', padding: '14px 14px', borderRadius: 8, fontSize: 16, lineHeight: '24px', minHeight: 48, color: tokens.colors.textSecondary, textDecoration: 'none', fontFamily: 'Inter, sans-serif' }}>
+                    className="nav-mobile-site-link">
                     {demo.label}
                   </a>
                 ))}
@@ -416,15 +335,10 @@ export function Nav() {
                     });
                     setOpen(false);
                   }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 10,
-                    padding: '14px 14px', borderRadius: 8, minHeight: 48,
-                    color: tokens.colors.textSecondary, textDecoration: 'none',
-                    fontFamily: 'Inter, sans-serif', fontSize: 16,
-                  }}>
+                  className="nav-mobile-github-link">
                   <GitHubIcon /> GitHub
                 </a>
-                <div style={{ marginTop: 8 }}>
+                <div className="nav-mobile-cta-wrap">
                   <Button
                     variant="primary"
                     size="lg"
@@ -438,7 +352,7 @@ export function Nav() {
                       });
                       setOpen(false);
                     }}
-                    style={{ width: '100%', justifyContent: 'center' }}
+                    className="nav-mobile-cta"
                   >
                     Talk to Us
                   </Button>
