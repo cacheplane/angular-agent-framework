@@ -7,7 +7,8 @@
       "types": "./src/index.d.ts",
       "default": "./src/index.js"
     },
-    "./theme.css": "./src/lib/theme.css"
+    "./theme.css": "./src/lib/theme.css",
+    "./tokens.css": "./src/lib/tokens.css"
   },
   "repository": {
     "type": "git",

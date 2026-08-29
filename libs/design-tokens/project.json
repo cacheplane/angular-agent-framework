@@ -24,7 +24,7 @@
         "assets": [
           {
             "input": "libs/design-tokens/src/lib",
-            "glob": "theme.css",
+            "glob": "*.css",
             "output": "src/lib"
           }
         ]
