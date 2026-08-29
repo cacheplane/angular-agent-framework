@@ -209,6 +209,42 @@ table text and code-block titles render in a blue-grey that no current token
 produces. Resolving these is Project 1 scope, and it is a **visible** change,
 not a refactor.
 
+## 9. Two rules in `global.css` are dead CSS
+
+Found while verifying the token work on 2026-08-29, not during the original
+review. Measured on `/docs/langgraph/getting-started/quickstart` and
+`/blog/langgraph-subgraphs-when-to-split`:
+
+```
+.shiki elements:                        0
+[data-rehype-pretty-code-title] elements: 0
+[data-rehype-pretty-code-figure]:         5
+```
+
+Both selectors match nothing, on docs **and** blog:
+
+- **`.shiki`** (`global.css:56-65`) — `rehype-pretty-code` is configured with
+  `keepBackground: true`, so it writes the theme background as an *inline
+  style* on the `<pre>` (`style="background-color:#1a1b26;color:#a9b1d6"`)
+  rather than emitting a `.shiki` class. The inline style is where the code
+  background actually comes from.
+- **`[data-rehype-pretty-code-title]`** (`global.css:97-109`, plus the
+  `:has()` companion rule) — no code fence in `content/docs` or `content/blog`
+  uses the `title=` meta, so the element is never generated.
+
+Consequences worth knowing:
+
+- The sibling rule `.docs-prose [data-rehype-pretty-code-figure] pre` **is**
+  live — verified, its border computes to `rgba(0, 0, 0, 0.1)` and its shadow
+  to `rgba(0, 0, 0, 0.08) 0px 2px 12px`.
+- This narrows the visible surface of the token adoption: changing the
+  code-title colour from `#8b8fa3` to `var(--color-text-muted)` is correct but
+  renders nowhere today.
+
+**Not fixed here.** Deleting dead rules is a cleanup, not a literal audit, and
+the `.shiki` rule would become live again if `keepBackground` were turned off.
+It belongs in the polish arc alongside the rest of the docs CSS work.
+
 ---
 
 ## Reproducing

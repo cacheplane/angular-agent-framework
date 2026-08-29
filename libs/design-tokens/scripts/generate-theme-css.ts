@@ -143,9 +143,12 @@ function buildThemeBlock(): string {
   // Space scale.
   //
   // `containerMax` goes to the --container-* namespace, not --spacing-*,
-  // because it is a max-width rather than a spacing step; that namespace is
-  // what generates the `max-w-container-page` utility the Container primitive
-  // wants.
+  // because it is a max-width rather than a spacing step.
+  //
+  // Tailwind strips the namespace prefix when naming the utility, so
+  // `--container-page` generates `max-w-page` (NOT `max-w-container-page`).
+  // Verified in a browser: `max-w-page` computes to 1200px. `--spacing-*`
+  // behaves the same way — `--spacing-section-y` gives `p-section-y`.
   lines.push('');
   lines.push('  /* Space scale */');
   lines.push(`  --spacing-section-y: ${space.sectionY};`);

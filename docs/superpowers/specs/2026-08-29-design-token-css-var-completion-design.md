@@ -138,8 +138,15 @@ vars.
 ```
 
 `containerMax` goes to the `--container-*` namespace rather than `--spacing-*`
-because it is a max-width, not a spacing step; that namespace generates the
-`max-w-container-page` utility the marketing `Container` primitive wants.
+because it is a max-width, not a spacing step.
+
+Tailwind strips the namespace prefix when it names the utility, so
+`--container-page` generates **`max-w-page`**, not `max-w-container-page`.
+`--spacing-*` behaves the same way (`--spacing-section-y` → `p-section-y`).
+Measured after implementation: `max-w-page` computes to `1200px`,
+`p-section-y` to `64px` at a 320px viewport (the `clamp` lower bound), and
+`text-h2` to `36px` with a `40.32px` line-height — confirming the
+`--text-*--line-height` sub-key is honoured.
 
 Seven references, four vars. Small, but it is the difference between `Section`
 and `Container` being migratable in Project 2 and not.
@@ -196,6 +203,11 @@ belong in the design system and must not be promoted into it:
   the accent automatically. **Open question for review:** `color-mix` is
   baseline across current browsers but this is the only use in the codebase; if
   that is unwanted, three local `--docs-accent-tint-*` vars are the fallback.
+
+  **Resolved 2026-08-29:** measured in a browser after implementation. The `td`
+  border computes to `color(srgb 0 0.25098 0.564706 / 0.08)` — `#004090` at 8%,
+  numerically identical to the `rgba(0, 64, 144, 0.08)` it replaced. `color-mix`
+  stays.
 
 ### 4. The third surface
 
@@ -270,10 +282,13 @@ unambiguous message.
 - `nx build website --configuration=production` before claiming deploy-ready —
   the prod bundle-budget and env wiring differ from dev.
 - Screenshot diff on `/docs/chat/components/chat`, `/docs`, and `/` at 1280 and
-  375. Expected: **no change anywhere except** docs table header text, docs
-  table body text, and code-block titles. Any other delta — including list
-  markers and figure captions, whose `#555770` is a dead fallback — is a bug in
-  the literal audit.
+  375. Expected: **no change anywhere except docs table header text and docs
+  table body text.** Any other delta — including list markers and figure
+  captions, whose `#555770` is a dead fallback — is a bug in the literal audit.
+
+  The code-title colour changes too, but renders nowhere: no code fence in the
+  repo uses the `title=` meta, so `[data-rehype-pretty-code-title]` is never
+  generated. Verified in a browser, recorded in the findings audit §9.
 
 The parity spec fails silently if written wrong — a walker that visits nothing
 passes. Mutation-test it: change one value in `light.ts` without regenerating,

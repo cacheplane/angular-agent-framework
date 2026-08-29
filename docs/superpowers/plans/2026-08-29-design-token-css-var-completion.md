@@ -419,9 +419,12 @@ insert:
   // Space scale.
   //
   // `containerMax` goes to the --container-* namespace, not --spacing-*,
-  // because it is a max-width rather than a spacing step; that namespace is
-  // what generates the `max-w-container-page` utility the Container primitive
-  // wants.
+  // because it is a max-width rather than a spacing step.
+  //
+  // Tailwind strips the namespace prefix when naming the utility, so
+  // `--container-page` generates `max-w-page` (NOT `max-w-container-page`).
+  // Verified in a browser: `max-w-page` computes to 1200px. `--spacing-*`
+  // behaves the same way — `--spacing-section-y` gives `p-section-y`.
   lines.push('');
   lines.push('  /* Space scale */');
   lines.push(`  --spacing-section-y: ${space.sectionY};`);
@@ -1108,7 +1111,28 @@ Expected: PASS — `tokens`, `generate-theme-css` (×2), `ds-var-contract`,
 cd apps/website && npx vitest run --config vite.config.mts
 ```
 
-Expected: PASS. Use this exact command — `nx test website` does not exist.
+Use this exact command — `nx test website` does not exist.
+
+**The website suite is NOT green, and was not green before this project started.**
+Because there is no `nx test` target, these specs never ran in CI and drifted
+red. Measured baseline at `959c6db0` (the commit this branch started from):
+
+```
+Test Files  3 failed | 33 passed (36)
+     Tests  5 failed | 341 passed (346)
+```
+
+The five are content assertions with no relationship to CSS custom properties:
+
+| spec | assertion that drifted |
+|---|---|
+| `blog/PostCard.spec.tsx` | expects the text `2026-05-17` |
+| `landing/Differentiator.spec.tsx` | expects the text `MIT + self-hosted` |
+| `app/thanks/page.spec.tsx` (×3) | heading, `provideChat()` mention, docs links |
+
+**Expected here: exactly those same 5 failures and no others.** A sixth failure,
+or a different one, is caused by this project and must be fixed. Do not "fix"
+the five — they are pre-existing drift and belong to their own cleanup.
 
 - [ ] **Step 3: Lint**
 
