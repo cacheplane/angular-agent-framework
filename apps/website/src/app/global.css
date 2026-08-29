@@ -2,6 +2,20 @@
 @import "@threadplane/design-tokens/theme.css";
 
 /*
+ * Scope files for the inline-style migration. These MUST sit with the other
+ * @imports at the top: @import after any rule is invalid CSS — the production
+ * pipeline (Lightning CSS) forgives it by hoisting, but turbopack dev can
+ * silently DROP the imported files, unstyling everything they cover. Found
+ * the hard way in Batch 2.
+ */
+@import "../styles/ui.css";
+@import "../styles/chrome.css";
+@import "../styles/docs.css";
+@import "../styles/landing.css";
+@import "../styles/marketing.css";
+@import "../styles/pages.css";
+
+/*
  * Local, non-token constants.
  *
  * These are deliberately NOT design tokens. Promoting them to
@@ -30,12 +44,6 @@
   --docs-accent-tint-line: color-mix(in srgb, var(--color-accent) 10%, transparent);
 }
 
-@import "../styles/ui.css";
-@import "../styles/chrome.css";
-@import "../styles/docs.css";
-@import "../styles/landing.css";
-@import "../styles/marketing.css";
-@import "../styles/pages.css";
 
 * {
   box-sizing: border-box;
