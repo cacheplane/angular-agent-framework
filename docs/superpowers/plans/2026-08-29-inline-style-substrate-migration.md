@@ -59,11 +59,12 @@ and this never bites.
 
 - Dev server: Browser pane `preview_start` with the `website-dev` launch entry.
   Never `npm run dev` via Bash.
-- Website tests: `cd apps/website && npx vitest run --config vite.config.mts`
-  — there is **no `nx test website` target**. Baseline: `5 failed | 341 passed`
-  (pre-existing content-assertion drift in `PostCard`, `Differentiator`,
-  `thanks/page`). Exactly those 5 must still fail after every batch; a 6th is
-  yours.
+- Website tests: `npx nx test website` — **SUPERSEDED mid-arc (2026-08-29):
+  #851 gave the suite an nx target and repaired the three rotted spec files.**
+  The "5 pre-existing failures" baseline that batches 1-4 asserted against is
+  retired; the suite is fully green (347+ tests) and every remaining batch
+  must keep it that way. Any failure is yours. (The direct
+  `cd apps/website && npx vitest run --config vite.config.mts` still works.)
 - Lint errors (CI fails on errors, tolerates warnings; strip ANSI first):
   `npx nx lint website 2>&1 | sed -r 's/\x1b\[[0-9;]*m//g' | grep -cE '  error  '`
 - Prod build gate before every PR: `npx nx build website --configuration=production`
