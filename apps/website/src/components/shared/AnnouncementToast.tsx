@@ -1,6 +1,5 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { tokens } from '@threadplane/design-tokens';
 import { analyticsEvents } from '../../lib/analytics/events';
 import { track, trackWhitepaperDownloadClick } from '../../lib/analytics/client';
 import { Button } from '../ui/Button';
@@ -83,97 +82,43 @@ export function AnnouncementToast() {
     setTimeout(dismiss, 4000);
   };
 
-  const inputStyle: React.CSSProperties = {
-    width: '100%',
-    background: tokens.surfaces.surface,
-    border: `1px solid ${tokens.surfaces.border}`,
-    borderRadius: tokens.radius.md,
-    padding: '8px 12px',
-    fontSize: '0.82rem',
-    color: tokens.colors.textPrimary,
-    fontFamily: 'Inter, sans-serif',
-    outline: 'none',
-  };
-
   if (!visible) return null;
 
   return (
     <div
       role="alert"
       aria-live="polite"
+      className="toast-root"
       style={{
-        position: 'fixed',
-        bottom: 24,
-        right: 24,
-        zIndex: 100,
-        maxWidth: 360,
-        width: 'calc(100vw - 48px)',
-        background: tokens.surfaces.surface,
-        border: `1px solid ${tokens.surfaces.border}`,
-        boxShadow: tokens.shadows.lg,
-        borderRadius: tokens.radius.lg,
-        padding: '20px 24px',
         opacity: mounted ? 1 : 0,
         transform: mounted ? 'translateY(0)' : 'translateY(12px)',
-        transition: 'opacity 200ms ease, transform 240ms ease',
       }}
     >
       {/* Dismiss button */}
       <button
         onClick={dismiss}
         aria-label="Dismiss"
-        style={{
-          position: 'absolute',
-          top: 10,
-          right: 12,
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          color: tokens.colors.textMuted,
-          fontSize: 18,
-          lineHeight: 1,
-          padding: 4,
-        }}
+        className="toast-close"
       >
         ×
       </button>
 
       {/* Eyebrow */}
-      <p style={{
-        fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
-        fontSize: '0.62rem',
-        textTransform: 'uppercase',
-        letterSpacing: '0.1em',
-        fontWeight: 700,
-        color: tokens.colors.accent,
-        marginBottom: 8,
-      }}>
+      <p className="toast-eyebrow">
         Free Guide
       </p>
 
       {/* Title */}
-      <p style={{
-        fontFamily: 'var(--font-garamond,"EB Garamond",Georgia,serif)',
-        fontSize: '1.05rem',
-        fontWeight: 700,
-        color: tokens.colors.textPrimary,
-        lineHeight: 1.3,
-        marginBottom: 6,
-      }}>
+      <p className="toast-title">
         From Prototype to Production
       </p>
 
       {step === 'cta' && (
         <>
-          <p style={{
-            fontSize: '0.82rem',
-            color: tokens.colors.textSecondary,
-            lineHeight: 1.5,
-            marginBottom: 16,
-          }}>
+          <p className="toast-cta-copy">
             Six production-readiness dimensions for Angular agents. Get the guide.
           </p>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <div className="toast-button-row">
             <Button
               variant="primary"
               size="md"
@@ -190,16 +135,7 @@ export function AnnouncementToast() {
             </Button>
             <button
               onClick={dismiss}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
-                fontSize: '0.68rem',
-                color: tokens.colors.textMuted,
-                textDecoration: 'underline',
-                padding: '8px 4px',
-              }}
+              className="toast-not-now"
             >
               Not now
             </button>
@@ -208,7 +144,7 @@ export function AnnouncementToast() {
       )}
 
       {step === 'form' && (
-        <form onSubmit={handleSubmit} style={{ marginTop: 8 }}>
+        <form onSubmit={handleSubmit} className="toast-mt-section">
           <label htmlFor="toast-email" className="sr-only">Email address</label>
           <input
             id="toast-email"
@@ -219,11 +155,9 @@ export function AnnouncementToast() {
             required
             disabled={submitting}
             autoFocus
-            style={{ ...inputStyle, marginBottom: 10 }}
-            onFocus={e => (e.currentTarget.style.borderColor = tokens.colors.accent)}
-            onBlur={e => (e.currentTarget.style.borderColor = tokens.surfaces.border)}
+            className="toast-input"
           />
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <div className="toast-button-row">
             <Button
               type="submit"
               variant="primary"
@@ -244,14 +178,7 @@ export function AnnouncementToast() {
               });
               dismiss();
             }}
-            style={{
-              display: 'inline-block',
-              marginTop: 10,
-              fontSize: '0.7rem',
-              color: tokens.colors.textMuted,
-              textDecoration: 'underline',
-              fontFamily: 'Inter, sans-serif',
-            }}
+            className="toast-download-link"
           >
             or download directly
           </a>
@@ -259,12 +186,8 @@ export function AnnouncementToast() {
       )}
 
       {step === 'sent' && (
-        <div style={{ marginTop: 8 }}>
-          <p style={{
-            fontSize: '0.85rem',
-            color: '#1a7a40',
-            lineHeight: 1.5,
-          }}>
+        <div className="toast-mt-section">
+          <p className="toast-success-text">
             ✓ Check your inbox — the guide is on its way!
           </p>
         </div>

@@ -299,3 +299,100 @@
   width: 100%;
   justify-content: center;
 }
+
+/* AnnouncementToast */
+.toast-root {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 100;
+  max-width: 360px;
+  width: calc(100vw - 48px);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  transition: opacity 200ms ease, transform 240ms ease;
+}
+.toast-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  font-size: 18px;
+  line-height: 1;
+  padding: 4px;
+}
+.toast-eyebrow {
+  font-family: var(--font-mono,"JetBrains Mono",monospace);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: var(--color-accent);
+  margin-bottom: 8px;
+}
+.toast-title {
+  font-family: var(--font-garamond,"EB Garamond",Georgia,serif);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+  margin-bottom: 6px;
+}
+.toast-cta-copy {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+.toast-button-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.toast-not-now {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-mono,"JetBrains Mono",monospace);
+  font-size: 0.68rem;
+  color: var(--color-text-muted);
+  text-decoration: underline;
+  padding: 8px 4px;
+}
+.toast-mt-section {
+  margin-top: 8px;
+}
+.toast-input {
+  width: 100%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  color: var(--color-text-primary);
+  font-family: Inter, sans-serif;
+  outline: none;
+  margin-bottom: 10px;
+}
+.toast-input:focus {
+  border-color: var(--color-accent);
+}
+.toast-download-link {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  text-decoration: underline;
+  font-family: Inter, sans-serif;
+}
+.toast-success-text {
+  font-size: 0.85rem;
+  color: #1a7a40;
+  line-height: 1.5;
+}
