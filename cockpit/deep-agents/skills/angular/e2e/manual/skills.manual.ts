@@ -9,7 +9,7 @@ test.describe('Deep Agents Skills Example', () => {
   test('renders the chat interface with skill invocation sidebar', async ({ page }) => {
     await expect(page.locator('chat')).toBeVisible();
     await expect(page.locator('textarea[name="messageText"]')).toBeVisible();
-    await expect(page.locator('text=Ask the agent to calculate, count words, or summarize text.')).toBeVisible();
+    await expect(page.locator('text=No skills invoked yet')).toBeVisible();
   });
 
   test('sends a message and receives a response', async ({ page }) => {

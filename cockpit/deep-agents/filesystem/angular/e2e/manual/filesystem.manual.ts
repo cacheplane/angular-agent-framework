@@ -9,7 +9,7 @@ test.describe('Deep Agents Filesystem Example', () => {
   test('renders the chat interface with file operations sidebar', async ({ page }) => {
     await expect(page.locator('chat')).toBeVisible();
     await expect(page.locator('textarea[name="messageText"]')).toBeVisible();
-    await expect(page.locator('text=Ask the agent to read or write a file.')).toBeVisible();
+    await expect(page.locator('text=No file operations yet')).toBeVisible();
   });
 
   test('sends a message and receives a response', async ({ page }) => {

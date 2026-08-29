@@ -9,7 +9,7 @@ test.describe('Deep Agents Memory Example', () => {
   test('renders the chat interface with memory sidebar', async ({ page }) => {
     await expect(page.locator('chat')).toBeVisible();
     await expect(page.locator('textarea[name="messageText"]')).toBeVisible();
-    await expect(page.locator('text=Tell the agent something about yourself to see it remember.')).toBeVisible();
+    await expect(page.locator('text=No facts learned yet')).toBeVisible();
   });
 
   test('sends a message and receives a response', async ({ page }) => {

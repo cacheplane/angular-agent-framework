@@ -9,7 +9,7 @@ test.describe('Deep Agents Subagents Example', () => {
   test('renders the chat interface with subagents sidebar', async ({ page }) => {
     await expect(page.locator('chat')).toBeVisible();
     await expect(page.locator('textarea[name="messageText"]')).toBeVisible();
-    await expect(page.locator('text=Ask a question to see subagent activity.')).toBeVisible();
+    await expect(page.locator('text=No delegations yet')).toBeVisible();
   });
 
   test('sends a message and receives a response', async ({ page }) => {

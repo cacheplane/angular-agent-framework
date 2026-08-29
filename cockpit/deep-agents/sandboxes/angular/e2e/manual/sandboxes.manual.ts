@@ -9,7 +9,7 @@ test.describe('Deep Agents Sandboxes Example', () => {
   test('renders the chat interface with execution log sidebar', async ({ page }) => {
     await expect(page.locator('chat')).toBeVisible();
     await expect(page.locator('textarea[name="messageText"]')).toBeVisible();
-    await expect(page.locator('text=Ask the agent to write and run Python code.')).toBeVisible();
+    await expect(page.locator('text=No code executed yet')).toBeVisible();
   });
 
   test('sends a message and receives a response', async ({ page }) => {
