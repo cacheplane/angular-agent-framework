@@ -857,3 +857,361 @@
   color: var(--color-text-muted);
 }
 
+/* DemoModal — components/landing/DemoModal.tsx */
+.demo-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(16, 18, 32, .55);
+  animation: demoModalBackdrop .16s ease-out;
+}
+@keyframes demoModalBackdrop { from { opacity: 0 } to { opacity: 1 } }
+@keyframes demoModalFrame { from { transform: scale(.96); opacity: .6 } to { transform: scale(1); opacity: 1 } }
+.demo-modal__frame {
+  width: min(96vw, calc(90vh * 16 / 10));
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .45);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: demoModalFrame .16s ease-out;
+}
+.demo-modal__body {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: #15161f;
+}
+.demo-modal__titlebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--color-surface-tinted);
+  border-bottom: 1px solid var(--color-border);
+}
+.demo-modal__dots {
+  display: flex;
+  gap: 5px;
+}
+.demo-modal__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #cdd2df;
+}
+.demo-modal__tabs {
+  display: flex;
+  gap: 5px;
+}
+.demo-modal__tab {
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: none;
+  cursor: pointer;
+  background: var(--color-accent-surface);
+  color: var(--color-text-muted);
+}
+.demo-modal__tab[aria-selected="true"] {
+  background: var(--color-accent);
+  color: var(--color-text-inverted);
+}
+.demo-modal__url {
+  flex: 1;
+  text-align: center;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.demo-modal__close {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: none;
+  cursor: pointer;
+  background: var(--color-accent-surface);
+  color: var(--color-text-secondary);
+  font-size: 16px;
+  line-height: 1;
+}
+.demo-modal__iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+.demo-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.demo-modal__hint {
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+.demo-modal__open-link {
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-accent);
+  text-decoration: none;
+}
+@media (max-width: 640px) {
+  .demo-modal__frame { width: 100vw; height: 100dvh; border-radius: 0; }
+  .demo-modal__body { aspect-ratio: auto; flex: 1 1 auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .demo-modal, .demo-modal__frame { animation: none !important; }
+}
+
+/* DemoShowcase — components/landing/DemoShowcase.tsx */
+.demo-showcase {
+  max-width: 760px;
+  margin: 0 auto;
+  text-align: center;
+}
+.demo-showcase__eyebrow {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin: 0;
+}
+.demo-showcase__heading {
+  font-family: var(--font-garamond);
+  font-size: var(--text-h2);
+  line-height: var(--text-h2--line-height);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 10px 0 8px;
+  letter-spacing: -0.015em;
+}
+.demo-showcase__subhead {
+  font-family: var(--font-inter);
+  font-size: var(--text-body-lg);
+  line-height: var(--text-body-lg--line-height);
+  color: var(--color-text-secondary);
+  max-width: 560px;
+  margin: 0 auto 20px;
+}
+.demo-showcase__launch-btn {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(180deg, rgba(16, 18, 32, .15), rgba(16, 18, 32, .45));
+  border: none;
+  cursor: pointer;
+}
+.demo-showcase__launch-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #15161f;
+  font-size: 22px;
+}
+.demo-showcase__launch-label {
+  font-family: Inter, sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: #fff;
+  background: rgba(0, 0, 0, .5);
+  padding: 8px 14px;
+  border-radius: 8px;
+}
+.demo-showcase__cta-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+.demo-showcase__caption {
+  font-family: var(--font-inter);
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+  margin: 14px 0 0;
+}
+
+/* HighlightedCode — components/landing/HighlightedCode.tsx
+ * `.shiki[data-ui="highlighted-code"]` (specificity 0,2,0) intentionally beats
+ * the plain `.shiki` rule in docs.css (0,1,0) regardless of stylesheet import
+ * order, so this landing-only override of margin/padding/font-size/line-height
+ * keeps winning the way the inline style used to. */
+.shiki[data-ui="highlighted-code"] {
+  margin: 0;
+  border-radius: 0;
+  padding: 16px 20px;
+  font-size: 0.78rem;
+  line-height: 1.65;
+}
+
+/* RenderCodeShowcase — components/landing/render/RenderCodeShowcase.tsx */
+.render-code {
+  padding: 80px 32px;
+}
+@media (max-width: 767px) { .render-code { padding: 60px 20px !important; } }
+.render-show-intro {
+  text-align: center;
+  margin-bottom: 48px;
+}
+.render-show-eyebrow {
+  font-family: var(--font-mono,"JetBrains Mono",monospace);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  color: var(--color-accent);
+  margin-bottom: 14px;
+}
+.render-show-heading {
+  font-family: var(--font-garamond,"EB Garamond",Georgia,serif);
+  font-size: clamp(26px, 3.5vw, 42px);
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--color-text-primary);
+}
+.render-show-grid {
+  max-width: 900px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr));
+  gap: 24px;
+}
+.render-show-card {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+.render-show-card-head {
+  padding: 10px 20px;
+  background: rgba(26, 122, 64, 0.04);
+  border-bottom: 1px solid var(--color-border);
+}
+.render-show-card-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--color-render-green);
+}
+
+/* LangGraphCodeShowcase — components/landing/langgraph/LangGraphCodeShowcase.tsx */
+.angular-code {
+  padding: 80px 32px;
+}
+@media (max-width: 767px) { .angular-code { padding: 60px 20px !important; } }
+.lg-show-intro {
+  text-align: center;
+  margin-bottom: 48px;
+}
+.lg-show-eyebrow {
+  font-family: var(--font-mono,"JetBrains Mono",monospace);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  color: var(--color-accent);
+  margin-bottom: 14px;
+}
+.lg-show-heading {
+  font-family: var(--font-garamond,"EB Garamond",Georgia,serif);
+  font-size: clamp(26px, 3.5vw, 42px);
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--color-text-primary);
+}
+.lg-show-grid {
+  max-width: 900px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr));
+  gap: 24px;
+}
+.lg-show-card {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+.lg-show-card-head {
+  padding: 10px 20px;
+  background: rgba(0, 64, 144, 0.04);
+  border-bottom: 1px solid var(--color-border);
+}
+.lg-show-card-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+/* ChatLandingCodeShowcase — components/landing/chat-landing/ChatLandingCodeShowcase.tsx */
+.chat-code {
+  padding: 80px 32px;
+}
+@media (max-width: 767px) { .chat-code { padding: 60px 20px !important; } }
+.chat-show-intro {
+  text-align: center;
+  margin-bottom: 48px;
+}
+.chat-show-eyebrow {
+  font-family: var(--font-mono,"JetBrains Mono",monospace);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  color: var(--color-chat-purple);
+  margin-bottom: 14px;
+}
+.chat-show-heading {
+  font-family: var(--font-garamond,"EB Garamond",Georgia,serif);
+  font-size: clamp(26px, 3.5vw, 42px);
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--color-text-primary);
+}
+.chat-show-grid {
+  max-width: 900px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr));
+  gap: 24px;
+}
+.chat-show-card {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+.chat-show-card-head {
+  padding: 10px 20px;
+  background: rgba(90, 0, 200, 0.04);
+  border-bottom: 1px solid var(--color-border);
+}
+.chat-show-card-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--color-chat-purple);
+}
