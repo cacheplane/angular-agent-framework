@@ -1,4 +1,3 @@
-import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';
@@ -31,70 +30,24 @@ export function Promises() {
   return (
     <Section surface="canvas" ariaLabelledBy="promises-heading">
       <Container>
-        <div style={{ textAlign: 'center', marginBottom: 56 }}>
-          <Eyebrow tone="accent" style={{ marginBottom: 16 }}>
+        <div className="promises-intro">
+          <Eyebrow tone="accent" className="promises-eyebrow">
             Built on principles
           </Eyebrow>
-          <h2
-            id="promises-heading"
-            style={{
-              fontFamily: tokens.typography.h2.family,
-              fontSize: tokens.typography.h2.size,
-              lineHeight: tokens.typography.h2.line,
-              fontWeight: 700,
-              color: tokens.colors.textPrimary,
-              margin: 0,
-              marginBottom: 12,
-              letterSpacing: '-0.015em',
-            }}
-          >
+          <h2 id="promises-heading" className="promises-heading">
             What we won&apos;t do.
           </h2>
-          <p
-            style={{
-              fontFamily: tokens.typography.bodyLg.family,
-              fontSize: tokens.typography.bodyLg.size,
-              lineHeight: tokens.typography.bodyLg.line,
-              color: tokens.colors.textSecondary,
-              margin: 0,
-            }}
-          >
+          <p className="promises-subhead">
             Honest commitments, not aspirations.
           </p>
         </div>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: 16,
-            maxWidth: 1100,
-            margin: '0 auto',
-          }}
-        >
+        <div className="promises-grid">
           {PROMISES.map((p) => (
             <Card key={p.title} padding="lg">
-              <h3
-                style={{
-                  fontFamily: tokens.typography.h3.family,
-                  fontSize: 17,
-                  lineHeight: 1.3,
-                  fontWeight: 600,
-                  color: tokens.colors.textPrimary,
-                  margin: 0,
-                  marginBottom: 8,
-                }}
-              >
+              <h3 className="promises-card-title">
                 {p.title}
               </h3>
-              <p
-                style={{
-                  fontFamily: tokens.typography.body.family,
-                  fontSize: 14,
-                  lineHeight: tokens.typography.body.line,
-                  color: tokens.colors.textSecondary,
-                  margin: 0,
-                }}
-              >
+              <p className="promises-card-body">
                 {p.body}
               </p>
             </Card>
