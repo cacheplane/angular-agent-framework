@@ -133,15 +133,17 @@ The live pass is unglamorous: for anything whose failure mode is mid-stream, dri
 Drift is the other half, and writing this post is what got it built properly. Our first design re-recorded fixtures and compared byte size — which detects that a response changed *size* while saying nothing about whether it changed *meaning*. The same trade again, one layer up. A model that starts returning something equally long and completely different sails straight through a size check.
 
 So we threw the metric away and kept the thing we already trusted.
-The drift run takes a tagged subset of the same e2e suite — contract assertions only: a reply renders, the research dispatch surfaces a subagent card, the interrupt panel appears — and points it at the *live* provider through the mock's record-proxy. No fixtures judged, no thresholds invented.
 
 The assertions are the drift check.
-If today's model stops calling the research tool, or the graph's prompts stop eliciting the interrupt, a spec we already believe in goes red and a weekly job opens an issue. Meaning drift is caught by construction, because the contract is what's being asserted.
 
-One rule makes the subset work: a tagged assertion may depend on *shape* — an element exists, a count is non-zero — never on the content of a canned response. A spec that expects the fixture's exact words fails against a live model whether or not anything drifted, so it stays in replay where it belongs.
+The drift run takes a tagged subset of the same e2e suite — contract assertions only: a reply renders, the research dispatch surfaces a subagent card, the interrupt panel appears — and points it at the live provider through the mock's record-proxy. No fixtures judged, no thresholds invented.
+If today's model stops calling the research tool, or the graph's prompts stop eliciting the interrupt, a spec we already believe in goes red and a weekly job opens an issue. Meaning drift is caught by construction.
 
-The first run promptly demonstrated the whole thesis in miniature.
-The diagnostic differ reported that both tool-calling responses had "drifted" to plain text — while the specs proving those tools fired were green. The recorder couldn't parse tool-call deltas out of the stream and had saved empty content, flagging it "fixture may be incomplete." The check's first finding was a blind spot in its own instrument, and it now reports that case in its own category instead of as drift.
+One rule makes the subset work: a tagged assertion may depend on structure or on the prompt's own terms — an element exists, a reply to "say hi" matches `/hi/i` — never on the content of a canned response. A spec that expects the fixture's exact words fails against a live model whether or not anything drifted, so it stays in replay where it belongs.
+
+The first run flagged drift that wasn't there.
+The diagnostic differ reported that both tool-calling responses had "drifted" to plain text — while the specs proving those tools fired were green. The recorder had saved empty content because it couldn't parse tool-call deltas out of the stream, warning "fixture may be incomplete." The check's first finding was a blind spot in its own instrument; it now reports that case in its own category instead of as drift.
+It's run clean against the live model since.
 
 ## Conclusion
 
@@ -149,10 +151,12 @@ Push your seam as far out as you can afford. The further out it goes, the more o
 
 Then write down which dimension you deleted to make it deterministic, in the file where you deleted it. Not in a wiki. Six months later that comment is the difference between "the suite is green" and "the suite is green, and here is what green does not cover."
 
-Ours was written down, which is the only reason I could check it — and checking it is how I learned the deletion was a default two of our apps had already bought back, and that our first drift design was measuring the wrong thing.
+Ours was written down, which is the only reason I could check it.
+Checking it is how I learned the deletion was a default two of our apps had already bought back — and that our first drift design was measuring the wrong thing.
 
 For us the list is short and specific: anything whose failure mode is mid-stream on a capability that never opted back into real chunking, and the model itself moving under the fixtures.
-Both are covered by the same move — run the assertions you already trust against the real thing, on a schedule for drift and before shipping for streams. Widening either is tagging more specs, not designing anything new.
+Both are answered by pointing what you already trust at the real thing — the tagged specs at the live provider on a schedule, a live browser at anything mid-stream before it ships.
+Widening the drift net is tagging more specs, plus one chore: porting record mode to the harness the other thirty-two apps share. Widening the stream check is opting more fixtures into real chunking. Neither is designing anything new.
 
 The [testing guide](/docs/langgraph/guides/testing) has the in-process tier, and [the subgraphs post](/blog/langgraph-subgraphs-when-to-split) has the bug that started this.
 
