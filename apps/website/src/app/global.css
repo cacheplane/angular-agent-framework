@@ -97,7 +97,7 @@ html {
 .docs-prose [data-rehype-pretty-code-figure] [data-rehype-pretty-code-title] {
   font-family: var(--font-mono), monospace;
   font-size: 0.7rem;
-  color: #8b8fa3;
+  color: var(--color-text-muted);
   padding: 0.5rem 1.5rem;
   background: #1a1b26;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
@@ -136,7 +136,7 @@ html {
 .docs-prose ol { list-style-type: decimal; }
 .docs-prose li { margin-bottom: 0.5rem; line-height: 1.6; }
 .docs-prose li > p { margin-bottom: 0.5rem; }
-.docs-prose li::marker { color: var(--color-text-muted, #555770); }
+.docs-prose li::marker { color: var(--color-text-muted); }
 .docs-prose ul ul, .docs-prose ol ol, .docs-prose ul ol, .docs-prose ol ul {
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
@@ -167,7 +167,7 @@ html {
   padding: 0.875rem 0.5rem 0.625rem;
   font-size: 0.875rem;
   line-height: 1.5;
-  color: var(--color-text-muted, #555770);
+  color: var(--color-text-muted);
   text-align: center;
   font-style: italic;
 }
@@ -192,8 +192,8 @@ html {
 
 .docs-table-scroll { max-width: 100%; overflow-x: auto; margin: 1.5rem 0; }
 .docs-prose table { width: 100%; border-collapse: collapse; font-size: 0.875rem; margin: 0; }
-.docs-prose th { text-align: left; padding: 0.5rem 0.75rem; font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; color: #555770; border-bottom: 1px solid var(--color-accent-border); }
-.docs-prose td { padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(0, 64, 144, 0.08); color: #555770; }
+.docs-prose th { text-align: left; padding: 0.5rem 0.75rem; font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; color: var(--color-text-muted); border-bottom: 1px solid var(--color-accent-border); }
+.docs-prose td { padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(0, 64, 144, 0.08); color: var(--color-text-secondary); }
 .docs-prose td code { font-size: 0.8em; }
 
 /* UI primitive — Card.
