@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 'use client';
 import { useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
-import { tokens } from '@threadplane/design-tokens';
 
 export interface TabPane {
   /** Unique within a group — used for React keys and DOM ids. */
@@ -76,13 +75,8 @@ export function TabGroup({ groupId, label, panes, onSelect }: TabGroupProps) {
   };
 
   return (
-    <div>
-      <div
-        role="tablist"
-        aria-label={label}
-        onKeyDown={onKeyDown}
-        style={{ display: 'flex', gap: 6, marginBottom: 12 }}
-      >
+    <div data-ui="tab-group">
+      <div data-ui="tab-group-list" role="tablist" aria-label={label} onKeyDown={onKeyDown}>
         {panes.map((pane, index) => {
           const selected = index === active;
           return (
@@ -92,23 +86,14 @@ export function TabGroup({ groupId, label, panes, onSelect }: TabGroupProps) {
                 tabRefs.current[index] = el;
               }}
               id={tabId(pane.id)}
+              data-ui="tab-group-tab"
+              data-active={selected || undefined}
               role="tab"
               type="button"
               aria-selected={selected}
               aria-controls={panelId(pane.id)}
               tabIndex={selected ? 0 : -1}
               onClick={() => select(index)}
-              style={{
-                fontFamily: 'Inter, sans-serif',
-                fontSize: 13,
-                fontWeight: 600,
-                padding: '8px 14px',
-                borderRadius: 8,
-                border: 'none',
-                cursor: 'pointer',
-                background: selected ? tokens.colors.accent : tokens.colors.accentSurface,
-                color: selected ? tokens.colors.textInverted : tokens.colors.textMuted,
-              }}
             >
               {pane.label}
             </button>

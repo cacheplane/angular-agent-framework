@@ -1,5 +1,4 @@
 import type { ReactNode, HTMLAttributes } from 'react';
-import { tokens } from '@threadplane/design-tokens';
 import { cn } from '../../lib/cn';
 
 type Surface = 'canvas' | 'tinted' | 'white';
@@ -15,12 +14,6 @@ interface SectionProps extends Omit<HTMLAttributes<HTMLElement>, 'id'> {
   /** Optional aria-labelledby pointing at a heading inside the section. */
   ariaLabelledBy?: string;
 }
-
-const SURFACE_BG: Record<Surface, string> = {
-  canvas: tokens.surfaces.canvas,
-  tinted: tokens.surfaces.surfaceTinted,
-  white: tokens.surfaces.surface,
-};
 
 export function Section({
   children,
@@ -38,13 +31,9 @@ export function Section({
       aria-labelledby={ariaLabelledBy}
       data-ui="section"
       data-surface={surface}
+      data-tight={tight || undefined}
       className={cn(className)}
-      style={{
-        background: SURFACE_BG[surface],
-        paddingTop: tight ? tokens.space.sectionYTight : tokens.space.sectionY,
-        paddingBottom: tight ? tokens.space.sectionYTight : tokens.space.sectionY,
-        ...style,
-      }}
+      style={style}
       {...rest}
     >
       {children}

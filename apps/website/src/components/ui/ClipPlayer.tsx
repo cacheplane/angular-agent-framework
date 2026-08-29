@@ -30,14 +30,7 @@ interface ClipPlayerProps {
 export function ClipPlayer({ clip, overlay, url }: ClipPlayerProps) {
   return (
     <BrowserFrame url={url ?? clip.url} elevation="lg">
-      <div
-        style={{
-          position: 'relative',
-          width: '100%',
-          aspectRatio: '16 / 10',
-          background: '#15161f',
-        }}
-      >
+      <div data-ui="clip-player">
         <video
           autoPlay
           muted
@@ -45,7 +38,6 @@ export function ClipPlayer({ clip, overlay, url }: ClipPlayerProps) {
           playsInline
           poster={clip.poster}
           aria-label={clip.caption}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
         >
           <source src={clip.videoWebm} type="video/webm" />
           <source src={clip.videoMp4} type="video/mp4" />

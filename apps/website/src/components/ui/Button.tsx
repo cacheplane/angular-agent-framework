@@ -2,9 +2,7 @@ import type {
   ReactNode,
   AnchorHTMLAttributes,
   ButtonHTMLAttributes,
-  CSSProperties,
 } from 'react';
-import { tokens } from '@threadplane/design-tokens';
 import { cn } from '../../lib/cn';
 
 type Variant = 'primary' | 'secondary' | 'ghost';
@@ -30,35 +28,6 @@ type NativeButtonProps = CommonProps &
 
 export type ButtonProps = AnchorButtonProps | NativeButtonProps;
 
-interface VariantStyle {
-  bg: string;
-  color: string;
-  border: string;
-}
-
-const VARIANT_STYLES: Record<Variant, VariantStyle> = {
-  primary: {
-    bg: tokens.colors.accent,
-    color: tokens.colors.textInverted,
-    border: tokens.colors.accent,
-  },
-  secondary: {
-    bg: tokens.surfaces.surface,
-    color: tokens.colors.textPrimary,
-    border: tokens.surfaces.borderStrong,
-  },
-  ghost: {
-    bg: 'transparent',
-    color: tokens.colors.accent,
-    border: 'transparent',
-  },
-};
-
-const SIZE_STYLES: Record<Size, { padding: string; fontSize: number; height: number }> = {
-  md: { padding: '0 16px', fontSize: 14, height: 40 },
-  lg: { padding: '0 22px', fontSize: 16, height: 48 },
-};
-
 export function Button(props: ButtonProps) {
   const {
     children,
@@ -68,32 +37,6 @@ export function Button(props: ButtonProps) {
     className,
     style,
   } = props;
-  const v = VARIANT_STYLES[variant];
-  const s = SIZE_STYLES[size];
-
-  const combinedStyle: CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    height: s.height,
-    padding: s.padding,
-    fontFamily: tokens.typography.fontSans,
-    fontSize: s.fontSize,
-    fontWeight: 600,
-    lineHeight: 1,
-    background: v.bg,
-    color: v.color,
-    border: `1px solid ${v.border}`,
-    borderRadius: tokens.radius.md,
-    boxShadow: variant === 'primary' ? tokens.shadows.sm : 'none',
-    cursor: 'pointer',
-    textDecoration: 'none',
-    transition:
-      'background-color 120ms ease, color 120ms ease, border-color 120ms ease, box-shadow 120ms ease',
-    whiteSpace: 'nowrap',
-    ...style,
-  };
 
   const content = (
     <>
@@ -120,7 +63,7 @@ export function Button(props: ButtonProps) {
         data-variant={variant}
         data-size={size}
         className={cn(className)}
-        style={combinedStyle}
+        style={style}
         {...anchorAttrs}
       >
         {content}
@@ -145,7 +88,7 @@ export function Button(props: ButtonProps) {
       data-variant={variant}
       data-size={size}
       className={cn(className)}
-      style={combinedStyle}
+      style={style}
       {...buttonAttrs}
     >
       {content}

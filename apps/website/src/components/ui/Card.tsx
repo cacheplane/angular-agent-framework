@@ -1,5 +1,4 @@
 import type { ReactNode, HTMLAttributes } from 'react';
-import { tokens } from '@threadplane/design-tokens';
 import { cn } from '../../lib/cn';
 
 type Surface = 'white' | 'tinted' | 'dim';
@@ -20,11 +19,6 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
   surface?: Surface;
 }
 
-const PADDING: Record<Padding, string> = {
-  md: '20px',
-  lg: '28px',
-};
-
 export function Card({
   children,
   hoverable = false,
@@ -35,23 +29,20 @@ export function Card({
   style,
   ...rest
 }: CardProps) {
-  // Resting background / border / shadow live in the `[data-ui="card"]`
-  // stylesheet (apps/website/src/app/global.css) — never inline — so the
-  // :hover rules can actually override border-color and box-shadow. Inline
-  // styles beat any stylesheet :hover rule, which previously left the lift
-  // rendering only the transform.
+  // Resting background / border / shadow / radius / padding live in the
+  // `[data-ui="card"]` stylesheet (apps/website/src/styles/ui.css) — never
+  // inline — so the :hover rules can actually override border-color and
+  // box-shadow. Inline styles beat any stylesheet :hover rule, which
+  // previously left the lift rendering only the transform.
   return (
     <div
       data-ui="card"
       data-hoverable={hoverable || undefined}
       data-accent={accent || undefined}
       data-surface={surface !== 'white' ? surface : undefined}
+      data-padding={padding !== 'md' ? padding : undefined}
       className={cn(className)}
-      style={{
-        borderRadius: tokens.radius.lg,
-        padding: PADDING[padding],
-        ...style,
-      }}
+      style={style}
       {...rest}
     >
       {children}

@@ -1,0 +1,378 @@
+/*
+ * ui.css — presentation for the data-ui primitives in components/ui, migrated from inline style props.
+ *
+ * Rules here are deliberately UNLAYERED: Tailwind v4 puts utilities in
+ * @layer utilities, and unlayered author CSS beats all layers — which is
+ * exactly the precedence the inline styles being replaced had. Wrapping
+ * these in @layer would let utilities win and change rendering.
+ *
+ * Migration: docs/superpowers/plans/2026-08-29-inline-style-substrate-migration.md
+ */
+
+/* UI primitive — Card.
+ * Resting background / border / shadow live here (not inline on the element)
+ * so the :hover rules below can override border-color and box-shadow. Inline
+ * styles beat any stylesheet :hover rule, which previously left the lift
+ * rendering only the transform. See components/ui/Card.tsx. */
+[data-ui="card"] {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+[data-ui="card"][data-surface="tinted"] {
+  background: var(--color-surface-tinted);
+}
+[data-ui="card"][data-surface="dim"] {
+  background: var(--color-surface-dim);
+}
+/* Accent-filled cards (e.g. docs backend / generative-UI cards). */
+[data-ui="card"][data-accent] {
+  background: var(--color-accent-surface);
+  border-color: var(--color-accent-border);
+}
+
+/* Hoverable cards are virtually always links; pointer is the right default.
+ * If a non-link gets `data-hoverable`, override inline. */
+[data-ui="card"][data-hoverable] {
+  cursor: pointer;
+}
+[data-ui="card"][data-hoverable]:not([data-accent]):hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-border-strong);
+  transform: translateY(-1px);
+}
+/* Accent cards keep their accent border and gain an accent ring on hover. */
+[data-ui="card"][data-hoverable][data-accent]:hover {
+  box-shadow: 0 0 0 3px var(--color-accent-glow), var(--shadow-md);
+  transform: translateY(-1px);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="card"][data-hoverable]:hover {
+    transform: none;
+  }
+}
+
+/* UI primitive — Card: static shape. Bounded padding tiers via data-padding
+ * (default 'md' has no attribute — see components/ui/Card.tsx). */
+[data-ui="card"] {
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+[data-ui="card"][data-padding="lg"] {
+  padding: 28px;
+}
+
+/* UI primitive — Container */
+[data-ui="container"] {
+  width: 100%;
+  margin: 0 auto;
+  padding-left: var(--spacing-container-x);
+  padding-right: var(--spacing-container-x);
+  max-width: var(--container-page);
+}
+[data-ui="container"][data-size="wide"] {
+  max-width: 1320px;
+}
+
+/* UI primitive — Eyebrow */
+[data-ui="eyebrow"] {
+  font-family: var(--font-mono);
+  font-size: var(--text-eyebrow);
+  font-weight: var(--text-eyebrow--font-weight);
+  letter-spacing: var(--text-eyebrow--letter-spacing);
+  text-transform: uppercase;
+  line-height: var(--text-eyebrow--line-height);
+  margin: 0;
+}
+[data-ui="eyebrow"][data-tone="muted"] {
+  color: var(--color-text-muted);
+}
+[data-ui="eyebrow"][data-tone="accent"] {
+  color: var(--color-accent);
+}
+[data-ui="eyebrow"][data-tone="angular"] {
+  color: var(--color-angular-red);
+}
+
+/*
+ * FONT FAMILIES ARE VERBATIM LITERALS, NOT var(--font-*), on purpose.
+ *
+ * layout.tsx loads fonts via next/font, which SHADOWS --font-inter,
+ * --font-mono, and --font-garamond on <html> with its own stacks
+ * ("Inter Fallback" etc.). var(--font-inter) therefore resolves to the
+ * next/font value at runtime, NOT the theme.css token value — measured:
+ * migrating Button to the var changed its rendered font and shifted
+ * widths ~2.5px. Sites whose inline style was the raw token stack keep
+ * that stack verbatim; only sites that already used a
+ * `tokens.typography.*.family` value (which IS 'var(--font-*)') keep
+ * the var. Unifying fonts onto next/font is a real visual change that
+ * belongs to the polish arc, not this migration.
+ */
+/* UI primitive — Pill */
+[data-ui="pill"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  line-height: 1.4;
+}
+[data-ui="pill"][data-variant="neutral"] {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+[data-ui="pill"][data-variant="accent"] {
+  background: var(--color-accent-surface);
+  border: 1px solid var(--color-accent-border);
+  color: var(--color-accent);
+}
+[data-ui="pill"][data-variant="angular"] {
+  background: rgba(221, 0, 49, 0.06);
+  border: 1px solid rgba(221, 0, 49, 0.18);
+  color: var(--color-angular-red);
+}
+
+/* UI primitive — Section */
+[data-ui="section"] {
+  padding-top: var(--spacing-section-y);
+  padding-bottom: var(--spacing-section-y);
+}
+[data-ui="section"][data-tight] {
+  padding-top: var(--spacing-section-y-tight);
+  padding-bottom: var(--spacing-section-y-tight);
+}
+[data-ui="section"][data-surface="canvas"] {
+  background: var(--color-canvas);
+}
+[data-ui="section"][data-surface="tinted"] {
+  background: var(--color-surface-tinted);
+}
+[data-ui="section"][data-surface="white"] {
+  background: var(--color-surface);
+}
+
+/* UI primitive — Button */
+[data-ui="button"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: Inter, system-ui, sans-serif;
+  font-weight: 600;
+  line-height: 1;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+  white-space: nowrap;
+}
+[data-ui="button"][data-size="md"] {
+  height: 40px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+[data-ui="button"][data-size="lg"] {
+  height: 48px;
+  padding: 0 22px;
+  font-size: 16px;
+}
+[data-ui="button"][data-variant="primary"] {
+  background: var(--color-accent);
+  color: var(--color-text-inverted);
+  border: 1px solid var(--color-accent);
+  box-shadow: var(--shadow-sm);
+}
+[data-ui="button"][data-variant="secondary"] {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-strong);
+  box-shadow: none;
+}
+[data-ui="button"][data-variant="ghost"] {
+  background: transparent;
+  color: var(--color-accent);
+  border: 1px solid transparent;
+  box-shadow: none;
+}
+
+/* UI primitive — FAQ.
+ * The summary::-webkit-details-marker hide, open-state chevron rotation, and
+ * summary focus-visible rules are pre-existing and stay above (cut-pasted
+ * verbatim from global.css); these are the resting styles that were inline. */
+[data-ui="faq"] {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+[data-ui="faq-item"] {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 0 20px;
+}
+[data-ui="faq-item"] > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 0;
+  cursor: pointer;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  list-style: none;
+}
+[data-ui="faq-chevron"] {
+  transition: transform 200ms ease;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+[data-ui="faq-item"] > div {
+  padding-bottom: 20px;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+/* UI primitive — LogoMark */
+[data-ui="logo-mark"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "EB Garamond", Georgia, serif;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+[data-ui="logo-mark"][data-size="sm"] {
+  font-size: 14px;
+}
+[data-ui="logo-mark"][data-size="md"] {
+  font-size: 16px;
+}
+[data-ui="logo-mark-icon"] {
+  line-height: 1;
+}
+[data-ui="logo-mark"][data-size="sm"] > [data-ui="logo-mark-icon"] {
+  font-size: 18px;
+}
+[data-ui="logo-mark"][data-size="md"] > [data-ui="logo-mark-icon"] {
+  font-size: 22px;
+}
+
+/* UI primitive — BrowserFrame.
+ * `transform` (rotate) and `max-width` are genuinely dynamic (unbounded
+ * caller props) and stay inline — see components/ui/BrowserFrame.tsx. */
+[data-ui="browser-frame"] {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+[data-ui="browser-frame"][data-elevation="sm"] {
+  box-shadow: var(--shadow-sm);
+}
+[data-ui="browser-frame"][data-elevation="md"] {
+  box-shadow: var(--shadow-md);
+}
+[data-ui="browser-frame"][data-elevation="lg"] {
+  box-shadow: var(--shadow-lg);
+}
+[data-ui="browser-frame-titlebar"] {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--color-surface-tinted);
+  border-bottom: 1px solid var(--color-border);
+}
+[data-ui="browser-frame-dots"] {
+  display: flex;
+  gap: 6px;
+}
+[data-ui="browser-frame-dots"] > span {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-full);
+}
+[data-ui="browser-frame-dots"] > span:nth-child(1) {
+  background: #FF5F57;
+}
+[data-ui="browser-frame-dots"] > span:nth-child(2) {
+  background: #FEBC2E;
+}
+[data-ui="browser-frame-dots"] > span:nth-child(3) {
+  background: #28C840;
+}
+[data-ui="browser-frame-url"] {
+  flex: 1;
+  text-align: center;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  max-width: 360px;
+  margin: 0 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+[data-ui="browser-frame-spacer"] {
+  width: 54px;
+}
+[data-ui="browser-frame-body"] {
+  position: relative;
+  background: var(--color-surface);
+}
+
+/* UI primitive — ClipPlayer */
+[data-ui="clip-player"] {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: #15161f;
+}
+[data-ui="clip-player"] > video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* UI primitive — TabGroup.
+ * `font-family: Inter, sans-serif` and `border-radius: 8px` are copied
+ * verbatim from the original inline literals — they are NOT the
+ * `--font-inter` / `--radius-md` tokens (which resolve to different
+ * fallback stacks / 10px respectively), so mapping them to those vars
+ * would be a value change, not a verbatim move. */
+[data-ui="tab-group-list"] {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+[data-ui="tab-group-tab"] {
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: var(--color-accent-surface);
+  color: var(--color-text-muted);
+}
+[data-ui="tab-group-tab"][data-active] {
+  background: var(--color-accent);
+  color: var(--color-text-inverted);
+}

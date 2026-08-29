@@ -1,0 +1,10 @@
+/*
+ * marketing.css — presentation for pricing, blog, contact, and solutions components, migrated from inline style props.
+ *
+ * Rules here are deliberately UNLAYERED: Tailwind v4 puts utilities in
+ * @layer utilities, and unlayered author CSS beats all layers — which is
+ * exactly the precedence the inline styles being replaced had. Wrapping
+ * these in @layer would let utilities win and change rendering.
+ *
+ * Migration: docs/superpowers/plans/2026-08-29-inline-style-substrate-migration.md
+ */
