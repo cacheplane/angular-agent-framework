@@ -46,9 +46,21 @@ export default async function globalSetup(): Promise<void> {
   freePort(LANGGRAPH_PORT);
   freePort(ANGULAR_PORT);
 
-  const aimock = await startAimock({ mode: 'replay', fixturePath: FIXTURE_PATH });
+  const AIMOCK_MODE = process.env.AIMOCK_MODE === 'record' ? 'record' : 'replay';
+  const RECORD_DIR = process.env.AIMOCK_RECORD_DIR
+    ?? resolve(__dirname, '../.aimock-recordings');
+
+  if (AIMOCK_MODE === 'record' && !process.env.OPENAI_API_KEY) {
+    throw new Error(
+      '[aimock-e2e] AIMOCK_MODE=record requires OPENAI_API_KEY — the record proxy forwards requests to the live provider.'
+    );
+  }
+
+  const aimock = AIMOCK_MODE === 'record'
+    ? await startAimock({ mode: 'record', recordDir: RECORD_DIR })
+    : await startAimock({ mode: 'replay', fixturePath: FIXTURE_PATH });
   // eslint-disable-next-line no-console
-  console.log(`[aimock-e2e] aimock listening at ${aimock.baseUrl}`);
+  console.log(`[aimock-e2e] aimock (${AIMOCK_MODE}) listening at ${aimock.baseUrl}`);
 
   const langgraph = spawn(
     'uv',
@@ -58,7 +70,10 @@ export default async function globalSetup(): Promise<void> {
       env: {
         ...process.env,
         OPENAI_BASE_URL: aimock.baseUrl,
-        OPENAI_API_KEY: 'test-not-used',
+        // Record mode proxies upstream; the auth header must be real.
+        OPENAI_API_KEY: AIMOCK_MODE === 'record'
+          ? (process.env.OPENAI_API_KEY as string)
+          : 'test-not-used',
       },
       stdio: 'pipe',
       // Lead its own process group so teardown can reap uvicorn (the real
