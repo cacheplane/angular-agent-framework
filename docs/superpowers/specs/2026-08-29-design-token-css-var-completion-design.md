@@ -150,13 +150,26 @@ Three categories, three different answers. The categorisation is the actual
 work here; the edits are trivial.
 
 **Genuine drift — adopt the live token, accept a visible change.**
-`#555770` (×4) and `#8b8fa3` (×1) become `var(--color-text-secondary)` and
-`var(--color-text-muted)`. Docs table body text, table headers, list markers,
-figure captions, and code-block titles shift from blue-grey to the system
-neutrals. This is a **visible design change, not a refactor** — it needs
-before/after screenshots at review, and it is the one part of this project that
-could reasonably be rejected on taste. If it is rejected, the correct outcome is
-a new token, not a retained literal.
+Only three of the five stale-literal uses actually render stale. Two are
+already `var(--color-text-muted, #555770)` — on `li::marker` (line 139) and
+`figcaption` (line 170) — where the var *is* defined, so the fallback is dead
+text and deleting it changes nothing. The visible set is exactly:
+
+| line | rule | now | becomes |
+|---|---|---|---|
+| 195 | `.docs-prose th` | `#555770` | `var(--color-text-muted)` |
+| 196 | `.docs-prose td` | `#555770` | `var(--color-text-secondary)` |
+| 100 | `[data-rehype-pretty-code-title]` | `#8b8fa3` | `var(--color-text-muted)` |
+
+`th` and `td` deliberately diverge rather than both taking one token: `td` is
+body content and should match `--tw-prose-body` (which `MdxRenderer` already
+sets to `colors.textSecondary`), while `th` is an uppercase mono label and
+belongs with the other muted labels, like the TOC heading.
+
+This is a **visible design change, not a refactor** — it needs before/after
+screenshots at review, and it is the one part of this project that could
+reasonably be rejected on taste. If it is rejected, the correct outcome is a new
+token, not a retained literal.
 
 **Already-matching literals — swap, no visual change.**
 `#004090` → `var(--color-accent)`, `rgba(0, 64, 144, 0.06)` →
@@ -234,11 +247,19 @@ beyond the new output.
 | `libs/design-tokens/scripts/generate-theme-css.ts` | emit type scale + space scale; emit `tokens.css` |
 | `libs/design-tokens/src/lib/theme.css` | regenerated |
 | `libs/design-tokens/src/lib/tokens.css` | regenerated from `light.ts` |
-| `libs/design-tokens/src/lib/token-css-parity.spec.ts` | new |
+| `libs/design-tokens/src/lib/token-css-parity.spec.ts` | new — JS↔CSS value parity |
+| `libs/design-tokens/src/lib/ds-var-contract.spec.ts` | new — `--ds-*` name stability |
 | `libs/design-tokens/src/lib/generate-theme-css.spec.ts` | extend to cover `tokens.css` |
+| `libs/design-tokens/package.json` | export `./tokens.css` |
+| `libs/design-tokens/project.json` | ship `tokens.css` in the build assets |
 | `apps/website/src/app/global.css` | literal audit — 18 literals, 3 categories |
 
-Six files. No component touched.
+Nine files. No component touched.
+
+The two new specs stay separate because they guard different contracts —
+value parity between JS and CSS, versus stability of the `--ds-*` names
+cockpit apps reference — and each should be able to fail with a clear,
+unambiguous message.
 
 ## Verification
 
@@ -249,9 +270,10 @@ Six files. No component touched.
 - `nx build website --configuration=production` before claiming deploy-ready —
   the prod bundle-budget and env wiring differ from dev.
 - Screenshot diff on `/docs/chat/components/chat`, `/docs`, and `/` at 1280 and
-  375. Expected: **no change anywhere except** docs table text, table headers,
-  list markers, figure captions, and code-block titles. Any other delta is a
-  bug in the literal audit.
+  375. Expected: **no change anywhere except** docs table header text, docs
+  table body text, and code-block titles. Any other delta — including list
+  markers and figure captions, whose `#555770` is a dead fallback — is a bug in
+  the literal audit.
 
 The parity spec fails silently if written wrong — a walker that visits nothing
 passes. Mutation-test it: change one value in `light.ts` without regenerating,
