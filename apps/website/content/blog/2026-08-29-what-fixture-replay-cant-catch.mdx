@@ -91,12 +91,14 @@ const mock = new LLMock({ port: 0, chunkSize: 4096 });
 
 A real rendering bug, but a *streaming* one, and it was making structural assertions flaky for reasons that had nothing to do with what they asserted. So the timing went away and the property moved down a tier.
 
+I think that's the right trade, and the reason isn't that the flakiness went away — it's that the property didn't.
+
 The tempting alternative is to replay the recorded chunk boundaries instead of re-chunking, so you get the timing back for free.
 That doesn't buy what it looks like it buys. Faithful boundaries make the fence failure *deterministic* rather than absent — the parser bug is still there, and now every structural assertion in the suite fails for a reason none of them are about.
 
-Now the part I'd have gotten wrong if I hadn't gone looking, and it's the useful half.
+Now the part that's easy to get wrong without going looking, and it's the useful half.
 
-That 4096 is a **default**, not a law. A second harness serves our two example apps, and its version of that comment says so outright — ordinary fixtures get the big chunk size, and *targeted streaming regressions opt into smaller per-fixture chunks*. Those fixtures set chunk sizes of three, four, six, twenty-three, thirty-six, with latencies from 25 to 750 milliseconds. There are e2e tests over there that sample the mid-stream DOM while it renders.
+That 4096 is a _default_, not a law. A second harness serves our two example apps, and its version of that comment says so outright — ordinary fixtures get the big chunk size, and *targeted streaming regressions opt into smaller per-fixture chunks*. Those fixtures set chunk sizes of three, four, six, twenty-three, thirty-six, with latencies from 25 to 750 milliseconds. There are e2e tests over there that sample the mid-stream DOM while it renders.
 
 So "we deleted time" is too tidy. What we did was delete it by default and buy it back per fixture, in the places somebody decided it was worth the cost.
 
@@ -130,7 +132,7 @@ A live pass for what replay structurally can't see, and a weekly drift run for t
 
 The live pass is unglamorous: for anything whose failure mode is mid-stream, drive it against a real model in a real browser before it ships. That's how the bubble above got caught. There's no clever tooling in it — the point is just that the deterministic suite was never going to be the thing that found it.
 
-Drift is the other half, and writing this post is what got it built properly. Our first design re-recorded fixtures and compared byte size — which detects that a response changed *size* while saying nothing about whether it changed *meaning*. The same trade again, one layer up. A model that starts returning something equally long and completely different sails straight through a size check.
+Drift is the other half, and it got built properly on the way to this post. Our first design re-recorded fixtures and compared byte size — which detects that a response changed *size* while saying nothing about whether it changed *meaning*. The same trade again, one layer up. A model that starts returning something equally long and completely different sails straight through a size check.
 
 So we threw the metric away and kept the thing we already trusted.
 
@@ -151,8 +153,8 @@ Push your seam as far out as you can afford. The further out it goes, the more o
 
 Then write down which dimension you deleted to make it deterministic, in the file where you deleted it. Not in a wiki. Six months later that comment is the difference between "the suite is green" and "the suite is green, and here is what green does not cover."
 
-Ours was written down, which is the only reason I could check it.
-Checking it is how I learned the deletion was a default two of our apps had already bought back — and that our first drift design was measuring the wrong thing.
+Ours was written down, which is the only reason it could be checked at all.
+Checking it surfaced two things: the deletion was a default two of our apps had already bought back, and our first drift design was measuring the wrong thing.
 
 For us the list is short and specific: anything whose failure mode is mid-stream on a capability that never opted back into real chunking, and the model itself moving under the fixtures.
 Both are answered by pointing what you already trust at the real thing — the tagged specs at the live provider on a schedule, a live browser at anything mid-stream before it ships.
