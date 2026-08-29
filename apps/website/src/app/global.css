@@ -23,8 +23,8 @@
   --docs-code-title-rule: rgba(255, 255, 255, 0.06);
   --docs-figure-shadow: 0 4px 16px rgba(0, 32, 72, 0.1);
   --docs-figure-shadow-bare: 0 4px 16px rgba(0, 32, 72, 0.08);
-  /* Accent tints between --color-accent-surface (6%) and --color-accent-border
-   * (15%). Derived rather than hardcoded so they track the accent. */
+  /* Accent tints in the 3.5–10% range, around --color-accent-surface (6%).
+   * Derived rather than hardcoded so they track the accent. */
   --docs-accent-tint-faint: color-mix(in srgb, var(--color-accent) 3.5%, transparent);
   --docs-accent-tint-soft: color-mix(in srgb, var(--color-accent) 8%, transparent);
   --docs-accent-tint-line: color-mix(in srgb, var(--color-accent) 10%, transparent);

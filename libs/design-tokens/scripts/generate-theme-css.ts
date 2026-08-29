@@ -25,7 +25,7 @@ const HEADER = `/*
  * GENERATED FILE — DO NOT EDIT BY HAND.
  *
  * Regenerate with:
- *   pnpm nx run design-tokens:generate-theme-css
+ *   npx nx run design-tokens:generate-theme-css
  *
  * Source of truth:
  *   - libs/design-tokens/src/lib/light.ts
@@ -276,9 +276,7 @@ export function generateThemeCss(): string {
 function main() {
   writeFileSync(OUTPUT_PATH, generateThemeCss());
   writeFileSync(TOKENS_OUTPUT_PATH, generateTokensCss());
-  // eslint-disable-next-line no-console
   console.log(`wrote ${OUTPUT_PATH}`);
-  // eslint-disable-next-line no-console
   console.log(`wrote ${TOKENS_OUTPUT_PATH}`);
 }
 

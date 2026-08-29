@@ -4,7 +4,7 @@
  * GENERATED FILE — DO NOT EDIT BY HAND.
  *
  * Regenerate with:
- *   pnpm nx run design-tokens:generate-theme-css
+ *   npx nx run design-tokens:generate-theme-css
  *
  * Source of truth:
  *   - libs/design-tokens/src/lib/light.ts
