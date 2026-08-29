@@ -2,7 +2,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { docsConfig, specialDocsPages, type LibraryId } from '../../lib/docs-config';
-import { tokens } from '@threadplane/design-tokens';
 import { analyticsEvents } from '../../lib/analytics/events';
 import { track } from '../../lib/analytics/client';
 
@@ -109,23 +108,11 @@ export function DocsSearch({ library }: { library?: LibraryId }) {
   if (!open) return null;
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 100,
-      background: 'rgba(0,0,0,0.4)',
-      display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
-      paddingTop: '20vh',
-    }} onClick={() => setOpen(false)}>
+    <div className="docs-search-overlay" onClick={() => setOpen(false)}>
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{
-          width: '100%', maxWidth: 520,
-          background: tokens.surfaces.surface,
-          border: `1px solid ${tokens.surfaces.border}`,
-          borderRadius: 12,
-          boxShadow: tokens.shadows.lg,
-          overflow: 'hidden',
-        }}>
-        <div style={{ padding: '12px 16px', borderBottom: `1px solid ${tokens.surfaces.border}` }}>
+        className="docs-search-modal">
+        <div className="docs-search-input-wrap">
           <input
             ref={inputRef}
             value={query}
@@ -142,35 +129,22 @@ export function DocsSearch({ library }: { library?: LibraryId }) {
             }}
             onKeyDown={handleInputKeyDown}
             placeholder="Search documentation..."
-            style={{
-              width: '100%', border: 'none', outline: 'none',
-              fontFamily: 'var(--font-inter)', fontSize: '0.95rem',
-              color: tokens.colors.textPrimary, background: 'transparent',
-            }}
+            className="docs-search-input"
           />
         </div>
-        <div style={{ maxHeight: 320, overflowY: 'auto', padding: 8 }}>
+        <div className="docs-search-results">
           {results.map((page, i) => (
             <button
               key={page.href}
               onClick={() => navigate(page)}
-              className="w-full text-left"
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '10px 12px', borderRadius: 8,
-                background: i === selected ? tokens.colors.accentSurface : 'transparent',
-                border: 'none', cursor: 'pointer', width: '100%',
-              }}>
-              <span style={{ fontSize: '0.875rem', color: tokens.colors.textPrimary }}>{page.title}</span>
-              <span style={{
-                fontFamily: 'var(--font-mono)', fontSize: '0.65rem',
-                color: tokens.colors.textMuted, background: 'rgba(0,0,0,0.04)',
-                padding: '2px 6px', borderRadius: 4,
-              }}>{page.libraryTitle}</span>
+              className="w-full text-left docs-search-result"
+              data-selected={i === selected || undefined}>
+              <span className="docs-search-result-title">{page.title}</span>
+              <span className="docs-search-result-lib">{page.libraryTitle}</span>
             </button>
           ))}
           {results.length === 0 && (
-            <div style={{ padding: 16, textAlign: 'center', color: tokens.colors.textMuted, fontSize: '0.85rem' }}>
+            <div className="docs-search-empty">
               No results found
             </div>
           )}

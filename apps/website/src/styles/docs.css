@@ -598,3 +598,371 @@
   font-size: 10px;
   color: var(--color-accent);
 }
+
+/*
+ * DocsSidebar
+ *
+ * [data-docs-navlink] rules hoisted verbatim (apart from the ${tokens.*}
+ * interpolations, replaced with their CSS vars) from the <style> tag that
+ * used to live in DocsSidebar.tsx.
+ */
+[data-docs-navlink] {
+  color: var(--color-text-secondary);
+  background: transparent;
+}
+[data-docs-navlink][data-active] {
+  color: var(--color-accent);
+  background: var(--color-accent-surface);
+}
+[data-docs-navlink]:not([data-active]):hover {
+  background: var(--color-surface-dim);
+  color: var(--color-text-primary);
+}
+
+.docs-sidebar {
+  border-right: 1px solid var(--color-border);
+  background: var(--color-surface);
+  min-height: calc(100vh - 5rem);
+  position: sticky;
+  top: 5rem;
+}
+.docs-sidebar-lib-trigger {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font-weight: 600;
+}
+.docs-sidebar-lib-trigger-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.docs-sidebar-lib-trigger-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+}
+.docs-sidebar-lib-caret {
+  color: var(--color-text-muted);
+  font-size: 10px;
+  transition: transform 0.2s;
+  transform: rotate(0);
+}
+.docs-sidebar-lib-caret[data-open] {
+  transform: rotate(180deg);
+}
+.docs-sidebar-lib-menu {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+}
+.docs-sidebar-lib-item {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.docs-sidebar-lib-item[data-active] {
+  background: var(--color-accent-surface);
+}
+.docs-sidebar-lib-item-icon {
+  margin-top: 1px;
+}
+.docs-sidebar-lib-item-text {
+  min-width: 0;
+}
+.docs-sidebar-lib-item-title {
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: 0.8rem;
+}
+.docs-sidebar-lib-item-title[data-active] {
+  color: var(--color-accent);
+}
+.docs-sidebar-lib-item-desc {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+.docs-sidebar-section {
+  margin-bottom: 16px;
+}
+.docs-sidebar-section-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.docs-sidebar-section-label {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+.docs-sidebar-section-label[data-tone="red"] {
+  color: var(--color-angular-red);
+}
+.docs-sidebar-section-caret {
+  color: var(--color-text-muted);
+  font-size: 10px;
+  transition: transform 0.2s;
+  transform: rotate(-90deg);
+}
+.docs-sidebar-section-caret[data-open] {
+  transform: rotate(0);
+}
+.docs-sidebar-section-link {
+  font-size: 0.825rem;
+}
+.docs-sidebar-search-trigger {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+.docs-sidebar-search-label {
+  font-size: 0.8rem;
+}
+.docs-sidebar-search-kbd {
+  font-size: 0.65rem;
+  padding: 2px 8px;
+}
+.docs-sidebar-top-link {
+  font-size: 0.825rem;
+  font-weight: 600;
+}
+.docs-sidebar-demo-link {
+  background: var(--color-accent-surface);
+  color: var(--color-accent);
+  border: 1px solid var(--color-border);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* DocsSearch */
+.docs-search-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 20vh;
+}
+.docs-search-modal {
+  width: 100%;
+  max-width: 520px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+.docs-search-input-wrap {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+.docs-search-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-family: var(--font-inter);
+  font-size: 0.95rem;
+  color: var(--color-text-primary);
+  background: transparent;
+}
+.docs-search-results {
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 8px;
+}
+.docs-search-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+}
+.docs-search-result[data-selected] {
+  background: var(--color-accent-surface);
+}
+.docs-search-result-title {
+  font-size: 0.875rem;
+  color: var(--color-text-primary);
+}
+.docs-search-result-lib {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  background: rgba(0, 0, 0, 0.04);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.docs-search-empty {
+  padding: 16px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+/* DocsTOC */
+.docs-toc {
+  position: sticky;
+  top: 5rem;
+  align-self: flex-start;
+  max-height: calc(100vh - 6rem);
+  overflow-y: auto;
+}
+.docs-toc-label {
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+.docs-toc-link {
+  color: var(--color-text-muted);
+  padding-left: 0;
+  font-size: 0.825rem;
+  line-height: 1.5;
+  text-decoration: none;
+}
+.docs-toc-link[data-level="3"] {
+  padding-left: 12px;
+  font-size: 0.8rem;
+}
+.docs-toc-link[data-active] {
+  color: var(--color-accent);
+}
+
+/* DocsBreadcrumb — verbatim, including the inconsistent li/separator
+ * typography (crumb/sep were separate style-variable shapes; a later
+ * polish pass reconciles them, not this migration). */
+.docs-crumb-nav {
+  margin-bottom: 16px;
+}
+.docs-crumb-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+}
+.docs-crumb-link {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+.docs-crumb-sep {
+  margin: 0 8px;
+  color: var(--color-text-muted);
+}
+.docs-crumb-current {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  text-decoration: none;
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+/* DocsPageHeader */
+.docs-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 12px;
+  margin-bottom: 20px;
+}
+.docs-page-header-lib {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.docs-page-header-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+.docs-page-header-actions {
+  flex: 0 0 auto;
+}
+
+/* PageActions */
+.docs-page-actions {
+  position: relative;
+}
+.docs-page-actions-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+.docs-page-actions-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 200px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: 4px;
+  z-index: 20;
+}
+.docs-page-actions-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 13px;
+  color: var(--color-text-primary);
+  background: transparent;
+  border: none;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* LibraryMark — size is an unbounded numeric prop, so it stays dynamic via
+ * the --size/--inner-size custom-property escape hatch. */
+.docs-library-mark {
+  width: var(--size);
+  height: var(--size);
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+.docs-library-mark[data-kind="logo"] {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+.docs-library-mark[data-kind="glyph"] {
+  background: var(--color-accent-surface);
+  border: 1px solid var(--color-accent-border);
+  color: var(--color-accent);
+}
+.docs-library-mark-img {
+  width: var(--inner-size);
+  height: var(--inner-size);
+  object-fit: contain;
+}

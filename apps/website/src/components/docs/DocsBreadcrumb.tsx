@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { tokens } from '@threadplane/design-tokens';
 import { getLibraryConfig, libraryIntroPath, type LibraryId } from '../../lib/docs-config';
 
 interface Props {
@@ -18,34 +17,22 @@ export function DocsBreadcrumb({ library, section, slug: _slug, title }: Props) 
   const libraryTitle = libConfig?.title ?? library;
   const sectionTitle = libConfig?.sections.find((s) => s.id === section)?.title ?? humanize(section);
 
-  const crumb: React.CSSProperties = {
-    fontFamily: tokens.typography.fontSans,
-    fontSize: 13,
-    lineHeight: 1.5,
-    color: tokens.colors.textMuted,
-    textDecoration: 'none',
-  };
-  const sep: React.CSSProperties = {
-    margin: '0 8px',
-    color: tokens.colors.textMuted,
-  };
-
   return (
-    <nav aria-label="Breadcrumb" style={{ marginBottom: 16 }}>
-      <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexWrap: 'wrap' }}>
+    <nav aria-label="Breadcrumb" className="docs-crumb-nav">
+      <ol className="docs-crumb-list">
         <li>
-          <Link href="/docs" style={crumb}>Docs</Link>
-          <span style={sep} aria-hidden="true">/</span>
+          <Link href="/docs" className="docs-crumb-link">Docs</Link>
+          <span className="docs-crumb-sep" aria-hidden="true">/</span>
         </li>
         <li>
-          <Link href={libraryIntroPath(library)} style={crumb}>{libraryTitle}</Link>
-          <span style={sep} aria-hidden="true">/</span>
+          <Link href={libraryIntroPath(library)} className="docs-crumb-link">{libraryTitle}</Link>
+          <span className="docs-crumb-sep" aria-hidden="true">/</span>
         </li>
-        <li style={crumb}>
+        <li className="docs-crumb-link">
           {sectionTitle}
-          <span style={sep} aria-hidden="true">/</span>
+          <span className="docs-crumb-sep" aria-hidden="true">/</span>
         </li>
-        <li style={{ ...crumb, color: tokens.colors.textPrimary, fontWeight: 600 }} aria-current="page">
+        <li className="docs-crumb-current" aria-current="page">
           {title}
         </li>
       </ol>

@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { tokens } from '@threadplane/design-tokens';
 import { LibraryMark } from './LibraryMark';
 import { getLibraryConfig, getDocsSection, type LibraryId } from '../../lib/docs-config';
 
@@ -19,32 +18,14 @@ export function DocsPageHeader({ library, section, actions }: Props) {
   const sectionTitle = getDocsSection(library, section)?.title ?? humanize(section);
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 16,
-        marginTop: 12,
-        marginBottom: 20,
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+    <div className="docs-page-header">
+      <div className="docs-page-header-lib">
         <LibraryMark library={library} size={34} />
-        <span
-          style={{
-            fontFamily: tokens.typography.fontMono,
-            fontSize: 11,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            fontWeight: 700,
-            color: tokens.colors.accent,
-          }}
-        >
+        <span className="docs-page-header-label">
           {libTitle} · {sectionTitle}
         </span>
       </div>
-      {actions ? <div style={{ flex: '0 0 auto' }}>{actions}</div> : null}
+      {actions ? <div className="docs-page-header-actions">{actions}</div> : null}
     </div>
   );
 }
