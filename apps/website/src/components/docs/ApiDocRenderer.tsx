@@ -1,5 +1,3 @@
-import { tokens } from '@threadplane/design-tokens';
-
 interface ApiParam {
   name: string;
   type: string;
@@ -28,34 +26,26 @@ export interface ApiDocEntry {
 
 function KindBadge({ kind }: { kind: string }) {
   return (
-    <span style={{
-      fontFamily: 'var(--font-mono)',
-      fontSize: '0.65rem',
-      padding: '2px 8px',
-      borderRadius: 4,
-      background: tokens.colors.accentSurface,
-      color: tokens.colors.accent,
-      textTransform: 'uppercase',
-    }}>{kind}</span>
+    <span className="api-doc-kind-badge">{kind}</span>
   );
 }
 
 function ParamTable({ params }: { params: ApiParam[] }) {
   return (
-    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', marginTop: 8 }}>
+    <table className="api-doc-param-table">
       <thead>
-        <tr style={{ borderBottom: `1px solid ${tokens.surfaces.border}`, background: tokens.surfaces.surfaceTinted }}>
+        <tr>
           {['Parameter', 'Type', 'Description'].map((h) => (
-            <th key={h} style={{ textAlign: 'left', padding: '6px 0', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: tokens.colors.textMuted, textTransform: 'uppercase' }}>{h}</th>
+            <th key={h}>{h}</th>
           ))}
         </tr>
       </thead>
       <tbody>
         {params.map((p) => (
-          <tr key={p.name} style={{ borderBottom: `1px solid ${tokens.surfaces.border}` }}>
-            <td style={{ padding: '6px 0', fontFamily: 'var(--font-mono)', color: tokens.colors.accent }}>{p.name}{p.optional ? '?' : ''}</td>
-            <td style={{ padding: '6px 0', fontFamily: 'var(--font-mono)', color: tokens.colors.textSecondary, fontSize: '0.75rem' }}>{p.type}</td>
-            <td style={{ padding: '6px 0', color: tokens.colors.textSecondary }}>{p.description}</td>
+          <tr key={p.name}>
+            <td className="api-doc-param-name">{p.name}{p.optional ? '?' : ''}</td>
+            <td className="api-doc-param-type">{p.type}</td>
+            <td className="api-doc-param-desc">{p.description}</td>
           </tr>
         ))}
       </tbody>
@@ -65,57 +55,50 @@ function ParamTable({ params }: { params: ApiParam[] }) {
 
 export function ApiDocRenderer({ entry }: { entry: ApiDocEntry }) {
   return (
-    <div style={{
-      padding: 24,
-      borderRadius: 12,
-      border: `1px solid ${tokens.surfaces.border}`,
-      background: tokens.surfaces.surface,
-      boxShadow: tokens.shadows.sm,
-      marginBottom: 24,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 8 }}>
-        <code style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '1.1rem', color: tokens.colors.accent }}>{entry.name}</code>
+    <div className="api-doc-card">
+      <div className="api-doc-header">
+        <code className="api-doc-name">{entry.name}</code>
         <KindBadge kind={entry.kind} />
       </div>
 
-      <p style={{ fontSize: '0.9rem', color: tokens.colors.textSecondary, lineHeight: 1.6, marginBottom: 16 }}>{entry.description}</p>
+      <p className="api-doc-description">{entry.description}</p>
 
       {entry.signature && (
-        <div style={{ borderRadius: 8, overflow: 'hidden', marginBottom: 16 }}>
-          <pre style={{ padding: 16, background: '#1a1b26', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#a9b1d6', overflowX: 'auto', margin: 0 }}>
+        <div className="api-doc-signature-wrap">
+          <pre className="api-doc-code-pre">
             {entry.signature}
           </pre>
         </div>
       )}
 
       {entry.params && entry.params.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
-          <h4 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: tokens.colors.textPrimary, marginBottom: 4 }}>Parameters</h4>
+        <div className="api-doc-section">
+          <h4 className="api-doc-section-title">Parameters</h4>
           <ParamTable params={entry.params} />
         </div>
       )}
 
       {entry.returns && (
-        <div style={{ marginBottom: 16 }}>
-          <h4 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: tokens.colors.textPrimary, marginBottom: 4 }}>Returns</h4>
-          <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: tokens.colors.accent }}>{entry.returns.type}</code>
+        <div className="api-doc-section">
+          <h4 className="api-doc-section-title">Returns</h4>
+          <code className="api-doc-inline-code">{entry.returns.type}</code>
         </div>
       )}
 
       {entry.properties && entry.properties.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
-          <h4 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: tokens.colors.textPrimary, marginBottom: 4 }}>Properties</h4>
+        <div className="api-doc-section">
+          <h4 className="api-doc-section-title">Properties</h4>
           <ParamTable params={entry.properties} />
         </div>
       )}
 
       {entry.methods && entry.methods.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
-          <h4 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: tokens.colors.textPrimary, marginBottom: 4 }}>Methods</h4>
+        <div className="api-doc-section">
+          <h4 className="api-doc-section-title">Methods</h4>
           {entry.methods.map((m) => (
-            <div key={m.name} style={{ marginBottom: 12, paddingLeft: 12, borderLeft: `2px solid ${tokens.colors.accentBorder}` }}>
-              <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: tokens.colors.accent }}>{m.signature}</code>
-              {m.description && <p style={{ fontSize: '0.8rem', color: tokens.colors.textSecondary, marginTop: 4 }}>{m.description}</p>}
+            <div key={m.name} className="api-doc-method">
+              <code className="api-doc-inline-code">{m.signature}</code>
+              {m.description && <p className="api-doc-method-desc">{m.description}</p>}
               {m.params && m.params.length > 0 && <ParamTable params={m.params} />}
             </div>
           ))}
@@ -124,10 +107,10 @@ export function ApiDocRenderer({ entry }: { entry: ApiDocEntry }) {
 
       {entry.examples && entry.examples.length > 0 && (
         <div>
-          <h4 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: tokens.colors.textPrimary, marginBottom: 4 }}>Examples</h4>
+          <h4 className="api-doc-section-title">Examples</h4>
           {entry.examples.map((ex, i) => (
-            <div key={i} style={{ borderRadius: 8, overflow: 'hidden', marginBottom: 8 }}>
-              <pre style={{ padding: 16, background: '#1a1b26', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#a9b1d6', overflowX: 'auto', margin: 0 }}>
+            <div key={i} className="api-doc-example-wrap">
+              <pre className="api-doc-code-pre">
                 {ex.replace(/^```\w*\n?/, '').replace(/\n?```$/, '')}
               </pre>
             </div>

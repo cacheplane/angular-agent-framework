@@ -1,6 +1,5 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { tokens } from '@threadplane/design-tokens';
 import { analyticsEvents } from '../../lib/analytics/events';
 import { track } from '../../lib/analytics/client';
 import { SITE_ORIGIN } from '../../lib/site-origin';
@@ -57,64 +56,24 @@ export function PageActions({ library, section, slug }: Props) {
     setOpen(false);
   };
 
-  const itemStyle: React.CSSProperties = {
-    display: 'block',
-    width: '100%',
-    textAlign: 'left',
-    padding: '8px 12px',
-    fontFamily: tokens.typography.fontSans,
-    fontSize: 13,
-    color: tokens.colors.textPrimary,
-    background: 'transparent',
-    border: 'none',
-    textDecoration: 'none',
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
-  };
-
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
+    <div ref={ref} className="docs-page-actions">
       <button
         type="button"
         aria-label="Page actions"
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: 32,
-          height: 32,
-          padding: 0,
-          border: `1px solid ${tokens.surfaces.border}`,
-          borderRadius: tokens.radius.md,
-          background: tokens.surfaces.surface,
-          color: tokens.colors.textSecondary,
-          cursor: 'pointer',
-          fontSize: 18,
-          lineHeight: 1,
-        }}
+        className="docs-page-actions-trigger"
       >
         <span aria-hidden="true">⋯</span>
       </button>
       {open ? (
         <div
           role="menu"
-          style={{
-            position: 'absolute',
-            top: 'calc(100% + 6px)',
-            right: 0,
-            minWidth: 200,
-            background: tokens.surfaces.surface,
-            border: `1px solid ${tokens.surfaces.border}`,
-            borderRadius: tokens.radius.md,
-            boxShadow: tokens.shadows.md,
-            padding: 4,
-            zIndex: 20,
-          }}
+          className="docs-page-actions-menu"
         >
-          <button type="button" role="menuitem" onClick={copyMarkdown} style={itemStyle}>
+          <button type="button" role="menuitem" onClick={copyMarkdown} className="docs-page-actions-item">
             {copied ? 'Copied' : 'Copy page as Markdown'}
           </button>
           <a
@@ -123,7 +82,7 @@ export function PageActions({ library, section, slug }: Props) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setOpen(false)}
-            style={itemStyle}
+            className="docs-page-actions-item"
           >
             Open in ChatGPT
           </a>
@@ -133,7 +92,7 @@ export function PageActions({ library, section, slug }: Props) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setOpen(false)}
-            style={itemStyle}
+            className="docs-page-actions-item"
           >
             Edit on GitHub
           </a>

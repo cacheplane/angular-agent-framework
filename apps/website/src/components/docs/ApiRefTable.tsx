@@ -1,5 +1,3 @@
-import { tokens } from '@threadplane/design-tokens';
-
 export interface ApiEntry {
   name: string;
   type: string;
@@ -13,34 +11,26 @@ export function ApiRefTable({ entries }: { entries: ApiEntry[] }) {
       {entries.map((entry) => (
         <div
           key={entry.name}
-          className="p-6 rounded-lg"
-          style={{
-            border: `1px solid ${tokens.surfaces.border}`,
-            background: tokens.surfaces.surface,
-            boxShadow: tokens.shadows.sm,
-          }}>
+          className="p-6 rounded-lg api-ref-card">
           <div className="flex items-baseline gap-3 mb-2">
             <code
-              className="font-mono font-bold text-base"
-              style={{ color: tokens.colors.accent }}>
+              className="font-mono font-bold text-base api-ref-name">
               {entry.name}
             </code>
             <code
-              className="font-mono text-xs"
-              style={{ color: tokens.colors.textSecondary }}>
+              className="font-mono text-xs api-ref-type">
               {entry.type}
             </code>
           </div>
-          <p className="text-sm mb-4" style={{ color: tokens.colors.textSecondary }}>{entry.description}</p>
+          <p className="text-sm mb-4 api-ref-description">{entry.description}</p>
           {entry.params && entry.params.length > 0 && (
-            <table className="w-full text-xs" style={{ borderCollapse: 'collapse' }}>
+            <table className="w-full text-xs api-ref-table">
               <thead>
-                <tr style={{ borderBottom: `1px solid ${tokens.colors.accentBorder}` }}>
+                <tr>
                   {['Parameter', 'Type', 'Description'].map((h) => (
                     <th
                       key={h}
-                      className="text-left py-2 font-mono uppercase"
-                      style={{ color: tokens.colors.textMuted }}>
+                      className="text-left py-2 font-mono uppercase api-ref-table-head">
                       {h}
                     </th>
                   ))}
@@ -48,10 +38,10 @@ export function ApiRefTable({ entries }: { entries: ApiEntry[] }) {
               </thead>
               <tbody>
                 {entry.params.map((p) => (
-                  <tr key={p.name} style={{ borderBottom: `1px solid ${tokens.colors.accentBorder}` }}>
-                    <td className="py-2 font-mono" style={{ color: tokens.colors.accent }}>{p.name}</td>
-                    <td className="py-2 font-mono" style={{ color: tokens.colors.textSecondary }}>{p.type}</td>
-                    <td className="py-2" style={{ color: tokens.colors.textSecondary }}>{p.desc}</td>
+                  <tr key={p.name}>
+                    <td className="py-2 font-mono api-ref-param-name">{p.name}</td>
+                    <td className="py-2 font-mono api-ref-param-type">{p.type}</td>
+                    <td className="py-2 api-ref-param-desc">{p.desc}</td>
                   </tr>
                 ))}
               </tbody>

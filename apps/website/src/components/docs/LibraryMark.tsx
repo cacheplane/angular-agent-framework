@@ -1,4 +1,3 @@
-import { tokens } from '@threadplane/design-tokens';
 import type { LibraryId } from '../../lib/docs-config';
 
 type GlyphKey = 'chat' | 'key' | 'middleware' | 'pulse';
@@ -67,33 +66,20 @@ interface Props {
 
 export function LibraryMark({ library, size = 24 }: Props) {
   const mark = MARKS[library];
-  const base = {
-    width: size,
-    height: size,
-    borderRadius: tokens.radius.md,
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: '0 0 auto',
-  } as const;
+  const sizeVar = { '--size': `${size}px` } as React.CSSProperties;
 
   if (mark.kind === 'logo') {
     const inner = Math.round(size * 0.6);
     return (
-      <span
-        style={{
-          ...base,
-          background: tokens.surfaces.surface,
-          border: `1px solid ${tokens.surfaces.border}`,
-        }}
-      >
+      <span className="docs-library-mark" data-kind="logo" style={sizeVar}>
         <img
           src={mark.src}
           alt=""
           aria-hidden="true"
           loading="lazy"
           decoding="async"
-          style={{ width: inner, height: inner, objectFit: 'contain' }}
+          className="docs-library-mark-img"
+          style={{ '--inner-size': `${inner}px` } as React.CSSProperties}
         />
       </span>
     );
@@ -101,14 +87,7 @@ export function LibraryMark({ library, size = 24 }: Props) {
 
   const Glyph = GLYPHS[mark.glyph];
   return (
-    <span
-      style={{
-        ...base,
-        background: tokens.colors.accentSurface,
-        border: `1px solid ${tokens.colors.accentBorder}`,
-        color: tokens.colors.accent,
-      }}
-    >
+    <span className="docs-library-mark" data-kind="glyph" style={sizeVar}>
       <Glyph s={Math.round(size * 0.55)} />
     </span>
   );
