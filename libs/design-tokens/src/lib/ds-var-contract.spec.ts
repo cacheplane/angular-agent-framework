@@ -32,6 +32,7 @@ const CONSUMER_REFERENCED = [
   '--ds-radius-md',
   '--ds-radius-sm',
   '--ds-radius-xl',
+  '--ds-render-green',
   '--ds-shadow-lg',
   '--ds-shadow-md',
   '--ds-surface',
