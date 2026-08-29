@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { tokens } from '@threadplane/design-tokens';
 import type { Post } from '../../lib/blog';
 import { formatCardDate, readingTimeMin } from '../../lib/blog';
 import { getAuthor } from '../../lib/blog-authors';
@@ -16,65 +15,18 @@ export function FeaturedPostCard({ post }: { post: Post }) {
       href={`/blog/${slug}`}
       data-ui="card"
       data-hoverable
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 16,
-        padding: 32,
-        borderRadius: 16,
-        background: tokens.surfaces.surface,
-        border: `1px solid ${tokens.colors.accent}`,
-        color: tokens.colors.textPrimary,
-        textDecoration: 'none',
-        cursor: 'pointer',
-        marginBottom: 32,
-      }}
+      className="featured-post-card"
     >
       <Eyebrow tone="accent">Featured</Eyebrow>
-      <h2
-        style={{
-          fontFamily: tokens.typography.h2.family,
-          fontSize: tokens.typography.h2.size,
-          lineHeight: tokens.typography.h2.line,
-          fontWeight: 700,
-          letterSpacing: '-0.02em',
-          margin: 0,
-        }}
-      >
+      <h2 className="featured-post-card-title">
         {frontmatter.title}
       </h2>
-      <p
-        style={{
-          fontFamily: tokens.typography.bodyLg.family,
-          fontSize: tokens.typography.bodyLg.size,
-          lineHeight: tokens.typography.bodyLg.line,
-          color: tokens.colors.textSecondary,
-          margin: 0,
-        }}
-      >
+      <p className="featured-post-card-description">
         {frontmatter.description}
       </p>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 16,
-          marginTop: 8,
-          flexWrap: 'wrap',
-        }}
-      >
+      <div className="featured-post-card-footer">
         <AuthorByline author={author} />
-        <span
-          style={{
-            fontFamily: tokens.typography.eyebrow.family,
-            fontSize: tokens.typography.eyebrow.size,
-            fontWeight: tokens.typography.eyebrow.weight,
-            letterSpacing: tokens.typography.eyebrow.letterSpacing,
-            textTransform: tokens.typography.eyebrow.transform,
-            color: tokens.colors.textMuted,
-          }}
-        >
+        <span className="featured-post-card-meta">
           {formatCardDate(frontmatter.date)} · {minutes} min read
         </span>
       </div>

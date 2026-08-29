@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { tokens } from '@threadplane/design-tokens';
 
 interface BlogTagFilterProps {
   /** Currently active tag from ?tag=. Undefined when on /blog. */
@@ -8,47 +7,17 @@ interface BlogTagFilterProps {
   tags: string[];
 }
 
-const PILL_BASE: React.CSSProperties = {
-  padding: '6px 12px',
-  borderRadius: 999,
-  fontSize: 13,
-  fontWeight: 500,
-  textDecoration: 'none',
-  lineHeight: 1.2,
-  cursor: 'pointer',
-  display: 'inline-block',
-};
-
-const ACTIVE: React.CSSProperties = {
-  ...PILL_BASE,
-  background: tokens.colors.accent,
-  color: '#ffffff',
-};
-
-const INACTIVE: React.CSSProperties = {
-  ...PILL_BASE,
-  background: tokens.colors.accentSurface,
-  color: tokens.colors.accent,
-};
-
 export function BlogTagFilter({ activeTag, tags }: BlogTagFilterProps) {
   const sorted = [...tags].sort((a, b) => a.localeCompare(b));
   return (
-    <div
-      style={{
-        display: 'flex',
-        gap: 8,
-        flexWrap: 'wrap',
-        marginBottom: 32,
-      }}
-    >
+    <div className="blog-tag-filter">
       {/* "All" pill */}
       {activeTag ? (
-        <Link href="/blog" style={INACTIVE}>
+        <Link href="/blog" className="blog-tag-pill">
           All
         </Link>
       ) : (
-        <span style={{ ...ACTIVE, cursor: 'default' }} aria-current="page">
+        <span className="blog-tag-pill" data-active data-static aria-current="page">
           All
         </span>
       )}
@@ -61,13 +30,14 @@ export function BlogTagFilter({ activeTag, tags }: BlogTagFilterProps) {
           <Link
             key={tag}
             href={href}
-            style={ACTIVE}
+            className="blog-tag-pill"
+            data-active
             aria-current="page"
           >
             {tag}
           </Link>
         ) : (
-          <Link key={tag} href={href} style={INACTIVE}>
+          <Link key={tag} href={href} className="blog-tag-pill">
             {tag}
           </Link>
         );
