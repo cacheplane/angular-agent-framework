@@ -1,3 +1,19 @@
+## 0.0.60 (2026-08-29)
+
+### 🚀 Features
+
+- **ci:** working aimock drift detection ([#846](https://github.com/cacheplane/angular-agent-framework/pull/846))
+- **design-tokens:** complete the CSS-var surface so the website can leave inline styles ([#845](https://github.com/cacheplane/angular-agent-framework/pull/845), [#555770](https://github.com/cacheplane/angular-agent-framework/issues/555770), [#8](https://github.com/cacheplane/angular-agent-framework/issues/8), [#1](https://github.com/cacheplane/angular-agent-framework/issues/1))
+
+### 🩹 Fixes
+
+- **langgraph:** subagent cards rendered an empty transcript ([#847](https://github.com/cacheplane/angular-agent-framework/pull/847), [#751](https://github.com/cacheplane/angular-agent-framework/issues/751))
+
+### ❤️ Thank You
+
+- Brian Love @blove
+- Claude Opus 5
+
 ## 0.0.59 (2026-08-29)
 
 ### 🚀 Features
