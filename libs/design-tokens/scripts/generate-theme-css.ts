@@ -17,6 +17,7 @@ import { lightOverrides } from '../src/lib/light';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
 const OUTPUT_PATH = resolve(HERE, '..', 'src', 'lib', 'theme.css');
+const TOKENS_OUTPUT_PATH = resolve(HERE, '..', 'src', 'lib', 'tokens.css');
 
 const HEADER = `/*
  * @threadplane/design-tokens/theme.css
@@ -24,7 +25,7 @@ const HEADER = `/*
  * GENERATED FILE — DO NOT EDIT BY HAND.
  *
  * Regenerate with:
- *   pnpm nx run design-tokens:generate-theme-css
+ *   npx nx run design-tokens:generate-theme-css
  *
  * Source of truth:
  *   - libs/design-tokens/src/lib/light.ts
@@ -36,7 +37,7 @@ const HEADER = `/*
 `;
 
 function buildThemeBlock(): string {
-  const { typography, radius, shadows, brand } = baseTokens;
+  const { typography, space, radius, shadows, brand } = baseTokens;
 
   const lines: string[] = ['@theme {'];
 
@@ -88,6 +89,40 @@ function buildThemeBlock(): string {
   lines.push(`  --font-inter: ${typography.fontSans};`);
   lines.push(`  --font-mono: ${typography.fontMono};`);
 
+  // Type scale — Tailwind v4 composite text tokens.
+  //
+  // `--text-{name}` plus the optional `--line-height` / `--font-weight` /
+  // `--letter-spacing` sub-keys collapse a whole type step into a single
+  // `text-{name}` utility, which is an exact structural match for the
+  // composite objects in typography.ts.
+  //
+  // `family` is deliberately not emitted: those values are already
+  // `var(--font-garamond)` and friends, and Tailwind's --text-* bundle has no
+  // font-family sub-key. `eyebrow.transform` is likewise a plain
+  // `text-transform` keyword, not a token. Both are excluded in
+  // token-css-parity.spec.ts with that reasoning.
+  lines.push('');
+  lines.push('  /* Type scale */');
+  const typeSteps = [
+    ['h1', typography.h1],
+    ['h2', typography.h2],
+    ['h3', typography.h3],
+    ['eyebrow', typography.eyebrow],
+    ['body-lg', typography.bodyLg],
+    ['body', typography.body],
+    ['caption', typography.caption],
+  ] as const;
+  for (const [name, step] of typeSteps) {
+    lines.push(`  --text-${name}: ${step.size};`);
+    lines.push(`  --text-${name}--line-height: ${step.line};`);
+    if ('weight' in step) {
+      lines.push(`  --text-${name}--font-weight: ${step.weight};`);
+    }
+    if ('letterSpacing' in step) {
+      lines.push(`  --text-${name}--letter-spacing: ${step.letterSpacing};`);
+    }
+  }
+
   // Radii
   lines.push('');
   lines.push('  /* Radii */');
@@ -105,8 +140,133 @@ function buildThemeBlock(): string {
   lines.push(`  --shadow-lg: ${shadows.lg};`);
   lines.push(`  --shadow-focus: ${shadows.focus};`);
 
+  // Space scale.
+  //
+  // `containerMax` goes to the --container-* namespace, not --spacing-*,
+  // because it is a max-width rather than a spacing step.
+  //
+  // Tailwind strips the namespace prefix when naming the utility, so
+  // `--container-page` generates `max-w-page` (NOT `max-w-container-page`).
+  // Verified in a browser: `max-w-page` computes to 1200px. `--spacing-*`
+  // behaves the same way — `--spacing-section-y` gives `p-section-y`.
+  lines.push('');
+  lines.push('  /* Space scale */');
+  lines.push(`  --spacing-section-y: ${space.sectionY};`);
+  lines.push(`  --spacing-section-y-tight: ${space.sectionYTight};`);
+  lines.push(`  --spacing-container-x: ${space.containerX};`);
+  lines.push(`  --container-page: ${space.containerMax};`);
+
   lines.push('}');
   return lines.join('\n') + '\n';
+}
+
+const TOKENS_HEADER = `/*
+ * @threadplane/design-tokens/tokens.css
+ *
+ * GENERATED FILE — DO NOT EDIT BY HAND.
+ *
+ * Plain \`:root { --ds-* }\` custom properties for consumers that do not run
+ * Tailwind (the Angular cockpit and example apps). Same values as theme.css,
+ * different naming convention and no \`@theme\` wrapper.
+ *
+ * Regenerate with:
+ *   npx nx run design-tokens:generate-theme-css
+ *
+ * Source of truth:
+ *   - libs/design-tokens/src/lib/light.ts
+ *   - libs/design-tokens/src/lib/base.ts
+ *
+ * The names here are a consumer contract — cockpit and example apps reference
+ * them. ds-var-contract.spec.ts fails if one disappears.
+ */
+`;
+
+function buildTokensBlock(): string {
+  const { typography, space, radius, shadows, brand } = baseTokens;
+  const lines: string[] = [':root {'];
+
+  lines.push('  /* Colors */');
+  lines.push(`  --ds-bg: ${lightOverrides.bg};`);
+  lines.push(`  --ds-accent: ${lightOverrides.accent};`);
+  lines.push(`  --ds-accent-hover: ${lightOverrides.accentHover};`);
+  lines.push(`  --ds-accent-light: ${brand.accentLight};`);
+  lines.push(`  --ds-accent-glow: ${lightOverrides.accentGlow};`);
+  lines.push(`  --ds-accent-border: ${lightOverrides.accentBorder};`);
+  lines.push(`  --ds-accent-border-hover: ${lightOverrides.accentBorderHover};`);
+  lines.push(`  --ds-accent-surface: ${lightOverrides.accentSurface};`);
+  lines.push(`  --ds-text-primary: ${lightOverrides.textPrimary};`);
+  lines.push(`  --ds-text-secondary: ${lightOverrides.textSecondary};`);
+  lines.push(`  --ds-text-muted: ${lightOverrides.textMuted};`);
+  lines.push(`  --ds-text-inverted: ${lightOverrides.textInverted};`);
+  lines.push(`  --ds-sidebar-bg: ${lightOverrides.sidebarBg};`);
+  lines.push(`  --ds-angular-red: ${brand.angularRed};`);
+  lines.push(`  --ds-render-green: ${brand.renderGreen};`);
+  lines.push(`  --ds-chat-purple: ${brand.chatPurple};`);
+
+  lines.push('');
+  lines.push('  /* Surfaces */');
+  lines.push(`  --ds-canvas: ${lightOverrides.canvas};`);
+  lines.push(`  --ds-surface: ${lightOverrides.surface};`);
+  lines.push(`  --ds-surface-tinted: ${lightOverrides.surfaceTinted};`);
+  lines.push(`  --ds-surface-dim: ${lightOverrides.surfaceDim};`);
+  lines.push(`  --ds-border: ${lightOverrides.border};`);
+  lines.push(`  --ds-border-strong: ${lightOverrides.borderStrong};`);
+
+  lines.push('');
+  lines.push('  /* Typography */');
+  lines.push(`  --ds-font-serif: ${typography.fontSerif};`);
+  lines.push(`  --ds-font-sans: ${typography.fontSans};`);
+  lines.push(`  --ds-font-mono: ${typography.fontMono};`);
+
+  lines.push('');
+  lines.push('  /* Typography — type scale */');
+  // `-spacing` (not `-letter-spacing`) preserves the pre-existing name.
+  const dsSteps = [
+    ['h1', typography.h1],
+    ['h2', typography.h2],
+    ['h3', typography.h3],
+    ['eyebrow', typography.eyebrow],
+    ['body-lg', typography.bodyLg],
+    ['body', typography.body],
+    ['caption', typography.caption],
+  ] as const;
+  for (const [name, step] of dsSteps) {
+    lines.push(`  --ds-${name}-size: ${step.size};`);
+    lines.push(`  --ds-${name}-line: ${step.line};`);
+    if ('weight' in step) lines.push(`  --ds-${name}-weight: ${step.weight};`);
+    if ('letterSpacing' in step) {
+      lines.push(`  --ds-${name}-spacing: ${step.letterSpacing};`);
+    }
+  }
+
+  lines.push('');
+  lines.push('  /* Shadows */');
+  lines.push(`  --ds-shadow-sm: ${shadows.sm};`);
+  lines.push(`  --ds-shadow-md: ${shadows.md};`);
+  lines.push(`  --ds-shadow-lg: ${shadows.lg};`);
+  lines.push(`  --ds-shadow-focus: ${shadows.focus};`);
+
+  lines.push('');
+  lines.push('  /* Radius */');
+  lines.push(`  --ds-radius-sm: ${radius.sm};`);
+  lines.push(`  --ds-radius-md: ${radius.md};`);
+  lines.push(`  --ds-radius-lg: ${radius.lg};`);
+  lines.push(`  --ds-radius-xl: ${radius.xl};`);
+  lines.push(`  --ds-radius-full: ${radius.full};`);
+
+  lines.push('');
+  lines.push('  /* Space */');
+  lines.push(`  --ds-section-y: ${space.sectionY};`);
+  lines.push(`  --ds-section-y-tight: ${space.sectionYTight};`);
+  lines.push(`  --ds-container-x: ${space.containerX};`);
+  lines.push(`  --ds-container-max: ${space.containerMax};`);
+
+  lines.push('}');
+  return lines.join('\n') + '\n';
+}
+
+export function generateTokensCss(): string {
+  return TOKENS_HEADER + buildTokensBlock();
 }
 
 export function generateThemeCss(): string {
@@ -114,10 +274,10 @@ export function generateThemeCss(): string {
 }
 
 function main() {
-  const content = generateThemeCss();
-  writeFileSync(OUTPUT_PATH, content);
-  // eslint-disable-next-line no-console
+  writeFileSync(OUTPUT_PATH, generateThemeCss());
+  writeFileSync(TOKENS_OUTPUT_PATH, generateTokensCss());
   console.log(`wrote ${OUTPUT_PATH}`);
+  console.log(`wrote ${TOKENS_OUTPUT_PATH}`);
 }
 
 // Only run main when invoked directly (not when imported by tests)

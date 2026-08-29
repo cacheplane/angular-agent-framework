@@ -4,7 +4,7 @@
  * GENERATED FILE — DO NOT EDIT BY HAND.
  *
  * Regenerate with:
- *   pnpm nx run design-tokens:generate-theme-css
+ *   npx nx run design-tokens:generate-theme-css
  *
  * Source of truth:
  *   - libs/design-tokens/src/lib/light.ts
@@ -51,6 +51,25 @@
   --font-inter: Inter, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 
+  /* Type scale */
+  --text-h1: clamp(48px, 6vw, 72px);
+  --text-h1--line-height: 1.08;
+  --text-h2: clamp(36px, 4.5vw, 56px);
+  --text-h2--line-height: 1.12;
+  --text-h3: 28px;
+  --text-h3--line-height: 1.25;
+  --text-h3--font-weight: 600;
+  --text-eyebrow: 12px;
+  --text-eyebrow--line-height: 1.4;
+  --text-eyebrow--font-weight: 700;
+  --text-eyebrow--letter-spacing: 0.12em;
+  --text-body-lg: 20px;
+  --text-body-lg--line-height: 1.6;
+  --text-body: 16px;
+  --text-body--line-height: 1.6;
+  --text-caption: 14px;
+  --text-caption--line-height: 1.5;
+
   /* Radii */
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -63,4 +82,10 @@
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.10), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.10), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --shadow-focus: 0 0 0 3px rgba(0, 64, 144, 0.25);
+
+  /* Space scale */
+  --spacing-section-y: clamp(64px, 8vw, 120px);
+  --spacing-section-y-tight: clamp(48px, 6vw, 80px);
+  --spacing-container-x: clamp(20px, 4vw, 40px);
+  --container-page: 1200px;
 }
