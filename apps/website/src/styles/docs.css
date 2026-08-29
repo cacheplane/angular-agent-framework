@@ -256,3 +256,345 @@
     display: none;
   }
 }
+
+/*
+ * mdx components (components/docs/mdx/*.tsx) — presentation for the MDX
+ * content components authored inside docs pages.
+ *
+ * Font-family exception: see the top of ui.css for the next/font shadowing
+ * rationale. `tokens.typography.fontSans/fontMono/fontSerif` are raw stacks
+ * and are copied through verbatim below ('Inter, system-ui, sans-serif',
+ * '"JetBrains Mono", monospace', '"EB Garamond", Georgia, serif');
+ * `tokens.typography.body.family` is already `var(--font-inter)` and is
+ * copied through as the var.
+ */
+
+/* mdx — Callout */
+[data-mdx="callout"] {
+  position: relative;
+  background: var(--color-surface-tinted);
+  border: 1px solid var(--color-border);
+  border-left-width: 4px;
+  border-radius: var(--radius-md);
+  padding: 14px 18px 14px 22px;
+  margin: 20px 0;
+}
+[data-mdx="callout"][data-tone="tip"] {
+  border-left-color: #1a7a40;
+}
+[data-mdx="callout"][data-tone="warning"] {
+  border-left-color: #D4850F;
+}
+[data-mdx="callout"][data-tone="info"] {
+  border-left-color: var(--color-accent);
+}
+[data-mdx="callout"][data-tone="danger"] {
+  border-left-color: var(--color-angular-red);
+}
+.mdx-callout-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 0;
+}
+.mdx-callout-header[data-has-title] {
+  margin-bottom: 6px;
+}
+.mdx-callout-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  color: var(--color-text-inverted);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+[data-mdx="callout"][data-tone="tip"] .mdx-callout-icon {
+  background: #1a7a40;
+}
+[data-mdx="callout"][data-tone="warning"] .mdx-callout-icon {
+  background: #D4850F;
+}
+[data-mdx="callout"][data-tone="info"] .mdx-callout-icon {
+  background: var(--color-accent);
+}
+[data-mdx="callout"][data-tone="danger"] .mdx-callout-icon {
+  background: var(--color-angular-red);
+}
+.mdx-callout-title {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 15px;
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+.mdx-callout-body {
+  font-family: var(--font-inter);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+/* mdx — Steps / Step */
+.mdx-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.mdx-step {
+  display: flex;
+  gap: 12px;
+}
+.mdx-step-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.mdx-step-number {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  color: var(--color-text-inverted);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 14px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+/* Connector stays per-step (no :last-child trim) — a later polish pass adds
+ * that; this migration moves the value verbatim. */
+.mdx-step-connector {
+  width: 2px;
+  flex: 1;
+  background: var(--color-border);
+  margin-top: 4px;
+}
+.mdx-step-content {
+  flex: 1;
+  padding-bottom: 8px;
+}
+.mdx-step-title {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+.mdx-step-body {
+  font-family: var(--font-inter);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+/* mdx — Card / CardGroup */
+.mdx-card-group {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+  margin-bottom: 20px;
+}
+.mdx-card-link {
+  text-decoration: none;
+}
+[data-mdx="card"] {
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 160ms ease, border-color 160ms ease, transform 160ms ease;
+  cursor: pointer;
+}
+[data-mdx="card"]:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-border-strong);
+  transform: translateY(-1px);
+}
+.mdx-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.mdx-card-icon {
+  font-size: 1.15rem;
+  margin-bottom: 6px;
+}
+.mdx-card-title {
+  font-family: "EB Garamond", Georgia, serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+.mdx-card-arrow {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  margin-top: 2px;
+}
+.mdx-card-body {
+  font-family: var(--font-inter);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+/* mdx — Tabs */
+.mdx-tabs {
+  margin-top: 16px;
+  margin-bottom: 20px;
+}
+.mdx-tabs-bar {
+  display: flex;
+  gap: 0;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+.mdx-tab-button {
+  padding: 10px 18px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  border-radius: 6px 6px 0 0;
+}
+.mdx-tab-button:not([data-active]):hover {
+  color: var(--color-text-primary);
+}
+.mdx-tab-button[data-active] {
+  font-weight: 600;
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
+
+/* mdx — CodeBlock (Pre + copy button) */
+.mdx-pre-wrap {
+  position: relative;
+  max-width: 100%;
+  overflow: hidden;
+}
+.mdx-pre {
+  overflow-x: auto;
+}
+.mdx-pre-copy {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.mdx-pre-copy[data-copied] {
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* mdx — CodeGroup */
+.mdx-codegroup {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.mdx-codegroup-bar {
+  display: flex;
+  gap: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+.mdx-codegroup-tab {
+  padding: 8px 14px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.mdx-codegroup-tab:not([data-active]):hover {
+  color: var(--color-text-primary);
+}
+.mdx-codegroup-tab[data-active] {
+  font-weight: 600;
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
+.mdx-codegroup-panel {
+  border: 1px solid var(--color-border);
+  border-top: none;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  overflow: hidden;
+}
+
+/* mdx — FeatureChips */
+.mdx-chip-row {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-top: 20px;
+  margin-bottom: 28px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+.mdx-chip-link {
+  text-decoration: none;
+  flex-shrink: 0;
+}
+[data-mdx="feature-chip"] {
+  width: 130px;
+  padding: 14px 12px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+[data-mdx="feature-chip"]:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-border-strong);
+}
+.mdx-chip-icon {
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+.mdx-chip-title {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+.mdx-chip-signal {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: var(--color-accent);
+}

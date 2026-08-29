@@ -1,10 +1,9 @@
 import React from 'react';
-import { tokens } from '@threadplane/design-tokens';
 
 export function Steps({ children }: { children: React.ReactNode }) {
   const steps = React.Children.toArray(children);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 16 }}>
+    <div className="mdx-steps-list">
       {steps.map((child, i) => {
         if (!React.isValidElement(child)) return null;
         return React.cloneElement(child as React.ReactElement<{ stepNumber: number }>, { stepNumber: i + 1 });
@@ -15,44 +14,18 @@ export function Steps({ children }: { children: React.ReactNode }) {
 
 export function Step({ title, children, stepNumber }: { title: string; children: React.ReactNode; stepNumber?: number }) {
   return (
-    <div style={{ display: 'flex', gap: 12 }}>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <div className="mdx-step">
+      <div className="mdx-step-rail">
         {/* Number circle */}
-        <div style={{
-          width: 32,
-          height: 32,
-          borderRadius: tokens.radius.full,
-          background: tokens.colors.accent,
-          color: tokens.colors.textInverted,
-          fontFamily: tokens.typography.fontMono,
-          fontSize: 14,
-          fontWeight: 700,
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-        }}>{stepNumber ?? 1}</div>
+        <div className="mdx-step-number">{stepNumber ?? 1}</div>
         {/* Vertical connector */}
-        <div style={{ width: 2, flex: 1, background: tokens.surfaces.border, marginTop: 4 }} />
+        <div className="mdx-step-connector" />
       </div>
-      <div style={{ flex: 1, paddingBottom: 8 }}>
+      <div className="mdx-step-content">
         {/* Step title */}
-        <div style={{
-          fontFamily: tokens.typography.fontSans,
-          fontSize: 17,
-          fontWeight: 600,
-          color: tokens.colors.textPrimary,
-          marginBottom: 4,
-        }}>{title}</div>
+        <div className="mdx-step-title">{title}</div>
         {/* Step body */}
-        <div style={{
-          fontFamily: tokens.typography.body.family,
-          fontSize: 16,
-          lineHeight: 1.6,
-          color: tokens.colors.textSecondary,
-        }}>
-          {children}
-        </div>
+        <div className="mdx-step-body">{children}</div>
       </div>
     </div>
   );

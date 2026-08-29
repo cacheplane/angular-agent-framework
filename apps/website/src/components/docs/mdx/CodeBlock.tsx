@@ -20,7 +20,7 @@ function CheckIcon() {
   );
 }
 
-export function Pre({ children, ...props }: React.HTMLAttributes<HTMLPreElement>) {
+export function Pre({ children, className, ...props }: React.HTMLAttributes<HTMLPreElement>) {
   const ref = useRef<HTMLPreElement>(null);
   const [copied, setCopied] = useState(false);
 
@@ -36,28 +36,13 @@ export function Pre({ children, ...props }: React.HTMLAttributes<HTMLPreElement>
   };
 
   return (
-    <div style={{ position: 'relative', maxWidth: '100%', overflow: 'hidden' }}>
-      <pre ref={ref} {...props} style={{ ...((props as Record<string, unknown>).style as React.CSSProperties), overflowX: 'auto' }}>{children}</pre>
+    <div className="mdx-pre-wrap">
+      <pre ref={ref} {...props} className={className ? `${className} mdx-pre` : 'mdx-pre'}>{children}</pre>
       <button
         onClick={copy}
         aria-label={copied ? 'Copied' : 'Copy code'}
-        style={{
-          position: 'absolute',
-          top: 8,
-          right: 8,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: 28,
-          height: 28,
-          padding: 0,
-          border: '1px solid rgba(255,255,255,0.15)',
-          borderRadius: 6,
-          background: copied ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)',
-          color: copied ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.55)',
-          cursor: 'pointer',
-          transition: 'background 0.15s, color 0.15s',
-        }}
+        data-copied={copied ? '' : undefined}
+        className="mdx-pre-copy"
       >
         {copied ? <CheckIcon /> : <CopyIcon />}
       </button>
