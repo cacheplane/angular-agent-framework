@@ -770,6 +770,9 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         if (child) {
           if (child.kind === 'subgraph') {
             subagentManager.ensureSubgraphStream(child.key, child.name);
+          } else {
+            // Claim the stream for its tool call before its tokens arrive.
+            subagentManager.ensureToolStreamAttribution(child.key);
           }
           for (const msg of normalized) {
             subagentManager.addMessageToSubagent(child.key, msg);
@@ -986,14 +989,15 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     if (!child) return;
 
     if (child.kind === 'tool') {
-      // Attribution ladder applies to tool children only: their namespace id
-      // may need mapping onto a registered tool call.
+      // Prefer the precise description match when the child's first message is
+      // the human task; otherwise claim the stream positionally so a graph that
+      // doesn't fit that shape still gets attributed.
       const messages = values['messages'];
-      if (Array.isArray(messages) && messages.length > 0) {
-        const first = messages[0];
-        if (isRecord(first) && (first['type'] === 'human' || first['type'] === 'user') && typeof first['content'] === 'string') {
-          subagentManager.matchSubgraphToSubagent(child.key, first['content']);
-        }
+      const first = Array.isArray(messages) && messages.length > 0 ? messages[0] : undefined;
+      if (isRecord(first) && (first['type'] === 'human' || first['type'] === 'user') && typeof first['content'] === 'string') {
+        subagentManager.matchSubgraphToSubagent(child.key, first['content']);
+      } else {
+        subagentManager.ensureToolStreamAttribution(child.key);
       }
     } else {
       subagentManager.ensureSubgraphStream(child.key, child.name);
