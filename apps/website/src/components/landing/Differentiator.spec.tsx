@@ -32,7 +32,7 @@ const EXPECTED_NEEDS = [
   'Backend portability',
   'Angular-native',
   'Observability hooks',
-  'MIT + self-hosted',
+  'Open adapters + self-hosted',
 ];
 
 describe('Differentiator', () => {
@@ -55,6 +55,9 @@ describe('Differentiator', () => {
     for (const need of EXPECTED_NEEDS) {
       expect(screen.getByText(need)).toBeTruthy();
     }
+    // Guards silent row loss: without this, deleting a row from the component
+    // AND its line here would leave the suite green on a shrunken table.
+    expect(EXPECTED_NEEDS).toHaveLength(10);
   });
 
   it('renders the @threadplane/render primitive for the generative UI row', () => {
