@@ -347,3 +347,25 @@
   gap: 8px;
 }
 
+/* Choosing-an-adapter page — app/docs/choosing-an-adapter/page.tsx */
+.adapter-hero-inner {
+  max-width: 720px;
+}
+.adapter-eyebrow-spaced {
+  margin-bottom: 16px;
+}
+.adapter-article {
+  max-width: 760px;
+}
+
+/* Docs shell — app/docs/[library]/[section]/[slug]/page.tsx
+ * paddingTop: 80 and the overflow-x-hidden utility are known defects
+ * (nav-height coupling) migrated VERBATIM here; a later project fixes them,
+ * not this migration. */
+.docs-shell-page {
+  background: var(--color-canvas);
+  padding-top: 80px;
+}
+.docs-shell-body {
+  background: var(--color-surface);
+}
