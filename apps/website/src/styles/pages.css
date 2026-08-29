@@ -796,3 +796,290 @@
   color: var(--color-text-secondary);
   margin: 0 0 32px 0;
 }
+
+/* Render landing page — app/render/page.tsx */
+.render-page-hero-inner {
+  max-width: 820px;
+  margin: 0 auto;
+  text-align: center;
+}
+.render-page-eyebrow-spaced {
+  margin-bottom: 16px;
+}
+.render-page-h1 {
+  font-family: var(--font-garamond);
+  font-size: var(--text-h1);
+  line-height: var(--text-h1--line-height);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+  margin-bottom: 24px;
+  letter-spacing: -0.02em;
+}
+.render-page-hero-subtitle {
+  font-family: var(--font-inter);
+  font-size: var(--text-body-lg);
+  line-height: var(--text-body-lg--line-height);
+  color: var(--color-text-secondary);
+  margin: 0 auto 32px;
+  max-width: 640px;
+}
+.render-page-hero-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.render-page-hero-pills {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.render-page-visual-panel {
+  padding: 24px;
+  min-height: 320px;
+  background: var(--color-surface);
+}
+.render-page-spec-block {
+  background: var(--color-surface-tinted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  margin-bottom: 12px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  white-space: pre;
+}
+.render-page-rendered-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+.render-page-ai-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--color-accent);
+  margin-bottom: 8px;
+}
+.render-page-card-title {
+  font-family: "EB Garamond", Georgia, serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+.render-page-card-value {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+/* Chat landing page — app/chat/page.tsx */
+.chat-page-hero-inner {
+  max-width: 820px;
+  margin: 0 auto;
+  text-align: center;
+}
+.chat-page-eyebrow-spaced {
+  margin-bottom: 16px;
+}
+.chat-page-h1 {
+  font-family: var(--font-garamond);
+  font-size: var(--text-h1);
+  line-height: var(--text-h1--line-height);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+  margin-bottom: 24px;
+  letter-spacing: -0.02em;
+}
+.chat-page-hero-subtitle {
+  font-family: var(--font-inter);
+  font-size: var(--text-body-lg);
+  line-height: var(--text-body-lg--line-height);
+  color: var(--color-text-secondary);
+  margin: 0 auto 32px;
+  max-width: 640px;
+}
+.chat-page-hero-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.chat-page-hero-pills {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.chat-page-visual-panel {
+  padding: 24px;
+  min-height: 320px;
+  background: linear-gradient(180deg, #fff, #f8fafc);
+}
+.chat-page-visual-pills-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.chat-page-tool-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
+}
+.chat-page-result-block {
+  background: var(--color-surface-tinted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  color: var(--color-text-primary);
+}
+.chat-page-replay-footer {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+/* AG-UI landing page — app/ag-ui/page.tsx */
+.ag-ui-page-hero-inner {
+  max-width: 820px;
+  margin: 0 auto;
+  text-align: center;
+}
+.ag-ui-page-eyebrow-spaced {
+  margin-bottom: 16px;
+}
+.ag-ui-page-h1 {
+  font-family: var(--font-garamond);
+  font-size: var(--text-h1);
+  line-height: var(--text-h1--line-height);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+  margin-bottom: 24px;
+  letter-spacing: -0.02em;
+}
+.ag-ui-page-hero-subtitle {
+  font-family: var(--font-inter);
+  font-size: var(--text-body-lg);
+  line-height: var(--text-body-lg--line-height);
+  color: var(--color-text-secondary);
+  margin: 0 auto 32px;
+  max-width: 680px;
+}
+.ag-ui-page-hero-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.ag-ui-page-adapter-note {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin-bottom: 20px;
+}
+.ag-ui-page-adapter-link {
+  color: var(--color-accent);
+}
+.ag-ui-page-hero-pills {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.ag-ui-page-langgraph-note {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin: 0 auto;
+  max-width: 520px;
+}
+.ag-ui-page-langgraph-link {
+  color: var(--color-accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+.ag-ui-page-code-pre {
+  margin: 0;
+  padding: 20px 22px;
+  background: #1a1b26;
+  color: #a9b1d6;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  min-height: 320px;
+  overflow: auto;
+}
+
+/* LangGraph landing page — app/langgraph/page.tsx */
+.langgraph-page-hero-inner {
+  max-width: 820px;
+  margin: 0 auto;
+  text-align: center;
+}
+.langgraph-page-eyebrow-spaced {
+  margin-bottom: 16px;
+}
+.langgraph-page-h1 {
+  font-family: var(--font-garamond);
+  font-size: var(--text-h1);
+  line-height: var(--text-h1--line-height);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+  margin-bottom: 24px;
+  letter-spacing: -0.02em;
+}
+.langgraph-page-hero-subtitle {
+  font-family: var(--font-inter);
+  font-size: var(--text-body-lg);
+  line-height: var(--text-body-lg--line-height);
+  color: var(--color-text-secondary);
+  margin: 0 auto 32px;
+  max-width: 640px;
+}
+.langgraph-page-hero-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.langgraph-page-adapter-note {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin-bottom: 20px;
+}
+.langgraph-page-adapter-link {
+  color: var(--color-accent);
+}
+.langgraph-page-hero-pills {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.langgraph-page-code-pre {
+  margin: 0;
+  padding: 20px 22px;
+  background: #1a1b26;
+  color: #a9b1d6;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  min-height: 320px;
+  overflow: auto;
+}

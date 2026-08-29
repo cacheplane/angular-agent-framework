@@ -1,4 +1,3 @@
-import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
@@ -24,43 +23,22 @@ export default async function LangGraphPage() {
       {/* Hero */}
       <Section surface="canvas" ariaLabelledBy="angular-hero-heading">
         <Container>
-          <div style={{ maxWidth: 820, margin: '0 auto', textAlign: 'center' }}>
-            <Eyebrow tone="angular" style={{ marginBottom: 16 }}>@threadplane/langgraph</Eyebrow>
-            <h1
-              id="angular-hero-heading"
-              style={{
-                fontFamily: tokens.typography.h1.family,
-                fontSize: tokens.typography.h1.size,
-                lineHeight: tokens.typography.h1.line,
-                fontWeight: 700,
-                color: tokens.colors.textPrimary,
-                margin: 0,
-                marginBottom: 24,
-                letterSpacing: '-0.02em',
-              }}
-            >
+          <div className="langgraph-page-hero-inner">
+            <Eyebrow tone="angular" className="langgraph-page-eyebrow-spaced">@threadplane/langgraph</Eyebrow>
+            <h1 id="angular-hero-heading" className="langgraph-page-h1">
               LangGraph agent UI for Angular.
             </h1>
-            <p
-              style={{
-                fontFamily: tokens.typography.bodyLg.family,
-                fontSize: tokens.typography.bodyLg.size,
-                lineHeight: tokens.typography.bodyLg.line,
-                color: tokens.colors.textSecondary,
-                margin: '0 auto 32px',
-                maxWidth: 640,
-              }}
-            >
+            <p className="langgraph-page-hero-subtitle">
               Ship LangGraph agents inside your Angular 20+ app with headless chat, durable threads, interrupts, branch/history, tool progress, and generative UI.
             </p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
+            <div className="langgraph-page-hero-buttons">
               <Button variant="primary" size="lg" href="/docs/langgraph/getting-started/introduction">Get started</Button>
               <Button variant="secondary" size="lg" href="https://github.com/cacheplane/angular-agent-framework" target="_blank" rel="noopener noreferrer">View source</Button>
             </div>
-            <p style={{ fontSize: 13, color: tokens.colors.textMuted, marginBottom: 20 }}>
-              Not sure if LangGraph is right for your backend? See <a href="/docs/choosing-an-adapter" style={{ color: tokens.colors.accent }}>Choosing an adapter</a>.
+            <p className="langgraph-page-adapter-note">
+              Not sure if LangGraph is right for your backend? See <a href="/docs/choosing-an-adapter" className="langgraph-page-adapter-link">Choosing an adapter</a>.
             </p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <div className="langgraph-page-hero-pills">
               <Pill variant="accent">MIT</Pill>
               <Pill variant="angular">Angular 20+</Pill>
               <Pill variant="neutral">LangGraph + AG-UI</Pill>
@@ -88,17 +66,7 @@ export default async function LangGraphPage() {
         cta={{ label: 'API reference', href: '/docs/langgraph/api/inject-agent' }}
         visual={
           <BrowserFrame url="app.config.ts" elevation="md">
-            <pre style={{
-              margin: 0,
-              padding: '20px 22px',
-              background: '#1a1b26',
-              color: '#a9b1d6',
-              fontFamily: tokens.typography.fontMono,
-              fontSize: 13,
-              lineHeight: 1.6,
-              minHeight: 320,
-              overflow: 'auto',
-            }}>
+            <pre className="langgraph-page-code-pre">
 {`import { provideAgent } from '@threadplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
