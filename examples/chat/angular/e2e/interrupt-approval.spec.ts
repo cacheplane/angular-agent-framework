@@ -7,7 +7,7 @@ const PROMPT =
   'what you would delete, and call request_approval before doing anything ' +
   'destructive so I can review your plan.';
 
-test('interrupt approval: pause renders the interrupt panel with the captured reason', async ({
+test('interrupt approval: pause renders the interrupt panel with the captured reason @drift', async ({
   page,
 }) => {
   await openDemo(page, '/embed');
