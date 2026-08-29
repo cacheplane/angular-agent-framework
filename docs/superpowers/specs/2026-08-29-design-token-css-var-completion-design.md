@@ -19,6 +19,11 @@ then apply the polish. That splits into three projects:
    reachable from CSS.
 2. **Substrate migration** — 802 inline style objects across 90 files, in
    reviewable batches, ending with an ESLint rule.
+   *(Corrected 2026-08-29: the real figure is 908. `grep 'style={{'` misses
+   components that build a `CSSProperties` object in a variable and pass
+   `style={someStyle}` — 106 such sites. The 1,188 token-reference count is
+   unaffected; it was counted from `tokens.*` directly. See
+   `2026-08-29-inline-style-substrate-migration-design.md`.)*
 3. **The polish arc** — three PRs against the findings audit.
 
 Project 2 is blocked on this one: 29% of the site's token references have no CSS
