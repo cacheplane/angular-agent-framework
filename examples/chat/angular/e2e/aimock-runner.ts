@@ -13,9 +13,11 @@ export interface AimockHandle {
 }
 
 export interface AimockStartOptions {
-  mode: 'replay';
-  /** Path to a single fixture file OR a directory of fixture files. */
-  fixturePath: string;
+  mode: 'replay' | 'record';
+  /** Replay: path to a fixture file or directory. Ignored in record mode. */
+  fixturePath?: string;
+  /** Record: directory where captured fixtures are written. Required in record mode. */
+  recordDir?: string;
 }
 
 // Raw JSON entry shape passes through to aimock's FixtureFileEntry — the
@@ -45,14 +47,30 @@ function loadFixtureEntries(fixturePath: string): FixtureFileEntry[] {
 }
 
 export async function startAimock(opts: AimockStartOptions): Promise<AimockHandle> {
-  const entries = loadFixtureEntries(opts.fixturePath);
-
-  // Use a large default chunkSize so ordinary fixture responses arrive in 1-2
-  // SSE deltas. Most e2e assertions measure the final rendered DOM, while
-  // targeted streaming regressions opt into smaller per-fixture chunks.
-  const mock = new LLMock({ port: 0, chunkSize: 4096 });
-  if (entries.length > 0) {
-    mock.addFixturesFromJSON(entries as never);
+  let mock: LLMock;
+  if (opts.mode === 'record') {
+    if (!opts.recordDir) throw new Error('record mode requires recordDir');
+    // Proxy unmatched requests to the real provider and capture fixtures.
+    // Requests carry the caller's Authorization header upstream, so the
+    // spawning process must hold a real OPENAI_API_KEY (see global-setup).
+    mock = new LLMock({
+      port: 0,
+      chunkSize: 4096,
+      record: {
+        providers: { openai: 'https://api.openai.com' },
+        fixturePath: opts.recordDir,
+      },
+    });
+  } else {
+    if (!opts.fixturePath) throw new Error('replay mode requires fixturePath');
+    const entries = loadFixtureEntries(opts.fixturePath);
+    // Use a large default chunkSize so ordinary fixture responses arrive in 1-2
+    // SSE deltas. Most e2e assertions measure the final rendered DOM, while
+    // targeted streaming regressions opt into smaller per-fixture chunks.
+    mock = new LLMock({ port: 0, chunkSize: 4096 });
+    if (entries.length > 0) {
+      mock.addFixturesFromJSON(entries as never);
+    }
   }
   await mock.start();
 
