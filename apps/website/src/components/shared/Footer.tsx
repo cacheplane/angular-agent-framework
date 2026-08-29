@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { tokens } from '@threadplane/design-tokens';
 import { analyticsEvents } from '../../lib/analytics/events';
 import { track, trackCtaClick, trackExternalLinkClick } from '../../lib/analytics/client';
 import { SHORT_POSITIONING_DESCRIPTION } from '../../lib/positioning';
@@ -62,7 +61,7 @@ function NewsletterForm() {
   };
 
   if (state === 'done') {
-    return <p className="text-sm mb-4" style={{ color: '#1a7a40' }}>✓ You&apos;re subscribed!</p>;
+    return <p className="text-sm mb-4 footer-newsletter-success">✓ You&apos;re subscribed!</p>;
   }
 
   return (
@@ -77,13 +76,7 @@ function NewsletterForm() {
         onChange={e => setEmail(e.target.value)}
         required
         disabled={state === 'submitting'}
-        className="text-sm rounded-lg px-3 py-2 flex-1 min-w-0"
-        style={{
-          background: tokens.surfaces.surface,
-          border: `1px solid ${tokens.surfaces.border}`,
-          color: tokens.colors.textPrimary,
-          outline: 'none',
-        }}
+        className="text-sm rounded-lg px-3 py-2 flex-1 min-w-0 footer-newsletter-input"
       />
       <Button
         type="submit"
@@ -108,13 +101,7 @@ export function Footer() {
   };
 
   return (
-    <footer
-      className="px-6 md:px-8 py-16 mt-24"
-      style={{
-        background: tokens.surfaces.surface,
-        borderTop: `1px solid ${tokens.surfaces.border}`,
-      }}
-    >
+    <footer className="px-6 md:px-8 py-16 mt-24 footer-root">
       <div className="max-w-6xl mx-auto">
 
         {/* Top section: brand + columns */}
@@ -124,7 +111,7 @@ export function Footer() {
             <div className="mb-2">
               <LogoMark size="md" />
             </div>
-            <p className="text-sm mb-4" style={{ color: tokens.colors.textMuted, maxWidth: '36ch', lineHeight: 1.6 }}>
+            <p className="text-sm mb-4 footer-tagline">
               {SHORT_POSITIONING_DESCRIPTION}
             </p>
             <NewsletterForm />
@@ -138,10 +125,7 @@ export function Footer() {
                   cta_id: 'footer_github_icon',
                   cta_text: 'GitHub',
                 })}
-                className="transition-colors"
-                style={{ color: tokens.colors.textMuted, minWidth: 44, minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-                onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textMuted)}
+                className="transition-colors footer-social-link"
                 aria-label="GitHub">
                 <GitHubIcon />
               </a>
@@ -153,10 +137,7 @@ export function Footer() {
                   cta_id: 'footer_npm_icon',
                   cta_text: 'npm',
                 })}
-                className="transition-colors"
-                style={{ color: tokens.colors.textMuted, minWidth: 44, minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-                onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textMuted)}
+                className="transition-colors footer-social-link"
                 aria-label="npm">
                 <NpmIcon />
               </a>
@@ -165,182 +146,139 @@ export function Footer() {
 
           {/* Product column */}
           <div className="flex flex-col gap-2.5 text-sm">
-            <Eyebrow tone="accent" style={{ marginBottom: 4 }}>Product</Eyebrow>
-            <Link href="/docs" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackFooterCta('Documentation', '/docs')}
-              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+            <Eyebrow tone="accent" className="footer-column-eyebrow">Product</Eyebrow>
+            <Link href="/docs" className="transition-colors footer-link"
+              onClick={() => trackFooterCta('Documentation', '/docs')}>
               Documentation
             </Link>
-            <Link href="/docs/langgraph/api/inject-agent" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackFooterCta('API Reference', '/docs/langgraph/api/inject-agent')}
-              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+            <Link href="/docs/langgraph/api/inject-agent" className="transition-colors footer-link"
+              onClick={() => trackFooterCta('API Reference', '/docs/langgraph/api/inject-agent')}>
               API Reference
             </Link>
             {DEMOS.map((demo) => (
-              <a key={demo.key} href={demo.href} className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              <a key={demo.key} href={demo.href} className="transition-colors footer-link"
                 onClick={() => trackExternalLinkClick(demo.href, {
                   surface: 'footer',
                   cta_id: `footer_demo_${demoCtaSuffix(demo.key)}`,
                   cta_text: demo.label,
-                })}
-                onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-                onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+                })}>
                 {demo.label}
               </a>
             ))}
-            <a href="https://cockpit.threadplane.ai" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+            <a href="https://cockpit.threadplane.ai" className="transition-colors footer-link"
               onClick={() => trackExternalLinkClick('https://cockpit.threadplane.ai', {
                 surface: 'footer',
                 cta_id: 'footer_examples',
                 cta_text: 'Examples',
-              })}
-              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+              })}>
               Examples
             </a>
-            <Link href="/pricing" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackFooterCta('Pricing', '/pricing')}
-              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+            <Link href="/pricing" className="transition-colors footer-link"
+              onClick={() => trackFooterCta('Pricing', '/pricing')}>
               Pricing
             </Link>
             <a href="https://github.com/cacheplane/angular-agent-framework"
               target="_blank" rel="noopener noreferrer"
-              className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              className="transition-colors footer-link"
               onClick={() => trackExternalLinkClick('https://github.com/cacheplane/angular-agent-framework', {
                 surface: 'footer',
                 cta_id: 'footer_github',
                 cta_text: 'GitHub',
-              })}
-              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+              })}>
               GitHub
             </a>
           </div>
 
           {/* Libraries column */}
           <div className="flex flex-col gap-2.5 text-sm">
-            <Eyebrow tone="accent" style={{ marginBottom: 4 }}>Libraries</Eyebrow>
-            <Link href="/langgraph" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackFooterCta('LangGraph', '/langgraph')}
-              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+            <Eyebrow tone="accent" className="footer-column-eyebrow">Libraries</Eyebrow>
+            <Link href="/langgraph" className="transition-colors footer-link"
+              onClick={() => trackFooterCta('LangGraph', '/langgraph')}>
               LangGraph
             </Link>
-            <Link href="/ag-ui" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackFooterCta('AG-UI', '/ag-ui')}
-              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+            <Link href="/ag-ui" className="transition-colors footer-link"
+              onClick={() => trackFooterCta('AG-UI', '/ag-ui')}>
               AG-UI
             </Link>
-            <Link href="/render" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackFooterCta('Render', '/render')}
-              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+            <Link href="/render" className="transition-colors footer-link"
+              onClick={() => trackFooterCta('Render', '/render')}>
               Render
             </Link>
-            <Link href="/chat" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackFooterCta('Chat', '/chat')}
-              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+            <Link href="/chat" className="transition-colors footer-link"
+              onClick={() => trackFooterCta('Chat', '/chat')}>
               Chat
             </Link>
           </div>
 
           {/* Solutions column */}
           <div className="flex flex-col gap-2.5 text-sm">
-            <Eyebrow tone="accent" style={{ marginBottom: 4 }}>Solutions</Eyebrow>
-            <Link href="/solutions/compliance" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackFooterCta('Compliance', '/solutions/compliance')}
-              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+            <Eyebrow tone="accent" className="footer-column-eyebrow">Solutions</Eyebrow>
+            <Link href="/solutions/compliance" className="transition-colors footer-link"
+              onClick={() => trackFooterCta('Compliance', '/solutions/compliance')}>
               Compliance
             </Link>
-            <Link href="/solutions/analytics" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackFooterCta('Analytics', '/solutions/analytics')}
-              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+            <Link href="/solutions/analytics" className="transition-colors footer-link"
+              onClick={() => trackFooterCta('Analytics', '/solutions/analytics')}>
               Analytics
             </Link>
-            <Link href="/solutions/customer-support" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackFooterCta('Customer Support', '/solutions/customer-support')}
-              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+            <Link href="/solutions/customer-support" className="transition-colors footer-link"
+              onClick={() => trackFooterCta('Customer Support', '/solutions/customer-support')}>
               Customer Support
             </Link>
-            <Link href="/solutions" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackFooterCta('All Solutions', '/solutions')}
-              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+            <Link href="/solutions" className="transition-colors footer-link"
+              onClick={() => trackFooterCta('All Solutions', '/solutions')}>
               All solutions
             </Link>
           </div>
 
           {/* Resources column */}
           <div className="flex flex-col gap-2.5 text-sm">
-            <Eyebrow tone="accent" style={{ marginBottom: 4 }}>Resources</Eyebrow>
-            <Link href="/pilot-to-prod" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackFooterCta('Pilot to Prod', '/pilot-to-prod')}
-              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+            <Eyebrow tone="accent" className="footer-column-eyebrow">Resources</Eyebrow>
+            <Link href="/pilot-to-prod" className="transition-colors footer-link"
+              onClick={() => trackFooterCta('Pilot to Prod', '/pilot-to-prod')}>
               Pilot to Prod
             </Link>
-            <Link href="/blog" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackFooterCta('Blog', '/blog')}
-              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+            <Link href="/blog" className="transition-colors footer-link"
+              onClick={() => trackFooterCta('Blog', '/blog')}>
               Blog
             </Link>
             <a href="https://www.npmjs.com/package/@threadplane/langgraph"
               target="_blank" rel="noopener noreferrer"
-              className="transition-colors" style={{ color: tokens.colors.textSecondary }}
+              className="transition-colors footer-link"
               onClick={() => trackExternalLinkClick('https://www.npmjs.com/package/@threadplane/langgraph', {
                 surface: 'footer',
                 cta_id: 'footer_npm_package',
                 cta_text: 'npm Package',
-              })}
-              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+              })}>
               npm Package
             </a>
-            <Link href="/about" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackFooterCta('About', '/about')}
-              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+            <Link href="/about" className="transition-colors footer-link"
+              onClick={() => trackFooterCta('About', '/about')}>
               About
             </Link>
-            <Link href="/docs/licensing" className="transition-colors" style={{ color: tokens.colors.textSecondary }}
-              onClick={() => trackFooterCta('Licensing', '/docs/licensing')}
-              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textSecondary)}>
+            <Link href="/docs/licensing" className="transition-colors footer-link"
+              onClick={() => trackFooterCta('Licensing', '/docs/licensing')}>
               Licensing
             </Link>
           </div>
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs"
-          style={{ borderTop: `1px solid ${tokens.surfaces.border}`, color: tokens.colors.textMuted }}>
+        <div className="mt-12 pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs footer-bottom-bar">
           <span>&copy; {new Date().getFullYear()} Threadplane. All rights reserved.</span>
           <span>
             <Link
               href="/docs/licensing"
-              className="transition-colors"
+              className="transition-colors footer-legal-link"
               onClick={() => trackFooterCta('Licensing Bottom', '/docs/licensing')}
-              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textMuted)}
             >
               Licensing
             </Link>
             &nbsp;&middot;&nbsp;
             <Link
               href="/pricing"
-              className="transition-colors"
+              className="transition-colors footer-legal-link"
               onClick={() => trackFooterCta('Pricing Bottom', '/pricing')}
-              onMouseEnter={(e) => (e.currentTarget.style.color = tokens.colors.accent)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = tokens.colors.textMuted)}
             >
               Pricing
             </Link>

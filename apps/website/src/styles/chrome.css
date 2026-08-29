@@ -7,4 +7,56 @@
  * these in @layer would let utilities win and change rendering.
  *
  * Migration: docs/superpowers/plans/2026-08-29-inline-style-substrate-migration.md
+ *
+ * Font-family exception: see the top of ui.css for the next/font
+ * shadowing rationale. Verbatim raw-stack literals below
+ * ('Inter, sans-serif', 'var(--font-mono,"JetBrains Mono",monospace)',
+ * 'var(--font-garamond,"EB Garamond",Georgia,serif)') are intentional.
  */
+
+/* Footer */
+.footer-root {
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}
+.footer-tagline {
+  color: var(--color-text-muted);
+  max-width: 36ch;
+  line-height: 1.6;
+}
+.footer-newsletter-success {
+  color: #1a7a40;
+}
+.footer-newsletter-input {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  outline: none;
+}
+.footer-column-eyebrow {
+  margin-bottom: 4px;
+}
+.footer-social-link {
+  color: var(--color-text-muted);
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.footer-social-link:hover {
+  color: var(--color-accent);
+}
+.footer-link {
+  color: var(--color-text-secondary);
+}
+.footer-link:hover {
+  color: var(--color-accent);
+}
+.footer-bottom-bar {
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+.footer-legal-link:hover {
+  color: var(--color-accent);
+}
