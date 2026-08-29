@@ -17,6 +17,7 @@ import { lightOverrides } from '../src/lib/light';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
 const OUTPUT_PATH = resolve(HERE, '..', 'src', 'lib', 'theme.css');
+const TOKENS_OUTPUT_PATH = resolve(HERE, '..', 'src', 'lib', 'tokens.css');
 
 const HEADER = `/*
  * @threadplane/design-tokens/theme.css
@@ -156,15 +157,126 @@ function buildThemeBlock(): string {
   return lines.join('\n') + '\n';
 }
 
+const TOKENS_HEADER = `/*
+ * @threadplane/design-tokens/tokens.css
+ *
+ * GENERATED FILE — DO NOT EDIT BY HAND.
+ *
+ * Plain \`:root { --ds-* }\` custom properties for consumers that do not run
+ * Tailwind (the Angular cockpit and example apps). Same values as theme.css,
+ * different naming convention and no \`@theme\` wrapper.
+ *
+ * Regenerate with:
+ *   npx nx run design-tokens:generate-theme-css
+ *
+ * Source of truth:
+ *   - libs/design-tokens/src/lib/light.ts
+ *   - libs/design-tokens/src/lib/base.ts
+ *
+ * The names here are a consumer contract — cockpit and example apps reference
+ * them. ds-var-contract.spec.ts fails if one disappears.
+ */
+`;
+
+function buildTokensBlock(): string {
+  const { typography, space, radius, shadows, brand } = baseTokens;
+  const lines: string[] = [':root {'];
+
+  lines.push('  /* Colors */');
+  lines.push(`  --ds-bg: ${lightOverrides.bg};`);
+  lines.push(`  --ds-accent: ${lightOverrides.accent};`);
+  lines.push(`  --ds-accent-hover: ${lightOverrides.accentHover};`);
+  lines.push(`  --ds-accent-light: ${brand.accentLight};`);
+  lines.push(`  --ds-accent-glow: ${lightOverrides.accentGlow};`);
+  lines.push(`  --ds-accent-border: ${lightOverrides.accentBorder};`);
+  lines.push(`  --ds-accent-border-hover: ${lightOverrides.accentBorderHover};`);
+  lines.push(`  --ds-accent-surface: ${lightOverrides.accentSurface};`);
+  lines.push(`  --ds-text-primary: ${lightOverrides.textPrimary};`);
+  lines.push(`  --ds-text-secondary: ${lightOverrides.textSecondary};`);
+  lines.push(`  --ds-text-muted: ${lightOverrides.textMuted};`);
+  lines.push(`  --ds-text-inverted: ${lightOverrides.textInverted};`);
+  lines.push(`  --ds-sidebar-bg: ${lightOverrides.sidebarBg};`);
+  lines.push(`  --ds-angular-red: ${brand.angularRed};`);
+  lines.push(`  --ds-render-green: ${brand.renderGreen};`);
+  lines.push(`  --ds-chat-purple: ${brand.chatPurple};`);
+
+  lines.push('');
+  lines.push('  /* Surfaces */');
+  lines.push(`  --ds-canvas: ${lightOverrides.canvas};`);
+  lines.push(`  --ds-surface: ${lightOverrides.surface};`);
+  lines.push(`  --ds-surface-tinted: ${lightOverrides.surfaceTinted};`);
+  lines.push(`  --ds-surface-dim: ${lightOverrides.surfaceDim};`);
+  lines.push(`  --ds-border: ${lightOverrides.border};`);
+  lines.push(`  --ds-border-strong: ${lightOverrides.borderStrong};`);
+
+  lines.push('');
+  lines.push('  /* Typography */');
+  lines.push(`  --ds-font-serif: ${typography.fontSerif};`);
+  lines.push(`  --ds-font-sans: ${typography.fontSans};`);
+  lines.push(`  --ds-font-mono: ${typography.fontMono};`);
+
+  lines.push('');
+  lines.push('  /* Typography — type scale */');
+  // `-spacing` (not `-letter-spacing`) preserves the pre-existing name.
+  const dsSteps = [
+    ['h1', typography.h1],
+    ['h2', typography.h2],
+    ['h3', typography.h3],
+    ['eyebrow', typography.eyebrow],
+    ['body-lg', typography.bodyLg],
+    ['body', typography.body],
+    ['caption', typography.caption],
+  ] as const;
+  for (const [name, step] of dsSteps) {
+    lines.push(`  --ds-${name}-size: ${step.size};`);
+    lines.push(`  --ds-${name}-line: ${step.line};`);
+    if ('weight' in step) lines.push(`  --ds-${name}-weight: ${step.weight};`);
+    if ('letterSpacing' in step) {
+      lines.push(`  --ds-${name}-spacing: ${step.letterSpacing};`);
+    }
+  }
+
+  lines.push('');
+  lines.push('  /* Shadows */');
+  lines.push(`  --ds-shadow-sm: ${shadows.sm};`);
+  lines.push(`  --ds-shadow-md: ${shadows.md};`);
+  lines.push(`  --ds-shadow-lg: ${shadows.lg};`);
+  lines.push(`  --ds-shadow-focus: ${shadows.focus};`);
+
+  lines.push('');
+  lines.push('  /* Radius */');
+  lines.push(`  --ds-radius-sm: ${radius.sm};`);
+  lines.push(`  --ds-radius-md: ${radius.md};`);
+  lines.push(`  --ds-radius-lg: ${radius.lg};`);
+  lines.push(`  --ds-radius-xl: ${radius.xl};`);
+  lines.push(`  --ds-radius-full: ${radius.full};`);
+
+  lines.push('');
+  lines.push('  /* Space */');
+  lines.push(`  --ds-section-y: ${space.sectionY};`);
+  lines.push(`  --ds-section-y-tight: ${space.sectionYTight};`);
+  lines.push(`  --ds-container-x: ${space.containerX};`);
+  lines.push(`  --ds-container-max: ${space.containerMax};`);
+
+  lines.push('}');
+  return lines.join('\n') + '\n';
+}
+
+export function generateTokensCss(): string {
+  return TOKENS_HEADER + buildTokensBlock();
+}
+
 export function generateThemeCss(): string {
   return HEADER + buildThemeBlock();
 }
 
 function main() {
-  const content = generateThemeCss();
-  writeFileSync(OUTPUT_PATH, content);
+  writeFileSync(OUTPUT_PATH, generateThemeCss());
+  writeFileSync(TOKENS_OUTPUT_PATH, generateTokensCss());
   // eslint-disable-next-line no-console
   console.log(`wrote ${OUTPUT_PATH}`);
+  // eslint-disable-next-line no-console
+  console.log(`wrote ${TOKENS_OUTPUT_PATH}`);
 }
 
 // Only run main when invoked directly (not when imported by tests)
