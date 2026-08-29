@@ -1,4 +1,3 @@
-import { tokens } from '@threadplane/design-tokens';
 import { HighlightedCode } from '../HighlightedCode';
 
 const SNIPPET_1 = `import { defineAngularRegistry } from '@threadplane/render';
@@ -24,42 +23,21 @@ const SNIPPETS = [
 
 export async function RenderCodeShowcase() {
   return (
-    <section className="render-code" style={{ padding: '80px 32px' }}>
-      <style>{`@media (max-width: 767px) { .render-code { padding: 60px 20px !important; } }`}</style>
-      <div style={{ textAlign: 'center', marginBottom: 48 }}>
-        <p style={{
-          fontFamily: 'var(--font-mono,"JetBrains Mono",monospace)',
-          fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.12em',
-          fontWeight: 700, color: tokens.colors.accent, marginBottom: 14,
-        }}>
+    <section className="render-code">
+      <div className="render-show-intro">
+        <p className="render-show-eyebrow">
           Developer Experience
         </p>
-        <h2 style={{
-          fontFamily: 'var(--font-garamond,"EB Garamond",Georgia,serif)',
-          fontSize: 'clamp(26px,3.5vw,42px)', fontWeight: 800, lineHeight: 1.1,
-          color: tokens.colors.textPrimary,
-        }}>
+        <h2 className="render-show-heading">
           Generative UI in a few lines
         </h2>
       </div>
 
-      <div style={{
-        maxWidth: 900, margin: '0 auto',
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(380px, 100%), 1fr))', gap: 24,
-      }}>
+      <div className="render-show-grid">
         {SNIPPETS.map((s) => (
-          <div
-            key={s.title}
-            style={{ borderRadius: 14, overflow: 'hidden', border: `1px solid ${tokens.surfaces.border}` }}
-          >
-            <div style={{
-              padding: '10px 20px', background: 'rgba(26,122,64,0.04)',
-              borderBottom: `1px solid ${tokens.surfaces.border}`,
-            }}>
-              <span style={{
-                fontFamily: "'JetBrains Mono', monospace", fontSize: '0.68rem',
-                fontWeight: 700, color: tokens.colors.renderGreen,
-              }}>
+          <div key={s.title} className="render-show-card">
+            <div className="render-show-card-head">
+              <span className="render-show-card-title">
                 {s.title}
               </span>
             </div>

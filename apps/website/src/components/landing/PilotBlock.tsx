@@ -1,4 +1,3 @@
-import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';
@@ -23,138 +22,44 @@ export function PilotBlock() {
   return (
     <Section surface="tinted" ariaLabelledBy="pilot-heading">
       <Container>
-        <div
-          className="pilot-block-grid"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
-            gap: 64,
-            alignItems: 'center',
-          }}
-        >
+        <div className="pilot-block-grid">
           <div>
-            <Eyebrow tone="accent" style={{ marginBottom: 16 }}>For teams</Eyebrow>
-            <h2
-              id="pilot-heading"
-              style={{
-                fontFamily: tokens.typography.h2.family,
-                fontSize: tokens.typography.h2.size,
-                lineHeight: tokens.typography.h2.line,
-                fontWeight: 700,
-                color: tokens.colors.textPrimary,
-                margin: 0,
-                marginBottom: 20,
-                letterSpacing: '-0.015em',
-              }}
-            >
+            <Eyebrow tone="accent" className="pilot-eyebrow">For teams</Eyebrow>
+            <h2 id="pilot-heading" className="pilot-heading">
               Ship your first Angular agent in 8 weeks.
             </h2>
-            <p
-              style={{
-                fontFamily: tokens.typography.bodyLg.family,
-                fontSize: tokens.typography.bodyLg.size,
-                lineHeight: tokens.typography.bodyLg.line,
-                color: tokens.colors.textSecondary,
-                margin: 0,
-                marginBottom: 24,
-              }}
-            >
+            <p className="pilot-subhead">
               Pilot-to-Prod is a concierge delivery — concrete outcomes, your engineers in the driver&apos;s seat, no lock-in.
             </p>
-            <ul
-              style={{
-                listStyle: 'none',
-                padding: 0,
-                margin: '0 0 32px 0',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 10,
-              }}
-            >
+            <ul className="pilot-outcomes">
               {OUTCOMES.map((o) => (
-                <li
-                  key={o}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: 10,
-                    fontFamily: tokens.typography.body.family,
-                    fontSize: tokens.typography.body.size,
-                    lineHeight: tokens.typography.body.line,
-                    color: tokens.colors.textPrimary,
-                  }}
-                >
-                  <span
-                    aria-hidden="true"
-                    style={{
-                      flex: '0 0 18px',
-                      height: 18,
-                      marginTop: 4,
-                      borderRadius: tokens.radius.full,
-                      background: tokens.colors.accent,
-                      color: tokens.colors.textInverted,
-                      fontSize: 11,
-                      fontWeight: 700,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      lineHeight: 1,
-                    }}
-                  >
+                <li key={o} className="pilot-outcome">
+                  <span aria-hidden="true" className="pilot-outcome-check">
                     ✓
                   </span>
                   <span>{o}</span>
                 </li>
               ))}
             </ul>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <div className="pilot-cta-row">
               <Button variant="primary" size="lg" href="/pilot-to-prod">See the program</Button>
               <Button variant="secondary" size="lg" href="/pilot-to-prod#contact">Book a call</Button>
             </div>
           </div>
 
           {/* Timeline */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className="pilot-timeline">
             {TIMELINE.map((t) => (
               <Card key={t.phase} padding="md">
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-                  <div
-                    style={{
-                      flex: '0 0 36px',
-                      height: 36,
-                      borderRadius: tokens.radius.full,
-                      background: tokens.colors.accent,
-                      color: tokens.colors.textInverted,
-                      fontFamily: tokens.typography.fontMono,
-                      fontSize: 14,
-                      fontWeight: 700,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
+                <div className="pilot-timeline-row">
+                  <div className="pilot-timeline-phase">
                     {t.phase}
                   </div>
                   <div>
-                    <div
-                      style={{
-                        fontFamily: tokens.typography.fontSans,
-                        fontSize: 17,
-                        fontWeight: 600,
-                        color: tokens.colors.textPrimary,
-                        marginBottom: 4,
-                      }}
-                    >
+                    <div className="pilot-timeline-title">
                       {t.title}
                     </div>
-                    <div
-                      style={{
-                        fontFamily: tokens.typography.body.family,
-                        fontSize: tokens.typography.body.size,
-                        lineHeight: tokens.typography.body.line,
-                        color: tokens.colors.textSecondary,
-                      }}
-                    >
+                    <div className="pilot-timeline-body">
                       {t.body}
                     </div>
                   </div>
@@ -163,15 +68,6 @@ export function PilotBlock() {
             ))}
           </div>
         </div>
-
-        <style>{`
-          @media (max-width: 900px) {
-            .pilot-block-grid {
-              grid-template-columns: 1fr !important;
-              gap: 40px !important;
-            }
-          }
-        `}</style>
       </Container>
     </Section>
   );

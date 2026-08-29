@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';
@@ -70,79 +69,23 @@ export function WhitePaperBlock({ paper = 'overview' }: WhitePaperBlockProps = {
   return (
     <Section surface="white" id="whitepaper-block" ariaLabelledBy="wp-heading">
       <Container>
-        <div
-          className="wp-grid"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
-            gap: 64,
-            alignItems: 'center',
-          }}
-        >
+        <div className="wp-grid">
           <div>
-            <Eyebrow tone="accent" style={{ marginBottom: 16 }}>Field report</Eyebrow>
-            <h2
-              id="wp-heading"
-              style={{
-                fontFamily: tokens.typography.h2.family,
-                fontSize: tokens.typography.h2.size,
-                lineHeight: tokens.typography.h2.line,
-                fontWeight: 700,
-                color: tokens.colors.textPrimary,
-                margin: 0,
-                marginBottom: 20,
-                letterSpacing: '-0.015em',
-              }}
-            >
+            <Eyebrow tone="accent" className="wp-eyebrow">Field report</Eyebrow>
+            <h2 id="wp-heading" className="wp-heading">
               The last-mile gap in Angular AI.
             </h2>
-            <ul
-              style={{
-                listStyle: 'none',
-                padding: 0,
-                margin: '0 0 24px 0',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 10,
-              }}
-            >
+            <ul className="wp-bullets">
               {BULLETS.map((b) => (
-                <li
-                  key={b}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: 10,
-                    fontFamily: tokens.typography.bodyLg.family,
-                    fontSize: tokens.typography.bodyLg.size,
-                    lineHeight: tokens.typography.bodyLg.line,
-                    color: tokens.colors.textSecondary,
-                  }}
-                >
-                  <span
-                    aria-hidden="true"
-                    style={{
-                      flex: '0 0 6px',
-                      height: 6,
-                      marginTop: 12,
-                      borderRadius: tokens.radius.full,
-                      background: tokens.colors.accent,
-                    }}
-                  />
+                <li key={b} className="wp-bullet">
+                  <span aria-hidden="true" className="wp-bullet-dot" />
                   <span>{b}</span>
                 </li>
               ))}
             </ul>
 
             {state === 'done' ? (
-              <div
-                style={{
-                  fontFamily: tokens.typography.body.family,
-                  fontSize: tokens.typography.body.size,
-                  color: '#1a7a40',
-                  marginBottom: 16,
-                }}
-              >
+              <div className="wp-success">
                 ✓ Check your inbox — the guide is on its way.{' '}
                 <a
                   href={pdf.href}
@@ -154,16 +97,13 @@ export function WhitePaperBlock({ paper = 'overview' }: WhitePaperBlockProps = {
                       cta_id: 'home_whitepaper_direct',
                     })
                   }
-                  style={{ color: tokens.colors.accent }}
+                  className="wp-success-link"
                 >
                   Or download directly.
                 </a>
               </div>
             ) : (
-              <form
-                onSubmit={submit}
-                style={{ display: 'flex', gap: 8, flexWrap: 'wrap', maxWidth: 480 }}
-              >
+              <form onSubmit={submit} className="wp-form">
                 <label htmlFor="wp-email" className="sr-only">Email address</label>
                 <input
                   id="wp-email"
@@ -174,17 +114,7 @@ export function WhitePaperBlock({ paper = 'overview' }: WhitePaperBlockProps = {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={state === 'submitting'}
-                  style={{
-                    flex: '1 1 240px',
-                    background: tokens.surfaces.surface,
-                    border: `1px solid ${tokens.surfaces.border}`,
-                    borderRadius: tokens.radius.md,
-                    padding: '12px 14px',
-                    fontFamily: tokens.typography.body.family,
-                    fontSize: tokens.typography.body.size,
-                    color: tokens.colors.textPrimary,
-                    outline: 'none',
-                  }}
+                  className="wp-email-input"
                 />
                 <Button
                   type="submit"
@@ -197,23 +127,16 @@ export function WhitePaperBlock({ paper = 'overview' }: WhitePaperBlockProps = {
               </form>
             )}
             {state === 'error' && (
-              <p style={{ marginTop: 12, color: tokens.colors.angularRed, fontSize: 14 }}>
+              <p className="wp-error">
                 Something went wrong — please try again or{' '}
-                <a href={pdf.href} download={pdf.download} style={{ color: tokens.colors.accent }}>
+                <a href={pdf.href} download={pdf.download} className="wp-error-link">
                   download directly
                 </a>
                 .
               </p>
             )}
             {state !== 'done' && (
-              <p
-                style={{
-                  marginTop: 12,
-                  fontSize: 13,
-                  color: tokens.colors.textMuted,
-                  fontFamily: tokens.typography.body.family,
-                }}
-              >
+              <p className="wp-already">
                 Already on the list?{' '}
                 <a
                   href={pdf.href}
@@ -225,7 +148,7 @@ export function WhitePaperBlock({ paper = 'overview' }: WhitePaperBlockProps = {
                       cta_id: 'home_whitepaper_direct_inline',
                     })
                   }
-                  style={{ color: tokens.colors.accent, textDecoration: 'underline' }}
+                  className="wp-already-link"
                 >
                   Download the PDF directly.
                 </a>
@@ -234,84 +157,32 @@ export function WhitePaperBlock({ paper = 'overview' }: WhitePaperBlockProps = {
           </div>
 
           {/* Tilted whitepaper cover */}
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <div className="wp-cover-wrap">
             <BrowserFrame
               url="angular-agent-readiness-guide.pdf"
               rotate={-2}
               elevation="lg"
               maxWidth={420}
             >
-              <div
-                style={{
-                  aspectRatio: '8.5 / 11',
-                  background: 'linear-gradient(135deg, #fafbfc 0%, #eaf3ff 100%)',
-                  padding: '48px 36px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                }}
-              >
+              <div className="wp-cover">
                 <div>
-                  <div
-                    style={{
-                      fontFamily: tokens.typography.fontMono,
-                      fontSize: 11,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.15em',
-                      color: tokens.colors.accent,
-                      marginBottom: 14,
-                    }}
-                  >
+                  <div className="wp-cover-badge">
                     Field report · 18 pages
                   </div>
-                  <div
-                    style={{
-                      fontFamily: tokens.typography.fontSerif,
-                      fontSize: 28,
-                      lineHeight: 1.15,
-                      fontWeight: 700,
-                      color: tokens.colors.textPrimary,
-                      marginBottom: 12,
-                      fontStyle: 'italic',
-                    }}
-                  >
+                  <div className="wp-cover-title">
                     From Prototype to Production
                   </div>
-                  <div
-                    style={{
-                      fontFamily: tokens.typography.fontSans,
-                      fontSize: 14,
-                      lineHeight: 1.5,
-                      color: tokens.colors.textSecondary,
-                    }}
-                  >
+                  <div className="wp-cover-desc">
                     Six production-readiness dimensions for Angular AI teams.
                   </div>
                 </div>
-                <div
-                  style={{
-                    fontFamily: tokens.typography.fontMono,
-                    fontSize: 11,
-                    color: tokens.colors.textMuted,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.1em',
-                  }}
-                >
+                <div className="wp-cover-footer">
                   Threadplane
                 </div>
               </div>
             </BrowserFrame>
           </div>
         </div>
-
-        <style>{`
-          @media (max-width: 900px) {
-            .wp-grid {
-              grid-template-columns: 1fr !important;
-              gap: 40px !important;
-            }
-          }
-        `}</style>
       </Container>
     </Section>
   );

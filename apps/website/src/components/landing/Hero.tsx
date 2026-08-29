@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useCallback, useState } from 'react';
-import { tokens } from '@threadplane/design-tokens';
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';
@@ -65,61 +64,23 @@ export function Hero() {
   return (
     <Section surface="canvas" ariaLabelledBy="hero-heading">
       <Container>
-        <div
-          className="hero-grid"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
-            gap: 64,
-            alignItems: 'center',
-          }}
-        >
+        <div className="hero-grid">
           {/* Left column */}
           <div>
-            <Eyebrow tone="accent" style={{ marginBottom: 16 }}>
+            <Eyebrow tone="accent" className="hero-eyebrow">
               Threadplane · Angular agent UI
             </Eyebrow>
-            <h1
-              id="hero-heading"
-              style={{
-                fontFamily: tokens.typography.h1.family,
-                fontSize: tokens.typography.h1.size,
-                lineHeight: tokens.typography.h1.line,
-                fontWeight: 700,
-                color: tokens.colors.textPrimary,
-                margin: 0,
-                marginBottom: 24,
-                letterSpacing: '-0.02em',
-              }}
-            >
+            <h1 id="hero-heading" className="hero-heading">
               Ship production agent UIs in Angular.
             </h1>
-            <p
-              style={{
-                fontFamily: tokens.typography.bodyLg.family,
-                fontSize: tokens.typography.bodyLg.size,
-                lineHeight: tokens.typography.bodyLg.line,
-                color: tokens.colors.textSecondary,
-                margin: 0,
-                marginBottom: 32,
-                maxWidth: '54ch',
-              }}
-            >
+            <p className="hero-subhead">
               {HERO_SUBHEAD}
             </p>
-            <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+            <div className="hero-cta-row">
               <PrimaryInstallButton />
               <SecondaryTalkButton />
             </div>
-            <div
-              style={{
-                display: 'flex',
-                gap: 8,
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                marginBottom: 12,
-              }}
-            >
+            <div className="hero-proof-row">
               {POSITIONING_PROOF_POINTS.map((proofPoint, index) => (
                 <a
                   key={proofPoint.label}
@@ -131,7 +92,7 @@ export function Hero() {
                       surface: 'home',
                     })
                   }
-                  style={{ textDecoration: 'none' }}
+                  className="hero-proof-link"
                 >
                   <Pill variant={index === 0 ? 'accent' : 'neutral'} className="hero-proof-pill">
                     {proofPoint.label}
@@ -139,17 +100,7 @@ export function Hero() {
                 </a>
               ))}
             </div>
-            <p
-              style={{
-                margin: 0,
-                fontFamily: tokens.typography.body.family,
-                fontSize: tokens.typography.body.size,
-                lineHeight: tokens.typography.body.line,
-                color: tokens.colors.textMuted,
-                fontStyle: 'italic',
-                maxWidth: '60ch',
-              }}
-            >
+            <p className="hero-caption">
               Not another backend agent runtime. Keep LangGraph, Genkit, Mastra, CrewAI, or your own service. Threadplane solves the Angular UI layer.
             </p>
           </div>
@@ -167,33 +118,25 @@ export function Hero() {
                   surface: 'home',
                 })
               }
-              style={{ display: 'block', textDecoration: 'none' }}
+              className="hero-demo-link"
               aria-label="Open the generative UI example running in cockpit"
             >
               <BrowserFrame
                 url="demo.threadplane.ai"
                 rotate={-1}
                 elevation="lg"
-                style={{ width: '100%' }}
+                className="hero-demo-frame"
               >
                 <img
                   src="/screenshots/canonical-demo-generative-ui.webp"
                   alt="Canonical demo — agent renders a live airline operations dashboard with KPI cards, charts, and a disruptions table"
-                  style={{ display: 'block', width: '100%', height: 'auto' }}
+                  className="hero-demo-img"
                   loading="lazy"
                   decoding="async"
                 />
               </BrowserFrame>
             </a>
-            <p
-              style={{
-                margin: '12px 0 0',
-                textAlign: 'center',
-                fontFamily: tokens.typography.body.family,
-                fontSize: 13,
-                color: tokens.colors.textMuted,
-              }}
-            >
+            <p className="hero-demo-caption">
               <a
                 href="https://cockpit.threadplane.ai/langgraph/core-capabilities/streaming/overview/python"
                 target="_blank"
@@ -205,44 +148,13 @@ export function Hero() {
                     surface: 'home',
                   })
                 }
-                style={{ color: tokens.colors.accent, textDecoration: 'none', fontWeight: 600 }}
+                className="hero-demo-caption-link"
               >
                 Open in cockpit →
               </a>
             </p>
           </div>
         </div>
-
-        <style>{`
-          @keyframes blink { to { visibility: hidden; } }
-          @media (max-width: 900px) {
-            .hero-grid {
-              grid-template-columns: 1fr !important;
-              gap: 40px !important;
-            }
-          }
-          .hero-proof-pill {
-            transition: transform 160ms ease, background 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
-            will-change: transform;
-          }
-          a:hover > .hero-proof-pill,
-          a:focus-visible > .hero-proof-pill {
-            transform: translateY(-1px);
-            background: ${tokens.colors.accentSurface} !important;
-            border-color: ${tokens.colors.accentBorder} !important;
-            color: ${tokens.colors.accent} !important;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-          }
-          a:active > .hero-proof-pill {
-            transform: translateY(0);
-            box-shadow: none;
-          }
-          @media (prefers-reduced-motion: reduce) {
-            .hero-proof-pill { transition: none; }
-            a:hover > .hero-proof-pill,
-            a:focus-visible > .hero-proof-pill { transform: none; }
-          }
-        `}</style>
       </Container>
     </Section>
   );

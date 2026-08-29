@@ -77,7 +77,7 @@ function CheckIcon() {
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
-      style={{ flexShrink: 0, marginTop: 4 }}
+      className="differentiator-check-icon"
     >
       <path d="M3 8.5l3.5 3.5L13 5" />
     </svg>
@@ -89,107 +89,33 @@ export function Differentiator() {
     <Section
       surface="canvas"
       ariaLabelledBy="differentiator-heading"
-      style={{ paddingTop: 72 }}
+      className="differentiator-section"
     >
       <Container>
-        <div style={{ maxWidth: 1020, margin: '0 auto 44px', textAlign: 'center' }}>
-          <Eyebrow tone="accent" style={{ marginBottom: 16 }}>Why this exists</Eyebrow>
-          <h2
-            id="differentiator-heading"
-            style={{
-              fontFamily: tokens.typography.h2.family,
-              fontSize: tokens.typography.h2.size,
-              lineHeight: tokens.typography.h2.line,
-              fontWeight: 700,
-              color: tokens.colors.textPrimary,
-              margin: 0,
-              marginBottom: 20,
-              letterSpacing: '-0.015em',
-            }}
-          >
+        <div className="differentiator-intro">
+          <Eyebrow tone="accent" className="differentiator-eyebrow">Why this exists</Eyebrow>
+          <h2 id="differentiator-heading" className="differentiator-heading">
             Everything an Angular agent needs once the demo works.
           </h2>
-          <p
-            style={{
-              fontFamily: tokens.typography.bodyLg.family,
-              fontSize: tokens.typography.bodyLg.size,
-              lineHeight: tokens.typography.bodyLg.line,
-              color: tokens.colors.textSecondary,
-              margin: '0 auto',
-              maxWidth: 760,
-            }}
-          >
+          <p className="differentiator-subhead">
             A streaming chat tutorial takes an hour. Shipping a real agent — durable, interruptible, observable, on your design system — takes most teams six months. Threadplane gives the Angular surface that the rest of the stack assumes you&apos;ve already built.
           </p>
         </div>
 
-        <ul
-          style={{
-            listStyle: 'none',
-            padding: 0,
-            margin: '0 auto',
-            maxWidth: 980,
-            borderTop: `1px solid ${tokens.surfaces.border}`,
-          }}
-        >
+        <ul className="differentiator-list">
           {PRODUCTION_ROWS.map((row) => (
-            <li
-              key={row.need}
-              className="why-row"
-              style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 16,
-                padding: '18px 8px',
-                borderBottom: `1px solid ${tokens.surfaces.border}`,
-              }}
-            >
+            <li key={row.need} className="why-row">
               <CheckIcon />
-              <div
-                className="why-row__body"
-                style={{
-                  flex: 1,
-                  display: 'flex',
-                  gap: 16,
-                  alignItems: 'baseline',
-                  flexWrap: 'wrap',
-                }}
-              >
-                <div style={{ flex: '1 1 200px', minWidth: 0 }}>
-                  <span
-                    style={{
-                      fontFamily: tokens.typography.body.family,
-                      fontSize: tokens.typography.body.size,
-                      lineHeight: tokens.typography.body.line,
-                      fontWeight: 600,
-                      color: tokens.colors.textPrimary,
-                      marginRight: 8,
-                    }}
-                  >
+              <div className="why-row__body">
+                <div className="why-row__text">
+                  <span className="why-row__need">
                     {row.need}
                   </span>
-                  <span
-                    style={{
-                      fontFamily: tokens.typography.body.family,
-                      fontSize: tokens.typography.body.size,
-                      lineHeight: tokens.typography.body.line,
-                      color: tokens.colors.textSecondary,
-                    }}
-                  >
+                  <span className="why-row__description">
                     {row.description}
                   </span>
                 </div>
-                <code
-                  style={{
-                    fontFamily: tokens.typography.fontMono,
-                    fontSize: 13,
-                    color: tokens.colors.textMuted,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    maxWidth: '100%',
-                  }}
-                >
+                <code className="why-row__primitive">
                   {row.primitive}
                 </code>
               </div>
@@ -197,17 +123,7 @@ export function Differentiator() {
           ))}
         </ul>
 
-        <p
-          style={{
-            margin: '24px auto 0',
-            maxWidth: 980,
-            textAlign: 'center',
-            fontFamily: tokens.typography.body.family,
-            fontSize: tokens.typography.body.size,
-            lineHeight: tokens.typography.body.line,
-            color: tokens.colors.textMuted,
-          }}
-        >
+        <p className="differentiator-footer">
           Want help walking these on your codebase?{' '}
           <a
             href="/pilot-to-prod"
@@ -219,20 +135,11 @@ export function Differentiator() {
                 cta_text: 'Pilot to Prod',
               })
             }
-            style={{ color: tokens.colors.accent, textDecoration: 'none', fontWeight: 600 }}
+            className="differentiator-footer-link"
           >
             Pilot to Prod →
           </a>
         </p>
-
-        <style>{`
-          @media (max-width: 640px) {
-            .why-row__body {
-              flex-direction: column !important;
-              gap: 6px !important;
-            }
-          }
-        `}</style>
       </Container>
     </Section>
   );
