@@ -12,13 +12,14 @@ child returned.
 Add a parent/child LangGraph composition to this Angular app using `provideAgent()` and `injectAgent()` from `@threadplane/langgraph`. The parent should route conditionally into a compiled child graph whose state has no `messages` key, and the component should read `agent.value()` for the shared `research_topic` / `research_brief` keys. Set `transcriptNodeNames` so only the parent's answer node reaches the chat transcript.
 </Prompt>
 
-<Warning>
-A plain subgraph node is **not** a tracked subagent. `agent.subagents()` is populated only
-by delegation *tool calls* whose name matches `subagentToolNames` and whose args carry a
-`subagent_type` — that path emits `tools:<id>` namespaced events. A subgraph added as a
-plain node emits a `research:<uuid>` namespace and never appears in that map. For the
-tool-call pattern, see [Chat Subagents](/chat/core-capabilities/subagents/overview/python).
-</Warning>
+<Tip>
+Every namespaced child run appears in `agent.subagents()`. A subgraph added as a plain
+node emits a `research:<uuid>` namespace and registers under that key, named by node —
+no configuration needed. Delegation *tool calls* (`subagentToolNames` + `subagent_type`)
+appear under their tool-call id instead, carrying the arguments a richer UI can render;
+for that pattern see [Chat Subagents](/chat/core-capabilities/subagents/overview/python).
+Either way, the child's tokens stay on its stream and never merge into the transcript.
+</Tip>
 
 <Steps>
 <Step title="Define the typed state and configure the provider">
@@ -180,5 +181,5 @@ variables or a proxy.
 </Warning>
 
 <Related>
-- [Chat Subagents](/chat/core-capabilities/subagents/overview/python) — tool-call delegation, the pattern that does populate `subagents()`
+- [Chat Subagents](/chat/core-capabilities/subagents/overview/python) — tool-call delegation, the named-and-argumented flavor of `subagents()`
 </Related>

@@ -27,19 +27,19 @@ const WELCOME_SUGGESTIONS = [
  * a plain node. The parent's `orchestrate` node classifies each turn and a
  * conditional edge decides whether execution enters the child at all.
  *
- * **Why this sidebar reads `agent.value()` and not `agent.subagents()`.**
- * `subagents()` is populated by the SubagentTracker, which keys on delegation
- * *tool calls* — a tool whose name is listed in `subagentToolNames` and whose
- * args carry a `subagent_type`, producing `tools:<id>` namespaced stream
- * events. A plain subgraph node emits a `research:<uuid>` namespace instead
- * and never appears in that map. See the Chat Subagents capability for the
- * tool-call path; this capability shows the composition primitive underneath
- * it, so child activity is read straight off the parent's own graph state.
+ * **The sidebar shows the boundary twice, from two angles.**
  *
- * `research_topic` and `research_brief` are the only two keys the parent
- * shares with the child. The brief is rendered here, in the sidebar, and
- * nowhere else — `transcriptNodeNames: ['answer']` in `app.config.ts` keeps
- * everything except the parent's final turn out of the chat transcript.
+ * `agent.value()` reads the parent graph's own state: `research_topic` and
+ * `research_brief` are the only two keys the parent shares with the child,
+ * so watching them is watching the state boundary itself.
+ *
+ * `agent.subagents()` shows the child as a *stream*: every namespaced child
+ * run appears in that map — plain subgraph nodes under their namespace key
+ * (named by node, here `research`), tool-dispatched children under their
+ * tool-call id (see the Chat Subagents capability for that shape). The
+ * child's tokens live on its stream and never merge into the transcript;
+ * `transcriptNodeNames: ['answer']` additionally keeps the *top-level*
+ * router node's structured-output chunks out of the chat.
  */
 @Component({
   selector: 'app-subgraphs',
@@ -154,6 +154,20 @@ const WELCOME_SUGGESTIONS = [
             The child graph's state has no <code>messages</code> key, so this brief
             never entered the transcript.
           </p>
+
+          <div class="field">
+            <h3 class="cap">Child streams</h3>
+            @for (child of childStreams(); track child.id) {
+              <p class="route" data-testid="child-stream">
+                <span class="dot"
+                      [class.dot--nested]="child.status === 'complete'"
+                      [class.dot--direct]="child.status === 'running'"></span>
+                {{ child.name }} — {{ child.status }}
+              </p>
+            } @empty {
+              <p class="hint">No child stream yet.</p>
+            }
+          </div>
         } @else {
           <p class="hint">
             The orchestrator answered without entering the child graph. Ask a
@@ -184,6 +198,19 @@ export class SubgraphsComponent {
    * so it doubles as the UI's "did we nest?" signal.
    */
   protected readonly delegated = computed(() => this.topic().length > 0);
+
+  /**
+   * The same child, seen as a stream. Plain subgraph children appear in
+   * `subagents()` keyed by their namespace segment; `name` is the node name
+   * and `status` settles with the run.
+   */
+  protected readonly childStreams = computed(() =>
+    [...this.agent.subagents().entries()].map(([id, ref]) => ({
+      id,
+      name: ref.name,
+      status: ref.status(),
+    })),
+  );
 
   protected send(text: string): void {
     void this.agent.submit({ message: text });

@@ -459,7 +459,7 @@ export class MultiAgentComponent {
 </Tabs>
 
 <Callout type="tip" title="subagentToolNames is the key">
-The `subagentToolNames` option tells `injectAgent()` which tool calls spawn subagents. The default Deep Agents tool name is `task`; set this option when your graph uses custom delegation tool names. Ordinary LangGraph subgraph nodes stream through the parent signals, but they do not appear in `subagents()` unless they are represented by matching delegation tool calls.
+The `subagentToolNames` option tells `injectAgent()` which tool calls spawn subagents. The default Deep Agents tool name is `task`; set this option when your graph uses custom delegation tool names. Ordinary LangGraph subgraph nodes need no configuration: they appear in `subagents()` under their namespace key, named by node, and their streamed output stays on that child stream rather than the parent transcript.
 </Callout>
 
 ## Error Handling and Recovery
@@ -677,7 +677,7 @@ builder.add_node("analyst", analyst_subgraph)
 builder.add_conditional_edges("supervisor", route_to_agent)
 ```
 
-**Angular signals used:** `messages()`, `toolCalls()`, `status()`; `subagents()` only when delegation happens through tracked tool calls
+**Angular signals used:** `messages()`, `toolCalls()`, `status()`; `subagents()` for every child graph — tool-dispatched or a plain subgraph node
 
 ### Decision Matrix
 

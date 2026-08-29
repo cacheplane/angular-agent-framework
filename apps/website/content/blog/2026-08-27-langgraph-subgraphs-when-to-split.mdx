@@ -99,12 +99,16 @@ Our `cockpit/chat/subagents` demo originally ran its three specialists as a flat
 A working feature was restructured so a UI card would appear.
 
 In both of those graphs the compiled child is invoked from inside a `@tool` body, not wired in as a plain node.
-That's deliberate: the tool call is what the tracker registers, and our own docs are blunt that [plain subgraph nodes](/docs/langgraph/guides/subgraphs) don't show up in that map at all.
+That's deliberate: the tool call carries the identity — an id the tracker can attribute the child's stream to, and a `subagent_type` to name it.
 
-Which cuts the other way from how it sounds — plain `add_node` subgraphs make the point sharper, not weaker.
-Those still get a namespace, so they're still observable in the raw stream.
-They just don't get a name, so nothing downstream can attribute them to anything.
-The subgraph is what makes the events observable; the tool call is what gives them an identity.
+For a long time that was also the only way into the map: plain `add_node` subgraphs streamed under a namespace nobody claimed, so [our own docs](/docs/langgraph/guides/subgraphs) were blunt that they didn't show up at all.
+That's no longer true.
+The namespace segment is itself a workable identity — unique per invocation, prefixed with the node name — so a plain subgraph child now registers in `subagents()` under its namespace key the moment it first streams, named by its node.
+The subgraph is what makes the events observable; the tool call upgrades that identity from a node name to a real delegation record, with arguments a UI can render.
+
+Which cuts the other way from how it sounds — plain `add_node` subgraphs make the visibility point sharper, not weaker.
+Nothing about them was ever invisible.
+The framework was simply the last to admit it.
 
 ## What does the frontend see while a child runs?
 
@@ -134,21 +138,21 @@ If you ever write a transport against this stream yourself, that's the bug you'l
 
 ### Where child text goes
 
-Into your main transcript, by default.
-Our `filterSubagentMessages` is off unless you set it, so a child's tokens flow into `messages()` alongside the parent's.
+Onto the child's stream — and, as of this week, nowhere else.
 
-That isn't a quirk of our config.
-Any consumer reading a namespaced stream has to decide what a child's tokens mean, and "append them like everything else" is the path of least resistance — so unless something opts out, child text lands in the parent transcript and the same content renders twice.
+Any consumer reading a namespaced stream has to decide what a child's tokens mean, and "append them like everything else" is the path of least resistance.
+Ours took that path for a long time: child tokens merged into `messages()` unless an opt-out flag was set, and the flag itself only fired for `tools:` namespaces — so for a plain subgraph node it silently did nothing, and the child's internal notes rendered as their own chat bubble mid-stream.
 
-There's a trap in that option's name, and it bites the exact graph shape this post has been holding up.
-`filterSubagentMessages` only fires inside a branch guarded by the `tools:` namespace check.
-A plain subgraph node's namespace looks like `research:<uuid>`, never reaches that branch, and so ignores the option entirely — its tokens merge into the transcript however you set it.
-The lever for that shape is `transcriptNodeNames`, which whitelists the graph nodes whose messages count as transcript.
+What made that bug expensive is that it self-corrected.
+The parent's final `values` event rewrites the message list from authoritative graph state, so the stray bubble disappeared on its own once the run settled.
+Assert on the finished DOM and everything looks right; watch the streaming pass and you'd see the child's notes appear and then vanish.
+A final-state test cannot catch it — we found it by watching a live model with the DOM under a polling probe.
 
-It's also a mid-stream bug with a clean end state, which is the part that will waste your afternoon.
-The parent's final `values` event rewrites the message list from authoritative graph state, so the stray bubble disappears on its own once the run settles.
-Assert on the finished DOM and everything looks right; watch the streaming pass and you'll see the child's internal notes render as their own message and then vanish.
-A final-state test cannot catch it.
+The fix was to stop making it a decision at all.
+A namespaced event belongs to its child, structurally: it feeds that child's `messages()` on the subagent stream and never merges into the parent transcript.
+The opt-out flag is gone because there's nothing left to opt out of.
+What the transcript shows at settle is decided by state — a shared `messages` key delivers the child's message through the final `values` sync; an isolated child schema means it never arrives.
+`transcriptNodeNames` still exists for the genuinely separate problem of *top-level* side-effect nodes, like routers and title generators.
 
 ### How does a child get attributed?
 

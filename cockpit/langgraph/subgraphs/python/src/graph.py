@@ -19,12 +19,12 @@ demo rather than a straight-line chain:
    sequence, and LangGraph emits its stream events under a namespace
    (`research:<uuid>`) rather than flattening them into the parent's.
 
-**A plain subgraph node is not a tracked "subagent".** `agent.subagents()` in
-`@threadplane/langgraph` is populated only by delegation *tool calls* whose
-name matches `subagentToolNames` and whose args carry a `subagent_type` — that
-path emits `tools:<id>` namespaces, and it is demonstrated in
-`cockpit/chat/subagents`. This example therefore surfaces child activity by
-reading the parent graph's own state through `agent.value()`.
+**Two views of the child on the Angular side.** `agent.value()` reads the
+parent's own state — the shared `research_topic` / `research_brief` keys are
+the boundary made visible. `agent.subagents()` shows the child as a stream:
+every namespaced child run appears there, plain subgraph nodes under their
+namespace key (named by node) and tool-dispatched children under their
+tool-call id (that shape is demonstrated in `cockpit/chat/subagents`).
 """
 
 from pathlib import Path
