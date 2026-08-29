@@ -41,7 +41,7 @@ Every line below was read directly in this repo on 2026-08-28.
 **The seam.**
 `libs/e2e-harness/src/global-setup-factory.ts:90` spawns a real `langgraph dev` with `OPENAI_BASE_URL: aimock.baseUrl` and `OPENAI_API_KEY: 'test-not-used'`. Real Angular app, real transport, real LangGraph server, real Python graph. Only the model provider is replaced. `ag-ui-global-setup-factory.ts:89` does the same for the AG-UI stack.
 
-**Scale.** 50 fixture files, 129 total fixture entries, across 34 capabilities (counted by parsing every `**/e2e/fixtures/*.json`).
+**Scale.** 50 fixture files holding 129 total fixture entries, across 34 distinct apps — 32 cockpit capabilities plus 2 example apps (counted by parsing every `**/e2e/fixtures/*.json`). Say "apps" or "capabilities and example apps" in prose, not "capabilities" alone: 2 of the 34 are examples, not cockpit caps.
 
 **The determinism trade.**
 `libs/e2e-harness/src/aimock-runner.ts:59` constructs `new LLMock({ port: 0, chunkSize: 4096 })`. The comment at :50-58 states the rationale: a large chunk size makes each response arrive in 1-2 SSE deltas, so structural assertions measure the FINAL rendered DOM rather than the progressive render; with default chunking the partial-markdown parser sometimes cannot recover a triple-backtick fence split mid-token, and the final state degrades to inline `<code>`. Progressive behavior is covered by unit-variance tables instead.
