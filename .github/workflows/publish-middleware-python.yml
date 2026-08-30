@@ -76,6 +76,17 @@ jobs:
         working-directory: packages/threadplane-middleware
         run: uv publish --dry-run dist/*
 
+      # PEP 740 attestations: `uv publish` uploads attestation files found
+      # next to the dists (on by default) but does not mint them — Astral's
+      # own publishing example pairs it with their attest-action for exactly
+      # this. Generated for the real release only; a dry run uploads nothing
+      # for them to accompany. SHA pin verified against tag v0.0.6.
+      - name: Generate PEP 740 attestations
+        if: ${{ inputs.dry_run == false }}
+        uses: astral-sh/attest-action@f589a42a7efb6fe400b4f400de60b4bc90390027 # v0.0.6
+        with:
+          paths: packages/threadplane-middleware/dist/*
+
       # uv publish, not the pypa action: the pinned action image's twine
       # rejected the Metadata-Version 2.5 that current `uv build` emits
       # ("InvalidDistribution: '2.5' is not a valid metadata version"), while

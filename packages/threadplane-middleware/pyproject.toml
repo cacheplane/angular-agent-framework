@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "threadplane-middleware"
-version = "0.0.2"
+version = "0.0.3"
 description = "LangGraph middleware for binding client-declared tool stubs and routing client tool calls to END so the browser executes them."
 readme = "README.md"
 license = { text = "MIT" }
