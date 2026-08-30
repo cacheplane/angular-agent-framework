@@ -8,8 +8,16 @@ featured: false
 draft: false
 ---
 
-Every deterministic test harness buys its determinism by deleting a dimension.
-Ours deletes time, deliberately, and the reason is written in the source.
+Agents are hard to test end to end for one boring reason: the model doesn't return the same thing twice.
+Ask it the same question in two runs and you get two different sentences, two different orderings, sometimes a tool call and sometimes not. Write an assertion against that and you've written a coin flip.
+
+The usual fix is to stop calling the model.
+You capture its responses once, save them to disk as _fixtures_, and _replay_ them on every run — same request in, same bytes back, forever. The tests go deterministic, CI stops spending money on tokens, and the agent under test never knows it's talking to a recording.
+
+We test our whole demo fleet that way. This post is about the bill, because replay isn't free and the charge doesn't show up where you'd look for it.
+
+Here's the shape of it. Every deterministic harness buys its determinism by deleting a dimension of the real thing.
+Ours deletes _time_ — deliberately, with the reason written in the source — and one specific class of bug vanishes along with it.
 
 So the interesting question about a harness isn't whether it's green.
 It's which dimension you deleted, because that's the list of bugs it can't report.
@@ -49,7 +57,9 @@ This is the outer tier. For in-process fakes at the unit level, the [testing gui
 
 The shape of the request — and the order you list the entries decides which one wins.
 
-Each entry carries a `match` block. The obvious discriminator is the user message, but there are richer ones: a parent LLM's first call and its continuation after a tool round carry the same user message. Something has to tell them apart.
+A fixture file is a list of entries, and each one is a pair: a `match` block describing which request it answers, and the response to hand back when a request fits.
+
+The obvious discriminator is the user message, but there are richer ones: a parent LLM's first call and its continuation after a tool round carry the same user message. Something has to tell them apart.
 
 That something is `hasToolResult`, and matching is first-match-wins:
 
