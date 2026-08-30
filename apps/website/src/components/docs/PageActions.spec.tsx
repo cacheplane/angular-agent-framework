@@ -19,16 +19,21 @@ beforeEach(() => {
   Object.assign(globalThis, { fetch: fetchMock });
 });
 
-async function open() {
+async function renderActions() {
   const { PageActions } = await import('./PageActions');
   render(<PageActions library="langgraph" section="guides" slug="streaming" />);
+}
+
+async function open() {
+  await renderActions();
   fireEvent.click(screen.getByRole('button', { name: /page actions/i }));
 }
 
 describe('PageActions', () => {
   it('copies the raw markdown from the route and fires analytics', async () => {
-    await open();
-    fireEvent.click(screen.getByRole('menuitem', { name: /copy page as markdown/i }));
+    // Split-button redesign: copy is the labeled PRIMARY segment, not a menu item.
+    await renderActions();
+    fireEvent.click(screen.getByRole('button', { name: /copy page as markdown/i }));
     await waitFor(() => expect(writeTextMock).toHaveBeenCalledWith('# Streaming\n\nbody'));
     expect(fetchMock).toHaveBeenCalledWith('/api/markdown/langgraph/guides/streaming');
     expect(trackMock).toHaveBeenCalledWith(

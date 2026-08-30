@@ -13,6 +13,38 @@ interface Props {
   slug: string;
 }
 
+function CopyIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="5" y="5" width="9" height="9" rx="1.5" />
+      <path d="M11 5V3.5A1.5 1.5 0 009.5 2h-6A1.5 1.5 0 002 3.5v6A1.5 1.5 0 003.5 11H5" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 8.5l3.5 3.5L13 5" />
+    </svg>
+  );
+}
+
+function ChevronIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 6.5l4 4 4-4" />
+    </svg>
+  );
+}
+
+/**
+ * "Copy page" split button (docs premium-polish pass). The primary segment
+ * copies the page's raw Markdown — the single most useful docs action in the
+ * LLM era, previously buried behind an unlabeled "⋯" menu. The chevron opens
+ * the secondary actions. Menu a11y (first-item focus, arrow roving, Escape,
+ * focus restore) carried over from the a11y pass (#865).
+ */
 export function PageActions({ library, section, slug }: Props) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -21,8 +53,7 @@ export function PageActions({ library, section, slug }: Props) {
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!open) return;
-    // Menu pattern: focus the first item on open, restore the trigger on close.
+    if (!open) return undefined;
     const items = menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]');
     items?.[0]?.focus();
     const onDown = (e: MouseEvent) => {
@@ -40,7 +71,6 @@ export function PageActions({ library, section, slug }: Props) {
     };
   }, [open]);
 
-  // Roving arrow-key navigation over the menu items.
   const onMenuKeyDown = (e: React.KeyboardEvent) => {
     const items = [...(menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])];
     if (items.length === 0) return;
@@ -57,6 +87,7 @@ export function PageActions({ library, section, slug }: Props) {
 
   const path = `${library}/${section}/${slug}`;
   const pageUrl = `${SITE_ORIGIN}/docs/${path}`;
+  const markdownUrl = `/api/markdown/${path}`;
   const chatgptUrl = `https://chatgpt.com/?hints=search&q=${encodeURIComponent(
     `Read this Threadplane docs page and help me apply it to my project: ${pageUrl}`,
   )}`;
@@ -64,7 +95,7 @@ export function PageActions({ library, section, slug }: Props) {
 
   const copyMarkdown = async () => {
     try {
-      const res = await fetch(`/api/markdown/${path}`);
+      const res = await fetch(markdownUrl);
       if (!res.ok) throw new Error(String(res.status));
       const text = await res.text();
       await navigator.clipboard.writeText(text);
@@ -74,22 +105,33 @@ export function PageActions({ library, section, slug }: Props) {
     } catch {
       // network/clipboard failure — silently ignore
     }
-    setOpen(false);
   };
 
   return (
     <div ref={ref} className="docs-page-actions">
-      <button
-        type="button"
-        ref={triggerRef}
-        aria-label="Page actions"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-        className="docs-page-actions-trigger"
-      >
-        <span aria-hidden="true">⋯</span>
-      </button>
+      <div className="docs-copy-split">
+        <button
+          type="button"
+          aria-label="Copy page as Markdown"
+          onClick={copyMarkdown}
+          className="docs-copy-primary"
+          data-copied={copied || undefined}
+        >
+          {copied ? <CheckIcon /> : <CopyIcon />}
+          <span>{copied ? 'Copied' : 'Copy page'}</span>
+        </button>
+        <button
+          type="button"
+          ref={triggerRef}
+          aria-label="Page actions"
+          aria-haspopup="menu"
+          aria-expanded={open}
+          onClick={() => setOpen((o) => !o)}
+          className="docs-copy-more"
+        >
+          <ChevronIcon />
+        </button>
+      </div>
       {open ? (
         <div
           role="menu"
@@ -97,9 +139,6 @@ export function PageActions({ library, section, slug }: Props) {
           onKeyDown={onMenuKeyDown}
           className="docs-page-actions-menu"
         >
-          <button type="button" role="menuitem" onClick={copyMarkdown} className="docs-page-actions-item">
-            {copied ? 'Copied' : 'Copy page as Markdown'}
-          </button>
           <a
             role="menuitem"
             href={chatgptUrl}
@@ -109,6 +148,16 @@ export function PageActions({ library, section, slug }: Props) {
             className="docs-page-actions-item"
           >
             Open in ChatGPT
+          </a>
+          <a
+            role="menuitem"
+            href={markdownUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setOpen(false)}
+            className="docs-page-actions-item"
+          >
+            View as Markdown
           </a>
           <a
             role="menuitem"
