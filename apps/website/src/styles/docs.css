@@ -63,7 +63,7 @@
 }
 
 .docs-prose [data-rehype-pretty-code-figure] code {
-  font-family: var(--font-mono), monospace;
+  font-family: var(--font-mono);
   font-size: inherit;
   background: none !important;
   padding: 0 !important;
@@ -90,7 +90,7 @@
    * table columns squeeze below the chip width and wrap `agent` as agen/t. */
   word-break: normal;
   overflow-wrap: break-word;
-  font-family: var(--font-mono), monospace;
+  font-family: var(--font-mono);
   font-size: 0.85em;
   background: var(--color-accent-surface);
   color: var(--color-accent);
@@ -255,7 +255,7 @@
   color: var(--color-accent);
 }
 .ag-ui-arch-box-title {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--color-text-primary);
@@ -360,13 +360,7 @@
 /*
  * mdx components (components/docs/mdx/*.tsx) — presentation for the MDX
  * content components authored inside docs pages.
- *
- * Font-family exception: see the top of ui.css for the next/font shadowing
- * rationale. `tokens.typography.fontSans/fontMono/fontSerif` are raw stacks
- * and are copied through verbatim below ('Inter, system-ui, sans-serif',
- * '"JetBrains Mono", monospace', '"EB Garamond", Georgia, serif');
- * `tokens.typography.body.family` is already `var(--font-inter)` and is
- * copied through as the var.
+ * Fonts: unified onto the next/font vars — see the font note atop ui.css.
  */
 
 /* mdx — Callout */
@@ -408,7 +402,7 @@
   height: 20px;
   border-radius: var(--radius-full);
   color: var(--color-text-inverted);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 700;
   flex-shrink: 0;
@@ -426,7 +420,7 @@
   background: var(--color-angular-red);
 }
 .mdx-callout-title {
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-inter);
   font-size: 15px;
   color: var(--color-text-primary);
   font-weight: 600;
@@ -460,7 +454,7 @@
   border-radius: var(--radius-full);
   background: var(--color-accent);
   color: var(--color-text-inverted);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 14px;
   font-weight: 700;
   display: inline-flex;
@@ -490,7 +484,7 @@
   padding-bottom: 8px;
 }
 .mdx-step-title {
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-inter);
   font-size: 17px;
   font-weight: 600;
   color: var(--color-text-primary);
@@ -539,7 +533,7 @@
   margin-bottom: 6px;
 }
 .mdx-card-title {
-  font-family: "EB Garamond", Georgia, serif;
+  font-family: var(--font-garamond);
   font-weight: 700;
   font-size: 0.95rem;
   color: var(--color-text-primary);
@@ -570,7 +564,7 @@
 }
 .mdx-tab-button {
   padding: 10px 18px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 0.8rem;
   font-weight: 400;
   color: var(--color-text-secondary);
@@ -637,7 +631,7 @@
 }
 .mdx-codegroup-tab {
   padding: 8px 14px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 0.7rem;
   font-weight: 400;
   color: var(--color-text-secondary);
@@ -698,14 +692,14 @@
   margin-bottom: 8px;
 }
 .mdx-chip-title {
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-inter);
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text-primary);
   margin-bottom: 4px;
 }
 .mdx-chip-signal {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   color: var(--color-accent);
 }
@@ -760,7 +754,7 @@
   min-width: 0;
 }
 .docs-sidebar-lib-trigger-label {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 0.8rem;
 }
 .docs-sidebar-lib-caret {
@@ -792,7 +786,7 @@
   min-width: 0;
 }
 .docs-sidebar-lib-item-title {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-weight: 600;
   color: var(--color-text-primary);
   font-size: 0.8rem;
@@ -853,7 +847,7 @@
   font-size: 0.8rem;
 }
 .docs-sidebar-search-kbd {
-  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 0.65rem;
   color: var(--color-text-muted);
   background: var(--color-surface-dim);
@@ -1008,7 +1002,7 @@
   /* Typography on the LIST, not the links: the separators are siblings of the
    * links inside each li, and when only the links carried 13px the first two
    * separators inherited body's 16px/24px and floated 3px high (findings §3). */
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-inter);
   font-size: 13px;
   line-height: 1.5;
 }
@@ -1042,7 +1036,7 @@
   min-width: 0;
 }
 .docs-page-header-label {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1077,7 +1071,7 @@
   align-items: center;
   gap: 7px;
   padding: 7px 12px;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-inter);
   font-size: 13px;
   font-weight: 500;
   color: var(--color-text-secondary);
@@ -1149,7 +1143,7 @@
   width: 100%;
   text-align: left;
   padding: 8px 12px;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-inter);
   font-size: 13px;
   color: var(--color-text-primary);
   background: transparent;
@@ -1591,7 +1585,7 @@
   margin-bottom: 8px;
 }
 .docs-prevnext-title {
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-inter);
   font-size: 16px;
   font-weight: 600;
   color: var(--color-accent);

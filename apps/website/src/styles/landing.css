@@ -197,7 +197,7 @@
   margin-bottom: 24px;
 }
 .feature-block-card-title {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 700;
   color: var(--color-accent);
@@ -210,7 +210,7 @@
   color: var(--color-text-secondary);
 }
 .feature-block-cta {
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-inter);
   font-size: 15px;
   font-weight: 600;
   color: var(--color-accent);
@@ -308,7 +308,7 @@
   color: var(--color-text-secondary);
 }
 .why-row__primitive {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
   color: var(--color-text-muted);
   white-space: nowrap;
@@ -457,7 +457,7 @@
   justify-content: space-between;
 }
 .wp-cover-badge {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.15em;
@@ -465,7 +465,7 @@
   margin-bottom: 14px;
 }
 .wp-cover-title {
-  font-family: "EB Garamond", Georgia, serif;
+  font-family: var(--font-garamond);
   font-size: 28px;
   line-height: 1.15;
   font-weight: 700;
@@ -474,13 +474,13 @@
   font-style: italic;
 }
 .wp-cover-desc {
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-inter);
   font-size: 14px;
   line-height: 1.5;
   color: var(--color-text-secondary);
 }
 .wp-cover-footer {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--color-text-muted);
   text-transform: uppercase;
@@ -575,7 +575,7 @@
   border-radius: var(--radius-full);
   background: var(--color-accent);
   color: var(--color-text-inverted);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 14px;
   font-weight: 700;
   display: inline-flex;
@@ -583,7 +583,7 @@
   justify-content: center;
 }
 .pilot-timeline-title {
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-inter);
   font-size: 17px;
   font-weight: 600;
   color: var(--color-text-primary);
@@ -629,14 +629,14 @@
   min-width: 0;
 }
 .ecosystem-tile-name {
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-inter);
   font-size: 15px;
   line-height: 1.25;
   font-weight: 700;
   color: var(--color-text-primary);
 }
 .ecosystem-tile-note {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   line-height: 1.4;
   text-transform: uppercase;
@@ -681,7 +681,7 @@
   align-items: start;
 }
 .ecosystem-row-title {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   line-height: 1.5;
   font-weight: 700;
@@ -878,13 +878,13 @@
   gap: 4px;
 }
 .backends-grid-name {
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-inter);
   font-size: 14px;
   font-weight: 600;
   color: var(--color-text-primary);
 }
 .backends-grid-note {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--color-text-muted);
 }
@@ -940,7 +940,7 @@
   gap: 5px;
 }
 .demo-modal__tab {
-  font-family: Inter, sans-serif;
+  font-family: var(--font-inter);
   font-size: 12px;
   font-weight: 600;
   padding: 6px 12px;
@@ -957,7 +957,7 @@
 .demo-modal__url {
   flex: 1;
   text-align: center;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 600;
   color: var(--color-text-muted);
@@ -991,12 +991,12 @@
   background: var(--color-surface);
 }
 .demo-modal__hint {
-  font-family: Inter, sans-serif;
+  font-family: var(--font-inter);
   font-size: 12px;
   color: var(--color-text-muted);
 }
 .demo-modal__open-link {
-  font-family: Inter, sans-serif;
+  font-family: var(--font-inter);
   font-size: 12px;
   font-weight: 600;
   color: var(--color-accent);
@@ -1017,7 +1017,7 @@
   text-align: center;
 }
 .demo-showcase__eyebrow {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -1066,7 +1066,7 @@
   font-size: 22px;
 }
 .demo-showcase__launch-label {
-  font-family: Inter, sans-serif;
+  font-family: var(--font-inter);
   font-weight: 600;
   font-size: 13px;
   color: #fff;
@@ -1111,7 +1111,7 @@
   margin-bottom: 48px;
 }
 .render-show-eyebrow {
-  font-family: var(--font-mono,"JetBrains Mono",monospace);
+  font-family: var(--font-mono);
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -1120,7 +1120,7 @@
   margin-bottom: 14px;
 }
 .render-show-heading {
-  font-family: var(--font-garamond,"EB Garamond",Georgia,serif);
+  font-family: var(--font-garamond);
   font-size: clamp(26px, 3.5vw, 42px);
   font-weight: 800;
   line-height: 1.1;
@@ -1144,7 +1144,7 @@
   border-bottom: 1px solid var(--color-border);
 }
 .render-show-card-title {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.68rem;
   font-weight: 700;
   color: var(--color-render-green);
@@ -1160,7 +1160,7 @@
   margin-bottom: 48px;
 }
 .lg-show-eyebrow {
-  font-family: var(--font-mono,"JetBrains Mono",monospace);
+  font-family: var(--font-mono);
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -1169,7 +1169,7 @@
   margin-bottom: 14px;
 }
 .lg-show-heading {
-  font-family: var(--font-garamond,"EB Garamond",Georgia,serif);
+  font-family: var(--font-garamond);
   font-size: clamp(26px, 3.5vw, 42px);
   font-weight: 800;
   line-height: 1.1;
@@ -1193,7 +1193,7 @@
   border-bottom: 1px solid var(--color-border);
 }
 .lg-show-card-title {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.68rem;
   font-weight: 700;
   color: var(--color-accent);
@@ -1209,7 +1209,7 @@
   margin-bottom: 48px;
 }
 .chat-show-eyebrow {
-  font-family: var(--font-mono,"JetBrains Mono",monospace);
+  font-family: var(--font-mono);
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -1218,7 +1218,7 @@
   margin-bottom: 14px;
 }
 .chat-show-heading {
-  font-family: var(--font-garamond,"EB Garamond",Georgia,serif);
+  font-family: var(--font-garamond);
   font-size: clamp(26px, 3.5vw, 42px);
   font-weight: 800;
   line-height: 1.1;
@@ -1242,7 +1242,7 @@
   border-bottom: 1px solid var(--color-border);
 }
 .chat-show-card-title {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.68rem;
   font-weight: 700;
   color: var(--color-chat-purple);
