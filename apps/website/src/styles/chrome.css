@@ -411,3 +411,18 @@
   color: #1a7a40;
   line-height: 1.5;
 }
+
+/* Mobile docs-search entry (polish arc PR 3) — button reset to match the
+ * .nav-mobile-item link styling it shares. */
+.nav-mobile-search {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+}
+.nav-mobile-search:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}

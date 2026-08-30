@@ -242,6 +242,20 @@ export function Nav() {
             {/* Docs content */}
             {(mobileTab === 'docs' && isDocsPage && currentLib) && (
               <div className="nav-mobile-content-list">
+                {/* Docs search was ⌘K-only, with its trigger in the
+                    desktop-only sidebar — phones had no way in (findings §7).
+                    DocsSearch is mounted on every docs page and listens for
+                    the same synthetic keydown the sidebar trigger sends. */}
+                <button
+                  type="button"
+                  className="nav-mobile-item nav-mobile-search"
+                  onClick={() => {
+                    setOpen(false);
+                    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }));
+                  }}
+                >
+                  Search docs…
+                </button>
                 {currentLib.demoUrl && (
                   <a href={currentLib.demoUrl} target="_blank" rel="noopener noreferrer"
                     onClick={() => {

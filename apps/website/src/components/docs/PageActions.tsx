@@ -17,9 +17,14 @@ export function PageActions({ library, section, slug }: Props) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
+    // Menu pattern: focus the first item on open, restore the trigger on close.
+    const items = menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]');
+    items?.[0]?.focus();
     const onDown = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
@@ -31,8 +36,24 @@ export function PageActions({ library, section, slug }: Props) {
     return () => {
       document.removeEventListener('mousedown', onDown);
       document.removeEventListener('keydown', onKey);
+      triggerRef.current?.focus();
     };
   }, [open]);
+
+  // Roving arrow-key navigation over the menu items.
+  const onMenuKeyDown = (e: React.KeyboardEvent) => {
+    const items = [...(menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])];
+    if (items.length === 0) return;
+    const i = items.indexOf(document.activeElement as HTMLElement);
+    const move = (n: number) => {
+      e.preventDefault();
+      items[(n + items.length) % items.length].focus();
+    };
+    if (e.key === 'ArrowDown') move(i + 1);
+    if (e.key === 'ArrowUp') move(i - 1);
+    if (e.key === 'Home') move(0);
+    if (e.key === 'End') move(items.length - 1);
+  };
 
   const path = `${library}/${section}/${slug}`;
   const pageUrl = `${SITE_ORIGIN}/docs/${path}`;
@@ -60,6 +81,7 @@ export function PageActions({ library, section, slug }: Props) {
     <div ref={ref} className="docs-page-actions">
       <button
         type="button"
+        ref={triggerRef}
         aria-label="Page actions"
         aria-haspopup="menu"
         aria-expanded={open}
@@ -71,6 +93,8 @@ export function PageActions({ library, section, slug }: Props) {
       {open ? (
         <div
           role="menu"
+          ref={menuRef}
+          onKeyDown={onMenuKeyDown}
           className="docs-page-actions-menu"
         >
           <button type="button" role="menuitem" onClick={copyMarkdown} className="docs-page-actions-item">
