@@ -52,6 +52,22 @@ Do not run `npm install` in a worktree on macOS either: it rewrites
 `package-lock.json` and drops the Linux `@next/swc-*` bindings, which breaks CI.
 `npm ci` is the safe command.
 
+One more worktree-only trap, after install: `nx build cockpit` can die with a
+Turbopack panic — `FileSystemPath(...).join(...) leaves the filesystem root` —
+whenever a website `.next` cache exists anywhere in the workspace
+(`apps/website/.next` from `next dev`/e2e, or `dist/apps/website` from a build).
+Those caches contain a `node_modules` symlink whose relative target resolves
+through the *main* checkout's root; the path is valid on disk, but Turbopack's
+virtual filesystem refuses to traverse above its project root and panics.
+Pinning `turbopack.root` does not help. Clear the caches instead:
+
+```bash
+rm -rf apps/website/.next dist/apps/website && npx nx build cockpit
+```
+
+CI never hits this — its jobs build from fresh checkouts that are not nested
+inside another checkout.
+
 ## Testing
 
 New functionality and bug fixes must include automated tests. Run a project's
