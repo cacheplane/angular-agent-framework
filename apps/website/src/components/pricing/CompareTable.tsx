@@ -308,14 +308,8 @@ function SectionTable({
 function CtaStrip({ cycle }: { cycle: BillingCycle }) {
   return (
     <div
-      style={{
-        minWidth: 960,
-        margin: '24px 0 0',
-        display: 'grid',
-        gridTemplateColumns: `${LABEL_COL_WIDTH} repeat(${TIERS.length}, 1fr)`,
-        gap: 0,
-        alignItems: 'start',
-      }}
+      className="pricing-cta-strip"
+      style={{ '--cta-cols': `${LABEL_COL_WIDTH} repeat(${TIERS.length}, 1fr)` } as React.CSSProperties}
     >
       <div />
       {TIERS.map((tier) => (

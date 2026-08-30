@@ -23,7 +23,7 @@ export function SolutionDemoBlock({ clip, accent }: { clip: DemoClip; accent: st
     <Section surface="tinted" ariaLabelledBy="solution-demo-heading">
       <Container>
         <div className="sol-demo-wrap">
-          <Eyebrow style={{ color: accent, marginBottom: 12 }}>See it running</Eyebrow>
+          <Eyebrow style={{ '--accent': accent } as React.CSSProperties} data-accent-text className="sol-code-eyebrow">See it running</Eyebrow>
           <h2 id="solution-demo-heading" className="sol-demo-heading">
             The approval gate, in the product
           </h2>

@@ -47,7 +47,7 @@ function PainPoints({ items, accent }: { items: SolutionPainPoint[]; accent: str
     <Section surface="canvas" ariaLabelledBy="problem-heading">
       <Container>
         <div className="sol-page-section-header">
-          <Eyebrow style={{ color: accent }} className="sol-page-eyebrow-tight">The problem</Eyebrow>
+          <Eyebrow style={{ '--accent': accent } as React.CSSProperties} data-accent-text className="sol-page-eyebrow-tight">The problem</Eyebrow>
           <h2 id="problem-heading" className="sol-page-h2">
             Why this is hard today.
           </h2>
@@ -82,7 +82,7 @@ function Architecture({
     <Section surface="tinted" ariaLabelledBy="arch-heading">
       <Container>
         <div className="sol-page-section-header">
-          <Eyebrow style={{ color: accent }} className="sol-page-eyebrow-tight">Architecture</Eyebrow>
+          <Eyebrow style={{ '--accent': accent } as React.CSSProperties} data-accent-text className="sol-page-eyebrow-tight">Architecture</Eyebrow>
           <h2 id="arch-heading" className="sol-page-h2 sol-page-h2-spaced">
             How the three libraries compose.
           </h2>
@@ -130,7 +130,7 @@ function Capabilities({ items, accent }: { items: ProofPoint[]; accent: string }
     <Section surface="canvas" ariaLabelledBy="capabilities-heading">
       <Container>
         <div className="sol-page-section-header">
-          <Eyebrow style={{ color: accent }} className="sol-page-eyebrow-tight">What you ship</Eyebrow>
+          <Eyebrow style={{ '--accent': accent } as React.CSSProperties} data-accent-text className="sol-page-eyebrow-tight">What you ship</Eyebrow>
           <h2 id="capabilities-heading" className="sol-page-h2">
             Capabilities the framework delivers.
           </h2>
@@ -138,7 +138,7 @@ function Capabilities({ items, accent }: { items: ProofPoint[]; accent: string }
         <div className="sol-page-grid-260">
           {items.map((p) => (
             <Card key={p.metric + p.label} padding="lg">
-              <div style={{ color: accent }} className="sol-page-metric">
+              <div style={{ '--accent': accent } as React.CSSProperties} data-accent-text className="sol-page-metric">
                 {p.metric}
               </div>
               <p className="sol-page-card-body">
@@ -163,7 +163,7 @@ export default async function SolutionPage({ params }: PageProps) {
       <Section surface="canvas" ariaLabelledBy="solution-hero-heading">
         <Container>
           <div className="sol-page-hero-inner">
-            <Eyebrow style={{ color: solution.color }} className="sol-page-eyebrow-spaced">{solution.eyebrow}</Eyebrow>
+            <Eyebrow style={{ '--accent': solution.color } as React.CSSProperties} data-accent-text className="sol-page-eyebrow-spaced">{solution.eyebrow}</Eyebrow>
             <h1 id="solution-hero-heading" className="sol-page-h1">
               {solution.title}
             </h1>

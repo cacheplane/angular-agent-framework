@@ -60,7 +60,9 @@ export default [
   // literal. The escape hatch for dynamic values — style={{ '--x': value }} —
   // uses string-literal keys and passes. Genuinely dynamic identifier-keyed
   // values (rare) get a targeted eslint-disable-next-line with a reason.
-  // Ships as 'warn' for one release, then 'error'.
+  // Escalated to 'error' after v0.0.61 per the plan's two-step; every former
+  // warning site now uses the escape hatch or a data-* state, so the rule
+  // guards at zero suppressions.
   {
     files: ['apps/website/src/**/*.tsx'],
     ignores: [
@@ -68,13 +70,11 @@ export default [
       'apps/website/src/app/opengraph-image.tsx',
       // NOTE: [slug] would be a glob character class, so match by wildcard.
       'apps/website/src/app/blog/*/opengraph-image.tsx',
-      // Dev-only route slated for deletion.
-      'apps/website/src/app/dev/primitives/page.tsx',
       'apps/website/src/**/*.spec.tsx',
     ],
     rules: {
       'no-restricted-syntax': [
-        'warn',
+        'error',
         {
           selector:
             'JSXAttribute[name.name="style"] > JSXExpressionContainer > ObjectExpression > Property[key.type="Identifier"]',
