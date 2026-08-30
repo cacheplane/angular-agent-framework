@@ -32,7 +32,7 @@
 }
 .pricing-billing-tab {
   position: relative;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-inter);
   font-size: 13px;
   font-weight: 600;
   padding: 8px 16px;
@@ -465,14 +465,14 @@
   flex-shrink: 0;
 }
 .lead-form-value-title {
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-inter);
   font-size: 15px;
   font-weight: 600;
   color: var(--color-text-primary);
   margin-bottom: 4px;
 }
 .lead-form-value-body {
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-inter);
   font-size: 14px;
   line-height: 1.5;
   color: var(--color-text-secondary);
@@ -481,7 +481,7 @@
 .lead-form-value-link {
   display: inline-block;
   margin-top: 6px;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-inter);
   font-size: 13px;
   color: var(--color-accent);
   text-decoration: none;
@@ -554,7 +554,7 @@
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-inter);
   color: var(--color-text-secondary);
   cursor: pointer;
 }
@@ -609,7 +609,7 @@
   padding: 12px 16px;
   font-size: var(--text-body);
   color: var(--color-text-secondary);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -922,7 +922,7 @@
   margin-top: 0;
 }
 .sol-code-block-label {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;

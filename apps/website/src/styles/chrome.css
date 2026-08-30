@@ -7,11 +7,7 @@
  * these in @layer would let utilities win and change rendering.
  *
  * Migration: docs/superpowers/plans/2026-08-29-inline-style-substrate-migration.md
- *
- * Font-family exception: see the top of ui.css for the next/font
- * shadowing rationale. Verbatim raw-stack literals below
- * ('Inter, sans-serif', 'var(--font-mono,"JetBrains Mono",monospace)',
- * 'var(--font-garamond,"EB Garamond",Georgia,serif)') are intentional.
+ * Fonts: unified onto the next/font vars — see the font note atop ui.css.
  */
 
 /* One nav height. The fixed nav measures 58px (px-6 py-4) and 81px at the md
@@ -175,7 +171,7 @@
   padding: 10px 0;
   font-size: 15px;
   font-weight: 500;
-  font-family: Inter, sans-serif;
+  font-family: var(--font-inter);
   background: transparent;
   color: var(--color-text-muted);
   border: none;
@@ -210,7 +206,7 @@
   line-height: 24px;
   min-height: 44px;
   text-decoration: none;
-  font-family: Inter, sans-serif;
+  font-family: var(--font-inter);
   color: var(--color-text-secondary);
   background: transparent;
 }
@@ -232,7 +228,7 @@
   flex: 1;
   text-align: center;
   padding: 8px 0;
-  font-family: var(--font-mono,"JetBrains Mono",monospace);
+  font-family: var(--font-mono);
   font-size: 0.75rem;
   font-weight: 600;
   background: transparent;
@@ -256,7 +252,7 @@
   color: var(--color-accent);
   background: var(--color-accent-surface);
   text-decoration: none;
-  font-family: Inter, sans-serif;
+  font-family: var(--font-inter);
   font-weight: 600;
 }
 .nav-mobile-section-toggle {
@@ -271,7 +267,7 @@
   padding: 12px 14px;
   min-height: 48px;
   border-radius: 8px;
-  font-family: Inter, sans-serif;
+  font-family: var(--font-inter);
   font-size: 16px;
   line-height: 24px;
   color: var(--color-text-primary);
@@ -293,7 +289,7 @@
   min-height: 48px;
   color: var(--color-text-secondary);
   text-decoration: none;
-  font-family: Inter, sans-serif;
+  font-family: var(--font-inter);
 }
 .nav-mobile-github-link {
   display: flex;
@@ -304,7 +300,7 @@
   min-height: 48px;
   color: var(--color-text-secondary);
   text-decoration: none;
-  font-family: Inter, sans-serif;
+  font-family: var(--font-inter);
   font-size: 16px;
 }
 .nav-mobile-cta-wrap {
@@ -352,7 +348,7 @@
   padding: 4px;
 }
 .toast-eyebrow {
-  font-family: var(--font-mono,"JetBrains Mono",monospace);
+  font-family: var(--font-mono);
   font-size: 0.62rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -361,7 +357,7 @@
   margin-bottom: 8px;
 }
 .toast-title {
-  font-family: var(--font-garamond,"EB Garamond",Georgia,serif);
+  font-family: var(--font-garamond);
   font-size: 1.05rem;
   font-weight: 700;
   color: var(--color-text-primary);
@@ -383,7 +379,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  font-family: var(--font-mono,"JetBrains Mono",monospace);
+  font-family: var(--font-mono);
   font-size: 0.68rem;
   color: var(--color-text-muted);
   text-decoration: underline;
@@ -400,7 +396,7 @@
   padding: 8px 12px;
   font-size: 0.82rem;
   color: var(--color-text-primary);
-  font-family: Inter, sans-serif;
+  font-family: var(--font-inter);
   outline: none;
   margin-bottom: 10px;
 }
@@ -413,7 +409,7 @@
   font-size: 0.7rem;
   color: var(--color-text-muted);
   text-decoration: underline;
-  font-family: Inter, sans-serif;
+  font-family: var(--font-inter);
 }
 .toast-success-text {
   font-size: 0.85rem;

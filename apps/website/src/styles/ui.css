@@ -96,25 +96,26 @@
 }
 
 /*
- * FONT FAMILIES ARE VERBATIM LITERALS, NOT var(--font-*), on purpose.
+ * FONTS: every font-family in apps/website CSS is var(--font-inter),
+ * var(--font-mono), or var(--font-garamond) — never a raw stack.
  *
- * layout.tsx loads fonts via next/font, which SHADOWS --font-inter,
- * --font-mono, and --font-garamond on <html> with its own stacks
- * ("Inter Fallback" etc.). var(--font-inter) therefore resolves to the
- * next/font value at runtime, NOT the theme.css token value — measured:
- * migrating Button to the var changed its rendered font and shifted
- * widths ~2.5px. Sites whose inline style was the raw token stack keep
- * that stack verbatim; only sites that already used a
- * `tokens.typography.*.family` value (which IS 'var(--font-*)') keep
- * the var. Unifying fonts onto next/font is a real visual change that
- * belongs to the polish arc, not this migration.
+ * layout.tsx loads the fonts via next/font, which defines those three
+ * vars on <html> with self-hosted, size-adjusted stacks ("Inter",
+ * "Inter Fallback", etc.). Raw literals like `Inter, system-ui` only
+ * matched a locally-installed Inter (next/font registers its family
+ * under a hashed name), so they silently fell back to system fonts.
+ * The 2026-08-30 unification (findings audit §10) moved all sites onto
+ * the vars — a deliberate visual change: real webfonts everywhere, no
+ * more mixed stacks. theme.css also defines the same var names from
+ * the design tokens; next/font's <html>-level values win, which is now
+ * the intended resolution, and they guarantee the vars always resolve.
  */
 /* UI primitive — Pill */
 [data-ui="pill"] {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 500;
   padding: 4px 10px;
@@ -162,7 +163,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-inter);
   font-weight: 600;
   line-height: 1;
   border-radius: var(--radius-md);
@@ -223,7 +224,7 @@
   gap: 16px;
   padding: 20px 0;
   cursor: pointer;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-inter);
   font-size: 17px;
   font-weight: 600;
   color: var(--color-text-primary);
@@ -236,7 +237,7 @@
 }
 [data-ui="faq-item"] > div {
   padding-bottom: 20px;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-inter);
   font-size: 16px;
   line-height: 1.6;
   color: var(--color-text-secondary);
@@ -247,7 +248,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: "EB Garamond", Georgia, serif;
+  font-family: var(--font-garamond);
   font-weight: 700;
   color: var(--color-text-primary);
   line-height: 1;
@@ -331,7 +332,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   text-align: center;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--color-text-muted);
   background: var(--color-surface);
@@ -367,18 +368,18 @@
 }
 
 /* UI primitive — TabGroup.
- * `font-family: Inter, sans-serif` and `border-radius: 8px` are copied
- * verbatim from the original inline literals — they are NOT the
- * `--font-inter` / `--radius-md` tokens (which resolve to different
- * fallback stacks / 10px respectively), so mapping them to those vars
- * would be a value change, not a verbatim move. */
+ * `border-radius: 8px` is copied verbatim from the original inline
+ * literal — it is NOT the `--radius-md` token (10px), so mapping it to
+ * the var would be a value change, not a verbatim move. (The font is on
+ * the unified next/font var like everything else — see the font note
+ * above.) */
 [data-ui="tab-group-list"] {
   display: flex;
   gap: 6px;
   margin-bottom: 12px;
 }
 [data-ui="tab-group-tab"] {
-  font-family: Inter, sans-serif;
+  font-family: var(--font-inter);
   font-size: 13px;
   font-weight: 600;
   padding: 8px 14px;
