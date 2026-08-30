@@ -68,8 +68,6 @@ export default [
       'apps/website/src/app/opengraph-image.tsx',
       // NOTE: [slug] would be a glob character class, so match by wildcard.
       'apps/website/src/app/blog/*/opengraph-image.tsx',
-      // Dev-only route slated for deletion.
-      'apps/website/src/app/dev/primitives/page.tsx',
       'apps/website/src/**/*.spec.tsx',
     ],
     rules: {
