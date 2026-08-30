@@ -29,7 +29,6 @@ describe('middleware matcher', () => {
 
   it.each([
     '/api/leads',
-    '/api/checkout/session',
     '/_next/static/chunk.js',
     '/_next/image',
     '/ingest/e',

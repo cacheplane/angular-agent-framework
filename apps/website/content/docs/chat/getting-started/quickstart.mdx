@@ -10,8 +10,8 @@ Angular 20+ project with an agent provider configured. See [Agent Installation](
 The provider steps below assume a running LangGraph server at `http://localhost:2024`. If you don't have one, jump to [Run with no backend](#run-with-no-backend) — `mockAgent()` drives the UI with canned messages so you can see `<chat>` render before wiring a real agent.
 </Callout>
 
-<Callout type="info" title="Do I need a license?">
-Evaluating? No license needed — the chat runs without a token (with a one-time advisory console warning). Shipping commercially? See [Installation](/docs/chat/getting-started/installation) for license activation.
+<Callout type="info" title="Can I use this commercially?">
+Yes. Every Threadplane package is MIT-licensed for commercial and noncommercial use, with no token, activation step, or runtime check.
 </Callout>
 
 <Steps>
@@ -122,6 +122,6 @@ With `mockAgent()` you can drop both `provideAgent()` calls — the agent is con
     Full primitive and composition reference.
   </Card>
   <Card title="Going to production" icon="rocket" href="/docs/chat/getting-started/installation">
-    Bake in your license at build time and swap the mock for a real adapter — see [Installation step 2](/docs/chat/getting-started/installation) for build-time license injection and [Agent deployment](/docs/langgraph/guides/deployment) for the backend.
+    Swap the mock for a real adapter, review the production checklist, and deploy your backend — see [Installation](/docs/chat/getting-started/installation) and [Agent deployment](/docs/langgraph/guides/deployment).
   </Card>
 </CardGroup>

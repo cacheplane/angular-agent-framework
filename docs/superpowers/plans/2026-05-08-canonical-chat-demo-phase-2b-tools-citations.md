@@ -12,7 +12,7 @@
 
 **Branch:** `claude/examples-chat-phase-2b-tools-citations`, branched from `origin/main` (currently `72cf2391`).
 
-**Hard constraint:** Never reference hashbrown / copilotkit / chatgpt / chatbot-kit / claude in code, comments, commit messages, or PR titles/bodies. Mentions in markdown spec/plan docs are OK as third-party library names; do not propagate.
+**Hard constraint:** Never reference hashbrown / a React agent UI framework / chatgpt / chatbot-kit / claude in code, comments, commit messages, or PR titles/bodies. Mentions in markdown spec/plan docs are OK as third-party library names; do not propagate.
 
 ---
 

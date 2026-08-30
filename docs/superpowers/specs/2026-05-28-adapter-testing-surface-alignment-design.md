@@ -14,7 +14,7 @@ There are three layers of test doubles in the framework, each for a different te
 |---|---|---|---|---|
 | **1. Contract** | `mockAgent` (chat) / `mockLangGraphAgent` (langgraph) | nothing | the whole `Agent` (writable signals) | component/unit — set `messages()`, assert render |
 | **2. Wire/transport** | `provideFakeAgent` / `FakeAgent` (ag-ui), `MockAgentTransport` (langgraph) | the real adapter pipeline (reducers, signal wiring) | the backend (canned wire events) | adapter-integration, in-browser, no server |
-| **3. LLM provider** | aimock (`libs/e2e-harness`, `@copilotkit/aimock` `LLMock`) | Angular app + real `langgraph dev` + real Python graph + real adapter | only the nondeterministic LLM (OpenAI fixtures) | full Playwright e2e |
+| **3. LLM provider** | aimock (`libs/e2e-harness`, `the former fixture dependency` `LLMock`) | Angular app + real `langgraph dev` + real Python graph + real adapter | only the nondeterministic LLM (OpenAI fixtures) | full Playwright e2e |
 
 **aimock (layer 3) is out of scope and needs no alignment.** It's graph/backend-side and adapter-agnostic — it replays OpenAI calls for whatever Python graph runs, indifferent to which frontend adapter is used. Its fixture format (OpenAI chat-completions matching) must NOT be unified with layer-2 token configs (LangGraph/AG-UI wire events) — different protocols, different process boundaries.
 

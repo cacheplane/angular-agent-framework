@@ -71,7 +71,7 @@ export function softwareSourceCodeJsonLd() {
     runtimePlatform: 'Angular',
     codeRepository: REPOSITORY_URL,
     author: { '@id': ORGANIZATION_ID },
-    license: getCanonicalUrl('/docs/licensing'),
+    license: `${REPOSITORY_URL}/blob/main/LICENSE`,
   };
 }
 

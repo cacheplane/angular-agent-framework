@@ -87,15 +87,12 @@ export default function AboutPage() {
       <Section surface="canvas">
         <Container>
           <div className="about-section-inner">
-            <h2 className="about-h2">How it is licensed</h2>
+            <h2 className="about-h2">Open software, supported production</h2>
             <p className="about-body">
-              <code>@threadplane/chat</code> is free for noncommercial use under PolyForm
-              Noncommercial 1.0.0; commercial production use requires a Threadplane Commercial
-              license. Most other published Threadplane packages are MIT-licensed. The{' '}
-              <Link href="/docs/licensing" className="about-link">
-                licensing docs
-              </Link>{' '}
-              and the <Link href="/pricing" className="about-link">pricing page</Link> have the details.
+              Every published Threadplane package is MIT-licensed for commercial
+              and noncommercial use. Production Assurance and enterprise delivery
+              add expert support without changing the software. The{' '}
+              <Link href="/pricing" className="about-link">pricing page</Link> has the details.
             </p>
             <p className="about-body about-body-last">
               Questions about a specific build go to{' '}

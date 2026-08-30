@@ -429,7 +429,7 @@ Insert after the existing introduction paragraph:
 Chat primitives consume a runtime-neutral `ChatAgent` contract. Two adapters ship today:
 
 - **`@cacheplane/langgraph`** — for LangGraph / LangGraph Platform backends.
-- **`@cacheplane/ag-ui`** — for any AG-UI-compatible backend (LangGraph, CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime).
+- **`@cacheplane/ag-ui`** — for any AG-UI-compatible backend (LangGraph, CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, a React agent UI framework runtime).
 
 Custom backends can implement `ChatAgent` directly with no library dependency.
 

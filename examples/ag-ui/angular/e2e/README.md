@@ -1,6 +1,6 @@
 # examples-ag-ui-angular e2e
 
-Cross-stack E2E harness for the ag-ui example. Uses [`@copilotkit/aimock`](https://github.com/CopilotKit/aimock) as a deterministic mock for LLM API calls; the Python ag-ui backend (`uvicorn src.server:app`) is launched with `OPENAI_BASE_URL` pointed at it; Playwright drives the Angular `/embed` route in real Chromium.
+Cross-stack E2E harness for the ag-ui example. A repository-owned fixture server provides deterministic OpenAI-compatible responses; the Python ag-ui backend (`uvicorn src.server:app`) is launched with `OPENAI_BASE_URL` pointed at it; Playwright drives the Angular `/embed` route in real Chromium.
 
 The graph is identical to the chat example — aimock mocks the LLM provider _below_ the transport, so the same graph served over AG-UI with the same committed fixtures produces the same output. The only differences from the chat harness are the backend launcher (uvicorn ag-ui server on `:8000` instead of `langgraph dev` on `:2024`) and the Angular dev-server port (`:4201`).
 

@@ -12,7 +12,7 @@ export function attachBrowserHygiene(page: Page): {
     if (msg.type() !== 'error') return;
     const text = msg.text();
     if (
-      /PostHog|ERR_NAME_NOT_RESOLVED|ERR_CONNECTION_RESET|license/i.test(text)
+      /PostHog|ERR_NAME_NOT_RESOLVED|ERR_CONNECTION_RESET/i.test(text)
     )
       return;
     consoleErrors.push(text);

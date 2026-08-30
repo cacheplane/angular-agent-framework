@@ -6,12 +6,12 @@
 
 **Architecture:** The examples/chat e2e harness gains a record mode (aimock's `LLMock` supports `record: { providers, fixturePath }` natively — no CLI shelling). A tagged contract-only subset of specs is the drift gate; a rewritten `drift.ts` differ is the diagnostic. The weekly workflow uploads recordings as artifacts and opens an issue on failure.
 
-**Tech Stack:** `@copilotkit/aimock` (LLMock library), Playwright (`--grep`), tsx, `node:test` via tsx for differ tests, GitHub Actions.
+**Tech Stack:** `the former fixture dependency` (LLMock library), Playwright (`--grep`), tsx, `node:test` via tsx for differ tests, GitHub Actions.
 
 **Source of truth:** `docs/superpowers/specs/2026-08-29-aimock-drift-detection-design.md`. Read it before Task 1.
 
 **Key facts an implementer must not rediscover the hard way:**
-- `LLMock`'s `MockServerOptions.record?: RecordConfig` with `RecordConfig = { providers: Partial<Record<RecordProviderKey, string>>, fixturePath?: string, ... }`; `'openai'` is a valid `RecordProviderKey`. Verified in `node_modules/@copilotkit/aimock/dist/types.d.ts`.
+- `LLMock`'s `MockServerOptions.record?: RecordConfig` with `RecordConfig = { providers: Partial<Record<RecordProviderKey, string>>, fixturePath?: string, ... }`; `'openai'` is a valid `RecordProviderKey`. Verified in `node_modules/the former fixture dependency/dist/types.d.ts`.
 - The old `drift.ts` failed because it shelled to `llmock --out`, which is not a CLI option. Do not resurrect any CLI invocation.
 - In replay mode, `global-setup.ts` gives the langgraph child `OPENAI_API_KEY: 'test-not-used'`. In record mode the child MUST receive the real key — the proxy forwards the request upstream, auth header included.
 - `examples/chat/angular/e2e/playwright.config.ts` already has `retries: process.env.CI ? 2 : 0`, which satisfies the spec's "one flaky generation should not page anyone" (spec said 1 retry; CI's existing 2 is fine — do not add config).

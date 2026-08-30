@@ -454,7 +454,7 @@ git commit -m "refactor(examples/chat): provide LANGGRAPH_CLIENT_OPTIONS at root
 - [ ] **Step 1: Regenerate API docs**
 
 Run: `npm run generate-api-docs`
-Expected: exit 0; `git status --porcelain apps/website/content/docs/langgraph/api/api-docs.json` shows it modified (the new `LANGGRAPH_CLIENT_OPTIONS` token). Confirm no `copilotkit` string appears anywhere in `git diff` (`git diff | grep -i copilotkit` must be empty).
+Expected: exit 0; `git status --porcelain apps/website/content/docs/langgraph/api/api-docs.json` shows it modified (the new `LANGGRAPH_CLIENT_OPTIONS` token). Confirm no `a React agent UI framework` string appears anywhere in `git diff` (`git diff | grep -i a React agent UI framework` must be empty).
 
 - [ ] **Step 2: Run the full local gates**
 

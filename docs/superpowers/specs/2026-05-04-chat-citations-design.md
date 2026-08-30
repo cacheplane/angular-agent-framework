@@ -20,7 +20,7 @@ Render citations inline (numbered markers like `[1]`, `[2]`) and as a sources pa
 
 **Out of scope:** global sources sidebar (per-conversation aggregation), citation deduplication across messages, citation export/copy actions, custom citation grouping syntax (`[@a; @b]`), tables and task-list view components in the markdown registry (deferred — citation refs are the only new node type wired in this release; tables/task-lists ship in a later release).
 
-**Hard constraint:** no copilotkit / chatgpt / chatbot-kit / etc. references in code, comments, commits, PR bodies, or docs.
+**Hard constraint:** no a React agent UI framework / chatgpt / chatbot-kit / etc. references in code, comments, commits, PR bodies, or docs.
 
 ---
 

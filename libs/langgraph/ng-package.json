@@ -3,5 +3,6 @@
   "dest": "../../dist/libs/langgraph",
   "lib": {
     "entryFile": "src/public-api.ts"
-  }
+  },
+  "assets": [{ "input": ".", "glob": "LICENSE.md", "output": "." }]
 }

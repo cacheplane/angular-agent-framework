@@ -5,7 +5,6 @@ export type LibraryId =
   | 'ag-ui'
   | 'a2ui'
   | 'middleware'
-  | 'licensing'
   | 'telemetry';
 
 export interface DocsPage {
@@ -255,7 +254,7 @@ export const docsConfig: DocsLibrary[] = [
   {
     id: 'ag-ui',
     title: 'AG-UI',
-    description: 'Adapter for any AG-UI-compatible backend (CrewAI, Mastra, Microsoft AF, AG2, Pydantic AI, AWS Strands, CopilotKit runtime)',
+    description: 'Adapter for AG-UI-compatible backends including CrewAI, Mastra, Microsoft AF, AG2, Pydantic AI, and AWS Strands',
     demoUrl: 'https://ag-ui.threadplane.ai',
     sections: [
       {
@@ -389,39 +388,6 @@ export const docsConfig: DocsLibrary[] = [
               'lastMessage',
             ],
           },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'licensing',
-    title: 'Licensing',
-    description: 'License token verification and package check behavior',
-    sections: [
-      {
-        title: 'Getting Started',
-        id: 'getting-started',
-        color: 'blue',
-        pages: [
-          { title: 'Introduction', slug: 'introduction', section: 'getting-started' },
-          { title: 'Quick Start', slug: 'quickstart', section: 'getting-started' },
-        ],
-      },
-      {
-        title: 'Guides',
-        id: 'guides',
-        color: 'blue',
-        pages: [
-          { title: 'Setup', slug: 'setup', section: 'guides' },
-          { title: 'CI and Offline', slug: 'ci-and-offline', section: 'guides' },
-        ],
-      },
-      {
-        title: 'Reference',
-        id: 'reference',
-        color: 'blue',
-        pages: [
-          { title: 'API', slug: 'api', section: 'reference' },
         ],
       },
     ],

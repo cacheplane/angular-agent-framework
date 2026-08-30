@@ -59,9 +59,6 @@ deployments/*/deps/
 !deployments/ag-ui-dev/deps/
 !deployments/ag-ui-dev/deps/**
 
-# Generated license public key (produced by libs/licensing/scripts/generate-public-key.mjs)
-libs/licensing/src/lib/license-public-key.generated.ts
-
 # superpowers brainstorming output
 .superpowers/
 # TypeScript incremental build caches (any project)

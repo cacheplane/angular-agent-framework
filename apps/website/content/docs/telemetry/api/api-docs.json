@@ -381,7 +381,7 @@
     "name": "ThreadplaneNodeEvent",
     "kind": "type",
     "description": "",
-    "signature": "\"tplane:postinstall\" | \"tplane:runtime_instance_created\" | \"tplane:runtime_request_created\" | \"tplane:stream_started\" | \"tplane:stream_ended\" | \"tplane:stream_errored\"",
+    "signature": "\"tplane:runtime_instance_created\" | \"tplane:runtime_request_created\" | \"tplane:stream_started\" | \"tplane:stream_ended\" | \"tplane:stream_errored\"",
     "examples": []
   },
   {
@@ -598,25 +598,6 @@
         "type": "Record<string, unknown>",
         "description": "",
         "optional": true
-      }
-    ],
-    "returns": {
-      "type": "Promise<CaptureResult>",
-      "description": ""
-    },
-    "examples": []
-  },
-  {
-    "name": "capturePostinstall",
-    "kind": "function",
-    "description": "",
-    "signature": "capturePostinstall(input: PostinstallInput): Promise<CaptureResult>",
-    "params": [
-      {
-        "name": "input",
-        "type": "PostinstallInput",
-        "description": "",
-        "optional": false
       }
     ],
     "returns": {

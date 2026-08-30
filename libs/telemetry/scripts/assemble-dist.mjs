@@ -94,7 +94,6 @@ export function createCanonicalPackageJson(srcPkg) {
     bugs: srcPkg.bugs,
     sideEffects: false,
     type: 'module',
-    bin: srcPkg.bin,
     exports: {
       '.': {
         types: './index.d.ts',
@@ -108,10 +107,6 @@ export function createCanonicalPackageJson(srcPkg) {
         types: './node/index.d.ts',
         default: './node/index.js',
       },
-      './node/postinstall': {
-        types: './node/postinstall.d.ts',
-        default: './node/postinstall.js',
-      },
       './browser': {
         types: './browser/index.d.ts',
         default: './browser/fesm2022/threadplane-telemetry.mjs',
@@ -121,9 +116,6 @@ export function createCanonicalPackageJson(srcPkg) {
     peerDependencies: srcPkg.peerDependencies,
     peerDependenciesMeta: srcPkg.peerDependenciesMeta,
     dependencies: srcPkg.dependencies,
-    scripts: {
-      postinstall: 'node ./node/postinstall.js || true',
-    },
   };
   // Strip undefined.
   for (const k of Object.keys(out)) if (out[k] === undefined) delete out[k];

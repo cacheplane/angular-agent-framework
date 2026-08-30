@@ -1,6 +1,6 @@
 # e2e-harness
 
-Internal-only library that wraps [`@copilotkit/aimock`](https://github.com/CopilotKit/aimock) for our cockpit example aimock e2e suite.
+Internal-only library with a repository-owned OpenAI-compatible fixture server for deterministic cockpit and example E2E suites.
 
 NOT published. This lib is tightly coupled to repo-specific orchestration (langgraph + Angular dev server boot) and shouldn't appear in consumer-facing API surfaces.
 

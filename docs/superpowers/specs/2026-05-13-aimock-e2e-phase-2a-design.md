@@ -4,7 +4,7 @@
 
 ## Library
 
-The harness is built around [`@copilotkit/aimock`](https://github.com/CopilotKit/aimock) — a zero-dependency mock infrastructure server that impersonates LLM APIs (OpenAI, Claude, Gemini, etc.), MCP, A2A, and other AI services on a single port. The features we use in Phase 2a:
+The harness is built around [`the former fixture dependency`](https://github.com/a React agent UI framework/aimock) — a zero-dependency mock infrastructure server that impersonates LLM APIs (OpenAI, Claude, Gemini, etc.), MCP, A2A, and other AI services on a single port. The features we use in Phase 2a:
 
 - **Record-and-replay** — proxy a real OpenAI call once, capture as JSON fixture, replay deterministically forever.
 - **OpenAI SSE stream replay** — replays captured runs token-by-token with the original streaming physics (chunk boundaries preserved).
@@ -96,7 +96,7 @@ export interface AimockStartOptions {
 export function startAimock(opts: AimockStartOptions): Promise<AimockHandle>;
 ```
 
-Implementation: spawns `@copilotkit/aimock` as a child process (the package ships a CLI binary). Captures `stdout` for the bound port (aimock binds to port 0 by default and reports the bound port via stdout). Resolves the promise once the server is listening.
+Implementation: spawns `the former fixture dependency` as a child process (the package ships a CLI binary). Captures `stdout` for the bound port (aimock binds to port 0 by default and reports the bound port via stdout). Resolves the promise once the server is listening.
 
 ### `playwright.config.ts`
 
@@ -106,7 +106,7 @@ The LangGraph startup must set `OPENAI_BASE_URL=http://localhost:<aimock-port>` 
 
 ### `fixtures/hi.json`
 
-The aimock fixture format is documented at https://aimock.copilotkit.dev/docs/. Format gist: a JSON file with a list of recorded request/response pairs, each carrying the SSE chunk stream verbatim. Phase 2a commits exactly one fixture — `hi.json` — captured from a real OpenAI call with prompt "say hi briefly".
+The aimock fixture format is documented at https://aimock.a React agent UI framework.dev/docs/. Format gist: a JSON file with a list of recorded request/response pairs, each carrying the SSE chunk stream verbatim. Phase 2a commits exactly one fixture — `hi.json` — captured from a real OpenAI call with prompt "say hi briefly".
 
 ### `smoke.spec.ts`
 

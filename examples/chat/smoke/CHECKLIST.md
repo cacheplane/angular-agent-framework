@@ -9,7 +9,7 @@ changes land in libs/chat, libs/langgraph, libs/render, libs/ag-ui.
 - [ ] `OPENAI_API_KEY` present in the repository root `.env`
 - [ ] `nx run examples-chat-python:serve` running on :2024 — `curl localhost:2024/ok` returns `{"ok":true}`
 - [ ] Smoke consumer started — page loads at :4200
-- [ ] No console errors on initial load (license warning OK, telemetry DNS failure OK)
+- [ ] No console errors on initial load (telemetry DNS failure OK)
 - [ ] No 4xx/5xx in the network tab on initial load
 
 ## Initial render (welcome state)

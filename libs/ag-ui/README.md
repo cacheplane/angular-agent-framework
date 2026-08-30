@@ -23,7 +23,7 @@ Part of [Threadplane](https://github.com/cacheplane/angular-agent-framework).
 ## What it does
 
 - Bridges any AG-UI-compatible backend into the Threadplane chat surface via `toAgent()`.
-- Supports: LangGraph, CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime.
+- Supports AG-UI-compatible runtimes including LangGraph, CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, and AWS Strands.
 - Exposes messages, status, tool calls, and raw AG-UI state as Angular Signals, plus `submit()`/`stop()`/`regenerate()` actions — coverage depends on what the AG-UI backend emits.
 - Ships `FakeAgent` and `provideFakeAgent` test doubles for unit testing without a live backend.
 

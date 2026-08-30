@@ -16,25 +16,22 @@ vi.mock('../ui/Eyebrow', () => ({
 
 const EXPECTED_QUESTIONS = [
   'Is Threadplane free?',
-  'Is @threadplane/chat open source?',
-  'What counts as commercial use?',
+  'Can I use every package commercially?',
   'Does Threadplane have a cloud service?',
   'Does Threadplane store my conversations or agent data?',
   'Are model or hosting costs included?',
   'What am I paying for?',
-  'Do my end users need licenses?',
-  'What is a developer seat?',
   'Does a paid plan unlock different software?',
-  'How does the license token work?',
   'Can I modify or redistribute the source?',
-  'What happens after cancellation or refund?',
+  'What is Production Assurance?',
+  'What is Pilot-to-Prod?',
 ];
 
 describe('PricingFAQ', () => {
   it('renders the FAQ heading', () => {
     render(<PricingFAQ />);
     expect(
-      screen.getByRole('heading', { level: 2, name: /Licensing FAQ/ }),
+      screen.getByRole('heading', { level: 2, name: /Pricing FAQ/ }),
     ).toBeTruthy();
   });
 
@@ -51,17 +48,8 @@ describe('PricingFAQ', () => {
     expect(container.querySelector('#faq')).toBeTruthy();
   });
 
-  it('renders the open-source clarification answer', () => {
+  it('states that all packages use MIT', () => {
     render(<PricingFAQ />);
-    expect(
-      screen.getByText(/source-available under the PolyForm Noncommercial License 1\.0\.0/i),
-    ).toBeTruthy();
-  });
-
-  it('explains offline advisory token verification without a licensing API call', () => {
-    render(<PricingFAQ />);
-    expect(screen.getByText(/Ed25519/i)).toBeTruthy();
-    expect(screen.getByText(/does not call a Threadplane licensing API/i)).toBeTruthy();
-    expect(screen.getByText(/does not block rendering/i)).toBeTruthy();
+    expect(screen.getByText(/every published Threadplane package is MIT-licensed/i)).toBeTruthy();
   });
 });

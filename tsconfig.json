@@ -49,13 +49,7 @@
       "path": "./cockpit/langgraph/memory/python"
     },
     {
-      "path": "./apps/minting-service"
-    },
-    {
       "path": "./libs/design-tokens"
-    },
-    {
-      "path": "./libs/licensing"
     },
     {
       "path": "./libs/telemetry"
@@ -71,9 +65,6 @@
     },
     {
       "path": "./libs/a2ui"
-    },
-    {
-      "path": "./libs/db"
     }
   ]
 }

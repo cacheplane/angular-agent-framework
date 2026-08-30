@@ -34,7 +34,7 @@ This effort closes that gap **and** validates it end-to-end by establishing a ne
 - **Resume:** the server reads `input.forwarded_props["command"]["resume"]`. The client resumes by calling `source.runAgent({ forwardedProps: { command: { resume } } })`.
 - **Chat contract:** `AgentInterrupt = { id, value, resumable }` (`libs/chat/src/lib/agent/agent-interrupt.ts`); `interrupt?`/`subagents?` are optional on `Agent` (`agent.ts:50-51`); `AgentSubmitInput.resume?: unknown` already exists (`agent-submit.ts:8`). `<chat-approval-card matchKind="…">` matches `interrupt.value.kind`, opens a dialog, emits `(action)`.
 - **Reducer today:** `libs/ag-ui/src/lib/reducer.ts` handles RUN/TEXT/REASONING/TOOL_CALL/STATE/MESSAGES/CUSTOM; the `CUSTOM` case forwards to `events$`. `ReducerStore` has no `interrupt`.
-- **E2E harness today:** `libs/e2e-harness/src/global-setup-factory.ts` `createGlobalSetup` spawns `uv run langgraph dev --port N --no-browser`, health-checks `http://localhost:N/ok`, and sets `OPENAI_BASE_URL` to an `aimock` (`@copilotkit/aimock` `LLMock`, OpenAI-compatible replay) server seeded from `fixturesDir`. This is LangGraph-Platform-specific.
+- **E2E harness today:** `libs/e2e-harness/src/global-setup-factory.ts` `createGlobalSetup` spawns `uv run langgraph dev --port N --no-browser`, health-checks `http://localhost:N/ok`, and sets `OPENAI_BASE_URL` to an `aimock` (`the former fixture dependency` `LLMock`, OpenAI-compatible replay) server seeded from `fixturesDir`. This is LangGraph-Platform-specific.
 - **Refund graph:** `cockpit/langgraph/interrupts/python/src/graph.py` raises `interrupt({ "kind": "refund_approval", "amount", "customer_id", "reason" })`.
 
 ---

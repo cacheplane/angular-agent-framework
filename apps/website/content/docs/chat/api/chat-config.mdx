@@ -1,6 +1,6 @@
 # ChatConfig
 
-`ChatConfig` is the configuration interface accepted by `provideChat()`. The object is stored under `CHAT_CONFIG` for application code that wants shared chat defaults, and `provideChat()` uses the license token to start the package license check.
+`ChatConfig` is the configuration interface accepted by `provideChat()`. The object is stored under `CHAT_CONFIG` for application code that wants shared chat defaults.
 
 **Import:**
 
@@ -19,8 +19,6 @@ interface ChatConfig {
   avatarLabel?: string;
   /** Shared assistant display name for consumers that read CHAT_CONFIG (default: "Assistant"). */
   assistantName?: string;
-  /** Signed license token from threadplane.ai. Optional; omitted in dev. */
-  license?: string;
 }
 ```
 
@@ -72,20 +70,6 @@ A shared render registry value for consumers that inject `CHAT_CONFIG`. `ChatCom
 
 ```typescript
 provideChat({ renderRegistry });
-```
-
-### license
-
-```typescript
-license?: string
-```
-
-A signed license token from threadplane.ai. It is optional in development and should be provided from your production configuration.
-
-**Example:**
-
-```typescript
-provideChat({ license: environment.tplaneLicense });
 ```
 
 ## Accessing ChatConfig at Runtime

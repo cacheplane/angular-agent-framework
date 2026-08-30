@@ -33,7 +33,6 @@ const THREADPLANE_PACKAGES = [
   { name: '@threadplane/ag-ui', dist: 'ag-ui' },
   { name: '@threadplane/chat', dist: 'chat' },
   { name: '@threadplane/langgraph', dist: 'langgraph' },
-  { name: '@threadplane/licensing', dist: 'licensing' },
   { name: '@threadplane/render', dist: 'render' },
   { name: '@threadplane/telemetry', dist: 'telemetry' },
 ];

@@ -39,7 +39,7 @@ Three foundational decisions, settled during brainstorming:
 | # | Decision | Rationale |
 |---|---|---|
 | 1 | Three separate compositions (`<chat>`, `<chat-popup>`, `<chat-sidebar>`) over one component with a `mode` input. | Tree-shakable, mirrors existing repo pattern (`<chat-timeline>`, `<chat-debug>`). Each component has a single layout responsibility. |
-| 2 | Hybrid styling: component-encapsulated styles + CSS custom properties on `:host` + optional global `chat.css`. | Renders out of the box (Layer 1 + 2), exposes copilotkit-style global-class deep-override surface (Layer 3) without making it a setup step. Improves on copilotkit's React-bundler-side-effect model. |
+| 2 | Hybrid styling: component-encapsulated styles + CSS custom properties on `:host` + optional global `chat.css`. | Renders out of the box (Layer 1 + 2), exposes a React agent UI framework-style global-class deep-override surface (Layer 3) without making it a setup step. Improves on a React agent UI framework's React-bundler-side-effect model. |
 | 3 | In-place rewrite of `<chat>`, no compatibility shim, ship as 0.0.3. | At 0.0.x stage breaking changes are expected. Cockpit demos updated in the same PR. Patch-only versioning policy applies regardless of break magnitude. |
 
 ### Component inventory
@@ -86,7 +86,7 @@ Three foundational decisions, settled during brainstorming:
 
 - All Tailwind utility-class usage in chat library output.
 - `CHAT_THEME_STYLES`, `CHAT_MARKDOWN_STYLES` public exports (replaced by per-component scoped styles + token file + optional global `chat.css`).
-- Avatar block in assistant messages (assistant goes bubble-less, no avatar — matches copilotkit philosophy).
+- Avatar block in assistant messages (assistant goes bubble-less, no avatar — matches a React agent UI framework philosophy).
 - Horizontal-slider variant of `chat-timeline-slider` (vertical history walk supersedes it).
 
 #### Styles directory restructure
@@ -328,7 +328,7 @@ chat-window
 
 #### Mobile
 - `<640px`: popup goes full-screen; sidebar goes full-width slide-in.
-- `<=768px`: hover-revealed message controls become always-visible (matches copilotkit's `@media` rule).
+- `<=768px`: hover-revealed message controls become always-visible (matches a React agent UI framework's `@media` rule).
 
 ### Trace primitive — drives tool calls, subagents, timeline
 
@@ -452,7 +452,7 @@ For each: replace Tailwind classes in local templates, swap `<chat-messages>` �
 | Removing Tailwind from chat library means cockpit demos that *also* use Tailwind elsewhere keep working, but `libs/example-layouts` cannot rely on Tailwind anymore. | `example-layouts` is the only remaining Tailwind-heavy first-party consumer; rewriting both layouts in the same PR contains the change. |
 | CSS custom property `--ngaf-chat-*` rename breaks any consumer overriding `--chat-*` from 0.0.2. | Document in changelog. Consumers running on 0.0.2 had a broken render anyway; this is a real but low-cost rename. |
 | Asymmetric message layout removes the assistant avatar consumers may expect. | Documented behavior change. Avatar can be re-added by a consumer via the `chatMessageControls` / `chatEmptyState` slots if needed. |
-| The new `chat-trace` indented-content pattern may not handle very long tool outputs gracefully. | Content has `max-height: 250px` and internal scroll, matching copilotkit. |
+| The new `chat-trace` indented-content pattern may not handle very long tool outputs gracefully. | Content has `max-height: 250px` and internal scroll, matching a React agent UI framework. |
 | `field-sizing: content` for textarea autosize lacks support in older browsers. | JS fallback observing scrollHeight is part of the input rewrite. |
 
 ## Out of scope (explicit)

@@ -20,7 +20,6 @@
     "@threadplane/ag-ui": "*",
     "@threadplane/chat": "*",
     "@threadplane/langgraph": "*",
-    "@threadplane/licensing": "*",
     "@threadplane/render": "*",
     "@threadplane/telemetry": "*",
     "@cacheplane/partial-markdown": "^0.3.0",

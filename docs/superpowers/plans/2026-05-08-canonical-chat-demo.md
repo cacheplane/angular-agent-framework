@@ -12,7 +12,7 @@
 
 **Branch:** `claude/examples-chat-canonical-demo`, branched from `origin/main`.
 
-**Hard constraint:** Never reference hashbrown / copilotkit / chatgpt / chatbot-kit / claude in code, comments, commits, PR bodies, or docs. The architecture is independently arrived at.
+**Hard constraint:** Never reference hashbrown / a React agent UI framework / chatgpt / chatbot-kit / claude in code, comments, commits, PR bodies, or docs. The architecture is independently arrived at.
 
 ---
 

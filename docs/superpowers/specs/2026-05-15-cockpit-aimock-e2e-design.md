@@ -8,7 +8,7 @@ Build cross-stack E2E test coverage for cockpit example apps, modeled after the 
 
 ## Library
 
-Same as the chat harness: [`@copilotkit/aimock`](https://github.com/CopilotKit/aimock). The runner uses the `addFixturesFromJSON` API (proven in Phase 2d) so fixture entries can carry richer match shapes (`toolName`, `hasToolResult`, `turnIndex`).
+Same as the chat harness: [`the former fixture dependency`](https://github.com/a React agent UI framework/aimock). The runner uses the `addFixturesFromJSON` API (proven in Phase 2d) so fixture entries can carry richer match shapes (`toolName`, `hasToolResult`, `turnIndex`).
 
 ## Non-goals
 

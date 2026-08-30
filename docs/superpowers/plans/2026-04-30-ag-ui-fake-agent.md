@@ -383,7 +383,7 @@ gh pr create --title "feat(ag-ui): FakeAgent for offline cockpit demo" --body "$
 - Wires the AG-UI cockpit demo to use the fake — \`nx serve cockpit-ag-ui-streaming-angular\` now shows a working streaming chat with no backend.
 
 ## Motivation
-The dojo at \`dojo.ag-ui.com\` speaks CopilotKit's runtime protocol, not raw AG-UI HTTP — so an HttpAgent can't directly connect. Until a public AG-UI-native endpoint exists (or we ship a local backend), the in-process fake unblocks the demo.
+The dojo at \`dojo.ag-ui.com\` speaks a React agent UI framework's runtime protocol, not raw AG-UI HTTP — so an HttpAgent can't directly connect. Until a public AG-UI-native endpoint exists (or we ship a local backend), the in-process fake unblocks the demo.
 
 ## Real-backend swap
 One line in \`app.config.ts\`:

@@ -1,5 +1,4 @@
 export type ThreadplaneNodeEvent =
-  | 'tplane:postinstall'
   | 'tplane:runtime_instance_created'
   | 'tplane:runtime_request_created'
   | 'tplane:stream_started'

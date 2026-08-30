@@ -13,9 +13,6 @@
   "references": [
     {
       "path": "../a2ui/tsconfig.lib.json"
-    },
-    {
-      "path": "../licensing/tsconfig.lib.json"
     }
   ]
 }

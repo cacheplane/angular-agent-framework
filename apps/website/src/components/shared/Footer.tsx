@@ -256,10 +256,6 @@ export function Footer() {
               onClick={() => trackFooterCta('About', '/about')}>
               About
             </Link>
-            <Link href="/docs/licensing" className="transition-colors footer-link"
-              onClick={() => trackFooterCta('Licensing', '/docs/licensing')}>
-              Licensing
-            </Link>
           </div>
         </div>
 
@@ -267,14 +263,6 @@ export function Footer() {
         <div className="mt-12 pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs footer-bottom-bar">
           <span>&copy; {new Date().getFullYear()} Threadplane. All rights reserved.</span>
           <span>
-            <Link
-              href="/docs/licensing"
-              className="transition-colors footer-legal-link"
-              onClick={() => trackFooterCta('Licensing Bottom', '/docs/licensing')}
-            >
-              Licensing
-            </Link>
-            &nbsp;&middot;&nbsp;
             <Link
               href="/pricing"
               className="transition-colors footer-legal-link"

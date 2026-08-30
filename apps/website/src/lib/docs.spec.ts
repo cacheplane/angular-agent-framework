@@ -67,7 +67,6 @@ describe('website docs bindings', () => {
     expect(slugs).toContainEqual({ library: 'chat', section: 'getting-started', slug: 'introduction' });
     expect(slugs).toContainEqual({ library: 'ag-ui', section: 'concepts', slug: 'architecture' });
     expect(slugs).toContainEqual({ library: 'a2ui', section: 'getting-started', slug: 'introduction' });
-    expect(slugs).toContainEqual({ library: 'licensing', section: 'guides', slug: 'setup' });
     expect(slugs).toContainEqual({ library: 'telemetry', section: 'guides', slug: 'privacy-and-opt-out' });
   });
 
@@ -114,7 +113,7 @@ describe('website docs bindings', () => {
     });
     expect(metadata?.description).toContain('AG-UI protocol events');
     expect(metadata?.description).not.toBe(
-      'Adapter for any AG-UI-compatible backend (CrewAI, Mastra, Microsoft AF, AG2, Pydantic AI, AWS Strands, CopilotKit runtime)',
+      'Adapter for AG-UI-compatible backends including CrewAI, Mastra, Microsoft AF, AG2, Pydantic AI, and AWS Strands',
     );
   });
 
@@ -232,7 +231,6 @@ describe('website docs bindings', () => {
       '@threadplane/chat/debug',
       '@threadplane/chat/testing',
       '@threadplane/langgraph',
-      '@threadplane/licensing',
       '@threadplane/middleware/langgraph',
       '@threadplane/render',
       '@threadplane/telemetry',
@@ -258,7 +256,7 @@ describe('website docs bindings', () => {
   });
 
   it('has generated API docs for every documented package surface', () => {
-    const librariesWithApiDocs = ['langgraph', 'chat', 'render', 'ag-ui', 'a2ui', 'middleware', 'licensing', 'telemetry'];
+    const librariesWithApiDocs = ['langgraph', 'chat', 'render', 'ag-ui', 'a2ui', 'middleware', 'telemetry'];
     const missingApiDocs = librariesWithApiDocs.filter((library) => {
       const apiDocsPath = path.join(contentRoot, library, 'api', 'api-docs.json');
       if (!fs.existsSync(apiDocsPath)) return true;
