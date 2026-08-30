@@ -14,10 +14,12 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { baseTokens } from '../src/lib/base';
 import { lightOverrides } from '../src/lib/light';
+import { darkOverrides } from '../src/lib/dark';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
 const OUTPUT_PATH = resolve(HERE, '..', 'src', 'lib', 'theme.css');
 const TOKENS_OUTPUT_PATH = resolve(HERE, '..', 'src', 'lib', 'tokens.css');
+const TOKENS_DARK_OUTPUT_PATH = resolve(HERE, '..', 'src', 'lib', 'tokens-dark.css');
 
 const HEADER = `/*
  * @threadplane/design-tokens/theme.css
@@ -181,36 +183,38 @@ const TOKENS_HEADER = `/*
  */
 `;
 
-function buildTokensBlock(): string {
+type ThemeOverrides = typeof lightOverrides | typeof darkOverrides;
+
+function buildTokensBlock(theme: ThemeOverrides): string {
   const { typography, space, radius, shadows, brand } = baseTokens;
   const lines: string[] = [':root {'];
 
   lines.push('  /* Colors */');
-  lines.push(`  --ds-bg: ${lightOverrides.bg};`);
-  lines.push(`  --ds-accent: ${lightOverrides.accent};`);
-  lines.push(`  --ds-accent-hover: ${lightOverrides.accentHover};`);
+  lines.push(`  --ds-bg: ${theme.bg};`);
+  lines.push(`  --ds-accent: ${theme.accent};`);
+  lines.push(`  --ds-accent-hover: ${theme.accentHover};`);
   lines.push(`  --ds-accent-light: ${brand.accentLight};`);
-  lines.push(`  --ds-accent-glow: ${lightOverrides.accentGlow};`);
-  lines.push(`  --ds-accent-border: ${lightOverrides.accentBorder};`);
-  lines.push(`  --ds-accent-border-hover: ${lightOverrides.accentBorderHover};`);
-  lines.push(`  --ds-accent-surface: ${lightOverrides.accentSurface};`);
-  lines.push(`  --ds-text-primary: ${lightOverrides.textPrimary};`);
-  lines.push(`  --ds-text-secondary: ${lightOverrides.textSecondary};`);
-  lines.push(`  --ds-text-muted: ${lightOverrides.textMuted};`);
-  lines.push(`  --ds-text-inverted: ${lightOverrides.textInverted};`);
-  lines.push(`  --ds-sidebar-bg: ${lightOverrides.sidebarBg};`);
+  lines.push(`  --ds-accent-glow: ${theme.accentGlow};`);
+  lines.push(`  --ds-accent-border: ${theme.accentBorder};`);
+  lines.push(`  --ds-accent-border-hover: ${theme.accentBorderHover};`);
+  lines.push(`  --ds-accent-surface: ${theme.accentSurface};`);
+  lines.push(`  --ds-text-primary: ${theme.textPrimary};`);
+  lines.push(`  --ds-text-secondary: ${theme.textSecondary};`);
+  lines.push(`  --ds-text-muted: ${theme.textMuted};`);
+  lines.push(`  --ds-text-inverted: ${theme.textInverted};`);
+  lines.push(`  --ds-sidebar-bg: ${theme.sidebarBg};`);
   lines.push(`  --ds-angular-red: ${brand.angularRed};`);
   lines.push(`  --ds-render-green: ${brand.renderGreen};`);
   lines.push(`  --ds-chat-purple: ${brand.chatPurple};`);
 
   lines.push('');
   lines.push('  /* Surfaces */');
-  lines.push(`  --ds-canvas: ${lightOverrides.canvas};`);
-  lines.push(`  --ds-surface: ${lightOverrides.surface};`);
-  lines.push(`  --ds-surface-tinted: ${lightOverrides.surfaceTinted};`);
-  lines.push(`  --ds-surface-dim: ${lightOverrides.surfaceDim};`);
-  lines.push(`  --ds-border: ${lightOverrides.border};`);
-  lines.push(`  --ds-border-strong: ${lightOverrides.borderStrong};`);
+  lines.push(`  --ds-canvas: ${theme.canvas};`);
+  lines.push(`  --ds-surface: ${theme.surface};`);
+  lines.push(`  --ds-surface-tinted: ${theme.surfaceTinted};`);
+  lines.push(`  --ds-surface-dim: ${theme.surfaceDim};`);
+  lines.push(`  --ds-border: ${theme.border};`);
+  lines.push(`  --ds-border-strong: ${theme.borderStrong};`);
 
   lines.push('');
   lines.push('  /* Typography */');
@@ -265,8 +269,31 @@ function buildTokensBlock(): string {
   return lines.join('\n') + '\n';
 }
 
+const TOKENS_DARK_HEADER = TOKENS_HEADER.replace(
+  '@threadplane/design-tokens/tokens.css',
+  '@threadplane/design-tokens/tokens-dark.css',
+).replace(
+  '- libs/design-tokens/src/lib/light.ts',
+  `- libs/design-tokens/src/lib/dark.ts`,
+).replace(
+  'Plain `:root { --ds-* }` custom properties for consumers that do not run',
+  'DARK-theme `:root { --ds-* }` custom properties for consumers that do not run',
+);
+
 export function generateTokensCss(): string {
-  return TOKENS_HEADER + buildTokensBlock();
+  return TOKENS_HEADER + buildTokensBlock(lightOverrides);
+}
+
+/**
+ * Dark twin of tokens.css, from darkOverrides. Exists because the cockpit
+ * example apps were designed dark: their var(--ds-*, fallback) fallbacks are
+ * hand-copies of darkOverrides (verified value-by-value, 2026-08-30, with
+ * minor drift - e.g. accentBorder 0.25 vs the token's 0.2). Wiring THIS file
+ * in makes those fallbacks dead text; wiring the light tokens.css would flip
+ * deliberately-dark apps to light.
+ */
+export function generateTokensDarkCss(): string {
+  return TOKENS_DARK_HEADER + buildTokensBlock(darkOverrides);
 }
 
 export function generateThemeCss(): string {
@@ -276,8 +303,10 @@ export function generateThemeCss(): string {
 function main() {
   writeFileSync(OUTPUT_PATH, generateThemeCss());
   writeFileSync(TOKENS_OUTPUT_PATH, generateTokensCss());
+  writeFileSync(TOKENS_DARK_OUTPUT_PATH, generateTokensDarkCss());
   console.log(`wrote ${OUTPUT_PATH}`);
   console.log(`wrote ${TOKENS_OUTPUT_PATH}`);
+  console.log(`wrote ${TOKENS_DARK_OUTPUT_PATH}`);
 }
 
 // Only run main when invoked directly (not when imported by tests)

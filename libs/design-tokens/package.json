@@ -8,7 +8,8 @@
       "default": "./src/index.js"
     },
     "./theme.css": "./src/lib/theme.css",
-    "./tokens.css": "./src/lib/tokens.css"
+    "./tokens.css": "./src/lib/tokens.css",
+    "./tokens-dark.css": "./src/lib/tokens-dark.css"
   },
   "repository": {
     "type": "git",
