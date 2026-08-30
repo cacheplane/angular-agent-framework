@@ -28,6 +28,34 @@ export function ogImagePath(slug: string): string {
   return `/blog/${slug}/opengraph-image`;
 }
 
+/**
+ * Clamp a meta description to what search results actually display.
+ *
+ * Google truncates snippets around 155-160 characters; anything longer gets
+ * cut mid-sentence with Google's own ellipsis, which reads worse than a
+ * deliberate ending (GSC follow-up to #826). Prefer ending on a sentence
+ * boundary once past 60% of the budget; otherwise cut at a word boundary and
+ * add a real ellipsis. Never truncates mid-word.
+ */
+export const META_DESCRIPTION_MAX = 160;
+
+export function clampMetaDescription(text: string, max = META_DESCRIPTION_MAX): string {
+  const normalized = text.replace(/\s+/g, ' ').trim();
+  if (normalized.length <= max) return normalized;
+
+  const slice = normalized.slice(0, max);
+  const sentenceEnd = Math.max(
+    slice.lastIndexOf('. '),
+    slice.lastIndexOf('! '),
+    slice.lastIndexOf('? '),
+  );
+  if (sentenceEnd >= max * 0.6) return slice.slice(0, sentenceEnd + 1);
+
+  const wordEnd = slice.lastIndexOf(' ');
+  const cut = slice.slice(0, wordEnd > 0 ? wordEnd : max - 1).replace(/[,;:\u2014-]+$/, '');
+  return `${cut}\u2026`;
+}
+
 export function getCanonicalPath(pathname: string): string {
   if (pathname === '/') return '/';
   return `/${pathname.replace(/^\/+|\/+$/g, '')}`;
@@ -83,6 +111,8 @@ export function createPageMetadata({
   article,
 }: PageMetadataOptions): Metadata {
   const canonicalPath = getCanonicalPath(pathname);
+  // Central guard: every page's meta/OG description fits a search snippet.
+  description = clampMetaDescription(description);
 
   return {
     title,
