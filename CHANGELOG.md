@@ -1,3 +1,21 @@
+## 0.0.61 (2026-08-30)
+
+### 🚀 Features
+
+- **website:** add 'What Fixture Replay Can't Catch' blog post ([#854](https://github.com/cacheplane/angular-agent-framework/pull/854), [#846](https://github.com/cacheplane/angular-agent-framework/issues/846))
+
+### 🩹 Fixes
+
+- **langgraph:** don't guess subagent attribution when it's a coin flip ([#864](https://github.com/cacheplane/angular-agent-framework/pull/864))
+- **website:** docs polish 1/3 — sticky rails, anchor offsets, honest mobile widths ([#861](https://github.com/cacheplane/angular-agent-framework/pull/861))
+- **website:** docs polish 2/3 — breadcrumb, tables, rails, and mdx details ([#863](https://github.com/cacheplane/angular-agent-framework/pull/863))
+- **website:** docs polish 3/3 — a11y and interaction ([#865](https://github.com/cacheplane/angular-agent-framework/pull/865))
+
+### ❤️ Thank You
+
+- Brian Love @blove
+- Claude Opus 5
+
 ## 0.0.60 (2026-08-29)
 
 ### 🚀 Features
