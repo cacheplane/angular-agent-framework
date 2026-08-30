@@ -103,7 +103,7 @@ class DemoBadgeComponent {
       background: var(--ds-surface, #1c1c1c);
       border: 1px solid var(--ds-border, #2d2d2d);
       border-radius: var(--ds-radius-lg, 14px);
-      box-shadow: var(--ds-shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.3));
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) /* dark-tuned; the --ds-shadow tokens are light-tuned and vanish on dark surfaces */;
     }
     .card__title {
       margin: 0 0 0.625rem;

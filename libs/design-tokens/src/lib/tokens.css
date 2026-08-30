@@ -47,7 +47,7 @@
   /* Typography */
   --ds-font-serif: "EB Garamond", Georgia, serif;
   --ds-font-sans: Inter, system-ui, sans-serif;
-  --ds-font-mono: "JetBrains Mono", monospace;
+  --ds-font-mono: "JetBrains Mono", ui-monospace, monospace;
 
   /* Typography — type scale */
   --ds-h1-size: clamp(48px, 6vw, 72px);

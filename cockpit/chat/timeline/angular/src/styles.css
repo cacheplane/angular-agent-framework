@@ -1,3 +1,9 @@
+/* Dark design tokens — the real values behind every var(--ds-*, fallback)
+ * in this app. The fallbacks were hand-copies of darkOverrides and 32 uses
+ * across the cockpit had NO fallback at all (silently invalid until this
+ * import). Path resolves from src/ up to the workspace root. */
+@import '../../../../../libs/design-tokens/src/lib/tokens-dark.css';
+
 @import "@threadplane/example-layouts/theme.css";
 
 /* App-specific globals (none for now; add below this line if needed). */
