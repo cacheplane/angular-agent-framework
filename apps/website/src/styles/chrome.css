@@ -14,6 +14,21 @@
  * 'var(--font-garamond,"EB Garamond",Georgia,serif)') are intentional.
  */
 
+/* One nav height. The fixed nav measures 58px (px-6 py-4) and 81px at the md
+ * breakpoint (md:px-8 md:py-5, 1px border included). Everything that offsets
+ * against the nav — the docs shell's top padding, both sticky rails, the
+ * mobile overlay, and html's scroll-padding for anchor jumps — reads this one
+ * variable instead of hardcoding its own guess (the old hardcoded 80px left
+ * 22px of dead space on phones; anchors landed 81px under the nav). */
+:root {
+  --nav-h: 58px;
+}
+@media (min-width: 768px) {
+  :root {
+    --nav-h: 81px;
+  }
+}
+
 /* Footer */
 .footer-root {
   background: var(--color-surface);
@@ -132,7 +147,7 @@
   margin: -12px;
 }
 .nav-mobile-overlay {
-  top: 57px;
+  top: calc(var(--nav-h) - 1px);
   z-index: 9999;
   background: var(--color-surface);
   border-top: 1px solid var(--color-border);

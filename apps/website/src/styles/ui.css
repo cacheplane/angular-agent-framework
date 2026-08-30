@@ -314,6 +314,13 @@
 }
 [data-ui="browser-frame-url"] {
   flex: 1;
+  /* An unbreakable mono URL is the frame's min-content; without these three
+   * it propagated a ~390px floor up to the page and forced phones to zoom out
+   * (findings §2). Real browser chrome ellipsizes — so do we. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   text-align: center;
   font-family: "JetBrains Mono", monospace;
   font-size: 11px;

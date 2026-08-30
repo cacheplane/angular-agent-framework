@@ -85,7 +85,7 @@ export default async function DocsPage({ params }: DocsRouteProps) {
   ]);
 
   return (
-    <div className="flex min-h-screen overflow-x-hidden docs-shell-page">
+    <div className="flex min-h-screen docs-shell-page">
       <JsonLd data={articleData} />
       <JsonLd data={breadcrumbs} />
       <DocsSearch library={library as LibraryId} />
