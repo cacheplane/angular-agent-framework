@@ -15,8 +15,10 @@ export const typography = {
   fontSerif: '"EB Garamond", Georgia, serif',
   /** Sans-serif font for body text */
   fontSans: 'Inter, system-ui, sans-serif',
-  /** Monospace font for code and labels */
-  fontMono: '"JetBrains Mono", monospace',
+  /** Monospace font for code and labels. ui-monospace before the generic
+   * keyword: consumers that don't load JetBrains Mono (the cockpit example
+   * apps) get the platform mono (SF Mono) instead of Courier. */
+  fontMono: '"JetBrains Mono", ui-monospace, monospace',
 
   h1: {
     size: 'clamp(48px, 6vw, 72px)',
