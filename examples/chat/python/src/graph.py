@@ -38,11 +38,12 @@ from langchain_core.messages import (
     ToolMessage,
 )
 from langchain_core.runnables import RunnableConfig
+from langchain_core.tools import InjectedToolCallId
 from langchain_core.tools import tool
 from langgraph_sdk import get_client
 from langsmith import traceable
 
-from threadplane.middleware.langgraph import bind_client_tools, client_tool_names
+from threadplane.middleware.langgraph import announce_subagent, bind_client_tools, client_tool_names
 
 from src.streaming.a2ui_partial_handler import A2uiPartialHandler
 from src.streaming.envelope_tool import render_a2ui_surface
@@ -310,7 +311,12 @@ research_subgraph = _research_builder.compile()
 
 
 @tool
-async def research(topic: str, subagent_type: str = "research") -> str:
+async def research(
+    topic: str,
+    subagent_type: str = "research",
+    tool_call_id: Annotated[str, InjectedToolCallId] = None,
+    config: RunnableConfig = None,
+) -> str:
     """Dispatch a research subagent to gather facts on a focused topic.
     The subagent returns a concise summary; pass that summary back to
     the user, citing it with the inline citation syntax if appropriate.
@@ -324,6 +330,11 @@ async def research(topic: str, subagent_type: str = "research") -> str:
     # it travels in the tool call args so the SubagentTracker can
     # register the dispatch and surface a card while the child graph runs.
     del subagent_type
+    # Bind the child's `tools:<uuid>` stream namespace to this tool-call id.
+    # The namespace is a checkpoint id with no wire-level link to `call_*`;
+    # announcing the pair lets the frontend attribute the stream exactly —
+    # including under parallel fan-out, where guessing is unsound.
+    announce_subagent(config, tool_call_id)
     result = await research_subgraph.ainvoke({"topic": topic, "messages": []})
     msgs = result.get("messages") if isinstance(result, dict) else None
     if not msgs:

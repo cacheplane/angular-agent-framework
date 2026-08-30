@@ -239,6 +239,32 @@ export class SubagentTracker {
   }
 
   /**
+   * Authoritative namespace→tool-call binding, from the server.
+   *
+   * `threadplane.middleware.langgraph.announce_subagent` emits a custom event
+   * pairing the child's checkpoint namespace with its tool-call id — the two
+   * halves that are never linked on the wire otherwise. Unlike the matching
+   * ladder this is not a heuristic: it overrides nothing that is already
+   * mapped, works with any number of children outstanding, and replays any
+   * chunks that streamed before the binding arrived.
+   */
+  bindChildStream(namespaceId: string, toolCallId: string): void {
+    if (this.namespaceToToolCallId.get(namespaceId) === toolCallId) return;
+    this.namespaceToToolCallId.set(namespaceId, toolCallId);
+    const subagent = this.subagents.get(toolCallId);
+    if (subagent) {
+      const buffered = this.unattributedMessages.get(namespaceId);
+      this.subagents.set(toolCallId, {
+        ...subagent,
+        status: subagent.status === 'complete' || subagent.status === 'error' ? subagent.status : 'running',
+        messages: buffered ? mergeMessages(subagent.messages, buffered) : subagent.messages,
+      });
+      this.unattributedMessages.delete(namespaceId);
+    }
+    this.onSubagentChange?.();
+  }
+
+  /**
    * Attribute a `tools:` child stream to its parent tool call as soon as the
    * child is seen, without requiring a description to match on.
    *

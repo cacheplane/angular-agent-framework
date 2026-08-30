@@ -1,3 +1,17 @@
+## 0.0.62 (2026-08-30)
+
+### 🚀 Features
+
+- **cockpit:** wire the dark design tokens into the 14 dark-designed apps ([#868](https://github.com/cacheplane/angular-agent-framework/pull/868))
+- **design-tokens:** generate tokens-dark.css for the dark-designed cockpit apps ([#867](https://github.com/cacheplane/angular-agent-framework/pull/867), [#111](https://github.com/cacheplane/angular-agent-framework/issues/111), [#64](https://github.com/cacheplane/angular-agent-framework/issues/64))
+- **langgraph:** server-announced subagent identity ([#869](https://github.com/cacheplane/angular-agent-framework/pull/869), [#864](https://github.com/cacheplane/angular-agent-framework/issues/864))
+- **website:** premium-polish pass on the docs chrome ([#872](https://github.com/cacheplane/angular-agent-framework/pull/872), [#865](https://github.com/cacheplane/angular-agent-framework/issues/865), [#004090](https://github.com/cacheplane/angular-agent-framework/issues/004090))
+
+### ❤️ Thank You
+
+- Brian Love @blove
+- Claude Opus 5
+
 ## 0.0.61 (2026-08-30)
 
 ### 🚀 Features

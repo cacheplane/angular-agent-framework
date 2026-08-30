@@ -12,6 +12,10 @@ from typing import Annotated, Literal, TypedDict
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
+from typing import Annotated
+
+from langchain_core.runnables import RunnableConfig
+from langchain_core.tools import InjectedToolCallId
 from langgraph.graph import StateGraph, MessagesState, END
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
@@ -154,8 +158,45 @@ def _final_text(messages: list) -> str:
     return "(no subagent output)"
 
 
+def _announce_subagent(config, tool_call_id: str) -> None:
+    """Bind this tool call's child stream to its tool-call id, for the UI.
+
+    LangGraph streams the child under a `tools:<uuid>` namespace whose uuid is
+    a checkpoint id — nothing on the wire links it to the `call_*` id, so a
+    frontend showing per-subagent progress would otherwise have to guess.
+    Inside the tool body both halves are known; emit them as one custom event
+    that `@threadplane/langgraph` recognizes.
+
+    Inlined per the cockpit standalone rule — the canonical helper is
+    `threadplane.middleware.langgraph.announce_subagent`.
+    """
+    if not tool_call_id:
+        return
+    meta = dict((config or {}).get("metadata") or {})
+    namespace = meta.get("checkpoint_ns")
+    if not namespace:
+        return
+    try:
+        from langgraph.config import get_stream_writer
+
+        get_stream_writer()(
+            {
+                "type": "threadplane.subagent_binding",
+                "namespace": namespace,
+                "tool_call_id": tool_call_id,
+            }
+        )
+    except Exception:
+        pass
+
+
 @tool
-async def task(subagent_type: Literal["research", "booking", "itinerary"], task_description: str) -> str:
+async def task(
+    subagent_type: Literal["research", "booking", "itinerary"],
+    task_description: str,
+    tool_call_id: Annotated[str, InjectedToolCallId] = None,
+    config: RunnableConfig = None,
+) -> str:
     """Delegate a subtask to a specialized subagent subgraph.
 
     Args:
@@ -169,6 +210,7 @@ async def task(subagent_type: Literal["research", "booking", "itinerary"], task_
     Returns:
         The subagent's final answer as a string.
     """
+    _announce_subagent(config, tool_call_id)
     result = await subagent_subgraph.ainvoke(
         {"subagent_type": subagent_type, "task_description": task_description, "messages": []}
     )

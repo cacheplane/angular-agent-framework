@@ -76,9 +76,14 @@ jobs:
         working-directory: packages/threadplane-middleware
         run: uv publish --dry-run dist/*
 
+      # uv publish, not the pypa action: the pinned action image's twine
+      # rejected the Metadata-Version 2.5 that current `uv build` emits
+      # ("InvalidDistribution: '2.5' is not a valid metadata version"), while
+      # the dry-run path — which already uses uv — passed. One toolchain for
+      # build, dry-run, and publish removes that skew permanently. PyPI
+      # trusted publishing is bound to repo + workflow filename, so the same
+      # OIDC token works; uv picks it up via --trusted-publishing.
       - name: Publish to PyPI (real release — OIDC trusted publishing)
         if: ${{ inputs.dry_run == false }}
-        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # release/v1
-        with:
-          packages-dir: packages/threadplane-middleware/dist
-          attestations: true
+        working-directory: packages/threadplane-middleware
+        run: uv publish --trusted-publishing always dist/*
