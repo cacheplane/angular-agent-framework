@@ -24,6 +24,7 @@ export function ApiRefTable({ entries }: { entries: ApiEntry[] }) {
           </div>
           <p className="text-sm mb-4 api-ref-description">{entry.description}</p>
           {entry.params && entry.params.length > 0 && (
+            <div className="docs-table-scroll" tabIndex={0} role="region" aria-label="Parameters table, scrolls horizontally">
             <table className="w-full text-xs api-ref-table">
               <thead>
                 <tr>
@@ -46,6 +47,7 @@ export function ApiRefTable({ entries }: { entries: ApiEntry[] }) {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       ))}

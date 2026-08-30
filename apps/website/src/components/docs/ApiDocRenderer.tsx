@@ -32,6 +32,7 @@ function KindBadge({ kind }: { kind: string }) {
 
 function ParamTable({ params }: { params: ApiParam[] }) {
   return (
+    <div className="docs-table-scroll" tabIndex={0} role="region" aria-label="Parameters table, scrolls horizontally">
     <table className="api-doc-param-table">
       <thead>
         <tr>
@@ -50,6 +51,7 @@ function ParamTable({ params }: { params: ApiParam[] }) {
         ))}
       </tbody>
     </table>
+    </div>
   );
 }
 

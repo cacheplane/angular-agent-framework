@@ -38,17 +38,12 @@
   --docs-accent-tint-line: color-mix(in srgb, var(--color-accent) 10%, transparent);
 }
 
-/* Shiki code blocks — tokyo-night theme */
-.shiki {
-  padding: 1.5rem;
-  background: var(--docs-code-bg) !important;
-  overflow-x: auto;
-}
-.shiki code {
-  font-family: var(--font-mono), monospace;
-  font-size: 0.75rem;
-  line-height: 1.7;
-}
+/* NOTE: the old `.shiki` rules were deleted here — rehype-pretty-code runs
+ * with keepBackground:true, which writes the theme background INLINE on the
+ * <pre> and never emits a .shiki class. Zero elements matched, on docs and
+ * blog (findings §9). If keepBackground is ever turned off, style the code
+ * background via [data-rehype-pretty-code-figure] pre, not a .shiki rule. */
+
 
 /* rehype-pretty-code — docs code blocks */
 .docs-prose [data-rehype-pretty-code-figure] {
@@ -80,21 +75,21 @@
   padding: 0 0.25rem;
 }
 
-.docs-prose [data-rehype-pretty-code-figure] [data-rehype-pretty-code-title] {
-  font-family: var(--font-mono), monospace;
-  font-size: 0.7rem;
-  color: var(--docs-code-title-fg);
-  padding: 0.5rem 1.5rem;
-  background: var(--docs-code-bg);
-  border-bottom: 1px solid var(--docs-code-title-rule);
-  border-radius: 0.75rem 0.75rem 0 0;
-}
+/* NOTE: the [data-rehype-pretty-code-title] rules were deleted — no code
+ * fence in the repo uses the `title=` meta, so the element is never generated
+ * (findings §9). Re-add title styling if a fence ever gains one; the
+ * foreground for a dark title bar lives with the --docs-code-* constants. */
 
-.docs-prose [data-rehype-pretty-code-figure]:has([data-rehype-pretty-code-title]) pre {
-  border-radius: 0 0 0.75rem 0.75rem;
-}
 
 .docs-prose :not(pre) > code {
+  /* .docs-prose sets word-break:break-word, which split tokens like
+   * @threadplane/langgraph into two separately-backgrounded pills mid-token.
+   * Prefer moving the whole chip to the next line; break inside only when a
+   * single token alone exceeds the line (findings §4). break-word, NOT
+   * anywhere: `anywhere` also shrinks min-content to one character, which let
+   * table columns squeeze below the chip width and wrap `agent` as agen/t. */
+  word-break: normal;
+  overflow-wrap: break-word;
   font-family: var(--font-mono), monospace;
   font-size: 0.85em;
   background: var(--color-accent-surface);
@@ -176,7 +171,30 @@
 .docs-prose > p:has(> .docs-diagram) { overflow-x: auto; }
 .docs-prose > p > img.docs-diagram { max-width: none; }
 
-.docs-table-scroll { max-width: 100%; overflow-x: auto; margin: 1.5rem 0; }
+.docs-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  /* Edge fades signal that the table scrolls; background-attachment:local
+   * pins the covers to the content so they vanish at the ends. */
+  background:
+    linear-gradient(to right, var(--color-surface), var(--color-surface)) left / 24px 100%,
+    linear-gradient(to right, var(--color-surface), var(--color-surface)) right / 24px 100%,
+    linear-gradient(to right, rgba(0, 0, 0, 0.08), transparent) left / 16px 100%,
+    linear-gradient(to left, rgba(0, 0, 0, 0.08), transparent) right / 16px 100%;
+  background-repeat: no-repeat;
+  background-attachment: local, local, scroll, scroll;
+}
+.docs-table-scroll:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+  border-radius: var(--radius-sm);
+}
+/* width:100% alone meant the table always fit its container, so the scroller
+ * had nothing to scroll — at 375px the props table crushed `agent` into a
+ * 49px column across three lines (findings §4). A floor makes narrow
+ * viewports scroll instead of crush; wide viewports are unaffected. */
+.docs-table-scroll table { min-width: 560px; }
 .docs-prose table { width: 100%; border-collapse: collapse; font-size: 0.875rem; margin: 0; }
 .docs-prose th { text-align: left; padding: 0.5rem 0.75rem; font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; color: var(--color-text-muted); border-bottom: 1px solid var(--color-accent-border); }
 .docs-prose td { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--docs-accent-tint-soft); color: var(--color-text-secondary); }
@@ -454,6 +472,11 @@
   flex: 1;
   background: var(--color-border);
   margin-top: 4px;
+}
+/* The connector is per-step, so the last step trailed a dangling line into
+ * the whitespace below (findings §7). */
+.mdx-step:last-child .mdx-step-connector {
+  display: none;
 }
 .mdx-step-content {
   flex: 1;
@@ -934,11 +957,16 @@
   margin: 0;
   display: flex;
   flex-wrap: wrap;
-}
-.docs-crumb-link {
+  align-items: center;
+  row-gap: 4px;
+  /* Typography on the LIST, not the links: the separators are siblings of the
+   * links inside each li, and when only the links carried 13px the first two
+   * separators inherited body's 16px/24px and floated 3px high (findings §3). */
   font-family: Inter, system-ui, sans-serif;
   font-size: 13px;
   line-height: 1.5;
+}
+.docs-crumb-link {
   color: var(--color-text-muted);
   text-decoration: none;
 }
@@ -947,9 +975,6 @@
   color: var(--color-text-muted);
 }
 .docs-crumb-current {
-  font-family: Inter, system-ui, sans-serif;
-  font-size: 13px;
-  line-height: 1.5;
   text-decoration: none;
   color: var(--color-text-primary);
   font-weight: 600;
