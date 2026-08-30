@@ -2906,6 +2906,52 @@ describe('createStreamManagerBridge', () => {
     destroy$.next();
   });
 
+  it('never cross-wires concurrent children when arrival order != dispatch order', async () => {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport, subagentToolNames: ['task'] },
+      subjects, threadId$: of(null), destroy$: destroy$.asObservable(),
+    });
+    bridge.submit({});
+    // Parent dispatches TWO children in one AI message: alpha then beta.
+    transport.emit([{
+      type: 'messages',
+      messages: [{
+        id: 'ai-1', type: 'ai', content: '',
+        tool_calls: [
+          { id: 'call_ALPHA', name: 'task', args: { subagent_type: 'alpha', task_description: 'a' } },
+          { id: 'call_BETA',  name: 'task', args: { subagent_type: 'beta',  task_description: 'b' } },
+        ],
+      }],
+    } satisfies StreamEvent]);
+    // BETA's child streams FIRST (parallel fan-out; arrival order != dispatch order).
+    transport.emit([{
+      type: 'messages|tools:ns-BETA' as StreamEvent['type'], namespace: ['tools:ns-BETA'],
+      messages: [{ id: 'm-beta', type: 'AIMessageChunk', content: 'beta output' }],
+      messageMetadata: { checkpoint_ns: 'tools:ns-BETA' },
+    } satisfies StreamEvent]);
+    transport.emit([{
+      type: 'messages|tools:ns-ALPHA' as StreamEvent['type'], namespace: ['tools:ns-ALPHA'],
+      messages: [{ id: 'm-alpha', type: 'AIMessageChunk', content: 'alpha output' }],
+      messageMetadata: { checkpoint_ns: 'tools:ns-ALPHA' },
+    } satisfies StreamEvent]);
+    transport.close();
+    await new Promise(r => setTimeout(r, 10));
+    const alpha = subjects.subagents$.value.get('call_ALPHA');
+    const beta  = subjects.subagents$.value.get('call_BETA');
+    // Two children are outstanding at once and the namespaces carry no link to
+    // the tool-call ids, so neither stream can be attributed honestly. The old
+    // fallback claimed the first unmapped call and handed alpha's card beta's
+    // output. Refusing to guess is the correct outcome: an empty card, never a
+    // confidently wrong one.
+    const txt = (x: unknown) => (x as { content?: string } | undefined)?.content;
+    expect(txt(alpha?.messages()[0])).not.toBe('beta output');
+    expect(txt(beta?.messages()[0])).not.toBe('alpha output');
+    destroy$.next();
+  });
+
   it('attributes a tool child whose values carry no human first message', async () => {
     // The real shape emitted by cockpit/chat/subagents, captured off the wire:
     // the delegation tool takes `task_description` (not `description`), and the

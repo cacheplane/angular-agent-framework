@@ -186,13 +186,31 @@ export class SubagentTracker {
       }
     }
 
-    // Last-resort fallback — tool children only. A subgraph child is keyed by
-    // its own namespace and must never absorb an unrelated child's events.
-    for (const [toolCallId, subagent] of this.subagents) {
-      if (subagent.kind !== 'tool') continue;
-      if (!mapped.has(toolCallId) && (subagent.status === 'pending' || subagent.status === 'running')) {
-        return establish(toolCallId);
-      }
+    // Last-resort fallback — tool children only, and only when there is
+    // nothing to guess between.
+    //
+    // LangGraph's `tools:<uuid>` namespace is a checkpoint id assigned
+    // independently of the parent's `call_*` tool-call id; the two are not
+    // linked anywhere on the wire (verified against a live run). So when a
+    // delegation tool carries no matchable description, position is the only
+    // signal left.
+    //
+    // That is sound with exactly one outstanding child — the shape every graph
+    // in this repo produces, since each dispatches one tool call per assistant
+    // turn. With several outstanding at once (parallel fan-out) arrival order
+    // is NOT dispatch order, and claiming the first unmapped call cross-wires
+    // the children: one card renders another's output. Leaving the stream
+    // unattributed keeps its messages buffered instead, so an empty card is
+    // the worst case rather than a confidently wrong one. It can still resolve
+    // later: as siblings complete, the candidate set shrinks back to one.
+    const candidates = [...this.subagents].filter(
+      ([toolCallId, subagent]) =>
+        subagent.kind === 'tool' &&
+        !mapped.has(toolCallId) &&
+        (subagent.status === 'pending' || subagent.status === 'running'),
+    );
+    if (candidates.length === 1) {
+      return establish(candidates[0][0]);
     }
 
     if (description) {
