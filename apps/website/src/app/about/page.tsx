@@ -91,7 +91,7 @@ export default function AboutPage() {
             <p className="about-body">
               <code>@threadplane/chat</code> is free for noncommercial use under PolyForm
               Noncommercial 1.0.0; commercial production use requires a Threadplane Commercial
-              license. The other libraries are MIT. The{' '}
+              license. Most other published Threadplane packages are MIT-licensed. The{' '}
               <Link href="/docs/licensing" className="about-link">
                 licensing docs
               </Link>{' '}

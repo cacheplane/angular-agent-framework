@@ -5,7 +5,7 @@ A complete walkthrough for installing `@threadplane/chat` in an Angular 20+ appl
 This guide goes deeper than the Quick Start: license activation, peer dependencies, and the warnings you'll see in the console.
 
 <Callout type="info" title="Just bought a license?">
-This guide is written for customers who purchased a Developer Seat, Team, or Enterprise plan and received a `THREADPLANE_LICENSE` token by email. If you're evaluating `@threadplane/chat` for noncommercial use, you can skip the license steps — the library runs without a token (with a one-time advisory warning).
+This guide is written for customers who purchased a Pro, Team, or Enterprise plan and received a `THREADPLANE_LICENSE` token by email. If you're using `@threadplane/chat` within permitted noncommercial scope, you can skip the license steps. Commercial evaluation is permitted for 30 calendar days from first commercial use without registration; the library's token check remains advisory.
 </Callout>
 
 ## Prerequisites
@@ -21,7 +21,7 @@ Required for the Angular build toolchain. `node --version` should report `v18` o
 The chat UI needs something to talk to. Two officially supported adapters cover virtually every backend:
 
 - **`@threadplane/langgraph`** — pick this if your backend is LangGraph or LangGraph Platform.
-- **`@threadplane/ag-ui`** — pick this for any AG-UI compatible backend (CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime).
+- **`@threadplane/ag-ui`** — pick this for an AG-UI-compatible backend such as CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, or AWS Strands.
 
 Both adapters expose the same `Agent` contract to `@threadplane/chat`, so swapping later is a one-line change. If you don't have a backend yet, use `mockAgent()` from `@threadplane/chat` to wire up the UI first.
 </Step>

@@ -25,16 +25,22 @@ export interface TierPrice {
   readonly cents: number | null;
   /** Display value, e.g. "$29" or "$299". */
   readonly display: string;
-  /** Period suffix shown inline after the price, e.g. "/dev/mo" or "/dev/yr". */
+  /** Period suffix shown inline after the price, e.g. "/developer/month". */
   readonly period: string;
 }
 
 export interface TierConfig {
   readonly slug: TierSlug;
-  readonly name: string;
+  /** Existing Stripe product name. Kept separate from public marketing names. */
+  readonly stripeProductName: string;
+  readonly displayName: string;
+  readonly stageLabel: string;
+  readonly journeyLabel: string;
+  readonly description: string;
   readonly prices: Record<BillingCycle, TierPrice>;
-  /** Subtitle under the price; replaces the standalone period gray subline. */
-  readonly subtitle: string;
+  /** Essential qualification displayed directly with the price. */
+  readonly priceQualifier: string;
+  readonly additionalQualifier?: string;
   readonly features: readonly string[];
   /** Short one-liner shown in its own row below the features. */
   readonly bestFor: string;
@@ -42,7 +48,7 @@ export interface TierConfig {
   readonly stripeBuyable: boolean;
   /** Highlighted card / column in the pricing table. */
   readonly highlight: boolean;
-  /** Checkout `adjustable_quantity` enabled. Only Developer Seat today. */
+  /** Checkout `adjustable_quantity` enabled. Only the individual-seat product today. */
   readonly adjustableQuantity?: boolean;
   /** Default quantity passed to Stripe Checkout when the buyer doesn't override. */
   readonly defaultQuantity?: number;
@@ -53,32 +59,49 @@ const FREE: TierPrice = { cents: null, display: 'Free', period: '' };
 export const TIERS: readonly TierConfig[] = [
   {
     slug: 'community',
-    name: 'Community',
+    stripeProductName: 'Community',
+    displayName: 'Developer',
+    stageLabel: 'Stage 01',
+    journeyLabel: 'First prototype',
+    description:
+      'For individual learning, personal projects, student and academic work, nonprofit use, public demos, qualifying open-source applications, and commercial evaluation.',
     prices: { monthly: FREE, annual: FREE },
-    subtitle: 'forever',
+    priceQualifier: 'For permitted noncommercial use',
+    additionalQualifier: 'Includes a 30-day commercial evaluation',
     features: [
-      'Personal, OSS, demos',
+      'All MIT-licensed Threadplane packages',
+      '@threadplane/chat within permitted free-use scope',
       'Source access',
-      '30-day commercial eval',
+      'Public documentation, examples, and GitHub community support',
+      'No registration required for the good-faith evaluation',
+      'Unlimited contributors within permitted free-use scope',
     ],
-    bestFor: 'Tinkering, OSS projects, students',
+    bestFor: 'Learning, personal projects, qualifying free use, and evaluation',
     stripeBuyable: false,
     highlight: false,
   },
   {
     slug: 'developer_seat',
-    name: 'Developer Seat',
+    stripeProductName: 'Developer Seat',
+    displayName: 'Pro',
+    stageLabel: 'Stage 02',
+    journeyLabel: 'Shipping commercially',
+    description:
+      'For solo developers and teams purchasing commercial developer seats individually.',
     prices: {
-      monthly: { cents: 2900, display: '$29', period: '/dev/mo' },
-      annual: { cents: 29900, display: '$299', period: '/dev/yr' },
+      monthly: { cents: 2900, display: '$29', period: '/developer/month' },
+      annual: { cents: 29900, display: '$299', period: '/developer/year' },
     },
-    subtitle: 'per developer',
+    priceQualifier: 'One developer seat per purchased quantity',
     features: [
-      'Per developer seat',
-      'Unlimited apps',
+      'Commercial production rights for @threadplane/chat',
+      'Unlimited licensed applications and end users',
+      'Development, staging, CI/CD, and production use',
+      'Same package and core capabilities as every paid plan',
+      'Offline signed license token',
       'GitHub support',
     ],
-    bestFor: 'Solo devs, growing teams',
+    bestFor: 'Solo developers and teams buying seats individually',
     stripeBuyable: true,
     highlight: false,
     adjustableQuantity: true,
@@ -86,36 +109,52 @@ export const TIERS: readonly TierConfig[] = [
   },
   {
     slug: 'team',
-    name: 'Team',
+    stripeProductName: 'Team',
+    displayName: 'Team',
+    stageLabel: 'Stage 03',
+    journeyLabel: 'Whole team shipping',
+    description:
+      'For small teams that want one subscription, one renewal, five seats, and direct email support.',
     prices: {
-      monthly: { cents: 14900, display: '$149', period: '/mo' },
-      annual: { cents: 149500, display: '$1,495', period: '/yr' },
+      monthly: { cents: 14900, display: '$149', period: '/month' },
+      annual: { cents: 149500, display: '$1,495', period: '/year' },
     },
-    subtitle: '5 developer seats',
+    priceQualifier: '5 developer seats included',
     features: [
-      '5 developer seats included',
-      'Unlimited apps',
+      'Commercial production rights for @threadplane/chat',
+      'Unlimited licensed applications and end users',
+      'Same package and core capabilities as Pro',
+      'Offline signed license token',
       'Email support',
+      'One procurement-friendly team subscription',
     ],
-    bestFor: 'Procurement-friendly small teams',
+    bestFor: 'Small teams that want a single subscription',
     stripeBuyable: true,
     highlight: true,
   },
   {
     slug: 'enterprise',
-    name: 'Enterprise',
+    stripeProductName: 'Enterprise',
+    displayName: 'Enterprise',
+    stageLabel: 'Destination',
+    journeyLabel: 'Production at scale',
+    description:
+      'For organizations requiring broader license scope, enterprise support, security review, contractual terms, and guided delivery.',
     // Enterprise is sales-led — same "From $4,000/mo" label regardless of cycle.
     prices: {
-      monthly: { cents: null, display: 'From $4,000', period: '/mo' },
-      annual: { cents: null, display: 'From $4,000', period: '/mo' },
+      monthly: { cents: null, display: 'From $4,000', period: '/month' },
+      annual: { cents: null, display: 'From $4,000', period: '/month' },
     },
-    subtitle: 'annual contract',
+    priceQualifier: 'Annual contract',
     features: [
-      'Pilot-to-Prod engagement',
-      'Slack Connect support',
-      'SLA + private channel',
+      'Custom or organization-wide developer coverage',
+      'Multi-application commercial scope',
+      'Custom contract and procurement support',
+      'Private support channel and response SLA',
+      'Security review assistance',
+      'Pilot-to-Prod available as an optional engagement',
     ],
-    bestFor: 'Procurement-led orgs',
+    bestFor: 'Organizations with custom support and contract requirements',
     stripeBuyable: false,
     highlight: false,
   },
@@ -143,15 +182,17 @@ export function annualSavingsDollars(tier: TierConfig): number {
 }
 
 /**
- * Compute the global "save N%" badge shown on the Annual toggle. We use the
- * Team tier as the canonical example since it's the highlighted plan.
+ * Compute the largest annual discount shown by a public paid tier. The UI
+ * labels this as "save up to" so it does not imply one universal discount.
  */
 export function annualDiscountPercent(): number {
-  const team = TIERS.find((t) => t.slug === 'team');
-  if (!team) return 0;
-  const m = team.prices.monthly.cents;
-  const a = team.prices.annual.cents;
-  if (m == null || a == null) return 0;
-  const annualizedMonthly = m * 12;
-  return Math.round((1 - a / annualizedMonthly) * 100);
+  return Math.max(
+    0,
+    ...TIERS.map((tier) => {
+      const monthly = tier.prices.monthly.cents;
+      const annual = tier.prices.annual.cents;
+      if (monthly == null || annual == null) return 0;
+      return Math.round((1 - annual / (monthly * 12)) * 100);
+    }),
+  );
 }

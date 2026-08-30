@@ -5,28 +5,56 @@ import { FAQ, type FAQItem } from '../ui/FAQ';
 
 const ITEMS: FAQItem[] = [
   {
+    q: 'Is Threadplane free?',
+    a: 'Most Threadplane packages are MIT-licensed and free for commercial or noncommercial use. @threadplane/chat is free for uses permitted by PolyForm Noncommercial 1.0.0 and for a 30-calendar-day commercial evaluation. Commercial production use of @threadplane/chat requires a Threadplane Commercial license.',
+  },
+  {
     q: 'Is @threadplane/chat open source?',
-    a: '@threadplane/chat is source-available under the PolyForm Noncommercial License 1.0.0. Because commercial use requires a license, it is not OSI open source.',
+    a: 'Most Threadplane packages are MIT open source. @threadplane/chat is source-available under the PolyForm Noncommercial License 1.0.0 and is not OSI open source.',
   },
   {
-    q: 'Can I use it for free?',
-    a: 'Yes. Personal, educational, nonprofit, academic, demo, open-source, and evaluation use are free under the noncommercial license.',
+    q: 'What counts as commercial use?',
+    a: 'Commercial use means using @threadplane/chat in an application, product, service, internal tool, client deliverable, hosted experience, or workflow that is operated by or for a for-profit entity, generates revenue, supports paid services, supports business operations, or is delivered to a paying client.',
   },
   {
-    q: 'Can I use it at work?',
-    a: 'You can evaluate it at work for 30 calendar days from your first commercial use. After that, production use in a commercial product, internal tool, SaaS app, or client deliverable requires a Threadplane Commercial license. The eval window is good-faith — no telemetry, no registration.',
+    q: 'Does Threadplane have a cloud service?',
+    a: 'No. Threadplane runs inside your Angular application. You operate your application, agent runtime, data stores, hosting, and model-provider accounts.',
+  },
+  {
+    q: 'Does Threadplane store my conversations or agent data?',
+    a: 'No hosted Threadplane persistence service is included. Threadplane provides Angular UI packages and adapter contracts for thread state, history, branching, reload, and interrupts. The connected runtime and persistence layer determine storage, checkpointing, retention, authorization, and cross-device behavior.',
+  },
+  {
+    q: 'Are model or hosting costs included?',
+    a: 'No. Model inference, agent runtime, database, observability, hosting, and other infrastructure charges remain with the providers you select.',
+  },
+  {
+    q: 'What am I paying for?',
+    a: 'Paid plans provide commercial production rights for @threadplane/chat, developer-seat or organization scope, support, and contract or procurement services. They do not provide hosted usage, bundled infrastructure, or a different package build.',
   },
   {
     q: 'Do my end users need licenses?',
-    a: 'No. Commercial licenses are for the developers, organization, or production application using @threadplane/chat, depending on the plan.',
+    a: 'No. End users of a licensed application do not need seats. Commercial coverage applies to the developers, organization, or application scope defined by the plan or contract.',
   },
   {
-    q: 'Can I modify the source?',
-    a: 'Yes, for permitted noncommercial use under the PolyForm Noncommercial license, or for commercial production use under a paid Threadplane Commercial license.',
+    q: 'What is a developer seat?',
+    a: 'A developer seat covers one developer working on or maintaining the licensed application. Contact sales for contractor, subsidiary, or other organizational edge cases not addressed by the standard commercial summary.',
   },
   {
-    q: 'Can I redistribute it?',
-    a: 'You may bundle it inside a larger licensed application. You may not redistribute it as a standalone package or as part of a competing component library, SDK, template kit, app builder, or design system.',
+    q: 'Does a paid plan unlock different software?',
+    a: 'No. Paid plans use the same source and package build. The plan changes permitted use, developer coverage, support, and contractual scope—not core product capabilities.',
+  },
+  {
+    q: 'How does the license token work?',
+    a: 'The package verifies the signed token locally with Ed25519. Verification does not call a Threadplane licensing API at runtime. A missing, expired, or invalid token produces an advisory console warning and does not block rendering.',
+  },
+  {
+    q: 'Can I modify or redistribute the source?',
+    a: 'You may modify @threadplane/chat within your permitted use and embed it in a larger licensed application. You may not redistribute it as a standalone package or as part of a competing component library, SDK, template kit, app builder, or design system.',
+  },
+  {
+    q: 'What happens after cancellation or refund?',
+    a: 'After cancellation, the license remains valid through the end of the current paid period. A refund marks the license revoked in Threadplane records and triggers a confirmation email. Runtime token verification remains offline and does not make a revocation lookup.',
   },
 ];
 

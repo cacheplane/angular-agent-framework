@@ -1289,7 +1289,7 @@
 /* Pricing page — app/pricing/page.tsx */
 .pricing-page-hero-inner {
   text-align: center;
-  max-width: 760px;
+  max-width: 960px;
   margin: 0 auto;
 }
 .pricing-page-eyebrow-spaced {
@@ -1303,6 +1303,33 @@
   color: var(--color-text-primary);
   margin: 0;
   letter-spacing: -0.02em;
+}
+.pricing-page-subtitle {
+  max-width: 760px;
+  margin: 20px auto 0;
+  color: var(--color-text-secondary);
+  font-family: var(--font-inter);
+  font-size: var(--text-body-lg);
+  line-height: 1.65;
+}
+.pricing-page-license-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 24px auto 0;
+  padding: 13px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-tinted);
+  color: var(--color-text-secondary);
+  font-family: var(--font-inter);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.pricing-page-license-line strong {
+  color: var(--color-accent);
 }
 .pricing-page-eyebrow-tight {
   margin-bottom: 12px;
@@ -1319,6 +1346,17 @@
   margin-bottom: 24px;
   color: var(--color-text-secondary);
   max-width: 60ch;
+}
+
+@media (max-width: 640px) {
+  .pricing-page-license-line {
+    align-items: flex-start;
+    flex-direction: column;
+    text-align: left;
+  }
+  .pricing-page-license-line > span[aria-hidden] {
+    display: none;
+  }
 }
 
 /* Home page — app/page.tsx */

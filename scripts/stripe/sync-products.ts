@@ -8,7 +8,7 @@
  * IDs to pricing/tiers.generated.ts.
  *
  * Usage:
- *   STRIPE_SECRET_KEY=sk_test_... pnpm tsx scripts/stripe/sync-products.ts
+ *   STRIPE_SECRET_KEY=sk_test_... npx tsx scripts/stripe/sync-products.ts
  *
  * Re-running is safe: products are matched by metadata, prices are reused if
  * the unit_amount and interval match, otherwise stale prices are archived
@@ -38,13 +38,13 @@ async function findOrCreateProduct(stripe: Stripe, tier: TierConfig): Promise<St
   });
   const existing = search.data[0];
   if (existing) {
-    if (existing.name !== tier.name || existing.active === false) {
-      return stripe.products.update(existing.id, { name: tier.name, active: true });
+    if (existing.name !== tier.stripeProductName || existing.active === false) {
+      return stripe.products.update(existing.id, { name: tier.stripeProductName, active: true });
     }
     return existing;
   }
   return stripe.products.create({
-    name: tier.name,
+    name: tier.stripeProductName,
     metadata: { [METADATA_KEY]: tier.slug },
   });
 }

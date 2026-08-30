@@ -32,12 +32,35 @@ test('landing page license copy distinguishes MIT packages from commercially lic
   await expect(main).not.toContainText('MIT · No signup required · App telemetry off by default');
 });
 
-test('pricing page shows plan cards', async ({ page }) => {
+test('pricing page presents the four-stage journey and licensing boundary', async ({ page }) => {
   await page.goto('/pricing');
-  await expect(page.getByText('Community').first()).toBeVisible();
-  await expect(page.getByText('Developer Seat').first()).toBeVisible();
-  await expect(page.getByText('Team').first()).toBeVisible();
-  await expect(page.getByText('Enterprise').first()).toBeVisible();
+  const plans = page.locator('.pricing-plan-card');
+  await expect(plans).toHaveCount(4);
+  await expect(plans.nth(0).getByRole('heading', { level: 3 })).toHaveText('Developer');
+  await expect(plans.nth(1).getByRole('heading', { level: 3 })).toHaveText('Pro');
+  await expect(plans.nth(2).getByRole('heading', { level: 3 })).toHaveText('Team');
+  await expect(plans.nth(3).getByRole('heading', { level: 3 })).toHaveText('Enterprise');
+  await expect(plans.nth(0)).toContainText('For permitted noncommercial use');
+  await expect(plans.nth(0)).toContainText('30-day commercial evaluation');
+  await expect(page.getByText('No Threadplane cloud').first()).toBeVisible();
+});
+
+test('pricing page preserves public-to-internal checkout mappings', async ({ page }) => {
+  await page.goto('/pricing');
+
+  await expect(page.getByRole('button', { name: 'Get Pro' }).locator('xpath=ancestor::form/input[@name="tier"]')).toHaveValue('developer_seat');
+  await expect(page.getByRole('button', { name: 'Get Team' }).locator('xpath=ancestor::form/input[@name="tier"]')).toHaveValue('team');
+  await expect(page.getByRole('link', { name: 'Start free' })).toHaveAttribute('href', /npmjs\.com\/package\/@threadplane\/chat/);
+  await expect(page.getByRole('link', { name: 'Talk to Sales' })).toHaveAttribute('href', '/contact?source=pricing_tier_enterprise');
+});
+
+test('pricing page is responsive without page-level horizontal overflow', async ({ page }) => {
+  for (const width of [375, 768, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/pricing');
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow, `pricing at ${width}px`).toBeLessThanOrEqual(1);
+  }
 });
 
 test('pricing page lead form validates required fields', async ({ page }) => {
