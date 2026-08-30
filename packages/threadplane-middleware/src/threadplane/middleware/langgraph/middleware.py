@@ -144,3 +144,64 @@ def route_after_agent(
     if has_server_tool_call(state, server_tool_names):
         return tools_node
     return end
+
+def announce_subagent(config: Any, tool_call_id: str) -> bool:
+    """Bind this tool call's child-graph stream to its tool-call id, for UIs.
+
+    LangGraph streams a child graph invoked inside a ``@tool`` body under a
+    ``tools:<uuid>`` namespace, where the uuid is a *checkpoint* id assigned
+    independently of the tool-call id — nothing on the wire links the two. A
+    frontend showing per-subagent progress therefore has to guess which stream
+    belongs to which call, which is unsound the moment two children run at
+    once.
+
+    Inside the tool body both halves are known: the namespace is the config's
+    ``checkpoint_ns`` and the tool-call id arrives via
+    ``InjectedToolCallId``. This helper emits them as one custom event::
+
+        from typing import Annotated
+        from langchain_core.runnables import RunnableConfig
+        from langchain_core.tools import InjectedToolCallId, tool
+
+        @tool
+        async def task(
+            description: str,
+            tool_call_id: Annotated[str, InjectedToolCallId] = None,
+            config: RunnableConfig = None,
+        ) -> str:
+            announce_subagent(config, tool_call_id)
+            result = await child_graph.ainvoke({...})
+            ...
+
+    ``@threadplane/langgraph`` recognizes the event and attributes the child's
+    stream deterministically, before any tokens arrive.
+
+    Returns ``True`` if the event was emitted, ``False`` when anything needed
+    is unavailable (no stream writer outside a run, no namespace at the top
+    level, missing tool_call_id) — callers never need to guard it.
+    """
+    if not tool_call_id:
+        return False
+    namespace = None
+    if isinstance(config, dict):
+        for section in ("metadata", "configurable"):
+            raw = config.get(section)
+            if isinstance(raw, dict) and raw.get("checkpoint_ns"):
+                namespace = raw["checkpoint_ns"]
+                break
+    if not namespace:
+        return False
+    try:
+        from langgraph.config import get_stream_writer
+
+        writer = get_stream_writer()
+        writer(
+            {
+                "type": "threadplane.subagent_binding",
+                "namespace": namespace,
+                "tool_call_id": tool_call_id,
+            }
+        )
+        return True
+    except Exception:
+        return False

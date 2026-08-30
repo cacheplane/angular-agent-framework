@@ -945,6 +945,22 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
         break;
       case 'custom': {
         const eventData = event['data'] as Record<string, unknown> | undefined;
+        // Server-announced subagent identity (threadplane-middleware's
+        // `announce_subagent`). Consumed here rather than forwarded: it is
+        // protocol chatter, not application data.
+        if (
+          isRecord(eventData)
+          && eventData['type'] === 'threadplane.subagent_binding'
+          && typeof eventData['namespace'] === 'string'
+          && typeof eventData['tool_call_id'] === 'string'
+        ) {
+          const bound = childStreamRefFromNamespace([eventData['namespace']]);
+          if (bound?.kind === 'tool') {
+            subagentManager.bindChildStream(bound.key, eventData['tool_call_id']);
+            publishSubagents();
+          }
+          break;
+        }
         const name = (event['name'] ?? eventData?.['name'] ?? '') as string;
         const data = eventData?.['data'] ?? eventData;
         const current = subjects.custom$.value;

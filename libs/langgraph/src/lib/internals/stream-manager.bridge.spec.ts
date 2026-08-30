@@ -2906,6 +2906,101 @@ describe('createStreamManagerBridge', () => {
     destroy$.next();
   });
 
+  it('binding events attribute concurrent children exactly, even out of order', async () => {
+    // The case #864 deliberately left unattributed: two children outstanding,
+    // streams arriving in reverse dispatch order. With server-announced
+    // bindings (threadplane-middleware announce_subagent) both resolve
+    // deterministically — no guessing, no empty cards.
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport, subagentToolNames: ['task'] },
+      subjects, threadId$: of(null), destroy$: destroy$.asObservable(),
+    });
+    bridge.submit({});
+    transport.emit([{
+      type: 'messages',
+      messages: [{
+        id: 'ai-1', type: 'ai', content: '',
+        tool_calls: [
+          { id: 'call_ALPHA', name: 'task', args: { subagent_type: 'alpha', task_description: 'a' } },
+          { id: 'call_BETA',  name: 'task', args: { subagent_type: 'beta',  task_description: 'b' } },
+        ],
+      }],
+    } satisfies StreamEvent]);
+    // BETA's chunk arrives BEFORE any binding — it must buffer, not misroute.
+    transport.emit([{
+      type: 'messages|tools:ns-BETA' as StreamEvent['type'], namespace: ['tools:ns-BETA'],
+      messages: [{ id: 'm-beta', type: 'AIMessageChunk', content: 'beta output' }],
+      messageMetadata: { checkpoint_ns: 'tools:ns-BETA' },
+    } satisfies StreamEvent]);
+    // Bindings arrive (order irrelevant), exactly as announce_subagent emits them.
+    transport.emit([{
+      type: 'custom',
+      data: { type: 'threadplane.subagent_binding', namespace: 'tools:ns-BETA', tool_call_id: 'call_BETA' },
+    } as StreamEvent]);
+    transport.emit([{
+      type: 'custom',
+      data: { type: 'threadplane.subagent_binding', namespace: 'tools:ns-ALPHA', tool_call_id: 'call_ALPHA' },
+    } as StreamEvent]);
+    transport.emit([{
+      type: 'messages|tools:ns-ALPHA' as StreamEvent['type'], namespace: ['tools:ns-ALPHA'],
+      messages: [{ id: 'm-alpha', type: 'AIMessageChunk', content: 'alpha output' }],
+      messageMetadata: { checkpoint_ns: 'tools:ns-ALPHA' },
+    } satisfies StreamEvent]);
+    transport.close();
+    await new Promise(r => setTimeout(r, 10));
+
+    const txt = (x: unknown) => (x as { content?: string } | undefined)?.content;
+    // Exact attribution both ways — including the pre-binding buffered chunk.
+    expect(txt(subjects.subagents$.value.get('call_ALPHA')?.messages()[0])).toBe('alpha output');
+    expect(txt(subjects.subagents$.value.get('call_BETA')?.messages()[0])).toBe('beta output');
+    // Protocol chatter is consumed, not surfaced to customEvents().
+    expect(subjects.custom$.value.filter(e =>
+      typeof e.data === 'object' && e.data !== null
+        && (e.data as Record<string, unknown>)['type'] === 'threadplane.subagent_binding',
+    )).toHaveLength(0);
+    destroy$.next();
+  });
+
+  it('a binding never overrides an established mapping', async () => {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport, subagentToolNames: ['task'] },
+      subjects, threadId$: of(null), destroy$: destroy$.asObservable(),
+    });
+    bridge.submit({});
+    transport.emit([{
+      type: 'messages',
+      messages: [{
+        id: 'ai-1', type: 'ai', content: '',
+        tool_calls: [{ id: 'call_X', name: 'task', args: { subagent_type: 'xray', task_description: 'x' } }],
+      }],
+    } satisfies StreamEvent]);
+    transport.emit([{
+      type: 'custom',
+      data: { type: 'threadplane.subagent_binding', namespace: 'tools:ns-X', tool_call_id: 'call_X' },
+    } as StreamEvent]);
+    // A duplicate binding for the same pair is a no-op, not a re-establish.
+    transport.emit([{
+      type: 'custom',
+      data: { type: 'threadplane.subagent_binding', namespace: 'tools:ns-X', tool_call_id: 'call_X' },
+    } as StreamEvent]);
+    transport.emit([{
+      type: 'messages|tools:ns-X' as StreamEvent['type'], namespace: ['tools:ns-X'],
+      messages: [{ id: 'm-x', type: 'AIMessageChunk', content: 'x output' }],
+      messageMetadata: { checkpoint_ns: 'tools:ns-X' },
+    } satisfies StreamEvent]);
+    transport.close();
+    await new Promise(r => setTimeout(r, 10));
+    const txt = (x: unknown) => (x as { content?: string } | undefined)?.content;
+    expect(txt(subjects.subagents$.value.get('call_X')?.messages()[0])).toBe('x output');
+    destroy$.next();
+  });
+
   it('never cross-wires concurrent children when arrival order != dispatch order', async () => {
     const transport = new MockAgentTransport();
     const subjects = makeSubjects();
