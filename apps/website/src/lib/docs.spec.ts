@@ -118,6 +118,20 @@ describe('website docs bindings', () => {
     );
   });
 
+  it('keeps every description within the search-snippet budget', () => {
+    // GSC follow-up to #826: 160+ char descriptions get re-truncated by
+    // Google mid-sentence. The clamp must also never leave the legacy
+    // mid-word '...' cut.
+    const slugs = getAllDocSlugs();
+    expect(slugs.length).toBeGreaterThan(100); // sweep must not pass on an empty list
+    for (const { library, section, slug } of slugs) {
+      const description = getDocMetadata(library, section, slug)?.description;
+      expect(description, `${library}/${section}/${slug}`).toBeTruthy();
+      expect(description!.length, `${library}/${section}/${slug}`).toBeLessThanOrEqual(160);
+      expect(description!.endsWith('...'), `${library}/${section}/${slug}`).toBe(false);
+    }
+  });
+
   it('derives mostly unique descriptions from page content', () => {
     const descriptions = getAllDocSlugs()
       .map(({ library, section, slug }) => getDocMetadata(library, section, slug)?.description)

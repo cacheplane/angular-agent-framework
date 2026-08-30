@@ -12,7 +12,7 @@ import { createPageMetadata } from '../../lib/site-metadata';
 export const metadata = createPageMetadata({
   title: 'Pricing — Threadplane',
   description:
-    'Most Threadplane packages are MIT-licensed. @threadplane/chat is free for permitted noncommercial use and evaluation; commercial production plans start at $29 per developer per month. Threadplane runs in your own stack.',
+    'Most Threadplane packages are MIT-licensed. @threadplane/chat plans start at $29 per developer per month. Threadplane runs in your own stack.',
   pathname: '/pricing',
   type: 'website',
 });

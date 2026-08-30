@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+  clampMetaDescription,
   DEFAULT_META_DESCRIPTION,
   HERO_SUBHEAD,
   LONG_SUBHEAD,
@@ -51,6 +52,49 @@ describe('site positioning copy', () => {
     expect(metadata.description).toBe(DEFAULT_META_DESCRIPTION);
     expect(metadata.openGraph?.description).toBe(DEFAULT_META_DESCRIPTION);
     expect(metadata.twitter?.description).toBe(DEFAULT_META_DESCRIPTION);
+  });
+});
+
+describe('clampMetaDescription', () => {
+  it('passes short descriptions through untouched', () => {
+    expect(clampMetaDescription('Short and sweet.')).toBe('Short and sweet.');
+  });
+
+  it('collapses internal whitespace', () => {
+    expect(clampMetaDescription('  a \n  b  ')).toBe('a b');
+  });
+
+  it('prefers a sentence boundary once past 60% of the budget', () => {
+    const first = 'This first sentence lands comfortably past the sixty percent mark of the one-sixty budget so the clamp should end exactly on it.';
+    const result = clampMetaDescription(`${first} This trailing sentence pushes the whole thing well over the limit.`);
+    expect(result).toBe(first);
+  });
+
+  it('falls back to a word boundary with an ellipsis', () => {
+    const words = Array.from({ length: 40 }, (_, i) => `word${i}`).join(' ');
+    const result = clampMetaDescription(words);
+    expect(result.length).toBeLessThanOrEqual(160);
+    expect(result.endsWith('\u2026')).toBe(true);
+    // never a mid-word cut: everything before the ellipsis is a whole word
+    expect(words.startsWith(result.slice(0, -1))).toBe(true);
+    expect(words[result.length - 1]).toBe(' ');
+  });
+
+  it('never exceeds the budget', () => {
+    const long = 'x'.repeat(400);
+    expect(clampMetaDescription(long).length).toBeLessThanOrEqual(160);
+  });
+});
+
+describe('createPageMetadata description clamp', () => {
+  it('clamps the meta and OpenGraph descriptions centrally', () => {
+    const metadata = createPageMetadata({
+      title: 'T',
+      description: `${'Lead sentence that is deliberately made long enough to pass the sixty percent sentence-boundary threshold of the budget for this clamp.'} Overflow text beyond the snippet budget.`,
+      pathname: '/x',
+    });
+    expect(String(metadata.description).length).toBeLessThanOrEqual(160);
+    expect(metadata.openGraph?.description).toBe(metadata.description);
   });
 });
 
@@ -157,5 +201,25 @@ describe('brand name', () => {
 
     expect(offenders).toEqual([]);
     expect(SITE_NAME).toBe('Threadplane');
+  });
+});
+
+describe('blog frontmatter description budget', () => {
+  it('every post description fits a search snippet without clamping', () => {
+    // The runtime clamp guards the meta tag, but a hand-written description
+    // that needs clamping loses its author's chosen ending — keep the source
+    // honest. (Reads the real content files; blog.spec.ts mocks fs.)
+    const blogDir = path.join(resolveWebsiteDir(), 'content', 'blog');
+    const offenders: string[] = [];
+    for (const file of fs.readdirSync(blogDir).filter((f) => f.endsWith('.mdx'))) {
+      const source = fs.readFileSync(path.join(blogDir, file), 'utf8');
+      const description = source
+        .match(/^---\n[\s\S]*?^description:\s*['"]?(?<d>[^'"\n]+?)['"]?\s*$/m)
+        ?.groups?.['d'];
+      if (description && description.length > 160) {
+        offenders.push(`${file} (${description.length} chars)`);
+      }
+    }
+    expect(offenders).toEqual([]);
   });
 });

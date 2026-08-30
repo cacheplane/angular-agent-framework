@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import type { Metadata } from 'next';
 import { docsConfig, type DocsPage, getLibraryConfig, getLibraryPages } from './docs-config';
-import { createPageMetadata } from './site-metadata';
+import { clampMetaDescription, createPageMetadata } from './site-metadata';
 
 const resolveContentDir = (library: string): string => {
   const workspacePath = path.join(process.cwd(), 'apps', 'website', 'content', 'docs', library);
@@ -79,16 +79,18 @@ function extractFirstParagraph(content: string): string | null {
       continue;
     }
 
-    return normalized.length > 180 ? `${normalized.slice(0, 177).trimEnd()}...` : normalized;
+    return clampMetaDescription(normalized);
   }
 
   return null;
 }
 
 function getDocDescription(content: string, fallback: string): string {
+  // Clamped here (not only in createPageMetadata) so the docs JSON-LD, which
+  // reads this value directly, stays byte-identical to the meta description.
   const frontmatterDescription = readFrontmatterDescription(content);
-  if (frontmatterDescription) return normalizeDescription(frontmatterDescription);
-  return extractFirstParagraph(content) ?? fallback;
+  if (frontmatterDescription) return clampMetaDescription(normalizeDescription(frontmatterDescription));
+  return extractFirstParagraph(content) ?? clampMetaDescription(fallback);
 }
 
 export function getDocBySlug(library: string, section: string, slug: string): ResolvedDoc | null {

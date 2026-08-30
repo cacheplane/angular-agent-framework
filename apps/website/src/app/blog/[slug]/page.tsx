@@ -8,7 +8,7 @@ import { Eyebrow } from '../../../components/ui/Eyebrow';
 import { getAllPosts, getPostBySlug, formatPostDate, readingTimeMin } from '../../../lib/blog';
 import { getAuthor } from '../../../lib/blog-authors';
 import { extractHeadings } from '../../../lib/extract-headings';
-import { createPageMetadata, ogImagePath } from '../../../lib/site-metadata';
+import { clampMetaDescription, createPageMetadata, ogImagePath } from '../../../lib/site-metadata';
 import { getPostLastModified, publishedDate } from '../../../lib/sitemap-dates';
 import { JsonLd } from '../../../components/shared/JsonLd';
 import { blogPostingJsonLd, breadcrumbJsonLd } from '../../../lib/structured-data';
@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   return createPageMetadata({
     title: `${post.frontmatter.title} — Threadplane`,
-    description: post.frontmatter.description,
+    description: clampMetaDescription(post.frontmatter.description),
     pathname,
     type: 'article',
     image: ogImagePath(post.slug),
@@ -72,7 +72,8 @@ export default async function BlogPostPage({ params }: Params) {
   const postData = published
     ? blogPostingJsonLd({
         title: post.frontmatter.title,
-        description: post.frontmatter.description,
+        // Same clamp as the meta description so the two never diverge.
+        description: clampMetaDescription(post.frontmatter.description),
         slug: post.slug,
         datePublished: published.toISOString(),
         dateModified: lastModified?.toISOString(),
