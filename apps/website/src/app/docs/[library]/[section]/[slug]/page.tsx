@@ -92,7 +92,7 @@ export default async function DocsPage({ params }: DocsRouteProps) {
       <DocsSidebar activeLibrary={library as LibraryId} activeSection={section} activeSlug={slug} />
       <div className="flex-1 flex min-w-0 docs-shell-body">
         <div className="flex-1 min-w-0">
-          <div className="px-6 md:px-12 pt-6">
+          <div className="px-4 sm:px-6 md:px-12 pt-6">
             <DocsBreadcrumb library={library as LibraryId} section={section} slug={slug} title={doc.title} />
             <DocsPageHeader
               library={library as LibraryId}
@@ -123,14 +123,14 @@ export default async function DocsPage({ params }: DocsRouteProps) {
               : [byName(target) ?? byName(doc.title)].filter((e): e is ApiDocEntry => Boolean(e));
 
             return rendered.length > 0 ? (
-              <div className="px-6 md:px-12 max-w-3xl pb-8">
+              <div className="px-4 sm:px-6 md:px-12 max-w-3xl pb-8">
                 {rendered.map((entry) => (
                   <ApiDocRenderer key={entry.name} entry={entry} />
                 ))}
               </div>
             ) : null;
           })()}
-          <div className="px-6 md:px-12 max-w-3xl pb-8">
+          <div className="px-4 sm:px-6 md:px-12 max-w-3xl pb-8">
             <DocsPrevNext library={library as LibraryId} section={section} slug={slug} />
           </div>
         </div>

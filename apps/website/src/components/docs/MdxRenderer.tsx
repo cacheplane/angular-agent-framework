@@ -62,7 +62,10 @@ const mdxComponents = {
     );
   },
   table: ({ children, ...rest }: React.HTMLAttributes<HTMLTableElement>) => (
-    <div className="docs-table-scroll">
+    // tabIndex + role: a scrollable region must be keyboard-reachable
+    // (WCAG 2.1.1) — without it, keyboard users can never see the clipped
+    // columns the scroller hides.
+    <div className="docs-table-scroll" tabIndex={0} role="region" aria-label="Table, scrolls horizontally">
       <table {...rest}>{children}</table>
     </div>
   ),
