@@ -335,6 +335,19 @@
   opacity: 1;
   transform: translateY(0);
 }
+/* On phones the 360px right-hugging card read as a wall (327px of a
+ * 375px screen, findings §6): present it as a centered bottom sheet
+ * with even margins instead. */
+@media (max-width: 480px) {
+  .toast-root {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    width: auto;
+    max-width: none;
+    padding: 16px 18px;
+  }
+}
 .toast-close {
   position: absolute;
   top: 10px;
@@ -346,6 +359,20 @@
   font-size: 18px;
   line-height: 1;
   padding: 4px;
+  border-radius: var(--radius-sm);
+}
+.toast-close:hover {
+  color: var(--color-text-primary);
+}
+/* 44px touch target without visual growth (findings §7). */
+.toast-close::after {
+  content: '';
+  position: absolute;
+  inset: -12px -13px;
+}
+.toast-close:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
 }
 .toast-eyebrow {
   font-family: var(--font-mono);
