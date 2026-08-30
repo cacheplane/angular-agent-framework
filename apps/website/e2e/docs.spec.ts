@@ -147,7 +147,9 @@ test.describe('Docs search', () => {
     const searchInput = page.locator('input[placeholder*="Search"], input[type="search"]').first();
     await searchInput.fill('choosing adapter');
 
-    await expect(page.getByRole('button', { name: /Choosing an adapter/i })).toBeVisible();
+    // Search results are role="option" inside the listbox (a11y pass, #865) —
+    // an explicit ARIA role overrides the implicit button role.
+    await expect(page.getByRole('option', { name: /Choosing an adapter/i })).toBeVisible();
     await expect(page.getByText('No results found')).toHaveCount(0);
   });
 });
