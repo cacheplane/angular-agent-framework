@@ -89,10 +89,7 @@ export function AnnouncementToast() {
       role="alert"
       aria-live="polite"
       className="toast-root"
-      style={{
-        opacity: mounted ? 1 : 0,
-        transform: mounted ? 'translateY(0)' : 'translateY(12px)',
-      }}
+      data-mounted={mounted || undefined}
     >
       {/* Dismiss button */}
       <button

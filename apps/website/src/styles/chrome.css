@@ -329,6 +329,15 @@
   border-radius: var(--radius-lg);
   padding: 20px 24px;
   transition: opacity 200ms ease, transform 240ms ease;
+  /* Entrance animation as bounded data-state (lint-guard follow-up): the
+   * component flips data-mounted a frame after render; the transition above
+   * carries it from this resting state. */
+  opacity: 0;
+  transform: translateY(12px);
+}
+.toast-root[data-mounted] {
+  opacity: 1;
+  transform: translateY(0);
 }
 .toast-close {
   position: absolute;

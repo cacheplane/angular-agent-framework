@@ -30,13 +30,15 @@ export function BrowserFrame({
       data-ui="browser-frame"
       data-elevation={elevation}
       className={cn(className)}
+      data-rotated={rotate ? '' : undefined}
       style={{
-        // Genuinely dynamic — computed from unbounded caller props, so these
-        // stay inline. Everything else here is static and lives in ui.css.
-        transform: rotate ? `rotate(${rotate}deg)` : undefined,
-        maxWidth,
+        // Genuinely dynamic — computed from unbounded caller props, passed as
+        // custom properties (the lint-guard escape hatch); ui.css consumes
+        // them. Everything else is static and lives in ui.css.
+        ...(rotate ? { '--frame-rotate': `${rotate}deg` } : null),
+        ...(maxWidth !== undefined ? { '--frame-max': typeof maxWidth === 'number' ? `${maxWidth}px` : maxWidth } : null),
         ...style,
-      }}
+      } as React.CSSProperties}
       {...rest}
     >
       {/* Title bar */}

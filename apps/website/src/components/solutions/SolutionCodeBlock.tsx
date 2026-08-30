@@ -31,7 +31,7 @@ export async function SolutionCodeBlock({ code, accent }: { code: SolutionCodeBl
     <Section surface="canvas" ariaLabelledBy="solution-code-heading">
       <Container>
         <div className="sol-code-wrap">
-          <Eyebrow style={{ color: accent, marginBottom: 12 }}>In practice</Eyebrow>
+          <Eyebrow style={{ '--accent': accent } as React.CSSProperties} data-accent-text className="sol-code-eyebrow">In practice</Eyebrow>
           <h2 id="solution-code-heading" className="sol-code-heading">
             What it looks like in your codebase
           </h2>

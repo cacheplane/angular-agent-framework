@@ -276,6 +276,15 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   overflow: hidden;
+  /* Dynamic caller props arrive as custom properties (lint-guard escape
+   * hatch): an optional width cap, and — gated behind data-rotated — the
+   * collage tilt. The gate matters: rotate(0deg) computes to an identity
+   * matrix, not `none`, which silently creates a stacking context and a
+   * containing block for fixed descendants on every un-rotated frame. */
+  max-width: var(--frame-max, none);
+}
+[data-ui="browser-frame"][data-rotated] {
+  transform: rotate(var(--frame-rotate));
 }
 [data-ui="browser-frame"][data-elevation="sm"] {
   box-shadow: var(--shadow-sm);

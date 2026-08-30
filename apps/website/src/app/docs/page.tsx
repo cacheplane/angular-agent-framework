@@ -162,7 +162,7 @@ function LogoChip({ src }: { src: string }) {
 }
 
 function GlyphChip({ size, children }: { size: number; children: ReactNode }) {
-  return <span className="docs-index-glyph-chip" style={{ width: size, height: size }}>{children}</span>;
+  return <span className="docs-index-glyph-chip" style={{ '--glyph-size': `${size}px` } as React.CSSProperties}>{children}</span>;
 }
 
 export default function DocsLandingPage() {

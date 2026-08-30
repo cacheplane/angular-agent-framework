@@ -506,6 +506,8 @@
 /* mdx — Card / CardGroup */
 .mdx-card-group {
   display: grid;
+  /* --card-min is set inline from the unbounded `cols` prop. */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--card-min)), 1fr));
   gap: 14px;
   margin-top: 16px;
   margin-bottom: 20px;

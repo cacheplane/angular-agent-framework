@@ -232,6 +232,9 @@
 /* GlyphChip's width/height come from a `size: number` prop (unbounded) and
  * stay inline; everything else in glyphChipStyle moves here. */
 .docs-index-glyph-chip {
+  /* --glyph-size is set inline per instance (unbounded numeric prop). */
+  width: var(--glyph-size);
+  height: var(--glyph-size);
   border-radius: var(--radius-md);
   background: var(--color-accent-surface);
   border: 1px solid var(--color-accent-border);
@@ -1408,4 +1411,14 @@
   justify-content: center;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+/* Per-page accent color, set inline as --accent (unbounded prop — the
+ * lint-guard escape hatch). The compound selector matches the Eyebrow tone
+ * rules' 0-2-0 specificity ([data-ui="eyebrow"][data-tone=…] in ui.css) and
+ * wins the tie because pages.css imports after ui.css — the inline color it
+ * replaces used to outrank everything. */
+[data-accent-text],
+[data-ui='eyebrow'][data-accent-text] {
+  color: var(--accent);
 }

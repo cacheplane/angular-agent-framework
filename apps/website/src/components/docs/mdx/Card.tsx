@@ -5,9 +5,7 @@ export function CardGroup({ cols = 2, children }: { cols?: number; children: Rea
   return (
     <div
       className="mdx-card-group"
-      style={{
-        gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, ${100 / cols - 2}%), 1fr))`,
-      }}
+      style={{ '--card-min': `${100 / cols - 2}%` } as React.CSSProperties}
     >
       {children}
     </div>
