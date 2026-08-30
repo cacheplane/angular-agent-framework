@@ -85,11 +85,18 @@ export function AnnouncementToast() {
   if (!visible) return null;
 
   return (
+    // Non-modal dialog, not role="alert": an alert/live region must not hold
+    // interactive content (the CTA button and email form live here), and
+    // assertive announcement of a marketing prompt is hostile. Focus is never
+    // stolen on entry; Escape dismisses once focus is inside.
     <div
-      role="alert"
-      aria-live="polite"
+      role="dialog"
+      aria-labelledby="toast-title"
       className="toast-root"
       data-mounted={mounted || undefined}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') dismiss();
+      }}
     >
       {/* Dismiss button */}
       <button
@@ -106,7 +113,7 @@ export function AnnouncementToast() {
       </p>
 
       {/* Title */}
-      <p className="toast-title">
+      <p id="toast-title" className="toast-title">
         From Prototype to Production
       </p>
 
@@ -184,7 +191,8 @@ export function AnnouncementToast() {
 
       {step === 'sent' && (
         <div className="toast-mt-section">
-          <p className="toast-success-text">
+          {/* role=status: the step swap is announced without stealing focus. */}
+          <p role="status" className="toast-success-text">
             ✓ Check your inbox — the guide is on its way!
           </p>
         </div>
