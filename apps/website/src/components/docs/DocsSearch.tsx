@@ -60,6 +60,9 @@ export function DocsSearch({ library }: { library?: LibraryId }) {
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const restoreRef = useRef<HTMLElement | null>(null);
+  const listboxId = 'docs-search-listbox';
   const router = useRouter();
 
   const results = query.length > 0
@@ -80,12 +83,23 @@ export function DocsSearch({ library }: { library?: LibraryId }) {
   }, [handleKeyDown]);
 
   useEffect(() => {
-    if (open) {
-      setQuery('');
-      setSelected(0);
-      setTimeout(() => inputRef.current?.focus(), 50);
-    }
+    if (!open) return undefined;
+    // Dialog pattern: remember where focus came from, restore it on close.
+    restoreRef.current = document.activeElement as HTMLElement | null;
+    setQuery('');
+    setSelected(0);
+    setTimeout(() => inputRef.current?.focus(), 50);
+    return () => restoreRef.current?.focus();
   }, [open]);
+
+  // Keep the keyboard-selected option in view (findings §7 — it scrolled
+  // out of the 320px results box).
+  useEffect(() => {
+    if (!open) return;
+    listRef.current
+      ?.querySelector('[aria-selected="true"]')
+      ?.scrollIntoView({ block: 'nearest' });
+  }, [open, selected]);
 
   const navigate = (page: SearchablePage) => {
     track(analyticsEvents.docsSearchResultClick, {
@@ -103,6 +117,10 @@ export function DocsSearch({ library }: { library?: LibraryId }) {
     if (e.key === 'ArrowDown') { e.preventDefault(); setSelected((s) => Math.min(s + 1, results.length - 1)); }
     if (e.key === 'ArrowUp') { e.preventDefault(); setSelected((s) => Math.max(s - 1, 0)); }
     if (e.key === 'Enter' && results[selected]) { navigate(results[selected]); }
+    // Focus trap: the combobox input is the dialog's only tab stop (options
+    // are reached with the arrow keys), so Tab must not escape to the page
+    // behind the modal.
+    if (e.key === 'Tab') e.preventDefault();
   };
 
   if (!open) return null;
@@ -110,6 +128,9 @@ export function DocsSearch({ library }: { library?: LibraryId }) {
   return (
     <div className="docs-search-overlay" onClick={() => setOpen(false)}>
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Search documentation"
         onClick={(e) => e.stopPropagation()}
         className="docs-search-modal">
         <div className="docs-search-input-wrap">
@@ -129,13 +150,21 @@ export function DocsSearch({ library }: { library?: LibraryId }) {
             }}
             onKeyDown={handleInputKeyDown}
             placeholder="Search documentation..."
+            role="combobox"
+            aria-expanded={results.length > 0}
+            aria-controls={listboxId}
+            aria-activedescendant={results[selected] ? `docs-search-opt-${selected}` : undefined}
             className="docs-search-input"
           />
         </div>
-        <div className="docs-search-results">
+        <div className="docs-search-results" ref={listRef} id={listboxId} role="listbox" aria-label="Search results">
           {results.map((page, i) => (
             <button
               key={page.href}
+              id={`docs-search-opt-${i}`}
+              role="option"
+              aria-selected={i === selected}
+              tabIndex={-1}
               onClick={() => navigate(page)}
               className="w-full text-left docs-search-result"
               data-selected={i === selected || undefined}>

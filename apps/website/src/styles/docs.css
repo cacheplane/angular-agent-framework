@@ -345,12 +345,15 @@
   color: var(--color-accent);
 }
 @media (max-width: 768px) {
-  /* On narrow viewports, drop the absolute positioning so the hash doesn't overlap the page edge. */
+  /* On narrow viewports the absolute-positioned hash would overlap the page
+   * edge — and display:none left phones with NO way to copy a deep link
+   * (findings §6). Inline after the heading, faintly visible: touch has no
+   * hover to reveal it. */
   .docs-prose h2 .heading-anchor,
   .docs-prose h3 .heading-anchor {
     position: static;
-    margin-right: 6px;
-    display: none;
+    margin-left: 8px;
+    opacity: 0.35;
   }
 }
 
@@ -1489,4 +1492,61 @@
   font-size: 16px;
   font-weight: 600;
   color: var(--color-accent);
+}
+
+/* Docs a11y — polish arc PR 3 (findings §6, §7). */
+
+/* One focus ring for the docs chrome. Buttons and links that had no
+ * :focus-visible affordance at all. */
+[data-docs-navlink]:focus-visible,
+.docs-crumb-link:focus-visible,
+.docs-toc-link:focus-visible,
+.docs-sidebar-search-trigger:focus-visible,
+.docs-sidebar-lib-trigger:focus-visible,
+.docs-sidebar-lib-item:focus-visible,
+.docs-sidebar-section-toggle:focus-visible,
+.docs-sidebar-demo-link:focus-visible,
+.docs-page-actions-trigger:focus-visible,
+.docs-page-actions-item:focus-visible,
+.docs-search-result:focus-visible,
+.mdx-tab-button:focus-visible,
+.mdx-pre-copy:focus-visible,
+.heading-anchor:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+  border-radius: var(--radius-sm);
+}
+
+/* Menu items had no hover or focus state at all. */
+.docs-page-actions-item:hover,
+.docs-page-actions-item:focus-visible {
+  background: var(--color-surface-dim);
+}
+
+/* 44px minimum touch targets (WCAG 2.5.8) without visual growth: the
+ * trigger is 32px and the code-copy button 28px; an inset pseudo expands
+ * the hit area only. */
+.docs-page-actions-trigger,
+.mdx-pre-copy {
+  position: relative;
+}
+.docs-page-actions-trigger::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+}
+.mdx-pre-copy::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+}
+
+/* The tab bar scrolls sideways instead of wrapping or clipping on narrow
+ * screens. */
+.mdx-tabs-bar {
+  overflow-x: auto;
+}
+.mdx-tab-button {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
