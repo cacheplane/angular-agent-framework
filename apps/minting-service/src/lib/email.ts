@@ -28,12 +28,17 @@ export interface RenderedEmail {
   html: string;
 }
 
+function publicTierName(tier: MintableTier): string {
+  return tier === 'developer_seat' ? 'Pro' : 'Team';
+}
+
 /**
  * Pure: render the subject / text / html for a license delivery email.
  */
 export function renderLicenseEmail(vars: LicenseEmailVars): RenderedEmail {
   const seatWord = vars.seats === 1 ? 'seat' : 'seats';
-  const subject = `Your Threadplane license — ${vars.tier} (${vars.seats} ${seatWord})`;
+  const planName = publicTierName(vars.tier);
+  const subject = `Your Threadplane ${planName} license — ${vars.seats} ${seatWord}`;
   const expiresIso = vars.expiresAt.toISOString();
 
   const portal = portalUrl(vars.stripeCustomerId);
@@ -47,7 +52,7 @@ the link at the bottom of this email.
 ${vars.token}
 -----END THREADPLANE LICENSE-----
 
-Tier: ${vars.tier}
+Plan: ${planName}
 Seats: ${vars.seats}
 Expires: ${expiresIso}
 
@@ -72,7 +77,7 @@ Questions: reply to this email.
 <pre style="white-space:pre-wrap;word-break:break-all;font-family:monospace;font-size:12px;background:#f4f4f4;padding:12px;border-radius:4px">-----BEGIN THREADPLANE LICENSE-----
 ${escapeHtml(vars.token)}
 -----END THREADPLANE LICENSE-----</pre>
-<p><strong>Tier:</strong> ${escapeHtml(vars.tier)}<br>
+<p><strong>Plan:</strong> ${escapeHtml(planName)}<br>
 <strong>Seats:</strong> ${vars.seats}<br>
 <strong>Expires:</strong> ${escapeHtml(expiresIso)}</p>
 <p><strong>Installation:</strong></p>
@@ -131,20 +136,20 @@ export interface RevocationEmailVars {
 
 export function renderRevocationEmail(vars: RevocationEmailVars): RenderedEmail {
   const subject = `Your Threadplane license has been revoked`;
+  const planName = publicTierName(vars.tier);
 
-  const text = `Your Threadplane ${vars.tier} license has been revoked because the
-underlying payment was refunded.
+  const text = `Your Threadplane ${planName} license has been marked revoked in Threadplane records because the underlying payment was refunded.
 
-The token previously delivered will fail signature checks at boot and
-@threadplane/chat will fall back to a noncommercial-use warning.
+Runtime verification remains offline and does not make a revocation lookup.
+Continued use must remain within the applicable license terms.
 
 If you believe this is in error, reply to this email.
 
 -- The Threadplane team
 `;
 
-  const html = `<p>Your Threadplane <strong>${escapeHtml(vars.tier)}</strong> license has been revoked because the underlying payment was refunded.</p>
-<p>The token previously delivered will fail signature checks at boot and <code>@threadplane/chat</code> will fall back to a noncommercial-use warning.</p>
+  const html = `<p>Your Threadplane <strong>${escapeHtml(planName)}</strong> license has been marked revoked in Threadplane records because the underlying payment was refunded.</p>
+<p>Runtime verification remains offline and does not make a revocation lookup. Continued use must remain within the applicable license terms.</p>
 <p>If you believe this is in error, reply to this email.</p>
 <p>-- The Threadplane team</p>
 `;

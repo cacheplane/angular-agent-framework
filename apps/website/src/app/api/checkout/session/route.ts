@@ -68,7 +68,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Tier missing from config' }, { status: 500 });
   }
 
-  const rawQuantity = body.quantity ?? tierConfig.defaultQuantity ?? 1;
+  const rawQuantity = tierConfig.adjustableQuantity
+    ? (body.quantity ?? tierConfig.defaultQuantity ?? 1)
+    : (tierConfig.defaultQuantity ?? 1);
   const quantity = Math.max(1, Math.min(100, Math.floor(rawQuantity)));
 
   const origin = getOrigin(req);

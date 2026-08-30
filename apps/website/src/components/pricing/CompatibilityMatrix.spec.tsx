@@ -16,4 +16,11 @@ describe('CompatibilityMatrix', () => {
     expect(screen.getByText(/Unsupported/)).toBeTruthy();
     expect(screen.getByText(/≤19/)).toBeTruthy();
   });
+
+  it('uses semantic column and row headers', () => {
+    render(<CompatibilityMatrix />);
+    expect(screen.getByRole('columnheader', { name: 'Status' }).getAttribute('scope')).toBe('col');
+    expect(screen.getByRole('columnheader', { name: 'Angular versions' }).getAttribute('scope')).toBe('col');
+    expect(screen.getByRole('rowheader', { name: 'Supported' }).getAttribute('scope')).toBe('row');
+  });
 });

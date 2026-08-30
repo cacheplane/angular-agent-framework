@@ -300,9 +300,13 @@ The full token vocabulary (`--a2ui-primary`, `--a2ui-spacing-1..7`, `--a2ui-typo
 Chat compositions consume the runtime-neutral `Agent` contract. Two adapters ship today:
 
 - **`@threadplane/langgraph`** — for LangGraph / LangGraph Platform backends.
-- **`@threadplane/ag-ui`** — for AG-UI-compatible backends (LangGraph, CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime).
+- **`@threadplane/ag-ui`** — for AG-UI-compatible backends such as LangGraph, CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, and AWS Strands.
 
 Custom backends implement the `Agent` (or `AgentWithHistory`) interface directly with no library dependency.
+
+Threadplane does not host agents, conversations, models, or storage. Thread, history, branching, and reload
+surfaces use the connected adapter contracts; durable storage, checkpointing, retention, authorization, and
+cross-device persistence depend on the backend and infrastructure you operate.
 
 ---
 
@@ -320,7 +324,8 @@ See [COMMERCIAL-USE.md](./COMMERCIAL-USE.md) for the definition of commercial us
 
 ## Using a commercial license
 
-After purchase, Threadplane emails a signed license token to the address on your receipt. The license is valid for 12 months. Pass the token to `provideChat()`:
+After purchase, Threadplane emails a signed license token to the address on your receipt. The token is valid
+through the current paid subscription period and is reissued after renewal. Pass the token to `provideChat()`:
 
 ```typescript
 // app.config.ts

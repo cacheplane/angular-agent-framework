@@ -20,10 +20,10 @@ export function CompatibilityMatrix() {
       <table className="compat-matrix-table">
         <thead>
           <tr className="compat-matrix-head-row">
-            <th className="compat-matrix-th">
+            <th scope="col" className="compat-matrix-th">
               Status
             </th>
-            <th className="compat-matrix-th">
+            <th scope="col" className="compat-matrix-th">
               Angular versions
             </th>
           </tr>
@@ -31,9 +31,9 @@ export function CompatibilityMatrix() {
         <tbody>
           {ROWS.map((row) => (
             <tr key={row.label}>
-              <td className="compat-matrix-td-label" data-tone={row.tone}>
+              <th scope="row" className="compat-matrix-td-label" data-tone={row.tone}>
                 {row.label}
-              </td>
+              </th>
               <td className="compat-matrix-td-versions">
                 {row.versions}
               </td>

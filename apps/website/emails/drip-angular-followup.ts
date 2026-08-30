@@ -33,16 +33,16 @@ export function dripAngularFollowupHtml(day: number): { subject: string; html: s
 
   if (day === 10) {
     return {
-      subject: 'The pilot program includes hands-on integration',
+      subject: 'An optional eight-week path from pilot to production',
       html: wrapEmail({
         body: `
           <p style="font-size:11px;font-family:monospace;text-transform:uppercase;letter-spacing:0.08em;color:#004090;font-weight:700;margin:0 0 8px">Pilot Program</p>
-          <p style="font-size:20px;font-weight:700;color:#1a1a2e;margin:0 0 14px;line-height:1.3">The pilot program includes hands-on integration</p>
-          <p style="font-size:14px;color:#555770;line-height:1.7;margin:0 0 14px">Every app deployment license includes a <strong>3-month co-pilot engagement</strong> — we work alongside your Angular team to ship your first agent to production.</p>
+          <p style="font-size:20px;font-weight:700;color:#1a1a2e;margin:0 0 14px;line-height:1.3">An optional eight-week path from pilot to production</p>
+          <p style="font-size:14px;color:#555770;line-height:1.7;margin:0 0 14px">Pilot-to-Prod is a separately scoped <strong>eight-week engineering engagement</strong> for teams that want hands-on help shipping their first agent to production.</p>
           <div style="background:#f8f9fc;border-radius:8px;padding:16px 18px;margin:0 0 24px;border:1px solid rgba(0,64,144,0.08)">
             <p style="font-size:13px;color:#555770;margin:0 0 4px;line-height:1.6"><strong style="color:#004090">Week 1</strong> · Integration &amp; first stream</p>
             <p style="font-size:13px;color:#555770;margin:0 0 4px;line-height:1.6"><strong style="color:#004090">Month 1</strong> · First agent in staging</p>
-            <p style="font-size:13px;color:#555770;margin:0;line-height:1.6"><strong style="color:#004090">Month 3</strong> · Production deployment</p>
+            <p style="font-size:13px;color:#555770;margin:0;line-height:1.6"><strong style="color:#004090">Week 8</strong> · Production readiness</p>
           </div>
           <a href="https://threadplane.ai/pilot-to-prod" style="display:inline-block;background-color:#004090;color:#fff;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none">Learn About the Pilot →</a>
         `,

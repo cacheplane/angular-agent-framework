@@ -13,7 +13,7 @@ import { createPageMetadata } from '../../lib/site-metadata';
 
 export const metadata = createPageMetadata({
   title: 'Pilot to Production — Threadplane',
-  description: 'Close the last-mile gap. The 3-month pilot engagement is included with every app deployment license. We work alongside your Angular team to ship your first agent to production.',
+  description: 'An optionally scoped eight-week concierge engagement for Angular teams shipping an agent into production with their own runtime, data, and infrastructure.',
   pathname: '/pilot-to-prod',
   type: 'website',
 });

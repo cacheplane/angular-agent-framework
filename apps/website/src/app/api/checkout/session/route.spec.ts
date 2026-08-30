@@ -80,6 +80,13 @@ describe('POST /api/checkout/session', () => {
     expect(args.line_items[0].adjustable_quantity).toEqual({ enabled: true, minimum: 1, maximum: 100 });
   });
 
+  it('keeps Team checkout to one fixed five-developer bundle', async () => {
+    await POST(makeReq({ tier: 'team', quantity: 7 }));
+    const args = stripeCreate.mock.calls[0]?.[0];
+    expect(args.line_items[0].quantity).toBe(1);
+    expect(args.line_items[0].adjustable_quantity).toBeUndefined();
+  });
+
   it('clamps quantity to [1, 100]', async () => {
     await POST(makeReq({ tier: 'developer_seat', quantity: 9999 }));
     expect(stripeCreate.mock.calls[0]?.[0].line_items[0].quantity).toBe(100);

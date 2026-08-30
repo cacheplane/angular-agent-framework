@@ -10,22 +10,22 @@ import { Card } from '../ui/Card';
 
 const VALUE_PROPS = [
   {
-    title: 'Threadplane Commercial license',
-    body: 'Multi-app coverage, unlimited developers, custom contract — built for procurement.',
+    title: 'Enterprise commercial license',
+    body: 'Custom or organization-wide developer coverage, multi-application scope, and contract terms built for procurement.',
   },
   {
     title: 'SLA + security review',
     body: 'Response SLAs, security questionnaires, and a private support channel.',
   },
   {
-    title: 'Pilot-to-Prod engagement',
-    body: '8-week concierge delivery. We ship your first Angular agent on your real data, in your real app — and your engineers own it at the end.',
+    title: 'Optional Pilot-to-Prod engagement',
+    body: 'Separately scoped eight-week concierge delivery for teams that want guided implementation alongside their license.',
     highlight: true,
     link: { href: '/pilot-to-prod', label: 'See how Pilot-to-Prod works →' },
   },
   {
     title: 'Procurement support',
-    body: 'Master services agreement, security review, custom indemnification — handled by humans, not portals.',
+    body: 'Master services agreement where applicable, security review, and custom indemnification where contractually agreed.',
   },
 ];
 
@@ -79,10 +79,10 @@ export function LeadForm() {
           <div className="lead-form-header">
             <Eyebrow tone="accent" className="lead-form-eyebrow">Enterprise</Eyebrow>
             <h2 id="lead-form-heading" className="lead-form-heading">
-              Built for procurement.<br />Backed by delivery.
+              Choose the license.<br />Add delivery if you need it.
             </h2>
             <p className="lead-form-subhead">
-              Volume licensing, custom contract, and optional concierge delivery — so your first Angular agent ships, not just compiles.
+              Enterprise licensing and Pilot-to-Prod are separate choices. Request license-only terms or ask us to scope the optional eight-week engagement.
             </p>
           </div>
 

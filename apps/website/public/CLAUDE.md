@@ -1,6 +1,12 @@
-# Threadplane v0.0.56
+# Threadplane v0.0.61
 
-Production-ready chat, durable threads, interrupts, subagents, planning, memory, and generative UI for Angular agent apps.
+Production-ready chat, thread/history/branch UI, interrupts, subagents, planning, memory, and generative UI for Angular agent apps.
+
+## Licensing and deployment boundary
+- Most Threadplane packages are MIT-licensed and free for any use.
+- `@threadplane/chat` is source-available under PolyForm Noncommercial 1.0.0, includes a good-faith 30-day commercial evaluation, and requires a Threadplane Commercial license for commercial production.
+- Threadplane runs inside the customer's Angular application. Agent runtime, models, storage, checkpointing, retention, authorization, and hosting remain customer-operated.
+- License-token verification is offline and advisory; it makes no runtime call to Threadplane and never blocks rendering.
 
 ## Install
 npm install @threadplane/chat @threadplane/langgraph @langchain/core @langchain/langgraph-sdk marked
@@ -34,7 +40,7 @@ export class ChatComponent {
 ```
 
 ## Key patterns
-- Thread persistence: configure `provideAgent({ assistantId, threadId: signal(localStorage.getItem('t')), onThreadId })`
+- Thread selection: configure `provideAgent({ assistantId, threadId: signal(localStorage.getItem('t')), onThreadId })`; actual durability and cross-device persistence depend on the connected runtime and persistence layer
 - Global config: `provideAgent({ apiUrl, assistantId })` in app.config.ts
 - Scoped config: re-provide `provideAgent({ apiUrl, assistantId })` in a component `providers` array for a subtree
 - Testing: use `MockAgentTransport` — never mock `injectAgent()` itself

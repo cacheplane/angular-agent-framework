@@ -47,6 +47,12 @@ export default function LicensingPage() {
               for production use inside a for-profit context. The same source ships under both — you don't get a
               different build.
             </p>
+            <p className="licensing-body">
+              Threadplane does not provide a hosted cloud runtime, conversation database, model inference, or
+              usage bundle. Your application connects to the agent runtime, models, storage, and infrastructure
+              you operate. Thread, history, branching, and reload UI depend on the capabilities and persistence
+              supplied by that connected backend.
+            </p>
 
             <h3 className="licensing-h3">Do you need a paid license?</h3>
             <p className="licensing-body">
@@ -111,7 +117,8 @@ export const appConfig: ApplicationConfig = {
             <h2 className="licensing-h2">Tier scoping</h2>
             <p className="licensing-body">
               Pick the tier that matches how you'll deploy. All paid tiers grant the same{' '}
-              Threadplane Commercial license; the difference is the scope of use and the number of seats.
+              Threadplane Commercial license; they differ in scope, included developer seats, support, and
+              contracting options.
             </p>
             <div className="licensing-table-scroll">
               <table className="licensing-table">
@@ -124,9 +131,9 @@ export const appConfig: ApplicationConfig = {
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="licensing-cell"><strong className="licensing-strong">Developer Seat</strong> — $29/dev/mo or $299/dev/yr</td>
+                    <td className="licensing-cell"><strong className="licensing-strong">Pro</strong> — $29/developer/month or $299/developer/year</td>
                     <td className="licensing-cell">Per seat</td>
-                    <td className="licensing-cell">Solo devs, growing teams</td>
+                    <td className="licensing-cell">Solo developers and teams purchasing seats individually</td>
                   </tr>
                   <tr>
                     <td className="licensing-cell"><strong className="licensing-strong">Team</strong> — $149/mo or $1,495/yr</td>
@@ -136,14 +143,16 @@ export const appConfig: ApplicationConfig = {
                   <tr>
                     <td className="licensing-cell"><strong className="licensing-strong">Enterprise</strong> — from $4,000/mo</td>
                     <td className="licensing-cell">Custom</td>
-                    <td className="licensing-cell">SLA, security review, Pilot-to-Prod engagement, Slack Connect</td>
+                    <td className="licensing-cell">Custom terms, SLA, security review, procurement, and private support</td>
                   </tr>
                 </tbody>
               </table>
             </div>
             <p className="licensing-body licensing-footnote">
-              Paid tiers are recurring subscriptions. Annual saves ~15% vs monthly. Cancel anytime — the license
-              stays valid through the end of the current paid period.
+              Paid tiers are recurring subscriptions. Pro saves $49 per developer per year (about 14%) and Team
+              saves $293 per year (about 16%) when billed annually. Cancel anytime — the license stays valid
+              through the end of the current paid period. Pilot-to-Prod is available as a separately scoped
+              eight-week engagement; it is not included automatically with a license.
             </p>
           </div>
         </Container>
@@ -163,9 +172,10 @@ export const appConfig: ApplicationConfig = {
 
             <h2 className="licensing-h2 licensing-h2-spaced">Refunds</h2>
             <p className="licensing-body">
-              If you refund a license through Stripe, the token is revoked automatically and we email a confirmation.
-              The verification check warns on boot. There's no clawback of the source code you already have —
-              everything is source-available under PolyForm Noncommercial by default.
+              If you refund a license through Stripe, the license is marked revoked in Threadplane records and we
+              email a confirmation. Runtime token verification remains offline and does not make a revocation
+              lookup. There is no clawback of source code already received; continued use must remain within the
+              applicable license terms.
             </p>
 
             <h2 className="licensing-h2 licensing-h2-spaced">Questions</h2>

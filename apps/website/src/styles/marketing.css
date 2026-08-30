@@ -9,11 +9,18 @@
  * Migration: docs/superpowers/plans/2026-08-29-inline-style-substrate-migration.md
  */
 
-/* CompareTable — components/pricing/CompareTable.tsx */
-.pricing-billing-toggle-wrap {
+/* Pricing plans and comparison */
+.pricing-plans-section {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 32px 24px 88px;
+}
+.pricing-billing-fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0 0 32px;
   display: flex;
   justify-content: center;
-  margin-bottom: 32px;
 }
 .pricing-billing-toggle {
   display: inline-flex;
@@ -24,11 +31,11 @@
   gap: 4px;
 }
 .pricing-billing-tab {
+  position: relative;
   font-family: var(--font-inter);
   font-size: 13px;
   font-weight: 600;
   padding: 8px 16px;
-  border: none;
   cursor: pointer;
   transition: background 150ms ease, color 150ms ease;
   background: transparent;
@@ -39,172 +46,357 @@
   background: var(--color-accent);
   color: #fff;
 }
-.pricing-compare-scroll {
-  overflow-x: auto;
+.pricing-billing-tab:has(input:focus-visible) {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
-.pricing-compare-box {
-  background: var(--color-surface);
+.pricing-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+.pricing-plan-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 26px 22px 22px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  overflow: hidden;
-  min-width: 960px;
-}
-.pricing-compare-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: var(--font-inter);
-  font-size: 14px;
-}
-.pricing-compare-th-label {
-  text-align: left;
-  padding: 20px 18px 14px;
-  color: var(--color-text-muted);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-weight: 600;
-  width: 22%;
   background: var(--color-surface);
 }
-.pricing-compare-th-tier {
-  text-align: center;
-  padding: 20px 14px 14px;
-  background: var(--color-surface);
-  position: relative;
-}
-.pricing-compare-th-tier[data-highlight] {
+.pricing-plan-card[data-highlight] {
+  border-color: var(--color-accent);
   background: var(--color-surface-tinted);
+  box-shadow: 0 0 0 1px var(--color-accent);
 }
-.pricing-compare-badge {
+.pricing-plan-popular {
   position: absolute;
-  top: 6px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 0;
+  right: 20px;
+  transform: translateY(-50%);
   background: var(--color-accent);
   color: #fff;
   font-family: var(--font-inter);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  padding: 2px 8px;
-  border-radius: 999px;
-  white-space: nowrap;
-}
-.pricing-compare-tier-name {
-  font-family: var(--font-inter);
-  color: var(--color-accent);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  margin-top: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
 }
-.pricing-compare-tier-name[data-highlight] {
-  margin-top: 12px;
+.pricing-plan-stage-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 24px;
+  margin-bottom: 14px;
 }
-.pricing-compare-price-label-th {
-  text-align: left;
-  padding: 0 18px 20px;
-  color: var(--color-text-primary);
+.pricing-plan-stage {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+.pricing-plan-journey {
   font-family: var(--font-inter);
-  font-size: 13px;
-  font-weight: 600;
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-align: right;
 }
-.pricing-compare-price-th {
-  text-align: center;
-  padding: 0 14px 20px;
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
+.pricing-plan-name {
+  margin: 0 0 18px;
+  font-family: var(--font-garamond);
+  font-size: 34px;
+  line-height: 1;
+  color: var(--color-text-primary);
 }
-.pricing-compare-price-th[data-highlight] {
-  background: var(--color-surface-tinted);
+.pricing-plan-price-block {
+  min-height: 126px;
 }
-.pricing-compare-price-row {
+.pricing-plan-price {
   display: flex;
   align-items: baseline;
-  justify-content: center;
-  gap: 4px;
+  gap: 6px;
+  flex-wrap: wrap;
 }
-.pricing-compare-price-amount {
+.pricing-plan-price-amount {
   font-family: var(--font-garamond);
   font-weight: 700;
-  font-size: 28px;
+  font-size: 30px;
   color: var(--color-text-primary);
   line-height: 1;
 }
-.pricing-compare-price-period {
+.pricing-plan-price-period {
   font-family: var(--font-inter);
-  font-size: 12px;
+  font-size: 11px;
   color: var(--color-text-muted);
 }
-.pricing-compare-spacer-label-th {
-  padding: 0 18px 12px;
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
+.pricing-plan-price-qualifier,
+.pricing-plan-billing-note,
+.pricing-plan-additional-qualifier {
+  font-family: var(--font-inter);
+  line-height: 1.45;
 }
-.pricing-compare-spacer-th {
-  padding: 0 14px 12px;
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-}
-.pricing-compare-spacer-th[data-highlight] {
-  background: var(--color-surface-tinted);
-}
-.pricing-compare-row {
-  border-bottom: 1px solid var(--color-border);
-}
-.pricing-compare-row[data-last] {
-  border-bottom: none;
-}
-.pricing-compare-td-label {
-  padding: 14px 18px;
+.pricing-plan-price-qualifier {
+  margin: 10px 0 0;
   color: var(--color-text-primary);
-  font-family: var(--font-inter);
   font-size: 13px;
-  font-weight: 500;
-}
-.pricing-compare-td {
-  padding: 14px 14px;
-  text-align: center;
-  font-family: var(--font-inter);
-  font-size: 13px;
-  background: transparent;
-}
-.pricing-compare-td[data-highlight] {
-  background: var(--color-surface-tinted);
-}
-.pricing-compare-check {
-  color: var(--color-accent);
   font-weight: 700;
 }
-.pricing-compare-dash {
+.pricing-plan-billing-note {
+  margin: 5px 0 0;
   color: var(--color-text-muted);
+  font-size: 11px;
 }
-.pricing-compare-cell-text {
+.pricing-plan-additional-qualifier {
+  margin: 7px 0 0;
+  color: var(--color-accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+.pricing-plan-description {
+  margin: 6px 0 20px;
+  min-height: 88px;
+  color: var(--color-text-secondary);
+  font-family: var(--font-inter);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.pricing-plan-feature-list {
+  list-style: none;
+  padding: 18px 0 0;
+  margin: 0;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+.pricing-plan-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-family: var(--font-inter);
+  font-size: 12px;
+  line-height: 1.45;
   color: var(--color-text-secondary);
 }
+.pricing-plan-feature-mark {
+  flex: 0 0 auto;
+  color: var(--color-accent);
+  font-weight: 800;
+}
+.pricing-plan-action {
+  margin-top: auto;
+  padding-top: 24px;
+}
+.pricing-plan-form,
 .pricing-plan-btn {
   width: 100%;
 }
-.pricing-compare-cta-cell {
-  padding: 0 14px;
-  display: flex;
-  justify-content: center;
+.pricing-section-heading-wrap {
+  max-width: 760px;
+  margin-bottom: 36px;
 }
-.pricing-compare-cta-btn-wrap {
-  width: 100%;
-  max-width: 220px;
+.pricing-section-kicker {
+  margin: 0 0 10px;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
 }
-.pricing-compare-section {
-  max-width: 1280px;
+.pricing-section-heading {
+  margin: 0 0 14px;
+  color: var(--color-text-primary);
+  font-family: var(--font-garamond);
+  font-size: clamp(30px, 4vw, 44px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+.pricing-section-body {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-family: var(--font-inter);
+  font-size: 16px;
+  line-height: 1.65;
+}
+.pricing-boundary,
+.pricing-comparison {
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 32px 24px;
 }
-.pricing-compare-spacer {
-  height: 56px;
+.pricing-boundary-flow {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1.35fr;
+  gap: 14px;
+  align-items: center;
+}
+.pricing-boundary-block {
+  min-height: 132px;
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  color: var(--color-text-primary);
+  font-family: var(--font-inter);
+  line-height: 1.4;
+}
+.pricing-boundary-block[data-accent] {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent);
+}
+.pricing-boundary-label {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.pricing-boundary-arrow {
+  color: var(--color-accent);
+  font-size: 22px;
+  font-weight: 700;
+}
+.pricing-boundary-note {
+  margin: 24px 0 0;
+  padding: 18px 20px;
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-family: var(--font-inter);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.pricing-comparison-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+.pricing-comparison-table {
+  width: 100%;
+  min-width: 1060px;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: var(--color-text-secondary);
+  font-family: var(--font-inter);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.pricing-comparison-table th,
+.pricing-comparison-table td {
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+}
+.pricing-comparison-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  font-size: 13px;
+  text-align: left;
+}
+.pricing-comparison-feature-col {
+  width: 27%;
+  left: 0;
+  z-index: 3 !important;
+}
+.pricing-comparison-plan-col {
+  width: 18.25%;
+}
+.pricing-comparison-plan-col[data-highlight],
+.pricing-comparison-table td[data-highlight] {
+  background: var(--color-surface-tinted);
+}
+.pricing-comparison-popular {
+  display: block;
+  margin-top: 3px;
+  color: var(--color-accent);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.pricing-comparison-group-row th {
+  padding-top: 20px;
+  color: var(--color-accent);
+  background: var(--color-surface-tinted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-align: left;
+  text-transform: uppercase;
+}
+.pricing-comparison-row-heading {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  font-weight: 600;
+  text-align: left;
+}
+.pricing-comparison-row-note {
+  display: block;
+  margin-top: 5px;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  font-weight: 400;
+}
+.pricing-comparison-table tbody:last-child tr:last-child th,
+.pricing-comparison-table tbody:last-child tr:last-child td {
+  border-bottom: 0;
+}
+
+@media (max-width: 1100px) {
+  .pricing-plan-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px 16px;
+  }
+  .pricing-plan-description {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .pricing-plans-section {
+    padding: 24px 16px 64px;
+  }
+  .pricing-plan-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pricing-plan-price-block {
+    min-height: 0;
+  }
+  .pricing-boundary-flow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pricing-boundary-arrow {
+    transform: rotate(90deg);
+    justify-self: center;
+  }
+  .pricing-billing-tab {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pricing-billing-tab {
+    transition: none;
+  }
 }
 
 /* LeadForm — components/pricing/LeadForm.tsx */
@@ -403,6 +595,7 @@
   border-bottom: 1px solid var(--color-border);
 }
 .compat-matrix-td-label {
+  text-align: left;
   padding: 12px 16px;
   font-size: var(--text-body);
   font-weight: 500;
@@ -743,16 +936,6 @@
   font-size: 14px;
 }
 
-/* CompareTable CTA strip (lint-guard follow-up): static box moved here;
- * --cta-cols is set inline from the tier config. */
-.pricing-cta-strip {
-  min-width: 960px;
-  margin: 24px 0 0;
-  display: grid;
-  grid-template-columns: var(--cta-cols);
-  gap: 0;
-  align-items: start;
-}
 .sol-code-eyebrow {
   margin-bottom: 12px;
 }
