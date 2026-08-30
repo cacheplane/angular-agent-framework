@@ -364,7 +364,7 @@
  * not this migration. */
 .docs-shell-page {
   background: var(--color-canvas);
-  padding-top: 80px;
+  padding-top: var(--nav-h);
 }
 .docs-shell-body {
   background: var(--color-surface);
@@ -410,6 +410,9 @@
   margin-top: 32px;
 }
 .about-link {
+  /* The full repo URL is one unbreakable token; without this it pushed the
+   * page 9px past a 320px viewport (findings §2). */
+  overflow-wrap: anywhere;
   color: var(--color-accent);
 }
 
@@ -1139,7 +1142,7 @@
 }
 .blog-index-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
   gap: 16px;
 }
 

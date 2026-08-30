@@ -90,7 +90,9 @@
 @keyframes blink { to { visibility: hidden; } }
 @media (max-width: 900px) {
   .hero-grid {
-    grid-template-columns: 1fr !important;
+    /* minmax(0,…): bare 1fr keeps an auto minimum, so one wide child pushed
+     * the stacked column past the viewport (findings §2). */
+    grid-template-columns: minmax(0, 1fr) !important;
     gap: 40px !important;
   }
 }
@@ -190,7 +192,7 @@
 }
 .feature-block-card-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr));
   gap: 8px;
   margin-bottom: 24px;
 }
@@ -219,7 +221,9 @@
 }
 @media (max-width: 900px) {
   .feature-block-grid {
-    grid-template-columns: 1fr !important;
+    /* minmax(0,…): bare 1fr keeps an auto minimum, so one wide child pushed
+     * the stacked column past the viewport (findings §2). */
+    grid-template-columns: minmax(0, 1fr) !important;
     gap: 32px !important;
   }
   .feature-block-grid > div {
@@ -277,6 +281,9 @@
 }
 .why-row__body {
   flex: 1;
+  /* min-width:auto refused to shrink past the nowrap primitive chip and
+   * pushed the row 52px past a 320px viewport (findings §2). */
+  min-width: 0;
   display: flex;
   gap: 16px;
   align-items: baseline;
@@ -421,8 +428,27 @@
 .wp-cover-wrap {
   display: flex;
   justify-content: center;
+  /* Grid items have min-width:auto too — without this the wrap sat at its
+   * content's 392px inside a 280px track. */
+  min-width: 0;
+}
+/* The frame is shrink-to-fit, so the cover's `100%` was indefinite and its
+ * aspect-ratio kept deriving a fixed ~392px width from content height. A
+ * definite width (capped by the frame's own inline maxWidth) lets the cover
+ * track the viewport. Scoped to the stacked breakpoint: at desktop the grid
+ * track is wider than the card, and an unconditional 100% would grow it. */
+@media (max-width: 640px) {
+  .wp-cover-wrap > [data-ui="browser-frame"] {
+    width: 100%;
+  }
 }
 .wp-cover {
+  /* aspect-ratio alone derives width from the content's height, which makes
+   * the cover a fixed ~392px regardless of container — the audit's 392px
+   * card forcing phones to clip. Pin the width; aspect-ratio then drives
+   * height, and content taller than the ratio still stretches it (min-height
+   * auto). */
+  width: min(100%, 392px);
   aspect-ratio: 8.5 / 11;
   background: linear-gradient(135deg, #fafbfc 0%, #eaf3ff 100%);
   padding: 48px 36px;
@@ -462,7 +488,9 @@
 }
 @media (max-width: 900px) {
   .wp-grid {
-    grid-template-columns: 1fr !important;
+    /* minmax(0,…): bare 1fr keeps an auto minimum, so one wide child pushed
+     * the stacked column past the viewport (findings §2). */
+    grid-template-columns: minmax(0, 1fr) !important;
     gap: 40px !important;
   }
 }
@@ -569,7 +597,9 @@
 }
 @media (max-width: 900px) {
   .pilot-block-grid {
-    grid-template-columns: 1fr !important;
+    /* minmax(0,…): bare 1fr keeps an auto minimum, so one wide child pushed
+     * the stacked column past the viewport (findings §2). */
+    grid-template-columns: minmax(0, 1fr) !important;
     gap: 40px !important;
   }
 }
@@ -662,7 +692,7 @@
 }
 .ecosystem-row-tiles {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
   gap: 10px;
 }
 [data-ui="ecosystem-tile"]:hover {
@@ -672,7 +702,9 @@
 }
 @media (max-width: 760px) {
   .ecosystem-row {
-    grid-template-columns: 1fr !important;
+    /* minmax(0,…): bare 1fr keeps an auto minimum, so one wide child pushed
+     * the stacked column past the viewport (findings §2). */
+    grid-template-columns: minmax(0, 1fr) !important;
     gap: 8px !important;
   }
   .ecosystem-row > div:first-child {
@@ -712,7 +744,7 @@
 }
 .promises-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
   gap: 16px;
   max-width: 1100px;
   margin: 0 auto;
@@ -752,7 +784,7 @@
 }
 .recent-articles-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
   gap: 16px;
 }
 .recent-articles-footer {
@@ -829,7 +861,7 @@
 /* BackendsGrid — components/landing/ag-ui/BackendsGrid.tsx */
 .backends-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr));
   gap: 10px;
   padding: 16px;
   background: var(--color-surface-tinted);

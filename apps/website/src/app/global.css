@@ -21,6 +21,8 @@
 
 html {
   overflow-x: hidden;
+  /* Anchor jumps clear the fixed nav (--nav-h defined in styles/chrome.css). */
+  scroll-padding-top: calc(var(--nav-h) + 16px);
 }
 
 body {
@@ -29,7 +31,15 @@ body {
   font-family: var(--font-inter);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
+  /* overflow-x: CLIP, never hidden. `hidden` makes <body> a scroll container
+   * and every position:sticky descendant pins against it — which never
+   * scrolls — so the docs rails were dead site-wide. `clip` clips identically
+   * but creates no scroll container, so sticky works AND the mobile layout
+   * viewport stays pinned to the device width (without any body guard,
+   * min-content overflow forces phones to zoom out — measured vw 421 on a
+   * 320 device). Real overflow sources are still fixed at the source; this
+   * is the belt, not the fix. */
+  overflow-x: clip;
 }
 
 /* Code blocks scroll internally; never expand the layout viewport. */

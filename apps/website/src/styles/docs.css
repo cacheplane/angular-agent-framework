@@ -457,6 +457,10 @@
 }
 .mdx-step-content {
   flex: 1;
+  /* flex:1 leaves min-width:auto; the item refuses to shrink below its
+   * content's min-content width and blew the quickstart pages 512px past a
+   * 320px viewport (findings §2). */
+  min-width: 0;
   padding-bottom: 8px;
 }
 .mdx-step-title {
@@ -701,9 +705,13 @@
 .docs-sidebar {
   border-right: 1px solid var(--color-border);
   background: var(--color-surface);
-  min-height: calc(100vh - 5rem);
   position: sticky;
-  top: 5rem;
+  top: var(--nav-h);
+  /* Without align-self the flex row stretches the aside to the article's full
+   * height (measured 10,030px), so its overflow-y:auto never engaged. */
+  align-self: flex-start;
+  min-height: calc(100vh - var(--nav-h));
+  max-height: calc(100vh - var(--nav-h));
 }
 .docs-sidebar-lib-trigger {
   background: var(--color-surface);
@@ -890,9 +898,9 @@
 /* DocsTOC */
 .docs-toc {
   position: sticky;
-  top: 5rem;
+  top: var(--nav-h);
   align-self: flex-start;
-  max-height: calc(100vh - 6rem);
+  max-height: calc(100vh - var(--nav-h) - 1rem);
   overflow-y: auto;
 }
 .docs-toc-label {
