@@ -304,7 +304,7 @@ requires-dist = [
     { name = "langgraph", specifier = ">=0.3" },
     { name = "langgraph-api", specifier = ">=0.8.7" },
     { name = "python-dotenv", specifier = ">=1.0" },
-    { name = "threadplane-middleware", specifier = ">=0.0.1" },
+    { name = "threadplane-middleware", specifier = ">=0.0.2" },
 ]
 
 [package.metadata.requires-dev]
@@ -1492,15 +1492,15 @@ wheels = [
 
 [[package]]
 name = "threadplane-middleware"
-version = "0.0.1"
+version = "0.0.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "langchain-core" },
     { name = "langgraph" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/01/5f/fee360e3547bede9388bb72a9ad20ca811935582b989c78dafeaae57558a/threadplane_middleware-0.0.1.tar.gz", hash = "sha256:60c931d0248ed2e701a3aa1330c6fd647e611a949500269c5ba82f3607102cef", size = 95505, upload-time = "2026-06-16T20:55:18.335Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/77/f6/4f5bce0536c584677f191223821c74d0617bde36d45640008e8adf123c79/threadplane_middleware-0.0.2.tar.gz", hash = "sha256:964925aef5cc5ed8a9a9bb1c7ea7f740ee010291b6ad0bec35f50ac3f41d9809", size = 97651, upload-time = "2026-08-30T18:35:45.87Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/72/55/28e6b752f3f53f2c5d2c2fa3ef27ac62a255a3b29376384f2dfc96d8acb0/threadplane_middleware-0.0.1-py3-none-any.whl", hash = "sha256:c14e49d506e8bd3078f54df381c150d390f2d129f844694d8f5154a2cd8710ea", size = 4315, upload-time = "2026-06-16T20:55:19.044Z" },
+    { url = "https://files.pythonhosted.org/packages/96/a4/0bc72be56ee222a15e151a8eb99decb749acf44c964ef12c240ec6a8f76f/threadplane_middleware-0.0.2-py3-none-any.whl", hash = "sha256:3bf42291b06b49f6e59eb92672fa88d9f14467a5222fec806531714d4349f17b", size = 5517, upload-time = "2026-08-30T18:35:45.074Z" },
 ]
 
 [[package]]
