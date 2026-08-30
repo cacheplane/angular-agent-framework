@@ -1,8 +1,11 @@
 # Docs visual review — findings
 
 **Date:** 2026-08-29
-**Status:** Findings captured. Fixes deferred to Project 3 of the substrate arc
-(see `2026-08-29-design-token-css-var-completion-design.md` for the decomposition).
+**Status:** RESOLVED (2026-08-30). The three-project arc completed: tokens
+(#845), substrate (#848–#858), polish (#861 structural, #863 details, #865
+a11y). Every finding below is fixed except the two explicitly deferred items:
+§10 (font unification onto next/font — a sitewide visual decision of its own)
+and the AnnouncementToast width note in §6.
 
 This is the evidence log for a visual/usability review of the docs site. Every
 item below was measured against a live dev server at 1280px, 768px, 375px, and
