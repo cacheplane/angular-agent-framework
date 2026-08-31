@@ -35,7 +35,10 @@ export function DemoShowcase() {
 
   return (
     <div className="demo-showcase">
-      <p className="demo-showcase__eyebrow">See it running</p>
+      <div className="demo-showcase__rail">
+        <p className="demo-showcase__eyebrow">See it running</p>
+        <span className="demo-showcase__rail-line" aria-hidden="true" />
+      </div>
       <h2 className="demo-showcase__heading">
         One chat UI. Two runtimes. Same code.
       </h2>

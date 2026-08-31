@@ -264,6 +264,16 @@
   gap: 64px;
   align-items: center;
 }
+.wp-rail {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.wp-rail-line {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
 .wp-eyebrow {
   margin-bottom: 16px;
 }
@@ -277,29 +287,38 @@
   margin-bottom: 20px;
   letter-spacing: -0.015em;
 }
-.wp-bullets {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 24px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.wp-rows {
+  margin: 18px 0 4px;
+  border-top: 2px solid var(--color-text-primary);
+  max-width: 42ch;
 }
-.wp-bullet {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
+.wp-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: baseline;
+  border-bottom: 1px solid var(--color-border);
+  padding: 9px 0;
+}
+.wp-row-claim {
   font-family: var(--font-inter);
-  font-size: var(--text-body-lg);
-  line-height: var(--text-body-lg--line-height);
-  color: var(--color-text-secondary);
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--color-text-primary);
+  margin: 0;
 }
-.wp-bullet-dot {
-  flex: 0 0 6px;
-  height: 6px;
-  margin-top: 12px;
-  border-radius: var(--radius-full);
-  background: var(--color-accent);
+.wp-row-tail {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .wp-row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
 }
 .wp-success {
   font-family: var(--font-inter);
@@ -352,29 +371,19 @@
    * content's 392px inside a 280px track. */
   min-width: 0;
 }
-/* The frame is shrink-to-fit, so the cover's `100%` was indefinite and its
- * aspect-ratio kept deriving a fixed ~392px width from content height. A
- * definite width (capped by the frame's own inline maxWidth) lets the cover
- * track the viewport. Scoped to the stacked breakpoint: at desktop the grid
- * track is wider than the card, and an unconditional 100% would grow it. */
-@media (max-width: 640px) {
-  .wp-cover-wrap > [data-ui="browser-frame"] {
-    width: 100%;
-  }
-}
-.wp-cover {
-  /* aspect-ratio alone derives width from the content's height, which makes
-   * the cover a fixed ~392px regardless of container — the audit's 392px
-   * card forcing phones to clip. Pin the width; aspect-ratio then drives
-   * height, and content taller than the ratio still stretches it (min-height
-   * auto). */
-  width: min(100%, 392px);
-  aspect-ratio: 8.5 / 11;
-  background: linear-gradient(135deg, #fafbfc 0%, #eaf3ff 100%);
-  padding: 48px 36px;
+.wp-paper {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  min-height: 300px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 26px 24px;
+  transform: rotate(-1.2deg);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    0 26px 52px -18px rgba(28, 28, 28, 0.28);
 }
 .wp-cover-badge {
   font-family: var(--font-mono);
@@ -425,6 +434,16 @@
 .pilot-eyebrow {
   margin-bottom: 16px;
 }
+.pilot-rail {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.pilot-rail-line {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
 .pilot-heading {
   font-family: var(--font-garamond);
   font-size: var(--text-h2);
@@ -443,77 +462,72 @@
   margin: 0;
   margin-bottom: 24px;
 }
-.pilot-outcomes {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 32px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.pilot-outcome {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  font-family: var(--font-inter);
-  font-size: var(--text-body);
-  line-height: var(--text-body--line-height);
-  color: var(--color-text-primary);
-}
-.pilot-outcome-check {
-  flex: 0 0 18px;
-  height: 18px;
-  margin-top: 4px;
-  border-radius: var(--radius-full);
-  background: var(--color-accent);
-  color: var(--color-text-inverted);
-  font-size: 11px;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-}
 .pilot-cta-row {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
 }
-.pilot-timeline {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.pilot-rows {
+  margin: 18px 0 4px;
+  border-top: 2px solid var(--color-text-primary);
+  max-width: 44ch;
 }
-.pilot-timeline-row {
-  display: flex;
-  align-items: flex-start;
+.pilot-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
   gap: 16px;
+  align-items: baseline;
+  border-bottom: 1px solid var(--color-border);
+  padding: 9px 0;
 }
-.pilot-timeline-phase {
-  flex: 0 0 36px;
-  height: 36px;
-  border-radius: var(--radius-full);
-  background: var(--color-accent);
-  color: var(--color-text-inverted);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.pilot-timeline-title {
+.pilot-row-claim {
   font-family: var(--font-inter);
-  font-size: 17px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+.pilot-row-tail {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  margin: 0;
+}
+.pilot-steps {
+  border-top: 2px solid var(--color-text-primary);
+}
+.pilot-step {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 16px;
+  align-items: start;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.pilot-step:last-child {
+  border-bottom: none;
+}
+.pilot-step-num {
+  font-family: var(--font-garamond);
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  color: var(--color-border);
+}
+.pilot-step-title {
+  font-family: var(--font-inter);
+  font-size: 15.5px;
   font-weight: 600;
   color: var(--color-text-primary);
-  margin-bottom: 4px;
 }
-.pilot-timeline-body {
+.pilot-step-body {
   font-family: var(--font-inter);
-  font-size: var(--text-body);
-  line-height: var(--text-body--line-height);
+  font-size: 14px;
+  line-height: 1.5;
   color: var(--color-text-secondary);
+  margin-top: 2px;
 }
 @media (max-width: 900px) {
   .pilot-block-grid {
@@ -523,12 +537,14 @@
     gap: 40px !important;
   }
 }
+@media (max-width: 640px) {
+  .pilot-row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}
 
 /* Promises — components/landing/Promises.tsx */
-.promises-intro {
-  text-align: center;
-  margin-bottom: 56px;
-}
 .promises-eyebrow {
   margin-bottom: 16px;
 }
@@ -542,52 +558,84 @@
   margin-bottom: 12px;
   letter-spacing: -0.015em;
 }
-.promises-subhead {
-  font-family: var(--font-inter);
-  font-size: var(--text-body-lg);
-  line-height: var(--text-body-lg--line-height);
-  color: var(--color-text-secondary);
-  margin: 0;
+.promises-rail {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
 }
-.promises-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
-  gap: 16px;
-  max-width: 1100px;
-  margin: 0 auto;
+.promises-rail-line {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
 }
-.promises-card-title {
-  font-family: var(--font-inter);
-  font-size: 17px;
-  line-height: 1.3;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  margin: 0;
-  margin-bottom: 8px;
-}
-.promises-card-body {
+.promises-rail-aside {
   font-family: var(--font-inter);
   font-size: 14px;
-  line-height: var(--text-body--line-height);
-  color: var(--color-text-secondary);
+  font-style: italic;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+.promises-rows {
+  margin-top: 22px;
+  border-top: 2px solid var(--color-text-primary);
+  max-width: 56ch;
+}
+.promises-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: baseline;
+  border-bottom: 1px solid var(--color-border);
+  padding: 11px 0;
+}
+.promises-row-claim {
+  font-family: var(--font-inter);
+  font-size: 15.5px;
+  line-height: 1.55;
+  color: var(--color-text-primary);
   margin: 0;
+}
+.promises-row-tail {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .promises-row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+  .promises-rail-aside {
+    display: none;
+  }
 }
 
 /* RecentArticles — components/landing/RecentArticles.tsx */
-.recent-articles-header {
+.recent-articles-rail {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
   margin-bottom: 32px;
 }
+.recent-articles-rail-line {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
 .recent-articles-eyebrow {
-  margin-bottom: 16px;
+  margin-bottom: 0;
 }
 .recent-articles-heading {
-  font-family: var(--font-garamond);
-  font-size: var(--text-h2);
-  line-height: var(--text-h2--line-height);
-  font-weight: 700;
-  letter-spacing: -0.015em;
-  color: var(--color-text-primary);
+  font-family: var(--font-inter);
+  font-size: 14px;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--color-text-muted);
   margin: 0;
+  text-transform: lowercase;
+  white-space: nowrap;
 }
 .recent-articles-grid {
   display: grid;
@@ -855,7 +903,16 @@
 .demo-showcase {
   max-width: 760px;
   margin: 0 auto;
-  text-align: center;
+}
+.demo-showcase__rail {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.demo-showcase__rail-line {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
 }
 .demo-showcase__eyebrow {
   font-family: var(--font-mono);
@@ -881,14 +938,7 @@
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
   max-width: 560px;
-  margin: 0 auto 20px;
-}
-/* Centered ragged text is fine at 2 lines on desktop but becomes a 6-line
- * ragged column on phones; left-align for readability. */
-@media (max-width: 640px) {
-  .demo-showcase__subhead {
-    text-align: left;
-  }
+  margin: 0 0 20px;
 }
 .demo-showcase__launch-btn {
   position: absolute;
