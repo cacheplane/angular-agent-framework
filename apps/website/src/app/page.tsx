@@ -1,6 +1,6 @@
 import { Hero } from '../components/landing/Hero';
 import { EcosystemStrip } from '../components/landing/EcosystemStrip';
-import { Differentiator } from '../components/landing/Differentiator';
+import { YesWall } from '../components/landing/YesWall';
 import { FeatureBlock } from '../components/landing/FeatureBlock';
 import { BrowserFrame } from '../components/ui/BrowserFrame';
 import { ClipPlayer } from '../components/ui/ClipPlayer';
@@ -105,7 +105,7 @@ export default async function HomePage() {
     <>
       <Hero />
       <EcosystemStrip />
-      <Differentiator />
+      <YesWall />
 
       {/* Interactive demo showcase */}
       <Section surface="canvas">
@@ -183,7 +183,7 @@ export default async function HomePage() {
       />
 
       {/*
-        The homepage claims human-in-the-loop in the Differentiator table and
+        The homepage claims human-in-the-loop in the Yes wall and
         mentions interrupts in the Stream block, but nothing here showed it.
         This is the only section whose heading the approval clip actually
         illustrates — the same rule the solutions pages follow.

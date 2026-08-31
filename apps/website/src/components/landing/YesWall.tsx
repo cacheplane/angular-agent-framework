@@ -54,6 +54,8 @@ export const YES_WALL_GROUPS: readonly YesGroup[] = [
   },
 ];
 
+const TOTAL_QUESTIONS = YES_WALL_GROUPS.reduce((n, g) => n + g.rows.length, 0);
+
 export function YesWall() {
   return (
     <Section surface="dark" id="yes-wall" ariaLabelledBy="yes-wall-heading">
@@ -75,11 +77,11 @@ export function YesWall() {
                     {String(index + 1).padStart(2, '0')}
                   </div>
                   <div className="yes-wall-group-rows">
-                    <p className="yes-wall-group-label">{group.label}</p>
+                    <h3 className="yes-wall-group-label">{group.label}</h3>
                     {group.rows.map((row) => (
                       <div className="yes-wall-row" key={row.question}>
-                        <span className="yes-wall-yes">Yes</span>
                         <p className="yes-wall-question">{row.question}</p>
+                        <em className="yes-wall-yes">Yes</em>
                         <p className="yes-wall-api">{row.api}</p>
                       </div>
                     ))}
@@ -101,7 +103,7 @@ export function YesWall() {
                 >
                   Every question answered, in the docs →
                 </a>
-                <p className="yes-wall-footer-count">16 questions · 16 yeses</p>
+                <p className="yes-wall-footer-count">{TOTAL_QUESTIONS} questions · {TOTAL_QUESTIONS} yeses</p>
               </div>
             </div>
           </div>
