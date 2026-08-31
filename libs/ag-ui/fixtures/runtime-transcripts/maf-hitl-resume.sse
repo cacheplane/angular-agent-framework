@@ -1,0 +1,38 @@
+{"__request__": {"threadId": "thread-06-hitl-interrupt", "runId": "4df61fb0-a261-42fd-b4f8-071ead4f8f3b", "messages": [{"id": "4b79402e-e291-42bb-be55-ccacb46ddb38", "role": "user", "content": "Plan the task: build a birdhouse."}, {"id": "1ac8f18f-4d6c-4cc8-8165-5ad820c437b8", "role": "assistant", "toolCalls": [{"id": "call_VlNsrwdW5hhp2G8Ufp6i8ueQ", "type": "function", "function": {"name": "generate_task_steps", "arguments": "{\"steps\":[{\"description\":\"Choose design\",\"status\":\"enabled\"},{\"description\":\"Gather materials\",\"status\":\"enabled\"},{\"description\":\"Cut wood pieces\",\"status\":\"enabled\"},{\"description\":\"Assemble walls\",\"status\":\"enabled\"},{\"description\":\"Attach base\",\"status\":\"enabled\"},{\"description\":\"Add roof\",\"status\":\"enabled\"},{\"description\":\"Drill entrance hole\",\"status\":\"enabled\"},{\"description\":\"Sand surfaces\",\"status\":\"enabled\"},{\"description\":\"Paint or stain\",\"status\":\"enabled\"},{\"description\":\"Install hangers or hooks\",\"status\":\"enabled\"}]}"}}, {"id": "171b2e37-ad9b-4e41-9cfe-d051602195d5", "type": "function", "function": {"name": "confirm_changes", "arguments": "{\"function_name\": \"generate_task_steps\", \"function_call_id\": \"call_VlNsrwdW5hhp2G8Ufp6i8ueQ\", \"function_arguments\": {\"steps\": [{\"description\": \"Choose design\", \"status\": \"enabled\"}, {\"description\": \"Gather materials\", \"status\": \"enabled\"}, {\"description\": \"Cut wood pieces\", \"status\": \"enabled\"}, {\"description\": \"Assemble walls\", \"status\": \"enabled\"}, {\"description\": \"Attach base\", \"status\": \"enabled\"}, {\"description\": \"Add roof\", \"status\": \"enabled\"}, {\"description\": \"Drill entrance hole\", \"status\": \"enabled\"}, {\"description\": \"Sand surfaces\", \"status\": \"enabled\"}, {\"description\": \"Paint or stain\", \"status\": \"enabled\"}, {\"description\": \"Install hangers or hooks\", \"status\": \"enabled\"}]}, \"steps\": [{\"description\": \"Execute generate_task_steps\", \"status\": \"enabled\"}]}"}}]}], "tools": [], "context": [], "state": {}, "forwardedProps": {"command": {"resume": [{"id": "call_VlNsrwdW5hhp2G8Ufp6i8ueQ", "status": "resolved", "payload": {"approved": true}}]}}}}
+
+data: {"type":"RUN_STARTED","threadId":"thread-06-hitl-interrupt","runId":"4df61fb0-a261-42fd-b4f8-071ead4f8f3b"}
+
+data: {"type":"TOOL_CALL_RESULT","messageId":"4a3b0279-af4c-471a-8372-e782124b1493","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","content":"Generated 10 execution steps for the task.","role":"tool"}
+
+data: {"type":"TEXT_MESSAGE_START","messageId":"284fd5f2-2168-489d-b6a7-b31253529dae","role":"assistant"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"284fd5f2-2168-489d-b6a7-b31253529dae","delta":"The"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"284fd5f2-2168-489d-b6a7-b31253529dae","delta":" plan"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"284fd5f2-2168-489d-b6a7-b31253529dae","delta":" has"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"284fd5f2-2168-489d-b6a7-b31253529dae","delta":" been"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"284fd5f2-2168-489d-b6a7-b31253529dae","delta":" created"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"284fd5f2-2168-489d-b6a7-b31253529dae","delta":" with"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"284fd5f2-2168-489d-b6a7-b31253529dae","delta":" "}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"284fd5f2-2168-489d-b6a7-b31253529dae","delta":"10"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"284fd5f2-2168-489d-b6a7-b31253529dae","delta":" steps"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"284fd5f2-2168-489d-b6a7-b31253529dae","delta":" selected"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"284fd5f2-2168-489d-b6a7-b31253529dae","delta":"."}
+
+data: {"type":"CUSTOM","name":"usage","value":{"input_token_count":521,"output_token_count":12,"total_token_count":533,"completion/reasoning_tokens":0,"reasoning_output_token_count":0,"prompt/cached_tokens":0,"cache_read_input_token_count":0}}
+
+data: {"type":"TEXT_MESSAGE_END","messageId":"284fd5f2-2168-489d-b6a7-b31253529dae"}
+
+data: {"type":"MESSAGES_SNAPSHOT","messages":[{"id":"4b79402e-e291-42bb-be55-ccacb46ddb38","role":"user","content":"Plan the task: build a birdhouse."},{"id":"1ac8f18f-4d6c-4cc8-8165-5ad820c437b8","role":"assistant","content":"","toolCalls":[{"id":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","type":"function","function":{"name":"generate_task_steps","arguments":"{\"steps\":[{\"description\":\"Choose design\",\"status\":\"enabled\"},{\"description\":\"Gather materials\",\"status\":\"enabled\"},{\"description\":\"Cut wood pieces\",\"status\":\"enabled\"},{\"description\":\"Assemble walls\",\"status\":\"enabled\"},{\"description\":\"Attach base\",\"status\":\"enabled\"},{\"description\":\"Add roof\",\"status\":\"enabled\"},{\"description\":\"Drill entrance hole\",\"status\":\"enabled\"},{\"description\":\"Sand surfaces\",\"status\":\"enabled\"},{\"description\":\"Paint or stain\",\"status\":\"enabled\"},{\"description\":\"Install hangers or hooks\",\"status\":\"enabled\"}]}"}},{"id":"171b2e37-ad9b-4e41-9cfe-d051602195d5","type":"function","function":{"name":"confirm_changes","arguments":"{\"function_name\": \"generate_task_steps\", \"function_call_id\": \"call_VlNsrwdW5hhp2G8Ufp6i8ueQ\", \"function_arguments\": {\"steps\": [{\"description\": \"Choose design\", \"status\": \"enabled\"}, {\"description\": \"Gather materials\", \"status\": \"enabled\"}, {\"description\": \"Cut wood pieces\", \"status\": \"enabled\"}, {\"description\": \"Assemble walls\", \"status\": \"enabled\"}, {\"description\": \"Attach base\", \"status\": \"enabled\"}, {\"description\": \"Add roof\", \"status\": \"enabled\"}, {\"description\": \"Drill entrance hole\", \"status\": \"enabled\"}, {\"description\": \"Sand surfaces\", \"status\": \"enabled\"}, {\"description\": \"Paint or stain\", \"status\": \"enabled\"}, {\"description\": \"Install hangers or hooks\", \"status\": \"enabled\"}]}, \"steps\": [{\"description\": \"Execute generate_task_steps\", \"status\": \"enabled\"}]}"}}]},{"id":"approval-response-call_VlNsrwdW5hhp2G8Ufp6i8ueQ","role":"tool","content":"Generated 10 execution steps for the task.","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ"},{"id":"284fd5f2-2168-489d-b6a7-b31253529dae","role":"assistant","content":"The plan has been created with 10 steps selected."}]}
+
+data: {"type":"RUN_FINISHED","threadId":"thread-06-hitl-interrupt","runId":"4df61fb0-a261-42fd-b4f8-071ead4f8f3b"}
+

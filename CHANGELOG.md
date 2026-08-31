@@ -1,3 +1,16 @@
+## 0.0.64 (2026-08-31)
+
+### 🚀 Features
+
+- support Angular 22 consumers ([#887](https://github.com/cacheplane/angular-agent-framework/pull/887))
+- **website:** Basecamp-informed homepage — Yes wall, proof strip, problem-first hero ([#885](https://github.com/cacheplane/angular-agent-framework/pull/885), [#881](https://github.com/cacheplane/angular-agent-framework/issues/881))
+- **website:** homepage cohesion — logo ribbon + feature-block rows ([#890](https://github.com/cacheplane/angular-agent-framework/pull/890))
+- **website:** add 'What Changes in Your Angular Code When the Agent Runtime Changes' ([#884](https://github.com/cacheplane/angular-agent-framework/pull/884))
+
+### 🩹 Fixes
+
+- **website:** mobile polish for the homepage ([#886](https://github.com/cacheplane/angular-agent-framework/pull/886))
+
 ## 0.0.63 (2026-08-31)
 
 ### 🚀 Features

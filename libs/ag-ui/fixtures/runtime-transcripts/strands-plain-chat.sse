@@ -1,0 +1,30 @@
+data: {"type":"RUN_STARTED","threadId":"th-plain-68ea9c","runId":"run-1"}
+
+data: {"type":"STATE_SNAPSHOT","snapshot":{}}
+
+data: {"type":"MESSAGES_SNAPSHOT","messages":[{"id":"u-d2d21968","role":"user","content":"Hello! What is 2+2?"}]}
+
+data: {"type":"TEXT_MESSAGE_START","messageId":"0b3ac57d-1c63-4443-b524-4182cc5920fb","role":"assistant"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"0b3ac57d-1c63-4443-b524-4182cc5920fb","delta":"2"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"0b3ac57d-1c63-4443-b524-4182cc5920fb","delta":"+"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"0b3ac57d-1c63-4443-b524-4182cc5920fb","delta":"2"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"0b3ac57d-1c63-4443-b524-4182cc5920fb","delta":" equals"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"0b3ac57d-1c63-4443-b524-4182cc5920fb","delta":" "}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"0b3ac57d-1c63-4443-b524-4182cc5920fb","delta":"4"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"0b3ac57d-1c63-4443-b524-4182cc5920fb","delta":"."}
+
+data: {"type":"TEXT_MESSAGE_END","messageId":"0b3ac57d-1c63-4443-b524-4182cc5920fb"}
+
+data: {"type":"MESSAGES_SNAPSHOT","messages":[{"id":"u-d2d21968","role":"user","content":"Hello! What is 2+2?"},{"id":"0b3ac57d-1c63-4443-b524-4182cc5920fb","role":"assistant","content":"2+2 equals 4."}]}
+
+data: {"type":"STATE_SNAPSHOT","snapshot":{}}
+
+data: {"type":"RUN_FINISHED","threadId":"th-plain-68ea9c","runId":"run-1","outcome":{"type":"success"}}
+

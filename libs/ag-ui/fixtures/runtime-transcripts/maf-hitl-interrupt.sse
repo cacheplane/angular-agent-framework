@@ -1,0 +1,232 @@
+{"__request__": {"threadId": "thread-06-hitl-interrupt", "runId": "83caa76f-b177-4c68-9b2b-ad1be07589e5", "messages": [{"id": "4b79402e-e291-42bb-be55-ccacb46ddb38", "role": "user", "content": "Plan the task: build a birdhouse."}], "tools": [], "context": [], "state": {}, "forwardedProps": {}}}
+
+data: {"type":"RUN_STARTED","threadId":"thread-06-hitl-interrupt","runId":"83caa76f-b177-4c68-9b2b-ad1be07589e5"}
+
+data: {"type":"TEXT_MESSAGE_START","messageId":"1ac8f18f-4d6c-4cc8-8165-5ad820c437b8","role":"assistant"}
+
+data: {"type":"TOOL_CALL_START","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","toolCallName":"generate_task_steps","parentMessageId":"1ac8f18f-4d6c-4cc8-8165-5ad820c437b8"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"{\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"steps"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\":["}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"{\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"description"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\":\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"Choose"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":" design"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\",\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"status"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\":\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"enabled"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\"},{\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"description"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\":\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"Gather"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":" materials"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\",\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"status"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\":\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"enabled"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\"},{\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"description"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\":\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"Cut"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":" wood"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":" pieces"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\",\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"status"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\":\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"enabled"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\"},{\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"description"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\":\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"As"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"semble"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":" walls"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\",\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"status"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\":\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"enabled"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\"},{\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"description"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\":\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"Attach"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":" base"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\",\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"status"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\":\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"enabled"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\"},{\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"description"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\":\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"Add"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":" roof"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\",\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"status"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\":\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"enabled"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\"},{\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"description"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\":\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"Dr"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"ill"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":" entrance"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":" hole"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\",\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"status"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\":\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"enabled"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\"},{\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"description"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\":\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"Sand"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":" surfaces"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\",\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"status"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\":\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"enabled"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\"},{\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"description"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\":\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"Paint"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":" or"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":" stain"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\",\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"status"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\":\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"enabled"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\"},{\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"description"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\":\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"Install"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":" hang"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"ers"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":" or"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":" hooks"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\",\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"status"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\":\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"enabled"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"\"}"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","delta":"]}"}
+
+data: {"type":"CUSTOM","name":"usage","value":{"input_token_count":390,"output_token_count":113,"total_token_count":503,"completion/reasoning_tokens":0,"reasoning_output_token_count":0,"prompt/cached_tokens":0,"cache_read_input_token_count":0}}
+
+data: {"type":"TOOL_CALL_END","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ"}
+
+data: {"type":"CUSTOM","name":"function_approval_request","value":{"id":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","function_call":{"call_id":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","name":"generate_task_steps","arguments":{"steps":[{"description":"Choose design","status":"enabled"},{"description":"Gather materials","status":"enabled"},{"description":"Cut wood pieces","status":"enabled"},{"description":"Assemble walls","status":"enabled"},{"description":"Attach base","status":"enabled"},{"description":"Add roof","status":"enabled"},{"description":"Drill entrance hole","status":"enabled"},{"description":"Sand surfaces","status":"enabled"},{"description":"Paint or stain","status":"enabled"},{"description":"Install hangers or hooks","status":"enabled"}]}}}}
+
+data: {"type":"TOOL_CALL_START","toolCallId":"171b2e37-ad9b-4e41-9cfe-d051602195d5","toolCallName":"confirm_changes","parentMessageId":"1ac8f18f-4d6c-4cc8-8165-5ad820c437b8"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"171b2e37-ad9b-4e41-9cfe-d051602195d5","delta":"{\"function_name\": \"generate_task_steps\", \"function_call_id\": \"call_VlNsrwdW5hhp2G8Ufp6i8ueQ\", \"function_arguments\": {\"steps\": [{\"description\": \"Choose design\", \"status\": \"enabled\"}, {\"description\": \"Gather materials\", \"status\": \"enabled\"}, {\"description\": \"Cut wood pieces\", \"status\": \"enabled\"}, {\"description\": \"Assemble walls\", \"status\": \"enabled\"}, {\"description\": \"Attach base\", \"status\": \"enabled\"}, {\"description\": \"Add roof\", \"status\": \"enabled\"}, {\"description\": \"Drill entrance hole\", \"status\": \"enabled\"}, {\"description\": \"Sand surfaces\", \"status\": \"enabled\"}, {\"description\": \"Paint or stain\", \"status\": \"enabled\"}, {\"description\": \"Install hangers or hooks\", \"status\": \"enabled\"}]}, \"steps\": [{\"description\": \"Execute generate_task_steps\", \"status\": \"enabled\"}]}"}
+
+data: {"type":"TOOL_CALL_END","toolCallId":"171b2e37-ad9b-4e41-9cfe-d051602195d5"}
+
+data: {"type":"TEXT_MESSAGE_END","messageId":"1ac8f18f-4d6c-4cc8-8165-5ad820c437b8"}
+
+data: {"type":"MESSAGES_SNAPSHOT","messages":[{"id":"4b79402e-e291-42bb-be55-ccacb46ddb38","role":"user","content":"Plan the task: build a birdhouse."},{"id":"1ac8f18f-4d6c-4cc8-8165-5ad820c437b8","role":"assistant","toolCalls":[{"id":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","type":"function","function":{"name":"generate_task_steps","arguments":"{\"steps\":[{\"description\":\"Choose design\",\"status\":\"enabled\"},{\"description\":\"Gather materials\",\"status\":\"enabled\"},{\"description\":\"Cut wood pieces\",\"status\":\"enabled\"},{\"description\":\"Assemble walls\",\"status\":\"enabled\"},{\"description\":\"Attach base\",\"status\":\"enabled\"},{\"description\":\"Add roof\",\"status\":\"enabled\"},{\"description\":\"Drill entrance hole\",\"status\":\"enabled\"},{\"description\":\"Sand surfaces\",\"status\":\"enabled\"},{\"description\":\"Paint or stain\",\"status\":\"enabled\"},{\"description\":\"Install hangers or hooks\",\"status\":\"enabled\"}]}"}},{"id":"171b2e37-ad9b-4e41-9cfe-d051602195d5","type":"function","function":{"name":"confirm_changes","arguments":"{\"function_name\": \"generate_task_steps\", \"function_call_id\": \"call_VlNsrwdW5hhp2G8Ufp6i8ueQ\", \"function_arguments\": {\"steps\": [{\"description\": \"Choose design\", \"status\": \"enabled\"}, {\"description\": \"Gather materials\", \"status\": \"enabled\"}, {\"description\": \"Cut wood pieces\", \"status\": \"enabled\"}, {\"description\": \"Assemble walls\", \"status\": \"enabled\"}, {\"description\": \"Attach base\", \"status\": \"enabled\"}, {\"description\": \"Add roof\", \"status\": \"enabled\"}, {\"description\": \"Drill entrance hole\", \"status\": \"enabled\"}, {\"description\": \"Sand surfaces\", \"status\": \"enabled\"}, {\"description\": \"Paint or stain\", \"status\": \"enabled\"}, {\"description\": \"Install hangers or hooks\", \"status\": \"enabled\"}]}, \"steps\": [{\"description\": \"Execute generate_task_steps\", \"status\": \"enabled\"}]}"}}]}]}
+
+data: {"type":"RUN_FINISHED","threadId":"thread-06-hitl-interrupt","runId":"83caa76f-b177-4c68-9b2b-ad1be07589e5","outcome":{"type":"interrupt","interrupts":[{"id":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","reason":"tool_call","message":"Approve running generate_task_steps?","toolCallId":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","responseSchema":{"type":"object","properties":{"approved":{"type":"boolean","description":"Whether the requested tool call is approved."},"accepted":{"type":"boolean","description":"Legacy alias for approved."},"steps":{"type":"array","description":"Optional edited value for the 'steps' tool argument."},"editedArgs":{"type":"object","description":"Full replacement of the tool arguments. Not merged.","properties":{"steps":{"type":"array"}},"required":["steps"],"additionalProperties":false}},"anyOf":[{"required":["approved"]},{"required":["accepted"]}],"additionalProperties":false},"metadata":{"agent_framework":{"type":"function_approval_request","function_call":{"call_id":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","name":"generate_task_steps","arguments":{"steps":[{"description":"Choose design","status":"enabled"},{"description":"Gather materials","status":"enabled"},{"description":"Cut wood pieces","status":"enabled"},{"description":"Assemble walls","status":"enabled"},{"description":"Attach base","status":"enabled"},{"description":"Add roof","status":"enabled"},{"description":"Drill entrance hole","status":"enabled"},{"description":"Sand surfaces","status":"enabled"},{"description":"Paint or stain","status":"enabled"},{"description":"Install hangers or hooks","status":"enabled"}]}},"value":{"type":"function_approval_request","function_call":{"call_id":"call_VlNsrwdW5hhp2G8Ufp6i8ueQ","name":"generate_task_steps","arguments":{"steps":[{"description":"Choose design","status":"enabled"},{"description":"Gather materials","status":"enabled"},{"description":"Cut wood pieces","status":"enabled"},{"description":"Assemble walls","status":"enabled"},{"description":"Attach base","status":"enabled"},{"description":"Add roof","status":"enabled"},{"description":"Drill entrance hole","status":"enabled"},{"description":"Sand surfaces","status":"enabled"},{"description":"Paint or stain","status":"enabled"},{"description":"Install hangers or hooks","status":"enabled"}]}}}}}}]}}
+

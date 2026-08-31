@@ -69,7 +69,8 @@ describe('refreshed shell structure', () => {
     );
 
     expect(html).toContain('aria-label="Cockpit shell"');
-    expect(html).toContain('aria-label="Cockpit sidebar"');
+    expect(html).toContain('aria-label="Cockpit modes"');
+    expect(html).toContain('aria-label="Cockpit context"');
     expect(html).toContain('aria-label="Code mode"');
     expect(html).toContain('page.tsx');
     expect(html).toContain('index.ts');

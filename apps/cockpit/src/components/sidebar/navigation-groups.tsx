@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useId } from 'react';
+import { ChevronRight } from 'lucide-react';
 import type { CockpitManifestEntry } from '@threadplane/cockpit-registry';
 import type { NavigationProduct } from '../../lib/route-resolution';
 import { toCockpitPath } from '../../lib/route-resolution';
@@ -10,23 +11,33 @@ import { track } from '../../lib/analytics/client';
 interface NavigationGroupsProps {
   tree: NavigationProduct[];
   currentEntry: CockpitManifestEntry;
+  expanded?: Record<string, boolean>;
+  onExpandedChange?: (key: string, open: boolean) => void;
+  onNavigate?: () => void;
 }
 
 function ProductGroup({
   product,
   currentEntry,
+  open,
+  onOpenChange,
+  onNavigate,
 }: {
   product: NavigationProduct;
   currentEntry: CockpitManifestEntry;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onNavigate?: () => void;
 }) {
-  const [open, setOpen] = useState(true);
   const label = PRODUCT_LABELS[product.product] ?? product.product;
+  const contentId = useId();
 
   return (
     <div style={{ marginBottom: 16 }}>
       <button
-        onClick={() => setOpen(!open)}
+        onClick={() => onOpenChange(!open)}
         aria-expanded={open}
+        aria-controls={contentId}
         aria-label={`${open ? 'Collapse' : 'Expand'} ${label}`}
         style={{
           width: '100%',
@@ -40,28 +51,19 @@ function ProductGroup({
           cursor: 'pointer',
         }}
       >
-        <span style={{
-          fontFamily: 'var(--ds-font-mono)',
-          fontSize: '0.7rem',
-          fontWeight: 600,
-          textTransform: 'uppercase',
-          letterSpacing: '0.05em',
-          color: 'var(--ds-accent)',
-        }}>
+        <span className="cockpit-nav-group-label">
           {label}
         </span>
         <span
           className={`cockpit-nav-caret${open ? ' cockpit-nav-caret--open' : ''}`}
           aria-hidden="true"
         >
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3.5 2.5 6.5 5 3.5 7.5" />
-          </svg>
+          <ChevronRight size={15} strokeWidth={2} aria-hidden="true" />
         </span>
       </button>
 
       {open && (
-        <nav style={{ display: 'flex', flexDirection: 'column', marginTop: 4 }}>
+        <div id={contentId} style={{ display: 'flex', flexDirection: 'column', marginTop: 4 }}>
           {product.sections.flatMap((section) =>
             section.entries
               .filter((entry) => entry.topic !== 'overview')
@@ -78,6 +80,7 @@ function ProductGroup({
                   href={toCockpitPath(entry)}
                   data-capability-link
                   onClick={() => {
+                    onNavigate?.();
                     track('cockpit:recipe_opened', {
                       capability: entry.topic,
                       category: entry.product,
@@ -92,18 +95,34 @@ function ProductGroup({
               );
             })
           )}
-        </nav>
+        </div>
       )}
     </div>
   );
 }
 
-export function NavigationGroups({ tree, currentEntry }: NavigationGroupsProps) {
+export function NavigationGroups({
+  tree,
+  currentEntry,
+  expanded = {},
+  onExpandedChange,
+  onNavigate,
+}: NavigationGroupsProps) {
   return (
     <nav aria-label="Cockpit navigation" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      {tree.map((product) => (
-        <ProductGroup key={product.product} product={product} currentEntry={currentEntry} />
-      ))}
+      {tree.map((product) => {
+        const key = `Capability:${product.product}`;
+        return (
+          <ProductGroup
+            key={product.product}
+            product={product}
+            currentEntry={currentEntry}
+            open={expanded[key] ?? true}
+            onOpenChange={(open) => onExpandedChange?.(key, open)}
+            onNavigate={onNavigate}
+          />
+        );
+      })}
     </nav>
   );
 }

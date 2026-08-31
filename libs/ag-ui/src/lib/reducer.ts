@@ -149,6 +149,24 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
     }
     case 'RUN_FINISHED': {
       const run = currentRunForEvent(event, store);
+      if (store.deliveryRun && !run) return;
+      const outcome = runFinishedOutcome(event);
+      if (outcome?.type === 'interrupt') {
+        // Protocol-standard interrupt signal: RUN_FINISHED carrying
+        // outcome = { type: 'interrupt', interrupts: [...] }. AWS Strands and
+        // Microsoft Agent Framework emit ONLY this; Mastra emits it in
+        // addition to the CUSTOM on_interrupt bridge convention below.
+        // First signal wins within a run — a CUSTOM on_interrupt that already
+        // paused this run must not have its interrupt clobbered here.
+        if (!run || run.outcome === undefined) {
+          store.interrupt.set(toOutcomeInterrupt(outcome, eventRunId(event)));
+        }
+        if (run && finalizeDeliveryRun(store, run, 'paused')) {
+          store.status.set('idle');
+          store.isLoading.set(false);
+        }
+        return;
+      }
       if (!run || !finalizeDeliveryRun(store, run, 'success')) return;
       store.status.set('idle');
       store.isLoading.set(false);
@@ -429,7 +447,12 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
       if (e.name === 'on_interrupt') {
         const run = currentRunForEvent(event, store);
         if (store.deliveryRun && !run) return;
-        store.interrupt.set({ id: randomId(), value: parsedValue, resumable: true });
+        // First signal wins within a run: when a RUN_FINISHED interrupt
+        // outcome already paused this run (a backend may emit both, in either
+        // order), keep the interrupt it stored rather than clobbering it.
+        if (!(run?.outcome === 'paused' && store.interrupt() !== undefined)) {
+          store.interrupt.set({ id: randomId(), value: parsedValue, resumable: true });
+        }
         if (run && finalizeDeliveryRun(store, run, 'paused')) {
           store.status.set('idle');
           store.isLoading.set(false);
@@ -496,6 +519,46 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
 
 function randomId(): string {
   return Math.random().toString(36).slice(2);
+}
+
+/** Loosely-typed RUN_FINISHED outcome. @ag-ui/core@0.0.59 ships the strict
+ *  RunFinishedInterruptOutcomeSchema / InterruptSchema for this shape, but
+ *  the reducer deliberately keeps this tolerant hand-rolled view: a strict
+ *  parse would silently DROP an interrupt whose entries deviate from the
+ *  schema (extra keys on the strict outcome object, a missing `reason`),
+ *  while the contract here is to preserve every entry verbatim under
+ *  `value.interrupts` for resume to address. Validation strictness would be
+ *  a behavior change, not a simplification. */
+interface RunFinishedOutcome {
+  type?: string;
+  interrupts?: unknown;
+}
+
+function runFinishedOutcome(event: BaseEvent): RunFinishedOutcome | undefined {
+  const outcome = (event as { outcome?: unknown }).outcome;
+  return isRecord(outcome) ? (outcome as RunFinishedOutcome) : undefined;
+}
+
+/**
+ * Build the neutral AgentInterrupt from a RUN_FINISHED interrupt outcome.
+ * Every identifying field of the outcome's interrupt entries (id, reason,
+ * toolCallId, responseSchema, metadata, …) is preserved verbatim under
+ * `value.interrupts` — resume needs them to address the pending interrupts.
+ * The event's protocol runId rides along as `value.runId` (Mastra's resume
+ * contract wants the interrupting run's id back).
+ */
+function toOutcomeInterrupt(
+  outcome: RunFinishedOutcome,
+  runId: string | undefined,
+): AgentInterrupt {
+  const interrupts = Array.isArray(outcome.interrupts) ? outcome.interrupts : [];
+  const first = interrupts.find(isRecord);
+  const firstId = first?.['id'];
+  return {
+    id: typeof firstId === 'string' && firstId.length > 0 ? firstId : randomId(),
+    value: { interrupts, ...(runId !== undefined ? { runId } : {}) },
+    resumable: true,
+  };
 }
 
 function eventRunId(event: BaseEvent): string | undefined {

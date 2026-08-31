@@ -2,6 +2,8 @@
 
 Production-ready chat, thread/history/branch UI, interrupts, subagents, planning, memory, and generative UI for Angular agent apps.
 
+Supported Angular majors: 20, 21, and 22.
+
 ## License and deployment boundary
 - Every Threadplane package is MIT-licensed and free for commercial and noncommercial use.
 - Threadplane runs inside the customer's Angular application. Agent runtime, models, storage, checkpointing, retention, authorization, and hosting remain customer-operated.

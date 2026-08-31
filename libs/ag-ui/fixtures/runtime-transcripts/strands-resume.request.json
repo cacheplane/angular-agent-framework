@@ -1,0 +1,24 @@
+{
+  "threadId": "th-int-555800",
+  "runId": "run-2",
+  "messages": [
+    {
+      "id": "u-b176b0c0",
+      "role": "user",
+      "content": "Schedule a meeting with Dana about the Q3 roadmap."
+    }
+  ],
+  "tools": [],
+  "context": [],
+  "state": {},
+  "forwardedProps": {},
+  "resume": [
+    {
+      "interruptId": "v1:tool_call:call_A9ckGX1LrvO82OhqZinzDsom:340a4daa-b874-5aad-8309-a63b92d507dd",
+      "status": "resolved",
+      "payload": {
+        "chosen_label": "Tuesday 10:00"
+      }
+    }
+  ]
+}

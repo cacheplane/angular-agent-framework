@@ -1,6 +1,8 @@
-# Threadplane v0.0.62
+# Threadplane v0.0.64
 
 Production-ready chat, thread/history/branch UI, interrupts, subagents, planning, memory, and generative UI for Angular agent apps.
+
+Supported Angular majors: 20, 21, and 22.
 
 ## License and deployment boundary
 - Every Threadplane package is MIT-licensed and free for commercial and noncommercial use.

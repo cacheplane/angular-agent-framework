@@ -1,7 +1,18 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+
+import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import {
+  Bot,
+  Check,
+  Copy,
+  Ellipsis,
+  FileText,
+  ListTree,
+  SquarePen,
+} from 'lucide-react';
 import { analyticsEvents } from '../../lib/analytics/events';
 import { track } from '../../lib/analytics/client';
+import type { DocHeading } from '../../lib/extract-headings';
 import { SITE_ORIGIN } from '../../lib/site-origin';
 
 const GITHUB_EDIT_BASE =
@@ -11,78 +22,63 @@ interface Props {
   library: string;
   section: string;
   slug: string;
+  headings: DocHeading[];
 }
 
-function CopyIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="5" y="5" width="9" height="9" rx="1.5" />
-      <path d="M11 5V3.5A1.5 1.5 0 009.5 2h-6A1.5 1.5 0 002 3.5v6A1.5 1.5 0 003.5 11H5" />
-    </svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M3 8.5l3.5 3.5L13 5" />
-    </svg>
-  );
-}
-
-function ChevronIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M4 6.5l4 4 4-4" />
-    </svg>
-  );
-}
-
-/**
- * "Copy page" split button (docs premium-polish pass). The primary segment
- * copies the page's raw Markdown — the single most useful docs action in the
- * LLM era, previously buried behind an unlabeled "⋯" menu. The chevron opens
- * the secondary actions. Menu a11y (first-item focus, arrow roving, Escape,
- * focus restore) carried over from the a11y pass (#865).
- */
-export function PageActions({ library, section, slug }: Props) {
+export function PageActions({ library, section, slug, headings }: Props) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showHeadings, setShowHeadings] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const restoreTriggerFocus = useRef(true);
+
+  const closeMenu = () => {
+    setOpen(false);
+    setShowHeadings(false);
+  };
 
   useEffect(() => {
     if (!open) return undefined;
-    const items = menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]');
-    items?.[0]?.focus();
-    const onDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    menuRef.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
+    const onDown = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) closeMenu();
     };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeMenu();
     };
     document.addEventListener('mousedown', onDown);
     document.addEventListener('keydown', onKey);
     return () => {
       document.removeEventListener('mousedown', onDown);
       document.removeEventListener('keydown', onKey);
-      triggerRef.current?.focus();
+      if (restoreTriggerFocus.current) triggerRef.current?.focus();
     };
   }, [open]);
 
-  const onMenuKeyDown = (e: React.KeyboardEvent) => {
-    const items = [...(menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])];
+  useEffect(
+    () => () => {
+      if (copiedTimer.current) clearTimeout(copiedTimer.current);
+    },
+    [],
+  );
+
+  const onMenuKeyDown = (event: ReactKeyboardEvent) => {
+    const items = Array.from(
+      menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [],
+    );
     if (items.length === 0) return;
-    const i = items.indexOf(document.activeElement as HTMLElement);
-    const move = (n: number) => {
-      e.preventDefault();
-      items[(n + items.length) % items.length].focus();
+    const current = Math.max(0, items.indexOf(document.activeElement as HTMLElement));
+    const move = (index: number) => {
+      event.preventDefault();
+      items[(index + items.length) % items.length]?.focus();
     };
-    if (e.key === 'ArrowDown') move(i + 1);
-    if (e.key === 'ArrowUp') move(i - 1);
-    if (e.key === 'Home') move(0);
-    if (e.key === 'End') move(items.length - 1);
+    if (event.key === 'ArrowDown') move(current + 1);
+    if (event.key === 'ArrowUp') move(current - 1);
+    if (event.key === 'Home') move(0);
+    if (event.key === 'End') move(items.length - 1);
   };
 
   const path = `${library}/${section}/${slug}`;
@@ -95,43 +91,49 @@ export function PageActions({ library, section, slug }: Props) {
 
   const copyMarkdown = async () => {
     try {
-      const res = await fetch(markdownUrl);
-      if (!res.ok) throw new Error(String(res.status));
-      const text = await res.text();
-      await navigator.clipboard.writeText(text);
-      track(analyticsEvents.docsCopyCodeClick, { surface: 'docs', cta_id: 'copy_page_markdown' });
+      const response = await fetch(markdownUrl);
+      if (!response.ok) throw new Error(String(response.status));
+      await navigator.clipboard.writeText(await response.text());
+      track(analyticsEvents.docsCopyCodeClick, {
+        surface: 'docs',
+        cta_id: 'copy_page_markdown',
+      });
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (copiedTimer.current) clearTimeout(copiedTimer.current);
+      copiedTimer.current = setTimeout(() => setCopied(false), 2000);
     } catch {
-      // network/clipboard failure — silently ignore
+      setCopied(false);
     }
+  };
+
+  const openOnThisPage = () => {
+    const toc = document.getElementById('docs-on-this-page');
+    if (toc && toc.getClientRects().length > 0) {
+      restoreTriggerFocus.current = false;
+      closeMenu();
+      toc.focus();
+      return;
+    }
+    setShowHeadings(true);
   };
 
   return (
     <div ref={ref} className="docs-page-actions">
-      <div className="docs-copy-split">
-        <button
-          type="button"
-          aria-label="Copy page as Markdown"
-          onClick={copyMarkdown}
-          className="docs-copy-primary"
-          data-copied={copied || undefined}
-        >
-          {copied ? <CheckIcon /> : <CopyIcon />}
-          <span>{copied ? 'Copied' : 'Copy page'}</span>
-        </button>
-        <button
-          type="button"
-          ref={triggerRef}
-          aria-label="Page actions"
-          aria-haspopup="menu"
-          aria-expanded={open}
-          onClick={() => setOpen((o) => !o)}
-          className="docs-copy-more"
-        >
-          <ChevronIcon />
-        </button>
-      </div>
+      <button
+        type="button"
+        ref={triggerRef}
+        aria-label="Page actions"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => {
+          restoreTriggerFocus.current = true;
+          setOpen((current) => !current);
+          if (open) setShowHeadings(false);
+        }}
+        className="docs-page-actions-trigger"
+      >
+        <Ellipsis size={18} strokeWidth={2} aria-hidden="true" />
+      </button>
       {open ? (
         <div
           role="menu"
@@ -139,35 +141,73 @@ export function PageActions({ library, section, slug }: Props) {
           onKeyDown={onMenuKeyDown}
           className="docs-page-actions-menu"
         >
+          <button
+            type="button"
+            role="menuitem"
+            onClick={openOnThisPage}
+            className="docs-page-actions-item"
+          >
+            <ListTree size={16} aria-hidden="true" />
+            <span>On this page</span>
+          </button>
+          {showHeadings ? (
+            <div className="docs-page-actions-headings">
+              {headings.map((heading) => (
+                <a
+                  key={heading.id}
+                  role="menuitem"
+                  href={`#${heading.id}`}
+                  data-level={heading.level}
+                  onClick={closeMenu}
+                  className="docs-page-actions-heading"
+                >
+                  {heading.text}
+                </a>
+              ))}
+            </div>
+          ) : null}
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => void copyMarkdown()}
+            className="docs-page-actions-item"
+          >
+            {copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
+            <span>{copied ? 'Copied' : 'Copy page as Markdown'}</span>
+          </button>
+          <div className="docs-page-actions-separator" role="separator" />
           <a
             role="menuitem"
             href={chatgptUrl}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => setOpen(false)}
+            onClick={closeMenu}
             className="docs-page-actions-item"
           >
-            Open in ChatGPT
+            <Bot size={16} aria-hidden="true" />
+            <span>Open in ChatGPT</span>
           </a>
           <a
             role="menuitem"
             href={markdownUrl}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => setOpen(false)}
+            onClick={closeMenu}
             className="docs-page-actions-item"
           >
-            View as Markdown
+            <FileText size={16} aria-hidden="true" />
+            <span>View as Markdown</span>
           </a>
           <a
             role="menuitem"
             href={githubUrl}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => setOpen(false)}
+            onClick={closeMenu}
             className="docs-page-actions-item"
           >
-            Edit on GitHub
+            <SquarePen size={16} aria-hidden="true" />
+            <span>Edit on GitHub</span>
           </a>
         </div>
       ) : null}

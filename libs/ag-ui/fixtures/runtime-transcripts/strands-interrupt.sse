@@ -1,0 +1,40 @@
+data: {"type":"RUN_STARTED","threadId":"th-int-555800","runId":"run-1"}
+
+data: {"type":"STATE_SNAPSHOT","snapshot":{}}
+
+data: {"type":"MESSAGES_SNAPSHOT","messages":[{"id":"u-b176b0c0","role":"user","content":"Schedule a meeting with Dana about the Q3 roadmap."}]}
+
+data: {"type":"TOOL_CALL_START","toolCallId":"call_A9ckGX1LrvO82OhqZinzDsom","toolCallName":"schedule_meeting","parentMessageId":"65ee30a7-e1c0-43c7-9cff-680c2f43fec8"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_A9ckGX1LrvO82OhqZinzDsom","delta":"{\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_A9ckGX1LrvO82OhqZinzDsom","delta":"topic"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_A9ckGX1LrvO82OhqZinzDsom","delta":"\":\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_A9ckGX1LrvO82OhqZinzDsom","delta":"Q"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_A9ckGX1LrvO82OhqZinzDsom","delta":"3"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_A9ckGX1LrvO82OhqZinzDsom","delta":" roadmap"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_A9ckGX1LrvO82OhqZinzDsom","delta":"\",\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_A9ckGX1LrvO82OhqZinzDsom","delta":"att"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_A9ckGX1LrvO82OhqZinzDsom","delta":"endee"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_A9ckGX1LrvO82OhqZinzDsom","delta":"\":\""}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_A9ckGX1LrvO82OhqZinzDsom","delta":"Dana"}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_A9ckGX1LrvO82OhqZinzDsom","delta":"\"}"}
+
+data: {"type":"TOOL_CALL_END","toolCallId":"call_A9ckGX1LrvO82OhqZinzDsom"}
+
+data: {"type":"MESSAGES_SNAPSHOT","messages":[{"id":"u-b176b0c0","role":"user","content":"Schedule a meeting with Dana about the Q3 roadmap."},{"id":"65ee30a7-e1c0-43c7-9cff-680c2f43fec8","role":"assistant","content":"","toolCalls":[{"id":"call_A9ckGX1LrvO82OhqZinzDsom","type":"function","function":{"name":"schedule_meeting","arguments":"{\"topic\": \"Q3 roadmap\", \"attendee\": \"Dana\"}"}}]}]}
+
+data: {"type":"STATE_SNAPSHOT","snapshot":{}}
+
+data: {"type":"RUN_FINISHED","threadId":"th-int-555800","runId":"run-1","outcome":{"type":"interrupt","interrupts":[{"id":"v1:tool_call:call_A9ckGX1LrvO82OhqZinzDsom:340a4daa-b874-5aad-8309-a63b92d507dd","reason":"schedule_meeting","metadata":{"reason":{"topic":"Q3 roadmap","attendee":"Dana"}}}]}}
+
