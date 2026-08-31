@@ -82,7 +82,9 @@ That something is `hasToolResult`, and matching is first-match-wins:
 Swap those two entries and the run never terminates.
 
 The continuation arrives carrying the same user message, matches the looser entry first, and gets handed the response that asks for the tool call again.
-The model calls the tool. The result comes back. It matches the looser entry again.
+The model calls the tool.
+The result comes back.
+It matches the looser entry again.
 Nothing errors. The assistant simply never finalizes.
 
 For me that is the sharpest thing about fixture files: they are data, so they look inert, but the ordering is executable.
