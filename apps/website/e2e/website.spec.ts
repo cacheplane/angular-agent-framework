@@ -7,11 +7,9 @@ test('landing page renders hero headline', async ({ page }) => {
   expect(headline?.toLowerCase()).toContain('angular');
 });
 
-test('landing page renders differentiator section', async ({ page }) => {
+test('landing page renders the Yes wall', async ({ page }) => {
   await page.goto('/');
-  // Assert on the stable id, not the heading copy — landing-page text rewrites
-  // happen far more often than the section structure changes.
-  await expect(page.locator('#differentiator-heading')).toBeVisible();
+  await expect(page.locator('#yes-wall-heading')).toBeVisible();
 });
 
 test('landing page renders feature blocks (Stream/Render/Ship)', async ({ page }) => {
