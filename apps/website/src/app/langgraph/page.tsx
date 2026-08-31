@@ -52,16 +52,10 @@ export default async function LangGraphPage() {
         eyebrow="Providers"
         headline="Drop it into app.config.ts. Done."
         body="provideAgent wires LangGraph into Angular's DI container. From any component, injectAgent() returns a signal-based handle for messages, status, errors, and interrupts."
-        bullets={[
-          'provideAgent — wire it once in app.config.ts',
-          'injectAgent() returns a typed signal-based handle',
-          'OnPush tested',
-          'Test transports for deterministic specs',
-        ]}
-        supportingCards={[
-          { title: 'provideAgent', description: 'LangGraph wiring.' },
-          { title: 'injectAgent()', description: 'No-args helper.' },
-          { title: 'MockAgentTransport', description: 'Deterministic tests.' },
+        rows={[
+          { claim: 'Wire it once in app.config.ts', api: 'provideAgent' },
+          { claim: 'A typed, signal-based handle, no args', api: 'injectAgent()' },
+          { claim: 'Deterministic tests without a backend', api: 'MockAgentTransport' },
         ]}
         cta={{ label: 'API reference', href: '/docs/langgraph/api/inject-agent' }}
         visual={
@@ -94,16 +88,10 @@ export class ChatComponent {
         eyebrow="Signals"
         headline="Reactive without RxJS gymnastics."
         body="Every agent surface is exposed as a signal — message stream, tool progress, interrupts, errors, status. Compose with the rest of your Angular reactivity story. No subscriptions to leak."
-        bullets={[
-          'messages() / status() / error() / reload()',
-          'interrupt() for human-in-the-loop gates',
-          'Branch / history / time-travel built in',
-          'Computed signals integrate cleanly',
-        ]}
-        supportingCards={[
-          { title: 'messages()', description: 'Streaming message list.' },
-          { title: 'interrupt()', description: 'Approval-gate signal.' },
-          { title: 'reload()', description: 'Recover from errors.' },
+        rows={[
+          { claim: 'messages(), status(), error() — live signals', api: 'signal-native handle' },
+          { claim: 'Human-in-the-loop gates', api: 'interrupt()' },
+          { claim: 'Branch, history, time-travel built in', api: 'checkpoints' },
         ]}
         cta={{ label: 'Read the streaming guide', href: '/docs/langgraph/guides/streaming' }}
         visualLeft

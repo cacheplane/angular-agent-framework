@@ -67,6 +67,9 @@
   margin: 0 0 28px;
   max-width: 54ch;
 }
+.hero-chip-row li {
+  display: inline-flex;
+}
 .hero-chip {
   font-family: var(--font-mono);
   font-size: 11.5px;
@@ -75,14 +78,24 @@
   border-radius: var(--radius-full);
   padding: 5px 11px;
   white-space: nowrap;
+  text-decoration: none;
+  display: inline-block;
 }
-/* On phones the chip row and the proof-pill row stack as two near-identical
- * pill lists in one viewport; the pills are links and carry the same nouns,
- * so the decorative chips yield. */
+/* Invisible tap-area extension (parity with the deleted proof pills):
+ * the chip renders ~29px tall; padding lifts the touch target toward the
+ * 44px ideal without shifting layout. */
 @media (max-width: 640px) {
-  .hero-chip-row {
-    display: none;
+  .hero-chip {
+    padding-top: 9px;
+    padding-bottom: 9px;
+    margin-top: -4px;
+    margin-bottom: -4px;
   }
+}
+.hero-chip:hover,
+.hero-chip:focus-visible {
+  border-color: var(--color-accent-border-hover);
+  color: var(--color-text-primary);
 }
 
 .hero-cta-row {
@@ -90,21 +103,6 @@
   gap: 12px;
   margin-bottom: 24px;
   flex-wrap: wrap;
-}
-.hero-proof-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-}
-.hero-proof-link {
-  text-decoration: none;
-  /* Invisible tap-area extension: the pill renders ~27px tall; the padding
-   * lifts the touch target past the 24px WCAG floor toward the 44px ideal. */
-  display: inline-block;
-  padding: 6px 0;
-  margin: -6px 0;
 }
 .hero-caption {
   margin: 0;
@@ -152,28 +150,6 @@
     gap: 40px !important;
   }
 }
-.hero-proof-pill {
-  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
-  will-change: transform;
-}
-.hero-proof-link:hover > .hero-proof-pill,
-.hero-proof-link:focus-visible > .hero-proof-pill {
-  transform: translateY(-1px);
-  background: var(--color-accent-surface) !important;
-  border-color: var(--color-accent-border) !important;
-  color: var(--color-accent) !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-}
-.hero-proof-link:active > .hero-proof-pill {
-  transform: translateY(0);
-  box-shadow: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  .hero-proof-pill { transition: none; }
-  .hero-proof-link:hover > .hero-proof-pill,
-  .hero-proof-link:focus-visible > .hero-proof-pill { transform: none; }
-}
-
 /* FeatureBlock — components/landing/FeatureBlock.tsx */
 .feature-block-grid {
   display: grid;
@@ -213,57 +189,6 @@
   color: var(--color-text-secondary);
   margin: 0;
   margin-bottom: 24px;
-}
-.feature-block-bullets {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 32px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.feature-block-bullet {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  font-family: var(--font-inter);
-  font-size: var(--text-body);
-  line-height: var(--text-body--line-height);
-  color: var(--color-text-primary);
-}
-.feature-block-bullet-check {
-  flex: 0 0 18px;
-  height: 18px;
-  margin-top: 4px;
-  border-radius: var(--radius-full);
-  background: var(--color-accent-surface);
-  border: 1px solid var(--color-accent-border);
-  color: var(--color-accent);
-  font-size: 11px;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-}
-.feature-block-card-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr));
-  gap: 8px;
-  margin-bottom: 24px;
-}
-.feature-block-card-title {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--color-accent);
-  margin-bottom: 4px;
-}
-.feature-block-card-desc {
-  font-family: var(--font-inter);
-  font-size: var(--text-caption);
-  line-height: var(--text-caption--line-height);
-  color: var(--color-text-secondary);
 }
 .feature-block-cta {
   font-family: var(--font-inter);

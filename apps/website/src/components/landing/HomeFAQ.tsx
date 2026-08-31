@@ -6,7 +6,7 @@ import { FAQ, type FAQItem } from '../ui/FAQ';
 const ITEMS: FAQItem[] = [
   {
     q: 'How is this different from using AG-UI directly?',
-    a: 'AG-UI is a protocol rather than a complete Angular UI layer. Threadplane gives Angular teams the production surface around compatible runtimes: headless chat, durable threads, interrupts, subagents, planning, memory, generative UI, and runtime adapters.',
+    a: 'AG-UI is a protocol rather than a complete Angular UI layer. Threadplane is the production surface built on the runtimes that speak it — the chat, threads, interrupts, and generative UI your Angular app actually ships.',
   },
   {
     q: 'Which adapter should I use — @threadplane/langgraph or @threadplane/ag-ui?',

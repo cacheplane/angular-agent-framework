@@ -52,16 +52,10 @@ export default function PilotToProdPage() {
         eyebrow="Week 1–2 · Discover"
         headline="Map your stack. Pick the work that earns its keep."
         body="We don't start with the model. We start with the workflow — the meeting where someone says 'this would be a great use of AI' and the friction that's stopping it from shipping."
-        bullets={[
-          'Audit existing Angular surfaces + agent-eligible workflows',
-          'Identify the 1–2 highest-leverage agents to build first',
-          'Lock down auth, data residency, observability constraints',
-          'Decide LangGraph vs AG-UI adapter strategy',
-        ]}
-        supportingCards={[
-          { title: 'Workshops', description: 'On-site or remote with your team.' },
-          { title: 'Stack audit', description: 'Existing Angular + backend review.' },
-          { title: 'Roadmap', description: 'Concrete scope for build phase.' },
+        rows={[
+          { claim: 'Audit your surfaces and agent-eligible workflows', api: 'stack audit' },
+          { claim: 'Pick the one or two agents that earn their keep', api: 'roadmap' },
+          { claim: 'Auth, residency, observability locked early', api: 'workshops' },
         ]}
         cta={{ label: 'See sample roadmap', href: '#whitepaper-block' }}
         visual={
@@ -93,16 +87,10 @@ export default function PilotToProdPage() {
         eyebrow="Week 3–5 · Build"
         headline="Ship a working agent on your real data."
         body="Working code, not slideware. We integrate against your real backend, your real auth, and your real Angular app — paired with your engineers, not behind a curtain."
-        bullets={[
-          'Real LangGraph or AG-UI backend (yours or ours, your call)',
-          'Streaming chat surface using @threadplane/chat compositions',
-          'Generative UI for the workflows that benefit from it',
-          'Daily syncs · weekly demo to stakeholders',
-        ]}
-        supportingCards={[
-          { title: 'Pair programming', description: 'Your engineers drive.' },
-          { title: 'Open repo', description: 'You own the source from day one.' },
-          { title: 'Weekly demo', description: 'Stakeholder transparency throughout.' },
+        rows={[
+          { claim: 'A working agent on your real data', api: 'your repo, your engineers' },
+          { claim: 'Streaming surface from the chat compositions', api: '@threadplane/chat' },
+          { claim: 'Weekly demos to stakeholders', api: 'open progress' },
         ]}
         cta={{ label: 'See @threadplane/chat', href: '/chat' }}
         visualLeft
@@ -125,17 +113,10 @@ export default function PilotToProdPage() {
         eyebrow="Week 6–7 · Harden"
         headline="Production-ready, not demo-ready."
         body="Observability, error boundaries, fallback strategies, deploy paths, on-call runbook. The stuff that makes the difference between a demo and an app you can leave running on a Friday afternoon."
-        bullets={[
-          'Observability — tracing, metrics, error budgets',
-          'Error/fallback strategy across every agent surface',
-          'CI/CD integration with your existing pipeline',
-          'Load + chaos testing patterns',
-          'On-call runbook handed to your team',
-        ]}
-        supportingCards={[
-          { title: 'Tracing', description: 'OpenTelemetry hooks.' },
-          { title: 'Fallback API', description: 'Per-component readiness.' },
-          { title: 'Runbook', description: 'Yours forever.' },
+        rows={[
+          { claim: 'Tracing, metrics, error budgets', api: 'OpenTelemetry hooks' },
+          { claim: 'Fallbacks across every agent surface', api: 'readiness + fallback' },
+          { claim: 'Load tested, on-call ready', api: 'runbook, yours' },
         ]}
         cta={{ label: 'Production patterns', href: '/docs/langgraph/guides/deployment' }}
         visual={

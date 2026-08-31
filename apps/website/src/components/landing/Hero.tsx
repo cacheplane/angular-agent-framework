@@ -6,10 +6,9 @@ import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';
 import { Button } from '../ui/Button';
 import { BrowserFrame } from '../ui/BrowserFrame';
-import { Pill } from '../ui/Pill';
 import { track } from '../../lib/analytics/client';
 import { analyticsEvents } from '../../lib/analytics/events';
-import { HERO_CHIPS, POSITIONING_PROOF_POINTS } from '../../lib/positioning';
+import { HERO_CAPABILITIES } from '../../lib/positioning';
 
 const INSTALL_COMMAND = 'npm install @threadplane/chat @threadplane/langgraph';
 const COPY_FEEDBACK_MS = 1500;
@@ -84,35 +83,27 @@ export function Hero() {
               </span>
             </p>
             <ul className="hero-chip-row" role="list" aria-label="Capabilities">
-              {HERO_CHIPS.map((chip) => (
-                <li key={chip} className="hero-chip">
-                  {chip}
+              {HERO_CAPABILITIES.map((cap) => (
+                <li key={cap.label}>
+                  <a
+                    className="hero-chip"
+                    href={cap.href}
+                    onClick={() =>
+                      track(analyticsEvents.marketingCtaClick, {
+                        cta_id: 'hero_proof_pill',
+                        track: 'developer',
+                        surface: 'home',
+                      })
+                    }
+                  >
+                    {cap.label}
+                  </a>
                 </li>
               ))}
             </ul>
             <div className="hero-cta-row">
               <PrimaryInstallButton />
               <SecondaryTalkButton />
-            </div>
-            <div className="hero-proof-row">
-              {POSITIONING_PROOF_POINTS.map((proofPoint, index) => (
-                <a
-                  key={proofPoint.label}
-                  href={proofPoint.href}
-                  onClick={() =>
-                    track(analyticsEvents.marketingCtaClick, {
-                      cta_id: 'hero_proof_pill',
-                      track: 'developer',
-                      surface: 'home',
-                    })
-                  }
-                  className="hero-proof-link"
-                >
-                  <Pill variant={index === 0 ? 'accent' : 'neutral'} className="hero-proof-pill">
-                    {proofPoint.label}
-                  </Pill>
-                </a>
-              ))}
             </div>
             <p className="hero-caption">
               Not another backend agent runtime. Keep LangGraph, Genkit, Mastra, CrewAI, or your own service. Threadplane solves the Angular UI layer.

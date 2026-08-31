@@ -51,16 +51,10 @@ export default async function ChatPage() {
         eyebrow="Compositions"
         headline="Opinionated shells, swappable parts."
         body="chat-timeline is a drop-in conversation surface that handles streaming, tool calls, interrupts, branching, and time-travel. chat-debug ships devtools alongside — tool-call inspector, message replay, thread history."
-        bullets={[
-          'chat-timeline — drop-in production surface',
-          'chat-debug — devtools alongside, ship-ready',
-          'Sidenav + history search palette',
-          'Themable via CSS vars or component overrides',
-        ]}
-        supportingCards={[
-          { title: 'chat-timeline', description: 'The conversation surface.' },
-          { title: 'chat-debug', description: 'Tool-call devtools.' },
-          { title: 'sidenav', description: 'Thread navigation.' },
+        rows={[
+          { claim: 'A drop-in production conversation surface', api: 'chat-timeline' },
+          { claim: 'Devtools beside it, ship-ready', api: 'chat-debug' },
+          { claim: 'Thread navigation and history search', api: 'sidenav + palette' },
         ]}
         cta={{ label: 'See @threadplane/chat docs', href: '/docs/chat/getting-started/introduction' }}
         visual={
@@ -90,16 +84,10 @@ export default async function ChatPage() {
         eyebrow="Headless"
         headline="Or skip the shell — use the primitives."
         body="If you have a design system, use the headless primitives directly. They're the same building blocks the compositions are made of — bring your own DOM, keep our state machine."
-        bullets={[
-          'Primitives stay unstyled',
-          'Bring your own design tokens',
-          'Compose with the streaming agent contract',
-          'No two-way coupling to the chat shell',
-        ]}
-        supportingCards={[
-          { title: 'message primitives', description: 'Streaming-aware atoms.' },
-          { title: 'tool primitives', description: 'Tool-call lifecycle.' },
-          { title: 'interrupt primitive', description: 'Approval gate.' },
+        rows={[
+          { claim: 'Unstyled primitives, your design tokens', api: 'message + tool primitives' },
+          { claim: 'The approval gate as a component', api: 'interrupt primitive' },
+          { claim: 'Composes against the streaming contract', api: 'Agent contract' },
         ]}
         cta={{ label: 'Headless API', href: '/docs/chat/api/provide-chat' }}
         visualLeft
