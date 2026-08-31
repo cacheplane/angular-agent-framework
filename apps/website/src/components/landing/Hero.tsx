@@ -83,7 +83,7 @@ export function Hero() {
                 keeps your backend exactly where it is.
               </span>
             </p>
-            <ul className="hero-chip-row" aria-label="Capabilities">
+            <ul className="hero-chip-row" role="list" aria-label="Capabilities">
               {HERO_CHIPS.map((chip) => (
                 <li key={chip} className="hero-chip">
                   {chip}
