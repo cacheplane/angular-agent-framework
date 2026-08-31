@@ -385,20 +385,6 @@
     0 2px 4px rgba(0, 0, 0, 0.05),
     0 26px 52px -18px rgba(28, 28, 28, 0.28);
 }
-.wp-cover {
-  /* aspect-ratio alone derives width from the content's height, which makes
-   * the cover a fixed ~392px regardless of container — the audit's 392px
-   * card forcing phones to clip. Pin the width; aspect-ratio then drives
-   * height, and content taller than the ratio still stretches it (min-height
-   * auto). */
-  width: min(100%, 392px);
-  aspect-ratio: 8.5 / 11;
-  background: linear-gradient(135deg, #fafbfc 0%, #eaf3ff 100%);
-  padding: 48px 36px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
 .wp-cover-badge {
   font-family: var(--font-mono);
   font-size: 11px;
