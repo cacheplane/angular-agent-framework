@@ -46,4 +46,15 @@ describe('AnnouncementToast', () => {
     act(() => setScroll(0.45));
     expect(document.querySelector('.toast-root')).toBeTruthy();
   });
+
+  it('stays dismissed: never reappears once the storage key is set', () => {
+    // STORAGE_KEY is not exported from the component; mirrored here from its
+    // literal construction: `dismissed-announcement-${ANNOUNCEMENT_DATE}`
+    // with ANNOUNCEMENT_DATE = '2026-04-07'.
+    localStorage.setItem('dismissed-announcement-2026-04-07', 'true');
+    render(<AnnouncementToast />);
+    act(() => vi.advanceTimersByTime(31_000));
+    act(() => setScroll(0.45));
+    expect(document.querySelector('.toast-root')).toBeNull();
+  });
 });
