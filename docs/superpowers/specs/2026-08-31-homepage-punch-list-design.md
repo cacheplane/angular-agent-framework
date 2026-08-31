@@ -42,9 +42,9 @@ Rendering: the chip row's visual (mono, hairline border, `--radius-full`)
 becomes a row of `<a>` links firing the existing `hero_proof_pill` analytics
 id (funnel continuity). The `max-width: 640px` hide is removed — one row
 earns its mobile place. The old `hero-proof-row` markup, its pill styling,
-and `HERO_CHIPS` + `POSITIONING_PROOF_POINTS` are deleted; grep for other
-consumers of `POSITIONING_PROOF_POINTS` first and stop if any exist outside
-Hero + its spec. `Hero.spec` asserts the six links (label + href) within the
+and `HERO_CHIPS` are deleted. `POSITIONING_PROOF_POINTS` SURVIVES — it also
+feeds the OG image (`app/opengraph-image.tsx`) and `site-metadata.ts`
+keywords, verified at design time; only Hero's usage of it is removed. `Hero.spec` asserts the six links (label + href) within the
 labelled row and drops the two-row logic.
 
 Also delete the `hero-caption` italic paragraph? **No** — out of scope; only
