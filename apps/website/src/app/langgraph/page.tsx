@@ -29,7 +29,7 @@ export default async function LangGraphPage() {
               LangGraph agent UI for Angular.
             </h1>
             <p className="langgraph-page-hero-subtitle">
-              Ship LangGraph agents inside your Angular 20+ app with headless chat, durable threads, interrupts, branch/history, tool progress, and generative UI.
+              Ship LangGraph agents inside your Angular 20–22 app with headless chat, durable threads, interrupts, branch/history, tool progress, and generative UI.
             </p>
             <div className="langgraph-page-hero-buttons">
               <Button variant="primary" size="lg" href="/docs/langgraph/getting-started/introduction">Get started</Button>
@@ -40,7 +40,7 @@ export default async function LangGraphPage() {
             </p>
             <div className="langgraph-page-hero-pills">
               <Pill variant="accent">MIT</Pill>
-              <Pill variant="angular">Angular 20+</Pill>
+              <Pill variant="angular">Angular 20–22</Pill>
               <Pill variant="neutral">LangGraph + AG-UI</Pill>
             </div>
           </div>

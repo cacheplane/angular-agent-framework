@@ -7,8 +7,8 @@ Detailed setup guide for `injectAgent()` in your Angular application.
 Supported Angular majors: 20, 21, and 22.
 
 <Steps>
-<Step title="Angular 20+">
-`injectAgent()` uses Angular Signals and the modern injection context API. Angular 20 or later is required.
+<Step title="Angular 20–22">
+`injectAgent()` uses Angular Signals and the modern injection context API. Angular 20, 21, or 22 is required.
 </Step>
 <Step title="Node.js compatibility">
 Use a Node.js version supported by the selected Angular major. Angular 22 supports Node.js ^22.22.3, ^24.15.0, or ^26.0.0. See the [Angular compatibility matrix](https://angular.dev/reference/versions).
@@ -120,7 +120,7 @@ export class TestComponent {
 
 <Callout type="warning" title="Common issues">
 
-**Version mismatch** -- If you see errors about missing APIs or unknown decorators, confirm your Angular version is 20 or later. Run `ng version` to check. Earlier versions do not support the injection context APIs that `injectAgent()` relies on.
+**Version mismatch** -- If you see errors about missing APIs or unknown decorators, confirm your Angular version is 20, 21, or 22. Run `ng version` to check. Versions outside this range are not supported.
 
 **CORS errors** -- If the browser console shows `Access-Control-Allow-Origin` errors, your LangGraph server is not configured for cross-origin requests. The LangGraph dev server allows all origins by default. For production, make sure your deployment's CORS policy includes your Angular app's domain.
 

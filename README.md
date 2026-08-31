@@ -35,7 +35,7 @@
 
 Threadplane is a production-ready agent UI framework for Angular. `@threadplane/chat` provides chat surfaces (headless primitives, opinionated compositions, interrupts, generative UI). `@threadplane/langgraph` adapts a LangGraph Platform endpoint into Angular Signals via `provideAgent()` + `injectAgent()`. `@threadplane/ag-ui` bridges any AG-UI-compatible backend into the same chat surface. `@threadplane/render` renders JSON specs to Angular components inside your design system.
 
-`injectAgent()` is the Angular equivalent of LangGraph's React `useStream()` hook, projected through a runtime-neutral `Agent` contract that `@threadplane/chat` consumes. Configure it once with `provideAgent({...})`, inject it into any Angular 20+ component, and get signal-driven access to messages, status, tool calls, interrupts, subagents, history, and thread management — no subscriptions, no `async` pipe, no zone.js required.
+`injectAgent()` is the Angular equivalent of LangGraph's React `useStream()` hook, projected through a runtime-neutral `Agent` contract that `@threadplane/chat` consumes. Configure it once with `provideAgent({...})`, inject it into any Angular 20–22 component, and get signal-driven access to messages, status, tool calls, interrupts, subagents, history, and thread management — no subscriptions, no `async` pipe, no zone.js required.
 
 ---
 
@@ -116,7 +116,7 @@ export class SupportChatComponent {
 | Reload last submission | `reload()` | — |
 | Custom transport (for testing) | `MockAgentTransport` | mock fetch |
 | Angular `ResourceRef<T>` compatibility | Full duck-type parity | N/A |
-| Angular 20+ Signals API | Native | N/A |
+| Angular 20–22 Signals API | Native | N/A |
 | SSR / Server Components | Client-side only | React Server Components (React) |
 
 ---

@@ -40,7 +40,7 @@ export default async function AgUiPage() {
             </p>
             <div className="ag-ui-page-hero-pills">
               <Pill variant="accent">MIT</Pill>
-              <Pill variant="angular">Angular 20+</Pill>
+              <Pill variant="angular">Angular 20–22</Pill>
               <Pill variant="neutral">AG-UI protocol</Pill>
             </div>
             <p className="ag-ui-page-langgraph-note">

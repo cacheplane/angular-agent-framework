@@ -15,7 +15,7 @@ AG-UI's event model maps onto Angular signals cleanly, which is what this post b
 
 ## Goals
 
-- Wire an AG-UI-compatible backend to an Angular 20+ app using `@threadplane/ag-ui` and `@threadplane/chat`.
+- Wire an AG-UI-compatible backend to an Angular 20–22 app using `@threadplane/ag-ui` and `@threadplane/chat`.
 - See how 17 protocol events become a handful of signals you read from a template.
 - Handle the parts that turn a demo into a product: tool calls, interrupts, threads, fallbacks.
 
@@ -78,7 +78,7 @@ The two are decoupled on purpose. We will get to why.
 
 ## Let's wire it up
 
-Start with a fresh Angular 20+ app, or use an existing one — `ng new` if you need to spin one up.
+Start with a fresh Angular 20–22 app, or use an existing one — `ng new` if you need to spin one up.
 
 ### Install the packages
 
