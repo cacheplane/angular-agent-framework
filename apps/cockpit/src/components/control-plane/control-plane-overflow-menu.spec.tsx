@@ -2,6 +2,7 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { ControlPlaneUtilityPanel } from '@threadplane/ui-react';
 import { describe, expect, it, vi } from 'vitest';
 import {
   ControlPlaneOverflowMenu,
@@ -56,6 +57,32 @@ describe('ControlPlaneOverflowMenu', () => {
 
     await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
     expect(document.activeElement).toBe(trigger);
+  });
+
+  it('consumes a focused menu item Escape before a containing utility panel', async () => {
+    const onClose = vi.fn();
+    render(
+      <ControlPlaneUtilityPanel title="Activity" onClose={onClose}>
+        <ControlPlaneOverflowMenu label="Activity actions">
+          <ControlPlaneOverflowMenuItem onSelect={vi.fn()}>
+            Clear session activity
+          </ControlPlaneOverflowMenuItem>
+        </ControlPlaneOverflowMenu>
+      </ControlPlaneUtilityPanel>
+    );
+    const trigger = screen.getByRole('button', { name: 'Activity actions' });
+    fireEvent.click(trigger);
+    const item = screen.getByRole('menuitem', {
+      name: 'Clear session activity',
+    });
+    await waitFor(() => expect(document.activeElement).toBe(item));
+
+    fireEvent.keyDown(item, { key: 'Escape' });
+
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
+    expect(document.activeElement).toBe(trigger);
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByRole('heading', { name: 'Activity' })).toBeTruthy();
   });
 
   it('closes on an outside pointer interaction and restores trigger focus', async () => {

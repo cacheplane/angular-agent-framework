@@ -59,6 +59,13 @@ export function ControlPlaneOverflowMenu({
   }, [open]);
 
   const onMenuKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      event.nativeEvent.stopImmediatePropagation();
+      setOpen(false);
+      return;
+    }
     if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
     const items = Array.from(
       menuRef.current?.querySelectorAll<HTMLElement>(
