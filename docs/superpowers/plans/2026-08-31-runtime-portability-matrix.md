@@ -150,3 +150,42 @@ our own demo-backend convention; no third party emits it.
    approval button.
 4. Publish the matrix; rewrite the paused post's limits section as measurement, and correct
    its claim that `on_interrupt` is required — it is the minority convention.
+
+---
+
+# Phase 2 RESULTS — shipped 2026-08-31
+
+All merged to main, all verified in production:
+
+| PR | What | Verified |
+|---|---|---|
+| #888 | Reducer detects protocol-standard `RUN_FINISHED.outcome` interrupts (both conventions coexist) | transcript-fixture tests |
+| #889 | Resume carries per-runtime interrupt identity | measured-request byte targets |
+| #891 | `@ag-ui/*` 0.0.52→0.0.59; top-level `resume` for outcome interrupts | 229 unit + 37 e2e; found+handled 0.0.59's `pendingInterrupts` throw |
+| #894 | Deployment generator: per-topic framework adapters | byte-identical regeneration of existing artifacts |
+| #896 | `cockpit/runtimes/microsoft-agent-framework/` example | live interrupt round-trip (OpenAI path); Azure default structurally wired |
+| #898 | `cockpit/runtimes/aws-strands/` example (git-pinned bridge, PEP 508 union support) | live round-trip matches spike capture; 3-way dep union pip-resolves |
+| #899 | **Production outage fix**: subagents topic's absolute imports broke every Railway build since 2026-06-16; `--detach` hid it. Relative imports + a deploy boot gate | `/agent/subagents` 404→422 after 2.5 months; all 9 topics answer in production |
+
+**Final production state:** all 9 AG-UI topics live, including three runtimes side by side in
+one FastAPI process (LangGraph, Microsoft Agent Framework, AWS Strands).
+
+**Post-fix matrix (interrupt column measured end-to-end live for MAF and Strands):**
+
+| runtime | messages | tool calls | state | interrupts | subagents |
+|---|---|---|---|---|---|
+| LangGraph | yes | yes | yes | yes | yes |
+| AWS Strands | yes | yes | partial (b) | **yes** (fixed) | no (b) |
+| Microsoft Agent Framework | yes | yes | yes | **yes** (fixed) | no (b) |
+| Mastra | yes | yes | yes | yes* (fixed, unit-level) | no (b) |
+
+*Mastra's fix is verified against captured transcripts + the real 0.0.59 client, but no live
+Mastra example exists yet (Lane B pending).
+
+## Remaining
+
+- Mastra Lane B: Node service + proxy topic→upstream map (~small, spike-proven; Brian's call)
+- Publish the matrix (docs page) + follow-up blog post replacing "belief is not measurement"
+- Azure live validation of the MAF example (needs fresh credentials; hashbrown's are dead)
+- The caveat now resolved: the "LangGraph subagents: yes" cell had only ever been verified in
+  dev, because production served a pre-June image. As of #899 the F5 subagent demo is live.
