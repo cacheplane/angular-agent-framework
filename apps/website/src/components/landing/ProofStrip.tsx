@@ -70,7 +70,10 @@ export function ProofStrip() {
                     className="proof-strip-badge"
                     src="https://hvtracker.net/badge/threadplane.svg"
                     alt="HVTrust grade for Threadplane (live badge)"
+                    width={91}
+                    height={20}
                     loading="lazy"
+                    referrerPolicy="no-referrer"
                   />
                 )}
                 <p className="proof-strip-caption">{cell.caption}</p>
