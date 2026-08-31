@@ -1,4 +1,4 @@
-Add angular to my Angular 20+ application.
+Add angular to my Angular 20–22 application.
 
 Install: npm install @threadplane/chat @threadplane/langgraph @langchain/core @langchain/langgraph-sdk marked
 
