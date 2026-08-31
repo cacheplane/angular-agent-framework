@@ -49,16 +49,10 @@ export default async function RenderPage() {
         eyebrow="Schemas"
         headline="One spec. Your components."
         body="The agent emits structured UI as JSON. @threadplane/render maps each spec node to one of your Angular components — so the design system stays yours, and the agent gets to assemble it."
-        bullets={[
-          'Vercel json-render adapter',
-          'Google A2UI protocol',
-          'Component registry — declare once, use everywhere',
-          'Server schema, client validation',
-        ]}
-        supportingCards={[
-          { title: 'json-render', description: 'Vercel adapter.' },
-          { title: 'A2UI v1', description: 'Google A2UI protocol.' },
-          { title: 'registry', description: 'Spec → component.' },
+        rows={[
+          { claim: 'One spec, rendered by components you own', api: 'component registry' },
+          { claim: 'Both protocols spoken', api: 'json-render + A2UI' },
+          { claim: 'Schema on the server, validation in the client', api: 'validated specs' },
         ]}
         cta={{ label: 'See @threadplane/render docs', href: '/docs/render/getting-started/introduction' }}
         visual={
@@ -93,16 +87,10 @@ export default async function RenderPage() {
         eyebrow="Fallbacks"
         headline="Readiness gate + per-component fallback."
         body="When the agent emits a spec your registry doesn't know how to render, @threadplane/render falls back gracefully — and surfaces it to your observability layer. No mystery white screens."
-        bullets={[
-          'Per-component fallback API',
-          'Readiness gate holds renders until safe',
-          'Telemetry hook for render events',
-          'Streaming partial renders supported',
-        ]}
-        supportingCards={[
-          { title: 'fallback views', description: 'Per-component recovery.' },
-          { title: 'readiness gate', description: 'Hold until safe.' },
-          { title: 'render events', description: 'Telemetry surface.' },
+        rows={[
+          { claim: 'Unknown components degrade, not crash', api: 'fallback API' },
+          { claim: 'Renders hold until the surface is real', api: 'readiness gate' },
+          { claim: 'Partial renders while streaming', api: 'streaming specs' },
         ]}
         cta={{ label: 'Fallback patterns', href: '/docs/render/guides/registry' }}
         visualLeft

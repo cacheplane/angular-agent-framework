@@ -59,16 +59,10 @@ export default async function AgUiPage() {
         eyebrow="Runtime choice"
         headline="Pick a backend. Keep the UI."
         body="The AG-UI protocol decouples your agent runtime from your front-end. @threadplane/ag-ui wraps any AG-UI AbstractAgent into the runtime-neutral Agent contract that @threadplane/chat consumes — so the same Angular components ship against eight different runtimes."
-        bullets={[
-          'Stream from Python, .NET, or TypeScript backends — same chat primitives',
-          'Swap runtimes without rewriting the UI layer',
-          'Protocol-first: tool calls, state deltas, citations all standardized',
-          'Future runtimes that ship AG-UI work day-one',
-        ]}
-        supportingCards={[
-          { title: 'LangGraph', description: 'Python or TS via AG-UI.' },
-          { title: 'Mastra', description: 'TypeScript-native.' },
-          { title: 'CrewAI / AG2', description: 'Multi-agent crews.' },
+        rows={[
+          { claim: 'Stream from Python, .NET, or TypeScript', api: 'AG-UI protocol' },
+          { claim: 'Tool calls, state deltas, citations — standardized', api: 'protocol events' },
+          { claim: 'New AG-UI runtimes work day one', api: 'no adapter needed' },
         ]}
         cta={{ label: 'Browse the AG-UI protocol', href: 'https://github.com/ag-ui-protocol/ag-ui' }}
         visual={<BackendsGrid />}
@@ -79,16 +73,10 @@ export default async function AgUiPage() {
         eyebrow="Same primitives"
         headline="Drop-in for everything @threadplane/chat ships."
         body="provideAgent registers an AG-UI client and exposes the same Agent contract that @threadplane/langgraph provides. Chat rendering, status, tool calls, generative UI, and citations use the same Angular primitives; durable checkpointed threads and history depend on the backend protocol, so use @threadplane/langgraph when you need the native LangGraph thread API."
-        bullets={[
-          'provideAgent + injectAgent — same names across adapters',
-          'Shared Agent contract: messages() / status() / reload()',
-          'Same A2UI surface, themes, and citations rendering',
-          'MockAgentTransport works the same way for tests',
-        ]}
-        supportingCards={[
-          { title: 'provideAgent', description: 'AG-UI wiring.' },
-          { title: 'injectAgent()', description: 'No-args helper.' },
-          { title: '@threadplane/chat', description: 'Same components.' },
+        rows={[
+          { claim: 'Same names across adapters', api: 'provideAgent + injectAgent' },
+          { claim: 'Same components, themes, citations', api: '@threadplane/chat' },
+          { claim: 'Same deterministic testing', api: 'MockAgentTransport' },
         ]}
         cta={{ label: 'API reference', href: '/docs/langgraph/api/inject-agent' }}
         visualLeft
