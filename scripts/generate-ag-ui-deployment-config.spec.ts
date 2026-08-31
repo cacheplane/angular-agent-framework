@@ -72,6 +72,20 @@ describe('generateAgUiDeployment', () => {
     expect(reqs).not.toMatch(/^-e \./m);
   });
 
+  it('carries direct-URL (git-pinned) requirements through the union', () => {
+    // The aws-strands example pins its bridge to a git ref because the PyPI
+    // ag-ui-strands wheel is stale. uv exports that as a PEP 508 direct-URL
+    // line (`name @ git+https://...@<sha>#subdirectory=...`), which the
+    // union must carry verbatim — pip installs it as-is.
+    generateAgUiDeployment({ repoRoot: REPO_ROOT, outDir });
+    const reqs = readFileSync(join(outDir, 'requirements.txt'), 'utf8');
+    expect(reqs).toMatch(
+      /^ag-ui-strands @ git\+https:\/\/github\.com\/ag-ui-protocol\/ag-ui\.git@[0-9a-f]{40}#subdirectory=integrations\/aws-strands\/python$/m,
+    );
+    // Never emit a version-pin form for a direct-URL dep.
+    expect(reqs).not.toContain('ag-ui-strands==');
+  });
+
   it('matches the committed deployments/ag-ui-dev artifacts byte-for-byte (drift check)', () => {
     // The deploy-ag-ui workflow regenerates and fails on `git diff` drift.
     // This is the same guarantee, runnable locally without touching the
@@ -122,6 +136,27 @@ describe('buildServerPy framework adapters', () => {
         '    app,\n' +
         '    microsoft_agent_framework_agent,\n' +
         '    path="/agent/microsoft-agent-framework",\n' +
+        ')',
+    );
+    // No LangGraph machinery when no langgraph topic is present.
+    expect(server).not.toContain('ag_ui_langgraph');
+    expect(server).not.toContain('LangGraphAgent');
+  });
+
+  it('aws-strands topics import the wrapped StrandsAgent and mount it with a positional path', () => {
+    const strands: AgUiTopic = {
+      topic: 'aws-strands',
+      pythonDir: 'x/aws-strands/python',
+      framework: 'aws-strands',
+    };
+    const server = buildServerPy([strands]);
+    expect(server).toContain('from ag_ui_strands import add_strands_fastapi_endpoint');
+    expect(server).toContain('from deps.aws_strands.src.agent import agent as aws_strands_agent');
+    expect(server).toContain(
+      'add_strands_fastapi_endpoint(\n' +
+        '    app,\n' +
+        '    aws_strands_agent,\n' +
+        '    "/agent/aws-strands",\n' +
         ')',
     );
     // No LangGraph machinery when no langgraph topic is present.

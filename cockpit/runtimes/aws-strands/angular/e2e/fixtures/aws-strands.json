@@ -1,0 +1,35 @@
+{
+  "fixtures": [
+    {
+      "match": { "userMessage": "roadmap review", "hasToolResult": true, "turnIndex": 2 },
+      "response": {
+        "content": "Your Q3 roadmap review is booked for Tuesday 10:00."
+      }
+    },
+    {
+      "match": { "userMessage": "roadmap review", "hasToolResult": true, "turnIndex": 1 },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "book_meeting",
+            "arguments": {
+              "topic": "Q3 roadmap review",
+              "slot": "Tuesday 10:00"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "match": { "userMessage": "roadmap review" },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "check_availability",
+            "arguments": { "day": "Tuesday" }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -27,6 +27,10 @@ export interface AgUiTopic {
  * - microsoft-agent-framework: `deps/<mod>/src/agent.py` exposes an `agent`
  *   object (agent_framework Agent / AgentFrameworkAgent); the bridge mounts
  *   the agent object directly — there is no wrapper class.
+ * - aws-strands: `deps/<mod>/src/agent.py` exposes an `agent` object that is
+ *   already a configured ag_ui_strands.StrandsAgent (per-tool ToolBehavior
+ *   config must ride with the example module, so the generator mounts the
+ *   wrapped instance rather than constructing the wrapper itself).
  */
 interface FrameworkAdapter {
   /** Module-level import line for the framework's AG-UI bridge package. */
@@ -61,6 +65,17 @@ const FRAMEWORK_ADAPTERS: Record<CapabilityFramework, FrameworkAdapter> = {
       `    app,\n` +
       `    ${mod}_agent,\n` +
       `    path="/agent/${topic}",\n` +
+      `)`,
+  },
+  'aws-strands': {
+    bridgeImport: 'from ag_ui_strands import add_strands_fastapi_endpoint',
+    topicImport: (mod) => `from deps.${mod}.src.agent import agent as ${mod}_agent`,
+    // path is positional in add_strands_fastapi_endpoint(app, agent, path).
+    mount: (topic, mod) =>
+      `add_strands_fastapi_endpoint(\n` +
+      `    app,\n` +
+      `    ${mod}_agent,\n` +
+      `    "/agent/${topic}",\n` +
       `)`,
   },
 };
@@ -178,24 +193,49 @@ ${mounts}
  */
 function buildRequirementsTxt(repoRoot: string, topics: AgUiTopic[]): string {
   const directVersions = new Map<string, string>();
+  const directUrls = new Map<string, string>();
   for (const topic of topics) {
     const reqPath = resolve(repoRoot, topic.pythonDir, 'requirements.txt');
     const content = readFileSync(reqPath, 'utf8');
     for (const pkg of parseDirectDeps(content)) {
+      if (pkg.url !== undefined) {
+        const existingUrl = directUrls.get(pkg.name);
+        if (existingUrl !== undefined && existingUrl !== pkg.url) {
+          throw new Error(
+            `Conflicting direct-URL pins for ${pkg.name}:\n  ${existingUrl}\n  ${pkg.url}\n` +
+              'Align the examples on one ref before regenerating.',
+          );
+        }
+        directUrls.set(pkg.name, pkg.url);
+        continue;
+      }
       const existing = directVersions.get(pkg.name);
-      if (!existing || compareVersions(pkg.version, existing) > 0) {
-        directVersions.set(pkg.name, pkg.version);
+      if (!existing || compareVersions(pkg.version!, existing) > 0) {
+        directVersions.set(pkg.name, pkg.version!);
       }
     }
   }
-  const sortedNames = [...directVersions.keys()].sort();
-  const lines = sortedNames.map((n) => `${n}==${directVersions.get(n)}`);
+  for (const name of directUrls.keys()) {
+    if (directVersions.has(name)) {
+      throw new Error(
+        `${name} is pinned as a direct URL by one example and as ==${directVersions.get(name)} by another. ` +
+          'Align the examples on one source before regenerating.',
+      );
+    }
+  }
+  const sortedNames = [...new Set([...directVersions.keys(), ...directUrls.keys()])].sort();
+  const lines = sortedNames.map((n) =>
+    directUrls.has(n) ? `${n} @ ${directUrls.get(n)}` : `${n}==${directVersions.get(n)}`,
+  );
   return `${GENERATED_HEADER}\n${lines.join('\n')}\n`;
 }
 
 interface DirectDep {
   name: string;
-  version: string;
+  /** Present for `name==version` pins. */
+  version?: string;
+  /** Present for direct-URL requirements (`name @ git+https://...`). */
+  url?: string;
 }
 
 /**
@@ -241,6 +281,14 @@ function parseDirectDeps(content: string): DirectDep[] {
       const match = beforeMarker.match(/^([A-Za-z0-9_.-]+)==([A-Za-z0-9_.+-]+)$/);
       if (match) {
         current = { name: match[1], version: match[2] };
+        continue;
+      }
+      // Direct-URL requirement (PEP 508), e.g. a git-pinned bridge:
+      //   ag-ui-strands @ git+https://github.com/...@<sha>#subdirectory=...
+      // uv export emits these for [tool.uv.sources] git/url dependencies.
+      const urlMatch = beforeMarker.match(/^([A-Za-z0-9_.-]+) @ (\S+)$/);
+      if (urlMatch) {
+        current = { name: urlMatch[1], url: urlMatch[2] };
       }
       continue;
     }

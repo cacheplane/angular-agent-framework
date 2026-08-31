@@ -10,7 +10,7 @@
  * vs `src/agent.py` exposing `agent` for Microsoft Agent Framework), and
  * the FastAPI mount call. Omitted means 'langgraph'.
  */
-export type CapabilityFramework = 'langgraph' | 'microsoft-agent-framework';
+export type CapabilityFramework = 'langgraph' | 'microsoft-agent-framework' | 'aws-strands';
 
 export interface Capability {
   id: string;
@@ -79,6 +79,7 @@ export const capabilities: readonly Capability[] = [
   // Runtime-portability examples (one capability, many runtimes; AG-UI-served
   // like the ag-ui caps, but the backend is genuinely non-LangGraph)
   { id: 'rt-maf', product: 'runtimes', topic: 'microsoft-agent-framework', angularProject: 'cockpit-runtimes-microsoft-agent-framework-angular', port: 4330, pythonPort: 5330, pythonDir: 'cockpit/runtimes/microsoft-agent-framework/python', framework: 'microsoft-agent-framework' },
+  { id: 'rt-strands', product: 'runtimes', topic: 'aws-strands', angularProject: 'cockpit-runtimes-aws-strands-angular', port: 4331, pythonPort: 5331, pythonDir: 'cockpit/runtimes/aws-strands/python', framework: 'aws-strands' },
 ] as const;
 
 export function findCapability(id: string): Capability | undefined {
