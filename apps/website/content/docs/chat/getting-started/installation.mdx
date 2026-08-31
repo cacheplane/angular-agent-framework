@@ -6,9 +6,25 @@ or runtime key.
 
 ## Prerequisites
 
-- Angular 20 or 21
-- Node.js 18 or later
-- An agent backend, or `mockAgent()` while you build the UI
+Supported Angular majors: 20, 21, and 22.
+
+<Steps>
+<Step title="Angular 20 or later">
+`@threadplane/chat` uses Angular Signals, `input()`, and `contentChildren()`. Run `ng version` to confirm. Upgrade with `ng update @angular/core @angular/cli` if you're below 20.
+</Step>
+<Step title="Node.js compatibility">
+Use a Node.js version supported by the selected Angular major. Angular 22 supports Node.js ^22.22.3, ^24.15.0, or ^26.0.0. See the [Angular compatibility matrix](https://angular.dev/reference/versions).
+</Step>
+<Step title="A running agent backend (or a mock)">
+The chat UI needs something to talk to. Two officially supported adapters cover virtually every backend:
+
+- **`@threadplane/langgraph`** — pick this if your backend is LangGraph or LangGraph Platform.
+- **`@threadplane/ag-ui`** — pick this for an AG-UI-compatible backend such as CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, or AWS Strands.
+
+Both adapters expose the same `Agent` contract to `@threadplane/chat`, so swapping later is a one-line change. If you don't have a backend yet, use `mockAgent()` from `@threadplane/chat` to wire up the UI first.
+
+</Step>
+</Steps>
 
 ## 1. Install the packages
 
@@ -24,10 +40,22 @@ npm install @threadplane/chat @threadplane/ag-ui @ag-ui/client @ag-ui/core marke
 `@json-render/core`, RxJS, and Zod as peer dependencies. npm 7 and later
 install required peers automatically. KaTeX is optional.
 
+<Callout type="info" title="Full peer dependency list">
+  `@threadplane/chat` declares peers on `@angular/core`, `@angular/common`,
+  `@angular/platform-browser`, `@angular/router` (all `^20.0.0 || ^21.0.0 ||
+  ^22.0.0`), plus `@threadplane/render`, `@threadplane/a2ui`,
+  `@json-render/core` (`^0.16.0`), `@langchain/core` (`^1.1.33`), `rxjs`
+  (`~7.8.0`), `marked` (`^15 || ^16`), `zod` (`^3.25.0`), and optional `katex`
+  (`^0.16.0 || ^0.17.0`). npm 7+ installs all required peers automatically.
+</Callout>
+
 ## 2. Configure the runtime and chat
 
 ```ts
-import { ApplicationConfig, provideZonelessChangeDetection } from '@angular/core';
+import {
+  ApplicationConfig,
+  provideZonelessChangeDetection,
+} from '@angular/core';
 import { provideAgent } from '@threadplane/langgraph';
 import { provideChat } from '@threadplane/chat';
 

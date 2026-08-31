@@ -4,12 +4,14 @@ Detailed setup guide for `@threadplane/render` in your Angular application.
 
 ## Requirements
 
+Supported Angular majors: 20, 21, and 22.
+
 <Steps>
 <Step title="Angular 20+">
 `@threadplane/render` uses Angular Signals, the `input()` function, and the `NgComponentOutlet` directive. Angular 20 or later is required.
 </Step>
-<Step title="Node.js 18+">
-Required for the build toolchain and package installation.
+<Step title="Node.js compatibility">
+Use a Node.js version supported by the selected Angular major. Angular 22 supports Node.js ^22.22.3, ^24.15.0, or ^26.0.0. See the [Angular compatibility matrix](https://angular.dev/reference/versions).
 </Step>
 </Steps>
 
@@ -25,8 +27,8 @@ The library requires the following peer dependencies:
 
 | Package | Version |
 |---------|---------|
-| `@angular/core` | `^20.0.0` or `^21.0.0` |
-| `@angular/common` | `^20.0.0` or `^21.0.0` |
+| `@angular/core` | `^20.0.0`, `^21.0.0`, or `^22.0.0` |
+| `@angular/common` | `^20.0.0`, `^21.0.0`, or `^22.0.0` |
 | `@json-render/core` | `^0.16.0` |
 
 <Callout type="info" title="Angular packages">

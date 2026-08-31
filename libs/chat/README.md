@@ -8,7 +8,7 @@ Part of [Threadplane](https://github.com/cacheplane/angular-agent-framework).
   <a href="https://www.npmjs.com/package/@threadplane/chat">
     <img alt="npm version" src="https://img.shields.io/npm/v/@threadplane%2Fchat?color=6C8EFF&labelColor=080B14&style=flat-square" />
   </a>
-  <img alt="Angular 20+" src="https://img.shields.io/badge/Angular-20%2B%20%7C%2021-6C8EFF?labelColor=080B14&style=flat-square" />
+  <img alt="Angular 20 | 21 | 22" src="https://img.shields.io/badge/Angular-20%20%7C%2021%20%7C%2022-6C8EFF?labelColor=080B14&style=flat-square" />
   <img alt="License" src="https://img.shields.io/badge/License-MIT-6C8EFF?labelColor=080B14&style=flat-square" />
 </p>
 
@@ -34,10 +34,10 @@ npm install @threadplane/chat @threadplane/langgraph @langchain/core @langchain/
 **Peer dependencies:**
 
 ```
-@angular/core              ^20.0.0 || ^21.0.0
-@angular/common            ^20.0.0 || ^21.0.0
-@angular/platform-browser  ^20.0.0 || ^21.0.0
-@angular/router            ^20.0.0 || ^21.0.0
+@angular/core              ^20.0.0 || ^21.0.0 || ^22.0.0
+@angular/common            ^20.0.0 || ^21.0.0 || ^22.0.0
+@angular/platform-browser  ^20.0.0 || ^21.0.0 || ^22.0.0
+@angular/router            ^20.0.0 || ^21.0.0 || ^22.0.0
 @threadplane/render        *
 @threadplane/a2ui          *
 @json-render/core          ^0.16.0
@@ -92,17 +92,17 @@ Get the agent from `@threadplane/langgraph` (for LangGraph Platform backends) or
 
 Ready-to-use full-feature layouts:
 
-| Component | Selector | Description |
-|---|---|---|
-| `ChatComponent` | `<chat>` | Full-page chat layout; primary entry point |
-| `ChatPopupComponent` | `<chat-popup>` | Floating popup with a launcher button |
-| `ChatSidebarComponent` | `<chat-sidebar>` | Sidebar-docked layout |
-| `ChatSidenavComponent` | `<chat-sidenav>` | Sidenav host with project/thread list panel |
+| Component                     | Selector                 | Description                                     |
+| ----------------------------- | ------------------------ | ----------------------------------------------- |
+| `ChatComponent`               | `<chat>`                 | Full-page chat layout; primary entry point      |
+| `ChatPopupComponent`          | `<chat-popup>`           | Floating popup with a launcher button           |
+| `ChatSidebarComponent`        | `<chat-sidebar>`         | Sidebar-docked layout                           |
+| `ChatSidenavComponent`        | `<chat-sidenav>`         | Sidenav host with project/thread list panel     |
 | `ChatTimelineSliderComponent` | `<chat-timeline-slider>` | Time-travel slider for agent checkpoint history |
-| `ChatInterruptPanelComponent` | `<chat-interrupt-panel>` | Full interrupt-handling composition |
-| `ChatApprovalCardComponent` | `<chat-approval-card>` | Approval/rejection dialog for HITL flows |
-| `ChatToolCallCardComponent` | `<chat-tool-call-card>` | Rich card for a single tool call |
-| `ChatSubagentCardComponent` | `<chat-subagent-card>` | Rich card for a subagent delegation |
+| `ChatInterruptPanelComponent` | `<chat-interrupt-panel>` | Full interrupt-handling composition             |
+| `ChatApprovalCardComponent`   | `<chat-approval-card>`   | Approval/rejection dialog for HITL flows        |
+| `ChatToolCallCardComponent`   | `<chat-tool-call-card>`  | Rich card for a single tool call                |
+| `ChatSubagentCardComponent`   | `<chat-subagent-card>`   | Rich card for a subagent delegation             |
 
 ### Primitives
 
@@ -117,10 +117,7 @@ Custom content templates for message bubbles, tool call rows, and citation cards
 `<chat-interrupt-panel>` surfaces the current `AgentInterrupt` from an agent and renders approve/reject controls. `<chat-approval-card>` composes as a dialog for explicit approval workflows. Both emit typed action results (`InterruptAction`, `ChatApprovalAction`) that the caller submits back to the agent.
 
 ```html
-<chat-interrupt-panel
-  [agent]="agent"
-  (interruptAction)="onAction($event)"
-/>
+<chat-interrupt-panel [agent]="agent" (interruptAction)="onAction($event)" />
 ```
 
 ### Tool calls and subagents
@@ -144,14 +141,14 @@ The `Citation` interface provides structured source metadata for assistant messa
 ```ts
 interface Citation {
   id: string;
-  index?: number;     // 1-based display index for inline superscript markers
+  index?: number; // 1-based display index for inline superscript markers
   title?: string;
   url?: string;
   snippet?: string;
   sourceType?: string; // 'web' | 'file' | 'app' | 'memory' | custom
-  iconUrl?: string;    // provider-supplied favicon/logo URL or data URI
+  iconUrl?: string; // provider-supplied favicon/logo URL or data URI
   publishedAt?: string | number | Date;
-  extra?: unknown;    // adapter-specific fields
+  extra?: unknown; // adapter-specific fields
 }
 ```
 
@@ -172,6 +169,7 @@ Inline citation markers are rendered automatically by `MarkdownCitationReference
 Citation display helpers derive the visible source type badge from `sourceType` and fall back to `web` when a URL is present.
 
 **Adapter integration:**
+
 - **LangGraph** — reads from `message.additional_kwargs.citations` (preferred) or `.sources` (fallback).
 - **AG-UI** — `bridgeCitationsState` reads `state.citations[messageId]` from the agent state on `STATE_SNAPSHOT` and `STATE_DELTA` events.
 
@@ -201,14 +199,19 @@ Without the font, the icon name falls back to plain text. Icons inherit `current
 Override individual node renderers:
 
 ```typescript
-import { MARKDOWN_VIEW_REGISTRY, cacheplaneMarkdownViews } from '@threadplane/chat';
+import {
+  MARKDOWN_VIEW_REGISTRY,
+  cacheplaneMarkdownViews,
+} from '@threadplane/chat';
 import { overrideViews } from '@threadplane/render';
 import { MyCodeBlockComponent } from './my-code-block.component';
 
 providers: [
   {
     provide: MARKDOWN_VIEW_REGISTRY,
-    useValue: overrideViews(cacheplaneMarkdownViews, { 'code-block': MyCodeBlockComponent }),
+    useValue: overrideViews(cacheplaneMarkdownViews, {
+      'code-block': MyCodeBlockComponent,
+    }),
   },
 ];
 ```
@@ -270,9 +273,9 @@ Use app tokens for app layout and `--tplane-chat-*` tokens at chat boundaries or
 **Built-in presets** — import one in your global stylesheet:
 
 ```css
-@import '@threadplane/chat/themes/default-dark.css';   /* lib defaults, explicit */
-@import '@threadplane/chat/themes/default-light.css';  /* neutral light, blue accent */
-@import '@threadplane/chat/themes/material-dark.css';  /* Material Design 3 dark */
+@import '@threadplane/chat/themes/default-dark.css'; /* lib defaults, explicit */
+@import '@threadplane/chat/themes/default-light.css'; /* neutral light, blue accent */
+@import '@threadplane/chat/themes/material-dark.css'; /* Material Design 3 dark */
 @import '@threadplane/chat/themes/material-light.css'; /* Material Design 3 light */
 ```
 
@@ -284,7 +287,7 @@ Material presets map M3 color tokens to the `--a2ui-*` vocabulary with no `@angu
 
 ```css
 :root {
-  --a2ui-primary: #FF6B35;
+  --a2ui-primary: #ff6b35;
   --a2ui-shape-medium: 4px;
   --a2ui-spacing-3: 16px;
 }

@@ -7,7 +7,7 @@ Adapter that wraps a LangGraph agent into the runtime-neutral `Agent` contract f
     <img alt="npm version" src="https://img.shields.io/npm/v/@threadplane%2Flanggraph?color=6C8EFF&labelColor=080B14&style=flat-square" />
   </a>
   <a href="https://angular.dev">
-    <img alt="Angular 20+" src="https://img.shields.io/badge/Angular-20%2B%20%7C%2021-6C8EFF?labelColor=080B14&style=flat-square" />
+    <img alt="Angular 20 | 21 | 22" src="https://img.shields.io/badge/Angular-20%20%7C%2021%20%7C%2022-6C8EFF?labelColor=080B14&style=flat-square" />
   </a>
   <a href="https://opensource.org/licenses/MIT">
     <img alt="MIT" src="https://img.shields.io/badge/License-MIT-6C8EFF?labelColor=080B14&style=flat-square" />
@@ -34,7 +34,7 @@ npm install @threadplane/langgraph @threadplane/chat @langchain/core @langchain/
 
 ```
 @threadplane/chat          *
-@angular/core              ^20.0.0 || ^21.0.0
+@angular/core              ^20.0.0 || ^21.0.0 || ^22.0.0
 @langchain/core            ^1.1.33
 @langchain/langgraph-sdk   ^1.7.4
 rxjs                       ~7.8.0

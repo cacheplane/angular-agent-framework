@@ -1,18 +1,14 @@
 // SPDX-License-Identifier: MIT
 import React from 'react';
+import { WEBSITE_ANGULAR_SUPPORT_ROWS } from './angular-support.mjs';
 
 interface Row {
-  label: string;
-  versions: string;
-  tone: 'success' | 'warn' | 'info' | 'muted';
+  readonly label: string;
+  readonly versions: string;
+  readonly tone: 'success' | 'warn' | 'info' | 'muted';
 }
 
-const ROWS: ReadonlyArray<Row> = [
-  { label: 'Supported',    versions: 'Angular 20, 21', tone: 'success' },
-  { label: 'Experimental', versions: '—',              tone: 'warn'    },
-  { label: 'Planned',      versions: 'Angular 22',     tone: 'info'    },
-  { label: 'Unsupported',  versions: 'Angular ≤19',    tone: 'muted'   },
-];
+const ROWS: readonly Row[] = WEBSITE_ANGULAR_SUPPORT_ROWS;
 
 export function CompatibilityMatrix() {
   return (
@@ -31,12 +27,14 @@ export function CompatibilityMatrix() {
         <tbody>
           {ROWS.map((row) => (
             <tr key={row.label}>
-              <th scope="row" className="compat-matrix-td-label" data-tone={row.tone}>
+              <th
+                scope="row"
+                className="compat-matrix-td-label"
+                data-tone={row.tone}
+              >
                 {row.label}
               </th>
-              <td className="compat-matrix-td-versions">
-                {row.versions}
-              </td>
+              <td className="compat-matrix-td-versions">{row.versions}</td>
             </tr>
           ))}
         </tbody>

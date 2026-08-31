@@ -5,6 +5,7 @@
   "prefix": "chat",
   "projectType": "library",
   "tags": [
+    "scope:angular-compatibility",
     "scope:cockpit",
     "scope:cockpit-deploy-smoke",
     "scope:cockpit-e2e",
@@ -18,9 +19,7 @@
   "targets": {
     "build": {
       "executor": "@nx/angular:package",
-      "outputs": [
-        "{workspaceRoot}/dist/{projectRoot}"
-      ],
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
       "options": {
         "project": "libs/chat/ng-package.json",
         "tsConfig": "libs/chat/tsconfig.lib.json"

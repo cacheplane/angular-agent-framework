@@ -11,7 +11,7 @@
   ],
   "peerDependencies": {
     "@threadplane/chat": "*",
-    "@angular/core": "^20.0.0 || ^21.0.0",
+    "@angular/core": "^20.0.0 || ^21.0.0 || ^22.0.0",
     "@ag-ui/client": "*",
     "@ag-ui/core": "*",
     "rxjs": "~7.8.0"

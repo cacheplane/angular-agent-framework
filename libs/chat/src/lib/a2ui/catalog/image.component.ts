@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import type { Spec } from '@json-render/core';
 
 /** v0.9 fit values; 'scaleDown' maps to CSS object-fit: scale-down. */
@@ -19,6 +19,7 @@ const FIT_MAP: Record<ImageFit, string> = {
 @Component({
   selector: 'a2ui-image',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Default,
   template: `
     <img
       [class]="cssClass()"

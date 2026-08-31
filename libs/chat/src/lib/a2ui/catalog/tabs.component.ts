@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
-import { Component, computed, effect, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, input, signal } from '@angular/core';
 import type { Spec } from '@json-render/core';
 import { RenderElementComponent } from '@threadplane/render';
 
 @Component({
   selector: 'a2ui-tabs',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Default,
   imports: [RenderElementComponent],
   template: `
     <div class="a2ui-tabs">

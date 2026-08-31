@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
-import { Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import type { Spec } from '@json-render/core';
 import { RenderElementComponent } from '@threadplane/render';
 
 @Component({
   selector: 'a2ui-card',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Default,
   imports: [RenderElementComponent],
   template: `
     <div class="a2ui-card">
