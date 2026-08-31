@@ -74,3 +74,79 @@ changes, no PRs — findings only. Implementation is planned after all three rep
 
 ## Phase 2 (after spikes): generator generalization, then the three examples, then publish
 the matrix and rewrite the paused post's limits section as measurement.
+
+---
+
+# Phase 1 RESULTS — measured 2026-08-31
+
+Three spikes stood up real servers against the upstream integrations, drove them with live
+model calls, captured raw SSE, and replayed every transcript through the pinned
+`@ag-ui/client@0.0.52` (`EventSchemas.safeParse` + `verifyEvents`).
+
+**Strands replay re-run by the main session after that spike lost its shell: 9 transcripts,
+0 parse failures, all verify OK.**
+
+| runtime | messages | tool calls | state | interrupts | subagents |
+|---|---|---|---|---|---|
+| LangGraph (baseline) | yes | yes | yes | yes | yes |
+| AWS Strands | yes | yes | **partial** (b) | **no** (c) | **no** (b) |
+| Microsoft Agent Framework | yes | yes | yes | **no** (c) | **no** (b) |
+| Mastra (TypeScript) | yes | yes | yes | **partial** (c) | **no** (b) |
+
+Cause classes: **(a)** AG-UI protocol · **(b)** upstream integration · **(c)** our adapter.
+
+## The headline
+
+Messages, tool calls, and state work against three genuinely non-LangGraph runtimes, in two
+languages, with **zero adapter changes**. The portability claim is now measured rather than
+believed.
+
+## Two adapter defects, both ours, both fixable now
+
+**1. Interrupt detection.** `reducer.ts` keys interrupts on `CUSTOM name === 'on_interrupt'`,
+an ag-ui-langgraph convention. Strands and Microsoft both use the protocol-standard
+`RUN_FINISHED.outcome = {type:'interrupt', interrupts:[…]}` and emit `on_interrupt` **never**.
+Our RUN_FINISHED handler ignores `outcome`, so the run finalizes `success` with a dangling
+approval call and `interrupt()` stays undefined.
+
+**Verified directly by the main session, contradicting the Strands spike's headline claim:**
+`@ag-ui/core@0.0.52` does **NOT** strip `outcome` — a `RUN_FINISHED` carrying an interrupt
+outcome parses cleanly with `outcome` intact. A reducer fix works today. No dependency
+upgrade is required.
+
+**2. Resume payload shape.** `to-agent.ts` sends only `{command:{resume}}` (the LangGraph
+shape). Mastra requires `command.interruptEvent{toolCallId,runId}`; Microsoft wants structured
+entries addressing every pending interrupt.
+
+`RunAgentInputSchema` in 0.0.52 has **no `resume` field** (verified), so the protocol-standard
+resume array is not sendable on the current pin — but `forwardedProps` **is** a field, and all
+three runtimes read resume from it today. Adopting the standard array later is cleaner, not a
+prerequisite.
+
+## Subagents: red everywhere, honestly
+
+Three different non-mappings, none of them our bug. Strands routes delegation through
+`CUSTOM MultiAgentHandoff` + `STEP_*` with zero ACTIVITY events. Mastra reserves ACTIVITY for
+background tasks and observational memory. Microsoft emits coarse `activityType:"executor"`
+snapshots and constructs `ACTIVITY_DELTA` nowhere. Our `activityType === 'subagent'` filter is
+our own demo-backend convention; no third party emits it.
+
+## Stand-up costs
+
+| runtime | cost | notes |
+|---|---|---|
+| Microsoft | ~30 min | `agent-framework-ag-ui` is the real bridge, not the upstream dojo shim. **Azure creds NOT required** — plain `OPENAI_API_KEY`. Deps co-resolve with the existing lane. |
+| Mastra | ~15 min | Upstream ships **no** plain AG-UI HTTP endpoint — only in-process `MastraAgent` + a CopilotKit runtime mount. A ~200-line Node shim was wire-correct first try. |
+| Strands | ~5 min | ⚠️ **PyPI `ag-ui-strands` 0.3.0 is stale and crashes on multi-agent routes** — install from a git ref, not the release. |
+
+## Phase 2 sequencing (approved 2026-08-31)
+
+1. **Fix the two adapter defects first** — they flip cells for three runtimes; another example
+   flips none.
+2. **Strands + Microsoft examples** in the existing Python FastAPI lane, which needs the
+   generator to carry a per-topic framework adapter `{import, wrapper, mount fn}` plus
+   per-topic deps.
+3. **Mastra Node service** last — hold until resume works, or it ships with a visibly broken
+   approval button.
+4. Publish the matrix; rewrite the paused post's limits section as measurement, and correct
+   its claim that `on_interrupt` is required — it is the minority convention.
