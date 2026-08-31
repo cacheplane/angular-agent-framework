@@ -1,0 +1,65 @@
+{
+  "fixtures": [
+    {
+      "match": { "userMessage": "packing list", "hasToolResult": true },
+      "response": {
+        "content": "Your Yosemite Weekend packing list is ready."
+      }
+    },
+    {
+      "match": { "userMessage": "conditions", "hasToolResult": true },
+      "response": {
+        "content": "Clear skies at Yosemite Valley with a high of 18°C."
+      }
+    },
+    {
+      "match": { "userMessage": "reserve", "hasToolResult": true },
+      "response": {
+        "content": "North Pines is reserved for 2 nights — confirmation TP-0288."
+      }
+    },
+    {
+      "match": { "userMessage": "packing list" },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "updateWorkingMemory",
+            "arguments": {
+              "memory": {
+                "packing_list": {
+                  "title": "Yosemite Weekend",
+                  "items": [
+                    { "name": "tent", "qty": 1 },
+                    { "name": "sleeping bag", "qty": 2 }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "match": { "userMessage": "conditions" },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "check_conditions",
+            "arguments": { "location": "Yosemite Valley" }
+          }
+        ]
+      }
+    },
+    {
+      "match": { "userMessage": "reserve" },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "reserve_campsite",
+            "arguments": { "site": "North Pines", "nights": 2 }
+          }
+        ]
+      }
+    }
+  ]
+}
