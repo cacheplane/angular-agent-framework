@@ -11,6 +11,7 @@ import { HighlightedCode } from '../components/landing/HighlightedCode';
 import { SECTION_MEDIA } from '../lib/section-media';
 import type { SectionMedia } from '../lib/section-media';
 import { PilotBlock } from '../components/landing/PilotBlock';
+import { ProofStrip } from '../components/landing/ProofStrip';
 import { WhitePaperBlock } from '../components/landing/WhitePaperBlock';
 import { Promises } from '../components/landing/Promises';
 import { HomeFAQ } from '../components/landing/HomeFAQ';
@@ -220,6 +221,7 @@ export default async function HomePage() {
       <PilotBlock />
       <WhitePaperBlock />
       <Promises />
+      <ProofStrip />
       <HomeFAQ />
       <FinalCTA />
       <RecentArticles />

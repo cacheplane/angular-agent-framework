@@ -153,6 +153,11 @@
 [data-ui="section"][data-surface="tinted"] {
   background: var(--color-surface-tinted);
 }
+/* Treatment D: the proof strip's tinted band is a whisper of gradient. Scoped
+ * to #proof so other tinted sections keep the flat token. */
+#proof[data-ui="section"][data-surface="tinted"] {
+  background: linear-gradient(180deg, #fdfdfd, #f6f6f6);
+}
 [data-ui="section"][data-surface="white"] {
   background: var(--color-surface);
 }

@@ -1361,3 +1361,93 @@
     text-align: left;
   }
 }
+
+/* ---------- Proof strip (light, paper elevation — spec change D) ---------- */
+.proof-strip-grid {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 64px;
+  align-items: start;
+}
+.proof-strip-cells {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.proof-strip-cell {
+  position: relative;
+  background: var(--color-surface);
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.9),
+    rgba(251, 251, 251, 0.4)
+  );
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 26px 24px 22px;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 12px 28px -12px rgba(28, 28, 28, 0.14);
+}
+/* 1px top highlight so the card reads as paper, not an outline. */
+.proof-strip-cell::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.9),
+    transparent
+  );
+}
+.proof-strip-value {
+  font-family: var(--font-garamond);
+  font-size: 58px;
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.028em;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+.proof-strip-suffix {
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--color-text-muted);
+}
+.proof-strip-badge {
+  height: 52px;
+  width: auto;
+  display: block;
+}
+.proof-strip-caption {
+  font-family: var(--font-inter);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  margin: 12px 0 0;
+}
+.proof-strip-source {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-top: 9px;
+}
+@media (max-width: 900px) {
+  .proof-strip-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .proof-strip-cells {
+    grid-template-columns: 1fr;
+  }
+}
