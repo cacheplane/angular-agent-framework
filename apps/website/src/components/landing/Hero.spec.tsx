@@ -27,9 +27,6 @@ vi.mock('../ui/Eyebrow', () => ({
 vi.mock('../ui/BrowserFrame', () => ({
   BrowserFrame: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
-vi.mock('../ui/Pill', () => ({
-  Pill: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
-}));
 vi.mock('../ui/Button', () => ({
   Button: ({ children, href, onClick }: { children: React.ReactNode; href?: string; onClick?: () => void }) =>
     href ? (
