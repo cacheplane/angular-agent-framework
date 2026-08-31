@@ -14,7 +14,9 @@ I would rather you measure it.
 
 In the Agent Frameworks category, that is #7 of 75. And it is the #1 — really the *only* — Angular agent framework on the list.
 
-I did not fill out a questionnaire or pay for a badge. HVTracker scores from public signals only: the GitHub API, the npm and PyPI registries, and the OpenSSF Scorecard CLI, refreshed daily. The grade is what their analysis says about us, not what we say about ourselves.
+I did not fill out a questionnaire or pay for a badge.
+HVTracker scores from public signals only: the GitHub API, the npm and PyPI registries, and the OpenSSF Scorecard CLI, refreshed daily.
+The grade is what their analysis says about us, not what we say about ourselves.
 
 For me, that is the whole point.
 A trust claim you make about yourself is not worth much.
@@ -38,16 +40,24 @@ Look at the stars column.
 
 Threadplane ranks *above* CrewAI, AutoGen, and LangChain on trust — with 99 GitHub stars against their tens of thousands.
 
-That is not a glitch. HVTrust is weighted toward supply-chain integrity and provenance, not popularity. A package can be downloaded millions of times a week and still have thin security signals. A smaller one can have every signal in place. The grade rewards the second kind, which is the whole reason a tracker like this exists.
+That is not a glitch.
+HVTrust is weighted toward supply-chain integrity and provenance, not popularity.
+A package can be downloaded millions of times a week and still have thin security signals.
+A smaller one can have every signal in place.
+The grade rewards the second kind, which is the whole reason a tracker like this exists.
 
 And I will be just as honest about where we are weak.
-Our lowest signal is adoption. With 99 stars, that is the part of the profile we have the most room to grow, and it is the one place the big projects above us are genuinely ahead. I am not going to dress that up.
+Our lowest signal is adoption.
+With 99 stars, that is the part of the profile we have the most room to grow, and it is the one place the big projects above us are genuinely ahead.
+I am not going to dress that up.
 
 ## What does a Grade A actually mean?
 
 HVTracker is careful about its own claims, and I want to be too. Right on the listing, they print this:
 
-> Not a safety endorsement. HVTracker describes what public signals show, not whether a project is safe for your use case. Run your own security review before adopting in production.
+> Not a safety endorsement.
+> HVTracker describes what public signals show, not whether a project is safe for your use case.
+> Run your own security review before adopting in production.
 
 That caveat is exactly why the grade is worth anything.
 
@@ -59,17 +69,24 @@ It is not a sticker that says "trust us." It is a measurement across five dimens
 - **Maintenance** — commit freshness and cadence.
 - **Adoption** — stars and downloads.
 
-Grade A just means the score lands in the top band (A is 80 and up). It does not mean anyone audited your threat model for you. It means the public evidence is strong, and you can go verify every piece of it yourself.
+Grade A just means the score lands in the top band (A is 80 and up).
+It does not mean anyone audited your threat model for you.
+It means the public evidence is strong, and you can go verify every piece of it yourself.
 
 ## Why this matters more for agent frameworks
 
 Most software you install does one job in one place. An agent framework is different.
 
-It runs models. It executes tool calls. It reaches for credentials and acts on behalf of your users, often with real authority over real systems.
+It runs models.
+It executes tool calls.
+It reaches for credentials and acts on behalf of your users, often with real authority over real systems.
 
 So the blast radius of a compromised dependency underneath an agent is bigger than almost anything else in your stack. That is what makes "is this thing's supply chain in order" a real question and not a checkbox.
 
-It is also the gap the tooling exists to close. The OpenSSF Scorecard — the engine behind a big part of HVTrust — checks the parts of the chain attackers actually go after: source, build, dependencies, signing, and maintenance. As [OpenSSF puts it](https://openssf.org/projects/scorecard/), a lot of open source is run by small teams with limited resources, which is exactly the soft target supply-chain attacks look for. And a [Sonatype analysis](https://github.com/ossf/scorecard) found a project's Scorecard score was one of the best available predictors of whether it carried known vulnerabilities.
+It is also the gap the tooling exists to close.
+The OpenSSF Scorecard — the engine behind a big part of HVTrust — checks the parts of the chain attackers actually go after: source, build, dependencies, signing, and maintenance.
+As [OpenSSF puts it](https://openssf.org/projects/scorecard/), a lot of open source is run by small teams with limited resources, which is exactly the soft target supply-chain attacks look for.
+And a [Sonatype analysis](https://github.com/ossf/scorecard) found a project's Scorecard score was one of the best available predictors of whether it carried known vulnerabilities.
 
 From my experience, that is the question worth asking before you install anything an agent will run: how much of your app are you handing to code you did not write, and can you prove where it came from?
 
