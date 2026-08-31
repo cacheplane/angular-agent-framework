@@ -26,14 +26,21 @@ export const ANGULAR_MANIFESTS = [
   'libs/example-layouts/package.json',
 ];
 
-export const ANGULAR_SUPPORT_READMES = [
-  'README.md',
-  'libs/chat/README.md',
-  'libs/langgraph/README.md',
-  'libs/ag-ui/README.md',
-  'libs/render/README.md',
-  'libs/telemetry/README.md',
+export const ANGULAR_SUPPORT_README_BLOCKS = [
+  { path: 'README.md', marker: '**Peer dependencies:**' },
+  { path: 'libs/chat/README.md', marker: '**Peer dependencies:**' },
+  { path: 'libs/langgraph/README.md', marker: '**Peer dependencies:**' },
+  { path: 'libs/ag-ui/README.md', marker: '**Peer dependencies:**' },
+  { path: 'libs/render/README.md', marker: '**Peer dependencies:**' },
+  {
+    path: 'libs/telemetry/README.md',
+    marker: 'Both peer dependencies are optional:',
+  },
 ];
+
+export const ANGULAR_SUPPORT_READMES = ANGULAR_SUPPORT_README_BLOCKS.map(
+  ({ path }) => path
+);
 
 export const ANGULAR_SUPPORT_INSTALLATION_PAGES = [
   'apps/website/content/docs/chat/getting-started/installation.mdx',
@@ -42,8 +49,26 @@ export const ANGULAR_SUPPORT_INSTALLATION_PAGES = [
   'apps/website/content/docs/render/getting-started/installation.mdx',
 ];
 
-const ACTIVE_INSTALLATION_SUPPORT_STATEMENT =
-  'Supported Angular majors: 20, 21, and 22.';
+function formatAngularMajorList(majors) {
+  if (majors.length === 1) {
+    return String(majors[0]);
+  }
+
+  if (majors.length === 2) {
+    return `${majors[0]} and ${majors[1]}`;
+  }
+
+  return `${majors.slice(0, -1).join(', ')}, and ${majors.at(-1)}`;
+}
+
+export const ANGULAR_SUPPORT_BADGE_TEXT = `Angular ${SUPPORTED_ANGULAR_MAJORS.join(
+  ' | '
+)}`;
+export const ACTIVE_INSTALLATION_SUPPORT_STATEMENT = `Supported Angular majors: ${formatAngularMajorList(
+  SUPPORTED_ANGULAR_MAJORS
+)}.`;
+export const ACTIVE_INSTALLATION_NODE_GUIDANCE =
+  'Use a Node.js version supported by the selected Angular major. Angular 22 supports Node.js ^22.22.3, ^24.15.0, or ^26.0.0. See the [Angular compatibility matrix](https://angular.dev/reference/versions).';
 const STALE_ANGULAR_PEER_RANGE = '^20.0.0 || ^21.0.0';
 const STALE_ANGULAR_PEER_RANGE_PATTERN =
   /\^20\.0\.0\s*\|\|\s*\^21\.0\.0(?!\s*\|\|\s*\^22\.0\.0)/;
@@ -54,6 +79,36 @@ async function readJson(path) {
 
 async function readText(path) {
   return readFile(path, 'utf8');
+}
+
+function getActivePeerDependencyBlock(contents, marker) {
+  const markerIndex = contents.indexOf(marker);
+
+  if (markerIndex === -1) {
+    return undefined;
+  }
+
+  const afterMarker = contents.slice(markerIndex + marker.length);
+  const firstLine = afterMarker.slice(
+    0,
+    afterMarker.indexOf('\n') === -1 ? undefined : afterMarker.indexOf('\n')
+  );
+
+  if (firstLine.trim()) {
+    return firstLine;
+  }
+
+  const openingFenceIndex = afterMarker.indexOf('```');
+  if (openingFenceIndex === -1) {
+    return undefined;
+  }
+
+  const blockStart = afterMarker.indexOf('\n', openingFenceIndex) + 1;
+  const closingFenceIndex = afterMarker.indexOf('```', blockStart);
+
+  return closingFenceIndex === -1
+    ? undefined
+    : afterMarker.slice(blockStart, closingFenceIndex);
 }
 
 export async function verifyPeerRanges({ root = process.cwd() } = {}) {
@@ -100,7 +155,7 @@ export async function verifyPeerRanges({ root = process.cwd() } = {}) {
 export async function verifyDocumentation({ root = process.cwd() } = {}) {
   const errors = [];
 
-  for (const readme of ANGULAR_SUPPORT_READMES) {
+  for (const { marker, path: readme } of ANGULAR_SUPPORT_README_BLOCKS) {
     const readmePath = join(root, readme);
     let contents;
 
@@ -113,9 +168,24 @@ export async function verifyDocumentation({ root = process.cwd() } = {}) {
       continue;
     }
 
-    if (!contents.replaceAll('\\|', '|').includes(ANGULAR_PEER_RANGE)) {
+    if (!contents.includes(`alt="${ANGULAR_SUPPORT_BADGE_TEXT}"`)) {
       errors.push(
-        `${readme} must include the Angular peer range "${ANGULAR_PEER_RANGE}".`
+        `${readme} must contain the Angular support badge text "${ANGULAR_SUPPORT_BADGE_TEXT}".`
+      );
+    }
+
+    const activePeerDependencyBlock = getActivePeerDependencyBlock(
+      contents,
+      marker
+    );
+
+    if (
+      !activePeerDependencyBlock
+        ?.replaceAll('\\|', '|')
+        .includes(ANGULAR_PEER_RANGE)
+    ) {
+      errors.push(
+        `${readme} active peer-dependency block must include the Angular peer range "${ANGULAR_PEER_RANGE}".`
       );
     }
   }
@@ -138,6 +208,12 @@ export async function verifyDocumentation({ root = process.cwd() } = {}) {
     if (!normalizedContents.includes(ACTIVE_INSTALLATION_SUPPORT_STATEMENT)) {
       errors.push(
         `${page} must contain "${ACTIVE_INSTALLATION_SUPPORT_STATEMENT}".`
+      );
+    }
+
+    if (!normalizedContents.includes(ACTIVE_INSTALLATION_NODE_GUIDANCE)) {
+      errors.push(
+        `${page} must contain "${ACTIVE_INSTALLATION_NODE_GUIDANCE}".`
       );
     }
 

@@ -85,10 +85,20 @@ async function createDocumentationFixture(t, updateDocumentation) {
   const root = await mkdtemp(join(tmpdir(), 'threadplane-angular-docs-'));
   t.after(() => rm(root, { force: true, recursive: true }));
 
-  for (const readme of angularSupportVerifier.ANGULAR_SUPPORT_READMES ?? []) {
+  for (const {
+    marker,
+    path,
+  } of angularSupportVerifier.ANGULAR_SUPPORT_README_BLOCKS ?? []) {
     await writeText(
-      join(root, readme),
-      `Peer dependencies: \`@angular/core ${ANGULAR_PEER_RANGE}\`\n`
+      join(root, path),
+      [
+        `<img alt="${angularSupportVerifier.ANGULAR_SUPPORT_BADGE_TEXT}" />`,
+        marker,
+        '',
+        '```',
+        `@angular/core ${ANGULAR_PEER_RANGE}`,
+        '```',
+      ].join('\n')
     );
   }
 
@@ -96,7 +106,7 @@ async function createDocumentationFixture(t, updateDocumentation) {
     []) {
     await writeText(
       join(root, page),
-      'Supported Angular majors: 20, 21, and 22.\n'
+      `${angularSupportVerifier.ACTIVE_INSTALLATION_SUPPORT_STATEMENT}\n${angularSupportVerifier.ACTIVE_INSTALLATION_NODE_GUIDANCE}\n`
     );
   }
 
@@ -151,7 +161,7 @@ test('reports all stale active documentation in one pass', async (t) => {
     (error) => {
       assert.match(
         error.message,
-        /README\.md must include the Angular peer range "\^20\.0\.0 \|\| \^21\.0\.0 \|\| \^22\.0\.0"\./
+        /README\.md active peer-dependency block must include the Angular peer range "\^20\.0\.0 \|\| \^21\.0\.0 \|\| \^22\.0\.0"\./
       );
       assert.match(
         error.message,
@@ -163,6 +173,24 @@ test('reports all stale active documentation in one pass', async (t) => {
       );
       return true;
     }
+  );
+});
+
+test('rejects a stale active peer block despite an unrelated canonical example', async (t) => {
+  const root = await createDocumentationFixture(t, async (fixtureRoot) => {
+    await writeText(
+      join(fixtureRoot, 'README.md'),
+      [
+        '**Peer dependencies:** `@angular/core ^20.0.0 || ^21.0.0`',
+        '',
+        `Example peer range: \`${ANGULAR_PEER_RANGE}\``,
+      ].join('\n')
+    );
+  });
+
+  await assert.rejects(
+    angularSupportVerifier.verifyDocumentation({ root }),
+    /README\.md active peer-dependency block must include the Angular peer range/
   );
 });
 

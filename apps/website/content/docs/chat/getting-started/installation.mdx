@@ -12,14 +12,12 @@ This guide is written for customers who purchased a Pro, Team, or Enterprise pla
 
 Supported Angular majors: 20, 21, and 22.
 
-Angular 22 requires Node.js 22.22.3 or a supported newer Node line.
-
 <Steps>
 <Step title="Angular 20 or later">
 `@threadplane/chat` uses Angular Signals, `input()`, and `contentChildren()`. Run `ng version` to confirm. Upgrade with `ng update @angular/core @angular/cli` if you're below 20.
 </Step>
-<Step title="Node.js 18+">
-Required for the Angular build toolchain. `node --version` should report `v18` or newer.
+<Step title="Node.js compatibility">
+Use a Node.js version supported by the selected Angular major. Angular 22 supports Node.js ^22.22.3, ^24.15.0, or ^26.0.0. See the [Angular compatibility matrix](https://angular.dev/reference/versions).
 </Step>
 <Step title="A running agent backend (or a mock)">
 The chat UI needs something to talk to. Two officially supported adapters cover virtually every backend:

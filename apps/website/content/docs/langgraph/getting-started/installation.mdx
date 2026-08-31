@@ -6,14 +6,12 @@ Detailed setup guide for `injectAgent()` in your Angular application.
 
 Supported Angular majors: 20, 21, and 22.
 
-Angular 22 requires Node.js 22.22.3 or a supported newer Node line.
-
 <Steps>
 <Step title="Angular 20+">
 `injectAgent()` uses Angular Signals and the modern injection context API. Angular 20 or later is required.
 </Step>
-<Step title="Node.js 18+">
-Required for the build toolchain and package installation.
+<Step title="Node.js compatibility">
+Use a Node.js version supported by the selected Angular major. Angular 22 supports Node.js ^22.22.3, ^24.15.0, or ^26.0.0. See the [Angular compatibility matrix](https://angular.dev/reference/versions).
 </Step>
 <Step title="LangGraph Platform">
 A running LangGraph agent reachable over HTTP. Local (`langgraph dev`) or deployed (LangGraph Cloud) both work.
