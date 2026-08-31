@@ -9,6 +9,7 @@ import {
   ANGULAR_MANIFESTS,
   ANGULAR_PEER_RANGE,
   verifyPeerRanges,
+  verifyWebsiteMajors,
 } from './verify-angular-support.mjs';
 
 async function writeJson(path, value) {
@@ -52,6 +53,28 @@ function runNode(args) {
   });
 }
 
+function createWebsiteFixture({
+  supportedMajors = [20, 21, 22],
+  supportedVersions = 'Angular 20, 21, 22',
+  plannedVersions = '—',
+  pricingSupportSummary = 'Angular 20, 21, and 22 support',
+} = {}) {
+  return {
+    websiteAngularSupportRows: [
+      {
+        label: 'Supported',
+        versions: supportedVersions,
+        tone: 'success',
+      },
+      { label: 'Experimental', versions: '—', tone: 'warn' },
+      { label: 'Planned', versions: plannedVersions, tone: 'info' },
+      { label: 'Unsupported', versions: 'Angular ≤19', tone: 'muted' },
+    ],
+    websiteSupportedAngularMajors: supportedMajors,
+    websitePricingSupportSummary: pricingSupportSummary,
+  };
+}
+
 test('imports without CLI side effects when argv[1] is undefined', async () => {
   const result = await runNode([
     '--input-type=module',
@@ -65,6 +88,114 @@ test('imports without CLI side effects when argv[1] is undefined', async () => {
 test('uses the expected Angular peer range in every repository manifest', async () => {
   assert.equal(ANGULAR_PEER_RANGE, '^20.0.0 || ^21.0.0 || ^22.0.0');
   await verifyPeerRanges();
+});
+
+test('uses the registry Angular majors in website support data', async () => {
+  await verifyWebsiteMajors();
+});
+
+test('reports website support data that omits Angular 22', async () => {
+  await assert.rejects(
+    verifyWebsiteMajors(createWebsiteFixture({ supportedMajors: [20, 21] })),
+    /website supported Angular majors expected "20, 21, 22" but found "20, 21"/
+  );
+});
+
+test('reports website support data that advertises Angular 23', async () => {
+  await assert.rejects(
+    verifyWebsiteMajors(
+      createWebsiteFixture({ supportedMajors: [20, 21, 22, 23] })
+    ),
+    /website supported Angular majors expected "20, 21, 22" but found "20, 21, 22, 23"/
+  );
+});
+
+test('reports a supported Angular major under the website Planned row', async () => {
+  await assert.rejects(
+    verifyWebsiteMajors(
+      createWebsiteFixture({ plannedVersions: 'Angular 22' })
+    ),
+    /website Planned row must not contain supported Angular major 22/
+  );
+});
+
+test('reports Supported row text that omits Angular 22', async () => {
+  await assert.rejects(
+    verifyWebsiteMajors(
+      createWebsiteFixture({ supportedVersions: 'Angular 20, 21' })
+    ),
+    /website Supported row versions expected "Angular 20, 21, 22" but found "Angular 20, 21"/
+  );
+});
+
+test('reports Supported row text that advertises Angular 23', async () => {
+  await assert.rejects(
+    verifyWebsiteMajors(
+      createWebsiteFixture({ supportedVersions: 'Angular 20, 21, 22, 23' })
+    ),
+    /website Supported row versions expected "Angular 20, 21, 22" but found "Angular 20, 21, 22, 23"/
+  );
+});
+
+test('reports a missing website Supported row', async () => {
+  const fixture = createWebsiteFixture();
+  fixture.websiteAngularSupportRows = fixture.websiteAngularSupportRows.filter(
+    (row) => row.label !== 'Supported'
+  );
+
+  await assert.rejects(
+    verifyWebsiteMajors(fixture),
+    /website must contain exactly one Supported row but found 0/
+  );
+});
+
+test('reports duplicate website Supported rows', async () => {
+  const fixture = createWebsiteFixture();
+  fixture.websiteAngularSupportRows = [
+    ...fixture.websiteAngularSupportRows,
+    { label: 'Supported', versions: 'Angular 20, 21, 22', tone: 'success' },
+  ];
+
+  await assert.rejects(
+    verifyWebsiteMajors(fixture),
+    /website must contain exactly one Supported row but found 2/
+  );
+});
+
+test('reports a missing website Planned row', async () => {
+  const fixture = createWebsiteFixture();
+  fixture.websiteAngularSupportRows = fixture.websiteAngularSupportRows.filter(
+    (row) => row.label !== 'Planned'
+  );
+
+  await assert.rejects(
+    verifyWebsiteMajors(fixture),
+    /website must contain exactly one Planned row but found 0/
+  );
+});
+
+test('reports duplicate website Planned rows', async () => {
+  const fixture = createWebsiteFixture();
+  fixture.websiteAngularSupportRows = [
+    ...fixture.websiteAngularSupportRows,
+    { label: 'Planned', versions: '—', tone: 'info' },
+  ];
+
+  await assert.rejects(
+    verifyWebsiteMajors(fixture),
+    /website must contain exactly one Planned row but found 2/
+  );
+});
+
+test('reports a pricing support summary that drifts from website majors', async () => {
+  await assert.rejects(
+    verifyWebsiteMajors(
+      createWebsiteFixture({
+        pricingSupportSummary: 'Angular 20 and 21 support',
+      })
+    ),
+    /website pricing support summary expected "Angular 20, 21, and 22 support" but found "Angular 20 and 21 support"/
+  );
 });
 
 test('reports a peer range that omits Angular 22', async (t) => {

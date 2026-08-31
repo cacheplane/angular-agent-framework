@@ -1,4 +1,5 @@
 import { TIERS, type TierSlug } from '../../../../../pricing/tiers.config';
+import { WEBSITE_PRICING_SUPPORT_SUMMARY } from './angular-support.mjs';
 
 type ComparisonCells = Record<TierSlug, string>;
 
@@ -142,7 +143,7 @@ const COMPARISON_GROUPS: readonly ComparisonGroup[] = [
       'LangGraph adapter',
       'AG-UI adapter',
       'Light, dark, and Material-related theme presets',
-      'Angular 20 and 21 support',
+      WEBSITE_PRICING_SUPPORT_SUMMARY,
     ].map((label) => ({
       label,
       cells: PAID_CAPABILITY,
