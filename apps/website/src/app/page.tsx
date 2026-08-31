@@ -1,5 +1,5 @@
 import { Hero } from '../components/landing/Hero';
-import { EcosystemStrip } from '../components/landing/EcosystemStrip';
+import { LogoRibbon } from '../components/landing/LogoRibbon';
 import { YesWall } from '../components/landing/YesWall';
 import { FeatureBlock } from '../components/landing/FeatureBlock';
 import { BrowserFrame } from '../components/ui/BrowserFrame';
@@ -105,7 +105,7 @@ export default async function HomePage() {
   return (
     <>
       <Hero />
-      <EcosystemStrip />
+      <LogoRibbon />
       <YesWall />
 
       {/* Interactive demo showcase */}
@@ -119,22 +119,17 @@ export default async function HomePage() {
       <FeatureBlock
         id="stream"
         eyebrow="Stream"
-        headline="Build the Angular UI layer for production agents."
+        headline="One provider. A whole agent surface."
         body={
           <>
-            <code className="home-code">provideAgent</code> + <code className="home-code">injectAgent()</code> give you headless chat, durable threads, interrupts, tool progress, and generative UI. LangGraph and AG-UI adapters share the contract, so teams can swap runtimes without rewriting the Angular surface.
+            <code className="home-code">provideAgent</code> wires the agent into DI;{' '}
+            <code className="home-code">injectAgent()</code> hands back signals — messages(), status(), error() — plus durable threads and tool progress.
           </>
         }
-        bullets={[
-          'Headless chat and durable thread state',
-          'Interrupts, tool progress, branch/history',
-          'Adapters: LangGraph (@threadplane/langgraph), AG-UI (@threadplane/ag-ui)',
-          'One Angular UI layer, swappable runtimes',
-        ]}
-        supportingCards={[
-          { title: 'provideAgent', description: 'Wire the agent into Angular DI.' },
-          { title: '@threadplane/ag-ui', description: 'Any AG-UI compliant backend.' },
-          { title: '@threadplane/langgraph', description: 'Native LangGraph streaming.' },
+        rows={[
+          { claim: 'Signals, not promises', api: 'injectAgent()' },
+          { claim: 'Threads that branch, resume, replay', api: 'threadId' },
+          { claim: 'Same contract on LangGraph and AG-UI', api: 'runtime adapters' },
         ]}
         cta={{ label: 'Read the streaming guide', href: '/docs/langgraph/guides/streaming' }}
         visual={<MediumSwitcher sectionId="stream" panes={streamPanes} />}
@@ -144,18 +139,12 @@ export default async function HomePage() {
       <FeatureBlock
         id="render"
         eyebrow="Render"
-        headline="Generative UI that renders into your design system."
-        body="Server-emitted JSON specs become Angular components you already own. Vercel json-render and Google A2UI both supported, with per-component fallback and a readiness gate."
-        bullets={[
-          'Per-component fallback API + readiness gate',
-          'A2UI v1 + Vercel json-render adapter',
-          'Renders into your existing component library',
-          'Server-side schema, client-side trust',
-        ]}
-        supportingCards={[
-          { title: 'chat-timeline', description: 'Drop-in conversation surface.' },
-          { title: 'chat-debug', description: 'Live devtools for tool calls.' },
-          { title: 'GenUI surfaces', description: 'Schema-driven UI from agent output.' },
+        headline="Agent output, rendered as your components."
+        body="The server emits a JSON spec. Angular renders it with components you own — json-render and A2UI both speak it."
+        rows={[
+          { claim: 'Your design system, not a chat widget', api: '@threadplane/render' },
+          { claim: 'Unknown specs degrade per component', api: 'fallback + readiness gate' },
+          { claim: 'Schema on the server, trust in the client', api: 'validated specs' },
         ]}
         cta={{ label: 'See @threadplane/render', href: '/render' }}
         visualLeft
@@ -166,52 +155,37 @@ export default async function HomePage() {
       <FeatureBlock
         id="ship"
         eyebrow="Ship"
-        headline="Patterns built for production, not demos."
-        body="Error boundaries, observability hooks, fallback strategies — the stuff that turns a demo into a real app. Every package is MIT-licensed, with production assurance available when your team wants expert support."
-        bullets={[
-          'error() / status() / reload() signals',
-          'Readiness gate + per-component fallback',
-          'Thread persistence patterns',
-          'Clear package licensing',
-        ]}
-        supportingCards={[
-          { title: 'error/status/reload', description: 'Boundary signals for every agent.' },
-          { title: 'readiness gate', description: 'Hold renders until the surface is real.' },
-          { title: 'thread persistence', description: 'Restore conversations across sessions.' },
+        headline="Demos stream. Production recovers."
+        body="The seams that turn a demo into an app: error boundaries, readiness gates, and threads that outlive deploys."
+        rows={[
+          { claim: 'error() / status() / reload() on every agent', api: 'boundary signals' },
+          { claim: 'Fallback content where specs go wrong', api: 'readiness gate' },
+          { claim: 'Conversations restore across sessions', api: 'thread persistence' },
         ]}
         cta={{ label: 'Production patterns', href: '/docs/langgraph/guides/deployment' }}
         visual={<MediumSwitcher sectionId="ship" panes={shipPanes} />}
       />
 
       {/*
-        The homepage claims human-in-the-loop in the Yes wall and
-        mentions interrupts in the Stream block, but nothing here showed it.
+        The homepage claims human-in-the-loop in the Yes wall, but nothing
+        before this section showed it.
         This is the only section whose heading the approval clip actually
         illustrates — the same rule the solutions pages follow.
       */}
       <FeatureBlock
         id="approve"
         eyebrow="Approve"
-        headline="Nothing irreversible happens without a human."
+        headline="Nothing irreversible without a human."
         body={
           <>
-            <code className="home-code">interrupt()</code> freezes the graph
-            mid-run and the pause lives in the checkpoint, not in component state. Your UI renders the
-            proposal, the human answers, and{' '}
-            <code className="home-code">submit({'{ resume }'})</code> continues
-            the run — with the decision written back beside the action it gated.
+            <code className="home-code">interrupt()</code> freezes the run inside the checkpoint. Your UI renders the proposal;{' '}
+            <code className="home-code">submit({'{ resume }'})</code> continues with the decision on the record.
           </>
         }
-        bullets={[
-          'interrupt() pauses mid-run; submit({ resume }) continues it',
-          '<chat-interrupt-panel> renders the proposal',
-          'The pause is a checkpoint, not a modal',
-          'Decision and proposal land in one thread record',
-        ]}
-        supportingCards={[
-          { title: 'interrupt()', description: 'Freezes the graph before the action runs.' },
-          { title: 'resume', description: 'Carries the human decision back into the run.' },
-          { title: 'checkpoint', description: 'The pause survives; it is not UI state.' },
+        rows={[
+          { claim: 'The pause is a checkpoint, not a modal', api: 'interrupt()' },
+          { claim: 'The proposal renders in your UI', api: '<chat-interrupt-panel>' },
+          { claim: 'The decision lands beside the action it gated', api: 'submit({ resume })' },
         ]}
         cta={{ label: 'Interrupt patterns', href: '/docs/langgraph/guides/interrupts' }}
         visualLeft

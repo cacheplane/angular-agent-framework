@@ -275,6 +275,51 @@
   align-items: center;
   gap: 6px;
 }
+
+/* Rows variant (homepage): the Yes wall's claim→API grammar, light. */
+.feature-block-rail {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.feature-block-rail-line {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+.feature-block-rows {
+  margin-top: 20px;
+  border-top: 2px solid var(--color-text-primary);
+  max-width: 46ch;
+}
+.feature-block-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: baseline;
+  border-bottom: 1px solid var(--color-border);
+  padding: 9px 0;
+}
+.feature-block-row-claim {
+  font-family: var(--font-inter);
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--color-text-primary);
+}
+.feature-block-row-api {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .feature-block-row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}
+
 @media (max-width: 900px) {
   .feature-block-grid {
     /* minmax(0,…): bare 1fr keeps an auto minimum, so one wide child pushed
@@ -551,127 +596,6 @@
      * the stacked column past the viewport (findings §2). */
     grid-template-columns: minmax(0, 1fr) !important;
     gap: 40px !important;
-  }
-}
-
-/* EcosystemStrip — components/landing/EcosystemStrip.tsx */
-[data-ui="ecosystem-tile"] {
-  min-height: 76px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-sm);
-  padding: 14px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 5px;
-  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
-}
-.ecosystem-tile-logo {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-  flex: 0 0 auto;
-  margin-right: 8px;
-}
-.ecosystem-tile-body {
-  min-width: 0;
-}
-.ecosystem-tile-name {
-  font-family: var(--font-inter);
-  font-size: 15px;
-  line-height: 1.25;
-  font-weight: 700;
-  color: var(--color-text-primary);
-}
-.ecosystem-tile-note {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.4;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-text-muted);
-}
-.ecosystem-intro {
-  max-width: 780px;
-  margin: 0 auto 28px;
-  text-align: center;
-}
-.ecosystem-eyebrow {
-  margin-bottom: 12px;
-}
-.ecosystem-heading {
-  font-family: var(--font-garamond);
-  font-size: var(--text-h2);
-  line-height: var(--text-h2--line-height);
-  font-weight: 700;
-  color: var(--color-text-primary);
-  margin: 0;
-  margin-bottom: 14px;
-  letter-spacing: 0;
-}
-.ecosystem-subhead {
-  font-family: var(--font-inter);
-  font-size: var(--text-body-lg);
-  line-height: var(--text-body-lg--line-height);
-  color: var(--color-text-secondary);
-  margin: 0;
-}
-/* Centered ragged text is fine at 2 lines on desktop but becomes a 6-line
- * ragged column on phones; left-align for readability. */
-@media (max-width: 640px) {
-  .ecosystem-subhead,
-  .demo-showcase__subhead {
-    text-align: left;
-  }
-}
-.ecosystem-groups {
-  display: grid;
-  gap: 18px;
-  max-width: 1080px;
-  margin: 0 auto;
-}
-.ecosystem-row {
-  display: grid;
-  grid-template-columns: 170px minmax(0, 1fr);
-  gap: 14px;
-  align-items: start;
-}
-.ecosystem-row-title {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.5;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--color-accent);
-  padding-top: 16px;
-}
-.ecosystem-row-tiles {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
-  gap: 10px;
-}
-[data-ui="ecosystem-tile"]:hover {
-  border-color: var(--color-accent-border-hover);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
-}
-@media (max-width: 760px) {
-  .ecosystem-row {
-    /* minmax(0,…): bare 1fr keeps an auto minimum, so one wide child pushed
-     * the stacked column past the viewport (findings §2). */
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 8px !important;
-  }
-  .ecosystem-row > div:first-child {
-    padding-top: 0 !important;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  [data-ui="ecosystem-tile"]:hover {
-    transform: none;
   }
 }
 
@@ -1033,6 +957,13 @@
   color: var(--color-text-secondary);
   max-width: 560px;
   margin: 0 auto 20px;
+}
+/* Centered ragged text is fine at 2 lines on desktop but becomes a 6-line
+ * ragged column on phones; left-align for readability. */
+@media (max-width: 640px) {
+  .demo-showcase__subhead {
+    text-align: left;
+  }
 }
 .demo-showcase__launch-btn {
   position: absolute;
@@ -1510,4 +1441,51 @@
   .proof-strip-cells {
     grid-template-columns: 1fr;
   }
+}
+
+/* ---------- LogoRibbon — components/landing/LogoRibbon.tsx ---------- */
+.logo-ribbon {
+  background: var(--color-canvas);
+  border-top: 1px solid var(--color-border);
+  /* No border-bottom: the Yes wall directly below draws its own accent seam
+   * at the boundary; two hairlines would stack. */
+}
+.logo-ribbon-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 26px;
+  padding: 16px 0;
+}
+.logo-ribbon-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+.logo-ribbon-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+.logo-ribbon-logo {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+.logo-ribbon-name {
+  font-family: var(--font-inter);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+.logo-ribbon-more {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
 }
