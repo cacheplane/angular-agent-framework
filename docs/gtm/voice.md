@@ -1,12 +1,41 @@
 # Voice: Brian Love
 
-> The canonical voice + tone reference for any post drafted on Brian's behalf — blog, social, threads, replies. Synthesized from his pre-2026 blog corpus (`~/repos/brianflove/src/content/posts/`, 2012–2024, ~141 posts). The 2026 technical voice is intentionally excluded — that register was tuned for the streaming-chat pillar post and is narrower than how Brian actually writes.
+> The canonical voice + tone reference for any post drafted on Brian's behalf — blog, social, threads, replies. Two layers, and they come from different places: **sentence-level register** is measured from Brian's 2026 posts (`~/repos/brianflove/src/content/posts/`, see "The 2026 register" below — this governs); **structural scaffolding** comes from the 2012–2024 tutorial corpus (~141 posts) documented in the rest of this file. Where the two conflict at the sentence level, 2026 wins.
+
+## The 2026 register (governs sentence-level style)
+
+Measured 2026-08-31 across every 2026 post in the corpus. These are counts, not
+impressions:
+
+| Marker | 2026 corpus | Notes |
+|---|---|---|
+| Contractions | **zero** | The A2UI post has one apostrophe in 2,252 words: the possessive "Google's". He writes *It is*, *That would be*, *you are*. |
+| "Let's" | **zero** | Not a 2026 move, despite the 2012–2020 sections below. |
+| Opinion flags | frequent | "For me, the core idea is simple", "That is why I think memory is going to become foundational" — 9 in one post. |
+| Emoji | zero | |
+
+**Sentence-level rules (these override the historical guidance further down):**
+
+- **No contractions.** Full forms throughout. This is the single most reliable tell.
+- **No "Let's."** Move with a declarative sentence instead.
+- **One sentence per line.** Hard returns inside paragraphs are the norm, not the exception.
+- **Declarative fragments carry emphasis.** *"That is the part that matters." "Memory is becoming policy."*
+- **Flag opinions often**, and early: "For me, …", "My recommendation is simple:", "I think …".
+- **Close on a declarative beat**, not a sign-off: *"That is what makes this interesting."*
+
+**Keep from the tutorial corpus (structure, not sentences):** `## Goals` blocks,
+H2-as-question, series cross-links, an explicit `## Conclusion`, and a closing
+invitation. Reader is a peer. No hype, no marketing CTAs.
+
+**Never fabricate a first-person anecdote.** Warmth comes from opinion and
+directness, not from invented experiences.
+
 
 ## tl;dr
 
 - One thought per line. Most paragraphs are 1–3 short sentences. Hard returns inside a paragraph are normal.
 - Openings restate the title in a single sentence, then jump into the work. No "Introduction" header, no "in this article we'll explore."
-- Contractions are normal ("it's," "don't," "let's"). Brian writes the way a senior engineer talks at a meetup.
+- *(2012–2024 only — superseded, see "The 2026 register" above.)* Contractions were normal in the older corpus. In 2026 he uses full forms.
 - Warm, low-stakes humor — "freakin' cool," "giddy up and get onboard," the occasional emoji (🤔 💚 😆 👍). Not bro-voice. Closer to "fun coworker."
 - Reader addressed directly ("Let's look at," "I suggest you check it out"); opinions flagged as opinions ("For me," "In my opinion," "what I think").
 - A small set of recurring values across 12 years: ship the boring thing, do it well, have fun, name the people you're thankful to.
@@ -33,7 +62,7 @@ Brian writes in three distinct registers. Pick one and stay in it.
 
 - **One sentence per line.** From "Year in Review": *"In 2023, I began development of Polaris in earnest. / This was my first step into bootstrapping a startup."*
 - **Short, direct, most under 20 words.** *"I like ordinary. / Ordinary is welcoming, accepting, inclusive, diverse, unapologetic, and authentic."*
-- **Contractions default.** *"Let's dive into the core concepts,"* *"You're finally getting the opportunity to build something."*
+- **Contractions default** *(2012–2024 only; superseded — 2026 uses full forms).*
 - **Italics for single-word emphasis.** *"Bootstrapping a startup is *hard*,"* *"build for mobile and *then* respond to users."* Rarely bold.
 - **Bold reserved for must-do callouts.** *"This is a **must** for smaller screen devices."*
 - **Em-dashes sparingly for asides.** He more often reaches for a period.
@@ -47,7 +76,7 @@ Brian writes in three distinct registers. Pick one and stay in it.
 - **Opening: title restated as the lede.** *"Learn the basics of implementing the Redux pattern in Angular applications."*
 - **`## Goals` block, 3–5 bullets, near the top.** The last bullet is sometimes literally *"Have fun!"*
 - **Series cross-link block** with the current post marked: *"1. NgRX: The Basics (this post) / 2. NgRX: Getting Started…"*
-- **"Let's" as workhorse transition.** *"Let's break each of these down," "Let's look at an example," "Let's quickly review."* 3–10 times in a long tutorial. **Signature move.**
+- **"Let's" as workhorse transition** *(2012–2020 only; superseded — zero occurrences in the 2026 corpus).*
 - **H2-as-question, body-as-answer.** *"## What are Operators? / ## How are they composable? / ## How do I import?"*
 - **Three-bullet spine, each bullet becoming an H3.** Personal essays: *"- Building a product / - Listening to developers / - Consulting."*
 - **"Anything Else?" near the close.** *"Did I miss something? Is there something on your top 5 list that I did not mention?"*
@@ -124,10 +153,12 @@ Warm, slightly goofy, occasionally folksy. Humor lives in the asides:
 ## Drafting checklist
 
 - [ ] Opens with one sentence restating the title or stating intent. No "Introduction" header.
-- [ ] Contractions present and natural. If absent, draft is in the wrong (2026) register.
+- [ ] **No contractions.** Full forms throughout.
 - [ ] Paragraphs 1–3 lines; one sentence per line is fine.
 - [ ] Pick a register: `## Goals` (tutorial), three-bullet spine (essay), or H2-as-question (concept). Use its scaffolding.
-- [ ] At least one "Let's" transition per major section.
+- [ ] **No "Let's."** Transitions are declarative sentences.
+- [ ] One sentence per line; declarative fragments carry the emphasis.
+- [ ] Opinions flagged early and often ("For me," "I think," "My recommendation").
 - [ ] Italics for single-word emphasis; bold reserved for one must-do callout.
 - [ ] Opinions flagged ("I think," "For me," "From my experience").
 - [ ] At least one moment of warmth: an aside, "(haha)," "freakin' cool," a genuine "Thank you!", or a small emoji.
