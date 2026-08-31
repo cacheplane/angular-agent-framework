@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import type { Spec } from '@json-render/core';
 import { RenderElementComponent } from '@threadplane/render';
 
@@ -21,6 +21,7 @@ const JUSTIFY_MAP: Record<ColumnJustify, string> = {
 @Component({
   selector: 'a2ui-column',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Default,
   imports: [RenderElementComponent],
   template: `
     <div

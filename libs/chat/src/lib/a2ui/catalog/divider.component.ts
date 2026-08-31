@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
-import { Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import type { Spec } from '@json-render/core';
 
 @Component({
   selector: 'a2ui-divider',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Default,
   template: `
     @if (orientation() === 'vertical') {
       <div class="a2ui-divider a2ui-divider--vertical"></div>
