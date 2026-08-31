@@ -9,14 +9,6 @@ const ITEMS: FAQItem[] = [
     a: 'AG-UI is a protocol rather than a complete Angular UI layer. Threadplane gives Angular teams the production surface around compatible runtimes: headless chat, durable threads, interrupts, subagents, planning, memory, generative UI, and runtime adapters.',
   },
   {
-    q: 'Does it work with my existing Angular app?',
-    a: 'Yes. Drop provideAgent (from @threadplane/langgraph or @threadplane/ag-ui) into your app.config.ts. The headless primitives don’t impose any UI; the chat compositions are opt-in.',
-  },
-  {
-    q: 'Can I use this without LangGraph?',
-    a: 'Yes. Use the @threadplane/ag-ui adapter for any AG-UI compliant backend, or implement the agent contract yourself. Threadplane keeps the Angular UI layer stable while the backend agent runtime can change.',
-  },
-  {
     q: 'Which adapter should I use — @threadplane/langgraph or @threadplane/ag-ui?',
     a: 'If your backend is LangGraph Platform, use @threadplane/langgraph. If your backend speaks the AG-UI protocol (CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, or AWS Strands), use @threadplane/ag-ui. Both expose the same provideAgent/injectAgent API — see /docs/choosing-an-adapter for a side-by-side comparison.',
   },
@@ -39,10 +31,6 @@ const ITEMS: FAQItem[] = [
   {
     q: 'Does it work with Angular Universal / SSR?',
     a: 'Streaming is client-side by design — agents are stateful and signal-based. If your shell is SSR’d, the agent-talking parts stay client-only; render fallbacks during hydration via standard Angular SSR patterns.',
-  },
-  {
-    q: 'How do I test agent-driven components?',
-    a: 'The agent is provided through Angular DI, so test doubles work the way you’re used to — supply a stub agent in your test module, drive it with signals, assert on the rendered output. See /docs/langgraph/guides/testing.',
   },
 ];
 

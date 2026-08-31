@@ -35,9 +35,51 @@
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
   margin: 0;
-  margin-bottom: 32px;
+  margin-bottom: 20px;
   max-width: 54ch;
 }
+
+/* Treatment A — marker highlight. isolation:isolate is load-bearing: without
+ * it the z-index:-1 sweep paints behind the section background and vanishes. */
+.marker-highlight {
+  position: relative;
+  isolation: isolate;
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+.marker-highlight::before {
+  content: '';
+  position: absolute;
+  inset: -1px -5px -3px;
+  z-index: -1;
+  background: linear-gradient(
+    100deg,
+    rgba(0, 64, 144, 0.14),
+    rgba(0, 64, 144, 0.08) 85%
+  );
+  border-radius: 4px;
+  transform: skewX(-6deg) rotate(-0.4deg);
+}
+
+.hero-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 28px;
+  max-width: 54ch;
+}
+.hero-chip {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  padding: 5px 11px;
+  white-space: nowrap;
+}
+
 .hero-cta-row {
   display: flex;
   gap: 12px;
@@ -228,112 +270,6 @@
   }
   .feature-block-grid > div {
     order: unset !important;
-  }
-}
-
-/* Differentiator — components/landing/Differentiator.tsx */
-.differentiator-check-icon {
-  flex-shrink: 0;
-  margin-top: 4px;
-}
-.differentiator-section {
-  padding-top: 72px;
-}
-.differentiator-intro {
-  max-width: 1020px;
-  margin: 0 auto 44px;
-  text-align: center;
-}
-.differentiator-eyebrow {
-  margin-bottom: 16px;
-}
-.differentiator-heading {
-  font-family: var(--font-garamond);
-  font-size: var(--text-h2);
-  line-height: var(--text-h2--line-height);
-  font-weight: 700;
-  color: var(--color-text-primary);
-  margin: 0;
-  margin-bottom: 20px;
-  letter-spacing: -0.015em;
-}
-.differentiator-subhead {
-  font-family: var(--font-inter);
-  font-size: var(--text-body-lg);
-  line-height: var(--text-body-lg--line-height);
-  color: var(--color-text-secondary);
-  margin: 0 auto;
-  max-width: 760px;
-}
-.differentiator-list {
-  list-style: none;
-  padding: 0;
-  margin: 0 auto;
-  max-width: 980px;
-  border-top: 1px solid var(--color-border);
-}
-.why-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 18px 8px;
-  border-bottom: 1px solid var(--color-border);
-}
-.why-row__body {
-  flex: 1;
-  /* min-width:auto refused to shrink past the nowrap primitive chip and
-   * pushed the row 52px past a 320px viewport (findings §2). */
-  min-width: 0;
-  display: flex;
-  gap: 16px;
-  align-items: baseline;
-  flex-wrap: wrap;
-}
-.why-row__text {
-  flex: 1 1 200px;
-  min-width: 0;
-}
-.why-row__need {
-  font-family: var(--font-inter);
-  font-size: var(--text-body);
-  line-height: var(--text-body--line-height);
-  font-weight: 600;
-  color: var(--color-text-primary);
-  margin-right: 8px;
-}
-.why-row__description {
-  font-family: var(--font-inter);
-  font-size: var(--text-body);
-  line-height: var(--text-body--line-height);
-  color: var(--color-text-secondary);
-}
-.why-row__primitive {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: var(--color-text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-.differentiator-footer {
-  margin: 24px auto 0;
-  max-width: 980px;
-  text-align: center;
-  font-family: var(--font-inter);
-  font-size: var(--text-body);
-  line-height: var(--text-body--line-height);
-  color: var(--color-text-muted);
-}
-.differentiator-footer-link {
-  color: var(--color-accent);
-  text-decoration: none;
-  font-weight: 600;
-}
-@media (max-width: 640px) {
-  .why-row__body {
-    flex-direction: column !important;
-    gap: 6px !important;
   }
 }
 
@@ -836,6 +772,40 @@
   margin: 0;
 }
 
+/* FinalCTA dark variant — the Yes wall's partner section. */
+[data-surface="dark"] .final-cta-inner {
+  position: relative;
+}
+.final-cta-mark {
+  position: absolute;
+  right: -30px;
+  bottom: -70px;
+  font-family: var(--font-garamond);
+  font-style: italic;
+  font-weight: 800;
+  font-size: 210px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  background: linear-gradient(
+    160deg,
+    rgba(100, 195, 253, 0.14),
+    rgba(100, 195, 253, 0.03) 70%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  pointer-events: none;
+  user-select: none;
+}
+.final-cta-dark {
+  overflow: clip;
+}
+@media (max-width: 640px) {
+  .final-cta-mark {
+    font-size: 140px;
+  }
+}
+
 /* HomeFAQ — components/landing/HomeFAQ.tsx */
 .home-faq-intro {
   text-align: center;
@@ -1246,4 +1216,276 @@
   font-size: 0.68rem;
   font-weight: 700;
   color: var(--color-chat-purple);
+}
+
+/* ---------- Yes wall (dark specimen, spec change A + treatment B) ---------- */
+/* Match FinalCTA's containment: the glow and watermark stay inside the band. */
+#yes-wall {
+  overflow: clip;
+}
+.yes-wall {
+  position: relative;
+}
+/* 330px italic Garamond watermark, gradient-filled, bleeding off the right.
+ * The div holds no text (screen readers + getAllByText stay clean); the glyph
+ * comes from the data attribute. */
+.yes-wall-watermark::after {
+  content: attr(data-watermark-text);
+}
+.yes-wall-watermark {
+  position: absolute;
+  right: -40px;
+  top: -20px;
+  font-family: var(--font-garamond);
+  font-style: italic;
+  font-weight: 800;
+  font-size: clamp(160px, 24vw, 330px);
+  line-height: 0.76;
+  letter-spacing: -0.04em;
+  background: linear-gradient(
+    160deg,
+    rgba(100, 195, 253, 0.16),
+    rgba(100, 195, 253, 0.03) 70%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  pointer-events: none;
+  user-select: none;
+}
+/* Radial accent glow rising behind the watermark (treatment B). */
+.yes-wall::before {
+  content: '';
+  position: absolute;
+  top: -160px;
+  right: -120px;
+  width: 640px;
+  height: 560px;
+  background: radial-gradient(
+    closest-side,
+    rgba(100, 195, 253, 0.13),
+    rgba(100, 195, 253, 0.04) 55%,
+    transparent 75%
+  );
+  pointer-events: none;
+}
+.yes-wall-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 64px;
+}
+.yes-wall-group {
+  display: grid;
+  grid-template-columns: 112px 1fr;
+}
+.yes-wall-group + .yes-wall-group {
+  margin-top: 34px;
+}
+.yes-wall-group-numeral {
+  font-family: var(--font-garamond);
+  font-size: 62px;
+  font-weight: 700;
+  line-height: 0.85;
+  letter-spacing: -0.03em;
+  color: var(--color-border-strong);
+  padding-top: 14px;
+}
+.yes-wall-group-rows {
+  border-top: 2px solid var(--color-text-primary);
+}
+.yes-wall-group-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin: 0;
+  padding: 13px 0 5px;
+}
+/* The answer is SECOND in the DOM (question first, for screen-reader order)
+ * but placed visually first via grid areas. */
+.yes-wall-row {
+  display: grid;
+  grid-template-columns: 33px 1fr 250px;
+  grid-template-areas: 'yes question api';
+  gap: 0 13px;
+  align-items: baseline;
+  border-top: 1px solid var(--color-border);
+  padding: 12px 0;
+  transition: background 140ms ease;
+}
+.yes-wall-row:hover {
+  background: var(--color-accent-surface);
+}
+.yes-wall-question {
+  grid-area: question;
+  font-family: var(--font-inter);
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+.yes-wall-yes {
+  grid-area: yes;
+  font-family: var(--font-garamond);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--color-accent);
+  text-shadow: 0 0 16px var(--color-accent-glow);
+}
+.yes-wall-api {
+  grid-area: api;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+  text-align: right;
+  margin: 0;
+}
+.yes-wall-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-top: 34px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+}
+.yes-wall-footer-link {
+  font-family: var(--font-inter);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.yes-wall-footer-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* Responsive: the specimen devices are the fragile part. */
+@media (max-width: 900px) {
+  .yes-wall-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .yes-wall-group {
+    grid-template-columns: 1fr;
+  }
+  .yes-wall-group-numeral {
+    font-size: 40px;
+    padding: 0 0 8px;
+  }
+  .yes-wall-watermark {
+    font-size: 140px;
+    right: -16px;
+  }
+  .yes-wall-row {
+    grid-template-columns: 33px 1fr;
+    grid-template-areas:
+      'yes question'
+      '. api';
+    gap: 4px 13px;
+  }
+  .yes-wall-api {
+    text-align: left;
+  }
+}
+
+/* ---------- Proof strip (light, paper elevation — spec change D) ---------- */
+.proof-strip-grid {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 64px;
+  align-items: start;
+}
+.proof-strip-cells {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.proof-strip-cell {
+  position: relative;
+  background: var(--color-surface);
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.9),
+    rgba(251, 251, 251, 0.4)
+  );
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 26px 24px 22px;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 12px 28px -12px rgba(28, 28, 28, 0.14);
+}
+/* 1px top highlight so the card reads as paper, not an outline. */
+.proof-strip-cell::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.9),
+    transparent
+  );
+}
+.proof-strip-value {
+  font-family: var(--font-garamond);
+  font-size: 58px;
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.028em;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+.proof-strip-suffix {
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--color-text-muted);
+}
+.proof-strip-badge {
+  height: 52px;
+  width: auto;
+  display: block;
+}
+.proof-strip-caption {
+  font-family: var(--font-inter);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  margin: 12px 0 0;
+}
+.proof-strip-source {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-top: 9px;
+}
+@media (max-width: 900px) {
+  .proof-strip-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .proof-strip-cells {
+    grid-template-columns: 1fr;
+  }
 }

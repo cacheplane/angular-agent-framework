@@ -14,6 +14,12 @@ interface FinalCTAProps {
   secondary?: { label: string; href: string; external?: boolean } | null;
   /** Optional trailing caption. Defaults to licensing and telemetry line. Pass null to hide. */
   caption?: string | null;
+  /**
+   * 'dark' renders on the dark band — homepage only, pairing with the Yes
+   * wall so the inverted treatment appears twice (spec: a lone dark band
+   * reads as arbitrary). All other pages keep the default tinted surface.
+   */
+  variant?: 'default' | 'dark';
 }
 
 const DEFAULT_SECONDARY = { label: 'See each feature in action →', href: 'https://cockpit.threadplane.ai', external: true };
@@ -24,11 +30,21 @@ export function FinalCTA({
   primary = null,
   secondary = DEFAULT_SECONDARY,
   caption = 'All packages are MIT · Production support available · App telemetry off by default',
+  variant = 'default',
 }: FinalCTAProps = {}) {
   return (
-    <Section surface="tinted" ariaLabelledBy="final-cta-heading">
+    <Section
+      surface={variant === 'dark' ? 'dark' : 'tinted'}
+      className={variant === 'dark' ? 'final-cta-dark' : undefined}
+      ariaLabelledBy="final-cta-heading"
+    >
       <Container>
         <div className="final-cta-inner">
+          {variant === 'dark' ? (
+            <div className="final-cta-mark" aria-hidden="true">
+              →
+            </div>
+          ) : null}
           <h2 id="final-cta-heading" className="final-cta-heading">
             {headline}
           </h2>
