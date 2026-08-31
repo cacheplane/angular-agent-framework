@@ -120,15 +120,17 @@ export function useRuntimeController({
     () => createRuntimeSnapshot(target, capability),
   );
   const snapshotRef = useRef(snapshot);
-  snapshotRef.current = snapshot;
 
   const frameRef = useRef<HTMLIFrameElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeCheckRef = useRef<ActiveCheck | null>(null);
   const onActivityRef = useRef(onActivity);
   const onTerminalTransitionRef = useRef(onTerminalTransition);
-  onActivityRef.current = onActivity;
-  onTerminalTransitionRef.current = onTerminalTransition;
+
+  useLayoutEffect(() => {
+    onActivityRef.current = onActivity;
+    onTerminalTransitionRef.current = onTerminalTransition;
+  }, [onActivity, onTerminalTransition]);
 
   const invalidInputRevision = useMemo(
     () =>
@@ -272,13 +274,13 @@ export function useRuntimeController({
     if (route.target.kind !== 'configured') return 'failed';
     recordActivity('runtime_open_requested', route.capability);
     try {
-      return window.open(
+      if (typeof window.open !== 'function') return 'failed';
+      window.open(
         route.target.configuredUrl,
         '_blank',
         'noopener,noreferrer',
-      ) === null
-        ? 'failed'
-        : 'requested';
+      );
+      return 'requested';
     } catch {
       return 'failed';
     }

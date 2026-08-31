@@ -524,17 +524,22 @@ describe('useRuntimeController', () => {
       .mockReturnValueOnce(firstEventId)
       .mockReturnValueOnce(secondEventId);
     const suspension = new Promise<never>(() => undefined);
+    const futureOnActivity = vi.fn<(event: RuntimeActivityInput) => void>();
+    const futureOnTerminalTransition =
+      vi.fn<(event: RuntimeTerminalTransition) => void>();
     const renderConcurrent = (
       runtimeUrl: string,
       capability: string,
       suspend: boolean,
+      activity = onActivity,
+      terminalTransition = onTerminalTransition,
     ) => (
       <Suspense fallback={<div>Suspended</div>}>
         <ConcurrentHarness
           runtimeUrl={runtimeUrl}
           capability={capability}
-          onActivity={onActivity}
-          onTerminalTransition={onTerminalTransition}
+          onActivity={activity}
+          onTerminalTransition={terminalTransition}
           suspend={suspend}
           suspension={suspension}
         />
@@ -561,6 +566,8 @@ describe('useRuntimeController', () => {
             'https://runtime.test/future',
             'persistence',
             true,
+            futureOnActivity,
+            futureOnTerminalTransition,
           ),
         );
       });
@@ -577,7 +584,18 @@ describe('useRuntimeController', () => {
       },
       'https://runtime.test',
     );
+    expect(onActivity.mock.calls.map(([event]) => event.kind)).toEqual([
+      'runtime_check_requested',
+    ]);
+    expect(futureOnActivity).not.toHaveBeenCalled();
     emitMessage(runtimeReady(firstNonce), 'https://runtime.test', frameWindow);
+    expect(onActivity.mock.calls.map(([event]) => event.kind)).toEqual([
+      'runtime_check_requested',
+      'runtime_ready',
+    ]);
+    expect(onTerminalTransition).toHaveBeenCalledTimes(1);
+    expect(futureOnActivity).not.toHaveBeenCalled();
+    expect(futureOnTerminalTransition).not.toHaveBeenCalled();
 
     act(() => {
       root.render(
@@ -595,6 +613,8 @@ describe('useRuntimeController', () => {
       frameGeneration: 0,
     });
     expect(onTerminalTransition).toHaveBeenCalledTimes(1);
+    expect(futureOnActivity).not.toHaveBeenCalled();
+    expect(futureOnTerminalTransition).not.toHaveBeenCalled();
   });
 
   it('reports each committed invalid raw input once without exposing it', () => {
@@ -641,7 +661,7 @@ describe('useRuntimeController', () => {
     ).toHaveLength(1);
   });
 
-  it('opens only the original configured URL and reports popup outcomes', () => {
+  it('reports Open as requested for any non-throwing call', () => {
     randomUUID
       .mockReturnValueOnce(firstEventId)
       .mockReturnValueOnce(secondEventId)
@@ -658,7 +678,7 @@ describe('useRuntimeController', () => {
       });
 
     expect(controller.open()).toBe('requested');
-    expect(controller.open()).toBe('failed');
+    expect(controller.open()).toBe('requested');
     expect(controller.open()).toBe('failed');
 
     expect(open).toHaveBeenNthCalledWith(
