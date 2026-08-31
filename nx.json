@@ -71,7 +71,7 @@
       "workspaceChangelog": {
         "createRelease": "github",
         "renderOptions": {
-          "authors": true,
+          "authors": false,
           "commitReferences": true,
           "versionTitleDate": true
         }
