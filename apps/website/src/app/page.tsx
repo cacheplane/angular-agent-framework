@@ -167,8 +167,8 @@ export default async function HomePage() {
       />
 
       {/*
-        The homepage claims human-in-the-loop in the Yes wall and
-        mentions interrupts in the Stream block, but nothing here showed it.
+        The homepage claims human-in-the-loop in the Yes wall, but nothing
+        before this section showed it.
         This is the only section whose heading the approval clip actually
         illustrates — the same rule the solutions pages follow.
       */}
