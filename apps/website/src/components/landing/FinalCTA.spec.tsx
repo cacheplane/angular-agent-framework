@@ -7,6 +7,7 @@ import { FinalCTA } from './FinalCTA';
 vi.mock('../../lib/analytics/client', () => ({
   track: vi.fn(),
   trackCtaClick: vi.fn(),
+  trackExternalLinkClick: vi.fn(),
 }));
 
 describe('FinalCTA', () => {
@@ -22,5 +23,6 @@ describe('FinalCTA', () => {
     const section = container.querySelector('[data-ui="section"]');
     expect(section?.getAttribute('data-surface')).toBe('dark');
     expect(container.querySelector('.final-cta-mark')).toBeTruthy();
+    expect(container.querySelector('.final-cta-mark')?.getAttribute('aria-hidden')).toBe('true');
   });
 });

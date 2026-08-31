@@ -797,6 +797,14 @@
   pointer-events: none;
   user-select: none;
 }
+.final-cta-dark {
+  overflow: clip;
+}
+@media (max-width: 640px) {
+  .final-cta-mark {
+    font-size: 140px;
+  }
+}
 
 /* HomeFAQ — components/landing/HomeFAQ.tsx */
 .home-faq-intro {

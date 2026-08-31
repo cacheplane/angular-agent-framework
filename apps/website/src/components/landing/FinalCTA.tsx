@@ -35,6 +35,7 @@ export function FinalCTA({
   return (
     <Section
       surface={variant === 'dark' ? 'dark' : 'tinted'}
+      className={variant === 'dark' ? 'final-cta-dark' : undefined}
       ariaLabelledBy="final-cta-heading"
     >
       <Container>
