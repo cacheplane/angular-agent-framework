@@ -426,7 +426,9 @@ Portability across agent frameworks and server-managed thread history are differ
 - **Client tools run in the browser, so they run with the user's authority.** A handler that calls your API is a client calling your API. Authorize on the server; a tool description is not an access-control policy.
 - **Side effects need a guard.** Tools are non-idempotent by default. If a handler moves money or sends mail, pair it with a `[clientToolExecutionGuard]` so a reload cannot run it twice, and mark only genuinely safe tools `idempotent: true`.
 - **Runaway loops are capped, but tune the cap.** A model that keeps calling client tools stops after 10 continuation groups per user turn. Adjust with `[clientToolContinuationPolicy]` and decide what the UI says when it trips.
-- **CORS and auth.** `http://localhost:4200` is a development origin. Use your real one, or route through the same domain and skip cross-origin entirely. Pass tokens with `headers`.
+- **CORS and auth.** `http://localhost:4200` is a development origin.
+  Use your real one, or route through the same domain and skip cross-origin entirely.
+  Pass tokens with `headers`.
 - **A buffering proxy breaks streaming.** Disable response buffering and preserve the streaming content type, or the whole thing collapses into a spinner.
 - **`MemorySaver` is not persistence.** It is in this tutorial because `ag-ui-langgraph` needs a checkpointer to read state. It is not a store.
 
