@@ -76,7 +76,15 @@ describe('cockpit/ports.mjs registry', () => {
   test('each cap python/project.json --port matches PORTS[name].langgraph', () => {
     const mismatches = [];
     for (const { name, dir } of projects) {
-      const pyProjectJson = join(dir, '..', 'python', 'project.json');
+      const pyDir = join(dir, '..', 'python');
+      if (!existsSync(pyDir)) {
+        // No python sibling at all: the cap's backend is not Python (e.g.
+        // rt-mastra, whose backend is the deployments/ag-ui-mastra Node
+        // service). Nothing to cross-check here — but a python/ dir WITHOUT
+        // a project.json is still an error below.
+        continue;
+      }
+      const pyProjectJson = join(pyDir, 'project.json');
       if (!existsSync(pyProjectJson)) {
         mismatches.push(`${name}: missing python/project.json at ${pyProjectJson}`);
         continue;

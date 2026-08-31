@@ -88,9 +88,19 @@ function deriveCockpitCaps() {
           const angularName = meta.name;
           if (typeof angularName !== 'string') continue;
           // Derive python sibling: same parent dir, swap angular -> python.
+          // A cap without a python sibling on disk (Node-hosted backend,
+          // e.g. rt-mastra) gets python: '' — ci.yml guards the uv/venv
+          // steps on that being non-empty.
           const relAngular = path.relative(repoRoot, full); // e.g. cockpit/chat/messages/angular
           const relPython = relAngular.replace(/\/angular$/, '/python');
-          caps.push({ angular: angularName, python: relPython });
+          const hasPython = (() => {
+            try {
+              return statSync(path.join(repoRoot, relPython)).isDirectory();
+            } catch {
+              return false;
+            }
+          })();
+          caps.push({ angular: angularName, python: hasPython ? relPython : '' });
         } catch {
           // No project.json or invalid JSON — skip silently.
         }

@@ -458,12 +458,18 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci
+      # matrix.cap.python is '' for caps whose backend is not Python (e.g.
+      # cockpit-runtimes-mastra-angular — its backend is the
+      # deployments/ag-ui-mastra Node service, installed by the example's
+      # own e2e global setup). Skip the uv/venv steps for those.
       - name: Cache cap python venv
+        if: matrix.cap.python != ''
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ matrix.cap.python }}/.venv
           key: uv-venv-${{ runner.os }}-py3.12-${{ matrix.cap.python }}-${{ hashFiles(format('{0}/uv.lock', matrix.cap.python)) }}
       - name: uv sync per-cap python
+        if: matrix.cap.python != ''
         working-directory: ${{ matrix.cap.python }}
         run: uv sync
       - name: Cache Playwright browsers

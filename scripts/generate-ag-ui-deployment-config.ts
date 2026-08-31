@@ -9,10 +9,17 @@ export interface GenerateOptions {
   outDir: string;
 }
 
+/**
+ * Frameworks hosted by the aggregated Python deployment. 'mastra' is
+ * excluded: it is the Node hosting lane (deployments/ag-ui-mastra) and by
+ * construction has no pythonDir, so it never reaches this generator.
+ */
+export type PythonHostedFramework = Exclude<CapabilityFramework, 'mastra'>;
+
 export interface AgUiTopic {
   topic: string;
   pythonDir: string;
-  framework: CapabilityFramework;
+  framework: PythonHostedFramework;
 }
 
 /**
@@ -46,7 +53,7 @@ interface FrameworkAdapter {
  * langgraph stays first so a langgraph-only registry generates byte-identical
  * output to the pre-adapter generator.
  */
-const FRAMEWORK_ADAPTERS: Record<CapabilityFramework, FrameworkAdapter> = {
+const FRAMEWORK_ADAPTERS: Record<PythonHostedFramework, FrameworkAdapter> = {
   langgraph: {
     bridgeImport: 'from ag_ui_langgraph import add_langgraph_fastapi_endpoint, LangGraphAgent',
     topicImport: (mod) => `from deps.${mod}.src.graph import graph as ${mod}_graph`,
@@ -96,11 +103,18 @@ function collectTopics(): AgUiTopic[] {
     // 'ag-ui' and 'runtimes' products are both AG-UI-served FastAPI backends
     // aggregated into the single ag-ui-dev deployment.
     .filter((c) => (c.product === 'ag-ui' || c.product === 'runtimes') && c.pythonDir)
-    .map<AgUiTopic>((c) => ({
-      topic: c.topic,
-      pythonDir: c.pythonDir!,
-      framework: c.framework ?? 'langgraph',
-    }));
+    .map<AgUiTopic>((c) => {
+      if (c.framework === 'mastra') {
+        // Node hosting lane: a mastra capability must not declare a
+        // pythonDir — its backend is deployments/ag-ui-mastra.
+        throw new Error(`Capability ${c.id} declares framework 'mastra' with a pythonDir; mastra topics are Node-hosted.`);
+      }
+      return {
+        topic: c.topic,
+        pythonDir: c.pythonDir!,
+        framework: c.framework ?? 'langgraph',
+      };
+    });
   topics.sort((a, b) => a.topic.localeCompare(b.topic));
   if (topics.length === 0) {
     throw new Error('No ag-ui topics with pythonDir found in capability registry');
