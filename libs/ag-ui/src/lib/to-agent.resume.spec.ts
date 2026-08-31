@@ -72,9 +72,15 @@ async function replayInterruptRun(
   expect(agent.interrupt!()).toBeDefined();
 }
 
-function lastRunAgentArg(stub: StubAgent): { forwardedProps?: Record<string, unknown> } {
+function lastRunAgentArg(stub: StubAgent): {
+  forwardedProps?: Record<string, unknown>;
+  resume?: Array<Record<string, unknown>>;
+} {
   const calls = stub.runAgent.mock.calls as unknown as ReadonlyArray<ReadonlyArray<unknown>>;
-  return calls[calls.length - 1][0] as { forwardedProps?: Record<string, unknown> };
+  return calls[calls.length - 1][0] as {
+    forwardedProps?: Record<string, unknown>;
+    resume?: Array<Record<string, unknown>>;
+  };
 }
 
 describe('submit({ resume }) — LangGraph wire shape is unchanged', () => {
@@ -134,11 +140,15 @@ describe('submit({ resume }) — Mastra transcript round-trip', () => {
 
 describe('submit({ resume }) — Microsoft Agent Framework transcript round-trip', () => {
   // Inbound: spike-maf/transcripts/06-hitl-interrupt.sse (RUN_FINISHED
-  // interrupt outcome). Expected outbound: the measured working request
-  // captured on the __request__ line of spike-maf/transcripts/
-  // 08-hitl-resume.sse — one structured { id, status, payload } entry per
-  // pending interrupt under command.resume.
-  it('reproduces the measured structured per-interrupt command.resume entries', async () => {
+  // interrupt outcome). Outbound since @ag-ui/client@0.0.59: the
+  // protocol-standard TOP-LEVEL resume array. The measured working request
+  // (maf-hitl-resume.sse __request__ line) carried the same entries under the
+  // pre-standard forwardedProps.command.resume location keyed `id`; the
+  // Microsoft bridge reads the top-level field FIRST (_extract_resume_payload
+  // checks input.resume before forwardedProps.command.resume) and accepts
+  // `interruptId` keys, so identity/status/payload are asserted against the
+  // measured entries with only the documented id → interruptId key rename.
+  it('addresses the measured pending interrupt via top-level resume entries', async () => {
     const stub = new StubAgent();
     const agent = toAgent(stub as unknown as AbstractAgent);
     await replayInterruptRun(
@@ -148,46 +158,53 @@ describe('submit({ resume }) — Microsoft Agent Framework transcript round-trip
     await agent.submit({ resume: { approved: true } });
 
     const measured = readCapturedRequest('maf-hitl-resume.sse');
-    expect(lastRunAgentArg(stub).forwardedProps).toEqual(measured['forwardedProps']);
-    expect(lastRunAgentArg(stub).forwardedProps).toEqual({
-      command: {
-        resume: [{
-          id: 'call_VlNsrwdW5hhp2G8Ufp6i8ueQ',
-          status: 'resolved',
-          payload: { approved: true },
-        }],
-      },
-    });
+    const measuredEntries = (
+      (measured['forwardedProps'] as { command: { resume: Array<Record<string, unknown>> } })
+    ).command.resume;
+    const sent = lastRunAgentArg(stub);
+    expect(sent.resume).toEqual(
+      measuredEntries.map(({ id, ...rest }) => ({ interruptId: id, ...rest })),
+    );
+    expect(sent.resume).toEqual([{
+      interruptId: 'call_VlNsrwdW5hhp2G8Ufp6i8ueQ',
+      status: 'resolved',
+      payload: { approved: true },
+    }]);
+    // The legacy forwardedProps location is NOT double-sent.
+    expect(sent.forwardedProps).toBeUndefined();
   });
 });
 
 describe('submit({ resume }) — AWS Strands interrupt outcome', () => {
-  // Inbound: spike-strands/transcripts/interrupt_phase1.sse. The outcome
-  // entry's id must ride back so the backend can address the pending
-  // interrupt. (The Strands spike resumed via the protocol-standard TOP-LEVEL
-  // resume array, which RunAgentInputSchema@0.0.52 cannot send — adopting it
-  // is an explicit follow-up; forwardedProps carries the same identity today.)
-  it('carries the interrupt id in structured entries with the resume payload', async () => {
+  // Inbound: spike-strands/transcripts/interrupt_phase1.sse. Outbound: the
+  // protocol-standard TOP-LEVEL resume array — byte-for-byte the `resume`
+  // field of the measured working request (strands-resume.request.json,
+  // captured as interrupt_phase2_resume in the spike). Strands reads ONLY
+  // this location (it received forwardedProps as {} in every capture), which
+  // is why 0.0.52 — whose prepareRunAgentInput dropped top-level resume at
+  // assembly — could not resume Strands at all.
+  it('sends the measured top-level resume array', async () => {
     const stub = new StubAgent();
     const agent = toAgent(stub as unknown as AbstractAgent);
     await replayInterruptRun(stub, agent, 'strands-interrupt.sse', 'run-1');
 
     await agent.submit({ resume: { chosen_label: 'Tuesday 10:00' } });
 
-    expect(lastRunAgentArg(stub).forwardedProps).toEqual({
-      command: {
-        resume: [{
-          id: 'v1:tool_call:call_A9ckGX1LrvO82OhqZinzDsom:340a4daa-b874-5aad-8309-a63b92d507dd',
-          status: 'resolved',
-          payload: { chosen_label: 'Tuesday 10:00' },
-        }],
-      },
-    });
+    const measured = readCapturedRequest('strands-resume.request.json');
+    const sent = lastRunAgentArg(stub);
+    expect(sent.resume).toEqual(measured['resume']);
+    expect(sent.resume).toEqual([{
+      interruptId: 'v1:tool_call:call_A9ckGX1LrvO82OhqZinzDsom:340a4daa-b874-5aad-8309-a63b92d507dd',
+      status: 'resolved',
+      payload: { chosen_label: 'Tuesday 10:00' },
+    }]);
+    expect(sent.forwardedProps).toBeUndefined();
   });
 
   // SYNTHETIC: no transcript covers a caller that authors its own structured
-  // entries; those must pass through untouched rather than be re-wrapped.
-  it('passes caller-authored structured entries through untouched', async () => {
+  // entries; those ride the top-level resume array normalized to the
+  // protocol's ResumeEntry shape (interruptId-keyed entries are unchanged).
+  it('passes caller-authored interruptId-keyed entries through unchanged', async () => {
     const stub = new StubAgent();
     const agent = toAgent(stub as unknown as AbstractAgent);
     await replayInterruptRun(stub, agent, 'strands-interrupt.sse', 'run-1');
@@ -199,8 +216,27 @@ describe('submit({ resume }) — AWS Strands interrupt outcome', () => {
     }];
     await agent.submit({ resume: structured });
 
-    expect(lastRunAgentArg(stub).forwardedProps).toEqual({
-      command: { resume: structured },
+    expect(lastRunAgentArg(stub)).toEqual({ resume: structured });
+  });
+
+  // SYNTHETIC: entries authored with the pre-standard `id` key are renamed to
+  // the protocol's `interruptId`; other fields ride along unchanged.
+  it('normalizes caller-authored id-keyed entries to ResumeEntry', async () => {
+    const stub = new StubAgent();
+    const agent = toAgent(stub as unknown as AbstractAgent);
+    await replayInterruptRun(stub, agent, 'strands-interrupt.sse', 'run-1');
+
+    await agent.submit({
+      resume: [{ id: 'interrupt-1', payload: { ok: true }, metadata: { via: 'test' } }],
+    });
+
+    expect(lastRunAgentArg(stub)).toEqual({
+      resume: [{
+        interruptId: 'interrupt-1',
+        status: 'resolved',
+        payload: { ok: true },
+        metadata: { via: 'test' },
+      }],
     });
   });
 });

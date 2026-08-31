@@ -521,8 +521,14 @@ function randomId(): string {
   return Math.random().toString(36).slice(2);
 }
 
-/** Loosely-typed RUN_FINISHED outcome (protocol-standard since AG-UI added
- *  run outcomes; @ag-ui/client@0.0.52 parses it through intact). */
+/** Loosely-typed RUN_FINISHED outcome. @ag-ui/core@0.0.59 ships the strict
+ *  RunFinishedInterruptOutcomeSchema / InterruptSchema for this shape, but
+ *  the reducer deliberately keeps this tolerant hand-rolled view: a strict
+ *  parse would silently DROP an interrupt whose entries deviate from the
+ *  schema (extra keys on the strict outcome object, a missing `reason`),
+ *  while the contract here is to preserve every entry verbatim under
+ *  `value.interrupts` for resume to address. Validation strictness would be
+ *  a behavior change, not a simplification. */
 interface RunFinishedOutcome {
   type?: string;
   interrupts?: unknown;
