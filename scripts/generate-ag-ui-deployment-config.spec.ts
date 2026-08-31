@@ -2,7 +2,7 @@ import { describe, expect, it, beforeEach } from 'vitest';
 import { mkdtempSync, rmSync, existsSync, readFileSync, statSync } from 'fs';
 import { tmpdir } from 'os';
 import { join, resolve } from 'path';
-import { generateAgUiDeployment } from './generate-ag-ui-deployment-config';
+import { buildServerPy, generateAgUiDeployment, type AgUiTopic } from './generate-ag-ui-deployment-config';
 
 const REPO_ROOT = resolve(__dirname, '..');
 
@@ -72,6 +72,19 @@ describe('generateAgUiDeployment', () => {
     expect(reqs).not.toMatch(/^-e \./m);
   });
 
+  it('matches the committed deployments/ag-ui-dev artifacts byte-for-byte (drift check)', () => {
+    // The deploy-ag-ui workflow regenerates and fails on `git diff` drift.
+    // This is the same guarantee, runnable locally without touching the
+    // committed artifacts.
+    generateAgUiDeployment({ repoRoot: REPO_ROOT, outDir });
+    const committedDir = join(REPO_ROOT, 'deployments/ag-ui-dev');
+    for (const file of ['server.py', 'requirements.txt']) {
+      expect(readFileSync(join(outDir, file), 'utf8')).toBe(
+        readFileSync(join(committedDir, file), 'utf8'),
+      );
+    }
+  });
+
   it('produces byte-identical output across runs (idempotent)', () => {
     generateAgUiDeployment({ repoRoot: REPO_ROOT, outDir });
     const firstServer = readFileSync(join(outDir, 'server.py'), 'utf8');
@@ -79,5 +92,54 @@ describe('generateAgUiDeployment', () => {
     generateAgUiDeployment({ repoRoot: REPO_ROOT, outDir });
     expect(readFileSync(join(outDir, 'server.py'), 'utf8')).toBe(firstServer);
     expect(readFileSync(join(outDir, 'requirements.txt'), 'utf8')).toBe(firstReqs);
+  });
+});
+
+describe('buildServerPy framework adapters', () => {
+  const lg = (topic: string): AgUiTopic => ({ topic, pythonDir: `x/${topic}/python`, framework: 'langgraph' });
+  const maf = (topic: string): AgUiTopic => ({
+    topic,
+    pythonDir: `x/${topic}/python`,
+    framework: 'microsoft-agent-framework',
+  });
+
+  it('langgraph topics import graph and mount via LangGraphAgent, with no MAF bridge import', () => {
+    const server = buildServerPy([lg('interrupts')]);
+    expect(server).toContain('from ag_ui_langgraph import add_langgraph_fastapi_endpoint, LangGraphAgent');
+    expect(server).toContain('from deps.interrupts.src.graph import graph as interrupts_graph');
+    expect(server).toContain('LangGraphAgent(name="interrupts", graph=interrupts_graph)');
+    expect(server).not.toContain('agent_framework_ag_ui');
+  });
+
+  it('microsoft-agent-framework topics import agent and mount the agent object directly', () => {
+    const server = buildServerPy([maf('microsoft-agent-framework')]);
+    expect(server).toContain('from agent_framework_ag_ui import add_agent_framework_fastapi_endpoint');
+    expect(server).toContain(
+      'from deps.microsoft_agent_framework.src.agent import agent as microsoft_agent_framework_agent',
+    );
+    expect(server).toContain(
+      'add_agent_framework_fastapi_endpoint(\n' +
+        '    app,\n' +
+        '    microsoft_agent_framework_agent,\n' +
+        '    path="/agent/microsoft-agent-framework",\n' +
+        ')',
+    );
+    // No LangGraph machinery when no langgraph topic is present.
+    expect(server).not.toContain('ag_ui_langgraph');
+    expect(server).not.toContain('LangGraphAgent');
+  });
+
+  it('mixed sets emit both bridge imports (langgraph first) and per-topic mounts', () => {
+    const server = buildServerPy([lg('interrupts'), maf('microsoft-agent-framework')]);
+    const lgImport = server.indexOf('from ag_ui_langgraph import');
+    const mafImport = server.indexOf('from agent_framework_ag_ui import');
+    expect(lgImport).toBeGreaterThan(-1);
+    expect(mafImport).toBeGreaterThan(lgImport);
+    expect(server).toContain('path="/agent/interrupts"');
+    expect(server).toContain('path="/agent/microsoft-agent-framework"');
+    // Framework routing is per-topic: the langgraph topic must not be
+    // mounted through the MAF bridge or vice versa.
+    expect(server).toContain('LangGraphAgent(name="interrupts"');
+    expect(server).not.toContain('LangGraphAgent(name="microsoft-agent-framework"');
   });
 });

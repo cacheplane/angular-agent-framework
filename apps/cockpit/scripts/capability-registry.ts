@@ -2,9 +2,25 @@
  * Single source of truth for all cockpit capability examples.
  * Used by serve, build, test, and deploy scripts.
  */
+/**
+ * Backend framework of an AG-UI-served capability (products 'ag-ui' and
+ * 'runtimes'). Selects the framework adapter in
+ * scripts/generate-ag-ui-deployment-config.ts: the bridge import, the
+ * per-topic module contract (`src/graph.py` exposing `graph` for LangGraph
+ * vs `src/agent.py` exposing `agent` for Microsoft Agent Framework), and
+ * the FastAPI mount call. Omitted means 'langgraph'.
+ */
+export type CapabilityFramework = 'langgraph' | 'microsoft-agent-framework';
+
 export interface Capability {
   id: string;
-  product: 'langgraph' | 'deep-agents' | 'render' | 'chat' | 'ag-ui';
+  /**
+   * 'runtimes' is the one-capability-many-runtimes axis
+   * (cockpit/runtimes/<runtime>/): non-LangGraph AG-UI backends measured
+   * against the same neutral Agent contract. Like 'ag-ui' caps, they are
+   * served by the aggregated deployments/ag-ui-dev FastAPI app.
+   */
+  product: 'langgraph' | 'deep-agents' | 'render' | 'chat' | 'ag-ui' | 'runtimes';
   topic: string;
   angularProject: string;
   port: number;
@@ -13,6 +29,8 @@ export interface Capability {
   pythonDir?: string;
   /** Optional — see pythonDir. */
   graphName?: string;
+  /** AG-UI backend framework; defaults to 'langgraph' when omitted. */
+  framework?: CapabilityFramework;
 }
 
 export const capabilities: readonly Capability[] = [
