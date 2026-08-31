@@ -1,13 +1,14 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { tokens } from '@threadplane/design-tokens';
-import { docsConfig, specialDocsPages } from '../../lib/docs-config';
+import { findDocsPage, getLibraryConfig, type LibraryId } from '../../lib/docs-config';
 import { trackCtaClick, trackExternalLinkClick } from '../../lib/analytics/client';
+import type { AnalyticsLibrary } from '../../lib/analytics/events';
 import { LogoMark } from '../ui/LogoMark';
 import { Button } from '../ui/Button';
 import { DEMOS, demoCtaSuffix } from '../../lib/demos';
+import { DocsContextContent } from '../docs/DocsControlPlane';
 
 const links = [
   { label: 'Pilot to Prod', href: '/pilot-to-prod', external: false },
@@ -15,6 +16,18 @@ const links = [
   { label: 'Pricing', href: '/pricing', external: false },
   { label: 'Examples', href: 'https://cockpit.threadplane.ai', external: true },
 ];
+
+const toAnalyticsLibrary = (library: LibraryId): AnalyticsLibrary => {
+  switch (library) {
+    case 'langgraph':
+    case 'render':
+    case 'chat':
+    case 'ag-ui':
+      return library;
+    default:
+      return 'unknown';
+  }
+};
 
 function GitHubIcon() {
   return (
@@ -82,7 +95,14 @@ export function Nav() {
   const activeLibrary = isDocsPage && pathParts.length >= 2 ? pathParts[1] : '';
   const activeSection = isDocsPage && pathParts.length >= 3 ? pathParts[2] : '';
   const activeSlug = isDocsPage && pathParts.length >= 4 ? pathParts[3] : '';
-  const initialMobileLibrary = docsConfig.find((lib) => lib.id === activeLibrary)?.id ?? 'langgraph';
+  const docsLibrary = (getLibraryConfig(activeLibrary)?.id ?? 'langgraph') as LibraryId;
+  const docsPageTitle = findDocsPage(activeLibrary, activeSection, activeSlug)?.title ?? 'Documentation';
+  const mobileTriggerRef = useRef<HTMLButtonElement>(null);
+  const mobileDialogRef = useRef<HTMLDivElement>(null);
+  const closeMobileMenu = useCallback(() => {
+    setOpen(false);
+    mobileTriggerRef.current?.focus();
+  }, []);
 
   const [mobileTab, setMobileTab] = useState<'site' | 'docs'>(isDocsPage ? 'docs' : 'site');
 
@@ -95,23 +115,38 @@ export function Nav() {
     }
     return () => { document.body.style.overflow = ''; };
   }, [open]);
-  const [mobileLibrary, setMobileLibrary] = useState(initialMobileLibrary);
-  const [openSections, setOpenSections] = useState<Set<string>>(() => new Set(activeSection ? [activeSection] : []));
-
   useEffect(() => {
-    const nextLibrary = docsConfig.find((lib) => lib.id === activeLibrary)?.id;
-    if (nextLibrary) setMobileLibrary(nextLibrary);
-  }, [activeLibrary]);
+    if (!open) return undefined;
+    const dialog = mobileDialogRef.current;
+    const focusable = () => Array.from(
+      dialog?.querySelectorAll<HTMLElement>(
+        'a[href], button:not(:disabled), [tabindex]:not([tabindex="-1"])',
+      ) ?? [],
+    );
+    focusable()[0]?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeMobileMenu();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const items = focusable();
+      const first = items[0];
+      const last = items.at(-1);
+      if (!first || !last) return;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [closeMobileMenu, open]);
 
-  const toggleSection = (id: string) => {
-    setOpenSections(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  };
-
-  const currentLib = docsConfig.find(lib => lib.id === mobileLibrary);
   const trackNavLink = (label: string, href: string, external: boolean, surface: 'nav' | 'mobile_nav') => {
     const slug = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
     const ctaId: `nav_${string}` | `mobile_nav_${string}` =
@@ -179,9 +214,13 @@ export function Nav() {
 
         {/* Mobile hamburger */}
         <button
+          ref={mobileTriggerRef}
           className="lg:hidden inline-flex items-center justify-center nav-hamburger"
           onClick={() => { setOpen(!open); if (!open) setMobileTab(isDocsPage ? 'docs' : 'site'); }}
-          aria-label={open ? 'Close menu' : 'Open menu'}>
+          aria-expanded={open}
+          aria-hidden={open || undefined}
+          tabIndex={open ? -1 : 0}
+          aria-label="Open menu">
           {open ? <CloseIcon /> : <MenuIcon />}
         </button>
       </div>
@@ -190,8 +229,22 @@ export function Nav() {
 
     {/* Mobile full-screen overlay — rendered outside nav to avoid stacking context issues */}
     {open && (
-      <div className="lg:hidden fixed left-0 right-0 bottom-0 nav-mobile-overlay">
+      <div
+        ref={mobileDialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Mobile navigation"
+        className="lg:hidden fixed left-0 right-0 bottom-0 nav-mobile-overlay"
+      >
           <div className="nav-mobile-overlay-inner">
+            <button
+              type="button"
+              className="nav-mobile-dialog-close"
+              aria-label="Close menu"
+              onClick={closeMobileMenu}
+            >
+              <CloseIcon />
+            </button>
 
             {/* Primary tabs — only on docs pages */}
             {isDocsPage && (
@@ -201,118 +254,32 @@ export function Nav() {
               </div>
             )}
 
-            {/* Library sub-tabs — only when Docs tab active */}
-            {isDocsPage && mobileTab === 'docs' && (
-              <div className="nav-msubtabs-wrap">
-                <div className="nav-mobile-list">
-                  {specialDocsPages.map((page) => {
-                    const isActive = pathname === page.path;
-                    return (
-                      <Link
-                        key={page.path}
-                        href={page.path}
-                        onClick={() => {
-                          trackCtaClick({
-                            surface: 'mobile_nav',
-                            destination_url: page.path,
-                            cta_id: 'mobile_nav_docs_page',
-                            cta_text: page.title,
-                            library: 'unknown',
-                          });
-                          setOpen(false);
-                        }}
-                        className="nav-mobile-item nav-mobile-item--strong"
-                        data-active={isActive || undefined}
-                      >
-                        {page.title}
-                      </Link>
-                    );
-                  })}
-                </div>
-                <div className="nav-msubtabs">
-                  {docsConfig.map(lib => (
-                    <button key={lib.id} onClick={() => setMobileLibrary(lib.id)} className="nav-msubtab" data-active={mobileLibrary === lib.id || undefined}>
-                      {lib.title}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Docs content */}
-            {(mobileTab === 'docs' && isDocsPage && currentLib) && (
-              <div className="nav-mobile-content-list">
-                {/* Docs search was ⌘K-only, with its trigger in the
-                    desktop-only sidebar — phones had no way in (findings §7).
-                    DocsSearch is mounted on every docs page and listens for
-                    the same synthetic keydown the sidebar trigger sends. */}
-                <button
-                  type="button"
-                  className="nav-mobile-item nav-mobile-search"
-                  onClick={() => {
-                    setOpen(false);
-                    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }));
-                  }}
-                >
-                  Search docs…
-                </button>
-                {currentLib.demoUrl && (
-                  <a href={currentLib.demoUrl} target="_blank" rel="noopener noreferrer"
-                    onClick={() => {
-                      const demoUrl = currentLib.demoUrl;
-                      if (!demoUrl) return;
-                      trackExternalLinkClick(demoUrl, { surface: 'mobile_nav', cta_id: `mobile_nav_docs_demo_${currentLib.id}`, cta_text: currentLib.demoLabel ?? 'Live demo' });
-                      setOpen(false);
-                    }}
-                    className="nav-mobile-demo-link">
-                    <span>{currentLib.demoLabel ?? 'Live demo'}</span><span aria-hidden="true">↗</span>
-                  </a>
-                )}
-                {currentLib.sections.map((section) => {
-                  return (
-                    <div key={section.id}>
-                      <button
-                        onClick={() => toggleSection(section.id)}
-                        className="nav-mobile-section-toggle"
-                      >
-                        {section.title}
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke={tokens.colors.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                          className="nav-mobile-chevron" data-open={openSections.has(section.id) || undefined}>
-                          <path d="M5 7.5l5 5 5-5" />
-                        </svg>
-                      </button>
-                      {openSections.has(section.id) && (
-                        <nav className="nav-mobile-list">
-                          {section.pages.map((page) => {
-                            const isActive = page.section === activeSection && page.slug === activeSlug && mobileLibrary === activeLibrary;
-                            return (
-                              <Link
-                                key={`${currentLib.id}/${page.section}/${page.slug}`}
-                                href={`/docs/${currentLib.id}/${page.section}/${page.slug}`}
-                                onClick={() => {
-                                  trackCtaClick({
-                                    surface: 'mobile_nav',
-                                    destination_url: `/docs/${currentLib.id}/${page.section}/${page.slug}`,
-                                    cta_id: 'mobile_nav_docs_page',
-                                    cta_text: page.title,
-                                    library: currentLib.id === 'langgraph' || currentLib.id === 'render' || currentLib.id === 'chat' || currentLib.id === 'ag-ui' ? currentLib.id : 'unknown',
-                                  });
-                                  setOpen(false);
-                                }}
-                                className="nav-mobile-item"
-                                data-active={isActive || undefined}
-                              >
-                                {page.title}
-                              </Link>
-                            );
-                          })}
-                        </nav>
-                      )}
-                    </div>
+            {mobileTab === 'docs' && isDocsPage ? (
+              <div
+                onClickCapture={(event) => {
+                  const link = (event.target as HTMLElement).closest<HTMLAnchorElement>(
+                    'a[data-docs-navlink]',
                   );
-                })}
+                  if (!link) return;
+                  trackCtaClick({
+                    surface: 'mobile_nav',
+                    destination_url: link.getAttribute('href') ?? link.href,
+                    cta_id: 'mobile_nav_docs_page',
+                    cta_text: link.textContent?.trim() ?? 'Docs page',
+                    library: toAnalyticsLibrary(docsLibrary),
+                  });
+                }}
+              >
+                <DocsContextContent
+                  activeLibrary={docsLibrary}
+                  activeSection={activeSection || 'getting-started'}
+                  activeSlug={activeSlug || 'introduction'}
+                  pageTitle={docsPageTitle}
+                  mobile
+                  onNavigate={() => setOpen(false)}
+                />
               </div>
-            )}
+            ) : null}
 
             {/* Site content */}
             {(mobileTab === 'site' || !isDocsPage) && (

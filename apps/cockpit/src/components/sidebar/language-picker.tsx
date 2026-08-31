@@ -21,6 +21,7 @@ interface LanguagePickerProps {
 export function LanguagePicker({ manifest, entry }: LanguagePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const currentLabel =
     LANGUAGE_OPTIONS.find(({ language }) => language === entry.language)?.label ?? entry.language;
 
@@ -29,20 +30,27 @@ export function LanguagePicker({ manifest, entry }: LanguagePickerProps) {
     const handleClick = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setIsOpen(false);
     };
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsOpen(false);
-    };
     document.addEventListener('mousedown', handleClick);
-    document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('mousedown', handleClick);
-      document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen]);
 
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
+    <div
+      ref={ref}
+      style={{ position: 'relative' }}
+      onKeyDown={(event) => {
+        if (!isOpen || event.key !== 'Escape') return;
+        event.preventDefault();
+        event.stopPropagation();
+        event.nativeEvent.stopImmediatePropagation();
+        setIsOpen(false);
+        triggerRef.current?.focus();
+      }}
+    >
       <button
+        ref={triggerRef}
         type="button"
         aria-haspopup="menu"
         aria-expanded={isOpen}

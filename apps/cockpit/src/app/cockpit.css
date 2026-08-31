@@ -346,3 +346,341 @@ pre.shiki {
   color: var(--ds-text-muted);
   font-size: 0.875rem;
 }
+
+/* Unified sidebar control plane */
+.cockpit-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 48rem) {
+  .cockpit-shell { grid-template-columns: 328px minmax(0, 1fr); }
+}
+.cockpit-control-plane {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 272px);
+  height: 100%;
+  min-width: 0;
+  color: var(--ds-text-secondary);
+  background: var(--ds-surface);
+}
+.cockpit-control-plane [data-control-plane-rail] {
+  min-width: 0;
+  padding: 10px 6px;
+  border-right: 1px solid var(--ds-border);
+  background: var(--ds-surface-tinted);
+  display: flex;
+  flex-direction: column;
+}
+.cockpit-control-plane [data-control-plane-rail-group] {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cockpit-control-plane [data-control-plane-rail-group="utilities"] { margin-top: auto; }
+.cockpit-control-plane-utility-anchor { display: contents; }
+.cockpit-control-plane [data-control-plane-rail-item] {
+  position: relative;
+  min-height: 48px;
+  padding: 6px 2px;
+  border: 0;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: var(--ds-text-muted);
+  background: transparent;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+.cockpit-control-plane [data-control-plane-rail-item]:hover {
+  color: var(--ds-text-primary);
+  background: var(--ds-surface);
+}
+.cockpit-control-plane [data-control-plane-rail-item][data-control-plane-active] {
+  color: var(--ds-accent);
+  background: var(--ds-accent-surface);
+}
+.cockpit-control-plane [data-control-plane-rail-label] {
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 600;
+}
+.cockpit-control-plane [data-control-plane-pane] {
+  min-width: 0;
+  overflow-y: auto;
+  border-right: 1px solid var(--ds-border-strong);
+}
+[data-cockpit-context-content] {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 10px 20px;
+}
+[data-cockpit-context-content] [data-control-plane-section] { padding: 3px 0; }
+[data-cockpit-context-content] [data-control-plane-section-trigger] {
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--ds-text-muted);
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+}
+[data-cockpit-context-content] [data-control-plane-section-trigger]:hover {
+  color: var(--ds-text-primary);
+  background: var(--ds-surface-tinted);
+}
+[data-cockpit-context-content] [data-control-plane-section-chevron] {
+  flex: none;
+  transition: transform 150ms ease;
+}
+[data-cockpit-context-content] [data-control-plane-section-trigger][aria-expanded="true"] [data-control-plane-section-chevron] {
+  transform: rotate(90deg);
+}
+[data-cockpit-context-content] [data-control-plane-section-heading] {
+  margin: 0;
+  padding: 8px;
+  color: var(--ds-text-muted);
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 600;
+}
+[data-cockpit-context-content] [data-control-plane-section-content] { padding: 2px 0 8px; }
+.cockpit-control-plane-scope {
+  margin: 0 8px;
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--ds-surface-tinted);
+  display: grid;
+  gap: 3px;
+  color: var(--ds-text-muted);
+  font-size: 11px;
+}
+.cockpit-control-plane-scope strong {
+  color: var(--ds-text-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+.cockpit-nav-group-label {
+  color: var(--ds-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+[data-cockpit-context-content] [aria-label^="Collapse"],
+[data-cockpit-context-content] [aria-label^="Expand"] {
+  border-radius: 7px;
+  min-height: 32px;
+}
+[data-cockpit-context-content] [aria-label^="Collapse"]:hover,
+[data-cockpit-context-content] [aria-label^="Expand"]:hover { background: var(--ds-surface-tinted) !important; }
+.cockpit-nav-item {
+  padding: 7px 9px;
+  margin: 1px 8px;
+  border-radius: 7px;
+  font-size: 13px;
+}
+[data-cockpit-context-content] [data-control-plane-environment-list] {
+  display: grid;
+  gap: 2px;
+  margin: 0 8px;
+}
+[data-cockpit-context-content] [data-control-plane-environment-row] {
+  min-height: 32px;
+  padding: 6px 8px;
+  border-radius: 7px;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+[data-cockpit-context-content] [data-control-plane-environment-row]:hover { background: var(--ds-surface-tinted); }
+[data-cockpit-context-content] [data-control-plane-environment-row] dt { color: var(--ds-text-muted); }
+[data-cockpit-context-content] [data-control-plane-environment-row] dd {
+  margin: 0;
+  color: var(--ds-text-primary);
+  font-family: var(--ds-font-mono);
+  font-size: 10px;
+}
+[data-cockpit-context-content] [data-control-plane-environment-icon] {
+  display: inline-flex;
+  color: var(--ds-text-muted);
+}
+[data-cockpit-context-content] [data-control-plane-action-bar] {
+  display: flex;
+  gap: 4px;
+  margin: 0 8px;
+}
+[data-cockpit-context-content] [data-control-plane-action] {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ds-text-muted);
+  background: transparent;
+}
+[data-cockpit-context-content] [data-control-plane-action]:hover {
+  color: var(--ds-text-primary);
+  background: var(--ds-surface-tinted);
+}
+.cockpit-control-plane [data-control-plane-tooltip] {
+  position: absolute;
+  z-index: 60;
+  padding: 5px 7px;
+  border-radius: 6px;
+  color: var(--ds-surface);
+  background: var(--ds-text-primary);
+  box-shadow: var(--ds-shadow-sm);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 120ms ease, visibility 120ms ease;
+}
+.cockpit-control-plane [data-control-plane-rail-item] [data-control-plane-tooltip] {
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+.cockpit-control-plane [data-control-plane-action] [data-control-plane-tooltip] {
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+}
+.cockpit-control-plane [data-control-plane-rail-item]:is(:hover, :focus-visible) [data-control-plane-tooltip],
+.cockpit-control-plane [data-control-plane-action]:is(:hover, :focus-visible) [data-control-plane-tooltip] {
+  opacity: 1;
+  visibility: visible;
+}
+.cockpit-control-plane [data-control-plane-utility-panel] { padding: 14px 12px; }
+.cockpit-control-plane [data-control-plane-utility-header] {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.cockpit-control-plane [data-control-plane-utility-header] h2 {
+  margin: 0;
+  color: var(--ds-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+.cockpit-control-plane [data-control-plane-utility-header] button,
+.cockpit-control-plane-theme {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ds-text-muted);
+  background: transparent;
+  cursor: pointer;
+}
+.cockpit-control-plane [data-control-plane-utility-header] button:hover,
+.cockpit-control-plane-theme:hover { background: var(--ds-surface-tinted); color: var(--ds-text-primary); }
+.cockpit-control-plane-setting {
+  min-height: 48px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ds-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--ds-text-muted);
+  font-size: 12px;
+}
+.cockpit-control-plane button:focus-visible,
+.cockpit-control-plane a:focus-visible,
+.cockpit-mobile-control-plane button:focus-visible,
+.cockpit-mobile-control-plane a:focus-visible {
+  outline: 2px solid var(--ds-accent);
+  outline-offset: 2px;
+}
+
+/* Adaptive mobile drawer */
+.cockpit-mobile-control-plane {
+  background: color-mix(in srgb, var(--ds-text-primary) 18%, transparent);
+  opacity: 1;
+  transition: opacity 150ms ease;
+}
+.cockpit-mobile-control-plane[data-state="closing"] { opacity: 0; }
+.cockpit-mobile-control-plane-panel {
+  width: 100%;
+  max-width: 360px;
+  height: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  background: var(--ds-surface);
+  transform: translateY(0);
+  transition: transform 200ms ease-out;
+}
+.cockpit-mobile-control-plane[data-state="closing"] .cockpit-mobile-control-plane-panel {
+  transform: translateY(8px);
+}
+.cockpit-mobile-control-plane-header {
+  min-height: 48px;
+  padding: 8px 12px 8px 16px;
+  border-bottom: 1px solid var(--ds-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--ds-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+.cockpit-mobile-control-plane-header button {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ds-text-muted);
+  background: transparent;
+}
+.cockpit-control-plane[data-mobile] {
+  grid-template-columns: 56px minmax(0, 1fr);
+  min-height: 0;
+}
+.cockpit-control-plane[data-mobile] [data-control-plane-pane] { border-right: 0; }
+@media (pointer: coarse) {
+  .cockpit-control-plane [data-control-plane-rail-item],
+  .cockpit-control-plane [data-control-plane-section-trigger],
+  .cockpit-control-plane [data-control-plane-action],
+  .cockpit-nav-item,
+  .cockpit-mobile-control-plane-header button { min-height: 44px; }
+  .cockpit-control-plane [data-control-plane-action] {
+    width: 44px;
+    height: 44px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cockpit-control-plane *,
+  .cockpit-mobile-control-plane,
+  .cockpit-mobile-control-plane-panel {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
