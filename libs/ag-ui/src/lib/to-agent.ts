@@ -2,6 +2,7 @@
 import { computed, signal, type Signal } from '@angular/core';
 import { Subject } from 'rxjs';
 import type { AbstractAgent } from '@ag-ui/client';
+import type { ResumeEntry } from '@ag-ui/core';
 import {
   completeDelivery,
   staticDelivery,
@@ -269,6 +270,20 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     const runParameters = parameters === undefined && tools.length === 0
       ? undefined
       : { ...parameters, ...(tools.length > 0 ? { tools } : {}) };
+    // @ag-ui/client@0.0.59 records RUN_FINISHED interrupt outcomes on
+    // source.pendingInterrupts and REFUSES the next runAgent() unless a
+    // `resume` entry addresses every pending id (AGUIError thrown in
+    // onInitialize). The adapter's own interrupt signal governs resume flow:
+    // when this run resolves the interrupt through forwardedProps (Mastra,
+    // LangGraph — their measured wire shapes carry no top-level resume) or is
+    // a plain submit that abandons the interrupt (the pre-0.0.59 semantics),
+    // clear the client-side ledger so the run is sent exactly as before.
+    if (runParameters?.resume === undefined) {
+      const pending = (source as { pendingInterrupts?: unknown }).pendingInterrupts;
+      if (Array.isArray(pending) && pending.length > 0) {
+        (source as { pendingInterrupts: unknown[] }).pendingInterrupts = [];
+      }
+    }
     try {
       await source.runAgent(runParameters);
       settleTransportClose(run);
@@ -398,15 +413,15 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     submit: async (input: AgentSubmitInput, _opts?: AgentSubmitOptions) => {
       if (input.resume !== undefined) {
         // Resume path: clear the pending interrupt and replay the run with the
-        // resume payload forwarded via AG-UI's forwardedProps mechanism. The
-        // wire shape is derived from the identifying fields the inbound
-        // interrupt carried — see buildResumeForwardedProps.
+        // resume payload. The wire mechanism (protocol-standard top-level
+        // `resume` array vs forwardedProps) is derived from how the inbound
+        // interrupt arrived — see buildResumeRunParameters.
         applyStatePatch(input.state);
         const pendingInterrupt = store.interrupt();
         store.interrupt.set(undefined);
         await executeRun(
           'resume',
-          { forwardedProps: buildResumeForwardedProps(input.resume, pendingInterrupt) },
+          buildResumeRunParameters(input.resume, pendingInterrupt),
           true,
         );
         return;
@@ -491,70 +506,78 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
 }
 
 /**
- * Build the outgoing forwardedProps for a `submit({ resume })`.
+ * Build the outgoing run parameters for a `submit({ resume })`.
  *
- * The shape is keyed on the identifying fields the pending interrupt carried
- * on the way IN, so each runtime finds the resume payload where it reads it
- * (all measured against the 2026-08-31 runtime-portability spike captures):
+ * The wire mechanism is keyed on how the pending interrupt arrived, so each
+ * runtime finds the resume payload where it reads it (all measured against
+ * the 2026-08-31 runtime-portability spike captures):
  *
  * - LangGraph (CUSTOM on_interrupt with an opaque payload — no identifying
- *   fields): exactly `{ command: { resume } }`, byte-for-byte the historical
- *   shape. Backward compatibility here is non-negotiable.
+ *   fields): exactly `{ forwardedProps: { command: { resume } } }`,
+ *   byte-for-byte the historical shape. Backward compatibility here is
+ *   non-negotiable.
  * - Mastra (CUSTOM on_interrupt payload carrying `toolCallId` + `runId`):
- *   `{ command: { resume, interruptEvent: { toolCallId, runId } } }` — the
- *   measured working request (fixtures/runtime-transcripts/
- *   mastra-resume-correct.request.json).
- * - Protocol-standard RUN_FINISHED interrupt outcome (Microsoft Agent
- *   Framework, AWS Strands — stored by the reducer as
- *   `{ interrupts: [...], runId }`): one structured entry per pending
- *   interrupt, `{ command: { resume: [{ id, status: 'resolved', payload }] } }`
- *   — the measured working request (fixtures/runtime-transcripts/
- *   maf-hitl-resume.sse, `__request__` line). A caller that already provides
- *   entry-shaped `resume` values is passed through untouched.
- *
- * Adopting the protocol-standard TOP-LEVEL `resume` array is an explicit
- * follow-up: RunAgentInputSchema@0.0.52 has no such field, while
- * `forwardedProps` is a schema field every runtime reads today.
+ *   `{ forwardedProps: { command: { resume, interruptEvent: { toolCallId,
+ *   runId } } } }` — the measured working request (fixtures/
+ *   runtime-transcripts/mastra-resume-correct.request.json), byte-for-byte
+ *   unchanged.
+ * - Protocol-standard RUN_FINISHED interrupt outcome (AWS Strands, Microsoft
+ *   Agent Framework — stored by the reducer as `{ interrupts: [...], runId }`):
+ *   the protocol-standard TOP-LEVEL `resume` array, one
+ *   `{ interruptId, status: 'resolved', payload }` entry per pending
+ *   interrupt. RunAgentInputSchema@0.0.59 carries the field and
+ *   prepareRunAgentInput serializes it (0.0.52 dropped it at assembly, which
+ *   made Strands resume unsendable — the reason for the 0.0.59 upgrade).
+ *   Strands reads exactly this shape (fixtures/runtime-transcripts/
+ *   strands-resume.request.json, measured working); the Microsoft bridge
+ *   reads the top-level field FIRST (`_extract_resume_payload` in
+ *   agent_framework_ag_ui checks `input.resume` before
+ *   forwardedProps.command.resume) and accepts `interruptId` entries. A
+ *   caller that already provides entry-shaped `resume` values has them
+ *   normalized to `ResumeEntry` (`id` → `interruptId`) and sent top-level.
  */
-function buildResumeForwardedProps(
+function buildResumeRunParameters(
   resume: unknown,
   interrupt: AgentInterrupt | undefined,
-): Record<string, unknown> {
+): { resume: ResumeEntry[] } | { forwardedProps: Record<string, unknown> } {
   const value = interrupt?.value;
   if (isRecord(value)) {
     if (typeof value['toolCallId'] === 'string') {
       return {
-        command: {
-          resume,
-          interruptEvent: {
-            toolCallId: value['toolCallId'],
-            ...(typeof value['runId'] === 'string' ? { runId: value['runId'] } : {}),
+        forwardedProps: {
+          command: {
+            resume,
+            interruptEvent: {
+              toolCallId: value['toolCallId'],
+              ...(typeof value['runId'] === 'string' ? { runId: value['runId'] } : {}),
+            },
           },
         },
       };
     }
     if (Array.isArray(value['interrupts'])) {
+      if (isStructuredResume(resume)) {
+        return { resume: (resume as Record<string, unknown>[]).map(toResumeEntry) };
+      }
       const entries = (value['interrupts'] as unknown[])
         .filter(isRecord)
         .filter((entry) => typeof entry['id'] === 'string');
-      if (entries.length > 0 && !isStructuredResume(resume)) {
+      if (entries.length > 0) {
         return {
-          command: {
-            resume: entries.map((entry) => ({
-              id: entry['id'],
-              status: 'resolved',
-              payload: resume,
-            })),
-          },
+          resume: entries.map((entry) => ({
+            interruptId: entry['id'] as string,
+            status: 'resolved' as const,
+            payload: resume,
+          })),
         };
       }
     }
   }
-  return { command: { resume } };
+  return { forwardedProps: { command: { resume } } };
 }
 
 /** True when the caller already provided per-interrupt entries
- *  (`[{ id | interruptId, ... }]`) — forwarded untouched in that case. */
+ *  (`[{ id | interruptId, ... }]`). */
 function isStructuredResume(resume: unknown): boolean {
   return Array.isArray(resume)
     && resume.length > 0
@@ -562,6 +585,18 @@ function isStructuredResume(resume: unknown): boolean {
       isRecord(entry)
       && (typeof entry['id'] === 'string' || typeof entry['interruptId'] === 'string'),
     );
+}
+
+/** Normalize a caller-authored entry to the protocol's ResumeEntry shape:
+ *  `id` becomes `interruptId`, status defaults to 'resolved', every other
+ *  field (payload, metadata, …) rides along unchanged. */
+function toResumeEntry(entry: Record<string, unknown>): ResumeEntry {
+  const { id, interruptId, status, ...rest } = entry;
+  return {
+    interruptId: (typeof interruptId === 'string' ? interruptId : id) as string,
+    status: status === 'cancelled' ? 'cancelled' : 'resolved',
+    ...rest,
+  } as ResumeEntry;
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {
