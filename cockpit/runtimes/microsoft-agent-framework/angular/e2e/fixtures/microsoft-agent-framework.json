@@ -1,0 +1,39 @@
+{
+  "fixtures": [
+    {
+      "match": { "userMessage": "team dinner", "hasToolResult": true, "turnIndex": 2 },
+      "response": {
+        "content": "Your $220.00 expense to Blue Finch Bistro has been submitted for reimbursement."
+      }
+    },
+    {
+      "match": { "userMessage": "team dinner", "hasToolResult": true, "turnIndex": 1 },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "submit_expense",
+            "arguments": {
+              "expense": {
+                "vendor": "Blue Finch Bistro",
+                "category": "meals",
+                "amount_usd": 220,
+                "memo": "Platform team offsite dinner, 6 attendees"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "match": { "userMessage": "team dinner" },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "lookup_expense_policy",
+            "arguments": { "category": "meals" }
+          }
+        ]
+      }
+    }
+  ]
+}

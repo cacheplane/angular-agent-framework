@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npx nx build cockpit-runtimes-microsoft-agent-framework-angular",
+  "outputDirectory": "dist/cockpit/runtimes/microsoft-agent-framework/angular/browser",
+  "framework": null
+}

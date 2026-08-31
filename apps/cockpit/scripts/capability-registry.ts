@@ -76,6 +76,9 @@ export const capabilities: readonly Capability[] = [
   { id: 'ag-ui-client-tools', product: 'ag-ui', topic: 'client-tools', angularProject: 'cockpit-ag-ui-client-tools-angular', port: 4325, pythonPort: 5325, pythonDir: 'cockpit/ag-ui/client-tools/python' },
   { id: 'ag-ui-a2ui', product: 'ag-ui', topic: 'a2ui', angularProject: 'cockpit-ag-ui-a2ui-angular', port: 4324, pythonPort: 5324, pythonDir: 'cockpit/ag-ui/a2ui/python' },
   { id: 'ag-ui-subagents', product: 'ag-ui', topic: 'subagents', angularProject: 'cockpit-ag-ui-subagents-angular', port: 4326, pythonPort: 5326, pythonDir: 'cockpit/ag-ui/subagents/python' },
+  // Runtime-portability examples (one capability, many runtimes; AG-UI-served
+  // like the ag-ui caps, but the backend is genuinely non-LangGraph)
+  { id: 'rt-maf', product: 'runtimes', topic: 'microsoft-agent-framework', angularProject: 'cockpit-runtimes-microsoft-agent-framework-angular', port: 4330, pythonPort: 5330, pythonDir: 'cockpit/runtimes/microsoft-agent-framework/python', framework: 'microsoft-agent-framework' },
 ] as const;
 
 export function findCapability(id: string): Capability | undefined {

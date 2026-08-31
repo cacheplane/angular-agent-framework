@@ -1,0 +1,102 @@
+{
+  "name": "cockpit-runtimes-microsoft-agent-framework-angular",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/runtimes/microsoft-agent-framework/angular/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "outputs": [
+        "{options.outputPath.base}"
+      ],
+      "options": {
+        "outputPath": {
+          "base": "dist/cockpit/runtimes/microsoft-agent-framework/angular",
+          "browser": ""
+        },
+        "browser": "cockpit/runtimes/microsoft-agent-framework/angular/src/main.ts",
+        "tsConfig": "cockpit/runtimes/microsoft-agent-framework/angular/tsconfig.app.json",
+        "styles": [
+          "cockpit/runtimes/microsoft-agent-framework/angular/src/styles.css"
+        ]
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "1mb",
+              "maximumError": "1.5mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "10kb",
+              "maximumError": "16kb"
+            }
+          ],
+          "outputHashing": "none"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "cockpit/runtimes/microsoft-agent-framework/angular/src/environments/environment.ts",
+              "with": "cockpit/runtimes/microsoft-agent-framework/angular/src/environments/environment.development.ts"
+            }
+          ]
+        },
+        "cockpit": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "cockpit/runtimes/microsoft-agent-framework/angular/src/environments/environment.ts",
+              "with": "cockpit/runtimes/microsoft-agent-framework/angular/src/environments/environment.development.ts"
+            }
+          ],
+          "browser": "cockpit/runtimes/microsoft-agent-framework/angular/src/main.cockpit.ts"
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@angular/build:dev-server",
+      "configurations": {
+        "production": {
+          "buildTarget": "cockpit-runtimes-microsoft-agent-framework-angular:build:production"
+        },
+        "development": {
+          "buildTarget": "cockpit-runtimes-microsoft-agent-framework-angular:build:development"
+        },
+        "cockpit": {
+          "buildTarget": "cockpit-runtimes-microsoft-agent-framework-angular:build:cockpit"
+        }
+      },
+      "defaultConfiguration": "development",
+      "options": {
+        "proxyConfig": "cockpit/runtimes/microsoft-agent-framework/angular/proxy.conf.mjs"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/runtimes/microsoft-agent-framework/angular",
+        "command": "npx tsx -e \"import { runtimesMicrosoftAgentFrameworkAngularModule } from './src/index.ts'; const module = runtimesMicrosoftAgentFrameworkAngularModule; if (module.id !== 'runtimes-microsoft-agent-framework-angular' || module.title !== 'Runtimes — Microsoft Agent Framework (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "cockpit/runtimes/microsoft-agent-framework/angular/e2e/playwright.config.ts"
+      }
+    }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples"
+  ]
+}

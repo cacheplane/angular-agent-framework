@@ -1,16 +1,19 @@
 # GENERATED — do not edit. Source: scripts/generate-ag-ui-deployment-config.ts
-# Multi-topic AG-UI FastAPI server. Aggregates each cockpit/ag-ui/*/python topic
-# at /agent/<topic>. Health route /ok is unauthenticated; /agent/* requires
-# X-Internal-Token matching the AG_UI_INTERNAL_TOKEN env var.
+# Multi-topic AG-UI FastAPI server. Aggregates each AG-UI-served python topic
+# (cockpit/ag-ui/*/python and cockpit/runtimes/*/python) at /agent/<topic>.
+# Health route /ok is unauthenticated; /agent/* requires X-Internal-Token
+# matching the AG_UI_INTERNAL_TOKEN env var.
 import os
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from ag_ui_langgraph import add_langgraph_fastapi_endpoint, LangGraphAgent
+from agent_framework_ag_ui import add_agent_framework_fastapi_endpoint
 
 from deps.a2ui.src.graph import graph as a2ui_graph
 from deps.client_tools.src.graph import graph as client_tools_graph
 from deps.interrupts.src.graph import graph as interrupts_graph
 from deps.json_render.src.graph import graph as json_render_graph
+from deps.microsoft_agent_framework.src.agent import agent as microsoft_agent_framework_agent
 from deps.streaming.src.graph import graph as streaming_graph
 from deps.subagents.src.graph import graph as subagents_graph
 from deps.tool_views.src.graph import graph as tool_views_graph
@@ -56,6 +59,11 @@ add_langgraph_fastapi_endpoint(
     app,
     LangGraphAgent(name="json-render", graph=json_render_graph),
     path="/agent/json-render",
+)
+add_agent_framework_fastapi_endpoint(
+    app,
+    microsoft_agent_framework_agent,
+    path="/agent/microsoft-agent-framework",
 )
 add_langgraph_fastapi_endpoint(
     app,

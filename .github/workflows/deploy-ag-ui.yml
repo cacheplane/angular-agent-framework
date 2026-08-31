@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'cockpit/ag-ui/**/python/**'
+      - 'cockpit/runtimes/**/python/**'
       - 'apps/cockpit/scripts/capability-registry.ts'
       - 'scripts/generate-ag-ui-deployment-config.ts'
       - 'deployments/ag-ui-dev/**'
