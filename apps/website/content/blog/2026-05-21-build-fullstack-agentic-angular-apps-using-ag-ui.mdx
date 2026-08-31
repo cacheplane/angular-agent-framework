@@ -172,7 +172,10 @@ Three files, maybe twenty lines of code, and you have a working streaming chat b
   <figcaption>The AG-UI streaming demo running on @threadplane/chat with the @threadplane/ag-ui adapter — FakeAgent provides the events, but the same code drives real LangGraph/CrewAI/Mastra backends.</figcaption>
 </figure>
 
-No `EventSource`. No reducer. No manual subscribe-and-render plumbing. No store.
+No `EventSource`.
+No reducer.
+No manual subscribe-and-render plumbing.
+No store.
 
 Spin up your agent backend, point `url` at it, and the chat just works.
 
@@ -213,7 +216,9 @@ Your template reads these directly:
 }
 ```
 
-No `async` pipe gymnastics. No `OnDestroy` to clean up a subscription. No manual change-detection plumbing.
+No `async` pipe gymnastics.
+No `OnDestroy` to clean up a subscription.
+No manual change-detection plumbing.
 
 This works because streaming, at the data-shape level, is a sequence of small writes to a growing list — and so are signals.
 For me, the shape of the state is what makes Angular a good fit for agentic UIs, more than the templates or standalone components.
@@ -336,8 +341,12 @@ The framework intentionally hides the parts you do not want to think about on da
 
 The parts you will want on day thirty:
 
-- **Errors and retries.** Per-message retry, transport-level backoff for transient SSE drops, graceful degradation when streaming is unavailable. Some corporate proxies buffer SSE. You will find out the hard way if you do not plan for it.
-- **Generative UI.** When the agent wants to render a richer surface than a tool-call card, `@threadplane/render` lets the backend stream a UI spec and the frontend resolves it against a registry of your approved Angular components. No arbitrary code, no `eval`, no design-system bypass. The agent picks from a menu you control.
+- **Errors and retries.** Per-message retry, transport-level backoff for transient SSE drops, graceful degradation when streaming is unavailable.
+  Some corporate proxies buffer SSE.
+  You will find out the hard way if you do not plan for it.
+- **Generative UI.** When the agent wants to render a richer surface than a tool-call card, `@threadplane/render` lets the backend stream a UI spec and the frontend resolves it against a registry of your approved Angular components.
+  No arbitrary code, no `eval`, no design-system bypass.
+  The agent picks from a menu you control.
 - **Observability.** `@threadplane/telemetry` ships a PostHog-shaped sink that is *off by default*. Turn it on per-environment, point it at your own analytics, never ship app content to a vendor you did not pick.
 - **Testing.** Because the contract is signals all the way down, the testing story is "write a signal, the chat re-renders." `@threadplane/ag-ui` ships a `FakeAgent` you can hand-feed events to in a unit test. No SSE harness, no fixture loader, no test-only DI dance.
 
