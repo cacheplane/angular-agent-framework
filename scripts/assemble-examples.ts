@@ -126,10 +126,14 @@ writeFileSync(resolve(outputDir, 'config.json'), JSON.stringify({
     // catch-all functions. Must precede the filesystem handle so static
     // index.html lookups for /ag-ui/<topic>/ still resolve.
     { src: '^/ag-ui/([^/]+)/agent(/.*)?$', dest: '/ag-ui-proxy/[[...path]]', check: true },
+    // Runtimes product (cockpit/runtimes/<topic>/) is AG-UI-served through
+    // the same proxy function; the function accepts either path prefix and
+    // still targets upstream /agent/<topic>.
+    { src: '^/runtimes/([^/]+)/agent(/.*)?$', dest: '/ag-ui-proxy/[[...path]]', check: true },
     { src: '^/api/(.*)', dest: '/api/[[...path]]', check: true },
     { handle: 'filesystem' },
-    { src: '^/(langgraph|deep-agents|render|chat|ag-ui)/([^/]+)/(.+\\..+)$', dest: '/$1/$2/$3' },
-    { src: '^/(langgraph|deep-agents|render|chat|ag-ui)/([^/]+)(/.*)?$', dest: '/$1/$2/index.html' },
+    { src: '^/(langgraph|deep-agents|render|chat|ag-ui|runtimes)/([^/]+)/(.+\\..+)$', dest: '/$1/$2/$3' },
+    { src: '^/(langgraph|deep-agents|render|chat|ag-ui|runtimes)/([^/]+)(/.*)?$', dest: '/$1/$2/index.html' },
     { handle: 'error' },
     { status: 404, src: '.*', dest: '/404.html' },
   ],
