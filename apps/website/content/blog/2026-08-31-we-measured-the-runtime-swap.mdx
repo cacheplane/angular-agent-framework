@@ -1,0 +1,174 @@
+---
+title: 'We Measured the Runtime Swap: Three Non-LangGraph Backends, One Angular Contract'
+description: 'Strands, Microsoft Agent Framework, and Mastra against the neutral Agent contract. Messages, tools, and state ported. Both defects we found were ours.'
+date: 2026-08-31
+tags: [ag-ui, angular, architecture, portability, agentic-ui]
+author: brian
+featured: false
+draft: false
+---
+
+The previous post in this series ended on an admission rather than a conclusion.
+
+I had spent several thousand words showing that swapping the agent runtime under an Angular app costs one import line at the component level, and then I had to point out that every AG-UI backend in our repository was itself a LangGraph graph.
+A transport swap over one runtime.
+Not a runtime swap.
+I wrote that I believed the neutral contract would hold against a genuinely different runtime, and that belief is not measurement.
+
+So we measured it.
+
+Three runtimes that have no LangGraph anywhere in them: AWS Strands, Microsoft Agent Framework, and Mastra.
+Two languages.
+Real servers, driven by real model calls, with the Server-Sent Events captured off the wire and replayed through the shipped client.
+
+The short version is that the contract held where it mattered and broke in two places, and both of the breaks were ours.
+
+## What was actually run
+
+Each runtime got a server standing on its upstream AG-UI integration, not on anything we wrote to make the numbers look good.
+Microsoft Agent Framework runs behind `agent-framework-ag-ui`.
+Strands runs behind the community `ag-ui-strands` bridge, pinned to a git reference because the published release crashes on multi-agent routes.
+Mastra needed about two hundred lines of Node hosting code, because the upstream package ships an in-process bridge and a CopilotKit mount rather than a plain HTTP endpoint.
+
+Every server was driven with live model calls until it produced each surface we cared about: streaming text, a tool call, shared state, and a human approval.
+The raw event stream from each of those runs was saved.
+Those captures then went back through schema validation and the protocol client's own `verifyEvents`, and through the adapter reducer, event for event.
+
+That last step is the one that matters for a portability claim.
+A screenshot of a working demo proves that one path worked once.
+A committed transcript replayed through the real client proves what the runtime put on the wire, and it keeps proving it every time the test suite runs.
+
+## The result
+
+| Runtime | Messages | Tool calls | State | Interrupts | Subagents |
+| --- | --- | --- | --- | --- | --- |
+| LangGraph (baseline) | Yes | Yes | Yes | Yes | Yes |
+| AWS Strands | Yes | Yes | Partial | Yes | No |
+| Microsoft Agent Framework | Yes | Yes | Yes | Yes | No |
+| Mastra | Yes | Yes | Yes | Yes | No |
+
+Messages, tool calls, and shared state crossed three non-LangGraph runtimes with zero changes to the adapter.
+Not one line.
+The Angular side of each example is the same `injectAgent()` call and the same `<chat>` element that the LangGraph demos use.
+
+For me, that is the claim I actually wanted to test, and it is now a measurement rather than an argument from design.
+
+One honest note on the Mastra interrupt cell.
+It was verified live against a real model in the development harness, and its resume round trip is covered by tests that run the captured transcripts through the shipped protocol client.
+The production service for it does not exist yet.
+I am not going to call that cell production-proven, because it is not.
+
+## Both real failures were ours
+
+This is the part of the exercise I would keep if I had to throw the rest away.
+
+We went in expecting the negative cells to indict the protocol or the upstream bridges.
+The two hard failures indicted us.
+
+### We keyed interrupts on a convention, not on the protocol
+
+Our AG-UI adapter detected a human-in-the-loop pause by watching for a `CUSTOM` event with the name `on_interrupt`.
+I flagged that in the previous post as a fragility, and I was right about the fragility and wrong about the shape of the risk.
+I assumed a runtime that did not adopt the convention would simply have no interrupt support.
+
+What actually happens is worse.
+
+Strands and Microsoft Agent Framework both signal an interrupt the way the protocol says to: the run-finished event carries an outcome object naming the pending interrupts.
+Neither of them emits the custom event at all.
+Our handler for that event read the status and ignored the outcome.
+
+So the run did not fail.
+It finalized as a success, with a tool call sitting there waiting for an approval that the UI never asked for, and with the adapter's `interrupt` signal still undefined.
+A silent wrong answer beats a loud failure only in the sense that it takes longer to notice.
+
+The fix was small once the cause was clear, and it landed in [#888](https://github.com/cacheplane/angular-agent-framework/pull/888).
+Both conventions are now recognized, and within one run the first signal to arrive wins, because Mastra emits both and we do not want a doubled interrupt.
+
+I want to name the mistake precisely, because "we had a bug" is not the lesson.
+We built a protocol adapter and then tested it exclusively against one bridge implementation of that protocol.
+A bridge convention and a protocol primitive are different things, and a test suite that only ever sees one backend cannot tell you which of the two you depend on.
+
+### Our resume payload was shaped like LangGraph
+
+The second defect is the same mistake wearing different clothes.
+
+When the user approves the pending action, the adapter sends the resume value back.
+It sent exactly the shape the LangGraph bridge reads, nested under a command object in the forwarded properties.
+That works for LangGraph.
+It is a coincidence anywhere else.
+
+Mastra needs the interrupt's identity carried with the value, specifically the tool-call id and the run id of the suspended run, or it cannot find the suspension to resume.
+Microsoft Agent Framework reads a top-level resume array before it looks at the forwarded properties, and it wants an entry addressing every pending interrupt.
+Send it nothing addressable and it raises an error rather than guessing.
+
+Three runtimes, three answers to the question of how a resume identifies itself.
+
+The adapter now derives the outgoing shape from how the interrupt arrived, which is the only signal available that is not a hardcoded runtime name.
+That work is in [#889](https://github.com/cacheplane/angular-agent-framework/pull/889), and [#891](https://github.com/cacheplane/angular-agent-framework/pull/891) upgraded the protocol packages so the standard top-level resume array became sendable at all.
+The application-facing call did not change.
+You still write `submit({ resume })` and the adapter decides what goes on the wire.
+
+Both defects share a root.
+Neither would have been found by another demo, another end-to-end test, or another review of our own code.
+They were only findable by pointing the adapter at software written by people who had never heard of us.
+
+## What stayed red, and why that is not a bug list
+
+Two cells did not go green, and I would rather explain them than quietly leave them off the page.
+
+**Shared state on Strands is partial.**
+Its bridge sends whole-document snapshots and never sends a patch, and a tool only contributes state if it opts in through a per-tool hook.
+Because a snapshot replaces the document rather than merging into it, every hook has to return the entire state object.
+A hook that returns just the key it touched will erase its siblings.
+That is a real hazard, it is documented in the example, and it is a property of the upstream bridge rather than of the protocol or of us.
+
+**Subagents are red for all three.**
+This one surprised me, and it is the finding I would most want another framework author to read.
+
+It is tempting to write that as three bugs.
+It is not.
+Strands models delegation as a handoff custom event alongside step boundaries.
+Mastra treats the activity event family as belonging to background work and observational memory, which is a defensible reading of the same specification.
+Microsoft Agent Framework does emit activity snapshots, but at the granularity of an executor, and it never emits the incremental form.
+
+Three runtimes, three different mental models of what a subagent is, and none of them wrong on their own terms.
+Meanwhile our own projection keys on an activity type of `subagent`, which is a convention our demo backends adopt and nobody else has any reason to.
+The protocol grew dedicated subagent events in version 0.0.59, and as of this measurement no runtime emits them.
+
+I think that is an ecosystem finding, not a defect report.
+Delegation is the surface where the AG-UI vocabulary is agreed on in syntax and not yet in meaning.
+If you are building on server-declared subagents today, build on a backend you control, and know that you are ahead of the ecosystem rather than portable across it.
+
+## The finding nobody asked for
+
+Measuring the deploy path surfaced something unrelated and much worse than anything in the matrix.
+
+One of our AG-UI demo topics had been dead in production for two and a half months.
+Its imports were written in a form that resolves when the topic is served from its own directory in development, and does not resolve in the aggregated deployment layout, so every image built since the middle of June crashed on startup.
+The deploy command uploads and detaches, which means it reports success at upload time.
+The platform kept serving the last image that booted.
+Nothing was red anywhere, and the route had been returning a not-found for months.
+
+The fix in [#899](https://github.com/cacheplane/angular-agent-framework/pull/899) was two import statements.
+The part worth keeping is the second half: the deploy workflow now installs the exact dependency set, imports the server, and fails the job if it cannot boot.
+
+Verify the route, not the exit code.
+A deploy step that exits zero has told you that a file was uploaded.
+It has not told you that anything is running, and if your platform keeps the previous image alive on failure, the absence of an alarm is not evidence.
+
+## Where this leaves the claim
+
+The neutral `Agent` contract is portable across runtimes for messages, tool calls, and state, and that is now measured against three implementations in two languages rather than asserted from the shape of the types.
+
+Interrupts are portable as of these fixes, and they were not before, in a way no amount of internal testing would have revealed.
+
+Subagents are not portable today, and the reason is upstream disagreement rather than a missing feature on anyone's list.
+
+The matrix now lives in the [adapter guide](/docs/choosing-an-adapter) with a cause column on every gap, split three ways: the protocol cannot express it, the upstream bridge does not emit it, or our adapter failed to consume it.
+That third category is the one I care about keeping honest, and it is currently empty.
+
+The transcripts are committed as test fixtures, verbatim from the wire.
+Interrupt detection and resume shaping are now pinned to what three real runtimes actually sent us on a specific day.
+The next regression in either one fails a test.
+
+That is the difference between a portability claim and a portability guarantee, and it is the only part of this work I would insist on.
