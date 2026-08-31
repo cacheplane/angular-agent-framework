@@ -81,6 +81,17 @@
   text-decoration: none;
   display: inline-block;
 }
+/* Invisible tap-area extension (parity with the deleted proof pills):
+ * the chip renders ~29px tall; padding lifts the touch target toward the
+ * 44px ideal without shifting layout. */
+@media (max-width: 640px) {
+  .hero-chip {
+    padding-top: 9px;
+    padding-bottom: 9px;
+    margin-top: -4px;
+    margin-bottom: -4px;
+  }
+}
 .hero-chip:hover,
 .hero-chip:focus-visible {
   border-color: var(--color-accent-border-hover);
