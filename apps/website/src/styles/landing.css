@@ -275,6 +275,51 @@
   align-items: center;
   gap: 6px;
 }
+
+/* Rows variant (homepage): the Yes wall's claim→API grammar, light. */
+.feature-block-rail {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.feature-block-rail-line {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+.feature-block-rows {
+  margin-top: 20px;
+  border-top: 2px solid var(--color-text-primary);
+  max-width: 46ch;
+}
+.feature-block-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: baseline;
+  border-bottom: 1px solid var(--color-border);
+  padding: 9px 0;
+}
+.feature-block-row-claim {
+  font-family: var(--font-inter);
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--color-text-primary);
+}
+.feature-block-row-api {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .feature-block-row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}
+
 @media (max-width: 900px) {
   .feature-block-grid {
     /* minmax(0,…): bare 1fr keeps an auto minimum, so one wide child pushed
