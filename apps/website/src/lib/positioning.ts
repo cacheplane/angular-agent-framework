@@ -2,7 +2,17 @@ export const PRIMARY_TAGLINE =
   'Threadplane. Durable threads, interrupts, subagents, planning, memory, and generative UI.';
 export const LONG_SUBHEAD =
   'The fullstack agentic Angular framework for LangGraph and AG-UI-compatible agents: durable threads, interrupts, subagents, planning, memory, and generative UI using Vercel json-render and Google A2UI.';
-export const HERO_SUBHEAD = `Build fullstack agentic apps in Angular with: durable threads, interrupts, subagents, planning, memory, and generative UI using Vercel json-render and Google A2UI.`;
+export const HERO_SUBHEAD = `The streaming demo takes an afternoon. Everything after it takes six months. Threadplane is the Angular layer that closes the gap — and it keeps your backend exactly where it is.`;
+
+/** Capability nouns, demoted from the subheadline to chips (spec change F). */
+export const HERO_CHIPS: readonly string[] = [
+  'durable threads',
+  'interrupts',
+  'subagents',
+  'planning + memory',
+  'generative UI',
+  'LangGraph + AG-UI',
+];
 export interface PositioningProofPoint {
   readonly label: string;
   readonly href: string;

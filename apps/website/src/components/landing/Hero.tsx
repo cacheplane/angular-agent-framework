@@ -9,7 +9,7 @@ import { BrowserFrame } from '../ui/BrowserFrame';
 import { Pill } from '../ui/Pill';
 import { track } from '../../lib/analytics/client';
 import { analyticsEvents } from '../../lib/analytics/events';
-import { HERO_SUBHEAD, POSITIONING_PROOF_POINTS } from '../../lib/positioning';
+import { HERO_CHIPS, POSITIONING_PROOF_POINTS } from '../../lib/positioning';
 
 const INSTALL_COMMAND = 'npm install @threadplane/chat @threadplane/langgraph';
 const COPY_FEEDBACK_MS = 1500;
@@ -74,8 +74,22 @@ export function Hero() {
               Ship production agent UIs in Angular.
             </h1>
             <p className="hero-subhead">
-              {HERO_SUBHEAD}
+              The streaming demo takes an afternoon.{' '}
+              <span className="marker-highlight">
+                Everything after it takes six months.
+              </span>{' '}
+              Threadplane is the Angular layer that closes the gap — and it{' '}
+              <span className="marker-highlight">
+                keeps your backend exactly where it is.
+              </span>
             </p>
+            <ul className="hero-chip-row" aria-label="Capabilities">
+              {HERO_CHIPS.map((chip) => (
+                <li key={chip} className="hero-chip">
+                  {chip}
+                </li>
+              ))}
+            </ul>
             <div className="hero-cta-row">
               <PrimaryInstallButton />
               <SecondaryTalkButton />

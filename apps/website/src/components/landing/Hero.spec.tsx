@@ -3,7 +3,7 @@
 import React from 'react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { HERO_SUBHEAD, POSITIONING_PROOF_POINTS } from '../../lib/positioning';
+import { HERO_CHIPS, POSITIONING_PROOF_POINTS } from '../../lib/positioning';
 
 const trackMock = vi.hoisted(() => vi.fn());
 const writeTextMock = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
@@ -46,14 +46,22 @@ beforeEach(() => {
 });
 
 describe('Hero', () => {
-  it('renders the locked H1 and subhead', async () => {
+  it('renders the locked H1, problem-first subhead, and capability chips', async () => {
     const { Hero } = await import('./Hero');
     render(<Hero />);
     expect(screen.getByRole('heading', { level: 1 }).textContent)
-      .toMatch(/Ship production agent UIs in Angular\./);
-    expect(screen.getByText(HERO_SUBHEAD)).toBeTruthy();
+      .toBe('Ship production agent UIs in Angular.');
+    const subhead = document.querySelector('.hero-subhead');
+    expect(subhead?.textContent).toContain('Everything after it takes six months.');
+    expect(subhead?.textContent).toContain('keeps your backend exactly where it is');
+    for (const chip of HERO_CHIPS) {
+      // 'LangGraph + AG-UI' appears both as a chip and as a proof pill label,
+      // so use getAllByText rather than getByText (which throws on multiple matches).
+      expect(screen.getAllByText(chip).length).toBeGreaterThanOrEqual(1);
+    }
     for (const proofPoint of POSITIONING_PROOF_POINTS) {
-      expect(screen.getByText(proofPoint.label)).toBeTruthy();
+      // Same collision as above for the shared 'LangGraph + AG-UI' label.
+      expect(screen.getAllByText(proofPoint.label).length).toBeGreaterThanOrEqual(1);
     }
   });
 
