@@ -38,6 +38,12 @@
         "optional": false
       },
       {
+        "name": "pendingInterrupts",
+        "type": "object[]",
+        "description": "Interrupts emitted by the most recent run that have not yet been resolved.\n Populated when RUN_FINISHED arrives with outcome.type === \"interrupt\".\n Cleared when a subsequent run completes successfully.",
+        "optional": false
+      },
+      {
         "name": "state",
         "type": "any",
         "description": "",
@@ -135,12 +141,12 @@
       },
       {
         "name": "connectAgent",
-        "signature": "connectAgent(parameters: Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>, subscriber: AgentSubscriber): Promise<RunAgentResult>",
+        "signature": "connectAgent(parameters: RunAgentParameters<>, subscriber: AgentSubscriber): Promise<RunAgentResult>",
         "description": "",
         "params": [
           {
             "name": "parameters",
-            "type": "Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>",
+            "type": "RunAgentParameters<>",
             "description": "",
             "optional": true
           },
@@ -166,12 +172,12 @@
       },
       {
         "name": "legacy_to_be_removed_runAgentBridged",
-        "signature": "legacy_to_be_removed_runAgentBridged(config: Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>): Observable<object | object | object | object | object | object | object | object | object | object>",
+        "signature": "legacy_to_be_removed_runAgentBridged(config: RunAgentParameters<>): Observable<object | object | object | object | object | object | object | object | object | object>",
         "description": "",
         "params": [
           {
             "name": "config",
-            "type": "Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>",
+            "type": "RunAgentParameters<>",
             "description": "",
             "optional": true
           }
@@ -242,12 +248,12 @@
       },
       {
         "name": "prepareRunAgentInput",
-        "signature": "prepareRunAgentInput(parameters: Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>): object",
+        "signature": "prepareRunAgentInput(parameters: RunAgentParameters<>): object",
         "description": "",
         "params": [
           {
             "name": "parameters",
-            "type": "Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>",
+            "type": "RunAgentParameters<>",
             "description": "",
             "optional": true
           }
@@ -293,12 +299,12 @@
       },
       {
         "name": "runAgent",
-        "signature": "runAgent(parameters: Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>, subscriber: AgentSubscriber): Promise<RunAgentResult>",
+        "signature": "runAgent(parameters: RunAgentParameters<>, subscriber: AgentSubscriber): Promise<RunAgentResult>",
         "description": "",
         "params": [
           {
             "name": "parameters",
-            "type": "Partial<Pick<object, \"runId\" | \"tools\" | \"context\" | \"forwardedProps\">>",
+            "type": "RunAgentParameters<>",
             "description": "",
             "optional": true
           },
