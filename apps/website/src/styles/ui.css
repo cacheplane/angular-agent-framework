@@ -177,6 +177,7 @@
   --color-accent-hover: #8dd4ff;
   --color-accent-glow: rgba(100, 195, 253, 0.25);
   --color-accent-border: rgba(100, 195, 253, 0.2);
+  --color-accent-border-hover: rgba(100, 195, 253, 0.35);
   --color-accent-surface: rgba(100, 195, 253, 0.08);
 
   background: linear-gradient(180deg, #161616 0%, #0e0e0e 100%);
