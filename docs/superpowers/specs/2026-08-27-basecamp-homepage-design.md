@@ -146,13 +146,42 @@ skimmers; they stop being the pitch.
 **Decision needed at review.** The proposal is:
 
 - `Differentiator` is **removed**; the Yes wall takes its slot.
-- `HomeFAQ` **shrinks** to genuinely non-binary questions — pricing, migration
-  effort from CopilotKit, licensing, SSR — since roughly half of its current
-  items become Yes-wall rows.
+- `HomeFAQ` **shrinks** to genuinely non-binary questions — pricing, adapter
+  choice, SSR — since roughly half of its current items become Yes-wall rows.
 - Net page length stays approximately flat.
 
 The alternative is keeping both, which costs length and reintroduces the
 repetition this design exists to remove.
+
+## Updated for main as of 2026-08-30 (post-#881, all-MIT)
+
+Main landed "move all packages to MIT" (#881) after this spec was first
+committed. Three corrections to the design content:
+
+- **Licensing moves from FAQ to the Yes wall.** It is no longer a "yes, but"
+  ("most packages MIT, chat commercially licensed") — it is now an unqualified
+  yes: *"Can I use every package commercially without a license fee?" → Yes,
+  MIT.* The old licensing FAQ item is gone from main; do not resurrect it.
+- **The CopilotKit migration question no longer exists.** #881 scrubbed
+  CopilotKit from the entire site (FAQ item, logo, differentiator copy). The
+  surviving-FAQ list above reflects that; reintroducing the comparison would
+  run against a deliberate decision on main.
+- **The telemetry Yes-wall row strengthens.** Main's language is now "package
+  installation is inert" — stronger than the drafted "telemetry off by
+  default". Use the inert phrasing: *"Can I install it without phoning home?"
+  → Yes, installation is inert.*
+
+Main also introduced **Production Assurance** as a second commercial offering
+beside Pilot-to-Prod; the FOR TEAMS section is untouched by this design, but
+any Yes-wall row about support should not imply Pilot-to-Prod is the only
+option.
+
+**Angular 22:** support is in flight per Brian (2026-08-30) but NOT yet on
+main — every Angular-facing lib still pins `^20.0.0 || ^21.0.0`. Once a
+`^22.0.0` range lands and releases, the cut LTS proof cell can return in
+honest form ("Angular 20–22 supported" — current Active plus both LTS lines).
+Until then it stays cut. Verify the published peer range, not the docs, before
+reviving it.
 
 ## Implementation notes
 
