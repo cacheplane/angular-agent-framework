@@ -7,7 +7,7 @@ Adapter that wraps an [AG-UI](https://github.com/ag-ui-protocol/ag-ui) `Abstract
     <img alt="npm version" src="https://img.shields.io/npm/v/@threadplane%2Fag-ui?color=6C8EFF&labelColor=080B14&style=flat-square" />
   </a>
   <a href="https://angular.dev">
-    <img alt="Angular 20+" src="https://img.shields.io/badge/Angular-20%2B%20%7C%2021-6C8EFF?labelColor=080B14&style=flat-square" />
+    <img alt="Angular 20 | 21 | 22" src="https://img.shields.io/badge/Angular-20%20%7C%2021%20%7C%2022-6C8EFF?labelColor=080B14&style=flat-square" />
   </a>
   <a href="../../LICENSE">
     <img alt="MIT" src="https://img.shields.io/badge/License-MIT-6C8EFF?labelColor=080B14&style=flat-square" />
@@ -35,7 +35,7 @@ Part of [Threadplane](https://github.com/cacheplane/angular-agent-framework).
 npm install @threadplane/ag-ui @threadplane/chat @ag-ui/client @ag-ui/core marked
 ```
 
-**Peer dependencies:** `@threadplane/chat: *`, `@angular/core: ^20.0.0 || ^21.0.0`, `@ag-ui/client: *`, `@ag-ui/core: *`, `rxjs: ~7.8.0`
+**Peer dependencies:** `@threadplane/chat: *`, `@angular/core: ^20.0.0 || ^21.0.0 || ^22.0.0`, `@ag-ui/client: *`, `@ag-ui/core: *`, `rxjs: ~7.8.0`
 
 `marked` is the required markdown parser peer used by `@threadplane/chat` when you render assistant messages through `<chat>`.
 

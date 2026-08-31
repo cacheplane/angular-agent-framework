@@ -8,7 +8,7 @@ Part of [Threadplane](https://github.com/cacheplane/angular-agent-framework).
   <a href="https://www.npmjs.com/package/@threadplane/chat">
     <img alt="npm version" src="https://img.shields.io/npm/v/@threadplane%2Fchat?color=6C8EFF&labelColor=080B14&style=flat-square" />
   </a>
-  <img alt="Angular 20+" src="https://img.shields.io/badge/Angular-20%2B%20%7C%2021-6C8EFF?labelColor=080B14&style=flat-square" />
+  <img alt="Angular 20 | 21 | 22" src="https://img.shields.io/badge/Angular-20%20%7C%2021%20%7C%2022-6C8EFF?labelColor=080B14&style=flat-square" />
   <img alt="License" src="https://img.shields.io/badge/License-PolyForm%20NC%20%7C%20Commercial-6C8EFF?labelColor=080B14&style=flat-square" />
 </p>
 
@@ -34,10 +34,10 @@ npm install @threadplane/chat @threadplane/langgraph @langchain/core @langchain/
 **Peer dependencies:**
 
 ```
-@angular/core              ^20.0.0 || ^21.0.0
-@angular/common            ^20.0.0 || ^21.0.0
-@angular/platform-browser  ^20.0.0 || ^21.0.0
-@angular/router            ^20.0.0 || ^21.0.0
+@angular/core              ^20.0.0 || ^21.0.0 || ^22.0.0
+@angular/common            ^20.0.0 || ^21.0.0 || ^22.0.0
+@angular/platform-browser  ^20.0.0 || ^21.0.0 || ^22.0.0
+@angular/router            ^20.0.0 || ^21.0.0 || ^22.0.0
 @threadplane/licensing     *
 @threadplane/render        *
 @threadplane/a2ui          *

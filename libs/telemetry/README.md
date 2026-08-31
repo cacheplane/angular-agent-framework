@@ -7,7 +7,7 @@ Transparent, opt-out anonymous usage telemetry for the Threadplane framework. Is
     <img alt="npm version" src="https://img.shields.io/npm/v/@threadplane%2Ftelemetry?color=6C8EFF&labelColor=080B14&style=flat-square" />
   </a>
   <a href="https://angular.dev">
-    <img alt="Angular 20+ | 21" src="https://img.shields.io/badge/Angular-20%2B%20%7C%2021-6C8EFF?labelColor=080B14&style=flat-square" />
+    <img alt="Angular 20 | 21 | 22" src="https://img.shields.io/badge/Angular-20%20%7C%2021%20%7C%2022-6C8EFF?labelColor=080B14&style=flat-square" />
   </a>
   <a href="https://opensource.org/licenses/MIT">
     <img alt="MIT" src="https://img.shields.io/badge/License-MIT-6C8EFF?labelColor=080B14&style=flat-square" />
@@ -61,7 +61,7 @@ npm install @threadplane/telemetry
 Both peer dependencies are optional:
 
 ```
-@angular/core    ^20.0.0 || ^21.0.0   # required only for the ./browser Angular service
+@angular/core    ^20.0.0 || ^21.0.0 || ^22.0.0   # required only for the ./browser Angular service
 posthog-js       ^1.372.0              # required only when using PostHog capture
 ```
 

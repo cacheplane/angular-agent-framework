@@ -26,8 +26,34 @@ export const ANGULAR_MANIFESTS = [
   'libs/example-layouts/package.json',
 ];
 
+export const ANGULAR_SUPPORT_READMES = [
+  'README.md',
+  'libs/chat/README.md',
+  'libs/langgraph/README.md',
+  'libs/ag-ui/README.md',
+  'libs/render/README.md',
+  'libs/telemetry/README.md',
+];
+
+export const ANGULAR_SUPPORT_INSTALLATION_PAGES = [
+  'apps/website/content/docs/chat/getting-started/installation.mdx',
+  'apps/website/content/docs/langgraph/getting-started/installation.mdx',
+  'apps/website/content/docs/ag-ui/getting-started/installation.mdx',
+  'apps/website/content/docs/render/getting-started/installation.mdx',
+];
+
+const ACTIVE_INSTALLATION_SUPPORT_STATEMENT =
+  'Supported Angular majors: 20, 21, and 22.';
+const STALE_ANGULAR_PEER_RANGE = '^20.0.0 || ^21.0.0';
+const STALE_ANGULAR_PEER_RANGE_PATTERN =
+  /\^20\.0\.0\s*\|\|\s*\^21\.0\.0(?!\s*\|\|\s*\^22\.0\.0)/;
+
 async function readJson(path) {
   return JSON.parse(await readFile(path, 'utf8'));
+}
+
+async function readText(path) {
+  return readFile(path, 'utf8');
 }
 
 export async function verifyPeerRanges({ root = process.cwd() } = {}) {
@@ -63,6 +89,62 @@ export async function verifyPeerRanges({ root = process.cwd() } = {}) {
           `${manifest} peerDependencies["${name}"] expected "${ANGULAR_PEER_RANGE}" but found "${range}".`
         );
       }
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(errors.join('\n'));
+  }
+}
+
+export async function verifyDocumentation({ root = process.cwd() } = {}) {
+  const errors = [];
+
+  for (const readme of ANGULAR_SUPPORT_READMES) {
+    const readmePath = join(root, readme);
+    let contents;
+
+    try {
+      contents = await readText(readmePath);
+    } catch (error) {
+      errors.push(
+        `${relative(root, readmePath)} could not be read: ${error.message}`
+      );
+      continue;
+    }
+
+    if (!contents.replaceAll('\\|', '|').includes(ANGULAR_PEER_RANGE)) {
+      errors.push(
+        `${readme} must include the Angular peer range "${ANGULAR_PEER_RANGE}".`
+      );
+    }
+  }
+
+  for (const page of ANGULAR_SUPPORT_INSTALLATION_PAGES) {
+    const pagePath = join(root, page);
+    let contents;
+
+    try {
+      contents = await readText(pagePath);
+    } catch (error) {
+      errors.push(
+        `${relative(root, pagePath)} could not be read: ${error.message}`
+      );
+      continue;
+    }
+
+    const normalizedContents = contents.replaceAll('\\|', '|');
+
+    if (!normalizedContents.includes(ACTIVE_INSTALLATION_SUPPORT_STATEMENT)) {
+      errors.push(
+        `${page} must contain "${ACTIVE_INSTALLATION_SUPPORT_STATEMENT}".`
+      );
+    }
+
+    if (STALE_ANGULAR_PEER_RANGE_PATTERN.test(normalizedContents)) {
+      errors.push(
+        `${page} must not retain the stale Angular peer range "${STALE_ANGULAR_PEER_RANGE}".`
+      );
     }
   }
 
@@ -146,6 +228,7 @@ if (
 ) {
   try {
     await verifyPeerRanges();
+    await verifyDocumentation();
     await verifyWebsiteMajors();
     console.log(
       `Angular support metadata verified: ${SUPPORTED_ANGULAR_MAJORS.join(

@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
 
+import * as angularSupportVerifier from './verify-angular-support.mjs';
 import {
   ANGULAR_MANIFESTS,
   ANGULAR_PEER_RANGE,
@@ -15,6 +16,11 @@ import {
 async function writeJson(path, value) {
   await mkdir(dirname(path), { recursive: true });
   await writeFile(path, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+async function writeText(path, value) {
+  await mkdir(dirname(path), { recursive: true });
+  await writeFile(path, value);
 }
 
 async function createFixture(t, updateManifest) {
@@ -75,6 +81,29 @@ function createWebsiteFixture({
   };
 }
 
+async function createDocumentationFixture(t, updateDocumentation) {
+  const root = await mkdtemp(join(tmpdir(), 'threadplane-angular-docs-'));
+  t.after(() => rm(root, { force: true, recursive: true }));
+
+  for (const readme of angularSupportVerifier.ANGULAR_SUPPORT_READMES ?? []) {
+    await writeText(
+      join(root, readme),
+      `Peer dependencies: \`@angular/core ${ANGULAR_PEER_RANGE}\`\n`
+    );
+  }
+
+  for (const page of angularSupportVerifier.ANGULAR_SUPPORT_INSTALLATION_PAGES ??
+    []) {
+    await writeText(
+      join(root, page),
+      'Supported Angular majors: 20, 21, and 22.\n'
+    );
+  }
+
+  await updateDocumentation(root);
+  return root;
+}
+
 test('imports without CLI side effects when argv[1] is undefined', async () => {
   const result = await runNode([
     '--input-type=module',
@@ -88,6 +117,53 @@ test('imports without CLI side effects when argv[1] is undefined', async () => {
 test('uses the expected Angular peer range in every repository manifest', async () => {
   assert.equal(ANGULAR_PEER_RANGE, '^20.0.0 || ^21.0.0 || ^22.0.0');
   await verifyPeerRanges();
+});
+
+test('requires Angular 22 in active package docs and installation pages', async () => {
+  assert.equal(
+    typeof angularSupportVerifier.verifyDocumentation,
+    'function',
+    'the verifier must expose documentation checks'
+  );
+
+  await angularSupportVerifier.verifyDocumentation();
+});
+
+test('reports all stale active documentation in one pass', async (t) => {
+  assert.equal(typeof angularSupportVerifier.verifyDocumentation, 'function');
+
+  const root = await createDocumentationFixture(t, async (fixtureRoot) => {
+    await writeText(
+      join(fixtureRoot, 'README.md'),
+      'Peer dependencies: `@angular/core ^20.0.0 || ^21.0.0`\n'
+    );
+    await writeText(
+      join(
+        fixtureRoot,
+        'apps/website/content/docs/chat/getting-started/installation.mdx'
+      ),
+      'Angular 20 and 21\n^20.0.0 || ^21.0.0\n'
+    );
+  });
+
+  await assert.rejects(
+    angularSupportVerifier.verifyDocumentation({ root }),
+    (error) => {
+      assert.match(
+        error.message,
+        /README\.md must include the Angular peer range "\^20\.0\.0 \|\| \^21\.0\.0 \|\| \^22\.0\.0"\./
+      );
+      assert.match(
+        error.message,
+        /apps\/website\/content\/docs\/chat\/getting-started\/installation\.mdx must contain "Supported Angular majors: 20, 21, and 22\."\./
+      );
+      assert.match(
+        error.message,
+        /apps\/website\/content\/docs\/chat\/getting-started\/installation\.mdx must not retain the stale Angular peer range "\^20\.0\.0 \|\| \^21\.0\.0"\./
+      );
+      return true;
+    }
+  );
 });
 
 test('uses the registry Angular majors in website support data', async () => {
