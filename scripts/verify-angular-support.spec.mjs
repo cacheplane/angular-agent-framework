@@ -92,7 +92,7 @@ async function createDocumentationFixture(t, updateDocumentation) {
     await writeText(
       join(root, path),
       [
-        `<img alt="${angularSupportVerifier.ANGULAR_SUPPORT_BADGE_TEXT}" />`,
+        `<img alt="${angularSupportVerifier.ANGULAR_SUPPORT_BADGE_TEXT}" src="https://img.shields.io/badge/Angular-${angularSupportVerifier.ANGULAR_SUPPORT_BADGE_URL_MESSAGE}-6C8EFF" />`,
         marker,
         '',
         '```',
@@ -137,6 +137,12 @@ test('requires Angular 22 in active package docs and installation pages', async 
   );
 
   await angularSupportVerifier.verifyDocumentation();
+});
+
+test('uses a fully valid active documentation fixture baseline', async (t) => {
+  const root = await createDocumentationFixture(t, async () => {});
+
+  await angularSupportVerifier.verifyDocumentation({ root });
 });
 
 test('reports all stale active documentation in one pass', async (t) => {
@@ -208,7 +214,17 @@ test('rejects a stale Shields badge message despite correct alt text', async (t)
 
   await assert.rejects(
     angularSupportVerifier.verifyDocumentation({ root }),
-    /README\.md Angular support badge must encode the message "20%20%7C%2021%20%7C%2022" in the same <img> tag\./
+    (error) => {
+      assert.deepEqual(
+        error.message
+          .split('\n')
+          .filter((message) => message.includes('Angular support badge')),
+        [
+          'README.md Angular support badge must encode the message "20%20%7C%2021%20%7C%2022" in the same <img> tag.',
+        ]
+      );
+      return true;
+    }
   );
 });
 
