@@ -1,0 +1,16 @@
+{
+  "threadId": "thread-hitl-1",
+  "runId": "run-hitl-3",
+  "state": {},
+  "messages": [
+    { "id": "u1", "role": "user", "content": "Schedule a meeting with Dana about the Q4 roadmap." }
+  ],
+  "tools": [],
+  "context": [],
+  "forwardedProps": {
+    "command": {
+      "resume": { "chosen_time": "2026-09-01T10:00" },
+      "interruptEvent": { "toolCallId": "call_MYPy83hJNJl68Qe2HuX24UqT", "runId": "run-hitl-2" }
+    }
+  }
+}

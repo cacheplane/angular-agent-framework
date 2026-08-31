@@ -398,13 +398,15 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     submit: async (input: AgentSubmitInput, _opts?: AgentSubmitOptions) => {
       if (input.resume !== undefined) {
         // Resume path: clear the pending interrupt and replay the run with the
-        // resume payload forwarded to the LangGraph backend via AG-UI's
-        // forwardedProps.command.resume mechanism.
+        // resume payload forwarded via AG-UI's forwardedProps mechanism. The
+        // wire shape is derived from the identifying fields the inbound
+        // interrupt carried — see buildResumeForwardedProps.
         applyStatePatch(input.state);
+        const pendingInterrupt = store.interrupt();
         store.interrupt.set(undefined);
         await executeRun(
           'resume',
-          { forwardedProps: { command: { resume: input.resume } } },
+          { forwardedProps: buildResumeForwardedProps(input.resume, pendingInterrupt) },
           true,
         );
         return;
@@ -486,6 +488,84 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
       await executeRun('regenerate');
     },
   };
+}
+
+/**
+ * Build the outgoing forwardedProps for a `submit({ resume })`.
+ *
+ * The shape is keyed on the identifying fields the pending interrupt carried
+ * on the way IN, so each runtime finds the resume payload where it reads it
+ * (all measured against the 2026-08-31 runtime-portability spike captures):
+ *
+ * - LangGraph (CUSTOM on_interrupt with an opaque payload — no identifying
+ *   fields): exactly `{ command: { resume } }`, byte-for-byte the historical
+ *   shape. Backward compatibility here is non-negotiable.
+ * - Mastra (CUSTOM on_interrupt payload carrying `toolCallId` + `runId`):
+ *   `{ command: { resume, interruptEvent: { toolCallId, runId } } }` — the
+ *   measured working request (fixtures/runtime-transcripts/
+ *   mastra-resume-correct.request.json).
+ * - Protocol-standard RUN_FINISHED interrupt outcome (Microsoft Agent
+ *   Framework, AWS Strands — stored by the reducer as
+ *   `{ interrupts: [...], runId }`): one structured entry per pending
+ *   interrupt, `{ command: { resume: [{ id, status: 'resolved', payload }] } }`
+ *   — the measured working request (fixtures/runtime-transcripts/
+ *   maf-hitl-resume.sse, `__request__` line). A caller that already provides
+ *   entry-shaped `resume` values is passed through untouched.
+ *
+ * Adopting the protocol-standard TOP-LEVEL `resume` array is an explicit
+ * follow-up: RunAgentInputSchema@0.0.52 has no such field, while
+ * `forwardedProps` is a schema field every runtime reads today.
+ */
+function buildResumeForwardedProps(
+  resume: unknown,
+  interrupt: AgentInterrupt | undefined,
+): Record<string, unknown> {
+  const value = interrupt?.value;
+  if (isRecord(value)) {
+    if (typeof value['toolCallId'] === 'string') {
+      return {
+        command: {
+          resume,
+          interruptEvent: {
+            toolCallId: value['toolCallId'],
+            ...(typeof value['runId'] === 'string' ? { runId: value['runId'] } : {}),
+          },
+        },
+      };
+    }
+    if (Array.isArray(value['interrupts'])) {
+      const entries = (value['interrupts'] as unknown[])
+        .filter(isRecord)
+        .filter((entry) => typeof entry['id'] === 'string');
+      if (entries.length > 0 && !isStructuredResume(resume)) {
+        return {
+          command: {
+            resume: entries.map((entry) => ({
+              id: entry['id'],
+              status: 'resolved',
+              payload: resume,
+            })),
+          },
+        };
+      }
+    }
+  }
+  return { command: { resume } };
+}
+
+/** True when the caller already provided per-interrupt entries
+ *  (`[{ id | interruptId, ... }]`) — forwarded untouched in that case. */
+function isStructuredResume(resume: unknown): boolean {
+  return Array.isArray(resume)
+    && resume.length > 0
+    && resume.every((entry) =>
+      isRecord(entry)
+      && (typeof entry['id'] === 'string' || typeof entry['interruptId'] === 'string'),
+    );
+}
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
 function buildUserMessage(input: AgentSubmitInput): Message | undefined {
