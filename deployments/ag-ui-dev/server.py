@@ -8,8 +8,10 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from ag_ui_langgraph import add_langgraph_fastapi_endpoint, LangGraphAgent
 from agent_framework_ag_ui import add_agent_framework_fastapi_endpoint
+from ag_ui_strands import add_strands_fastapi_endpoint
 
 from deps.a2ui.src.graph import graph as a2ui_graph
+from deps.aws_strands.src.agent import agent as aws_strands_agent
 from deps.client_tools.src.graph import graph as client_tools_graph
 from deps.interrupts.src.graph import graph as interrupts_graph
 from deps.json_render.src.graph import graph as json_render_graph
@@ -44,6 +46,11 @@ add_langgraph_fastapi_endpoint(
     app,
     LangGraphAgent(name="a2ui", graph=a2ui_graph),
     path="/agent/a2ui",
+)
+add_strands_fastapi_endpoint(
+    app,
+    aws_strands_agent,
+    "/agent/aws-strands",
 )
 add_langgraph_fastapi_endpoint(
     app,
