@@ -1,7 +1,7 @@
 import type { ReactNode, HTMLAttributes } from 'react';
 import { cn } from '../../lib/cn';
 
-type Surface = 'canvas' | 'tinted' | 'white';
+type Surface = 'canvas' | 'tinted' | 'white' | 'dark';
 
 interface SectionProps extends Omit<HTMLAttributes<HTMLElement>, 'id'> {
   children: ReactNode;
