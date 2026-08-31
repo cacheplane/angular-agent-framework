@@ -1511,3 +1511,49 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------- LogoRibbon — components/landing/LogoRibbon.tsx ---------- */
+.logo-ribbon {
+  background: var(--color-canvas);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+.logo-ribbon-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 26px;
+  padding: 16px 0;
+}
+.logo-ribbon-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+.logo-ribbon-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+.logo-ribbon-logo {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+.logo-ribbon-name {
+  font-family: var(--font-inter);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+.logo-ribbon-more {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
