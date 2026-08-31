@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: MIT
-/* eslint-disable no-console */
-
 /**
  * Smoke generator for a fresh consumer of the canonical examples/chat demo.
  *
@@ -53,6 +51,7 @@ function parseArgs(argv) {
     install: undefined,
     nonInteractive: false,
     packageSpecs: new Map(),
+    runtime: false,
     start: undefined,
     target: undefined,
     version: undefined,
@@ -80,6 +79,7 @@ function parseArgs(argv) {
     else if (arg === '--start') options.start = true;
     else if (arg === '--no-start') options.start = false;
     else if (arg === '--build') options.build = true;
+    else if (arg === '--runtime') options.runtime = true;
     else if (arg === '--local-dist-root') options.localDistRoot = readValue();
     else if (arg === '--pack-destination')
       options.packDestination = readValue();
@@ -160,6 +160,12 @@ async function main() {
       : undefined;
   const doInstall =
     options.install ?? !installAnswer.toLowerCase().startsWith('n');
+  if (options.runtime && !doInstall) {
+    throw new Error(
+      '--runtime requires installation; omit --no-install or pass --install'
+    );
+  }
+  if (options.runtime) options.build = true;
   const doStart =
     options.start ??
     (doInstall && !options.nonInteractive
@@ -206,6 +212,15 @@ async function main() {
   if (options.build) {
     console.log('\n→ Running npm run build ...');
     await runChild('npm', ['run', 'build'], { cwd: target });
+  }
+
+  if (options.runtime) {
+    console.log('\n→ Running backend-free runtime compatibility smoke ...');
+    await runChild(
+      process.execPath,
+      [join(SCRIPT_DIR, 'runtime-smoke.mjs'), '--target', target],
+      { cwd: SCRIPT_DIR }
+    );
   }
 
   console.log(`\n✓ Smoke consumer ready at ${target}`);

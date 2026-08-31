@@ -13,6 +13,17 @@ npx nx run examples-chat-smoke:run
 node examples/chat/smoke/cli.mjs
 ```
 
+To build a generated consumer and run the backend-free browser compatibility
+smoke, include `--runtime`. It requires installation and automatically runs the
+production build before launching Chromium:
+
+```bash
+node examples/chat/smoke/cli.mjs --non-interactive --install --runtime
+```
+
+`--runtime` launches Chromium through the root `@playwright/test` dependency.
+Install its browser locally first when needed with `npx playwright install chromium`.
+
 ## Flow
 
 1. Prompts for target directory (default: `~/tmp/threadplane`).
@@ -22,8 +33,12 @@ node examples/chat/smoke/cli.mjs
 5. Copies `examples/chat/angular/src/app/` into the target's `src/app/`.
 6. Selects an exact Angular compatibility lane with `--angular-major 20|21|22` (default: `21`) and rewrites all Angular, Angular CLI, and TypeScript pins from the registry.
 7. Pins `@threadplane/*` deps to the resolved version, then runs `npm install` with strict peer resolution (`legacy-peer-deps=false`).
-8. Optionally runs `npm start`.
-9. Drops `CHECKLIST.md` and `SMOKE_RUN.md` (capture metadata, including the selected Angular lane) in the target.
+8. Optionally runs the production build and, with `--runtime`, checks the
+   generated `/embed` page in Chromium. The runtime smoke stubs only the
+   cold-start thread search and telemetry ingest API calls, so no backend is
+   required.
+9. Optionally runs `npm start`.
+10. Drops `CHECKLIST.md` and `SMOKE_RUN.md` (capture metadata, including the selected Angular lane) in the target.
 
 ## What's in `template/`
 
