@@ -68,7 +68,7 @@ export function YesWall() {
               eyebrow="Every question below has the same answer"
               heading="Yes, it does that."
               headingId="yes-wall-heading"
-              aside="Sixteen questions teams ask before they commit — each linked to the API that answers it."
+              aside="Sixteen questions teams ask before they commit — each paired with the API that answers it."
             />
             <div className="yes-wall-body">
               {YES_WALL_GROUPS.map((group, index) => (
@@ -98,6 +98,7 @@ export function YesWall() {
                       destination_url: '/docs',
                       cta_id: 'home_yes_wall_docs',
                       cta_text: 'Every question answered, in the docs',
+                      track: 'developer',
                     })
                   }
                 >

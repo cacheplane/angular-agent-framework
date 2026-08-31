@@ -1219,6 +1219,10 @@
 }
 
 /* ---------- Yes wall (dark specimen, spec change A + treatment B) ---------- */
+/* Match FinalCTA's containment: the glow and watermark stay inside the band. */
+#yes-wall {
+  overflow: clip;
+}
 .yes-wall {
   position: relative;
 }
