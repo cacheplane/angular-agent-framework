@@ -129,9 +129,10 @@ export function buildServerPy(topics: AgUiTopic[]): string {
     .map((t) => FRAMEWORK_ADAPTERS[t.framework].mount(t.topic, pyModule(t.topic)))
     .join('\n');
   return `${GENERATED_HEADER}
-# Multi-topic AG-UI FastAPI server. Aggregates each cockpit/ag-ui/*/python topic
-# at /agent/<topic>. Health route /ok is unauthenticated; /agent/* requires
-# X-Internal-Token matching the AG_UI_INTERNAL_TOKEN env var.
+# Multi-topic AG-UI FastAPI server. Aggregates each AG-UI-served python topic
+# (cockpit/ag-ui/*/python and cockpit/runtimes/*/python) at /agent/<topic>.
+# Health route /ok is unauthenticated; /agent/* requires X-Internal-Token
+# matching the AG_UI_INTERNAL_TOKEN env var.
 import os
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse

@@ -1,0 +1,38 @@
+{
+  "name": "cockpit-runtimes-microsoft-agent-framework-python",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/runtimes/microsoft-agent-framework/python/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{workspaceRoot}/dist/cockpit/runtimes/microsoft-agent-framework/python"
+      ],
+      "options": {
+        "outputPath": "dist/cockpit/runtimes/microsoft-agent-framework/python",
+        "main": "cockpit/runtimes/microsoft-agent-framework/python/src/index.ts",
+        "tsConfig": "cockpit/runtimes/microsoft-agent-framework/python/tsconfig.json"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/runtimes/microsoft-agent-framework/python",
+        "command": "npx tsx -e \"import { runtimesMicrosoftAgentFrameworkPythonModule } from './src/index.ts'; const module = runtimesMicrosoftAgentFrameworkPythonModule; if (module.id !== 'runtimes-microsoft-agent-framework-python' || module.title !== 'Runtimes — Microsoft Agent Framework (Python)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/runtimes/microsoft-agent-framework/python",
+        "command": "uv run uvicorn src.server:app --port 5330"
+      }
+    }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples",
+    "scope:cockpit-smoke"
+  ]
+}
