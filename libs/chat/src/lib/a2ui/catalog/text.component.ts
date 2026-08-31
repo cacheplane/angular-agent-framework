@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import type { Spec } from '@json-render/core';
 
 type TextVariant = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'caption' | 'body';
@@ -7,6 +7,7 @@ type TextVariant = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'caption' | 'body';
 @Component({
   selector: 'a2ui-text',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Default,
   template: `<span [class]="cssClass()">{{ text() }}</span>`,
   styles: [`
     .a2ui-text-h1 {

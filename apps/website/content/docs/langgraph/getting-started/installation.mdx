@@ -4,12 +4,14 @@ Detailed setup guide for `injectAgent()` in your Angular application.
 
 ## Requirements
 
+Supported Angular majors: 20, 21, and 22.
+
 <Steps>
 <Step title="Angular 20+">
 `injectAgent()` uses Angular Signals and the modern injection context API. Angular 20 or later is required.
 </Step>
-<Step title="Node.js 18+">
-Required for the build toolchain and package installation.
+<Step title="Node.js compatibility">
+Use a Node.js version supported by the selected Angular major. Angular 22 supports Node.js ^22.22.3, ^24.15.0, or ^26.0.0. See the [Angular compatibility matrix](https://angular.dev/reference/versions).
 </Step>
 <Step title="LangGraph Platform">
 A running LangGraph agent reachable over HTTP. Local (`langgraph dev`) or deployed (LangGraph Cloud) both work.
@@ -31,7 +33,7 @@ npm install @threadplane/langgraph @threadplane/chat @langchain/core @langchain/
 | Package | Version |
 |---------|---------|
 | `@threadplane/chat` | `*` |
-| `@angular/core` | `^20.0.0 \|\| ^21.0.0` |
+| `@angular/core` | `^20.0.0 \|\| ^21.0.0 \|\| ^22.0.0` |
 | `@langchain/core` | `^1.1.33` |
 | `@langchain/langgraph-sdk` | `^1.7.4` |
 | `rxjs` | `~7.8.0` |

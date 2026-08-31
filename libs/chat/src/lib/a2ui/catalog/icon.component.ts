@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import type { Spec } from '@json-render/core';
 
 /**
@@ -19,6 +19,7 @@ export function toMaterialSymbolName(name: string): string {
 @Component({
   selector: 'a2ui-icon',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Default,
   template: `
     @if (svgPath(); as path) {
       <svg

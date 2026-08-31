@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
-import { Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import type { Spec } from '@json-render/core';
 import { RenderElementComponent } from '@threadplane/render';
 
 @Component({
   selector: 'a2ui-list',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Default,
   imports: [RenderElementComponent],
   template: `
     <div [class]="listClass()" [style.align-items]="alignmentCss()">

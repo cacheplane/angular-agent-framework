@@ -4,6 +4,7 @@
   "sourceRoot": "libs/a2ui/src",
   "projectType": "library",
   "tags": [
+    "scope:angular-compatibility",
     "scope:cockpit",
     "scope:cockpit-deploy-smoke",
     "scope:cockpit-e2e",
@@ -19,9 +20,7 @@
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": [
-        "{workspaceRoot}/dist/libs/a2ui"
-      ],
+      "outputs": ["{workspaceRoot}/dist/libs/a2ui"],
       "options": {
         "outputPath": "dist/libs/a2ui",
         "main": "libs/a2ui/src/index.ts",

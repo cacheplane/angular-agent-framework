@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
-import { Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import type { Spec } from '@json-render/core';
 
 @Component({
   selector: 'a2ui-audio-player',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Default,
   template: `
     <div class="a2ui-audio-wrap">
       @if (description()) {

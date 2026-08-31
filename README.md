@@ -15,7 +15,7 @@
     <img alt="npm version" src="https://img.shields.io/npm/v/@threadplane%2Flanggraph?color=6C8EFF&labelColor=080B14&style=flat-square" />
   </a>
   <a href="https://angular.dev">
-    <img alt="Angular 20+" src="https://img.shields.io/badge/Angular-20%2B-6C8EFF?labelColor=080B14&style=flat-square" />
+    <img alt="Angular 20 | 21 | 22" src="https://img.shields.io/badge/Angular-20%20%7C%2021%20%7C%2022-6C8EFF?labelColor=080B14&style=flat-square" />
   </a>
   <a href="https://langchain-ai.github.io/langgraph/">
     <img alt="LangGraph" src="https://img.shields.io/badge/LangGraph-SDK-6C8EFF?labelColor=080B14&style=flat-square" />
@@ -45,7 +45,7 @@ Threadplane is a production-ready agent UI framework for Angular. `@threadplane/
 npm install @threadplane/langgraph @threadplane/chat
 ```
 
-**Peer dependencies:** `@angular/core ^20.0.0 || ^21.0.0`, `@langchain/core ^1.1.33`, `@langchain/langgraph-sdk ^1.7.4`, `rxjs ~7.8.0`
+**Peer dependencies:** `@angular/core ^20.0.0 || ^21.0.0 || ^22.0.0`, `@langchain/core ^1.1.33`, `@langchain/langgraph-sdk ^1.7.4`, `rxjs ~7.8.0`
 
 ---
 

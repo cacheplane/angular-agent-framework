@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
-import { Component, computed, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 import type { Spec } from '@json-render/core';
 import { RenderElementComponent } from '@threadplane/render';
 
 @Component({
   selector: 'a2ui-modal',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Default,
   imports: [RenderElementComponent],
   template: `
     <!-- Entry point (trigger): always rendered inline, e.g. a button. -->

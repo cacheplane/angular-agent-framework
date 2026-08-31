@@ -15,11 +15,9 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "examples/chat/smoke",
-        "command": "node cli.mjs --non-interactive --target ../../../tmp/examples-chat-smoke --fresh --local-dist-root ../../../dist/libs --install --build"
+        "command": "node cli.mjs --non-interactive --target ../../../tmp/examples-chat-smoke --fresh --angular-major 21 --local-dist-root ../../../dist/libs --install --build"
       }
     }
   },
-  "tags": [
-    "scope:examples-chat"
-  ]
+  "tags": ["scope:angular-compatibility", "scope:examples-chat"]
 }

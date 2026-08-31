@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
-import { Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import type { Spec } from '@json-render/core';
 
 @Component({
   selector: 'a2ui-video',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Default,
   template: `
     <video
       class="a2ui-video"
