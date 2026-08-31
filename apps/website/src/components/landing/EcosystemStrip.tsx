@@ -28,13 +28,12 @@ const ECOSYSTEM_GROUPS: EcosystemGroup[] = [
     title: 'Agent runtimes',
     items: [
       { name: 'LangGraph', note: 'native adapter', logoSrc: '/logos/langgraph.svg' },
-      { name: 'AG-UI', note: 'protocol adapter', logoSrc: '/logos/runtimes/copilotkit.svg' },
+      { name: 'AG-UI', note: 'protocol adapter', logoSrc: '/logos/ag-ui.svg' },
       { name: 'CrewAI', note: 'via AG-UI', logoSrc: '/logos/runtimes/crewai.svg' },
       { name: 'Mastra', note: 'via AG-UI', logoSrc: '/logos/runtimes/mastra.svg' },
       { name: 'Pydantic AI', note: 'via AG-UI', logoSrc: '/logos/runtimes/pydantic.svg' },
       { name: 'Microsoft Agent Framework', note: 'via AG-UI', logoSrc: '/logos/runtimes/microsoft.svg' },
       { name: 'AWS Strands', note: 'via AG-UI', logoSrc: '/logos/providers/bedrock.svg' },
-      { name: 'CopilotKit Runtime', note: 'via AG-UI', logoSrc: '/logos/runtimes/copilotkit.svg' },
     ],
   },
   {

@@ -28,7 +28,7 @@ jobs:
       contents: read
       id-token: write # required for npm trusted publishing + provenance
     env:
-      NPM_PUBLISHABLE_PROJECTS: chat,langgraph,ag-ui,render,a2ui,licensing,telemetry
+      NPM_PUBLISHABLE_PROJECTS: chat,langgraph,ag-ui,render,a2ui,telemetry
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       # Node 24 ships npm 11+ which fully implements npm trusted publishing
@@ -52,15 +52,7 @@ jobs:
         run: npm install -g npm@11.17.0
 
       - name: Lint, test, build publishable projects
-        env:
-          CACHEPLANE_LICENSE_PUBLIC_KEY: ${{ secrets.CACHEPLANE_LICENSE_PUBLIC_KEY }}
         run: npx nx run-many -t lint,test,build --projects=$NPM_PUBLISHABLE_PROJECTS --skip-nx-cache
-
-      - name: Patch install telemetry into publishable manifests
-        run: node libs/telemetry/scripts/apply-install-telemetry.mjs dist/libs/chat dist/libs/langgraph dist/libs/ag-ui dist/libs/render dist/libs/a2ui dist/libs/licensing
-
-      - name: Verify install telemetry in publishable manifests
-        run: node libs/telemetry/scripts/verify-install-telemetry.mjs dist/libs/chat dist/libs/langgraph dist/libs/ag-ui dist/libs/render dist/libs/a2ui dist/libs/licensing dist/libs/telemetry
 
       - name: Verify atomic release versions
         run: node scripts/verify-release-versions.mjs --tag "$RELEASE_TAG"

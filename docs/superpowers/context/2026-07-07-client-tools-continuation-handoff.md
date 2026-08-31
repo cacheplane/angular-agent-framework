@@ -120,7 +120,7 @@ M0 concretely (see spec §11 for the full checklist):
   Prefer keeping M0 test scaffolding internal to spec/test files.
 - Patch-only releases: never bump @threadplane/* to 0.1.0; increment patch.
 - Deterministic, local tests only (no network, no live LLM in unit tests).
-- NEVER reference external frameworks (hashbrown / copilotkit / chatgpt / claude)
+- NEVER reference external frameworks (hashbrown / a React agent UI framework / chatgpt / claude)
   in code, comments, or commit/PR text. Spec/plan markdown is the only sanctioned
   place. The architecture is independently arrived at.
 - Do not relitigate the resolved decisions above.

@@ -6,7 +6,7 @@
 
 **Architecture:** New per-example e2e dir under `cockpit/chat/interrupts/angular/e2e/` modeled on the existing c-subagents harness. Two new helpers in `libs/e2e-harness/src/test-helpers.ts` (`sendPromptAndWaitForInterrupt`, `clickInterruptActionAndWaitFinal`) make interrupt-flow assertions reusable across capabilities. Fixture captured via `llmock --record` against the real OpenAI API by a script that drives two booking flows (UA123 confirm, AA404 cancel) through the standalone `cockpit/chat/interrupts/python` backend.
 
-**Tech Stack:** Playwright 1.x, `@copilotkit/aimock` (`llmock` CLI for record mode), LangGraph 1.x `interrupt()` + `Command(resume=...)`, `langgraph_sdk` HTTP API for the record script, Nx `@nx/playwright:playwright` executor, GitHub Actions.
+**Tech Stack:** Playwright 1.x, `the former fixture dependency` (`llmock` CLI for record mode), LangGraph 1.x `interrupt()` + `Command(resume=...)`, `langgraph_sdk` HTTP API for the record script, Nx `@nx/playwright:playwright` executor, GitHub Actions.
 
 ---
 
@@ -530,7 +530,7 @@ fi
 
 echo "[record] starting aimock --record on :$AIMOCK_PORT"
 mkdir -p "$(dirname "$FIXTURE_OUT")"
-npx -y -p @copilotkit/aimock llmock \
+npx -y -p the former fixture dependency llmock \
   --port "$AIMOCK_PORT" \
   --record \
   --provider-openai https://api.openai.com \

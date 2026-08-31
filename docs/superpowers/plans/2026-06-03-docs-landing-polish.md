@@ -214,7 +214,7 @@ test.describe('Docs landing page', () => {
 
     // Vendor logo marks on the fork cards
     await expect(page.locator('main img[src="/logos/langgraph.svg"]').first()).toBeVisible();
-    await expect(page.locator('main img[src="/logos/runtimes/copilotkit.svg"]').first()).toBeVisible();
+    await expect(page.locator('main img[src="/logos/runtimes/a React agent UI framework.svg"]').first()).toBeVisible();
     await expect(page.locator('main img[src="/logos/providers/google.svg"]').first()).toBeVisible();
     await expect(page.locator('main img[src="/logos/surface/vercel.svg"]').first()).toBeVisible();
 
@@ -306,8 +306,8 @@ const BACKENDS: Backend[] = [
     blurb: 'For CrewAI, Mastra, Pydantic AI, Strands, and more.',
     install: 'npm i @threadplane/ag-ui',
     href: '/docs/ag-ui/getting-started/quickstart',
-    logoSrc: '/logos/runtimes/copilotkit.svg',
-    attribution: 'AG-UI · CopilotKit',
+    logoSrc: '/logos/runtimes/a React agent UI framework.svg',
+    attribution: 'AG-UI · a React agent UI framework',
   },
 ];
 
@@ -836,7 +836,7 @@ After the e2e passes, confirm visually:
 - [ ] Open `/docs` on the dev server (port 3000).
 - [ ] Hero reads "Start building with Threadplane".
 - [ ] Step labels show numbered badges 1 / 2 / 3; "Supporting libraries" has no badge.
-- [ ] Each fork card shows its vendor mark in a white chip + uppercase attribution (LangChain, AG-UI · CopilotKit, Google, Vercel).
+- [ ] Each fork card shows its vendor mark in a white chip + uppercase attribution (LangChain, AG-UI · a React agent UI framework, Google, Vercel).
 - [ ] Chat / Licensing / Telemetry show accent-tinted glyph chips.
 - [ ] The backend install snippets have a working copy button (click → checkmark, command on clipboard).
 - [ ] Hairline dividers separate steps 1/2/3/supporting; hover lifts each card.

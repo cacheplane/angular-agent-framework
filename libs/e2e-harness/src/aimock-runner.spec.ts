@@ -32,9 +32,75 @@ describe('startAimock', () => {
     expect(handle.port).toBeGreaterThan(0);
     expect(handle.baseUrl).toMatch(/^http:\/\/.+\/v1$/);
 
-    // The OpenAI SDK call path is exercised in Task 0's de-risk; this
-    // unit test stops at "the harness started cleanly and exposes the
-    // documented shape."
+    const response = await fetch(`${handle.baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        model: 'fixture-model',
+        messages: [{ role: 'user', content: 'say hi briefly' }],
+      }),
+    });
+    expect(response.status).toBe(200);
+    const body = await response.json() as {
+      choices: Array<{ message: { content: string } }>;
+    };
+    expect(body.choices[0]?.message.content).toBe('Hi!');
+  });
+
+  it('matches a fixture when the user message contains its text matcher', async () => {
+    workDir = mkdtempSync(join(tmpdir(), 'aimock-test-'));
+    const fixturePath = join(workDir, 'substring.json');
+    writeFileSync(
+      fixturePath,
+      JSON.stringify({
+        fixtures: [
+          { match: { userMessage: 'contact form' }, response: { content: 'Matched!' } },
+        ],
+      }),
+    );
+
+    handle = await startAimock({ mode: 'replay', fixturePath });
+    const response = await fetch(`${handle.baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        model: 'fixture-model',
+        messages: [{ role: 'user', content: 'Please render a contact form for support.' }],
+      }),
+    });
+
+    expect(response.status).toBe(200);
+  });
+
+  it('uses fixture latency as the delay between streamed chunks', async () => {
+    workDir = mkdtempSync(join(tmpdir(), 'aimock-test-'));
+    const fixturePath = join(workDir, 'paced.json');
+    writeFileSync(
+      fixturePath,
+      JSON.stringify({
+        fixtures: [{
+          match: { userMessage: 'pace this' },
+          response: { content: 'abcd' },
+          chunkSize: 1,
+          latency: 25,
+        }],
+      }),
+    );
+
+    handle = await startAimock({ mode: 'replay', fixturePath });
+    const startedAt = performance.now();
+    const response = await fetch(`${handle.baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        model: 'fixture-model',
+        stream: true,
+        messages: [{ role: 'user', content: 'pace this' }],
+      }),
+    });
+    await response.text();
+
+    expect(performance.now() - startedAt).toBeGreaterThanOrEqual(75);
   });
 
   it('stop() is idempotent', async () => {
@@ -67,5 +133,100 @@ describe('startAimock', () => {
     handle = await startAimock({ mode: 'replay', fixturePath: workDir });
     expect(handle.port).toBeGreaterThan(0);
     expect(handle.baseUrl).toMatch(/^http:\/\/.+\/v1$/);
+  });
+
+  it('streams OpenAI-compatible tool calls', async () => {
+    workDir = mkdtempSync(join(tmpdir(), 'aimock-test-'));
+    const fixturePath = join(workDir, 'tool.json');
+    writeFileSync(
+      fixturePath,
+      JSON.stringify({
+        fixtures: [{
+          match: { userMessage: 'weather' },
+          response: { toolCalls: [{ name: 'get_weather', arguments: { city: 'LA' } }] },
+        }],
+      }),
+    );
+    handle = await startAimock({ mode: 'replay', fixturePath });
+
+    const response = await fetch(`${handle.baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        model: 'fixture-model',
+        stream: true,
+        messages: [{ role: 'user', content: 'weather' }],
+      }),
+    });
+    const body = await response.text();
+    expect(response.headers.get('content-type')).toContain('text/event-stream');
+    expect(body).toContain('get_weather');
+    expect(body).toContain('tool_calls');
+    expect(body).toContain('data: [DONE]');
+  });
+
+  it('streams text through the Responses API', async () => {
+    workDir = mkdtempSync(join(tmpdir(), 'aimock-test-'));
+    const fixturePath = join(workDir, 'response.json');
+    writeFileSync(
+      fixturePath,
+      JSON.stringify({
+        fixtures: [{ match: { userMessage: 'hello' }, response: { content: 'Hello!' } }],
+      }),
+    );
+    handle = await startAimock({ mode: 'replay', fixturePath });
+
+    const response = await fetch(`${handle.baseUrl}/responses`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        model: 'fixture-model',
+        stream: true,
+        input: [{ role: 'user', content: [{ type: 'input_text', text: 'hello' }] }],
+      }),
+    });
+    const body = await response.text();
+    expect(response.status).toBe(200);
+    expect(body).toContain('response.created');
+    expect(body).toContain('response.output_text.delta');
+    expect(body).toContain('Hello!');
+    expect(body).toContain('response.completed');
+    expect(body).toContain('data: [DONE]');
+  });
+
+  it('streams Responses API function calls after matching tool results', async () => {
+    workDir = mkdtempSync(join(tmpdir(), 'aimock-test-'));
+    const fixturePath = join(workDir, 'tool-response.json');
+    writeFileSync(
+      fixturePath,
+      JSON.stringify({
+        fixtures: [{
+          match: { userMessage: 'weather', hasToolResult: true },
+          response: { toolCalls: [{ name: 'summarize_weather', arguments: { city: 'LA' } }] },
+        }],
+      }),
+    );
+    handle = await startAimock({ mode: 'replay', fixturePath });
+
+    const response = await fetch(`${handle.baseUrl}/responses`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        model: 'fixture-model',
+        stream: true,
+        input: [
+          { role: 'user', content: 'weather' },
+          { type: 'function_call_output', call_id: 'call_weather', output: 'sunny' },
+        ],
+      }),
+    });
+    const body = await response.text();
+    expect(response.status).toBe(200);
+    expect(body).toContain('response.output_item.added');
+    expect(body).toContain('response.function_call_arguments.delta');
+    expect(body).toContain('response.function_call_arguments.done');
+    expect(body).toContain('\\"city\\":\\"LA\\"');
+    expect(body).toContain('summarize_weather');
+    expect(body).toContain('response.completed');
   });
 });

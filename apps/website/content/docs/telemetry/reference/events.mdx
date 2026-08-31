@@ -10,7 +10,6 @@ type ThreadplaneEvent = ThreadplaneNodeEvent | ThreadplaneBrowserEvent;
 
 ```ts
 type ThreadplaneNodeEvent =
-  | 'tplane:postinstall'
   | 'tplane:runtime_instance_created'
   | 'tplane:runtime_request_created'
   | 'tplane:stream_started'
@@ -20,7 +19,6 @@ type ThreadplaneNodeEvent =
 
 | Event                           | Source                     | Properties from source                                                                                                 |
 | ------------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `tplane:postinstall`              | package postinstall script | `pkg`, `version`, `node`, `node_version`, `os`, `arch`, `global_install`, package-manager fields when npm exposes them |
 | `tplane:runtime_instance_created` | Node adapter helper        | `transport`, `provider`, `model`, `angularVersion`; `apiKey` is removed                                                |
 | `tplane:runtime_request_created`  | Node adapter helper        | `transport`, `requestType`, `provider`, `model` (`provider` and `model` optional)                                     |
 | `tplane:stream_started`           | Node adapter helper        | `provider`, `model`, optional fields in the input object                                                               |

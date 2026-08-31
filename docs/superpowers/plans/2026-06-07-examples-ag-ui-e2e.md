@@ -6,7 +6,7 @@
 
 **Architecture:** aimock mocks the OpenAI provider (below the transport), so the *same* graph over AG-UI replaying the *same* recorded fixtures yields the *same* a2ui surfaces — the suite ports transport-agnostically. The only harness change is `global-setup` launching the uvicorn ag-ui server (`:8000`) instead of `langgraph dev` (`:2024`), and the app on `:4201`. Shell-specific specs (control-palette, mode-routing, model-picker, url-routing, debug-devtools, lifecycle, keyboard-accessibility, visual-polish, regenerate) are NOT ported — the ag-ui example is a simplified single-conversation app.
 
-**Tech Stack:** Playwright, `@copilotkit/aimock` (repo-standard e2e LLM mock — confirmed in scope), Nx; the existing `examples/ag-ui` app + uvicorn backend (Part 2a).
+**Tech Stack:** Playwright, `the former fixture dependency` (repo-standard e2e LLM mock — confirmed in scope), Nx; the existing `examples/ag-ui` app + uvicorn backend (Part 2a).
 
 **Spec:** `docs/superpowers/specs/2026-06-06-examples-ag-ui-standalone-design.md` (Part 2, e2e). Branches off `main` (Part 2a merged). CI e2e job + deploy = Part 3.
 

@@ -108,49 +108,6 @@ test('insight property filters are allowed by the event contract', async () => {
   );
 });
 
-test('postinstall telemetry contract does not expose derived install context', () => {
-  const contract = TELEMETRY_EVENT_CONTRACT['tplane:postinstall'];
-  assert(!contract.allowedProperties.includes('install_context'));
-  assert(!contract.allowedBreakdowns.includes('install_context'));
-});
-
-test('package telemetry dashboard does not filter by derived install context', async () => {
-  const dashboard = await readJson<{ tiles: Array<{ insight: string }> }>(
-    join(HERE, 'dashboards', 'package-telemetry.json')
-  );
-
-  const violations: string[] = [];
-  for (const tile of dashboard.tiles) {
-    const insight = await readJson<{
-      slug: string;
-      events?: Array<{
-        event?: string;
-        properties?: Array<{
-          key?: string;
-          value?: unknown;
-          operator?: string;
-        }>;
-      }>;
-    }>(join(INSIGHTS_DIR, `${tile.insight}.json`));
-
-    for (const item of insight.events ?? []) {
-      if (item.event !== 'tplane:postinstall') continue;
-      const usesInstallContext = (item.properties ?? []).some(
-        (property) => property.key === 'install_context'
-      );
-      if (usesInstallContext) violations.push(insight.slug);
-    }
-  }
-
-  assert.deepEqual(
-    violations,
-    [],
-    `Package telemetry insights must not filter by install_context:\n${violations.join(
-      '\n'
-    )}`
-  );
-});
-
 test('runtime dashboard covers every runtime event exactly once', async () => {
   const dashboard = await readJson<{ tiles: Array<{ insight: string }> }>(
     join(HERE, 'dashboards', 'runtime-telemetry.json')

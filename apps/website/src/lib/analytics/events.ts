@@ -22,8 +22,6 @@ export const analyticsEvents = {
   blogCopyCodeClick: 'blog:copy_code_click',
   marketingAiCrawlerVisit: 'marketing:ai_crawler_visit',
   marketingAiReferralVisit: 'marketing:ai_referral_visit',
-  marketingCheckoutStarted: 'marketing:checkout_started',
-  marketingCheckoutSucceeded: 'marketing:checkout_succeeded',
 } as const;
 
 export type AnalyticsEventName = (typeof analyticsEvents)[keyof typeof analyticsEvents];
@@ -67,12 +65,9 @@ export type CtaId =
   | 'home_why_pilot_to_prod'
   // Pricing tier CTAs
   | 'pricing_tier_community'
-  | 'pricing_tier_developer_seat'
-  | 'pricing_tier_team'
+  | 'pricing_tier_production_assurance'
   | 'pricing_tier_enterprise'
-  // Footer licensing links
-  | 'footer_licensing'
-  | 'footer_licensing_bottom'
+  // Footer product links
   | 'footer_pilot_to_prod'
   | 'footer_ag_ui'
   // Announcement toast

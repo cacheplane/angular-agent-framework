@@ -23,7 +23,7 @@ export function FinalCTA({
   subtext = 'Install the framework, read the docs, and have a streaming chat in your app this afternoon.',
   primary = null,
   secondary = DEFAULT_SECONDARY,
-  caption = 'Most packages are MIT · @threadplane/chat requires a production license · App telemetry off by default',
+  caption = 'All packages are MIT · Production support available · App telemetry off by default',
 }: FinalCTAProps = {}) {
   return (
     <Section surface="tinted" ariaLabelledBy="final-cta-heading">

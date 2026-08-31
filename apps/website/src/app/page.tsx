@@ -166,7 +166,7 @@ export default async function HomePage() {
         id="ship"
         eyebrow="Ship"
         headline="Patterns built for production, not demos."
-        body="Error boundaries, observability hooks, fallback strategies — the stuff that turns a demo into a real app. Most packages are MIT; the drop-in chat package is commercially licensed for production use."
+        body="Error boundaries, observability hooks, fallback strategies — the stuff that turns a demo into a real app. Every package is MIT-licensed, with production assurance available when your team wants expert support."
         bullets={[
           'error() / status() / reload() signals',
           'Readiness gate + per-component fallback',

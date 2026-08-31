@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { beforeEach, describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { provideRender, RENDER_CONFIG } from './provide-render';
@@ -10,10 +10,6 @@ import type { RenderConfig } from './render.types';
 class TestCardComponent {}
 
 describe('provideRender', () => {
-  beforeEach(() => {
-    globalThis.console.warn = vi.fn();
-  });
-
   it('should provide RenderConfig via injection token', () => {
     const registry = defineAngularRegistry({ Card: TestCardComponent });
     const config: RenderConfig = { registry };
@@ -32,20 +28,5 @@ describe('provideRender', () => {
     TestBed.configureTestingModule({ providers: [provideRender({})] });
     const config = TestBed.inject(RENDER_CONFIG);
     expect(config).toBeDefined();
-  });
-
-  it('does not perform license checks because @threadplane/render is MIT-licensed', async () => {
-    const legacyLicenseConfig = {
-      license: 'invalid-token',
-      __licenseEnvHint: { isNoncommercial: false },
-    } as unknown as RenderConfig;
-
-    TestBed.configureTestingModule({
-      providers: [provideRender(legacyLicenseConfig)],
-    });
-    TestBed.inject(RENDER_CONFIG);
-    await new Promise((r) => setTimeout(r, 0));
-    const warn = globalThis.console.warn as ReturnType<typeof vi.fn>;
-    expect(warn).not.toHaveBeenCalled();
   });
 });

@@ -23,23 +23,6 @@ type TelemetryEventContract = {
   allowedBreakdowns: readonly string[];
 };
 
-const installProperties = [
-  'arch',
-  'global_install',
-  'node',
-  'node_version',
-  'os',
-  'package_manager',
-  'package_manager_arch',
-  'package_manager_node_version',
-  'package_manager_os',
-  'package_manager_version',
-  'package_manager_workspaces',
-  'pkg',
-  'sample_weight',
-  'version',
-] as const;
-
 const runtimeProperties = [
   'durationMs',
   'errorClass',
@@ -143,18 +126,6 @@ export const TELEMETRY_EVENT_CONTRACT: Record<string, TelemetryEventContract> =
       requiredProperties: [],
       allowedProperties: runtimeProperties,
       allowedBreakdowns: ['surface'],
-    },
-    'tplane:postinstall': {
-      requiredProperties: ['pkg', 'version'],
-      allowedProperties: installProperties,
-      allowedBreakdowns: [
-        'global_install',
-        'os',
-        'package_manager',
-        'package_manager_os',
-        'package_manager_workspaces',
-        'pkg',
-      ],
     },
     'tplane:runtime_instance_created': {
       requiredProperties: ['transport'],

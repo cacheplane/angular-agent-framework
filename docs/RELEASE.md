@@ -1,6 +1,6 @@
 # Release Process
 
-The seven publishable libraries (`@threadplane/chat`, `@threadplane/langgraph`, `@threadplane/ag-ui`, `@threadplane/render`, `@threadplane/a2ui`, `@threadplane/licensing`, `@threadplane/telemetry`) ship together at a synchronized version via Nx Release. During the `0.0.x` exploratory phase, only patch bumps are used.
+The six publishable libraries (`@threadplane/chat`, `@threadplane/langgraph`, `@threadplane/ag-ui`, `@threadplane/render`, `@threadplane/a2ui`, `@threadplane/telemetry`) ship together at a synchronized version via Nx Release. During the `0.0.x` exploratory phase, only patch bumps are used.
 
 ## Standard release (second release onward)
 
@@ -21,8 +21,7 @@ From a clean main branch:
 ```bash
 git checkout main && git pull
 
-# 1. Version bump. Runs preVersionCommand (builds all seven projects and
-#    patches install telemetry into the dist manifests), rewrites every
+# 1. Version bump. Runs preVersionCommand (builds all six projects), rewrites every
 #    package.json, updates package-lock.json, and stages the result.
 npx nx release version --specifier=patch
 
@@ -53,7 +52,7 @@ by CI.
 
 Step 1 regenerates `package-lock.json`. On macOS that can drop the Linux
 `@next/swc-*` bindings and break CI. The diff should be **only** the version
-lines for the seven libs:
+lines for the six libs:
 
 ```bash
 git diff --cached package-lock.json | grep -E '^-' | grep -icE 'linux|darwin|musl|gnu'
@@ -69,23 +68,16 @@ The first publish under the `@threadplane` npm org is manual. The packages must 
 ```bash
 # 1. Install and build everything
 npm ci
-npx nx run-many -t lint,test,build --projects=chat,langgraph,ag-ui,render,a2ui,licensing,telemetry --skip-nx-cache
+npx nx run-many -t lint,test,build --projects=chat,langgraph,ag-ui,render,a2ui,telemetry --skip-nx-cache
 
-# 2. Patch and verify install telemetry in dist manifests
-node libs/telemetry/scripts/apply-install-telemetry.mjs dist/libs/chat dist/libs/langgraph dist/libs/ag-ui dist/libs/render dist/libs/a2ui dist/libs/licensing
-node libs/telemetry/scripts/verify-install-telemetry.mjs dist/libs/chat dist/libs/langgraph dist/libs/ag-ui dist/libs/render dist/libs/a2ui dist/libs/licensing dist/libs/telemetry
-node libs/telemetry/scripts/smoke-install-telemetry.mjs dist/libs/chat dist/libs/langgraph dist/libs/ag-ui dist/libs/render dist/libs/a2ui dist/libs/licensing dist/libs/telemetry
-
-# 3. Verify release metadata
+# 2. Verify release metadata
 node scripts/verify-release-versions.mjs --tag v$(node -p "require('./libs/chat/package.json').version")
 npx nx release publish --groups=publishable --dry-run
 
-# 4. Publish manually. Telemetry goes first because the patched manifests
-# depend on @threadplane/telemetry.
+# 3. Publish manually.
 npm publish dist/libs/telemetry --access public
 npm publish dist/libs/a2ui --access public
 npm publish dist/libs/render --access public
-npm publish dist/libs/licensing --access public
 npm publish dist/libs/chat --access public
 npm publish dist/libs/ag-ui --access public
 npm publish dist/libs/langgraph --access public
@@ -94,13 +86,12 @@ npm publish dist/libs/langgraph --access public
 npm view @threadplane/telemetry version
 npm view @threadplane/a2ui version
 npm view @threadplane/render version
-npm view @threadplane/licensing version
 npm view @threadplane/chat version
 npm view @threadplane/ag-ui version
 npm view @threadplane/langgraph version
 ```
 
-After the first `@threadplane` release, configure npm trusted publishing for all seven packages against `.github/workflows/publish.yml`. Subsequent patch bumps use the one-shot flow above.
+After the first `@threadplane` release, configure npm trusted publishing for all six packages against `.github/workflows/publish.yml`. Subsequent patch bumps use the one-shot flow above.
 
 ## Dry run
 

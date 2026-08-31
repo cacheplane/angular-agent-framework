@@ -6,7 +6,7 @@ import { Card } from '../ui/Card';
 const PROMISES = [
   {
     title: 'No runtime lock-in',
-    body: 'MIT adapters and render primitives stay open. @threadplane/chat is free for noncommercial use and commercially licensed for production.',
+    body: 'Every Threadplane package is MIT-licensed for commercial and noncommercial use.',
   },
   {
     title: 'No abandoned majors',
@@ -17,8 +17,8 @@ const PROMISES = [
     body: 'Self-host LangGraph + your Angular app. Run it all in your VPC.',
   },
   {
-    title: 'No app telemetry',
-    body: 'We don’t collect prompts, completions, tool data, or app runtime content by default. Package installs send a minimal opt-out ping.',
+    title: 'No hidden telemetry',
+    body: 'Package installation is inert. Browser and Node events require an explicit application action.',
   },
   {
     title: 'No model lock-in',

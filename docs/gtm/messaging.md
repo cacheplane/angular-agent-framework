@@ -58,7 +58,6 @@ Hidden attribution fields (populated by URL params + referrer): `source_page`, `
 | Alternative           | Threadplane positioning vs. them |
 |-----------------------|---------------------------------|
 | `@langchain/angular`  | "Use it for the stream. Use Threadplane for the production Angular UI, design-system rendering, fallbacks, thread UX, testing, and enterprise patterns." |
-| CopilotKit            | "Broad agent frontend stack; Threadplane is deeply Angular-native, signal/DI/design-system-first, optimized for enterprise Angular teams that don't want a React-first mental model." |
 | Hashbrown             | "Hashbrown is great for browser-running agents and LLM-driven frontend tools; Threadplane is for LangGraph/AG-UI/A2UI-backed enterprise agent workflows with production chat, approvals, threads, observability, and runtime adapters." |
 | A2UI renderer         | "A2UI renderer support is table stakes; Threadplane adds Angular app integration, fallback behavior, design-system registry patterns, thread/chat UX, and enterprise hardening." |
 

@@ -13,7 +13,7 @@ Stop hardcoding user-facing labels in chat primitives and stop pretending non-LL
 
 ## Research basis
 
-Research subagent surveyed LangChain/LangGraph, Vercel AI SDK, assistant-ui, CopilotKit/AG-UI, and the ChatGPT/Claude reference UX. Cross-cutting consensus:
+Research subagent surveyed LangChain/LangGraph, Vercel AI SDK, assistant-ui, a React agent UI framework/AG-UI, and the ChatGPT/Claude reference UX. Cross-cutting consensus:
 
 - **Thread title generation**: triggered after first AI turn, runs out-of-band, uses a cheap dedicated model (Haiku-class / gpt-4o-mini), persisted in thread metadata. Slicing the first user message is universally treated as a fallback only.
 - **Action labels**: the tool/component author supplies the human label at definition time. The protocol carries the machine name; the rendering layer humanizes. **Nobody hardcodes a per-app `KNOWN_LABELS` map in the chat primitive itself.** AG-UI explicitly states "consumers should translate `getBookedFlights` → 'Determining booked flights…' in the UI" — i.e. the rendering layer humanizes from authored metadata, not from a centralized string table in the lib.

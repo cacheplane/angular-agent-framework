@@ -1,12 +1,11 @@
-# Threadplane v0.0.61
+# Threadplane v0.0.62
 
 Production-ready chat, thread/history/branch UI, interrupts, subagents, planning, memory, and generative UI for Angular agent apps.
 
-## Licensing and deployment boundary
-- Most Threadplane packages are MIT-licensed and free for any use.
-- `@threadplane/chat` is source-available under PolyForm Noncommercial 1.0.0, includes a good-faith 30-day commercial evaluation, and requires a Threadplane Commercial license for commercial production.
+## License and deployment boundary
+- Every Threadplane package is MIT-licensed and free for commercial and noncommercial use.
 - Threadplane runs inside the customer's Angular application. Agent runtime, models, storage, checkpointing, retention, authorization, and hosting remain customer-operated.
-- License-token verification is offline and advisory; it makes no runtime call to Threadplane and never blocks rendering.
+- Package use requires no registration, activation, or runtime check.
 
 ## Install
 npm install @threadplane/chat @threadplane/langgraph @langchain/core @langchain/langgraph-sdk marked

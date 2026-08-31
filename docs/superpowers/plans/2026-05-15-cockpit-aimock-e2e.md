@@ -6,7 +6,7 @@
 
 **Architecture:** Harness mirroring `examples/chat/aimock-e2e/`, living at `apps/cockpit/e2e/`. Playwright globalSetup boots aimock + `cockpit/langgraph/streaming/python` (multi-graph langgraph) + the `cockpit-langgraph-streaming-angular` dev server. Pilot spec captures a real LLM text response, asserts the finalized assistant bubble carries a distinctive phrase.
 
-**Tech Stack:** `@copilotkit/aimock`, Playwright, Nx, GitHub Actions. Python LangGraph dev server via `uv`.
+**Tech Stack:** `the former fixture dependency`, Playwright, Nx, GitHub Actions. Python LangGraph dev server via `uv`.
 
 **Spec:** [docs/superpowers/specs/2026-05-15-cockpit-aimock-e2e-design.md](../specs/2026-05-15-cockpit-aimock-e2e-design.md)
 
@@ -74,11 +74,11 @@ Create scratch fixture at `/tmp/cockpit-tc-fixture.json` (text response — `str
 In one terminal, start aimock + langgraph:
 ```bash
 cd /tmp/cockpit-aimock-spec
-npm install --no-save --no-package-lock @copilotkit/aimock openai
+npm install --no-save --no-package-lock the former fixture dependency openai
 
 # Inline node script that starts aimock and keeps it alive
 node -e "
-const { LLMock } = require('@copilotkit/aimock');
+const { LLMock } = require('the former fixture dependency');
 const fs = require('fs');
 const mock = new LLMock({ port: 0, chunkSize: 4096 });
 const fx = JSON.parse(fs.readFileSync('/tmp/cockpit-tc-fixture.json', 'utf-8'));
@@ -93,7 +93,7 @@ sleep 3
 
 Verify aimock printed an `AIMOCK_BASE_URL=...` line.
 
-If the inline node script fails: STOP. Report whether `@copilotkit/aimock` is importable, what error occurred.
+If the inline node script fails: STOP. Report whether `the former fixture dependency` is importable, what error occurred.
 
 - [ ] **Step 4: Hit langgraph via the proxy, confirm tool flow**
 
@@ -129,7 +129,7 @@ kill $NODE_PID $LG_PID 2>/dev/null || true
 rm -f /tmp/cockpit-tc-fixture.json /tmp/run.json
 rm -f cockpit/langgraph/streaming/python/.env
 # remove the test install
-rm -rf node_modules/@copilotkit/aimock node_modules/openai 2>/dev/null || true
+rm -rf node_modules/the former fixture dependency node_modules/openai 2>/dev/null || true
 ```
 
 Confirm: `git status` clean (the worktree node_modules is a symlink to the main checkout — the rm above only removes from the symlinked target's `node_modules`, which is fine because Task 1 reinstalls properly).
@@ -195,7 +195,7 @@ Write `apps/cockpit/e2e/README.md`:
 ```markdown
 # cockpit e2e
 
-Cross-stack E2E harness for cockpit example apps. Uses [`@copilotkit/aimock`](https://github.com/CopilotKit/aimock) as a deterministic mock for LLM API calls; the per-product Python LangGraph dev server is launched with `OPENAI_BASE_URL` pointed at it; Playwright drives the example Angular app in real Chromium.
+Cross-stack E2E harness for cockpit example apps. Uses [`the former fixture dependency`](https://github.com/a React agent UI framework/aimock) as a deterministic mock for LLM API calls; the per-product Python LangGraph dev server is launched with `OPENAI_BASE_URL` pointed at it; Playwright drives the example Angular app in real Chromium.
 
 Phase 1 covers `streaming` only. Future phases each add one example (one fixture + one spec file per PR).
 
@@ -279,7 +279,7 @@ npx vitest run aimock-runner.spec.ts
 
 Expected: 3 passed (boots a replay server, stop is idempotent, loads directory of fixtures).
 
-If `@copilotkit/aimock` import fails: `cd /tmp/cockpit-aimock-spec && npm install` should fix it (the package is already in the root `package.json` from Phase 2a).
+If `the former fixture dependency` import fails: `cd /tmp/cockpit-aimock-spec && npm install` should fix it (the package is already in the root `package.json` from Phase 2a).
 
 If any test fails, STOP and report — the modules should be byte-identical to the chat harness which passes today.
 
@@ -896,7 +896,7 @@ Report when CI completes.
   - Phase 1 acceptance criteria → Task 8 verification
 - [x] Placeholder scan: no TBD/TODO. Two adapt-if-Task-0-revealed notes are intentional guidance for the implementer to incorporate de-risk findings.
 - [x] Type consistency: `AimockHandle`, `AimockStartOptions`, `startAimock`, `sendPromptAndWait` names match across tasks and align with the chat harness (since the modules are copied).
-- [x] Constraints: `@copilotkit/aimock` referenced only in plan/spec/README/imports; commit messages and PR body avoid the library name.
+- [x] Constraints: `the former fixture dependency` referenced only in plan/spec/README/imports; commit messages and PR body avoid the library name.
 
 ## Execution handoff
 

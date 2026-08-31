@@ -19,7 +19,7 @@ test.describe('Docs landing page', () => {
 
     // Vendor logo marks on the fork cards
     await expect(page.locator('main img[src="/logos/langgraph.svg"]').first()).toBeVisible();
-    await expect(page.locator('main img[src="/logos/runtimes/copilotkit.svg"]').first()).toBeVisible();
+    await expect(page.locator('main img[src="/logos/ag-ui.svg"]').first()).toBeVisible();
     await expect(page.locator('main img[src="/logos/providers/google.svg"]').first()).toBeVisible();
     await expect(page.locator('main img[src="/logos/surface/vercel.svg"]').first()).toBeVisible();
 
@@ -38,7 +38,6 @@ test.describe('Docs landing page', () => {
     await expect(page.locator('main a[href="/docs/render/concepts/json-render-vs-a2ui"]').first()).toBeVisible();
 
     // Supporting libraries
-    await expect(page.locator('main a[href="/docs/licensing/getting-started/introduction"]').first()).toBeVisible();
     await expect(page.locator('main a[href="/docs/telemetry/getting-started/introduction"]').first()).toBeVisible();
 
     // Search prompt

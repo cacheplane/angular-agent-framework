@@ -5,8 +5,8 @@ import { FAQ, type FAQItem } from '../ui/FAQ';
 
 const ITEMS: FAQItem[] = [
   {
-    q: 'How is this different from CopilotKit or AG-UI directly?',
-    a: 'CopilotKit has an Angular SDK, and AG-UI is a protocol rather than a complete Angular UI layer. Threadplane gives Angular teams the production surface around those runtimes: headless chat, durable threads, interrupts, subagents, planning, memory, generative UI, and adapters for LangGraph and AG-UI-compatible backends.',
+    q: 'How is this different from using AG-UI directly?',
+    a: 'AG-UI is a protocol rather than a complete Angular UI layer. Threadplane gives Angular teams the production surface around compatible runtimes: headless chat, durable threads, interrupts, subagents, planning, memory, generative UI, and runtime adapters.',
   },
   {
     q: 'Does it work with my existing Angular app?',
@@ -18,15 +18,15 @@ const ITEMS: FAQItem[] = [
   },
   {
     q: 'Which adapter should I use — @threadplane/langgraph or @threadplane/ag-ui?',
-    a: 'If your backend is LangGraph Platform, use @threadplane/langgraph. If your backend speaks the AG-UI protocol (CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime), use @threadplane/ag-ui. Both expose the same provideAgent/injectAgent API — see /docs/choosing-an-adapter for a side-by-side comparison.',
+    a: 'If your backend is LangGraph Platform, use @threadplane/langgraph. If your backend speaks the AG-UI protocol (CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, or AWS Strands), use @threadplane/ag-ui. Both expose the same provideAgent/injectAgent API — see /docs/choosing-an-adapter for a side-by-side comparison.',
   },
   {
     q: 'Is the Pilot-to-Prod program required?',
-    a: 'No. Most packages are MIT-licensed and complete on their own; @threadplane/chat is free for noncommercial use and commercially licensed for production. Pilot-to-Prod is for teams who want concierge delivery, not a paywall.',
+    a: 'No. Every package is MIT-licensed and complete on its own. Pilot-to-Prod is for teams who want hands-on delivery, not a software paywall.',
   },
   {
     q: 'What does it cost?',
-    a: 'Most libraries: free, MIT. @threadplane/chat: free for noncommercial/evaluation use and commercially licensed for production. Pilot-to-Prod: scoped per engagement — see the pricing page.',
+    a: 'Every package is free under MIT. Production Assurance and Pilot-to-Prod are scoped support and delivery engagements — see the pricing page.',
   },
   {
     q: 'Is this production-ready today?',
@@ -35,10 +35,6 @@ const ITEMS: FAQItem[] = [
   {
     q: 'Where do I report issues?',
     a: 'GitHub Issues. Pilot customers also get a private channel.',
-  },
-  {
-    q: 'I’m using CopilotKit today — how hard is the migration?',
-    a: 'Component-by-component. CopilotKit’s chat hooks have rough equivalents in our injectAgent() signal API, and CopilotKit actions map to LangGraph/AG-UI tool calls. Thread state lives in a service (not the component tree), so plan a session to port that. There isn’t a one-shot codemod.',
   },
   {
     q: 'Does it work with Angular Universal / SSR?',

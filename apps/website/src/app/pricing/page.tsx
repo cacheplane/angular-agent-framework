@@ -12,7 +12,7 @@ import { createPageMetadata } from '../../lib/site-metadata';
 export const metadata = createPageMetadata({
   title: 'Pricing — Threadplane',
   description:
-    'Most Threadplane packages are MIT-licensed. @threadplane/chat plans start at $29 per developer per month. Threadplane runs in your own stack.',
+    'Every Threadplane package is MIT-licensed. Add Production Assurance or enterprise delivery for expert support in your own stack.',
   pathname: '/pricing',
   type: 'website',
 });
@@ -28,14 +28,14 @@ export default function PricingPage() {
               From prototype to production.
             </h1>
             <p className="pricing-page-subtitle">
-              Start free, then purchase a commercial license when you ship{' '}
-              <code>@threadplane/chat</code> in a for-profit context. Threadplane runs inside your
-              Angular application and connects to the agent infrastructure you already operate.
+              Use the complete framework in commercial products, internal tools, and client work.
+              Add expert support when you need response commitments, architecture guidance, or
+              hands-on delivery.
             </p>
             <p className="pricing-page-license-line">
-              <span>Most packages are MIT</span>
+              <span>Every package is MIT</span>
               <span aria-hidden="true">·</span>
-              <span>@threadplane/chat requires a license for commercial production</span>
+              <span>Commercial use without registration or runtime checks</span>
               <span aria-hidden="true">·</span>
               <strong>No Threadplane cloud</strong>
             </p>

@@ -59,7 +59,7 @@ describe('LibraryMark', () => {
 
   it('maps ag-ui and a2ui to their vendor logos', () => {
     const { container: a } = render(<LibraryMark library="ag-ui" />);
-    expect(a.querySelector('img')?.getAttribute('src')).toBe('/logos/runtimes/copilotkit.svg');
+    expect(a.querySelector('img')?.getAttribute('src')).toBe('/logos/runtimes/a React agent UI framework.svg');
     const { container: b } = render(<LibraryMark library="a2ui" />);
     expect(b.querySelector('img')?.getAttribute('src')).toBe('/logos/providers/google.svg');
   });
@@ -90,7 +90,7 @@ type MarkEntry =
 
 const MARKS: Record<LibraryId, MarkEntry> = {
   langgraph: { kind: 'logo', src: '/logos/langgraph.svg' },
-  'ag-ui': { kind: 'logo', src: '/logos/runtimes/copilotkit.svg' },
+  'ag-ui': { kind: 'logo', src: '/logos/runtimes/a React agent UI framework.svg' },
   a2ui: { kind: 'logo', src: '/logos/providers/google.svg' },
   render: { kind: 'logo', src: '/logos/surface/vercel.svg' },
   chat: { kind: 'glyph', glyph: 'chat' },

@@ -9,10 +9,10 @@ Part of [Threadplane](https://github.com/cacheplane/angular-agent-framework).
     <img alt="npm version" src="https://img.shields.io/npm/v/@threadplane%2Fchat?color=6C8EFF&labelColor=080B14&style=flat-square" />
   </a>
   <img alt="Angular 20+" src="https://img.shields.io/badge/Angular-20%2B%20%7C%2021-6C8EFF?labelColor=080B14&style=flat-square" />
-  <img alt="License" src="https://img.shields.io/badge/License-PolyForm%20NC%20%7C%20Commercial-6C8EFF?labelColor=080B14&style=flat-square" />
+  <img alt="License" src="https://img.shields.io/badge/License-MIT-6C8EFF?labelColor=080B14&style=flat-square" />
 </p>
 
-**Source-available.** Free for noncommercial use under PolyForm Noncommercial License 1.0.0. Commercial production use — SaaS, internal tools, agency work, paid client projects — requires a [Threadplane Commercial license](https://threadplane.ai/pricing).
+**MIT-licensed.** Use it in commercial products, internal tools, agency work, and open-source projects without registration or runtime checks.
 
 ---
 
@@ -38,7 +38,6 @@ npm install @threadplane/chat @threadplane/langgraph @langchain/core @langchain/
 @angular/common            ^20.0.0 || ^21.0.0
 @angular/platform-browser  ^20.0.0 || ^21.0.0
 @angular/router            ^20.0.0 || ^21.0.0
-@threadplane/licensing     *
 @threadplane/render        *
 @threadplane/a2ui          *
 @json-render/core          ^0.16.0
@@ -62,7 +61,7 @@ import { provideAgent } from '@threadplane/langgraph';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({ apiUrl: '/api/langgraph', assistantId: 'agent' }),
-    provideChat({ license: 'eyJ…' }),
+    provideChat({}),
   ],
 };
 ```
@@ -310,53 +309,6 @@ cross-device persistence depend on the backend and infrastructure you operate.
 
 ---
 
-## Commercial use
-
-Building a commercial product, SaaS application, internal business tool, agency deliverable, or paid client project with `@threadplane/chat` requires a Threadplane Commercial license.
-
-Free under PolyForm Noncommercial:
-
-- Personal, hobby, student, academic, nonprofit, and public-demo use
-- Open-source applications released under an OSI-approved license
-- 30 calendar days of commercial evaluation from your first commercial use (good-faith — no tracking, no email required)
-
-See [COMMERCIAL-USE.md](./COMMERCIAL-USE.md) for the definition of commercial use, [LICENSE-COMMERCIAL.md](./LICENSE-COMMERCIAL.md) for the commercial license summary, and the [Threadplane pricing page](https://threadplane.ai/pricing) for plans.
-
-## Using a commercial license
-
-After purchase, Threadplane emails a signed license token to the address on your receipt. The token is valid
-through the current paid subscription period and is reissued after renewal. Pass the token to `provideChat()`:
-
-```typescript
-// app.config.ts
-import { ApplicationConfig } from '@angular/core';
-import { provideChat } from '@threadplane/chat';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideChat({
-      license: 'eyJ…',  // Token from your purchase email.
-    }),
-  ],
-};
-```
-
-The library verifies the token's signature on boot. A missing, expired, or tampered token logs a `console.warn` advisory but does not block rendering — chat continues to work either way. Tokens are validated offline; no calls to Threadplane are made at runtime.
-
-The license string is safe to commit to source control for private repositories, or read from a build-time env var for public ones:
-
-```typescript
-declare const THREADPLANE_LICENSE: string | undefined;
-
-providers: [
-  provideChat({
-    license: typeof THREADPLANE_LICENSE === 'string' ? THREADPLANE_LICENSE : undefined,
-  }),
-],
-```
-
----
-
 ## Reliability
 
 `@threadplane/chat` follows a patch-only release cadence (`0.0.x`). The runtime-neutral `Agent` contract is a stability boundary: adapter updates do not break chat UI code and vice versa. The package is covered by the monorepo's CI lint, test, and build pipeline on every commit.
@@ -371,9 +323,4 @@ Full API reference, capability matrix, and examples: [threadplane.ai/docs/chat](
 
 ## License
 
-`@threadplane/chat` is dual-licensed:
-
-- **Noncommercial use:** [PolyForm Noncommercial License 1.0.0](./LICENSE.md)
-- **Commercial use:** [Threadplane Commercial License](./LICENSE-COMMERCIAL.md)
-
-See [COMMERCIAL-USE.md](./COMMERCIAL-USE.md) for the definition of commercial use.
+MIT. See [LICENSE.md](./LICENSE.md).

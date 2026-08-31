@@ -184,7 +184,6 @@ const LIBRARIES: LibraryEntryConfig[] = [
   { docSlug: 'ag-ui',     entryPoints: ['libs/ag-ui/src/public-api.ts'] },
   { docSlug: 'a2ui',      entryPoints: ['libs/a2ui/src/index.ts'] },
   { docSlug: 'middleware', entryPoints: ['libs/middleware/src/langgraph/index.ts'] },
-  { docSlug: 'licensing', entryPoints: ['libs/licensing/src/index.ts'] },
   {
     docSlug: 'telemetry',
     entryPoints: [

@@ -1,11 +1,6 @@
-import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import {
-  capturePostinstall,
-  captureEvent,
-  createPostinstallProperties,
-  _resetClientForTesting,
-} from './client';
+import { captureEvent, _resetClientForTesting } from './client';
 import { disableTelemetry, _resetDisableForTesting } from './disable';
 
 describe('node client', () => {
@@ -19,147 +14,68 @@ describe('node client', () => {
     _resetDisableForTesting();
     delete process.env.DO_NOT_TRACK;
     delete process.env.TPLANE_TELEMETRY_DISABLED;
-    delete process.env.npm_config_do_not_track;
-    delete process.env.NPM_CONFIG_DO_NOT_TRACK;
     delete process.env.CI;
     delete process.env.GITHUB_ACTIONS;
-    delete process.env.CONTINUOUS_INTEGRATION;
-    delete process.env.BUILDKITE;
-    delete process.env.CIRCLECI;
     delete process.env.TPLANE_TELEMETRY_SAMPLE_RATE;
-    delete process.env.npm_config_user_agent;
-    delete process.env.npm_config_global;
-    delete process.env.npm_config_location;
     process.env.TPLANE_TELEMETRY_INGEST_URL = 'https://test.example/api/ingest';
   });
 
-  test('capturePostinstall sends an event with pkg + version', async () => {
+  test('sends an event only when an application calls captureEvent', async () => {
     await expect(
-      capturePostinstall({ pkg: '@threadplane/telemetry', version: '0.0.31' })
+      captureEvent('tplane:runtime_instance_created', { transport: 'langgraph' })
     ).resolves.toEqual({ sent: true });
+
     const body = JSON.parse(String(fetchMock.mock.calls[0][1].body));
     expect(body).toMatchObject({
-      event: 'tplane:postinstall',
+      event: 'tplane:runtime_instance_created',
       properties: expect.objectContaining({
-        pkg: '@threadplane/telemetry',
-        version: '0.0.31',
+        transport: 'langgraph',
+        sample_weight: 1,
       }),
     });
   });
 
-  test('capturePostinstall no-ops when DO_NOT_TRACK is set', async () => {
-    process.env.DO_NOT_TRACK = '1';
-    await expect(
-      capturePostinstall({ pkg: 'x', version: '1' })
-    ).resolves.toEqual({ sent: false, reason: 'disabled' });
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
-
-  test('capturePostinstall no-ops after disableTelemetry()', async () => {
-    disableTelemetry();
-    await expect(
-      capturePostinstall({ pkg: 'x', version: '1' })
-    ).resolves.toEqual({ sent: false, reason: 'disabled' });
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
-
-  test('capturePostinstall uses TPLANE_TELEMETRY_INGEST_URL when set', async () => {
+  test('uses the configured ingest endpoint', async () => {
     process.env.TPLANE_TELEMETRY_INGEST_URL = 'https://custom.example/api/ingest';
-    await capturePostinstall({ pkg: 'x', version: '1' });
-    expect(fetchMock.mock.calls[0][0]).toBe(
-      'https://custom.example/api/ingest'
-    );
+    await captureEvent('tplane:stream_started', {});
+    expect(fetchMock.mock.calls[0][0]).toBe('https://custom.example/api/ingest');
   });
 
-  test('capturePostinstall defaults to the live Threadplane ingest proxy', async () => {
+  test('defaults to the Threadplane ingest proxy', async () => {
     delete process.env.TPLANE_TELEMETRY_INGEST_URL;
-    await capturePostinstall({ pkg: 'x', version: '1' });
+    await captureEvent('tplane:stream_started', {});
     expect(fetchMock.mock.calls[0][0]).toBe('https://threadplane.ai/api/ingest');
   });
 
-  test('capturePostinstall sends sample_weight property', async () => {
-    await capturePostinstall({ pkg: 'x', version: '1' });
-    const body = JSON.parse(String(fetchMock.mock.calls[0][1].body));
-    expect(body.properties).toEqual(
-      expect.objectContaining({ sample_weight: expect.any(Number) })
-    );
-  });
-
-  test('capturePostinstall includes npm package manager metadata when available', async () => {
-    process.env.npm_config_user_agent =
-      'npm/10.9.2 node/v22.14.0 darwin arm64 workspaces/false';
-    await capturePostinstall({ pkg: 'x', version: '1' });
-    const body = JSON.parse(String(fetchMock.mock.calls[0][1].body));
-    expect(body.properties).toEqual(
-      expect.objectContaining({
-        package_manager: 'npm',
-        package_manager_version: '10.9.2',
-      })
-    );
-  });
-
-  test('capturePostinstall includes runtime and installer context without paths', async () => {
-    process.env.npm_config_user_agent =
-      'npm/10.9.2 node/v22.14.0 darwin arm64 workspaces/true';
-    process.env.npm_config_global = 'true';
-    await capturePostinstall({ pkg: 'x', version: '1' });
-    const body = JSON.parse(String(fetchMock.mock.calls[0][1].body));
-    expect(body.properties).toEqual(
-      expect.objectContaining({
-        node: process.version,
-        node_version: process.version,
-        os: process.platform,
-        arch: process.arch,
-        package_manager: 'npm',
-        package_manager_version: '10.9.2',
-        package_manager_node_version: '22.14.0',
-        package_manager_os: 'darwin',
-        package_manager_arch: 'arm64',
-        package_manager_workspaces: true,
-        global_install: true,
-      })
-    );
-    expect(body.properties).not.toHaveProperty('cwd');
-    expect(body.properties).not.toHaveProperty('init_cwd');
-  });
-
-  test('createPostinstallProperties does not include derived install context', () => {
-    expect(
-      createPostinstallProperties(
-        { pkg: '@threadplane/chat', version: '0.0.31' },
-        {
-          CI: 'true',
-          npm_config_global: 'true',
-          npm_config_user_agent:
-            'npm/10.9.2 node/v22.14.0 darwin arm64 workspaces/true',
-        }
-      )
-    ).not.toHaveProperty('install_context');
-  });
-
-  test('capturePostinstall awaits fetch before resolving', async () => {
-    let fetchResolved = false;
-    fetchMock.mockImplementationOnce(async () => {
-      fetchResolved = true;
-      return { ok: true, status: 200 };
+  test('respects environment opt-out before making a request', async () => {
+    process.env.DO_NOT_TRACK = '1';
+    await expect(captureEvent('tplane:stream_started', {})).resolves.toEqual({
+      sent: false,
+      reason: 'disabled',
     });
-    await capturePostinstall({ pkg: 'x', version: '1' });
-    expect(fetchResolved).toBe(true);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  test('captureEvent reports failed sends instead of pretending success', async () => {
+  test('respects programmatic opt-out before making a request', async () => {
+    disableTelemetry();
+    await expect(captureEvent('tplane:stream_started', {})).resolves.toEqual({
+      sent: false,
+      reason: 'disabled',
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  test('reports failed sends instead of throwing', async () => {
     fetchMock.mockRejectedValueOnce(new Error('network'));
-    await expect(captureEvent('tplane:postinstall', {})).resolves.toEqual({
+    await expect(captureEvent('tplane:stream_errored', {})).resolves.toEqual({
       sent: false,
       reason: 'failed',
     });
   });
 
-  test('invalid sample rate falls back to 1 instead of silently dropping telemetry', async () => {
+  test('invalid sample rate falls back to sending', async () => {
     process.env.TPLANE_TELEMETRY_SAMPLE_RATE = 'not-a-number';
-    await expect(
-      capturePostinstall({ pkg: 'x', version: '1' })
-    ).resolves.toEqual({ sent: true });
-    expect(fetchMock).toHaveBeenCalled();
+    await expect(captureEvent('tplane:stream_started', {})).resolves.toEqual({ sent: true });
+    expect(fetchMock).toHaveBeenCalledOnce();
   });
 });

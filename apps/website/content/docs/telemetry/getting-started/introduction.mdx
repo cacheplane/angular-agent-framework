@@ -5,7 +5,7 @@
 The important boundary is simple:
 
 - browser telemetry is opt-in through Angular DI;
-- Node telemetry is opt-out and used by package lifecycle or server adapter code;
+- Node telemetry runs only when application or adapter code explicitly calls a capture helper;
 - shared utilities expose event and environment helpers.
 
 Don't treat the browser and Node entry points as interchangeable. They have different runtime assumptions and different privacy defaults.
@@ -20,10 +20,8 @@ import { isTelemetryDisabled, getDisableReason } from '@threadplane/telemetry';
 import { provideThreadplaneTelemetry } from '@threadplane/telemetry/browser';
 
 // Node/server helpers
-import { disableTelemetry, capturePostinstall } from '@threadplane/telemetry/node';
+import { disableTelemetry, captureEvent } from '@threadplane/telemetry/node';
 ```
-
-The package also exports `@threadplane/telemetry/node/postinstall` for the package postinstall executable.
 
 ## Browser posture
 
@@ -39,9 +37,9 @@ For me, `sink` and `endpoint` are the paths to reach for. They keep delivery app
 
 ## Node posture
 
-Node helpers check opt-out environment variables before sending. They use a per-process anonymous ID and deterministic sampling based on that ID.
+Installing the package is inert: it has no install lifecycle hook and makes no network request. Node helpers check disable environment variables before an explicit capture call. They use a per-process anonymous ID and deterministic sampling based on that ID.
 
-Node capture failures return a failure result or are swallowed by adapter helpers. Telemetry should not break install, startup, or request handling.
+Node capture failures return a failure result or are swallowed by adapter helpers. Telemetry should not break startup or request handling.
 
 ## What this package does not promise
 
@@ -52,6 +50,6 @@ It does collect runtime metadata when the corresponding Node or browser capture 
 ## Next steps
 
 - [Browser Telemetry](/docs/telemetry/guides/browser) - wire `provideThreadplaneTelemetry()` and bridge the agent runtime into a sink.
-- [Node Telemetry](/docs/telemetry/guides/node) - capture helpers for package lifecycle and server adapters.
+- [Node Telemetry](/docs/telemetry/guides/node) - explicit capture helpers for server adapters.
 - [Privacy and opt-out](/docs/telemetry/guides/privacy-and-opt-out) - what's collected and how to turn it off.
 - [Events](/docs/telemetry/reference/events) - the event names and property shapes emitted by each surface.

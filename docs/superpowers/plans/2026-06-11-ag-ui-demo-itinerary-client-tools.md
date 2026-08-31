@@ -10,7 +10,7 @@
 
 **Branch:** `claude/ag-ui-demo-client-tools` (exists; spec committed). Demo serve: angular `:4201`, backend uvicorn `:8000`.
 
-**Constraints:** Never run `npm install`/regenerate the root `package-lock.json`. `uv lock`/`uv export` inside `examples/ag-ui/python` only. Never reference "copilotkit" or "hashbrown". `pyenv: cannot rehash` shell noise is benign.
+**Constraints:** Never run `npm install`/regenerate the root `package-lock.json`. `uv lock`/`uv export` inside `examples/ag-ui/python` only. Never reference "a React agent UI framework" or "hashbrown". `pyenv: cannot rehash` shell noise is benign.
 
 ---
 

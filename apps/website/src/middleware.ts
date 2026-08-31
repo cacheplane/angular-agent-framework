@@ -193,7 +193,7 @@ export function middleware(request: NextRequest, event: NextFetchEvent) {
  * They would otherwise be lost to the blunt "has a file extension" rule.
  *
  * Excluded by the first entry, and why:
- * - `api`            — no HTML, and lead/checkout routes already capture server-side.
+ * - `api`            — no HTML, and lead routes already capture server-side.
  * - `_next/static`, `_next/image` — build assets.
  * - `ingest`         — the PostHog proxy rewrites in `next.config.ts`; matching them
  *                      would put this in front of our own analytics traffic.

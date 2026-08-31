@@ -10,8 +10,8 @@ import { Card } from '../ui/Card';
 
 const VALUE_PROPS = [
   {
-    title: 'Enterprise commercial license',
-    body: 'Custom or organization-wide developer coverage, multi-application scope, and contract terms built for procurement.',
+    title: 'Production assurance',
+    body: 'Architecture guidance, private support, and response commitments scoped to your production needs.',
   },
   {
     title: 'SLA + security review',
@@ -19,7 +19,7 @@ const VALUE_PROPS = [
   },
   {
     title: 'Optional Pilot-to-Prod engagement',
-    body: 'Separately scoped eight-week concierge delivery for teams that want guided implementation alongside their license.',
+    body: 'A separately scoped delivery engagement for teams that want guided implementation from prototype through production.',
     highlight: true,
     link: { href: '/pilot-to-prod', label: 'See how Pilot-to-Prod works →' },
   },
@@ -79,10 +79,10 @@ export function LeadForm() {
           <div className="lead-form-header">
             <Eyebrow tone="accent" className="lead-form-eyebrow">Enterprise</Eyebrow>
             <h2 id="lead-form-heading" className="lead-form-heading">
-              Choose the license.<br />Add delivery if you need it.
+              Choose the support.<br />Add delivery if you need it.
             </h2>
             <p className="lead-form-subhead">
-              Enterprise licensing and Pilot-to-Prod are separate choices. Request license-only terms or ask us to scope the optional eight-week engagement.
+              Production Assurance and Pilot-to-Prod are separate choices. Request ongoing support or ask us to scope a hands-on delivery engagement.
             </p>
           </div>
 
@@ -210,7 +210,7 @@ export function LeadForm() {
                           />
                           {value === 'yes' && 'Yes, include it'}
                           {value === 'maybe' && 'Tell me more'}
-                          {value === 'no' && 'License only'}
+                          {value === 'no' && 'Assurance only'}
                         </label>
                       ))}
                     </div>

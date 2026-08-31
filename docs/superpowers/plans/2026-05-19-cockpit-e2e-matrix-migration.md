@@ -6,7 +6,7 @@
 
 **Architecture:** Single ci.yml job replaced by a matrix-strategy job + a summary job. Summary job's `name: "Cockpit — e2e"` preserves branch-protection check name. New harness helper coexists with the existing `sendPromptAndWait` — both exported, callers choose based on cap UI shape.
 
-**Tech Stack:** GitHub Actions matrix strategy, `@nx/playwright:playwright` executor, `@copilotkit/aimock`, TypeScript.
+**Tech Stack:** GitHub Actions matrix strategy, `@nx/playwright:playwright` executor, `the former fixture dependency`, TypeScript.
 
 ---
 

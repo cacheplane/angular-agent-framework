@@ -33,13 +33,7 @@ export const appConfig: ApplicationConfig = {
     // localStorage flag → fail fast. useFactory runs at injection time (post-
     // bootstrap), so the flag is readable.
     { provide: LANGGRAPH_CLIENT_OPTIONS, useFactory: () => e2eClientOptions() },
-    // Optional license token, populated from environment.license. When
-    // unset (the default in main), @threadplane/chat runs in advisory mode and
-    // logs a console.warn once. A smoke-test session can drop a real
-    // token into environment.ts to exercise the verify path.
-    provideChat({
-      license: environment.license,
-    }),
+    provideChat({}),
     // App-wide singleton so DemoShell, the itinerary panel, and the map cockpit
     // all read/write ONE working copy of the itinerary. Provided at root (not at
     // the component) so routed children share the same instance.

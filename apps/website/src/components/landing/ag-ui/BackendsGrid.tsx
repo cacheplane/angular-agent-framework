@@ -11,7 +11,6 @@ const BACKENDS: readonly Backend[] = [
   { name: 'AG2', note: 'Python' },
   { name: 'Pydantic AI', note: 'Python' },
   { name: 'AWS Strands', note: 'Python' },
-  { name: 'CopilotKit runtime', note: 'TypeScript' },
 ];
 
 export function BackendsGrid() {

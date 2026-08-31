@@ -542,7 +542,7 @@ Expected: generated API docs are stable after a second run.
 Run:
 
 ```bash
-git diff -- . ':(exclude)docs/superpowers/**' | rg -i 'hashbrown|copilotkit|chatgpt|claude'
+git diff -- . ':(exclude)docs/superpowers/**' | rg -i 'hashbrown|a React agent UI framework|chatgpt|claude'
 ```
 
 Expected: no matches. Mentions in `docs/superpowers/**` are allowed by the handoff; all code, README, website docs, commit text, and PR text must stay provider-neutral.

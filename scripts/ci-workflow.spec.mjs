@@ -15,6 +15,14 @@ describe('CI workflow', () => {
     );
   }
 
+  async function readLibraryJob() {
+    const workflow = await readWorkflow();
+    return workflow.slice(
+      workflow.indexOf('\n  library:\n'),
+      workflow.indexOf('\n  website:\n')
+    );
+  }
+
   async function readCanonicalDemoJob() {
     const workflow = await readWorkflow();
     return workflow.slice(
@@ -76,6 +84,19 @@ describe('CI workflow', () => {
     assert.match(
       'libs/chat/src/lib/styles/chat-sidenav.styles.ts',
       new RegExp(pattern?.[1] ?? '')
+    );
+  });
+
+  it('isolates langgraph coverage before the remaining bounded library tests', async () => {
+    const libraryJob = await readLibraryJob();
+
+    assert.match(
+      libraryJob,
+      /npx nx test langgraph --coverage --maxWorkers=2 --reporter=default/
+    );
+    assert.match(
+      libraryJob,
+      /npx nx run-many -t test --projects=chat,ag-ui,render,a2ui,telemetry --coverage --parallel=1 --maxWorkers=2/
     );
   });
 

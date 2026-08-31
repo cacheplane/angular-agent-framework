@@ -1,8 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
-    "types": ["vitest/globals", "node"]
-  },
-  "include": ["src/**/*.spec.ts", "handlers/**/*.spec.ts", "src/**/*.ts", "handlers/**/*.ts"]
-}
