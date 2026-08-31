@@ -77,11 +77,7 @@ export function parseRuntimeTarget(value: string | null): RuntimeTarget {
 
   try {
     const parsed = new URL(value);
-    if (
-      (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') ||
-      parsed.username.length > 0 ||
-      parsed.password.length > 0
-    ) {
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
       return { kind: 'invalid_configuration' };
     }
 

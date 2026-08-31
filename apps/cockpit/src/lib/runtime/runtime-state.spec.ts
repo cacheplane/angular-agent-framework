@@ -33,7 +33,6 @@ describe('parseRuntimeTarget', () => {
     'javascript:alert(1)',
     'data:text/plain,secret',
     'ftp://runtime.test/path',
-    'https://user:password@runtime.test/path',
   ])('rejects an unsafe configured value without exposing it: %s', (value) => {
     expect(parseRuntimeTarget(value)).toEqual({ kind: 'invalid_configuration' });
   });
@@ -48,6 +47,20 @@ describe('parseRuntimeTarget', () => {
     expect(configuredTarget).toEqual({
       kind: 'configured',
       configuredUrl: 'https://runtime.test/path?secret=x#hash',
+      sanitizedUrl: 'https://runtime.test/path',
+      origin: 'https://runtime.test',
+    });
+  });
+
+  test('accepts HTTP credentials while omitting them from the sanitized identity', () => {
+    expect(
+      parseRuntimeTarget(
+        'https://user:password@runtime.test/path?secret=x#hash',
+      ),
+    ).toEqual({
+      kind: 'configured',
+      configuredUrl:
+        'https://user:password@runtime.test/path?secret=x#hash',
       sanitizedUrl: 'https://runtime.test/path',
       origin: 'https://runtime.test',
     });
