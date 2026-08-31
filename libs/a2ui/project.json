@@ -24,7 +24,10 @@
       "options": {
         "outputPath": "dist/libs/a2ui",
         "main": "libs/a2ui/src/index.ts",
-        "tsConfig": "libs/a2ui/tsconfig.lib.json"
+        "tsConfig": "libs/a2ui/tsconfig.lib.json",
+        "assets": [
+          "libs/a2ui/LICENSE.md"
+        ]
       }
     },
     "lint": {

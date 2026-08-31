@@ -6,7 +6,7 @@
 
 **Architecture:** Pure rename + path-relative updates. No semantic changes to either harness. Lib's `sendPromptAndWait` (cockpit-tuned) is already correct on main; no revert needed.
 
-**Tech Stack:** Nx, Playwright, `@copilotkit/aimock` (via the lib's runner).
+**Tech Stack:** Nx, Playwright, `the former fixture dependency` (via the lib's runner).
 
 **Spec:** [docs/superpowers/specs/2026-05-16-e2e-harness-rename-design.md](../specs/2026-05-16-e2e-harness-rename-design.md)
 

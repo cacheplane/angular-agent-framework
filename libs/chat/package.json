@@ -1,6 +1,6 @@
 {
   "name": "@threadplane/chat",
-  "version": "0.0.62",
+  "version": "0.0.63",
   "exports": {
     "./chat.css": "./chat.css",
     "./themes/default-dark.css": "./themes/default-dark.css",
@@ -18,7 +18,6 @@
     "@angular/common": "^20.0.0 || ^21.0.0 || ^22.0.0",
     "@angular/platform-browser": "^20.0.0 || ^21.0.0 || ^22.0.0",
     "@angular/router": "^20.0.0 || ^21.0.0 || ^22.0.0",
-    "@threadplane/licensing": "*",
     "@threadplane/render": "*",
     "@threadplane/a2ui": "*",
     "@json-render/core": "^0.16.0",
@@ -32,7 +31,7 @@
       "optional": true
     }
   },
-  "license": "PolyForm-Noncommercial-1.0.0 OR LicenseRef-Threadplane-Commercial",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/cacheplane/angular-agent-framework.git",

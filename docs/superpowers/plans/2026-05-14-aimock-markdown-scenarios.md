@@ -6,7 +6,7 @@
 
 **Architecture:** Extend `aimock-runner.ts` to load all `.json` fixture files in a directory (each contains one or more match/response entries; the runner merges them and registers every entry with the mock). One harness boot serves N specs — no per-spec re-spin. The existing single-file mode keeps working.
 
-**Tech Stack:** `@copilotkit/aimock`, Playwright, vitest.
+**Tech Stack:** `the former fixture dependency`, Playwright, vitest.
 
 **Sits on:** Phase 2a ([#309](https://github.com/cacheplane/angular-agent-framework/pull/309)) — the harness, the `hi.json` fixture, the `examples/chat — aimock e2e` per-PR job.
 
@@ -33,7 +33,7 @@ Replace the contents of `examples/chat/aimock-e2e/aimock-runner.ts` with:
 
 ```typescript
 // SPDX-License-Identifier: MIT
-import { LLMock } from '@copilotkit/aimock';
+import { LLMock } from 'the former fixture dependency';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 

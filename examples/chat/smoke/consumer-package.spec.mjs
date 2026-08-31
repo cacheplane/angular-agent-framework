@@ -131,11 +131,19 @@ test('builds the template with the production configuration', async () => {
   );
 });
 
-test('includes required browser bundle closures in the template', async () => {
+test('includes browser dependencies required by the runtime pre-transform', async () => {
   const packageJson = JSON.parse(
     await readFile(new URL('./template/package.json', import.meta.url), 'utf8')
   );
 
-  assert.equal(packageJson.dependencies['posthog-js'], '^1.372.0');
   assert.equal(packageJson.dependencies.katex, '^0.17.0');
+  assert.equal(packageJson.dependencies['posthog-js'], '^1.372.0');
+});
+
+test('excludes dependencies that the compatibility consumer does not exercise', async () => {
+  const packageJson = JSON.parse(
+    await readFile(new URL('./template/package.json', import.meta.url), 'utf8')
+  );
+
+  assert.equal(packageJson.dependencies['@noble/ed25519'], undefined);
 });

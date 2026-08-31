@@ -1,5 +1,5 @@
 export { disableTelemetry } from './disable.js';
-export { capturePostinstall, captureEvent } from './client.js';
+export { captureEvent } from './client.js';
 export type { CaptureResult } from './client.js';
 export {
   captureRuntimeInstanceCreated,

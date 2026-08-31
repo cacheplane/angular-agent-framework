@@ -1,6 +1,6 @@
 # Node Telemetry
 
-Node telemetry lives under `@threadplane/telemetry/node`. It's built for package lifecycle hooks and server-side adapters.
+Node telemetry lives under `@threadplane/telemetry/node`. Installing it is inert. Events are sent only when application or server-adapter code calls a capture helper.
 
 ```ts
 import {
@@ -91,14 +91,6 @@ unless `TPLANE_TELEMETRY_INGEST_URL` is set.
 Sampling uses `TPLANE_TELEMETRY_SAMPLE_RATE`. Invalid values fall back to `1`. Values are clamped to the range `0` to `1`.
 
 Every sent event includes `sample_weight`.
-
-## Postinstall script
-
-The postinstall entry point reads package name and version from npm lifecycle environment variables or package.json, skips disabled environments, and sends `tplane:postinstall`.
-
-It skips local top-level installs by default. Dependency installs under `node_modules` and global installs can be eligible unless disabled.
-
-When `DEBUG` includes `tplane:telemetry`, `tplane:*`, or `*`, the script prints the payload shape it attempted to send. It prints the normal install telemetry notice only when the ingest endpoint accepted the event.
 
 ## Failure behavior
 

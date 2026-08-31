@@ -43,7 +43,7 @@ export const appConfig: ApplicationConfig = {
     // mode is opened; the map still waits for `loaded()` so its component never
     // constructs before the API is present. Skips cleanly with no key.
     provideEnvironmentInitializer(() => inject(GoogleMapsLoader).ensureLoaded()),
-    provideChat({ license: environment.license }),
+    provideChat({}),
     // The frontend-owned itinerary is a single shared instance: the panel,
     // the App component, and the client-tool ask component all inject it, so
     // user edits and agent writes hit the same signals and render live.

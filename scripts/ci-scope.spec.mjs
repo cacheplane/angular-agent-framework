@@ -52,7 +52,6 @@ describe('Angular compatibility project tags', () => {
     'libs/ag-ui/project.json',
     'libs/render/project.json',
     'libs/a2ui/project.json',
-    'libs/licensing/project.json',
     'libs/telemetry/project.json',
     'examples/chat/angular/project.json',
     'examples/chat/smoke/project.json',

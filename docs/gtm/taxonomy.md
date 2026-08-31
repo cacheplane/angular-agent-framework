@@ -70,42 +70,22 @@ The five activation signals (whose union fires `cockpit:activation_complete`) ar
 and `generative_component_rendered`. The shell events (`recipe_opened`,
 `mode_switched`, `code_copied`) are context for the funnel — they fire before
 or alongside the activation signals but are not part of the five-step rollup.
-`tplane:postinstall` is a separate top-of-funnel chart, uncorrelated to cockpit
-sessions by design.
+Package installation is not measured. Runtime events are evaluated separately
+from cockpit sessions.
 
 ## tplane (library telemetry)
 
 | Event                           | When                                                       | Surface        | Default                                    |
 | ------------------------------- | ---------------------------------------------------------- | -------------- | ------------------------------------------ |
-| `tplane:postinstall`              | Dependency/global install of a published `@threadplane/*` package | Node (script)  | **Opt-out**                                |
-| `tplane:runtime_instance_created` | Runtime adapter init                                       | Node / Browser | **Opt-out** on Node, **Opt-in** in Browser |
-| `tplane:runtime_request_created`  | Runtime adapter request created                            | Node / Browser | **Opt-out** on Node, **Opt-in** in Browser |
-| `tplane:stream_started`           | Stream begins                                              | Node / Browser | **Opt-out** on Node, **Opt-in** in Browser |
-| `tplane:stream_ended`             | Stream ends normally                                       | Node / Browser | **Opt-out** on Node, **Opt-in** in Browser |
-| `tplane:stream_errored`           | Stream errors                                              | Node / Browser | **Opt-out** on Node, **Opt-in** in Browser |
+| `tplane:runtime_instance_created` | Runtime adapter init                                       | Node / Browser | **Explicit call** on Node, **Opt-in** in Browser |
+| `tplane:runtime_request_created`  | Runtime adapter request created                            | Node / Browser | **Explicit call** on Node, **Opt-in** in Browser |
+| `tplane:stream_started`           | Stream begins                                              | Node / Browser | **Explicit call** on Node, **Opt-in** in Browser |
+| `tplane:stream_ended`             | Stream ends normally                                       | Node / Browser | **Explicit call** on Node, **Opt-in** in Browser |
+| `tplane:stream_errored`           | Stream errors                                              | Node / Browser | **Explicit call** on Node, **Opt-in** in Browser |
 | `tplane:browser_provided`         | `provideThreadplaneTelemetry({enabled:true})`                     | Browser        | **Opt-in**                                 |
 | `tplane:browser_chat_init`        | Browser chat surface initialized                           | Browser        | **Opt-in**                                 |
 
 Browser events never fire unless the consumer explicitly opts in. See `libs/telemetry/README.md` for the trust contract.
-
-### `tplane:postinstall` properties
-
-| Property                       | Type   | Notes                                                        |
-| ------------------------------ | ------ | ------------------------------------------------------------ |
-| `pkg`                          | string | Published `@threadplane/*` package name.                            |
-| `version`                      | string | Published package version.                                   |
-| `node`                         | string | Current `process.version`; kept for existing dashboards.     |
-| `node_version`                 | string | Current `process.version`.                                   |
-| `os`                           | string | Current `process.platform`.                                  |
-| `arch`                         | string | Current `process.arch`.                                      |
-| `package_manager`              | string | Parsed from npm's package-manager user agent when available. |
-| `package_manager_version`      | string | Parsed from npm's package-manager user agent when available. |
-| `package_manager_node_version` | string | Installer-reported Node version when available.              |
-| `package_manager_os`           | string | Installer-reported OS token when available.                  |
-| `package_manager_arch`         | string | Installer-reported architecture token when available.        |
-| `package_manager_workspaces`   | bool   | Installer-reported workspace flag when available.            |
-| `global_install`               | bool   | Whether npm reports a global install.                        |
-| `sample_weight`                | number | Inverse sample rate for weighted counts.                     |
 
 ### Runtime telemetry properties
 

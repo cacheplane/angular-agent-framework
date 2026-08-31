@@ -11,7 +11,7 @@
     "types": [
       "node"
     ],
-    "baseUrl": "../../../../..",
+    "baseUrl": "../../../..",
     "paths": {
       "@threadplane-internal/e2e-harness": [
         "libs/e2e-harness/src/index.ts"

@@ -269,7 +269,7 @@ Expected: all commands exit 0. Lint warnings are acceptable only if there are ze
 Run:
 
 ```bash
-(git diff --name-only; git ls-files --others --exclude-standard) | rg -v '^docs/superpowers/' | xargs rg -n 'hashbrown|copilotkit|chatgpt|claude' || true
+(git diff --name-only; git ls-files --others --exclude-standard) | rg -v '^docs/superpowers/' | xargs rg -n 'hashbrown|a React agent UI framework|chatgpt|claude' || true
 ```
 
 Expected: no output.

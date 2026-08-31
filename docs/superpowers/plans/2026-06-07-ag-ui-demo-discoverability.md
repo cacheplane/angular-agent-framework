@@ -12,7 +12,7 @@
 
 **Verification note:** The website has no component unit-test runner; verification per task is `nx lint website` + `nx build website` (both must pass), plus targeted Playwright/visual checks where called out. This is a presentational/docs effort — there is no red-green unit TDD. Commit after each task.
 
-**Constraint:** New content authored in this effort must NOT introduce any CopilotKit mention/reference. (The pre-existing ecosystem mention in `introduction.mdx` is untouched.)
+**Constraint:** New content authored in this effort must NOT introduce any a React agent UI framework mention/reference. (The pre-existing ecosystem mention in `introduction.mdx` is untouched.)
 
 **Working dir:** worktree `.claude/worktrees/ag-ui-docs-demo-link` (branch `worktree-ag-ui-docs-demo-link`), off latest `main`.
 
@@ -598,7 +598,7 @@ git commit -m "feat(website): contextual AG-UI live-demo link in docs nav"
 - Modify: `apps/website/content/docs/ag-ui/getting-started/introduction.mdx`
 - Modify: `apps/website/content/docs/ag-ui/getting-started/quickstart.mdx`
 
-Use the existing `<Callout type="tip" title="…">` mdx component (no import needed — provided by MdxRenderer). Do NOT add any CopilotKit reference.
+Use the existing `<Callout type="tip" title="…">` mdx component (no import needed — provided by MdxRenderer). Do NOT add any a React agent UI framework reference.
 
 - [ ] **Step 1: Add a demo callout to introduction.mdx**
 
@@ -644,7 +644,7 @@ git commit -m "docs(ag-ui): add live-demo callouts to introduction + quickstart"
 - Modify: `apps/website/src/lib/docs-config.ts` (add `API Reference` section to ag-ui)
 - Modify: `apps/website/content/docs/ag-ui/guides/citations.mdx` (cross-link `bridgeCitationsState`)
 
-Author prose mirroring `apps/website/content/docs/langgraph/api/*.mdx` voice (concise, `# symbolName()` H1, intro paragraph, a usage code block, sub-sections). Source the exact signatures from `libs/ag-ui/src/public-api.ts`. No CopilotKit references.
+Author prose mirroring `apps/website/content/docs/langgraph/api/*.mdx` voice (concise, `# symbolName()` H1, intro paragraph, a usage code block, sub-sections). Source the exact signatures from `libs/ag-ui/src/public-api.ts`. No a React agent UI framework references.
 
 Required content per page (each begins with the H1 shown, then prose + a `ts` code block):
 
@@ -704,7 +704,7 @@ git commit -m "docs(ag-ui): API reference pages + nav section"
 - Create: `apps/website/content/docs/ag-ui/guides/custom-events.mdx`
 - Modify: `apps/website/src/lib/docs-config.ts` (add to ag-ui Guides section)
 
-Author in AG-UI doc voice (no fabricated anecdotes, trimmed register, no CopilotKit reference).
+Author in AG-UI doc voice (no fabricated anecdotes, trimmed register, no a React agent UI framework reference).
 
 - [ ] **Step 1: Write the guide**
 

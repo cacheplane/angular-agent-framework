@@ -2,7 +2,7 @@
 
 The telemetry source has two distinct privacy postures.
 
-Browser telemetry is off unless the app opts in. Node telemetry can send from package lifecycle hooks or server adapters unless the environment or process disables it.
+Browser telemetry is off unless the app opts in. Node telemetry sends only after an explicit capture call, and the environment or process can still disable it.
 
 ## Node opt-out
 
@@ -57,8 +57,6 @@ Browser endpoint delivery uses `browser:<uuid>` when `crypto.randomUUID()` is av
 The source never persists either ID across process restarts or browser sessions.
 
 ## Data minimization from source
-
-The Node postinstall payload includes package/runtime installation metadata such as package name, version, Node version, OS, architecture, package manager details, and global/workspace flags when npm exposes them.
 
 Runtime lifecycle helpers send transport/provider/model style metadata. Stream error helpers send an error class, not the raw error object.
 

@@ -12,7 +12,7 @@
 
 **Branch:** `claude/langgraph-thread-restoration`, branched from `origin/main`.
 
-**Hard constraint:** Never reference hashbrown / copilotkit / chatgpt / chatbot-kit / claude in code, commits, or PR titles/bodies.
+**Hard constraint:** Never reference hashbrown / a React agent UI framework / chatgpt / chatbot-kit / claude in code, commits, or PR titles/bodies.
 
 ---
 

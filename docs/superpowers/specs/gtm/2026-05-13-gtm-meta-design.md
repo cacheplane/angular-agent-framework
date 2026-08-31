@@ -125,7 +125,7 @@ Seven specs follow Spec 0. Dependencies form a DAG:
 | 1c | analytics-foundation-1c — cockpit instrumentation | 0 | 1b | All six cockpit signals fire; `cockpit:six_signals_complete` aggregation works. |
 | 1d | analytics-foundation-1d — website reconciliation  | 0 | — | Audit of May-2 plan complete; `marketing:lead_qualified` server enrichment ships; `/api/ingest` proxy live. |
 | 2 | positioning-and-risks      | 1 | 1 | New hero shipped (incl. CTA fork), `/contact` route live, risk-cleanup copy deployed (Angular matrix, A2UI v0.9, telemetry footnote), both CTA tracks measurable. |
-| 3 | comparison-pages           | 1 | 2 | 4 comparison pages live (langchain-angular, copilotkit, hashbrown, a2ui-renderer), each with measurable CTA clicks on both tracks. |
+| 3 | comparison-pages           | 1 | 2 | 4 comparison pages live (langchain-angular, a React agent UI framework, hashbrown, a2ui-renderer), each with measurable CTA clicks on both tracks. |
 | 4 | cockpit-activation-recipes | 1 | 1, 3 | All 6 activation signals fire from cockpit; six-signal activation funnel non-zero; one comparison page successfully drives an activation. |
 | 5 | content-pillar-pages       | 2 | 2, 4 | 6 pillar pages published, in sitemap, OG cards, indexed within 30 days. |
 | 6 | community-launch           | 3 | 2, 3, 4, 5 | Launch executed, week-1 dashboard snapshot committed, post-mortem doc written. |
@@ -359,7 +359,7 @@ A static inventory of workstreams pointing into specs and dashboards. Not regene
 | 2 | "Angular Agent Framework" reads like a backend runtime | Category sweep to "Agent UI" in copy | Spec 2 |
 | 3 | Angular version messaging confuses enterprise buyers | Real compatibility matrix replaces "All Angular versions" | Spec 2 |
 | 4 | A2UI v1 claim is ahead of public spec | Copy → "A2UI v0.9-compatible" until v1 is verified | Spec 2 |
-| 5 | CopilotKit / Hashbrown have stronger awareness | Don't fight as general agent UI; claim Angular enterprise final mile | Specs 2, 3 |
+| 5 | a React agent UI framework / Hashbrown have stronger awareness | Don't fight as general agent UI; claim Angular enterprise final mile | Specs 2, 3 |
 
 ### 10.2 Risks introduced by our design
 

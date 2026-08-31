@@ -153,8 +153,58 @@
 [data-ui="section"][data-surface="tinted"] {
   background: var(--color-surface-tinted);
 }
+/* Treatment D: the proof strip's tinted band is a whisper of gradient. Scoped
+ * to #proof so other tinted sections keep the flat token. */
+#proof[data-ui="section"][data-surface="tinted"] {
+  background: linear-gradient(180deg, #fdfdfd, #f6f6f6);
+}
 [data-ui="section"][data-surface="white"] {
   background: var(--color-surface);
+}
+
+/* Dark section scope (homepage Yes wall + FinalCTA dark variant).
+ * Values mirror libs/design-tokens/src/lib/dark.ts — the website hardwires
+ * the light theme in TS, so dark sections re-scope the CSS variables instead.
+ * If dark.ts changes, update here. Treatment B (spec): the canvas is a subtle
+ * vertical gradient, and a 1px accent seam marks the light→dark boundary. */
+[data-ui="section"][data-surface="dark"] {
+  --color-canvas: rgb(17, 17, 17);
+  --color-surface: rgb(28, 28, 28);
+  --color-surface-tinted: rgb(44, 44, 44);
+  --color-surface-dim: rgb(10, 10, 10);
+  --color-border: rgb(45, 45, 45);
+  --color-border-strong: rgb(60, 60, 60);
+  --color-text-primary: rgb(245, 245, 245);
+  --color-text-secondary: rgb(200, 200, 200);
+  --color-text-muted: rgb(160, 160, 160);
+  --color-text-inverted: rgb(17, 17, 17);
+  --color-accent: #64c3fd;
+  --color-accent-hover: #8dd4ff;
+  --color-accent-glow: rgba(100, 195, 253, 0.25);
+  --color-accent-border: rgba(100, 195, 253, 0.2);
+  --color-accent-border-hover: rgba(100, 195, 253, 0.35);
+  --color-accent-surface: rgba(100, 195, 253, 0.08);
+
+  background: linear-gradient(180deg, #161616 0%, #0e0e0e 100%);
+  color: var(--color-text-primary);
+  position: relative;
+}
+/* 1px accent seam at the light→dark boundary. */
+[data-ui="section"][data-surface="dark"]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(100, 195, 253, 0.55) 30%,
+    rgba(100, 195, 253, 0.55) 70%,
+    transparent
+  );
+  pointer-events: none;
 }
 
 /* UI primitive — Button */
@@ -392,4 +442,42 @@
 [data-ui="tab-group-tab"][data-active] {
   background: var(--color-accent);
   color: var(--color-text-inverted);
+}
+
+/* UI primitive — SectionHeader (centered + rail variants, treatment C). */
+[data-ui="section-header"] .section-header-eyebrow {
+  margin-bottom: 16px;
+}
+[data-ui="section-header"] .section-header-heading {
+  font-family: var(--font-garamond);
+  font-size: var(--text-h2);
+  line-height: var(--text-h2--line-height);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+[data-ui="section-header"] .section-header-aside {
+  font-family: var(--font-inter);
+  font-size: 15px;
+  line-height: 1.6;
+  font-style: italic;
+  color: var(--color-text-muted);
+  margin: 16px 0 0;
+}
+[data-ui="section-header"][data-variant="centered"] {
+  text-align: center;
+}
+[data-ui="section-header"][data-variant="rail"] {
+  text-align: left;
+}
+[data-ui="section-header"][data-variant="rail"] .section-header-eyebrow {
+  border-top: 2px solid var(--color-text-primary);
+  padding-top: 8px;
+  margin-bottom: 14px;
+}
+[data-ui="section-header"][data-variant="rail"] .section-header-heading {
+  font-size: clamp(32px, 3.4vw, 44px);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
 }

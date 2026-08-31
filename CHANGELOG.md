@@ -1,3 +1,18 @@
+## 0.0.63 (2026-08-31)
+
+### 🚀 Features
+
+- move all packages to MIT ([#881](https://github.com/cacheplane/angular-agent-framework/pull/881))
+- **examples/chat:** announce the research subagent's stream identity ([#874](https://github.com/cacheplane/angular-agent-framework/pull/874))
+- **website:** unify all fonts onto the next/font variables ([#876](https://github.com/cacheplane/angular-agent-framework/pull/876))
+- **website:** redesign pricing and licensing journey ([#875](https://github.com/cacheplane/angular-agent-framework/pull/875))
+
+### 🩹 Fixes
+
+- **proxy:** remove unauthenticated _proxy_debug disclosure endpoint ([#882](https://github.com/cacheplane/angular-agent-framework/pull/882))
+- **website:** AnnouncementToast mobile presentation and a11y ([#877](https://github.com/cacheplane/angular-agent-framework/pull/877))
+- **website:** fit meta descriptions to the search-snippet budget ([#880](https://github.com/cacheplane/angular-agent-framework/pull/880), [#826](https://github.com/cacheplane/angular-agent-framework/issues/826))
+
 ## 0.0.62 (2026-08-30)
 
 ### 🚀 Features

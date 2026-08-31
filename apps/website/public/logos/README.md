@@ -9,12 +9,11 @@ These assets support the homepage ecosystem strip. They are compatibility marks,
 - `providers/anthropic.svg` copied from `~/repos/dawn/apps/web/public/logos/providers/anthropic.svg`.
 - `providers/bedrock.svg` copied from `~/repos/dawn/apps/web/public/logos/providers/bedrock.svg`.
 - `providers/google.svg` copied from `~/repos/dawn/apps/web/public/logos/providers/google.svg`.
-- `runtimes/copilotkit.svg` cropped from `~/repos/CopilotKit/docs/public/images/logo-light.svg`.
+- `ag-ui.svg` is a repository-owned AG-UI monogram.
 - `runtimes/mastra.svg` downloaded from `https://github.com/mastra-ai/mastra/blob/main/packages/playground/public/mastra.svg`.
 
 `providers/bedrock.svg` is also reused for the AWS Strands tile.
 `providers/google.svg` is also reused for the Google A2UI tile.
-`runtimes/copilotkit.svg` is also reused for the AG-UI tile.
 
 ## Wikimedia Commons Sources
 

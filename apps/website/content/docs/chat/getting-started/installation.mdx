@@ -1,12 +1,8 @@
 # Installation
 
-A complete walkthrough for installing `@threadplane/chat` in an Angular 20+ application, activating a commercial license, and rendering your first chat in under 30 minutes.
-
-This guide goes deeper than the Quick Start: license activation, peer dependencies, and the warnings you'll see in the console.
-
-<Callout type="info" title="Just bought a license?">
-This guide is written for customers who purchased a Pro, Team, or Enterprise plan and received a `THREADPLANE_LICENSE` token by email. If you're using `@threadplane/chat` within permitted noncommercial scope, you can skip the license steps. Commercial evaluation is permitted for 30 calendar days from first commercial use without registration; the library's token check remains advisory.
-</Callout>
+Install `@threadplane/chat`, a runtime adapter, and the markdown parser. Every
+Threadplane package is MIT-licensed; setup requires no registration, activation,
+or runtime key.
 
 ## Prerequisites
 
@@ -26,245 +22,90 @@ The chat UI needs something to talk to. Two officially supported adapters cover 
 - **`@threadplane/ag-ui`** — pick this for an AG-UI-compatible backend such as CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, or AWS Strands.
 
 Both adapters expose the same `Agent` contract to `@threadplane/chat`, so swapping later is a one-line change. If you don't have a backend yet, use `mockAgent()` from `@threadplane/chat` to wire up the UI first.
+
 </Step>
 </Steps>
 
 ## 1. Install the packages
 
-Install `@threadplane/chat`, your chosen runtime adapter, and the `marked` markdown parser:
-
 ```bash
-# LangGraph backends
+# LangGraph backend
 npm install @threadplane/chat @threadplane/langgraph @langchain/core @langchain/langgraph-sdk marked
 
-# AG-UI compatible backends
+# AG-UI-compatible backend
 npm install @threadplane/chat @threadplane/ag-ui @ag-ui/client @ag-ui/core marked
 ```
 
-`marked` is a required peer dependency used to render assistant message markdown (code blocks, tables, headings). The AG-UI adapter also needs the protocol packages `@ag-ui/client` and `@ag-ui/core`. The chat components ship with their own design tokens and component-scoped styles — no Tailwind, PostCSS, or global stylesheet import is required.
+`@threadplane/chat` also uses `@threadplane/render`, `@threadplane/a2ui`,
+`@json-render/core`, RxJS, and Zod as peer dependencies. npm 7 and later
+install required peers automatically. KaTeX is optional.
 
 <Callout type="info" title="Full peer dependency list">
-`@threadplane/chat` declares peers on `@angular/core`, `@angular/common`, `@angular/platform-browser`, `@angular/router` (all `^20.0.0 || ^21.0.0 || ^22.0.0`), plus `@threadplane/licensing`, `@threadplane/render`, `@threadplane/a2ui`, `@json-render/core` (`^0.16.0`), `@langchain/core` (`^1.1.33`), `rxjs` (`~7.8.0`), `marked` (`^15 || ^16`), `zod` (`^3.25.0`), and optional `katex` (`^0.16.0 || ^0.17.0`). npm 7+ installs all required peers automatically.
+  `@threadplane/chat` declares peers on `@angular/core`, `@angular/common`,
+  `@angular/platform-browser`, `@angular/router` (all `^20.0.0 || ^21.0.0 ||
+  ^22.0.0`), plus `@threadplane/render`, `@threadplane/a2ui`,
+  `@json-render/core` (`^0.16.0`), `@langchain/core` (`^1.1.33`), `rxjs`
+  (`~7.8.0`), `marked` (`^15 || ^16`), `zod` (`^3.25.0`), and optional `katex`
+  (`^0.16.0 || ^0.17.0`). npm 7+ installs all required peers automatically.
 </Callout>
 
-## 2. Add your license token
-
-After purchase, Threadplane emails a signed token that looks like:
-
-```
-eyJzdWIiOiJjdXN0QGV4YW1wbGUuY29tIiwidGllciI6ImRldmVsb3Blci1zZWF0IiwiaWF0IjoxNzM…
-```
-
-The token is signed with Ed25519. Verification is **offline** and **advisory** — a missing or expired token logs one `console.warn` line on first boot and the chat keeps working. There is no kill switch, no network call, no telemetry.
-
-So how you store the token is a matter of secret-management preference, not runtime correctness. Pick whichever flow fits your team.
-
-### Option A: `.env` file (recommended for local dev)
-
-Create `.env` at the project root (add it to `.gitignore`):
-
-```bash
-# .env
-THREADPLANE_LICENSE=eyJzdWIi…
-```
-
-Wire the variable into your Angular environment file or read it directly in `app.config.ts` via your build's env-var mechanism (Vite/esbuild `define`, Angular CLI `fileReplacements`, etc.). For a typical Angular CLI setup:
+## 2. Configure the runtime and chat
 
 ```ts
-// src/environments/environment.ts
-export const environment = {
-  production: false,
-  threadplaneLicense: process.env['THREADPLANE_LICENSE'] ?? '',
-};
-```
-
-### Option B: CI secret / secret manager (recommended for production)
-
-Set `THREADPLANE_LICENSE` as a build-time secret in GitHub Actions, Vercel, Netlify, CircleCI, AWS Secrets Manager, Doppler, or whatever you already use. Reference it the same way as Option A — the token is baked into the bundle at build time.
-
-```yaml
-# .github/workflows/deploy.yml
-- run: npm run build
-  env:
-    THREADPLANE_LICENSE: ${{ secrets.THREADPLANE_LICENSE }}
-```
-
-### Option C: Commit to a private repo
-
-The token is signed — it cannot be forged. If your repository is private and you accept distributing the token to everyone with repo access, it's safe to commit. Paste the literal string into `app.config.ts`:
-
-```ts
-provideChat({
-  license: 'eyJzdWIi…',
-});
-```
-
-For me, this is the lowest-friction path for a small team — the tradeoff is that everyone with repo access also gets the token. Do **not** commit it to a public repository — anyone with the token can use the seats it grants.
-
-## 3. Wire `provideChat()` and `provideAgent()`
-
-Register both providers in your application config. Below is a minimal `app.config.ts` for a LangGraph backend. If you picked AG-UI, component calls stay the same, but the provider import and config shape change (`apiUrl`/`assistantId` for LangGraph, `url` for AG-UI).
-
-```ts
-// src/app/app.config.ts
-import { ApplicationConfig, provideZonelessChangeDetection } from '@angular/core';
+import {
+  ApplicationConfig,
+  provideZonelessChangeDetection,
+} from '@angular/core';
 import { provideAgent } from '@threadplane/langgraph';
 import { provideChat } from '@threadplane/chat';
-import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZonelessChangeDetection(),
     provideAgent({
-      apiUrl: environment.langgraphApiUrl, // e.g. 'http://localhost:2024'
-      assistantId: 'chat',                 // The graph/agent ID exposed by your backend
+      apiUrl: 'http://localhost:2024',
+      assistantId: 'chat',
     }),
     provideChat({
-      license: environment.threadplaneLicense,
       assistantName: 'Assistant',
+      avatarLabel: 'AI',
     }),
   ],
 };
 ```
 
-`provideChat()` accepts the license as a plain string — you can also inline a `typeof` guard if your build defines the token as a global:
+`provideChat()` is optional when you do not need shared defaults.
+
+## 3. Render your first chat
 
 ```ts
-declare const THREADPLANE_LICENSE: string | undefined;
-
-provideChat({
-  license: typeof THREADPLANE_LICENSE === 'string' ? THREADPLANE_LICENSE : undefined,
-});
-```
-
-`provideChat()` itself is optional — chat components fall back to sensible defaults — but you'll want it once you start passing a license, an `assistantName`, or any other global config.
-
-## 4. Render your first chat
-
-Add `assistantId` and `threadId` to the same root `provideAgent({...})` from step 3, then bind `<chat>` to the result of `injectAgent()` in your component. Extend the config from step 3 rather than declaring a second provider:
-
-```ts
-// src/app/app.config.ts
-import { ApplicationConfig, provideZonelessChangeDetection, signal } from '@angular/core';
-import { provideAgent } from '@threadplane/langgraph';
-import { provideChat } from '@threadplane/chat';
-import { environment } from '../environments/environment';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideZonelessChangeDetection(),
-    provideAgent({
-      apiUrl: environment.langgraphApiUrl, // e.g. 'http://localhost:2024'
-      assistantId: 'chat',                 // The graph/agent ID exposed by your backend
-      threadId: signal(null),              // null = new thread on first send
-    }),
-    provideChat({
-      license: environment.threadplaneLicense,
-      assistantName: 'Assistant',
-    }),
-  ],
-};
-```
-
-The component just injects that agent — no second provider:
-
-```ts
-// src/app/chat-page.component.ts
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { injectAgent } from '@threadplane/langgraph';
+import { Component } from '@angular/core';
 import { ChatComponent } from '@threadplane/chat';
+import { injectAgent } from '@threadplane/langgraph';
 
 @Component({
-  selector: 'app-chat-page',
-  standalone: true,
+  selector: 'app-root',
   imports: [ChatComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div style="height: 100vh">
-      <chat [agent]="chatAgent" />
-    </div>
-  `,
+  template: `<chat [agent]="agent" />`,
 })
-export class ChatPageComponent {
-  protected readonly chatAgent = injectAgent();
+export class AppComponent {
+  protected readonly agent = injectAgent();
 }
 ```
 
-Add the route, run `ng serve`, and open the page. You should see the chat surface mount, an input at the bottom, and streaming responses as the agent replies.
-
-<Callout type="info" title="Multiple agents in one app">
-Want several `<chat>` surfaces pointing at different graphs? Keep `apiUrl` (and `license`) on the root provider, then re-provide `provideAgent({ assistantId, threadId })` in each component's `providers: []`. Angular's hierarchical DI merges the component-level config over the root, so each subtree gets its own `assistantId` while sharing the backend URL. `injectAgent()` resolves the nearest provider.
-</Callout>
-
-## 5. Verify the license activated
-
-Open the browser DevTools console and look for messages prefixed with `[threadplane]`.
-
-| What you see | What it means |
-|--------------|---------------|
-| (no `[threadplane]` warnings) | Token verified successfully. You're licensed. |
-| `[threadplane] @threadplane/chat: license missing.` | No token was passed. Chat still works, but you're in advisory mode. |
-| `[threadplane] @threadplane/chat: license expired.` | Token is past `exp`. Renew at [threadplane.ai](https://threadplane.ai/pricing). |
-| `[threadplane] @threadplane/chat: license tampered.` | Token failed signature verification. Re-copy from the purchase email. |
-| `[threadplane] @threadplane/chat: license in grace period.` | Token expired recently but is still inside the 14-day grace window. |
-
-Each warning fires at most once per package per status, so the console stays quiet on subsequent renders. There is no UI badge, no banner, and no rate limit — verification is purely a one-time advisory.
-
-<Callout type="info" title="No console warnings = healthy">
-A successful boot is silent. If you see `[threadplane]` lines in production, fix them before shipping — but the app will continue to function either way.
-</Callout>
+If you do not have a backend yet, use `mockAgent()` from
+`@threadplane/chat/testing` to exercise the UI.
 
 ## Troubleshooting
 
-<Steps>
-<Step title="`license missing` warning in production">
-You shipped without `THREADPLANE_LICENSE` defined at build time. Confirm the build secret is set in your CI environment, then verify the value actually reaches the bundle. A quick check:
-
-```ts
-console.log('license length:', environment.threadplaneLicense?.length ?? 0);
-```
-
-It should print roughly 200+ characters. Zero means the env var didn't get inlined.
-</Step>
-<Step title="`license tampered` warning">
-The token failed Ed25519 verification. Common causes:
-
-- The string was truncated when copied from email (some clients break long lines).
-- A `.env` parser stripped a trailing character.
-- You pasted the token with a leading or trailing whitespace.
-
-Re-copy the full token from the original purchase email and try again. Tokens never expire silently — a tampered status always means string corruption.
-</Step>
-<Step title="`license expired` warning">
-Your 12-month term has lapsed. Renew at [threadplane.ai/pricing](https://threadplane.ai/pricing); you'll receive a new token by email. There's a 14-day grace window after `exp` (during which the status reports `grace` rather than `expired`) to give you time to renew without disruption.
-</Step>
-<Step title="Chat renders blank or 404s the backend">
-Verify `apiUrl` in `provideAgent()` points to a reachable LangGraph or AG-UI endpoint, and `assistantId` matches a deployed graph on that server. For LangGraph, `langgraph dev` defaults to `http://localhost:2024`.
-</Step>
-<Step title="`Cannot find module '@threadplane/chat'`">
-Double-check the install completed and your `tsconfig.json` `paths` does not shadow node_modules. The package ships ESM and CJS — both Angular CLI and Vite-based builds work out of the box.
-</Step>
-</Steps>
+- Confirm the backend URL is reachable from the browser.
+- Confirm the adapter's assistant or graph identifier exists.
+- Check peer-dependency warnings after installation.
+- If dependency injection fails, verify the matching runtime provider is
+  registered before the component is created.
 
 ## What's next
 
-<CardGroup cols={3}>
-  <Card title="Quick Start" icon="rocket" href="/docs/chat/getting-started/quickstart">
-    The 5-minute version of this guide.
-  </Card>
-  <Card title="Licensing model" icon="key" href="/docs/licensing/getting-started/introduction">
-    Tiers, grace periods, status semantics.
-  </Card>
-  <Card title="Layout Modes" icon="layout" href="/docs/chat/guides/layout-modes">
-    Embedded, popup, or sidebar.
-  </Card>
-  <Card title="Theming" icon="palette" href="/docs/chat/guides/theming">
-    Override design tokens for your brand.
-  </Card>
-  <Card title="Streaming & interrupts" icon="bolt" href="/docs/chat/guides/streaming">
-    Tool calls, human-in-the-loop, durable threads.
-  </Card>
-  <Card title="Components" icon="components" href="/docs/chat/components/chat">
-    Full primitive and composition reference.
-  </Card>
-</CardGroup>
+- [Configuration](/docs/chat/guides/configuration)
+- [ChatComponent](/docs/chat/components/chat)
+- [Choosing an adapter](/docs/choosing-an-adapter)

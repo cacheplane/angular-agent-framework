@@ -27,7 +27,7 @@ The official one-liner from the docs:
 
 That's the whole pitch. It standardizes the wire so the agent doesn't care what frontend you use, and the frontend doesn't care what backend you wrote.
 
-It was introduced by [CopilotKit](https://www.copilotkit.ai/blog/introducing-ag-ui-the-protocol-where-agents-meet-users) in 2025. Markus and the team open-sourced it after years of integrating LangGraph and CrewAI agents into frontend apps and realizing the wire format was the durable piece. It's now the third member of an emerging triad of agent protocols:
+It was introduced in 2025 and open-sourced after years of integrating agent runtimes into frontend apps. The wire format became the durable piece. It's now the third member of an emerging triad of agent protocols:
 
 - **MCP**: agent ↔ tools.
 - **A2A**: agent ↔ other agents.
@@ -37,7 +37,7 @@ A real production agent typically speaks all three. The interesting one for us i
 
 ### Why Angular devs should care
 
-For the last two years, every interesting agentic UI library has been React-first. CopilotKit, assistant-ui, Vercel AI SDK UI. All React. If you were building an Angular app, your options were:
+For the last two years, the most visible agentic UI libraries have been React-first. If you were building an Angular app, your options were:
 
 1. Reach for `EventSource`, hand-roll the SSE parsing, and reinvent message lists, status, tool cards, and interrupts for the fifth time.
 2. Iframe a React app into your Angular app. (Please don't.)
@@ -302,4 +302,4 @@ Each of those is its own post. The point here is just that the protocol-to-signa
 
 AG-UI standardizes the wire between the agent and the UI: it's small enough to hold in your head, and the event model maps onto Angular signals cleanly. With Threadplane (`@threadplane/ag-ui` and `@threadplane/chat` on npm), the wiring is three lines — a provider, an inject, and a `<chat>` — which leaves the interesting work (tool cards, interrupt flows, generative UI, your design system) as the part you spend the day on.
 
-The adapters are MIT; `@threadplane/chat` is source-available with a free non-commercial tier. If you're building this inside an enterprise Angular app (design system, multi-tenant, regulated), [talk to us](/contact?source=blog_ag_ui_pillar&track=enterprise).
+Every Threadplane package is MIT-licensed. If you're building this inside an enterprise Angular app and want production assurance or delivery support, [talk to us](/contact?source=blog_ag_ui_pillar&track=enterprise).

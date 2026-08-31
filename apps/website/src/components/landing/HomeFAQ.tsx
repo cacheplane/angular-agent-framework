@@ -5,28 +5,20 @@ import { FAQ, type FAQItem } from '../ui/FAQ';
 
 const ITEMS: FAQItem[] = [
   {
-    q: 'How is this different from CopilotKit or AG-UI directly?',
-    a: 'CopilotKit has an Angular SDK, and AG-UI is a protocol rather than a complete Angular UI layer. Threadplane gives Angular teams the production surface around those runtimes: headless chat, durable threads, interrupts, subagents, planning, memory, generative UI, and adapters for LangGraph and AG-UI-compatible backends.',
-  },
-  {
-    q: 'Does it work with my existing Angular app?',
-    a: 'Yes. Drop provideAgent (from @threadplane/langgraph or @threadplane/ag-ui) into your app.config.ts. The headless primitives don’t impose any UI; the chat compositions are opt-in.',
-  },
-  {
-    q: 'Can I use this without LangGraph?',
-    a: 'Yes. Use the @threadplane/ag-ui adapter for any AG-UI compliant backend, or implement the agent contract yourself. Threadplane keeps the Angular UI layer stable while the backend agent runtime can change.',
+    q: 'How is this different from using AG-UI directly?',
+    a: 'AG-UI is a protocol rather than a complete Angular UI layer. Threadplane gives Angular teams the production surface around compatible runtimes: headless chat, durable threads, interrupts, subagents, planning, memory, generative UI, and runtime adapters.',
   },
   {
     q: 'Which adapter should I use — @threadplane/langgraph or @threadplane/ag-ui?',
-    a: 'If your backend is LangGraph Platform, use @threadplane/langgraph. If your backend speaks the AG-UI protocol (CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime), use @threadplane/ag-ui. Both expose the same provideAgent/injectAgent API — see /docs/choosing-an-adapter for a side-by-side comparison.',
+    a: 'If your backend is LangGraph Platform, use @threadplane/langgraph. If your backend speaks the AG-UI protocol (CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, or AWS Strands), use @threadplane/ag-ui. Both expose the same provideAgent/injectAgent API — see /docs/choosing-an-adapter for a side-by-side comparison.',
   },
   {
     q: 'Is the Pilot-to-Prod program required?',
-    a: 'No. Most packages are MIT-licensed and complete on their own; @threadplane/chat is free for noncommercial use and commercially licensed for production. Pilot-to-Prod is for teams who want concierge delivery, not a paywall.',
+    a: 'No. Every package is MIT-licensed and complete on its own. Pilot-to-Prod is for teams who want hands-on delivery, not a software paywall.',
   },
   {
     q: 'What does it cost?',
-    a: 'Most libraries: free, MIT. @threadplane/chat: free for noncommercial/evaluation use and commercially licensed for production. Pilot-to-Prod: scoped per engagement — see the pricing page.',
+    a: 'Every package is free under MIT. Production Assurance and Pilot-to-Prod are scoped support and delivery engagements — see the pricing page.',
   },
   {
     q: 'Is this production-ready today?',
@@ -37,16 +29,8 @@ const ITEMS: FAQItem[] = [
     a: 'GitHub Issues. Pilot customers also get a private channel.',
   },
   {
-    q: 'I’m using CopilotKit today — how hard is the migration?',
-    a: 'Component-by-component. CopilotKit’s chat hooks have rough equivalents in our injectAgent() signal API, and CopilotKit actions map to LangGraph/AG-UI tool calls. Thread state lives in a service (not the component tree), so plan a session to port that. There isn’t a one-shot codemod.',
-  },
-  {
     q: 'Does it work with Angular Universal / SSR?',
     a: 'Streaming is client-side by design — agents are stateful and signal-based. If your shell is SSR’d, the agent-talking parts stay client-only; render fallbacks during hydration via standard Angular SSR patterns.',
-  },
-  {
-    q: 'How do I test agent-driven components?',
-    a: 'The agent is provided through Angular DI, so test doubles work the way you’re used to — supply a stub agent in your test module, drive it with signals, assert on the rendered output. See /docs/langgraph/guides/testing.',
   },
 ];
 

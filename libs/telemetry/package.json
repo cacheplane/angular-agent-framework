@@ -1,6 +1,6 @@
 {
   "name": "@threadplane/telemetry",
-  "version": "0.0.62",
+  "version": "0.0.63",
   "license": "MIT",
   "publishConfig": {
     "access": "public"
@@ -16,9 +16,6 @@
   },
   "sideEffects": false,
   "type": "module",
-  "bin": {
-    "threadplane-telemetry-postinstall": "./node/postinstall.js"
-  },
   "exports": {
     ".": {
       "types": "./index.d.ts",
@@ -31,10 +28,6 @@
     "./node": {
       "types": "./node/index.d.ts",
       "default": "./node/index.js"
-    },
-    "./node/postinstall": {
-      "types": "./node/postinstall.d.ts",
-      "default": "./node/postinstall.js"
     },
     "./browser": {
       "types": "./browser/index.d.ts",

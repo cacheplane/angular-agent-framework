@@ -14,7 +14,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-05-11-progressive-genui-bubble-coalescing-design.md` (commit `08f124ef` on `claude/spec-progressive-genui`).
 
-**Hard constraint:** Never reference hashbrown / copilotkit / chatgpt / chatbot-kit / claude in code, comments, commits, PR bodies, or docs. Third-party library mentions inside `docs/superpowers/specs/*.md` or `docs/superpowers/plans/*.md` (this file) are the only exception.
+**Hard constraint:** Never reference hashbrown / a React agent UI framework / chatgpt / chatbot-kit / claude in code, comments, commits, PR bodies, or docs. Third-party library mentions inside `docs/superpowers/specs/*.md` or `docs/superpowers/plans/*.md` (this file) are the only exception.
 
 **Dispatch:**
 

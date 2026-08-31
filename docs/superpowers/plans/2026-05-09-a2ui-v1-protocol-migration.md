@@ -12,7 +12,7 @@
 
 **Branch:** `claude/a2ui-v1-migration`, branched from `origin/main` (currently `b8e3bca9` — tip after PR #227 merged).
 
-**Hard constraint:** Never reference hashbrown / copilotkit / chatgpt / chatbot-kit / claude in code, comments, commit messages, or PR titles/bodies. Mentions in markdown spec/plan docs are OK as third-party library names; do not propagate.
+**Hard constraint:** Never reference hashbrown / a React agent UI framework / chatgpt / chatbot-kit / claude in code, comments, commit messages, or PR titles/bodies. Mentions in markdown spec/plan docs are OK as third-party library names; do not propagate.
 
 ---
 
@@ -208,7 +208,7 @@ Use the full type definitions from the spec's "Library changes → libs/a2ui/src
 - `A2uiSurface` (kept from v0.9)
 - `A2uiClientDataModel`, `A2uiActionMessage` (outbound, updated)
 
-Field-level reference: see spec section "Library changes → libs/a2ui/src/lib/types.ts" for the canonical TypeScript source. Where the spec elides per-component property details, infer from the v1 JSON schema embedded in the spec's "Reference: A2UI v1 component property reference" section (or, if absent, from `/Users/blove/repos/SC-CopilotKit-C1/L4/backend-dynamic/schema.py` SCHEMA_PROMPT).
+Field-level reference: see spec section "Library changes → libs/a2ui/src/lib/types.ts" for the canonical TypeScript source. Where the spec elides per-component property details, infer from the v1 JSON schema embedded in the spec's "Reference: A2UI v1 component property reference" section (or, if absent, from `/Users/blove/repos/SC-a React agent UI framework-C1/L4/backend-dynamic/schema.py` SCHEMA_PROMPT).
 
 - [ ] **Step 4: Update `libs/a2ui/src/index.ts` exports**
 

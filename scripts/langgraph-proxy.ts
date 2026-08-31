@@ -152,29 +152,6 @@ export function createProxyHandler(config: ProxyConfig = {}): (req: VercelReques
     const backendUrl = resolveBackend(req.headers.referer);
     const targetUrl = `${backendUrl}${apiPath}${cleanSearch}`;
 
-    // Debug endpoint — confirms the proxy is wired without hitting the upstream.
-    if (apiPath === '/_proxy_debug') {
-      res.status(200).json({
-        method: req.method,
-        url: req.url,
-        apiPath,
-        targetUrl,
-        backendUrl,
-        referer: req.headers.referer,
-        query: req.query,
-        hasApiKey: !!apiKey,
-        apiKeyPrefix: apiKey.substring(0, 10),
-        hasDatabaseUrl: !!process.env['DATABASE_URL'],
-        rateLimitConfigured: !!config.checkRateLimit,
-        instanceId: (() => {
-          const g = globalThis as { __instanceId?: string };
-          if (!g.__instanceId) g.__instanceId = Math.random().toString(36).slice(2, 10);
-          return g.__instanceId;
-        })(),
-      });
-      return;
-    }
-
     // Body-size cap. Fast-fail before rate-limit + upstream fetch.
     if (config.maxBodyBytes !== undefined) {
       const cl = req.headers['content-length'];

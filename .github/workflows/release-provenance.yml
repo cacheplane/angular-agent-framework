@@ -33,7 +33,7 @@ jobs:
       hashes: ${{ steps.hash.outputs.hashes }}
       tag: ${{ steps.tag.outputs.tag }}
     env:
-      NPM_PUBLISHABLE_PROJECTS: chat,langgraph,ag-ui,render,a2ui,licensing,telemetry
+      NPM_PUBLISHABLE_PROJECTS: chat,langgraph,ag-ui,render,a2ui,telemetry
     steps:
       - name: Resolve target tag
         id: tag
@@ -47,13 +47,11 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Build publishable projects
-        env:
-          CACHEPLANE_LICENSE_PUBLIC_KEY: ${{ secrets.CACHEPLANE_LICENSE_PUBLIC_KEY }}
         run: npx nx run-many -t build --projects="$NPM_PUBLISHABLE_PROJECTS" --skip-nx-cache
       - name: Pack tarballs
         run: |
           mkdir -p release-artifacts
-          for p in chat langgraph ag-ui render a2ui licensing telemetry; do
+          for p in chat langgraph ag-ui render a2ui telemetry; do
             npm pack "dist/libs/$p" --pack-destination release-artifacts
           done
       - name: Generate subject hashes

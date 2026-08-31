@@ -159,7 +159,7 @@ Accept the historical seam — `agent`-labeled events stop, `langgraph`-labeled 
 **Content outline:**
 
 - One-sentence summary of each adapter
-- Decision matrix: backend type → adapter (LangGraph Platform → langgraph; AG-UI-protocol backend like CrewAI/Mastra/Agent Framework/AG2/Pydantic AI/AWS Strands/CopilotKit runtime → ag-ui)
+- Decision matrix: backend type → adapter (LangGraph Platform → langgraph; AG-UI-protocol backend like CrewAI/Mastra/Agent Framework/AG2/Pydantic AI/AWS Strands/a React agent UI framework runtime → ag-ui)
 - Side-by-side code comparison using the new symmetric API
 - "Both adapters consume the same `Agent` contract from `@threadplane/chat`" explainer
 - Note about mixing both adapters (rare; pick one per app; import-rename pattern shown)

@@ -261,7 +261,7 @@ Run:
 
 ```bash
 git diff --check
-(git diff --name-only; git ls-files --others --exclude-standard) | rg -v '^docs/superpowers/' | xargs rg -n "hashbrown|copilotkit|chatgpt|claude" || true
+(git diff --name-only; git ls-files --others --exclude-standard) | rg -v '^docs/superpowers/' | xargs rg -n "hashbrown|a React agent UI framework|chatgpt|claude" || true
 ```
 
 Expected: no whitespace errors; changed non-plan files contain none of the forbidden external names.

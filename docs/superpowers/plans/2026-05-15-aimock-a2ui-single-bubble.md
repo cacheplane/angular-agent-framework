@@ -65,7 +65,7 @@ Write a one-off scratch fixture at `/tmp/aimock-tc-fixture.json`:
 Write a scratch Node script at `/tmp/aimock-tc-smoke.mjs`:
 
 ```javascript
-import { LLMock } from "@copilotkit/aimock";
+import { LLMock } from "the former fixture dependency";
 import OpenAI from "openai";
 
 const mock = new LLMock({ port: 0 });
@@ -95,7 +95,7 @@ await mock.stop();
 Run:
 ```bash
 cd /tmp/aimock-2c
-npm install --no-save --no-package-lock @copilotkit/aimock openai
+npm install --no-save --no-package-lock the former fixture dependency openai
 node /tmp/aimock-tc-smoke.mjs
 ```
 

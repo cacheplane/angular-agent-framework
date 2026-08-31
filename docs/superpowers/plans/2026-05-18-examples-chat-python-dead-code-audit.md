@@ -6,7 +6,7 @@
 
 **Architecture:** Two evidence passes (static grep + coverage.py instrumentation driven by the 7 aimock fixtures), merged into a findings table. The instrumentation runs once and produces a committed `coverage.json` artifact the report cites. If `coverage.py` can't be wrapped around `langgraph dev` cleanly, fall back to a direct-invocation harness that replays each fixture's injected tool_calls against the graph — documented in the report.
 
-**Tech Stack:** Python 3.12 + uv + coverage.py for the trace pass; bash + ripgrep for the static pass; Playwright + `@copilotkit/aimock` for fixture replay (existing infra at `examples/chat/angular/e2e/aimock-runner.ts`).
+**Tech Stack:** Python 3.12 + uv + coverage.py for the trace pass; bash + ripgrep for the static pass; Playwright + `the former fixture dependency` for fixture replay (existing infra at `examples/chat/angular/e2e/aimock-runner.ts`).
 
 ---
 

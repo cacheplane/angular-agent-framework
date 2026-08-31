@@ -7,11 +7,9 @@ test('landing page renders hero headline', async ({ page }) => {
   expect(headline?.toLowerCase()).toContain('angular');
 });
 
-test('landing page renders differentiator section', async ({ page }) => {
+test('landing page renders the Yes wall', async ({ page }) => {
   await page.goto('/');
-  // Assert on the stable id, not the heading copy — landing-page text rewrites
-  // happen far more often than the section structure changes.
-  await expect(page.locator('#differentiator-heading')).toBeVisible();
+  await expect(page.locator('#yes-wall-heading')).toBeVisible();
 });
 
 test('landing page renders feature blocks (Stream/Render/Ship)', async ({ page }) => {
@@ -21,37 +19,32 @@ test('landing page renders feature blocks (Stream/Render/Ship)', async ({ page }
   await expect(page.locator('#ship-heading')).toBeVisible();
 });
 
-test('landing page license copy distinguishes MIT packages from commercially licensed chat', async ({ page }) => {
+test('landing page states the all-MIT and explicit-telemetry commitments', async ({ page }) => {
   await page.goto('/');
   const main = page.locator('main');
 
-  await expect(main).toContainText('Most packages are MIT');
-  await expect(main).toContainText('@threadplane/chat');
-  await expect(main).toContainText('commercially licensed for production use');
-  await expect(main).not.toContainText('MIT today, MIT tomorrow');
-  await expect(main).not.toContainText('MIT · No signup required · App telemetry off by default');
+  await expect(main).toContainText('Every Threadplane package is MIT-licensed');
+  await expect(main).toContainText('Package installation is inert');
 });
 
-test('pricing page presents the four-stage journey and licensing boundary', async ({ page }) => {
+test('pricing page presents three software and support paths', async ({ page }) => {
   await page.goto('/pricing');
   const plans = page.locator('.pricing-plan-card');
-  await expect(plans).toHaveCount(4);
-  await expect(plans.nth(0).getByRole('heading', { level: 3 })).toHaveText('Developer');
-  await expect(plans.nth(1).getByRole('heading', { level: 3 })).toHaveText('Pro');
-  await expect(plans.nth(2).getByRole('heading', { level: 3 })).toHaveText('Team');
-  await expect(plans.nth(3).getByRole('heading', { level: 3 })).toHaveText('Enterprise');
-  await expect(plans.nth(0)).toContainText('For permitted noncommercial use');
-  await expect(plans.nth(0)).toContainText('30-day commercial evaluation');
+  await expect(plans).toHaveCount(3);
+  await expect(plans.nth(0).getByRole('heading', { level: 3 })).toHaveText('Community');
+  await expect(plans.nth(1).getByRole('heading', { level: 3 })).toHaveText('Production Assurance');
+  await expect(plans.nth(2).getByRole('heading', { level: 3 })).toHaveText('Enterprise');
+  await expect(plans.nth(0)).toContainText('All packages are MIT-licensed');
   await expect(page.getByText('No Threadplane cloud').first()).toBeVisible();
 });
 
-test('pricing page preserves public-to-internal checkout mappings', async ({ page }) => {
+test('pricing page routes software and support CTAs without checkout', async ({ page }) => {
   await page.goto('/pricing');
 
-  await expect(page.getByRole('button', { name: 'Get Pro' }).locator('xpath=ancestor::form/input[@name="tier"]')).toHaveValue('developer_seat');
-  await expect(page.getByRole('button', { name: 'Get Team' }).locator('xpath=ancestor::form/input[@name="tier"]')).toHaveValue('team');
-  await expect(page.getByRole('link', { name: 'Start free' })).toHaveAttribute('href', /npmjs\.com\/package\/@threadplane\/chat/);
+  await expect(page.getByRole('link', { name: 'Install from npm' })).toHaveAttribute('href', /npmjs\.com\/package\/@threadplane\/chat/);
+  await expect(page.getByRole('link', { name: 'Discuss assurance' })).toHaveAttribute('href', '/contact?source=pricing_production_assurance');
   await expect(page.getByRole('link', { name: 'Talk to Sales' })).toHaveAttribute('href', '/contact?source=pricing_tier_enterprise');
+  await expect(page.locator('form[action*="checkout"]')).toHaveCount(0);
 });
 
 test('pricing page is responsive without page-level horizontal overflow', async ({ page }) => {
@@ -64,18 +57,11 @@ test('pricing page is responsive without page-level horizontal overflow', async 
 });
 
 test('pricing page lead form validates required fields', async ({ page }) => {
-  let checkoutCalled = false;
-  await page.route('**/api/checkout/session', async (route) => {
-    checkoutCalled = true;
-    await route.abort();
-  });
-
   await page.goto('/pricing');
   const leadForm = page.locator('#lead-form form');
   await expect(leadForm).toBeVisible();
   await leadForm.getByRole('button', { name: 'Request enterprise quote' }).click();
   await expect(leadForm).toBeVisible();
-  expect(checkoutCalled).toBe(false);
   expect(await leadForm.evaluate((form) => (form as HTMLFormElement).checkValidity())).toBe(false);
 });
 
@@ -226,7 +212,6 @@ test('/llms-full.txt includes generated API reference content', async ({ request
   expect(body).toContain('### a2ui');
   expect(body).toContain('### langgraph');
   expect(body).toContain('### chat');
-  expect(body).toContain('### licensing');
   expect(body).toContain('### telemetry');
   expect(body).not.toContain('API reference not yet generated');
 });

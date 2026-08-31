@@ -127,13 +127,12 @@ All packages are published at version `0.0.47` under a patch-only `0.0.x` releas
 
 | Package | Purpose | License |
 |---|---|---|
-| `@threadplane/chat` | Drop-in agent chat UI for Angular: headless primitives and opinionated compositions (`<chat>`, popup, sidebar, interrupts, GenUI) | PolyForm Noncommercial + Commercial (dual) |
+| `@threadplane/chat` | Drop-in agent chat UI for Angular: headless primitives and opinionated compositions (`<chat>`, popup, sidebar, interrupts, GenUI) | MIT |
 | `@threadplane/langgraph` | LangGraph adapter; `provideAgent()`/`injectAgent()` exposes a LangGraph run as Angular Signals | MIT |
 | `@threadplane/ag-ui` | AG-UI adapter; bridges any `@ag-ui/client`-compatible backend into the chat surface | MIT |
 | `@threadplane/render` | `@json-render/core`-backed Angular engine that renders JSON specs to components (powers GenUI) | MIT |
 | `@threadplane/a2ui` | A2UI protocol types, streaming parser, and dynamic-value resolver; pure TypeScript, no Angular dependency | MIT |
-| `@threadplane/licensing` | Browser-safe Ed25519 license-token verification and evaluation (backs the chat commercial check) | MIT |
-| `@threadplane/telemetry` | Transparent, opt-out anonymous usage telemetry (node + browser) | MIT |
+| `@threadplane/telemetry` | Explicit Node and opt-in browser telemetry helpers | MIT |
 
 ---
 
@@ -168,6 +167,4 @@ The runtime-neutral `Agent` contract is the stability boundary between adapters 
 
 ## License
 
-Most published libraries in this repository (`@threadplane/render`, `@threadplane/langgraph`, `@threadplane/ag-ui`, `@threadplane/a2ui`, `@threadplane/licensing`, `@threadplane/telemetry`) are released under the **MIT License** — free for any use, including commercial, with attribution.
-
-**`@threadplane/chat`** is the exception. It is dual-licensed under **PolyForm Noncommercial 1.0.0** for free noncommercial use, or a **Threadplane Commercial license** for production use inside a for-profit context. See [`libs/chat/LICENSE.md`](./libs/chat/LICENSE.md), [`libs/chat/COMMERCIAL-USE.md`](./libs/chat/COMMERCIAL-USE.md), [`COMMERCIAL.md`](./COMMERCIAL.md), and [threadplane.ai/docs/licensing](https://threadplane.ai/docs/licensing) for details.
+Every published package in this repository is released under the **MIT License** — free for commercial and noncommercial use, modification, and redistribution with the required notice.

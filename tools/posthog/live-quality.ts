@@ -46,7 +46,6 @@ export interface LiveCoverageRequirement {
 
 export const DEFAULT_LIVE_COVERAGE_REQUIREMENTS: readonly LiveCoverageRequirement[] =
   [
-    { event: 'tplane:postinstall', minCount: 1 },
     { event: 'tplane:browser_chat_init', minCount: 1 },
     { event: 'tplane:runtime_instance_created', minCount: 1 },
     { event: 'tplane:runtime_request_created', minCount: 1 },

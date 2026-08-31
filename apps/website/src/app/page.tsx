@@ -1,6 +1,6 @@
 import { Hero } from '../components/landing/Hero';
 import { EcosystemStrip } from '../components/landing/EcosystemStrip';
-import { Differentiator } from '../components/landing/Differentiator';
+import { YesWall } from '../components/landing/YesWall';
 import { FeatureBlock } from '../components/landing/FeatureBlock';
 import { BrowserFrame } from '../components/ui/BrowserFrame';
 import { ClipPlayer } from '../components/ui/ClipPlayer';
@@ -11,6 +11,7 @@ import { HighlightedCode } from '../components/landing/HighlightedCode';
 import { SECTION_MEDIA } from '../lib/section-media';
 import type { SectionMedia } from '../lib/section-media';
 import { PilotBlock } from '../components/landing/PilotBlock';
+import { ProofStrip } from '../components/landing/ProofStrip';
 import { WhitePaperBlock } from '../components/landing/WhitePaperBlock';
 import { Promises } from '../components/landing/Promises';
 import { HomeFAQ } from '../components/landing/HomeFAQ';
@@ -105,7 +106,7 @@ export default async function HomePage() {
     <>
       <Hero />
       <EcosystemStrip />
-      <Differentiator />
+      <YesWall />
 
       {/* Interactive demo showcase */}
       <Section surface="canvas">
@@ -166,7 +167,7 @@ export default async function HomePage() {
         id="ship"
         eyebrow="Ship"
         headline="Patterns built for production, not demos."
-        body="Error boundaries, observability hooks, fallback strategies — the stuff that turns a demo into a real app. Most packages are MIT; the drop-in chat package is commercially licensed for production use."
+        body="Error boundaries, observability hooks, fallback strategies — the stuff that turns a demo into a real app. Every package is MIT-licensed, with production assurance available when your team wants expert support."
         bullets={[
           'error() / status() / reload() signals',
           'Readiness gate + per-component fallback',
@@ -183,7 +184,7 @@ export default async function HomePage() {
       />
 
       {/*
-        The homepage claims human-in-the-loop in the Differentiator table and
+        The homepage claims human-in-the-loop in the Yes wall and
         mentions interrupts in the Stream block, but nothing here showed it.
         This is the only section whose heading the approval clip actually
         illustrates — the same rule the solutions pages follow.
@@ -220,8 +221,9 @@ export default async function HomePage() {
       <PilotBlock />
       <WhitePaperBlock />
       <Promises />
+      <ProofStrip />
       <HomeFAQ />
-      <FinalCTA />
+      <FinalCTA variant="dark" />
       <RecentArticles />
     </>
   );

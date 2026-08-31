@@ -7,7 +7,7 @@ Use a Node.js version supported by the selected Angular major. Angular 22 suppor
 ## Prerequisites
 
 - Angular 20 or later
-- An AG-UI-compatible backend running locally or remotely (CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, CopilotKit runtime, or your own subclass of `AbstractAgent`)
+- An AG-UI-compatible backend running locally or remotely (CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, or your own subclass of `AbstractAgent`)
 
 ## Install packages
 
@@ -22,13 +22,13 @@ npm install @threadplane/chat @threadplane/ag-ui @ag-ui/client @ag-ui/core marke
 
 `@threadplane/ag-ui` declares the following peer dependencies:
 
-| Package | Version |
-|---|---|
-| `@threadplane/chat` | `*` |
-| `@angular/core` | `^20.0.0 \|\| ^21.0.0 \|\| ^22.0.0` |
-| `@ag-ui/client` | `*` |
-| `@ag-ui/core` | `*` |
-| `rxjs` | `~7.8.0` |
+| Package             | Version                             |
+| ------------------- | ----------------------------------- |
+| `@threadplane/chat` | `*`                                 |
+| `@angular/core`     | `^20.0.0 \|\| ^21.0.0 \|\| ^22.0.0` |
+| `@ag-ui/client`     | `*`                                 |
+| `@ag-ui/core`       | `*`                                 |
+| `rxjs`              | `~7.8.0`                            |
 
 ## Configure the provider
 
@@ -41,7 +41,7 @@ import { provideAgent } from '@threadplane/ag-ui';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({
-      url: 'http://localhost:3000/agent',  // your AG-UI backend
+      url: 'http://localhost:3000/agent', // your AG-UI backend
     }),
   ],
 };
@@ -49,12 +49,12 @@ export const appConfig: ApplicationConfig = {
 
 `provideAgent` accepts:
 
-| Option | Type | Description |
-|---|---|---|
-| `url` | `string` | **Required.** AG-UI backend HTTP/SSE endpoint. |
-| `agentId` | `string` | Optional. Identifies a specific agent on the backend. |
-| `threadId` | `string` | Optional. Resume an existing conversation thread. |
-| `headers` | `Record<string, string>` | Optional. Custom request headers (auth, tracing). |
+| Option      | Type                                 | Description                                                                                                                                               |
+| ----------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `url`       | `string`                             | **Required.** AG-UI backend HTTP/SSE endpoint.                                                                                                            |
+| `agentId`   | `string`                             | Optional. Identifies a specific agent on the backend.                                                                                                     |
+| `threadId`  | `string`                             | Optional. Resume an existing conversation thread.                                                                                                         |
+| `headers`   | `Record<string, string>`             | Optional. Custom request headers (auth, tracing).                                                                                                         |
 | `telemetry` | `AgentRuntimeTelemetrySink \| false` | Optional. App-owned telemetry sink — opt-in, emits nothing unless supplied. See [`@threadplane/telemetry`](/docs/telemetry/getting-started/introduction). |
 
 ## Use in a component
@@ -97,18 +97,22 @@ export const appConfig: ApplicationConfig = {
 
 `provideFakeAgent` accepts:
 
-| Option | Type | Description |
-|---|---|---|
-| `tokens` | `string[]` | Optional. Tokens streamed back as the assistant reply. |
-| `reasoningTokens` | `string[]` | Optional. Reasoning chunks emitted before the text reply (defaults to `[]`). |
-| `delayMs` | `number` | Optional. Milliseconds between successive token emissions (defaults to `60`). |
+| Option            | Type       | Description                                                                   |
+| ----------------- | ---------- | ----------------------------------------------------------------------------- |
+| `tokens`          | `string[]` | Optional. Tokens streamed back as the assistant reply.                        |
+| `reasoningTokens` | `string[]` | Optional. Reasoning chunks emitted before the text reply (defaults to `[]`).  |
+| `delayMs`         | `number`   | Optional. Milliseconds between successive token emissions (defaults to `60`). |
 
 ## Custom transport
 
 If you have a backend that speaks AG-UI but not over HTTP, subclass `AbstractAgent` directly and feed it to `toAgent`:
 
 ```ts
-import { AbstractAgent, type RunAgentInput, type BaseEvent } from '@ag-ui/client';
+import {
+  AbstractAgent,
+  type RunAgentInput,
+  type BaseEvent,
+} from '@ag-ui/client';
 import { Observable } from 'rxjs';
 import { toAgent } from '@threadplane/ag-ui';
 

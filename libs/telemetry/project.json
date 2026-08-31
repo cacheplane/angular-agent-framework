@@ -24,12 +24,13 @@
       "options": {
         "outputPath": "dist/libs/telemetry",
         "main": "libs/telemetry/src/index.ts",
-        "additionalEntryPoints": [
-          "libs/telemetry/src/node/index.ts",
-          "libs/telemetry/src/node/postinstall.ts"
-        ],
+        "additionalEntryPoints": ["libs/telemetry/src/node/index.ts"],
         "tsConfig": "libs/telemetry/tsconfig.lib.json",
-        "assets": ["libs/telemetry/README.md", "libs/telemetry/package.json"]
+        "assets": [
+          "libs/telemetry/LICENSE.md",
+          "libs/telemetry/README.md",
+          "libs/telemetry/package.json"
+        ]
       }
     },
     "build:browser": {

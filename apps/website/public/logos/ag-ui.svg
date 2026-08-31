@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">AG-UI</title>
+  <rect width="64" height="64" rx="14" fill="#111827"/>
+  <path d="M15 44 27 18h6l12 26h-7l-2.5-6H24.2l-2.5 6H15Zm11.5-12h6.8L30 24l-3.5 8ZM47 18h6v26h-6V18Z" fill="#fff"/>
+</svg>

@@ -39,8 +39,8 @@ const BACKENDS: Backend[] = [
     blurb: 'For CrewAI, Mastra, Pydantic AI, Strands, and more.',
     install: 'npm i @threadplane/chat @threadplane/ag-ui @ag-ui/client @ag-ui/core marked',
     href: '/docs/ag-ui/getting-started/quickstart',
-    logoSrc: '/logos/runtimes/copilotkit.svg',
-    attribution: 'AG-UI · CopilotKit',
+    logoSrc: '/logos/ag-ui.svg',
+    attribution: 'AG-UI',
   },
 ];
 
@@ -75,7 +75,7 @@ interface SupportingLib {
   title: string;
   blurb: string;
   href: string;
-  glyph: 'key' | 'middleware' | 'pulse';
+  glyph: 'middleware' | 'pulse';
 }
 
 const SUPPORTING: SupportingLib[] = [
@@ -84,12 +84,6 @@ const SUPPORTING: SupportingLib[] = [
     blurb: 'JS & Python client-tool routing',
     href: '/docs/middleware/getting-started/introduction',
     glyph: 'middleware',
-  },
-  {
-    title: 'Licensing',
-    blurb: 'Token verification',
-    href: '/docs/licensing/getting-started/introduction',
-    glyph: 'key',
   },
   {
     title: 'Telemetry',
@@ -103,15 +97,6 @@ function ChatGlyph() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M4 5h16v11H8l-4 4V5Z" />
-    </svg>
-  );
-}
-
-function KeyGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="8" cy="12" r="3" />
-      <path d="M11 12h9M17 12v4" />
     </svg>
   );
 }
@@ -133,7 +118,7 @@ function MiddlewareGlyph() {
   );
 }
 
-const GLYPHS = { key: KeyGlyph, middleware: MiddlewareGlyph, pulse: PulseGlyph } as const;
+const GLYPHS = { middleware: MiddlewareGlyph, pulse: PulseGlyph } as const;
 
 function StepLabel({ id, step, children }: { id: string; step?: number; children: ReactNode }) {
   return (
@@ -181,8 +166,8 @@ export default function DocsLandingPage() {
             </h1>
             <p className="docs-index-subtitle">
               Streaming agent interfaces with runtime adapters, a shared Agent contract,
-              and a drop-in chat surface. Most packages are MIT; @threadplane/chat is
-              dual-licensed for noncommercial/evaluation and commercial production use.
+              and a drop-in chat surface. Every package is MIT-licensed, with optional
+              production assurance and delivery services for teams that want expert support.
             </p>
           </div>
         </Container>

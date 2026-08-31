@@ -6467,18 +6467,6 @@
     "description": "Application-wide options for provideChat. Every field is optional;\nthe values are exposed to all chat components in the tree via the\n`CHAT_CONFIG` injection token, so you set them once at bootstrap instead of\nthreading props through every component.",
     "properties": [
       {
-        "name": "__licenseEnvHint",
-        "type": "object",
-        "description": "Test-only env hint override. Not part of the stable API.",
-        "optional": true
-      },
-      {
-        "name": "__licensePublicKey",
-        "type": "Uint8Array<ArrayBufferLike>",
-        "description": "Test-only public-key override. Defaults to the compile-time embedded\n`LICENSE_PUBLIC_KEY`. Not part of the stable API.",
-        "optional": true
-      },
-      {
         "name": "assistantName",
         "type": "string",
         "description": "Shared assistant display name for consumers that read CHAT_CONFIG (default: \"Assistant\").",
@@ -6488,12 +6476,6 @@
         "name": "avatarLabel",
         "type": "string",
         "description": "Shared AI avatar label for consumers that read CHAT_CONFIG (default: \"A\").",
-        "optional": true
-      },
-      {
-        "name": "license",
-        "type": "string",
-        "description": "Signed license token from threadplane.ai. Optional; omitted in dev.",
         "optional": true
       },
       {
@@ -9546,13 +9528,13 @@
   {
     "name": "provideChat",
     "kind": "function",
-    "description": "Bootstrap `@threadplane/chat` in an Angular application or standalone\ncomponent tree.\n\nCall this once inside `bootstrapApplication` (or the `providers` array of a\nroot `ApplicationConfig`). It registers the shared ChatConfig token\nso every chat component in the tree can read the render registry, avatar\nlabel, and assistant display name without explicit prop threading.\n\nA license check is fired asynchronously on every call (it never throws; a\nwatermark is shown in non-commercial builds when no valid token is supplied).",
+    "description": "Bootstrap `@threadplane/chat` in an Angular application or standalone\ncomponent tree.\n\nCall this once inside `bootstrapApplication` (or the `providers` array of a\nroot `ApplicationConfig`). It registers the shared ChatConfig token\nso every chat component in the tree can read the render registry, avatar\nlabel, and assistant display name without explicit prop threading.",
     "signature": "provideChat(config: ChatConfig): EnvironmentProviders",
     "params": [
       {
         "name": "config",
         "type": "ChatConfig",
-        "description": "Options bag that controls the chat feature set:\n  - `renderRegistry` — shared AngularRegistry wiring tool-view\n    components to their names; pass the value returned by\n    `defineAngularRegistry` from `\\@threadplane/render`.\n  - `avatarLabel` — short label shown in the AI avatar bubble (default `\"A\"`).\n  - `assistantName` — display name shown above assistant messages\n    (default `\"Assistant\"`).\n  - `license` — signed token from threadplane.ai; omit in development.",
+        "description": "Options bag that controls the chat feature set:\n  - `renderRegistry` — shared AngularRegistry wiring tool-view\n    components to their names; pass the value returned by\n    `defineAngularRegistry` from `\\@threadplane/render`.\n  - `avatarLabel` — short label shown in the AI avatar bubble (default `\"A\"`).\n  - `assistantName` — display name shown above assistant messages\n    (default `\"Assistant\"`).",
         "optional": false
       }
     ],

@@ -6,193 +6,80 @@ type ComparisonCells = Record<TierSlug, string>;
 interface ComparisonRow {
   readonly label: string;
   readonly cells: ComparisonCells;
-  readonly note?: string;
 }
 
-interface ComparisonGroup {
-  readonly title: string;
-  readonly rows: readonly ComparisonRow[];
-}
-
-const PAID_CAPABILITY: ComparisonCells = {
-  community: 'For permitted free use',
-  developer_seat: 'Included under commercial license',
-  team: 'Included under commercial license',
-  enterprise: 'Included under commercial license',
+const ALL_INCLUDED: ComparisonCells = {
+  community: 'Included',
+  production_assurance: 'Included',
+  enterprise: 'Included',
 };
 
-const COMPARISON_GROUPS: readonly ComparisonGroup[] = [
+const COMPARISON_GROUPS: readonly {
+  title: string;
+  rows: readonly ComparisonRow[];
+}[] = [
   {
-    title: 'License and deployment',
+    title: 'Software',
     rows: [
-      {
-        label: 'Permitted free use',
-        cells: {
-          community: 'Yes, within PolyForm Noncommercial terms',
-          developer_seat: 'Yes',
-          team: 'Yes',
-          enterprise: 'Yes',
-        },
-      },
-      {
-        label: '30-day commercial evaluation',
-        cells: {
-          community: '30 calendar days',
-          developer_seat: 'Not needed after purchase',
-          team: 'Not needed after purchase',
-          enterprise: 'Handled during sales process',
-        },
-      },
-      {
-        label: 'Commercial production rights for @threadplane/chat',
-        cells: {
-          community: 'Not included',
-          developer_seat: 'Included',
-          team: 'Included',
-          enterprise: 'Included by contract',
-        },
-      },
-      {
-        label: 'Developer coverage',
-        cells: {
-          community: 'Unlimited only for permitted free use',
-          developer_seat: 'Per purchased seat',
-          team: '5 developers included',
-          enterprise: 'Custom or organization-wide by contract',
-        },
-      },
-      {
-        label: 'Licensed applications',
-        cells: {
-          community: 'Permitted free-use applications',
-          developer_seat: 'Unlimited',
-          team: 'Unlimited',
-          enterprise: 'Multi-application or custom scope',
-        },
-      },
-      {
-        label: 'End-user seats required',
-        cells: {
-          community: 'No',
-          developer_seat: 'No',
-          team: 'No',
-          enterprise: 'No',
-        },
-      },
-      {
-        label: 'Development, staging, CI/CD, and production use',
-        cells: {
-          community: 'Commercial evaluation only; no commercial production',
-          developer_seat: 'Included',
-          team: 'Included',
-          enterprise: 'Included by contract',
-        },
-      },
-      {
-        label: 'Customer-deployed',
-        cells: {
-          community: 'Yes',
-          developer_seat: 'Yes',
-          team: 'Yes',
-          enterprise: 'Yes',
-        },
-      },
-      {
-        label: 'Offline license verification',
-        cells: {
-          community: 'No paid token required for permitted free use',
-          developer_seat: 'Signed token included',
-          team: 'Signed token included',
-          enterprise: 'Signed token included',
-        },
-      },
-      {
-        label: 'Recurring subscription',
-        cells: {
-          community: 'No',
-          developer_seat: 'Monthly or annual',
-          team: 'Monthly or annual',
-          enterprise: 'Annual contract',
-        },
-      },
-      {
-        label: 'Custom contract',
-        cells: {
-          community: 'PolyForm terms',
-          developer_seat: 'Standard commercial terms',
-          team: 'Standard commercial terms',
-          enterprise: 'Included',
-        },
-      },
+      { label: 'MIT-licensed software', cells: ALL_INCLUDED },
+      { label: 'Commercial use', cells: ALL_INCLUDED },
+      { label: 'All framework and UI capabilities', cells: ALL_INCLUDED },
+      { label: WEBSITE_PRICING_SUPPORT_SUMMARY, cells: ALL_INCLUDED },
+      { label: 'Source modification and redistribution', cells: ALL_INCLUDED },
+      { label: 'Customer-operated deployment', cells: ALL_INCLUDED },
     ],
   },
   {
-    title: 'Framework and UI capabilities',
+    title: 'Support and delivery',
     rows: [
-      'Headless chat primitives',
-      'Composed chat UI',
-      'Signal-based streaming state',
-      'Tool-call progress and errors',
-      'Human-in-the-loop interrupts',
-      'Subagents and delegation surfaces',
-      'Planning and memory surfaces',
-      'Thread, history, and branch UI primitives',
-      'Citations and sources',
-      'json-render integration',
-      'A2UI integration',
-      'LangGraph adapter',
-      'AG-UI adapter',
-      'Light, dark, and Material-related theme presets',
-      WEBSITE_PRICING_SUPPORT_SUMMARY,
-    ].map((label) => ({
-      label,
-      cells: PAID_CAPABILITY,
-      ...(label === 'Thread, history, and branch UI primitives'
-        ? {
-            note:
-              'Availability and durability depend on capabilities provided by the connected agent runtime and persistence layer.',
-          }
-        : {}),
-    })),
-  },
-  {
-    title: 'Support and procurement',
-    rows: [
+      { label: 'Public documentation and examples', cells: ALL_INCLUDED },
       {
-        label: 'Documentation and examples',
-        cells: { community: 'Included', developer_seat: 'Included', team: 'Included', enterprise: 'Included' },
+        label: 'Private support channel',
+        cells: {
+          community: 'Not included',
+          production_assurance: 'Included',
+          enterprise: 'Included',
+        },
       },
       {
-        label: 'GitHub support',
-        cells: { community: 'GitHub community support', developer_seat: 'Included', team: 'Included', enterprise: 'Included' },
+        label: 'Response commitments',
+        cells: {
+          community: 'Not included',
+          production_assurance: 'Defined scope',
+          enterprise: 'Custom',
+        },
       },
       {
-        label: 'Email support',
-        cells: { community: 'Not included', developer_seat: 'Not included', team: 'Included', enterprise: 'Included' },
+        label: 'Architecture and implementation reviews',
+        cells: {
+          community: 'Not included',
+          production_assurance: 'Included',
+          enterprise: 'Included',
+        },
       },
       {
-        label: 'Private support channel or Slack Connect',
-        cells: { community: 'Not included', developer_seat: 'Not included', team: 'Not included', enterprise: 'Included' },
+        label: 'Security and procurement assistance',
+        cells: {
+          community: 'Not included',
+          production_assurance: 'Included',
+          enterprise: 'Included',
+        },
       },
       {
-        label: 'Response SLA',
-        cells: { community: 'Not included', developer_seat: 'Not included', team: 'Not included', enterprise: 'Included' },
+        label: 'Pilot-to-Prod delivery',
+        cells: {
+          community: 'Not included',
+          production_assurance: 'Optional',
+          enterprise: 'Available',
+        },
       },
       {
-        label: 'Security review assistance',
-        cells: { community: 'Not included', developer_seat: 'Not included', team: 'Not included', enterprise: 'Included' },
-      },
-      {
-        label: 'Procurement support',
-        cells: { community: 'Not applicable', developer_seat: 'Self-service checkout', team: 'Single team subscription', enterprise: 'Included' },
-      },
-      {
-        label: 'Custom terms',
-        cells: { community: 'Not included', developer_seat: 'Not included', team: 'Not included', enterprise: 'Available by contract' },
-      },
-      {
-        label: 'Pilot-to-Prod availability',
-        cells: { community: 'Contact sales', developer_seat: 'Contact sales', team: 'Contact sales', enterprise: 'Available as an optional engagement' },
+        label: 'Custom enablement and training',
+        cells: {
+          community: 'Not included',
+          production_assurance: 'Optional',
+          enterprise: 'Available',
+        },
       },
     ],
   },
@@ -203,34 +90,44 @@ export function ArchitectureBoundary() {
     <div className="pricing-boundary">
       <div className="pricing-section-heading-wrap">
         <p className="pricing-section-kicker">What you are buying</p>
-        <h2 id="pricing-value-heading" className="pricing-section-heading">Same software. Different license scope and support.</h2>
+        <h2 id="pricing-value-heading" className="pricing-section-heading">
+          Open software. Commercial support when you want it.
+        </h2>
         <p className="pricing-section-body">
-          Threadplane does not gate core Angular agent UI capabilities by plan. Paid plans license{' '}
-          <code>@threadplane/chat</code> for commercial production and expand developer coverage,
-          support, and contract terms.
+          Every Threadplane package and capability is available under MIT. Paid
+          engagements add expertise, response commitments, and delivery
+          support—not a different build or permission to use the software.
         </p>
       </div>
-
-      <div className="pricing-boundary-flow" aria-label="Threadplane deployment architecture">
+      <div
+        className="pricing-boundary-flow"
+        aria-label="Threadplane deployment architecture"
+      >
         <div className="pricing-boundary-block">
           <span className="pricing-boundary-label">Your product</span>
           <strong>Your Angular application</strong>
         </div>
-        <span className="pricing-boundary-arrow" aria-hidden="true">→</span>
+        <span className="pricing-boundary-arrow" aria-hidden="true">
+          →
+        </span>
         <div className="pricing-boundary-block" data-accent>
-          <span className="pricing-boundary-label">Runs in your app</span>
+          <span className="pricing-boundary-label">MIT software</span>
           <strong>Threadplane UI packages</strong>
         </div>
-        <span className="pricing-boundary-arrow" aria-hidden="true">→</span>
+        <span className="pricing-boundary-arrow" aria-hidden="true">
+          →
+        </span>
         <div className="pricing-boundary-block">
           <span className="pricing-boundary-label">Customer-operated</span>
-          <strong>Your agent runtime, models, storage, and infrastructure</strong>
+          <strong>
+            Your agent runtime, models, storage, and infrastructure
+          </strong>
         </div>
       </div>
-
       <p className="pricing-boundary-note">
-        Threadplane does not host your agents or conversations. Runtime behavior, durable persistence,
-        retention, and infrastructure costs are determined by the connected backend and providers.
+        Threadplane does not host your agents or conversations. Runtime
+        behavior, durable persistence, retention, and infrastructure costs are
+        determined by the connected backend and providers.
       </p>
     </div>
   );
@@ -241,16 +138,23 @@ export function PricingComparison() {
     <div className="pricing-comparison">
       <div className="pricing-section-heading-wrap">
         <p className="pricing-section-kicker">Full comparison</p>
-        <h2 id="pricing-comparison-heading" className="pricing-section-heading">What changes between plans.</h2>
+        <h2 id="pricing-comparison-heading" className="pricing-section-heading">
+          What changes between paths.
+        </h2>
         <p className="pricing-section-body">
-          Capabilities stay consistent. License scope, developer coverage, support, and procurement terms change.
+          The software stays open. The level of support and delivery changes.
         </p>
       </div>
       <div className="pricing-comparison-scroll">
-        <table className="pricing-comparison-table" aria-label="Full plan comparison">
+        <table
+          className="pricing-comparison-table"
+          aria-label="Full plan comparison"
+        >
           <thead>
             <tr>
-              <th scope="col" className="pricing-comparison-feature-col">Plan detail</th>
+              <th scope="col" className="pricing-comparison-feature-col">
+                Plan detail
+              </th>
               {TIERS.map((tier) => (
                 <th
                   key={tier.slug}
@@ -259,7 +163,6 @@ export function PricingComparison() {
                   data-highlight={tier.highlight || undefined}
                 >
                   {tier.displayName}
-                  {tier.highlight ? <span aria-hidden="true" className="pricing-comparison-popular">Most popular</span> : null}
                 </th>
               ))}
             </tr>
@@ -267,16 +170,20 @@ export function PricingComparison() {
           {COMPARISON_GROUPS.map((group) => (
             <tbody key={group.title}>
               <tr className="pricing-comparison-group-row">
-                <th scope="rowgroup" colSpan={TIERS.length + 1}>{group.title}</th>
+                <th scope="rowgroup" colSpan={TIERS.length + 1}>
+                  {group.title}
+                </th>
               </tr>
               {group.rows.map((row) => (
                 <tr key={row.label}>
                   <th scope="row" className="pricing-comparison-row-heading">
                     {row.label}
-                    {row.note ? <span className="pricing-comparison-row-note">{row.note}</span> : null}
                   </th>
                   {TIERS.map((tier) => (
-                    <td key={tier.slug} data-highlight={tier.highlight || undefined}>
+                    <td
+                      key={tier.slug}
+                      data-highlight={tier.highlight || undefined}
+                    >
                       {row.cells[tier.slug]}
                     </td>
                   ))}

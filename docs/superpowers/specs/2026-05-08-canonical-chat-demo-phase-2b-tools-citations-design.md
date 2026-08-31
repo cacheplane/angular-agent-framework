@@ -24,7 +24,7 @@ So Phase 2B is mostly Python-side. The implementation surface is ~120 LOC.
 
 ## Reference research
 
-**CopilotKit** (`packages/runtime/src/agents/langgraph/event-source.ts`) wires tool calls via explicit `ActionExecutionStart` / `ActionExecutionArgs` / `ActionExecutionEnd` events emitted from their LangGraph event source — same pattern as their text events. Their downstream consumers accumulate args deltas into a final tool call. The @ngaf/langgraph adapter takes a different path: reads `tool_calls` directly off the LangChain SDK's message stream and uses `getToolCallsWithResults` to pair them. We don't mirror their approach — the existing adapter logic works.
+**a React agent UI framework** (`packages/runtime/src/agents/langgraph/event-source.ts`) wires tool calls via explicit `ActionExecutionStart` / `ActionExecutionArgs` / `ActionExecutionEnd` events emitted from their LangGraph event source — same pattern as their text events. Their downstream consumers accumulate args deltas into a final tool call. The @ngaf/langgraph adapter takes a different path: reads `tool_calls` directly off the LangChain SDK's message stream and uses `getToolCallsWithResults` to pair them. We don't mirror their approach — the existing adapter logic works.
 
 **Hashbrown** (`packages/core/src/utils/assistant-message.ts`) uses OpenAI chat-completion-style tool-call deltas (each chunk carries partial tool_call args that get JSON-concatenated). Different protocol; doesn't apply to LangGraph-mediated flows.
 

@@ -1,14 +1,10 @@
 // SPDX-License-Identifier: MIT
-import { beforeEach, describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { provideAgent, AGENT_CONFIG, AGENT, type AgentConfig } from './agent.provider';
+import { provideAgent, AGENT_CONFIG, AGENT } from './agent.provider';
 import { MockAgentTransport } from './transport/mock-stream.transport';
 
 describe('provideAgent', () => {
-  beforeEach(() => {
-    globalThis.console.warn = vi.fn();
-  });
-
   it('registers AGENT_CONFIG internally for the legacy factory defaults-merge path', () => {
     TestBed.configureTestingModule({
       providers: [provideAgent({ apiUrl: 'https://api.example.com' })],
@@ -89,21 +85,5 @@ describe('provideAgent', () => {
     expect(typeof ag.submit).toBe('function');
     // AGENT reads the already-resolved AGENT_CONFIG, so the factory ran once.
     expect(calls).toBe(1);
-  });
-
-  it('does not perform license checks because @threadplane/langgraph is MIT-licensed', async () => {
-    const warn = globalThis.console.warn as ReturnType<typeof vi.fn>;
-    const legacyLicenseConfig = {
-      apiUrl: '',
-      license: 'invalid-token',
-      __licenseEnvHint: { isNoncommercial: false },
-    } as unknown as AgentConfig;
-
-    TestBed.configureTestingModule({
-      providers: [provideAgent(legacyLicenseConfig)],
-    });
-    TestBed.inject(AGENT_CONFIG);
-    await new Promise((r) => setTimeout(r, 0));
-    expect(warn).not.toHaveBeenCalled();
   });
 });

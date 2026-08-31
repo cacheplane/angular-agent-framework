@@ -170,14 +170,14 @@ test('formatLiveQualityReport includes coverage requirements', () => {
     events: [],
     findings: analyzeTelemetryCoverage(
       [],
-      [{ event: 'tplane:postinstall', minCount: 1 }]
+      [{ event: 'tplane:runtime_instance_created', minCount: 1 }]
     ),
-    checkedEvents: ['tplane:postinstall'],
-    coverageRequirements: [{ event: 'tplane:postinstall', minCount: 1 }],
+    checkedEvents: ['tplane:runtime_instance_created'],
+    coverageRequirements: [{ event: 'tplane:runtime_instance_created', minCount: 1 }],
   });
 
   assert.match(report, /\| Event \| Sampled events \| Required minimum \|/);
-  assert.match(report, /\| tplane:postinstall \| 0 \| 1 \|/);
+  assert.match(report, /\| tplane:runtime_instance_created \| 0 \| 1 \|/);
   assert.match(report, /insufficient_event_coverage/);
 });
 

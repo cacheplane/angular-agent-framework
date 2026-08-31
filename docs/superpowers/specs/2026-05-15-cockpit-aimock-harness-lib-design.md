@@ -8,7 +8,7 @@ Refactor the cockpit aimock harness so each cockpit example owns its own e2e dir
 
 ## Library
 
-Same as Phase 1: [`@copilotkit/aimock`](https://github.com/CopilotKit/aimock). The new internal library wraps it with the project's specific orchestration (langgraph + Angular dev server boot).
+Same as Phase 1: [`the former fixture dependency`](https://github.com/a React agent UI framework/aimock). The new internal library wraps it with the project's specific orchestration (langgraph + Angular dev server boot).
 
 ## Non-goals
 
