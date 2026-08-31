@@ -1,0 +1,85 @@
+name: Deploy AG-UI Mastra Railway
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'deployments/ag-ui-mastra/**'
+      - '.github/workflows/deploy-ag-ui-mastra.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  DO_NOT_TRACK: '1'
+
+jobs:
+  deploy:
+    name: Deploy ag-ui-mastra to Railway
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: deployments/ag-ui-mastra/package-lock.json
+
+      # The service is self-contained: its own package.json + lockfile,
+      # independent of the root workspace.
+      - name: Install service dependencies
+        working-directory: deployments/ag-ui-mastra
+        run: npm ci --no-audit --no-fund
+
+      - name: Syntax-check entry modules
+        working-directory: deployments/ag-ui-mastra
+        run: |
+          node --check server.mjs
+          node --check agents.mjs
+
+      - name: Transcript-shape tests (real @ag-ui/client, scripted model)
+        working-directory: deployments/ag-ui-mastra
+        run: npm test
+
+      - name: Boot gate — the service must start and answer /ok
+        # `railway up --detach` reports success at upload time, so a build or
+        # boot failure on Railway is invisible to CI and the last good image
+        # keeps serving (this hid a broken ag-ui-dev deploy for 2.5 months —
+        # see .github/workflows/deploy-ag-ui.yml). Booting the exact code
+        # with the exact pinned deps reproduces the container's start here
+        # and fails the workflow instead.
+        working-directory: deployments/ag-ui-mastra
+        run: |
+          AG_UI_INTERNAL_TOKEN=bootgate OPENAI_API_KEY=sk-bootgate PORT=8321 \
+            node server.mjs &
+          SERVER_PID=$!
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8321/ok >/dev/null 2>&1; then
+              echo "boot ok: /ok answered"
+              kill "$SERVER_PID"
+              exit 0
+            fi
+            if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+              echo "::error::service exited before /ok answered"
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "::error::service did not answer /ok within 30s"
+          kill "$SERVER_PID" || true
+          exit 1
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli@4.68.0
+
+      - name: Deploy
+        working-directory: deployments/ag-ui-mastra
+        run: railway up --service ag-ui-mastra --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
