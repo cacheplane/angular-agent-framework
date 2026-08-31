@@ -34,9 +34,13 @@ The seams come first, before any code.
 You do not write the transport.
 LangGraph does.
 
-**`@threadplane/langgraph` adapter.** This is the Angular-side translator. It takes LangGraph's `ThreadState` and turns it into a signal-shaped `AgentCheckpoint` that the chat UI knows how to render. It also owns the run lifecycle — submit, cancel, retry — and the thread CRUD.
+**`@threadplane/langgraph` adapter.** This is the Angular-side translator.
+It takes LangGraph's `ThreadState` and turns it into a signal-shaped `AgentCheckpoint` that the chat UI knows how to render.
+It also owns the run lifecycle — submit, cancel, retry — and the thread CRUD.
 
-**`@threadplane/chat` UI.** This is the rendering layer. Message list, input, suggestions, interrupt panels, tool-call cards, reasoning blocks. Every piece is a signal, every signal flows through OnPush change detection, and everything is themeable through CSS custom properties.
+**`@threadplane/chat` UI.** This is the rendering layer.
+Message list, input, suggestions, interrupt panels, tool-call cards, reasoning blocks.
+Every piece is a signal, every signal flows through OnPush change detection, and everything is themeable through CSS custom properties.
 
 The contract between the adapter and the UI is small on purpose.
 The chat does not know it is talking to LangGraph.
@@ -133,10 +137,14 @@ export class ChatPageComponent {
 </Steps>
 
 That is the entire wiring.
-No global stylesheet to import. No PostCSS config. No Tailwind setup.
+No global stylesheet to import.
+No PostCSS config.
+No Tailwind setup.
 The chat ships with its own design tokens and component-scoped styles.
 
-One thing worth calling out is the `assistantId`. That is the name of your LangGraph graph — the entry point the run will execute against. If you have multiple graphs, you have multiple `agent()` instances, and you decide which one mounts where: a support graph in one route, a coding graph in another, the same chat shell rendering both.
+One thing worth calling out is the `assistantId`.
+That is the name of your LangGraph graph — the entry point the run will execute against.
+If you have multiple graphs, you have multiple `agent()` instances, and you decide which one mounts where: a support graph in one route, a coding graph in another, the same chat shell rendering both.
 
 ## Render the chat
 
@@ -174,7 +182,9 @@ template: `
 
 The slot pattern is intentional: the chat does not set your welcome copy, pick your suggestions, or own your empty states. It exposes those as slots so you can grow past the demo phase without fighting the component.
 
-Theming is a separate concern. The chat reads from CSS custom properties — `--chat-bg`, `--chat-fg`, `--chat-accent`, and a few dozen more. If you already use a design system, map your tokens onto theirs in a single stylesheet and the chat picks them up.
+Theming is a separate concern.
+The chat reads from CSS custom properties — `--chat-bg`, `--chat-fg`, `--chat-accent`, and a few dozen more.
+If you already use a design system, map your tokens onto theirs in a single stylesheet and the chat picks them up.
 
 ## What's happening under the hood?
 
@@ -189,18 +199,28 @@ The contract is roughly:
 - `cancel()` — abort the current run
 - `retry()` — re-run the last user message
 
-Notice what *is not* in there. No event emitters. No observables to subscribe to. No imperative `subscribe(messages, render)` plumbing.
+Notice what *is not* in there.
+No event emitters.
+No observables to subscribe to.
+No imperative `subscribe(messages, render)` plumbing.
 
-Everything is a signal. The chat template reads `messages()` directly. OnPush change detection picks up the writes and re-renders only the components that depend on the changed signal.
+Everything is a signal.
+The chat template reads `messages()` directly.
+OnPush change detection picks up the writes and re-renders only the components that depend on the changed signal.
 
 Angular's signal model maps cleanly onto streaming: at the data-shape level, streaming is a sequence of small writes to a growing list, and so are signals.
 That is why the chat does not need an internal store, a reducer, or a state machine.
 The agent is the state, the signal is the read, the template is the render.
 
-It also matters for testing. Because the contract is signals all the way down, you can mock the agent with a plain object — no harness, no fakes, no subscription bookkeeping. Write a signal, the chat re-renders. Write another signal, the chat re-renders again.
+It also matters for testing.
+Because the contract is signals all the way down, you can mock the agent with a plain object — no harness, no fakes, no subscription bookkeeping.
+Write a signal, the chat re-renders.
+Write another signal, the chat re-renders again.
 That is the entire testing story for the UI layer.
 
-The transport story is the same shape one level down. The adapter reads from LangGraph's SSE stream and writes the parsed events into the agent's signals. You can swap the transport — a fake stream, a recorded fixture, a different backend entirely — and the chat does not know the difference.
+The transport story is the same shape one level down.
+The adapter reads from LangGraph's SSE stream and writes the parsed events into the agent's signals.
+You can swap the transport — a fake stream, a recorded fixture, a different backend entirely — and the chat does not know the difference.
 That is the boundary the contract was designed to enforce.
 
 ## Production patterns
@@ -210,7 +230,9 @@ Each one is covered below.
 
 ### 1. Errors and retries
 
-Models fail. Networks fail. Tools time out.
+Models fail.
+Networks fail.
+Tools time out.
 The default behavior is to surface the error in the chat with a retry affordance, but most teams want more than the default.
 
 For me, two patterns are worth setting up early:
@@ -218,7 +240,12 @@ For me, two patterns are worth setting up early:
 - **Per-message retry**, so a failed assistant response can be re-run without resubmitting the user's message.
 - **Transport-level retry with backoff**, so transient SSE drops do not surface as errors at all.
 
-The adapter exposes both as configuration on `provideAgent`. A third pattern worth thinking about early: **graceful degradation when streaming is unavailable**. Some networks strip SSE. Some corporate proxies buffer it. The chat will fall back to a non-streaming render, but you should know that path exists before a customer finds it. The depth of what you can do here is in the [error handling guide](/docs/chat/guides/lifecycle).
+The adapter exposes both as configuration on `provideAgent`.
+A third pattern worth thinking about early: **graceful degradation when streaming is unavailable**.
+Some networks strip SSE.
+Some corporate proxies buffer it.
+The chat will fall back to a non-streaming render, but you should know that path exists before a customer finds it.
+The depth of what you can do here is in the [error handling guide](/docs/chat/guides/lifecycle).
 
 ### 2. Threads and persistence
 
@@ -236,11 +263,19 @@ If you are building a multi-thread sidebar, the [`<chat-sidebar>`](/docs/chat/co
 ### 3. Generative UI fallbacks
 
 Sometimes the model wants to do more than render text.
-Tool calls produce structured output. Interrupts ask for human input. Subagents return their own state.
+Tool calls produce structured output.
+Interrupts ask for human input.
+Subagents return their own state.
 
 The chat handles each of these as a first-class message type. You do not need to write a custom renderer to get the default behavior — tool calls become cards, interrupts become panels, subagents become collapsible blocks.
 
-When you do need custom rendering — and you will — every one of these is a templatable slot. Pass a template, override the default, ship the variant you actually want. This is the seam where a generic chat becomes *your* chat. The branded card for your most important tool. The custom approval flow for your most sensitive interrupt. The product-specific summary block when a subagent finishes a long task. The [generative UI guide](/docs/chat/guides/generative-ui) walks through each surface in depth.
+When you do need custom rendering — and you will — every one of these is a templatable slot.
+Pass a template, override the default, ship the variant you actually want.
+This is the seam where a generic chat becomes *your* chat.
+The branded card for your most important tool.
+The custom approval flow for your most sensitive interrupt.
+The product-specific summary block when a subagent finishes a long task.
+The [generative UI guide](/docs/chat/guides/generative-ui) walks through each surface in depth.
 
 ## Where to go from here
 
