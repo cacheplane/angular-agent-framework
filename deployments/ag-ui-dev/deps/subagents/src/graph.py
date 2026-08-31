@@ -25,7 +25,7 @@ from langgraph.graph import StateGraph, MessagesState, END
 from langgraph.prebuilt import ToolNode
 from langgraph_sdk import get_client
 
-from src.streaming.subagent_stream_handler import SubagentStreamHandler
+from .streaming.subagent_stream_handler import SubagentStreamHandler
 
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 
