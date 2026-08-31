@@ -1,5 +1,5 @@
 import { Hero } from '../components/landing/Hero';
-import { EcosystemStrip } from '../components/landing/EcosystemStrip';
+import { LogoRibbon } from '../components/landing/LogoRibbon';
 import { YesWall } from '../components/landing/YesWall';
 import { FeatureBlock } from '../components/landing/FeatureBlock';
 import { BrowserFrame } from '../components/ui/BrowserFrame';
@@ -105,7 +105,7 @@ export default async function HomePage() {
   return (
     <>
       <Hero />
-      <EcosystemStrip />
+      <LogoRibbon />
       <YesWall />
 
       {/* Interactive demo showcase */}
