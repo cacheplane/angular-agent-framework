@@ -17,10 +17,11 @@ export function RecentArticles() {
   return (
     <Section surface="canvas" ariaLabelledBy="recent-articles-heading">
       <Container>
-        <div className="recent-articles-header">
+        <div className="recent-articles-rail">
           <Eyebrow tone="accent" className="recent-articles-eyebrow">
             Blog
           </Eyebrow>
+          <span className="recent-articles-rail-line" aria-hidden="true" />
           <h2 id="recent-articles-heading" className="recent-articles-heading">
             Recent articles
           </h2>
