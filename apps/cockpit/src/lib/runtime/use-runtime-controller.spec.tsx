@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 /** @vitest-environment jsdom */
-import React, { act } from 'react';
+import React, { Suspense, act, startTransition, useLayoutEffect } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import {
   afterEach,
@@ -36,6 +36,27 @@ let controller: RuntimeController;
 function Harness({ mountFrame = true, ...options }: HarnessProps) {
   controller = useRuntimeController(options);
   return mountFrame ? <iframe ref={controller.frameRef} /> : null;
+}
+
+interface ConcurrentHarnessProps extends HarnessProps {
+  suspend: boolean;
+  suspension: Promise<never>;
+}
+
+let committedConcurrentController: RuntimeController;
+
+function ConcurrentHarness({
+  suspend,
+  suspension,
+  mountFrame = true,
+  ...options
+}: ConcurrentHarnessProps) {
+  const candidate = useRuntimeController(options);
+  useLayoutEffect(() => {
+    committedConcurrentController = candidate;
+  }, [candidate]);
+  if (suspend) throw suspension;
+  return mountFrame ? <iframe ref={candidate.frameRef} /> : null;
 }
 
 function runtimeReady(nonce: string) {
@@ -454,6 +475,153 @@ describe('useRuntimeController', () => {
       frameWindow,
     );
     expect(controller.snapshot.phase).toBe('ready');
+  });
+
+  it('keeps the operational route ready when only credentials, query, and hash change', () => {
+    randomUUID
+      .mockReturnValueOnce(firstNonce)
+      .mockReturnValueOnce(firstEventId)
+      .mockReturnValueOnce(secondEventId)
+      .mockReturnValueOnce('00000000-0000-4000-8000-000000000005');
+    render('https://runtime.test/path?token=a#one');
+    const frameWindow = controller.frameRef.current!.contentWindow!;
+    act(() => controller.onFrameLoad());
+    emitMessage(runtimeReady(firstNonce), 'https://runtime.test', frameWindow);
+    const ready = controller.snapshot;
+    const activityCount = onActivity.mock.calls.length;
+    const terminalCount = onTerminalTransition.mock.calls.length;
+
+    const latestConfiguredUrl =
+      'https://user:pw@runtime.test/path?token=b#two';
+    render(latestConfiguredUrl);
+
+    expect(controller.validatedRuntimeUrl).toBe('https://runtime.test/path');
+    expect(controller.snapshot).toMatchObject({
+      phase: 'ready',
+      routeGeneration: ready.routeGeneration,
+      frameGeneration: ready.frameGeneration,
+      activeNonce: null,
+      checkedAt: ready.checkedAt,
+      lastReadyAt: ready.lastReadyAt,
+    });
+    expect(vi.getTimerCount()).toBe(0);
+    expect(randomUUID).toHaveBeenCalledTimes(3);
+    expect(onActivity).toHaveBeenCalledTimes(activityCount);
+    expect(onTerminalTransition).toHaveBeenCalledTimes(terminalCount);
+
+    const open = vi.spyOn(window, 'open').mockReturnValue(window);
+    expect(controller.open()).toBe('requested');
+    expect(open).toHaveBeenCalledWith(
+      latestConfiguredUrl,
+      '_blank',
+      'noopener,noreferrer',
+    );
+  });
+
+  it('does not publish future route context from a suspended render', () => {
+    randomUUID
+      .mockReturnValueOnce(firstNonce)
+      .mockReturnValueOnce(firstEventId)
+      .mockReturnValueOnce(secondEventId);
+    const suspension = new Promise<never>(() => undefined);
+    const renderConcurrent = (
+      runtimeUrl: string,
+      capability: string,
+      suspend: boolean,
+    ) => (
+      <Suspense fallback={<div>Suspended</div>}>
+        <ConcurrentHarness
+          runtimeUrl={runtimeUrl}
+          capability={capability}
+          onActivity={onActivity}
+          onTerminalTransition={onTerminalTransition}
+          suspend={suspend}
+          suspension={suspension}
+        />
+      </Suspense>
+    );
+
+    act(() => {
+      root.render(
+        renderConcurrent(
+          'https://runtime.test/committed',
+          'streaming',
+          false,
+        ),
+      );
+    });
+    const committedController = committedConcurrentController;
+    const frameWindow = committedController.frameRef.current!.contentWindow!;
+    const postMessage = vi.spyOn(frameWindow, 'postMessage');
+
+    act(() => {
+      startTransition(() => {
+        root.render(
+          renderConcurrent(
+            'https://runtime.test/future',
+            'persistence',
+            true,
+          ),
+        );
+      });
+    });
+    expect(container.querySelector('iframe')?.contentWindow).toBe(frameWindow);
+
+    act(() => committedController.onFrameLoad());
+    expect(postMessage).toHaveBeenCalledWith(
+      {
+        type: 'tplane:runtime-check',
+        version: RUNTIME_BRIDGE_VERSION,
+        nonce: firstNonce,
+        capability: 'streaming',
+      },
+      'https://runtime.test',
+    );
+    emitMessage(runtimeReady(firstNonce), 'https://runtime.test', frameWindow);
+
+    act(() => {
+      root.render(
+        renderConcurrent(
+          'https://runtime.test/committed',
+          'streaming',
+          false,
+        ),
+      );
+    });
+    expect(committedConcurrentController.snapshot).toMatchObject({
+      phase: 'ready',
+      capability: 'streaming',
+      routeGeneration: 0,
+      frameGeneration: 0,
+    });
+    expect(onTerminalTransition).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports each committed invalid raw input once without exposing it', () => {
+    render('invalid-secret-a');
+    const firstRouteGeneration = controller.snapshot.routeGeneration;
+    expect(onTerminalTransition).toHaveBeenCalledTimes(1);
+    expect(onActivity).toHaveBeenCalledTimes(1);
+
+    render('invalid-secret-a');
+    expect(controller.snapshot.routeGeneration).toBe(firstRouteGeneration);
+    expect(onTerminalTransition).toHaveBeenCalledTimes(1);
+    expect(onActivity).toHaveBeenCalledTimes(1);
+
+    render('invalid-secret-b');
+    expect(controller.snapshot).toMatchObject({
+      phase: 'invalid_configuration',
+      routeGeneration: firstRouteGeneration + 1,
+    });
+    expect(onTerminalTransition).toHaveBeenCalledTimes(2);
+    expect(onActivity).toHaveBeenCalledTimes(2);
+    expect(
+      JSON.stringify({
+        snapshot: controller.snapshot,
+        activity: onActivity.mock.calls,
+        terminal: onTerminalTransition.mock.calls,
+      }),
+    ).not.toMatch(/invalid-secret-[ab]/);
   });
 
   it('installs one message listener and invalidates work on unmount', () => {

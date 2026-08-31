@@ -4,6 +4,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useReducer,
   useRef,
@@ -49,6 +50,7 @@ interface RouteContext {
   token: number;
   target: RuntimeTarget;
   capability: string;
+  invalidInputRevision: symbol | null;
 }
 
 interface ActiveCheck {
@@ -81,6 +83,30 @@ function activityKindFor(
   }
 }
 
+function isSameOperationalRoute(
+  previous: RouteContext,
+  next: Omit<RouteContext, 'token'>,
+): boolean {
+  if (
+    previous.capability !== next.capability ||
+    previous.target.kind !== next.target.kind
+  ) {
+    return false;
+  }
+
+  switch (previous.target.kind) {
+    case 'configured':
+      return (
+        next.target.kind === 'configured' &&
+        previous.target.sanitizedUrl === next.target.sanitizedUrl
+      );
+    case 'invalid_configuration':
+      return previous.invalidInputRevision === next.invalidInputRevision;
+    case 'not_configured':
+      return true;
+  }
+}
+
 export function useRuntimeController({
   runtimeUrl,
   capability,
@@ -104,27 +130,21 @@ export function useRuntimeController({
   onActivityRef.current = onActivity;
   onTerminalTransitionRef.current = onTerminalTransition;
 
-  const renderedInputRef = useRef({ runtimeUrl, capability, token: 0 });
-  if (
-    renderedInputRef.current.runtimeUrl !== runtimeUrl ||
-    renderedInputRef.current.capability !== capability
-  ) {
-    renderedInputRef.current = {
-      runtimeUrl,
-      capability,
-      token: renderedInputRef.current.token + 1,
-    };
-  }
+  const invalidInputRevision = useMemo(
+    () =>
+      target.kind === 'invalid_configuration'
+        ? Symbol('invalid runtime input')
+        : null,
+    [runtimeUrl, target.kind],
+  );
+  const renderedRoute = useMemo<Omit<RouteContext, 'token'>>(
+    () => ({ target, capability, invalidInputRevision }),
+    [target, capability, invalidInputRevision],
+  );
   const routeContextRef = useRef<RouteContext>({
-    token: renderedInputRef.current.token,
-    target,
-    capability,
+    token: 0,
+    ...renderedRoute,
   });
-  routeContextRef.current = {
-    token: renderedInputRef.current.token,
-    target,
-    capability,
-  };
 
   const applyAction = useCallback((action: RuntimeAction) => {
     snapshotRef.current = runtimeReducer(snapshotRef.current, action);
@@ -264,21 +284,35 @@ export function useRuntimeController({
     }
   }, [recordActivity]);
 
-  const committedRouteTokenRef = useRef(routeContextRef.current.token);
-  useEffect(() => {
-    const route = routeContextRef.current;
-    if (committedRouteTokenRef.current !== route.token) {
+  useLayoutEffect(() => {
+    const previousRoute = routeContextRef.current;
+    const routeChanged = !isSameOperationalRoute(
+      previousRoute,
+      renderedRoute,
+    );
+    if (routeChanged) {
       cancelActiveCheck(false);
-      applyAction({
-        type: 'route_reset',
-        target: route.target,
-        capability: route.capability,
-      });
-      committedRouteTokenRef.current = route.token;
     }
 
-    return () => cancelActiveCheck(false);
-  }, [runtimeUrl, capability, applyAction, cancelActiveCheck]);
+    const committedRoute: RouteContext = {
+      ...renderedRoute,
+      token: routeChanged ? previousRoute.token + 1 : previousRoute.token,
+    };
+    routeContextRef.current = committedRoute;
+
+    if (routeChanged) {
+      applyAction({
+        type: 'route_reset',
+        target: committedRoute.target,
+        capability: committedRoute.capability,
+      });
+    }
+  }, [renderedRoute, applyAction, cancelActiveCheck]);
+
+  useLayoutEffect(
+    () => () => cancelActiveCheck(false),
+    [cancelActiveCheck],
+  );
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
