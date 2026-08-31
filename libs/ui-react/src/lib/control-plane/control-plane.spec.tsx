@@ -87,6 +87,21 @@ describe('control-plane structure', () => {
     expect(onOpenChange).toHaveBeenCalledWith(false);
     expect(screen.getByText('Angular')).toBeTruthy();
   });
+
+  it('shows a section summary without adding it to the disclosure name', () => {
+    render(
+      <ControlPlaneSection title="Runtime" summary="Ready" open>
+        <p>Shared development</p>
+      </ControlPlaneSection>,
+    );
+
+    const trigger = screen.getByRole('button', { name: 'Runtime' });
+    expect(trigger.textContent).toContain('Ready');
+    expect(
+      trigger.querySelector('[data-control-plane-section-summary]')?.getAttribute('aria-hidden'),
+    ).toBe('true');
+    expect(screen.queryByRole('button', { name: 'Runtime Ready' })).toBeNull();
+  });
 });
 
 describe('control-plane actions', () => {

@@ -1,0 +1,104 @@
+// SPDX-License-Identifier: MIT
+'use client';
+
+import React from 'react';
+import { Circle, CircleCheck, TriangleAlert } from 'lucide-react';
+import {
+  ControlPlaneActionBar,
+  ControlPlaneUtilityPanel,
+} from '@threadplane/ui-react';
+import type {
+  ActivitySeverity,
+  SessionActivityEvent,
+} from '../../lib/runtime/session-activity';
+import {
+  ControlPlaneOverflowMenu,
+  ControlPlaneOverflowMenuItem,
+} from './control-plane-overflow-menu';
+
+export interface ActivityPanelProps {
+  events: readonly SessionActivityEvent[];
+  currentCapability: string;
+  attention?: boolean;
+  onClose(): void;
+  onClear(): void | PromiseLike<void>;
+  formatTimestamp?: (timestamp: string) => string;
+}
+
+function defaultTimestamp(timestamp: string): string {
+  return timestamp;
+}
+
+function SeverityIcon({ severity }: { severity: ActivitySeverity }) {
+  const Icon =
+    severity === 'success'
+      ? CircleCheck
+      : severity === 'error'
+      ? TriangleAlert
+      : Circle;
+  return (
+    <span data-activity-severity-icon={severity}>
+      <Icon size={15} strokeWidth={2} aria-hidden="true" />
+    </span>
+  );
+}
+
+function byNewest(
+  left: SessionActivityEvent,
+  right: SessionActivityEvent
+): number {
+  const difference = Date.parse(right.at) - Date.parse(left.at);
+  return Number.isFinite(difference) ? difference : 0;
+}
+
+export function ActivityPanel({
+  events,
+  currentCapability,
+  attention = false,
+  onClose,
+  onClear,
+  formatTimestamp = defaultTimestamp,
+}: ActivityPanelProps) {
+  const orderedEvents = [...events].sort(byNewest);
+  const label = attention ? 'Activity, attention required' : 'Activity';
+
+  return (
+    <ControlPlaneUtilityPanel title="Activity" onClose={onClose}>
+      <ControlPlaneActionBar label="Activity actions">
+        <ControlPlaneOverflowMenu label="Activity actions">
+          <ControlPlaneOverflowMenuItem onSelect={onClear}>
+            Clear session activity
+          </ControlPlaneOverflowMenuItem>
+        </ControlPlaneOverflowMenu>
+      </ControlPlaneActionBar>
+      {orderedEvents.length === 0 ? (
+        <p data-activity-empty>No operational activity this session.</p>
+      ) : (
+        <ol
+          aria-label={label}
+          data-activity-timeline
+          data-activity-attention={attention || undefined}
+        >
+          {orderedEvents.map((event, index) => (
+            <li
+              key={event.id}
+              data-activity-event
+              data-activity-kind={event.kind}
+              data-activity-severity={event.severity}
+            >
+              <SeverityIcon severity={event.severity} />
+              <time dateTime={event.at}>{formatTimestamp(event.at)}</time>
+              <span data-activity-summary>{event.summary}</span>
+              {event.capability !== currentCapability ? (
+                <span data-activity-capability>{event.capability}</span>
+              ) : null}
+              {index < orderedEvents.length - 1 ? (
+                <span aria-hidden="true" data-activity-connector />
+              ) : null}
+            </li>
+          ))}
+        </ol>
+      )}
+    </ControlPlaneUtilityPanel>
+  );
+}

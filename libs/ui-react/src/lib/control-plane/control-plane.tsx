@@ -128,6 +128,7 @@ export function ControlPlanePane({ label, children, className }: ControlPlanePan
 export interface ControlPlaneSectionProps extends CommonProps {
   title: string;
   icon?: ReactNode;
+  summary?: ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   children: ReactNode;
@@ -137,6 +138,7 @@ export interface ControlPlaneSectionProps extends CommonProps {
 export function ControlPlaneSection({
   title,
   icon,
+  summary,
   open = true,
   onOpenChange,
   children,
@@ -158,13 +160,20 @@ export function ControlPlaneSection({
             {icon ? <span data-control-plane-section-icon>{icon}</span> : null}
             {title}
           </span>
-          <ChevronRight
-            size={16}
-            strokeWidth={2}
-            aria-hidden="true"
-            data-control-plane-chevron
-            data-control-plane-section-chevron
-          />
+          <span data-control-plane-section-end>
+            {summary ? (
+              <span data-control-plane-section-summary aria-hidden="true">
+                {summary}
+              </span>
+            ) : null}
+            <ChevronRight
+              size={16}
+              strokeWidth={2}
+              aria-hidden="true"
+              data-control-plane-chevron
+              data-control-plane-section-chevron
+            />
+          </span>
         </button>
       ) : (
         <h2 data-control-plane-section-heading>
