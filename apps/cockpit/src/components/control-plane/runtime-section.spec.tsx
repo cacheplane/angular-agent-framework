@@ -2,6 +2,7 @@
 // @vitest-environment jsdom
 import React from 'react';
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -16,6 +17,14 @@ import {
   type RuntimeSnapshot,
 } from '../../lib/runtime/runtime-state';
 import { RuntimeSection } from './runtime-section';
+
+function deferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  const promise = new Promise<T>((accept) => {
+    resolve = accept;
+  });
+  return { promise, resolve };
+}
 
 function snapshot(phase: RuntimePhase): RuntimeSnapshot {
   const target =
@@ -192,6 +201,23 @@ describe('RuntimeSection', () => {
     expect(props.onOpenChange).toHaveBeenCalledWith(false);
   });
 
+  it('describes the current status while Runtime is collapsed', () => {
+    renderSection('unresponsive', { open: false });
+
+    expect(
+      screen.getByRole('button', {
+        name: 'Runtime',
+        description: 'Runtime status: Unresponsive',
+      })
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole('button', { name: 'Runtime Unresponsive' })
+    ).toBeNull();
+    expect(
+      document.querySelectorAll('[data-control-plane-section-description]')
+    ).toHaveLength(1);
+  });
+
   it('announces only user-triggered outcomes and never false copy success', async () => {
     const onCopyDiagnostics = vi.fn().mockResolvedValue('failed');
     renderSection('ready', { onCopyDiagnostics });
@@ -230,5 +256,142 @@ describe('RuntimeSection', () => {
         name: 'Copy diagnostics',
       })
     ).toBeTruthy();
+  });
+
+  it('mutates the live-region outcome for repeated identical failures', async () => {
+    const onCopyDiagnostics = vi.fn().mockResolvedValue('failed');
+    renderSection('ready', { onCopyDiagnostics });
+    const live = screen.getByRole('status');
+    fireEvent.click(
+      screen.getByRole('button', { name: 'More runtime actions' })
+    );
+    const item = screen.getByRole('menuitem', { name: 'Copy diagnostics' });
+
+    fireEvent.click(item);
+    await waitFor(() => expect(onCopyDiagnostics).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(live.textContent).toBe('Diagnostics copy failed.')
+    );
+    const firstOutcome = live.firstElementChild;
+    const firstRevision = firstOutcome?.getAttribute(
+      'data-runtime-announcement-revision'
+    );
+    expect(firstOutcome).toBeTruthy();
+    expect(firstRevision).toBeTruthy();
+
+    fireEvent.click(item);
+    await waitFor(() => expect(onCopyDiagnostics).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(
+        live.firstElementChild?.getAttribute(
+          'data-runtime-announcement-revision'
+        )
+      ).not.toBe(firstRevision)
+    );
+    expect(live.firstElementChild).not.toBe(firstOutcome);
+    expect(live.textContent).toBe('Diagnostics copy failed.');
+    expect(document.querySelectorAll('[aria-live="polite"]')).toHaveLength(1);
+  });
+
+  it.each([
+    ['a capability change', { capability: 'persistence', routeGeneration: 1 }],
+    [
+      'a fresh route for the same capability',
+      { capability: 'streaming', routeGeneration: 1 },
+    ],
+  ] as const)(
+    'does not announce a stale copy outcome after %s',
+    async (_label, nextIdentity) => {
+      const pending = deferred<'succeeded'>();
+      const onCopyDiagnostics = vi.fn().mockReturnValue(pending.promise);
+      const initialSnapshot = snapshot('ready');
+      const { rerender } = render(
+        <RuntimeSection
+          snapshot={initialSnapshot}
+          product="LangGraph"
+          language="Python"
+          open
+          onOpenChange={vi.fn()}
+          onRecheck={vi.fn()}
+          onReload={vi.fn()}
+          onOpenRuntime={vi.fn().mockReturnValue('requested')}
+          onCopyDiagnostics={onCopyDiagnostics}
+        />
+      );
+      fireEvent.click(
+        screen.getByRole('button', { name: 'More runtime actions' })
+      );
+      fireEvent.click(
+        screen.getByRole('menuitem', { name: 'Copy diagnostics' })
+      );
+      expect(onCopyDiagnostics).toHaveBeenCalledTimes(1);
+
+      rerender(
+        <RuntimeSection
+          snapshot={{ ...snapshot('ready'), ...nextIdentity }}
+          product="LangGraph"
+          language="Python"
+          open
+          onOpenChange={vi.fn()}
+          onRecheck={vi.fn()}
+          onReload={vi.fn()}
+          onOpenRuntime={vi.fn().mockReturnValue('requested')}
+          onCopyDiagnostics={onCopyDiagnostics}
+        />
+      );
+      await act(async () => pending.resolve('succeeded'));
+
+      expect(screen.getByRole('status').textContent).toBe('');
+    }
+  );
+
+  it('does not let an older same-route command overwrite a newer outcome', async () => {
+    const pending = deferred<'succeeded'>();
+    renderSection('ready', {
+      onCopyDiagnostics: vi.fn().mockReturnValue(pending.promise),
+      onOpenRuntime: vi.fn().mockReturnValue('requested'),
+    });
+    fireEvent.click(
+      screen.getByRole('button', { name: 'More runtime actions' })
+    );
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Copy diagnostics' }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open runtime' }));
+    await waitFor(() =>
+      expect(screen.getByRole('status').textContent).toBe(
+        'Runtime open requested.'
+      )
+    );
+    await act(async () => pending.resolve('succeeded'));
+
+    expect(screen.getByRole('status').textContent).toBe(
+      'Runtime open requested.'
+    );
+  });
+
+  it('publishes current command outcomes after Strict Mode effect replay', async () => {
+    render(
+      <React.StrictMode>
+        <RuntimeSection
+          snapshot={snapshot('ready')}
+          product="LangGraph"
+          language="Python"
+          open
+          onOpenChange={vi.fn()}
+          onRecheck={vi.fn()}
+          onReload={vi.fn()}
+          onOpenRuntime={vi.fn().mockReturnValue('requested')}
+          onCopyDiagnostics={vi.fn().mockResolvedValue('succeeded')}
+        />
+      </React.StrictMode>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open runtime' }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('status').textContent).toBe(
+        'Runtime open requested.'
+      )
+    );
   });
 });

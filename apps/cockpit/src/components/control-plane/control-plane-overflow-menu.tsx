@@ -33,7 +33,9 @@ export function ControlPlaneOverflowMenu({
     if (!open) return undefined;
 
     menuRef.current
-      ?.querySelector<HTMLElement>('[role="menuitem"]:not(:disabled)')
+      ?.querySelector<HTMLElement>(
+        '[role="menuitem"]:not(:disabled):not([aria-disabled="true"])'
+      )
       ?.focus();
 
     const closeFromOutside = (event: Event) => {
@@ -59,38 +61,51 @@ export function ControlPlaneOverflowMenu({
   }, [open]);
 
   const onMenuKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'Escape') {
+    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+    const items = Array.from(
+      menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []
+    );
+    const enabled = items.filter(
+      (item) =>
+        !item.matches(':disabled') &&
+        item.getAttribute('aria-disabled') !== 'true'
+    );
+    if (enabled.length === 0) return;
+    event.preventDefault();
+
+    if (event.key === 'Home' || event.key === 'End') {
+      enabled[event.key === 'Home' ? 0 : enabled.length - 1]?.focus();
+      return;
+    }
+
+    const direction = event.key === 'ArrowDown' ? 1 : -1;
+    let current = items.indexOf(document.activeElement as HTMLElement);
+    if (current < 0) current = direction === 1 ? -1 : 0;
+    for (let offset = 1; offset <= items.length; offset += 1) {
+      const candidate =
+        items[(current + direction * offset + items.length) % items.length];
+      if (candidate && enabled.includes(candidate)) {
+        candidate.focus();
+        return;
+      }
+    }
+  };
+
+  const onRootKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (open && event.key === 'Escape') {
       event.preventDefault();
       event.stopPropagation();
       event.nativeEvent.stopImmediatePropagation();
       setOpen(false);
-      return;
     }
-    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
-    const items = Array.from(
-      menuRef.current?.querySelectorAll<HTMLElement>(
-        '[role="menuitem"]:not(:disabled):not([aria-disabled="true"])'
-      ) ?? []
-    );
-    if (items.length === 0) return;
-    const current = Math.max(
-      0,
-      items.indexOf(document.activeElement as HTMLElement)
-    );
-    const nextIndex =
-      event.key === 'Home'
-        ? 0
-        : event.key === 'End'
-        ? items.length - 1
-        : event.key === 'ArrowDown'
-        ? (current + 1) % items.length
-        : (current - 1 + items.length) % items.length;
-    event.preventDefault();
-    items[nextIndex]?.focus();
   };
 
   return (
-    <div ref={rootRef} data-control-plane-overflow-menu-root>
+    <div
+      ref={rootRef}
+      data-control-plane-overflow-menu-root
+      onKeyDown={onRootKeyDown}
+    >
       <button
         ref={triggerRef}
         type="button"
@@ -137,15 +152,18 @@ export function ControlPlaneOverflowMenuItem({
   disabled = false,
 }: ControlPlaneOverflowMenuItemProps) {
   const [pending, setPending] = useState(false);
+  const pendingRef = useRef(false);
 
   const select = async () => {
-    if (disabled || pending) return;
+    if (disabled || pendingRef.current) return;
+    pendingRef.current = true;
     setPending(true);
     try {
       await onSelect();
     } catch {
       // The owning operational component reports semantic failure outcomes.
     } finally {
+      pendingRef.current = false;
       setPending(false);
     }
   };
@@ -154,7 +172,8 @@ export function ControlPlaneOverflowMenuItem({
     <button
       type="button"
       role="menuitem"
-      disabled={disabled || pending}
+      disabled={disabled}
+      aria-disabled={disabled || pending || undefined}
       aria-busy={pending || undefined}
       data-control-plane-overflow-item
       onClick={() => void select()}

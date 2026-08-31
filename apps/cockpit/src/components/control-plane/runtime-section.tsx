@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: MIT
 'use client';
 
-import React, { useState, type ReactNode } from 'react';
+import React, {
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import {
   CircleCheck,
   CircleSlash,
@@ -93,18 +98,6 @@ const STATUS_PRESENTATION: Record<RuntimePhase, StatusPresentation> = {
   },
 };
 
-const visuallyHidden: React.CSSProperties = {
-  position: 'absolute',
-  width: 1,
-  height: 1,
-  padding: 0,
-  margin: -1,
-  overflow: 'hidden',
-  clip: 'rect(0, 0, 0, 0)',
-  whiteSpace: 'nowrap',
-  border: 0,
-};
-
 function RuntimeStatus({ phase }: { phase: RuntimePhase }) {
   const presentation = STATUS_PRESENTATION[phase];
   const StatusIcon = presentation.icon;
@@ -143,7 +136,17 @@ export function RuntimeSection({
   onCopyDiagnostics,
   formatCheckedAt = defaultCheckedAt,
 }: RuntimeSectionProps) {
-  const [announcement, setAnnouncement] = useState('');
+  const [announcement, setAnnouncement] = useState({
+    message: '',
+    revision: 0,
+  });
+  const mountedRef = useRef(true);
+  const commandSequenceRef = useRef(0);
+  const operationalIdentityRef = useRef({
+    capability: snapshot.capability,
+    routeGeneration: snapshot.routeGeneration,
+    generation: 0,
+  });
   const phase = snapshot.phase;
   const configured = snapshot.target.kind === 'configured';
   const invalid = snapshot.target.kind === 'invalid_configuration';
@@ -152,16 +155,68 @@ export function RuntimeSection({
   const checking =
     phase === 'connecting' || phase === 'checking' || phase === 'reloading';
 
+  useLayoutEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      commandSequenceRef.current += 1;
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    const identity = operationalIdentityRef.current;
+    if (
+      identity.capability === snapshot.capability &&
+      identity.routeGeneration === snapshot.routeGeneration
+    ) {
+      return;
+    }
+    operationalIdentityRef.current = {
+      capability: snapshot.capability,
+      routeGeneration: snapshot.routeGeneration,
+      generation: identity.generation + 1,
+    };
+    commandSequenceRef.current += 1;
+    setAnnouncement((current) => ({
+      message: '',
+      revision: current.revision + 1,
+    }));
+  }, [snapshot.capability, snapshot.routeGeneration]);
+
+  const publishAnnouncement = (message: string) => {
+    setAnnouncement((current) => ({
+      message,
+      revision: current.revision + 1,
+    }));
+  };
+
   const runCommand = async (
     command: RuntimeCommand,
     succeeded: string,
     failed: string
   ) => {
+    const identityGeneration = operationalIdentityRef.current.generation;
+    const commandSequence = commandSequenceRef.current + 1;
+    commandSequenceRef.current = commandSequence;
     try {
       const outcome = await command();
-      setAnnouncement(outcome === 'failed' ? failed : succeeded);
+      if (
+        !mountedRef.current ||
+        operationalIdentityRef.current.generation !== identityGeneration ||
+        commandSequenceRef.current !== commandSequence
+      ) {
+        return;
+      }
+      publishAnnouncement(outcome === 'failed' ? failed : succeeded);
     } catch {
-      setAnnouncement(failed);
+      if (
+        !mountedRef.current ||
+        operationalIdentityRef.current.generation !== identityGeneration ||
+        commandSequenceRef.current !== commandSequence
+      ) {
+        return;
+      }
+      publishAnnouncement(failed);
     }
   };
 
@@ -243,12 +298,10 @@ export function RuntimeSection({
     <ControlPlaneSection
       title="Runtime"
       summary={<RuntimeStatus phase={phase} />}
+      description={`Runtime status: ${STATUS_PRESENTATION[phase].label}`}
       open={open}
       onOpenChange={onOpenChange}
     >
-      <span style={visuallyHidden} data-runtime-status-description>
-        Runtime status: {STATUS_PRESENTATION[phase].label}
-      </span>
       <div data-runtime-metadata>
         <span>Shared development</span>
         <span>
@@ -276,7 +329,14 @@ export function RuntimeSection({
         aria-atomic="true"
         data-runtime-announcement
       >
-        {announcement}
+        {announcement.message ? (
+          <span
+            key={announcement.revision}
+            data-runtime-announcement-revision={announcement.revision}
+          >
+            {announcement.message}
+          </span>
+        ) : null}
       </span>
     </ControlPlaneSection>
   );

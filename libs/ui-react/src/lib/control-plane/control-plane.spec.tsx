@@ -102,6 +102,30 @@ describe('control-plane structure', () => {
     ).toBe('true');
     expect(screen.queryByRole('button', { name: 'Runtime Ready' })).toBeNull();
   });
+
+  it('describes a collapsed disclosure without changing its accessible name', () => {
+    render(
+      <ControlPlaneSection
+        title="Runtime"
+        summary="Unresponsive"
+        description="Runtime status: Unresponsive"
+        open={false}
+      >
+        <p>Shared development</p>
+      </ControlPlaneSection>,
+    );
+
+    expect(
+      screen.getByRole('button', {
+        name: 'Runtime',
+        description: 'Runtime status: Unresponsive',
+      }),
+    ).toBeTruthy();
+    expect(screen.queryByText('Shared development')).toBeNull();
+    expect(
+      document.querySelectorAll('[data-control-plane-section-description]'),
+    ).toHaveLength(1);
+  });
 });
 
 describe('control-plane actions', () => {
