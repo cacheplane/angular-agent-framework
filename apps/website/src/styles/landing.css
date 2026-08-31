@@ -939,13 +939,6 @@
   max-width: 560px;
   margin: 0 0 20px;
 }
-/* Centered ragged text is fine at 2 lines on desktop but becomes a 6-line
- * ragged column on phones; left-align for readability. */
-@media (max-width: 640px) {
-  .demo-showcase__subhead {
-    text-align: left;
-  }
-}
 .demo-showcase__launch-btn {
   position: absolute;
   inset: 0;

@@ -43,7 +43,7 @@ describe('AnnouncementToast', () => {
   it('appears once BOTH the timer and the 40% scroll threshold are met', () => {
     render(<AnnouncementToast />);
     act(() => vi.advanceTimersByTime(31_000));
-    act(() => setScroll(0.5));
+    act(() => setScroll(0.45));
     expect(document.querySelector('.toast-root')).toBeTruthy();
   });
 });
