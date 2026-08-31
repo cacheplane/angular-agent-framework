@@ -43,7 +43,7 @@
     "./README.md": "./README.md"
   },
   "peerDependencies": {
-    "@angular/core": "^20.0.0 || ^21.0.0",
+    "@angular/core": "^20.0.0 || ^21.0.0 || ^22.0.0",
     "posthog-js": "^1.372.0"
   },
   "peerDependenciesMeta": {

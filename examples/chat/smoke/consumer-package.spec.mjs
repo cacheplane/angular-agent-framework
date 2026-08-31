@@ -130,3 +130,12 @@ test('builds the template with the production configuration', async () => {
     'ng build --configuration production'
   );
 });
+
+test('includes required browser bundle closures in the template', async () => {
+  const packageJson = JSON.parse(
+    await readFile(new URL('./template/package.json', import.meta.url), 'utf8')
+  );
+
+  assert.equal(packageJson.dependencies['posthog-js'], '^1.372.0');
+  assert.equal(packageJson.dependencies.katex, '^0.17.0');
+});
