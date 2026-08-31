@@ -205,7 +205,9 @@ export const appConfig: ApplicationConfig = {
 
 The two options that make this an app rather than a demo:
 
-- `threadId: ACTIVE_THREAD` — the adapter _watches_ this signal. Set it, and the conversation switches. You never call a "load thread" method.
+- `threadId: ACTIVE_THREAD` — the adapter _watches_ this signal.
+  Set it, and the conversation switches.
+  You never call a "load thread" method.
 - `onThreadId` — fires when the adapter creates a thread on the first submit. Writing it back into the same signal is what closes the loop.
 
 `LANGGRAPH_THREADS_CONFIG` is separate because the thread list is a separate concern from the agent.
@@ -374,7 +376,10 @@ It is a bailout warning, not an error.
 The app runs now.
 It is not finished.
 
-- **The checkpointer has to be durable.** `langgraph dev` keeps threads in memory. Bookmarkable URLs against an in-memory store are a lie — the link survives, the conversation does not. Move to Postgres before you ship the sidebar. Persistence UI should match what the backend can actually restore.
+- **The checkpointer has to be durable.** `langgraph dev` keeps threads in memory.
+  Bookmarkable URLs against an in-memory store are a lie — the link survives, the conversation does not.
+  Move to Postgres before you ship the sidebar.
+  Persistence UI should match what the backend can actually restore.
 - **Threads need owners.** A `threadId` in a URL is an identifier, not proof the caller may read that conversation. Bind threads to the authenticated user on the server; `client.threads.search()` will happily list everything otherwise.
 - **The API key cannot live in the browser.** Right now Angular talks to `localhost:2024` directly. In production put a same-origin backend-for-frontend in front, and make `apiUrl` point at that.
 - **A buffering proxy breaks streaming.** If a gateway sits in the path, disable response buffering and preserve the streaming content type, or your token-by-token UI becomes a spinner.
