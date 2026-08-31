@@ -7,9 +7,12 @@ author: brian
 featured: true
 ---
 
-This is how to pause an AG-UI agent in Angular for human approval before it runs a high-stakes tool, using a `CUSTOM` `on_interrupt` event and the `<chat-approval-card>` composition from `@threadplane/chat`. The example is the same refund agent from [Human-in-the-Loop LangGraph Agents in Angular](/blog/2026-05-28-human-in-the-loop-langgraph-agents-in-angular) — wired through the AG-UI adapter instead. The Angular component is byte-identical except the import.
+This is how to pause an AG-UI agent in Angular for human approval before it runs a high-stakes tool, using a `CUSTOM` `on_interrupt` event and the `<chat-approval-card>` composition from `@threadplane/chat`.
+The example is the same refund agent from [Human-in-the-Loop LangGraph Agents in Angular](/blog/2026-05-28-human-in-the-loop-langgraph-agents-in-angular) — wired through the AG-UI adapter instead.
+The Angular component is byte-identical except the import.
 
-Everything below is running code from the cockpit example at `cockpit/ag-ui/interrupts`. Clone the repo, run `nx serve cockpit-ag-ui-interrupts-angular`, and follow along.
+Everything below is running code from the cockpit example at `cockpit/ag-ui/interrupts`.
+Clone the repo, run `nx serve cockpit-ag-ui-interrupts-angular`, and follow along.
 
 <div style={{ marginTop: 40, marginBottom: 44 }}>
 <CardGroup cols={2}>
@@ -44,17 +47,26 @@ The `app.config.ts` adapter swap is one line in the providers array:
 + provideAgent({ url: '/agent' }),
 ```
 
-That's the whole client-side delta. The rest of the file — the template binding `<chat-approval-card>`, the `(action)` handler, the approve / edit / cancel branches, the `submit({ resume })` call — is unchanged.
+That is the whole client-side delta.
+The rest of the file — the template binding `<chat-approval-card>`, the `(action)` handler, the approve / edit / cancel branches, the `submit({ resume })` call — is unchanged.
 
-`<chat-approval-card>` reads `agent.interrupt()` (a `Signal<AgentInterrupt | undefined>`), and `submit({ resume })` is part of the runtime-neutral `Agent` contract declared in `@threadplane/chat`. Both adapters populate the signal and forward the resume; the chat surface above doesn't see the wire format.
+`<chat-approval-card>` reads `agent.interrupt()` (a `Signal<AgentInterrupt | undefined>`), and `submit({ resume })` is part of the runtime-neutral `Agent` contract declared in `@threadplane/chat`.
+Both adapters populate the signal and forward the resume.
+The chat surface above does not see the wire format.
 
 ## When should you use an interrupt?
 
-Most tool calls don't need approval. Reads, searches, and lookups can run unattended. Reach for an interrupt when a tool does something the operator wouldn't want to undo by hand: moves money, sends a customer-facing message, deletes a record, or triggers a deploy.
+Most tool calls do not need approval.
+Reads, searches, and lookups can run unattended.
+Reach for an interrupt when a tool does something the operator would not want to undo by hand: moves money, sends a customer-facing message, deletes a record, or triggers a deploy.
 
-Two practical reasons hold up: it caps the cost of a misfiring agent looping over a write API, and it gives the operator a checkpoint to catch a wrong action before it lands.
+For me, two practical reasons hold up.
+An interrupt caps the cost of a misfiring agent looping over a write API, and it gives the operator a checkpoint to catch a wrong action before it lands.
 
-The AG-UI angle adds a third. Because AG-UI normalizes the wire across many backends, the same operator-approval checkpoint plugs into LangGraph, CrewAI, Mastra, Pydantic AI, or anything else that speaks AG-UI — with no UI rewrite. If your shop runs more than one agent backend, that's a real benefit. The `<chat-approval-card>` you build today survives the backend you swap in next year.
+The AG-UI angle adds a third.
+Because AG-UI normalizes the wire across many backends, the same operator-approval checkpoint plugs into LangGraph, CrewAI, Mastra, Pydantic AI, or anything else that speaks AG-UI — with no UI rewrite.
+If your shop runs more than one agent backend, I think that is a real benefit.
+The `<chat-approval-card>` you build today survives the backend you swap in next year.
 
 ## The architecture
 
@@ -62,7 +74,7 @@ Three pieces:
 
 - **AG-UI-fronted LangGraph backend.** The same compiled graph as the LangGraph post, duplicated under `cockpit/ag-ui/interrupts/python` because cockpit examples are standalone. Wrapped with `ag-ui-langgraph`'s `LangGraphAgent(name, graph)` + `add_langgraph_fastapi_endpoint(app, agent, path='/agent')` and served by `uvicorn`. When `interrupt()` fires inside the graph, `ag-ui-langgraph` emits a `CUSTOM` AG-UI event with `name: 'on_interrupt'` and a `value` carrying the interrupt payload — serialized as a JSON string via `dump_json_safe`. The uvicorn server needs a `MemorySaver` checkpointer (`langgraph dev` and LangGraph Platform inject one automatically; plain uvicorn does not, and `aget_state` raises "No checkpointer set" without it).
 - **`@threadplane/ag-ui` adapter.** The reducer recognizes the `CUSTOM`/`on_interrupt` event, JSON-parses the string `value` so consumers see the structured object, and sets `agent.interrupt()` to `{ id, value, resumable: true }`. `agent.submit({ resume })` short-circuits the message-append path and calls `source.runAgent({ forwardedProps: { command: { resume } } })`. The server reads `forwarded_props.command.resume`. The adapter exposes the same `Agent` contract as `@threadplane/langgraph`.
-- **`@threadplane/chat` UI.** `<chat-approval-card matchKind="refund_approval">` reads `agent.interrupt()`, opens a `<dialog>`-backed modal, and emits `'approve' | 'edit' | 'cancel'`. Resume actions call `agent.submit({ resume: { approved, amount? } })`. Reject calls `submit({ resume: { approved: false } })`. The component doesn't know which adapter is wired. That's the point.
+- **`@threadplane/chat` UI.** `<chat-approval-card matchKind="refund_approval">` reads `agent.interrupt()`, opens a `<dialog>`-backed modal, and emits `'approve' | 'edit' | 'cancel'`. Resume actions call `agent.submit({ resume: { approved, amount? } })`. Reject calls `submit({ resume: { approved: false } })`. The component does not know which adapter is wired. That is the point.
 
 The data flow on resume:
 
@@ -74,7 +86,8 @@ The data flow on resume:
         → ag-ui-langgraph: Command(resume=value) → graph continues
 ```
 
-On the LangGraph adapter, the same `submit({ resume })` becomes a native `Client.submit(thread, command={resume:…})` call. Different wire, same Angular surface.
+On the LangGraph adapter, the same `submit({ resume })` becomes a native `Client.submit(thread, command={resume:…})` call.
+Different wire, same Angular surface.
 
 <figure>
   <img src="/blog/2026-06-04-human-in-the-loop-ag-ui-agents-in-angular/1.png" alt="The cockpit ag-ui/interrupts welcome screen showing two suggestion chips: 'Refund a duplicate charge' and 'Refund a chargeback.'" width="1280" height="800" />
@@ -144,12 +157,14 @@ def request_approval(state: RefundState) -> dict:
     }
 ```
 
-This file is **duplicated** into `cockpit/ag-ui/interrupts/python/src/graph.py` per the cockpit standalone-examples convention — copy, don't import across examples. The graph itself doesn't know it'll be served over AG-UI.
+This file is **duplicated** into `cockpit/ag-ui/interrupts/python/src/graph.py` per the cockpit standalone-examples convention — copy, do not import across examples.
+The graph itself does not know it will be served over AG-UI.
 
 </Step>
 <Step title="Wrap the graph with ag-ui-langgraph + uvicorn">
 
-`ag-ui-langgraph` translates LangGraph runtime events into AG-UI protocol events and mounts a FastAPI endpoint. We add a `/ok` route for the e2e harness's readiness check:
+`ag-ui-langgraph` translates LangGraph runtime events into AG-UI protocol events and mounts a FastAPI endpoint.
+We add a `/ok` route for the e2e harness's readiness check:
 
 ```python
 # server.py — cockpit/ag-ui/interrupts/python/src/server.py
@@ -204,7 +219,8 @@ export default {
 };
 ```
 
-AG-UI's `provideAgent({ url })` and LangGraph's `provideAgent({ apiUrl, assistantId })` share the symmetric provider name but take different config shapes because the wire protocols differ. The provider+inject names are deliberately symmetric across both adapters — that's what makes the component code unchanged.
+AG-UI's `provideAgent({ url })` and LangGraph's `provideAgent({ apiUrl, assistantId })` share the symmetric provider name but take different config shapes because the wire protocols differ.
+The provider+inject names are deliberately symmetric across both adapters — that is what makes the component code unchanged.
 
 </Step>
 <Step title="The Angular component">
@@ -328,9 +344,14 @@ export class InterruptsComponent {
 }
 ```
 
-This is the same file as `cockpit/langgraph/interrupts/angular/src/app/interrupts.component.ts` from the LangGraph post — **byte-identical except for the `injectAgent` import**. The template binds `<chat-approval-card matchKind="refund_approval">` to the agent. When `agent.interrupt()` becomes non-undefined, the dialog opens. The `(action)` event fires `'approve' | 'edit' | 'cancel'`; the handler calls `agent.submit({ resume: { approved, amount? } })`. The `{ approved, amount? }` shape couples back to whatever the LangGraph node will read from `Command(resume=…)` — keep them in sync.
+This is the same file as `cockpit/langgraph/interrupts/angular/src/app/interrupts.component.ts` from the LangGraph post — **byte-identical except for the `injectAgent` import**.
+The template binds `<chat-approval-card matchKind="refund_approval">` to the agent.
+When `agent.interrupt()` becomes non-undefined, the dialog opens.
+The `(action)` event fires `'approve' | 'edit' | 'cancel'`; the handler calls `agent.submit({ resume: { approved, amount? } })`.
+The `{ approved, amount? }` shape couples back to whatever the LangGraph node will read from `Command(resume=…)` — keep them in sync.
 
-The `matchKind` input is the discriminator pattern that keeps the dialog component reusable across interrupt kinds. If your graph emits `interrupt({ kind: 'deploy_approval', … })`, a separate `<chat-approval-card matchKind="deploy_approval">` instance picks that up — same component, different match.
+The `matchKind` input is the discriminator pattern that keeps the dialog component reusable across interrupt kinds.
+If your graph emits `interrupt({ kind: 'deploy_approval', … })`, a separate `<chat-approval-card matchKind="deploy_approval">` instance picks that up — same component, different match.
 
 </Step>
 </Steps>
@@ -339,11 +360,14 @@ The `matchKind` input is the discriminator pattern that keeps the dialog compone
 
 ### Streaming start → the draft
 
-The user clicks "Refund a duplicate charge." A run starts; token-level `TEXT_MESSAGE_CONTENT` events stream the assistant's draft and `messages()` updates incrementally. For more on the AG-UI streaming model, see [Build Fullstack Agentic Angular Apps Using AG-UI](/blog/2026-05-21-build-fullstack-agentic-angular-apps-using-ag-ui).
+The user clicks "Refund a duplicate charge."
+A run starts; token-level `TEXT_MESSAGE_CONTENT` events stream the assistant's draft and `messages()` updates incrementally.
+For more on the AG-UI streaming model, see [Build Fullstack Agentic Angular Apps Using AG-UI](/blog/2026-05-21-build-fullstack-agentic-angular-apps-using-ag-ui).
 
 ### The interrupt arrives
 
-The structured-output call finishes, the graph hits `request_approval`, and `interrupt({ kind: 'refund_approval', … })` fires. `ag-ui-langgraph` emits the `CUSTOM` event on the SSE stream:
+The structured-output call finishes, the graph hits `request_approval`, and `interrupt({ kind: 'refund_approval', … })` fires.
+`ag-ui-langgraph` emits the `CUSTOM` event on the SSE stream:
 
 ```jsonc
 // AG-UI event on the wire
@@ -354,7 +378,8 @@ The structured-output call finishes, the graph hits `request_approval`, and `int
 }
 ```
 
-`value` is a JSON string — that's the `dump_json_safe` quirk. The `@threadplane/ag-ui` reducer parses it and sets:
+`value` is a JSON string — that is the `dump_json_safe` quirk.
+The `@threadplane/ag-ui` reducer parses it and sets:
 
 ```ts
 agent.interrupt() // → { id: 'r3w…', value: { kind, amount, customer_id, reason }, resumable: true }
@@ -365,7 +390,9 @@ agent.interrupt() // → { id: 'r3w…', value: { kind, amount, customer_id, rea
   <figcaption>The approval card with structured payload fields.</figcaption>
 </figure>
 
-`<chat-approval-card matchKind="refund_approval">` is bound to `agent.interrupt()`. The moment the signal becomes non-undefined, the dialog opens with the structured payload. The run has already finished (`RUN_FINISHED` arrived); the graph is parked at its checkpoint until something resumes it.
+`<chat-approval-card matchKind="refund_approval">` is bound to `agent.interrupt()`.
+The moment the signal becomes non-undefined, the dialog opens with the structured payload.
+The run has already finished (`RUN_FINISHED` arrived); the graph is parked at its checkpoint until something resumes it.
 
 ### Approve, edit, or cancel → resume
 
@@ -381,9 +408,13 @@ The adapter clears `agent.interrupt()` immediately for snappy UX, then forwards 
 source.runAgent({ forwardedProps: { command: { resume: { approved: true, amount: 99 } } } });
 ```
 
-A new `POST /agent` request fires. `ag-ui-langgraph` reads `forwarded_props.command.resume`, constructs a `Command(resume=…)`, and continues the graph from the checkpoint. Token-level streaming resumes; the assistant confirms the refund issued. Reject (`{ approved: false }`) takes the alternate branch in the graph; edit-then-approve carries a new `amount` through `Command(resume=…)`.
+A new `POST /agent` request fires.
+`ag-ui-langgraph` reads `forwarded_props.command.resume`, constructs a `Command(resume=…)`, and continues the graph from the checkpoint.
+Token-level streaming resumes; the assistant confirms the refund issued.
+Reject (`{ approved: false }`) takes the alternate branch in the graph; edit-then-approve carries a new `amount` through `Command(resume=…)`.
 
-On the langgraph adapter the same `submit({ resume })` becomes a native `Client.submit(thread, command={resume:…})` call. Different wire, same Angular surface.
+On the langgraph adapter the same `submit({ resume })` becomes a native `Client.submit(thread, command={resume:…})` call.
+Different wire, same Angular surface.
 
 <figure>
   <img src="/blog/2026-06-04-human-in-the-loop-ag-ui-agents-in-angular/3.png" alt="The chat history after the refund was approved and the run completed, showing the assistant's confirmation." width="1280" height="800" />
@@ -392,7 +423,13 @@ On the langgraph adapter the same `submit({ resume })` becomes a native `Client.
 
 ## Closing
 
-The runtime-neutral `Agent` contract isn't a marketing line; it's the reason this post existed without rewriting the component. `<chat-approval-card>`, `agent.interrupt()`, and `submit({ resume })` are the stable surface. `on_interrupt` and `forwardedProps.command.resume` are the AG-UI-specific wire details the adapter hides. Pick the adapter that matches your backend — LangGraph SDK direct → `@threadplane/langgraph`; anything AG-UI-fronted, including LangGraph-via-`ag-ui-langgraph` → `@threadplane/ag-ui`. Your chat surface doesn't pick.
+The runtime-neutral `Agent` contract is not a marketing line.
+It is the reason this post existed without rewriting the component.
+`<chat-approval-card>`, `agent.interrupt()`, and `submit({ resume })` are the stable surface.
+`on_interrupt` and `forwardedProps.command.resume` are the AG-UI-specific wire details the adapter hides.
+
+My recommendation is simple: pick the adapter that matches your backend — LangGraph SDK direct → `@threadplane/langgraph`; anything AG-UI-fronted, including LangGraph-via-`ag-ui-langgraph` → `@threadplane/ag-ui`.
+Your chat surface does not pick.
 
 Pointers:
 
