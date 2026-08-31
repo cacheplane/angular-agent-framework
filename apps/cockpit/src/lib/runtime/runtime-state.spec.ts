@@ -101,6 +101,8 @@ describe('runtime state', () => {
       lastReadyAt: null,
       errorCode: null,
       frameGeneration: 0,
+      routeGeneration: 0,
+      recoveryOrigin: null,
     });
   });
 
@@ -263,7 +265,10 @@ describe('runtime state', () => {
         target: resetTarget,
         capability: 'persistence',
       }),
-    ).toEqual(createRuntimeSnapshot(resetTarget, 'persistence'));
+    ).toEqual({
+      ...createRuntimeSnapshot(resetTarget, 'persistence'),
+      routeGeneration: 1,
+    });
   });
 });
 
@@ -309,7 +314,7 @@ describe('classifyRuntimeTerminalTransition', () => {
   });
 
   test.each(['unresponsive', 'error'] as const)(
-    'classifies %s to ready as one recovery',
+    'classifies a direct %s to ready change as one recovery',
     (phase) => {
       const previous = {
         ...createRuntimeSnapshot(configuredTarget, capability),
@@ -324,6 +329,143 @@ describe('classifyRuntimeTerminalTransition', () => {
       });
     },
   );
+
+  test('classifies unresponsive through recheck to ready as exactly one recovery', () => {
+    const pending = checkingSnapshot();
+    const unresponsive = runtimeReducer(pending, {
+      type: 'timeout',
+      nonce: 'nonce-1',
+      at: 6_000,
+    });
+    const rechecking = runtimeReducer(unresponsive, {
+      type: 'check_started',
+      intent: 'recheck',
+      nonce: 'nonce-2',
+      startedAt: 7_000,
+    });
+    const ready = runtimeReducer(rechecking, {
+      type: 'ready',
+      nonce: 'nonce-2',
+      at: 7_250,
+    });
+
+    expect(
+      [
+        classifyRuntimeTerminalTransition(unresponsive, rechecking),
+        classifyRuntimeTerminalTransition(rechecking, ready),
+        classifyRuntimeTerminalTransition(ready, { ...ready }),
+      ].filter((transition) => transition !== null),
+    ).toEqual([
+      {
+        capability,
+        fromState: 'unresponsive',
+        toState: 'ready',
+        elapsedMs: 250,
+        transition: 'recovered',
+      },
+    ]);
+    expect(ready.recoveryOrigin).toBeNull();
+  });
+
+  test('classifies error through reload and frame check to ready as exactly one recovery', () => {
+    const failed = runtimeReducer(checkingSnapshot(), {
+      type: 'bootstrap_failed',
+      nonce: 'nonce-1',
+      code: 'bootstrap_failed',
+      at: 1_300,
+    });
+    const reloading = runtimeReducer(failed, { type: 'reload_requested' });
+    const checkingReload = runtimeReducer(reloading, {
+      type: 'check_started',
+      intent: 'frame_load',
+      nonce: 'nonce-2',
+      startedAt: 2_000,
+    });
+    const ready = runtimeReducer(checkingReload, {
+      type: 'ready',
+      nonce: 'nonce-2',
+      at: 2_200,
+    });
+
+    expect(
+      [
+        classifyRuntimeTerminalTransition(failed, reloading),
+        classifyRuntimeTerminalTransition(reloading, checkingReload),
+        classifyRuntimeTerminalTransition(checkingReload, ready),
+      ].filter((transition) => transition !== null),
+    ).toEqual([
+      {
+        capability,
+        fromState: 'error',
+        toState: 'ready',
+        elapsedMs: 200,
+        transition: 'recovered',
+      },
+    ]);
+    expect(ready.recoveryOrigin).toBeNull();
+  });
+
+  test('keeps ready through recheck to ready generic after a recovery', () => {
+    const unresponsive = runtimeReducer(checkingSnapshot(), {
+      type: 'timeout',
+      nonce: 'nonce-1',
+      at: 6_000,
+    });
+    const recoveredCheck = runtimeReducer(unresponsive, {
+      type: 'check_started',
+      intent: 'recheck',
+      nonce: 'nonce-2',
+      startedAt: 7_000,
+    });
+    const recovered = runtimeReducer(recoveredCheck, {
+      type: 'ready',
+      nonce: 'nonce-2',
+      at: 7_250,
+    });
+    const ordinaryCheck = runtimeReducer(recovered, {
+      type: 'check_started',
+      intent: 'recheck',
+      nonce: 'nonce-3',
+      startedAt: 8_000,
+    });
+    const readyAgain = runtimeReducer(ordinaryCheck, {
+      type: 'ready',
+      nonce: 'nonce-3',
+      at: 8_100,
+    });
+
+    expect(
+      classifyRuntimeTerminalTransition(ordinaryCheck, readyAgain),
+    ).toEqual({
+      capability,
+      fromState: 'checking',
+      toState: 'ready',
+      elapsedMs: 100,
+    });
+  });
+
+  test('stale terminal actions preserve a pending recovery origin', () => {
+    const unresponsive = runtimeReducer(checkingSnapshot(), {
+      type: 'timeout',
+      nonce: 'nonce-1',
+      at: 6_000,
+    });
+    const rechecking = runtimeReducer(unresponsive, {
+      type: 'check_started',
+      intent: 'recheck',
+      nonce: 'nonce-2',
+      startedAt: 7_000,
+    });
+
+    expect(
+      runtimeReducer(rechecking, {
+        type: 'ready',
+        nonce: 'stale',
+        at: 7_250,
+      }),
+    ).toBe(rechecking);
+    expect(rechecking.recoveryOrigin).toBe('unresponsive');
+  });
 
   test('classifies initialization failure with only its allowlisted reason', () => {
     const previous = checkingSnapshot();
@@ -384,5 +526,50 @@ describe('classifyRuntimeTerminalTransition', () => {
       fromState: 'checking',
       toState: 'unresponsive',
     });
+  });
+
+  test('classifies invalid configuration again after a capability route reset', () => {
+    const previous = createRuntimeSnapshot(
+      parseRuntimeTarget('invalid-a'),
+      'capability-a',
+    );
+    const next = runtimeReducer(previous, {
+      type: 'route_reset',
+      target: parseRuntimeTarget('invalid-b'),
+      capability: 'capability-b',
+    });
+
+    expect(classifyRuntimeTerminalTransition(previous, next)).toEqual({
+      capability: 'capability-b',
+      fromState: 'invalid_configuration',
+      toState: 'invalid_configuration',
+      reasonCode: 'invalid_runtime_url',
+    });
+    expect(next.routeGeneration).toBe(1);
+  });
+
+  test('classifies a new invalid route for the same capability but dedupes its renders', () => {
+    const previous = createRuntimeSnapshot(
+      parseRuntimeTarget('invalid-a'),
+      capability,
+    );
+    const next = runtimeReducer(previous, {
+      type: 'route_reset',
+      target: parseRuntimeTarget('invalid-b'),
+      capability,
+    });
+
+    expect(classifyRuntimeTerminalTransition(previous, next)).toEqual({
+      capability,
+      fromState: 'invalid_configuration',
+      toState: 'invalid_configuration',
+      reasonCode: 'invalid_runtime_url',
+    });
+    expect(
+      classifyRuntimeTerminalTransition(next, {
+        ...next,
+        checkedAt: 2_000,
+      }),
+    ).toBeNull();
   });
 });

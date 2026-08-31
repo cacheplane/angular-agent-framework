@@ -19,6 +19,7 @@ export type RuntimeTarget =
     };
 
 export type RuntimeErrorCode = 'bootstrap_failed';
+export type RuntimeRecoveryOrigin = 'unresponsive' | 'error';
 
 export interface RuntimeSnapshot {
   phase: RuntimePhase;
@@ -30,6 +31,8 @@ export interface RuntimeSnapshot {
   lastReadyAt: number | null;
   errorCode: RuntimeErrorCode | null;
   frameGeneration: number;
+  routeGeneration: number;
+  recoveryOrigin: RuntimeRecoveryOrigin | null;
 }
 
 export type RuntimeAction =
@@ -95,6 +98,7 @@ export function parseRuntimeTarget(value: string | null): RuntimeTarget {
 export function createRuntimeSnapshot(
   target: RuntimeTarget,
   capability: string,
+  routeGeneration = 0,
 ): RuntimeSnapshot {
   const phase =
     target.kind === 'not_configured'
@@ -113,6 +117,8 @@ export function createRuntimeSnapshot(
     lastReadyAt: null,
     errorCode: null,
     frameGeneration: 0,
+    routeGeneration,
+    recoveryOrigin: null,
   };
 }
 
@@ -126,6 +132,15 @@ function clearActiveCheck(state: RuntimeSnapshot): RuntimeSnapshot {
     activeNonce: null,
     checkStartedAt: null,
   };
+}
+
+function recoveryOriginFor(
+  state: RuntimeSnapshot,
+): RuntimeRecoveryOrigin | null {
+  if (state.phase === 'unresponsive' || state.phase === 'error') {
+    return state.phase;
+  }
+  return state.recoveryOrigin;
 }
 
 export function runtimeReducer(
@@ -143,6 +158,7 @@ export function runtimeReducer(
         activeNonce: action.nonce,
         checkStartedAt: action.startedAt,
         errorCode: null,
+        recoveryOrigin: recoveryOriginFor(state),
       };
     case 'ready':
       if (!hasCurrentNonce(state, action.nonce)) {
@@ -154,6 +170,7 @@ export function runtimeReducer(
         checkedAt: action.at,
         lastReadyAt: action.at,
         errorCode: null,
+        recoveryOrigin: null,
       };
     case 'timeout':
       if (!hasCurrentNonce(state, action.nonce)) {
@@ -164,6 +181,7 @@ export function runtimeReducer(
         phase: 'unresponsive',
         checkedAt: action.at,
         errorCode: null,
+        recoveryOrigin: null,
       };
     case 'bootstrap_failed':
       if (!hasCurrentNonce(state, action.nonce)) {
@@ -174,6 +192,7 @@ export function runtimeReducer(
         phase: 'error',
         checkedAt: action.at,
         errorCode: action.code,
+        recoveryOrigin: null,
       };
     case 'reload_requested':
       if (state.target.kind !== 'configured') {
@@ -184,11 +203,16 @@ export function runtimeReducer(
         phase: 'reloading',
         frameGeneration: state.frameGeneration + 1,
         errorCode: null,
+        recoveryOrigin: recoveryOriginFor(state),
       };
     case 'check_cancelled':
       return clearActiveCheck(state);
     case 'route_reset':
-      return createRuntimeSnapshot(action.target, action.capability);
+      return createRuntimeSnapshot(
+        action.target,
+        action.capability,
+        state.routeGeneration + 1,
+      );
   }
 }
 
@@ -221,13 +245,20 @@ export function classifyRuntimeTerminalTransition(
   previous: RuntimeSnapshot,
   next: RuntimeSnapshot,
 ): RuntimeTerminalTransition | null {
-  if (!isTerminalPhase(next.phase) || previous.phase === next.phase) {
+  if (
+    !isTerminalPhase(next.phase) ||
+    (previous.phase === next.phase &&
+      previous.routeGeneration === next.routeGeneration)
+  ) {
     return null;
   }
 
   const result: RuntimeTerminalTransition = {
     capability: next.capability,
-    fromState: previous.phase,
+    fromState:
+      next.phase === 'ready' && previous.recoveryOrigin !== null
+        ? previous.recoveryOrigin
+        : previous.phase,
     toState: next.phase,
   };
   const elapsedMs = safeElapsedMs(previous.checkStartedAt, next.checkedAt);
@@ -236,7 +267,9 @@ export function classifyRuntimeTerminalTransition(
   }
   if (
     next.phase === 'ready' &&
-    (previous.phase === 'unresponsive' || previous.phase === 'error')
+    (previous.phase === 'unresponsive' ||
+      previous.phase === 'error' ||
+      previous.recoveryOrigin !== null)
   ) {
     result.transition = 'recovered';
   }
