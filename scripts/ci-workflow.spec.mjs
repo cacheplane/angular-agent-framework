@@ -75,6 +75,10 @@ describe('CI workflow', () => {
     return readJobBlock(await readWorkflow(), 'deploy');
   }
 
+  async function readCiScopeJob() {
+    return readJobBlock(await readWorkflow(), 'ci-scope');
+  }
+
   async function readLibraryJob() {
     return readJobBlock(await readWorkflow(), 'library');
   }
@@ -128,6 +132,15 @@ describe('CI workflow', () => {
         }))
     );
   }
+
+  it('runs the Cockpit runtime bridge drift guard with the always-run scope tests', async () => {
+    const ciScopeJob = await readCiScopeJob();
+
+    assert.match(
+      ciScopeJob,
+      /name:\s*Test CI scope classifier\s+run:\s*node --test[^\n]*scripts\/cockpit-runtime-bridge-coverage\.spec\.mjs/
+    );
+  });
 
   it('treats nested library files as deploy-relevant changes', async () => {
     const deployJob = await readDeployJob();

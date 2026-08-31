@@ -6,7 +6,7 @@ import type { CockpitTelemetryConfig } from './tokens';
  *
  * The parent shell appends `cockpit_did`, `cockpit_phk`, `cockpit_cap`, and
  * optionally `cockpit_host` to the iframe `src`. Returns `null` when any of
- * the three required params are missing (no harness — example runs pristine).
+ * the three required params are missing (no Cockpit telemetry configuration).
  */
 export function readCockpitConfigFromIframe(): CockpitTelemetryConfig | null {
   if (typeof window === 'undefined') return null;
