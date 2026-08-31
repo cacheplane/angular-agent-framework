@@ -150,6 +150,30 @@ describe('createProxyHandler', () => {
     expect(res._status).toBe(200);
   });
 
+  // Regression: `/_proxy_debug` was an unauthenticated early-return that
+  // disclosed a prefix of LANGSMITH_API_KEY, the upstream deployment URL, and
+  // environment facts to any caller. It sat above the origin/rate-limit gates,
+  // and the origin allowlist only rejects when an Origin header is present, so
+  // a plain curl reached it on production. It must stay a normal proxied path.
+  it('does not answer /_proxy_debug locally or disclose key material', async () => {
+    const fetchMock = vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response('{"detail":"Not Found"}', { status: 404, headers: { 'content-type': 'application/json' } }),
+    );
+    const handler = createProxyHandler({ backendUrl: DEFAULT_BACKEND });
+    const res = makeRes();
+    await handler({ method: 'GET', headers: { host: 'demo.threadplane.ai' }, url: '/api/_proxy_debug', query: {} } as never, res as never);
+
+    // Forwarded upstream like any other path rather than short-circuited here.
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]![0]).toBe(`${DEFAULT_BACKEND}/_proxy_debug`);
+
+    // Nothing the proxy itself wrote may carry the key or its prefix.
+    const written = JSON.stringify([res.json.mock.calls, res.send.mock.calls, res.write.mock.calls]);
+    expect(written).not.toContain('test-key-123');
+    expect(written).not.toContain('test-key-1');
+    expect(written).not.toContain('apiKeyPrefix');
+  });
+
   it('strips the catch-all query param but keeps real query params', async () => {
     const fetchMock = vi.spyOn(global, 'fetch').mockResolvedValue(
       new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } }),
