@@ -1,131 +1,96 @@
-import React from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+/** @vitest-environment jsdom */
+import React, { createRef } from 'react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { cockpitManifest } from '@threadplane/cockpit-registry';
+import { ThemeProvider } from '@threadplane/ui-react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildNavigationTree } from '../lib/route-resolution';
 import { MobileNavOverlay } from './mobile-nav-overlay';
 
 const tree = buildNavigationTree(cockpitManifest);
 const entry = cockpitManifest.find(
-  (e) =>
-    e.product === 'render' &&
-    e.section === 'core-capabilities' &&
-    e.topic === 'spec-rendering' &&
-    e.language === 'python'
+  (candidate) =>
+    candidate.product === 'render' &&
+    candidate.section === 'core-capabilities' &&
+    candidate.topic === 'spec-rendering' &&
+    candidate.language === 'python',
 )!;
 
+const renderOverlay = (overrides: Partial<React.ComponentProps<typeof MobileNavOverlay>> = {}) => {
+  const onClose = vi.fn();
+  const onModeChange = vi.fn();
+  const triggerRef = createRef<HTMLButtonElement>();
+  render(
+    <ThemeProvider theme="light">
+      <button ref={triggerRef}>Shell trigger</button>
+      <MobileNavOverlay
+        navigationTree={tree}
+        manifest={cockpitManifest}
+        entry={entry}
+        activeMode="Run"
+        onModeChange={onModeChange}
+        runtimeUrl={null}
+        isOpen
+        onClose={onClose}
+        triggerRef={triggerRef}
+        {...overrides}
+      />
+    </ThemeProvider>,
+  );
+  return { onClose, onModeChange, triggerRef };
+};
+
 describe('MobileNavOverlay', () => {
+  beforeEach(() => window.localStorage.clear());
+
   it('renders nothing when closed', () => {
-    const html = renderToStaticMarkup(
-      <MobileNavOverlay
-        navigationTree={tree}
-        manifest={cockpitManifest}
-        entry={entry}
-        isOpen={false}
-        onClose={() => {}}
-      />
-    );
-    expect(html).toBe('');
+    renderOverlay({ isOpen: false });
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it('renders all four product groups when open', () => {
-    const html = renderToStaticMarkup(
-      <MobileNavOverlay
-        navigationTree={tree}
-        manifest={cockpitManifest}
-        entry={entry}
-        isOpen={true}
-        onClose={() => {}}
-      />
-    );
-    expect(html).toContain('LangGraph');
-    expect(html).toContain('Render');
-    expect(html).toContain('Chat');
-    expect(html).toContain('Deep Agents');
+  it('exposes every mode and capability through the adaptive drawer', () => {
+    renderOverlay();
+    const dialog = screen.getByRole('dialog', { name: 'Cockpit control plane' });
+    for (const mode of ['Run', 'Code', 'Docs', 'API']) {
+      expect(within(dialog).getByRole('button', { name: mode })).toBeTruthy();
+    }
+    expect(within(dialog).getByRole('link', { name: 'Spec Rendering' })).toBeTruthy();
+    expect(within(dialog).getByRole('button', { name: 'Settings' })).toBeTruthy();
+    expect(dialog.getAttribute('style') ?? '').not.toContain('width:');
   });
 
-  it('renders topic chips as links', () => {
-    const html = renderToStaticMarkup(
-      <MobileNavOverlay
-        navigationTree={tree}
-        manifest={cockpitManifest}
-        entry={entry}
-        isOpen={true}
-        onClose={() => {}}
-      />
-    );
-    expect(html).toContain('Streaming');
-    expect(html).toContain('Persistence');
-    expect(html).toContain('Messages');
-    expect(html).toContain('href="/');
+  it('replaces only the drawer body for Settings and restores utility focus', () => {
+    const result = renderOverlay();
+    const dialog = screen.getByRole('dialog', { name: 'Cockpit control plane' });
+    const settings = within(dialog).getByRole('button', { name: 'Settings' });
+    fireEvent.click(settings);
+
+    expect(within(dialog).getByRole('heading', { name: 'Settings' })).toBeTruthy();
+    expect(within(dialog).getByRole('button', { name: 'Run' })).toBeTruthy();
+    expect(within(dialog).queryByRole('button', { name: 'Capability' })).toBeNull();
+
+    fireEvent.keyDown(within(dialog).getByRole('heading', { name: 'Settings' }), {
+      key: 'Escape',
+    });
+
+    expect(result.onClose).not.toHaveBeenCalled();
+    expect(within(dialog).getByRole('button', { name: 'Capability' })).toBeTruthy();
+    expect(document.activeElement).toBe(settings);
   });
 
-  it('highlights the active entry chip', () => {
-    const html = renderToStaticMarkup(
-      <MobileNavOverlay
-        navigationTree={tree}
-        manifest={cockpitManifest}
-        entry={entry}
-        isOpen={true}
-        onClose={() => {}}
-      />
-    );
-    expect(html).toContain('aria-current="page"');
-  });
+  it('closes from Escape, backdrop, and close control and restores shell focus', () => {
+    const result = renderOverlay();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(result.onClose).toHaveBeenCalledTimes(1);
+    expect(document.activeElement).toBe(result.triggerRef.current);
 
-  it('strips product prefix from topic titles', () => {
-    const html = renderToStaticMarkup(
-      <MobileNavOverlay
-        navigationTree={tree}
-        manifest={cockpitManifest}
-        entry={entry}
-        isOpen={true}
-        onClose={() => {}}
-      />
-    );
-    expect(html).toContain('Spec Rendering');
-    expect(html).not.toContain('>Render Spec Rendering<');
-  });
+    result.onClose.mockClear();
+    const dialog = screen.getByRole('dialog', { name: 'Cockpit control plane' });
+    fireEvent.mouseDown(dialog);
+    expect(result.onClose).toHaveBeenCalledTimes(1);
 
-  it('filters out overview topics', () => {
-    const html = renderToStaticMarkup(
-      <MobileNavOverlay
-        navigationTree={tree}
-        manifest={cockpitManifest}
-        entry={entry}
-        isOpen={true}
-        onClose={() => {}}
-      />
-    );
-    // No chip should link to an overview topic (topic segment = "overview")
-    const hrefMatches = html.match(/href="[^"]+"/g) || [];
-    const overviewHrefs = hrefMatches.filter((h) => /\/overview\/overview\//.test(h));
-    expect(overviewHrefs).toHaveLength(0);
-  });
-
-  it('includes the language picker', () => {
-    const html = renderToStaticMarkup(
-      <MobileNavOverlay
-        navigationTree={tree}
-        manifest={cockpitManifest}
-        entry={entry}
-        isOpen={true}
-        onClose={() => {}}
-      />
-    );
-    expect(html).toContain('Python');
-  });
-
-  it('includes a close button', () => {
-    const html = renderToStaticMarkup(
-      <MobileNavOverlay
-        navigationTree={tree}
-        manifest={cockpitManifest}
-        entry={entry}
-        isOpen={true}
-        onClose={() => {}}
-      />
-    );
-    expect(html).toContain('aria-label="Close navigation"');
+    result.onClose.mockClear();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Close navigation' }));
+    expect(result.onClose).toHaveBeenCalledTimes(1);
   });
 });

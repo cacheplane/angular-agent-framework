@@ -1,46 +1,49 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import type { CockpitManifestEntry } from '@threadplane/cockpit-registry';
+import { X } from 'lucide-react';
+import type { ControlPlaneMode } from '@threadplane/ui-react';
 import type { NavigationProduct } from '../lib/route-resolution';
-import { toCockpitPath } from '../lib/route-resolution';
-import { PRODUCT_LABELS, stripProductPrefix } from '../lib/navigation-labels';
-import { LanguagePicker } from './sidebar/language-picker';
-
-function CloseIcon() {
-  return (
-    <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-      <path d="M18 6L6 18M6 6l12 12" />
-    </svg>
-  );
-}
+import { CockpitControlPlane } from './control-plane/cockpit-control-plane';
 
 interface MobileNavOverlayProps {
   navigationTree: NavigationProduct[];
   manifest: CockpitManifestEntry[];
   entry: CockpitManifestEntry;
+  activeMode: ControlPlaneMode;
+  onModeChange: (mode: ControlPlaneMode) => void;
+  runtimeUrl: string | null;
   isOpen: boolean;
   onClose: () => void;
+  triggerRef?: RefObject<HTMLButtonElement | null>;
 }
 
 export function MobileNavOverlay({
   navigationTree,
   manifest,
   entry,
+  activeMode,
+  onModeChange,
+  runtimeUrl,
   isOpen,
   onClose,
+  triggerRef,
 }: MobileNavOverlayProps) {
   const [state, setState] = useState<'closed' | 'open' | 'closing'>(
-    isOpen ? 'open' : 'closed'
+    isOpen ? 'open' : 'closed',
   );
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  const requestClose = useCallback(() => {
+    onClose();
+    triggerRef?.current?.focus();
+  }, [onClose, triggerRef]);
 
   useEffect(() => {
-    if (isOpen) {
-      setState('open');
-    } else if (state === 'open') {
-      setState('closing');
-    }
-  }, [isOpen]);
+    if (isOpen) setState('open');
+    else if (state === 'open') setState('closing');
+  }, [isOpen, state]);
 
   useEffect(() => {
     if (state !== 'closing') return;
@@ -49,124 +52,73 @@ export function MobileNavOverlay({
   }, [state]);
 
   useEffect(() => {
-    if (state !== 'open') return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+    if (state !== 'open') return undefined;
+    document.body.style.overflow = 'hidden';
+    const dialog = dialogRef.current;
+    const focusable = () => Array.from(dialog?.querySelectorAll<HTMLElement>(
+      'a[href], button:not(:disabled), [tabindex]:not([tabindex="-1"])',
+    ) ?? []);
+    focusable()[0]?.focus();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        requestClose();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const items = focusable();
+      const first = items[0];
+      const last = items.at(-1);
+      if (!first || !last) return;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [state, onClose]);
+    return () => {
+      document.body.style.overflow = '';
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [requestClose, state]);
 
   if (state === 'closed') return null;
 
   return (
     <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Cockpit control plane"
       data-state={state}
-      className="fixed inset-0 z-50 md:hidden flex flex-col"
-      style={{
-        background: 'var(--ds-surface)',
-        boxShadow: 'var(--ds-shadow-lg)',
-        opacity: state === 'open' ? 1 : 0,
-        transform: state === 'open' ? 'translateY(0)' : 'translateY(8px)',
-        transition: state === 'open'
-          ? 'opacity 200ms ease-out, transform 200ms ease-out'
-          : 'opacity 150ms ease-in, transform 150ms ease-in',
+      className="cockpit-mobile-control-plane fixed inset-0 z-50 md:hidden"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) requestClose();
       }}
     >
-      {/* Header */}
-      <header
-        className="flex items-center justify-between px-4 py-3 border-b border-[var(--ds-border)]"
-      >
-        <p
-          className="font-mono text-xs font-semibold uppercase tracking-wide"
-          style={{ color: 'var(--ds-text-muted)' }}
-        >
-          Cockpit
-        </p>
-        <div className="flex items-center gap-3">
-          <LanguagePicker manifest={manifest} entry={entry} />
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close navigation"
-            className="p-2 -m-2"
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: 'var(--ds-text-muted)',
-            }}
-          >
-            <CloseIcon />
+      <div className="cockpit-mobile-control-plane-panel">
+        <header className="cockpit-mobile-control-plane-header">
+          <span>Cockpit</span>
+          <button type="button" onClick={requestClose} aria-label="Close navigation">
+            <X size={20} strokeWidth={2} aria-hidden="true" />
           </button>
-        </div>
-      </header>
-
-      {/* Scrollable product cards */}
-      <div className="flex-1 overflow-y-auto px-4 py-3" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {navigationTree.map((product) => {
-          const label = PRODUCT_LABELS[product.product] ?? product.product;
-          const topics = product.sections.flatMap((section) =>
-            section.entries.filter((e) => e.topic !== 'overview')
-          );
-
-          if (topics.length === 0) return null;
-
-          return (
-            <div
-              key={product.product}
-              style={{
-                background: 'var(--ds-surface-tinted)',
-                border: '1px solid var(--ds-border)',
-                borderRadius: 10,
-                padding: 12,
-              }}
-            >
-              <p
-                style={{
-                  fontFamily: 'var(--ds-font-mono)',
-                  fontSize: '0.7rem',
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  color: 'var(--ds-accent)',
-                  marginBottom: 8,
-                }}
-              >
-                {label}
-              </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {topics.map((topicEntry) => {
-                  const isActive =
-                    topicEntry.product === entry.product &&
-                    topicEntry.section === entry.section &&
-                    topicEntry.topic === entry.topic &&
-                    topicEntry.page === entry.page;
-
-                  return (
-                    <a
-                      key={`${topicEntry.product}-${topicEntry.topic}`}
-                      href={toCockpitPath(topicEntry)}
-                      aria-current={isActive ? 'page' : undefined}
-                      style={{
-                        padding: '4px 10px',
-                        borderRadius: 20,
-                        fontSize: '0.8rem',
-                        textDecoration: 'none',
-                        transition: 'all 0.15s',
-                        background: isActive ? 'var(--ds-accent-surface)' : 'rgba(0, 0, 0, 0.04)',
-                        color: isActive ? 'var(--ds-accent)' : 'var(--ds-text-secondary)',
-                        border: isActive ? '1px solid var(--ds-accent-border)' : '1px solid transparent',
-                      }}
-                    >
-                      {stripProductPrefix(topicEntry.title)}
-                    </a>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
+        </header>
+        <CockpitControlPlane
+          navigationTree={navigationTree}
+          manifest={manifest}
+          entry={entry}
+          activeMode={activeMode}
+          onModeChange={(mode) => {
+            onModeChange(mode);
+            requestClose();
+          }}
+          runtimeUrl={runtimeUrl}
+          mobile
+          onNavigate={requestClose}
+        />
       </div>
     </div>
   );

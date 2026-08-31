@@ -41,8 +41,8 @@ export function DocsTOC({ headings }: { headings: DocHeading[] }) {
   if (headings.length === 0) return null;
 
   return (
-    <aside className="hidden xl:block w-56 shrink-0 py-8 pl-8 pr-6 docs-toc">
-      <p className="font-mono text-xs uppercase tracking-wider mb-3 docs-toc-label">On this page</p>
+    <aside id="docs-on-this-page" tabIndex={-1} className="hidden xl:block w-56 shrink-0 py-8 pl-8 pr-6 docs-toc">
+      <p className="mb-3 docs-toc-label">On this page</p>
       <nav className="flex flex-col gap-0.5 docs-toc-nav">
         {headings.map((h) => (
           <a

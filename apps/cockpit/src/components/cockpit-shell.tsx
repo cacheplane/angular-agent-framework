@@ -1,19 +1,23 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { cockpitManifest } from '@threadplane/cockpit-registry';
+import { Menu } from 'lucide-react';
+import {
+  parseControlPlaneMode,
+  useControlPlanePreferences,
+  type ControlPlaneMode,
+} from '@threadplane/ui-react';
 import type { ContentBundle } from '../lib/content-bundle';
 import type { CapabilityPresentation, NavigationProduct } from '../lib/route-resolution';
+import { PRODUCT_LABELS } from '../lib/navigation-labels';
 import { CodeMode } from './code-mode/code-mode';
 import { ApiMode } from './api-mode/api-mode';
 import { NarrativeDocs } from './narrative-docs/narrative-docs';
-import { ModeSwitcher } from './modes/mode-switcher';
 import { RunMode } from './run-mode/run-mode';
-import { CockpitSidebar } from './sidebar/cockpit-sidebar';
 import { MobileNavOverlay } from './mobile-nav-overlay';
+import { CockpitControlPlane } from './control-plane/cockpit-control-plane';
 
-const PRIMARY_MODES = ['Run', 'Code', 'Docs', 'API'] as const;
-type PrimaryMode = (typeof PRIMARY_MODES)[number];
 
 interface CockpitShellProps {
   navigationTree: NavigationProduct[];
@@ -28,45 +32,52 @@ const toLabel = (value: string) =>
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
 
-function MenuIcon() {
-  return (
-    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <path d="M3 5h14M3 10h14M3 15h14" />
-    </svg>
-  );
-}
-
 export function CockpitShell({
   navigationTree,
   presentation,
   entryTitle,
   contentBundle,
 }: CockpitShellProps) {
-  const [isHydrated, setIsHydrated] = useState(false);
-  const [activeMode, setActiveMode] = useState<PrimaryMode>('Run');
+  const preferences = useControlPlanePreferences('cockpit');
+  const queryHandled = useRef(false);
+  const mobileTriggerRef = useRef<HTMLButtonElement>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const isCapability = presentation.kind === 'capability';
   const codeAssetPaths = isCapability ? presentation.codeAssetPaths : [];
   const backendAssetPaths = isCapability ? (presentation.backendAssetPaths ?? []) : [];
   const entry = presentation.entry;
-  const contextLabel = `${toLabel(entry.product)} / ${toLabel(entry.section)} / ${entry.topic}`;
+  const contextLabel = `${PRODUCT_LABELS[entry.product] ?? toLabel(entry.product)} / ${toLabel(entry.section)} / ${toLabel(entry.topic)}`;
 
   useEffect(() => {
-    setIsHydrated(true);
-  }, []);
+    if (!preferences.hydrated || queryHandled.current) return;
+    queryHandled.current = true;
+    const url = new URL(window.location.href);
+    const rawMode = url.searchParams.get('mode');
+    const requestedMode = parseControlPlaneMode(rawMode);
+    if (requestedMode) preferences.setActiveMode(requestedMode);
+    if (rawMode !== null) {
+      url.searchParams.delete('mode');
+      window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+    }
+  }, [preferences]);
+
+  const activeMode: ControlPlaneMode = preferences.activeMode;
 
   return (
     <main
       aria-label="Cockpit shell"
-      className="grid md:grid-cols-[16rem_minmax(0,1fr)] h-screen overflow-hidden"
-      data-hydrated={isHydrated ? 'true' : 'false'}
+      className="cockpit-shell h-screen overflow-hidden"
+      data-hydrated={preferences.hydrated ? 'true' : 'false'}
     >
       {/* Desktop sidebar — hidden on mobile */}
-      <div className="hidden md:block overflow-y-auto">
-        <CockpitSidebar
+      <div className="hidden md:block min-h-0 overflow-hidden">
+        <CockpitControlPlane
           navigationTree={navigationTree}
           manifest={cockpitManifest}
           entry={entry}
+          activeMode={activeMode}
+          onModeChange={preferences.setActiveMode}
+          runtimeUrl={contentBundle.runtimeUrl}
         />
       </div>
 
@@ -75,8 +86,12 @@ export function CockpitShell({
         navigationTree={navigationTree}
         manifest={cockpitManifest}
         entry={entry}
+        activeMode={activeMode}
+        onModeChange={preferences.setActiveMode}
+        runtimeUrl={contentBundle.runtimeUrl}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
+        triggerRef={mobileTriggerRef}
       />
 
       <section className="grid grid-rows-[auto_1fr] grid-cols-[minmax(0,1fr)] overflow-hidden bg-[var(--ds-surface)]">
@@ -85,23 +100,16 @@ export function CockpitShell({
         >
           <div className="flex items-center gap-3 min-w-0">
             <button
+              ref={mobileTriggerRef}
               className="md:hidden"
               onClick={() => setIsSidebarOpen(true)}
               aria-label={isSidebarOpen ? 'Close navigation' : 'Open navigation'}
               aria-expanded={isSidebarOpen}
               style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ds-text-secondary)' }}
             >
-              <MenuIcon />
+              <Menu size={20} strokeWidth={2} aria-hidden="true" />
             </button>
             <p className="hidden md:block text-[var(--ds-text-muted)] font-mono text-xs truncate">{contextLabel}</p>
-          </div>
-          <div className="shrink-0 overflow-x-auto">
-            <ModeSwitcher
-              modes={PRIMARY_MODES}
-              activeMode={activeMode}
-              onChange={setActiveMode}
-              capability={entry.topic}
-            />
           </div>
         </header>
 

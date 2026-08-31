@@ -4,6 +4,7 @@ import React from 'react';
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { renderToStaticMarkup } from 'react-dom/server';
 
 vi.mock('../../lib/analytics/client', () => ({ track: vi.fn() }));
 
@@ -67,5 +68,47 @@ describe('NavigationGroups capability link instrumentation', () => {
         from_capability: 'streaming',
       }),
     );
+  });
+
+  it('uses sentence-case headings and modern chevrons', () => {
+    const currentEntry = cockpitManifest.find(
+      (candidate) => candidate.topic === 'streaming' && candidate.language === 'python',
+    )!;
+    const html = renderToStaticMarkup(
+      <NavigationGroups
+        tree={buildNavigationTree(cockpitManifest)}
+        currentEntry={currentEntry}
+      />,
+    );
+
+    expect(html).toContain('cockpit-nav-group-label');
+    expect(html).toContain('lucide-chevron-right');
+    expect(html).not.toContain('text-transform:uppercase');
+  });
+
+  it('uses one labeled navigation landmark and connected disclosures', () => {
+    container = document.createElement('div');
+    document.body.append(container);
+    root = createRoot(container);
+    const currentEntry = cockpitManifest.find(
+      (candidate) => candidate.topic === 'streaming' && candidate.language === 'python',
+    )!;
+
+    act(() => {
+      root!.render(
+        <NavigationGroups
+          tree={buildNavigationTree(cockpitManifest)}
+          currentEntry={currentEntry}
+        />,
+      );
+    });
+
+    const landmarks = container.querySelectorAll('nav');
+    expect(landmarks).toHaveLength(1);
+    expect(landmarks[0]?.getAttribute('aria-label')).toBe('Cockpit navigation');
+    const disclosure = container.querySelector<HTMLButtonElement>('button[aria-expanded]');
+    const controlledId = disclosure?.getAttribute('aria-controls');
+    expect(controlledId).toBeTruthy();
+    expect(container.querySelector(`#${controlledId}`)).toBeTruthy();
   });
 });

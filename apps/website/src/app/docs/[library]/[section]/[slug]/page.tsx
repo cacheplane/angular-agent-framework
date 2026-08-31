@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { DocsSidebar } from '../../../../../components/docs/DocsSidebar';
+import { DocsControlPlane } from '../../../../../components/docs/DocsControlPlane';
 import { MdxRenderer } from '../../../../../components/docs/MdxRenderer';
 import { DocsSearch } from '../../../../../components/docs/DocsSearch';
 import { DocsBreadcrumb } from '../../../../../components/docs/DocsBreadcrumb';
@@ -61,6 +61,7 @@ export default async function DocsPage({ params }: DocsRouteProps) {
   if (!doc) notFound();
 
   const pathname = `/docs/${library}/${section}/${slug}`;
+  const headings = extractHeadings(doc.body);
 
   const articleData = techArticleJsonLd({
     title: doc.title,
@@ -89,7 +90,12 @@ export default async function DocsPage({ params }: DocsRouteProps) {
       <JsonLd data={articleData} />
       <JsonLd data={breadcrumbs} />
       <DocsSearch library={library as LibraryId} />
-      <DocsSidebar activeLibrary={library as LibraryId} activeSection={section} activeSlug={slug} />
+      <DocsControlPlane
+        activeLibrary={library as LibraryId}
+        activeSection={section}
+        activeSlug={slug}
+        pageTitle={doc.title}
+      />
       <div className="flex-1 flex min-w-0 docs-shell-body">
         <div className="flex-1 min-w-0">
           <div className="px-4 sm:px-6 md:px-12 pt-6">
@@ -97,7 +103,7 @@ export default async function DocsPage({ params }: DocsRouteProps) {
             <DocsPageHeader
               library={library as LibraryId}
               section={section}
-              actions={<PageActions library={library} section={section} slug={slug} />}
+              actions={<PageActions library={library} section={section} slug={slug} headings={headings} />}
             />
           </div>
           <article className="flex-1 py-8 px-4 sm:px-6 md:px-12 md:max-w-3xl overflow-x-hidden">
@@ -134,7 +140,7 @@ export default async function DocsPage({ params }: DocsRouteProps) {
             <DocsPrevNext library={library as LibraryId} section={section} slug={slug} />
           </div>
         </div>
-        <DocsTOC headings={extractHeadings(doc.body)} />
+        <DocsTOC headings={headings} />
       </div>
     </div>
   );
