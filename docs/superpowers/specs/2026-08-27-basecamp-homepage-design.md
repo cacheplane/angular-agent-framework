@@ -183,6 +183,59 @@ honest form ("Angular 20–22 supported" — current Active plus both LTS lines)
 Until then it stays cut. Verify the published peer range, not the docs, before
 reviving it.
 
+## Surface treatments (approved 2026-08-30)
+
+Four atmosphere treatments, chosen with basecamp.com as reference. Basecamp
+barely uses gradients — its texture comes from highlight marks, elevation on
+product shots, and asymmetric whitespace. These translate those moves; all four
+ship, and they compose (A+D dress light sections, B refines the dark band, C
+restructures section openings).
+
+**A — Marker highlight.** A skewed navy sweep behind key phrases — hero
+subheadline first, testimonial pulls if/when real ones exist. Values:
+`linear-gradient(100deg, rgba(0,64,144,.14), rgba(0,64,144,.08) 85%)`,
+`border-radius:4px`, `transform:skewX(-6deg) rotate(-.4deg)`, drawn by a
+`::before` at `z-index:-1` with `isolation:isolate` on the span (without the
+isolation the sweep paints behind the section background and vanishes).
+Use on at most two phrases per section; a page of highlights is a page of none.
+
+**B — Glow & gradient atmosphere (dark band).** The Yes wall and FinalCTA
+canvas becomes `linear-gradient(180deg,#161616,#0e0e0e)` instead of flat
+`#111`. A radial accent glow sits behind the watermark
+(`radial-gradient(closest-side, rgba(100,195,253,.13), rgba(100,195,253,.04)
+55%, transparent 75%)`, ~640px, off the top-right corner). The watermark glyph
+itself is gradient-filled via `background-clip:text`
+(`linear-gradient(160deg, rgba(100,195,253,.16), rgba(100,195,253,.03) 70%)`)
+rather than flat low-opacity. A 1px seam marks the light→dark boundary:
+`linear-gradient(90deg, transparent, rgba(100,195,253,.55) 30%,
+rgba(100,195,253,.55) 70%, transparent)`.
+
+**C — Editorial asymmetry.** Section headers leave the centre for a left rail:
+kicker over a 2px ink rule, Garamond heading below (~44px in-rail), an italic
+muted aside under that; content in the right column. Grid `300px / 1fr`, gap
+64px, collapsing to stacked below ~900px. This replaces the centred
+kicker/H2/lede opening on the sections this design touches. **Consequence:**
+the shared `SectionHeader` primitive previously noted as out-of-scope becomes
+**in-scope** — restructuring every section opening by copy-paste would multiply
+the existing margin/letter-spacing drift. Build a `SectionHeader` (or
+`SectionRail`) primitive with centred and rail variants; sections not in this
+design's scope keep the centred variant and migrate opportunistically.
+
+**D — Paper elevation (light sections).** Tinted bands become a whisper of
+vertical gradient (`linear-gradient(180deg,#fdfdfd,#f6f6f6)`) instead of flat
+`#fbfbfb`. Proof cards: layered shadows — tight contact plus long soft ambient
+(`0 1px 2px rgba(0,0,0,.04), 0 12px 28px -12px rgba(28,28,28,.14)`) — a 1px
+top highlight (`linear-gradient(90deg, transparent, rgba(255,255,255,.9),
+transparent)`), and a faint internal vertical wash so they read as paper rather
+than outlines. Product shots: slight rotation with a deep soft shadow
+(`rotate(-.6deg)`, `0 2px 4px rgba(0,0,0,.05), 0 24px 48px -16px
+rgba(28,28,28,.22)`) — `BrowserFrame` already supports `rotate` and
+`elevation`, so this extends existing props rather than inventing.
+
+Note: change D's earlier drawing used a flat 4-cell hairline grid; with this
+treatment the proof strip becomes three elevated cards on the gradient band.
+The per-cell source lines and the live-badge rule are unchanged.
+
 ## Implementation notes
 
 `apps/website` is **Next.js 16 / React 19**, not Angular. Landing components
@@ -215,11 +268,11 @@ Tailwind is present but barely used on the homepage. Match that pattern.
 3. `components/ui/Eyebrow.tsx` has three tones (`muted`/`accent`/`angular`), all
    light-theme. The dark sections need an on-dark tone resolving to `#64C3FD`.
 
-**Not in scope but worth recording:** there is no shared `SectionHeader`
-primitive. The kicker/H2/lede block is copy-pasted across `EcosystemStrip`,
-`Differentiator`, `Promises`, and `HomeFAQ` with drifting margins (28/44/56/48)
-and inconsistent letter-spacing. Extracting one was the natural companion to the
-section-label change that got cut; leaving a note rather than doing it here.
+**`SectionHeader` extraction is now in scope** (see treatment C above). There
+is no shared primitive today — the kicker/H2/lede block is copy-pasted across
+`EcosystemStrip`, `Differentiator`, `Promises`, and `HomeFAQ` with drifting
+margins (28/44/56/48) and inconsistent letter-spacing. Treatment C's left-rail
+opening is the reason to extract one with centred and rail variants.
 
 **Testing.** `nx test website` does not exist and fails quasi-silently. Use:
 
