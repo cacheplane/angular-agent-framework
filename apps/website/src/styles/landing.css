@@ -39,26 +39,23 @@
   max-width: 54ch;
 }
 
-/* Treatment A — marker highlight. isolation:isolate is load-bearing: without
- * it the z-index:-1 sweep paints behind the section background and vanishes. */
+/* Treatment A — marker highlight. Painted as a background on the inline span
+ * with box-decoration-break: clone, so the sweep follows the text across line
+ * wraps (an absolutely-positioned box renders one broken block when the
+ * phrase wraps — which it does at every width below ~1200px). */
 .marker-highlight {
-  position: relative;
-  isolation: isolate;
   color: var(--color-text-primary);
   font-weight: 600;
-}
-.marker-highlight::before {
-  content: '';
-  position: absolute;
-  inset: -1px -5px -3px;
-  z-index: -1;
   background: linear-gradient(
     100deg,
     rgba(0, 64, 144, 0.14),
     rgba(0, 64, 144, 0.08) 85%
   );
   border-radius: 4px;
-  transform: skewX(-6deg) rotate(-0.4deg);
+  padding: 1px 5px 3px;
+  margin: -1px -5px -3px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
 .hero-chip-row {
@@ -79,6 +76,14 @@
   padding: 5px 11px;
   white-space: nowrap;
 }
+/* On phones the chip row and the proof-pill row stack as two near-identical
+ * pill lists in one viewport; the pills are links and carry the same nouns,
+ * so the decorative chips yield. */
+@media (max-width: 640px) {
+  .hero-chip-row {
+    display: none;
+  }
+}
 
 .hero-cta-row {
   display: flex;
@@ -95,6 +100,11 @@
 }
 .hero-proof-link {
   text-decoration: none;
+  /* Invisible tap-area extension: the pill renders ~27px tall; the padding
+   * lifts the touch target past the 24px WCAG floor toward the 44px ideal. */
+  display: inline-block;
+  padding: 6px 0;
+  margin: -6px 0;
 }
 .hero-caption {
   margin: 0;
@@ -128,6 +138,10 @@
   color: var(--color-accent);
   text-decoration: none;
   font-weight: 600;
+  /* 16px-tall text link; pad the tap target without shifting layout. */
+  display: inline-block;
+  padding: 8px 4px;
+  margin: -8px -4px;
 }
 @keyframes blink { to { visibility: hidden; } }
 @media (max-width: 900px) {
@@ -573,7 +587,7 @@
 }
 .ecosystem-tile-note {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.4;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -603,6 +617,14 @@
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
   margin: 0;
+}
+/* Centered ragged text is fine at 2 lines on desktop but becomes a 6-line
+ * ragged column on phones; left-align for readability. */
+@media (max-width: 640px) {
+  .ecosystem-subhead,
+  .demo-showcase__subhead {
+    text-align: left;
+  }
 }
 .ecosystem-groups {
   display: grid;
@@ -1474,7 +1496,7 @@
 .proof-strip-source {
   display: inline-block;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-text-muted);
