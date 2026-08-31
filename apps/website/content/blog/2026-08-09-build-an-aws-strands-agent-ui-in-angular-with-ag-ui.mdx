@@ -307,7 +307,9 @@ There are a few more seams to make explicit:
 
 - **CORS:** `http://localhost:4200` is a development origin. Use your exact production origin, or remove cross-origin traffic by routing through the same application domain.
 - **Authentication:** protect `/invocations` before exposing it. Never put AWS access keys, Bedrock credentials, or SigV4 signing secrets in an Angular bundle.
-- **Remote content:** version 0.2.4 can fetch URL-backed image, document, and video inputs from the server. Reject URL sources if you do not need them. Otherwise, validate them before the adapter sees the request: allowlist schemes and hosts, block redirects to private, link-local, and metadata addresses, and cap response size and time.
+- **Remote content:** version 0.2.4 can fetch URL-backed image, document, and video inputs from the server.
+  Reject URL sources if you do not need them.
+  Otherwise, validate them before the adapter sees the request: allowlist schemes and hosts, block redirects to private, link-local, and metadata addresses, and cap response size and time.
 - **Proxy streaming:** if a gateway or backend-for-frontend sits in front of the agent, disable response buffering and preserve the streaming content type. A proxy that collects the whole response turns streaming chat back into a spinner.
 - **Authorization:** bind threads to the authenticated user on the server. A client-provided `threadId` is an identifier, not proof that the caller may access that conversation.
 - **Operations:** set timeouts intentionally, propagate cancellation where your stack supports it, rate-limit runs, and record errors without logging sensitive prompts or tool results by default.
