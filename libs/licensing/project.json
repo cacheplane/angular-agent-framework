@@ -4,6 +4,7 @@
   "sourceRoot": "libs/licensing/src",
   "projectType": "library",
   "tags": [
+    "scope:angular-compatibility",
     "scope:cockpit",
     "scope:cockpit-deploy-smoke",
     "scope:cockpit-e2e",
@@ -25,12 +26,8 @@
     },
     "build": {
       "executor": "@nx/js:tsc",
-      "dependsOn": [
-        "prebuild"
-      ],
-      "outputs": [
-        "{workspaceRoot}/dist/libs/licensing"
-      ],
+      "dependsOn": ["prebuild"],
+      "outputs": ["{workspaceRoot}/dist/libs/licensing"],
       "options": {
         "outputPath": "dist/libs/licensing",
         "main": "libs/licensing/src/index.ts",
@@ -42,9 +39,7 @@
     },
     "test": {
       "executor": "@nx/vitest:test",
-      "dependsOn": [
-        "prebuild"
-      ],
+      "dependsOn": ["prebuild"],
       "options": {
         "configFile": "libs/licensing/vite.config.mts"
       }

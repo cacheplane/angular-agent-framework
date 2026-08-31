@@ -22,6 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       library: ${{ steps.scope.outputs.library }}
+      angular_compatibility: ${{ steps.scope.outputs.angular_compatibility }}
       website: ${{ steps.scope.outputs.website }}
       cockpit: ${{ steps.scope.outputs.cockpit }}
       cockpit_examples: ${{ steps.scope.outputs.cockpit_examples }}
@@ -79,7 +80,7 @@ jobs:
   library:
     name: Library — lint / test / build
     needs: ci-scope
-    if: github.event_name == 'push' || needs.ci-scope.outputs.library == 'true'
+    if: github.event_name == 'push' || needs.ci-scope.outputs.library == 'true' || needs.ci-scope.outputs.angular_compatibility == 'true'
     runs-on: ubuntu-latest
     env:
       LIBS: chat,langgraph,ag-ui,render,a2ui,licensing,telemetry
@@ -96,6 +97,60 @@ jobs:
       - run: node scripts/verify-release-versions.mjs
       - name: DX-coverage — public dev-facing functions must have a JSDoc summary
         run: node scripts/check-dx-coverage.mjs
+      - run: node --test examples/chat/smoke/*.spec.mjs scripts/verify-angular-support.spec.mjs
+      - run: node scripts/verify-angular-support.mjs
+      - name: Upload production library artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: threadplane-library-dist
+          path: dist/libs
+          if-no-files-found: error
+          retention-days: 1
+
+  angular-compatibility:
+    name: 'Angular ${{ matrix.angular }} — packaged consumer'
+    needs: [ci-scope, library]
+    if: github.event_name == 'push' || needs.ci-scope.outputs.angular_compatibility == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        angular: [20, 21, 22]
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 22.22.3
+          cache: npm
+      - run: npm ci
+      - name: Download production library artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: threadplane-library-dist
+          path: dist/libs
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Generate, install, build, and run consumer
+        run: >-
+          node examples/chat/smoke/cli.mjs
+          --non-interactive --fresh
+          --target "${{ runner.temp }}/threadplane-angular-${{ matrix.angular }}"
+          --local-dist-root dist/libs
+          --angular-major "${{ matrix.angular }}"
+          --install --build --runtime
+      - name: Upload compatibility diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: angular-${{ matrix.angular }}-compatibility-diagnostics
+          path: |
+            ${{ runner.temp }}/threadplane-angular-${{ matrix.angular }}/package.json
+            ${{ runner.temp }}/threadplane-angular-${{ matrix.angular }}/package-lock.json
+            ${{ runner.temp }}/threadplane-angular-${{ matrix.angular }}/runtime-smoke.png
+            ${{ runner.temp }}/threadplane-angular-${{ matrix.angular }}/runtime-smoke-trace.zip
+          if-no-files-found: warn
+          retention-days: 7
 
   website:
     name: Website — lint / test / build
@@ -239,7 +294,7 @@ jobs:
       - run: npx nx run examples-chat-python:smoke --skip-nx-cache
 
   examples-chat-e2e:
-    name: "examples/chat — e2e (${{ matrix.shard }}/4)"
+    name: 'examples/chat — e2e (${{ matrix.shard }}/4)'
     needs: ci-scope
     if: github.event_name == 'push' || needs.ci-scope.outputs.examples_chat == 'true'
     runs-on: ubuntu-latest
@@ -286,7 +341,7 @@ jobs:
           retention-days: 7
 
   examples-chat-e2e-summary:
-    name: "examples/chat — e2e"
+    name: 'examples/chat — e2e'
     needs: [ci-scope, examples-chat-e2e]
     if: always() && (github.event_name == 'push' || needs.ci-scope.outputs.examples_chat == 'true')
     runs-on: ubuntu-latest
@@ -300,7 +355,7 @@ jobs:
           echo "All examples-chat-e2e matrix expansions passed."
 
   examples-ag-ui-e2e:
-    name: "examples/ag-ui — e2e"
+    name: 'examples/ag-ui — e2e'
     needs: ci-scope
     # No dedicated ci-scope output exists for examples/ag-ui yet, so this job
     # runs on every push and pull_request rather than being scope-gated. It is
@@ -382,7 +437,7 @@ jobs:
             --full-fleet "${{ steps.refs.outputs.full }}"
 
   cockpit-e2e:
-    name: "Cockpit — e2e (${{ matrix.cap.angular }})"
+    name: 'Cockpit — e2e (${{ matrix.cap.angular }})'
     needs: [ci-scope, cockpit-e2e-dispatcher]
     if: github.event_name == 'push' || needs.ci-scope.outputs.cockpit_e2e == 'true'
     runs-on: ubuntu-latest
@@ -430,7 +485,7 @@ jobs:
           retention-days: 7
 
   cockpit-e2e-summary:
-    name: "Cockpit — e2e"
+    name: 'Cockpit — e2e'
     needs: [ci-scope, cockpit-e2e]
     if: always() && (github.event_name == 'push' || needs.ci-scope.outputs.cockpit_e2e == 'true')
     runs-on: ubuntu-latest
@@ -470,6 +525,7 @@ jobs:
     needs:
       - ci-scope
       - library
+      - angular-compatibility
       - website
       - cockpit
       - cockpit-examples-build
@@ -487,6 +543,7 @@ jobs:
         env:
           RESULT_CI_SCOPE: ${{ needs.ci-scope.result }}
           RESULT_LIBRARY: ${{ needs.library.result }}
+          RESULT_ANGULAR_COMPATIBILITY: ${{ needs.angular-compatibility.result }}
           RESULT_WEBSITE: ${{ needs.website.result }}
           RESULT_COCKPIT: ${{ needs.cockpit.result }}
           RESULT_COCKPIT_EXAMPLES: ${{ needs.cockpit-examples-build.result }}
@@ -498,6 +555,7 @@ jobs:
           RESULT_WEBSITE_E2E: ${{ needs.website-e2e.result }}
           RESULT_POSTHOG: ${{ needs.posthog-sync-plan.result }}
           SCOPE_LIBRARY: ${{ needs.ci-scope.outputs.library }}
+          SCOPE_ANGULAR_COMPATIBILITY: ${{ needs.ci-scope.outputs.angular_compatibility }}
           SCOPE_WEBSITE: ${{ needs.ci-scope.outputs.website }}
           SCOPE_COCKPIT: ${{ needs.ci-scope.outputs.cockpit }}
           SCOPE_COCKPIT_EXAMPLES: ${{ needs.ci-scope.outputs.cockpit_examples }}
@@ -544,6 +602,11 @@ jobs:
 
           require_always "CI scope" "$RESULT_CI_SCOPE"
           require_scoped "library" "Library — lint / test / build" "$RESULT_LIBRARY" "$SCOPE_LIBRARY"
+          require_scoped \
+            "angular_compatibility" \
+            "Angular compatibility matrix" \
+            "$RESULT_ANGULAR_COMPATIBILITY" \
+            "$SCOPE_ANGULAR_COMPATIBILITY"
           require_scoped "website" "Website — lint / test / build" "$RESULT_WEBSITE" "$SCOPE_WEBSITE"
           require_scoped "cockpit" "Cockpit — build / test" "$RESULT_COCKPIT" "$SCOPE_COCKPIT"
           require_scoped "cockpit_examples" "Cockpit — build all examples" "$RESULT_COCKPIT_EXAMPLES" "$SCOPE_COCKPIT_EXAMPLES"

@@ -4,6 +4,7 @@
   "sourceRoot": "libs/telemetry/src",
   "projectType": "library",
   "tags": [
+    "scope:angular-compatibility",
     "scope:cockpit",
     "scope:cockpit-deploy-smoke",
     "scope:cockpit-e2e",
@@ -19,9 +20,7 @@
   "targets": {
     "build:node": {
       "executor": "@nx/js:tsc",
-      "outputs": [
-        "{workspaceRoot}/dist/libs/telemetry"
-      ],
+      "outputs": ["{workspaceRoot}/dist/libs/telemetry"],
       "options": {
         "outputPath": "dist/libs/telemetry",
         "main": "libs/telemetry/src/index.ts",
@@ -30,34 +29,22 @@
           "libs/telemetry/src/node/postinstall.ts"
         ],
         "tsConfig": "libs/telemetry/tsconfig.lib.json",
-        "assets": [
-          "libs/telemetry/README.md",
-          "libs/telemetry/package.json"
-        ]
+        "assets": ["libs/telemetry/README.md", "libs/telemetry/package.json"]
       }
     },
     "build:browser": {
       "executor": "@nx/angular:package",
-      "outputs": [
-        "{workspaceRoot}/dist/libs/telemetry/browser"
-      ],
+      "outputs": ["{workspaceRoot}/dist/libs/telemetry/browser"],
       "options": {
         "project": "libs/telemetry/ng-package.json",
         "tsConfig": "libs/telemetry/tsconfig.lib.browser.json"
       },
-      "dependsOn": [
-        "build:node"
-      ]
+      "dependsOn": ["build:node"]
     },
     "build": {
-      "dependsOn": [
-        "build:node",
-        "build:browser"
-      ],
+      "dependsOn": ["build:node", "build:browser"],
       "executor": "nx:run-commands",
-      "outputs": [
-        "{workspaceRoot}/dist/libs/telemetry"
-      ],
+      "outputs": ["{workspaceRoot}/dist/libs/telemetry"],
       "options": {
         "command": "node libs/telemetry/scripts/assemble-dist.mjs"
       }

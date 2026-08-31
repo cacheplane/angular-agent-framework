@@ -5,10 +5,17 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const SCOPE_KEYS = [
-  'library', 'website', 'website_e2e',
-  'cockpit', 'cockpit_examples', 'cockpit_smoke',
-  'cockpit_deploy_smoke', 'cockpit_e2e',
-  'examples_chat', 'posthog',
+  'library',
+  'angular_compatibility',
+  'website',
+  'website_e2e',
+  'cockpit',
+  'cockpit_examples',
+  'cockpit_smoke',
+  'cockpit_deploy_smoke',
+  'cockpit_e2e',
+  'examples_chat',
+  'posthog',
 ];
 
 const GLOBAL_CI_FILES = new Set([
@@ -20,14 +27,42 @@ const GLOBAL_CI_FILES = new Set([
   'tsconfig.base.json',
 ]);
 
+const ANGULAR_COMPATIBILITY_FILES = new Set([
+  'scripts/verify-angular-support.mjs',
+  'scripts/verify-angular-support.spec.mjs',
+  'libs/chat/package.json',
+  'libs/langgraph/package.json',
+  'libs/ag-ui/package.json',
+  'libs/render/package.json',
+  'libs/telemetry/package.json',
+  'libs/cockpit-telemetry/package.json',
+  'libs/example-layouts/package.json',
+  'apps/website/src/components/pricing/angular-support.mjs',
+  'apps/website/src/components/pricing/CompatibilityMatrix.tsx',
+  'apps/website/src/components/pricing/PricingDetails.tsx',
+  'README.md',
+  'libs/chat/README.md',
+  'libs/langgraph/README.md',
+  'libs/ag-ui/README.md',
+  'libs/render/README.md',
+  'libs/telemetry/README.md',
+  'apps/website/content/docs/chat/getting-started/installation.mdx',
+  'apps/website/content/docs/langgraph/getting-started/installation.mdx',
+  'apps/website/content/docs/ag-ui/getting-started/installation.mdx',
+  'apps/website/content/docs/render/getting-started/installation.mdx',
+]);
+
+const ANGULAR_COMPATIBILITY_PREFIXES = [
+  'examples/chat/smoke/',
+  'examples/chat/angular/src/app/',
+];
+
 /** Files whose changes only affect linting (not builds, not e2e tests).
  *  These flip the scopes that actually run `nx lint` (library, cockpit,
  *  website, examples_chat) but do NOT trigger e2e/smoke/deploy jobs.
  *  Avoids the ~50 CI-minute spike from a one-line lint-config tweak
  *  re-running the 24-cap cockpit-e2e matrix. */
-const LINT_ONLY_FILES = new Set([
-  'eslint.config.mjs',
-]);
+const LINT_ONLY_FILES = new Set(['eslint.config.mjs']);
 
 /** Subset of SCOPE_KEYS that own jobs running `nx lint`. Flipped true
  *  when a LINT_ONLY_FILES entry changes. */
@@ -42,12 +77,27 @@ export function fullScope() {
 }
 
 function normalizePath(value) {
-  return String(value ?? '').replaceAll(path.sep, '/').replace(/^\.\//, '').replace(/\/+$/, '');
+  return String(value ?? '')
+    .replaceAll(path.sep, '/')
+    .replace(/^\.\//, '')
+    .replace(/\/+$/, '');
 }
 
 function tagToScopeKey(tag) {
   // 'scope:cockpit-e2e' → 'cockpit_e2e'
   return tag.replace(/^scope:/, '').replaceAll('-', '_');
+}
+
+export function isAngularCompatibilityChange(changedFiles) {
+  return changedFiles.some((file) => {
+    const normalized = normalizePath(file);
+    return (
+      ANGULAR_COMPATIBILITY_FILES.has(normalized) ||
+      ANGULAR_COMPATIBILITY_PREFIXES.some((prefix) =>
+        normalized.startsWith(prefix)
+      )
+    );
+  });
 }
 
 /**
@@ -74,6 +124,9 @@ export function classifyFromAffected(changedFiles, affectedProjects) {
   if (changedFiles.some((f) => LINT_ONLY_FILES.has(f))) {
     for (const key of LINT_SCOPE_KEYS) scope[key] = true;
   }
+  if (isAngularCompatibilityChange(changedFiles)) {
+    scope.angular_compatibility = true;
+  }
   return scope;
 }
 
@@ -92,17 +145,28 @@ function changedFilesBetween(base, head, workspaceRoot) {
 }
 
 function loadAffectedProjects(base, head, workspaceRoot) {
-  const namesJson = execFileSync('npx', [
-    'nx', 'show', 'projects',
-    '--affected',
-    '--base', base, '--head', head,
-    '--json',
-  ], { cwd: workspaceRoot, encoding: 'utf8' });
+  const namesJson = execFileSync(
+    'npx',
+    [
+      'nx',
+      'show',
+      'projects',
+      '--affected',
+      '--base',
+      base,
+      '--head',
+      head,
+      '--json',
+    ],
+    { cwd: workspaceRoot, encoding: 'utf8' }
+  );
   const names = JSON.parse(namesJson);
   return names.map((name) => {
-    const projectJson = execFileSync('npx', [
-      'nx', 'show', 'project', name, '--json',
-    ], { cwd: workspaceRoot, encoding: 'utf8' });
+    const projectJson = execFileSync(
+      'npx',
+      ['nx', 'show', 'project', name, '--json'],
+      { cwd: workspaceRoot, encoding: 'utf8' }
+    );
     const project = JSON.parse(projectJson);
     return { name: project.name ?? name, tags: project.tags ?? [] };
   });
@@ -136,7 +200,9 @@ function main() {
   }
 
   if (!args.base || !args.head) {
-    throw new Error('Expected --base and --head for pull request scope detection.');
+    throw new Error(
+      'Expected --base and --head for pull request scope detection.'
+    );
   }
 
   const changedFiles = changedFilesBetween(args.base, args.head, workspaceRoot);
@@ -148,13 +214,18 @@ function main() {
     return;
   }
 
-  const affectedProjects = loadAffectedProjects(args.base, args.head, workspaceRoot);
+  const affectedProjects = loadAffectedProjects(
+    args.base,
+    args.head,
+    workspaceRoot
+  );
   const scope = classifyFromAffected(changedFiles, affectedProjects);
 
   console.log('Changed files:');
   for (const f of changedFiles) console.log(`  ${f}`);
   console.log(`Affected projects (${affectedProjects.length}):`);
-  for (const p of affectedProjects) console.log(`  ${p.name} [${p.tags.join(', ')}]`);
+  for (const p of affectedProjects)
+    console.log(`  ${p.name} [${p.tags.join(', ')}]`);
 
   writeOutputs(scope, args.output);
 }
@@ -163,7 +234,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   try {
     main();
   } catch (error) {
-    console.error(`::error::${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `::error::${error instanceof Error ? error.message : String(error)}`
+    );
     process.exit(1);
   }
 }

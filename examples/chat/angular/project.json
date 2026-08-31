@@ -14,12 +14,8 @@
     },
     "build": {
       "executor": "@angular/build:application",
-      "dependsOn": [
-        "inject-env"
-      ],
-      "outputs": [
-        "{options.outputPath.base}"
-      ],
+      "dependsOn": ["inject-env"],
+      "outputs": ["{options.outputPath.base}"],
       "options": {
         "outputPath": {
           "base": "dist/examples/chat/angular",
@@ -44,9 +40,7 @@
           "define": {
             "THREADPLANE_CHAT_DEBUG": "false"
           },
-          "externalDependencies": [
-            "@threadplane/chat/debug"
-          ],
+          "externalDependencies": ["@threadplane/chat/debug"],
           "budgets": [
             {
               "type": "initial",
@@ -109,9 +103,7 @@
     "serve": {
       "continuous": true,
       "executor": "@angular/build:dev-server",
-      "dependsOn": [
-        "inject-env"
-      ],
+      "dependsOn": ["inject-env"],
       "options": {
         "port": 4200
       },
@@ -156,6 +148,7 @@
     }
   },
   "tags": [
+    "scope:angular-compatibility",
     "scope:examples",
     "scope:examples-chat",
     "type:app"
