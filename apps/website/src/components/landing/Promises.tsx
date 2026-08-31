@@ -1,56 +1,37 @@
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';
-import { Card } from '../ui/Card';
 
 const PROMISES = [
-  {
-    title: 'No runtime lock-in',
-    body: 'Every Threadplane package is MIT-licensed for commercial and noncommercial use.',
-  },
-  {
-    title: 'No abandoned majors',
-    body: 'We support Angular’s current and previous LTS versions.',
-  },
-  {
-    title: 'No required cloud',
-    body: 'Self-host LangGraph + your Angular app. Run it all in your VPC.',
-  },
-  {
-    title: 'No hidden telemetry',
-    body: 'Package installation is inert. Browser and Node events require an explicit application action.',
-  },
-  {
-    title: 'No model lock-in',
-    body: 'Adapters work with any LLM your runtime supports. Swap providers without changing Angular code.',
-  },
+  { no: 'No runtime lock-in', rest: 'every package is MIT, commercial or not.', tail: 'MIT, all packages' },
+  { no: 'No abandoned majors', rest: "Angular's current and previous LTS, always.", tail: 'support policy' },
+  { no: 'No required cloud', rest: 'run everything in your own VPC.', tail: 'self-host' },
+  { no: 'No hidden telemetry', rest: 'events require an explicit application action.', tail: 'installation is inert' },
+  { no: 'No model lock-in', rest: 'swap providers without touching Angular code.', tail: 'any LLM your runtime runs' },
 ];
 
 export function Promises() {
   return (
     <Section surface="canvas" ariaLabelledBy="promises-heading">
       <Container>
-        <div className="promises-intro">
+        <div className="promises-rail">
           <Eyebrow tone="accent" className="promises-eyebrow">
             Built on principles
           </Eyebrow>
-          <h2 id="promises-heading" className="promises-heading">
-            What we won&apos;t do.
-          </h2>
-          <p className="promises-subhead">
-            Honest commitments, not aspirations.
-          </p>
+          <span className="promises-rail-line" aria-hidden="true" />
+          <span className="promises-rail-aside">honest commitments, not aspirations</span>
         </div>
-        <div className="promises-grid">
+        <h2 id="promises-heading" className="promises-heading">
+          What we won&apos;t do.
+        </h2>
+        <div className="promises-rows">
           {PROMISES.map((p) => (
-            <Card key={p.title} padding="lg">
-              <h3 className="promises-card-title">
-                {p.title}
-              </h3>
-              <p className="promises-card-body">
-                {p.body}
+            <div className="promises-row" key={p.no}>
+              <p className="promises-row-claim">
+                <span className="marker-highlight">{p.no}</span> — {p.rest}
               </p>
-            </Card>
+              <p className="promises-row-tail">{p.tail}</p>
+            </div>
           ))}
         </div>
       </Container>
