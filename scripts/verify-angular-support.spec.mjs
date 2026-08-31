@@ -194,6 +194,24 @@ test('rejects a stale active peer block despite an unrelated canonical example',
   );
 });
 
+test('rejects a stale Shields badge message despite correct alt text', async (t) => {
+  const root = await createDocumentationFixture(t, async (fixtureRoot) => {
+    await writeText(
+      join(fixtureRoot, 'README.md'),
+      [
+        '<img alt="Angular 20 | 21 | 22" src="https://img.shields.io/badge/Angular-20%20%7C%2021-6C8EFF" />',
+        '',
+        `**Peer dependencies:** \`@angular/core ${ANGULAR_PEER_RANGE}\``,
+      ].join('\n')
+    );
+  });
+
+  await assert.rejects(
+    angularSupportVerifier.verifyDocumentation({ root }),
+    /README\.md Angular support badge must encode the message "20%20%7C%2021%20%7C%2022" in the same <img> tag\./
+  );
+});
+
 test('uses the registry Angular majors in website support data', async () => {
   await verifyWebsiteMajors();
 });

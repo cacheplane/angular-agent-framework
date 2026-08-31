@@ -61,9 +61,12 @@ function formatAngularMajorList(majors) {
   return `${majors.slice(0, -1).join(', ')}, and ${majors.at(-1)}`;
 }
 
-export const ANGULAR_SUPPORT_BADGE_TEXT = `Angular ${SUPPORTED_ANGULAR_MAJORS.join(
-  ' | '
-)}`;
+export const ANGULAR_SUPPORT_BADGE_MESSAGE =
+  SUPPORTED_ANGULAR_MAJORS.join(' | ');
+export const ANGULAR_SUPPORT_BADGE_TEXT = `Angular ${ANGULAR_SUPPORT_BADGE_MESSAGE}`;
+export const ANGULAR_SUPPORT_BADGE_URL_MESSAGE = encodeURIComponent(
+  ANGULAR_SUPPORT_BADGE_MESSAGE
+);
 export const ACTIVE_INSTALLATION_SUPPORT_STATEMENT = `Supported Angular majors: ${formatAngularMajorList(
   SUPPORTED_ANGULAR_MAJORS
 )}.`;
@@ -109,6 +112,12 @@ function getActivePeerDependencyBlock(contents, marker) {
   return closingFenceIndex === -1
     ? undefined
     : afterMarker.slice(blockStart, closingFenceIndex);
+}
+
+function getAngularSupportBadgeTag(contents) {
+  return [...contents.matchAll(/<img\b[^>]*>/g)].find((tag) =>
+    tag[0].includes(`alt="${ANGULAR_SUPPORT_BADGE_TEXT}"`)
+  )?.[0];
 }
 
 export async function verifyPeerRanges({ root = process.cwd() } = {}) {
@@ -168,9 +177,19 @@ export async function verifyDocumentation({ root = process.cwd() } = {}) {
       continue;
     }
 
-    if (!contents.includes(`alt="${ANGULAR_SUPPORT_BADGE_TEXT}"`)) {
+    const angularSupportBadgeTag = getAngularSupportBadgeTag(contents);
+
+    if (!angularSupportBadgeTag) {
       errors.push(
         `${readme} must contain the Angular support badge text "${ANGULAR_SUPPORT_BADGE_TEXT}".`
+      );
+    } else if (
+      !angularSupportBadgeTag.includes(
+        `src="https://img.shields.io/badge/Angular-${ANGULAR_SUPPORT_BADGE_URL_MESSAGE}-`
+      )
+    ) {
+      errors.push(
+        `${readme} Angular support badge must encode the message "${ANGULAR_SUPPORT_BADGE_URL_MESSAGE}" in the same <img> tag.`
       );
     }
 
