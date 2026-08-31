@@ -9,7 +9,7 @@ export const COCKPIT_RUNTIME_ENV = { NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL: '' } 
 export function backendCommand(cap: Capability): string | null {
   if (!cap.pythonDir) return null;
   const enter = `cd ${cap.pythonDir} && source $HOME/.local/bin/env 2>/dev/null; uv sync`;
-  if (cap.product === 'ag-ui') {
+  if (cap.product === 'ag-ui' || cap.product === 'runtimes') {
     return `${enter} && uv run uvicorn src.server:app --port ${cap.pythonPort}`;
   }
   return `${enter} && uv run langgraph dev --port ${cap.pythonPort} --no-browser`;

@@ -1,6 +1,6 @@
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
-import { capabilities } from '../apps/cockpit/scripts/capability-registry';
+import { capabilities, type CapabilityFramework } from '../apps/cockpit/scripts/capability-registry';
 
 const GENERATED_HEADER = '# GENERATED — do not edit. Source: scripts/generate-ag-ui-deployment-config.ts';
 
@@ -9,10 +9,61 @@ export interface GenerateOptions {
   outDir: string;
 }
 
-interface AgUiTopic {
+export interface AgUiTopic {
   topic: string;
   pythonDir: string;
+  framework: CapabilityFramework;
 }
+
+/**
+ * Per-framework adapter: how a topic's staged module is imported and mounted
+ * on the aggregated FastAPI app. Adding a runtime means adding one entry here
+ * plus a `framework` discriminator on its registry capability — nothing else
+ * in the generator is framework-aware.
+ *
+ * Module contract per framework:
+ * - langgraph: `deps/<mod>/src/graph.py` exposes a compiled `graph`; mounted
+ *   via ag-ui-langgraph's LangGraphAgent wrapper.
+ * - microsoft-agent-framework: `deps/<mod>/src/agent.py` exposes an `agent`
+ *   object (agent_framework Agent / AgentFrameworkAgent); the bridge mounts
+ *   the agent object directly — there is no wrapper class.
+ */
+interface FrameworkAdapter {
+  /** Module-level import line for the framework's AG-UI bridge package. */
+  bridgeImport: string;
+  /** Per-topic import of the staged module's exported object. */
+  topicImport(mod: string): string;
+  /** Per-topic FastAPI mount block. */
+  mount(topic: string, mod: string): string;
+}
+
+/**
+ * Declaration order is emission order for bridge imports in server.py:
+ * langgraph stays first so a langgraph-only registry generates byte-identical
+ * output to the pre-adapter generator.
+ */
+const FRAMEWORK_ADAPTERS: Record<CapabilityFramework, FrameworkAdapter> = {
+  langgraph: {
+    bridgeImport: 'from ag_ui_langgraph import add_langgraph_fastapi_endpoint, LangGraphAgent',
+    topicImport: (mod) => `from deps.${mod}.src.graph import graph as ${mod}_graph`,
+    mount: (topic, mod) =>
+      `add_langgraph_fastapi_endpoint(\n` +
+      `    app,\n` +
+      `    LangGraphAgent(name="${topic}", graph=${mod}_graph),\n` +
+      `    path="/agent/${topic}",\n` +
+      `)`,
+  },
+  'microsoft-agent-framework': {
+    bridgeImport: 'from agent_framework_ag_ui import add_agent_framework_fastapi_endpoint',
+    topicImport: (mod) => `from deps.${mod}.src.agent import agent as ${mod}_agent`,
+    mount: (topic, mod) =>
+      `add_agent_framework_fastapi_endpoint(\n` +
+      `    app,\n` +
+      `    ${mod}_agent,\n` +
+      `    path="/agent/${topic}",\n` +
+      `)`,
+  },
+};
 
 /**
  * A topic is a URL slug and may contain hyphens (e.g. `tool-views`,
@@ -27,8 +78,14 @@ function pyModule(topic: string): string {
 
 function collectTopics(): AgUiTopic[] {
   const topics = capabilities
-    .filter((c) => c.product === 'ag-ui' && c.pythonDir)
-    .map<AgUiTopic>((c) => ({ topic: c.topic, pythonDir: c.pythonDir! }));
+    // 'ag-ui' and 'runtimes' products are both AG-UI-served FastAPI backends
+    // aggregated into the single ag-ui-dev deployment.
+    .filter((c) => (c.product === 'ag-ui' || c.product === 'runtimes') && c.pythonDir)
+    .map<AgUiTopic>((c) => ({
+      topic: c.topic,
+      pythonDir: c.pythonDir!,
+      framework: c.framework ?? 'langgraph',
+    }));
   topics.sort((a, b) => a.topic.localeCompare(b.topic));
   if (topics.length === 0) {
     throw new Error('No ag-ui topics with pythonDir found in capability registry');
@@ -58,19 +115,18 @@ function stageDeps(repoRoot: string, outDir: string, topics: AgUiTopic[]): void 
   }
 }
 
-function buildServerPy(topics: AgUiTopic[]): string {
+export function buildServerPy(topics: AgUiTopic[]): string {
+  const usedFrameworks = (Object.keys(FRAMEWORK_ADAPTERS) as CapabilityFramework[]).filter(
+    (framework) => topics.some((t) => t.framework === framework),
+  );
+  const bridgeImports = usedFrameworks
+    .map((framework) => FRAMEWORK_ADAPTERS[framework].bridgeImport)
+    .join('\n');
   const imports = topics
-    .map((t) => `from deps.${pyModule(t.topic)}.src.graph import graph as ${pyModule(t.topic)}_graph`)
+    .map((t) => FRAMEWORK_ADAPTERS[t.framework].topicImport(pyModule(t.topic)))
     .join('\n');
   const mounts = topics
-    .map(
-      (t) =>
-        `add_langgraph_fastapi_endpoint(\n` +
-        `    app,\n` +
-        `    LangGraphAgent(name="${t.topic}", graph=${pyModule(t.topic)}_graph),\n` +
-        `    path="/agent/${t.topic}",\n` +
-        `)`,
-    )
+    .map((t) => FRAMEWORK_ADAPTERS[t.framework].mount(t.topic, pyModule(t.topic)))
     .join('\n');
   return `${GENERATED_HEADER}
 # Multi-topic AG-UI FastAPI server. Aggregates each cockpit/ag-ui/*/python topic
@@ -79,7 +135,7 @@ function buildServerPy(topics: AgUiTopic[]): string {
 import os
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from ag_ui_langgraph import add_langgraph_fastapi_endpoint, LangGraphAgent
+${bridgeImports}
 
 ${imports}
 
