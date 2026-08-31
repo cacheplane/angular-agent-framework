@@ -264,6 +264,16 @@
   gap: 64px;
   align-items: center;
 }
+.wp-rail {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.wp-rail-line {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
 .wp-eyebrow {
   margin-bottom: 16px;
 }
@@ -277,29 +287,38 @@
   margin-bottom: 20px;
   letter-spacing: -0.015em;
 }
-.wp-bullets {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 24px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.wp-rows {
+  margin: 18px 0 4px;
+  border-top: 2px solid var(--color-text-primary);
+  max-width: 42ch;
 }
-.wp-bullet {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
+.wp-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: baseline;
+  border-bottom: 1px solid var(--color-border);
+  padding: 9px 0;
+}
+.wp-row-claim {
   font-family: var(--font-inter);
-  font-size: var(--text-body-lg);
-  line-height: var(--text-body-lg--line-height);
-  color: var(--color-text-secondary);
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--color-text-primary);
+  margin: 0;
 }
-.wp-bullet-dot {
-  flex: 0 0 6px;
-  height: 6px;
-  margin-top: 12px;
-  border-radius: var(--radius-full);
-  background: var(--color-accent);
+.wp-row-tail {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .wp-row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
 }
 .wp-success {
   font-family: var(--font-inter);
@@ -352,15 +371,19 @@
    * content's 392px inside a 280px track. */
   min-width: 0;
 }
-/* The frame is shrink-to-fit, so the cover's `100%` was indefinite and its
- * aspect-ratio kept deriving a fixed ~392px width from content height. A
- * definite width (capped by the frame's own inline maxWidth) lets the cover
- * track the viewport. Scoped to the stacked breakpoint: at desktop the grid
- * track is wider than the card, and an unconditional 100% would grow it. */
-@media (max-width: 640px) {
-  .wp-cover-wrap > [data-ui="browser-frame"] {
-    width: 100%;
-  }
+.wp-paper {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 300px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 26px 24px;
+  transform: rotate(-1.2deg);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    0 26px 52px -18px rgba(28, 28, 28, 0.28);
 }
 .wp-cover {
   /* aspect-ratio alone derives width from the content's height, which makes
