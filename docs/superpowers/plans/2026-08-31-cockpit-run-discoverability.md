@@ -596,31 +596,31 @@ Add to `apps/cockpit/src/lib/runtime/runtime-state.spec.ts`:
 describe('runtimeRailStatus', () => {
   it('maps every phase to a rail status', () => {
     expect(runtimeRailStatus('ready')).toEqual({
-      status: 'success',
+      kind: 'success',
       label: 'runtime ready',
     });
     expect(runtimeRailStatus('connecting')).toEqual({
-      status: 'working',
+      kind: 'working',
       label: 'runtime starting',
     });
     expect(runtimeRailStatus('checking')).toEqual({
-      status: 'working',
+      kind: 'working',
       label: 'runtime starting',
     });
     expect(runtimeRailStatus('reloading')).toEqual({
-      status: 'working',
+      kind: 'working',
       label: 'runtime starting',
     });
     expect(runtimeRailStatus('unresponsive')).toEqual({
-      status: 'error',
+      kind: 'error',
       label: 'runtime error',
     });
     expect(runtimeRailStatus('error')).toEqual({
-      status: 'error',
+      kind: 'error',
       label: 'runtime error',
     });
     expect(runtimeRailStatus('invalid_configuration')).toEqual({
-      status: 'error',
+      kind: 'error',
       label: 'runtime error',
     });
   });
@@ -643,30 +643,31 @@ Expected: FAIL — `runtimeRailStatus is not a function`.
 Append to `apps/cockpit/src/lib/runtime/runtime-state.ts`:
 
 ```ts
-export interface RuntimeRailStatus {
-  status: 'success' | 'working' | 'error';
-  label: string;
-}
+import type { ControlPlaneRailItemStatus } from '@threadplane/ui-react';
 
 export function runtimeRailStatus(
   phase: RuntimePhase
-): RuntimeRailStatus | null {
+): ControlPlaneRailItemStatus | null {
   switch (phase) {
     case 'ready':
-      return { status: 'success', label: 'runtime ready' };
+      return { kind: 'success', label: 'runtime ready' };
     case 'connecting':
     case 'checking':
     case 'reloading':
-      return { status: 'working', label: 'runtime starting' };
+      return { kind: 'working', label: 'runtime starting' };
     case 'unresponsive':
     case 'error':
     case 'invalid_configuration':
-      return { status: 'error', label: 'runtime error' };
+      return { kind: 'error', label: 'runtime error' };
     case 'not_configured':
       return null;
   }
 }
 ```
+
+`ControlPlaneRailItemStatus` is `{ kind, label }`, exported from `@threadplane/ui-react`
+by Task 3. Returning that shape directly means the rail item takes one prop, and a dot
+without an accessible label is unrepresentable.
 
 The exhaustive `switch` over `RuntimePhase` with no `default` means a future phase is a
 compile error rather than a silently missing dot.
@@ -724,8 +725,7 @@ and change the `primary` mapping so only Run carries it:
             icon={<Icon size={18} aria-hidden="true" />}
             active={label === activeMode}
             onSelect={() => selectMode(label)}
-            status={label === 'Run' ? railStatus?.status : undefined}
-            statusLabel={label === 'Run' ? railStatus?.label : undefined}
+            status={label === 'Run' ? railStatus ?? undefined : undefined}
           />
         ))}
 ```
@@ -774,6 +774,14 @@ Then add the dot itself, after the rail-label rule:
 
 Steady fills — no `animation`, deliberately.
 
+`position: absolute` is load-bearing, not cosmetic: the dot span is an in-flow child of a
+`display:flex; flex-direction:column; gap:4px` container, so left in flow it consumes a
+4px gap and nudges the icon and label even at zero size.
+
+Also verify by eye in Task 6: a status on a non-`iconOnly` item now shows a hover tooltip
+at `left: calc(100% + 8px)` (`cockpit.css:696-700`), positioning authored for the narrow
+icon rail. On the Run item that lands over the adjacent pane. No test covers it.
+
 - [ ] **Step 9: Run tests to verify they pass**
 
 Run: `npx nx test cockpit`
@@ -785,7 +793,7 @@ the intended contract change, not a regression.
 - [ ] **Step 10: Mutation-check the no-dot case**
 
 Temporarily change `runtimeRailStatus('not_configured')` to return
-`{ status: 'success', label: 'runtime ready' }` and confirm "shows no dot on Run when no
+`{ kind: 'success', label: 'runtime ready' }` and confirm "shows no dot on Run when no
 runtime is configured" fails. Revert. The assertion is an absence and would otherwise pass
 vacuously.
 
