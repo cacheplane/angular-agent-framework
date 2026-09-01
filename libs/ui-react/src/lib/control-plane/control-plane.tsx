@@ -32,24 +32,45 @@ const visuallyHidden: CSSProperties = {
 
 export interface ControlPlaneRailProps extends CommonProps {
   label: string;
+  primaryLabel?: string;
   primary: ReactNode;
   utilities?: ReactNode;
 }
 
 export function ControlPlaneRail({
   label,
+  primaryLabel,
   primary,
   utilities,
   className,
 }: ControlPlaneRailProps) {
+  const primaryLabelId = useId();
   return (
     <nav aria-label={label} className={className} data-control-plane-rail>
-      <div data-control-plane-rail-group="primary">{primary}</div>
+      <div
+        data-control-plane-rail-group="primary"
+        role={primaryLabel ? 'group' : undefined}
+        aria-labelledby={primaryLabel ? primaryLabelId : undefined}
+      >
+        {primaryLabel ? (
+          <span id={primaryLabelId} data-control-plane-rail-group-label>
+            {primaryLabel}
+          </span>
+        ) : null}
+        {primary}
+      </div>
       {utilities ? (
         <div data-control-plane-rail-group="utilities">{utilities}</div>
       ) : null}
     </nav>
   );
+}
+
+export type ControlPlaneRailStatus = 'success' | 'working' | 'error';
+
+export interface ControlPlaneRailItemStatus {
+  kind: ControlPlaneRailStatus;
+  label: string;
 }
 
 export interface ControlPlaneRailItemProps extends CommonProps {
@@ -61,6 +82,7 @@ export interface ControlPlaneRailItemProps extends CommonProps {
   iconOnly?: boolean;
   target?: string;
   rel?: string;
+  status?: ControlPlaneRailItemStatus;
 }
 
 export function ControlPlaneRailItem({
@@ -73,15 +95,29 @@ export function ControlPlaneRailItem({
   className,
   target,
   rel,
+  status,
 }: ControlPlaneRailItemProps) {
   const tooltipId = useId();
+  const accessibleName = status ? `${label}, ${status.label}` : label;
+  // An icon-only item needs a tooltip because it has no visible label. A
+  // status item needs its status in the accessible name, which `aria-label`
+  // already supplies -- it must not also get the rail tooltip, whose
+  // positioning is authored for the narrow icon rail.
+  const needsAccessibleName = iconOnly || Boolean(status);
+  const showTooltip = iconOnly;
   const content = (
     <>
       <span data-control-plane-rail-icon>{icon}</span>
       {iconOnly ? null : <span data-control-plane-rail-label>{label}</span>}
-      {iconOnly ? (
+      {status ? (
+        <span data-control-plane-rail-status={status.kind} aria-hidden="true" />
+      ) : null}
+      {status && !iconOnly ? (
+        <span style={visuallyHidden}>{status.label}</span>
+      ) : null}
+      {showTooltip ? (
         <span id={tooltipId} role="tooltip" data-control-plane-tooltip>
-          {label}
+          {accessibleName}
         </span>
       ) : null}
     </>
@@ -90,8 +126,8 @@ export function ControlPlaneRailItem({
     className,
     'data-control-plane-rail-item': true,
     'data-control-plane-active': active || undefined,
-    'aria-label': iconOnly ? label : undefined,
-    'aria-describedby': iconOnly ? tooltipId : undefined,
+    'aria-label': needsAccessibleName ? accessibleName : undefined,
+    'aria-describedby': showTooltip ? tooltipId : undefined,
   } as const;
 
   if (href) {

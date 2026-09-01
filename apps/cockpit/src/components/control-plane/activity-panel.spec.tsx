@@ -176,7 +176,7 @@ describe('ActivityPanel', () => {
       />
     );
     expect(
-      screen.getByRole('list', { name: 'Activity, attention required' })
+      screen.getByRole('list', { name: 'Activity, unread problems' })
     ).toBeTruthy();
     expect(
       document

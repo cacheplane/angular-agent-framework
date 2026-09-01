@@ -71,6 +71,7 @@ const renderOverlay = ({
             activityOpenCycle: 0,
             runtimeSnapshot: snapshot,
             events: [],
+            unseenProblems: 0,
             expanded: { Capability: true, Runtime: true },
             onExpandedChange: vi.fn(),
             onClearActivity: vi.fn(),
@@ -194,7 +195,12 @@ describe('MobileNavOverlay', () => {
       expect(
         within(overlay).getByRole('heading', { name: utility })
       ).toBeTruthy();
-      expect(within(overlay).getByRole('button', { name: 'Run' })).toBeTruthy();
+      // This fixture's runtime is not_configured, so Run has no status suffix
+      // and the bare name matches -- but the suffix exists in other phases, so
+      // match the label prefix rather than depending on the fixture.
+      expect(
+        within(overlay).getByRole('button', { name: /^Run(,|$)/ })
+      ).toBeTruthy();
       expect(
         within(overlay).queryByRole('button', { name: 'Capability' })
       ).toBeNull();

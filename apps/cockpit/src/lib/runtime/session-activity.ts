@@ -116,3 +116,28 @@ export function activityReducer(
       return [];
   }
 }
+
+/**
+ * Problems the user has not looked at yet.
+ *
+ * Errors only: `mode_changed` and `runtime_ready` fire during ordinary use, so
+ * counting every unread event would light the indicator from the user's own
+ * actions.
+ *
+ * `seenCount` is a marker over the log, but `activityReducer` prepends, so the
+ * seen events are the array's TAIL and the unseen window runs from index 0.
+ *
+ * The clamp is load-bearing, not defensive: a marker past the end (possible if
+ * the log was trimmed or cleared under it) would otherwise give `slice` a
+ * negative end index, which counts back from the tail and reports already-seen
+ * errors as unseen.
+ */
+export function countUnseenProblems(
+  events: readonly SessionActivityEvent[],
+  seenCount: number,
+): number {
+  const unseen = Math.max(0, events.length - seenCount);
+  return events
+    .slice(0, unseen)
+    .filter((event) => event.severity === 'error').length;
+}

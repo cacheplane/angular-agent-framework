@@ -94,8 +94,7 @@ const baseContentBundle = {
   narrativeDocs: [],
 };
 
-const seedMode = (
-  activeMode: 'Run' | 'Code' | 'Docs' | 'API',
+const seedExpanded = (
   expanded: Record<string, boolean> = {
     Capability: true,
     Runtime: true,
@@ -106,7 +105,7 @@ const seedMode = (
     JSON.stringify({
       version: 1,
       docs: { expanded: { Learn: true, Environment: false } },
-      cockpit: { activeMode, expanded },
+      cockpit: { expanded },
     })
   );
 };
@@ -140,6 +139,11 @@ const renderShellFor = (
   );
 };
 
+// The Run rail item's accessible name carries the live runtime phase
+// ('Run, runtime ready'), so these mode assertions match the label prefix
+// instead of a name that depends on which phase the fixture happens to be in.
+const RUN_RAIL_ITEM = /^Run(,|$)/;
+
 const openActivity = () => {
   fireEvent.click(screen.getByRole('button', { name: /^Activity/ }));
   return screen.getByRole('heading', {
@@ -168,22 +172,34 @@ describe('CockpitShell operational composition', () => {
     vi.restoreAllMocks();
   });
 
-  it('initializes from the saved Cockpit mode after hydration', async () => {
-    seedMode('Docs');
+  it('always opens in Run, ignoring a stored activeMode from an older visit', async () => {
+    window.localStorage.setItem(
+      CONTROL_PLANE_STORAGE_KEY,
+      JSON.stringify({
+        version: 1,
+        docs: { expanded: { Learn: true, Environment: false } },
+        cockpit: {
+          activeMode: 'Code',
+          expanded: { Capability: true, Runtime: true },
+        },
+      })
+    );
     renderShell();
 
     await waitFor(() => {
       expect(
         screen
-          .getByRole('button', { name: 'Docs' })
+          .getByRole('button', { name: RUN_RAIL_ITEM })
           .getAttribute('aria-pressed')
       ).toBe('true');
     });
-    expect(screen.getByRole('region', { name: 'Docs mode' })).toBeTruthy();
+    expect(
+      screen.getByRole('button', { name: 'Code' }).getAttribute('aria-pressed')
+    ).toBe('false');
   });
 
-  it('consumes a valid mode query once and persists it over the saved mode', async () => {
-    seedMode('Docs');
+  it('consumes a valid mode query once and lands in that mode', async () => {
+    seedExpanded();
     window.history.replaceState({}, '', '/?mode=code&keep=1');
     renderShell();
 
@@ -195,28 +211,73 @@ describe('CockpitShell operational composition', () => {
       ).toBe('true');
     });
     expect(window.location.search).toBe('?keep=1');
-    expect(
-      JSON.parse(window.localStorage.getItem(CONTROL_PLANE_STORAGE_KEY) ?? '{}')
-        .cockpit.activeMode
-    ).toBe('Code');
   });
 
-  it('ignores invalid mode queries and uses the saved mode', async () => {
-    seedMode('API');
+  it('ignores invalid mode queries and falls back to Run', async () => {
+    seedExpanded();
     window.history.replaceState({}, '', '/?mode=preview');
     renderShell();
 
     await waitFor(() => {
       expect(
-        screen.getByRole('button', { name: 'API' }).getAttribute('aria-pressed')
+        screen
+          .getByRole('button', { name: RUN_RAIL_ITEM })
+          .getAttribute('aria-pressed')
       ).toBe('true');
     });
+    expect(window.location.search).toBe('');
+  });
+
+  it('lands a newly navigated-to capability on Run even after switching to Code, when the shell remounts on the route key', async () => {
+    const { rerender } = render(
+      <ThemeProvider theme="light">
+        <CockpitShell
+          key={model.canonicalPath}
+          navigationTree={model.navigationTree}
+          presentation={model.presentation}
+          entryTitle={model.entry.title}
+          contentBundle={baseContentBundle}
+        />
+      </ThemeProvider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Code' }));
+    await waitFor(() => {
+      expect(
+        screen
+          .getByRole('button', { name: 'Code' })
+          .getAttribute('aria-pressed')
+      ).toBe('true');
+    });
+
+    rerender(
+      <ThemeProvider theme="light">
+        <CockpitShell
+          key={persistenceModel.canonicalPath}
+          navigationTree={persistenceModel.navigationTree}
+          presentation={persistenceModel.presentation}
+          entryTitle={persistenceModel.entry.title}
+          contentBundle={baseContentBundle}
+        />
+      </ThemeProvider>
+    );
+
+    await waitFor(() => {
+      expect(
+        screen
+          .getByRole('button', { name: RUN_RAIL_ITEM })
+          .getAttribute('aria-pressed')
+      ).toBe('true');
+    });
+    expect(
+      screen.getByRole('button', { name: 'Code' }).getAttribute('aria-pressed')
+    ).toBe('false');
   });
 
   it('owns one controller and one Activity store shared by desktop and mobile adapters', async () => {
     renderShell();
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Run' })).toBeTruthy()
+      expect(screen.getByRole('button', { name: RUN_RAIL_ITEM })).toBeTruthy()
     );
     expect(operationalMocks.controllerInstances).toBe(1);
 
@@ -230,6 +291,75 @@ describe('CockpitShell operational composition', () => {
     });
     expect(within(dialog).getByText('Mode changed to Code')).toBeTruthy();
     expect(operationalMocks.controllerInstances).toBe(1);
+  });
+
+  it('flags an unread runtime problem until Activity is opened, and survives recovery', async () => {
+    renderShell();
+    await waitFor(() =>
+      expect(operationalMocks.latestControllerOptions).not.toBeNull()
+    );
+
+    // Routine activity must not light the indicator.
+    act(() => {
+      operationalMocks.latestControllerOptions?.onActivity({
+        id: 'ready-event',
+        at: '2026-08-31T17:00:00.000Z',
+        kind: 'runtime_ready',
+        capability: 'streaming',
+      });
+    });
+    expect(screen.getByRole('button', { name: 'Activity' })).toBeTruthy();
+
+    act(() => {
+      operationalMocks.latestControllerOptions?.onActivity({
+        id: 'unresponsive-event',
+        at: '2026-08-31T17:01:00.000Z',
+        kind: 'runtime_unresponsive',
+        capability: 'streaming',
+      });
+    });
+    expect(
+      screen.getAllByRole('button', { name: 'Activity, 1 unread problem' })
+    ).not.toHaveLength(0);
+
+    // A self-recovering runtime clears the phase but not the unread problem.
+    act(() => {
+      operationalMocks.latestControllerOptions?.onActivity({
+        id: 'recovered-event',
+        at: '2026-08-31T17:02:00.000Z',
+        kind: 'runtime_recovered',
+        capability: 'streaming',
+      });
+    });
+    expect(
+      screen.getAllByRole('button', { name: 'Activity, 1 unread problem' })
+    ).not.toHaveLength(0);
+
+    openActivity();
+    expect(
+      screen.getAllByRole('button', { name: 'Activity' })
+    ).not.toHaveLength(0);
+
+    // Clearing the log must reset the marker too. If it did not, the marker
+    // would stay at N over an empty log and silently swallow the next N
+    // problems for the rest of the page visit.
+    fireEvent.click(
+      screen.getAllByRole('button', { name: 'Activity actions' })[0]
+    );
+    fireEvent.click(
+      screen.getAllByRole('menuitem', { name: 'Clear session activity' })[0]
+    );
+    act(() => {
+      operationalMocks.latestControllerOptions?.onActivity({
+        id: 'post-clear-event',
+        at: '2026-08-31T17:03:00.000Z',
+        kind: 'runtime_unresponsive',
+        capability: 'streaming',
+      });
+    });
+    expect(
+      screen.getAllByRole('button', { name: 'Activity, 1 unread problem' })
+    ).not.toHaveLength(0);
   });
 
   it('does not reset drawer focus when shared operational state rerenders', async () => {
@@ -477,7 +607,7 @@ describe('CockpitShell operational composition', () => {
   it('records one fixed Activity event and one existing analytics event only for an actual mode change', async () => {
     renderShell();
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Run' })).toBeTruthy()
+      expect(screen.getByRole('button', { name: RUN_RAIL_ITEM })).toBeTruthy()
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Code' }));
@@ -507,7 +637,7 @@ describe('CockpitShell operational composition', () => {
   });
 
   it('reloads only the iframe while preserving shell state and session Activity', async () => {
-    seedMode('Run', { Capability: true, Runtime: true });
+    seedExpanded({ Capability: true, Runtime: true });
     renderShell('https://runtime.test/path?secret=hidden');
     const firstFrame = await screen.findByTitle(
       'LangGraph Streaming live example'
@@ -528,7 +658,9 @@ describe('CockpitShell operational composition', () => {
       )
     );
     expect(
-      screen.getByRole('button', { name: 'Run' }).getAttribute('aria-pressed')
+      screen
+        .getByRole('button', { name: 'Run, runtime starting' })
+        .getAttribute('aria-pressed')
     ).toBe('true');
     expect(window.location.pathname).toBe(routeBefore);
     expect(
@@ -553,7 +685,7 @@ describe('CockpitShell operational composition', () => {
     for (let index = 0; index < 22; index += 1) {
       fireEvent.click(
         screen.getByRole('button', {
-          name: index % 2 === 0 ? 'Code' : 'Run',
+          name: index % 2 === 0 ? 'Code' : 'Run, runtime starting',
         })
       );
     }

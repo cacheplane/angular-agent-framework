@@ -363,6 +363,7 @@ pre.shiki {
 .cockpit-control-plane {
   --cockpit-state-error: #b42318;
   --cockpit-state-success: #1a7a40;
+  --cockpit-state-working: #9a6700;
   display: grid;
   grid-template-columns: 56px minmax(0, 272px);
   height: 100%;
@@ -373,6 +374,7 @@ pre.shiki {
 [data-theme="dark"] .cockpit-control-plane {
   --cockpit-state-error: #ff6369;
   --cockpit-state-success: #4cc38a;
+  --cockpit-state-working: #e0a02f;
 }
 .cockpit-control-plane [data-control-plane-rail] {
   min-width: 0;
@@ -387,9 +389,28 @@ pre.shiki {
   flex-direction: column;
   gap: 4px;
 }
-.cockpit-control-plane [data-control-plane-rail-group="utilities"] { margin-top: auto; }
+.cockpit-control-plane [data-control-plane-rail-group="utilities"] {
+  margin-top: auto;
+  padding-top: 8px;
+  /* --ds-border is a 1-value difference from --ds-surface-tinted (the rail
+     background) in dark mode -- rgb(45,45,45) on rgb(44,44,44), effectively
+     invisible. --ds-border-strong is the token the pane divider already
+     uses for the same reason (cockpit.css ~L460). */
+  border-top: 1px solid var(--ds-border-strong);
+}
+.cockpit-control-plane [data-control-plane-rail-group-label] {
+  display: block;
+  padding-bottom: 4px;
+  color: var(--ds-text-secondary);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  text-align: center;
+}
 .cockpit-control-plane-utility-anchor { display: contents; }
 .cockpit-control-plane [data-control-plane-rail-item] {
+  --cockpit-rail-status-ring: var(--ds-surface-tinted);
   position: relative;
   min-height: 48px;
   padding: 6px 2px;
@@ -400,13 +421,14 @@ pre.shiki {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  color: var(--ds-text-muted);
+  color: var(--ds-text-secondary);
   background: transparent;
   text-decoration: none;
   cursor: pointer;
   transition: background 120ms ease, color 120ms ease;
 }
 .cockpit-control-plane [data-control-plane-rail-item]:hover {
+  --cockpit-rail-status-ring: var(--ds-surface);
   color: var(--ds-text-primary);
   background: var(--ds-surface);
 }
@@ -418,6 +440,24 @@ pre.shiki {
   font-size: 10px;
   line-height: 1;
   font-weight: 600;
+}
+.cockpit-control-plane [data-control-plane-rail-status] {
+  position: absolute;
+  top: 7px;
+  right: 11px;
+  width: 7px;
+  height: 7px;
+  border: 2px solid var(--cockpit-rail-status-ring);
+  border-radius: 999px;
+}
+.cockpit-control-plane [data-control-plane-rail-status="success"] {
+  background: var(--cockpit-state-success);
+}
+.cockpit-control-plane [data-control-plane-rail-status="working"] {
+  background: var(--cockpit-state-working);
+}
+.cockpit-control-plane [data-control-plane-rail-status="error"] {
+  background: var(--cockpit-state-error);
 }
 .cockpit-control-plane [data-control-plane-rail-icon],
 [data-cockpit-activity-icon] {
@@ -948,6 +988,10 @@ pre.shiki {
     border: 1px solid CanvasText;
     border-radius: 7px;
     color: CanvasText;
+    background: Canvas;
+  }
+  .cockpit-control-plane [data-control-plane-rail-status] {
+    border: 1px solid CanvasText;
     background: Canvas;
   }
   .cockpit-control-plane [data-control-plane-overflow-menu] {

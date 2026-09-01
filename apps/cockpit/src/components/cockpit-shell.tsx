@@ -29,6 +29,7 @@ import type {
 } from '../lib/analytics/events';
 import {
   activityReducer,
+  countUnseenProblems,
   createSessionActivityEvent,
   type ActivityMode,
   type RuntimeActivityInput,
@@ -159,9 +160,11 @@ export function CockpitShell({
   const queryHandled = useRef(false);
   const mobileTriggerRef = useRef<HTMLButtonElement>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [activeMode, setActiveMode] = useState<ControlPlaneMode>('Run');
   const [isMobileOverlayPresent, setIsMobileOverlayPresent] = useState(false);
   const [activeUtility, setActiveUtility] = useState<CockpitUtility>(null);
   const [activityOpenCycle, setActivityOpenCycle] = useState(0);
+  const [seenActivityCount, setSeenActivityCount] = useState(0);
   const [events, dispatchActivity] = useReducer(activityReducer, []);
   const isCapability = presentation.kind === 'capability';
   const codeAssetPaths = isCapability ? presentation.codeAssetPaths : [];
@@ -203,12 +206,12 @@ export function CockpitShell({
   const docsUrl = resolveDocsUrl(presentation.docsPath);
 
   useEffect(() => {
-    if (!preferences.hydrated || queryHandled.current) return;
+    if (queryHandled.current) return;
     queryHandled.current = true;
     const url = new URL(window.location.href);
     const rawMode = url.searchParams.get('mode');
     const requestedMode = parseControlPlaneMode(rawMode);
-    if (requestedMode) preferences.setActiveMode(requestedMode);
+    if (requestedMode) setActiveMode(requestedMode);
     if (rawMode !== null) {
       url.searchParams.delete('mode');
       window.history.replaceState(
@@ -217,15 +220,14 @@ export function CockpitShell({
         url.pathname + url.search + url.hash
       );
     }
-  }, [preferences]);
+  }, []);
 
-  const activeMode: ControlPlaneMode = preferences.activeMode;
   const isMobileModalActive = isSidebarOpen || isMobileOverlayPresent;
 
   const handleModeChange = useCallback(
     (mode: ControlPlaneMode) => {
       if (mode === activeMode) return;
-      preferences.setActiveMode(mode);
+      setActiveMode(mode);
       appendActivity(
         createLocalActivityInput(entry.topic, {
           kind: 'mode_changed',
@@ -238,17 +240,18 @@ export function CockpitShell({
         to_mode: MODE_ANALYTICS[mode],
       });
     },
-    [activeMode, appendActivity, entry.topic, preferences]
+    [activeMode, appendActivity, entry.topic]
   );
 
   const handleActiveUtilityChange = useCallback(
     (utility: CockpitUtility) => {
       if (utility === 'activity' && activeUtility !== 'activity') {
         setActivityOpenCycle((cycle) => cycle + 1);
+        setSeenActivityCount(events.length);
       }
       setActiveUtility(utility);
     },
-    [activeUtility]
+    [activeUtility, events.length]
   );
 
   const closeMobileNavigation = useCallback(() => {
@@ -319,6 +322,7 @@ export function CockpitShell({
 
   const handleClearActivity = useCallback(() => {
     dispatchActivity({ type: 'clear' });
+    setSeenActivityCount(0);
   }, []);
 
   const handleRecheck = useCallback(() => {
@@ -392,6 +396,7 @@ export function CockpitShell({
       activityOpenCycle,
       runtimeSnapshot: controller.snapshot,
       events,
+      unseenProblems: countUnseenProblems(events, seenActivityCount),
       expanded: preferences.expanded,
       onExpandedChange: preferences.setExpanded,
       onClearActivity: handleClearActivity,
@@ -417,6 +422,7 @@ export function CockpitShell({
       navigationTree,
       preferences.expanded,
       preferences.setExpanded,
+      seenActivityCount,
     ]
   );
 

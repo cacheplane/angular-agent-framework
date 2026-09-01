@@ -22,7 +22,7 @@ import type { NavigationProduct } from '../../lib/route-resolution';
 import { PRODUCT_LABELS } from '../../lib/navigation-labels';
 import type { SessionActivityEvent } from '../../lib/runtime/session-activity';
 import {
-  runtimeNeedsAttention,
+  runtimeRailStatus,
   type RuntimeSnapshot,
 } from '../../lib/runtime/runtime-state';
 import { CockpitSidebar } from '../sidebar/cockpit-sidebar';
@@ -59,6 +59,7 @@ export interface CockpitControlPlaneProps {
   activityOpenCycle: number;
   runtimeSnapshot: RuntimeSnapshot;
   events: readonly SessionActivityEvent[];
+  unseenProblems: number;
   expanded: Record<string, boolean>;
   onExpandedChange(key: string, open: boolean): void;
   onClearActivity(): void;
@@ -86,6 +87,7 @@ export function CockpitControlPlane({
   activityOpenCycle,
   runtimeSnapshot,
   events,
+  unseenProblems,
   expanded,
   onExpandedChange,
   onClearActivity,
@@ -99,8 +101,13 @@ export function CockpitControlPlane({
 }: CockpitControlPlaneProps) {
   const activityRef = useRef<HTMLSpanElement>(null);
   const settingsRef = useRef<HTMLSpanElement>(null);
-  const attention = runtimeNeedsAttention(runtimeSnapshot.phase);
-  const activityLabel = attention ? 'Activity, attention required' : 'Activity';
+  const railStatus = runtimeRailStatus(runtimeSnapshot.phase);
+  const attention = unseenProblems > 0;
+  const activityLabel = attention
+    ? `Activity, ${unseenProblems} unread problem${
+        unseenProblems === 1 ? '' : 's'
+      }`
+    : 'Activity';
   const product = PRODUCT_LABELS[entry.product] ?? entry.product;
   const language = entry.language === 'typescript' ? 'TypeScript' : 'Python';
 
@@ -197,6 +204,7 @@ export function CockpitControlPlane({
     >
       <ControlPlaneRail
         label="Cockpit modes"
+        primaryLabel="View"
         primary={MODES.map(({ label, icon: Icon }) => (
           <ControlPlaneRailItem
             key={label}
@@ -204,6 +212,7 @@ export function CockpitControlPlane({
             icon={<Icon size={18} aria-hidden="true" />}
             active={label === activeMode}
             onSelect={() => selectMode(label)}
+            status={label === 'Run' ? railStatus ?? undefined : undefined}
           />
         ))}
         utilities={

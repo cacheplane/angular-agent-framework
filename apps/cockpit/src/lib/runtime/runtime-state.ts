@@ -1,3 +1,5 @@
+import type { ControlPlaneRailItemStatus } from '@threadplane/ui-react';
+
 export type RuntimePhase =
   | 'not_configured'
   | 'invalid_configuration'
@@ -281,10 +283,21 @@ export function classifyRuntimeTerminalTransition(
   return result;
 }
 
-export function runtimeNeedsAttention(phase: RuntimePhase): boolean {
-  return (
-    phase === 'invalid_configuration' ||
-    phase === 'unresponsive' ||
-    phase === 'error'
-  );
+export function runtimeRailStatus(
+  phase: RuntimePhase
+): ControlPlaneRailItemStatus | null {
+  switch (phase) {
+    case 'ready':
+      return { kind: 'success', label: 'runtime ready' };
+    case 'connecting':
+    case 'checking':
+    case 'reloading':
+      return { kind: 'working', label: 'runtime starting' };
+    case 'unresponsive':
+    case 'error':
+    case 'invalid_configuration':
+      return { kind: 'error', label: 'runtime error' };
+    case 'not_configured':
+      return null;
+  }
 }
