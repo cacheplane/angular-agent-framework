@@ -1,0 +1,67 @@
+---
+title: How It Connects
+description: Measured AG-UI wire behavior for Microsoft Agent Framework: outcome interrupts, resume entries for every pending interrupt, and real state deltas.
+---
+
+# How Microsoft Agent Framework Connects
+
+This page records the AG-UI wire behavior measured for the Microsoft Agent Framework bridge on 2026-08-31. It describes what the runtime emitted, not what the protocol permits in general. The captured Server-Sent Events are committed at [`libs/ag-ui/fixtures/runtime-transcripts/`](https://github.com/cacheplane/angular-agent-framework/tree/main/libs/ag-ui/fixtures/runtime-transcripts) and replayed by the adapter test suite on every run.
+
+## Transport
+
+The example serves a single AG-UI endpoint from FastAPI.
+
+| Route | Method | Notes |
+|---|---|---|
+| `/agent` | `POST` | `RunAgentInput` JSON in, Server-Sent Events out. |
+| `/ok` | `GET` | Unauthenticated health check. |
+
+On the Angular side that is an ordinary `provideAgent({ url: '/agent' })`. Nothing about the adapter configuration is Microsoft-specific.
+
+## Interrupts use the outcome convention
+
+A tool declares `approval_mode="always_require"`, and the bridge finishes the run with the protocol-standard outcome:
+
+```json
+{
+  "type": "RUN_FINISHED",
+  "outcome": {
+    "type": "interrupt",
+    "interrupts": [{ "interruptId": "...", "value": { } }]
+  }
+}
+```
+
+This matches AWS Strands and differs from the LangGraph bridge, which signals interrupts only through a `CUSTOM` event named `on_interrupt`. The adapter detects either convention; within a single run, the first signal it sees wins.
+
+## Resume must address every pending interrupt
+
+Like Strands, this runtime reads the protocol-standard top-level `resume` array of `{ interruptId, status, payload }` entries. Unlike Strands, it expects an entry for **every** pending interrupt, not only the one the user just answered.
+
+Application code does not assemble that. You call the neutral `submit({ resume })`, and the adapter derives the wire shape, including the entries for interrupts still outstanding.
+
+## State streams predictively
+
+`predict_state_config` maps a tool argument onto a state key:
+
+```python
+predict_state_config={
+    "expense": {"tool": "submit_expense", "tool_argument": "expense"},
+}
+```
+
+The bridge emits `STATE_SNAPSHOT` followed by real `STATE_DELTA` events as the argument is generated, so the frontend sees the expense fill in before `submit_expense` has been called or approved.
+
+This is the meaningful contrast with AWS Strands, whose bridge emits snapshots only and requires each hook to return the complete state object. On Microsoft Agent Framework, ordinary delta application is enough.
+
+## Subagent activity is too coarse to project
+
+The bridge emits executor-level activity snapshots and constructs `ACTIVITY_DELTA` nowhere. The Threadplane subagent projection keys on an `activityType` of `subagent`, which is a convention adopted by Threadplane's own demo backends and by no third-party runtime.
+
+The AG-UI protocol has carried dedicated `SUBAGENT_STARTED`, `SUBAGENT_FINISHED`, and `SUBAGENT_ERROR` events since `@ag-ui/core` 0.0.59. No runtime measured here emits them yet.
+
+## Next steps
+
+- [Overview](/docs/runtimes/microsoft-agent-framework/overview) — what the integration supports.
+- [AWS Strands — How It Connects](/docs/runtimes/aws-strands/how-it-connects) — the same outcome convention, snapshot-only state.
+- [Choosing an adapter](/docs/choosing-an-adapter) — the full matrix and its cause analysis.

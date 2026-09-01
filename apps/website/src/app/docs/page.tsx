@@ -207,6 +207,10 @@ export default function DocsLandingPage() {
             <Link href="/docs/chat/getting-started/quickstart" className="docs-index-helper-link">
               Chat quickstart →
             </Link>
+            {' '}Running a non-LangGraph backend?{' '}
+            <Link href="/docs/runtimes/getting-started/introduction" className="docs-index-helper-link">
+              Agent runtimes →
+            </Link>
           </p>
         </Container>
       </Section>

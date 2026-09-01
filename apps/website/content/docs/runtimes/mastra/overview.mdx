@@ -1,0 +1,52 @@
+---
+title: Overview
+description: What the Mastra integration demonstrates through @threadplane/ag-ui, and why it needs a hand-written Node hosting service.
+---
+
+# Mastra Overview
+
+[Mastra](https://mastra.ai) is a TypeScript agent framework. It is the only non-Python runtime in the measured set, and the only one whose upstream AG-UI integration ships no HTTP endpoint at all.
+
+The Threadplane example is a camping trip planner. It streams messages, calls a backend tool, keeps a packing list in shared state through Mastra's working memory, and suspends a run for human approval before reserving a campsite.
+
+<Callout type="warning" title="This runtime runs locally first">
+Unlike the two Python runtimes, Mastra is not served by the shared FastAPI deployment. Its backend is a separate Node service with its own hosting lane, so the [hosted example page](https://examples.threadplane.ai/runtimes/mastra/) may not have a reachable backend behind it. The [Quickstart](/docs/runtimes/mastra/quickstart) is the supported path.
+</Callout>
+
+## What the integration demonstrates
+
+| Surface | Status | How |
+|---|---|---|
+| Messages | Supported | Streamed assistant text over `TEXT_MESSAGE_CHUNK`. |
+| Tool calls | Supported | `check_conditions` executes server-side with no pause. |
+| Shared state | Supported | A working-memory packing list, over snapshots and real JSON-Patch deltas. |
+| Interrupts | Supported | `reserve_campsite` suspends the run and resumes from a persisted snapshot. |
+| Subagents | Not available | `ACTIVITY_*` is reserved for background tasks and observational memory. |
+
+## Upstream ships no HTTP endpoint
+
+`@ag-ui/mastra` provides an in-process `MastraAgent` bridge and a CopilotKit runtime mount. It does not provide a plain AG-UI HTTP endpoint, which is what `@threadplane/ag-ui` connects to.
+
+Threadplane therefore maintains a small hosting service, [`deployments/ag-ui-mastra`](https://github.com/cacheplane/angular-agent-framework/tree/main/deployments/ag-ui-mastra). It accepts `POST /agent/<topic>`, calls `MastraAgent.run(input)`, and writes one Server-Sent Events frame per AG-UI event. It is deliberately hand-written rather than generated: the Python generator targets one aggregated FastAPI process, and Mastra is a different language on a different hosting lane.
+
+This is the honest shape of the Mastra integration. The adapter needed no changes, but somebody has to serve the events, and upstream does not.
+
+## Persistence is a hard requirement
+
+Mastra persists memory and suspended-run snapshots to LibSQL file storage. Resume loads the suspended snapshot back, so the database path has to survive between HTTP requests and across restarts. An in-memory store breaks resume, and an ephemeral filesystem orphans every pending interrupt on redeploy.
+
+## Subagents are not available
+
+Mastra reserves the `ACTIVITY_*` events for background tasks and observational memory. The Threadplane subagent projection keys on an `activityType` of `subagent`, which Mastra does not emit and does not intend to.
+
+As with the other two runtimes, this is an upstream modeling difference rather than an adapter defect.
+
+## How the Mastra row was measured
+
+Its cells come from a real Mastra server driven with live model calls. The raw Server-Sent Events were captured off the wire and are committed and replayed like every other runtime's, including the interrupt and resume round trip driven through the real `@ag-ui/client`.
+
+## Next steps
+
+- [Quickstart](/docs/runtimes/mastra/quickstart) — run the example locally.
+- [How It Connects](/docs/runtimes/mastra/how-it-connects) — the measured wire conventions.
+- [Choosing an adapter](/docs/choosing-an-adapter) — the full runtime matrix and its cause analysis.
