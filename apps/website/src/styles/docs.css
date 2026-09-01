@@ -425,74 +425,58 @@ body:has([data-website-workspace-host]) {
  * Fonts: unified onto the next/font vars — see the font note atop ui.css.
  */
 
-/* mdx — Callout */
+/* mdx — Callout (header band; tone via custom properties) */
 [data-mdx="callout"] {
-  position: relative;
-  background: var(--color-surface-tinted);
+  --callout-tone-text: var(--color-accent);
+  --callout-tone-surface: rgba(0, 64, 144, 0.06);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-left-width: 4px;
   border-radius: var(--radius-md);
-  padding: 14px 18px 14px 22px;
+  overflow: hidden;
   margin: 20px 0;
 }
 [data-mdx="callout"][data-tone="tip"] {
-  border-left-color: #1a7a40;
+  --callout-tone-text: #1a7a40;
+  --callout-tone-surface: rgba(26, 122, 64, 0.07);
 }
 [data-mdx="callout"][data-tone="warning"] {
-  border-left-color: #D4850F;
-}
-[data-mdx="callout"][data-tone="info"] {
-  border-left-color: var(--color-accent);
+  /* Band text darkened from #D4850F for contrast on the tint. */
+  --callout-tone-text: #b26d06;
+  --callout-tone-surface: rgba(212, 133, 15, 0.08);
 }
 [data-mdx="callout"][data-tone="danger"] {
-  border-left-color: var(--color-angular-red);
+  --callout-tone-text: var(--color-angular-red);
+  --callout-tone-surface: rgba(221, 0, 49, 0.06);
 }
-.mdx-callout-header {
+.mdx-callout-band {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
-  margin-bottom: 0;
-}
-.mdx-callout-header[data-has-title] {
-  margin-bottom: 6px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--callout-tone-surface);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--callout-tone-text);
 }
 .mdx-callout-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: var(--radius-full);
-  color: var(--color-text-inverted);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
+  width: 14px;
+  height: 14px;
   flex-shrink: 0;
 }
-[data-mdx="callout"][data-tone="tip"] .mdx-callout-icon {
-  background: #1a7a40;
-}
-[data-mdx="callout"][data-tone="warning"] .mdx-callout-icon {
-  background: #D4850F;
-}
-[data-mdx="callout"][data-tone="info"] .mdx-callout-icon {
-  background: var(--color-accent);
-}
-[data-mdx="callout"][data-tone="danger"] .mdx-callout-icon {
-  background: var(--color-angular-red);
-}
 .mdx-callout-title {
-  font-family: var(--font-inter);
-  font-size: 15px;
-  color: var(--color-text-primary);
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 13px;
   font-weight: 600;
+  color: var(--callout-tone-text);
 }
 .mdx-callout-body {
+  padding: 12px 14px;
   font-family: var(--font-inter);
   font-size: 15px;
   line-height: 1.6;
   color: var(--color-text-secondary);
 }
+.mdx-callout-body > :first-child { margin-top: 0; }
+.mdx-callout-body > :last-child { margin-bottom: 0; }
 
 /* mdx — Steps / Step */
 .mdx-steps-list {
