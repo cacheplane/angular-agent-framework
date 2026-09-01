@@ -24,6 +24,18 @@ describe('Docs mobile navigation', () => {
     trackCtaClick.mockClear();
   });
 
+  const expectFocusAfterDrawerUnmount = (trigger: HTMLButtonElement) => {
+    const nativeFocus = trigger.focus.bind(trigger);
+    const observation = { drawerWasMounted: undefined as boolean | undefined };
+    const focus = vi.spyOn(trigger, 'focus').mockImplementation(() => {
+      observation.drawerWasMounted = Boolean(
+        screen.queryByRole('dialog', { name: 'Mobile navigation' }),
+      );
+      nativeFocus();
+    });
+    return { focus, observation };
+  };
+
   it('uses the existing header trigger for the control-plane Docs drawer', () => {
     render(<Nav />);
     const trigger = screen.getByRole('button', { name: 'Open menu' });
@@ -41,11 +53,14 @@ describe('Docs mobile navigation', () => {
     render(<Nav />);
     const trigger = screen.getByRole('button', { name: 'Open menu' });
     fireEvent.click(trigger);
+    const { focus, observation } = expectFocusAfterDrawerUnmount(trigger);
     const dialog = screen.getByRole('dialog', { name: 'Mobile navigation' });
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Close menu' }));
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await waitFor(() => expect(focus).toHaveBeenCalledOnce());
+    expect(observation.drawerWasMounted).toBe(false);
     expect(document.activeElement).toBe(trigger);
   });
 
@@ -53,10 +68,49 @@ describe('Docs mobile navigation', () => {
     render(<Nav />);
     const trigger = screen.getByRole('button', { name: 'Open menu' });
     fireEvent.click(trigger);
+    const { focus, observation } = expectFocusAfterDrawerUnmount(trigger);
     fireEvent.keyDown(document, { key: 'Escape' });
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await waitFor(() => expect(focus).toHaveBeenCalledOnce());
+    expect(observation.drawerWasMounted).toBe(false);
     expect(document.activeElement).toBe(trigger);
+  });
+
+  it('closes after Docs link navigation and restores focus after unmount', async () => {
+    render(<Nav />);
+    const trigger = screen.getByRole('button', { name: 'Open menu' });
+    fireEvent.click(trigger);
+    const { focus, observation } = expectFocusAfterDrawerUnmount(trigger);
+
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('link', { name: 'Streaming' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await waitFor(() => expect(focus).toHaveBeenCalledOnce());
+    expect(observation.drawerWasMounted).toBe(false);
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it('makes the top navigation and site content inert only while the drawer is open', async () => {
+    render(
+      <>
+        <Nav />
+        <div id="site-content"><button type="button">Page content</button></div>
+      </>,
+    );
+    const trigger = screen.getByRole('button', { name: 'Open menu' });
+    const nav = document.querySelector<HTMLElement>('.nav-bar');
+    const siteContent = document.getElementById('site-content');
+    if (!nav || !siteContent) throw new Error('Expected modal background surfaces');
+
+    fireEvent.click(trigger);
+    expect(nav.inert).toBe(true);
+    expect(siteContent.inert).toBe(true);
+
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close menu' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(nav.inert).toBe(false);
+    expect(siteContent.inert).toBe(false);
   });
 
   it('keeps the drawer open when Escape dismisses the nested library menu', () => {
@@ -79,14 +133,30 @@ describe('Docs mobile navigation', () => {
     const searchListener = vi.fn();
     document.addEventListener('keydown', searchListener);
     render(<Nav />);
-    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    const trigger = screen.getByRole('button', { name: 'Open menu' });
+    fireEvent.click(trigger);
+    const { focus, observation } = expectFocusAfterDrawerUnmount(trigger);
+
+    const searchObservation = {
+      drawerWasMounted: undefined as boolean | undefined,
+      focusedTrigger: undefined as boolean | undefined,
+    };
+    searchListener.mockImplementation(() => {
+      searchObservation.drawerWasMounted = Boolean(
+        screen.queryByRole('dialog', { name: 'Mobile navigation' }),
+      );
+      searchObservation.focusedTrigger = document.activeElement === trigger;
+    });
 
     fireEvent.click(screen.getByRole('button', { name: 'Search docs' }));
 
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Mobile navigation' })).toBeNull());
+    await waitFor(() => expect(focus).toHaveBeenCalledOnce());
+    expect(observation.drawerWasMounted).toBe(false);
     await waitFor(() => expect(searchListener).toHaveBeenCalledWith(
       expect.objectContaining({ key: 'k', metaKey: true }),
     ));
+    expect(searchObservation).toEqual({ drawerWasMounted: false, focusedTrigger: true });
     document.removeEventListener('keydown', searchListener);
   });
 

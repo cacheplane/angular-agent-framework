@@ -4,15 +4,22 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DocsControlPlane, DocsContextContent } from './DocsControlPlane';
 
+const { track } = vi.hoisted(() => ({
+  track: vi.fn(),
+}));
+
 const push = vi.fn();
 vi.mock('next/navigation', () => ({
   usePathname: () => '/docs/langgraph/guides/streaming',
   useRouter: () => ({ push }),
 }));
 
+vi.mock('../../lib/analytics/client', () => ({ track }));
+
 beforeEach(() => {
   window.localStorage.clear();
   push.mockClear();
+  track.mockClear();
 });
 
 describe('DocsControlPlane', () => {
@@ -36,7 +43,7 @@ describe('DocsControlPlane', () => {
     expect(screen.queryByRole('button', { name: 'Settings' })).toBeNull();
   });
 
-  it('shows truthful scope and collapsed environment defaults', async () => {
+  it('shows truthful scope and a collapsed configuration-only Runtime preview', async () => {
     render(
       <DocsControlPlane
         activeLibrary="langgraph"
@@ -51,12 +58,97 @@ describe('DocsControlPlane', () => {
     expect(within(scope).getByText('LangGraph')).toBeTruthy();
     expect(within(scope).getByText('Guides')).toBeTruthy();
     expect(within(scope).getByText('Streaming')).toBeTruthy();
-    const environment = screen.getByRole('button', { name: 'Environment' });
-    expect(environment.getAttribute('aria-expanded')).toBe('false');
-    fireEvent.click(environment);
-    expect(screen.getByText('Angular')).toBeTruthy();
-    expect(screen.getByText('npm')).toBeTruthy();
-    await waitFor(() => expect(window.localStorage.getItem('threadplane:control-plane:v1')).toContain('Environment'));
+    expect(screen.queryByRole('button', { name: 'Environment' })).toBeNull();
+    const runtime = screen.getByRole('button', { name: 'Runtime' });
+    expect(runtime.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(runtime);
+    const runtimeSection = runtime.closest('section');
+    if (!runtimeSection) throw new Error('Expected Runtime section');
+    const configuration = runtimeSection.querySelector('dl');
+    if (!configuration) throw new Error('Expected Runtime configuration');
+    expect(within(configuration).getByText('Shared development')).toBeTruthy();
+    expect(within(configuration).getByText('Cockpit')).toBeTruthy();
+    expect(within(configuration).getByText('streaming')).toBeTruthy();
+    expect(within(configuration).getByText('Run')).toBeTruthy();
+    expect(within(runtimeSection).getByRole('link', { name: 'Open controls in Cockpit' }).getAttribute('href')).toContain(
+      '/langgraph/core-capabilities/streaming/overview/python?mode=run',
+    );
+    expect(within(runtimeSection).queryByText(/ready|unresponsive|last checked/i)).toBeNull();
+    await waitFor(() => expect(window.localStorage.getItem('threadplane:control-plane:v1')).toContain('Runtime'));
+  });
+
+  it.each([
+    ['Run', 'run'],
+    ['Code', 'code'],
+    ['API', 'api'],
+  ] as const)('tracks the %s rail handoff at the anchor boundary', (label, requestedMode) => {
+    render(
+      <DocsControlPlane
+        activeLibrary="langgraph"
+        activeSection="guides"
+        activeSlug="streaming"
+        pageTitle="Streaming"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('link', { name: label }));
+
+    expect(track).toHaveBeenCalledWith('docs:cockpit_handoff', {
+      library: 'langgraph',
+      source_section: 'guides',
+      source_slug: 'streaming',
+      destination_product: 'langgraph',
+      destination_capability: 'streaming',
+      requested_mode: requestedMode,
+      mapped: true,
+    });
+  });
+
+  it('tracks Open controls as a mapped Run handoff without a URL property', () => {
+    render(
+      <DocsControlPlane
+        activeLibrary="langgraph"
+        activeSection="guides"
+        activeSlug="streaming"
+        pageTitle="Streaming"
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Runtime' }));
+
+    fireEvent.click(screen.getByRole('link', { name: 'Open controls in Cockpit' }));
+
+    expect(track).toHaveBeenCalledWith('docs:cockpit_handoff', {
+      library: 'langgraph',
+      source_section: 'guides',
+      source_slug: 'streaming',
+      destination_product: 'langgraph',
+      destination_capability: 'streaming',
+      requested_mode: 'run',
+      mapped: true,
+    });
+    expect(track.mock.calls[0]?.[1]).not.toHaveProperty('destination_url');
+  });
+
+  it('uses and tracks the Cockpit home fallback for unsupported pages', () => {
+    render(
+      <DocsControlPlane
+        activeLibrary="langgraph"
+        activeSection="api"
+        activeSlug="inject-agent"
+        pageTitle="Inject agent"
+      />,
+    );
+
+    const run = screen.getByRole('link', { name: 'Run' });
+    expect(run.getAttribute('href')).toBe('https://cockpit.threadplane.ai/?mode=run');
+    fireEvent.click(run);
+    expect(track).toHaveBeenCalledWith('docs:cockpit_handoff', {
+      library: 'langgraph',
+      source_section: 'api',
+      source_slug: 'inject-agent',
+      requested_mode: 'run',
+      mapped: false,
+    });
   });
 
   it('keeps search as a real icon action', () => {
@@ -128,7 +220,7 @@ describe('DocsContextContent', () => {
 
     expect(screen.getByRole('heading', { name: 'Scope' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Learn' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Environment' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Runtime' })).toBeTruthy();
     expect(screen.getByRole('toolbar', { name: 'Docs actions' })).toBeTruthy();
   });
 });

@@ -1,6 +1,7 @@
 import { cockpitManifest } from '@threadplane/cockpit-registry';
 import { describe, expect, it } from 'vitest';
 import {
+  buildCockpitHandoffProperties,
   buildCockpitModeHref,
   docsCockpitMappings,
   resolveCockpitIdentity,
@@ -53,6 +54,48 @@ describe('Docs-to-Cockpit links', () => {
         'https://cockpit.example',
       ),
     ).toBe('https://cockpit.example/?mode=api');
+  });
+
+  it('builds safe mapped handoff properties separately from the destination URL', () => {
+    expect(
+      buildCockpitHandoffProperties(
+        { library: 'langgraph', section: 'guides', slug: 'streaming' },
+        'Run',
+      ),
+    ).toEqual({
+      library: 'langgraph',
+      source_section: 'guides',
+      source_slug: 'streaming',
+      destination_product: 'langgraph',
+      destination_capability: 'streaming',
+      requested_mode: 'run',
+      mapped: true,
+    });
+  });
+
+  it('marks unsupported pages as fallback handoffs without leaking a URL', () => {
+    const properties = buildCockpitHandoffProperties(
+      { library: 'langgraph', section: 'api', slug: 'inject-agent' },
+      'API',
+    );
+
+    expect(properties).toEqual({
+      library: 'langgraph',
+      source_section: 'api',
+      source_slug: 'inject-agent',
+      requested_mode: 'api',
+      mapped: false,
+    });
+    expect(properties).not.toHaveProperty('destination_url');
+  });
+
+  it('normalizes libraries outside the analytics allowlist to unknown', () => {
+    expect(
+      buildCockpitHandoffProperties(
+        { library: 'telemetry', section: 'guides', slug: 'overview' },
+        'Code',
+      ).library,
+    ).toBe('unknown');
   });
 
   it('uses the configured public Cockpit origin by default', () => {

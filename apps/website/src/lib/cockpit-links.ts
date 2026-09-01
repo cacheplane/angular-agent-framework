@@ -1,11 +1,15 @@
 import type { CockpitManifestIdentity } from '@threadplane/cockpit-registry';
 import type { ControlPlaneMode } from '@threadplane/ui-react';
+import type { AnalyticsLibrary } from './analytics/events';
 
 export interface DocsIdentity {
   library: string;
   section: string;
   slug: string;
 }
+
+export const COCKPIT_ENVIRONMENT_LABEL =
+  process.env.NEXT_PUBLIC_COCKPIT_ENVIRONMENT_LABEL ?? 'Shared development';
 
 export const docsCockpitMappings = {
   'langgraph/guides/streaming': {
@@ -56,6 +60,50 @@ export const resolveCockpitIdentity = (
   docsCockpitMappings[
     docsKey(library, section, slug) as keyof typeof docsCockpitMappings
   ] ?? null;
+
+export type CockpitHandoffProperties = {
+  library: AnalyticsLibrary;
+  source_section: string;
+  source_slug: string;
+  destination_product?: string;
+  destination_capability?: string;
+  requested_mode: Lowercase<Exclude<ControlPlaneMode, 'Docs'>>;
+  mapped: boolean;
+};
+
+const toAnalyticsLibrary = (library: string): AnalyticsLibrary => {
+  switch (library) {
+    case 'langgraph':
+    case 'render':
+    case 'chat':
+    case 'ag-ui':
+      return library;
+    default:
+      return 'unknown';
+  }
+};
+
+export const buildCockpitHandoffProperties = (
+  identity: DocsIdentity,
+  mode: Exclude<ControlPlaneMode, 'Docs'>,
+): CockpitHandoffProperties => {
+  const target = resolveCockpitIdentity(identity.library, identity.section, identity.slug);
+  const source = {
+    library: toAnalyticsLibrary(identity.library),
+    source_section: identity.section,
+    source_slug: identity.slug,
+    requested_mode: mode.toLowerCase() as CockpitHandoffProperties['requested_mode'],
+  };
+
+  return target
+    ? {
+        ...source,
+        destination_product: target.product,
+        destination_capability: target.topic,
+        mapped: true,
+      }
+    : { ...source, mapped: false };
+};
 
 const cockpitPath = (target: CockpitManifestIdentity) =>
   `/${target.product}/${target.section}/${target.topic}/${target.page}/${target.language}`;

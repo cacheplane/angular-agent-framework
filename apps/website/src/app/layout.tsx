@@ -68,9 +68,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         */}
         <JsonLd data={rootJsonLd()} />
         <Nav />
-        <main>{children}</main>
-        <Footer />
-        <AnnouncementToast />
+        <div id="site-content">
+          <main>{children}</main>
+          <Footer />
+          <AnnouncementToast />
+        </div>
       </body>
     </html>
   );

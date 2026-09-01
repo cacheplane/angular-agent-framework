@@ -1591,6 +1591,7 @@
   flex: 0 0 328px;
   border-right: 1px solid var(--color-border);
   background: var(--color-surface);
+  overflow: hidden;
 }
 @media (min-width: 64rem) {
   .docs-control-plane { display: flex; }
@@ -1643,8 +1644,10 @@
 }
 .docs-control-plane [data-control-plane-pane] {
   width: 272px;
+  height: 100%;
   min-width: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 [data-docs-control-plane-context] {
   display: flex;
@@ -1871,6 +1874,7 @@
 [data-docs-control-plane-context][data-mobile] {
   height: 100%;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 10px 12px 24px;
 }
 @media (prefers-reduced-motion: reduce) {

@@ -18,6 +18,7 @@ export const analyticsEvents = {
   docsCopyCodeClick: 'docs:copy_code_click',
   docsTabSelect: 'docs:tab_select',
   docsSidebarSectionToggle: 'docs:sidebar_section_toggle',
+  docsCockpitHandoff: 'docs:cockpit_handoff',
   blogCtaClick: 'blog:cta_click',
   blogCopyCodeClick: 'blog:copy_code_click',
   marketingAiCrawlerVisit: 'marketing:ai_crawler_visit',
