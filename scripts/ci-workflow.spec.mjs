@@ -66,6 +66,16 @@ function readJobNeeds(job) {
     .filter(Boolean);
 }
 
+function readNamedStep(job, name) {
+  const marker = `      - name: ${name}`;
+  const start = job.indexOf(marker);
+  assert.notEqual(start, -1, `expected workflow step ${name}`);
+  const afterStart = job.slice(start + marker.length);
+  const nextStep = /^ {6}- /m.exec(afterStart);
+  const end = nextStep ? start + marker.length + nextStep.index : job.length;
+  return job.slice(start, end);
+}
+
 describe('CI workflow', () => {
   async function readWorkflow() {
     return readFile('.github/workflows/ci.yml', 'utf8');
@@ -230,6 +240,24 @@ describe('CI workflow', () => {
       /continue-on-error:\s*true/,
       'example build/deploy must fail the linear job before Cockpit promotion'
     );
+
+    for (const name of [
+      'Build and assemble Angular examples',
+      'Deploy Angular examples to Vercel (production)',
+    ]) {
+      const step = readNamedStep(deployJob, name);
+      assert.doesNotMatch(step, /\|\||;\s*true(?:\s|$)|set\s+\+e/);
+    }
+
+    for (const name of [
+      'Prepare cockpit Vercel project',
+      'Build and deploy cockpit to Vercel (production)',
+      'Verify deployed cockpit',
+    ]) {
+      const step = readNamedStep(deployJob, name);
+      assert.doesNotMatch(step, /continue-on-error:\s*true/);
+      assert.doesNotMatch(step, /if:[^\n]*(?:always|failure|cancelled)\s*\(/);
+    }
   });
 
   it('runs production smoke after the canonical demo deploy', async () => {
