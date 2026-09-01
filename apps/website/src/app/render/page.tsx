@@ -32,7 +32,6 @@ export default async function RenderPage() {
               <Eyebrow tone="accent">@threadplane/render · generative UI</Eyebrow>
               <span className="lib-hero-rail-line" aria-hidden="true" />
             </div>
-            <Eyebrow tone="accent" className="render-page-eyebrow-spaced">@threadplane/render</Eyebrow>
             <h1 id="render-hero-heading" className="render-page-h1">
               Generative UI without a second framework.
             </h1>

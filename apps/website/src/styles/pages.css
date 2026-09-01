@@ -697,9 +697,6 @@
   margin: 0 auto;
   text-align: center;
 }
-.render-page-eyebrow-spaced {
-  margin-bottom: 16px;
-}
 .render-page-h1 {
   font-family: var(--font-garamond);
   font-size: var(--text-h1);
@@ -737,9 +734,6 @@
   margin: 0 auto;
   text-align: center;
 }
-.chat-page-eyebrow-spaced {
-  margin-bottom: 16px;
-}
 .chat-page-h1 {
   font-family: var(--font-garamond);
   font-size: var(--text-h1);
@@ -776,9 +770,6 @@
   max-width: 820px;
   margin: 0 auto;
   text-align: center;
-}
-.ag-ui-page-eyebrow-spaced {
-  margin-bottom: 16px;
 }
 .ag-ui-page-h1 {
   font-family: var(--font-garamond);
@@ -837,9 +828,6 @@
   max-width: 820px;
   margin: 0 auto;
   text-align: center;
-}
-.langgraph-page-eyebrow-spaced {
-  margin-bottom: 16px;
 }
 .langgraph-page-h1 {
   font-family: var(--font-garamond);

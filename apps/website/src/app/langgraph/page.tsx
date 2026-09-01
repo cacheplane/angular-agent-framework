@@ -32,7 +32,6 @@ export default async function LangGraphPage() {
               <Eyebrow tone="accent">@threadplane/langgraph · LangGraph adapter</Eyebrow>
               <span className="lib-hero-rail-line" aria-hidden="true" />
             </div>
-            <Eyebrow tone="angular" className="langgraph-page-eyebrow-spaced">@threadplane/langgraph</Eyebrow>
             <h1 id="angular-hero-heading" className="langgraph-page-h1">
               LangGraph agent UI for Angular.
             </h1>

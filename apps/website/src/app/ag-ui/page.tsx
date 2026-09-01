@@ -33,7 +33,6 @@ export default async function AgUiPage() {
               <Eyebrow tone="accent">@threadplane/ag-ui · protocol adapter</Eyebrow>
               <span className="lib-hero-rail-line" aria-hidden="true" />
             </div>
-            <Eyebrow tone="accent" className="ag-ui-page-eyebrow-spaced">@threadplane/ag-ui</Eyebrow>
             <h1 id="ag-ui-hero-heading" className="ag-ui-page-h1">
               One adapter. Eight backends.
             </h1>

@@ -32,7 +32,6 @@ export default async function ChatPage() {
               <Eyebrow tone="accent">@threadplane/chat · chat compositions</Eyebrow>
               <span className="lib-hero-rail-line" aria-hidden="true" />
             </div>
-            <Eyebrow tone="accent" className="chat-page-eyebrow-spaced">@threadplane/chat</Eyebrow>
             <h1 id="chat-hero-heading" className="chat-page-h1">
               Drop-in chat for Angular agents.
             </h1>
