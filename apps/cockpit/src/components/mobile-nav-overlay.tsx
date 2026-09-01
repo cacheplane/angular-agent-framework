@@ -1,37 +1,36 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
-import type { CockpitManifestEntry } from '@threadplane/cockpit-registry';
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type RefObject,
+} from 'react';
 import { X } from 'lucide-react';
-import type { ControlPlaneMode } from '@threadplane/ui-react';
-import type { NavigationProduct } from '../lib/route-resolution';
-import { CockpitControlPlane } from './control-plane/cockpit-control-plane';
+import {
+  CockpitControlPlane,
+  type CockpitControlPlaneProps,
+} from './control-plane/cockpit-control-plane';
 
-interface MobileNavOverlayProps {
-  navigationTree: NavigationProduct[];
-  manifest: CockpitManifestEntry[];
-  entry: CockpitManifestEntry;
-  activeMode: ControlPlaneMode;
-  onModeChange: (mode: ControlPlaneMode) => void;
-  runtimeUrl: string | null;
+export interface MobileNavOverlayProps {
+  controlPlaneProps: Omit<
+    CockpitControlPlaneProps,
+    'mobile' | 'onModeSelected' | 'onNavigate'
+  >;
   isOpen: boolean;
   onClose: () => void;
   triggerRef?: RefObject<HTMLButtonElement | null>;
 }
 
 export function MobileNavOverlay({
-  navigationTree,
-  manifest,
-  entry,
-  activeMode,
-  onModeChange,
-  runtimeUrl,
+  controlPlaneProps,
   isOpen,
   onClose,
   triggerRef,
 }: MobileNavOverlayProps) {
   const [state, setState] = useState<'closed' | 'open' | 'closing'>(
-    isOpen ? 'open' : 'closed',
+    isOpen ? 'open' : 'closed'
   );
   const dialogRef = useRef<HTMLDivElement>(null);
 
@@ -55,9 +54,12 @@ export function MobileNavOverlay({
     if (state !== 'open') return undefined;
     document.body.style.overflow = 'hidden';
     const dialog = dialogRef.current;
-    const focusable = () => Array.from(dialog?.querySelectorAll<HTMLElement>(
-      'a[href], button:not(:disabled), [tabindex]:not([tabindex="-1"])',
-    ) ?? []);
+    const focusable = () =>
+      Array.from(
+        dialog?.querySelectorAll<HTMLElement>(
+          'a[href], button:not(:disabled), [tabindex]:not([tabindex="-1"])'
+        ) ?? []
+      );
     focusable()[0]?.focus();
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -102,21 +104,18 @@ export function MobileNavOverlay({
       <div className="cockpit-mobile-control-plane-panel">
         <header className="cockpit-mobile-control-plane-header">
           <span>Cockpit</span>
-          <button type="button" onClick={requestClose} aria-label="Close navigation">
+          <button
+            type="button"
+            onClick={requestClose}
+            aria-label="Close navigation"
+          >
             <X size={20} strokeWidth={2} aria-hidden="true" />
           </button>
         </header>
         <CockpitControlPlane
-          navigationTree={navigationTree}
-          manifest={manifest}
-          entry={entry}
-          activeMode={activeMode}
-          onModeChange={(mode) => {
-            onModeChange(mode);
-            requestClose();
-          }}
-          runtimeUrl={runtimeUrl}
+          {...controlPlaneProps}
           mobile
+          onModeSelected={requestClose}
           onNavigate={requestClose}
         />
       </div>

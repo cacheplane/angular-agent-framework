@@ -19,7 +19,6 @@ describe('CockpitSidebar', () => {
       <CockpitSidebar
         entry={entry}
         navigationTree={buildNavigationTree(cockpitManifest)}
-        runtimeUrl="https://runtime.example.test"
       />
     );
 
@@ -29,9 +28,10 @@ describe('CockpitSidebar', () => {
     expect(html).toContain('Streaming');
     expect(html).toContain('aria-current="page"');
     expect(html).toContain('Scope');
-    expect(html).toContain('Environment');
-    expect(html).toContain('Python');
-    expect(html).toContain('aria-label="Open runtime"');
+    expect(html).toContain('Capability');
+    expect(html).not.toContain('Environment');
+    expect(html).not.toContain('Actions');
+    expect(html).not.toContain('aria-label="Open runtime"');
     expect(html).not.toContain('Theme');
   });
 });
