@@ -23,8 +23,8 @@ test('landing page states the all-MIT and explicit-telemetry commitments', async
   await page.goto('/');
   const main = page.locator('main');
 
-  await expect(main).toContainText('Every Threadplane package is MIT-licensed');
-  await expect(main).toContainText('Package installation is inert');
+  await expect(main).toContainText('every package is MIT');
+  await expect(main).toContainText('No hidden telemetry');
 });
 
 test('pricing page presents three software and support paths', async ({ page }) => {
