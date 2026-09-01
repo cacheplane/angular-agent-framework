@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { WEBSITE_SUPPORTED_ANGULAR_MAJORS } from '../../components/pricing/angular-support.mjs';
 import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
@@ -34,10 +35,10 @@ export default async function AgUiPage() {
               <span className="lib-hero-rail-line" aria-hidden="true" />
             </div>
             <h1 id="ag-ui-hero-heading" className="ag-ui-page-h1">
-              One adapter. Eight backends.
+              One adapter. Seven backends.
             </h1>
             <p className="ag-ui-page-hero-subtitle">
-              Build the Angular UI once, on the AG-UI protocol — eight runtimes speak it today, and new ones <span className="marker-highlight">work the day they ship</span>. History and checkpoint behavior stays with your backend.
+              Build the Angular UI once, on the AG-UI protocol — seven runtimes speak it today, and new ones <span className="marker-highlight">work the day they ship</span>. History and checkpoint behavior stays with your backend.
             </p>
             <div className="ag-ui-page-hero-buttons">
               <Button variant="primary" size="lg" href="/docs/ag-ui/getting-started/quickstart">Get started</Button>
@@ -48,7 +49,7 @@ export default async function AgUiPage() {
             </p>
             <div className="ag-ui-page-hero-pills">
               <Pill variant="accent">MIT</Pill>
-              <Pill variant="angular">Angular 20–22</Pill>
+              <Pill variant="angular">{`Angular ${WEBSITE_SUPPORTED_ANGULAR_MAJORS[0]}–${WEBSITE_SUPPORTED_ANGULAR_MAJORS.at(-1)}`}</Pill>
               <Pill variant="neutral">AG-UI protocol</Pill>
             </div>
             <p className="ag-ui-page-langgraph-note">
@@ -66,7 +67,7 @@ export default async function AgUiPage() {
         id="backends"
         eyebrow="Runtime choice"
         headline="Pick a backend. Keep the UI."
-        body="The AG-UI protocol decouples your agent runtime from your front-end. @threadplane/ag-ui wraps any AG-UI AbstractAgent into the runtime-neutral Agent contract that @threadplane/chat consumes — so the same Angular components ship against eight different runtimes."
+        body="The AG-UI protocol decouples your agent runtime from your front-end. @threadplane/ag-ui wraps any AG-UI AbstractAgent into the runtime-neutral Agent contract that @threadplane/chat consumes — so the same Angular components ship against seven different runtimes."
         rows={[
           { claim: 'Stream from Python, .NET, or TypeScript', api: 'AG-UI protocol' },
           { claim: 'Tool calls, state deltas, citations — standardized', api: 'protocol events' },

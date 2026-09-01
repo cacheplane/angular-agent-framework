@@ -54,6 +54,9 @@ export const YES_WALL_GROUPS: readonly YesGroup[] = [
   },
 ];
 
+// NOTE: the SectionHeader aside says "Sixteen questions" in prose — update it
+// (and the spec's toBe(16)) together with any row change; the footer count
+// derives automatically.
 const TOTAL_QUESTIONS = YES_WALL_GROUPS.reduce((n, g) => n + g.rows.length, 0);
 
 export function YesWall() {

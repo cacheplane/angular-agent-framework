@@ -36,7 +36,7 @@ export default async function RenderPage() {
               Generative UI without a second framework.
             </h1>
             <p className="render-page-hero-subtitle">
-              Server-emitted JSON specs render into Angular <span className="marker-highlight">components you already own</span>. Vercel json-render and Google A2UI both supported. Per-component fallback, readiness gate, no surprises.
+              Server-emitted JSON specs render into Angular <span className="marker-highlight">components you already own</span>. Vercel json-render and Google A2UI both supported. Unknown specs degrade gracefully — no surprises.
             </p>
             <div className="render-page-hero-buttons">
               <Button variant="primary" size="lg" href="/docs/render/getting-started/introduction">Get started</Button>

@@ -15,9 +15,9 @@ interface FinalCTAProps {
   /** Optional trailing caption. Defaults to licensing and telemetry line. Pass null to hide. */
   caption?: string | null;
   /**
-   * 'dark' renders on the dark band — homepage only, pairing with the Yes
-   * wall so the inverted treatment appears twice (spec: a lone dark band
-   * reads as arbitrary). All other pages keep the default tinted surface.
+   * 'dark' renders on the dark band. Rule (amended 2026-08-31): dark closes
+   * PRODUCT pages — the homepage (pairing with the Yes wall) and the four
+   * library pages. Commerce pages keep the default tinted surface.
    */
   variant?: 'default' | 'dark';
 }
@@ -29,7 +29,7 @@ export function FinalCTA({
   subtext = 'Install the framework, read the docs, and have a streaming chat in your app this afternoon.',
   primary = null,
   secondary = DEFAULT_SECONDARY,
-  caption = 'All packages are MIT · Production support available · App telemetry off by default',
+  caption = 'All packages are MIT · Production support available · Installation is inert',
   variant = 'default',
 }: FinalCTAProps = {}) {
   return (

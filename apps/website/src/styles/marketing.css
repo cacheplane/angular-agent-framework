@@ -15,41 +15,6 @@
   margin: 0 auto;
   padding: 32px 24px 88px;
 }
-.pricing-billing-fieldset {
-  border: 0;
-  padding: 0;
-  margin: 0 0 32px;
-  display: flex;
-  justify-content: center;
-}
-.pricing-billing-toggle {
-  display: inline-flex;
-  padding: 4px;
-  background: var(--color-surface-tinted);
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  gap: 4px;
-}
-.pricing-billing-tab {
-  position: relative;
-  font-family: var(--font-inter);
-  font-size: 13px;
-  font-weight: 600;
-  padding: 8px 16px;
-  cursor: pointer;
-  transition: background 150ms ease, color 150ms ease;
-  background: transparent;
-  color: var(--color-text-secondary);
-  border-radius: 999px;
-}
-.pricing-billing-tab[data-active] {
-  background: var(--color-accent);
-  color: #fff;
-}
-.pricing-billing-tab:has(input:focus-visible) {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-}
 .pricing-plan-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -134,17 +99,8 @@
   color: var(--color-text-primary);
   line-height: 1;
 }
-.pricing-plan-price-period {
-  font-family: var(--font-inter);
-  font-size: 11px;
-  color: var(--color-text-muted);
-}
 .pricing-plan-price-qualifier,
 .pricing-plan-billing-note,
-.pricing-plan-additional-qualifier {
-  font-family: var(--font-inter);
-  line-height: 1.45;
-}
 .pricing-plan-price-qualifier {
   margin: 10px 0 0;
   color: var(--color-text-primary);
@@ -155,12 +111,6 @@
   margin: 5px 0 0;
   color: var(--color-text-muted);
   font-size: 11px;
-}
-.pricing-plan-additional-qualifier {
-  margin: 7px 0 0;
-  color: var(--color-accent);
-  font-size: 12px;
-  font-weight: 700;
 }
 .pricing-plan-description {
   margin: 6px 0 20px;
@@ -196,10 +146,6 @@
 .pricing-plan-action {
   margin-top: auto;
   padding-top: 24px;
-}
-.pricing-plan-form,
-.pricing-plan-btn {
-  width: 100%;
 }
 .pricing-section-heading-wrap {
   max-width: 760px;
@@ -332,14 +278,6 @@
 .pricing-comparison-table td[data-highlight] {
   background: var(--color-surface-tinted);
 }
-.pricing-comparison-popular {
-  display: block;
-  margin-top: 3px;
-  color: var(--color-accent);
-  font-size: 9px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
 .pricing-comparison-row-heading {
   position: sticky;
   left: 0;
@@ -348,13 +286,6 @@
   background: var(--color-surface);
   font-weight: 600;
   text-align: left;
-}
-.pricing-comparison-row-note {
-  display: block;
-  margin-top: 5px;
-  color: var(--color-text-muted);
-  font-size: 10px;
-  font-weight: 400;
 }
 .pricing-comparison-table tbody:last-child tr:last-child th,
 .pricing-comparison-table tbody:last-child tr:last-child td {
@@ -390,16 +321,9 @@
     transform: rotate(90deg);
     justify-self: center;
   }
-  .pricing-billing-tab {
-    padding: 8px 12px;
-    font-size: 12px;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pricing-billing-tab {
-    transition: none;
-  }
 }
 
 /* LeadForm — components/pricing/LeadForm.tsx */

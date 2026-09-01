@@ -1,4 +1,5 @@
 import { Container } from '../../components/ui/Container';
+import { WEBSITE_SUPPORTED_ANGULAR_MAJORS } from '../../components/pricing/angular-support.mjs';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
 import { Button } from '../../components/ui/Button';
@@ -47,7 +48,7 @@ export default async function LangGraphPage() {
             </p>
             <div className="langgraph-page-hero-pills">
               <Pill variant="accent">MIT</Pill>
-              <Pill variant="angular">Angular 20–22</Pill>
+              <Pill variant="angular">{`Angular ${WEBSITE_SUPPORTED_ANGULAR_MAJORS[0]}–${WEBSITE_SUPPORTED_ANGULAR_MAJORS.at(-1)}`}</Pill>
               <Pill variant="neutral">LangGraph + AG-UI</Pill>
             </div>
           </div>
