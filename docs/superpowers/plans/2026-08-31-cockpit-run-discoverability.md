@@ -48,7 +48,7 @@ Every capability opens in Run. `activeMode` leaves persisted preferences entirel
 - Test: `libs/ui-react/src/lib/control-plane/control-plane-preferences.spec.ts`
 - Test: `apps/cockpit/src/components/cockpit-shell.spec.tsx`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add to `libs/ui-react/src/lib/control-plane/control-plane-preferences.spec.ts`:
 
@@ -74,13 +74,13 @@ This spec drives `window.localStorage` directly and clears it in `beforeEach` �
 no fake-storage helper to reuse. `CONTROL_PLANE_STORAGE_KEY` and
 `readControlPlanePreferences` are already imported at the top of the file.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx nx test ui-react -- -t "ignores a stored activeMode"`
 Expected: FAIL — `expect(true).toBe(false)`, because `readControlPlanePreferences` still
 copies `activeMode` through.
 
-- [ ] **Step 3: Remove `activeMode` from the persisted shape**
+- [x] **Step 3: Remove `activeMode` from the persisted shape**
 
 In `control-plane-preferences.ts`:
 
@@ -143,12 +143,12 @@ Delete the `setActiveMode` callback entirely, and change the hook's return to:
 
 Note `surface` is still read by `setExpanded`, so it stays a parameter.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx nx test ui-react -- -t "ignores a stored activeMode"`
 Expected: PASS
 
-- [ ] **Step 5: Fix the rest of the preferences suite**
+- [x] **Step 5: Fix the rest of the preferences suite**
 
 Run: `npx nx test ui-react`
 Expected: several existing assertions fail — they set and read `activeMode`
@@ -161,7 +161,7 @@ no longer has a subject — delete it.
 
 Re-run until green.
 
-- [ ] **Step 6: Move mode into the shell**
+- [x] **Step 6: Move mode into the shell**
 
 In `apps/cockpit/src/components/cockpit-shell.tsx`:
 
@@ -228,7 +228,7 @@ In `handleModeChange`, swap the setter and drop `preferences` from the dependenc
 `preferences` is still used for `expanded`, `setExpanded` and `hydrated` — leave the
 `useControlPlanePreferences('cockpit')` call in place.
 
-- [ ] **Step 7: Run the cockpit suite**
+- [x] **Step 7: Run the cockpit suite**
 
 Run: `npx nx test cockpit`
 Expected: failures in `cockpit-shell.spec.tsx` around lines 96, 107 and 195, which seed
@@ -242,13 +242,13 @@ Rewrite those so that:
 
 Re-run until green.
 
-- [ ] **Step 8: Mutation-check the stickiness test**
+- [x] **Step 8: Mutation-check the stickiness test**
 
 Temporarily re-add `activeMode` passthrough in `readControlPlanePreferences` and confirm
 the "stored `activeMode` does not change the landing view" test fails. Revert the
 mutation. This assertion is about an absence and would pass vacuously if mis-wired.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add libs/ui-react/src/lib/control-plane/control-plane-preferences.ts libs/ui-react/src/lib/control-plane/control-plane-preferences.spec.ts apps/cockpit/src/components/cockpit-shell.tsx apps/cockpit/src/components/cockpit-shell.spec.tsx
@@ -264,7 +264,7 @@ git commit -m "fix(cockpit): stop persisting the active mode so every capability
 - Modify: `libs/ui-react/src/lib/control-plane/control-plane.tsx`
 - Test: `apps/cockpit/src/components/control-plane/cockpit-control-plane.spec.tsx`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add to `cockpit-control-plane.spec.tsx`, copying the disk-read preamble that
 `activity-panel.spec.tsx:11-17` already uses (the cwd check matters — Nx runs this suite
@@ -304,13 +304,13 @@ it('names the mode group without adding a second landmark label', () => {
 
 `renderControlPlane` is the existing render helper in this spec file.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx nx test cockpit -- -t "separates the mode group"`
 Expected: FAIL — no `border-top` on the utilities group, and the item rule still sets
 `--ds-text-muted`.
 
-- [ ] **Step 3: Add the group label to the primitive**
+- [x] **Step 3: Add the group label to the primitive**
 
 In `libs/ui-react/src/lib/control-plane/control-plane.tsx`, extend the rail:
 
@@ -350,7 +350,7 @@ export function ControlPlaneRail({
 It is `aria-hidden` on purpose: the `nav` already carries `aria-label="Cockpit modes"`, and
 a visible duplicate would announce the group twice.
 
-- [ ] **Step 4: Pass the label from the cockpit**
+- [x] **Step 4: Pass the label from the cockpit**
 
 In `apps/cockpit/src/components/control-plane/cockpit-control-plane.tsx`, on the
 `<ControlPlaneRail>` element add:
@@ -359,7 +359,7 @@ In `apps/cockpit/src/components/control-plane/cockpit-control-plane.tsx`, on the
         primaryLabel="View"
 ```
 
-- [ ] **Step 5: Update the CSS**
+- [x] **Step 5: Update the CSS**
 
 In `apps/cockpit/src/app/cockpit.css`, change the resting colour of the rail item:
 
@@ -403,13 +403,13 @@ Then replace the utilities rule and add the cap:
 }
 ```
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 6: Run tests to verify they pass**
 
 Run: `npx nx test cockpit -- -t "separates the mode group"`
 Run: `npx nx test cockpit -- -t "names the mode group"`
 Expected: PASS
 
-- [ ] **Step 7: Run both suites**
+- [x] **Step 7: Run both suites**
 
 Run: `npx nx test ui-react`
 Run: `npx nx test cockpit`
@@ -417,7 +417,7 @@ Expected: green. `control-plane.spec.tsx` may need a case for `primaryLabel` bei
 omitted — if a snapshot or structural assertion breaks, update it to reflect the new
 optional wrapper.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add libs/ui-react/src/lib/control-plane/control-plane.tsx apps/cockpit/src/components/control-plane/cockpit-control-plane.tsx apps/cockpit/src/app/cockpit.css apps/cockpit/src/components/control-plane/cockpit-control-plane.spec.tsx
@@ -435,7 +435,7 @@ Generic primitive change. No cockpit behaviour yet.
 - Modify: `libs/ui-react/src/index.ts`
 - Test: `libs/ui-react/src/lib/control-plane/control-plane.spec.tsx`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add to `control-plane.spec.tsx`:
 
@@ -464,12 +464,12 @@ it('renders no status dot when status is omitted', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx nx test ui-react -- -t "renders a status dot"`
 Expected: FAIL — `status` is not a valid prop and no element matches.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `control-plane.tsx`, replace `ControlPlaneRailItemProps` and the body of
 `ControlPlaneRailItem`:
@@ -559,18 +559,18 @@ export function ControlPlaneRailItem({
 A labelled item with a status now gets a hover tooltip too, so the state has a
 non-colour, non-screen-reader home.
 
-- [ ] **Step 4: Export the new type**
+- [x] **Step 4: Export the new type**
 
 In `libs/ui-react/src/index.ts`, add `ControlPlaneRailStatus` alongside the existing
 `ControlPlaneRailItem` / `ControlPlaneMode` exports, matching the file's existing export
 style.
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `npx nx test ui-react`
 Expected: PASS, whole suite green.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add libs/ui-react/src/lib/control-plane/control-plane.tsx libs/ui-react/src/lib/control-plane/control-plane.spec.tsx libs/ui-react/src/index.ts
@@ -588,7 +588,7 @@ git commit -m "feat(ui-react): add a status dot slot to control plane rail items
 - Test: `apps/cockpit/src/lib/runtime/runtime-state.spec.ts`
 - Test: `apps/cockpit/src/components/control-plane/cockpit-control-plane.spec.tsx`
 
-- [ ] **Step 1: Write the failing test for the mapping**
+- [x] **Step 1: Write the failing test for the mapping**
 
 Add to `apps/cockpit/src/lib/runtime/runtime-state.spec.ts`:
 
@@ -633,12 +633,12 @@ describe('runtimeRailStatus', () => {
 
 Add `runtimeRailStatus` to the file's existing import from `./runtime-state`.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx nx test cockpit -- -t "runtimeRailStatus"`
 Expected: FAIL — `runtimeRailStatus is not a function`.
 
-- [ ] **Step 3: Implement the mapping**
+- [x] **Step 3: Implement the mapping**
 
 Append to `apps/cockpit/src/lib/runtime/runtime-state.ts`:
 
@@ -672,12 +672,12 @@ without an accessible label is unrepresentable.
 The exhaustive `switch` over `RuntimePhase` with no `default` means a future phase is a
 compile error rather than a silently missing dot.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx nx test cockpit -- -t "runtimeRailStatus"`
 Expected: PASS
 
-- [ ] **Step 5: Write the failing wiring test**
+- [x] **Step 5: Write the failing wiring test**
 
 Add to `cockpit-control-plane.spec.tsx`:
 
@@ -701,12 +701,12 @@ it('shows no dot on Run when no runtime is configured', () => {
 });
 ```
 
-- [ ] **Step 6: Run test to verify it fails**
+- [x] **Step 6: Run test to verify it fails**
 
 Run: `npx nx test cockpit -- -t "puts the runtime phase"`
 Expected: FAIL — no button named `Run, runtime error`.
 
-- [ ] **Step 7: Wire it**
+- [x] **Step 7: Wire it**
 
 In `cockpit-control-plane.tsx`, add `runtimeRailStatus` to the existing import from
 `../../lib/runtime/runtime-state`, then compute it next to `attention`:
@@ -730,7 +730,7 @@ and change the `primary` mapping so only Run carries it:
         ))}
 ```
 
-- [ ] **Step 8: Add the dot styling**
+- [x] **Step 8: Add the dot styling**
 
 In `apps/cockpit/src/app/cockpit.css`, add the working token to both blocks:
 
@@ -782,7 +782,7 @@ Also verify by eye in Task 6: a status on a non-`iconOnly` item now shows a hove
 at `left: calc(100% + 8px)` (`cockpit.css:696-700`), positioning authored for the narrow
 icon rail. On the Run item that lands over the adjacent pane. No test covers it.
 
-- [ ] **Step 9: Run tests to verify they pass**
+- [x] **Step 9: Run tests to verify they pass**
 
 Run: `npx nx test cockpit`
 Expected: PASS. Existing tests that query `screen.getByRole('button', { name: 'Run' })`
@@ -790,14 +790,14 @@ will now fail wherever the fixture snapshot has a phase other than `not_configur
 because Run's accessible name has changed. Update those queries to the new name — this is
 the intended contract change, not a regression.
 
-- [ ] **Step 10: Mutation-check the no-dot case**
+- [x] **Step 10: Mutation-check the no-dot case**
 
 Temporarily change `runtimeRailStatus('not_configured')` to return
 `{ kind: 'success', label: 'runtime ready' }` and confirm "shows no dot on Run when no
 runtime is configured" fails. Revert. The assertion is an absence and would otherwise pass
 vacuously.
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 
 ```bash
 git add apps/cockpit/src/lib/runtime/runtime-state.ts apps/cockpit/src/lib/runtime/runtime-state.spec.ts apps/cockpit/src/components/control-plane/cockpit-control-plane.tsx apps/cockpit/src/components/control-plane/cockpit-control-plane.spec.tsx apps/cockpit/src/app/cockpit.css
@@ -819,7 +819,7 @@ read".
 - Test: `apps/cockpit/src/lib/runtime/session-activity.spec.ts`
 - Test: `apps/cockpit/src/components/control-plane/cockpit-control-plane.spec.tsx`
 
-- [ ] **Step 1: Write the failing selector test**
+- [x] **Step 1: Write the failing selector test**
 
 Add to `apps/cockpit/src/lib/runtime/session-activity.spec.ts`:
 
@@ -868,12 +868,12 @@ describe('countUnseenProblems', () => {
 Import `countUnseenProblems`, `ActivityKind`, `ActivitySeverity` and
 `SessionActivityEvent` from `./session-activity`.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx nx test cockpit -- -t "countUnseenProblems"`
 Expected: FAIL — `countUnseenProblems is not a function`.
 
-- [ ] **Step 3: Implement the selector**
+- [x] **Step 3: Implement the selector**
 
 Append to `apps/cockpit/src/lib/runtime/session-activity.ts`:
 
@@ -900,12 +900,12 @@ export function countUnseenProblems(
 events are the tail, and the unseen window runs from index 0. `slice(seenCount)` is
 inverted and still passes all three tests above — add a test that pins the direction.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx nx test cockpit -- -t "countUnseenProblems"`
 Expected: PASS
 
-- [ ] **Step 5: Track the seen marker in the shell**
+- [x] **Step 5: Track the seen marker in the shell**
 
 In `cockpit-shell.tsx`, add state beside `activityOpenCycle`:
 
@@ -947,7 +947,7 @@ from `../lib/runtime/session-activity`, then inside `controlPlaneProps`:
 
 and add `seenActivityCount` to that `useMemo` dependency array.
 
-- [ ] **Step 6: Write the failing behaviour test**
+- [x] **Step 6: Write the failing behaviour test**
 
 In `cockpit-control-plane.spec.tsx`, **replace** the existing test named
 `'renders Activity above Settings with a nonnumeric attention indicator that opening does not clear'`
@@ -978,12 +978,12 @@ it('does not flag Activity when nothing has gone wrong', () => {
 `renderControlPlane` builds props from a defaults object in this spec — add
 `unseenProblems: 0` to those defaults so every other test keeps compiling.
 
-- [ ] **Step 7: Run test to verify it fails**
+- [x] **Step 7: Run test to verify it fails**
 
 Run: `npx nx test cockpit -- -t "flags unseen problems"`
 Expected: FAIL — `unseenProblems` is not a prop and the label is still phase-derived.
 
-- [ ] **Step 8: Wire the control plane**
+- [x] **Step 8: Wire the control plane**
 
 In `cockpit-control-plane.tsx`:
 
@@ -1012,7 +1012,7 @@ test table rather than leaving a tested, uncalled predicate behind.
 Everything downstream (`attention` passed to `ActivityPanel`, the
 `[data-cockpit-activity-attention]` marker) keeps working unchanged.
 
-- [ ] **Step 9: Update the panel's wording**
+- [x] **Step 9: Update the panel's wording**
 
 In `activity-panel.tsx`, the `attention` prop now means unseen problems. Update the JSDoc-free
 prop by renaming the derived label so the list's accessible name matches the new claim:
@@ -1024,20 +1024,20 @@ prop by renaming the derived label so the list's accessible name matches the new
 Update the matching assertions in `activity-panel.spec.tsx` (around lines 168–184) from
 `'Activity, attention required'` to `'Activity, unread problems'`.
 
-- [ ] **Step 10: Run tests to verify they pass**
+- [x] **Step 10: Run tests to verify they pass**
 
 Run: `npx nx test cockpit`
 Expected: PASS. Any remaining `'Activity, attention required'` string assertions must be
 updated to the new labels.
 
-- [ ] **Step 11: Mutation-check the quiet case**
+- [x] **Step 11: Mutation-check the quiet case**
 
 Temporarily change `countUnseenProblems` to `events.slice(seenCount).length` (dropping the
 severity filter) and confirm "does not flag Activity when nothing has gone wrong" fails
 once a `mode_changed` event exists in the fixture. Revert. Without this check the test
 passes whether or not the filter is wired.
 
-- [ ] **Step 12: Commit**
+- [x] **Step 12: Commit**
 
 ```bash
 git add apps/cockpit/src/lib/runtime/session-activity.ts apps/cockpit/src/lib/runtime/session-activity.spec.ts apps/cockpit/src/components/cockpit-shell.tsx apps/cockpit/src/components/control-plane/cockpit-control-plane.tsx apps/cockpit/src/components/control-plane/cockpit-control-plane.spec.tsx apps/cockpit/src/components/control-plane/activity-panel.tsx apps/cockpit/src/components/control-plane/activity-panel.spec.tsx
@@ -1050,13 +1050,13 @@ git commit -m "feat(cockpit): re-scope the Activity indicator to unseen problems
 
 **Files:** none — verification only.
 
-- [ ] **Step 1: Full suites**
+- [x] **Step 1: Full suites**
 
 Run: `npx nx test ui-react`
 Run: `npx nx test cockpit`
 Expected: both green.
 
-- [ ] **Step 2: Lint**
+- [x] **Step 2: Lint**
 
 `apps/cockpit` has **no** `lint` target — only `ui-react` does. Run:
 
@@ -1073,7 +1073,7 @@ Note on reading test results: `npx nx test <project>` swallows the vitest report
 in this worktree, so it tells you pass/fail but not counts. When you need real numbers, run
 `npx vitest run --root apps/cockpit` (or `--root libs/ui-react`) directly.
 
-- [ ] **Step 3: Confirm in a real browser**
+- [x] **Step 3: Confirm in a real browser**
 
 Start the cockpit dev server via the Browser pane's `preview_start` (never `Bash`), open a
 capability page, and check:
@@ -1084,7 +1084,7 @@ capability page, and check:
 
 Check both themes — the dot tokens are defined per theme.
 
-- [ ] **Step 4: Commit anything the browser pass turned up**
+- [x] **Step 4: Commit anything the browser pass turned up**
 
 ```bash
 git add -A
@@ -1092,3 +1092,40 @@ git commit -m "fix(cockpit): browser-pass corrections for the rail redesign"
 ```
 
 Skip if there is nothing to commit.
+
+---
+
+## Task 6 result (2026-09-01)
+
+Verified against a fresh `nx serve cockpit` build at 1440×900, in both themes.
+
+| Check | Result |
+| --- | --- |
+| Stale `activeMode: "Code"` in localStorage | lands on **Run** (`aria-pressed="true"`), preference untouched in storage |
+| `?mode=code` deep link | lands on Code, `location.search` stripped to `""` |
+| Code → click another capability (client-side `router.push`) | lands on **Run** — the `key={canonicalPath}` fix, confirmed live |
+| Rail inactive contrast | dark `rgb(200,200,200)`, light `rgb(70,70,70)` — `--ds-text-secondary`, not the disabled token |
+| Utilities separator | dark `rgb(60,60,60)` on `rgb(44,44,44)`; light `rgb(200,200,200)` on `rgb(251,251,251)` — visible in both |
+| `VIEW` cap | present, `role="group"` + `aria-labelledby` resolving to "View" |
+| Run status dot | `position: absolute`, 7×7, dark `rgb(76,195,138)` / light `rgb(26,122,64)`, 2px ring matching the rail |
+| Run tooltip | **absent** — no `[data-control-plane-tooltip]`, no `aria-describedby`; status in a visually-hidden span |
+| Activity tooltip | still present (icon-only), no dot with a healthy runtime |
+| Console | no errors, no hydration warnings, across reload and cross-product navigation |
+
+**Not verified by eye:** the Activity dot lighting on a real runtime failure, and the
+`working`/`error` dot colours in situ — all three are covered by unit and integration
+tests, but reproducing them live needs a deliberately broken runtime.
+
+**Two false alarms worth recording**, both caused by testing procedure rather than code:
+
+1. A hydration `useId` mismatch appeared after I edited `page.tsx` under a live dev server.
+   It did not reproduce on a fresh tab against a clean build — it was an HMR artifact.
+2. The status dot briefly computed as `position: static` with a transparent background and
+   the served stylesheet contained neither the dot nor the cap rules. This followed a
+   revert/restore of source files under a running Turbopack server, which left a stale
+   stylesheet. Clearing `.next` and restarting resolved it.
+
+Lesson for future browser passes: **restart the dev server and use a fresh tab after any
+git-level file swap.** The console buffer also persists across navigations, so a stale
+error can be misattributed to the current build — check the DOM to confirm which build you
+are actually looking at.
