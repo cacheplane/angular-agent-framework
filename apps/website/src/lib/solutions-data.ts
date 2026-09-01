@@ -71,7 +71,6 @@ export type SolutionCodeBlocks = readonly SolutionCode[];
 
 export interface SolutionConfig {
   slug: string;
-  color: string;
   rgb: string;
   eyebrow: string;
   title: string;
@@ -97,7 +96,6 @@ export interface SolutionConfig {
 export const SOLUTIONS: SolutionConfig[] = [
   {
     slug: 'compliance',
-    color: '#D4850F',
     rgb: '212,133,15',
     eyebrow: 'Compliance & Audit',
     title: 'AI agents your compliance\nteam will actually approve',
@@ -190,7 +188,6 @@ export const SOLUTIONS: SolutionConfig[] = [
   },
   {
     slug: 'analytics',
-    color: '#0F7B8D',
     rgb: '15,123,141',
     eyebrow: 'Analytics & BI',
     title: 'Natural language queries.\nReal-time dashboards.',
@@ -268,7 +265,6 @@ export class DashboardComponent {
   },
   {
     slug: 'customer-support',
-    color: '#5B4FCF',
     rgb: '91,79,207',
     eyebrow: 'Customer Support',
     title: 'AI agents that know when\nto escalate to a human',

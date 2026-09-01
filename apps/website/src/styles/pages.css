@@ -399,12 +399,21 @@
 
 /* Solution detail page — app/solutions/[slug]/page.tsx */
 .sol-page-section-header {
-  text-align: center;
   max-width: 720px;
-  margin: 0 auto 48px;
+  margin-bottom: 48px;
 }
 .sol-page-eyebrow-tight {
   margin-bottom: 12px;
+}
+.sol-page-rail {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.sol-page-rail-line {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
 }
 .sol-page-h2 {
   font-family: var(--font-garamond);
@@ -492,10 +501,11 @@
 }
 .sol-page-metric {
   font-family: var(--font-garamond);
-  font-style: italic;
-  font-size: 32px;
+  font-size: 40px;
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 12px;
 }
@@ -1167,14 +1177,4 @@
   justify-content: center;
   gap: 12px;
   flex-wrap: wrap;
-}
-
-/* Per-page accent color, set inline as --accent (unbounded prop — the
- * lint-guard escape hatch). The compound selector matches the Eyebrow tone
- * rules' 0-2-0 specificity ([data-ui="eyebrow"][data-tone=…] in ui.css) and
- * wins the tie because pages.css imports after ui.css — the inline color it
- * replaces used to outrank everything. */
-[data-accent-text],
-[data-ui='eyebrow'][data-accent-text] {
-  color: var(--accent);
 }
