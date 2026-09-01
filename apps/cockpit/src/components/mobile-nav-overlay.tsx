@@ -146,26 +146,34 @@ export function MobileNavOverlay({
 
   const interceptCapabilityNavigation = useCallback(
     (event: ReactMouseEvent<HTMLDivElement>) => {
-      if (
-        !onCapabilityNavigateRef.current ||
-        event.defaultPrevented ||
-        event.button !== 0 ||
-        event.metaKey ||
-        event.ctrlKey ||
-        event.shiftKey ||
-        event.altKey
-      ) {
-        return;
-      }
       const target = event.target;
       const anchor =
         target instanceof Element
-          ? target.closest<HTMLAnchorElement>('a[data-capability-link]')
+          ? target.closest<HTMLAnchorElement>('a')
           : null;
-      if (!anchor || anchor.target || anchor.hasAttribute('download')) return;
+      if (!anchor) return;
+
+      const shouldDefer =
+        Boolean(onCapabilityNavigateRef.current) &&
+        anchor.hasAttribute('data-capability-link') &&
+        !event.defaultPrevented &&
+        event.button === 0 &&
+        !event.metaKey &&
+        !event.ctrlKey &&
+        !event.shiftKey &&
+        !event.altKey &&
+        !anchor.target &&
+        !anchor.hasAttribute('download');
+      if (!shouldDefer) {
+        pendingNavigationRef.current = null;
+        return;
+      }
 
       const destination = new URL(anchor.href, window.location.href);
-      if (destination.origin !== window.location.origin) return;
+      if (destination.origin !== window.location.origin) {
+        pendingNavigationRef.current = null;
+        return;
+      }
       pendingNavigationRef.current =
         destination.pathname + destination.search + destination.hash;
       event.preventDefault();

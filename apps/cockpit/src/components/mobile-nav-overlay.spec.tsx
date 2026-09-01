@@ -276,6 +276,73 @@ describe('MobileNavOverlay', () => {
     );
   });
 
+  it('cancels a pending capability route when a later modified anchor click is not deferred', () => {
+    const result = renderOverlay();
+    const overlay = dialog();
+
+    expect(
+      fireEvent.click(
+        within(overlay).getByRole('link', { name: 'Persistence' })
+      )
+    ).toBe(false);
+    expect(
+      fireEvent.click(
+        within(overlay).getByRole('link', { name: 'Spec Rendering' }),
+        { ctrlKey: true }
+      )
+    ).toBe(true);
+
+    act(() => vi.advanceTimersByTime(150));
+    act(() => vi.advanceTimersByTime(16));
+    expect(result.onCapabilityNavigate).not.toHaveBeenCalled();
+  });
+
+  it('cancels a pending capability route for a later non-capability target link', () => {
+    const result = renderOverlay();
+    const overlay = dialog();
+    const nativeLink = document.createElement('a');
+    nativeLink.href = '/native-destination';
+    nativeLink.target = '_blank';
+    nativeLink.textContent = 'Native destination';
+    overlay.appendChild(nativeLink);
+
+    expect(
+      fireEvent.click(
+        within(overlay).getByRole('link', { name: 'Persistence' })
+      )
+    ).toBe(false);
+    expect(fireEvent.click(nativeLink)).toBe(true);
+
+    act(() => vi.advanceTimersByTime(150));
+    act(() => vi.advanceTimersByTime(16));
+    expect(result.onCapabilityNavigate).not.toHaveBeenCalled();
+  });
+
+  it('replaces a pending capability route with the latest eligible link', () => {
+    const result = renderOverlay();
+    const overlay = dialog();
+
+    expect(
+      fireEvent.click(
+        within(overlay).getByRole('link', { name: 'Persistence' })
+      )
+    ).toBe(false);
+    expect(
+      fireEvent.click(
+        within(overlay).getByRole('link', { name: 'Spec Rendering' })
+      )
+    ).toBe(false);
+
+    act(() => vi.advanceTimersByTime(150));
+    act(() => vi.advanceTimersByTime(16));
+    expect(result.onCapabilityNavigate).toHaveBeenCalledTimes(1);
+    expect(result.onCapabilityNavigate).toHaveBeenCalledWith(
+      expect.stringContaining(
+        '/render/core-capabilities/spec-rendering/overview/python'
+      )
+    );
+  });
+
   it('cancels closing focus and capability routing when reopened', () => {
     const result = renderOverlay();
     const trigger = result.triggerRef.current;

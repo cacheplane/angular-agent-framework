@@ -15,14 +15,12 @@ describe('GET /favicon.ico', () => {
     const response = GET(new Request('https://cockpit.test/favicon.ico'));
 
     expect(response.status).toBe(308);
-    expect(response.headers.get('location')).toBe(
-      'https://cockpit.test/icon.svg'
-    );
+    expect(response.headers.get('location')).toBe('/icon.svg');
     expect(response.headers.get('cache-control')).toBe('public, max-age=86400');
     expect(capabilityResolver).not.toHaveBeenCalled();
   });
 
-  it('uses the effective Host header when the request URL was normalized', () => {
+  it('keeps the redirect relative when the request URL was normalized', () => {
     const response = GET(
       new Request('http://localhost:4319/favicon.ico', {
         headers: { host: '127.0.0.1:4319' },
@@ -30,13 +28,11 @@ describe('GET /favicon.ico', () => {
     );
 
     expect(response.status).toBe(308);
-    expect(response.headers.get('location')).toBe(
-      'http://127.0.0.1:4319/icon.svg'
-    );
+    expect(response.headers.get('location')).toBe('/icon.svg');
     expect(response.headers.get('cache-control')).toBe('public, max-age=86400');
   });
 
-  it('honors valid forwarded origin headers without accepting an arbitrary scheme', () => {
+  it('ignores forwarded and malformed origin headers', () => {
     const forwarded = GET(
       new Request('http://localhost:4319/favicon.ico', {
         headers: {
@@ -56,33 +52,28 @@ describe('GET /favicon.ico', () => {
       })
     );
 
-    expect(forwarded.headers.get('location')).toBe(
-      'https://cockpit.alias.test:4319/icon.svg'
-    );
-    expect(malformed.headers.get('location')).toBe(
-      'http://localhost:4319/icon.svg'
-    );
+    expect(forwarded.headers.get('location')).toBe('/icon.svg');
+    expect(malformed.headers.get('location')).toBe('/icon.svg');
   });
 
-  it('keeps valid effective hosts when URL parsing canonicalizes default ports', () => {
+  it('never incorporates hostile authorities into the redirect', () => {
     const host = GET(
       new Request('http://localhost:4319/favicon.ico', {
-        headers: { host: 'public.example:80' },
+        headers: { host: 'attacker.example' },
       })
     );
     const forwarded = GET(
       new Request('http://localhost:4319/favicon.ico', {
         headers: {
-          'x-forwarded-host': 'public.example:443',
+          host: 'trusted.example',
+          'x-forwarded-host': 'attacker.example',
           'x-forwarded-proto': 'https',
         },
       })
     );
 
-    expect(host.headers.get('location')).toBe('http://public.example/icon.svg');
-    expect(forwarded.headers.get('location')).toBe(
-      'https://public.example/icon.svg'
-    );
+    expect(host.headers.get('location')).toBe('/icon.svg');
+    expect(forwarded.headers.get('location')).toBe('/icon.svg');
   });
 
   it('ships a self-contained accessible Threadplane SVG icon', () => {
