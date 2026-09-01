@@ -26,6 +26,21 @@ describe('Docs mobile navigation', () => {
     pathnameRef.current = '/docs/langgraph/guides/streaming';
   });
 
+  it('names the docs index the same way the page does', () => {
+    pathnameRef.current = '/docs';
+    render(<Nav />);
+    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    const dialog = screen.getByRole('dialog', { name: 'Mobile navigation' });
+
+    // The page passes pageTitle="Overview"; Nav derives its own title. When
+    // they drift, the same page is called two different things depending on
+    // viewport width.
+    const scope = within(dialog).getByRole('heading', { name: 'Scope' }).closest('section');
+    if (!scope) throw new Error('Expected a Scope section');
+    expect(within(scope).getByText('Overview')).toBeTruthy();
+    expect(within(scope).queryByText('Documentation')).toBeNull();
+  });
+
   it('does not invent a library on a library-neutral docs page', () => {
     pathnameRef.current = '/docs/choosing-an-adapter';
     render(<Nav />);

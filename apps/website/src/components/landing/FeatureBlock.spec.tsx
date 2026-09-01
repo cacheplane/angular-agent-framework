@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { FeatureBlock } from './FeatureBlock';
 
 const base = {
-  eyebrow: 'Render',
+  eyebrow: 'json-render',
   headline: 'Agent output, rendered as your components.',
   body: 'Two sentences.',
   cta: { label: 'See it', href: '/render' },

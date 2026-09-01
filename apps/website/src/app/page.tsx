@@ -67,7 +67,7 @@ export default async function HomePage() {
       {/* Render */}
       <FeatureBlock
         id="render"
-        eyebrow="Render"
+        eyebrow="json-render"
         headline="Agent output, rendered as your components."
         body="The server emits a JSON spec. Angular renders it with components you own — json-render and A2UI both speak it."
         rows={[
