@@ -889,13 +889,16 @@ export function countUnseenProblems(
   events: readonly SessionActivityEvent[],
   seenCount: number,
 ): number {
+  const unseen = Math.max(0, events.length - Math.max(0, seenCount));
   return events
-    .slice(seenCount)
+    .slice(0, unseen)
     .filter((event) => event.severity === 'error').length;
 }
 ```
 
-The reducer appends, so index order is arrival order and a prefix count is a valid marker.
+**The reducer PREPENDS** (`[action.event, ...state]`), so the log is newest-first: seen
+events are the tail, and the unseen window runs from index 0. `slice(seenCount)` is
+inverted and still passes all three tests above — add a test that pins the direction.
 
 - [ ] **Step 4: Run test to verify it passes**
 

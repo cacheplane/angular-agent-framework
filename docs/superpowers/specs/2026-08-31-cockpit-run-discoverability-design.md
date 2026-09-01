@@ -124,6 +124,14 @@ assigned in `createSessionActivityEvent`, so this needs no new event plumbing. I
 
 - Seen-marker: opening the Activity utility marks all current events seen. `CockpitShell`
   already tracks `activityOpenCycle` on open, which is the natural hook.
+- **Direction matters.** `activityReducer` *prepends* (`[action.event, ...state]`), so the
+  log is newest-first: the seen events are the array's tail and the unseen window runs from
+  index 0. A naive `slice(seenCount)` is exactly inverted and still passes the obvious
+  tests, so the selector needs a case that pins the direction.
+- Known limitation: the marker is a count, and the log is capped at `MAX_ACTIVITY_EVENTS`
+  (50). Once the cap is reached, `length - seenCount` saturates at 0 and further errors
+  would not flag. Keying the marker on the newest seen event id would be robust; the count
+  is kept because the cap is far outside ordinary use. Revisit if the cap ever drops.
 - Clearing the log clears the marker.
 - Deriving from `severity === 'error'` rather than "any unread event" matters: `mode_changed`
   and `runtime_ready` fire during ordinary use, and counting them would light the dot
