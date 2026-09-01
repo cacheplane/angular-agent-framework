@@ -1020,6 +1020,10 @@ jobs:
     needs: [examples-ag-ui-e2e]
     runs-on: ubuntu-latest
     if: ${{ always() && !cancelled() && github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+    permissions:
+      # Needed to advance refs/deploy/ag-ui-demo-last-promoted. Nothing else in
+      # this job writes to the repo.
+      contents: write
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -1047,17 +1051,47 @@ jobs:
           else
             echo "stale=false" >> "$GITHUB_OUTPUT"
           fi
-      - name: Check if AG-UI demo changed
-        id: ag_ui_changed
+      - name: Resolve AG-UI demo deploy baseline
+        id: demo_baseline
         run: |
-          base_sha="${{ github.event.before }}"
+          # Same hazard the deploy job fixed in #909, on a different target:
+          # diffing `github.event.before..sha` asks "what changed in THIS
+          # push", so any run that does not reach the deploy steps — cancelled
+          # in the concurrency queue, or failed on an unrelated job — has its
+          # range dropped for good. The next push diffs only its own range, so
+          # the skipped change stays undeployed until a later commit happens to
+          # touch a gated path.
+          #
+          # refs/deploy/ag-ui-demo-last-promoted advances only after a fully
+          # successful, non-stale run of this job, so the range covers
+          # everything not yet promoted. A separate ref from the deploy job's:
+          # the two promote different targets and go stale independently.
+          base_sha=""
+          marker="$(git ls-remote origin refs/deploy/ag-ui-demo-last-promoted 2>/dev/null | cut -f1)"
+          if [ -n "$marker" ] && git cat-file -e "${marker}^{commit}" 2>/dev/null; then
+            base_sha="$marker"
+            echo "::notice::AG-UI demo baseline: last promoted commit ${marker}."
+          else
+            base_sha="${{ github.event.before }}"
+            echo "::notice::No usable refs/deploy/ag-ui-demo-last-promoted marker; falling back to github.event.before (${base_sha})."
+          fi
           head_sha="${{ github.sha }}"
           if [ -z "$base_sha" ] || [ "$base_sha" = "0000000000000000000000000000000000000000" ]; then
             base_sha="$(git rev-parse "$head_sha^")"
           fi
-          if ! git cat-file -e "$base_sha^{commit}" 2>/dev/null; then
-            git fetch --no-tags origin "$base_sha"
+          if ! git cat-file -e "${base_sha}^{commit}" 2>/dev/null; then
+            git fetch --no-tags origin "$base_sha" 2>/dev/null || true
           fi
+          if ! git cat-file -e "${base_sha}^{commit}" 2>/dev/null; then
+            echo "::warning::AG-UI demo baseline ${base_sha} does not resolve; using ${head_sha}^ instead."
+            base_sha="$(git rev-parse "$head_sha^")"
+          fi
+          echo "base=$base_sha" >> "$GITHUB_OUTPUT"
+      - name: Check if AG-UI demo changed
+        id: ag_ui_changed
+        run: |
+          base_sha="${{ steps.demo_baseline.outputs.base }}"
+          head_sha="${{ github.sha }}"
           changed_files="$(git diff --name-only "$base_sha" "$head_sha")"
           ag_ui_changed=false
           if printf '%s\n' "$changed_files" | grep -E '^(examples/ag-ui/.*|scripts/(ag-ui-demo-middleware|assemble-ag-ui-demo)\.ts)$' >/dev/null; then
@@ -1106,6 +1140,14 @@ jobs:
           RAILWAY_TOKEN: ${{ secrets.AG_UI_DEMO_RAILWAY_TOKEN }}
         run: |
           npx --yes @railway/cli@4 up --service ag-ui-demo --detach
+
+      # Advance only when the whole job succeeded and actually promoted. A
+      # stale run, a failure, or a partial deploy leaves the marker put, so the
+      # next run's range still covers whatever did not ship. Never `always()`:
+      # advancing past unshipped work is the bug this exists to prevent.
+      - name: Record this commit as AG-UI demo promoted
+        if: success() && steps.freshness.outputs.stale != 'true'
+        run: git push origin --force "${{ github.sha }}:refs/deploy/ag-ui-demo-last-promoted"
 
   production-smoke:
     name: Production smoke
