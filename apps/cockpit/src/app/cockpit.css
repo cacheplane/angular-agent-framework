@@ -862,7 +862,11 @@ pre.shiki {
 
 /* Adaptive mobile drawer */
 .cockpit-mobile-navigation-trigger {
+  width: 44px;
+  height: 44px;
+  padding: 0;
   border: 0;
+  border-radius: 8px;
   color: var(--ds-text-secondary);
   background: transparent;
   cursor: pointer;
@@ -899,8 +903,8 @@ pre.shiki {
   font-weight: 600;
 }
 .cockpit-mobile-control-plane-header button {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border: 0;
   border-radius: 8px;
   display: inline-flex;

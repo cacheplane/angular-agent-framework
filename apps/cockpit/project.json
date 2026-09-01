@@ -59,6 +59,12 @@
         "configFile": "apps/cockpit/vite.config.mts"
       }
     },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "apps/cockpit/playwright.config.ts"
+      }
+    },
     "serve-streaming": {
       "executor": "nx:run-commands",
       "options": {
