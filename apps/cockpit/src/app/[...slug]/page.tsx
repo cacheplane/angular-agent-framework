@@ -27,6 +27,7 @@ export default async function CockpitRoutePage({
 
   return (
     <CockpitShell
+      key={canonicalPath}
       navigationTree={navigationTree}
       presentation={presentation}
       entryTitle={entry.title}

@@ -183,9 +183,7 @@ describe('CockpitShell operational composition', () => {
 
     await waitFor(() => {
       expect(
-        screen
-          .getByRole('button', { name: 'Run' })
-          .getAttribute('aria-pressed')
+        screen.getByRole('button', { name: 'Run' }).getAttribute('aria-pressed')
       ).toBe('true');
     });
     expect(
@@ -218,6 +216,51 @@ describe('CockpitShell operational composition', () => {
         screen.getByRole('button', { name: 'Run' }).getAttribute('aria-pressed')
       ).toBe('true');
     });
+    expect(window.location.search).toBe('');
+  });
+
+  it('lands a newly navigated-to capability on Run even after switching to Code, when the shell remounts on the route key', async () => {
+    const { rerender } = render(
+      <ThemeProvider theme="light">
+        <CockpitShell
+          key={model.canonicalPath}
+          navigationTree={model.navigationTree}
+          presentation={model.presentation}
+          entryTitle={model.entry.title}
+          contentBundle={baseContentBundle}
+        />
+      </ThemeProvider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Code' }));
+    await waitFor(() => {
+      expect(
+        screen
+          .getByRole('button', { name: 'Code' })
+          .getAttribute('aria-pressed')
+      ).toBe('true');
+    });
+
+    rerender(
+      <ThemeProvider theme="light">
+        <CockpitShell
+          key={persistenceModel.canonicalPath}
+          navigationTree={persistenceModel.navigationTree}
+          presentation={persistenceModel.presentation}
+          entryTitle={persistenceModel.entry.title}
+          contentBundle={baseContentBundle}
+        />
+      </ThemeProvider>
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: 'Run' }).getAttribute('aria-pressed')
+      ).toBe('true');
+    });
+    expect(
+      screen.getByRole('button', { name: 'Code' }).getAttribute('aria-pressed')
+    ).toBe('false');
   });
 
   it('owns one controller and one Activity store shared by desktop and mobile adapters', async () => {

@@ -136,6 +136,24 @@ describe('control-plane preferences', () => {
     });
   });
 
+  it('writes docs disclosure state into docs.expanded, leaving cockpit untouched', async () => {
+    const { result } = renderHook(() => useControlPlanePreferences('docs'));
+    await waitFor(() => expect(result.current.hydrated).toBe(true));
+
+    act(() => result.current.setExpanded('Environment', true));
+
+    expect(result.current.expanded.Environment).toBe(true);
+    const stored = window.localStorage.getItem(CONTROL_PLANE_STORAGE_KEY);
+    expect(stored).not.toBeNull();
+    expect(JSON.parse(stored ?? '{}')).toEqual({
+      version: 1,
+      docs: { expanded: { Learn: true, Environment: true } },
+      cockpit: {
+        expanded: { Capability: true, Environment: true },
+      },
+    });
+  });
+
   it('merges writes from concurrent hook instances without reverting newer preferences', async () => {
     const shell = renderHook(() => useControlPlanePreferences('cockpit'));
     const pane = renderHook(() => useControlPlanePreferences('cockpit'));
