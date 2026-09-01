@@ -2,16 +2,129 @@
   "fixtures": [
     {
       "match": {
-        "userMessage": "Hello"
+        "userMessage": "Plan a dispatch brief for a flight from KSFO to KASE",
+        "hasToolResult": true,
+        "turnIndex": 1
       },
       "response": {
-        "content": "[{\"title\":\"Respond with a friendly greeting\",\"status\":\"pending\"},{\"title\":\"Ask how I can help\",\"status\":\"pending\"},{\"title\":\"Give examples of what I can do\",\"status\":\"pending\"},{\"title\":\"Suggest next steps/questions\",\"status\":\"pending\"}]\n\nStep 1 \u2014 Respond with a friendly greeting (completed):\nHello! Nice to meet you.\n\nStep 2 \u2014 Ask how I can help (completed):\nHow can I help you today?\n\nStep 3 \u2014 Give examples of what I can do (completed):\n- Answer questions or explain concepts\n- Help write or edit email, essays, or code\n- Brainstorm ideas or outline plans\n- Summarize articles or long text\n- Translate or proofread text\n- Solve math problems or debug code\n\nStep 4 \u2014 Suggest next steps/questions (completed):\nYou can tell me what you need right now (a question, a task, or a topic). If you prefer, pick one of the examples above and I\u2019ll get started."
+        "toolCalls": [
+          {
+            "name": "lookup_field_elevation",
+            "arguments": "{\"airport\": \"KSFO\"}"
+          },
+          {
+            "name": "lookup_field_elevation",
+            "arguments": "{\"airport\": \"KASE\"}"
+          }
+        ]
       }
     },
     {
-      "match": {},
+      "match": {
+        "userMessage": "Plan a dispatch brief for a flight from KSFO to KASE",
+        "hasToolResult": true,
+        "turnIndex": 2
+      },
       "response": {
-        "content": "Plan (4 steps)\n1. Ask what you need.\n2. Clarify scope, format, and any constraints (deadline, length, tone, audience).\n3. Offer examples of how I can help and suggest a concrete first deliverable.\n4. Confirm and begin work.\n\nExecution\nStep 1 \u2014 Ask what you need:\nWhat would you like me to do right now?\n\nStep 2 \u2014 Clarify scope and constraints:\nIf you already have something specific, tell me: the goal, desired format (email, essay, code, plan, summary, slides, etc.), length, tone (formal/casual), audience, and any deadline. If you don\u2019t have constraints, say so.\n\nStep 3 \u2014 Examples and a suggested first deliverable:\nHere are quick examples of tasks I can do \u2014 pick one or describe your own:\n- Write or edit an email (provide recipient/context and key points).\n- Draft an essay or article (topic, thesis, word count).\n- Create a project plan or roadmap (objective, timeline).\n- Summarize an article or document (paste text or upload).\n- Debug or write code (language, repo/files, expected behavior).\n- Brainstorm ideas (product names, marketing angles, meeting agendas).\n\nSuggested first deliverable: I can produce a short sample (e.g., a 150\u2013300 word draft, a 5-item plan, or a 1-paragraph summary) so you can confirm style before I expand.\n\nStep 4 \u2014 Confirm and begin:\nTell me which task you want and any constraints, or choose one of the examples above. I\u2019ll start immediately."
+        "toolCalls": [
+          {
+            "name": "write_todos",
+            "arguments": "{\"todos\":[{\"content\":\"Check field elevation at KSFO and KASE.\",\"status\":\"completed\"},{\"content\":\"Check longest runway length at KSFO and KASE.\",\"status\":\"in_progress\"},{\"content\":\"Check current weather at KSFO and KASE.\",\"status\":\"pending\"},{\"content\":\"Summarize findings and note any operational considerations for the crew.\",\"status\":\"pending\"}]}"
+          }
+        ]
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Plan a dispatch brief for a flight from KSFO to KASE",
+        "hasToolResult": true,
+        "turnIndex": 3
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "lookup_runway_length",
+            "arguments": "{\"airport\": \"KSFO\"}"
+          },
+          {
+            "name": "lookup_runway_length",
+            "arguments": "{\"airport\": \"KASE\"}"
+          }
+        ]
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Plan a dispatch brief for a flight from KSFO to KASE",
+        "hasToolResult": true,
+        "turnIndex": 4
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "write_todos",
+            "arguments": "{\"todos\":[{\"content\":\"Check field elevation at KSFO and KASE.\",\"status\":\"completed\"},{\"content\":\"Check longest runway length at KSFO and KASE.\",\"status\":\"completed\"},{\"content\":\"Check current weather at KSFO and KASE.\",\"status\":\"in_progress\"},{\"content\":\"Summarize findings and note any operational considerations for the crew.\",\"status\":\"pending\"}]}"
+          }
+        ]
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Plan a dispatch brief for a flight from KSFO to KASE",
+        "hasToolResult": true,
+        "turnIndex": 5
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "lookup_weather",
+            "arguments": "{\"airport\": \"KSFO\"}"
+          },
+          {
+            "name": "lookup_weather",
+            "arguments": "{\"airport\": \"KASE\"}"
+          }
+        ]
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Plan a dispatch brief for a flight from KSFO to KASE",
+        "hasToolResult": true,
+        "turnIndex": 6
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "write_todos",
+            "arguments": "{\"todos\":[{\"content\":\"Check field elevation at KSFO and KASE.\",\"status\":\"completed\"},{\"content\":\"Check longest runway length at KSFO and KASE.\",\"status\":\"completed\"},{\"content\":\"Check current weather at KSFO and KASE.\",\"status\":\"completed\"},{\"content\":\"Summarize findings and note any operational considerations for the crew.\",\"status\":\"in_progress\"}]}"
+          }
+        ]
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Plan a dispatch brief for a flight from KSFO to KASE",
+        "hasToolResult": true,
+        "turnIndex": 7
+      },
+      "response": {
+        "content": "Dispatch brief for KSFO-KASE:\n\n- KSFO field elevation: 13 ft; longest runway: 11,870 ft; current weather: marine layer, 800 ft overcast, 4 SM visibility, wind 280 at 14.\n- KASE field elevation: 7,820 ft; longest runway: 8,006 ft; current weather: few clouds at 12,000 ft, 10 SM visibility, wind 300 at 6, mountain wave advisory in effect.\n\nCrew considerations: Expect low ceilings and reduced visibility on departure from KSFO. KASE has a high elevation and a relatively short runway for the altitude, so performance calculations are critical. Be aware of potential turbulence and windshear on approach due to the mountain wave advisory at Aspen."
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Plan a dispatch brief for a flight from KSFO to KASE",
+        "hasToolResult": false,
+        "turnIndex": 0
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "write_todos",
+            "arguments": "{\"todos\":[{\"content\":\"Check field elevation at KSFO and KASE.\",\"status\":\"in_progress\"},{\"content\":\"Check longest runway length at KSFO and KASE.\",\"status\":\"pending\"},{\"content\":\"Check current weather at KSFO and KASE.\",\"status\":\"pending\"},{\"content\":\"Summarize findings and note any operational considerations for the crew.\",\"status\":\"pending\"}]}"
+          }
+        ]
       }
     }
   ]
