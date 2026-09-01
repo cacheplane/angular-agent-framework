@@ -524,46 +524,6 @@
   margin: 0;
 }
 
-/* CompatibilityMatrix — components/pricing/CompatibilityMatrix.tsx */
-.compat-matrix {
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  overflow: hidden;
-}
-.compat-matrix-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.compat-matrix-head-row {
-  background: var(--color-surface);
-}
-.compat-matrix-th {
-  text-align: left;
-  padding: 12px 16px;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  font-size: var(--text-body);
-  border-bottom: 1px solid var(--color-border);
-}
-.compat-matrix-td-label {
-  text-align: left;
-  padding: 12px 16px;
-  font-size: var(--text-body);
-  font-weight: 500;
-  border-bottom: 1px solid var(--color-border);
-}
-.compat-matrix-td-label[data-tone="success"] { color: #16a34a; }
-.compat-matrix-td-label[data-tone="warn"] { color: #d97706; }
-.compat-matrix-td-label[data-tone="info"] { color: var(--color-accent); }
-.compat-matrix-td-label[data-tone="muted"] { color: var(--color-text-muted); }
-.compat-matrix-td-versions {
-  padding: 12px 16px;
-  font-size: var(--text-body);
-  color: var(--color-text-secondary);
-  font-family: var(--font-mono);
-  border-bottom: 1px solid var(--color-border);
-}
-
 /* PricingFAQ — components/pricing/PricingFAQ.tsx */
 .pricing-faq-header {
   text-align: center;
