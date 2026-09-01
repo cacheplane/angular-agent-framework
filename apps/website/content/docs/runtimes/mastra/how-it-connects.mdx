@@ -1,0 +1,67 @@
+---
+title: How It Connects
+description: Measured AG-UI wire behavior for Mastra: both interrupt conventions, an interruptEvent resume shape, and JSON-Patch state deltas.
+---
+
+# How Mastra Connects
+
+This page records the AG-UI wire behavior measured for Mastra on 2026-08-31. It describes what the runtime emitted, not what the protocol permits in general. The captured Server-Sent Events are committed at [`libs/ag-ui/fixtures/runtime-transcripts/`](https://github.com/cacheplane/angular-agent-framework/tree/main/libs/ag-ui/fixtures/runtime-transcripts) and replayed by the adapter test suite on every run.
+
+## Transport is Threadplane's, not upstream's
+
+`@ag-ui/mastra` ships an in-process `MastraAgent` bridge and a CopilotKit runtime mount, and no plain AG-UI HTTP endpoint. The service in [`deployments/ag-ui-mastra`](https://github.com/cacheplane/angular-agent-framework/tree/main/deployments/ag-ui-mastra) supplies the missing endpoint.
+
+| Route | Method | Auth | Notes |
+|---|---|---|---|
+| `/ok` | `GET` | None | Health check. |
+| `/agent/mastra` | `POST` | `X-Internal-Token` | `RunAgentInput` JSON in, Server-Sent Events out. |
+
+The service refuses to boot without `AG_UI_INTERNAL_TOKEN`, rejects any non-health route without a matching header, and maps an error from the underlying observable to a `RUN_ERROR` frame rather than dropping the socket. Every other route returns `401 {"detail":"unauthorized"}`.
+
+On the Angular side this is still an ordinary `provideAgent({ url: '/agent' })`. The token is injected by the dev proxy in front of the app, never by the browser.
+
+## Interrupts arrive by both conventions
+
+Mastra is the only measured runtime that signals an interrupt twice: it emits a `CUSTOM` event named `on_interrupt` **and** finishes the run with the protocol-standard interrupt outcome.
+
+AWS Strands and Microsoft Agent Framework emit only the outcome. The LangGraph bridge emits only `on_interrupt`. The adapter accepts either, and within a single run the first signal it sees wins, so a runtime that emits both is handled without special-casing.
+
+## Resume uses interruptEvent
+
+Mastra reads resume data from `forwardedProps.command.interruptEvent`, carrying a tool-call id and a run id:
+
+```json
+{
+  "forwardedProps": {
+    "command": {
+      "interruptEvent": { "toolCallId": "...", "runId": "..." }
+    }
+  }
+}
+```
+
+That is a third distinct shape. Strands and Microsoft Agent Framework read a top-level `resume` array; the LangGraph bridge reads `forwardedProps.command.resume`. Application code passes one neutral `submit({ resume })` and the adapter derives the wire shape from how the interrupt arrived.
+
+## Suspend and resume require persistent storage
+
+`reserve_campsite` calls Mastra's `suspend()` on its first invocation and reads `resumeData` on the second. Mastra writes the suspended-run snapshot to LibSQL file storage, and resume loads it back.
+
+Because those two invocations are separate HTTP requests, an in-memory store cannot round-trip them. On a deployment with an ephemeral filesystem, every redeploy orphans pending interrupts. This is a property of the runtime, not of the adapter, and it is the single most consequential operational difference between Mastra and the two Python runtimes.
+
+## State is working memory, with real deltas
+
+Shared state is a Mastra working-memory object under a Zod schema. The bridge emits `STATE_SNAPSHOT` followed by real JSON-Patch `STATE_DELTA` events as the model revises it, so the adapter applies ordinary deltas with no reassembly.
+
+That places Mastra alongside Microsoft Agent Framework and apart from AWS Strands, whose bridge emits snapshots only.
+
+## Subagents emit nothing the adapter can read
+
+Mastra reserves the `ACTIVITY_*` events for background tasks and observational memory. The Threadplane subagent projection keys on an `activityType` of `subagent`, which Mastra does not emit.
+
+The AG-UI protocol has carried dedicated `SUBAGENT_STARTED`, `SUBAGENT_FINISHED`, and `SUBAGENT_ERROR` events since `@ag-ui/core` 0.0.59. No runtime measured here emits them yet.
+
+## Next steps
+
+- [Overview](/docs/runtimes/mastra/overview) — what the integration supports.
+- [Quickstart](/docs/runtimes/mastra/quickstart) — run the example and the service locally.
+- [Choosing an adapter](/docs/choosing-an-adapter) — the full matrix and its cause analysis.

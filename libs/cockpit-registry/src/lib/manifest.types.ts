@@ -1,4 +1,14 @@
-export type CockpitProduct = 'deep-agents' | 'langgraph' | 'ag-ui' | 'render' | 'chat';
+export type CockpitProduct =
+  | 'deep-agents'
+  | 'langgraph'
+  | 'ag-ui'
+  | 'render'
+  | 'chat'
+  /**
+   * The one-capability-many-runtimes axis (`cockpit/runtimes/<runtime>/`):
+   * non-LangGraph AG-UI backends measured against the same Agent contract.
+   */
+  | 'runtimes';
 
 export type CockpitSection = 'getting-started' | 'core-capabilities';
 

@@ -18,6 +18,7 @@ import { agUiToolViewsPythonModule } from '../../../../cockpit/ag-ui/tool-views/
 import { agUiJsonRenderPythonModule } from '../../../../cockpit/ag-ui/json-render/python/src/index';
 import { agUiClientToolsPythonModule } from '../../../../cockpit/ag-ui/client-tools/python/src/index';
 import { agUiA2uiPythonModule } from '../../../../cockpit/ag-ui/a2ui/python/src/index';
+import { agUiSubagentsPythonModule } from '../../../../cockpit/ag-ui/subagents/python/src/index';
 import { deepAgentsMemoryPythonModule } from '../../../../cockpit/deep-agents/memory/python/src/index';
 import { deepAgentsPlanningPythonModule } from '../../../../cockpit/deep-agents/planning/python/src/index';
 import { deepAgentsFilesystemPythonModule } from '../../../../cockpit/deep-agents/filesystem/python/src/index';
@@ -41,6 +42,11 @@ import { chatGenerativeUiPythonModule } from '../../../../cockpit/chat/generativ
 import { chatDebugPythonModule } from '../../../../cockpit/chat/debug/python/src/index';
 import { chatThemingPythonModule } from '../../../../cockpit/chat/theming/python/src/index';
 import { chatA2uiPythonModule } from '../../../../cockpit/chat/a2ui/python/src/index';
+import { runtimesMicrosoftAgentFrameworkPythonModule } from '../../../../cockpit/runtimes/microsoft-agent-framework/python/src/index';
+import { runtimesAwsStrandsPythonModule } from '../../../../cockpit/runtimes/aws-strands/python/src/index';
+// Mastra has no Python lane — its backend is the Node AG-UI service
+// deployments/ag-ui-mastra — so its descriptor lives beside the Angular app.
+import { runtimesMastraAngularModule } from '../../../../cockpit/runtimes/mastra/angular/src/index';
 
 export interface ResolveCockpitEntryOptions {
   manifest: CockpitManifestEntry[];
@@ -79,7 +85,33 @@ export type CapabilityPresentation =
       devPort?: number;
     };
 
-const capabilityModules = [
+/**
+ * Shape a `cockpit/**\/src/index.ts` descriptor must satisfy to be wired into
+ * the cockpit. Each example declares its own structural copy of this interface
+ * (standalone-examples rule), so the fields diverge: the Angular lane carries
+ * no backend/docs assets. Declaring the element type here keeps the registry
+ * heterogeneous without widening every reader to a union.
+ */
+export interface RegisteredCapabilityModule {
+  id: string;
+  manifestIdentity: {
+    product: string;
+    section: string;
+    topic: string;
+    page: string;
+    language: string;
+  };
+  title: string;
+  docsPath: string;
+  promptAssetPaths: string[];
+  codeAssetPaths: string[];
+  backendAssetPaths?: string[];
+  docsAssetPaths?: string[];
+  runtimeUrl?: string;
+  devPort?: number;
+}
+
+export const capabilityModules: RegisteredCapabilityModule[] = [
   langgraphStreamingPythonModule,
   langgraphPersistencePythonModule,
   langgraphInterruptsPythonModule,
@@ -95,6 +127,7 @@ const capabilityModules = [
   agUiJsonRenderPythonModule,
   agUiClientToolsPythonModule,
   agUiA2uiPythonModule,
+  agUiSubagentsPythonModule,
   deepAgentsMemoryPythonModule,
   deepAgentsPlanningPythonModule,
   deepAgentsFilesystemPythonModule,
@@ -118,6 +151,9 @@ const capabilityModules = [
   chatDebugPythonModule,
   chatThemingPythonModule,
   chatA2uiPythonModule,
+  runtimesMicrosoftAgentFrameworkPythonModule,
+  runtimesAwsStrandsPythonModule,
+  runtimesMastraAngularModule,
 ];
 
 export const toCockpitPath = (entry: CockpitManifestEntry): string =>
@@ -183,7 +219,14 @@ export const resolveCockpitEntry = ({
 export const buildNavigationTree = (
   manifest: CockpitManifestEntry[]
 ): NavigationProduct[] => {
-  const products: CockpitManifestEntry['product'][] = ['deep-agents', 'langgraph', 'ag-ui', 'render', 'chat'];
+  const products: CockpitManifestEntry['product'][] = [
+    'deep-agents',
+    'langgraph',
+    'ag-ui',
+    'render',
+    'chat',
+    'runtimes',
+  ];
   const sections: CockpitManifestEntry['section'][] = [
     'getting-started',
     'core-capabilities',
@@ -221,14 +264,22 @@ export const getCapabilityPresentation = (
     };
   }
 
-  const module = capabilityModules.find(
-    (candidate) =>
-      candidate.manifestIdentity.product === entry.product &&
-      candidate.manifestIdentity.section === entry.section &&
-      candidate.manifestIdentity.topic === entry.topic &&
-      candidate.manifestIdentity.page === entry.page &&
-      candidate.manifestIdentity.language === entry.language
-  );
+  const matchesIdentity = (candidate: RegisteredCapabilityModule): boolean =>
+    candidate.manifestIdentity.product === entry.product &&
+    candidate.manifestIdentity.section === entry.section &&
+    candidate.manifestIdentity.topic === entry.topic &&
+    candidate.manifestIdentity.page === entry.page;
+
+  // Prefer the module whose lane matches the requested language. Fall back to
+  // the topic's only module when no lane matches: a topic with no Python lane
+  // (runtimes/mastra) still resolves to its real assets instead of silently
+  // falling through to the manifest's generic, non-existent Python paths.
+  const module =
+    capabilityModules.find(
+      (candidate) =>
+        matchesIdentity(candidate) &&
+        candidate.manifestIdentity.language === entry.language
+    ) ?? capabilityModules.find(matchesIdentity);
 
   return {
     kind: 'capability',

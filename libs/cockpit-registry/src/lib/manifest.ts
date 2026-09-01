@@ -28,11 +28,20 @@ const APPROVED_TOPICS = {
       'subgraphs',
       'time-travel',
       'deployment-runtime',
+      'client-tools',
     ],
   },
   'ag-ui': {
     'getting-started': ['overview'],
-    'core-capabilities': ['streaming', 'interrupts', 'tool-views', 'json-render', 'a2ui'],
+    'core-capabilities': [
+      'streaming',
+      'interrupts',
+      'tool-views',
+      'json-render',
+      'client-tools',
+      'a2ui',
+      'subagents',
+    ],
   },
   render: {
     'getting-started': ['overview'],
@@ -61,7 +70,30 @@ const APPROVED_TOPICS = {
       'a2ui',
     ],
   },
+  runtimes: {
+    'getting-started': ['overview'],
+    'core-capabilities': [
+      'microsoft-agent-framework',
+      'aws-strands',
+      'mastra',
+    ],
+  },
 } as const;
+
+/**
+ * Example-directory lane for a capability topic, as `<product>/<topic>`.
+ * Every topic ships its example under `cockpit/<product>/<topic>/python`
+ * except the ones listed here: the Mastra runtime's backend is the Node
+ * AG-UI service `deployments/ag-ui-mastra`, so its assets and smoke target
+ * live in the `angular` lane instead. Keeping the lane explicit is what
+ * keeps `promptAssetPaths`/`codeAssetPaths` pointing at files that exist.
+ */
+const TOPIC_LANES: Record<string, 'python' | 'angular'> = {
+  'runtimes/mastra': 'angular',
+};
+
+const getLane = (product: string, topic: string): 'python' | 'angular' =>
+  TOPIC_LANES[`${product}/${topic}`] ?? 'python';
 
 const toTitle = (value: string): string =>
   value
@@ -81,6 +113,8 @@ const getProductTitle = (product: CockpitProduct): string => {
       return 'Render';
     case 'chat':
       return 'Chat';
+    case 'runtimes':
+      return 'Runtimes';
   }
 };
 
@@ -99,13 +133,13 @@ const getDocsPath = (
 ): string => `/docs/${product}/${section}/${topic}/overview/python`;
 
 const getPromptAssetPath = (product: CockpitProduct, topic: string): string =>
-  `cockpit/${product}/${topic}/python/prompts/${topic}.md`;
+  `cockpit/${product}/${topic}/${getLane(product, topic)}/prompts/${topic}.md`;
 
 const getCodeAssetPath = (product: CockpitProduct, topic: string): string =>
-  `cockpit/${product}/${topic}/python/src/index.ts`;
+  `cockpit/${product}/${topic}/${getLane(product, topic)}/src/index.ts`;
 
 const getSmokeTarget = (product: CockpitProduct, topic: string): string =>
-  `cockpit-${product}-${topic}-python:smoke`;
+  `cockpit-${product}-${topic}-${getLane(product, topic)}:smoke`;
 
 const getRuntimeClass = (topic: string): CockpitRuntimeClass =>
   topic === 'deployment-runtime' ? 'deployed-service' : 'local-service';
