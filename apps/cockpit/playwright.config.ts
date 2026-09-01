@@ -9,6 +9,7 @@ const reuseExistingServer =
 export default defineConfig({
   testDir: './e2e',
   testMatch: 'control-plane.spec.ts',
+  outputDir: '../../test-results/cockpit',
   fullyParallel: false,
   retries: process.env['CI'] ? 2 : 0,
   use: {
