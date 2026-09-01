@@ -37,6 +37,7 @@ const renderOverlay = ({
   const onClose = vi.fn();
   const onModeChange = vi.fn();
   const onActiveUtilityChange = vi.fn();
+  const onCapabilityNavigate = vi.fn();
   const triggerRef = createRef<HTMLButtonElement>();
   let setOpen: React.Dispatch<React.SetStateAction<boolean>> = () => undefined;
   let bumpSharedState = () => undefined;
@@ -81,6 +82,7 @@ const renderOverlay = ({
           isOpen={isOpen}
           onClose={close}
           onPresenceChange={onPresenceChange}
+          onCapabilityNavigate={onCapabilityNavigate}
           triggerRef={triggerRef}
         />
       </ThemeProvider>
@@ -102,6 +104,7 @@ const renderOverlay = ({
     onModeChange,
     onActiveUtilityChange,
     onPresenceChange,
+    onCapabilityNavigate,
     triggerRef,
     reopen: () => act(() => setOpen(true)),
     bumpSharedState: () => act(bumpSharedState),
@@ -115,6 +118,12 @@ describe('MobileNavOverlay', () => {
   beforeEach(() => {
     window.localStorage.clear();
     vi.useFakeTimers();
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) =>
+      window.setTimeout(() => callback(performance.now()), 16)
+    );
+    vi.stubGlobal('cancelAnimationFrame', (handle: number) =>
+      window.clearTimeout(handle)
+    );
   });
 
   afterEach(() => {
@@ -230,6 +239,11 @@ describe('MobileNavOverlay', () => {
       act(() => vi.advanceTimersByTime(1));
       expect(screen.queryByRole('dialog')).toBeNull();
       expect(result.onPresenceChange).toHaveBeenLastCalledWith(false);
+      expect(focus).not.toHaveBeenCalled();
+
+      act(() => vi.advanceTimersByTime(15));
+      expect(focus).not.toHaveBeenCalled();
+      act(() => vi.advanceTimersByTime(1));
       expect(focus).toHaveBeenCalledTimes(1);
 
       act(() => vi.advanceTimersByTime(300));
@@ -237,12 +251,39 @@ describe('MobileNavOverlay', () => {
     }
   );
 
-  it('cancels closing without restoring external focus when reopened', () => {
+  it('defers capability routing until the drawer has closed and restored focus', () => {
     const result = renderOverlay();
     const trigger = result.triggerRef.current;
     if (!trigger) throw new Error('Expected the shell trigger');
     const focus = vi.spyOn(trigger, 'focus');
-    fireEvent.keyDown(document, { key: 'Escape' });
+    const link = within(dialog()).getByRole('link', { name: 'Spec Rendering' });
+
+    expect(fireEvent.click(link)).toBe(false);
+    expect(result.onClose).toHaveBeenCalledTimes(1);
+    expect(result.onCapabilityNavigate).not.toHaveBeenCalled();
+
+    act(() => vi.advanceTimersByTime(150));
+    expect(result.onCapabilityNavigate).not.toHaveBeenCalled();
+    expect(focus).not.toHaveBeenCalled();
+
+    act(() => vi.advanceTimersByTime(16));
+    expect(focus).toHaveBeenCalledTimes(1);
+    expect(result.onCapabilityNavigate).toHaveBeenCalledTimes(1);
+    expect(result.onCapabilityNavigate).toHaveBeenCalledWith(
+      expect.stringContaining(
+        '/render/core-capabilities/spec-rendering/overview/python'
+      )
+    );
+  });
+
+  it('cancels closing focus and capability routing when reopened', () => {
+    const result = renderOverlay();
+    const trigger = result.triggerRef.current;
+    if (!trigger) throw new Error('Expected the shell trigger');
+    const focus = vi.spyOn(trigger, 'focus');
+    fireEvent.click(
+      within(dialog()).getByRole('link', { name: 'Spec Rendering' })
+    );
     act(() => vi.advanceTimersByTime(100));
 
     result.reopen();
@@ -250,7 +291,22 @@ describe('MobileNavOverlay', () => {
 
     expect(dialog().getAttribute('data-state')).toBe('open');
     expect(focus).not.toHaveBeenCalled();
+    expect(result.onCapabilityNavigate).not.toHaveBeenCalled();
     expect(result.onPresenceChange).not.toHaveBeenCalledWith(false);
+  });
+
+  it('cancels a scheduled requested focus restoration when unmounted', () => {
+    const result = renderOverlay();
+    const trigger = result.triggerRef.current;
+    if (!trigger) throw new Error('Expected the shell trigger');
+    const focus = vi.spyOn(trigger, 'focus');
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    act(() => vi.advanceTimersByTime(150));
+    result.unmount();
+    act(() => vi.advanceTimersByTime(16));
+
+    expect(focus).not.toHaveBeenCalled();
   });
 
   it('clears the hidden mobile modal immediately at the desktop breakpoint without restoring focus', () => {
@@ -289,6 +345,47 @@ describe('MobileNavOverlay', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(result.onPresenceChange).toHaveBeenLastCalledWith(false);
     expect(focus).not.toHaveBeenCalled();
+  });
+
+  it('cancels queued focus and capability routing when the breakpoint changes after close', () => {
+    const listeners = new Set<(event: MediaQueryListEvent) => void>();
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn().mockReturnValue({
+        matches: false,
+        media: '(min-width: 48rem)',
+        onchange: null,
+        addEventListener: (
+          _type: string,
+          listener: (event: MediaQueryListEvent) => void
+        ) => listeners.add(listener),
+        removeEventListener: (
+          _type: string,
+          listener: (event: MediaQueryListEvent) => void
+        ) => listeners.delete(listener),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })
+    );
+    const result = renderOverlay();
+    const trigger = result.triggerRef.current;
+    if (!trigger) throw new Error('Expected the shell trigger');
+    const focus = vi.spyOn(trigger, 'focus');
+
+    fireEvent.click(
+      within(dialog()).getByRole('link', { name: 'Spec Rendering' })
+    );
+    act(() => vi.advanceTimersByTime(150));
+    act(() => {
+      for (const listener of listeners) {
+        listener({ matches: true } as MediaQueryListEvent);
+      }
+    });
+    act(() => vi.advanceTimersByTime(16));
+
+    expect(focus).not.toHaveBeenCalled();
+    expect(result.onCapabilityNavigate).not.toHaveBeenCalled();
   });
 
   it('does not reset dialog focus when shared state rerenders', () => {

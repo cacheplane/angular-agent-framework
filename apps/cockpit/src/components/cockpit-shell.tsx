@@ -10,6 +10,7 @@ import React, {
 } from 'react';
 import { cockpitManifest } from '@threadplane/cockpit-registry';
 import { Menu } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import {
   parseControlPlaneMode,
   useControlPlanePreferences,
@@ -62,6 +63,10 @@ const MODE_ANALYTICS: Record<
   Docs: 'docs',
   API: 'api',
 };
+
+const MOBILE_NAVIGATION_FOCUS_INTENT =
+  'threadplane:cockpit:mobile-navigation-focus';
+const MOBILE_NAVIGATION_FOCUS_MAX_AGE_MS = 10_000;
 
 const toLabel = (value: string) =>
   value
@@ -146,6 +151,9 @@ export function CockpitShell({
   entryTitle,
   contentBundle,
 }: CockpitShellProps) {
+  const router = useRouter();
+  const routerRef = useRef(router);
+  routerRef.current = router;
   const preferences = useControlPlanePreferences('cockpit');
   const queryHandled = useRef(false);
   const mobileTriggerRef = useRef<HTMLButtonElement>(null);
@@ -242,6 +250,68 @@ export function CockpitShell({
   const closeMobileNavigation = useCallback(() => {
     setIsSidebarOpen(false);
   }, []);
+
+  const handleCapabilityNavigate = useCallback((destination: string) => {
+    const currentDestination =
+      window.location.pathname + window.location.search + window.location.hash;
+    if (destination !== currentDestination) {
+      try {
+        window.sessionStorage.setItem(
+          MOBILE_NAVIGATION_FOCUS_INTENT,
+          JSON.stringify({ destination, requestedAt: Date.now() })
+        );
+      } catch {
+        // Client navigation still works if session storage is unavailable.
+      }
+    }
+    routerRef.current.push(destination);
+  }, []);
+
+  useEffect(() => {
+    let rawIntent: string | null = null;
+    try {
+      rawIntent = window.sessionStorage.getItem(MOBILE_NAVIGATION_FOCUS_INTENT);
+    } catch {
+      return undefined;
+    }
+    if (!rawIntent) return undefined;
+
+    let intent: { destination?: unknown; requestedAt?: unknown };
+    try {
+      intent = JSON.parse(rawIntent) as typeof intent;
+    } catch {
+      window.sessionStorage.removeItem(MOBILE_NAVIGATION_FOCUS_INTENT);
+      return undefined;
+    }
+    const currentDestination =
+      window.location.pathname + window.location.search + window.location.hash;
+    const isFresh =
+      typeof intent.requestedAt === 'number' &&
+      Date.now() - intent.requestedAt <= MOBILE_NAVIGATION_FOCUS_MAX_AGE_MS;
+    if (!isFresh) {
+      window.sessionStorage.removeItem(MOBILE_NAVIGATION_FOCUS_INTENT);
+      return undefined;
+    }
+    if (intent.destination !== currentDestination) return undefined;
+
+    window.sessionStorage.removeItem(MOBILE_NAVIGATION_FOCUS_INTENT);
+    const focusTrigger = () => {
+      if (
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(min-width: 48rem)').matches
+      ) {
+        return;
+      }
+      const trigger = mobileTriggerRef.current;
+      if (!trigger?.closest('[inert]')) trigger?.focus();
+    };
+    if (typeof window.requestAnimationFrame === 'function') {
+      const frame = window.requestAnimationFrame(focusTrigger);
+      return () => window.cancelAnimationFrame(frame);
+    }
+    const timer = window.setTimeout(focusTrigger, 0);
+    return () => window.clearTimeout(timer);
+  }, [entry.page, entry.product, entry.section, entry.topic]);
 
   const handleClearActivity = useCallback(() => {
     dispatchActivity({ type: 'clear' });
@@ -366,6 +436,7 @@ export function CockpitShell({
         isOpen={isSidebarOpen}
         onClose={closeMobileNavigation}
         onPresenceChange={setIsMobileOverlayPresent}
+        onCapabilityNavigate={handleCapabilityNavigate}
         triggerRef={mobileTriggerRef}
       />
 

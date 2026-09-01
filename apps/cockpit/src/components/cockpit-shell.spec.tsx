@@ -21,6 +21,18 @@ const operationalMocks = vi.hoisted(() => ({
   latestControllerOptions: null as UseRuntimeControllerOptions | null,
   activityShouldThrow: false,
   track: vi.fn(),
+  push: vi.fn(),
+}));
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: operationalMocks.push,
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    prefetch: vi.fn(),
+  }),
 }));
 
 vi.mock('../lib/analytics/client', () => ({ track: operationalMocks.track }));
@@ -65,6 +77,13 @@ vi.mock('./control-plane/activity-panel', async (importOriginal) => {
 import { CockpitShell } from './cockpit-shell';
 
 const model = getCockpitPageModel();
+const persistenceModel = getCockpitPageModel([
+  'langgraph',
+  'core-capabilities',
+  'persistence',
+  'overview',
+  'python',
+]);
 const baseContentBundle = {
   codeFiles: {},
   promptFiles: {},
@@ -112,11 +131,13 @@ const openActivity = () => {
 describe('CockpitShell operational composition', () => {
   beforeEach(() => {
     window.localStorage.clear();
+    window.sessionStorage.clear();
     window.history.replaceState({}, '', '/');
     operationalMocks.controllerInstances = 0;
     operationalMocks.latestControllerOptions = null;
     operationalMocks.activityShouldThrow = false;
     operationalMocks.track.mockClear();
+    operationalMocks.push.mockClear();
     document.documentElement.dataset.theme = 'light';
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({}));
   });
@@ -220,6 +241,12 @@ describe('CockpitShell operational composition', () => {
 
   it('keeps both background siblings inert through the mobile closing transition', async () => {
     vi.useFakeTimers();
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) =>
+      window.setTimeout(() => callback(performance.now()), 16)
+    );
+    vi.stubGlobal('cancelAnimationFrame', (handle: number) =>
+      window.clearTimeout(handle)
+    );
     const rendered = renderShell();
     await act(async () => {
       await vi.runAllTimersAsync();
@@ -235,6 +262,12 @@ describe('CockpitShell operational composition', () => {
     if (!desktopNavigation || !workspace || !trigger) {
       throw new Error('Expected named shell boundaries and mobile trigger');
     }
+    const inertAtFocusAttempt: boolean[] = [];
+    const nativeFocus = trigger.focus.bind(trigger);
+    vi.spyOn(trigger, 'focus').mockImplementation(() => {
+      inertAtFocusAttempt.push(Boolean(trigger.closest('[inert]')));
+      nativeFocus();
+    });
 
     fireEvent.click(trigger);
 
@@ -277,8 +310,147 @@ describe('CockpitShell operational composition', () => {
     expect(workspace.hasAttribute('inert')).toBe(false);
     expect(workspace.hasAttribute('aria-hidden')).toBe(false);
     expect(trigger.tabIndex).toBe(0);
+    expect(document.activeElement).not.toBe(trigger);
+
+    act(() => vi.advanceTimersByTime(16));
+    expect(inertAtFocusAttempt).toEqual([false]);
     expect(document.activeElement).toBe(trigger);
 
+    rendered.unmount();
+    vi.useRealTimers();
+  });
+
+  it('closes and restores focus before routing an internal capability exactly once', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) =>
+      window.setTimeout(() => callback(performance.now()), 16)
+    );
+    vi.stubGlobal('cancelAnimationFrame', (handle: number) =>
+      window.clearTimeout(handle)
+    );
+    const rendered = renderShell();
+    await act(async () => {
+      await vi.runAllTimersAsync();
+    });
+    const trigger = screen.getByRole('button', { name: 'Open navigation' });
+    fireEvent.click(trigger);
+    const overlay = screen.getByRole('dialog', {
+      name: 'Cockpit control plane',
+    });
+    const workspace = trigger.closest('[data-cockpit-workspace]');
+    if (!workspace) throw new Error('Expected the workspace boundary');
+    const destination = within(overlay).getByRole('link', {
+      name: 'Persistence',
+    });
+    const destinationPath = new URL(
+      destination.getAttribute('href') ?? '',
+      window.location.href
+    ).pathname;
+    const inertAtFocusAttempt: boolean[] = [];
+    const nativeFocus = trigger.focus.bind(trigger);
+    vi.spyOn(trigger, 'focus').mockImplementation(() => {
+      inertAtFocusAttempt.push(Boolean(trigger.closest('[inert]')));
+      nativeFocus();
+    });
+    operationalMocks.track.mockClear();
+
+    expect(fireEvent.click(destination)).toBe(false);
+    expect(overlay.getAttribute('data-state')).toBe('closing');
+    expect(operationalMocks.push).not.toHaveBeenCalled();
+    expect(operationalMocks.track).toHaveBeenCalledTimes(1);
+    expect(operationalMocks.track).toHaveBeenCalledWith(
+      'cockpit:recipe_opened',
+      expect.objectContaining({ capability: 'persistence' })
+    );
+
+    act(() => vi.advanceTimersByTime(150));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(workspace.hasAttribute('inert')).toBe(false);
+    expect(operationalMocks.push).not.toHaveBeenCalled();
+
+    act(() => vi.advanceTimersByTime(16));
+    expect(inertAtFocusAttempt).toEqual([false]);
+    expect(document.activeElement).toBe(trigger);
+    expect(operationalMocks.push).toHaveBeenCalledTimes(1);
+    expect(operationalMocks.push).toHaveBeenCalledWith(destinationPath);
+
+    act(() => window.history.replaceState({}, '', destinationPath));
+    rendered.rerender(
+      <ThemeProvider theme="light">
+        <CockpitShell
+          navigationTree={persistenceModel.navigationTree}
+          presentation={persistenceModel.presentation}
+          entryTitle={persistenceModel.entry.title}
+          contentBundle={baseContentBundle}
+        />
+      </ThemeProvider>
+    );
+    act(() => vi.advanceTimersByTime(16));
+    expect(inertAtFocusAttempt).toEqual([false, false]);
+    expect(document.activeElement).toBe(trigger);
+    expect(operationalMocks.push).toHaveBeenCalledTimes(1);
+
+    rendered.unmount();
+    vi.useRealTimers();
+  });
+
+  it('does not focus the mobile trigger on an ordinary shell load', async () => {
+    const rendered = renderShell();
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: 'Open navigation' })
+      ).toBeTruthy()
+    );
+    const trigger = screen.getByRole('button', { name: 'Open navigation' });
+
+    expect(document.activeElement).not.toBe(trigger);
+    rendered.unmount();
+  });
+
+  it('does not consume a navigation focus intent into the hidden desktop trigger', () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn().mockReturnValue({
+        matches: true,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })
+    );
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) =>
+      window.setTimeout(() => callback(performance.now()), 16)
+    );
+    vi.stubGlobal('cancelAnimationFrame', (handle: number) =>
+      window.clearTimeout(handle)
+    );
+    window.history.replaceState({}, '', persistenceModel.canonicalPath);
+    window.sessionStorage.setItem(
+      'threadplane:cockpit:mobile-navigation-focus',
+      JSON.stringify({
+        destination: persistenceModel.canonicalPath,
+        requestedAt: Date.now(),
+      })
+    );
+    const rendered = render(
+      <ThemeProvider theme="light">
+        <CockpitShell
+          navigationTree={persistenceModel.navigationTree}
+          presentation={persistenceModel.presentation}
+          entryTitle={persistenceModel.entry.title}
+          contentBundle={baseContentBundle}
+        />
+      </ThemeProvider>
+    );
+    const trigger = screen.getByRole('button', {
+      name: 'Open navigation',
+      hidden: true,
+    });
+    const focus = vi.spyOn(trigger, 'focus');
+
+    act(() => vi.advanceTimersByTime(16));
+
+    expect(focus).not.toHaveBeenCalled();
+    expect(document.activeElement).not.toBe(trigger);
     rendered.unmount();
     vi.useRealTimers();
   });

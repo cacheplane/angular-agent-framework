@@ -7,6 +7,7 @@ import React, {
   useRef,
   useState,
   type RefObject,
+  type MouseEvent as ReactMouseEvent,
 } from 'react';
 import { X } from 'lucide-react';
 import {
@@ -22,6 +23,7 @@ export interface MobileNavOverlayProps {
   isOpen: boolean;
   onClose: () => void;
   onPresenceChange?: (present: boolean) => void;
+  onCapabilityNavigate?: (href: string) => void;
   triggerRef?: RefObject<HTMLButtonElement | null>;
 }
 
@@ -30,6 +32,7 @@ export function MobileNavOverlay({
   isOpen,
   onClose,
   onPresenceChange,
+  onCapabilityNavigate,
   triggerRef,
 }: MobileNavOverlayProps) {
   const [state, setState] = useState<'closed' | 'open' | 'closing'>(
@@ -39,11 +42,22 @@ export function MobileNavOverlay({
   const stateRef = useRef(state);
   const onCloseRef = useRef(onClose);
   const onPresenceChangeRef = useRef(onPresenceChange);
+  const onCapabilityNavigateRef = useRef(onCapabilityNavigate);
+  const triggerRefRef = useRef(triggerRef);
   const restoreFocusRef = useRef(false);
+  const pendingNavigationRef = useRef<string | null>(null);
+  const cancelScheduledFocusRef = useRef<(() => void) | null>(null);
   const reportedPresenceRef = useRef<boolean | undefined>(undefined);
   stateRef.current = state;
   onCloseRef.current = onClose;
   onPresenceChangeRef.current = onPresenceChange;
+  onCapabilityNavigateRef.current = onCapabilityNavigate;
+  triggerRefRef.current = triggerRef;
+
+  const cancelScheduledFocus = useCallback(() => {
+    cancelScheduledFocusRef.current?.();
+    cancelScheduledFocusRef.current = null;
+  }, []);
 
   const requestClose = useCallback(() => {
     if (stateRef.current !== 'open') return;
@@ -54,19 +68,26 @@ export function MobileNavOverlay({
 
   useEffect(() => {
     if (isOpen) {
-      if (stateRef.current === 'closing') restoreFocusRef.current = false;
+      if (stateRef.current !== 'open') {
+        restoreFocusRef.current = false;
+        pendingNavigationRef.current = null;
+        cancelScheduledFocus();
+      }
       setState((current) => (current === 'open' ? current : 'open'));
       return;
     }
     setState((current) => (current === 'open' ? 'closing' : current));
-  }, [isOpen]);
+  }, [cancelScheduledFocus, isOpen]);
 
   useEffect(() => {
     if (typeof window.matchMedia !== 'function') return undefined;
     const desktop = window.matchMedia('(min-width: 48rem)');
     const closeAtDesktop = ({ matches }: Pick<MediaQueryList, 'matches'>) => {
-      if (!matches || stateRef.current === 'closed') return;
+      if (!matches) return;
       restoreFocusRef.current = false;
+      pendingNavigationRef.current = null;
+      cancelScheduledFocus();
+      if (stateRef.current === 'closed') return;
       stateRef.current = 'closed';
       setState('closed');
       onCloseRef.current();
@@ -75,7 +96,7 @@ export function MobileNavOverlay({
     desktop.addEventListener('change', handleChange);
     closeAtDesktop(desktop);
     return () => desktop.removeEventListener('change', handleChange);
-  }, []);
+  }, [cancelScheduledFocus]);
 
   useEffect(() => {
     if (state !== 'closing') return;
@@ -100,10 +121,57 @@ export function MobileNavOverlay({
   );
 
   useEffect(() => {
-    if (state !== 'closed' || !restoreFocusRef.current) return;
+    if (state !== 'closed' || !restoreFocusRef.current) return undefined;
     restoreFocusRef.current = false;
-    triggerRef?.current?.focus();
-  }, [state, triggerRef]);
+    const restoreFocusAndNavigate = () => {
+      cancelScheduledFocusRef.current = null;
+      if (stateRef.current !== 'closed') return;
+      const destination = pendingNavigationRef.current;
+      pendingNavigationRef.current = null;
+      triggerRefRef.current?.current?.focus();
+      if (destination) onCapabilityNavigateRef.current?.(destination);
+    };
+
+    if (typeof window.requestAnimationFrame === 'function') {
+      const frame = window.requestAnimationFrame(restoreFocusAndNavigate);
+      cancelScheduledFocusRef.current = () =>
+        window.cancelAnimationFrame(frame);
+    } else {
+      const timer = window.setTimeout(restoreFocusAndNavigate, 0);
+      cancelScheduledFocusRef.current = () => window.clearTimeout(timer);
+    }
+
+    return cancelScheduledFocus;
+  }, [cancelScheduledFocus, state]);
+
+  const interceptCapabilityNavigation = useCallback(
+    (event: ReactMouseEvent<HTMLDivElement>) => {
+      if (
+        !onCapabilityNavigateRef.current ||
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
+      const target = event.target;
+      const anchor =
+        target instanceof Element
+          ? target.closest<HTMLAnchorElement>('a[data-capability-link]')
+          : null;
+      if (!anchor || anchor.target || anchor.hasAttribute('download')) return;
+
+      const destination = new URL(anchor.href, window.location.href);
+      if (destination.origin !== window.location.origin) return;
+      pendingNavigationRef.current =
+        destination.pathname + destination.search + destination.hash;
+      event.preventDefault();
+    },
+    []
+  );
 
   useEffect(() => {
     if (!present) return undefined;
@@ -158,6 +226,7 @@ export function MobileNavOverlay({
       aria-label="Cockpit control plane"
       data-state={state}
       className="cockpit-mobile-control-plane fixed inset-0 z-50 md:hidden"
+      onClickCapture={interceptCapabilityNavigation}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) requestClose();
       }}

@@ -22,6 +22,69 @@ describe('GET /favicon.ico', () => {
     expect(capabilityResolver).not.toHaveBeenCalled();
   });
 
+  it('uses the effective Host header when the request URL was normalized', () => {
+    const response = GET(
+      new Request('http://localhost:4319/favicon.ico', {
+        headers: { host: '127.0.0.1:4319' },
+      })
+    );
+
+    expect(response.status).toBe(308);
+    expect(response.headers.get('location')).toBe(
+      'http://127.0.0.1:4319/icon.svg'
+    );
+    expect(response.headers.get('cache-control')).toBe('public, max-age=86400');
+  });
+
+  it('honors valid forwarded origin headers without accepting an arbitrary scheme', () => {
+    const forwarded = GET(
+      new Request('http://localhost:4319/favicon.ico', {
+        headers: {
+          host: '127.0.0.1:4319',
+          'x-forwarded-host': 'cockpit.alias.test:4319',
+          'x-forwarded-proto': 'https',
+        },
+      })
+    );
+    const malformed = GET(
+      new Request('http://localhost:4319/favicon.ico', {
+        headers: {
+          host: '127.0.0.1:4319/path',
+          'x-forwarded-host': 'bad.example/path',
+          'x-forwarded-proto': 'javascript',
+        },
+      })
+    );
+
+    expect(forwarded.headers.get('location')).toBe(
+      'https://cockpit.alias.test:4319/icon.svg'
+    );
+    expect(malformed.headers.get('location')).toBe(
+      'http://localhost:4319/icon.svg'
+    );
+  });
+
+  it('keeps valid effective hosts when URL parsing canonicalizes default ports', () => {
+    const host = GET(
+      new Request('http://localhost:4319/favicon.ico', {
+        headers: { host: 'public.example:80' },
+      })
+    );
+    const forwarded = GET(
+      new Request('http://localhost:4319/favicon.ico', {
+        headers: {
+          'x-forwarded-host': 'public.example:443',
+          'x-forwarded-proto': 'https',
+        },
+      })
+    );
+
+    expect(host.headers.get('location')).toBe('http://public.example/icon.svg');
+    expect(forwarded.headers.get('location')).toBe(
+      'https://public.example/icon.svg'
+    );
+  });
+
   it('ships a self-contained accessible Threadplane SVG icon', () => {
     const svg = readFileSync(
       join(
