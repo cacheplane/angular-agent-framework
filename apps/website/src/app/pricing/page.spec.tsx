@@ -27,7 +27,9 @@ describe('PricingPage', () => {
     expect(screen.getByRole('table', { name: /Full plan comparison/i })).toBeTruthy();
     expect(screen.getByRole('columnheader', { name: 'Community' })).toBeTruthy();
     expect(screen.getByRole('columnheader', { name: 'Production Assurance' })).toBeTruthy();
-    expect(screen.getByRole('rowheader', { name: 'MIT-licensed software' })).toBeTruthy();
+    expect(screen.queryByRole('rowheader', { name: 'MIT-licensed software' })).toBeNull();
+    expect(screen.getByRole('rowheader', { name: 'Private support channel' })).toBeTruthy();
+    expect(screen.getByText(/identical on every path/i)).toBeTruthy();
     expect(container.querySelectorAll('table[aria-label="Full plan comparison"]')).toHaveLength(1);
   });
 

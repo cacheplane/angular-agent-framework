@@ -329,16 +329,6 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.pricing-comparison-group-row th {
-  padding-top: 20px;
-  color: var(--color-accent);
-  background: var(--color-surface-tinted);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.09em;
-  text-align: left;
-  text-transform: uppercase;
-}
 .pricing-comparison-row-heading {
   position: sticky;
   left: 0;

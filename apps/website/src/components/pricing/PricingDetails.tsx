@@ -1,5 +1,4 @@
 import { TIERS, type TierSlug } from '../../../../../pricing/tiers.config';
-import { WEBSITE_PRICING_SUPPORT_SUMMARY } from './angular-support.mjs';
 
 type ComparisonCells = Record<TierSlug, string>;
 
@@ -14,74 +13,55 @@ const ALL_INCLUDED: ComparisonCells = {
   enterprise: 'Included',
 };
 
-const COMPARISON_GROUPS: readonly {
-  title: string;
-  rows: readonly ComparisonRow[];
-}[] = [
+const COMPARISON_ROWS: readonly ComparisonRow[] = [
+  { label: 'Public documentation and examples', cells: ALL_INCLUDED },
   {
-    title: 'Software',
-    rows: [
-      { label: 'MIT-licensed software', cells: ALL_INCLUDED },
-      { label: 'Commercial use', cells: ALL_INCLUDED },
-      { label: 'All framework and UI capabilities', cells: ALL_INCLUDED },
-      { label: WEBSITE_PRICING_SUPPORT_SUMMARY, cells: ALL_INCLUDED },
-      { label: 'Source modification and redistribution', cells: ALL_INCLUDED },
-      { label: 'Customer-operated deployment', cells: ALL_INCLUDED },
-    ],
+    label: 'Private support channel',
+    cells: {
+      community: 'Not included',
+      production_assurance: 'Included',
+      enterprise: 'Included',
+    },
   },
   {
-    title: 'Support and delivery',
-    rows: [
-      { label: 'Public documentation and examples', cells: ALL_INCLUDED },
-      {
-        label: 'Private support channel',
-        cells: {
-          community: 'Not included',
-          production_assurance: 'Included',
-          enterprise: 'Included',
-        },
-      },
-      {
-        label: 'Response commitments',
-        cells: {
-          community: 'Not included',
-          production_assurance: 'Defined scope',
-          enterprise: 'Custom',
-        },
-      },
-      {
-        label: 'Architecture and implementation reviews',
-        cells: {
-          community: 'Not included',
-          production_assurance: 'Included',
-          enterprise: 'Included',
-        },
-      },
-      {
-        label: 'Security and procurement assistance',
-        cells: {
-          community: 'Not included',
-          production_assurance: 'Included',
-          enterprise: 'Included',
-        },
-      },
-      {
-        label: 'Pilot-to-Prod delivery',
-        cells: {
-          community: 'Not included',
-          production_assurance: 'Optional',
-          enterprise: 'Available',
-        },
-      },
-      {
-        label: 'Custom enablement and training',
-        cells: {
-          community: 'Not included',
-          production_assurance: 'Optional',
-          enterprise: 'Available',
-        },
-      },
-    ],
+    label: 'Response commitments',
+    cells: {
+      community: 'Not included',
+      production_assurance: 'Defined scope',
+      enterprise: 'Custom',
+    },
+  },
+  {
+    label: 'Architecture and implementation reviews',
+    cells: {
+      community: 'Not included',
+      production_assurance: 'Included',
+      enterprise: 'Included',
+    },
+  },
+  {
+    label: 'Security and procurement assistance',
+    cells: {
+      community: 'Not included',
+      production_assurance: 'Included',
+      enterprise: 'Included',
+    },
+  },
+  {
+    label: 'Pilot-to-Prod delivery',
+    cells: {
+      community: 'Not included',
+      production_assurance: 'Optional',
+      enterprise: 'Available',
+    },
+  },
+  {
+    label: 'Custom enablement and training',
+    cells: {
+      community: 'Not included',
+      production_assurance: 'Optional',
+      enterprise: 'Available',
+    },
   },
 ];
 
@@ -142,7 +122,8 @@ export function PricingComparison() {
           What changes between paths.
         </h2>
         <p className="pricing-section-body">
-          The software stays open. The level of support and delivery changes.
+          The software is identical on every path — MIT, all of it. What
+          changes is support.
         </p>
       </div>
       <div className="pricing-comparison-scroll">
@@ -167,30 +148,23 @@ export function PricingComparison() {
               ))}
             </tr>
           </thead>
-          {COMPARISON_GROUPS.map((group) => (
-            <tbody key={group.title}>
-              <tr className="pricing-comparison-group-row">
-                <th scope="rowgroup" colSpan={TIERS.length + 1}>
-                  {group.title}
+          <tbody>
+            {COMPARISON_ROWS.map((row) => (
+              <tr key={row.label}>
+                <th scope="row" className="pricing-comparison-row-heading">
+                  {row.label}
                 </th>
+                {TIERS.map((tier) => (
+                  <td
+                    key={tier.slug}
+                    data-highlight={tier.highlight || undefined}
+                  >
+                    {row.cells[tier.slug]}
+                  </td>
+                ))}
               </tr>
-              {group.rows.map((row) => (
-                <tr key={row.label}>
-                  <th scope="row" className="pricing-comparison-row-heading">
-                    {row.label}
-                  </th>
-                  {TIERS.map((tier) => (
-                    <td
-                      key={tier.slug}
-                      data-highlight={tier.highlight || undefined}
-                    >
-                      {row.cells[tier.slug]}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          ))}
+            ))}
+          </tbody>
         </table>
       </div>
     </div>
