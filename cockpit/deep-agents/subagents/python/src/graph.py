@@ -1,115 +1,118 @@
-"""
-Deep Agents Subagents Graph
+"""Deep Agents subagents capability: real child agents behind the `task` tool.
 
-Demonstrates the orchestrator + subagent delegation pattern. The orchestrator
-receives a task and delegates to specialist subagent tools. Each tool call
-represents a child agent invocation whose progress streams independently to
-the frontend via stream.subagents().
+`SubAgentMiddleware` gives the orchestrator a `task` tool taking
+`{description, subagent_type}`. Each dispatch runs a real child graph in its own
+`tools:<call_id>` namespace, and the child is seeded with the orchestrator's
+`description` before its first token.
+
+That ordering is what lets the frontend attribute child output structurally
+rather than by guessing: the SubagentTracker registers the dispatch from the
+`task` call and matches the child namespace exactly. On the Angular side the
+only wiring needed is `subagentToolNames: ['task']`.
+
+Parallel fan-out works: two `task` calls in one turn produce two children with
+distinct namespaces, distinct transcripts, and no cross-wiring.
 """
 
 from pathlib import Path
-from typing import TypedDict, Annotated
-import operator
-from langgraph.graph import StateGraph, END
-from langchain_openai import ChatOpenAI
-from langchain_core.messages import SystemMessage, BaseMessage, AIMessage, ToolMessage
+
+from deepagents import SubAgent, create_deep_agent
 from langchain_core.tools import tool
+from langchain_openai import ChatOpenAI
 
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 
+FIELD_ELEVATION_FT = {
+    "KSFO": 13,
+    "KDEN": 5434,
+    "KJFK": 13,
+    "KASE": 7820,
+    "KLAX": 125,
+    "KBOS": 20,
+}
 
-class SubagentsState(TypedDict):
-    messages: Annotated[list[BaseMessage], operator.add]
+RUNWAY_LENGTH_FT = {
+    "KSFO": 11870,
+    "KDEN": 16000,
+    "KJFK": 14511,
+    "KASE": 8006,
+    "KLAX": 12091,
+    "KBOS": 10083,
+}
 
-
-def build_subagents_graph():
-    llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
-
-    @tool
-    async def research_agent(topic: str) -> str:
-        """Spawn a research subagent to gather information on a topic."""
-        research_llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
-        response = await research_llm.ainvoke([
-            SystemMessage(content="You are a research specialist. Provide concise, factual information."),
-            {"role": "human", "content": f"Research this topic and provide key facts: {topic}"},
-        ])
-        return str(response.content)
-
-    @tool
-    async def analysis_agent(content: str) -> str:
-        """Spawn an analysis subagent to analyze and synthesize information."""
-        analysis_llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
-        response = await analysis_llm.ainvoke([
-            SystemMessage(content="You are an analysis specialist. Identify patterns, draw insights, and synthesize information clearly."),
-            {"role": "human", "content": f"Analyze this content and provide key insights: {content}"},
-        ])
-        return str(response.content)
-
-    @tool
-    async def summary_agent(findings: str) -> str:
-        """Spawn a summary subagent to produce a final coherent response."""
-        summary_llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
-        response = await summary_llm.ainvoke([
-            SystemMessage(content="You are a summarization specialist. Produce clear, well-structured summaries."),
-            {"role": "human", "content": f"Summarize these findings into a concise final answer: {findings}"},
-        ])
-        return str(response.content)
-
-    tools = [research_agent, analysis_agent, summary_agent]
-    tools_by_name = {t.name: t for t in tools}
-    orchestrator_llm = llm.bind_tools(tools)
-
-    async def orchestrate(state: SubagentsState) -> dict:
-        """Orchestrator decides which subagents to invoke."""
-        system_prompt = (PROMPTS_DIR / "subagents.md").read_text()
-        messages = [SystemMessage(content=system_prompt)] + state["messages"]
-        response = await orchestrator_llm.ainvoke(messages)
-        return {"messages": [response]}
-
-    async def run_subagents(state: SubagentsState) -> dict:
-        """Execute each tool call as a subagent invocation."""
-        last_message = state["messages"][-1]
-        if not isinstance(last_message, AIMessage) or not last_message.tool_calls:
-            return {"messages": []}
-
-        tool_messages = []
-        for tool_call in last_message.tool_calls:
-            tool_fn = tools_by_name.get(tool_call["name"])
-            if tool_fn:
-                result = await tool_fn.ainvoke(tool_call["args"])
-                tool_messages.append(
-                    ToolMessage(
-                        content=str(result),
-                        tool_call_id=tool_call["id"],
-                    )
-                )
-        return {"messages": tool_messages}
-
-    async def respond(state: SubagentsState) -> dict:
-        """Produce the final response after all subagents have completed."""
-        system_prompt = (PROMPTS_DIR / "subagents.md").read_text()
-        messages = [SystemMessage(content=system_prompt)] + state["messages"]
-        response = await orchestrator_llm.ainvoke(messages)
-        return {"messages": [response]}
-
-    def should_continue(state: SubagentsState) -> str:
-        last_message = state["messages"][-1]
-        if isinstance(last_message, AIMessage) and last_message.tool_calls:
-            return "run_subagents"
-        return END
-
-    graph = StateGraph(SubagentsState)
-    graph.add_node("orchestrate", orchestrate)
-    graph.add_node("run_subagents", run_subagents)
-    graph.add_node("respond", respond)
-    graph.set_entry_point("orchestrate")
-    graph.add_conditional_edges("orchestrate", should_continue, {
-        "run_subagents": "run_subagents",
-        END: END,
-    })
-    graph.add_edge("run_subagents", "respond")
-    graph.add_edge("respond", END)
-    return graph.compile()
+WEATHER = {
+    "KSFO": "Marine layer, 800 ft overcast, visibility 4 SM, wind 280 at 14.",
+    "KDEN": "Clear, visibility 10 SM, wind 350 at 22 gusting 31.",
+    "KJFK": "Broken 3500 ft, visibility 10 SM, wind 040 at 9.",
+    "KASE": "Few 12000 ft, visibility 10 SM, wind 300 at 6, mountain wave advisory.",
+    "KLAX": "Clear, visibility 10 SM, wind 260 at 8.",
+    "KBOS": "Overcast 1200 ft, visibility 6 SM, wind 120 at 17.",
+}
 
 
-graph = build_subagents_graph()
+@tool
+def lookup_field_elevation(airport: str) -> str:
+    """Return the field elevation in feet for a four-letter ICAO airport code."""
+    elevation = FIELD_ELEVATION_FT.get(airport.upper())
+    if elevation is None:
+        return f"No field elevation on file for {airport.upper()}."
+    return f"{airport.upper()} field elevation is {elevation} ft."
+
+
+@tool
+def lookup_runway_length(airport: str) -> str:
+    """Return the longest runway length in feet for a four-letter ICAO airport code."""
+    length = RUNWAY_LENGTH_FT.get(airport.upper())
+    if length is None:
+        return f"No runway data on file for {airport.upper()}."
+    return f"{airport.upper()} longest runway is {length} ft."
+
+
+@tool
+def lookup_weather(airport: str) -> str:
+    """Return the current field conditions for a four-letter ICAO airport code."""
+    conditions = WEATHER.get(airport.upper())
+    if conditions is None:
+        return f"No observation on file for {airport.upper()}."
+    return f"{airport.upper()}: {conditions}"
+
+
+FIELD_RESEARCHER: SubAgent = {
+    "name": "field-researcher",
+    "description": "Gathers field elevation and runway length for one airport.",
+    "system_prompt": (
+        "You research airport field data for a dispatch desk. Use "
+        "lookup_field_elevation and lookup_runway_length for the airport you were "
+        "given. Reply with two sentences: the numbers, and whether the runway is "
+        "long enough for a mid-size business jet at that elevation."
+    ),
+    "tools": [lookup_field_elevation, lookup_runway_length],
+}
+
+WEATHER_ANALYST: SubAgent = {
+    "name": "weather-analyst",
+    "description": "Reads the current conditions for one airport and calls out the operational impact.",
+    "system_prompt": (
+        "You read weather for a dispatch desk. Use lookup_weather for the airport "
+        "you were given. Reply with two sentences: the conditions, and what they "
+        "mean for a departure or arrival there."
+    ),
+    "tools": [lookup_weather],
+}
+
+
+def build_subagents_agent():
+    """Build the orchestrator.
+
+    Passing `subagents` is what installs `SubAgentMiddleware` and, with it, the
+    `task` tool. The orchestrator gets no lookup tools of its own so it has no
+    way to answer without delegating.
+    """
+    return create_deep_agent(
+        model=ChatOpenAI(model="gpt-4.1", temperature=0),
+        system_prompt=(PROMPTS_DIR / "subagents.md").read_text(),
+        subagents=[FIELD_RESEARCHER, WEATHER_ANALYST],
+    )
+
+
+graph = build_subagents_agent()

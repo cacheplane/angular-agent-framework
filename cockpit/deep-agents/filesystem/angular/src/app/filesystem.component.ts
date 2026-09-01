@@ -1,180 +1,289 @@
-import { Component, computed } from '@angular/core';
-import { ChatComponent, views } from '@threadplane/chat';
+// SPDX-License-Identifier: MIT
+import { Component, computed, signal } from '@angular/core';
+import {
+  ChatComponent,
+  ChatInterruptPanelComponent,
+  ChatWelcomeSuggestionComponent,
+} from '@threadplane/chat';
+import type { InterruptAction } from '@threadplane/chat';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
 import { injectAgent } from '@threadplane/langgraph';
-import { signalStateStore } from '@threadplane/render';
-import { FilePreviewComponent } from './views/file-preview.component';
 
-/**
- * Represents a file operation extracted from agent tool calls.
- */
-interface FileOperation {
-  type: 'read' | 'write';
+/** One entry of the `files` map `StateBackend` keeps on the graph state. */
+interface WorkspaceFile {
   path: string;
-  preview: string;
+  directory: string;
+  name: string;
+  contents: string;
+  /** True while a write to this path is waiting on human approval. */
+  pending: boolean;
 }
 
+const SUGGESTIONS = [
+  // value matches cockpit/deep-agents/filesystem/angular/e2e/da-filesystem.spec.ts PROMPT.
+  {
+    label: 'Runway note for KASE',
+    value:
+      'Work up a runway suitability note for KASE. Save your raw lookups to /notes/kase-data.md, then write the finished note to /reports/kase-runway.md.',
+    description: 'Notes are written straight through; the report pauses for your approval.',
+  },
+] as const;
+
 /**
- * FilesystemComponent demonstrates agent file operations.
+ * FilesystemComponent renders the agent's workspace, not a log of its actions.
  *
- * The agent can read and write files using tool calls. The sidebar displays
- * a live log of file operations derived from `stream.messages()`, filtering
- * for `read_file` and `write_file` tool calls.
+ * `StateBackend` puts every file the agent writes on the graph state under
+ * `files`, keyed by absolute path, so the panel is a projection of the live
+ * workspace rather than a replay of `write_file` tool calls. The distinction
+ * matters: an edit that rewrites an existing file shows up as one changed file
+ * here, and as two entries in a call log.
  *
- * Key integration points:
- * - `stream.messages()` exposes the full message history including tool calls
- * - `fileOps` filters messages for file-related tool calls and extracts metadata
- * - Operations appear in the sidebar in real time as the agent works
+ * A `FilesystemPermission` in `interrupt` mode covers `/reports/**`, so a write
+ * there pauses the run. The pending path is read off the interrupt payload and
+ * shown in the tree as a ghost row before it exists, which is the whole reason
+ * to render the tree and the approval together.
+ *
+ * `deepagents` resumes on `{ decisions: [{ type: 'approve' | 'reject' }] }`. A
+ * bare string or list is a server-side TypeError.
  */
 @Component({
   selector: 'app-filesystem',
   standalone: true,
-  imports: [ChatComponent, ExampleChatLayoutComponent],
+  imports: [
+    ChatComponent,
+    ChatInterruptPanelComponent,
+    ChatWelcomeSuggestionComponent,
+    ExampleChatLayoutComponent,
+  ],
   template: `
-    <example-chat-layout sidebarWidth="18rem">
-      <chat main [agent]="agent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
+    <example-chat-layout sidebarWidth="22rem">
+      <chat main [agent]="agent" class="flex-1 min-w-0">
+        <div chatWelcomeSuggestions>
+          @for (s of suggestions; track s.value) {
+            <chat-welcome-suggestion
+              [label]="s.label"
+              [value]="s.value"
+              [description]="s.description"
+              (selected)="send($event)"
+            />
+          }
+        </div>
+      </chat>
       <div sidebar class="panel">
-        <h3 class="cap">File Operations</h3>
-        @if (fileOps().length === 0) {
-          <p class="empty">No file operations yet</p>
+        <h3 class="cap">Workspace</h3>
+        @if (files().length === 0) {
+          <p class="empty">No files yet</p>
         }
-        @for (op of fileOps(); track $index) {
-          <div class="file-op">
-            <div class="file-op__head">
-              <span class="op-badge"
-                    [class.op-badge--read]="op.type === 'read'"
-                    [class.op-badge--write]="op.type === 'write'">
-                {{ op.type === 'read' ? 'READ' : 'WRITE' }}
-              </span>
-              <span class="file-path">{{ op.path }}</span>
-            </div>
-            @if (op.preview) {
-              <p class="preview">{{ op.preview }}</p>
+        @for (group of tree(); track group.directory) {
+          <div class="dir" data-testid="file-dir">
+            <span class="dir__name">{{ group.directory }}</span>
+            @for (file of group.files; track file.path) {
+              <button
+                type="button"
+                class="file"
+                data-testid="file-row"
+                [attr.data-path]="file.path"
+                [attr.data-pending]="file.pending ? 'true' : null"
+                [class.file--selected]="selectedPath() === file.path"
+                (click)="select(file.path)"
+              >
+                <span class="file__name">{{ file.name }}</span>
+                @if (file.pending) {
+                  <span class="file__badge">awaiting approval</span>
+                }
+              </button>
             }
           </div>
         }
+        @if (selectedFile(); as file) {
+          <div class="preview" data-testid="file-preview">
+            <span class="cap">{{ file.path }}</span>
+            <pre class="preview__body">{{ file.contents }}</pre>
+          </div>
+        }
+        <h3 class="cap">Approval</h3>
+        <chat-interrupt-panel [agent]="agent" (action)="onInterruptAction($event)" />
       </div>
     </example-chat-layout>
   `,
-  styles: [`
-    .panel {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      padding: 1rem;
-      background: var(--tplane-chat-bg);
-      color: var(--tplane-chat-text);
-    }
+  styles: [
+    `
+      .panel {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 1rem;
+        background: var(--tplane-chat-bg);
+        color: var(--tplane-chat-text);
+      }
 
-    .cap {
-      margin: 0;
-      font-size: var(--tplane-chat-font-size-xs);
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--tplane-chat-text-muted);
-    }
+      .cap {
+        margin: 0;
+        color: var(--tplane-chat-text-muted);
+        font-size: var(--tplane-chat-font-size-xs);
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
 
-    .empty {
-      margin: 0;
-      font-size: var(--tplane-chat-font-size-sm);
-      font-style: italic;
-      color: var(--tplane-chat-text-muted);
-    }
+      .empty {
+        margin: 0;
+        color: var(--tplane-chat-text-muted);
+        font-size: var(--tplane-chat-font-size-sm);
+        font-style: italic;
+      }
 
-    .file-op {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-      padding: 0.375rem 0.5rem;
-      border-radius: var(--tplane-chat-radius-card);
-      background: var(--tplane-chat-surface-alt);
-      font-size: var(--tplane-chat-font-size-sm);
-    }
+      .dir {
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+      }
 
-    .file-op__head {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      min-width: 0;
-    }
+      .dir__name {
+        color: var(--tplane-chat-text-muted);
+        font-family: var(--tplane-chat-font-mono);
+        font-size: var(--tplane-chat-font-size-xs);
+      }
 
-    .op-badge {
-      display: inline-flex;
-      align-items: center;
-      flex: 0 0 auto;
-      border-radius: var(--tplane-chat-radius-button);
-      padding: 0.125rem 0.375rem;
-      font-size: var(--tplane-chat-font-size-xs);
-      font-weight: 600;
-    }
+      .file {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        margin-left: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border: 0;
+        border-radius: var(--tplane-chat-radius-card);
+        background: var(--tplane-chat-surface-alt);
+        color: var(--tplane-chat-text);
+        cursor: pointer;
+        font-family: var(--tplane-chat-font-mono);
+        font-size: var(--tplane-chat-font-size-xs);
+        text-align: left;
+      }
 
-    .op-badge--read {
-      background: color-mix(in srgb, var(--tplane-chat-primary) 12%, var(--tplane-chat-surface));
-      color: var(--tplane-chat-primary);
-    }
+      .file--selected {
+        outline: 1px solid var(--tplane-chat-primary);
+      }
 
-    .op-badge--write {
-      background: var(--tplane-chat-warning-bg);
-      color: var(--tplane-chat-warning-text);
-    }
+      .file[data-pending='true'] {
+        opacity: 0.65;
+        font-style: italic;
+      }
 
-    .file-path {
-      min-width: 0;
-      overflow: hidden;
-      color: var(--tplane-chat-text);
-      font-size: var(--tplane-chat-font-size-xs);
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
+      .file__badge {
+        color: var(--tplane-chat-text-muted);
+        font-family: var(--tplane-chat-font-family);
+        font-style: normal;
+      }
 
-    .preview {
-      margin: 0;
-      overflow: hidden;
-      color: var(--tplane-chat-text-muted);
-      font-size: var(--tplane-chat-font-size-xs);
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-  `],
+      .preview__body {
+        max-height: 14rem;
+        margin: 0.25rem 0 0;
+        overflow: auto;
+        padding: 0.5rem;
+        border-radius: var(--tplane-chat-radius-card);
+        background: var(--tplane-chat-surface-alt);
+        font-family: var(--tplane-chat-font-mono);
+        font-size: var(--tplane-chat-font-size-xs);
+        white-space: pre-wrap;
+      }
+    `,
+  ],
 })
 export class FilesystemComponent {
-  readonly ui = views({ 'file-preview': FilePreviewComponent });
-  readonly uiStore = signalStateStore({});
-
-  /**
-   * The streaming resource connected to the filesystem graph.
-   *
-   * The graph uses `read_file` and `write_file` tool calls that appear
-   * in `stream.messages()`. We filter and display them in the sidebar.
-   */
   protected readonly agent = injectAgent();
 
+  protected readonly suggestions = SUGGESTIONS;
+
+  private readonly manualSelection = signal<string | null>(null);
+
   /**
-   * Reactive list of file operations derived from the message history.
+   * The path a pending `write_file` approval would create.
    *
-   * Scans all messages for tool calls named `read_file` or `write_file`,
-   * extracts the file path and a short result preview for sidebar display.
+   * The interrupt payload is `{ action_requests: [{ name, args }] }`; the path
+   * lives on `args.file_path`.
    */
-  protected readonly fileOps = computed<FileOperation[]>(() => {
-    const msgs = this.agent.langGraphMessages();
-    const ops: FileOperation[] = [];
-    for (const msg of msgs) {
-      const m = msg as unknown as Record<string, unknown>;
-      if (!('tool_calls' in m) || !Array.isArray(m['tool_calls'])) continue;
-      for (const tc of m['tool_calls'] as Array<Record<string, unknown>>) {
-        const name = tc['name'] as string | undefined;
-        if (name !== 'read_file' && name !== 'write_file') continue;
-        const args = (tc['args'] ?? {}) as Record<string, unknown>;
-        const path = String(args['path'] ?? args['file_path'] ?? '');
-        const content = String(args['content'] ?? args['result'] ?? '');
-        ops.push({
-          type: name === 'read_file' ? 'read' : 'write',
-          path,
-          preview: content.slice(0, 80),
-        });
+  protected readonly pendingPath = computed<string | null>(() => {
+    for (const interrupt of this.agent.langGraphInterrupts() ?? []) {
+      const value = (interrupt as { value?: unknown }).value as
+        | { action_requests?: Array<{ name?: string; args?: Record<string, unknown> }> }
+        | undefined;
+      for (const request of value?.action_requests ?? []) {
+        const path = request.args?.['file_path'];
+        if (typeof path === 'string') return path;
       }
     }
-    return ops;
+    return null;
   });
+
+  /** Live projection of `state.files`, plus a ghost row for a pending write. */
+  protected readonly files = computed<WorkspaceFile[]>(() => {
+    const raw = (this.agent.value() as Record<string, unknown> | undefined)?.['files'];
+    const entries = new Map<string, string>();
+    if (raw && typeof raw === 'object') {
+      for (const [path, contents] of Object.entries(raw as Record<string, unknown>)) {
+        entries.set(path, typeof contents === 'string' ? contents : JSON.stringify(contents));
+      }
+    }
+    const pending = this.pendingPath();
+    if (pending && !entries.has(pending)) entries.set(pending, '');
+
+    return [...entries.entries()]
+      .map(([path, contents]) => {
+        const slash = path.lastIndexOf('/');
+        return {
+          path,
+          directory: slash > 0 ? path.slice(0, slash) : '/',
+          name: path.slice(slash + 1),
+          contents,
+          pending: path === pending,
+        };
+      })
+      .sort((a, b) => a.path.localeCompare(b.path));
+  });
+
+  /** Files grouped by directory, so the panel reads as a tree. */
+  protected readonly tree = computed(() => {
+    const groups = new Map<string, WorkspaceFile[]>();
+    for (const file of this.files()) {
+      const bucket = groups.get(file.directory) ?? [];
+      bucket.push(file);
+      groups.set(file.directory, bucket);
+    }
+    return [...groups.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([directory, files]) => ({ directory, files }));
+  });
+
+  /** The clicked file, defaulting to the most recently written one. */
+  protected readonly selectedPath = computed<string | null>(() => {
+    const manual = this.manualSelection();
+    const files = this.files();
+    if (manual && files.some((file) => file.path === manual)) return manual;
+    const settled = files.filter((file) => !file.pending);
+    return settled.at(-1)?.path ?? files.at(0)?.path ?? null;
+  });
+
+  protected readonly selectedFile = computed<WorkspaceFile | null>(() => {
+    const path = this.selectedPath();
+    return this.files().find((file) => file.path === path) ?? null;
+  });
+
+  protected select(path: string): void {
+    this.manualSelection.set(path);
+  }
+
+  protected onInterruptAction(action: InterruptAction): void {
+    if (action === 'accept') {
+      void this.agent.submit({ resume: { decisions: [{ type: 'approve' }] } });
+    } else if (action === 'ignore') {
+      void this.agent.submit({ resume: { decisions: [{ type: 'reject' }] } });
+    }
+    // 'edit' and 'respond' would need the tool args echoed back; out of scope here.
+  }
+
+  protected send(text: string): void {
+    void this.agent.submit({ message: text });
+  }
 }

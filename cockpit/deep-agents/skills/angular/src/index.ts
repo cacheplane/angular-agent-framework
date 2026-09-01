@@ -30,6 +30,7 @@ export const deepAgentsSkillsAngularModule: CockpitCapabilityModule = {
     'cockpit/deep-agents/skills/angular/prompts/skills.md',
   ],
   codeAssetPaths: [
-    'cockpit/deep-agents/skills/angular/src/app.component.ts',
+    'cockpit/deep-agents/skills/angular/src/app/skills.component.ts',
+    'cockpit/deep-agents/skills/angular/src/app/app.config.ts',
   ],
 };

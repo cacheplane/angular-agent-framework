@@ -16,9 +16,6 @@
       "path": "./cockpit/deep-agents/filesystem/python"
     },
     {
-      "path": "./cockpit/deep-agents/sandboxes/python"
-    },
-    {
       "path": "./cockpit/deep-agents/subagents/python"
     },
     {

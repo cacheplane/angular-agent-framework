@@ -34,7 +34,6 @@ const ACTIVE_PRODUCT_PATHS = new Set([
   'deep-agents/subagents',
   'deep-agents/memory',
   'deep-agents/skills',
-  'deep-agents/sandboxes',
   'chat/messages',
   'chat/input',
   'chat/interrupts',

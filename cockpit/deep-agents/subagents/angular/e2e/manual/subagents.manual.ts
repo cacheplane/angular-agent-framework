@@ -1,3 +1,8 @@
+// SPDX-License-Identifier: MIT
+//
+// Live-model manual check. Not run by CI (playwright matches *.spec.ts only).
+//   npx nx run cockpit:serve-subagents
+//   npx playwright test cockpit/deep-agents/subagents/angular/e2e/manual
 import { expect, test } from '@playwright/test';
 
 test.describe('Deep Agents Subagents Example', () => {
@@ -6,16 +11,18 @@ test.describe('Deep Agents Subagents Example', () => {
     await page.waitForSelector('app-subagents', { state: 'attached' });
   });
 
-  test('renders the chat interface with subagents sidebar', async ({ page }) => {
+  test('renders the chat interface with the specialist roster', async ({ page }) => {
     await expect(page.locator('chat')).toBeVisible();
     await expect(page.locator('textarea[name="messageText"]')).toBeVisible();
-    await expect(page.locator('text=No delegations yet')).toBeVisible();
+    await expect(page.locator('text=field-researcher')).toBeVisible();
+    await expect(page.locator('text=weather-analyst')).toBeVisible();
   });
 
-  test('sends a message and receives a response', async ({ page }) => {
-    await page.fill('textarea[name="messageText"]', 'Research the history of the internet and summarize it.');
-    await page.click('button[type="submit"]');
-    await expect(page.locator('.chat-md').first()).toBeVisible({ timeout: 30000 });
-    await expect(page.locator('.chat-md').first()).not.toBeEmpty({ timeout: 30000 });
+  test('fans out to several specialists at once', async ({ page }) => {
+    await page.getByRole('button', { name: 'Two airports at once' }).click();
+
+    await expect(page.locator('chat-subagent-card').first()).toBeVisible({ timeout: 120000 });
+    await expect(page.locator('chat-subagent-card')).toHaveCount(4, { timeout: 180000 });
+    await expect(page.getByTestId('dispatch-count')).toBeVisible();
   });
 });

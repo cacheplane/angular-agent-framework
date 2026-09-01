@@ -1,5 +1,5 @@
 # Deep Agents Memory (Angular)
 
-This capability demonstrates how a deep agent stores, retrieves, and updates long-term memories across sessions using the `@threadplane/chat` Angular component library. The `<chat-debug>` component reveals every memory read and write operation — including the memory key, value, and retrieval score — so developers can verify that the agent is building and using its knowledge store correctly.
+This capability shows the file the agent keeps about you. `MemoryMiddleware` loads `/memories/AGENTS.md` into the system prompt at the start of every turn and the agent rewrites it with `edit_file` when it learns something durable — nothing in the Angular app parses the conversation for facts. `StoreBackend` puts that file in LangGraph's store rather than on the thread, so a brand new thread starts already knowing.
 
-Key components used: `<chat-debug>`. Memory tool calls (store_memory, retrieve_memories, delete_memory) appear as collapsible trace nodes, giving full visibility into how the agent's persistent knowledge base evolves over the course of a session and across session boundaries.
+Reading it back needs a detour, and that is the interesting part. `memory_contents` is annotated `PrivateStateAttr`, so it never reaches the `values` stream. The graph republishes it as a `custom` stream event, which arrives on `agent.customEvents()`; the key IS on the checkpoint, so `agent.value()` covers a reopened thread once the client has hydrated it.

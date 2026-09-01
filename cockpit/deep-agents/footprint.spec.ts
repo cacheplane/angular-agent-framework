@@ -8,7 +8,6 @@ const topicNames = [
   'subagents',
   'memory',
   'skills',
-  'sandboxes',
 ] as const;
 
 const pageNames = ['overview', 'build', 'prompts', 'code', 'testing'] as const;

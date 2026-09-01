@@ -1,96 +1,186 @@
-"""
-Deep Agents Skills Graph
+"""Deep Agents skills capability: SKILL.md progressive disclosure.
 
-Demonstrates a multi-skill agent that selects specialized tools based on
-the user's request. The agent can calculate math expressions, count words
-in text, and summarize content. Tool calls are visible to the frontend
-via stream.messages(), powering the skill invocation sidebar.
+A skill is a folder with a `SKILL.md` whose YAML frontmatter carries a `name`
+and a `description`. `SkillsMiddleware` loads only that frontmatter into the
+system prompt — a short index the model can scan — and leaves the body on the
+filesystem for the agent to `read_file` when a request actually matches. That
+two-stage load is what "progressive disclosure" means: the instructions cost
+nothing until they are needed, and a reference file inside the skill costs
+nothing until the SKILL.md sends the agent to it.
+
+Where the skills live matters. They must be readable through a backend, and this
+demo is deployed on a shared public LangGraph deployment, so a host-filesystem
+backend is out — `FilesystemBackend` documents itself as inappropriate for
+servers, and the same reasoning retired the sandboxes topic. Instead the bundled
+skills are seeded into a process-local `InMemoryStore` at import and mounted
+read-only at `/skills/` through a `CompositeBackend`; everything else the agent
+writes goes to the thread's own `StateBackend`.
+
+Visibility: `skills_metadata` is annotated `PrivateStateAttr`, so it never
+reaches the `values` stream. `SkillsVisibilityMiddleware` republishes it as a
+`custom` stream event.
 """
 
 from pathlib import Path
-from typing import Annotated
-import operator
-from langgraph.graph import StateGraph, END
-from langgraph.prebuilt import ToolNode
-from langchain_openai import ChatOpenAI
-from langchain_core.messages import SystemMessage, BaseMessage, AIMessage
+from typing import Any
+
+from deepagents import create_deep_agent
+from deepagents.backends import CompositeBackend, StateBackend, StoreBackend
+from langchain.agents.middleware import AgentMiddleware
 from langchain_core.tools import tool
+from langchain_openai import ChatOpenAI
+from langgraph.config import get_stream_writer
+from langgraph.store.memory import InMemoryStore
 
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
+SKILLS_DIR = Path(__file__).parent.parent / "skills"
 
+#: Mount point the agent sees. `SkillsMiddleware` scans one level below it.
+SKILLS_ROOT = "/skills/"
 
-class SkillsState(dict):
-    messages: Annotated[list[BaseMessage], operator.add]
+SKILLS_NAMESPACE = ("cockpit", "deep-agents-skills")
+
+#: Custom stream event name the Angular panel listens for.
+SKILLS_EVENT = "deep_agents.skills"
+
+FIELD_ELEVATION_FT = {
+    "KSFO": 13,
+    "KDEN": 5434,
+    "KJFK": 13,
+    "KASE": 7820,
+    "KLAX": 125,
+    "KBOS": 20,
+}
+
+RUNWAY_LENGTH_FT = {
+    "KSFO": 11870,
+    "KDEN": 16000,
+    "KJFK": 14511,
+    "KASE": 8006,
+    "KLAX": 12091,
+    "KBOS": 10083,
+}
+
+WEATHER = {
+    "KSFO": "Marine layer, 800 ft overcast, visibility 4 SM, wind 280 at 14.",
+    "KDEN": "Clear, visibility 10 SM, wind 350 at 22 gusting 31.",
+    "KJFK": "Broken 3500 ft, visibility 10 SM, wind 040 at 9.",
+    "KASE": "Few 12000 ft, visibility 10 SM, wind 300 at 6, mountain wave advisory.",
+    "KLAX": "Clear, visibility 10 SM, wind 260 at 8.",
+    "KBOS": "Overcast 1200 ft, visibility 6 SM, wind 120 at 17.",
+}
 
 
 @tool
-def calculator(expression: str) -> str:
-    """Evaluate a mathematical expression and return the result.
-
-    Args:
-        expression: A mathematical expression to evaluate (e.g. '42 * 7').
-    """
-    try:
-        result = eval(expression, {"__builtins__": {}}, {})  # noqa: S307
-        return str(result)
-    except Exception as e:
-        return f"Error evaluating expression: {e}"
+def lookup_field_elevation(airport: str) -> str:
+    """Return the field elevation in feet for a four-letter ICAO airport code."""
+    elevation = FIELD_ELEVATION_FT.get(airport.upper())
+    if elevation is None:
+        return f"No field elevation on file for {airport.upper()}."
+    return f"{airport.upper()} field elevation is {elevation} ft."
 
 
 @tool
-def word_count(text: str) -> str:
-    """Count the number of words in a piece of text.
-
-    Args:
-        text: The text to count words in.
-    """
-    words = text.split()
-    return f"{len(words)} words"
+def lookup_runway_length(airport: str) -> str:
+    """Return the longest runway length in feet for a four-letter ICAO airport code."""
+    length = RUNWAY_LENGTH_FT.get(airport.upper())
+    if length is None:
+        return f"No runway data on file for {airport.upper()}."
+    return f"{airport.upper()} longest runway is {length} ft."
 
 
 @tool
-def summarize(text: str) -> str:
-    """Summarize a piece of text in one sentence.
+def lookup_weather(airport: str) -> str:
+    """Return the current field conditions for a four-letter ICAO airport code."""
+    conditions = WEATHER.get(airport.upper())
+    if conditions is None:
+        return f"No observation on file for {airport.upper()}."
+    return f"{airport.upper()}: {conditions}"
 
-    Args:
-        text: The text to summarize.
+
+def _seed_skills_store() -> InMemoryStore:
+    """Load the bundled skill folders into a process-local store.
+
+    Read once at import. The store is never written to at runtime, so the agent
+    sees `/skills/` as a stable read-only mount even though it is served by the
+    same `StoreBackend` machinery as a writable one.
     """
-    sentences = [s.strip() for s in text.split(".") if s.strip()]
-    if not sentences:
-        return "No content to summarize."
-    first = sentences[0]
-    total = len(sentences)
-    return f"{first}. [{total} sentence(s) total]"
+    store = InMemoryStore()
+    backend = StoreBackend(namespace=lambda _runtime: SKILLS_NAMESPACE, store=store)
+    for path in sorted(SKILLS_DIR.rglob("*.md")):
+        # Paths are stored WITHOUT the mount prefix. `CompositeBackend` strips
+        # the route prefix before delegating, so a store seeded at
+        # `/skills/runway-analysis/...` would surface as
+        # `/skills/skills/runway-analysis/...` to the agent.
+        backend.write(f"/{path.relative_to(SKILLS_DIR).as_posix()}", path.read_text())
+    return store
 
 
-def build_skills_graph():
-    tools = [calculator, word_count, summarize]
-    llm = ChatOpenAI(model="gpt-5-mini", streaming=True).bind_tools(tools)
-    tool_node = ToolNode(tools)
-
-    async def agent(state: SkillsState) -> dict:
-        """Choose and call the appropriate skill tool."""
-        system_prompt = (PROMPTS_DIR / "skills.md").read_text()
-        messages = [SystemMessage(content=system_prompt)] + state["messages"]
-        response = await llm.ainvoke(messages)
-        return {"messages": [response]}
-
-    def should_continue(state: SkillsState) -> str:
-        last = state["messages"][-1]
-        if isinstance(last, AIMessage) and last.tool_calls:
-            return "tools"
-        return END
-
-    graph = StateGraph(SkillsState)
-    graph.add_node("agent", agent)
-    graph.add_node("tools", tool_node)
-    graph.set_entry_point("agent")
-    graph.add_conditional_edges("agent", should_continue, {
-        "tools": "tools",
-        END: END,
-    })
-    graph.add_edge("tools", "agent")
-    return graph.compile()
+SKILLS_STORE = _seed_skills_store()
 
 
-graph = build_skills_graph()
+class SkillsVisibilityMiddleware(AgentMiddleware):
+    """Republish `skills_metadata` as a `custom` stream event.
+
+    Same shim as the memory capability's: the key stays private on the state and
+    is announced alongside it, so a panel can render the loaded skill index
+    while the agent works rather than only once the run settles.
+    """
+
+    @property
+    def name(self) -> str:
+        return "SkillsVisibilityMiddleware"
+
+    def _emit(self, state: dict[str, Any]) -> None:
+        metadata = state.get("skills_metadata")
+        if metadata is None:
+            return
+        try:
+            writer = get_stream_writer()
+        except (RuntimeError, KeyError):
+            return
+        writer(
+            {
+                "name": SKILLS_EVENT,
+                "data": {
+                    "skills_metadata": metadata,
+                    "skills_load_errors": state.get("skills_load_errors") or [],
+                },
+            }
+        )
+
+    def before_model(self, state: dict[str, Any], runtime: Any) -> None:  # noqa: ANN401, ARG002
+        self._emit(state)
+        return None
+
+    def after_agent(self, state: dict[str, Any], runtime: Any) -> None:  # noqa: ANN401, ARG002
+        self._emit(state)
+        return None
+
+
+def build_skills_agent():
+    """Build the skills agent.
+
+    `CompositeBackend` routes by path prefix, longest first. `/skills/` resolves
+    to the seeded store; everything else falls through to `StateBackend`, so any
+    notes the agent writes stay on the thread and never touch the skill mount.
+    """
+    return create_deep_agent(
+        model=ChatOpenAI(model="gpt-4.1", temperature=0),
+        tools=[lookup_field_elevation, lookup_runway_length, lookup_weather],
+        system_prompt=(PROMPTS_DIR / "skills.md").read_text(),
+        backend=CompositeBackend(
+            default=StateBackend(),
+            routes={
+                SKILLS_ROOT: StoreBackend(
+                    namespace=lambda _runtime: SKILLS_NAMESPACE,
+                    store=SKILLS_STORE,
+                ),
+            },
+        ),
+        skills=[SKILLS_ROOT],
+        middleware=[SkillsVisibilityMiddleware()],
+    )
+
+
+graph = build_skills_agent()

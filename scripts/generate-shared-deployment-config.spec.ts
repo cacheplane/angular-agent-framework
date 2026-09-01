@@ -38,4 +38,50 @@ describe('generate-shared-deployment-config', () => {
     };
     expect(manifest.dependencies.some((d) => d.includes('ag-ui'))).toBe(false);
   });
+
+  it('carries the deepagents dependency set into every deep-agents staged dep', () => {
+    // The deep-agents topics run on the real `deepagents` package, and the
+    // shared deployment installs each staged dep from its own pyproject. If a
+    // topic's pyproject loses the pin, nothing here fails until the deploy
+    // does — the graph imports `deepagents` at module scope, so the revision
+    // dies at startup rather than at build.
+    //
+    // `langchain-anthropic` and `langchain-google-genai` are mandatory
+    // transitive imports of `deepagents` even for an OpenAI-only graph. They
+    // are hard dependencies of the package itself, so pinning `deepagents`
+    // is what brings them; this asserts the lock agrees rather than trusting
+    // that.
+    const root = resolve(__dirname, '..');
+    execSync('npx tsx scripts/generate-shared-deployment-config.ts', {
+      cwd: root,
+      stdio: 'pipe',
+    });
+
+    const deepAgentAliases = ['da-planning', 'da-filesystem', 'da-subagents', 'da-memory', 'da-skills'];
+    for (const alias of deepAgentAliases) {
+      const depRoot = resolve(root, 'deployments/shared-dev/deps', alias);
+      const pyproject = readFileSync(resolve(depRoot, 'pyproject.toml'), 'utf8');
+      expect(pyproject).toContain('deepagents==0.7.11');
+
+      const lock = readFileSync(resolve(depRoot, 'uv.lock'), 'utf8');
+      for (const transitive of ['langchain-anthropic', 'langchain-google-genai']) {
+        expect(lock).toContain(`name = "${transitive}"`);
+      }
+    }
+  });
+
+  it('keeps every deep-agents graph in the aggregated manifest', () => {
+    const root = resolve(__dirname, '..');
+    const manifest = JSON.parse(
+      readFileSync(resolve(root, 'deployments/shared-dev/langgraph.json'), 'utf8'),
+    ) as { graphs: Record<string, string> };
+
+    // `subagents` is the odd one out: its graph name predates the `da-` prefix
+    // and the Angular environment's assistantId matches it, so renaming it
+    // would silently break that demo in production.
+    expect(Object.keys(manifest.graphs)).toEqual(
+      expect.arrayContaining(['da-planning', 'da-filesystem', 'subagents', 'da-memory', 'da-skills']),
+    );
+    expect(manifest.graphs).not.toHaveProperty('da-sandboxes');
+  });
 });

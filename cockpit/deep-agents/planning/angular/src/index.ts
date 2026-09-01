@@ -30,6 +30,7 @@ export const deepAgentsPlanningAngularModule: CockpitCapabilityModule = {
     'cockpit/deep-agents/planning/angular/prompts/planning.md',
   ],
   codeAssetPaths: [
-    'cockpit/deep-agents/planning/angular/src/app.component.ts',
+    'cockpit/deep-agents/planning/angular/src/app/planning.component.ts',
+    'cockpit/deep-agents/planning/angular/src/app/app.config.ts',
   ],
 };

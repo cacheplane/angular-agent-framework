@@ -1,5 +1,5 @@
 # Deep Agents Planning (Angular)
 
-This capability demonstrates how a deep agent decomposes complex tasks into structured plans using the `@threadplane/chat` Angular component library. The `<chat-debug>` component exposes the agent's internal reasoning trace — goal decomposition, sub-task generation, and dependency resolution — so developers can inspect planning decisions in real time.
+This capability renders the todo list that `deepagents` keeps on the graph state. `TodoListMiddleware` gives the model a `write_todos` tool; every call replaces the whole `todos` array, and the Angular sidebar is a `computed()` projection of it, so rows move from pending to in progress to completed while the agent works.
 
-Key components used: `<chat-debug>`. The debug panel renders the full agent thought trace alongside the final response, making it easy to understand how the planning agent broke down the user's request and in which order it intends to tackle each sub-task.
+Key integration points: `injectAgent().value()` for the graph state, and the `<chat>` composition from `@threadplane/chat` for the conversation. A todo is `{ content, status }` — there is no identifier, so the panel tracks rows by index.

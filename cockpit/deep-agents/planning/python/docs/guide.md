@@ -1,152 +1,131 @@
-# Task Decomposition with Angular
+# Planning with Deep Agents
 
 <Summary>
-Build a chat interface that shows real-time task decomposition using `provideAgent()` and
-`injectAgent()` from `@threadplane/langgraph`. The agent breaks complex requests into ordered steps, and the
-sidebar displays each step's status as the agent works through them.
+Render the live todo list a `deepagents` agent keeps while it works. `TodoListMiddleware`
+gives the model a `write_todos` tool and puts a `todos` array on the graph state; the Angular
+panel is a `computed()` projection of that array, so rows move from pending to in progress to
+completed as the agent works, and the list changes shape when the agent revises its plan.
 </Summary>
 
 <Prompt>
-Add a task planning sidebar to this Angular component using `provideAgent()` and `injectAgent()` from `@threadplane/langgraph`. Use `stream.value()` to access the agent's plan state, derive `planSteps` with `computed()`, and bind them to the sidebar beside the `<chat>` component from `@threadplane/chat`.
+Add a live plan panel beside the `<chat>` component. Read `todos` off `injectAgent().value()`,
+where each entry is `{ content, status }` with status one of `pending`, `in_progress`, or
+`completed`, and render one row per todo with a status icon.
 </Prompt>
 
+<Callout type="info" title="Provider setup lives in the LangGraph quickstart">
+This guide assumes `provideAgent()` is already configured. If it is not, work through the
+[LangGraph quickstart](/docs/langgraph/getting-started/quickstart) first — every Deep Agents
+capability uses the same provider, the same `injectAgent()` call, and the same `<chat>`
+composition.
+</Callout>
+
 <Steps>
-<Step title="Configure the provider">
+<Step title="Build the agent on TodoListMiddleware">
 
-Set up `provideAgent()` in your app config with the LangGraph API URL:
+`create_deep_agent` assembles a LangGraph agent from middleware. `TodoListMiddleware` is the
+one that matters here: it registers the `write_todos` tool and declares the `todos` key on the
+state schema.
 
-```typescript
-// app.config.ts
-import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@threadplane/langgraph';
+```python
+# src/graph.py
+from deepagents import create_deep_agent
+from langchain.agents.middleware import TodoListMiddleware
+from langchain_openai import ChatOpenAI
 
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideAgent({
-      apiUrl: 'https://your-deployment.langgraph.app',
-      assistantId: 'da-planning',
-    }),
-  ],
-};
+graph = create_deep_agent(
+    model=ChatOpenAI(model="gpt-4.1", temperature=0),
+    tools=[lookup_field_elevation, lookup_runway_length, lookup_weather],
+    system_prompt=(PROMPTS_DIR / "planning.md").read_text(),
+    middleware=[TodoListMiddleware()],
+)
 ```
 
-This makes the configured agent available to all `injectAgent()` calls in your app.
+The middleware is listed explicitly rather than left to the `create_deep_agent` defaults, so
+the source says which component owns `todos`.
 
 </Step>
-<Step title="Create the streaming resource">
+<Step title="Tell the model to plan first">
 
-In your component, call `injectAgent()` to retrieve the configured planning agent:
+`TodoListMiddleware` supplies the model with a tool, not with a policy. Without instruction the
+model will happily fan out six parallel lookups and never write a todo. The system prompt is
+what makes the plan visible:
+
+```markdown
+Your first action on any request is a call to `write_todos`. Do not call a
+lookup tool before the todo list exists. Write one todo per step.
+
+Mark exactly one todo `in_progress` before you start it and mark it `completed`
+the moment it is done. Call `write_todos` again for each transition.
+```
+
+Each `write_todos` call replaces the entire list. There is no partial update, so the panel never
+has to reconcile anything.
+
+</Step>
+<Step title="Project the todos into a signal">
+
+`injectAgent().value()` is the latest graph state. Derive the rows with `computed()` and
+normalize the status, because a state key is not a typed contract:
 
 ```typescript
 // planning.component.ts
-import { injectAgent } from '@threadplane/langgraph';
-
-export class PlanningComponent {
-  protected readonly stream = injectAgent();
-}
-```
-
-The resource manages the connection, message history, loading state, and errors automatically.
-
-</Step>
-<Step title="Derive plan steps with computed()">
-
-Use Angular's `computed()` to reactively derive the plan steps from `stream.value()`:
-
-```typescript
-import { computed } from '@angular/core';
-import { injectAgent } from '@threadplane/langgraph';
-
-interface PlanStep {
-  title: string;
-  status: 'pending' | 'running' | 'complete';
+interface Todo {
+  content: string;
+  status: 'pending' | 'in_progress' | 'completed';
 }
 
-export class PlanningComponent {
-  protected readonly stream = injectAgent();
+protected readonly agent = injectAgent();
 
-  planSteps = computed(() => {
-    const val = this.stream.value() as { plan?: PlanStep[] } | undefined;
-    return val?.plan ?? [];
+protected readonly todos = computed<Todo[]>(() => {
+  const todos = (this.agent.value() as Record<string, unknown> | undefined)?.['todos'];
+  if (!Array.isArray(todos)) return [];
+  return todos.map((todo) => {
+    const entry = todo as Record<string, unknown>;
+    const status = entry['status'] as Todo['status'];
+    return {
+      content: String(entry['content'] ?? ''),
+      status: TODO_STATUSES.includes(status) ? status : 'pending',
+    };
   });
-}
+});
 ```
 
-`stream.value()` contains the latest graph state. The planning graph stores steps under a `plan` key, updating statuses as each step is completed.
-
-<Tip>
-`stream.value()` is a signal that updates reactively as new state arrives from the server. `computed()` recalculates `planSteps` automatically whenever the stream updates.
-</Tip>
-
 </Step>
-<Step title="Build the template with plan sidebar">
+<Step title="Render the panel">
 
-Use the `<chat>` component from `@threadplane/chat` and render a sibling sidebar:
+A todo carries no identifier, so track by index rather than by content — the content of a row
+can change when the agent rewrites a step.
 
 ```html
-<chat [agent]="stream" />
-
-<aside>
-    <h3>Task Plan</h3>
-    @for (step of planSteps(); track $index) {
-      <div>
-        <span [style.background]="step.status === 'complete' ? '#10b981' : '#d1d5db'"></span>
-        <span [style.textDecoration]="step.status === 'complete' ? 'line-through' : 'none'">
-          {{ step.title }}
-        </span>
+<example-chat-layout sidebarWidth="20rem">
+  <chat main [agent]="agent" class="flex-1 min-w-0" />
+  <div sidebar class="panel">
+    <h3 class="cap">Plan</h3>
+    @if (todos().length === 0) {
+      <p class="empty">No plan yet</p>
+    }
+    @for (todo of todos(); track $index) {
+      <div class="todo" [attr.data-status]="todo.status">
+        <span class="todo__text">{{ todo.content }}</span>
       </div>
     }
-    @empty {
-      <p>Ask a complex question to see the plan.</p>
-    }
-</aside>
+  </div>
+</example-chat-layout>
 ```
 
-The sibling panel renders steps reactively as the agent updates the plan state.
-
-</Step>
-<Step title="The LangGraph planning backend">
-
-The backend uses a two-node graph: one to decompose the task into steps, another to execute them:
-
-```python
-# graph.py
-from langgraph.graph import StateGraph, END
-
-def build_planning_graph():
-    async def create_plan(state: PlanningState) -> dict:
-        """Decompose the task into ordered steps."""
-        # LLM returns a JSON array of steps
-        plan = [{"title": "Step 1", "status": "pending"}, ...]
-        return {"plan": plan, "messages": [response]}
-
-    async def execute_plan(state: PlanningState) -> dict:
-        """Execute the plan and mark steps complete."""
-        plan = [dict(s, status="complete") for s in state["plan"]]
-        return {"plan": plan, "messages": [response]}
-
-    graph = StateGraph(PlanningState)
-    graph.add_node("create_plan", create_plan)
-    graph.add_node("execute_plan", execute_plan)
-    graph.set_entry_point("create_plan")
-    graph.add_edge("create_plan", "execute_plan")
-    graph.add_edge("execute_plan", END)
-    return graph.compile()
-```
-
-Each node updates the `plan` list in state. The frontend sees these updates via `stream.value()` as the graph executes.
-
-<Tip>
-For real step-by-step execution, add one node per step and update the step's `status` field to `"running"` at the start and `"complete"` at the end. The frontend will show progress in real time.
-</Tip>
+Styling off `[attr.data-status]` keeps the status mapping in CSS instead of spreading a second
+copy of the enum through the template.
 
 </Step>
 </Steps>
 
 <Tip>
-The `@empty` block in `@for` renders when the plan array is empty — a clean way to show a placeholder before the user submits their first complex question.
+The shape of a todo in `deepagents` 0.7.11 is exactly `{ content, status }`. There is no `id`
+and no separate present-tense label, so do not build a panel that depends on one.
 </Tip>
 
 <Related>
-- [Chat Tool Calls](/chat/core-capabilities/tool-calls/overview/python) — Learn how ChatToolCallsComponent renders tool call activity
+- [Deep Agents Subagents](/deep-agents/core-capabilities/subagents/overview/python) — the same agent delegating work to child agents
+- [Deep Agents Filesystem](/deep-agents/core-capabilities/filesystem/overview/python) — the file tree the agent writes into while it works
 </Related>

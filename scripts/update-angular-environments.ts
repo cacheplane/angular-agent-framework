@@ -28,7 +28,6 @@ const capabilities = [
   { dir: 'cockpit/deep-agents/subagents/angular', assistantId: 'subagents', field: 'streamingAssistantId' },
   { dir: 'cockpit/deep-agents/memory/angular', assistantId: 'da-memory', field: 'streamingAssistantId' },
   { dir: 'cockpit/deep-agents/skills/angular', assistantId: 'da-skills', field: 'streamingAssistantId' },
-  { dir: 'cockpit/deep-agents/sandboxes/angular', assistantId: 'da-sandboxes', field: 'streamingAssistantId' },
   { dir: 'cockpit/chat/messages/angular', assistantId: 'c-messages', urlKey: 'streaming', field: 'streamingAssistantId' },
   { dir: 'cockpit/chat/input/angular', assistantId: 'c-input', urlKey: 'streaming', field: 'streamingAssistantId' },
   { dir: 'cockpit/chat/interrupts/angular', assistantId: 'c-interrupts', urlKey: 'streaming', field: 'streamingAssistantId' },

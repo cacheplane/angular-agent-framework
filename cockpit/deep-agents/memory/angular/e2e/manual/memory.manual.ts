@@ -1,3 +1,8 @@
+// SPDX-License-Identifier: MIT
+//
+// Live-model manual check. Not run by CI (playwright matches *.spec.ts only).
+//   npx nx run cockpit:serve-memory
+//   npx playwright test cockpit/deep-agents/memory/angular/e2e/manual
 import { expect, test } from '@playwright/test';
 
 test.describe('Deep Agents Memory Example', () => {
@@ -6,16 +11,21 @@ test.describe('Deep Agents Memory Example', () => {
     await page.waitForSelector('app-da-memory', { state: 'attached' });
   });
 
-  test('renders the chat interface with memory sidebar', async ({ page }) => {
+  test('renders the chat interface with an empty memory panel', async ({ page }) => {
     await expect(page.locator('chat')).toBeVisible();
     await expect(page.locator('textarea[name="messageText"]')).toBeVisible();
-    await expect(page.locator('text=No facts learned yet')).toBeVisible();
+    await expect(page.locator('text=Nothing remembered yet')).toBeVisible();
   });
 
-  test('sends a message and receives a response', async ({ page }) => {
-    await page.fill('textarea[name="messageText"]', 'My name is Alex and I love hiking.');
-    await page.click('button[type="submit"]');
-    await expect(page.locator('.chat-md').first()).toBeVisible({ timeout: 30000 });
-    await expect(page.locator('.chat-md').first()).not.toBeEmpty({ timeout: 30000 });
+  test('remembers across a reload', async ({ page }) => {
+    await page.getByRole('button', { name: 'Tell it about your operation' }).click();
+    await expect(page.locator('chat-message[data-role="assistant"]').last()).toBeVisible({
+      timeout: 120000,
+    });
+
+    await page.reload();
+    await page.getByRole('button', { name: 'Start over and ask what it knows' }).click();
+    await expect(page.locator('[data-testid="memory-file"]')).toBeVisible({ timeout: 120000 });
+    await expect(page.locator('[data-testid="memory-line"]').first()).toBeVisible();
   });
 });

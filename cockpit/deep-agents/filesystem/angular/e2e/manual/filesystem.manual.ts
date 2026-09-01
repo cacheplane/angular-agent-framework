@@ -1,3 +1,8 @@
+// SPDX-License-Identifier: MIT
+//
+// Live-model manual check. Not run by CI (playwright matches *.spec.ts only).
+//   npx nx run cockpit:serve-filesystem
+//   npx playwright test cockpit/deep-agents/filesystem/angular/e2e/manual
 import { expect, test } from '@playwright/test';
 
 test.describe('Deep Agents Filesystem Example', () => {
@@ -6,16 +11,20 @@ test.describe('Deep Agents Filesystem Example', () => {
     await page.waitForSelector('app-filesystem', { state: 'attached' });
   });
 
-  test('renders the chat interface with file operations sidebar', async ({ page }) => {
+  test('renders the chat interface with an empty workspace', async ({ page }) => {
     await expect(page.locator('chat')).toBeVisible();
     await expect(page.locator('textarea[name="messageText"]')).toBeVisible();
-    await expect(page.locator('text=No file operations yet')).toBeVisible();
+    await expect(page.locator('text=No files yet')).toBeVisible();
   });
 
-  test('sends a message and receives a response', async ({ page }) => {
-    await page.fill('textarea[name="messageText"]', 'Read the file at workspace/hello.txt');
-    await page.click('button[type="submit"]');
-    await expect(page.locator('.chat-md').first()).toBeVisible({ timeout: 30000 });
-    await expect(page.locator('.chat-md').first()).not.toBeEmpty({ timeout: 30000 });
+  test('writes notes, pauses on the report, and lands it after approval', async ({ page }) => {
+    await page.getByRole('button', { name: 'Runway note for KASE' }).click();
+
+    await expect(page.locator('[data-testid="file-row"]').first()).toBeVisible({ timeout: 120000 });
+    await expect(page.locator('chat-interrupt-panel')).toBeVisible({ timeout: 120000 });
+    await expect(page.locator('text=awaiting approval')).toBeVisible();
+
+    await page.locator('chat-interrupt-panel').getByRole('button', { name: /^Accept$/ }).click();
+    await expect(page.locator('[data-testid="file-row"]')).toHaveCount(2, { timeout: 120000 });
   });
 });

@@ -30,6 +30,7 @@ export const deepAgentsSubagentsAngularModule: CockpitCapabilityModule = {
     'cockpit/deep-agents/subagents/angular/prompts/subagents.md',
   ],
   codeAssetPaths: [
-    'cockpit/deep-agents/subagents/angular/src/app.component.ts',
+    'cockpit/deep-agents/subagents/angular/src/app/subagents.component.ts',
+    'cockpit/deep-agents/subagents/angular/src/app/app.config.ts',
   ],
 };

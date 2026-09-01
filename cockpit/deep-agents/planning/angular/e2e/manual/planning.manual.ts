@@ -1,3 +1,8 @@
+// SPDX-License-Identifier: MIT
+//
+// Live-model manual check. Not run by CI (playwright matches *.spec.ts only).
+//   npx nx run cockpit:serve-planning
+//   npx playwright test cockpit/deep-agents/planning/angular/e2e/manual
 import { expect, test } from '@playwright/test';
 
 test.describe('Deep Agents Planning Example', () => {
@@ -6,16 +11,20 @@ test.describe('Deep Agents Planning Example', () => {
     await page.waitForSelector('app-planning', { state: 'attached' });
   });
 
-  test('renders the chat interface with plan sidebar', async ({ page }) => {
+  test('renders the chat interface with an empty plan panel', async ({ page }) => {
     await expect(page.locator('chat')).toBeVisible();
     await expect(page.locator('textarea[name="messageText"]')).toBeVisible();
     await expect(page.locator('text=No plan yet')).toBeVisible();
   });
 
-  test('sends a message and receives a response', async ({ page }) => {
-    await page.fill('textarea[name="messageText"]', 'What are the steps to build a REST API?');
-    await page.click('button[type="submit"]');
-    await expect(page.locator('.chat-md').first()).toBeVisible({ timeout: 30000 });
-    await expect(page.locator('.chat-md').first()).not.toBeEmpty({ timeout: 30000 });
+  test('writes a todo list and works it to completion', async ({ page }) => {
+    await page.getByRole('button', { name: 'Dispatch brief: KSFO to KASE' }).click();
+
+    const rows = page.locator('[data-testid="todo-row"]');
+    await expect(rows.first()).toBeVisible({ timeout: 60000 });
+    await expect(page.locator('[data-testid="todo-row"][data-status="completed"]').first()).toBeVisible({
+      timeout: 120000,
+    });
+    await expect(page.locator('[data-testid="todo-progress"]')).toBeVisible();
   });
 });

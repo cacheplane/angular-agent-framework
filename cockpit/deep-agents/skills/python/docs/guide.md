@@ -1,163 +1,128 @@
-# Multi-Skill Agent with Angular
+# Skills with Deep Agents
 
 <Summary>
-Build a chat interface that shows real-time skill invocations using `provideAgent()` and
-`injectAgent()` from `@threadplane/langgraph`. The agent selects from specialized tools (calculator, word counter,
-summarizer) based on the user's request, and the sidebar displays each skill invocation as a card.
+Give an agent procedures it loads on demand. A skill is a folder with a `SKILL.md`;
+`SkillsMiddleware` puts only the frontmatter — a name and a description — in the system prompt
+and leaves the body on the filesystem until a request matches. Rendering both halves is what
+makes progressive disclosure visible rather than theoretical.
 </Summary>
 
 <Prompt>
-Add a skill invocation sidebar to this Angular component using `provideAgent()` and `injectAgent()` from `@threadplane/langgraph`. Use `stream.messages()` to access tool call data, derive `skillInvocations` with `computed()`, and bind them to the sidebar beside the `<chat>` component from `@threadplane/chat`.
+Add a skill-index panel beside the `<chat>` component. Read `skills_metadata` from
+`agent.customEvents()`, and mark each skill as opened when `agent.toolCalls()` shows a
+`read_file` under that skill's directory.
 </Prompt>
 
+<Callout type="info" title="Provider setup lives in the LangGraph quickstart">
+This guide assumes `provideAgent()` is already configured. If it is not, work through the
+[LangGraph quickstart](/docs/langgraph/getting-started/quickstart) first.
+</Callout>
+
 <Steps>
-<Step title="Configure the provider">
+<Step title="Write a SKILL.md">
 
-Set up `provideAgent()` in your app config with the LangGraph API URL:
+The frontmatter is the part the model sees first, so the `description` is doing the routing.
+Write it as a matching rule, not as a summary:
 
-```typescript
-// app.config.ts
-import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@threadplane/langgraph';
+```markdown
+---
+name: runway-analysis
+description: Decide whether a runway is long enough for a given aircraft at a given field elevation. Use when the user asks about runway suitability, takeoff or landing distance, or operating out of a high-elevation field.
+license: MIT
+---
 
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideAgent({
-      apiUrl: 'https://your-deployment.langgraph.app',
-      assistantId: 'da-skills',
-    }),
-  ],
-};
+# Runway Analysis
+
+## Procedure
+
+1. Get the field elevation and the longest runway length.
+2. Read `/skills/runway-analysis/reference/margins.md` for the margin table.
+   Do not work from memory — the table is the authority.
+3. Compare, then state the verdict and the two numbers you compared.
 ```
 
-This makes the configured agent available to all `injectAgent()` calls in your app.
+Step 2 is the second stage of the disclosure. The reference file costs nothing until the
+`SKILL.md` sends the agent to it.
 
 </Step>
-<Step title="Create the streaming resource">
+<Step title="Mount the skills somewhere a server can serve">
 
-In your component, call `injectAgent()` to retrieve the configured skills agent:
-
-```typescript
-// skills.component.ts
-import { injectAgent } from '@threadplane/langgraph';
-
-export class SkillsComponent {
-  protected readonly stream = injectAgent();
-}
-```
-
-The resource manages the connection, message history, loading state, and errors automatically.
-
-</Step>
-<Step title="Derive skill invocations with computed()">
-
-Use Angular's `computed()` to reactively extract skill invocations from tool calls in `stream.messages()`:
-
-```typescript
-import { computed } from '@angular/core';
-import { injectAgent } from '@threadplane/langgraph';
-
-interface SkillInvocation {
-  skillName: string;
-  args: string;
-  result?: string;
-}
-
-export class SkillsComponent {
-  protected readonly stream = injectAgent();
-
-  skillInvocations = computed(() => {
-    const msgs = this.stream.messages();
-    const invocations: SkillInvocation[] = [];
-    for (const m of msgs) {
-      if ((m as any).tool_calls) {
-        for (const tc of (m as any).tool_calls) {
-          invocations.push({
-            skillName: tc.name,
-            args: JSON.stringify(tc.args),
-            result: tc.output,
-          });
-        }
-      }
-    }
-    return invocations;
-  });
-}
-```
-
-Each tool call in an AI message maps to a skill invocation card. The `result` field is populated once the tool returns.
-
-<Tip>
-`stream.messages()` is a signal. `computed()` recalculates `skillInvocations` automatically whenever new messages arrive — no manual subscription needed.
-</Tip>
-
-</Step>
-<Step title="Build the template with skill invocation sidebar">
-
-Use the `<chat>` component from `@threadplane/chat` and render a sibling sidebar:
-
-```html
-<chat [agent]="stream" />
-
-<aside>
-    <h3>Skill Invocations</h3>
-    @for (inv of skillInvocations(); track $index) {
-      <div>
-        <span>{{ inv.skillName }}</span>
-        <span>{{ inv.result ? 'done' : 'running…' }}</span>
-        <div>{{ inv.args }}</div>
-        @if (inv.result) {
-          <div>{{ inv.result }}</div>
-        }
-      </div>
-    }
-    @empty {
-      <p>Ask the agent to calculate, count words, or summarize text.</p>
-    }
-</aside>
-```
-
-Each invocation card shows the skill name, input args, and result once available.
-
-</Step>
-<Step title="The LangGraph skills backend">
-
-The backend defines three tool skills and uses a tool-calling agent loop with `ToolNode`:
+`SkillsMiddleware` reads through a backend, and the choice of backend is a deployment decision.
+`FilesystemBackend` documents itself as inappropriate for servers and HTTP APIs, which rules it
+out for anything with a public URL. Seeding a process-local store and mounting it read-only
+keeps the content in the repo without giving the agent the host:
 
 ```python
-# graph.py
-from langchain_core.tools import tool
-from langgraph.prebuilt import ToolNode
+def _seed_skills_store() -> InMemoryStore:
+    store = InMemoryStore()
+    backend = StoreBackend(namespace=lambda _runtime: SKILLS_NAMESPACE, store=store)
+    for path in sorted(SKILLS_DIR.rglob("*.md")):
+        backend.write(f"/{path.relative_to(SKILLS_DIR).as_posix()}", path.read_text())
+    return store
 
-@tool
-def calculator(expression: str) -> str:
-    """Evaluate a mathematical expression."""
-    return str(eval(expression, {"__builtins__": {}}, {}))
-
-@tool
-def word_count(text: str) -> str:
-    """Count the number of words in text."""
-    return f"{len(text.split())} words"
-
-@tool
-def summarize(text: str) -> str:
-    """Summarize text in one sentence."""
-    sentences = [s.strip() for s in text.split(".") if s.strip()]
-    return sentences[0] + "." if sentences else "No content."
-
-# Bind all tools to the LLM
-llm = ChatOpenAI(model="gpt-5-mini").bind_tools([calculator, word_count, summarize])
+graph = create_deep_agent(
+    ...,
+    backend=CompositeBackend(
+        default=StateBackend(),
+        routes={"/skills/": StoreBackend(namespace=..., store=SKILLS_STORE)},
+    ),
+    skills=["/skills/"],
+)
 ```
 
-The agent selects which skill to call based on the user's request. `ToolNode` dispatches the call and returns the result as a `ToolMessage`.
+<Callout type="warning" title="CompositeBackend strips the route prefix">
+Seed the store at `/runway-analysis/SKILL.md`, not `/skills/runway-analysis/SKILL.md`. The
+composite removes the matched prefix before delegating and re-adds it to the result, so a store
+seeded with the prefix surfaces to the agent as `/skills/skills/runway-analysis/...` and the
+skill scan finds nothing.
+</Callout>
 
-<Tip>
-The agent loops back after each tool call, allowing it to call multiple skills in a single turn if the user's request requires it (e.g., "count the words in this summary first, then calculate 10% of that number").
-</Tip>
+</Step>
+<Step title="Tell the model the index is an index">
+
+The model has the names and descriptions and nothing else, so the prompt has to say what to do
+with them:
+
+```markdown
+Your procedures are not in this prompt — they are skills under `/skills/`.
+When a request matches a skill, read its `SKILL.md` before you start, and
+follow the procedure it gives you. If the `SKILL.md` points at another file,
+read that too — the numbers in a reference file are the authority, and your
+recollection is not.
+```
+
+</Step>
+<Step title="Render both halves">
+
+`skills_metadata` is annotated `PrivateStateAttr`, so it is absent from the `values` stream and
+needs the same custom-event shim as the memory capability. What the agent actually opened needs
+no shim at all — `read_file` is an ordinary tool call:
+
+```typescript
+private readonly openedPaths = computed<string[]>(() => {
+  const paths: string[] = [];
+  for (const call of this.agent.toolCalls()) {
+    if (call.name !== 'read_file') continue;
+    const path = (call.args as Record<string, unknown> | undefined)?.['file_path'];
+    if (typeof path === 'string' && !paths.includes(path)) paths.push(path);
+  }
+  return paths;
+});
+```
+
+Match those against each skill's directory and the panel shows exactly what progressive
+disclosure bought: one skill opened, the rest still on disk.
 
 </Step>
 </Steps>
 
 <Tip>
-The `@empty` block in `@for` renders when no skill invocations have occurred yet — a clean way to show a placeholder before the user submits their first request.
+The strongest test of a skills setup is the skill that does NOT get opened. If every skill's
+files are read on every request, the index is not routing anything and the descriptions need
+work.
 </Tip>
+
+<Related>
+- [Deep Agents Memory](/deep-agents/core-capabilities/memory/overview/python) — the same private-state visibility problem, for `memory_contents`
+- [Deep Agents Filesystem](/deep-agents/core-capabilities/filesystem/overview/python) — the backends the skill mount is built from
+</Related>

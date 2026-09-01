@@ -2,10 +2,61 @@
   "fixtures": [
     {
       "match": {
-        "userMessage": "Hello"
+        "userMessage": "Work up a runway suitability note for KASE",
+        "hasToolResult": true,
+        "turnIndex": 1
       },
       "response": {
-        "content": "Hello! How can I help you today? I can read or write files in the workspace\u2014tell me what you'd like to do (e.g., \"read file /path/to/file\" or \"write file /path/to/file with content ...\")."
+        "toolCalls": [
+          {
+            "name": "write_file",
+            "arguments": "{\"file_path\":\"/notes/kase-data.md\",\"content\":\"KASE Field Elevation: 7,820 ft\\nKASE Longest Runway: 8,006 ft\"}"
+          }
+        ]
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Work up a runway suitability note for KASE",
+        "hasToolResult": true,
+        "turnIndex": 2
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "write_file",
+            "arguments": "{\"file_path\":\"/reports/kase-runway.md\",\"content\":\"Runway Suitability Note: KASE (Aspen/Pitkin County)\\n\\n- Field elevation is 7,820 ft, which is considered high altitude and will impact aircraft performance (longer takeoff/landing distances required).\\n- The longest runway is 8,006 ft, which is adequate for many business jets and regional aircraft, but performance calculations are critical due to elevation and possible temperature effects.\\n- Operators should verify aircraft-specific requirements and consider density altitude, especially in warm weather or with heavy loads.\"}"
+          }
+        ]
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Work up a runway suitability note for KASE",
+        "hasToolResult": true,
+        "turnIndex": 3
+      },
+      "response": {
+        "content": "I saved the raw data lookups for KASE (field elevation and runway length) to /notes/kase-data.md. The finished runway suitability note is in /reports/kase-runway.md."
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Work up a runway suitability note for KASE",
+        "hasToolResult": false,
+        "turnIndex": 0
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "lookup_field_elevation",
+            "arguments": "{\"airport\": \"KASE\"}"
+          },
+          {
+            "name": "lookup_runway_length",
+            "arguments": "{\"airport\": \"KASE\"}"
+          }
+        ]
       }
     }
   ]

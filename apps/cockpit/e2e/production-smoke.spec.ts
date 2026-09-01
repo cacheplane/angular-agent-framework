@@ -35,7 +35,6 @@ const CHAT_CAPABILITIES = [
   'deep-agents/subagents',
   'deep-agents/memory',
   'deep-agents/skills',
-  'deep-agents/sandboxes',
   'chat/tool-calls',
   'chat/subagents',
   'chat/threads',
