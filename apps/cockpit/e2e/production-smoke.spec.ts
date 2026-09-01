@@ -124,6 +124,44 @@ test.describe('Production: cockpit shell loads', () => {
     );
     expect(overviewLinks).toHaveLength(0);
   });
+
+  test('representative runtime reports Ready after Recheck and records Activity', async ({
+    page,
+  }) => {
+    test.setTimeout(45_000);
+    const runtimeRoute = `${COCKPIT_URL}/langgraph/core-capabilities/streaming/overview/python`;
+    await page.goto(runtimeRoute, { timeout: 15_000 });
+
+    const ready = page.getByText('Ready', { exact: true });
+    await expect(ready).toBeVisible({ timeout: 15_000 });
+
+    await page.getByRole('button', { name: 'Activity' }).click();
+    const checkEvents = page.locator(
+      '[data-activity-kind="runtime_check_requested"]'
+    );
+    const readyEvents = page.locator('[data-activity-kind="runtime_ready"]');
+    const initialCheckEvents = await checkEvents.count();
+    const initialReadyEvents = await readyEvents.count();
+    await page.getByRole('button', { name: 'Close Activity' }).click();
+
+    const checkedAt = page.locator('[data-runtime-checked-at]');
+    const checkedAtBefore = await checkedAt.textContent();
+    await page.getByRole('button', { name: 'Recheck' }).click();
+    await expect
+      .poll(() => checkedAt.textContent(), { timeout: 15_000 })
+      .not.toBe(checkedAtBefore);
+    await expect(ready).toBeVisible({ timeout: 15_000 });
+
+    await page.getByRole('button', { name: 'Activity' }).click();
+    await expect(checkEvents).toHaveCount(initialCheckEvents + 1);
+    await expect(readyEvents).toHaveCount(initialReadyEvents + 1);
+  });
+
+  test('favicon resolves after redirects', async ({ request }) => {
+    const response = await request.get(`${COCKPIT_URL}/favicon.ico`);
+
+    expect(response.status()).toBeLessThan(400);
+  });
 });
 
 test.describe('Production: canonical demo sends runtime telemetry', () => {

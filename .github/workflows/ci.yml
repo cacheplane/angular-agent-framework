@@ -799,6 +799,19 @@ jobs:
         run: npx nx e2e website --skip-nx-cache
         env:
           BASE_URL: https://threadplane.ai
+      - name: Build and assemble Angular examples
+        if: steps.freshness.outputs.stale != 'true' && steps.examples_changed.outputs.changed == 'true'
+        run: npx tsx scripts/assemble-examples.ts
+      - name: Deploy Angular examples to Vercel (production)
+        if: steps.freshness.outputs.stale != 'true' && steps.examples_changed.outputs.changed == 'true'
+        working-directory: deploy/examples
+        run: |
+          mkdir -p .vercel
+          cat > .vercel/project.json <<EOF
+          {"projectId":"${{ secrets.VERCEL_EXAMPLES_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"threadplane-examples"}
+          EOF
+          npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+          npx vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
       - name: Prepare cockpit Vercel project
         if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true'
         run: |
@@ -819,20 +832,6 @@ jobs:
         if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true'
         run: |
           npx tsx apps/cockpit/scripts/deploy-smoke.ts --url https://cockpit.threadplane.ai --retries 20 --retry-delay-ms 5000
-
-      - name: Build and assemble Angular examples
-        if: steps.freshness.outputs.stale != 'true' && steps.examples_changed.outputs.changed == 'true'
-        run: npx tsx scripts/assemble-examples.ts
-      - name: Deploy Angular examples to Vercel (production)
-        if: steps.freshness.outputs.stale != 'true' && steps.examples_changed.outputs.changed == 'true'
-        working-directory: deploy/examples
-        run: |
-          mkdir -p .vercel
-          cat > .vercel/project.json <<EOF
-          {"projectId":"${{ secrets.VERCEL_EXAMPLES_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"threadplane-examples"}
-          EOF
-          npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-          npx vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
 
   demo-deploy:
     name: Canonical demo → Vercel

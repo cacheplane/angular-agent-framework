@@ -179,6 +179,59 @@ describe('CI workflow', () => {
     );
   });
 
+  it('treats the Cockpit runtime bridge as an Angular example deployment change', async () => {
+    const deployJob = await readDeployJob();
+    const examplesDetection = deployJob.slice(
+      deployJob.indexOf('Check if examples changed'),
+      deployJob.indexOf('- uses: actions/setup-node')
+    );
+    const patterns = [...examplesDetection.matchAll(/grep -E '([^']+)'/g)].map(
+      (match) => new RegExp(match[1])
+    );
+
+    assert.ok(
+      patterns.some((pattern) =>
+        pattern.test('libs/cockpit-runtime-bridge/src/index.ts')
+      )
+    );
+  });
+
+  it('deploys changed runtime bridges before the cockpit shell and preserves fail-fast ordering', async () => {
+    const deployJob = await readDeployJob();
+    const assembleExamples = deployJob.indexOf(
+      'Build and assemble Angular examples'
+    );
+    const deployExamples = deployJob.indexOf(
+      'Deploy Angular examples to Vercel (production)'
+    );
+    const prepareCockpit = deployJob.indexOf('Prepare cockpit Vercel project');
+    const deployCockpit = deployJob.indexOf(
+      'Build and deploy cockpit to Vercel (production)'
+    );
+
+    for (const [label, position] of [
+      ['example assembly', assembleExamples],
+      ['example deployment', deployExamples],
+      ['cockpit preparation', prepareCockpit],
+      ['cockpit deployment', deployCockpit],
+    ]) {
+      assert.notEqual(position, -1, `expected ${label} in the deploy job`);
+    }
+    assert.ok(assembleExamples < deployExamples);
+    assert.ok(deployExamples < prepareCockpit);
+    assert.ok(prepareCockpit < deployCockpit);
+
+    const examplesBeforeCockpit = deployJob.slice(
+      assembleExamples,
+      prepareCockpit
+    );
+    assert.doesNotMatch(
+      examplesBeforeCockpit,
+      /continue-on-error:\s*true/,
+      'example build/deploy must fail the linear job before Cockpit promotion'
+    );
+  });
+
   it('runs production smoke after the canonical demo deploy', async () => {
     const productionSmokeJob = await readProductionSmokeJob();
 

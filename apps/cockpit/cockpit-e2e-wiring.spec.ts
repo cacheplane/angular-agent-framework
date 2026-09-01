@@ -111,6 +111,25 @@ function activeCockpitE2eWiring(): E2eWiring[] {
 }
 
 describe('cockpit e2e wiring', () => {
+  it('keeps production smoke focused on runtime readiness and a safe recheck', () => {
+    const smoke = readRepoFile('apps/cockpit/e2e/production-smoke.spec.ts');
+
+    expect(smoke).toContain("getByText('Ready', { exact: true })");
+    expect(smoke).toContain("getByRole('button', { name: 'Recheck' })");
+    expect(smoke).toContain('data-activity-kind="runtime_check_requested"');
+    expect(smoke).toContain('data-activity-kind="runtime_ready"');
+    expect(smoke).not.toContain(
+      "getByRole('button', { name: 'Reload runtime' })"
+    );
+  });
+
+  it('keeps the production favicon redirect covered', () => {
+    const smoke = readRepoFile('apps/cockpit/e2e/production-smoke.spec.ts');
+
+    expect(smoke).toContain('request.get(`${COCKPIT_URL}/favicon.ico`)');
+    expect(smoke).toContain('expect(response.status()).toBeLessThan(400)');
+  });
+
   it('does not leave cockpit e2e spec files outside Nx e2e targets', () => {
     const projects = new Map(
       listProjectJsonFiles(join(repoRoot, 'cockpit')).map((projectJsonPath) => {
