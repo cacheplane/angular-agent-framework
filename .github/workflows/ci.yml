@@ -650,6 +650,10 @@ jobs:
     runs-on: ubuntu-latest
     # Only deploy on pushes to main, not on pull requests
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      # Needed to advance refs/deploy/last-promoted (see "Resolve deploy
+      # baseline"). Nothing else in this job writes to the repo.
+      contents: write
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -675,14 +679,53 @@ jobs:
           else
             echo "stale=false" >> "$GITHUB_OUTPUT"
           fi
-      - name: Detect deploy-relevant changes
-        id: deploy_preflight
+      - name: Resolve deploy baseline
+        id: deploy_baseline
         run: |
-          base_sha="${{ github.event.before }}"
+          # Gating on `github.event.before..sha` asks "what changed in THIS
+          # push", which silently drops work whenever a run does not reach the
+          # deploy steps. Pushes to main do not cancel in-progress runs, but
+          # GitHub keeps only the newest QUEUED run per concurrency group and
+          # cancels the rest, and a run can also fail on an unrelated job — in
+          # both cases that push's diff range is never re-examined. The next
+          # push only diffs its own range, so the skipped change stays
+          # undeployed until some later commit happens to touch a gated path.
+          #
+          # Seen live 2026-08-31: #902 (cockpit/ag-ui/subagents/angular) failed
+          # on an unrelated website e2e regression, and the two green runs after
+          # it touched no gated path — so the fix sat on main, undeployed,
+          # alongside the cockpit/runtimes examples from two culled runs. All
+          # three shipped only when #907 incidentally touched a gated file.
+          #
+          # refs/deploy/last-promoted advances only after a fully successful
+          # deploy job, so this range covers everything not yet promoted.
+          # Falls back to the old behaviour when the marker is absent
+          # (first run after this lands) or no longer resolves (history rewrite).
+          base_sha=""
+          marker="$(git ls-remote origin refs/deploy/last-promoted 2>/dev/null | cut -f1)"
+          if [ -n "$marker" ] && git cat-file -e "${marker}^{commit}" 2>/dev/null; then
+            base_sha="$marker"
+            echo "::notice::Deploy baseline: last promoted commit ${marker}."
+          else
+            base_sha="${{ github.event.before }}"
+            echo "::notice::No usable refs/deploy/last-promoted marker; falling back to github.event.before (${base_sha})."
+          fi
           head_sha="${{ github.sha }}"
           if [ -z "$base_sha" ] || [ "$base_sha" = "0000000000000000000000000000000000000000" ]; then
             base_sha="$(git rev-parse "$head_sha^")"
           fi
+          # Guarantee every consumer gets a resolvable commit: the fallback can
+          # name a commit this clone does not have (force-push, deleted branch).
+          if ! git cat-file -e "${base_sha}^{commit}" 2>/dev/null; then
+            echo "::warning::Deploy baseline ${base_sha} does not resolve; using ${head_sha}^ instead."
+            base_sha="$(git rev-parse "$head_sha^")"
+          fi
+          echo "base=$base_sha" >> "$GITHUB_OUTPUT"
+      - name: Detect deploy-relevant changes
+        id: deploy_preflight
+        run: |
+          base_sha="${{ steps.deploy_baseline.outputs.base }}"
+          head_sha="${{ github.sha }}"
 
           if ! git cat-file -e "$base_sha^{commit}" 2>/dev/null; then
             git fetch --no-tags origin "$base_sha"
@@ -702,11 +745,8 @@ jobs:
       - name: Check if examples changed
         id: examples_changed
         run: |
-          base_sha="${{ github.event.before }}"
+          base_sha="${{ steps.deploy_baseline.outputs.base }}"
           head_sha="${{ github.sha }}"
-          if [ -z "$base_sha" ] || [ "$base_sha" = "0000000000000000000000000000000000000000" ]; then
-            base_sha="$(git rev-parse "$head_sha^")"
-          fi
           changed_files="$(git diff --name-only "$base_sha" "$head_sha")"
           examples_changed=false
           if printf '%s\n' "$changed_files" | grep -E '^cockpit/.*/angular/' >/dev/null; then
@@ -739,11 +779,8 @@ jobs:
         if: steps.deploy_preflight.outputs.relevant == 'true'
         id: affected
         run: |
-          base_sha="${{ github.event.before }}"
+          base_sha="${{ steps.deploy_baseline.outputs.base }}"
           head_sha="${{ github.sha }}"
-          if [ -z "$base_sha" ] || [ "$base_sha" = "0000000000000000000000000000000000000000" ]; then
-            base_sha="$(git rev-parse "$head_sha^")"
-          fi
 
           if ! git cat-file -e "$base_sha^{commit}" 2>/dev/null; then
             git fetch --no-tags origin "$base_sha"
@@ -839,6 +876,14 @@ jobs:
           EOF
           npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           npx vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+
+      # Advance only when the whole job succeeded and actually promoted. On a
+      # stale run, a failure, or a partial deploy the marker stays put, so the
+      # next run's range still covers whatever did not ship. Never `always()`:
+      # advancing past unshipped work is the bug this step exists to prevent.
+      - name: Record this commit as promoted
+        if: success() && steps.freshness.outputs.stale != 'true'
+        run: git push origin --force "${{ github.sha }}:refs/deploy/last-promoted"
 
   demo-deploy:
     name: Canonical demo → Vercel
