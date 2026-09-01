@@ -15,7 +15,9 @@ the homepage wall).
 Each page's FIRST FeatureBlock swaps its static BrowserFrame mock for
 `MediumSwitcher`, panes built server-side via the homepage's `buildPanes`
 pattern (extract that helper from `app/page.tsx` into a shared module rather
-than copy it — it is currently page-local). The SECOND FeatureBlock keeps its
+than copy it — it is currently page-local). (/ag-ui deviates: its first
+block's visual is the real BackendsGrid; the switcher replaces the static
+mock on its second block instead.) The SECOND FeatureBlock keeps its
 CodeShowcase untouched.
 
 New `SECTION_MEDIA` entries (validation via the existing section-media.spec

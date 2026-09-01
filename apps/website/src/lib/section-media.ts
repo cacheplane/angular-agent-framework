@@ -113,10 +113,10 @@ const catalog = views({
   },
 
   // The four library pages (/langgraph, /chat, /ag-ui, /render) reuse this
-  // table for their first FeatureBlock's medium switcher. Code sources below
-  // are lifted verbatim from each page's current static mock content — Task
-  // 3 of the library-pages plan deletes those page-local copies once the
-  // switcher is wired in, so for now the same source lives in both places.
+  // table for their first FeatureBlock's medium switcher — except /ag-ui,
+  // whose switcher replaces its SECOND block's mock (see libAgUi below). The
+  // pages consume these entries via buildPanes; the page-local static mocks
+  // they were lifted from are gone.
   libLanggraph: {
     video: LANGGRAPH_CLIP,
     live: { featured: 'tell-me-about-coral' },
@@ -153,7 +153,9 @@ export class ChatComponent {
   libAgUi: {
     video: AG_UI_CLIP,
     // No live tab: the demo host speaks LangGraph, and wiring AG-UI into it
-    // live is out of scope for this arc.
+    // live is out of scope for this arc. Unlike the other three pages, this
+    // switcher lands on /ag-ui's SECOND FeatureBlock — its first block's
+    // visual is the real BackendsGrid, not a mock.
     code: [
       {
         label: 'app.config.ts',
@@ -186,7 +188,9 @@ export class App {
     live: { featured: 'generative-ui-contact-form' },
     code: [
       {
-        label: 'render · spec → component',
+        // 'json' isn't in SolutionCode's language union (typescript | python
+        // | html), so this stays tagged typescript for Shiki highlighting.
+        label: 'spec.json',
         language: 'typescript',
         source: `{
   "type": "card",

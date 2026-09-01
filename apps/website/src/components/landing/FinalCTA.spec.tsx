@@ -11,7 +11,7 @@ vi.mock('../../lib/analytics/client', () => ({
 }));
 
 describe('FinalCTA', () => {
-  it('defaults to the tinted surface (used by 8 non-home pages)', () => {
+  it('defaults to the tinted surface (used by 4 non-home pages)', () => {
     const { container } = render(<FinalCTA />);
     expect(
       container.querySelector('[data-ui="section"]')?.getAttribute('data-surface'),
