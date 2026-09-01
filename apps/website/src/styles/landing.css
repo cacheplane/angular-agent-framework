@@ -986,16 +986,19 @@
 }
 
 /* HighlightedCode — components/landing/HighlightedCode.tsx
- * `.shiki[data-ui="highlighted-code"]` (specificity 0,2,0) intentionally beats
- * the plain `.shiki` rule in docs.css (0,1,0) regardless of stylesheet import
- * order, so this landing-only override of margin/padding/font-size/line-height
- * keeps winning the way the inline style used to. */
+ * The wrapper <div> owns only type scale; the frame around it
+ * (.home-code-frame, .lg-show-card, ...) owns radius and clipping. Padding
+ * belongs on the <pre>, which is where Shiki's dark background lives — putting
+ * it here would inset the code from a light gutter instead. The base
+ * `pre.shiki` padding is in global.css; this is the tighter landing scale. */
 .shiki[data-ui="highlighted-code"] {
   margin: 0;
   border-radius: 0;
-  padding: 16px 20px;
   font-size: 0.78rem;
   line-height: 1.65;
+}
+.shiki[data-ui="highlighted-code"] > pre.shiki {
+  padding: 16px 20px;
 }
 
 /* RenderCodeShowcase — components/landing/render/RenderCodeShowcase.tsx */
