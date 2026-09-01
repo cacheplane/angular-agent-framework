@@ -467,14 +467,6 @@ export function childStreamRefFromNamespace(namespace: string[]): ChildStreamRef
   return { key: first, name: colon > 0 ? first.slice(0, colon) : first, kind: 'subgraph' };
 }
 
-export function extractToolCallIdFromNamespace(namespace: string[] | undefined): string | undefined {
-  if (!namespace) return undefined;
-  for (const segment of namespace) {
-    if (segment.startsWith('tools:')) return segment.slice(6);
-  }
-  return undefined;
-}
-
 function parseToolCallArgs(args: Record<string, unknown> | string): Record<string, unknown> {
   if (typeof args !== 'string') return args;
   try {
