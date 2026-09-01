@@ -125,6 +125,47 @@ describe('classifyFromAffected — lint-only files', () => {
   });
 });
 
+describe('classifyFromAffected — rootless cockpit specs', () => {
+  // These specs live at cockpit/<product>/ — outside every project root — so
+  // `nx affected` reports only the untagged `root` project for them. Without
+  // the path rule they produced an empty scope and skipped the cockpit job
+  // that actually runs them.
+  for (const file of [
+    'cockpit/deep-agents/footprint.spec.ts',
+    'cockpit/chat/footprint.spec.ts',
+    'cockpit/render/footprint.spec.ts',
+    'cockpit/chat/matrix.spec.ts',
+    'cockpit/langgraph/matrix.spec.ts',
+  ]) {
+    it(`${file} flips the cockpit scope even when nx reports only \`root\``, () => {
+      const scope = classifyFromAffected(
+        [file],
+        [{ name: 'root', tags: ['npm:private'] }]
+      );
+      assert.equal(scope.cockpit, true);
+    });
+  }
+
+  it('does not flip cockpit for specs that already live inside a project root', () => {
+    const scope = classifyFromAffected(
+      ['cockpit/chat/messages/angular/e2e/c-messages.spec.ts'],
+      [{ name: 'root', tags: ['npm:private'] }]
+    );
+    assert.equal(scope.cockpit, false);
+  });
+
+  it('leaves the e2e / smoke / deploy scopes alone', () => {
+    const scope = classifyFromAffected(
+      ['cockpit/deep-agents/footprint.spec.ts'],
+      [{ name: 'root', tags: ['npm:private'] }]
+    );
+    assert.equal(scope.cockpit_e2e, false);
+    assert.equal(scope.cockpit_smoke, false);
+    assert.equal(scope.cockpit_deploy_smoke, false);
+    assert.equal(scope.cockpit_examples, false);
+  });
+});
+
 describe('classifyFromAffected — publishable lib broadcast', () => {
   it('publishable lib triggers its existing scopes plus angular compatibility', () => {
     const scope = classifyFromAffected(

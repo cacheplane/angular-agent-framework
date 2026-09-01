@@ -368,6 +368,24 @@ describe('CI workflow', () => {
     }
   });
 
+  it('runs the cockpit sibling libraries that own vitest specs', async () => {
+    // `nx test cockpit` does not walk `^test`, and the `library` job runs a
+    // hardcoded LIBS list that excludes both of these. If they are dropped
+    // from this run-many their specs stop executing silently.
+    const cockpitJob = readJobBlock(await readWorkflow(), 'cockpit');
+    const runMany = cockpitJob.match(/npx nx run-many -t test --projects=(\S+)/);
+
+    assert.ok(runMany, 'cockpit job should run tests via nx run-many');
+
+    const projects = runMany[1].split(',');
+    for (const project of ['cockpit', 'cockpit-docs', 'cockpit-registry']) {
+      assert.ok(
+        projects.includes(project),
+        `cockpit job should run \`nx test ${project}\``
+      );
+    }
+  });
+
   it('lets the cockpit e2e summary inspect CI scope outputs', async () => {
     const cockpitE2eSummaryJob = await readCockpitE2eSummaryJob();
 

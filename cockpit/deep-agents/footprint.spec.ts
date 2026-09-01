@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 const topicNames = [
@@ -10,34 +11,24 @@ const topicNames = [
   'skills',
 ] as const;
 
-const pageNames = ['overview', 'build', 'prompts', 'code', 'testing'] as const;
+// Resolve from this file, not process.cwd(). These specs run under
+// `nx test cockpit`, whose cwd is apps/cockpit — a cwd-relative root silently
+// points at apps/cockpit/cockpit/... and turns every existence assertion into
+// a vacuous pass (or an unrelated ENOENT).
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const deepAgentsRoot = path.join(repoRoot, 'cockpit', 'deep-agents');
 
-const deepAgentsRoot = path.join(process.cwd(), 'cockpit', 'deep-agents');
-const websiteDocsRoot = path.join(
-  process.cwd(),
-  'apps',
-  'website',
-  'content',
-  'docs',
-  'deep-agents'
-);
-
-describe('Deep Agents Phase 5 footprint', () => {
-  it('keeps the getting-started overview in place', () => {
-    expect(
-      fs.existsSync(
-        path.join(
-          websiteDocsRoot,
-          'getting-started',
-          'overview',
-          'python',
-          'overview.mdx'
-        )
-      )
-    ).toBe(true);
-  });
-
-  it('creates the approved topic modules and docs pages', () => {
+// This spec used to also assert a website docs page per topic at
+// content/docs/deep-agents/core-capabilities/<topic>/python/<page>.mdx. That
+// five-segment shape is the formula #918 removed: as
+// libs/cockpit-registry/src/lib/docs-links.ts records, it "produced a URL that
+// 404s for every product", and no `deep-agents` docs library exists on the
+// website at all. The real website coupling now lives in the docs-links table
+// and is checked against the website's actual content tree and nav config by
+// apps/cockpit/src/lib/docs-links.spec.ts. What is left here is what
+// "footprint" actually means: the cockpit modules exist and are runnable.
+describe('Deep Agents footprint', () => {
+  it('creates the approved topic modules', () => {
     for (const topic of topicNames) {
       const moduleRoot = path.join(deepAgentsRoot, topic, 'python');
       const projectJson = JSON.parse(
@@ -45,28 +36,15 @@ describe('Deep Agents Phase 5 footprint', () => {
       );
 
       expect(fs.existsSync(path.join(moduleRoot, 'package.json'))).toBe(true);
-      expect(fs.existsSync(path.join(moduleRoot, 'project.json'))).toBe(true);
       expect(fs.existsSync(path.join(moduleRoot, 'tsconfig.json'))).toBe(true);
       expect(fs.existsSync(path.join(moduleRoot, 'src', 'index.ts'))).toBe(true);
-      expect(fs.existsSync(path.join(moduleRoot, 'prompts', `${topic}.md`))).toBe(true);
+      expect(fs.existsSync(path.join(moduleRoot, 'prompts', `${topic}.md`))).toBe(
+        true
+      );
       expect(projectJson.targets?.smoke?.executor).toBe('nx:run-commands');
       expect(projectJson.targets?.smoke?.options?.command).toContain(
         'src/index.ts'
       );
-
-      for (const page of pageNames) {
-        expect(
-          fs.existsSync(
-            path.join(
-              websiteDocsRoot,
-              'core-capabilities',
-              topic,
-              'python',
-              `${page}.mdx`
-            )
-          )
-        ).toBe(true);
-      }
     }
   });
 });

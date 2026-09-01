@@ -69,6 +69,15 @@ const LINT_ONLY_FILES = new Set(['eslint.config.mjs']);
  *  when a LINT_ONLY_FILES entry changes. */
 const LINT_SCOPE_KEYS = ['library', 'cockpit', 'website', 'examples_chat'];
 
+/** The per-product `matrix.spec.ts` / `footprint.spec.ts` files sit at
+ *  cockpit/<product>/, which is outside every project root. `nx affected`
+ *  therefore attributes them to the `root` project, and `root` carries no
+ *  `scope:` tag — so a PR touching only these specs produced an empty scope
+ *  and skipped the very job that runs them. They execute under
+ *  `nx test cockpit` (see apps/cockpit/vite.config.mts), so map them onto the
+ *  cockpit scope by path. */
+const COCKPIT_ROOTLESS_SPEC = /^cockpit\/[^/]+\/[^/]+\.spec\.ts$/;
+
 export function emptyScope() {
   return Object.fromEntries(SCOPE_KEYS.map((k) => [k, false]));
 }
@@ -124,6 +133,9 @@ export function classifyFromAffected(changedFiles, affectedProjects) {
   }
   if (changedFiles.some((f) => LINT_ONLY_FILES.has(f))) {
     for (const key of LINT_SCOPE_KEYS) scope[key] = true;
+  }
+  if (changedFiles.some((f) => COCKPIT_ROOTLESS_SPEC.test(f))) {
+    scope.cockpit = true;
   }
   if (isAngularCompatibilityChange(changedFiles)) {
     scope.angular_compatibility = true;

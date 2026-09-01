@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 const topicNames = [
@@ -11,41 +12,38 @@ const topicNames = [
   'computed-functions',
 ] as const;
 
-const pageNames = ['overview', 'build', 'prompts', 'code', 'testing'] as const;
+// Resolve from this file, not process.cwd(). These specs run under
+// `nx test cockpit`, whose cwd is apps/cockpit — a cwd-relative root silently
+// points at apps/cockpit/cockpit/... and turns every existence assertion into
+// a vacuous pass (or an unrelated ENOENT).
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const renderRoot = path.join(repoRoot, 'cockpit', 'render');
 
-const renderRoot = path.join(process.cwd(), 'cockpit', 'render');
-const websiteDocsRoot = path.join(
-  process.cwd(), 'apps', 'website', 'content', 'docs', 'render'
-);
-
+// The per-topic website .mdx assertions this spec used to carry asserted the
+// five-segment docs shape #918 removed (see
+// libs/cockpit-registry/src/lib/docs-links.ts: it "produced a URL that 404s for
+// every product"). The website tree is organised by guide, not by cockpit
+// topic. That coupling is now a table checked against the website's real
+// content tree by apps/cockpit/src/lib/docs-links.spec.ts.
 describe('Render footprint', () => {
-  it('keeps the getting-started overview in place', () => {
-    expect(
-      fs.existsSync(
-        path.join(websiteDocsRoot, 'getting-started', 'overview', 'python', 'overview.mdx')
-      )
-    ).toBe(true);
-  });
-
-  it('creates the approved topic modules and docs pages', () => {
+  it('creates the approved topic modules', () => {
     for (const topic of topicNames) {
       const moduleRoot = path.join(renderRoot, topic, 'python');
-      const projectJsonPath = path.join(renderRoot, topic, 'angular', 'project.json');
+      const projectJsonPath = path.join(
+        renderRoot,
+        topic,
+        'angular',
+        'project.json'
+      );
 
       expect(fs.existsSync(path.join(moduleRoot, 'src', 'index.ts'))).toBe(true);
-      expect(fs.existsSync(path.join(moduleRoot, 'prompts', `${topic}.md`))).toBe(true);
+      expect(fs.existsSync(path.join(moduleRoot, 'prompts', `${topic}.md`))).toBe(
+        true
+      );
       expect(fs.existsSync(projectJsonPath)).toBe(true);
 
       const projectJson = JSON.parse(fs.readFileSync(projectJsonPath, 'utf8'));
       expect(projectJson.targets?.smoke?.executor).toBe('nx:run-commands');
-
-      for (const page of pageNames) {
-        expect(
-          fs.existsSync(
-            path.join(websiteDocsRoot, 'core-capabilities', topic, 'python', `${page}.mdx`)
-          )
-        ).toBe(true);
-      }
     }
   });
 });
