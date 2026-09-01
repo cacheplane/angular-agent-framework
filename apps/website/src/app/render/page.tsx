@@ -3,12 +3,14 @@ import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
 import { Button } from '../../components/ui/Button';
 import { Pill } from '../../components/ui/Pill';
-import { BrowserFrame } from '../../components/ui/BrowserFrame';
 import { FeatureBlock } from '../../components/landing/FeatureBlock';
 import { WhitePaperBlock } from '../../components/landing/WhitePaperBlock';
 import { FinalCTA } from '../../components/landing/FinalCTA';
+import { MediumSwitcher } from '../../components/landing/MediumSwitcher';
 import { RenderCodeShowcase } from '../../components/landing/render/RenderCodeShowcase';
 import { createPageMetadata } from '../../lib/site-metadata';
+import { SECTION_MEDIA } from '../../lib/section-media';
+import { buildPanes } from '../../lib/build-panes';
 
 export const metadata = createPageMetadata({
   title: '@threadplane/render — Generative UI for Angular',
@@ -18,18 +20,24 @@ export const metadata = createPageMetadata({
 });
 
 export default async function RenderPage() {
+  const panes = await buildPanes(SECTION_MEDIA.libRender, SECTION_MEDIA.libRender.video?.url ?? '');
+
   return (
     <>
       {/* Hero */}
       <Section surface="canvas" ariaLabelledBy="render-hero-heading">
         <Container>
           <div className="render-page-hero-inner">
+            <div className="lib-hero-rail">
+              <Eyebrow tone="accent">@threadplane/render · generative UI</Eyebrow>
+              <span className="lib-hero-rail-line" aria-hidden="true" />
+            </div>
             <Eyebrow tone="accent" className="render-page-eyebrow-spaced">@threadplane/render</Eyebrow>
             <h1 id="render-hero-heading" className="render-page-h1">
               Generative UI without a second framework.
             </h1>
             <p className="render-page-hero-subtitle">
-              Server-emitted JSON specs render into Angular components you already own. Vercel json-render and Google A2UI both supported. Per-component fallback, readiness gate, no surprises.
+              Server-emitted JSON specs render into Angular <span className="marker-highlight">components you already own</span>. Vercel json-render and Google A2UI both supported. Per-component fallback, readiness gate, no surprises.
             </p>
             <div className="render-page-hero-buttons">
               <Button variant="primary" size="lg" href="/docs/render/getting-started/introduction">Get started</Button>
@@ -55,31 +63,7 @@ export default async function RenderPage() {
           { claim: 'Schema on the server, validation in the client', api: 'validated specs' },
         ]}
         cta={{ label: 'See @threadplane/render docs', href: '/docs/render/getting-started/introduction' }}
-        visual={
-          <BrowserFrame url="render · spec → component" elevation="md">
-            <div className="render-page-visual-panel">
-              <div className="render-page-spec-block">
-{`{
-  "type": "card",
-  "props": {
-    "title": "Q3 revenue",
-    "value": "$4.2M",
-    "delta": "+18%"
-  }
-}`}
-              </div>
-              <div className="render-page-rendered-card">
-                <div className="render-page-ai-label">
-                  AI-rendered · YourCardComponent
-                </div>
-                <div className="render-page-card-title">
-                  Q3 revenue: $4.2M
-                </div>
-                <div className="render-page-card-value">+18% vs Q2</div>
-              </div>
-            </div>
-          </BrowserFrame>
-        }
+        visual={<MediumSwitcher sectionId="lib-render" panes={panes} />}
       />
 
       <FeatureBlock
@@ -98,7 +82,7 @@ export default async function RenderPage() {
       />
 
       <WhitePaperBlock paper="render" />
-      <FinalCTA />
+      <FinalCTA variant="dark" />
     </>
   );
 }
