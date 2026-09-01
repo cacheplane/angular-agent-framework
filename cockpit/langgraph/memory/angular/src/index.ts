@@ -23,7 +23,7 @@ export const langgraphMemoryAngularModule: CockpitCapabilityModule = {
     language: 'angular',
   },
   title: 'LangGraph Memory (Angular)',
-  docsPath: '/docs/langgraph/core-capabilities/memory/overview/angular',
+  docsPath: '/docs/langgraph/guides/memory',
   promptAssetPaths: [
     'cockpit/langgraph/memory/angular/prompts/memory.md',
   ],

@@ -23,7 +23,7 @@ export const langgraphTimeTravelAngularModule: CockpitCapabilityModule = {
     language: 'angular',
   },
   title: 'LangGraph Time Travel (Angular)',
-  docsPath: '/docs/langgraph/core-capabilities/time-travel/overview/angular',
+  docsPath: '/docs/langgraph/guides/time-travel',
   promptAssetPaths: [
     'cockpit/langgraph/time-travel/angular/prompts/time-travel.md',
   ],

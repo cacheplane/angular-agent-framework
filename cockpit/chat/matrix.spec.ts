@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { getCockpitDocsPath } from '@threadplane/cockpit-registry';
 import { chatMessagesPythonModule } from './messages/python/src/index';
 import { chatInputPythonModule } from './input/python/src/index';
 import { chatInterruptsPythonModule } from './interrupts/python/src/index';
@@ -46,9 +47,18 @@ describe('Chat matrix slice', () => {
         page: 'overview',
         language: 'python',
       });
+      // The docs link is a table lookup, not a formula derived from the
+      // identity: the cockpit tree and the website's docs tree do not share a
+      // naming scheme. The table's targets are checked against the website's
+      // real content tree in apps/cockpit/src/lib/docs-links.spec.ts.
       expect(module.docsPath).toBe(
-        `/docs/chat/core-capabilities/${module.manifestIdentity.topic}/overview/python`
+        getCockpitDocsPath(
+          module.manifestIdentity.product,
+          module.manifestIdentity.section,
+          module.manifestIdentity.topic
+        )
       );
+      expect(module.docsPath).toMatch(/^\/docs\/[a-z0-9-]+\/[a-z0-9-]+\/[a-z0-9-]+$/);
       expect(module.promptAssetPaths.length).toBe(1);
       expect(module.codeAssetPaths.length).toBeGreaterThanOrEqual(1);
     }

@@ -1,3 +1,4 @@
+import { getCockpitDocsPath } from './docs-links';
 import type {
   CockpitManifestEntry,
   CockpitManifestIdentity,
@@ -126,11 +127,18 @@ const getOverviewIdentity = (product: CockpitProduct): CockpitManifestIdentity =
   language: 'python',
 });
 
+/**
+ * The website documentation page for a capability.
+ *
+ * This is a table lookup, not a formula: the cockpit tree and the docs tree do
+ * not share a naming scheme. See `./docs-links.ts`. Returns the empty string
+ * for capabilities with no published page.
+ */
 const getDocsPath = (
   product: CockpitProduct,
   section: CockpitManifestEntry['section'],
   topic: string
-): string => `/docs/${product}/${section}/${topic}/overview/python`;
+): string => getCockpitDocsPath(product, section, topic);
 
 const getPromptAssetPath = (product: CockpitProduct, topic: string): string =>
   `cockpit/${product}/${topic}/${getLane(product, topic)}/prompts/${topic}.md`;

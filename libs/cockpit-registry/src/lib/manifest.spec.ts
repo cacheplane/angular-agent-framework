@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import { cockpitManifest } from './manifest';
+import { getCockpitDocsPath, NO_COCKPIT_DOCS_LINK } from './docs-links';
 import type { CockpitManifestEntry } from './manifest.types';
 
 const expectedTopics = {
@@ -110,9 +111,17 @@ describe('cockpitManifest', () => {
 
     for (const entry of capabilityEntries) {
       expect(entry.supportedLanguages).toEqual(['python']);
+      // The docs link is a table lookup (see ./docs-links.ts), not a formula
+      // derived from the identity. Assert the shape the website actually
+      // serves — /docs/<library>/<section>/<slug> — or the "no page yet"
+      // sentinel. The exact targets are checked against the website's content
+      // tree in apps/cockpit/src/lib/docs-links.spec.ts.
       expect(entry.docsPath).toBe(
-        `/docs/${entry.product}/${entry.section}/${entry.topic}/overview/python`
+        getCockpitDocsPath(entry.product, entry.section, entry.topic)
       );
+      if (entry.docsPath !== NO_COCKPIT_DOCS_LINK) {
+        expect(entry.docsPath).toMatch(/^\/docs\/[a-z0-9-]+\/[a-z0-9-]+\/[a-z0-9-]+$/);
+      }
       expect(entry.implementationStatus).toBe('implemented');
       expect(entry.docsStatus).toBe('docs-authored');
       expect(entry.testStatus).toBe('smoke-tested');

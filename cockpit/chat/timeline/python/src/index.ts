@@ -27,7 +27,7 @@ export const chatTimelinePythonModule: CockpitCapabilityModule = {
     language: 'python',
   },
   title: 'Chat Timeline (Python)',
-  docsPath: '/docs/chat/core-capabilities/timeline/overview/python',
+  docsPath: '/docs/chat/components/chat-trace',
   promptAssetPaths: ['cockpit/chat/timeline/python/prompts/timeline.md'],
   codeAssetPaths: [
     'cockpit/chat/timeline/angular/src/app/timeline.component.ts',

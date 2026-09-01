@@ -23,7 +23,7 @@ export const langgraphInterruptsAngularModule: CockpitCapabilityModule = {
     language: 'angular',
   },
   title: 'LangGraph Interrupts (Angular)',
-  docsPath: '/docs/langgraph/core-capabilities/interrupts/overview/angular',
+  docsPath: '/docs/langgraph/guides/interrupts',
   promptAssetPaths: [
     'cockpit/langgraph/interrupts/angular/prompts/interrupts.md',
   ],
