@@ -97,6 +97,7 @@ describe('cockpitManifest', () => {
       'ag-ui/getting-started/overview',
       'render/getting-started/overview',
       'chat/getting-started/overview',
+      'runtimes/getting-started/overview',
     ]);
   });
 
@@ -105,7 +106,7 @@ describe('cockpitManifest', () => {
       (entry) => entry.entryKind === 'capability'
     );
 
-    expect(capabilityEntries).toHaveLength(36);
+    expect(capabilityEntries).toHaveLength(42);
 
     for (const entry of capabilityEntries) {
       expect(entry.supportedLanguages).toEqual(['python']);
