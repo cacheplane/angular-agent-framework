@@ -1,4 +1,5 @@
 import { TIERS, type TierSlug } from '../../../../../pricing/tiers.config';
+import { Eyebrow } from '../ui/Eyebrow';
 
 type ComparisonCells = Record<TierSlug, string>;
 
@@ -70,7 +71,7 @@ export function ArchitectureBoundary() {
     <div className="pricing-boundary">
       <div className="pricing-section-heading-wrap">
         <div className="pricing-section-rail">
-          <p className="pricing-section-kicker">What you are buying</p>
+          <Eyebrow tone="accent" className="pricing-section-kicker">What you are buying</Eyebrow>
           <span className="pricing-section-rail-line" aria-hidden="true" />
         </div>
         <h2 id="pricing-value-heading" className="pricing-section-heading">
@@ -121,7 +122,7 @@ export function PricingComparison() {
     <div className="pricing-comparison">
       <div className="pricing-section-heading-wrap">
         <div className="pricing-section-rail">
-          <p className="pricing-section-kicker">Full comparison</p>
+          <Eyebrow tone="accent" className="pricing-section-kicker">Full comparison</Eyebrow>
           <span className="pricing-section-rail-line" aria-hidden="true" />
         </div>
         <h2 id="pricing-comparison-heading" className="pricing-section-heading">

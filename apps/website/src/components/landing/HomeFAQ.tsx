@@ -39,9 +39,12 @@ export function HomeFAQ() {
     <Section surface="white" ariaLabelledBy="faq-heading">
       <Container>
         <div className="home-faq-intro">
-          <Eyebrow tone="accent" className="home-faq-eyebrow">
-            Questions
-          </Eyebrow>
+          <div className="home-faq-rail">
+            <Eyebrow tone="accent" className="home-faq-eyebrow">
+              Questions
+            </Eyebrow>
+            <span className="home-faq-rail-line" aria-hidden="true" />
+          </div>
           <h2 id="faq-heading" className="home-faq-heading">
             Frequently asked questions.
           </h2>

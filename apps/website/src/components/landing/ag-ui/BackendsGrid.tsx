@@ -3,7 +3,10 @@ interface Backend {
   readonly note: string;
 }
 
-const BACKENDS: readonly Backend[] = [
+// Three copy sites on /ag-ui say "seven" — the page spec ties this list's
+// length to that word. Adding a runtime here fails that test until the copy
+// updates. Honest counts only.
+export const BACKENDS: readonly Backend[] = [
   { name: 'LangGraph', note: 'Python / TS' },
   { name: 'CrewAI', note: 'Python' },
   { name: 'Mastra', note: 'TypeScript' },

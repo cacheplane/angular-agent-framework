@@ -3,7 +3,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { analyticsEvents } from '../../lib/analytics/events';
 import { track, trackCtaClick, trackExternalLinkClick } from '../../lib/analytics/client';
-import { SHORT_POSITIONING_DESCRIPTION } from '../../lib/positioning';
 import { DEMOS, demoCtaSuffix } from '../../lib/demos';
 import { LogoMark } from '../ui/LogoMark';
 import { Button } from '../ui/Button';
@@ -112,7 +111,7 @@ export function Footer() {
               <LogoMark size="md" />
             </div>
             <p className="text-sm mb-4 footer-tagline">
-              {SHORT_POSITIONING_DESCRIPTION}
+              The Angular UI layer for production agents.
             </p>
             <NewsletterForm />
             {/* Social links */}

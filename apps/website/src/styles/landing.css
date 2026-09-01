@@ -727,7 +727,6 @@
 
 /* HomeFAQ — components/landing/HomeFAQ.tsx */
 .home-faq-intro {
-  text-align: center;
   margin-bottom: 48px;
 }
 .home-faq-eyebrow {
@@ -1470,6 +1469,17 @@
   gap: 14px;
 }
 .show-intro-rail-line {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.home-faq-rail {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.home-faq-rail-line {
   flex: 1;
   height: 1px;
   background: var(--color-border);

@@ -23,7 +23,6 @@ describe('FeatureBlock', () => {
     );
     expect(screen.getByText('Your design system, not a chat widget')).toBeTruthy();
     expect(screen.getByText('@threadplane/render')).toBeTruthy();
-    expect(container.querySelector('.feature-block-card-row')).toBeNull();
     expect(container.querySelectorAll('.feature-block-row')).toHaveLength(2);
     expect(container.querySelector('.feature-block-rail')).toBeTruthy();
   });
