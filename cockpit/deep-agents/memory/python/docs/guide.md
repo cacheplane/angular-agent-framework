@@ -1,146 +1,126 @@
-# Persistent Agent Memory with Angular
+# Memory with Deep Agents
 
 <Summary>
-Build a chat interface where the agent remembers facts about the user across turns using `provideAgent()` and `injectAgent()` from `@threadplane/langgraph`. The agent stores learned facts in `agent_memory` state, and the sidebar displays them in real time.
+Give an agent a memory file it maintains itself, keep that file in LangGraph's store so it
+outlives the thread, and render it. The interesting part is reading it back:
+`memory_contents` is annotated `PrivateStateAttr`, so it never appears in the `values` stream
+and needs a deliberate channel.
 </Summary>
 
 <Prompt>
-Add a memory sidebar to this Angular component using `provideAgent()` and `injectAgent()` from `@threadplane/langgraph`. Use `stream.value()` to access the agent's `agent_memory` state, derive `memoryEntries` with `computed()`, and bind them to the sidebar beside the `<chat>` component from `@threadplane/chat`.
+Add an agent-memory panel beside the `<chat>` component. Read `memory_contents` from
+`agent.customEvents()` for the live view and from `agent.value()` for a reopened thread, and
+render each remembered line.
 </Prompt>
 
+<Callout type="info" title="Provider setup lives in the LangGraph quickstart">
+This guide assumes `provideAgent()` is already configured. If it is not, work through the
+[LangGraph quickstart](/docs/langgraph/getting-started/quickstart) first.
+</Callout>
+
 <Steps>
-<Step title="Configure the provider">
+<Step title="Point memory at a store, not at the thread">
 
-Set up `provideAgent()` in your app config with the LangGraph API URL:
-
-```typescript
-// app.config.ts
-import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@threadplane/langgraph';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideAgent({
-      apiUrl: 'https://your-deployment.langgraph.app',
-      assistantId: 'da-memory',
-    }),
-  ],
-};
-```
-
-This makes the configured agent available to all `injectAgent()` calls in your app.
-
-</Step>
-<Step title="Create the streaming resource">
-
-In your component, call `injectAgent()` to retrieve the configured memory agent:
-
-```typescript
-// memory.component.ts
-import { injectAgent } from '@threadplane/langgraph';
-
-export class MemoryComponent {
-  protected readonly stream = injectAgent();
-}
-```
-
-The resource manages the connection, message history, loading state, and errors automatically.
-
-</Step>
-<Step title="Derive memory entries with computed()">
-
-Use Angular's `computed()` to reactively derive the memory key/value pairs from `stream.value()`:
-
-```typescript
-import { computed } from '@angular/core';
-import { injectAgent } from '@threadplane/langgraph';
-
-export class MemoryComponent {
-  protected readonly stream = injectAgent();
-
-  memoryEntries = computed(() => {
-    const val = this.stream.value() as { agent_memory?: Record<string, string> } | undefined;
-    return Object.entries(val?.agent_memory ?? {});
-  });
-}
-```
-
-`stream.value()` contains the latest graph state. The memory graph stores learned facts under `agent_memory`, updating the dict as the agent extracts new information.
-
-<Tip>
-`stream.value()` is a signal that updates reactively as new state arrives from the server. `computed()` recalculates `memoryEntries` automatically whenever the stream updates.
-</Tip>
-
-</Step>
-<Step title="Build the template with memory sidebar">
-
-Use the `<chat>` component from `@threadplane/chat` and render a sibling sidebar:
-
-```html
-<chat [agent]="stream" />
-
-<aside>
-    <h3>Learned Facts</h3>
-    @for (entry of memoryEntries(); track entry[0]) {
-      <div>
-        <div style="font-weight: 600;">{{ entry[0] }}</div>
-        <div>{{ entry[1] }}</div>
-      </div>
-    }
-    @empty {
-      <p>Tell the agent something about yourself to see it remember.</p>
-    }
-</aside>
-```
-
-The sibling panel renders memory entries reactively as the agent learns new facts.
-
-</Step>
-<Step title="The LangGraph memory backend">
-
-The backend uses a two-node graph: one to generate a response, another to extract new facts:
+`memory=[...]` installs `MemoryMiddleware`, which loads those files into the system prompt on
+every turn and instructs the model to keep them current with `edit_file`. The backend decides
+how long that survives:
 
 ```python
-# graph.py
-from langgraph.graph import StateGraph, END
+from deepagents import create_deep_agent
+from deepagents.backends import StoreBackend
 
-def build_memory_graph():
-    async def generate(state: MemoryState) -> dict:
-        """Generate a response, using remembered facts in the prompt."""
-        memory = state.get("agent_memory", {})
-        # Inject memory into system prompt...
-        response = await llm.ainvoke(messages)
-        return {"messages": [response]}
+MEMORY_NAMESPACE = ("cockpit", "deep-agents-memory")
 
-    async def extract_facts(state: MemoryState) -> dict:
-        """Extract new facts from the conversation and update agent_memory."""
-        new_facts = {}  # LLM returns JSON dict of facts
-        current_memory = dict(state.get("agent_memory", {}))
-        current_memory.update(new_facts)
-        return {"agent_memory": current_memory}
-
-    graph = StateGraph(MemoryState)
-    graph.add_node("generate", generate)
-    graph.add_node("extract_facts", extract_facts)
-    graph.set_entry_point("generate")
-    graph.add_edge("generate", "extract_facts")
-    graph.add_edge("extract_facts", END)
-    return graph.compile()
+graph = create_deep_agent(
+    model=ChatOpenAI(model="gpt-4.1", temperature=0),
+    system_prompt=(PROMPTS_DIR / "memory.md").read_text(),
+    backend=StoreBackend(namespace=lambda _runtime: MEMORY_NAMESPACE),
+    memory=["/memories/AGENTS.md"],
+)
 ```
 
-Each turn, `generate` uses existing memory to personalize its response, then `extract_facts` updates `agent_memory` with anything new the user shared. The frontend sees these updates via `stream.value()`.
+`StoreBackend` writes into LangGraph's `BaseStore`, which is shared across threads;
+`StateBackend` would put the file on the thread's own state, where a new conversation would
+never see it. `store=None` means "resolve the store from the graph execution context", which
+the LangGraph server supplies. Scope the namespace per user in anything real — a fixed tuple
+means every visitor shares one memory.
 
-<Tip>
-Because LangGraph persists state across turns in a thread, `agent_memory` accumulates facts over the entire session. The agent becomes progressively more personalized as the conversation continues.
-</Tip>
+</Step>
+<Step title="Let the agent decide what to remember">
+
+Nothing in the application parses the conversation for facts. The system prompt is the policy:
+
+```markdown
+`/memories/AGENTS.md` is yours. It is loaded into your context at the start of
+every conversation, including conversations you have not had yet.
+
+Write to it with `edit_file` whenever the user tells you something durable:
+a home base, a fleet type, a standing preference, a correction.
+
+Do not record one-off requests, small talk, or anything stale next week.
+Never record credentials of any kind.
+```
+
+The last line matters. A memory file is a persistent, model-writable document, so say plainly
+what must never go in it.
+
+</Step>
+<Step title="Republish the private key as a custom event">
+
+`MemoryMiddleware` annotates `memory_contents` with `PrivateStateAttr`. That keeps it out of
+the `values` stream — correct for a transcript, and the reason a panel bound to
+`agent.value()` shows nothing while the agent is working. A small middleware announces it on a
+channel the client does receive:
+
+```python
+class MemoryVisibilityMiddleware(AgentMiddleware):
+    def _emit(self, state):
+        contents = state.get("memory_contents")
+        if contents is None:
+            return
+        try:
+            writer = get_stream_writer()
+        except (RuntimeError, KeyError):
+            return
+        writer({"name": MEMORY_EVENT, "data": {"memory_contents": contents}})
+
+    def after_model(self, state, runtime):
+        self._emit(state)
+        return None
+```
+
+This is an application-side shim, not a framework change: the key stays private on the state
+and is simply announced alongside it.
+
+</Step>
+<Step title="Read both sources, and know which one you are on">
+
+A custom event is a live signal — it is not replayed when a thread is reopened. The key IS
+written to the checkpoint, though, and `@threadplane/langgraph` projects the latest checkpoint
+into `value()` when a run completes. So there are two sources, and it is worth telling them
+apart:
+
+```typescript
+protected readonly memorySource = computed<'live' | 'checkpoint' | 'none'>(() => {
+  const live = this.liveMemory();
+  if (live && Object.keys(live).length > 0) return 'live';
+  return this.settledMemory() ? 'checkpoint' : 'none';
+});
+```
+
+Without the middleware the panel still fills in, just a beat later and only at settle. With it,
+the panel updates while the agent is still writing.
 
 </Step>
 </Steps>
 
 <Tip>
-The `@empty` block in `@for` renders when the memory dict is empty — a clean way to show a placeholder before the user shares any personal information.
+Test cross-thread memory by starting a genuinely new thread, not by clearing the panel. A
+reload that creates a new thread and still shows the file is the only assertion that proves the
+store, rather than the component, is doing the remembering.
 </Tip>
 
 <Related>
-- [Chat Threads](/chat/core-capabilities/threads/overview/python) — Learn how ChatThreadsComponent manages conversation threads
+- [Deep Agents Skills](/deep-agents/core-capabilities/skills/overview/python) — the same private-state visibility problem, for `skills_metadata`
+- [Deep Agents Filesystem](/deep-agents/core-capabilities/filesystem/overview/python) — the state-backed workspace that does stream
 </Related>

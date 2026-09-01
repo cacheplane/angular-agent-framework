@@ -2,16 +2,52 @@
   "fixtures": [
     {
       "match": {
-        "userMessage": "Hello"
+        "userMessage": "I fly a Citation CJ3 out of KASE, and I always want briefings in bullet points. Please remember that.",
+        "hasToolResult": true,
+        "turnIndex": 1
       },
       "response": {
-        "content": "Hi \u2014 hello! How can I help you today?"
+        "toolCalls": [
+          {
+            "name": "write_file",
+            "arguments": "{\"file_path\":\"/memories/AGENTS.md\",\"content\":\"## Crew notes\\n- Aircraft: Citation CJ3\\n- Home base: KASE\\n- Briefing preference: Always provide briefings in bullet points\\n\"}"
+          }
+        ]
       }
     },
     {
-      "match": {},
+      "match": {
+        "userMessage": "I fly a Citation CJ3 out of KASE, and I always want briefings in bullet points. Please remember that.",
+        "hasToolResult": true,
+        "turnIndex": 2
+      },
       "response": {
-        "content": "{}"
+        "content": "I've saved the following to my memory:\n- You fly a Citation CJ3 based at KASE.\n- You want all briefings provided in bullet points.\n\nI'll use this information for all future requests."
+      }
+    },
+    {
+      "match": {
+        "userMessage": "I fly a Citation CJ3 out of KASE, and I always want briefings in bullet points. Please remember that.",
+        "hasToolResult": false,
+        "turnIndex": 0
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "ls",
+            "arguments": "{\"path\":\"/memories\"}"
+          }
+        ]
+      }
+    },
+    {
+      "match": {
+        "userMessage": "What do you already know about my operation?",
+        "hasToolResult": false,
+        "turnIndex": 0
+      },
+      "response": {
+        "content": "Here’s what I have in my notes about your operation:\n\n- Aircraft: Citation CJ3\n- Home base: KASE (Aspen)\n- Briefing preference: Always provide briefings in bullet points\n\nIf anything has changed or you’d like to add more details (like crew names, typical routes, or special procedures), just let me know!"
       }
     }
   ]

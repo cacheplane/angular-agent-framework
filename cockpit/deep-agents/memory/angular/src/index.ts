@@ -30,6 +30,7 @@ export const deepAgentsMemoryAngularModule: CockpitCapabilityModule = {
     'cockpit/deep-agents/memory/angular/prompts/memory.md',
   ],
   codeAssetPaths: [
-    'cockpit/deep-agents/memory/angular/src/app.component.ts',
+    'cockpit/deep-agents/memory/angular/src/app/memory.component.ts',
+    'cockpit/deep-agents/memory/angular/src/app/app.config.ts',
   ],
 };
