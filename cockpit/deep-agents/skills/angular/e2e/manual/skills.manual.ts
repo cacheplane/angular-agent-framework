@@ -1,3 +1,8 @@
+// SPDX-License-Identifier: MIT
+//
+// Live-model manual check. Not run by CI (playwright matches *.spec.ts only).
+//   npx nx run cockpit:serve-skills
+//   npx playwright test cockpit/deep-agents/skills/angular/e2e/manual
 import { expect, test } from '@playwright/test';
 
 test.describe('Deep Agents Skills Example', () => {
@@ -6,16 +11,19 @@ test.describe('Deep Agents Skills Example', () => {
     await page.waitForSelector('app-skills', { state: 'attached' });
   });
 
-  test('renders the chat interface with skill invocation sidebar', async ({ page }) => {
+  test('renders the chat interface with an empty skill index', async ({ page }) => {
     await expect(page.locator('chat')).toBeVisible();
     await expect(page.locator('textarea[name="messageText"]')).toBeVisible();
-    await expect(page.locator('text=No skills invoked yet')).toBeVisible();
+    await expect(page.locator('text=No skills loaded')).toBeVisible();
   });
 
-  test('sends a message and receives a response', async ({ page }) => {
-    await page.fill('textarea[name="messageText"]', 'What is 42 times 7?');
-    await page.click('button[type="submit"]');
-    await expect(page.locator('.chat-md').first()).toBeVisible({ timeout: 30000 });
-    await expect(page.locator('.chat-md').first()).not.toBeEmpty({ timeout: 30000 });
+  test('opens only the skill the request matches', async ({ page }) => {
+    await page.getByRole('button', { name: 'Mid-size jet at KASE' }).click();
+
+    await expect(page.locator('[data-testid="skill"]')).toHaveCount(2, { timeout: 120000 });
+    await expect(
+      page.locator('[data-testid="skill"][data-name="runway-analysis"]'),
+    ).toHaveAttribute('data-opened', 'true', { timeout: 120000 });
+    await expect(page.locator('[data-testid="skill-open"]').first()).toBeVisible();
   });
 });

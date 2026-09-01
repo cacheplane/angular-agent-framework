@@ -2,10 +2,72 @@
   "fixtures": [
     {
       "match": {
-        "userMessage": "Hello"
+        "userMessage": "Can a mid-size jet operate out of KASE?",
+        "hasToolResult": true,
+        "turnIndex": 1
       },
       "response": {
-        "content": "Hello! How can I help you today? I can evaluate math expressions, count words in a text, or summarize content \u2014 which would you like?"
+        "toolCalls": [
+          {
+            "name": "lookup_runway_length",
+            "arguments": "{\"airport\":\"KASE\"}"
+          }
+        ]
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Can a mid-size jet operate out of KASE?",
+        "hasToolResult": true,
+        "turnIndex": 2
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "read_file",
+            "arguments": "{\"file_path\":\"/skills/runway-analysis/SKILL.md\",\"limit\":1000}"
+          }
+        ]
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Can a mid-size jet operate out of KASE?",
+        "hasToolResult": true,
+        "turnIndex": 3
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "read_file",
+            "arguments": "{\"file_path\":\"/skills/runway-analysis/reference/margins.md\",\"limit\":1000}"
+          }
+        ]
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Can a mid-size jet operate out of KASE?",
+        "hasToolResult": true,
+        "turnIndex": 4
+      },
+      "response": {
+        "content": "A mid-size jet requires 10,057 ft of runway at KASE (Aspen), but the longest available is only 8,006 ft. \n\nMargin applied: mid-size jet, 4,800 ft sea-level balanced field, 14% penalty per 1,000 ft elevation. Verdict: The runway is not long enough for a mid-size jet at this elevation. (Used: runway-analysis skill)"
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Can a mid-size jet operate out of KASE?",
+        "hasToolResult": false,
+        "turnIndex": 0
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "lookup_field_elevation",
+            "arguments": "{\"airport\":\"KASE\"}"
+          }
+        ]
       }
     }
   ]
