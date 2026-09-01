@@ -94,4 +94,20 @@ describe('SubagentTracker attribution ladder', () => {
       expect.objectContaining({ id: 'm1', content: 'checking fares' }),
     ]);
   });
+
+  it('empty-description attribution never exact-matches an empty stored description', () => {
+    const t = new SubagentTracker();
+    t.registerFromToolCalls([
+      taskCall('call_a', { description: '' }),
+      taskCall('call_b', { description: 'Book a flight' }),
+    ]);
+    // ensureToolStreamAttribution runs the ladder with '' — with two
+    // candidates outstanding it must refuse (positional rung), not let
+    // '' === '' claim call_a at the exact rung.
+    t.ensureToolStreamAttribution('ns-uuid-7');
+    t.addMessageToSubagent('ns-uuid-7', aiMsg('m1', 'child token'));
+    for (const subagent of t.getSubagents().values()) {
+      expect(subagent.messages).toHaveLength(0);
+    }
+  });
 });

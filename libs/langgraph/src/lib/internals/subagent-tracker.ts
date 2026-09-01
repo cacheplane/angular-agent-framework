@@ -170,19 +170,26 @@ export class SubagentTracker {
       return toolCallId;
     };
 
-    for (const [toolCallId, subagent] of this.subagents) {
-      if (subagent.kind !== 'tool' || mapped.has(toolCallId)) continue;
-      if (subagent.toolCall.args['description'] === description) {
-        return establish(toolCallId);
+    // The description rungs are only meaningful with a real description.
+    // ensureToolStreamAttribution calls this with '' precisely to skip them:
+    // without this guard, a subagent whose `description` arg is literally ''
+    // exact-matches every empty-description probe, bypassing the positional
+    // rung's one-candidate safety check.
+    if (description) {
+      for (const [toolCallId, subagent] of this.subagents) {
+        if (subagent.kind !== 'tool' || mapped.has(toolCallId)) continue;
+        if (subagent.toolCall.args['description'] === description) {
+          return establish(toolCallId);
+        }
       }
-    }
 
-    for (const [toolCallId, subagent] of this.subagents) {
-      if (subagent.kind !== 'tool' || mapped.has(toolCallId)) continue;
-      const subagentDescription = subagent.toolCall.args['description'];
-      if (typeof subagentDescription !== 'string' || !subagentDescription) continue;
-      if (description.includes(subagentDescription) || subagentDescription.includes(description)) {
-        return establish(toolCallId);
+      for (const [toolCallId, subagent] of this.subagents) {
+        if (subagent.kind !== 'tool' || mapped.has(toolCallId)) continue;
+        const subagentDescription = subagent.toolCall.args['description'];
+        if (typeof subagentDescription !== 'string' || !subagentDescription) continue;
+        if (description.includes(subagentDescription) || subagentDescription.includes(description)) {
+          return establish(toolCallId);
+        }
       }
     }
 
