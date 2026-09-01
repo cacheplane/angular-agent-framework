@@ -1,155 +1,111 @@
-# Child Agent Delegation with Angular
+# Subagents with Deep Agents
 
 <Summary>
-Build a chat interface that shows real-time subagent activity using `provideAgent()` and
-`injectAgent()` from `@threadplane/langgraph`. An orchestrator agent delegates subtasks to specialist child
-agents, and the sidebar displays each subagent's status and message count as they stream.
+Render real child agents. `SubAgentMiddleware` dispatches through a single `task` tool, and
+each dispatch runs as its own graph in a `tools:<call_id>` namespace — so several children
+streaming at the same time stay in separate cards. `task` is the SubagentTracker's default
+dispatch-tool name, so the Angular side needs no configuration for this to work.
 </Summary>
 
 <Prompt>
-Add a subagent activity sidebar to this Angular component using `provideAgent()` and `injectAgent()` from `@threadplane/langgraph`. Use `stream.subagents()` to access the live Map of child agent streams, derive `subagentEntries` with `computed()`, and render them beside the `<chat>` component.
+Render subagent dispatches beside the `<chat>` component: `task` tool calls already register
+as subagents, so read `agent.subagents()` for a live dispatch and running count.
 </Prompt>
 
+<Callout type="info" title="Provider setup lives in the LangGraph quickstart">
+This guide assumes `provideAgent()` is already configured. If it is not, work through the
+[LangGraph quickstart](/docs/langgraph/getting-started/quickstart) first.
+</Callout>
+
 <Steps>
-<Step title="Configure the provider">
+<Step title="Declare the specialists">
 
-Set up `provideAgent()` in your app config with the LangGraph API URL:
-
-```typescript
-// app.config.ts
-import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@threadplane/langgraph';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideAgent({
-      apiUrl: 'https://your-deployment.langgraph.app',
-      assistantId: 'subagents',
-    }),
-  ],
-};
-```
-
-This makes the configured agent available to all `injectAgent()` calls in your app.
-
-</Step>
-<Step title="Create the streaming resource">
-
-In your component, call `injectAgent()` to retrieve the configured subagents agent:
-
-```typescript
-// subagents.component.ts
-import { injectAgent } from '@threadplane/langgraph';
-
-export class SubagentsComponent {
-  protected readonly stream = injectAgent();
-}
-```
-
-The resource manages the connection, message history, loading state, and all subagent streams automatically.
-
-</Step>
-<Step title="Derive subagent entries with computed()">
-
-Use Angular's `computed()` to convert the subagents Map into a renderable array:
-
-```typescript
-import { computed } from '@angular/core';
-import { injectAgent } from '@threadplane/langgraph';
-
-export class SubagentsComponent {
-  protected readonly stream = injectAgent();
-
-  subagentEntries = computed(() => Array.from(this.stream.subagents().entries()));
-}
-```
-
-`stream.subagents()` returns a `Map<string, SubagentStreamRef>` keyed by tool call ID. Each `SubagentStreamRef` exposes `status`, `messages`, and `values` as Angular Signals.
-
-<Tip>
-`stream.subagents()` is a signal that updates whenever a new subagent is spawned or an existing one changes status. `computed()` recalculates `subagentEntries` automatically on each update.
-</Tip>
-
-</Step>
-<Step title="Build the template with subagent sidebar">
-
-Use the `<chat>` component from `@threadplane/chat` and render a sibling sidebar:
-
-```html
-<chat [agent]="stream" />
-
-<aside>
-    <h3>Subagents</h3>
-    @for (entry of subagentEntries(); track entry[0]) {
-      <div>
-        <span>{{ entry[1].status() }}</span>
-        <span>{{ entry[0].slice(0, 8) }}…</span>
-        <div>{{ entry[1].messages().length }} messages</div>
-      </div>
-    }
-    @empty {
-      <p>Ask a question to see subagent activity.</p>
-    }
-</aside>
-```
-
-Each `entry` is a `[toolCallId, SubagentStreamRef]` tuple. The tool call ID identifies which specialist was invoked; the ref's signals update in real time.
-
-</Step>
-<Step title="The LangGraph orchestrator backend">
-
-The backend uses an orchestrator node that binds specialist tools and a conditional edge to run them:
+A `SubAgent` is a name, a description the orchestrator reads when choosing, a system prompt,
+and the tools that child may use. Giving the orchestrator no lookup tools of its own is what
+forces delegation:
 
 ```python
-# graph.py
-from langgraph.graph import StateGraph, END
-from langchain_core.tools import tool
+from deepagents import SubAgent, create_deep_agent
 
-@tool
-async def research_agent(topic: str) -> str:
-    """Spawn a research subagent to gather information on a topic."""
-    # Delegate to a specialist LLM
-    ...
+FIELD_RESEARCHER: SubAgent = {
+    "name": "field-researcher",
+    "description": "Gathers field elevation and runway length for one airport.",
+    "system_prompt": "You research airport field data for a dispatch desk. ...",
+    "tools": [lookup_field_elevation, lookup_runway_length],
+}
 
-@tool
-async def analysis_agent(content: str) -> str:
-    """Spawn an analysis subagent to analyze and synthesize information."""
-    ...
-
-def build_subagents_graph():
-    orchestrator_llm = llm.bind_tools([research_agent, analysis_agent, summary_agent])
-
-    async def orchestrate(state):
-        response = await orchestrator_llm.ainvoke(messages)
-        return {"messages": [response]}
-
-    def should_continue(state):
-        last = state["messages"][-1]
-        if last.tool_calls:
-            return "run_subagents"
-        return END
-
-    graph = StateGraph(SubagentsState)
-    graph.add_node("orchestrate", orchestrate)
-    graph.add_node("run_subagents", run_subagents)
-    graph.add_conditional_edges("orchestrate", should_continue, ...)
-    graph.add_edge("run_subagents", "respond")
-    return graph.compile()
+graph = create_deep_agent(
+    model=ChatOpenAI(model="gpt-4.1", temperature=0),
+    system_prompt=(PROMPTS_DIR / "subagents.md").read_text(),
+    subagents=[FIELD_RESEARCHER, WEATHER_ANALYST],
+)
 ```
 
-Each tool call emits a `ToolMessage` that the frontend tracks as a subagent stream entry.
+Passing `subagents` is what installs `SubAgentMiddleware` and, with it, the `task` tool.
 
-<Tip>
-For real parallel subagent execution, use `asyncio.gather()` inside `run_subagents` to invoke all tools concurrently. The frontend's `stream.subagents()` will show multiple subagents running simultaneously.
-</Tip>
+</Step>
+<Step title="Ask for parallel work explicitly">
+
+The model will serialize dispatches unless told not to. One line in the orchestrator prompt
+changes the shape of the run:
+
+```markdown
+When a request covers more than one airport or more than one kind of data,
+issue every dispatch you need **in a single turn** so the specialists work in
+parallel. Do not wait for one to report before sending the next.
+```
+
+</Step>
+<Step title="Know which tool call means a child started">
+
+`task` is an ordinary tool call on the wire. What makes it render as a child agent is that the
+SubagentTracker recognizes the name — and `task` is its default, so a `deepagents` graph needs
+no client configuration at all. Naming it explicitly is worth doing anyway, as documentation:
+
+```typescript
+provideAgent({
+  apiUrl: environment.langGraphApiUrl,
+  assistantId: environment.streamingAssistantId,
+  // The default. Set it when your dispatch tool is named something else.
+  subagentToolNames: ['task'],
+});
+```
+
+The SubagentTracker registers the dispatch from the tool call — including the `subagent_type`
+argument, which becomes the card's name — and then matches the child's `tools:<call_id>`
+namespace. Because the dispatch is registered before the child emits its first token,
+attribution never depends on message ordering, which is exactly why concurrent children do not
+bleed into each other.
+
+</Step>
+<Step title="Let the cards render inline, and count them in the sidebar">
+
+The `<chat>` composition renders each dispatch as a `<chat-subagent-card>` in the conversation
+and keeps it, collapsed, after completion. A separate active-only tray would duplicate that, so
+the sidebar is better spent on something the cards do not show — how wide the fan-out went:
+
+```typescript
+private readonly dispatches = computed(() => [...this.agent.subagents().values()]);
+
+protected readonly dispatchCount = computed(() => this.dispatches().length);
+
+protected readonly runningCount = computed(
+  () => this.dispatches().filter((subagent) => subagent.status() === 'running').length,
+);
+```
+
+Note that `status` is itself a signal on the `Subagent` record, so it is called, not read.
 
 </Step>
 </Steps>
 
 <Tip>
-The `@empty` block in `@for` renders when no subagents have been spawned yet — a clean placeholder before the first message is submitted.
+Give every dispatch a `description` that names its subject and says what you want back. It is
+both the child's opening instruction and the label a reader sees on the card, so a vague
+description costs twice.
 </Tip>
 
 <Related>
-- [Chat Subagents](/chat/core-capabilities/subagents/overview/python) — Learn how ChatSubagentsComponent visualizes nested agent delegation
+- [Deep Agents Planning](/deep-agents/core-capabilities/planning/overview/python) — the orchestrator's own todo list
+- [Chat Subagents](/chat/core-capabilities/subagents/overview/python) — the card components on their own
 </Related>

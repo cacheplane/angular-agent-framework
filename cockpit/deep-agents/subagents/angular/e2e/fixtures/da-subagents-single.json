@@ -1,0 +1,58 @@
+{
+  "fixtures": [
+    {
+      "match": {
+        "userMessage": "Gather the field elevation and runway length for San Francisco International Airport (KSFO). Return both values clearly labeled.",
+        "hasToolResult": true,
+        "turnIndex": 1
+      },
+      "response": {
+        "content": "San Francisco International Airport (KSFO) has a field elevation of 13 feet and its longest runway is 11,870 feet. This runway length is more than sufficient for a mid-size business jet at that elevation."
+      }
+    },
+    {
+      "match": {
+        "userMessage": "What is the field data for KSFO?",
+        "hasToolResult": true,
+        "turnIndex": 1
+      },
+      "response": {
+        "content": "San Francisco International Airport (KSFO) has a field elevation of 13 feet above sea level. Its longest runway measures 11,870 feet, which is ample for most aircraft operations, including mid-size business jets."
+      }
+    },
+    {
+      "match": {
+        "userMessage": "What is the field data for KSFO?",
+        "hasToolResult": false,
+        "turnIndex": 0
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "task",
+            "arguments": "{\"description\":\"Gather the field elevation and runway length for San Francisco International Airport (KSFO). Return both values clearly labeled.\",\"subagent_type\":\"field-researcher\"}"
+          }
+        ]
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Gather the field elevation and runway length for San Francisco International Airport (KSFO). Return both values clearly labeled.",
+        "hasToolResult": false,
+        "turnIndex": 0
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "lookup_field_elevation",
+            "arguments": "{\"airport\": \"KSFO\"}"
+          },
+          {
+            "name": "lookup_runway_length",
+            "arguments": "{\"airport\": \"KSFO\"}"
+          }
+        ]
+      }
+    }
+  ]
+}

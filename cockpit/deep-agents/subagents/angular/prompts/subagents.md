@@ -1,5 +1,5 @@
 # Deep Agents Subagents (Angular)
 
-This capability demonstrates an orchestrator agent that delegates work to specialised subagents using the `@threadplane/chat` Angular component library. The `<chat-debug>` component shows the full delegation trace — which subagent was called, with what instructions, and what it returned — giving developers complete observability into multi-agent coordination.
+This capability renders real child agents. `SubAgentMiddleware` gives the orchestrator a `task` tool taking `{ description, subagent_type }`, and each dispatch runs as its own graph in a `tools:<call_id>` namespace. Attribution is therefore structural rather than inferred: the SubagentTracker matches namespaces, so four children streaming at once land in four separate `<chat-subagent-card>` elements instead of interleaving into one.
 
-Key components used: `<chat-debug>`. Each subagent invocation appears as a collapsible trace node labelled with the subagent's identity, making it straightforward to audit delegation chains, spot redundant calls, and verify that each subagent received the correct context.
+`task` is the SubagentTracker's default dispatch-tool name, so a `deepagents` graph needs no client configuration for the cards to appear; `provideAgent()` names it explicitly as documentation. The sidebar reads `agent.subagents()` for a live dispatch and running count.

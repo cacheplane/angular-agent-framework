@@ -1,0 +1,149 @@
+{
+  "fixtures": [
+    {
+      "match": {
+        "userMessage": "Analyze the current weather conditions at Denver International Airport (KDEN) and explain the operational impact for departures and arrivals.",
+        "hasToolResult": true,
+        "turnIndex": 1
+      },
+      "response": {
+        "content": "Denver International Airport (KDEN) is currently experiencing clear skies, 10 statute miles visibility, and strong north winds at 22 knots gusting to 31 knots. These gusty winds may require increased attention during takeoff and landing, potentially causing delays or runway changes, but otherwise conditions are favorable for operations."
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Gather the field elevation and runway length for Denver International Airport (KDEN). Return both values clearly.",
+        "hasToolResult": true,
+        "turnIndex": 1
+      },
+      "response": {
+        "content": "Denver International Airport (KDEN) has a field elevation of 5,434 feet and its longest runway is 16,000 feet. This runway length is more than sufficient for a mid-size business jet at that elevation."
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Analyze the current weather conditions at Aspen/Pitkin County Airport (KASE) and explain the operational impact for departures and arrivals.",
+        "hasToolResult": true,
+        "turnIndex": 1
+      },
+      "response": {
+        "content": "Aspen/Pitkin County Airport (KASE) is currently reporting a few clouds at 12,000 feet, visibility 10 statute miles, wind from 300° at 6 knots, and a mountain wave advisory. While the weather is generally VFR and suitable for operations, the mountain wave advisory indicates potential turbulence and wind shear, which could impact both departures and arrivals, especially for smaller aircraft and during approach or climb-out phases."
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Gather the field elevation and runway length for Aspen/Pitkin County Airport (KASE). Return both values clearly.",
+        "hasToolResult": true,
+        "turnIndex": 1
+      },
+      "response": {
+        "content": "Aspen/Pitkin County Airport (KASE) has a field elevation of 7,820 feet and its longest runway is 8,006 feet. At this elevation, the runway is just adequate for most mid-size business jets, but performance margins may be tight, especially in hot weather or at maximum weights."
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Brief me on KASE and KDEN: I need field data for both and the current weather at both.",
+        "hasToolResult": true,
+        "turnIndex": 1
+      },
+      "response": {
+        "content": "Aspen/Pitkin County Airport (KASE) sits at a high elevation of 7,820 feet with an 8,006-foot runway, which is adequate but leaves little margin for performance, especially in hot or heavy conditions. The current weather at KASE is VFR with good visibility, but a mountain wave advisory means turbulence and wind shear could affect arrivals and departures. Denver International Airport (KDEN) is at 5,434 feet and has a very long 16,000-foot runway, providing ample room for operations. Weather at KDEN is clear, but strong, gusty north winds may require extra caution during takeoff and landing, though overall conditions are favorable."
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Brief me on KASE and KDEN: I need field data for both and the current weather at both.",
+        "hasToolResult": false,
+        "turnIndex": 0
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "task",
+            "arguments": "{\"description\": \"Gather the field elevation and runway length for Aspen/Pitkin County Airport (KASE). Return both values clearly.\", \"subagent_type\": \"field-researcher\"}"
+          },
+          {
+            "name": "task",
+            "arguments": "{\"description\": \"Gather the field elevation and runway length for Denver International Airport (KDEN). Return both values clearly.\", \"subagent_type\": \"field-researcher\"}"
+          },
+          {
+            "name": "task",
+            "arguments": "{\"description\": \"Analyze the current weather conditions at Aspen/Pitkin County Airport (KASE) and explain the operational impact for departures and arrivals.\", \"subagent_type\": \"weather-analyst\"}"
+          },
+          {
+            "name": "task",
+            "arguments": "{\"description\": \"Analyze the current weather conditions at Denver International Airport (KDEN) and explain the operational impact for departures and arrivals.\", \"subagent_type\": \"weather-analyst\"}"
+          }
+        ]
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Analyze the current weather conditions at Denver International Airport (KDEN) and explain the operational impact for departures and arrivals.",
+        "hasToolResult": false,
+        "turnIndex": 0
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "lookup_weather",
+            "arguments": "{\"airport\":\"KDEN\"}"
+          }
+        ]
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Gather the field elevation and runway length for Denver International Airport (KDEN). Return both values clearly.",
+        "hasToolResult": false,
+        "turnIndex": 0
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "lookup_field_elevation",
+            "arguments": "{\"airport\": \"KDEN\"}"
+          },
+          {
+            "name": "lookup_runway_length",
+            "arguments": "{\"airport\": \"KDEN\"}"
+          }
+        ]
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Analyze the current weather conditions at Aspen/Pitkin County Airport (KASE) and explain the operational impact for departures and arrivals.",
+        "hasToolResult": false,
+        "turnIndex": 0
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "lookup_weather",
+            "arguments": "{\"airport\":\"KASE\"}"
+          }
+        ]
+      }
+    },
+    {
+      "match": {
+        "userMessage": "Gather the field elevation and runway length for Aspen/Pitkin County Airport (KASE). Return both values clearly.",
+        "hasToolResult": false,
+        "turnIndex": 0
+      },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "lookup_field_elevation",
+            "arguments": "{\"airport\": \"KASE\"}"
+          },
+          {
+            "name": "lookup_runway_length",
+            "arguments": "{\"airport\": \"KASE\"}"
+          }
+        ]
+      }
+    }
+  ]
+}

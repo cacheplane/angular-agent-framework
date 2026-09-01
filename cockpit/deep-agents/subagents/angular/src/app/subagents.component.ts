@@ -1,177 +1,129 @@
+// SPDX-License-Identifier: MIT
 import { Component, computed } from '@angular/core';
-import { ChatComponent } from '@threadplane/chat';
+import { ChatComponent, ChatWelcomeSuggestionComponent } from '@threadplane/chat';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
 import { injectAgent } from '@threadplane/langgraph';
 
-/**
- * Delegation status derived from matching tool calls with tool result messages.
- */
-interface Delegation {
-  /** Tool call ID used to track request/response pairing. */
-  id: string;
-  /** Name of the delegated agent (tool name). */
-  agent: string;
-  /** Execution status: running until a matching tool result arrives. */
-  status: 'running' | 'complete' | 'error';
-  /** Human-readable status text. */
-  statusText: string;
-}
+const SUGGESTIONS = [
+  // values match cockpit/deep-agents/subagents/angular/e2e/*.spec.ts prompts.
+  {
+    label: 'Two airports at once',
+    value: 'Brief me on KASE and KDEN: I need field data for both and the current weather at both.',
+    description: 'Four dispatches in a single turn — the specialists run in parallel.',
+  },
+  {
+    label: 'One airport',
+    value: 'What is the field data for KSFO?',
+    description: 'A single dispatch to the field researcher.',
+  },
+] as const;
 
 /**
- * SubagentsComponent demonstrates the Deep Agents subagent delegation pattern.
+ * SubagentsComponent shows real child agents, not a tool-call log.
  *
- * The orchestrator agent receives a task and delegates subtasks to specialist
- * subagents via tool calls. The sidebar tracks each delegation by scanning
- * `stream.messages()` for AI tool_calls and matching ToolMessage results.
+ * `SubAgentMiddleware` runs each `task` dispatch as its own graph in a
+ * `tools:<call_id>` namespace, so a child's tokens arrive tagged with which
+ * dispatch produced them. Attribution is therefore structural: the tracker
+ * matches namespaces, and does not have to guess from message ordering. That
+ * is what makes parallel fan-out render correctly — four children streaming at
+ * once land in four separate cards rather than interleaving into one.
+ *
+ * The cards are rendered inline by the `<chat>` composition and persist after
+ * completion. The sidebar keeps the roster and a live dispatch count so the
+ * fan-out is visible as a number, not only as a wall of cards.
  */
 @Component({
   selector: 'app-subagents',
   standalone: true,
-  imports: [ChatComponent, ExampleChatLayoutComponent],
+  imports: [ChatComponent, ChatWelcomeSuggestionComponent, ExampleChatLayoutComponent],
   template: `
-    <example-chat-layout sidebarWidth="18rem">
-      <chat main [agent]="agent" class="flex-1 min-w-0" />
+    <example-chat-layout sidebarWidth="20rem">
+      <chat main [agent]="agent" class="flex-1 min-w-0">
+        <div chatWelcomeSuggestions>
+          @for (s of suggestions; track s.value) {
+            <chat-welcome-suggestion
+              [label]="s.label"
+              [value]="s.value"
+              [description]="s.description"
+              (selected)="send($event)"
+            />
+          }
+        </div>
+      </chat>
       <div sidebar class="panel">
-        <h3 class="cap">Delegations</h3>
-        @if (delegations().length === 0) {
-          <p class="empty">No delegations yet</p>
-        }
-        @for (d of delegations(); track d.id) {
-          <div class="delegation">
-            <span class="dot"
-                  [class.dot--running]="d.status === 'running'"
-                  [class.dot--complete]="d.status === 'complete'"
-                  [class.dot--error]="d.status === 'error'">
-            </span>
-            <span class="agent">{{ d.agent }}</span>
-            <span class="status">{{ d.statusText }}</span>
-          </div>
-        }
+        <h3 class="cap">Dispatches</h3>
+        <p class="count" data-testid="dispatch-count">
+          {{ dispatchCount() }} dispatched, {{ runningCount() }} running
+        </p>
+        <h3 class="cap">Specialists</h3>
+        <ul class="roster">
+          <li><span class="roster__name">field-researcher</span> — elevation and runway length</li>
+          <li><span class="roster__name">weather-analyst</span> — conditions and operational impact</li>
+        </ul>
       </div>
     </example-chat-layout>
   `,
-  styles: [`
-    .panel {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      padding: 1rem;
-      background: var(--tplane-chat-bg);
-      color: var(--tplane-chat-text);
-    }
+  styles: [
+    `
+      .panel {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 1rem;
+        background: var(--tplane-chat-bg);
+        color: var(--tplane-chat-text);
+      }
 
-    .cap {
-      margin: 0;
-      font-size: var(--tplane-chat-font-size-xs);
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--tplane-chat-text-muted);
-    }
+      .cap {
+        margin: 0;
+        color: var(--tplane-chat-text-muted);
+        font-size: var(--tplane-chat-font-size-xs);
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        line-height: var(--tplane-chat-line-height-tight);
+        text-transform: uppercase;
+      }
 
-    .empty {
-      margin: 0;
-      font-size: var(--tplane-chat-font-size-sm);
-      font-style: italic;
-      color: var(--tplane-chat-text-muted);
-    }
+      .count {
+        margin: 0;
+        color: var(--tplane-chat-text);
+        font-family: var(--tplane-chat-font-mono);
+        font-size: var(--tplane-chat-font-size-xs);
+      }
 
-    .delegation {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.25rem 0;
-      font-size: var(--tplane-chat-font-size-sm);
-    }
+      .roster {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        margin: 0;
+        padding: 0;
+        color: var(--tplane-chat-text-muted);
+        font-size: var(--tplane-chat-font-size-xs);
+        line-height: var(--tplane-chat-line-height);
+        list-style: none;
+      }
 
-    .dot {
-      flex: 0 0 auto;
-      width: 0.5rem;
-      height: 0.5rem;
-      border-radius: var(--tplane-chat-radius-launcher);
-    }
-
-    .dot--running {
-      background: var(--tplane-chat-warning-text);
-    }
-
-    .dot--complete {
-      background: var(--tplane-chat-success);
-    }
-
-    .dot--error {
-      background: var(--tplane-chat-error-text);
-    }
-
-    .agent {
-      min-width: 0;
-      overflow: hidden;
-      color: var(--tplane-chat-text);
-      font-weight: 600;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .status {
-      margin-left: auto;
-      color: var(--tplane-chat-text-muted);
-      font-size: var(--tplane-chat-font-size-xs);
-    }
-  `],
+      .roster__name {
+        color: var(--tplane-chat-text);
+        font-family: var(--tplane-chat-font-mono);
+      }
+    `,
+  ],
 })
 export class SubagentsComponent {
-  /**
-   * The streaming resource connected to the subagents orchestrator graph.
-   */
   protected readonly agent = injectAgent();
 
-  /**
-   * Reactive delegation list derived from messages.
-   *
-   * Scans all messages for AI tool_calls, then checks for matching
-   * ToolMessage results (by tool_call_id) to determine completion status.
-   */
-  protected readonly delegations = computed<Delegation[]>(() => {
-    const msgs = this.agent.langGraphMessages();
-    const toolResultIds = new Set<string>();
-    const errorResultIds = new Set<string>();
+  protected readonly suggestions = SUGGESTIONS;
 
-    // Collect all tool result message IDs and detect errors
-    for (const msg of msgs) {
-      const type = typeof msg._getType === 'function' ? msg._getType() : (msg as any).type;
-      if (type === 'tool') {
-        const toolCallId = (msg as any).tool_call_id;
-        if (toolCallId) {
-          toolResultIds.add(toolCallId);
-          const status = (msg as any).status;
-          if (status === 'error') {
-            errorResultIds.add(toolCallId);
-          }
-        }
-      }
-    }
+  private readonly dispatches = computed(() => [...this.agent.subagents().values()]);
 
-    // Extract tool calls from AI messages and match with results
-    const delegations: Delegation[] = [];
-    for (const msg of msgs) {
-      const type = typeof msg._getType === 'function' ? msg._getType() : (msg as any).type;
-      if (type === 'ai') {
-        const toolCalls = (msg as any).tool_calls as Array<{ id: string; name: string }> | undefined;
-        if (toolCalls?.length) {
-          for (const tc of toolCalls) {
-            const isError = errorResultIds.has(tc.id);
-            const isComplete = toolResultIds.has(tc.id);
-            delegations.push({
-              id: tc.id,
-              agent: tc.name,
-              status: isError ? 'error' : isComplete ? 'complete' : 'running',
-              statusText: isError ? 'error' : isComplete ? 'done' : 'running',
-            });
-          }
-        }
-      }
-    }
+  protected readonly dispatchCount = computed(() => this.dispatches().length);
 
-    return delegations;
-  });
+  protected readonly runningCount = computed(
+    () => this.dispatches().filter((subagent) => subagent.status() === 'running').length,
+  );
+
+  protected send(text: string): void {
+    void this.agent.submit({ message: text });
+  }
 }
