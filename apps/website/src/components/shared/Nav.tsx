@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
+  DOCS_INDEX_TITLE,
   findDocsPage,
   getLibraryConfig,
   specialDocsPages,
@@ -108,7 +109,7 @@ export function Nav() {
   const docsPageTitle =
     findDocsPage(activeLibrary, activeSection, activeSlug)?.title ??
     specialDocsPage?.title ??
-    'Documentation';
+    (pathname === '/docs' ? DOCS_INDEX_TITLE : 'Documentation');
   const navRef = useRef<HTMLElement>(null);
   const mobileTriggerRef = useRef<HTMLButtonElement>(null);
   const mobileDialogRef = useRef<HTMLDivElement>(null);

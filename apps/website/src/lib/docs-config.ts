@@ -62,6 +62,13 @@ export interface SpecialDocsPage {
   description: string;
 }
 
+/**
+ * What the docs root calls itself in the control plane's Scope card. Shared so
+ * the page and the mobile drawer, which resolve the title independently,
+ * cannot drift into naming the same page two different things.
+ */
+export const DOCS_INDEX_TITLE = 'Overview';
+
 export const specialDocsPages: SpecialDocsPage[] = [
   {
     path: '/docs/choosing-an-adapter',
@@ -133,7 +140,9 @@ export const docsConfig: DocsLibrary[] = [
   },
   {
     id: 'render',
-    title: 'Render',
+    // Display label only. The package is @threadplane/render and the docs URL
+    // stays /docs/render/ — but every page of prose calls it json-render.
+    title: 'json-render',
     description: 'Declarative UI rendering from JSON specifications',
     group: 'library',
     sections: [
