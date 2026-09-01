@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { cockpitManifest } from '@threadplane/cockpit-registry';
 import {
@@ -117,8 +119,39 @@ describe('runtimes capability presentation', () => {
       'cockpit/runtimes/mastra/angular/src/app/mastra.component.ts'
     );
     expect(presentation.promptAssetPaths).toEqual([
+      'cockpit/runtimes/mastra/angular/prompts/mastra-backend.md',
       'cockpit/runtimes/mastra/angular/prompts/mastra.md',
     ]);
+    // Backend assets deliberately point outside cockpit/: the topic's
+    // backend is the Node hosting service, not a cockpit/ Python lane.
+    expect(presentation.backendAssetPaths).toEqual([
+      'deployments/ag-ui-mastra/agents.mjs',
+      'deployments/ag-ui-mastra/server.mjs',
+    ]);
+    expect(presentation.docsAssetPaths).toEqual([
+      'cockpit/runtimes/mastra/angular/docs/guide.md',
+    ]);
+    expect(presentation.runtimeUrl).toBe('runtimes/mastra');
+    expect(presentation.devPort).toBe(4332);
+
+    // Every declared asset must exist on disk — the content bundle renders
+    // "File not found" instead of failing, so a typo here is silent in CI.
+    // Same workspace-root discovery as content-bundle.ts: walk up from CWD
+    // until nx.json (vitest may run from the app dir or the workspace root).
+    let workspaceRoot = process.cwd();
+    while (!existsSync(join(workspaceRoot, 'nx.json'))) {
+      const parent = join(workspaceRoot, '..');
+      if (parent === workspaceRoot) break;
+      workspaceRoot = parent;
+    }
+    for (const path of [
+      ...presentation.promptAssetPaths,
+      ...presentation.codeAssetPaths,
+      ...presentation.backendAssetPaths,
+      ...presentation.docsAssetPaths,
+    ]) {
+      expect(existsSync(join(workspaceRoot, path)), `missing asset: ${path}`).toBe(true);
+    }
   });
 });
 

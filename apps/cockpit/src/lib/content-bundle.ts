@@ -63,6 +63,7 @@ const LANG_MAP: Record<string, string> = {
   ts: 'typescript',
   tsx: 'tsx',
   js: 'javascript',
+  mjs: 'javascript',
   jsx: 'jsx',
   py: 'python',
   md: 'markdown',
@@ -129,7 +130,7 @@ export async function getContentBundle(
 
       // Extract doc sections
       const fileName = path.split('/').pop() ?? path;
-      if (path.endsWith('.ts') || path.endsWith('.tsx')) {
+      if (path.endsWith('.ts') || path.endsWith('.tsx') || path.endsWith('.mjs')) {
         docSections.push(...extractTsDocSections(source, fileName));
       } else if (path.endsWith('.py')) {
         docSections.push(...extractPyDocSections(source, fileName));
