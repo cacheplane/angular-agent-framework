@@ -1,0 +1,78 @@
+---
+title: Quickstart
+description: Run the AWS Strands runtime example locally, backend and Angular app, on ports 5331 and 4331.
+---
+
+# AWS Strands Quickstart
+
+This runs the example from a clone of the [monorepo](https://github.com/cacheplane/angular-agent-framework). The backend is a uvicorn process on port 5331; the Angular dev server is on port 4331 and proxies `/agent` to it.
+
+<Callout type="info" title="Prerequisites">
+Node.js 20 or newer, Python 3.11 or newer, [`uv`](https://docs.astral.sh/uv/), and an OpenAI API key. No AWS account and no AWS credentials are required.
+</Callout>
+
+<Steps>
+<Step title="Install workspace dependencies">
+
+```bash
+git clone https://github.com/cacheplane/angular-agent-framework.git
+cd angular-agent-framework
+npm ci
+```
+
+</Step>
+<Step title="Configure the backend environment">
+
+Copy the example file and fill in a real key.
+
+```bash
+cp cockpit/runtimes/aws-strands/python/.env.example \
+   cockpit/runtimes/aws-strands/python/.env
+```
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `OPENAI_API_KEY` | Yes | Strands' native OpenAI provider. |
+| `OPENAI_CHAT_MODEL` | No | Model name. Defaults to `gpt-4o-mini`. |
+| `OPENAI_BASE_URL` | No | Redirects the OpenAI client. The end-to-end fixture harness sets this to replay recorded calls. |
+| `OTEL_SDK_DISABLED` | No | Already set to `true` in `src/agent.py`. Strands wires OpenTelemetry unconditionally and logs exporter noise without a collector. |
+| `OTEL_PYTHON_DISABLED_INSTRUMENTATIONS` | No | Same reason, set to `all` by default. |
+
+</Step>
+<Step title="Start both halves">
+
+One command starts the Python backend and the Angular dev server together.
+
+```bash
+npx tsx apps/cockpit/scripts/serve-example.ts --capability=rt-strands
+```
+
+The script runs `uv sync` in `cockpit/runtimes/aws-strands/python` on the way, so the first start takes longer than later ones.
+
+</Step>
+<Step title="Open the app">
+
+Visit `http://localhost:4331`. The backend answers on `http://localhost:5331/agent`, with an unauthenticated health check at `http://localhost:5331/ok`.
+
+</Step>
+<Step title="Exercise every surface">
+
+Three prompts cover the measured surfaces in order.
+
+1. *"What is my availability on Thursday?"* — streams a message and calls `check_availability`, which mirrors its result into shared state.
+2. *"Book the 2pm slot to talk about the roadmap."* — calls `book_meeting`, which parks in an interrupt and renders an approval card.
+3. Approve or decline the card — the run resumes and the agent confirms the outcome.
+
+</Step>
+</Steps>
+
+## About the bridge pin
+
+`pyproject.toml` pins `ag-ui-strands` to a git reference of the [`ag-ui-protocol/ag-ui`](https://github.com/ag-ui-protocol/ag-ui) repository, subdirectory `integrations/aws-strands/python`, through `[tool.uv.sources]`. The exported requirements file carries the matching `git+https://...#subdirectory=...` line.
+
+The published PyPI release, `ag-ui-strands` 0.3.0, is stale: it predates the interrupt and resume contract this example depends on, and it crashes on multi-agent routes. Installing from PyPI instead of the pin will not reproduce the behavior documented here.
+
+## Next steps
+
+- [How It Connects](/docs/runtimes/aws-strands/how-it-connects) — the wire conventions this example relies on.
+- [Overview](/docs/runtimes/aws-strands/overview) — what the integration does and does not support.

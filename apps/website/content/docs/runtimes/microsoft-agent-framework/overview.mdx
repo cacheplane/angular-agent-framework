@@ -1,0 +1,56 @@
+---
+title: Overview
+description: What the Microsoft Agent Framework integration demonstrates through @threadplane/ag-ui, including predictive state streaming.
+---
+
+# Microsoft Agent Framework Overview
+
+[Microsoft Agent Framework](https://github.com/microsoft/agent-framework) is Microsoft's Python and .NET agent SDK. Its AG-UI bridge turns an `Agent` into an AG-UI event stream, which is all `@threadplane/ag-ui` needs in order to bind it to `<chat>`.
+
+The Threadplane example is an expense assistant. It looks up policy through a server-side tool, streams a proposed expense into frontend state while the model is still writing it, and requires human approval before submitting.
+
+<Callout type="tip" title="See it live">
+The hosted example runs at [examples.threadplane.ai/runtimes/microsoft-agent-framework](https://examples.threadplane.ai/runtimes/microsoft-agent-framework/). The source is [`cockpit/runtimes/microsoft-agent-framework`](https://github.com/cacheplane/angular-agent-framework/tree/main/cockpit/runtimes/microsoft-agent-framework).
+</Callout>
+
+## What the integration demonstrates
+
+| Surface | Status | How |
+|---|---|---|
+| Messages | Supported | Streamed assistant text from `Agent` in `agent-framework-core`. |
+| Tool calls | Supported | `lookup_expense_policy` executes server-side with no pause. |
+| Shared state | Supported | `predict_state_config` streams a tool argument into frontend state. |
+| Interrupts | Supported | `submit_expense` declares `approval_mode="always_require"`. |
+| Subagents | Not available | The bridge emits no per-subagent activity stream. |
+
+This is the most complete third-party row in the measured matrix: four of five surfaces are green, and the fifth is red on every runtime tested.
+
+## Predictive state is the interesting part
+
+`predict_state_config` maps a tool argument onto a state key:
+
+```python
+predict_state_config={
+    "expense": {"tool": "submit_expense", "tool_argument": "expense"},
+}
+```
+
+The bridge then streams the `expense` argument of `submit_expense` into frontend state as the model generates it, over `STATE_SNAPSHOT` and `STATE_DELTA`. The user watches the expense fill in before the tool has been called, let alone approved.
+
+Unlike AWS Strands, this runtime emits real deltas, so state does not have to be reassembled in full on every update.
+
+## Subagents are not available
+
+The bridge emits coarse executor-level activity snapshots and constructs `ACTIVITY_DELTA` nowhere. The Threadplane subagent projection keys on an `activityType` of `subagent`, which no third-party runtime emits.
+
+This is an upstream gap rather than an adapter defect. The AG-UI protocol has carried dedicated `SUBAGENT_*` events since `@ag-ui/core` 0.0.59, and adopting them is upstream work.
+
+## Model access
+
+Azure OpenAI is the default path. When `AZURE_OPENAI_ENDPOINT` is set, the agent routes through Azure OpenAI with key authentication. When it is absent, the agent falls back to the plain OpenAI client on `OPENAI_API_KEY`.
+
+## Next steps
+
+- [Quickstart](/docs/runtimes/microsoft-agent-framework/quickstart) — run the example locally.
+- [How It Connects](/docs/runtimes/microsoft-agent-framework/how-it-connects) — the measured wire conventions.
+- [Choosing an adapter](/docs/choosing-an-adapter) — the full runtime matrix and its cause analysis.

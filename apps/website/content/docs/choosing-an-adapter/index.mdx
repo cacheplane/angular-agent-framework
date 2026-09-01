@@ -123,9 +123,9 @@ AWS Strands and Microsoft Agent Framework both read the protocol-standard top-le
 The LangGraph bridge reads `forwardedProps.command.resume`.
 You pass one neutral `submit({ resume })`, and the adapter derives the wire shape from how the interrupt arrived.
 
-**The Mastra row was measured, but not in the hosted demo.**
+**The Mastra row is hosted on its own lane.**
 Its cells come from a real Mastra server driven with live model calls, and its transcripts are committed and replayed like the others.
-Unlike the Strands and Microsoft Agent Framework rows, it is not yet running in the hosted demo deployment.
+Unlike the Strands and Microsoft Agent Framework rows, it is not served by the shared FastAPI deployment: upstream ships no plain AG-UI HTTP endpoint, so its backend is a separate Node service.
 
 **Subagents are red for every third-party runtime, and none of those reds are a bug.**
 The three runtimes do not fail to implement one thing; they model delegation three different ways.

@@ -5,7 +5,8 @@ export type LibraryId =
   | 'ag-ui'
   | 'a2ui'
   | 'middleware'
-  | 'telemetry';
+  | 'telemetry'
+  | 'runtimes';
 
 export interface DocsPage {
   title: string;
@@ -422,6 +423,51 @@ export const docsConfig: DocsLibrary[] = [
         color: 'blue',
         pages: [
           { title: 'Events', slug: 'events', section: 'reference' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'runtimes',
+    title: 'Runtimes',
+    description: 'Measured AG-UI runtime integrations behind @threadplane/ag-ui',
+    sections: [
+      {
+        title: 'Getting Started',
+        id: 'getting-started',
+        color: 'blue',
+        pages: [
+          { title: 'Introduction', slug: 'introduction', section: 'getting-started' },
+        ],
+      },
+      {
+        title: 'AWS Strands',
+        id: 'aws-strands',
+        color: 'blue',
+        pages: [
+          { title: 'Overview', slug: 'overview', section: 'aws-strands' },
+          { title: 'Quickstart', slug: 'quickstart', section: 'aws-strands' },
+          { title: 'How It Connects', slug: 'how-it-connects', section: 'aws-strands' },
+        ],
+      },
+      {
+        title: 'Microsoft Agent Framework',
+        id: 'microsoft-agent-framework',
+        color: 'red',
+        pages: [
+          { title: 'Overview', slug: 'overview', section: 'microsoft-agent-framework' },
+          { title: 'Quickstart', slug: 'quickstart', section: 'microsoft-agent-framework' },
+          { title: 'How It Connects', slug: 'how-it-connects', section: 'microsoft-agent-framework' },
+        ],
+      },
+      {
+        title: 'Mastra',
+        id: 'mastra',
+        color: 'blue',
+        pages: [
+          { title: 'Overview', slug: 'overview', section: 'mastra' },
+          { title: 'Quickstart', slug: 'quickstart', section: 'mastra' },
+          { title: 'How It Connects', slug: 'how-it-connects', section: 'mastra' },
         ],
       },
     ],
