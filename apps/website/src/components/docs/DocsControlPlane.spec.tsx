@@ -404,6 +404,45 @@ describe('DocsControlPlane', () => {
   });
 });
 
+describe('DocsControlPlane — library-neutral', () => {
+  it('states only what it knows in Scope', () => {
+    render(
+      <DocsControlPlane
+        activeLibrary={null}
+        activeSection=""
+        activeSlug=""
+        pageTitle="Choosing an adapter"
+      />,
+    );
+
+    const scope = screen.getByRole('heading', { name: 'Scope' }).closest('section');
+    if (!scope) throw new Error('Expected Scope section');
+    expect(within(scope).getByText('Choosing an adapter')).toBeTruthy();
+    expect(within(scope).queryByText('LangGraph')).toBeNull();
+    expect(within(scope).queryByText('Getting Started')).toBeNull();
+  });
+
+  it('offers an unselected picker and no section tree', () => {
+    render(
+      <DocsControlPlane
+        activeLibrary={null}
+        activeSection=""
+        activeSlug=""
+        pageTitle="Choosing an adapter"
+      />,
+    );
+
+    const trigger = screen.getByRole('button', { name: 'Choose a library' });
+    fireEvent.click(trigger);
+    const items = screen.getAllByRole('menuitemradio');
+    expect(items.length).toBeGreaterThan(0);
+    expect(items.every((i) => i.getAttribute('aria-checked') === 'false')).toBe(true);
+
+    // No library means there is no section tree to show.
+    expect(screen.queryByRole('button', { name: 'Getting Started' })).toBeNull();
+  });
+});
+
 describe('DocsContextContent', () => {
   it('reuses the same sentence-case navigation content for mobile', () => {
     render(

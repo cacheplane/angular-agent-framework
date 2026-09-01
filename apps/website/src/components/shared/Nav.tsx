@@ -2,7 +2,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { findDocsPage, getLibraryConfig, type LibraryId } from '../../lib/docs-config';
+import {
+  findDocsPage,
+  getLibraryConfig,
+  specialDocsPages,
+  type LibraryId,
+} from '../../lib/docs-config';
 import { trackCtaClick, trackExternalLinkClick } from '../../lib/analytics/client';
 import type { AnalyticsLibrary } from '../../lib/analytics/events';
 import { LogoMark } from '../ui/LogoMark';
@@ -17,7 +22,7 @@ const links = [
   { label: 'Examples', href: 'https://cockpit.threadplane.ai', external: true },
 ];
 
-const toAnalyticsLibrary = (library: LibraryId): AnalyticsLibrary => {
+const toAnalyticsLibrary = (library: LibraryId | null): AnalyticsLibrary => {
   switch (library) {
     case 'langgraph':
     case 'render':
@@ -95,8 +100,15 @@ export function Nav() {
   const activeLibrary = isDocsPage && pathParts.length >= 2 ? pathParts[1] : '';
   const activeSection = isDocsPage && pathParts.length >= 3 ? pathParts[2] : '';
   const activeSlug = isDocsPage && pathParts.length >= 4 ? pathParts[3] : '';
-  const docsLibrary = (getLibraryConfig(activeLibrary)?.id ?? 'langgraph') as LibraryId;
-  const docsPageTitle = findDocsPage(activeLibrary, activeSection, activeSlug)?.title ?? 'Documentation';
+  // A docs URL without a library segment (e.g. /docs/choosing-an-adapter) is
+  // library-neutral. Defaulting to a library here made the drawer claim the
+  // reader was inside LangGraph's docs.
+  const docsLibrary = (getLibraryConfig(activeLibrary)?.id ?? null) as LibraryId | null;
+  const specialDocsPage = specialDocsPages.find((page) => page.path === pathname);
+  const docsPageTitle =
+    findDocsPage(activeLibrary, activeSection, activeSlug)?.title ??
+    specialDocsPage?.title ??
+    'Documentation';
   const navRef = useRef<HTMLElement>(null);
   const mobileTriggerRef = useRef<HTMLButtonElement>(null);
   const mobileDialogRef = useRef<HTMLDivElement>(null);

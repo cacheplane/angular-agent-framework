@@ -1,23 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 import { notFound } from 'next/navigation';
-import { MDXRemote } from 'next-mdx-remote/rsc';
-import rehypePrettyCode from 'rehype-pretty-code';
-import rehypeSlug from 'rehype-slug';
-import remarkGfm from 'remark-gfm';
-import { tokens } from '@threadplane/design-tokens';
-import { Container } from '../../../components/ui/Container';
-import { Section } from '../../../components/ui/Section';
-import { Eyebrow } from '../../../components/ui/Eyebrow';
-import { Callout } from '../../../components/docs/mdx/Callout';
-import { Steps, Step } from '../../../components/docs/mdx/Steps';
-import { Tabs, Tab } from '../../../components/docs/mdx/Tabs';
-import { Card, CardGroup } from '../../../components/docs/mdx/Card';
-import { CodeGroup } from '../../../components/docs/mdx/CodeGroup';
-import { Pre } from '../../../components/docs/mdx/CodeBlock';
-import { mdxHeadingComponents } from '../../../components/docs/mdx/headings';
+import { DocsControlPlane } from '../../../components/docs/DocsControlPlane';
+import { DocsSearch } from '../../../components/docs/DocsSearch';
+import { MdxRenderer } from '../../../components/docs/MdxRenderer';
 import { createPageMetadata } from '../../../lib/site-metadata';
 import { stripFrontmatter } from '../../../lib/docs';
+
+const PAGE_TITLE = 'Choosing an adapter';
 
 export const metadata = createPageMetadata({
   title: 'Choosing an adapter — Threadplane',
@@ -25,29 +15,6 @@ export const metadata = createPageMetadata({
   pathname: '/docs/choosing-an-adapter',
   type: 'website',
 });
-
-const mdxComponents = {
-  Callout,
-  Steps,
-  Step,
-  Tabs,
-  Tab,
-  Card,
-  CardGroup,
-  CodeGroup,
-  pre: Pre,
-  table: ({ children, ...rest }: React.HTMLAttributes<HTMLTableElement>) => (
-    <div className="docs-table-scroll">
-      <table {...rest}>{children}</table>
-    </div>
-  ),
-  ...mdxHeadingComponents,
-};
-
-const rehypeOptions = {
-  theme: 'tokyo-night',
-  keepBackground: true,
-};
 
 function resolveContentFile(): string | null {
   const candidates = [
@@ -64,49 +31,29 @@ export default function ChoosingAnAdapterPage() {
   const filePath = resolveContentFile();
   if (!filePath) notFound();
 
-  const raw = fs.readFileSync(filePath, 'utf8');
-  const source = stripFrontmatter(raw);
+  const source = stripFrontmatter(fs.readFileSync(filePath, 'utf8'));
 
   return (
-    <>
-      <Section surface="canvas" ariaLabelledBy="choosing-an-adapter-heading">
-        <Container>
-          <div className="adapter-hero-inner">
-            <Eyebrow tone="accent" className="adapter-eyebrow-spaced">
-              Documentation
-            </Eyebrow>
-            <div id="choosing-an-adapter-heading" />
-          </div>
-        </Container>
-      </Section>
-
-      <Section surface="canvas">
-        <Container>
+    <div className="flex min-h-screen docs-shell-page">
+      <DocsSearch />
+      {/* This page is deliberately library-neutral: it is the page that helps
+       * you pick one, so the picker opens with nothing selected. */}
+      <DocsControlPlane
+        activeLibrary={null}
+        activeSection=""
+        activeSlug=""
+        pageTitle={PAGE_TITLE}
+      />
+      <div className="flex-1 flex min-w-0 docs-shell-body">
+        <div className="flex-1 min-w-0">
           <article
-            className="docs-prose prose prose-slate max-w-none adapter-article"
-            style={
-              {
-                '--tw-prose-body': tokens.colors.textSecondary,
-                '--tw-prose-headings': tokens.colors.textPrimary,
-                '--tw-prose-code': tokens.colors.accent,
-                '--tw-prose-links': tokens.colors.accent,
-              } as React.CSSProperties
-            }
+            aria-label={PAGE_TITLE}
+            className="flex-1 py-8 px-4 sm:px-6 md:px-12 md:max-w-3xl overflow-x-hidden"
           >
-            <MDXRemote
-              source={source}
-              components={mdxComponents}
-              options={{
-                mdxOptions: {
-                  remarkPlugins: [remarkGfm],
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  rehypePlugins: [rehypeSlug, [rehypePrettyCode, rehypeOptions] as any],
-                },
-              }}
-            />
+            <MdxRenderer source={source} />
           </article>
-        </Container>
-      </Section>
-    </>
+        </div>
+      </div>
+    </div>
   );
 }
