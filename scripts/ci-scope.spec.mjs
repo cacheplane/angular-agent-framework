@@ -395,8 +395,59 @@ describe('classifyFromAffected — tag isolation', () => {
   });
 });
 
+describe('classifyFromAffected — examples/ag-ui', () => {
+  // examples/ag-ui/{,angular/}project.json already carried
+  // `scope:examples-ag-ui`, but `examples_ag_ui` was missing from SCOPE_KEYS,
+  // so classifyFromAffected read the tag and dropped it on the floor. The
+  // examples-ag-ui-e2e job therefore had no scope to gate on and ran on every
+  // PR — a 35-minute-timeout Playwright job on docs-only changes.
+  it('an affected examples/ag-ui project selects examples_ag_ui only', async () => {
+    const project = JSON.parse(
+      await readFile('examples/ag-ui/angular/project.json', 'utf8')
+    );
+    const scope = classifyFromAffected(
+      ['examples/ag-ui/angular/src/app/app.ts'],
+      [{ name: project.name, tags: project.tags }]
+    );
+
+    assert.equal(scope.examples_ag_ui, true);
+    assert.equal(scope.examples_chat, false);
+    assert.equal(scope.cockpit_e2e, false);
+    assert.equal(scope.website, false);
+  });
+
+  it('the python backend the e2e job uv-syncs owns the scope too', async () => {
+    // The examples-ag-ui-e2e job runs `uv sync` in examples/ag-ui/python and
+    // then drives the Angular app against it. An untagged backend would mean
+    // a python-only change silently skips the suite — scoping that buys speed
+    // by dropping coverage.
+    const project = JSON.parse(
+      await readFile('examples/ag-ui/python/project.json', 'utf8')
+    );
+
+    assert.ok(
+      project.tags?.includes('scope:examples-ag-ui'),
+      'examples/ag-ui/python must select the ag-ui e2e suite'
+    );
+
+    const scope = classifyFromAffected(
+      ['examples/ag-ui/python/src/agent.py'],
+      [{ name: project.name, tags: project.tags }]
+    );
+    assert.equal(scope.examples_ag_ui, true);
+  });
+
+  it('a website-only change leaves examples_ag_ui false', () => {
+    const scope = classifyFromAffected(
+      ['apps/website/src/app/layout.tsx'],
+      [{ name: 'website', tags: WEBSITE_TAGS }]
+    );
+    assert.equal(scope.examples_ag_ui, false);
+  });
+});
+
 describe('SCOPE_KEYS export', () => {
-  it('contains the 12 documented scope keys', () => {
+  it('contains the 13 documented scope keys', () => {
     assert.deepEqual(SCOPE_KEYS, [
       'library',
       'angular_compatibility',
@@ -408,6 +459,7 @@ describe('SCOPE_KEYS export', () => {
       'cockpit_deploy_smoke',
       'cockpit_e2e',
       'examples_chat',
+      'examples_ag_ui',
       'posthog',
       'scripts_tests',
     ]);

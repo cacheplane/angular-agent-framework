@@ -29,6 +29,7 @@ jobs:
       cockpit_smoke: ${{ steps.scope.outputs.cockpit_smoke }}
       cockpit_deploy_smoke: ${{ steps.scope.outputs.cockpit_deploy_smoke }}
       examples_chat: ${{ steps.scope.outputs.examples_chat }}
+      examples_ag_ui: ${{ steps.scope.outputs.examples_ag_ui }}
       cockpit_e2e: ${{ steps.scope.outputs.cockpit_e2e }}
       website_e2e: ${{ steps.scope.outputs.website_e2e }}
       posthog: ${{ steps.scope.outputs.posthog }}
@@ -399,10 +400,7 @@ jobs:
   examples-ag-ui-e2e:
     name: 'examples/ag-ui — e2e'
     needs: ci-scope
-    # No dedicated ci-scope output exists for examples/ag-ui yet, so this job
-    # runs on every push and pull_request rather than being scope-gated. It is
-    # deliberately NOT wired into the require_scoped aggregation in
-    # `required-pr-checks` (see Step 1 report) to avoid breaking that logic.
+    if: github.event_name == 'push' || needs.ci-scope.outputs.examples_ag_ui == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -581,6 +579,7 @@ jobs:
       - cockpit-deploy-smoke
       - examples-chat-smoke
       - examples-chat-e2e
+      - examples-ag-ui-e2e
       - cockpit-e2e-summary
       - website-e2e
       - posthog-sync-plan
@@ -600,6 +599,7 @@ jobs:
           RESULT_COCKPIT_DEPLOY_SMOKE: ${{ needs.cockpit-deploy-smoke.result }}
           RESULT_EXAMPLES_CHAT_SMOKE: ${{ needs.examples-chat-smoke.result }}
           RESULT_EXAMPLES_CHAT_E2E: ${{ needs.examples-chat-e2e.result }}
+          RESULT_EXAMPLES_AG_UI_E2E: ${{ needs.examples-ag-ui-e2e.result }}
           RESULT_COCKPIT_E2E: ${{ needs.cockpit-e2e-summary.result }}
           RESULT_WEBSITE_E2E: ${{ needs.website-e2e.result }}
           RESULT_POSTHOG: ${{ needs.posthog-sync-plan.result }}
@@ -612,6 +612,7 @@ jobs:
           SCOPE_COCKPIT_SMOKE: ${{ needs.ci-scope.outputs.cockpit_smoke }}
           SCOPE_COCKPIT_DEPLOY_SMOKE: ${{ needs.ci-scope.outputs.cockpit_deploy_smoke }}
           SCOPE_EXAMPLES_CHAT: ${{ needs.ci-scope.outputs.examples_chat }}
+          SCOPE_EXAMPLES_AG_UI: ${{ needs.ci-scope.outputs.examples_ag_ui }}
           SCOPE_COCKPIT_E2E: ${{ needs.ci-scope.outputs.cockpit_e2e }}
           SCOPE_WEBSITE_E2E: ${{ needs.ci-scope.outputs.website_e2e }}
           SCOPE_POSTHOG: ${{ needs.ci-scope.outputs.posthog }}
@@ -665,6 +666,11 @@ jobs:
           require_scoped "cockpit_deploy_smoke" "Cockpit — deploy smoke dry-run" "$RESULT_COCKPIT_DEPLOY_SMOKE" "$SCOPE_COCKPIT_DEPLOY_SMOKE"
           require_scoped "examples_chat" "examples/chat — python smoke" "$RESULT_EXAMPLES_CHAT_SMOKE" "$SCOPE_EXAMPLES_CHAT"
           require_scoped "examples_chat" "examples/chat — e2e" "$RESULT_EXAMPLES_CHAT_E2E" "$SCOPE_EXAMPLES_CHAT"
+          require_scoped \
+            "examples_ag_ui" \
+            "examples/ag-ui — e2e" \
+            "$RESULT_EXAMPLES_AG_UI_E2E" \
+            "$SCOPE_EXAMPLES_AG_UI"
           require_scoped "cockpit_e2e" "Cockpit — e2e" "$RESULT_COCKPIT_E2E" "$SCOPE_COCKPIT_E2E"
           require_scoped "website_e2e" "Website — e2e" "$RESULT_WEBSITE_E2E" "$SCOPE_WEBSITE_E2E"
           require_scoped "posthog" "PostHog — dashboards-as-code drift check" "$RESULT_POSTHOG" "$SCOPE_POSTHOG"

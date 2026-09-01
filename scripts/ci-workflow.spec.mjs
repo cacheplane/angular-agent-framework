@@ -409,6 +409,29 @@ describe('CI workflow', () => {
     );
   });
 
+  it('scope-gates the examples/ag-ui e2e job and requires it', async () => {
+    // This job had no `if:` at all — it ran on every push and pull_request,
+    // including docs-only ones, at a 35-minute timeout. It was also left out
+    // of required-pr-checks, so an ag-ui e2e failure did not block a merge.
+    // Both halves are fixed together: gating it without requiring it would
+    // leave a suite that is skipped often and ignored when it fails.
+    const workflow = await readWorkflow();
+    const job = readJobBlock(workflow, 'examples-ag-ui-e2e');
+
+    assert.match(job, /needs\.ci-scope\.outputs\.examples_ag_ui == 'true'/);
+
+    const required = readJobBlock(workflow, 'required-pr-checks');
+    assert.match(
+      required,
+      /require_scoped \\\n\s*"examples_ag_ui"/,
+      'required-pr-checks should aggregate the ag-ui e2e result'
+    );
+    assert.ok(
+      readJobNeeds(required).includes('examples-ag-ui-e2e'),
+      'required-pr-checks should depend on examples-ag-ui-e2e'
+    );
+  });
+
   it('lets the cockpit e2e summary inspect CI scope outputs', async () => {
     const cockpitE2eSummaryJob = await readCockpitE2eSummaryJob();
 
@@ -520,6 +543,7 @@ describe('CI workflow', () => {
       'cockpit-deploy-smoke',
       'examples-chat-smoke',
       'examples-chat-e2e',
+      'examples-ag-ui-e2e',
       'cockpit-e2e-summary',
       'website-e2e',
       'posthog-sync-plan',

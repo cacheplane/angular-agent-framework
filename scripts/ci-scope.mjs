@@ -15,6 +15,7 @@ export const SCOPE_KEYS = [
   'cockpit_deploy_smoke',
   'cockpit_e2e',
   'examples_chat',
+  'examples_ag_ui',
   'posthog',
   'scripts_tests',
 ];
