@@ -136,7 +136,7 @@ our own demo-backend convention; no third party emits it.
 | runtime | cost | notes |
 |---|---|---|
 | Microsoft | ~30 min | `agent-framework-ag-ui` is the real bridge, not the upstream dojo shim. **Azure creds NOT required** — plain `OPENAI_API_KEY`. Deps co-resolve with the existing lane. |
-| Mastra | ~15 min | Upstream ships **no** plain AG-UI HTTP endpoint — only in-process `MastraAgent` + a CopilotKit runtime mount. A ~200-line Node shim was wire-correct first try. |
+| Mastra | ~15 min | Upstream ships **no** plain AG-UI HTTP endpoint — only an in-process `MastraAgent` and a mount for its own chat frontend runtime. A ~200-line Node shim was wire-correct first try. |
 | Strands | ~5 min | ⚠️ **PyPI `ag-ui-strands` 0.3.0 is stale and crashes on multi-agent routes** — install from a git ref, not the release. |
 
 ## Phase 2 sequencing (approved 2026-08-31)

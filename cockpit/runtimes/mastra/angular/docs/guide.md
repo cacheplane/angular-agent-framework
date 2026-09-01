@@ -29,8 +29,9 @@ store would orphan every pending approval across HTTP requests.
 ## The hosting service (Node lane)
 
 Upstream `@ag-ui/mastra` ships no plain AG-UI HTTP endpoint — only the
-in-process `MastraAgent` bridge and a CopilotKit runtime mount. The backend
-is therefore the hand-written Node service `deployments/ag-ui-mastra/`:
+in-process `MastraAgent` bridge and a mount for its own chat frontend
+runtime. The backend is therefore the hand-written Node service
+`deployments/ag-ui-mastra/`:
 `server.mjs` subscribes to `MastraAgent.run(input)` (the raw AG-UI event
 Observable) and encodes each event as one SSE `data:` frame — exactly what
 `@ag-ui/client`'s `HttpAgent` consumes. It mirrors the Python lane's

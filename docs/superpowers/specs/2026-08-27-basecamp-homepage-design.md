@@ -162,8 +162,8 @@ committed. Three corrections to the design content:
   ("most packages MIT, chat commercially licensed") — it is now an unqualified
   yes: *"Can I use every package commercially without a license fee?" → Yes,
   MIT.* The old licensing FAQ item is gone from main; do not resurrect it.
-- **The CopilotKit migration question no longer exists.** #881 scrubbed
-  CopilotKit from the entire site (FAQ item, logo, differentiator copy). The
+- **The competitor-migration question no longer exists.** #881 scrubbed the
+  competitor's name from the entire site (FAQ item, logo, differentiator copy). The
   surviving-FAQ list above reflects that; reintroducing the comparison would
   run against a deliberate decision on main.
 - **The telemetry Yes-wall row strengthens.** Main's language is now "package

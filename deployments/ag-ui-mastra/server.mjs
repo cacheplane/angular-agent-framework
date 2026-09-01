@@ -2,8 +2,8 @@
 // AG-UI HTTP/SSE hosting service for Mastra agents (Lane B).
 //
 // Upstream @ag-ui/mastra ships NO plain AG-UI HTTP endpoint — only the
-// in-process `MastraAgent` bridge and a CopilotKit runtime mount. This
-// hand-written service is the missing piece: it subscribes to
+// in-process `MastraAgent` bridge and a mount for its own chat frontend
+// runtime. This hand-written service is the missing piece: it subscribes to
 // `MastraAgent.run(input)` (the raw AG-UI event Observable) and encodes each
 // event as an SSE `data: {json}` frame — exactly what @ag-ui/client's
 // HttpAgent consumes, and exactly what the Python lane's FastAPI bridges
