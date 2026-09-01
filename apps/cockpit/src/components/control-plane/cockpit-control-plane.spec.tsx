@@ -1,20 +1,13 @@
 /** @vitest-environment jsdom */
 import React, { useState } from 'react';
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { cockpitManifest } from '@threadplane/cockpit-registry';
 import { ThemeProvider, type ControlPlaneMode } from '@threadplane/ui-react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildNavigationTree } from '../../lib/route-resolution';
-
-const workspaceRoot = process.cwd().endsWith('/apps/cockpit')
-  ? resolve(process.cwd(), '../..')
-  : process.cwd();
-const cockpitCss = readFileSync(
-  resolve(workspaceRoot, 'apps/cockpit/src/app/cockpit.css'),
-  'utf8'
-);
 import {
   createRuntimeSnapshot,
   parseRuntimeTarget,
@@ -26,6 +19,11 @@ import {
   type CockpitControlPlaneProps,
   type CockpitUtility,
 } from './cockpit-control-plane';
+
+const cockpitCss = readFileSync(
+  resolve(fileURLToPath(import.meta.url), '../../../app/cockpit.css'),
+  'utf8'
+);
 
 const entry = cockpitManifest.find(
   (candidate) =>
@@ -235,19 +233,29 @@ describe('CockpitControlPlane', () => {
   });
 
   it('separates the mode group from the utilities and lifts resting contrast', () => {
+    // The utilities separator must resolve to --ds-border-strong, not
+    // --ds-border: in dark mode --ds-border (rgb(45,45,45)) sits one value
+    // away from --ds-surface-tinted, the rail background (rgb(44,44,44)),
+    // which is an invisible 1.01:1 hairline. --ds-border-strong is what the
+    // pane divider already uses for the same reason. This is a text
+    // assertion, not a rendered-contrast check -- jsdom's getComputedStyle
+    // does not resolve var(), so it can't verify the resolved colour, only
+    // that the correct token is referenced.
     expect(cockpitCss).toMatch(
-      /\[data-control-plane-rail-group="utilities"\][^}]*border-top/
+      /\[data-control-plane-rail-group="utilities"\][^}]*border-top:\s*1px solid var\(--ds-border-strong\)/
     );
     expect(cockpitCss).not.toMatch(
       /\[data-control-plane-rail-item\]\s*\{[^}]*--ds-text-muted/
     );
   });
 
-  it('names the mode group without adding a second landmark label', () => {
+  it('names the mode group as an ARIA group announced to screen readers', () => {
     renderControlPlane();
     const rail = screen.getByRole('navigation', { name: 'Cockpit modes' });
-    const cap = rail.querySelector('[data-control-plane-rail-group-label]');
+    const group = screen.getByRole('group', { name: 'View' });
+    expect(rail.contains(group)).toBe(true);
+    const cap = group.querySelector('[data-control-plane-rail-group-label]');
     expect(cap?.textContent).toBe('View');
-    expect(cap?.getAttribute('aria-hidden')).toBe('true');
+    expect(cap?.getAttribute('aria-hidden')).toBeNull();
   });
 });

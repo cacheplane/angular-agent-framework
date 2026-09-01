@@ -390,13 +390,17 @@ pre.shiki {
 .cockpit-control-plane [data-control-plane-rail-group="utilities"] {
   margin-top: auto;
   padding-top: 8px;
-  border-top: 1px solid var(--ds-border);
+  /* --ds-border is a 1-value difference from --ds-surface-tinted (the rail
+     background) in dark mode -- rgb(45,45,45) on rgb(44,44,44), effectively
+     invisible. --ds-border-strong is the token the pane divider already
+     uses for the same reason (cockpit.css ~L460). */
+  border-top: 1px solid var(--ds-border-strong);
 }
 .cockpit-control-plane [data-control-plane-rail-group-label] {
   display: block;
   padding-bottom: 4px;
-  color: var(--ds-text-muted);
-  font-size: 9px;
+  color: var(--ds-text-secondary);
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.09em;
   text-transform: uppercase;

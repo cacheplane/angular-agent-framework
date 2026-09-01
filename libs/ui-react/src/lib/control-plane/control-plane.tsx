@@ -44,11 +44,16 @@ export function ControlPlaneRail({
   utilities,
   className,
 }: ControlPlaneRailProps) {
+  const primaryLabelId = useId();
   return (
     <nav aria-label={label} className={className} data-control-plane-rail>
-      <div data-control-plane-rail-group="primary">
+      <div
+        data-control-plane-rail-group="primary"
+        role={primaryLabel ? 'group' : undefined}
+        aria-labelledby={primaryLabel ? primaryLabelId : undefined}
+      >
         {primaryLabel ? (
-          <span data-control-plane-rail-group-label aria-hidden="true">
+          <span id={primaryLabelId} data-control-plane-rail-group-label>
             {primaryLabel}
           </span>
         ) : null}
