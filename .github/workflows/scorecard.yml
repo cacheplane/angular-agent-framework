@@ -23,8 +23,15 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+      # v2.4.0 runs from `gcr.io/openssf/scorecard-action`, and OpenSSF's GCP
+      # project lost billing: every pull since 2026-09-01 fails with
+      # "denied: This API method requires billing to be enabled ... project
+      # #367732848534". Six consecutive main runs went red for that reason
+      # alone — nothing in this repo. v2.4.1 moved the image to
+      # ghcr.io/ossf/scorecard-action, which pulls anonymously; v2.4.4 is the
+      # current release.
       - name: Run analysis
-        uses: ossf/scorecard-action@62b2cac7ed8198b15735ed49ab1e5cf35480ba46 # v2.4.0
+        uses: ossf/scorecard-action@2d1146689b8cda280b9bc96326124645441f03bc # v2.4.4
         with:
           results_file: results.sarif
           results_format: sarif
