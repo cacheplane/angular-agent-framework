@@ -95,11 +95,22 @@ with `main` before it merges).
 
 Nothing else is required. In particular:
 
-- **`Vercel` is not required.** The `website` job's last step is
-  `npx nx build website`, byte-identical to `vercel.json`'s `buildCommand`, so
-  a broken build still fails `CI — required`. A Vercel-environment-specific
-  failure is caught post-merge by `Deploy → Vercel` before it reaches
-  production.
+- **`Vercel` is not required**, and that is a deliberate decision, reviewed on
+  2026-09-01. The `website` job's last step is `npx nx build website`,
+  byte-identical to `vercel.json`'s `buildCommand`, so a broken build still
+  fails `CI — required`. The residual gap is real but narrow: a failure
+  specific to Vercel's environment — an env var set there and not in CI, an
+  install difference — is not caught pre-merge. It is caught post-merge by
+  `Deploy → Vercel`, before production.
+
+  Requiring the status back was considered and rejected. Vercel now posts a
+  single consolidated `Vercel` context covering every project, where it used to
+  post one per project. Gating on it would mean an unrelated project's failure
+  blocks a pure-website PR — the opposite of the current behaviour, which is
+  load-bearing: #931 merged on 2026-09-01 while `threadplane-minting-service`
+  was failing on that same commit, deliberately not allowed to block website
+  work. It would also re-introduce the vendor-string dependency described
+  below.
 - **`approve` is not a quality gate and must never become one.** It comes from
   `.github/workflows/auto-approve.yml` and exists only so OSSF Scorecard's
   Code-Review check has a review to read (see [Code review](#code-review)).
