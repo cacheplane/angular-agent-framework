@@ -25,7 +25,7 @@ The hosted example runs at [examples.threadplane.ai/runtimes/mastra](https://exa
 
 ## Upstream ships no HTTP endpoint
 
-`@ag-ui/mastra` provides an in-process `MastraAgent` bridge and a CopilotKit runtime mount. It does not provide a plain AG-UI HTTP endpoint, which is what `@threadplane/ag-ui` connects to.
+`@ag-ui/mastra` provides an in-process `MastraAgent` bridge and a mount for its own chat frontend runtime. It does not provide a plain AG-UI HTTP endpoint, which is what `@threadplane/ag-ui` connects to.
 
 Threadplane therefore maintains a small hosting service, [`deployments/ag-ui-mastra`](https://github.com/cacheplane/angular-agent-framework/tree/main/deployments/ag-ui-mastra). It accepts `POST /agent/<topic>`, calls `MastraAgent.run(input)`, and writes one Server-Sent Events frame per AG-UI event. It is deliberately hand-written rather than generated: the Python generator targets one aggregated FastAPI process, and Mastra is a different language on a different hosting lane.
 

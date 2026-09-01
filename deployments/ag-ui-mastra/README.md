@@ -4,10 +4,11 @@ Hand-written Node hosting service for the **Mastra** AG-UI runtime — Lane B of
 the runtime-portability matrix (`docs/superpowers/plans/2026-08-31-runtime-portability-matrix.md`).
 
 Upstream `@ag-ui/mastra` ships **no** plain AG-UI HTTP endpoint (only the
-in-process `MastraAgent` bridge and a CopilotKit runtime mount). This service
-is that missing endpoint: `POST /agent/<topic>` → `MastraAgent.run(input)` →
-one SSE `data:` frame per AG-UI event. It is deliberately hand-written, not
-generated: the Python generator (`scripts/generate-ag-ui-deployment-config.ts`)
+in-process `MastraAgent` bridge and a mount for its own chat frontend
+runtime). This service is that missing endpoint: `POST /agent/<topic>` →
+`MastraAgent.run(input)` → one SSE `data:` frame per AG-UI event. It is
+deliberately hand-written, not generated: the Python generator
+(`scripts/generate-ag-ui-deployment-config.ts`)
 targets one aggregated FastAPI process, and Mastra is a different language and
 hosting lane.
 

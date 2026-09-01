@@ -29,7 +29,7 @@ The short version is that the contract held where it mattered and broke in two p
 Each runtime got a server standing on its upstream AG-UI integration, not on anything we wrote to make the numbers look good.
 Microsoft Agent Framework runs behind `agent-framework-ag-ui`.
 Strands runs behind the community `ag-ui-strands` bridge, pinned to a git reference because the published release crashes on multi-agent routes.
-Mastra needed about two hundred lines of Node hosting code, because the upstream package ships an in-process bridge and a CopilotKit mount rather than a plain HTTP endpoint.
+Mastra needed about two hundred lines of Node hosting code, because the upstream package ships an in-process bridge and a mount for its own chat frontend, rather than a plain HTTP endpoint.
 
 Every server was driven with live model calls until it produced each surface we cared about: streaming text, a tool call, shared state, and a human approval.
 The raw event stream from each of those runs was saved.
