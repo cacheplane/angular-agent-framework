@@ -1046,11 +1046,20 @@ Expected: both green.
 
 - [ ] **Step 2: Lint**
 
-Run: `npx nx lint cockpit 2>&1 | sed $'s/\033\\[[0-9;]*m//g' | grep -cE ' error '`
+`apps/cockpit` has **no** `lint` target — only `ui-react` does. Run:
+
+```bash
+npx nx lint ui-react 2>&1 | sed $'s/\033\\[[0-9;]*m//g' | grep -cE ' error '
+```
+
 Expected: `0`.
 
 CI tolerates warnings but fails on errors. Strip ANSI before grepping — a bare
-`grep -cE ' error '` silently returns 0 against coloured output. Repeat for `ui-react`.
+`grep -cE ' error '` silently returns 0 against coloured output.
+
+Note on reading test results: `npx nx test <project>` swallows the vitest reporter output
+in this worktree, so it tells you pass/fail but not counts. When you need real numbers, run
+`npx vitest run --root apps/cockpit` (or `--root libs/ui-react`) directly.
 
 - [ ] **Step 3: Confirm in a real browser**
 
