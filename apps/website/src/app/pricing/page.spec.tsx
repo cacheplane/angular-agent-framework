@@ -16,6 +16,7 @@ describe('PricingPage', () => {
     expect(screen.getByText(/Every package is MIT/i)).toBeTruthy();
     expect(screen.getByText(/commercial products, internal tools, and client work/i)).toBeTruthy();
     expect(screen.getByText(/No Threadplane cloud/i)).toBeTruthy();
+    expect(screen.getByText(/Angular 20, 21, 22, CI-tested/i)).toBeTruthy();
     expect(screen.getByRole('heading', { level: 2, name: /Open software/i })).toBeTruthy();
     expect(screen.getByText(/does not host your agents or conversations/i)).toBeTruthy();
     expect(screen.getByText(/durable persistence.*connected backend/i)).toBeTruthy();
@@ -27,7 +28,9 @@ describe('PricingPage', () => {
     expect(screen.getByRole('table', { name: /Full plan comparison/i })).toBeTruthy();
     expect(screen.getByRole('columnheader', { name: 'Community' })).toBeTruthy();
     expect(screen.getByRole('columnheader', { name: 'Production Assurance' })).toBeTruthy();
-    expect(screen.getByRole('rowheader', { name: 'MIT-licensed software' })).toBeTruthy();
+    expect(screen.queryByRole('rowheader', { name: 'MIT-licensed software' })).toBeNull();
+    expect(screen.getByRole('rowheader', { name: 'Private support channel' })).toBeTruthy();
+    expect(screen.getByText(/identical on every path/i)).toBeTruthy();
     expect(container.querySelectorAll('table[aria-label="Full plan comparison"]')).toHaveLength(1);
   });
 

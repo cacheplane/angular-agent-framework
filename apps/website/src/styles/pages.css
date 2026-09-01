@@ -1163,23 +1163,6 @@
 .pricing-page-license-line strong {
   color: var(--color-accent);
 }
-.pricing-page-eyebrow-tight {
-  margin-bottom: 12px;
-}
-.pricing-page-h2 {
-  font-family: var(--font-garamond);
-  font-size: var(--text-h2);
-  margin: 0;
-  margin-bottom: 16px;
-  color: var(--color-text-primary);
-}
-.pricing-page-compat-body {
-  margin: 0;
-  margin-bottom: 24px;
-  color: var(--color-text-secondary);
-  max-width: 60ch;
-}
-
 @media (max-width: 640px) {
   .pricing-page-license-line {
     align-items: flex-start;
