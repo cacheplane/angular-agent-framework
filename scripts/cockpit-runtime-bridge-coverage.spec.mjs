@@ -316,13 +316,13 @@ describe('entryPointProblems', () => {
 });
 
 describe('Cockpit Angular runtime bridge coverage', () => {
-  test('the capability registry contains exactly 40 unique Angular projects', async () => {
+  test('the capability registry contains exactly 42 unique Angular projects', async () => {
     const projects = await registryAngularProjects();
 
-    assert.equal(projects.length, 40, 'expected exactly 40 registry Angular projects');
+    assert.equal(projects.length, 42, 'expected exactly 42 registry Angular projects');
     assert.equal(
       new Set(projects).size,
-      40,
+      42,
       'expected every registry Angular project to be unique',
     );
   });
