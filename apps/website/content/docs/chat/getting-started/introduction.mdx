@@ -10,7 +10,7 @@ This guide explains the library's two-tier architecture, how it relates to the r
 
 <StackDiagram
   highlight="chat"
-  caption="The chat primitives and compositions consume only the Agent contract — the runtime below is swappable."
+  caption="The chat components consume only the Agent contract — the runtime below is swappable."
 />
 
 ## Two-Tier Architecture
@@ -49,21 +49,7 @@ Compositions are opinionated, styled components that combine primitives into rea
 
 ## How the Stack Fits Together
 
-`@threadplane/chat` sits between your application and two other Threadplane libraries:
-
-```
-Your App
-  |
-  v
-@threadplane/chat       <-- UI components (this library)
-  |         |
-  v         v
-@threadplane/langgraph  @threadplane/render
-  (streaming state)      (generative UI)
-  |
-  v
-LangGraph Platform
-```
+`@threadplane/chat` sits between your application and two other Threadplane libraries, on either side of the seam shown in the diagram above.
 
 - **`@threadplane/langgraph`** provides `provideAgent()` and `injectAgent()` returning a `LangGraphAgent`, which satisfies the `Agent` contract consumed by `@threadplane/chat`. The base `Agent` contract exposes reactive Signals for `messages()`, `status()`, `isLoading()`, `error()`, `toolCalls()`, and `state()`, plus optional `interrupt()` and `subagents()`. Adapters can layer on more: LangGraph implements `AgentWithHistory`, adding `history()` for checkpoint time-travel.
 
