@@ -71,8 +71,6 @@ export type SolutionCodeBlocks = readonly SolutionCode[];
 
 export interface SolutionConfig {
   slug: string;
-  color: string;
-  rgb: string;
   eyebrow: string;
   title: string;
   subtitle: string;
@@ -97,8 +95,6 @@ export interface SolutionConfig {
 export const SOLUTIONS: SolutionConfig[] = [
   {
     slug: 'compliance',
-    color: '#D4850F',
-    rgb: '212,133,15',
     eyebrow: 'Compliance & Audit',
     title: 'AI agents your compliance\nteam will actually approve',
     subtitle: 'Human-in-the-loop approvals, auditable thread history, and deterministic testing — built into the framework, not bolted on.',
@@ -190,8 +186,6 @@ export const SOLUTIONS: SolutionConfig[] = [
   },
   {
     slug: 'analytics',
-    color: '#0F7B8D',
-    rgb: '15,123,141',
     eyebrow: 'Analytics & BI',
     title: 'Natural language queries.\nReal-time dashboards.',
     subtitle: 'Your users ask questions in plain English. The agent queries, visualizes, and streams results — all inside your Angular app.',
@@ -268,8 +262,6 @@ export class DashboardComponent {
   },
   {
     slug: 'customer-support',
-    color: '#5B4FCF',
-    rgb: '91,79,207',
     eyebrow: 'Customer Support',
     title: 'AI agents that know when\nto escalate to a human',
     subtitle: 'Resolve routine tickets autonomously, surface context instantly, and hand off to humans seamlessly — with full conversation history.',

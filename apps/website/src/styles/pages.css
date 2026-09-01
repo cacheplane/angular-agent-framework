@@ -335,8 +335,17 @@
   max-width: 640px;
 }
 .sol-index-grid-header {
-  text-align: center;
   margin-bottom: 48px;
+}
+.sol-index-rail {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.sol-index-rail-line {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
 }
 .sol-index-eyebrow-tight {
   margin-bottom: 12px;
@@ -399,12 +408,21 @@
 
 /* Solution detail page — app/solutions/[slug]/page.tsx */
 .sol-page-section-header {
-  text-align: center;
   max-width: 720px;
-  margin: 0 auto 48px;
+  margin-bottom: 48px;
 }
 .sol-page-eyebrow-tight {
   margin-bottom: 12px;
+}
+.sol-page-rail {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.sol-page-rail-line {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
 }
 .sol-page-h2 {
   font-family: var(--font-garamond);
@@ -492,10 +510,11 @@
 }
 .sol-page-metric {
   font-family: var(--font-garamond);
-  font-style: italic;
-  font-size: 32px;
+  font-size: 40px;
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
   margin: 0;
   margin-bottom: 12px;
 }
@@ -639,9 +658,17 @@
 }
 .pilot-section-header {
   max-width: 720px;
-  margin: 0 auto;
-  text-align: center;
   margin-bottom: 48px;
+}
+.pilot-rail2 {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.pilot-rail2-line {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
 }
 .pilot-h2 {
   font-family: var(--font-garamond);
@@ -655,28 +682,38 @@
 .pilot-h2-spaced {
   margin-bottom: 16px;
 }
-.pilot-outcomes-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
-  max-width: 1000px;
-  margin: 0 auto;
+.pilot-outcome-rows {
+  margin-top: 22px;
+  border-top: 2px solid var(--color-text-primary);
+  max-width: 56ch;
 }
-.pilot-outcome-h3 {
+.pilot-outcome-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: baseline;
+  border-bottom: 1px solid var(--color-border);
+  padding: 10px 0;
+}
+.pilot-outcome-claim {
   font-family: var(--font-inter);
-  font-size: 17px;
-  line-height: 1.3;
-  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.5;
   color: var(--color-text-primary);
   margin: 0;
-  margin-bottom: 8px;
 }
-.pilot-outcome-body {
-  font-family: var(--font-inter);
-  font-size: 14px;
-  line-height: var(--text-body--line-height);
-  color: var(--color-text-secondary);
+.pilot-outcome-tail {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
   margin: 0;
+}
+@media (max-width: 640px) {
+  .pilot-outcome-row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
 }
 .pilot-contact-inner {
   max-width: 720px;
@@ -1167,14 +1204,4 @@
   justify-content: center;
   gap: 12px;
   flex-wrap: wrap;
-}
-
-/* Per-page accent color, set inline as --accent (unbounded prop — the
- * lint-guard escape hatch). The compound selector matches the Eyebrow tone
- * rules' 0-2-0 specificity ([data-ui="eyebrow"][data-tone=…] in ui.css) and
- * wins the tie because pages.css imports after ui.css — the inline color it
- * replaces used to outrank everything. */
-[data-accent-text],
-[data-ui='eyebrow'][data-accent-text] {
-  color: var(--accent);
 }

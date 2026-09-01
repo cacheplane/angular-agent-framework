@@ -18,12 +18,12 @@ import type { DemoClip } from '../../lib/demo-media';
  * No client JS: `autoPlay muted loop playsInline` is the whole behaviour, so
  * this stays a Server Component.
  */
-export function SolutionDemoBlock({ clip, accent }: { clip: DemoClip; accent: string }) {
+export function SolutionDemoBlock({ clip }: { clip: DemoClip }) {
   return (
     <Section surface="tinted" ariaLabelledBy="solution-demo-heading">
       <Container>
         <div className="sol-demo-wrap">
-          <Eyebrow style={{ '--accent': accent } as React.CSSProperties} data-accent-text className="sol-code-eyebrow">See it running</Eyebrow>
+          <Eyebrow tone="accent" className="sol-code-eyebrow">See it running</Eyebrow>
           <h2 id="solution-demo-heading" className="sol-demo-heading">
             The approval gate, in the product
           </h2>

@@ -20,7 +20,7 @@ async function highlight(block: SolutionCode) {
   return codeToHtml(block.source, { lang: block.language, theme: 'tokyo-night' });
 }
 
-export async function SolutionCodeBlock({ code, accent }: { code: SolutionCodeBlocks; accent: string }) {
+export async function SolutionCodeBlock({ code }: { code: SolutionCodeBlocks }) {
   // Highlight every block up front: an async map inside JSX would give React
   // promises to render rather than markup.
   const rendered = await Promise.all(
@@ -31,7 +31,7 @@ export async function SolutionCodeBlock({ code, accent }: { code: SolutionCodeBl
     <Section surface="canvas" ariaLabelledBy="solution-code-heading">
       <Container>
         <div className="sol-code-wrap">
-          <Eyebrow style={{ '--accent': accent } as React.CSSProperties} data-accent-text className="sol-code-eyebrow">In practice</Eyebrow>
+          <Eyebrow tone="accent" className="sol-code-eyebrow">In practice</Eyebrow>
           <h2 id="solution-code-heading" className="sol-code-heading">
             What it looks like in your codebase
           </h2>

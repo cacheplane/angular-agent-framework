@@ -48,12 +48,15 @@ export async function generateMetadata({ params }: PageProps) {
   };
 }
 
-function PainPoints({ items, accent }: { items: SolutionPainPoint[]; accent: string }) {
+function PainPoints({ items }: { items: SolutionPainPoint[] }) {
   return (
     <Section surface="canvas" ariaLabelledBy="problem-heading">
       <Container>
         <div className="sol-page-section-header">
-          <Eyebrow style={{ '--accent': accent } as React.CSSProperties} data-accent-text className="sol-page-eyebrow-tight">The problem</Eyebrow>
+          <div className="sol-page-rail">
+            <Eyebrow tone="accent" className="sol-page-eyebrow-tight">The problem</Eyebrow>
+            <span className="sol-page-rail-line" aria-hidden="true" />
+          </div>
           <h2 id="problem-heading" className="sol-page-h2">
             Why this is hard today.
           </h2>
@@ -78,17 +81,18 @@ function PainPoints({ items, accent }: { items: SolutionPainPoint[]; accent: str
 function Architecture({
   intro,
   layers,
-  accent,
 }: {
   intro: string;
   layers: ArchitectureLayer[];
-  accent: string;
 }) {
   return (
     <Section surface="tinted" ariaLabelledBy="arch-heading">
       <Container>
         <div className="sol-page-section-header">
-          <Eyebrow style={{ '--accent': accent } as React.CSSProperties} data-accent-text className="sol-page-eyebrow-tight">Architecture</Eyebrow>
+          <div className="sol-page-rail">
+            <Eyebrow tone="accent" className="sol-page-eyebrow-tight">Architecture</Eyebrow>
+            <span className="sol-page-rail-line" aria-hidden="true" />
+          </div>
           <h2 id="arch-heading" className="sol-page-h2 sol-page-h2-spaced">
             How the three libraries compose.
           </h2>
@@ -131,12 +135,15 @@ function Architecture({
   );
 }
 
-function Capabilities({ items, accent }: { items: ProofPoint[]; accent: string }) {
+function Capabilities({ items }: { items: ProofPoint[] }) {
   return (
     <Section surface="canvas" ariaLabelledBy="capabilities-heading">
       <Container>
         <div className="sol-page-section-header">
-          <Eyebrow style={{ '--accent': accent } as React.CSSProperties} data-accent-text className="sol-page-eyebrow-tight">What you ship</Eyebrow>
+          <div className="sol-page-rail">
+            <Eyebrow tone="accent" className="sol-page-eyebrow-tight">What you ship</Eyebrow>
+            <span className="sol-page-rail-line" aria-hidden="true" />
+          </div>
           <h2 id="capabilities-heading" className="sol-page-h2">
             Capabilities the framework delivers.
           </h2>
@@ -144,7 +151,7 @@ function Capabilities({ items, accent }: { items: ProofPoint[]; accent: string }
         <div className="sol-page-grid-260">
           {items.map((p) => (
             <Card key={p.metric + p.label} padding="lg">
-              <div style={{ '--accent': accent } as React.CSSProperties} data-accent-text className="sol-page-metric">
+              <div className="sol-page-metric">
                 {p.metric}
               </div>
               <p className="sol-page-card-body">
@@ -169,7 +176,7 @@ export default async function SolutionPage({ params }: PageProps) {
       <Section surface="canvas" ariaLabelledBy="solution-hero-heading">
         <Container>
           <div className="sol-page-hero-inner">
-            <Eyebrow style={{ '--accent': solution.color } as React.CSSProperties} data-accent-text className="sol-page-eyebrow-spaced">{solution.eyebrow}</Eyebrow>
+            <Eyebrow tone="accent" className="sol-page-eyebrow-spaced">{solution.eyebrow}</Eyebrow>
             <h1 id="solution-hero-heading" className="sol-page-h1">
               {solution.title}
             </h1>
@@ -188,11 +195,11 @@ export default async function SolutionPage({ params }: PageProps) {
         </Container>
       </Section>
 
-      <PainPoints items={solution.painPoints} accent={solution.color} />
-      <Architecture intro={solution.architectureIntro} layers={solution.architectureLayers} accent={solution.color} />
-      <Capabilities items={solution.proofPoints} accent={solution.color} />
-      <SolutionCodeBlock code={solution.code} accent={solution.color} />
-      {solution.demo && <SolutionDemoBlock clip={solution.demo} accent={solution.color} />}
+      <PainPoints items={solution.painPoints} />
+      <Architecture intro={solution.architectureIntro} layers={solution.architectureLayers} />
+      <Capabilities items={solution.proofPoints} />
+      <SolutionCodeBlock code={solution.code} />
+      {solution.demo && <SolutionDemoBlock clip={solution.demo} />}
       <WhitePaperBlock />
       <FinalCTA
         headline={solution.ctaHeadline}
