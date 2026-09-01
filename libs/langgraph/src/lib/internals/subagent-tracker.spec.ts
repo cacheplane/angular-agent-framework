@@ -111,3 +111,37 @@ describe('SubagentTracker attribution ladder', () => {
     }
   });
 });
+
+describe('childStreamRefFromNamespace', () => {
+  it('single tools: segment resolves to a tool child by tool-call id', () => {
+    expect(childStreamRefFromNamespace(['tools:call-1'])).toEqual({
+      key: 'call-1', name: '', kind: 'tool',
+    });
+  });
+
+  it('a tool child followed by its own internal nodes stays a tool child', () => {
+    // `model`/`agent` segments after the tools: segment are the child's own
+    // graph internals, not a second delegation.
+    expect(childStreamRefFromNamespace(['tools:call-1', 'agent:step-2'])).toEqual({
+      key: 'call-1', name: '', kind: 'tool',
+    });
+  });
+
+  it('plain subgraph namespace resolves to the first segment, named by node', () => {
+    expect(childStreamRefFromNamespace(['research:uuid-1'])).toEqual({
+      key: 'research:uuid-1', name: 'research', kind: 'subgraph',
+    });
+  });
+
+  it('nested delegation registers as its own subgraph stream, never the outer tool child', () => {
+    expect(childStreamRefFromNamespace(['tools:call-1', 'tools:call-2'])).toEqual({
+      key: 'tools:call-1|tools:call-2', name: 'tools', kind: 'subgraph',
+    });
+  });
+
+  it('nested delegation with intermediate segments still keys the full path', () => {
+    expect(childStreamRefFromNamespace(['tools:call-1', 'agent:x', 'tools:call-2'])).toEqual({
+      key: 'tools:call-1|agent:x|tools:call-2', name: 'tools', kind: 'subgraph',
+    });
+  });
+});

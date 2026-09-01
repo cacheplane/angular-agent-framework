@@ -438,12 +438,28 @@ export interface ChildStreamRef {
  * Any other segment (e.g. `research:<uuid>` from a compiled graph added with
  * `add_node`) identifies a plain subgraph child: the full segment is the key
  * (unique per invocation) and the part before the first ':' is the node name.
+ *
+ * A namespace with MORE than one `tools:` segment is a nested delegation — a
+ * subagent that itself dispatched a delegation tool. That stream registers as
+ * its own subgraph-kind entry keyed by the full namespace path: subgraph
+ * entries are skipped by every attribution-ladder rung, so a grandchild can
+ * neither merge into the outer child's card nor mis-attach to a sibling.
+ * Linking it to its parent card (a delegation tree) is deliberately not
+ * modeled; the flat map is the contract.
  */
 export function childStreamRefFromNamespace(namespace: string[]): ChildStreamRef | undefined {
-  for (const segment of namespace) {
-    if (segment.startsWith('tools:')) {
-      return { key: segment.slice(6), name: '', kind: 'tool' };
-    }
+  const toolSegments = namespace.filter((segment) => segment.startsWith('tools:'));
+  if (toolSegments.length > 1) {
+    const innermost = toolSegments[toolSegments.length - 1];
+    const colon = innermost.indexOf(':');
+    return {
+      key: namespace.join('|'),
+      name: colon > 0 ? innermost.slice(0, colon) : innermost,
+      kind: 'subgraph',
+    };
+  }
+  if (toolSegments.length === 1) {
+    return { key: toolSegments[0].slice(6), name: '', kind: 'tool' };
   }
   const first = namespace[0];
   if (!first) return undefined;
