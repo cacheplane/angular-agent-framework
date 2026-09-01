@@ -25,6 +25,13 @@ export default defineConfig({
       // docsPath assertion drifted into asserting a URL shape the website has
       // never served. Run them here so `nx test cockpit` covers them.
       '../../cockpit/*/matrix.spec.ts',
+      // Same story for the per-product footprint specs (chat, deep-agents,
+      // render): they sit outside any project root, so no `test` target owned
+      // them and the deep-agents one drifted into asserting a website docs
+      // library that does not exist. Glob the whole family rather than naming
+      // files, so a new `cockpit/<product>/footprint.spec.ts` is covered the
+      // day it lands instead of joining the unrun pile.
+      '../../cockpit/*/footprint.spec.ts',
     ],
     setupFiles: ['./test-setup.ts'],
   },

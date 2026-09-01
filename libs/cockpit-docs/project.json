@@ -17,6 +17,12 @@
         "main": "libs/cockpit-docs/src/index.ts",
         "tsConfig": "libs/cockpit-docs/tsconfig.lib.json"
       }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "options": {
+        "configFile": "libs/cockpit-docs/vite.config.mts"
+      }
     }
   },
   "tags": [
