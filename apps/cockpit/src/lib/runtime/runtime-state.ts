@@ -283,23 +283,6 @@ export function classifyRuntimeTerminalTransition(
   return result;
 }
 
-export function runtimeNeedsAttention(phase: RuntimePhase): boolean {
-  // Exhaustive with no `default`, so a new RuntimePhase is a compile error here
-  // just as it is in runtimeRailStatus rather than silently returning false.
-  switch (phase) {
-    case 'invalid_configuration':
-    case 'unresponsive':
-    case 'error':
-      return true;
-    case 'not_configured':
-    case 'connecting':
-    case 'checking':
-    case 'ready':
-    case 'reloading':
-      return false;
-  }
-}
-
 export function runtimeRailStatus(
   phase: RuntimePhase
 ): ControlPlaneRailItemStatus | null {

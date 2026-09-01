@@ -8,7 +8,6 @@ import {
   type RuntimeActivityInput,
   type SessionActivityEvent,
 } from './session-activity';
-import { runtimeNeedsAttention, type RuntimePhase } from './runtime-state';
 
 const common = {
   id: 'event-1',
@@ -166,24 +165,6 @@ describe('activityReducer', () => {
   });
 });
 
-describe('runtimeNeedsAttention', () => {
-  test.each([
-    ['not_configured', false],
-    ['invalid_configuration', true],
-    ['connecting', false],
-    ['checking', false],
-    ['ready', false],
-    ['unresponsive', true],
-    ['reloading', false],
-    ['error', true],
-  ] satisfies ReadonlyArray<readonly [RuntimePhase, boolean]>)(
-    'derives attention for %s solely from phase',
-    (phase, expected) => {
-      expect(runtimeNeedsAttention(phase)).toBe(expected);
-    },
-  );
-});
-
 describe('countUnseenProblems', () => {
   const event = (
     id: string,
@@ -234,8 +215,15 @@ describe('countUnseenProblems', () => {
     expect(countUnseenProblems(events, 2)).toBe(1);
   });
 
-  test('treats a marker beyond the log as everything seen', () => {
-    const events = [event('a', 'runtime_unresponsive', 'error')];
+  test('treats a marker beyond a trimmed log as everything seen', () => {
+    // A stale marker must not make slice() count back from the tail, which
+    // would report already-seen errors as unseen.
+    const events = [
+      event('d', 'runtime_unresponsive', 'error'),
+      event('c', 'runtime_unresponsive', 'error'),
+      event('b', 'runtime_unresponsive', 'error'),
+      event('a', 'runtime_ready', 'success'),
+    ];
     expect(countUnseenProblems(events, 5)).toBe(0);
   });
 });

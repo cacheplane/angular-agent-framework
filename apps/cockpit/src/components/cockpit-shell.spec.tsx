@@ -188,7 +188,9 @@ describe('CockpitShell operational composition', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole('button', { name: RUN_RAIL_ITEM }).getAttribute('aria-pressed')
+        screen
+          .getByRole('button', { name: RUN_RAIL_ITEM })
+          .getAttribute('aria-pressed')
       ).toBe('true');
     });
     expect(
@@ -218,7 +220,9 @@ describe('CockpitShell operational composition', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole('button', { name: RUN_RAIL_ITEM }).getAttribute('aria-pressed')
+        screen
+          .getByRole('button', { name: RUN_RAIL_ITEM })
+          .getAttribute('aria-pressed')
       ).toBe('true');
     });
     expect(window.location.search).toBe('');
@@ -260,7 +264,9 @@ describe('CockpitShell operational composition', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole('button', { name: RUN_RAIL_ITEM }).getAttribute('aria-pressed')
+        screen
+          .getByRole('button', { name: RUN_RAIL_ITEM })
+          .getAttribute('aria-pressed')
       ).toBe('true');
     });
     expect(
@@ -330,9 +336,30 @@ describe('CockpitShell operational composition', () => {
     ).not.toHaveLength(0);
 
     openActivity();
-    expect(screen.getAllByRole('button', { name: 'Activity' })).not.toHaveLength(
-      0
+    expect(
+      screen.getAllByRole('button', { name: 'Activity' })
+    ).not.toHaveLength(0);
+
+    // Clearing the log must reset the marker too. If it did not, the marker
+    // would stay at N over an empty log and silently swallow the next N
+    // problems for the rest of the page visit.
+    fireEvent.click(
+      screen.getAllByRole('button', { name: 'Activity actions' })[0]
     );
+    fireEvent.click(
+      screen.getAllByRole('menuitem', { name: 'Clear session activity' })[0]
+    );
+    act(() => {
+      operationalMocks.latestControllerOptions?.onActivity({
+        id: 'post-clear-event',
+        at: '2026-08-31T17:03:00.000Z',
+        kind: 'runtime_unresponsive',
+        capability: 'streaming',
+      });
+    });
+    expect(
+      screen.getAllByRole('button', { name: 'Activity, 1 unread problem' })
+    ).not.toHaveLength(0);
   });
 
   it('does not reset drawer focus when shared operational state rerenders', async () => {
