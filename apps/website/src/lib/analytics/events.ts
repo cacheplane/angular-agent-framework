@@ -90,7 +90,14 @@ export type CtaId =
   // MediumSwitcher derives ids from section id + medium key at runtime
   | `medium_${string}`;
 
-export type AnalyticsLibrary = 'langgraph' | 'render' | 'chat' | 'ag-ui' | 'unknown';
+export type AnalyticsLibrary =
+  | 'langgraph'
+  | 'render'
+  | 'chat'
+  | 'ag-ui'
+  | 'deep-agents'
+  | 'runtimes'
+  | 'unknown';
 
 export type WhitepaperId = 'overview' | 'angular' | 'render' | 'chat';
 
