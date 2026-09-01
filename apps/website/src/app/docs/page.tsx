@@ -226,6 +226,10 @@ export default function DocsLandingPage() {
             <Link href="/docs/runtimes/getting-started/introduction" className="docs-index-helper-link">
               Agent runtimes →
             </Link>
+            {' '}Building on the Deep Agents framework?{' '}
+            <Link href="/docs/deep-agents/getting-started/introduction" className="docs-index-helper-link">
+              Deep Agents →
+            </Link>
           </p>
         </Container>
       </Section>

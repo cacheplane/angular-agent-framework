@@ -1,0 +1,104 @@
+---
+title: Planning
+description: TodoListMiddleware puts a todos array on the graph state, and an Angular panel renders the plan as the agent revises it mid-run.
+---
+
+# Planning
+
+`TodoListMiddleware` gives the model one tool, `write_todos`, and declares one key on the graph state, `todos`. That is the entire capability. Everything a plan panel needs comes from those two facts.
+
+```python
+from deepagents import create_deep_agent
+from langchain.agents.middleware import TodoListMiddleware
+from langchain_openai import ChatOpenAI
+
+graph = create_deep_agent(
+    model=ChatOpenAI(model="gpt-4.1", temperature=0),
+    tools=[lookup_field_elevation, lookup_runway_length, lookup_weather],
+    system_prompt=(PROMPTS_DIR / "planning.md").read_text(),
+    middleware=[TodoListMiddleware()],
+)
+```
+
+`create_deep_agent` installs a default middleware set that already includes the todo list. The demo passes it explicitly anyway, so the source states which component owns `todos` rather than leaving a reader to infer it.
+
+## What the demo shows
+
+The demo is an aviation dispatch desk. Ask it whether a mid-size business jet can operate out of Aspen and San Francisco on the same day, and the run has a visible shape:
+
+1. The agent writes a plan before it does any work. The panel fills with pending rows.
+2. One row flips to in progress, the corresponding lookup tool runs, and the row completes.
+3. When a lookup returns something the plan did not account for — a mountain wave advisory, a runway shorter than the aircraft needs — the agent rewrites the list mid-run. Rows are added, and the panel changes shape while the run is still going.
+
+Step 3 is the reason the panel is worth building. A plan that only ever appends is a progress bar. A plan the agent revises is a window into what the agent is actually reasoning about.
+
+Getting there needs a prompt, not more middleware. `TodoListMiddleware` supplies a tool, not a policy, and a model left to itself will fan out six parallel lookups and never write a todo. The demo's system prompt is explicit:
+
+```markdown
+Your first action on any request is a call to `write_todos`. Do not call a
+lookup tool before the todo list exists. Write one todo per step.
+
+Mark exactly one todo `in_progress` before you start it and mark it `completed`
+the moment it is done. Call `write_todos` again for each transition.
+```
+
+## How it reaches the UI
+
+`todos` is a public key on the graph state, so LangGraph streams it in the `values` channel and `@threadplane/langgraph` projects the latest snapshot into `agent.value()`. The panel is a `computed()` over that snapshot and nothing more.
+
+```ts
+import { Component, computed } from '@angular/core';
+import { injectAgent } from '@threadplane/langgraph';
+
+interface Todo {
+  content: string;
+  status: 'pending' | 'in_progress' | 'completed';
+}
+
+const TODO_STATUSES: Todo['status'][] = ['pending', 'in_progress', 'completed'];
+
+export class PlanningComponent {
+  protected readonly agent = injectAgent();
+
+  protected readonly todos = computed<Todo[]>(() => {
+    const todos = (this.agent.value() as Record<string, unknown> | undefined)?.['todos'];
+    if (!Array.isArray(todos)) return [];
+    return todos.map((todo) => {
+      const entry = todo as Record<string, unknown>;
+      const status = entry['status'] as Todo['status'];
+      return {
+        content: String(entry['content'] ?? ''),
+        status: TODO_STATUSES.includes(status) ? status : 'pending',
+      };
+    });
+  });
+}
+```
+
+Two details in that projection are deliberate.
+
+**The status is normalized.** A graph state key is not a typed contract. Narrowing an unknown status to `pending` keeps an unexpected value from reaching a template that switches on it.
+
+**Every call to `write_todos` replaces the whole list.** There is no partial update and no merge, so the panel never has to reconcile anything. It renders the array it was given.
+
+The template tracks by index, because a todo carries no identifier:
+
+```html
+@for (todo of todos(); track $index) {
+  <div class="todo" [attr.data-status]="todo.status">
+    <span class="todo__text">{{ todo.content }}</span>
+  </div>
+}
+```
+
+Tracking by content would be worse, not better: content is exactly what changes when the agent rewrites a step.
+
+<Callout type="warning" title="The todo shape is minimal">
+In `deepagents` 0.7.11 a todo is exactly `{ content, status }`. There is no identifier, no timestamp, and no separate present-tense label. A panel that depends on any of those will not survive contact with the framework.
+</Callout>
+
+## Next steps
+
+- [Subagents](/docs/deep-agents/capabilities/subagents) — the same orchestrator delegating each planned step to a child agent.
+- [Filesystem](/docs/deep-agents/capabilities/filesystem) — the workspace the agent writes into while it works through the plan.
+- [Streaming](/docs/langgraph/guides/streaming) — how the `values` channel reaches `agent.value()`.

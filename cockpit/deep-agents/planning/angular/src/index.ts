@@ -23,9 +23,7 @@ export const deepAgentsPlanningAngularModule: CockpitCapabilityModule = {
     language: 'angular',
   },
   title: 'Deep Agents Planning (Angular)',
-  // No `deep-agents` library exists on the website yet; the empty string is
-  // the "no published docs page" sentinel and renders no Docs link.
-  docsPath: '',
+  docsPath: '/docs/deep-agents/capabilities/planning',
   promptAssetPaths: [
     'cockpit/deep-agents/planning/angular/prompts/planning.md',
   ],

@@ -27,9 +27,7 @@ export const deepAgentsFilesystemPythonModule: CockpitCapabilityModule = {
     language: 'python',
   },
   title: 'Deep Agents Filesystem (Python)',
-  // No `deep-agents` library exists on the website yet; the empty string is
-  // the "no published docs page" sentinel and renders no Docs link.
-  docsPath: '',
+  docsPath: '/docs/deep-agents/capabilities/filesystem',
   promptAssetPaths: ['cockpit/deep-agents/filesystem/python/prompts/filesystem.md'],
   codeAssetPaths: [
     'cockpit/deep-agents/filesystem/angular/src/app/filesystem.component.ts',
