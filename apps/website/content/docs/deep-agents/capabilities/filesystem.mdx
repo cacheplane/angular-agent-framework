@@ -1,0 +1,111 @@
+---
+title: Filesystem
+description: StateBackend keeps a Deep Agents workspace on the graph state, and a FilesystemPermission in interrupt mode routes writes through the chat interrupt panel.
+---
+
+# Filesystem
+
+`create_deep_agent` always installs `FilesystemMiddleware`, so a Deep Agents agent always has `ls`, `read_file`, `write_file`, and `edit_file`. What decides whether a user interface can render that workspace is not the middleware. It is the backend.
+
+```python
+from deepagents import create_deep_agent
+from deepagents.backends import StateBackend
+from deepagents.middleware import FilesystemPermission
+
+graph = create_deep_agent(
+    model=ChatOpenAI(model="gpt-4.1", temperature=0),
+    tools=[lookup_field_elevation, lookup_runway_length],
+    system_prompt=(PROMPTS_DIR / "filesystem.md").read_text(),
+    backend=StateBackend(),
+    permissions=[
+        FilesystemPermission(operations=["write"], paths=["/reports/**"], mode="interrupt"),
+    ],
+)
+```
+
+`StateBackend` stores the agent's files on the graph state under `files`, which means every write arrives at the client as a `values` update. A backend that writes anywhere else — a host directory, a remote object store — puts nothing on the state, and a panel bound to `files` stays empty no matter how busy the agent is. The choice of backend is the choice of whether the workspace is renderable at all.
+
+## What the demo shows
+
+The demo is the same dispatch desk, given a task that produces artifacts: gather field data for two airports, keep working notes, then file a report.
+
+The workspace panel renders a directory tree grouped by path. Scratch files under `/notes/` appear the moment the agent writes them, with no ceremony. A write under `/reports/`, however, stops the run.
+
+That is the `FilesystemPermission` above. In `interrupt` mode a matching call pauses for human approval instead of executing, and the pause surfaces through the standard chat interrupt panel — the same component every other LangGraph interrupt uses. There is no Deep Agents specific interrupt UI, because there is no Deep Agents specific interrupt.
+
+Approving the write lets the run continue and the file lands in the tree. Rejecting it returns the model to work without the file.
+
+<Callout type="warning" title="Anchor the permission pattern">
+Give the pattern a literal prefix, as `/reports/**` does. Bulk tools such as `ls`, `glob`, and `grep` decide whether to fire the permission based on whether their search subtree could overlap the anchored prefix. A fully unanchored pattern collapses to the root and fires on every listing, which turns an approval gate into an interruption on each directory read.
+</Callout>
+
+## How it reaches the UI
+
+### The tree
+
+`files` is a flat map from absolute path to contents. Splitting each key on its last slash is enough to group it into directories.
+
+```ts
+protected readonly files = computed<WorkspaceFile[]>(() => {
+  const raw = (this.agent.value() as Record<string, unknown> | undefined)?.['files'];
+  const entries = new Map<string, string>();
+  if (raw && typeof raw === 'object') {
+    for (const [path, contents] of Object.entries(raw as Record<string, unknown>)) {
+      entries.set(path, typeof contents === 'string' ? contents : JSON.stringify(contents));
+    }
+  }
+  return [...entries.entries()].map(([path, contents]) => {
+    const slash = path.lastIndexOf('/');
+    return {
+      path,
+      directory: slash > 0 ? path.slice(0, slash) : '/',
+      name: path.slice(slash + 1),
+      contents,
+    };
+  });
+});
+```
+
+### The pending write
+
+While an approval is open, the file does not exist yet — it is an argument on a paused tool call. Reading it off the interrupt lets the tree show the file as a ghost row, so the reviewer sees where it is about to land before deciding.
+
+The interrupt payload is `{ action_requests: [{ name, args }] }`, and for `write_file` the target path is `args.file_path`:
+
+```ts
+protected readonly pendingPath = computed<string | null>(() => {
+  for (const interrupt of this.agent.langGraphInterrupts() ?? []) {
+    const value = (interrupt as { value?: unknown }).value as
+      | { action_requests?: Array<{ args?: Record<string, unknown> }> }
+      | undefined;
+    for (const request of value?.action_requests ?? []) {
+      const path = request.args?.['file_path'];
+      if (typeof path === 'string') return path;
+    }
+  }
+  return null;
+});
+```
+
+### The resume payload
+
+`deepagents` expects a structured decision, not a bare string and not a bare list:
+
+```ts
+protected onInterruptAction(action: InterruptAction): void {
+  if (action === 'accept') {
+    void this.agent.submit({ resume: { decisions: [{ type: 'approve' }] } });
+  } else if (action === 'ignore') {
+    void this.agent.submit({ resume: { decisions: [{ type: 'reject' }] } });
+  }
+}
+```
+
+Passing a bare list raises a `TypeError` on the server rather than a validation error the browser can show, so the failure appears as a dead run rather than as a rejected submission. The shape is worth getting right the first time.
+
+## Next steps
+
+- [Planning](/docs/deep-agents/capabilities/planning) — the todo list the agent keeps while it files.
+- [Skills](/docs/deep-agents/capabilities/skills) — the same backend machinery, mounted read-only.
+- [Interrupts](/docs/langgraph/guides/interrupts) — the interrupt lifecycle underneath the approval.
+- [Chat interrupt panel](/docs/chat/components/chat-interrupt-panel) — the component that renders the approval.

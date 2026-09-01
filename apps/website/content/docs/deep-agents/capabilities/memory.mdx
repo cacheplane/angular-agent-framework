@@ -1,0 +1,124 @@
+---
+title: Memory
+description: MemoryMiddleware plus StoreBackend give an agent a cross-thread memory file, and memory_contents is private state that a panel has to reach deliberately.
+---
+
+# Memory
+
+Memory in Deep Agents is a file the agent maintains about itself. `memory=["/memories/AGENTS.md"]` installs `MemoryMiddleware`, which loads that file into the system prompt at the start of every turn and instructs the model to keep it current with `edit_file`. Nothing in the application parses the conversation for facts. The agent decides what is worth remembering.
+
+The backend decides how long the memory lasts.
+
+```python
+from deepagents import create_deep_agent
+from deepagents.backends import StoreBackend
+
+MEMORY_NAMESPACE = ("cockpit", "deep-agents-memory")
+
+graph = create_deep_agent(
+    model=ChatOpenAI(model="gpt-4.1", temperature=0),
+    system_prompt=(PROMPTS_DIR / "memory.md").read_text(),
+    backend=StoreBackend(namespace=lambda _runtime: MEMORY_NAMESPACE),
+    memory=["/memories/AGENTS.md"],
+)
+```
+
+`StoreBackend` writes into LangGraph's `BaseStore`, which is shared across threads. `StateBackend` would put the same file on the thread's own state, where a new conversation would never see it. Leaving `store` unset means "resolve the store from the graph execution context", which LangGraph Server supplies.
+
+<Callout type="warning" title="Scope the namespace in anything real">
+The demo uses a fixed namespace tuple, so every visitor shares one memory. That is deliberate for a demo and wrong everywhere else. A real deployment derives the namespace from the caller's identity.
+</Callout>
+
+## What the demo shows
+
+The demo is the dispatch desk with a memory panel beside it. Tell it your home base is Denver and that you fly a mid-size business jet, and the panel fills in as the agent writes to `/memories/AGENTS.md`. Start a genuinely new thread and the agent already knows both facts, because the file came from the store rather than from the transcript.
+
+The panel also labels which of two sources it is reading, which turns out to be the interesting part.
+
+What the agent records is a matter of prompt, not code:
+
+```markdown
+`/memories/AGENTS.md` is yours. It is loaded into your context at the start of
+every conversation, including conversations you have not had yet.
+
+Write to it with `edit_file` whenever the user tells you something durable:
+a home base, a fleet type, a standing preference, a correction.
+
+Do not record one-off requests, small talk, or anything stale next week.
+Never record credentials of any kind.
+```
+
+The last line is not decoration. A memory file is a persistent, model-writable document, so what must never go into it belongs in the prompt explicitly.
+
+## How it reaches the UI
+
+Here the framework constrains the answer, and the constraint is worth stating rather than working around quietly.
+
+`MemoryMiddleware` annotates `memory_contents` with `PrivateStateAttr`. That keeps the key out of the `values` stream — correct for a transcript, since the memory file is context for the model rather than conversation — and it is exactly why a panel bound to `agent.value()` shows nothing while the agent is working. The key **is** written to the checkpoint, so it does arrive, but only once the run settles and the client hydrates the latest state.
+
+For a live panel, the graph has to announce the key on a channel the client does receive. A small middleware does that:
+
+```python
+class MemoryVisibilityMiddleware(AgentMiddleware):
+    def _emit(self, state):
+        contents = state.get("memory_contents")
+        if contents is None:
+            return
+        try:
+            writer = get_stream_writer()
+        except (RuntimeError, KeyError):
+            # No streaming context. The value is still on the checkpoint,
+            # which is what the client's settle-time hydration reads.
+            return
+        writer({"name": MEMORY_EVENT, "data": {"memory_contents": contents}})
+
+    def after_model(self, state, runtime):
+        self._emit(state)
+        return None
+```
+
+This is an application-side shim, not a framework change. The key stays private on the state; it is simply announced alongside it.
+
+### Two sources, and knowing which one you are on
+
+A custom event is a live signal and is not replayed when a thread is reopened. The checkpoint is durable but arrives only at settle. A panel that wants both reads both, and it is worth telling them apart rather than blending them:
+
+```ts
+private readonly liveMemory = computed<Record<string, string> | null>(() => {
+  for (const event of [...this.agent.customEvents()].reverse()) {
+    if (event.name !== MEMORY_EVENT) continue;
+    const contents = (event.data as { memory_contents?: unknown } | undefined)?.[
+      'memory_contents'
+    ];
+    if (contents && typeof contents === 'object') return contents as Record<string, string>;
+  }
+  return null;
+});
+
+private readonly settledMemory = computed<Record<string, string> | null>(() => {
+  const contents = (this.agent.value() as Record<string, unknown> | undefined)?.[
+    'memory_contents'
+  ];
+  return contents && typeof contents === 'object'
+    ? (contents as Record<string, string>)
+    : null;
+});
+
+protected readonly memorySource = computed<'live' | 'checkpoint' | 'none'>(() => {
+  const live = this.liveMemory();
+  if (live && Object.keys(live).length > 0) return 'live';
+  return this.settledMemory() ? 'checkpoint' : 'none';
+});
+```
+
+Without the middleware the panel still fills in, just a beat later and only at settle. With it, the panel updates while the agent is still writing. `checkpoint` is also what a reopened thread looks like, so the label is genuinely informative rather than a debug artifact.
+
+<Callout type="tip" title="Test the store, not the panel">
+The only assertion that proves cross-thread memory is a genuinely new thread that already knows. Clearing the panel and watching it refill proves the component works, not the store.
+</Callout>
+
+## Next steps
+
+- [Skills](/docs/deep-agents/capabilities/skills) — the same private-state visibility problem, for `skills_metadata`.
+- [Filesystem](/docs/deep-agents/capabilities/filesystem) — the state-backed workspace that does stream on its own.
+- [Memory](/docs/langgraph/guides/memory) — the LangGraph store this capability is built on.

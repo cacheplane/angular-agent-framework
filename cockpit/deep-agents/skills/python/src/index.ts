@@ -27,9 +27,7 @@ export const deepAgentsSkillsPythonModule: CockpitCapabilityModule = {
     language: 'python',
   },
   title: 'Deep Agents Skills (Python)',
-  // No `deep-agents` library exists on the website yet; the empty string is
-  // the "no published docs page" sentinel and renders no Docs link.
-  docsPath: '',
+  docsPath: '/docs/deep-agents/capabilities/skills',
   promptAssetPaths: ['cockpit/deep-agents/skills/python/prompts/skills.md'],
   codeAssetPaths: [
     'cockpit/deep-agents/skills/angular/src/app/skills.component.ts',

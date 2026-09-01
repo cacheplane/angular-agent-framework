@@ -6,7 +6,8 @@ export type LibraryId =
   | 'a2ui'
   | 'middleware'
   | 'telemetry'
-  | 'runtimes';
+  | 'runtimes'
+  | 'deep-agents';
 
 export interface DocsPage {
   title: string;
@@ -505,6 +506,37 @@ export const docsConfig: DocsLibrary[] = [
           { title: 'Overview', slug: 'overview', section: 'mastra' },
           { title: 'Quickstart', slug: 'quickstart', section: 'mastra' },
           { title: 'How It Connects', slug: 'how-it-connects', section: 'mastra' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'deep-agents',
+    title: 'Deep Agents',
+    description:
+      'Rendering the Deep Agents middleware capabilities — planning, filesystem, subagents, memory, and skills — in an Angular UI',
+    // The framework is a LangGraph agent harness, so these pages sit behind the
+    // LangGraph adapter rather than beside it. Reference material, not a pick.
+    group: 'library',
+    sections: [
+      {
+        title: 'Getting Started',
+        id: 'getting-started',
+        color: 'blue',
+        pages: [
+          { title: 'Introduction', slug: 'introduction', section: 'getting-started' },
+        ],
+      },
+      {
+        title: 'Capabilities',
+        id: 'capabilities',
+        color: 'blue',
+        pages: [
+          { title: 'Planning', slug: 'planning', section: 'capabilities' },
+          { title: 'Filesystem', slug: 'filesystem', section: 'capabilities' },
+          { title: 'Subagents', slug: 'subagents', section: 'capabilities' },
+          { title: 'Memory', slug: 'memory', section: 'capabilities' },
+          { title: 'Skills', slug: 'skills', section: 'capabilities' },
         ],
       },
     ],

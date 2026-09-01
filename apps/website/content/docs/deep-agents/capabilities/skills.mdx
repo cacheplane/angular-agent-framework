@@ -1,0 +1,111 @@
+---
+title: Skills
+description: SkillsMiddleware loads only SKILL.md frontmatter into the prompt and leaves the body on disk, and skills_metadata is private state a panel must reach deliberately.
+---
+
+# Skills
+
+A skill is a folder with a `SKILL.md` whose YAML frontmatter carries a `name` and a `description`, following the [agentskills.io](https://agentskills.io) specification. `SkillsMiddleware` loads **only that frontmatter** into the system prompt — a short index the model can scan — and leaves the body on the filesystem until a request actually matches.
+
+That two-stage load is what progressive disclosure means. The index costs a few tokens per skill. The procedure costs nothing until it is needed.
+
+```markdown
+---
+name: runway-analysis
+description: Decide whether a runway is long enough for a given aircraft at a given field elevation. Use when the user asks about runway suitability, takeoff or landing distance, or operating out of a high-elevation field.
+license: MIT
+---
+
+# Runway Analysis
+
+## Procedure
+
+1. Get the field elevation and the longest runway length.
+2. Read `/skills/runway-analysis/reference/margins.md` for the margin table.
+   Do not work from memory — the table is the authority.
+3. Compare, then state the verdict and the two numbers you compared.
+```
+
+The `description` is doing the routing, so it is written as a matching rule rather than as a summary. Step 2 is the second stage of the disclosure: the reference file costs nothing until the `SKILL.md` sends the agent to it.
+
+## What the demo shows
+
+The dispatch desk carries two skills, runway analysis and a weather brief. The panel lists both from the moment the run starts, because both frontmatter blocks are in the prompt. Ask a runway question and exactly one skill opens: the panel marks `runway-analysis` as read, its reference file is opened a step later, and the weather skill stays closed on disk.
+
+That closed skill is the demonstration. If every skill's files are read on every request, the index is not routing anything and the descriptions need work.
+
+The prompt has to say that the index is an index:
+
+```markdown
+Your procedures are not in this prompt — they are skills under `/skills/`.
+When a request matches a skill, read its `SKILL.md` before you start, and
+follow the procedure it gives you. If the `SKILL.md` points at another file,
+read that too — the numbers in a reference file are the authority, and your
+recollection is not.
+```
+
+## Mounting the skills
+
+`SkillsMiddleware` reads through a backend, and which backend is a deployment decision. The demo seeds a process-local store from the repository and mounts it read-only, which keeps the skill content in version control without giving the agent the host.
+
+```python
+graph = create_deep_agent(
+    model=ChatOpenAI(model="gpt-4.1", temperature=0),
+    tools=[lookup_field_elevation, lookup_runway_length, lookup_weather],
+    system_prompt=(PROMPTS_DIR / "skills.md").read_text(),
+    backend=CompositeBackend(
+        default=StateBackend(),
+        routes={"/skills/": StoreBackend(namespace=..., store=SKILLS_STORE)},
+    ),
+    skills=["/skills/"],
+)
+```
+
+`CompositeBackend` routes by path prefix, longest first. Anything outside `/skills/` falls through to `StateBackend`, so notes the agent writes stay on the thread and never touch the skill mount.
+
+<Callout type="warning" title="CompositeBackend strips the route prefix">
+Seed the store at `/runway-analysis/SKILL.md`, not `/skills/runway-analysis/SKILL.md`. The composite removes the matched prefix before delegating and re-adds it to the result, so a store seeded with the prefix surfaces to the agent as `/skills/skills/runway-analysis/...` and the skill scan finds nothing.
+</Callout>
+
+## How it reaches the UI
+
+The panel has two halves, and they arrive by different routes.
+
+**The index is private state.** `skills_metadata` is annotated `PrivateStateAttr`, exactly as `memory_contents` is, so it is absent from the `values` stream and reaches `agent.value()` only once the run settles. A live index needs the same custom-event shim the [memory capability](/docs/deep-agents/capabilities/memory) documents: a small middleware republishes the key on the custom stream, and the client reads the custom event first and falls back to the settled state for a reopened thread.
+
+```ts
+private readonly liveSkills = computed<SkillMetadata[] | null>(() => {
+  for (const event of [...this.agent.customEvents()].reverse()) {
+    if (event.name !== SKILLS_EVENT) continue;
+    const metadata = (event.data as { skills_metadata?: unknown } | undefined)?.[
+      'skills_metadata'
+    ];
+    if (Array.isArray(metadata)) return metadata as SkillMetadata[];
+  }
+  return null;
+});
+```
+
+As with memory, this is an application-side shim rather than a framework feature, and it is worth naming as such.
+
+**What the agent opened needs no shim at all.** A skill body is read with `read_file`, which is an ordinary tool call:
+
+```ts
+private readonly openedPaths = computed<string[]>(() => {
+  const paths: string[] = [];
+  for (const call of this.agent.toolCalls()) {
+    if (call.name !== 'read_file') continue;
+    const path = (call.args as Record<string, unknown> | undefined)?.['file_path'];
+    if (typeof path === 'string' && !paths.includes(path)) paths.push(path);
+  }
+  return paths;
+});
+```
+
+Matching those paths against each skill's directory is what makes the panel show the thing worth showing: one skill opened, the rest still on disk.
+
+## Next steps
+
+- [Memory](/docs/deep-agents/capabilities/memory) — the same private-state visibility problem, in full.
+- [Filesystem](/docs/deep-agents/capabilities/filesystem) — the backends the skill mount is assembled from.
+- [Chat tool calls](/docs/chat/components/chat-tool-calls) — how the `read_file` calls render in the conversation.

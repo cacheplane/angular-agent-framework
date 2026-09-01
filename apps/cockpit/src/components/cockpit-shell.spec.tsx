@@ -13,7 +13,9 @@ import {
   ThemeProvider,
 } from '@threadplane/ui-react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { NO_COCKPIT_DOCS_LINK } from '@threadplane/cockpit-registry';
 import { getCockpitPageModel } from '../lib/cockpit-page';
+import type { CockpitPageModel } from '../lib/cockpit-page';
 import type { UseRuntimeControllerOptions } from '../lib/runtime/use-runtime-controller';
 
 const operationalMocks = vi.hoisted(() => ({
@@ -121,13 +123,16 @@ const renderShell = (runtimeUrl: string | null = null) =>
     </ThemeProvider>
   );
 
-const renderShellFor = (slug: string[]) => {
+const renderShellFor = (
+  slug: string[],
+  presentationOverrides: Partial<CockpitPageModel['presentation']> = {}
+) => {
   const pageModel = getCockpitPageModel(slug);
   return render(
     <ThemeProvider theme="light">
       <CockpitShell
         navigationTree={pageModel.navigationTree}
-        presentation={pageModel.presentation}
+        presentation={{ ...pageModel.presentation, ...presentationOverrides }}
         entryTitle={pageModel.entry.title}
         contentBundle={baseContentBundle}
       />
@@ -745,9 +750,7 @@ describe('CockpitShell documentation link', () => {
     expect(link.getAttribute('rel')).toBe('noopener noreferrer');
   });
 
-  it('renders no link for a capability with no published docs page', () => {
-    // deep-agents carries the NO_COCKPIT_DOCS_LINK sentinel: the website has no
-    // deep-agents library yet, so there is nothing to link to.
+  it('links a deep-agents capability at the deep-agents docs library', () => {
     renderShellFor([
       'deep-agents',
       'core-capabilities',
@@ -755,6 +758,21 @@ describe('CockpitShell documentation link', () => {
       'overview',
       'python',
     ]);
+
+    const link = screen.getByRole('link', { name: /read docs/i });
+    expect(link.getAttribute('href')).toBe(
+      'https://threadplane.ai/docs/deep-agents/capabilities/planning'
+    );
+  });
+
+  it('renders no link for a capability with no published docs page', () => {
+    // Every mapped capability now points at a published page, so the sentinel
+    // branch is exercised through a presentation carrying it rather than
+    // through a table entry that happens to be blank today.
+    renderShellFor(
+      ['deep-agents', 'core-capabilities', 'planning', 'overview', 'python'],
+      { docsPath: NO_COCKPIT_DOCS_LINK }
+    );
 
     expect(screen.queryByRole('link', { name: /read docs/i })).toBeNull();
   });

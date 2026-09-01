@@ -23,9 +23,7 @@ export const deepAgentsSubagentsAngularModule: CockpitCapabilityModule = {
     language: 'angular',
   },
   title: 'Deep Agents Subagents (Angular)',
-  // No `deep-agents` library exists on the website yet; the empty string is
-  // the "no published docs page" sentinel and renders no Docs link.
-  docsPath: '',
+  docsPath: '/docs/deep-agents/capabilities/subagents',
   promptAssetPaths: [
     'cockpit/deep-agents/subagents/angular/prompts/subagents.md',
   ],

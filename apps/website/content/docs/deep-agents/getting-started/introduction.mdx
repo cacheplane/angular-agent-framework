@@ -1,0 +1,87 @@
+---
+title: Introduction
+description: Render the Deep Agents middleware capabilities — planning, filesystem, subagents, memory, and skills — in an Angular UI over LangGraph.
+---
+
+# Introduction
+
+[Deep Agents](https://github.com/langchain-ai/deepagents) is LangChain's agent-harness library. It is not a protocol and not a runtime: it is a set of LangGraph middleware that assembles a long-horizon agent out of five capabilities, each of which puts something on the graph that a user interface can render.
+
+| Capability | Middleware | What it puts on the graph |
+|---|---|---|
+| [Planning](/docs/deep-agents/capabilities/planning) | `TodoListMiddleware` | A `todos` array the agent rewrites as it works. |
+| [Filesystem](/docs/deep-agents/capabilities/filesystem) | `FilesystemMiddleware` | A `files` map, plus write approvals when a permission is set to interrupt. |
+| [Subagents](/docs/deep-agents/capabilities/subagents) | `SubAgentMiddleware` | A `task` tool that dispatches real child graphs. |
+| [Memory](/docs/deep-agents/capabilities/memory) | `MemoryMiddleware` | A memory file the agent maintains, held across threads. |
+| [Skills](/docs/deep-agents/capabilities/skills) | `SkillsMiddleware` | A skill index loaded from `SKILL.md` frontmatter. |
+
+Every page in this section is written against the real `deepagents` package, version 0.7.11, running as a LangGraph graph. Nothing here is a reimplementation of the framework, and nothing here is a mock of it.
+
+<Callout type="info" title="What this section is not">
+These pages document what a Deep Agents graph exposes and how an Angular application reads it. They are not a substitute for the upstream Deep Agents documentation, and Threadplane does not maintain the framework.
+</Callout>
+
+## The setup story, once
+
+A Deep Agents agent is a LangGraph graph. `create_deep_agent` returns a compiled graph, LangGraph Server serves it like any other, and the browser talks to it over the same protocol. There is no Deep Agents adapter, because none is needed: `@threadplane/langgraph` is the whole client wiring.
+
+That means the setup is identical for all five capabilities, and it is the setup already documented under the LangGraph adapter. Work through the [LangGraph quickstart](/docs/langgraph/getting-started/quickstart) once, and every page below assumes it.
+
+```ts
+// app.config.ts
+import { ApplicationConfig } from '@angular/core';
+import { provideAgent } from '@threadplane/langgraph';
+import { provideChat } from '@threadplane/chat';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({
+      apiUrl: environment.langGraphApiUrl,
+      assistantId: environment.assistantId,
+    }),
+    provideChat({}),
+  ],
+};
+```
+
+```ts
+import { Component, computed } from '@angular/core';
+import { ChatComponent } from '@threadplane/chat';
+import { injectAgent } from '@threadplane/langgraph';
+
+@Component({
+  selector: 'app-root',
+  imports: [ChatComponent],
+  template: `<chat [agent]="agent" />`,
+})
+export class App {
+  protected readonly agent = injectAgent();
+}
+```
+
+What changes from capability to capability is not the provider and not the component. It is which part of the agent handle each panel reads: `value()` for state keys, `subagents()` for dispatches, `customEvents()` for keys the framework keeps private, `toolCalls()` for what the agent actually opened.
+
+## Three ways a capability reaches the browser
+
+Deep Agents does not publish all five capabilities the same way, and the difference decides how much work a panel is.
+
+**Public state keys stream on their own.** `todos` and `files` are ordinary keys on the graph state. LangGraph streams them in the `values` channel, `@threadplane/langgraph` projects the latest snapshot into `agent.value()`, and a panel is a `computed()` over that. No configuration, no custom events, no server-side shim.
+
+**Tool calls are already structured.** The subagent `task` tool and the filesystem `read_file` tool arrive as normal tool calls. The subagent tracker recognizes `task` by default, so child agents render as cards with no client configuration at all.
+
+**Private state keys do not stream.** `memory_contents` and `skills_metadata` are annotated `PrivateStateAttr` by their middleware. That annotation keeps them out of the `values` stream by design — they are context for the model, not transcript — and it means a panel bound to `agent.value()` shows nothing while the agent is working. Those keys are written to the checkpoint, so they arrive at settle, but a live panel needs the graph to announce them on a channel the client does receive. The memory and skills pages show the small middleware that does it, and say plainly that it is an application-side shim rather than a framework feature.
+
+That last row is a real constraint of the framework as it stands, not an oversight in the demos. It is stated on both pages it affects.
+
+## The demos
+
+Each capability page describes a standalone example that runs the real framework against a real model. The examples live under [`cockpit/deep-agents`](https://github.com/cacheplane/angular-agent-framework/tree/main/cockpit/deep-agents) and are hosted on the [Threadplane cockpit](https://cockpit.threadplane.ai), which shows the Angular source, the Python graph, and the system prompt beside the running demo.
+
+All five share one scenario — an aviation dispatch desk with a handful of airport lookup tools — so the difference between two pages is the capability under test and nothing else.
+
+## Further reading
+
+- [LangGraph adapter introduction](/docs/langgraph/getting-started/introduction) — the adapter every Deep Agents graph binds through.
+- [Chat subagent card](/docs/chat/components/chat-subagent-card) — the component the `task` dispatches render into.
+- [Chat interrupt panel](/docs/chat/components/chat-interrupt-panel) — the component a filesystem write approval renders into.
+- [Persistence](/docs/langgraph/guides/persistence) — checkpoints and the store, which the memory capability depends on.

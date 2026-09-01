@@ -34,13 +34,13 @@ export const NO_COCKPIT_DOCS_LINK = '';
  * lanes of one cockpit demo point at the same page.
  */
 export const COCKPIT_DOCS_LINKS: Readonly<Record<string, string>> = {
-  // deep-agents — no `deep-agents` library exists on the website yet.
-  'deep-agents/getting-started/overview': NO_COCKPIT_DOCS_LINK,
-  'deep-agents/core-capabilities/planning': NO_COCKPIT_DOCS_LINK,
-  'deep-agents/core-capabilities/filesystem': NO_COCKPIT_DOCS_LINK,
-  'deep-agents/core-capabilities/subagents': NO_COCKPIT_DOCS_LINK,
-  'deep-agents/core-capabilities/memory': NO_COCKPIT_DOCS_LINK,
-  'deep-agents/core-capabilities/skills': NO_COCKPIT_DOCS_LINK,
+  // deep-agents
+  'deep-agents/getting-started/overview': '/docs/deep-agents/getting-started/introduction',
+  'deep-agents/core-capabilities/planning': '/docs/deep-agents/capabilities/planning',
+  'deep-agents/core-capabilities/filesystem': '/docs/deep-agents/capabilities/filesystem',
+  'deep-agents/core-capabilities/subagents': '/docs/deep-agents/capabilities/subagents',
+  'deep-agents/core-capabilities/memory': '/docs/deep-agents/capabilities/memory',
+  'deep-agents/core-capabilities/skills': '/docs/deep-agents/capabilities/skills',
 
   // langgraph
   'langgraph/getting-started/overview': '/docs/langgraph/getting-started/introduction',
@@ -104,18 +104,12 @@ export const COCKPIT_DOCS_LINKS: Readonly<Record<string, string>> = {
 /**
  * The capabilities that deliberately carry `NO_COCKPIT_DOCS_LINK`.
  *
- * Kept as an explicit list so the guard spec can assert that the only blank
- * entries are these — a rename that accidentally blanks a real link fails
- * instead of quietly dropping the "Docs" button from a page.
+ * Currently empty: every mapped capability points at a published page. The list
+ * stays because the guard spec asserts that the blanked entries are exactly
+ * these — so with an empty list, blanking anything at all fails, rather than
+ * quietly dropping the "Docs" button from a page.
  */
-export const COCKPIT_TOPICS_WITHOUT_DOCS: readonly string[] = [
-  'deep-agents/getting-started/overview',
-  'deep-agents/core-capabilities/planning',
-  'deep-agents/core-capabilities/filesystem',
-  'deep-agents/core-capabilities/subagents',
-  'deep-agents/core-capabilities/memory',
-  'deep-agents/core-capabilities/skills',
-];
+export const COCKPIT_TOPICS_WITHOUT_DOCS: readonly string[] = [];
 
 /**
  * Resolve the website documentation URL for a cockpit capability.

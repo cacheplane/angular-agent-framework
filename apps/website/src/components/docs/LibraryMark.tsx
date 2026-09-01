@@ -1,6 +1,6 @@
 import type { LibraryId } from '../../lib/docs-config';
 
-type GlyphKey = 'chat' | 'middleware' | 'pulse' | 'layers';
+type GlyphKey = 'chat' | 'middleware' | 'pulse' | 'layers' | 'branch';
 
 type MarkEntry =
   | { kind: 'logo'; src: string }
@@ -15,6 +15,7 @@ const MARKS: Record<LibraryId, MarkEntry> = {
   middleware: { kind: 'glyph', glyph: 'middleware' },
   telemetry: { kind: 'glyph', glyph: 'pulse' },
   runtimes: { kind: 'glyph', glyph: 'layers' },
+  'deep-agents': { kind: 'glyph', glyph: 'branch' },
 };
 
 function ChatGlyph({ s }: { s: number }) {
@@ -52,11 +53,23 @@ function LayersGlyph({ s }: { s: number }) {
   );
 }
 
+function BranchGlyph({ s }: { s: number }) {
+  return (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="5" r="2" />
+      <circle cx="5" cy="19" r="2" />
+      <circle cx="19" cy="19" r="2" />
+      <path d="M12 7v4M5 17v-2a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v2" />
+    </svg>
+  );
+}
+
 const GLYPHS: Record<GlyphKey, (props: { s: number }) => React.JSX.Element> = {
   chat: ChatGlyph,
   middleware: MiddlewareGlyph,
   pulse: PulseGlyph,
   layers: LayersGlyph,
+  branch: BranchGlyph,
 };
 
 interface Props {
