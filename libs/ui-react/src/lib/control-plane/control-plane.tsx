@@ -32,19 +32,28 @@ const visuallyHidden: CSSProperties = {
 
 export interface ControlPlaneRailProps extends CommonProps {
   label: string;
+  primaryLabel?: string;
   primary: ReactNode;
   utilities?: ReactNode;
 }
 
 export function ControlPlaneRail({
   label,
+  primaryLabel,
   primary,
   utilities,
   className,
 }: ControlPlaneRailProps) {
   return (
     <nav aria-label={label} className={className} data-control-plane-rail>
-      <div data-control-plane-rail-group="primary">{primary}</div>
+      <div data-control-plane-rail-group="primary">
+        {primaryLabel ? (
+          <span data-control-plane-rail-group-label aria-hidden="true">
+            {primaryLabel}
+          </span>
+        ) : null}
+        {primary}
+      </div>
       {utilities ? (
         <div data-control-plane-rail-group="utilities">{utilities}</div>
       ) : null}

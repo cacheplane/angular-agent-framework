@@ -197,6 +197,7 @@ export function CockpitControlPlane({
     >
       <ControlPlaneRail
         label="Cockpit modes"
+        primaryLabel="View"
         primary={MODES.map(({ label, icon: Icon }) => (
           <ControlPlaneRailItem
             key={label}

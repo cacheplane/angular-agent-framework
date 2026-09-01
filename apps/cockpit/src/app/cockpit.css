@@ -387,7 +387,21 @@ pre.shiki {
   flex-direction: column;
   gap: 4px;
 }
-.cockpit-control-plane [data-control-plane-rail-group="utilities"] { margin-top: auto; }
+.cockpit-control-plane [data-control-plane-rail-group="utilities"] {
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--ds-border);
+}
+.cockpit-control-plane [data-control-plane-rail-group-label] {
+  display: block;
+  padding-bottom: 4px;
+  color: var(--ds-text-muted);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  text-align: center;
+}
 .cockpit-control-plane-utility-anchor { display: contents; }
 .cockpit-control-plane [data-control-plane-rail-item] {
   position: relative;
@@ -400,7 +414,7 @@ pre.shiki {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  color: var(--ds-text-muted);
+  color: var(--ds-text-secondary);
   background: transparent;
   text-decoration: none;
   cursor: pointer;

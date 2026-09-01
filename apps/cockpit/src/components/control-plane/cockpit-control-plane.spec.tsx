@@ -1,10 +1,20 @@
 /** @vitest-environment jsdom */
 import React, { useState } from 'react';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { cockpitManifest } from '@threadplane/cockpit-registry';
 import { ThemeProvider, type ControlPlaneMode } from '@threadplane/ui-react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildNavigationTree } from '../../lib/route-resolution';
+
+const workspaceRoot = process.cwd().endsWith('/apps/cockpit')
+  ? resolve(process.cwd(), '../..')
+  : process.cwd();
+const cockpitCss = readFileSync(
+  resolve(workspaceRoot, 'apps/cockpit/src/app/cockpit.css'),
+  'utf8'
+);
 import {
   createRuntimeSnapshot,
   parseRuntimeTarget,
@@ -222,5 +232,22 @@ describe('CockpitControlPlane', () => {
     expect(result.onExpandedChange).toHaveBeenCalledWith('Runtime', false);
     fireEvent.click(screen.getByRole('button', { name: 'Recheck' }));
     expect(result.onRecheck).toHaveBeenCalledTimes(1);
+  });
+
+  it('separates the mode group from the utilities and lifts resting contrast', () => {
+    expect(cockpitCss).toMatch(
+      /\[data-control-plane-rail-group="utilities"\][^}]*border-top/
+    );
+    expect(cockpitCss).not.toMatch(
+      /\[data-control-plane-rail-item\]\s*\{[^}]*--ds-text-muted/
+    );
+  });
+
+  it('names the mode group without adding a second landmark label', () => {
+    renderControlPlane();
+    const rail = screen.getByRole('navigation', { name: 'Cockpit modes' });
+    const cap = rail.querySelector('[data-control-plane-rail-group-label]');
+    expect(cap?.textContent).toBe('View');
+    expect(cap?.getAttribute('aria-hidden')).toBe('true');
   });
 });
