@@ -10,7 +10,6 @@ import { FeatureChips } from './mdx/FeatureChips';
 import { mdxHeadingComponents } from './mdx/headings';
 import { ArchFlowDiagram } from './ArchFlowDiagram';
 import { AgUiArchDiagram } from './AgUiArchDiagram';
-import { type LibraryId } from '../../lib/docs-config';
 import rehypePrettyCode from 'rehype-pretty-code';
 import rehypeSlug from 'rehype-slug';
 import remarkGfm from 'remark-gfm';
@@ -79,13 +78,9 @@ const rehypeOptions = {
 
 interface MdxRendererProps {
   source: string;
-  library: LibraryId;
-  section: string;
-  slug: string;
-  title: string;
 }
 
-export function MdxRenderer({ source, library, section, slug, title }: MdxRendererProps) {
+export function MdxRenderer({ source }: MdxRendererProps) {
   return (
     <div className="docs-prose prose prose-slate max-w-none"
       style={{

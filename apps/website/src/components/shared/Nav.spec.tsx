@@ -4,12 +4,13 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Nav } from './Nav';
 
-const { trackCtaClick } = vi.hoisted(() => ({
+const { trackCtaClick, pathnameRef } = vi.hoisted(() => ({
   trackCtaClick: vi.fn(),
+  pathnameRef: { current: '/docs/langgraph/guides/streaming' },
 }));
 
 vi.mock('next/navigation', () => ({
-  usePathname: () => '/docs/langgraph/guides/streaming',
+  usePathname: () => pathnameRef.current,
   useRouter: () => ({ push: vi.fn() }),
 }));
 
@@ -22,6 +23,27 @@ describe('Docs mobile navigation', () => {
   beforeEach(() => {
     window.localStorage.clear();
     trackCtaClick.mockClear();
+    pathnameRef.current = '/docs/langgraph/guides/streaming';
+  });
+
+  it('does not invent a library on a library-neutral docs page', () => {
+    pathnameRef.current = '/docs/choosing-an-adapter';
+    render(<Nav />);
+    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    const dialog = screen.getByRole('dialog', { name: 'Mobile navigation' });
+
+    // `/docs/choosing-an-adapter` has no library segment. Falling back to
+    // 'langgraph' made the Scope card read "LangGraph / Getting Started /
+    // Documentation" — three fabrications in the one card whose job is saying
+    // where you are.
+    const scope = within(dialog).getByRole('heading', { name: 'Scope' }).closest('section');
+    if (!scope) throw new Error('Expected a Scope section');
+    expect(within(scope).queryByText('LangGraph')).toBeNull();
+    expect(within(scope).queryByText('Getting Started')).toBeNull();
+    expect(within(scope).getByText('Choosing an adapter')).toBeTruthy();
+
+    expect(within(dialog).queryByRole('button', { name: 'LangGraph' })).toBeNull();
+    expect(within(dialog).getByRole('button', { name: 'Choose a library' })).toBeTruthy();
   });
 
   it('uses the existing header trigger for the control-plane Docs drawer', () => {

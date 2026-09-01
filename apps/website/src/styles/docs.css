@@ -1730,6 +1730,11 @@
   font-family: var(--font-inter);
   font-size: 13px;
 }
+/* Library-neutral pages: the picker is an invitation, not a statement. */
+.docs-sidebar-lib-trigger-label[data-placeholder] {
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
 .docs-sidebar-lib-trigger > svg { transition: transform 150ms ease; }
 .docs-sidebar-lib-trigger > svg[data-open] { transform: rotate(180deg); }
 .docs-sidebar-lib-menu {

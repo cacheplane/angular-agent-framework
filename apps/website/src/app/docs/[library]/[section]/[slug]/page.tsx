@@ -107,13 +107,7 @@ export default async function DocsPage({ params }: DocsRouteProps) {
             />
           </div>
           <article className="flex-1 py-8 px-4 sm:px-6 md:px-12 md:max-w-3xl overflow-x-hidden">
-            <MdxRenderer
-              source={doc.body}
-              library={library as LibraryId}
-              section={section}
-              slug={slug}
-              title={doc.title}
-            />
+            <MdxRenderer source={doc.body} />
           </article>
           {section === 'api' && (() => {
             const entries = loadApiDocs(library);

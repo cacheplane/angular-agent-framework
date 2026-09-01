@@ -33,7 +33,8 @@ import {
 import { LibraryMark } from './LibraryMark';
 
 export interface DocsNavigationProps {
-  activeLibrary: LibraryId;
+  /** `null` on a library-neutral docs page. */
+  activeLibrary: LibraryId | null;
   activeSection: string;
   activeSlug: string;
   expanded?: Record<string, boolean>;
@@ -62,7 +63,7 @@ function LibraryDropdown({
   activeLibrary,
   onNavigate,
 }: {
-  activeLibrary: LibraryId;
+  activeLibrary: LibraryId | null;
   onNavigate?: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -74,7 +75,8 @@ function LibraryDropdown({
 
   useEffect(() => {
     const handler = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(event.target as Node))
+        setOpen(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -82,7 +84,8 @@ function LibraryDropdown({
 
   useEffect(() => {
     if (!open) return;
-    const items = menuRef.current?.querySelectorAll<HTMLElement>(MENU_ITEM_SELECTOR);
+    const items =
+      menuRef.current?.querySelectorAll<HTMLElement>(MENU_ITEM_SELECTOR);
     items?.[initialFocusRef.current]?.focus();
   }, [open]);
 
@@ -98,7 +101,10 @@ function LibraryDropdown({
       const trigger = triggerRef.current;
       const menu = menuRef.current;
       if (!trigger || !menu) return;
-      const available = window.innerHeight - trigger.getBoundingClientRect().bottom - MENU_VIEWPORT_GUTTER;
+      const available =
+        window.innerHeight -
+        trigger.getBoundingClientRect().bottom -
+        MENU_VIEWPORT_GUTTER;
       menu.style.maxHeight = `${Math.max(MENU_MIN_HEIGHT, available)}px`;
     };
     resize();
@@ -118,19 +124,22 @@ function LibraryDropdown({
 
   const onMenuKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const items = Array.from(
-      menuRef.current?.querySelectorAll<HTMLElement>(MENU_ITEM_SELECTOR) ?? [],
+      menuRef.current?.querySelectorAll<HTMLElement>(MENU_ITEM_SELECTOR) ?? []
     );
-    const current = Math.max(0, items.indexOf(document.activeElement as HTMLElement));
+    const current = Math.max(
+      0,
+      items.indexOf(document.activeElement as HTMLElement)
+    );
     const nextIndex =
       event.key === 'Home'
         ? 0
         : event.key === 'End'
-          ? items.length - 1
-          : event.key === 'ArrowDown'
-            ? (current + 1) % items.length
-            : event.key === 'ArrowUp'
-              ? (current - 1 + items.length) % items.length
-              : -1;
+        ? items.length - 1
+        : event.key === 'ArrowDown'
+        ? (current + 1) % items.length
+        : event.key === 'ArrowUp'
+        ? (current - 1 + items.length) % items.length
+        : -1;
     if (nextIndex >= 0) {
       event.preventDefault();
       items[nextIndex]?.focus();
@@ -144,7 +153,9 @@ function LibraryDropdown({
     }
   };
 
-  const currentLibrary = getLibraryConfig(activeLibrary);
+  const currentLibrary = activeLibrary
+    ? getLibraryConfig(activeLibrary)
+    : undefined;
 
   return (
     <div ref={ref} className="docs-sidebar-library">
@@ -167,12 +178,22 @@ function LibraryDropdown({
         className="docs-sidebar-lib-trigger"
       >
         <span className="docs-sidebar-lib-trigger-inner">
-          <LibraryMark library={activeLibrary} size={20} />
-          <span className="docs-sidebar-lib-trigger-label">
-            {currentLibrary?.title ?? activeLibrary}
+          {activeLibrary ? (
+            <LibraryMark library={activeLibrary} size={20} />
+          ) : null}
+          <span
+            className="docs-sidebar-lib-trigger-label"
+            data-placeholder={activeLibrary ? undefined : ''}
+          >
+            {currentLibrary?.title ?? 'Choose a library'}
           </span>
         </span>
-        <ChevronDown size={16} strokeWidth={2} aria-hidden="true" data-open={open || undefined} />
+        <ChevronDown
+          size={16}
+          strokeWidth={2}
+          aria-hidden="true"
+          data-open={open || undefined}
+        />
       </button>
 
       {open ? (
@@ -185,7 +206,9 @@ function LibraryDropdown({
         >
           {LIBRARY_GROUPS.map((group, groupIndex) => (
             <div role="group" aria-label={group.label} key={group.id}>
-              {groupIndex > 0 ? <span className="docs-sidebar-lib-divider" aria-hidden="true" /> : null}
+              {groupIndex > 0 ? (
+                <span className="docs-sidebar-lib-divider" aria-hidden="true" />
+              ) : null}
               <span className="docs-sidebar-lib-group" aria-hidden="true">
                 {group.label}
               </span>
@@ -211,11 +234,16 @@ function LibraryDropdown({
                         <LibraryMark library={library.id} size={20} />
                       </span>
                       <span className="docs-sidebar-lib-item-text">
-                        <span className="docs-sidebar-lib-item-title" data-active={isActive || undefined}>
+                        <span
+                          className="docs-sidebar-lib-item-title"
+                          data-active={isActive || undefined}
+                        >
                           {library.title}
                         </span>
                         {library.tagline ? (
-                          <span className="docs-sidebar-lib-item-desc">{library.tagline}</span>
+                          <span className="docs-sidebar-lib-item-desc">
+                            {library.tagline}
+                          </span>
                         ) : null}
                       </span>
                     </Link>
@@ -229,7 +257,10 @@ function LibraryDropdown({
   );
 }
 
-const SECTION_ICONS: Record<string, ComponentType<{ size?: number; 'aria-hidden'?: boolean }>> = {
+const SECTION_ICONS: Record<
+  string,
+  ComponentType<{ size?: number; 'aria-hidden'?: boolean }>
+> = {
   'getting-started': Rocket,
   guides: BookOpen,
   concepts: Lightbulb,
@@ -288,7 +319,8 @@ function SectionGroup({
           className="docs-sidebar-section-links"
         >
           {section.pages.map((page) => {
-            const isActive = page.section === activeSection && page.slug === activeSlug;
+            const isActive =
+              page.section === activeSection && page.slug === activeSlug;
             return (
               <Link
                 key={`${page.section}/${page.slug}`}
@@ -317,12 +349,15 @@ export function DocsNavigation({
   onExpandedChange,
   onNavigate,
 }: DocsNavigationProps) {
-  const library = getLibraryConfig(activeLibrary);
+  const library = activeLibrary ? getLibraryConfig(activeLibrary) : undefined;
   const pathname = usePathname();
 
   return (
     <div data-docs-navigation>
-      <nav aria-label="Featured documentation" className="docs-sidebar-top-links">
+      <nav
+        aria-label="Featured documentation"
+        className="docs-sidebar-top-links"
+      >
         {specialDocsPages.map((page) => (
           <Link
             key={page.path}
@@ -340,21 +375,25 @@ export function DocsNavigation({
 
       <LibraryDropdown activeLibrary={activeLibrary} onNavigate={onNavigate} />
 
-      {library?.sections.map((section) => {
-        const key = `Learn:${activeLibrary}:${section.id}`;
-        return (
-          <SectionGroup
-            key={section.id}
-            section={section}
-            activeLibrary={activeLibrary}
-            activeSection={activeSection}
-            activeSlug={activeSlug}
-            open={expanded[key] ?? true}
-            onOpenChange={(open) => onExpandedChange?.(key, open)}
-            onNavigate={onNavigate}
-          />
-        );
-      })}
+      {/* No library means no section tree. Narrowing on `activeLibrary` rather
+       * than `library` keeps SectionGroup's non-null contract honest. */}
+      {activeLibrary && library
+        ? library.sections.map((section) => {
+            const key = `Learn:${activeLibrary}:${section.id}`;
+            return (
+              <SectionGroup
+                key={section.id}
+                section={section}
+                activeLibrary={activeLibrary}
+                activeSection={activeSection}
+                activeSlug={activeSlug}
+                open={expanded[key] ?? true}
+                onOpenChange={(open) => onExpandedChange?.(key, open)}
+                onNavigate={onNavigate}
+              />
+            );
+          })
+        : null}
     </div>
   );
 }
