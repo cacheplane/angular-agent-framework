@@ -413,3 +413,52 @@ describe('SCOPE_KEYS export', () => {
     ]);
   });
 });
+
+describe('classifyFromAffected — cockpit shell does not own the e2e matrix', () => {
+  // The cockpit-e2e matrix dispatches `nx e2e` for the standalone Angular cap
+  // apps under cockpit/**; none of them depends on the apps/cockpit Next.js
+  // shell, and no workflow runs the shell's own `e2e` target. A
+  // `scope:cockpit-e2e` tag on the shell therefore cannot select any real
+  // work — it can only over-select. It used to: apps/cockpit imports from
+  // apps/website, so a website-only PR made the shell nx-affected, flipped
+  // cockpit_e2e true, and (with no cap affected) hit the dispatcher's
+  // full-fleet fallback. PR #932 changed three apps/website/src files and ran
+  // the whole cap matrix.
+  it('apps/cockpit is not tagged scope:cockpit-e2e', async () => {
+    const project = JSON.parse(
+      await readFile('apps/cockpit/project.json', 'utf8')
+    );
+
+    assert.ok(
+      !project.tags.includes('scope:cockpit-e2e'),
+      'the cockpit shell must not select the cockpit-e2e cap matrix'
+    );
+  });
+
+  it('a website-only change leaves cockpit_e2e false', async () => {
+    const cockpit = JSON.parse(
+      await readFile('apps/cockpit/project.json', 'utf8')
+    );
+    const website = JSON.parse(
+      await readFile('apps/website/project.json', 'utf8')
+    );
+
+    // The real nx-affected set for PR #932 was [website, cockpit, scripts]:
+    // apps/cockpit statically depends on apps/website.
+    const scope = classifyFromAffected(
+      [
+        'apps/website/src/app/layout.tsx',
+        'apps/website/src/components/shared/SiteFooter.tsx',
+      ],
+      [
+        { name: 'website', tags: website.tags },
+        { name: 'cockpit', tags: cockpit.tags },
+      ]
+    );
+
+    assert.equal(scope.cockpit_e2e, false);
+    // The shell still builds and tests — it consumes the changed website code.
+    assert.equal(scope.cockpit, true);
+    assert.equal(scope.website, true);
+  });
+});

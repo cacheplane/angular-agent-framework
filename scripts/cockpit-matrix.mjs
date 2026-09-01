@@ -2,12 +2,31 @@
 // SPDX-License-Identifier: MIT
 
 /**
+ * Does this cap own one of the nx-affected projects?
+ *
+ * A cap is two independent nx projects — the Angular app that owns the `e2e`
+ * target and the python backend it talks to — with no edge between them in the
+ * project graph. Matching only on the Angular name made a python-only change
+ * look unattributed, which main() answers with the full fleet.
+ *
+ * @param {{angular: string, pythonName?: string}} cap
+ * @param {Set<string>} affectedNames
+ * @returns {boolean}
+ */
+export function isCapAffected(cap, affectedNames) {
+  if (affectedNames.has(cap.angular)) return true;
+  // Guard the falsy case: caps with a Node-hosted backend carry '' here, and
+  // `affectedNames` must never be probed with an empty key.
+  return Boolean(cap.pythonName) && affectedNames.has(cap.pythonName);
+}
+
+/**
  * Pure-function classifier for the cockpit-e2e matrix.
  *
- * @param {Array<{angular: string, python: string}>} allCockpitCaps
+ * @param {Array<{angular: string, python: string, pythonName: string}>} allCockpitCaps
  *        All cockpit angular projects with an e2e target, paired with
- *        their python sibling path. Derived from the project graph by
- *        the CLI wrapper (or hard-coded in tests).
+ *        their python sibling path and project name. Derived from the
+ *        project graph by the CLI wrapper (or hard-coded in tests).
  * @param {Set<string>} affectedNames
  *        Set of project names nx-affected returned for this diff.
  * @param {{fullFleet: boolean}} opts
@@ -19,7 +38,7 @@
  */
 export function selectCockpitCaps(allCockpitCaps, affectedNames, { fullFleet }) {
   if (fullFleet) return allCockpitCaps;
-  return allCockpitCaps.filter((cap) => affectedNames.has(cap.angular));
+  return allCockpitCaps.filter((cap) => isCapAffected(cap, affectedNames));
 }
 
 // ── CLI wrapper ────────────────────────────────────────────────────────────
@@ -100,7 +119,29 @@ function deriveCockpitCaps() {
               return false;
             }
           })();
-          caps.push({ angular: angularName, python: hasPython ? relPython : '' });
+          // Read the python sibling's own project.json for its nx name rather
+          // than deriving one from the path — the name is what nx-affected
+          // reports, and a convention-derived guess would fail open (no match
+          // → full fleet) without ever saying so.
+          const pythonName = (() => {
+            if (!hasPython) return '';
+            try {
+              const sibling = JSON.parse(
+                readFileSync(
+                  path.join(repoRoot, relPython, 'project.json'),
+                  'utf8',
+                ),
+              );
+              return typeof sibling.name === 'string' ? sibling.name : '';
+            } catch {
+              return '';
+            }
+          })();
+          caps.push({
+            angular: angularName,
+            python: hasPython ? relPython : '',
+            pythonName,
+          });
         } catch {
           // No project.json or invalid JSON — skip silently.
         }
@@ -135,14 +176,18 @@ function main() {
 
   // Empty-affected fallback: when scope says e2e is required but nx
   // didn't attribute any cap (lib fanout), run all caps.
-  const haveAnyCockpitAffected = allCaps.some((c) => affected.has(c.angular));
+  const haveAnyCockpitAffected = allCaps.some((c) => isCapAffected(c, affected));
   const effectiveFullFleet = args.fullFleet || !haveAnyCockpitAffected;
 
   const selected = selectCockpitCaps(allCaps, affected, {
     fullFleet: effectiveFullFleet,
   });
 
-  const json = JSON.stringify(selected);
+  // ci.yml reads matrix.cap.angular / matrix.cap.python; pythonName is an
+  // internal attribution detail, so keep it out of the emitted matrix.
+  const json = JSON.stringify(
+    selected.map(({ angular, python }) => ({ angular, python })),
+  );
 
   const ghOutput = process.env.GITHUB_OUTPUT;
   if (ghOutput) {
