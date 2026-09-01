@@ -182,10 +182,20 @@ test('docs page renders sidebar and content', async ({ page }) => {
 
 test('docs landing page shows library cards', async ({ page }) => {
   await page.goto('/docs');
-  await expect(page.getByText('LangGraph').first()).toBeVisible();
-  await expect(page.getByText('Render').first()).toBeVisible();
-  await expect(page.getByText('Chat').first()).toBeVisible();
-  await expect(page.getByText('AG-UI').first()).toBeVisible();
+  // Assert on card titles, not page text. A bare getByText('Render') passed on
+  // a substring of "json-render"; hasText on the card would match the Chat
+  // card too, whose blurb mentions json-render. Only the title is the card.
+  const titles = page.locator('.docs-index-card-title');
+  await expect(titles.filter({ hasText: /^LangGraph$/ })).toBeVisible();
+  await expect(titles.filter({ hasText: /^json-render$/ })).toBeVisible();
+  await expect(titles.filter({ hasText: /^AG-UI$/ })).toBeVisible();
+  await expect(titles.filter({ hasText: /^Chat$/ })).toBeVisible();
+});
+
+test('docs landing page carries the control plane', async ({ page }) => {
+  await page.goto('/docs');
+  await expect(page.getByRole('navigation', { name: 'Docs modes' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Choose a library' })).toBeVisible();
 });
 
 test('api reference renders in docs', async ({ page }) => {

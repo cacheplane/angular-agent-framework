@@ -6,6 +6,9 @@ import { Eyebrow } from '../../components/ui/Eyebrow';
 import { Card } from '../../components/ui/Card';
 import { Pill } from '../../components/ui/Pill';
 import { CopyButton } from '../../components/docs/CopyButton';
+import { DocsControlPlane } from '../../components/docs/DocsControlPlane';
+import { DocsSearch } from '../../components/docs/DocsSearch';
+import { DOCS_INDEX_TITLE } from '../../lib/docs-config';
 import { createPageMetadata } from '../../lib/site-metadata';
 
 export const metadata = createPageMetadata({
@@ -152,7 +155,19 @@ function GlyphChip({ size, children }: { size: number; children: ReactNode }) {
 
 export default function DocsLandingPage() {
   return (
-    <>
+    <div className="flex min-h-screen docs-shell-page">
+      <DocsSearch />
+      {/* The index is library-neutral: it is where you pick one. */}
+      <DocsControlPlane
+        activeLibrary={null}
+        activeSection=""
+        activeSlug=""
+        pageTitle={DOCS_INDEX_TITLE}
+      />
+      {/* Deliberately outside the article measure the [slug] route uses — the
+       * card grids need their own width, and the prose column would flatten
+       * them. The shell supplies the chrome, not the content width. */}
+      <div className="flex-1 min-w-0 docs-shell-body docs-index-body">
 
       {/* Hero */}
       <Section surface="canvas" ariaLabelledBy="docs-heading">
@@ -309,6 +324,7 @@ export default function DocsLandingPage() {
           </div>
         </Container>
       </Section>
-    </>
+      </div>
+    </div>
   );
 }
