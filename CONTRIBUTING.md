@@ -86,6 +86,115 @@ Then add the same public key as a **Signing Key** at
 <https://github.com/settings/ssh/new>. Commits merged through the GitHub UI and
 bot commits (Renovate, Dependabot) are signed automatically.
 
+## The merge gate
+
+`main` has exactly one required status check: **`CI — required`**. That is the
+`required-pr-checks` job in `.github/workflows/ci.yml`, app-pinned to the
+GitHub Actions app (id `15368`), with `strict: true` (a PR must be up to date
+with `main` before it merges).
+
+Nothing else is required. In particular:
+
+- **`Vercel` is not required**, and that is a deliberate decision, reviewed on
+  2026-09-01. The `website` job's last step is `npx nx build website`,
+  byte-identical to `vercel.json`'s `buildCommand`, so a broken build still
+  fails `CI — required`. The residual gap is real but narrow: a failure
+  specific to Vercel's environment — an env var set there and not in CI, an
+  install difference — is not caught pre-merge. It is caught post-merge by
+  `Deploy → Vercel`, before production.
+
+  Requiring the status back was considered and rejected. Vercel now posts a
+  single consolidated `Vercel` context covering every project, where it used to
+  post one per project. Gating on it would mean an unrelated project's failure
+  blocks a pure-website PR — the opposite of the current behaviour, which is
+  load-bearing: #931 merged on 2026-09-01 while `threadplane-minting-service`
+  was failing on that same commit, deliberately not allowed to block website
+  work. It would also re-introduce the vendor-string dependency described
+  below.
+- **`approve` is not a quality gate and must never become one.** It comes from
+  `.github/workflows/auto-approve.yml` and exists only so OSSF Scorecard's
+  Code-Review check has a review to read (see [Code review](#code-review)).
+
+### Why the gate is a job we own, not a vendor status string
+
+On 2026-09-01 Vercel consolidated its GitHub commit-status contexts. It had
+been posting one per project — `Vercel – threadplane` and
+`Vercel – threadplane-minting-service` — and from ~17:19 UTC it posted a single
+`Vercel`. Branch protection required the literal string `Vercel – threadplane`,
+so the required check simply stopped arriving and **every PR became
+permanently unmergeable while showing all checks green**. Same publisher
+(`vercel[bot]`, app id `8329`), so it was a platform-side rename, not a
+misconfiguration on our end.
+
+A required context is matched by name. Any vendor free to rename its context is
+free to strand every PR in the repo, silently and indefinitely. `CI — required`
+is a job in this repository, so its name can only change in a commit.
+
+It is safe to gate on because it is not vacuous: it runs
+`if: always() && github.event_name == 'pull_request'` (so it posts on every PR,
+fork PRs included), it fails when any in-scope job is not `success`, and it
+also fails when an out-of-scope job reports `failure` or `cancelled`. Read the
+job before changing it.
+
+### Diagnostic: a PR is green but will not merge
+
+`mergeable: MERGEABLE` together with `mergeStateStatus: BLOCKED`, on a PR whose
+checks are all green, means a **required context never arrived**. This looks
+identical to a slow queue and it never resolves on its own. Do not wait it out,
+and do not reach for `--admin`.
+
+Compare what was actually posted on the head SHA against what protection
+requires:
+
+```bash
+gh api repos/cacheplane/angular-agent-framework/commits/<head-sha>/status --jq '[.statuses[].context]'
+```
+
+```bash
+gh api repos/cacheplane/angular-agent-framework/branches/main/protection --jq '.required_status_checks.checks'
+```
+
+Any required context missing from the posted list is the cause. Fix branch
+protection (or the workflow that should post it) — forcing the merge only hides
+the next one.
+
+Note that check *runs* (GitHub Actions) and commit *statuses* (external apps
+like Vercel) are different APIs. `CI — required` is a check run, so it appears
+in `gh pr checks` but not in the `/status` output above; use
+`gh api repos/cacheplane/angular-agent-framework/commits/<head-sha>/check-runs`
+for those.
+
+### Rollback reference
+
+Branch protection is repo-wide, not version-controlled, and reachable only with
+an admin-scoped token. The configuration in force before the 2026-09-01 change,
+recorded here so it can be restored without guessing:
+
+```jsonc
+// required_status_checks, as of 2026-09-01 before the fix
+{
+  "strict": true,
+  "contexts": ["Vercel – threadplane"],
+  "checks": [{ "context": "Vercel – threadplane", "app_id": 8329 }]
+}
+```
+
+Everything else was, and remains, unchanged: `required_signatures.enabled:
+true`, `enforce_admins.enabled: false`, `required_approving_review_count: 0`,
+`allow_force_pushes: false`, `allow_deletions: false`, no rulesets. Only
+`required_status_checks` was edited, to
+`{"strict": true, "checks": [{"context": "CI — required", "app_id": 15368}]}`.
+
+There is deliberately **no CI assertion that protection matches this file**.
+Reading branch protection needs the `administration: read` scope, which the
+workflow `permissions:` key cannot grant — `GITHUB_TOKEN` has no such scope —
+so a guard would require a long-lived admin PAT in Actions secrets. The
+blast radius of that credential is worse than the drift it would catch, given
+the drift is loud once you know the diagnostic above. The repo uses classic
+branch protection and has no rulesets, so the unprivileged
+`GET /repos/{owner}/{repo}/rules/branches/main` endpoint returns `[]` and is
+not an alternative.
+
 ## Code review
 
 Every PR gets a genuine advisory AI code review
