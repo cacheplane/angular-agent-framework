@@ -15,7 +15,7 @@ export interface ControlPlaneOverflowMenuProps {
   label: string;
   children: ReactNode;
   tabIndex?: number;
-  placement?: 'start' | 'end';
+  placement?: 'start' | 'center' | 'end';
 }
 
 export function ControlPlaneOverflowMenu({

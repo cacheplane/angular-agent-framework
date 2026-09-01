@@ -139,13 +139,34 @@ describe('RuntimeSection', () => {
       document.querySelector('[data-control-plane-overflow-menu-root]')
     ).toBeTruthy();
     expect(
-      document
-        .querySelector('[data-control-plane-overflow-menu-root]')
-        ?.getAttribute('data-overflow-placement')
-    ).toBe('end');
-    expect(
       document.querySelector('[data-control-plane-overflow-trigger]')
     ).toBeTruthy();
+  });
+
+  it.each([
+    ['invalid_configuration', 'start'],
+    ['connecting', 'center'],
+    ['checking', 'center'],
+    ['ready', 'center'],
+    ['unresponsive', 'center'],
+    ['reloading', 'center'],
+    ['error', 'center'],
+  ] as const)(
+    'places the %s layout at its explicit %s anchor',
+    (phase, placement) => {
+      renderSection(phase);
+      expect(
+        document
+          .querySelector('[data-control-plane-overflow-menu-root]')
+          ?.getAttribute('data-overflow-placement')
+      ).toBe(placement);
+    }
+  );
+
+  it('binds configured Runtime menu centering to the placement hook', () => {
+    expect(cockpitCss).toMatch(
+      /\[data-control-plane-overflow-menu-root\]\[data-overflow-placement="center"\]\s*>\s*\[data-control-plane-overflow-menu\]\s*\{[\s\S]*?left:\s*50%;[\s\S]*?right:\s*auto;[\s\S]*?transform:\s*translateX\(-50%\);/
+    );
   });
 
   it('shows compact metadata, only the sanitized target, and truthful checked time', () => {

@@ -259,7 +259,10 @@ export function RuntimeSection({
             )
           }
         />
-        <ControlPlaneOverflowMenu label="More runtime actions">
+        <ControlPlaneOverflowMenu
+          label="More runtime actions"
+          placement="center"
+        >
           <ControlPlaneOverflowMenuItem
             onSelect={() =>
               runCommand(
@@ -277,7 +280,10 @@ export function RuntimeSection({
   } else if (invalid) {
     actions = (
       <ControlPlaneActionBar label="Runtime actions">
-        <ControlPlaneOverflowMenu label="More runtime actions">
+        <ControlPlaneOverflowMenu
+          label="More runtime actions"
+          placement="start"
+        >
           <ControlPlaneOverflowMenuItem
             onSelect={() =>
               runCommand(

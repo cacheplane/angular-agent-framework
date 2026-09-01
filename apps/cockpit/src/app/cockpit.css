@@ -707,6 +707,11 @@ pre.shiki {
   left: 0;
   right: auto;
 }
+.cockpit-control-plane [data-control-plane-overflow-menu-root][data-overflow-placement="center"] > [data-control-plane-overflow-menu] {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+}
 .cockpit-control-plane [data-control-plane-overflow-item] {
   width: 100%;
   min-height: 34px;

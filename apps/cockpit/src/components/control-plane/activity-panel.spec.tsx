@@ -62,7 +62,7 @@ describe('ActivityPanel', () => {
     expect(cockpitCss).toMatch(/\[data-cockpit-activity-attention\]/);
   });
 
-  it('uses a compact default timestamp while preserving the full datetime', () => {
+  it('uses compact local time while preserving machine and accessible datetimes', () => {
     render(
       <ActivityPanel
         events={events}
@@ -73,12 +73,21 @@ describe('ActivityPanel', () => {
     );
 
     const timestamp = document.querySelector('[data-activity-timestamp]');
-    expect(timestamp?.textContent).toBe('17:00');
+    const date = new Date('2026-08-31T17:00:00.000Z');
+    expect(timestamp?.textContent).toBe(
+      new Intl.DateTimeFormat(undefined, {
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(date)
+    );
     expect(timestamp?.getAttribute('datetime')).toBe(
       '2026-08-31T17:00:00.000Z'
     );
     expect(timestamp?.getAttribute('aria-label')).toBe(
-      '2026-08-31T17:00:00.000Z'
+      new Intl.DateTimeFormat(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }).format(date)
     );
     const firstRow = screen.getAllByRole('listitem')[0];
     expect(Array.from(firstRow?.children ?? []).map((child) => child.tagName)).toEqual([
@@ -87,6 +96,22 @@ describe('ActivityPanel', () => {
       'TIME',
       'SPAN',
     ]);
+  });
+
+  it('falls back safely when an activity timestamp is invalid', () => {
+    render(
+      <ActivityPanel
+        events={[{ ...events[0], at: 'invalid-timestamp' }]}
+        currentCapability="streaming"
+        onClose={vi.fn()}
+        onClear={vi.fn()}
+      />
+    );
+
+    const timestamp = document.querySelector('[data-activity-timestamp]');
+    expect(timestamp?.textContent).toBe('invalid-timestamp');
+    expect(timestamp?.getAttribute('datetime')).toBe('invalid-timestamp');
+    expect(timestamp?.getAttribute('aria-label')).toBe('invalid-timestamp');
   });
 
   it('renders safe events newest first with severity icons and cross-capability labels only', () => {

@@ -25,9 +25,29 @@ export interface ActivityPanelProps {
   formatTimestamp?: (timestamp: string) => string;
 }
 
+const compactTimestampFormatter = new Intl.DateTimeFormat(undefined, {
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
+const accessibleTimestampFormatter = new Intl.DateTimeFormat(undefined, {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+});
+
+function parsedTimestamp(timestamp: string): Date | null {
+  const date = new Date(timestamp);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 function defaultTimestamp(timestamp: string): string {
-  const compact = timestamp.match(/T(\d{2}:\d{2})/u)?.[1];
-  return compact ?? timestamp;
+  const date = parsedTimestamp(timestamp);
+  return date ? compactTimestampFormatter.format(date) : timestamp;
+}
+
+function accessibleTimestamp(timestamp: string): string {
+  const date = parsedTimestamp(timestamp);
+  return date ? accessibleTimestampFormatter.format(date) : timestamp;
 }
 
 function SeverityIcon({ severity }: { severity: ActivitySeverity }) {
@@ -91,7 +111,7 @@ export function ActivityPanel({
               <span data-activity-summary>{event.summary}</span>
               <time
                 dateTime={event.at}
-                aria-label={event.at}
+                aria-label={accessibleTimestamp(event.at)}
                 data-activity-timestamp
               >
                 {formatTimestamp(event.at)}
