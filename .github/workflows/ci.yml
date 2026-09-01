@@ -232,6 +232,23 @@ jobs:
       # actually execute. All three share the `scope:cockpit` tag, so ci-scope
       # already gates this job correctly for changes under either library.
       - run: npx nx run-many -t test --projects=cockpit,cockpit-docs,cockpit-registry --skip-nx-cache
+      # apps/cockpit owns a real Playwright suite (e2e/control-plane.spec.ts)
+      # behind `nx e2e cockpit` that nothing invoked: the cockpit-e2e matrix
+      # only dispatches caps derived from cockpit/**, and no other job named
+      # the target — so it had never run in CI since #921 added it. It lives
+      # here rather than in its own job because it is cheap (7 tests, ~25s
+      # once the dev servers are up) and reuses this job's `npm ci`; the
+      # `cockpit` scope already gates the shell, and required-pr-checks
+      # already aggregates this job.
+      - name: Cache Playwright browsers
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+      - run: npx playwright install --with-deps chromium
+      - run: npx nx e2e cockpit --skip-nx-cache
 
   cockpit-examples-build:
     name: Cockpit — build all examples

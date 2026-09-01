@@ -373,7 +373,9 @@ describe('CI workflow', () => {
     // hardcoded LIBS list that excludes both of these. If they are dropped
     // from this run-many their specs stop executing silently.
     const cockpitJob = readJobBlock(await readWorkflow(), 'cockpit');
-    const runMany = cockpitJob.match(/npx nx run-many -t test --projects=(\S+)/);
+    const runMany = cockpitJob.match(
+      /npx nx run-many -t test --projects=(\S+)/
+    );
 
     assert.ok(runMany, 'cockpit job should run tests via nx run-many');
 
@@ -384,6 +386,27 @@ describe('CI workflow', () => {
         `cockpit job should run \`nx test ${project}\``
       );
     }
+  });
+
+  it('runs the cockpit shell control-plane e2e', async () => {
+    // apps/cockpit owns a real Playwright suite (e2e/control-plane.spec.ts,
+    // 7 tests, added by #921) behind `nx e2e cockpit`. Nothing invoked that
+    // target: the cockpit-e2e matrix only dispatches caps derived from
+    // cockpit/**, and no other job named it — so the suite had never run in
+    // CI. It belongs in the `cockpit` job, whose `cockpit` scope already
+    // gates the shell and is already aggregated by required-pr-checks.
+    const cockpitJob = readJobBlock(await readWorkflow(), 'cockpit');
+
+    assert.match(
+      cockpitJob,
+      /npx nx e2e cockpit\b/,
+      'cockpit job should run the shell control-plane e2e'
+    );
+    assert.match(
+      cockpitJob,
+      /npx playwright install/,
+      'the control-plane e2e needs a browser installed'
+    );
   });
 
   it('lets the cockpit e2e summary inspect CI scope outputs', async () => {
