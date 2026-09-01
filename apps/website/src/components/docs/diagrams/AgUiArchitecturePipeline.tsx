@@ -29,7 +29,7 @@ export function AgUiArchitecturePipeline() {
       <DiagramNode
         x={130} y={172} w={380} h={64}
         eyebrow="Adapter" title="@threadplane/ag-ui"
-        meta="reduces AG-UI events into Angular signals"
+        meta="toAgent() reduces AG-UI events into Angular signals"
         tone="accent"
       />
       <DiagramEdge d="M320 236 V256" slug={SLUG} arrow />

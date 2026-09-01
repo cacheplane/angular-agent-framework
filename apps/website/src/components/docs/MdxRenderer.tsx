@@ -11,6 +11,7 @@ import { mdxHeadingComponents } from './mdx/headings';
 import { ArchFlowDiagram } from './ArchFlowDiagram';
 import { StackDiagram } from './diagrams/StackDiagram';
 import { AgUiArchitecturePipeline } from './diagrams/AgUiArchitecturePipeline';
+import { A2uiMessageFlow } from './diagrams/A2uiMessageFlow';
 import rehypePrettyCode from 'rehype-pretty-code';
 import rehypeSlug from 'rehype-slug';
 import remarkGfm from 'remark-gfm';
@@ -41,6 +42,7 @@ const mdxComponents = {
   ArchFlowDiagram,
   StackDiagram,
   AgUiArchitecturePipeline,
+  A2uiMessageFlow,
   FeatureChips,
   pre: Pre,
   // Explicit width/height let the browser reserve the box before the file

@@ -4,6 +4,7 @@ import React from 'react';
 import { describe, expect, it } from 'vitest';
 import { render } from '@testing-library/react';
 import { AgUiArchitecturePipeline } from './AgUiArchitecturePipeline';
+import { A2uiMessageFlow } from './A2uiMessageFlow';
 
 /**
  * Compositions are hand-placed layouts; the spec guards that each mounts,
@@ -17,5 +18,15 @@ describe('AgUiArchitecturePipeline', () => {
     const titles = Array.from(container.querySelectorAll('.tp-diagram-title')).map((t) => t.textContent);
     expect(titles).toContain('@threadplane/ag-ui');
     expect(titles).toContain('AbstractAgent');
+  });
+});
+
+describe('A2uiMessageFlow', () => {
+  it('mounts and names the parser and surface store stages', () => {
+    const { container } = render(<A2uiMessageFlow />);
+    expect(container.querySelector('svg[role="img"]')).not.toBeNull();
+    const titles = Array.from(container.querySelectorAll('.tp-diagram-title')).map((t) => t.textContent);
+    expect(titles).toContain('createA2uiMessageParser()');
+    expect(titles).toContain('createA2uiSurfaceStore()');
   });
 });
