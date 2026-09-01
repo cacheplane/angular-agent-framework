@@ -176,7 +176,7 @@ describe('getCapabilityPresentation', () => {
 
     expect(getCapabilityPresentation(docsEntry)).toMatchObject({
       kind: 'docs-only',
-      docsPath: '',
+      docsPath: '/docs/deep-agents/getting-started/introduction',
     });
     expect(getCapabilityPresentation(capabilityEntry)).toMatchObject({
       kind: 'capability',
