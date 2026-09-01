@@ -69,7 +69,10 @@ export function ArchitectureBoundary() {
   return (
     <div className="pricing-boundary">
       <div className="pricing-section-heading-wrap">
-        <p className="pricing-section-kicker">What you are buying</p>
+        <div className="pricing-section-rail">
+          <p className="pricing-section-kicker">What you are buying</p>
+          <span className="pricing-section-rail-line" aria-hidden="true" />
+        </div>
         <h2 id="pricing-value-heading" className="pricing-section-heading">
           Open software. Commercial support when you want it.
         </h2>
@@ -117,7 +120,10 @@ export function PricingComparison() {
   return (
     <div className="pricing-comparison">
       <div className="pricing-section-heading-wrap">
-        <p className="pricing-section-kicker">Full comparison</p>
+        <div className="pricing-section-rail">
+          <p className="pricing-section-kicker">Full comparison</p>
+          <span className="pricing-section-rail-line" aria-hidden="true" />
+        </div>
         <h2 id="pricing-comparison-heading" className="pricing-section-heading">
           What changes between paths.
         </h2>

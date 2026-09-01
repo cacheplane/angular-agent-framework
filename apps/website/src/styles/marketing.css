@@ -52,9 +52,11 @@
 }
 .pricing-plan-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
   align-items: stretch;
+  max-width: 1040px;
+  margin-inline: auto;
 }
 .pricing-plan-card {
   position: relative;
@@ -203,6 +205,16 @@
   max-width: 760px;
   margin-bottom: 36px;
 }
+.pricing-section-rail {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.pricing-section-rail-line {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
 .pricing-section-kicker {
   margin: 0 0 10px;
   color: var(--color-accent);
@@ -230,7 +242,6 @@
 .pricing-boundary,
 .pricing-comparison {
   max-width: 1200px;
-  margin: 0 auto;
 }
 .pricing-boundary-flow {
   display: grid;
@@ -354,6 +365,8 @@
   .pricing-plan-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 24px 16px;
+    max-width: none;
+    margin-inline: 0;
   }
   .pricing-plan-description {
     min-height: 0;
@@ -526,7 +539,6 @@
 
 /* PricingFAQ — components/pricing/PricingFAQ.tsx */
 .pricing-faq-header {
-  text-align: center;
   margin-bottom: 48px;
 }
 .pricing-faq-eyebrow {

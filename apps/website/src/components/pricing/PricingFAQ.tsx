@@ -35,7 +35,10 @@ export function PricingFAQ() {
     <Section surface="white" ariaLabelledBy="pricing-faq-heading">
       <Container>
         <div id="faq" className="pricing-faq-header">
-          <Eyebrow tone="accent" className="pricing-faq-eyebrow">Questions</Eyebrow>
+          <div className="pricing-section-rail">
+            <Eyebrow tone="accent" className="pricing-faq-eyebrow">Questions</Eyebrow>
+            <span className="pricing-section-rail-line" aria-hidden="true" />
+          </div>
           <h2 id="pricing-faq-heading" className="pricing-faq-heading">Pricing FAQ.</h2>
         </div>
         <div className="pricing-faq-items"><FAQ items={ITEMS} /></div>
