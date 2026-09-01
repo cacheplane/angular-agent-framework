@@ -5,14 +5,6 @@ import { FAQ, type FAQItem } from '../ui/FAQ';
 
 const ITEMS: FAQItem[] = [
   {
-    q: 'Is Threadplane free?',
-    a: 'Yes. Every published Threadplane package is MIT-licensed and free to use, modify, and redistribute under the MIT terms.',
-  },
-  {
-    q: 'Can I use every package commercially?',
-    a: 'Yes. The MIT license permits commercial products, internal tools, client work, and hosted services. There are no paid-use activation steps or runtime checks.',
-  },
-  {
     q: 'Does Threadplane have a cloud service?',
     a: 'No. Threadplane runs inside your Angular application. You operate your application, agent runtime, data stores, hosting, and model-provider accounts.',
   },
@@ -27,14 +19,6 @@ const ITEMS: FAQItem[] = [
   {
     q: 'What am I paying for?',
     a: 'Paid engagements provide expert support, architecture guidance, response commitments, security and procurement assistance, or hands-on delivery. The software remains MIT-licensed.',
-  },
-  {
-    q: 'Does a paid plan unlock different software?',
-    a: 'No. Community users and paid customers run the same packages with the same core capabilities. Paid relationships add services and accountability.',
-  },
-  {
-    q: 'Can I modify or redistribute the source?',
-    a: 'Yes. You may modify and redistribute the packages under the MIT license, including as part of commercial software. Preserve the copyright and permission notice as required by MIT.',
   },
   {
     q: 'What is Production Assurance?',

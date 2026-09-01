@@ -15,14 +15,10 @@ vi.mock('../ui/Eyebrow', () => ({
 }));
 
 const EXPECTED_QUESTIONS = [
-  'Is Threadplane free?',
-  'Can I use every package commercially?',
   'Does Threadplane have a cloud service?',
   'Does Threadplane store my conversations or agent data?',
   'Are model or hosting costs included?',
   'What am I paying for?',
-  'Does a paid plan unlock different software?',
-  'Can I modify or redistribute the source?',
   'What is Production Assurance?',
   'What is Pilot-to-Prod?',
 ];
@@ -48,8 +44,8 @@ describe('PricingFAQ', () => {
     expect(container.querySelector('#faq')).toBeTruthy();
   });
 
-  it('states that all packages use MIT', () => {
+  it('describes Production Assurance as a scoped support relationship', () => {
     render(<PricingFAQ />);
-    expect(screen.getByText(/every published Threadplane package is MIT-licensed/i)).toBeTruthy();
+    expect(screen.getByText(/Production Assurance is a scoped support relationship/i)).toBeTruthy();
   });
 });
