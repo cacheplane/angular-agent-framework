@@ -59,9 +59,9 @@ The whole protocol is seventeen events; you can hold it in your head.
 
 The seams come first, before any code.
 
-<StackDiagram highlight="ag-ui" />
+<StackDiagram highlight="ag-ui" caption="Backend speaks AG-UI over SSE → the adapter exposes the Agent contract → the chat UI renders." />
 
-Three boxes. Two seams.
+Two seams: the wire, and the contract.
 
 **The backend.** Whatever you want, as long as it can emit AG-UI events.
 LangGraph, CrewAI, Mastra, Microsoft Agent Framework, Pydantic AI, AG2, AWS Strands, Agno. They all have first-party or partnership adapters.
