@@ -3,12 +3,14 @@ import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
 import { Button } from '../../components/ui/Button';
 import { Pill } from '../../components/ui/Pill';
-import { BrowserFrame } from '../../components/ui/BrowserFrame';
 import { FeatureBlock } from '../../components/landing/FeatureBlock';
 import { WhitePaperBlock } from '../../components/landing/WhitePaperBlock';
 import { FinalCTA } from '../../components/landing/FinalCTA';
+import { MediumSwitcher } from '../../components/landing/MediumSwitcher';
 import { ChatLandingCodeShowcase } from '../../components/landing/chat-landing/ChatLandingCodeShowcase';
 import { createPageMetadata } from '../../lib/site-metadata';
+import { SECTION_MEDIA } from '../../lib/section-media';
+import { buildPanes } from '../../lib/build-panes';
 
 export const metadata = createPageMetadata({
   title: '@threadplane/chat — Batteries-Included Agent Chat for Angular',
@@ -18,18 +20,23 @@ export const metadata = createPageMetadata({
 });
 
 export default async function ChatPage() {
+  const panes = await buildPanes(SECTION_MEDIA.libChat, SECTION_MEDIA.libChat.video?.url ?? '');
+
   return (
     <>
       {/* Hero */}
       <Section surface="canvas" ariaLabelledBy="chat-hero-heading">
         <Container>
           <div className="chat-page-hero-inner">
-            <Eyebrow tone="accent" className="chat-page-eyebrow-spaced">@threadplane/chat</Eyebrow>
+            <div className="lib-hero-rail">
+              <Eyebrow tone="accent">@threadplane/chat · chat compositions</Eyebrow>
+              <span className="lib-hero-rail-line" aria-hidden="true" />
+            </div>
             <h1 id="chat-hero-heading" className="chat-page-h1">
               Drop-in chat for Angular agents.
             </h1>
             <p className="chat-page-hero-subtitle">
-              chat-timeline + chat-debug + GenUI surfaces. Production-shaped from day one, themable to your design system, or use the headless primitives if you want full control.
+              chat-timeline + chat-debug + GenUI surfaces. <span className="marker-highlight">Production-shaped from day one</span>, themable to your design system, or use the headless primitives if you want full control.
             </p>
             <div className="chat-page-hero-buttons">
               <Button variant="primary" size="lg" href="/docs/chat/getting-started/introduction">Get started</Button>
@@ -57,26 +64,7 @@ export default async function ChatPage() {
           { claim: 'Thread navigation and history search', api: 'sidenav + palette' },
         ]}
         cta={{ label: 'See @threadplane/chat docs', href: '/docs/chat/getting-started/introduction' }}
-        visual={
-          <BrowserFrame url="cockpit.threadplane.ai/chat/core-capabilities/debug/overview/python" elevation="md">
-            <div className="chat-page-visual-panel">
-              <div className="chat-page-visual-pills-row">
-                <Pill variant="accent">streaming</Pill>
-                <Pill variant="neutral">3 tools</Pill>
-                <Pill variant="neutral">1 interrupt</Pill>
-              </div>
-              <div className="chat-page-tool-label">
-                tool · query_inventory · 240ms
-              </div>
-              <div className="chat-page-result-block">
-                {`{ items: 47, low_stock: 3, total_value: 12400 }`}
-              </div>
-              <div className="chat-page-replay-footer">
-                replay · 0:24 · paused on interrupt
-              </div>
-            </div>
-          </BrowserFrame>
-        }
+        visual={<MediumSwitcher sectionId="lib-chat" panes={panes} />}
       />
 
       <FeatureBlock
@@ -95,7 +83,7 @@ export default async function ChatPage() {
       />
 
       <WhitePaperBlock paper="chat" />
-      <FinalCTA />
+      <FinalCTA variant="dark" />
     </>
   );
 }
