@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Nav } from './Nav';
 
 const { trackCtaClick } = vi.hoisted(() => ({
@@ -23,6 +23,40 @@ describe('Docs mobile navigation', () => {
     window.localStorage.clear();
     trackCtaClick.mockClear();
   });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const installDesktopMediaQuery = () => {
+    const listeners = new Set<(event: MediaQueryListEvent) => void>();
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn().mockReturnValue({
+        matches: false,
+        media: '(min-width: 64rem)',
+        onchange: null,
+        addEventListener: (
+          _type: string,
+          listener: (event: MediaQueryListEvent) => void,
+        ) => listeners.add(listener),
+        removeEventListener: (
+          _type: string,
+          listener: (event: MediaQueryListEvent) => void,
+        ) => listeners.delete(listener),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }),
+    );
+    return () => {
+      act(() => {
+        for (const listener of listeners) {
+          listener({ matches: true } as MediaQueryListEvent);
+        }
+      });
+    };
+  };
 
   const expectFocusAfterDrawerUnmount = (trigger: HTMLButtonElement) => {
     const nativeFocus = trigger.focus.bind(trigger);
@@ -83,12 +117,87 @@ describe('Docs mobile navigation', () => {
     fireEvent.click(trigger);
     const { focus, observation } = expectFocusAfterDrawerUnmount(trigger);
 
-    fireEvent.click(within(screen.getByRole('dialog')).getByRole('link', { name: 'Streaming' }));
+    const destination = within(screen.getByRole('dialog')).getByRole('link', {
+      name: 'Persistence',
+    });
+    expect(destination.getAttribute('href')).toBe('/docs/langgraph/guides/persistence');
+    fireEvent.click(destination);
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     await waitFor(() => expect(focus).toHaveBeenCalledOnce());
     expect(observation.drawerWasMounted).toBe(false);
     expect(document.activeElement).toBe(trigger);
+  });
+
+  it('closes and unlocks the page at the desktop breakpoint without restoring mobile intent', async () => {
+    const crossToDesktop = installDesktopMediaQuery();
+    const searchListener = vi.fn();
+    document.addEventListener('keydown', searchListener);
+    render(
+      <>
+        <Nav />
+        <div id="site-content"><button type="button">Page content</button></div>
+      </>,
+    );
+    const trigger = screen.getByRole('button', { name: 'Open menu' });
+    const focus = vi.spyOn(trigger, 'focus');
+    const nav = document.querySelector<HTMLElement>('.nav-bar');
+    const siteContent = document.getElementById('site-content');
+    if (!nav || !siteContent) throw new Error('Expected modal background surfaces');
+
+    fireEvent.click(trigger);
+    expect(screen.getByRole('dialog', { name: 'Mobile navigation' })).toBeTruthy();
+    expect(document.body.style.overflow).toBe('hidden');
+    expect(nav.inert).toBe(true);
+    expect(siteContent.inert).toBe(true);
+
+    crossToDesktop();
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(document.body.style.overflow).toBe('');
+    expect(nav.inert).toBe(false);
+    expect(siteContent.inert).toBe(false);
+    expect(focus).not.toHaveBeenCalled();
+    await new Promise((resolve) => window.setTimeout(resolve, 20));
+    expect(searchListener).not.toHaveBeenCalled();
+    document.removeEventListener('keydown', searchListener);
+  });
+
+  it('cancels queued search and focus when the breakpoint changes after dismissal', () => {
+    const crossToDesktop = installDesktopMediaQuery();
+    const frames = new Map<number, FrameRequestCallback>();
+    let nextFrame = 0;
+    vi.stubGlobal(
+      'requestAnimationFrame',
+      vi.fn((callback: FrameRequestCallback) => {
+        nextFrame += 1;
+        frames.set(nextFrame, callback);
+        return nextFrame;
+      }),
+    );
+    vi.stubGlobal(
+      'cancelAnimationFrame',
+      vi.fn((frame: number) => frames.delete(frame)),
+    );
+    const searchListener = vi.fn();
+    document.addEventListener('keydown', searchListener);
+    render(<Nav />);
+    const trigger = screen.getByRole('button', { name: 'Open menu' });
+    fireEvent.click(trigger);
+    const focus = vi.spyOn(trigger, 'focus');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Search docs' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(frames.size).toBe(1);
+
+    crossToDesktop();
+    act(() => {
+      for (const callback of frames.values()) callback(16);
+    });
+
+    expect(focus).not.toHaveBeenCalled();
+    expect(searchListener).not.toHaveBeenCalled();
+    document.removeEventListener('keydown', searchListener);
   });
 
   it('makes the top navigation and site content inert only while the drawer is open', async () => {

@@ -102,6 +102,11 @@ export function Nav() {
   const mobileDialogRef = useRef<HTMLDivElement>(null);
   const restoreMobileFocusRef = useRef(false);
   const pendingMobileSearchRef = useRef(false);
+  const cancelScheduledMobileRestoreRef = useRef<(() => void) | null>(null);
+  const cancelScheduledMobileRestore = useCallback(() => {
+    cancelScheduledMobileRestoreRef.current?.();
+    cancelScheduledMobileRestoreRef.current = null;
+  }, []);
   const closeMobileMenu = useCallback((openSearch = false) => {
     restoreMobileFocusRef.current = true;
     pendingMobileSearchRef.current = openSearch;
@@ -130,8 +135,25 @@ export function Nav() {
     };
   }, [open]);
   useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return undefined;
+    const desktop = window.matchMedia('(min-width: 64rem)');
+    const closeAtDesktop = ({ matches }: Pick<MediaQueryList, 'matches'>) => {
+      if (!matches) return;
+      restoreMobileFocusRef.current = false;
+      pendingMobileSearchRef.current = false;
+      cancelScheduledMobileRestore();
+      setOpen(false);
+    };
+    const handleChange = (event: MediaQueryListEvent) => closeAtDesktop(event);
+    desktop.addEventListener('change', handleChange);
+    closeAtDesktop(desktop);
+    return () => desktop.removeEventListener('change', handleChange);
+  }, [cancelScheduledMobileRestore]);
+  useEffect(() => {
     if (open || !restoreMobileFocusRef.current) return undefined;
-    const frame = window.requestAnimationFrame(() => {
+    const restoreFocusAndSearch = () => {
+      cancelScheduledMobileRestoreRef.current = null;
+      if (!restoreMobileFocusRef.current) return;
       restoreMobileFocusRef.current = false;
       mobileTriggerRef.current?.focus();
       if (pendingMobileSearchRef.current) {
@@ -140,9 +162,17 @@ export function Nav() {
           new KeyboardEvent('keydown', { key: 'k', metaKey: true }),
         );
       }
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [open]);
+    };
+    if (typeof window.requestAnimationFrame === 'function') {
+      const frame = window.requestAnimationFrame(restoreFocusAndSearch);
+      cancelScheduledMobileRestoreRef.current = () =>
+        window.cancelAnimationFrame(frame);
+    } else {
+      const timer = window.setTimeout(restoreFocusAndSearch, 0);
+      cancelScheduledMobileRestoreRef.current = () => window.clearTimeout(timer);
+    }
+    return cancelScheduledMobileRestore;
+  }, [cancelScheduledMobileRestore, open]);
   useEffect(() => {
     if (!open) return undefined;
     const dialog = mobileDialogRef.current;
