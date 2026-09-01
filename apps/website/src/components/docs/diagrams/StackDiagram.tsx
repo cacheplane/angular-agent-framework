@@ -40,7 +40,7 @@ export function StackDiagram({ highlight = 'none', caption, scale = 'docs' }: St
         meta="<chat> · <chat-message-list> · <chat-input>"
         tone={highlight === 'chat' ? 'accent' : 'neutral'}
       />
-      <DiagramEdge d="M320 82 V116" slug={slug} arrow />
+      <DiagramEdge d="M320 82 V120" slug={slug} arrow />
       <DiagramPill cx={320} cy={136} w={230} label="Agent contract · signals + events$" />
       <DiagramEdge d="M320 148 V178 H180 V200" slug={slug} arrow />
       <DiagramEdge d="M320 178 H460 V200" slug={slug} arrow />
@@ -79,7 +79,7 @@ export function StackDiagram({ highlight = 'none', caption, scale = 'docs' }: St
         y={284}
         w={240}
         h={40}
-        title="CrewAI · Mastra · MS Agent Fwk · Strands · …"
+        title="CrewAI · Mastra · MS Agent Fwk · Strands"
         align="middle"
         titleStyle="sans"
         tone={backends ? 'accent' : 'dim'}

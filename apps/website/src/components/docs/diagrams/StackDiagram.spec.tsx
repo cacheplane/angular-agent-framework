@@ -33,7 +33,24 @@ describe('StackDiagram', () => {
   it('highlight=runtimes accents the backend row', () => {
     const { container } = render(<StackDiagram highlight="runtimes" />);
     expect(toneOf(container, 'LangGraph Platform')).toBe('accent');
-    expect(toneOf(container, 'CrewAI · Mastra · MS Agent Fwk · Strands · …')).toBe('accent');
+    expect(toneOf(container, 'CrewAI · Mastra · MS Agent Fwk · Strands')).toBe('accent');
+  });
+
+  it('highlight=contract accents both adapters', () => {
+    const { container } = render(<StackDiagram highlight="contract" />);
+    expect(toneOf(container, '@threadplane/langgraph')).toBe('accent');
+    expect(toneOf(container, '@threadplane/ag-ui')).toBe('accent');
+  });
+
+  it('highlight=chat leaves both adapters neutral', () => {
+    const { container } = render(<StackDiagram highlight="chat" />);
+    expect(toneOf(container, '@threadplane/langgraph')).toBe('neutral');
+    expect(toneOf(container, '@threadplane/ag-ui')).toBe('neutral');
+  });
+
+  it('highlight default (none) accents nothing', () => {
+    const { container } = render(<StackDiagram />);
+    expect(container.querySelectorAll('g.tp-diagram-node[data-tone="accent"]').length).toBe(0);
   });
 
   it('renders a caption when given', () => {
