@@ -159,6 +159,7 @@ export function CockpitShell({
   const queryHandled = useRef(false);
   const mobileTriggerRef = useRef<HTMLButtonElement>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [activeMode, setActiveMode] = useState<ControlPlaneMode>('Run');
   const [isMobileOverlayPresent, setIsMobileOverlayPresent] = useState(false);
   const [activeUtility, setActiveUtility] = useState<CockpitUtility>(null);
   const [activityOpenCycle, setActivityOpenCycle] = useState(0);
@@ -203,12 +204,12 @@ export function CockpitShell({
   const docsUrl = resolveDocsUrl(presentation.docsPath);
 
   useEffect(() => {
-    if (!preferences.hydrated || queryHandled.current) return;
+    if (queryHandled.current) return;
     queryHandled.current = true;
     const url = new URL(window.location.href);
     const rawMode = url.searchParams.get('mode');
     const requestedMode = parseControlPlaneMode(rawMode);
-    if (requestedMode) preferences.setActiveMode(requestedMode);
+    if (requestedMode) setActiveMode(requestedMode);
     if (rawMode !== null) {
       url.searchParams.delete('mode');
       window.history.replaceState(
@@ -217,15 +218,14 @@ export function CockpitShell({
         url.pathname + url.search + url.hash
       );
     }
-  }, [preferences]);
+  }, []);
 
-  const activeMode: ControlPlaneMode = preferences.activeMode;
   const isMobileModalActive = isSidebarOpen || isMobileOverlayPresent;
 
   const handleModeChange = useCallback(
     (mode: ControlPlaneMode) => {
       if (mode === activeMode) return;
-      preferences.setActiveMode(mode);
+      setActiveMode(mode);
       appendActivity(
         createLocalActivityInput(entry.topic, {
           kind: 'mode_changed',
@@ -238,7 +238,7 @@ export function CockpitShell({
         to_mode: MODE_ANALYTICS[mode],
       });
     },
-    [activeMode, appendActivity, entry.topic, preferences]
+    [activeMode, appendActivity, entry.topic]
   );
 
   const handleActiveUtilityChange = useCallback(

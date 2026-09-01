@@ -11,7 +11,6 @@ export interface ControlPlanePreferencesV1 {
     expanded: Record<string, boolean>;
   };
   cockpit: {
-    activeMode: ControlPlaneMode;
     expanded: Record<string, boolean>;
   };
 }
@@ -22,7 +21,6 @@ const DEFAULT_PREFERENCES: ControlPlanePreferencesV1 = {
   version: 1,
   docs: { expanded: { Learn: true, Environment: false } },
   cockpit: {
-    activeMode: 'Run',
     expanded: { Capability: true, Environment: true },
   },
 };
@@ -32,10 +30,7 @@ const MODES: readonly ControlPlaneMode[] = ['Docs', 'Run', 'Code', 'API'];
 const cloneDefaults = (): ControlPlanePreferencesV1 => ({
   version: 1,
   docs: { expanded: { ...DEFAULT_PREFERENCES.docs.expanded } },
-  cockpit: {
-    activeMode: DEFAULT_PREFERENCES.cockpit.activeMode,
-    expanded: { ...DEFAULT_PREFERENCES.cockpit.expanded },
-  },
+  cockpit: { expanded: { ...DEFAULT_PREFERENCES.cockpit.expanded } },
 });
 
 const getBrowserStorage = (): Storage | null => {
@@ -61,9 +56,6 @@ const booleanRecord = (
   return result;
 };
 
-const isMode = (value: unknown): value is ControlPlaneMode =>
-  typeof value === 'string' && MODES.includes(value as ControlPlaneMode);
-
 export const parseControlPlaneMode = (value: string | null): ControlPlaneMode | null => {
   if (!value) return null;
   const normalized = value.toLowerCase();
@@ -88,9 +80,6 @@ export const readControlPlanePreferences = (
         expanded: booleanRecord(docs.expanded, defaults.docs.expanded),
       },
       cockpit: {
-        activeMode: isMode(cockpit.activeMode)
-          ? cockpit.activeMode
-          : defaults.cockpit.activeMode,
         expanded: booleanRecord(cockpit.expanded, defaults.cockpit.expanded),
       },
     };
@@ -135,17 +124,6 @@ export function useControlPlanePreferences(surface: ControlPlaneSurface) {
     [hydrated],
   );
 
-  const setActiveMode = useCallback(
-    (activeMode: ControlPlaneMode) => {
-      if (surface === 'docs') return;
-      update((current) => ({
-        ...current,
-        cockpit: { ...current.cockpit, activeMode },
-      }));
-    },
-    [surface, update],
-  );
-
   const setExpanded = useCallback(
     (section: string, open: boolean) => {
       update((current) =>
@@ -171,9 +149,7 @@ export function useControlPlanePreferences(surface: ControlPlaneSurface) {
 
   return {
     hydrated,
-    activeMode: surface === 'docs' ? ('Docs' as const) : preferences.cockpit.activeMode,
     expanded: preferences[surface].expanded,
-    setActiveMode,
     setExpanded,
   };
 }

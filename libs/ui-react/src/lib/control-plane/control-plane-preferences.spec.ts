@@ -20,10 +20,25 @@ describe('control-plane preferences', () => {
       version: 1,
       docs: { expanded: { Learn: true, Environment: false } },
       cockpit: {
-        activeMode: 'Run',
         expanded: { Capability: true, Environment: true },
       },
     });
+  });
+
+  it('ignores a stored activeMode and never writes one back', () => {
+    window.localStorage.setItem(
+      CONTROL_PLANE_STORAGE_KEY,
+      JSON.stringify({
+        version: 1,
+        docs: { expanded: {} },
+        cockpit: { activeMode: 'Code', expanded: { Capability: false } },
+      }),
+    );
+
+    const parsed = readControlPlanePreferences(window.localStorage);
+
+    expect('activeMode' in parsed.cockpit).toBe(false);
+    expect(parsed.cockpit.expanded.Capability).toBe(false);
   });
 
   it('validates persisted values and falls back only for invalid fields', () => {
@@ -33,7 +48,6 @@ describe('control-plane preferences', () => {
         version: 1,
         docs: { expanded: { Learn: false, Environment: 'yes' } },
         cockpit: {
-          activeMode: 'Preview',
           expanded: { Capability: false, Environment: true, Extra: 'no' },
         },
       }),
@@ -43,7 +57,6 @@ describe('control-plane preferences', () => {
       version: 1,
       docs: { expanded: { Learn: false, Environment: false } },
       cockpit: {
-        activeMode: 'Run',
         expanded: { Capability: false, Environment: true },
       },
     });
@@ -77,9 +90,9 @@ describe('control-plane preferences', () => {
     try {
       const { result } = renderHook(() => useControlPlanePreferences('cockpit'));
       await waitFor(() => expect(result.current.hydrated).toBe(true));
-      expect(result.current.activeMode).toBe('Run');
-      expect(() => act(() => result.current.setActiveMode('Code'))).not.toThrow();
-      expect(result.current.activeMode).toBe('Code');
+      expect(result.current.expanded.Capability).toBe(true);
+      expect(() => act(() => result.current.setExpanded('Capability', false))).not.toThrow();
+      expect(result.current.expanded.Capability).toBe(false);
     } finally {
       if (descriptor) Object.defineProperty(window, 'localStorage', descriptor);
     }
@@ -94,14 +107,13 @@ describe('control-plane preferences', () => {
     expect(parseControlPlaneMode(null)).toBeNull();
   });
 
-  it('hydrates Cockpit mode and persists mode changes without erasing Docs', async () => {
+  it('hydrates Cockpit disclosure state and persists changes without erasing Docs', async () => {
     window.localStorage.setItem(
       CONTROL_PLANE_STORAGE_KEY,
       JSON.stringify({
         version: 1,
         docs: { expanded: { Learn: false, Environment: true } },
         cockpit: {
-          activeMode: 'Code',
           expanded: { Capability: true, Environment: false },
         },
       }),
@@ -109,9 +121,9 @@ describe('control-plane preferences', () => {
 
     const { result } = renderHook(() => useControlPlanePreferences('cockpit'));
     await waitFor(() => expect(result.current.hydrated).toBe(true));
-    expect(result.current.activeMode).toBe('Code');
+    expect(result.current.expanded).toEqual({ Capability: true, Environment: false });
 
-    act(() => result.current.setActiveMode('API'));
+    act(() => result.current.setExpanded('Environment', true));
 
     const stored = window.localStorage.getItem(CONTROL_PLANE_STORAGE_KEY);
     expect(stored).not.toBeNull();
@@ -119,28 +131,6 @@ describe('control-plane preferences', () => {
       version: 1,
       docs: { expanded: { Learn: false, Environment: true } },
       cockpit: {
-        activeMode: 'API',
-        expanded: { Capability: true, Environment: false },
-      },
-    });
-  });
-
-  it('keeps Docs active and persists only its disclosure state', async () => {
-    const { result } = renderHook(() => useControlPlanePreferences('docs'));
-    await waitFor(() => expect(result.current.hydrated).toBe(true));
-
-    act(() => result.current.setActiveMode('Code'));
-    act(() => result.current.setExpanded('Environment', true));
-
-    expect(result.current.activeMode).toBe('Docs');
-    expect(result.current.expanded.Environment).toBe(true);
-    const stored = window.localStorage.getItem(CONTROL_PLANE_STORAGE_KEY);
-    expect(stored).not.toBeNull();
-    expect(JSON.parse(stored ?? '{}')).toEqual({
-      version: 1,
-      docs: { expanded: { Learn: true, Environment: true } },
-      cockpit: {
-        activeMode: 'Run',
         expanded: { Capability: true, Environment: true },
       },
     });
@@ -154,15 +144,14 @@ describe('control-plane preferences', () => {
       expect(pane.result.current.hydrated).toBe(true);
     });
 
-    act(() => shell.result.current.setActiveMode('Code'));
+    act(() => shell.result.current.setExpanded('Capability', false));
     act(() => pane.result.current.setExpanded('Environment', false));
 
     expect(JSON.parse(window.localStorage.getItem(CONTROL_PLANE_STORAGE_KEY) ?? '{}')).toEqual({
       version: 1,
       docs: { expanded: { Learn: true, Environment: false } },
       cockpit: {
-        activeMode: 'Code',
-        expanded: { Capability: true, Environment: false },
+        expanded: { Capability: false, Environment: false },
       },
     });
   });

@@ -94,8 +94,7 @@ const baseContentBundle = {
   narrativeDocs: [],
 };
 
-const seedMode = (
-  activeMode: 'Run' | 'Code' | 'Docs' | 'API',
+const seedExpanded = (
   expanded: Record<string, boolean> = {
     Capability: true,
     Runtime: true,
@@ -106,7 +105,7 @@ const seedMode = (
     JSON.stringify({
       version: 1,
       docs: { expanded: { Learn: true, Environment: false } },
-      cockpit: { activeMode, expanded },
+      cockpit: { expanded },
     })
   );
 };
@@ -168,22 +167,34 @@ describe('CockpitShell operational composition', () => {
     vi.restoreAllMocks();
   });
 
-  it('initializes from the saved Cockpit mode after hydration', async () => {
-    seedMode('Docs');
+  it('always opens in Run, ignoring a stored activeMode from an older visit', async () => {
+    window.localStorage.setItem(
+      CONTROL_PLANE_STORAGE_KEY,
+      JSON.stringify({
+        version: 1,
+        docs: { expanded: { Learn: true, Environment: false } },
+        cockpit: {
+          activeMode: 'Code',
+          expanded: { Capability: true, Runtime: true },
+        },
+      })
+    );
     renderShell();
 
     await waitFor(() => {
       expect(
         screen
-          .getByRole('button', { name: 'Docs' })
+          .getByRole('button', { name: 'Run' })
           .getAttribute('aria-pressed')
       ).toBe('true');
     });
-    expect(screen.getByRole('region', { name: 'Docs mode' })).toBeTruthy();
+    expect(
+      screen.getByRole('button', { name: 'Code' }).getAttribute('aria-pressed')
+    ).toBe('false');
   });
 
-  it('consumes a valid mode query once and persists it over the saved mode', async () => {
-    seedMode('Docs');
+  it('consumes a valid mode query once and lands in that mode', async () => {
+    seedExpanded();
     window.history.replaceState({}, '', '/?mode=code&keep=1');
     renderShell();
 
@@ -195,20 +206,16 @@ describe('CockpitShell operational composition', () => {
       ).toBe('true');
     });
     expect(window.location.search).toBe('?keep=1');
-    expect(
-      JSON.parse(window.localStorage.getItem(CONTROL_PLANE_STORAGE_KEY) ?? '{}')
-        .cockpit.activeMode
-    ).toBe('Code');
   });
 
-  it('ignores invalid mode queries and uses the saved mode', async () => {
-    seedMode('API');
+  it('ignores invalid mode queries and falls back to Run', async () => {
+    seedExpanded();
     window.history.replaceState({}, '', '/?mode=preview');
     renderShell();
 
     await waitFor(() => {
       expect(
-        screen.getByRole('button', { name: 'API' }).getAttribute('aria-pressed')
+        screen.getByRole('button', { name: 'Run' }).getAttribute('aria-pressed')
       ).toBe('true');
     });
   });
@@ -507,7 +514,7 @@ describe('CockpitShell operational composition', () => {
   });
 
   it('reloads only the iframe while preserving shell state and session Activity', async () => {
-    seedMode('Run', { Capability: true, Runtime: true });
+    seedExpanded({ Capability: true, Runtime: true });
     renderShell('https://runtime.test/path?secret=hidden');
     const firstFrame = await screen.findByTitle(
       'LangGraph Streaming live example'
