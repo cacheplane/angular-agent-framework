@@ -338,7 +338,7 @@ describe('classifyFromAffected — tag isolation', () => {
 });
 
 describe('SCOPE_KEYS export', () => {
-  it('contains the 11 documented scope keys', () => {
+  it('contains the 12 documented scope keys', () => {
     assert.deepEqual(SCOPE_KEYS, [
       'library',
       'angular_compatibility',
@@ -351,6 +351,7 @@ describe('SCOPE_KEYS export', () => {
       'cockpit_e2e',
       'examples_chat',
       'posthog',
+      'scripts_tests',
     ]);
   });
 });

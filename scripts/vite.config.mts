@@ -1,0 +1,38 @@
+import { defineConfig } from 'vite';
+
+// Vitest config for the root deployment/proxy generator scripts.
+//
+// Two runners share scripts/: the node:test suites listed in `exclude`
+// below are invoked directly by .github/workflows/ci.yml (`node --test`),
+// everything else matching `include` runs under vitest via `nx test scripts`.
+// A new *.spec.ts / *.spec.mjs file here is picked up automatically; a new
+// node:test suite must be added to `exclude` AND to the ci.yml `node --test`
+// invocation, otherwise vitest fails loudly on it ("no test suite found") —
+// loud-by-default beats silently unrun.
+export default defineConfig({
+  test: {
+    environment: 'node',
+    globals: true,
+    include: ['*.spec.ts', '*.spec.mjs'],
+    exclude: [
+      // node:test suites — run by ci.yml directly, not by vitest.
+      'ci-scope.spec.mjs',
+      'ci-workflow.spec.mjs',
+      'cockpit-matrix.spec.mjs',
+      'cockpit-ports.spec.mjs',
+      'verify-angular-support.spec.mjs',
+      // STALE (excluded deliberately, not a runner mismatch): this one-time
+      // #881 cutover checklist now fails against main on two counts —
+      // libs/licensing is still tracked (and consumed by Angular bundles),
+      // and the Mastra runtime content/lockfiles legitimately mention the
+      // "excluded competitor". Reinstate only after the spec is reconciled
+      // with current policy.
+      'mit-cutover.spec.mjs',
+    ],
+    // Generator specs shell out to `npx tsx` and (re)generate committed
+    // deployment manifests; keep them serial to avoid write races.
+    fileParallelism: false,
+    testTimeout: 60000,
+    hookTimeout: 60000,
+  },
+});
