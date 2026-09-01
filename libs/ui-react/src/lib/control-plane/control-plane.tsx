@@ -66,6 +66,8 @@ export function ControlPlaneRail({
   );
 }
 
+export type ControlPlaneRailStatus = 'success' | 'working' | 'error';
+
 export interface ControlPlaneRailItemProps extends CommonProps {
   label: string;
   icon: ReactNode;
@@ -75,6 +77,8 @@ export interface ControlPlaneRailItemProps extends CommonProps {
   iconOnly?: boolean;
   target?: string;
   rel?: string;
+  status?: ControlPlaneRailStatus;
+  statusLabel?: string;
 }
 
 export function ControlPlaneRailItem({
@@ -87,15 +91,22 @@ export function ControlPlaneRailItem({
   className,
   target,
   rel,
+  status,
+  statusLabel,
 }: ControlPlaneRailItemProps) {
   const tooltipId = useId();
+  const accessibleName = statusLabel ? `${label}, ${statusLabel}` : label;
+  const showTooltip = iconOnly || Boolean(statusLabel);
   const content = (
     <>
       <span data-control-plane-rail-icon>{icon}</span>
       {iconOnly ? null : <span data-control-plane-rail-label>{label}</span>}
-      {iconOnly ? (
+      {status ? (
+        <span data-control-plane-rail-status={status} aria-hidden="true" />
+      ) : null}
+      {showTooltip ? (
         <span id={tooltipId} role="tooltip" data-control-plane-tooltip>
-          {label}
+          {accessibleName}
         </span>
       ) : null}
     </>
@@ -104,8 +115,8 @@ export function ControlPlaneRailItem({
     className,
     'data-control-plane-rail-item': true,
     'data-control-plane-active': active || undefined,
-    'aria-label': iconOnly ? label : undefined,
-    'aria-describedby': iconOnly ? tooltipId : undefined,
+    'aria-label': showTooltip ? accessibleName : undefined,
+    'aria-describedby': showTooltip ? tooltipId : undefined,
   } as const;
 
   if (href) {
