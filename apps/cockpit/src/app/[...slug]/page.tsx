@@ -1,3 +1,4 @@
+import React from 'react';
 import { redirect } from 'next/navigation';
 import { CockpitShell } from '../../components/cockpit-shell';
 import { getContentBundle } from '../../lib/content-bundle';
