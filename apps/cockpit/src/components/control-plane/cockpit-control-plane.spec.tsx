@@ -274,6 +274,30 @@ describe('CockpitControlPlane', () => {
     expect(run.querySelector('[data-control-plane-rail-status]')).toBeNull();
   });
 
+  it('keeps the status dot ring on the item background and visible in forced colors', () => {
+    // jsdom does not resolve var() in getComputedStyle, so this asserts the
+    // authored rules, not a rendered colour. The ring must track the rail
+    // item's own background: --ds-surface-tinted at rest, --ds-surface on
+    // hover, which in dark is rgb(28,28,28) inside the rail's rgb(44,44,44)
+    // -- a fixed ring would read as a lighter halo whenever Run is hovered.
+    expect(cockpitCss).toMatch(
+      /\[data-control-plane-rail-status\]\s*\{[^}]*border:\s*2px solid var\(--cockpit-rail-status-ring\)/
+    );
+    expect(cockpitCss).toMatch(
+      /\[data-control-plane-rail-item\]\s*\{[^}]*--cockpit-rail-status-ring:\s*var\(--ds-surface-tinted\)/
+    );
+    expect(cockpitCss).toMatch(
+      /\[data-control-plane-rail-item\]:hover\s*\{[^}]*--cockpit-rail-status-ring:\s*var\(--ds-surface\)/
+    );
+    // Forced colors overrides background, so the dot needs an explicit
+    // treatment like the runtime pill it sits beside.
+    expect(
+      cockpitCss.slice(cockpitCss.indexOf('@media (forced-colors: active)'))
+    ).toMatch(
+      /\[data-control-plane-rail-status\]\s*\{[^}]*border:\s*1px solid CanvasText/
+    );
+  });
+
   it('names the mode group as an ARIA group announced to screen readers', () => {
     renderControlPlane();
     const rail = screen.getByRole('navigation', { name: 'Cockpit modes' });

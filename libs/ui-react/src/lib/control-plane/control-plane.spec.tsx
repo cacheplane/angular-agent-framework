@@ -70,6 +70,20 @@ describe('control-plane structure', () => {
     ).toBe('error');
   });
 
+  it('gives a labeled status item the accessible name without a tooltip', () => {
+    render(
+      <ControlPlaneRailItem
+        label="Run"
+        icon={<svg />}
+        status={{ kind: 'error', label: 'runtime error' }}
+      />,
+    );
+    const button = screen.getByRole('button', { name: 'Run, runtime error' });
+    expect(button.querySelector('[data-control-plane-tooltip]')).toBeNull();
+    expect(button.getAttribute('aria-describedby')).toBeNull();
+    expect(screen.queryByRole('tooltip')).toBeNull();
+  });
+
   it('renders no status dot when status is omitted', () => {
     render(<ControlPlaneRailItem label="Run" icon={<svg />} />);
     const button = screen.getByRole('button', { name: 'Run' });

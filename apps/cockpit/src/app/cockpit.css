@@ -410,6 +410,7 @@ pre.shiki {
 }
 .cockpit-control-plane-utility-anchor { display: contents; }
 .cockpit-control-plane [data-control-plane-rail-item] {
+  --cockpit-rail-status-ring: var(--ds-surface-tinted);
   position: relative;
   min-height: 48px;
   padding: 6px 2px;
@@ -427,6 +428,7 @@ pre.shiki {
   transition: background 120ms ease, color 120ms ease;
 }
 .cockpit-control-plane [data-control-plane-rail-item]:hover {
+  --cockpit-rail-status-ring: var(--ds-surface);
   color: var(--ds-text-primary);
   background: var(--ds-surface);
 }
@@ -445,7 +447,7 @@ pre.shiki {
   right: 11px;
   width: 7px;
   height: 7px;
-  border: 2px solid var(--ds-surface-tinted);
+  border: 2px solid var(--cockpit-rail-status-ring);
   border-radius: 999px;
 }
 .cockpit-control-plane [data-control-plane-rail-status="success"] {
@@ -986,6 +988,10 @@ pre.shiki {
     border: 1px solid CanvasText;
     border-radius: 7px;
     color: CanvasText;
+    background: Canvas;
+  }
+  .cockpit-control-plane [data-control-plane-rail-status] {
+    border: 1px solid CanvasText;
     background: Canvas;
   }
   .cockpit-control-plane [data-control-plane-overflow-menu] {
