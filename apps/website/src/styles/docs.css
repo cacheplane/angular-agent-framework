@@ -190,7 +190,7 @@ body:has([data-website-workspace-host]) {
  * rather than an inline asset. Tinted backdrop + soft shadow + clean caption.
  * Scoped to image figures via :has(> img) so it doesn't collide with the
  * code-block figures from rehype-pretty-code or component figures (e.g.
- * AgUiArchDiagram). */
+ * StackDiagram). */
 .docs-prose figure:has(> img) {
   margin: 2.5rem 0;
   padding: 0.75rem 0.75rem 0;
@@ -261,103 +261,6 @@ body:has([data-website-workspace-host]) {
 .docs-prose th { text-align: left; padding: 0.5rem 0.75rem; font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; color: var(--color-text-muted); border-bottom: 1px solid var(--color-accent-border); }
 .docs-prose td { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--docs-accent-tint-soft); color: var(--color-text-secondary); }
 .docs-prose td code { font-size: 0.8em; }
-
-/* AG-UI architecture diagram */
-.ag-ui-arch-grid {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr auto 1fr;
-  align-items: stretch;
-  gap: 0;
-}
-/* Reunited with the .ag-ui-arch-arrow mobile override below — this base
- * rule was migrated from AgUiArchDiagram.tsx's inline style, the media
- * query pre-existed it. */
-.ag-ui-arch-arrow {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  color: var(--color-text-muted);
-  padding: 0 4px;
-}
-@media (max-width: 720px) {
-  .ag-ui-arch-grid {
-    grid-template-columns: 1fr;
-  }
-  .ag-ui-arch-arrow {
-    transform: rotate(90deg);
-    padding: 12px 0;
-    margin: 4px auto;
-  }
-}
-.ag-ui-arch-box {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 20px 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-height: 116px;
-}
-.ag-ui-arch-box[data-tone="accent"] {
-  background: var(--color-accent-surface);
-  border-color: #00409033;
-}
-.ag-ui-arch-box-eyebrow {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-}
-.ag-ui-arch-box[data-tone="accent"] .ag-ui-arch-box-eyebrow {
-  color: var(--color-accent);
-}
-.ag-ui-arch-box-title {
-  font-family: var(--font-mono);
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-.ag-ui-arch-box-meta {
-  font-size: 0.85rem;
-  line-height: 1.5;
-  color: var(--color-text-secondary);
-}
-.ag-ui-arch-arrow-label {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-accent);
-  white-space: nowrap;
-}
-.ag-ui-arch-arrow-svg {
-  display: block;
-}
-.ag-ui-arch-arrow-sub {
-  font-size: 0.72rem;
-  color: var(--color-text-muted);
-  white-space: nowrap;
-}
-.ag-ui-arch-figure {
-  margin: 2rem 0;
-  padding: 28px 24px;
-  background: var(--color-canvas);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-}
-.ag-ui-arch-caption {
-  margin-top: 16px;
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-  text-align: center;
-  font-style: italic;
-}
 
 /* Docs — readable column max-width */
 .docs-prose {

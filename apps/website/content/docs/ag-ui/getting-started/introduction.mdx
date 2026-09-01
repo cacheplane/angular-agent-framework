@@ -14,19 +14,10 @@ The [AG-UI demo](https://ag-ui.threadplane.ai) runs this exact chat surface agai
 
 ## How it fits
 
-```text
-@threadplane/chat
-  <chat>, <chat-message-list>, <chat-input>
-  @threadplane/chat/debug -> <chat-debug>
-      |
-      | Agent contract (signals + events$)
-      |
-      +--> @threadplane/langgraph
-      |      LangGraphAgent -> LangGraph Platform
-      |
-      +--> @threadplane/ag-ui
-             toAgent(AbstractAgent) -> AG-UI backend
-```
+<StackDiagram
+  highlight="ag-ui"
+  caption="Backend speaks AG-UI over SSE → the adapter exposes the signal-shaped Agent contract → the chat UI renders."
+/>
 
 ## What you get
 
