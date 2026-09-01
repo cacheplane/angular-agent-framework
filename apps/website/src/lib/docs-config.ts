@@ -5,7 +5,8 @@ export type LibraryId =
   | 'ag-ui'
   | 'a2ui'
   | 'middleware'
-  | 'telemetry';
+  | 'telemetry'
+  | 'runtimes';
 
 export interface DocsPage {
   title: string;
@@ -26,10 +27,27 @@ export interface DocsSection {
   pages: DocsPage[];
 }
 
+/**
+ * Adapters connect a backend agent runtime; libraries are the companion
+ * packages around them. The picker groups on this.
+ */
+export type LibraryGroup = 'adapter' | 'library';
+
 export interface DocsLibrary {
   id: LibraryId;
   title: string;
+  /**
+   * Long form. Fallback for the page `<meta name="description">` via
+   * {@link resolveDocDescription} — not shown in the picker.
+   */
   description: string;
+  group: LibraryGroup;
+  /**
+   * Shown under the name in the library picker. Adapters only — the companion
+   * libraries are self-describing, and a tagline there is just noise. Keep to
+   * three or four words so picker rows cannot wrap.
+   */
+  tagline?: string;
   /** Optional external live-demo URL, surfaced contextually in docs nav. */
   demoUrl?: string;
   /** Optional label override for the demo link. Defaults to 'Live demo'. */
@@ -58,6 +76,8 @@ export const docsConfig: DocsLibrary[] = [
     id: 'langgraph',
     title: 'LangGraph',
     description: 'LangChain/LangGraph adapter for Angular UI',
+    group: 'adapter',
+    tagline: 'Talk to LangGraph directly',
     sections: [
       {
         title: 'Getting Started',
@@ -115,6 +135,7 @@ export const docsConfig: DocsLibrary[] = [
     id: 'render',
     title: 'Render',
     description: 'Declarative UI rendering from JSON specifications',
+    group: 'library',
     sections: [
       {
         title: 'Getting Started',
@@ -164,6 +185,7 @@ export const docsConfig: DocsLibrary[] = [
     id: 'chat',
     title: 'Chat',
     description: 'Pre-built chat UI components for agent interfaces',
+    group: 'library',
     sections: [
       {
         title: 'Getting Started',
@@ -255,6 +277,8 @@ export const docsConfig: DocsLibrary[] = [
     id: 'ag-ui',
     title: 'AG-UI',
     description: 'Adapter for AG-UI-compatible backends including CrewAI, Mastra, Microsoft AF, AG2, Pydantic AI, and AWS Strands',
+    group: 'adapter',
+    tagline: 'Any AG-UI backend',
     demoUrl: 'https://ag-ui.threadplane.ai',
     sections: [
       {
@@ -313,6 +337,7 @@ export const docsConfig: DocsLibrary[] = [
     id: 'a2ui',
     title: 'A2UI',
     description: 'Protocol types and helpers for agent-driven UI surfaces',
+    group: 'library',
     sections: [
       {
         title: 'Getting Started',
@@ -348,6 +373,7 @@ export const docsConfig: DocsLibrary[] = [
     id: 'middleware',
     title: 'Middleware',
     description: 'Backend helpers for browser-executed client tools',
+    group: 'library',
     sections: [
       {
         title: 'Getting Started',
@@ -396,6 +422,7 @@ export const docsConfig: DocsLibrary[] = [
     id: 'telemetry',
     title: 'Telemetry',
     description: 'Browser and Node telemetry setup, privacy controls, and events',
+    group: 'library',
     sections: [
       {
         title: 'Getting Started',
@@ -422,6 +449,53 @@ export const docsConfig: DocsLibrary[] = [
         color: 'blue',
         pages: [
           { title: 'Events', slug: 'events', section: 'reference' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'runtimes',
+    title: 'Runtimes',
+    description: 'Measured AG-UI runtime integrations behind @threadplane/ag-ui',
+    // Reference material *behind* the AG-UI adapter, not an adapter you pick.
+    group: 'library',
+    sections: [
+      {
+        title: 'Getting Started',
+        id: 'getting-started',
+        color: 'blue',
+        pages: [
+          { title: 'Introduction', slug: 'introduction', section: 'getting-started' },
+        ],
+      },
+      {
+        title: 'AWS Strands',
+        id: 'aws-strands',
+        color: 'blue',
+        pages: [
+          { title: 'Overview', slug: 'overview', section: 'aws-strands' },
+          { title: 'Quickstart', slug: 'quickstart', section: 'aws-strands' },
+          { title: 'How It Connects', slug: 'how-it-connects', section: 'aws-strands' },
+        ],
+      },
+      {
+        title: 'Microsoft Agent Framework',
+        id: 'microsoft-agent-framework',
+        color: 'red',
+        pages: [
+          { title: 'Overview', slug: 'overview', section: 'microsoft-agent-framework' },
+          { title: 'Quickstart', slug: 'quickstart', section: 'microsoft-agent-framework' },
+          { title: 'How It Connects', slug: 'how-it-connects', section: 'microsoft-agent-framework' },
+        ],
+      },
+      {
+        title: 'Mastra',
+        id: 'mastra',
+        color: 'blue',
+        pages: [
+          { title: 'Overview', slug: 'overview', section: 'mastra' },
+          { title: 'Quickstart', slug: 'quickstart', section: 'mastra' },
+          { title: 'How It Connects', slug: 'how-it-connects', section: 'mastra' },
         ],
       },
     ],

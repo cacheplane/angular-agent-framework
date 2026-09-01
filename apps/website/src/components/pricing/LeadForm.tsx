@@ -8,27 +8,6 @@ import { Eyebrow } from '../ui/Eyebrow';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 
-const VALUE_PROPS = [
-  {
-    title: 'Production assurance',
-    body: 'Architecture guidance, private support, and response commitments scoped to your production needs.',
-  },
-  {
-    title: 'SLA + security review',
-    body: 'Response SLAs, security questionnaires, and a private support channel.',
-  },
-  {
-    title: 'Optional Pilot-to-Prod engagement',
-    body: 'A separately scoped delivery engagement for teams that want guided implementation from prototype through production.',
-    highlight: true,
-    link: { href: '/pilot-to-prod', label: 'See how Pilot-to-Prod works →' },
-  },
-  {
-    title: 'Procurement support',
-    body: 'Master services agreement where applicable, security review, and custom indemnification where contractually agreed.',
-  },
-];
-
 export function LeadForm() {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [pilotInterest, setPilotInterest] = useState<'yes' | 'maybe' | 'no'>('maybe');
@@ -77,45 +56,22 @@ export function LeadForm() {
       <Container>
         <div className="lead-form-wrap">
           <div className="lead-form-header">
-            <Eyebrow tone="accent" className="lead-form-eyebrow">Enterprise</Eyebrow>
+            <div className="lead-form-rail">
+              <Eyebrow tone="accent" className="lead-form-eyebrow">Enterprise</Eyebrow>
+              <span className="lead-form-rail-line" aria-hidden="true" />
+            </div>
             <h2 id="lead-form-heading" className="lead-form-heading">
               Choose the support.<br />Add delivery if you need it.
             </h2>
             <p className="lead-form-subhead">
               Production Assurance and Pilot-to-Prod are separate choices. Request ongoing support or ask us to scope a hands-on delivery engagement.
             </p>
+            <a href="/pilot-to-prod" className="lead-form-p2p-link">
+              See how Pilot-to-Prod works →
+            </a>
           </div>
 
           <div className="lead-form-grid">
-            {/* Value props column */}
-            <ul className="lead-form-value-list">
-              {VALUE_PROPS.map((vp) => (
-                <li
-                  key={vp.title}
-                  className="lead-form-value-item"
-                  data-highlight={vp.highlight || undefined}
-                >
-                  <span aria-hidden="true" className="lead-form-value-check">
-                    ✓
-                  </span>
-                  <div>
-                    <div className="lead-form-value-title">
-                      {vp.title}
-                    </div>
-                    <p className="lead-form-value-body">
-                      {vp.body}
-                    </p>
-                    {vp.link && (
-                      <a href={vp.link.href} className="lead-form-value-link">
-                        {vp.link.label}
-                      </a>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-
-            {/* Form column */}
             {status === 'sent' ? (
               <Card padding="lg">
                 <p className="lead-form-sent-message">

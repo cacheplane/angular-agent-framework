@@ -44,7 +44,9 @@ export interface DocsControlPlaneProps {
 }
 
 const dispatchSearch = () =>
-  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }));
+  document.dispatchEvent(
+    new KeyboardEvent('keydown', { key: 'k', metaKey: true })
+  );
 
 export function DocsContextContent({
   activeLibrary,
@@ -74,13 +76,21 @@ export function DocsContextContent({
     onNavigate?.();
     window.requestAnimationFrame(dispatchSearch);
   };
-  const identity = { library: activeLibrary, section: activeSection, slug: activeSlug };
-  const target = resolveCockpitIdentity(activeLibrary, activeSection, activeSlug);
+  const identity = {
+    library: activeLibrary,
+    section: activeSection,
+    slug: activeSlug,
+  };
+  const target = resolveCockpitIdentity(
+    activeLibrary,
+    activeSection,
+    activeSlug
+  );
   const runtimeHref = buildCockpitModeHref(identity, 'Run');
   const trackHandoff = (mode: 'Run' | 'Code' | 'API') =>
     track(
       analyticsEvents.docsCockpitHandoff,
-      buildCockpitHandoffProperties(identity, mode),
+      buildCockpitHandoffProperties(identity, mode)
     );
   const runtimeRows = [
     {
@@ -94,9 +104,19 @@ export function DocsContextContent({
       icon: <MonitorCog size={15} aria-hidden="true" />,
     },
     ...(target
-      ? [{ label: 'Capability', value: target.topic, icon: <Gauge size={15} aria-hidden="true" /> }]
+      ? [
+          {
+            label: 'Capability',
+            value: target.topic,
+            icon: <Gauge size={15} aria-hidden="true" />,
+          },
+        ]
       : []),
-    { label: 'Mode', value: 'Run', icon: <Play size={15} aria-hidden="true" /> },
+    {
+      label: 'Mode',
+      value: 'Run',
+      icon: <Play size={15} aria-hidden="true" />,
+    },
   ];
 
   return (
@@ -175,7 +195,7 @@ export function DocsControlPlane(props: DocsControlPlaneProps) {
   const handoff = (mode: 'Run' | 'Code' | 'API') =>
     track(
       analyticsEvents.docsCockpitHandoff,
-      buildCockpitHandoffProperties(identity, mode),
+      buildCockpitHandoffProperties(identity, mode)
     );
 
   return (

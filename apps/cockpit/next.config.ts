@@ -13,6 +13,9 @@ export const nextConfig: WithNxOptions = {
       '../../cockpit/**/*.md',
       '../../cockpit/**/*.py',
       '../../cockpit/**/*.ts',
+      // The mastra runtime's backend assets live outside cockpit/ — the
+      // Node hosting service IS that topic's backend (no python lane).
+      '../../deployments/ag-ui-mastra/*.mjs',
       '../../nx.json',
     ],
   },

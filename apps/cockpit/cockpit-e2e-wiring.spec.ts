@@ -83,11 +83,14 @@ function activeCockpitE2eWiring(): E2eWiring[] {
       const globalSetupPath = join(projectRoot, 'e2e/global-setup-impl.ts');
       const globalSetup = readFileSync(globalSetupPath, 'utf8');
       // langgraph-shaped global-setup uses `langgraphCwd`; ag-ui-shaped
-      // global-setup (createAgUiGlobalSetup) uses `pythonCwd`. Both name
-      // the python project's cwd — accept either.
+      // global-setup (createAgUiGlobalSetup) uses `pythonCwd`; a Node-hosted
+      // backend (rt-mastra's hand-rolled setup spawning
+      // deployments/ag-ui-mastra) uses `backendCwd`. All name the backend
+      // project's cwd — accept any.
       const langgraphCwd =
         parseStringProperty(globalSetup, 'langgraphCwd') ??
-        parseStringProperty(globalSetup, 'pythonCwd');
+        parseStringProperty(globalSetup, 'pythonCwd') ??
+        parseStringProperty(globalSetup, 'backendCwd');
 
       // Post-port-registry migration: ports are imported from
       // cockpit/ports.mjs rather than living as literals in

@@ -21,15 +21,46 @@ export function AnnouncementToast() {
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const [timerDone, setTimerDone] = useState(false);
+  const [scrolledEnough, setScrolledEnough] = useState(false);
+
   useEffect(() => {
     try {
       if (localStorage.getItem(STORAGE_KEY) === 'true') return;
     } catch {
       return;
     }
-    const timer = setTimeout(() => setVisible(true), DELAY_MS);
+    const timer = setTimeout(() => setTimerDone(true), DELAY_MS);
     return () => clearTimeout(timer);
   }, []);
+
+  // Intent gate (spec 2026-08-31): the toast waits for BOTH the delay and a
+  // 40% scroll depth — it should meet readers who are reading, not arrivals.
+  useEffect(() => {
+    if (scrolledEnough) return undefined;
+    let raf = 0;
+    const check = () => {
+      raf = 0;
+      const doc = document.documentElement;
+      const denom = Math.max(1, doc.scrollHeight - window.innerHeight);
+      if (window.scrollY / denom >= 0.4) {
+        setScrolledEnough(true);
+      }
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(check);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    check();
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [scrolledEnough]);
+
+  useEffect(() => {
+    if (timerDone && scrolledEnough) setVisible(true);
+  }, [timerDone, scrolledEnough]);
 
   useEffect(() => {
     if (visible) {

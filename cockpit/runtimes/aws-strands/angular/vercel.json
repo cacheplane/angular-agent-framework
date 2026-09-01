@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npx nx build cockpit-runtimes-aws-strands-angular",
+  "outputDirectory": "dist/cockpit/runtimes/aws-strands/angular/browser",
+  "framework": null
+}

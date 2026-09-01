@@ -5,14 +5,6 @@ import { FAQ, type FAQItem } from '../ui/FAQ';
 
 const ITEMS: FAQItem[] = [
   {
-    q: 'Is Threadplane free?',
-    a: 'Yes. Every published Threadplane package is MIT-licensed and free to use, modify, and redistribute under the MIT terms.',
-  },
-  {
-    q: 'Can I use every package commercially?',
-    a: 'Yes. The MIT license permits commercial products, internal tools, client work, and hosted services. There are no paid-use activation steps or runtime checks.',
-  },
-  {
     q: 'Does Threadplane have a cloud service?',
     a: 'No. Threadplane runs inside your Angular application. You operate your application, agent runtime, data stores, hosting, and model-provider accounts.',
   },
@@ -29,14 +21,6 @@ const ITEMS: FAQItem[] = [
     a: 'Paid engagements provide expert support, architecture guidance, response commitments, security and procurement assistance, or hands-on delivery. The software remains MIT-licensed.',
   },
   {
-    q: 'Does a paid plan unlock different software?',
-    a: 'No. Community users and paid customers run the same packages with the same core capabilities. Paid relationships add services and accountability.',
-  },
-  {
-    q: 'Can I modify or redistribute the source?',
-    a: 'Yes. You may modify and redistribute the packages under the MIT license, including as part of commercial software. Preserve the copyright and permission notice as required by MIT.',
-  },
-  {
     q: 'What is Production Assurance?',
     a: 'Production Assurance is a scoped support relationship for teams running Threadplane in production. It can include private support, response commitments, architecture reviews, migration guidance, and security assistance.',
   },
@@ -51,7 +35,10 @@ export function PricingFAQ() {
     <Section surface="white" ariaLabelledBy="pricing-faq-heading">
       <Container>
         <div id="faq" className="pricing-faq-header">
-          <Eyebrow tone="accent" className="pricing-faq-eyebrow">Questions</Eyebrow>
+          <div className="pricing-section-rail">
+            <Eyebrow tone="accent" className="pricing-faq-eyebrow">Questions</Eyebrow>
+            <span className="pricing-section-rail-line" aria-hidden="true" />
+          </div>
           <h2 id="pricing-faq-heading" className="pricing-faq-heading">Pricing FAQ.</h2>
         </div>
         <div className="pricing-faq-items"><FAQ items={ITEMS} /></div>

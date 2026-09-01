@@ -2,20 +2,19 @@ import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';
 import { Button } from '../ui/Button';
-import { Card } from '../ui/Card';
 
 const TIMELINE = [
-  { phase: '1', title: 'Discover', body: 'Map your stack, surfaces, and the agentic work that earns its keep.' },
-  { phase: '2', title: 'Build', body: 'Ship a working demo on your real data, in your real Angular app.' },
-  { phase: '3', title: 'Harden', body: 'Observability, error boundaries, deploy paths, on-call patterns.' },
-  { phase: '4', title: 'Train', body: 'Your team owns the stack. We leave you with a runbook, not a black box.' },
+  { phase: '01', title: 'Discover', body: 'Map your stack, surfaces, and the agentic work that earns its keep.' },
+  { phase: '02', title: 'Build', body: 'A working demo on your real data, in your real app.' },
+  { phase: '03', title: 'Harden', body: 'Observability, error boundaries, deploy paths, on-call patterns.' },
+  { phase: '04', title: 'Train', body: 'Your team owns the stack. We leave you with a runbook, not a black box.' },
 ];
 
 const OUTCOMES = [
-  'Working agent demo on your domain',
-  'Hardened production patterns (error/fallback/observability)',
-  'Deploy-ready integration with your CI/CD',
-  'Team trained on the framework + LangGraph',
+  { claim: 'A working agent demo on your domain', tail: 'your data' },
+  { claim: 'Hardened error, fallback, observability patterns', tail: 'production-ready' },
+  { claim: 'Deploy-ready integration', tail: 'your CI/CD' },
+  { claim: 'Team trained on the framework', tail: 'runbook, yours' },
 ];
 
 export function PilotBlock() {
@@ -24,23 +23,24 @@ export function PilotBlock() {
       <Container>
         <div className="pilot-block-grid">
           <div>
-            <Eyebrow tone="accent" className="pilot-eyebrow">For teams</Eyebrow>
+            <div className="pilot-rail">
+              <Eyebrow tone="accent" className="pilot-eyebrow">For teams</Eyebrow>
+              <span className="pilot-rail-line" aria-hidden="true" />
+            </div>
             <h2 id="pilot-heading" className="pilot-heading">
               Ship your first Angular agent in 8 weeks.
             </h2>
             <p className="pilot-subhead">
               Pilot-to-Prod is a concierge delivery — concrete outcomes, your engineers in the driver&apos;s seat, no lock-in.
             </p>
-            <ul className="pilot-outcomes">
+            <div className="pilot-rows">
               {OUTCOMES.map((o) => (
-                <li key={o} className="pilot-outcome">
-                  <span aria-hidden="true" className="pilot-outcome-check">
-                    ✓
-                  </span>
-                  <span>{o}</span>
-                </li>
+                <div className="pilot-row" key={o.claim}>
+                  <p className="pilot-row-claim">{o.claim}</p>
+                  <p className="pilot-row-tail">{o.tail}</p>
+                </div>
               ))}
-            </ul>
+            </div>
             <div className="pilot-cta-row">
               <Button variant="primary" size="lg" href="/pilot-to-prod">See the program</Button>
               <Button variant="secondary" size="lg" href="/pilot-to-prod#contact">Book a call</Button>
@@ -48,23 +48,15 @@ export function PilotBlock() {
           </div>
 
           {/* Timeline */}
-          <div className="pilot-timeline">
+          <div className="pilot-steps">
             {TIMELINE.map((t) => (
-              <Card key={t.phase} padding="md">
-                <div className="pilot-timeline-row">
-                  <div className="pilot-timeline-phase">
-                    {t.phase}
-                  </div>
-                  <div>
-                    <div className="pilot-timeline-title">
-                      {t.title}
-                    </div>
-                    <div className="pilot-timeline-body">
-                      {t.body}
-                    </div>
-                  </div>
+              <div className="pilot-step" key={t.phase}>
+                <span className="pilot-step-num" aria-hidden="true">{t.phase}</span>
+                <div>
+                  <div className="pilot-step-title">{t.title}</div>
+                  <div className="pilot-step-body">{t.body}</div>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         </div>

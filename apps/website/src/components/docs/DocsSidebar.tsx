@@ -9,7 +9,7 @@ import {
   type KeyboardEvent,
 } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import {
   Blocks,
   BookOpen,
@@ -24,8 +24,10 @@ import {
 import {
   docsConfig,
   getLibraryConfig,
+  libraryIntroPath,
   specialDocsPages,
   type DocsSection,
+  type LibraryGroup,
   type LibraryId,
 } from '../../lib/docs-config';
 import { LibraryMark } from './LibraryMark';
@@ -38,6 +40,23 @@ export interface DocsNavigationProps {
   onExpandedChange?: (key: string, open: boolean) => void;
   onNavigate?: () => void;
 }
+
+/**
+ * Menu entries are `menuitemradio` (single-select from a set), not `menuitem`.
+ * Keyboard traversal reads this — if it drifts from the rendered role, arrow
+ * keys and Escape silently stop finding anything.
+ */
+const MENU_ITEM_SELECTOR = '[role="menuitemradio"]';
+
+/** Breathing room between the open menu and the bottom of the viewport. */
+const MENU_VIEWPORT_GUTTER = 16;
+/** Below this the menu is uselessly short; let the pane scroll instead. */
+const MENU_MIN_HEIGHT = 180;
+
+const LIBRARY_GROUPS: { id: LibraryGroup; label: string }[] = [
+  { id: 'adapter', label: 'Adapters' },
+  { id: 'library', label: 'Libraries' },
+];
 
 function LibraryDropdown({
   activeLibrary,
@@ -52,7 +71,6 @@ function LibraryDropdown({
   const menuRef = useRef<HTMLDivElement>(null);
   const initialFocusRef = useRef(0);
   const menuId = useId();
-  const router = useRouter();
 
   useEffect(() => {
     const handler = (event: MouseEvent) => {
@@ -64,8 +82,28 @@ function LibraryDropdown({
 
   useEffect(() => {
     if (!open) return;
-    const items = menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]');
+    const items = menuRef.current?.querySelectorAll<HTMLElement>(MENU_ITEM_SELECTOR);
     items?.[initialFocusRef.current]?.focus();
+  }, [open]);
+
+  /**
+   * Cap the menu to the room actually left below the trigger. A CSS `vh` cap
+   * cannot do this: the menu opens ~340px down the pane, so even `60vh` still
+   * overflows a short window by ~100px. Measured from the trigger, it never
+   * runs past the fold — it scrolls internally instead.
+   */
+  useEffect(() => {
+    if (!open) return;
+    const resize = () => {
+      const trigger = triggerRef.current;
+      const menu = menuRef.current;
+      if (!trigger || !menu) return;
+      const available = window.innerHeight - trigger.getBoundingClientRect().bottom - MENU_VIEWPORT_GUTTER;
+      menu.style.maxHeight = `${Math.max(MENU_MIN_HEIGHT, available)}px`;
+    };
+    resize();
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
   }, [open]);
 
   const openMenu = (initialIndex: number) => {
@@ -80,9 +118,9 @@ function LibraryDropdown({
 
   const onMenuKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const items = Array.from(
-      menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? [],
+      menuRef.current?.querySelectorAll<HTMLElement>(MENU_ITEM_SELECTOR) ?? [],
     );
-    const current = Math.max(0, items.indexOf(document.activeElement as HTMLButtonElement));
+    const current = Math.max(0, items.indexOf(document.activeElement as HTMLElement));
     const nextIndex =
       event.key === 'Home'
         ? 0
@@ -145,33 +183,45 @@ function LibraryDropdown({
           className="docs-sidebar-lib-menu"
           onKeyDown={onMenuKeyDown}
         >
-          {docsConfig.map((library) => (
-            <button
-              type="button"
-              role="menuitem"
-              tabIndex={-1}
-              key={library.id}
-              onClick={() => {
-                closeMenu();
-                onNavigate?.();
-                router.push(`/docs/${library.id}/getting-started/introduction`);
-              }}
-              className="docs-sidebar-lib-item"
-              data-active={library.id === activeLibrary || undefined}
-            >
-              <span className="docs-sidebar-lib-item-icon">
-                <LibraryMark library={library.id} size={20} />
+          {LIBRARY_GROUPS.map((group, groupIndex) => (
+            <div role="group" aria-label={group.label} key={group.id}>
+              {groupIndex > 0 ? <span className="docs-sidebar-lib-divider" aria-hidden="true" /> : null}
+              <span className="docs-sidebar-lib-group" aria-hidden="true">
+                {group.label}
               </span>
-              <span className="docs-sidebar-lib-item-text">
-                <span
-                  className="docs-sidebar-lib-item-title"
-                  data-active={library.id === activeLibrary || undefined}
-                >
-                  {library.title}
-                </span>
-                <span className="docs-sidebar-lib-item-desc">{library.description}</span>
-              </span>
-            </button>
+              {docsConfig
+                .filter((library) => library.group === group.id)
+                .map((library) => {
+                  const isActive = library.id === activeLibrary;
+                  return (
+                    <Link
+                      role="menuitemradio"
+                      aria-checked={isActive}
+                      tabIndex={-1}
+                      key={library.id}
+                      href={libraryIntroPath(library.id)}
+                      onClick={() => {
+                        closeMenu();
+                        onNavigate?.();
+                      }}
+                      className="docs-sidebar-lib-item"
+                      data-active={isActive || undefined}
+                    >
+                      <span className="docs-sidebar-lib-item-icon">
+                        <LibraryMark library={library.id} size={20} />
+                      </span>
+                      <span className="docs-sidebar-lib-item-text">
+                        <span className="docs-sidebar-lib-item-title" data-active={isActive || undefined}>
+                          {library.title}
+                        </span>
+                        {library.tagline ? (
+                          <span className="docs-sidebar-lib-item-desc">{library.tagline}</span>
+                        ) : null}
+                      </span>
+                    </Link>
+                  );
+                })}
+            </div>
           ))}
         </div>
       ) : null}

@@ -9,10 +9,17 @@ export interface GenerateOptions {
   outDir: string;
 }
 
+/**
+ * Frameworks hosted by the aggregated Python deployment. 'mastra' is
+ * excluded: it is the Node hosting lane (deployments/ag-ui-mastra) and by
+ * construction has no pythonDir, so it never reaches this generator.
+ */
+export type PythonHostedFramework = Exclude<CapabilityFramework, 'mastra'>;
+
 export interface AgUiTopic {
   topic: string;
   pythonDir: string;
-  framework: CapabilityFramework;
+  framework: PythonHostedFramework;
 }
 
 /**
@@ -27,6 +34,10 @@ export interface AgUiTopic {
  * - microsoft-agent-framework: `deps/<mod>/src/agent.py` exposes an `agent`
  *   object (agent_framework Agent / AgentFrameworkAgent); the bridge mounts
  *   the agent object directly — there is no wrapper class.
+ * - aws-strands: `deps/<mod>/src/agent.py` exposes an `agent` object that is
+ *   already a configured ag_ui_strands.StrandsAgent (per-tool ToolBehavior
+ *   config must ride with the example module, so the generator mounts the
+ *   wrapped instance rather than constructing the wrapper itself).
  */
 interface FrameworkAdapter {
   /** Module-level import line for the framework's AG-UI bridge package. */
@@ -42,7 +53,7 @@ interface FrameworkAdapter {
  * langgraph stays first so a langgraph-only registry generates byte-identical
  * output to the pre-adapter generator.
  */
-const FRAMEWORK_ADAPTERS: Record<CapabilityFramework, FrameworkAdapter> = {
+const FRAMEWORK_ADAPTERS: Record<PythonHostedFramework, FrameworkAdapter> = {
   langgraph: {
     bridgeImport: 'from ag_ui_langgraph import add_langgraph_fastapi_endpoint, LangGraphAgent',
     topicImport: (mod) => `from deps.${mod}.src.graph import graph as ${mod}_graph`,
@@ -63,6 +74,17 @@ const FRAMEWORK_ADAPTERS: Record<CapabilityFramework, FrameworkAdapter> = {
       `    path="/agent/${topic}",\n` +
       `)`,
   },
+  'aws-strands': {
+    bridgeImport: 'from ag_ui_strands import add_strands_fastapi_endpoint',
+    topicImport: (mod) => `from deps.${mod}.src.agent import agent as ${mod}_agent`,
+    // path is positional in add_strands_fastapi_endpoint(app, agent, path).
+    mount: (topic, mod) =>
+      `add_strands_fastapi_endpoint(\n` +
+      `    app,\n` +
+      `    ${mod}_agent,\n` +
+      `    "/agent/${topic}",\n` +
+      `)`,
+  },
 };
 
 /**
@@ -81,11 +103,18 @@ function collectTopics(): AgUiTopic[] {
     // 'ag-ui' and 'runtimes' products are both AG-UI-served FastAPI backends
     // aggregated into the single ag-ui-dev deployment.
     .filter((c) => (c.product === 'ag-ui' || c.product === 'runtimes') && c.pythonDir)
-    .map<AgUiTopic>((c) => ({
-      topic: c.topic,
-      pythonDir: c.pythonDir!,
-      framework: c.framework ?? 'langgraph',
-    }));
+    .map<AgUiTopic>((c) => {
+      if (c.framework === 'mastra') {
+        // Node hosting lane: a mastra capability must not declare a
+        // pythonDir — its backend is deployments/ag-ui-mastra.
+        throw new Error(`Capability ${c.id} declares framework 'mastra' with a pythonDir; mastra topics are Node-hosted.`);
+      }
+      return {
+        topic: c.topic,
+        pythonDir: c.pythonDir!,
+        framework: c.framework ?? 'langgraph',
+      };
+    });
   topics.sort((a, b) => a.topic.localeCompare(b.topic));
   if (topics.length === 0) {
     throw new Error('No ag-ui topics with pythonDir found in capability registry');
@@ -178,24 +207,49 @@ ${mounts}
  */
 function buildRequirementsTxt(repoRoot: string, topics: AgUiTopic[]): string {
   const directVersions = new Map<string, string>();
+  const directUrls = new Map<string, string>();
   for (const topic of topics) {
     const reqPath = resolve(repoRoot, topic.pythonDir, 'requirements.txt');
     const content = readFileSync(reqPath, 'utf8');
     for (const pkg of parseDirectDeps(content)) {
+      if (pkg.url !== undefined) {
+        const existingUrl = directUrls.get(pkg.name);
+        if (existingUrl !== undefined && existingUrl !== pkg.url) {
+          throw new Error(
+            `Conflicting direct-URL pins for ${pkg.name}:\n  ${existingUrl}\n  ${pkg.url}\n` +
+              'Align the examples on one ref before regenerating.',
+          );
+        }
+        directUrls.set(pkg.name, pkg.url);
+        continue;
+      }
       const existing = directVersions.get(pkg.name);
-      if (!existing || compareVersions(pkg.version, existing) > 0) {
-        directVersions.set(pkg.name, pkg.version);
+      if (!existing || compareVersions(pkg.version!, existing) > 0) {
+        directVersions.set(pkg.name, pkg.version!);
       }
     }
   }
-  const sortedNames = [...directVersions.keys()].sort();
-  const lines = sortedNames.map((n) => `${n}==${directVersions.get(n)}`);
+  for (const name of directUrls.keys()) {
+    if (directVersions.has(name)) {
+      throw new Error(
+        `${name} is pinned as a direct URL by one example and as ==${directVersions.get(name)} by another. ` +
+          'Align the examples on one source before regenerating.',
+      );
+    }
+  }
+  const sortedNames = [...new Set([...directVersions.keys(), ...directUrls.keys()])].sort();
+  const lines = sortedNames.map((n) =>
+    directUrls.has(n) ? `${n} @ ${directUrls.get(n)}` : `${n}==${directVersions.get(n)}`,
+  );
   return `${GENERATED_HEADER}\n${lines.join('\n')}\n`;
 }
 
 interface DirectDep {
   name: string;
-  version: string;
+  /** Present for `name==version` pins. */
+  version?: string;
+  /** Present for direct-URL requirements (`name @ git+https://...`). */
+  url?: string;
 }
 
 /**
@@ -241,6 +295,14 @@ function parseDirectDeps(content: string): DirectDep[] {
       const match = beforeMarker.match(/^([A-Za-z0-9_.-]+)==([A-Za-z0-9_.+-]+)$/);
       if (match) {
         current = { name: match[1], version: match[2] };
+        continue;
+      }
+      // Direct-URL requirement (PEP 508), e.g. a git-pinned bridge:
+      //   ag-ui-strands @ git+https://github.com/...@<sha>#subdirectory=...
+      // uv export emits these for [tool.uv.sources] git/url dependencies.
+      const urlMatch = beforeMarker.match(/^([A-Za-z0-9_.-]+) @ (\S+)$/);
+      if (urlMatch) {
+        current = { name: urlMatch[1], url: urlMatch[2] };
       }
       continue;
     }

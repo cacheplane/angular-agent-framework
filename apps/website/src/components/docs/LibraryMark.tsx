@@ -1,6 +1,6 @@
 import type { LibraryId } from '../../lib/docs-config';
 
-type GlyphKey = 'chat' | 'middleware' | 'pulse';
+type GlyphKey = 'chat' | 'middleware' | 'pulse' | 'layers';
 
 type MarkEntry =
   | { kind: 'logo'; src: string }
@@ -14,6 +14,7 @@ const MARKS: Record<LibraryId, MarkEntry> = {
   chat: { kind: 'glyph', glyph: 'chat' },
   middleware: { kind: 'glyph', glyph: 'middleware' },
   telemetry: { kind: 'glyph', glyph: 'pulse' },
+  runtimes: { kind: 'glyph', glyph: 'layers' },
 };
 
 function ChatGlyph({ s }: { s: number }) {
@@ -41,10 +42,21 @@ function PulseGlyph({ s }: { s: number }) {
   );
 }
 
+function LayersGlyph({ s }: { s: number }) {
+  return (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3 3 8l9 5 9-5-9-5Z" />
+      <path d="m3 16 9 5 9-5" />
+      <path d="m3 12 9 5 9-5" />
+    </svg>
+  );
+}
+
 const GLYPHS: Record<GlyphKey, (props: { s: number }) => React.JSX.Element> = {
   chat: ChatGlyph,
   middleware: MiddlewareGlyph,
   pulse: PulseGlyph,
+  layers: LayersGlyph,
 };
 
 interface Props {

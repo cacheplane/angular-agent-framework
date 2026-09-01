@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { HITL_CLIP, LANGGRAPH_CLIP, RENDER_CLIP, SHIP_CLIP, type DemoClip } from './demo-media';
+import { AG_UI_CLIP, HITL_CLIP, LANGGRAPH_CLIP, RENDER_CLIP, SHIP_CLIP, type DemoClip } from './demo-media';
 import type { SolutionCodeBlocks } from './solutions-data';
 
 /**
@@ -23,7 +23,10 @@ export interface SectionMedia {
   live?: { featured: string; mode?: 'embed' | 'popup' | 'sidebar' };
 }
 
-export const SECTION_MEDIA: Record<'stream' | 'render' | 'ship' | 'approve', SectionMedia> = {
+export const SECTION_MEDIA: Record<
+  'stream' | 'render' | 'ship' | 'approve' | 'libLanggraph' | 'libChat' | 'libAgUi' | 'libRender',
+  SectionMedia
+> = {
   stream: {
     video: LANGGRAPH_CLIP,
     live: { featured: 'tell-me-about-coral' },
@@ -103,6 +106,98 @@ const catalog = views({
 
   reject(reason: string) {
     this.agent.submit({ resume: { approved: false, reason } });
+  }
+}`,
+      },
+    ],
+  },
+
+  // The four library pages (/langgraph, /chat, /ag-ui, /render) reuse this
+  // table for their first FeatureBlock's medium switcher — except /ag-ui,
+  // whose switcher replaces its SECOND block's mock (see libAgUi below). The
+  // pages consume these entries via buildPanes; the page-local static mocks
+  // they were lifted from are gone.
+  libLanggraph: {
+    video: LANGGRAPH_CLIP,
+    live: { featured: 'tell-me-about-coral' },
+    code: [
+      {
+        label: 'app.config.ts',
+        language: 'typescript',
+        source: `import { provideAgent } from '@threadplane/langgraph';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({
+      apiUrl: '/agent',
+      assistantId: 'my-agent',
+    }),
+  ],
+};
+
+// any component
+export class ChatComponent {
+  agent = injectAgent();
+  messages = this.agent.messages;
+  status = this.agent.status;
+}`,
+      },
+    ],
+  },
+  libChat: {
+    video: SHIP_CLIP,
+    live: { featured: 'tell-me-about-coral' },
+    // No code pane: the /chat page's first FeatureBlock mocks a chat-debug
+    // panel (pills, tool call, replay footer), not a source snippet.
+  },
+  libAgUi: {
+    video: AG_UI_CLIP,
+    // No live tab: the demo host speaks LangGraph, and wiring AG-UI into it
+    // live is out of scope for this arc. Unlike the other three pages, this
+    // switcher lands on /ag-ui's SECOND FeatureBlock — its first block's
+    // visual is the real BackendsGrid, not a mock.
+    code: [
+      {
+        label: 'app.config.ts',
+        language: 'typescript',
+        source: `import { provideAgent, injectAgent } from '@threadplane/ag-ui';
+import { ChatComponent } from '@threadplane/chat';
+
+// app.config.ts
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideAgent({
+      url: 'https://your.agent.endpoint',
+    }),
+  ],
+};
+
+// component
+@Component({
+  imports: [ChatComponent],
+  template: \`<chat [agent]="agent" />\`,
+})
+export class App {
+  protected readonly agent = injectAgent();
+}`,
+      },
+    ],
+  },
+  libRender: {
+    video: RENDER_CLIP,
+    live: { featured: 'generative-ui-contact-form' },
+    code: [
+      {
+        // 'json' isn't in SolutionCode's language union (typescript | python
+        // | html), so this stays tagged typescript for Shiki highlighting.
+        label: 'spec.json',
+        language: 'typescript',
+        source: `{
+  "type": "card",
+  "props": {
+    "title": "Q3 revenue",
+    "value": "$4.2M",
+    "delta": "+18%"
   }
 }`,
       },

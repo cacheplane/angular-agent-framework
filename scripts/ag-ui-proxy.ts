@@ -15,11 +15,13 @@
  * `.vercel/output/functions/ag-ui-proxy/[[...path]].func/index.js`
  * (NOT under functions/api/ — the route table's catch-all `^/api/(.*)` for
  * the langgraph proxy would otherwise re-match the rewrite via check:true
- * and shadow this function). Invoked by the route
+ * and shadow this function). Invoked by the routes
  *   { src: '^/ag-ui/([^/]+)/agent(/.*)?$', dest: '/ag-ui-proxy/[[...path]]' }
+ *   { src: '^/runtimes/([^/]+)/agent(/.*)?$', dest: '/ag-ui-proxy/[[...path]]' }
  * The dest names the catch-all function, which Vercel invokes while
  * PRESERVING the original request URL in req.url — so this function parses
- * the public `/ag-ui/<topic>/agent` path, not the `/ag-ui-proxy/...` dest.
+ * the public `/ag-ui/<topic>/agent` (or `/runtimes/<topic>/agent`) path,
+ * not the `/ag-ui-proxy/...` dest.
  *
  * AG-UI uses streaming responses (Server-Sent Events / chunked), so the
  * upstream body is piped chunk-by-chunk rather than buffered.
@@ -29,6 +31,24 @@ import { Redis } from '@upstash/redis';
 
 const RAILWAY_BASE_URL =
   process.env['AG_UI_RAILWAY_URL'] ?? 'https://ag-ui-dev-production.up.railway.app';
+
+/**
+ * Topic → upstream override map. Topics not listed here keep routing to the
+ * default FastAPI runtime (RAILWAY_BASE_URL) — the Python hosting lane. The
+ * `mastra` topic is served by the separate Node service
+ * (deployments/ag-ui-mastra, Railway service `ag-ui-mastra`); its base URL
+ * comes from the AG_UI_MASTRA_URL env var on the Vercel examples project.
+ * Both upstreams verify the same X-Internal-Token header contract.
+ *
+ * Values are read lazily per request so a missing env var yields a clear
+ * 500 for that topic only, never a module-load crash.
+ */
+function upstreamBaseFor(topic: string): string | null {
+  if (topic === 'mastra') {
+    return process.env['AG_UI_MASTRA_URL'] ?? null;
+  }
+  return RAILWAY_BASE_URL;
+}
 
 const ALLOWED_ORIGINS = new Set<string>([
   'https://examples.threadplane.ai',
@@ -103,8 +123,16 @@ function getOrigin(headers: VercelRequest['headers']): string | undefined {
 function parseProxyPath(url: string): { topic: string; rest: string } | null {
   const u = new URL(url, 'http://placeholder');
   const segments = u.pathname.split('/').filter(Boolean);
-  // Expected: ['ag-ui', '<topic>', 'agent', ...rest]
-  if (segments[0] !== 'ag-ui' || !segments[1] || segments[2] !== 'agent') return null;
+  // Expected: ['ag-ui' | 'runtimes', '<topic>', 'agent', ...rest]. The
+  // 'runtimes' product (cockpit/runtimes/<topic>/) is AG-UI-served exactly
+  // like the ag-ui product; the upstream URL is /agent/<topic> either way.
+  if (
+    (segments[0] !== 'ag-ui' && segments[0] !== 'runtimes') ||
+    !segments[1] ||
+    segments[2] !== 'agent'
+  ) {
+    return null;
+  }
   const topic = segments[1];
   const rest = segments.slice(3).join('/');
   const restPath = rest ? `/${rest}` : '';
@@ -161,7 +189,12 @@ module.exports = async function handler(req: VercelRequest, res: VercelResponse)
     const qIndex = (req.url ?? '').indexOf('?');
     return qIndex >= 0 ? (req.url as string).slice(qIndex) : '';
   })();
-  const upstreamUrl = `${RAILWAY_BASE_URL}/agent/${parsed.topic}${parsed.rest}${query}`;
+  const upstreamBase = upstreamBaseFor(parsed.topic);
+  if (!upstreamBase) {
+    res.status(500).json({ error: 'misconfigured', detail: `no upstream configured for topic ${parsed.topic}` });
+    return;
+  }
+  const upstreamUrl = `${upstreamBase}/agent/${parsed.topic}${parsed.rest}${query}`;
   const upstreamHeaders: Record<string, string> = {
     'x-internal-token': internalToken,
   };

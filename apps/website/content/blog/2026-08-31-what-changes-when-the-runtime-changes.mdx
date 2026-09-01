@@ -301,6 +301,10 @@ Two smaller caveats.
 The interrupt path currently depends on a `CUSTOM` event name that the LangGraph bridge emits, so an unrelated AG-UI backend would need to adopt that convention.
 And the subagent path depends on the backend emitting native `ACTIVITY` events, which our demo backend does deliberately.
 
+*Editor's note, added after publication: we went and measured it.*
+*Three genuinely non-LangGraph backends, two languages, wire transcripts replayed through the shipped client.*
+*The results, including two adapter defects the exercise exposed, are in [We Measured the Runtime Swap](/blog/we-measured-the-runtime-swap).*
+
 ## Conclusion
 
 The measured answer to the title is short.

@@ -1,0 +1,38 @@
+{
+  "name": "cockpit-runtimes-aws-strands-python",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/runtimes/aws-strands/python/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{workspaceRoot}/dist/cockpit/runtimes/aws-strands/python"
+      ],
+      "options": {
+        "outputPath": "dist/cockpit/runtimes/aws-strands/python",
+        "main": "cockpit/runtimes/aws-strands/python/src/index.ts",
+        "tsConfig": "cockpit/runtimes/aws-strands/python/tsconfig.json"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/runtimes/aws-strands/python",
+        "command": "npx tsx -e \"import { runtimesAwsStrandsPythonModule } from './src/index.ts'; const module = runtimesAwsStrandsPythonModule; if (module.id !== 'runtimes-aws-strands-python' || module.title !== 'Runtimes — AWS Strands (Python)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/runtimes/aws-strands/python",
+        "command": "uv run uvicorn src.server:app --port 5331"
+      }
+    }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples",
+    "scope:cockpit-smoke"
+  ]
+}

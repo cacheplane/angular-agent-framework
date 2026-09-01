@@ -32,6 +32,7 @@ jobs:
       cockpit_e2e: ${{ steps.scope.outputs.cockpit_e2e }}
       website_e2e: ${{ steps.scope.outputs.website_e2e }}
       posthog: ${{ steps.scope.outputs.posthog }}
+      scripts_tests: ${{ steps.scope.outputs.scripts_tests }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -76,6 +77,24 @@ jobs:
             --output "$GITHUB_OUTPUT"
       - name: Validate CI workflow guards
         run: node --test scripts/ci-workflow.spec.mjs
+
+  scripts-tests:
+    name: Scripts — generator / proxy vitest suites
+    needs: ci-scope
+    if: github.event_name == 'push' || needs.ci-scope.outputs.scripts_tests == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Vitest suites for the root deployment/proxy generators (drift checks,
+      # framework-adapter branching, requirements unions, rate limits). The
+      # node:test suites in scripts/ run in ci-scope and library instead —
+      # see scripts/vite.config.mts for the split.
+      - run: npx nx test scripts
 
   library:
     name: Library — lint / test / build
@@ -252,7 +271,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx nx run-many -t smoke --projects=cockpit-ag-ui-interrupts-python,cockpit-ag-ui-streaming-python,cockpit-deep-agents-planning-python,cockpit-deep-agents-filesystem-python,cockpit-deep-agents-subagents-python,cockpit-deep-agents-memory-python,cockpit-deep-agents-skills-python,cockpit-deep-agents-sandboxes-python,cockpit-langgraph-persistence-python,cockpit-langgraph-durable-execution-python,cockpit-langgraph-streaming-python,cockpit-langgraph-interrupts-python,cockpit-langgraph-memory-python,cockpit-langgraph-subgraphs-python,cockpit-langgraph-time-travel-python,cockpit-langgraph-deployment-runtime-python,cockpit-chat-messages-python,cockpit-render-spec-rendering-python,cockpit-runtimes-microsoft-agent-framework-python --skip-nx-cache
+      - run: npx nx run-many -t smoke --projects=cockpit-ag-ui-interrupts-python,cockpit-ag-ui-streaming-python,cockpit-deep-agents-planning-python,cockpit-deep-agents-filesystem-python,cockpit-deep-agents-subagents-python,cockpit-deep-agents-memory-python,cockpit-deep-agents-skills-python,cockpit-deep-agents-sandboxes-python,cockpit-langgraph-persistence-python,cockpit-langgraph-durable-execution-python,cockpit-langgraph-streaming-python,cockpit-langgraph-interrupts-python,cockpit-langgraph-memory-python,cockpit-langgraph-subgraphs-python,cockpit-langgraph-time-travel-python,cockpit-langgraph-deployment-runtime-python,cockpit-chat-messages-python,cockpit-render-spec-rendering-python,cockpit-runtimes-microsoft-agent-framework-python,cockpit-runtimes-aws-strands-python --skip-nx-cache
 
   cockpit-deploy-smoke:
     name: Cockpit — deploy smoke dry-run
@@ -458,12 +477,18 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci
+      # matrix.cap.python is '' for caps whose backend is not Python (e.g.
+      # cockpit-runtimes-mastra-angular — its backend is the
+      # deployments/ag-ui-mastra Node service, installed by the example's
+      # own e2e global setup). Skip the uv/venv steps for those.
       - name: Cache cap python venv
+        if: matrix.cap.python != ''
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ matrix.cap.python }}/.venv
           key: uv-venv-${{ runner.os }}-py3.12-${{ matrix.cap.python }}-${{ hashFiles(format('{0}/uv.lock', matrix.cap.python)) }}
       - name: uv sync per-cap python
+        if: matrix.cap.python != ''
         working-directory: ${{ matrix.cap.python }}
         run: uv sync
       - name: Cache Playwright browsers
@@ -537,6 +562,7 @@ jobs:
       - cockpit-e2e-summary
       - website-e2e
       - posthog-sync-plan
+      - scripts-tests
     if: ${{ always() && github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
@@ -555,6 +581,7 @@ jobs:
           RESULT_COCKPIT_E2E: ${{ needs.cockpit-e2e-summary.result }}
           RESULT_WEBSITE_E2E: ${{ needs.website-e2e.result }}
           RESULT_POSTHOG: ${{ needs.posthog-sync-plan.result }}
+          RESULT_SCRIPTS_TESTS: ${{ needs.scripts-tests.result }}
           SCOPE_LIBRARY: ${{ needs.ci-scope.outputs.library }}
           SCOPE_ANGULAR_COMPATIBILITY: ${{ needs.ci-scope.outputs.angular_compatibility }}
           SCOPE_WEBSITE: ${{ needs.ci-scope.outputs.website }}
@@ -566,6 +593,7 @@ jobs:
           SCOPE_COCKPIT_E2E: ${{ needs.ci-scope.outputs.cockpit_e2e }}
           SCOPE_WEBSITE_E2E: ${{ needs.ci-scope.outputs.website_e2e }}
           SCOPE_POSTHOG: ${{ needs.ci-scope.outputs.posthog }}
+          SCOPE_SCRIPTS_TESTS: ${{ needs.ci-scope.outputs.scripts_tests }}
         run: |
           set -euo pipefail
 
@@ -618,6 +646,7 @@ jobs:
           require_scoped "cockpit_e2e" "Cockpit — e2e" "$RESULT_COCKPIT_E2E" "$SCOPE_COCKPIT_E2E"
           require_scoped "website_e2e" "Website — e2e" "$RESULT_WEBSITE_E2E" "$SCOPE_WEBSITE_E2E"
           require_scoped "posthog" "PostHog — dashboards-as-code drift check" "$RESULT_POSTHOG" "$SCOPE_POSTHOG"
+          require_scoped "scripts_tests" "Scripts — generator / proxy vitest suites" "$RESULT_SCRIPTS_TESTS" "$SCOPE_SCRIPTS_TESTS"
 
           if [[ "$failed" -ne 0 ]]; then
             exit 1
@@ -644,6 +673,10 @@ jobs:
     runs-on: ubuntu-latest
     # Only deploy on pushes to main, not on pull requests
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      # Needed to advance refs/deploy/last-promoted (see "Resolve deploy
+      # baseline"). Nothing else in this job writes to the repo.
+      contents: write
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -669,14 +702,53 @@ jobs:
           else
             echo "stale=false" >> "$GITHUB_OUTPUT"
           fi
-      - name: Detect deploy-relevant changes
-        id: deploy_preflight
+      - name: Resolve deploy baseline
+        id: deploy_baseline
         run: |
-          base_sha="${{ github.event.before }}"
+          # Gating on `github.event.before..sha` asks "what changed in THIS
+          # push", which silently drops work whenever a run does not reach the
+          # deploy steps. Pushes to main do not cancel in-progress runs, but
+          # GitHub keeps only the newest QUEUED run per concurrency group and
+          # cancels the rest, and a run can also fail on an unrelated job — in
+          # both cases that push's diff range is never re-examined. The next
+          # push only diffs its own range, so the skipped change stays
+          # undeployed until some later commit happens to touch a gated path.
+          #
+          # Seen live 2026-08-31: #902 (cockpit/ag-ui/subagents/angular) failed
+          # on an unrelated website e2e regression, and the two green runs after
+          # it touched no gated path — so the fix sat on main, undeployed,
+          # alongside the cockpit/runtimes examples from two culled runs. All
+          # three shipped only when #907 incidentally touched a gated file.
+          #
+          # refs/deploy/last-promoted advances only after a fully successful
+          # deploy job, so this range covers everything not yet promoted.
+          # Falls back to the old behaviour when the marker is absent
+          # (first run after this lands) or no longer resolves (history rewrite).
+          base_sha=""
+          marker="$(git ls-remote origin refs/deploy/last-promoted 2>/dev/null | cut -f1)"
+          if [ -n "$marker" ] && git cat-file -e "${marker}^{commit}" 2>/dev/null; then
+            base_sha="$marker"
+            echo "::notice::Deploy baseline: last promoted commit ${marker}."
+          else
+            base_sha="${{ github.event.before }}"
+            echo "::notice::No usable refs/deploy/last-promoted marker; falling back to github.event.before (${base_sha})."
+          fi
           head_sha="${{ github.sha }}"
           if [ -z "$base_sha" ] || [ "$base_sha" = "0000000000000000000000000000000000000000" ]; then
             base_sha="$(git rev-parse "$head_sha^")"
           fi
+          # Guarantee every consumer gets a resolvable commit: the fallback can
+          # name a commit this clone does not have (force-push, deleted branch).
+          if ! git cat-file -e "${base_sha}^{commit}" 2>/dev/null; then
+            echo "::warning::Deploy baseline ${base_sha} does not resolve; using ${head_sha}^ instead."
+            base_sha="$(git rev-parse "$head_sha^")"
+          fi
+          echo "base=$base_sha" >> "$GITHUB_OUTPUT"
+      - name: Detect deploy-relevant changes
+        id: deploy_preflight
+        run: |
+          base_sha="${{ steps.deploy_baseline.outputs.base }}"
+          head_sha="${{ github.sha }}"
 
           if ! git cat-file -e "$base_sha^{commit}" 2>/dev/null; then
             git fetch --no-tags origin "$base_sha"
@@ -696,11 +768,8 @@ jobs:
       - name: Check if examples changed
         id: examples_changed
         run: |
-          base_sha="${{ github.event.before }}"
+          base_sha="${{ steps.deploy_baseline.outputs.base }}"
           head_sha="${{ github.sha }}"
-          if [ -z "$base_sha" ] || [ "$base_sha" = "0000000000000000000000000000000000000000" ]; then
-            base_sha="$(git rev-parse "$head_sha^")"
-          fi
           changed_files="$(git diff --name-only "$base_sha" "$head_sha")"
           examples_changed=false
           if printf '%s\n' "$changed_files" | grep -E '^cockpit/.*/angular/' >/dev/null; then
@@ -733,11 +802,8 @@ jobs:
         if: steps.deploy_preflight.outputs.relevant == 'true'
         id: affected
         run: |
-          base_sha="${{ github.event.before }}"
+          base_sha="${{ steps.deploy_baseline.outputs.base }}"
           head_sha="${{ github.sha }}"
-          if [ -z "$base_sha" ] || [ "$base_sha" = "0000000000000000000000000000000000000000" ]; then
-            base_sha="$(git rev-parse "$head_sha^")"
-          fi
 
           if ! git cat-file -e "$base_sha^{commit}" 2>/dev/null; then
             git fetch --no-tags origin "$base_sha"
@@ -832,6 +898,14 @@ jobs:
         if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true'
         run: |
           npx tsx apps/cockpit/scripts/deploy-smoke.ts --url https://cockpit.threadplane.ai --retries 20 --retry-delay-ms 5000
+
+      # Advance only when the whole job succeeded and actually promoted. On a
+      # stale run, a failure, or a partial deploy the marker stays put, so the
+      # next run's range still covers whatever did not ship. Never `always()`:
+      # advancing past unshipped work is the bug this step exists to prevent.
+      - name: Record this commit as promoted
+        if: success() && steps.freshness.outputs.stale != 'true'
+        run: git push origin --force "${{ github.sha }}:refs/deploy/last-promoted"
 
   demo-deploy:
     name: Canonical demo → Vercel

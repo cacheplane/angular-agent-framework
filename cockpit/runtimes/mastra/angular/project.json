@@ -1,0 +1,102 @@
+{
+  "name": "cockpit-runtimes-mastra-angular",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "cockpit/runtimes/mastra/angular/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "outputs": [
+        "{options.outputPath.base}"
+      ],
+      "options": {
+        "outputPath": {
+          "base": "dist/cockpit/runtimes/mastra/angular",
+          "browser": ""
+        },
+        "browser": "cockpit/runtimes/mastra/angular/src/main.ts",
+        "tsConfig": "cockpit/runtimes/mastra/angular/tsconfig.app.json",
+        "styles": [
+          "cockpit/runtimes/mastra/angular/src/styles.css"
+        ]
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "1mb",
+              "maximumError": "1.5mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "10kb",
+              "maximumError": "16kb"
+            }
+          ],
+          "outputHashing": "none"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "cockpit/runtimes/mastra/angular/src/environments/environment.ts",
+              "with": "cockpit/runtimes/mastra/angular/src/environments/environment.development.ts"
+            }
+          ]
+        },
+        "cockpit": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "fileReplacements": [
+            {
+              "replace": "cockpit/runtimes/mastra/angular/src/environments/environment.ts",
+              "with": "cockpit/runtimes/mastra/angular/src/environments/environment.development.ts"
+            }
+          ],
+          "browser": "cockpit/runtimes/mastra/angular/src/main.cockpit.ts"
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@angular/build:dev-server",
+      "configurations": {
+        "production": {
+          "buildTarget": "cockpit-runtimes-mastra-angular:build:production"
+        },
+        "development": {
+          "buildTarget": "cockpit-runtimes-mastra-angular:build:development"
+        },
+        "cockpit": {
+          "buildTarget": "cockpit-runtimes-mastra-angular:build:cockpit"
+        }
+      },
+      "defaultConfiguration": "development",
+      "options": {
+        "proxyConfig": "cockpit/runtimes/mastra/angular/proxy.conf.mjs"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "cockpit/runtimes/mastra/angular",
+        "command": "npx tsx -e \"import { runtimesMastraAngularModule } from './src/index.ts'; const module = runtimesMastraAngularModule; if (module.id !== 'runtimes-mastra-angular' || module.title !== 'Runtimes — Mastra (Angular)') { throw new Error('Unexpected module shape for ' + module.id); }\""
+      }
+    },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "cockpit/runtimes/mastra/angular/e2e/playwright.config.ts"
+      }
+    }
+  },
+  "tags": [
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples"
+  ]
+}

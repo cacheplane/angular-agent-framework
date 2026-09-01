@@ -1,0 +1,80 @@
+---
+title: How It Connects
+description: The AG-UI wire conventions measured for AWS Strands: outcome interrupts, top-level resume entries, and snapshot-only state.
+---
+
+# How AWS Strands Connects
+
+This page records the AG-UI wire behavior measured for the Strands bridge on 2026-08-31. It describes what the runtime emitted, not what the protocol permits in general. The captured Server-Sent Events are committed at [`libs/ag-ui/fixtures/runtime-transcripts/`](https://github.com/cacheplane/angular-agent-framework/tree/main/libs/ag-ui/fixtures/runtime-transcripts) and replayed by the adapter test suite on every run.
+
+## Transport
+
+The example serves a single AG-UI endpoint from FastAPI.
+
+| Route | Method | Notes |
+|---|---|---|
+| `/agent` | `POST` | `RunAgentInput` JSON in, Server-Sent Events out. |
+| `/ok` | `GET` | Unauthenticated health check. |
+
+On the Angular side that is an ordinary `provideAgent({ url: '/agent' })`. Nothing about the adapter configuration is Strands-specific.
+
+## Interrupts use the outcome convention
+
+Strands signals an interrupt through the protocol-standard run outcome and never through a `CUSTOM` event:
+
+```json
+{
+  "type": "RUN_FINISHED",
+  "outcome": {
+    "type": "interrupt",
+    "interrupts": [{ "interruptId": "...", "value": { } }]
+  }
+}
+```
+
+This is the opposite of the LangGraph bridge, which signals interrupts only through a `CUSTOM` event named `on_interrupt` and never sets an outcome. The adapter detects either convention; within a single run, the first signal it sees wins.
+
+The reducer originally keyed interrupts on `on_interrupt` alone, which meant a Strands run finalized as a success with a dangling approval call and an undefined `interrupt()`. That was an adapter defect, and it is fixed.
+
+## Resume uses top-level entries
+
+Strands reads resume data from the protocol-standard top-level `resume` array, one entry per interrupt, keyed by `interruptId`:
+
+```json
+{
+  "resume": [
+    { "interruptId": "...", "status": "accepted", "payload": { } }
+  ]
+}
+```
+
+Application code does not assemble that. You call the neutral `submit({ resume })`, and the adapter derives the wire shape from how the interrupt arrived. The same call against a Mastra backend produces `forwardedProps.command.interruptEvent` instead, and against the LangGraph bridge produces `forwardedProps.command.resume`.
+
+## State is snapshot-only
+
+The bridge emits `STATE_SNAPSHOT` and never `STATE_DELTA`. State reaches the wire only where a tool opts in with a `ToolBehavior` hook:
+
+```python
+StrandsAgentConfig(
+    tool_behaviors={
+        "check_availability": ToolBehavior(state_from_result=availability_state),
+        "book_meeting": ToolBehavior(state_from_args=booking_state),
+    },
+)
+```
+
+`state_from_result` fires after the tool returns. `state_from_args` fires as the tool call's arguments finish streaming, which is what puts a pending booking into state *before* the interrupt pauses the run.
+
+Because the adapter applies a snapshot as a full replacement, both hooks return the complete state object. A hook that returns a partial object silently drops whatever the other hook had written.
+
+## Subagents emit nothing the adapter can read
+
+Delegation is routed through a `CUSTOM` `MultiAgentHandoff` event plus `STEP_*` events, with no `ACTIVITY` events at any point. The Threadplane subagent projection keys on an `activityType` of `subagent`, so there is nothing to project.
+
+The AG-UI protocol has carried dedicated `SUBAGENT_STARTED`, `SUBAGENT_FINISHED`, and `SUBAGENT_ERROR` events since `@ag-ui/core` 0.0.59. No runtime measured here emits them yet.
+
+## Next steps
+
+- [Overview](/docs/runtimes/aws-strands/overview) — what the integration supports.
+- [Microsoft Agent Framework — How It Connects](/docs/runtimes/microsoft-agent-framework/how-it-connects) — the same outcome convention, a different resume requirement.
+- [Choosing an adapter](/docs/choosing-an-adapter) — the full matrix and its cause analysis.

@@ -4,14 +4,13 @@ import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';
 import { Button } from '../ui/Button';
-import { BrowserFrame } from '../ui/BrowserFrame';
 import { analyticsEvents } from '../../lib/analytics/events';
 import { track, trackWhitepaperDownloadClick } from '../../lib/analytics/client';
 
-const BULLETS = [
-  'Six production-readiness dimensions for Angular AI',
-  'Concrete patterns — error boundaries, fallbacks, observability, deploy',
-  'No vendor pitch. Just what we learned shipping it.',
+const ROWS = [
+  { claim: 'Six production-readiness dimensions', tail: '18 pages' },
+  { claim: 'Error boundaries, fallbacks, observability, deploy', tail: 'concrete patterns' },
+  { claim: 'No vendor pitch — what we learned shipping it', tail: 'free' },
 ];
 
 type WhitepaperId = 'overview' | 'angular' | 'render' | 'chat';
@@ -71,18 +70,21 @@ export function WhitePaperBlock({ paper = 'overview' }: WhitePaperBlockProps = {
       <Container>
         <div className="wp-grid">
           <div>
-            <Eyebrow tone="accent" className="wp-eyebrow">Field report</Eyebrow>
+            <div className="wp-rail">
+              <Eyebrow tone="accent" className="wp-eyebrow">Field report</Eyebrow>
+              <span className="wp-rail-line" aria-hidden="true" />
+            </div>
             <h2 id="wp-heading" className="wp-heading">
               The last-mile gap in Angular AI.
             </h2>
-            <ul className="wp-bullets">
-              {BULLETS.map((b) => (
-                <li key={b} className="wp-bullet">
-                  <span aria-hidden="true" className="wp-bullet-dot" />
-                  <span>{b}</span>
-                </li>
+            <div className="wp-rows">
+              {ROWS.map((r) => (
+                <div key={r.claim} className="wp-row">
+                  <p className="wp-row-claim">{r.claim}</p>
+                  <p className="wp-row-tail">{r.tail}</p>
+                </div>
               ))}
-            </ul>
+            </div>
 
             {state === 'done' ? (
               <div className="wp-success">
@@ -157,30 +159,15 @@ export function WhitePaperBlock({ paper = 'overview' }: WhitePaperBlockProps = {
           </div>
 
           {/* Tilted whitepaper cover */}
-          <div className="wp-cover-wrap">
-            <BrowserFrame
-              url="angular-agent-readiness-guide.pdf"
-              rotate={-2}
-              elevation="lg"
-              maxWidth={420}
-            >
-              <div className="wp-cover">
-                <div>
-                  <div className="wp-cover-badge">
-                    Field report · 18 pages
-                  </div>
-                  <div className="wp-cover-title">
-                    From Prototype to Production
-                  </div>
-                  <div className="wp-cover-desc">
-                    Six production-readiness dimensions for Angular AI teams.
-                  </div>
-                </div>
-                <div className="wp-cover-footer">
-                  Threadplane
-                </div>
+          <div className="wp-cover-wrap" aria-hidden="true">
+            <div className="wp-paper">
+              <div>
+                <div className="wp-cover-badge">Field report · 18 pages</div>
+                <div className="wp-cover-title">From Prototype to Production</div>
+                <div className="wp-cover-desc">Six production-readiness dimensions for Angular AI teams.</div>
               </div>
-            </BrowserFrame>
+              <div className="wp-cover-footer">Threadplane</div>
+            </div>
           </div>
         </div>
       </Container>

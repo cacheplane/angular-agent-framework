@@ -9,8 +9,13 @@
  * per-topic module contract (`src/graph.py` exposing `graph` for LangGraph
  * vs `src/agent.py` exposing `agent` for Microsoft Agent Framework), and
  * the FastAPI mount call. Omitted means 'langgraph'.
+ *
+ * 'mastra' is the TypeScript hosting lane (Lane B): its backend is the
+ * hand-written Node service deployments/ag-ui-mastra, NOT the aggregated
+ * Python deployment — a 'mastra' capability therefore has no pythonDir and
+ * the Python deployment generator never stages it.
  */
-export type CapabilityFramework = 'langgraph' | 'microsoft-agent-framework';
+export type CapabilityFramework = 'langgraph' | 'microsoft-agent-framework' | 'aws-strands' | 'mastra';
 
 export interface Capability {
   id: string;
@@ -33,6 +38,9 @@ export interface Capability {
   framework?: CapabilityFramework;
 }
 
+// NOTE: registry changes must reach production through a run whose diff range
+// includes this file — see the deploy-gate hazard note in
+// scripts/assemble-examples.ts before assuming a green main run deployed them.
 export const capabilities: readonly Capability[] = [
   { id: 'streaming', product: 'langgraph', topic: 'streaming', angularProject: 'cockpit-langgraph-streaming-angular', port: 4300, pythonPort: 5300, pythonDir: 'cockpit/langgraph/streaming/python', graphName: 'streaming' },
   { id: 'persistence', product: 'langgraph', topic: 'persistence', angularProject: 'cockpit-langgraph-persistence-angular', port: 4301, pythonPort: 5301, pythonDir: 'cockpit/langgraph/persistence/python', graphName: 'persistence' },
@@ -79,6 +87,11 @@ export const capabilities: readonly Capability[] = [
   // Runtime-portability examples (one capability, many runtimes; AG-UI-served
   // like the ag-ui caps, but the backend is genuinely non-LangGraph)
   { id: 'rt-maf', product: 'runtimes', topic: 'microsoft-agent-framework', angularProject: 'cockpit-runtimes-microsoft-agent-framework-angular', port: 4330, pythonPort: 5330, pythonDir: 'cockpit/runtimes/microsoft-agent-framework/python', framework: 'microsoft-agent-framework' },
+  { id: 'rt-strands', product: 'runtimes', topic: 'aws-strands', angularProject: 'cockpit-runtimes-aws-strands-angular', port: 4331, pythonPort: 5331, pythonDir: 'cockpit/runtimes/aws-strands/python', framework: 'aws-strands' },
+  // No pythonDir: the Mastra topic's backend is the hand-written Node
+  // service deployments/ag-ui-mastra (start it locally on pythonPort — here
+  // meaning "backend port" — for dev/e2e; see that service's README).
+  { id: 'rt-mastra', product: 'runtimes', topic: 'mastra', angularProject: 'cockpit-runtimes-mastra-angular', port: 4332, pythonPort: 5332, framework: 'mastra' },
 ] as const;
 
 export function findCapability(id: string): Capability | undefined {

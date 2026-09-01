@@ -84,6 +84,76 @@ Three layers of test doubles, smallest scope first:
 
 Reach for the smallest layer that covers your test. Don't stand up aimock when a `mockAgent` unit test suffices; don't hand-roll a transport when `provideFakeAgent` exists.
 
+## Measured runtime support
+
+The AG-UI adapter is protocol-first, so "any AG-UI backend plugs in" is a claim that can be tested rather than asserted.
+On 2026-08-31 we tested it against three runtimes that have nothing to do with LangGraph, in two languages.
+
+| Runtime | Messages | Tool calls | State | Interrupts | Subagents | Cause of any gap |
+|---|---|---|---|---|---|---|
+| **LangGraph** (via the AG-UI bridge) | Yes | Yes | Yes | Yes | Yes | — |
+| **AWS Strands** (Python) | Yes | Yes | Partial | Yes | No | State + subagents: upstream |
+| **Microsoft Agent Framework** (Python) | Yes | Yes | Yes | Yes | No | Subagents: upstream |
+| **Mastra** (TypeScript) | Yes | Yes | Yes | Yes | No | Subagents: upstream |
+
+Every gap in that table falls into one of three causes, and the distinction is the point of the column:
+
+- **Protocol** — the AG-UI event vocabulary has no way to express the capability. Nothing an adapter or a backend author can do about it today.
+- **Upstream integration** — the protocol can express it, but the runtime's AG-UI bridge does not emit the events. Fixable upstream.
+- **Our adapter** — `@threadplane/ag-ui` failed to consume something the wire already carried. Our bug, and our responsibility.
+
+No cell in the current matrix is caused by the protocol, and no cell is caused by a bug in our adapter — the two that were are fixed.
+
+### Reading the individual cells
+
+**State on AWS Strands is partial.**
+The Strands AG-UI bridge never emits `STATE_DELTA`, and outbound state exists only where a tool opts in through per-tool `ToolBehavior` hooks.
+Because the adapter applies a `STATE_SNAPSHOT` as a full replacement, every hook must return the complete state object; a partial return clobbers sibling keys.
+Shared state works on Strands, but it is snapshot-only and it is opt-in per tool.
+
+**Interrupts arrive two different ways.**
+AWS Strands and Microsoft Agent Framework signal an interrupt only through the protocol-standard `RUN_FINISHED` outcome, `{ type: 'interrupt', interrupts: [...] }`.
+The LangGraph bridge signals it only through a `CUSTOM` event named `on_interrupt`.
+Mastra emits both.
+The adapter detects either convention, and within a single run the first signal wins.
+
+**Resume payloads are not portable, so the adapter shapes them per runtime.**
+Mastra reads `forwardedProps.command.interruptEvent`, carrying a tool-call id and a run id.
+AWS Strands and Microsoft Agent Framework both read the protocol-standard top-level `resume` array, one `{ interruptId, status, payload }` entry per interrupt; Microsoft additionally expects an entry for every pending interrupt.
+The LangGraph bridge reads `forwardedProps.command.resume`.
+You pass one neutral `submit({ resume })`, and the adapter derives the wire shape from how the interrupt arrived.
+
+**The Mastra row is hosted on its own lane.**
+Its cells come from a real Mastra server driven with live model calls, and its transcripts are committed and replayed like the others.
+Unlike the Strands and Microsoft Agent Framework rows, it is not served by the shared FastAPI deployment: upstream ships no plain AG-UI HTTP endpoint, so its backend is a separate Node service.
+
+**Subagents are red for every third-party runtime, and none of those reds are a bug.**
+The three runtimes do not fail to implement one thing; they model delegation three different ways.
+Strands routes handoffs through a `CUSTOM` event plus step events, with no `ACTIVITY` events at all.
+Mastra reserves `ACTIVITY_*` for background tasks and observational memory.
+Microsoft Agent Framework emits coarse executor-level activity snapshots and constructs `ACTIVITY_DELTA` nowhere.
+The Threadplane subagent projection keys on an `activityType` of `subagent`, which is a convention our own demo backend adopts.
+The protocol has carried dedicated `SUBAGENT_STARTED`, `SUBAGENT_FINISHED`, and `SUBAGENT_ERROR` events since `@ag-ui/core` 0.0.59, and no runtime emits them yet.
+Treat server-declared subagents as a capability of LangGraph and of backends you control, until that changes.
+
+### How this was measured
+
+Each runtime got a real server, started against the upstream AG-UI integration and driven with live model calls.
+The raw Server-Sent Events were captured off the wire, then replayed event-for-event through the pinned `@ag-ui/client` — schema parse plus `verifyEvents` — and through the adapter reducer itself.
+
+The captures are committed at [`libs/ag-ui/fixtures/runtime-transcripts/`](https://github.com/cacheplane/angular-agent-framework/tree/main/libs/ag-ui/fixtures/runtime-transcripts), verbatim from the wire.
+The adapter test suite replays them on every run.
+
+### Runnable examples
+
+Each runtime has a standalone Angular example bound through `@threadplane/ag-ui`, with its own backend:
+
+- [`cockpit/runtimes/aws-strands`](https://github.com/cacheplane/angular-agent-framework/tree/main/cockpit/runtimes/aws-strands) — Python, hosted in the shared FastAPI deployment.
+- [`cockpit/runtimes/microsoft-agent-framework`](https://github.com/cacheplane/angular-agent-framework/tree/main/cockpit/runtimes/microsoft-agent-framework) — Python, hosted in that same FastAPI deployment, running beside the Strands and LangGraph topics in one process.
+- [`cockpit/runtimes/mastra`](https://github.com/cacheplane/angular-agent-framework/tree/main/cockpit/runtimes/mastra) — TypeScript, hosted by a Node AG-UI service, because the upstream Mastra integration ships an in-process bridge rather than an HTTP endpoint.
+
+In all three, the Angular component is ordinary `<chat [agent]="agent" />` over `injectAgent()`.
+
 ## Why two adapters?
 
 The `Agent` contract from `@threadplane/chat` is intentionally runtime-neutral. The two adapters exist because they bridge different on-the-wire protocols into that contract:

@@ -9,6 +9,19 @@
  * Migration: docs/superpowers/plans/2026-08-29-inline-style-substrate-migration.md
  */
 
+/* Library pages hero kicker rail — shared by app/{langgraph,chat,ag-ui,render}/page.tsx */
+.lib-hero-rail {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.lib-hero-rail-line {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
 /* Docs index page — app/docs/page.tsx */
 .docs-index-hero-inner {
   max-width: 720px;
@@ -684,9 +697,6 @@
   margin: 0 auto;
   text-align: center;
 }
-.render-page-eyebrow-spaced {
-  margin-bottom: 16px;
-}
 .render-page-h1 {
   font-family: var(--font-garamond);
   font-size: var(--text-h1);
@@ -718,54 +728,11 @@
   gap: 8px;
   flex-wrap: wrap;
 }
-.render-page-visual-panel {
-  padding: 24px;
-  min-height: 320px;
-  background: var(--color-surface);
-}
-.render-page-spec-block {
-  background: var(--color-surface-tinted);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 12px;
-  margin-bottom: 12px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--color-text-secondary);
-  white-space: pre;
-}
-.render-page-rendered-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 16px;
-}
-.render-page-ai-label {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--color-accent);
-  margin-bottom: 8px;
-}
-.render-page-card-title {
-  font-family: var(--font-garamond);
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  margin-bottom: 4px;
-}
-.render-page-card-value {
-  font-size: 13px;
-  color: var(--color-text-secondary);
-}
-
 /* Chat landing page — app/chat/page.tsx */
 .chat-page-hero-inner {
   max-width: 820px;
   margin: 0 auto;
   text-align: center;
-}
-.chat-page-eyebrow-spaced {
-  margin-bottom: 16px;
 }
 .chat-page-h1 {
   font-family: var(--font-garamond);
@@ -798,48 +765,11 @@
   gap: 8px;
   flex-wrap: wrap;
 }
-.chat-page-visual-panel {
-  padding: 24px;
-  min-height: 320px;
-  background: linear-gradient(180deg, #fff, #f8fafc);
-}
-.chat-page-visual-pills-row {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-.chat-page-tool-label {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--color-text-muted);
-  margin-bottom: 8px;
-}
-.chat-page-result-block {
-  background: var(--color-surface-tinted);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 12px;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--color-text-primary);
-}
-.chat-page-replay-footer {
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 1px solid var(--color-border);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--color-text-secondary);
-}
-
 /* AG-UI landing page — app/ag-ui/page.tsx */
 .ag-ui-page-hero-inner {
   max-width: 820px;
   margin: 0 auto;
   text-align: center;
-}
-.ag-ui-page-eyebrow-spaced {
-  margin-bottom: 16px;
 }
 .ag-ui-page-h1 {
   font-family: var(--font-garamond);
@@ -893,26 +823,11 @@
   text-decoration: none;
   font-weight: 600;
 }
-.ag-ui-page-code-pre {
-  margin: 0;
-  padding: 20px 22px;
-  background: #1a1b26;
-  color: #a9b1d6;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  line-height: 1.6;
-  min-height: 320px;
-  overflow: auto;
-}
-
 /* LangGraph landing page — app/langgraph/page.tsx */
 .langgraph-page-hero-inner {
   max-width: 820px;
   margin: 0 auto;
   text-align: center;
-}
-.langgraph-page-eyebrow-spaced {
-  margin-bottom: 16px;
 }
 .langgraph-page-h1 {
   font-family: var(--font-garamond);
@@ -953,18 +868,6 @@
   gap: 8px;
   flex-wrap: wrap;
 }
-.langgraph-page-code-pre {
-  margin: 0;
-  padding: 20px 22px;
-  background: #1a1b26;
-  color: #a9b1d6;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  line-height: 1.6;
-  min-height: 320px;
-  overflow: auto;
-}
-
 /* Blog index page — app/blog/page.tsx */
 .blog-index-page {
   padding-top: 80px;
@@ -1163,23 +1066,6 @@
 .pricing-page-license-line strong {
   color: var(--color-accent);
 }
-.pricing-page-eyebrow-tight {
-  margin-bottom: 12px;
-}
-.pricing-page-h2 {
-  font-family: var(--font-garamond);
-  font-size: var(--text-h2);
-  margin: 0;
-  margin-bottom: 16px;
-  color: var(--color-text-primary);
-}
-.pricing-page-compat-body {
-  margin: 0;
-  margin-bottom: 24px;
-  color: var(--color-text-secondary);
-  max-width: 60ch;
-}
-
 @media (max-width: 640px) {
   .pricing-page-license-line {
     align-items: flex-start;

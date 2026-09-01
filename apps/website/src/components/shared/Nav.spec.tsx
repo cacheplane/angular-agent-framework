@@ -229,7 +229,7 @@ describe('Docs mobile navigation', () => {
     const libraryTrigger = within(dialog).getByRole('button', { name: 'LangGraph' });
     fireEvent.click(libraryTrigger);
 
-    fireEvent.keyDown(within(dialog).getByRole('menuitem', { name: /LangGraph/ }), {
+    fireEvent.keyDown(within(dialog).getByRole('menuitemradio', { name: /LangGraph/ }), {
       key: 'Escape',
     });
 

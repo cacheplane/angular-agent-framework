@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { capabilities } from '../scripts/capability-registry';
 
 /**
  * Production smoke test: verifies the deployed cockpit shell and deployed
@@ -69,6 +70,20 @@ const RENDER_CAPABILITIES = [
   'render/repeat-loops',
   'render/computed-functions',
 ] as const;
+
+/**
+ * Driven off the capability registry so a newly added ag-ui topic is covered
+ * automatically instead of silently going unasserted — the previous two
+ * hardcoded checks covered interrupts and streaming only.
+ *
+ * Scoped to the ag-ui product: `runtimes` capabilities share the Railway
+ * runtime but are not yet in the examples route table, so they have no
+ * /ag-ui/<topic>/ URL to assert against.
+ */
+const AG_UI_TOPICS = capabilities
+  .filter((c) => c.product === 'ag-ui' && c.pythonDir)
+  .map((c) => c.topic)
+  .sort();
 
 const SEND_RECEIVE_TIMEOUT_MS = 30_000;
 test.describe('Production: Angular chat example apps load', () => {
@@ -235,15 +250,47 @@ test.describe('ag-ui Railway runtime', () => {
     expect(await res.json()).toMatchObject({ ok: true });
   });
 
-  test('examples.threadplane.ai/ag-ui/interrupts is reachable', async ({ page }) => {
-    const res = await page.goto(`${EXAMPLES_URL}/ag-ui/interrupts/`);
-    expect(res?.status()).toBeLessThan(400);
-  });
+  for (const topic of AG_UI_TOPICS) {
+    test(`ag-ui/${topic} page is reachable`, async ({ page }) => {
+      const res = await page.goto(`${EXAMPLES_URL}/ag-ui/${topic}/`, {
+        timeout: 15_000,
+      });
+      expect(res?.status()).toBeLessThan(400);
+    });
 
-  test('examples.threadplane.ai/ag-ui/streaming is reachable', async ({ page }) => {
-    const res = await page.goto(`${EXAMPLES_URL}/ag-ui/streaming/`);
-    expect(res?.status()).toBeLessThan(400);
-  });
+    /**
+     * Page reachability is not enough, and /ok is not either. A misconfigured
+     * agent URL, a missing proxy route, or a Railway image that crashed on
+     * boot all leave a healthy 200 index.html and a healthy /ok while the
+     * runtime endpoint is dead — Railway keeps serving the last good image
+     * when a new one fails to boot. That combination hid a broken
+     * /agent/subagents for two and a half months.
+     *
+     * POSTing an empty body is a deliberate, token-free canary: the FastAPI
+     * request model rejects it before any graph or LLM call runs.
+     *   422 → healthy (proxy routed, internal token accepted, topic mounted)
+     *   404 → topic missing from the deployed image, or no proxy route
+     *   401 → AG_UI_INTERNAL_TOKEN mismatch between the proxy and Railway
+     */
+    test(`ag-ui/${topic} agent endpoint is routed and mounted`, async ({
+      request,
+    }) => {
+      const res = await request.post(`${EXAMPLES_URL}/ag-ui/${topic}/agent`, {
+        headers: { Origin: EXAMPLES_URL, 'content-type': 'application/json' },
+        data: {},
+      });
+      const status = res.status();
+      expect(
+        status,
+        `POST /ag-ui/${topic}/agent returned ${status}; 404 means the deployed image has no /agent/${topic} route (check the Railway build/boot log) or the Vercel proxy route is missing`
+      ).not.toBe(404);
+      expect(
+        status,
+        `POST /ag-ui/${topic}/agent returned 401 — AG_UI_INTERNAL_TOKEN mismatch between the Vercel proxy and Railway`
+      ).not.toBe(401);
+      expect(status).toBeLessThan(500);
+    });
+  }
 });
 
 /**

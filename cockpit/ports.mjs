@@ -33,6 +33,10 @@ export const PORTS = Object.freeze({
   'cockpit-ag-ui-client-tools-angular': { angular: 4325, langgraph: 5325 },
   'cockpit-ag-ui-subagents-angular': { angular: 4326, langgraph: 5326 },
   'cockpit-runtimes-microsoft-agent-framework-angular': { angular: 4330, langgraph: 5330 },
+  'cockpit-runtimes-aws-strands-angular': { angular: 4331, langgraph: 5331 },
+  // rt-mastra: 'langgraph' here means backend port (the ag-ui convention);
+  // the backend is the deployments/ag-ui-mastra Node service, not Python.
+  'cockpit-runtimes-mastra-angular': { angular: 4332, langgraph: 5332 },
   'cockpit-chat-a2ui-angular': { angular: 4511, langgraph: 5511 },
   'cockpit-chat-debug-angular': { angular: 4509, langgraph: 5509 },
   'cockpit-chat-generative-ui-angular': { angular: 4508, langgraph: 5508 },

@@ -441,6 +441,31 @@ describe('CI workflow', () => {
     );
   });
 
+  it('runs the root scripts vitest suites when the scripts project is affected', async () => {
+    const workflow = await readWorkflow();
+    const scriptsTestsJob = readJobBlock(workflow, 'scripts-tests');
+
+    assert.match(
+      scriptsTestsJob,
+      /if: github\.event_name == 'push' \|\| needs\.ci-scope\.outputs\.scripts_tests == 'true'/
+    );
+    assert.match(scriptsTestsJob, /npx nx test scripts/);
+
+    const requiredPrChecksJob = await readRequiredPrChecksJob();
+    assert.match(
+      requiredPrChecksJob,
+      /RESULT_SCRIPTS_TESTS:\s*\$\{\{\s*needs\.scripts-tests\.result\s*\}\}/
+    );
+    assert.match(
+      requiredPrChecksJob,
+      /SCOPE_SCRIPTS_TESTS:\s*\$\{\{\s*needs\.ci-scope\.outputs\.scripts_tests\s*\}\}/
+    );
+    assert.match(
+      requiredPrChecksJob,
+      /require_scoped "scripts_tests" "Scripts — generator \/ proxy vitest suites"/
+    );
+  });
+
   it('provides one stable required PR check that waits for scoped CI jobs', async () => {
     const requiredPrChecksJob = await readRequiredPrChecksJob();
     const expectedNeeds = [
@@ -457,6 +482,7 @@ describe('CI workflow', () => {
       'cockpit-e2e-summary',
       'website-e2e',
       'posthog-sync-plan',
+      'scripts-tests',
     ];
 
     assert.match(requiredPrChecksJob, /name:\s*CI — required/);

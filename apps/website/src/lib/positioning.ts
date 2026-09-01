@@ -4,14 +4,23 @@ export const LONG_SUBHEAD =
   'The fullstack agentic Angular framework for LangGraph and AG-UI-compatible agents: durable threads, interrupts, subagents, planning, memory, and generative UI using Vercel json-render and Google A2UI.';
 export const HERO_SUBHEAD = `The streaming demo takes an afternoon. Everything after it takes six months. Threadplane is the Angular layer that closes the gap — and it keeps your backend exactly where it is.`;
 
-/** Capability nouns, demoted from the subheadline to chips (spec change F). */
-export const HERO_CHIPS: readonly string[] = [
-  'durable threads',
-  'interrupts',
-  'subagents',
-  'planning + memory',
-  'generative UI',
-  'LangGraph + AG-UI',
+export interface HeroCapability {
+  readonly label: string;
+  readonly href: string;
+}
+
+/**
+ * The hero's single capability row (spec 2026-08-31): chip casing, proof-pill
+ * hrefs, rendered as links. POSITIONING_PROOF_POINTS still feeds the OG image
+ * and metadata keywords — do not fold these together.
+ */
+export const HERO_CAPABILITIES: readonly HeroCapability[] = [
+  { label: 'durable threads', href: '/docs/langgraph/guides/persistence' },
+  { label: 'interrupts', href: '/docs/langgraph/guides/interrupts' },
+  { label: 'subagents', href: '/docs/langgraph/guides/subgraphs' },
+  { label: 'planning + memory', href: '/docs/langgraph/guides/memory' },
+  { label: 'generative UI', href: '/docs/render/concepts/json-render-vs-a2ui' },
+  { label: 'LangGraph + AG-UI', href: '/docs/choosing-an-adapter' },
 ];
 export interface PositioningProofPoint {
   readonly label: string;
