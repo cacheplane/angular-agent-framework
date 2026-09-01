@@ -28,7 +28,7 @@ const PACKAGE_REFS = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<aside aria-label="Threadplane compatibility probes">
     <span data-threadplane-compatibility="ag-ui">{{
-      agUiReady ? 'ag-ui ready' : 'ag-ui unavailable'
+      agUiReady ? 'AG-UI ready' : 'AG-UI unavailable'
     }}</span>
     <span data-threadplane-compatibility="chat">{{
       packageReady('chat') ? 'chat ready' : 'chat unavailable'

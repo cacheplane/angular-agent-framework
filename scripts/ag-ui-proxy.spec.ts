@@ -44,7 +44,7 @@ function makeReq(url: string, origin = 'https://examples.threadplane.ai') {
 
 const RAILWAY_DEFAULT = 'https://ag-ui-dev-production.up.railway.app';
 
-describe('ag-ui proxy', () => {
+describe('AG-UI proxy', () => {
   beforeEach(() => {
     process.env['AG_UI_INTERNAL_TOKEN'] = 'test-token';
     delete process.env['AG_UI_RAILWAY_URL'];

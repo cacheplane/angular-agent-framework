@@ -76,7 +76,7 @@ describe('DemoShowcase', () => {
     render(<DemoShowcase />);
 
     fireEvent.click(screen.getAllByRole('tab')[1]);
-    fireEvent.click(screen.getByRole('button', { name: /launch ag-ui live demo/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Launch AG-UI live demo' }));
 
     expect(trackCtaClickMock).toHaveBeenCalledWith(
       expect.objectContaining({ surface: 'home_demo', cta_id: 'home_demo_launch_ag_ui' }),

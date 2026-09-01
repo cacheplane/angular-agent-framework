@@ -20,7 +20,7 @@ describe('LibraryMark', () => {
     expect(container.querySelector('svg')).not.toBeNull();
   });
 
-  it('maps ag-ui and a2ui to their vendor logos', () => {
+  it('maps AG-UI and a2ui to their vendor logos', () => {
     const { container: a } = render(<LibraryMark library="ag-ui" />);
     expect(a.querySelector('img')?.getAttribute('src')).toBe('/logos/ag-ui.svg');
     const { container: b } = render(<LibraryMark library="a2ui" />);

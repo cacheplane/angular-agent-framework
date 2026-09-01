@@ -64,7 +64,7 @@ async function readSubagents(page: Page): Promise<SubagentProbe> {
 // `research` tool, the langgraph child subgraph runs a genuine reason → tool →
 // answer loop (an LLM call that returns a `lookup` tool_call, the offline
 // `lookup` tool, then a second plain LLM call that writes the summary), and the
-// ag-ui server converts the subagent_activity CUSTOM events into native
+// AG-UI server converts the subagent_activity CUSTOM events into native
 // ACTIVITY_SNAPSHOT/ACTIVITY_DELTA. The @threadplane/ag-ui reducer projects the
 // activity to agent.subagents() (the ordered transcript chat-subagent-card
 // renders) and the child's research text must stay OUT of the parent's bubble.

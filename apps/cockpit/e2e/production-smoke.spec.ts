@@ -72,11 +72,11 @@ const RENDER_CAPABILITIES = [
 ] as const;
 
 /**
- * Driven off the capability registry so a newly added ag-ui topic is covered
+ * Driven off the capability registry so a newly added AG-UI topic is covered
  * automatically instead of silently going unasserted — the previous two
  * hardcoded checks covered interrupts and streaming only.
  *
- * Scoped to the ag-ui product: `runtimes` capabilities share the Railway
+ * Scoped to the AG-UI product: `runtimes` capabilities share the Railway
  * runtime but are not yet in the examples route table, so they have no
  * /ag-ui/<topic>/ URL to assert against.
  */
@@ -241,7 +241,7 @@ test.describe('Production: canonical demo sends runtime telemetry', () => {
   });
 });
 
-test.describe('ag-ui Railway runtime', () => {
+test.describe('AG-UI Railway runtime', () => {
   const RAILWAY_URL = process.env['AG_UI_RAILWAY_URL'] ?? 'https://ag-ui-dev-production.up.railway.app';
 
   test('healthcheck /ok responds 200', async ({ request }) => {
@@ -327,7 +327,7 @@ test.describe('examples langgraph proxy hardening', () => {
   });
 });
 
-test.describe('ag-ui demo (ag-ui.threadplane.ai)', () => {
+test.describe('AG-UI demo (ag-ui.threadplane.ai)', () => {
   const DEMO = process.env['AG_UI_DEMO_URL'] ?? 'https://ag-ui.threadplane.ai';
 
   test('demo SPA is reachable', async ({ page }) => {

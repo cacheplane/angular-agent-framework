@@ -6600,7 +6600,7 @@
   {
     "name": "Citation",
     "kind": "interface",
-    "description": "Provider-agnostic citation entry. Populated by adapters from message\nmetadata (LangGraph additional_kwargs.citations, ag-ui STATE_DELTA at\n/citations/{messageId}). Pandoc-formatted [^id]: ... defs in message\ncontent remain in the markdown AST sidecar and are merged via\nCitationsResolverService at render time.",
+    "description": "Provider-agnostic citation entry. Populated by adapters from message\nmetadata (LangGraph additional_kwargs.citations, AG-UI STATE_DELTA at\n/citations/{messageId}). Pandoc-formatted [^id]: ... defs in message\ncontent remain in the markdown AST sidecar and are merged via\nCitationsResolverService at render time.",
     "properties": [
       {
         "name": "extra",
@@ -7525,7 +7525,7 @@
       {
         "name": "lifecycle",
         "type": "object",
-        "description": "Minimal lifecycle stub the chat lib's effects subscribe to. We only\nmodel the signals the chat composition currently reads; richer adapter\nlifecycles (langgraph, ag-ui) extend this contract on their own mocks.\nThe public `lifecycle` view is a readonly signal; tests drive the\nvalue via `_internal.streamStartedAt.set(...)` below.",
+        "description": "Minimal lifecycle stub the chat lib's effects subscribe to. We only\nmodel the signals the chat composition currently reads; richer adapter\nlifecycles (langgraph, AG-UI) extend this contract on their own mocks.\nThe public `lifecycle` view is a readonly signal; tests drive the\nvalue via `_internal.streamStartedAt.set(...)` below.",
         "optional": false
       },
       {

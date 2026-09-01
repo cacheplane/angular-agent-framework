@@ -4,7 +4,7 @@
  * Per-IP token-bucket rate limit backed by Upstash Redis, shaped to the
  * createProxyHandler `checkRateLimit` contract. Sibling to the Neon-backed
  * scripts/rate-limit.ts — same interface, different backend. Used by the
- * threadplane-examples langgraph proxy; the ag-ui proxy on the same project
+ * threadplane-examples langgraph proxy; the AG-UI proxy on the same project
  * uses the same Upstash creds.
  *
  * Fail-open: if UPSTASH_* env is unset at module load, or the limit call

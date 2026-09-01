@@ -32,7 +32,7 @@ const agentBackedCapabilities = capabilities.filter(
   (c) => c.product === 'ag-ui' || c.product === 'runtimes'
 );
 
-describe('ag-ui agent URL is resolved against <base href>', () => {
+describe('AG-UI agent URL is resolved against <base href>', () => {
   it('covers every registered agent-backed capability', () => {
     expect(agentBackedCapabilities.length).toBeGreaterThan(0);
   });

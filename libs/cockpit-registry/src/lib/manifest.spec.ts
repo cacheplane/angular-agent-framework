@@ -134,7 +134,7 @@ describe('cockpitManifest', () => {
     }
   });
 
-  it('includes ag-ui after langgraph with streaming + interrupts topics', () => {
+  it('includes AG-UI after langgraph with streaming + interrupts topics', () => {
     const products = cockpitManifest.map((e) => e.product);
     expect(products).toContain('ag-ui');
     expect(products.indexOf('ag-ui')).toBeGreaterThan(products.indexOf('langgraph'));

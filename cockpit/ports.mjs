@@ -8,10 +8,10 @@
 /**
  * Single source of truth for cockpit cap port allocation.
  *
- * ag-ui examples (cockpit-ag-ui-*) run a uvicorn `ag-ui-langgraph`
+ * AG-UI examples (cockpit-ag-ui-*) run a uvicorn `ag-ui-langgraph`
  * FastAPI backend; the `langgraph` field holds that backend port and
  * the Angular dev-server proxies /agent to it — so "langgraph" means
- * "backend port" for ag-ui caps, not a LangGraph Studio instance.
+ * "backend port" for AG-UI caps, not a LangGraph Studio instance.
  *
  * Port ranges:
  *   - angular: [4000, 5000)
@@ -34,7 +34,7 @@ export const PORTS = Object.freeze({
   'cockpit-ag-ui-subagents-angular': { angular: 4326, langgraph: 5326 },
   'cockpit-runtimes-microsoft-agent-framework-angular': { angular: 4330, langgraph: 5330 },
   'cockpit-runtimes-aws-strands-angular': { angular: 4331, langgraph: 5331 },
-  // rt-mastra: 'langgraph' here means backend port (the ag-ui convention);
+  // rt-mastra: 'langgraph' here means backend port (the AG-UI convention);
   // the backend is the deployments/ag-ui-mastra Node service, not Python.
   'cockpit-runtimes-mastra-angular': { angular: 4332, langgraph: 5332 },
   'cockpit-chat-a2ui-angular': { angular: 4511, langgraph: 5511 },

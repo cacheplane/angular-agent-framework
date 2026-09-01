@@ -5,7 +5,7 @@ import { PalettePersistence } from './palette-persistence.service';
 
 const KEY = 'threadplane-ag-ui-demo:palette';
 
-describe('PalettePersistence (ag-ui)', () => {
+describe('PalettePersistence (AG-UI)', () => {
   beforeEach(() => {
     localStorage.clear();
   });

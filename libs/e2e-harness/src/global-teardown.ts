@@ -9,7 +9,7 @@ interface SharedState {
   /** Present when the backend is a langgraph dev server. */
   langgraph?: ChildProcess;
   langgraphPort?: number;
-  /** Present when the backend is a uvicorn ag-ui server. */
+  /** Present when the backend is a uvicorn AG-UI server. */
   backend?: ChildProcess;
   backendPort?: number;
   angular: ChildProcess;
@@ -85,7 +85,7 @@ export default async function globalTeardown(): Promise<void> {
   if (!states) return;
   for (const state of states.values()) {
     killGroup(state.angular);
-    // Kill whichever backend variant is present (langgraph dev or uvicorn ag-ui).
+    // Kill whichever backend variant is present (langgraph dev or uvicorn AG-UI).
     if (state.langgraph) killGroup(state.langgraph);
     if (state.backend) killGroup(state.backend);
     await state.aimock.stop();

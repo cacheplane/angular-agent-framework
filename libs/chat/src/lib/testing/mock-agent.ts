@@ -29,7 +29,7 @@ export interface MockAgent extends Agent {
   /**
    * Minimal lifecycle stub the chat lib's effects subscribe to. We only
    * model the signals the chat composition currently reads; richer adapter
-   * lifecycles (langgraph, ag-ui) extend this contract on their own mocks.
+   * lifecycles (langgraph, AG-UI) extend this contract on their own mocks.
    * The public `lifecycle` view is a readonly signal; tests drive the
    * value via `_internal.streamStartedAt.set(...)` below.
    */

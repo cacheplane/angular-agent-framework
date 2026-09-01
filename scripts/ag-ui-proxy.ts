@@ -125,7 +125,7 @@ function parseProxyPath(url: string): { topic: string; rest: string } | null {
   const segments = u.pathname.split('/').filter(Boolean);
   // Expected: ['ag-ui' | 'runtimes', '<topic>', 'agent', ...rest]. The
   // 'runtimes' product (cockpit/runtimes/<topic>/) is AG-UI-served exactly
-  // like the ag-ui product; the upstream URL is /agent/<topic> either way.
+  // like the AG-UI product; the upstream URL is /agent/<topic> either way.
   if (
     (segments[0] !== 'ag-ui' && segments[0] !== 'runtimes') ||
     !segments[1] ||

@@ -238,7 +238,7 @@ describe('reduceEvent', () => {
   });
 
   it('MESSAGES_SNAPSHOT re-applies citations from prior STATE onto the final message', () => {
-    // Reproduces the ag-ui citation-delivery ordering: STATE_SNAPSHOT carries
+    // Reproduces the AG-UI citation-delivery ordering: STATE_SNAPSHOT carries
     // citations keyed by the final AI message id, but arrives BEFORE the
     // MESSAGES_SNAPSHOT that swaps the streamed chunk-id message for the final
     // one. Without re-bridging in the MESSAGES_SNAPSHOT handler the citations

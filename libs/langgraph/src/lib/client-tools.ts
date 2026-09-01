@@ -13,7 +13,7 @@ import type { LangGraphSubmitOptions } from './agent.types';
 
 /**
  * A patch written onto a local ToolCall when a client tool resolves.
- * Mirrors the fields the ag-ui adapter writes directly onto its WritableSignal.
+ * Mirrors the fields the AG-UI adapter writes directly onto its WritableSignal.
  */
 export interface ClientToolResultPatch {
   result: unknown;

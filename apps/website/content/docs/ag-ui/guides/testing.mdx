@@ -3,7 +3,7 @@
 `@threadplane/ag-ui` gives you two test doubles, smallest scope first:
 
 - **`provideFakeAgent()`** — a one-call fake backend that runs the real adapter pipeline and streams canned tokens. No server, no LLM.
-- **`mockAgent()`** (from `@threadplane/chat`) — a writable-signal mock for component/unit tests. The ag-ui agent _is_ the neutral `Agent` contract, so there is no ag-ui-specific mock — use the neutral one directly.
+- **`mockAgent()`** (from `@threadplane/chat`) — a writable-signal mock for component/unit tests. The AG-UI agent _is_ the neutral `Agent` contract, so there is no AG-UI-specific mock — use the neutral one directly.
 
 See [Choosing an adapter → Testing](/docs/choosing-an-adapter#testing) for when to use each test double.
 
@@ -89,7 +89,7 @@ describe('chat via provideFakeAgent', () => {
 
 For component and unit tests where you don't need a streaming pipeline at all, use the neutral `mockAgent(initial)` from `@threadplane/chat`. It returns an `Agent` whose state surface is exposed as **writable signals** — set state directly and assert your component reacts. Nothing is real.
 
-The ag-ui adapter exposes exactly the neutral `Agent` contract, so there is no ag-ui-specific mock — `mockAgent()` is the right tool.
+The AG-UI adapter exposes exactly the neutral `Agent` contract, so there is no AG-UI-specific mock — `mockAgent()` is the right tool.
 
 ```typescript
 import { mockAgent } from '@threadplane/chat';

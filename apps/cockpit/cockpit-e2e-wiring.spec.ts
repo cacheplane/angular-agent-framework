@@ -213,7 +213,7 @@ describe('cockpit e2e wiring', () => {
           errors.push(`${wiring.project}: proxy.conf.mjs does not call portsFor('${wiring.project}')`);
         }
       } else if (existsSync(proxyJson)) {
-        // Legacy (allowed for ag-ui exception only); not expected for any
+        // Legacy (allowed for AG-UI exception only); not expected for any
         // cap reaching this code path.
         const proxy = JSON.parse(readFileSync(proxyJson, 'utf8')) as Record<string, { target?: string }>;
         const target = proxy['/api']?.target;
@@ -293,7 +293,7 @@ describe('cockpit e2e wiring', () => {
     const errors: string[] = [];
 
     const capProjects = listProjectJsonFiles(join(repoRoot, 'cockpit'))
-      .filter((p) => !p.includes('/ag-ui/'))   // ag-ui has no python; out of scope
+      .filter((p) => !p.includes('/ag-ui/'))   // AG-UI has no python; out of scope
       .filter((p) => p.includes('/angular/') || p.includes('/python/'))
       .map((p) => ({
         path: p,

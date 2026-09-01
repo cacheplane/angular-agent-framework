@@ -57,7 +57,7 @@ export const COCKPIT_DOCS_LINKS: Readonly<Record<string, string>> = {
   // The demo's visible half is the browser-declared tool, which `chat` documents.
   'langgraph/core-capabilities/client-tools': '/docs/chat/guides/client-tools',
 
-  // ag-ui
+  // AG-UI
   'ag-ui/getting-started/overview': '/docs/ag-ui/getting-started/introduction',
   // AG-UI has no streaming guide; event mapping is where token streaming is specified.
   'ag-ui/core-capabilities/streaming': '/docs/ag-ui/reference/event-mapping',

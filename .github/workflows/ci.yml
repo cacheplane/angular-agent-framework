@@ -1015,7 +1015,7 @@ jobs:
           NODE
 
   ag-ui-demo-deploy:
-    name: ag-ui demo → Vercel
+    name: AG-UI demo → Vercel
     timeout-minutes: 30 # fail fast instead of blocking the main concurrency group on a hang
     needs: [examples-ag-ui-e2e]
     runs-on: ubuntu-latest
@@ -1024,10 +1024,10 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
-      - name: Require ag-ui demo prerequisite jobs
+      - name: Require AG-UI demo prerequisite jobs
         run: |
           if [ "${{ needs.examples-ag-ui-e2e.result }}" != "success" ]; then
-            echo "::error::examples/ag-ui — e2e finished with ${{ needs.examples-ag-ui-e2e.result }}; refusing to deploy the ag-ui demo."
+            echo "::error::examples/ag-ui — e2e finished with ${{ needs.examples-ag-ui-e2e.result }}; refusing to deploy the AG-UI demo."
             exit 1
           fi
       # Same staleness guard as the other production promotions.
@@ -1043,11 +1043,11 @@ jobs:
           fi
           if [ "$tip" != "${{ github.sha }}" ]; then
             echo "stale=true" >> "$GITHUB_OUTPUT"
-            echo "::warning::main has advanced to ${tip} since this run started (${{ github.sha }}); skipping the ag-ui demo promotion."
+            echo "::warning::main has advanced to ${tip} since this run started (${{ github.sha }}); skipping the AG-UI demo promotion."
           else
             echo "stale=false" >> "$GITHUB_OUTPUT"
           fi
-      - name: Check if ag-ui demo changed
+      - name: Check if AG-UI demo changed
         id: ag_ui_changed
         run: |
           base_sha="${{ github.event.before }}"
@@ -1065,7 +1065,7 @@ jobs:
           fi
           echo "changed=$ag_ui_changed" >> "$GITHUB_OUTPUT"
           if [ "$ag_ui_changed" != "true" ]; then
-            echo "::notice::No ag-ui demo files changed; skipping ag-ui demo deploy."
+            echo "::notice::No AG-UI demo files changed; skipping AG-UI demo deploy."
           fi
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         if: steps.freshness.outputs.stale != 'true' && steps.ag_ui_changed.outputs.changed == 'true'
@@ -1079,7 +1079,7 @@ jobs:
           python-version: '3.12'
       - if: steps.freshness.outputs.stale != 'true' && steps.ag_ui_changed.outputs.changed == 'true'
         run: npm ci
-      - name: Build and assemble ag-ui demo
+      - name: Build and assemble AG-UI demo
         if: steps.freshness.outputs.stale != 'true' && steps.ag_ui_changed.outputs.changed == 'true'
         env:
           # Baked into the SPA bundle by inject-env at build time. Without the
@@ -1089,7 +1089,7 @@ jobs:
           GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
           GOOGLE_MAPS_MAP_ID: 86d464ea7d5306034fe2a254
         run: npx tsx scripts/assemble-ag-ui-demo.ts
-      - name: Deploy ag-ui demo SPA to Vercel (production)
+      - name: Deploy AG-UI demo SPA to Vercel (production)
         if: steps.freshness.outputs.stale != 'true' && steps.ag_ui_changed.outputs.changed == 'true'
         run: |
           mkdir -p deploy/ag-ui-demo/.vercel
@@ -1099,7 +1099,7 @@ jobs:
           cd deploy/ag-ui-demo
           npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           npx vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
-      - name: Deploy ag-ui backend to Railway
+      - name: Deploy AG-UI backend to Railway
         if: steps.freshness.outputs.stale != 'true' && steps.ag_ui_changed.outputs.changed == 'true'
         working-directory: examples/ag-ui/python
         env:

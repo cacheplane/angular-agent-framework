@@ -51,10 +51,10 @@ uv run uvicorn src.app:app --port 5320
 ## Rotating `AG_UI_INTERNAL_TOKEN`
 
 The token lives in two places: Railway (this service) and each Vercel project
-that hosts a cockpit ag-ui example. Rotation order:
+that hosts a cockpit AG-UI example. Rotation order:
 
 1. Generate a new token: `openssl rand -hex 32`.
-2. Update the Vercel env var on every ag-ui cockpit project. Redeploy each.
+2. Update the Vercel env var on every AG-UI cockpit project. Redeploy each.
 3. Update the Railway env var. Redeploy the service.
 
 Tokens valid in both places overlap briefly during step 2.
