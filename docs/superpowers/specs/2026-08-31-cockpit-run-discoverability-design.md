@@ -141,8 +141,9 @@ This is strictly better than today's behaviour on one case: a runtime that faile
 self-recovered currently leaves no trace once the phase clears, because the dot tracks
 live phase. Under the new rule the unread error survives the recovery until someone looks.
 
-`runtimeNeedsAttention` remains exported and still drives the Run dot's error bucket; only
-the Activity dot stops calling it.
+`runtimeNeedsAttention` becomes dead once the Activity dot stops calling it: the Run dot
+goes through `runtimeRailStatus`, not through it. It is deleted along with its test table
+rather than left as an exported, tested, uncalled predicate.
 
 ## Components touched
 

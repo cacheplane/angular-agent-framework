@@ -1005,8 +1005,9 @@ Replace the `attention` derivation:
 ```
 
 Remove `runtimeNeedsAttention` from the import list — `runtimeRailStatus` now covers the
-Run dot and nothing else in this file uses it. Leave the function exported from
-`runtime-state.ts`; `use-runtime-controller.ts` still uses it.
+Run dot. This removes its LAST caller repo-wide (`use-runtime-controller.ts` does not
+reference it, contrary to an earlier draft of this plan), so delete the function and its
+test table rather than leaving a tested, uncalled predicate behind.
 
 Everything downstream (`attention` passed to `ActivityPanel`, the
 `[data-cockpit-activity-attention]` marker) keeps working unchanged.
