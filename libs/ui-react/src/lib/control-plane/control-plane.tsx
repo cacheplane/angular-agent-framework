@@ -68,6 +68,11 @@ export function ControlPlaneRail({
 
 export type ControlPlaneRailStatus = 'success' | 'working' | 'error';
 
+export interface ControlPlaneRailItemStatus {
+  kind: ControlPlaneRailStatus;
+  label: string;
+}
+
 export interface ControlPlaneRailItemProps extends CommonProps {
   label: string;
   icon: ReactNode;
@@ -77,8 +82,7 @@ export interface ControlPlaneRailItemProps extends CommonProps {
   iconOnly?: boolean;
   target?: string;
   rel?: string;
-  status?: ControlPlaneRailStatus;
-  statusLabel?: string;
+  status?: ControlPlaneRailItemStatus;
 }
 
 export function ControlPlaneRailItem({
@@ -92,17 +96,16 @@ export function ControlPlaneRailItem({
   target,
   rel,
   status,
-  statusLabel,
 }: ControlPlaneRailItemProps) {
   const tooltipId = useId();
-  const accessibleName = statusLabel ? `${label}, ${statusLabel}` : label;
-  const showTooltip = iconOnly || Boolean(statusLabel);
+  const accessibleName = status ? `${label}, ${status.label}` : label;
+  const showTooltip = iconOnly || Boolean(status);
   const content = (
     <>
       <span data-control-plane-rail-icon>{icon}</span>
       {iconOnly ? null : <span data-control-plane-rail-label>{label}</span>}
       {status ? (
-        <span data-control-plane-rail-status={status} aria-hidden="true" />
+        <span data-control-plane-rail-status={status.kind} aria-hidden="true" />
       ) : null}
       {showTooltip ? (
         <span id={tooltipId} role="tooltip" data-control-plane-tooltip>

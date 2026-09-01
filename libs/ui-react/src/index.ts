@@ -19,6 +19,7 @@ export {
   type ControlPlanePaneProps,
   type ControlPlaneRailItemProps,
   type ControlPlaneRailProps,
+  type ControlPlaneRailItemStatus,
   type ControlPlaneRailStatus,
   type ControlPlaneSectionProps,
 } from './lib/control-plane/control-plane';

@@ -59,8 +59,7 @@ describe('control-plane structure', () => {
       <ControlPlaneRailItem
         label="Run"
         icon={<svg />}
-        status="error"
-        statusLabel="runtime error"
+        status={{ kind: 'error', label: 'runtime error' }}
       />,
     );
     const button = screen.getByRole('button', { name: 'Run, runtime error' });
