@@ -1,8 +1,18 @@
 // @vitest-environment jsdom
 import React from 'react';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DocsControlPlane, DocsContextContent } from './DocsControlPlane';
+
+const workspaceRoot = process.cwd().endsWith('/apps/website')
+  ? resolve(process.cwd(), '../..')
+  : process.cwd();
+const docsCss = readFileSync(
+  resolve(workspaceRoot, 'apps/website/src/styles/docs.css'),
+  'utf8',
+);
 
 const { track } = vi.hoisted(() => ({
   track: vi.fn(),
@@ -23,6 +33,16 @@ beforeEach(() => {
 });
 
 describe('DocsControlPlane', () => {
+  it('styles the preview hooks for forced colors and reduced motion', () => {
+    expect(docsCss).toMatch(/\[data-docs-runtime-preview\]/);
+    expect(docsCss).toMatch(/@media \(forced-colors:\s*active\)/);
+    expect(docsCss).toMatch(/Canvas/);
+    expect(docsCss).toMatch(/HighlightText/);
+    expect(docsCss).toMatch(
+      /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*?transition:\s*none/
+    );
+  });
+
   it('renders the stable labeled mode rail with deterministic Cockpit links', () => {
     render(
       <DocsControlPlane
@@ -60,6 +80,9 @@ describe('DocsControlPlane', () => {
     expect(within(scope).getByText('Streaming')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Environment' })).toBeNull();
     const runtime = screen.getByRole('button', { name: 'Runtime' });
+    const preview = document.querySelector('[data-docs-runtime-preview]');
+    expect(preview).toBeTruthy();
+    expect(preview?.contains(runtime)).toBe(true);
     expect(runtime.getAttribute('aria-expanded')).toBe('false');
     fireEvent.click(runtime);
     const runtimeSection = runtime.closest('section');

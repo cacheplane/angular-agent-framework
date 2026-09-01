@@ -1,10 +1,20 @@
 // SPDX-License-Identifier: MIT
 // @vitest-environment jsdom
 import React, { useRef, useState } from 'react';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { SessionActivityEvent } from '../../lib/runtime/session-activity';
 import { ActivityPanel } from './activity-panel';
+
+const workspaceRoot = process.cwd().endsWith('/apps/cockpit')
+  ? resolve(process.cwd(), '../..')
+  : process.cwd();
+const cockpitCss = readFileSync(
+  resolve(workspaceRoot, 'apps/cockpit/src/app/cockpit.css'),
+  'utf8'
+);
 
 const events: SessionActivityEvent[] = [
   {
@@ -26,6 +36,17 @@ const events: SessionActivityEvent[] = [
 ];
 
 describe('ActivityPanel', () => {
+  it('styles stable timeline hooks with neutral, error, and recovery states', () => {
+    expect(cockpitCss).toMatch(/\[data-activity-connector\]/);
+    expect(cockpitCss).toMatch(
+      /\[data-activity-severity="error"\][\s\S]*?var\(--cockpit-state-error/
+    );
+    expect(cockpitCss).toMatch(
+      /\[data-activity-kind="runtime_recovered"\][\s\S]*?var\(--cockpit-state-success/
+    );
+    expect(cockpitCss).toMatch(/\[data-cockpit-activity-attention\]/);
+  });
+
   it('renders safe events newest first with severity icons and cross-capability labels only', () => {
     render(
       <ActivityPanel
@@ -89,6 +110,43 @@ describe('ActivityPanel', () => {
     );
     expect(
       screen.getByRole('list', { name: 'Activity, attention required' })
+    ).toBeTruthy();
+    expect(
+      document
+        .querySelector('[data-activity-timeline]')
+        ?.getAttribute('data-activity-attention')
+    ).toBe('true');
+  });
+
+  it('maps event state to stable row hooks without attention by default', () => {
+    render(
+      <ActivityPanel
+        events={events}
+        currentCapability="streaming"
+        onClose={vi.fn()}
+        onClear={vi.fn()}
+      />
+    );
+
+    const timeline = document.querySelector('[data-activity-timeline]');
+    expect(timeline?.hasAttribute('data-activity-attention')).toBe(false);
+    const rows = Array.from(
+      document.querySelectorAll('[data-activity-event]')
+    );
+    expect(
+      rows.map((row) => [
+        row.getAttribute('data-activity-kind'),
+        row.getAttribute('data-activity-severity'),
+      ])
+    ).toEqual([
+      ['runtime_recovered', 'success'],
+      ['runtime_unresponsive', 'error'],
+    ]);
+    expect(
+      document.querySelector('[data-control-plane-overflow-menu-root]')
+    ).toBeTruthy();
+    expect(
+      document.querySelector('[data-control-plane-overflow-trigger]')
     ).toBeTruthy();
   });
 

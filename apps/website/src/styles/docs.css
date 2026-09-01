@@ -1642,6 +1642,15 @@
   line-height: 1;
   font-weight: 600;
 }
+.docs-control-plane [data-control-plane-rail-icon] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.docs-control-plane [data-control-plane-rail-icon] > svg {
+  width: 18px;
+  height: 18px;
+}
 .docs-control-plane [data-control-plane-pane] {
   width: 272px;
   height: 100%;
@@ -1698,6 +1707,31 @@
 }
 [data-docs-control-plane-context] [data-control-plane-section-content] {
   padding: 2px 0 8px;
+}
+[data-docs-runtime-preview] { display: contents; }
+[data-docs-runtime-preview] [data-control-plane-section-trigger] {
+  justify-content: flex-start;
+  gap: 8px;
+}
+[data-docs-runtime-preview] [data-control-plane-section-title] { flex: none; }
+[data-docs-runtime-preview] [data-control-plane-section-end] {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+[data-docs-runtime-preview] [data-control-plane-section-summary] {
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+[data-docs-runtime-preview] [data-control-plane-section-chevron] {
+  flex: none;
+  margin-left: auto;
 }
 .docs-control-plane-scope {
   margin: 0 8px;
@@ -1814,6 +1848,10 @@
   display: inline-flex;
   color: var(--color-text-muted);
 }
+[data-docs-control-plane-context] [data-control-plane-environment-icon] > svg {
+  width: 18px;
+  height: 18px;
+}
 [data-docs-control-plane-context] [data-control-plane-action-bar] {
   display: flex;
   gap: 4px;
@@ -1832,6 +1870,10 @@
   color: var(--color-text-muted);
   background: transparent;
   cursor: pointer;
+}
+[data-docs-control-plane-context] [data-control-plane-action] > svg {
+  width: 16px;
+  height: 16px;
 }
 [data-docs-control-plane-context] [data-control-plane-action]:hover {
   color: var(--color-text-primary);
@@ -1880,10 +1922,12 @@
 @media (prefers-reduced-motion: reduce) {
   .docs-control-plane *,
   [data-docs-control-plane-context] *,
-  .docs-page-actions * {
+  .docs-page-actions *,
+  .nav-mobile-overlay,
+  .nav-mobile-overlay * {
     scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
+    transition: none !important;
+    animation: none !important;
   }
 }
 
@@ -1975,6 +2019,64 @@
 .docs-control-plane [data-control-plane-rail-item]:focus-visible {
   outline: none;
   box-shadow: var(--shadow-focus);
+}
+@media (forced-colors: active) {
+  .docs-control-plane,
+  .docs-control-plane [data-control-plane-rail],
+  .docs-control-plane [data-control-plane-pane],
+  [data-docs-control-plane-context] {
+    color: CanvasText;
+    background: Canvas;
+    border-color: CanvasText;
+  }
+  .docs-control-plane [data-control-plane-rail-item],
+  [data-docs-control-plane-context] [data-control-plane-section-trigger],
+  [data-docs-control-plane-context] [data-control-plane-action],
+  .docs-sidebar-lib-trigger,
+  .docs-sidebar-section-toggle,
+  .docs-page-actions-trigger,
+  .docs-page-actions-item,
+  .docs-page-actions-heading {
+    border: 1px solid CanvasText;
+    color: CanvasText;
+    background: Canvas;
+  }
+  .docs-control-plane [data-control-plane-rail-item][data-control-plane-active] {
+    border-color: Highlight;
+    color: HighlightText;
+    background: Highlight;
+  }
+  [data-docs-runtime-preview] [data-control-plane-section-summary] {
+    padding: 1px 4px;
+    border: 1px solid CanvasText;
+    border-radius: 7px;
+    color: CanvasText;
+    background: Canvas;
+  }
+  .docs-sidebar-lib-menu,
+  .docs-page-actions-menu {
+    border: 1px solid CanvasText;
+    color: CanvasText;
+    background: Canvas;
+    box-shadow: none;
+  }
+  .docs-control-plane [data-control-plane-rail-item]:is(:hover, :focus-visible),
+  [data-docs-control-plane-context] [data-control-plane-action]:is(:hover, :focus-visible),
+  .docs-sidebar-lib-item:is(:hover, :focus-visible),
+  .docs-page-actions-item:is(:hover, :focus-visible),
+  .docs-page-actions-heading:is(:hover, :focus-visible) {
+    border-color: Highlight;
+    color: HighlightText;
+    background: Highlight;
+  }
+  .docs-page-actions-trigger:focus-visible,
+  [data-docs-control-plane-context] button:focus-visible,
+  [data-docs-control-plane-context] a:focus-visible,
+  .docs-control-plane [data-control-plane-rail-item]:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+    box-shadow: none;
+  }
 }
 @media (pointer: coarse) {
   [data-docs-control-plane-context][data-mobile] button,

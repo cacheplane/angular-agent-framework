@@ -124,22 +124,24 @@ export function DocsContextContent({
         />
       </ControlPlaneSection>
 
-      <ControlPlaneSection
-        title="Runtime"
-        summary="Cockpit"
-        open={preferences.expanded.Runtime ?? false}
-        onOpenChange={(open) => preferences.setExpanded('Runtime', open)}
-      >
-        <ControlPlaneEnvironmentList rows={runtimeRows} />
-        <ControlPlaneActionBar label="Runtime actions">
-          <ControlPlaneIconButton
-            label="Open controls in Cockpit"
-            icon={<ExternalLink size={16} aria-hidden="true" />}
-            href={runtimeHref}
-            onClick={() => trackHandoff('Run')}
-          />
-        </ControlPlaneActionBar>
-      </ControlPlaneSection>
+      <div data-docs-runtime-preview>
+        <ControlPlaneSection
+          title="Runtime"
+          summary="Cockpit"
+          open={preferences.expanded.Runtime ?? false}
+          onOpenChange={(open) => preferences.setExpanded('Runtime', open)}
+        >
+          <ControlPlaneEnvironmentList rows={runtimeRows} />
+          <ControlPlaneActionBar label="Runtime actions">
+            <ControlPlaneIconButton
+              label="Open controls in Cockpit"
+              icon={<ExternalLink size={16} aria-hidden="true" />}
+              href={runtimeHref}
+              onClick={() => trackHandoff('Run')}
+            />
+          </ControlPlaneActionBar>
+        </ControlPlaneSection>
+      </div>
 
       <ControlPlaneSection title="Actions" collapsible={false}>
         <ControlPlaneActionBar label="Docs actions">

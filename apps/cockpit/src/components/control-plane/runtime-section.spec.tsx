@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 // @vitest-environment jsdom
 import React from 'react';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import {
   act,
   fireEvent,
@@ -17,6 +19,14 @@ import {
   type RuntimeSnapshot,
 } from '../../lib/runtime/runtime-state';
 import { RuntimeSection } from './runtime-section';
+
+const workspaceRoot = process.cwd().endsWith('/apps/cockpit')
+  ? resolve(process.cwd(), '../..')
+  : process.cwd();
+const cockpitCss = readFileSync(
+  resolve(workspaceRoot, 'apps/cockpit/src/app/cockpit.css'),
+  'utf8'
+);
 
 function deferred<T>() {
   let resolve!: (value: T | PromiseLike<T>) => void;
@@ -75,6 +85,18 @@ function renderSection(
 }
 
 describe('RuntimeSection', () => {
+  it('styles runtime state hooks for truncation, forced colors, and reduced motion', () => {
+    expect(cockpitCss).toMatch(
+      /\[data-runtime-target\][\s\S]*?text-overflow:\s*ellipsis/
+    );
+    expect(cockpitCss).toMatch(/@media \(forced-colors:\s*active\)/);
+    expect(cockpitCss).toMatch(/CanvasText/);
+    expect(cockpitCss).toMatch(/HighlightText/);
+    expect(cockpitCss).toMatch(
+      /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*?\.cockpit-runtime-status-loader[\s\S]*?animation:\s*none/
+    );
+  });
+
   it.each(statusCases)(
     'renders %s with exact visible status and icon vocabulary',
     (phase, label, icon) => {
@@ -91,6 +113,32 @@ describe('RuntimeSection', () => {
       ).toBeNull();
     }
   );
+
+  it('exposes stable visual-state hooks without leaking the runtime target', () => {
+    renderSection('unresponsive');
+
+    expect(document.querySelector('[data-runtime-section]')).toBeTruthy();
+    expect(
+      document
+        .querySelector('[data-runtime-status]')
+        ?.getAttribute('data-runtime-phase')
+    ).toBe('unresponsive');
+    const target = document.querySelector('[data-runtime-target]');
+    expect(target?.textContent).toBe('https://runtime.test/path');
+    expect(target?.getAttribute('title')).toBe('https://runtime.test/path');
+    expect(target?.getAttribute('aria-label')).toBe(
+      'Runtime target https://runtime.test/path'
+    );
+    expect(document.querySelector('[data-runtime-announcement]')).toBe(
+      screen.getByRole('status')
+    );
+    expect(
+      document.querySelector('[data-control-plane-overflow-menu-root]')
+    ).toBeTruthy();
+    expect(
+      document.querySelector('[data-control-plane-overflow-trigger]')
+    ).toBeTruthy();
+  });
 
   it('shows compact metadata, only the sanitized target, and truthful checked time', () => {
     renderSection('ready');
