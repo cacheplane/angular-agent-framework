@@ -6,7 +6,6 @@ import {
   Braces,
   Code2,
   ExternalLink,
-  Package,
   Play,
   Search,
 } from 'lucide-react';
@@ -58,7 +57,6 @@ export function DocsContextContent({
     window.setTimeout(dispatchSearch, 0);
   };
   const environmentRows = [
-    { label: 'Library', value: library?.title ?? activeLibrary, icon: <Package size={15} aria-hidden="true" /> },
     { label: 'Framework', value: 'Angular', icon: <Blocks size={15} aria-hidden="true" /> },
     { label: 'Package manager', value: 'npm', icon: <Code2 size={15} aria-hidden="true" /> },
   ];

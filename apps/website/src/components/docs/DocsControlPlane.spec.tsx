@@ -3,6 +3,9 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DocsControlPlane, DocsContextContent } from './DocsControlPlane';
+import { docsConfig } from '../../lib/docs-config';
+
+const LIBRARY_TITLES = docsConfig.filter((l) => l.group === 'library').map((l) => l.title);
 
 const push = vi.fn();
 vi.mock('next/navigation', () => ({
@@ -93,6 +96,113 @@ describe('DocsControlPlane', () => {
     expect(document.getElementById(controlledId)).toBeTruthy();
   });
 
+  it('stacks the adapter title and tagline on separate lines', () => {
+    render(
+      <DocsControlPlane
+        activeLibrary="langgraph"
+        activeSection="guides"
+        activeSlug="streaming"
+        pageTitle="Streaming"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'LangGraph' }));
+    const item = screen.getByRole('menuitemradio', { name: /LangGraph/ });
+    const title = item.querySelector('.docs-sidebar-lib-item-title');
+    const tagline = item.querySelector('.docs-sidebar-lib-item-desc');
+    if (!title || !tagline) throw new Error('Expected a title and a tagline');
+
+    // The collision regression: both spans rendered inline on one line, so the
+    // row read as "LangGraphTalk to LangGraph directly".
+    expect(title.textContent).toBe('LangGraph');
+    expect(tagline.textContent).toBe('Talk to LangGraph directly');
+    const wrapper = title.parentElement;
+    if (!wrapper) throw new Error('Expected a text wrapper');
+    expect(wrapper.className).toContain('docs-sidebar-lib-item-text');
+  });
+
+  it('splits the menu into labelled adapter and library groups', () => {
+    render(
+      <DocsControlPlane
+        activeLibrary="langgraph"
+        activeSection="guides"
+        activeSlug="streaming"
+        pageTitle="Streaming"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'LangGraph' }));
+    const adapters = screen.getByRole('group', { name: 'Adapters' });
+    const libraries = screen.getByRole('group', { name: 'Libraries' });
+
+    // Adapters are asserted exactly: there are two, and only they carry
+    // taglines. A new library must not quietly land in this group.
+    expect(within(adapters).getAllByRole('menuitemradio').map((i) => i.textContent)).toEqual([
+      'LangGraphTalk to LangGraph directly',
+      'AG-UIAny AG-UI backend',
+    ]);
+    // Libraries are checked against config so adding one does not churn this
+    // test — misclassifying one still fails the assertion above.
+    expect(within(libraries).getAllByRole('menuitemradio').map((i) => i.textContent)).toEqual(
+      LIBRARY_TITLES,
+    );
+  });
+
+  it('renders menu entries as real links with the current one checked', () => {
+    render(
+      <DocsControlPlane
+        activeLibrary="langgraph"
+        activeSection="guides"
+        activeSlug="streaming"
+        pageTitle="Streaming"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'LangGraph' }));
+    const agUi = screen.getByRole('menuitemradio', { name: /AG-UI/ });
+    expect(agUi.tagName).toBe('A');
+    expect(agUi.getAttribute('href')).toBe('/docs/ag-ui/getting-started/introduction');
+    expect(agUi.getAttribute('aria-checked')).toBe('false');
+    expect(
+      screen.getByRole('menuitemradio', { name: /LangGraph/ }).getAttribute('aria-checked'),
+    ).toBe('true');
+  });
+
+  it('drops the library row from environment now the picker owns it', () => {
+    render(
+      <DocsControlPlane
+        activeLibrary="langgraph"
+        activeSection="guides"
+        activeSlug="streaming"
+        pageTitle="Streaming"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Environment' }));
+    expect(screen.getByText('Angular')).toBeTruthy();
+    expect(screen.getByText('npm')).toBeTruthy();
+    expect(screen.queryByText('Library')).toBeNull();
+  });
+
+  it('caps the open menu to the space left below the trigger', () => {
+    render(
+      <DocsControlPlane
+        activeLibrary="langgraph"
+        activeSection="guides"
+        activeSlug="streaming"
+        pageTitle="Streaming"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'LangGraph' }));
+    const menu = screen.getByRole('menu');
+
+    // A viewport-percentage cap cannot work: the menu opens ~342px down the
+    // pane, so `60vh` still overflows a short window by ~100px. The cap has to
+    // be measured from the trigger's own position.
+    expect(menu.style.maxHeight).toMatch(/^\d+(\.\d+)?px$/);
+  });
+
   it('supports keyboard entry and dismissal for the library menu', () => {
     render(
       <DocsControlPlane
@@ -105,7 +215,15 @@ describe('DocsControlPlane', () => {
 
     const trigger = screen.getByRole('button', { name: 'LangGraph' });
     fireEvent.keyDown(trigger, { key: 'ArrowDown' });
-    const firstItem = screen.getByRole('menuitem', { name: /LangGraph/ });
+    const firstItem = screen.getByRole('menuitemradio', { name: /LangGraph/ });
+    expect(document.activeElement).toBe(firstItem);
+
+    // Traversal must still cross the Adapters/Libraries group boundary.
+    fireEvent.keyDown(firstItem, { key: 'End' });
+    expect(document.activeElement).toBe(
+      screen.getByRole('menuitemradio', { name: LIBRARY_TITLES[LIBRARY_TITLES.length - 1] }),
+    );
+    fireEvent.keyDown(document.activeElement as HTMLElement, { key: 'Home' });
     expect(document.activeElement).toBe(firstItem);
 
     fireEvent.keyDown(firstItem, { key: 'Escape' });
