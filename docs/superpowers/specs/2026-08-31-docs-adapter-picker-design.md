@@ -86,6 +86,8 @@ export type LibraryGroup = 'adapter' | 'library';
 export interface DocsLibrary {
   id: LibraryId;
   title: string;
+  /** Long form. Fallback for the page meta description — not shown in the picker. */
+  description: string;
   group: LibraryGroup;
   /** Shown in the picker. Adapters only — libraries are self-describing. */
   tagline?: string;
@@ -93,13 +95,15 @@ export interface DocsLibrary {
 }
 ```
 
-`DocsLibrary.description` is **removed**. It is read in exactly one place today
-(`DocsSidebar.tsx:172`, the picker). `DocsSearch` indexes pages, not libraries;
-page `metadata.description` is a separate concern. Once the picker stops
-rendering it, it is dead data, and seven long strings that nothing reads will
-drift unnoticed.
+`DocsLibrary.description` is **kept**, unchanged. An earlier draft of this spec
+removed it as dead data; that was wrong. Besides the picker it is the fallback
+for each page's `<meta name="description">` via `resolveDocDescription()`
+(`src/lib/docs.ts:126`), which also feeds the page's JSON-LD. Deleting it would
+have silently changed search snippets across the docs — the exact budget tuned
+in #880. `tagline` is added *alongside* it: `description` is long-form metadata,
+`tagline` is the short picker string.
 
-Group assignment:
+Every `description` string stays byte-identical to `main`. Group assignment:
 
 | Library    | Group   | Tagline                      |
 | ---------- | ------- | ---------------------------- |
@@ -148,14 +152,27 @@ silence, so it must be covered by a test that fails before the fix.
   min-width: 0;
 }
 .docs-sidebar-lib-menu {
-  max-height: 60vh;   /* replaces overflow: hidden */
+  max-height: 60vh;   /* replaces overflow: hidden — floor only, see below */
   overflow-y: auto;
 }
 ```
 
-The redesigned menu measures ~325px, which already fits a 720px viewport — but
-by only ~15px. `60vh` guarantees internal scrolling rather than a menu that runs
-off the fold at smaller heights.
+**A CSS cap alone is not enough**, and an earlier draft of this spec claimed
+otherwise. The menu opens ~342px down the pane, so at a 600px viewport `60vh`
+(360px) still puts its bottom edge at 702px — **102px past the fold**, measured.
+A viewport percentage cannot account for a large fixed top offset.
+
+So the real cap is measured from the trigger, in an effect that runs on open and
+on resize:
+
+```ts
+const available = window.innerHeight - trigger.getBoundingClientRect().bottom - 16;
+menu.style.maxHeight = `${Math.max(180, available)}px`;
+```
+
+Verified at a 600px viewport: the menu caps to 245px, its bottom lands 12px
+inside the viewport, it scrolls internally, and Telemetry — the last entry —
+stays reachable. The CSS `max-height` remains as a pre-hydration floor.
 
 ### Environment — `src/components/docs/DocsControlPlane.tsx`
 
@@ -164,12 +181,15 @@ Remove the `Library` row from `environmentRows`. `Framework` and
 
 ## Testing
 
-Two existing tests in `DocsControlPlane.spec.tsx` will fail and should:
+Three existing tests will fail and should:
 
-- `'shows truthful scope and collapsed environment defaults'` — asserts the
-  removed `Library` row.
-- `'supports keyboard entry and dismissal for the library menu'` — assumes
-  button elements and the `[role="menuitem"]` selector.
+- `DocsControlPlane.spec.tsx` → `'shows truthful scope and collapsed environment
+  defaults'` — asserts the removed `Library` row.
+- `DocsControlPlane.spec.tsx` → `'supports keyboard entry and dismissal for the
+  library menu'` — assumes button elements and the `[role="menuitem"]` selector.
+- `Nav.spec.tsx` → `'keeps the drawer open when Escape dismisses the nested
+  library menu'` — the mobile drawer renders the same menu, so it asserts the
+  same role.
 
 New coverage:
 
@@ -180,6 +200,12 @@ New coverage:
 3. **Groups are labelled** — `role="group"` with accessible names
    "Adapters" / "Libraries".
 4. **Items are anchors with real hrefs** — guards the ⌘-click regression.
+5. **The menu carries a measured `max-height` when open** — guards the cap,
+   whose absence is invisible until someone opens the picker in a short window.
+6. **A CSS-level guard** (`src/styles/docs-sidebar-styles.spec.ts`) asserting
+   both new rules exist. jsdom does not apply the stylesheet, so no component
+   test can see the collision — this is the only guard for the failure mode that
+   actually reached production.
 
 ## Out of scope
 
