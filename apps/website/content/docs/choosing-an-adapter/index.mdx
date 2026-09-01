@@ -92,9 +92,9 @@ On 2026-08-31 we tested it against three runtimes that have nothing to do with L
 | Runtime | Messages | Tool calls | State | Interrupts | Subagents | Cause of any gap |
 |---|---|---|---|---|---|---|
 | **LangGraph** (via the AG-UI bridge) | Yes | Yes | Yes | Yes | Yes | — |
-| **AWS Strands** (Python) | Yes | Yes | Partial | Yes | No | State: upstream integration. Subagents: upstream integration. |
-| **Microsoft Agent Framework** (Python) | Yes | Yes | Yes | Yes | No | Subagents: upstream integration. |
-| **Mastra** (TypeScript) | Yes | Yes | Yes | Yes | No | Subagents: upstream integration. |
+| **AWS Strands** (Python) | Yes | Yes | Partial | Yes | No | State + subagents: upstream |
+| **Microsoft Agent Framework** (Python) | Yes | Yes | Yes | Yes | No | Subagents: upstream |
+| **Mastra** (TypeScript) | Yes | Yes | Yes | Yes | No | Subagents: upstream |
 
 Every gap in that table falls into one of three causes, and the distinction is the point of the column:
 
@@ -102,8 +102,7 @@ Every gap in that table falls into one of three causes, and the distinction is t
 - **Upstream integration** — the protocol can express it, but the runtime's AG-UI bridge does not emit the events. Fixable upstream.
 - **Our adapter** — `@threadplane/ag-ui` failed to consume something the wire already carried. Our bug, and our responsibility.
 
-No cell in the current matrix is caused by the protocol, and no cell is caused by our adapter.
-Two cells were caused by our adapter when the measurement started, and both are fixed.
+No cell in the current matrix is caused by the protocol, and no cell is caused by a bug in our adapter — the two that were are fixed.
 
 ### Reading the individual cells
 
@@ -120,9 +119,13 @@ The adapter detects either convention, and within a single run the first signal 
 
 **Resume payloads are not portable, so the adapter shapes them per runtime.**
 Mastra reads `forwardedProps.command.interruptEvent`, carrying a tool-call id and a run id.
-Microsoft Agent Framework reads the protocol-standard top-level `resume` array first.
+AWS Strands and Microsoft Agent Framework both read the protocol-standard top-level `resume` array, one `{ interruptId, status, payload }` entry per interrupt; Microsoft additionally expects an entry for every pending interrupt.
 The LangGraph bridge reads `forwardedProps.command.resume`.
 You pass one neutral `submit({ resume })`, and the adapter derives the wire shape from how the interrupt arrived.
+
+**The Mastra row was measured, but not in the hosted demo.**
+Its cells come from a real Mastra server driven with live model calls, and its transcripts are committed and replayed like the others.
+Unlike the Strands and Microsoft Agent Framework rows, it is not yet running in the hosted demo deployment.
 
 **Subagents are red for every third-party runtime, and none of those reds are a bug.**
 The three runtimes do not fail to implement one thing; they model delegation three different ways.
@@ -138,8 +141,8 @@ Treat server-declared subagents as a capability of LangGraph and of backends you
 Each runtime got a real server, started against the upstream AG-UI integration and driven with live model calls.
 The raw Server-Sent Events were captured off the wire, then replayed event-for-event through the pinned `@ag-ui/client` — schema parse plus `verifyEvents` — and through the adapter reducer itself.
 
-The captures are committed at [`libs/ag-ui/fixtures/runtime-transcripts/`](https://github.com/cacheplane/angular-agent-framework/tree/main/libs/ag-ui/fixtures/runtime-transcripts), verbatim from the wire, and the adapter test suite replays them.
-A regression in interrupt detection or resume shaping now fails a test rather than a user.
+The captures are committed at [`libs/ag-ui/fixtures/runtime-transcripts/`](https://github.com/cacheplane/angular-agent-framework/tree/main/libs/ag-ui/fixtures/runtime-transcripts), verbatim from the wire.
+The adapter test suite replays them on every run.
 
 ### Runnable examples
 
@@ -150,7 +153,6 @@ Each runtime has a standalone Angular example bound through `@threadplane/ag-ui`
 - [`cockpit/runtimes/mastra`](https://github.com/cacheplane/angular-agent-framework/tree/main/cockpit/runtimes/mastra) — TypeScript, hosted by a Node AG-UI service, because the upstream Mastra integration ships an in-process bridge rather than an HTTP endpoint.
 
 In all three, the Angular component is ordinary `<chat [agent]="agent" />` over `injectAgent()`.
-The runtime is a provider-level fact.
 
 ## Why two adapters?
 
