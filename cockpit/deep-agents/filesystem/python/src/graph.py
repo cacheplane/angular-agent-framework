@@ -1,64 +1,85 @@
-"""
-Deep Agents Filesystem Graph
+"""Deep Agents filesystem capability: a real agent-visible file tree.
 
-Demonstrates agent file operations using tool calls. The agent can
-read and write files, and the frontend displays each operation in
-the sidebar via stream.messages().
+`create_deep_agent` always installs `FilesystemMiddleware`. What this
+capability adds is the two things that make the file tree worth rendering:
+
+1. `StateBackend` — the agent's files live on the graph state under `files`,
+   so every write streams to the client as a `values` update. A backend that
+   stores files anywhere else (a host directory, a remote store) writes nothing
+   to the state and the panel would stay empty.
+2. A `FilesystemPermission` in `interrupt` mode on `/reports/**` — writes under
+   that prefix pause the run for human approval instead of completing, which is
+   what the interrupt panel renders.
+
+Resuming an approval takes `{"decisions": [{"type": "approve"}]}`. A bare list
+is a server-side TypeError.
 """
 
 from pathlib import Path
-from typing import TypedDict
-from langgraph.graph import StateGraph, END
-from langgraph.prebuilt import ToolNode
-from langchain_openai import ChatOpenAI
+
+from deepagents import create_deep_agent
+from deepagents.backends import StateBackend
+from deepagents.middleware import FilesystemPermission
 from langchain_core.tools import tool
-from langchain_core.messages import SystemMessage, BaseMessage
+from langchain_openai import ChatOpenAI
 
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 
+FIELD_ELEVATION_FT = {
+    "KSFO": 13,
+    "KDEN": 5434,
+    "KJFK": 13,
+    "KASE": 7820,
+    "KLAX": 125,
+    "KBOS": 20,
+}
+
+RUNWAY_LENGTH_FT = {
+    "KSFO": 11870,
+    "KDEN": 16000,
+    "KJFK": 14511,
+    "KASE": 8006,
+    "KLAX": 12091,
+    "KBOS": 10083,
+}
+
 
 @tool
-def read_file(path: str) -> str:
-    """Read a file's contents. Only reads from the workspace directory."""
-    return f"Contents of {path}: [simulated file content]"
+def lookup_field_elevation(airport: str) -> str:
+    """Return the field elevation in feet for a four-letter ICAO airport code."""
+    elevation = FIELD_ELEVATION_FT.get(airport.upper())
+    if elevation is None:
+        return f"No field elevation on file for {airport.upper()}."
+    return f"{airport.upper()} field elevation is {elevation} ft."
 
 
 @tool
-def write_file(path: str, content: str) -> str:
-    """Write content to a file in the workspace."""
-    return f"Successfully wrote {len(content)} bytes to {path}"
+def lookup_runway_length(airport: str) -> str:
+    """Return the longest runway length in feet for a four-letter ICAO airport code."""
+    length = RUNWAY_LENGTH_FT.get(airport.upper())
+    if length is None:
+        return f"No runway data on file for {airport.upper()}."
+    return f"{airport.upper()} longest runway is {length} ft."
 
 
-class FilesystemState(TypedDict):
-    messages: list[BaseMessage]
+def build_filesystem_agent():
+    """Build the filesystem agent.
+
+    `permissions` reaches `FilesystemMiddleware`, which pairs with
+    `HumanInTheLoopMiddleware` to raise the interrupt. Anchor the pattern with a
+    literal prefix: bulk tools (`ls`, `glob`, `grep`) decide whether to fire
+    based on whether their search subtree could overlap the anchored prefix, so
+    an unanchored pattern over-fires on every listing.
+    """
+    return create_deep_agent(
+        model=ChatOpenAI(model="gpt-4.1", temperature=0),
+        tools=[lookup_field_elevation, lookup_runway_length],
+        system_prompt=(PROMPTS_DIR / "filesystem.md").read_text(),
+        backend=StateBackend(),
+        permissions=[
+            FilesystemPermission(operations=["write"], paths=["/reports/**"], mode="interrupt"),
+        ],
+    )
 
 
-def build_filesystem_graph():
-    tools = [read_file, write_file]
-    llm = ChatOpenAI(model="gpt-5-mini", streaming=True).bind_tools(tools)
-
-    async def agent(state: FilesystemState) -> dict:
-        """Run the agent — may emit tool calls."""
-        system_prompt = (PROMPTS_DIR / "filesystem.md").read_text()
-        messages = [SystemMessage(content=system_prompt)] + state["messages"]
-        response = await llm.ainvoke(messages)
-        return {"messages": [response]}
-
-    def should_continue(state: FilesystemState) -> str:
-        last = state["messages"][-1]
-        if hasattr(last, "tool_calls") and last.tool_calls:
-            return "tools"
-        return END
-
-    tool_node = ToolNode(tools)
-
-    graph = StateGraph(FilesystemState)
-    graph.add_node("agent", agent)
-    graph.add_node("tools", tool_node)
-    graph.set_entry_point("agent")
-    graph.add_conditional_edges("agent", should_continue, {"tools": "tools", END: END})
-    graph.add_edge("tools", "agent")
-    return graph.compile()
-
-
-graph = build_filesystem_graph()
+graph = build_filesystem_agent()

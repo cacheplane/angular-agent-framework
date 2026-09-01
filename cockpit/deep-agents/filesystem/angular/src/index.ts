@@ -30,6 +30,7 @@ export const deepAgentsFilesystemAngularModule: CockpitCapabilityModule = {
     'cockpit/deep-agents/filesystem/angular/prompts/filesystem.md',
   ],
   codeAssetPaths: [
-    'cockpit/deep-agents/filesystem/angular/src/app.component.ts',
+    'cockpit/deep-agents/filesystem/angular/src/app/filesystem.component.ts',
+    'cockpit/deep-agents/filesystem/angular/src/app/app.config.ts',
   ],
 };

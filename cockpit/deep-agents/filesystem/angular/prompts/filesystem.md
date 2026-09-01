@@ -1,5 +1,5 @@
 # Deep Agents Filesystem (Angular)
 
-This capability demonstrates a deep agent that reads, writes, and navigates a sandboxed filesystem using the `@threadplane/chat` Angular component library. The `<chat-debug>` component surfaces every filesystem tool call — including path, arguments, and result — so developers can follow the agent's file operations step by step.
+This capability renders the agent's workspace, not a log of its file operations. `StateBackend` puts every file the agent writes on the graph state under `files`, keyed by absolute path, so the Angular sidebar is a projection of the live workspace: an edit that rewrites an existing file shows as one changed file rather than two log entries.
 
-Key components used: `<chat-debug>`. Each tool invocation (read_file, write_file, list_dir, etc.) appears as a collapsible trace node, giving full visibility into how the agent interacts with the filesystem without cluttering the end-user chat view.
+A `FilesystemPermission` in `interrupt` mode covers `/reports/**`, so a write there pauses the run and `<chat-interrupt-panel>` from `@threadplane/chat` renders the approval. The pending path is read off the interrupt payload and shown in the tree as a ghost row before the file exists. Resuming takes `{ decisions: [{ type: 'approve' }] }`.
