@@ -29,6 +29,7 @@ import type {
 } from '../lib/analytics/events';
 import {
   activityReducer,
+  countUnseenProblems,
   createSessionActivityEvent,
   type ActivityMode,
   type RuntimeActivityInput,
@@ -163,6 +164,7 @@ export function CockpitShell({
   const [isMobileOverlayPresent, setIsMobileOverlayPresent] = useState(false);
   const [activeUtility, setActiveUtility] = useState<CockpitUtility>(null);
   const [activityOpenCycle, setActivityOpenCycle] = useState(0);
+  const [seenActivityCount, setSeenActivityCount] = useState(0);
   const [events, dispatchActivity] = useReducer(activityReducer, []);
   const isCapability = presentation.kind === 'capability';
   const codeAssetPaths = isCapability ? presentation.codeAssetPaths : [];
@@ -245,10 +247,11 @@ export function CockpitShell({
     (utility: CockpitUtility) => {
       if (utility === 'activity' && activeUtility !== 'activity') {
         setActivityOpenCycle((cycle) => cycle + 1);
+        setSeenActivityCount(events.length);
       }
       setActiveUtility(utility);
     },
-    [activeUtility]
+    [activeUtility, events.length]
   );
 
   const closeMobileNavigation = useCallback(() => {
@@ -319,6 +322,7 @@ export function CockpitShell({
 
   const handleClearActivity = useCallback(() => {
     dispatchActivity({ type: 'clear' });
+    setSeenActivityCount(0);
   }, []);
 
   const handleRecheck = useCallback(() => {
@@ -392,6 +396,7 @@ export function CockpitShell({
       activityOpenCycle,
       runtimeSnapshot: controller.snapshot,
       events,
+      unseenProblems: countUnseenProblems(events, seenActivityCount),
       expanded: preferences.expanded,
       onExpandedChange: preferences.setExpanded,
       onClearActivity: handleClearActivity,
@@ -417,6 +422,7 @@ export function CockpitShell({
       navigationTree,
       preferences.expanded,
       preferences.setExpanded,
+      seenActivityCount,
     ]
   );
 

@@ -71,6 +71,7 @@ const renderOverlay = ({
             activityOpenCycle: 0,
             runtimeSnapshot: snapshot,
             events: [],
+            unseenProblems: 0,
             expanded: { Capability: true, Runtime: true },
             onExpandedChange: vi.fn(),
             onClearActivity: vi.fn(),
@@ -194,7 +195,10 @@ describe('MobileNavOverlay', () => {
       expect(
         within(overlay).getByRole('heading', { name: utility })
       ).toBeTruthy();
-      expect(within(overlay).getByRole('button', { name: 'Run' })).toBeTruthy();
+      // Run's accessible name carries the runtime phase; match the prefix.
+      expect(
+        within(overlay).getByRole('button', { name: /^Run(,|$)/ })
+      ).toBeTruthy();
       expect(
         within(overlay).queryByRole('button', { name: 'Capability' })
       ).toBeNull();

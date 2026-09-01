@@ -81,7 +81,7 @@ export function ActivityPanel({
   formatTimestamp = defaultTimestamp,
 }: ActivityPanelProps) {
   const orderedEvents = [...events].sort(byNewest);
-  const label = attention ? 'Activity, attention required' : 'Activity';
+  const label = attention ? 'Activity, unread problems' : 'Activity';
 
   return (
     <ControlPlaneUtilityPanel title="Activity" onClose={onClose}>

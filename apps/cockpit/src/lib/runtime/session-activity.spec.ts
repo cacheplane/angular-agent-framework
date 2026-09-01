@@ -1,8 +1,10 @@
 import { describe, expect, expectTypeOf, test } from 'vitest';
 import {
   activityReducer,
+  countUnseenProblems,
   createSessionActivityEvent,
   type ActivityKind,
+  type ActivitySeverity,
   type RuntimeActivityInput,
   type SessionActivityEvent,
 } from './session-activity';
@@ -180,4 +182,60 @@ describe('runtimeNeedsAttention', () => {
       expect(runtimeNeedsAttention(phase)).toBe(expected);
     },
   );
+});
+
+describe('countUnseenProblems', () => {
+  const event = (
+    id: string,
+    kind: ActivityKind,
+    severity: ActivitySeverity,
+  ): SessionActivityEvent => ({
+    id,
+    at: '2026-08-31T17:00:00.000Z',
+    kind,
+    severity,
+    capability: 'streaming',
+    summary: kind,
+  });
+
+  test('counts only error events beyond the seen marker', () => {
+    const events = [
+      event('a', 'runtime_ready', 'success'),
+      event('b', 'mode_changed', 'neutral'),
+      event('c', 'runtime_unresponsive', 'error'),
+    ];
+    expect(countUnseenProblems(events, 0)).toBe(1);
+  });
+
+  test('ignores routine activity entirely', () => {
+    const events = [
+      event('a', 'runtime_ready', 'success'),
+      event('b', 'mode_changed', 'neutral'),
+    ];
+    expect(countUnseenProblems(events, 0)).toBe(0);
+  });
+
+  test('ignores errors the user has already seen', () => {
+    const events = [
+      event('a', 'runtime_unresponsive', 'error'),
+      event('b', 'mode_changed', 'neutral'),
+    ];
+    expect(countUnseenProblems(events, 2)).toBe(0);
+  });
+
+  test('reads the unseen window from the newest end of the log', () => {
+    // activityReducer prepends, so index 0 is the most recent arrival and the
+    // seen prefix is the TAIL of the array.
+    const events = [
+      event('c', 'runtime_unresponsive', 'error'),
+      event('b', 'mode_changed', 'neutral'),
+      event('a', 'runtime_ready', 'success'),
+    ];
+    expect(countUnseenProblems(events, 2)).toBe(1);
+  });
+
+  test('treats a marker beyond the log as everything seen', () => {
+    const events = [event('a', 'runtime_unresponsive', 'error')];
+    expect(countUnseenProblems(events, 5)).toBe(0);
+  });
 });

@@ -100,6 +100,7 @@ const renderControlPlane = (overrides: HarnessOverrides = {}) => {
           activityOpenCycle={1}
           runtimeSnapshot={runtimeSnapshot('ready')}
           events={activity}
+          unseenProblems={0}
           expanded={{ Capability: true, Runtime: true }}
           onExpandedChange={onExpandedChange}
           {...actions}
@@ -156,27 +157,30 @@ describe('CockpitControlPlane', () => {
     expect(within(pane).queryByText('Actions')).toBeNull();
   });
 
-  it('renders Activity above Settings with a nonnumeric attention indicator that opening does not clear', () => {
-    renderControlPlane({ runtimeSnapshot: runtimeSnapshot('unresponsive') });
+  it('flags unseen problems on Activity and clears them when the panel opens', () => {
+    renderControlPlane({ unseenProblems: 1 });
     const rail = screen.getByRole('navigation', { name: 'Cockpit modes' });
     const utilities = within(rail).getAllByRole('button').slice(4);
     expect(
       utilities.map((button) => button.getAttribute('aria-label'))
-    ).toEqual(['Activity, attention required', 'Settings']);
+    ).toEqual(['Activity, 1 unread problem', 'Settings']);
     expect(
       document.querySelector('[data-cockpit-activity-attention]')?.textContent
     ).toBe('');
+  });
 
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: 'Activity, attention required',
-      })
-    );
-    expect(screen.getByRole('heading', { name: 'Activity' })).toBeTruthy();
+  it('does not flag Activity when nothing has gone wrong', () => {
+    renderControlPlane({ unseenProblems: 0 });
+    expect(screen.getByRole('button', { name: 'Activity' })).toBeTruthy();
     expect(
-      screen.getByRole('button', {
-        name: 'Activity, attention required',
-      })
+      document.querySelector('[data-cockpit-activity-attention]')
+    ).toBeNull();
+  });
+
+  it('pluralises the unseen problem count', () => {
+    renderControlPlane({ unseenProblems: 3 });
+    expect(
+      screen.getByRole('button', { name: 'Activity, 3 unread problems' })
     ).toBeTruthy();
   });
 

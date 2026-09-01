@@ -284,11 +284,20 @@ export function classifyRuntimeTerminalTransition(
 }
 
 export function runtimeNeedsAttention(phase: RuntimePhase): boolean {
-  return (
-    phase === 'invalid_configuration' ||
-    phase === 'unresponsive' ||
-    phase === 'error'
-  );
+  // Exhaustive with no `default`, so a new RuntimePhase is a compile error here
+  // just as it is in runtimeRailStatus rather than silently returning false.
+  switch (phase) {
+    case 'invalid_configuration':
+    case 'unresponsive':
+    case 'error':
+      return true;
+    case 'not_configured':
+    case 'connecting':
+    case 'checking':
+    case 'ready':
+    case 'reloading':
+      return false;
+  }
 }
 
 export function runtimeRailStatus(

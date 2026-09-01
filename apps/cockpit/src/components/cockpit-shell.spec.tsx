@@ -139,6 +139,11 @@ const renderShellFor = (
   );
 };
 
+// The Run rail item's accessible name carries the live runtime phase
+// ('Run, runtime ready'), so these mode assertions match the label prefix
+// instead of a name that depends on which phase the fixture happens to be in.
+const RUN_RAIL_ITEM = /^Run(,|$)/;
+
 const openActivity = () => {
   fireEvent.click(screen.getByRole('button', { name: /^Activity/ }));
   return screen.getByRole('heading', {
@@ -183,7 +188,7 @@ describe('CockpitShell operational composition', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole('button', { name: 'Run' }).getAttribute('aria-pressed')
+        screen.getByRole('button', { name: RUN_RAIL_ITEM }).getAttribute('aria-pressed')
       ).toBe('true');
     });
     expect(
@@ -213,7 +218,7 @@ describe('CockpitShell operational composition', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole('button', { name: 'Run' }).getAttribute('aria-pressed')
+        screen.getByRole('button', { name: RUN_RAIL_ITEM }).getAttribute('aria-pressed')
       ).toBe('true');
     });
     expect(window.location.search).toBe('');
@@ -255,7 +260,7 @@ describe('CockpitShell operational composition', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole('button', { name: 'Run' }).getAttribute('aria-pressed')
+        screen.getByRole('button', { name: RUN_RAIL_ITEM }).getAttribute('aria-pressed')
       ).toBe('true');
     });
     expect(
@@ -266,7 +271,7 @@ describe('CockpitShell operational composition', () => {
   it('owns one controller and one Activity store shared by desktop and mobile adapters', async () => {
     renderShell();
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Run' })).toBeTruthy()
+      expect(screen.getByRole('button', { name: RUN_RAIL_ITEM })).toBeTruthy()
     );
     expect(operationalMocks.controllerInstances).toBe(1);
 
@@ -280,6 +285,54 @@ describe('CockpitShell operational composition', () => {
     });
     expect(within(dialog).getByText('Mode changed to Code')).toBeTruthy();
     expect(operationalMocks.controllerInstances).toBe(1);
+  });
+
+  it('flags an unread runtime problem until Activity is opened, and survives recovery', async () => {
+    renderShell();
+    await waitFor(() =>
+      expect(operationalMocks.latestControllerOptions).not.toBeNull()
+    );
+
+    // Routine activity must not light the indicator.
+    act(() => {
+      operationalMocks.latestControllerOptions?.onActivity({
+        id: 'ready-event',
+        at: '2026-08-31T17:00:00.000Z',
+        kind: 'runtime_ready',
+        capability: 'streaming',
+      });
+    });
+    expect(screen.getByRole('button', { name: 'Activity' })).toBeTruthy();
+
+    act(() => {
+      operationalMocks.latestControllerOptions?.onActivity({
+        id: 'unresponsive-event',
+        at: '2026-08-31T17:01:00.000Z',
+        kind: 'runtime_unresponsive',
+        capability: 'streaming',
+      });
+    });
+    expect(
+      screen.getAllByRole('button', { name: 'Activity, 1 unread problem' })
+    ).not.toHaveLength(0);
+
+    // A self-recovering runtime clears the phase but not the unread problem.
+    act(() => {
+      operationalMocks.latestControllerOptions?.onActivity({
+        id: 'recovered-event',
+        at: '2026-08-31T17:02:00.000Z',
+        kind: 'runtime_recovered',
+        capability: 'streaming',
+      });
+    });
+    expect(
+      screen.getAllByRole('button', { name: 'Activity, 1 unread problem' })
+    ).not.toHaveLength(0);
+
+    openActivity();
+    expect(screen.getAllByRole('button', { name: 'Activity' })).not.toHaveLength(
+      0
+    );
   });
 
   it('does not reset drawer focus when shared operational state rerenders', async () => {
@@ -527,7 +580,7 @@ describe('CockpitShell operational composition', () => {
   it('records one fixed Activity event and one existing analytics event only for an actual mode change', async () => {
     renderShell();
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Run' })).toBeTruthy()
+      expect(screen.getByRole('button', { name: RUN_RAIL_ITEM })).toBeTruthy()
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Code' }));
