@@ -47,9 +47,12 @@ export async function LangGraphCodeShowcase() {
   return (
     <section className="angular-code">
       <div className="lg-show-intro">
-        <p className="lg-show-eyebrow">
+        <div className="show-intro-rail">
+          <p className="lg-show-eyebrow">
           Developer Experience
-        </p>
+          </p>
+          <span className="show-intro-rail-line" aria-hidden="true" />
+        </div>
         <h2 className="lg-show-heading">
           Production streaming in a few lines
         </h2>

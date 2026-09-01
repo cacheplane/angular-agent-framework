@@ -126,8 +126,8 @@ export default async function HomePage() {
       <Promises />
       <ProofStrip />
       <HomeFAQ />
-      <FinalCTA variant="dark" />
       <RecentArticles />
+      <FinalCTA variant="dark" />
     </>
   );
 }

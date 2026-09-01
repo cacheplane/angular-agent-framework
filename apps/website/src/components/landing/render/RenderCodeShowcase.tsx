@@ -25,9 +25,12 @@ export async function RenderCodeShowcase() {
   return (
     <section className="render-code">
       <div className="render-show-intro">
-        <p className="render-show-eyebrow">
+        <div className="show-intro-rail">
+          <p className="render-show-eyebrow">
           Developer Experience
-        </p>
+          </p>
+          <span className="show-intro-rail-line" aria-hidden="true" />
+        </div>
         <h2 className="render-show-heading">
           Generative UI in a few lines
         </h2>
