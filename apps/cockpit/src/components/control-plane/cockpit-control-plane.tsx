@@ -23,6 +23,7 @@ import { PRODUCT_LABELS } from '../../lib/navigation-labels';
 import type { SessionActivityEvent } from '../../lib/runtime/session-activity';
 import {
   runtimeNeedsAttention,
+  runtimeRailStatus,
   type RuntimeSnapshot,
 } from '../../lib/runtime/runtime-state';
 import { CockpitSidebar } from '../sidebar/cockpit-sidebar';
@@ -100,6 +101,7 @@ export function CockpitControlPlane({
   const activityRef = useRef<HTMLSpanElement>(null);
   const settingsRef = useRef<HTMLSpanElement>(null);
   const attention = runtimeNeedsAttention(runtimeSnapshot.phase);
+  const railStatus = runtimeRailStatus(runtimeSnapshot.phase);
   const activityLabel = attention ? 'Activity, attention required' : 'Activity';
   const product = PRODUCT_LABELS[entry.product] ?? entry.product;
   const language = entry.language === 'typescript' ? 'TypeScript' : 'Python';
@@ -205,6 +207,7 @@ export function CockpitControlPlane({
             icon={<Icon size={18} aria-hidden="true" />}
             active={label === activeMode}
             onSelect={() => selectMode(label)}
+            status={label === 'Run' ? railStatus ?? undefined : undefined}
           />
         ))}
         utilities={

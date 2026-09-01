@@ -578,7 +578,9 @@ describe('CockpitShell operational composition', () => {
       )
     );
     expect(
-      screen.getByRole('button', { name: 'Run' }).getAttribute('aria-pressed')
+      screen
+        .getByRole('button', { name: 'Run, runtime starting' })
+        .getAttribute('aria-pressed')
     ).toBe('true');
     expect(window.location.pathname).toBe(routeBefore);
     expect(
@@ -603,7 +605,7 @@ describe('CockpitShell operational composition', () => {
     for (let index = 0; index < 22; index += 1) {
       fireEvent.click(
         screen.getByRole('button', {
-          name: index % 2 === 0 ? 'Code' : 'Run',
+          name: index % 2 === 0 ? 'Code' : 'Run, runtime starting',
         })
       );
     }

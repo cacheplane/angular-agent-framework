@@ -1,8 +1,9 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, it, test } from 'vitest';
 import {
   classifyRuntimeTerminalTransition,
   createRuntimeSnapshot,
   parseRuntimeTarget,
+  runtimeRailStatus,
   runtimeReducer,
   type RuntimeSnapshot,
 } from './runtime-state';
@@ -571,5 +572,42 @@ describe('classifyRuntimeTerminalTransition', () => {
         checkedAt: 2_000,
       }),
     ).toBeNull();
+  });
+});
+
+describe('runtimeRailStatus', () => {
+  it('maps every phase to a rail status', () => {
+    expect(runtimeRailStatus('ready')).toEqual({
+      kind: 'success',
+      label: 'runtime ready',
+    });
+    expect(runtimeRailStatus('connecting')).toEqual({
+      kind: 'working',
+      label: 'runtime starting',
+    });
+    expect(runtimeRailStatus('checking')).toEqual({
+      kind: 'working',
+      label: 'runtime starting',
+    });
+    expect(runtimeRailStatus('reloading')).toEqual({
+      kind: 'working',
+      label: 'runtime starting',
+    });
+    expect(runtimeRailStatus('unresponsive')).toEqual({
+      kind: 'error',
+      label: 'runtime error',
+    });
+    expect(runtimeRailStatus('error')).toEqual({
+      kind: 'error',
+      label: 'runtime error',
+    });
+    expect(runtimeRailStatus('invalid_configuration')).toEqual({
+      kind: 'error',
+      label: 'runtime error',
+    });
+  });
+
+  it('reports no status when there is no runtime to report on', () => {
+    expect(runtimeRailStatus('not_configured')).toBeNull();
   });
 });

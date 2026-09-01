@@ -124,10 +124,15 @@ describe('CockpitControlPlane', () => {
       within(rail)
         .getAllByRole('button')
         .slice(0, 4)
-        .map((button) => button.textContent)
+        .map(
+          (button) =>
+            button.querySelector('[data-control-plane-rail-label]')?.textContent
+        )
     ).toEqual(['Docs', 'Run', 'Code', 'API']);
     expect(
-      screen.getByRole('button', { name: 'Run' }).getAttribute('aria-pressed')
+      screen
+        .getByRole('button', { name: 'Run, runtime ready' })
+        .getAttribute('aria-pressed')
     ).toBe('true');
 
     const pane = screen.getByRole('complementary', {
@@ -180,7 +185,9 @@ describe('CockpitControlPlane', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Activity' }));
     expect(screen.getByRole('heading', { name: 'Activity' })).toBeTruthy();
     expect(
-      screen.getByRole('button', { name: 'Run' }).getAttribute('aria-pressed')
+      screen
+        .getByRole('button', { name: 'Run, runtime ready' })
+        .getAttribute('aria-pressed')
     ).toBe('true');
 
     fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
@@ -247,6 +254,24 @@ describe('CockpitControlPlane', () => {
     expect(cockpitCss).not.toMatch(
       /\[data-control-plane-rail-item\]\s*\{[^}]*--ds-text-muted/
     );
+  });
+
+  it('puts the runtime phase on the Run rail item', () => {
+    renderControlPlane({ runtimeSnapshot: runtimeSnapshot('unresponsive') });
+    const run = screen.getByRole('button', { name: 'Run, runtime error' });
+    expect(
+      run
+        .querySelector('[data-control-plane-rail-status]')
+        ?.getAttribute('data-control-plane-rail-status')
+    ).toBe('error');
+  });
+
+  it('shows no dot on Run when no runtime is configured', () => {
+    renderControlPlane({
+      runtimeSnapshot: runtimeSnapshot('not_configured'),
+    });
+    const run = screen.getByRole('button', { name: 'Run' });
+    expect(run.querySelector('[data-control-plane-rail-status]')).toBeNull();
   });
 
   it('names the mode group as an ARIA group announced to screen readers', () => {
