@@ -59,7 +59,10 @@ export function Callout({ type = 'info', title, children }: Props) {
         >
           {ICON_PATHS[type]}
         </svg>
-        <strong className="mdx-callout-title">{title ?? KIND_LABEL[type]}</strong>
+        <strong className="mdx-callout-title">
+          {title ? <span className="sr-only">{KIND_LABEL[type]}: </span> : null}
+          {title ?? KIND_LABEL[type]}
+        </strong>
       </div>
       <div className="mdx-callout-body">{children}</div>
     </div>

@@ -15,6 +15,13 @@ describe('Callout', () => {
     const band = container.querySelector('.mdx-callout-band');
     expect(band?.textContent).toContain('Heads up');
     expect(band?.querySelector('svg')).not.toBeNull();
+    expect(band?.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('prefixes a screen-reader kind label when a title is given', () => {
+    const { container } = render(<Callout type="warning" title="Heads up">body</Callout>);
+    const sr = container.querySelector('.mdx-callout-title .sr-only');
+    expect(sr?.textContent).toBe('Warning: ');
   });
 
   it.each([

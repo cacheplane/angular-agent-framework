@@ -440,8 +440,8 @@ body:has([data-website-workspace-host]) {
   --callout-tone-surface: rgba(26, 122, 64, 0.07);
 }
 [data-mdx="callout"][data-tone="warning"] {
-  /* Band text darkened from #D4850F for contrast on the tint. */
-  --callout-tone-text: #b26d06;
+  /* Band text darkened from #D4850F for WCAG AA contrast on the tint. */
+  --callout-tone-text: #8a5a00;
   --callout-tone-surface: rgba(212, 133, 15, 0.08);
 }
 [data-mdx="callout"][data-tone="danger"] {
