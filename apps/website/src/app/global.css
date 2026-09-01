@@ -50,6 +50,31 @@ pre {
   overflow-x: auto;
 }
 
+/*
+ * Shiki `codeToHtml` output — components/landing/HighlightedCode.tsx and
+ * components/solutions/SolutionCodeBlock.tsx.
+ *
+ * Shiki writes the theme background INLINE on the <pre> but emits no padding,
+ * so without this the code text sits flush against the dark surface's edges.
+ * That padding used to come from a global `.shiki` rule, deleted in #863 on a
+ * docs-only survey ("zero elements matched") that missed these two TSX call
+ * sites — rehype-pretty-code really does not emit `.shiki`, but `codeToHtml`
+ * does. Selector is `pre.shiki`, not `.shiki`: both call sites put the class on
+ * a wrapper <div> too, and padding there lands OUTSIDE the dark surface.
+ *
+ * Held by a style contract (styles/style-contracts.spec.ts) — this comment is
+ * exactly the tell that registry asks for.
+ */
+pre.shiki {
+  margin: 0;
+  padding: 1.25rem 1.5rem;
+}
+pre.shiki code {
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
+  font-size: inherit;
+  line-height: inherit;
+}
+
 /* Long unbreakable tokens (e.g. package names like @threadplane/chat,
  * file paths like app.config.ts) live inside marketing headings and pull
  * the layout wider than the viewport on narrow phones. Allow breaking
