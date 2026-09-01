@@ -38,7 +38,10 @@ export default function SolutionsIndexPage() {
       <Section surface="canvas" ariaLabelledBy="solutions-grid-heading">
         <Container>
           <div className="sol-index-grid-header">
-            <Eyebrow className="sol-index-eyebrow-tight">By use case</Eyebrow>
+            <div className="sol-index-rail">
+              <Eyebrow className="sol-index-eyebrow-tight">By use case</Eyebrow>
+              <span className="sol-index-rail-line" aria-hidden="true" />
+            </div>
             <h2 id="solutions-grid-heading" className="sol-index-h2">
               Where agents earn their keep.
             </h2>

@@ -335,8 +335,17 @@
   max-width: 640px;
 }
 .sol-index-grid-header {
-  text-align: center;
   margin-bottom: 48px;
+}
+.sol-index-rail {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.sol-index-rail-line {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
 }
 .sol-index-eyebrow-tight {
   margin-bottom: 12px;
