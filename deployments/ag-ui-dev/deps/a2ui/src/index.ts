@@ -27,7 +27,7 @@ export const agUiA2uiPythonModule: CockpitCapabilityModule = {
     language: 'python',
   },
   title: 'AG-UI A2UI (Python)',
-  docsPath: '/docs/ag-ui/core-capabilities/a2ui/overview/python',
+  docsPath: '/docs/a2ui/getting-started/introduction',
   promptAssetPaths: ['cockpit/ag-ui/a2ui/python/prompts/a2ui.md'],
   codeAssetPaths: [
     'cockpit/ag-ui/a2ui/angular/src/app/a2ui.component.ts',

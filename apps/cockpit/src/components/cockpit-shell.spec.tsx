@@ -23,6 +23,20 @@ const seedMode = (activeMode: 'Run' | 'Code' | 'Docs' | 'API') => {
   }));
 };
 
+const renderShellFor = (slug: string[]) => {
+  const pageModel = getCockpitPageModel(slug);
+  return render(
+    <ThemeProvider theme="light">
+      <CockpitShell
+        navigationTree={pageModel.navigationTree}
+        presentation={pageModel.presentation}
+        entryTitle={pageModel.entry.title}
+        contentBundle={contentBundle}
+      />
+    </ThemeProvider>,
+  );
+};
+
 const renderShell = () => render(
   <ThemeProvider theme="light">
     <CockpitShell
@@ -83,5 +97,31 @@ describe('CockpitShell control-plane mode state', () => {
 
     expect(screen.getByRole('region', { name: 'Run mode' })).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Code mode' })).toBeTruthy();
+  });
+});
+
+describe('CockpitShell documentation link', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    window.history.replaceState({}, '', '/');
+  });
+
+  it('links a capability to its page on the docs site', () => {
+    renderShellFor(['langgraph', 'core-capabilities', 'streaming', 'overview', 'python']);
+
+    const link = screen.getByRole('link', { name: /read docs/i });
+    expect(link.getAttribute('href')).toBe(
+      'https://threadplane.ai/docs/langgraph/guides/streaming'
+    );
+    expect(link.getAttribute('target')).toBe('_blank');
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer');
+  });
+
+  it('renders no link for a capability with no published docs page', () => {
+    // deep-agents carries the NO_COCKPIT_DOCS_LINK sentinel: the website has no
+    // deep-agents library yet, so there is nothing to link to.
+    renderShellFor(['deep-agents', 'core-capabilities', 'planning', 'overview', 'python']);
+
+    expect(screen.queryByRole('link', { name: /read docs/i })).toBeNull();
   });
 });

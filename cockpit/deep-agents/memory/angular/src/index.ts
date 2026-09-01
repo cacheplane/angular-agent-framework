@@ -23,7 +23,9 @@ export const deepAgentsMemoryAngularModule: CockpitCapabilityModule = {
     language: 'angular',
   },
   title: 'Deep Agents Memory (Angular)',
-  docsPath: '/docs/deep-agents/core-capabilities/memory/overview/angular',
+  // No `deep-agents` library exists on the website yet; the empty string is
+  // the "no published docs page" sentinel and renders no Docs link.
+  docsPath: '',
   promptAssetPaths: [
     'cockpit/deep-agents/memory/angular/prompts/memory.md',
   ],

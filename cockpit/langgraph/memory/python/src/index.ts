@@ -27,7 +27,7 @@ export const langgraphMemoryPythonModule: CockpitCapabilityModule = {
     language: 'python',
   },
   title: 'LangGraph Memory (Python)',
-  docsPath: '/docs/langgraph/core-capabilities/memory/overview/python',
+  docsPath: '/docs/langgraph/guides/memory',
   promptAssetPaths: ['cockpit/langgraph/memory/python/prompts/memory.md'],
   codeAssetPaths: [
     'cockpit/langgraph/memory/angular/src/app/memory.component.ts',

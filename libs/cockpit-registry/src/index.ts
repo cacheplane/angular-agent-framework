@@ -1,3 +1,4 @@
+export * from './lib/docs-links';
 export * from './lib/manifest';
 export * from './lib/manifest.types';
 export * from './lib/resolve-language';

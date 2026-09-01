@@ -27,7 +27,7 @@ export const chatThreadsPythonModule: CockpitCapabilityModule = {
     language: 'python',
   },
   title: 'Chat Threads (Python)',
-  docsPath: '/docs/chat/core-capabilities/threads/overview/python',
+  docsPath: '/docs/chat/guides/thread-routing',
   promptAssetPaths: ['cockpit/chat/threads/python/prompts/threads.md'],
   codeAssetPaths: [
     'cockpit/chat/threads/angular/src/app/threads.component.ts',

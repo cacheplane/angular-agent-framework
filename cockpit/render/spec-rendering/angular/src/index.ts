@@ -23,7 +23,7 @@ export const renderSpecRenderingAngularModule: CockpitCapabilityModule = {
     language: 'angular',
   },
   title: 'Render Spec Rendering (Angular)',
-  docsPath: '/docs/render/core-capabilities/spec-rendering/overview/angular',
+  docsPath: '/docs/render/guides/specs',
   promptAssetPaths: ['cockpit/render/spec-rendering/angular/prompts/spec-rendering.md'],
   codeAssetPaths: ['cockpit/render/spec-rendering/angular/src/app/spec-rendering.component.ts'],
 };
