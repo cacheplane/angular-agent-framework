@@ -23,7 +23,7 @@ export const renderComputedFunctionsAngularModule: CockpitCapabilityModule = {
     language: 'angular',
   },
   title: 'Render Computed Functions (Angular)',
-  docsPath: '/docs/render/core-capabilities/computed-functions/overview/angular',
+  docsPath: '/docs/render/api/provide-render',
   promptAssetPaths: ['cockpit/render/computed-functions/angular/prompts/computed-functions.md'],
   codeAssetPaths: ['cockpit/render/computed-functions/angular/src/app/computed-functions.component.ts'],
 };

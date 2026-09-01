@@ -27,7 +27,7 @@ export const agUiToolViewsPythonModule: CockpitCapabilityModule = {
     language: 'python',
   },
   title: 'AG-UI Tool Views (Python)',
-  docsPath: '/docs/ag-ui/core-capabilities/tool-views/overview/python',
+  docsPath: '/docs/chat/components/chat-tool-calls',
   promptAssetPaths: ['cockpit/ag-ui/tool-views/python/prompts/tool-views.md'],
   codeAssetPaths: [
     'cockpit/ag-ui/tool-views/angular/src/app/tool-views.component.ts',

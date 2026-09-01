@@ -27,7 +27,9 @@ export const deepAgentsSandboxesPythonModule: CockpitCapabilityModule = {
     language: 'python',
   },
   title: 'Deep Agents Sandboxes (Python)',
-  docsPath: '/docs/deep-agents/core-capabilities/sandboxes/overview/python',
+  // No `deep-agents` library exists on the website yet; the empty string is
+  // the "no published docs page" sentinel and renders no Docs link.
+  docsPath: '',
   promptAssetPaths: ['cockpit/deep-agents/sandboxes/python/prompts/sandboxes.md'],
   codeAssetPaths: [
     'cockpit/deep-agents/sandboxes/angular/src/app/sandboxes.component.ts',

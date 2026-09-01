@@ -24,7 +24,7 @@ export const agUiA2uiAngularModule: CockpitCapabilityModule = {
     language: 'angular',
   },
   title: 'AG-UI A2UI (Angular)',
-  docsPath: '/docs/ag-ui/core-capabilities/a2ui/overview/angular',
+  docsPath: '/docs/a2ui/getting-started/introduction',
   promptAssetPaths: [],
   codeAssetPaths: [
     'cockpit/ag-ui/a2ui/angular/src/app/a2ui.component.ts',

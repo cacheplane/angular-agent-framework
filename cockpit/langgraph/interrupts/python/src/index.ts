@@ -27,7 +27,7 @@ export const langgraphInterruptsPythonModule: CockpitCapabilityModule = {
     language: 'python',
   },
   title: 'LangGraph Interrupts (Python)',
-  docsPath: '/docs/langgraph/core-capabilities/interrupts/overview/python',
+  docsPath: '/docs/langgraph/guides/interrupts',
   promptAssetPaths: ['cockpit/langgraph/interrupts/python/prompts/interrupts.md'],
   codeAssetPaths: [
     'cockpit/langgraph/interrupts/angular/src/app/interrupts.component.ts',

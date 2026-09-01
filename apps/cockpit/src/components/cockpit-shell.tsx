@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { cockpitManifest } from '@threadplane/cockpit-registry';
-import { Menu } from 'lucide-react';
+import { BookOpen, Menu } from 'lucide-react';
 import {
   parseControlPlaneMode,
   useControlPlanePreferences,
@@ -11,6 +11,7 @@ import {
 import type { ContentBundle } from '../lib/content-bundle';
 import type { CapabilityPresentation, NavigationProduct } from '../lib/route-resolution';
 import { PRODUCT_LABELS } from '../lib/navigation-labels';
+import { resolveDocsUrl } from '../lib/docs-links';
 import { CodeMode } from './code-mode/code-mode';
 import { ApiMode } from './api-mode/api-mode';
 import { NarrativeDocs } from './narrative-docs/narrative-docs';
@@ -47,6 +48,9 @@ export function CockpitShell({
   const backendAssetPaths = isCapability ? (presentation.backendAssetPaths ?? []) : [];
   const entry = presentation.entry;
   const contextLabel = `${PRODUCT_LABELS[entry.product] ?? toLabel(entry.product)} / ${toLabel(entry.section)} / ${toLabel(entry.topic)}`;
+  // Null for the capabilities that have no published docs page yet — those
+  // render no link at all rather than one that 404s.
+  const docsUrl = resolveDocsUrl(presentation.docsPath);
 
   useEffect(() => {
     if (!preferences.hydrated || queryHandled.current) return;
@@ -111,6 +115,17 @@ export function CockpitShell({
             </button>
             <p className="hidden md:block text-[var(--ds-text-muted)] font-mono text-xs truncate">{contextLabel}</p>
           </div>
+          {docsUrl ? (
+            <a
+              className="shrink-0 inline-flex items-center gap-1.5 text-xs text-[var(--ds-text-secondary)] hover:text-[var(--ds-text-primary)] no-underline"
+              href={docsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <BookOpen size={14} aria-hidden="true" />
+              Read docs
+            </a>
+          ) : null}
         </header>
 
         <div className="min-h-0 relative">

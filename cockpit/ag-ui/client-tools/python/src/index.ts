@@ -15,7 +15,7 @@ export const agUiClientToolsPythonModule: CockpitCapabilityModule = {
   id: 'ag-ui-client-tools-python',
   manifestIdentity: { product: 'ag-ui', section: 'core-capabilities', topic: 'client-tools', page: 'overview', language: 'python' },
   title: 'AG-UI Client Tools (Python)',
-  docsPath: '/docs/ag-ui/core-capabilities/client-tools/overview/python',
+  docsPath: '/docs/chat/guides/client-tools',
   promptAssetPaths: ['cockpit/ag-ui/client-tools/python/prompts/client-tools.md'],
   codeAssetPaths: [
     'cockpit/ag-ui/client-tools/angular/src/app/client-tools.component.ts',

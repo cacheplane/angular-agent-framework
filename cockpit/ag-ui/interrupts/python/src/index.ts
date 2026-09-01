@@ -27,7 +27,7 @@ export const agUiInterruptsPythonModule: CockpitCapabilityModule = {
     language: 'python',
   },
   title: 'AG-UI Interrupts (Python)',
-  docsPath: '/docs/ag-ui/core-capabilities/interrupts/overview/python',
+  docsPath: '/docs/ag-ui/guides/interrupts',
   promptAssetPaths: ['cockpit/ag-ui/interrupts/python/prompts/interrupts.md'],
   codeAssetPaths: [
     'cockpit/ag-ui/interrupts/angular/src/app/interrupts.component.ts',

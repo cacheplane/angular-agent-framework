@@ -27,7 +27,7 @@ export const langgraphSubgraphsPythonModule: CockpitCapabilityModule = {
     language: 'python',
   },
   title: 'LangGraph Subgraphs (Python)',
-  docsPath: '/docs/langgraph/core-capabilities/subgraphs/overview/python',
+  docsPath: '/docs/langgraph/guides/subgraphs',
   promptAssetPaths: ['cockpit/langgraph/subgraphs/python/prompts/subgraphs.md'],
   codeAssetPaths: [
     'cockpit/langgraph/subgraphs/angular/src/app/agent-ref.ts',

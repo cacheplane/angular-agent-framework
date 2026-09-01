@@ -1,0 +1,15 @@
+{
+  "name": "scripts",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "tags": ["scope:scripts-tests", "type:tooling"],
+  "implicitDependencies": [],
+  "targets": {
+    "test": {
+      "executor": "@nx/vitest:test",
+      "options": {
+        "configFile": "scripts/vite.config.mts"
+      }
+    }
+  }
+}

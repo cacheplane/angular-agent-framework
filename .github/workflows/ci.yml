@@ -32,6 +32,7 @@ jobs:
       cockpit_e2e: ${{ steps.scope.outputs.cockpit_e2e }}
       website_e2e: ${{ steps.scope.outputs.website_e2e }}
       posthog: ${{ steps.scope.outputs.posthog }}
+      scripts_tests: ${{ steps.scope.outputs.scripts_tests }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -76,6 +77,24 @@ jobs:
             --output "$GITHUB_OUTPUT"
       - name: Validate CI workflow guards
         run: node --test scripts/ci-workflow.spec.mjs
+
+  scripts-tests:
+    name: Scripts — generator / proxy vitest suites
+    needs: ci-scope
+    if: github.event_name == 'push' || needs.ci-scope.outputs.scripts_tests == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Vitest suites for the root deployment/proxy generators (drift checks,
+      # framework-adapter branching, requirements unions, rate limits). The
+      # node:test suites in scripts/ run in ci-scope and library instead —
+      # see scripts/vite.config.mts for the split.
+      - run: npx nx test scripts
 
   library:
     name: Library — lint / test / build
@@ -543,6 +562,7 @@ jobs:
       - cockpit-e2e-summary
       - website-e2e
       - posthog-sync-plan
+      - scripts-tests
     if: ${{ always() && github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
@@ -561,6 +581,7 @@ jobs:
           RESULT_COCKPIT_E2E: ${{ needs.cockpit-e2e-summary.result }}
           RESULT_WEBSITE_E2E: ${{ needs.website-e2e.result }}
           RESULT_POSTHOG: ${{ needs.posthog-sync-plan.result }}
+          RESULT_SCRIPTS_TESTS: ${{ needs.scripts-tests.result }}
           SCOPE_LIBRARY: ${{ needs.ci-scope.outputs.library }}
           SCOPE_ANGULAR_COMPATIBILITY: ${{ needs.ci-scope.outputs.angular_compatibility }}
           SCOPE_WEBSITE: ${{ needs.ci-scope.outputs.website }}
@@ -572,6 +593,7 @@ jobs:
           SCOPE_COCKPIT_E2E: ${{ needs.ci-scope.outputs.cockpit_e2e }}
           SCOPE_WEBSITE_E2E: ${{ needs.ci-scope.outputs.website_e2e }}
           SCOPE_POSTHOG: ${{ needs.ci-scope.outputs.posthog }}
+          SCOPE_SCRIPTS_TESTS: ${{ needs.ci-scope.outputs.scripts_tests }}
         run: |
           set -euo pipefail
 
@@ -624,6 +646,7 @@ jobs:
           require_scoped "cockpit_e2e" "Cockpit — e2e" "$RESULT_COCKPIT_E2E" "$SCOPE_COCKPIT_E2E"
           require_scoped "website_e2e" "Website — e2e" "$RESULT_WEBSITE_E2E" "$SCOPE_WEBSITE_E2E"
           require_scoped "posthog" "PostHog — dashboards-as-code drift check" "$RESULT_POSTHOG" "$SCOPE_POSTHOG"
+          require_scoped "scripts_tests" "Scripts — generator / proxy vitest suites" "$RESULT_SCRIPTS_TESTS" "$SCOPE_SCRIPTS_TESTS"
 
           if [[ "$failed" -ne 0 ]]; then
             exit 1

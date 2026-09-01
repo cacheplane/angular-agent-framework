@@ -176,11 +176,11 @@ describe('getCapabilityPresentation', () => {
 
     expect(getCapabilityPresentation(docsEntry)).toMatchObject({
       kind: 'docs-only',
-      docsPath: '/docs/deep-agents/getting-started/overview/overview/python',
+      docsPath: '',
     });
     expect(getCapabilityPresentation(capabilityEntry)).toMatchObject({
       kind: 'capability',
-      docsPath: '/docs/langgraph/core-capabilities/streaming/overview/python',
+      docsPath: '/docs/langgraph/guides/streaming',
       promptAssetPaths: ['cockpit/langgraph/streaming/python/prompts/streaming.md'],
       codeAssetPaths: [
         'cockpit/langgraph/streaming/angular/src/app/streaming.component.ts',
@@ -237,7 +237,7 @@ describe('getCapabilityPresentation', () => {
 
     expect(presentation).toMatchObject({
       kind: 'capability',
-      docsPath: '/docs/langgraph/core-capabilities/durable-execution/overview/python',
+      docsPath: '/docs/langgraph/guides/persistence',
       docsAssetPaths: ['cockpit/langgraph/durable-execution/python/docs/guide.md'],
     });
   });
@@ -255,7 +255,7 @@ describe('getCapabilityPresentation', () => {
 
     expect(presentation).toMatchObject({
       kind: 'capability',
-      docsPath: '/docs/render/core-capabilities/spec-rendering/overview/python',
+      docsPath: '/docs/render/guides/specs',
     });
   });
 
@@ -272,7 +272,7 @@ describe('getCapabilityPresentation', () => {
 
     expect(presentation).toMatchObject({
       kind: 'capability',
-      docsPath: '/docs/chat/core-capabilities/messages/overview/python',
+      docsPath: '/docs/chat/concepts/message-model',
     });
   });
 

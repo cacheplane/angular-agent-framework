@@ -16,6 +16,7 @@ export const SCOPE_KEYS = [
   'cockpit_e2e',
   'examples_chat',
   'posthog',
+  'scripts_tests',
 ];
 
 const GLOBAL_CI_FILES = new Set([

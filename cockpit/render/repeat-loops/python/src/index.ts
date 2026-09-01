@@ -27,7 +27,7 @@ export const renderRepeatLoopsPythonModule: CockpitCapabilityModule = {
     language: 'python',
   },
   title: 'Render Repeat Loops (Python)',
-  docsPath: '/docs/render/core-capabilities/repeat-loops/overview/python',
+  docsPath: '/docs/render/guides/specs',
   promptAssetPaths: ['cockpit/render/repeat-loops/python/prompts/repeat-loops.md'],
   codeAssetPaths: [
     'cockpit/render/repeat-loops/angular/src/app/repeat-loops.component.ts',

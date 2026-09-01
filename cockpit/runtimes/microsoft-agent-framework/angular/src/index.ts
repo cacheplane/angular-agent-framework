@@ -23,7 +23,7 @@ export const runtimesMicrosoftAgentFrameworkAngularModule: CockpitCapabilityModu
     language: 'angular',
   },
   title: 'Runtimes — Microsoft Agent Framework (Angular)',
-  docsPath: '/docs/runtimes/core-capabilities/microsoft-agent-framework/overview/angular',
+  docsPath: '/docs/runtimes/microsoft-agent-framework/overview',
   promptAssetPaths: [
     'cockpit/runtimes/microsoft-agent-framework/angular/prompts/microsoft-agent-framework.md',
   ],
