@@ -20,6 +20,7 @@ export default defineConfig({
       'ci-workflow.spec.mjs',
       'cockpit-matrix.spec.mjs',
       'cockpit-ports.spec.mjs',
+      'cockpit-runtime-bridge-coverage.spec.mjs',
       'verify-angular-support.spec.mjs',
       // STALE (excluded deliberately, not a runner mismatch): this one-time
       // #881 cutover checklist now fails against main on two counts —
