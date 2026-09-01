@@ -28,7 +28,8 @@ import { buildCockpitModeHref } from '../../lib/cockpit-links';
 import { DocsNavigation } from './DocsSidebar';
 
 export interface DocsControlPlaneProps {
-  activeLibrary: LibraryId;
+  /** `null` on a library-neutral docs page, e.g. /docs/choosing-an-adapter. */
+  activeLibrary: LibraryId | null;
   activeSection: string;
   activeSlug: string;
   pageTitle: string;
@@ -46,8 +47,8 @@ export function DocsContextContent({
   onNavigate,
 }: DocsControlPlaneProps & { mobile?: boolean; onNavigate?: () => void }) {
   const preferences = useControlPlanePreferences('docs');
-  const library = getLibraryConfig(activeLibrary);
-  const section = getDocsSection(activeLibrary, activeSection);
+  const library = activeLibrary ? getLibraryConfig(activeLibrary) : undefined;
+  const section = activeLibrary ? getDocsSection(activeLibrary, activeSection) : undefined;
   const openSearch = () => {
     if (!mobile) {
       dispatchSearch();
@@ -65,8 +66,11 @@ export function DocsContextContent({
     <div data-docs-control-plane-context data-mobile={mobile || undefined}>
       <ControlPlaneSection title="Scope" collapsible={false}>
         <div className="docs-control-plane-scope">
-          <span>{library?.title ?? activeLibrary}</span>
-          <span>{section?.title ?? activeSection}</span>
+          {/* A neutral page has no library and no section. Say only what is
+           * true — inventing them is how the mobile drawer came to claim
+           * "LangGraph / Getting Started" on the adapter-comparison page. */}
+          <span>{library?.title ?? 'Docs'}</span>
+          {library && section ? <span>{section.title}</span> : null}
           <strong>{pageTitle}</strong>
         </div>
       </ControlPlaneSection>
@@ -118,11 +122,13 @@ export function DocsContextContent({
 
 export function DocsControlPlane(props: DocsControlPlaneProps) {
   const identity = {
-    library: props.activeLibrary,
+    library: props.activeLibrary ?? '',
     section: props.activeSection,
     slug: props.activeSlug,
   };
-  const currentPath = `/docs/${props.activeLibrary}/${props.activeSection}/${props.activeSlug}`;
+  const currentPath = props.activeLibrary
+    ? `/docs/${props.activeLibrary}/${props.activeSection}/${props.activeSlug}`
+    : '/docs';
 
   return (
     <div className="docs-control-plane" data-docs-control-plane>
