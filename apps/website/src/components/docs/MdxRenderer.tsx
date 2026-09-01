@@ -10,6 +10,7 @@ import { FeatureChips } from './mdx/FeatureChips';
 import { mdxHeadingComponents } from './mdx/headings';
 import { ArchFlowDiagram } from './ArchFlowDiagram';
 import { StackDiagram } from './diagrams/StackDiagram';
+import { AgUiArchitecturePipeline } from './diagrams/AgUiArchitecturePipeline';
 import rehypePrettyCode from 'rehype-pretty-code';
 import rehypeSlug from 'rehype-slug';
 import remarkGfm from 'remark-gfm';
@@ -39,6 +40,7 @@ const mdxComponents = {
   CodeGroup,
   ArchFlowDiagram,
   StackDiagram,
+  AgUiArchitecturePipeline,
   FeatureChips,
   pre: Pre,
   // Explicit width/height let the browser reserve the box before the file
