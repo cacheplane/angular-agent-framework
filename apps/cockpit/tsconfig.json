@@ -30,9 +30,6 @@
   "exclude": ["node_modules"],
   "references": [
     {
-      "path": "../../cockpit/deep-agents/sandboxes/python"
-    },
-    {
       "path": "../../cockpit/deep-agents/skills/python"
     },
     {

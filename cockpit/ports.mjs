@@ -51,7 +51,6 @@ export const PORTS = Object.freeze({
   'cockpit-deep-agents-filesystem-angular': { angular: 4311, langgraph: 5311 },
   'cockpit-deep-agents-memory-angular': { angular: 4313, langgraph: 5313 },
   'cockpit-deep-agents-planning-angular': { angular: 4310, langgraph: 5310 },
-  'cockpit-deep-agents-sandboxes-angular': { angular: 4315, langgraph: 5315 },
   'cockpit-deep-agents-skills-angular': { angular: 4314, langgraph: 5314 },
   'cockpit-deep-agents-subagents-angular': { angular: 4312, langgraph: 5312 },
   'cockpit-langgraph-client-tools-angular': { angular: 4308, langgraph: 5308 },

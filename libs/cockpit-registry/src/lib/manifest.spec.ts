@@ -12,7 +12,6 @@ const expectedTopics = {
     ['core-capabilities', 'subagents'],
     ['core-capabilities', 'memory'],
     ['core-capabilities', 'skills'],
-    ['core-capabilities', 'sandboxes'],
   ],
   langgraph: [
     ['getting-started', 'overview'],
@@ -107,7 +106,7 @@ describe('cockpitManifest', () => {
       (entry) => entry.entryKind === 'capability'
     );
 
-    expect(capabilityEntries).toHaveLength(42);
+    expect(capabilityEntries).toHaveLength(41);
 
     for (const entry of capabilityEntries) {
       expect(entry.supportedLanguages).toEqual(['python']);

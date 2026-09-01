@@ -41,7 +41,6 @@ export const COCKPIT_DOCS_LINKS: Readonly<Record<string, string>> = {
   'deep-agents/core-capabilities/subagents': NO_COCKPIT_DOCS_LINK,
   'deep-agents/core-capabilities/memory': NO_COCKPIT_DOCS_LINK,
   'deep-agents/core-capabilities/skills': NO_COCKPIT_DOCS_LINK,
-  'deep-agents/core-capabilities/sandboxes': NO_COCKPIT_DOCS_LINK,
 
   // langgraph
   'langgraph/getting-started/overview': '/docs/langgraph/getting-started/introduction',
@@ -116,7 +115,6 @@ export const COCKPIT_TOPICS_WITHOUT_DOCS: readonly string[] = [
   'deep-agents/core-capabilities/subagents',
   'deep-agents/core-capabilities/memory',
   'deep-agents/core-capabilities/skills',
-  'deep-agents/core-capabilities/sandboxes',
 ];
 
 /**

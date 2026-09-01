@@ -74,7 +74,6 @@ describe('docs bundle matrix coverage', () => {
       ['deep-agents', 'core-capabilities', 'subagents'],
       ['deep-agents', 'core-capabilities', 'memory'],
       ['deep-agents', 'core-capabilities', 'skills'],
-      ['deep-agents', 'core-capabilities', 'sandboxes'],
       ['langgraph', 'getting-started', 'overview'],
       ['langgraph', 'core-capabilities', 'persistence'],
       ['langgraph', 'core-capabilities', 'durable-execution'],

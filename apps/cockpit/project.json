@@ -156,13 +156,6 @@
         "cwd": "."
       }
     },
-    "serve-sandboxes": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "npx tsx apps/cockpit/scripts/serve-example.ts --capability=da-sandboxes",
-        "cwd": "."
-      }
-    },
     "serve-all": {
       "executor": "nx:run-commands",
       "options": {

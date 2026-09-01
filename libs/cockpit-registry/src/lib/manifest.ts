@@ -15,7 +15,6 @@ const APPROVED_TOPICS = {
       'subagents',
       'memory',
       'skills',
-      'sandboxes',
     ],
   },
   langgraph: {

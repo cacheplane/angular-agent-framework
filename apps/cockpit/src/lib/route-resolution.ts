@@ -24,7 +24,6 @@ import { deepAgentsPlanningPythonModule } from '../../../../cockpit/deep-agents/
 import { deepAgentsFilesystemPythonModule } from '../../../../cockpit/deep-agents/filesystem/python/src/index';
 import { deepAgentsSubagentsPythonModule } from '../../../../cockpit/deep-agents/subagents/python/src/index';
 import { deepAgentsSkillsPythonModule } from '../../../../cockpit/deep-agents/skills/python/src/index';
-import { deepAgentsSandboxesPythonModule } from '../../../../cockpit/deep-agents/sandboxes/python/src/index';
 import { renderSpecRenderingPythonModule } from '../../../../cockpit/render/spec-rendering/python/src/index';
 import { renderElementRenderingPythonModule } from '../../../../cockpit/render/element-rendering/python/src/index';
 import { renderStateManagementPythonModule } from '../../../../cockpit/render/state-management/python/src/index';
@@ -133,7 +132,6 @@ export const capabilityModules: RegisteredCapabilityModule[] = [
   deepAgentsFilesystemPythonModule,
   deepAgentsSubagentsPythonModule,
   deepAgentsSkillsPythonModule,
-  deepAgentsSandboxesPythonModule,
   renderSpecRenderingPythonModule,
   renderElementRenderingPythonModule,
   renderStateManagementPythonModule,
