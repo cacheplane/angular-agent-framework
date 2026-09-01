@@ -177,15 +177,10 @@ export default function PilotToProdPage() {
       <Section id="contact" surface="white" ariaLabelledBy="contact-heading">
         <Container>
           <div className="pilot-contact-inner">
-            <div className="pilot-section-header">
-              <div className="pilot-rail2">
-                <Eyebrow tone="accent" className="pilot-eyebrow-tight">Discovery call</Eyebrow>
-                <span className="pilot-rail2-line" aria-hidden="true" />
-              </div>
-              <h2 id="contact-heading" className="pilot-h2 pilot-h2-spaced">
-                Tell us about your stack.
-              </h2>
-            </div>
+            <Eyebrow tone="accent" className="pilot-eyebrow-spaced">Discovery call</Eyebrow>
+            <h2 id="contact-heading" className="pilot-h2 pilot-h2-spaced">
+              Tell us about your stack.
+            </h2>
             <p className="pilot-contact-body">
               30-minute discovery call. We&apos;ll dig into your Angular surface, your agent-eligible workflows, and whether Pilot-to-Prod is the right fit. No pitch deck.
             </p>

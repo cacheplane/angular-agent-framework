@@ -12,7 +12,7 @@ vi.mock('../../lib/analytics/client', () => ({
 describe('PilotToProdPage', () => {
   it('renders rail-kicked section headers and the outcomes ledger', () => {
     const { container } = render(<PilotToProdPage />);
-    expect(container.querySelectorAll('.pilot-rail2').length).toBeGreaterThanOrEqual(2);
+    expect(container.querySelectorAll('.pilot-rail2')).toHaveLength(1);
     expect(container.querySelectorAll('.pilot-outcome-row')).toHaveLength(4);
     expect(container.querySelectorAll('.pilot-outcomes-grid')).toHaveLength(0);
     expect(screen.getByRole('heading', { level: 1 })).toBeTruthy();
