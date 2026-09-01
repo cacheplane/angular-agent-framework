@@ -38,6 +38,9 @@ export interface Capability {
   framework?: CapabilityFramework;
 }
 
+// NOTE: registry changes must reach production through a run whose diff range
+// includes this file — see the deploy-gate hazard note in
+// scripts/assemble-examples.ts before assuming a green main run deployed them.
 export const capabilities: readonly Capability[] = [
   { id: 'streaming', product: 'langgraph', topic: 'streaming', angularProject: 'cockpit-langgraph-streaming-angular', port: 4300, pythonPort: 5300, pythonDir: 'cockpit/langgraph/streaming/python', graphName: 'streaming' },
   { id: 'persistence', product: 'langgraph', topic: 'persistence', angularProject: 'cockpit-langgraph-persistence-angular', port: 4301, pythonPort: 5301, pythonDir: 'cockpit/langgraph/persistence/python', graphName: 'persistence' },
