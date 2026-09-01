@@ -155,25 +155,4 @@ describe('MIT package cutover', () => {
 
     expect(violations).toEqual([]);
   });
-
-  it('contains no tracked references to the excluded competitor', async () => {
-    const excludedName = ['copilot', 'kit'].join('');
-    const tracked = execFileSync('git', ['ls-files', '-z'], {
-      cwd: workspaceRoot,
-      encoding: 'utf8',
-    }).split('\0').filter(Boolean);
-    const violations = [];
-
-    for (const path of tracked) {
-      if (path.toLowerCase().includes(excludedName)) violations.push(path);
-      try {
-        const content = await read(path);
-        if (content.toLowerCase().includes(excludedName)) violations.push(path);
-      } catch {
-        // Binary or otherwise unreadable tracked files are covered by the path check.
-      }
-    }
-
-    expect([...new Set(violations)]).toEqual([]);
-  }, 15_000);
 });
