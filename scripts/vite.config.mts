@@ -22,13 +22,6 @@ export default defineConfig({
       'cockpit-ports.spec.mjs',
       'cockpit-runtime-bridge-coverage.spec.mjs',
       'verify-angular-support.spec.mjs',
-      // STALE (excluded deliberately, not a runner mismatch): this one-time
-      // #881 cutover checklist now fails against main on two counts —
-      // libs/licensing is still tracked (and consumed by Angular bundles),
-      // and the Mastra runtime content/lockfiles legitimately mention the
-      // "excluded competitor". Reinstate only after the spec is reconciled
-      // with current policy.
-      'mit-cutover.spec.mjs',
     ],
     // Generator specs shell out to `npx tsx` and (re)generate committed
     // deployment manifests; keep them serial to avoid write races.
