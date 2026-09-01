@@ -1001,6 +1001,11 @@ pre.shiki {
     width: 44px;
     height: 44px;
   }
+  .cockpit-control-plane [data-control-plane-overflow-menu-root][data-overflow-placement="center"] > [data-control-plane-overflow-menu] {
+    left: auto;
+    right: 0;
+    transform: none;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .cockpit-control-plane * {

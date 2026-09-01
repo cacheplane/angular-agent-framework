@@ -169,6 +169,12 @@ describe('RuntimeSection', () => {
     );
   });
 
+  it('right-aligns the configured Runtime menu for coarse pointers', () => {
+    expect(cockpitCss).toMatch(
+      /@media \(pointer:\s*coarse\)\s*\{[\s\S]*?\[data-control-plane-overflow-menu-root\]\[data-overflow-placement="center"\]\s*>\s*\[data-control-plane-overflow-menu\]\s*\{[\s\S]*?left:\s*auto;[\s\S]*?right:\s*0;[\s\S]*?transform:\s*none;/
+    );
+  });
+
   it('shows compact metadata, only the sanitized target, and truthful checked time', () => {
     renderSection('ready');
     expect(screen.getByText('Shared development')).toBeTruthy();
