@@ -393,7 +393,7 @@ test('requires every visible compatibility marker to report exact readiness', as
   const markerText = new Map(
     COMPATIBILITY_PACKAGES.map((packageName) => [
       packageName,
-      `${packageName} ready`,
+      packageName === 'ag-ui' ? 'AG-UI ready' : `${packageName} ready`,
     ])
   );
   markerText.set('telemetry', 'telemetry unavailable');
