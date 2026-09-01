@@ -413,11 +413,37 @@ test('representative docs pages do not create page-level horizontal overflow', a
 
     for (const route of routes) {
       await page.goto(route);
-      const overflow = await page.evaluate(() => (
-        document.documentElement.scrollWidth - document.documentElement.clientWidth
-      ));
 
-      expect(overflow, `${route} at ${width}px`).toBeLessThanOrEqual(1);
+      // NOT documentElement.scrollWidth. global.css clips the body
+      // (`overflow-x: clip`) precisely so overflow can never reach the layout
+      // viewport, which means that number is pinned to the viewport width and
+      // every assertion on it passed vacuously — confirmed by injecting a
+      // 2000px-wide element and watching it stay put. Ask the question the
+      // clip is hiding instead: does anything escape its own column? Content
+      // inside a horizontal scroller (code blocks, wide tables) is exempt —
+      // scrolling there is the intended containment.
+      const escaped = await page.evaluate(() => {
+        const column = document.querySelector('article') ?? document.querySelector('main');
+        if (!column) return ['no column'];
+        const box = column.getBoundingClientRect();
+        const inScroller = (el: Element) => {
+          let p = el.parentElement;
+          while (p && p !== column) {
+            const ox = getComputedStyle(p).overflowX;
+            if (ox === 'auto' || ox === 'scroll' || ox === 'hidden' || ox === 'clip') return true;
+            p = p.parentElement;
+          }
+          return false;
+        };
+        return [...column.querySelectorAll('*')]
+          .filter((el) => {
+            const r = el.getBoundingClientRect();
+            return r.width > 0 && r.right > box.right + 1 && !inScroller(el);
+          })
+          .map((el) => `${el.tagName}.${String(el.className).slice(0, 40)}`);
+      });
+
+      expect(escaped, `${route} at ${width}px`).toEqual([]);
     }
   }
 });

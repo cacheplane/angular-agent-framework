@@ -98,7 +98,12 @@ export default async function DocsPage({ params }: DocsRouteProps) {
       />
       <div className="flex-1 flex min-w-0 docs-shell-body">
         <div className="flex-1 min-w-0">
-          <div className="px-4 sm:px-6 md:px-12 pt-6">
+          {/* Same measure as the article and the prev/next rail below it, so the
+            * whole column shares one right edge. Without md:max-w-3xl this
+            * block stretched to the full content width and PageActions floated
+            * ~500px right of the prose it belongs to (1272px vs 768px at
+            * 1920). */}
+          <div className="px-4 sm:px-6 md:px-12 md:max-w-3xl pt-6">
             <DocsBreadcrumb library={library as LibraryId} section={section} slug={slug} title={doc.title} />
             <DocsPageHeader
               library={library as LibraryId}
@@ -106,7 +111,7 @@ export default async function DocsPage({ params }: DocsRouteProps) {
               actions={<PageActions library={library} section={section} slug={slug} headings={headings} />}
             />
           </div>
-          <article className="flex-1 py-8 px-4 sm:px-6 md:px-12 md:max-w-3xl overflow-x-hidden">
+          <article className="flex-1 py-8 px-4 sm:px-6 md:px-12 md:max-w-3xl">
             <MdxRenderer source={doc.body} />
           </article>
           {section === 'api' && (() => {

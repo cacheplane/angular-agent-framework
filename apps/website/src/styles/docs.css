@@ -978,9 +978,8 @@
   font-weight: 500;
 }
 
-/* DocsBreadcrumb — verbatim, including the inconsistent li/separator
- * typography (crumb/sep were separate style-variable shapes; a later
- * polish pass reconciles them, not this migration). */
+/* DocsBreadcrumb — the crumb/separator typography the migration left
+ * inconsistent is reconciled below, on the list rather than the links. */
 .docs-crumb-nav {
   margin-bottom: 16px;
 }

@@ -10,16 +10,31 @@
  * Fonts: unified onto the next/font vars — see the font note atop ui.css.
  */
 
-/* One nav height. The fixed nav measures 58px (px-6 py-4) and 81px at the md
- * breakpoint (md:px-8 md:py-5, 1px border included). Everything that offsets
- * against the nav — the docs shell's top padding, both sticky rails, the
- * mobile overlay, and html's scroll-padding for anchor jumps — reads this one
- * variable instead of hardcoding its own guess (the old hardcoded 80px left
- * 22px of dead space on phones; anchors landed 81px under the nav). */
+/* One nav height. Everything that offsets against the nav — the docs shell's
+ * top padding, both sticky rails, the mobile overlay, and html's scroll-padding
+ * for anchor jumps — reads this one variable instead of hardcoding its own
+ * guess (the old hardcoded 80px left 22px of dead space on phones; anchors
+ * landed 81px under the nav).
+ *
+ * The nav has THREE heights, not two, because padding and content step at
+ * different breakpoints (Nav.tsx): the inner row is `px-6 py-4 md:px-8 md:py-5`,
+ * so padding grows at md (768px), but the tall `hidden lg:flex` link row only
+ * appears at lg (1024px). Between them the nav is 66px — a 25px logo in 40px of
+ * padding plus the 1px border. This variable used to jump straight to 81px at
+ * md, so from 768px to 1023px every offset overshot by 15px: dead space above
+ * the docs column, and the mobile drawer (top: nav-h - 1px) hung 14px below the
+ * nav it is supposed to be attached to. These are measured, not derived, so
+ * only a real browser can hold them honest: e2e/nav-height.spec.ts asserts
+ * nav.height === --nav-h at each of the three steps. */
 :root {
   --nav-h: 58px;
 }
 @media (min-width: 768px) {
+  :root {
+    --nav-h: 66px;
+  }
+}
+@media (min-width: 1024px) {
   :root {
     --nav-h: 81px;
   }
