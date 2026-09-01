@@ -359,7 +359,9 @@ async function assertCompatibilityMarkers(
     );
     await marker.waitFor();
     const markerText = await marker.innerText();
-    if (markerText !== `${packageName} ready`) {
+    const expectedText =
+      packageName === 'ag-ui' ? 'AG-UI ready' : `${packageName} ready`;
+    if (markerText !== expectedText) {
       throw new Error(
         `${packageName} compatibility probe reported "${markerText}"`
       );
