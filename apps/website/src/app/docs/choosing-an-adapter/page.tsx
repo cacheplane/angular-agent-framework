@@ -4,7 +4,9 @@ import { notFound } from 'next/navigation';
 import { DocsControlPlane } from '../../../components/docs/DocsControlPlane';
 import { DocsSearch } from '../../../components/docs/DocsSearch';
 import { MdxRenderer } from '../../../components/docs/MdxRenderer';
+import { DocsTOC } from '../../../components/docs/DocsTOC';
 import { createPageMetadata } from '../../../lib/site-metadata';
+import { extractHeadings } from '../../../lib/extract-headings';
 import { stripFrontmatter } from '../../../lib/docs';
 
 const PAGE_TITLE = 'Choosing an adapter';
@@ -32,6 +34,7 @@ export default function ChoosingAnAdapterPage() {
   if (!filePath) notFound();
 
   const source = stripFrontmatter(fs.readFileSync(filePath, 'utf8'));
+  const headings = extractHeadings(source);
 
   return (
     <div className="flex min-h-screen docs-shell-page">
@@ -48,11 +51,16 @@ export default function ChoosingAnAdapterPage() {
         <div className="flex-1 min-w-0">
           <article
             aria-label={PAGE_TITLE}
-            className="flex-1 py-8 px-4 sm:px-6 md:px-12 md:max-w-3xl overflow-x-hidden"
+            className="flex-1 py-8 px-4 sm:px-6 md:px-12 md:max-w-3xl"
           >
             <MdxRenderer source={source} />
           </article>
         </div>
+        {/* This page carries as many headings as any library page, so it gets
+          * the same rail. It stays library-neutral, so it takes no breadcrumb
+          * or page header — both are keyed to a library it deliberately
+          * has not picked. */}
+        <DocsTOC headings={headings} />
       </div>
     </div>
   );
