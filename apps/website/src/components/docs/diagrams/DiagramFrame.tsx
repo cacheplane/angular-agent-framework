@@ -1,7 +1,11 @@
 import type { ReactNode } from 'react';
 
 interface DiagramFrameProps {
-  /** Unique per rendered diagram; namespaces the SVG defs ids (`{slug}-dots`, `{slug}-arrow`). */
+  /**
+   * Unique per rendered diagram; namespaces the SVG defs ids (`{slug}-dots`, `{slug}-arrow`).
+   * Must be unique per rendered diagram INSTANCE on a page — a duplicate slug cross-wires
+   * `url(#…)` defs document-wide (first match wins).
+   */
   slug: string;
   viewWidth: number;
   viewHeight: number;
@@ -13,6 +17,11 @@ interface DiagramFrameProps {
   children: ReactNode;
 }
 
+/**
+ * These are React Server Components by design — no hooks/context, which is
+ * why `slug` is threaded explicitly through every primitive instead of being
+ * derived implicitly.
+ */
 export function DiagramFrame({
   slug,
   viewWidth,

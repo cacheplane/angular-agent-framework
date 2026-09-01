@@ -15,6 +15,11 @@ interface DiagramNodeProps {
 
 const PAD = 16;
 
+/**
+ * SVG text neither wraps nor clips — the caller owns fitting text to `w`.
+ * Minimum heights: `h >= 64` with eyebrow+meta, `h >= 52` with meta only,
+ * any `h` for title-only (vertically centered).
+ */
 export function DiagramNode({
   x,
   y,

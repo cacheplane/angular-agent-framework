@@ -826,7 +826,6 @@ body:has([data-website-workspace-host]) {
   font-family: var(--font-mono);
   font-size: 10px;
   fill: var(--color-accent);
-  text-anchor: middle;
 }
 
 /*

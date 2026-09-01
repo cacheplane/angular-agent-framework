@@ -120,6 +120,22 @@ const CONTRACTS: StyleContract[] = [
       'overscroll-behavior': /overscroll-behavior:\s*none/,
     },
   },
+  {
+    file: 'docs.css',
+    selector: '.tp-diagram-figure',
+    why: 'Diagram SVGs are wider than the article column on narrow viewports. Without horizontal scrolling the figure either overflows the page or gets silently clipped.',
+    requires: {
+      'overflow-x': /overflow-x:\s*auto/,
+    },
+  },
+  {
+    file: 'docs.css',
+    selector: '.tp-diagram-svg',
+    why: 'The docs-scale cap keeps diagrams from ballooning past a readable width in the article column; losing it lets the SVG stretch to the full (scrollable) figure width instead.',
+    requires: {
+      'max-width': /max-width:\s*680px/,
+    },
+  },
 ];
 
 describe('style contracts', () => {

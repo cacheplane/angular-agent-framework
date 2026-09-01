@@ -33,6 +33,24 @@ describe('diagram kit primitives', () => {
     expect(container.querySelector('figure')?.getAttribute('data-scale')).toBe('marketing');
   });
 
+  it('DiagramFrame defaults data-scale to docs', () => {
+    const { container } = render(
+      <DiagramFrame slug="d" viewWidth={640} viewHeight={200} label="x">
+        <g />
+      </DiagramFrame>
+    );
+    expect(container.querySelector('figure')?.getAttribute('data-scale')).toBe('docs');
+  });
+
+  it('DiagramEdge omits marker-end when arrow is not set', () => {
+    const { container } = render(
+      <svg>
+        <DiagramEdge d="M0 0 H10" />
+      </svg>
+    );
+    expect(container.querySelector('path.tp-diagram-edge')?.getAttribute('marker-end')).toBeNull();
+  });
+
   it('DiagramNode renders eyebrow, title, meta and tone', () => {
     const { container } = render(
       <svg>
@@ -54,6 +72,7 @@ describe('diagram kit primitives', () => {
     );
     const title = container.querySelector('.tp-diagram-title');
     expect(title?.getAttribute('text-anchor')).toBe('middle');
+    expect(title?.getAttribute('x')).toBe('100');
     expect(container.querySelector('g.tp-diagram-node')?.getAttribute('data-title')).toBe('sans');
   });
 
