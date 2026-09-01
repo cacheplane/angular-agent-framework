@@ -26,7 +26,8 @@ export interface ActivityPanelProps {
 }
 
 function defaultTimestamp(timestamp: string): string {
-  return timestamp;
+  const compact = timestamp.match(/T(\d{2}:\d{2})/u)?.[1];
+  return compact ?? timestamp;
 }
 
 function SeverityIcon({ severity }: { severity: ActivitySeverity }) {
@@ -65,7 +66,7 @@ export function ActivityPanel({
   return (
     <ControlPlaneUtilityPanel title="Activity" onClose={onClose}>
       <ControlPlaneActionBar label="Activity actions">
-        <ControlPlaneOverflowMenu label="Activity actions">
+        <ControlPlaneOverflowMenu label="Activity actions" placement="start">
           <ControlPlaneOverflowMenuItem onSelect={onClear}>
             Clear session activity
           </ControlPlaneOverflowMenuItem>
@@ -87,8 +88,14 @@ export function ActivityPanel({
               data-activity-severity={event.severity}
             >
               <SeverityIcon severity={event.severity} />
-              <time dateTime={event.at}>{formatTimestamp(event.at)}</time>
               <span data-activity-summary>{event.summary}</span>
+              <time
+                dateTime={event.at}
+                aria-label={event.at}
+                data-activity-timestamp
+              >
+                {formatTimestamp(event.at)}
+              </time>
               {event.capability !== currentCapability ? (
                 <span data-activity-capability>{event.capability}</span>
               ) : null}

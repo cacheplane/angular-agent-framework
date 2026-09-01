@@ -46,6 +46,7 @@ export function MobileNavOverlay({
   const triggerRefRef = useRef(triggerRef);
   const restoreFocusRef = useRef(false);
   const pendingNavigationRef = useRef<string | null>(null);
+  const prefersReducedMotionRef = useRef(false);
   const cancelScheduledFocusRef = useRef<(() => void) | null>(null);
   const reportedPresenceRef = useRef<boolean | undefined>(undefined);
   stateRef.current = state;
@@ -59,12 +60,64 @@ export function MobileNavOverlay({
     cancelScheduledFocusRef.current = null;
   }, []);
 
+  const completePostClose = useCallback(() => {
+    cancelScheduledFocus();
+    if (
+      stateRef.current !== 'closed' ||
+      !restoreFocusRef.current
+    ) {
+      return;
+    }
+    restoreFocusRef.current = false;
+    const destination = pendingNavigationRef.current;
+    pendingNavigationRef.current = null;
+    triggerRefRef.current?.current?.focus();
+    if (destination) onCapabilityNavigateRef.current?.(destination);
+  }, [cancelScheduledFocus]);
+
   const requestClose = useCallback(() => {
     if (stateRef.current !== 'open') return;
     restoreFocusRef.current = true;
-    setState('closing');
+    const nextState = prefersReducedMotionRef.current ? 'closed' : 'closing';
+    stateRef.current = nextState;
+    setState(nextState);
     onCloseRef.current();
   }, []);
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return undefined;
+    const reducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)'
+    );
+    const applyPreference = ({
+      matches,
+    }: Pick<MediaQueryList, 'matches'>) => {
+      prefersReducedMotionRef.current = matches;
+      if (!matches) return;
+      cancelScheduledFocus();
+      if (stateRef.current === 'closing') {
+        stateRef.current = 'closed';
+        setState('closed');
+      } else if (stateRef.current === 'closed') {
+        completePostClose();
+      }
+    };
+    const handleChange = () => applyPreference(reducedMotion);
+
+    if (typeof reducedMotion.addEventListener === 'function') {
+      reducedMotion.addEventListener('change', handleChange);
+    } else {
+      reducedMotion.addListener(handleChange);
+    }
+    applyPreference(reducedMotion);
+    return () => {
+      if (typeof reducedMotion.removeEventListener === 'function') {
+        reducedMotion.removeEventListener('change', handleChange);
+      } else {
+        reducedMotion.removeListener(handleChange);
+      }
+    };
+  }, [cancelScheduledFocus, completePostClose]);
 
   useEffect(() => {
     if (isOpen) {
@@ -76,7 +129,10 @@ export function MobileNavOverlay({
       setState((current) => (current === 'open' ? current : 'open'));
       return;
     }
-    setState((current) => (current === 'open' ? 'closing' : current));
+    if (stateRef.current !== 'open') return;
+    const nextState = prefersReducedMotionRef.current ? 'closed' : 'closing';
+    stateRef.current = nextState;
+    setState(nextState);
   }, [cancelScheduledFocus, isOpen]);
 
   useEffect(() => {
@@ -100,7 +156,15 @@ export function MobileNavOverlay({
 
   useEffect(() => {
     if (state !== 'closing') return;
-    const timer = setTimeout(() => setState('closed'), 150);
+    if (prefersReducedMotionRef.current) {
+      stateRef.current = 'closed';
+      setState('closed');
+      return;
+    }
+    const timer = setTimeout(() => {
+      stateRef.current = 'closed';
+      setState('closed');
+    }, 150);
     return () => clearTimeout(timer);
   }, [state]);
 
@@ -122,14 +186,13 @@ export function MobileNavOverlay({
 
   useEffect(() => {
     if (state !== 'closed' || !restoreFocusRef.current) return undefined;
-    restoreFocusRef.current = false;
+    if (prefersReducedMotionRef.current) {
+      completePostClose();
+      return undefined;
+    }
     const restoreFocusAndNavigate = () => {
       cancelScheduledFocusRef.current = null;
-      if (stateRef.current !== 'closed') return;
-      const destination = pendingNavigationRef.current;
-      pendingNavigationRef.current = null;
-      triggerRefRef.current?.current?.focus();
-      if (destination) onCapabilityNavigateRef.current?.(destination);
+      completePostClose();
     };
 
     if (typeof window.requestAnimationFrame === 'function') {
@@ -142,7 +205,7 @@ export function MobileNavOverlay({
     }
 
     return cancelScheduledFocus;
-  }, [cancelScheduledFocus, state]);
+  }, [cancelScheduledFocus, completePostClose, state]);
 
   const interceptCapabilityNavigation = useCallback(
     (event: ReactMouseEvent<HTMLDivElement>) => {

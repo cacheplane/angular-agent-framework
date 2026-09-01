@@ -114,6 +114,23 @@ const renderOverlay = ({
 const dialog = () =>
   screen.getByRole('dialog', { name: 'Cockpit control plane' });
 
+function stubReducedMotion(matches: boolean) {
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn((query: string) => ({
+      matches:
+        query === '(prefers-reduced-motion: reduce)' ? matches : false,
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }))
+  );
+}
+
 describe('MobileNavOverlay', () => {
   beforeEach(() => {
     window.localStorage.clear();
@@ -250,6 +267,103 @@ describe('MobileNavOverlay', () => {
       expect(focus).toHaveBeenCalledTimes(1);
     }
   );
+
+  it.each([
+    ['Escape', () => fireEvent.keyDown(document, { key: 'Escape' })],
+    [
+      'drawer close',
+      () =>
+        fireEvent.click(
+          within(dialog()).getByRole('button', { name: 'Close navigation' })
+        ),
+    ],
+  ] as const)(
+    'closes, releases presence, and restores focus synchronously with reduced motion for %s',
+    (_closePath, close) => {
+      stubReducedMotion(true);
+      const result = renderOverlay();
+      const trigger = result.triggerRef.current;
+      if (!trigger) throw new Error('Expected the shell trigger');
+      const focus = vi.spyOn(trigger, 'focus');
+
+      close();
+
+      expect(result.onClose).toHaveBeenCalledTimes(1);
+      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(result.onPresenceChange).toHaveBeenLastCalledWith(false);
+      expect(focus).toHaveBeenCalledTimes(1);
+    }
+  );
+
+  it('restores focus and completes deferred navigation synchronously with reduced motion', () => {
+    stubReducedMotion(true);
+    const result = renderOverlay();
+    const trigger = result.triggerRef.current;
+    if (!trigger) throw new Error('Expected the shell trigger');
+    const focus = vi.spyOn(trigger, 'focus');
+
+    expect(
+      fireEvent.click(
+        within(dialog()).getByRole('link', { name: 'Spec Rendering' })
+      )
+    ).toBe(false);
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(result.onPresenceChange).toHaveBeenLastCalledWith(false);
+    expect(focus).toHaveBeenCalledTimes(1);
+    expect(result.onCapabilityNavigate).toHaveBeenCalledTimes(1);
+    expect(result.onCapabilityNavigate).toHaveBeenCalledWith(
+      expect.stringContaining(
+        '/render/core-capabilities/spec-rendering/overview/python'
+      )
+    );
+  });
+
+  it('finishes an in-flight close when reduced motion activates and removes its listener', () => {
+    const listeners = new Set<() => void>();
+    const reducedMotion = {
+      matches: false,
+      media: '(prefers-reduced-motion: reduce)',
+      onchange: null,
+      addEventListener: (_type: string, listener: () => void) =>
+        listeners.add(listener),
+      removeEventListener: (_type: string, listener: () => void) =>
+        listeners.delete(listener),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    };
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn((query: string) =>
+        query === reducedMotion.media
+          ? reducedMotion
+          : {
+              ...reducedMotion,
+              media: query,
+              addEventListener: vi.fn(),
+              removeEventListener: vi.fn(),
+            }
+      )
+    );
+    const result = renderOverlay();
+    const trigger = result.triggerRef.current;
+    if (!trigger) throw new Error('Expected the shell trigger');
+    const focus = vi.spyOn(trigger, 'focus');
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(dialog().getAttribute('data-state')).toBe('closing');
+
+    reducedMotion.matches = true;
+    act(() => listeners.forEach((listener) => listener()));
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(result.onPresenceChange).toHaveBeenLastCalledWith(false);
+    expect(focus).toHaveBeenCalledTimes(1);
+
+    result.unmount();
+    expect(listeners.size).toBe(0);
+  });
 
   it('defers capability routing until the drawer has closed and restored focus', () => {
     const result = renderOverlay();

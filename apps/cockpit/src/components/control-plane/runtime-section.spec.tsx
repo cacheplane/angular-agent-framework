@@ -93,6 +93,9 @@ describe('RuntimeSection', () => {
     expect(cockpitCss).toMatch(/CanvasText/);
     expect(cockpitCss).toMatch(/HighlightText/);
     expect(cockpitCss).toMatch(
+      /@media \(forced-colors:\s*active\)[\s\S]*?\[data-runtime-status\]\[data-runtime-phase\]\s*\{[\s\S]*?color:\s*CanvasText;/
+    );
+    expect(cockpitCss).toMatch(
       /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*?\.cockpit-runtime-status-loader[\s\S]*?animation:\s*none/
     );
   });
@@ -135,6 +138,11 @@ describe('RuntimeSection', () => {
     expect(
       document.querySelector('[data-control-plane-overflow-menu-root]')
     ).toBeTruthy();
+    expect(
+      document
+        .querySelector('[data-control-plane-overflow-menu-root]')
+        ?.getAttribute('data-overflow-placement')
+    ).toBe('end');
     expect(
       document.querySelector('[data-control-plane-overflow-trigger]')
     ).toBeTruthy();

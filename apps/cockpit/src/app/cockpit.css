@@ -703,6 +703,10 @@ pre.shiki {
   background: var(--ds-surface);
   box-shadow: var(--ds-shadow-md);
 }
+.cockpit-control-plane [data-control-plane-overflow-menu-root][data-overflow-placement="start"] > [data-control-plane-overflow-menu] {
+  left: 0;
+  right: auto;
+}
 .cockpit-control-plane [data-control-plane-overflow-item] {
   width: 100%;
   min-height: 34px;
@@ -802,14 +806,23 @@ pre.shiki {
   width: 1px;
   background: var(--ds-border-strong);
 }
-[data-activity-event] time {
+[data-activity-timestamp] {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
   color: var(--ds-text-muted);
   font-family: var(--ds-font-mono);
   font-size: 9px;
 }
-[data-activity-summary] { min-width: 0; overflow-wrap: anywhere; }
+[data-activity-summary] {
+  min-width: 0;
+  grid-column: 1;
+  grid-row: 1;
+  overflow-wrap: anywhere;
+}
 [data-activity-capability] {
   grid-column: 1 / -1;
+  grid-row: 2;
   color: var(--ds-text-muted);
   font-family: var(--ds-font-mono);
   font-size: 9px;
@@ -921,7 +934,7 @@ pre.shiki {
     color: HighlightText;
     background: Highlight;
   }
-  [data-runtime-status] {
+  [data-runtime-status][data-runtime-phase] {
     padding: 1px 4px;
     border: 1px solid CanvasText;
     border-radius: 7px;

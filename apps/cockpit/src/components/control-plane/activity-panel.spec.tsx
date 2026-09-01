@@ -36,6 +36,21 @@ const events: SessionActivityEvent[] = [
 ];
 
 describe('ActivityPanel', () => {
+  it('styles the local menu inside the pane and explicitly places timeline fields', () => {
+    expect(cockpitCss).toMatch(
+      /\[data-control-plane-overflow-menu-root\]\[data-overflow-placement="start"\]\s*>\s*\[data-control-plane-overflow-menu\]\s*\{[\s\S]*?left:\s*0;[\s\S]*?right:\s*auto;/
+    );
+    expect(cockpitCss).toMatch(
+      /\[data-activity-summary\]\s*\{[\s\S]*?grid-column:\s*1;[\s\S]*?grid-row:\s*1;/
+    );
+    expect(cockpitCss).toMatch(
+      /\[data-activity-timestamp\]\s*\{[\s\S]*?grid-column:\s*2;[\s\S]*?grid-row:\s*1;/
+    );
+    expect(cockpitCss).toMatch(
+      /\[data-activity-capability\]\s*\{[\s\S]*?grid-column:\s*1\s*\/\s*-1;[\s\S]*?grid-row:\s*2;/
+    );
+  });
+
   it('styles stable timeline hooks with neutral, error, and recovery states', () => {
     expect(cockpitCss).toMatch(/\[data-activity-connector\]/);
     expect(cockpitCss).toMatch(
@@ -45,6 +60,33 @@ describe('ActivityPanel', () => {
       /\[data-activity-kind="runtime_recovered"\][\s\S]*?var\(--cockpit-state-success/
     );
     expect(cockpitCss).toMatch(/\[data-cockpit-activity-attention\]/);
+  });
+
+  it('uses a compact default timestamp while preserving the full datetime', () => {
+    render(
+      <ActivityPanel
+        events={events}
+        currentCapability="streaming"
+        onClose={vi.fn()}
+        onClear={vi.fn()}
+      />
+    );
+
+    const timestamp = document.querySelector('[data-activity-timestamp]');
+    expect(timestamp?.textContent).toBe('17:00');
+    expect(timestamp?.getAttribute('datetime')).toBe(
+      '2026-08-31T17:00:00.000Z'
+    );
+    expect(timestamp?.getAttribute('aria-label')).toBe(
+      '2026-08-31T17:00:00.000Z'
+    );
+    const firstRow = screen.getAllByRole('listitem')[0];
+    expect(Array.from(firstRow?.children ?? []).map((child) => child.tagName)).toEqual([
+      'SPAN',
+      'SPAN',
+      'TIME',
+      'SPAN',
+    ]);
   });
 
   it('renders safe events newest first with severity icons and cross-capability labels only', () => {
@@ -146,6 +188,11 @@ describe('ActivityPanel', () => {
       document.querySelector('[data-control-plane-overflow-menu-root]')
     ).toBeTruthy();
     expect(
+      document
+        .querySelector('[data-control-plane-overflow-menu-root]')
+        ?.getAttribute('data-overflow-placement')
+    ).toBe('start');
+    expect(
       document.querySelector('[data-control-plane-overflow-trigger]')
     ).toBeTruthy();
   });
@@ -197,6 +244,11 @@ describe('ActivityPanel', () => {
     ).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'Activity actions' }));
+    expect(
+      screen
+        .getByRole('menu', { name: 'Activity actions' })
+        .closest('[data-overflow-placement="start"]')
+    ).toBeTruthy();
     fireEvent.click(
       await screen.findByRole('menuitem', { name: 'Clear session activity' })
     );

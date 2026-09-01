@@ -15,12 +15,14 @@ export interface ControlPlaneOverflowMenuProps {
   label: string;
   children: ReactNode;
   tabIndex?: number;
+  placement?: 'start' | 'end';
 }
 
 export function ControlPlaneOverflowMenu({
   label,
   children,
   tabIndex,
+  placement = 'end',
 }: ControlPlaneOverflowMenuProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -106,7 +108,11 @@ export function ControlPlaneOverflowMenu({
   };
 
   return (
-    <div ref={rootRef} data-control-plane-overflow-menu-root>
+    <div
+      ref={rootRef}
+      data-control-plane-overflow-menu-root
+      data-overflow-placement={placement}
+    >
       <button
         ref={triggerRef}
         type="button"
