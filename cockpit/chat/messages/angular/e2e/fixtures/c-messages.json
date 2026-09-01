@@ -5,6 +5,14 @@
       "response": {
         "content": "Hi! I'm the chat-messages capability demo. I show how ChatMessageListComponent, ChatInputComponent, and ChatTypingIndicatorComponent render together. Try sending a few messages to see the bubbles and typing indicator in action."
       }
+    },
+    {
+      "match": { "userMessage": "Stream a TypeScript code fence" },
+      "response": {
+        "content": "Here is the snippet:\n\n```typescript\nconst answer = 42;\n```\n\nThe constant is available for later use."
+      },
+      "chunkSize": 3,
+      "latency": 25
     }
   ]
 }
