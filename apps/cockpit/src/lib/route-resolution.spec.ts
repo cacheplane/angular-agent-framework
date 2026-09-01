@@ -47,22 +47,78 @@ describe('buildNavigationTree', () => {
   it('groups manifest entries by product and section', () => {
     const tree = buildNavigationTree(cockpitManifest);
 
-    expect(tree).toHaveLength(5);
-    expect(tree[0]).toMatchObject({
-      product: 'deep-agents',
+    expect(tree.map((product) => product.product)).toEqual([
+      'deep-agents',
+      'langgraph',
+      'ag-ui',
+      'render',
+      'chat',
+      'runtimes',
+    ]);
+  });
+
+  it('lists every runtimes topic under core-capabilities', () => {
+    const runtimes = buildNavigationTree(cockpitManifest).find(
+      (product) => product.product === 'runtimes'
+    );
+    const coreCapabilities = runtimes?.sections.find(
+      (section) => section.section === 'core-capabilities'
+    );
+
+    expect(coreCapabilities?.entries.map((entry) => entry.topic)).toEqual([
+      'microsoft-agent-framework',
+      'aws-strands',
+      'mastra',
+    ]);
+  });
+});
+
+describe('runtimes capability presentation', () => {
+  const resolveRuntime = (topic: string, language: 'python' | 'typescript' = 'python') =>
+    resolveCockpitEntry({
+      manifest: cockpitManifest,
+      product: 'runtimes',
+      section: 'core-capabilities',
+      topic,
+      page: 'overview',
+      language,
     });
-    expect(tree[1]).toMatchObject({
-      product: 'langgraph',
-    });
-    expect(tree[2]).toMatchObject({
-      product: 'ag-ui',
-    });
-    expect(tree[3]).toMatchObject({
-      product: 'render',
-    });
-    expect(tree[4]).toMatchObject({
-      product: 'chat',
-    });
+
+  it('resolves each runtime topic instead of throwing', () => {
+    for (const topic of ['microsoft-agent-framework', 'aws-strands', 'mastra']) {
+      expect(resolveRuntime(topic)).toMatchObject({
+        product: 'runtimes',
+        topic,
+        entryKind: 'capability',
+      });
+    }
+  });
+
+  it('serves Python-lane runtimes from their registered module assets', () => {
+    const presentation = getCapabilityPresentation(resolveRuntime('aws-strands'));
+
+    expect(presentation.kind).toBe('capability');
+    if (presentation.kind !== 'capability') return;
+    expect(presentation.runtimeUrl).toBe('runtimes/aws-strands');
+    expect(presentation.backendAssetPaths).toContain(
+      'cockpit/runtimes/aws-strands/python/src/agent.py'
+    );
+  });
+
+  it('falls back to the Angular-lane module for a runtime with no Python lane', () => {
+    const presentation = getCapabilityPresentation(resolveRuntime('mastra'));
+
+    expect(presentation.kind).toBe('capability');
+    if (presentation.kind !== 'capability') return;
+    // The manifest entry's language is 'python' (the canonical URL lane) but
+    // Mastra's only descriptor is the Angular one — the lookup must still find
+    // it rather than falling through to non-existent cockpit/runtimes/mastra/python paths.
+    expect(presentation.codeAssetPaths).toContain(
+      'cockpit/runtimes/mastra/angular/src/app/mastra.component.ts'
+    );
+    expect(presentation.promptAssetPaths).toEqual([
+      'cockpit/runtimes/mastra/angular/prompts/mastra.md',
+    ]);
   });
 });
 

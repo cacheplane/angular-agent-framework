@@ -3,10 +3,11 @@ export const PRODUCT_LABELS: Record<string, string> = {
   'langgraph': 'LangGraph',
   'render': 'Render',
   'chat': 'Chat',
+  'runtimes': 'Runtimes',
 };
 
 export function stripProductPrefix(title: string): string {
-  const prefixes = ['Deep Agents ', 'LangGraph ', 'Render ', 'Chat '];
+  const prefixes = ['Deep Agents ', 'LangGraph ', 'Render ', 'Chat ', 'Runtimes '];
   for (const p of prefixes) {
     if (title.startsWith(p)) return title.slice(p.length);
   }
