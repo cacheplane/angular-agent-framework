@@ -39,9 +39,12 @@ export async function ChatLandingCodeShowcase() {
   return (
     <section className="chat-code">
       <div className="chat-show-intro">
-        <p className="chat-show-eyebrow">
+        <div className="show-intro-rail">
+          <p className="chat-show-eyebrow">
           Developer Experience
-        </p>
+          </p>
+          <span className="show-intro-rail-line" aria-hidden="true" />
+        </div>
         <h2 className="chat-show-heading">
           Full-featured chat in a few lines
         </h2>

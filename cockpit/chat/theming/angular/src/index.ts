@@ -23,7 +23,7 @@ export const chatThemingAngularModule: CockpitCapabilityModule = {
     language: 'angular',
   },
   title: 'Chat Theming (Angular)',
-  docsPath: '/docs/chat/core-capabilities/theming/overview/angular',
+  docsPath: '/docs/chat/guides/theming',
   promptAssetPaths: ['cockpit/chat/theming/python/prompts/theming.md'],
   codeAssetPaths: ['cockpit/chat/theming/angular/src/app/theming.component.ts'],
 };

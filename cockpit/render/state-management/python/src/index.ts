@@ -27,7 +27,7 @@ export const renderStateManagementPythonModule: CockpitCapabilityModule = {
     language: 'python',
   },
   title: 'Render State Management (Python)',
-  docsPath: '/docs/render/core-capabilities/state-management/overview/python',
+  docsPath: '/docs/render/guides/state-store',
   promptAssetPaths: ['cockpit/render/state-management/python/prompts/state-management.md'],
   codeAssetPaths: [
     'cockpit/render/state-management/angular/src/app/state-management.component.ts',

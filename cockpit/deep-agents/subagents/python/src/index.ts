@@ -27,7 +27,9 @@ export const deepAgentsSubagentsPythonModule: CockpitCapabilityModule = {
     language: 'python',
   },
   title: 'Deep Agents Subagents (Python)',
-  docsPath: '/docs/deep-agents/core-capabilities/subagents/overview/python',
+  // No `deep-agents` library exists on the website yet; the empty string is
+  // the "no published docs page" sentinel and renders no Docs link.
+  docsPath: '',
   promptAssetPaths: ['cockpit/deep-agents/subagents/python/prompts/subagents.md'],
   codeAssetPaths: [
     'cockpit/deep-agents/subagents/angular/src/app/subagents.component.ts',

@@ -27,7 +27,7 @@ export const renderSpecRenderingPythonModule: CockpitCapabilityModule = {
     language: 'python',
   },
   title: 'Render Spec Rendering (Python)',
-  docsPath: '/docs/render/core-capabilities/spec-rendering/overview/python',
+  docsPath: '/docs/render/guides/specs',
   promptAssetPaths: ['cockpit/render/spec-rendering/python/prompts/spec-rendering.md'],
   codeAssetPaths: [
     'cockpit/render/spec-rendering/angular/src/app/spec-rendering.component.ts',

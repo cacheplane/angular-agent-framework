@@ -27,7 +27,7 @@ export const chatMessagesPythonModule: CockpitCapabilityModule = {
     language: 'python',
   },
   title: 'Chat Messages (Python)',
-  docsPath: '/docs/chat/core-capabilities/messages/overview/python',
+  docsPath: '/docs/chat/concepts/message-model',
   promptAssetPaths: ['cockpit/chat/messages/python/prompts/messages.md'],
   codeAssetPaths: [
     'cockpit/chat/messages/angular/src/app/messages.component.ts',

@@ -1,6 +1,7 @@
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { SectionHeader } from '../ui/SectionHeader';
+import { WEBSITE_SUPPORTED_ANGULAR_MAJORS } from '../pricing/angular-support.mjs';
 
 interface ProofCell {
   /** Big Garamond numeral, or null when the cell renders a live badge. */
@@ -40,6 +41,14 @@ export const PROOF_CELLS: readonly ProofCell[] = [
     caption: 'HVTrust supply-chain grade, live',
     sourceLabel: 'hvtracker.net/agents/threadplane',
     sourceHref: 'https://hvtracker.net/agents/threadplane/',
+  },
+  {
+    // Revived per the homepage design spec's condition: npm @latest publishes
+    // ^20 || ^21 || ^22 (verified 2026-08-31). Derived, never hardcoded.
+    value: `${WEBSITE_SUPPORTED_ANGULAR_MAJORS[0]}–${WEBSITE_SUPPORTED_ANGULAR_MAJORS.at(-1)}`,
+    caption: 'Angular majors supported, CI-tested',
+    sourceLabel: 'npmjs.com/@threadplane/langgraph',
+    sourceHref: 'https://www.npmjs.com/package/@threadplane/langgraph',
   },
 ];
 

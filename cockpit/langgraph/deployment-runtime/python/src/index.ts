@@ -27,7 +27,7 @@ export const langgraphDeploymentRuntimePythonModule: CockpitCapabilityModule = {
     language: 'python',
   },
   title: 'LangGraph Deployment Runtime (Python)',
-  docsPath: '/docs/langgraph/core-capabilities/deployment-runtime/overview/python',
+  docsPath: '/docs/langgraph/guides/deployment',
   promptAssetPaths: [
     'cockpit/langgraph/deployment-runtime/python/prompts/deployment-runtime.md',
   ],

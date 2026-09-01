@@ -27,7 +27,7 @@ export const langgraphDurableExecutionPythonModule: CockpitCapabilityModule = {
     language: 'python',
   },
   title: 'LangGraph Durable Execution (Python)',
-  docsPath: '/docs/langgraph/core-capabilities/durable-execution/overview/python',
+  docsPath: '/docs/langgraph/guides/persistence',
   promptAssetPaths: ['cockpit/langgraph/durable-execution/python/prompts/durable-execution.md'],
   codeAssetPaths: [
     'cockpit/langgraph/durable-execution/angular/src/app/durable-execution.component.ts',

@@ -23,7 +23,7 @@ export const renderRepeatLoopsAngularModule: CockpitCapabilityModule = {
     language: 'angular',
   },
   title: 'Render Repeat Loops (Angular)',
-  docsPath: '/docs/render/core-capabilities/repeat-loops/overview/angular',
+  docsPath: '/docs/render/guides/specs',
   promptAssetPaths: ['cockpit/render/repeat-loops/angular/prompts/repeat-loops.md'],
   codeAssetPaths: ['cockpit/render/repeat-loops/angular/src/app/repeat-loops.component.ts'],
 };

@@ -24,7 +24,7 @@ export const agUiSubagentsAngularModule: CockpitCapabilityModule = {
     language: 'angular',
   },
   title: 'AG-UI Subagents (Angular)',
-  docsPath: '/docs/ag-ui/core-capabilities/subagents/overview/angular',
+  docsPath: '/docs/chat/components/chat-subagent-card',
   promptAssetPaths: [
     'cockpit/ag-ui/subagents/angular/prompts/subagents.md',
   ],

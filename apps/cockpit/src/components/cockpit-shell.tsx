@@ -9,7 +9,7 @@ import React, {
   useState,
 } from 'react';
 import { cockpitManifest } from '@threadplane/cockpit-registry';
-import { Menu } from 'lucide-react';
+import { BookOpen, Menu } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
   parseControlPlaneMode,
@@ -36,6 +36,7 @@ import {
 import { copyRuntimeDiagnostics } from '../lib/runtime/runtime-diagnostics';
 import type { RuntimeTerminalTransition } from '../lib/runtime/runtime-state';
 import { useRuntimeController } from '../lib/runtime/use-runtime-controller';
+import { resolveDocsUrl } from '../lib/docs-links';
 import { CodeMode } from './code-mode/code-mode';
 import { ApiMode } from './api-mode/api-mode';
 import { NarrativeDocs } from './narrative-docs/narrative-docs';
@@ -197,6 +198,9 @@ export function CockpitShell({
     onActivity: appendActivity,
     onTerminalTransition: handleTerminalTransition,
   });
+  // Null for the capabilities that have no published docs page yet — those
+  // render no link at all rather than one that 404s.
+  const docsUrl = resolveDocsUrl(presentation.docsPath);
 
   useEffect(() => {
     if (!preferences.hydrated || queryHandled.current) return;
@@ -462,6 +466,17 @@ export function CockpitShell({
               {contextLabel}
             </p>
           </div>
+          {docsUrl ? (
+            <a
+              className="shrink-0 inline-flex items-center gap-1.5 text-xs text-[var(--ds-text-secondary)] hover:text-[var(--ds-text-primary)] no-underline"
+              href={docsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <BookOpen size={14} aria-hidden="true" />
+              Read docs
+            </a>
+          ) : null}
         </header>
 
         <div className="min-h-0 relative">

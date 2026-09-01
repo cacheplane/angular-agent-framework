@@ -27,7 +27,7 @@ export const runtimesMicrosoftAgentFrameworkPythonModule: CockpitCapabilityModul
     language: 'python',
   },
   title: 'Runtimes — Microsoft Agent Framework (Python)',
-  docsPath: '/docs/runtimes/core-capabilities/microsoft-agent-framework/overview/python',
+  docsPath: '/docs/runtimes/microsoft-agent-framework/overview',
   promptAssetPaths: ['cockpit/runtimes/microsoft-agent-framework/python/prompts/microsoft-agent-framework.md'],
   codeAssetPaths: [
     'cockpit/runtimes/microsoft-agent-framework/angular/src/app/microsoft-agent-framework.component.ts',
