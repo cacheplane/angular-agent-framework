@@ -150,6 +150,7 @@ export function CockpitShell({
   const queryHandled = useRef(false);
   const mobileTriggerRef = useRef<HTMLButtonElement>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobileOverlayPresent, setIsMobileOverlayPresent] = useState(false);
   const [activeUtility, setActiveUtility] = useState<CockpitUtility>(null);
   const [activityOpenCycle, setActivityOpenCycle] = useState(0);
   const [events, dispatchActivity] = useReducer(activityReducer, []);
@@ -207,6 +208,7 @@ export function CockpitShell({
   }, [preferences]);
 
   const activeMode: ControlPlaneMode = preferences.activeMode;
+  const isMobileModalActive = isSidebarOpen || isMobileOverlayPresent;
 
   const handleModeChange = useCallback(
     (mode: ControlPlaneMode) => {
@@ -350,7 +352,12 @@ export function CockpitShell({
       className="cockpit-shell h-screen overflow-hidden"
       data-hydrated={preferences.hydrated ? 'true' : 'false'}
     >
-      <div className="hidden md:block min-h-0 overflow-hidden">
+      <div
+        className="hidden md:block min-h-0 overflow-hidden"
+        data-cockpit-desktop-navigation
+        inert={isMobileModalActive ? true : undefined}
+        aria-hidden={isMobileModalActive ? true : undefined}
+      >
         <CockpitControlPlane {...controlPlaneProps} />
       </div>
 
@@ -358,26 +365,25 @@ export function CockpitShell({
         controlPlaneProps={controlPlaneProps}
         isOpen={isSidebarOpen}
         onClose={closeMobileNavigation}
+        onPresenceChange={setIsMobileOverlayPresent}
         triggerRef={mobileTriggerRef}
       />
 
-      <section className="grid grid-rows-[auto_1fr] grid-cols-[minmax(0,1fr)] overflow-hidden bg-[var(--ds-surface)]">
+      <section
+        className="grid grid-rows-[auto_1fr] grid-cols-[minmax(0,1fr)] overflow-hidden bg-[var(--ds-surface)]"
+        data-cockpit-workspace
+        inert={isMobileModalActive ? true : undefined}
+        aria-hidden={isMobileModalActive ? true : undefined}
+      >
         <header className="flex items-center justify-between gap-3 px-4 py-3 border-b border-[var(--ds-border)]">
           <div className="flex items-center gap-3 min-w-0">
             <button
               ref={mobileTriggerRef}
-              className="md:hidden"
+              className="cockpit-mobile-navigation-trigger md:hidden"
               onClick={() => setIsSidebarOpen(true)}
-              aria-label={
-                isSidebarOpen ? 'Close navigation' : 'Open navigation'
-              }
+              aria-label="Open navigation"
               aria-expanded={isSidebarOpen}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: 'var(--ds-text-secondary)',
-              }}
+              tabIndex={isMobileModalActive ? -1 : undefined}
             >
               <Menu size={20} strokeWidth={2} aria-hidden="true" />
             </button>

@@ -1,9 +1,11 @@
 /** @vitest-environment jsdom */
-import React, { createRef, useState } from 'react';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import React, { StrictMode, createRef, useCallback, useState } from 'react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { cockpitManifest } from '@threadplane/cockpit-registry';
 import { ThemeProvider } from '@threadplane/ui-react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildNavigationTree } from '../lib/route-resolution';
 import {
   createRuntimeSnapshot,
@@ -19,19 +21,37 @@ const entry = cockpitManifest.find(
     candidate.section === 'core-capabilities' &&
     candidate.topic === 'spec-rendering' &&
     candidate.language === 'python'
-)!;
+);
+if (!entry) throw new Error('Expected the Spec Rendering fixture');
 const snapshot = createRuntimeSnapshot(parseRuntimeTarget(null), entry.topic);
 
-const renderOverlay = (
-  overrides: Partial<React.ComponentProps<typeof MobileNavOverlay>> = {}
-) => {
+const renderOverlay = ({
+  initialOpen = true,
+  onPresenceChange = vi.fn(),
+  strict = false,
+}: {
+  initialOpen?: boolean;
+  onPresenceChange?: ReturnType<typeof vi.fn>;
+  strict?: boolean;
+} = {}) => {
   const onClose = vi.fn();
   const onModeChange = vi.fn();
   const onActiveUtilityChange = vi.fn();
   const triggerRef = createRef<HTMLButtonElement>();
+  let setOpen: React.Dispatch<React.SetStateAction<boolean>> = () => undefined;
+  let bumpSharedState = () => undefined;
 
   function Harness() {
+    const [isOpen, setIsOpen] = useState(initialOpen);
     const [activeUtility, setActiveUtility] = useState<CockpitUtility>(null);
+    const [, setSharedState] = useState(0);
+    setOpen = setIsOpen;
+    bumpSharedState = () => setSharedState((value) => value + 1);
+    const close = useCallback(() => {
+      onClose();
+      setIsOpen(false);
+    }, []);
+
     return (
       <ThemeProvider theme="light">
         <button ref={triggerRef}>Shell trigger</button>
@@ -58,98 +78,281 @@ const renderOverlay = (
             onOpenRuntime: vi.fn(),
             onCopyDiagnostics: vi.fn(),
           }}
-          isOpen
-          onClose={onClose}
+          isOpen={isOpen}
+          onClose={close}
+          onPresenceChange={onPresenceChange}
           triggerRef={triggerRef}
-          {...overrides}
         />
       </ThemeProvider>
     );
   }
 
-  render(<Harness />);
-  return { onClose, onModeChange, onActiveUtilityChange, triggerRef };
+  const rendered = render(
+    strict ? (
+      <StrictMode>
+        <Harness />
+      </StrictMode>
+    ) : (
+      <Harness />
+    )
+  );
+  return {
+    ...rendered,
+    onClose,
+    onModeChange,
+    onActiveUtilityChange,
+    onPresenceChange,
+    triggerRef,
+    reopen: () => act(() => setOpen(true)),
+    bumpSharedState: () => act(bumpSharedState),
+  };
 };
 
-describe('MobileNavOverlay', () => {
-  beforeEach(() => window.localStorage.clear());
+const dialog = () =>
+  screen.getByRole('dialog', { name: 'Cockpit control plane' });
 
-  it('renders nothing when closed', () => {
-    renderOverlay({ isOpen: false });
+describe('MobileNavOverlay', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.runOnlyPendingTimers();
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  it('renders nothing when initially closed without stealing focus', () => {
+    const sentinel = document.createElement('button');
+    document.body.appendChild(sentinel);
+    sentinel.focus();
+
+    const result = renderOverlay({ initialOpen: false });
+
     expect(screen.queryByRole('dialog')).toBeNull();
+    expect(document.activeElement).toBe(sentinel);
+    expect(result.onPresenceChange).toHaveBeenLastCalledWith(false);
+    sentinel.remove();
   });
 
   it('exposes the same operational control-plane state through the adaptive drawer', () => {
     renderOverlay();
-    const dialog = screen.getByRole('dialog', {
-      name: 'Cockpit control plane',
-    });
+    const overlay = dialog();
     for (const mode of ['Run', 'Code', 'Docs', 'API']) {
-      expect(within(dialog).getByRole('button', { name: mode })).toBeTruthy();
+      expect(within(overlay).getByRole('button', { name: mode })).toBeTruthy();
     }
     expect(
-      within(dialog).getByRole('link', { name: 'Spec Rendering' })
+      within(overlay).getByRole('link', { name: 'Spec Rendering' })
     ).toBeTruthy();
     expect(
-      within(dialog).getByRole('button', { name: 'Activity' })
+      within(overlay).getByRole('button', { name: 'Activity' })
     ).toBeTruthy();
     expect(
-      within(dialog).getByRole('button', { name: 'Settings' })
+      within(overlay).getByRole('button', { name: 'Settings' })
     ).toBeTruthy();
     expect(
-      within(dialog).getByRole('button', { name: 'Runtime' })
+      within(overlay).getByRole('button', { name: 'Runtime' })
     ).toBeTruthy();
-    expect(dialog.getAttribute('style') ?? '').not.toContain('width:');
+    expect(overlay.getAttribute('style') ?? '').not.toContain('width:');
   });
 
   it.each(['Activity', 'Settings'] as const)(
     'replaces only the drawer body for %s and restores matching utility focus',
     (utility) => {
       const result = renderOverlay();
-      const dialog = screen.getByRole('dialog', {
-        name: 'Cockpit control plane',
-      });
-      const invoker = within(dialog).getByRole('button', { name: utility });
+      const overlay = dialog();
+      const invoker = within(overlay).getByRole('button', { name: utility });
       fireEvent.click(invoker);
 
       expect(
-        within(dialog).getByRole('heading', { name: utility })
+        within(overlay).getByRole('heading', { name: utility })
       ).toBeTruthy();
-      expect(within(dialog).getByRole('button', { name: 'Run' })).toBeTruthy();
+      expect(within(overlay).getByRole('button', { name: 'Run' })).toBeTruthy();
       expect(
-        within(dialog).queryByRole('button', { name: 'Capability' })
+        within(overlay).queryByRole('button', { name: 'Capability' })
       ).toBeNull();
 
       fireEvent.keyDown(
-        within(dialog).getByRole('heading', { name: utility }),
+        within(overlay).getByRole('heading', { name: utility }),
         { key: 'Escape' }
       );
 
       expect(result.onClose).not.toHaveBeenCalled();
       expect(
-        within(dialog).getByRole('button', { name: 'Capability' })
+        within(overlay).getByRole('button', { name: 'Capability' })
       ).toBeTruthy();
       expect(document.activeElement).toBe(invoker);
     }
   );
 
-  it('closes from Escape, backdrop, and close control and restores shell focus', () => {
+  it.each([
+    ['Escape', () => fireEvent.keyDown(document, { key: 'Escape' })],
+    [
+      'drawer close',
+      () =>
+        fireEvent.click(
+          within(dialog()).getByRole('button', { name: 'Close navigation' })
+        ),
+    ],
+    ['backdrop', () => fireEvent.mouseDown(dialog())],
+    [
+      'primary mode selection',
+      () =>
+        fireEvent.click(within(dialog()).getByRole('button', { name: 'Code' })),
+    ],
+    [
+      'capability navigation',
+      () =>
+        fireEvent.click(
+          within(dialog()).getByRole('link', { name: 'Spec Rendering' })
+        ),
+    ],
+  ] as const)(
+    'keeps focus in the closing drawer and restores the trigger exactly once after 150ms for %s',
+    (_closePath, close) => {
+      const result = renderOverlay();
+      const trigger = result.triggerRef.current;
+      if (!trigger) throw new Error('Expected the shell trigger');
+      const focus = vi.spyOn(trigger, 'focus');
+
+      close();
+
+      expect(result.onClose).toHaveBeenCalledTimes(1);
+      expect(dialog().getAttribute('data-state')).toBe('closing');
+      expect(focus).not.toHaveBeenCalled();
+      expect(result.onPresenceChange).toHaveBeenLastCalledWith(true);
+
+      act(() => vi.advanceTimersByTime(149));
+      expect(screen.getByRole('dialog')).toBeTruthy();
+      expect(focus).not.toHaveBeenCalled();
+
+      act(() => vi.advanceTimersByTime(1));
+      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(result.onPresenceChange).toHaveBeenLastCalledWith(false);
+      expect(focus).toHaveBeenCalledTimes(1);
+
+      act(() => vi.advanceTimersByTime(300));
+      expect(focus).toHaveBeenCalledTimes(1);
+    }
+  );
+
+  it('cancels closing without restoring external focus when reopened', () => {
     const result = renderOverlay();
+    const trigger = result.triggerRef.current;
+    if (!trigger) throw new Error('Expected the shell trigger');
+    const focus = vi.spyOn(trigger, 'focus');
     fireEvent.keyDown(document, { key: 'Escape' });
-    expect(result.onClose).toHaveBeenCalledTimes(1);
-    expect(document.activeElement).toBe(result.triggerRef.current);
+    act(() => vi.advanceTimersByTime(100));
 
-    result.onClose.mockClear();
-    const dialog = screen.getByRole('dialog', {
-      name: 'Cockpit control plane',
-    });
-    fireEvent.mouseDown(dialog);
-    expect(result.onClose).toHaveBeenCalledTimes(1);
+    result.reopen();
+    act(() => vi.advanceTimersByTime(500));
 
-    result.onClose.mockClear();
-    fireEvent.click(
-      within(dialog).getByRole('button', { name: 'Close navigation' })
+    expect(dialog().getAttribute('data-state')).toBe('open');
+    expect(focus).not.toHaveBeenCalled();
+    expect(result.onPresenceChange).not.toHaveBeenCalledWith(false);
+  });
+
+  it('clears the hidden mobile modal immediately at the desktop breakpoint without restoring focus', () => {
+    const listeners = new Set<(event: MediaQueryListEvent) => void>();
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn().mockReturnValue({
+        matches: false,
+        media: '(min-width: 48rem)',
+        onchange: null,
+        addEventListener: (
+          _type: string,
+          listener: (event: MediaQueryListEvent) => void
+        ) => listeners.add(listener),
+        removeEventListener: (
+          _type: string,
+          listener: (event: MediaQueryListEvent) => void
+        ) => listeners.delete(listener),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })
     );
+    const result = renderOverlay();
+    const trigger = result.triggerRef.current;
+    if (!trigger) throw new Error('Expected the shell trigger');
+    const focus = vi.spyOn(trigger, 'focus');
+
+    act(() => {
+      for (const listener of listeners) {
+        listener({ matches: true } as MediaQueryListEvent);
+      }
+    });
+
     expect(result.onClose).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(result.onPresenceChange).toHaveBeenLastCalledWith(false);
+    expect(focus).not.toHaveBeenCalled();
+  });
+
+  it('does not reset dialog focus when shared state rerenders', () => {
+    const result = renderOverlay();
+    const capability = within(dialog()).getByRole('button', {
+      name: 'Capability',
+    });
+    capability.focus();
+
+    result.bumpSharedState();
+
+    expect(document.activeElement).toBe(capability);
+  });
+
+  it('clears reported presence when an open overlay unmounts', () => {
+    const result = renderOverlay();
+    expect(result.onPresenceChange).toHaveBeenLastCalledWith(true);
+    result.onPresenceChange.mockClear();
+
+    result.unmount();
+
+    expect(result.onPresenceChange).toHaveBeenCalledTimes(1);
+    expect(result.onPresenceChange).toHaveBeenCalledWith(false);
+  });
+
+  it('settles on present in StrictMode for an initially open overlay', () => {
+    const onPresenceChange = vi.fn();
+    renderOverlay({ onPresenceChange, strict: true });
+
+    expect(dialog().getAttribute('data-state')).toBe('open');
+    expect(onPresenceChange).toHaveBeenLastCalledWith(true);
+  });
+
+  it('uses stable target hooks and explicit coarse-pointer and reduced-motion rules', () => {
+    renderOverlay();
+    expect(
+      within(dialog()).getByRole('button', { name: 'Close navigation' })
+        .classList
+    ).toContain('cockpit-mobile-control-plane-close');
+
+    const css = readFileSync(
+      join(
+        process.cwd().endsWith('/apps/cockpit')
+          ? process.cwd()
+          : join(process.cwd(), 'apps/cockpit'),
+        'src/app/cockpit.css'
+      ),
+      'utf8'
+    );
+    expect(css).toMatch(
+      /@media \(pointer: coarse\)[\s\S]*\.cockpit-mobile-navigation-trigger[\s\S]*\.cockpit-mobile-control-plane-close/
+    );
+    expect(css).toMatch(
+      /\.cockpit-mobile-navigation-trigger[\s\S]*min-width:\s*44px[\s\S]*min-height:\s*44px/
+    );
+    expect(css).toMatch(
+      /\.cockpit-mobile-control-plane-close[\s\S]*min-width:\s*44px[\s\S]*min-height:\s*44px/
+    );
+    expect(css).toContain('.cockpit-mobile-navigation-trigger:focus-visible');
+    expect(css).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.cockpit-mobile-control-plane[\s\S]*transition:\s*none\s*!important/
+    );
+    expect(css).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.cockpit-runtime-status-loader[\s\S]*animation:\s*none\s*!important/
+    );
   });
 });

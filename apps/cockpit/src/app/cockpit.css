@@ -222,6 +222,11 @@ pre.shiki {
 .cockpit-prose h1 { font-size: 1.875rem; line-height: 1.1; margin: 0 0 0.5rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--ds-accent-border); }
 .cockpit-prose h2 { font-size: 1.5rem; margin: 2.25rem 0 0.75rem; }
 .cockpit-prose h3 { font-size: 1.25rem; margin: 1.5rem 0 0.5rem; }
+.cockpit-prose .cockpit-api-heading {
+  font-family: var(--font-inter), var(--ds-font-sans);
+  letter-spacing: normal;
+  text-transform: none;
+}
 .cockpit-prose p { margin: 0 0 0.75rem; }
 .cockpit-prose ul { margin: 0 0 0.75rem; padding-left: 1.25rem; list-style: disc; }
 .cockpit-prose li { margin-bottom: 0.25rem; }
@@ -610,6 +615,7 @@ pre.shiki {
 }
 .cockpit-control-plane button:focus-visible,
 .cockpit-control-plane a:focus-visible,
+.cockpit-mobile-navigation-trigger:focus-visible,
 .cockpit-mobile-control-plane button:focus-visible,
 .cockpit-mobile-control-plane a:focus-visible {
   outline: 2px solid var(--ds-accent);
@@ -617,6 +623,12 @@ pre.shiki {
 }
 
 /* Adaptive mobile drawer */
+.cockpit-mobile-navigation-trigger {
+  border: 0;
+  color: var(--ds-text-secondary);
+  background: transparent;
+  cursor: pointer;
+}
 .cockpit-mobile-control-plane {
   background: color-mix(in srgb, var(--ds-text-primary) 18%, transparent);
   opacity: 1;
@@ -665,22 +677,33 @@ pre.shiki {
 }
 .cockpit-control-plane[data-mobile] [data-control-plane-pane] { border-right: 0; }
 @media (pointer: coarse) {
+  .cockpit-mobile-navigation-trigger,
+  .cockpit-mobile-control-plane-close {
+    min-width: 44px;
+    min-height: 44px;
+  }
   .cockpit-control-plane [data-control-plane-rail-item],
   .cockpit-control-plane [data-control-plane-section-trigger],
   .cockpit-control-plane [data-control-plane-action],
-  .cockpit-nav-item,
-  .cockpit-mobile-control-plane-header button { min-height: 44px; }
+  .cockpit-nav-item { min-height: 44px; }
   .cockpit-control-plane [data-control-plane-action] {
     width: 44px;
     height: 44px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .cockpit-control-plane *,
+  .cockpit-control-plane * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
   .cockpit-mobile-control-plane,
   .cockpit-mobile-control-plane-panel {
     scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
+    transition: none !important;
+    animation: none !important;
+  }
+  .cockpit-runtime-status-loader {
+    animation: none !important;
   }
 }

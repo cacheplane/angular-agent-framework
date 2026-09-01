@@ -123,6 +123,7 @@ describe('CockpitShell operational composition', () => {
 
   afterEach(() => {
     window.history.replaceState({}, '', '/');
+    vi.useRealTimers();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
@@ -215,6 +216,71 @@ describe('CockpitShell operational composition', () => {
     });
 
     expect(document.activeElement).toBe(capability);
+  });
+
+  it('keeps both background siblings inert through the mobile closing transition', async () => {
+    vi.useFakeTimers();
+    const rendered = renderShell();
+    await act(async () => {
+      await vi.runAllTimersAsync();
+    });
+    const shell = screen.getByRole('main', { name: 'Cockpit shell' });
+    const desktopNavigation = shell.querySelector(
+      '[data-cockpit-desktop-navigation]'
+    );
+    const workspace = shell.querySelector('[data-cockpit-workspace]');
+    const trigger = shell.querySelector<HTMLButtonElement>(
+      '.cockpit-mobile-navigation-trigger'
+    );
+    if (!desktopNavigation || !workspace || !trigger) {
+      throw new Error('Expected named shell boundaries and mobile trigger');
+    }
+
+    fireEvent.click(trigger);
+
+    expect(desktopNavigation.hasAttribute('inert')).toBe(true);
+    expect(desktopNavigation.getAttribute('aria-hidden')).toBe('true');
+    expect(workspace.hasAttribute('inert')).toBe(true);
+    expect(workspace.getAttribute('aria-hidden')).toBe('true');
+    expect(trigger.getAttribute('aria-label')).toBe('Open navigation');
+    expect(trigger.tabIndex).toBe(-1);
+    expect(
+      screen.queryByRole('button', { name: 'Open navigation' })
+    ).toBeNull();
+    expect(
+      screen.getAllByRole('button', { name: 'Close navigation', hidden: true })
+    ).toHaveLength(1);
+
+    fireEvent.click(
+      within(
+        screen.getByRole('dialog', { name: 'Cockpit control plane' })
+      ).getByRole('button', { name: 'Close navigation' })
+    );
+
+    expect(
+      screen
+        .getByRole('dialog', { name: 'Cockpit control plane' })
+        .getAttribute('data-state')
+    ).toBe('closing');
+    expect(desktopNavigation.hasAttribute('inert')).toBe(true);
+    expect(workspace.hasAttribute('inert')).toBe(true);
+    expect(trigger.tabIndex).toBe(-1);
+
+    act(() => vi.advanceTimersByTime(149));
+    expect(desktopNavigation.hasAttribute('inert')).toBe(true);
+    expect(workspace.hasAttribute('inert')).toBe(true);
+
+    act(() => vi.advanceTimersByTime(1));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(desktopNavigation.hasAttribute('inert')).toBe(false);
+    expect(desktopNavigation.hasAttribute('aria-hidden')).toBe(false);
+    expect(workspace.hasAttribute('inert')).toBe(false);
+    expect(workspace.hasAttribute('aria-hidden')).toBe(false);
+    expect(trigger.tabIndex).toBe(0);
+    expect(document.activeElement).toBe(trigger);
+
+    rendered.unmount();
+    vi.useRealTimers();
   });
 
   it('records one fixed Activity event and one existing analytics event only for an actual mode change', async () => {

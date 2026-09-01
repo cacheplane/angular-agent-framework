@@ -62,7 +62,7 @@ function DocArticle({ section }: { section: DocSection }) {
 
         {section.params.length > 0 ? (
           <div>
-            <h5 className="text-xs font-mono uppercase tracking-wide mb-1.5" style={{ color: 'var(--ds-text-muted)' }}>
+            <h5 className="cockpit-api-heading text-xs font-sans font-semibold tracking-normal mb-1.5" style={{ color: 'var(--ds-text-muted)' }}>
               Parameters
             </h5>
             <table className="params w-full text-sm">
@@ -93,7 +93,7 @@ function DocArticle({ section }: { section: DocSection }) {
         {section.returns ? (
           <div>
             <h5
-              className="text-xs font-mono uppercase tracking-wide mb-1.5"
+              className="cockpit-api-heading text-xs font-sans font-semibold tracking-normal mb-1.5"
               style={{ color: 'var(--ds-text-muted)' }}
             >
               Returns
@@ -135,7 +135,7 @@ export function ApiMode({ docSections, hasCodeFiles = false }: ApiModeProps) {
         {tsSections.length > 0 ? (
           <div>
             <h3
-              className="text-xs font-mono uppercase tracking-wide mb-3"
+              className="cockpit-api-heading text-xs font-sans font-semibold tracking-normal mb-3"
               style={{ color: 'var(--ds-accent)' }}
             >
               {LANGUAGE_LABELS[tsSections[0]?.language] ?? 'TypeScript'}
@@ -149,7 +149,7 @@ export function ApiMode({ docSections, hasCodeFiles = false }: ApiModeProps) {
         {pySections.length > 0 ? (
           <div>
             <h3
-              className="text-xs font-mono uppercase tracking-wide mb-3"
+              className="cockpit-api-heading text-xs font-sans font-semibold tracking-normal mb-3"
               style={{ color: 'var(--ds-accent)' }}
             >
               {LANGUAGE_LABELS[pySections[0]?.language] ?? 'Python'}

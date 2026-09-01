@@ -3,6 +3,7 @@
 import React, {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type RefObject,
@@ -20,6 +21,7 @@ export interface MobileNavOverlayProps {
   >;
   isOpen: boolean;
   onClose: () => void;
+  onPresenceChange?: (present: boolean) => void;
   triggerRef?: RefObject<HTMLButtonElement | null>;
 }
 
@@ -27,22 +29,53 @@ export function MobileNavOverlay({
   controlPlaneProps,
   isOpen,
   onClose,
+  onPresenceChange,
   triggerRef,
 }: MobileNavOverlayProps) {
   const [state, setState] = useState<'closed' | 'open' | 'closing'>(
     isOpen ? 'open' : 'closed'
   );
   const dialogRef = useRef<HTMLDivElement>(null);
+  const stateRef = useRef(state);
+  const onCloseRef = useRef(onClose);
+  const onPresenceChangeRef = useRef(onPresenceChange);
+  const restoreFocusRef = useRef(false);
+  const reportedPresenceRef = useRef<boolean | undefined>(undefined);
+  stateRef.current = state;
+  onCloseRef.current = onClose;
+  onPresenceChangeRef.current = onPresenceChange;
 
   const requestClose = useCallback(() => {
-    onClose();
-    triggerRef?.current?.focus();
-  }, [onClose, triggerRef]);
+    if (stateRef.current !== 'open') return;
+    restoreFocusRef.current = true;
+    setState('closing');
+    onCloseRef.current();
+  }, []);
 
   useEffect(() => {
-    if (isOpen) setState('open');
-    else if (state === 'open') setState('closing');
-  }, [isOpen, state]);
+    if (isOpen) {
+      if (stateRef.current === 'closing') restoreFocusRef.current = false;
+      setState((current) => (current === 'open' ? current : 'open'));
+      return;
+    }
+    setState((current) => (current === 'open' ? 'closing' : current));
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return undefined;
+    const desktop = window.matchMedia('(min-width: 48rem)');
+    const closeAtDesktop = ({ matches }: Pick<MediaQueryList, 'matches'>) => {
+      if (!matches || stateRef.current === 'closed') return;
+      restoreFocusRef.current = false;
+      stateRef.current = 'closed';
+      setState('closed');
+      onCloseRef.current();
+    };
+    const handleChange = (event: MediaQueryListEvent) => closeAtDesktop(event);
+    desktop.addEventListener('change', handleChange);
+    closeAtDesktop(desktop);
+    return () => desktop.removeEventListener('change', handleChange);
+  }, []);
 
   useEffect(() => {
     if (state !== 'closing') return;
@@ -50,9 +83,38 @@ export function MobileNavOverlay({
     return () => clearTimeout(timer);
   }, [state]);
 
+  const present = state !== 'closed';
+  useLayoutEffect(() => {
+    if (reportedPresenceRef.current === present) return;
+    reportedPresenceRef.current = present;
+    onPresenceChangeRef.current?.(present);
+  }, [present]);
+
+  useEffect(
+    () => () => {
+      if (reportedPresenceRef.current === false) return;
+      reportedPresenceRef.current = false;
+      onPresenceChangeRef.current?.(false);
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (state !== 'closed' || !restoreFocusRef.current) return;
+    restoreFocusRef.current = false;
+    triggerRef?.current?.focus();
+  }, [state, triggerRef]);
+
+  useEffect(() => {
+    if (!present) return undefined;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [present]);
+
   useEffect(() => {
     if (state !== 'open') return undefined;
-    document.body.style.overflow = 'hidden';
     const dialog = dialogRef.current;
     const focusable = () =>
       Array.from(
@@ -82,7 +144,6 @@ export function MobileNavOverlay({
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => {
-      document.body.style.overflow = '';
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [requestClose, state]);
@@ -108,6 +169,7 @@ export function MobileNavOverlay({
             type="button"
             onClick={requestClose}
             aria-label="Close navigation"
+            className="cockpit-mobile-control-plane-close"
           >
             <X size={20} strokeWidth={2} aria-hidden="true" />
           </button>
