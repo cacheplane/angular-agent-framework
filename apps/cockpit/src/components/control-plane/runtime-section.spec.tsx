@@ -293,6 +293,47 @@ describe('RuntimeSection', () => {
     expect(document.querySelectorAll('[aria-live="polite"]')).toHaveLength(1);
   });
 
+  it('keeps one live region mounted for a command outcome after collapse', async () => {
+    const pending = deferred<'failed'>();
+    const runtimeSnapshot = snapshot('ready');
+    const props = {
+      snapshot: runtimeSnapshot,
+      product: 'LangGraph',
+      language: 'Python',
+      onOpenChange: vi.fn(),
+      onRecheck: vi.fn(),
+      onReload: vi.fn(),
+      onOpenRuntime: vi.fn().mockReturnValue('requested' as const),
+      onCopyDiagnostics: vi.fn().mockReturnValue(pending.promise),
+    };
+    const { rerender } = render(<RuntimeSection {...props} open />);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'More runtime actions' })
+    );
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Copy diagnostics' }));
+    expect(props.onCopyDiagnostics).toHaveBeenCalledTimes(1);
+
+    rerender(<RuntimeSection {...props} open={false} />);
+
+    expect(screen.queryByText('Shared development')).toBeNull();
+    expect(
+      screen.queryByRole('toolbar', { name: 'Runtime actions' })
+    ).toBeNull();
+    expect(document.querySelectorAll('[aria-live="polite"]')).toHaveLength(1);
+    const live = screen.getByRole('status');
+    expect(live.textContent).toBe('');
+
+    await act(async () => pending.resolve('failed'));
+
+    await waitFor(() =>
+      expect(live.textContent).toBe('Diagnostics copy failed.')
+    );
+    expect(
+      live.firstElementChild?.getAttribute('data-runtime-announcement-revision')
+    ).toBeTruthy();
+    expect(document.querySelectorAll('[aria-live="polite"]')).toHaveLength(1);
+  });
+
   it.each([
     ['a capability change', { capability: 'persistence', routeGeneration: 1 }],
     [

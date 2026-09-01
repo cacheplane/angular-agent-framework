@@ -295,34 +295,36 @@ export function RuntimeSection({
   }
 
   return (
-    <ControlPlaneSection
-      title="Runtime"
-      summary={<RuntimeStatus phase={phase} />}
-      description={`Runtime status: ${STATUS_PRESENTATION[phase].label}`}
-      open={open}
-      onOpenChange={onOpenChange}
-    >
-      <div data-runtime-metadata>
-        <span>Shared development</span>
-        <span>
-          {language} · {product}
-        </span>
-        {sanitizedTarget !== null ? (
-          <span
-            title={sanitizedTarget}
-            aria-label={`Runtime target ${sanitizedTarget}`}
-            data-runtime-target
-          >
-            {sanitizedTarget}
+    <div data-runtime-section>
+      <ControlPlaneSection
+        title="Runtime"
+        summary={<RuntimeStatus phase={phase} />}
+        description={`Runtime status: ${STATUS_PRESENTATION[phase].label}`}
+        open={open}
+        onOpenChange={onOpenChange}
+      >
+        <div data-runtime-metadata>
+          <span>Shared development</span>
+          <span>
+            {language} · {product}
           </span>
-        ) : null}
-        <span data-runtime-checked-at>
-          {snapshot.checkedAt === null
-            ? 'Not checked yet'
-            : `Checked ${formatCheckedAt(snapshot.checkedAt)}`}
-        </span>
-      </div>
-      {actions}
+          {sanitizedTarget !== null ? (
+            <span
+              title={sanitizedTarget}
+              aria-label={`Runtime target ${sanitizedTarget}`}
+              data-runtime-target
+            >
+              {sanitizedTarget}
+            </span>
+          ) : null}
+          <span data-runtime-checked-at>
+            {snapshot.checkedAt === null
+              ? 'Not checked yet'
+              : `Checked ${formatCheckedAt(snapshot.checkedAt)}`}
+          </span>
+        </div>
+        {actions}
+      </ControlPlaneSection>
       <span
         role="status"
         aria-live="polite"
@@ -338,6 +340,6 @@ export function RuntimeSection({
           </span>
         ) : null}
       </span>
-    </ControlPlaneSection>
+    </div>
   );
 }

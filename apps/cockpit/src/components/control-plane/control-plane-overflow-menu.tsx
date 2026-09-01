@@ -46,22 +46,37 @@ export function ControlPlaneOverflowMenu({
     const closeFromEscape = (event: globalThis.KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
         setOpen(false);
       }
     };
     document.addEventListener('pointerdown', closeFromOutside);
     document.addEventListener('click', closeFromOutside);
-    document.addEventListener('keydown', closeFromEscape);
+    document.addEventListener('keydown', closeFromEscape, true);
     return () => {
       document.removeEventListener('pointerdown', closeFromOutside);
       document.removeEventListener('click', closeFromOutside);
-      document.removeEventListener('keydown', closeFromEscape);
+      document.removeEventListener('keydown', closeFromEscape, true);
       triggerRef.current?.focus();
     };
   }, [open]);
 
   const onMenuKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const consume = () => {
+      event.preventDefault();
+      event.stopPropagation();
+      event.nativeEvent.stopImmediatePropagation();
+    };
+
+    if (event.key === 'Tab') {
+      consume();
+      setOpen(false);
+      return;
+    }
+
     if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+    consume();
     const items = Array.from(
       menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []
     );
@@ -71,7 +86,6 @@ export function ControlPlaneOverflowMenu({
         item.getAttribute('aria-disabled') !== 'true'
     );
     if (enabled.length === 0) return;
-    event.preventDefault();
 
     if (event.key === 'Home' || event.key === 'End') {
       enabled[event.key === 'Home' ? 0 : enabled.length - 1]?.focus();
@@ -91,21 +105,8 @@ export function ControlPlaneOverflowMenu({
     }
   };
 
-  const onRootKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (open && event.key === 'Escape') {
-      event.preventDefault();
-      event.stopPropagation();
-      event.nativeEvent.stopImmediatePropagation();
-      setOpen(false);
-    }
-  };
-
   return (
-    <div
-      ref={rootRef}
-      data-control-plane-overflow-menu-root
-      onKeyDown={onRootKeyDown}
-    >
+    <div ref={rootRef} data-control-plane-overflow-menu-root>
       <button
         ref={triggerRef}
         type="button"

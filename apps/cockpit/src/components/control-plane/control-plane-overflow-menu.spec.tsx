@@ -8,7 +8,11 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react';
-import { ControlPlaneUtilityPanel } from '@threadplane/ui-react';
+import {
+  ControlPlaneActionBar,
+  ControlPlaneIconButton,
+  ControlPlaneUtilityPanel,
+} from '@threadplane/ui-react';
 import { describe, expect, it, vi } from 'vitest';
 import {
   ControlPlaneOverflowMenu,
@@ -59,6 +63,50 @@ describe('ControlPlaneOverflowMenu', () => {
     expect(document.activeElement).toBe(last);
     fireEvent.keyDown(last, { key: 'Home' });
     expect(document.activeElement).toBe(first);
+  });
+
+  it('contains menu navigation inside a surrounding action toolbar', async () => {
+    render(
+      <ControlPlaneActionBar label="Runtime actions">
+        <ControlPlaneIconButton
+          label="Recheck"
+          icon={<span aria-hidden="true">R</span>}
+          onClick={vi.fn()}
+        />
+        <ControlPlaneIconButton
+          label="Reload runtime"
+          icon={<span aria-hidden="true">L</span>}
+          onClick={vi.fn()}
+        />
+        <ControlPlaneOverflowMenu label="More runtime actions">
+          <ControlPlaneOverflowMenuItem onSelect={vi.fn()}>
+            Copy diagnostics
+          </ControlPlaneOverflowMenuItem>
+          <ControlPlaneOverflowMenuItem onSelect={vi.fn()}>
+            Clear session activity
+          </ControlPlaneOverflowMenuItem>
+        </ControlPlaneOverflowMenu>
+      </ControlPlaneActionBar>
+    );
+    const recheck = screen.getByRole('button', { name: 'Recheck' });
+    const reload = screen.getByRole('button', { name: 'Reload runtime' });
+    fireEvent.click(
+      screen.getByRole('button', { name: 'More runtime actions' })
+    );
+    const items = screen.getAllByRole('menuitem');
+    const first = items[0];
+    const last = items[1];
+    if (!first || !last) throw new Error('Expected two overflow menu items');
+    await waitFor(() => expect(document.activeElement).toBe(first));
+
+    fireEvent.keyDown(first, { key: 'ArrowDown' });
+    expect(document.activeElement).toBe(last);
+    fireEvent.keyDown(last, { key: 'Home' });
+    expect(document.activeElement).toBe(first);
+    fireEvent.keyDown(first, { key: 'End' });
+    expect(document.activeElement).toBe(last);
+    expect(document.activeElement).not.toBe(recheck);
+    expect(document.activeElement).not.toBe(reload);
   });
 
   it('closes on Escape and restores focus to its trigger', async () => {
@@ -116,10 +164,69 @@ describe('ControlPlaneOverflowMenu', () => {
       name: 'Clear session activity',
     });
     await waitFor(() => expect(document.activeElement).toBe(item));
-    fireEvent.keyDown(item, { key: 'Tab', shiftKey: true });
     trigger.focus();
 
     fireEvent.keyDown(trigger, { key: 'Escape' });
+
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
+    expect(document.activeElement).toBe(trigger);
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByRole('heading', { name: 'Activity' })).toBeTruthy();
+  });
+
+  it.each([
+    ['Tab', false],
+    ['Shift+Tab', true],
+  ] as const)(
+    'closes and restores its trigger before %s leaves a containing utility panel',
+    async (_label, shiftKey) => {
+      const onClose = vi.fn();
+      render(
+        <ControlPlaneUtilityPanel title="Activity" onClose={onClose}>
+          <ControlPlaneOverflowMenu label="Activity actions">
+            <ControlPlaneOverflowMenuItem onSelect={vi.fn()}>
+              Clear session activity
+            </ControlPlaneOverflowMenuItem>
+          </ControlPlaneOverflowMenu>
+        </ControlPlaneUtilityPanel>
+      );
+      const trigger = screen.getByRole('button', { name: 'Activity actions' });
+      fireEvent.click(trigger);
+      const item = screen.getByRole('menuitem', {
+        name: 'Clear session activity',
+      });
+      await waitFor(() => expect(document.activeElement).toBe(item));
+
+      fireEvent.keyDown(item, { key: 'Tab', shiftKey });
+
+      await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
+      expect(document.activeElement).toBe(trigger);
+      expect(onClose).not.toHaveBeenCalled();
+    }
+  );
+
+  it('consumes Escape before its utility panel when focus moved outside the menu', async () => {
+    const onClose = vi.fn();
+    render(
+      <ControlPlaneUtilityPanel title="Activity" onClose={onClose}>
+        <ControlPlaneOverflowMenu label="Activity actions">
+          <ControlPlaneOverflowMenuItem onSelect={vi.fn()}>
+            Clear session activity
+          </ControlPlaneOverflowMenuItem>
+        </ControlPlaneOverflowMenu>
+      </ControlPlaneUtilityPanel>
+    );
+    const trigger = screen.getByRole('button', { name: 'Activity actions' });
+    fireEvent.click(trigger);
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getByRole('menuitem', { name: 'Clear session activity' })
+      )
+    );
+    const panelClose = screen.getByRole('button', { name: 'Close Activity' });
+    panelClose.focus();
+
+    fireEvent.keyDown(panelClose, { key: 'Escape' });
 
     await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
     expect(document.activeElement).toBe(trigger);
