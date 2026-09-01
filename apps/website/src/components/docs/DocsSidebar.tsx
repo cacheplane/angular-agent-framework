@@ -397,11 +397,3 @@ export function DocsNavigation({
     </div>
   );
 }
-
-export function DocsSidebar(props: DocsNavigationProps) {
-  return (
-    <aside className="docs-sidebar">
-      <DocsNavigation {...props} />
-    </aside>
-  );
-}

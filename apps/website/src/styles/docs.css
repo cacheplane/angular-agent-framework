@@ -729,17 +729,6 @@
   color: var(--color-text-primary);
 }
 
-.docs-sidebar {
-  border-right: 1px solid var(--color-border);
-  background: var(--color-surface);
-  position: sticky;
-  top: var(--nav-h);
-  /* Without align-self the flex row stretches the aside to the article's full
-   * height (measured 10,030px), so its overflow-y:auto never engaged. */
-  align-self: flex-start;
-  min-height: calc(100vh - var(--nav-h));
-  max-height: calc(100vh - var(--nav-h));
-}
 .docs-sidebar-lib-trigger {
   background: var(--color-surface);
   border: 1px solid var(--color-border);

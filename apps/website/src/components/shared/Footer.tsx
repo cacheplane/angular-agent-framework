@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { analyticsEvents } from '../../lib/analytics/events';
+import { analyticsEvents, type CtaId } from '../../lib/analytics/events';
 import { track, trackCtaClick, trackExternalLinkClick } from '../../lib/analytics/client';
 import { DEMOS, demoCtaSuffix } from '../../lib/demos';
 import { LogoMark } from '../ui/LogoMark';
@@ -90,11 +90,18 @@ function NewsletterForm() {
 }
 
 export function Footer() {
-  const trackFooterCta = (label: string, href: string) => {
+  /**
+   * `ctaId` defaults to a slug of the label. Pass it explicitly when the visible
+   * text changes but the analytics series should stay continuous — renaming
+   * "Render" to "json-render" would otherwise silently split footer_render into
+   * a new footer_json_render series.
+   */
+  const trackFooterCta = (label: string, href: string, ctaId?: CtaId) => {
     trackCtaClick({
       surface: 'footer',
       destination_url: href,
-      cta_id: `footer_${label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')}`,
+      cta_id:
+        ctaId ?? `footer_${label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')}`,
       cta_text: label,
     });
   };
@@ -200,8 +207,8 @@ export function Footer() {
               AG-UI
             </Link>
             <Link href="/render" className="transition-colors footer-link"
-              onClick={() => trackFooterCta('Render', '/render')}>
-              Render
+              onClick={() => trackFooterCta('json-render', '/render', 'footer_render')}>
+              json-render
             </Link>
             <Link href="/chat" className="transition-colors footer-link"
               onClick={() => trackFooterCta('Chat', '/chat')}>
