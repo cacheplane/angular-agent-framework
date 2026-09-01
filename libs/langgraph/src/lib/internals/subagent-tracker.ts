@@ -424,7 +424,13 @@ export function isChildNamespace(namespace: string[] | string | undefined): bool
 
 /** Resolved identity of a child stream, derived from its event namespace. */
 export interface ChildStreamRef {
-  /** Map key: the tool-call id for `tools:` namespaces, else the namespace segment itself. */
+  /**
+   * Map key: the tool-call id for a single `tools:` namespace; for a nested
+   * delegation, the namespace path truncated at (and including) the
+   * innermost `tools:` segment, so trailing internal-node segments don't
+   * fragment one grandchild into several entries; else the namespace segment
+   * itself.
+   */
   key: string;
   /** Display name; for subgraph nodes, the node name. Unused on the tool path. */
   name: string;
@@ -441,19 +447,31 @@ export interface ChildStreamRef {
  *
  * A namespace with MORE than one `tools:` segment is a nested delegation — a
  * subagent that itself dispatched a delegation tool. That stream registers as
- * its own subgraph-kind entry keyed by the full namespace path: subgraph
- * entries are skipped by every attribution-ladder rung, so a grandchild can
- * neither merge into the outer child's card nor mis-attach to a sibling.
- * Linking it to its parent card (a delegation tree) is deliberately not
- * modeled; the flat map is the contract.
+ * its own subgraph-kind entry keyed by the namespace path truncated at the
+ * innermost `tools:` segment (inclusive), so trailing internal-node segments
+ * after it (the grandchild's own `model:`/`agent:` steps) don't fragment one
+ * grandchild into several map entries. Subgraph entries are skipped by every
+ * attribution-ladder rung, so a grandchild can neither merge into the outer
+ * child's card nor mis-attach to a sibling. Linking it to its parent card (a
+ * delegation tree) is deliberately not modeled; the flat map is the contract.
  */
 export function childStreamRefFromNamespace(namespace: string[]): ChildStreamRef | undefined {
   const toolSegments = namespace.filter((segment) => segment.startsWith('tools:'));
   if (toolSegments.length > 1) {
-    const innermost = toolSegments[toolSegments.length - 1];
+    let lastToolsIndex = -1;
+    for (let i = namespace.length - 1; i >= 0; i -= 1) {
+      if (namespace[i].startsWith('tools:')) {
+        lastToolsIndex = i;
+        break;
+      }
+    }
+    const innermost = namespace[lastToolsIndex];
     const colon = innermost.indexOf(':');
     return {
-      key: namespace.join('|'),
+      // The innermost segment's node name is 'tools' for a delegation-tool
+      // child — an intentionally generic card label; there's no
+      // subagent_type to name it from.
+      key: namespace.slice(0, lastToolsIndex + 1).join('|'),
       name: colon > 0 ? innermost.slice(0, colon) : innermost,
       kind: 'subgraph',
     };

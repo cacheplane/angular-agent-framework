@@ -74,6 +74,9 @@ describe('SubagentTracker attribution ladder', () => {
 
     // Unattributed messages are held, not dropped and not mis-assigned.
     t.addMessageToSubagent('ns-uuid-5', aiMsg('m1', 'early chunk'));
+    // getSubagents() hides 'pending' entries — this loop is empty when
+    // correct, and bites only when a mutant wrongly establishes the match
+    // and promotes a candidate to 'running'.
     for (const subagent of t.getSubagents().values()) {
       expect(subagent.messages).toHaveLength(0);
     }
@@ -106,6 +109,9 @@ describe('SubagentTracker attribution ladder', () => {
     // '' === '' claim call_a at the exact rung.
     t.ensureToolStreamAttribution('ns-uuid-7');
     t.addMessageToSubagent('ns-uuid-7', aiMsg('m1', 'child token'));
+    // getSubagents() hides 'pending' entries — this loop is empty when
+    // correct, and bites only when a mutant wrongly establishes the match
+    // and promotes a candidate to 'running'.
     for (const subagent of t.getSubagents().values()) {
       expect(subagent.messages).toHaveLength(0);
     }
@@ -142,6 +148,15 @@ describe('childStreamRefFromNamespace', () => {
   it('nested delegation with intermediate segments still keys the full path', () => {
     expect(childStreamRefFromNamespace(['tools:call-1', 'agent:x', 'tools:call-2'])).toEqual({
       key: 'tools:call-1|agent:x|tools:call-2', name: 'tools', kind: 'subgraph',
+    });
+  });
+
+  it('trailing internal segments after the innermost tools: segment do not fragment the key', () => {
+    expect(childStreamRefFromNamespace(['tools:call-1', 'tools:call-2', 'agent:x'])).toEqual({
+      key: 'tools:call-1|tools:call-2', name: 'tools', kind: 'subgraph',
+    });
+    expect(childStreamRefFromNamespace(['tools:call-1', 'tools:call-2', 'model:y'])).toEqual({
+      key: 'tools:call-1|tools:call-2', name: 'tools', kind: 'subgraph',
     });
   });
 });
