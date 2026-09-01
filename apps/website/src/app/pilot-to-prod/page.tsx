@@ -3,7 +3,6 @@ import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
 import { Button } from '../../components/ui/Button';
 import { Pill } from '../../components/ui/Pill';
-import { Card } from '../../components/ui/Card';
 import { FeatureBlock } from '../../components/landing/FeatureBlock';
 import { BrowserFrame } from '../../components/ui/BrowserFrame';
 import { WhitePaperBlock } from '../../components/landing/WhitePaperBlock';
@@ -147,26 +146,25 @@ export default function PilotToProdPage() {
       <Section surface="tinted" ariaLabelledBy="outcomes-heading">
         <Container>
           <div className="pilot-section-header">
-            <Eyebrow tone="accent" className="pilot-eyebrow-spaced">What you walk away with</Eyebrow>
+            <div className="pilot-rail2">
+              <Eyebrow tone="accent" className="pilot-eyebrow-tight">What you walk away with</Eyebrow>
+              <span className="pilot-rail2-line" aria-hidden="true" />
+            </div>
             <h2 id="outcomes-heading" className="pilot-h2">
               A working agent. A trained team. A runbook.
             </h2>
           </div>
-          <div className="pilot-outcomes-grid">
+          <div className="pilot-outcome-rows">
             {[
-              { t: 'Working demo', d: 'Live on your data, in your app — not in a sandbox.' },
-              { t: 'Hardened patterns', d: 'Error/fallback/observability built in from the start.' },
-              { t: 'Deploy-ready', d: 'Integrated with your CI/CD, your auth, your data.' },
-              { t: 'Trained team', d: 'Your engineers own the framework and the runbook.' },
+              { claim: 'Live on your data, in your app — not in a sandbox.', tail: 'working demo' },
+              { claim: 'Error, fallback, and observability built in from the start.', tail: 'hardened patterns' },
+              { claim: 'Integrated with your CI/CD, your auth, your data.', tail: 'deploy-ready' },
+              { claim: 'Your engineers own the framework and the runbook.', tail: 'trained team' },
             ].map((o) => (
-              <Card key={o.t} padding="lg">
-                <h3 className="pilot-outcome-h3">
-                  {o.t}
-                </h3>
-                <p className="pilot-outcome-body">
-                  {o.d}
-                </p>
-              </Card>
+              <div className="pilot-outcome-row" key={o.tail}>
+                <p className="pilot-outcome-claim">{o.claim}</p>
+                <p className="pilot-outcome-tail">{o.tail}</p>
+              </div>
             ))}
           </div>
         </Container>
@@ -179,10 +177,15 @@ export default function PilotToProdPage() {
       <Section id="contact" surface="white" ariaLabelledBy="contact-heading">
         <Container>
           <div className="pilot-contact-inner">
-            <Eyebrow tone="accent" className="pilot-eyebrow-spaced">Discovery call</Eyebrow>
-            <h2 id="contact-heading" className="pilot-h2 pilot-h2-spaced">
-              Tell us about your stack.
-            </h2>
+            <div className="pilot-section-header">
+              <div className="pilot-rail2">
+                <Eyebrow tone="accent" className="pilot-eyebrow-tight">Discovery call</Eyebrow>
+                <span className="pilot-rail2-line" aria-hidden="true" />
+              </div>
+              <h2 id="contact-heading" className="pilot-h2 pilot-h2-spaced">
+                Tell us about your stack.
+              </h2>
+            </div>
             <p className="pilot-contact-body">
               30-minute discovery call. We&apos;ll dig into your Angular surface, your agent-eligible workflows, and whether Pilot-to-Prod is the right fit. No pitch deck.
             </p>
