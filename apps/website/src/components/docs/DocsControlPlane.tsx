@@ -78,14 +78,14 @@ export function DocsContextContent({
     window.requestAnimationFrame(dispatchSearch);
   };
   const identity = {
-    library: activeLibrary,
+    library: activeLibrary ?? '',
     section: activeSection,
     slug: activeSlug,
   };
   const target = resolveCockpitIdentity(
-    activeLibrary,
-    activeSection,
-    activeSlug
+    identity.library,
+    identity.section,
+    identity.slug
   );
   const runtimeHref = buildCockpitModeHref(identity, 'Run');
   const trackHandoff = (mode: 'Run' | 'Code' | 'API') =>
