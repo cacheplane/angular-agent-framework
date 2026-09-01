@@ -114,6 +114,45 @@ function activeCockpitE2eWiring(): E2eWiring[] {
 }
 
 describe('cockpit e2e wiring', () => {
+  it('keeps the representative production smoke deterministic and scoped to Recheck', () => {
+    const smoke = readRepoFile('apps/cockpit/e2e/production-smoke.spec.ts');
+    const start = smoke.indexOf(
+      "test('representative runtime reports Ready after Recheck and records Activity'"
+    );
+    const end = smoke.indexOf("test('favicon resolves after redirects'", start);
+    const representative = smoke.slice(start, end);
+
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    expect(representative).toContain('test.setTimeout(60_000)');
+    expect(representative).toContain("getByText('Ready', { exact: true })");
+    expect(representative).toContain(
+      "getByRole('button', { name: 'Recheck' })"
+    );
+    expect(representative).toContain('await expect(checkEvents).toHaveCount(1)');
+    expect(representative).toContain('await expect(readyEvents).toHaveCount(1)');
+    expect(representative).toContain('await expect(checkEvents).toHaveCount(2)');
+    expect(representative).toContain('await expect(readyEvents).toHaveCount(2)');
+    expect(representative).not.toContain(
+      "getByRole('button', { name: 'Reload runtime' })"
+    );
+  });
+
+  it('keeps the production favicon redirect covered', () => {
+    const smoke = readRepoFile('apps/cockpit/e2e/production-smoke.spec.ts');
+    const start = smoke.indexOf("test('favicon resolves after redirects'");
+    const end = smoke.indexOf(
+      "test.describe('Production: canonical demo sends runtime telemetry'",
+      start
+    );
+    const favicon = smoke.slice(start, end);
+
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    expect(favicon).toContain('request.get(`${COCKPIT_URL}/favicon.ico`)');
+    expect(favicon).toContain('expect(response.status()).toBeLessThan(400)');
+  });
+
   it('does not leave cockpit e2e spec files outside Nx e2e targets', () => {
     const projects = new Map(
       listProjectJsonFiles(join(repoRoot, 'cockpit')).map((projectJsonPath) => {

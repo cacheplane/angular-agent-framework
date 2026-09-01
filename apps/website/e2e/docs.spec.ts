@@ -48,6 +48,28 @@ test.describe('Docs landing page', () => {
 test.describe('Docs slug page', () => {
   const route = '/docs/langgraph/getting-started/introduction';
 
+  test('keeps page scroll fixed when focusing the bottom control-plane action', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1024, height: 900 });
+    await page.goto(route);
+
+    const pane = page.locator(
+      '[data-docs-control-plane] [data-control-plane-pane]',
+    );
+    const search = pane.getByRole('button', { name: 'Search docs' });
+    await expect(pane).toBeVisible();
+    await pane.evaluate((element) => {
+      element.scrollTop = 0;
+    });
+    await page.evaluate(() => window.scrollTo(0, 0));
+
+    await search.focus();
+
+    await expect.poll(() => pane.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  });
+
   test('renders breadcrumb + h1 + sidebar', async ({ page }) => {
     await page.goto(route);
     await expect(page.locator('aside').first()).toBeVisible();

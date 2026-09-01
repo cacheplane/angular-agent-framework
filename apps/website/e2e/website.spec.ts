@@ -1,5 +1,17 @@
 import { test, expect } from '@playwright/test';
 
+const docsRoute = '/docs/langgraph/getting-started/introduction';
+
+async function expectNoHorizontalOverflow(
+  page: import('@playwright/test').Page,
+  label: string,
+) {
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(overflow, label).toBeLessThanOrEqual(1);
+}
+
 test('landing page renders hero headline', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#hero-heading')).toBeVisible();
@@ -190,6 +202,114 @@ test('mobile viewport renders nav', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto('/');
   await expect(page.locator('nav')).toBeVisible();
+});
+
+for (const viewport of [
+  { width: 1440, height: 900, surface: 'desktop' },
+  { width: 768, height: 900, surface: 'tablet' },
+  { width: 390, height: 844, surface: 'mobile' },
+  { width: 320, height: 844, surface: 'compact mobile' },
+] as const) {
+  test(`docs ${viewport.surface} keeps the control plane reachable`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    await page.goto(docsRoute);
+    await expectNoHorizontalOverflow(page, `Docs at ${viewport.width}px`);
+
+    const desktopControlPlane = page.locator('[data-docs-control-plane]');
+    const mobileTrigger = page.getByRole('button', { name: 'Open menu' });
+    if (viewport.width >= 1024) {
+      await expect(desktopControlPlane).toBeVisible();
+      await expect(mobileTrigger).toBeHidden();
+      const runtime = desktopControlPlane.getByRole('button', {
+        name: 'Runtime',
+        exact: true,
+      });
+      await runtime.click();
+      await expect(
+        desktopControlPlane.getByRole('link', {
+          name: 'Open controls in Cockpit',
+        }),
+      ).toBeVisible();
+    } else {
+      await expect(desktopControlPlane).toBeHidden();
+      await expect(mobileTrigger).toBeVisible();
+      const triggerBox = await mobileTrigger.boundingBox();
+      expect(triggerBox?.width).toBeGreaterThanOrEqual(44);
+      expect(triggerBox?.height).toBeGreaterThanOrEqual(44);
+
+      await mobileTrigger.click();
+      const dialog = page.getByRole('dialog', { name: 'Mobile navigation' });
+      await expect(dialog).toBeVisible();
+      await expect(page.locator('#site-content')).toHaveAttribute('inert', '');
+      await expect(page.locator('nav.nav-bar')).toHaveAttribute('inert', '');
+
+      const close = dialog.getByRole('button', { name: 'Close menu' });
+      const closeBox = await close.boundingBox();
+      expect(closeBox?.width).toBeGreaterThanOrEqual(44);
+      expect(closeBox?.height).toBeGreaterThanOrEqual(44);
+
+      const runtime = dialog.getByRole('button', {
+        name: 'Runtime',
+        exact: true,
+      });
+      await runtime.click();
+      await expect(
+        dialog.getByRole('link', { name: 'Open controls in Cockpit' }),
+      ).toBeVisible();
+      await expect(dialog.getByRole('button', { name: 'Search docs' })).toBeVisible();
+
+      await page.keyboard.press('Escape');
+      await expect(dialog).toBeHidden();
+      await expect(mobileTrigger).toBeFocused();
+    }
+  });
+}
+
+test('docs forced colors preserve control boundaries and keyboard focus', async ({
+  page,
+}) => {
+  await page.emulateMedia({ forcedColors: 'active' });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(docsRoute);
+
+  const runtime = page
+    .locator('[data-docs-control-plane]')
+    .getByRole('button', { name: 'Runtime', exact: true });
+  await runtime.focus();
+  const styles = await runtime.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return {
+      borderWidth: style.borderTopWidth,
+      outlineStyle: style.outlineStyle,
+      outlineWidth: style.outlineWidth,
+    };
+  });
+  expect(Number.parseFloat(styles.borderWidth)).toBeGreaterThan(0);
+  expect(styles.outlineStyle).not.toBe('none');
+  expect(Number.parseFloat(styles.outlineWidth)).toBeGreaterThan(0);
+});
+
+test('docs reduced motion disables mobile drawer transitions and animations', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(docsRoute);
+  await page.getByRole('button', { name: 'Open menu' }).click();
+
+  const overlay = page.locator('.nav-mobile-overlay');
+  await expect(overlay).toBeVisible();
+  const motion = await overlay.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return {
+      animationName: style.animationName,
+      transitionDuration: style.transitionDuration,
+    };
+  });
+  expect(motion.animationName).toBe('none');
+  expect(motion.transitionDuration).toBe('0s');
 });
 
 test('/llms.txt returns plain text', async ({ page }) => {

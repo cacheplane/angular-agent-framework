@@ -1,11 +1,33 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DocsControlPlane, DocsContextContent } from './DocsControlPlane';
 import { docsConfig } from '../../lib/docs-config';
 
-const LIBRARY_TITLES = docsConfig.filter((l) => l.group === 'library').map((l) => l.title);
+const LIBRARY_TITLES = docsConfig
+  .filter((l) => l.group === 'library')
+  .map((l) => l.title);
+
+const workspaceRoot = process.cwd().endsWith('/apps/website')
+  ? resolve(process.cwd(), '../..')
+  : process.cwd();
+const docsCss = readFileSync(
+  resolve(workspaceRoot, 'apps/website/src/styles/docs.css'),
+  'utf8'
+);
+
+const { track } = vi.hoisted(() => ({
+  track: vi.fn(),
+}));
 
 const push = vi.fn();
 vi.mock('next/navigation', () => ({
@@ -13,12 +35,25 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push }),
 }));
 
+vi.mock('../../lib/analytics/client', () => ({ track }));
+
 beforeEach(() => {
   window.localStorage.clear();
   push.mockClear();
+  track.mockClear();
 });
 
 describe('DocsControlPlane', () => {
+  it('styles the preview hooks for forced colors and reduced motion', () => {
+    expect(docsCss).toMatch(/\[data-docs-runtime-preview\]/);
+    expect(docsCss).toMatch(/@media \(forced-colors:\s*active\)/);
+    expect(docsCss).toMatch(/Canvas/);
+    expect(docsCss).toMatch(/HighlightText/);
+    expect(docsCss).toMatch(
+      /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*?transition:\s*none/
+    );
+  });
+
   it('renders the stable labeled mode rail with deterministic Cockpit links', () => {
     render(
       <DocsControlPlane
@@ -26,40 +61,157 @@ describe('DocsControlPlane', () => {
         activeSection="guides"
         activeSlug="streaming"
         pageTitle="Streaming"
-      />,
+      />
     );
 
     const rail = screen.getByRole('navigation', { name: 'Docs modes' });
     expect(rail).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Docs' }).getAttribute('aria-current')).toBe('page');
-    expect(screen.getByRole('link', { name: 'Run' }).getAttribute('href')).toContain('/langgraph/core-capabilities/streaming/overview/python?mode=run');
-    expect(screen.getByRole('link', { name: 'Code' }).getAttribute('href')).toContain('mode=code');
-    expect(screen.getByRole('link', { name: 'API' }).getAttribute('href')).toContain('mode=api');
+    expect(
+      screen.getByRole('link', { name: 'Docs' }).getAttribute('aria-current')
+    ).toBe('page');
+    expect(
+      screen.getByRole('link', { name: 'Run' }).getAttribute('href')
+    ).toContain(
+      '/langgraph/core-capabilities/streaming/overview/python?mode=run'
+    );
+    expect(
+      screen.getByRole('link', { name: 'Code' }).getAttribute('href')
+    ).toContain('mode=code');
+    expect(
+      screen.getByRole('link', { name: 'API' }).getAttribute('href')
+    ).toContain('mode=api');
     expect(screen.queryByRole('button', { name: 'Activity' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Settings' })).toBeNull();
   });
 
-  it('shows truthful scope and collapsed environment defaults', async () => {
+  it('shows truthful scope and a collapsed configuration-only Runtime preview', async () => {
     render(
       <DocsControlPlane
         activeLibrary="langgraph"
         activeSection="guides"
         activeSlug="streaming"
         pageTitle="Streaming"
-      />,
+      />
     );
 
-    const scope = screen.getByRole('heading', { name: 'Scope' }).closest('section');
+    const scope = screen
+      .getByRole('heading', { name: 'Scope' })
+      .closest('section');
     if (!scope) throw new Error('Expected Scope section');
     expect(within(scope).getByText('LangGraph')).toBeTruthy();
     expect(within(scope).getByText('Guides')).toBeTruthy();
     expect(within(scope).getByText('Streaming')).toBeTruthy();
-    const environment = screen.getByRole('button', { name: 'Environment' });
-    expect(environment.getAttribute('aria-expanded')).toBe('false');
-    fireEvent.click(environment);
-    expect(screen.getByText('Angular')).toBeTruthy();
-    expect(screen.getByText('npm')).toBeTruthy();
-    await waitFor(() => expect(window.localStorage.getItem('threadplane:control-plane:v1')).toContain('Environment'));
+    expect(screen.queryByRole('button', { name: 'Environment' })).toBeNull();
+    const runtime = screen.getByRole('button', { name: 'Runtime' });
+    const preview = document.querySelector('[data-docs-runtime-preview]');
+    expect(preview).toBeTruthy();
+    expect(preview?.contains(runtime)).toBe(true);
+    expect(runtime.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(runtime);
+    const runtimeSection = runtime.closest('section');
+    if (!runtimeSection) throw new Error('Expected Runtime section');
+    const configuration = runtimeSection.querySelector('dl');
+    if (!configuration) throw new Error('Expected Runtime configuration');
+    expect(within(configuration).getByText('Shared development')).toBeTruthy();
+    expect(within(configuration).getByText('Cockpit')).toBeTruthy();
+    expect(within(configuration).getByText('streaming')).toBeTruthy();
+    expect(within(configuration).getByText('Run')).toBeTruthy();
+    expect(
+      within(runtimeSection)
+        .getByRole('link', { name: 'Open controls in Cockpit' })
+        .getAttribute('href')
+    ).toContain(
+      '/langgraph/core-capabilities/streaming/overview/python?mode=run'
+    );
+    expect(
+      within(runtimeSection).queryByText(/ready|unresponsive|last checked/i)
+    ).toBeNull();
+    await waitFor(() =>
+      expect(
+        window.localStorage.getItem('threadplane:control-plane:v1')
+      ).toContain('Runtime')
+    );
+  });
+
+  it.each([
+    ['Run', 'run'],
+    ['Code', 'code'],
+    ['API', 'api'],
+  ] as const)(
+    'tracks the %s rail handoff at the anchor boundary',
+    (label, requestedMode) => {
+      render(
+        <DocsControlPlane
+          activeLibrary="langgraph"
+          activeSection="guides"
+          activeSlug="streaming"
+          pageTitle="Streaming"
+        />
+      );
+
+      fireEvent.click(screen.getByRole('link', { name: label }));
+
+      expect(track).toHaveBeenCalledWith('docs:cockpit_handoff', {
+        library: 'langgraph',
+        source_section: 'guides',
+        source_slug: 'streaming',
+        destination_product: 'langgraph',
+        destination_capability: 'streaming',
+        requested_mode: requestedMode,
+        mapped: true,
+      });
+    }
+  );
+
+  it('tracks Open controls as a mapped Run handoff without a URL property', () => {
+    render(
+      <DocsControlPlane
+        activeLibrary="langgraph"
+        activeSection="guides"
+        activeSlug="streaming"
+        pageTitle="Streaming"
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Runtime' }));
+
+    fireEvent.click(
+      screen.getByRole('link', { name: 'Open controls in Cockpit' })
+    );
+
+    expect(track).toHaveBeenCalledWith('docs:cockpit_handoff', {
+      library: 'langgraph',
+      source_section: 'guides',
+      source_slug: 'streaming',
+      destination_product: 'langgraph',
+      destination_capability: 'streaming',
+      requested_mode: 'run',
+      mapped: true,
+    });
+    expect(track.mock.calls[0]?.[1]).not.toHaveProperty('destination_url');
+  });
+
+  it('uses and tracks the Cockpit home fallback for unsupported pages', () => {
+    render(
+      <DocsControlPlane
+        activeLibrary="langgraph"
+        activeSection="api"
+        activeSlug="inject-agent"
+        pageTitle="Inject agent"
+      />
+    );
+
+    const run = screen.getByRole('link', { name: 'Run' });
+    expect(run.getAttribute('href')).toBe(
+      'https://cockpit.threadplane.ai/?mode=run'
+    );
+    fireEvent.click(run);
+    expect(track).toHaveBeenCalledWith('docs:cockpit_handoff', {
+      library: 'langgraph',
+      source_section: 'api',
+      source_slug: 'inject-agent',
+      requested_mode: 'run',
+      mapped: false,
+    });
   });
 
   it('keeps search as a real icon action', () => {
@@ -71,11 +223,13 @@ describe('DocsControlPlane', () => {
         activeSection="guides"
         activeSlug="streaming"
         pageTitle="Streaming"
-      />,
+      />
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Search docs' }));
-    expect(listener).toHaveBeenCalledWith(expect.objectContaining({ key: 'k', metaKey: true }));
+    expect(listener).toHaveBeenCalledWith(
+      expect.objectContaining({ key: 'k', metaKey: true })
+    );
     document.removeEventListener('keydown', listener);
   });
 
@@ -86,13 +240,14 @@ describe('DocsControlPlane', () => {
         activeSection="guides"
         activeSlug="streaming"
         pageTitle="Streaming"
-      />,
+      />
     );
 
     const guides = screen.getByRole('button', { name: 'Guides' });
     const controlledId = guides.getAttribute('aria-controls');
     expect(controlledId).toBeTruthy();
-    if (!controlledId) throw new Error('Expected Guides to control its page links');
+    if (!controlledId)
+      throw new Error('Expected Guides to control its page links');
     expect(document.getElementById(controlledId)).toBeTruthy();
   });
 
@@ -103,7 +258,7 @@ describe('DocsControlPlane', () => {
         activeSection="guides"
         activeSlug="streaming"
         pageTitle="Streaming"
-      />,
+      />
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'LangGraph' }));
@@ -128,7 +283,7 @@ describe('DocsControlPlane', () => {
         activeSection="guides"
         activeSlug="streaming"
         pageTitle="Streaming"
-      />,
+      />
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'LangGraph' }));
@@ -137,15 +292,21 @@ describe('DocsControlPlane', () => {
 
     // Adapters are asserted exactly: there are two, and only they carry
     // taglines. A new library must not quietly land in this group.
-    expect(within(adapters).getAllByRole('menuitemradio').map((i) => i.textContent)).toEqual([
+    expect(
+      within(adapters)
+        .getAllByRole('menuitemradio')
+        .map((i) => i.textContent)
+    ).toEqual([
       'LangGraphTalk to LangGraph directly',
       'AG-UIAny AG-UI backend',
     ]);
     // Libraries are checked against config so adding one does not churn this
     // test — misclassifying one still fails the assertion above.
-    expect(within(libraries).getAllByRole('menuitemradio').map((i) => i.textContent)).toEqual(
-      LIBRARY_TITLES,
-    );
+    expect(
+      within(libraries)
+        .getAllByRole('menuitemradio')
+        .map((i) => i.textContent)
+    ).toEqual(LIBRARY_TITLES);
   });
 
   it('renders menu entries as real links with the current one checked', () => {
@@ -155,33 +316,42 @@ describe('DocsControlPlane', () => {
         activeSection="guides"
         activeSlug="streaming"
         pageTitle="Streaming"
-      />,
+      />
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'LangGraph' }));
     const agUi = screen.getByRole('menuitemradio', { name: /AG-UI/ });
     expect(agUi.tagName).toBe('A');
-    expect(agUi.getAttribute('href')).toBe('/docs/ag-ui/getting-started/introduction');
+    expect(agUi.getAttribute('href')).toBe(
+      '/docs/ag-ui/getting-started/introduction'
+    );
     expect(agUi.getAttribute('aria-checked')).toBe('false');
     expect(
-      screen.getByRole('menuitemradio', { name: /LangGraph/ }).getAttribute('aria-checked'),
+      screen
+        .getByRole('menuitemradio', { name: /LangGraph/ })
+        .getAttribute('aria-checked')
     ).toBe('true');
   });
 
-  it('drops the library row from environment now the picker owns it', () => {
+  it('keeps Runtime focused on the handoff instead of duplicating picker metadata', () => {
     render(
       <DocsControlPlane
         activeLibrary="langgraph"
         activeSection="guides"
         activeSlug="streaming"
         pageTitle="Streaming"
-      />,
+      />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Environment' }));
-    expect(screen.getByText('Angular')).toBeTruthy();
-    expect(screen.getByText('npm')).toBeTruthy();
-    expect(screen.queryByText('Library')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Runtime' }));
+    const runtime = screen
+      .getByRole('button', { name: 'Runtime' })
+      .closest('section');
+    if (!runtime) throw new Error('Expected Runtime section');
+    expect(within(runtime).getByText('Shared development')).toBeTruthy();
+    expect(within(runtime).queryByText('Library')).toBeNull();
+    expect(within(runtime).queryByText('Framework')).toBeNull();
+    expect(within(runtime).queryByText('Package manager')).toBeNull();
   });
 
   it('caps the open menu to the space left below the trigger', () => {
@@ -191,7 +361,7 @@ describe('DocsControlPlane', () => {
         activeSection="guides"
         activeSlug="streaming"
         pageTitle="Streaming"
-      />,
+      />
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'LangGraph' }));
@@ -210,7 +380,7 @@ describe('DocsControlPlane', () => {
         activeSection="guides"
         activeSlug="streaming"
         pageTitle="Streaming"
-      />,
+      />
     );
 
     const trigger = screen.getByRole('button', { name: 'LangGraph' });
@@ -221,7 +391,9 @@ describe('DocsControlPlane', () => {
     // Traversal must still cross the Adapters/Libraries group boundary.
     fireEvent.keyDown(firstItem, { key: 'End' });
     expect(document.activeElement).toBe(
-      screen.getByRole('menuitemradio', { name: LIBRARY_TITLES[LIBRARY_TITLES.length - 1] }),
+      screen.getByRole('menuitemradio', {
+        name: LIBRARY_TITLES[LIBRARY_TITLES.length - 1],
+      })
     );
     fireEvent.keyDown(document.activeElement as HTMLElement, { key: 'Home' });
     expect(document.activeElement).toBe(firstItem);
@@ -280,12 +452,12 @@ describe('DocsContextContent', () => {
         activeSlug="specs"
         pageTitle="Specs & Elements"
         mobile
-      />,
+      />
     );
 
     expect(screen.getByRole('heading', { name: 'Scope' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Learn' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Environment' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Runtime' })).toBeTruthy();
     expect(screen.getByRole('toolbar', { name: 'Docs actions' })).toBeTruthy();
   });
 });

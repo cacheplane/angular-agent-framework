@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img">
+  <title>Threadplane Cockpit</title>
+  <rect width="64" height="64" rx="14" fill="#004090"/>
+  <path d="M12 17h40v9H37v27H27V26H12z" fill="#64C3FD"/>
+  <circle cx="47" cy="47" r="7" fill="#fff"/>
+</svg>

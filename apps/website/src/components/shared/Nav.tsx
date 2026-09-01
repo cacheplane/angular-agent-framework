@@ -109,11 +109,20 @@ export function Nav() {
     findDocsPage(activeLibrary, activeSection, activeSlug)?.title ??
     specialDocsPage?.title ??
     'Documentation';
+  const navRef = useRef<HTMLElement>(null);
   const mobileTriggerRef = useRef<HTMLButtonElement>(null);
   const mobileDialogRef = useRef<HTMLDivElement>(null);
-  const closeMobileMenu = useCallback(() => {
+  const restoreMobileFocusRef = useRef(false);
+  const pendingMobileSearchRef = useRef(false);
+  const cancelScheduledMobileRestoreRef = useRef<(() => void) | null>(null);
+  const cancelScheduledMobileRestore = useCallback(() => {
+    cancelScheduledMobileRestoreRef.current?.();
+    cancelScheduledMobileRestoreRef.current = null;
+  }, []);
+  const closeMobileMenu = useCallback((openSearch = false) => {
+    restoreMobileFocusRef.current = true;
+    pendingMobileSearchRef.current = openSearch;
     setOpen(false);
-    mobileTriggerRef.current?.focus();
   }, []);
 
   const [mobileTab, setMobileTab] = useState<'site' | 'docs'>(isDocsPage ? 'docs' : 'site');
@@ -127,6 +136,55 @@ export function Nav() {
     }
     return () => { document.body.style.overflow = ''; };
   }, [open]);
+  useEffect(() => {
+    const nav = navRef.current;
+    const siteContent = document.getElementById('site-content');
+    if (nav) nav.inert = open;
+    if (siteContent) siteContent.inert = open;
+    return () => {
+      if (nav) nav.inert = false;
+      if (siteContent) siteContent.inert = false;
+    };
+  }, [open]);
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return undefined;
+    const desktop = window.matchMedia('(min-width: 64rem)');
+    const closeAtDesktop = ({ matches }: Pick<MediaQueryList, 'matches'>) => {
+      if (!matches) return;
+      restoreMobileFocusRef.current = false;
+      pendingMobileSearchRef.current = false;
+      cancelScheduledMobileRestore();
+      setOpen(false);
+    };
+    const handleChange = (event: MediaQueryListEvent) => closeAtDesktop(event);
+    desktop.addEventListener('change', handleChange);
+    closeAtDesktop(desktop);
+    return () => desktop.removeEventListener('change', handleChange);
+  }, [cancelScheduledMobileRestore]);
+  useEffect(() => {
+    if (open || !restoreMobileFocusRef.current) return undefined;
+    const restoreFocusAndSearch = () => {
+      cancelScheduledMobileRestoreRef.current = null;
+      if (!restoreMobileFocusRef.current) return;
+      restoreMobileFocusRef.current = false;
+      mobileTriggerRef.current?.focus();
+      if (pendingMobileSearchRef.current) {
+        pendingMobileSearchRef.current = false;
+        document.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'k', metaKey: true }),
+        );
+      }
+    };
+    if (typeof window.requestAnimationFrame === 'function') {
+      const frame = window.requestAnimationFrame(restoreFocusAndSearch);
+      cancelScheduledMobileRestoreRef.current = () =>
+        window.cancelAnimationFrame(frame);
+    } else {
+      const timer = window.setTimeout(restoreFocusAndSearch, 0);
+      cancelScheduledMobileRestoreRef.current = () => window.clearTimeout(timer);
+    }
+    return cancelScheduledMobileRestore;
+  }, [cancelScheduledMobileRestore, open]);
   useEffect(() => {
     if (!open) return undefined;
     const dialog = mobileDialogRef.current;
@@ -172,7 +230,7 @@ export function Nav() {
 
   return (
     <>
-    <nav className="fixed top-0 left-0 right-0 z-50 nav-bar">
+    <nav ref={navRef} className="fixed top-0 left-0 right-0 z-50 nav-bar">
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 py-4 md:px-8 md:py-5">
         <Link href="/" className="nav-logo-link">
@@ -253,7 +311,7 @@ export function Nav() {
               type="button"
               className="nav-mobile-dialog-close"
               aria-label="Close menu"
-              onClick={closeMobileMenu}
+              onClick={() => closeMobileMenu()}
             >
               <CloseIcon />
             </button>
@@ -288,7 +346,8 @@ export function Nav() {
                   activeSlug={activeSlug || 'introduction'}
                   pageTitle={docsPageTitle}
                   mobile
-                  onNavigate={() => setOpen(false)}
+                  onNavigate={() => closeMobileMenu()}
+                  onSearchHandoff={() => closeMobileMenu(true)}
                 />
               </div>
             ) : null}
@@ -303,7 +362,7 @@ export function Nav() {
                     <LinkEl key={l.href} href={l.href} {...extraProps}
                       onClick={() => {
                         trackNavLink(l.label, l.href, l.external, 'mobile_nav');
-                        setOpen(false);
+                        closeMobileMenu();
                       }}
                       className="nav-mobile-site-link"
                     >
@@ -313,7 +372,7 @@ export function Nav() {
                 })}
                 {DEMOS.map((demo) => (
                   <a key={demo.key} href={demo.href} target="_blank" rel="noopener noreferrer"
-                    onClick={() => { trackExternalLinkClick(demo.href, { surface: 'mobile_nav', cta_id: `mobile_nav_demo_${demoCtaSuffix(demo.key)}`, cta_text: demo.label }); setOpen(false); }}
+                    onClick={() => { trackExternalLinkClick(demo.href, { surface: 'mobile_nav', cta_id: `mobile_nav_demo_${demoCtaSuffix(demo.key)}`, cta_text: demo.label }); closeMobileMenu(); }}
                     className="nav-mobile-site-link">
                     {demo.label}
                   </a>
@@ -326,7 +385,7 @@ export function Nav() {
                       cta_id: 'mobile_nav_github',
                       cta_text: 'GitHub',
                     });
-                    setOpen(false);
+                    closeMobileMenu();
                   }}
                   className="nav-mobile-github-link">
                   <GitHubIcon /> GitHub
@@ -343,7 +402,7 @@ export function Nav() {
                         cta_id: 'mobile_nav_talk_to_us',
                         cta_text: 'Talk to Us',
                       });
-                      setOpen(false);
+                      closeMobileMenu();
                     }}
                     className="nav-mobile-cta"
                   >

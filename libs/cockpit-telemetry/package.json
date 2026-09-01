@@ -13,6 +13,7 @@
     "@threadplane/render": "*"
   },
   "dependencies": {
+    "@threadplane/cockpit-runtime-bridge": "*",
     "posthog-js": "^1.373.0"
   }
 }

@@ -66,6 +66,16 @@ function readJobNeeds(job) {
     .filter(Boolean);
 }
 
+function readNamedStep(job, name) {
+  const marker = `      - name: ${name}`;
+  const start = job.indexOf(marker);
+  assert.notEqual(start, -1, `expected workflow step ${name}`);
+  const afterStart = job.slice(start + marker.length);
+  const nextStep = /^ {6}- /m.exec(afterStart);
+  const end = nextStep ? start + marker.length + nextStep.index : job.length;
+  return job.slice(start, end);
+}
+
 describe('CI workflow', () => {
   async function readWorkflow() {
     return readFile('.github/workflows/ci.yml', 'utf8');
@@ -73,6 +83,10 @@ describe('CI workflow', () => {
 
   async function readDeployJob() {
     return readJobBlock(await readWorkflow(), 'deploy');
+  }
+
+  async function readCiScopeJob() {
+    return readJobBlock(await readWorkflow(), 'ci-scope');
   }
 
   async function readLibraryJob() {
@@ -129,6 +143,15 @@ describe('CI workflow', () => {
     );
   }
 
+  it('runs the Cockpit runtime bridge drift guard with the always-run scope tests', async () => {
+    const ciScopeJob = await readCiScopeJob();
+
+    assert.match(
+      ciScopeJob,
+      /name:\s*Test CI scope classifier\s+run:\s*node --test[^\n]*scripts\/cockpit-runtime-bridge-coverage\.spec\.mjs/
+    );
+  });
+
   it('treats nested library files as deploy-relevant changes', async () => {
     const deployJob = await readDeployJob();
 
@@ -164,6 +187,77 @@ describe('CI workflow', () => {
       dependencyInstall?.[1] ?? '',
       /steps\.examples_changed\.outputs\.changed == 'true'/
     );
+  });
+
+  it('treats the Cockpit runtime bridge as an Angular example deployment change', async () => {
+    const deployJob = await readDeployJob();
+    const examplesDetection = deployJob.slice(
+      deployJob.indexOf('Check if examples changed'),
+      deployJob.indexOf('- uses: actions/setup-node')
+    );
+    const patterns = [...examplesDetection.matchAll(/grep -E '([^']+)'/g)].map(
+      (match) => new RegExp(match[1])
+    );
+
+    assert.ok(
+      patterns.some((pattern) =>
+        pattern.test('libs/cockpit-runtime-bridge/src/index.ts')
+      )
+    );
+  });
+
+  it('deploys changed runtime bridges before the cockpit shell and preserves fail-fast ordering', async () => {
+    const deployJob = await readDeployJob();
+    const assembleExamples = deployJob.indexOf(
+      'Build and assemble Angular examples'
+    );
+    const deployExamples = deployJob.indexOf(
+      'Deploy Angular examples to Vercel (production)'
+    );
+    const prepareCockpit = deployJob.indexOf('Prepare cockpit Vercel project');
+    const deployCockpit = deployJob.indexOf(
+      'Build and deploy cockpit to Vercel (production)'
+    );
+
+    for (const [label, position] of [
+      ['example assembly', assembleExamples],
+      ['example deployment', deployExamples],
+      ['cockpit preparation', prepareCockpit],
+      ['cockpit deployment', deployCockpit],
+    ]) {
+      assert.notEqual(position, -1, `expected ${label} in the deploy job`);
+    }
+    assert.ok(assembleExamples < deployExamples);
+    assert.ok(deployExamples < prepareCockpit);
+    assert.ok(prepareCockpit < deployCockpit);
+
+    const examplesBeforeCockpit = deployJob.slice(
+      assembleExamples,
+      prepareCockpit
+    );
+    assert.doesNotMatch(
+      examplesBeforeCockpit,
+      /continue-on-error:\s*true/,
+      'example build/deploy must fail the linear job before Cockpit promotion'
+    );
+
+    for (const name of [
+      'Build and assemble Angular examples',
+      'Deploy Angular examples to Vercel (production)',
+    ]) {
+      const step = readNamedStep(deployJob, name);
+      assert.doesNotMatch(step, /\|\||;\s*true(?:\s|$)|set\s+\+e/);
+    }
+
+    for (const name of [
+      'Prepare cockpit Vercel project',
+      'Build and deploy cockpit to Vercel (production)',
+      'Verify deployed cockpit',
+    ]) {
+      const step = readNamedStep(deployJob, name);
+      assert.doesNotMatch(step, /continue-on-error:\s*true/);
+      assert.doesNotMatch(step, /if:[^\n]*(?:always|failure|cancelled)\s*\(/);
+    }
   });
 
   it('runs production smoke after the canonical demo deploy', async () => {

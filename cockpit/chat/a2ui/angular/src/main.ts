@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { bootstrapApplication } from '@angular/platform-browser';
+import { bootstrapWithCockpitHarness } from '@threadplane/cockpit-telemetry';
 import { appConfig } from './app/app.config';
 import { A2uiComponent } from './app/a2ui.component';
 
-bootstrapApplication(A2uiComponent, appConfig).catch(console.error);
+void bootstrapWithCockpitHarness(A2uiComponent, appConfig).catch(console.error);

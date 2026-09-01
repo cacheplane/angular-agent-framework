@@ -145,6 +145,23 @@ describe('classifyFromAffected — publishable lib broadcast', () => {
   });
 });
 
+describe('classifyFromAffected — cockpit runtime bridge', () => {
+  it('selects Cockpit, examples, deploy smoke, and browser coverage through existing scopes', async () => {
+    const project = JSON.parse(
+      await readFile('libs/cockpit-runtime-bridge/project.json', 'utf8')
+    );
+    const scope = classifyFromAffected(
+      ['libs/cockpit-runtime-bridge/src/index.ts'],
+      [{ name: project.name, tags: project.tags }]
+    );
+
+    assert.equal(scope.cockpit, true);
+    assert.equal(scope.cockpit_examples, true);
+    assert.equal(scope.cockpit_deploy_smoke, true);
+    assert.equal(scope.cockpit_e2e, true);
+  });
+});
+
 describe('classifyFromAffected — Angular compatibility', () => {
   for (const projectName of ['examples-chat-angular', 'examples-chat-smoke']) {
     it(`${projectName} triggers Angular compatibility without unrelated scopes`, () => {

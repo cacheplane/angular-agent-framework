@@ -222,6 +222,11 @@ pre.shiki {
 .cockpit-prose h1 { font-size: 1.875rem; line-height: 1.1; margin: 0 0 0.5rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--ds-accent-border); }
 .cockpit-prose h2 { font-size: 1.5rem; margin: 2.25rem 0 0.75rem; }
 .cockpit-prose h3 { font-size: 1.25rem; margin: 1.5rem 0 0.5rem; }
+.cockpit-prose .cockpit-api-heading {
+  font-family: var(--font-inter), var(--ds-font-sans);
+  letter-spacing: normal;
+  text-transform: none;
+}
 .cockpit-prose p { margin: 0 0 0.75rem; }
 .cockpit-prose ul { margin: 0 0 0.75rem; padding-left: 1.25rem; list-style: disc; }
 .cockpit-prose li { margin-bottom: 0.25rem; }
@@ -356,12 +361,18 @@ pre.shiki {
   .cockpit-shell { grid-template-columns: 328px minmax(0, 1fr); }
 }
 .cockpit-control-plane {
+  --cockpit-state-error: #b42318;
+  --cockpit-state-success: #1a7a40;
   display: grid;
   grid-template-columns: 56px minmax(0, 272px);
   height: 100%;
   min-width: 0;
   color: var(--ds-text-secondary);
   background: var(--ds-surface);
+}
+[data-theme="dark"] .cockpit-control-plane {
+  --cockpit-state-error: #ff6369;
+  --cockpit-state-success: #4cc38a;
 }
 .cockpit-control-plane [data-control-plane-rail] {
   min-width: 0;
@@ -407,6 +418,28 @@ pre.shiki {
   font-size: 10px;
   line-height: 1;
   font-weight: 600;
+}
+.cockpit-control-plane [data-control-plane-rail-icon],
+[data-cockpit-activity-icon] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.cockpit-control-plane [data-control-plane-rail-icon] > svg,
+[data-cockpit-activity-icon] > svg {
+  width: 18px;
+  height: 18px;
+}
+[data-cockpit-activity-icon] { position: relative; }
+[data-cockpit-activity-attention] {
+  position: absolute;
+  top: -2px;
+  right: -3px;
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--ds-surface-tinted);
+  border-radius: 999px;
+  background: var(--cockpit-state-error);
 }
 .cockpit-control-plane [data-control-plane-pane] {
   min-width: 0;
@@ -456,6 +489,90 @@ pre.shiki {
   font-weight: 600;
 }
 [data-cockpit-context-content] [data-control-plane-section-content] { padding: 2px 0 8px; }
+
+/* Runtime remains a compact, unboxed operational summary. */
+[data-runtime-section] [data-control-plane-section-trigger] {
+  justify-content: flex-start;
+  gap: 8px;
+}
+[data-runtime-section] [data-control-plane-section-title] { flex: none; }
+[data-runtime-section] [data-control-plane-section-end] {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+[data-runtime-section] [data-control-plane-section-summary] { min-width: 0; }
+[data-runtime-section] [data-control-plane-section-chevron] {
+  flex: none;
+  margin-left: auto;
+}
+[data-runtime-status] {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ds-text-muted);
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+[data-runtime-status-icon] { display: inline-flex; }
+[data-runtime-status][data-runtime-phase="ready"] {
+  color: var(--cockpit-state-success);
+}
+[data-runtime-status]:is(
+  [data-runtime-phase="invalid_configuration"],
+  [data-runtime-phase="unresponsive"],
+  [data-runtime-phase="error"]
+) {
+  color: var(--cockpit-state-error);
+}
+[data-runtime-status]:is(
+  [data-runtime-phase="connecting"],
+  [data-runtime-phase="checking"],
+  [data-runtime-phase="reloading"]
+) {
+  color: var(--ds-accent);
+}
+@keyframes cockpit-runtime-status-spin {
+  to { transform: rotate(1turn); }
+}
+.cockpit-runtime-status-loader {
+  animation: cockpit-runtime-status-spin 900ms linear infinite;
+}
+[data-runtime-metadata] {
+  min-width: 0;
+  margin: 0 8px 6px;
+  padding: 2px 0;
+  display: grid;
+  gap: 3px;
+  color: var(--ds-text-muted);
+  font-size: 10px;
+  line-height: 1.35;
+}
+[data-runtime-metadata] > span { min-width: 0; }
+[data-runtime-target] {
+  display: block;
+  overflow: hidden;
+  color: var(--ds-text-secondary);
+  font-family: var(--ds-font-mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+[data-runtime-checked-at] { color: var(--ds-text-muted); }
+[data-runtime-announcement] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 .cockpit-control-plane-scope {
   margin: 0 8px;
   padding: 10px;
@@ -533,6 +650,10 @@ pre.shiki {
   color: var(--ds-text-muted);
   background: transparent;
 }
+[data-cockpit-context-content] [data-control-plane-action] > svg {
+  width: 16px;
+  height: 16px;
+}
 [data-cockpit-context-content] [data-control-plane-action]:hover {
   color: var(--ds-text-primary);
   background: var(--ds-surface-tinted);
@@ -569,6 +690,46 @@ pre.shiki {
   opacity: 1;
   visibility: visible;
 }
+.cockpit-control-plane [data-control-plane-overflow-menu-root] { position: relative; }
+.cockpit-control-plane [data-control-plane-overflow-menu] {
+  position: absolute;
+  z-index: 70;
+  top: calc(100% + 5px);
+  right: 0;
+  min-width: 184px;
+  padding: 5px;
+  border: 1px solid var(--ds-border-strong);
+  border-radius: 8px;
+  background: var(--ds-surface);
+  box-shadow: var(--ds-shadow-md);
+}
+.cockpit-control-plane [data-control-plane-overflow-menu-root][data-overflow-placement="start"] > [data-control-plane-overflow-menu] {
+  left: 0;
+  right: auto;
+}
+.cockpit-control-plane [data-control-plane-overflow-menu-root][data-overflow-placement="center"] > [data-control-plane-overflow-menu] {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+}
+.cockpit-control-plane [data-control-plane-overflow-item] {
+  width: 100%;
+  min-height: 34px;
+  padding: 7px 9px;
+  border: 0;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  color: var(--ds-text-secondary);
+  background: transparent;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+.cockpit-control-plane [data-control-plane-overflow-item]:is(:hover, :focus-visible) {
+  color: var(--ds-text-primary);
+  background: var(--ds-surface-tinted);
+}
 .cockpit-control-plane [data-control-plane-utility-panel] { padding: 14px 12px; }
 .cockpit-control-plane [data-control-plane-utility-header] {
   min-height: 36px;
@@ -597,6 +758,88 @@ pre.shiki {
 }
 .cockpit-control-plane [data-control-plane-utility-header] button:hover,
 .cockpit-control-plane-theme:hover { background: var(--ds-surface-tinted); color: var(--ds-text-primary); }
+.cockpit-control-plane [data-control-plane-utility-header] button > svg,
+.cockpit-control-plane-theme > svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Session Activity is newest-first in markup; styling keeps the chronology quiet. */
+[data-activity-empty] {
+  margin: 14px 0 0;
+  color: var(--ds-text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+[data-activity-timeline] {
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+  list-style: none;
+}
+[data-activity-event] {
+  position: relative;
+  min-width: 0;
+  padding: 0 0 16px 25px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 3px 8px;
+  color: var(--ds-text-secondary);
+  font-size: 11px;
+  line-height: 1.35;
+}
+[data-activity-event]:last-child { padding-bottom: 0; }
+[data-activity-severity-icon] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ds-text-muted);
+  background: var(--ds-surface);
+}
+[data-activity-connector] {
+  position: absolute;
+  top: 15px;
+  bottom: -1px;
+  left: 7px;
+  width: 1px;
+  background: var(--ds-border-strong);
+}
+[data-activity-timestamp] {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  color: var(--ds-text-muted);
+  font-family: var(--ds-font-mono);
+  font-size: 9px;
+}
+[data-activity-summary] {
+  min-width: 0;
+  grid-column: 1;
+  grid-row: 1;
+  overflow-wrap: anywhere;
+}
+[data-activity-capability] {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  color: var(--ds-text-muted);
+  font-family: var(--ds-font-mono);
+  font-size: 9px;
+}
+[data-activity-severity="error"] [data-activity-severity-icon],
+[data-activity-severity="error"] [data-activity-summary] {
+  color: var(--cockpit-state-error);
+}
+[data-activity-kind="runtime_recovered"] [data-activity-severity-icon],
+[data-activity-kind="runtime_recovered"] [data-activity-summary] {
+  color: var(--cockpit-state-success);
+}
 .cockpit-control-plane-setting {
   min-height: 48px;
   padding: 8px 0;
@@ -610,6 +853,7 @@ pre.shiki {
 }
 .cockpit-control-plane button:focus-visible,
 .cockpit-control-plane a:focus-visible,
+.cockpit-mobile-navigation-trigger:focus-visible,
 .cockpit-mobile-control-plane button:focus-visible,
 .cockpit-mobile-control-plane a:focus-visible {
   outline: 2px solid var(--ds-accent);
@@ -617,6 +861,16 @@ pre.shiki {
 }
 
 /* Adaptive mobile drawer */
+.cockpit-mobile-navigation-trigger {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  color: var(--ds-text-secondary);
+  background: transparent;
+  cursor: pointer;
+}
 .cockpit-mobile-control-plane {
   background: color-mix(in srgb, var(--ds-text-primary) 18%, transparent);
   opacity: 1;
@@ -649,8 +903,8 @@ pre.shiki {
   font-weight: 600;
 }
 .cockpit-mobile-control-plane-header button {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border: 0;
   border-radius: 8px;
   display: inline-flex;
@@ -664,23 +918,112 @@ pre.shiki {
   min-height: 0;
 }
 .cockpit-control-plane[data-mobile] [data-control-plane-pane] { border-right: 0; }
-@media (pointer: coarse) {
+@media (forced-colors: active) {
+  .cockpit-control-plane,
+  .cockpit-control-plane [data-control-plane-rail],
+  .cockpit-control-plane [data-control-plane-pane],
+  .cockpit-mobile-control-plane-panel {
+    color: CanvasText;
+    background: Canvas;
+    border-color: CanvasText;
+  }
   .cockpit-control-plane [data-control-plane-rail-item],
   .cockpit-control-plane [data-control-plane-section-trigger],
   .cockpit-control-plane [data-control-plane-action],
-  .cockpit-nav-item,
-  .cockpit-mobile-control-plane-header button { min-height: 44px; }
+  .cockpit-control-plane [data-control-plane-utility-header] button,
+  .cockpit-control-plane-theme,
+  .cockpit-mobile-navigation-trigger,
+  .cockpit-mobile-control-plane-close {
+    border: 1px solid CanvasText;
+    color: CanvasText;
+    background: Canvas;
+  }
+  .cockpit-control-plane [data-control-plane-rail-item][data-control-plane-active] {
+    border-color: Highlight;
+    color: HighlightText;
+    background: Highlight;
+  }
+  [data-runtime-status][data-runtime-phase] {
+    padding: 1px 4px;
+    border: 1px solid CanvasText;
+    border-radius: 7px;
+    color: CanvasText;
+    background: Canvas;
+  }
+  .cockpit-control-plane [data-control-plane-overflow-menu] {
+    border: 1px solid CanvasText;
+    color: CanvasText;
+    background: Canvas;
+    box-shadow: none;
+  }
+  .cockpit-control-plane [data-control-plane-overflow-item] {
+    border: 1px solid CanvasText;
+    color: CanvasText;
+    background: Canvas;
+  }
+  .cockpit-control-plane [data-control-plane-overflow-item]:is(:hover, :focus-visible) {
+    border-color: Highlight;
+    color: HighlightText;
+    background: Highlight;
+  }
+  [data-cockpit-activity-attention] {
+    border-color: Canvas;
+    background: Highlight;
+  }
+  [data-activity-severity-icon] {
+    color: CanvasText;
+    background: Canvas;
+  }
+  [data-activity-connector] { background: CanvasText; }
+  [data-activity-severity="error"] [data-activity-severity-icon],
+  [data-activity-severity="error"] [data-activity-summary],
+  [data-activity-kind="runtime_recovered"] [data-activity-severity-icon],
+  [data-activity-kind="runtime_recovered"] [data-activity-summary] {
+    color: CanvasText;
+  }
+  .cockpit-control-plane button:focus-visible,
+  .cockpit-control-plane a:focus-visible,
+  .cockpit-mobile-navigation-trigger:focus-visible,
+  .cockpit-mobile-control-plane button:focus-visible,
+  .cockpit-mobile-control-plane a:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+}
+@media (pointer: coarse) {
+  .cockpit-mobile-navigation-trigger,
+  .cockpit-mobile-control-plane-close {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .cockpit-control-plane [data-control-plane-rail-item],
+  .cockpit-control-plane [data-control-plane-section-trigger],
+  .cockpit-control-plane [data-control-plane-action],
+  .cockpit-nav-item { min-height: 44px; }
   .cockpit-control-plane [data-control-plane-action] {
     width: 44px;
     height: 44px;
   }
+  .cockpit-control-plane [data-control-plane-overflow-menu-root][data-overflow-placement="center"] > [data-control-plane-overflow-menu] {
+    left: auto;
+    right: 0;
+    transform: none;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .cockpit-control-plane *,
+  .cockpit-control-plane * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
   .cockpit-mobile-control-plane,
   .cockpit-mobile-control-plane-panel {
     scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
+    transition: none !important;
+    animation: none !important;
+  }
+  .cockpit-runtime-status-loader {
+    animation: none !important;
   }
 }

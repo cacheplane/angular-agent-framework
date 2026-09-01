@@ -7,6 +7,7 @@ import {
   useEffect,
   useId,
   useRef,
+  type CSSProperties,
   type KeyboardEvent,
   type ReactElement,
   type ReactNode,
@@ -15,6 +16,18 @@ import { ChevronRight, X } from 'lucide-react';
 
 type CommonProps = {
   className?: string;
+};
+
+const visuallyHidden: CSSProperties = {
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  padding: 0,
+  margin: -1,
+  overflow: 'hidden',
+  clip: 'rect(0, 0, 0, 0)',
+  whiteSpace: 'nowrap',
+  border: 0,
 };
 
 export interface ControlPlaneRailProps extends CommonProps {
@@ -128,6 +141,8 @@ export function ControlPlanePane({ label, children, className }: ControlPlanePan
 export interface ControlPlaneSectionProps extends CommonProps {
   title: string;
   icon?: ReactNode;
+  summary?: ReactNode;
+  description?: ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   children: ReactNode;
@@ -137,6 +152,8 @@ export interface ControlPlaneSectionProps extends CommonProps {
 export function ControlPlaneSection({
   title,
   icon,
+  summary,
+  description,
   open = true,
   onOpenChange,
   children,
@@ -144,6 +161,7 @@ export function ControlPlaneSection({
   collapsible = true,
 }: ControlPlaneSectionProps) {
   const id = useId();
+  const descriptionId = useId();
   return (
     <section className={className} data-control-plane-section>
       {collapsible ? (
@@ -151,6 +169,7 @@ export function ControlPlaneSection({
           type="button"
           aria-expanded={open}
           aria-controls={id}
+          aria-describedby={description ? descriptionId : undefined}
           onClick={() => onOpenChange?.(!open)}
           data-control-plane-section-trigger
         >
@@ -158,13 +177,20 @@ export function ControlPlaneSection({
             {icon ? <span data-control-plane-section-icon>{icon}</span> : null}
             {title}
           </span>
-          <ChevronRight
-            size={16}
-            strokeWidth={2}
-            aria-hidden="true"
-            data-control-plane-chevron
-            data-control-plane-section-chevron
-          />
+          <span data-control-plane-section-end>
+            {summary ? (
+              <span data-control-plane-section-summary aria-hidden="true">
+                {summary}
+              </span>
+            ) : null}
+            <ChevronRight
+              size={16}
+              strokeWidth={2}
+              aria-hidden="true"
+              data-control-plane-chevron
+              data-control-plane-section-chevron
+            />
+          </span>
         </button>
       ) : (
         <h2 data-control-plane-section-heading>
@@ -172,6 +198,15 @@ export function ControlPlaneSection({
           {title}
         </h2>
       )}
+      {collapsible && description ? (
+        <span
+          id={descriptionId}
+          style={visuallyHidden}
+          data-control-plane-section-description
+        >
+          {description}
+        </span>
+      ) : null}
       {open ? (
         <div id={id} data-control-plane-section-content>
           {children}

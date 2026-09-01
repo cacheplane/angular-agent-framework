@@ -1,0 +1,34 @@
+{
+  "name": "cockpit-runtime-bridge",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/cockpit-runtime-bridge/src",
+  "projectType": "library",
+  "tags": [
+    "scope:cockpit",
+    "scope:cockpit-deploy-smoke",
+    "scope:cockpit-e2e",
+    "scope:cockpit-examples"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{workspaceRoot}/dist/libs/cockpit-runtime-bridge"
+      ],
+      "options": {
+        "outputPath": "dist/libs/cockpit-runtime-bridge",
+        "main": "libs/cockpit-runtime-bridge/src/index.ts",
+        "tsConfig": "libs/cockpit-runtime-bridge/tsconfig.lib.json"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "options": {
+        "configFile": "libs/cockpit-runtime-bridge/vite.config.mts"
+      }
+    }
+  }
+}
