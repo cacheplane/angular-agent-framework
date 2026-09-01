@@ -22,9 +22,15 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-const LIBRARY_HREF: Record<string, string> = {
+/**
+ * Keyed by the display name in solutions-data. A miss renders the card
+ * unlinked rather than failing, and `Record<string, string>` will not catch a
+ * rename on either side — so `solutions-links.spec.ts` asserts every layer
+ * resolves.
+ */
+export const LIBRARY_HREF: Record<string, string> = {
   Agent: '/langgraph',
-  Render: '/render',
+  'json-render': '/render',
   Chat: '/chat',
 };
 

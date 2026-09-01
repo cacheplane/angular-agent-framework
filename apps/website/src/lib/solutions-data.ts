@@ -124,7 +124,7 @@ export const SOLUTIONS: SolutionConfig[] = [
         role: 'Production agent state with first-class interrupt support. Every agent action can require human approval before execution. Durable thread persistence preserves the full record of every tool call and state transition.',
       },
       {
-        library: 'Render',
+        library: 'json-render',
         pkg: '@threadplane/render',
         role: 'Approval workflows rendered as structured UI — not chat messages. The agent proposes an action, renders a confirmation card, and waits for the human gate before proceeding.',
       },
@@ -217,7 +217,7 @@ export const SOLUTIONS: SolutionConfig[] = [
         role: 'Streams query results token-by-token as the LangGraph agent reasons over your data. Thread persistence means users can refine questions without re-running expensive queries.',
       },
       {
-        library: 'Render',
+        library: 'json-render',
         pkg: '@threadplane/render',
         role: 'The agent emits chart specs, data tables, and KPI cards as structured render specs. Your Angular components render them with streaming JSON patches — live-updating visualizations as data arrives.',
       },
@@ -295,7 +295,7 @@ export class DashboardComponent {
         role: 'LangGraph interrupts let the agent pause before sensitive actions — refunds, account changes, escalations. Thread persistence preserves the full conversation across bot-to-human handoffs.',
       },
       {
-        library: 'Render',
+        library: 'json-render',
         pkg: '@threadplane/render',
         role: 'The agent renders structured UI — order summaries, refund confirmations, knowledge base cards — instead of dumping text. Customers see clean, actionable information.',
       },
