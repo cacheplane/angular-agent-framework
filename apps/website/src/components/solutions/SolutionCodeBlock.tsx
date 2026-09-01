@@ -45,8 +45,9 @@ export async function SolutionCodeBlock({ code }: { code: SolutionCodeBlocks }) 
                 {block.label}
               </p>
           {/*
-            Shiki emits a complete <pre> that already carries its own background,
-            padding, and `overflow-x: auto`, so this wrapper owns only the frame.
+            Shiki emits a <pre> carrying its own background; its padding and
+            `overflow-x: auto` come from the `pre.shiki` / `pre` rules in
+            global.css, so this wrapper owns only the frame.
             `overflow: hidden` is what makes the radius clip that background — it
             must not be `auto`, which would nest a second scroll container around
             a element that already scrolls and can show two scrollbars.

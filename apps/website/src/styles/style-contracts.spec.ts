@@ -50,6 +50,14 @@ const CONTRACTS: StyleContract[] = [
     },
   },
   {
+    file: '../app/global.css',
+    selector: 'pre.shiki',
+    why: "Shiki writes the theme background inline on the <pre> but emits no padding, so losing this sits the code flush against the dark surface's edges — on the homepage Code tabs, /langgraph, /render, /chat and every /solutions page. Deleted once already in #863, on a docs-only survey that concluded `.shiki` matched nothing.",
+    requires: {
+      padding: /padding:/,
+    },
+  },
+  {
     file: 'docs.css',
     selector: '.docs-control-plane [data-control-plane-pane]',
     why: 'The pane holds the whole docs nav in a fixed-height column. Without its own scrolling the lower sections are unreachable on short viewports.',
