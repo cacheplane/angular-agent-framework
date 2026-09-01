@@ -29,7 +29,7 @@ export default async function LangGraphPage() {
               LangGraph agent UI for Angular.
             </h1>
             <p className="langgraph-page-hero-subtitle">
-              Ship LangGraph agents inside your Angular 20–22 app with headless chat, durable threads, interrupts, branch/history, tool progress, and generative UI.
+              Ship LangGraph agents inside your Angular app. Agent state arrives as signals; threads survive reloads; humans stay in the loop.
             </p>
             <div className="langgraph-page-hero-buttons">
               <Button variant="primary" size="lg" href="/docs/langgraph/getting-started/introduction">Get started</Button>

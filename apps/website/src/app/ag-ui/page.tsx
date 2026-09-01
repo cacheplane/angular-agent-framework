@@ -29,7 +29,7 @@ export default async function AgUiPage() {
               One adapter. Eight backends.
             </h1>
             <p className="ag-ui-page-hero-subtitle">
-              Build an Angular agent UI on AG-UI-compatible runtimes including CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, or LangGraph fronted by AG-UI. Same Agent contract and chat surface; runtime-specific history and checkpoint behavior stays with the backend.
+              Build the Angular UI once, on the AG-UI protocol — eight runtimes speak it today, and new ones work the day they ship. History and checkpoint behavior stays with your backend.
             </p>
             <div className="ag-ui-page-hero-buttons">
               <Button variant="primary" size="lg" href="/docs/ag-ui/getting-started/quickstart">Get started</Button>
