@@ -13,6 +13,15 @@ import { cpSync, mkdirSync, rmSync, existsSync, writeFileSync, readFileSync } fr
 import { resolve } from 'path';
 import { capabilities as registryCapabilities } from '../apps/cockpit/scripts/capability-registry';
 
+// DEPLOY-GATE HAZARD: ci.yml's deploy steps diff `github.event.before..sha` to
+// decide whether examples/cockpit redeploy. Runs waiting in the CI-main
+// concurrency queue are cancelled when a newer push arrives, and a cancelled
+// run's diff range is never re-examined — so a change that skipped deploy in a
+// culled run can stay undeployed until a later commit touches a gated path
+// (this file is one). Seen live 2026-08-31: the cockpit/runtimes examples
+// merged green but never deployed. If pages are missing in production after a
+// green main run, check for culled runs before suspecting the code.
+
 const root = resolve(__dirname, '..');
 const deployDir = resolve(root, 'deploy/examples');
 const skipBuild = process.argv.includes('--skip-build');
