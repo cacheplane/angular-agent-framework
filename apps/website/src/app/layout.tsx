@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { EB_Garamond, Inter, JetBrains_Mono } from 'next/font/google';
 import './global.css';
 import { Nav } from '../components/shared/Nav';
-import { Footer } from '../components/shared/Footer';
+import { SiteFooter } from '../components/shared/SiteFooter';
 import { AnnouncementToast } from '../components/shared/AnnouncementToast';
 import { JsonLd } from '../components/shared/JsonLd';
 import { rootJsonLd } from '../lib/structured-data';
@@ -70,7 +70,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Nav />
         <div id="site-content">
           <main>{children}</main>
-          <Footer />
+          <SiteFooter />
           <AnnouncementToast />
         </div>
       </body>
