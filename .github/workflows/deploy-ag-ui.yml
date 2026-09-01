@@ -71,3 +71,15 @@ jobs:
         run: railway up --service ag-ui-dev --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      # The boot gate above proves the aggregated server IMPORTS. It cannot
+      # prove the rollout took: `railway up --detach` returns at upload time,
+      # and when a new image fails to start Railway keeps serving the last good
+      # one — so a broken deploy looks identical to a healthy one from CI.
+      # That is exactly how /agent/subagents stayed 404 in production from
+      # 2026-06-16 to 2026-08-31 behind green deploys, and why /ok is no help:
+      # a stale image answers it happily. Assert the endpoints instead.
+      - name: Verify the deployed runtime mounts every topic
+        run: npx tsx scripts/verify-ag-ui-runtime.ts
+        env:
+          EXAMPLES_URL: https://examples.threadplane.ai
