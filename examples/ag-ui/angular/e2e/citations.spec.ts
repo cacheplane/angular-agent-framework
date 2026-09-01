@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 import { sendPromptAndWait } from './test-helpers';
 
 // Twin of examples/chat's citations spec. AG-UI delivers citations differently
-// (the backend surfaces them as state.citations[messageId], which the ag-ui
+// (the backend surfaces them as state.citations[messageId], which the AG-UI
 // adapter mirrors and bridgeCitationsState() maps onto Message.citations) — but
 // the rendered surface is the shared @threadplane/chat markers/preview/panel, so
 // the assertions match. The graph runs the REAL search_documents tool; its

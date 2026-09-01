@@ -120,7 +120,7 @@
 
 - **ci:** never promote a superseded commit to production ([#816](https://github.com/cacheplane/angular-agent-framework/pull/816), [#813](https://github.com/cacheplane/angular-agent-framework/issues/813), [#814](https://github.com/cacheplane/angular-agent-framework/issues/814))
 - **deploy:** restore shared-deployment namespace merge broken by src/__init__.py ([#825](https://github.com/cacheplane/angular-agent-framework/pull/825), [#642](https://github.com/cacheplane/angular-agent-framework/issues/642))
-- **examples:** raise ag-ui demo initial bundle budget to chat parity ([#821](https://github.com/cacheplane/angular-agent-framework/pull/821))
+- **examples:** raise AG-UI demo initial bundle budget to chat parity ([#821](https://github.com/cacheplane/angular-agent-framework/pull/821))
 - **langgraph:** reject non-durable client tool flushes ([#809](https://github.com/cacheplane/angular-agent-framework/pull/809))
 - **langgraph:** retain client tool results across failed runs ([#810](https://github.com/cacheplane/angular-agent-framework/pull/810))
 - **website:** render grouped API entries on middleware helpers page ([#815](https://github.com/cacheplane/angular-agent-framework/pull/815))
@@ -164,7 +164,7 @@
 ### 🩹 Fixes
 
 - remove unused fake agent delay variable ([#787](https://github.com/cacheplane/angular-agent-framework/pull/787))
-- **ag-ui:** version authoritative snapshot rewrites ([#804](https://github.com/cacheplane/angular-agent-framework/pull/804))
+- **AG-UI:** version authoritative snapshot rewrites ([#804](https://github.com/cacheplane/angular-agent-framework/pull/804))
 - **chat:** closed drawer sidenav must not intercept clicks on content ([#778](https://github.com/cacheplane/angular-agent-framework/pull/778))
 - **chat:** never leave a client tool call unanswered on the server ([#807](https://github.com/cacheplane/angular-agent-framework/pull/807), [#782](https://github.com/cacheplane/angular-agent-framework/issues/782), [#805](https://github.com/cacheplane/angular-agent-framework/issues/805))
 - **cockpit-examples:** use CSS sidebar widths ([496db8e8](https://github.com/cacheplane/angular-agent-framework/commit/496db8e8))
@@ -359,7 +359,7 @@
 
 ### Added
 
-- **`Agent.regenerate(index)`** — new method on the `Agent` interface implemented by both LangGraph and ag-ui adapters. Replace-semantics: discards the target assistant message and all subsequent messages, then re-runs against the prior user prompt. (#199)
+- **`Agent.regenerate(index)`** — new method on the `Agent` interface implemented by both LangGraph and AG-UI adapters. Replace-semantics: discards the target assistant message and all subsequent messages, then re-runs against the prior user prompt. (#199)
 - **`<chat-message-actions>`** — regenerate button is disabled while `agent.isLoading()`. (#199)
 
 ### Fixed
@@ -481,8 +481,8 @@
 - relicense to MIT (selective; minting-service stays proprietary) ([#141](https://github.com/cacheplane/angular-agent-framework/pull/141))
 - **a2ui:** align validation with v0.9 CheckRule spec ([#97](https://github.com/cacheplane/angular-agent-framework/pull/97))
 - **a2ui:** v0.9 action envelope and sendDataModel transport ([#101](https://github.com/cacheplane/angular-agent-framework/pull/101))
-- **ag-ui:** @cacheplane/ag-ui adapter wrapping @ag-ui/client ([#139](https://github.com/cacheplane/angular-agent-framework/pull/139))
-- **ag-ui:** FakeAgent for offline cockpit demo ([#140](https://github.com/cacheplane/angular-agent-framework/pull/140))
+- **AG-UI:** @cacheplane/ag-ui adapter wrapping @ag-ui/client ([#139](https://github.com/cacheplane/angular-agent-framework/pull/139))
+- **AG-UI:** FakeAgent for offline cockpit demo ([#140](https://github.com/cacheplane/angular-agent-framework/pull/140))
 - **agent:** run license check at provider init ([fd95400f](https://github.com/cacheplane/angular-agent-framework/commit/fd95400f))
 - **chat:** Apple-clean UI redesign + streaming example integration ([499ef645](https://github.com/cacheplane/angular-agent-framework/commit/499ef645))
 - **chat:** eliminate streaming jank with append-only markdown and frame-synced pipeline ([#107](https://github.com/cacheplane/angular-agent-framework/pull/107))

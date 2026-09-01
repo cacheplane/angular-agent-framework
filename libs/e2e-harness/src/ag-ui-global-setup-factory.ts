@@ -26,7 +26,7 @@ interface SharedState {
   /** Present when the backend is a langgraph dev server. */
   langgraph?: ChildProcess;
   langgraphPort?: number;
-  /** Present when the backend is a uvicorn ag-ui server. */
+  /** Present when the backend is a uvicorn AG-UI server. */
   backend?: ChildProcess;
   backendPort?: number;
   angular: ChildProcess;

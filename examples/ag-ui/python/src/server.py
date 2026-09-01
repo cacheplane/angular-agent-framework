@@ -2,7 +2,7 @@
 """Standalone AG-UI server for the examples/ag-ui demo.
 
 Wraps the (transport-agnostic) chat graph with ag-ui-langgraph and serves it
-over an AG-UI FastAPI endpoint at /agent. Mirrors the cockpit ag-ui pattern.
+over an AG-UI FastAPI endpoint at /agent. Mirrors the cockpit AG-UI pattern.
 
 Auth is OPTIONAL for clone-and-run: the X-Internal-Token check is enforced
 only when AG_UI_INTERNAL_TOKEN is set (production), so `uvicorn src.server:app`

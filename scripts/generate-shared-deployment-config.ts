@@ -65,7 +65,7 @@ mkdirSync(stagedDependenciesDir, { recursive: true });
 
 for (const capability of capabilities) {
   if (!capability.pythonDir || capability.product === 'ag-ui' || capability.product === 'runtimes') {
-    // No-Python caps have nothing to deploy. ag-ui and runtimes caps DO have
+    // No-Python caps have nothing to deploy. AG-UI and runtimes caps DO have
     // a pythonDir (uvicorn AG-UI FastAPI apps) but deploy to Railway via
     // generate-ag-ui-deployment-config.ts — they ship no langgraph.json.
     continue;

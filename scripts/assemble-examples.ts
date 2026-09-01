@@ -107,7 +107,7 @@ writeFileSync(resolve(funcDir, '.vc-config.json'), JSON.stringify({
   shouldAddHelpers: true,
 }, null, 2));
 
-// Build the ag-ui proxy serverless function (forwards /ag-ui/<topic>/agent
+// Build the AG-UI proxy serverless function (forwards /ag-ui/<topic>/agent
 // requests to the Railway-hosted FastAPI runtime with origin allowlist +
 // Upstash rate limit + X-Internal-Token injection).
 mkdirSync(agUiFuncDir, { recursive: true });
@@ -126,7 +126,7 @@ writeFileSync(resolve(agUiFuncDir, '.vc-config.json'), JSON.stringify({
 writeFileSync(resolve(outputDir, 'config.json'), JSON.stringify({
   version: 3,
   routes: [
-    // ag-ui proxy: /ag-ui/<topic>/agent[/rest] → ag-ui-proxy function.
+    // AG-UI proxy: /ag-ui/<topic>/agent[/rest] → ag-ui-proxy function.
     // Mirrors the langgraph rule exactly: dest names the catch-all function
     // (`[[...path]]`), which invokes it while PRESERVING the original request
     // URL in req.url. The function (scripts/ag-ui-proxy.ts) parses the topic
@@ -148,6 +148,6 @@ writeFileSync(resolve(outputDir, 'config.json'), JSON.stringify({
   ],
 }, null, 2));
 
-console.log('✅ .vercel/output/ (Build Output API with langgraph + ag-ui proxies)');
+console.log('✅ .vercel/output/ (Build Output API with langgraph + AG-UI proxies)');
 
 console.log(`\nAssembled ${capabilities.length} apps + proxy to ${deployDir}`);

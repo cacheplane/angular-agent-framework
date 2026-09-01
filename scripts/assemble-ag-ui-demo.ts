@@ -98,4 +98,4 @@ writeFileSync(resolve(outputDir, 'config.json'), JSON.stringify({
 }, null, 2));
 
 console.log('✅ .vercel/output/ (Build Output API with serverless proxy)');
-console.log(`\nAssembled ag-ui demo to ${deployDir}`);
+console.log(`\nAssembled AG-UI demo to ${deployDir}`);

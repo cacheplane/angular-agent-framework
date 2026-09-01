@@ -3,7 +3,7 @@ import { backendCommand, COCKPIT_RUNTIME_ENV, formatAllModeSummary } from './ser
 import { capabilities, findCapability, type Capability } from './capability-registry';
 
 describe('backendCommand', () => {
-  it('uses uvicorn on the registry pythonPort for ag-ui caps', () => {
+  it('uses uvicorn on the registry pythonPort for AG-UI caps', () => {
     const cap = findCapability('ag-ui-streaming')!;
     const cmd = backendCommand(cap)!;
     expect(cmd).toContain('cd cockpit/ag-ui/streaming/python');

@@ -117,7 +117,7 @@ function collectTopics(): AgUiTopic[] {
     });
   topics.sort((a, b) => a.topic.localeCompare(b.topic));
   if (topics.length === 0) {
-    throw new Error('No ag-ui topics with pythonDir found in capability registry');
+    throw new Error('No AG-UI topics with pythonDir found in capability registry');
   }
   return topics;
 }

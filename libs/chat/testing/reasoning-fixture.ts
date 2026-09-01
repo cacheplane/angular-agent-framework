@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 //
 // Provider-neutral fixture for the reasoning conformance test. Both
-// adapters (langgraph + ag-ui) translate this abstract sequence into
+// adapters (langgraph + AG-UI) translate this abstract sequence into
 // their own wire format and assert that the resulting Agent.messages()
 // produces a single assistant Message with the expected reasoning
 // string, response content, and a numeric (>= 0) reasoningDurationMs.

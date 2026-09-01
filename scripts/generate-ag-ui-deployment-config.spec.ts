@@ -13,7 +13,7 @@ describe('generateAgUiDeployment', () => {
     outDir = mkdtempSync(join(tmpdir(), 'ag-ui-deploy-'));
   });
 
-  it('stages each ag-ui python tree under deps/<topic>/', () => {
+  it('stages each AG-UI python tree under deps/<topic>/', () => {
     generateAgUiDeployment({ repoRoot: REPO_ROOT, outDir });
     expect(statSync(join(outDir, 'deps/interrupts/src/graph.py')).isFile()).toBe(true);
     expect(statSync(join(outDir, 'deps/streaming/src/graph.py')).isFile()).toBe(true);

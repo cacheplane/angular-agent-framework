@@ -161,7 +161,7 @@ providers: [provideFakeAgent({ tokens: ['Hello', ' world'] })];
 ```
 
 For component/unit tests, use the neutral writable-signal mock `mockAgent()`
-from `@threadplane/chat` — the ag-ui agent _is_ the neutral `Agent` contract,
+from `@threadplane/chat` — the AG-UI agent _is_ the neutral `Agent` contract,
 so there is no adapter-specific mock. See
 [Choosing an adapter → Testing](https://threadplane.ai/docs/choosing-an-adapter#testing).
 

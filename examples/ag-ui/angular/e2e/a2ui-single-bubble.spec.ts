@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 import { sendPromptAndWait } from './test-helpers';
 
 // a2ui generative-UI parity over AG-UI: the wrapped a2ui content reaches the
-// chat composition over ag-ui identically to langgraph; the surface mounts once
+// chat composition over AG-UI identically to langgraph; the surface mounts once
 // the host binds a `views` catalog (`[views]` on <chat>). See issue #616.
 test('a2ui single bubble: one assistant bubble carries the rendered surface', async ({ page }) => {
   await sendPromptAndWait(page, 'Demo: render a feedback form');

@@ -22,7 +22,7 @@ export interface Capability {
   /**
    * 'runtimes' is the one-capability-many-runtimes axis
    * (cockpit/runtimes/<runtime>/): non-LangGraph AG-UI backends measured
-   * against the same neutral Agent contract. Like 'ag-ui' caps, they are
+   * against the same neutral Agent contract. Like AG-UI caps, they are
    * served by the aggregated deployments/ag-ui-dev FastAPI app.
    */
   product: 'langgraph' | 'deep-agents' | 'render' | 'chat' | 'ag-ui' | 'runtimes';
@@ -30,7 +30,7 @@ export interface Capability {
   angularProject: string;
   port: number;
   pythonPort?: number;
-  /** Optional — ag-ui caps run in-process via FakeAgent and have no Python backend. */
+  /** Optional — AG-UI caps run in-process via FakeAgent and have no Python backend. */
   pythonDir?: string;
   /** Optional — see pythonDir. */
   graphName?: string;
@@ -85,7 +85,7 @@ export const capabilities: readonly Capability[] = [
   { id: 'ag-ui-a2ui', product: 'ag-ui', topic: 'a2ui', angularProject: 'cockpit-ag-ui-a2ui-angular', port: 4324, pythonPort: 5324, pythonDir: 'cockpit/ag-ui/a2ui/python' },
   { id: 'ag-ui-subagents', product: 'ag-ui', topic: 'subagents', angularProject: 'cockpit-ag-ui-subagents-angular', port: 4326, pythonPort: 5326, pythonDir: 'cockpit/ag-ui/subagents/python' },
   // Runtime-portability examples (one capability, many runtimes; AG-UI-served
-  // like the ag-ui caps, but the backend is genuinely non-LangGraph)
+  // like the AG-UI caps, but the backend is genuinely non-LangGraph)
   { id: 'rt-maf', product: 'runtimes', topic: 'microsoft-agent-framework', angularProject: 'cockpit-runtimes-microsoft-agent-framework-angular', port: 4330, pythonPort: 5330, pythonDir: 'cockpit/runtimes/microsoft-agent-framework/python', framework: 'microsoft-agent-framework' },
   { id: 'rt-strands', product: 'runtimes', topic: 'aws-strands', angularProject: 'cockpit-runtimes-aws-strands-angular', port: 4331, pythonPort: 5331, pythonDir: 'cockpit/runtimes/aws-strands/python', framework: 'aws-strands' },
   // No pythonDir: the Mastra topic's backend is the hand-written Node

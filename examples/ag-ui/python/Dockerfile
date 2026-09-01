@@ -1,4 +1,4 @@
-# Multi-stage build for the ag-ui demo backend (examples/ag-ui).
+# Multi-stage build for the AG-UI demo backend (examples/ag-ui).
 FROM python:3.12-slim@sha256:d764629ce0ddd8c71fd371e9901efb324a95789d2315a47db7e4d27e78f1b0e9 AS builder
 WORKDIR /build
 COPY requirements.txt .

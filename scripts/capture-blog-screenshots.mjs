@@ -1,4 +1,4 @@
-// Capture three screenshots for the ag-ui interrupts blog post.
+// Capture three screenshots for the AG-UI interrupts blog post.
 // Drives the running localhost:4320 cockpit example end-to-end.
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';

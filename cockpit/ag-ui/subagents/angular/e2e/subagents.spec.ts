@@ -52,13 +52,13 @@ async function readSubagents(page: Page): Promise<SubagentProbe> {
 }
 
 // Research delegation over the AG-UI transport: the orchestrator LLM calls the
-// `task` tool, the subagent LLM streams a summary, and the ag-ui server
+// `task` tool, the subagent LLM streams a summary, and the AG-UI server
 // converts the subagent_activity CUSTOM events into native ACTIVITY_SNAPSHOT/
 // ACTIVITY_DELTA. The @threadplane/ag-ui reducer projects the activity to
 // agent.subagents(), which the inline <chat-subagent-card> (rendered in place of
 // the `task` tool call) binds to. The child's research text must stay OUT of the
 // parent's bubble.
-test('ag-ui subagents: orchestrator dispatches subagent cards that settle complete', async ({
+test('AG-UI subagents: orchestrator dispatches subagent cards that settle complete', async ({
   page,
 }) => {
   const bubble = await submitAndWaitForResponse(page, PROMPT);

@@ -22,7 +22,7 @@ const angularProject = 'cockpit-runtimes-mastra-angular';
 // `backendCwd: '<path>'` literal shape).
 const wiring = { backendCwd: 'deployments/ag-ui-mastra' };
 const backendCwd = wiring.backendCwd;
-const backendPort = ports.langgraph; // "backend port" by the ag-ui convention
+const backendPort = ports.langgraph; // "backend port" by the AG-UI convention
 const angularPort = ports.angular;
 const INTERNAL_TOKEN = 'dev-local-token'; // proxy.conf.mjs injects the same default
 

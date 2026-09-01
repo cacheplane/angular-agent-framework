@@ -64,7 +64,7 @@ export default async function globalSetup(): Promise<void> {
 
   await waitForPort('http://localhost:8000/ok', 60_000);
   // eslint-disable-next-line no-console
-  console.log('[aimock-e2e] ag-ui backend ready on :8000');
+  console.log('[aimock-e2e] AG-UI backend ready on :8000');
 
   const angular = spawn(
     'npx',
