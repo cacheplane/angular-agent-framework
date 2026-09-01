@@ -749,6 +749,85 @@ body:has([data-website-workspace-host]) {
   font-size: 10px;
   color: var(--color-accent);
 }
+/* mdx — diagram kit (components/docs/diagrams/*) */
+.tp-diagram-figure {
+  margin: 24px 0;
+  overflow-x: auto;
+}
+.tp-diagram-svg {
+  display: block;
+  width: 100%;
+  min-width: 480px;
+  max-width: 680px;
+  margin: 0 auto;
+}
+.tp-diagram-figure[data-scale="marketing"] .tp-diagram-svg {
+  max-width: 860px;
+}
+.tp-diagram-dot { fill: var(--color-border); }
+.tp-diagram-caption {
+  font-family: var(--font-inter);
+  font-size: 13px;
+  color: var(--color-text-muted);
+  text-align: center;
+  margin-top: 10px;
+}
+.tp-diagram-node rect {
+  fill: var(--color-surface);
+  stroke: var(--color-border);
+}
+.tp-diagram-node[data-tone="accent"] rect {
+  fill: var(--color-accent-surface);
+  stroke: var(--color-accent-border);
+}
+.tp-diagram-node[data-tone="dim"] rect {
+  fill: var(--color-surface-dim);
+  stroke: var(--color-border);
+}
+.tp-diagram-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  fill: var(--color-text-muted);
+}
+.tp-diagram-node[data-tone="accent"] .tp-diagram-eyebrow { fill: var(--color-accent); }
+.tp-diagram-title {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 700;
+  fill: var(--color-text-primary);
+}
+.tp-diagram-node[data-title="sans"] .tp-diagram-title {
+  font-family: var(--font-inter);
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--color-text-secondary);
+}
+.tp-diagram-meta {
+  font-family: var(--font-inter);
+  font-size: 10.5px;
+  fill: var(--color-text-muted);
+}
+.tp-diagram-edge {
+  fill: none;
+  stroke: var(--color-text-muted);
+  stroke-width: 1.2;
+}
+.tp-diagram-arrowhead {
+  fill: none;
+  stroke: var(--color-text-muted);
+}
+.tp-diagram-pill rect {
+  fill: var(--color-accent-surface);
+  stroke: var(--color-accent-border);
+}
+.tp-diagram-pill text {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  fill: var(--color-accent);
+  text-anchor: middle;
+}
 
 /*
  * DocsSidebar
