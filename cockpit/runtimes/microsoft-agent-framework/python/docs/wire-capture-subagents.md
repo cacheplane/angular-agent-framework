@@ -231,3 +231,39 @@ the whole sequence (`subagentRunId = <tid>-sub`, `parentToolCallId = <tid>`);
 the generated `sub-<hex8>` fallback was not needed. Existing surfaces are
 untouched: PredictState CUSTOM, STATE_SNAPSHOT, both TOOL_CALL_RESULTs, and
 MESSAGES_SNAPSHOT all present as before.
+
+## Browser verification
+
+2026-09-02, live backend (real `OPENAI_API_KEY`, uvicorn on :5330) + `nx
+serve cockpit-runtimes-microsoft-agent-framework-angular` on :4330, driven
+headlessly with Playwright. Screenshot:
+`cockpit/runtimes/microsoft-agent-framework/angular/e2e/manual/subagent-card-live.png`.
+
+What rendered: the delegation prompt (*"Should I submit a $900 conference
+travel expense? Research the policy first"*) produced an inline
+`<chat-subagent-card>` anchored to the `research_policy` tool call — header
+`policy_researcher` + wire `toolCallId` + status badge — with the
+specialist's 3-bullet policy transcript inside it, preceded by the
+orchestrator's own `lookup_expense_policy` chip and followed by its summary
+bubble. The child text never leaked into the parent bubble, and the card
+persists (collapsed to `complete`) after the run.
+
+Did the card text stream mid-run: **yes** (matrix cell: expected
+streaming = yes). Polling the card's `innerText` every ~150ms during the
+run showed the card mounting at 66 chars (header only) the moment
+SUBAGENT_STARTED landed, then the specialist's message growing
+monotonically while the run was live — one run sampled 66 → 163 → 277 →
+398 → 422 → 553 → 622 chars between t≈1.5s and t≈3.0s; a second run
+sampled 66 → 105 → 207 → 314 → 430 → 519 → 614 chars — before the badge
+flipped to `complete` and the card collapsed to its 67-char summary row.
+This confirms the queue-merge emitter's attributed `TEXT_MESSAGE_CONTENT`
+deltas render progressively in the card during the run, not as one
+post-hoc paste.
+
+Same `libs/chat` anchoring dependency as the Strands verification: the wire
+and the `@threadplane/ag-ui` reducer were correct, but `chat-tool-calls`
+anchored subagent cards by the adapter's `subagents()` map key (for native
+SUBAGENT_* that is the `subagentRunId`, `<toolCallId>-sub`) instead of the
+contract field `Subagent.toolCallId`, so the card never mounted. The fix
+(re-index on `Subagent.toolCallId`) plus its pinning spec are cherry-picked
+onto this branch.
