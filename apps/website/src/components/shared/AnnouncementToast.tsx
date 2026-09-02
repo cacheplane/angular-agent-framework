@@ -1,7 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { analyticsEvents } from '../../lib/analytics/events';
-import { track, trackWhitepaperDownloadClick } from '../../lib/analytics/client';
+import {
+  track,
+  trackWhitepaperDownloadClick,
+} from '../../lib/analytics/client';
 import { Button } from '../ui/Button';
 
 /**
@@ -76,7 +79,9 @@ export function AnnouncementToast() {
     setVisible(false);
     try {
       localStorage.setItem(STORAGE_KEY, 'true');
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -124,24 +129,19 @@ export function AnnouncementToast() {
       role="dialog"
       aria-labelledby="toast-title"
       className="toast-root"
+      data-announcement-toast=""
       data-mounted={mounted || undefined}
       onKeyDown={(e) => {
         if (e.key === 'Escape') dismiss();
       }}
     >
       {/* Dismiss button */}
-      <button
-        onClick={dismiss}
-        aria-label="Dismiss"
-        className="toast-close"
-      >
+      <button onClick={dismiss} aria-label="Dismiss" className="toast-close">
         ×
       </button>
 
       {/* Eyebrow */}
-      <p className="toast-eyebrow">
-        Free Guide
-      </p>
+      <p className="toast-eyebrow">Free Guide</p>
 
       {/* Title */}
       <p id="toast-title" className="toast-title">
@@ -151,7 +151,8 @@ export function AnnouncementToast() {
       {step === 'cta' && (
         <>
           <p className="toast-cta-copy">
-            Six production-readiness dimensions for Angular agents. Get the guide.
+            Six production-readiness dimensions for Angular agents. Get the
+            guide.
           </p>
           <div className="toast-button-row">
             <Button
@@ -168,10 +169,7 @@ export function AnnouncementToast() {
             >
               ↓ Get the Guide
             </Button>
-            <button
-              onClick={dismiss}
-              className="toast-not-now"
-            >
+            <button onClick={dismiss} className="toast-not-now">
               Not now
             </button>
           </div>
@@ -180,13 +178,15 @@ export function AnnouncementToast() {
 
       {step === 'form' && (
         <form onSubmit={handleSubmit} className="toast-mt-section">
-          <label htmlFor="toast-email" className="sr-only">Email address</label>
+          <label htmlFor="toast-email" className="sr-only">
+            Email address
+          </label>
           <input
             id="toast-email"
             type="email"
             placeholder="Email address"
             value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             required
             disabled={submitting}
             autoFocus

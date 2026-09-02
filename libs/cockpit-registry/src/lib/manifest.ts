@@ -1,9 +1,14 @@
 import { getCockpitDocsPath } from './docs-links';
+import {
+  deriveAvailableModes,
+  getCapabilityDescriptor,
+} from './content-descriptors';
 import type {
   CockpitManifestEntry,
   CockpitManifestIdentity,
   CockpitProduct,
   CockpitRuntimeClass,
+  RuntimeAdapter,
 } from './manifest.types';
 
 const APPROVED_TOPICS = {
@@ -72,11 +77,7 @@ const APPROVED_TOPICS = {
   },
   runtimes: {
     'getting-started': ['overview'],
-    'core-capabilities': [
-      'microsoft-agent-framework',
-      'aws-strands',
-      'mastra',
-    ],
+    'core-capabilities': ['microsoft-agent-framework', 'aws-strands', 'mastra'],
   },
 } as const;
 
@@ -118,7 +119,9 @@ const getProductTitle = (product: CockpitProduct): string => {
   }
 };
 
-const getOverviewIdentity = (product: CockpitProduct): CockpitManifestIdentity => ({
+const getOverviewIdentity = (
+  product: CockpitProduct
+): CockpitManifestIdentity => ({
   product,
   section: 'getting-started',
   topic: 'overview',
@@ -151,6 +154,14 @@ const getSmokeTarget = (product: CockpitProduct, topic: string): string =>
 const getRuntimeClass = (topic: string): CockpitRuntimeClass =>
   topic === 'deployment-runtime' ? 'deployed-service' : 'local-service';
 
+const getRuntimeAdapter = (
+  product: CockpitProduct,
+  isDocsOnly: boolean
+): RuntimeAdapter => {
+  if (isDocsOnly) return 'none';
+  return product === 'ag-ui' || product === 'runtimes' ? 'ag-ui' : 'langgraph';
+};
+
 const createEntry = (
   product: CockpitProduct,
   section: CockpitManifestEntry['section'],
@@ -162,13 +173,21 @@ const createEntry = (
     section === 'getting-started'
       ? `${getProductTitle(product)} Overview`
       : `${getProductTitle(product)} ${toTitle(topic)}`;
-
-  return {
+  const identity = {
     product,
     section,
     topic,
     page,
-    language: 'python',
+    language: 'python' as const,
+  };
+  const id = `${product}:${section}:${topic}:${page}:python`;
+  const docsPath = getDocsPath(product, section, topic);
+  const runtimeAdapter = getRuntimeAdapter(product, isDocsOnly);
+  const descriptor = getCapabilityDescriptor(identity);
+
+  return {
+    ...identity,
+    id,
     capabilityId: topic,
     title,
     summary: `${title} reference metadata`,
@@ -187,7 +206,15 @@ const createEntry = (
     fallbackTarget: getOverviewIdentity(product),
     entryKind: isDocsOnly ? 'docs-only' : 'capability',
     runtimeClass: isDocsOnly ? 'docs-only' : getRuntimeClass(topic),
-    docsPath: getDocsPath(product, section, topic),
+    docsPath,
+    workspacePath: `/workspace/${product}/${topic}`,
+    legacyPath: `/${product}/${section}/${topic}/${page}/python`,
+    runtimeAdapter,
+    availableModes: deriveAvailableModes({
+      docsPath,
+      runtimeAdapter,
+      descriptor,
+    }),
     promptAssetPaths: isDocsOnly ? [] : [getPromptAssetPath(product, topic)],
     codeAssetPaths: isDocsOnly ? [] : [getCodeAssetPath(product, topic)],
     implementationStatus: isDocsOnly ? 'docs-authored' : 'implemented',

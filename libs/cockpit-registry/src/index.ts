@@ -1,5 +1,7 @@
 export * from './lib/docs-links';
+export * from './lib/content-descriptors';
 export * from './lib/manifest';
 export * from './lib/manifest.types';
 export * from './lib/resolve-language';
 export * from './lib/validate-manifest';
+export * from './lib/workspace-resolution';

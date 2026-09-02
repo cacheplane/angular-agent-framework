@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
 import { EB_Garamond, Inter, JetBrains_Mono } from 'next/font/google';
+import '@threadplane/design-tokens/tokens.css';
 import './global.css';
 import { Nav } from '../components/shared/Nav';
 import { SiteFooter } from '../components/shared/SiteFooter';
 import { AnnouncementToast } from '../components/shared/AnnouncementToast';
+import { WebsiteWorkspaceLayout } from '../components/workspace/WebsiteWorkspace';
 import { JsonLd } from '../components/shared/JsonLd';
 import { rootJsonLd } from '../lib/structured-data';
 import {
@@ -55,9 +57,16 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="en" className={`${garamond.variable} ${inter.variable} ${mono.variable}`}>
+    <html
+      lang="en"
+      className={`${garamond.variable} ${inter.variable} ${mono.variable}`}
+    >
       <body>
         {/*
           Site-wide structured data, mounted once here so it is present on every
@@ -69,9 +78,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <JsonLd data={rootJsonLd()} />
         <Nav />
         <div id="site-content">
-          <main>{children}</main>
+          <main>
+            <WebsiteWorkspaceLayout>{children}</WebsiteWorkspaceLayout>
+          </main>
           <SiteFooter />
-          <AnnouncementToast />
+          <div data-announcement-region="">
+            <AnnouncementToast />
+          </div>
         </div>
       </body>
     </html>

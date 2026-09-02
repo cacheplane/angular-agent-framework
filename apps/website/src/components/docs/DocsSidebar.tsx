@@ -223,6 +223,7 @@ function LibraryDropdown({
                       tabIndex={-1}
                       key={library.id}
                       href={libraryIntroPath(library.id)}
+                      data-workspace-navigation-link
                       onClick={() => {
                         closeMenu();
                         onNavigate?.();
@@ -327,6 +328,7 @@ function SectionGroup({
                 href={`/docs/${activeLibrary}/${page.section}/${page.slug}`}
                 onClick={onNavigate}
                 data-docs-navlink
+                data-workspace-navigation-link
                 data-active={isActive || undefined}
                 aria-current={isActive ? 'page' : undefined}
                 className="docs-sidebar-section-link"
@@ -364,6 +366,7 @@ export function DocsNavigation({
             href={page.path}
             onClick={onNavigate}
             data-docs-navlink
+            data-workspace-navigation-link
             data-active={pathname === page.path || undefined}
             aria-current={pathname === page.path ? 'page' : undefined}
             className="docs-sidebar-top-link"

@@ -57,14 +57,18 @@ export function DocsContextContent({
   mobile = false,
   onNavigate,
   onSearchHandoff,
+  showRuntime = true,
 }: DocsControlPlaneProps & {
   mobile?: boolean;
   onNavigate?: () => void;
   onSearchHandoff?: () => void;
+  showRuntime?: boolean;
 }) {
   const preferences = useControlPlanePreferences('docs');
   const library = activeLibrary ? getLibraryConfig(activeLibrary) : undefined;
-  const section = activeLibrary ? getDocsSection(activeLibrary, activeSection) : undefined;
+  const section = activeLibrary
+    ? getDocsSection(activeLibrary, activeSection)
+    : undefined;
   const openSearch = () => {
     if (!mobile) {
       dispatchSearch();
@@ -148,24 +152,26 @@ export function DocsContextContent({
         />
       </ControlPlaneSection>
 
-      <div data-docs-runtime-preview>
-        <ControlPlaneSection
-          title="Runtime"
-          summary="Cockpit"
-          open={preferences.expanded.Runtime ?? false}
-          onOpenChange={(open) => preferences.setExpanded('Runtime', open)}
-        >
-          <ControlPlaneEnvironmentList rows={runtimeRows} />
-          <ControlPlaneActionBar label="Runtime actions">
-            <ControlPlaneIconButton
-              label="Open controls in Cockpit"
-              icon={<ExternalLink size={16} aria-hidden="true" />}
-              href={runtimeHref}
-              onClick={() => trackHandoff('Run')}
-            />
-          </ControlPlaneActionBar>
-        </ControlPlaneSection>
-      </div>
+      {showRuntime ? (
+        <div data-docs-runtime-preview>
+          <ControlPlaneSection
+            title="Runtime"
+            summary="Cockpit"
+            open={preferences.expanded.Runtime ?? false}
+            onOpenChange={(open) => preferences.setExpanded('Runtime', open)}
+          >
+            <ControlPlaneEnvironmentList rows={runtimeRows} />
+            <ControlPlaneActionBar label="Runtime actions">
+              <ControlPlaneIconButton
+                label="Open controls in Cockpit"
+                icon={<ExternalLink size={16} aria-hidden="true" />}
+                href={runtimeHref}
+                onClick={() => trackHandoff('Run')}
+              />
+            </ControlPlaneActionBar>
+          </ControlPlaneSection>
+        </div>
+      ) : null}
 
       <ControlPlaneSection title="Actions" collapsible={false}>
         <ControlPlaneActionBar label="Docs actions">

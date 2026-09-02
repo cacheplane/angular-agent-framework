@@ -65,6 +65,61 @@ const CONTRACTS: StyleContract[] = [
       'overflow-y': /overflow-y:\s*auto/,
     },
   },
+  {
+    file: 'docs.css',
+    selector: '.website-workspace-host',
+    why: 'The fixed site nav remains outside the workspace. This wrapper owns the remaining viewport and prevents the page footer from creating a second scroller.',
+    requires: {
+      height: /height:\s*100dvh/,
+      'padding-top': /padding-top:\s*var\(--nav-h\)/,
+      overflow: /overflow:\s*hidden/,
+    },
+  },
+  {
+    file: 'docs.css',
+    selector: '.website-workspace-host .cockpit-shell',
+    why: 'The shared shell uses h-screen by default; the Website host must subtract its fixed nav or the bottom of every workspace panel is clipped.',
+    requires: {
+      height: /height:\s*calc\(100dvh\s*-\s*var\(--nav-h\)\)/,
+    },
+  },
+  {
+    file: 'docs.css',
+    selector: '#site-content:has([data-website-workspace-host])',
+    why: 'Workspace routes own the viewport beneath the global nav and must not inherit ordinary page/footer scrolling.',
+    requires: {
+      height: /height:\s*100dvh/,
+      overflow: /overflow:\s*hidden/,
+    },
+  },
+  {
+    file: 'docs.css',
+    selector: '#site-content:has([data-website-workspace-host]) > .footer-root',
+    why: 'The workspace is a full-height surface; the ordinary marketing footer must not add document height behind it.',
+    requires: {
+      display: /display:\s*none/,
+    },
+  },
+  {
+    file: 'docs.css',
+    selector: 'html:has([data-website-workspace-host])',
+    why: 'Workspace routes must lock the document scroll root so oversized control-plane descendants cannot create a second vertical scroller outside the article panel.',
+    requires: {
+      height: /height:\s*100%/,
+      overflow: /overflow:\s*hidden/,
+      'overscroll-behavior': /overscroll-behavior:\s*none/,
+    },
+  },
+  {
+    file: 'docs.css',
+    selector: 'body:has([data-website-workspace-host])',
+    why: 'The body must join the route-scoped root lock; locking only the shell still lets descendant min-content inflate document scrolling.',
+    requires: {
+      height: /height:\s*100%/,
+      overflow: /overflow:\s*hidden/,
+      'overscroll-behavior': /overscroll-behavior:\s*none/,
+    },
+  },
 ];
 
 describe('style contracts', () => {

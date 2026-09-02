@@ -3,6 +3,10 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/website/src",
   "projectType": "application",
+  "implicitDependencies": [
+    "workspace-react",
+    "cockpit-langgraph-streaming-angular"
+  ],
   "tags": [
     "scope:website",
     "scope:website-e2e",

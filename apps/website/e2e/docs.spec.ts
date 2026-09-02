@@ -54,8 +54,13 @@ test.describe('Docs slug page', () => {
     await page.setViewportSize({ width: 1024, height: 900 });
     await page.goto(route);
 
+    await expect(page.locator('[data-workspace-shell]')).toHaveAttribute(
+      'data-hydrated',
+      'true',
+    );
+
     const pane = page.locator(
-      '[data-docs-control-plane] [data-control-plane-pane]',
+      '[data-cockpit-desktop-navigation] [data-control-plane-pane]',
     );
     const search = pane.getByRole('button', { name: 'Search docs' });
     await expect(pane).toBeVisible();

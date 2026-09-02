@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { DocsControlPlane } from '../../../../../components/docs/DocsControlPlane';
 import { MdxRenderer } from '../../../../../components/docs/MdxRenderer';
 import { DocsSearch } from '../../../../../components/docs/DocsSearch';
 import { DocsBreadcrumb } from '../../../../../components/docs/DocsBreadcrumb';
@@ -15,19 +14,48 @@ import {
   resolveDocDescription,
 } from '../../../../../lib/docs';
 import { JsonLd } from '../../../../../components/shared/JsonLd';
-import { breadcrumbJsonLd, techArticleJsonLd } from '../../../../../lib/structured-data';
+import {
+  breadcrumbJsonLd,
+  techArticleJsonLd,
+} from '../../../../../lib/structured-data';
 import { getDocLastModified } from '../../../../../lib/sitemap-dates';
-import { ApiDocRenderer, type ApiDocEntry } from '../../../../../components/docs/ApiDocRenderer';
+import {
+  ApiDocRenderer,
+  type ApiDocEntry,
+} from '../../../../../components/docs/ApiDocRenderer';
 import { DocsTOC } from '../../../../../components/docs/DocsTOC';
 import { extractHeadings } from '../../../../../lib/extract-headings';
-import { findDocsPage, getLibraryConfig, libraryIntroPath, type LibraryId } from '../../../../../lib/docs-config';
+import {
+  findDocsPage,
+  getLibraryConfig,
+  libraryIntroPath,
+  type LibraryId,
+} from '../../../../../lib/docs-config';
+import { WebsiteWorkspace } from '../../../../../components/workspace/WebsiteWorkspace';
+import { getWebsiteWorkspacePage } from '../../../../../lib/workspace-page';
 import fs from 'fs';
 import path from 'path';
 
 function loadApiDocs(library: string): ApiDocEntry[] {
   const candidates = [
-    path.join(process.cwd(), 'apps', 'website', 'content', 'docs', library, 'api', 'api-docs.json'),
-    path.join(process.cwd(), 'content', 'docs', library, 'api', 'api-docs.json'),
+    path.join(
+      process.cwd(),
+      'apps',
+      'website',
+      'content',
+      'docs',
+      library,
+      'api',
+      'api-docs.json'
+    ),
+    path.join(
+      process.cwd(),
+      'content',
+      'docs',
+      library,
+      'api',
+      'api-docs.json'
+    ),
   ];
   for (const p of candidates) {
     if (fs.existsSync(p)) return JSON.parse(fs.readFileSync(p, 'utf8'));
@@ -40,15 +68,23 @@ interface DocsRouteProps {
 }
 
 export function generateStaticParams() {
-  return getAllDocSlugs().map(({ library, section, slug }) => ({ library, section, slug }));
+  return getAllDocSlugs().map(({ library, section, slug }) => ({
+    library,
+    section,
+    slug,
+  }));
 }
 
-export async function generateMetadata({ params }: DocsRouteProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: DocsRouteProps): Promise<Metadata> {
   const { library, section, slug } = await params;
-  return getDocMetadata(library, section, slug) ?? {
-    title: 'Docs — Threadplane',
-    description: DEFAULT_DOCS_DESCRIPTION,
-  };
+  return (
+    getDocMetadata(library, section, slug) ?? {
+      title: 'Docs — Threadplane',
+      description: DEFAULT_DOCS_DESCRIPTION,
+    }
+  );
 }
 
 export default async function DocsPage({ params }: DocsRouteProps) {
@@ -62,6 +98,10 @@ export default async function DocsPage({ params }: DocsRouteProps) {
 
   const pathname = `/docs/${library}/${section}/${slug}`;
   const headings = extractHeadings(doc.body);
+  const workspacePage = await getWebsiteWorkspacePage({
+    docsPath: pathname,
+    title: doc.title,
+  });
 
   const articleData = techArticleJsonLd({
     title: doc.title,
@@ -85,62 +125,100 @@ export default async function DocsPage({ params }: DocsRouteProps) {
     { name: doc.title, pathname },
   ]);
 
-  return (
-    <div className="flex min-h-screen docs-shell-page">
-      <JsonLd data={articleData} />
-      <JsonLd data={breadcrumbs} />
+  const docsSlot = (
+    <div className="docs-workspace-article">
       <DocsSearch library={library as LibraryId} />
-      <DocsControlPlane
-        activeLibrary={library as LibraryId}
-        activeSection={section}
-        activeSlug={slug}
-        pageTitle={doc.title}
-      />
-      <div className="flex-1 flex min-w-0 docs-shell-body">
+      <div className="flex min-w-0 docs-article-layout">
         <div className="flex-1 min-w-0">
           {/* Same measure as the article and the prev/next rail below it, so the
-            * whole column shares one right edge. Without md:max-w-3xl this
-            * block stretched to the full content width and PageActions floated
-            * ~500px right of the prose it belongs to (1272px vs 768px at
-            * 1920). */}
+           * whole column shares one right edge. Without md:max-w-3xl this
+           * block stretched to the full content width and PageActions floated
+           * ~500px right of the prose it belongs to (1272px vs 768px at
+           * 1920). */}
           <div className="px-4 sm:px-6 md:px-12 md:max-w-3xl pt-6">
-            <DocsBreadcrumb library={library as LibraryId} section={section} slug={slug} title={doc.title} />
+            <DocsBreadcrumb
+              library={library as LibraryId}
+              section={section}
+              slug={slug}
+              title={doc.title}
+            />
             <DocsPageHeader
               library={library as LibraryId}
               section={section}
-              actions={<PageActions library={library} section={section} slug={slug} headings={headings} />}
+              actions={
+                <PageActions
+                  library={library}
+                  section={section}
+                  slug={slug}
+                  headings={headings}
+                />
+              }
             />
           </div>
           <article className="flex-1 py-8 px-4 sm:px-6 md:px-12 md:max-w-3xl">
             <MdxRenderer source={doc.body} />
           </article>
-          {section === 'api' && (() => {
-            const entries = loadApiDocs(library);
-            const target = doc.title.replace(/\(\)$/, '');
-            const byName = (name: string) =>
-              entries.find((e: ApiDocEntry) => e.name === name);
+          {section === 'api' &&
+            (() => {
+              const entries = loadApiDocs(library);
+              const target = doc.title.replace(/\(\)$/, '');
+              const byName = (name: string) =>
+                entries.find((e: ApiDocEntry) => e.name === name);
 
-            // A page normally documents the one export named by its H1. Pages
-            // covering a group of exports declare them via `apiEntries`.
-            const configured = findDocsPage(library, section, slug)?.apiEntries;
-            const rendered = configured
-              ? configured.map(byName).filter((e): e is ApiDocEntry => Boolean(e))
-              : [byName(target) ?? byName(doc.title)].filter((e): e is ApiDocEntry => Boolean(e));
+              // A page normally documents the one export named by its H1. Pages
+              // covering a group of exports declare them via `apiEntries`.
+              const configured = findDocsPage(
+                library,
+                section,
+                slug
+              )?.apiEntries;
+              const rendered = configured
+                ? configured
+                    .map(byName)
+                    .filter((e): e is ApiDocEntry => Boolean(e))
+                : [byName(target) ?? byName(doc.title)].filter(
+                    (e): e is ApiDocEntry => Boolean(e)
+                  );
 
-            return rendered.length > 0 ? (
-              <div className="px-4 sm:px-6 md:px-12 max-w-3xl pb-8">
-                {rendered.map((entry) => (
-                  <ApiDocRenderer key={entry.name} entry={entry} />
-                ))}
-              </div>
-            ) : null;
-          })()}
+              return rendered.length > 0 ? (
+                <div className="px-4 sm:px-6 md:px-12 max-w-3xl pb-8">
+                  {rendered.map((entry) => (
+                    <ApiDocRenderer key={entry.name} entry={entry} />
+                  ))}
+                </div>
+              ) : null;
+            })()}
           <div className="px-4 sm:px-6 md:px-12 max-w-3xl pb-8">
-            <DocsPrevNext library={library as LibraryId} section={section} slug={slug} />
+            <DocsPrevNext
+              library={library as LibraryId}
+              section={section}
+              slug={slug}
+            />
           </div>
         </div>
         <DocsTOC headings={headings} />
       </div>
     </div>
+  );
+
+  return (
+    <>
+      <JsonLd data={articleData} />
+      <JsonLd data={breadcrumbs} />
+      <WebsiteWorkspace
+        resolution={workspacePage.resolution}
+        presentation={workspacePage.presentation}
+        contentBundle={workspacePage.contentBundle}
+        navigationTree={workspacePage.navigationTree}
+        routePath={pathname}
+        docsSlot={docsSlot}
+        docsContext={{
+          activeLibrary: library as LibraryId,
+          activeSection: section,
+          activeSlug: slug,
+          pageTitle: doc.title,
+        }}
+      />
+    </>
   );
 }

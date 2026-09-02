@@ -2,6 +2,13 @@ import { test, expect } from '@playwright/test';
 
 const ARTICLE = '/docs/langgraph/getting-started/introduction';
 
+async function expectWorkspaceReady(page: import('@playwright/test').Page) {
+  await expect(page.locator('[data-workspace-shell]')).toHaveAttribute(
+    'data-hydrated',
+    'true',
+  );
+}
+
 /**
  * The docs shell is one reading pane: a sticky control plane on the left, one
  * prose column, and a sticky TOC rail on the right. These guard the parts of
@@ -13,12 +20,16 @@ test.describe('DocsTOC rail', () => {
   test('tracks the reading position on a hard load', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(ARTICLE);
+    await expectWorkspaceReady(page);
     await expect(page.locator('.docs-toc-link').first()).toBeVisible();
 
     // Nothing is active at the top: the first heading is below the reading line.
     await expect(page.locator('.docs-toc-link[data-active]')).toHaveCount(0);
 
-    await page.evaluate(() => window.scrollTo({ top: 4000, behavior: 'instant' }));
+    const articleScroller = page.locator('.docs-workspace-article');
+    await articleScroller.evaluate((element) =>
+      element.scrollTo({ top: 4000, behavior: 'instant' }),
+    );
     await expect
       .poll(() =>
         page
@@ -28,7 +39,9 @@ test.describe('DocsTOC rail', () => {
       .toEqual(['#connect-with-angular']);
 
     // ...and it follows the scroll rather than latching on the first match.
-    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+    await articleScroller.evaluate((element) =>
+      element.scrollTo({ top: 0, behavior: 'instant' }),
+    );
     await expect.poll(() => page.locator('.docs-toc-link[data-active]').count()).toBe(0);
   });
 
@@ -53,23 +66,32 @@ test.describe('DocsTOC rail', () => {
 });
 
 test.describe('docs shell layout', () => {
-  test('the sticky rails hold through a full-page scroll', async ({ page }) => {
+  test('the workspace navigation and TOC hold through a full article scroll', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(ARTICLE);
+    await expectWorkspaceReady(page);
 
     const navH = await page.evaluate(() =>
       parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')),
     );
     const tops = async () => ({
-      plane: await page.locator('.docs-control-plane').evaluate((el) => Math.round(el.getBoundingClientRect().top)),
+      plane: await page.locator('[data-cockpit-desktop-navigation]').evaluate((el) => Math.round(el.getBoundingClientRect().top)),
       toc: await page.locator('.docs-toc').evaluate((el) => Math.round(el.getBoundingClientRect().top)),
     });
 
-    expect(await tops()).toEqual({ plane: navH, toc: navH });
-    await page.evaluate(() => window.scrollTo({ top: 4000, behavior: 'instant' }));
-    expect(await tops()).toEqual({ plane: navH, toc: navH });
-    await page.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'instant' }));
-    expect(await tops()).toEqual({ plane: navH, toc: navH });
+    const initial = await tops();
+    const articleScroller = page.locator('.docs-workspace-article');
+
+    expect(initial.plane).toBe(navH);
+    expect(initial.toc).toBeGreaterThan(navH);
+    await articleScroller.evaluate((element) =>
+      element.scrollTo({ top: 4000, behavior: 'instant' }),
+    );
+    expect(await tops()).toEqual(initial);
+    await articleScroller.evaluate((element) =>
+      element.scrollTo({ top: element.scrollHeight, behavior: 'instant' }),
+    );
+    expect(await tops()).toEqual(initial);
   });
 
   test('breadcrumb, prose and prev/next share one right edge', async ({ page }) => {
@@ -78,9 +100,11 @@ test.describe('docs shell layout', () => {
     // ~500px right of the column it belongs to.
     await page.setViewportSize({ width: 1920, height: 1000 });
     await page.goto(ARTICLE);
+    await expectWorkspaceReady(page);
+    const docsPanel = page.getByRole('region', { name: 'Docs workspace panel' });
 
     const right = (selector: string) =>
-      page.locator(selector).first().evaluate((el) => Math.round(el.getBoundingClientRect().right));
+      docsPanel.locator(selector).evaluate((el) => Math.round(el.getBoundingClientRect().right));
 
     const header = await right('.docs-page-header');
     const article = await right('article');

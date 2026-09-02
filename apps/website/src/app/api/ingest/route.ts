@@ -3,6 +3,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { normalizePostHogHost, toSafeAnalyticsString } from '@threadplane/telemetry/shared';
 
 const PUBLIC_INGEST_KEY = 'phc_public_cacheplane_telemetry';
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Max-Age': '86400',
+} as const;
 
 interface TelemetryIngestPayload {
   key?: unknown;
@@ -45,19 +51,40 @@ function readPayload(value: unknown): {
   };
 }
 
+function jsonWithCors(body: unknown, init: { status: number }): NextResponse {
+  return NextResponse.json(body, {
+    ...init,
+    headers: CORS_HEADERS,
+  });
+}
+
+export function OPTIONS(): NextResponse {
+  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+}
+
 export async function POST(req: NextRequest) {
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    return jsonWithCors({ error: 'Invalid JSON' }, { status: 400 });
   }
 
   const payload = readPayload(body);
-  if (!payload) return NextResponse.json({ error: 'Invalid telemetry payload' }, { status: 400 });
+  if (!payload) {
+    return jsonWithCors(
+      { error: 'Invalid telemetry payload' },
+      { status: 400 }
+    );
+  }
 
   const posthog = getPostHogClient();
-  if (!posthog) return NextResponse.json({ error: 'Telemetry ingest is not configured' }, { status: 503 });
+  if (!posthog) {
+    return jsonWithCors(
+      { error: 'Telemetry ingest is not configured' },
+      { status: 503 }
+    );
+  }
 
   try {
     posthog.capture({
@@ -70,10 +97,13 @@ export async function POST(req: NextRequest) {
       },
     });
     await posthog.shutdown();
-    return NextResponse.json({ ok: true }, { status: 202 });
+    return jsonWithCors({ ok: true }, { status: 202 });
   } catch (err) {
     console.error('[telemetry-ingest] capture failed:', err);
     await posthog.shutdown().catch(() => undefined);
-    return NextResponse.json({ error: 'Telemetry ingest failed' }, { status: 502 });
+    return jsonWithCors(
+      { error: 'Telemetry ingest failed' },
+      { status: 502 }
+    );
   }
 }

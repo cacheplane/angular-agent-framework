@@ -225,54 +225,72 @@ for (const viewport of [
   }) => {
     await page.setViewportSize(viewport);
     await page.goto(docsRoute);
+    await expect(page.locator('[data-workspace-shell]')).toHaveAttribute(
+      'data-hydrated',
+      'true',
+    );
     await expectNoHorizontalOverflow(page, `Docs at ${viewport.width}px`);
 
-    const desktopControlPlane = page.locator('[data-docs-control-plane]');
-    const mobileTrigger = page.getByRole('button', { name: 'Open menu' });
+    const desktopControlPlane = page.locator('[data-cockpit-desktop-navigation]');
+    await expect(page.getByRole('button', { name: 'Open menu' })).toBeHidden();
     if (viewport.width >= 1024) {
       await expect(desktopControlPlane).toBeVisible();
-      await expect(mobileTrigger).toBeHidden();
-      const runtime = desktopControlPlane.getByRole('button', {
-        name: 'Runtime',
-        exact: true,
-      });
-      await runtime.click();
       await expect(
-        desktopControlPlane.getByRole('link', {
-          name: 'Open controls in Cockpit',
-        }),
+        desktopControlPlane.locator('[data-control-plane-pane]'),
       ).toBeVisible();
+      await expect(
+        desktopControlPlane.getByRole('button', { name: 'Docs', exact: true }),
+      ).toBeVisible();
+      await expect(
+        desktopControlPlane.getByRole('button', { name: 'Search docs' }),
+      ).toBeVisible();
+    } else if (viewport.width >= 768) {
+      await expect(desktopControlPlane).toBeVisible();
+      await expect(
+        desktopControlPlane.locator('[data-control-plane-pane]'),
+      ).toBeHidden();
+      const contextTrigger = page.getByRole('button', { name: 'Open context' });
+      await expect(contextTrigger).toBeVisible();
+      await contextTrigger.click();
+      const dialog = page.getByRole('dialog', {
+        name: 'Documentation control plane context',
+      });
+      await expect(dialog).toBeVisible();
+      await expect(dialog.getByRole('button', { name: 'Search docs' })).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(dialog).toHaveCount(0);
+      await expect(contextTrigger).toBeFocused();
     } else {
       await expect(desktopControlPlane).toBeHidden();
-      await expect(mobileTrigger).toBeVisible();
-      const triggerBox = await mobileTrigger.boundingBox();
+      const navigationTrigger = page.getByRole('button', {
+        name: 'Open navigation',
+      });
+      await expect(navigationTrigger).toBeVisible();
+      const triggerBox = await navigationTrigger.boundingBox();
       expect(triggerBox?.width).toBeGreaterThanOrEqual(44);
       expect(triggerBox?.height).toBeGreaterThanOrEqual(44);
 
-      await mobileTrigger.click();
-      const dialog = page.getByRole('dialog', { name: 'Mobile navigation' });
+      await navigationTrigger.click();
+      const dialog = page.getByRole('dialog', {
+        name: 'Documentation control plane',
+      });
       await expect(dialog).toBeVisible();
-      await expect(page.locator('#site-content')).toHaveAttribute('inert', '');
+      await expect(page.locator('[data-cockpit-workspace]')).toHaveAttribute('inert', '');
       await expect(page.locator('nav.nav-bar')).toHaveAttribute('inert', '');
 
-      const close = dialog.getByRole('button', { name: 'Close menu' });
+      const close = dialog.getByRole('button', { name: 'Close navigation' });
       const closeBox = await close.boundingBox();
       expect(closeBox?.width).toBeGreaterThanOrEqual(44);
       expect(closeBox?.height).toBeGreaterThanOrEqual(44);
 
-      const runtime = dialog.getByRole('button', {
-        name: 'Runtime',
-        exact: true,
-      });
-      await runtime.click();
       await expect(
-        dialog.getByRole('link', { name: 'Open controls in Cockpit' }),
+        dialog.getByRole('button', { name: 'Docs', exact: true }),
       ).toBeVisible();
       await expect(dialog.getByRole('button', { name: 'Search docs' })).toBeVisible();
 
       await page.keyboard.press('Escape');
-      await expect(dialog).toBeHidden();
-      await expect(mobileTrigger).toBeFocused();
+      await expect(dialog).toHaveCount(0);
+      await expect(navigationTrigger).toBeFocused();
     }
   });
 }
@@ -283,12 +301,16 @@ test('docs forced colors preserve control boundaries and keyboard focus', async 
   await page.emulateMedia({ forcedColors: 'active' });
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(docsRoute);
+  await expect(page.locator('[data-workspace-shell]')).toHaveAttribute(
+    'data-hydrated',
+    'true',
+  );
 
-  const runtime = page
-    .locator('[data-docs-control-plane]')
-    .getByRole('button', { name: 'Runtime', exact: true });
-  await runtime.focus();
-  const styles = await runtime.evaluate((element) => {
+  const run = page
+    .locator('[data-cockpit-desktop-navigation]')
+    .getByRole('button', { name: 'Run', exact: true });
+  await run.focus();
+  const styles = await run.evaluate((element) => {
     const style = getComputedStyle(element);
     return {
       borderWidth: style.borderTopWidth,
@@ -307,19 +329,33 @@ test('docs reduced motion disables mobile drawer transitions and animations', as
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(docsRoute);
-  await page.getByRole('button', { name: 'Open menu' }).click();
+  await expect(page.locator('[data-workspace-shell]')).toHaveAttribute(
+    'data-hydrated',
+    'true',
+  );
+  await page.getByRole('button', { name: 'Open navigation' }).click();
 
-  const overlay = page.locator('.nav-mobile-overlay');
+  const overlay = page.getByRole('dialog', {
+    name: 'Documentation control plane',
+  });
   await expect(overlay).toBeVisible();
   const motion = await overlay.evaluate((element) => {
-    const style = getComputedStyle(element);
+    const panel = element.querySelector('.cockpit-mobile-control-plane-panel');
+    const overlayStyle = getComputedStyle(element);
+    const panelStyle = panel ? getComputedStyle(panel) : null;
     return {
-      animationName: style.animationName,
-      transitionDuration: style.transitionDuration,
+      overlayAnimation: overlayStyle.animationName,
+      overlayTransition: overlayStyle.transitionDuration,
+      panelAnimation: panelStyle?.animationName,
+      panelTransition: panelStyle?.transitionDuration,
     };
   });
-  expect(motion.animationName).toBe('none');
-  expect(motion.transitionDuration).toBe('0s');
+  expect(motion).toEqual({
+    overlayAnimation: 'none',
+    overlayTransition: '0s',
+    panelAnimation: 'none',
+    panelTransition: '0s',
+  });
 });
 
 test('/llms.txt returns plain text', async ({ page }) => {

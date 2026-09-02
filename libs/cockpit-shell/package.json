@@ -12,5 +12,10 @@
     "url": "https://github.com/cacheplane/angular-agent-framework/issues"
   },
   "sideEffects": false,
-  "private": true
+  "private": true,
+  "dependencies": {
+    "@threadplane/cockpit-registry": "*",
+    "marked": "^15.0.0",
+    "shiki": "^4.0.2"
+  }
 }

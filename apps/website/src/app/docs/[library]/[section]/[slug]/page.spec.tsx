@@ -1,0 +1,101 @@
+import { isValidElement, type ComponentType, type ReactNode } from 'react';
+import { describe, expect, it } from 'vitest';
+import { DocsBreadcrumb } from '../../../../../components/docs/DocsBreadcrumb';
+import { DocsPageHeader } from '../../../../../components/docs/DocsPageHeader';
+import { DocsTOC } from '../../../../../components/docs/DocsTOC';
+import { MdxRenderer } from '../../../../../components/docs/MdxRenderer';
+import { WebsiteWorkspace } from '../../../../../components/workspace/WebsiteWorkspace';
+import DocsPage, { generateMetadata } from './page';
+
+interface ElementProps {
+  children?: ReactNode;
+  docsSlot?: ReactNode;
+  requestedMode?: string | null;
+  resolution?: { kind?: string; identity?: { availableModes?: string[] } };
+  contentBundle?: { runtimeUrl?: string | null };
+}
+
+function findElement(
+  node: ReactNode,
+  type: ComponentType<never>
+): React.ReactElement<ElementProps> | null {
+  if (Array.isArray(node)) {
+    for (const child of node) {
+      const found = findElement(child, type);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (!isValidElement<ElementProps>(node)) return null;
+  if (node.type === type) return node;
+  return findElement(node.props.children, type);
+}
+
+const route = (library: string, section: string, slug: string, mode?: string) =>
+  DocsPage({
+    params: Promise.resolve({ library, section, slug }),
+    searchParams: Promise.resolve(mode ? { mode } : {}),
+  } as never);
+
+describe('unified docs workspace route', () => {
+  it('passes mapped descriptor-backed content and the requested mode to the client boundary', async () => {
+    const tree = await route('langgraph', 'guides', 'streaming', 'code');
+    const workspace = findElement(
+      tree,
+      WebsiteWorkspace as ComponentType<never>
+    );
+
+    expect(workspace).toBeTruthy();
+    // Search state belongs to the client workspace adapter so this canonical
+    // Docs route remains statically generated.
+    expect(workspace?.props.requestedMode).toBeUndefined();
+    expect(workspace?.props.resolution).toMatchObject({
+      kind: 'mapped',
+      identity: { availableModes: ['Docs', 'Run', 'Code', 'API'] },
+    });
+    expect(workspace?.props.contentBundle?.runtimeUrl).toMatch(
+      /(?:langgraph\/streaming|localhost:4300)$/
+    );
+    expect(workspace?.props.docsContext).toEqual({
+      activeLibrary: 'langgraph',
+      activeSection: 'guides',
+      activeSlug: 'streaming',
+      pageTitle: 'Streaming',
+    });
+  });
+
+  it('keeps an unmapped page as a complete server Docs slot', async () => {
+    const tree = await route('langgraph', 'guides', 'testing', 'run');
+    const workspace = findElement(
+      tree,
+      WebsiteWorkspace as ComponentType<never>
+    );
+    const slot = workspace?.props.docsSlot;
+
+    expect(workspace?.props.resolution).toMatchObject({ kind: 'docs-only' });
+    expect(
+      findElement(slot, DocsBreadcrumb as ComponentType<never>)
+    ).toBeTruthy();
+    expect(
+      findElement(slot, DocsPageHeader as ComponentType<never>)
+    ).toBeTruthy();
+    expect(findElement(slot, MdxRenderer as ComponentType<never>)).toBeTruthy();
+    expect(findElement(slot, DocsTOC as ComponentType<never>)).toBeTruthy();
+  });
+
+  it('keeps canonical metadata independent of the workspace mode query', async () => {
+    const metadata = await generateMetadata({
+      params: Promise.resolve({
+        library: 'langgraph',
+        section: 'guides',
+        slug: 'streaming',
+      }),
+      searchParams: Promise.resolve({ mode: 'run' }),
+    } as never);
+
+    expect(metadata.alternates?.canonical).toBe(
+      '/docs/langgraph/guides/streaming'
+    );
+    expect(String(metadata.alternates?.canonical)).not.toContain('mode');
+  });
+});

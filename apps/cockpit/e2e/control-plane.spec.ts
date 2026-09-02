@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 const route = '/langgraph/core-capabilities/streaming/overview/python';
+const RUN_RAIL_ITEM = /^Run(?:,|$)/;
 
 declare global {
   interface Window {
@@ -108,12 +109,43 @@ test.describe('Cockpit operational control plane', () => {
         await expect(desktopNavigation).toBeVisible();
         await expect(mobileTrigger).toBeHidden();
         await expect(
-          page.getByRole('button', { name: 'Runtime', exact: true })
+          desktopNavigation.getByRole('button', { name: RUN_RAIL_ITEM })
         ).toBeVisible();
-        await page.getByRole('button', { name: 'Activity' }).click();
-        await expect(
-          page.getByRole('heading', { name: 'Activity' })
-        ).toBeVisible();
+        if (viewport.width >= 1024) {
+          await expect(
+            page.getByRole('button', { name: 'Runtime', exact: true })
+          ).toBeVisible();
+          await page.getByRole('button', { name: 'Activity' }).click();
+          await expect(
+            page.getByRole('heading', { name: 'Activity' })
+          ).toBeVisible();
+        } else {
+          const contextTrigger = page.getByRole('button', {
+            name: 'Open context',
+          });
+          await expect(contextTrigger).toBeVisible();
+          await contextTrigger.click();
+          const contextDialog = page.getByRole('dialog', {
+            name: 'Cockpit control plane context',
+          });
+          await expect(
+            contextDialog.getByRole('button', {
+              name: 'Runtime',
+              exact: true,
+            })
+          ).toBeVisible();
+          await page.keyboard.press('Escape');
+          await expect(contextDialog).toBeHidden();
+          await expect(contextTrigger).toBeFocused();
+
+          await desktopNavigation
+            .getByRole('button', { name: 'Activity' })
+            .click();
+          await expect(contextDialog).toBeVisible();
+          await expect(
+            contextDialog.getByRole('heading', { name: 'Activity' })
+          ).toBeVisible();
+        }
       } else {
         await expect(desktopNavigation).toBeHidden();
         await expect(mobileTrigger).toBeVisible();
@@ -131,13 +163,16 @@ test.describe('Cockpit operational control plane', () => {
           ''
         );
         await expect(
-          dialog.getByRole('button', { name: 'Runtime', exact: true })
+          dialog.getByRole('button', { name: RUN_RAIL_ITEM })
         ).toBeVisible();
         await dialog.getByRole('button', { name: 'Activity' }).click();
         await expect(
           dialog.getByRole('heading', { name: 'Activity' })
         ).toBeVisible();
         await dialog.getByRole('button', { name: 'Close Activity' }).click();
+        await expect(
+          dialog.getByRole('button', { name: RUN_RAIL_ITEM })
+        ).toBeVisible();
         await expect(
           dialog.getByRole('button', { name: 'Runtime', exact: true })
         ).toBeVisible();

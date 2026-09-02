@@ -1,8 +1,7 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { CodeMode } from './code-mode/code-mode';
-import { CodePane } from './code-pane/code-pane';
+import { CodeMode, CodePane } from '@threadplane/workspace-react';
 import { CockpitShell } from './cockpit-shell';
 
 import { getCockpitPageModel } from '../lib/cockpit-page';
@@ -25,9 +24,17 @@ describe('cockpit shell contract', () => {
     const html = renderToStaticMarkup(
       <CockpitShell
         navigationTree={model.navigationTree}
+        resolution={model.resolution}
         presentation={model.presentation}
-        entryTitle={model.entry.title}
-        contentBundle={{ codeFiles: {}, promptFiles: {}, runtimeUrl: null, docSections: [], narrativeDocs: [] }}
+        contentBundle={{
+          codeFiles: {},
+          promptFiles: {},
+          runtimeUrl: null,
+          docSections: [],
+          narrativeDocs: [],
+        }}
+        routePath={model.canonicalPath}
+        requestedMode={null}
       />
     );
 
@@ -51,9 +58,17 @@ describe('refreshed shell structure', () => {
       <div>
         <CockpitShell
           navigationTree={model.navigationTree}
+          resolution={model.resolution}
           presentation={model.presentation}
-          entryTitle={model.entry.title}
-          contentBundle={{ codeFiles: {}, promptFiles: {}, runtimeUrl: null, docSections: [], narrativeDocs: [] }}
+          contentBundle={{
+            codeFiles: {},
+            promptFiles: {},
+            runtimeUrl: null,
+            docSections: [],
+            narrativeDocs: [],
+          }}
+          routePath={model.canonicalPath}
+          requestedMode={null}
         />
         <CodeMode
           entryTitle="LangGraph Streaming"

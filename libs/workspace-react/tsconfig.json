@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": ["es2022", "DOM", "DOM.Iterable"]
+  },
+  "files": [],
+  "references": [{ "path": "./tsconfig.lib.json" }]
+}

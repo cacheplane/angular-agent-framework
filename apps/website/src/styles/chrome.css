@@ -157,7 +157,9 @@
   padding: 12px;
   margin: -12px;
 }
-.nav-hamburger[aria-hidden="true"] { visibility: hidden; }
+.nav-hamburger[aria-hidden='true'] {
+  visibility: hidden;
+}
 .nav-mobile-overlay {
   top: calc(var(--nav-h) - 1px);
   z-index: 9999;
@@ -367,6 +369,9 @@
 .toast-root[data-mounted] {
   opacity: 1;
   transform: translateY(0);
+}
+[data-announcement-region][data-workspace-modal-hidden] {
+  display: none;
 }
 /* On phones the 360px right-hugging card read as a wall (327px of a
  * 375px screen, findings §6): present it as a centered bottom sheet

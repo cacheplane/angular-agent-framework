@@ -77,6 +77,8 @@ export interface ControlPlaneRailItemProps extends CommonProps {
   label: string;
   icon: ReactNode;
   active?: boolean;
+  disabled?: boolean;
+  disabledReason?: string;
   href?: string;
   onSelect?: () => void;
   iconOnly?: boolean;
@@ -89,6 +91,8 @@ export function ControlPlaneRailItem({
   label,
   icon,
   active = false,
+  disabled = false,
+  disabledReason,
   href,
   onSelect,
   iconOnly = false,
@@ -98,6 +102,7 @@ export function ControlPlaneRailItem({
   status,
 }: ControlPlaneRailItemProps) {
   const tooltipId = useId();
+  const disabledReasonId = useId();
   const accessibleName = status ? `${label}, ${status.label}` : label;
   // An icon-only item needs a tooltip because it has no visible label. A
   // status item needs its status in the accessible name, which `aria-label`
@@ -122,38 +127,64 @@ export function ControlPlaneRailItem({
       ) : null}
     </>
   );
+  const reason =
+    disabled && disabledReason ? (
+      <span id={disabledReasonId} style={visuallyHidden}>
+        {disabledReason}
+      </span>
+    ) : null;
   const shared = {
     className,
     'data-control-plane-rail-item': true,
     'data-control-plane-active': active || undefined,
+    'data-control-plane-disabled': disabled || undefined,
     'aria-label': needsAccessibleName ? accessibleName : undefined,
-    'aria-describedby': showTooltip ? tooltipId : undefined,
+    'aria-describedby':
+      [
+        showTooltip ? tooltipId : null,
+        disabled && disabledReason ? disabledReasonId : null,
+      ]
+        .filter(Boolean)
+        .join(' ') || undefined,
   } as const;
 
   if (href) {
     return (
-      <a
-        {...shared}
-        href={href}
-        target={target}
-        rel={rel}
-        aria-current={active ? 'page' : undefined}
-        onClick={onSelect}
-      >
-        {content}
-      </a>
+      <>
+        <a
+          {...shared}
+          href={href}
+          target={target}
+          rel={rel}
+          aria-current={active ? 'page' : undefined}
+          aria-disabled={disabled || undefined}
+          onClick={(event) => {
+            if (disabled) event.preventDefault();
+            else onSelect?.();
+          }}
+        >
+          {content}
+        </a>
+        {reason}
+      </>
     );
   }
 
   return (
-    <button
-      {...shared}
-      type="button"
-      aria-pressed={active}
-      onClick={onSelect}
-    >
-      {content}
-    </button>
+    <>
+      <button
+        {...shared}
+        type="button"
+        aria-pressed={active}
+        aria-disabled={disabled || undefined}
+        onClick={() => {
+          if (!disabled) onSelect?.();
+        }}
+      >
+        {content}
+      </button>
+      {reason}
+    </>
   );
 }
 
@@ -162,13 +193,13 @@ export interface ControlPlanePaneProps extends CommonProps {
   children: ReactNode;
 }
 
-export function ControlPlanePane({ label, children, className }: ControlPlanePaneProps) {
+export function ControlPlanePane({
+  label,
+  children,
+  className,
+}: ControlPlanePaneProps) {
   return (
-    <aside
-      aria-label={label}
-      className={className}
-      data-control-plane-pane
-    >
+    <aside aria-label={label} className={className} data-control-plane-pane>
       {children}
     </aside>
   );
@@ -266,7 +297,9 @@ export function ControlPlaneEnvironmentList({
     <dl className={className} data-control-plane-environment-list>
       {rows.map((row) => (
         <div key={row.label} data-control-plane-environment-row>
-          {row.icon ? <span data-control-plane-environment-icon>{row.icon}</span> : null}
+          {row.icon ? (
+            <span data-control-plane-environment-icon>{row.icon}</span>
+          ) : null}
           <dt>{row.label}</dt>
           <dd>{row.value}</dd>
         </div>
@@ -296,19 +329,22 @@ export function ControlPlaneActionBar({
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
     const enabled = Array.from(
       ref.current?.querySelectorAll<HTMLElement>(
-        '[data-control-plane-action]:not(:disabled):not([aria-disabled="true"])',
-      ) ?? [],
+        '[data-control-plane-action]:not(:disabled):not([aria-disabled="true"])'
+      ) ?? []
     );
     if (enabled.length === 0) return;
-    const current = Math.max(0, enabled.indexOf(document.activeElement as HTMLElement));
+    const current = Math.max(
+      0,
+      enabled.indexOf(document.activeElement as HTMLElement)
+    );
     const nextIndex =
       event.key === 'Home'
         ? 0
         : event.key === 'End'
-          ? enabled.length - 1
-          : event.key === 'ArrowRight'
-            ? (current + 1) % enabled.length
-            : (current - 1 + enabled.length) % enabled.length;
+        ? enabled.length - 1
+        : event.key === 'ArrowRight'
+        ? (current + 1) % enabled.length
+        : (current - 1 + enabled.length) % enabled.length;
     event.preventDefault();
     enabled.forEach((item, index) => {
       item.tabIndex = index === nextIndex ? 0 : -1;
@@ -386,12 +422,7 @@ export function ControlPlaneIconButton({
     );
   }
   return (
-    <button
-      {...shared}
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-    >
+    <button {...shared} type="button" disabled={disabled} onClick={onClick}>
       {content}
     </button>
   );
@@ -423,7 +454,9 @@ export function ControlPlaneUtilityPanel({
       }}
     >
       <header data-control-plane-utility-header>
-        <h2 ref={titleRef} id={titleId} tabIndex={-1}>{title}</h2>
+        <h2 ref={titleRef} id={titleId} tabIndex={-1}>
+          {title}
+        </h2>
         <button type="button" aria-label={`Close ${title}`} onClick={onClose}>
           <X size={18} strokeWidth={2} aria-hidden="true" />
         </button>

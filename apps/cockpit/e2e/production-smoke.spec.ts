@@ -1,5 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { capabilities } from '../scripts/capability-registry';
+import {
+  getRedirectDisabledProbePath,
+  getRegistryWebsiteDestinations,
+} from '../scripts/deploy-smoke';
 
 /**
  * Production smoke test: verifies the deployed cockpit shell and deployed
@@ -20,6 +24,7 @@ const COCKPIT_URL = process.env['BASE_URL'] ?? 'https://cockpit.threadplane.ai';
 const EXAMPLES_URL =
   process.env['EXAMPLES_URL'] ?? 'https://examples.threadplane.ai';
 const DEMO_URL = process.env['DEMO_URL'] ?? 'https://demo.threadplane.ai';
+const WEBSITE_URL = process.env['WEBSITE_URL'] ?? 'https://threadplane.ai';
 
 const CHAT_CAPABILITIES = [
   'langgraph/streaming',
@@ -85,6 +90,20 @@ const AG_UI_TOPICS = capabilities
   .sort();
 
 const SEND_RECEIVE_TIMEOUT_MS = 30_000;
+const WEBSITE_DESTINATIONS = getRegistryWebsiteDestinations();
+
+test.describe('Production: registry-owned Website destinations load', () => {
+  for (const destination of WEBSITE_DESTINATIONS) {
+    test(`${destination} is reachable`, async ({ request }) => {
+      const response = await request.get(
+        new URL(destination, WEBSITE_URL).toString()
+      );
+
+      expect(response.status()).toBeLessThan(400);
+    });
+  }
+});
+
 test.describe('Production: Angular chat example apps load', () => {
   for (const cap of CHAT_CAPABILITIES) {
     test(`${cap} loads at examples URL`, async ({ page }) => {
@@ -175,6 +194,18 @@ test.describe('Production: cockpit shell loads', () => {
     const response = await request.get(`${COCKPIT_URL}/favicon.ico`);
 
     expect(response.status()).toBeLessThan(400);
+  });
+
+  test('legacy workspace redirects remain disabled before opt-in activation', async ({
+    request,
+  }) => {
+    const response = await request.get(
+      new URL(getRedirectDisabledProbePath(), COCKPIT_URL).toString(),
+      { maxRedirects: 0 }
+    );
+
+    expect(response.status()).toBe(200);
+    expect(response.headers()['location']).toBeUndefined();
   });
 });
 

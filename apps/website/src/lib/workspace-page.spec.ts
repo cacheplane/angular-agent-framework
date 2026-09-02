@@ -1,0 +1,161 @@
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { compile } from '@tailwindcss/node';
+import { Scanner } from '@tailwindcss/oxide';
+import { describe, expect, it } from 'vitest';
+import { nextConfig } from '../../next.config';
+import { getWebsiteWorkspacePage } from './workspace-page';
+
+const workspaceRoot = process.cwd().endsWith('/apps/website')
+  ? resolve(process.cwd(), '../..')
+  : process.cwd();
+
+describe('getWebsiteWorkspacePage', () => {
+  it('loads descriptor-backed content for a mapped LangGraph docs page', async () => {
+    const page = await getWebsiteWorkspacePage({
+      docsPath: '/docs/langgraph/guides/streaming',
+      title: 'Streaming',
+    });
+
+    expect(page.resolution).toMatchObject({
+      kind: 'mapped',
+      identity: {
+        id: 'langgraph:core-capabilities:streaming:overview:python',
+        availableModes: ['Docs', 'Run', 'Code', 'API'],
+      },
+    });
+    expect(page.presentation).toMatchObject({
+      kind: 'capability',
+      runtimeUrl: 'langgraph/streaming',
+      codeAssetPaths: expect.arrayContaining([
+        'cockpit/langgraph/streaming/angular/src/app/streaming.component.ts',
+      ]),
+    });
+    expect(page.contentBundle.runtimeUrl).toMatch(/(?:langgraph\/streaming|localhost:4300)$/);
+    expect(Object.keys(page.contentBundle.codeFiles)).toEqual(
+      expect.arrayContaining([
+        'cockpit/langgraph/streaming/angular/src/app/streaming.component.ts',
+        'cockpit/langgraph/streaming/python/src/graph.py',
+      ])
+    );
+  });
+
+  it('uses the explicit primary capability for a duplicate docs path', async () => {
+    const page = await getWebsiteWorkspacePage({
+      docsPath: '/docs/langgraph/guides/persistence',
+      title: 'Persistence',
+    });
+
+    expect(page.resolution).toMatchObject({
+      kind: 'mapped',
+      identity: {
+        id: 'langgraph:core-capabilities:persistence:overview:python',
+        topic: 'persistence',
+      },
+    });
+  });
+
+  it('keeps a mapped limited-mode entry truthful', async () => {
+    const page = await getWebsiteWorkspacePage({
+      docsPath: '/docs/langgraph/getting-started/introduction',
+      title: 'Introduction',
+    });
+
+    expect(page.resolution).toMatchObject({
+      kind: 'mapped',
+      identity: {
+        id: 'langgraph:getting-started:overview:overview:python',
+        availableModes: ['Docs'],
+      },
+    });
+    expect(page.presentation).toMatchObject({
+      kind: 'docs-only',
+      runnable: false,
+    });
+    expect(page.contentBundle).toEqual({
+      codeFiles: {},
+      promptFiles: {},
+      runtimeUrl: null,
+      docSections: [],
+      narrativeDocs: [],
+    });
+  });
+
+  it('returns a docs-only model for an unmapped valid docs page', async () => {
+    const page = await getWebsiteWorkspacePage({
+      docsPath: '/docs/langgraph/guides/testing',
+      title: 'Testing',
+    });
+
+    expect(page.resolution).toEqual({
+      kind: 'docs-only',
+      docsPath: '/docs/langgraph/guides/testing',
+      title: 'Testing',
+      unavailableReason: 'no-workspace-capability',
+    });
+    expect(page.presentation).toEqual({
+      kind: 'docs-only',
+      docsPath: '/docs/langgraph/guides/testing',
+      title: 'Testing',
+      runnable: false,
+    });
+    expect(page.contentBundle.runtimeUrl).toBeNull();
+  });
+
+  it('traces registry-owned workspace assets in production bundles', () => {
+    expect(nextConfig.outputFileTracingRoot).toBe(workspaceRoot);
+    expect(nextConfig.outputFileTracingIncludes).toEqual({
+      '/*': expect.arrayContaining([
+        '../../cockpit/**/*.md',
+        '../../cockpit/**/*.py',
+        '../../cockpit/**/*.ts',
+        '../../deployments/ag-ui-mastra/*.mjs',
+        '../../nx.json',
+      ]),
+    });
+  });
+
+  it('imports shared workspace CSS once and scopes Docs geometry to the article slot', () => {
+    const layoutSource = readFileSync(
+      resolve(workspaceRoot, 'apps/website/src/app/layout.tsx'),
+      'utf8'
+    );
+    const globalCss = readFileSync(
+      resolve(workspaceRoot, 'apps/website/src/app/global.css'),
+      'utf8'
+    );
+    const docsCss = readFileSync(
+      resolve(workspaceRoot, 'apps/website/src/styles/docs.css'),
+      'utf8'
+    );
+
+    expect(
+      globalCss.match(/workspace-react\/src\/styles\/workspace\.css/g)
+    ).toHaveLength(1);
+    expect(layoutSource).toMatch(
+      /import\s+["']@threadplane\/design-tokens\/tokens\.css["'];[\s\S]*import\s+["']\.\/global\.css["'];/
+    );
+    expect(docsCss).toMatch(
+      /\.docs-workspace-article\s*\{[\s\S]*height:\s*100%[\s\S]*overflow-y:\s*auto/
+    );
+    expect(docsCss).toMatch(/\.docs-workspace-article\s+\.docs-article-layout/);
+  });
+
+  it('scans shared workspace components for Tailwind v4 utilities', async () => {
+    const globalCssPath = resolve(
+      workspaceRoot,
+      'apps/website/src/app/global.css'
+    );
+    const compiler = await compile(readFileSync(globalCssPath, 'utf8'), {
+      base: dirname(globalCssPath),
+      from: globalCssPath,
+      onDependency() {
+        return undefined;
+      },
+    });
+    const candidates = new Scanner({ sources: compiler.sources }).scan();
+
+    expect(candidates).toContain('text-[10px]');
+    expect(compiler.build(candidates)).toMatch(/\.text-\\\[10px\\\]/);
+  });
+});

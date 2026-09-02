@@ -1,0 +1,447 @@
+/** @vitest-environment jsdom */
+import React from 'react';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  cockpitManifest,
+  toWorkspaceIdentity,
+  type WorkspaceMode,
+  type WorkspaceResolution,
+} from '@threadplane/cockpit-registry';
+import type {
+  ContentBundle,
+  WorkspacePresentation,
+} from '@threadplane/cockpit-shell';
+import { WorkspaceProvider } from './workspace-provider';
+import { WorkspaceShell } from './workspace-shell';
+
+const runModeFault = vi.hoisted(() => ({ shouldThrow: false }));
+const RUN_RAIL_ITEM = /^Run(?:,|$)/;
+
+vi.mock('./components/run-mode/run-mode', async (importOriginal) => {
+  const ReactModule = await import('react');
+  const actual = await importOriginal<
+    typeof import('./components/run-mode/run-mode')
+  >();
+  return {
+    ...actual,
+    RunMode(props: React.ComponentProps<typeof actual.RunMode>) {
+      if (runModeFault.shouldThrow) throw new Error('runtime panel failure');
+      return ReactModule.createElement(actual.RunMode, props);
+    },
+  };
+});
+
+const entry = cockpitManifest.find(
+  (candidate) =>
+    candidate.product === 'langgraph' &&
+    candidate.topic === 'streaming' &&
+    candidate.language === 'python'
+);
+if (!entry) throw new Error('Expected the streaming registry fixture');
+
+const identity = toWorkspaceIdentity(entry);
+const resolution: WorkspaceResolution = { kind: 'mapped', identity };
+const presentation: WorkspacePresentation = {
+  kind: 'capability',
+  identity,
+  docsPath: identity.docsPath ?? '',
+  promptAssetPaths: [],
+  codeAssetPaths: ['example.ts'],
+  backendAssetPaths: [],
+  docsAssetPaths: ['guide.md'],
+  runtimeUrl: 'langgraph/streaming',
+  devPort: 4300,
+  runnable: true,
+};
+const contentBundle: ContentBundle = {
+  codeFiles: { 'example.ts': '<pre><code>source</code></pre>' },
+  promptFiles: {},
+  runtimeUrl: 'https://runtime.example.test/demo',
+  docSections: [],
+  narrativeDocs: [
+    {
+      title: 'Streaming guide',
+      html: '<h1>Registry narrative</h1>',
+      sourceFile: 'guide.md',
+    },
+  ],
+};
+
+function renderWorkspace(options: {
+  resolution?: WorkspaceResolution;
+  presentation?: WorkspacePresentation;
+  contentBundle?: ContentBundle;
+  requestedMode?: string | null;
+  docsSlot?: React.ReactNode;
+  rootElement?: 'main' | 'section';
+}) {
+  const selectedResolution = options.resolution ?? resolution;
+  const selectedPresentation = options.presentation ?? presentation;
+  const selectedContent = options.contentBundle ?? contentBundle;
+  return render(
+    <WorkspaceProvider
+      resolution={selectedResolution}
+      presentation={selectedPresentation}
+      contentBundle={selectedContent}
+      routeKind="docs"
+      routePath={
+        selectedResolution.kind === 'mapped'
+          ? selectedResolution.identity.docsPath ??
+            selectedResolution.identity.workspacePath
+          : selectedResolution.docsPath
+      }
+      requestedMode={options.requestedMode ?? 'docs'}
+      docsSlot={options.docsSlot}
+      pushIdentity={vi.fn()}
+      pushMode={vi.fn()}
+      replaceMode={vi.fn()}
+      getSessionId={() => 'session-1'}
+    >
+      <WorkspaceShell
+        navigationTree={[]}
+        manifest={cockpitManifest}
+        rootElement={options.rootElement}
+      />
+    </WorkspaceProvider>
+  );
+}
+
+describe('WorkspaceShell persistent panel composition', () => {
+  afterEach(() => {
+    window.localStorage.clear();
+    window.history.replaceState({}, '', '/');
+    runModeFault.shouldThrow = false;
+    vi.restoreAllMocks();
+  });
+
+  it('keeps one Run iframe node mounted through modes and utility switches', async () => {
+    const rendered = renderWorkspace({
+      requestedMode: 'docs',
+      docsSlot: <article>Server docs</article>,
+    });
+
+    await waitFor(() =>
+      expect(rendered.container.querySelector('iframe')).toBeTruthy()
+    );
+    const frame = rendered.container.querySelector('iframe');
+    expect(frame).toBeTruthy();
+    expect(screen.getByText('Server docs')).toBeTruthy();
+
+    for (const mode of ['Run', 'Code', 'API', 'Docs'] as WorkspaceMode[]) {
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: mode === 'Run' ? RUN_RAIL_ITEM : mode,
+        })
+      );
+      expect(rendered.container.querySelector('iframe')).toBe(frame);
+    }
+
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    expect(screen.getByRole('heading', { name: 'Settings' })).toBeTruthy();
+    expect(rendered.container.querySelector('iframe')).toBe(frame);
+  });
+
+  it('exposes focusable panel headings without remounting Run', async () => {
+    const rendered = renderWorkspace({ requestedMode: 'run' });
+    const runTarget = await screen.findByRole('heading', {
+      name: 'LangGraph Streaming Run',
+    });
+    const frame = rendered.container.querySelector('iframe');
+    expect(runTarget.tabIndex).toBe(-1);
+    expect(runTarget.getAttribute('data-workspace-panel-target')).toBe('Run');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Code' }));
+    const codeTarget = screen.getByRole('heading', {
+      name: 'LangGraph Streaming Code',
+    });
+    expect(codeTarget.tabIndex).toBe(-1);
+    expect(codeTarget.getAttribute('data-workspace-panel-target')).toBe('Code');
+    await waitFor(() => expect(document.activeElement).toBe(codeTarget));
+    expect(rendered.container.querySelector('iframe')).toBe(frame);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Docs' }));
+    const docsTarget = screen.getByRole('heading', {
+      name: 'LangGraph Streaming Docs',
+    });
+    expect(docsTarget.tabIndex).toBe(-1);
+    await waitFor(() => expect(document.activeElement).toBe(docsTarget));
+    expect(rendered.container.querySelector('iframe')).toBe(frame);
+  });
+
+  it('implements mobile, tablet rail/context, and desktop shell breakpoints', () => {
+    const sourceRoot = process.cwd().endsWith('/libs/workspace-react')
+      ? process.cwd()
+      : resolve(process.cwd(), 'libs/workspace-react');
+    const css = readFileSync(
+      resolve(sourceRoot, 'src/styles/workspace.css'),
+      'utf8'
+    );
+
+    expect(css).toMatch(
+      /@media \(min-width: 48rem\) and \(max-width: 63\.999rem\)[\s\S]*grid-template-columns:\s*56px minmax\(0, 1fr\)/
+    );
+    expect(css).toMatch(
+      /@media \(min-width: 64rem\)[\s\S]*grid-template-columns:\s*328px minmax\(0, 1fr\)/
+    );
+    expect(css).toContain('.cockpit-tablet-context-trigger');
+    expect(css).toContain('.cockpit-tablet-context-surface');
+    expect(css).toMatch(
+      /\.cockpit-tablet-context-surface \.cockpit-control-plane\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\)/
+    );
+  });
+
+  it('uses neutral Workspace landmark and modal labels by default', () => {
+    renderWorkspace({ docsSlot: <article>Server docs</article> });
+    expect(
+      screen.getByRole('main', { name: 'Workspace shell' })
+    ).toBeTruthy();
+    expect(
+      screen.getByRole('navigation', { name: 'Workspace modes' })
+    ).toBeTruthy();
+    expect(
+      screen.getByRole('complementary', { name: 'Workspace context' })
+    ).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Open navigation' }));
+    expect(
+      screen.getByRole('dialog', { name: 'Workspace control plane' })
+    ).toBeTruthy();
+  });
+
+  it('lets an embedding host use a labelled region instead of a nested main', () => {
+    renderWorkspace({
+      docsSlot: <article>Server docs</article>,
+      rootElement: 'section',
+    });
+
+    expect(
+      screen.getByRole('region', { name: 'Workspace shell' })
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole('main', { name: 'Workspace shell' })
+    ).toBeNull();
+  });
+
+  it('accepts product labels and neutral header actions from a host adapter', () => {
+    const ProductWorkspaceShell = WorkspaceShell as React.ComponentType<
+      React.ComponentProps<typeof WorkspaceShell> & {
+        modeNavigationLabel: string;
+        contextPaneLabel: string;
+        mobileDialogLabel: string;
+        mobileTitle: string;
+        headerActions: React.ReactNode;
+      }
+    >;
+    render(
+      <WorkspaceProvider
+        resolution={resolution}
+        presentation={presentation}
+        contentBundle={contentBundle}
+        routeKind="workspace"
+        routePath={identity.legacyPath}
+        requestedMode="docs"
+        pushIdentity={vi.fn()}
+        pushMode={vi.fn()}
+        replaceMode={vi.fn()}
+        getSessionId={() => 'session-1'}
+      >
+        <ProductWorkspaceShell
+          navigationTree={[]}
+          manifest={cockpitManifest}
+          modeNavigationLabel="Product modes"
+          contextPaneLabel="Product context"
+          mobileDialogLabel="Product control plane"
+          mobileTitle="Product"
+          headerActions={<a href="https://example.test/docs">Read docs</a>}
+        />
+      </WorkspaceProvider>
+    );
+
+    expect(
+      screen.getByRole('navigation', { name: 'Product modes' })
+    ).toBeTruthy();
+    expect(
+      screen.getByRole('complementary', { name: 'Product context' })
+    ).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Read docs' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Open navigation' }));
+    expect(
+      screen.getByRole('dialog', { name: 'Product control plane' })
+    ).toBeTruthy();
+    expect(screen.getByText('Product')).toBeTruthy();
+  });
+
+  it('uses registry narrative Docs when no server slot is present', () => {
+    renderWorkspace({ requestedMode: 'docs' });
+    expect(
+      screen.getByRole('heading', { name: 'Registry narrative' })
+    ).toBeTruthy();
+  });
+
+  it('does not mount Run for docs-only or mapped identities without Run', () => {
+    const docsOnly: WorkspaceResolution = {
+      kind: 'docs-only',
+      docsPath: '/docs/example',
+      title: 'Example docs',
+      unavailableReason: 'no-workspace-capability',
+    };
+    const docsOnlyPresentation: WorkspacePresentation = {
+      kind: 'docs-only',
+      docsPath: '/docs/example',
+      title: 'Example docs',
+      runnable: false,
+    };
+    const rendered = renderWorkspace({
+      resolution: docsOnly,
+      presentation: docsOnlyPresentation,
+      contentBundle: { ...contentBundle, runtimeUrl: null },
+      docsSlot: <article>Docs-only article</article>,
+    });
+    expect(rendered.container.querySelector('iframe')).toBeNull();
+
+    const limitedIdentity = {
+      ...identity,
+      availableModes: ['Docs', 'Code'] as const,
+    };
+    rendered.rerender(
+      <WorkspaceProvider
+        resolution={{ kind: 'mapped', identity: limitedIdentity }}
+        presentation={{ ...presentation, identity: limitedIdentity }}
+        contentBundle={contentBundle}
+        routeKind="docs"
+        routePath={limitedIdentity.docsPath ?? limitedIdentity.workspacePath}
+        requestedMode="docs"
+        docsSlot={<article>Limited article</article>}
+        pushIdentity={vi.fn()}
+        pushMode={vi.fn()}
+        replaceMode={vi.fn()}
+        getSessionId={() => 'session-1'}
+      >
+        <WorkspaceShell navigationTree={[]} manifest={cockpitManifest} />
+      </WorkspaceProvider>
+    );
+    expect(rendered.container.querySelector('iframe')).toBeNull();
+  });
+
+  it('renders disabled modes with explicit mode-specific accessible reasons', () => {
+    const docsOnly: WorkspaceResolution = {
+      kind: 'docs-only',
+      docsPath: '/docs/example',
+      title: 'Example docs',
+      unavailableReason: 'no-workspace-capability',
+    };
+    renderWorkspace({
+      resolution: docsOnly,
+      presentation: {
+        kind: 'docs-only',
+        docsPath: '/docs/example',
+        title: 'Example docs',
+        runnable: false,
+      },
+      contentBundle: { ...contentBundle, runtimeUrl: null },
+      docsSlot: <article>Docs-only article</article>,
+    });
+
+    for (const mode of ['Run', 'Code', 'API'] as const) {
+      const reason = `${mode} is unavailable because this page has no workspace capability.`;
+      const control = screen.getByRole('button', {
+        name: mode,
+        description: reason,
+      });
+      expect(control.getAttribute('aria-disabled')).toBe('true');
+      expect((control as HTMLButtonElement).disabled).toBe(false);
+      control.focus();
+      expect(document.activeElement).toBe(control);
+      fireEvent.click(control);
+      expect(
+        screen
+          .getByRole('button', { name: 'Docs' })
+          .getAttribute('aria-pressed')
+      ).toBe('true');
+      const descriptionId = control.getAttribute('aria-describedby');
+      expect(descriptionId).toBeTruthy();
+      expect(document.getElementById(descriptionId ?? '')?.textContent).toBe(
+        reason
+      );
+    }
+    expect(
+      (screen.getByRole('button', { name: 'Docs' }) as HTMLButtonElement)
+        .disabled
+    ).toBe(false);
+  });
+
+  it('describes unavailable modes for a mapped limited-mode identity', () => {
+    const limitedIdentity = {
+      ...identity,
+      title: 'Limited streaming',
+      availableModes: ['Docs', 'Code'] as const,
+    };
+    renderWorkspace({
+      resolution: { kind: 'mapped', identity: limitedIdentity },
+      presentation: { ...presentation, identity: limitedIdentity },
+      docsSlot: <article>Limited article</article>,
+    });
+
+    expect(
+      (screen.getByRole('button', { name: 'Code' }) as HTMLButtonElement)
+        .disabled
+    ).toBe(false);
+    for (const mode of ['Run', 'API'] as const) {
+      const control = screen.getByRole('button', { name: mode });
+      expect(control.getAttribute('aria-disabled')).toBe('true');
+      expect((control as HTMLButtonElement).disabled).toBe(false);
+      expect(
+        document.getElementById(control.getAttribute('aria-describedby') ?? '')
+          ?.textContent
+      ).toBe(`${mode} is unavailable for Limited streaming.`);
+    }
+  });
+
+  it('styles unavailable modes without pointer or hover affordances', () => {
+    const sourceRoot = process.cwd().endsWith('/libs/workspace-react')
+      ? process.cwd()
+      : resolve(process.cwd(), 'libs/workspace-react');
+    const css = readFileSync(
+      resolve(sourceRoot, 'src/styles/workspace.css'),
+      'utf8'
+    );
+    expect(css).toMatch(
+      /\[data-control-plane-rail-item\]\[aria-disabled=['"]true['"]\]/
+    );
+    expect(css).toMatch(/:not\(\[aria-disabled=['"]true['"]\]\):hover/);
+  });
+
+  it('recovers a failed persistent Run panel after runtime reload', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    runModeFault.shouldThrow = true;
+    const rendered = renderWorkspace({ requestedMode: 'run' });
+    expect(screen.getByRole('alert').textContent).toContain(
+      'Run panel unavailable.'
+    );
+
+    runModeFault.shouldThrow = false;
+    fireEvent.click(screen.getByRole('button', { name: 'Reload runtime' }));
+    await waitFor(() =>
+      expect(rendered.container.querySelector('iframe')).toBeTruthy()
+    );
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('contains a panel render failure without replacing the workspace shell', () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    function BrokenDocs() {
+      throw new Error('sensitive panel failure');
+    }
+    renderWorkspace({ requestedMode: 'docs', docsSlot: <BrokenDocs /> });
+
+    expect(screen.getByRole('main', { name: 'Workspace shell' })).toBeTruthy();
+    expect(screen.getByRole('alert').textContent).toContain(
+      'Docs panel unavailable.'
+    );
+    expect(
+      screen.getByRole('button', { name: RUN_RAIL_ITEM })
+    ).toBeTruthy();
+  });
+});

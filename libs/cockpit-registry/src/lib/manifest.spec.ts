@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
 import { cockpitManifest } from './manifest';
 import { getCockpitDocsPath, NO_COCKPIT_DOCS_LINK } from './docs-links';
 import type { CockpitManifestEntry } from './manifest.types';
+
+const workspaceRoot = fileURLToPath(new URL('../../../../', import.meta.url));
 
 const expectedTopics = {
   'deep-agents': [
@@ -128,7 +132,7 @@ describe('cockpitManifest', () => {
       expect(entry.codeAssetPaths.length).toBeGreaterThan(0);
 
       for (const assetPath of [...entry.promptAssetPaths, ...entry.codeAssetPaths]) {
-        expect(fs.existsSync(assetPath)).toBe(true);
+        expect(fs.existsSync(resolve(workspaceRoot, assetPath))).toBe(true);
       }
     }
   });
