@@ -195,3 +195,64 @@ child tokens must be re-emitted by our `tool_stream_event_handler` as
   the future emitter must not splice subagent messages into those snapshots
   (mirroring `_forward_inner_agent_events`' deliberate choice,
   `agent.py:1209-1211`).
+
+## After the emitter
+
+Captured 2026-09-02 against the shipped scenario (`research_availability`
+registered with `ToolBehavior(tool_stream_event_handler=emit_subagent_events)`,
+`src/subagent_emitter.py`), same `RunAgentInput` as §3 (prompt *"Find a slot
+for Ada and Grace next week — research their availability first"*, empty
+`tools`/`context`/`state`/`forwardedProps`). No keys or org ids appeared in
+the stream; only repetitive delta runs and `MESSAGES_SNAPSHOT`s are elided,
+marked with `# [elided: ...]`.
+
+The model delegated TWICE this run (first to ask for concrete dates, then to
+research them) — both rounds carried the full `SUBAGENT_*` block, each nested
+between its own `TOOL_CALL_END` and `TOOL_CALL_RESULT` exactly as §1
+predicted. First round shown; the second is shape-identical with
+`toolCallId=call_ur6NyfucZhR4FlDTxrDt0hy9` and 61 content deltas.
+
+```
+data: {"type":"RUN_STARTED","threadId":"smoke-thread-1","runId":"smoke-run-1"}
+data: {"type":"STATE_SNAPSHOT","snapshot":{}}
+# [elided: MESSAGES_SNAPSHOT]
+data: {"type":"TOOL_CALL_START","toolCallId":"call_YW6LslLJbLNZul9qYlYfeySg","toolCallName":"research_availability","parentMessageId":"6228ef46-8396-4044-903c-ef9e3f3abc3d"}
+# [elided: 14 TOOL_CALL_ARGS deltas spelling {"attendees": "Ada, Grace", "date_range": "next week"}]
+data: {"type":"TOOL_CALL_END","toolCallId":"call_YW6LslLJbLNZul9qYlYfeySg"}
+# [elided: MESSAGES_SNAPSHOT]
+data: {"type":"SUBAGENT_STARTED","subagentRunId":"call_YW6LslLJbLNZul9qYlYfeySg-sub","name":"availability_researcher","parentToolCallId":"call_YW6LslLJbLNZul9qYlYfeySg"}
+data: {"type":"TEXT_MESSAGE_START","messageId":"call_YW6LslLJbLNZul9qYlYfeySg-sub-m1","role":"assistant","subagentRunId":"call_YW6LslLJbLNZul9qYlYfeySg-sub"}
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"call_YW6LslLJbLNZul9qYlYfeySg-sub-m1","delta":"Please","subagentRunId":"call_YW6LslLJbLNZul9qYlYfeySg-sub"}
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"call_YW6LslLJbLNZul9qYlYfeySg-sub-m1","delta":" provide","subagentRunId":"call_YW6LslLJbLNZul9qYlYfeySg-sub"}
+# [elided: 25 more TEXT_MESSAGE_CONTENT deltas — the CHILD's text, token by token]
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"call_YW6LslLJbLNZul9qYlYfeySg-sub-m1","delta":".","subagentRunId":"call_YW6LslLJbLNZul9qYlYfeySg-sub"}
+data: {"type":"TEXT_MESSAGE_END","messageId":"call_YW6LslLJbLNZul9qYlYfeySg-sub-m1","subagentRunId":"call_YW6LslLJbLNZul9qYlYfeySg-sub"}
+data: {"type":"SUBAGENT_FINISHED","subagentRunId":"call_YW6LslLJbLNZul9qYlYfeySg-sub","outcome":{"type":"success"}}
+data: {"type":"TOOL_CALL_RESULT","messageId":"b4c51965-4781-4683-8808-05fddd85135f","toolCallId":"call_YW6LslLJbLNZul9qYlYfeySg","content":"\"Please provide the specific dates for next week (e.g., from October 16 to October 20) so I can summarize the availability accordingly.\""}
+# [elided: MESSAGES_SNAPSHOT, then the second delegation round — TOOL_CALL_START/ARGS×19/END,
+#  SUBAGENT_STARTED, TEXT_MESSAGE_START, 61 TEXT_MESSAGE_CONTENT deltas, TEXT_MESSAGE_END,
+#  SUBAGENT_FINISHED success, TOOL_CALL_RESULT — ids derived from call_ur6NyfucZhR4FlDTxrDt0hy9]
+data: {"type":"TEXT_MESSAGE_START","messageId":"77635fb9-a418-443a-af7e-c70a29d079f6","role":"assistant"}
+# [elided: 26 TEXT_MESSAGE_CONTENT deltas — the ORCHESTRATOR's own summary, no subagentRunId]
+data: {"type":"TEXT_MESSAGE_END","messageId":"77635fb9-a418-443a-af7e-c70a29d079f6"}
+# [elided: final MESSAGES_SNAPSHOT]
+data: {"type":"STATE_SNAPSHOT","snapshot":{}}
+data: {"type":"RUN_FINISHED","threadId":"smoke-thread-1","runId":"smoke-run-1","outcome":{"type":"success"}}
+```
+
+Event tally (174 SSE lines): 1 RUN_STARTED, 2 STATE_SNAPSHOT,
+6 MESSAGES_SNAPSHOT, 2 TOOL_CALL_START, 33 TOOL_CALL_ARGS, 2 TOOL_CALL_END,
+2 SUBAGENT_STARTED, 2 TEXT_MESSAGE_START(sub), 89 TEXT_MESSAGE_CONTENT(sub),
+2 TEXT_MESSAGE_END(sub), 2 SUBAGENT_FINISHED, 2 TOOL_CALL_RESULT,
+1 TEXT_MESSAGE_START, 26 TEXT_MESSAGE_CONTENT, 1 TEXT_MESSAGE_END,
+1 RUN_FINISHED. No RAW, no CUSTOM, no STEP_*, no SUBAGENT_ERROR.
+
+**Child deltas: streaming (89 content events across the two delegation
+rounds: 28 + 61)** — §4's black box is gone. Every child event carries
+`subagentRunId` derived from the wire `toolCallId`
+(`<toolCallId>-sub` / `<toolCallId>-sub-m1`), `SUBAGENT_STARTED.parentToolCallId`
+matches the bridge-native `TOOL_CALL_START.toolCallId` verbatim, and the
+`TOOL_CALL_RESULT` content equals the joined child deltas (the tool's final
+yield), confirming the last-yield-as-result contract survived the handler
+registration. The §5 OTel `ContextVar` warnings still log server-side and
+remain cosmetic.
