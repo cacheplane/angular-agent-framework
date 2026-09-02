@@ -2,7 +2,12 @@ import { describe, expect, it, beforeEach } from 'vitest';
 import { mkdtempSync, rmSync, existsSync, readFileSync, statSync } from 'fs';
 import { tmpdir } from 'os';
 import { join, resolve } from 'path';
-import { buildServerPy, generateAgUiDeployment, type AgUiTopic } from './generate-ag-ui-deployment-config';
+import {
+  buildServerPy,
+  detectBridgeAgent,
+  generateAgUiDeployment,
+  type AgUiTopic,
+} from './generate-ag-ui-deployment-config';
 
 const REPO_ROOT = resolve(__dirname, '..');
 
@@ -52,6 +57,26 @@ describe('generateAgUiDeployment', () => {
     // The underscored deps dir must exist for the import to resolve.
     expect(statSync(join(outDir, 'deps/json_render/src/graph.py')).isFile()).toBe(true);
     expect(statSync(join(outDir, 'deps/tool_views/src/graph.py')).isFile()).toBe(true);
+  });
+
+  it('mounts a topic\'s own LangGraphAgent subclass when its src/server.py declares one', () => {
+    // The subagents demo mounts SubagentEmittingAgent (a LangGraphAgent
+    // subclass that expands `subagent_activity` CUSTOM events into standard
+    // SUBAGENT_* events). The aggregated Railway server must mount the same
+    // class or production serves raw CUSTOM events and no subagent cards.
+    generateAgUiDeployment({ repoRoot: REPO_ROOT, outDir });
+    const server = readFileSync(join(outDir, 'server.py'), 'utf8');
+    expect(server).toContain(
+      'from deps.subagents.src.streaming.subagent_emitting_agent import SubagentEmittingAgent',
+    );
+    expect(server).toContain('SubagentEmittingAgent(name="subagents", graph=subagents_graph)');
+    expect(server).not.toContain('LangGraphAgent(name="subagents"');
+    // Topics without a subclass keep the plain bridge wrapper.
+    expect(server).toContain('LangGraphAgent(name="interrupts", graph=interrupts_graph)');
+    // The subclass module must be staged so the import resolves from the deployment root.
+    expect(
+      statSync(join(outDir, 'deps/subagents/src/streaming/subagent_emitting_agent.py')).isFile(),
+    ).toBe(true);
   });
 
   it('server.py enforces X-Internal-Token on /agent/*', () => {
@@ -164,6 +189,26 @@ describe('buildServerPy framework adapters', () => {
     expect(server).not.toContain('LangGraphAgent');
   });
 
+  it('langgraph topics with a bridgeAgent import the subclass and construct it with name/graph', () => {
+    const server = buildServerPy([
+      { ...lg('subagents'), bridgeAgent: { module: 'streaming.subagent_emitting_agent', cls: 'SubagentEmittingAgent' } },
+      lg('interrupts'),
+    ]);
+    expect(server).toContain('from deps.subagents.src.graph import graph as subagents_graph');
+    expect(server).toContain(
+      'from deps.subagents.src.streaming.subagent_emitting_agent import SubagentEmittingAgent',
+    );
+    expect(server).toContain(
+      'add_langgraph_fastapi_endpoint(\n' +
+        '    app,\n' +
+        '    SubagentEmittingAgent(name="subagents", graph=subagents_graph),\n' +
+        '    path="/agent/subagents",\n' +
+        ')',
+    );
+    expect(server).toContain('LangGraphAgent(name="interrupts", graph=interrupts_graph)');
+    expect(server).not.toContain('LangGraphAgent(name="subagents"');
+  });
+
   it('mixed sets emit both bridge imports (langgraph first) and per-topic mounts', () => {
     const server = buildServerPy([lg('interrupts'), maf('microsoft-agent-framework')]);
     const lgImport = server.indexOf('from ag_ui_langgraph import');
@@ -176,5 +221,43 @@ describe('buildServerPy framework adapters', () => {
     // mounted through the MAF bridge or vice versa.
     expect(server).toContain('LangGraphAgent(name="interrupts"');
     expect(server).not.toContain('LangGraphAgent(name="microsoft-agent-framework"');
+  });
+});
+
+describe('detectBridgeAgent', () => {
+  it('returns undefined for the plain bridge wrapper', () => {
+    expect(
+      detectBridgeAgent(
+        'from ag_ui_langgraph import add_langgraph_fastapi_endpoint, LangGraphAgent\n' +
+          'from .graph import graph\n' +
+          'agent = LangGraphAgent(name="interrupts", graph=graph)\n',
+      ),
+    ).toBeUndefined();
+  });
+
+  it('returns undefined when the wrapper is constructed inline in the mount call', () => {
+    expect(
+      detectBridgeAgent(
+        'add_langgraph_fastapi_endpoint(app, LangGraphAgent(name="x", graph=graph), path="/agent")\n',
+      ),
+    ).toBeUndefined();
+  });
+
+  it('resolves a subclass to its package-relative module', () => {
+    expect(
+      detectBridgeAgent(
+        'from .graph import graph\n' +
+          'from .streaming.subagent_emitting_agent import SubagentEmittingAgent\n' +
+          'agent = SubagentEmittingAgent(name="subagents", graph=graph)\n',
+      ),
+    ).toEqual({ module: 'streaming.subagent_emitting_agent', cls: 'SubagentEmittingAgent' });
+  });
+
+  it('throws when a subclass is mounted but not imported from the topic package', () => {
+    // A class the generator cannot re-import from deps/<mod>/src would emit a
+    // server.py that fails at boot; fail at generation time instead.
+    expect(() =>
+      detectBridgeAgent('from somewhere import FancyAgent\nagent = FancyAgent(name="x", graph=graph)\n'),
+    ).toThrow(/FancyAgent/);
   });
 });

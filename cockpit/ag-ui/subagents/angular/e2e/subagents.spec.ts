@@ -21,9 +21,10 @@ interface SubagentProbe {
 // inline AS a <chat-subagent-card> anchored to its message, and the card
 // PERSISTS (collapsed) after the subagent completes — there is no separate
 // active-only mount, and the `task` call no longer renders a generic tool-call
-// chip. The map read here is the data the card binds to: it proves the ACTIVITY
-// snapshot/delta pipeline populated the subagent (name + streamed child text)
-// and that it settled to `complete`. The card element and this projection are
+// chip. The map read here is the data the card binds to: it proves the
+// SUBAGENT_STARTED + subagentRunId-attributed TEXT_MESSAGE_* pipeline populated
+// the subagent (name + streamed child text) and that SUBAGENT_FINISHED settled
+// it to `complete`. The card element and this projection are
 // asserted together below (card presence/persistence + projection contents).
 async function readSubagents(page: Page): Promise<SubagentProbe> {
   return page.evaluate(() => {
@@ -52,12 +53,13 @@ async function readSubagents(page: Page): Promise<SubagentProbe> {
 }
 
 // Research delegation over the AG-UI transport: the orchestrator LLM calls the
-// `task` tool, the subagent LLM streams a summary, and the AG-UI server
-// converts the subagent_activity CUSTOM events into native ACTIVITY_SNAPSHOT/
-// ACTIVITY_DELTA. The @threadplane/ag-ui reducer projects the activity to
-// agent.subagents(), which the inline <chat-subagent-card> (rendered in place of
-// the `task` tool call) binds to. The child's research text must stay OUT of the
-// parent's bubble.
+// `task` tool, the subagent LLM streams a summary, and the AG-UI server's
+// SubagentEmittingAgent expands the graph's subagent_activity CUSTOM events into
+// the protocol's standard SUBAGENT_STARTED / TEXT_MESSAGE_* (carrying
+// subagentRunId) / SUBAGENT_FINISHED events. The @threadplane/ag-ui reducer
+// projects them to agent.subagents(), which the inline <chat-subagent-card>
+// (rendered in place of the `task` tool call) binds to. The child's research
+// text must stay OUT of the parent's bubble.
 test('AG-UI subagents: orchestrator dispatches subagent cards that settle complete', async ({
   page,
 }) => {

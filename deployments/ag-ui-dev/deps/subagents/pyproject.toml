@@ -7,6 +7,7 @@ dependencies = [
     "langchain-openai>=0.3",
     "langsmith>=0.2",
     "ag-ui-langgraph>=0.0.25",
+    "ag-ui-protocol>=0.1.22",
     "fastapi>=0.110",
     "uvicorn[standard]>=0.29",
 ]

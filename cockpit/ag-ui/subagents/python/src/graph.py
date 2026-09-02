@@ -4,10 +4,13 @@ each dispatch as a native AG-UI subagent card.
 
 Mirrors cockpit/chat/subagents' orchestrator + `task` tool + `_run_subagent`
 structure, but each dispatch emits `subagent_activity` CUSTOM events (like the
-examples/ag-ui `research` tool): `started` before the run, `message` per
-streamed token (via SubagentStreamHandler), `finished` after. The backend's
-ActivityEmittingAgent converts those CUSTOM events into native AG-UI ACTIVITY
-events, which the @threadplane/ag-ui reducer projects onto agent.subagents().
+examples/ag-ui `research` tool): `started {name}` before the run,
+`message_start {message_id}` + `message {message_id, delta}` per streamed
+token (via SubagentStreamHandler), `finished` after — or `error {message}` if
+the child fails. The backend's SubagentEmittingAgent expands those CUSTOM
+events into the protocol's standard SUBAGENT_STARTED / TEXT_MESSAGE_* (attributed
+via subagentRunId) / SUBAGENT_FINISHED / SUBAGENT_ERROR events, which the
+@threadplane/ag-ui reducer projects onto agent.subagents().
 
 Self-contained: no imports from examples/ or other cockpit capabilities.
 """
@@ -111,8 +114,9 @@ async def _run_subagent(
     tool_call_id: str,
 ) -> str:
     """Run a single subagent LLM, streaming its tokens through
-    SubagentStreamHandler so they surface as `subagent_activity` `message`
-    events keyed by the parent tool_call_id."""
+    SubagentStreamHandler so they surface as `subagent_activity`
+    `message_start` / `message` (per-token delta) events keyed by the parent
+    tool_call_id."""
     llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
     messages = [
         SystemMessage(content=system_prompt),
@@ -157,9 +161,10 @@ async def task(
     Returns:
         The subagent's final answer as a string.
 
-    The subagent run is surfaced to the UI as a native AG-UI ACTIVITY
-    (activityType "subagent"): started → message-per-token → finished, keyed
-    by this tool's own call id.
+    The subagent run is surfaced to the UI as the protocol's standard
+    subagent events: SUBAGENT_STARTED → attributed TEXT_MESSAGE_* per token →
+    SUBAGENT_FINISHED (or SUBAGENT_ERROR), with ids derived from this tool's
+    own call id (`<tool_call_id>-sub`).
     """
 
     async def _emit(payload: dict) -> None:
@@ -180,7 +185,13 @@ async def task(
         return f"Unknown role: {role}"
 
     await _emit({"phase": "started", "name": role})
-    result = await _run_subagent(role, task_description, system_prompt, tool_call_id)
+    try:
+        result = await _run_subagent(role, task_description, system_prompt, tool_call_id)
+    except Exception as exc:
+        # Surface the failure on the subagent card (SUBAGENT_ERROR), then
+        # re-raise so the bridge's own tool-error path still runs.
+        await _emit({"phase": "error", "message": f"{type(exc).__name__}: {exc}"})
+        raise
     await _emit({"phase": "finished", "status": "complete"})
     return result
 

@@ -4,13 +4,14 @@
 Render live subagent cards in an Angular chat UI using `provideAgent()` and
 `injectAgent()` from `@threadplane/ag-ui`. An orchestrator LangGraph agent
 delegates focused subtasks to specialized subagents via a `task` tool; the
-backend converts each subagent's streamed tokens into native AG-UI ACTIVITY
-events, which the `@threadplane/ag-ui` reducer projects onto
-`agent.subagents()` for the `<chat-subagents>` primitive to render.
+backend emits each subagent's run as the protocol's standard `SUBAGENT_STARTED`,
+`subagentRunId`-attributed `TEXT_MESSAGE_*` and `SUBAGENT_FINISHED` events,
+which the `@threadplane/ag-ui` reducer projects onto `agent.subagents()` for
+the `<chat-subagents>` primitive to render.
 </Summary>
 
 <Prompt>
-Add subagent cards to this Angular component using `@threadplane/ag-ui`. Configure `provideAgent({ url })` in the app config, call `injectAgent()` in the component, and pass the agent to the `<chat>` component from `@threadplane/chat`. The orchestrator graph dispatches subagents with a `task` tool and emits `subagent_activity` custom events; the backend's `ActivityEmittingAgent` converts those into native AG-UI ACTIVITY events so the chat composition renders a live card per subagent — all Signals, no subscriptions needed.
+Add subagent cards to this Angular component using `@threadplane/ag-ui`. Configure `provideAgent({ url })` in the app config, call `injectAgent()` in the component, and pass the agent to the `<chat>` component from `@threadplane/chat`. The orchestrator graph dispatches subagents with a `task` tool and emits `subagent_activity` custom events; the backend's `SubagentEmittingAgent` expands those into the standard AG-UI `SUBAGENT_STARTED` / attributed `TEXT_MESSAGE_*` / `SUBAGENT_FINISHED` events so the chat composition renders a live card per subagent — all Signals, no subscriptions needed.
 </Prompt>
 
 <Steps>
@@ -62,10 +63,11 @@ export class SubagentsComponent {
 <Step title="Dispatch subagents from the graph">
 
 The orchestrator binds a `task` tool that dispatches a role-specific
-subagent. Before running the subagent it emits a `started` activity; while
-the subagent streams it forwards each token as a `message` activity (via
-`SubagentStreamHandler`); after it emits a `finished` activity — all keyed
-by the tool's own call id:
+subagent. Before running the subagent it emits a `started` payload; while
+the subagent streams, `SubagentStreamHandler` forwards a `message_start`
+once and then one `message` per token (the raw delta); after it emits
+`finished` — or `error` if the child fails — all keyed by the tool's own
+call id:
 
 ```python
 # graph.py
@@ -79,36 +81,56 @@ async def task(role, task_description, tool_call_id: Annotated[str, InjectedTool
         "subagent_activity",
         {"subagent_id": tool_call_id, "phase": "started", "name": role},
     )
-    result = await _run_subagent(
-        role, task_description,
-        config={"callbacks": [SubagentStreamHandler(tool_call_id)]},
-    )
+    try:
+        result = await _run_subagent(
+            role, task_description,
+            config={"callbacks": [SubagentStreamHandler(tool_call_id)]},
+        )
+    except Exception as exc:
+        await adispatch_custom_event(
+            "subagent_activity",
+            {"subagent_id": tool_call_id, "phase": "error", "message": str(exc)},
+        )
+        raise
     await adispatch_custom_event(
         "subagent_activity",
-        {"subagent_id": tool_call_id, "phase": "finished", "status": "complete"},
+        {"subagent_id": tool_call_id, "phase": "finished"},
     )
     return result
 ```
 
 </Step>
-<Step title="Convert custom events to native ACTIVITY events">
+<Step title="Expand custom events into standard SUBAGENT_* events">
 
 The backend wraps the LangGraph `graph` in a FastAPI app using
-`ag-ui-langgraph`. `ActivityEmittingAgent` subclasses the bridge's
-`LangGraphAgent` and converts each `subagent_activity` CUSTOM event into a
-native AG-UI ACTIVITY event (snapshot/delta) at the bridge's 1:1 dispatch
-point:
+`ag-ui-langgraph`. `SubagentEmittingAgent` subclasses the bridge's
+`LangGraphAgent` and wraps its `run()` generator, expanding each
+`subagent_activity` CUSTOM event into the protocol's standard events (ids
+derived from the `task` tool call id, `tid`):
+
+| phase | wire event |
+| --- | --- |
+| `started {name}` | `SUBAGENT_STARTED {subagentRunId: <tid>-sub, name, parentToolCallId: <tid>}` |
+| `message_start {message_id}` | `TEXT_MESSAGE_START {messageId: <tid>-sub-m1, role: assistant, subagentRunId}` |
+| `message {message_id, delta}` | `TEXT_MESSAGE_CONTENT {messageId, delta, subagentRunId}` |
+| `finished` | `TEXT_MESSAGE_END` for the open message, then `SUBAGENT_FINISHED {outcome: success}` |
+| `error {message}` | `TEXT_MESSAGE_END` for the open message, then `SUBAGENT_ERROR {message}` |
+
+The CUSTOM event itself is consumed; every other bridge event passes through
+untouched. Because `parentToolCallId` equals the bridge-native
+`TOOL_CALL_START.toolCallId` (which is fully streamed before the tool body
+runs), the reducer anchors the card to the `task` call with no bookkeeping:
 
 ```python
 # server.py
 from fastapi import FastAPI
 from ag_ui_langgraph import add_langgraph_fastapi_endpoint
 from .graph import graph
-from .streaming.activity_emitting_agent import ActivityEmittingAgent
+from .streaming.subagent_emitting_agent import SubagentEmittingAgent
 
 app = FastAPI(title="cockpit-ag-ui-subagents")
 add_langgraph_fastapi_endpoint(
-    app, ActivityEmittingAgent(name="subagents", graph=graph), path="/agent"
+    app, SubagentEmittingAgent(name="subagents", graph=graph), path="/agent"
 )
 
 @app.get("/ok")
@@ -124,6 +146,10 @@ uv run uvicorn src.server:app --port 5326
 
 <Warning>
 A checkpointer is required for `ag-ui-langgraph` to work. Without it, the library cannot call `graph.aget_state()`. The graph in `src/graph.py` uses `MemorySaver` for development.
+</Warning>
+
+<Warning>
+The AG-UI encoder only serializes pydantic `ag_ui.core` event classes — yielding a raw dict crashes the stream. `SubagentEmittingAgent` constructs `SubagentStartedEvent`, `TextMessageStartEvent`, and friends from `ag_ui.core` (`ag-ui-protocol>=0.1.22`, the first release with `subagent_run_id` on every event).
 </Warning>
 
 </Step>
