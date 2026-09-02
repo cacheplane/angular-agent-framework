@@ -7,6 +7,8 @@ import { FeatureBlock } from '../../components/landing/FeatureBlock';
 import { WhitePaperBlock } from '../../components/landing/WhitePaperBlock';
 import { FinalCTA } from '../../components/landing/FinalCTA';
 import { MediumSwitcher } from '../../components/landing/MediumSwitcher';
+import { DiagramSection } from '../../components/landing/DiagramSection';
+import { RenderTransform } from '../../components/docs/diagrams';
 import { RenderCodeShowcase } from '../../components/landing/render/RenderCodeShowcase';
 import { createPageMetadata } from '../../lib/site-metadata';
 import { SECTION_MEDIA } from '../../lib/section-media';
@@ -50,6 +52,15 @@ export default async function RenderPage() {
           </div>
         </Container>
       </Section>
+
+      <DiagramSection
+        id="render-transform"
+        eyebrow="How it works"
+        headline="The shape of the transform"
+        body="A UI spec goes in one end; your own Angular components come out the other. @threadplane/render resolves it through your registry, state, and handlers — nothing renders that your app doesn't already own."
+      >
+        <RenderTransform />
+      </DiagramSection>
 
       <FeatureBlock
         id="schemas"

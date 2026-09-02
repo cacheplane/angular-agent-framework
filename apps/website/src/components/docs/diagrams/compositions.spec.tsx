@@ -7,6 +7,7 @@ import { AgUiArchitecturePipeline } from './AgUiArchitecturePipeline';
 import { A2uiMessageFlow } from './A2uiMessageFlow';
 import { RenderHowItFits } from './RenderHowItFits';
 import { RenderVsA2ui } from './RenderVsA2ui';
+import { RenderTransform } from './RenderTransform';
 import { MiddlewareHowItFits } from './MiddlewareHowItFits';
 import { TelemetryHowItFits } from './TelemetryHowItFits';
 
@@ -106,5 +107,30 @@ describe('TelemetryHowItFits', () => {
     const { container } = render(<TelemetryHowItFits />);
     expect(container.querySelectorAll('.tp-diagram-pill')).toHaveLength(2);
     expect(container.querySelectorAll('path.tp-diagram-edge')).toHaveLength(5);
+  });
+});
+
+describe('RenderTransform', () => {
+  it('mounts at standard scale with spec, render, and result stages', () => {
+    const { container } = render(<RenderTransform />);
+    const titles = Array.from(container.querySelectorAll('.tp-diagram-title')).map((t) => t.textContent);
+    expect(titles).toContain('@threadplane/render');
+    expect(container.querySelectorAll('.tp-diagram-pill')).toHaveLength(2);
+  });
+
+  it('names the spec fragment, the transport pills, and the payoff node', () => {
+    const { container } = render(<RenderTransform />);
+    const titles = Array.from(container.querySelectorAll('.tp-diagram-title')).map((t) => t.textContent);
+    expect(titles).toContain("type: 'Text'");
+    expect(titles).toContain('your components');
+    const pills = Array.from(container.querySelectorAll('.tp-diagram-pill text')).map((t) => t.textContent);
+    expect(pills).toEqual(['UI spec', 'bindings + events']);
+  });
+
+  it('accents only the payoff node', () => {
+    const { container } = render(<RenderTransform />);
+    const accented = container.querySelectorAll('g.tp-diagram-node[data-tone="accent"]');
+    expect(accented).toHaveLength(1);
+    expect(accented[0]?.querySelector('.tp-diagram-title')?.textContent).toBe('your components');
   });
 });
