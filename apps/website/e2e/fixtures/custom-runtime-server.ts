@@ -3,7 +3,7 @@ import {
   type IncomingMessage,
   type ServerResponse,
 } from 'node:http';
-import { createHash, timingSafeEqual } from 'node:crypto';
+import { timingSafeEqual } from 'node:crypto';
 import {
   renderRuntimeBridgeFrame,
   type RuntimeBridgeFault,
@@ -12,9 +12,7 @@ import {
 const HOST = '127.0.0.1';
 const PORT = 4399;
 const POISON = 'test-key-redact-me-poison-body';
-const FIXTURE_KEY_DIGEST = createHash('sha256')
-  .update('test-key-redact-me')
-  .digest();
+const FIXTURE_KEY_BYTES = Buffer.from('test-key-redact-me');
 const allowedRuntimeOrigins = new Set([
   'http://localhost:4300',
   'http://localhost:4321',
@@ -46,10 +44,9 @@ function sanitizedHeaderNames(request: IncomingMessage): readonly string[] {
 function requestKeyMatched(request: IncomingMessage): boolean {
   const candidate = request.headers['x-api-key'];
   if (typeof candidate !== 'string') return false;
-  return timingSafeEqual(
-    createHash('sha256').update(candidate).digest(),
-    FIXTURE_KEY_DIGEST
-  );
+  const candidateBytes = Buffer.from(candidate);
+  if (candidateBytes.length !== FIXTURE_KEY_BYTES.length) return false;
+  return timingSafeEqual(candidateBytes, FIXTURE_KEY_BYTES);
 }
 
 function recordRequest(
