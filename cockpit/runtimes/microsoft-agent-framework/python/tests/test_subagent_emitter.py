@@ -13,6 +13,7 @@ from ag_ui.core import (
     EventType,
     RunFinishedEvent,
     RunStartedEvent,
+    ToolCallArgsEvent,
     ToolCallEndEvent,
     ToolCallResultEvent,
     ToolCallStartEvent,
@@ -205,11 +206,16 @@ async def _collect(agent) -> list:
 
 async def test_wrapper_merges_tool_enqueued_events_mid_stream():
     async def inner(_input):
+        # Measured wire order: the bridge streams TOOL_CALL_START + ARGS
+        # before invoking the tool; TOOL_CALL_END arrives only AFTER the
+        # tool returns (docs/wire-capture-subagents.md, "After the emitter").
         yield _run_started()
         yield ToolCallStartEvent(
             type=EventType.TOOL_CALL_START, tool_call_id=TID, tool_call_name="research_policy"
         )
-        yield ToolCallEndEvent(type=EventType.TOOL_CALL_END, tool_call_id=TID)
+        yield ToolCallArgsEvent(
+            type=EventType.TOOL_CALL_ARGS, tool_call_id=TID, delta='{"category":"travel","amount":900}'
+        )
         # The framework invokes the tool HERE, on the pump's driving chain,
         # while the outer consumer is awaiting the queue.
         tid = current_tool_call_id("research_policy")
@@ -218,6 +224,7 @@ async def test_wrapper_merges_tool_enqueued_events_mid_stream():
         delegation_delta(tid, "- Pre-approval")
         delegation_delta(tid, " required")
         delegation_finished(tid)
+        yield ToolCallEndEvent(type=EventType.TOOL_CALL_END, tool_call_id=TID)
         yield ToolCallResultEvent(
             type=EventType.TOOL_CALL_RESULT, message_id="m", tool_call_id=TID, content="- Pre-approval required"
         )
@@ -227,15 +234,16 @@ async def test_wrapper_merges_tool_enqueued_events_mid_stream():
     assert [ev.type for ev in out] == [
         EventType.RUN_STARTED,
         EventType.TOOL_CALL_START,
-        EventType.TOOL_CALL_END,
+        EventType.TOOL_CALL_ARGS,
         # Child events land BETWEEN inner generator items — before the
-        # bridge's own TOOL_CALL_RESULT reaches the client.
+        # bridge's own TOOL_CALL_END/RESULT reach the client.
         EventType.SUBAGENT_STARTED,
         EventType.TEXT_MESSAGE_START,
         EventType.TEXT_MESSAGE_CONTENT,
         EventType.TEXT_MESSAGE_CONTENT,
         EventType.TEXT_MESSAGE_END,
         EventType.SUBAGENT_FINISHED,
+        EventType.TOOL_CALL_END,
         EventType.TOOL_CALL_RESULT,
         EventType.RUN_FINISHED,
     ]
@@ -243,6 +251,68 @@ async def test_wrapper_merges_tool_enqueued_events_mid_stream():
     assert started.subagent_run_id == RUN_ID
     assert started.parent_tool_call_id == TID
     assert [ev.delta for ev in out[5:7]] == ["- Pre-approval", " required"]
+
+
+async def test_same_tool_double_call_gets_distinct_tids_and_delegations():
+    # MAF runs multi-tool batches concurrently (asyncio.gather) and the
+    # bridge streams every TOOL_CALL_START before the tools execute — so
+    # two research_policy calls must each claim their OWN tid from the
+    # FIFO and drive their own delegation, never sharing one message.
+    tid2 = "call_secondResearchPolicyCall00"
+
+    async def inner(_input):
+        yield ToolCallStartEvent(
+            type=EventType.TOOL_CALL_START, tool_call_id=TID, tool_call_name="research_policy"
+        )
+        yield ToolCallStartEvent(
+            type=EventType.TOOL_CALL_START, tool_call_id=tid2, tool_call_name="research_policy"
+        )
+        # Both tool bodies run concurrently; their deltas interleave.
+        tid_a = current_tool_call_id("research_policy")
+        tid_b = current_tool_call_id("research_policy")
+        assert (tid_a, tid_b) == (TID, tid2)  # FIFO: oldest first
+        delegation_started(tid_a, "policy_researcher")
+        delegation_started(tid_b, "policy_researcher")
+        delegation_delta(tid_a, "- travel rules")
+        delegation_delta(tid_b, "- meal rules")
+        delegation_delta(tid_a, " apply")
+        delegation_finished(tid_b)
+        delegation_finished(tid_a)
+        yield ToolCallEndEvent(type=EventType.TOOL_CALL_END, tool_call_id=TID)
+        yield ToolCallEndEvent(type=EventType.TOOL_CALL_END, tool_call_id=tid2)
+
+    out = await _collect(wrap_agent_run(_FakeInner(inner)))
+
+    started = [ev for ev in out if ev.type == EventType.SUBAGENT_STARTED]
+    assert [ev.subagent_run_id for ev in started] == [f"{TID}-sub", f"{tid2}-sub"]
+    assert [ev.parent_tool_call_id for ev in started] == [TID, tid2]
+
+    # Identity separation: every child event carries its own delegation's
+    # ids — interleaved ORDER between the two runs is fine.
+    for ev in out:
+        if ev.type == EventType.TEXT_MESSAGE_CONTENT and ev.delta.startswith("- travel"):
+            assert ev.message_id == f"{TID}-sub-m1"
+        if ev.type == EventType.TEXT_MESSAGE_CONTENT and ev.delta.startswith("- meal"):
+            assert ev.message_id == f"{tid2}-sub-m1"
+    a_events = [ev for ev in out if getattr(ev, "subagent_run_id", None) == f"{TID}-sub"]
+    b_events = [ev for ev in out if getattr(ev, "subagent_run_id", None) == f"{tid2}-sub"]
+    assert [ev.type for ev in a_events] == [
+        EventType.SUBAGENT_STARTED,
+        EventType.TEXT_MESSAGE_START,
+        EventType.TEXT_MESSAGE_CONTENT,
+        EventType.TEXT_MESSAGE_CONTENT,
+        EventType.TEXT_MESSAGE_END,
+        EventType.SUBAGENT_FINISHED,
+    ]
+    assert [ev.type for ev in b_events] == [
+        EventType.SUBAGENT_STARTED,
+        EventType.TEXT_MESSAGE_START,
+        EventType.TEXT_MESSAGE_CONTENT,
+        EventType.TEXT_MESSAGE_END,
+        EventType.SUBAGENT_FINISHED,
+    ]
+    assert {ev.message_id for ev in a_events if hasattr(ev, "message_id")} == {f"{TID}-sub-m1"}
+    assert {ev.message_id for ev in b_events if hasattr(ev, "message_id")} == {f"{tid2}-sub-m1"}
 
 
 async def test_wrapper_error_path_emits_subagent_error_then_propagates():

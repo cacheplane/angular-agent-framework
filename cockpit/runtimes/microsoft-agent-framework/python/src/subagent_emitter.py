@@ -28,12 +28,18 @@ How the seam works (``SubagentEmittingAgent`` / ``wrap_agent_run``):
        TEXT_MESSAGE_START/CONTENT.../END   (streamed specialist deltas)
        SUBAGENT_FINISHED outcome=success   (or SUBAGENT_ERROR on failure)
 
-Correlation: the pump records every TOOL_CALL_START's ``toolCallId`` by
-tool name as it passes through the queue. The bridge yields the complete
-TOOL_CALL_START/ARGS/END lifecycle for the delegation call BEFORE the
-framework invokes the tool (both run on the pump task's driving chain), so
-``current_tool_call_id("research_policy")`` is deterministically populated
-by the time the tool body runs. If a caller ever invokes the tool outside
+Correlation: the pump appends every TOOL_CALL_START's ``toolCallId`` to a
+per-tool-name FIFO as it passes through the queue, and each tool body pops
+the oldest via ``current_tool_call_id`` — so a multi-tool batch calling the
+same tool twice (MAF runs batches concurrently via ``asyncio.gather``, and
+the bridge streams all TOOL_CALL_STARTs first) gives each invocation its
+own tid and its own delegation. The bridge yields TOOL_CALL_START (and the
+ARGS deltas) for the delegation call BEFORE the framework invokes the tool
+on the same driving chain, so the FIFO is deterministically populated by
+the time the tool body runs; TOOL_CALL_END arrives only AFTER the tool
+returns (measured wire order — the SUBAGENT_* sequence lands between ARGS
+and END), which is why correlation relies on START alone. If a caller ever
+invokes the tool outside
 the wrapped run, the helpers fall back to a generated ``sub-<hex8>`` run id
 with ``parentToolCallId`` omitted — and with no queue at all they are pure
 no-ops, which is what keeps unit tests and direct agent runs side-effect
@@ -80,7 +86,10 @@ class _EmitterSession:
     """Per-run channel shared between the run wrapper and the tool body."""
 
     queue: asyncio.Queue[Any]
-    tool_call_ids: dict[str, str] = field(default_factory=dict)
+    # Per-tool-name FIFO of not-yet-claimed TOOL_CALL_START toolCallIds:
+    # the pump appends, each tool body pops the oldest — one tid per call
+    # even when a batch invokes the same tool twice.
+    tool_call_ids: dict[str, list[str]] = field(default_factory=dict)
     runs: dict[str | None, _Delegation] = field(default_factory=dict)
 
 
@@ -90,15 +99,20 @@ _event_queue: ContextVar[_EmitterSession | None] = ContextVar(
 
 
 def current_tool_call_id(tool_name: str) -> str | None:
-    """The wire toolCallId of the most recent TOOL_CALL_START for a tool.
+    """Claim the oldest unclaimed TOOL_CALL_START toolCallId for a tool.
 
-    Deterministically populated before the tool body runs (see module
-    docstring); ``None`` outside a wrapped run.
+    Pops from the per-name FIFO the pump fills, so each concurrent
+    invocation of the same tool gets its own tid. Deterministically
+    populated before the tool body runs (see module docstring); ``None``
+    outside a wrapped run.
     """
     session = _event_queue.get()
     if session is None:
         return None
-    return session.tool_call_ids.get(tool_name)
+    pending = session.tool_call_ids.get(tool_name)
+    if not pending:
+        return None
+    return pending.pop(0)
 
 
 def emit(event: BaseEvent) -> None:
@@ -220,7 +234,9 @@ _DONE = object()
 
 def _record_tool_call(session: _EmitterSession, event: Any) -> None:
     if getattr(event, "type", None) == EventType.TOOL_CALL_START:
-        session.tool_call_ids[event.tool_call_name] = event.tool_call_id
+        session.tool_call_ids.setdefault(event.tool_call_name, []).append(
+            event.tool_call_id
+        )
 
 
 class SubagentEmittingAgent(AgentFrameworkAgent):
