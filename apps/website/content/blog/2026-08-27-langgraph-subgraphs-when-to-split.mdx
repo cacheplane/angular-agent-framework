@@ -98,21 +98,16 @@ namespace events get emitted because no subgraph runs. The card would
 render empty. Rejected.
 ```
 
-Then there is the conversion.
-Our `cockpit/chat/subagents` demo originally ran its three specialists as a flat in-process helper, and was rewritten to dispatch a real compiled child graph — because the flat version emitted no namespace events, so `subagents()` stayed empty and no card rendered.
-A working feature was restructured so a UI card would appear.
+Our `cockpit/chat/subagents` demo makes the same call.
+Its three specialists dispatch through a real compiled child graph because the subgraph run is what emits namespace events — and the namespace events are what the tracker turns into per-child progress.
+Run the specialists as a flat in-process helper and the feature still works; the UI just cannot see it working.
 
 In both of those graphs the compiled child is invoked from inside a `@tool` body, not wired in as a plain node.
 That is deliberate: the tool call carries the identity — an id the tracker can attribute the child's stream to, and a `subagent_type` to name it.
 
-For a long time that was also the only way into the map: plain `add_node` subgraphs streamed under a namespace nobody claimed, so [our own docs](/docs/langgraph/guides/subgraphs) were blunt that they did not show up at all.
-That is no longer true.
-The namespace segment is itself a workable identity — unique per invocation, prefixed with the node name — so a plain subgraph child now registers in `subagents()` under its namespace key the moment it first streams, named by its node.
+A plain `add_node` subgraph has an identity too, just a thinner one.
+Its namespace segment is unique per invocation and prefixed with the node name, so it registers in `subagents()` under its namespace key the moment it first streams, named by its node.
 The subgraph is what makes the events observable; the tool call upgrades that identity from a node name to a real delegation record, with arguments a UI can render.
-
-Which cuts the other way from how it sounds — plain `add_node` subgraphs make the visibility point sharper, not weaker.
-Nothing about them was ever invisible.
-The framework was simply the last to admit it.
 
 ## What does the frontend see while a child runs?
 
@@ -125,7 +120,7 @@ The event type carries the namespace after a pipe, so the base type is the part 
 
 ```text
 messages                 # parent
-messages|tools:call-1    # child run dispatched by tool call "call-1"
+messages|tools:<uuid>    # a child run, streaming under its own namespace
 ```
 
 Our transport requests those child streams by default — `streamSubgraphs` is `true` unless you turn it off.
@@ -142,43 +137,40 @@ If you ever write a transport against this stream yourself, that is the bug you 
 
 ### Where child text goes
 
-Onto the child's stream — and, as of this week, nowhere else.
+Onto the child's stream — and nowhere else.
 
 Any consumer reading a namespaced stream has to decide what a child's tokens mean, and "append them like everything else" is the path of least resistance.
-Ours took that path for a long time: child tokens merged into `messages()` unless an opt-out flag was set, and the flag itself only fired for `tools:` namespaces — so for a plain subgraph node it silently did nothing, and the child's internal notes rendered as their own chat bubble mid-stream.
+It is also a trap, and a well-hidden one.
+Merge a child's tokens into the transcript and its internal notes render as their own chat bubble mid-stream — then the parent's final `values` event rewrites the message list from authoritative graph state, and the stray bubble disappears on its own.
+The end state looks right.
+The streaming pass did not.
 
-What made that bug expensive is that it self-corrected.
-The parent's final `values` event rewrites the message list from authoritative graph state, so the stray bubble disappeared on its own once the run settled.
-Assert on the finished DOM and everything looks right.
-Watch the streaming pass and you would see the child's notes appear and then vanish.
-A final-state test cannot catch it — we found it by watching a live model with the DOM under a polling probe.
-
-The fix was to stop making it a decision at all.
+So we do not make it a decision at all.
 A namespaced event belongs to its child, structurally: it feeds that child's `messages()` on the subagent stream and never merges into the parent transcript.
-The opt-out flag is gone because there is nothing left to opt out of.
+There is no opt-out flag because there is nothing to opt out of.
 What the transcript shows at settle is decided by state — a shared `messages` key delivers the child's message through the final `values` sync; an isolated child schema means it never arrives.
 `transcriptNodeNames` still exists for the genuinely separate problem of *top-level* side-effect nodes, like routers and title generators.
 
 ### How does a child get attributed?
 
-By id — and this is the part I find well-designed: the namespace segment _is_ the identifier.
+By an announced binding — and this is the part of the design I would steal for any protocol.
 
-`tools:<id>` carries the parent tool call id, so the tracker slices the prefix off and looks the id up directly against what it recorded when the tool call came through.
-Marking a child running and routing its messages need no matching at all.
+The `tools:<uuid>` namespace a child streams under is a checkpoint id, assigned independently of the parent's tool-call id — nothing on the wire links the two.
+But the server knows both halves.
+So the graph announces the pair: one custom event pairing the child's checkpoint namespace with its tool-call id, emitted from inside the tool body.
+The tracker treats that binding as authoritative — it never overrides an established mapping, it works with any number of children in flight, and it replays any chunks that streamed before the binding arrived.
 
-There is also a description-comparison ladder — exact match on the tool call's `description` argument, then substring either direction, then a last-resort fallback to any unmapped subagent still pending or running.
-It only runs for children whose state opens with a human message, and none of the graphs we ship reach it.
-The ones dispatched through a tool call invoke the child with an empty message list, so the first message in child state is the AI response.
-The one wired in as a plain node does not keep a `messages` key in child state at all.
-Treat that path as untested rather than as the mechanism.
+There is also a description-comparison ladder for graphs that do not announce — exact match on the tool call's `description` argument, then substring either direction, then a positional fallback that only fires when exactly one unmapped subagent is still pending or running.
+That last rung is deliberately conservative.
+With parallel children in flight, guessing would cross-wire one card's output into another, so an unattributed stream stays buffered instead — an empty card beats a confidently wrong one.
 
-The general point survives, though, and it is the one worth carrying to any protocol.
-A consumer mapping child runs onto delegations is doing string matching unless the protocol gives it an id.
-LangGraph gives it an id — which is why the ladder is vestigial here and would be load-bearing in a fan-out graph with look-alike children.
+The general point is the one worth carrying to any protocol.
+A consumer mapping child runs onto delegations is doing string matching unless something hands it an id.
+Here the graph hands it one — which is why the ladder is a fallback, and why it would be load-bearing in a stack that cannot announce.
 
-One limit, though: only the _first_ `tools:` segment of a namespace is read.
-A subagent that itself delegates will have its inner events attributed to the outer tool call.
-Nothing in this repo exercises deeper nesting, so do not build on it.
+Nesting is worth knowing about too.
+A subagent that itself delegates gets its own entry in `subagents()`, keyed by its namespace path, the same way a plain subgraph node does.
+Each level of delegation surfaces as its own stream; the map stays flat, so there is no parent/child tree to walk.
 
 ## When should you not split?
 
