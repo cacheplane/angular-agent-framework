@@ -19,9 +19,10 @@ const SLUG = 'pilot-journey';
  * Gate pills mark every transition the page's copy actually names an
  * artifact for: Discover's own row api is literally "roadmap" (carried into
  * Build), Build's headline is literally "Ship a working agent on your real
- * data" (the thing Harden then hardens), and Harden's own roadmap row is
- * literally "Train your team · handoff" (the page's own week-8 close, not a
- * fourth phase — Harden is still the last FeatureBlock). All three pills
+ * data" (the thing Harden then hardens), and the "Roadmap draft" panel in
+ * the Discover block ends on a row that is literally "W8 · Train your team ·
+ * handoff" (the page's own week-8 close, not a fourth phase — Harden is
+ * still the last FeatureBlock). All three pills
  * stay neutral so they read as hand-offs, not payoffs; the terminal one
  * after Harden has no outbound arrow since there is no fourth node. The
  * Harden node carries the sole accent: it is what the customer is left
