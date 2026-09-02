@@ -49,6 +49,12 @@ describe('Dawn generated storage isolation', () => {
     ) as Record<string, unknown>;
     const tsconfig = JSON.parse(
       readFileSync(resolve(process.cwd(), 'apps/lifecycle/tsconfig.json'), 'utf8')
+    ) as { compilerOptions?: Record<string, unknown>; extends?: string };
+    const runtimeTsconfigBase = JSON.parse(
+      readFileSync(
+        resolve(process.cwd(), 'apps/lifecycle/tsconfig.runtime-base.json'),
+        'utf8'
+      )
     ) as { compilerOptions?: Record<string, unknown> };
     const config = (await import('../dawn.config.js')).default;
     expect(packageJson['engines']).toEqual({ node: '>=24.0.0' });
@@ -71,6 +77,13 @@ describe('Dawn generated storage isolation', () => {
       'api/[...path].ts': { maxDuration: 60 },
     });
     expect(vercel['outputDirectory']).toBe('public');
+    expect(tsconfig.extends).toBe('./tsconfig.runtime-base.json');
+    expect(runtimeTsconfigBase.compilerOptions).toMatchObject({
+      composite: false,
+      declaration: false,
+      declarationMap: false,
+      emitDeclarationOnly: false,
+    });
     expect(tsconfig.compilerOptions?.['noEmit']).toBe(false);
     expect(tsconfig.compilerOptions?.['noEmitOnError']).toBe(false);
     expect(
