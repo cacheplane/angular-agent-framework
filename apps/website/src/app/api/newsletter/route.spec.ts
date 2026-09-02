@@ -35,7 +35,6 @@ vi.mock('../../../lib/growth/form-route', async (importOriginal) => ({
 // These no-op modules isolate the legacy handler during the required RED run.
 vi.mock('../../../../lib/resend', () => ({
   FROM: '',
-  NOTIFY_TO: '',
   addToAudience: vi.fn(),
   sendEmail: vi.fn(),
 }));
@@ -44,8 +43,7 @@ vi.mock('../../../../lib/loops', () => ({
   loopsUpsertContact: vi.fn(),
 }));
 vi.mock('../../../lib/analytics/server', () => ({
-  captureLeadConversion: vi.fn(),
-  captureLeadQualified: vi.fn(),
+  captureNewsletterConversion: vi.fn(),
 }));
 
 import type { PublicFormPolicy } from '../../../lib/growth/form-policy';
@@ -70,11 +68,8 @@ const keyring = {
   },
 };
 
-function request(
-  body: BodyInit | unknown,
-  contentType = 'application/json'
-): Request {
-  return new Request('https://threadplane.ai/api/leads', {
+function request(body: BodyInit | unknown, contentType = 'application/json'): Request {
+  return new Request('https://threadplane.ai/api/newsletter', {
     method: 'POST',
     headers: contentType ? { 'content-type': contentType } : undefined,
     body: typeof body === 'string' ? body : JSON.stringify(body),
@@ -86,11 +81,7 @@ function validBody(overrides: Record<string, unknown> = {}) {
     submission_id: submissionId,
     policy_version: policy.version,
     acquisition_session_id: acquisitionSessionId,
-    form_kind: 'contact',
     email: '  Reader@Acme.COM  ',
-    name: '  Reader  ',
-    company: '  Acme  ',
-    message: '  How do interrupts work?  ',
     ...overrides,
   };
 }
@@ -133,8 +124,8 @@ beforeEach(() => {
   seam.nudge.mockResolvedValue(undefined);
 });
 
-describe('/api/leads growth_v1', () => {
-  it('commits the disclosed contact submission, closes Neon, then nudges', async () => {
+describe('/api/newsletter growth_v1', () => {
+  it('commits the disclosed newsletter, closes Neon, then nudges', async () => {
     const response = await POST(request(validBody()));
 
     expect(response.status).toBe(200);
@@ -142,13 +133,11 @@ describe('/api/leads growth_v1', () => {
     expect(seam.accept).toHaveBeenCalledWith(expect.anything(), {
       submissionId,
       email: 'reader@acme.com',
-      displayName: 'Reader',
-      companyName: 'Acme',
-      form: { kind: 'contact', message: 'How do interrupts work?' },
+      form: { kind: 'newsletter' },
       source: 'website',
-      sourceForm: 'contact',
-      noticeText: policy.disclosures.contact,
-      noticeVersion: `${policy.version}.contact`,
+      sourceForm: 'newsletter',
+      noticeText: policy.disclosures.newsletter,
+      noticeVersion: `${policy.version}.newsletter`,
       policyVersion: policy.version,
       acquisitionSessionId,
       occurredAt,
@@ -158,43 +147,6 @@ describe('/api/leads growth_v1', () => {
     expect(JSON.stringify(seam.nudge.mock.calls)).not.toContain(
       'reader@acme.com'
     );
-    expectCommittedBeforeNudge();
-  });
-
-  it('commits a pricing submission with its qualifying answers', async () => {
-    const response = await POST(
-      request(
-        validBody({
-          form_kind: 'pricing',
-          team_size: '6-25',
-          timeline: 'this_quarter',
-          pilot_interest: 'yes',
-        })
-      )
-    );
-
-    expect(response.status).toBe(200);
-    expect(seam.accept).toHaveBeenCalledWith(expect.anything(), {
-      submissionId,
-      email: 'reader@acme.com',
-      displayName: 'Reader',
-      companyName: 'Acme',
-      form: {
-        kind: 'pricing',
-        message: 'How do interrupts work?',
-        teamSize: '6-25',
-        timeline: 'this_quarter',
-        pilotInterest: 'yes',
-      },
-      source: 'website',
-      sourceForm: 'pricing',
-      noticeText: policy.disclosures.contact,
-      noticeVersion: `${policy.version}.pricing`,
-      policyVersion: policy.version,
-      acquisitionSessionId,
-      occurredAt,
-      keyring,
-    });
     expectCommittedBeforeNudge();
   });
 
@@ -223,37 +175,18 @@ describe('/api/leads growth_v1', () => {
     ['non-object JSON', request('null')],
     ['missing content type', request(JSON.stringify(validBody()), '')],
     ['invalid content type', request(JSON.stringify(validBody()), 'text/plain')],
-    [
-      'oversized body',
-      request(JSON.stringify({ padding: 'x'.repeat(20_000) })),
-    ],
-  ])(
-    'rejects %s before reading policy or durable state',
-    async (_label, input) => {
-      const response = await POST(input);
+    ['oversized body', request(JSON.stringify({ padding: 'x'.repeat(10_000) }))],
+  ])('rejects %s before reading policy or durable state', async (_label, input) => {
+    const response = await POST(input);
 
-      expect(response.status).toBe(400);
-      expect(seam.getPolicy).not.toHaveBeenCalled();
-      expect(seam.createDatabase).not.toHaveBeenCalled();
-    }
-  );
+    expect(response.status).toBe(400);
+    expect(seam.getPolicy).not.toHaveBeenCalled();
+    expect(seam.createDatabase).not.toHaveBeenCalled();
+  });
 
   it.each([
     ['invalid submission UUID', { submission_id: 'not-a-uuid' }],
     ['invalid acquisition UUID', { acquisition_session_id: 'not-a-uuid' }],
-    ['missing form kind', { form_kind: undefined }],
-    ['unsupported form kind', { form_kind: 'whitepaper' }],
-    ['form kind wrong type', { form_kind: ['contact'] }],
-    ['name too long', { name: 'n'.repeat(201) }],
-    ['name wrong type', { name: { nested: true } }],
-    ['company too long', { company: 'c'.repeat(201) }],
-    ['message too long', { message: 'm'.repeat(2_001) }],
-    ['unsupported team size', { form_kind: 'pricing', team_size: '1000+' }],
-    ['unsupported timeline', { form_kind: 'pricing', timeline: 'someday' }],
-    [
-      'unsupported pilot interest',
-      { form_kind: 'pricing', pilot_interest: 'perhaps' },
-    ],
   ])('rejects %s before opening Neon', async (_label, overrides) => {
     const response = await POST(request(validBody(overrides)));
 
@@ -269,9 +202,7 @@ describe('/api/leads growth_v1', () => {
     'reader @example.com',
     `${'a'.repeat(250)}@example.com`,
   ])('rejects an invalid email without echoing or logging it', async (email) => {
-    const consoleError = vi
-      .spyOn(console, 'error')
-      .mockImplementation(() => undefined);
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const response = await POST(request(validBody({ email })));
     const responseBody = await response.json();
 
@@ -353,10 +284,9 @@ describe('/api/leads growth_v1', () => {
       async execute(sql, parameters = []) {
         if (!sql.includes('growth:enqueue-form-jobs')) return { rows: [] };
         const replaySubmissionId = String(parameters[2]);
-        const kinds =
-          parameters[3] === true
-            ? ['fulfill', 'enrich', 'notify']
-            : ['fulfill'];
+        const kinds = parameters[3] === true
+          ? ['fulfill', 'enrich', 'notify']
+          : ['fulfill'];
         for (const kind of kinds) {
           const key = `form:${replaySubmissionId}:${kind}`;
           if (!jobKeys.has(key)) {

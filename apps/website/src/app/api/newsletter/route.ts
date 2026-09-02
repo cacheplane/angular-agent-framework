@@ -1,49 +1,106 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { sendEmail, FROM, addToAudience } from '../../../../lib/resend';
-import { loopsUpsertContact, loopsSendEvent } from '../../../../lib/loops';
-import { newsletterWelcomeHtml } from '../../../../emails/newsletter-welcome';
-import { captureNewsletterConversion } from '../../../lib/analytics/server';
-import { getSourcePage } from '@threadplane/telemetry/shared';
+import { normalizeRecipientEmail } from '@threadplane-internal/growth';
 
-export async function POST(req: NextRequest) {
-  let body: { email?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
-  }
+import { matchesSubmittedFormPolicy } from '../../../lib/growth/form-policy';
+import {
+  defaultGrowthFormRouteDependencies,
+  jsonResponse,
+  readBoundedJsonObject,
+  stalePolicyResponse,
+  strictText,
+  validGrowthFormIdentities,
+  type GrowthFormRouteDependencies,
+} from '../../../lib/growth/form-route';
 
-  const email = (body.email || '').trim().slice(0, 320);
-  const sourcePage = getSourcePage(req.headers.get('referer'));
+const MAX_BODY_BYTES = 8_192;
 
-  if (!email || !email.includes('@')) {
-    return NextResponse.json({ error: 'Valid email required' }, { status: 400 });
-  }
+export function createNewsletterRoute(
+  dependencies: GrowthFormRouteDependencies = defaultGrowthFormRouteDependencies()
+): { POST: (request: Request) => Promise<Response> } {
+  return {
+    async POST(request: Request): Promise<Response> {
+      const body = await readBoundedJsonObject(request, MAX_BODY_BYTES);
+      if (!body) return jsonResponse({ error: 'Invalid JSON' }, 400);
 
-  // Resend: welcome email + audience (best-effort)
-  try {
-    await Promise.all([
-      sendEmail({
-        from: FROM,
-        to: email,
-        subject: 'Welcome to Threadplane updates',
-        html: newsletterWelcomeHtml(),
-      }),
-      addToAudience(email),
-      loopsUpsertContact({
-        email,
-        source: 'newsletter',
-      }),
-      loopsSendEvent({
-        email,
-        eventName: 'newsletter_subscribed',
-      }),
-    ]);
-  } catch (err) {
-    console.error('[resend] newsletter signup failed:', err);
-  }
+      let policy;
+      try {
+        policy = dependencies.getPolicy();
+      } catch {
+        return jsonResponse({ error: 'Unable to accept request' }, 503);
+      }
 
-  await captureNewsletterConversion({ email, sourcePage });
+      let submissionId;
+      let acquisitionSessionId;
+      let email;
+      try {
+        const policyVersion = strictText(body, 'policy_version', 100);
+        if (!matchesSubmittedFormPolicy(policy, policyVersion || undefined)) {
+          return stalePolicyResponse(policy);
+        }
+        submissionId = strictText(body, 'submission_id', 36);
+        acquisitionSessionId = strictText(body, 'acquisition_session_id', 36);
+        email = strictText(body, 'email', 254);
+      } catch {
+        return jsonResponse({ error: 'Invalid form submission' }, 400);
+      }
+      if (!validGrowthFormIdentities(submissionId, acquisitionSessionId)) {
+        return jsonResponse({ error: 'Invalid submission' }, 400);
+      }
 
-  return NextResponse.json({ ok: true });
+      let normalizedEmail;
+      try {
+        normalizedEmail = normalizeRecipientEmail(email);
+      } catch {
+        return jsonResponse({ error: 'Valid email required' }, 400);
+      }
+
+      let database;
+      let keyring;
+      try {
+        keyring = dependencies.loadKeyring();
+        database = dependencies.createDatabase();
+      } catch {
+        return jsonResponse({ error: 'Unable to accept request' }, 503);
+      }
+
+      let accepted = false;
+      try {
+        await dependencies.accept(database, {
+          submissionId,
+          email: normalizedEmail,
+          form: { kind: 'newsletter' },
+          source: 'website',
+          sourceForm: 'newsletter',
+          noticeText: policy.disclosures.newsletter,
+          noticeVersion: `${policy.version}.newsletter`,
+          policyVersion: policy.version,
+          acquisitionSessionId: acquisitionSessionId || undefined,
+          occurredAt: dependencies.now(),
+          keyring,
+        });
+        accepted = true;
+      } catch {
+        // The response below reports the failure without echoing provider detail.
+      }
+
+      try {
+        await database.close?.();
+      } catch {
+        return unableToAccept();
+      }
+      if (!accepted) return unableToAccept();
+
+      // The durable jobs remain available to the scheduled dispatcher.
+      await dependencies.nudge({ submissionId }).catch(() => undefined);
+      return jsonResponse({ ok: true });
+    },
+  };
 }
+
+function unableToAccept(): Response {
+  return jsonResponse(
+    { error: 'Unable to accept request', retryable: true },
+    503
+  );
+}
+
+export const { POST } = createNewsletterRoute();

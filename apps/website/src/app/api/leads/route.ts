@@ -1,73 +1,158 @@
-import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-import { sendEmail, FROM, NOTIFY_TO, addToAudience } from '../../../../lib/resend';
-import { loopsUpsertContact, loopsSendEvent } from '../../../../lib/loops';
-import { leadNotificationHtml } from '../../../../emails/lead-notification';
-import { captureLeadConversion, captureLeadQualified } from '../../../lib/analytics/server';
-import { getSourcePage } from '@threadplane/telemetry/shared';
+import {
+  normalizeRecipientEmail,
+  type FormSubmission,
+} from '@threadplane-internal/growth';
 
-const LEADS_FILE = path.join(process.cwd(), 'data', 'leads.ndjson');
+import { matchesSubmittedFormPolicy } from '../../../lib/growth/form-policy';
+import {
+  defaultGrowthFormRouteDependencies,
+  jsonResponse,
+  readBoundedJsonObject,
+  stalePolicyResponse,
+  strictOptionalEnum,
+  strictText,
+  validGrowthFormIdentities,
+  type GrowthFormRouteDependencies,
+} from '../../../lib/growth/form-route';
 
-export async function POST(req: NextRequest) {
-  let body: { name?: unknown; email?: unknown; company?: unknown; message?: unknown };
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
-  }
+const MAX_BODY_BYTES = 16_384;
 
-  const sanitize = (v: unknown, max = 500): string =>
-    typeof v === 'string' ? v.slice(0, max).trim() : '';
+const TEAM_SIZES = ['1-5', '6-25', '26-100', '100+'] as const;
+const TIMELINES = [
+  'this_quarter',
+  'next_quarter',
+  '6_plus_months',
+  'exploring',
+] as const;
+const PILOT_INTERESTS = ['yes', 'maybe', 'no'] as const;
 
-  const name = sanitize(body.name, 200);
-  const email = sanitize(body.email, 320);
-  const company = sanitize(body.company, 200);
-  const message = sanitize(body.message, 2000);
+export function createLeadRoute(
+  dependencies: GrowthFormRouteDependencies = defaultGrowthFormRouteDependencies()
+): { POST: (request: Request) => Promise<Response> } {
+  return {
+    async POST(request: Request): Promise<Response> {
+      const body = await readBoundedJsonObject(request, MAX_BODY_BYTES);
+      if (!body) return jsonResponse({ error: 'Invalid JSON' }, 400);
 
-  if (!email || !email.includes('@')) {
-    return NextResponse.json({ error: 'Valid email required' }, { status: 400 });
-  }
+      let policy;
+      try {
+        policy = dependencies.getPolicy();
+      } catch {
+        return jsonResponse({ error: 'Unable to accept request' }, 503);
+      }
 
-  const ts = new Date().toISOString();
-  const sourcePage = getSourcePage(req.headers.get('referer'));
+      try {
+        const policyVersion = strictText(body, 'policy_version', 100);
+        if (!matchesSubmittedFormPolicy(policy, policyVersion || undefined)) {
+          return stalePolicyResponse(policy);
+        }
+      } catch {
+        return jsonResponse({ error: 'Invalid form submission' }, 400);
+      }
 
-  // NDJSON backup (always writes, even if Resend fails)
-  try {
-    fs.mkdirSync(path.dirname(LEADS_FILE), { recursive: true });
-    fs.appendFileSync(LEADS_FILE, JSON.stringify({ name, email, company, message, ts }) + '\n', 'utf8');
-  } catch (err) {
-    console.error('[leads] NDJSON write failed:', err);
-  }
+      const formKind = body['form_kind'];
+      if (formKind !== 'contact' && formKind !== 'pricing') {
+        return jsonResponse({ error: 'Invalid form' }, 400);
+      }
 
-  // Resend: email notification + audience (best-effort)
-  try {
-    await Promise.all([
-      sendEmail({
-        from: FROM,
-        to: NOTIFY_TO,
-        subject: `New lead: ${name || email}${company ? ` at ${company}` : ''}`,
-        html: leadNotificationHtml({ name, email, company, message, ts }),
-      }),
-      addToAudience(email, name),
-      loopsUpsertContact({
-        email,
-        firstName: name,
-        source: 'lead-form',
-        properties: { company },
-      }),
-      loopsSendEvent({
-        email,
-        eventName: 'lead_submitted',
-        properties: { company },
-      }),
-    ]);
-  } catch (err) {
-    console.error('[resend] lead notification failed:', err);
-  }
+      let submissionId;
+      let acquisitionSessionId;
+      let email;
+      let name;
+      let company;
+      let message;
+      let teamSize;
+      let timeline;
+      let pilotInterest;
+      try {
+        submissionId = strictText(body, 'submission_id', 36);
+        acquisitionSessionId = strictText(body, 'acquisition_session_id', 36);
+        email = strictText(body, 'email', 254);
+        name = strictText(body, 'name', 200);
+        company = strictText(body, 'company', 200);
+        message = strictText(body, 'message', 2_000);
+        teamSize = strictOptionalEnum(body, 'team_size', TEAM_SIZES);
+        timeline = strictOptionalEnum(body, 'timeline', TIMELINES);
+        pilotInterest = strictOptionalEnum(
+          body,
+          'pilot_interest',
+          PILOT_INTERESTS
+        );
+      } catch {
+        return jsonResponse({ error: 'Invalid form submission' }, 400);
+      }
+      if (!validGrowthFormIdentities(submissionId, acquisitionSessionId)) {
+        return jsonResponse({ error: 'Invalid submission' }, 400);
+      }
 
-  await captureLeadConversion({ email, company, sourcePage });
-  await captureLeadQualified({ email, company, sourcePage });
+      let normalizedEmail;
+      try {
+        normalizedEmail = normalizeRecipientEmail(email);
+      } catch {
+        return jsonResponse({ error: 'Valid email required' }, 400);
+      }
 
-  return NextResponse.json({ ok: true });
+      const form: FormSubmission =
+        formKind === 'contact'
+          ? { kind: 'contact', ...(message ? { message } : {}) }
+          : {
+              kind: 'pricing',
+              ...(message ? { message } : {}),
+              ...(teamSize ? { teamSize } : {}),
+              ...(timeline ? { timeline } : {}),
+              ...(pilotInterest ? { pilotInterest } : {}),
+            };
+
+      let database;
+      let keyring;
+      try {
+        keyring = dependencies.loadKeyring();
+        database = dependencies.createDatabase();
+      } catch {
+        return jsonResponse({ error: 'Unable to accept request' }, 503);
+      }
+
+      let accepted = false;
+      try {
+        await dependencies.accept(database, {
+          submissionId,
+          email: normalizedEmail,
+          displayName: name || undefined,
+          companyName: company || undefined,
+          form,
+          source: 'website',
+          sourceForm: formKind,
+          noticeText: policy.disclosures.contact,
+          noticeVersion: `${policy.version}.${formKind}`,
+          policyVersion: policy.version,
+          acquisitionSessionId: acquisitionSessionId || undefined,
+          occurredAt: dependencies.now(),
+          keyring,
+        });
+        accepted = true;
+      } catch {
+        // The response below reports the failure without echoing provider detail.
+      }
+
+      try {
+        await database.close?.();
+      } catch {
+        return unableToAccept();
+      }
+      if (!accepted) return unableToAccept();
+
+      // The durable jobs remain available to the scheduled dispatcher.
+      await dependencies.nudge({ submissionId }).catch(() => undefined);
+      return jsonResponse({ ok: true });
+    },
+  };
 }
+
+function unableToAccept(): Response {
+  return jsonResponse(
+    { error: 'Unable to accept request', retryable: true },
+    503
+  );
+}
+
+export const { POST } = createLeadRoute();
