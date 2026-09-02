@@ -117,6 +117,15 @@ test.describe('Docs slug page', () => {
 
   test('heading permalinks carry no glyph in the text, only a CSS ::before', async ({ page }) => {
     await page.goto(route);
+
+    // The workspace shell re-renders the article on hydration; before that,
+    // computed styles on its subtree can read as empty on a cold CI server.
+    // Same gate the control-plane tests above use.
+    await expect(page.locator('[data-workspace-shell]')).toHaveAttribute(
+      'data-hydrated',
+      'true',
+    );
+
     const h2 = page.locator('article h2').first();
     await expect(h2).toBeVisible();
 
@@ -127,10 +136,14 @@ test.describe('Docs slug page', () => {
     // ...which means the visible affordance hangs entirely on one CSS rule
     // (`.docs-prose h2 .heading-anchor::before` in global.css). jsdom cannot
     // resolve pseudo-element content, so this is the only place it is guarded.
+    // Poll: stylesheet application can trail hydration on a cold dev server.
     const anchor = h2.locator('a.heading-anchor');
     await expect(anchor).toHaveCount(1);
-    const glyph = await anchor.evaluate((el) => getComputedStyle(el, '::before').content);
-    expect(glyph).toBe('"#"');
+    await expect
+      .poll(() =>
+        anchor.evaluate((el) => getComputedStyle(el, '::before').content)
+      )
+      .toBe('"#"');
   });
 
   test('breadcrumb renders exactly once', async ({ page }) => {
