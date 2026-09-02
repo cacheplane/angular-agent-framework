@@ -18,4 +18,12 @@ describe('HomeConceptGrid', () => {
     const { container } = render(<HomeConceptGrid />);
     expect(container.querySelector('section')?.getAttribute('aria-labelledby')).toBe('how-it-works-heading');
   });
+
+  it("phrases thread durability as the backend's job (spec §5 gate)", () => {
+    const { container } = render(<HomeConceptGrid />);
+    const sentences = Array.from(container.querySelectorAll('.home-concept-sentence')).map((p) => p.textContent ?? '');
+    const ship = sentences.find((s) => s.includes('Threads'));
+    expect(ship).toContain('persistent backend');
+    expect(ship).not.toMatch(/they outlast/);
+  });
 });

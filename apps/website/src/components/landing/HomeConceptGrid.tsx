@@ -23,13 +23,13 @@ const CARDS: ConceptCard[] = [
   {
     anchor: '#render',
     title: 'Render',
-    sentence: 'Agent output arrives as a spec and renders as your own components.',
+    sentence: 'A JSON spec resolves through your registry into components you already own.',
     diagram: <RenderConcept />,
   },
   {
     anchor: '#ship',
     title: 'Ship',
-    sentence: 'Threads live behind the contract, not in components — a persistent backend carries them across reloads and deploys.',
+    sentence: 'Threads live behind the contract — a persistent backend carries them across reloads and deploys.',
     diagram: <ShipConcept />,
   },
   {
