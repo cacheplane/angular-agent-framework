@@ -553,6 +553,18 @@ const DispatchStateSchema = z
   })
   .strict();
 
+const PersistedWorkflowThreadSchema = z
+  .object({
+    metadata: z
+      .object({
+        route: z.literal(ROUTE),
+      })
+      .passthrough(),
+    status: z.literal('idle'),
+    thread_id: z.string(),
+  })
+  .passthrough();
+
 async function parseJsonResponse(response: Response): Promise<unknown> {
   const text = await response.text();
   try {
@@ -764,17 +776,16 @@ export async function probeLifecyclePreview(
   const persisted = await lifecycleRequest(
     dependencies,
     'b',
-    `/threads/${encodeURIComponent(namedThread)}/state`,
+    `/threads/${encodeURIComponent(namedThread)}`,
     { method: 'GET' }
   );
-  const persistedBody = await parseJsonResponse(persisted);
-  const persistedValues =
-    persistedBody && typeof persistedBody === 'object'
-      ? (persistedBody as Record<string, unknown>)['values']
-      : undefined;
+  const persistedBody = PersistedWorkflowThreadSchema.safeParse(
+    await parseJsonResponse(persisted)
+  );
   if (
     persisted.status !== 200 ||
-    !DispatchStateSchema.safeParse(persistedValues).success
+    !persistedBody.success ||
+    persistedBody.data.thread_id !== namedThread
   ) {
     throw new DogfoodHarnessError('persistence_probe_failed');
   }
@@ -860,7 +871,7 @@ export async function probeLifecyclePreview(
       {
         name: 'fresh-instance-persistence',
         status: 'PASS',
-        actual: { stateSchemaValid: true },
+        actual: { threadRecordValid: true },
       },
     ],
   };
@@ -886,7 +897,29 @@ async function preflightDawnFixtures(
       { method: 'GET' }
     );
     if (response.status === 404) {
-      missingCount += 1;
+      const threadResponse = await lifecycleRequest(
+        dependencies,
+        instance,
+        `/threads/${encodeURIComponent(id)}`,
+        { method: 'GET' }
+      );
+      if (threadResponse.status === 404) {
+        missingCount += 1;
+        continue;
+      }
+      if (threadResponse.status !== 200) {
+        throw new DogfoodHarnessError('dawn_cleanup_preflight_failed');
+      }
+      const persistedThread = PersistedWorkflowThreadSchema.safeParse(
+        await parseJsonResponse(threadResponse)
+      );
+      if (
+        !persistedThread.success ||
+        persistedThread.data.thread_id !== id
+      ) {
+        throw new DogfoodHarnessError('dawn_fixture_marker_mismatch');
+      }
+      markedIds.push(id);
       continue;
     }
     if (response.status !== 200) {

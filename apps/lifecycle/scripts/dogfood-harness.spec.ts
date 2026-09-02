@@ -391,18 +391,10 @@ describe('preview dogfood probes', () => {
           return Response.json({ code: 'no_run_in_flight' }, { status: 409 });
         }
         if (url.pathname.endsWith('/state')) {
-          return Response.json({
-            values: {
-              trigger: 'cron',
-              dogfood_fixture_marker: 'threadplane-preview-dogfood-v1',
-              result: {
-                leased: 0,
-                dispatched: 0,
-                recoveryPaused: false,
-                operatorAlerts: [],
-              },
-            },
-          });
+          return Response.json(
+            { error: 'No checkpoint found for thread' },
+            { status: 404 }
+          );
         }
         if (url.pathname.endsWith('/runs/wait')) {
           const isDuplicate = url.pathname.includes('00000000020');
@@ -416,6 +408,16 @@ describe('preview dogfood probes', () => {
               recoveryPaused: false,
               operatorAlerts: [],
             },
+          });
+        }
+        if (request.method === 'GET' && url.pathname.startsWith('/threads/')) {
+          const threadId = decodeURIComponent(url.pathname.split('/').at(-1) ?? '');
+          return Response.json({
+            created_at: '2026-09-01T00:00:00.000Z',
+            metadata: { route: '/dispatch#workflow' },
+            status: 'idle',
+            thread_id: threadId,
+            updated_at: '2026-09-01T00:00:00.000Z',
           });
         }
         return Response.json({ status: 'idle' });
@@ -479,25 +481,26 @@ describe('preview dogfood probes', () => {
         const id = decodeURIComponent(
           request.method === 'DELETE'
             ? segments.at(-1) ?? ''
-            : segments.at(-2) ?? ''
+            : url.pathname.endsWith('/state')
+            ? segments.at(-2) ?? ''
+            : segments.at(-1) ?? ''
         );
         if (request.method === 'DELETE') {
           deleted.push(id);
           existing.delete(id);
           return new Response(null, { status: 204 });
         }
+        if (url.pathname.endsWith('/state')) {
+          return Response.json(
+            { error: 'No checkpoint found for thread' },
+            { status: 404 }
+          );
+        }
         return existing.has(id)
           ? Response.json({
-              values: {
-                trigger: 'cron',
-                dogfood_fixture_marker: 'threadplane-preview-dogfood-v1',
-                result: {
-                  leased: 0,
-                  dispatched: 0,
-                  recoveryPaused: false,
-                  operatorAlerts: [],
-                },
-              },
+              metadata: { route: '/dispatch#workflow' },
+              status: 'idle',
+              thread_id: id,
             })
           : Response.json({ error: 'Thread not found' }, { status: 404 });
       }
