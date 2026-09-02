@@ -614,7 +614,8 @@ export async function readLifecycleJobContext(
        from growth_activity a
        where a.contact_id = c.id
          and a.kind = 'contact.form_submission'
-         and a.event_key = 'form:' || target.payload->>'submission_id' || ':accepted'
+         and a.event_key =
+             'form:' || (target.payload->>'submission_id') || ':accepted'
        limit 1
      ) submission on true
      left join lateral (

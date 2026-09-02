@@ -389,6 +389,9 @@ describe('job leasing', () => {
         expect(sql).toMatch(/'team_size', a\.data->'team_size'/u);
         expect(sql).toMatch(/'timeline', a\.data->'timeline'/u);
         expect(sql).toMatch(/contact\.form_submission/u);
+        expect(sql).toMatch(
+          /'form:' \|\| \(target\.payload->>'submission_id'\) \|\| ':accepted'/u
+        );
         expect(sql).not.toMatch(/form\.outreach_approved/u);
         expect(sql).toMatch(/campaign\.enrolled:v1/u);
         expect(sql).toMatch(/enrichment\.v1/u);
