@@ -125,6 +125,14 @@ describe('CI workflow', () => {
     return readJobBlock(await readWorkflow(), 'required-pr-checks');
   }
 
+  async function readGrowthLifecycleJob() {
+    return readJobBlock(await readWorkflow(), 'growth-lifecycle');
+  }
+
+  async function readLifecycleJob() {
+    return readJobBlock(await readWorkflow(), 'lifecycle');
+  }
+
   async function readPostHogQualityWorkflow() {
     return readFile('.github/workflows/posthog-quality.yml', 'utf8');
   }
@@ -530,6 +538,41 @@ describe('CI workflow', () => {
     );
   });
 
+  it('exports the growth lifecycle scope and runs its Node 22 lane', async () => {
+    const workflow = await readWorkflow();
+    const scopeJob = readJobBlock(workflow, 'ci-scope');
+    const job = await readGrowthLifecycleJob();
+
+    assert.match(
+      scopeJob,
+      /growth_lifecycle:\s*\$\{\{ steps\.scope\.outputs\.growth_lifecycle \}\}/
+    );
+    assert.match(job, /needs\.ci-scope\.outputs\.growth_lifecycle == 'true'/);
+    assert.match(job, /node-version:\s*22(?:\s|$)/m);
+    assert.match(job, /npx nx lint growth(?:\s|$)/m);
+    assert.match(job, /npx nx test growth(?:\s|$)/m);
+    assert.match(job, /npx nx run growth:test-operator-cli(?:\s|$)/m);
+    assert.match(job, /npx nx build growth(?:\s|$)/m);
+    assert.match(job, /npx nx test google-mailbox-poller(?:\s|$)/m);
+    assert.match(job, /npx nx lint google-mailbox-poller(?:\s|$)/m);
+    assert.doesNotMatch(job, /test-integration/);
+  });
+
+  it('runs lifecycle lint, test, check, and build under Node 24', async () => {
+    const job = await readLifecycleJob();
+
+    assert.match(job, /needs\.ci-scope\.outputs\.growth_lifecycle == 'true'/);
+    assert.match(job, /node-version:\s*24(?:\s|$)/m);
+    assert.match(job, /npx nx lint lifecycle(?:\s|$)/m);
+    assert.match(job, /npx nx test lifecycle(?:\s|$)/m);
+    assert.match(job, /npx nx run lifecycle:check(?:\s|$)/m);
+    assert.match(job, /npx nx build lifecycle(?:\s|$)/m);
+    assert.doesNotMatch(
+      job,
+      /vercel deploy|growth:import-resend|apply-migrations/
+    );
+  });
+
   it('provides one stable required PR check that waits for scoped CI jobs', async () => {
     const requiredPrChecksJob = await readRequiredPrChecksJob();
     const expectedNeeds = [
@@ -548,6 +591,8 @@ describe('CI workflow', () => {
       'website-e2e',
       'posthog-sync-plan',
       'scripts-tests',
+      'growth-lifecycle',
+      'lifecycle',
     ];
 
     assert.match(requiredPrChecksJob, /name:\s*CI — required/);
@@ -582,6 +627,34 @@ describe('CI workflow', () => {
       requiredPrChecksJob,
       /require_scoped\s+\\?\s*"angular_compatibility"\s+\\?\s*"Angular compatibility matrix"/
     );
+    assert.match(
+      requiredPrChecksJob,
+      /RESULT_GROWTH_LIFECYCLE:\s*\$\{\{\s*needs\.growth-lifecycle\.result\s*\}\}/
+    );
+    assert.match(
+      requiredPrChecksJob,
+      /RESULT_LIFECYCLE:\s*\$\{\{\s*needs\.lifecycle\.result\s*\}\}/
+    );
+    assert.match(
+      requiredPrChecksJob,
+      /SCOPE_GROWTH_LIFECYCLE:\s*\$\{\{\s*needs\.ci-scope\.outputs\.growth_lifecycle\s*\}\}/
+    );
+    assert.match(
+      requiredPrChecksJob,
+      /require_scoped "growth_lifecycle" "Growth lifecycle — Node 22"/
+    );
+    assert.match(
+      requiredPrChecksJob,
+      /require_scoped "growth_lifecycle" "Lifecycle — Node 24"/
+    );
+  });
+
+  it('gates the website deploy on both growth lifecycle lanes', async () => {
+    const deployJob = await readDeployJob();
+    const needs = readJobNeeds(deployJob);
+
+    assert.ok(needs.includes('growth-lifecycle'));
+    assert.ok(needs.includes('lifecycle'));
   });
 });
 

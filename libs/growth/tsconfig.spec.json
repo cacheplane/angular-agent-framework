@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "declaration": false,
+    "declarationMap": false,
+    "lib": ["es2022"],
+    "types": ["node", "vitest/globals"]
+  },
+  "include": [
+    "src/**/*.spec.ts",
+    "test/**/*.spec.ts",
+    "../../scripts/apply-migrations.spec.ts"
+  ]
+}

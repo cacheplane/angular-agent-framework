@@ -1,0 +1,423 @@
+import type { SqlExecutor } from './database.ts';
+import type { ErrorResponse } from 'resend';
+import {
+  authorizeLeasedJobForSubmission,
+  markProviderAcceptanceUnknown,
+  markProviderRejection,
+  recordProviderAcceptance,
+} from './jobs.ts';
+import {
+  unsubscribeActionUrlValueForContact,
+  unsubscribeActionUrlValue,
+  type UnsubscribeActionUrl,
+} from './tokens.ts';
+import { normalizeRecipientEmail } from './crypto.ts';
+
+export const RECIPIENT_EMAIL_SENDER =
+  'Brian at Threadplane <brian@threadplane.ai>';
+
+const UUID_V4_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
+const OPAQUE_IDENTIFIER_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]*$/u;
+const RECIPIENT_JOB_KINDS = new Set(['fulfill', 'send_step']);
+const RECIPIENT_EMAIL_ADDRESS = 'brian@threadplane.ai';
+const AMBIGUOUS_PROVIDER_ERROR_NAMES = new Set([
+  'concurrent_idempotent_requests',
+  'invalid_idempotent_request',
+]);
+const AMBIGUOUS_PROVIDER_STATUSES = new Set([408, 409, 425, 429]);
+
+export function classifyResendProviderError(
+  error: Pick<ErrorResponse, 'name' | 'statusCode'>
+): 'rejected' | 'unknown' {
+  return error.statusCode === null ||
+    error.statusCode >= 500 ||
+    AMBIGUOUS_PROVIDER_STATUSES.has(error.statusCode) ||
+    AMBIGUOUS_PROVIDER_ERROR_NAMES.has(error.name)
+    ? 'unknown'
+    : 'rejected';
+}
+
+export type DeliveryEnvironment = 'production' | 'preview' | 'test';
+
+export interface RecipientDeliveryPolicy {
+  campaignEnabled: boolean;
+  deliveryEnabled: boolean;
+  environment: DeliveryEnvironment;
+  databaseEnvironment: DeliveryEnvironment;
+  senderVerified: boolean;
+  verifiedDomain: string;
+  configuredSender: string;
+  providerTrackingDisabled: boolean;
+  nonProductionRecipientAllowlist: readonly string[];
+  nonProductionRedirectTo?: string;
+}
+
+export interface RecipientEmailInput {
+  jobId: string;
+  leaseToken: string;
+  subject: string;
+  text: string;
+  unsubscribeUrl: UnsubscribeActionUrl;
+  signal?: AbortSignal;
+}
+
+type ResendResponse =
+  | { data: { id: string }; error: null }
+  | { data: null; error: ErrorResponse };
+
+export interface RecipientEmailProviderPayload {
+  from: typeof RECIPIENT_EMAIL_SENDER;
+  to: string;
+  bcc: typeof RECIPIENT_EMAIL_SENDER;
+  replyTo: typeof RECIPIENT_EMAIL_SENDER;
+  subject: string;
+  text: string;
+  headers: {
+    'List-Unsubscribe': string;
+    'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click';
+    'X-Threadplane-Job-ID': string;
+  };
+  tags: { name: string; value: string }[];
+}
+
+export interface RecipientResendClient {
+  emails: {
+    send(
+      payload: RecipientEmailProviderPayload,
+      options: { idempotencyKey: string }
+    ): Promise<ResendResponse>;
+  };
+}
+
+export interface RecipientSendDependencies {
+  now: () => Date;
+  resend: RecipientResendClient;
+  authorizeLeasedJobForSubmission: typeof authorizeLeasedJobForSubmission;
+  recordProviderAcceptance: typeof recordProviderAcceptance;
+  markProviderAcceptanceUnknown: typeof markProviderAcceptanceUnknown;
+  markProviderRejection: typeof markProviderRejection;
+}
+
+export type RecipientSendResult =
+  | { accepted: true; providerEmailId: string }
+  | {
+      accepted: false;
+      reason:
+        | 'contact_deleted'
+        | 'contact_stopped'
+        | 'contact_unapproved'
+        | 'campaign_disabled'
+        | 'delivery_disabled'
+        | 'mailbox_recovery_required'
+        | 'provider_rejected'
+        | 'provider_outcome_unknown';
+    };
+
+function requiredBoundedText(
+  field: string,
+  value: string,
+  maximum: number,
+  allowNewlines = false
+): string {
+  if (typeof value !== 'string') throw new Error(`${field} is required`);
+  const normalized = value.trim();
+  if (
+    normalized.length === 0 ||
+    normalized.length > maximum ||
+    (!allowNewlines && /[\r\n]/u.test(normalized)) ||
+    /\0/u.test(normalized)
+  ) {
+    throw new Error(
+      `${field} must contain between 1 and ${maximum} safe characters`
+    );
+  }
+  return normalized;
+}
+
+function validEmail(field: string, value: string): string {
+  try {
+    return normalizeRecipientEmail(value);
+  } catch {
+    throw new Error(`${field} must be a valid email address`);
+  }
+}
+
+function validUuid(field: string, value: string): string {
+  const normalized = requiredBoundedText(field, value, 36).toLowerCase();
+  if (!UUID_V4_PATTERN.test(normalized)) {
+    throw new Error(`${field} must be a UUID v4`);
+  }
+  return normalized;
+}
+
+function opaqueIdentifier(
+  field: string,
+  value: string,
+  maximum: number
+): string {
+  const normalized = requiredBoundedText(field, value, maximum);
+  if (!OPAQUE_IDENTIFIER_PATTERN.test(normalized)) {
+    throw new Error(`${field} must be an opaque identifier`);
+  }
+  return normalized;
+}
+
+export function assertRecipientDeliveryPolicy(
+  policy: RecipientDeliveryPolicy
+): void {
+  if (typeof policy.campaignEnabled !== 'boolean') {
+    throw new Error('campaignEnabled must be a boolean');
+  }
+  if (typeof policy.deliveryEnabled !== 'boolean') {
+    throw new Error('deliveryEnabled must be a boolean');
+  }
+  if (
+    !['production', 'preview', 'test'].includes(policy.environment) ||
+    !['production', 'preview', 'test'].includes(policy.databaseEnvironment)
+  ) {
+    throw new Error('A registered delivery environment is required');
+  }
+  if (
+    !policy.senderVerified ||
+    policy.verifiedDomain !== 'threadplane.ai' ||
+    policy.configuredSender !== RECIPIENT_EMAIL_SENDER ||
+    !policy.providerTrackingDisabled
+  ) {
+    throw new Error(
+      'Exact verified Threadplane sender configuration is required'
+    );
+  }
+  if (policy.databaseEnvironment !== policy.environment) {
+    throw new Error('Delivery environment must match the database environment');
+  }
+  if (policy.environment === 'production') return;
+  if (policy.nonProductionRecipientAllowlist.length === 0) {
+    throw new Error('A non-production recipient allowlist is required');
+  }
+  const allowlist = new Set(
+    policy.nonProductionRecipientAllowlist.map((email) =>
+      validEmail('nonProductionRecipientAllowlist', email)
+    )
+  );
+  if (!allowlist.has(RECIPIENT_EMAIL_ADDRESS)) {
+    throw new Error(
+      'The recipient BCC mailbox must be on the non-production allowlist'
+    );
+  }
+  if (policy.nonProductionRedirectTo !== undefined) {
+    const redirect = validEmail(
+      'nonProductionRedirectTo',
+      policy.nonProductionRedirectTo
+    );
+    if (!allowlist.has(redirect)) {
+      throw new Error('Non-production recipient is not allowlisted');
+    }
+  }
+}
+
+function effectiveRecipient(
+  recipient: string,
+  policy: RecipientDeliveryPolicy
+): string {
+  if (policy.environment === 'production') return recipient;
+  const allowlist = new Set(
+    policy.nonProductionRecipientAllowlist.map((email) =>
+      validEmail('nonProductionRecipientAllowlist', email)
+    )
+  );
+  const redirected = policy.nonProductionRedirectTo
+    ? validEmail('nonProductionRedirectTo', policy.nonProductionRedirectTo)
+    : recipient;
+  if (!allowlist.has(redirected)) {
+    throw new Error('Non-production recipient is not allowlisted');
+  }
+  return redirected;
+}
+
+function campaignTags(
+  environment: DeliveryEnvironment,
+  kind: string,
+  payload: Record<string, unknown>
+): { name: string; value: string }[] {
+  const tags = [
+    { name: 'environment', value: environment },
+    { name: 'job_kind', value: kind },
+  ];
+  if (kind !== 'send_step') return tags;
+  const campaignVersion = payload['campaign_version'];
+  const step = payload['step'];
+  if (campaignVersion !== 'v1' || (step !== 1 && step !== 2 && step !== 3)) {
+    throw new Error(
+      'send_step requires a registered campaign version and step'
+    );
+  }
+  tags.push(
+    { name: 'campaign_version', value: campaignVersion },
+    { name: 'campaign_step', value: String(step) }
+  );
+  return tags;
+}
+
+export async function sendRecipientEmail(
+  executor: SqlExecutor,
+  input: RecipientEmailInput,
+  policy: RecipientDeliveryPolicy,
+  dependencies: RecipientSendDependencies
+): Promise<RecipientSendResult> {
+  input.signal?.throwIfAborted();
+  assertRecipientDeliveryPolicy(policy);
+  const jobId = validUuid('jobId', input.jobId);
+  const leaseToken = validUuid('leaseToken', input.leaseToken);
+  const subject = requiredBoundedText('subject', input.subject, 200);
+  const text = requiredBoundedText('text', input.text, 20_000, true);
+  unsubscribeActionUrlValue(input.unsubscribeUrl);
+  const authorizedAt = dependencies.now();
+  if (Number.isNaN(authorizedAt.getTime()))
+    throw new Error('now must be valid');
+
+  const authorization = await dependencies.authorizeLeasedJobForSubmission(
+    executor,
+    {
+      campaignEnabled: policy.campaignEnabled,
+      deliveryEnabled: policy.deliveryEnabled,
+      jobId,
+      leaseToken,
+      now: authorizedAt,
+    }
+  );
+  if (!authorization.authorized) {
+    return { accepted: false, reason: authorization.reason };
+  }
+  input.signal?.throwIfAborted();
+  const job = authorization.job;
+  if (job.id !== jobId || job.leaseToken !== leaseToken) {
+    throw new Error('Final send authorization returned a different job lease');
+  }
+  if (
+    authorization.recipient.contactId !== job.contactId ||
+    typeof authorization.recipient.emailNormalized !== 'string'
+  ) {
+    throw new Error('Final send authorization returned a different recipient');
+  }
+  const recipient = validEmail(
+    'authorized recipient',
+    authorization.recipient.emailNormalized
+  );
+  if (recipient !== authorization.recipient.emailNormalized) {
+    throw new Error(
+      'Final send authorization returned a noncanonical recipient'
+    );
+  }
+  const unsubscribeUrl = unsubscribeActionUrlValueForContact(
+    input.unsubscribeUrl,
+    authorization.recipient.contactId
+  );
+  const to = effectiveRecipient(recipient, policy);
+  if (!RECIPIENT_JOB_KINDS.has(job.kind)) {
+    throw new Error(`Unsupported recipient job kind: ${job.kind}`);
+  }
+  const idempotencyKey = opaqueIdentifier(
+    'job.idempotencyKey',
+    job.idempotencyKey,
+    256
+  );
+  const tags = campaignTags(policy.environment, job.kind, job.payload);
+
+  input.signal?.throwIfAborted();
+  let response: ResendResponse;
+  try {
+    response = await dependencies.resend.emails.send(
+      {
+        from: RECIPIENT_EMAIL_SENDER,
+        to,
+        bcc: RECIPIENT_EMAIL_SENDER,
+        replyTo: RECIPIENT_EMAIL_SENDER,
+        subject,
+        text,
+        headers: {
+          'List-Unsubscribe': `<${unsubscribeUrl}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          'X-Threadplane-Job-ID': jobId,
+        },
+        tags,
+      },
+      { idempotencyKey }
+    );
+  } catch {
+    const occurredAt = dependencies.now();
+    await dependencies.markProviderAcceptanceUnknown(executor, {
+      jobId,
+      leaseToken,
+      occurredAt: Number.isNaN(occurredAt.getTime())
+        ? authorizedAt
+        : occurredAt,
+      errorCode: 'resend_submission_outcome_unknown',
+    });
+    return { accepted: false, reason: 'provider_outcome_unknown' };
+  }
+
+  if (response.error !== null) {
+    if (classifyResendProviderError(response.error) === 'unknown') {
+      const occurredAt = dependencies.now();
+      await dependencies.markProviderAcceptanceUnknown(executor, {
+        jobId,
+        leaseToken,
+        occurredAt: Number.isNaN(occurredAt.getTime())
+          ? authorizedAt
+          : occurredAt,
+        errorCode: 'resend_submission_outcome_unknown',
+      });
+      return { accepted: false, reason: 'provider_outcome_unknown' };
+    }
+    const occurredAt = dependencies.now();
+    const providerErrorName = /^[a-z0-9_]{1,80}$/u.test(response.error.name)
+      ? response.error.name
+      : 'provider_rejected';
+    await dependencies.markProviderRejection(executor, {
+      errorCode: `resend_${providerErrorName}`,
+      jobId,
+      leaseToken,
+      occurredAt: Number.isNaN(occurredAt.getTime())
+        ? authorizedAt
+        : occurredAt,
+    });
+    return { accepted: false, reason: 'provider_rejected' };
+  }
+  let providerEmailId: string;
+  try {
+    providerEmailId = opaqueIdentifier(
+      'providerEmailId',
+      response.data.id,
+      256
+    );
+  } catch {
+    const occurredAt = dependencies.now();
+    await dependencies.markProviderAcceptanceUnknown(executor, {
+      jobId,
+      leaseToken,
+      occurredAt: Number.isNaN(occurredAt.getTime())
+        ? authorizedAt
+        : occurredAt,
+      errorCode: 'resend_submission_outcome_unknown',
+    });
+    return { accepted: false, reason: 'provider_outcome_unknown' };
+  }
+  const acceptedAt = dependencies.now();
+  if (Number.isNaN(acceptedAt.getTime())) {
+    await dependencies.markProviderAcceptanceUnknown(executor, {
+      jobId,
+      leaseToken,
+      occurredAt: authorizedAt,
+      errorCode: 'resend_submission_outcome_unknown',
+    });
+    return { accepted: false, reason: 'provider_outcome_unknown' };
+  }
+  await dependencies.recordProviderAcceptance(executor, {
+    jobId,
+    leaseToken,
+    acceptedAt,
+    providerEmailId,
+  });
+  return { accepted: true, providerEmailId };
+}

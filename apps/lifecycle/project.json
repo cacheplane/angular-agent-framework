@@ -1,0 +1,64 @@
+{
+  "name": "lifecycle",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/lifecycle/src",
+  "projectType": "application",
+  "tags": [
+    "scope:internal",
+    "scope:growth-lifecycle",
+    "type:app",
+    "runtime:node24"
+  ],
+  "targets": {
+    "test": {
+      "executor": "@nx/vitest:test",
+      "options": {
+        "configFile": "apps/lifecycle/vitest.config.ts"
+      }
+    },
+    "test-dogfood-integration": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "npx vitest run --config apps/lifecycle/vitest.dogfood-integration.config.ts --reporter=verbose"
+      }
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "apps/lifecycle",
+        "commands": [
+          "npx -y node@24 ../../node_modules/@dawn-ai/cli/dist/index.js check",
+          "npx -y node@24 ../../node_modules/typescript/bin/tsc --noEmit -p tsconfig.json"
+        ],
+        "parallel": false
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": ["{projectRoot}/.dawn/build"],
+      "options": {
+        "cwd": "apps/lifecycle",
+        "commands": [
+          "npx -y node@24 ../../node_modules/@dawn-ai/cli/dist/index.js build --clean",
+          "npx -y node@24 ../../node_modules/tsx/dist/cli.mjs scripts/verify-vercel-adapter.mts"
+        ],
+        "parallel": false
+      }
+    },
+    "dogfood": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "apps/lifecycle",
+        "command": "npx -y node@24 ../../node_modules/tsx/dist/cli.mjs scripts/dogfood-harness.mts",
+        "forwardAllArgs": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}
