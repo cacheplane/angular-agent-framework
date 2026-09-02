@@ -19,6 +19,18 @@
       }
     },
     {
+      "match": { "userMessage": "Bear Lake", "hasToolResult": true },
+      "response": {
+        "content": "Expect a sunny, mild weekend at Bear Lake — great weather for camping."
+      }
+    },
+    {
+      "match": { "systemMessage": "You are a weather forecaster" },
+      "response": {
+        "content": "Here's the Bear Lake weekend forecast:\n\n- Saturday: sunny, high 24°C\n- Sunday: partly cloudy, high 22°C\n- Overall: mild with light winds"
+      }
+    },
+    {
       "match": { "userMessage": "packing list" },
       "response": {
         "toolCalls": [
@@ -57,6 +69,25 @@
           {
             "name": "reserve_campsite",
             "arguments": { "site": "North Pines", "nights": 2 }
+          }
+        ]
+      }
+    },
+    {
+      "match": { "userMessage": "Bear Lake" },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "agent-weather_forecaster",
+            "arguments": {
+              "prompt": "What will the weather be like at Bear Lake this weekend?",
+              "threadId": null,
+              "resourceId": null,
+              "instructions": null,
+              "maxSteps": 5,
+              "suspendedToolRunId": null,
+              "resumeData": null
+            }
           }
         ]
       }

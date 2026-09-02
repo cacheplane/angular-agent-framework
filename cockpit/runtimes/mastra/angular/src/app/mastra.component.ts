@@ -56,8 +56,11 @@ interface PackingList {
  *   `submit({ resume })` goes out as
  *   `forwardedProps.command = { resume, interruptEvent: { toolCallId, runId } }`
  *   — exactly what the Mastra bridge requires to resume the suspended run.
- * - NO subagents surface here: Mastra reserves ACTIVITY_* for background
- *   tasks, a measured red cell in the matrix.
+ * - Sub-agent delegation (weather_forecaster) reaches the wire as a
+ *   `agent-<key>` tool call; the Node service's subagent emitter turns it
+ *   into SUBAGENT_* + attributed TEXT_MESSAGE_* frames, so the standard
+ *   chat-subagent-card renders with zero code in this component
+ *   (docs/wire-capture-subagents.md).
  */
 @Component({
   selector: 'app-mastra',
