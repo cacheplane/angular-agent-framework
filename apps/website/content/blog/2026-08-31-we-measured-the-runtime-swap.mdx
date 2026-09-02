@@ -139,7 +139,7 @@ The cause is the upstream bridge, not the protocol and not us.
 The protocol standardized the events — `SUBAGENT_STARTED`, `SUBAGENT_FINISHED`, `SUBAGENT_ERROR`, plus a `subagentRunId` attribution field on ordinary content events — and the adapter consumes them directly.
 What no runtime does is emit them natively.
 Each one reports delegation in its own dialect: Strands surfaces the specialist's tool use and forwards its token stream, Microsoft Agent Framework streams the specialist's updates in-process into the tool body where the in-tree emitter merges them across the bridge boundary, and Mastra forwards the child's chunks on the parent stream, where its bridge drops them and withholds the delegation tool call until the child resolves.
-So each demo backend carries a small emitter — roughly 125 to 310 lines each — that translates its runtime's dialect into the standard events at the bridge boundary.
+So each demo backend carries a small emitter — roughly 190 to 360 lines each — that translates its runtime's dialect into the standard events at the bridge boundary.
 
 All three cards stream live.
 Mastra's took one more seam than the others: the emitter observes the runtime's public stream through a tee ahead of the bridge, emits the delegation tool call eagerly, and forwards the child's deltas itself, because the bridge would otherwise have painted the card only at completion.

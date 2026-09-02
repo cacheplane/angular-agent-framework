@@ -135,7 +135,7 @@ Strands surfaces the specialist's tool use and streamed tokens through a per-too
 On Microsoft Agent Framework the specialist's updates stream in-process into the tool body, and the in-tree emitter merges them across the bridge boundary, so the card streams live there too.
 Mastra streams the child's chunks in-process on the parent stream, but its bridge drops them and withholds the delegation tool call until the child resolves; the in-tree emitter therefore observes the runtime's public stream through a tee ahead of the bridge, emits the delegation tool call eagerly, and forwards the child's deltas under the subagent identity, so the card mounts while the child runs and streams live there too.
 All three cards stream live; the Mastra card streams through the tee rather than through the bridge, a property of the runtime's bridge rather than of the protocol or the adapter.
-Each demo backend ships its emitter in tree, roughly 125 to 310 lines per runtime.
+Each demo backend ships its emitter in tree, roughly 190 to 360 lines per runtime.
 
 ### How this was measured
 

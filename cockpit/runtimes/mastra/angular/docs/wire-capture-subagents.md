@@ -14,7 +14,7 @@ this document is the only artifact.
 | Child registration | `agents: { weather_forecaster: childAgent }` on the supervisor's `Agent` config. |
 | Delegation hooks | `delegation: { onDelegationStart, onDelegationComplete }` in stream options; works via the supervisor's `defaultOptions` (verified live — both hooks fired). |
 | Delegation on the AG-UI wire today | An ordinary backend tool call named `agent-<childKey>`: `TOOL_CALL_START` → one `TOOL_CALL_ARGS` blob → `TOOL_CALL_END` → `TOOL_CALL_RESULT` whose `content` is JSON `{text, subAgentThreadId, subAgentResourceId, subAgentToolResults}`. |
-| Does child text stream incrementally anywhere? | **In-process yes, on the wire no.** The parent `fullStream` carries every child chunk wrapped as `tool-output` (`payload: {output: <childChunk>, toolCallId, toolName}`) — 82 inner `text-delta` chunks in the raw tap — but `@ag-ui/mastra`'s chunk processor drops them (`case "tool-output": break`). Only the final text reaches AG-UI, inside `TOOL_CALL_RESULT`. |
+| Does child text stream incrementally anywhere? | **In-process yes, on the wire no.** The parent `fullStream` carries every child chunk wrapped as `tool-output` (`payload: {output: <childChunk>, toolCallId, toolName}`) — 82 inner `text-delta` chunks in the raw tap — but `@ag-ui/mastra`'s chunk processor drops them (`case "tool-output": break`). Only the final text reaches AG-UI, inside `TOOL_CALL_RESULT`. — superseded, see [After streaming](#after-streaming) |
 | Delegation tool-call id (for `parentToolCallId`) | The LLM's tool-call id (e.g. `call_aUfV9K0RCDZdZK3NWt9dRDKx`). Identical across `TOOL_CALL_START/ARGS/END/RESULT` and both hooks' `toolCallId`. |
 
 ## Installed-API details (`node_modules/@mastra/core/dist`)

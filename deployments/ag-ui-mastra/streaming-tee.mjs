@@ -70,6 +70,9 @@ export function withDelegationTee(agent, observe) {
       };
     },
     has(target, prop) {
+      // Restates the default `has` behavior explicitly, so the bridge's
+      // `'getMemory' in agent` check reads as a deliberate, documented
+      // contract of this Proxy rather than an accident of the default trap.
       return prop in target;
     },
   });

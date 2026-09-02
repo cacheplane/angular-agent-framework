@@ -157,3 +157,58 @@ test('a stream result without fullStream is returned untouched', async () => {
   assert.equal(typeof result.processDataStream, 'function');
   assert.equal(result.fullStream, undefined);
 });
+
+// ── Consumer early-exit propagates to the source generator ────────────────
+test('consumer breaking out of the wrapped fullStream closes the source generator', async () => {
+  let finallyRan = false;
+  async function* source() {
+    try {
+      yield { type: 'a' };
+      yield { type: 'b' };
+      yield { type: 'c' };
+    } finally {
+      finallyRan = true;
+    }
+  }
+  const agent = {
+    getMemory() {},
+    async stream() {
+      return { fullStream: source() };
+    },
+  };
+  const proxy = withDelegationTee(agent, () => {});
+  const result = await proxy.stream([], {});
+  const seen = [];
+  for await (const c of result.fullStream) {
+    seen.push(c.type);
+    if (c.type === 'a') break;
+  }
+  assert.deepEqual(seen, ['a']);
+  assert.equal(finallyRan, true, "breaking the consumer's loop must call the source generator's return()");
+});
+
+// ── Result proxy forwards prototype getters, not just own properties ──────
+test('traceId/usage defined as prototype getters still resolve through the result proxy', async () => {
+  class StreamResult {
+    get traceId() {
+      return 'trace-123';
+    }
+    get usage() {
+      return { total: 42 };
+    }
+  }
+  const resultInstance = new StreamResult();
+  resultInstance.fullStream = (async function* () {
+    yield { type: 'a' };
+  })();
+  const agent = {
+    getMemory() {},
+    async stream() {
+      return resultInstance;
+    },
+  };
+  const proxy = withDelegationTee(agent, () => {});
+  const result = await proxy.stream([], {});
+  assert.equal(result.traceId, 'trace-123');
+  assert.deepEqual(result.usage, { total: 42 });
+});

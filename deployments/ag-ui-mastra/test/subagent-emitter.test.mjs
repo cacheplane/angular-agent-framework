@@ -457,3 +457,10 @@ test('pending delegation at RUN_ERROR → SUBAGENT_ERROR cleanup, then no double
   // A second terminal frame injects nothing more.
   assert.deepEqual(injector.eventsFor({ type: 'RUN_FINISHED' }), [{ type: 'RUN_FINISHED' }]);
 });
+
+test('chunk: agent-* tool-call with NO prior start/step-start omits parentMessageId entirely', () => {
+  const injector = createSubagentInjector();
+  const [start] = injector.chunk(toolCallChunk());
+  assert.equal(start.type, 'TOOL_CALL_START');
+  assert.equal('parentMessageId' in start, false, 'key must be absent, not present with an undefined value');
+});
