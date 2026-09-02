@@ -690,9 +690,33 @@ function routeSubagentContentEvent(subagentRunId: string, event: BaseEvent, stor
       }
       case 'TEXT_MESSAGE_END':
         return c;
-      case 'TOOL_CALL_START':
+      case 'TOOL_CALL_START': {
         toolCalls.push({ id: e['toolCallId'], name: e['toolCallName'], args: {}, status: 'running' });
-        return { ...c, toolCalls };
+        // Mirror the parent TOOL_CALL_START handler: link the call to its
+        // parent child message so chat-subagent-card can draw it from
+        // message.toolCallIds, same as the top-level transcript does.
+        const parentId = e['parentMessageId'] as string | undefined;
+        if (parentId) {
+          const idx = messages.findIndex((m) => m['id'] === parentId);
+          if (idx < 0) {
+            messages.push({ id: parentId, role: 'assistant', content: '', toolCallIds: [e['toolCallId']] });
+          } else {
+            messages[idx] = {
+              ...messages[idx],
+              toolCallIds: [...((messages[idx]['toolCallIds'] as unknown[]) ?? []), e['toolCallId']],
+            };
+          }
+        } else if (messages.length > 0) {
+          // No parentMessageId on the wire: attach to the most recently
+          // opened child message, mirroring TEXT_MESSAGE_START's append order.
+          const lastIdx = messages.length - 1;
+          messages[lastIdx] = {
+            ...messages[lastIdx],
+            toolCallIds: [...((messages[lastIdx]['toolCallIds'] as unknown[]) ?? []), e['toolCallId']],
+          };
+        }
+        return { ...c, messages, toolCalls };
+      }
       case 'TOOL_CALL_ARGS':
         return parsedArgs === undefined
           ? c
