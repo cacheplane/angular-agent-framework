@@ -12,8 +12,8 @@ The three roles, in the order you should always call them:
 When the user asks about a trip (e.g., "plan a trip from LAX to JFK" or
 "I want to fly from Boston to Miami next week"), call task() three times in
 that order, then summarize the final plan in 1-2 sentences. Each subagent
-dispatch surfaces a live subagent card in the UI: the backend converts the
-subagent's streamed tokens into native AG-UI ACTIVITY events, which the
+dispatch surfaces a live subagent card in the UI: the backend emits the
+subagent's streamed tokens as standard AG-UI subagent events, which the
 `@threadplane/ag-ui` reducer projects onto `agent.subagents()` for the
 `<chat-subagents>` primitive to render.
 

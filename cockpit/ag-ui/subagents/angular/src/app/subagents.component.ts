@@ -10,10 +10,11 @@ import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
  * Retrieves the agent with injectAgent() (provided by provideAgent /
  * provideFakeAgent) and passes it to the prebuilt <chat> composition. No
  * subagent-specific wiring is needed in the component: when the orchestrator
- * dispatches a `task` tool call, the backend converts the subagent_activity
- * CUSTOM events into native AG-UI ACTIVITY events, the @threadplane/ag-ui
- * reducer projects them onto `agent.subagents()`, and <chat> renders each
- * dispatch inline as a persistent `chat-subagent-card`.
+ * dispatches a `task` tool call, the backend emits the protocol's standard
+ * SUBAGENT_STARTED / TEXT_MESSAGE_* (attributed via subagentRunId) /
+ * SUBAGENT_FINISHED events, the @threadplane/ag-ui reducer projects them onto
+ * `agent.subagents()`, and <chat> renders each dispatch inline as a persistent
+ * `chat-subagent-card`.
  *
  * Demonstrates the chat-runtime decoupling: same <chat> composition as the
  * LangGraph cockpit, AG-UI runtime instead of LangGraph.
