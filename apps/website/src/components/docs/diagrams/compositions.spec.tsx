@@ -10,6 +10,7 @@ import { RenderVsA2ui } from './RenderVsA2ui';
 import { RenderTransform } from './RenderTransform';
 import { MiddlewareHowItFits } from './MiddlewareHowItFits';
 import { TelemetryHowItFits } from './TelemetryHowItFits';
+import { PilotJourney } from './PilotJourney';
 
 /**
  * Compositions are hand-placed layouts; the spec guards that each mounts,
@@ -132,5 +133,30 @@ describe('RenderTransform', () => {
     const accented = container.querySelectorAll('g.tp-diagram-node[data-tone="accent"]');
     expect(accented).toHaveLength(1);
     expect(accented[0]?.querySelector('.tp-diagram-title')?.textContent).toBe('your components');
+  });
+});
+
+describe('PilotJourney', () => {
+  it('mounts with three phase nodes on the journey line', () => {
+    const { container } = render(<PilotJourney />);
+    expect(container.querySelectorAll('g.tp-diagram-node')).toHaveLength(3);
+    expect(container.querySelector('svg[role="img"]')?.getAttribute('aria-label')).toBeTruthy();
+  });
+
+  it('names the three phases and their gate pills', () => {
+    const { container } = render(<PilotJourney />);
+    const titles = Array.from(container.querySelectorAll('.tp-diagram-title')).map((t) => t.textContent);
+    expect(titles).toEqual(['Discover', 'Build', 'Harden']);
+    const pills = Array.from(container.querySelectorAll('.tp-diagram-pill text')).map((t) => t.textContent);
+    expect(pills).toEqual(['roadmap', 'working agent']);
+    const neutralPills = container.querySelectorAll('.tp-diagram-pill[data-tone="neutral"]');
+    expect(neutralPills).toHaveLength(2);
+  });
+
+  it('accents only the Harden node — the production-ready system the customer keeps', () => {
+    const { container } = render(<PilotJourney />);
+    const accented = container.querySelectorAll('g.tp-diagram-node[data-tone="accent"]');
+    expect(accented).toHaveLength(1);
+    expect(accented[0]?.querySelector('.tp-diagram-title')?.textContent).toBe('Harden');
   });
 });

@@ -8,6 +8,8 @@ import { BrowserFrame } from '../../components/ui/BrowserFrame';
 import { WhitePaperBlock } from '../../components/landing/WhitePaperBlock';
 import { Promises } from '../../components/landing/Promises';
 import { FinalCTA } from '../../components/landing/FinalCTA';
+import { DiagramSection } from '../../components/landing/DiagramSection';
+import { PilotJourney } from '../../components/docs/diagrams';
 import { createPageMetadata } from '../../lib/site-metadata';
 
 export const metadata = createPageMetadata({
@@ -44,6 +46,15 @@ export default function PilotToProdPage() {
           </div>
         </Container>
       </Section>
+
+      <DiagramSection
+        id="pilot-journey"
+        eyebrow="The engagement"
+        headline="Three phases, each with a gate you can point at"
+        body="No open-ended consulting arc: each phase ends with a concrete deliverable — a roadmap, a working agent, a production-ready system — not a status update."
+      >
+        <PilotJourney />
+      </DiagramSection>
 
       {/* Discover */}
       <FeatureBlock
