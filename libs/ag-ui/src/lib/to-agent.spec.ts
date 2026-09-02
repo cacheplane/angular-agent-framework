@@ -1257,3 +1257,19 @@ describe('subagents transcript projection (F5-transcript)', () => {
     expect(sa?.messages()[0].delivery).toEqual(staticDelivery('m1'));
   });
 });
+
+describe('SUBAGENT_* lifecycle projection', () => {
+  it('SUBAGENT_STARTED + attributed TEXT_MESSAGE events project into agent.subagents()', () => {
+    const source = new StubAgent();
+    const agent = toAgent(source as never);
+    source.emit({ type: 'SUBAGENT_STARTED', subagentRunId: 'sa-1', name: 'researcher' } as never);
+    source.emit({ type: 'TEXT_MESSAGE_START', messageId: 'm-1', role: 'assistant', subagentRunId: 'sa-1' } as never);
+    source.emit({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm-1', delta: 'Checking ', subagentRunId: 'sa-1' } as never);
+    source.emit({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm-1', delta: 'flights', subagentRunId: 'sa-1' } as never);
+    const sa = agent.subagents!().get('sa-1');
+    expect(sa?.name).toBe('researcher');
+    expect(sa?.messages()).toEqual([
+      { id: 'm-1', role: 'assistant', content: 'Checking flights', delivery: expect.objectContaining({ phase: 'streaming' }) },
+    ]);
+  });
+});

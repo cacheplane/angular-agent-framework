@@ -135,6 +135,16 @@ function resolveReasoningDurationMs(messageId: string): number | undefined {
  * for testability — no side effects beyond the supplied store.
  */
 export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
+  // A subagentRunId on a content event means the child produced it: route it
+  // into that subagent's activity entry and never into the parent transcript —
+  // the same structural rule @threadplane/langgraph applies to namespaced
+  // events. Scope: text + tool events (what our emitters produce). Reasoning/
+  // step attribution is deliberately not routed yet (YAGNI).
+  const subagentRunId = (event as { subagentRunId?: string }).subagentRunId;
+  if (subagentRunId && SUBAGENT_ROUTED_TYPES.has(event.type as string)) {
+    routeSubagentContentEvent(subagentRunId, event, store);
+    return;
+  }
   switch (event.type) {
     case 'RUN_STARTED': {
       const run = store.deliveryRun;
@@ -470,6 +480,54 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
       }
       return;
     }
+    case 'SUBAGENT_STARTED': {
+      const e = event as unknown as {
+        subagentRunId: string; name: string; description?: string; parentToolCallId?: string;
+      };
+      const entry = ensureSubagentEntry(e.subagentRunId, store);
+      // Fills identity in without resetting content a pre-STARTED attributed
+      // event already buffered; a post-suspend re-announce is a no-op update.
+      entry.content.update((c) => ({
+        ...c,
+        name: e.name,
+        ...(e.description !== undefined ? { description: e.description } : {}),
+        ...(e.parentToolCallId !== undefined ? { toolCallId: e.parentToolCallId } : {}),
+        status: 'running',
+      }));
+      store.activities.update((m) => new Map(m));
+      return;
+    }
+    case 'SUBAGENT_FINISHED': {
+      const e = event as unknown as {
+        subagentRunId: string; result?: unknown; outcome?: { type: 'success' | 'suspended' };
+      };
+      const entry = store.activities().get(e.subagentRunId);
+      if (!entry) return;
+      // Suspended keeps the card running: the run resumes with the same id,
+      // and the interrupt itself surfaces through the interrupt signal.
+      const status = e.outcome?.type === 'suspended' ? 'running' : 'complete';
+      entry.content.update((c) => ({
+        ...c,
+        status,
+        ...(e.result !== undefined
+          ? { state: { ...((c['state'] as Record<string, unknown>) ?? {}), result: e.result } }
+          : {}),
+      }));
+      store.activities.update((m) => new Map(m));
+      return;
+    }
+    case 'SUBAGENT_ERROR': {
+      const e = event as unknown as { subagentRunId: string; message: string };
+      const entry = store.activities().get(e.subagentRunId);
+      if (!entry) return;
+      entry.content.update((c) => ({
+        ...c,
+        status: 'error',
+        state: { ...((c['state'] as Record<string, unknown>) ?? {}), error: e.message },
+      }));
+      store.activities.update((m) => new Map(m));
+      return;
+    }
     case 'ACTIVITY_SNAPSHOT': {
       const e = event as unknown as {
         messageId: string; activityType: string;
@@ -519,6 +577,93 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
 
 function randomId(): string {
   return Math.random().toString(36).slice(2);
+}
+
+/** Content events a subagentRunId can route away from the parent transcript. */
+const SUBAGENT_ROUTED_TYPES = new Set([
+  'TEXT_MESSAGE_START', 'TEXT_MESSAGE_CONTENT', 'TEXT_MESSAGE_END',
+  'TOOL_CALL_START', 'TOOL_CALL_ARGS', 'TOOL_CALL_END', 'TOOL_CALL_RESULT',
+]);
+
+/** Get-or-create the ActivityEntry for a subagent run, keyed by
+ *  subagentRunId — mirrors ACTIVITY_SNAPSHOT's creation branch exactly
+ *  (same generation allocation, same activities-map replace idiom) so
+ *  the projection in to-agent.ts needs no special-casing. Buffer-not-drop:
+ *  an attributed content event that arrives before SUBAGENT_STARTED still
+ *  gets a card, which SUBAGENT_STARTED then fills in with identity. */
+function ensureSubagentEntry(subagentRunId: string, store: ReducerStore): ActivityEntry {
+  const existing = store.activities().get(subagentRunId);
+  if (existing && existing.activityType === 'subagent') return existing;
+  const entry: ActivityEntry = {
+    messageId: subagentRunId,
+    activityType: 'subagent',
+    generation: store.allocateDeliveryGeneration(`activity:${subagentRunId}`),
+    content: signal<Record<string, unknown>>({
+      toolCallId: subagentRunId,
+      name: '',
+      status: 'running',
+      messages: [],
+      toolCalls: [],
+    }),
+  };
+  const map = new Map(store.activities());
+  map.set(subagentRunId, entry);
+  store.activities.set(map);
+  return entry;
+}
+
+/** Route a subagentRunId-attributed content event into that subagent's
+ *  ActivityEntry rather than the parent transcript/toolCalls signal.
+ *  Text and tool-call handling mirrors the parent TEXT_MESSAGE and
+ *  TOOL_CALL cases above, but written against the entry's content record
+ *  instead of store.messages/store.toolCalls. */
+function routeSubagentContentEvent(subagentRunId: string, event: BaseEvent, store: ReducerStore): void {
+  const entry = ensureSubagentEntry(subagentRunId, store); // buffer-not-drop: creates on first sight
+  const e = event as unknown as Record<string, unknown>;
+  entry.content.update((c) => {
+    const messages = [...((c['messages'] as Array<Record<string, unknown>>) ?? [])];
+    const toolCalls = [...((c['toolCalls'] as Array<Record<string, unknown>>) ?? [])];
+    switch (event.type as string) {
+      case 'TEXT_MESSAGE_START': {
+        const id = e['messageId'] as string;
+        if (!messages.some((m) => m['id'] === id)) messages.push({ id, role: 'assistant', content: '' });
+        return { ...c, messages };
+      }
+      case 'TEXT_MESSAGE_CONTENT': {
+        const id = e['messageId'] as string;
+        const idx = messages.findIndex((m) => m['id'] === id);
+        if (idx < 0) messages.push({ id, role: 'assistant', content: (e['delta'] as string) ?? '' });
+        else messages[idx] = { ...messages[idx], content: `${messages[idx]['content'] ?? ''}${(e['delta'] as string) ?? ''}` };
+        return { ...c, messages };
+      }
+      case 'TEXT_MESSAGE_END':
+        return c;
+      case 'TOOL_CALL_START':
+        toolCalls.push({ id: e['toolCallId'], name: e['toolCallName'], args: {}, status: 'running' });
+        return { ...c, toolCalls };
+      case 'TOOL_CALL_ARGS': {
+        // Same accumulated-buffer rule as the parent handler: deltas are JSON
+        // fragments; parse the accumulation, keep last-good args.
+        const buffers = (store.argsBuffers ??= new Map<string, string>());
+        const key = `subagent:${e['toolCallId']}`;
+        const buffer = (buffers.get(key) ?? '') + ((e['delta'] as string) ?? '');
+        buffers.set(key, buffer);
+        const args = tryParseArgs(buffer);
+        return args === undefined
+          ? c
+          : { ...c, toolCalls: toolCalls.map((t) => (t['id'] === e['toolCallId'] ? { ...t, args } : t)) };
+      }
+      case 'TOOL_CALL_END': {
+        store.argsBuffers?.delete(`subagent:${e['toolCallId']}`);
+        return { ...c, toolCalls: toolCalls.map((t) => (t['id'] === e['toolCallId'] ? { ...t, status: 'complete' } : t)) };
+      }
+      case 'TOOL_CALL_RESULT':
+        return { ...c, toolCalls: toolCalls.map((t) => (t['id'] === e['toolCallId'] ? { ...t, result: e['content'] } : t)) };
+      default:
+        return c;
+    }
+  });
+  store.activities.update((m) => new Map(m));
 }
 
 /** Loosely-typed RUN_FINISHED outcome. @ag-ui/core@0.0.59 ships the strict
