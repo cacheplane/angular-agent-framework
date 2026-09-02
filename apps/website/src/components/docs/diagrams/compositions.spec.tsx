@@ -5,6 +5,8 @@ import { describe, expect, it } from 'vitest';
 import { render } from '@testing-library/react';
 import { AgUiArchitecturePipeline } from './AgUiArchitecturePipeline';
 import { A2uiMessageFlow } from './A2uiMessageFlow';
+import { RenderHowItFits } from './RenderHowItFits';
+import { RenderVsA2ui } from './RenderVsA2ui';
 
 /**
  * Compositions are hand-placed layouts; the spec guards that each mounts,
@@ -36,5 +38,23 @@ describe('A2uiMessageFlow', () => {
     expect(accented).toHaveLength(1);
     expect(accented[0]?.querySelector('.tp-diagram-eyebrow')?.textContent).toBe('@THREADPLANE/A2UI');
     expect(accented[0]?.querySelector('.tp-diagram-title')?.textContent).toBe('createA2uiMessageParser()');
+  });
+});
+
+describe('RenderHowItFits', () => {
+  it('mounts and shows the spec-to-components pipeline', () => {
+    const { container } = render(<RenderHowItFits />);
+    const titles = Array.from(container.querySelectorAll('.tp-diagram-title')).map((t) => t.textContent);
+    expect(titles).toContain('@threadplane/render');
+  });
+});
+
+describe('RenderVsA2ui', () => {
+  it('mounts and shows both packages under chat', () => {
+    const { container } = render(<RenderVsA2ui />);
+    const titles = Array.from(container.querySelectorAll('.tp-diagram-title')).map((t) => t.textContent);
+    expect(titles).toContain('@threadplane/render');
+    expect(titles).toContain('@threadplane/a2ui');
+    expect(titles).toContain('@threadplane/chat');
   });
 });
