@@ -50,6 +50,8 @@ from strands.types.tools import ToolContext
 
 from ag_ui_strands import StrandsAgent, StrandsAgentConfig, ToolBehavior
 
+from .subagent_emitter import emit_subagent_events
+
 _SLOTS = {
     "monday": ["09:00", "13:30"],
     "tuesday": ["10:00", "15:00"],
@@ -238,6 +240,9 @@ agent = StrandsAgent(
         tool_behaviors={
             "check_availability": ToolBehavior(state_from_result=availability_state),
             "book_meeting": ToolBehavior(state_from_args=booking_state),
+            "research_availability": ToolBehavior(
+                tool_stream_event_handler=emit_subagent_events,
+            ),
         },
     ),
 )
