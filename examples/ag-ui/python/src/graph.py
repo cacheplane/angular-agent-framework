@@ -278,10 +278,11 @@ def request_approval(reason: str) -> str:
 # node loops back to `agent`. A per-run `iterations` counter caps the loop
 # so it always terminates (the agent is told to answer after one lookup).
 # Each node emits the structured transcript (`message_start` / `tool_call` /
-# `tool_result`) as `subagent_activity` CUSTOM events the L2 transform turns
-# into AG-UI ACTIVITY DELTAs; live token text is streamed separately by the
-# SubagentStreamHandler (which tags each `message` with the same
-# `message_index` the subgraph opened the turn with).
+# `tool_result`) as `subagent_activity` CUSTOM events that the server's
+# SubagentEmittingAgent expands into the protocol's `subagentRunId`-attributed
+# TEXT_MESSAGE_* / TOOL_CALL_* events; live token text is streamed
+# separately by the SubagentStreamHandler as per-token `message` deltas
+# tagged with the message id the subgraph opened the turn with.
 class ResearchState(TypedDict):
     messages: Annotated[list, add_messages]
     topic: Optional[str]
@@ -346,7 +347,8 @@ def _build_research_subgraph(emit, run_state, llm_factory=_make_research_llm):
 
     `emit(payload)` dispatches a `subagent_activity` CUSTOM event already
     keyed by the parent tool_call_id. `run_state` is the SubagentRunState
-    the SubagentStreamHandler reads `message_index` from for live tokens.
+    that derives the `<tool_call_id>-sub-m<n>` message ids; the
+    SubagentStreamHandler reads the open id from it for live tokens.
     `llm_factory(force_answer)` returns the model for a turn — overridable
     in tests with a fake tool-calling chat model.
     """
@@ -354,10 +356,10 @@ def _build_research_subgraph(emit, run_state, llm_factory=_make_research_llm):
     async def agent_node(state: ResearchState) -> dict:
         topic = state.get("topic") or ""
         iterations = state.get("iterations") or 0
-        # Open a new assistant turn. The handler reads this index for the
-        # live `message` tokens it streams during this LLM call.
-        run_state.message_index = iterations
-        await emit({"phase": "message_start", "message_index": iterations})
+        # Open a new assistant turn. The handler reads this id for the
+        # live `message` deltas it streams during this LLM call.
+        message_id = run_state.open_message()
+        await emit({"phase": "message_start", "message_id": message_id})
 
         force_answer = iterations >= _RESEARCH_MAX_ITERATIONS
         system = SystemMessage(content=(
@@ -380,15 +382,16 @@ def _build_research_subgraph(emit, run_state, llm_factory=_make_research_llm):
         call_llm = llm_factory(force_answer)
         response = await call_llm.ainvoke(messages)
 
-        # Emit one tool_call event per call on the returned AIMessage.
+        # Emit one tool_call event per call on the returned AIMessage. The
+        # emitter anchors it to the turn that is open (this one).
         tool_calls = getattr(response, "tool_calls", None) or []
         for tc in tool_calls:
             await emit({
                 "phase": "tool_call",
-                "message_index": iterations,
+                "message_id": message_id,
                 "tool_call_id": tc.get("id"),
                 "name": tc.get("name"),
-                "args": tc.get("args"),
+                "args": tc.get("args") or {},
             })
 
         return {"messages": [response], "iterations": iterations + 1}
@@ -405,15 +408,11 @@ def _build_research_subgraph(emit, run_state, llm_factory=_make_research_llm):
             else:
                 result = f"(unknown tool: {name})"
             out.append(ToolMessage(content=result, tool_call_id=tc.get("id")))
-            # tool_index is the 0-based position of this call in the run's
-            # toolCalls[] (same order tool_call events were emitted).
             await emit({
                 "phase": "tool_result",
-                "tool_index": run_state.tool_index,
-                "result": result,
-                "status": "complete",
+                "tool_call_id": tc.get("id"),
+                "content": result,
             })
-            run_state.tool_index += 1
         return {"messages": out}
 
     def should_continue(state: ResearchState) -> Literal["tools", "__end__"]:
@@ -450,9 +449,11 @@ async def research(
     to populate `agent.subagents()` for the chat-subagents primitive).
     Always pass a stable identifier like "research".
 
-    The subagent run is also surfaced to the UI as a native AG-UI ACTIVITY
-    (activityType "subagent"): started → reason/tool/answer transcript →
-    finished, keyed by this tool's own call id.
+    The subagent run is also surfaced to the UI as the protocol's standard
+    subagent events (SUBAGENT_STARTED → attributed reason/tool/answer
+    transcript → SUBAGENT_FINISHED / SUBAGENT_ERROR), keyed by this tool's
+    own call id: the graph dispatches `subagent_activity` CUSTOM payloads
+    and the server's SubagentEmittingAgent expands them on the wire.
     """
 
     async def _emit(payload: dict) -> None:
@@ -463,14 +464,18 @@ async def research(
         except Exception:
             pass
 
-    run_state = SubagentRunState()
+    run_state = SubagentRunState(tool_call_id)
     subgraph = _build_research_subgraph(_emit, run_state)
 
     await _emit({"phase": "started", "name": subagent_type})
-    result = await subgraph.ainvoke(
-        {"topic": topic, "messages": [], "iterations": 0},
-        config={"callbacks": [SubagentStreamHandler(tool_call_id, run_state)]},
-    )
+    try:
+        result = await subgraph.ainvoke(
+            {"topic": topic, "messages": [], "iterations": 0},
+            config={"callbacks": [SubagentStreamHandler(tool_call_id, run_state)]},
+        )
+    except Exception as exc:
+        await _emit({"phase": "error", "message": f"{type(exc).__name__}: {exc}"})
+        raise
     await _emit({"phase": "finished", "status": "complete"})
 
     msgs = result.get("messages") if isinstance(result, dict) else None

@@ -63,7 +63,7 @@ async def test_subgraph_emits_reason_tool_answer_transcript():
         events.append({"subagent_id": "tc-research", **payload})
 
     fake_model = _FakeToolCallingModel()
-    run_state = SubagentRunState()
+    run_state = SubagentRunState("tc-research")
     subgraph = _build_research_subgraph(
         fake_emit, run_state, llm_factory=lambda force_answer: fake_model
     )
@@ -85,23 +85,21 @@ async def test_subgraph_emits_reason_tool_answer_transcript():
 
     by_phase = {p: e for p, e in phases}
 
-    # message_start indices: 0 then 1.
-    starts = [e["message_index"] for p, e in phases if p == "message_start"]
-    assert starts == [0, 1], starts
+    # message_start ids follow <tool_call_id>-sub-m<n>: m1 then m2.
+    starts = [e["message_id"] for p, e in phases if p == "message_start"]
+    assert starts == ["tc-research-sub-m1", "tc-research-sub-m2"], starts
 
-    # tool_call carries id/name/args + the originating message_index (0).
+    # tool_call carries id/name/args + the originating message id (m1).
     tc = by_phase["tool_call"]
-    assert tc["message_index"] == 0
+    assert tc["message_id"] == "tc-research-sub-m1"
     assert tc["tool_call_id"] == "call_lookup_1"
     assert tc["name"] == "lookup"
     assert tc["args"] == {"query": "angular signals"}
 
-    # tool_result carries the matching tool_index (0), the lookup result text,
-    # and a complete status.
+    # tool_result carries the matching tool_call_id and the lookup result text.
     tr = by_phase["tool_result"]
-    assert tr["tool_index"] == 0
-    assert tr["status"] == "complete"
-    assert isinstance(tr["result"], str) and "signal" in tr["result"].lower()
+    assert tr["tool_call_id"] == "call_lookup_1"
+    assert isinstance(tr["content"], str) and "signal" in tr["content"].lower()
 
     # Loop terminates: the forced-answer turn returns a plain answer (no tool
     # calls), so the run ends with a final AIMessage and exactly two turns.
