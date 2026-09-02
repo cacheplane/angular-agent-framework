@@ -1487,3 +1487,35 @@
   height: 1px;
   background: var(--color-border);
 }
+
+/* StackDiagramSection — components/landing/StackDiagramSection.tsx */
+.stack-diagram-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+.stack-diagram-eyebrow {
+  margin-bottom: 4px;
+}
+.stack-diagram-headline {
+  font-family: var(--font-garamond);
+  font-size: var(--text-h2);
+  line-height: var(--text-h2--line-height);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+  letter-spacing: -0.015em;
+}
+.stack-diagram-body {
+  font-family: var(--font-inter);
+  font-size: var(--text-body-lg);
+  line-height: var(--text-body-lg--line-height);
+  color: var(--color-text-secondary);
+  max-width: 620px;
+  margin: 0 0 12px;
+}
+.stack-diagram-section .tp-diagram-figure {
+  width: 100%;
+}

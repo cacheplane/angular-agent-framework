@@ -2,6 +2,7 @@ import { Hero } from '../components/landing/Hero';
 import { LogoRibbon } from '../components/landing/LogoRibbon';
 import { YesWall } from '../components/landing/YesWall';
 import { FeatureBlock } from '../components/landing/FeatureBlock';
+import { StackDiagramSection } from '../components/landing/StackDiagramSection';
 import { DemoShowcase } from '../components/landing/DemoShowcase';
 import { MediumSwitcher } from '../components/landing/MediumSwitcher';
 import { SECTION_MEDIA } from '../lib/section-media';
@@ -36,6 +37,14 @@ export default async function HomePage() {
       <Hero />
       <LogoRibbon />
       <YesWall />
+
+      <StackDiagramSection
+        id="architecture"
+        eyebrow="Architecture"
+        headline="One contract between your UI and any runtime"
+        body="Your Angular components consume a signal-shaped Agent contract. Adapters implement it — swap the runtime underneath without touching the UI."
+        caption="The chat surface never imports a runtime SDK — only the contract."
+      />
 
       {/* Interactive demo showcase */}
       <Section surface="canvas">
