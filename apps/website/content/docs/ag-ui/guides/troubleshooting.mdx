@@ -137,7 +137,7 @@ Pass the index of the assistant message you want to replace, not the user messag
 
 History and time-travel are not implemented by the AG-UI adapter today.
 
-Current scope is messages, status/loading/error, tool calls, state/custom events, reasoning messages, message snapshots, interrupts from `CUSTOM` `on_interrupt` events, subagent/activity progress from `ACTIVITY_*` events, and citations from state.
+Current scope is messages, status/loading/error, tool calls, state/custom events, reasoning messages, message snapshots, interrupts from `CUSTOM` `on_interrupt` events, subagent progress from `SUBAGENT_*` and `ACTIVITY_*` events, and citations from state.
 
 Use `@threadplane/langgraph` if you need LangGraph Platform thread history APIs, or write a custom adapter against the `@threadplane/chat` `Agent` contract if you need AG-UI plus product-specific behavior.
 
