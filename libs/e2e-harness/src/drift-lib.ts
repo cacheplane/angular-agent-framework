@@ -6,6 +6,9 @@
 export interface FixtureEntry {
   match: Record<string, unknown>;
   response: Record<string, unknown>;
+  /** Stamped by the aimock recorder: fingerprints of the system prompt and
+   * tool definitions that produced the recording. Older fixtures lack it. */
+  metadata?: { systemHash?: string; toolsHash?: string };
 }
 
 export interface EntrySummary {
@@ -18,10 +21,16 @@ export interface EntrySummary {
    * recorder emits this ("fixture may be incomplete") when it cannot parse
    * tool-call deltas out of a stream. A recorder artifact, not drift. */
   incomplete: boolean;
+  systemHash?: string;
+  toolsHash?: string;
 }
 
 export interface DriftReport {
   changed: Array<{ key: string; reason: string; committed: EntrySummary; recorded: EntrySummary }>;
+  /** Pairs whose recorder-stamped systemHash/toolsHash differ: the prompt or
+   * tool definitions moved underneath the fixture — not model drift. Only
+   * reported when BOTH sides carry the hash. Independent of `changed`. */
+  promptChanged: Array<{ key: string; reason: string; committed: EntrySummary; recorded: EntrySummary }>;
   unmatchedCommitted: string[];
   unmatchedRecorded: string[];
   /** Recorded entries the recorder itself marked as possibly incomplete
@@ -44,20 +53,23 @@ export function summarizeEntry(e: FixtureEntry): EntrySummary {
         .sort()
     : [];
   const content = e.response?.['content'];
-  return {
+  const summary: EntrySummary = {
     key: entryKey(e),
     kind: names.length > 0 ? 'toolCalls' : 'text',
     toolNames: names,
     lengthBucket: Math.floor(Math.log10(Math.max(1, JSON.stringify(e.response ?? {}).length))),
     incomplete: names.length === 0 && (content === '' || content === undefined),
   };
+  if (typeof e.metadata?.systemHash === 'string') summary.systemHash = e.metadata.systemHash;
+  if (typeof e.metadata?.toolsHash === 'string') summary.toolsHash = e.metadata.toolsHash;
+  return summary;
 }
 
 export function diffFixtures(committed: FixtureEntry[], recorded: FixtureEntry[]): DriftReport {
   const byKey = (list: FixtureEntry[]) => new Map(list.map((e) => [entryKey(e), summarizeEntry(e)]));
   const c = byKey(committed);
   const r = byKey(recorded);
-  const report: DriftReport = { changed: [], unmatchedCommitted: [], unmatchedRecorded: [], incompleteRecordings: [] };
+  const report: DriftReport = { changed: [], promptChanged: [], unmatchedCommitted: [], unmatchedRecorded: [], incompleteRecordings: [] };
   for (const [key, cs] of c) {
     const rs = r.get(key);
     if (!rs) { report.unmatchedCommitted.push(key); continue; }
@@ -67,6 +79,14 @@ export function diffFixtures(committed: FixtureEntry[], recorded: FixtureEntry[]
     if (cs.toolNames.join(',') !== rs.toolNames.join(',')) reasons.push(`toolNames: [${cs.toolNames}] -> [${rs.toolNames}]`);
     if (cs.lengthBucket !== rs.lengthBucket) reasons.push(`lengthBucket: ${cs.lengthBucket} -> ${rs.lengthBucket}`);
     if (reasons.length) report.changed.push({ key, reason: reasons.join('; '), committed: cs, recorded: rs });
+    // Hash mismatch means our prompt/tools moved, not the model. Absent hashes
+    // (pre-metadata fixtures) prove nothing, so only compare when both exist.
+    const promptReasons: string[] = [];
+    if (cs.systemHash && rs.systemHash && cs.systemHash !== rs.systemHash)
+      promptReasons.push(`systemHash: ${cs.systemHash} -> ${rs.systemHash}`);
+    if (cs.toolsHash && rs.toolsHash && cs.toolsHash !== rs.toolsHash)
+      promptReasons.push(`toolsHash: ${cs.toolsHash} -> ${rs.toolsHash}`);
+    if (promptReasons.length) report.promptChanged.push({ key, reason: promptReasons.join('; '), committed: cs, recorded: rs });
   }
   for (const key of r.keys()) if (!c.has(key)) report.unmatchedRecorded.push(key);
   return report;
