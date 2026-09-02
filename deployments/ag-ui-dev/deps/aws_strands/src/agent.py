@@ -19,11 +19,16 @@ contract surfaces measured in the 2026-08-31 runtime-portability matrix:
   resumes from the client's top-level ``resume`` entries keyed by
   ``interruptId`` (never the LangGraph bridge's CUSTOM ``on_interrupt``).
 
-No subagents surface and no multi-agent route: the Strands bridge routes
-delegation through CUSTOM MultiAgentHandoff + STEP_* with zero ACTIVITY
-events (measured red upstream), and multi-agent routes crash the stale
-PyPI ``ag-ui-strands`` 0.3.0 wheel — which is why this example pins the
-bridge to a git ref (see pyproject.toml).
+- subagents: ``research_availability`` delegates to a tool-less specialist
+  ``availability_researcher`` Agent via an async-generator ``@tool`` that
+  re-yields the specialist's ``stream_async`` events; a per-tool
+  ``ToolBehavior.tool_stream_event_handler`` (src/subagent_emitter.py)
+  translates them into standard ``SUBAGENT_*`` + child ``TEXT_MESSAGE_*``
+  wire events. (The bridge natively drops inner text deltas and would
+  otherwise route delegation through CUSTOM MultiAgentHandoff + STEP_*;
+  multi-agent routes also crash the stale PyPI ``ag-ui-strands`` 0.3.0
+  wheel — which is why this example pins the bridge to a git ref, see
+  pyproject.toml and docs/wire-capture-subagents.md.)
 
 Model: Strands' native OpenAI provider on plain ``OPENAI_API_KEY`` — no
 AWS credentials involved. ``OPENAI_BASE_URL`` is honored, which is how the
@@ -44,6 +49,8 @@ from strands.models.openai import OpenAIModel
 from strands.types.tools import ToolContext
 
 from ag_ui_strands import StrandsAgent, StrandsAgentConfig, ToolBehavior
+
+from .subagent_emitter import emit_subagent_events
 
 _SLOTS = {
     "monday": ["09:00", "13:30"],
@@ -139,6 +146,41 @@ async def booking_state(context) -> dict | None:
     return _complete_state()
 
 
+_RESEARCHER_INSTRUCTIONS = (
+    "You are an availability researcher. Given attendee names and a date "
+    "range, produce a short bullet summary of likely availability windows. "
+    "Be concise: 3 bullets max."
+)
+
+
+@tool
+async def research_availability(attendees: str, date_range: str):
+    """Delegate availability research for the given attendees to a specialist.
+
+    Args:
+        attendees: Comma-separated attendee names, e.g. 'Ada, Grace'.
+        date_range: The window to research, e.g. 'next week'.
+
+    Returns:
+        The specialist's bullet summary of likely availability windows.
+    """
+    chunks: list[str] = []
+    try:
+        async for event in availability_researcher.stream_async(
+            f"Attendees: {attendees}\nDate range: {date_range}"
+        ):
+            if isinstance(event, dict) and isinstance(event.get("data"), str):
+                chunks.append(event["data"])
+            yield event
+    except Exception as exc:  # pragma: no cover - not reachable without a live model failure
+        # Surface the failure to the emitter (which owns the SUBAGENT_ERROR
+        # wire event), then let the tool error propagate to Strands normally.
+        yield {"delegation_error": str(exc)}
+        raise
+    # Strands takes the LAST yielded value as the tool result.
+    yield "".join(chunks)
+
+
 _INSTRUCTIONS = """You are a meeting scheduling copilot.
 
 When the user asks to book a meeting:
@@ -155,6 +197,9 @@ booked.
 
 Keep every response brief and factual. Never invent availability — use the
 tool.
+
+When the user asks about attendees' availability, delegate that research to
+the `research_availability` tool before proposing meeting slots.
 """
 
 
@@ -172,11 +217,22 @@ def build_model() -> OpenAIModel:
     return OpenAIModel(client_args=client_args, model_id=os.environ.get("OPENAI_CHAT_MODEL", "gpt-4o-mini"))
 
 
+# Tool-less specialist the orchestrator delegates availability research to
+# via the `research_availability` async-generator tool above. Its streamed
+# events cross the bridge as tool_stream_events and are translated into
+# SUBAGENT_* wire events by the emitter registered in ToolBehavior below.
+availability_researcher = Agent(
+    model=build_model(),
+    system_prompt=_RESEARCHER_INSTRUCTIONS,
+    name="availability_researcher",
+    tools=[],
+)
+
 agent = StrandsAgent(
     agent=Agent(
         model=build_model(),
         system_prompt=_INSTRUCTIONS,
-        tools=[check_availability, book_meeting],
+        tools=[check_availability, book_meeting, research_availability],
     ),
     name="aws-strands",
     description="Books meetings with availability lookup, shared state, and human approval.",
@@ -184,6 +240,9 @@ agent = StrandsAgent(
         tool_behaviors={
             "check_availability": ToolBehavior(state_from_result=availability_state),
             "book_meeting": ToolBehavior(state_from_args=booking_state),
+            "research_availability": ToolBehavior(
+                tool_stream_event_handler=emit_subagent_events,
+            ),
         },
     ),
 )
