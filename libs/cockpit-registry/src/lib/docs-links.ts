@@ -18,9 +18,9 @@
  *   page covers this yet". Consumers must not render a link for it. Every
  *   sentinel entry is listed in `COCKPIT_TOPICS_WITHOUT_DOCS` below, so nobody
  *   can silently blank an entry that used to point somewhere real.
- * - `apps/cockpit/src/lib/docs-links.spec.ts` checks every non-sentinel value
- *   against the website's actual content tree and nav config. A docs rename
- *   breaks that test rather than the link.
+ * - `apps/website/src/lib/cockpit-docs-links.spec.ts` checks every non-sentinel
+ *   value against the Website's actual content tree and nav config. A docs
+ *   rename breaks that test rather than the link.
  */
 
 /** Sentinel meaning "this capability has no published docs page yet." */
@@ -35,24 +35,35 @@ export const NO_COCKPIT_DOCS_LINK = '';
  */
 export const COCKPIT_DOCS_LINKS: Readonly<Record<string, string>> = {
   // deep-agents
-  'deep-agents/getting-started/overview': '/docs/deep-agents/getting-started/introduction',
-  'deep-agents/core-capabilities/planning': '/docs/deep-agents/capabilities/planning',
-  'deep-agents/core-capabilities/filesystem': '/docs/deep-agents/capabilities/filesystem',
-  'deep-agents/core-capabilities/subagents': '/docs/deep-agents/capabilities/subagents',
-  'deep-agents/core-capabilities/memory': '/docs/deep-agents/capabilities/memory',
-  'deep-agents/core-capabilities/skills': '/docs/deep-agents/capabilities/skills',
+  'deep-agents/getting-started/overview':
+    '/docs/deep-agents/getting-started/introduction',
+  'deep-agents/core-capabilities/planning':
+    '/docs/deep-agents/capabilities/planning',
+  'deep-agents/core-capabilities/filesystem':
+    '/docs/deep-agents/capabilities/filesystem',
+  'deep-agents/core-capabilities/subagents':
+    '/docs/deep-agents/capabilities/subagents',
+  'deep-agents/core-capabilities/memory':
+    '/docs/deep-agents/capabilities/memory',
+  'deep-agents/core-capabilities/skills':
+    '/docs/deep-agents/capabilities/skills',
 
   // langgraph
-  'langgraph/getting-started/overview': '/docs/langgraph/getting-started/introduction',
-  'langgraph/core-capabilities/persistence': '/docs/langgraph/guides/persistence',
+  'langgraph/getting-started/overview':
+    '/docs/langgraph/getting-started/introduction',
+  'langgraph/core-capabilities/persistence':
+    '/docs/langgraph/guides/persistence',
   // Durable execution is the checkpointer story; persistence is where it is written up.
-  'langgraph/core-capabilities/durable-execution': '/docs/langgraph/guides/persistence',
+  'langgraph/core-capabilities/durable-execution':
+    '/docs/langgraph/guides/persistence',
   'langgraph/core-capabilities/streaming': '/docs/langgraph/guides/streaming',
   'langgraph/core-capabilities/interrupts': '/docs/langgraph/guides/interrupts',
   'langgraph/core-capabilities/memory': '/docs/langgraph/guides/memory',
   'langgraph/core-capabilities/subgraphs': '/docs/langgraph/guides/subgraphs',
-  'langgraph/core-capabilities/time-travel': '/docs/langgraph/guides/time-travel',
-  'langgraph/core-capabilities/deployment-runtime': '/docs/langgraph/guides/deployment',
+  'langgraph/core-capabilities/time-travel':
+    '/docs/langgraph/guides/time-travel',
+  'langgraph/core-capabilities/deployment-runtime':
+    '/docs/langgraph/guides/deployment',
   // The demo's visible half is the browser-declared tool, which `chat` documents.
   'langgraph/core-capabilities/client-tools': '/docs/chat/guides/client-tools',
 
@@ -62,29 +73,37 @@ export const COCKPIT_DOCS_LINKS: Readonly<Record<string, string>> = {
   'ag-ui/core-capabilities/streaming': '/docs/ag-ui/reference/event-mapping',
   'ag-ui/core-capabilities/interrupts': '/docs/ag-ui/guides/interrupts',
   'ag-ui/core-capabilities/tool-views': '/docs/chat/components/chat-tool-calls',
-  'ag-ui/core-capabilities/json-render': '/docs/render/getting-started/introduction',
+  'ag-ui/core-capabilities/json-render':
+    '/docs/render/getting-started/introduction',
   'ag-ui/core-capabilities/client-tools': '/docs/chat/guides/client-tools',
   'ag-ui/core-capabilities/a2ui': '/docs/a2ui/getting-started/introduction',
-  'ag-ui/core-capabilities/subagents': '/docs/chat/components/chat-subagent-card',
+  'ag-ui/core-capabilities/subagents':
+    '/docs/chat/components/chat-subagent-card',
 
   // render
-  'render/getting-started/overview': '/docs/render/getting-started/introduction',
+  'render/getting-started/overview':
+    '/docs/render/getting-started/introduction',
   'render/core-capabilities/spec-rendering': '/docs/render/guides/specs',
-  'render/core-capabilities/element-rendering': '/docs/render/api/render-spec-component',
-  'render/core-capabilities/state-management': '/docs/render/guides/state-store',
+  'render/core-capabilities/element-rendering':
+    '/docs/render/api/render-spec-component',
+  'render/core-capabilities/state-management':
+    '/docs/render/guides/state-store',
   'render/core-capabilities/registry': '/docs/render/guides/registry',
   // Repeat loops are a spec feature, documented under "Repeat Loops" in the specs guide.
   'render/core-capabilities/repeat-loops': '/docs/render/guides/specs',
   // `$computed` resolves against the `functions` map registered by provideRender().
-  'render/core-capabilities/computed-functions': '/docs/render/api/provide-render',
+  'render/core-capabilities/computed-functions':
+    '/docs/render/api/provide-render',
 
   // chat
   'chat/getting-started/overview': '/docs/chat/getting-started/introduction',
   'chat/core-capabilities/messages': '/docs/chat/concepts/message-model',
   'chat/core-capabilities/input': '/docs/chat/components/chat-input',
-  'chat/core-capabilities/interrupts': '/docs/chat/components/chat-interrupt-panel',
+  'chat/core-capabilities/interrupts':
+    '/docs/chat/components/chat-interrupt-panel',
   'chat/core-capabilities/tool-calls': '/docs/chat/components/chat-tool-calls',
-  'chat/core-capabilities/subagents': '/docs/chat/components/chat-subagent-card',
+  'chat/core-capabilities/subagents':
+    '/docs/chat/components/chat-subagent-card',
   'chat/core-capabilities/threads': '/docs/chat/guides/thread-routing',
   // No chat-timeline page yet; the trace row is the primitive the timeline renders.
   'chat/core-capabilities/timeline': '/docs/chat/components/chat-trace',
@@ -94,10 +113,12 @@ export const COCKPIT_DOCS_LINKS: Readonly<Record<string, string>> = {
   'chat/core-capabilities/a2ui': '/docs/chat/a2ui/overview',
 
   // runtimes
-  'runtimes/getting-started/overview': '/docs/runtimes/getting-started/introduction',
+  'runtimes/getting-started/overview':
+    '/docs/runtimes/getting-started/introduction',
   'runtimes/core-capabilities/microsoft-agent-framework':
     '/docs/runtimes/microsoft-agent-framework/overview',
-  'runtimes/core-capabilities/aws-strands': '/docs/runtimes/aws-strands/overview',
+  'runtimes/core-capabilities/aws-strands':
+    '/docs/runtimes/aws-strands/overview',
   'runtimes/core-capabilities/mastra': '/docs/runtimes/mastra/overview',
 };
 
@@ -122,4 +143,5 @@ export const getCockpitDocsPath = (
   product: string,
   section: string,
   topic: string
-): string => COCKPIT_DOCS_LINKS[`${product}/${section}/${topic}`] ?? NO_COCKPIT_DOCS_LINK;
+): string =>
+  COCKPIT_DOCS_LINKS[`${product}/${section}/${topic}`] ?? NO_COCKPIT_DOCS_LINK;

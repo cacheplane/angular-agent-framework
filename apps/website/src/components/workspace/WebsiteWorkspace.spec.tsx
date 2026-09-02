@@ -79,7 +79,8 @@ const docsOnlyPresentation: WorkspacePresentation = {
 const mappedResolution = (
   id: string,
   topic: string,
-  availableModes: ('Docs' | 'Run' | 'Code' | 'API')[]
+  availableModes: ('Docs' | 'Run' | 'Code' | 'API')[],
+  docsPath = `/docs/langgraph/guides/${topic}`
 ): WorkspaceResolution => ({
   kind: 'mapped',
   identity: {
@@ -90,7 +91,7 @@ const mappedResolution = (
     page: 'overview',
     language: 'python',
     title: topic,
-    docsPath: `/docs/langgraph/guides/${topic}`,
+    docsPath,
     workspacePath: `/workspace/langgraph/${topic}`,
     legacyPath: `/langgraph/core-capabilities/${topic}/overview/python`,
     runtimeAdapter: 'langgraph',
@@ -340,7 +341,7 @@ describe('WebsiteWorkspace', () => {
     await waitFor(() => {
       expect(activeWorkspaceMode()).toBe('Docs');
       expect(mocks.replace).toHaveBeenCalledWith(
-        '/docs/langgraph/guides/testing?keep=1'
+        '/docs/langgraph/guides/testing'
       );
     });
     expect(mocks.replace.mock.calls[0]?.[0]).not.toContain('runtime');
@@ -366,7 +367,7 @@ describe('WebsiteWorkspace', () => {
     await waitFor(() => {
       expect(activeWorkspaceMode()).toBe('Docs');
       expect(mocks.replace).toHaveBeenCalledWith(
-        '/docs/langgraph/guides/streaming?keep=1'
+        '/docs/langgraph/guides/streaming'
       );
     });
   });
@@ -381,16 +382,79 @@ describe('WebsiteWorkspace', () => {
 
     act(() => mocks.latestProviderProps?.pushMode('Run'));
     expect(mocks.push).toHaveBeenCalledWith(
-      '/docs/langgraph/guides/testing?keep=1&mode=run'
+      '/docs/langgraph/guides/testing?mode=run'
     );
 
     act(() => mocks.latestProviderProps?.pushMode('Docs'));
     expect(mocks.push).toHaveBeenLastCalledWith(
-      '/docs/langgraph/guides/testing?keep=1'
+      '/docs/langgraph/guides/testing'
     );
     expect(mocks.push.mock.calls.flat().join(' ')).not.toMatch(
       /runtimeUrl|runtime_url|endpoint|credential/i
     );
+  });
+
+  it('serializes Docs mode explicitly on workspace routes and keeps the selected mode synchronized', async () => {
+    const resolution = mappedResolution(
+      'langgraph:core-capabilities:durable-execution:overview:python',
+      'durable-execution',
+      ['Docs', 'Run', 'Code', 'API'],
+      '/docs/langgraph/guides/persistence'
+    );
+    window.history.replaceState(
+      {},
+      '',
+      '/workspace/langgraph/durable-execution?mode=run&keep=1'
+    );
+    mocks.push.mockImplementation((href: string) => {
+      window.history.pushState({}, '', href);
+    });
+    renderWorkspace({
+      resolution,
+      presentation: mappedPresentation(resolution),
+      routePath: '/workspace/langgraph/durable-execution',
+      routeKind: 'workspace',
+      docsSlot: undefined,
+    });
+    await waitFor(() => expect(activeWorkspaceMode()).toBe('Run'));
+
+    act(() => mocks.latestProviderProps?.pushMode('Docs'));
+
+    await waitFor(() => {
+      expect(mocks.push).toHaveBeenCalledWith(
+        '/workspace/langgraph/durable-execution?mode=docs'
+      );
+      expect(mocks.latestProviderProps?.requestedMode).toBe('docs');
+      expect(activeWorkspaceMode()).toBe('Docs');
+    });
+  });
+
+  it('restores the canonical workspace Docs mode on reload', async () => {
+    const resolution = mappedResolution(
+      'langgraph:core-capabilities:durable-execution:overview:python',
+      'durable-execution',
+      ['Docs', 'Run', 'Code', 'API'],
+      '/docs/langgraph/guides/persistence'
+    );
+    window.history.replaceState(
+      {},
+      '',
+      '/workspace/langgraph/durable-execution?mode=docs'
+    );
+
+    renderWorkspace({
+      resolution,
+      presentation: mappedPresentation(resolution),
+      routePath: '/workspace/langgraph/durable-execution',
+      routeKind: 'workspace',
+      docsSlot: undefined,
+    });
+
+    await waitFor(() => {
+      expect(activeWorkspaceMode()).toBe('Docs');
+      expect(mocks.latestProviderProps?.requestedMode).toBe('docs');
+    });
+    expect(mocks.replace).not.toHaveBeenCalled();
   });
 
   it('uses workspace routes only when Docs are absent or would lose identity', () => {
@@ -637,21 +701,68 @@ describe('WebsiteWorkspace', () => {
     });
   });
 
-  it('treats repeated mode values as invalid during history traversal', async () => {
+  it('keeps workspace mode state aligned across Back and Forward history entries', async () => {
     const source = mappedResolution(
-      'deep-agents:core-capabilities:planning:overview:python',
-      'planning',
-      ['Docs', 'Run', 'Code', 'API']
+      'langgraph:core-capabilities:durable-execution:overview:python',
+      'durable-execution',
+      ['Docs', 'Run', 'Code', 'API'],
+      '/docs/langgraph/guides/persistence'
     );
     window.history.replaceState(
       {},
       '',
-      '/workspace/deep-agents/planning?mode=code'
+      '/workspace/langgraph/durable-execution?mode=docs'
     );
     renderWorkspace({
       resolution: source,
       presentation: mappedPresentation(source),
-      routePath: '/workspace/deep-agents/planning',
+      routePath: '/workspace/langgraph/durable-execution',
+      routeKind: 'workspace',
+      docsSlot: undefined,
+    });
+    await waitFor(() => expect(activeWorkspaceMode()).toBe('Docs'));
+
+    window.history.pushState(
+      {},
+      '',
+      '/workspace/langgraph/durable-execution?mode=code'
+    );
+    act(() => window.dispatchEvent(new PopStateEvent('popstate')));
+    await waitFor(() => expect(activeWorkspaceMode()).toBe('Code'));
+
+    window.history.replaceState(
+      {},
+      '',
+      '/workspace/langgraph/durable-execution?mode=docs'
+    );
+    act(() => window.dispatchEvent(new PopStateEvent('popstate')));
+    await waitFor(() => expect(activeWorkspaceMode()).toBe('Docs'));
+
+    window.history.replaceState(
+      {},
+      '',
+      '/workspace/langgraph/durable-execution?mode=code'
+    );
+    act(() => window.dispatchEvent(new PopStateEvent('popstate')));
+    await waitFor(() => expect(activeWorkspaceMode()).toBe('Code'));
+  });
+
+  it('treats repeated mode values as invalid during history traversal', async () => {
+    const source = mappedResolution(
+      'langgraph:core-capabilities:durable-execution:overview:python',
+      'durable-execution',
+      ['Docs', 'Run', 'Code', 'API'],
+      '/docs/langgraph/guides/persistence'
+    );
+    window.history.replaceState(
+      {},
+      '',
+      '/workspace/langgraph/durable-execution?mode=code'
+    );
+    renderWorkspace({
+      resolution: source,
+      presentation: mappedPresentation(source),
+      routePath: '/workspace/langgraph/durable-execution',
       routeKind: 'workspace',
       docsSlot: undefined,
     });
@@ -661,7 +772,7 @@ describe('WebsiteWorkspace', () => {
     window.history.pushState(
       {},
       '',
-      '/workspace/deep-agents/planning?mode=api&mode=docs&keep=1'
+      '/workspace/langgraph/durable-execution?mode=api&mode=docs&keep=1'
     );
     act(() => window.dispatchEvent(new PopStateEvent('popstate')));
 
@@ -673,9 +784,11 @@ describe('WebsiteWorkspace', () => {
       String(mocks.replace.mock.calls[0]?.[0]),
       window.location.origin
     );
-    expect(replacement.pathname).toBe('/workspace/deep-agents/planning');
+    expect(replacement.pathname).toBe(
+      '/workspace/langgraph/durable-execution'
+    );
     expect(replacement.searchParams.getAll('mode')).toEqual(['run']);
-    expect(replacement.searchParams.get('keep')).toBe('1');
+    expect(replacement.searchParams.has('keep')).toBe(false);
   });
 
   it('uses the Website same-origin ingest proxy for the real runtime iframe', async () => {

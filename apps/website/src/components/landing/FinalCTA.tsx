@@ -10,7 +10,7 @@ interface FinalCTAProps {
   subtext?: string;
   /** Override CTA. When omitted, renders the LangGraph + AG-UI demo pair. */
   primary?: { label: string; href: string; external?: boolean } | null;
-  /** Optional secondary CTA. Defaults to "See each feature in action →" → cockpit. */
+  /** Optional secondary CTA. Defaults to the live Website workspace. */
   secondary?: { label: string; href: string; external?: boolean } | null;
   /** Optional trailing caption. Defaults to licensing and telemetry line. Pass null to hide. */
   caption?: string | null;
@@ -22,7 +22,10 @@ interface FinalCTAProps {
   variant?: 'default' | 'dark';
 }
 
-const DEFAULT_SECONDARY = { label: 'See each feature in action →', href: 'https://cockpit.threadplane.ai', external: true };
+const DEFAULT_SECONDARY = {
+  label: 'See each feature in action →',
+  href: '/docs/langgraph/guides/streaming?mode=run',
+};
 
 export function FinalCTA({
   headline = 'Stop stalling on agentic Angular.',

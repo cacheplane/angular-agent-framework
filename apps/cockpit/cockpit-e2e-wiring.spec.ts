@@ -41,7 +41,10 @@ function listProjectJsonFiles(root: string): string[] {
   return out.sort();
 }
 
-function listFiles(root: string, predicate: (filePath: string) => boolean): string[] {
+function listFiles(
+  root: string,
+  predicate: (filePath: string) => boolean
+): string[] {
   const out: string[] = [];
   const stack = [root];
 
@@ -75,9 +78,11 @@ function activeCockpitE2eWiring(): E2eWiring[] {
       return { project, projectJsonPath };
     })
     .filter(({ project, projectJsonPath }) => {
-      return project.name?.startsWith('cockpit-') &&
+      return (
+        project.name?.startsWith('cockpit-') &&
         projectJsonPath.includes('/angular/') &&
-        Boolean(project.targets?.['e2e']);
+        Boolean(project.targets?.['e2e'])
+      );
     })
     .map(({ project, projectJsonPath }) => {
       const projectRoot = dirname(projectJsonPath);
@@ -96,12 +101,20 @@ function activeCockpitE2eWiring(): E2eWiring[] {
       // Post-port-registry migration: ports are imported from
       // cockpit/ports.mjs rather than living as literals in
       // global-setup-impl.ts. Look them up by project name.
-      const ports = portsFor(project.name) as { angular: number; langgraph: number };
+      const ports = portsFor(project.name) as {
+        angular: number;
+        langgraph: number;
+      };
       const langgraphPort = ports.langgraph;
       const angularPort = ports.angular;
 
       if (!project.name || !langgraphCwd || !langgraphPort || !angularPort) {
-        throw new Error(`Unable to parse e2e wiring for ${relative(repoRoot, projectJsonPath)}`);
+        throw new Error(
+          `Unable to parse e2e wiring for ${relative(
+            repoRoot,
+            projectJsonPath
+          )}`
+        );
       }
 
       return {
@@ -115,43 +128,24 @@ function activeCockpitE2eWiring(): E2eWiring[] {
 }
 
 describe('cockpit e2e wiring', () => {
-  it('keeps the representative production smoke deterministic and scoped to Recheck', () => {
-    const smoke = readRepoFile('apps/cockpit/e2e/production-smoke.spec.ts');
-    const start = smoke.indexOf(
-      "test('representative runtime reports Ready after Recheck and records Activity'"
+  it('keeps production platform smoke under Website ownership', () => {
+    const smoke = readRepoFile(
+      'apps/website/e2e/platform-production-smoke.spec.ts'
     );
-    const end = smoke.indexOf("test('favicon resolves after redirects'", start);
-    const representative = smoke.slice(start, end);
+    const websiteConfig = readRepoFile('apps/website/playwright.config.ts');
 
-    expect(start).toBeGreaterThan(-1);
-    expect(end).toBeGreaterThan(start);
-    expect(representative).toContain('test.setTimeout(60_000)');
-    expect(representative).toContain("getByText('Ready', { exact: true })");
-    expect(representative).toContain(
-      "getByRole('button', { name: 'Recheck' })"
-    );
-    expect(representative).toContain('await expect(checkEvents).toHaveCount(1)');
-    expect(representative).toContain('await expect(readyEvents).toHaveCount(1)');
-    expect(representative).toContain('await expect(checkEvents).toHaveCount(2)');
-    expect(representative).toContain('await expect(readyEvents).toHaveCount(2)');
-    expect(representative).not.toContain(
-      "getByRole('button', { name: 'Reload runtime' })"
-    );
-  });
-
-  it('keeps the production favicon redirect covered', () => {
-    const smoke = readRepoFile('apps/cockpit/e2e/production-smoke.spec.ts');
-    const start = smoke.indexOf("test('favicon resolves after redirects'");
-    const end = smoke.indexOf(
-      "test.describe('Production: canonical demo sends runtime telemetry'",
-      start
-    );
-    const favicon = smoke.slice(start, end);
-
-    expect(start).toBeGreaterThan(-1);
-    expect(end).toBeGreaterThan(start);
-    expect(favicon).toContain('request.get(`${COCKPIT_URL}/favicon.ico`)');
-    expect(favicon).toContain('expect(response.status()).toBeLessThan(400)');
+    expect(
+      existsSync(join(repoRoot, 'apps/cockpit/e2e/production-smoke.spec.ts'))
+    ).toBe(false);
+    expect(smoke).toContain('getCanonicalWebsiteWorkspaceHref');
+    expect(smoke).toContain('smokeCase.location');
+    expect(smoke).toContain('getWorkspaceDestinationPath');
+    expect(smoke).toContain('EXAMPLES_URL');
+    expect(smoke).toContain('DEMO_URL');
+    expect(smoke).toContain('AG_UI_TOPICS');
+    expect(smoke).not.toMatch(/Cockpit navigation|Recheck|runtime_ready/);
+    expect(websiteConfig).toContain("process.env['PRODUCTION_SMOKE']");
+    expect(websiteConfig).toContain('platform-production-smoke.spec.ts');
   });
 
   it('does not leave cockpit e2e spec files outside Nx e2e targets', () => {
@@ -162,13 +156,14 @@ describe('cockpit e2e wiring', () => {
           targets?: Record<string, unknown>;
         };
         return [dirname(projectJsonPath), project] as const;
-      }),
+      })
     );
     const orphanSpecs: string[] = [];
 
     for (const specPath of listFiles(
       join(repoRoot, 'cockpit'),
-      (filePath) => filePath.includes('/angular/e2e/') && filePath.endsWith('.spec.ts'),
+      (filePath) =>
+        filePath.includes('/angular/e2e/') && filePath.endsWith('.spec.ts')
     )) {
       const projectRoot = specPath.slice(0, specPath.indexOf('/e2e/'));
       const project = projects.get(projectRoot);
@@ -185,20 +180,34 @@ describe('cockpit e2e wiring', () => {
     const activeE2e = activeCockpitE2eWiring();
 
     for (const wiring of activeE2e) {
-      const capability = capabilities.find((c) => c.angularProject === wiring.project);
+      const capability = capabilities.find(
+        (c) => c.angularProject === wiring.project
+      );
       if (!capability) {
         errors.push(`${wiring.project}: missing capability registry entry`);
         continue;
       }
 
       if (capability.port !== wiring.angularPort) {
-        errors.push(`${wiring.project}: registry port ${capability.port} != global setup angularPort ${wiring.angularPort}`);
+        errors.push(
+          `${wiring.project}: registry port ${capability.port} != global setup angularPort ${wiring.angularPort}`
+        );
       }
-      if (capability.pythonPort !== undefined && capability.pythonPort !== wiring.langgraphPort) {
-        errors.push(`${wiring.project}: registry pythonPort ${capability.pythonPort} != global setup langgraphPort ${wiring.langgraphPort}`);
+      if (
+        capability.pythonPort !== undefined &&
+        capability.pythonPort !== wiring.langgraphPort
+      ) {
+        errors.push(
+          `${wiring.project}: registry pythonPort ${capability.pythonPort} != global setup langgraphPort ${wiring.langgraphPort}`
+        );
       }
-      if (capability.pythonDir !== undefined && capability.pythonDir !== wiring.langgraphCwd) {
-        errors.push(`${wiring.project}: registry pythonDir ${capability.pythonDir} != global setup langgraphCwd ${wiring.langgraphCwd}`);
+      if (
+        capability.pythonDir !== undefined &&
+        capability.pythonDir !== wiring.langgraphCwd
+      ) {
+        errors.push(
+          `${wiring.project}: registry pythonDir ${capability.pythonDir} != global setup langgraphCwd ${wiring.langgraphCwd}`
+        );
       }
 
       // Post-port-registry: proxy.conf.mjs templates the target from
@@ -211,16 +220,23 @@ describe('cockpit e2e wiring', () => {
       if (existsSync(proxyMjs)) {
         const text = readFileSync(proxyMjs, 'utf8');
         if (!text.includes(`portsFor('${wiring.project}')`)) {
-          errors.push(`${wiring.project}: proxy.conf.mjs does not call portsFor('${wiring.project}')`);
+          errors.push(
+            `${wiring.project}: proxy.conf.mjs does not call portsFor('${wiring.project}')`
+          );
         }
       } else if (existsSync(proxyJson)) {
         // Legacy (allowed for AG-UI exception only); not expected for any
         // cap reaching this code path.
-        const proxy = JSON.parse(readFileSync(proxyJson, 'utf8')) as Record<string, { target?: string }>;
+        const proxy = JSON.parse(readFileSync(proxyJson, 'utf8')) as Record<
+          string,
+          { target?: string }
+        >;
         const target = proxy['/api']?.target;
         const expectedTarget = `http://localhost:${wiring.langgraphPort}`;
         if (target !== expectedTarget) {
-          errors.push(`${wiring.project}: proxy target ${target} != ${expectedTarget}`);
+          errors.push(
+            `${wiring.project}: proxy target ${target} != ${expectedTarget}`
+          );
         }
       } else {
         errors.push(`${wiring.project}: missing proxy.conf (no .mjs or .json)`);
@@ -228,14 +244,29 @@ describe('cockpit e2e wiring', () => {
 
       const scriptsDir = join(wiring.projectRoot, 'e2e/scripts');
       if (existsSync(scriptsDir)) {
-        for (const script of readdirSync(scriptsDir).filter((name) => name.startsWith('record-'))) {
+        for (const script of readdirSync(scriptsDir).filter((name) =>
+          name.startsWith('record-')
+        )) {
           const scriptPath = join(scriptsDir, script);
           const text = readFileSync(scriptPath, 'utf8');
           if (!text.includes(wiring.langgraphCwd)) {
-            errors.push(`${wiring.project}: ${relative(repoRoot, scriptPath)} does not reference ${wiring.langgraphCwd}`);
+            errors.push(
+              `${wiring.project}: ${relative(
+                repoRoot,
+                scriptPath
+              )} does not reference ${wiring.langgraphCwd}`
+            );
           }
-          if (wiring.langgraphCwd !== 'cockpit/langgraph/streaming/python' && text.includes('cockpit/langgraph/streaming/python')) {
-            errors.push(`${wiring.project}: ${relative(repoRoot, scriptPath)} still references cockpit/langgraph/streaming/python`);
+          if (
+            wiring.langgraphCwd !== 'cockpit/langgraph/streaming/python' &&
+            text.includes('cockpit/langgraph/streaming/python')
+          ) {
+            errors.push(
+              `${wiring.project}: ${relative(
+                repoRoot,
+                scriptPath
+              )} still references cockpit/langgraph/streaming/python`
+            );
           }
         }
       }
@@ -248,22 +279,28 @@ describe('cockpit e2e wiring', () => {
         // Every cap with an e2e target is covered by definition — no per-cap
         // literal needed in ci.yml.
         const dispatcherCoversAllCaps = workflow.includes(
-          'fromJson(needs.cockpit-e2e-dispatcher.outputs.caps)',
+          'fromJson(needs.cockpit-e2e-dispatcher.outputs.caps)'
         );
         if (dispatcherCoversAllCaps) {
           continue;
         }
         if (!workflow.includes(wiring.project)) {
-          errors.push(`${wiring.project}: ${workflowPath} does not run the e2e target`);
+          errors.push(
+            `${wiring.project}: ${workflowPath} does not run the e2e target`
+          );
         }
         // Matrix-migrated jobs (cockpit-e2e) template the working-directory via
         // `${{ matrix.cap.python }}`; the python path appears in the matrix
         // entry (e.g. `python: cockpit/chat/foo/python`) instead. Accept either
         // form so matrix and non-matrix jobs both pass.
-        const literalUvSync = workflow.includes(`working-directory: ${wiring.langgraphCwd}`);
+        const literalUvSync = workflow.includes(
+          `working-directory: ${wiring.langgraphCwd}`
+        );
         const matrixEntry = workflow.includes(`python: ${wiring.langgraphCwd}`);
         if (!literalUvSync && !matrixEntry) {
-          errors.push(`${wiring.project}: ${workflowPath} does not pre-sync ${wiring.langgraphCwd}`);
+          errors.push(
+            `${wiring.project}: ${workflowPath} does not pre-sync ${wiring.langgraphCwd}`
+          );
         }
       }
     }
@@ -274,12 +311,19 @@ describe('cockpit e2e wiring', () => {
   it('keeps capability-registry ports aligned with cockpit/ports.mjs', async () => {
     const mismatches: string[] = [];
     for (const cap of capabilities) {
-      const ports = portsFor(cap.angularProject) as { angular: number; langgraph: number };
+      const ports = portsFor(cap.angularProject) as {
+        angular: number;
+        langgraph: number;
+      };
       if (cap.port !== ports.angular) {
-        mismatches.push(`${cap.id}: registry.port ${cap.port} !== ports.angular ${ports.angular}`);
+        mismatches.push(
+          `${cap.id}: registry.port ${cap.port} !== ports.angular ${ports.angular}`
+        );
       }
       if (cap.pythonPort !== undefined && cap.pythonPort !== ports.langgraph) {
-        mismatches.push(`${cap.id}: registry.pythonPort ${cap.pythonPort} !== ports.langgraph ${ports.langgraph}`);
+        mismatches.push(
+          `${cap.id}: registry.pythonPort ${cap.pythonPort} !== ports.langgraph ${ports.langgraph}`
+        );
       }
     }
     expect(mismatches).toEqual([]);
@@ -294,7 +338,7 @@ describe('cockpit e2e wiring', () => {
     const errors: string[] = [];
 
     const capProjects = listProjectJsonFiles(join(repoRoot, 'cockpit'))
-      .filter((p) => !p.includes('/ag-ui/'))   // AG-UI has no python; out of scope
+      .filter((p) => !p.includes('/ag-ui/')) // AG-UI has no python; out of scope
       .filter((p) => p.includes('/angular/') || p.includes('/python/'))
       .map((p) => ({
         path: p,
@@ -320,7 +364,9 @@ describe('cockpit e2e wiring', () => {
       // Python caps with a smoke target must also trigger cockpit_smoke.
       if (p.includes('/python/') && project.targets?.['smoke']) {
         if (!tags.has('scope:cockpit-smoke')) {
-          errors.push(`${relPath}: has smoke target but missing scope:cockpit-smoke`);
+          errors.push(
+            `${relPath}: has smoke target but missing scope:cockpit-smoke`
+          );
         }
       }
     }
@@ -330,14 +376,21 @@ describe('cockpit e2e wiring', () => {
 
   it('smoke job represents every cockpit product with a real smoke target', () => {
     const ci = readFileSync(join(repoRoot, '.github/workflows/ci.yml'), 'utf8');
-    const smokeLine = ci.split('\n').find((l) => l.includes('-t smoke --projects=')) ?? '';
-    const listed = (smokeLine.match(/--projects=(\S+)/)?.[1] ?? '').split(',').filter(Boolean);
+    const smokeLine =
+      ci.split('\n').find((l) => l.includes('-t smoke --projects=')) ?? '';
+    const listed = (smokeLine.match(/--projects=(\S+)/)?.[1] ?? '')
+      .split(',')
+      .filter(Boolean);
 
     // Every listed cockpit python project must actually declare a smoke target.
     const missingTarget = listed.filter((name) => {
-      const cap = capabilities.find((c) => c.angularProject.replace('-angular', '-python') === name);
+      const cap = capabilities.find(
+        (c) => c.angularProject.replace('-angular', '-python') === name
+      );
       if (!cap?.pythonDir) return true; // listed a project not backed by a registry cap with python
-      const pj = JSON.parse(readFileSync(join(repoRoot, cap.pythonDir, 'project.json'), 'utf8'));
+      const pj = JSON.parse(
+        readFileSync(join(repoRoot, cap.pythonDir, 'project.json'), 'utf8')
+      );
       return !pj.targets?.smoke;
     });
     expect(missingTarget).toEqual([]);
@@ -345,9 +398,12 @@ describe('cockpit e2e wiring', () => {
     // Every product must be represented by a listed project.
     const products = [...new Set(capabilities.map((c) => c.product))];
     const uncovered = products.filter(
-      (product) => !capabilities.some(
-        (c) => c.product === product && listed.includes(c.angularProject.replace('-angular', '-python')),
-      ),
+      (product) =>
+        !capabilities.some(
+          (c) =>
+            c.product === product &&
+            listed.includes(c.angularProject.replace('-angular', '-python'))
+        )
     );
     expect(uncovered).toEqual([]);
   });

@@ -13,7 +13,7 @@ export default defineConfig({
   // with ERR_MODULE_NOT_FOUND on a `/@fs/...` path under `nx test cockpit`.
   server: { fs: { allow: [resolve(__dirname, '../..')] } },
   test: {
-    environment: 'jsdom',
+    environment: 'node',
     globals: true,
     include: [
       'src/**/*.spec.ts',
@@ -33,6 +33,5 @@ export default defineConfig({
       // day it lands instead of joining the unrun pile.
       '../../cockpit/*/footprint.spec.ts',
     ],
-    setupFiles: ['./test-setup.ts'],
   },
 });

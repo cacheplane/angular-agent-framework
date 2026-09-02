@@ -111,3 +111,41 @@ export const getRouteDefaultMode = (
 
   return resolution.identity.availableModes.includes('Run') ? 'Run' : 'Docs';
 };
+
+const LEGACY_REQUEST_MODES: Readonly<Record<string, WorkspaceMode>> = {
+  docs: 'Docs',
+  run: 'Run',
+  code: 'Code',
+  api: 'API',
+};
+
+export const resolveLegacyRequestMode = (
+  rawMode: string | string[] | undefined,
+  resolution: WorkspaceResolution
+): WorkspaceMode => {
+  const fallback = getRouteDefaultMode(resolution, 'workspace');
+  if (typeof rawMode !== 'string' || resolution.kind !== 'mapped') {
+    return fallback;
+  }
+
+  const requested = LEGACY_REQUEST_MODES[rawMode.toLowerCase()];
+  return requested && resolution.identity.availableModes.includes(requested)
+    ? requested
+    : fallback;
+};
+
+export const getCanonicalWebsiteWorkspaceHref = (
+  resolution: WorkspaceResolution,
+  mode: WorkspaceMode
+): string => {
+  const destinationPath =
+    resolution.kind === 'mapped'
+      ? getWorkspaceDestinationPath(resolution.identity)
+      : resolution.docsPath;
+  const canonicalDocsRoute =
+    destinationPath === '/docs' || destinationPath.startsWith('/docs/');
+
+  return mode === 'Docs' && canonicalDocsRoute
+    ? destinationPath
+    : `${destinationPath}?mode=${mode.toLowerCase()}`;
+};

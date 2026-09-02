@@ -19,7 +19,6 @@ export * from './lib/workspace-contracts';
 export * from './lib/workspace-navigation';
 export * from './lib/workspace-provider';
 export * from './lib/workspace-shell';
-export * from './lib/docs-links';
 export * from './lib/navigation-labels';
 
 export * from './lib/components/api-mode/api-mode';

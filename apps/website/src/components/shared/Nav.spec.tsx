@@ -107,6 +107,95 @@ describe('Docs mobile navigation', () => {
     return { focus, observation };
   };
 
+  it('retires Examples from desktop navigation without changing primary destinations or demos', () => {
+    pathnameRef.current = '/';
+    render(<Nav />);
+
+    const navigation = screen.getByRole('navigation');
+    expect(
+      within(navigation).queryByRole('link', { name: 'Examples' }),
+    ).toBeNull();
+    expect(
+      within(navigation)
+        .getByRole('link', { name: 'Pilot to Prod' })
+        .getAttribute('href'),
+    ).toBe('/pilot-to-prod');
+    expect(
+      within(navigation)
+        .getByRole('link', { name: 'Docs' })
+        .getAttribute('href'),
+    ).toBe('/docs');
+    expect(
+      within(navigation)
+        .getByRole('link', { name: 'Pricing' })
+        .getAttribute('href'),
+    ).toBe('/pricing');
+    expect(
+      within(navigation)
+        .getByRole('link', { name: 'GitHub repository' })
+        .getAttribute('href'),
+    ).toBe(
+      'https://github.com/cacheplane/angular-agent-framework',
+    );
+
+    fireEvent.click(within(navigation).getByRole('button', { name: /^Demo/ }));
+    expect(
+      within(navigation)
+        .getByRole('link', { name: 'LangGraph demo' })
+        .getAttribute('href'),
+    ).toBe(
+      'https://demo.threadplane.ai',
+    );
+    expect(
+      within(navigation)
+        .getByRole('link', { name: 'AG-UI demo' })
+        .getAttribute('href'),
+    ).toBe(
+      'https://ag-ui.threadplane.ai',
+    );
+  });
+
+  it('retires Examples from mobile navigation without changing primary destinations or demos', () => {
+    pathnameRef.current = '/';
+    render(<Nav />);
+    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+
+    const dialog = screen.getByRole('dialog', { name: 'Mobile navigation' });
+    expect(within(dialog).queryByRole('link', { name: 'Examples' })).toBeNull();
+    expect(
+      within(dialog)
+        .getByRole('link', { name: 'Pilot to Prod' })
+        .getAttribute('href'),
+    ).toBe('/pilot-to-prod');
+    expect(
+      within(dialog).getByRole('link', { name: 'Docs' }).getAttribute('href'),
+    ).toBe('/docs');
+    expect(
+      within(dialog).getByRole('link', { name: 'Pricing' }).getAttribute('href'),
+    ).toBe('/pricing');
+    expect(
+      within(dialog)
+        .getByRole('link', { name: 'LangGraph demo' })
+        .getAttribute('href'),
+    ).toBe(
+      'https://demo.threadplane.ai',
+    );
+    expect(
+      within(dialog)
+        .getByRole('link', { name: 'AG-UI demo' })
+        .getAttribute('href'),
+    ).toBe(
+      'https://ag-ui.threadplane.ai',
+    );
+    expect(
+      within(dialog)
+        .getByRole('link', { name: /GitHub/ })
+        .getAttribute('href'),
+    ).toBe(
+      'https://github.com/cacheplane/angular-agent-framework',
+    );
+  });
+
   it('uses the existing header trigger for the control-plane Docs drawer', () => {
     render(<Nav />);
     const trigger = screen.getByRole('button', { name: 'Open menu' });

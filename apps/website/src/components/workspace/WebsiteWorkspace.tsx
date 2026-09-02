@@ -12,6 +12,7 @@ import {
 } from 'react';
 import {
   type CockpitManifestEntry,
+  getCanonicalWebsiteWorkspaceHref,
   getWorkspaceDestinationPath,
   type WorkspaceMode,
   type WorkspaceResolution,
@@ -96,16 +97,6 @@ function getWebsiteWorkspaceSessionId(): string {
     workspaceSessionId = `website_workspace_${globalThis.crypto.randomUUID()}`;
   }
   return workspaceSessionId;
-}
-
-export function getWebsiteModeHref(
-  currentHref: string,
-  mode: WorkspaceMode
-): string {
-  const url = new URL(currentHref);
-  if (mode === 'Docs') url.searchParams.delete('mode');
-  else url.searchParams.set('mode', mode.toLowerCase());
-  return `${url.pathname}${url.search}${url.hash}`;
 }
 
 const trackNavigation: TrackNavigation = ({
@@ -247,18 +238,28 @@ function WebsiteWorkspaceSurface({
 
   const pushMode = useCallback(
     (mode: WorkspaceMode) => {
-      synchronizeRouteMode(mode === 'Docs' ? null : mode.toLowerCase());
-      routerRef.current.push(getWebsiteModeHref(window.location.href, mode));
+      const href = getCanonicalWebsiteWorkspaceHref(resolution, mode);
+      synchronizeRouteMode(
+        readWorkspaceModeQuery(
+          new URL(href, window.location.origin).searchParams
+        )
+      );
+      routerRef.current.push(href);
     },
-    [synchronizeRouteMode]
+    [resolution, synchronizeRouteMode]
   );
 
   const replaceMode = useCallback(
     (mode: WorkspaceMode) => {
-      synchronizeRouteMode(mode === 'Docs' ? null : mode.toLowerCase());
-      routerRef.current.replace(getWebsiteModeHref(window.location.href, mode));
+      const href = getCanonicalWebsiteWorkspaceHref(resolution, mode);
+      synchronizeRouteMode(
+        readWorkspaceModeQuery(
+          new URL(href, window.location.origin).searchParams
+        )
+      );
+      routerRef.current.replace(href);
     },
-    [synchronizeRouteMode]
+    [resolution, synchronizeRouteMode]
   );
 
   const renderContextPane = useCallback<WorkspaceContextPaneRenderer>(
@@ -270,7 +271,6 @@ function WebsiteWorkspaceSurface({
           mobile={Boolean(onAction)}
           onNavigate={onNavigate}
           onSearchHandoff={onAction ? () => onAction('search-docs') : undefined}
-          showRuntime={false}
         />
       );
     },

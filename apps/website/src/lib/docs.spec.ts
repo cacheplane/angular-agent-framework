@@ -11,7 +11,8 @@ const mdxLinkPattern = /(?:href=["']|\]\()(?<href>[^"')\s]+\.mdx(?:#[^"')\s]+)?)
 
 function findInternalDocsLinks(content: string): string[] {
   return Array.from(content.matchAll(internalDocsLinkPattern), (match) => match.groups?.href)
-    .filter((href): href is string => Boolean(href));
+    .filter((href): href is string => Boolean(href))
+    .map((href) => href.split('?')[0]);
 }
 
 // Resolved relative to this spec file so the path stays correct regardless of

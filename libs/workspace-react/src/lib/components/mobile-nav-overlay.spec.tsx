@@ -329,6 +329,9 @@ describe('MobileNavOverlay', () => {
         </button>
       ),
     });
+    const trigger = result.triggerRef.current;
+    if (!trigger) throw new Error('Expected the shell trigger');
+    const focus = vi.spyOn(trigger, 'focus');
 
     fireEvent.click(
       within(dialog()).getByRole('button', { name: 'Search docs' })
@@ -340,6 +343,7 @@ describe('MobileNavOverlay', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(result.onContextAction).not.toHaveBeenCalled();
     act(() => vi.advanceTimersByTime(16));
+    expect(focus).toHaveBeenCalledOnce();
     expect(result.onContextAction).toHaveBeenCalledOnce();
     expect(result.onContextAction).toHaveBeenCalledWith('search-docs');
   });

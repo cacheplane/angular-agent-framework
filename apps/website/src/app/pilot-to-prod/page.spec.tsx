@@ -17,4 +17,15 @@ describe('PilotToProdPage', () => {
     expect(container.querySelectorAll('.pilot-outcomes-grid')).toHaveLength(0);
     expect(screen.getByRole('heading', { level: 1 })).toBeTruthy();
   });
+
+  it('presents the embedded Website workspace instead of the retired Cockpit host', () => {
+    render(<PilotToProdPage />);
+
+    expect(
+      screen.getByAltText(
+        'Threadplane Website workspace — live chat surface ready to receive a message'
+      )
+    ).toBeTruthy();
+    expect(screen.queryByText('cockpit.threadplane.ai')).toBeNull();
+  });
 });

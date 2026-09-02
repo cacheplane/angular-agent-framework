@@ -11,13 +11,13 @@ This is how to pause an AG-UI agent in Angular for human approval before it runs
 The example is the same refund agent from [Human-in-the-Loop LangGraph Agents in Angular](/blog/2026-05-28-human-in-the-loop-langgraph-agents-in-angular) — wired through the AG-UI adapter instead.
 The Angular component is byte-identical except the import.
 
-Everything below is running code from the cockpit example at `cockpit/ag-ui/interrupts`.
+Everything below is running code from the workspace example at `cockpit/ag-ui/interrupts`.
 Clone the repo, run `nx serve cockpit-ag-ui-interrupts-angular`, and follow along.
 
 <div style={{ marginTop: 40, marginBottom: 44 }}>
 <CardGroup cols={2}>
-  <Card title="Run the live demo" icon="▶" external href="https://cockpit.threadplane.ai/ag-ui/core-capabilities/interrupts/overview/python">
-    The refund agent running in the cockpit. Walk the approve / edit / cancel flow yourself.
+  <Card title="Run the live demo" icon="▶" href="/docs/ag-ui/guides/interrupts?mode=run">
+    The refund agent running in the docs workspace. Walk the approve / edit / cancel flow yourself.
   </Card>
   <Card title="View the source" icon="⌥" external href="https://github.com/cacheplane/angular-agent-framework/tree/main/cockpit/ag-ui/interrupts">
     The exact graph.py, server.py, and Angular component from this post.
@@ -99,8 +99,8 @@ On the LangGraph adapter, the same `submit({ resume })` becomes a native `Client
 Different wire, same Angular surface.
 
 <figure>
-  <img src="/blog/2026-06-04-human-in-the-loop-ag-ui-agents-in-angular/1.png" alt="The cockpit ag-ui/interrupts welcome screen showing two suggestion chips: 'Refund a duplicate charge' and 'Refund a chargeback.'" width="1280" height="800" />
-  <figcaption>The cockpit refund example on the AG-UI adapter.</figcaption>
+  <img src="/blog/2026-06-04-human-in-the-loop-ag-ui-agents-in-angular/1.png" alt="The Threadplane docs workspace showing the AG-UI interrupts welcome screen with two suggestion chips: 'Refund a duplicate charge' and 'Refund a chargeback.'" width="1280" height="800" />
+  <figcaption>The live refund workspace on the AG-UI adapter.</figcaption>
 </figure>
 
 ## Scaffold

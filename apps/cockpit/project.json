@@ -30,7 +30,6 @@
       "inputs": [
         "default",
         "deploymentConfig",
-        "contentAssets",
         "^default"
       ]
     },
@@ -62,12 +61,6 @@
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
-    },
-    "e2e": {
-      "executor": "@nx/playwright:playwright",
-      "options": {
-        "config": "apps/cockpit/playwright.config.ts"
-      }
     },
     "serve-streaming": {
       "executor": "nx:run-commands",
@@ -169,13 +162,6 @@
     }
   },
   "namedInputs": {
-    "contentAssets": [
-      "{workspaceRoot}/cockpit/**/prompts/**",
-      "{workspaceRoot}/cockpit/**/angular/src/**",
-      "{workspaceRoot}/cockpit/**/python/src/**",
-      "{workspaceRoot}/cockpit/**/docs/**",
-      "{workspaceRoot}/deployments/ag-ui-mastra/*.mjs"
-    ],
     "deploymentConfig": [
       "{workspaceRoot}/vercel.cockpit.json",
       "{workspaceRoot}/vercel.examples.json",

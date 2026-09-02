@@ -3,7 +3,6 @@ import {
   cockpitManifest,
 } from '@threadplane/cockpit-registry';
 import { capabilities } from './scripts/capability-registry';
-import { buildNavigationTree } from '@threadplane/cockpit-shell';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -80,29 +79,6 @@ describe('cockpit capability wiring', () => {
     expect(orphans).toEqual([]);
   });
 
-  it('surfaces every manifest product in the navigation tree', () => {
-    const manifestProducts = [
-      ...new Set(cockpitManifest.map((entry) => entry.product)),
-    ];
-    const navigationProducts = buildNavigationTree(cockpitManifest).map(
-      (product) => product.product
-    );
-
-    expect([...manifestProducts].sort()).toEqual(
-      [...navigationProducts].sort()
-    );
-
-    for (const product of buildNavigationTree(cockpitManifest)) {
-      const entries = product.sections.flatMap((section) => section.entries);
-      expect({ product: product.product, empty: entries.length === 0 }).toEqual(
-        {
-          product: product.product,
-          empty: false,
-        }
-      );
-    }
-  });
-
   it('keeps every registry product inside the CockpitProduct union', () => {
     // `cockpitManifest` is typed `CockpitManifestEntry[]`, so a product that is
     // not in the union cannot appear here — the runtime check is that the
@@ -123,13 +99,13 @@ describe('cockpit capability wiring', () => {
     ) as { references?: Array<{ path: string }> };
 
     expect(
-      tsconfig.references?.filter((reference) =>
+      (tsconfig.references ?? []).filter((reference) =>
         reference.path.startsWith('../../cockpit/')
       )
     ).toEqual([]);
   });
 
-  it('includes external capability content assets in the Cockpit build inputs', () => {
+  it('keeps redirect deployment inputs without tracing interactive content assets', () => {
     const project = JSON.parse(
       readFileSync(resolveCockpitConfig('project.json'), 'utf8')
     ) as {
@@ -140,15 +116,8 @@ describe('cockpit capability wiring', () => {
     expect(project.targets.build.inputs).toEqual([
       'default',
       'deploymentConfig',
-      'contentAssets',
       '^default',
     ]);
-    expect(project.namedInputs['contentAssets']).toEqual([
-      '{workspaceRoot}/cockpit/**/prompts/**',
-      '{workspaceRoot}/cockpit/**/angular/src/**',
-      '{workspaceRoot}/cockpit/**/python/src/**',
-      '{workspaceRoot}/cockpit/**/docs/**',
-      '{workspaceRoot}/deployments/ag-ui-mastra/*.mjs',
-    ]);
+    expect(project.namedInputs['contentAssets']).toBeUndefined();
   });
 });

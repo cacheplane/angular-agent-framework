@@ -77,7 +77,7 @@ export function DemoShowcase() {
 
       <div className="demo-showcase__cta-row">
         <DemoCtaPair surface="home_demo" size="lg" />
-        <Button variant="ghost" size="lg" href="https://cockpit.threadplane.ai" target="_blank" rel="noopener noreferrer">
+        <Button variant="ghost" size="lg" href="/docs/langgraph/guides/streaming?mode=run">
           See each feature in action →
         </Button>
       </div>

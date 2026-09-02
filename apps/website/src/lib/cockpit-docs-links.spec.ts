@@ -1,29 +1,26 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import ts from 'typescript';
-import { describe, expect, it } from 'vitest';
 import {
   COCKPIT_DOCS_LINKS,
   COCKPIT_TOPICS_WITHOUT_DOCS,
   NO_COCKPIT_DOCS_LINK,
   cockpitManifest,
 } from '@threadplane/cockpit-registry';
+import { describe, expect, it } from 'vitest';
+import { docsConfig } from './docs-config';
 
 /**
- * Guard for the cockpit -> website documentation links.
+ * Website-owned guard for registry capability links into the real docs tree.
  *
- * `docsPath` used to be generated from a five-segment formula that matched no
- * route the website has ever served, so every link 404'd and nothing noticed:
- * the shape was asserted against a regex, never against reality. This spec
- * checks each declared path against the website's real content tree and its
- * real nav config, so a docs rename breaks a test instead of a link.
+ * The link table cannot be derived from legacy Cockpit path segments: docs
+ * routes and capability identities intentionally have different shapes.
  */
 
 const findWorkspaceRoot = (): string => {
-  let dir = process.cwd();
-  while (dir !== resolve(dir, '..')) {
-    if (existsSync(join(dir, 'nx.json'))) return dir;
-    dir = resolve(dir, '..');
+  let directory = process.cwd();
+  while (directory !== resolve(directory, '..')) {
+    if (existsSync(join(directory, 'nx.json'))) return directory;
+    directory = resolve(directory, '..');
   }
   throw new Error('workspace root (nx.json) not found');
 };
@@ -31,38 +28,22 @@ const findWorkspaceRoot = (): string => {
 const WORKSPACE_ROOT = findWorkspaceRoot();
 const DOCS_CONTENT_ROOT = join(WORKSPACE_ROOT, 'apps/website/content/docs');
 
-interface DocsConfigRecord {
-  id: string;
-  sections: Array<{ id: string; pages: Array<{ slug: string }> }>;
-}
-
-const readWebsiteDocsConfig = (): DocsConfigRecord[] => {
-  const source = readFileSync(
-    join(WORKSPACE_ROOT, 'apps/website/src/lib/docs-config.ts'),
-    'utf8'
-  );
-  const output = ts.transpileModule(source, {
-    compilerOptions: { module: ts.ModuleKind.CommonJS },
-  }).outputText;
-  const module = { exports: {} as Record<string, unknown> };
-  Function('exports', 'module', output)(module.exports, module);
-  return module.exports['docsConfig'] as DocsConfigRecord[];
-};
-
-const docsConfig = readWebsiteDocsConfig();
-
-/** Every `/docs/<library>/<section>/<slug>` the website's nav actually offers. */
+/** Every `/docs/<library>/<section>/<slug>` offered by Website navigation. */
 const navRoutes = new Set(
   docsConfig.flatMap((library) =>
     library.sections.flatMap((section) =>
-      section.pages.map((page) => `/docs/${library.id}/${section.id}/${page.slug}`)
+      section.pages.map(
+        (page) => `/docs/${library.id}/${section.id}/${page.slug}`
+      )
     )
   )
 );
 
-/** Every `/docs/<library>/<section>/<slug>` backed by an `.mdx` file on disk. */
+/** Every three-segment docs route backed by an authored `.mdx` file. */
 const contentRoutes = new Set<string>();
-for (const library of readdirSync(DOCS_CONTENT_ROOT, { withFileTypes: true })) {
+for (const library of readdirSync(DOCS_CONTENT_ROOT, {
+  withFileTypes: true,
+})) {
   if (!library.isDirectory()) continue;
   const libraryDir = join(DOCS_CONTENT_ROOT, library.name);
   for (const section of readdirSync(libraryDir, { withFileTypes: true })) {
@@ -77,31 +58,38 @@ for (const library of readdirSync(DOCS_CONTENT_ROOT, { withFileTypes: true })) {
   }
 }
 
+interface DescriptorDocsPath {
+  readonly file: string;
+  readonly key: string;
+  readonly docsPath: string;
+}
+
 /**
- * Descriptors are duplicated per example (cockpit examples are standalone), so
- * they are read off disk rather than imported — an example whose module nobody
- * imports still has to declare a link that resolves.
+ * Standalone examples duplicate their descriptors, so scan every leaf rather
+ * than relying on the subset imported by a package entry point.
  */
-const readDescriptorDocsPaths = (): { file: string; key: string; docsPath: string }[] => {
-  const results: { file: string; key: string; docsPath: string }[] = [];
+const readDescriptorDocsPaths = (): DescriptorDocsPath[] => {
+  const results: DescriptorDocsPath[] = [];
   const cockpitRoot = join(WORKSPACE_ROOT, 'cockpit');
   for (const product of readdirSync(cockpitRoot, { withFileTypes: true })) {
     if (!product.isDirectory()) continue;
     const productDir = join(cockpitRoot, product.name);
     for (const topic of readdirSync(productDir, { withFileTypes: true })) {
       if (!topic.isDirectory()) continue;
-      for (const lane of readdirSync(join(productDir, topic.name), { withFileTypes: true })) {
+      const topicDir = join(productDir, topic.name);
+      for (const lane of readdirSync(topicDir, { withFileTypes: true })) {
         if (!lane.isDirectory()) continue;
-        const file = join(productDir, topic.name, lane.name, 'src/index.ts');
+        const file = join(topicDir, lane.name, 'src/index.ts');
         if (!existsSync(file)) continue;
-        const source = readFileSync(file, 'utf-8');
-        const identity = /manifestIdentity:\s*\{[^}]*?product:\s*'([^']+)'[^}]*?section:\s*'([^']+)'[^}]*?topic:\s*'([^']+)'/s.exec(
-          source
-        );
+        const source = readFileSync(file, 'utf8');
+        const identity =
+          /manifestIdentity:\s*\{[^}]*?product:\s*'([^']+)'[^}]*?section:\s*'([^']+)'[^}]*?topic:\s*'([^']+)'/s.exec(
+            source
+          );
         const declared = /\n {2}docsPath: '([^']*)',/.exec(source);
         if (!identity || !declared) continue;
         results.push({
-          file: file.slice(WORKSPACE_ROOT.length + 1),
+          file: file.slice(WORKSPACE_ROOT.length),
           key: `${identity[1]}/${identity[2]}/${identity[3]}`,
           docsPath: declared[1],
         });
@@ -113,14 +101,13 @@ const readDescriptorDocsPaths = (): { file: string; key: string; docsPath: strin
 
 const descriptors = readDescriptorDocsPaths();
 
-describe('cockpit docs links', () => {
-  it('reads a docs route list from the website that is not empty', () => {
-    // Guards the guard: an empty derived list would let everything below pass.
+describe('Cockpit registry links into Website docs', () => {
+  it('derives nonempty docs inventories from Website navigation and content', () => {
     expect(navRoutes.size).toBeGreaterThan(50);
     expect(contentRoutes.size).toBeGreaterThan(50);
   });
 
-  it('points every mapped capability at a page the website actually serves', () => {
+  it('points every nonblank mapping at both Website content and navigation', () => {
     const broken = Object.entries(COCKPIT_DOCS_LINKS)
       .filter(([, path]) => path !== NO_COCKPIT_DOCS_LINK)
       .filter(([, path]) => !contentRoutes.has(path) || !navRoutes.has(path))
@@ -129,7 +116,7 @@ describe('cockpit docs links', () => {
     expect(broken).toEqual([]);
   });
 
-  it('blanks only the capabilities that are known to have no docs page', () => {
+  it('blanks exactly the topics explicitly known to have no docs', () => {
     const blanked = Object.entries(COCKPIT_DOCS_LINKS)
       .filter(([, path]) => path === NO_COCKPIT_DOCS_LINK)
       .map(([key]) => key)
@@ -140,7 +127,13 @@ describe('cockpit docs links', () => {
 
   it('maps every manifest entry', () => {
     const unmapped = cockpitManifest
-      .filter((entry) => !(`${entry.product}/${entry.section}/${entry.topic}` in COCKPIT_DOCS_LINKS))
+      .filter(
+        (entry) =>
+          !(
+            `${entry.product}/${entry.section}/${entry.topic}` in
+            COCKPIT_DOCS_LINKS
+          )
+      )
       .map((entry) => `${entry.product}/${entry.section}/${entry.topic}`);
 
     expect(unmapped).toEqual([]);
@@ -151,7 +144,10 @@ describe('cockpit docs links', () => {
 
     const drifted = descriptors
       .filter(({ key, docsPath }) => docsPath !== COCKPIT_DOCS_LINKS[key])
-      .map(({ file, key, docsPath }) => `${file}: ${key} declares ${docsPath || '(blank)'}`);
+      .map(
+        ({ file, key, docsPath }) =>
+          `${file}: ${key} declares ${docsPath || '(blank)'}`
+      );
 
     expect(drifted).toEqual([]);
   });

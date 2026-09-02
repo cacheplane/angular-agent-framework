@@ -1,26 +1,29 @@
 import { expect, test } from '@playwright/test';
-import { capabilities } from '../scripts/capability-registry';
 import {
-  getRedirectDisabledProbePath,
-  getRegistryWebsiteDestinations,
-} from '../scripts/deploy-smoke';
+  cockpitManifest,
+  getCanonicalWebsiteWorkspaceHref,
+  getWorkspaceDestinationPath,
+  resolveLegacyPath,
+  resolveLegacyRequestMode,
+} from '@threadplane/cockpit-registry';
 
 /**
- * Production smoke test: verifies the deployed cockpit shell and deployed
- * example apps are reachable after production deploy.
+ * Production platform smoke: verifies the Website, legacy Cockpit redirects,
+ * deployed examples, canonical demo, and shared runtimes as one product.
  *
  * Requires:
- *   BASE_URL - e.g. https://cockpit.threadplane.ai
+ *   COCKPIT_URL - e.g. https://cockpit.threadplane.ai
  *   EXAMPLES_URL - e.g. https://examples.threadplane.ai
  *   OPENAI_API_KEY - optional; enables the single live-provider canary
  *
  * Run:
- *   BASE_URL=https://cockpit.threadplane.ai \
+ *   PRODUCTION_SMOKE=true COCKPIT_URL=https://cockpit.threadplane.ai \
  *   EXAMPLES_URL=https://examples.threadplane.ai \
- *   npx playwright test apps/cockpit/e2e/production-smoke.spec.ts
+ *   npx playwright test apps/website/e2e/platform-production-smoke.spec.ts
  */
 
-const COCKPIT_URL = process.env['BASE_URL'] ?? 'https://cockpit.threadplane.ai';
+const COCKPIT_URL =
+  process.env['COCKPIT_URL'] ?? 'https://cockpit.threadplane.ai';
 const EXAMPLES_URL =
   process.env['EXAMPLES_URL'] ?? 'https://examples.threadplane.ai';
 const DEMO_URL = process.env['DEMO_URL'] ?? 'https://demo.threadplane.ai';
@@ -84,13 +87,75 @@ const RENDER_CAPABILITIES = [
  * runtime but are not yet in the examples route table, so they have no
  * /ag-ui/<topic>/ URL to assert against.
  */
-const AG_UI_TOPICS = capabilities
-  .filter((c) => c.product === 'ag-ui' && c.pythonDir)
-  .map((c) => c.topic)
-  .sort();
+const AG_UI_TOPICS = [
+  ...new Set(
+    cockpitManifest
+      .filter(
+        (entry) => entry.product === 'ag-ui' && entry.runtimeAdapter === 'ag-ui'
+      )
+      .map((entry) => entry.topic)
+  ),
+].sort();
 
 const SEND_RECEIVE_TIMEOUT_MS = 30_000;
-const WEBSITE_DESTINATIONS = getRegistryWebsiteDestinations();
+const WEBSITE_DESTINATIONS = [
+  ...new Set(cockpitManifest.map(getWorkspaceDestinationPath)),
+].sort();
+
+const expectedRedirect = (legacyPath: string): string => {
+  const resolution = resolveLegacyPath(legacyPath);
+  if (!resolution) throw new Error(`Expected registry path ${legacyPath}`);
+  const mode = resolveLegacyRequestMode(undefined, resolution);
+  return new URL(
+    getCanonicalWebsiteWorkspaceHref(resolution, mode),
+    `${WEBSITE_URL}/`
+  ).toString();
+};
+
+const docsBacked = cockpitManifest.find((entry) =>
+  getWorkspaceDestinationPath(entry).startsWith('/docs/')
+);
+const workspaceOnly = cockpitManifest.find((entry) =>
+  getWorkspaceDestinationPath(entry).startsWith('/workspace/')
+);
+if (!docsBacked || !workspaceOnly) {
+  throw new Error('Production smoke requires Docs-backed and workspace routes');
+}
+
+const COCKPIT_REDIRECT_CASES = [
+  {
+    name: 'root production redirect',
+    path: '/',
+    status: 308,
+    location: expectedRedirect(
+      '/langgraph/core-capabilities/streaming/overview/python'
+    ),
+  },
+  {
+    name: 'Docs-backed production redirect',
+    path: docsBacked.legacyPath,
+    status: 308,
+    location: expectedRedirect(docsBacked.legacyPath),
+  },
+  {
+    name: 'workspace-only production redirect',
+    path: workspaceOnly.legacyPath,
+    status: 308,
+    location: expectedRedirect(workspaceOnly.legacyPath),
+  },
+  {
+    name: 'unknown production 404',
+    path: '/unknown',
+    status: 404,
+    location: undefined,
+  },
+  {
+    name: 'favicon production redirect',
+    path: '/favicon.ico',
+    status: 308,
+    location: '/icon.svg',
+  },
+] as const;
 
 test.describe('Production: registry-owned Website destinations load', () => {
   for (const destination of WEBSITE_DESTINATIONS) {
@@ -144,69 +209,17 @@ test.describe('Production: render example apps load', () => {
   }
 });
 
-test.describe('Production: cockpit shell loads', () => {
-  test('cockpit loads with sidebar navigation', async ({ page }) => {
-    await page.goto(COCKPIT_URL, { timeout: 15_000 });
-    await expect(
-      page.getByRole('navigation', { name: 'Cockpit navigation' })
-    ).toBeVisible();
+test.describe('Production: legacy Cockpit redirect service', () => {
+  for (const smokeCase of COCKPIT_REDIRECT_CASES) {
+    test(smokeCase.name, async ({ request }) => {
+      const response = await request.get(`${COCKPIT_URL}${smokeCase.path}`, {
+        maxRedirects: 0,
+      });
 
-    const links = await page.locator('nav a').allTextContents();
-    const overviewLinks = links.filter((text) =>
-      text.toLowerCase().includes('overview')
-    );
-    expect(overviewLinks).toHaveLength(0);
-  });
-
-  test('representative runtime reports Ready after Recheck and records Activity', async ({
-    page,
-  }) => {
-    test.setTimeout(60_000);
-    const runtimeRoute = `${COCKPIT_URL}/langgraph/core-capabilities/streaming/overview/python`;
-    await page.goto(runtimeRoute, { timeout: 15_000 });
-
-    const ready = page.getByText('Ready', { exact: true });
-    await expect(ready).toBeVisible({ timeout: 15_000 });
-
-    await page.getByRole('button', { name: 'Activity' }).click();
-    const checkEvents = page.locator(
-      '[data-activity-kind="runtime_check_requested"]'
-    );
-    const readyEvents = page.locator('[data-activity-kind="runtime_ready"]');
-    await expect(checkEvents).toHaveCount(1);
-    await expect(readyEvents).toHaveCount(1);
-    await page.getByRole('button', { name: 'Close Activity' }).click();
-
-    const checkedAt = page.locator('[data-runtime-checked-at]');
-    const checkedAtBefore = await checkedAt.textContent();
-    await page.getByRole('button', { name: 'Recheck' }).click();
-    await expect
-      .poll(() => checkedAt.textContent(), { timeout: 15_000 })
-      .not.toBe(checkedAtBefore);
-    await expect(ready).toBeVisible({ timeout: 15_000 });
-
-    await page.getByRole('button', { name: 'Activity' }).click();
-    await expect(checkEvents).toHaveCount(2);
-    await expect(readyEvents).toHaveCount(2);
-  });
-
-  test('favicon resolves after redirects', async ({ request }) => {
-    const response = await request.get(`${COCKPIT_URL}/favicon.ico`);
-
-    expect(response.status()).toBeLessThan(400);
-  });
-
-  test('legacy workspace redirects remain disabled before opt-in activation', async ({
-    request,
-  }) => {
-    const response = await request.get(
-      new URL(getRedirectDisabledProbePath(), COCKPIT_URL).toString(),
-      { maxRedirects: 0 }
-    );
-
-    expect(response.status()).toBe(200);
-    expect(response.headers()['location']).toBeUndefined();
-  });
+      expect(response.status()).toBe(smokeCase.status);
+      expect(response.headers()['location']).toBe(smokeCase.location);
+    });
+  }
 });
 
 test.describe('Production: canonical demo sends runtime telemetry', () => {
@@ -272,7 +285,9 @@ test.describe('Production: canonical demo sends runtime telemetry', () => {
 });
 
 test.describe('AG-UI Railway runtime', () => {
-  const RAILWAY_URL = process.env['AG_UI_RAILWAY_URL'] ?? 'https://ag-ui-dev-production.up.railway.app';
+  const RAILWAY_URL =
+    process.env['AG_UI_RAILWAY_URL'] ??
+    'https://ag-ui-dev-production.up.railway.app';
 
   test('healthcheck /ok responds 200', async ({ request }) => {
     const res = await request.get(`${RAILWAY_URL}/ok`);
@@ -340,7 +355,10 @@ test.describe('examples langgraph proxy hardening', () => {
 
   test('rejects a forbidden Origin with 403', async ({ request }) => {
     const res = await request.post(streamPath(), {
-      headers: { Origin: 'https://evil.example.com', 'content-type': 'application/json' },
+      headers: {
+        Origin: 'https://evil.example.com',
+        'content-type': 'application/json',
+      },
       data: runBody,
     });
     expect(res.status()).toBe(403);
@@ -365,9 +383,14 @@ test.describe('AG-UI demo (ag-ui.threadplane.ai)', () => {
     expect(res?.status()).toBeLessThan(400);
   });
 
-  test('forbidden origin to /agent is rejected with 403', async ({ request }) => {
+  test('forbidden origin to /agent is rejected with 403', async ({
+    request,
+  }) => {
     const res = await request.post(`${DEMO}/agent`, {
-      headers: { Origin: 'https://evil.example.com', 'content-type': 'application/json' },
+      headers: {
+        Origin: 'https://evil.example.com',
+        'content-type': 'application/json',
+      },
       data: {},
     });
     expect(res.status()).toBe(403);

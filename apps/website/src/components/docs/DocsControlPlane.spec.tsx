@@ -6,7 +6,6 @@ import {
   fireEvent,
   render,
   screen,
-  waitFor,
   within,
 } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -105,23 +104,18 @@ describe('DocsControlPlane', () => {
     );
   });
 
-  it('styles the preview hooks for forced colors and reduced motion', () => {
-    expect(docsCss).toMatch(/\[data-docs-runtime-preview\]/);
-    expect(docsCss).toMatch(/@media \(forced-colors:\s*active\)/);
-    expect(docsCss).toMatch(/Canvas/);
-    expect(docsCss).toMatch(/HighlightText/);
-    expect(docsCss).toMatch(
-      /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*?transition:\s*none/
-    );
+  it('does not retain style contracts for the retired Runtime preview or environment rows', () => {
+    expect(docsCss).not.toMatch(/\[data-docs-runtime-preview\]/);
+    expect(docsCss).not.toMatch(/\[data-control-plane-environment-/);
   });
 
-  it('renders the stable labeled mode rail with deterministic Cockpit links', () => {
+  it('keeps standalone docs-only modes disabled without handoff links', () => {
     render(
       <DocsControlPlane
-        activeLibrary="langgraph"
-        activeSection="guides"
-        activeSlug="streaming"
-        pageTitle="Streaming"
+        activeLibrary={null}
+        activeSection=""
+        activeSlug=""
+        pageTitle="Overview"
       />
     );
 
@@ -130,17 +124,16 @@ describe('DocsControlPlane', () => {
     expect(
       screen.getByRole('link', { name: 'Docs' }).getAttribute('aria-current')
     ).toBe('page');
-    expect(
-      screen.getByRole('link', { name: 'Run' }).getAttribute('href')
-    ).toContain(
-      '/langgraph/core-capabilities/streaming/overview/python?mode=run'
-    );
-    expect(
-      screen.getByRole('link', { name: 'Code' }).getAttribute('href')
-    ).toContain('mode=code');
-    expect(
-      screen.getByRole('link', { name: 'API' }).getAttribute('href')
-    ).toContain('mode=api');
+    for (const mode of ['Run', 'Code', 'API'] as const) {
+      const control = screen.getByRole('button', {
+        name: mode,
+        description: `${mode} is unavailable because this page has no workspace capability.`,
+      });
+      expect(control.getAttribute('aria-disabled')).toBe('true');
+      expect(control.getAttribute('href')).toBeNull();
+      fireEvent.click(control);
+    }
+    expect(track).not.toHaveBeenCalled();
     expect(screen.queryByRole('button', { name: 'Activity' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Settings' })).toBeNull();
   });
@@ -166,7 +159,7 @@ describe('DocsControlPlane', () => {
     }
   });
 
-  it('shows truthful scope and a collapsed configuration-only Runtime preview', async () => {
+  it('shows truthful scope without the retired Cockpit Runtime preview', () => {
     render(
       <DocsControlPlane
         activeLibrary="langgraph"
@@ -184,116 +177,9 @@ describe('DocsControlPlane', () => {
     expect(within(scope).getByText('Guides')).toBeTruthy();
     expect(within(scope).getByText('Streaming')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Environment' })).toBeNull();
-    const runtime = screen.getByRole('button', { name: 'Runtime' });
-    const preview = document.querySelector('[data-docs-runtime-preview]');
-    expect(preview).toBeTruthy();
-    expect(preview?.contains(runtime)).toBe(true);
-    expect(runtime.getAttribute('aria-expanded')).toBe('false');
-    fireEvent.click(runtime);
-    const runtimeSection = runtime.closest('section');
-    if (!runtimeSection) throw new Error('Expected Runtime section');
-    const configuration = runtimeSection.querySelector('dl');
-    if (!configuration) throw new Error('Expected Runtime configuration');
-    expect(within(configuration).getByText('Shared development')).toBeTruthy();
-    expect(within(configuration).getByText('Cockpit')).toBeTruthy();
-    expect(within(configuration).getByText('streaming')).toBeTruthy();
-    expect(within(configuration).getByText('Run')).toBeTruthy();
-    expect(
-      within(runtimeSection)
-        .getByRole('link', { name: 'Open controls in Cockpit' })
-        .getAttribute('href')
-    ).toContain(
-      '/langgraph/core-capabilities/streaming/overview/python?mode=run'
-    );
-    expect(
-      within(runtimeSection).queryByText(/ready|unresponsive|last checked/i)
-    ).toBeNull();
-    await waitFor(() =>
-      expect(
-        window.localStorage.getItem('threadplane:control-plane:v1')
-      ).toContain('Runtime')
-    );
-  });
-
-  it.each([
-    ['Run', 'run'],
-    ['Code', 'code'],
-    ['API', 'api'],
-  ] as const)(
-    'tracks the %s rail handoff at the anchor boundary',
-    (label, requestedMode) => {
-      render(
-        <DocsControlPlane
-          activeLibrary="langgraph"
-          activeSection="guides"
-          activeSlug="streaming"
-          pageTitle="Streaming"
-        />
-      );
-
-      fireEvent.click(screen.getByRole('link', { name: label }));
-
-      expect(track).toHaveBeenCalledWith('docs:cockpit_handoff', {
-        library: 'langgraph',
-        source_section: 'guides',
-        source_slug: 'streaming',
-        destination_product: 'langgraph',
-        destination_capability: 'streaming',
-        requested_mode: requestedMode,
-        mapped: true,
-      });
-    }
-  );
-
-  it('tracks Open controls as a mapped Run handoff without a URL property', () => {
-    render(
-      <DocsControlPlane
-        activeLibrary="langgraph"
-        activeSection="guides"
-        activeSlug="streaming"
-        pageTitle="Streaming"
-      />
-    );
-    fireEvent.click(screen.getByRole('button', { name: 'Runtime' }));
-
-    fireEvent.click(
-      screen.getByRole('link', { name: 'Open controls in Cockpit' })
-    );
-
-    expect(track).toHaveBeenCalledWith('docs:cockpit_handoff', {
-      library: 'langgraph',
-      source_section: 'guides',
-      source_slug: 'streaming',
-      destination_product: 'langgraph',
-      destination_capability: 'streaming',
-      requested_mode: 'run',
-      mapped: true,
-    });
-    expect(track.mock.calls[0]?.[1]).not.toHaveProperty('destination_url');
-  });
-
-  it('uses and tracks the Cockpit home fallback for unsupported pages', () => {
-    render(
-      <DocsControlPlane
-        activeLibrary="langgraph"
-        activeSection="api"
-        activeSlug="inject-agent"
-        pageTitle="Inject agent"
-      />
-    );
-
-    const run = screen.getByRole('link', { name: 'Run' });
-    expect(run.getAttribute('href')).toBe(
-      'https://cockpit.threadplane.ai/?mode=run'
-    );
-    fireEvent.click(run);
-    expect(track).toHaveBeenCalledWith('docs:cockpit_handoff', {
-      library: 'langgraph',
-      source_section: 'api',
-      source_slug: 'inject-agent',
-      requested_mode: 'run',
-      mapped: false,
-    });
+    expect(screen.queryByRole('button', { name: 'Runtime' })).toBeNull();
+    expect(screen.queryByText('Cockpit')).toBeNull();
+    expect(screen.queryByRole('link', { name: /Open controls/ })).toBeNull();
   });
 
   it('keeps search as a real icon action', () => {
@@ -415,27 +301,6 @@ describe('DocsControlPlane', () => {
     ).toBe('true');
   });
 
-  it('keeps Runtime focused on the handoff instead of duplicating picker metadata', () => {
-    render(
-      <DocsControlPlane
-        activeLibrary="langgraph"
-        activeSection="guides"
-        activeSlug="streaming"
-        pageTitle="Streaming"
-      />
-    );
-
-    fireEvent.click(screen.getByRole('button', { name: 'Runtime' }));
-    const runtime = screen
-      .getByRole('button', { name: 'Runtime' })
-      .closest('section');
-    if (!runtime) throw new Error('Expected Runtime section');
-    expect(within(runtime).getByText('Shared development')).toBeTruthy();
-    expect(within(runtime).queryByText('Library')).toBeNull();
-    expect(within(runtime).queryByText('Framework')).toBeNull();
-    expect(within(runtime).queryByText('Package manager')).toBeNull();
-  });
-
   it('caps the open menu to the space left below the trigger', () => {
     render(
       <DocsControlPlane
@@ -487,6 +352,34 @@ describe('DocsControlPlane', () => {
 });
 
 describe('DocsControlPlane — library-neutral', () => {
+  it.each([
+    { pageTitle: 'Overview', path: '/docs' },
+    {
+      pageTitle: 'Choosing an adapter',
+      path: '/docs/choosing-an-adapter',
+    },
+  ])('$path keeps standalone controls disabled and free of Cockpit handoffs', ({ pageTitle }) => {
+    render(
+      <DocsControlPlane
+        activeLibrary={null}
+        activeSection=""
+        activeSlug=""
+        pageTitle={pageTitle}
+      />,
+    );
+
+    for (const mode of ['Run', 'Code', 'API'] as const) {
+      const control = screen.getByRole('button', {
+        name: mode,
+        description: `${mode} is unavailable because this page has no workspace capability.`,
+      });
+      expect(control.getAttribute('href')).toBeNull();
+      fireEvent.click(control);
+    }
+    expect(track).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Search docs' })).toBeTruthy();
+  });
+
   it('states only what it knows in Scope', () => {
     render(
       <DocsControlPlane
@@ -539,7 +432,25 @@ describe('DocsContextContent', () => {
 
     expect(screen.getByRole('heading', { name: 'Scope' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Learn' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Runtime' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Runtime' })).toBeNull();
     expect(screen.getByRole('toolbar', { name: 'Docs actions' })).toBeTruthy();
+  });
+
+  it('keeps explicit standalone demo actions', () => {
+    render(
+      <DocsContextContent
+        activeLibrary="ag-ui"
+        activeSection="getting-started"
+        activeSlug="introduction"
+        pageTitle="Introduction"
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Search docs' })).toBeTruthy();
+    expect(
+      screen.getByRole('link', { name: 'Open live demo' }).getAttribute('href'),
+    ).toBe(
+      'https://ag-ui.threadplane.ai',
+    );
   });
 });
