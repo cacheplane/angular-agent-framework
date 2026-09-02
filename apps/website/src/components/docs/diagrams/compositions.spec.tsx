@@ -29,4 +29,12 @@ describe('A2uiMessageFlow', () => {
     expect(titles).toContain('createA2uiMessageParser()');
     expect(titles).toContain('createA2uiSurfaceStore()');
   });
+
+  it('accents only the a2ui-owned parser stage', () => {
+    const { container } = render(<A2uiMessageFlow />);
+    const accented = Array.from(container.querySelectorAll('g.tp-diagram-node[data-tone="accent"]'));
+    expect(accented).toHaveLength(1);
+    expect(accented[0]?.querySelector('.tp-diagram-eyebrow')?.textContent).toBe('@THREADPLANE/A2UI');
+    expect(accented[0]?.querySelector('.tp-diagram-title')?.textContent).toBe('createA2uiMessageParser()');
+  });
 });

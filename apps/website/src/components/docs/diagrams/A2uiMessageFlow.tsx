@@ -41,9 +41,8 @@ export function A2uiMessageFlow() {
       <DiagramEdge d="M320 236 V256" slug={SLUG} arrow />
       <DiagramNode
         x={170} y={260} w={300} h={64}
-        eyebrow="@threadplane/a2ui" title="createA2uiSurfaceStore()"
+        eyebrow="@threadplane/chat" title="createA2uiSurfaceStore()"
         meta="applies those messages by surface id"
-        tone="accent"
       />
       <DiagramEdge d="M320 324 V344" slug={SLUG} arrow />
       <DiagramNode
