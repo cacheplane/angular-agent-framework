@@ -33,17 +33,16 @@ interleaved with the bridge's own events, so a plain ``for out in
 expand(ev): yield out`` preserves streaming. Delegation state is per
 ``run()`` call (the endpoint clones the agent per request anyway).
 
-Because the child here is a compiled SUBGRAPH and the bridge streams
-subgraphs, the bridge ALSO emits the child's own LLM text and ``lookup``
-tool call as unattributed, bridge-native ``TEXT_MESSAGE_*`` /
-``TOOL_CALL_*`` events — the same content the attributed expansion carries,
-landing in the parent transcript (wire capture §2b). While a delegation
-window is open (``started`` → ``finished`` / ``error``) the parent is blocked
-in its tools node, so every unattributed content event in that window is the
-child's duplicate; the wrapper drops them (remembering their ids so a
-trailing ``TEXT_MESSAGE_END`` / ``TOOL_CALL_END`` after the window is dropped
-too). ``STEP_*``, ``STATE_SNAPSHOT``, RAW mirrors and the parent's own
-``TOOL_CALL_RESULT`` (which arrives after ``finished``) are untouched.
+The child here is a compiled SUBGRAPH, and the bridge streams subgraphs —
+so left alone it would ALSO emit the child's own LLM text and ``lookup`` tool
+call as unattributed, bridge-native ``TEXT_MESSAGE_*`` / ``TOOL_CALL_*``
+events in the parent transcript (wire capture §2b). The graph opts the child
+out at the source: the ``research`` tool invokes the subgraph with LangChain
+run metadata ``emit-messages`` / ``emit-tool-calls`` = ``False``, the bridge's
+declared switch for skipping those emissions while callbacks, CUSTOM events
+and ``STEP_*`` still flow (see ``src/graph.py``). This wrapper therefore never
+filters bridge-native events — every non-``subagent_activity`` event passes
+through untouched.
 
 The encoder requires pydantic ``BaseEvent`` instances — raw dicts crash the
 stream — so only typed ``ag_ui.core`` events are yielded.
@@ -75,15 +74,6 @@ from ag_ui_langgraph import LangGraphAgent
 
 CUSTOM_NAME = "subagent_activity"
 
-# Bridge-native content events the child subgraph duplicates inside a
-# delegation window (see module docstring).
-_CHILD_MESSAGE_TYPES = frozenset({
-    EventType.TEXT_MESSAGE_START, EventType.TEXT_MESSAGE_CONTENT, EventType.TEXT_MESSAGE_END,
-})
-_CHILD_TOOL_TYPES = frozenset({
-    EventType.TOOL_CALL_START, EventType.TOOL_CALL_ARGS, EventType.TOOL_CALL_END,
-})
-
 logger = logging.getLogger(__name__)
 
 
@@ -94,7 +84,6 @@ class _Delegation:
     run_id: str
     open_message_id: str | None = None
     message_count: int = 0
-    active: bool = False
 
 
 @dataclass
@@ -102,13 +91,6 @@ class _RunState:
     """Per-``run()`` expansion state."""
 
     delegations: dict[str, _Delegation] = field(default_factory=dict)
-    # Ids of bridge-native child messages / tool calls dropped inside a window,
-    # so their trailing END events are dropped after the window closes too.
-    dropped_message_ids: set[str] = field(default_factory=set)
-    dropped_tool_call_ids: set[str] = field(default_factory=set)
-
-    def in_window(self) -> bool:
-        return any(d.active for d in self.delegations.values())
 
 
 def _subagent_run_id(tid: str) -> str:
@@ -153,8 +135,7 @@ def _payload(event: BaseEvent) -> dict[str, Any] | None:
 class SubagentEmittingAgent(LangGraphAgent):
     """LangGraphAgent whose ``run`` expands the graph's `subagent_activity`
     CUSTOM events into standard SUBAGENT_* + attributed TEXT_MESSAGE_* /
-    TOOL_CALL_* events, and drops the bridge's unattributed duplicates of the
-    child subgraph's stream.
+    TOOL_CALL_* events. Everything else passes through untouched.
 
     Keeps the bridge's ``__init__`` signature so ``clone()`` (called by the
     FastAPI endpoint per request) reconstructs this subclass.
@@ -169,8 +150,7 @@ class SubagentEmittingAgent(LangGraphAgent):
     def _expand(self, event: BaseEvent, state: _RunState) -> Iterator[BaseEvent]:
         payload = _payload(event)
         if payload is None:
-            if not self._is_child_duplicate(event, state):
-                yield event
+            yield event
             return
         if not payload:
             return  # malformed — already logged
@@ -187,7 +167,6 @@ class SubagentEmittingAgent(LangGraphAgent):
         run_id = delegation.run_id
 
         if phase == "started":
-            delegation.active = True
             yield SubagentStartedEvent(
                 type=EventType.SUBAGENT_STARTED,
                 subagent_run_id=run_id,
@@ -250,7 +229,6 @@ class SubagentEmittingAgent(LangGraphAgent):
             )
         elif phase == "finished":
             yield from self._close_message(delegation)
-            delegation.active = False
             yield SubagentFinishedEvent(
                 type=EventType.SUBAGENT_FINISHED,
                 subagent_run_id=run_id,
@@ -258,7 +236,6 @@ class SubagentEmittingAgent(LangGraphAgent):
             )
         elif phase == "error":
             yield from self._close_message(delegation)
-            delegation.active = False
             yield SubagentErrorEvent(
                 type=EventType.SUBAGENT_ERROR,
                 subagent_run_id=run_id,
@@ -266,30 +243,6 @@ class SubagentEmittingAgent(LangGraphAgent):
             )
         else:
             logger.warning("subagent_activity phase %r not supported; dropped", phase)
-
-    @staticmethod
-    def _is_child_duplicate(event: BaseEvent, state: _RunState) -> bool:
-        """True for a bridge-native, unattributed content event that duplicates
-        the child subgraph's stream (inside a delegation window, or a trailing
-        END for an id dropped inside one)."""
-        event_type = getattr(event, "type", None)
-        if getattr(event, "subagent_run_id", None):
-            return False  # already attributed — someone else's business
-        if event_type in _CHILD_MESSAGE_TYPES:
-            message_id = getattr(event, "message_id", None)
-            if state.in_window():
-                if message_id:
-                    state.dropped_message_ids.add(message_id)
-                return True
-            return message_id in state.dropped_message_ids
-        if event_type in _CHILD_TOOL_TYPES:
-            tool_call_id = getattr(event, "tool_call_id", None)
-            if state.in_window():
-                if tool_call_id:
-                    state.dropped_tool_call_ids.add(tool_call_id)
-                return True
-            return tool_call_id in state.dropped_tool_call_ids
-        return False
 
     @staticmethod
     def _open_message(

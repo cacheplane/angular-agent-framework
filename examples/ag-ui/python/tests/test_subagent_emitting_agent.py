@@ -187,31 +187,26 @@ async def test_expands_the_reason_tool_answer_loop_field_for_field(monkeypatch):
     assert out[16].subagent_run_id is None
 
 
-async def test_bridge_native_child_stream_is_dropped_inside_the_delegation_window(monkeypatch):
-    # ag-ui-langgraph streams the child SUBGRAPH's own LLM/tool events as
-    # unattributed bridge-native events while the research tool runs (measured
-    # in docs/wire-capture-subagents.md §2b). Inside the delegation window the
-    # parent is blocked in its tools node, so every unattributed content event
-    # is the child's duplicate of what the attributed expansion already
-    # carries — drop them, including a trailing END for a dropped id.
-    child_text_id = "lc_run--child"
+async def test_bridge_native_events_pass_through_untouched_even_inside_a_delegation(monkeypatch):
+    # The wrapper is a pure 1:N expander: it never filters bridge-native
+    # events. The child subgraph's own LLM text / tool call are kept off the
+    # wire at the SOURCE — the research tool invokes the subgraph with the
+    # bridge's `emit-messages` / `emit-tool-calls` = False run metadata (see
+    # test_subagent_emission.py) — so an unattributed event that does arrive
+    # between started and finished (the child's STEP_*, or any future
+    # bridge-native event) is forwarded as-is, same object, in order.
+    step = StepStartedEvent(type=EventType.STEP_STARTED, step_name="tools")
+    parent_text = _text("lc_run--parent", "Here is what the subagent found.")
     script = [
         _run_started(),
         *_tool_call(TID),
         _activity({"subagent_id": TID, "phase": "started", "name": "research"}),
         _activity({"subagent_id": TID, "phase": "message_start", "message_id": M1}),
-        *_tool_call(LOOKUP, name="lookup", args=json.dumps(LOOKUP_ARGS)),   # bridge-native copy of the child's call
-        _activity({"subagent_id": TID, "phase": "tool_call", "message_id": M1,
-                   "tool_call_id": LOOKUP, "name": "lookup", "args": LOOKUP_ARGS}),
-        StepStartedEvent(type=EventType.STEP_STARTED, step_name="tools"),      # child node steps pass through
-        _activity({"subagent_id": TID, "phase": "tool_result", "tool_call_id": LOOKUP, "content": LOOKUP_RESULT}),
-        _activity({"subagent_id": TID, "phase": "message_start", "message_id": M2}),
-        *_text(child_text_id, "- Signals")[:2],                              # bridge-native copy of the child's answer
-        _activity({"subagent_id": TID, "phase": "message", "message_id": M2, "delta": "- Signals"}),
+        step,
+        _activity({"subagent_id": TID, "phase": "message", "message_id": M1, "delta": "- Signals"}),
         _activity({"subagent_id": TID, "phase": "finished"}),
-        _text(child_text_id, "")[2],                                         # trailing END for the dropped id
         _tool_result(TID, "- Signals"),
-        *_text("lc_run--parent", "Here is what the subagent found."),        # the orchestrator's own answer
+        *parent_text,
         _run_finished(),
     ]
     out = await _collect(monkeypatch, script)
@@ -222,13 +217,7 @@ async def test_bridge_native_child_stream_is_dropped_inside_the_delegation_windo
         (EventType.TOOL_CALL_END, None),
         (EventType.SUBAGENT_STARTED, RUN_ID),
         (EventType.TEXT_MESSAGE_START, RUN_ID),
-        (EventType.TEXT_MESSAGE_END, RUN_ID),
-        (EventType.TOOL_CALL_START, RUN_ID),
-        (EventType.TOOL_CALL_ARGS, RUN_ID),
-        (EventType.TOOL_CALL_END, RUN_ID),
         (EventType.STEP_STARTED, None),
-        (EventType.TOOL_CALL_RESULT, RUN_ID),
-        (EventType.TEXT_MESSAGE_START, RUN_ID),
         (EventType.TEXT_MESSAGE_CONTENT, RUN_ID),
         (EventType.TEXT_MESSAGE_END, RUN_ID),
         (EventType.SUBAGENT_FINISHED, RUN_ID),
@@ -238,15 +227,11 @@ async def test_bridge_native_child_stream_is_dropped_inside_the_delegation_windo
         (EventType.TEXT_MESSAGE_END, None),
         (EventType.RUN_FINISHED, None),
     ]
-    # Exactly one lookup call on the wire, and it is the attributed one.
-    lookups = [ev for ev in out if ev.type == EventType.TOOL_CALL_START and ev.tool_call_id == LOOKUP]
-    assert len(lookups) == 1 and lookups[0].subagent_run_id == RUN_ID
-    assert not any(getattr(ev, "message_id", None) == child_text_id for ev in out)
-    # The orchestrator's answer after the window is untouched.
-    assert out[17] is script[-4]
+    assert out[6] is step
+    assert out[11:14] == parent_text
 
 
-async def test_outside_a_delegation_window_nothing_is_dropped(monkeypatch):
+async def test_without_any_delegation_the_stream_is_the_identity(monkeypatch):
     script = [_run_started(), *_tool_call("call_search", name="search_documents"),
               _tool_result("call_search", "[]"), *_text("lc_run--parent", "hi"), _run_finished()]
     out = await _collect(monkeypatch, script)
@@ -432,8 +417,7 @@ async def test_malformed_payload_is_dropped(monkeypatch, caplog):
 
 
 async def test_delegation_state_is_per_run(monkeypatch):
-    # A second run on the same agent must not see the first run's open message
-    # or its open delegation window.
+    # A second run on the same agent must not see the first run's open message.
     script = [
         _activity({"subagent_id": TID, "phase": "started", "name": "research"}),
         _activity({"subagent_id": TID, "phase": "message_start", "message_id": M1}),
@@ -452,9 +436,8 @@ async def test_delegation_state_is_per_run(monkeypatch):
 
     script[:] = [*_text("lc_run--parent", "hello"), _activity({"subagent_id": TID, "phase": "finished"})]
     second = [ev async for ev in agent.run(_input())]
-    # No stale TEXT_MESSAGE_END from run 1 leaks into run 2, the parent's
-    # text is not suppressed by run 1's window, and the unknown delegation's
-    # finished is still expanded (bracketing the card).
+    # No stale TEXT_MESSAGE_END from run 1 leaks into run 2, and the unknown
+    # delegation's finished is still expanded (bracketing the card).
     assert [ev.type for ev in second] == [
         EventType.TEXT_MESSAGE_START,
         EventType.TEXT_MESSAGE_CONTENT,

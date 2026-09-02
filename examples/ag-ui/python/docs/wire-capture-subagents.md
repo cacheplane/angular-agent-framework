@@ -184,7 +184,7 @@ org ids appeared in the stream; only repetitive delta runs,
 124   {"type":"STEP_FINISHED","stepName":"tools"}
 125   {"type":"STEP_STARTED","stepName":"agent"}                      # child subgraph node (passes through, as before)
 128   {"type":"TEXT_MESSAGE_START","messageId":"call_Ax1IOxHNk2UEIdCaKlDvCLtc-sub-m1","role":"assistant","subagentRunId":"call_Ax1IOxHNk2UEIdCaKlDvCLtc-sub"}
-      # [elided: the bridge-native, UNATTRIBUTED TOOL_CALL_START/ARGS/END for lookup that §2b showed here are GONE — dropped inside the delegation window; their RAW on_chat_model_stream mirrors remain]
+      # [elided: the bridge-native, UNATTRIBUTED TOOL_CALL_START/ARGS/END for lookup that §2b showed here are GONE (at this capture, filtered by the wrapper — superseded, see "Declared opt-out" below); their RAW on_chat_model_stream mirrors remain]
 148   {"type":"TEXT_MESSAGE_END","messageId":"call_Ax1IOxHNk2UEIdCaKlDvCLtc-sub-m1","subagentRunId":"call_Ax1IOxHNk2UEIdCaKlDvCLtc-sub"}
 149   {"type":"TOOL_CALL_START","toolCallId":"call_9FAovVPV9iy8ZR4l2XI6w5sE","toolCallName":"lookup","parentMessageId":"call_Ax1IOxHNk2UEIdCaKlDvCLtc-sub-m1","subagentRunId":"call_Ax1IOxHNk2UEIdCaKlDvCLtc-sub"}
 150   {"type":"TOOL_CALL_ARGS","toolCallId":"call_9FAovVPV9iy8ZR4l2XI6w5sE","delta":"{\"query\": \"Angular Signals introduced in Angular 16 release\"}","subagentRunId":"call_Ax1IOxHNk2UEIdCaKlDvCLtc-sub"}
@@ -243,12 +243,11 @@ them before `_handle_single_event`, and the client ignores RAW.
 **The §2b duplicates are gone.** Exactly one `lookup` `TOOL_CALL_START` and
 exactly two child `TEXT_MESSAGE_START`s are on the wire, all attributed; the
 only unattributed `TEXT_MESSAGE_START` is the orchestrator's own answer
-(1809). The wrapper drops the bridge-native copies of the child subgraph's
-stream inside the delegation window (`SUBAGENT_STARTED` → `SUBAGENT_FINISHED`;
-the parent is blocked in its tools node for the whole window, so nothing of
-the parent's is lost), so the child text no longer transits the parent
-transcript at all — the post-run `MESSAGES_SNAPSHOT` reconciliation is no
-longer doing any work. `STEP_*` for the child nodes still pass through.
+(1809). At this capture the wrapper achieved that by *inferring* the
+duplicates — dropping every unattributed content event between
+`SUBAGENT_STARTED` and `SUBAGENT_FINISHED`. That filter was replaced in review
+by the bridge's declared opt-out (next section); the wire shape is the same,
+the mechanism is not. `STEP_*` for the child nodes still pass through.
 
 **Measured order, `TOOL_CALL_START` vs `SUBAGENT_STARTED`:** START 9 → ARGS →
 END 107 → `on_tool_start` 118 → SUBAGENT_STARTED 120 → … → SUBAGENT_FINISHED
@@ -256,6 +255,89 @@ END 107 → `on_tool_start` 118 → SUBAGENT_STARTED 120 → … → SUBAGENT_FI
 body runs, so the reducer attaches the card to an already-known
 `parentToolCallId`; the whole `SUBAGENT_*` block nests between
 `TOOL_CALL_END` and `TOOL_CALL_RESULT`, as in the cockpit lane.
+
+## Declared opt-out (review follow-up)
+
+Review of the emitter asked why the wrapper *inferred* the child's duplicates
+(any unattributed `TEXT_MESSAGE_*` / `TOOL_CALL_*` inside a delegation window)
+when the bridge already honors a declared opt-out. It does:
+`ag_ui_langgraph/agent.py:993-994` reads the LangChain run metadata keys
+`emit-messages` and `emit-tool-calls` (default `True`) and skips emitting
+`TEXT_MESSAGE_*` / `TOOL_CALL_*` for runs that carry them as `False` — while
+callbacks (`SubagentStreamHandler`, `adispatch_custom_event`) still fire,
+`STEP_*` still pass, and the parent's own `TOOL_CALL_RESULT` / answer are
+untouched. Metadata set on the tool's `subgraph.ainvoke(..., config=...)`
+inherits into every run of the child subgraph.
+
+So the `research` tool now invokes the subgraph with
+`config={"callbacks": [...], "metadata": {"emit-messages": False,
+"emit-tool-calls": False}}` (`src/graph.py`), and `SubagentEmittingAgent` is
+back to a pure 1:N expander: no window flag, no remembered ids, every
+non-`subagent_activity` event passes through untouched
+(`tests/test_subagent_emitting_agent.py`
+`test_bridge_native_events_pass_through_untouched_even_inside_a_delegation`;
+`tests/test_subagent_emission.py`
+`test_research_tool_declares_the_child_silent_via_bridge_metadata` asserts the
+metadata is on the invocation).
+
+Re-captured 2026-09-02 with the opt-out and no wrapper-side filtering, same
+`RunAgentInput` as §2 (thread `capture-optout-1788383126`, real
+`OPENAI_API_KEY`, `gpt-5-mini`):
+
+```
+1     {"type":"RUN_STARTED", ...}
+9     {"type":"TOOL_CALL_START","toolCallId":"call_zDfLSjalNBgmmB45oNQ7ERvm","toolCallName":"research", ...}
+69    {"type":"TOOL_CALL_END","toolCallId":"call_zDfLSjalNBgmmB45oNQ7ERvm"}
+78    {"type":"STEP_STARTED","stepName":"tools"}
+80    {"type":"RAW","event":{"event":"on_tool_start","name":"research"}}
+82    {"type":"SUBAGENT_STARTED","subagentRunId":"call_zDfLSjalNBgmmB45oNQ7ERvm-sub","name":"research","parentToolCallId":"call_zDfLSjalNBgmmB45oNQ7ERvm"}
+87    {"type":"STEP_STARTED","stepName":"agent"}                      # child node — still on the wire
+90    {"type":"TEXT_MESSAGE_START","messageId":"call_zDfLSjalNBgmmB45oNQ7ERvm-sub-m1","role":"assistant","subagentRunId":"call_zDfLSjalNBgmmB45oNQ7ERvm-sub"}
+      # [no bridge-native TOOL_CALL_START for lookup here — the bridge skipped it (emit-tool-calls=False); its RAW on_chat_model_stream mirrors remain]
+122   {"type":"TEXT_MESSAGE_END","messageId":"call_zDfLSjalNBgmmB45oNQ7ERvm-sub-m1","subagentRunId":"call_zDfLSjalNBgmmB45oNQ7ERvm-sub"}
+123   {"type":"TOOL_CALL_START","toolCallId":"call_1E9G6oUvZ43IDK58Hc0TSnVC","toolCallName":"lookup","parentMessageId":"call_zDfLSjalNBgmmB45oNQ7ERvm-sub-m1","subagentRunId":"call_zDfLSjalNBgmmB45oNQ7ERvm-sub"}
+124   {"type":"TOOL_CALL_ARGS", ... "subagentRunId":"call_zDfLSjalNBgmmB45oNQ7ERvm-sub"}
+125   {"type":"TOOL_CALL_END","toolCallId":"call_1E9G6oUvZ43IDK58Hc0TSnVC","subagentRunId":"call_zDfLSjalNBgmmB45oNQ7ERvm-sub"}
+132   {"type":"STEP_STARTED","stepName":"tools"}                      # child node
+138   {"type":"TOOL_CALL_RESULT","messageId":"call_1E9G6oUvZ43IDK58Hc0TSnVC-result","toolCallId":"call_1E9G6oUvZ43IDK58Hc0TSnVC","role":"tool","subagentRunId":"call_zDfLSjalNBgmmB45oNQ7ERvm-sub", ...}
+143   {"type":"STEP_STARTED","stepName":"agent"}
+      # [259 attributed TEXT_MESSAGE_CONTENT deltas on -sub-m2 — the child's answer; no bridge-native TEXT_MESSAGE_START/CONTENT/END copy (emit-messages=False)]
+941   {"type":"TEXT_MESSAGE_END","messageId":"call_zDfLSjalNBgmmB45oNQ7ERvm-sub-m2","subagentRunId":"call_zDfLSjalNBgmmB45oNQ7ERvm-sub"}
+942   {"type":"SUBAGENT_FINISHED","subagentRunId":"call_zDfLSjalNBgmmB45oNQ7ERvm-sub","outcome":{"type":"success"}}
+944   {"type":"TOOL_CALL_RESULT","toolCallId":"call_zDfLSjalNBgmmB45oNQ7ERvm","content":"- What they are: Angular Signals are a fine-grained reactivity primitive ..."}   # the PARENT's result, untouched
+952   {"type":"STEP_STARTED","stepName":"generate"}
+958   {"type":"TEXT_MESSAGE_START","messageId":"lc_run--01a063f1-275c-79f0-8b5d-f6175c48fc09","role":"assistant"}   # the ORCHESTRATOR's own answer — the only unattributed TEXT_MESSAGE_START
+      # [elided: 49 TEXT_MESSAGE_CONTENT deltas, no subagentRunId]
+1084  {"type":"RUN_FINISHED", ...}
+```
+
+Event tally (1,084 events): 1 RUN_STARTED, 9 STEP_STARTED, 9 STEP_FINISHED,
+1 TOOL_CALL_START, 29 TOOL_CALL_ARGS, 1 TOOL_CALL_END, 1 SUBAGENT_STARTED,
+2 TEXT_MESSAGE_START(sub), 259 TEXT_MESSAGE_CONTENT(sub),
+2 TEXT_MESSAGE_END(sub), 1 TOOL_CALL_START(sub), 1 TOOL_CALL_ARGS(sub),
+1 TOOL_CALL_END(sub), 1 TOOL_CALL_RESULT(sub), 1 SUBAGENT_FINISHED,
+1 TOOL_CALL_RESULT, 1 TEXT_MESSAGE_START, 49 TEXT_MESSAGE_CONTENT,
+1 TEXT_MESSAGE_END, 10 STATE_SNAPSHOT, 2 MESSAGES_SNAPSHOT, 1 RUN_FINISHED,
+700 RAW (377 `on_chat_model_stream`, 265 `on_custom_event`, 16
+`on_chain_stream`, 15/15 `on_chain_start`/`_end`, 4/4
+`on_chat_model_start`/`_end`, 2/2 `on_tool_start`/`_end`). No CUSTOM, no
+ACTIVITY_*, no SUBAGENT_ERROR.
+
+- (a) **Zero** unattributed `TEXT_MESSAGE_*` / `TOOL_CALL_*` events between
+  `SUBAGENT_STARTED` (82) and `SUBAGENT_FINISHED` (942), with nothing
+  filtering them: the `lookup` call appears exactly once (123, attributed) and
+  the child's answer only as the 259 attributed deltas on `-sub-m2`. The only
+  unattributed `TEXT_MESSAGE_START` in the whole run is the orchestrator's
+  (958). The joined child deltas (1,386 chars) equal the parent's
+  `TOOL_CALL_RESULT.content` byte-for-byte.
+- (b) The parent's `TOOL_CALL_RESULT` for the delegation (944) and its own
+  answer (958 → 1 START / 49 CONTENT / 1 END) are present and unattributed.
+- (c) `STEP_*` still passes: 9 `STEP_STARTED` / 9 `STEP_FINISHED`
+  (`generate` ×2, `tools` ×3, `agent` ×2, `attach_citations`,
+  `generate_title`) — the child's `agent` / `tools` nodes included.
+
+The e2e suite (`examples/ag-ui/angular/e2e`, aimock replay) passed unchanged
+after the swap.
 
 ## Browser verification
 

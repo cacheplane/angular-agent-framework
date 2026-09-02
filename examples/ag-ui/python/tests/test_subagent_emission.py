@@ -28,7 +28,7 @@ from langchain_core.runnables import Runnable
 from langgraph.graph import END, MessagesState, StateGraph
 
 import src.graph as graph_mod
-from src.graph import _build_research_subgraph
+from src.graph import _build_research_subgraph, research
 from src.streaming.subagent_emitting_agent import SubagentEmittingAgent
 from src.streaming.subagent_stream_handler import SubagentRunState
 
@@ -181,3 +181,37 @@ async def test_lookup_tool_is_deterministic_and_offline():
     # Unknown topic falls back to the default fact, never raises / hits network.
     assert graph_mod.lookup.invoke({"query": "quantum widgets"}) == \
         graph_mod._RESEARCH_DEFAULT_FACT
+
+
+@pytest.mark.asyncio
+async def test_research_tool_declares_the_child_silent_via_bridge_metadata(monkeypatch):
+    # ag-ui-langgraph streams compiled subgraphs and would emit the child's
+    # own text / `lookup` call as UNATTRIBUTED TEXT_MESSAGE_* / TOOL_CALL_*
+    # events in the parent transcript. The bridge honors a declared opt-out:
+    # runs whose LangChain metadata carries `emit-messages` / `emit-tool-calls`
+    # = False are skipped for those emissions (callbacks and STEP_* still
+    # fire). The tool must pass it on the subgraph invocation so it inherits
+    # into the child run — no wrapper-side duplicate filtering.
+    captured: dict[str, Any] = {}
+
+    class _CapturingSubgraph:
+        async def ainvoke(self, state: Any, config: Any = None, **kwargs: Any) -> dict:
+            captured["state"] = state
+            captured["config"] = config
+            return {"messages": [AIMessage(content="- Signals are reactive.")]}
+
+    monkeypatch.setattr(graph_mod, "_build_research_subgraph", lambda *a, **k: _CapturingSubgraph())
+
+    result = await research.ainvoke(
+        {"type": "tool_call", "id": TID, "name": "research", "args": {"topic": "Angular signals"}}
+    )
+
+    assert result.content == "- Signals are reactive."
+    assert captured["state"]["topic"] == "Angular signals"
+    metadata = captured["config"]["metadata"]
+    assert metadata["emit-messages"] is False
+    assert metadata["emit-tool-calls"] is False
+    # The streaming callback still rides along — the opt-out silences only the
+    # bridge's raw emission, not the per-token subagent_activity source.
+    handler_types = [type(cb).__name__ for cb in captured["config"]["callbacks"]]
+    assert "SubagentStreamHandler" in handler_types

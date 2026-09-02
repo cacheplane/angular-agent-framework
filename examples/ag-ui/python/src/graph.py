@@ -471,7 +471,21 @@ async def research(
     try:
         result = await subgraph.ainvoke(
             {"topic": topic, "messages": [], "iterations": 0},
-            config={"callbacks": [SubagentStreamHandler(tool_call_id, run_state)]},
+            config={
+                "callbacks": [SubagentStreamHandler(tool_call_id, run_state)],
+                # ag-ui-langgraph streams this compiled subgraph by default and
+                # would put the child's own LLM text and `lookup` tool call on
+                # the wire as UNATTRIBUTED TEXT_MESSAGE_* / TOOL_CALL_* events
+                # in the parent transcript. `emit-messages` / `emit-tool-calls`
+                # is the bridge's declared opt-out (read from LangChain run
+                # metadata, which inherits into the subgraph run): with them
+                # False the child's raw events never reach the wire, while
+                # callbacks (SubagentStreamHandler, adispatch_custom_event) and
+                # the child's STEP_* still fire. The attributed copies come from
+                # the `subagent_activity` payloads the SubagentEmittingAgent
+                # expands.
+                "metadata": {"emit-messages": False, "emit-tool-calls": False},
+            },
         )
     except Exception as exc:
         await _emit({"phase": "error", "message": f"{type(exc).__name__}: {exc}"})
