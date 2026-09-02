@@ -1,0 +1,649 @@
+import { describe, expect, it, vi } from 'vitest';
+import type { WebhookEventPayload } from 'resend';
+
+import type {
+  SqlExecutor,
+  SqlQueryResult,
+  SqlTransaction,
+} from './database.ts';
+import {
+  processVerifiedResendWebhook,
+  type ProcessResendWebhookDependencies,
+} from './webhooks.ts';
+
+type TestRow = Record<string, unknown>;
+
+const now = new Date('2026-09-01T12:00:00.000Z');
+const jobId = '00000000-0000-4000-8000-000000000001';
+const contactId = '00000000-0000-4000-8000-000000000002';
+const providerEmailId = 'resend-email-1';
+
+const sdkBaseEmailData = {
+  created_at: now.toISOString(),
+  email_id: providerEmailId,
+  from: 'Brian at Threadplane <brian@threadplane.ai>',
+  to: ['developer@example.com'],
+  subject: 'A note',
+};
+
+const supportedSdkFixtures = [
+  { type: 'email.sent', created_at: now.toISOString(), data: sdkBaseEmailData },
+  {
+    type: 'email.delivered',
+    created_at: now.toISOString(),
+    data: sdkBaseEmailData,
+  },
+  {
+    type: 'email.delivery_delayed',
+    created_at: now.toISOString(),
+    data: sdkBaseEmailData,
+  },
+  {
+    type: 'email.complained',
+    created_at: now.toISOString(),
+    data: sdkBaseEmailData,
+  },
+  {
+    type: 'email.bounced',
+    created_at: now.toISOString(),
+    data: {
+      ...sdkBaseEmailData,
+      bounce: { type: 'Permanent', subType: 'General', message: 'bounced' },
+    },
+  },
+  {
+    type: 'email.failed',
+    created_at: now.toISOString(),
+    data: { ...sdkBaseEmailData, failed: { reason: 'provider_rejected' } },
+  },
+  {
+    type: 'email.suppressed',
+    created_at: now.toISOString(),
+    data: {
+      ...sdkBaseEmailData,
+      suppressed: { type: 'Suppressed', message: 'suppressed' },
+    },
+  },
+] satisfies readonly Extract<
+  WebhookEventPayload,
+  {
+    type:
+      | 'email.sent'
+      | 'email.delivered'
+      | 'email.delivery_delayed'
+      | 'email.complained'
+      | 'email.bounced'
+      | 'email.failed'
+      | 'email.suppressed';
+  }
+>[];
+
+function jobRow(overrides: TestRow = {}): TestRow {
+  return {
+    id: jobId,
+    kind: 'send_step',
+    contact_id: contactId,
+    project_id: null,
+    status: 'completed',
+    payload: { campaign_version: 'v1', step: 1 },
+    provider_email_id: providerEmailId,
+    delivery_status: 'submitted',
+    ...overrides,
+  };
+}
+
+function executorWith(
+  handlers: Record<
+    string,
+    (parameters: readonly unknown[], sql: string) => SqlQueryResult<TestRow>
+  >
+): { executor: SqlExecutor; calls: string[] } {
+  const calls: string[] = [];
+  const transaction: SqlTransaction = {
+    async execute<Row extends Record<string, unknown>>(
+      sql: string,
+      parameters: readonly unknown[] = []
+    ): Promise<SqlQueryResult<Row>> {
+      const marker = /\/\* growth:([a-z0-9-]+) \*\//u.exec(sql)?.[1];
+      const handler = marker ? handlers[marker] : undefined;
+      if (!marker || !handler) {
+        throw new Error(`Unexpected SQL marker: ${marker ?? 'missing'}`);
+      }
+      calls.push(marker);
+      return handler(parameters, sql) as SqlQueryResult<Row>;
+    },
+  };
+  return {
+    calls,
+    executor: {
+      execute: transaction.execute,
+      transaction: async (operation) => operation(transaction),
+    },
+  };
+}
+
+function event(
+  type: string,
+  dataOverrides: Record<string, unknown> = {}
+): Record<string, unknown> {
+  return {
+    type,
+    created_at: now.toISOString(),
+    data: {
+      created_at: now.toISOString(),
+      email_id: providerEmailId,
+      from: 'Brian at Threadplane <brian@threadplane.ai>',
+      to: ['developer@example.com'],
+      subject: 'A note',
+      tags: {
+        environment: 'production',
+        job_kind: 'send_step',
+        campaign_version: 'v1',
+        campaign_step: '1',
+      },
+      ...(type === 'email.failed'
+        ? { failed: { reason: 'provider_rejected' } }
+        : {}),
+      ...(type === 'email.suppressed'
+        ? { suppressed: { type: 'Suppressed', message: 'provider message' } }
+        : {}),
+      ...dataOverrides,
+    },
+  };
+}
+
+function webhookHarness(
+  options: {
+    existingActivity?: TestRow;
+    job?: TestRow;
+  } = {}
+) {
+  const currentJob = options.job ?? jobRow();
+  const insertedRows = options.existingActivity ? [] : [{ event_key: 'x' }];
+  const harness = executorWith({
+    'discover-resend-webhook-job': (parameters, sql) => {
+      expect(parameters).toEqual([providerEmailId]);
+      expect(sql).toMatch(/where provider_email_id = \$1/u);
+      expect(sql).not.toMatch(/x-threadplane|tags/iu);
+      return { rows: [{ id: jobId, contact_id: contactId }] };
+    },
+    'lock-resend-webhook-contact': (_parameters, sql) => {
+      expect(sql).toMatch(/for update/u);
+      return { rows: [{ id: contactId }] };
+    },
+    'lock-resend-webhook-job': (_parameters, sql) => {
+      expect(sql).toMatch(/provider_email_id = \$1/u);
+      expect(sql).toMatch(/for update/u);
+      return { rows: [currentJob] };
+    },
+    'insert-resend-webhook-activity': (parameters, sql) => {
+      expect(parameters[0]).toMatch(/^resend:msg_/u);
+      expect(sql).toMatch(/on conflict \(event_key\) do nothing/u);
+      const serialized = String(parameters.at(-1));
+      expect(serialized).not.toContain('developer@example.com');
+      expect(serialized).not.toContain('A note');
+      expect(serialized).not.toContain('Brian at Threadplane');
+      return { rows: insertedRows };
+    },
+    'read-resend-webhook-activity': () => ({
+      rows: options.existingActivity ? [options.existingActivity] : [],
+    }),
+    'update-resend-delivery-status': (_parameters, sql) => {
+      expect(sql).toMatch(/delivery_status/u);
+      return { rows: [currentJob] };
+    },
+  });
+  const stopContact = vi
+    .fn()
+    .mockResolvedValue({ applied: true, effective: true });
+  const dependencies: ProcessResendWebhookDependencies = { stopContact };
+  return { ...harness, stopContact, dependencies };
+}
+
+describe('processVerifiedResendWebhook', () => {
+  it('keeps supported parser fixtures assignable to the pinned Resend webhook union', () => {
+    expect(supportedSdkFixtures).toHaveLength(7);
+  });
+
+  it.each([
+    ['email.sent', 'submitted', 'delivery.sent'],
+    ['email.delivered', 'delivered', 'delivery.delivered'],
+    ['email.delivery_delayed', 'submitted', 'delivery.delayed'],
+    ['email.complained', 'complained', 'delivery.complained'],
+    ['email.suppressed', 'suppressed', 'delivery.suppressed'],
+    ['email.failed', 'failed', 'delivery.failed'],
+  ] as const)('maps %s to the closed %s status', async (type, status, kind) => {
+    const harness = webhookHarness();
+
+    const result = await processVerifiedResendWebhook(
+      harness.executor,
+      { providerEventId: `msg_${type}`, payload: event(type) },
+      harness.dependencies
+    );
+
+    expect(result).toMatchObject({
+      applied: true,
+      activityKind: kind,
+      deliveryStatus: status,
+    });
+    if (status === 'submitted') {
+      expect(harness.calls).not.toContain('update-resend-delivery-status');
+    } else {
+      expect(harness.calls).toContain('update-resend-delivery-status');
+    }
+  });
+
+  it('marks only a permanent bounce as a hard-bounce stop', async () => {
+    const hard = webhookHarness();
+    await processVerifiedResendWebhook(
+      hard.executor,
+      {
+        providerEventId: 'msg_hard_bounce',
+        payload: event('email.bounced', {
+          bounce: {
+            type: 'Permanent',
+            subType: 'General',
+            message: 'raw provider text',
+          },
+        }),
+      },
+      hard.dependencies
+    );
+    expect(hard.stopContact).toHaveBeenCalledWith(
+      expect.objectContaining({ transaction: expect.any(Function) }),
+      expect.objectContaining({
+        contactId,
+        reason: 'hard_bounce',
+        eventKey: 'resend:msg_hard_bounce:stop',
+        source: 'resend_webhook',
+        provenance: expect.objectContaining({ kind: 'provider_webhook' }),
+      })
+    );
+
+    const soft = webhookHarness();
+    await processVerifiedResendWebhook(
+      soft.executor,
+      {
+        providerEventId: 'msg_soft_bounce',
+        payload: event('email.bounced', {
+          bounce: {
+            type: 'Transient',
+            subType: 'MailboxFull',
+            message: 'raw provider text',
+          },
+        }),
+      },
+      soft.dependencies
+    );
+    expect(soft.stopContact).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['email.complained', 'complaint'],
+    ['email.suppressed', 'provider_suppression'],
+  ] as const)('uses canonical stop for %s', async (type, reason) => {
+    const harness = webhookHarness();
+    await processVerifiedResendWebhook(
+      harness.executor,
+      { providerEventId: `msg_${type}`, payload: event(type) },
+      harness.dependencies
+    );
+    expect(harness.stopContact).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ reason })
+    );
+  });
+
+  it('does not stop for a provider failure with arbitrary invalid-looking text', async () => {
+    const harness = webhookHarness();
+    await processVerifiedResendWebhook(
+      harness.executor,
+      {
+        providerEventId: 'msg_failed',
+        payload: event('email.failed', {
+          failed: { reason: 'invalid address maybe attacker supplied' },
+        }),
+      },
+      harness.dependencies
+    );
+    expect(harness.stopContact).not.toHaveBeenCalled();
+  });
+
+  it('ignores verified open, click, and irrelevant events without database access', async () => {
+    const harness = executorWith({});
+    for (const type of ['email.opened', 'email.clicked', 'contact.created']) {
+      await expect(
+        processVerifiedResendWebhook(harness.executor, {
+          providerEventId: `msg_${type}`,
+          payload: event(type),
+        })
+      ).resolves.toEqual({ applied: false, reason: 'ignored_event_type' });
+    }
+    expect(harness.calls).toEqual([]);
+  });
+
+  it('accepts bounded provider ISO timestamps with offsets and fractional precision', async () => {
+    const harness = webhookHarness();
+    const payload = event('email.sent');
+    payload['created_at'] = '2026-09-01T05:00:00.123456-07:00';
+    (payload['data'] as Record<string, unknown>)['created_at'] =
+      '2026-09-01T05:00:00.123456-07:00';
+
+    await expect(
+      processVerifiedResendWebhook(
+        harness.executor,
+        { providerEventId: 'msg_timestamp', payload },
+        harness.dependencies
+      )
+    ).resolves.toMatchObject({ applied: true });
+  });
+
+  it('finds the job only by provider email ID and rejects contradictory corroboration tags', async () => {
+    const harness = webhookHarness();
+    await expect(
+      processVerifiedResendWebhook(
+        harness.executor,
+        {
+          providerEventId: 'msg_bad_tags',
+          payload: event('email.delivered', { tags: { job_kind: 'fulfill' } }),
+        },
+        harness.dependencies
+      )
+    ).rejects.toThrow(/corroboration/iu);
+    expect(harness.calls).toEqual([
+      'read-resend-webhook-activity',
+      'discover-resend-webhook-job',
+      'lock-resend-webhook-contact',
+      'lock-resend-webhook-job',
+    ]);
+  });
+
+  it('leaves a tagged Threadplane webhook retryable until provider acceptance attaches the ID', async () => {
+    const unmatched = executorWith({
+      'read-resend-webhook-activity': () => ({ rows: [] }),
+      'discover-resend-webhook-job': () => ({ rows: [] }),
+    });
+    const input = {
+      providerEventId: 'msg_acceptance_race',
+      payload: event('email.delivered'),
+    };
+
+    await expect(
+      processVerifiedResendWebhook(unmatched.executor, input)
+    ).resolves.toEqual({
+      applied: false,
+      reason: 'retryable_unmatched_job',
+    });
+    expect(unmatched.calls).toEqual([
+      'read-resend-webhook-activity',
+      'discover-resend-webhook-job',
+    ]);
+
+    const matched = webhookHarness();
+    await expect(
+      processVerifiedResendWebhook(
+        matched.executor,
+        input,
+        matched.dependencies
+      )
+    ).resolves.toMatchObject({ applied: true });
+    expect(
+      matched.calls.filter(
+        (marker) => marker === 'insert-resend-webhook-activity'
+      )
+    ).toHaveLength(1);
+
+    const data = {
+      provider: 'resend',
+      provider_event_id: input.providerEventId,
+      provider_email_id: providerEmailId,
+      event_type: 'email.delivered',
+      category: 'delivered',
+    };
+    const replay = webhookHarness({
+      existingActivity: {
+        event_key: `resend:${input.providerEventId}`,
+        contact_id: contactId,
+        project_id: null,
+        kind: 'delivery.delivered',
+        occurred_at: now,
+        data,
+      },
+    });
+    await expect(
+      processVerifiedResendWebhook(
+        replay.executor,
+        input,
+        replay.dependencies
+      )
+    ).resolves.toEqual({ applied: false, reason: 'replay' });
+    expect(replay.calls).toEqual(['read-resend-webhook-activity']);
+  });
+
+  it('acknowledges an unmatched untagged provider event without reserving its replay key', async () => {
+    const harness = executorWith({
+      'read-resend-webhook-activity': () => ({ rows: [] }),
+      'discover-resend-webhook-job': () => ({ rows: [] }),
+    });
+
+    await expect(
+      processVerifiedResendWebhook(harness.executor, {
+        providerEventId: 'msg_legacy_unmatched',
+        payload: event('email.delivered', { tags: undefined }),
+      })
+    ).resolves.toEqual({ applied: false, reason: 'unmatched_job' });
+    expect(harness.calls).toEqual([
+      'read-resend-webhook-activity',
+      'discover-resend-webhook-job',
+    ]);
+  });
+
+  it.each([
+    {
+      environment: 'production',
+      job_kind: 'send_step',
+    },
+    {
+      environment: 'production',
+      job_kind: 'fulfill',
+      campaign_version: 'v1',
+    },
+    {
+      environment: 'unknown',
+      job_kind: 'fulfill',
+    },
+  ])('does not create an account-wide retry storm for noncanonical tags %#', async (tags) => {
+    const harness = executorWith({
+      'read-resend-webhook-activity': () => ({ rows: [] }),
+      'discover-resend-webhook-job': () => ({ rows: [] }),
+    });
+
+    await expect(
+      processVerifiedResendWebhook(harness.executor, {
+        providerEventId: 'msg_noncanonical_tags',
+        payload: event('email.delivered', { tags }),
+      })
+    ).resolves.toEqual({ applied: false, reason: 'unmatched_job' });
+  });
+
+  it('does not regress a terminal delivered status on delayed or failure events', async () => {
+    const delivered = jobRow({ delivery_status: 'delivered' });
+    for (const type of ['email.delivery_delayed', 'email.failed']) {
+      const harness = webhookHarness({ job: delivered });
+      const result = await processVerifiedResendWebhook(
+        harness.executor,
+        { providerEventId: `msg_${type}`, payload: event(type) },
+        harness.dependencies
+      );
+      expect(result).toMatchObject({ deliveryStatus: 'delivered' });
+      expect(harness.calls).not.toContain('update-resend-delivery-status');
+    }
+  });
+
+  it.each([
+    [
+      'email.bounced',
+      'bounced',
+      {
+        bounce: {
+          type: 'Permanent',
+          subType: 'General',
+          message: 'provider text',
+        },
+      },
+      'hard_bounce',
+    ],
+    ['email.complained', 'complained', {}, 'complaint'],
+    ['email.suppressed', 'suppressed', {}, 'provider_suppression'],
+  ] as const)(
+    'promotes post-delivery %s to the operational stop status',
+    async (type, status, details, stopReason) => {
+      const harness = webhookHarness({
+        job: jobRow({ delivery_status: 'delivered' }),
+      });
+      const result = await processVerifiedResendWebhook(
+        harness.executor,
+        {
+          providerEventId: `msg_post_delivery_${type}`,
+          payload: event(type, details),
+        },
+        harness.dependencies
+      );
+
+      expect(result).toMatchObject({ deliveryStatus: status });
+      expect(harness.calls).toContain('update-resend-delivery-status');
+      expect(harness.stopContact).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ reason: stopReason })
+      );
+    }
+  );
+
+  it('makes an identical provider event replay inert', async () => {
+    const data = {
+      provider: 'resend',
+      provider_event_id: 'msg_delivered',
+      provider_email_id: providerEmailId,
+      event_type: 'email.delivered',
+      category: 'delivered',
+    };
+    const harness = webhookHarness({
+      existingActivity: {
+        event_key: 'resend:msg_delivered',
+        contact_id: contactId,
+        project_id: null,
+        kind: 'delivery.delivered',
+        occurred_at: now,
+        data,
+      },
+    });
+
+    const result = await processVerifiedResendWebhook(
+      harness.executor,
+      { providerEventId: 'msg_delivered', payload: event('email.delivered') },
+      harness.dependencies
+    );
+
+    expect(result).toEqual({ applied: false, reason: 'replay' });
+    expect(harness.calls).not.toContain('update-resend-delivery-status');
+    expect(harness.stopContact).not.toHaveBeenCalled();
+  });
+
+  it('fails conflicting reuse of a provider event ID before status mutation', async () => {
+    const harness = webhookHarness({
+      existingActivity: {
+        event_key: 'resend:msg_conflict',
+        contact_id: contactId,
+        project_id: null,
+        kind: 'delivery.failed',
+        occurred_at: now,
+        data: { provider: 'resend', provider_event_id: 'msg_conflict' },
+      },
+    });
+    await expect(
+      processVerifiedResendWebhook(
+        harness.executor,
+        { providerEventId: 'msg_conflict', payload: event('email.delivered') },
+        harness.dependencies
+      )
+    ).rejects.toThrow(/event id conflict/iu);
+    expect(harness.calls).not.toContain('update-resend-delivery-status');
+  });
+
+  it('fails conflicting provider event ID reuse even when the new provider email ID is unknown', async () => {
+    const existing = {
+      event_key: 'resend:msg_reused',
+      contact_id: contactId,
+      project_id: null,
+      kind: 'delivery.delivered',
+      occurred_at: now,
+      data: {
+        provider: 'resend',
+        provider_event_id: 'msg_reused',
+        provider_email_id: providerEmailId,
+        event_type: 'email.delivered',
+        category: 'delivered',
+      },
+    };
+    const harness = executorWith({
+      'read-resend-webhook-activity': () => ({ rows: [existing] }),
+      'discover-resend-webhook-job': () => ({ rows: [] }),
+    });
+
+    await expect(
+      processVerifiedResendWebhook(harness.executor, {
+        providerEventId: 'msg_reused',
+        payload: event('email.delivered', { email_id: 'different-email-id' }),
+      })
+    ).rejects.toThrow(/event id conflict/iu);
+  });
+
+  it.each([
+    [
+      { type: 'email.delivered', created_at: 'not-a-date', data: {} },
+      /payload/iu,
+    ],
+    [event('email.delivered', { email_id: 'x'.repeat(257) }), /payload/iu],
+    [
+      event('email.delivered', {
+        to: Array.from({ length: 51 }, () => 'a@b.com'),
+      }),
+      /payload/iu,
+    ],
+    [event('email.delivered', { subject: 'x'.repeat(501) }), /payload/iu],
+    [event('email.delivered', { headers: {} }), /payload/iu],
+    [
+      event('email.bounced', {
+        bounce: { type: 'x'.repeat(101), subType: 'x', message: 'x' },
+      }),
+      /payload/iu,
+    ],
+    [
+      event('email.delivered', { failed: { reason: 'unexpected' } }),
+      /payload/iu,
+    ],
+  ] as const)(
+    'rejects malformed or oversized verified provider payload %#',
+    async (payload, error) => {
+      const harness = executorWith({});
+      await expect(
+        processVerifiedResendWebhook(harness.executor, {
+          providerEventId: 'msg_invalid',
+          payload,
+        })
+      ).rejects.toThrow(error);
+      expect(harness.calls).toEqual([]);
+    }
+  );
+
+  it('bounds the provider event ID so derived stop keys remain valid', async () => {
+    const harness = executorWith({});
+    await expect(
+      processVerifiedResendWebhook(harness.executor, {
+        providerEventId: `msg_${'x'.repeat(240)}`,
+        payload: event('email.complained'),
+      })
+    ).rejects.toThrow(/payload/iu);
+    expect(harness.calls).toEqual([]);
+  });
+});

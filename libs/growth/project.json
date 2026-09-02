@@ -1,0 +1,58 @@
+{
+  "name": "growth",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/growth/src",
+  "projectType": "library",
+  "tags": ["scope:internal", "scope:growth-lifecycle"],
+  "namedInputs": {
+    "growthLifecycleControlPlane": [
+      "{workspaceRoot}/migrations/[0-9][0-9][0-9][0-9]*([0-9])_+([a-z0-9])*([-_]+([a-z0-9])).sql",
+      "{workspaceRoot}/scripts/apply-migrations*",
+      "{workspaceRoot}/scripts/growth-database-preflight*",
+      "{workspaceRoot}/scripts/growth-control*",
+      "{workspaceRoot}/scripts/import-resend-lifecycle*"
+    ]
+  },
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "inputs": ["default", "growthLifecycleControlPlane", "^default"],
+      "outputs": ["{workspaceRoot}/dist/libs/growth"],
+      "options": {
+        "outputPath": "dist/libs/growth",
+        "main": "libs/growth/src/index.ts",
+        "tsConfig": "libs/growth/tsconfig.lib.json"
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "inputs": ["default", "growthLifecycleControlPlane", "^default"],
+      "options": {
+        "configFile": "libs/growth/vite.config.mts"
+      }
+    },
+    "test-operator-cli": {
+      "executor": "@nx/vitest:test",
+      "inputs": ["default", "growthLifecycleControlPlane", "^default"],
+      "options": {
+        "configFile": "libs/growth/vite.operator-cli.config.mts"
+      }
+    },
+    "test-integration": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": ["default", "growthLifecycleControlPlane", "^default"],
+      "options": {
+        "command": "node --import tsx scripts/growth-database-preflight.mts integration"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "inputs": [
+        "default",
+        "growthLifecycleControlPlane",
+        "{workspaceRoot}/eslint.config.mjs"
+      ]
+    }
+  }
+}

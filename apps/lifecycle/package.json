@@ -1,0 +1,22 @@
+{
+  "name": "@threadplane-internal/lifecycle",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.79.0",
+    "@dawn-ai/cli": "0.8.21",
+    "@dawn-ai/core": "0.8.21",
+    "@dawn-ai/langgraph": "0.8.21",
+    "@dawn-ai/postgres-storage": "0.8.21",
+    "@dawn-ai/sdk": "0.8.21",
+    "@neondatabase/serverless": "0.10.4",
+    "@threadplane-internal/growth": "0.0.0",
+    "hono": "4.13.5",
+    "resend": "6.10.0",
+    "zod": "4.4.3"
+  }
+}

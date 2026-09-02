@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "cd ../.. && npm ci --ignore-scripts",
+  "buildCommand": "cd ../.. && npx nx build lifecycle",
+  "framework": null,
+  "functions": {
+    "api/[...path].ts": {
+      "maxDuration": 60
+    }
+  },
+  "rewrites": [{ "source": "/:path*", "destination": "/api/:path*" }]
+}
