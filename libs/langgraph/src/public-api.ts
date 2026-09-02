@@ -56,6 +56,8 @@ export { extractCitations } from './lib/internals/extract-citations';
 // `/api`-style relative paths work in browser contexts.
 export { createLangGraphClient, toAbsoluteApiUrl } from './lib/client/create-langgraph-client';
 export { LANGGRAPH_CLIENT_OPTIONS } from './lib/client/client-options';
+export { ɵLANGGRAPH_RUNTIME_OPERATION_REPORTER } from './lib/runtime-operation-reporter';
+export type { RuntimeOperationFailureReporter as ɵLangGraphRuntimeOperationFailureReporter } from './lib/runtime-operation-reporter';
 
 // SDK-backed thread store — drop-in replacement for the
 // hand-rolled ThreadsService that consumers used to duplicate.

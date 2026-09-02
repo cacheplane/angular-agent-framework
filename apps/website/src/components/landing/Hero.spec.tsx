@@ -83,4 +83,27 @@ describe('Hero', () => {
       surface: 'home',
     }));
   });
+
+  it('opens the generative UI demo in the same-origin Website workspace', async () => {
+    const { Hero } = await import('./Hero');
+    render(<Hero />);
+
+    const links = screen.getAllByRole('link', {
+      name: /open (?:the generative UI example|interactive workspace)/i,
+    });
+    expect(links).toHaveLength(2);
+    for (const link of links) {
+      expect(link.getAttribute('href')).toBe(
+        '/docs/chat/guides/generative-ui?mode=run'
+      );
+      expect(link.getAttribute('target')).toBeNull();
+      expect(link.getAttribute('rel')).toBeNull();
+    }
+
+    fireEvent.click(links[0]);
+    expect(trackMock).toHaveBeenCalledWith(
+      'marketing:cta_click',
+      expect.objectContaining({ cta_id: 'hero_demo_open_workspace' })
+    );
+  });
 });

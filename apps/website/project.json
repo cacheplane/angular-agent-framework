@@ -5,19 +5,15 @@
   "projectType": "application",
   "implicitDependencies": [
     "workspace-react",
-    "cockpit-langgraph-streaming-angular"
+    "cockpit-langgraph-streaming-angular",
+    "cockpit-ag-ui-streaming-angular",
+    "cockpit-chat-threads-angular"
   ],
-  "tags": [
-    "scope:website",
-    "scope:website-e2e",
-    "type:app"
-  ],
+  "tags": ["scope:website", "scope:website-e2e", "type:app"],
   "targets": {
     "build": {
       "executor": "@nx/next:build",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
         "outputPath": "dist/apps/website"
@@ -30,11 +26,7 @@
           "outputPath": "dist/apps/website"
         }
       },
-      "inputs": [
-        "default",
-        "deploymentConfig",
-        "^default"
-      ]
+      "inputs": ["default", "deploymentConfig", "^default"]
     },
     "serve": {
       "executor": "@nx/next:server",
@@ -63,9 +55,7 @@
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}"
-      ]
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "@nx/vitest:test",
@@ -81,8 +71,6 @@
     }
   },
   "namedInputs": {
-    "deploymentConfig": [
-      "{workspaceRoot}/vercel.json"
-    ]
+    "deploymentConfig": ["{workspaceRoot}/vercel.json"]
   }
 }

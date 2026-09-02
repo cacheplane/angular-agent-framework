@@ -12,6 +12,7 @@ import {
   parseRuntimeTarget,
   type RuntimePhase,
 } from '../../runtime/runtime-state';
+import { RuntimeTargetProvider } from '../../runtime/runtime-target-provider';
 import type { SessionActivityEvent } from '../../runtime/session-activity';
 import {
   CockpitControlPlane,
@@ -26,6 +27,17 @@ const cockpitCss = readFileSync(
   resolve(workspaceRoot, 'libs/workspace-react/src/styles/workspace.css'),
   'utf8'
 );
+
+function declarationsFor(css: string, selector: string): string {
+  const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, '');
+
+  return [...withoutComments.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter((match) =>
+      match[1].split(',').some((part) => part.trim() === selector)
+    )
+    .map((match) => match[2])
+    .join(';');
+}
 
 const entry = cockpitManifest.find(
   (candidate) =>
@@ -84,36 +96,38 @@ const renderControlPlane = (overrides: HarnessOverrides = {}) => {
       overrides.initialUtility ?? null
     );
     return (
-      <ThemeProvider theme="light">
-        <CockpitControlPlane
-          navigationTree={buildNavigationTree(cockpitManifest)}
-          manifest={cockpitManifest}
-          entry={entry}
-          hostServices={{
-            resolveEntryHref: (resolvedEntry) =>
-              `/workspace/${resolvedEntry.product}/${resolvedEntry.topic}/${resolvedEntry.language}`,
-            navigate: vi.fn(),
-          }}
-          activeMode={activeMode}
-          onModeChange={(mode) => {
-            onModeChange(mode);
-            setActiveMode(mode);
-          }}
-          activeUtility={activeUtility}
-          onActiveUtilityChange={(utility) => {
-            onActiveUtilityChange(utility);
-            setActiveUtility(utility);
-          }}
-          activityOpenCycle={1}
-          runtimeSnapshot={runtimeSnapshot('ready')}
-          events={activity}
-          unseenProblems={0}
-          expanded={{ Capability: true, Runtime: true }}
-          onExpandedChange={onExpandedChange}
-          {...actions}
-          {...overrides}
-        />
-      </ThemeProvider>
+      <RuntimeTargetProvider>
+        <ThemeProvider theme="light">
+          <CockpitControlPlane
+            navigationTree={buildNavigationTree(cockpitManifest)}
+            manifest={cockpitManifest}
+            entry={entry}
+            hostServices={{
+              resolveEntryHref: (resolvedEntry) =>
+                `/workspace/${resolvedEntry.product}/${resolvedEntry.topic}/${resolvedEntry.language}`,
+              navigate: vi.fn(),
+            }}
+            activeMode={activeMode}
+            onModeChange={(mode) => {
+              onModeChange(mode);
+              setActiveMode(mode);
+            }}
+            activeUtility={activeUtility}
+            onActiveUtilityChange={(utility) => {
+              onActiveUtilityChange(utility);
+              setActiveUtility(utility);
+            }}
+            activityOpenCycle={1}
+            runtimeSnapshot={runtimeSnapshot('ready')}
+            events={activity}
+            unseenProblems={0}
+            expanded={{ Capability: true, Runtime: true }}
+            onExpandedChange={onExpandedChange}
+            {...actions}
+            {...overrides}
+          />
+        </ThemeProvider>
+      </RuntimeTargetProvider>
     );
   }
 
@@ -123,6 +137,23 @@ const renderControlPlane = (overrides: HarnessOverrides = {}) => {
 
 describe('CockpitControlPlane', () => {
   beforeEach(() => window.localStorage.clear());
+
+  it('keeps context headings on the shared sentence-case sans contract', () => {
+    for (const selector of [
+      '[data-cockpit-context-content] [data-control-plane-section-trigger]',
+      '[data-cockpit-context-content] [data-control-plane-section-heading]',
+    ]) {
+      const declarations = declarationsFor(cockpitCss, selector);
+      expect(declarations).toMatch(
+        /font-family:\s*var\(--font-inter,\s*var\(--ds-font-sans\)\)/
+      );
+      expect(declarations).toMatch(/font-size:\s*12px/);
+      expect(declarations).toMatch(/font-weight:\s*600/);
+      expect(declarations).toMatch(/letter-spacing:\s*normal/);
+      expect(declarations).toMatch(/color:\s*var\(--ds-text-muted\)/);
+      expect(declarations).toMatch(/text-transform:\s*none/);
+    }
+  });
 
   it('renders four primary modes plus Runtime after Scope and Capability', () => {
     renderControlPlane();
@@ -169,6 +200,31 @@ describe('CockpitControlPlane', () => {
 
     const settings = screen.getByRole('region', { name: 'Settings' });
     expect(within(settings).queryByText('Theme')).toBeNull();
+  });
+
+  it('places Runtime target below Language and before Theme', () => {
+    renderControlPlane({
+      initialUtility: 'settings',
+      themeControl: <button type="button">System</button>,
+    });
+
+    const settings = screen.getByRole('region', { name: 'Settings' });
+    const language = within(settings).getByText('Language');
+    const runtimeTarget = within(settings).getByRole('heading', {
+      name: 'Runtime target',
+    });
+    const theme = within(settings).getByText('Theme');
+    expect(
+      language.compareDocumentPosition(runtimeTarget) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    expect(
+      runtimeTarget.compareDocumentPosition(theme) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    expect(
+      within(settings).getByRole('radio', { name: 'Custom LangSmith' })
+    ).toBeTruthy();
   });
 
   it('renders Activity above Settings with a controlled unread-problem indicator', () => {
@@ -262,7 +318,7 @@ describe('CockpitControlPlane', () => {
     // does not resolve var(), so it can't verify the resolved colour, only
     // that the correct token is referenced.
     expect(cockpitCss).toMatch(
-      /\[data-control-plane-rail-group="utilities"\][^}]*border-top:\s*1px solid var\(--ds-border-strong\)/
+      /\[data-control-plane-rail-group=["']utilities["']\][^}]*border-top:\s*1px solid var\(--ds-border-strong\)/
     );
     expect(cockpitCss).not.toMatch(
       /\[data-control-plane-rail-item\]\s*\{[^}]*--ds-text-muted/
@@ -310,5 +366,4 @@ describe('CockpitControlPlane', () => {
       /\[data-control-plane-rail-status\]\s*\{[^}]*border:\s*1px solid CanvasText/
     );
   });
-
 });

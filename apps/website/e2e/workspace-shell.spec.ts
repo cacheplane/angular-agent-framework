@@ -8,6 +8,13 @@ const workspaceOnlyPath = '/workspace/langgraph/durable-execution';
 const deepAgentsDocsPath = '/docs/deep-agents/capabilities/planning';
 const RUN_RAIL_ITEM = /^Run(?:,|$)/;
 
+declare global {
+  interface Window {
+    __websiteAboutBlankMounted?: boolean;
+    __websiteRuntimePhases?: string[];
+  }
+}
+
 const modeButton = (page: Page, mode: 'Docs' | 'Run' | 'Code' | 'API') =>
   page.locator('[data-cockpit-desktop-navigation]').getByRole('button', {
     name: mode === 'Run' ? RUN_RAIL_ITEM : mode,
@@ -40,6 +47,75 @@ async function markRuntimeFrame(frame: Locator) {
     element.setAttribute('data-e2e-runtime-frame', crypto.randomUUID());
   });
   return frame.getAttribute('data-e2e-runtime-frame');
+}
+
+async function installRuntimeObservation(page: Page) {
+  await page.addInitScript(() => {
+    window.__websiteAboutBlankMounted = false;
+    window.__websiteRuntimePhases = [];
+
+    const recordPhase = (phase: string | null) => {
+      if (phase && !window.__websiteRuntimePhases?.includes(phase)) {
+        window.__websiteRuntimePhases?.push(phase);
+      }
+    };
+    const inspectElement = (element: Element) => {
+      const frames = element.matches('iframe')
+        ? [element]
+        : Array.from(element.querySelectorAll('iframe'));
+      for (const frame of frames) {
+        if (frame.getAttribute('src') === 'about:blank') {
+          window.__websiteAboutBlankMounted = true;
+        }
+      }
+      const statuses = element.matches('[data-runtime-phase]')
+        ? [element]
+        : Array.from(element.querySelectorAll('[data-runtime-phase]'));
+      for (const status of statuses) {
+        recordPhase(status.getAttribute('data-runtime-phase'));
+      }
+    };
+    const inspectCurrent = () => {
+      for (const element of document.querySelectorAll(
+        'iframe, [data-runtime-phase]'
+      )) {
+        inspectElement(element);
+      }
+    };
+
+    new MutationObserver((records) => {
+      for (const record of records) {
+        if (record.type === 'attributes' && record.target instanceof Element) {
+          if (
+            record.attributeName === 'src' &&
+            record.target.matches('iframe') &&
+            record.oldValue === 'about:blank'
+          ) {
+            window.__websiteAboutBlankMounted = true;
+          }
+          if (record.attributeName === 'data-runtime-phase') {
+            recordPhase(record.oldValue);
+          }
+          inspectElement(record.target);
+        } else if (record.type === 'childList') {
+          for (const node of record.addedNodes) {
+            if (node instanceof Element) inspectElement(node);
+          }
+        }
+      }
+      inspectCurrent();
+    }).observe(document, {
+      attributes: true,
+      attributeOldValue: true,
+      attributeFilter: ['src', 'data-runtime-phase'],
+      childList: true,
+      subtree: true,
+    });
+    inspectCurrent();
+    document.addEventListener('DOMContentLoaded', inspectCurrent, {
+      once: true,
+    });
+  });
 }
 
 test.describe('workspace shell', () => {
@@ -98,6 +174,71 @@ test.describe('workspace shell', () => {
         page.locator(`iframe[data-e2e-runtime-frame="${frameIdentity}"]`)
       ).toBeAttached();
     }
+  });
+
+  test('runtime observer captures transient blank and unresponsive mutations', async ({
+    page,
+  }) => {
+    await installRuntimeObservation(page);
+    await page.goto(streamingDocsPath);
+
+    await page.evaluate(() => {
+      const frame = document.createElement('iframe');
+      frame.src = 'about:blank';
+      document.body.append(frame);
+      frame.src = 'https://runtime.test/ready';
+
+      const status = document.createElement('span');
+      status.setAttribute('data-runtime-phase', 'ready');
+      document.body.append(status);
+      status.setAttribute('data-runtime-phase', 'unresponsive');
+      status.setAttribute('data-runtime-phase', 'ready');
+    });
+
+    await expect
+      .poll(() => page.evaluate(() => window.__websiteAboutBlankMounted))
+      .toBe(true);
+    await expect
+      .poll(() => page.evaluate(() => window.__websiteRuntimePhases))
+      .toContain('unresponsive');
+  });
+
+  test('reports Ready and Recheck activity without blank or unresponsive runtime phases', async ({
+    page,
+  }) => {
+    await installRuntimeObservation(page);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(`${streamingDocsPath}?mode=run`);
+    await expectMode(page, 'Run');
+    await expect(page.getByText('Ready', { exact: true })).toBeVisible();
+    expect(await page.evaluate(() => window.__websiteAboutBlankMounted)).toBe(
+      false
+    );
+    expect(
+      await page.evaluate(() => window.__websiteRuntimePhases)
+    ).not.toContain('unresponsive');
+
+    await page.getByRole('button', { name: 'Activity', exact: true }).click();
+    await expect(
+      page.locator('[data-activity-kind="runtime_check_requested"]')
+    ).toHaveCount(1);
+    await expect(
+      page.locator('[data-activity-kind="runtime_ready"]')
+    ).toHaveCount(1);
+    await page.getByRole('button', { name: 'Close Activity' }).click();
+
+    await page.getByRole('button', { name: 'Recheck' }).click();
+    await expect(page.getByText('Ready', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Activity', exact: true }).click();
+    await expect(
+      page.locator('[data-activity-kind="runtime_check_requested"]')
+    ).toHaveCount(2);
+    await expect(
+      page.locator('[data-activity-kind="runtime_ready"]')
+    ).toHaveCount(2);
+    expect(
+      await page.evaluate(() => window.__websiteRuntimePhases)
+    ).not.toContain('unresponsive');
   });
 
   test('restores mode and capability navigation through Back and Forward', async ({
@@ -190,6 +331,40 @@ test.describe('workspace shell', () => {
     }
   });
 
+  for (const path of ['/docs', '/docs/choosing-an-adapter']) {
+    test(`docs-only ${path} keeps operational modes focusable and local`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await page.goto(path);
+
+      const controlPlane = page.locator('[data-docs-control-plane]');
+      await expect(controlPlane).toBeVisible();
+      for (const mode of ['Run', 'Code', 'API'] as const) {
+        const control = controlPlane.getByRole('button', {
+          name: mode,
+          exact: true,
+        });
+        await expect(control).toHaveAttribute('aria-disabled', 'true');
+        await expect(control).toHaveAccessibleDescription(
+          new RegExp(
+            `${mode} is unavailable because this page has no workspace capability`,
+            'i'
+          )
+        );
+        await expect(control).not.toHaveAttribute('href', /.+/);
+        await expect(control).not.toHaveAttribute('target', /.+/);
+        await control.focus();
+        await expect(control).toBeFocused();
+        await control.click({ force: true });
+        await expect(page).toHaveURL(path);
+      }
+      await expect(
+        controlPlane.getByRole('button', { name: 'Search docs' })
+      ).toBeVisible();
+    });
+  }
+
   test('uses workspace fallbacks only when a shared Docs path would lose identity', async ({
     page,
   }) => {
@@ -232,6 +407,87 @@ test.describe('workspace shell', () => {
       page.getByRole('button', { name: 'Open navigation' })
     ).toBeHidden();
   });
+
+  for (const viewport of [
+    { width: 1440, height: 900, surface: 'wide desktop' },
+    { width: 1024, height: 900, surface: 'desktop breakpoint' },
+    { width: 768, height: 900, surface: 'tablet breakpoint' },
+    { width: 320, height: 844, surface: 'compact mobile' },
+  ] as const) {
+    test(`${viewport.surface} keeps workspace controls reachable without overflow`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport);
+      await page.goto(`${streamingDocsPath}?mode=run`);
+      await expectMode(page, 'Run');
+      await expectNoHorizontalOverflow(page, `Website at ${viewport.width}px`);
+
+      const desktopNavigation = page.locator(
+        '[data-cockpit-desktop-navigation]'
+      );
+      const mobileTrigger = page.getByRole('button', {
+        name: 'Open navigation',
+      });
+      if (viewport.width >= 1024) {
+        await expect(desktopNavigation).toBeVisible();
+        await expect(mobileTrigger).toBeHidden();
+        await expect(
+          page.getByRole('button', { name: 'Runtime', exact: true })
+        ).toBeVisible();
+        await expect(
+          desktopNavigation.getByRole('button', {
+            name: RUN_RAIL_ITEM,
+          })
+        ).toBeVisible();
+        await desktopNavigation
+          .getByRole('button', { name: 'Activity' })
+          .click();
+        await expect(
+          page.getByRole('heading', { name: 'Activity' })
+        ).toBeVisible();
+      } else if (viewport.width === 768) {
+        await expect(desktopNavigation).toBeVisible();
+        await expect(mobileTrigger).toBeHidden();
+        const contextTrigger = page.getByRole('button', {
+          name: 'Open context',
+        });
+        await expect(contextTrigger).toBeVisible();
+        await contextTrigger.click();
+        const dialog = page.getByRole('dialog', {
+          name: 'Documentation control plane context',
+        });
+        await expect(
+          dialog.getByRole('button', { name: 'Runtime', exact: true })
+        ).toBeVisible();
+        await desktopNavigation
+          .getByRole('button', { name: 'Activity' })
+          .click();
+        await expect(
+          dialog.getByRole('heading', { name: 'Activity' })
+        ).toBeVisible();
+      } else {
+        await expect(desktopNavigation).toBeHidden();
+        await expect(mobileTrigger).toBeVisible();
+        const triggerBox = await mobileTrigger.boundingBox();
+        expect(triggerBox?.width).toBeGreaterThanOrEqual(44);
+        expect(triggerBox?.height).toBeGreaterThanOrEqual(44);
+        await mobileTrigger.click();
+        const dialog = page.getByRole('dialog', {
+          name: 'Documentation control plane',
+        });
+        await expect(
+          dialog.getByRole('button', { name: RUN_RAIL_ITEM })
+        ).toBeVisible();
+        await expect(
+          dialog.getByRole('button', { name: 'Runtime', exact: true })
+        ).toBeVisible();
+        await dialog.getByRole('button', { name: 'Activity' }).click();
+        await expect(
+          dialog.getByRole('heading', { name: 'Activity' })
+        ).toBeVisible();
+      }
+    });
+  }
 
   test('uses tablet disclosure, focuses destinations, and restores utility focus', async ({
     page,
@@ -419,7 +675,16 @@ test.describe('workspace shell', () => {
       await expect(
         page.getByRole('dialog', { name: 'Search documentation' })
       ).toBeVisible();
+      await expect(
+        page.getByRole('combobox', { name: 'Search documentation...' })
+      ).toBeFocused();
       await page.keyboard.press('Escape');
+      await expect(
+        page.getByRole('dialog', { name: 'Search documentation' })
+      ).toHaveCount(0);
+      await expect(
+        page.getByRole('button', { name: 'Open navigation' })
+      ).toBeFocused();
     }
   });
 
@@ -443,14 +708,31 @@ test.describe('workspace shell', () => {
     expect(Number.parseFloat(styles.borderWidth)).toBeGreaterThan(0);
     expect(styles.outlineStyle).not.toBe('none');
     expect(Number.parseFloat(styles.outlineWidth)).toBeGreaterThan(0);
+
+    await run.click();
+    await expect(page.getByText('Ready', { exact: true })).toBeVisible();
+    const runtime = page.getByRole('button', { name: 'Runtime', exact: true });
+    await runtime.focus();
+    const runtimeStyles = await runtime.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        borderWidth: style.borderTopWidth,
+        outlineStyle: style.outlineStyle,
+        outlineWidth: style.outlineWidth,
+      };
+    });
+    expect(Number.parseFloat(runtimeStyles.borderWidth)).toBeGreaterThan(0);
+    expect(runtimeStyles.outlineStyle).not.toBe('none');
+    expect(Number.parseFloat(runtimeStyles.outlineWidth)).toBeGreaterThan(0);
   });
 
   test('removes mobile control-plane motion when reduced motion is requested', async ({
     page,
   }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.route('http://localhost:4300/**', (request) => request.abort());
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(streamingDocsPath);
+    await page.goto(`${streamingDocsPath}?mode=run`);
     await page.getByRole('button', { name: 'Open navigation' }).click();
 
     const dialog = page.getByRole('dialog', {
@@ -470,6 +752,13 @@ test.describe('workspace shell', () => {
         panelTransition: panelStyle?.transitionDuration,
       };
     });
+    const loader = dialog.locator('.cockpit-runtime-status-loader');
+    await expect(loader).toBeVisible();
+    expect(
+      await loader.evaluate(
+        (element) => getComputedStyle(element).animationName
+      )
+    ).toBe('none');
     expect(motion).toEqual({
       overlayAnimation: 'none',
       overlayTransition: '0s',

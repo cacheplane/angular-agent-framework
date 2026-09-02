@@ -109,6 +109,10 @@ describe('CI workflow', () => {
     return readJobBlock(await readWorkflow(), 'demo-deploy');
   }
 
+  async function readAgUiDemoJob() {
+    return readJobBlock(await readWorkflow(), 'ag-ui-demo-deploy');
+  }
+
   async function readProductionSmokeJob() {
     return readJobBlock(await readWorkflow(), 'production-smoke');
   }
@@ -214,7 +218,118 @@ describe('CI workflow', () => {
     );
   });
 
-  it('deploys changed runtime bridges before the cockpit shell and preserves fail-fast ordering', async () => {
+  it('rebuilds examples for Website changes so the immutable preview origin reaches child policy', async () => {
+    const deployJob = await readDeployJob();
+    const examplesDetection = deployJob.slice(
+      deployJob.indexOf('Check if examples changed'),
+      deployJob.indexOf('- uses: actions/setup-node')
+    );
+    const patterns = [...examplesDetection.matchAll(/grep -E '([^']+)'/g)].map(
+      (match) => new RegExp(match[1])
+    );
+
+    assert.ok(
+      patterns.some((pattern) =>
+        pattern.test('apps/website/src/components/workspace/WebsiteWorkspace.tsx')
+      )
+    );
+    assert.ok(patterns.some((pattern) => pattern.test('vercel.json')));
+  });
+
+  it('smokes one immutable Website preview with its generated child policy before promoting it', async () => {
+    const deployJob = await readDeployJob();
+    const previewDeploy = deployJob.indexOf('Deploy immutable Website preview');
+    const assembleExamples = deployJob.indexOf(
+      'Build and assemble Angular examples'
+    );
+    const deployExamples = deployJob.indexOf(
+      'Deploy Angular examples to Vercel (production)'
+    );
+    const previewSmoke = deployJob.indexOf(
+      'Verify Website preview runtime embedding policy'
+    );
+    const promotionFreshness = deployJob.indexOf(
+      'Check this commit is still the tip before Website promotion'
+    );
+    const promote = deployJob.indexOf(
+      'Promote verified Website artifact unchanged'
+    );
+
+    for (const [label, position] of [
+      ['Website preview deploy', previewDeploy],
+      ['example assembly', assembleExamples],
+      ['example deployment', deployExamples],
+      ['Website preview smoke', previewSmoke],
+      ['Website promotion freshness', promotionFreshness],
+      ['Website promotion', promote],
+    ]) {
+      assert.notEqual(position, -1, `expected ${label} in the deploy job`);
+    }
+    assert.ok(
+      previewDeploy < assembleExamples &&
+        assembleExamples < deployExamples &&
+        deployExamples < previewSmoke &&
+        previewSmoke < promotionFreshness &&
+        promotionFreshness < promote
+    );
+
+    const previewStep = readNamedStep(
+      deployJob,
+      'Deploy immutable Website preview'
+    );
+    const assemblyStep = readNamedStep(
+      deployJob,
+      'Build and assemble Angular examples'
+    );
+    const smokeStep = readNamedStep(
+      deployJob,
+      'Verify Website preview runtime embedding policy'
+    );
+    const freshnessStep = readNamedStep(
+      deployJob,
+      'Check this commit is still the tip before Website promotion'
+    );
+    const promoteStep = readNamedStep(
+      deployJob,
+      'Promote verified Website artifact unchanged'
+    );
+
+    assert.match(previewStep, /id:\s*deploy_website/);
+    assert.match(
+      previewStep,
+      /vercel deploy[^\n]*--prebuilt[^\n]*--prod[^\n]*--skip-domain/
+    );
+    assert.match(previewStep, /new URL\(process\.argv\[1\]\)/);
+    assert.match(previewStep, /process\.stdout\.write\(parsed\.origin\)/);
+    assert.match(previewStep, /preview_origin=.*GITHUB_OUTPUT/);
+    assert.match(
+      assemblyStep,
+      /RUNTIME_PARENT_PREVIEW_ORIGINS:\s*\$\{\{ steps\.deploy_website\.outputs\.preview_origin \}\}/
+    );
+    assert.match(
+      smokeStep,
+      /BASE_URL:\s*\$\{\{ steps\.deploy_website\.outputs\.preview_origin \}\}/
+    );
+    assert.match(
+      smokeStep,
+      /RUNTIME_PARENT_PREVIEW_ORIGINS:\s*\$\{\{ steps\.deploy_website\.outputs\.preview_origin \}\}/
+    );
+    assert.match(smokeStep, /unified runtime embedding policy/);
+    assert.match(freshnessStep, /id:\s*website_promotion_freshness/);
+    assert.match(freshnessStep, /git ls-remote origin refs\/heads\/main/);
+    assert.match(freshnessStep, /fresh=false.*GITHUB_OUTPUT/);
+    assert.match(freshnessStep, /fresh=true.*GITHUB_OUTPUT/);
+    assert.match(
+      promoteStep,
+      /vercel promote "\$\{\{ steps\.deploy_website\.outputs\.deployment_url \}\}" --yes/
+    );
+    assert.match(
+      promoteStep,
+      /if:[^\n]*steps\.website_promotion_freshness\.outputs\.fresh\s*==\s*'true'/
+    );
+  });
+
+  it('deploys examples before the Cockpit redirect artifact and preserves fail-fast ordering', async () => {
     const deployJob = await readDeployJob();
     const assembleExamples = deployJob.indexOf(
       'Build and assemble Angular examples'
@@ -223,21 +338,24 @@ describe('CI workflow', () => {
       'Deploy Angular examples to Vercel (production)'
     );
     const prepareCockpit = deployJob.indexOf('Prepare cockpit Vercel project');
+    const buildCockpit = deployJob.indexOf('Build cockpit redirect service');
     const deployCockpit = deployJob.indexOf(
-      'Build and deploy cockpit to Vercel (production)'
+      'Deploy immutable cockpit artifact'
     );
 
     for (const [label, position] of [
       ['example assembly', assembleExamples],
       ['example deployment', deployExamples],
       ['cockpit preparation', prepareCockpit],
+      ['cockpit build', buildCockpit],
       ['cockpit deployment', deployCockpit],
     ]) {
       assert.notEqual(position, -1, `expected ${label} in the deploy job`);
     }
     assert.ok(assembleExamples < deployExamples);
     assert.ok(deployExamples < prepareCockpit);
-    assert.ok(prepareCockpit < deployCockpit);
+    assert.ok(prepareCockpit < buildCockpit);
+    assert.ok(buildCockpit < deployCockpit);
 
     const examplesBeforeCockpit = deployJob.slice(
       assembleExamples,
@@ -259,8 +377,11 @@ describe('CI workflow', () => {
 
     for (const name of [
       'Prepare cockpit Vercel project',
-      'Build and deploy cockpit to Vercel (production)',
-      'Verify deployed cockpit',
+      'Build cockpit redirect service',
+      'Deploy immutable cockpit artifact',
+      'Exhaustively verify immutable cockpit preview',
+      'Promote verified cockpit artifact unchanged',
+      'Verify production cockpit redirects',
     ]) {
       const step = readNamedStep(deployJob, name);
       assert.doesNotMatch(step, /continue-on-error:\s*true/);
@@ -268,10 +389,175 @@ describe('CI workflow', () => {
     }
   });
 
-  it('runs production smoke after the canonical demo deploy', async () => {
-    const productionSmokeJob = await readProductionSmokeJob();
+  it('smokes one immutable Cockpit deployment before promoting that exact URL', async () => {
+    const deployJob = await readDeployJob();
+    const websiteDeploy = deployJob.indexOf(
+      'Deploy immutable Website preview'
+    );
+    const websiteSmoke = deployJob.indexOf('Verify deployed website');
+    const cockpitBuild = deployJob.indexOf('Build cockpit redirect service');
+    const cockpitDeploy = deployJob.indexOf(
+      'Deploy immutable cockpit artifact'
+    );
+    const previewSmoke = deployJob.indexOf(
+      'Exhaustively verify immutable cockpit preview'
+    );
+    const promotionFreshness = deployJob.indexOf(
+      'Check this commit is still the tip before cockpit promotion'
+    );
+    const promote = deployJob.indexOf(
+      'Promote verified cockpit artifact unchanged'
+    );
+    const productionSmoke = deployJob.indexOf(
+      'Verify production cockpit redirects'
+    );
+    const platformJob = await readProductionSmokeJob();
+    const platformSmoke = platformJob.indexOf('Run production smoke tests');
+    const marker = platformJob.indexOf('Record this commit as promoted');
 
-    assert.match(productionSmokeJob, /needs:\s*\[deploy,\s*demo-deploy\]/);
+    assert.ok(
+      websiteDeploy < websiteSmoke &&
+        websiteSmoke < cockpitBuild &&
+        cockpitBuild < cockpitDeploy &&
+        cockpitDeploy < previewSmoke &&
+        previewSmoke < promotionFreshness &&
+        promotionFreshness < promote &&
+        promote < productionSmoke
+    );
+    assert.ok(platformSmoke < marker);
+
+    const deployStep = readNamedStep(
+      deployJob,
+      'Deploy immutable cockpit artifact'
+    );
+    const previewStep = readNamedStep(
+      deployJob,
+      'Exhaustively verify immutable cockpit preview'
+    );
+    const promotionFreshnessStep = readNamedStep(
+      deployJob,
+      'Check this commit is still the tip before cockpit promotion'
+    );
+    const promoteStep = readNamedStep(
+      deployJob,
+      'Promote verified cockpit artifact unchanged'
+    );
+    const productionStep = readNamedStep(
+      deployJob,
+      'Verify production cockpit redirects'
+    );
+
+    assert.match(deployStep, /id:\s*deploy_cockpit/);
+    assert.match(deployStep, /vercel deploy[^\n]*--prod[^\n]*--skip-domain/);
+    assert.match(
+      deployStep,
+      /--env COCKPIT_WEBSITE_ORIGIN=https:\/\/threadplane\.ai/
+    );
+    assert.match(
+      previewStep,
+      /--url "\$\{\{ steps\.deploy_cockpit\.outputs\.deployment_url \}\}"[\s\S]*--mode preview/
+    );
+    assert.match(promotionFreshnessStep, /id:\s*cockpit_promotion_freshness/);
+    assert.match(
+      promotionFreshnessStep,
+      /git ls-remote origin refs\/heads\/main/
+    );
+    assert.match(promotionFreshnessStep, /if \[ -z "\$tip" \]/);
+    assert.match(promotionFreshnessStep, /exit 1/);
+    assert.match(
+      promotionFreshnessStep,
+      /if \[ "\$tip" != "\$\{\{ github\.sha \}\}" \]/
+    );
+    assert.match(promotionFreshnessStep, /fresh=false.*GITHUB_OUTPUT/);
+    assert.match(promotionFreshnessStep, /fresh=true.*GITHUB_OUTPUT/);
+    assert.match(
+      promoteStep,
+      /vercel promote "\$\{\{ steps\.deploy_cockpit\.outputs\.deployment_url \}\}" --yes/
+    );
+    assert.match(
+      promoteStep,
+      /if:[^\n]*steps\.cockpit_promotion_freshness\.outputs\.fresh\s*==\s*'true'/
+    );
+    assert.match(productionStep, /--mode production/);
+    assert.match(
+      productionStep,
+      /if:[^\n]*steps\.cockpit_promotion_freshness\.outputs\.fresh\s*==\s*'true'/
+    );
+    assert.doesNotMatch(
+      deployJob.slice(cockpitDeploy, promote),
+      /vercel promote/
+    );
+    assert.equal(
+      (deployStep.match(/vercel deploy/g) ?? []).length,
+      1,
+      'Cockpit deployment must be captured once'
+    );
+  });
+
+  it('gates Cockpit deployment on the production Website smoke even for Cockpit-only changes', async () => {
+    const deployJob = await readDeployJob();
+    const websiteOrCockpit =
+      /if:[^\n]*steps\.affected\.outputs\.website\s*==\s*'true'[^\n]*\|\|[^\n]*steps\.affected\.outputs\.cockpit\s*==\s*'true'/;
+
+    for (const name of ['Cache Playwright browsers', 'Install Playwright browsers']) {
+      const step = readNamedStep(deployJob, name);
+      assert.match(
+        step,
+        websiteOrCockpit,
+        `${name} must cover Cockpit-only runs`
+      );
+      assert.doesNotMatch(step, /continue-on-error:\s*true/);
+    }
+
+    const websiteSmokeStep = readNamedStep(deployJob, 'Verify deployed website');
+    assert.match(websiteSmokeStep, websiteOrCockpit);
+    assert.match(
+      websiteSmokeStep,
+      /steps\.website_promotion_freshness\.outputs\.fresh\s*==\s*'true'/
+    );
+    assert.doesNotMatch(websiteSmokeStep, /continue-on-error:\s*true/);
+
+    for (const name of [
+      'Prepare website Vercel project',
+      'Deploy immutable Website preview',
+    ]) {
+      const step = readNamedStep(deployJob, name);
+      assert.match(
+        step,
+        /if:[^\n]*steps\.affected\.outputs\.website\s*==\s*'true'/
+      );
+      assert.doesNotMatch(
+        step,
+        /steps\.affected\.outputs\.cockpit\s*==\s*'true'/
+      );
+    }
+
+    const websiteSmoke = deployJob.indexOf('Verify deployed website');
+    for (const cockpitStep of [
+      'Prepare cockpit Vercel project',
+      'Build cockpit redirect service',
+      'Deploy immutable cockpit artifact',
+    ]) {
+      assert.ok(
+        websiteSmoke < deployJob.indexOf(cockpitStep),
+        `Website production smoke must precede ${cockpitStep}`
+      );
+    }
+  });
+
+  it('runs production smoke after every platform deployment job', async () => {
+    const productionSmokeJob = await readProductionSmokeJob();
+    const agUiDemoJob = await readAgUiDemoJob();
+
+    assert.deepEqual(readJobNeeds(productionSmokeJob), [
+      'deploy',
+      'demo-deploy',
+      'ag-ui-demo-deploy',
+    ]);
+    assert.match(
+      readJobFieldBlock(agUiDemoJob, 'if'),
+      /always\(\).*?!cancelled\(\).*?refs\/heads\/main.*?push/
+    );
   });
 
   it('verifies the shared backend before installing Playwright browsers', async () => {
@@ -290,7 +576,7 @@ describe('CI workflow', () => {
 
     assert.match(
       productionSmokeJob,
-      /BASE_URL:\s*https:\/\/cockpit\.threadplane\.ai/
+      /COCKPIT_URL:\s*https:\/\/cockpit\.threadplane\.ai/
     );
     assert.match(
       productionSmokeJob,
@@ -298,7 +584,21 @@ describe('CI workflow', () => {
     );
     assert.match(
       productionSmokeJob,
+      /RUNTIME_PARENT_PREVIEW_ORIGINS:\s*\$\{\{ needs\.deploy\.outputs\.runtime_parent_preview_origin \}\}/
+    );
+    assert.match(
+      productionSmokeJob,
       /DEMO_URL:\s*https:\/\/demo\.threadplane\.ai/
+    );
+    assert.match(productionSmokeJob, /PRODUCTION_SMOKE:\s*'true'/);
+    assert.match(productionSmokeJob, /BASE_URL:\s*https:\/\/threadplane\.ai/);
+    assert.match(
+      productionSmokeJob,
+      /playwright test apps\/website\/e2e\/platform-production-smoke\.spec\.ts[^\n]*--config apps\/website\/playwright\.config\.ts/
+    );
+    assert.doesNotMatch(
+      productionSmokeJob,
+      /apps\/cockpit\/e2e\/production-smoke\.spec\.ts/
     );
   });
 
@@ -396,24 +696,34 @@ describe('CI workflow', () => {
     }
   });
 
-  it('runs the cockpit shell control-plane e2e', async () => {
-    // apps/cockpit owns a real Playwright suite (e2e/control-plane.spec.ts,
-    // 7 tests, added by #921) behind `nx e2e cockpit`. Nothing invoked that
-    // target: the cockpit-e2e matrix only dispatches caps derived from
-    // cockpit/**, and no other job named it — so the suite had never run in
-    // CI. It belongs in the `cockpit` job, whose `cockpit` scope already
-    // gates the shell and is already aggregated by required-pr-checks.
-    const cockpitJob = readJobBlock(await readWorkflow(), 'cockpit');
+  it('leaves interactive control-plane e2e ownership with the Website', async () => {
+    // The Website now owns the interactive shell and its runtime server.
+    // Cockpit is tested as an application here but must not reinstall a
+    // browser or invoke the retired duplicate Playwright target.
+    const workflow = await readWorkflow();
+    const cockpitJob = readJobBlock(workflow, 'cockpit');
+    const websiteE2eJob = readJobBlock(workflow, 'website-e2e');
 
     assert.match(
-      cockpitJob,
-      /npx nx e2e cockpit\b/,
-      'cockpit job should run the shell control-plane e2e'
+      websiteE2eJob,
+      /npx playwright install(?:\s+--with-deps)?\s+chromium\b/,
+      'Website e2e should install Chromium'
     );
     assert.match(
+      websiteE2eJob,
+      /npx nx e2e website\b/,
+      'Website e2e should run the interactive shell suite'
+    );
+
+    assert.doesNotMatch(
+      cockpitJob,
+      /npx nx e2e cockpit\b/,
+      'cockpit job should not run retired shell control-plane e2e'
+    );
+    assert.doesNotMatch(
       cockpitJob,
       /npx playwright install/,
-      'the control-plane e2e needs a browser installed'
+      'cockpit job should not install a browser for retired shell e2e'
     );
   });
 

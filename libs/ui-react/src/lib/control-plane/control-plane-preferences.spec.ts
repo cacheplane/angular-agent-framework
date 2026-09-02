@@ -41,6 +41,55 @@ describe('control-plane preferences', () => {
     expect(parsed.cockpit.expanded.Capability).toBe(false);
   });
 
+  it('ignores runtime-target extension fields and never persists target-shaped data', () => {
+    window.localStorage.setItem(
+      CONTROL_PLANE_STORAGE_KEY,
+      JSON.stringify({
+        version: 1,
+        endpoint: 'https://ag.example.test/agent',
+        apiUrl: 'https://lang.example.test/api',
+        apiKey: 'test-key-redact-me',
+        authorization: 'Bearer test-key-redact-me',
+        runtimeTargetSession: {
+          agUi: { kind: 'ag-ui', endpoint: 'https://ag.example.test/agent' },
+        },
+        'runtime-target-session': {
+          apiKey: 'test-key-redact-me',
+        },
+        'target-session': {
+          endpoint: 'https://ag.example.test/agent',
+        },
+        docs: {
+          expanded: { Learn: false },
+          target: { endpoint: 'https://ag.example.test/agent' },
+        },
+        cockpit: {
+          expanded: { Capability: false },
+          targetSession: {
+            apiUrl: 'https://lang.example.test/api',
+            apiKey: 'test-key-redact-me',
+          },
+        },
+      }),
+    );
+
+    const parsed = readControlPlanePreferences(window.localStorage);
+    writeControlPlanePreferences(window.localStorage, parsed);
+
+    expect(parsed).toEqual({
+      version: 1,
+      docs: { expanded: { Learn: false, Environment: false } },
+      cockpit: {
+        expanded: { Capability: false, Environment: true },
+      },
+    });
+    const serialized = window.localStorage.getItem(CONTROL_PLANE_STORAGE_KEY) ?? '';
+    expect(serialized).not.toMatch(
+      /endpoint|apiUrl|apiKey|authorization|runtime[-]?TargetSession|target[-]?Session/i,
+    );
+    expect(serialized).not.toContain('test-key-redact-me');
+  });
+
   it('validates persisted values and falls back only for invalid fields', () => {
     window.localStorage.setItem(
       CONTROL_PLANE_STORAGE_KEY,

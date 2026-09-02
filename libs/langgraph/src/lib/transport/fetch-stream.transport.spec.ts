@@ -4,15 +4,17 @@ import { FetchStreamTransport } from './fetch-stream.transport';
 const mocks = vi.hoisted(() => ({
   threadsCreate: vi.fn(),
   threadsGetHistory: vi.fn(),
+  threadsUpdateState: vi.fn(),
   runsStream: vi.fn(),
   runsCreate: vi.fn(),
   runsCancel: vi.fn(),
   runsJoinStream: vi.fn(),
-  clientCtor: vi.fn(function (_config: { apiUrl: string }) {
+  clientCtor: vi.fn(function (_config: { apiUrl: string; callerOptions?: { fetch?: typeof fetch } }) {
     return {
       threads: {
         create: mocks.threadsCreate,
         getHistory: mocks.threadsGetHistory,
+        updateState: mocks.threadsUpdateState,
       },
       runs: {
         stream: mocks.runsStream,
@@ -40,11 +42,384 @@ describe('FetchStreamTransport', () => {
   beforeEach(() => {
     mocks.threadsCreate.mockReset();
     mocks.threadsGetHistory.mockReset();
+    mocks.threadsUpdateState.mockReset();
     mocks.runsStream.mockReset();
     mocks.runsCreate.mockReset();
     mocks.runsCancel.mockReset();
     mocks.runsJoinStream.mockReset();
     mocks.clientCtor.mockClear();
+  });
+
+  it.each([401, 403])('does not report arbitrary SDK status %s lookalikes and throws cause-free generic errors', async status => {
+    const reportOperationFailure = vi.fn();
+    const remote = Object.assign(new Error('test-key-redact-me'), { status });
+    mocks.threadsCreate.mockRejectedValueOnce(remote);
+    const transport = new FetchStreamTransport(
+      'https://runtime.example/api',
+      undefined,
+      { apiKey: 'test-key-redact-me', maxRetries: 0 },
+      reportOperationFailure,
+    );
+
+    const error = await collect(transport.stream(
+      'assistant-1',
+      null,
+      {},
+      new AbortController().signal,
+    )).catch((reason: unknown) => reason);
+
+    expect(reportOperationFailure).not.toHaveBeenCalled();
+    expect(error).toMatchObject({ message: 'The LangGraph request failed.' });
+    expect(error).not.toHaveProperty('cause');
+    expect(JSON.stringify(error)).not.toContain('test-key-redact-me');
+  });
+
+  it('reports network_blocked only for rejection from its installed SDK fetch', async () => {
+    const reportOperationFailure = vi.fn();
+    const transport = new FetchStreamTransport(
+      'https://runtime.example/api',
+      undefined,
+      { apiKey: 'test-key-redact-me', maxRetries: 0 },
+      reportOperationFailure,
+    );
+    const config = mocks.clientCtor.mock.calls.at(-1)?.[0] as {
+      callerOptions?: { fetch?: typeof fetch };
+    };
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('test-key-redact-me')));
+    const protectedFailure = await config.callerOptions?.fetch?.('https://runtime.example/api')
+      .catch((reason: unknown) => reason);
+    mocks.threadsCreate.mockRejectedValueOnce(protectedFailure);
+
+    const error = await collect(transport.stream(
+      'assistant-1',
+      null,
+      {},
+      new AbortController().signal,
+    )).catch((reason: unknown) => reason);
+
+    expect(reportOperationFailure).toHaveBeenCalledExactlyOnceWith('network_blocked');
+    expect(error).toMatchObject({ message: 'The LangGraph request failed.' });
+    expect(JSON.stringify(error)).not.toContain('test-key-redact-me');
+    vi.unstubAllGlobals();
+  });
+
+  it('preserves an owned fetch abort without reporting a runtime failure', async () => {
+    const reportOperationFailure = vi.fn();
+    new FetchStreamTransport(
+      'https://runtime.example/api',
+      undefined,
+      { apiKey: 'test-key-redact-me', maxRetries: 0 },
+      reportOperationFailure,
+    );
+    const config = mocks.clientCtor.mock.calls.at(-1)?.[0] as {
+      callerOptions?: { fetch?: typeof fetch };
+    };
+    const controller = new AbortController();
+    controller.abort();
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('test-key-redact-me')));
+
+    const error = await config.callerOptions?.fetch?.(
+      'https://runtime.example/api',
+      { signal: controller.signal },
+    ).catch((reason: unknown) => reason);
+
+    expect(reportOperationFailure).not.toHaveBeenCalled();
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+    expect(error).toMatchObject({ name: 'AbortError' });
+    expect(JSON.stringify(error)).not.toContain('test-key-redact-me');
+    vi.unstubAllGlobals();
+  });
+
+  it('preserves a race-aborted installed SDK fetch without reporting', async () => {
+    const reportOperationFailure = vi.fn();
+    new FetchStreamTransport(
+      'https://runtime.example/api',
+      undefined,
+      { apiKey: 'test-key-redact-me', maxRetries: 0 },
+      reportOperationFailure,
+    );
+    const config = mocks.clientCtor.mock.calls.at(-1)?.[0] as {
+      callerOptions?: { fetch?: typeof fetch };
+    };
+    const controller = new AbortController();
+    vi.stubGlobal('fetch', vi.fn().mockImplementationOnce(() => {
+      controller.abort();
+      return Promise.reject(new Error('test-key-redact-me'));
+    }));
+
+    const error = await config.callerOptions?.fetch?.(
+      'https://runtime.example/api',
+      { signal: controller.signal },
+    ).catch((reason: unknown) => reason);
+
+    expect(reportOperationFailure).not.toHaveBeenCalled();
+    expect(error).toMatchObject({ name: 'AbortError' });
+    expect(JSON.stringify(error)).not.toContain('test-key-redact-me');
+    vi.unstubAllGlobals();
+  });
+
+  it.each([401, 403])('reports native fetch Response %s exactly once and sanitizes its body', async status => {
+    const reportOperationFailure = vi.fn();
+    new FetchStreamTransport(
+      'https://runtime.example/api',
+      undefined,
+      { apiKey: 'test-key-redact-me', maxRetries: 0 },
+      reportOperationFailure,
+    );
+    const config = mocks.clientCtor.mock.calls.at(-1)?.[0] as {
+      callerOptions?: { fetch?: typeof fetch };
+    };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+      new Response('test-key-redact-me', { status }),
+    ));
+
+    const response = await config.callerOptions?.fetch?.('https://runtime.example/api');
+
+    expect(reportOperationFailure).toHaveBeenCalledExactlyOnceWith('unauthorized');
+    expect(response?.status).toBe(status);
+    expect(await response?.text()).toBe('');
+    vi.unstubAllGlobals();
+  });
+
+  it('fails closed when the installed SDK fetch receives a hostile response object', async () => {
+    new FetchStreamTransport(
+      'https://runtime.example/api',
+      undefined,
+      { apiKey: 'test-key-redact-me', maxRetries: 0 },
+    );
+    const config = mocks.clientCtor.mock.calls.at(-1)?.[0] as {
+      callerOptions?: { fetch?: typeof fetch };
+    };
+    const hostileResponse = new Proxy({}, {
+      get(_target, property) {
+        if (property === 'then') return undefined;
+        throw new Error('test-key-redact-me');
+      },
+    });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(hostileResponse));
+
+    const response = await config.callerOptions?.fetch?.('https://runtime.example/api');
+
+    expect(response === hostileResponse).toBe(false);
+    expect(response?.status).toBe(500);
+    expect(await response?.text()).toBe('');
+    vi.unstubAllGlobals();
+  });
+
+  it('fails closed when a trusted SDK operation rejects with hostile property getters', async () => {
+    const reportOperationFailure = vi.fn();
+    const hostile = new Proxy({}, {
+      get() { throw new Error('test-key-redact-me'); },
+      getOwnPropertyDescriptor() { throw new Error('test-key-redact-me'); },
+    });
+    mocks.threadsGetHistory.mockRejectedValueOnce(hostile);
+    const transport = new FetchStreamTransport(
+      'https://runtime.example/api',
+      undefined,
+      { apiKey: 'test-key-redact-me', maxRetries: 0 },
+      reportOperationFailure,
+    );
+
+    const error = await transport.getHistory('thread-1', new AbortController().signal)
+      .catch((reason: unknown) => reason);
+
+    expect(reportOperationFailure).not.toHaveBeenCalled();
+    expect(error).toMatchObject({ message: 'The LangGraph request failed.' });
+    expect(JSON.stringify(error)).not.toContain('test-key-redact-me');
+  });
+
+  it('sanitizes every non-stream default SDK operation when a key is configured', async () => {
+    const sentinel = new Error('test-key-redact-me');
+    mocks.runsCreate.mockRejectedValue(sentinel);
+    mocks.runsCancel.mockRejectedValue(sentinel);
+    mocks.threadsGetHistory.mockRejectedValue(sentinel);
+    mocks.threadsUpdateState.mockRejectedValue(sentinel);
+    const transport = new FetchStreamTransport(
+      'https://runtime.example/api',
+      undefined,
+      { apiKey: 'test-key-redact-me', maxRetries: 0 },
+    );
+    const signal = new AbortController().signal;
+    const operations = [
+      transport.createQueuedRun('assistant-1', 'thread-1', {}, signal),
+      transport.cancelRun('thread-1', 'run-1', signal),
+      transport.getHistory('thread-1', signal),
+      transport.updateState('thread-1', {}, signal),
+    ];
+
+    const errors = await Promise.all(operations.map(operation => operation.catch(error => error)));
+
+    for (const error of errors) {
+      expect(error).toMatchObject({ message: 'The LangGraph request failed.' });
+      expect(error).not.toHaveProperty('cause');
+      expect(JSON.stringify(error)).not.toContain('test-key-redact-me');
+    }
+  });
+
+  it('does not report status lookalikes thrown by the application thread callback', async () => {
+    const reportOperationFailure = vi.fn();
+    const callbackError = Object.assign(new Error('test-key-redact-me'), { status: 401 });
+    mocks.threadsCreate.mockResolvedValueOnce({ thread_id: 'thread-1' });
+    const transport = new FetchStreamTransport(
+      'https://runtime.example/api',
+      () => { throw callbackError; },
+      { apiKey: 'test-key-redact-me', maxRetries: 0 },
+      reportOperationFailure,
+    );
+
+    const error = await collect(transport.stream(
+      'assistant-1',
+      null,
+      {},
+      new AbortController().signal,
+    )).catch((reason: unknown) => reason);
+
+    expect(reportOperationFailure).not.toHaveBeenCalled();
+    expect(error).toMatchObject({ message: 'The LangGraph request failed.' });
+    expect(error).not.toHaveProperty('cause');
+    expect(JSON.stringify(error)).not.toContain('test-key-redact-me');
+  });
+
+  it('does not report hostile local run-payload construction as an SDK failure', async () => {
+    const reportOperationFailure = vi.fn();
+    const options = new Proxy({} as object, {
+      ownKeys() { throw Object.assign(new Error('test-key-redact-me'), { status: 403 }); },
+    });
+    const transport = new FetchStreamTransport(
+      'https://runtime.example/api',
+      undefined,
+      { apiKey: 'test-key-redact-me', maxRetries: 0 },
+      reportOperationFailure,
+    );
+
+    const error = await collect(transport.stream(
+      'assistant-1',
+      'thread-1',
+      {},
+      new AbortController().signal,
+      options,
+    )).catch((reason: unknown) => reason);
+
+    expect(reportOperationFailure).not.toHaveBeenCalled();
+    expect(error).toMatchObject({ message: 'The LangGraph request failed.' });
+    expect(error).not.toHaveProperty('cause');
+    expect(JSON.stringify(error)).not.toContain('test-key-redact-me');
+  });
+
+  it('does not report a payload proxy returned as a 403 SDK lookalike', async () => {
+    const reportOperationFailure = vi.fn();
+    const payload = new Proxy({}, {
+      getOwnPropertyDescriptor(_target, property) {
+        if (property === 'status') {
+          return { configurable: true, enumerable: false, writable: false, value: 403 };
+        }
+        return undefined;
+      },
+    });
+    mocks.runsStream.mockImplementationOnce(() => { throw payload; });
+    const transport = new FetchStreamTransport(
+      'https://runtime.example/api',
+      undefined,
+      { apiKey: 'test-key-redact-me', maxRetries: 0 },
+      reportOperationFailure,
+    );
+
+    const error = await collect(transport.stream(
+      'assistant-1',
+      'thread-1',
+      payload,
+      new AbortController().signal,
+    )).catch((reason: unknown) => reason);
+
+    expect(reportOperationFailure).not.toHaveBeenCalled();
+    expect(error).toMatchObject({ message: 'The LangGraph request failed.' });
+    expect(error).not.toHaveProperty('cause');
+  });
+
+  it('does not report an AbortSignal proxy carrying a 401 lookalike', async () => {
+    const reportOperationFailure = vi.fn();
+    const nativeSignal = new AbortController().signal;
+    const signal = new Proxy(nativeSignal, {
+      getOwnPropertyDescriptor(target, property) {
+        if (property === 'status') {
+          return { configurable: true, enumerable: false, writable: false, value: 401 };
+        }
+        return Reflect.getOwnPropertyDescriptor(target, property);
+      },
+    });
+    mocks.threadsGetHistory.mockRejectedValueOnce(signal);
+    const transport = new FetchStreamTransport(
+      'https://runtime.example/api',
+      undefined,
+      { apiKey: 'test-key-redact-me', maxRetries: 0 },
+      reportOperationFailure,
+    );
+
+    const error = await transport.getHistory('thread-1', signal)
+      .catch((reason: unknown) => reason);
+
+    expect(reportOperationFailure).not.toHaveBeenCalled();
+    expect(error).toMatchObject({ message: 'The LangGraph request failed.' });
+    expect(error).not.toHaveProperty('cause');
+  });
+
+  it('does not report sync SDK, stream iterator, or non-stream status lookalikes', async () => {
+    const reportOperationFailure = vi.fn();
+    const statusLookalike = Object.assign(new Error('test-key-redact-me'), { status: 401 });
+    const transport = new FetchStreamTransport(
+      'https://runtime.example/api',
+      undefined,
+      { apiKey: 'test-key-redact-me', maxRetries: 0 },
+      reportOperationFailure,
+    );
+    const signal = new AbortController().signal;
+
+    mocks.threadsCreate.mockImplementationOnce(() => { throw statusLookalike; });
+    const syncThreadError = await collect(transport.stream('assistant-1', null, {}, signal))
+      .catch((reason: unknown) => reason);
+
+    mocks.runsStream.mockImplementationOnce(() => { throw statusLookalike; });
+    const syncStreamError = await collect(transport.stream('assistant-1', 'thread-1', {}, signal))
+      .catch((reason: unknown) => reason);
+
+    mocks.runsStream.mockReturnValueOnce({
+      [Symbol.asyncIterator]() { throw statusLookalike; },
+    });
+    const iteratorAcquisitionError = await collect(
+      transport.stream('assistant-1', 'thread-1', {}, signal),
+    ).catch((reason: unknown) => reason);
+
+    mocks.runsStream.mockReturnValueOnce({
+      [Symbol.asyncIterator]() {
+        return { next: vi.fn().mockRejectedValue(statusLookalike) };
+      },
+    });
+    const iteratorError = await collect(transport.stream('assistant-1', 'thread-1', {}, signal))
+      .catch((reason: unknown) => reason);
+
+    mocks.runsCreate.mockRejectedValueOnce(statusLookalike);
+    mocks.runsCancel.mockRejectedValueOnce(statusLookalike);
+    mocks.threadsGetHistory.mockRejectedValueOnce(statusLookalike);
+    mocks.threadsUpdateState.mockRejectedValueOnce(statusLookalike);
+    const nonStreamErrors = await Promise.all([
+      transport.createQueuedRun('assistant-1', 'thread-1', {}, signal),
+      transport.cancelRun('thread-1', 'run-1', signal),
+      transport.getHistory('thread-1', signal),
+      transport.updateState('thread-1', {}, signal),
+    ].map(operation => operation.catch((reason: unknown) => reason)));
+
+    expect(reportOperationFailure).not.toHaveBeenCalled();
+    for (const error of [
+      syncThreadError,
+      syncStreamError,
+      iteratorAcquisitionError,
+      iteratorError,
+      ...nonStreamErrors,
+    ]) {
+      expect(error).toMatchObject({ message: 'The LangGraph request failed.' });
+      expect(error).not.toHaveProperty('cause');
+      expect(JSON.stringify(error)).not.toContain('test-key-redact-me');
+    }
   });
 
   it('normalizes messages/* events with a direct messages array', async () => {

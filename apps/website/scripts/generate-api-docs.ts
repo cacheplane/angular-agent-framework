@@ -41,6 +41,16 @@ function extractExamples(comment: any): string[] {
     .map((t: any) => t.content.map((c: any) => c.text ?? '').join('').trim());
 }
 
+function isInternalReflection(ref: any): boolean {
+  if (typeof ref?.name === 'string' && ref.name.startsWith('ɵ')) return true;
+  const modifierTags = ref?.comment?.modifierTags;
+  return (
+    modifierTags !== undefined &&
+    typeof modifierTags.has === 'function' &&
+    modifierTags.has('@internal')
+  );
+}
+
 /** Renders a single parameter for a signature string, preserving rest (`...`) syntax. */
 function paramToSigString(p: any): string {
   return `${p.flags?.isRest ? '...' : ''}${p.name}: ${extractType(p.type)}`;
@@ -74,15 +84,18 @@ function extractType(typeObj: any): string {
 
 function extractParams(sig: any): ApiParam[] {
   if (!sig?.parameters) return [];
-  return sig.parameters.map((p: any) => ({
-    name: `${p.flags?.isRest ? '...' : ''}${p.name}`,
-    type: extractType(p.type),
-    description: extractDescription(p.comment),
-    // A parameter is optional if explicitly marked `?` OR it has a default
-    // value (e.g. `opts: MockAgentOptions = {}`) — TypeDoc only sets the
-    // `isOptional` flag for the former, so check `defaultValue` for the latter.
-    optional: (p.flags?.isOptional ?? false) || p.defaultValue !== undefined,
-  }));
+  return sig.parameters
+    .filter((p: any) => !isInternalReflection(p))
+    .map((p: any) => ({
+      name: `${p.flags?.isRest ? '...' : ''}${p.name}`,
+      type: extractType(p.type),
+      description: extractDescription(p.comment),
+      // A parameter is optional if explicitly marked `?` OR it has a default
+      // value (e.g. `opts: MockAgentOptions = {}`) — TypeDoc only sets the
+      // `isOptional` flag for the former, so check `defaultValue` for the latter.
+      optional:
+        (p.flags?.isOptional ?? false) || p.defaultValue !== undefined,
+    }));
 }
 
 function reflectionToEntry(ref: any): ApiDocEntry | null {
@@ -105,10 +118,16 @@ function reflectionToEntry(ref: any): ApiDocEntry | null {
 
   if (kind === ReflectionKind.Class) {
     const props = (ref.children ?? [])
-      .filter((c: any) => c.kind === ReflectionKind.Property)
+      .filter(
+        (c: any) =>
+          c.kind === ReflectionKind.Property && !isInternalReflection(c)
+      )
       .map((c: any) => ({ name: c.name, type: extractType(c.type), description: extractDescription(c.comment), optional: c.flags?.isOptional }));
     const methods = (ref.children ?? [])
-      .filter((c: any) => c.kind === ReflectionKind.Method)
+      .filter(
+        (c: any) =>
+          c.kind === ReflectionKind.Method && !isInternalReflection(c)
+      )
       .map((c: any) => {
         const sig = c.signatures?.[0];
         return { name: c.name, signature: signatureToString(c.name, sig), description: extractDescription(c.comment) || extractDescription(sig?.comment), params: extractParams(sig) };
@@ -128,7 +147,10 @@ function reflectionToEntry(ref: any): ApiDocEntry | null {
   if (kind === ReflectionKind.Interface) {
     const children = ref.children ?? [];
     const props = children
-      .filter((c: any) => c.kind !== ReflectionKind.Method)
+      .filter(
+        (c: any) =>
+          c.kind !== ReflectionKind.Method && !isInternalReflection(c)
+      )
       .map((c: any) => ({
         name: c.name,
         type: extractType(c.type),
@@ -136,7 +158,10 @@ function reflectionToEntry(ref: any): ApiDocEntry | null {
         optional: c.flags?.isOptional,
       }));
     const methods = children
-      .filter((c: any) => c.kind === ReflectionKind.Method)
+      .filter(
+        (c: any) =>
+          c.kind === ReflectionKind.Method && !isInternalReflection(c)
+      )
       .map((c: any) => {
         const sig = c.signatures?.[0];
         return {
@@ -162,6 +187,7 @@ function reflectionToEntry(ref: any): ApiDocEntry | null {
 
 function collectApiEntries(reflections: any[]): ApiDocEntry[] {
   return reflections.flatMap((ref) => {
+    if (isInternalReflection(ref)) return [];
     const entry = reflectionToEntry(ref);
     if (entry) return [entry];
     return collectApiEntries(ref.children ?? []);
@@ -236,8 +262,31 @@ function findPackageRoot(entryPoint: string): string {
   return path.dirname(path.dirname(entryPoint));
 }
 
+function selectedLibrarySlugs(args: readonly string[]): ReadonlySet<string> | null {
+  const flags = args.filter((arg) => arg.startsWith('--libraries='));
+  if (flags.length === 0) return null;
+  if (flags.length !== 1) throw new Error('Pass --libraries at most once');
+  const selected = new Set(
+    flags[0]
+      .slice('--libraries='.length)
+      .split(',')
+      .map((slug) => slug.trim())
+      .filter(Boolean)
+  );
+  const known = new Set(LIBRARIES.map((library) => library.docSlug));
+  const unknown = [...selected].filter((slug) => !known.has(slug));
+  if (selected.size === 0 || unknown.length > 0) {
+    throw new Error(
+      `Unknown or empty API-doc library selection: ${unknown.join(', ')}`
+    );
+  }
+  return selected;
+}
+
 async function main() {
+  const selected = selectedLibrarySlugs(process.argv.slice(2));
   for (const cfg of LIBRARIES) {
+    if (selected !== null && !selected.has(cfg.docSlug)) continue;
     await generateForLibrary(cfg);
   }
 }

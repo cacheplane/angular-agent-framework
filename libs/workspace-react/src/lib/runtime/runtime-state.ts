@@ -3,12 +3,16 @@ import type { ControlPlaneRailItemStatus } from '@threadplane/ui-react';
 export type RuntimePhase =
   | 'not_configured'
   | 'invalid_configuration'
+  | 'configuring'
   | 'connecting'
   | 'checking'
   | 'ready'
   | 'unresponsive'
   | 'reloading'
-  | 'error';
+  | 'error'
+  | 'unauthorized'
+  | 'network_blocked'
+  | 'incompatible_bridge';
 
 export type RuntimeTarget =
   | { kind: 'not_configured' }
@@ -20,8 +24,17 @@ export type RuntimeTarget =
       origin: string;
     };
 
-export type RuntimeErrorCode = 'bootstrap_failed';
-export type RuntimeRecoveryOrigin = 'unresponsive' | 'error';
+export type RuntimeErrorCode =
+  | 'bootstrap_failed'
+  | 'unauthorized'
+  | 'network_blocked'
+  | 'incompatible_bridge';
+export type RuntimeRecoveryOrigin =
+  | 'unresponsive'
+  | 'error'
+  | 'unauthorized'
+  | 'network_blocked'
+  | 'incompatible_bridge';
 
 export interface RuntimeSnapshot {
   phase: RuntimePhase;
@@ -34,6 +47,7 @@ export interface RuntimeSnapshot {
   errorCode: RuntimeErrorCode | null;
   frameGeneration: number;
   routeGeneration: number;
+  targetGeneration: number;
   recoveryOrigin: RuntimeRecoveryOrigin | null;
 }
 
@@ -54,13 +68,33 @@ export type RuntimeAction =
     }
   | { type: 'reload_requested' }
   | { type: 'check_cancelled' }
-  | { type: 'route_reset'; target: RuntimeTarget; capability: string };
+  | { type: 'configuration_started' }
+  | { type: 'configuration_succeeded' }
+  | {
+      type: 'runtime_failure';
+      code: Extract<
+        RuntimeErrorCode,
+        'unauthorized' | 'network_blocked' | 'incompatible_bridge'
+      >;
+      at: number;
+    }
+  | { type: 'route_reset'; target: RuntimeTarget; capability: string }
+  | {
+      type: 'context_reset';
+      target: RuntimeTarget;
+      capability: string;
+      routeChanged: boolean;
+      targetChanged: boolean;
+    };
 
 export type RuntimeTerminalPhase =
   | 'invalid_configuration'
   | 'ready'
   | 'unresponsive'
-  | 'error';
+  | 'error'
+  | 'unauthorized'
+  | 'network_blocked'
+  | 'incompatible_bridge';
 
 export interface RuntimeTerminalTransition {
   capability: string;
@@ -68,7 +102,7 @@ export interface RuntimeTerminalTransition {
   toState: RuntimeTerminalPhase;
   elapsedMs?: number;
   transition?: 'recovered';
-  reasonCode?: 'bootstrap_failed' | 'invalid_runtime_url';
+  reasonCode?: RuntimeErrorCode | 'invalid_runtime_url';
 }
 
 export function parseRuntimeTarget(value: string | null): RuntimeTarget {
@@ -101,13 +135,15 @@ export function createRuntimeSnapshot(
   target: RuntimeTarget,
   capability: string,
   routeGeneration = 0,
+  targetGeneration = 0,
+  frameGeneration = 0
 ): RuntimeSnapshot {
   const phase =
     target.kind === 'not_configured'
       ? 'not_configured'
       : target.kind === 'invalid_configuration'
-        ? 'invalid_configuration'
-        : 'connecting';
+      ? 'invalid_configuration'
+      : 'connecting';
 
   return {
     phase,
@@ -118,8 +154,9 @@ export function createRuntimeSnapshot(
     checkedAt: null,
     lastReadyAt: null,
     errorCode: null,
-    frameGeneration: 0,
+    frameGeneration,
     routeGeneration,
+    targetGeneration,
     recoveryOrigin: null,
   };
 }
@@ -137,9 +174,15 @@ function clearActiveCheck(state: RuntimeSnapshot): RuntimeSnapshot {
 }
 
 function recoveryOriginFor(
-  state: RuntimeSnapshot,
+  state: RuntimeSnapshot
 ): RuntimeRecoveryOrigin | null {
-  if (state.phase === 'unresponsive' || state.phase === 'error') {
+  if (
+    state.phase === 'unresponsive' ||
+    state.phase === 'error' ||
+    state.phase === 'unauthorized' ||
+    state.phase === 'network_blocked' ||
+    state.phase === 'incompatible_bridge'
+  ) {
     return state.phase;
   }
   return state.recoveryOrigin;
@@ -147,7 +190,7 @@ function recoveryOriginFor(
 
 export function runtimeReducer(
   state: RuntimeSnapshot,
-  action: RuntimeAction,
+  action: RuntimeAction
 ): RuntimeSnapshot {
   switch (action.type) {
     case 'check_started':
@@ -209,11 +252,47 @@ export function runtimeReducer(
       };
     case 'check_cancelled':
       return clearActiveCheck(state);
+    case 'configuration_started':
+      if (state.target.kind !== 'configured') return state;
+      return {
+        ...clearActiveCheck(state),
+        phase: 'configuring',
+        errorCode: null,
+        recoveryOrigin: recoveryOriginFor(state),
+      };
+    case 'configuration_succeeded':
+      if (state.target.kind !== 'configured' || state.phase !== 'configuring') {
+        return state;
+      }
+      return {
+        ...state,
+        phase: 'connecting',
+        errorCode: null,
+      };
+    case 'runtime_failure':
+      if (state.target.kind !== 'configured') return state;
+      return {
+        ...clearActiveCheck(state),
+        phase: action.code,
+        checkedAt: action.at,
+        errorCode: action.code,
+        recoveryOrigin: null,
+      };
     case 'route_reset':
       return createRuntimeSnapshot(
         action.target,
         action.capability,
         state.routeGeneration + 1,
+        state.targetGeneration,
+        state.frameGeneration
+      );
+    case 'context_reset':
+      return createRuntimeSnapshot(
+        action.target,
+        action.capability,
+        state.routeGeneration + (action.routeChanged ? 1 : 0),
+        state.targetGeneration + (action.targetChanged ? 1 : 0),
+        state.frameGeneration + (action.targetChanged ? 1 : 0)
       );
   }
 }
@@ -223,13 +302,16 @@ function isTerminalPhase(phase: RuntimePhase): phase is RuntimeTerminalPhase {
     phase === 'invalid_configuration' ||
     phase === 'ready' ||
     phase === 'unresponsive' ||
-    phase === 'error'
+    phase === 'error' ||
+    phase === 'unauthorized' ||
+    phase === 'network_blocked' ||
+    phase === 'incompatible_bridge'
   );
 }
 
 function safeElapsedMs(
   startedAt: number | null,
-  completedAt: number | null,
+  completedAt: number | null
 ): number | undefined {
   if (
     startedAt === null ||
@@ -245,7 +327,7 @@ function safeElapsedMs(
 
 export function classifyRuntimeTerminalTransition(
   previous: RuntimeSnapshot,
-  next: RuntimeSnapshot,
+  next: RuntimeSnapshot
 ): RuntimeTerminalTransition | null {
   if (
     !isTerminalPhase(next.phase) ||
@@ -271,12 +353,20 @@ export function classifyRuntimeTerminalTransition(
     next.phase === 'ready' &&
     (previous.phase === 'unresponsive' ||
       previous.phase === 'error' ||
+      previous.phase === 'unauthorized' ||
+      previous.phase === 'network_blocked' ||
+      previous.phase === 'incompatible_bridge' ||
       previous.recoveryOrigin !== null)
   ) {
     result.transition = 'recovered';
   }
-  if (next.phase === 'error') {
-    result.reasonCode = 'bootstrap_failed';
+  if (
+    next.phase === 'error' ||
+    next.phase === 'unauthorized' ||
+    next.phase === 'network_blocked' ||
+    next.phase === 'incompatible_bridge'
+  ) {
+    if (next.errorCode !== null) result.reasonCode = next.errorCode;
   } else if (next.phase === 'invalid_configuration') {
     result.reasonCode = 'invalid_runtime_url';
   }
@@ -290,11 +380,15 @@ export function runtimeRailStatus(
     case 'ready':
       return { kind: 'success', label: 'runtime ready' };
     case 'connecting':
+    case 'configuring':
     case 'checking':
     case 'reloading':
       return { kind: 'working', label: 'runtime starting' };
     case 'unresponsive':
     case 'error':
+    case 'unauthorized':
+    case 'network_blocked':
+    case 'incompatible_bridge':
     case 'invalid_configuration':
       return { kind: 'error', label: 'runtime error' };
     case 'not_configured':

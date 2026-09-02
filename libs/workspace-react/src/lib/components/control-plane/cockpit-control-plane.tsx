@@ -20,6 +20,7 @@ import {
 import type { NavigationProduct } from '@threadplane/cockpit-shell';
 import { PRODUCT_LABELS } from '../../navigation-labels';
 import type { SessionActivityEvent } from '../../runtime/session-activity';
+import { useRuntimeTargetView } from '../../runtime/runtime-target-provider';
 import {
   runtimeRailStatus,
   type RuntimeSnapshot,
@@ -34,6 +35,7 @@ import { LanguagePicker } from '../sidebar/language-picker';
 import { ActivityPanel } from './activity-panel';
 import { ActivityPanelBoundary } from './activity-panel-boundary';
 import { RuntimeSection } from './runtime-section';
+import { RuntimeTargetSettings } from './runtime-target-settings';
 
 const MODES: Array<{
   label: ControlPlaneMode;
@@ -143,6 +145,12 @@ export function CockpitControlPlane({
   const activityRef = useRef<HTMLSpanElement>(null);
   const settingsRef = useRef<HTMLSpanElement>(null);
   const railStatus = runtimeRailStatus(runtimeSnapshot.phase);
+  const runtimeAdapter = entry?.runtimeAdapter ?? 'none';
+  const runtimeTargetView = useRuntimeTargetView(runtimeAdapter);
+  const runtimeOrigin =
+    runtimeSnapshot.target.kind === 'configured'
+      ? runtimeSnapshot.target.origin
+      : null;
   const attention = unseenProblems > 0;
   const activityLabel = attention
     ? `Activity, ${unseenProblems} unread problem${
@@ -219,6 +227,10 @@ export function CockpitControlPlane({
             <span>Not available</span>
           )}
         </div>
+        <RuntimeTargetSettings
+          adapter={runtimeAdapter}
+          runtimeOrigin={runtimeOrigin}
+        />
         {themeControl ? (
           <div className="cockpit-control-plane-setting">
             <span>Theme</span>
@@ -257,6 +269,7 @@ export function CockpitControlPlane({
               onReload={onReload}
               onOpenRuntime={onOpenRuntime}
               onCopyDiagnostics={onCopyDiagnostics}
+              runtimeTargetView={runtimeTargetView}
             />
           </>
         ) : (

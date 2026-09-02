@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
+import { injectCockpitRuntimeConnection } from '@threadplane/cockpit-telemetry';
 import { Component, signal } from '@angular/core';
 import { ChatComponent, ChatWelcomeSuggestionComponent } from '@threadplane/chat';
 import { injectAgent, provideAgent } from '@threadplane/langgraph';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
-import { environment } from '../environments/environment';
 
 const WELCOME_SUGGESTIONS = [
   {
@@ -45,22 +45,29 @@ let threadCounter = 0;
   // module-scoped signals the sidebar reads. Provided at the component (Option
   // B) because the config is genuinely per-instance.
   providers: [
-    provideAgent({
-      apiUrl: environment.langGraphApiUrl,
-      assistantId: environment.streamingAssistantId,
-      onThreadId: (id: string) => {
-        activeThreadIdState.set(id);
+    provideAgent(() => {
+      const connection = injectCockpitRuntimeConnection();
+      if (connection.adapter !== 'langgraph') {
+        throw new Error('incompatible runtime');
+      }
+      return {
+        apiUrl: connection.apiUrl,
+        assistantId: connection.assistantId,
+        clientOptions: connection.clientOptions,
+        onThreadId: (id: string) => {
+          activeThreadIdState.set(id);
 
-        // Only add if not already tracked
-        const existing = threadsState();
-        if (!existing.some((t) => t.id === id)) {
-          threadCounter++;
-          threadsState.set([
-            ...existing,
-            { id, label: `Thread ${threadCounter}` },
-          ]);
-        }
-      },
+          // Only add if not already tracked
+          const existing = threadsState();
+          if (!existing.some((t) => t.id === id)) {
+            threadCounter++;
+            threadsState.set([
+              ...existing,
+              { id, label: `Thread ${threadCounter}` },
+            ]);
+          }
+        },
+      };
     }),
   ],
   styles: `

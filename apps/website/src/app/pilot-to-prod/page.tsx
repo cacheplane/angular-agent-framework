@@ -105,10 +105,10 @@ export default function PilotToProdPage() {
         cta={{ label: 'See @threadplane/chat', href: '/chat' }}
         visualLeft
         visual={
-          <BrowserFrame url="cockpit.threadplane.ai" elevation="md">
+          <BrowserFrame url="threadplane.ai/docs · Run" elevation="md">
             <img
               src="/screenshots/cockpit-run.webp"
-              alt="Cockpit reference app — live chat surface ready to receive a message"
+              alt="Threadplane Website workspace — live chat surface ready to receive a message"
               className="pilot-screenshot"
               loading="lazy"
               decoding="async"

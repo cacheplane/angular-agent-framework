@@ -154,8 +154,16 @@ describe('registry content descriptors', () => {
     );
   });
 
-  it('matches the legacy leaf descriptor exports exactly', () => {
-    expect(capabilityModules).toEqual(legacyCapabilityModules);
+  it('retains the legacy leaf descriptor fields exactly', () => {
+    const withoutRuntimeAdapter = capabilityModules.map((descriptor) =>
+      Object.fromEntries(
+        Object.entries(descriptor).filter(
+          ([field]) => field !== 'runtimeAdapter'
+        )
+      )
+    );
+
+    expect(withoutRuntimeAdapter).toEqual(legacyCapabilityModules);
   });
 
   it('exposes deeply frozen descriptors that cannot mutate registry state', () => {
@@ -223,35 +231,47 @@ describe('registry content descriptors', () => {
     );
   });
 
-  it('classifies LangGraph-backed products with the LangGraph adapter', () => {
-    for (const product of [
-      'deep-agents',
-      'langgraph',
-      'render',
-      'chat',
-    ] as const) {
-      const capabilities = cockpitManifest.filter(
-        (entry) => entry.product === product && entry.entryKind === 'capability'
-      );
+  it('classifies all 41 application descriptors explicitly without product heuristics', () => {
+    const adapters = capabilityModules.map(
+      (descriptor) => descriptor.runtimeAdapter
+    );
+    const manifestSource = readFileSync(
+      new URL('./manifest.ts', import.meta.url),
+      'utf8'
+    );
 
-      expect(capabilities).not.toHaveLength(0);
-      expect(
-        capabilities.every((entry) => entry.runtimeAdapter === 'langgraph')
-      ).toBe(true);
-    }
+    expect(adapters).toHaveLength(41);
+    expect(adapters.filter((adapter) => adapter === 'langgraph')).toHaveLength(
+      25
+    );
+    expect(adapters.filter((adapter) => adapter === 'ag-ui')).toHaveLength(10);
+    expect(adapters.filter((adapter) => adapter === 'none')).toHaveLength(6);
+    expect(adapters).not.toContain(undefined);
+    expect(manifestSource).not.toContain('getRuntimeAdapter');
   });
 
-  it('classifies AG-UI and runtimes capabilities with the AG-UI adapter', () => {
-    for (const product of ['ag-ui', 'runtimes'] as const) {
-      const capabilities = cockpitManifest.filter(
-        (entry) => entry.product === product && entry.entryKind === 'capability'
-      );
+  it('keeps the six Render applications static and runnable', () => {
+    const renderDescriptors = capabilityModules.filter(
+      (descriptor) => descriptor.manifestIdentity.product === 'render'
+    );
+    const renderEntries = cockpitManifest.filter(
+      (entry) => entry.product === 'render' && entry.entryKind === 'capability'
+    );
 
-      expect(capabilities).not.toHaveLength(0);
-      expect(
-        capabilities.every((entry) => entry.runtimeAdapter === 'ag-ui')
-      ).toBe(true);
-    }
+    expect(renderDescriptors).toHaveLength(6);
+    expect(
+      renderDescriptors.every(
+        (descriptor) => descriptor.runtimeAdapter === 'none'
+      )
+    ).toBe(true);
+    expect(renderEntries).toHaveLength(6);
+    expect(
+      renderEntries.every(
+        (entry) =>
+          entry.runtimeAdapter === 'none' &&
+          entry.availableModes.includes('Run')
+      )
+    ).toBe(true);
   });
 
   it('derives available modes from canonical and descriptor-backed content', () => {
@@ -269,8 +289,7 @@ describe('registry content descriptors', () => {
       ].filter((path) => /\.(?:ts|tsx|js|jsx|mjs|py)$/.test(path));
 
       expect(entry.availableModes.includes('Run')).toBe(
-        entry.runtimeAdapter !== 'none' &&
-          Boolean(descriptor?.runtimeUrl || descriptor?.devPort)
+        Boolean(descriptor?.runtimeUrl || descriptor?.devPort)
       );
       expect(entry.availableModes.includes('Code')).toBe(
         Boolean(
