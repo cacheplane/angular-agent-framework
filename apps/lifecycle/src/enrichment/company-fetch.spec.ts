@@ -525,6 +525,134 @@ describe('fetchCompanyEvidence SSRF controls', () => {
     );
   });
 
+  it('decodes HTML entities only once when extracting evidence', async () => {
+    const deps = dependencies({
+      fetch: vi.fn().mockResolvedValue(
+        new Response(
+          '<html><head><title>Example &amp;lt;script&amp;gt;alert(1)&amp;lt;/script&amp;gt;</title></head></html>',
+          { headers: { 'content-type': 'text/html' } }
+        )
+      ),
+    });
+
+    const [evidence] = await fetchCompanyEvidence(
+      'example.com',
+      new AbortController().signal,
+      deps
+    );
+
+    expect(evidence?.facts).toContain(
+      'Example &lt;script&gt;alert(1)&lt;/script&gt;'
+    );
+    expect(evidence?.facts.join(' ')).not.toContain('<script>');
+  });
+
+  it('removes executable elements whose closing tag contains whitespace', async () => {
+    const deps = dependencies({
+      fetch: vi.fn().mockResolvedValue(
+        new Response(
+          '<html><body><script><p>malicious executable text</p></script ><p>Safe public evidence.</p></body></html>',
+          { headers: { 'content-type': 'text/html' } }
+        )
+      ),
+    });
+
+    const [evidence] = await fetchCompanyEvidence(
+      'example.com',
+      new AbortController().signal,
+      deps
+    );
+
+    expect(evidence?.snippets).toContain('Safe public evidence.');
+    expect(evidence?.snippets.join(' ')).not.toContain(
+      'malicious executable text'
+    );
+  });
+
+  it('preserves document order across paragraph and list-item snippets', async () => {
+    const deps = dependencies({
+      fetch: vi.fn().mockResolvedValue(
+        new Response(
+          '<html><body><li>First evidence.</li><p>Second evidence.</p></body></html>',
+          { headers: { 'content-type': 'text/html' } }
+        )
+      ),
+    });
+
+    const [evidence] = await fetchCompanyEvidence(
+      'example.com',
+      new AbortController().signal,
+      deps
+    );
+
+    expect(evidence?.snippets).toEqual([
+      'First evidence.',
+      'Second evidence.',
+    ]);
+  });
+
+  it('excludes executable descendants nested inside evidence elements', async () => {
+    const deps = dependencies({
+      fetch: vi.fn().mockResolvedValue(
+        new Response(
+          '<html><body><p>Safe evidence.<script>malicious executable text</script></p></body></html>',
+          { headers: { 'content-type': 'text/html' } }
+        )
+      ),
+    });
+
+    const [evidence] = await fetchCompanyEvidence(
+      'example.com',
+      new AbortController().signal,
+      deps
+    );
+
+    expect(evidence?.snippets).toEqual(['Safe evidence.']);
+  });
+
+  it('handles deeply nested bounded HTML without exhausting the call stack', async () => {
+    const depth = 18_000;
+    const body = `<html><body><p>${'<b>'.repeat(depth)}Safe evidence.${'</b>'.repeat(depth)}</p></body></html>`;
+    const deps = dependencies({
+      fetch: vi.fn().mockResolvedValue(
+        new Response(body, {
+          headers: { 'content-type': 'text/html' },
+        })
+      ),
+    });
+
+    const [evidence] = await fetchCompanyEvidence(
+      'example.com',
+      new AbortController().signal,
+      deps
+    );
+
+    expect(evidence?.snippets).toEqual(['Safe evidence.']);
+  });
+
+  it('applies the snippet limit after removing duplicates', async () => {
+    const duplicates = '<p>Duplicate evidence.</p>'.repeat(6);
+    const deps = dependencies({
+      fetch: vi.fn().mockResolvedValue(
+        new Response(
+          `<html><body>${duplicates}<p>Unique evidence.</p></body></html>`,
+          { headers: { 'content-type': 'text/html' } }
+        )
+      ),
+    });
+
+    const [evidence] = await fetchCompanyEvidence(
+      'example.com',
+      new AbortController().signal,
+      deps
+    );
+
+    expect(evidence?.snippets).toEqual([
+      'Duplicate evidence.',
+      'Unique evidence.',
+    ]);
+  });
+
   it('returns only bounded extracted evidence, canonical URL, timestamp, and hash', async () => {
     const fullBody = `<html><head><title>Example</title></head><body><h1>Example company</h1><p>${'bounded evidence '.repeat(
       400

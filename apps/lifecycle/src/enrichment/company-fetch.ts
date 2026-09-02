@@ -12,6 +12,8 @@ import {
 import { isIP } from 'node:net';
 import { Readable } from 'node:stream';
 
+import { parse, type DefaultTreeAdapterTypes } from 'parse5';
+
 import {
   CompanyPageEvidenceSchema,
   type CompanyPageEvidence,
@@ -434,22 +436,93 @@ async function readBoundedBody(response: Response): Promise<Uint8Array> {
 
 function cleanText(value: string): string {
   return value
-    .replace(/<[^>]*>/gu, ' ')
-    .replace(/&(?:nbsp|#160);/giu, ' ')
-    .replace(/&amp;/giu, '&')
-    .replace(/&lt;/giu, '<')
-    .replace(/&gt;/giu, '>')
-    .replace(/&quot;/giu, '"')
-    .replace(/&#39;/giu, "'")
     .replace(/\s+/gu, ' ')
     .trim()
     .slice(0, 240);
 }
 
-function matches(html: string, expression: RegExp, limit: number): string[] {
+const EXECUTABLE_ELEMENTS = new Set(['script', 'style', 'noscript']);
+
+function nodeText(node: DefaultTreeAdapterTypes.Node): string {
+  const text: string[] = [];
+  const pending: DefaultTreeAdapterTypes.Node[] = [node];
+  while (pending.length > 0) {
+    const candidate = pending.pop();
+    if (!candidate) break;
+    if (
+      'tagName' in candidate &&
+      EXECUTABLE_ELEMENTS.has(candidate.tagName)
+    ) {
+      continue;
+    }
+    if (candidate.nodeName === '#text') {
+      text.push((candidate as DefaultTreeAdapterTypes.TextNode).value);
+      continue;
+    }
+    if ('childNodes' in candidate) {
+      for (let index = candidate.childNodes.length - 1; index >= 0; index -= 1) {
+        const child = candidate.childNodes[index];
+        if (child) pending.push(child);
+      }
+    }
+  }
+  return text.join(' ');
+}
+
+function collectElements(
+  node: DefaultTreeAdapterTypes.Node,
+  tagNames: ReadonlySet<string>
+): DefaultTreeAdapterTypes.Element[] {
+  const elements: DefaultTreeAdapterTypes.Element[] = [];
+  const pending: DefaultTreeAdapterTypes.Node[] = [node];
+  while (pending.length > 0) {
+    const candidate = pending.pop();
+    if (!candidate) break;
+    if ('tagName' in candidate) {
+      if (EXECUTABLE_ELEMENTS.has(candidate.tagName)) continue;
+      if (tagNames.has(candidate.tagName)) elements.push(candidate);
+    }
+    if ('childNodes' in candidate) {
+      for (let index = candidate.childNodes.length - 1; index >= 0; index -= 1) {
+        const child = candidate.childNodes[index];
+        if (child) pending.push(child);
+      }
+    }
+  }
+  return elements;
+}
+
+function textValues(
+  document: DefaultTreeAdapterTypes.Document,
+  tagNames: string | readonly string[],
+  limit: number
+): string[] {
   const values: string[] = [];
-  for (const match of html.matchAll(expression)) {
-    const value = cleanText(match[1] ?? '');
+  const selectedTags = new Set(
+    typeof tagNames === 'string' ? [tagNames] : tagNames
+  );
+  for (const element of collectElements(document, selectedTags)) {
+    const value = cleanText(nodeText(element));
+    if (value && !values.includes(value)) values.push(value);
+    if (values.length === limit) break;
+  }
+  return values;
+}
+
+function descriptionValues(
+  document: DefaultTreeAdapterTypes.Document,
+  limit: number
+): string[] {
+  const values: string[] = [];
+  for (const element of collectElements(document, new Set(['meta']))) {
+    const attributes = new Map(
+      element.attrs.map((attribute) => [
+        attribute.name.toLowerCase(),
+        attribute.value,
+      ])
+    );
+    if (attributes.get('name')?.toLowerCase() !== 'description') continue;
+    const value = cleanText(attributes.get('content') ?? '');
     if (value && !values.includes(value)) values.push(value);
     if (values.length === limit) break;
   }
@@ -460,28 +533,13 @@ function extractEvidence(
   body: Uint8Array
 ): Pick<CompanyPageEvidence, 'facts' | 'snippets'> {
   const html = new TextDecoder('utf-8', { fatal: false }).decode(body);
-  const withoutExecutableContent = html.replace(
-    /<(?:script|style|noscript)\b[^>]*>[\s\S]*?<\/(?:script|style|noscript)>/giu,
-    ' '
-  );
+  const document = parse(html);
   const facts = [
-    ...matches(
-      withoutExecutableContent,
-      /<title\b[^>]*>([\s\S]*?)<\/title>/giu,
-      1
-    ),
-    ...matches(withoutExecutableContent, /<h1\b[^>]*>([\s\S]*?)<\/h1>/giu, 3),
-    ...matches(
-      withoutExecutableContent,
-      /<meta\b[^>]*name=["']description["'][^>]*content=["']([^"']*)["'][^>]*>/giu,
-      2
-    ),
+    ...textValues(document, 'title', 1),
+    ...textValues(document, 'h1', 3),
+    ...descriptionValues(document, 2),
   ].slice(0, 6);
-  const snippets = matches(
-    withoutExecutableContent,
-    /<(?:p|li)\b[^>]*>([\s\S]*?)<\/(?:p|li)>/giu,
-    6
-  );
+  const snippets = textValues(document, ['p', 'li'], 6);
   return { facts, snippets };
 }
 

@@ -16,6 +16,7 @@
     "@neondatabase/serverless": "0.10.4",
     "@threadplane-internal/growth": "0.0.0",
     "hono": "4.13.5",
+    "parse5": "8.0.1",
     "resend": "6.10.0",
     "zod": "4.4.3"
   }
