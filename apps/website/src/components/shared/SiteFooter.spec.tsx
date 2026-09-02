@@ -4,17 +4,15 @@ import { render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const pathname = vi.hoisted(() => ({ current: '/' }));
-const footerProps = vi.hoisted(() => ({ calls: [] as unknown[] }));
 
 vi.mock('next/navigation', () => ({
   usePathname: () => pathname.current,
 }));
 
-vi.mock('./Footer', () => ({
-  Footer: (props: unknown) => {
-    footerProps.calls.push(props);
-    return <footer data-testid="marketing-footer" />;
-  },
+vi.mock('../../lib/analytics/client', () => ({
+  track: vi.fn(),
+  trackCtaClick: vi.fn(),
+  trackExternalLinkClick: vi.fn(),
 }));
 
 import type { PublicFormPolicy } from '../../lib/growth/form-policy';
@@ -32,7 +30,6 @@ const formPolicy: PublicFormPolicy = {
 
 afterEach(() => {
   pathname.current = '/';
-  footerProps.calls.length = 0;
 });
 
 /**
@@ -43,7 +40,7 @@ describe('SiteFooter', () => {
   it('retires Examples without changing the active footer destinations or demos', () => {
     pathname.current = '/';
 
-    render(<SiteFooter />);
+    render(<SiteFooter formPolicy={formPolicy} />);
 
     expect(screen.queryByRole('link', { name: 'Examples' })).toBeNull();
     expect(
@@ -108,16 +105,20 @@ describe('SiteFooter', () => {
       const { container } = render(<SiteFooter formPolicy={formPolicy} />);
 
       expect(container.querySelector('footer')).toBeNull();
-      expect(footerProps.calls).toHaveLength(0);
+      expect(
+        screen.queryByText(formPolicy.disclosures.newsletter)
+      ).toBeNull();
     }
   );
 
-  it('hands the server-owned policy object through to the footer unchanged', () => {
+  it('hands the server-owned policy through to the footer newsletter form', () => {
     render(<SiteFooter formPolicy={formPolicy} />);
 
-    expect(footerProps.calls).toHaveLength(1);
+    const disclosure = screen.getByText(formPolicy.disclosures.newsletter);
     expect(
-      (footerProps.calls[0] as { formPolicy: PublicFormPolicy }).formPolicy
-    ).toBe(formPolicy);
+      screen
+        .getByRole('button', { name: /subscribe/i })
+        .getAttribute('aria-describedby')
+    ).toBe(disclosure.id);
   });
 });
