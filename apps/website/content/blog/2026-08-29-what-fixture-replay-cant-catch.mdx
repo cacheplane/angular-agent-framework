@@ -33,12 +33,12 @@ At the model provider, not the app.
 Our end-to-end suite starts a mock OpenAI server, then spawns the real agent server with its base URL pointed at that mock — `langgraph dev` for the LangGraph apps, uvicorn for the AG-UI ones:
 
 ```typescript
-const aimock = await startAimock({ mode: 'replay', fixturePath: opts.fixturesDir });
+const mock = await startMock({ mode: 'replay', fixturePath: opts.fixturesDir });
 
 spawn('uv', ['run', 'langgraph', 'dev', '--port', String(langgraphPort)], {
   env: {
     ...process.env,
-    OPENAI_BASE_URL: aimock.baseUrl,   // the only thing that isn't real
+    OPENAI_BASE_URL: mock.baseUrl,   // the only thing that isn't real
     OPENAI_API_KEY: 'test-not-used',
   },
 });
@@ -54,7 +54,7 @@ It cannot tell you that your graph's conditional edge routes correctly, that you
 Push the seam out to the provider and all of that is under test, because none of it was replaced.
 
 Replacing the model — and only the model — is also what makes it cheap enough to run everywhere: no API spend, no rate limits, no coin flips.
-We have 50 fixture files holding 129 entries across 34 apps — 32 cockpit capabilities and two example apps — all on the same harness.
+We have 53 fixture files holding 169 entries across 36 apps — 34 cockpit capabilities and two example apps — all on the same harness.
 
 This is the outer tier.
 For in-process fakes at the unit level, the [testing guide](/docs/langgraph/guides/testing) covers `provideFakeAgent()`, `mockLangGraphAgent()`, and `MockAgentTransport`, which are a different tool for a different job.
@@ -91,69 +91,51 @@ For me that is the sharpest thing about fixture files: they are data, so they lo
 
 ## What did we trade away?
 
-The streaming, on purpose.
+The streaming, by default.
 
 The mock is constructed with a chunk size large enough that every response arrives in one or two server-sent events.
-Here is the whole note that sits above it:
+Here is the note that sits above it:
 
 ```typescript
-// Use a large chunkSize so each response arrives in 1-2 SSE deltas. This
-// intentionally turns off the partial-markdown streaming path for harness
-// tests: structural assertions (code fence, list) measure the FINAL rendered
-// DOM, not the progressive render. With aggressive default chunking, the
-// partial-markdown parser sometimes can't recover a triple-backtick fence
-// that gets split mid-token, and the final state ends up as inline <code>
-// instead of <pre><code>. Streaming-progressive behavior is covered by the
-// Phase 1 unit-variance tables; the e2e harness is for final-state
-// invariants and cross-stack integration.
+// Use a large default chunkSize so ordinary fixture responses arrive in 1-2
+// SSE deltas: most e2e assertions measure the final rendered DOM, and big
+// chunks keep them deterministic. This is a determinism default, not a
+// workaround — streaming-progressive behavior is covered by the unit
+// variance tables and by fixtures that opt into small per-fixture
+// chunkSize/latency values (see the fence fixture in
+// cockpit/chat/messages/angular/e2e/fixtures/c-messages.json).
 const mock = new LLMock({ port: 0, chunkSize: 4096 });
 ```
 
-A real rendering bug, but a *streaming* one, and it was making structural assertions flaky for reasons that had nothing to do with what they asserted.
-So the timing went away and the property moved down a tier.
+Structural assertions — a code fence renders as a block, a list is a list — are final-state invariants, and big chunks keep them from depending on where a token boundary happened to fall.
 
-I think that is the right trade, and the reason is not that the flakiness went away — it is that the property did not.
-
-The tempting alternative is to replay the recorded chunk boundaries instead of re-chunking, so you get the timing back for free.
-That does not buy what it looks like it buys.
-Faithful boundaries make the fence failure *deterministic* rather than absent — the parser bug is still there, and now every structural assertion in the suite fails for a reason none of them are about.
-
-Now the part that is easy to get wrong without going looking, and it is the useful half.
-
-That 4096 is a _default_, not a law.
-A second harness serves our two example apps, and its version of that comment says so outright — ordinary fixtures get the big chunk size, and *targeted streaming regressions opt into smaller per-fixture chunks*.
-Those fixtures set chunk sizes of three, four, six, twenty-three, thirty-six, with latencies from 25 to 750 milliseconds.
-There are e2e tests over there that sample the mid-stream DOM while it renders.
+That 4096 is a _default_, not a law, and the second half of that comment is the useful half.
+Targeted streaming regressions opt into smaller per-fixture chunks: fixtures that set chunk sizes of three, four, six, eight, twenty-three, thirty-six, with latencies from 25 to 750 milliseconds, and e2e tests that sample the mid-stream DOM while it renders.
+What a real model's chunking does to a triple-backtick fence is covered one tier down too, in unit tables that drive the markdown parser one character at a time.
 
 So "we deleted time" is too tidy.
-What we did was delete it by default and buy it back per fixture, in the places somebody decided it was worth the cost.
+What we did was delete it by default and buy it back per fixture, in the places somebody decided the progressive render was the thing under test.
 
 Which turns the question into a better one.
-Not *what did the harness give up*, but *which tier opted back in* — because the tier that did not is the one flying blind.
+Not *what did the harness give up*, but *which fixtures opted back in* — because a tier where nothing does is flying blind on everything mid-stream.
 
 ## What does that hide?
 
 Bugs that exist only while the stream is open and fix themselves before it closes.
 
-We shipped one recently and fixed it, and where it lived is the whole argument: a cockpit capability, on the harness with no per-fixture opt-in.
+Here is the shape, built from a mechanism [the subgraphs post](/blog/langgraph-subgraphs-when-to-split) walks through.
+A child graph's tokens stream in under a namespace.
+A consumer that merged them into the transcript would show an extra chat bubble mid-run — the child's internal notes, rendered as if the assistant said them.
+Then the run settles, the parent publishes its authoritative state, the transcript is rebuilt from it, and the extra bubble vanishes.
 
-A demo runs a child graph as a plain node — the shape [the subgraphs post](/blog/langgraph-subgraphs-when-to-split) ends on.
-A plain subgraph node's events are not tagged as a delegated subagent, so the bridge merges the child's tokens into the transcript as they arrive.
-
-The child in that graph produces an internal research brief, meant for the parent to write its answer from.
-Without the option that whitelists which nodes count as transcript, that brief renders as its own chat bubble, and the message list transiently reaches three.
-
-Then the run settles.
-The parent publishes its authoritative state, the transcript is rebuilt from it, and the extra bubble vanishes.
-
-Read that sequence again from a test's point of view.
+Read that sequence from a test's point of view.
 The end state is correct. Two messages, in the right order.
 Assert on the finished DOM and it passes — not by luck.
 
-Confirming the fix meant driving it against a live model and sampling the DOM on a tight interval for the length of a full run, watching that the message count never crossed two.
-Not something the suite does, and not something it could tell us.
+That is why our transport routes child tokens structurally instead of by merge decision — and it is why *verifying* that property means driving a live model and sampling the DOM on a tight interval for the length of a full run, watching that the message count never crosses two.
+Not something a final-state suite does, and not something it could tell you.
 
-That generalizes, because this is not specific to us.
+Let us generalize, because this is not specific to us.
 Any assertion that runs after an `await` sees a settled system.
 A self-correcting bug is precisely one that settles.
 So the class of defects a final-state suite cannot see is not random — it is exactly the ones that repair themselves.
@@ -163,31 +145,24 @@ So the class of defects a final-state suite cannot see is not random — it is e
 A live pass for what replay structurally cannot see, and a weekly drift run for the model itself.
 
 The live pass is unglamorous: for anything whose failure mode is mid-stream, drive it against a real model in a real browser before it ships.
-That is how the bubble above got caught.
-There is no clever tooling in it — the point is just that the deterministic suite was never going to be the thing that found it.
+There is no clever tooling in it.
+The deterministic suite is for final-state invariants, and mid-stream behavior is not one of them.
 
-Drift is the other half, and it got built properly on the way to this post.
-Our first design re-recorded fixtures and compared byte size — which detects that a response changed *size* while saying nothing about whether it changed *meaning*.
-The same trade again, one layer up.
+Drift is the other half, and the tempting design is the wrong one.
+Re-record fixtures and diff the bytes and you detect that a response changed *size* while learning nothing about whether it changed *meaning* — the same trade again, one layer up.
 A model that starts returning something equally long and completely different sails straight through a size check.
 
-So we threw the metric away and kept the thing we already trusted.
+So the drift check is not a new metric.
+It is the assertions we already trust.
 
-The assertions are the drift check.
-
-The drift run takes a tagged subset of the same e2e suite — contract assertions only: a reply renders, the research dispatch surfaces a subagent card, the interrupt panel appears — and points it at the live provider through the mock's record-proxy.
+The drift run takes a tagged subset of the same e2e suite — contract assertions only: a reply renders, the research dispatch surfaces a subagent card, the interrupt panel appears — and points it at the live provider through the mock's record-proxy, which any app on the harness can switch on with an environment variable.
 No fixtures judged, no thresholds invented.
 If today's model stops calling the research tool, or the graph's prompts stop eliciting the interrupt, a spec we already believe in goes red and a weekly job opens an issue.
 Meaning drift is caught by construction.
 
 One rule makes the subset work: a tagged assertion may depend on structure or on the prompt's own terms — an element exists, a reply to "say hi" matches `/hi/i` — never on the content of a canned response.
 A spec that expects the fixture's exact words fails against a live model whether or not anything drifted, so it stays in replay where it belongs.
-
-The first run flagged drift that was not there.
-The diagnostic differ reported that both tool-calling responses had "drifted" to plain text — while the specs proving those tools fired were green.
-The recorder had saved empty content because it could not parse tool-call deltas out of the stream, warning "fixture may be incomplete."
-The check's first finding was a blind spot in its own instrument; it now reports that case in its own category instead of as drift.
-It has run clean against the live model since.
+A structural differ runs alongside as a diagnostic, and it files recordings the recorder itself flagged as incomplete under their own category instead of counting them as drift — an instrument reporting on its own blind spot rather than disguising it.
 
 ## Conclusion
 
@@ -198,15 +173,10 @@ Then write down which dimension you deleted to make it deterministic, in the fil
 Not in a wiki.
 Six months later that comment is the difference between "the suite is green" and "the suite is green, and here is what green does not cover."
 
-Ours was written down, which is the only reason it could be checked at all.
-Checking it surfaced two things: the deletion was a default two of our apps had already bought back, and our first drift design was measuring the wrong thing.
-
-For us the list is short and specific: anything whose failure mode is mid-stream on a capability that never opted back into real chunking, and the model itself moving under the fixtures.
+For us the remaining list is short and specific: mid-stream behavior on fixtures that never opted into real chunking, and the model itself moving under the fixtures.
 Both are answered by pointing what you already trust at the real thing — the tagged specs at the live provider on a schedule, a live browser at anything mid-stream before it ships.
-Widening the drift net is tagging more specs, plus one chore: porting record mode to the harness the other thirty-two apps share.
-Widening the stream check is opting more fixtures into real chunking.
-Neither is designing anything new.
+Widening either net is a fixture opt-in or a spec tag, not a new design.
 
-The [testing guide](/docs/langgraph/guides/testing) has the in-process tier, and [the subgraphs post](/blog/langgraph-subgraphs-when-to-split) has the bug that started this.
+The [testing guide](/docs/langgraph/guides/testing) has the in-process tier, and [the subgraphs post](/blog/langgraph-subgraphs-when-to-split) has the streaming attribution model this post leans on.
 
 If your agent suite is green today, I would like to know what you think it cannot see.
