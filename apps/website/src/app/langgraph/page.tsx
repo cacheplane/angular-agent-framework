@@ -9,6 +9,7 @@ import { WhitePaperBlock } from '../../components/landing/WhitePaperBlock';
 import { FinalCTA } from '../../components/landing/FinalCTA';
 import { MediumSwitcher } from '../../components/landing/MediumSwitcher';
 import { LangGraphCodeShowcase } from '../../components/landing/langgraph/LangGraphCodeShowcase';
+import { StackDiagramSection } from '../../components/landing/StackDiagramSection';
 import { createPageMetadata, SHORT_POSITIONING_DESCRIPTION } from '../../lib/site-metadata';
 import { SECTION_MEDIA } from '../../lib/section-media';
 import { buildPanes } from '../../lib/build-panes';
@@ -54,6 +55,14 @@ export default async function LangGraphPage() {
           </div>
         </Container>
       </Section>
+
+      <StackDiagramSection
+        id="langgraph-architecture"
+        eyebrow="Where it sits"
+        headline="Native LangGraph, behind the Agent contract"
+        body="The adapter speaks LangGraph Platform directly — threads, runs, checkpoints — and hands your components the same signal-shaped contract every Threadplane surface consumes."
+        highlight="langgraph"
+      />
 
       <FeatureBlock
         id="providers"

@@ -10,6 +10,7 @@ import { WhitePaperBlock } from '../../components/landing/WhitePaperBlock';
 import { FinalCTA } from '../../components/landing/FinalCTA';
 import { MediumSwitcher } from '../../components/landing/MediumSwitcher';
 import { BackendsGrid } from '../../components/landing/ag-ui/BackendsGrid';
+import { StackDiagramSection } from '../../components/landing/StackDiagramSection';
 import { createPageMetadata, SHORT_POSITIONING_DESCRIPTION } from '../../lib/site-metadata';
 import { SECTION_MEDIA } from '../../lib/section-media';
 import { buildPanes } from '../../lib/build-panes';
@@ -62,6 +63,14 @@ export default async function AgUiPage() {
           </div>
         </Container>
       </Section>
+
+      <StackDiagramSection
+        id="ag-ui-architecture"
+        eyebrow="Where it sits"
+        headline="Your UI above the seam, any backend below"
+        body="toAgent() sits between your Angular components and any AG-UI-compliant runtime, translating protocol events into the same signal-shaped contract every Threadplane surface consumes."
+        highlight="ag-ui"
+      />
 
       <FeatureBlock
         id="backends"
