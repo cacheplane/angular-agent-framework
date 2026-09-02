@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -67,6 +67,10 @@ describe('Dawn generated storage isolation', () => {
     expect(vercel['functions']).toEqual({
       'api/[...path].ts': { maxDuration: 60 },
     });
+    expect(vercel['outputDirectory']).toBe('public');
+    expect(
+      existsSync(resolve(process.cwd(), 'apps/lifecycle/public/.gitkeep'))
+    ).toBe(true);
     expect(JSON.stringify({ packageJson, vercel })).not.toContain(
       'NEXT_PUBLIC_'
     );

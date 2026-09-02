@@ -2,6 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "cd ../.. && npm ci --ignore-scripts",
   "buildCommand": "cd ../.. && npx nx build lifecycle",
+  "outputDirectory": "public",
   "framework": null,
   "functions": {
     "api/[...path].ts": {
