@@ -9,7 +9,7 @@
     "lib": ["es2024", "dom", "dom.iterable"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "noEmit": true,
+    "noEmit": false,
     "types": ["node", "vitest/globals"]
   },
   "include": ["api/**/*.ts", "scripts/**/*.ts", "src/**/*.ts", "*.ts"]

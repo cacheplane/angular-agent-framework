@@ -47,6 +47,9 @@ describe('Dawn generated storage isolation', () => {
     const vercel = JSON.parse(
       readFileSync(resolve(process.cwd(), 'apps/lifecycle/vercel.json'), 'utf8')
     ) as Record<string, unknown>;
+    const tsconfig = JSON.parse(
+      readFileSync(resolve(process.cwd(), 'apps/lifecycle/tsconfig.json'), 'utf8')
+    ) as { compilerOptions?: Record<string, unknown> };
     const config = (await import('../dawn.config.js')).default;
     expect(packageJson['engines']).toEqual({ node: '>=24.0.0' });
     expect(packageJson['dependencies']).toMatchObject({
@@ -68,6 +71,7 @@ describe('Dawn generated storage isolation', () => {
       'api/[...path].ts': { maxDuration: 60 },
     });
     expect(vercel['outputDirectory']).toBe('public');
+    expect(tsconfig.compilerOptions?.['noEmit']).toBe(false);
     expect(
       existsSync(resolve(process.cwd(), 'apps/lifecycle/public/.gitkeep'))
     ).toBe(true);
