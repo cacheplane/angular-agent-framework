@@ -5,6 +5,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createLifecycleVercelAdapter } from '../src/vercel-adapter.js';
 
 const GENERIC_DATABASE_ENV = /(?<!DAWN_)DATABASE_URL/u;
+const GENERATED_DAWN_TS_IMPORT =
+  /from "(\.\.\/\.\.\/src\/[^"]+)\.ts"/gu;
 
 export function rewriteDedicatedDawnDatabaseEnv(source: string): string {
   if (!source.includes('binding(env, "DATABASE_URL")')) {
@@ -30,16 +32,42 @@ export function assertExpectedDawnDefaultExport(source: string): void {
   }
 }
 
+export function rewriteDawnModuleImports(source: string): string {
+  const imports = [...source.matchAll(GENERATED_DAWN_TS_IMPORT)].map(
+    (match) => match[1]
+  );
+  if (
+    !imports.includes('../../src/middleware') ||
+    !imports.some((specifier) => specifier?.startsWith('../../src/app/'))
+  ) {
+    throw new Error(
+      'Generated Dawn modules are missing the expected TypeScript module imports'
+    );
+  }
+  const rewritten = source.replaceAll(GENERATED_DAWN_TS_IMPORT, 'from "$1.js"');
+  if (GENERATED_DAWN_TS_IMPORT.test(rewritten)) {
+    throw new Error('Generated Dawn TypeScript module imports remain');
+  }
+  return rewritten;
+}
+
 export async function verifyVercelAdapter(
   appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 ): Promise<void> {
   const buildRoot = resolve(appRoot, '.dawn/build');
   const storesPath = resolve(buildRoot, 'stores.mjs');
   const appPath = resolve(buildRoot, 'app.mjs');
+  const modulesPath = resolve(buildRoot, 'modules.edge.mjs');
   const stores = await readFile(storesPath, 'utf8');
   const rewrittenStores = rewriteDedicatedDawnDatabaseEnv(stores);
   if (stores !== rewrittenStores) {
     await writeFile(storesPath, rewrittenStores, 'utf8');
+  }
+
+  const modules = await readFile(modulesPath, 'utf8');
+  const rewrittenModules = rewriteDawnModuleImports(modules);
+  if (modules !== rewrittenModules) {
+    await writeFile(modulesPath, rewrittenModules, 'utf8');
   }
 
   const appSource = await readFile(appPath, 'utf8');

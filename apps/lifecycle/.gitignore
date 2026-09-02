@@ -1,2 +1,4 @@
 .dawn/
 wrangler.toml
+.vercel/
+.env.local

@@ -11,7 +11,7 @@ import {
   type GrowthDispatchResult,
   type GrowthJob,
   type SqlExecutor,
-} from '@threadplane-internal/growth';
+} from './growth.js';
 
 import { createLifecycleAppJobHandlers } from './campaign/send.js';
 import { DeterministicLifecycleJobError } from './job-errors.js';

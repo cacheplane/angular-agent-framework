@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import {
   assertExpectedDawnDefaultExport,
   rewriteDedicatedDawnDatabaseEnv,
+  rewriteDawnModuleImports,
 } from './verify-vercel-adapter.mjs';
 
 describe('Dawn generated storage isolation', () => {
@@ -26,6 +27,25 @@ describe('Dawn generated storage isolation', () => {
     expect(() =>
       rewriteDedicatedDawnDatabaseEnv('export const unrelated = true')
     ).toThrow(/expected DATABASE_URL lookup/u);
+  });
+
+  it('rewrites generated Dawn TypeScript module imports for the Node bundle', () => {
+    const generated = [
+      'import * as middlewareModule from "../../src/middleware.ts"',
+      'import * as route0 from "../../src/app/dispatch/index.ts"',
+    ].join('\n');
+
+    const rewritten = rewriteDawnModuleImports(generated);
+
+    expect(rewritten).toContain('from "../../src/middleware.js"');
+    expect(rewritten).toContain('from "../../src/app/dispatch/index.js"');
+    expect(rewritten).not.toMatch(/from "\.\.\/\.\.\/src\/.+\.ts"/u);
+  });
+
+  it('fails closed when generated Dawn module imports change shape', () => {
+    expect(() => rewriteDawnModuleImports('export default {}')).toThrow(
+      /expected TypeScript module imports/u
+    );
   });
 
   it('fails closed when Dawn changes the generated default export shape', () => {

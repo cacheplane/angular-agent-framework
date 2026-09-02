@@ -33,7 +33,7 @@ import {
   type RecipientSendResult,
   type SqlExecutor,
   type UnsubscribeActionUrl,
-} from '@threadplane-internal/growth';
+} from '../growth.js';
 import { Resend } from 'resend';
 
 import { generateEnrichmentArtifact } from '../enrichment/anthropic.js';
