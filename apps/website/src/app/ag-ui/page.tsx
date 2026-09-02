@@ -14,6 +14,7 @@ import { StackDiagramSection } from '../../components/landing/StackDiagramSectio
 import { createPageMetadata, SHORT_POSITIONING_DESCRIPTION } from '../../lib/site-metadata';
 import { SECTION_MEDIA } from '../../lib/section-media';
 import { buildPanes } from '../../lib/build-panes';
+import { getFormPolicy } from '../../lib/growth/form-policy';
 
 export const metadata = createPageMetadata({
   title: '@threadplane/ag-ui — Threadplane',
@@ -23,6 +24,7 @@ export const metadata = createPageMetadata({
 });
 
 export default async function AgUiPage() {
+  const formPolicy = getFormPolicy();
   const panes = await buildPanes(SECTION_MEDIA.libAgUi, SECTION_MEDIA.libAgUi.video?.url ?? '');
 
   return (
@@ -102,7 +104,7 @@ export default async function AgUiPage() {
         visual={<MediumSwitcher sectionId="lib-ag-ui" panes={panes} />}
       />
 
-      <WhitePaperBlock paper="overview" />
+      <WhitePaperBlock formPolicy={formPolicy} paper="overview" />
       <FinalCTA variant="dark" />
     </>
   );

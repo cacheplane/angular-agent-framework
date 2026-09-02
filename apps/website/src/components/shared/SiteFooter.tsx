@@ -1,5 +1,6 @@
 'use client';
 import { usePathname } from 'next/navigation';
+import type { PublicFormPolicy } from '../../lib/growth/form-policy';
 import { Footer } from './Footer';
 
 /**
@@ -10,8 +11,8 @@ import { Footer } from './Footer';
  * the sidebar control plane and ends at its own prev/next rail, and a marketing
  * footer bolted under that column breaks the single-pane reading experience.
  */
-export function SiteFooter() {
+export function SiteFooter({ formPolicy }: { formPolicy: PublicFormPolicy }) {
   const pathname = usePathname();
   if (pathname === '/docs' || pathname?.startsWith('/docs/')) return null;
-  return <Footer />;
+  return <Footer formPolicy={formPolicy} />;
 }

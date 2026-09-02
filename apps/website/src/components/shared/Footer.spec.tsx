@@ -3,35 +3,34 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const trackMock = vi.hoisted(() => vi.fn());
-
 vi.mock('../../lib/analytics/client', () => ({
-  track: trackMock,
-  trackWhitepaperDownloadClick: vi.fn(),
+  track: vi.fn(),
+  trackCtaClick: vi.fn(),
+  trackExternalLinkClick: vi.fn(),
 }));
 
 import type { PublicFormPolicy } from '../../lib/growth/form-policy';
-import { WhitePaperBlock } from './WhitePaperBlock';
+import { Footer } from './Footer';
 
 const formPolicy: PublicFormPolicy = {
   mode: 'growth_v1',
   version: 'growth_v1.2026-09-01',
   disclosures: {
     contact: 'Contact disclosure',
-    newsletter: 'Newsletter disclosure',
-    whitepaper:
-      'Send me the guide and a short, three-email follow-up from Brian about building with Threadplane. Unsubscribe anytime.',
+    newsletter:
+      'Subscribe to Threadplane updates and a short, three-email welcome from Brian. Unsubscribe anytime.',
+    whitepaper: 'Whitepaper disclosure',
   },
 };
 
 const UUID_V4 =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 
-function submit(email: string): void {
+function subscribe(email: string): void {
   fireEvent.change(screen.getByLabelText(/email address/i), {
     target: { value: email },
   });
-  fireEvent.click(screen.getByRole('button', { name: /download \(free\)/i }));
+  fireEvent.click(screen.getByRole('button', { name: /subscribe/i }));
 }
 
 function sentBody(fetchMock: ReturnType<typeof vi.fn>, call: number) {
@@ -46,48 +45,31 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('WhitePaperBlock', () => {
-  beforeEach(() => {
-    trackMock.mockClear();
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 200 }));
-  });
+describe('Footer newsletter growth policy', () => {
+  it('renders the exact newsletter disclosure and describes the submit control', () => {
+    render(<Footer formPolicy={formPolicy} />);
 
-  it('submits the email, fires signup analytics, and shows the done state', async () => {
-    render(<WhitePaperBlock formPolicy={formPolicy} />);
-    submit('dev@example.com');
+    const disclosure = screen.getByText(formPolicy.disclosures.newsletter);
+    const submit = screen.getByRole('button', { name: /subscribe/i });
 
-    await waitFor(() =>
-      expect(screen.getByText(/Check your inbox/i)).toBeTruthy()
+    expect(disclosure.compareDocumentPosition(submit)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
     );
-    const events = trackMock.mock.calls.map((call) => call[0]);
-    expect(events).toContain('marketing:whitepaper_signup_submit');
-    expect(events).toContain('marketing:whitepaper_signup_success');
-  });
-});
-
-describe('WhitePaperBlock growth policy', () => {
-  it('renders the whitepaper disclosure and describes the submit control', () => {
-    render(<WhitePaperBlock formPolicy={formPolicy} />);
-
-    const disclosure = screen.getByText(formPolicy.disclosures.whitepaper);
-    const button = screen.getByRole('button', { name: /download \(free\)/i });
-
+    expect(submit.getAttribute('aria-describedby')).toBe(disclosure.id);
     expect(disclosure.id).toBeTruthy();
-    expect(button.getAttribute('aria-describedby')).toBe(disclosure.id);
   });
 
-  it('submits the immutable growth envelope with the declared paper', async () => {
+  it('submits the immutable growth envelope with the declared facts', async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200 });
     vi.stubGlobal('fetch', fetchMock);
-    render(<WhitePaperBlock formPolicy={formPolicy} paper="chat" />);
+    render(<Footer formPolicy={formPolicy} />);
 
-    submit('reader@example.com');
+    subscribe('reader@example.com');
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
-    expect(fetchMock.mock.calls[0][0]).toBe('/api/whitepaper-signup');
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/newsletter');
     const body = sentBody(fetchMock, 0);
     expect(body.email).toBe('reader@example.com');
-    expect(body.paper).toBe('chat');
     expect(body.policy_version).toBe(formPolicy.version);
     expect(body.submission_id).toMatch(UUID_V4);
     expect(body.acquisition_session_id).toMatch(UUID_V4);
@@ -99,11 +81,11 @@ describe('WhitePaperBlock growth policy', () => {
       .mockRejectedValueOnce(new Error('network'))
       .mockResolvedValue({ ok: true, status: 200 });
     vi.stubGlobal('fetch', fetchMock);
-    render(<WhitePaperBlock formPolicy={formPolicy} />);
+    render(<Footer formPolicy={formPolicy} />);
 
-    submit('reader@example.com');
+    subscribe('reader@example.com');
     await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
-    fireEvent.click(screen.getByRole('button', { name: /download \(free\)/i }));
+    fireEvent.click(screen.getByRole('button', { name: /subscribe/i }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
 
     expect(sentBody(fetchMock, 1).submission_id).toBe(
@@ -117,16 +99,17 @@ describe('WhitePaperBlock growth policy', () => {
       .mockRejectedValueOnce(new Error('network'))
       .mockResolvedValue({ ok: true, status: 200 });
     vi.stubGlobal('fetch', fetchMock);
-    render(<WhitePaperBlock formPolicy={formPolicy} />);
+    render(<Footer formPolicy={formPolicy} />);
 
-    submit('reader@example.com');
+    subscribe('reader@example.com');
     await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
-    submit('someone-else@example.com');
+    subscribe('someone-else@example.com');
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
 
     expect(sentBody(fetchMock, 1).submission_id).not.toBe(
       sentBody(fetchMock, 0).submission_id
     );
+    expect(sentBody(fetchMock, 1).email).toBe('someone-else@example.com');
   });
 
   it('requires a page refresh after a policy mismatch and reports no success', async () => {
@@ -134,13 +117,13 @@ describe('WhitePaperBlock growth policy', () => {
       'fetch',
       vi.fn().mockResolvedValue({ ok: false, status: 409 })
     );
-    render(<WhitePaperBlock formPolicy={formPolicy} />);
+    render(<Footer formPolicy={formPolicy} />);
 
-    submit('reader@example.com');
+    subscribe('reader@example.com');
 
     await waitFor(() =>
       expect(screen.getByRole('button', { name: /refresh page/i })).toBeTruthy()
     );
-    expect(screen.queryByText(/check your inbox/i)).toBeNull();
+    expect(screen.queryByText(/subscribed/i)).toBeNull();
   });
 });

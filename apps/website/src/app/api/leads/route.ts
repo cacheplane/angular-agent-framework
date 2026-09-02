@@ -1,3 +1,5 @@
+// The website intentionally consumes the growth library through its internal boundary.
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import {
   normalizeRecipientEmail,
   type FormSubmission,

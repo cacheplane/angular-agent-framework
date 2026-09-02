@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+// The website intentionally consumes the growth library through its internal boundary.
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import {
   acceptFormSubmission,
   type ApproveContactFromFormInput,

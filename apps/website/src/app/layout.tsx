@@ -16,6 +16,7 @@ import {
   SITE_NAME,
   SITE_ORIGIN,
 } from '../lib/site-metadata';
+import { getFormPolicy } from '../lib/growth/form-policy';
 
 const garamond = EB_Garamond({
   subsets: ['latin'],
@@ -62,6 +63,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const formPolicy = getFormPolicy();
   return (
     <html
       lang="en"
@@ -81,9 +83,9 @@ export default function RootLayout({
           <main>
             <WebsiteWorkspaceLayout>{children}</WebsiteWorkspaceLayout>
           </main>
-          <SiteFooter />
+          <SiteFooter formPolicy={formPolicy} />
           <div data-announcement-region="">
-            <AnnouncementToast />
+            <AnnouncementToast formPolicy={formPolicy} />
           </div>
         </div>
       </body>

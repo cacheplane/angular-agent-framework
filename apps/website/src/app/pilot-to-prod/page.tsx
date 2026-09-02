@@ -11,6 +11,7 @@ import { FinalCTA } from '../../components/landing/FinalCTA';
 import { DiagramSection } from '../../components/landing/DiagramSection';
 import { PilotJourney } from '../../components/docs/diagrams';
 import { createPageMetadata } from '../../lib/site-metadata';
+import { getFormPolicy } from '../../lib/growth/form-policy';
 
 export const metadata = createPageMetadata({
   title: 'Pilot to Production — Threadplane',
@@ -20,6 +21,7 @@ export const metadata = createPageMetadata({
 });
 
 export default function PilotToProdPage() {
+  const formPolicy = getFormPolicy();
   return (
     <>
       {/* Hero */}
@@ -181,7 +183,7 @@ export default function PilotToProdPage() {
         </Container>
       </Section>
 
-      <WhitePaperBlock />
+      <WhitePaperBlock formPolicy={formPolicy} />
       <Promises />
 
       {/* Contact anchor */}

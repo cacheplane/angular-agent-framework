@@ -13,6 +13,7 @@ import { StackDiagramSection } from '../../components/landing/StackDiagramSectio
 import { createPageMetadata, SHORT_POSITIONING_DESCRIPTION } from '../../lib/site-metadata';
 import { SECTION_MEDIA } from '../../lib/section-media';
 import { buildPanes } from '../../lib/build-panes';
+import { getFormPolicy } from '../../lib/growth/form-policy';
 
 export const metadata = createPageMetadata({
   title: '@threadplane/langgraph — Threadplane',
@@ -22,6 +23,7 @@ export const metadata = createPageMetadata({
 });
 
 export default async function LangGraphPage() {
+  const formPolicy = getFormPolicy();
   const panes = await buildPanes(SECTION_MEDIA.libLanggraph, SECTION_MEDIA.libLanggraph.video?.url ?? '');
 
   return (
@@ -93,7 +95,7 @@ export default async function LangGraphPage() {
         visual={<LangGraphCodeShowcase />}
       />
 
-      <WhitePaperBlock paper="angular" />
+      <WhitePaperBlock formPolicy={formPolicy} paper="angular" />
       <FinalCTA variant="dark" />
     </>
   );

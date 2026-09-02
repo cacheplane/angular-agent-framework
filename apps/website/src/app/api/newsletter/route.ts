@@ -1,3 +1,5 @@
+// The website intentionally consumes the growth library through its internal boundary.
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import { normalizeRecipientEmail } from '@threadplane-internal/growth';
 
 import { matchesSubmittedFormPolicy } from '../../../lib/growth/form-policy';

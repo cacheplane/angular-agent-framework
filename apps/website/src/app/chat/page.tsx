@@ -11,6 +11,7 @@ import { ChatLandingCodeShowcase } from '../../components/landing/chat-landing/C
 import { createPageMetadata } from '../../lib/site-metadata';
 import { SECTION_MEDIA } from '../../lib/section-media';
 import { buildPanes } from '../../lib/build-panes';
+import { getFormPolicy } from '../../lib/growth/form-policy';
 
 export const metadata = createPageMetadata({
   title: '@threadplane/chat — Batteries-Included Agent Chat for Angular',
@@ -20,6 +21,7 @@ export const metadata = createPageMetadata({
 });
 
 export default async function ChatPage() {
+  const formPolicy = getFormPolicy();
   const panes = await buildPanes(SECTION_MEDIA.libChat, SECTION_MEDIA.libChat.video?.url ?? '');
 
   return (
@@ -82,7 +84,7 @@ export default async function ChatPage() {
         visual={<ChatLandingCodeShowcase />}
       />
 
-      <WhitePaperBlock paper="chat" />
+      <WhitePaperBlock formPolicy={formPolicy} paper="chat" />
       <FinalCTA variant="dark" />
     </>
   );
