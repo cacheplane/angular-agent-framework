@@ -13,7 +13,12 @@ interface DiagramFrameProps {
   /** Accessible one-sentence description of what the diagram shows. */
   label: string;
   caption?: string;
-  /** Marketing pages render the same SVG larger; compact cards render it small with a bigger type ramp. */
+  /**
+   * Marketing pages render the same SVG larger; compact cards render it small with a bigger type
+   * ramp. Compact compositions author at a ~320 viewBox with the compact type ramp (eyebrow 10 /
+   * mono title 13.5 / sans title 12 / meta 11 / pill 10.5, viewBox units) — see DiagramNode's note
+   * for the shared baseline offsets; rendered width is capped at 420px regardless of card size.
+   */
   scale?: 'docs' | 'marketing' | 'compact';
   children: ReactNode;
 }

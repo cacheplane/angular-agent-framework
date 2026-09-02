@@ -689,12 +689,23 @@ body:has([data-website-workspace-host]) {
 /* Compact scale: card-sized diagrams (~320 viewBox). No floor — a compact
  * figure fills its card and never scrolls; legibility comes from the larger
  * type ramp below, not from render width. */
+.tp-diagram-figure[data-scale="compact"] {
+  /* Compact figures cannot overflow, live inside cards that own their own
+   * spacing, and sit on arbitrary card backgrounds — no scroll affordance,
+   * no margins. */
+  margin: 0;
+  overflow-x: visible;
+  background: none;
+}
 .tp-diagram-figure[data-scale="compact"] .tp-diagram-svg {
   min-width: 0;
-  max-width: 100%;
+  max-width: 420px;
 }
 .tp-diagram-figure[data-scale="compact"] .tp-diagram-eyebrow { font-size: 10px; }
 .tp-diagram-figure[data-scale="compact"] .tp-diagram-title { font-size: 13.5px; }
+/* Ties with the base .tp-diagram-node[data-title="sans"] rule below in file
+ * order — this higher-specificity duplicate must stay or compact sans
+ * titles lose the cascade. */
 .tp-diagram-figure[data-scale="compact"] .tp-diagram-node[data-title="sans"] .tp-diagram-title { font-size: 12px; }
 .tp-diagram-figure[data-scale="compact"] .tp-diagram-meta { font-size: 11px; }
 .tp-diagram-figure[data-scale="compact"] .tp-diagram-pill text { font-size: 10.5px; }

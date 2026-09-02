@@ -76,6 +76,11 @@ describe('diagram kit primitives', () => {
     expect(container.querySelector('g.tp-diagram-node')?.getAttribute('data-title')).toBe('sans');
   });
 
+  // This runtime assertion is trivially green — 'compact' is a literal in the
+  // scale union, so any string reaching here has already type-checked. The
+  // real guard is tsc during `nx build` (spec .tsx files are type-checked
+  // because tsconfig excludes only `*.spec.ts`, not `*.spec.tsx`) — don't
+  // "fix" that tsconfig exclude without replacing this guard.
   it('DiagramFrame accepts the compact scale', () => {
     const { container } = render(
       <DiagramFrame slug="c" viewWidth={320} viewHeight={150} label="x" scale="compact">
