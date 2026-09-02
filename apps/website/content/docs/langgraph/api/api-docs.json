@@ -1388,6 +1388,12 @@
         "optional": true
       },
       {
+        "name": "namespace",
+        "type": "string[]",
+        "description": "Protocol namespace tuple for resume targeting (`[]` at root).\nPopulated for nested subgraph / subagent interrupts so\n`respond({ interruptId })` can resume without a separate\n`getThread()?.interrupts` lookup.",
+        "optional": true
+      },
+      {
         "name": "ns",
         "type": "string[]",
         "description": "The namespace of the interrupt.",
