@@ -16,7 +16,13 @@ export interface AimockLaunch {
  * `.aimock-recordings/` next to the fixtures dir).
  */
 export function resolveAimockLaunch(fixturesDir: string): AimockLaunch {
-  if (process.env['AIMOCK_MODE'] === 'record') {
+  const mode = process.env['AIMOCK_MODE'];
+  if (mode !== undefined && mode !== 'record' && mode !== 'replay') {
+    // A typo (`Record`, `recording`, ...) would otherwise silently replay
+    // against stale fixtures while the operator believes they are recording.
+    console.warn(`[aimock-harness] unrecognized AIMOCK_MODE="${mode}" — falling back to replay`);
+  }
+  if (mode === 'record') {
     if (!process.env['OPENAI_API_KEY']) {
       throw new Error(
         '[aimock-harness] AIMOCK_MODE=record requires OPENAI_API_KEY — the record proxy forwards requests to the live provider.',
