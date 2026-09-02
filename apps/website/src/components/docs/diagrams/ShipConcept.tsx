@@ -37,13 +37,13 @@ export function ShipConcept() {
       scale="compact"
       label="Durability concept: a thread starts, survives a page reload and a deploy, and resumes."
     >
-      <DiagramNode x={16} y={94} w={74} h={52} title="Starts" align="middle" titleStyle="sans" tone="dim" />
+      <DiagramNode x={16} y={94} w={74} h={52} eyebrow="Thread" title="Starts" align="middle" titleStyle="sans" tone="dim" />
       <DiagramEdge d="M90 120 H102" slug={SLUG} />
-      <DiagramPill cx={126} cy={120} w={48} label="reload" />
+      <DiagramPill cx={126} cy={120} w={48} label="reload" tone="neutral" />
       <DiagramEdge d="M150 120 H162" slug={SLUG} />
-      <DiagramPill cx={186} cy={120} w={48} label="deploy" />
-      <DiagramEdge d="M210 120 H218" slug={SLUG} arrow />
-      <DiagramNode x={222} y={94} w={80} h={52} title="Resumes" align="middle" titleStyle="sans" tone="accent" />
+      <DiagramPill cx={186} cy={120} w={48} label="deploy" tone="neutral" />
+      <DiagramEdge d="M210 120 H220" slug={SLUG} arrow />
+      <DiagramNode x={224} y={94} w={80} h={52} eyebrow="Thread" title="Resumes" align="middle" titleStyle="sans" tone="accent" />
     </DiagramFrame>
   );
 }

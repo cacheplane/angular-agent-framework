@@ -773,6 +773,13 @@ body:has([data-website-workspace-host]) {
   font-size: 10px;
   fill: var(--color-accent);
 }
+.tp-diagram-pill[data-tone="neutral"] rect {
+  fill: var(--color-surface);
+  stroke: var(--color-border-strong);
+}
+.tp-diagram-pill[data-tone="neutral"] text {
+  fill: var(--color-text-muted);
+}
 
 /*
  * DocsSidebar

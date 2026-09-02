@@ -109,4 +109,20 @@ describe('diagram kit primitives', () => {
     expect(text?.textContent).toBe('SSE');
     expect(text?.getAttribute('text-anchor')).toBe('middle');
   });
+
+  it('DiagramPill defaults to accent tone and accepts neutral', () => {
+    const { container: defaultContainer } = render(
+      <svg>
+        <DiagramPill cx={0} cy={0} w={50} label="x" />
+      </svg>
+    );
+    expect(defaultContainer.querySelector('.tp-diagram-pill')?.getAttribute('data-tone')).toBe('accent');
+
+    const { container: neutralContainer } = render(
+      <svg>
+        <DiagramPill cx={0} cy={0} w={50} label="x" tone="neutral" />
+      </svg>
+    );
+    expect(neutralContainer.querySelector('.tp-diagram-pill')?.getAttribute('data-tone')).toBe('neutral');
+  });
 });

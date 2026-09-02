@@ -19,6 +19,13 @@ describe('StreamConcept', () => {
     const titles = Array.from(container.querySelectorAll('.tp-diagram-title')).map((t) => t.textContent);
     expect(titles).toContain('injectAgent()');
   });
+
+  it('accents the UI-updates-itself payoff node, not the signals source', () => {
+    const { container } = render(<StreamConcept />);
+    const accentNodes = container.querySelectorAll('g.tp-diagram-node[data-tone="accent"]');
+    expect(accentNodes.length).toBe(1);
+    expect(accentNodes[0].querySelector('.tp-diagram-title')?.textContent).toBe('UI updates itself');
+  });
 });
 
 describe('RenderConcept', () => {
@@ -43,13 +50,18 @@ describe('ApproveConcept', () => {
     const titles = Array.from(container.querySelectorAll('.tp-diagram-title')).map((t) => t.textContent);
     expect(titles).toContain('Agent');
     expect(titles).toContain('Human');
-    expect(titles).toContain('Resumes exactly there');
+    expect(titles).toContain('Resumes with the decision');
     const pills = Array.from(container.querySelectorAll('.tp-diagram-pill text')).map((t) => t.textContent);
     expect(pills).toContain('interrupt');
     expect(pills).toContain('resume');
     const accentNodes = container.querySelectorAll('g.tp-diagram-node[data-tone="accent"]');
     expect(accentNodes.length).toBe(1);
     expect(accentNodes[0].querySelector('.tp-diagram-title')?.textContent).toBe('Human');
+    const pillGroups = container.querySelectorAll('.tp-diagram-pill');
+    expect(pillGroups.length).toBeGreaterThan(0);
+    pillGroups.forEach((pill) => {
+      expect(pill.getAttribute('data-tone')).toBe('neutral');
+    });
   });
 });
 
@@ -68,5 +80,10 @@ describe('ShipConcept', () => {
     const accentNodes = container.querySelectorAll('g.tp-diagram-node[data-tone="accent"]');
     expect(accentNodes.length).toBe(1);
     expect(accentNodes[0].querySelector('.tp-diagram-title')?.textContent).toBe('Resumes');
+    const pillGroups = container.querySelectorAll('.tp-diagram-pill');
+    expect(pillGroups.length).toBeGreaterThan(0);
+    pillGroups.forEach((pill) => {
+      expect(pill.getAttribute('data-tone')).toBe('neutral');
+    });
   });
 });
