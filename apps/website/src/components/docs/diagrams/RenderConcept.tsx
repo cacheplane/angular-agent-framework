@@ -15,7 +15,7 @@ export function RenderConcept() {
     <DiagramFrame
       slug={SLUG}
       viewWidth={320}
-      viewHeight={232}
+      viewHeight={240}
       scale="compact"
       label="Generative UI concept: a JSON spec resolves through your Angular registry into your own components."
     >
