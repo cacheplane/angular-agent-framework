@@ -182,11 +182,14 @@ Its module docstring says so outright:
 
 ```text
 Mirrors cockpit/chat/subagents' orchestrator + `task` tool + `_run_subagent`
-structure, but each dispatch emits `subagent_activity` CUSTOM events
+structure, but each dispatch emits `subagent_activity` CUSTOM events [...]
+The backend's SubagentEmittingAgent expands those CUSTOM events into the
+protocol's standard SUBAGENT_STARTED / TEXT_MESSAGE_* (attributed via
+subagentRunId) / SUBAGENT_FINISHED / SUBAGENT_ERROR events
 ```
 
-The thing that differs is the transport: AG-UI's already carries a first-class delegation event.
-So the specialists stayed a flat `async` helper and progress reaches the frontend as a custom event dispatched from the tool body.
+The thing that differs is the transport: AG-UI already carries first-class delegation events — `SUBAGENT_STARTED`, `SUBAGENT_FINISHED`, and content events attributed to a child run.
+So the specialists stayed a flat `async` helper, the tool body dispatches its progress as custom events, and a thin wrapper on the server expands those into the protocol's standard subagent events on the wire.
 
 The subgraph was never required by the feature.
 It was required by the transport.
@@ -209,7 +212,7 @@ A node is already a unit.
 
 When the child really is a different graph — and the repo has exactly one of those, which is the case I owe you after arguing the other side this whole time.
 
-Our `examples/ag-ui` demo runs on that same AG-UI transport, and it emits the same `subagent_activity` events from the tool body.
+Our `examples/ag-ui` demo runs on that same AG-UI transport, and its research tool reaches the frontend the same way: the protocol's standard `SUBAGENT_*` events, with the child's messages and its own `lookup` tool call attributed to the child run.
 So it is not buying observability.
 It already had it.
 It compiles a child graph anyway.

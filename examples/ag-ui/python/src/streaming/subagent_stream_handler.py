@@ -1,60 +1,74 @@
-"""Taps a child subagent LLM's text tokens and emits them as `subagent_activity`
-`message` events, keyed by the parent tool_call_id. Accumulates `text_so_far`
-so the L2 transform stays stateless. `started`/`finished` are emitted by the
-research tool body. Uses adispatch_custom_event (the bridge reads on_custom_event
-from astream_events; get_stream_writer would surface only as a RAW event).
+"""Taps a child subagent LLM's text tokens and forwards each one as a
+`subagent_activity` payload keyed by the parent tool_call_id:
 
-Each `message` event also carries the current `message_index` — the 0-based
-ordinal of the assistant turn the tokens belong to. The subgraph owns the
-counter (it opens each turn with a `message_start`); the handler reads it
-through a shared mutable ref (`SubagentRunState`) so the index it tags stays
-in lock-step with the transcript the subgraph emits. The handler resets its
-text buffer whenever the subgraph advances to a new turn so each message's
-`text_so_far` starts fresh."""
+    message_start {subagent_id, message_id}          once per assistant turn
+    message       {subagent_id, message_id, delta}   one per token (raw delta)
+
+`SubagentEmittingAgent` turns those into `subagentRunId`-attributed
+TEXT_MESSAGE_START / TEXT_MESSAGE_CONTENT events and closes the message
+(TEXT_MESSAGE_END) itself at the next `message_start` / `tool_call` /
+`finished` / `error`. `started` / `tool_call` / `tool_result` / `finished` /
+`error` are emitted by the research subgraph nodes and the `research` tool
+body.
+
+Message ids follow the `<tool_call_id>-sub-m<n>` convention. The research
+subgraph runs several assistant turns per delegation (reason → tool → answer),
+so it owns the turn counter: its `agent` node calls
+`SubagentRunState.open_message()` and dispatches `message_start` BEFORE
+invoking the model, and the handler reads the open id for the tokens that
+follow. When no turn is open (a bare LLM call outside the subgraph, or the
+unit tests) the handler opens one itself so a token is never orphaned.
+
+Uses adispatch_custom_event (the bridge reads on_custom_event from
+astream_events; get_stream_writer would surface only as a RAW event)."""
 from typing import Any, Optional
 from uuid import UUID
 
 from langchain_core.callbacks import AsyncCallbackHandler, adispatch_custom_event
 
+CUSTOM_NAME = "subagent_activity"
+
 
 class SubagentRunState:
-    """Per-research-run shared state. The subgraph nodes own `message_index`
-    (bumping it as each assistant turn opens) and `tool_index` (the running
-    position in the run's toolCalls[]); the SubagentStreamHandler reads
-    `message_index` so its streamed `message` events tag the right turn."""
+    """Per-delegation shared state: the message counter that derives
+    `<subagent_id>-sub-m<n>` ids and the id of the currently open assistant
+    turn. The research subgraph's nodes advance it; the SubagentStreamHandler
+    reads it so its streamed `message` deltas tag the right turn."""
 
-    def __init__(self) -> None:
-        self.message_index: int = 0
-        self.tool_index: int = 0
+    def __init__(self, subagent_id: str) -> None:
+        self.subagent_id = subagent_id
+        self.message_count: int = 0
+        self.message_id: Optional[str] = None
+
+    def open_message(self) -> str:
+        """Advance to the next assistant turn and return its message id."""
+        self.message_count += 1
+        self.message_id = f"{self.subagent_id}-sub-m{self.message_count}"
+        return self.message_id
 
 
 class SubagentStreamHandler(AsyncCallbackHandler):
     def __init__(self, subagent_id: str, run_state: Optional[SubagentRunState] = None) -> None:
         self._id = subagent_id
-        self._buffer = ""
-        self._run_state = run_state if run_state is not None else SubagentRunState()
-        # Track which turn the current buffer belongs to so we reset the
-        # accumulated text when the subgraph advances to a new assistant turn.
-        self._buffer_index = self._run_state.message_index
+        self._run_state = run_state if run_state is not None else SubagentRunState(subagent_id)
 
     async def on_llm_new_token(self, token: str, *, run_id: UUID | None = None, **kwargs: Any) -> None:
         if not token:
             return
-        index = self._run_state.message_index
-        if index != self._buffer_index:
-            # New assistant turn opened since the last token — start fresh so
-            # `text_so_far` is scoped to this message, not the whole run.
-            self._buffer = ""
-            self._buffer_index = index
-        self._buffer += token
         try:
+            if self._run_state.message_id is None:
+                message_id = self._run_state.open_message()
+                await adispatch_custom_event(
+                    CUSTOM_NAME,
+                    {"subagent_id": self._id, "phase": "message_start", "message_id": message_id},
+                )
             await adispatch_custom_event(
-                "subagent_activity",
+                CUSTOM_NAME,
                 {
                     "subagent_id": self._id,
                     "phase": "message",
-                    "message_index": index,
-                    "text": self._buffer,
+                    "message_id": self._run_state.message_id,
+                    "delta": token,
                 },
             )
         except Exception:

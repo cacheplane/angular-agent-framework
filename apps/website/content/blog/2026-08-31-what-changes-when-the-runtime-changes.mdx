@@ -224,8 +224,8 @@ Our LangGraph subagent tracker is 543 lines.
 It infers subagent identity from stream namespaces, correlates namespaces back to tool-call ids, and requires you to configure `subagentToolNames: ['task']` in the provider so it knows which tool calls are delegations.
 That is client-side inference of a server-side fact, and inference is exactly as reliable as it sounds.
 
-AG-UI ships `ACTIVITY_SNAPSHOT` and `ACTIVITY_DELTA` as first-class events.
-The server declares "this is a subagent, here is its type, here is its status, here is its content."
+AG-UI ships `SUBAGENT_STARTED`, `SUBAGENT_FINISHED`, and `SUBAGENT_ERROR` as first-class events, and every content event can carry a `subagentRunId`.
+The server declares "this is a subagent, here is its name, here is the tool call that dispatched it, and these messages and tool calls belong to it."
 Our reducer projects those onto the neutral `Subagent` contract, and the AG-UI provider config for the subagents demo needs no subagent option at all.
 
 Declared beats inferred.
