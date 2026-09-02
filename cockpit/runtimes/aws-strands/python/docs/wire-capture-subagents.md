@@ -256,3 +256,34 @@ matches the bridge-native `TOOL_CALL_START.toolCallId` verbatim, and the
 yield), confirming the last-yield-as-result contract survived the handler
 registration. The §5 OTel `ContextVar` warnings still log server-side and
 remain cosmetic.
+
+## Browser verification
+
+2026-09-02, live backend (real `OPENAI_API_KEY`, uvicorn on :5331) + `nx
+serve cockpit-runtimes-aws-strands-angular` on :4331, driven headlessly
+with Playwright. Screenshot:
+`cockpit/runtimes/aws-strands/angular/e2e/manual/subagent-card-live.png`.
+
+What rendered: the delegation prompt (*"Find a slot for Ada and Grace next
+week — research their availability first"*) produced an inline
+`<chat-subagent-card>` anchored to the `research_availability` tool call —
+header `availability_researcher` + wire `toolCallId` + status badge — with
+the specialist's transcript inside it, followed by the orchestrator's own
+summary bubble. The child text never leaked into the parent bubble, and the
+card persists (collapsed to `complete`) after the run.
+
+Did the card text stream mid-run: **yes** (matrix cell: expected
+streaming = yes). Polling the card's `innerText` every 150ms during the
+run showed the badge at `running` while the specialist's message grew
+monotonically across successive samples (one run: lengths 144 → 213 → 288
+→ 403 → 420 → 438 → 501 → 643 chars between t≈2.0s and t≈3.5s), then
+flipped to `complete` and collapsed. This confirms the attributed
+`TEXT_MESSAGE_CONTENT` deltas render progressively in the card, not as one
+post-hoc paste.
+
+One rendering defect surfaced and was fixed on this branch: the wire and
+the `@threadplane/ag-ui` reducer were both correct, but `chat-tool-calls`
+anchored subagent cards by the adapter's `subagents()` **map key** (here
+the `subagentRunId`, `<toolCallId>-sub`) instead of the contract field
+`Subagent.toolCallId`, so the card never mounted for Strands delegations.
+Fixed in `libs/chat` by re-indexing on `Subagent.toolCallId`.
