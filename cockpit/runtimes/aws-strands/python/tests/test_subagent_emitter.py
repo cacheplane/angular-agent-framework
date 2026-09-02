@@ -141,6 +141,74 @@ async def test_events_after_terminal_are_ignored():
     ]
 
 
+async def test_reused_tool_use_id_resets_on_init_event_loop():
+    # Some Strands providers reuse tool_use_ids across calls (see the
+    # bridge's _reused_frontend_tool_identity_error). A fresh inner stream
+    # always opens with init_event_loop, so a full second sequence must be
+    # emitted — with a bumped message-id generation so -m1 is not reused.
+    first = await _drive([
+        {"init_event_loop": True},
+        {"data": "- Ada"},
+        {"result": object()},
+        "- Ada",
+    ])
+    assert [ev.type for ev in first] == [
+        EventType.SUBAGENT_STARTED,
+        EventType.TEXT_MESSAGE_START,
+        EventType.TEXT_MESSAGE_CONTENT,
+        EventType.TEXT_MESSAGE_END,
+        EventType.SUBAGENT_FINISHED,
+    ]
+    assert first[1].message_id == f"{TOOL_USE_ID}-sub-m1"
+
+    second = await _drive([
+        {"init_event_loop": True},
+        {"data": "- Grace"},
+        {"result": object()},
+        "- Grace",
+    ])
+    assert [ev.type for ev in second] == [
+        EventType.SUBAGENT_STARTED,
+        EventType.TEXT_MESSAGE_START,
+        EventType.TEXT_MESSAGE_CONTENT,
+        EventType.TEXT_MESSAGE_END,
+        EventType.SUBAGENT_FINISHED,
+    ]
+    # Same subagent_run_id (identity-unchanged re-announce), fresh message id.
+    assert second[0].subagent_run_id == RUN_ID
+    assert second[1].message_id == f"{TOOL_USE_ID}-sub-m2"
+    assert second[2].delta == "- Grace"
+
+
+async def test_str_payload_on_unfinished_session_is_terminal_success():
+    # A stream that ends without a {"result": ...} event still terminates:
+    # the tool's final result-string yield closes the message and finishes
+    # the subagent instead of leaving the card open forever.
+    out = await _drive([
+        {"init_event_loop": True},
+        {"data": "- Ada is free Tuesday"},
+        "- Ada is free Tuesday",
+    ])
+    assert [ev.type for ev in out] == [
+        EventType.SUBAGENT_STARTED,
+        EventType.TEXT_MESSAGE_START,
+        EventType.TEXT_MESSAGE_CONTENT,
+        EventType.TEXT_MESSAGE_END,
+        EventType.SUBAGENT_FINISHED,
+    ]
+    assert out[-1].outcome.type == "success"
+    assert subagent_emitter._sessions[TOOL_USE_ID].finished is True
+
+
+async def test_sessions_growth_is_capped():
+    for i in range(subagent_emitter._MAX_SESSIONS + 5):
+        await _drive([{"result": object()}], tool_use_id=f"call_{i}")
+    assert len(subagent_emitter._sessions) == subagent_emitter._MAX_SESSIONS
+    # Oldest entries were evicted, newest kept.
+    assert "call_0" not in subagent_emitter._sessions
+    assert f"call_{subagent_emitter._MAX_SESSIONS + 4}" in subagent_emitter._sessions
+
+
 async def test_ids_derive_from_tool_use_id():
     out = await _drive([{"data": "x"}, {"result": object()}], tool_use_id="call_other")
     assert out[0].subagent_run_id == "call_other-sub"

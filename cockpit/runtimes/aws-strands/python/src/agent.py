@@ -172,7 +172,7 @@ async def research_availability(attendees: str, date_range: str):
             if isinstance(event, dict) and isinstance(event.get("data"), str):
                 chunks.append(event["data"])
             yield event
-    except Exception as exc:  # pragma: no cover - exercised via the emitter tests
+    except Exception as exc:  # pragma: no cover - not reachable without a live model failure
         # Surface the failure to the emitter (which owns the SUBAGENT_ERROR
         # wire event), then let the tool error propagate to Strands normally.
         yield {"delegation_error": str(exc)}

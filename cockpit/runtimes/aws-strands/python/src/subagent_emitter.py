@@ -51,29 +51,50 @@ class _DelegationState:
     started: bool = False
     message_open: bool = False
     finished: bool = False
+    generation: int = 1
+    """Bumped when a reused tool_use_id starts a fresh inner stream, so the
+    re-run's message id (-m2, -m3, ...) never collides with an already-emitted
+    one."""
 
 
 # Finished entries are kept (not popped) so the tool's trailing result-string
-# yield and any stragglers stay suppressed; the dict grows one small entry per
-# delegation call for the life of the process, matching the module-level demo
-# state in agent.py.
+# yield and any stragglers stay suppressed. Growth is capped at _MAX_SESSIONS
+# (dict insertion order = age; each entry is a short key string plus a
+# 4-field dataclass, ~414 bytes measured with sys.getsizeof — the cap bounds
+# the dict at ~200 KiB).
 _sessions: dict[str, _DelegationState] = {}
+_MAX_SESSIONS = 512
 
 
 def _subagent_run_id(tool_use_id: str) -> str:
     return f"{tool_use_id}-sub"
 
 
-def _message_id(tool_use_id: str) -> str:
-    return f"{tool_use_id}-sub-m1"
+def _message_id(tool_use_id: str, generation: int) -> str:
+    return f"{tool_use_id}-sub-m{generation}"
 
 
 async def emit_subagent_events(ctx: ToolStreamEventContext):
     """tool_stream_event_handler translating child events to SUBAGENT_* wire
     events. Async generator, called once per inner event."""
-    state = _sessions.setdefault(ctx.tool_use_id, _DelegationState())
+    state = _sessions.get(ctx.tool_use_id)
+    if state is None:
+        state = _DelegationState()
+        _sessions[ctx.tool_use_id] = state
+        while len(_sessions) > _MAX_SESSIONS:
+            del _sessions[next(k for k in _sessions if k != ctx.tool_use_id)]
     run_id = _subagent_run_id(ctx.tool_use_id)
-    message_id = _message_id(ctx.tool_use_id)
+    data = ctx.stream_data
+    if state.finished and isinstance(data, dict) and "init_event_loop" in data:
+        # Reused tool_use_id (real for some Strands providers — see the
+        # bridge's _reused_frontend_tool_identity_error): a fresh inner
+        # stream always opens with init_event_loop, so reset for a second
+        # full SUBAGENT_* sequence under the same subagent_run_id (the
+        # adapter treats an identity-unchanged re-announce as content-only).
+        # Non-init stragglers after the terminal stay swallowed below.
+        state = _DelegationState(generation=state.generation + 1)
+        _sessions[ctx.tool_use_id] = state
+    message_id = _message_id(ctx.tool_use_id, state.generation)
     try:
         if state.finished:
             # The tool's final yield (the result string) and any stragglers
@@ -89,7 +110,25 @@ async def emit_subagent_events(ctx: ToolStreamEventContext):
                 parent_tool_call_id=ctx.tool_use_id,
             )
 
-        data = ctx.stream_data
+        if isinstance(data, str):
+            # Terminal-success fallback: the tool's final result-string yield
+            # arriving on an UNFINISHED session means the inner stream ended
+            # without a {"result": ...} event — close out rather than leaving
+            # the subagent card open forever.
+            state.finished = True
+            if state.message_open:
+                state.message_open = False
+                yield TextMessageEndEvent(
+                    type=EventType.TEXT_MESSAGE_END,
+                    message_id=message_id,
+                    subagent_run_id=run_id,
+                )
+            yield SubagentFinishedEvent(
+                type=EventType.SUBAGENT_FINISHED,
+                subagent_run_id=run_id,
+                outcome=SubagentFinishedSuccessOutcome(),
+            )
+            return
         if not isinstance(data, dict):
             return
 

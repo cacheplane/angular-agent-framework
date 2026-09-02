@@ -11,6 +11,8 @@ from src.agent import agent, availability_researcher, research_availability
 
 
 def _tool_names() -> list[str]:
+    # Private-attr coupling (StrandsAgent._tools) is frozen by the git-ref
+    # pin on ag-ui-strands in pyproject.toml.
     return [t.tool_name for t in agent._tools]
 
 
