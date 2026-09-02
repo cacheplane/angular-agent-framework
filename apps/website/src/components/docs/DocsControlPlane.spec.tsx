@@ -12,6 +12,7 @@ import {
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DocsControlPlane, DocsContextContent } from './DocsControlPlane';
 import { docsConfig } from '../../lib/docs-config';
+import { declarationsFor } from '../../styles/style-contract';
 
 const LIBRARY_TITLES = docsConfig
   .filter((l) => l.group === 'library')
@@ -44,6 +45,66 @@ beforeEach(() => {
 });
 
 describe('DocsControlPlane', () => {
+  it('keeps context headings on the shared sentence-case sans contract', () => {
+    for (const selector of [
+      '[data-docs-control-plane-context] [data-control-plane-section-trigger]',
+      '[data-docs-control-plane-context] [data-control-plane-section-heading]',
+    ]) {
+      const declarations = declarationsFor(docsCss, selector);
+      expect(declarations).toMatch(/font-family:\s*var\(--font-inter\)/);
+      expect(declarations).toMatch(/font-size:\s*12px/);
+      expect(declarations).toMatch(/font-weight:\s*600/);
+      expect(declarations).toMatch(/letter-spacing:\s*normal/);
+      expect(declarations).toMatch(/color:\s*var\(--color-text-muted\)/);
+      expect(declarations).toMatch(/text-transform:\s*none/);
+    }
+  });
+
+  it('rotates the shared disclosure chevron as a complete icon', () => {
+    const chevron = declarationsFor(
+      docsCss,
+      '[data-docs-control-plane-context] [data-control-plane-section-trigger] [data-control-plane-section-chevron]'
+    );
+    const expanded = declarationsFor(
+      docsCss,
+      '[data-docs-control-plane-context] [data-control-plane-section-trigger][aria-expanded="true"] [data-control-plane-section-chevron]'
+    );
+
+    expect(chevron).toMatch(/transition:[^;]*transform\s+150ms\s+ease/);
+    expect(chevron).toMatch(/transform:\s*rotate\(0deg\)/);
+    expect(expanded).toMatch(/transform:\s*rotate\(90deg\)/);
+  });
+
+  it('uses complete rounded sidebar states without a left marker', () => {
+    for (const selector of [
+      '.docs-sidebar-top-link',
+      '.docs-sidebar-section-link',
+    ]) {
+      const declarations = declarationsFor(docsCss, selector);
+      expect(declarations).toMatch(/border-radius:\s*7px/);
+      expect(declarations).not.toMatch(
+        /border-(?:left|inline-start)(?:-(?:color|style|width))?\s*:/
+      );
+    }
+
+    const hover = declarationsFor(
+      docsCss,
+      '[data-docs-navlink]:not([data-active]):hover'
+    );
+    const active = declarationsFor(
+      docsCss,
+      '[data-docs-navlink][data-active]'
+    );
+    expect(hover).toMatch(/background:\s*var\(--color-surface-dim\)/);
+    expect(active).toMatch(/background:\s*var\(--color-accent-surface\)/);
+    expect(hover).not.toMatch(
+      /border-(?:left|inline-start)(?:-(?:color|style|width))?\s*:/
+    );
+    expect(active).not.toMatch(
+      /border-(?:left|inline-start)(?:-(?:color|style|width))?\s*:/
+    );
+  });
+
   it('styles the preview hooks for forced colors and reduced motion', () => {
     expect(docsCss).toMatch(/\[data-docs-runtime-preview\]/);
     expect(docsCss).toMatch(/@media \(forced-colors:\s*active\)/);
@@ -82,6 +143,27 @@ describe('DocsControlPlane', () => {
     ).toContain('mode=api');
     expect(screen.queryByRole('button', { name: 'Activity' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Settings' })).toBeNull();
+  });
+
+  it('renders Lucide rail and action icons with the accepted stroke', () => {
+    render(
+      <DocsControlPlane
+        activeLibrary="langgraph"
+        activeSection="guides"
+        activeSlug="streaming"
+        pageTitle="Streaming"
+      />
+    );
+
+    const rail = screen.getByRole('navigation', { name: 'Docs modes' });
+    const icons = [
+      ...rail.querySelectorAll('[data-control-plane-rail-icon] svg.lucide'),
+      screen.getByRole('button', { name: 'Search docs' }).querySelector('svg'),
+    ];
+    expect(icons).toHaveLength(5);
+    for (const icon of icons) {
+      expect(icon?.getAttribute('stroke-width')).toBe('2');
+    }
   });
 
   it('shows truthful scope and a collapsed configuration-only Runtime preview', async () => {

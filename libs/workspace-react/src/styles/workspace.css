@@ -711,8 +711,11 @@
   color: var(--ds-text-muted);
   background: transparent;
   cursor: pointer;
+  font-family: var(--font-inter, var(--ds-font-sans));
   font-size: 12px;
   font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
   text-align: left;
 }
 [data-cockpit-context-content] [data-control-plane-section-trigger]:hover {
@@ -732,9 +735,12 @@
   margin: 0;
   padding: 8px;
   color: var(--ds-text-muted);
+  font-family: var(--font-inter, var(--ds-font-sans));
   font-size: 12px;
   line-height: 1.2;
   font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
 }
 [data-cockpit-context-content] [data-control-plane-section-content] {
   padding: 2px 0 8px;

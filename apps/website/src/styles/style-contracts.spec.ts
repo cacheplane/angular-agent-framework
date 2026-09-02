@@ -148,6 +148,48 @@ const CONTRACTS: StyleContract[] = [
   },
 ];
 
+function baseDeclarationsFor(css: string, selector: string): string {
+  const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  let depth = 0;
+  let ruleStart = 0;
+
+  for (let index = 0; index < withoutComments.length; index += 1) {
+    const character = withoutComments[index];
+    if (character === '{') {
+      if (depth === 0) {
+        const ruleSelector = withoutComments.slice(ruleStart, index).trim();
+        const close = withoutComments.indexOf('}', index + 1);
+        if (ruleSelector === selector && close !== -1) {
+          return withoutComments.slice(index + 1, close);
+        }
+      }
+      depth += 1;
+    } else if (character === '}') {
+      depth -= 1;
+      if (depth === 0) ruleStart = index + 1;
+    }
+  }
+
+  return '';
+}
+
+function mediaBlock(css: string, query: string): string {
+  const start = css.indexOf(`@media ${query}`);
+  if (start === -1) return '';
+  const open = css.indexOf('{', start);
+  let depth = 0;
+
+  for (let index = open; index < css.length; index += 1) {
+    if (css[index] === '{') depth += 1;
+    if (css[index] === '}') {
+      depth -= 1;
+      if (depth === 0) return css.slice(open + 1, index);
+    }
+  }
+
+  return '';
+}
+
 describe('style contracts', () => {
   for (const contract of CONTRACTS) {
     describe(`${contract.file} ${contract.selector}`, () => {
@@ -167,4 +209,56 @@ describe('style contracts', () => {
       }
     });
   }
+
+  describe('docs.css page actions geometry and tooltip', () => {
+    const css = loadStylesheet('docs.css');
+    const trigger = baseDeclarationsFor(css, '.docs-page-actions-trigger');
+    const tooltip = declarationsFor(css, '.docs-page-actions-tooltip');
+
+    it('keeps the base trigger a borderless 44px rounded square outside media queries', () => {
+      expect(trigger).toMatch(/width:\s*44px/);
+      expect(trigger).toMatch(/height:\s*44px/);
+      expect(trigger).toMatch(/border:\s*0/);
+      expect(trigger).toMatch(/border-radius:\s*(?:8px|var\(--radius-[^)]+\))/);
+    });
+
+    it('transitions tooltip opacity and visibility over 120ms', () => {
+      expect(tooltip).toMatch(/transition:[^;]*opacity\s+120ms[^;]*visibility\s+120ms/);
+    });
+
+    it('reveals the tooltip for trigger hover and keyboard focus', () => {
+      for (const selector of [
+        '.docs-page-actions-trigger:hover + .docs-page-actions-tooltip',
+        '.docs-page-actions-trigger:focus-visible + .docs-page-actions-tooltip',
+      ]) {
+        const declarations = declarationsFor(css, selector);
+        expect(declarations).toMatch(/opacity:\s*1/);
+        expect(declarations).toMatch(/visibility:\s*visible/);
+      }
+    });
+
+    it('keeps the tooltip interactive, hover-persistent, and bridged to the trigger', () => {
+      expect(tooltip).toMatch(/pointer-events:\s*auto/);
+
+      const hover = declarationsFor(css, '.docs-page-actions-tooltip:hover');
+      expect(hover).toMatch(/opacity:\s*1/);
+      expect(hover).toMatch(/visibility:\s*visible/);
+
+      const bridge = declarationsFor(css, '.docs-page-actions-tooltip::before');
+      expect(bridge).toMatch(/content:\s*['"]["']/);
+      expect(bridge).toMatch(/position:\s*absolute/);
+      expect(bridge).toMatch(/top:\s*-6px/);
+      expect(bridge).toMatch(/left:\s*0/);
+      expect(bridge).toMatch(/right:\s*0/);
+      expect(bridge).toMatch(/height:\s*6px/);
+    });
+
+    it('suppresses the tooltip on coarse pointers', () => {
+      expect(declarationsFor(mediaBlock(css, '(pointer: coarse)'), '.docs-page-actions-tooltip')).toMatch(/display:\s*none/);
+    });
+
+    it('removes tooltip transitions when reduced motion is requested', () => {
+      expect(declarationsFor(mediaBlock(css, '(prefers-reduced-motion: reduce)'), '.docs-page-actions *')).toMatch(/transition:\s*none\s*!important/);
+    });
+  });
 });

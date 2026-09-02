@@ -42,6 +42,66 @@ async function open() {
 }
 
 describe('PageActions', () => {
+  it('describes the closed trigger with a tooltip and restores it after Escape', async () => {
+    await renderActions();
+    const trigger = screen.getByRole('button', { name: 'Page actions' });
+    const tooltip = screen.getByRole('tooltip');
+
+    expect(trigger.getAttribute('aria-label')).toBe('Page actions');
+    expect(trigger.getAttribute('aria-describedby')).toBe(tooltip.id);
+    expect(tooltip.textContent).toBe('Page actions');
+    expect(trigger.nextElementSibling).toBe(tooltip);
+
+    fireEvent.click(trigger);
+    expect(trigger.getAttribute('aria-label')).toBe('Page actions');
+    expect(trigger.hasAttribute('aria-describedby')).toBe(false);
+    expect(screen.queryByRole('tooltip')).toBeNull();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() => expect(document.activeElement).toBe(trigger));
+    const restoredTooltip = screen.getByRole('tooltip');
+    expect(trigger.getAttribute('aria-describedby')).toBe(restoredTooltip.id);
+    expect(restoredTooltip.textContent).toBe('Page actions');
+  });
+
+  it('dismisses the closed tooltip with Escape without moving trigger focus', async () => {
+    await renderActions();
+    const trigger = screen.getByRole('button', { name: 'Page actions' });
+    trigger.focus();
+    expect(screen.getByRole('tooltip')).toBeTruthy();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    await waitFor(() => expect(screen.queryByRole('tooltip')).toBeNull());
+    expect(document.activeElement).toBe(trigger);
+    expect(trigger.hasAttribute('aria-describedby')).toBe(false);
+  });
+
+  it('keeps a dismissed tooltip closed until a new focus or pointer cycle', async () => {
+    await renderActions();
+    const trigger = screen.getByRole('button', { name: 'Page actions' });
+    trigger.focus();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('tooltip')).toBeNull());
+
+    fireEvent.keyDown(document, { key: 'ArrowDown' });
+    expect(screen.queryByRole('tooltip')).toBeNull();
+
+    fireEvent.blur(trigger);
+    expect(screen.queryByRole('tooltip')).toBeNull();
+    fireEvent.focus(trigger);
+    await waitFor(() => expect(screen.getByRole('tooltip')).toBeTruthy());
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('tooltip')).toBeNull());
+    fireEvent.pointerMove(trigger);
+    expect(screen.queryByRole('tooltip')).toBeNull();
+    fireEvent.pointerLeave(trigger);
+    expect(screen.queryByRole('tooltip')).toBeNull();
+    fireEvent.pointerEnter(trigger);
+    expect(screen.getByRole('tooltip')).toBeTruthy();
+  });
+
   it('uses one ellipsis trigger and keeps utilities inside its menu', async () => {
     await renderActions();
     expect(screen.getByRole('button', { name: /page actions/i })).toBeTruthy();

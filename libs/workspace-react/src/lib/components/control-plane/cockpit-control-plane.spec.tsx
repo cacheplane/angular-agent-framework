@@ -27,6 +27,17 @@ const cockpitCss = readFileSync(
   'utf8'
 );
 
+function declarationsFor(css: string, selector: string): string {
+  const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, '');
+
+  return [...withoutComments.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter((match) =>
+      match[1].split(',').some((part) => part.trim() === selector)
+    )
+    .map((match) => match[2])
+    .join(';');
+}
+
 const entry = cockpitManifest.find(
   (candidate) =>
     candidate.product === 'langgraph' &&
@@ -123,6 +134,23 @@ const renderControlPlane = (overrides: HarnessOverrides = {}) => {
 
 describe('CockpitControlPlane', () => {
   beforeEach(() => window.localStorage.clear());
+
+  it('keeps context headings on the shared sentence-case sans contract', () => {
+    for (const selector of [
+      '[data-cockpit-context-content] [data-control-plane-section-trigger]',
+      '[data-cockpit-context-content] [data-control-plane-section-heading]',
+    ]) {
+      const declarations = declarationsFor(cockpitCss, selector);
+      expect(declarations).toMatch(
+        /font-family:\s*var\(--font-inter,\s*var\(--ds-font-sans\)\)/
+      );
+      expect(declarations).toMatch(/font-size:\s*12px/);
+      expect(declarations).toMatch(/font-weight:\s*600/);
+      expect(declarations).toMatch(/letter-spacing:\s*normal/);
+      expect(declarations).toMatch(/color:\s*var\(--ds-text-muted\)/);
+      expect(declarations).toMatch(/text-transform:\s*none/);
+    }
+  });
 
   it('renders four primary modes plus Runtime after Scope and Capability', () => {
     renderControlPlane();
