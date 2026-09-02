@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 export { startAimock, type AimockHandle, type AimockStartOptions } from './aimock-runner';
+export { resolveAimockLaunch, type AimockLaunch } from './aimock-mode';
 export {
   sendPromptAndWaitForInterrupt,
   clickInterruptActionAndWaitFinal,

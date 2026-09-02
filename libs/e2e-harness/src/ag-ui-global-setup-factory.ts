@@ -3,6 +3,7 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 import { resolve } from 'node:path';
 import { startAimock, type AimockHandle } from './aimock-runner';
+import { resolveAimockLaunch } from './aimock-mode';
 
 export interface CreateAgUiGlobalSetupOpts {
   /** Repo-relative path to the python ag-ui-langgraph project (contains src/server.py). */
@@ -75,7 +76,8 @@ export function createAgUiGlobalSetup(opts: CreateAgUiGlobalSetupOpts): () => Pr
 
   return async function globalSetup(): Promise<void> {
     const root = repoRoot(opts);
-    const aimock = await startAimock({ mode: 'replay', fixturePath: opts.fixturesDir });
+    const launch = resolveAimockLaunch(opts.fixturesDir);
+    const aimock = await startAimock(launch.startOptions);
     // eslint-disable-next-line no-console
     console.log(`[ag-ui-harness] aimock listening at ${aimock.baseUrl}`);
 
@@ -87,7 +89,7 @@ export function createAgUiGlobalSetup(opts: CreateAgUiGlobalSetupOpts): () => Pr
         env: {
           ...process.env,
           OPENAI_BASE_URL: aimock.baseUrl,
-          OPENAI_API_KEY: 'test-not-used',
+          OPENAI_API_KEY: launch.openaiApiKey,
         },
         stdio: 'pipe',
         // detached:true puts the process in its own group so teardown can
