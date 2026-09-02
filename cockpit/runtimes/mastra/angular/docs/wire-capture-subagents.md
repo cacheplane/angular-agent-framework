@@ -244,3 +244,75 @@ the completed, expanded card: `e2e/manual/subagent-card-live.png`.
   `data-state="done"` on first sight). The emitter is not the limiter;
   @ag-ui/mastra's buffered tool-call flush is (same upstream drop/buffer
   behavior documented above).
+
+## Streaming spike
+
+Task 0 of the streaming PR (spec:
+`docs/superpowers/specs/2026-09-02-mastra-subagent-streaming-design.md`).
+Captured 2026-09-02 by calling the supervisor's `stream()` directly with the
+delegation prompt and logging every `fullStream` chunk. Pins unchanged
+(`@mastra/core@1.63.2`, `@ag-ui/mastra@1.1.2`).
+
+### Bridge members touched (from `node_modules/@ag-ui/mastra/dist/mastra-*.mjs`)
+
+- `'getMemory' in agent` (`isLocalMastraAgent`) — decides the local dispatch path.
+- `agent.stream(messages, options)` → reads `.fullStream` (consumed by
+  `processFullStream`), then `.traceId` and `.usage` for RUN_FINISHED.
+- `agent.resumeStream(resume, options)` → the same `.fullStream` read.
+- `agent.getMemory({requestContext})`, `agent.listTools(...)`, `agent.model`.
+- `parentMessageId` on `TOOL_CALL_START` is the bridge's current message id,
+  set by `onMessageId` from the last `start` / `step-start` chunk's
+  `payload.messageId` (and re-randomized after `step-finish` / `finish`).
+- The delegation `tool-call` chunk is buffered (`u = {toolCallId, toolName,
+  args}`) and flushed as START+ARGS+END only by the next flushing chunk —
+  for a delegation that is the `tool-result`, because every `tool-output`
+  in between hits `case "tool-output": break`.
+
+### Raw fullStream order (one delegation, 248 chunks)
+
+```
+ 1  start              messageId=b45dfabd-…   ← parentMessageId source
+ 2  step-start         messageId=b45dfabd-…
+ 3-51  tool-call-input-streaming-start / tool-call-delta x48 / -end   (agent-weather_forecaster)
+52  tool-call          toolCallId=call_s7dO… toolName=agent-weather_forecaster
+                       args={prompt, threadId:null, resourceId:null, instructions:null, maxSteps:5, …}  ← complete
+53  tool-output/start            output.payload={id:'weather_forecaster', messageId:467ded64-…}
+54  tool-output/step-start
+55-74 tool-output/tool-call-input-streaming-* + tool-call + tool-result   (inner updateWorkingMemory)
+75  tool-output/step-finish
+76  tool-output/step-start
+77  tool-output/text-start       output.payload.id=msg_0dad…
+78-185 tool-output/text-delta x108   output.payload.text="Here's", " the", " weather", …
+186 tool-output/text-end
+187 tool-output/step-finish
+188 tool-output/finish
+189 tool-result        toolCallId=call_s7dO… result keys={text, subAgentThreadId, subAgentResourceId, subAgentToolResults}
+190 step-finish, 191 step-start, 192-207 parent updateWorkingMemory tool call,
+208 step-finish, 209 step-start, 210 text-start, 211-245 text-delta x35, 246 text-end,
+247 step-finish, 248 finish
+```
+
+Findings:
+
+- Chunk order is `tool-call` (args complete) → `tool-output` x135 (the whole
+  child stream, incrementally) → `tool-result`, exactly as the earlier tap.
+- The child emits an explicit `text-start` before its deltas and `text-end`
+  after them; the lazy-START path in the injector is defensive only.
+- `parentMessageId` for the eager `TOOL_CALL_START` is the `messageId` of the
+  last top-level `start` / `step-start` chunk (`b45dfabd-…` here), which is
+  the same id the bridge would stamp when it flushes at `tool-result`.
+- `tool-call-suspended` never appears in this capture (the delegation tool
+  does not suspend; the demo child has no suspending tools). The injector
+  still maps it defensively to `SUBAGENT_FINISHED {outcome:{type:'suspended'}}`.
+- Inner sub-agent tool chunks (`updateWorkingMemory` — 16 `tool-call-delta`
+  plus `tool-call` / `tool-result`) are present under `tool-output` and are
+  ignored by this PR (out of scope).
+
+### Card-mount check (`libs/chat/src/lib/primitives/chat-tool-calls/chat-tool-calls.component.ts`)
+
+`groups()` iterates the parent message's `toolCalls()` list and mounts
+`chat-subagent-card` only when `subs.has(tc.id)` for an existing tool-call
+entry (`Subagent.toolCallId` is the anchor). A `SUBAGENT_STARTED` with no
+prior `TOOL_CALL_START` for its `parentToolCallId` therefore renders NO card:
+synthesizing the eager `TOOL_CALL_START/ARGS/END` on the `tool-call` chunk
+is required, not optional, for the card to appear before the child finishes.
