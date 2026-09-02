@@ -58,7 +58,7 @@ export default async function LangGraphPage() {
 
       <StackDiagramSection
         id="langgraph-architecture"
-        eyebrow="Where it sits"
+        eyebrow="Architecture"
         headline="Native LangGraph, behind the Agent contract"
         body="The adapter speaks LangGraph Platform directly — threads, runs, checkpoints — and hands your components the same signal-shaped contract every Threadplane surface consumes."
         highlight="langgraph"

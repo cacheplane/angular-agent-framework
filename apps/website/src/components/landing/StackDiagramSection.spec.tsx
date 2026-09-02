@@ -35,4 +35,19 @@ describe('StackDiagramSection', () => {
     const langgraphTitle = titles.find((el) => el.textContent === '@threadplane/langgraph');
     expect(langgraphTitle?.closest('g.tp-diagram-node')?.getAttribute('data-tone')).toBe('accent');
   });
+
+  it('accents the AG-UI node when highlight="ag-ui"', () => {
+    const { container } = render(
+      <StackDiagramSection
+        id="architecture"
+        eyebrow="Architecture"
+        headline="One contract between your UI and any runtime"
+        body="The body copy."
+        highlight="ag-ui"
+      />
+    );
+    const titles = Array.from(container.querySelectorAll('.tp-diagram-title'));
+    const agUiTitle = titles.find((el) => el.textContent === '@threadplane/ag-ui');
+    expect(agUiTitle?.closest('g.tp-diagram-node')?.getAttribute('data-tone')).toBe('accent');
+  });
 });

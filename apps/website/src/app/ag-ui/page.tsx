@@ -66,10 +66,11 @@ export default async function AgUiPage() {
 
       <StackDiagramSection
         id="ag-ui-architecture"
-        eyebrow="Where it sits"
-        headline="Your UI above the seam, any backend below"
-        body="toAgent() sits between your Angular components and any AG-UI-compliant runtime, translating protocol events into the same signal-shaped contract every Threadplane surface consumes."
+        eyebrow="Architecture"
+        headline="The adapter is the only part that speaks AG-UI"
+        body="Everything above the seam is plain Angular — signals in, components out. toAgent() keeps the protocol at the boundary, so nothing in your UI changes when the backend does."
         highlight="ag-ui"
+        caption="Four of the seven AG-UI runtimes shown; the rest speak the same protocol."
       />
 
       <FeatureBlock
