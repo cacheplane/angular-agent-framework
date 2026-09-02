@@ -7,3 +7,5 @@ export { AgUiArchitecturePipeline } from './AgUiArchitecturePipeline';
 export { A2uiMessageFlow } from './A2uiMessageFlow';
 export { RenderHowItFits } from './RenderHowItFits';
 export { RenderVsA2ui } from './RenderVsA2ui';
+export { MiddlewareHowItFits } from './MiddlewareHowItFits';
+export { TelemetryHowItFits } from './TelemetryHowItFits';

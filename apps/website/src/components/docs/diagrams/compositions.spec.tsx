@@ -7,6 +7,8 @@ import { AgUiArchitecturePipeline } from './AgUiArchitecturePipeline';
 import { A2uiMessageFlow } from './A2uiMessageFlow';
 import { RenderHowItFits } from './RenderHowItFits';
 import { RenderVsA2ui } from './RenderVsA2ui';
+import { MiddlewareHowItFits } from './MiddlewareHowItFits';
+import { TelemetryHowItFits } from './TelemetryHowItFits';
 
 /**
  * Compositions are hand-placed layouts; the spec guards that each mounts,
@@ -51,6 +53,7 @@ describe('RenderHowItFits', () => {
   it('breaks each edge around its pill so the line does not show through the label', () => {
     const { container } = render(<RenderHowItFits />);
     expect(container.querySelectorAll('.tp-diagram-pill')).toHaveLength(2);
+    expect(container.querySelectorAll('path.tp-diagram-edge')).toHaveLength(4);
   });
 });
 
@@ -63,11 +66,29 @@ describe('RenderVsA2ui', () => {
     expect(titles).toContain('@threadplane/chat');
   });
 
-  it('accents exactly the two surface nodes and wires at least three edges', () => {
+  it('accents exactly the two surface nodes and wires exactly four edges', () => {
     const { container } = render(<RenderVsA2ui />);
     const accented = container.querySelectorAll('g.tp-diagram-node[data-tone="accent"]');
     expect(accented).toHaveLength(2);
     const edges = container.querySelectorAll('path.tp-diagram-edge');
-    expect(edges.length).toBeGreaterThanOrEqual(3);
+    expect(edges).toHaveLength(4);
+    const titles = Array.from(container.querySelectorAll('.tp-diagram-title')).map((t) => t.textContent);
+    expect(titles).toContain('Your Angular app');
+  });
+});
+
+describe('MiddlewareHowItFits', () => {
+  it('mounts and places the middleware between frontend and graph', () => {
+    const { container } = render(<MiddlewareHowItFits />);
+    const titles = Array.from(container.querySelectorAll('.tp-diagram-title')).map((t) => t.textContent);
+    expect(titles).toContain('threadplane-middleware');
+  });
+});
+
+describe('TelemetryHowItFits', () => {
+  it('mounts and shows both entry points feeding ingest', () => {
+    const { container } = render(<TelemetryHowItFits />);
+    const titles = Array.from(container.querySelectorAll('.tp-diagram-title')).map((t) => t.textContent);
+    expect(titles).toContain('@threadplane/telemetry');
   });
 });

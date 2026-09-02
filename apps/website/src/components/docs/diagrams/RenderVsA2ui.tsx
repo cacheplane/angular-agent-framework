@@ -18,7 +18,7 @@ export function RenderVsA2ui() {
       slug={SLUG}
       viewWidth={640}
       viewHeight={204}
-      label="Chat detects assistant content and mounts either a json-render spec or an A2UI surface."
+      label="json-render versus A2UI: your Angular app renders json-render specs directly through @threadplane/render; @threadplane/chat also detects assistant content and mounts either a json-render spec or an A2UI surface. @threadplane/a2ui defines the A2UI v0.9 message and component types."
     >
       <DiagramNode
         x={20}

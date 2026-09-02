@@ -14,6 +14,8 @@ import { AgUiArchitecturePipeline } from './diagrams/AgUiArchitecturePipeline';
 import { A2uiMessageFlow } from './diagrams/A2uiMessageFlow';
 import { RenderHowItFits } from './diagrams/RenderHowItFits';
 import { RenderVsA2ui } from './diagrams/RenderVsA2ui';
+import { MiddlewareHowItFits } from './diagrams/MiddlewareHowItFits';
+import { TelemetryHowItFits } from './diagrams/TelemetryHowItFits';
 import rehypePrettyCode from 'rehype-pretty-code';
 import rehypeSlug from 'rehype-slug';
 import remarkGfm from 'remark-gfm';
@@ -47,6 +49,8 @@ const mdxComponents = {
   A2uiMessageFlow,
   RenderHowItFits,
   RenderVsA2ui,
+  MiddlewareHowItFits,
+  TelemetryHowItFits,
   FeatureChips,
   pre: Pre,
   // Explicit width/height let the browser reserve the box before the file
