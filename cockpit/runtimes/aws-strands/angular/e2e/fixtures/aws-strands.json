@@ -30,6 +30,32 @@
           }
         ]
       }
+    },
+    {
+      "match": { "userMessage": "Ada and Grace", "hasToolResult": true },
+      "response": {
+        "content": "Both are available Tuesday 10:00 next week — that slot works for Ada and Grace."
+      }
+    },
+    {
+      "match": { "systemMessage": "availability researcher" },
+      "response": {
+        "content": "- Ada: free Tuesday 10:00–12:00 and Thursday afternoon next week.\n- Grace: free Tuesday 10:00–11:30 and Friday morning next week.\n- Overlap: Tuesday 10:00 works for both."
+      }
+    },
+    {
+      "match": { "userMessage": "Ada and Grace" },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "research_availability",
+            "arguments": {
+              "attendees": "Ada, Grace",
+              "date_range": "next week"
+            }
+          }
+        ]
+      }
     }
   ]
 }

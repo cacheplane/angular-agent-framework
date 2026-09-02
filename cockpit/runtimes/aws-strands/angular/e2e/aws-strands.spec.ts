@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { test, expect } from '@playwright/test';
+import { submitAndWaitForResponse } from '@threadplane-internal/e2e-harness';
 
 // Second proof outside unit tests that the neutral Agent contract's
 // interrupt path works against a genuinely non-LangGraph AG-UI backend: the
@@ -35,5 +36,24 @@ test.describe('cockpit runtimes/aws-strands: meeting booking approval', () => {
     await expect(dialog).toBeVisible({ timeout: 30_000 });
     await dialog.getByRole('button', { name: 'Approve' }).click();
     await expect(page.getByText(/is booked for Tuesday 10:00/i)).toBeVisible({ timeout: 30_000 });
+  });
+});
+
+// Delegation over the same non-LangGraph bridge: the orchestrator's
+// `research_availability` async-generator tool re-yields the specialist's
+// stream, and the per-tool ToolBehavior handler (src/subagent_emitter.py)
+// translates it into SUBAGENT_STARTED / attributed TEXT_MESSAGE_* /
+// SUBAGENT_FINISHED wire events. The @threadplane/ag-ui reducer keys the
+// subagent to its spawning toolCallId, so <chat-tool-calls> renders the
+// delegation inline as a <chat-subagent-card> instead of a tool-call chip.
+test.describe('cockpit runtimes/aws-strands: subagent delegation', () => {
+  test('rt-strands: delegated availability research renders a streaming subagent card', async ({ page }) => {
+    const bubble = await submitAndWaitForResponse(
+      page,
+      'Find a slot for Ada and Grace next week — research their availability first',
+    );
+    await expect(page.locator('chat-subagent-card')).toHaveCount(1);
+    await expect(page.locator('chat-subagent-card')).toContainText('availability_researcher');
+    await expect(bubble).toContainText(/slot|available/i);
   });
 });
