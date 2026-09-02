@@ -137,3 +137,25 @@ other. PR 2 has an external dependency (cacheplane release) and can proceed in p
 - PR 3: boot test; run one cockpit cap e2e in replay to prove no regression; record mode
   smoke against a live key locally (not CI).
 - PR 4: `nx test website` (content assertions), prose review against the post-fix code.
+
+## Addendum (2026-09-01, post-execution)
+
+Execution surfaced two facts that redirected PRs 2-4; recorded here so the spec matches
+what shipped:
+
+1. **Stale base.** The original branches were cut from a local `main` 76 commits behind
+   origin (and carrying one unpushed stray commit). Everything was re-verified and
+   rebased against real main. Two upstream changes mattered: #869 added server-announced
+   subagent bindings (`bindChildStream`) — the ladder is now the fallback tier, which the
+   rewritten subgraphs post reflects — and #881's brand scrub had silently deleted the
+   aimock dependency, record proxy, drift differ, drift workflow, and recorder scripts,
+   replacing the mock with a replay-only vendored server.
+2. **Decisions taken with Brian:** reinstate the mock as an npm alias
+   (`"aimock": "npm:@copilotkit/aimock@^1.39.0"` — org name confined to
+   package.json/lockfile), delete the vendored reimplementation, and restore the
+   record/drift infrastructure (PR 3 became the restore PR). The fence bug (PR 2) was
+   verified already fixed upstream in partial-markdown 0.5.6, so PR 2 shrank to a
+   downgrade-guard spec plus the cockpit small-chunk fixture; the stale harness comment
+   it was to rewrite had already been deleted with the vendored runner.
+3. **Collateral find:** the vendored mock was the cause of the failing
+   `c-messages: renders both turns` spec on main; the restore fixes it.
