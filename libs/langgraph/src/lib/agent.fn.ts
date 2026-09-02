@@ -74,6 +74,7 @@ import {
   mergeStagedToolMessages,
 } from './client-tools';
 import type { ClientToolResultPatch, StagedToolMessageBatch } from './client-tools';
+import { ɵLANGGRAPH_RUNTIME_OPERATION_REPORTER } from './runtime-operation-reporter';
 
 /**
  * Walk LangGraph history (newest-first) and pair each AIMessage id with
@@ -155,6 +156,7 @@ export function agent<
   const destroyRef   = inject(DestroyRef);
   const globalConfig = inject(AGENT_CONFIG, { optional: true });
   const sharedClientOptions = inject(LANGGRAPH_CLIENT_OPTIONS, { optional: true });
+  const reportOperationFailure = inject(ɵLANGGRAPH_RUNTIME_OPERATION_REPORTER, { optional: true });
   const destroy$     = new Subject<void>();
   destroyRef.onDestroy(() => { destroy$.next(); destroy$.complete(); });
 
@@ -325,6 +327,9 @@ export function agent<
     subjects,
     threadId$,
     destroy$: destroy$.asObservable(),
+    ...(transport === undefined && reportOperationFailure !== null
+      ? { reportOperationFailure }
+      : {}),
   });
 
   // Throttle helper — default 16ms (~60fps) to batch SSE token updates into

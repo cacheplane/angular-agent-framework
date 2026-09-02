@@ -1,6 +1,13 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "buildCommand": "npx nx build cockpit --skip-nx-cache",
   "outputDirectory": "dist/apps/cockpit/.next",
-  "installCommand": "npm ci"
+  "installCommand": "npm ci",
+  "routes": [
+    {
+      "src": "^(?:.*//.*|.*(?:\\\\|%5[cC]|%2[fF]).*|.*(?:^|/)(?:\\.{1,2}|%2[eE](?:%2[eE])?)(?:/|$).*)$",
+      "status": 404
+    }
+  ]
 }

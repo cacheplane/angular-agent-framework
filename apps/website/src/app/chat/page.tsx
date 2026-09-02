@@ -42,7 +42,7 @@ export default async function ChatPage() {
             </p>
             <div className="chat-page-hero-buttons">
               <Button variant="primary" size="lg" href="/docs/chat/getting-started/introduction">Get started</Button>
-              <Button variant="ghost" size="lg" href="https://cockpit.threadplane.ai" target="_blank" rel="noopener noreferrer">
+              <Button variant="ghost" size="lg" href="/docs/chat/guides/generative-ui?mode=run">
                 See it live →
               </Button>
             </div>

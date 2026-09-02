@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import {
   Bot,
   Check,
@@ -26,7 +26,9 @@ interface Props {
 }
 
 export function PageActions({ library, section, slug, headings }: Props) {
+  const tooltipId = useId();
   const [open, setOpen] = useState(false);
+  const [tooltipDismissed, setTooltipDismissed] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showHeadings, setShowHeadings] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -56,6 +58,15 @@ export function PageActions({ library, section, slug, headings }: Props) {
       document.removeEventListener('keydown', onKey);
       if (restoreTriggerFocus.current) triggerRef.current?.focus();
     };
+  }, [open]);
+
+  useEffect(() => {
+    if (open) return undefined;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setTooltipDismissed(true);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
   }, [open]);
 
   useEffect(
@@ -123,8 +134,11 @@ export function PageActions({ library, section, slug, headings }: Props) {
         type="button"
         ref={triggerRef}
         aria-label="Page actions"
+        aria-describedby={!open && !tooltipDismissed ? tooltipId : undefined}
         aria-haspopup="menu"
         aria-expanded={open}
+        onFocus={() => setTooltipDismissed(false)}
+        onPointerEnter={() => setTooltipDismissed(false)}
         onClick={() => {
           restoreTriggerFocus.current = true;
           setOpen((current) => !current);
@@ -134,6 +148,11 @@ export function PageActions({ library, section, slug, headings }: Props) {
       >
         <Ellipsis size={18} strokeWidth={2} aria-hidden="true" />
       </button>
+      {!open && !tooltipDismissed ? (
+        <span id={tooltipId} role="tooltip" className="docs-page-actions-tooltip">
+          Page actions
+        </span>
+      ) : null}
       {open ? (
         <div
           role="menu"

@@ -23,7 +23,6 @@ const links = [
   { label: 'Pilot to Prod', href: '/pilot-to-prod', external: false },
   { label: 'Docs', href: '/docs', external: false },
   { label: 'Pricing', href: '/pricing', external: false },
-  { label: 'Examples', href: 'https://cockpit.threadplane.ai', external: true },
 ];
 
 const toAnalyticsLibrary = (library: LibraryId | null): AnalyticsLibrary => {

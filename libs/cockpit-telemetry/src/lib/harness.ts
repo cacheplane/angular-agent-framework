@@ -1,8 +1,108 @@
 // SPDX-License-Identifier: MIT
 import { bootstrapApplication } from '@angular/platform-browser';
-import type { ApplicationConfig, Type } from '@angular/core';
-import { installRuntimeBridge } from '@threadplane/cockpit-runtime-bridge';
+import type {
+  ApplicationConfig,
+  InjectionToken,
+  Provider,
+  Type,
+} from '@angular/core';
+import {
+  GENERATED_RUNTIME_PARENT_ORIGINS,
+  installRuntimeBridge,
+} from '@threadplane/cockpit-runtime-bridge';
+import type { RuntimeBridgeConfiguration } from '@threadplane/cockpit-runtime-bridge';
 import { readCockpitConfigFromIframe } from './distinct-id';
+import {
+  COCKPIT_RUNTIME_CONNECTION,
+  type CockpitRuntimeConnection,
+} from './runtime-connection';
+
+export type CockpitRuntimeBootstrapTarget =
+  | Readonly<{ adapter: 'none' }>
+  | Readonly<{
+      adapter: 'ag-ui';
+      sharedUrl: string;
+      operationReporterToken: CockpitRuntimeOperationReporterToken;
+    }>
+  | Readonly<{
+      adapter: 'langgraph';
+      sharedApiUrl: string;
+      assistantId: string;
+      operationReporterToken: CockpitRuntimeOperationReporterToken;
+    }>;
+
+export type CockpitRuntimeOperationFailureReporter = (
+  code: 'unauthorized' | 'network_blocked'
+) => void;
+
+export type CockpitRuntimeOperationReporterToken =
+  InjectionToken<CockpitRuntimeOperationFailureReporter>;
+
+export type CockpitBootstrapOptions = Readonly<{
+  runtime: CockpitRuntimeBootstrapTarget;
+  allowedParentOrigins?: readonly string[];
+}>;
+
+class RuntimeConfigurationError extends Error {
+  constructor() {
+    super('The embedded runtime could not accept its configuration.');
+    this.name = 'RuntimeConfigurationError';
+  }
+}
+
+function sharedConnection(
+  runtime: Exclude<CockpitRuntimeBootstrapTarget, { adapter: 'none' }>
+): CockpitRuntimeConnection {
+  return runtime.adapter === 'ag-ui'
+    ? Object.freeze({ adapter: 'ag-ui', url: runtime.sharedUrl })
+    : Object.freeze({
+        adapter: 'langgraph',
+        apiUrl: runtime.sharedApiUrl,
+        assistantId: runtime.assistantId,
+      });
+}
+
+function resolveConnection(
+  runtime: Exclude<CockpitRuntimeBootstrapTarget, { adapter: 'none' }>,
+  configuration: RuntimeBridgeConfiguration
+): CockpitRuntimeConnection {
+  if (configuration.status === 'error') throw new RuntimeConfigurationError();
+  if (
+    configuration.status === 'default' ||
+    configuration.target.kind === 'shared'
+  ) {
+    return sharedConnection(runtime);
+  }
+  if (runtime.adapter === 'ag-ui' && configuration.target.kind === 'ag-ui') {
+    return Object.freeze({
+      adapter: 'ag-ui',
+      url: configuration.target.endpoint,
+    });
+  }
+  if (
+    runtime.adapter === 'langgraph' &&
+    configuration.target.kind === 'langsmith'
+  ) {
+    return Object.freeze({
+      adapter: 'langgraph',
+      apiUrl: configuration.target.apiUrl,
+      assistantId: runtime.assistantId,
+      clientOptions: Object.freeze({ apiKey: configuration.target.apiKey }),
+    });
+  }
+  throw new RuntimeConfigurationError();
+}
+
+function operationReporterProvider(
+  runtime: Exclude<CockpitRuntimeBootstrapTarget, { adapter: 'none' }>,
+  configuration: RuntimeBridgeConfiguration
+): Provider | null {
+  if (configuration.status !== 'configured') return null;
+  return {
+    provide: runtime.operationReporterToken,
+    useValue: configuration.reportOperationFailure,
+  };
+}
 
 /**
  * Entry helper for every Cockpit Angular example.
@@ -17,20 +117,54 @@ import { readCockpitConfigFromIframe } from './distinct-id';
 export async function bootstrapWithCockpitHarness(
   component: Type<unknown>,
   appConfig: ApplicationConfig,
+  options?: CockpitBootstrapOptions
 ): Promise<void> {
-  const runtimeBridge = installRuntimeBridge();
+  const compatibleRuntime =
+    options?.runtime.adapter !== undefined &&
+    options.runtime.adapter !== 'none';
+  const runtimeBridge = compatibleRuntime
+    ? installRuntimeBridge(undefined, {
+        allowedParentOrigins:
+          options?.allowedParentOrigins ?? GENERATED_RUNTIME_PARENT_ORIGINS,
+      })
+    : installRuntimeBridge();
   const harness = readCockpitConfigFromIframe();
 
   try {
+    const runtimeProviders: Provider[] = [];
+    if (compatibleRuntime) {
+      const configuration = await runtimeBridge.awaitConfiguration();
+      runtimeProviders.push({
+        provide: COCKPIT_RUNTIME_CONNECTION,
+        useValue: resolveConnection(options.runtime, configuration),
+      });
+      const reporterProvider = operationReporterProvider(
+        options.runtime,
+        configuration
+      );
+      if (reporterProvider !== null) runtimeProviders.push(reporterProvider);
+    }
     const providers = harness
       ? [
+          ...runtimeProviders,
           ...(appConfig.providers ?? []),
-          (await import('./provide-cockpit-telemetry')).provideCockpitTelemetry(harness),
+          (await import('./provide-cockpit-telemetry')).provideCockpitTelemetry(
+            harness
+          ),
         ]
-      : (appConfig.providers ?? []);
+      : [...runtimeProviders, ...(appConfig.providers ?? [])];
     await bootstrapApplication(component, { ...appConfig, providers });
   } catch (error) {
-    runtimeBridge.markError('bootstrap_failed');
+    try {
+      runtimeBridge.markError('bootstrap_failed');
+    } catch {
+      // Preserve the original bootstrap/configuration failure.
+    }
+    try {
+      runtimeBridge.dispose();
+    } catch {
+      // Disposal is best-effort; never replace the original failure.
+    }
     throw error;
   }
 

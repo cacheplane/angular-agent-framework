@@ -247,6 +247,11 @@ export interface AgentTransport {
  */
 export interface LangGraphClientOptions {
   /**
+   * API key passed directly to the LangGraph SDK client. `null` preserves the
+   * SDK's explicit no-key behavior; omission leaves the SDK default unchanged.
+   */
+  apiKey?: string | null;
+  /**
    * How many times a failed request — including the initial stream connect —
    * is retried with exponential backoff before the error surfaces. Maps to the
    * SDK's `callerOptions.maxRetries`. Omitted → the SDK default (currently 4).

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+import { injectCockpitRuntimeConnection } from '@threadplane/cockpit-telemetry';
 import { Component, inject, signal } from '@angular/core';
 import {
   ChatComponent,
@@ -7,7 +8,6 @@ import {
 } from '@threadplane/chat';
 import { injectAgent, provideAgent, LangGraphThreadsAdapter, refreshOnRunEnd } from '@threadplane/langgraph';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
-import { environment } from '../environments/environment';
 
 // Writable signal the agent watches — assigning to it switches the active
 // thread without forcing a full agent rebuild. Shared between the
@@ -33,14 +33,21 @@ const activeThreadIdState = signal<string | null>(null);
   // Scoped agent (Option B): threadId + onThreadId are per-instance, so the
   // agent is provided at the component rather than in app.config.ts.
   providers: [
-    provideAgent({
-      apiUrl: environment.langGraphApiUrl,
-      assistantId: environment.streamingAssistantId,
-      threadId: activeThreadIdState,
-      // When the agent auto-creates a thread on first submit, the
-      // adapter calls back with its id; mirror that into our signal so
-      // the sidenav highlights it immediately.
-      onThreadId: (id: string) => activeThreadIdState.set(id),
+    provideAgent(() => {
+      const connection = injectCockpitRuntimeConnection();
+      if (connection.adapter !== 'langgraph') {
+        throw new Error('incompatible runtime');
+      }
+      return {
+        apiUrl: connection.apiUrl,
+        assistantId: connection.assistantId,
+        clientOptions: connection.clientOptions,
+        threadId: activeThreadIdState,
+        // When the agent auto-creates a thread on first submit, the
+        // adapter calls back with its id; mirror that into our signal so
+        // the sidenav highlights it immediately.
+        onThreadId: (id: string) => activeThreadIdState.set(id),
+      };
     }),
   ],
   template: `

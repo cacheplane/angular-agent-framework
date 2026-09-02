@@ -9,7 +9,8 @@ import {
   streamingDelivery,
   toAgentError,
   isAbortError,
-  type AgentError,
+  AgentError,
+  AGENT_ERROR_MESSAGES,
 } from '@threadplane/chat';
 import type {
   Agent, Message, AgentStatus, ToolCall, AgentEvent,
@@ -44,6 +45,10 @@ export interface ToAgentOptions {
   a2uiClientCapabilities?: { supportedCatalogIds: string[]; inlineCatalogs?: unknown[] };
 }
 
+type InternalToAgentOptions = ToAgentOptions & {
+  protectOperationErrors?: boolean;
+};
+
 function captureAgentRuntimeTelemetry(
   sink: AgentRuntimeTelemetrySink | false | undefined,
   event: AgentRuntimeTelemetryEvent,
@@ -58,15 +63,12 @@ function captureAgentRuntimeTelemetry(
 }
 
 function agentRuntimeTelemetryErrorClass(error: unknown): string {
-  if (error instanceof Error) return error.name || error.constructor.name || 'Error';
-  if (
-    error
-    && typeof error === 'object'
-    && 'name' in error
-    && typeof error.name === 'string'
-    && error.name.length > 0
-  ) {
-    return error.name;
+  try {
+    if (isAbortError(error)) return 'AbortError';
+    if (error instanceof AgentError) return 'AgentError';
+    if (error instanceof Error) return 'Error';
+  } catch {
+    return 'UnknownError';
   }
   return 'UnknownError';
 }
@@ -111,6 +113,21 @@ export interface AgUiAgent<TState = Record<string, unknown>> extends Agent<TStat
  * ```
  */
 export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): AgUiAgent {
+  return createAgentAdapter(source, options);
+}
+
+/** @internal Adapter integration seam used only by provideAgent. */
+export function ɵtoAgentWithProtectedErrors(
+  source: AbstractAgent,
+  options: ToAgentOptions,
+): AgUiAgent {
+  return createAgentAdapter(source, { ...options, protectOperationErrors: true });
+}
+
+function createAgentAdapter(
+  source: AbstractAgent,
+  options: InternalToAgentOptions,
+): AgUiAgent {
   // Advertise A2UI capabilities via the AG-UI shared state so every
   // RunAgentInput.state carries them (transport metadata, A2UI v0.9).
   if (options.a2uiClientCapabilities) {
@@ -241,9 +258,9 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     if (activeRun === run) {
       store.status.set('error');
       store.isLoading.set(false);
-      store.error.set(toAgentError(error));
+      store.error.set(options.protectOperationErrors ? protectedAgentError() : projectAgentError(error));
     }
-    failRunTelemetry(error, run);
+    failRunTelemetry(options.protectOperationErrors ? undefined : error, run);
   }
 
   function settleTransportClose(run: AdapterRun): void {
@@ -288,7 +305,7 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
       await source.runAgent(runParameters);
       settleTransportClose(run);
     } catch (err) {
-      if (run.outcome === 'aborted' && isAbortError(err)) return;
+      if (run.outcome === 'aborted' && safeIsAbortError(err)) return;
       failRun(run, err);
     }
   }
@@ -318,6 +335,10 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
         return;
       }
       if (event.type === 'RUN_ERROR' && run.outcome === 'aborted') return;
+      if (event.type === 'RUN_ERROR' && options.protectOperationErrors) {
+        failRun(run, undefined);
+        return;
+      }
       reduceEvent(event, store);
       if (run && event.type === 'RUN_FINISHED' && run.outcome === 'success') {
         finishRunTelemetry(run);
@@ -328,14 +349,19 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
     onRunFailed({ error, input }) {
       const run = resolveCallbackRun(input?.runId);
       if (run) {
-        if (run.outcome === 'aborted' && isAbortError(error)) return;
+        if (run.outcome === 'aborted' && safeIsAbortError(error)) {
+          return options.protectOperationErrors ? ({ stopPropagation: true } as never) : undefined;
+        }
         failRun(run, error);
-        return;
+        return options.protectOperationErrors ? ({ stopPropagation: true } as never) : undefined;
       }
-      if (input?.runId) return;
+      if (input?.runId) {
+        return options.protectOperationErrors ? ({ stopPropagation: true } as never) : undefined;
+      }
       store.status.set('error');
       store.isLoading.set(false);
-      store.error.set(toAgentError(error));
+      store.error.set(options.protectOperationErrors ? protectedAgentError() : projectAgentError(error));
+      return options.protectOperationErrors ? ({ stopPropagation: true } as never) : undefined;
     },
   });
 
@@ -503,6 +529,30 @@ export function toAgent(source: AbstractAgent, options: ToAgentOptions = {}): Ag
       await executeRun('regenerate');
     },
   };
+}
+
+function protectedAgentError(): AgentError {
+  return new AgentError({
+    kind: 'server',
+    message: AGENT_ERROR_MESSAGES.server,
+    retryable: true,
+  });
+}
+
+function projectAgentError(error: unknown): AgentError {
+  try {
+    return toAgentError(error);
+  } catch {
+    return protectedAgentError();
+  }
+}
+
+function safeIsAbortError(error: unknown): boolean {
+  try {
+    return isAbortError(error);
+  } catch {
+    return false;
+  }
 }
 
 /**

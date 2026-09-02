@@ -10,7 +10,7 @@ import {
 
 const capability = 'streaming';
 const configuredTarget = parseRuntimeTarget(
-  'https://runtime.test/path?secret=x#hash',
+  'https://runtime.test/path?secret=x#hash'
 );
 
 function checkingSnapshot(): RuntimeSnapshot {
@@ -35,7 +35,9 @@ describe('parseRuntimeTarget', () => {
     'data:text/plain,secret',
     'ftp://runtime.test/path',
   ])('rejects an unsafe configured value without exposing it: %s', (value) => {
-    expect(parseRuntimeTarget(value)).toEqual({ kind: 'invalid_configuration' });
+    expect(parseRuntimeTarget(value)).toEqual({
+      kind: 'invalid_configuration',
+    });
   });
 
   test('treats an out-of-contract undefined value as invalid rather than throwing', () => {
@@ -56,12 +58,11 @@ describe('parseRuntimeTarget', () => {
   test('accepts HTTP credentials while omitting them from the sanitized identity', () => {
     expect(
       parseRuntimeTarget(
-        'https://user:password@runtime.test/path?secret=x#hash',
-      ),
+        'https://user:password@runtime.test/path?secret=x#hash'
+      )
     ).toEqual({
       kind: 'configured',
-      configuredUrl:
-        'https://user:password@runtime.test/path?secret=x#hash',
+      configuredUrl: 'https://user:password@runtime.test/path?secret=x#hash',
       sanitizedUrl: 'https://runtime.test/path',
       origin: 'https://runtime.test',
     });
@@ -87,10 +88,10 @@ describe('parseRuntimeTarget', () => {
 describe('runtime state', () => {
   test('initializes each target category to its distinct phase', () => {
     expect(
-      createRuntimeSnapshot(parseRuntimeTarget(null), capability).phase,
+      createRuntimeSnapshot(parseRuntimeTarget(null), capability).phase
     ).toBe('not_configured');
     expect(
-      createRuntimeSnapshot(parseRuntimeTarget('invalid'), capability).phase,
+      createRuntimeSnapshot(parseRuntimeTarget('invalid'), capability).phase
     ).toBe('invalid_configuration');
     expect(createRuntimeSnapshot(configuredTarget, capability)).toMatchObject({
       phase: 'connecting',
@@ -103,9 +104,74 @@ describe('runtime state', () => {
       errorCode: null,
       frameGeneration: 0,
       routeGeneration: 0,
+      targetGeneration: 0,
       recoveryOrigin: null,
     });
   });
+
+  test('tracks configuration and target generations independently from routes and frames', () => {
+    const initial = createRuntimeSnapshot(configuredTarget, capability);
+    const configuring = runtimeReducer(initial, {
+      type: 'configuration_started',
+    } as never);
+    expect(configuring).toMatchObject({
+      phase: 'configuring',
+      routeGeneration: 0,
+      frameGeneration: 0,
+      targetGeneration: 0,
+    });
+
+    const configured = runtimeReducer(configuring, {
+      type: 'configuration_succeeded',
+    } as never);
+    expect(configured.phase).toBe('connecting');
+
+    const targetChanged = runtimeReducer(configured, {
+      type: 'context_reset',
+      target: configuredTarget,
+      capability,
+      routeChanged: false,
+      targetChanged: true,
+    } as never);
+    expect(targetChanged).toMatchObject({
+      phase: 'connecting',
+      routeGeneration: 0,
+      frameGeneration: 1,
+      targetGeneration: 1,
+    });
+
+    const routeChanged = runtimeReducer(targetChanged, {
+      type: 'context_reset',
+      target: configuredTarget,
+      capability: 'persistence',
+      routeChanged: true,
+      targetChanged: false,
+    } as never);
+    expect(routeChanged).toMatchObject({
+      routeGeneration: 1,
+      frameGeneration: 1,
+      targetGeneration: 1,
+    });
+  });
+
+  test.each([
+    ['unauthorized', 'unauthorized'],
+    ['network_blocked', 'network_blocked'],
+    ['incompatible_bridge', 'incompatible_bridge'],
+  ] as const)(
+    'records the allowlisted %s runtime failure phase',
+    (code, phase) => {
+      const failed = runtimeReducer(
+        createRuntimeSnapshot(configuredTarget, capability),
+        { type: 'runtime_failure', code, at: 1_250 } as never
+      );
+      expect(failed).toMatchObject({
+        phase,
+        errorCode: code,
+        checkedAt: 1_250,
+      });
+    }
+  );
 
   test('starts an initial frame check without claiming ready', () => {
     const state = runtimeReducer(
@@ -115,7 +181,7 @@ describe('runtime state', () => {
         intent: 'frame_load',
         nonce: 'nonce-1',
         startedAt: 1_000,
-      },
+      }
     );
 
     expect(state).toMatchObject({
@@ -168,7 +234,7 @@ describe('runtime state', () => {
         type: 'timeout',
         nonce: 'nonce-2',
         at: 7_000,
-      }),
+      })
     ).toMatchObject({
       phase: 'unresponsive',
       activeNonce: null,
@@ -186,7 +252,7 @@ describe('runtime state', () => {
         nonce: 'nonce-1',
         code: 'bootstrap_failed',
         at: 1_300,
-      }),
+      })
     ).toMatchObject({
       phase: 'error',
       activeNonce: null,
@@ -243,13 +309,13 @@ describe('runtime state', () => {
         intent: 'frame_load',
         nonce: 'nonce-3',
         startedAt: 2_100,
-      }).phase,
+      }).phase
     ).toBe('reloading');
   });
 
   test('cancellation invalidates a nonce without inventing a terminal phase', () => {
     expect(
-      runtimeReducer(checkingSnapshot(), { type: 'check_cancelled' }),
+      runtimeReducer(checkingSnapshot(), { type: 'check_cancelled' })
     ).toMatchObject({
       phase: 'checking',
       activeNonce: null,
@@ -265,7 +331,7 @@ describe('runtime state', () => {
         type: 'route_reset',
         target: resetTarget,
         capability: 'persistence',
-      }),
+      })
     ).toEqual({
       ...createRuntimeSnapshot(resetTarget, 'persistence'),
       routeGeneration: 1,
@@ -279,9 +345,9 @@ describe('classifyRuntimeTerminalTransition', () => {
     (phase) => {
       const previous = createRuntimeSnapshot(configuredTarget, capability);
       expect(
-        classifyRuntimeTerminalTransition(previous, { ...previous, phase }),
+        classifyRuntimeTerminalTransition(previous, { ...previous, phase })
       ).toBeNull();
-    },
+    }
   );
 
   test('does not classify a duplicate semantic terminal state', () => {
@@ -294,7 +360,7 @@ describe('classifyRuntimeTerminalTransition', () => {
       classifyRuntimeTerminalTransition(ready, {
         ...ready,
         checkedAt: 2_000,
-      }),
+      })
     ).toBeNull();
   });
 
@@ -328,7 +394,7 @@ describe('classifyRuntimeTerminalTransition', () => {
         toState: 'ready',
         transition: 'recovered',
       });
-    },
+    }
   );
 
   test('classifies unresponsive through recheck to ready as exactly one recovery', () => {
@@ -355,7 +421,7 @@ describe('classifyRuntimeTerminalTransition', () => {
         classifyRuntimeTerminalTransition(unresponsive, rechecking),
         classifyRuntimeTerminalTransition(rechecking, ready),
         classifyRuntimeTerminalTransition(ready, { ...ready }),
-      ].filter((transition) => transition !== null),
+      ].filter((transition) => transition !== null)
     ).toEqual([
       {
         capability,
@@ -393,7 +459,7 @@ describe('classifyRuntimeTerminalTransition', () => {
         classifyRuntimeTerminalTransition(failed, reloading),
         classifyRuntimeTerminalTransition(reloading, checkingReload),
         classifyRuntimeTerminalTransition(checkingReload, ready),
-      ].filter((transition) => transition !== null),
+      ].filter((transition) => transition !== null)
     ).toEqual([
       {
         capability,
@@ -436,7 +502,7 @@ describe('classifyRuntimeTerminalTransition', () => {
     });
 
     expect(
-      classifyRuntimeTerminalTransition(ordinaryCheck, readyAgain),
+      classifyRuntimeTerminalTransition(ordinaryCheck, readyAgain)
     ).toEqual({
       capability,
       fromState: 'checking',
@@ -463,7 +529,7 @@ describe('classifyRuntimeTerminalTransition', () => {
         type: 'ready',
         nonce: 'stale',
         at: 7_250,
-      }),
+      })
     ).toBe(rechecking);
     expect(rechecking.recoveryOrigin).toBe('unresponsive');
   });
@@ -488,11 +554,11 @@ describe('classifyRuntimeTerminalTransition', () => {
   test('classifies invalid configuration without exposing its rejected value', () => {
     const previous = createRuntimeSnapshot(
       parseRuntimeTarget(null),
-      capability,
+      capability
     );
     const next = createRuntimeSnapshot(
       parseRuntimeTarget('https://runtime.test/?secret=x'),
-      capability,
+      capability
     );
     const invalid = {
       ...next,
@@ -532,7 +598,7 @@ describe('classifyRuntimeTerminalTransition', () => {
   test('classifies invalid configuration again after a capability route reset', () => {
     const previous = createRuntimeSnapshot(
       parseRuntimeTarget('invalid-a'),
-      'capability-a',
+      'capability-a'
     );
     const next = runtimeReducer(previous, {
       type: 'route_reset',
@@ -552,7 +618,7 @@ describe('classifyRuntimeTerminalTransition', () => {
   test('classifies a new invalid route for the same capability but dedupes its renders', () => {
     const previous = createRuntimeSnapshot(
       parseRuntimeTarget('invalid-a'),
-      capability,
+      capability
     );
     const next = runtimeReducer(previous, {
       type: 'route_reset',
@@ -570,7 +636,7 @@ describe('classifyRuntimeTerminalTransition', () => {
       classifyRuntimeTerminalTransition(next, {
         ...next,
         checkedAt: 2_000,
-      }),
+      })
     ).toBeNull();
   });
 });
@@ -582,6 +648,10 @@ describe('runtimeRailStatus', () => {
       label: 'runtime ready',
     });
     expect(runtimeRailStatus('connecting')).toEqual({
+      kind: 'working',
+      label: 'runtime starting',
+    });
+    expect(runtimeRailStatus('configuring' as never)).toEqual({
       kind: 'working',
       label: 'runtime starting',
     });
@@ -601,6 +671,16 @@ describe('runtimeRailStatus', () => {
       kind: 'error',
       label: 'runtime error',
     });
+    for (const phase of [
+      'unauthorized',
+      'network_blocked',
+      'incompatible_bridge',
+    ] as const) {
+      expect(runtimeRailStatus(phase as never)).toEqual({
+        kind: 'error',
+        label: 'runtime error',
+      });
+    }
     expect(runtimeRailStatus('invalid_configuration')).toEqual({
       kind: 'error',
       label: 'runtime error',

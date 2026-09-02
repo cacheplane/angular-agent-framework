@@ -8,7 +8,7 @@ export interface MessagesState {
 
 /**
  * Typed DI handle for the messages agent.
- * Wire with `provideAgent(MESSAGES_AGENT, { ... })` and inject with
+ * Wire with `provideAgent(MESSAGES_AGENT, () => ...)` and inject with
  * `injectAgent(MESSAGES_AGENT)` to get `LangGraphAgent<MessagesState>`.
  */
 export const MESSAGES_AGENT = createAgentRef<MessagesState>('messages');

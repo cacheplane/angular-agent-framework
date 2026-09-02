@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { cockpitManifest } from './manifest';
 import {
   PRIMARY_CAPABILITY_BY_DOCS_PATH,
+  getCanonicalWebsiteWorkspaceHref,
   getWorkspaceDestinationPath,
   getRouteDefaultMode,
+  resolveLegacyRequestMode,
   resolveDocsWorkspace,
   resolveLegacyPath,
   resolveWorkspacePath,
@@ -126,5 +128,113 @@ describe('workspace identity resolution', () => {
     expect(
       resolveDocsWorkspace('/docs/langgraph/guides/stream', 'Stream')
     ).toMatchObject({ kind: 'docs-only' });
+  });
+});
+
+describe('canonical Website workspace destinations', () => {
+  it('applies the legacy Cockpit default to absent, duplicate, invalid, and unavailable modes for every manifest entry', () => {
+    for (const entry of cockpitManifest) {
+      const resolution = resolveLegacyPath(entry.legacyPath);
+      expect(resolution).not.toBeNull();
+      if (!resolution) continue;
+
+      const expectedDefault = getRouteDefaultMode(resolution, 'workspace');
+      const unavailableMode = (
+        ['Run', 'Code', 'API', 'Docs'] as const
+      ).find((mode) => !entry.availableModes.includes(mode));
+
+      expect(resolveLegacyRequestMode(undefined, resolution)).toBe(
+        expectedDefault
+      );
+      expect(resolveLegacyRequestMode(['run', 'code'], resolution)).toBe(
+        expectedDefault
+      );
+      expect(resolveLegacyRequestMode('invalid', resolution)).toBe(
+        expectedDefault
+      );
+      if (unavailableMode) {
+        expect(
+          resolveLegacyRequestMode(unavailableMode.toLowerCase(), resolution)
+        ).toBe(expectedDefault);
+      }
+    }
+  });
+
+  it('resolves valid legacy modes case-insensitively and defaults runnable and narrative-only requests correctly', () => {
+    const runnable = resolveLegacyPath(
+      '/langgraph/core-capabilities/streaming/overview/python'
+    );
+    const narrativeOnly = resolveLegacyPath(
+      '/langgraph/getting-started/overview/overview/python'
+    );
+    expect(runnable).not.toBeNull();
+    expect(narrativeOnly).not.toBeNull();
+    if (!runnable || !narrativeOnly) return;
+
+    expect(resolveLegacyRequestMode('CoDe', runnable)).toBe('Code');
+    expect(resolveLegacyRequestMode(undefined, runnable)).toBe('Run');
+    expect(resolveLegacyRequestMode('run', narrativeOnly)).toBe('Docs');
+    expect(resolveLegacyRequestMode(['docs'], narrativeOnly)).toBe('Docs');
+  });
+
+  it('serializes every manifest entry and mode to its canonical relative Website href', () => {
+    for (const entry of cockpitManifest) {
+      const resolution = resolveLegacyPath(entry.legacyPath);
+      expect(resolution).not.toBeNull();
+      if (!resolution) continue;
+
+      const destinationPath = getWorkspaceDestinationPath(entry);
+      for (const mode of ['Docs', 'Run', 'Code', 'API'] as const) {
+        const expectedHref =
+          mode === 'Docs' && destinationPath.startsWith('/docs/')
+            ? destinationPath
+            : `${destinationPath}?mode=${mode.toLowerCase()}`;
+        expect(getCanonicalWebsiteWorkspaceHref(resolution, mode)).toBe(
+          expectedHref
+        );
+      }
+    }
+  });
+
+  it('omits Docs mode on a canonical Docs path and includes it on a secondary workspace path', () => {
+    const primary = resolveLegacyPath(
+      '/langgraph/core-capabilities/persistence/overview/python'
+    );
+    const secondary = resolveLegacyPath(
+      '/langgraph/core-capabilities/durable-execution/overview/python'
+    );
+    expect(primary).not.toBeNull();
+    expect(secondary).not.toBeNull();
+    if (!primary || !secondary) return;
+
+    expect(getCanonicalWebsiteWorkspaceHref(primary, 'Docs')).toBe(
+      '/docs/langgraph/guides/persistence'
+    );
+    expect(getCanonicalWebsiteWorkspaceHref(secondary, 'Docs')).toBe(
+      '/workspace/langgraph/durable-execution?mode=docs'
+    );
+    expect(getCanonicalWebsiteWorkspaceHref(primary, 'Run')).toBe(
+      '/docs/langgraph/guides/persistence?mode=run'
+    );
+    expect(getCanonicalWebsiteWorkspaceHref(primary, 'Code')).toBe(
+      '/docs/langgraph/guides/persistence?mode=code'
+    );
+    expect(getCanonicalWebsiteWorkspaceHref(primary, 'API')).toBe(
+      '/docs/langgraph/guides/persistence?mode=api'
+    );
+  });
+
+  it('serializes docs-only resolutions without accepting source query data', () => {
+    const resolution = resolveDocsWorkspace(
+      '/docs/langgraph/api/inject-agent',
+      'Inject an agent into Angular'
+    );
+
+    expect(getCanonicalWebsiteWorkspaceHref(resolution, 'Docs')).toBe(
+      '/docs/langgraph/api/inject-agent'
+    );
+    expect(getCanonicalWebsiteWorkspaceHref(resolution, 'Run')).toBe(
+      '/docs/langgraph/api/inject-agent?mode=run'
+    );
   });
 });

@@ -17,6 +17,7 @@ import type {
 } from './control-plane/cockpit-control-plane';
 import type { WorkspaceHostServices } from '../workspace-contracts';
 import { MobileNavOverlay } from './mobile-nav-overlay';
+import { RuntimeTargetProvider } from '../runtime/runtime-target-provider';
 
 const tree = buildNavigationTree(cockpitManifest);
 const entry = cockpitManifest.find(
@@ -74,44 +75,46 @@ const renderOverlay = ({
     }, []);
 
     return (
-      <ThemeProvider theme="light">
-        <button ref={triggerRef}>Shell trigger</button>
-        <MobileNavOverlay
-          controlPlaneProps={{
-            navigationTree: tree,
-            manifest: cockpitManifest,
-            entry,
-            hostServices,
-            activeMode,
-            onModeChange,
-            activeUtility,
-            onActiveUtilityChange: (utility) => {
-              onActiveUtilityChange(utility);
-              setActiveUtility(utility);
-            },
-            activityOpenCycle: 0,
-            runtimeSnapshot: snapshot,
-            events: [],
-            unseenProblems: 0,
-            expanded: { Capability: true, Runtime: true },
-            onExpandedChange: vi.fn(),
-            onClearActivity: vi.fn(),
-            onRecheck: vi.fn(),
-            onReload: vi.fn(),
-            onOpenRuntime: vi.fn(),
-            onCopyDiagnostics: vi.fn(),
-            renderContextPane,
-          }}
-          isOpen={isOpen}
-          onClose={close}
-          onPresenceChange={onPresenceChange}
-          triggerRef={triggerRef}
-          onFocusDestination={onFocusDestination}
-          variant={variant}
-          controlPlaneLayout={controlPlaneLayout}
-          onContextAction={onContextAction}
-        />
-      </ThemeProvider>
+      <RuntimeTargetProvider>
+        <ThemeProvider theme="light">
+          <button ref={triggerRef}>Shell trigger</button>
+          <MobileNavOverlay
+            controlPlaneProps={{
+              navigationTree: tree,
+              manifest: cockpitManifest,
+              entry,
+              hostServices,
+              activeMode,
+              onModeChange,
+              activeUtility,
+              onActiveUtilityChange: (utility) => {
+                onActiveUtilityChange(utility);
+                setActiveUtility(utility);
+              },
+              activityOpenCycle: 0,
+              runtimeSnapshot: snapshot,
+              events: [],
+              unseenProblems: 0,
+              expanded: { Capability: true, Runtime: true },
+              onExpandedChange: vi.fn(),
+              onClearActivity: vi.fn(),
+              onRecheck: vi.fn(),
+              onReload: vi.fn(),
+              onOpenRuntime: vi.fn(),
+              onCopyDiagnostics: vi.fn(),
+              renderContextPane,
+            }}
+            isOpen={isOpen}
+            onClose={close}
+            onPresenceChange={onPresenceChange}
+            triggerRef={triggerRef}
+            onFocusDestination={onFocusDestination}
+            variant={variant}
+            controlPlaneLayout={controlPlaneLayout}
+            onContextAction={onContextAction}
+          />
+        </ThemeProvider>
+      </RuntimeTargetProvider>
     );
   }
 
@@ -329,6 +332,9 @@ describe('MobileNavOverlay', () => {
         </button>
       ),
     });
+    const trigger = result.triggerRef.current;
+    if (!trigger) throw new Error('Expected the shell trigger');
+    const focus = vi.spyOn(trigger, 'focus');
 
     fireEvent.click(
       within(dialog()).getByRole('button', { name: 'Search docs' })
@@ -340,6 +346,7 @@ describe('MobileNavOverlay', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(result.onContextAction).not.toHaveBeenCalled();
     act(() => vi.advanceTimersByTime(16));
+    expect(focus).toHaveBeenCalledOnce();
     expect(result.onContextAction).toHaveBeenCalledOnce();
     expect(result.onContextAction).toHaveBeenCalledWith('search-docs');
   });

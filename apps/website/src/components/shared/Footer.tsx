@@ -218,14 +218,6 @@ export function Footer({ formPolicy }: { formPolicy: PublicFormPolicy }) {
                 {demo.label}
               </a>
             ))}
-            <a href="https://cockpit.threadplane.ai" className="transition-colors footer-link"
-              onClick={() => trackExternalLinkClick('https://cockpit.threadplane.ai', {
-                surface: 'footer',
-                cta_id: 'footer_examples',
-                cta_text: 'Examples',
-              })}>
-              Examples
-            </a>
             <Link href="/pricing" className="transition-colors footer-link"
               onClick={() => trackFooterCta('Pricing', '/pricing')}>
               Pricing

@@ -98,6 +98,7 @@ export function MobileNavOverlay({
         restoreFocus: 'workspace-panel',
       });
     } else if (intent.kind === 'action') {
+      triggerRefRef.current?.current?.focus();
       onContextAction?.(intent.action);
     }
   }, [cancelScheduledFocus, onContextAction, onFocusDestination]);

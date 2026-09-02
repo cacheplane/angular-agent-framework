@@ -1,10 +1,20 @@
 /** @vitest-environment jsdom */
 import React from 'react';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   WorkspaceProviderProps,
   WorkspaceShellProps,
+} from '@threadplane/workspace-react';
+import {
+  RuntimeTargetProvider,
+  useLangGraphRuntimeTarget,
 } from '@threadplane/workspace-react';
 import type {
   ContentBundle,
@@ -52,7 +62,7 @@ vi.mock('@threadplane/workspace-react', async (importOriginal) => {
   };
 });
 
-import { WebsiteWorkspace, WebsiteWorkspaceLayout } from './WebsiteWorkspace';
+import { WebsiteWorkspace, WebsiteWorkspaceRoot } from './WebsiteWorkspace';
 
 const emptyContent: ContentBundle = {
   codeFiles: {},
@@ -79,7 +89,8 @@ const docsOnlyPresentation: WorkspacePresentation = {
 const mappedResolution = (
   id: string,
   topic: string,
-  availableModes: ('Docs' | 'Run' | 'Code' | 'API')[]
+  availableModes: ('Docs' | 'Run' | 'Code' | 'API')[],
+  docsPath = `/docs/langgraph/guides/${topic}`
 ): WorkspaceResolution => ({
   kind: 'mapped',
   identity: {
@@ -90,7 +101,7 @@ const mappedResolution = (
     page: 'overview',
     language: 'python',
     title: topic,
-    docsPath: `/docs/langgraph/guides/${topic}`,
+    docsPath,
     workspacePath: `/workspace/langgraph/${topic}`,
     legacyPath: `/langgraph/core-capabilities/${topic}/overview/python`,
     runtimeAdapter: 'langgraph',
@@ -118,15 +129,17 @@ const renderWorkspace = (
   overrides: Partial<React.ComponentProps<typeof WebsiteWorkspace>> = {}
 ) =>
   render(
-    <WebsiteWorkspace
-      resolution={docsOnlyResolution}
-      presentation={docsOnlyPresentation}
-      contentBundle={emptyContent}
-      navigationTree={[]}
-      routePath="/docs/langgraph/guides/testing"
-      docsSlot={<article>Server-rendered docs article</article>}
-      {...overrides}
-    />
+    <RuntimeTargetProvider>
+      <WebsiteWorkspace
+        resolution={docsOnlyResolution}
+        presentation={docsOnlyPresentation}
+        contentBundle={emptyContent}
+        navigationTree={[]}
+        routePath="/docs/langgraph/guides/testing"
+        docsSlot={<article>Server-rendered docs article</article>}
+        {...overrides}
+      />
+    </RuntimeTargetProvider>
   );
 
 const activeWorkspaceMode = (): string | undefined =>
@@ -258,7 +271,7 @@ describe('WebsiteWorkspace', () => {
       routePath: string,
       article: string
     ) => (
-      <WebsiteWorkspaceLayout>
+      <WebsiteWorkspaceRoot>
         <WebsiteWorkspace
           key={routePath}
           resolution={resolution}
@@ -268,7 +281,7 @@ describe('WebsiteWorkspace', () => {
           routePath={routePath}
           docsSlot={<article>{article}</article>}
         />
-      </WebsiteWorkspaceLayout>
+      </WebsiteWorkspaceRoot>
     );
 
     const view = render(
@@ -297,6 +310,73 @@ describe('WebsiteWorkspace', () => {
     expect(shell.dataset.shellLifetime).toBe('original');
     expect(mocks.latestProviderProps?.routePath).toBe(
       '/docs/langgraph/guides/persistence'
+    );
+  });
+
+  it('keeps the volatile runtime target above in-shell route registrars', async () => {
+    function RuntimeTargetProbe() {
+      const langgraph = useLangGraphRuntimeTarget();
+      return (
+        <>
+          <output data-testid="website-target-kind">
+            {langgraph.view.kind}
+          </output>
+          <button
+            onClick={() =>
+              langgraph.applyCustomTarget(
+                'https://api.example.test/langgraph',
+                'test-key-redact-me'
+              )
+            }
+          >
+            Apply Website target
+          </button>
+        </>
+      );
+    }
+    const source = mappedResolution(
+      'langgraph:core-capabilities:streaming:overview:python',
+      'streaming',
+      ['Docs', 'Run', 'Code', 'API']
+    );
+    const destination = mappedResolution(
+      'langgraph:core-capabilities:persistence:overview:python',
+      'persistence',
+      ['Docs', 'Run', 'Code', 'API']
+    );
+    const route = (resolution: WorkspaceResolution, routePath: string) => (
+      <WebsiteWorkspaceRoot>
+        <RuntimeTargetProbe />
+        <WebsiteWorkspace
+          key={routePath}
+          resolution={resolution}
+          presentation={mappedPresentation(resolution)}
+          contentBundle={emptyContent}
+          navigationTree={[]}
+          routePath={routePath}
+          docsSlot={
+            <article>
+              {resolution.kind === 'mapped' ? resolution.identity.title : ''}
+            </article>
+          }
+        />
+      </WebsiteWorkspaceRoot>
+    );
+
+    const view = render(route(source, '/docs/langgraph/guides/streaming'));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Apply Website target' })
+    );
+    expect(screen.getByTestId('website-target-kind').textContent).toBe(
+      'langsmith'
+    );
+
+    window.history.replaceState({}, '', '/docs/langgraph/guides/persistence');
+    view.rerender(route(destination, '/docs/langgraph/guides/persistence'));
+
+    await screen.findByText('persistence');
+    expect(screen.getByTestId('website-target-kind').textContent).toBe(
+      'langsmith'
     );
   });
 
@@ -340,7 +420,7 @@ describe('WebsiteWorkspace', () => {
     await waitFor(() => {
       expect(activeWorkspaceMode()).toBe('Docs');
       expect(mocks.replace).toHaveBeenCalledWith(
-        '/docs/langgraph/guides/testing?keep=1'
+        '/docs/langgraph/guides/testing'
       );
     });
     expect(mocks.replace.mock.calls[0]?.[0]).not.toContain('runtime');
@@ -366,7 +446,7 @@ describe('WebsiteWorkspace', () => {
     await waitFor(() => {
       expect(activeWorkspaceMode()).toBe('Docs');
       expect(mocks.replace).toHaveBeenCalledWith(
-        '/docs/langgraph/guides/streaming?keep=1'
+        '/docs/langgraph/guides/streaming'
       );
     });
   });
@@ -381,16 +461,79 @@ describe('WebsiteWorkspace', () => {
 
     act(() => mocks.latestProviderProps?.pushMode('Run'));
     expect(mocks.push).toHaveBeenCalledWith(
-      '/docs/langgraph/guides/testing?keep=1&mode=run'
+      '/docs/langgraph/guides/testing?mode=run'
     );
 
     act(() => mocks.latestProviderProps?.pushMode('Docs'));
     expect(mocks.push).toHaveBeenLastCalledWith(
-      '/docs/langgraph/guides/testing?keep=1'
+      '/docs/langgraph/guides/testing'
     );
     expect(mocks.push.mock.calls.flat().join(' ')).not.toMatch(
       /runtimeUrl|runtime_url|endpoint|credential/i
     );
+  });
+
+  it('serializes Docs mode explicitly on workspace routes and keeps the selected mode synchronized', async () => {
+    const resolution = mappedResolution(
+      'langgraph:core-capabilities:durable-execution:overview:python',
+      'durable-execution',
+      ['Docs', 'Run', 'Code', 'API'],
+      '/docs/langgraph/guides/persistence'
+    );
+    window.history.replaceState(
+      {},
+      '',
+      '/workspace/langgraph/durable-execution?mode=run&keep=1'
+    );
+    mocks.push.mockImplementation((href: string) => {
+      window.history.pushState({}, '', href);
+    });
+    renderWorkspace({
+      resolution,
+      presentation: mappedPresentation(resolution),
+      routePath: '/workspace/langgraph/durable-execution',
+      routeKind: 'workspace',
+      docsSlot: undefined,
+    });
+    await waitFor(() => expect(activeWorkspaceMode()).toBe('Run'));
+
+    act(() => mocks.latestProviderProps?.pushMode('Docs'));
+
+    await waitFor(() => {
+      expect(mocks.push).toHaveBeenCalledWith(
+        '/workspace/langgraph/durable-execution?mode=docs'
+      );
+      expect(mocks.latestProviderProps?.requestedMode).toBe('docs');
+      expect(activeWorkspaceMode()).toBe('Docs');
+    });
+  });
+
+  it('restores the canonical workspace Docs mode on reload', async () => {
+    const resolution = mappedResolution(
+      'langgraph:core-capabilities:durable-execution:overview:python',
+      'durable-execution',
+      ['Docs', 'Run', 'Code', 'API'],
+      '/docs/langgraph/guides/persistence'
+    );
+    window.history.replaceState(
+      {},
+      '',
+      '/workspace/langgraph/durable-execution?mode=docs'
+    );
+
+    renderWorkspace({
+      resolution,
+      presentation: mappedPresentation(resolution),
+      routePath: '/workspace/langgraph/durable-execution',
+      routeKind: 'workspace',
+      docsSlot: undefined,
+    });
+
+    await waitFor(() => {
+      expect(activeWorkspaceMode()).toBe('Docs');
+      expect(mocks.latestProviderProps?.requestedMode).toBe('docs');
+    });
+    expect(mocks.replace).not.toHaveBeenCalled();
   });
 
   it('uses workspace routes only when Docs are absent or would lose identity', () => {
@@ -509,14 +652,16 @@ describe('WebsiteWorkspace', () => {
       '/docs/langgraph/guides/code-only?mode=code'
     );
     view.rerender(
-      <WebsiteWorkspace
-        resolution={destination}
-        presentation={mappedPresentation(destination)}
-        contentBundle={emptyContent}
-        navigationTree={[]}
-        routePath="/docs/langgraph/guides/code-only"
-        docsSlot={<article>Destination docs article</article>}
-      />
+      <RuntimeTargetProvider>
+        <WebsiteWorkspace
+          resolution={destination}
+          presentation={mappedPresentation(destination)}
+          contentBundle={emptyContent}
+          navigationTree={[]}
+          routePath="/docs/langgraph/guides/code-only"
+          docsSlot={<article>Destination docs article</article>}
+        />
+      </RuntimeTargetProvider>
     );
 
     await waitFor(() => expect(activeWorkspaceMode()).toBe('Code'));
@@ -545,14 +690,16 @@ describe('WebsiteWorkspace', () => {
 
     window.history.replaceState({}, '', '/docs/langgraph/guides/testing');
     view.rerender(
-      <WebsiteWorkspace
-        resolution={docsOnlyResolution}
-        presentation={docsOnlyPresentation}
-        contentBundle={emptyContent}
-        navigationTree={[]}
-        routePath="/docs/langgraph/guides/testing"
-        docsSlot={<article>Testing docs article</article>}
-      />
+      <RuntimeTargetProvider>
+        <WebsiteWorkspace
+          resolution={docsOnlyResolution}
+          presentation={docsOnlyPresentation}
+          contentBundle={emptyContent}
+          navigationTree={[]}
+          routePath="/docs/langgraph/guides/testing"
+          docsSlot={<article>Testing docs article</article>}
+        />
+      </RuntimeTargetProvider>
     );
 
     await waitFor(() => expect(activeWorkspaceMode()).toBe('Docs'));
@@ -594,14 +741,16 @@ describe('WebsiteWorkspace', () => {
     });
 
     view.rerender(
-      <WebsiteWorkspace
-        resolution={source}
-        presentation={mappedPresentation(source)}
-        contentBundle={emptyContent}
-        navigationTree={[]}
-        routePath="/docs/langgraph/guides/streaming"
-        docsSlot={<article>Updated docs article</article>}
-      />
+      <RuntimeTargetProvider>
+        <WebsiteWorkspace
+          resolution={source}
+          presentation={mappedPresentation(source)}
+          contentBundle={emptyContent}
+          navigationTree={[]}
+          routePath="/docs/langgraph/guides/streaming"
+          docsSlot={<article>Updated docs article</article>}
+        />
+      </RuntimeTargetProvider>
     );
     expect(activeWorkspaceMode()).toBe('Code');
   });
@@ -637,21 +786,68 @@ describe('WebsiteWorkspace', () => {
     });
   });
 
-  it('treats repeated mode values as invalid during history traversal', async () => {
+  it('keeps workspace mode state aligned across Back and Forward history entries', async () => {
     const source = mappedResolution(
-      'deep-agents:core-capabilities:planning:overview:python',
-      'planning',
-      ['Docs', 'Run', 'Code', 'API']
+      'langgraph:core-capabilities:durable-execution:overview:python',
+      'durable-execution',
+      ['Docs', 'Run', 'Code', 'API'],
+      '/docs/langgraph/guides/persistence'
     );
     window.history.replaceState(
       {},
       '',
-      '/workspace/deep-agents/planning?mode=code'
+      '/workspace/langgraph/durable-execution?mode=docs'
     );
     renderWorkspace({
       resolution: source,
       presentation: mappedPresentation(source),
-      routePath: '/workspace/deep-agents/planning',
+      routePath: '/workspace/langgraph/durable-execution',
+      routeKind: 'workspace',
+      docsSlot: undefined,
+    });
+    await waitFor(() => expect(activeWorkspaceMode()).toBe('Docs'));
+
+    window.history.pushState(
+      {},
+      '',
+      '/workspace/langgraph/durable-execution?mode=code'
+    );
+    act(() => window.dispatchEvent(new PopStateEvent('popstate')));
+    await waitFor(() => expect(activeWorkspaceMode()).toBe('Code'));
+
+    window.history.replaceState(
+      {},
+      '',
+      '/workspace/langgraph/durable-execution?mode=docs'
+    );
+    act(() => window.dispatchEvent(new PopStateEvent('popstate')));
+    await waitFor(() => expect(activeWorkspaceMode()).toBe('Docs'));
+
+    window.history.replaceState(
+      {},
+      '',
+      '/workspace/langgraph/durable-execution?mode=code'
+    );
+    act(() => window.dispatchEvent(new PopStateEvent('popstate')));
+    await waitFor(() => expect(activeWorkspaceMode()).toBe('Code'));
+  });
+
+  it('treats repeated mode values as invalid during history traversal', async () => {
+    const source = mappedResolution(
+      'langgraph:core-capabilities:durable-execution:overview:python',
+      'durable-execution',
+      ['Docs', 'Run', 'Code', 'API'],
+      '/docs/langgraph/guides/persistence'
+    );
+    window.history.replaceState(
+      {},
+      '',
+      '/workspace/langgraph/durable-execution?mode=code'
+    );
+    renderWorkspace({
+      resolution: source,
+      presentation: mappedPresentation(source),
+      routePath: '/workspace/langgraph/durable-execution',
       routeKind: 'workspace',
       docsSlot: undefined,
     });
@@ -661,7 +857,7 @@ describe('WebsiteWorkspace', () => {
     window.history.pushState(
       {},
       '',
-      '/workspace/deep-agents/planning?mode=api&mode=docs&keep=1'
+      '/workspace/langgraph/durable-execution?mode=api&mode=docs&keep=1'
     );
     act(() => window.dispatchEvent(new PopStateEvent('popstate')));
 
@@ -673,9 +869,9 @@ describe('WebsiteWorkspace', () => {
       String(mocks.replace.mock.calls[0]?.[0]),
       window.location.origin
     );
-    expect(replacement.pathname).toBe('/workspace/deep-agents/planning');
+    expect(replacement.pathname).toBe('/workspace/langgraph/durable-execution');
     expect(replacement.searchParams.getAll('mode')).toEqual(['run']);
-    expect(replacement.searchParams.get('keep')).toBe('1');
+    expect(replacement.searchParams.has('keep')).toBe(false);
   });
 
   it('uses the Website same-origin ingest proxy for the real runtime iframe', async () => {

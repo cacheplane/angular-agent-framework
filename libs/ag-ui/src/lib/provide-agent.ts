@@ -2,7 +2,11 @@
 import { InjectionToken, inject, type Provider } from '@angular/core';
 import { HttpAgent } from '@ag-ui/client';
 import type { AgentRef, AgentRuntimeTelemetrySink } from '@threadplane/chat';
-import { toAgent, type AgUiAgent } from './to-agent';
+import { toAgent, ɵtoAgentWithProtectedErrors, type AgUiAgent } from './to-agent';
+import {
+  createRuntimeProtectedFetch,
+  ɵAG_UI_RUNTIME_OPERATION_REPORTER,
+} from './runtime-operation-reporter';
 
 /**
  * Connection options for the AG-UI agent provider, passed to {@link provideAgent}.
@@ -35,13 +39,20 @@ function buildAgUiAgent(configOrFactory: AgentConfig | (() => AgentConfig)): AgU
   // call inject() to read runtime/DI state.
   const config =
     typeof configOrFactory === 'function' ? configOrFactory() : configOrFactory;
+  const reportOperationFailure = inject(ɵAG_UI_RUNTIME_OPERATION_REPORTER, { optional: true });
   const source = new HttpAgent({
     url: config.url,
     ...(config.agentId !== undefined ? { agentId: config.agentId } : {}),
     ...(config.threadId !== undefined ? { threadId: config.threadId } : {}),
     ...(config.headers !== undefined ? { headers: config.headers } : {}),
+    ...(reportOperationFailure !== null
+      ? { fetch: createRuntimeProtectedFetch(reportOperationFailure) }
+      : {}),
   });
-  return toAgent(source, { telemetry: config.telemetry });
+  const options = { telemetry: config.telemetry };
+  return reportOperationFailure === null
+    ? toAgent(source, options)
+    : ɵtoAgentWithProtectedErrors(source, options);
 }
 
 function isAgentRef<T>(x: unknown): x is AgentRef<T> {

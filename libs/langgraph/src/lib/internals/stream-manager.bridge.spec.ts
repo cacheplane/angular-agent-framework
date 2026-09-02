@@ -1,7 +1,8 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { createStreamManagerBridge } from './stream-manager.bridge';
 import { MockAgentTransport } from '../transport/mock-stream.transport';
+import { FetchStreamTransport } from '../transport/fetch-stream.transport';
 import { ResourceStatus, AgentTransport, StreamSubjects, CustomStreamEvent, StreamEvent } from '../agent.types';
 import type { AgentRuntimeTelemetryPayload } from '@threadplane/chat';
 import { AgentError } from '@threadplane/chat';
@@ -77,6 +78,129 @@ function makeThreadState(
 }
 
 describe('createStreamManagerBridge', () => {
+  it('never reports custom-transport HTTP/network/TypeError lookalikes', async () => {
+    for (const error of [
+      Object.assign(new Error('application status'), { status: 401 }),
+      new TypeError('ordinary app type error'),
+      Object.assign(new Error('Unable to connect to LangGraph server.'), { name: 'ConnectionError' }),
+    ]) {
+      const transport = new MockAgentTransport();
+      const subjects = makeSubjects();
+      const reportOperationFailure = vi.fn();
+      const bridge = createStreamManagerBridge({
+        options: { apiUrl: '', assistantId: 'test', transport },
+        subjects,
+        threadId$: of('thread-1'),
+        destroy$: new Subject<void>().asObservable(),
+        reportOperationFailure,
+      });
+
+      const submitted = bridge.submit({});
+      transport.emitError(error);
+      await submitted;
+
+      expect(reportOperationFailure).not.toHaveBeenCalled();
+    }
+  });
+
+  it('does not retain a custom transport error merely because a key is configured', async () => {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const bridge = createStreamManagerBridge({
+      options: {
+        apiUrl: '',
+        assistantId: 'test',
+        transport,
+        clientOptions: { apiKey: 'test-key-redact-me' },
+      },
+      subjects,
+      threadId$: of('thread-1'),
+      destroy$: new Subject<void>().asObservable(),
+    });
+
+    const submitted = bridge.submit({});
+    transport.emitError(new Error('application error must remain local'));
+    await submitted;
+
+    expect(subjects.error$.value).toMatchObject({ cause: expect.any(Error) });
+  });
+
+  it('uses a closed telemetry error class and fails closed for hostile custom errors', async () => {
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const seen: AgentRuntimeTelemetryPayload[] = [];
+    const bridge = createStreamManagerBridge({
+      options: {
+        apiUrl: '',
+        assistantId: 'test',
+        transport,
+        telemetry: payload => { seen.push(payload); },
+      },
+      subjects,
+      threadId$: of('thread-1'),
+      destroy$: new Subject<void>().asObservable(),
+    });
+    const hostile = new Proxy({}, {
+      get() { throw new Error('test-key-redact-me'); },
+      getOwnPropertyDescriptor() { throw new Error('test-key-redact-me'); },
+    });
+
+    const submitted = bridge.submit({});
+    transport.emitError(hostile);
+    await submitted;
+
+    expect(subjects.error$.value).toBeInstanceOf(AgentError);
+    expect(seen.find(payload => payload.event === 'tplane:stream_errored')?.properties)
+      .toMatchObject({ errorClass: 'UnknownError' });
+    expect(JSON.stringify(seen)).not.toContain('test-key-redact-me');
+  });
+
+  it('sanitizes structured stream and tool errors from the protected default transport', async () => {
+    const sentinel = new Error('test-key-redact-me');
+    const transport = new FetchStreamTransport(
+      'https://runtime.example/api',
+      undefined,
+      { apiKey: 'test-key-redact-me', maxRetries: 0 },
+    );
+    Object.defineProperty(transport, 'client', {
+      value: {
+        runs: {
+          stream: () => (async function* () {
+            yield { event: 'tools', data: { event: 'on_tool_error', name: 'secret-tool', error: sentinel } };
+            yield { event: 'error', data: { error: sentinel } };
+          })(),
+        },
+        threads: {},
+      },
+    });
+    const subjects = makeSubjects();
+    const bridge = createStreamManagerBridge({
+      options: {
+        apiUrl: 'https://runtime.example/api',
+        assistantId: 'test',
+        transport,
+        clientOptions: { apiKey: 'test-key-redact-me' },
+      },
+      subjects,
+      threadId$: of('thread-1'),
+      destroy$: new Subject<void>().asObservable(),
+    });
+
+    await bridge.submit({});
+
+    expect(subjects.error$.value).toMatchObject({
+      message: 'The server ran into an error. You can try again.',
+    });
+    expect(subjects.error$.value?.cause).toBeUndefined();
+    expect(subjects.toolProgress$.value).toContainEqual(
+      expect.objectContaining({ error: 'The tool call failed.' }),
+    );
+    expect(JSON.stringify({
+      error: subjects.error$.value,
+      toolProgress: subjects.toolProgress$.value,
+    })).not.toContain('test-key-redact-me');
+  });
+
   it('creates a bridge with submit and stop methods', () => {
     const transport = new MockAgentTransport();
     const subjects = makeSubjects();
@@ -1655,7 +1779,7 @@ describe('createStreamManagerBridge', () => {
       transport: 'langgraph',
       surface: 'agent',
       durationMs: expect.any(Number),
-      errorClass: 'TypeError',
+      errorClass: 'Error',
     });
     expect(JSON.stringify(seen)).not.toContain('secret prompt fragment');
     destroy$.next();

@@ -7,14 +7,22 @@ import type { SubagentStreamRef } from './agent.types';
 import { MockAgentTransport } from './transport/mock-stream.transport';
 import type { AgentTransport, StreamEvent } from './agent.types';
 import type { ThreadState } from '@langchain/langgraph-sdk';
-import { createLangGraphClient } from './client/create-langgraph-client';
+import {
+  createLangGraphClient,
+  ɵcreateProtectedLangGraphClient,
+} from './client/create-langgraph-client';
 import { LANGGRAPH_CLIENT_OPTIONS } from './client/client-options';
 import { AGENT_CONFIG } from './agent.provider';
 import { AgentError } from '@threadplane/chat';
+import { ɵLANGGRAPH_RUNTIME_OPERATION_REPORTER } from './runtime-operation-reporter';
 
 vi.mock('./client/create-langgraph-client', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./client/create-langgraph-client')>();
-  return { ...actual, createLangGraphClient: vi.fn(actual.createLangGraphClient) };
+  return {
+    ...actual,
+    createLangGraphClient: vi.fn(actual.createLangGraphClient),
+    ɵcreateProtectedLangGraphClient: vi.fn(actual.ɵcreateProtectedLangGraphClient),
+  };
 });
 
 function withInjectionContext<T>(fn: () => T): T {
@@ -1185,11 +1193,15 @@ describe('agent — LANGGRAPH_CLIENT_OPTIONS resolution (no mock transport)', ()
   };
 
   const createLangGraphClientMock = createLangGraphClient as ReturnType<typeof vi.fn>;
+  const createProtectedLangGraphClientMock =
+    ɵcreateProtectedLangGraphClient as ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     TestBed.resetTestingModule();
     createLangGraphClientMock.mockClear();
     createLangGraphClientMock.mockReturnValue(mockClientStub);
+    createProtectedLangGraphClientMock.mockClear();
+    createProtectedLangGraphClientMock.mockReturnValue(mockClientStub);
   });
 
   it('case 1 — token only: passes token clientOptions to createLangGraphClient', () => {
@@ -1267,6 +1279,61 @@ describe('agent — LANGGRAPH_CLIENT_OPTIONS resolution (no mock transport)', ()
       'http://localhost:2024',
       { maxRetries: 3 },
     );
+  });
+
+  it('passes an explicit api key through the Agent streaming client options', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        {
+          provide: LANGGRAPH_CLIENT_OPTIONS,
+          useValue: { apiKey: 'test-key-redact-me', maxRetries: 0 },
+        },
+      ],
+    });
+
+    TestBed.runInInjectionContext(() => {
+      agent({ apiUrl: 'https://runtime.example/api', assistantId: 'a' });
+    });
+
+    expect(createProtectedLangGraphClientMock).toHaveBeenCalledWith(
+      'https://runtime.example/api',
+      { apiKey: 'test-key-redact-me', maxRetries: 0 },
+      expect.any(Function),
+    );
+  });
+});
+
+describe('agent — runtime operation reporter integration', () => {
+  it('does not pass the private reporter to a custom transport', async () => {
+    class HTTPError extends Error {
+      readonly text = 'unauthorized';
+      constructor(readonly status: number) {
+        super(`HTTP ${status}: unauthorized`);
+      }
+    }
+    const transport = new MockAgentTransport();
+    const reportOperationFailure = vi.fn();
+    TestBed.configureTestingModule({
+      providers: [
+        {
+          provide: ɵLANGGRAPH_RUNTIME_OPERATION_REPORTER,
+          useValue: reportOperationFailure,
+        },
+      ],
+    });
+    const runtime = TestBed.runInInjectionContext(() =>
+      agent({
+        apiUrl: 'https://runtime.example/api',
+        assistantId: 'a',
+        transport,
+      }),
+    );
+
+    const submitted = runtime.submit({ message: 'hello' });
+    transport.emitError(new HTTPError(403));
+    await submitted;
+
+    expect(reportOperationFailure).not.toHaveBeenCalled();
   });
 });
 

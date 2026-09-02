@@ -18,7 +18,7 @@ export interface SubgraphsState {
 
 /**
  * Typed DI handle for the subgraphs agent.
- * Wire with `provideAgent(SUBGRAPHS_AGENT, { ... })` and inject with
+ * Wire with `provideAgent(SUBGRAPHS_AGENT, () => ...)` and inject with
  * `injectAgent(SUBGRAPHS_AGENT)` to get `LangGraphAgent<SubgraphsState>`.
  */
 export const SUBGRAPHS_AGENT = createAgentRef<SubgraphsState>('subgraphs');

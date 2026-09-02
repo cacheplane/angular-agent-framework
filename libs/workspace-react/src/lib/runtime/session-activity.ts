@@ -1,11 +1,115 @@
+import type { RuntimeAdapter } from '@threadplane/cockpit-registry';
+import type { SanitizedRuntimeTargetDisplay } from './runtime-target-session';
+import type { RuntimePhase } from './runtime-state';
+
 export type ActivitySeverity = 'neutral' | 'success' | 'error';
 export type ActivityMode = 'Run' | 'Code' | 'Docs' | 'API';
+
+export type RuntimeActivityReasonCode =
+  | 'bootstrap_failed'
+  | 'invalid_runtime_url'
+  | 'unauthorized'
+  | 'network_blocked'
+  | 'incompatible_bridge';
+
+export interface RuntimeActivityContext {
+  adapter: RuntimeAdapter;
+  targetKind: SanitizedRuntimeTargetDisplay['kind'];
+  protocolVersion: number;
+  configurationGeneration: number;
+  phase: RuntimePhase;
+  reasonCode: RuntimeActivityReasonCode | null;
+}
+
+const RUNTIME_ADAPTERS = ['ag-ui', 'langgraph', 'none'] as const;
+const RUNTIME_TARGET_KINDS = ['shared', 'ag-ui', 'langsmith', 'none'] as const;
+const RUNTIME_PHASES = [
+  'not_configured',
+  'invalid_configuration',
+  'configuring',
+  'connecting',
+  'checking',
+  'ready',
+  'unresponsive',
+  'reloading',
+  'error',
+  'unauthorized',
+  'network_blocked',
+  'incompatible_bridge',
+] as const;
+const RUNTIME_REASON_CODES = [
+  'bootstrap_failed',
+  'invalid_runtime_url',
+  'unauthorized',
+  'network_blocked',
+  'incompatible_bridge',
+] as const;
+
+const knownString = <T extends string>(
+  value: unknown,
+  allowed: readonly T[],
+  fallback: T
+): T =>
+  typeof value === 'string' && (allowed as readonly string[]).includes(value)
+    ? (value as T)
+    : fallback;
+
+const safeNonnegativeInteger = (value: unknown): number =>
+  typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
+    ? value
+    : 0;
+
+const knownReasonCode = (value: unknown): RuntimeActivityReasonCode | null =>
+  typeof value === 'string' &&
+  (RUNTIME_REASON_CODES as readonly string[]).includes(value)
+    ? (value as RuntimeActivityReasonCode)
+    : null;
+
+const defaultRuntimeActivityContext = (): RuntimeActivityContext => ({
+  adapter: 'none',
+  targetKind: 'none',
+  protocolVersion: 0,
+  configurationGeneration: 0,
+  phase: 'not_configured',
+  reasonCode: null,
+});
+
+export function projectRuntimeActivityContext(
+  context: unknown
+): RuntimeActivityContext {
+  if (typeof context !== 'object' || context === null) {
+    return defaultRuntimeActivityContext();
+  }
+
+  try {
+    const source = context as Record<PropertyKey, unknown>;
+    return {
+      adapter: knownString(source['adapter'], RUNTIME_ADAPTERS, 'none'),
+      targetKind: knownString(
+        source['targetKind'],
+        RUNTIME_TARGET_KINDS,
+        'none'
+      ),
+      protocolVersion: safeNonnegativeInteger(source['protocolVersion']),
+      configurationGeneration: safeNonnegativeInteger(
+        source['configurationGeneration']
+      ),
+      phase: knownString(source['phase'], RUNTIME_PHASES, 'not_configured'),
+      reasonCode: knownReasonCode(source['reasonCode']),
+    };
+  } catch {
+    return defaultRuntimeActivityContext();
+  }
+}
 
 type RuntimeActivityKind =
   | 'runtime_check_requested'
   | 'runtime_ready'
   | 'runtime_unresponsive'
   | 'runtime_initialization_error'
+  | 'runtime_unauthorized'
+  | 'runtime_network_blocked'
+  | 'runtime_incompatible_bridge'
   | 'runtime_reload_requested'
   | 'runtime_recovered'
   | 'runtime_open_requested'
@@ -17,6 +121,7 @@ interface RuntimeActivityInputBase {
   id: string;
   at: string;
   capability: string;
+  runtime?: RuntimeActivityContext;
 }
 
 export type RuntimeActivityInput = RuntimeActivityInputBase &
@@ -34,6 +139,7 @@ export interface SessionActivityEvent {
   severity: ActivitySeverity;
   capability: string;
   summary: string;
+  runtime?: RuntimeActivityContext;
 }
 
 export type ActivityAction =
@@ -41,7 +147,7 @@ export type ActivityAction =
   | { type: 'clear' };
 
 export function createSessionActivityEvent(
-  input: RuntimeActivityInput,
+  input: RuntimeActivityInput
 ): SessionActivityEvent {
   let severity: ActivitySeverity;
   let summary: string;
@@ -62,6 +168,18 @@ export function createSessionActivityEvent(
     case 'runtime_initialization_error':
       severity = 'error';
       summary = 'Runtime initialization failed';
+      break;
+    case 'runtime_unauthorized':
+      severity = 'error';
+      summary = 'Runtime authorization failed';
+      break;
+    case 'runtime_network_blocked':
+      severity = 'error';
+      summary = 'Runtime network request blocked';
+      break;
+    case 'runtime_incompatible_bridge':
+      severity = 'error';
+      summary = 'Runtime bridge incompatible';
       break;
     case 'runtime_reload_requested':
       severity = 'neutral';
@@ -100,6 +218,11 @@ export function createSessionActivityEvent(
     severity,
     capability: input.capability,
     summary,
+    ...(input.runtime
+      ? {
+          runtime: projectRuntimeActivityContext(input.runtime),
+        }
+      : {}),
   };
 }
 
@@ -107,7 +230,7 @@ const MAX_ACTIVITY_EVENTS = 50;
 
 export function activityReducer(
   state: SessionActivityEvent[],
-  action: ActivityAction,
+  action: ActivityAction
 ): SessionActivityEvent[] {
   switch (action.type) {
     case 'add':
@@ -134,10 +257,9 @@ export function activityReducer(
  */
 export function countUnseenProblems(
   events: readonly SessionActivityEvent[],
-  seenCount: number,
+  seenCount: number
 ): number {
   const unseen = Math.max(0, events.length - seenCount);
-  return events
-    .slice(0, unseen)
-    .filter((event) => event.severity === 'error').length;
+  return events.slice(0, unseen).filter((event) => event.severity === 'error')
+    .length;
 }

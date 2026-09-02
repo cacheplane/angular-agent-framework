@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 // Vitest config for the root deployment/proxy generator scripts.
 //
@@ -10,6 +11,7 @@ import { defineConfig } from 'vite';
 // invocation, otherwise vitest fails loudly on it ("no test suite found") —
 // loud-by-default beats silently unrun.
 export default defineConfig({
+  plugins: [nxViteTsPaths()],
   test: {
     environment: 'node',
     globals: true,

@@ -12,9 +12,8 @@
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": [
-        "{workspaceRoot}/dist/libs/cockpit-runtime-bridge"
-      ],
+      "inputs": ["production", "runtimeParentPolicy", "^production"],
+      "outputs": ["{workspaceRoot}/dist/libs/cockpit-runtime-bridge"],
       "options": {
         "outputPath": "dist/libs/cockpit-runtime-bridge",
         "main": "libs/cockpit-runtime-bridge/src/index.ts",
@@ -26,9 +25,16 @@
     },
     "test": {
       "executor": "@nx/vitest:test",
+      "inputs": ["default", "runtimeParentPolicy", "^default"],
       "options": {
         "configFile": "libs/cockpit-runtime-bridge/vite.config.mts"
       }
     }
+  },
+  "namedInputs": {
+    "runtimeParentPolicy": [
+      "{workspaceRoot}/runtime-parent-origins.json",
+      "{workspaceRoot}/scripts/generate-runtime-parent-origins.ts"
+    ]
   }
 }

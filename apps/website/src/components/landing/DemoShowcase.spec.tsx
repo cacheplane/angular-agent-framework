@@ -82,4 +82,17 @@ describe('DemoShowcase', () => {
       expect.objectContaining({ surface: 'home_demo', cta_id: 'home_demo_launch_ag_ui' }),
     );
   });
+
+  it('links the feature CTA to the same-origin streaming workspace', () => {
+    render(<DemoShowcase />);
+
+    const link = screen.getByRole('link', {
+      name: 'See each feature in action →',
+    });
+    expect(link.getAttribute('href')).toBe(
+      '/docs/langgraph/guides/streaming?mode=run'
+    );
+    expect(link.getAttribute('target')).toBeNull();
+    expect(link.getAttribute('rel')).toBeNull();
+  });
 });

@@ -18,7 +18,6 @@ export const analyticsEvents = {
   docsCopyCodeClick: 'docs:copy_code_click',
   docsTabSelect: 'docs:tab_select',
   docsSidebarSectionToggle: 'docs:sidebar_section_toggle',
-  docsCockpitHandoff: 'docs:cockpit_handoff',
   docsWorkspaceNavigation: 'docs:workspace_navigation',
   docsWorkspaceModeSwitched: 'docs:workspace_mode_switched',
   docsWorkspaceNarrativeAction: 'docs:workspace_narrative_action',
@@ -61,8 +60,8 @@ export type CtaId =
   // Hero (Spec 2)
   | 'hero_install'
   | 'hero_talk_to_engineers'
-  | 'hero_demo_open_cockpit'
-  | 'hero_demo_open_cockpit_caption'
+  | 'hero_demo_open_workspace'
+  | 'hero_demo_open_workspace_caption'
   | 'hero_proof_pill'
   // Whitepaper block on home
   | 'home_whitepaper_direct'

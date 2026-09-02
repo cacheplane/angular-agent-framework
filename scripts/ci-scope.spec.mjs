@@ -447,6 +447,31 @@ describe('classifyFromAffected — apps + fallback paths via namedInputs', () =>
     assert.equal(scope.cockpit_e2e, true);
   });
 
+  it('the Website-owned platform smoke selects Website browser coverage', () => {
+    const scope = classifyFromAffected(
+      ['apps/website/e2e/platform-production-smoke.spec.ts'],
+      [{ name: 'website', tags: WEBSITE_TAGS }]
+    );
+
+    assert.equal(scope.website, true);
+    assert.equal(scope.website_e2e, true);
+    assert.equal(scope.cockpit_e2e, false);
+  });
+
+  it('the Cockpit Vercel gate selects redirect build and deploy smoke', async () => {
+    const project = JSON.parse(
+      await readFile('apps/cockpit/project.json', 'utf8')
+    );
+    const scope = classifyFromAffected(
+      ['vercel.cockpit.json'],
+      [{ name: project.name, tags: project.tags }]
+    );
+
+    assert.equal(scope.cockpit, true);
+    assert.equal(scope.cockpit_deploy_smoke, true);
+    assert.equal(scope.cockpit_e2e, false);
+  });
+
   it('examples/chat change → examples_chat only', () => {
     const scope = classifyFromAffected(
       ['examples/chat/angular/src/main.ts'],

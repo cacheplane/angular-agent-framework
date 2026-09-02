@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { capabilities } from './scripts/capability-registry';
+import { inspectRuntimeTargetSource } from './runtime-wiring-audit';
 
 /**
  * Guard for a failure mode production smoke cannot see.
@@ -39,27 +40,45 @@ describe('AG-UI agent URL is resolved against <base href>', () => {
 
   for (const cap of agentBackedCapabilities) {
     it(`${cap.product}/${cap.topic} resolves its agent URL relative to the base href`, () => {
-      const configPath = join(
+      const angularRoot = join(
         repoRoot,
         'cockpit',
         cap.product,
         cap.topic,
-        'angular/src/app/app.config.ts'
+        'angular/src'
       );
-      const source = readFileSync(configPath, 'utf8');
+      const configPath = join(angularRoot, 'app/app.config.ts');
+      const configSource = readFileSync(configPath, 'utf8');
+      const entryPoints = ['main.ts', 'main.cockpit.ts'].map((fileName) => ({
+        path: join(angularRoot, fileName),
+        source: readFileSync(join(angularRoot, fileName), 'utf8'),
+      }));
 
+      for (const entryPoint of entryPoints) {
+        const bootstrapCalls = inspectRuntimeTargetSource(
+          entryPoint.source,
+          entryPoint.path,
+          'ag-ui'
+        ).bootstrapCalls;
+        expect(
+          bootstrapCalls,
+          `${entryPoint.path} must supply sharedUrl with ${AGENT_URL_EXPR} so it ` +
+            `resolves under the deployed <base href="/${cap.product}/${cap.topic}/">`
+        ).toHaveLength(1);
+        expect(bootstrapCalls[0].runtimeProperties['sharedUrl']).toBe(
+          AGENT_URL_EXPR
+        );
+      }
+      const providerCalls = inspectRuntimeTargetSource(
+        configSource,
+        configPath,
+        'ag-ui'
+      ).providerCalls;
       expect(
-        source,
-        `${configPath} must build the agent URL with ${AGENT_URL_EXPR} so it ` +
-          `resolves under the deployed <base href="/${cap.product}/${cap.topic}/">`
-      ).toContain(AGENT_URL_EXPR);
-
-      // A root-absolute literal silently 404s in production; see the note above.
-      expect(
-        source,
-        `${configPath} hardcodes a root-absolute agent URL, which does not ` +
-          `survive the <base href> rewrite in scripts/assemble-examples.ts`
-      ).not.toMatch(/url:\s*['"`]\/agent/);
+        providerCalls,
+        `${configPath} must source the runtime URL from the generation-scoped connection`
+      ).toHaveLength(1);
+      expect(providerCalls[0].properties['url']).toBe('connection.url');
     });
   }
 });

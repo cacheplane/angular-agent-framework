@@ -1668,6 +1668,12 @@
     "description": "Tuning options for the underlying LangGraph SDK `Client` constructed by the\ndefault FetchStreamTransport. Ignored when a custom `transport` is\nsupplied (the transport owns its own client).",
     "properties": [
       {
+        "name": "apiKey",
+        "type": "string | null",
+        "description": "API key passed directly to the LangGraph SDK client. `null` preserves the\nSDK's explicit no-key behavior; omission leaves the SDK default unchanged.",
+        "optional": true
+      },
+      {
         "name": "maxRetries",
         "type": "number",
         "description": "How many times a failed request — including the initial stream connect —\nis retried with exponential backoff before the error surfaces. Maps to the\nSDK's `callerOptions.maxRetries`. Omitted → the SDK default (currently 4).\n\nSet `0` to fail fast: useful for e2e tests that force a connection failure\nand assert the error surfaces promptly, rather than after the full\nmulti-second backoff window.",

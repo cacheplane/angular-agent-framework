@@ -268,30 +268,16 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx nx build cockpit --skip-nx-cache
-      # cockpit-docs and cockpit-registry carry `test` targets that nothing in
-      # CI invoked: `nx test` does not walk `^test`, and the `library` job runs
-      # a hardcoded LIBS list that excludes both. Name them here so their specs
-      # actually execute. All three share the `scope:cockpit` tag, so ci-scope
-      # already gates this job correctly for changes under either library.
-      - run: npx nx run-many -t test --projects=cockpit,cockpit-docs,cockpit-registry --skip-nx-cache
-      # apps/cockpit owns a real Playwright suite (e2e/control-plane.spec.ts)
-      # behind `nx e2e cockpit` that nothing invoked: the cockpit-e2e matrix
-      # only dispatches caps derived from cockpit/**, and no other job named
-      # the target — so it had never run in CI since #921 added it. It lives
-      # here rather than in its own job because it is cheap (7 tests, ~25s
-      # once the dev servers are up) and reuses this job's `npm ci`; the
-      # `cockpit` scope already gates the shell, and required-pr-checks
-      # already aggregates this job.
-      - name: Cache Playwright browsers
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            playwright-${{ runner.os }}-
-      - run: npx playwright install --with-deps chromium
-      - run: npx nx e2e cockpit --skip-nx-cache
-
+      # cockpit-docs, cockpit-registry and workspace-react carry `test` targets
+      # that nothing in CI invoked: `nx test` does not walk `^test`, and the
+      # `library` job runs a hardcoded LIBS list that excludes all three. Name
+      # them here so their specs actually execute. They all share the
+      # `scope:cockpit` tag, so ci-scope already gates this job correctly for
+      # changes under any of them. workspace-react's only other scope tag is
+      # `scope:shared`, which is not a SCOPE_KEY — adding it to LIBS would not
+      # have run it, because a workspace-react change never flips `library`.
+      - run: npx nx lint workspace-react
+      - run: npx nx run-many -t test --projects=cockpit,cockpit-docs,cockpit-registry,workspace-react --skip-nx-cache
   cockpit-examples-build:
     name: Cockpit — build all examples
     needs: ci-scope
@@ -350,7 +336,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx tsx apps/cockpit/scripts/deploy-smoke.ts --url https://cockpit.threadplane.ai --dry-run
+      - run: npx tsx apps/cockpit/scripts/deploy-smoke.ts --url https://cockpit.threadplane.ai --mode preview --dry-run
 
   examples-chat-smoke:
     name: examples/chat — python smoke
@@ -799,6 +785,8 @@ jobs:
       - growth-lifecycle
       - lifecycle
     runs-on: ubuntu-latest
+    outputs:
+      runtime_parent_preview_origin: ${{ steps.deploy_website.outputs.preview_origin }}
     # Only deploy on pushes to main, not on pull requests
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     permissions:
@@ -884,7 +872,7 @@ jobs:
 
           changed_files="$(git diff --name-only "$base_sha" "$head_sha")"
           deploy_relevant=false
-          if printf '%s\n' "$changed_files" | grep -E '^(\.github/workflows/ci\.yml|vercel\.(json|cockpit\.json|examples\.json)|apps/(website|cockpit)/.*|cockpit/.*|examples/chat/.*|libs/.*|scripts/(assemble-examples|deploy-smoke|demo-middleware|langgraph-proxy|rate-limit)\.ts|scripts/assemble-demo\.ts)$' >/dev/null; then
+          if printf '%s\n' "$changed_files" | grep -E '^(\.github/workflows/ci\.yml|runtime-parent-origins\.json|vercel\.(json|cockpit\.json|examples\.json)|apps/(website|cockpit)/.*|cockpit/.*|examples/chat/.*|libs/.*|scripts/(assemble-examples|deploy-smoke|demo-middleware|generate-runtime-parent-origins|langgraph-proxy|rate-limit)\.ts|scripts/assemble-demo\.ts)$' >/dev/null; then
             deploy_relevant=true
           fi
 
@@ -903,7 +891,10 @@ jobs:
           if printf '%s\n' "$changed_files" | grep -E '^cockpit/.*/angular/' >/dev/null; then
             examples_changed=true
           fi
-          if printf '%s\n' "$changed_files" | grep -E '^(vercel\.examples\.json|scripts/(assemble-examples|examples-middleware|langgraph-proxy|upstash-rate-limit)\.ts)$' >/dev/null; then
+          if printf '%s\n' "$changed_files" | grep -E '^(runtime-parent-origins\.json|vercel\.examples\.json|scripts/(assemble-examples|examples-middleware|generate-runtime-parent-origins|langgraph-proxy|upstash-rate-limit)\.ts)$' >/dev/null; then
+            examples_changed=true
+          fi
+          if printf '%s\n' "$changed_files" | grep -E '^(\.github/workflows/ci\.yml|vercel\.json|apps/website/.*)$' >/dev/null; then
             examples_changed=true
           fi
           # Any libs/ change retriggers examples deploy. Previous hand-maintained
@@ -962,7 +953,7 @@ jobs:
           echo "website=$website_changed" >> "$GITHUB_OUTPUT"
           echo "cockpit=$cockpit_changed" >> "$GITHUB_OUTPUT"
       - name: Cache Playwright browsers
-        if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.website == 'true'
+        if: steps.freshness.outputs.stale != 'true' && (steps.affected.outputs.website == 'true' || steps.affected.outputs.cockpit == 'true')
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/.cache/ms-playwright
@@ -970,7 +961,7 @@ jobs:
           restore-keys: |
             playwright-${{ runner.os }}-
       - name: Install Playwright browsers
-        if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.website == 'true'
+        if: steps.freshness.outputs.stale != 'true' && (steps.affected.outputs.website == 'true' || steps.affected.outputs.cockpit == 'true')
         run: npx playwright install --with-deps chromium
       - name: Prepare website Vercel project
         if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.website == 'true'
@@ -981,21 +972,20 @@ jobs:
           EOF
           npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           rm -rf .vercel/output
-      - name: Build and deploy website to Vercel (production)
+      - name: Deploy immutable Website preview
         if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.website == 'true'
         id: deploy_website
         run: |
           npx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-          url=$(npx vercel deploy --prebuilt --archive=tgz --prod --yes --token=${{ secrets.VERCEL_TOKEN }} | tail -n 1)
-          echo "deployment_url=$url" >> "$GITHUB_OUTPUT"
-      - name: Verify deployed website
-        if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.website == 'true'
-        run: npx nx e2e website --skip-nx-cache
-        env:
-          BASE_URL: https://threadplane.ai
+          url=$(npx vercel deploy --prebuilt --archive=tgz --prod --skip-domain --yes --token=${{ secrets.VERCEL_TOKEN }} | tail -n 1)
+          preview_origin=$(node -e 'const parsed = new URL(process.argv[1]); if (parsed.protocol !== "https:" || parsed.username || parsed.password || parsed.pathname !== "/" || parsed.search || parsed.hash) throw new Error("Vercel returned a non-origin Website preview URL"); process.stdout.write(parsed.origin)' "$url")
+          echo "deployment_url=$preview_origin" >> "$GITHUB_OUTPUT"
+          echo "preview_origin=$preview_origin" >> "$GITHUB_OUTPUT"
       - name: Build and assemble Angular examples
         if: steps.freshness.outputs.stale != 'true' && steps.examples_changed.outputs.changed == 'true'
         run: npx tsx scripts/assemble-examples.ts
+        env:
+          RUNTIME_PARENT_PREVIEW_ORIGINS: ${{ steps.deploy_website.outputs.preview_origin }}
       - name: Deploy Angular examples to Vercel (production)
         if: steps.freshness.outputs.stale != 'true' && steps.examples_changed.outputs.changed == 'true'
         working-directory: deploy/examples
@@ -1006,6 +996,38 @@ jobs:
           EOF
           npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           npx vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Verify Website preview runtime embedding policy
+        if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.website == 'true'
+        run: npx playwright test apps/website/e2e/platform-production-smoke.spec.ts --config apps/website/playwright.config.ts --grep "unified runtime embedding policy" --reporter=list
+        env:
+          PRODUCTION_SMOKE: 'true'
+          BASE_URL: ${{ steps.deploy_website.outputs.preview_origin }}
+          WEBSITE_URL: ${{ steps.deploy_website.outputs.preview_origin }}
+          EXAMPLES_URL: https://examples.threadplane.ai
+          RUNTIME_PARENT_PREVIEW_ORIGINS: ${{ steps.deploy_website.outputs.preview_origin }}
+      - name: Check this commit is still the tip before Website promotion
+        if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.website == 'true'
+        id: website_promotion_freshness
+        run: |
+          tip="$(git ls-remote origin refs/heads/main | cut -f1)"
+          if [ -z "$tip" ]; then
+            echo "::error::Could not resolve the tip of main after Website preview verification; refusing promotion."
+            exit 1
+          fi
+          if [ "$tip" != "${{ github.sha }}" ]; then
+            echo "fresh=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::main advanced to ${tip} during Website preview verification; leaving the production alias untouched for the newer run."
+          else
+            echo "fresh=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Promote verified Website artifact unchanged
+        if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.website == 'true' && steps.website_promotion_freshness.outputs.fresh == 'true'
+        run: npx vercel promote "${{ steps.deploy_website.outputs.deployment_url }}" --yes --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Verify deployed website
+        if: steps.freshness.outputs.stale != 'true' && ((steps.affected.outputs.website == 'true' && steps.website_promotion_freshness.outputs.fresh == 'true') || steps.affected.outputs.cockpit == 'true')
+        run: npx nx e2e website --skip-nx-cache
+        env:
+          BASE_URL: https://threadplane.ai
       - name: Prepare cockpit Vercel project
         if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true'
         run: |
@@ -1015,25 +1037,43 @@ jobs:
           EOF
           npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           rm -rf .vercel/output
-      - name: Build and deploy cockpit to Vercel (production)
+      - name: Build cockpit redirect service
+        if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true'
+        env:
+          COCKPIT_WEBSITE_ORIGIN: https://threadplane.ai
+        run: |
+          npx vercel build --prod --local-config vercel.cockpit.json --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy immutable cockpit artifact
         if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true'
         id: deploy_cockpit
         run: |
-          npx vercel build --prod --local-config vercel.cockpit.json --token=${{ secrets.VERCEL_TOKEN }}
-          url=$(npx vercel deploy --prebuilt --archive=tgz --prod --yes --token=${{ secrets.VERCEL_TOKEN }} | tail -n 1)
+          url=$(npx vercel deploy --prebuilt --archive=tgz --prod --skip-domain --yes --env COCKPIT_WEBSITE_ORIGIN=https://threadplane.ai --token=${{ secrets.VERCEL_TOKEN }} | tail -n 1)
           echo "deployment_url=$url" >> "$GITHUB_OUTPUT"
-      - name: Verify deployed cockpit
+      - name: Exhaustively verify immutable cockpit preview
         if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true'
         run: |
-          npx tsx apps/cockpit/scripts/deploy-smoke.ts --url https://cockpit.threadplane.ai --retries 20 --retry-delay-ms 5000
-
-      # Advance only when the whole job succeeded and actually promoted. On a
-      # stale run, a failure, or a partial deploy the marker stays put, so the
-      # next run's range still covers whatever did not ship. Never `always()`:
-      # advancing past unshipped work is the bug this step exists to prevent.
-      - name: Record this commit as promoted
-        if: success() && steps.freshness.outputs.stale != 'true'
-        run: git push origin --force "${{ github.sha }}:refs/deploy/last-promoted"
+          npx tsx apps/cockpit/scripts/deploy-smoke.ts --url "${{ steps.deploy_cockpit.outputs.deployment_url }}" --mode preview --retries 20 --retry-delay-ms 5000
+      - name: Check this commit is still the tip before cockpit promotion
+        if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true'
+        id: cockpit_promotion_freshness
+        run: |
+          tip="$(git ls-remote origin refs/heads/main | cut -f1)"
+          if [ -z "$tip" ]; then
+            echo "::error::Could not resolve the tip of main after preview verification; refusing the irreversible Cockpit redirect promotion."
+            exit 1
+          fi
+          if [ "$tip" != "${{ github.sha }}" ]; then
+            echo "fresh=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::main advanced to ${tip} during Cockpit preview verification; leaving the production alias untouched for the newer run."
+          else
+            echo "fresh=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Promote verified cockpit artifact unchanged
+        if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true' && steps.cockpit_promotion_freshness.outputs.fresh == 'true'
+        run: npx vercel promote "${{ steps.deploy_cockpit.outputs.deployment_url }}" --yes --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Verify production cockpit redirects
+        if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true' && steps.cockpit_promotion_freshness.outputs.fresh == 'true'
+        run: npx tsx apps/cockpit/scripts/deploy-smoke.ts --url https://cockpit.threadplane.ai --mode production --retries 20 --retry-delay-ms 5000
 
   demo-deploy:
     name: Canonical demo → Vercel
@@ -1279,11 +1319,15 @@ jobs:
 
   production-smoke:
     name: Production smoke
-    needs: [deploy, demo-deploy]
+    needs: [deploy, demo-deploy, ag-ui-demo-deploy]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: 22
@@ -1302,12 +1346,35 @@ jobs:
             playwright-${{ runner.os }}-
       - run: npx playwright install --with-deps chromium
       - name: Run production smoke tests
-        run: npx playwright test apps/cockpit/e2e/production-smoke.spec.ts --reporter=list
+        run: npx playwright test apps/website/e2e/platform-production-smoke.spec.ts --config apps/website/playwright.config.ts --reporter=list
         env:
-          BASE_URL: https://cockpit.threadplane.ai
+          PRODUCTION_SMOKE: 'true'
+          BASE_URL: https://threadplane.ai
+          COCKPIT_URL: https://cockpit.threadplane.ai
+          WEBSITE_URL: https://threadplane.ai
           EXAMPLES_URL: https://examples.threadplane.ai
+          RUNTIME_PARENT_PREVIEW_ORIGINS: ${{ needs.deploy.outputs.runtime_parent_preview_origin }}
           DEMO_URL: https://demo.threadplane.ai
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      - name: Check this commit is still the tip before recording promotion
+        id: freshness
+        run: |
+          tip="$(git ls-remote origin refs/heads/main | cut -f1)"
+          if [ -z "$tip" ]; then
+            echo "::error::Could not resolve the tip of main; refusing to advance the deploy marker."
+            exit 1
+          fi
+          if [ "$tip" != "${{ github.sha }}" ]; then
+            echo "stale=true" >> "$GITHUB_OUTPUT"
+            echo "::warning::main advanced to ${tip}; leaving refs/deploy/last-promoted untouched for the newer run."
+          else
+            echo "stale=false" >> "$GITHUB_OUTPUT"
+          fi
+      # Advance only after immutable preview verification, promotion,
+      # representative redirects, and the full cross-host platform smoke pass.
+      - name: Record this commit as promoted
+        if: success() && steps.freshness.outputs.stale != 'true'
+        run: git push origin --force "${{ github.sha }}:refs/deploy/last-promoted"
 
   posthog-sync-plan:
     name: PostHog — dashboards-as-code drift check

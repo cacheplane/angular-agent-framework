@@ -153,21 +153,23 @@ describe('validateCockpitManifest', () => {
     );
   });
 
-  it('rejects runnable entries with no runtime adapter', () => {
+  it('accepts runnable static entries with no configurable runtime adapter', () => {
     const entry = getLangGraphEntry('streaming');
+    const baseline = validateManifest([entry]);
 
-    expect(validateManifest([{ ...entry, runtimeAdapter: 'none' }])).toContain(
-      `Runnable entry has no runtime adapter: ${entry.id}`
+    expect(validateManifest([{ ...entry, runtimeAdapter: 'none' }])).toEqual(
+      baseline
     );
   });
 
-  it('rejects non-runnable entries with a runtime adapter', () => {
+  it('does not derive configurable transport compatibility from Run availability', () => {
     const entry = getLangGraphEntry('streaming');
+    const baseline = validateManifest([entry]);
 
     expect(
       validateManifest([
         { ...entry, runtimeAdapter: 'langgraph', availableModes: ['Docs'] },
       ])
-    ).toContain(`Non-runnable entry has a runtime adapter: ${entry.id}`);
+    ).toEqual(baseline);
   });
 });

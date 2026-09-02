@@ -1,194 +1,320 @@
+import {
+  cockpitManifest,
+  getWorkspaceDestinationPath,
+  type WorkspaceMode,
+} from '@threadplane/cockpit-registry';
 import { describe, expect, it } from 'vitest';
 import {
-  getCanonicalCockpitRedirect,
-  getCockpitPageModel,
+  getCockpitWebsiteOrigin,
   getLegacyWebsiteRedirect,
   getRootWebsiteRedirect,
-  getUnifiedWorkspaceRedirectOrigin,
-  normalizeRequestedMode,
 } from './cockpit-page';
-import { cockpitManifest } from '@threadplane/cockpit-registry';
-import { getWorkspaceDestinationPath } from '@threadplane/cockpit-registry';
 
-const enabledProductionEnv = {
-  UNIFIED_WORKSPACE_REDIRECTS_ENABLED: 'true',
-  NEXT_PUBLIC_WEBSITE_ORIGIN: 'https://threadplane.ai',
+const productionEnvironment = {
+  COCKPIT_WEBSITE_ORIGIN: 'https://threadplane.ai',
   NODE_ENV: 'production',
+} as const;
+
+const expectedHref = (
+  entry: (typeof cockpitManifest)[number],
+  mode: WorkspaceMode
+): string => {
+  const path = getWorkspaceDestinationPath(entry);
+  const query =
+    mode === 'Docs' && path.startsWith('/docs')
+      ? ''
+      : `?mode=${mode.toLowerCase()}`;
+  return `https://threadplane.ai${path}${query}`;
 };
 
-describe('Cockpit page query normalization', () => {
-  it('keeps repeated mode params explicitly invalid for provider normalization', () => {
-    expect(normalizeRequestedMode(['code', 'docs'])).toBe('code,docs');
-    expect(normalizeRequestedMode('code')).toBe('code');
-    expect(normalizeRequestedMode(undefined)).toBeNull();
-  });
-
-  it('preserves only a syntactically valid mode available on the canonical entry', () => {
-    const model = getCockpitPageModel([
-      'langgraph',
-      'core-capabilities',
-      'streaming',
-      'overview',
-      'python',
-    ]);
-    expect(getCanonicalCockpitRedirect(model, 'code')).toBe(
-      `${model.canonicalPath}?mode=code`
-    );
-    expect(getCanonicalCockpitRedirect(model, 'preview')).toBe(
-      model.canonicalPath
-    );
-    expect(getCanonicalCockpitRedirect(model, ['code', 'docs'])).toBe(
-      model.canonicalPath
-    );
-
-    const docsOnly = getCockpitPageModel([
-      'langgraph',
-      'getting-started',
-      'overview',
-      'overview',
-      'python',
-    ]);
-    expect(getCanonicalCockpitRedirect(docsOnly, 'run')).toBe(
-      docsOnly.canonicalPath
-    );
-  });
-});
-
-describe('unified Website redirect gate', () => {
-  it('is disabled unless the explicit flag and a valid origin are both present', () => {
-    expect(
-      getUnifiedWorkspaceRedirectOrigin({
-        NEXT_PUBLIC_WEBSITE_ORIGIN: 'https://threadplane.ai',
-        NODE_ENV: 'production',
-      })
-    ).toBeNull();
-    expect(
-      getUnifiedWorkspaceRedirectOrigin({
-        ...enabledProductionEnv,
-        NEXT_PUBLIC_WEBSITE_ORIGIN: 'http://threadplane.ai',
-      })
-    ).toBeNull();
-    expect(
-      getUnifiedWorkspaceRedirectOrigin({
-        ...enabledProductionEnv,
-        NEXT_PUBLIC_WEBSITE_ORIGIN: 'https://threadplane.ai/docs',
-      })
-    ).toBeNull();
-    expect(getUnifiedWorkspaceRedirectOrigin(enabledProductionEnv)).toBe(
+describe('Cockpit Website origin validation', () => {
+  it('accepts only the canonical Website HTTPS origin in production', () => {
+    expect(getCockpitWebsiteOrigin(productionEnvironment)).toBe(
       'https://threadplane.ai'
     );
-  });
-
-  it('allows HTTP localhost only in development', () => {
-    const localhost = {
-      UNIFIED_WORKSPACE_REDIRECTS_ENABLED: 'true',
-      NEXT_PUBLIC_WEBSITE_ORIGIN: 'http://localhost:3000',
-    };
     expect(
-      getUnifiedWorkspaceRedirectOrigin({
-        ...localhost,
-        NODE_ENV: 'development',
-      })
-    ).toBe('http://localhost:3000');
-    expect(
-      getUnifiedWorkspaceRedirectOrigin({
-        ...localhost,
+      getCockpitWebsiteOrigin({
+        COCKPIT_WEBSITE_ORIGIN: 'https://threadplane.ai/',
         NODE_ENV: 'production',
       })
-    ).toBeNull();
+    ).toBe('https://threadplane.ai');
+  });
+
+  it('accepts explicit HTTP localhost only in development', () => {
+    expect(
+      getCockpitWebsiteOrigin({
+        COCKPIT_WEBSITE_ORIGIN: 'http://localhost/',
+        NODE_ENV: 'development',
+      })
+    ).toBe('http://localhost');
+    expect(
+      getCockpitWebsiteOrigin({
+        COCKPIT_WEBSITE_ORIGIN: 'http://localhost:4200/',
+        NODE_ENV: 'development',
+      })
+    ).toBe('http://localhost:4200');
+  });
+
+  it.each([
+    [{ NODE_ENV: 'production' }, 'missing'],
+    [
+      { COCKPIT_WEBSITE_ORIGIN: 'not a URL', NODE_ENV: 'production' },
+      'invalid',
+    ],
+    [
+      {
+        COCKPIT_WEBSITE_ORIGIN: 'https://preview.threadplane.ai',
+        NODE_ENV: 'production',
+      },
+      'production preview origin',
+    ],
+    [
+      {
+        COCKPIT_WEBSITE_ORIGIN: 'https://threadplane.ai:8443',
+        NODE_ENV: 'production',
+      },
+      'production non-default port',
+    ],
+    [
+      {
+        COCKPIT_WEBSITE_ORIGIN: 'https://preview.threadplane.ai',
+        NODE_ENV: 'development',
+      },
+      'development preview HTTPS origin',
+    ],
+    [
+      {
+        COCKPIT_WEBSITE_ORIGIN: 'https://user:secret@threadplane.ai',
+        NODE_ENV: 'production',
+      },
+      'credentials',
+    ],
+    [
+      {
+        COCKPIT_WEBSITE_ORIGIN: 'https://threadplane.ai/docs',
+        NODE_ENV: 'production',
+      },
+      'non-root path',
+    ],
+    [
+      {
+        COCKPIT_WEBSITE_ORIGIN: 'https://threadplane.ai?next=/docs',
+        NODE_ENV: 'production',
+      },
+      'query',
+    ],
+    [
+      {
+        COCKPIT_WEBSITE_ORIGIN: 'https://threadplane.ai#fragment',
+        NODE_ENV: 'production',
+      },
+      'fragment',
+    ],
+    [
+      {
+        COCKPIT_WEBSITE_ORIGIN: 'https://threadplane.ai?',
+        NODE_ENV: 'production',
+      },
+      'empty query delimiter',
+    ],
+    [
+      {
+        COCKPIT_WEBSITE_ORIGIN: 'https://threadplane.ai#',
+        NODE_ENV: 'production',
+      },
+      'empty fragment delimiter',
+    ],
+    [
+      {
+        COCKPIT_WEBSITE_ORIGIN: ' https://threadplane.ai',
+        NODE_ENV: 'production',
+      },
+      'leading whitespace',
+    ],
+    [
+      {
+        COCKPIT_WEBSITE_ORIGIN: 'https://threadplane.ai\n',
+        NODE_ENV: 'production',
+      },
+      'trailing whitespace',
+    ],
+    [
+      {
+        COCKPIT_WEBSITE_ORIGIN: 'https://threadplane.ai/%2e',
+        NODE_ENV: 'production',
+      },
+      'encoded dot path',
+    ],
+    [
+      {
+        COCKPIT_WEBSITE_ORIGIN: 'https://threadplane.ai/a/..',
+        NODE_ENV: 'production',
+      },
+      'normalized dot path',
+    ],
+    [
+      {
+        COCKPIT_WEBSITE_ORIGIN: 'HTTPS://THREADPLANE.AI',
+        NODE_ENV: 'production',
+      },
+      'case-normalized origin',
+    ],
+    [
+      {
+        COCKPIT_WEBSITE_ORIGIN: 'https://threadplane.ai:443',
+        NODE_ENV: 'production',
+      },
+      'normalized default port',
+    ],
+    [
+      {
+        COCKPIT_WEBSITE_ORIGIN: 'http://threadplane.ai',
+        NODE_ENV: 'production',
+      },
+      'production HTTP',
+    ],
+    [
+      {
+        COCKPIT_WEBSITE_ORIGIN: 'http://127.0.0.1:4200',
+        NODE_ENV: 'development',
+      },
+      'non-localhost development HTTP',
+    ],
+    [
+      {
+        COCKPIT_WEBSITE_ORIGIN: 'http://localhost.evil.test:4200',
+        NODE_ENV: 'development',
+      },
+      'lookalike localhost',
+    ],
+    [
+      {
+        COCKPIT_WEBSITE_ORIGIN: 'javascript:alert(1)',
+        NODE_ENV: 'development',
+      },
+      'unsafe protocol',
+    ],
+    [
+      {
+        COCKPIT_WEBSITE_ORIGIN: 'file:///tmp/threadplane',
+        NODE_ENV: 'development',
+      },
+      'file protocol',
+    ],
+  ] as const)('rejects %s origin configuration', (environment) => {
+    expect(() => getCockpitWebsiteOrigin(environment)).toThrow(
+      /COCKPIT_WEBSITE_ORIGIN/
+    );
   });
 });
 
 describe('registry-derived legacy Website redirects', () => {
-  it('maps every legacy path to its registry-owned Website destination', () => {
+  it('maps every exact manifest path using its old Cockpit default mode', () => {
     for (const entry of cockpitManifest) {
+      const defaultMode = entry.availableModes.includes('Run') ? 'Run' : 'Docs';
       expect(
-        getLegacyWebsiteRedirect(
-          entry.legacyPath,
-          undefined,
-          enabledProductionEnv
-        )
-      ).toBe(
-        `https://threadplane.ai${getWorkspaceDestinationPath(entry)}`
-      );
+        getLegacyWebsiteRedirect(entry.legacyPath, [], productionEnvironment),
+        entry.id
+      ).toBe(expectedHref(entry, defaultMode));
     }
   });
 
-  it('preserves only a single valid mode available at the destination', () => {
-    const streaming = cockpitManifest.find(
-      (entry) =>
-        entry.id === 'langgraph:core-capabilities:streaming:overview:python'
-    );
-    const overview = cockpitManifest.find(
-      (entry) =>
-        entry.id === 'langgraph:getting-started:overview:overview:python'
-    );
-    if (!streaming || !overview) throw new Error('Expected fixture entries');
-
-    expect(
-      getLegacyWebsiteRedirect(
-        streaming.legacyPath,
-        'code',
-        enabledProductionEnv
-      )
-    ).toBe('https://threadplane.ai/docs/langgraph/guides/streaming?mode=code');
-    expect(
-      getLegacyWebsiteRedirect(
-        streaming.legacyPath,
-        ['code', 'run'],
-        enabledProductionEnv
-      )
-    ).toBe('https://threadplane.ai/docs/langgraph/guides/streaming');
-    expect(
-      getLegacyWebsiteRedirect(overview.legacyPath, 'run', enabledProductionEnv)
-    ).toBe(
-      'https://threadplane.ai/docs/langgraph/getting-started/introduction'
-    );
-    expect(
-      getLegacyWebsiteRedirect(
-        streaming.legacyPath,
-        'preview',
-        enabledProductionEnv
-      )
-    ).toBe('https://threadplane.ai/docs/langgraph/guides/streaming');
+  it('honors every single available mode case-insensitively', () => {
+    for (const entry of cockpitManifest) {
+      for (const mode of entry.availableModes) {
+        expect(
+          getLegacyWebsiteRedirect(
+            entry.legacyPath,
+            [mode.toUpperCase()],
+            productionEnvironment
+          ),
+          `${entry.id} ${mode}`
+        ).toBe(expectedHref(entry, mode));
+      }
+    }
   });
 
-  it('preserves secondary capability identity and its available modes', () => {
-    const jsonRender = cockpitManifest.find(
-      (entry) =>
-        entry.id === 'ag-ui:core-capabilities:json-render:overview:python'
+  it('uses the old default for invalid, duplicate, or unavailable modes', () => {
+    const runnable = cockpitManifest.find((entry) =>
+      entry.availableModes.includes('Run')
     );
-    if (!jsonRender) throw new Error('Expected AG-UI JSON Render fixture');
+    const docsOnly = cockpitManifest.find(
+      (entry) => !entry.availableModes.includes('Run')
+    );
+    if (!runnable || !docsOnly) throw new Error('Expected manifest fixtures');
 
-    expect(jsonRender.availableModes).toContain('Run');
     expect(
       getLegacyWebsiteRedirect(
-        jsonRender.legacyPath,
-        'run',
-        enabledProductionEnv
+        runnable.legacyPath,
+        ['preview'],
+        productionEnvironment
       )
-    ).toBe('https://threadplane.ai/workspace/ag-ui/json-render?mode=run');
+    ).toBe(expectedHref(runnable, 'Run'));
     expect(
       getLegacyWebsiteRedirect(
-        jsonRender.legacyPath,
-        'docs',
-        enabledProductionEnv
+        runnable.legacyPath,
+        ['docs', 'code'],
+        productionEnvironment
       )
-    ).toBe('https://threadplane.ai/workspace/ag-ui/json-render?mode=docs');
+    ).toBe(expectedHref(runnable, 'Run'));
+    expect(
+      getLegacyWebsiteRedirect(
+        docsOnly.legacyPath,
+        ['run'],
+        productionEnvironment
+      )
+    ).toBe(expectedHref(docsOnly, 'Docs'));
   });
 
-  it('does not redirect invalid or unmapped legacy paths', () => {
+  it('serializes Docs mode truthfully for docs and workspace destinations', () => {
+    const docsDestination = cockpitManifest.find((entry) =>
+      getWorkspaceDestinationPath(entry).startsWith('/docs/')
+    );
+    const workspaceDestination = cockpitManifest.find((entry) =>
+      getWorkspaceDestinationPath(entry).startsWith('/workspace/')
+    );
+    if (!docsDestination || !workspaceDestination) {
+      throw new Error('Expected docs and workspace fixtures');
+    }
+
     expect(
       getLegacyWebsiteRedirect(
-        '/langgraph/core-capabilities/not-real/overview/python',
-        'run',
-        enabledProductionEnv
+        docsDestination.legacyPath,
+        ['docs'],
+        productionEnvironment
       )
-    ).toBeNull();
+    ).toBe(expectedHref(docsDestination, 'Docs'));
+    expect(
+      getLegacyWebsiteRedirect(
+        workspaceDestination.legacyPath,
+        ['docs'],
+        productionEnvironment
+      )
+    ).toBe(expectedHref(workspaceDestination, 'Docs'));
+    expect(expectedHref(workspaceDestination, 'Docs')).toContain('?mode=docs');
   });
 
-  it('redirects the Cockpit root through its default registry identity', () => {
-    expect(getRootWebsiteRedirect('run', enabledProductionEnv)).toBe(
+  it('returns null for unknown, partial, extra, malformed, and trailing paths', () => {
+    const exact = cockpitManifest[0].legacyPath;
+    const partial = exact.split('/').slice(0, -1).join('/');
+
+    for (const pathname of [
+      '/not-a-capability',
+      partial,
+      `${exact}/extra`,
+      `${exact}/`,
+      exact.replace('/', '//'),
+      exact.replace('/overview/', '/%2Foverview/'),
+    ]) {
+      expect(
+        getLegacyWebsiteRedirect(pathname, [], productionEnvironment),
+        pathname
+      ).toBeNull();
+    }
+  });
+
+  it('redirects root to the representative streaming Run surface', () => {
+    expect(getRootWebsiteRedirect(productionEnvironment)).toBe(
       'https://threadplane.ai/docs/langgraph/guides/streaming?mode=run'
     );
   });

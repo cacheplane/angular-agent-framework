@@ -10,12 +10,14 @@ import {
   type WorkspaceMode,
   type WorkspaceResolution,
 } from '@threadplane/cockpit-registry';
+import { RUNTIME_CONFIGURATION_VERSION } from '@threadplane/cockpit-runtime-bridge';
 import type {
   ContentBundle,
   WorkspacePresentation,
 } from '@threadplane/cockpit-shell';
 import { WorkspaceProvider } from './workspace-provider';
 import { WorkspaceShell } from './workspace-shell';
+import { RuntimeTargetProvider } from './runtime/runtime-target-provider';
 
 const runModeFault = vi.hoisted(() => ({ shouldThrow: false }));
 const RUN_RAIL_ITEM = /^Run(?:,|$)/;
@@ -82,30 +84,32 @@ function renderWorkspace(options: {
   const selectedPresentation = options.presentation ?? presentation;
   const selectedContent = options.contentBundle ?? contentBundle;
   return render(
-    <WorkspaceProvider
-      resolution={selectedResolution}
-      presentation={selectedPresentation}
-      contentBundle={selectedContent}
-      routeKind="docs"
-      routePath={
-        selectedResolution.kind === 'mapped'
-          ? selectedResolution.identity.docsPath ??
-            selectedResolution.identity.workspacePath
-          : selectedResolution.docsPath
-      }
-      requestedMode={options.requestedMode ?? 'docs'}
-      docsSlot={options.docsSlot}
-      pushIdentity={vi.fn()}
-      pushMode={vi.fn()}
-      replaceMode={vi.fn()}
-      getSessionId={() => 'session-1'}
-    >
-      <WorkspaceShell
-        navigationTree={[]}
-        manifest={cockpitManifest}
-        rootElement={options.rootElement}
-      />
-    </WorkspaceProvider>
+    <RuntimeTargetProvider>
+      <WorkspaceProvider
+        resolution={selectedResolution}
+        presentation={selectedPresentation}
+        contentBundle={selectedContent}
+        routeKind="docs"
+        routePath={
+          selectedResolution.kind === 'mapped'
+            ? selectedResolution.identity.docsPath ??
+              selectedResolution.identity.workspacePath
+            : selectedResolution.docsPath
+        }
+        requestedMode={options.requestedMode ?? 'docs'}
+        docsSlot={options.docsSlot}
+        pushIdentity={vi.fn()}
+        pushMode={vi.fn()}
+        replaceMode={vi.fn()}
+        getSessionId={() => 'session-1'}
+      >
+        <WorkspaceShell
+          navigationTree={[]}
+          manifest={cockpitManifest}
+          rootElement={options.rootElement}
+        />
+      </WorkspaceProvider>
+    </RuntimeTargetProvider>
   );
 }
 
@@ -142,6 +146,99 @@ describe('WorkspaceShell persistent panel composition', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
     expect(screen.getByRole('heading', { name: 'Settings' })).toBeTruthy();
     expect(rendered.container.querySelector('iframe')).toBe(frame);
+  });
+
+  it('disposes the old frame for a target change without placing the target or key in the replacement frame', async () => {
+    const customUrl = 'https://api.example.test/langgraph';
+    const secretKey = 'test-key-redact-me';
+    const rendered = renderWorkspace({
+      requestedMode: 'docs',
+      docsSlot: <article>Server docs</article>,
+    });
+    await waitFor(() =>
+      expect(rendered.container.querySelector('iframe')).toBeTruthy()
+    );
+    const oldFrame = rendered.container.querySelector('iframe');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Custom LangSmith' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'API URL' }), {
+      target: { value: customUrl },
+    });
+    fireEvent.input(screen.getByLabelText('API key'), {
+      target: { value: secretKey },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Use custom target' }));
+
+    await waitFor(() =>
+      expect(rendered.container.querySelector('iframe')).not.toBe(oldFrame)
+    );
+    const replacement = rendered.container.querySelector('iframe');
+    expect(oldFrame?.isConnected).toBe(false);
+    expect(replacement?.outerHTML).not.toContain(customUrl);
+    expect(replacement?.outerHTML).not.toContain(secretKey);
+    expect(replacement?.getAttribute('referrerpolicy')).toBe('origin');
+
+    const childNonce = 'workspace-child-nonce';
+    const frameWindow = replacement?.contentWindow ?? null;
+    fireEvent(
+      window,
+      new MessageEvent('message', {
+        source: frameWindow,
+        origin: 'https://runtime.example.test',
+        data: {
+          type: 'tplane:runtime-child-ready',
+          version: RUNTIME_CONFIGURATION_VERSION,
+          nonce: childNonce,
+        },
+      })
+    );
+    fireEvent(
+      window,
+      new MessageEvent('message', {
+        source: frameWindow,
+        origin: 'https://runtime.example.test',
+        data: {
+          type: 'tplane:runtime-configuration-failed',
+          version: RUNTIME_CONFIGURATION_VERSION,
+          nonce: childNonce,
+          generation: 1,
+          code: 'incompatible_bridge',
+        },
+      })
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Docs' }));
+    expect(screen.getByText('Server docs')).toBeTruthy();
+    expect(screen.getByText('Incompatible runtime')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    expect(screen.getByText(customUrl)).toBeTruthy();
+    expect(document.body.textContent).not.toContain(secretKey);
+  });
+
+  it('installs the parent message listener before assigning the iframe navigation URL', async () => {
+    const addEventListener = vi.spyOn(window, 'addEventListener');
+    const setAttribute = vi.spyOn(Element.prototype, 'setAttribute');
+    const rendered = renderWorkspace({ requestedMode: 'docs' });
+    await waitFor(() =>
+      expect(rendered.container.querySelector('iframe')).toBeTruthy()
+    );
+
+    const messageListenerCall = addEventListener.mock.calls.findIndex(
+      ([type]) => type === 'message'
+    );
+    const iframeSrcCall = setAttribute.mock.calls.findIndex(
+      ([name], index) =>
+        name === 'src' &&
+        setAttribute.mock.instances[index] instanceof HTMLIFrameElement
+    );
+    expect(messageListenerCall).toBeGreaterThanOrEqual(0);
+    expect(iframeSrcCall).toBeGreaterThanOrEqual(0);
+    expect(
+      addEventListener.mock.invocationCallOrder[messageListenerCall]
+    ).toBeLessThan(
+      setAttribute.mock.invocationCallOrder[iframeSrcCall] ?? Infinity
+    );
   });
 
   it('exposes focusable panel headings without remounting Run', async () => {
@@ -195,9 +292,7 @@ describe('WorkspaceShell persistent panel composition', () => {
 
   it('uses neutral Workspace landmark and modal labels by default', () => {
     renderWorkspace({ docsSlot: <article>Server docs</article> });
-    expect(
-      screen.getByRole('main', { name: 'Workspace shell' })
-    ).toBeTruthy();
+    expect(screen.getByRole('main', { name: 'Workspace shell' })).toBeTruthy();
     expect(
       screen.getByRole('navigation', { name: 'Workspace modes' })
     ).toBeTruthy();
@@ -219,9 +314,7 @@ describe('WorkspaceShell persistent panel composition', () => {
     expect(
       screen.getByRole('region', { name: 'Workspace shell' })
     ).toBeTruthy();
-    expect(
-      screen.queryByRole('main', { name: 'Workspace shell' })
-    ).toBeNull();
+    expect(screen.queryByRole('main', { name: 'Workspace shell' })).toBeNull();
   });
 
   it('accepts product labels and neutral header actions from a host adapter', () => {
@@ -235,28 +328,30 @@ describe('WorkspaceShell persistent panel composition', () => {
       }
     >;
     render(
-      <WorkspaceProvider
-        resolution={resolution}
-        presentation={presentation}
-        contentBundle={contentBundle}
-        routeKind="workspace"
-        routePath={identity.legacyPath}
-        requestedMode="docs"
-        pushIdentity={vi.fn()}
-        pushMode={vi.fn()}
-        replaceMode={vi.fn()}
-        getSessionId={() => 'session-1'}
-      >
-        <ProductWorkspaceShell
-          navigationTree={[]}
-          manifest={cockpitManifest}
-          modeNavigationLabel="Product modes"
-          contextPaneLabel="Product context"
-          mobileDialogLabel="Product control plane"
-          mobileTitle="Product"
-          headerActions={<a href="https://example.test/docs">Read docs</a>}
-        />
-      </WorkspaceProvider>
+      <RuntimeTargetProvider>
+        <WorkspaceProvider
+          resolution={resolution}
+          presentation={presentation}
+          contentBundle={contentBundle}
+          routeKind="workspace"
+          routePath={identity.legacyPath}
+          requestedMode="docs"
+          pushIdentity={vi.fn()}
+          pushMode={vi.fn()}
+          replaceMode={vi.fn()}
+          getSessionId={() => 'session-1'}
+        >
+          <ProductWorkspaceShell
+            navigationTree={[]}
+            manifest={cockpitManifest}
+            modeNavigationLabel="Product modes"
+            contextPaneLabel="Product context"
+            mobileDialogLabel="Product control plane"
+            mobileTitle="Product"
+            headerActions={<a href="https://example.test/docs">Read docs</a>}
+          />
+        </WorkspaceProvider>
+      </RuntimeTargetProvider>
     );
 
     expect(
@@ -306,21 +401,23 @@ describe('WorkspaceShell persistent panel composition', () => {
       availableModes: ['Docs', 'Code'] as const,
     };
     rendered.rerender(
-      <WorkspaceProvider
-        resolution={{ kind: 'mapped', identity: limitedIdentity }}
-        presentation={{ ...presentation, identity: limitedIdentity }}
-        contentBundle={contentBundle}
-        routeKind="docs"
-        routePath={limitedIdentity.docsPath ?? limitedIdentity.workspacePath}
-        requestedMode="docs"
-        docsSlot={<article>Limited article</article>}
-        pushIdentity={vi.fn()}
-        pushMode={vi.fn()}
-        replaceMode={vi.fn()}
-        getSessionId={() => 'session-1'}
-      >
-        <WorkspaceShell navigationTree={[]} manifest={cockpitManifest} />
-      </WorkspaceProvider>
+      <RuntimeTargetProvider>
+        <WorkspaceProvider
+          resolution={{ kind: 'mapped', identity: limitedIdentity }}
+          presentation={{ ...presentation, identity: limitedIdentity }}
+          contentBundle={contentBundle}
+          routeKind="docs"
+          routePath={limitedIdentity.docsPath ?? limitedIdentity.workspacePath}
+          requestedMode="docs"
+          docsSlot={<article>Limited article</article>}
+          pushIdentity={vi.fn()}
+          pushMode={vi.fn()}
+          replaceMode={vi.fn()}
+          getSessionId={() => 'session-1'}
+        >
+          <WorkspaceShell navigationTree={[]} manifest={cockpitManifest} />
+        </WorkspaceProvider>
+      </RuntimeTargetProvider>
     );
     expect(rendered.container.querySelector('iframe')).toBeNull();
   });
@@ -440,8 +537,6 @@ describe('WorkspaceShell persistent panel composition', () => {
     expect(screen.getByRole('alert').textContent).toContain(
       'Docs panel unavailable.'
     );
-    expect(
-      screen.getByRole('button', { name: RUN_RAIL_ITEM })
-    ).toBeTruthy();
+    expect(screen.getByRole('button', { name: RUN_RAIL_ITEM })).toBeTruthy();
   });
 });
