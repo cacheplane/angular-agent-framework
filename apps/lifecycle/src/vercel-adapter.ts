@@ -17,14 +17,15 @@ function jsonError(status: number, error: string): Response {
   );
 }
 
-function dawnRequestFromVercelRewrite(request: Request): Request | null {
+function dawnRequestFromVercelRewrite(request: Request): Request {
   const url = new URL(request.url);
   if (url.pathname === INTERNAL_FUNCTION_PREFIX) {
     url.pathname = '/';
   } else if (url.pathname.startsWith(`${INTERNAL_FUNCTION_PREFIX}/`)) {
     url.pathname = url.pathname.slice(INTERNAL_FUNCTION_PREFIX.length);
   } else {
-    return null;
+    // Vercel rewrites can preserve the public URL presented to the function.
+    return request;
   }
   return new Request(url, request);
 }
@@ -49,7 +50,6 @@ export function createLifecycleVercelAdapter(
         return jsonError(401, 'Unauthorized');
       }
       const dawnRequest = dawnRequestFromVercelRewrite(request);
-      if (!dawnRequest) return jsonError(404, 'Not found');
       const response = await dawnApp.fetch(dawnRequest);
       if (new URL(dawnRequest.url).pathname !== '/healthz') return response;
       const deploymentId = readDeploymentId()?.trim();

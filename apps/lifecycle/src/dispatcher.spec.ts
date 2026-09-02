@@ -162,7 +162,7 @@ describe('Dawn lifecycle service authorization', () => {
     }
   );
 
-  it('outer adapter rejects an authenticated request outside its internal function prefix', async () => {
+  it('outer adapter delegates the public path when Vercel preserves the rewrite URL', async () => {
     const fetch = vi.fn().mockResolvedValue(new Response('healthy'));
     const adapter = createLifecycleVercelAdapter({ fetch }, () => 'secret');
     const request = new Request('https://lifecycle.test/healthz', {
@@ -171,8 +171,11 @@ describe('Dawn lifecycle service authorization', () => {
 
     const response = await adapter.fetch(request);
 
-    expect(response.status).toBe(404);
-    expect(fetch).not.toHaveBeenCalled();
+    expect(response.status).toBe(200);
+    expect(fetch).toHaveBeenCalledOnce();
+    expect(new URL(fetch.mock.calls[0]?.[0]?.url ?? '').pathname).toBe(
+      '/healthz'
+    );
   });
 
   it('outer adapter rejects a wrong bearer token before delegation', async () => {
