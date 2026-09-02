@@ -2,7 +2,7 @@
 import type { ReactNode } from 'react';
 import { Section } from '../ui/Section';
 import { Container } from '../ui/Container';
-import { Eyebrow } from '../ui/Eyebrow';
+import { SectionHeader } from '../ui/SectionHeader';
 import { StackDiagram, type StackHighlight } from '../docs/diagrams/StackDiagram';
 
 interface StackDiagramSectionProps {
@@ -30,12 +30,12 @@ export function StackDiagramSection({
     <Section surface="tinted" id={id} ariaLabelledBy={`${id}-heading`}>
       <Container>
         <div className="stack-diagram-section">
-          <Eyebrow tone="accent" className="stack-diagram-eyebrow">
-            {eyebrow}
-          </Eyebrow>
-          <h2 id={`${id}-heading`} className="stack-diagram-headline">
-            {headline}
-          </h2>
+          <SectionHeader
+            variant="centered"
+            eyebrow={eyebrow}
+            heading={headline}
+            headingId={`${id}-heading`}
+          />
           <p className="stack-diagram-body">{body}</p>
           <StackDiagram highlight={highlight} caption={caption} scale="marketing" />
         </div>

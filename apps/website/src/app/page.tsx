@@ -41,7 +41,7 @@ export default async function HomePage() {
       <StackDiagramSection
         id="architecture"
         eyebrow="Architecture"
-        headline="One contract between your UI and any runtime"
+        headline="Your UI talks to one contract, never to a runtime"
         body="Your Angular components consume a signal-shaped Agent contract. Adapters implement it — swap the runtime underneath without touching the UI."
         caption="The chat surface never imports a runtime SDK — only the contract."
       />
