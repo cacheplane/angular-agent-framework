@@ -6,7 +6,7 @@ import { DiagramEdge } from './DiagramEdge';
 const SLUG = 'concept-render';
 
 /**
- * Homepage concept card: a JSON spec — abbreviated from the `@threadplane/render`
+ * Homepage concept card: a UI spec — abbreviated from the `@threadplane/render`
  * intro's own example (`type: 'Text'`, `props: { … }`) — resolves through
  * `defineAngularRegistry()` into your own Angular components.
  */
@@ -17,7 +17,7 @@ export function RenderConcept() {
       viewWidth={320}
       viewHeight={240}
       scale="compact"
-      label="Generative UI concept: a JSON spec resolves through your Angular registry into your own components."
+      label="Generative UI concept: a UI spec resolves through your Angular registry into your own components."
     >
       <DiagramNode
         x={16}
@@ -39,7 +39,6 @@ export function RenderConcept() {
         eyebrow="Render"
         title="defineAngularRegistry()"
         meta="@threadplane/render"
-        tone="accent"
       />
       <DiagramEdge d="M160 162 V176" slug={SLUG} arrow />
       <DiagramNode
@@ -50,6 +49,7 @@ export function RenderConcept() {
         title="Your own Angular components"
         align="middle"
         titleStyle="sans"
+        tone="accent"
       />
     </DiagramFrame>
   );

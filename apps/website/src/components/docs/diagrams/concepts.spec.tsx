@@ -11,16 +11,23 @@ import { RenderConcept } from './RenderConcept';
 describe('StreamConcept', () => {
   it('mounts compact with the signals claim', () => {
     const { container } = render(<StreamConcept />);
+    const svg = container.querySelector('svg');
     expect(container.querySelector('figure')?.getAttribute('data-scale')).toBe('compact');
+    expect(svg?.getAttribute('aria-label')).toBeTruthy();
     const titles = Array.from(container.querySelectorAll('.tp-diagram-title')).map((t) => t.textContent);
     expect(titles).toContain('injectAgent()');
   });
 });
 
 describe('RenderConcept', () => {
-  it('mounts compact and accents the your-components claim', () => {
+  it('accents the your-components payoff node', () => {
     const { container } = render(<RenderConcept />);
     expect(container.querySelector('figure')?.getAttribute('data-scale')).toBe('compact');
-    expect(container.querySelectorAll('g.tp-diagram-node[data-tone="accent"]').length).toBeGreaterThan(0);
+    const titles = Array.from(container.querySelectorAll('.tp-diagram-title')).map((t) => t.textContent);
+    expect(titles).toContain("type: 'Text'");
+    expect(titles).toContain('defineAngularRegistry()');
+    const accentNodes = container.querySelectorAll('g.tp-diagram-node[data-tone="accent"]');
+    expect(accentNodes.length).toBe(1);
+    expect(accentNodes[0].querySelector('.tp-diagram-title')?.textContent).toBe('Your own Angular components');
   });
 });
