@@ -461,8 +461,11 @@ jobs:
       - name: Check requirements.txt matches uv.lock
         working-directory: examples/ag-ui/python
         run: |
-          uv export --no-hashes -o /tmp/requirements.check.txt
-          if ! diff -u requirements.txt /tmp/requirements.check.txt; then
+          # Regenerate in place with the exact documented command. uv stamps the
+          # -o path into the file's header, so exporting to a scratch path never
+          # matches a checked-in export no matter how fresh it is.
+          uv export --no-hashes -o requirements.txt
+          if ! git diff --exit-code -- requirements.txt; then
             echo "::error::examples/ag-ui/python/requirements.txt is stale — the Railway image installs from this file, not uv.lock. Run 'uv export --no-hashes -o requirements.txt' in examples/ag-ui/python and commit the result."
             exit 1
           fi
@@ -567,8 +570,10 @@ jobs:
             echo "No requirements.txt in ${{ matrix.cap.python }} — skipping drift check."
             exit 0
           fi
-          uv export --no-hashes -o /tmp/requirements.check.txt
-          if ! diff -u requirements.txt /tmp/requirements.check.txt; then
+          # Regenerate in place with the exact documented command; see the
+          # examples/ag-ui lane above for why a scratch-path export can't match.
+          uv export --no-hashes -o requirements.txt
+          if ! git diff --exit-code -- requirements.txt; then
             echo "::error::${{ matrix.cap.python }}/requirements.txt is stale relative to uv.lock — deployments/ag-ui-dev is generated from this file. Run 'uv export --no-hashes -o requirements.txt' in ${{ matrix.cap.python }} and commit the result."
             exit 1
           fi
