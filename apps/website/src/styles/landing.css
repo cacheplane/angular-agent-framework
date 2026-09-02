@@ -1488,7 +1488,7 @@
   background: var(--color-border);
 }
 
-/* StackDiagramSection — components/landing/StackDiagramSection.tsx */
+/* DiagramSection — components/landing/DiagramSection.tsx (wrapped by StackDiagramSection) */
 .stack-diagram-section {
   display: flex;
   flex-direction: column;
@@ -1512,4 +1512,61 @@
   /* The section sits on the tinted surface; the scroll-shadow cover layers
      must match it or they read as white bars at the figure edges. */
   --diagram-scroll-bg: var(--color-surface-tinted);
+}
+
+/* HomeConceptGrid — components/landing/HomeConceptGrid.tsx */
+.home-concept {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.home-concept-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+@media (max-width: 767px) {
+  .home-concept-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.home-concept-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.home-concept-card .tp-diagram-figure {
+  margin: 0 auto 10px;
+  width: 100%;
+  max-width: 420px;
+}
+.home-concept-title {
+  font-family: var(--font-inter);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+.home-concept-sentence {
+  font-family: var(--font-inter);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+.home-concept-link {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-accent);
+  text-decoration: none;
+  margin-top: auto;
+  padding-top: 6px;
+}
+.home-concept-link:hover {
+  text-decoration: underline;
 }

@@ -137,6 +137,15 @@ const CONTRACTS: StyleContract[] = [
       'min-width': /min-width:\s*600px/,
     },
   },
+  {
+    file: 'docs.css',
+    selector: '.tp-diagram-figure[data-scale="compact"] .tp-diagram-svg',
+    why: 'Compact card diagrams must never inherit the 600px phone floor: inside a grid card that floor would force an internal scroll where none is affordable. Losing the min-width override silently reintroduces that 600px floor. Losing the max-width cap lets a wide grid card scale the diagram past its tuned compact type ramp, ballooning the text.',
+    requires: {
+      'min-width': /min-width:\s*0/,
+      'max-width': /max-width:\s*420px/,
+    },
+  },
 ];
 
 describe('style contracts', () => {

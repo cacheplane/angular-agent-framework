@@ -13,8 +13,18 @@ interface DiagramFrameProps {
   /** Accessible one-sentence description of what the diagram shows. */
   label: string;
   caption?: string;
-  /** Marketing pages render the same SVG larger. */
-  scale?: 'docs' | 'marketing';
+  /**
+   * Marketing pages render the same SVG larger; compact cards render it small with a bigger type
+   * ramp. Compact compositions author at a ~320 viewBox with the compact type ramp (eyebrow 10 /
+   * mono title 13.5 / sans title 12 / meta 11 / pill 10.5, viewBox units) — see DiagramNode's note
+   * for the shared baseline offsets; rendered width is capped at 420px regardless of card size.
+   * Compact rhythm: 18px inter-node gaps, edges stop 4px short of the node they arrive at
+   * (arrowhead fills the rest), 16px outer margins, and a uniform viewHeight of 240 across the
+   * homepage concept-card set — so every card in that set is the same height regardless of
+   * viewWidth or node count. Second rhythm, for node↔pill gaps: 12px (segment lengths flex to
+   * fit; pills abut their segments).
+   */
+  scale?: 'docs' | 'marketing' | 'compact';
   children: ReactNode;
 }
 

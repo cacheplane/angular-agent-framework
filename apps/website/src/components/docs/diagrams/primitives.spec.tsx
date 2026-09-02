@@ -76,6 +76,29 @@ describe('diagram kit primitives', () => {
     expect(container.querySelector('g.tp-diagram-node')?.getAttribute('data-title')).toBe('sans');
   });
 
+  // This runtime assertion is trivially green — 'compact' is a literal in the
+  // scale union, so any string reaching here has already type-checked. The
+  // real guard is tsc during `nx build` (spec .tsx files are type-checked
+  // because tsconfig excludes only `*.spec.ts`, not `*.spec.tsx`) — don't
+  // "fix" that tsconfig exclude without replacing this guard.
+  it('DiagramFrame accepts the compact scale', () => {
+    const { container } = render(
+      <DiagramFrame slug="c" viewWidth={320} viewHeight={150} label="x" scale="compact">
+        <g />
+      </DiagramFrame>
+    );
+    expect(container.querySelector('figure')?.getAttribute('data-scale')).toBe('compact');
+  });
+
+  it('DiagramNode renders a mono meta when metaStyle is mono', () => {
+    const { container } = render(
+      <svg>
+        <DiagramNode x={0} y={0} w={200} h={64} title="spec" meta='{ "component": "Form" }' metaStyle="mono" />
+      </svg>
+    );
+    expect(container.querySelector('g.tp-diagram-node')?.getAttribute('data-meta')).toBe('mono');
+  });
+
   it('DiagramPill renders a centered label', () => {
     const { container } = render(
       <svg>
@@ -85,5 +108,21 @@ describe('diagram kit primitives', () => {
     const text = container.querySelector('.tp-diagram-pill text');
     expect(text?.textContent).toBe('SSE');
     expect(text?.getAttribute('text-anchor')).toBe('middle');
+  });
+
+  it('DiagramPill defaults to accent tone and accepts neutral', () => {
+    const { container: defaultContainer } = render(
+      <svg>
+        <DiagramPill cx={0} cy={0} w={50} label="x" />
+      </svg>
+    );
+    expect(defaultContainer.querySelector('.tp-diagram-pill')?.getAttribute('data-tone')).toBe('accent');
+
+    const { container: neutralContainer } = render(
+      <svg>
+        <DiagramPill cx={0} cy={0} w={50} label="x" tone="neutral" />
+      </svg>
+    );
+    expect(neutralContainer.querySelector('.tp-diagram-pill')?.getAttribute('data-tone')).toBe('neutral');
   });
 });

@@ -7,6 +7,8 @@ import { FeatureBlock } from '../../components/landing/FeatureBlock';
 import { WhitePaperBlock } from '../../components/landing/WhitePaperBlock';
 import { FinalCTA } from '../../components/landing/FinalCTA';
 import { MediumSwitcher } from '../../components/landing/MediumSwitcher';
+import { DiagramSection } from '../../components/landing/DiagramSection';
+import { RenderTransform } from '../../components/docs/diagrams';
 import { RenderCodeShowcase } from '../../components/landing/render/RenderCodeShowcase';
 import { createPageMetadata } from '../../lib/site-metadata';
 import { SECTION_MEDIA } from '../../lib/section-media';
@@ -50,6 +52,15 @@ export default async function RenderPage() {
           </div>
         </Container>
       </Section>
+
+      <DiagramSection
+        id="render-transform"
+        eyebrow="How it works"
+        headline="Schema on the wire, your design system on screen"
+        body="The agent emits a spec. Your registry, state, and handlers resolve it — and your own Angular components render it."
+      >
+        <RenderTransform />
+      </DiagramSection>
 
       <FeatureBlock
         id="schemas"
