@@ -72,6 +72,7 @@ describe('Dawn generated storage isolation', () => {
     });
     expect(vercel['outputDirectory']).toBe('public');
     expect(tsconfig.compilerOptions?.['noEmit']).toBe(false);
+    expect(tsconfig.compilerOptions?.['noEmitOnError']).toBe(false);
     expect(
       existsSync(resolve(process.cwd(), 'apps/lifecycle/public/.gitkeep'))
     ).toBe(true);

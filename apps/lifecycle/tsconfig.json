@@ -10,6 +10,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "noEmit": false,
+    "noEmitOnError": false,
     "types": ["node", "vitest/globals"]
   },
   "include": ["api/**/*.ts", "scripts/**/*.ts", "src/**/*.ts", "*.ts"]
