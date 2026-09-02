@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+// eslint-disable-next-line @nx/enforce-module-boundaries -- repo-root deployment verifier is intentionally outside an Nx project.
 import {
   DEFAULT_SMOKE_ASSISTANT_STREAM_TIMEOUT_MS,
   getSmokeAssistantStreamTimeoutMs,

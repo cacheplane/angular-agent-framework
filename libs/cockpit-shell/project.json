@@ -6,15 +6,33 @@
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": [
-        "{workspaceRoot}/dist/libs/cockpit-shell"
-      ],
+      "dependsOn": ["^build"],
+      "outputs": ["{workspaceRoot}/dist/libs/cockpit-shell"],
       "options": {
         "outputPath": "dist/libs/cockpit-shell",
         "main": "libs/cockpit-shell/src/index.ts",
         "tsConfig": "libs/cockpit-shell/tsconfig.lib.json"
       }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "inputs": ["default", "^default", "contentAssets"],
+      "options": {
+        "configFile": "libs/cockpit-shell/vite.config.mts"
+      }
     }
+  },
+  "namedInputs": {
+    "contentAssets": [
+      "{workspaceRoot}/cockpit/**/prompts/**",
+      "{workspaceRoot}/cockpit/**/angular/src/**",
+      "{workspaceRoot}/cockpit/**/python/src/**",
+      "{workspaceRoot}/cockpit/**/docs/**",
+      "{workspaceRoot}/deployments/ag-ui-mastra/*.mjs"
+    ]
   },
   "tags": [
     "scope:cockpit",

@@ -13,24 +13,36 @@ import {
   ThemeProvider,
 } from '@threadplane/ui-react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { NO_COCKPIT_DOCS_LINK } from '@threadplane/cockpit-registry';
 import { getCockpitPageModel } from '../lib/cockpit-page';
-import type { CockpitPageModel } from '../lib/cockpit-page';
-import type { UseRuntimeControllerOptions } from '../lib/runtime/use-runtime-controller';
+import type {
+  UseRuntimeControllerOptions,
+  WorkspaceProviderProps,
+  WorkspaceShellProps,
+} from '@threadplane/workspace-react';
+
+type CockpitSharedShellProps = WorkspaceShellProps & {
+  modeNavigationLabel?: string;
+  contextPaneLabel?: string;
+  mobileDialogLabel?: string;
+  mobileTitle?: string;
+};
 
 const operationalMocks = vi.hoisted(() => ({
   controllerInstances: 0,
   latestControllerOptions: null as UseRuntimeControllerOptions | null,
   activityShouldThrow: false,
+  latestProviderProps: null as WorkspaceProviderProps | null,
+  latestShellProps: null as CockpitSharedShellProps | null,
   track: vi.fn(),
   push: vi.fn(),
+  replace: vi.fn(),
 }));
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: operationalMocks.push,
     refresh: vi.fn(),
-    replace: vi.fn(),
+    replace: operationalMocks.replace,
     back: vi.fn(),
     forward: vi.fn(),
     prefetch: vi.fn(),
@@ -39,42 +51,66 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('../lib/analytics/client', () => ({ track: operationalMocks.track }));
 
-vi.mock('../lib/runtime/use-runtime-controller', async (importOriginal) => {
+vi.mock('@threadplane/workspace-react', async (importOriginal) => {
   const ReactModule = await import('react');
   const actual = await importOriginal<
-    typeof import('../lib/runtime/use-runtime-controller')
+    typeof import('@threadplane/workspace-react')
   >();
   return {
     ...actual,
-    useRuntimeController(options: UseRuntimeControllerOptions) {
-      const mounted = ReactModule.useRef(false);
-      if (!mounted.current) {
-        mounted.current = true;
-        operationalMocks.controllerInstances += 1;
-      }
-      ReactModule.useLayoutEffect(() => {
-        operationalMocks.latestControllerOptions = options;
-      }, [options]);
-      return actual.useRuntimeController(options);
+    WorkspaceProvider(props: WorkspaceProviderProps) {
+      operationalMocks.latestProviderProps = props;
+      return ReactModule.createElement(actual.WorkspaceProvider, props);
+    },
+    WorkspaceShell(props: WorkspaceShellProps) {
+      operationalMocks.latestShellProps = props;
+      return ReactModule.createElement(actual.WorkspaceShell, props);
     },
   };
 });
 
-vi.mock('./control-plane/activity-panel', async (importOriginal) => {
-  const ReactModule = await import('react');
-  const actual = await importOriginal<
-    typeof import('./control-plane/activity-panel')
-  >();
-  return {
-    ...actual,
-    ActivityPanel(props: React.ComponentProps<typeof actual.ActivityPanel>) {
-      if (operationalMocks.activityShouldThrow) {
-        throw new Error('sensitive activity render failure');
-      }
-      return ReactModule.createElement(actual.ActivityPanel, props);
-    },
-  };
-});
+vi.mock(
+  '../../../../libs/workspace-react/src/lib/runtime/use-runtime-controller',
+  async (importOriginal) => {
+    const ReactModule = await import('react');
+    const actual = await importOriginal<
+      typeof import('../../../../libs/workspace-react/src/lib/runtime/use-runtime-controller')
+    >();
+    return {
+      ...actual,
+      useRuntimeController(options: UseRuntimeControllerOptions) {
+        const mounted = ReactModule.useRef(false);
+        if (!mounted.current) {
+          mounted.current = true;
+          operationalMocks.controllerInstances += 1;
+        }
+        ReactModule.useLayoutEffect(() => {
+          operationalMocks.latestControllerOptions = options;
+        }, [options]);
+        return actual.useRuntimeController(options);
+      },
+    };
+  }
+);
+
+vi.mock(
+  '../../../../libs/workspace-react/src/lib/components/control-plane/activity-panel',
+  async (importOriginal) => {
+    const ReactModule = await import('react');
+    const actual = await importOriginal<
+      typeof import('../../../../libs/workspace-react/src/lib/components/control-plane/activity-panel')
+    >();
+    return {
+      ...actual,
+      ActivityPanel(props: React.ComponentProps<typeof actual.ActivityPanel>) {
+        if (operationalMocks.activityShouldThrow) {
+          throw new Error('sensitive activity render failure');
+        }
+        return ReactModule.createElement(actual.ActivityPanel, props);
+      },
+    };
+  }
+);
 
 import { CockpitShell } from './cockpit-shell';
 
@@ -115,25 +151,26 @@ const renderShell = (runtimeUrl: string | null = null) =>
     <ThemeProvider theme="light">
       <CockpitShell
         navigationTree={model.navigationTree}
+        resolution={model.resolution}
         presentation={model.presentation}
-        entryTitle={model.entry.title}
         contentBundle={{ ...baseContentBundle, runtimeUrl }}
+        routePath={model.canonicalPath}
+        requestedMode={new URL(window.location.href).searchParams.get('mode')}
       />
     </ThemeProvider>
   );
 
-const renderShellFor = (
-  slug: string[],
-  presentationOverrides: Partial<CockpitPageModel['presentation']> = {}
-) => {
+const renderShellFor = (slug: string[]) => {
   const pageModel = getCockpitPageModel(slug);
   return render(
     <ThemeProvider theme="light">
       <CockpitShell
         navigationTree={pageModel.navigationTree}
-        presentation={{ ...pageModel.presentation, ...presentationOverrides }}
-        entryTitle={pageModel.entry.title}
+        resolution={pageModel.resolution}
+        presentation={pageModel.presentation}
         contentBundle={baseContentBundle}
+        routePath={pageModel.canonicalPath}
+        requestedMode={new URL(window.location.href).searchParams.get('mode')}
       />
     </ThemeProvider>
   );
@@ -159,8 +196,11 @@ describe('CockpitShell operational composition', () => {
     operationalMocks.controllerInstances = 0;
     operationalMocks.latestControllerOptions = null;
     operationalMocks.activityShouldThrow = false;
+    operationalMocks.latestProviderProps = null;
+    operationalMocks.latestShellProps = null;
     operationalMocks.track.mockClear();
     operationalMocks.push.mockClear();
+    operationalMocks.replace.mockClear();
     document.documentElement.dataset.theme = 'light';
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({}));
   });
@@ -172,18 +212,69 @@ describe('CockpitShell operational composition', () => {
     vi.restoreAllMocks();
   });
 
-  it('always opens in Run, ignoring a stored activeMode from an older visit', async () => {
-    window.localStorage.setItem(
-      CONTROL_PLANE_STORAGE_KEY,
-      JSON.stringify({
-        version: 1,
-        docs: { expanded: { Learn: true, Environment: false } },
-        cockpit: {
-          activeMode: 'Code',
-          expanded: { Capability: true, Runtime: true },
-        },
-      })
+  it('adapts Cockpit route, content, navigation, analytics, session, telemetry, theme, and labels into the shared workspace', () => {
+    renderShell();
+
+    expect(operationalMocks.latestProviderProps).toMatchObject({
+      contentBundle: baseContentBundle,
+      routeKind: 'workspace',
+      routePath: model.canonicalPath,
+      requestedMode: null,
+      runtimeTelemetry: {
+        posthogToken: process.env.NEXT_PUBLIC_COCKPIT_POSTHOG_TOKEN,
+        ingestHost: process.env.NEXT_PUBLIC_COCKPIT_INGEST_HOST,
+      },
+    });
+    expect(operationalMocks.latestProviderProps?.resolution.kind).toBe(
+      'mapped'
     );
+    expect(
+      operationalMocks.latestProviderProps?.resolution.kind === 'mapped'
+        ? operationalMocks.latestProviderProps.resolution.identity.id
+        : null
+    ).toBe('langgraph:core-capabilities:streaming:overview:python');
+    expect(operationalMocks.latestProviderProps?.presentation.kind).toBe(
+      'capability'
+    );
+    expect(operationalMocks.latestProviderProps?.getSessionId).toBeTypeOf(
+      'function'
+    );
+    expect(operationalMocks.latestProviderProps?.pushIdentity).toBeTypeOf(
+      'function'
+    );
+    expect(operationalMocks.latestProviderProps?.pushMode).toBeTypeOf(
+      'function'
+    );
+    expect(operationalMocks.latestProviderProps?.replaceMode).toBeTypeOf(
+      'function'
+    );
+    expect(operationalMocks.latestProviderProps?.trackNavigation).toBeTypeOf(
+      'function'
+    );
+    expect(
+      operationalMocks.latestProviderProps?.trackNarrativeAction
+    ).toBeTypeOf('function');
+    expect(operationalMocks.latestProviderProps?.trackModeChange).toBeTypeOf(
+      'function'
+    );
+    expect(operationalMocks.latestProviderProps?.trackRuntimeAction).toBeTypeOf(
+      'function'
+    );
+    expect(
+      operationalMocks.latestProviderProps?.trackRuntimeTransition
+    ).toBeTypeOf('function');
+    expect(operationalMocks.latestShellProps).toMatchObject({
+      navigationTree: model.navigationTree,
+      ariaLabel: 'Cockpit shell',
+      modeNavigationLabel: 'Cockpit modes',
+      contextPaneLabel: 'Cockpit context',
+      mobileDialogLabel: 'Cockpit control plane',
+      mobileTitle: 'Cockpit',
+    });
+    expect(operationalMocks.latestShellProps?.themeControl).toBeTruthy();
+  });
+
+  it('uses the truthful workspace route default when no mode query is present', async () => {
     renderShell();
 
     await waitFor(() => {
@@ -193,13 +284,10 @@ describe('CockpitShell operational composition', () => {
           .getAttribute('aria-pressed')
       ).toBe('true');
     });
-    expect(
-      screen.getByRole('button', { name: 'Code' }).getAttribute('aria-pressed')
-    ).toBe('false');
+    expect(screen.getByRole('region', { name: 'Run mode' })).toBeTruthy();
   });
 
-  it('consumes a valid mode query once and lands in that mode', async () => {
-    seedExpanded();
+  it('keeps a valid mode query as route state without persisting the mode', async () => {
     window.history.replaceState({}, '', '/?mode=code&keep=1');
     renderShell();
 
@@ -210,11 +298,11 @@ describe('CockpitShell operational composition', () => {
           .getAttribute('aria-pressed')
       ).toBe('true');
     });
-    expect(window.location.search).toBe('?keep=1');
+    expect(window.location.search).toBe('?mode=code&keep=1');
+    expect(window.localStorage.getItem(CONTROL_PLANE_STORAGE_KEY)).toBeNull();
   });
 
-  it('ignores invalid mode queries and falls back to Run', async () => {
-    seedExpanded();
+  it('normalizes invalid mode queries to the truthful route default', async () => {
     window.history.replaceState({}, '', '/?mode=preview');
     renderShell();
 
@@ -225,53 +313,7 @@ describe('CockpitShell operational composition', () => {
           .getAttribute('aria-pressed')
       ).toBe('true');
     });
-    expect(window.location.search).toBe('');
-  });
-
-  it('lands a newly navigated-to capability on Run even after switching to Code, when the shell remounts on the route key', async () => {
-    const { rerender } = render(
-      <ThemeProvider theme="light">
-        <CockpitShell
-          key={model.canonicalPath}
-          navigationTree={model.navigationTree}
-          presentation={model.presentation}
-          entryTitle={model.entry.title}
-          contentBundle={baseContentBundle}
-        />
-      </ThemeProvider>
-    );
-
-    fireEvent.click(screen.getByRole('button', { name: 'Code' }));
-    await waitFor(() => {
-      expect(
-        screen
-          .getByRole('button', { name: 'Code' })
-          .getAttribute('aria-pressed')
-      ).toBe('true');
-    });
-
-    rerender(
-      <ThemeProvider theme="light">
-        <CockpitShell
-          key={persistenceModel.canonicalPath}
-          navigationTree={persistenceModel.navigationTree}
-          presentation={persistenceModel.presentation}
-          entryTitle={persistenceModel.entry.title}
-          contentBundle={baseContentBundle}
-        />
-      </ThemeProvider>
-    );
-
-    await waitFor(() => {
-      expect(
-        screen
-          .getByRole('button', { name: RUN_RAIL_ITEM })
-          .getAttribute('aria-pressed')
-      ).toBe('true');
-    });
-    expect(
-      screen.getByRole('button', { name: 'Code' }).getAttribute('aria-pressed')
-    ).toBe('false');
+    expect(operationalMocks.replace).toHaveBeenCalledWith('/?mode=run');
   });
 
   it('owns one controller and one Activity store shared by desktop and mobile adapters', async () => {
@@ -469,7 +511,7 @@ describe('CockpitShell operational composition', () => {
     vi.useRealTimers();
   });
 
-  it('closes and restores focus before routing an internal capability exactly once', async () => {
+  it('closes before routing and restores destination-panel focus after navigation exactly once', async () => {
     vi.useFakeTimers();
     vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) =>
       window.setTimeout(() => callback(performance.now()), 16)
@@ -482,6 +524,9 @@ describe('CockpitShell operational composition', () => {
       await vi.runAllTimersAsync();
     });
     const trigger = screen.getByRole('button', { name: 'Open navigation' });
+    const panel = screen.getByRole('heading', {
+      name: 'LangGraph Streaming Run',
+    });
     fireEvent.click(trigger);
     const overlay = screen.getByRole('dialog', {
       name: 'Cockpit control plane',
@@ -495,12 +540,8 @@ describe('CockpitShell operational composition', () => {
       destination.getAttribute('href') ?? '',
       window.location.href
     ).pathname;
-    const inertAtFocusAttempt: boolean[] = [];
-    const nativeFocus = trigger.focus.bind(trigger);
-    vi.spyOn(trigger, 'focus').mockImplementation(() => {
-      inertAtFocusAttempt.push(Boolean(trigger.closest('[inert]')));
-      nativeFocus();
-    });
+    const triggerFocus = vi.spyOn(trigger, 'focus');
+    const panelFocus = vi.spyOn(panel, 'focus');
     operationalMocks.track.mockClear();
 
     expect(fireEvent.click(destination)).toBe(false);
@@ -518,8 +559,8 @@ describe('CockpitShell operational composition', () => {
     expect(operationalMocks.push).not.toHaveBeenCalled();
 
     act(() => vi.advanceTimersByTime(16));
-    expect(inertAtFocusAttempt).toEqual([false]);
-    expect(document.activeElement).toBe(trigger);
+    expect(triggerFocus).not.toHaveBeenCalled();
+    expect(panelFocus).not.toHaveBeenCalled();
     expect(operationalMocks.push).toHaveBeenCalledTimes(1);
     expect(operationalMocks.push).toHaveBeenCalledWith(destinationPath);
 
@@ -528,19 +569,78 @@ describe('CockpitShell operational composition', () => {
       <ThemeProvider theme="light">
         <CockpitShell
           navigationTree={persistenceModel.navigationTree}
+          resolution={persistenceModel.resolution}
           presentation={persistenceModel.presentation}
-          entryTitle={persistenceModel.entry.title}
           contentBundle={baseContentBundle}
+          routePath={persistenceModel.canonicalPath}
+          requestedMode={null}
         />
       </ThemeProvider>
     );
     act(() => vi.advanceTimersByTime(16));
-    expect(inertAtFocusAttempt).toEqual([false, false]);
-    expect(document.activeElement).toBe(trigger);
+    expect(triggerFocus).not.toHaveBeenCalled();
+    expect(panelFocus).toHaveBeenCalledTimes(1);
+    expect(document.activeElement).toBe(panel);
     expect(operationalMocks.push).toHaveBeenCalledTimes(1);
 
     rendered.unmount();
     vi.useRealTimers();
+  });
+
+  it('focuses the selected mobile destination panel instead of the navigation trigger', () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) =>
+      window.setTimeout(() => callback(performance.now()), 16)
+    );
+    vi.stubGlobal('cancelAnimationFrame', (handle: number) =>
+      window.clearTimeout(handle)
+    );
+    renderShell();
+    const trigger = screen.getByRole('button', { name: 'Open navigation' });
+    const triggerFocus = vi.spyOn(trigger, 'focus');
+
+    fireEvent.click(trigger);
+    fireEvent.click(
+      within(
+        screen.getByRole('dialog', { name: 'Cockpit control plane' })
+      ).getByRole('button', { name: 'Code' })
+    );
+    const codePanel = screen.getByRole('heading', {
+      name: 'LangGraph Streaming Code',
+      hidden: true,
+    });
+    act(() => vi.advanceTimersByTime(150));
+    act(() => vi.advanceTimersByTime(16));
+
+    expect(triggerFocus).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(codePanel);
+  });
+
+  it('uses the Cockpit host adapter for desktop capability navigation', async () => {
+    const rendered = renderShell();
+    await waitFor(() =>
+      expect(screen.getByRole('link', { name: 'Persistence' })).toBeTruthy()
+    );
+    const destination = screen.getByRole('link', { name: 'Persistence' });
+    const destinationPath = new URL(
+      destination.getAttribute('href') ?? '',
+      window.location.href
+    ).pathname;
+
+    expect(fireEvent.click(destination)).toBe(false);
+
+    expect(operationalMocks.push).toHaveBeenCalledWith(destinationPath);
+    expect(
+      JSON.parse(
+        window.sessionStorage.getItem(
+          'threadplane:cockpit:workspace-panel-focus'
+        ) ?? '{}'
+      )
+    ).toEqual({
+      destination: destinationPath,
+      requestedAt: expect.any(Number),
+    });
+    rendered.unmount();
   });
 
   it('does not focus the mobile trigger on an ordinary shell load', async () => {
@@ -556,7 +656,7 @@ describe('CockpitShell operational composition', () => {
     rendered.unmount();
   });
 
-  it('does not consume a navigation focus intent into the hidden desktop trigger', () => {
+  it('consumes a cross-route focus intent into the active destination panel', () => {
     vi.useFakeTimers();
     vi.stubGlobal(
       'matchMedia',
@@ -574,7 +674,7 @@ describe('CockpitShell operational composition', () => {
     );
     window.history.replaceState({}, '', persistenceModel.canonicalPath);
     window.sessionStorage.setItem(
-      'threadplane:cockpit:mobile-navigation-focus',
+      'threadplane:cockpit:workspace-panel-focus',
       JSON.stringify({
         destination: persistenceModel.canonicalPath,
         requestedAt: Date.now(),
@@ -584,9 +684,11 @@ describe('CockpitShell operational composition', () => {
       <ThemeProvider theme="light">
         <CockpitShell
           navigationTree={persistenceModel.navigationTree}
+          resolution={persistenceModel.resolution}
           presentation={persistenceModel.presentation}
-          entryTitle={persistenceModel.entry.title}
           contentBundle={baseContentBundle}
+          routePath={persistenceModel.canonicalPath}
+          requestedMode={null}
         />
       </ThemeProvider>
     );
@@ -595,13 +697,138 @@ describe('CockpitShell operational composition', () => {
       hidden: true,
     });
     const focus = vi.spyOn(trigger, 'focus');
+    const panel = screen.getByRole('heading', {
+      name: 'LangGraph Persistence Run',
+    });
+    const panelFocus = vi.spyOn(panel, 'focus');
 
     act(() => vi.advanceTimersByTime(16));
 
     expect(focus).not.toHaveBeenCalled();
-    expect(document.activeElement).not.toBe(trigger);
+    expect(panelFocus).toHaveBeenCalledTimes(1);
+    expect(document.activeElement).toBe(panel);
     rendered.unmount();
     vi.useRealTimers();
+  });
+
+  it('uses a persistent tablet rail while Activity and Settings replace the context surface', () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn((query: string) => ({
+        matches:
+          query === '(min-width: 48rem)' ||
+          query === '(min-width: 48rem) and (max-width: 63.999rem)',
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+      }))
+    );
+    renderShell();
+
+    const settings = screen.getByRole('button', { name: 'Settings' });
+    fireEvent.click(settings);
+    const surface = screen.getByRole('dialog', {
+      name: 'Cockpit control plane context',
+    });
+    expect(
+      within(surface).getByRole('heading', { name: 'Settings' })
+    ).toBeTruthy();
+    expect(
+      screen.getByRole('navigation', { name: 'Cockpit modes' })
+    ).toBeTruthy();
+
+    const activity = screen.getByRole('button', { name: 'Activity' });
+    fireEvent.click(activity);
+    expect(
+      within(surface).getByRole('heading', { name: 'Activity' })
+    ).toBeTruthy();
+    fireEvent.click(
+      within(surface).getByRole('button', { name: 'Close Activity' })
+    );
+
+    expect(document.activeElement).toBe(activity);
+    expect(
+      within(surface).getByRole('button', { name: 'Capability' })
+    ).toBeTruthy();
+  });
+
+  it('closes the tablet context surface and focuses the selected mode panel', () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn((query: string) => ({
+        matches:
+          query === '(min-width: 48rem)' ||
+          query === '(min-width: 48rem) and (max-width: 63.999rem)',
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+      }))
+    );
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) =>
+      window.setTimeout(() => callback(performance.now()), 16)
+    );
+    vi.stubGlobal('cancelAnimationFrame', (handle: number) =>
+      window.clearTimeout(handle)
+    );
+    renderShell();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open context' }));
+    expect(
+      screen.getByRole('dialog', { name: 'Cockpit control plane context' })
+    ).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Code' }));
+    const codePanel = screen.getByRole('heading', {
+      name: 'LangGraph Streaming Code',
+      hidden: true,
+    });
+
+    act(() => vi.advanceTimersByTime(150));
+    act(() => vi.advanceTimersByTime(16));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(document.activeElement).toBe(codePanel);
+  });
+
+  it('restores the tablet context trigger after explicit dismissal', () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn((query: string) => ({
+        matches:
+          query === '(min-width: 48rem)' ||
+          query === '(min-width: 48rem) and (max-width: 63.999rem)',
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+      }))
+    );
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) =>
+      window.setTimeout(() => callback(performance.now()), 16)
+    );
+    vi.stubGlobal('cancelAnimationFrame', (handle: number) =>
+      window.clearTimeout(handle)
+    );
+    renderShell();
+
+    const trigger = screen.getByRole('button', { name: 'Open context' });
+    fireEvent.click(trigger);
+    fireEvent.click(
+      within(
+        screen.getByRole('dialog', {
+          name: 'Cockpit control plane context',
+        })
+      ).getByRole('button', { name: 'Close navigation' })
+    );
+    act(() => vi.advanceTimersByTime(150));
+    act(() => vi.advanceTimersByTime(16));
+
+    expect(document.activeElement).toBe(trigger);
   });
 
   it('records one fixed Activity event and one existing analytics event only for an actual mode change', async () => {
@@ -624,6 +851,9 @@ describe('CockpitShell operational composition', () => {
         to_mode: 'code',
       }
     );
+    expect(operationalMocks.push).toHaveBeenCalledTimes(1);
+    expect(operationalMocks.push).toHaveBeenCalledWith('/?mode=code');
+    expect(operationalMocks.replace).not.toHaveBeenCalled();
   });
 
   it('keeps the exact Run iframe mounted while Activity and Settings replace only context', async () => {
@@ -633,6 +863,79 @@ describe('CockpitShell operational composition', () => {
     openActivity();
     expect(screen.getByTitle('LangGraph Streaming live example')).toBe(frame);
     fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    expect(screen.getByTitle('LangGraph Streaming live example')).toBe(frame);
+  });
+
+  it('renders non-empty Run, Code, narrative Docs, and API fixtures through the shared panels without remounting Run', async () => {
+    if (model.presentation.kind !== 'capability') {
+      throw new Error('Expected the streaming capability presentation');
+    }
+    const codePath = model.presentation.codeAssetPaths[0];
+    if (!codePath) throw new Error('Expected a streaming code asset');
+    window.history.replaceState({}, '', '/?mode=run');
+
+    render(
+      <ThemeProvider theme="light">
+        <CockpitShell
+          navigationTree={model.navigationTree}
+          resolution={model.resolution}
+          presentation={model.presentation}
+          contentBundle={{
+            codeFiles: {
+              [codePath]:
+                '<pre class="shiki"><code>const adapterFixture = true;</code></pre>',
+            },
+            promptFiles: {},
+            runtimeUrl: 'https://runtime.test/parity',
+            narrativeDocs: [
+              {
+                title: 'Adapter narrative',
+                html: '<h1>Adapter narrative</h1><p>Shared Docs fixture.</p>',
+                sourceFile: 'adapter.md',
+              },
+            ],
+            docSections: [
+              {
+                title: 'adapterApi',
+                signature: 'adapterApi(value: string): boolean',
+                description: 'Shared API fixture.',
+                params: [{ name: 'value', description: 'Fixture input.' }],
+                returns: 'Whether the fixture is active.',
+                sourceFile: 'adapter.ts',
+                language: 'typescript',
+              },
+            ],
+          }}
+          routePath={model.canonicalPath}
+          requestedMode="run"
+        />
+      </ThemeProvider>
+    );
+
+    const frame = await screen.findByTitle('LangGraph Streaming live example');
+    expect(screen.getByRole('region', { name: 'Run mode' })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Code' }));
+    expect(screen.getByRole('region', { name: 'Code mode' })).toBeTruthy();
+    expect(screen.getByText('const adapterFixture = true;')).toBeTruthy();
+    expect(screen.getByTitle('LangGraph Streaming live example')).toBe(frame);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Docs' }));
+    expect(screen.getByRole('region', { name: 'Docs mode' })).toBeTruthy();
+    expect(
+      screen.getByRole('heading', { name: 'Adapter narrative' })
+    ).toBeTruthy();
+    expect(screen.getByText('Shared Docs fixture.')).toBeTruthy();
+    expect(screen.getByTitle('LangGraph Streaming live example')).toBe(frame);
+
+    fireEvent.click(screen.getByRole('button', { name: 'API' }));
+    expect(screen.getByRole('region', { name: 'API mode' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'adapterApi' })).toBeTruthy();
+    expect(screen.getByText('Shared API fixture.')).toBeTruthy();
+    expect(screen.getByTitle('LangGraph Streaming live example')).toBe(frame);
+
+    fireEvent.click(screen.getByRole('button', { name: RUN_RAIL_ITEM }));
+    expect(screen.getByRole('region', { name: 'Run mode' })).toBeTruthy();
     expect(screen.getByTitle('LangGraph Streaming live example')).toBe(frame);
   });
 
@@ -882,6 +1185,22 @@ describe('CockpitShell documentation link', () => {
     expect(link.getAttribute('rel')).toBe('noopener noreferrer');
   });
 
+  it('links a docs-only legacy entry to its published canonical page', () => {
+    renderShellFor([
+      'langgraph',
+      'getting-started',
+      'overview',
+      'overview',
+      'python',
+    ]);
+
+    expect(
+      screen.getByRole('link', { name: /read docs/i }).getAttribute('href')
+    ).toBe(
+      'https://threadplane.ai/docs/langgraph/getting-started/introduction'
+    );
+  });
+
   it('links a deep-agents capability at the deep-agents docs library', () => {
     renderShellFor([
       'deep-agents',
@@ -897,15 +1216,4 @@ describe('CockpitShell documentation link', () => {
     );
   });
 
-  it('renders no link for a capability with no published docs page', () => {
-    // Every mapped capability now points at a published page, so the sentinel
-    // branch is exercised through a presentation carrying it rather than
-    // through a table entry that happens to be blank today.
-    renderShellFor(
-      ['deep-agents', 'core-capabilities', 'planning', 'overview', 'python'],
-      { docsPath: NO_COCKPIT_DOCS_LINK }
-    );
-
-    expect(screen.queryByRole('link', { name: /read docs/i })).toBeNull();
-  });
 });

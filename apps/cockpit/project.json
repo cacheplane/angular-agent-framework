@@ -30,6 +30,7 @@
       "inputs": [
         "default",
         "deploymentConfig",
+        "contentAssets",
         "^default"
       ]
     },
@@ -57,6 +58,10 @@
       "options": {
         "configFile": "apps/cockpit/vite.config.mts"
       }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
     },
     "e2e": {
       "executor": "@nx/playwright:playwright",
@@ -164,6 +169,13 @@
     }
   },
   "namedInputs": {
+    "contentAssets": [
+      "{workspaceRoot}/cockpit/**/prompts/**",
+      "{workspaceRoot}/cockpit/**/angular/src/**",
+      "{workspaceRoot}/cockpit/**/python/src/**",
+      "{workspaceRoot}/cockpit/**/docs/**",
+      "{workspaceRoot}/deployments/ag-ui-mastra/*.mjs"
+    ],
     "deploymentConfig": [
       "{workspaceRoot}/vercel.cockpit.json",
       "{workspaceRoot}/vercel.examples.json",

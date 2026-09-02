@@ -1,0 +1,29 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "declaration": true,
+    "paths": {
+      "@threadplane/cockpit-registry": [
+        "../../dist/libs/cockpit-registry/src/index.d.ts"
+      ],
+      "@threadplane/cockpit-runtime-bridge": [
+        "../../dist/libs/cockpit-runtime-bridge/src/index.d.ts"
+      ],
+      "@threadplane/cockpit-shell": [
+        "../../dist/libs/cockpit-shell/src/index.d.ts"
+      ],
+      "@threadplane/ui-react": [
+        "../../dist/libs/ui-react/src/index.d.ts"
+      ]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["src/**/*.spec.ts", "src/**/*.spec.tsx"],
+  "references": [
+    { "path": "../cockpit-registry/tsconfig.lib.json" },
+    { "path": "../cockpit-runtime-bridge/tsconfig.lib.json" },
+    { "path": "../cockpit-shell/tsconfig.lib.json" },
+    { "path": "../ui-react/tsconfig.lib.json" }
+  ]
+}

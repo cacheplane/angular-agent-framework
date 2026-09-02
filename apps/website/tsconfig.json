@@ -21,8 +21,16 @@
     "paths": {
       "@/*": ["./src/*"],
       "@threadplane/cockpit-docs": ["../../libs/cockpit-docs/src/index.ts"],
-      "@threadplane/cockpit-registry": ["../../libs/cockpit-registry/src/index.ts"],
+      "@threadplane/cockpit-registry": [
+        "../../libs/cockpit-registry/src/index.ts"
+      ],
       "@threadplane/cockpit-shell": ["../../libs/cockpit-shell/src/index.ts"],
+      "@threadplane/workspace-react": [
+        "../../libs/workspace-react/src/index.ts"
+      ],
+      "@threadplane/cockpit-runtime-bridge": [
+        "../../libs/cockpit-runtime-bridge/src/index.ts"
+      ],
       "@threadplane/design-tokens": ["../../libs/design-tokens/src/index.ts"],
       "@threadplane/ui-react": ["../../libs/ui-react/src/index.ts"],
       "@threadplane/telemetry/shared": [

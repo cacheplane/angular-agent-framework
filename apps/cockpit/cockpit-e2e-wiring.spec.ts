@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { capabilities } from './scripts/capability-registry';
 // @ts-expect-error — .mjs ES module without .d.ts; the e2e tsconfig uses
 // allowJs:true but this top-level test file doesn't go through that config.
+// eslint-disable-next-line @nx/enforce-module-boundaries -- repo-root port registry is intentionally outside an Nx project.
 import { portsFor } from '../../cockpit/ports.mjs';
 
 interface E2eWiring {

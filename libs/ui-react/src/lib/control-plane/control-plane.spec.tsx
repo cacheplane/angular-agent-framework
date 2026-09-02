@@ -35,23 +35,60 @@ describe('control-plane structure', () => {
             iconOnly
           />
         }
-      />,
+      />
     );
 
-    expect(screen.getByRole('navigation', { name: 'Workspace modes' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Docs' }).getAttribute('aria-current')).toBe('page');
+    expect(
+      screen.getByRole('navigation', { name: 'Workspace modes' })
+    ).toBeTruthy();
+    expect(
+      screen.getByRole('link', { name: 'Docs' }).getAttribute('aria-current')
+    ).toBe('page');
     expect(screen.getByText('Docs')).toBeTruthy();
     const settings = screen.getByRole('button', { name: 'Settings' });
     const tooltip = screen.getByRole('tooltip', { name: 'Settings' });
     expect(settings.getAttribute('aria-describedby')).toBe(tooltip.id);
-    expect(document.querySelector('[data-control-plane-rail-label]')?.textContent).not.toBe('Settings');
+    expect(
+      document.querySelector('[data-control-plane-rail-label]')?.textContent
+    ).not.toBe('Settings');
   });
 
   it('uses pressed semantics for active local mode and utility buttons', () => {
     render(
-      <ControlPlaneRailItem label="Run" icon={<Icon />} active onSelect={vi.fn()} />,
+      <ControlPlaneRailItem
+        label="Run"
+        icon={<Icon />}
+        active
+        onSelect={vi.fn()}
+      />
     );
-    expect(screen.getByRole('button', { name: 'Run' }).getAttribute('aria-pressed')).toBe('true');
+    expect(
+      screen.getByRole('button', { name: 'Run' }).getAttribute('aria-pressed')
+    ).toBe('true');
+  });
+
+  it('keeps unavailable rail modes focusable, described, and inert', () => {
+    const onSelect = vi.fn();
+    render(
+      <ControlPlaneRailItem
+        label="Run"
+        icon={<Icon />}
+        disabled
+        disabledReason="Run is unavailable for this page."
+        onSelect={onSelect}
+      />
+    );
+
+    const control = screen.getByRole('button', {
+      name: 'Run',
+      description: 'Run is unavailable for this page.',
+    });
+    expect(control.getAttribute('aria-disabled')).toBe('true');
+    expect((control as HTMLButtonElement).disabled).toBe(false);
+    control.focus();
+    expect(document.activeElement).toBe(control);
+    fireEvent.click(control);
+    expect(onSelect).not.toHaveBeenCalled();
   });
 
   it('renders a status dot and folds its label into the accessible name', () => {
@@ -99,10 +136,12 @@ describe('control-plane structure', () => {
             { label: 'Package manager', value: 'npm' },
           ]}
         />
-      </ControlPlanePane>,
+      </ControlPlanePane>
     );
 
-    expect(screen.getByRole('complementary', { name: 'Docs context' })).toBeTruthy();
+    expect(
+      screen.getByRole('complementary', { name: 'Docs context' })
+    ).toBeTruthy();
     expect(screen.getByText('Framework').tagName).toBe('DT');
     expect(screen.getByText('Angular').tagName).toBe('DD');
   });
@@ -112,13 +151,15 @@ describe('control-plane structure', () => {
     render(
       <ControlPlaneSection title="Environment" open onOpenChange={onOpenChange}>
         <p>Angular</p>
-      </ControlPlaneSection>,
+      </ControlPlaneSection>
     );
 
     const trigger = screen.getByRole('button', { name: 'Environment' });
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
     expect(trigger.getAttribute('aria-controls')).toBeTruthy();
-    expect(trigger.querySelector('svg[data-control-plane-chevron]')).toBeTruthy();
+    expect(
+      trigger.querySelector('svg[data-control-plane-chevron]')
+    ).toBeTruthy();
     fireEvent.click(trigger);
     expect(onOpenChange).toHaveBeenCalledWith(false);
     expect(screen.getByText('Angular')).toBeTruthy();
@@ -128,13 +169,15 @@ describe('control-plane structure', () => {
     render(
       <ControlPlaneSection title="Runtime" summary="Ready" open>
         <p>Shared development</p>
-      </ControlPlaneSection>,
+      </ControlPlaneSection>
     );
 
     const trigger = screen.getByRole('button', { name: 'Runtime' });
     expect(trigger.textContent).toContain('Ready');
     expect(
-      trigger.querySelector('[data-control-plane-section-summary]')?.getAttribute('aria-hidden'),
+      trigger
+        .querySelector('[data-control-plane-section-summary]')
+        ?.getAttribute('aria-hidden')
     ).toBe('true');
     expect(screen.queryByRole('button', { name: 'Runtime Ready' })).toBeNull();
   });
@@ -148,18 +191,18 @@ describe('control-plane structure', () => {
         open={false}
       >
         <p>Shared development</p>
-      </ControlPlaneSection>,
+      </ControlPlaneSection>
     );
 
     expect(
       screen.getByRole('button', {
         name: 'Runtime',
         description: 'Runtime status: Unresponsive',
-      }),
+      })
     ).toBeTruthy();
     expect(screen.queryByText('Shared development')).toBeNull();
     expect(
-      document.querySelectorAll('[data-control-plane-section-description]'),
+      document.querySelectorAll('[data-control-plane-section-description]')
     ).toHaveLength(1);
   });
 });
@@ -168,9 +211,17 @@ describe('control-plane actions', () => {
   it('uses a labeled toolbar with accessible icon buttons', () => {
     render(
       <ControlPlaneActionBar label="Quick actions">
-        <ControlPlaneIconButton label="Search" icon={<Icon />} onClick={vi.fn()} />
-        <ControlPlaneIconButton label="Open runtime" icon={<Icon />} onClick={vi.fn()} />
-      </ControlPlaneActionBar>,
+        <ControlPlaneIconButton
+          label="Search"
+          icon={<Icon />}
+          onClick={vi.fn()}
+        />
+        <ControlPlaneIconButton
+          label="Open runtime"
+          icon={<Icon />}
+          onClick={vi.fn()}
+        />
+      </ControlPlaneActionBar>
     );
 
     expect(screen.getByRole('toolbar', { name: 'Quick actions' })).toBeTruthy();
@@ -178,16 +229,31 @@ describe('control-plane actions', () => {
     const tooltip = screen.getByRole('tooltip', { name: 'Search' });
     expect(search.getAttribute('aria-describedby')).toBe(tooltip.id);
     expect(search.tabIndex).toBe(0);
-    expect(screen.getByRole('button', { name: 'Open runtime' }).tabIndex).toBe(-1);
+    expect(screen.getByRole('button', { name: 'Open runtime' }).tabIndex).toBe(
+      -1
+    );
   });
 
   it('supports wrapping arrow navigation and Home/End while skipping disabled actions', () => {
     render(
       <ControlPlaneActionBar label="Quick actions">
-        <ControlPlaneIconButton label="First" icon={<Icon />} onClick={vi.fn()} />
-        <ControlPlaneIconButton label="Disabled" icon={<Icon />} onClick={vi.fn()} disabled />
-        <ControlPlaneIconButton label="Last" icon={<Icon />} onClick={vi.fn()} />
-      </ControlPlaneActionBar>,
+        <ControlPlaneIconButton
+          label="First"
+          icon={<Icon />}
+          onClick={vi.fn()}
+        />
+        <ControlPlaneIconButton
+          label="Disabled"
+          icon={<Icon />}
+          onClick={vi.fn()}
+          disabled
+        />
+        <ControlPlaneIconButton
+          label="Last"
+          icon={<Icon />}
+          onClick={vi.fn()}
+        />
+      </ControlPlaneActionBar>
     );
 
     const first = screen.getByRole('button', { name: 'First' });
@@ -210,7 +276,7 @@ describe('ControlPlaneUtilityPanel', () => {
     const { rerender } = render(
       <ControlPlaneUtilityPanel title="Settings" onClose={onClose}>
         Preferences
-      </ControlPlaneUtilityPanel>,
+      </ControlPlaneUtilityPanel>
     );
 
     expect(screen.getByRole('heading', { name: 'Settings' })).toBeTruthy();
@@ -220,9 +286,11 @@ describe('ControlPlaneUtilityPanel', () => {
     rerender(
       <ControlPlaneUtilityPanel title="Settings" onClose={onClose}>
         Preferences
-      </ControlPlaneUtilityPanel>,
+      </ControlPlaneUtilityPanel>
     );
-    fireEvent.keyDown(screen.getByRole('heading', { name: 'Settings' }), { key: 'Escape' });
+    fireEvent.keyDown(screen.getByRole('heading', { name: 'Settings' }), {
+      key: 'Escape',
+    });
     expect(onClose).toHaveBeenCalledTimes(2);
   });
 });

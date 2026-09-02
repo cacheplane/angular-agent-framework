@@ -47,26 +47,34 @@ test('the docs column starts directly under the nav at a tablet width', async ({
   // The 15px overshoot showed up here as dead space above the breadcrumb.
   await page.setViewportSize({ width: 900, height: 800 });
   await page.goto('/docs/langgraph/getting-started/introduction');
+  await expect(page.locator('[data-workspace-shell]')).toHaveAttribute(
+    'data-hydrated',
+    'true',
+  );
 
   const navBottom = await page
     .locator('nav')
     .first()
     .evaluate((el) => el.getBoundingClientRect().bottom);
   const shellTop = await page
-    .locator('.docs-shell-page')
-    .evaluate((el) => el.getBoundingClientRect().top + parseFloat(getComputedStyle(el).paddingTop));
+    .locator('.website-workspace-host .cockpit-shell')
+    .evaluate((el) => el.getBoundingClientRect().top);
 
   expect(Math.abs(shellTop - navBottom)).toBeLessThanOrEqual(1);
 });
 
-test('the mobile drawer hangs flush off the nav on a tablet width', async ({ page }) => {
-  // The drawer is positioned at `top: calc(var(--nav-h) - 1px)`, so a wrong
-  // --nav-h shows up here as a visible gap between the nav and the panel.
+test('the workspace context drawer hangs flush off the nav at tablet width', async ({ page }) => {
   await page.setViewportSize({ width: 900, height: 800 });
   await page.goto('/docs/langgraph/getting-started/introduction');
+  await expect(page.locator('[data-workspace-shell]')).toHaveAttribute(
+    'data-hydrated',
+    'true',
+  );
 
-  await page.locator('.nav-hamburger').click();
-  const overlay = page.locator('.nav-mobile-overlay');
+  await page.getByRole('button', { name: 'Open context' }).click();
+  const overlay = page.getByRole('dialog', {
+    name: 'Documentation control plane context',
+  });
   await expect(overlay).toBeVisible();
 
   const navBottom = await page
@@ -75,7 +83,5 @@ test('the mobile drawer hangs flush off the nav on a tablet width', async ({ pag
     .evaluate((el) => el.getBoundingClientRect().bottom);
   const overlayTop = await overlay.evaluate((el) => el.getBoundingClientRect().top);
 
-  // Flush or overlapping the nav's bottom border — never a gap below it.
-  expect(overlayTop - navBottom).toBeLessThanOrEqual(0);
-  expect(overlayTop - navBottom).toBeGreaterThanOrEqual(-2);
+  expect(Math.abs(overlayTop - navBottom)).toBeLessThanOrEqual(1);
 });

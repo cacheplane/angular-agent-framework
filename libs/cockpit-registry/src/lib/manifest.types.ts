@@ -12,9 +12,42 @@ export type CockpitProduct =
 
 export type CockpitSection = 'getting-started' | 'core-capabilities';
 
-export type CockpitPageId = 'overview' | 'build' | 'prompts' | 'code' | 'testing';
+export type CockpitPageId =
+  | 'overview'
+  | 'build'
+  | 'prompts'
+  | 'code'
+  | 'testing';
 
 export type CockpitLanguage = 'python' | 'typescript';
+
+export type RuntimeAdapter = 'langgraph' | 'ag-ui' | 'none';
+
+export type WorkspaceMode = 'Docs' | 'Run' | 'Code' | 'API';
+
+export interface WorkspaceIdentity {
+  id: string;
+  product: CockpitProduct;
+  section: string;
+  topic: string;
+  page: string;
+  language: CockpitLanguage;
+  title: string;
+  docsPath: string | null;
+  workspacePath: string;
+  legacyPath: string;
+  runtimeAdapter: RuntimeAdapter;
+  availableModes: readonly WorkspaceMode[];
+}
+
+export type WorkspaceResolution =
+  | { kind: 'mapped'; identity: WorkspaceIdentity }
+  | {
+      kind: 'docs-only';
+      docsPath: string;
+      title: string;
+      unavailableReason: 'no-workspace-capability';
+    };
 
 export type CockpitEntryKind = 'docs-only' | 'capability';
 
@@ -52,6 +85,7 @@ export interface CockpitManifestIdentity {
 }
 
 export interface CockpitManifestEntry extends CockpitManifestIdentity {
+  id: string;
   capabilityId: string;
   title: string;
   summary: string;
@@ -63,6 +97,10 @@ export interface CockpitManifestEntry extends CockpitManifestIdentity {
   entryKind: CockpitEntryKind;
   runtimeClass: CockpitRuntimeClass;
   docsPath: string;
+  workspacePath: string;
+  legacyPath: string;
+  runtimeAdapter: RuntimeAdapter;
+  availableModes: readonly WorkspaceMode[];
   promptAssetPaths: string[];
   codeAssetPaths: string[];
   implementationStatus: CockpitLifecycleStatus;

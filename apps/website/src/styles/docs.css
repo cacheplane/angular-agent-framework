@@ -38,6 +38,68 @@
   --docs-accent-tint-line: color-mix(in srgb, var(--color-accent) 10%, transparent);
 }
 
+/* The workspace owns viewport geometry. Docs owns only the scrollable article
+ * slot inside it, so mode switches do not create a second page-level scroller. */
+.docs-workspace-article {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--color-bg);
+}
+
+.docs-workspace-article .docs-article-layout {
+  min-height: 100%;
+}
+
+/* The global nav remains fixed above the unified workspace. The host owns the
+ * remaining viewport, including footer suppression and the single scroll root
+ * inside the active workspace panel. */
+html:has([data-website-workspace-host]),
+body:has([data-website-workspace-host]) {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+#site-content:has([data-website-workspace-host]) {
+  height: 100dvh;
+  overflow: hidden;
+}
+
+#site-content:has([data-website-workspace-host]) > main {
+  height: 100%;
+}
+
+#site-content:has([data-website-workspace-host]) > .footer-root {
+  display: none;
+}
+
+.website-workspace-host {
+  height: 100dvh;
+  padding-top: var(--nav-h);
+  overflow: hidden;
+}
+
+.website-workspace-host .cockpit-shell {
+  height: calc(100dvh - var(--nav-h));
+}
+
+/* Detail docs render the unified workspace navigation. Below the desktop
+ * breakpoint it is the sole modal control plane; the ordinary site drawer
+ * remains available on non-workspace pages. */
+@media (max-width: 63.999rem) {
+  body:has([data-website-workspace-host]) .nav-hamburger,
+  body:has([data-website-workspace-host]) .nav-mobile-overlay {
+    display: none;
+  }
+}
+
+@media (min-width: 48rem) and (max-width: 63.999rem) {
+  .website-workspace-host .cockpit-tablet-context-surface {
+    top: var(--nav-h);
+  }
+}
+
 /* NOTE: the old `.shiki` rules were deleted here — rehype-pretty-code runs
  * with keepBackground:true, which writes the theme background INLINE on the
  * <pre> and never emits a .shiki class. Zero elements matched, on docs and
@@ -939,9 +1001,9 @@
 /* DocsTOC */
 .docs-toc {
   position: sticky;
-  top: var(--nav-h);
+  top: 0;
   align-self: flex-start;
-  max-height: calc(100vh - var(--nav-h) - 1rem);
+  max-height: 100%;
   overflow-y: auto;
 }
 .docs-toc-label {

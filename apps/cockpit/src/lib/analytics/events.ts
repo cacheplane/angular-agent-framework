@@ -2,7 +2,7 @@
 import type {
   RuntimePhase,
   RuntimeTerminalPhase,
-} from '../runtime/runtime-state';
+} from '@threadplane/workspace-react';
 
 export type CockpitShellEvent =
   | 'cockpit:recipe_opened'

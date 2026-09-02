@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "@threadplane/design-tokens/theme.css";
+@import "../../../../libs/workspace-react/src/styles/workspace.css";
 
 /*
  * Scope files for the inline-style migration. These MUST sit with the other
@@ -14,6 +15,10 @@
 @import "../styles/landing.css";
 @import "../styles/marketing.css";
 @import "../styles/pages.css";
+
+/* Shared workspace components live outside this app's automatic content
+ * boundary. Keep their Tailwind utilities in the Website production build. */
+@source "../../../../libs/workspace-react/src";
 
 * {
   box-sizing: border-box;

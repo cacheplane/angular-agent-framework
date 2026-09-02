@@ -32,6 +32,8 @@
         "libs/cockpit-runtime-bridge/src/index.ts"
       ],
       "@threadplane/cockpit-shell": ["libs/cockpit-shell/src/index.ts"],
+      "@threadplane/ui-react": ["libs/ui-react/src/index.ts"],
+      "@threadplane/workspace-react": ["libs/workspace-react/src/index.ts"],
       "@threadplane/cockpit-telemetry": ["libs/cockpit-telemetry/src/index.ts"],
       "@threadplane/cockpit-testing": ["libs/cockpit-testing/src/index.ts"],
       "@threadplane/cockpit-ui": ["libs/cockpit-ui/src/index.ts"],

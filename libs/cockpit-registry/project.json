@@ -15,6 +15,7 @@
       "outputs": [
         "{workspaceRoot}/dist/libs/cockpit-registry"
       ],
+      "inputs": ["default", "descriptorSources"],
       "options": {
         "outputPath": "dist/libs/cockpit-registry",
         "main": "libs/cockpit-registry/src/index.ts",
@@ -26,9 +27,23 @@
     },
     "test": {
       "executor": "@nx/vitest:test",
+      "inputs": ["default", "descriptorSources", "descriptorAssets"],
       "options": {
         "configFile": "libs/cockpit-registry/vite.config.mts"
       }
     }
+  },
+  "namedInputs": {
+    "descriptorSources": [
+      "{workspaceRoot}/cockpit/*/*/python/src/index.ts",
+      "{workspaceRoot}/cockpit/runtimes/mastra/angular/src/index.ts"
+    ],
+    "descriptorAssets": [
+      "{workspaceRoot}/cockpit/**/prompts/**",
+      "{workspaceRoot}/cockpit/**/angular/src/**",
+      "{workspaceRoot}/cockpit/**/python/src/**",
+      "{workspaceRoot}/cockpit/**/docs/**",
+      "{workspaceRoot}/deployments/ag-ui-mastra/*.mjs"
+    ]
   }
 }

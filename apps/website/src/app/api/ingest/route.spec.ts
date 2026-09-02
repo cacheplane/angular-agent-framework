@@ -9,7 +9,7 @@ vi.mock('posthog-node', () => ({
   }),
 }));
 
-import { POST } from './route';
+import { OPTIONS, POST } from './route';
 
 describe('/api/ingest', () => {
   beforeEach(() => {
@@ -30,6 +30,7 @@ describe('/api/ingest', () => {
     }) as never);
 
     expect(response.status).toBe(202);
+    expect(response.headers.get('access-control-allow-origin')).toBe('*');
     expect(capture).toHaveBeenCalledWith({
       distinctId: 'browser:test',
       event: 'tplane:browser_chat_init',
@@ -39,5 +40,31 @@ describe('/api/ingest', () => {
         $process_person_profile: false,
       },
     });
+  });
+
+  it('answers runtime telemetry preflight with the complete CORS contract', async () => {
+    const response = await OPTIONS();
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get('access-control-allow-origin')).toBe('*');
+    expect(response.headers.get('access-control-allow-methods')).toBe(
+      'POST, OPTIONS'
+    );
+    expect(response.headers.get('access-control-allow-headers')).toBe(
+      'Content-Type, Authorization'
+    );
+    expect(response.headers.get('access-control-max-age')).toBe('86400');
+  });
+
+  it('returns CORS headers on rejected telemetry requests too', async () => {
+    const response = await POST(
+      new Request('https://threadplane.ai/api/ingest', {
+        method: 'POST',
+        body: '{bad json',
+      }) as never
+    );
+
+    expect(response.status).toBe(400);
+    expect(response.headers.get('access-control-allow-origin')).toBe('*');
   });
 });
