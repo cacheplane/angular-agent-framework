@@ -11,7 +11,7 @@ Replace Phase 4's hardcoded `FEEDBACK_FORM_JSONL` path with **dynamic schema gen
 
 ## Why dynamic now
 
-Phase 4's hardcoded JSONL was a stepping stone: it proved the wire-format prefix routes correctly through the chat composition's content classifier and that the catalog renders. With v1 (#228) merged, the canonical Google A2UI v1 schema is now what `@ngaf/a2ui` actually parses — so a sub-LLM with that schema in its system prompt produces output the parser accepts. The pattern is proven in production at `~/repos/SC-a React agent UI framework-C1/L4/backend-dynamic/schema.py`. We adopt it here.
+Phase 4's hardcoded JSONL was a stepping stone: it proved the wire-format prefix routes correctly through the chat composition's content classifier and that the catalog renders. With v1 (#228) merged, the canonical Google A2UI v1 schema is now what `@ngaf/a2ui` actually parses — so a sub-LLM with that schema in its system prompt produces output the parser accepts. The pattern is proven in production at `~/repos/SC-<vendor>-C1/L4/backend-dynamic/schema.py`. We adopt it here.
 
 ## Architecture
 
@@ -49,7 +49,7 @@ Existing Phase 2B/3A/3B paths (`search_documents`, `request_approval`, `research
 
 ## Sub-LLM pattern
 
-Reference: `~/repos/SC-a React agent UI framework-C1/L4/backend-dynamic/schema.py` lines 1-887. The `generate_schema` tool there uses langchain's newer `@tool()` decorator with `ToolRuntime[Any]`; ours uses langchain-core's `@tool` (matching Phase 2B/3A/3B) and accesses prior messages via the standard state injection.
+Reference: `~/repos/SC-<vendor>-C1/L4/backend-dynamic/schema.py` lines 1-887. The `generate_schema` tool there uses langchain's newer `@tool()` decorator with `ToolRuntime[Any]`; ours uses langchain-core's `@tool` (matching Phase 2B/3A/3B) and accesses prior messages via the standard state injection.
 
 Each tool body:
 1. Filters preceding messages to drop tool messages and pending tool-call AI turns (the schema sub-LLM should see only conversational context).

@@ -206,8 +206,8 @@ Full replacement of the `const ITEMS: FAQItem[] = [...]` block. Replace with:
 ```ts
 const ITEMS: FAQItem[] = [
   {
-    q: 'How is this different from a React agent UI framework or AG-UI directly?',
-    a: 'a React agent UI framework has an Angular SDK; we made different choices (signals, DI, zoneless-first). AG-UI is a protocol, not a UI library — you still build the Angular side. Angular Agent Framework gives you signal-native primitives plus adapters that hide the protocol, so you can swap LangGraph for AG-UI without rewriting your UI.',
+    q: 'How is this different from a competing React framework or AG-UI directly?',
+    a: 'a competing React framework has an Angular SDK; we made different choices (signals, DI, zoneless-first). AG-UI is a protocol, not a UI library — you still build the Angular side. Angular Agent Framework gives you signal-native primitives plus adapters that hide the protocol, so you can swap LangGraph for AG-UI without rewriting your UI.',
   },
   {
     q: 'Does it work with my existing Angular app?',
@@ -238,7 +238,7 @@ const ITEMS: FAQItem[] = [
     a: 'GitHub Issues. Pilot customers also get a private channel.',
   },
   {
-    q: 'I’m using a React agent UI framework today — how hard is the migration?',
+    q: 'I’m using a competing React framework today — how hard is the migration?',
     a: 'Component-by-component. useChat-style hooks map to the agent() signal API; actions map to LangGraph/AG-UI tool calls. Thread state lives in a service (not the component tree), so plan a session to port that. There isn’t a one-shot codemod.',
   },
   {
@@ -253,7 +253,7 @@ const ITEMS: FAQItem[] = [
 ```
 
 Notes on what's different vs the existing array:
-- Q1 body is reworded (the "a React agent UI framework ports React patterns" claim is softened).
+- Q1 body is reworded (the "a competing React framework ports React patterns" claim is softened).
 - Q2 through Q6 are byte-identical to the current file.
 - Q7 body is reworded (drops the unqualified "Yes —", lets the evidence carry).
 - Q8 is byte-identical to the current file.
@@ -287,7 +287,7 @@ Expected: no new lint errors. Strings with apostrophes (`don’t`, `isn’t`, `y
 
 ```bash
 git add apps/website/src/components/landing/HomeFAQ.tsx
-git commit -m "feat(website): expand HomeFAQ — soften a React agent UI framework + production claims, add migration/SSR/testing"
+git commit -m "feat(website): expand HomeFAQ — soften a competing React framework + production claims, add migration/SSR/testing"
 ```
 
 ---
@@ -336,7 +336,7 @@ Each body reads as drafted in Task 2. No old cards (`No vendor lock-in`, `No pai
 Scroll to `Frequently asked questions.`
 
 Confirm 11 entries total, in this order:
-1. How is this different from a React agent UI framework or AG-UI directly?
+1. How is this different from a competing React framework or AG-UI directly?
 2. Does it work with my existing Angular app?
 3. Is it zoneless-compatible?
 4. Can I use this without LangGraph?
@@ -344,7 +344,7 @@ Confirm 11 entries total, in this order:
 6. What does it cost?
 7. Is this production-ready today?
 8. Where do I report issues?
-9. I'm using a React agent UI framework today — how hard is the migration?
+9. I'm using a competing React framework today — how hard is the migration?
 10. Does it work with Angular Universal / SSR?
 11. How do I test agent-driven components?
 

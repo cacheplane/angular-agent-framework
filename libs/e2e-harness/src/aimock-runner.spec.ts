@@ -191,7 +191,10 @@ describe('startAimock', () => {
     expect(body).toContain('response.output_text.delta');
     expect(body).toContain('Hello!');
     expect(body).toContain('response.completed');
-    expect(body).toContain('data: [DONE]');
+    // Note: the Responses API stream ends at response.completed with no
+    // trailing "data: [DONE]" sentinel — that terminator is a Chat
+    // Completions convention (the earlier vendored mock emitted it on
+    // /responses too, which was inaccurate).
   });
 
   it('streams Responses API function calls after matching tool results', async () => {
@@ -228,5 +231,22 @@ describe('startAimock', () => {
     expect(body).toContain('\\"city\\":\\"LA\\"');
     expect(body).toContain('summarize_weather');
     expect(body).toContain('response.completed');
+  });
+
+  it('boots a record-proxy server with no fixtures', async () => {
+    workDir = mkdtempSync(join(tmpdir(), 'aimock-test-'));
+    handle = await startAimock({ mode: 'record', recordDir: workDir });
+    expect(handle.port).toBeGreaterThan(0);
+    expect(handle.baseUrl).toMatch(/^http:\/\/.+\/v1$/);
+    // No upstream call is made here — this stops at "the proxy started
+    // cleanly"; live recording is a manual smoke, not CI.
+  });
+
+  it('record mode without recordDir throws', async () => {
+    await expect(startAimock({ mode: 'record' })).rejects.toThrow('recordDir');
+  });
+
+  it('replay mode without fixturePath throws', async () => {
+    await expect(startAimock({ mode: 'replay' })).rejects.toThrow('fixturePath');
   });
 });

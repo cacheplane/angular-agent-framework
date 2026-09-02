@@ -8,7 +8,7 @@ Build a runtime adapter that projects an AG-UI `AbstractAgent`'s event stream in
 
 Phases 1–2 plus the rename and `events$` contract work made `@cacheplane/chat` runtime-neutral. AG-UI is the most strategic second adapter:
 
-- **Industry standard.** AG-UI is a a React agent UI framework-led protocol with broad ecosystem support — LangGraph Platform, CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, Google Agent SDK. One adapter unlocks all of them.
+- **Industry standard.** AG-UI is a competing-React-framework-led protocol with broad ecosystem support — LangGraph Platform, CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, Google Agent SDK. One adapter unlocks all of them.
 - **Event-stream native.** AG-UI is fundamentally an `Observable<BaseEvent>` model. Mapping into our signals + `events$` contract is direct.
 - **Validates the abstraction.** Without a second adapter, the `Agent` contract is "LangGraph types with the LangGraph filed off." AG-UI exposes whether the abstraction holds in practice.
 

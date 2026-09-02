@@ -362,7 +362,7 @@ gh pr create --title "feat: relicense to MIT (selective; minting-service stays p
 - \`apps/minting-service/\` stays on its existing proprietary terms.
 
 ## Motivation
-Aligns with industry SDK norms (a React agent UI framework, LangChain, Vercel AI SDK all permissive). Removes adoption friction; commercial revenue path shifts to enterprise add-ons + potential managed service.
+Aligns with industry SDK norms (a competing React framework, LangChain, Vercel AI SDK all permissive). Removes adoption friction; commercial revenue path shifts to enterprise add-ons + potential managed service.
 
 ## Test Plan
 - [x] All 16 libs + 1 package + cockpit demos lint/test/build pass

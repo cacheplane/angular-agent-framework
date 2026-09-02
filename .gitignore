@@ -74,3 +74,9 @@ keys/
 
 # Playwright demo-recording output (large binaries; see apps/website/scripts/upload-demo-media.md)
 **/.record-output/
+
+# aimock record-mode scratch dirs (AIMOCK_MODE=record captures; see libs/e2e-harness/src/aimock-mode.ts)
+.aimock-recordings/
+
+# Aborted fixture-record runs strand raw recordings under a committed path
+**/e2e/fixtures/.staging/

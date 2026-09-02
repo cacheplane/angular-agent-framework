@@ -1,7 +1,7 @@
 # Homepage content fills — ProofStrip / Promises / HomeFAQ
 
 **Date:** 2026-05-12 (revised after PR #275 landed)
-**Scope:** Editorial pass on three landing components shipped in PR #270. Fill gaps identified in the full analysis: missing ProofStrip claim line, redundant adapter signal, undersold npm signal, two overlapping Promises (now consolidated), two new Promises (telemetry, model lock-in), softened HomeFAQ Q1 (a React agent UI framework claim) and Q-production (production-ready), three new HomeFAQ entries (a React agent UI framework migration, Angular Universal / SSR, testing).
+**Scope:** Editorial pass on three landing components shipped in PR #270. Fill gaps identified in the full analysis: missing ProofStrip claim line, redundant adapter signal, undersold npm signal, two overlapping Promises (now consolidated), two new Promises (telemetry, model lock-in), softened HomeFAQ Q1 (a competing React framework claim) and Q-production (production-ready), three new HomeFAQ entries (a competing React framework migration, Angular Universal / SSR, testing).
 
 **Out of scope:** Hero, Differentiator, Stream/Render/Ship FeatureBlocks, PilotBlock, WhitePaperBlock, FinalCTA. Screenshot pipeline (separate workstream). The broken `/docs/agent/guides/production` link in the Ship block (flagged for a follow-up task).
 
@@ -102,8 +102,8 @@ Full replacement of the `ITEMS` array. Same shape (`FAQItem[]`), expands from **
 ```ts
 const ITEMS: FAQItem[] = [
   {
-    q: 'How is this different from a React agent UI framework or AG-UI directly?',
-    a: 'a React agent UI framework has an Angular SDK; ours is built around signals and DI as the substrate, not a port. AG-UI is a protocol, not a UI library — you still build the Angular side. Angular Agent Framework gives you signal-native primitives plus adapters that hide the protocol, so you can swap LangGraph for AG-UI without rewriting your UI.',
+    q: 'How is this different from a competing React framework or AG-UI directly?',
+    a: 'a competing React framework has an Angular SDK; ours is built around signals and DI as the substrate, not a port. AG-UI is a protocol, not a UI library — you still build the Angular side. Angular Agent Framework gives you signal-native primitives plus adapters that hide the protocol, so you can swap LangGraph for AG-UI without rewriting your UI.',
   },
   // Q2 unchanged: existing-app
   // Q3 unchanged: without LangGraph
@@ -115,8 +115,8 @@ const ITEMS: FAQItem[] = [
   },
   // Q7 unchanged: where to report issues
   {
-    q: 'I’m using a React agent UI framework today — how hard is the migration?',
-    a: 'Component-by-component. a React agent UI framework’s chat hooks have rough equivalents in our `agent()` signal API, and a React agent UI framework actions map to LangGraph/AG-UI tool calls. Thread state lives in a service (not the component tree), so plan a session to port that. There isn’t a one-shot codemod.',
+    q: 'I’m using a competing React framework today — how hard is the migration?',
+    a: 'Component-by-component. the competing React framework’s chat hooks have rough equivalents in our `agent()` signal API, and a competing React framework actions map to LangGraph/AG-UI tool calls. Thread state lives in a service (not the component tree), so plan a session to port that. There isn’t a one-shot codemod.',
   },
   {
     q: 'Does it work with Angular Universal / SSR?',
@@ -132,9 +132,9 @@ const ITEMS: FAQItem[] = [
 Final order (10 entries): Q1 (reworded) → Q2 → Q3 → Q4 → Q5 → Q6-production (reworded) → Q7-report-issues → Q8 (new migration) → Q9 (new SSR) → Q10 (new testing).
 
 Edits in detail (vs current main):
-- **Q1:** softens "a React agent UI framework ports React patterns to Angular" — replaced with the substrate-not-port framing. Deliberately does **not** mention "zoneless" (per #275).
+- **Q1:** softens "a competing React framework ports React patterns to Angular" — replaced with the substrate-not-port framing. Deliberately does **not** mention "zoneless" (per #275).
 - **Q6-production-ready:** drops the unqualified "Yes —" opener, leads with deployment evidence and release-notes commitment, then keeps **#275's LTS phrasing verbatim** as the closer.
-- **Q8 (new):** the obvious follow-up to Q1. The most commercially-relevant question this section can answer. Phrased to hedge on the a React agent UI framework Angular SDK API surface ("rough equivalents") rather than naming specific hooks I can't verify.
+- **Q8 (new):** the obvious follow-up to Q1. The most commercially-relevant question this section can answer. Phrased to hedge on the competing React framework Angular SDK API surface ("rough equivalents") rather than naming specific hooks I can't verify.
 - **Q9 (new):** SSR is a hard-stop for many enterprise Angular shops. Silence reads as "doesn't support it." Honest answer with a known boundary (agent parts stay client-only) and a pointer at standard SSR-fallback patterns, without claiming a specific built-in loading-state primitive.
 - **Q10 (new):** Angular teams care about testing; silence here suggests it's hard. Links to existing `apps/website/content/docs/agent/guides/testing.mdx`.
 

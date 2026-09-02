@@ -1290,8 +1290,8 @@ import { FAQ, type FAQItem } from '../ui/FAQ';
 
 const ITEMS: FAQItem[] = [
   {
-    q: 'How is this different from a React agent UI framework or AG-UI directly?',
-    a: 'a React agent UI framework ports React patterns to Angular. AG-UI is a protocol — you still build the Angular side. Angular Agent Framework is Angular-native: signals, DI, zoneless support, and adapters that hide the protocol so you can swap LangGraph for AG-UI without rewriting your UI.',
+    q: 'How is this different from a competing React framework or AG-UI directly?',
+    a: 'a competing React framework ports React patterns to Angular. AG-UI is a protocol — you still build the Angular side. Angular Agent Framework is Angular-native: signals, DI, zoneless support, and adapters that hide the protocol so you can swap LangGraph for AG-UI without rewriting your UI.',
   },
   {
     q: 'Does it work with my existing Angular app?',

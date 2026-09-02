@@ -131,6 +131,13 @@
       "options": {
         "config": "examples/chat/angular/e2e/playwright.config.ts"
       }
+    },
+    "drift": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "examples/chat/angular",
+        "command": "tsx ../../../libs/e2e-harness/src/drift.ts e2e/.aimock-recordings e2e/fixtures"
+      }
     }
   },
   "tags": [

@@ -23,7 +23,7 @@ mark, reusing the exact assets/glyphs from the landing page:
 | Library | Mark |
 |---------|------|
 | langgraph | `/logos/langgraph.svg` (logo chip) |
-| ag-ui | `/logos/runtimes/a React agent UI framework.svg` (logo chip) |
+| ag-ui | `/logos/runtimes/ag-ui.svg` (logo chip) |
 | a2ui | `/logos/providers/google.svg` (logo chip) |
 | render | `/logos/surface/vercel.svg` (logo chip) |
 | chat | in-house speech-bubble glyph |

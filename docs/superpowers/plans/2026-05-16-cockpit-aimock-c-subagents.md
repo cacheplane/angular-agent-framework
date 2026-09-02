@@ -6,7 +6,7 @@
 
 **Architecture:** Per-example dir under the harness library landed in Phase 2 ([#356](https://github.com/cacheplane/angular-agent-framework/pull/356)). LangGraph port 8125 (next after streaming=8123 and tool-calls=8124). Multi-turn fixture (parent task tool_calls + tool results + continuation). No library changes.
 
-**Tech Stack:** `the former fixture dependency`, Playwright, `libs/internal/aimock-harness/`, `uv` for the python langgraph dev server.
+**Tech Stack:** `aimock`, Playwright, `libs/internal/aimock-harness/`, `uv` for the python langgraph dev server.
 
 **Spec:** [docs/superpowers/specs/2026-05-16-cockpit-aimock-c-subagents-design.md](../specs/2026-05-16-cockpit-aimock-c-subagents-design.md)
 
@@ -244,7 +244,7 @@ cp examples/chat/python/.env cockpit/langgraph/streaming/python/.env
 # 1. Start aimock in record mode
 echo "[record] starting aimock --record on :$AIMOCK_PORT"
 mkdir -p "$(dirname "$FIXTURE_OUT")"
-npx -y -p the former fixture dependency aimock \
+npx -y -p aimock aimock \
   --port "$AIMOCK_PORT" \
   --record \
   --provider-openai https://api.openai.com \
@@ -605,7 +605,7 @@ When green, merge with `--squash` and clean up worktree.
 - [x] Spec coverage: library reuse (Tasks 1+4), per-example layout (Tasks 1+2+3+4), CI loop (Task 5), per-example port (Task 1+2), capture script + fixture (Task 3), spec assertions (Task 4), acceptance criteria (Task 6).
 - [x] Placeholder scan: no TBD. `<DISTINCTIVE_PHRASE>`-style placeholders avoided — the spec assertion uses a fixed loose regex.
 - [x] Type consistency: `createGlobalSetup`, `sendPromptAndWait` match the library's exports as committed in PR #356.
-- [x] Constraints: `the former fixture dependency` referenced in imports/plans only, NOT in commit messages or PR body.
+- [x] Constraints: `aimock` referenced in imports/plans only, NOT in commit messages or PR body.
 
 ## Execution handoff
 

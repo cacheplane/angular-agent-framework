@@ -6,7 +6,7 @@
 
 **Architecture:** A new Nx project `examples-chat-aimock-e2e` boots aimock as an in-process Node server in a Playwright `globalSetup`. The Python LangGraph dev server is launched with `OPENAI_BASE_URL` pointed at aimock. Real Chromium drives the Angular `/embed` route end-to-end. One smoke fixture (`hi.json`) lands in this phase; scenario fixtures come later.
 
-**Tech Stack:** `the former fixture dependency` (Node API), Playwright, Nx, GitHub Actions. Python LangGraph dev server (uv) already exists.
+**Tech Stack:** `aimock` (Node API), Playwright, Nx, GitHub Actions. Python LangGraph dev server (uv) already exists.
 
 **Spec:** [docs/superpowers/specs/2026-05-13-aimock-e2e-phase-2a-design.md](../specs/2026-05-13-aimock-e2e-phase-2a-design.md)
 
@@ -19,7 +19,7 @@
 - Python deps: run `cd examples/chat/python && uv sync` once at session start.
 - License header `// SPDX-License-Identifier: MIT` on line 1 of every new TS/JS file.
 - DO NOT commit the harness's captured fixtures from a real OPENAI run unless explicitly asked. Phase 2a's `hi.json` is small and handwritten.
-- Aimock library name (`the former fixture dependency`) is allowed in spec/plan docs and in `package.json` dependency lists. It MUST NOT appear in commit messages, PR bodies, or in user-visible UI strings.
+- Aimock library name (`aimock`) is allowed in spec/plan docs and in `package.json` dependency lists. It MUST NOT appear in commit messages, PR bodies, or in user-visible UI strings.
 
 ---
 
@@ -34,10 +34,10 @@ This task validates the spec's assumptions before any code lands. If any assumpt
 Run:
 ```bash
 cd /tmp/aimock-phase-2a
-npm install --no-save --no-package-lock the former fixture dependency
+npm install --no-save --no-package-lock aimock
 ```
 
-Expected: install succeeds, package present at `node_modules/the former fixture dependency/`.
+Expected: install succeeds, package present at `node_modules/aimock/`.
 
 If install fails: STOP. Report the error.
 
@@ -46,7 +46,7 @@ If install fails: STOP. Report the error.
 Create a one-off scratch script (do NOT commit) at `/tmp/aimock-smoke.mjs`:
 
 ```javascript
-import { LLMock } from "the former fixture dependency";
+import { LLMock } from "aimock";
 import OpenAI from "openai";
 
 const mock = new LLMock({ port: 0 });
@@ -135,7 +135,7 @@ If the agent hardcodes a `base_url=` argument that overrides the env var: report
 Kill the scratch aimock process. Delete `/tmp/aimock-smoke.mjs` and `/tmp/aimock-py-smoke.py`. Remove the `--no-save` test install:
 ```bash
 cd /tmp/aimock-phase-2a
-rm -rf node_modules/@a React agent UI framework /tmp/aimock-smoke.mjs /tmp/aimock-py-smoke.py
+rm -rf "node_modules/<the aimock org scope>" /tmp/aimock-smoke.mjs /tmp/aimock-py-smoke.py
 ```
 (The symlink to the parent's node_modules means the directory shouldn't be modified anyway; cleanup is defensive.)
 
@@ -155,21 +155,21 @@ If all four sub-steps succeeded, proceed to Task 1.
 - Create: `examples/chat/aimock-e2e/tsconfig.json`
 - Create: `examples/chat/aimock-e2e/.gitignore`
 - Create: `examples/chat/aimock-e2e/README.md`
-- Modify: `package.json` (add `the former fixture dependency` and `@playwright/test` if not already present)
+- Modify: `package.json` (add `aimock` and `@playwright/test` if not already present)
 
 - [ ] **Step 1: Add aimock to package.json**
 
-Check whether `the former fixture dependency` and `@playwright/test` are already in `package.json` devDependencies. If not, add them. Use the latest published versions (check `npm view the former fixture dependency version` and `npm view @playwright/test version`).
+Check whether `aimock` and `@playwright/test` are already in `package.json` devDependencies. If not, add them. Use the latest published versions (check `npm view aimock version` and `npm view @playwright/test version`).
 
 ```bash
 cd /tmp/aimock-phase-2a
-npm view the former fixture dependency version
+npm view aimock version
 npm view @playwright/test version
 ```
 
 Edit `package.json` and add to `devDependencies`:
 ```json
-"the former fixture dependency": "^<version-from-above>",
+"aimock": "^<version-from-above>",
 "@playwright/test": "^<version-from-above>"
 ```
 
@@ -258,7 +258,7 @@ Write `examples/chat/aimock-e2e/README.md`:
 ```markdown
 # examples-chat-aimock-e2e
 
-Cross-stack E2E harness for the chat example. Uses [`the former fixture dependency`](https://github.com/a React agent UI framework/aimock) as a deterministic mock for LLM API calls; the Python LangGraph dev server is launched with `OPENAI_BASE_URL` pointed at it; Playwright drives the Angular `/embed` route in real Chromium.
+Cross-stack E2E harness for the chat example. Uses `aimock` as a deterministic mock for LLM API calls; the Python LangGraph dev server is launched with `OPENAI_BASE_URL` pointed at it; Playwright drives the Angular `/embed` route in real Chromium.
 
 ## Run the suite
 
@@ -393,7 +393,7 @@ Write `examples/chat/aimock-e2e/aimock-runner.ts`:
 
 ```typescript
 // SPDX-License-Identifier: MIT
-import { LLMock } from 'the former fixture dependency';
+import { LLMock } from 'aimock';
 import { readFileSync } from 'node:fs';
 
 export interface AimockHandle {
@@ -819,7 +819,7 @@ const FIXTURE_PATH = resolve(__dirname, `../fixtures/${NAME}.json`);
 const result = spawnSync(
   'npx',
   [
-    '-p', 'the former fixture dependency',
+    '-p', 'aimock',
     'llmock',
     '--record',
     '--provider-openai', 'https://api.openai.com',
@@ -874,7 +874,7 @@ for (const file of fixtureFiles) {
   const result = spawnSync(
     'npx',
     [
-      '-p', 'the former fixture dependency',
+      '-p', 'aimock',
       'llmock',
       '--record',
       '--provider-openai', 'https://api.openai.com',

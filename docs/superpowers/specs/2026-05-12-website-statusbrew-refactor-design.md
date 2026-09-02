@@ -264,7 +264,7 @@ Uses `ui/FAQ` accordion (native `<details>`).
 
 | Q | A (drafted, please revise) |
 |---|---|
-| How is this different from a React agent UI framework or AG-UI directly? | a React agent UI framework ports React patterns to Angular. AG-UI is a protocol — you still build the Angular side. Angular Agent Framework is Angular-native: signals, DI, zoneless support, and adapters that hide the protocol so you can swap LangGraph for AG-UI without rewriting your UI. |
+| How is this different from a competing React framework or AG-UI directly? | a competing React framework ports React patterns to Angular. AG-UI is a protocol — you still build the Angular side. Angular Agent Framework is Angular-native: signals, DI, zoneless support, and adapters that hide the protocol so you can swap LangGraph for AG-UI without rewriting your UI. |
 | Does it work with my existing Angular app? | Yes. Drop `provideAgent` (or `provideAgUiAgent`) into your `app.config.ts`. The headless primitives don't impose any UI; the chat compositions are opt-in. |
 | Is it zoneless-compatible? | Yes. All signal flows are zoneless-safe. We test against zoneless apps. |
 | Can I use this without LangGraph? | Yes. Use the `@ngaf/ag-ui` adapter for any AG-UI compliant backend, or implement the agent contract yourself. The Angular side doesn't know which runtime is behind it. |

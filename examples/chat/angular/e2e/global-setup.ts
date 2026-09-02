@@ -3,6 +3,7 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 import { resolve } from 'node:path';
 import { startAimock, type AimockHandle } from './aimock-runner';
+import { resolveAimockLaunch } from '@threadplane-internal/e2e-harness';
 import { freePort } from './process-utils';
 
 const LANGGRAPH_PORT = 2024;
@@ -46,7 +47,10 @@ export default async function globalSetup(): Promise<void> {
   freePort(LANGGRAPH_PORT);
   freePort(ANGULAR_PORT);
 
-  const aimock = await startAimock({ mode: 'replay', fixturePath: FIXTURE_PATH });
+  // Mode/key resolution is shared with the cockpit factories; passing
+  // FIXTURE_PATH keeps the AIMOCK_FIXTURE override flowing through in replay.
+  const launch = resolveAimockLaunch(FIXTURE_PATH);
+  const aimock = await startAimock(launch.startOptions);
   // eslint-disable-next-line no-console
   console.log(`[aimock-e2e] fixture server listening at ${aimock.baseUrl}`);
 
@@ -58,7 +62,7 @@ export default async function globalSetup(): Promise<void> {
       env: {
         ...process.env,
         OPENAI_BASE_URL: aimock.baseUrl,
-        OPENAI_API_KEY: 'test-not-used',
+        OPENAI_API_KEY: launch.openaiApiKey,
       },
       stdio: 'pipe',
       // Lead its own process group so teardown can reap uvicorn (the real

@@ -12,7 +12,7 @@
 
 **Branch:** `claude/langgraph-streaming-content-dedup`, branched from `origin/main`.
 
-**Hard constraint:** Never reference hashbrown / a React agent UI framework / chatgpt / chatbot-kit / claude in code, comments, commit messages, or PR titles/bodies. (Spec/plan markdown docs already use those library names to ground the analysis — do not propagate them anywhere else.)
+**Hard constraint:** Never reference hashbrown / a competing React framework / chatgpt / chatbot-kit / claude in code, comments, commit messages, or PR titles/bodies. (Spec/plan markdown docs already use those library names to ground the analysis — do not propagate them anywhere else.)
 
 ---
 

@@ -1213,7 +1213,7 @@ Threadplane ships two adapters that connect a backend agent runtime to `<chat>` 
 | If your backend is... | Use |
 |---|---|
 | **LangGraph Platform** (cloud or self-hosted, via the LangGraph SDK) | `@threadplane/langgraph` |
-| **Any AG-UI-protocol backend** — CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, a React agent UI framework runtime, or LangGraph fronted by AG-UI | `@threadplane/ag-ui` |
+| **Any AG-UI-protocol backend** — CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, a competing React framework runtime, or LangGraph fronted by AG-UI | `@threadplane/ag-ui` |
 
 ## Code comparison
 
@@ -1359,7 +1359,7 @@ In `apps/website/src/components/landing/HomeFAQ.tsx`, add a new Q/A entry:
 ```ts
 {
   q: 'Which adapter should I use — @threadplane/langgraph or @threadplane/ag-ui?',
-  a: 'If your backend is LangGraph Platform, use @threadplane/langgraph. If your backend speaks the AG-UI protocol (CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, a React agent UI framework runtime), use @threadplane/ag-ui. Both expose the same provideAgent/injectAgent API — see /docs/choosing-an-adapter for a side-by-side comparison.',
+  a: 'If your backend is LangGraph Platform, use @threadplane/langgraph. If your backend speaks the AG-UI protocol (CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, AWS Strands, a competing React framework runtime), use @threadplane/ag-ui. Both expose the same provideAgent/injectAgent API — see /docs/choosing-an-adapter for a side-by-side comparison.',
 },
 ```
 
