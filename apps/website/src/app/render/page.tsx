@@ -56,8 +56,8 @@ export default async function RenderPage() {
       <DiagramSection
         id="render-transform"
         eyebrow="How it works"
-        headline="The shape of the transform"
-        body="A UI spec goes in one end; your own Angular components come out the other. @threadplane/render resolves it through your registry, state, and handlers — nothing renders that your app doesn't already own."
+        headline="Schema on the wire, your design system on screen"
+        body="The agent emits a spec. Your registry, state, and handlers resolve it — and your own Angular components render it."
       >
         <RenderTransform />
       </DiagramSection>
