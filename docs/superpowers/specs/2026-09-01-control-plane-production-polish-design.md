@@ -39,6 +39,7 @@ Chrome validation covered the Docs and Cockpit production deployments at 320, 76
 - Replacing Lucide, changing the shared 2px icon stroke, or adding decorative icons.
 - Changing article typography, navigation labels, shell breakpoints, or runtime behavior.
 - Implementing command palette, pins, recents, Activity filters, or custom runtime targets.
+- Removing Cockpit links or retiring the Cockpit surface; that is the following dedicated PR.
 - Committing screenshot baselines from the manual production audit.
 
 ## Page-actions control

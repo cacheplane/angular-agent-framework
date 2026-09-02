@@ -4,7 +4,7 @@
 
 Approved through interactive design review on 2026-09-01 and amended after production validation on the same date. This amendment replaces the earlier endpoint-persistence design: endpoint URLs and API keys are both memory-only.
 
-This is the second implementation PR in the control-plane follow-up. It depends on the unified workspace shell, but not on the production-polish PR.
+This is the third implementation PR in the control-plane follow-up. It depends on the unified workspace shell and Cockpit surface retirement, but not on the production-polish implementation details.
 
 ## Summary
 
@@ -27,7 +27,6 @@ The top-level workspace owns target selection and credential lifetime. It config
 
 - Remembering any custom value after refresh, navigation away, or tab close.
 - Saved target lists, target naming, account sync, or credential vaulting.
-- Sharing memory between `threadplane.ai` and `cockpit.threadplane.ai` tabs or origins.
 - Proxying custom traffic through Threadplane infrastructure.
 - Deployment management, server mutation, OAuth, arbitrary headers, or custom authentication schemes.
 - AG-UI credentials; this release accepts only an AG-UI endpoint.
@@ -55,7 +54,7 @@ interface RuntimeTargetSession {
 }
 ```
 
-Both adapter slots default to `{ kind: 'shared' }`. A dedicated `RuntimeTargetProvider` owns the session above route content in each application root. The website and Cockpit each mount their own provider once per browser document. `WorkspaceProvider` consumes the provider and resolves the current capability's `runtimeAdapter` to the matching slot.
+Both adapter slots default to `{ kind: 'shared' }`. A dedicated `RuntimeTargetProvider` owns the session above route content in the Website application root and mounts once per browser document. `WorkspaceProvider` consumes the provider and resolves the current capability's `runtimeAdapter` to the matching slot. The redirect-only Cockpit domain never mounts this provider.
 
 The provider has no serializer, hydration path, storage key, URL reader, or module-global fallback. Tests fail if target fields are added to the existing control-plane preference schema. A full document reload constructs the default session again.
 
@@ -158,7 +157,7 @@ type RuntimeFailureMessage =
 The full protocol follows these rules:
 
 - The parent sends only to the iframe's exact origin; never `*`.
-- Compatible child builds receive an exact `allowedParentOrigins` array generated from repository deployment configuration for the production website, production Cockpit, supported named previews, and explicit localhost development origins. Wildcards, suffix matching, and referrer-derived additions are forbidden.
+- Compatible child builds receive an exact `allowedParentOrigins` array generated from repository deployment configuration for the production Website, supported Website previews, and explicit localhost development origins. The retired production Cockpit origin is not included. Wildcards, suffix matching, and referrer-derived additions are forbidden.
 - A child is a recognized embed only when `window.parent !== window`, `document.referrer` parses to an exact member of `allowedParentOrigins`, and the incoming message source and origin match that parent. The runtime iframe keeps `referrerPolicy="origin"`, and deployment smoke verifies the referrer is not suppressed.
 - The child accepts configuration only from `window.parent`, that exact recognized parent origin, the expected source window, and the current protocol version.
 - A recognized child installs its listener before Angular bootstrap, creates a fresh nonce, and announces ready to its exact parent origin. A standalone window bootstraps its registry default immediately. An embedded window with a missing or unallowlisted referrer ignores configuration messages and uses its existing unrecognized-embed fallback.
@@ -176,7 +175,7 @@ The protocol protects configuration transport between the known workspace and kn
 
 ## Angular bootstrap and client integration
 
-A shared pre-bootstrap target resolver is used by every compatible Cockpit application.
+A shared pre-bootstrap target resolver is used by every compatible embedded Angular example application.
 
 - A recognized embed waits for the valid configuration message before constructing Angular providers.
 - The resolver maps Shared development to the current environment configuration.
