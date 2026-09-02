@@ -8,10 +8,11 @@ const SLUG = 'middleware-how-it-fits';
 
 /**
  * The middleware intro's runtime flow, condensed to three stages: the
- * browser declares client tools through `@threadplane/chat`, the Python
- * `threadplane-middleware` package binds those tool stubs onto the model via
- * `bind_client_tools()` (verified against
- * `threadplane.middleware.langgraph.__init__`), and the bound model runs
+ * browser declares client tools through `@threadplane/chat`, the
+ * `threadplane-middleware` package binds those tool stubs onto the model —
+ * runtime-neutral, since it ships both a Python `bind_client_tools()`
+ * (`packages/threadplane-middleware`) and a TypeScript `bindClientTools()`
+ * (`libs/middleware/src/langgraph/middleware.ts`) — and the bound model runs
  * inside your own LangGraph graph. Stacked vertically (matching the kit's
  * other how-it-fits diagrams) so the `client_tools` pill has its own 48px
  * gap between nodes instead of overlapping either flanking node.
@@ -42,9 +43,9 @@ export function MiddlewareHowItFits() {
         y={128}
         w={300}
         h={64}
-        eyebrow="Python"
+        eyebrow="Middleware"
         title="threadplane-middleware"
-        meta="bind_client_tools()"
+        meta="bind_client_tools() · bindClientTools()"
         tone="accent"
       />
       <DiagramEdge d="M320 192 V212" slug={SLUG} arrow />

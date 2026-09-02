@@ -81,14 +81,30 @@ describe('MiddlewareHowItFits', () => {
   it('mounts and places the middleware between frontend and graph', () => {
     const { container } = render(<MiddlewareHowItFits />);
     const titles = Array.from(container.querySelectorAll('.tp-diagram-title')).map((t) => t.textContent);
+    expect(titles).toContain('@threadplane/chat');
     expect(titles).toContain('threadplane-middleware');
+    expect(titles).toContain('Your LangGraph graph');
+  });
+
+  it('breaks the single edge around its pill and wires exactly three edges', () => {
+    const { container } = render(<MiddlewareHowItFits />);
+    expect(container.querySelectorAll('.tp-diagram-pill')).toHaveLength(1);
+    expect(container.querySelectorAll('path.tp-diagram-edge')).toHaveLength(3);
   });
 });
 
 describe('TelemetryHowItFits', () => {
-  it('mounts and shows both entry points feeding ingest', () => {
+  it('mounts and names the package and both honest destinations', () => {
     const { container } = render(<TelemetryHowItFits />);
     const titles = Array.from(container.querySelectorAll('.tp-diagram-title')).map((t) => t.textContent);
     expect(titles).toContain('@threadplane/telemetry');
+    expect(titles).toContain('Your sink or endpoint — app-owned');
+    expect(titles).toContain('threadplane.ai/api/ingest — default');
+  });
+
+  it('breaks each branch around its pill and wires exactly five edges', () => {
+    const { container } = render(<TelemetryHowItFits />);
+    expect(container.querySelectorAll('.tp-diagram-pill')).toHaveLength(2);
+    expect(container.querySelectorAll('path.tp-diagram-edge')).toHaveLength(5);
   });
 });

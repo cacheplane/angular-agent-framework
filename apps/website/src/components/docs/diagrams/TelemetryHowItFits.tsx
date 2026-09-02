@@ -7,69 +7,65 @@ import { DiagramPill } from './DiagramPill';
 const SLUG = 'telemetry-how-it-fits';
 
 /**
- * A diamond: the shared `@threadplane/telemetry` entry point (environment
- * and event helpers, verified against `libs/telemetry/package.json`
- * `exports["."]`) underpins both the browser and Node surfaces. Both
- * surfaces are genuine entry points a caller imports directly — the intro's
- * "Entry points" section lists all three import paths — and, when each is
- * enabled or explicitly invoked, both fan back in to the same ingest
- * endpoint (`DEFAULT_INGEST` in `libs/telemetry/src/node/client.ts`, and the
- * `endpoint`/`sink` delivery path documented for the browser surface). The
- * fan-in trunk breaks around its "sampled events" pill rather than drawing a
- * continuous line under it.
+ * `@threadplane/telemetry` has two peer entry points (`./browser`,
+ * `./node` — verified against `libs/telemetry/package.json` `exports`); the
+ * browser entry deliberately cannot import the package root (ng-packagr's
+ * rootDir rule forces it to inline shared helpers — see the comment atop
+ * `libs/telemetry/src/browser/service.ts`), so there is no root-fans-out-to
+ * hierarchy to draw. What the two entries share is a destination story:
+ * - Browser (`libs/telemetry/src/browser/service.ts`) never has a default
+ *   network target. It delivers only through an app-supplied `sink`,
+ *   `endpoint`, or `posthogKey` — otherwise `capture()` is a no-op.
+ * - Node (`libs/telemetry/src/node/client.ts`) defaults to
+ *   `DEFAULT_INGEST` (`https://threadplane.ai/api/ingest`), overridable via
+ *   `TPLANE_TELEMETRY_INGEST_URL`.
+ * Both entries sample (browser via `config.sampleRate`, node via
+ * `TPLANE_TELEMETRY_SAMPLE_RATE`), so sampling is not a node-only trait —
+ * the branch pills are labeled by destination, not by sampling. Each branch
+ * breaks around its pill (segment, pill, segment+arrow) rather than drawing
+ * a continuous line under the label.
  */
 export function TelemetryHowItFits() {
   return (
     <DiagramFrame
       slug={SLUG}
       viewWidth={640}
-      viewHeight={316}
-      label="How @threadplane/telemetry fits: the shared package underpins both the browser and Node entry points, and both fan sampled events back in to the same ingest endpoint."
+      viewHeight={238}
+      label="How @threadplane/telemetry fits: the package's browser entry delivers events to an app-owned sink or endpoint, and its node entry delivers events by default to threadplane.ai/api/ingest."
     >
       <DiagramNode
-        x={210}
+        x={170}
         y={16}
-        w={220}
+        w={300}
         h={64}
-        eyebrow="Shared"
+        eyebrow="Package"
         title="@threadplane/telemetry"
-        meta="environment + event helpers"
+        meta="entry points: ./browser · ./node"
+        tone="accent"
+      />
+      <DiagramEdge d="M320 80 V100" slug={SLUG} />
+      <DiagramEdge d="M320 100 H180 V118" slug={SLUG} />
+      <DiagramEdge d="M320 100 H460 V118" slug={SLUG} />
+      <DiagramPill cx={180} cy={130} w={110} label="browser events" />
+      <DiagramPill cx={460} cy={130} w={110} label="node events" />
+      <DiagramEdge d="M180 142 V174" slug={SLUG} arrow />
+      <DiagramEdge d="M460 142 V174" slug={SLUG} arrow />
+      <DiagramNode
+        x={50}
+        y={178}
+        w={260}
+        h={44}
+        title="Your sink or endpoint — app-owned"
+        align="middle"
+        titleStyle="sans"
         tone="dim"
       />
-      <DiagramEdge d="M320 80 V92" slug={SLUG} />
-      <DiagramEdge d="M320 92 H175 V100" slug={SLUG} arrow />
-      <DiagramEdge d="M320 92 H480 V100" slug={SLUG} arrow />
       <DiagramNode
-        x={35}
-        y={104}
-        w={280}
-        h={64}
-        eyebrow="Entry"
-        title="@threadplane/telemetry/browser"
-        meta="provideThreadplaneTelemetry() · opt-in"
-        tone="accent"
-      />
-      <DiagramNode
-        x={355}
-        y={104}
-        w={250}
-        h={64}
-        eyebrow="Entry"
-        title="@threadplane/telemetry/node"
-        meta="captureEvent() · explicit calls only"
-        tone="accent"
-      />
-      <DiagramEdge d="M175 168 V188 H320" slug={SLUG} />
-      <DiagramEdge d="M480 168 V188 H320" slug={SLUG} />
-      <DiagramEdge d="M320 188 V200" slug={SLUG} />
-      <DiagramPill cx={320} cy={212} w={140} label="sampled events" />
-      <DiagramEdge d="M320 224 V252" slug={SLUG} arrow />
-      <DiagramNode
-        x={170}
-        y={256}
-        w={300}
+        x={330}
+        y={178}
+        w={260}
         h={44}
-        title="https://threadplane.ai/api/ingest"
+        title="threadplane.ai/api/ingest — default"
         align="middle"
         titleStyle="sans"
         tone="dim"
