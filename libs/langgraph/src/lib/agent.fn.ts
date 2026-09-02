@@ -628,13 +628,7 @@ export function agent<
     getSubagent:     (toolCallId) => subagentsSig().get(toolCallId),
     getSubagentsByType: (type) =>
       [...subagentsSig().values()].filter(sa => sa.name === type),
-    getSubagentsByMessage: (msg) => {
-      const ids = getToolCallIds(msg);
-      const subagents = subagentsSig();
-      return ids
-        .map(id => subagents.get(id))
-        .filter((subagent): subagent is SubagentStreamRef => subagent != null);
-    },
+    getSubagentsByMessage: (msg) => resolveSubagentsByMessage(msg, subagentsSig()),
     customEvents:    customSig,
     branch:          branchSig,
     setBranch:       (b) => branch$.next(b),
@@ -823,6 +817,28 @@ function toSubagent(
     }) as Signal<Message[]>,
     state: sa.values as Signal<Record<string, unknown>>,
   };
+}
+
+/**
+ * Resolve the subagents spawned by an AI message's tool calls.
+ *
+ * Anchors on the contract field `SubagentStreamRef.toolCallId`, not the map
+ * KEY: the key is an adapter detail (LangGraph keys by the tool-call id,
+ * AG-UI keys activities by `<toolCallId>-sub`) and only the field is
+ * guaranteed to equal the id on the message's `tool_calls` — the same rule
+ * `<chat-tool-calls>` applies when it re-indexes `agent.subagents()`.
+ *
+ * @internal Exported for unit tests only — not part of the public API.
+ */
+export function resolveSubagentsByMessage(
+  msg: CoreAIMessage,
+  subagents: ReadonlyMap<string, SubagentStreamRef>,
+): SubagentStreamRef[] {
+  const byToolCallId = new Map<string, SubagentStreamRef>();
+  subagents.forEach(sa => byToolCallId.set(sa.toolCallId, sa));
+  return getToolCallIds(msg)
+    .map(id => byToolCallId.get(id))
+    .filter((subagent): subagent is SubagentStreamRef => subagent != null);
 }
 
 function getToolCallIds(msg: CoreAIMessage): string[] {

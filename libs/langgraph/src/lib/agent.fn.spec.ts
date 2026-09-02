@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import type { AIMessage as CoreAIMessage } from '@langchain/core/messages';
-import { agent } from './agent.fn';
+import { agent, resolveSubagentsByMessage } from './agent.fn';
+import type { SubagentStreamRef } from './agent.types';
 import { MockAgentTransport } from './transport/mock-stream.transport';
 import type { AgentTransport, StreamEvent } from './agent.types';
 import type { ThreadState } from '@langchain/langgraph-sdk';
@@ -892,6 +893,36 @@ describe('agent', () => {
       'call-review',
     ]);
     expect(ref.getSubagent('missing')).toBeUndefined();
+  });
+
+  it('getSubagentsByMessage resolves through the Subagent.toolCallId field, not the map key', () => {
+    // The neutral contract anchors a subagent on `Subagent.toolCallId`; the
+    // map KEY is an adapter detail (LangGraph keys by the id today, AG-UI
+    // keys activities by `<toolCallId>-sub`). A key that diverges from the
+    // field must not hide the subagent from the message lookup.
+    const sub = (toolCallId: string, name: string): SubagentStreamRef => ({
+      toolCallId,
+      name,
+      status: signal<'pending' | 'running' | 'complete' | 'error'>('running'),
+      values: signal<Record<string, unknown>>({}),
+      messages: signal([]),
+    });
+    const subagents = new Map<string, SubagentStreamRef>([
+      ['call_x-sub', sub('call_x', 'researcher')],
+      ['call_y-sub', sub('call_y', 'reviewer')],
+      ['unrelated-sub', sub('call_z', 'other')],
+    ]);
+    const msg = {
+      id: 'ai-1',
+      type: 'ai',
+      content: '',
+      tool_calls: [
+        { id: 'call_x', name: 'task', args: {} },
+        { id: 'call_y', name: 'task', args: {} },
+      ],
+    } as unknown as CoreAIMessage;
+
+    expect(resolveSubagentsByMessage(msg, subagents).map(sa => sa.name)).toEqual(['researcher', 'reviewer']);
   });
 
   it('events$ is an Observable-like with .subscribe', () => {
