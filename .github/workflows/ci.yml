@@ -458,6 +458,14 @@ jobs:
           key: uv-venv-${{ runner.os }}-py3.12-${{ hashFiles('examples/ag-ui/python/uv.lock') }}
       - working-directory: examples/ag-ui/python
         run: uv sync
+      - name: Check requirements.txt matches uv.lock
+        working-directory: examples/ag-ui/python
+        run: |
+          uv export --no-hashes -o /tmp/requirements.check.txt
+          if ! diff -u requirements.txt /tmp/requirements.check.txt; then
+            echo "::error::examples/ag-ui/python/requirements.txt is stale — the Railway image installs from this file, not uv.lock. Run 'uv export --no-hashes -o requirements.txt' in examples/ag-ui/python and commit the result."
+            exit 1
+          fi
       - name: Cache Playwright browsers
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
@@ -548,6 +556,22 @@ jobs:
         if: matrix.cap.python != ''
         working-directory: ${{ matrix.cap.python }}
         run: uv sync
+      - name: Check requirements.txt matches uv.lock
+        if: matrix.cap.python != ''
+        working-directory: ${{ matrix.cap.python }}
+        run: |
+          # Only a handful of caps (the ones deployed via a Railway/Docker
+          # image, e.g. cockpit/ag-ui/*) check in a requirements.txt export
+          # alongside pyproject.toml/uv.lock. Skip caps that don't have one.
+          if [ ! -f requirements.txt ]; then
+            echo "No requirements.txt in ${{ matrix.cap.python }} — skipping drift check."
+            exit 0
+          fi
+          uv export --no-hashes -o /tmp/requirements.check.txt
+          if ! diff -u requirements.txt /tmp/requirements.check.txt; then
+            echo "::error::${{ matrix.cap.python }}/requirements.txt is stale relative to uv.lock — deployments/ag-ui-dev is generated from this file. Run 'uv export --no-hashes -o requirements.txt' in ${{ matrix.cap.python }} and commit the result."
+            exit 1
+          fi
       - name: Cache Playwright browsers
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
