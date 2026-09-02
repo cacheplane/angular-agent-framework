@@ -1,6 +1,30 @@
-import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { capabilities, type CapabilityFramework } from '../apps/cockpit/scripts/capability-registry';
+
+/**
+ * Bridge-agent detection (langgraph topics only).
+ *
+ * A langgraph topic normally mounts the stock `LangGraphAgent` wrapper. Some
+ * topics subclass it — e.g. `subagents` mounts `SubagentEmittingAgent`, which
+ * expands the graph's `subagent_activity` CUSTOM events into standard
+ * SUBAGENT_* events. The aggregated server must mount the same subclass or
+ * production serves the raw CUSTOM events (no subagent cards).
+ *
+ * Convention: the topic's own `src/server.py` is the source of truth. The
+ * generator reads it and looks for
+ *
+ *     from .<module> import <Cls>      # package-relative, inside src/
+ *     agent = <Cls>(name=..., graph=...)
+ *
+ * If `<Cls>` is anything other than `LangGraphAgent`, the generated server
+ * imports `<Cls>` from `deps.<mod>.src.<module>` and constructs it with the
+ * same `name`/`graph` arguments it already uses for the stock wrapper. A
+ * topic that constructs the wrapper inline in `add_langgraph_fastapi_endpoint`
+ * (no `agent = ...` line) keeps the plain `LangGraphAgent`. A subclass that is
+ * mounted but not imported package-relatively is a generation error, because
+ * the aggregated server could not re-import it from the staged deps tree.
+ */
 
 const GENERATED_HEADER = '# GENERATED — do not edit. Source: scripts/generate-ag-ui-deployment-config.ts';
 
@@ -16,10 +40,44 @@ export interface GenerateOptions {
  */
 export type PythonHostedFramework = Exclude<CapabilityFramework, 'mastra'>;
 
+/**
+ * A `LangGraphAgent` subclass the topic mounts instead of the stock wrapper.
+ * `module` is dotted and relative to the topic's `src/` package
+ * (e.g. `streaming.subagent_emitting_agent`).
+ */
+export interface BridgeAgent {
+  module: string;
+  cls: string;
+}
+
 export interface AgUiTopic {
   topic: string;
   pythonDir: string;
   framework: PythonHostedFramework;
+  /** langgraph only; undefined means mount the plain `LangGraphAgent`. */
+  bridgeAgent?: BridgeAgent;
+}
+
+const STOCK_LANGGRAPH_AGENT = 'LangGraphAgent';
+
+/**
+ * Parse a topic's `src/server.py` for a mounted `LangGraphAgent` subclass.
+ * See the header comment for the convention. Exported for unit tests.
+ */
+export function detectBridgeAgent(serverPy: string): BridgeAgent | undefined {
+  const assignment = serverPy.match(/^agent\s*=\s*([A-Za-z_]\w*)\s*\(/m);
+  if (!assignment) return undefined;
+  const cls = assignment[1];
+  if (cls === STOCK_LANGGRAPH_AGENT) return undefined;
+  const importRe = /^from\s+\.([\w.]+)\s+import\s+([^\n]+)$/gm;
+  for (const m of serverPy.matchAll(importRe)) {
+    const names = m[2].split(',').map((n) => n.trim().split(/\s+as\s+/)[0]);
+    if (names.includes(cls)) return { module: m[1], cls };
+  }
+  throw new Error(
+    `server.py mounts \`agent = ${cls}(...)\` but does not import ${cls} package-relatively ` +
+      `(\`from .<module> import ${cls}\`); the aggregated server cannot re-import it from deps/.`,
+  );
 }
 
 /**
@@ -43,9 +101,9 @@ interface FrameworkAdapter {
   /** Module-level import line for the framework's AG-UI bridge package. */
   bridgeImport: string;
   /** Per-topic import of the staged module's exported object. */
-  topicImport(mod: string): string;
+  topicImport(mod: string, topic: AgUiTopic): string;
   /** Per-topic FastAPI mount block. */
-  mount(topic: string, mod: string): string;
+  mount(topic: string, mod: string, t: AgUiTopic): string;
 }
 
 /**
@@ -56,11 +114,15 @@ interface FrameworkAdapter {
 const FRAMEWORK_ADAPTERS: Record<PythonHostedFramework, FrameworkAdapter> = {
   langgraph: {
     bridgeImport: 'from ag_ui_langgraph import add_langgraph_fastapi_endpoint, LangGraphAgent',
-    topicImport: (mod) => `from deps.${mod}.src.graph import graph as ${mod}_graph`,
-    mount: (topic, mod) =>
+    topicImport: (mod, t) => {
+      const graphImport = `from deps.${mod}.src.graph import graph as ${mod}_graph`;
+      if (!t.bridgeAgent) return graphImport;
+      return `${graphImport}\nfrom deps.${mod}.src.${t.bridgeAgent.module} import ${t.bridgeAgent.cls}`;
+    },
+    mount: (topic, mod, t) =>
       `add_langgraph_fastapi_endpoint(\n` +
       `    app,\n` +
-      `    LangGraphAgent(name="${topic}", graph=${mod}_graph),\n` +
+      `    ${t.bridgeAgent?.cls ?? STOCK_LANGGRAPH_AGENT}(name="${topic}", graph=${mod}_graph),\n` +
       `    path="/agent/${topic}",\n` +
       `)`,
   },
@@ -98,7 +160,7 @@ function pyModule(topic: string): string {
   return topic.replace(/-/g, '_');
 }
 
-function collectTopics(): AgUiTopic[] {
+function collectTopics(repoRoot: string): AgUiTopic[] {
   const topics = capabilities
     // 'ag-ui' and 'runtimes' products are both AG-UI-served FastAPI backends
     // aggregated into the single ag-ui-dev deployment.
@@ -109,10 +171,17 @@ function collectTopics(): AgUiTopic[] {
         // pythonDir — its backend is deployments/ag-ui-mastra.
         throw new Error(`Capability ${c.id} declares framework 'mastra' with a pythonDir; mastra topics are Node-hosted.`);
       }
+      const framework = c.framework ?? 'langgraph';
+      const serverPy = resolve(repoRoot, c.pythonDir!, 'src/server.py');
+      const bridgeAgent =
+        framework === 'langgraph' && existsSync(serverPy)
+          ? detectBridgeAgent(readFileSync(serverPy, 'utf8'))
+          : undefined;
       return {
         topic: c.topic,
         pythonDir: c.pythonDir!,
-        framework: c.framework ?? 'langgraph',
+        framework,
+        ...(bridgeAgent ? { bridgeAgent } : {}),
       };
     });
   topics.sort((a, b) => a.topic.localeCompare(b.topic));
@@ -152,10 +221,10 @@ export function buildServerPy(topics: AgUiTopic[]): string {
     .map((framework) => FRAMEWORK_ADAPTERS[framework].bridgeImport)
     .join('\n');
   const imports = topics
-    .map((t) => FRAMEWORK_ADAPTERS[t.framework].topicImport(pyModule(t.topic)))
+    .map((t) => FRAMEWORK_ADAPTERS[t.framework].topicImport(pyModule(t.topic), t))
     .join('\n');
   const mounts = topics
-    .map((t) => FRAMEWORK_ADAPTERS[t.framework].mount(t.topic, pyModule(t.topic)))
+    .map((t) => FRAMEWORK_ADAPTERS[t.framework].mount(t.topic, pyModule(t.topic), t))
     .join('\n');
   return `${GENERATED_HEADER}
 # Multi-topic AG-UI FastAPI server. Aggregates each AG-UI-served python topic
@@ -330,7 +399,7 @@ function compareVersions(a: string, b: string): number {
 }
 
 export function generateAgUiDeployment(options: GenerateOptions): void {
-  const topics = collectTopics();
+  const topics = collectTopics(options.repoRoot);
   mkdirSync(options.outDir, { recursive: true });
   stageDeps(options.repoRoot, options.outDir, topics);
   writeFileSync(resolve(options.outDir, 'server.py'), buildServerPy(topics));
