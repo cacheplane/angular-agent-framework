@@ -114,7 +114,7 @@ They describe different topologies.
 LangGraph addresses a platform API and names a graph on it.
 AG-UI addresses one HTTP endpoint that streams Server-Sent Events, and the endpoint is the whole address space.
 
-<AgUiArchDiagram />
+<StackDiagram highlight="contract" caption="Two adapters, one contract — the UI cannot tell which runtime answered." />
 
 One SSE route to allowlist, proxy, and monitor is a smaller operational surface than a platform API with a run lifecycle behind it.
 Whether that simplicity is a feature depends entirely on the next section.

@@ -10,6 +10,7 @@ import { WhitePaperBlock } from '../../components/landing/WhitePaperBlock';
 import { FinalCTA } from '../../components/landing/FinalCTA';
 import { MediumSwitcher } from '../../components/landing/MediumSwitcher';
 import { BackendsGrid } from '../../components/landing/ag-ui/BackendsGrid';
+import { StackDiagramSection } from '../../components/landing/StackDiagramSection';
 import { createPageMetadata, SHORT_POSITIONING_DESCRIPTION } from '../../lib/site-metadata';
 import { SECTION_MEDIA } from '../../lib/section-media';
 import { buildPanes } from '../../lib/build-panes';
@@ -62,6 +63,15 @@ export default async function AgUiPage() {
           </div>
         </Container>
       </Section>
+
+      <StackDiagramSection
+        id="ag-ui-architecture"
+        eyebrow="Architecture"
+        headline="The adapter is the only part that speaks AG-UI"
+        body="Everything above the seam is plain Angular — signals in, components out. toAgent() keeps the protocol at the boundary, so nothing in your UI changes when the backend does."
+        highlight="ag-ui"
+        caption="Four of the seven AG-UI runtimes shown; the rest speak the same protocol."
+      />
 
       <FeatureBlock
         id="backends"

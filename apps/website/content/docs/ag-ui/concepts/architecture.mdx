@@ -4,23 +4,7 @@
 
 The package takes an AG-UI `AbstractAgent`, listens to its protocol events, and exposes the runtime-neutral `Agent` contract that the chat components already understand.
 
-```text
-Angular component
-  |
-  v
-@threadplane/chat Agent contract
-  |  messages, status, isLoading, error, toolCalls, state, events$
-  |
-  v
-@threadplane/ag-ui toAgent()
-  |  reduces AG-UI events into Angular signals
-  |
-  v
-@ag-ui/client AbstractAgent
-  |
-  v
-AG-UI backend or in-process fake agent
-```
+<AgUiArchitecturePipeline />
 
 ## The boundary
 
