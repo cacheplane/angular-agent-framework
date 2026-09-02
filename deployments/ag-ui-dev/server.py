@@ -18,6 +18,7 @@ from deps.json_render.src.graph import graph as json_render_graph
 from deps.microsoft_agent_framework.src.agent import agent as microsoft_agent_framework_agent
 from deps.streaming.src.graph import graph as streaming_graph
 from deps.subagents.src.graph import graph as subagents_graph
+from deps.subagents.src.streaming.subagent_emitting_agent import SubagentEmittingAgent
 from deps.tool_views.src.graph import graph as tool_views_graph
 
 AG_UI_INTERNAL_TOKEN = os.environ["AG_UI_INTERNAL_TOKEN"]
@@ -79,7 +80,7 @@ add_langgraph_fastapi_endpoint(
 )
 add_langgraph_fastapi_endpoint(
     app,
-    LangGraphAgent(name="subagents", graph=subagents_graph),
+    SubagentEmittingAgent(name="subagents", graph=subagents_graph),
     path="/agent/subagents",
 )
 add_langgraph_fastapi_endpoint(
