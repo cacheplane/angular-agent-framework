@@ -5,7 +5,7 @@ import './global.css';
 import { Nav } from '../components/shared/Nav';
 import { SiteFooter } from '../components/shared/SiteFooter';
 import { AnnouncementToast } from '../components/shared/AnnouncementToast';
-import { WebsiteWorkspaceLayout } from '../components/workspace/WebsiteWorkspace';
+import { WebsiteWorkspaceRoot } from '../components/workspace/WebsiteWorkspace';
 import { JsonLd } from '../components/shared/JsonLd';
 import { rootJsonLd } from '../lib/structured-data';
 import {
@@ -79,7 +79,7 @@ export default function RootLayout({
         <Nav />
         <div id="site-content">
           <main>
-            <WebsiteWorkspaceLayout>{children}</WebsiteWorkspaceLayout>
+            <WebsiteWorkspaceRoot>{children}</WebsiteWorkspaceRoot>
           </main>
           <SiteFooter />
           <div data-announcement-region="">

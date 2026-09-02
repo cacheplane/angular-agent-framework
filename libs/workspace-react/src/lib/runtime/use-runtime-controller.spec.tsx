@@ -11,8 +11,12 @@ import {
   vi,
   type Mock,
 } from 'vitest';
-import { RUNTIME_BRIDGE_VERSION } from '@threadplane/cockpit-runtime-bridge';
+import {
+  RUNTIME_BRIDGE_VERSION,
+  RUNTIME_CONFIGURATION_VERSION,
+} from '@threadplane/cockpit-runtime-bridge';
 import type { RuntimeActivityInput } from './session-activity';
+import type { EffectiveRuntimeTarget } from './runtime-target-session';
 import type { RuntimeTerminalTransition } from './runtime-state';
 import {
   useRuntimeController,
@@ -76,10 +80,45 @@ function runtimeError(nonce: string) {
   } as const;
 }
 
+const noneTarget: EffectiveRuntimeTarget = {
+  adapter: 'none',
+  target: null,
+};
+
+const sharedLangGraphTarget: EffectiveRuntimeTarget = {
+  adapter: 'langgraph',
+  target: { kind: 'shared' },
+};
+
+const customLangGraphTarget = (
+  apiUrl = 'https://api.example.test/langgraph',
+  apiKey = 'test-key-redact-me'
+): EffectiveRuntimeTarget => ({
+  adapter: 'langgraph',
+  target: { kind: 'langsmith', apiUrl, apiKey },
+});
+
+function childReady(nonce: string) {
+  return {
+    type: 'tplane:runtime-child-ready',
+    version: RUNTIME_CONFIGURATION_VERSION,
+    nonce,
+  } as const;
+}
+
+function configured(nonce: string, generation: number) {
+  return {
+    type: 'tplane:runtime-configured',
+    version: RUNTIME_CONFIGURATION_VERSION,
+    nonce,
+    generation,
+  } as const;
+}
+
 function emitMessage(
   data: unknown,
   origin: string,
-  source: MessageEventSource | null,
+  source: MessageEventSource | null
 ) {
   act(() => {
     window.dispatchEvent(new MessageEvent('message', { data, origin, source }));
@@ -90,25 +129,27 @@ describe('useRuntimeController', () => {
   let container: HTMLDivElement;
   let root: Root;
   let onActivity: Mock<(event: RuntimeActivityInput) => void>;
-  let onTerminalTransition: Mock<
-    (event: RuntimeTerminalTransition) => void
+  let onTerminalTransition: Mock<(event: RuntimeTerminalTransition) => void>;
+  let randomUUID: Mock<
+    () => `${string}-${string}-${string}-${string}-${string}`
   >;
-  let randomUUID: Mock<() => `${string}-${string}-${string}-${string}-${string}`>;
 
   const render = (
     runtimeUrl: string | null,
     capability = 'streaming',
     mountFrame = true,
+    effectiveTarget: EffectiveRuntimeTarget = noneTarget
   ) => {
     act(() => {
       root.render(
         <Harness
           runtimeUrl={runtimeUrl}
           capability={capability}
+          effectiveTarget={effectiveTarget}
           onActivity={onActivity}
           onTerminalTransition={onTerminalTransition}
           mountFrame={mountFrame}
-        />,
+        />
       );
     });
   };
@@ -164,7 +205,7 @@ describe('useRuntimeController', () => {
       expect.objectContaining({
         kind: 'configuration_invalid',
         capability: 'streaming',
-      }),
+      })
     );
     expect(onTerminalTransition).toHaveBeenCalledTimes(1);
     expect(onTerminalTransition).toHaveBeenCalledWith({
@@ -183,9 +224,7 @@ describe('useRuntimeController', () => {
       activeNonce: null,
       frameGeneration: 0,
     });
-    expect(controller.validatedRuntimeUrl).toBe(
-      'https://runtime.test/path',
-    );
+    expect(controller.validatedRuntimeUrl).toBe('https://runtime.test/path');
     expect(randomUUID).not.toHaveBeenCalled();
     expect(vi.getTimerCount()).toBe(0);
     expect(onActivity).not.toHaveBeenCalled();
@@ -211,7 +250,7 @@ describe('useRuntimeController', () => {
         nonce: firstNonce,
         capability: 'streaming',
       },
-      'https://runtime.test',
+      'https://runtime.test'
     );
     expect(postMessage).not.toHaveBeenCalledWith(expect.anything(), '*');
     expect(controller.snapshot).toMatchObject({
@@ -230,6 +269,647 @@ describe('useRuntimeController', () => {
     expect(onTerminalTransition).not.toHaveBeenCalled();
   });
 
+  it('configures a compatible child at the exact iframe origin and stops retrying only for the matching acknowledgement', () => {
+    const childNonce = 'child-configuration-nonce';
+    render(
+      'https://runtime.test/path',
+      'streaming',
+      true,
+      customLangGraphTarget()
+    );
+    const frameWindow = controller.frameRef.current!.contentWindow!;
+    const postMessage = vi.spyOn(frameWindow, 'postMessage');
+
+    expect(controller.snapshot).toMatchObject({
+      phase: 'configuring',
+      targetGeneration: 0,
+      frameGeneration: 0,
+      routeGeneration: 0,
+    });
+    emitMessage(childReady(childNonce), 'https://runtime.test', frameWindow);
+
+    const configureMessage = {
+      type: 'tplane:runtime-configure',
+      version: RUNTIME_CONFIGURATION_VERSION,
+      nonce: childNonce,
+      generation: 0,
+      target: {
+        kind: 'langsmith',
+        apiUrl: 'https://api.example.test/langgraph',
+        apiKey: 'test-key-redact-me',
+      },
+    } as const;
+    expect(postMessage).toHaveBeenCalledWith(
+      configureMessage,
+      'https://runtime.test'
+    );
+    expect(postMessage).not.toHaveBeenCalledWith(expect.anything(), '*');
+
+    act(() => vi.advanceTimersByTime(250));
+    expect(postMessage).toHaveBeenCalledTimes(2);
+
+    emitMessage(
+      { ...childReady('wrong-version'), version: 1 },
+      'https://runtime.test',
+      frameWindow
+    );
+    emitMessage(
+      configured('wrong-child-nonce', 0),
+      'https://runtime.test',
+      frameWindow
+    );
+    emitMessage(configured(childNonce, 1), 'https://runtime.test', frameWindow);
+    emitMessage(configured(childNonce, 0), 'https://sibling.test', frameWindow);
+    emitMessage(configured(childNonce, 0), 'https://runtime.test', window);
+    expect(controller.snapshot.phase).toBe('configuring');
+
+    emitMessage(configured(childNonce, 0), 'https://runtime.test', frameWindow);
+    expect(controller.snapshot.phase).toBe('connecting');
+    const callCount = postMessage.mock.calls.length;
+    act(() => vi.advanceTimersByTime(5_000));
+    expect(postMessage).toHaveBeenCalledTimes(callCount);
+    expect(vi.getTimerCount()).toBe(0);
+
+    const serialized = JSON.stringify({
+      snapshot: controller.snapshot,
+      runtimeContext: controller.runtimeContext,
+      validatedRuntimeUrl: controller.validatedRuntimeUrl,
+      frameGeneration: controller.frameGeneration,
+      targetGeneration: controller.targetGeneration,
+    });
+    expect(serialized).not.toContain('test-key-redact-me');
+    expect(serialized).not.toContain('api.example.test');
+  });
+
+  it('owns a distinct target generation and increments it exactly once per semantic target change', () => {
+    render(
+      'https://runtime.test/path',
+      'streaming',
+      true,
+      sharedLangGraphTarget
+    );
+    expect(controller.snapshot).toMatchObject({
+      targetGeneration: 0,
+      routeGeneration: 0,
+      frameGeneration: 0,
+    });
+
+    render(
+      'https://runtime.test/path',
+      'persistence',
+      true,
+      sharedLangGraphTarget
+    );
+    expect(controller.snapshot).toMatchObject({
+      targetGeneration: 0,
+      routeGeneration: 1,
+      frameGeneration: 0,
+    });
+
+    render('https://runtime.test/path', 'persistence', true, {
+      adapter: 'ag-ui',
+      target: { kind: 'shared' },
+    });
+    expect(controller.snapshot).toMatchObject({
+      targetGeneration: 1,
+      routeGeneration: 1,
+      frameGeneration: 1,
+    });
+
+    const custom = customLangGraphTarget();
+    render('https://runtime.test/path', 'persistence', true, custom);
+    expect(controller.snapshot).toMatchObject({
+      targetGeneration: 2,
+      routeGeneration: 1,
+      frameGeneration: 2,
+    });
+
+    render(
+      'https://runtime.test/path',
+      'persistence',
+      true,
+      customLangGraphTarget()
+    );
+    expect(controller.snapshot).toMatchObject({
+      targetGeneration: 2,
+      routeGeneration: 1,
+      frameGeneration: 2,
+    });
+
+    render(
+      'https://runtime.test/path',
+      'persistence',
+      true,
+      customLangGraphTarget(
+        'https://api.example.test/langgraph',
+        'replacement-key'
+      )
+    );
+    expect(controller.snapshot).toMatchObject({
+      targetGeneration: 3,
+      routeGeneration: 1,
+      frameGeneration: 3,
+    });
+  });
+
+  it('detects in-place endpoint and adapter mutation from primitive target fields', () => {
+    const mutableTarget = {
+      adapter: 'ag-ui' as 'ag-ui' | 'langgraph',
+      target: {
+        kind: 'ag-ui' as 'ag-ui' | 'shared',
+        endpoint: 'HTTPS://AGENT.EXAMPLE.TEST:443/one',
+      },
+    };
+
+    render(
+      'https://runtime.test/path',
+      'streaming',
+      true,
+      mutableTarget as EffectiveRuntimeTarget
+    );
+    expect(controller.snapshot).toMatchObject({
+      targetGeneration: 0,
+      frameGeneration: 0,
+    });
+
+    mutableTarget.target.endpoint = 'https://agent.example.test/one';
+    render(
+      'https://runtime.test/path',
+      'streaming',
+      true,
+      mutableTarget as EffectiveRuntimeTarget
+    );
+    expect(controller.snapshot).toMatchObject({
+      targetGeneration: 0,
+      frameGeneration: 0,
+    });
+
+    mutableTarget.target.endpoint = 'https://agent.example.test/two';
+    render(
+      'https://runtime.test/path',
+      'streaming',
+      true,
+      mutableTarget as EffectiveRuntimeTarget
+    );
+    expect(controller.snapshot).toMatchObject({
+      targetGeneration: 1,
+      frameGeneration: 1,
+    });
+
+    mutableTarget.adapter = 'langgraph';
+    mutableTarget.target.kind = 'shared';
+    render(
+      'https://runtime.test/path',
+      'streaming',
+      true,
+      mutableTarget as EffectiveRuntimeTarget
+    );
+    expect(controller.snapshot).toMatchObject({
+      targetGeneration: 2,
+      frameGeneration: 2,
+    });
+  });
+
+  it('detects an in-place LangSmith key mutation and never posts it under the old generation', () => {
+    const mutableTarget = {
+      adapter: 'langgraph' as const,
+      target: {
+        kind: 'langsmith' as const,
+        apiUrl: 'https://api.example.test/langgraph',
+        apiKey: 'first-private-key',
+      },
+    };
+    render('https://runtime.test/path', 'streaming', true, mutableTarget);
+    const frameWindow = controller.frameRef.current!.contentWindow!;
+    const postMessage = vi.spyOn(frameWindow, 'postMessage');
+    emitMessage(childReady('first-child'), 'https://runtime.test', frameWindow);
+    expect(postMessage).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        generation: 0,
+        target: expect.objectContaining({ apiKey: 'first-private-key' }),
+      }),
+      'https://runtime.test'
+    );
+
+    mutableTarget.target.apiKey = 'replacement-private-key';
+    render('https://runtime.test/path', 'streaming', true, mutableTarget);
+    expect(controller.snapshot).toMatchObject({
+      phase: 'configuring',
+      targetGeneration: 1,
+      frameGeneration: 1,
+    });
+
+    const oldGenerationCallCount = postMessage.mock.calls.length;
+    act(() => vi.advanceTimersByTime(250));
+    expect(postMessage).toHaveBeenCalledTimes(oldGenerationCallCount);
+
+    emitMessage(
+      childReady('replacement-child'),
+      'https://runtime.test',
+      frameWindow
+    );
+    expect(postMessage).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        generation: 1,
+        target: expect.objectContaining({ apiKey: 'replacement-private-key' }),
+      }),
+      'https://runtime.test'
+    );
+    expect(JSON.stringify(controller.runtimeContext)).not.toContain(
+      'replacement-private-key'
+    );
+  });
+
+  it('does not send configuration for a static runtime adapter', () => {
+    render('https://runtime.test/path', 'streaming', true, noneTarget);
+    const frameWindow = controller.frameRef.current!.contentWindow!;
+    const postMessage = vi.spyOn(frameWindow, 'postMessage');
+
+    emitMessage(
+      childReady('static-child-nonce'),
+      'https://runtime.test',
+      frameWindow
+    );
+    expect(postMessage).not.toHaveBeenCalled();
+    expect(controller.snapshot.phase).toBe('connecting');
+  });
+
+  it.each([
+    ['unauthorized', 'unauthorized'],
+    ['network_blocked', 'network_blocked'],
+  ] as const)(
+    'accepts only a generation-bound %s operation failure from the configured child',
+    (code, phase) => {
+      const childNonce = 'child-operation-nonce';
+      render(
+        'https://runtime.test/path',
+        'streaming',
+        true,
+        customLangGraphTarget()
+      );
+      const frameWindow = controller.frameRef.current!.contentWindow!;
+      emitMessage(childReady(childNonce), 'https://runtime.test', frameWindow);
+      emitMessage(
+        configured(childNonce, 0),
+        'https://runtime.test',
+        frameWindow
+      );
+
+      const failure = {
+        type: 'tplane:runtime-operation-failed',
+        version: RUNTIME_CONFIGURATION_VERSION,
+        nonce: childNonce,
+        generation: 0,
+        code,
+      } as const;
+      emitMessage(
+        { ...failure, generation: 1 },
+        'https://runtime.test',
+        frameWindow
+      );
+      emitMessage(failure, 'https://sibling.test', frameWindow);
+      emitMessage(failure, 'https://runtime.test', window);
+      expect(controller.snapshot.phase).toBe('connecting');
+
+      emitMessage(failure, 'https://runtime.test', frameWindow);
+      expect(controller.snapshot).toMatchObject({
+        phase,
+        errorCode: code,
+        targetGeneration: 0,
+      });
+      expect(onActivity).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          capability: 'streaming',
+          runtime: {
+            adapter: 'langgraph',
+            targetKind: 'langsmith',
+            protocolVersion: RUNTIME_CONFIGURATION_VERSION,
+            configurationGeneration: 0,
+            phase,
+            reasonCode: code,
+          },
+        })
+      );
+      expect(JSON.stringify(onActivity.mock.calls)).not.toContain(
+        'test-key-redact-me'
+      );
+      expect(JSON.stringify(onActivity.mock.calls)).not.toContain(
+        'api.example.test'
+      );
+    }
+  );
+
+  it('maps a bounded configuration timeout and strict failure to incompatible_bridge without clearing the target', () => {
+    const childNonce = 'child-timeout-nonce';
+    render(
+      'https://runtime.test/path',
+      'streaming',
+      true,
+      customLangGraphTarget()
+    );
+    const frameWindow = controller.frameRef.current!.contentWindow!;
+    const postMessage = vi.spyOn(frameWindow, 'postMessage');
+    emitMessage(childReady(childNonce), 'https://runtime.test', frameWindow);
+
+    act(() => vi.advanceTimersByTime(5_000));
+    expect(controller.snapshot).toMatchObject({
+      phase: 'incompatible_bridge',
+      errorCode: 'incompatible_bridge',
+      targetGeneration: 0,
+    });
+    expect(controller.runtimeContext).toEqual({
+      adapter: 'langgraph',
+      targetKind: 'langsmith',
+      protocolVersion: RUNTIME_CONFIGURATION_VERSION,
+      configurationGeneration: 0,
+      phase: 'incompatible_bridge',
+      reasonCode: 'incompatible_bridge',
+    });
+
+    emitMessage(configured(childNonce, 0), 'https://runtime.test', frameWindow);
+    expect(controller.snapshot.phase).toBe('incompatible_bridge');
+
+    const priorConfigurationCount = postMessage.mock.calls.length;
+    act(() => controller.recheck());
+    expect(controller.snapshot).toMatchObject({
+      phase: 'configuring',
+      targetGeneration: 0,
+    });
+    expect(postMessage).toHaveBeenCalledTimes(priorConfigurationCount + 1);
+    expect(vi.getTimerCount()).toBeGreaterThan(0);
+    act(() => vi.advanceTimersByTime(5_000));
+    expect(controller.snapshot.phase).toBe('incompatible_bridge');
+  });
+
+  it('times out a compatible frame that never loads or announces child-ready', () => {
+    render(
+      'https://runtime.test/path',
+      'streaming',
+      true,
+      customLangGraphTarget()
+    );
+    expect(controller.snapshot.phase).toBe('configuring');
+    expect(vi.getTimerCount()).toBe(1);
+
+    act(() => vi.advanceTimersByTime(5_000));
+    expect(controller.snapshot).toMatchObject({
+      phase: 'incompatible_bridge',
+      errorCode: 'incompatible_bridge',
+      targetGeneration: 0,
+    });
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('keeps the fail-closed deadline through StrictMode layout-effect replay', () => {
+    act(() => {
+      root.render(
+        <React.StrictMode>
+          <Harness
+            runtimeUrl="https://runtime.test/path"
+            capability="streaming"
+            effectiveTarget={customLangGraphTarget()}
+            onActivity={onActivity}
+            onTerminalTransition={onTerminalTransition}
+          />
+        </React.StrictMode>
+      );
+    });
+    expect(controller.snapshot.phase).toBe('configuring');
+    expect(vi.getTimerCount()).toBe(1);
+
+    act(() => vi.advanceTimersByTime(5_000));
+    expect(controller.snapshot).toMatchObject({
+      phase: 'incompatible_bridge',
+      errorCode: 'incompatible_bridge',
+      targetGeneration: 0,
+    });
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('ignores late child-ready after a no-session terminal timeout until explicit retry', () => {
+    render(
+      'https://runtime.test/path',
+      'streaming',
+      true,
+      customLangGraphTarget()
+    );
+    const frameWindow = controller.frameRef.current!.contentWindow!;
+    const postMessage = vi.spyOn(frameWindow, 'postMessage');
+    act(() => vi.advanceTimersByTime(5_000));
+
+    emitMessage(
+      childReady('late-child-nonce'),
+      'https://runtime.test',
+      frameWindow
+    );
+    expect(controller.snapshot.phase).toBe('incompatible_bridge');
+    expect(postMessage).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+
+    act(() => controller.recheck());
+    expect(controller.snapshot.phase).toBe('configuring');
+    expect(postMessage).not.toHaveBeenCalled();
+    emitMessage(
+      childReady('retry-child-nonce'),
+      'https://runtime.test',
+      frameWindow
+    );
+    expect(postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        nonce: 'retry-child-nonce',
+        generation: 0,
+      }),
+      'https://runtime.test'
+    );
+  });
+
+  it('ignores a late frame load after a no-session terminal timeout until explicit retry', () => {
+    render(
+      'https://runtime.test/path',
+      'streaming',
+      true,
+      customLangGraphTarget()
+    );
+    const frameWindow = controller.frameRef.current!.contentWindow!;
+    const postMessage = vi.spyOn(frameWindow, 'postMessage');
+    act(() => vi.advanceTimersByTime(5_000));
+
+    act(() => controller.onFrameLoad());
+    expect(controller.snapshot.phase).toBe('incompatible_bridge');
+    expect(postMessage).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+
+    act(() => controller.reload());
+    expect(controller.snapshot).toMatchObject({
+      phase: 'reloading',
+      frameGeneration: 1,
+      targetGeneration: 0,
+    });
+    expect(vi.getTimerCount()).toBe(1);
+  });
+
+  it('does not let duplicate child-ready retries extend the frame configuration deadline', () => {
+    const childNonce = 'bounded-child-nonce';
+    render(
+      'https://runtime.test/path',
+      'streaming',
+      true,
+      customLangGraphTarget()
+    );
+    const frameWindow = controller.frameRef.current!.contentWindow!;
+    act(() => vi.advanceTimersByTime(4_999));
+    emitMessage(childReady(childNonce), 'https://runtime.test', frameWindow);
+    emitMessage(childReady(childNonce), 'https://runtime.test', frameWindow);
+    act(() => vi.advanceTimersByTime(1));
+
+    expect(controller.snapshot.phase).toBe('incompatible_bridge');
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('maps a strict configuration failure and invalidates every old-generation response after replacement', () => {
+    const oldNonce = 'old-child-nonce';
+    const nextNonce = 'next-child-nonce';
+    render(
+      'https://runtime.test/path',
+      'streaming',
+      true,
+      customLangGraphTarget()
+    );
+    const frameWindow = controller.frameRef.current!.contentWindow!;
+    emitMessage(childReady(oldNonce), 'https://runtime.test', frameWindow);
+    emitMessage(
+      {
+        type: 'tplane:runtime-configuration-failed',
+        version: RUNTIME_CONFIGURATION_VERSION,
+        nonce: oldNonce,
+        generation: 0,
+        code: 'incompatible_bridge',
+      },
+      'https://runtime.test',
+      frameWindow
+    );
+    expect(controller.snapshot.phase).toBe('incompatible_bridge');
+
+    render(
+      'https://runtime.test/path',
+      'streaming',
+      true,
+      customLangGraphTarget(
+        'https://api.example.test/langgraph',
+        'replacement-key'
+      )
+    );
+    expect(controller.snapshot).toMatchObject({
+      phase: 'configuring',
+      targetGeneration: 1,
+      frameGeneration: 1,
+    });
+
+    emitMessage(
+      {
+        type: 'tplane:runtime-operation-failed',
+        version: RUNTIME_CONFIGURATION_VERSION,
+        nonce: oldNonce,
+        generation: 0,
+        code: 'unauthorized',
+      },
+      'https://runtime.test',
+      frameWindow
+    );
+    expect(controller.snapshot.phase).toBe('configuring');
+
+    emitMessage(childReady(nextNonce), 'https://runtime.test', frameWindow);
+    emitMessage(configured(nextNonce, 1), 'https://runtime.test', frameWindow);
+    emitMessage(
+      {
+        type: 'tplane:runtime-operation-failed',
+        version: RUNTIME_CONFIGURATION_VERSION,
+        nonce: oldNonce,
+        generation: 0,
+        code: 'network_blocked',
+      },
+      'https://runtime.test',
+      frameWindow
+    );
+    expect(controller.snapshot.phase).toBe('connecting');
+  });
+
+  it('cancels an active health check before replacing the target generation', () => {
+    const childNonce = 'health-child-nonce';
+    render(
+      'https://runtime.test/path',
+      'streaming',
+      true,
+      customLangGraphTarget()
+    );
+    const frameWindow = controller.frameRef.current!.contentWindow!;
+    emitMessage(childReady(childNonce), 'https://runtime.test', frameWindow);
+    emitMessage(configured(childNonce, 0), 'https://runtime.test', frameWindow);
+    act(() => controller.onFrameLoad());
+    expect(controller.snapshot.activeNonce).toBe(firstNonce);
+    expect(vi.getTimerCount()).toBe(1);
+
+    render(
+      'https://runtime.test/path',
+      'streaming',
+      true,
+      customLangGraphTarget(
+        'https://api.example.test/langgraph',
+        'replacement-key'
+      )
+    );
+    expect(controller.snapshot).toMatchObject({
+      phase: 'configuring',
+      activeNonce: null,
+      targetGeneration: 1,
+    });
+    expect(vi.getTimerCount()).toBe(1);
+
+    emitMessage(runtimeReady(firstNonce), 'https://runtime.test', frameWindow);
+    expect(controller.snapshot.phase).toBe('configuring');
+  });
+
+  it('keeps reload and recheck bound to the current target generation', () => {
+    const childNonce = 'reload-child-nonce';
+    render(
+      'https://runtime.test/path',
+      'streaming',
+      true,
+      customLangGraphTarget()
+    );
+    const frameWindow = controller.frameRef.current!.contentWindow!;
+    emitMessage(childReady(childNonce), 'https://runtime.test', frameWindow);
+    emitMessage(configured(childNonce, 0), 'https://runtime.test', frameWindow);
+
+    act(() => controller.reload());
+    expect(controller.snapshot).toMatchObject({
+      phase: 'reloading',
+      targetGeneration: 0,
+      frameGeneration: 1,
+    });
+    emitMessage(
+      {
+        type: 'tplane:runtime-operation-failed',
+        version: RUNTIME_CONFIGURATION_VERSION,
+        nonce: childNonce,
+        generation: 0,
+        code: 'unauthorized',
+      },
+      'https://runtime.test',
+      frameWindow
+    );
+    expect(controller.snapshot.phase).toBe('reloading');
+
+    act(() => controller.onFrameLoad());
+    expect(controller.snapshot).toMatchObject({
+      phase: 'configuring',
+      targetGeneration: 0,
+      frameGeneration: 1,
+    });
+    act(() => controller.recheck());
+    expect(controller.snapshot.targetGeneration).toBe(0);
+  });
+
   it('accepts ready only from the mounted frame, exact origin, valid shape, and current nonce', () => {
     randomUUID
       .mockReturnValueOnce(firstNonce)
@@ -244,12 +924,12 @@ describe('useRuntimeController', () => {
     emitMessage(
       { ...runtimeReady(firstNonce), version: 2 },
       'https://runtime.test',
-      frameWindow,
+      frameWindow
     );
     emitMessage(
       { ...runtimeReady(firstNonce), extra: true },
       'https://runtime.test',
-      frameWindow,
+      frameWindow
     );
     emitMessage(runtimeReady('stale'), 'https://runtime.test', frameWindow);
     expect(controller.snapshot.phase).toBe('connecting');
@@ -289,7 +969,7 @@ describe('useRuntimeController', () => {
     emitMessage(
       { ...runtimeError(firstNonce), code: 'raw_failure' },
       'https://runtime.test',
-      frameWindow,
+      frameWindow
     );
     expect(controller.snapshot.phase).toBe('connecting');
 
@@ -455,7 +1135,7 @@ describe('useRuntimeController', () => {
       routeGeneration: 1,
     });
     expect(controller.validatedRuntimeUrl).toBe(
-      'https://next.runtime.test/new',
+      'https://next.runtime.test/new'
     );
     expect(vi.getTimerCount()).toBe(0);
     emitMessage(runtimeReady(firstNonce), 'https://runtime.test', frameWindow);
@@ -463,16 +1143,12 @@ describe('useRuntimeController', () => {
 
     act(() => controller.onFrameLoad());
     expect(controller.snapshot.activeNonce).toBe(secondNonce);
-    emitMessage(
-      runtimeReady(secondNonce),
-      'https://runtime.test',
-      frameWindow,
-    );
+    emitMessage(runtimeReady(secondNonce), 'https://runtime.test', frameWindow);
     expect(controller.snapshot.phase).toBe('connecting');
     emitMessage(
       runtimeReady(secondNonce),
       'https://next.runtime.test',
-      frameWindow,
+      frameWindow
     );
     expect(controller.snapshot.phase).toBe('ready');
   });
@@ -491,8 +1167,7 @@ describe('useRuntimeController', () => {
     const activityCount = onActivity.mock.calls.length;
     const terminalCount = onTerminalTransition.mock.calls.length;
 
-    const latestConfiguredUrl =
-      'https://user:pw@runtime.test/path?token=b#two';
+    const latestConfiguredUrl = 'https://user:pw@runtime.test/path?token=b#two';
     render(latestConfiguredUrl);
 
     expect(controller.validatedRuntimeUrl).toBe('https://runtime.test/path');
@@ -514,7 +1189,7 @@ describe('useRuntimeController', () => {
     expect(open).toHaveBeenCalledWith(
       latestConfiguredUrl,
       '_blank',
-      'noopener,noreferrer',
+      'noopener,noreferrer'
     );
   });
 
@@ -532,12 +1207,13 @@ describe('useRuntimeController', () => {
       capability: string,
       suspend: boolean,
       activity = onActivity,
-      terminalTransition = onTerminalTransition,
+      terminalTransition = onTerminalTransition
     ) => (
       <Suspense fallback={<div>Suspended</div>}>
         <ConcurrentHarness
           runtimeUrl={runtimeUrl}
           capability={capability}
+          effectiveTarget={noneTarget}
           onActivity={activity}
           onTerminalTransition={terminalTransition}
           suspend={suspend}
@@ -548,11 +1224,7 @@ describe('useRuntimeController', () => {
 
     act(() => {
       root.render(
-        renderConcurrent(
-          'https://runtime.test/committed',
-          'streaming',
-          false,
-        ),
+        renderConcurrent('https://runtime.test/committed', 'streaming', false)
       );
     });
     const committedController = committedConcurrentController;
@@ -567,8 +1239,8 @@ describe('useRuntimeController', () => {
             'persistence',
             true,
             futureOnActivity,
-            futureOnTerminalTransition,
-          ),
+            futureOnTerminalTransition
+          )
         );
       });
     });
@@ -582,7 +1254,7 @@ describe('useRuntimeController', () => {
         nonce: firstNonce,
         capability: 'streaming',
       },
-      'https://runtime.test',
+      'https://runtime.test'
     );
     expect(onActivity.mock.calls.map(([event]) => event.kind)).toEqual([
       'runtime_check_requested',
@@ -599,11 +1271,7 @@ describe('useRuntimeController', () => {
 
     act(() => {
       root.render(
-        renderConcurrent(
-          'https://runtime.test/committed',
-          'streaming',
-          false,
-        ),
+        renderConcurrent('https://runtime.test/committed', 'streaming', false)
       );
     });
     expect(committedConcurrentController.snapshot).toMatchObject({
@@ -640,7 +1308,7 @@ describe('useRuntimeController', () => {
         snapshot: controller.snapshot,
         activity: onActivity.mock.calls,
         terminal: onTerminalTransition.mock.calls,
-      }),
+      })
     ).not.toMatch(/invalid-secret-[ab]/);
   });
 
@@ -651,13 +1319,13 @@ describe('useRuntimeController', () => {
     act(() => controller.onFrameLoad());
 
     expect(
-      addEventListener.mock.calls.filter(([type]) => type === 'message'),
+      addEventListener.mock.calls.filter(([type]) => type === 'message')
     ).toHaveLength(1);
     act(() => root.unmount());
 
     expect(vi.getTimerCount()).toBe(0);
     expect(
-      removeEventListener.mock.calls.filter(([type]) => type === 'message'),
+      removeEventListener.mock.calls.filter(([type]) => type === 'message')
     ).toHaveLength(1);
   });
 
@@ -685,7 +1353,7 @@ describe('useRuntimeController', () => {
       1,
       configuredUrl,
       '_blank',
-      'noopener,noreferrer',
+      'noopener,noreferrer'
     );
     expect(onActivity.mock.calls.map(([event]) => event.kind)).toEqual([
       'runtime_open_requested',
@@ -702,11 +1370,15 @@ describe('useRuntimeController', () => {
         .mockReturnValueOnce(firstNonce)
         .mockReturnValueOnce(firstEventId)
         .mockReturnValueOnce(secondEventId);
-      render('https://runtime.test/path', 'streaming', failure !== 'missing frame window');
+      render(
+        'https://runtime.test/path',
+        'streaming',
+        failure !== 'missing frame window'
+      );
       if (failure === 'postMessage failure') {
         vi.spyOn(
           controller.frameRef.current!.contentWindow!,
-          'postMessage',
+          'postMessage'
         ).mockImplementation(() => {
           throw new Error('cross-origin failure');
         });
@@ -723,6 +1395,6 @@ describe('useRuntimeController', () => {
         'runtime_check_requested',
         'runtime_unresponsive',
       ]);
-    },
+    }
   );
 });

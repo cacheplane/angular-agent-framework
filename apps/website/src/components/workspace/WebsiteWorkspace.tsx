@@ -25,6 +25,7 @@ import type {
 import {
   WorkspaceProvider,
   WorkspaceShell,
+  RuntimeTargetProvider,
   readWorkspaceModeQuery,
   type RuntimeTerminalTransition,
   type TrackModeChange,
@@ -438,6 +439,18 @@ export function WebsiteWorkspaceLayout({
       {active ? <WebsiteWorkspaceSurface {...active.props} /> : null}
       {children}
     </WebsiteWorkspaceLayoutContext.Provider>
+  );
+}
+
+export function WebsiteWorkspaceRoot({
+  children,
+}: {
+  readonly children: ReactNode;
+}) {
+  return (
+    <RuntimeTargetProvider>
+      <WebsiteWorkspaceLayout>{children}</WebsiteWorkspaceLayout>
+    </RuntimeTargetProvider>
   );
 }
 

@@ -30,10 +30,37 @@ export function createLangGraphClient(
   apiUrl: string,
   clientOptions?: LangGraphClientOptions,
 ): Client {
+  return constructLangGraphClient(apiUrl, clientOptions);
+}
+
+/** @internal Default-transport-only constructor with a protected SDK fetch seam. */
+export function ɵcreateProtectedLangGraphClient(
+  apiUrl: string,
+  clientOptions: LangGraphClientOptions | undefined,
+  runtimeFetch: typeof fetch,
+): Client {
+  return constructLangGraphClient(apiUrl, clientOptions, runtimeFetch);
+}
+
+function constructLangGraphClient(
+  apiUrl: string,
+  clientOptions?: LangGraphClientOptions,
+  runtimeFetch?: typeof fetch,
+): Client {
   return new Client({
     apiUrl: toAbsoluteApiUrl(apiUrl),
-    ...(clientOptions?.maxRetries !== undefined
-      ? { callerOptions: { maxRetries: clientOptions.maxRetries } }
+    ...(clientOptions?.apiKey !== undefined
+      ? { apiKey: clientOptions.apiKey }
+      : {}),
+    ...(clientOptions?.maxRetries !== undefined || runtimeFetch !== undefined
+      ? {
+          callerOptions: {
+            ...(clientOptions?.maxRetries !== undefined
+              ? { maxRetries: clientOptions.maxRetries }
+              : {}),
+            ...(runtimeFetch !== undefined ? { fetch: runtimeFetch } : {}),
+          },
+        }
       : {}),
   });
 }

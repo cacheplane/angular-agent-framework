@@ -31,7 +31,7 @@ const WELCOME_SUGGESTIONS = [
  * The handler maps each action to a structured resume payload back to the
  * graph.
  *
- * The agent is wired in `app.config.ts` via `provideAgent({...})` and
+ * The agent is wired in `app.config.ts` via a `provideAgent(() => ...)` factory and
  * retrieved here with `injectAgent()`.
  */
 @Component({

@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { validateRuntimeParentOrigins } from '@threadplane/cockpit-runtime-bridge';
 import {
   cockpitManifest,
   getCanonicalWebsiteWorkspaceHref,
@@ -28,6 +30,27 @@ const EXAMPLES_URL =
   process.env['EXAMPLES_URL'] ?? 'https://examples.threadplane.ai';
 const DEMO_URL = process.env['DEMO_URL'] ?? 'https://demo.threadplane.ai';
 const WEBSITE_URL = process.env['WEBSITE_URL'] ?? 'https://threadplane.ai';
+const runtimeParentOriginSource = JSON.parse(
+  readFileSync(
+    new URL('../../../runtime-parent-origins.json', import.meta.url),
+    'utf8'
+  )
+) as { readonly baseOrigins?: unknown };
+const runtimeParentPreviewOrigins = (
+  process.env['RUNTIME_PARENT_PREVIEW_ORIGINS'] ?? ''
+)
+  .split(/\r?\n/)
+  .filter(Boolean);
+const baseRuntimeParentOrigins = validateRuntimeParentOrigins(
+  runtimeParentOriginSource.baseOrigins
+);
+const expectedRuntimeParentOrigins = validateRuntimeParentOrigins([
+  ...(baseRuntimeParentOrigins ?? []),
+  ...runtimeParentPreviewOrigins,
+]);
+if (baseRuntimeParentOrigins === null || expectedRuntimeParentOrigins === null) {
+  throw new Error('Invalid runtime parent origin smoke policy');
+}
 
 const CHAT_CAPABILITIES = [
   'langgraph/streaming',
@@ -220,6 +243,71 @@ test.describe('Production: legacy Cockpit redirect service', () => {
       expect(response.headers()['location']).toBe(smokeCase.location);
     });
   }
+});
+
+test.describe('Production: unified runtime embedding policy', () => {
+  test('assembled children ship the exact parent/referrer policy without an X-Frame-Options conflict', async ({
+    request,
+  }) => {
+    const response = await request.get(`${EXAMPLES_URL}/langgraph/streaming/`);
+    const headers = response.headers();
+    const policy = headers['content-security-policy'];
+    const frameAncestors = policy
+      ?.split(';')
+      .find((directive) => directive.trim().startsWith('frame-ancestors'));
+
+    expect(response.status()).toBe(200);
+    const actualFrameAncestors = frameAncestors
+      ?.trim()
+      .split(/\s+/)
+      .slice(1);
+    const validatedFrameAncestors = validateRuntimeParentOrigins(
+      actualFrameAncestors
+    );
+    expect(validatedFrameAncestors).not.toBeNull();
+    if (runtimeParentPreviewOrigins.length > 0) {
+      expect(validatedFrameAncestors).toEqual(expectedRuntimeParentOrigins);
+    } else {
+      for (const origin of baseRuntimeParentOrigins) {
+        expect(validatedFrameAncestors).toContain(origin);
+      }
+    }
+    expect(policy).toContain(
+      "connect-src 'self' https: http://localhost:* http://127.0.0.1:* http://[::1]:*"
+    );
+    expect(frameAncestors).not.toContain('*');
+    expect(frameAncestors).not.toContain('cockpit.threadplane.ai');
+    expect(headers['referrer-policy']).toBe('origin');
+    expect(headers['x-frame-options']).toBeUndefined();
+  });
+
+  test('production begins Shared-only and sends only the Website origin as iframe referrer', async ({
+    page,
+  }) => {
+    let iframeReferrer: string | undefined;
+    page.on('request', (request) => {
+      if (request.resourceType() !== 'document') return;
+      if (!request.url().startsWith(`${EXAMPLES_URL}/langgraph/streaming`)) {
+        return;
+      }
+      iframeReferrer = request.headers()['referer'];
+    });
+
+    await page.goto(`${WEBSITE_URL}/docs/langgraph/guides/streaming?mode=run`);
+    const controls = page.locator('[data-cockpit-desktop-navigation]');
+    await controls
+      .getByRole('button', { name: 'Settings', exact: true })
+      .click();
+    await expect(
+      page.locator('[data-runtime-target-settings]')
+    ).toHaveAttribute('data-runtime-target-kind', 'shared');
+    await expect(
+      page.locator('[data-runtime-target-settings]')
+    ).not.toContainText('Custom target active');
+    await expect
+      .poll(() => iframeReferrer)
+      .toBe(new URL(WEBSITE_URL).origin + '/');
+  });
 });
 
 test.describe('Production: canonical demo sends runtime telemetry', () => {

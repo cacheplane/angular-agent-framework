@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: MIT
 import { ApplicationConfig } from '@angular/core';
-import { LANGGRAPH_THREADS_CONFIG } from '@threadplane/langgraph';
 import { provideChat } from '@threadplane/chat';
-import { environment } from '../environments/environment';
+import { injectCockpitRuntimeConnection } from '@threadplane/cockpit-telemetry';
+import {
+  LANGGRAPH_CLIENT_OPTIONS,
+  LANGGRAPH_THREADS_CONFIG,
+} from '@threadplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -13,7 +16,23 @@ export const appConfig: ApplicationConfig = {
     // graph node writes there. No per-cap key override needed.
     {
       provide: LANGGRAPH_THREADS_CONFIG,
-      useValue: { apiUrl: environment.langGraphApiUrl },
+      useFactory: () => {
+        const connection = injectCockpitRuntimeConnection();
+        if (connection.adapter !== 'langgraph') {
+          throw new Error('incompatible runtime');
+        }
+        return { apiUrl: connection.apiUrl };
+      },
+    },
+    {
+      provide: LANGGRAPH_CLIENT_OPTIONS,
+      useFactory: () => {
+        const connection = injectCockpitRuntimeConnection();
+        if (connection.adapter !== 'langgraph') {
+          throw new Error('incompatible runtime');
+        }
+        return connection.clientOptions;
+      },
     },
   ],
 };

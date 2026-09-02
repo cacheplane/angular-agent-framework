@@ -8,7 +8,6 @@ import type {
   CockpitManifestIdentity,
   CockpitProduct,
   CockpitRuntimeClass,
-  RuntimeAdapter,
 } from './manifest.types';
 
 const APPROVED_TOPICS = {
@@ -154,14 +153,6 @@ const getSmokeTarget = (product: CockpitProduct, topic: string): string =>
 const getRuntimeClass = (topic: string): CockpitRuntimeClass =>
   topic === 'deployment-runtime' ? 'deployed-service' : 'local-service';
 
-const getRuntimeAdapter = (
-  product: CockpitProduct,
-  isDocsOnly: boolean
-): RuntimeAdapter => {
-  if (isDocsOnly) return 'none';
-  return product === 'ag-ui' || product === 'runtimes' ? 'ag-ui' : 'langgraph';
-};
-
 const createEntry = (
   product: CockpitProduct,
   section: CockpitManifestEntry['section'],
@@ -182,8 +173,8 @@ const createEntry = (
   };
   const id = `${product}:${section}:${topic}:${page}:python`;
   const docsPath = getDocsPath(product, section, topic);
-  const runtimeAdapter = getRuntimeAdapter(product, isDocsOnly);
   const descriptor = getCapabilityDescriptor(identity);
+  const runtimeAdapter = descriptor?.runtimeAdapter ?? 'none';
 
   return {
     ...identity,
@@ -212,7 +203,6 @@ const createEntry = (
     runtimeAdapter,
     availableModes: deriveAvailableModes({
       docsPath,
-      runtimeAdapter,
       descriptor,
     }),
     promptAssetPaths: isDocsOnly ? [] : [getPromptAssetPath(product, topic)],

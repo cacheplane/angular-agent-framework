@@ -9,7 +9,7 @@ import {
   staticDelivery,
   type AgentRuntimeTelemetryPayload,
 } from '@threadplane/chat';
-import { toAgent } from './to-agent';
+import { toAgent, ɵtoAgentWithProtectedErrors } from './to-agent';
 
 /**
  * Minimal concrete subclass of AbstractAgent for unit testing.
@@ -61,10 +61,12 @@ class StubAgent {
   }
 
   /** Convenience: fail the run by calling onRunFailed on all subscribers. */
-  failRun(error: Error, callbackRunId?: string): void {
+  failRun(error: Error, callbackRunId?: string): unknown[] {
+    const mutations: unknown[] = [];
     for (const sub of this._subscribers) {
-      sub.onRunFailed?.({ error, input: { runId: callbackRunId } });
+      mutations.push(sub.onRunFailed?.({ error, input: { runId: callbackRunId } }));
     }
+    return mutations;
   }
 
   // runAgent: the public API toAgent() calls via submit().
@@ -100,6 +102,38 @@ function deferNextRun(source: StubAgent): { resolve: () => void; reject: (error:
 }
 
 describe('toAgent', () => {
+  it.each([
+    new TypeError('ordinary app failure test-key-redact-me'),
+    new (class ApplicationTypeError extends TypeError {})('subclass test-key-redact-me'),
+    Object.assign(new Error('lookalike test-key-redact-me'), { status: 401 }),
+  ])('protected mode stores only a generic cause-free AgentError for application failures', async error => {
+    const source = new StubAgent();
+    source.runAgent.mockRejectedValueOnce(error);
+    const agent = ɵtoAgentWithProtectedErrors(source as unknown as AbstractAgent, {});
+
+    await agent.submit({ message: 'hello' });
+
+    expect(agent.error()).toMatchObject({ message: 'The server ran into an error. You can try again.' });
+    expect(agent.error()?.cause).toBeUndefined();
+    expect(JSON.stringify(agent.error())).not.toContain('test-key-redact-me');
+  });
+
+  it('protected onRunFailed without an active run stops propagation and stores no hostile error', () => {
+    const source = new StubAgent();
+    const agent = ɵtoAgentWithProtectedErrors(source as unknown as AbstractAgent, {});
+    const hostile = new Proxy({}, {
+      get() { throw new Error('test-key-redact-me'); },
+      getOwnPropertyDescriptor() { throw new Error('test-key-redact-me'); },
+    });
+
+    const mutations = source.failRun(hostile as Error);
+
+    expect(mutations).toContainEqual({ stopPropagation: true });
+    expect(agent.error()).toMatchObject({ message: 'The server ran into an error. You can try again.' });
+    expect(agent.error()?.cause).toBeUndefined();
+    expect(JSON.stringify(agent.error())).not.toContain('test-key-redact-me');
+  });
+
   it('seeds a2ui_client_capabilities into the source state when configured', () => {
     const stub = new StubAgent();
     const caps = { supportedCatalogIds: ['https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json'] };
@@ -205,9 +239,28 @@ describe('toAgent', () => {
       transport: 'ag-ui',
       surface: 'to_agent',
       durationMs: expect.any(Number),
-      errorClass: 'SyntaxError',
+      errorClass: 'Error',
     });
     expect(JSON.stringify(seen)).not.toContain('private app state');
+  });
+
+  it('uses a closed telemetry error class for hostile errors', async () => {
+    const seen: AgentRuntimeTelemetryPayload[] = [];
+    const source = new StubAgent();
+    const hostile = new Proxy({}, {
+      get() { throw new Error('test-key-redact-me'); },
+      getOwnPropertyDescriptor() { throw new Error('test-key-redact-me'); },
+    });
+    source.runAgent.mockRejectedValueOnce(hostile);
+    const agent = toAgent(source as unknown as AbstractAgent, {
+      telemetry: payload => { seen.push(payload); },
+    });
+
+    await agent.submit({ message: 'hello' });
+
+    expect(seen.find(payload => payload.event === 'tplane:stream_errored')?.properties)
+      .toMatchObject({ errorClass: 'UnknownError' });
+    expect(JSON.stringify(seen)).not.toContain('test-key-redact-me');
   });
 
   it.each(['resolve', 'reject'] as const)(
@@ -235,7 +288,7 @@ describe('toAgent', () => {
       expect(terminalEvents()).toEqual([
         expect.objectContaining({
           event: 'tplane:stream_errored',
-          properties: expect.objectContaining({ errorClass: 'InterruptedError' }),
+          properties: expect.objectContaining({ errorClass: 'Error' }),
         }),
       ]);
 

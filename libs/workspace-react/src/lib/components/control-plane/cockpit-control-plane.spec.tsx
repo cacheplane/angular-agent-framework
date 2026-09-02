@@ -12,6 +12,7 @@ import {
   parseRuntimeTarget,
   type RuntimePhase,
 } from '../../runtime/runtime-state';
+import { RuntimeTargetProvider } from '../../runtime/runtime-target-provider';
 import type { SessionActivityEvent } from '../../runtime/session-activity';
 import {
   CockpitControlPlane,
@@ -95,36 +96,38 @@ const renderControlPlane = (overrides: HarnessOverrides = {}) => {
       overrides.initialUtility ?? null
     );
     return (
-      <ThemeProvider theme="light">
-        <CockpitControlPlane
-          navigationTree={buildNavigationTree(cockpitManifest)}
-          manifest={cockpitManifest}
-          entry={entry}
-          hostServices={{
-            resolveEntryHref: (resolvedEntry) =>
-              `/workspace/${resolvedEntry.product}/${resolvedEntry.topic}/${resolvedEntry.language}`,
-            navigate: vi.fn(),
-          }}
-          activeMode={activeMode}
-          onModeChange={(mode) => {
-            onModeChange(mode);
-            setActiveMode(mode);
-          }}
-          activeUtility={activeUtility}
-          onActiveUtilityChange={(utility) => {
-            onActiveUtilityChange(utility);
-            setActiveUtility(utility);
-          }}
-          activityOpenCycle={1}
-          runtimeSnapshot={runtimeSnapshot('ready')}
-          events={activity}
-          unseenProblems={0}
-          expanded={{ Capability: true, Runtime: true }}
-          onExpandedChange={onExpandedChange}
-          {...actions}
-          {...overrides}
-        />
-      </ThemeProvider>
+      <RuntimeTargetProvider>
+        <ThemeProvider theme="light">
+          <CockpitControlPlane
+            navigationTree={buildNavigationTree(cockpitManifest)}
+            manifest={cockpitManifest}
+            entry={entry}
+            hostServices={{
+              resolveEntryHref: (resolvedEntry) =>
+                `/workspace/${resolvedEntry.product}/${resolvedEntry.topic}/${resolvedEntry.language}`,
+              navigate: vi.fn(),
+            }}
+            activeMode={activeMode}
+            onModeChange={(mode) => {
+              onModeChange(mode);
+              setActiveMode(mode);
+            }}
+            activeUtility={activeUtility}
+            onActiveUtilityChange={(utility) => {
+              onActiveUtilityChange(utility);
+              setActiveUtility(utility);
+            }}
+            activityOpenCycle={1}
+            runtimeSnapshot={runtimeSnapshot('ready')}
+            events={activity}
+            unseenProblems={0}
+            expanded={{ Capability: true, Runtime: true }}
+            onExpandedChange={onExpandedChange}
+            {...actions}
+            {...overrides}
+          />
+        </ThemeProvider>
+      </RuntimeTargetProvider>
     );
   }
 
@@ -197,6 +200,31 @@ describe('CockpitControlPlane', () => {
 
     const settings = screen.getByRole('region', { name: 'Settings' });
     expect(within(settings).queryByText('Theme')).toBeNull();
+  });
+
+  it('places Runtime target below Language and before Theme', () => {
+    renderControlPlane({
+      initialUtility: 'settings',
+      themeControl: <button type="button">System</button>,
+    });
+
+    const settings = screen.getByRole('region', { name: 'Settings' });
+    const language = within(settings).getByText('Language');
+    const runtimeTarget = within(settings).getByRole('heading', {
+      name: 'Runtime target',
+    });
+    const theme = within(settings).getByText('Theme');
+    expect(
+      language.compareDocumentPosition(runtimeTarget) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    expect(
+      runtimeTarget.compareDocumentPosition(theme) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    expect(
+      within(settings).getByRole('radio', { name: 'Custom LangSmith' })
+    ).toBeTruthy();
   });
 
   it('renders Activity above Settings with a controlled unread-problem indicator', () => {
@@ -290,7 +318,7 @@ describe('CockpitControlPlane', () => {
     // does not resolve var(), so it can't verify the resolved colour, only
     // that the correct token is referenced.
     expect(cockpitCss).toMatch(
-      /\[data-control-plane-rail-group="utilities"\][^}]*border-top:\s*1px solid var\(--ds-border-strong\)/
+      /\[data-control-plane-rail-group=["']utilities["']\][^}]*border-top:\s*1px solid var\(--ds-border-strong\)/
     );
     expect(cockpitCss).not.toMatch(
       /\[data-control-plane-rail-item\]\s*\{[^}]*--ds-text-muted/
@@ -338,5 +366,4 @@ describe('CockpitControlPlane', () => {
       /\[data-control-plane-rail-status\]\s*\{[^}]*border:\s*1px solid CanvasText/
     );
   });
-
 });

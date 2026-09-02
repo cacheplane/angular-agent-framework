@@ -15,6 +15,16 @@ export {
   type RuntimeTerminalTransition,
 } from './lib/runtime/runtime-state';
 export * from './lib/runtime/runtime-diagnostics';
+export {
+  RuntimeTargetProvider,
+  useAgUiRuntimeTarget,
+  useLangGraphRuntimeTarget,
+  useRuntimeTargetView,
+  type AgUiRuntimeTargetControls,
+  type LangGraphRuntimeTargetControls,
+  type RuntimeTargetApplyResult,
+} from './lib/runtime/runtime-target-provider';
+export * from './lib/runtime/runtime-target-session';
 export * from './lib/workspace-contracts';
 export * from './lib/workspace-navigation';
 export * from './lib/workspace-provider';

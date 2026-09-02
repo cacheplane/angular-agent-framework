@@ -350,7 +350,7 @@
   background: var(--ds-surface-dim);
   color: var(--ds-text-primary);
 }
-.cockpit-nav-item[aria-current="page"] {
+.cockpit-nav-item[aria-current='page'] {
   background: var(--ds-accent-surface);
   color: var(--ds-accent);
 }
@@ -449,7 +449,7 @@
   background: var(--ds-surface-subtle);
   color: var(--ds-text-primary);
 }
-.cockpit-file-tree__file[aria-current="true"] {
+.cockpit-file-tree__file[aria-current='true'] {
   background: var(--ds-accent-surface);
   color: var(--ds-text-primary);
   border-radius: var(--ds-radius-md);
@@ -475,7 +475,7 @@
   cursor: pointer;
 }
 .cockpit-tab-trigger:hover .cockpit-tab-trigger__close,
-.cockpit-tab-trigger[data-state="active"] .cockpit-tab-trigger__close {
+.cockpit-tab-trigger[data-state='active'] .cockpit-tab-trigger__close {
   opacity: 1;
 }
 .cockpit-tab-trigger__close:hover {
@@ -499,14 +499,14 @@
 }
 
 /* Shiki dual-theme: light mode uses inline `color` (github-light), dark mode swaps to the --shiki-dark CSS variable (tokyo-night). */
-[data-theme="dark"] .cockpit-shell .shiki,
-[data-theme="dark"] .cockpit-shell .shiki span {
+[data-theme='dark'] .cockpit-shell .shiki,
+[data-theme='dark'] .cockpit-shell .shiki span {
   color: var(--shiki-dark) !important;
 }
-[data-theme="dark"] .cockpit-shell .shiki {
+[data-theme='dark'] .cockpit-shell .shiki {
   background-color: var(--shiki-dark-bg) !important;
 }
-[data-theme="dark"] .cockpit-code-pane .shiki {
+[data-theme='dark'] .cockpit-code-pane .shiki {
   background-color: transparent !important;
 }
 .cockpit-code-pane--plain {
@@ -578,7 +578,7 @@
   color: var(--ds-text-secondary);
   background: var(--ds-surface);
 }
-[data-theme="dark"] .cockpit-control-plane {
+[data-theme='dark'] .cockpit-control-plane {
   --cockpit-state-error: #ff6369;
   --cockpit-state-success: #4cc38a;
   --cockpit-state-working: #e0a02f;
@@ -596,7 +596,7 @@
   flex-direction: column;
   gap: 4px;
 }
-.cockpit-control-plane [data-control-plane-rail-group="utilities"] {
+.cockpit-control-plane [data-control-plane-rail-group='utilities'] {
   margin-top: auto;
   padding-top: 8px;
   border-top: 1px solid var(--ds-border-strong);
@@ -623,12 +623,12 @@
   transition: background 120ms ease, color 120ms ease;
 }
 .cockpit-control-plane
-  [data-control-plane-rail-item]:not([aria-disabled="true"]):hover {
+  [data-control-plane-rail-item]:not([aria-disabled='true']):hover {
   --cockpit-rail-status-ring: var(--ds-surface);
   color: var(--ds-text-primary);
   background: var(--ds-surface);
 }
-.cockpit-control-plane [data-control-plane-rail-item][aria-disabled="true"] {
+.cockpit-control-plane [data-control-plane-rail-item][aria-disabled='true'] {
   color: color-mix(in srgb, var(--ds-text-muted) 62%, transparent);
   background: transparent;
   cursor: not-allowed;
@@ -652,13 +652,13 @@
   border: 2px solid var(--cockpit-rail-status-ring);
   border-radius: 999px;
 }
-.cockpit-control-plane [data-control-plane-rail-status="success"] {
+.cockpit-control-plane [data-control-plane-rail-status='success'] {
   background: var(--cockpit-state-success);
 }
-.cockpit-control-plane [data-control-plane-rail-status="working"] {
+.cockpit-control-plane [data-control-plane-rail-status='working'] {
   background: var(--cockpit-state-working);
 }
-.cockpit-control-plane [data-control-plane-rail-status="error"] {
+.cockpit-control-plane [data-control-plane-rail-status='error'] {
   background: var(--cockpit-state-error);
 }
 .cockpit-control-plane [data-control-plane-rail-icon],
@@ -727,7 +727,7 @@
   transition: transform 150ms ease;
 }
 [data-cockpit-context-content]
-  [data-control-plane-section-trigger][aria-expanded="true"]
+  [data-control-plane-section-trigger][aria-expanded='true']
   [data-control-plane-section-chevron] {
   transform: rotate(90deg);
 }
@@ -781,20 +781,20 @@
 [data-runtime-status-icon] {
   display: inline-flex;
 }
-[data-runtime-status][data-runtime-phase="ready"] {
+[data-runtime-status][data-runtime-phase='ready'] {
   color: var(--cockpit-state-success);
 }
 [data-runtime-status]:is(
-    [data-runtime-phase="invalid_configuration"],
-    [data-runtime-phase="unresponsive"],
-    [data-runtime-phase="error"]
+    [data-runtime-phase='invalid_configuration'],
+    [data-runtime-phase='unresponsive'],
+    [data-runtime-phase='error']
   ) {
   color: var(--cockpit-state-error);
 }
 [data-runtime-status]:is(
-    [data-runtime-phase="connecting"],
-    [data-runtime-phase="checking"],
-    [data-runtime-phase="reloading"]
+    [data-runtime-phase='connecting'],
+    [data-runtime-phase='checking'],
+    [data-runtime-phase='reloading']
   ) {
   color: var(--ds-accent);
 }
@@ -861,13 +861,13 @@
   font-size: 12px;
   font-weight: 600;
 }
-[data-cockpit-context-content] [aria-label^="Collapse"],
-[data-cockpit-context-content] [aria-label^="Expand"] {
+[data-cockpit-context-content] [aria-label^='Collapse'],
+[data-cockpit-context-content] [aria-label^='Expand'] {
   border-radius: 7px;
   min-height: 32px;
 }
-[data-cockpit-context-content] [aria-label^="Collapse"]:hover,
-[data-cockpit-context-content] [aria-label^="Expand"]:hover {
+[data-cockpit-context-content] [aria-label^='Collapse']:hover,
+[data-cockpit-context-content] [aria-label^='Expand']:hover {
   background: var(--ds-surface-tinted) !important;
 }
 .cockpit-nav-item {
@@ -988,13 +988,13 @@
   box-shadow: var(--ds-shadow-md);
 }
 .cockpit-control-plane
-  [data-control-plane-overflow-menu-root][data-overflow-placement="start"]
+  [data-control-plane-overflow-menu-root][data-overflow-placement='start']
   > [data-control-plane-overflow-menu] {
   left: 0;
   right: auto;
 }
 .cockpit-control-plane
-  [data-control-plane-overflow-menu-root][data-overflow-placement="center"]
+  [data-control-plane-overflow-menu-root][data-overflow-placement='center']
   > [data-control-plane-overflow-menu] {
   left: 50%;
   right: auto;
@@ -1020,7 +1020,11 @@
   background: var(--ds-surface-tinted);
 }
 .cockpit-control-plane [data-control-plane-utility-panel] {
+  height: 100%;
+  max-height: 100%;
   padding: 14px 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .cockpit-control-plane [data-control-plane-utility-header] {
   min-height: 36px;
@@ -1128,12 +1132,12 @@
   font-family: var(--ds-font-mono);
   font-size: 9px;
 }
-[data-activity-severity="error"] [data-activity-severity-icon],
-[data-activity-severity="error"] [data-activity-summary] {
+[data-activity-severity='error'] [data-activity-severity-icon],
+[data-activity-severity='error'] [data-activity-summary] {
   color: var(--cockpit-state-error);
 }
-[data-activity-kind="runtime_recovered"] [data-activity-severity-icon],
-[data-activity-kind="runtime_recovered"] [data-activity-summary] {
+[data-activity-kind='runtime_recovered'] [data-activity-severity-icon],
+[data-activity-kind='runtime_recovered'] [data-activity-summary] {
   color: var(--cockpit-state-success);
 }
 .cockpit-control-plane-setting {
@@ -1146,6 +1150,147 @@
   gap: 12px;
   color: var(--ds-text-muted);
   font-size: 12px;
+}
+[data-runtime-target-settings] {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--ds-border);
+  color: var(--ds-text-secondary);
+  font-size: 12px;
+}
+[data-runtime-target-settings] h3 {
+  margin: 0 0 10px;
+  color: var(--ds-text-primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+[data-runtime-target-settings] p {
+  margin: 8px 0 0;
+  line-height: 1.45;
+}
+[data-runtime-target-settings] form,
+[data-runtime-target-fields] {
+  display: grid;
+  gap: 10px;
+}
+[data-runtime-target-selector] {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: grid;
+  gap: 5px;
+}
+[data-runtime-target-selector] legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+[data-runtime-target-selector] label {
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--ds-border);
+  border-radius: 8px;
+  display: grid;
+  grid-template-columns: auto 18px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  color: var(--ds-text-secondary);
+  background: var(--ds-surface);
+  cursor: pointer;
+}
+[data-runtime-target-selector] label:has(input:checked) {
+  border-color: var(--ds-accent-border);
+  color: var(--ds-text-primary);
+  background: var(--ds-accent-surface);
+}
+[data-runtime-target-selector] input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--ds-accent);
+}
+[data-runtime-target-fields] > label {
+  display: grid;
+  gap: 5px;
+  color: var(--ds-text-muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+[data-runtime-target-fields] > label > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+[data-runtime-target-settings] input[type='url'],
+[data-runtime-target-settings] input[type='password'] {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 9px 10px;
+  border: 1px solid var(--ds-border-strong);
+  border-radius: 8px;
+  color: var(--ds-text-primary);
+  background: var(--ds-surface);
+  font-family: var(--ds-font-mono);
+  font-size: 11px;
+}
+[data-runtime-target-settings] input[aria-invalid='true'] {
+  border-color: var(--cockpit-state-error);
+}
+[data-runtime-target-settings] input:focus-visible {
+  outline: 2px solid var(--ds-accent);
+  outline-offset: 2px;
+}
+[data-runtime-target-settings] button {
+  min-height: 44px;
+  padding: 9px 12px;
+  border: 1px solid var(--ds-border-strong);
+  border-radius: 8px;
+  color: var(--ds-text-secondary);
+  background: var(--ds-surface);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+[data-runtime-target-settings] button:hover {
+  color: var(--ds-text-primary);
+  background: var(--ds-surface-tinted);
+}
+[data-runtime-target-settings] [data-runtime-target-primary-action] {
+  border-color: var(--ds-accent-border);
+  color: var(--ds-accent);
+  background: var(--ds-accent-surface);
+}
+[data-runtime-target-error] {
+  color: var(--cockpit-state-error);
+}
+[data-runtime-target-current] {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+  color: var(--ds-text-muted);
+  font-size: 10px;
+}
+[data-runtime-target-current] code {
+  overflow: hidden;
+  color: var(--ds-text-secondary);
+  font-family: var(--ds-font-mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+[data-runtime-target-cors],
+[data-runtime-target-memory] {
+  color: var(--ds-text-muted);
+  font-size: 10px;
+}
+[data-runtime-target-memory] {
+  padding-left: 9px;
+  border-left: 2px solid var(--ds-accent-border);
 }
 .cockpit-control-plane button:focus-visible,
 .cockpit-control-plane a:focus-visible,
@@ -1220,10 +1365,10 @@
   opacity: 1;
   transition: opacity 150ms ease;
 }
-.cockpit-mobile-control-plane[data-variant="mobile"] {
+.cockpit-mobile-control-plane[data-variant='mobile'] {
   inset: 0;
 }
-.cockpit-mobile-control-plane[data-state="closing"] {
+.cockpit-mobile-control-plane[data-state='closing'] {
   opacity: 0;
 }
 .cockpit-mobile-control-plane-panel {
@@ -1237,7 +1382,7 @@
   transform: translateY(0);
   transition: transform 200ms ease-out;
 }
-.cockpit-mobile-control-plane[data-state="closing"]
+.cockpit-mobile-control-plane[data-state='closing']
   .cockpit-mobile-control-plane-panel {
   transform: translateY(8px);
 }
@@ -1336,10 +1481,10 @@
   [data-activity-connector] {
     background: CanvasText;
   }
-  [data-activity-severity="error"] [data-activity-severity-icon],
-  [data-activity-severity="error"] [data-activity-summary],
-  [data-activity-kind="runtime_recovered"] [data-activity-severity-icon],
-  [data-activity-kind="runtime_recovered"] [data-activity-summary] {
+  [data-activity-severity='error'] [data-activity-severity-icon],
+  [data-activity-severity='error'] [data-activity-summary],
+  [data-activity-kind='runtime_recovered'] [data-activity-severity-icon],
+  [data-activity-kind='runtime_recovered'] [data-activity-summary] {
     color: CanvasText;
   }
   .cockpit-control-plane button:focus-visible,
@@ -1371,7 +1516,7 @@
     height: 44px;
   }
   .cockpit-control-plane
-    [data-control-plane-overflow-menu-root][data-overflow-placement="center"]
+    [data-control-plane-overflow-menu-root][data-overflow-placement='center']
     > [data-control-plane-overflow-menu] {
     left: auto;
     right: 0;

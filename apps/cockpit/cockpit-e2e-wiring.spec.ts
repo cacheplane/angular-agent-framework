@@ -144,7 +144,10 @@ describe('cockpit e2e wiring', () => {
     expect(smoke).toContain('DEMO_URL');
     expect(smoke).toContain('AG_UI_TOPICS');
     expect(smoke).not.toMatch(/Cockpit navigation|Recheck|runtime_ready/);
-    expect(websiteConfig).toContain("process.env['PRODUCTION_SMOKE']");
+    expect(websiteConfig).toContain("environment['PRODUCTION_SMOKE']");
+    expect(websiteConfig).toContain(
+      'environment: WebsitePlaywrightEnvironment = process.env'
+    );
     expect(websiteConfig).toContain('platform-production-smoke.spec.ts');
   });
 

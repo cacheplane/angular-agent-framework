@@ -1,10 +1,20 @@
 /** @vitest-environment jsdom */
 import React from 'react';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   WorkspaceProviderProps,
   WorkspaceShellProps,
+} from '@threadplane/workspace-react';
+import {
+  RuntimeTargetProvider,
+  useLangGraphRuntimeTarget,
 } from '@threadplane/workspace-react';
 import type {
   ContentBundle,
@@ -52,7 +62,7 @@ vi.mock('@threadplane/workspace-react', async (importOriginal) => {
   };
 });
 
-import { WebsiteWorkspace, WebsiteWorkspaceLayout } from './WebsiteWorkspace';
+import { WebsiteWorkspace, WebsiteWorkspaceRoot } from './WebsiteWorkspace';
 
 const emptyContent: ContentBundle = {
   codeFiles: {},
@@ -119,15 +129,17 @@ const renderWorkspace = (
   overrides: Partial<React.ComponentProps<typeof WebsiteWorkspace>> = {}
 ) =>
   render(
-    <WebsiteWorkspace
-      resolution={docsOnlyResolution}
-      presentation={docsOnlyPresentation}
-      contentBundle={emptyContent}
-      navigationTree={[]}
-      routePath="/docs/langgraph/guides/testing"
-      docsSlot={<article>Server-rendered docs article</article>}
-      {...overrides}
-    />
+    <RuntimeTargetProvider>
+      <WebsiteWorkspace
+        resolution={docsOnlyResolution}
+        presentation={docsOnlyPresentation}
+        contentBundle={emptyContent}
+        navigationTree={[]}
+        routePath="/docs/langgraph/guides/testing"
+        docsSlot={<article>Server-rendered docs article</article>}
+        {...overrides}
+      />
+    </RuntimeTargetProvider>
   );
 
 const activeWorkspaceMode = (): string | undefined =>
@@ -259,7 +271,7 @@ describe('WebsiteWorkspace', () => {
       routePath: string,
       article: string
     ) => (
-      <WebsiteWorkspaceLayout>
+      <WebsiteWorkspaceRoot>
         <WebsiteWorkspace
           key={routePath}
           resolution={resolution}
@@ -269,7 +281,7 @@ describe('WebsiteWorkspace', () => {
           routePath={routePath}
           docsSlot={<article>{article}</article>}
         />
-      </WebsiteWorkspaceLayout>
+      </WebsiteWorkspaceRoot>
     );
 
     const view = render(
@@ -298,6 +310,73 @@ describe('WebsiteWorkspace', () => {
     expect(shell.dataset.shellLifetime).toBe('original');
     expect(mocks.latestProviderProps?.routePath).toBe(
       '/docs/langgraph/guides/persistence'
+    );
+  });
+
+  it('keeps the volatile runtime target above in-shell route registrars', async () => {
+    function RuntimeTargetProbe() {
+      const langgraph = useLangGraphRuntimeTarget();
+      return (
+        <>
+          <output data-testid="website-target-kind">
+            {langgraph.view.kind}
+          </output>
+          <button
+            onClick={() =>
+              langgraph.applyCustomTarget(
+                'https://api.example.test/langgraph',
+                'test-key-redact-me'
+              )
+            }
+          >
+            Apply Website target
+          </button>
+        </>
+      );
+    }
+    const source = mappedResolution(
+      'langgraph:core-capabilities:streaming:overview:python',
+      'streaming',
+      ['Docs', 'Run', 'Code', 'API']
+    );
+    const destination = mappedResolution(
+      'langgraph:core-capabilities:persistence:overview:python',
+      'persistence',
+      ['Docs', 'Run', 'Code', 'API']
+    );
+    const route = (resolution: WorkspaceResolution, routePath: string) => (
+      <WebsiteWorkspaceRoot>
+        <RuntimeTargetProbe />
+        <WebsiteWorkspace
+          key={routePath}
+          resolution={resolution}
+          presentation={mappedPresentation(resolution)}
+          contentBundle={emptyContent}
+          navigationTree={[]}
+          routePath={routePath}
+          docsSlot={
+            <article>
+              {resolution.kind === 'mapped' ? resolution.identity.title : ''}
+            </article>
+          }
+        />
+      </WebsiteWorkspaceRoot>
+    );
+
+    const view = render(route(source, '/docs/langgraph/guides/streaming'));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Apply Website target' })
+    );
+    expect(screen.getByTestId('website-target-kind').textContent).toBe(
+      'langsmith'
+    );
+
+    window.history.replaceState({}, '', '/docs/langgraph/guides/persistence');
+    view.rerender(route(destination, '/docs/langgraph/guides/persistence'));
+
+    await screen.findByText('persistence');
+    expect(screen.getByTestId('website-target-kind').textContent).toBe(
+      'langsmith'
     );
   });
 
@@ -573,14 +652,16 @@ describe('WebsiteWorkspace', () => {
       '/docs/langgraph/guides/code-only?mode=code'
     );
     view.rerender(
-      <WebsiteWorkspace
-        resolution={destination}
-        presentation={mappedPresentation(destination)}
-        contentBundle={emptyContent}
-        navigationTree={[]}
-        routePath="/docs/langgraph/guides/code-only"
-        docsSlot={<article>Destination docs article</article>}
-      />
+      <RuntimeTargetProvider>
+        <WebsiteWorkspace
+          resolution={destination}
+          presentation={mappedPresentation(destination)}
+          contentBundle={emptyContent}
+          navigationTree={[]}
+          routePath="/docs/langgraph/guides/code-only"
+          docsSlot={<article>Destination docs article</article>}
+        />
+      </RuntimeTargetProvider>
     );
 
     await waitFor(() => expect(activeWorkspaceMode()).toBe('Code'));
@@ -609,14 +690,16 @@ describe('WebsiteWorkspace', () => {
 
     window.history.replaceState({}, '', '/docs/langgraph/guides/testing');
     view.rerender(
-      <WebsiteWorkspace
-        resolution={docsOnlyResolution}
-        presentation={docsOnlyPresentation}
-        contentBundle={emptyContent}
-        navigationTree={[]}
-        routePath="/docs/langgraph/guides/testing"
-        docsSlot={<article>Testing docs article</article>}
-      />
+      <RuntimeTargetProvider>
+        <WebsiteWorkspace
+          resolution={docsOnlyResolution}
+          presentation={docsOnlyPresentation}
+          contentBundle={emptyContent}
+          navigationTree={[]}
+          routePath="/docs/langgraph/guides/testing"
+          docsSlot={<article>Testing docs article</article>}
+        />
+      </RuntimeTargetProvider>
     );
 
     await waitFor(() => expect(activeWorkspaceMode()).toBe('Docs'));
@@ -658,14 +741,16 @@ describe('WebsiteWorkspace', () => {
     });
 
     view.rerender(
-      <WebsiteWorkspace
-        resolution={source}
-        presentation={mappedPresentation(source)}
-        contentBundle={emptyContent}
-        navigationTree={[]}
-        routePath="/docs/langgraph/guides/streaming"
-        docsSlot={<article>Updated docs article</article>}
-      />
+      <RuntimeTargetProvider>
+        <WebsiteWorkspace
+          resolution={source}
+          presentation={mappedPresentation(source)}
+          contentBundle={emptyContent}
+          navigationTree={[]}
+          routePath="/docs/langgraph/guides/streaming"
+          docsSlot={<article>Updated docs article</article>}
+        />
+      </RuntimeTargetProvider>
     );
     expect(activeWorkspaceMode()).toBe('Code');
   });
@@ -784,9 +869,7 @@ describe('WebsiteWorkspace', () => {
       String(mocks.replace.mock.calls[0]?.[0]),
       window.location.origin
     );
-    expect(replacement.pathname).toBe(
-      '/workspace/langgraph/durable-execution'
-    );
+    expect(replacement.pathname).toBe('/workspace/langgraph/durable-execution');
     expect(replacement.searchParams.getAll('mode')).toEqual(['run']);
     expect(replacement.searchParams.has('keep')).toBe(false);
   });

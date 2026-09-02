@@ -725,6 +725,8 @@ jobs:
       - growth-lifecycle
       - lifecycle
     runs-on: ubuntu-latest
+    outputs:
+      runtime_parent_preview_origin: ${{ steps.deploy_website.outputs.preview_origin }}
     # Only deploy on pushes to main, not on pull requests
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     permissions:
@@ -810,7 +812,7 @@ jobs:
 
           changed_files="$(git diff --name-only "$base_sha" "$head_sha")"
           deploy_relevant=false
-          if printf '%s\n' "$changed_files" | grep -E '^(\.github/workflows/ci\.yml|vercel\.(json|cockpit\.json|examples\.json)|apps/(website|cockpit)/.*|cockpit/.*|examples/chat/.*|libs/.*|scripts/(assemble-examples|deploy-smoke|demo-middleware|langgraph-proxy|rate-limit)\.ts|scripts/assemble-demo\.ts)$' >/dev/null; then
+          if printf '%s\n' "$changed_files" | grep -E '^(\.github/workflows/ci\.yml|runtime-parent-origins\.json|vercel\.(json|cockpit\.json|examples\.json)|apps/(website|cockpit)/.*|cockpit/.*|examples/chat/.*|libs/.*|scripts/(assemble-examples|deploy-smoke|demo-middleware|generate-runtime-parent-origins|langgraph-proxy|rate-limit)\.ts|scripts/assemble-demo\.ts)$' >/dev/null; then
             deploy_relevant=true
           fi
 
@@ -829,7 +831,10 @@ jobs:
           if printf '%s\n' "$changed_files" | grep -E '^cockpit/.*/angular/' >/dev/null; then
             examples_changed=true
           fi
-          if printf '%s\n' "$changed_files" | grep -E '^(vercel\.examples\.json|scripts/(assemble-examples|examples-middleware|langgraph-proxy|upstash-rate-limit)\.ts)$' >/dev/null; then
+          if printf '%s\n' "$changed_files" | grep -E '^(runtime-parent-origins\.json|vercel\.examples\.json|scripts/(assemble-examples|examples-middleware|generate-runtime-parent-origins|langgraph-proxy|upstash-rate-limit)\.ts)$' >/dev/null; then
+            examples_changed=true
+          fi
+          if printf '%s\n' "$changed_files" | grep -E '^(\.github/workflows/ci\.yml|vercel\.json|apps/website/.*)$' >/dev/null; then
             examples_changed=true
           fi
           # Any libs/ change retriggers examples deploy. Previous hand-maintained
@@ -907,21 +912,20 @@ jobs:
           EOF
           npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           rm -rf .vercel/output
-      - name: Build and deploy website to Vercel (production)
+      - name: Deploy immutable Website preview
         if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.website == 'true'
         id: deploy_website
         run: |
           npx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-          url=$(npx vercel deploy --prebuilt --archive=tgz --prod --yes --token=${{ secrets.VERCEL_TOKEN }} | tail -n 1)
-          echo "deployment_url=$url" >> "$GITHUB_OUTPUT"
-      - name: Verify deployed website
-        if: steps.freshness.outputs.stale != 'true' && (steps.affected.outputs.website == 'true' || steps.affected.outputs.cockpit == 'true')
-        run: npx nx e2e website --skip-nx-cache
-        env:
-          BASE_URL: https://threadplane.ai
+          url=$(npx vercel deploy --prebuilt --archive=tgz --prod --skip-domain --yes --token=${{ secrets.VERCEL_TOKEN }} | tail -n 1)
+          preview_origin=$(node -e 'const parsed = new URL(process.argv[1]); if (parsed.protocol !== "https:" || parsed.username || parsed.password || parsed.pathname !== "/" || parsed.search || parsed.hash) throw new Error("Vercel returned a non-origin Website preview URL"); process.stdout.write(parsed.origin)' "$url")
+          echo "deployment_url=$preview_origin" >> "$GITHUB_OUTPUT"
+          echo "preview_origin=$preview_origin" >> "$GITHUB_OUTPUT"
       - name: Build and assemble Angular examples
         if: steps.freshness.outputs.stale != 'true' && steps.examples_changed.outputs.changed == 'true'
         run: npx tsx scripts/assemble-examples.ts
+        env:
+          RUNTIME_PARENT_PREVIEW_ORIGINS: ${{ steps.deploy_website.outputs.preview_origin }}
       - name: Deploy Angular examples to Vercel (production)
         if: steps.freshness.outputs.stale != 'true' && steps.examples_changed.outputs.changed == 'true'
         working-directory: deploy/examples
@@ -932,6 +936,38 @@ jobs:
           EOF
           npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           npx vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Verify Website preview runtime embedding policy
+        if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.website == 'true'
+        run: npx playwright test apps/website/e2e/platform-production-smoke.spec.ts --config apps/website/playwright.config.ts --grep "unified runtime embedding policy" --reporter=list
+        env:
+          PRODUCTION_SMOKE: 'true'
+          BASE_URL: ${{ steps.deploy_website.outputs.preview_origin }}
+          WEBSITE_URL: ${{ steps.deploy_website.outputs.preview_origin }}
+          EXAMPLES_URL: https://examples.threadplane.ai
+          RUNTIME_PARENT_PREVIEW_ORIGINS: ${{ steps.deploy_website.outputs.preview_origin }}
+      - name: Check this commit is still the tip before Website promotion
+        if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.website == 'true'
+        id: website_promotion_freshness
+        run: |
+          tip="$(git ls-remote origin refs/heads/main | cut -f1)"
+          if [ -z "$tip" ]; then
+            echo "::error::Could not resolve the tip of main after Website preview verification; refusing promotion."
+            exit 1
+          fi
+          if [ "$tip" != "${{ github.sha }}" ]; then
+            echo "fresh=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::main advanced to ${tip} during Website preview verification; leaving the production alias untouched for the newer run."
+          else
+            echo "fresh=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Promote verified Website artifact unchanged
+        if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.website == 'true' && steps.website_promotion_freshness.outputs.fresh == 'true'
+        run: npx vercel promote "${{ steps.deploy_website.outputs.deployment_url }}" --yes --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Verify deployed website
+        if: steps.freshness.outputs.stale != 'true' && ((steps.affected.outputs.website == 'true' && steps.website_promotion_freshness.outputs.fresh == 'true') || steps.affected.outputs.cockpit == 'true')
+        run: npx nx e2e website --skip-nx-cache
+        env:
+          BASE_URL: https://threadplane.ai
       - name: Prepare cockpit Vercel project
         if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true'
         run: |
@@ -1257,6 +1293,7 @@ jobs:
           COCKPIT_URL: https://cockpit.threadplane.ai
           WEBSITE_URL: https://threadplane.ai
           EXAMPLES_URL: https://examples.threadplane.ai
+          RUNTIME_PARENT_PREVIEW_ORIGINS: ${{ needs.deploy.outputs.runtime_parent_preview_origin }}
           DEMO_URL: https://demo.threadplane.ai
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       - name: Check this commit is still the tip before recording promotion

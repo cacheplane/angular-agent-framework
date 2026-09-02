@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: MIT
 'use client';
 
-import {
-  useLayoutEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react';
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import {
   CircleCheck,
   CircleSlash,
@@ -26,6 +21,7 @@ import type {
   RuntimePhase,
   RuntimeSnapshot,
 } from '../../runtime/runtime-state';
+import type { SanitizedRuntimeTargetDisplay } from '../../runtime/runtime-target-session';
 import {
   ControlPlaneOverflowMenu,
   ControlPlaneOverflowMenuItem,
@@ -46,6 +42,7 @@ export interface RuntimeSectionProps {
   onReload: RuntimeCommand;
   onOpenRuntime: RuntimeCommand;
   onCopyDiagnostics: RuntimeCommand;
+  runtimeTargetView?: SanitizedRuntimeTargetDisplay;
   formatCheckedAt?: (timestamp: number) => string;
 }
 
@@ -65,6 +62,11 @@ const STATUS_PRESENTATION: Record<RuntimePhase, StatusPresentation> = {
     label: 'Invalid runtime URL',
     icon: TriangleAlert,
     iconName: 'triangle-alert',
+  },
+  configuring: {
+    label: 'Configuring',
+    icon: LoaderCircle,
+    iconName: 'loader-circle',
   },
   connecting: {
     label: 'Connecting',
@@ -93,6 +95,21 @@ const STATUS_PRESENTATION: Record<RuntimePhase, StatusPresentation> = {
   },
   error: {
     label: 'Error',
+    icon: TriangleAlert,
+    iconName: 'triangle-alert',
+  },
+  unauthorized: {
+    label: 'Unauthorized',
+    icon: TriangleAlert,
+    iconName: 'triangle-alert',
+  },
+  network_blocked: {
+    label: 'Network blocked',
+    icon: TriangleAlert,
+    iconName: 'triangle-alert',
+  },
+  incompatible_bridge: {
+    label: 'Incompatible runtime',
     icon: TriangleAlert,
     iconName: 'triangle-alert',
   },
@@ -134,6 +151,7 @@ export function RuntimeSection({
   onReload,
   onOpenRuntime,
   onCopyDiagnostics,
+  runtimeTargetView,
   formatCheckedAt = defaultCheckedAt,
 }: RuntimeSectionProps) {
   const [announcement, setAnnouncement] = useState({
@@ -145,15 +163,23 @@ export function RuntimeSection({
   const operationalIdentityRef = useRef({
     capability: snapshot.capability,
     routeGeneration: snapshot.routeGeneration,
+    targetGeneration: snapshot.targetGeneration,
     generation: 0,
   });
   const phase = snapshot.phase;
   const configured = snapshot.target.kind === 'configured';
   const invalid = snapshot.target.kind === 'invalid_configuration';
-  const sanitizedTarget =
-    snapshot.target.kind === 'configured' ? snapshot.target.sanitizedUrl : null;
+  const targetLabel = runtimeTargetView?.label ?? 'Shared development';
+  const sanitizedTarget = runtimeTargetView
+    ? runtimeTargetView.location
+    : snapshot.target.kind === 'configured'
+    ? snapshot.target.sanitizedUrl
+    : null;
   const checking =
-    phase === 'connecting' || phase === 'checking' || phase === 'reloading';
+    phase === 'configuring' ||
+    phase === 'connecting' ||
+    phase === 'checking' ||
+    phase === 'reloading';
 
   useLayoutEffect(() => {
     mountedRef.current = true;
@@ -167,13 +193,15 @@ export function RuntimeSection({
     const identity = operationalIdentityRef.current;
     if (
       identity.capability === snapshot.capability &&
-      identity.routeGeneration === snapshot.routeGeneration
+      identity.routeGeneration === snapshot.routeGeneration &&
+      identity.targetGeneration === snapshot.targetGeneration
     ) {
       return;
     }
     operationalIdentityRef.current = {
       capability: snapshot.capability,
       routeGeneration: snapshot.routeGeneration,
+      targetGeneration: snapshot.targetGeneration,
       generation: identity.generation + 1,
     };
     commandSequenceRef.current += 1;
@@ -181,7 +209,11 @@ export function RuntimeSection({
       message: '',
       revision: current.revision + 1,
     }));
-  }, [snapshot.capability, snapshot.routeGeneration]);
+  }, [
+    snapshot.capability,
+    snapshot.routeGeneration,
+    snapshot.targetGeneration,
+  ]);
 
   const publishAnnouncement = (message: string) => {
     setAnnouncement((current) => ({
@@ -310,18 +342,12 @@ export function RuntimeSection({
         onOpenChange={onOpenChange}
       >
         <div data-runtime-metadata>
-          <span>Shared development</span>
+          <span>{targetLabel}</span>
           <span>
             {language} · {product}
           </span>
           {sanitizedTarget !== null ? (
-            <span
-              title={sanitizedTarget}
-              aria-label={`Runtime target ${sanitizedTarget}`}
-              data-runtime-target
-            >
-              {sanitizedTarget}
-            </span>
+            <span data-runtime-target>{sanitizedTarget}</span>
           ) : null}
           <span data-runtime-checked-at>
             {snapshot.checkedAt === null

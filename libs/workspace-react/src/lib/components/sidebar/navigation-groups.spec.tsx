@@ -54,7 +54,7 @@ describe('NavigationGroups capability link instrumentation', () => {
     const hover = declarationsFor(workspaceCss, '.cockpit-nav-item:hover');
     const active = declarationsFor(
       workspaceCss,
-      '.cockpit-nav-item[aria-current="page"]'
+      ".cockpit-nav-item[aria-current='page']"
     );
 
     expect(item).toMatch(/border-radius:\s*(?:6px|7px)/);
@@ -189,12 +189,12 @@ describe('NavigationGroups capability link instrumentation', () => {
         'cockpit-nav-caret--open'
       );
     }
-    expect(
-      declarationsFor(workspaceCss, '.cockpit-nav-caret')
-    ).toMatch(/transition:[^;]*transform\s+150ms\s+ease/);
-    expect(
-      declarationsFor(workspaceCss, '.cockpit-nav-caret--open')
-    ).toMatch(/transform:\s*rotate\(90deg\)/);
+    expect(declarationsFor(workspaceCss, '.cockpit-nav-caret')).toMatch(
+      /transition:[^;]*transform\s+150ms\s+ease/
+    );
+    expect(declarationsFor(workspaceCss, '.cockpit-nav-caret--open')).toMatch(
+      /transform:\s*rotate\(90deg\)/
+    );
     expect(html).not.toContain('text-transform:uppercase');
   });
 

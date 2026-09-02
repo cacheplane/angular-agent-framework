@@ -12,9 +12,7 @@
   "targets": {
     "build": {
       "executor": "@nx/next:build",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
         "outputPath": "dist/apps/cockpit"
@@ -27,11 +25,7 @@
           "outputPath": "dist/apps/cockpit"
         }
       },
-      "inputs": [
-        "default",
-        "deploymentConfig",
-        "^default"
-      ]
+      "inputs": ["default", "deploymentConfig", "^default"]
     },
     "serve": {
       "executor": "@nx/next:server",
@@ -168,6 +162,9 @@
       "{workspaceRoot}/vercel.demo.json",
       "{workspaceRoot}/scripts/assemble-demo.ts",
       "{workspaceRoot}/scripts/assemble-examples.ts",
+      "{workspaceRoot}/scripts/generate-runtime-parent-origins.ts",
+      "{workspaceRoot}/runtime-parent-origins.json",
+      "{workspaceRoot}/libs/cockpit-runtime-bridge/src/lib/generated-runtime-parent-origins.ts",
       "{workspaceRoot}/scripts/demo-middleware.ts",
       "{workspaceRoot}/scripts/langgraph-proxy.ts",
       "{workspaceRoot}/scripts/rate-limit.ts",

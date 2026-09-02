@@ -40,7 +40,7 @@ const events: SessionActivityEvent[] = [
 describe('ActivityPanel', () => {
   it('styles the local menu inside the pane and explicitly places timeline fields', () => {
     expect(cockpitCss).toMatch(
-      /\[data-control-plane-overflow-menu-root\]\[data-overflow-placement="start"\]\s*>\s*\[data-control-plane-overflow-menu\]\s*\{[\s\S]*?left:\s*0;[\s\S]*?right:\s*auto;/
+      /\[data-control-plane-overflow-menu-root\]\[data-overflow-placement=["']start["']\]\s*>\s*\[data-control-plane-overflow-menu\]\s*\{[\s\S]*?left:\s*0;[\s\S]*?right:\s*auto;/
     );
     expect(cockpitCss).toMatch(
       /\[data-activity-summary\]\s*\{[\s\S]*?grid-column:\s*1;[\s\S]*?grid-row:\s*1;/
@@ -56,10 +56,10 @@ describe('ActivityPanel', () => {
   it('styles stable timeline hooks with neutral, error, and recovery states', () => {
     expect(cockpitCss).toMatch(/\[data-activity-connector\]/);
     expect(cockpitCss).toMatch(
-      /\[data-activity-severity="error"\][\s\S]*?var\(--cockpit-state-error/
+      /\[data-activity-severity=["']error["']\][\s\S]*?var\(--cockpit-state-error/
     );
     expect(cockpitCss).toMatch(
-      /\[data-activity-kind="runtime_recovered"\][\s\S]*?var\(--cockpit-state-success/
+      /\[data-activity-kind=["']runtime_recovered["']\][\s\S]*?var\(--cockpit-state-success/
     );
     expect(cockpitCss).toMatch(/\[data-cockpit-activity-attention\]/);
   });

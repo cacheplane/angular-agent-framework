@@ -38,7 +38,7 @@ describe('RunMode', () => {
         runtimeUrl="http://localhost:4300"
         capabilitySlug="streaming"
         {...requiredProps}
-      />,
+      />
     );
     expect(html).not.toContain('<iframe');
     expect(html).not.toContain('about:blank');
@@ -54,7 +54,7 @@ describe('RunMode', () => {
         capabilitySlug="streaming"
         {...requiredProps}
         runtimePhase="not_configured"
-      />,
+      />
     );
     expect(html).not.toContain('<iframe');
     expect(html).toContain('No runtime available');
@@ -68,7 +68,7 @@ describe('RunMode', () => {
         capabilitySlug="streaming"
         {...requiredProps}
         runtimePhase="invalid_configuration"
-      />,
+      />
     );
     expect(html).not.toContain('<iframe');
     expect(html).toContain('Invalid runtime URL');
@@ -86,7 +86,7 @@ describe('RunMode', () => {
           runtimeUrl="http://localhost:4500/path"
           capabilitySlug="streaming"
           {...requiredProps}
-        />,
+        />
       );
     });
 
@@ -115,7 +115,7 @@ describe('RunMode', () => {
           runtimeUrl="http://localhost:4500/path"
           capabilitySlug="streaming"
           {...requiredProps}
-        />,
+        />
       );
     });
     const firstFrame = container.querySelector('iframe');
@@ -128,11 +128,49 @@ describe('RunMode', () => {
           capabilitySlug="streaming"
           {...requiredProps}
           frameGeneration={1}
-        />,
+        />
       );
     });
 
     expect(container.querySelector('iframe')).not.toBe(firstFrame);
+  });
+
+  it('remounts the frame for a new target generation without placing target values in the DOM', () => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+
+    act(() => {
+      root!.render(
+        <RunMode
+          entryTitle="Streaming"
+          runtimeUrl="http://localhost:4500/path"
+          capabilitySlug="streaming"
+          {...requiredProps}
+          targetGeneration={0}
+        />
+      );
+    });
+    const firstFrame = container.querySelector('iframe');
+
+    act(() => {
+      root!.render(
+        <RunMode
+          entryTitle="Streaming"
+          runtimeUrl="http://localhost:4500/path"
+          capabilitySlug="streaming"
+          {...requiredProps}
+          targetGeneration={1}
+        />
+      );
+    });
+
+    const replacement = container.querySelector('iframe');
+    expect(replacement).not.toBe(firstFrame);
+    expect(firstFrame?.isConnected).toBe(false);
+    expect(container.innerHTML).not.toMatch(
+      /api\.example\.test|test-key-redact-me|targetGeneration/i
+    );
   });
 
   it('does not retain the old frame when the validated route identity changes', () => {
@@ -147,7 +185,7 @@ describe('RunMode', () => {
           runtimeUrl="https://old.runtime.test/path"
           capabilitySlug="streaming"
           {...requiredProps}
-        />,
+        />
       );
     });
     const oldFrame = container.querySelector('iframe');
@@ -159,14 +197,14 @@ describe('RunMode', () => {
           runtimeUrl="https://new.runtime.test/path"
           capabilitySlug="persistence"
           {...requiredProps}
-        />,
+        />
       );
     });
     const newFrame = container.querySelector('iframe');
 
     expect(newFrame).not.toBe(oldFrame);
     expect(new URL(newFrame!.getAttribute('src')!).origin).toBe(
-      'https://new.runtime.test',
+      'https://new.runtime.test'
     );
     act(() => oldFrame!.dispatchEvent(new Event('load')));
     expect(requiredProps.onFrameLoad).not.toHaveBeenCalled();

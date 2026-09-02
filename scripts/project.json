@@ -3,13 +3,21 @@
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
   "tags": ["scope:scripts-tests", "type:tooling"],
-  "implicitDependencies": [],
+  "implicitDependencies": ["cockpit-runtime-bridge"],
   "targets": {
     "test": {
       "executor": "@nx/vitest:test",
+      "inputs": ["default", "runtimeParentPolicy", "^default"],
       "options": {
         "configFile": "scripts/vite.config.mts"
       }
     }
+  },
+  "namedInputs": {
+    "runtimeParentPolicy": [
+      "{workspaceRoot}/runtime-parent-origins.json",
+      "{workspaceRoot}/scripts/generate-runtime-parent-origins.ts",
+      "{workspaceRoot}/libs/cockpit-runtime-bridge/src/lib/generated-runtime-parent-origins.ts"
+    ]
   }
 }

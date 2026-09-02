@@ -269,6 +269,59 @@ describe('website docs bindings', () => {
     expect(missingApiDocs).toEqual([]);
   });
 
+  it('keeps internal and ɵ adapter plumbing out of consumer API docs', () => {
+    const prohibited: string[] = [];
+    for (const library of ['langgraph', 'ag-ui']) {
+      const apiDocsPath = path.join(
+        contentRoot,
+        library,
+        'api',
+        'api-docs.json'
+      );
+      const entries = JSON.parse(
+        fs.readFileSync(apiDocsPath, 'utf8')
+      ) as Array<{
+        name: string;
+        params?: Array<{ name: string }>;
+        properties?: Array<{ name: string }>;
+        methods?: Array<{ name: string; params?: Array<{ name: string }> }>;
+      }>;
+      for (const entry of entries) {
+        const names = [
+          entry.name,
+          ...(entry.params ?? []).map((parameter) => parameter.name),
+          ...(entry.properties ?? []).map((property) => property.name),
+          ...(entry.methods ?? []).flatMap((method) => [
+            method.name,
+            ...(method.params ?? []).map((parameter) => parameter.name),
+          ]),
+        ];
+        for (const name of names) {
+          if (
+            name.startsWith('ɵ') ||
+            name === 'reportOperationFailure' ||
+            name === 'protectsOperationErrors'
+          ) {
+            prohibited.push(`${library}:${entry.name}:${name}`);
+          }
+        }
+      }
+    }
+
+    expect(prohibited).toEqual([]);
+    const langGraphDocs = JSON.parse(
+      fs.readFileSync(
+        path.join(contentRoot, 'langgraph', 'api', 'api-docs.json'),
+        'utf8'
+      )
+    ) as Array<{ name: string; properties?: Array<{ name: string }> }>;
+    expect(
+      langGraphDocs
+        .find((entry) => entry.name === 'LangGraphClientOptions')
+        ?.properties?.map((property) => property.name)
+    ).toContain('apiKey');
+  });
+
   it('auto-rendered API pages resolve generated entries', () => {
     const unresolvedApiPages: string[] = [];
 

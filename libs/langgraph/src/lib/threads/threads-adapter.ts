@@ -2,8 +2,17 @@
 import { Injectable, InjectionToken, inject, signal, type Signal, type WritableSignal } from '@angular/core';
 import type { Client, Thread as SdkThread } from '@langchain/langgraph-sdk';
 import type { Thread } from '@threadplane/chat';
-import { createLangGraphClient } from '../client/create-langgraph-client';
+import {
+  createLangGraphClient,
+  ɵcreateProtectedLangGraphClient,
+} from '../client/create-langgraph-client';
 import { LANGGRAPH_CLIENT_OPTIONS } from '../client/client-options';
+import {
+  createLangGraphRuntimeFetch,
+  createSafeRequestError,
+  sanitizeLangGraphClientOperationFailure,
+  ɵLANGGRAPH_RUNTIME_OPERATION_REPORTER,
+} from '../runtime-operation-reporter';
 
 /**
  * Configuration consumed by {@link LangGraphThreadsAdapter}. Provide
@@ -62,9 +71,34 @@ export const LANGGRAPH_CLIENT = new InjectionToken<Client>('LANGGRAPH_CLIENT');
 @Injectable({ providedIn: 'root' })
 export class LangGraphThreadsAdapter {
   private readonly config = inject(LANGGRAPH_THREADS_CONFIG);
-  private readonly sharedClientOptions = inject(LANGGRAPH_CLIENT_OPTIONS, { optional: true }) ?? undefined;
-  private readonly client: Client = inject(LANGGRAPH_CLIENT, { optional: true })
-    ?? createLangGraphClient(this.config.apiUrl, this.sharedClientOptions);
+  private readonly clientState = (() => {
+    const clientOptions = inject(LANGGRAPH_CLIENT_OPTIONS, { optional: true }) ?? undefined;
+    const reportOperationFailure =
+      inject(ɵLANGGRAPH_RUNTIME_OPERATION_REPORTER, { optional: true }) ??
+      undefined;
+    const injectedClient = inject(LANGGRAPH_CLIENT, { optional: true });
+    const ownsProtectedClient =
+      injectedClient === null &&
+      (typeof clientOptions?.apiKey === 'string' ||
+        reportOperationFailure !== undefined);
+    return {
+      client:
+        injectedClient ??
+        (ownsProtectedClient
+          ? ɵcreateProtectedLangGraphClient(
+              this.config.apiUrl,
+              clientOptions,
+              createLangGraphRuntimeFetch(reportOperationFailure)
+            )
+          : createLangGraphClient(this.config.apiUrl, clientOptions)),
+      protectErrors:
+        typeof clientOptions?.apiKey === 'string' || ownsProtectedClient,
+      reportOperationFailure: ownsProtectedClient
+        ? reportOperationFailure
+        : undefined,
+    };
+  })();
+  private readonly client: Client = this.clientState.client;
 
   private readonly fallback: string = this.config.titleFallback ?? 'Untitled';
 
@@ -109,7 +143,7 @@ export class LangGraphThreadsAdapter {
       );
       this._archived.set(mapped.filter((t) => t.status === 'archived'));
     } catch (e) {
-      console.error('[LangGraphThreadsAdapter.refresh] failed:', e);
+      console.error('[LangGraphThreadsAdapter.refresh] failed:', this.safeError(e));
     }
   }
 
@@ -128,11 +162,9 @@ export class LangGraphThreadsAdapter {
       // 404 (server says "no such thread") and 422 (server says "id
       // isn't even a valid UUID") as "missing" — both warrant the
       // same caller behavior (redirect to a fresh chat).
-      const status =
-        (e as { status?: number }).status ??
-        (e as { response?: { status?: number } }).response?.status;
+      const status = safeThreadErrorStatus(e);
       if (status === 404 || status === 422) return null;
-      throw e;
+      throw this.safeError(e);
     }
   }
 
@@ -142,43 +174,43 @@ export class LangGraphThreadsAdapter {
       await this.refresh();
       return t.thread_id;
     } catch (e) {
-      console.error('[LangGraphThreadsAdapter.create] failed:', e);
+      console.error('[LangGraphThreadsAdapter.create] failed:', this.safeError(e));
       return null;
     }
   }
 
   async delete(threadId: string): Promise<void> {
-    await this.client.threads.delete(threadId);
+    await this.request(() => this.client.threads.delete(threadId));
     await this.refresh();
   }
 
   async rename(threadId: string, newTitle: string): Promise<void> {
-    await this.client.threads.update(threadId, { metadata: { title: newTitle } });
+    await this.request(() => this.client.threads.update(threadId, { metadata: { title: newTitle } }));
     await this.refresh();
   }
 
   async archive(threadId: string): Promise<void> {
-    await this.client.threads.update(threadId, { metadata: { archived: true } });
+    await this.request(() => this.client.threads.update(threadId, { metadata: { archived: true } }));
     await this.refresh();
   }
 
   async unarchive(threadId: string): Promise<void> {
-    await this.client.threads.update(threadId, { metadata: { archived: false } });
+    await this.request(() => this.client.threads.update(threadId, { metadata: { archived: false } }));
     await this.refresh();
   }
 
   async pin(threadId: string): Promise<void> {
-    await this.client.threads.update(threadId, { metadata: { pinned: true } });
+    await this.request(() => this.client.threads.update(threadId, { metadata: { pinned: true } }));
     await this.refresh();
   }
 
   async unpin(threadId: string): Promise<void> {
-    await this.client.threads.update(threadId, { metadata: { pinned: false } });
+    await this.request(() => this.client.threads.update(threadId, { metadata: { pinned: false } }));
     await this.refresh();
   }
 
   async moveToProject(threadId: string, projectId: string | null): Promise<void> {
-    await this.client.threads.update(threadId, { metadata: { projectId } });
+    await this.request(() => this.client.threads.update(threadId, { metadata: { projectId } }));
     await this.refresh();
   }
 
@@ -196,12 +228,33 @@ export class LangGraphThreadsAdapter {
     }
     if (beforeId === null) next.push(moved);
 
-    await Promise.all(
-      next.map((t, idx) =>
-        this.client.threads.update(t.id, { metadata: { pinnedOrder: idx } }),
+    await this.request(() =>
+      Promise.all(
+        next.map((t, idx) =>
+          this.client.threads.update(t.id, { metadata: { pinnedOrder: idx } }),
+        ),
       ),
     );
     await this.refresh();
+  }
+
+  private async request<T>(operation: () => Promise<T>): Promise<T> {
+    try {
+      return await operation();
+    } catch (error) {
+      throw this.safeError(error);
+    }
+  }
+
+  private safeError(error: unknown): unknown {
+    if (!this.clientState.protectErrors) return error;
+    if (this.clientState.reportOperationFailure !== undefined) {
+      return sanitizeLangGraphClientOperationFailure(
+        error,
+        this.clientState.reportOperationFailure
+      );
+    }
+    return createSafeRequestError();
   }
 
   private toThread(t: SdkThread): Thread {
@@ -222,5 +275,23 @@ export class LangGraphThreadsAdapter {
       pinnedOrder,
       updatedAt: t.updated_at ? Date.parse(t.updated_at) : undefined,
     };
+  }
+}
+
+function safeThreadErrorStatus(error: unknown): number | null {
+  try {
+    if ((typeof error !== 'object' || error === null) && typeof error !== 'function') return null;
+    const own = Object.getOwnPropertyDescriptor(error, 'status');
+    if (own && 'value' in own && typeof own.value === 'number') return own.value;
+    const responseDescriptor = Object.getOwnPropertyDescriptor(error, 'response');
+    if (!responseDescriptor || !('value' in responseDescriptor)) return null;
+    const response = responseDescriptor.value as unknown;
+    if ((typeof response !== 'object' || response === null) && typeof response !== 'function') return null;
+    const nested = Object.getOwnPropertyDescriptor(response, 'status');
+    return nested && 'value' in nested && typeof nested.value === 'number'
+      ? nested.value
+      : null;
+  } catch {
+    return null;
   }
 }

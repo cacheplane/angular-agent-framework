@@ -8,7 +8,7 @@ export interface StreamingState {
 
 /**
  * Typed DI handle for the streaming agent.
- * Wire with `provideAgent(STREAMING_AGENT, { ... })` and inject with
+ * Wire with `provideAgent(STREAMING_AGENT, () => ...)` and inject with
  * `injectAgent(STREAMING_AGENT)` to get `LangGraphAgent<StreamingState>`.
  */
 export const STREAMING_AGENT = createAgentRef<StreamingState>('streaming');
