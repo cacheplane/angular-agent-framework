@@ -155,6 +155,10 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
       store.interrupt.set(undefined);
       store.customEvents.set([]);
       store.activities.set(new Map());
+      // A run boundary is the reset point for in-flight args accumulation:
+      // a TOOL_CALL_ARGS fragment whose TOOL_CALL_END never arrived (aborted
+      // or errored run) must not prefix a same-id call in the next run.
+      store.argsBuffers?.clear();
       return;
     }
     case 'RUN_FINISHED': {
@@ -609,6 +613,10 @@ const SUBAGENT_ROUTED_TYPES = new Set([
   'TOOL_CALL_START', 'TOOL_CALL_ARGS', 'TOOL_CALL_END', 'TOOL_CALL_RESULT',
 ]);
 
+function subagentArgsBufferKey(subagentRunId: string, toolCallId: string): string {
+  return `subagent:${subagentRunId}:${toolCallId}`;
+}
+
 /** Get-or-create the ActivityEntry for a subagent run, keyed by
  *  subagentRunId — mirrors ACTIVITY_SNAPSHOT's creation branch exactly
  *  (same generation allocation, same activities-map replace idiom) so
@@ -652,13 +660,16 @@ function routeSubagentContentEvent(subagentRunId: string, event: BaseEvent, stor
   if (event.type === 'TOOL_CALL_ARGS') {
     // Same accumulated-buffer rule as the parent handler: deltas are JSON
     // fragments; parse the accumulation, keep last-good args.
+    // Keyed by subagent run AND tool-call id: two children reusing the same
+    // toolCallId (real for providers that mint per-child ids) must never
+    // interleave fragments into one buffer.
     const buffers = (store.argsBuffers ??= new Map<string, string>());
-    const key = `subagent:${e['toolCallId']}`;
+    const key = subagentArgsBufferKey(subagentRunId, e['toolCallId'] as string);
     const buffer = (buffers.get(key) ?? '') + ((e['delta'] as string) ?? '');
     buffers.set(key, buffer);
     parsedArgs = tryParseArgs(buffer);
   } else if (event.type === 'TOOL_CALL_END') {
-    store.argsBuffers?.delete(`subagent:${e['toolCallId']}`);
+    store.argsBuffers?.delete(subagentArgsBufferKey(subagentRunId, e['toolCallId'] as string));
   }
 
   entry.content.update((c) => {

@@ -59,11 +59,31 @@ class _DelegationState:
 
 # Finished entries are kept (not popped) so the tool's trailing result-string
 # yield and any stragglers stay suppressed. Growth is capped at _MAX_SESSIONS
-# (dict insertion order = age; each entry is a short key string plus a
-# 4-field dataclass, ~414 bytes measured with sys.getsizeof — the cap bounds
-# the dict at ~200 KiB).
+# (dict insertion order = age; eviction prefers finished sessions, see
+# _eviction_candidate; each entry is a short key string plus a 4-field
+# dataclass, ~414 bytes measured with sys.getsizeof — the cap bounds the dict
+# at ~200 KiB).
 _sessions: dict[str, _DelegationState] = {}
 _MAX_SESSIONS = 512
+
+
+def _eviction_candidate(current: str) -> str:
+    """Pick the session to drop when the cap is exceeded: the oldest FINISHED
+    session first (its only job is straggler suppression); only when every
+    other session is still in flight, the oldest in-flight one — evicting an
+    unfinished session makes its next event re-emit SUBAGENT_STARTED, so that
+    is the last resort that keeps the cap a hard memory bound. Never the
+    session being registered right now."""
+    oldest_unfinished: str | None = None
+    for key, state in _sessions.items():
+        if key == current:
+            continue
+        if state.finished:
+            return key
+        if oldest_unfinished is None:
+            oldest_unfinished = key
+    assert oldest_unfinished is not None  # cap > 1, so another key exists
+    return oldest_unfinished
 
 
 def _subagent_run_id(tool_use_id: str) -> str:
@@ -82,7 +102,7 @@ async def emit_subagent_events(ctx: ToolStreamEventContext):
         state = _DelegationState()
         _sessions[ctx.tool_use_id] = state
         while len(_sessions) > _MAX_SESSIONS:
-            del _sessions[next(k for k in _sessions if k != ctx.tool_use_id)]
+            del _sessions[_eviction_candidate(ctx.tool_use_id)]
     run_id = _subagent_run_id(ctx.tool_use_id)
     data = ctx.stream_data
     if state.finished and isinstance(data, dict) and "init_event_loop" in data:

@@ -145,6 +145,39 @@ describe('reduceEvent SUBAGENT_* lifecycle', () => {
     expect((content['state'] as Record<string, unknown>)['error']).toBe('rate limited');
   });
 
+  it('two subagents reusing a toolCallId keep separate args buffers', () => {
+    const store = makeStore();
+    reduceEvent(ev({ type: 'SUBAGENT_STARTED', subagentRunId: 'sa-1', name: 'researcher' }), store);
+    reduceEvent(ev({ type: 'SUBAGENT_STARTED', subagentRunId: 'sa-2', name: 'forecaster' }), store);
+    reduceEvent(ev({ type: 'TOOL_CALL_START', toolCallId: 't-1', toolCallName: 'web_search', subagentRunId: 'sa-1' }), store);
+    reduceEvent(ev({ type: 'TOOL_CALL_START', toolCallId: 't-1', toolCallName: 'forecast', subagentRunId: 'sa-2' }), store);
+    // Interleaved fragments: a shared buffer would concatenate them into
+    // `{"q":"{"city":"x"}"paris"}` and neither child would ever parse.
+    reduceEvent(ev({ type: 'TOOL_CALL_ARGS', toolCallId: 't-1', delta: '{"q":', subagentRunId: 'sa-1' }), store);
+    reduceEvent(ev({ type: 'TOOL_CALL_ARGS', toolCallId: 't-1', delta: '{"city":"x"}', subagentRunId: 'sa-2' }), store);
+    reduceEvent(ev({ type: 'TOOL_CALL_ARGS', toolCallId: 't-1', delta: '"paris"}', subagentRunId: 'sa-1' }), store);
+    reduceEvent(ev({ type: 'TOOL_CALL_END', toolCallId: 't-1', subagentRunId: 'sa-1' }), store);
+    reduceEvent(ev({ type: 'TOOL_CALL_END', toolCallId: 't-1', subagentRunId: 'sa-2' }), store);
+    const calls1 = store.activities().get('sa-1')?.content()['toolCalls'] as Array<Record<string, unknown>>;
+    const calls2 = store.activities().get('sa-2')?.content()['toolCalls'] as Array<Record<string, unknown>>;
+    expect(calls1[0]).toMatchObject({ id: 't-1', status: 'complete', args: { q: 'paris' } });
+    expect(calls2[0]).toMatchObject({ id: 't-1', status: 'complete', args: { city: 'x' } });
+  });
+
+  it('RUN_STARTED drops a dangling parent args buffer so a same-id call in the next run parses cleanly', () => {
+    const store = makeStore();
+    // A run that dies mid-stream: ARGS fragment arrives, TOOL_CALL_END never does.
+    reduceEvent(ev({ type: 'TOOL_CALL_START', toolCallId: 't-1', toolCallName: 'web_search' }), store);
+    reduceEvent(ev({ type: 'TOOL_CALL_ARGS', toolCallId: 't-1', delta: '{"a":' }), store);
+    reduceEvent(ev({ type: 'RUN_STARTED' }), store);
+    reduceEvent(ev({ type: 'TOOL_CALL_START', toolCallId: 't-1', toolCallName: 'web_search' }), store);
+    reduceEvent(ev({ type: 'TOOL_CALL_ARGS', toolCallId: 't-1', delta: '{"b":1}' }), store);
+    reduceEvent(ev({ type: 'TOOL_CALL_END', toolCallId: 't-1' }), store);
+    const call = store.toolCalls().find((t) => t.id === 't-1');
+    expect(call?.args).toEqual({ b: 1 });
+    expect(call?.status).toBe('complete');
+  });
+
   it('unattributed events behave exactly as before (regression)', () => {
     const store = makeStore();
     reduceEvent(ev({ type: 'TEXT_MESSAGE_START', messageId: 'm-1', role: 'assistant' }), store);

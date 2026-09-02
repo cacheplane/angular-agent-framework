@@ -209,6 +209,44 @@ async def test_sessions_growth_is_capped():
     assert f"call_{subagent_emitter._MAX_SESSIONS + 4}" in subagent_emitter._sessions
 
 
+async def test_eviction_prefers_finished_sessions_over_in_flight_ones():
+    # Fill the cap with UNFINISHED (in-flight) delegations, then one finished
+    # one inserted LAST (the youngest entry — plain oldest-first eviction
+    # would keep it and drop an in-flight session, whose next event would
+    # then re-emit SUBAGENT_STARTED). The finished entry must go first.
+    for i in range(subagent_emitter._MAX_SESSIONS - 1):
+        await _drive([{"data": "x"}], tool_use_id=f"call_inflight_{i}")
+    await _drive([{"result": object()}], tool_use_id="call_finished")
+    assert len(subagent_emitter._sessions) == subagent_emitter._MAX_SESSIONS
+
+    out = await _drive([{"data": "y"}], tool_use_id="call_one_more")
+
+    assert len(subagent_emitter._sessions) == subagent_emitter._MAX_SESSIONS
+    assert "call_finished" not in subagent_emitter._sessions
+    assert "call_one_more" in subagent_emitter._sessions
+    for i in range(subagent_emitter._MAX_SESSIONS - 1):
+        assert f"call_inflight_{i}" in subagent_emitter._sessions
+    # The newcomer started normally (STARTED + message open + delta).
+    assert [ev.type for ev in out] == [
+        EventType.SUBAGENT_STARTED,
+        EventType.TEXT_MESSAGE_START,
+        EventType.TEXT_MESSAGE_CONTENT,
+    ]
+
+    # A straggler on a surviving in-flight session does NOT re-emit STARTED.
+    again = await _drive([{"data": "z"}], tool_use_id="call_inflight_0")
+    assert [ev.type for ev in again] == [EventType.TEXT_MESSAGE_CONTENT]
+
+
+async def test_eviction_falls_back_to_oldest_in_flight_when_none_finished():
+    for i in range(subagent_emitter._MAX_SESSIONS):
+        await _drive([{"data": "x"}], tool_use_id=f"call_inflight_{i}")
+    await _drive([{"data": "y"}], tool_use_id="call_one_more")
+    assert len(subagent_emitter._sessions) == subagent_emitter._MAX_SESSIONS
+    assert "call_inflight_0" not in subagent_emitter._sessions
+    assert "call_one_more" in subagent_emitter._sessions
+
+
 async def test_ids_derive_from_tool_use_id():
     out = await _drive([{"data": "x"}, {"result": object()}], tool_use_id="call_other")
     assert out[0].subagent_run_id == "call_other-sub"
