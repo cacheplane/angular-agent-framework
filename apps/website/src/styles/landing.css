@@ -1487,3 +1487,26 @@
   height: 1px;
   background: var(--color-border);
 }
+
+/* StackDiagramSection — components/landing/StackDiagramSection.tsx */
+.stack-diagram-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+.stack-diagram-body {
+  font-family: var(--font-inter);
+  font-size: var(--text-body-lg);
+  line-height: var(--text-body-lg--line-height);
+  color: var(--color-text-secondary);
+  max-width: 620px;
+  margin: 0 0 12px;
+}
+/* Guards against flex-item shrink-to-content: without an explicit width the
+   figure would collapse to its intrinsic SVG size inside the centered
+   flex column, instead of filling the container like the surrounding text. */
+.stack-diagram-section .tp-diagram-figure {
+  width: 100%;
+}
