@@ -181,3 +181,53 @@ for tool call id `<tid>`:
 specialist update; live-interleaved via the pump-task merge) → `SUBAGENT_FINISHED
 {outcome: success}` (or `SUBAGENT_ERROR` on tool-body exception), all before the
 bridge's own `TOOL_CALL_RESULT` for `<tid>` reaches the client.
+
+## After the emitter
+
+Date: 2026-09-02, post-implementation. Live capture against the committed
+`src/server.py` (uvicorn, port 5330; plain-OpenAI path, `gpt-4o-mini`), request
+identical in shape to the spike: single user message "Should I submit a $900
+conference travel expense? Research the policy first" (`threadId:
+smoke-thread-1`, `runId: smoke-run-1`). The model called
+`lookup_expense_policy` first and then delegated via `research_policy` on the
+same turn. Full event-type census of the complete stream:
+
+```
+1 RUN_STARTED   1 STATE_SNAPSHOT   4 CUSTOM (PredictState, usage×3)
+4 TEXT_MESSAGE_START   128 TEXT_MESSAGE_CONTENT   4 TEXT_MESSAGE_END
+2 TOOL_CALL_START   14 TOOL_CALL_ARGS   2 TOOL_CALL_END   2 TOOL_CALL_RESULT
+1 SUBAGENT_STARTED   1 SUBAGENT_FINISHED   0 SUBAGENT_ERROR
+1 MESSAGES_SNAPSHOT   1 RUN_FINISHED
+```
+
+**Child delta count: 100 streamed TEXT_MESSAGE_CONTENT events** attributed to
+the subagent run (`messageId: <tid>-sub-m1`, token-granular — same order of
+magnitude as the spike's 101/106 in-tool updates), live-interleaved between the
+bridge's own events: the bridge yields `TOOL_CALL_END` for `research_policy`
+only after the tool returns, and the entire SUBAGENT_* sequence lands between
+`TOOL_CALL_ARGS` and that `TOOL_CALL_END` — proof the pump-task merge queue
+delivered the deltas while the bridge generator was suspended inside the tool.
+
+Abridged stream around the delegation (ids as captured; no secrets present):
+
+```
+data: {"type":"TOOL_CALL_START","toolCallId":"call_drwxfbPJnrzSBBLnrcqehqfx","toolCallName":"research_policy","parentMessageId":"c1a737b4-..."}
+...   (11 ARGS deltas spelling {"category":"travel","amount":900})
+data: {"type":"SUBAGENT_STARTED","subagentRunId":"call_drwxfbPJnrzSBBLnrcqehqfx-sub","name":"policy_researcher","parentToolCallId":"call_drwxfbPJnrzSBBLnrcqehqfx"}
+data: {"type":"TEXT_MESSAGE_START","messageId":"call_drwxfbPJnrzSBBLnrcqehqfx-sub-m1","role":"assistant","subagentRunId":"call_drwxfbPJnrzSBBLnrcqehqfx-sub"}
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"call_drwxfbPJnrzSBBLnrcqehqfx-sub-m1","delta":"-","subagentRunId":"call_drwxfbPJnrzSBBLnrcqehqfx-sub"}
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"call_drwxfbPJnrzSBBLnrcqehqfx-sub-m1","delta":" **","subagentRunId":"call_drwxfbPJnrzSBBLnrcqehqfx-sub"}
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"call_drwxfbPJnrzSBBLnrcqehqfx-sub-m1","delta":"Pre","subagentRunId":"call_drwxfbPJnrzSBBLnrcqehqfx-sub"}
+...   (100 CONTENT deltas total, token-granular)
+data: {"type":"TEXT_MESSAGE_END","messageId":"call_drwxfbPJnrzSBBLnrcqehqfx-sub-m1","subagentRunId":"call_drwxfbPJnrzSBBLnrcqehqfx-sub"}
+data: {"type":"SUBAGENT_FINISHED","subagentRunId":"call_drwxfbPJnrzSBBLnrcqehqfx-sub","outcome":{"type":"success"}}
+data: {"type":"TOOL_CALL_END","toolCallId":"call_drwxfbPJnrzSBBLnrcqehqfx"}
+data: {"type":"TOOL_CALL_RESULT","messageId":"7dec6623-...","toolCallId":"call_drwxfbPJnrzSBBLnrcqehqfx","content":"- **Pre-Approval Required**: Travel expenses exceeding $500 ...","role":"tool"}
+```
+
+Tid derivation on the live run: the pump-recorded `TOOL_CALL_START` path
+(`current_tool_call_id("research_policy")`) — the real wire toolCallId keys
+the whole sequence (`subagentRunId = <tid>-sub`, `parentToolCallId = <tid>`);
+the generated `sub-<hex8>` fallback was not needed. Existing surfaces are
+untouched: PredictState CUSTOM, STATE_SNAPSHOT, both TOOL_CALL_RESULTs, and
+MESSAGES_SNAPSHOT all present as before.
