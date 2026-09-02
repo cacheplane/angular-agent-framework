@@ -6,10 +6,11 @@ import { DiagramEdge } from './DiagramEdge';
 const SLUG = 'render-vs-a2ui';
 
 /**
- * The layering from the json-render-vs-A2UI concept page: `@threadplane/chat`
- * detects assistant content and streams it into whichever surface applies,
- * fanning out to a fixed json-render spec on one side and an A2UI surface on
- * the other.
+ * The layering from the json-render-vs-A2UI concept page: `@threadplane/render`
+ * is usable directly from your own app (no chat required), while
+ * `@threadplane/chat` also detects assistant content and streams it into
+ * whichever surface applies — a json-render spec on one side, an A2UI
+ * surface on the other.
  */
 export function RenderVsA2ui() {
   return (
@@ -20,7 +21,18 @@ export function RenderVsA2ui() {
       label="Chat detects assistant content and mounts either a json-render spec or an A2UI surface."
     >
       <DiagramNode
-        x={190}
+        x={20}
+        y={16}
+        w={160}
+        h={44}
+        title="Your Angular app"
+        align="middle"
+        titleStyle="sans"
+        tone="dim"
+      />
+      <DiagramEdge d="M100 60 V120" slug={SLUG} arrow />
+      <DiagramNode
+        x={217}
         y={16}
         w={260}
         h={64}
@@ -29,26 +41,27 @@ export function RenderVsA2ui() {
         meta="detects content, streams, mounts surfaces"
         tone="neutral"
       />
-      <DiagramEdge d="M320 80 V100 H180 V120" slug={SLUG} arrow />
-      <DiagramEdge d="M320 80 V100 H460 V120" slug={SLUG} arrow />
+      <DiagramEdge d="M347 80 V100" slug={SLUG} />
+      <DiagramEdge d="M347 100 H200 V120" slug={SLUG} arrow />
+      <DiagramEdge d="M347 100 H494 V120" slug={SLUG} arrow />
       <DiagramNode
-        x={60}
+        x={16}
         y={124}
-        w={240}
+        w={260}
         h={64}
         eyebrow="json-render"
         title="@threadplane/render"
-        meta="via registry, state store, functions"
+        meta="registry · state · functions · handlers"
         tone="accent"
       />
       <DiagramNode
-        x={340}
+        x={364}
         y={124}
-        w={240}
+        w={260}
         h={64}
         eyebrow="A2UI"
         title="@threadplane/a2ui"
-        meta="A2UI v0.9 message and component types"
+        meta="A2UI v0.9 messages + component types"
         tone="accent"
       />
     </DiagramFrame>

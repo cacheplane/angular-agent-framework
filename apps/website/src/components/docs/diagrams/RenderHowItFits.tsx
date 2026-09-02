@@ -25,13 +25,14 @@ export function RenderHowItFits() {
         y={16}
         w={300}
         h={44}
-        title="Agent output — a JSON Spec"
+        title="Agent or app output — a JSON Spec"
         align="middle"
         titleStyle="sans"
         tone="dim"
       />
-      <DiagramEdge d="M320 60 V104" slug={SLUG} arrow />
-      <DiagramPill cx={320} cy={82} w={120} label="validated spec" />
+      <DiagramEdge d="M320 60 V70" slug={SLUG} />
+      <DiagramPill cx={320} cy={82} w={90} label="JSON Spec" />
+      <DiagramEdge d="M320 94 V104" slug={SLUG} arrow />
       <DiagramNode
         x={170}
         y={108}
@@ -42,8 +43,9 @@ export function RenderHowItFits() {
         meta="registry · state store · functions · handlers"
         tone="accent"
       />
-      <DiagramEdge d="M320 172 V216" slug={SLUG} arrow />
+      <DiagramEdge d="M320 172 V182" slug={SLUG} />
       <DiagramPill cx={320} cy={194} w={140} label="bindings + events" />
+      <DiagramEdge d="M320 206 V216" slug={SLUG} arrow />
       <DiagramNode
         x={170}
         y={220}

@@ -47,6 +47,11 @@ describe('RenderHowItFits', () => {
     const titles = Array.from(container.querySelectorAll('.tp-diagram-title')).map((t) => t.textContent);
     expect(titles).toContain('@threadplane/render');
   });
+
+  it('breaks each edge around its pill so the line does not show through the label', () => {
+    const { container } = render(<RenderHowItFits />);
+    expect(container.querySelectorAll('.tp-diagram-pill')).toHaveLength(2);
+  });
 });
 
 describe('RenderVsA2ui', () => {
@@ -56,5 +61,13 @@ describe('RenderVsA2ui', () => {
     expect(titles).toContain('@threadplane/render');
     expect(titles).toContain('@threadplane/a2ui');
     expect(titles).toContain('@threadplane/chat');
+  });
+
+  it('accents exactly the two surface nodes and wires at least three edges', () => {
+    const { container } = render(<RenderVsA2ui />);
+    const accented = container.querySelectorAll('g.tp-diagram-node[data-tone="accent"]');
+    expect(accented).toHaveLength(2);
+    const edges = container.querySelectorAll('path.tp-diagram-edge');
+    expect(edges.length).toBeGreaterThanOrEqual(3);
   });
 });
