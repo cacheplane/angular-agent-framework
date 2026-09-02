@@ -179,3 +179,44 @@ Rationale:
   about weather forecasts you MUST delegate to the weather_forecaster agent"
   (the stock instructions force `check_conditions` for weather, which would
   have fought delegation).
+
+## After the emitter
+
+Live smoke against the committed emitter (`deployments/ag-ui-mastra/subagent-emitter.mjs`
+wired into `server.mjs`'s translation loop), 2026-09-02. Request:
+`POST /agent/mastra` with `{"threadId":"t-post-emitter-1","runId":"r-post-emitter-1",
+"messages":[{"role":"user","content":"Plan a trip to Bear Lake this weekend — what
+will the weather be?"}], ...}`. Delegated on the first attempt; the injected
+sequence appeared exactly once, ids consistent throughout (scrubbed):
+
+```
+data: {"type":"RUN_STARTED","threadId":"t-post-emitter-1","runId":"r-post-emitter-1"}
+data: {"type":"TOOL_CALL_START","parentMessageId":"28f84e1d-…","toolCallId":"call_1W2Rmq…","toolCallName":"agent-weather_forecaster"}
+data: {"type":"SUBAGENT_STARTED","subagentRunId":"call_1W2Rmq…-sub","name":"weather_forecaster","parentToolCallId":"call_1W2Rmq…"}
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call_1W2Rmq…","delta":"{\"prompt\":\"What will the weather be like at Bear Lake this weekend?\",…}"}
+data: {"type":"TOOL_CALL_END","toolCallId":"call_1W2Rmq…"}
+data: {"type":"TEXT_MESSAGE_START","messageId":"call_1W2Rmq…-sub-m1","role":"assistant","subagentRunId":"call_1W2Rmq…-sub"}
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"call_1W2Rmq…-sub-m1","delta":"Here's the weather forecast for Bear Lake this weekend:\n\n- **Saturday**: Mostly sunny…","subagentRunId":"call_1W2Rmq…-sub"}
+data: {"type":"TEXT_MESSAGE_END","messageId":"call_1W2Rmq…-sub-m1","subagentRunId":"call_1W2Rmq…-sub"}
+data: {"type":"SUBAGENT_FINISHED","subagentRunId":"call_1W2Rmq…-sub","outcome":{"type":"success"}}
+data: {"type":"TOOL_CALL_RESULT","toolCallId":"call_1W2Rmq…","content":"{\"text\":\"Here's the weather forecast…\",\"subAgentThreadId\":…}","messageId":"…","role":"tool"}
+data: {"type":"STATE_SNAPSHOT","snapshot":{}}
+data: {"type":"STATE_DELTA","delta":[…]}   (x3)
+data: {"type":"TEXT_MESSAGE_CHUNK","role":"assistant","messageId":"28f84e1d-…-agui-text","delta":"…"}   (x31 — the parent's own summary)
+data: {"type":"STATE_SNAPSHOT","snapshot":{"packing_list":…}}
+data: {"type":"RUN_FINISHED","threadId":"t-post-emitter-1","runId":"r-post-emitter-1","usage":[…]}
+```
+
+Event-type totals: 1 each RUN_STARTED / TOOL_CALL_START / SUBAGENT_STARTED /
+TOOL_CALL_ARGS / TOOL_CALL_END / TEXT_MESSAGE_START / TEXT_MESSAGE_CONTENT /
+TEXT_MESSAGE_END / SUBAGENT_FINISHED / TOOL_CALL_RESULT / RUN_FINISHED,
+2 STATE_SNAPSHOT, 3 STATE_DELTA, 31 TEXT_MESSAGE_CHUNK.
+
+Notes:
+
+- SUBAGENT_STARTED is injected immediately after TOOL_CALL_START, which on
+  this bridge lands BEFORE the buffered TOOL_CALL_ARGS/END flush — the card
+  therefore exists before the delegation prompt is readable.
+- Child deltas: single final chunk — bridge drops tool-output upstream
+  (`case "tool-output": break` in @ag-ui/mastra), so the one
+  TEXT_MESSAGE_CONTENT carries the child's entire final text.
