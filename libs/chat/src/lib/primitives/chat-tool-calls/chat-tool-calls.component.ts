@@ -124,7 +124,15 @@ export class ChatToolCallsComponent {
   readonly groups = computed((): Group[] => {
     const excludeSet = new Set(this.excludeToolNames());
     const calls = this.toolCalls().filter(tc => !excludeSet.has(tc.name));
-    const subs = this.agent().subagents?.() ?? new Map<string, Subagent>();
+    // Anchor subagents by the contract field `Subagent.toolCallId` (the tool
+    // call that spawned them), NOT by the adapter's map key. Adapters key the
+    // map differently — LangGraph by toolCallId, AG-UI activities by
+    // messageId, AG-UI native SUBAGENT_* by subagentRunId (e.g.
+    // `<toolCallId>-sub`) — and only the wrapper's toolCallId is guaranteed
+    // to match the spawning call.
+    const rawSubs = this.agent().subagents?.() ?? new Map<string, Subagent>();
+    const subs = new Map<string, Subagent>();
+    rawSubs.forEach((sa) => subs.set(sa.toolCallId, sa));
     const groupingMode = this.grouping();
     const registry = this.templateRegistry();
     const wildcard = registry.get('*');
