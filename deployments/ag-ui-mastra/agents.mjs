@@ -96,12 +96,29 @@ const reserveCampsiteTool = createTool({
 export function createMastra(dbUrl) {
   const store = (id) => new LibSQLStore({ id, url: dbUrl });
 
+  /**
+   * Sub-agent (spike: wire-capture-subagents.md). Registered on the
+   * supervisor via `agents:`; Mastra surfaces it as a backend tool named
+   * `agent-weather_forecaster` whose TOOL_CALL_RESULT carries the child's
+   * final text — server.mjs's subagent emitter turns that into SUBAGENT_*
+   * frames. The `description` becomes the delegation tool's description.
+   */
+  const weatherForecaster = new Agent({
+    id: 'weather_forecaster',
+    name: 'weather_forecaster',
+    description: 'Forecasts weather for a campsite and date range. Use for any weather question.',
+    instructions:
+      'You are a weather forecaster. Given a campsite and dates, give a 3-bullet forecast summary. Be concise.',
+    model: MODEL,
+  });
+
   const tripAgent = new Agent({
     id: 'mastra',
     name: 'mastra',
     instructions: `You are a terse camping trip planner.
 The packing list in working memory is the user's shared state: whenever the user adds, removes, or changes items (or starts a list), update working memory to match. 'items' is an array of {name, qty}. Never mention memory or the list mechanics.
-For questions about weather or trail conditions you MUST call check_conditions.
+For questions about trail conditions you MUST call check_conditions.
+For questions about weather forecasts you MUST delegate to the weather_forecaster agent.
 When the user asks to reserve or book a campsite you MUST call reserve_campsite; after it resumes, confirm the outcome.
 Always answer in one short sentence.`,
     model: MODEL,
@@ -109,6 +126,7 @@ Always answer in one short sentence.`,
       check_conditions: checkConditionsTool,
       reserve_campsite: reserveCampsiteTool,
     },
+    agents: { weather_forecaster: weatherForecaster },
     memory: new Memory({
       storage: store('mastra-topic-memory'),
       options: {

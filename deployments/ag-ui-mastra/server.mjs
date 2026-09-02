@@ -22,6 +22,7 @@ import { pathToFileURL } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { MastraAgent } from '@ag-ui/mastra';
 import { createMastra } from './agents.mjs';
+import { createSubagentInjector } from './subagent-emitter.mjs';
 
 const AG_UI_INTERNAL_TOKEN = process.env.AG_UI_INTERNAL_TOKEN;
 if (!AG_UI_INTERNAL_TOKEN) {
@@ -108,16 +109,18 @@ export function createAgUiServer() {
       resourceId: input.threadId,
     });
 
+    // One injector per run: turns delegation tool calls (`agent-<childKey>`)
+    // into SUBAGENT_* frames around the events the bridge already emits.
+    const injector = createSubagentInjector();
     const sub = bridge.run(input).subscribe({
       next: (event) => {
-        res.write(sseFrame(event));
+        for (const e of injector.eventsFor(event)) res.write(sseFrame(e));
       },
       error: (err) => {
         // Map failures into the protocol instead of killing the socket:
         // the client finalizes the run as an error rather than hanging.
-        res.write(
-          sseFrame({ type: 'RUN_ERROR', message: String(err?.message ?? err) }),
-        );
+        const runError = { type: 'RUN_ERROR', message: String(err?.message ?? err) };
+        for (const e of injector.eventsFor(runError)) res.write(sseFrame(e));
         res.end();
       },
       complete: () => {
