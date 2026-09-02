@@ -9,13 +9,15 @@ import { Pre } from './mdx/CodeBlock';
 import { FeatureChips } from './mdx/FeatureChips';
 import { mdxHeadingComponents } from './mdx/headings';
 import { ArchFlowDiagram } from './ArchFlowDiagram';
-import { StackDiagram } from './diagrams/StackDiagram';
-import { AgUiArchitecturePipeline } from './diagrams/AgUiArchitecturePipeline';
-import { A2uiMessageFlow } from './diagrams/A2uiMessageFlow';
-import { RenderHowItFits } from './diagrams/RenderHowItFits';
-import { RenderVsA2ui } from './diagrams/RenderVsA2ui';
-import { MiddlewareHowItFits } from './diagrams/MiddlewareHowItFits';
-import { TelemetryHowItFits } from './diagrams/TelemetryHowItFits';
+import {
+  StackDiagram,
+  AgUiArchitecturePipeline,
+  A2uiMessageFlow,
+  RenderHowItFits,
+  RenderVsA2ui,
+  MiddlewareHowItFits,
+  TelemetryHowItFits,
+} from './diagrams';
 import rehypePrettyCode from 'rehype-pretty-code';
 import rehypeSlug from 'rehype-slug';
 import remarkGfm from 'remark-gfm';

@@ -49,7 +49,7 @@ Compositions are opinionated, styled components that combine primitives into rea
 
 ## How the Stack Fits Together
 
-`@threadplane/chat` sits between your application and two other Threadplane libraries, on either side of the seam shown in the diagram above.
+`@threadplane/chat` sits between your application and the adapters below the Agent-contract seam shown above; alongside it, `@threadplane/render` turns specs in assistant messages into your components.
 
 - **`@threadplane/langgraph`** provides `provideAgent()` and `injectAgent()` returning a `LangGraphAgent`, which satisfies the `Agent` contract consumed by `@threadplane/chat`. The base `Agent` contract exposes reactive Signals for `messages()`, `status()`, `isLoading()`, `error()`, `toolCalls()`, and `state()`, plus optional `interrupt()` and `subagents()`. Adapters can layer on more: LangGraph implements `AgentWithHistory`, adding `history()` for checkpoint time-travel.
 

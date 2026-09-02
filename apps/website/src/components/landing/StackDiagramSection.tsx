@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { Section } from '../ui/Section';
 import { Container } from '../ui/Container';
 import { SectionHeader } from '../ui/SectionHeader';
-import { StackDiagram, type StackHighlight } from '../docs/diagrams/StackDiagram';
+import { StackDiagram, type StackHighlight } from '../docs/diagrams';
 
 interface StackDiagramSectionProps {
   id: string;

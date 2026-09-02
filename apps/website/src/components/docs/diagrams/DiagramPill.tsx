@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 interface DiagramPillProps {
   /** Center of the pill. */
   cx: number;

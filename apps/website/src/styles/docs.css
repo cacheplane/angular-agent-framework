@@ -366,7 +366,7 @@ body:has([data-website-workspace-host]) {
   flex-shrink: 0;
 }
 .mdx-callout-title {
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-inter);
   font-size: 13px;
   font-weight: 600;
   color: var(--callout-tone-text);

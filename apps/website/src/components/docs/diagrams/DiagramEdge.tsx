@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 type DiagramEdgeProps = {
   /** SVG path data; orthogonal segments (H/V) preferred. Arrowheads point along path direction — reverse `d` for a reversed arrow. */
   d: string;

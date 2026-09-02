@@ -33,7 +33,7 @@ describe('StackDiagram', () => {
   it('highlight=runtimes accents the backend row', () => {
     const { container } = render(<StackDiagram highlight="runtimes" />);
     expect(toneOf(container, 'LangGraph Platform')).toBe('accent');
-    expect(toneOf(container, 'CrewAI · Mastra · MS Agent Fwk · Strands')).toBe('accent');
+    expect(toneOf(container, 'CrewAI · Mastra · Agent Fwk · Strands · …')).toBe('accent');
   });
 
   it('highlight=contract accents both adapters', () => {

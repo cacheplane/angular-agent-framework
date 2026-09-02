@@ -79,7 +79,7 @@ export function StackDiagram({ highlight = 'none', caption, scale = 'docs' }: St
         y={284}
         w={240}
         h={40}
-        title="CrewAI · Mastra · MS Agent Fwk · Strands"
+        title="CrewAI · Mastra · Agent Fwk · Strands · …"
         align="middle"
         titleStyle="sans"
         tone={backends ? 'accent' : 'dim'}
