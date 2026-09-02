@@ -21,3 +21,13 @@ test('c-messages: chat-message-list renders both turns', async ({ page }) => {
   // list renders one bubble per message. Regression coverage for that fix.
   await expect(page.locator('chat-message-list chat-message')).toHaveCount(2);
 });
+
+test('c-messages: a code fence streamed in 3-char chunks renders as a code block', async ({ page }) => {
+  const bubble = await submitAndWaitForResponse(page, 'Stream a TypeScript code fence');
+
+  // Final-state invariant driven through REAL small-chunk streaming: the
+  // fence opener arrives split mid-token and must still commit as a block.
+  await expect(bubble.locator('pre code')).toHaveCount(1);
+  await expect(bubble.locator('pre code')).toContainText('const answer = 42;');
+  await expect(bubble).not.toContainText('```');
+});
