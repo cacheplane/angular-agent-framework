@@ -148,9 +148,9 @@ describe('PilotJourney', () => {
     const titles = Array.from(container.querySelectorAll('.tp-diagram-title')).map((t) => t.textContent);
     expect(titles).toEqual(['Discover', 'Build', 'Harden']);
     const pills = Array.from(container.querySelectorAll('.tp-diagram-pill text')).map((t) => t.textContent);
-    expect(pills).toEqual(['roadmap', 'working agent']);
+    expect(pills).toEqual(['roadmap', 'working agent', 'handoff']);
     const neutralPills = container.querySelectorAll('.tp-diagram-pill[data-tone="neutral"]');
-    expect(neutralPills).toHaveLength(2);
+    expect(neutralPills).toHaveLength(3);
   });
 
   it('accents only the Harden node — the production-ready system the customer keeps', () => {

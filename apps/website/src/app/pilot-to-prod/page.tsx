@@ -51,7 +51,7 @@ export default function PilotToProdPage() {
         id="pilot-journey"
         eyebrow="The engagement"
         headline="Three phases, each with a gate you can point at"
-        body="No open-ended consulting arc: each phase ends with a concrete deliverable — a roadmap, a working agent, a production-ready system — not a status update."
+        body="No open-ended consulting arc: each phase ends with a concrete deliverable — a roadmap, a working agent, an on-call runbook — not a status update."
       >
         <PilotJourney />
       </DiagramSection>
