@@ -264,12 +264,16 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx nx build cockpit --skip-nx-cache
-      # cockpit-docs and cockpit-registry carry `test` targets that nothing in
-      # CI invoked: `nx test` does not walk `^test`, and the `library` job runs
-      # a hardcoded LIBS list that excludes both. Name them here so their specs
-      # actually execute. All three share the `scope:cockpit` tag, so ci-scope
-      # already gates this job correctly for changes under either library.
-      - run: npx nx run-many -t test --projects=cockpit,cockpit-docs,cockpit-registry --skip-nx-cache
+      # cockpit-docs, cockpit-registry and workspace-react carry `test` targets
+      # that nothing in CI invoked: `nx test` does not walk `^test`, and the
+      # `library` job runs a hardcoded LIBS list that excludes all three. Name
+      # them here so their specs actually execute. They all share the
+      # `scope:cockpit` tag, so ci-scope already gates this job correctly for
+      # changes under any of them. workspace-react's only other scope tag is
+      # `scope:shared`, which is not a SCOPE_KEY — adding it to LIBS would not
+      # have run it, because a workspace-react change never flips `library`.
+      - run: npx nx lint workspace-react
+      - run: npx nx run-many -t test --projects=cockpit,cockpit-docs,cockpit-registry,workspace-react --skip-nx-cache
   cockpit-examples-build:
     name: Cockpit — build all examples
     needs: ci-scope
