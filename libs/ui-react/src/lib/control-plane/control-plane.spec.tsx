@@ -160,6 +160,10 @@ describe('control-plane structure', () => {
     expect(
       trigger.querySelector('svg[data-control-plane-chevron]')
     ).toBeTruthy();
+    const chevron = trigger.querySelector('svg[data-control-plane-chevron]');
+    expect(chevron?.getAttribute('width')).toBe('16');
+    expect(chevron?.getAttribute('height')).toBe('16');
+    expect(chevron?.getAttribute('stroke-width')).toBe('2');
     fireEvent.click(trigger);
     expect(onOpenChange).toHaveBeenCalledWith(false);
     expect(screen.getByText('Angular')).toBeTruthy();

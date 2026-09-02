@@ -3,6 +3,7 @@ import {
   activityReducer,
   countUnseenProblems,
   createSessionActivityEvent,
+  projectRuntimeActivityContext,
   type ActivityKind,
   type ActivitySeverity,
   type RuntimeActivityInput,
@@ -32,6 +33,21 @@ describe('createSessionActivityEvent', () => {
       { ...common, kind: 'runtime_initialization_error' },
       'error',
       'Runtime initialization failed',
+    ],
+    [
+      { ...common, kind: 'runtime_unauthorized' },
+      'error',
+      'Runtime authorization failed',
+    ],
+    [
+      { ...common, kind: 'runtime_network_blocked' },
+      'error',
+      'Runtime network request blocked',
+    ],
+    [
+      { ...common, kind: 'runtime_incompatible_bridge' },
+      'error',
+      'Runtime bridge incompatible',
     ],
     [
       { ...common, kind: 'runtime_reload_requested' },
@@ -79,9 +95,7 @@ describe('createSessionActivityEvent', () => {
       'error',
       'Runtime configuration invalid',
     ],
-  ] satisfies ReadonlyArray<
-    readonly [RuntimeActivityInput, SessionActivityEvent['severity'], string]
-  >)(
+  ] satisfies ReadonlyArray<readonly [RuntimeActivityInput, SessionActivityEvent['severity'], string]>)(
     'formats $0.kind with fixed severity and summary',
     (input, severity, summary) => {
       expect(createSessionActivityEvent(input)).toEqual({
@@ -92,7 +106,7 @@ describe('createSessionActivityEvent', () => {
         capability: common.capability,
         summary,
       });
-    },
+    }
   );
 
   test('exports only the semantic allowlist as event kinds', () => {
@@ -101,6 +115,9 @@ describe('createSessionActivityEvent', () => {
       | 'runtime_ready'
       | 'runtime_unresponsive'
       | 'runtime_initialization_error'
+      | 'runtime_unauthorized'
+      | 'runtime_network_blocked'
+      | 'runtime_incompatible_bridge'
       | 'runtime_reload_requested'
       | 'runtime_recovered'
       | 'mode_changed'
@@ -109,6 +126,127 @@ describe('createSessionActivityEvent', () => {
       | 'diagnostics_copy_failed'
       | 'configuration_invalid'
     >();
+  });
+
+  test('projects only allowlisted runtime target context into Activity', () => {
+    const event = createSessionActivityEvent({
+      ...common,
+      kind: 'runtime_ready',
+      runtime: {
+        adapter: 'langgraph',
+        targetKind: 'langsmith',
+        protocolVersion: 2,
+        configurationGeneration: 7,
+        phase: 'ready',
+        reasonCode: null,
+        endpoint: 'https://api.example.test/langgraph',
+        apiKey: 'test-key-redact-me',
+      },
+    } as RuntimeActivityInput & {
+      runtime: RuntimeActivityInput['runtime'] & {
+        endpoint: string;
+        apiKey: string;
+      };
+    });
+
+    expect(event.runtime).toEqual({
+      adapter: 'langgraph',
+      targetKind: 'langsmith',
+      protocolVersion: 2,
+      configurationGeneration: 7,
+      phase: 'ready',
+      reasonCode: null,
+    });
+    expect(JSON.stringify(event)).not.toMatch(
+      /api\.example\.test|test-key-redact-me|endpoint|apiKey/i
+    );
+  });
+
+  test('defaults hostile runtime context values without echoing them', () => {
+    const hostileMarker = 'test-key-redact-me';
+    const event = createSessionActivityEvent({
+      ...common,
+      kind: 'runtime_ready',
+      runtime: {
+        adapter: `unknown-${hostileMarker}`,
+        targetKind: `unknown-${hostileMarker}`,
+        protocolVersion: Number.POSITIVE_INFINITY,
+        configurationGeneration: -1,
+        phase: `unknown-${hostileMarker}`,
+        reasonCode: `unknown-${hostileMarker}`,
+      },
+    } as unknown as RuntimeActivityInput);
+
+    expect(event.runtime).toEqual({
+      adapter: 'none',
+      targetKind: 'none',
+      protocolVersion: 0,
+      configurationGeneration: 0,
+      phase: 'not_configured',
+      reasonCode: null,
+    });
+    expect(JSON.stringify(event)).not.toContain(hostileMarker);
+
+    for (const invalidNumber of [
+      Number.NaN,
+      -1,
+      1.5,
+      Number.MAX_SAFE_INTEGER + 1,
+    ]) {
+      const invalidNumbers = createSessionActivityEvent({
+        ...common,
+        kind: 'runtime_ready',
+        runtime: {
+          adapter: 'ag-ui',
+          targetKind: 'ag-ui',
+          protocolVersion: invalidNumber,
+          configurationGeneration: invalidNumber,
+          phase: 'ready',
+          reasonCode: null,
+        },
+      });
+      expect(invalidNumbers.runtime?.protocolVersion).toBe(0);
+      expect(invalidNumbers.runtime?.configurationGeneration).toBe(0);
+    }
+  });
+
+  test('defaults throwing and revoked runtime contexts without throwing or echoing markers', () => {
+    const hostileMarker = 'throwing-runtime-marker';
+    const throwingContext = Object.defineProperty({}, 'adapter', {
+      enumerable: true,
+      get() {
+        throw new Error(hostileMarker);
+      },
+    });
+    const revocable = Proxy.revocable(
+      {
+        adapter: 'langgraph',
+        targetKind: 'langsmith',
+        protocolVersion: 2,
+        configurationGeneration: 7,
+        phase: 'ready',
+        reasonCode: null,
+      },
+      {}
+    );
+    revocable.revoke();
+
+    for (const hostileContext of [throwingContext, revocable.proxy]) {
+      let projected: ReturnType<typeof projectRuntimeActivityContext> | null =
+        null;
+      expect(() => {
+        projected = projectRuntimeActivityContext(hostileContext);
+      }).not.toThrow();
+      expect(projected).toEqual({
+        adapter: 'none',
+        targetKind: 'none',
+        protocolVersion: 0,
+        configurationGeneration: 0,
+        phase: 'not_configured',
+        reasonCode: null,
+      });
+      expect(JSON.stringify(projected)).not.toContain(hostileMarker);
+    }
   });
 });
 
@@ -129,7 +267,7 @@ describe('activityReducer', () => {
       activityReducer(activityReducer([], { type: 'add', event: first }), {
         type: 'add',
         event: second,
-      }),
+      })
     ).toEqual([second, first]);
   });
 
@@ -148,9 +286,7 @@ describe('activityReducer', () => {
   });
 
   test('clear returns an empty event list', () => {
-    expect(
-      activityReducer([event('1')], { type: 'clear' }),
-    ).toEqual([]);
+    expect(activityReducer([event('1')], { type: 'clear' })).toEqual([]);
   });
 
   test('retains capability labels on older entries', () => {
@@ -160,7 +296,7 @@ describe('activityReducer', () => {
       activityReducer(activityReducer([], { type: 'add', event: older }), {
         type: 'add',
         event: newer,
-      }).map(({ capability }) => capability),
+      }).map(({ capability }) => capability)
     ).toEqual(['persistence', 'streaming']);
   });
 });
@@ -169,7 +305,7 @@ describe('countUnseenProblems', () => {
   const event = (
     id: string,
     kind: ActivityKind,
-    severity: ActivitySeverity,
+    severity: ActivitySeverity
   ): SessionActivityEvent => ({
     id,
     at: '2026-08-31T17:00:00.000Z',

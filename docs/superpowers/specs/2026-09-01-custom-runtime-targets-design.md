@@ -1,103 +1,122 @@
-# Custom AG-UI and LangSmith runtime targets
+# Memory-only custom AG-UI and LangSmith runtime targets
 
 ## Status
 
-Approved through interactive design review on 2026-09-01. This is release 2 of the unified control-plane program and depends on the unified workspace shell.
+Approved through interactive design review on 2026-09-01 and amended after production validation on the same date. This amendment replaces the earlier endpoint-persistence design: endpoint URLs and API keys are both memory-only.
+
+This is the third implementation PR in the control-plane follow-up. It depends on the unified workspace shell and Cockpit surface retirement, but not on the production-polish implementation details.
 
 ## Summary
 
-Let users connect the unified workspace to either their own AG-UI endpoint or a LangSmith deployment URL and API key. Endpoint metadata may be stored on the current device. API keys are memory-only: they are never persisted, placed in URLs, included in diagnostics, emitted to analytics, or forwarded through a Threadplane server.
+Let users run compatible capabilities against either their own AG-UI endpoint or a LangSmith deployment URL and API key. The shared development deployment remains the default.
 
-The parent workspace remains the sole credential-management authority: it accepts, replaces, and clears credentials. It configures the mounted Angular runtime through a strict-origin, nonce-bound iframe handshake. Angular bootstraps with the selected runtime target in memory, acknowledges the exact configuration generation, and reports actionable health states back to the control plane. The trusted child Agent client may retain the key in volatile memory only for that configured generation so it can authorize requests.
+Every custom value is volatile. Endpoint URLs, API URLs, and keys may survive mode and capability changes inside the current browser document, but they disappear on full refresh, top-level navigation away, tab close, or explicit clearing. They never enter local storage, session storage, IndexedDB, cookies, URLs, analytics, diagnostics, Activity, logs, or a Threadplane server.
+
+The top-level workspace owns target selection and credential lifetime. It configures the mounted Angular runtime through an exact-origin, nonce-bound iframe handshake. The child builds the appropriate Agent client for that configuration generation and retains any key only inside the resulting in-memory client. Replacing or clearing the generation disposes the client reference.
 
 ## Goals
 
 1. Support Shared development, Custom AG-UI, and Custom LangSmith targets.
-2. Keep API keys memory-only across the entire browser flow.
-3. Configure compatible Angular runtime examples without query parameters or browser storage.
-4. Make authorization, CORS, network, configuration, and bridge failures distinguishable.
-5. Preserve the existing shared-development default and standalone examples.
-6. Apply one generated, drift-tested configuration contract across compatible Cockpit runtimes.
+2. Keep every user-entered target value in memory only.
+3. Preserve a custom target through Docs, Run, Code, API, and in-shell capability navigation without writing browser storage.
+4. Configure compatible Angular examples without query parameters or credential-bearing globals.
+5. Make validation, authorization, network/CORS, and bridge failures actionable without exposing secrets or remote response bodies.
+6. Preserve existing shared-development and standalone-example behavior.
 
 ## Non-goals
 
-- Remembering API keys after refresh, navigation away, or tab close.
-- Account-synced targets or credential vaulting.
+- Remembering any custom value after refresh, navigation away, or tab close.
+- Saved target lists, target naming, account sync, or credential vaulting.
 - Proxying custom traffic through Threadplane infrastructure.
-- Deployment management, server restart, or mutation commands.
-- Arbitrary request headers, OAuth flows, or custom authentication schemes.
-- Claiming compatibility for static examples with no Agent transport.
+- Deployment management, server mutation, OAuth, arbitrary headers, or custom authentication schemes.
+- AG-UI credentials; this release accepts only an AG-UI endpoint.
+- Changing static examples that have no Agent transport.
+- Proving a remote endpoint healthy before the user performs a protocol operation when that protocol has no safe standard health request.
 
-## Target model
+## Session model and lifetime
 
-```ts
-type SavedRuntimeTarget =
-  | { id: 'shared'; kind: 'shared'; label: 'Shared development' }
-  | { id: string; kind: 'ag-ui'; label: string; endpoint: string }
-  | { id: string; kind: 'langsmith'; label: string; apiUrl: string };
-
-type EphemeralCredentials = {
-  targetId: string;
-  kind: 'langsmith';
-  apiKey: string;
-} | null;
-```
-
-Only `SavedRuntimeTarget` enters device-local preferences. The `EphemeralCredentials` record exists only in React state owned by the mounted workspace provider. After configuration, the child Agent client's separately scoped volatile key copy is permitted only under the generation-lifetime rules below; it is never an `EphemeralCredentials` store or credential-management surface.
-
-Release 2 stores target metadata in a dedicated `threadplane:runtime-targets:v1` record:
+Target state is keyed by runtime adapter so a LangSmith choice cannot block AG-UI capabilities and an AG-UI choice cannot leak into LangGraph capabilities.
 
 ```ts
-interface RuntimeTargetPreferencesV1 {
-  version: 1;
-  selectedTargetId: string;
-  savedTargets: SavedRuntimeTarget[];
+type SharedTarget = { kind: 'shared' };
+
+type AgUiTarget =
+  | SharedTarget
+  | { kind: 'ag-ui'; endpoint: string };
+
+type LangGraphTarget =
+  | SharedTarget
+  | { kind: 'langsmith'; apiUrl: string; apiKey: string };
+
+interface RuntimeTargetSession {
+  agUi: AgUiTarget;
+  langgraph: LangGraphTarget;
 }
 ```
 
-The record contains no credential field or extension bag. Invalid selected IDs fall back to `shared`; malformed custom targets are dropped individually. Release 3 may migrate this record into the unified workspace preference schema, but release 2 keeps this narrow store independently deployable.
+Both adapter slots default to `{ kind: 'shared' }`. A dedicated `RuntimeTargetProvider` owns the session above route content in the Website application root and mounts once per browser document. `WorkspaceProvider` consumes the provider and resolves the current capability's `runtimeAdapter` to the matching slot. The redirect-only Cockpit domain never mounts this provider.
 
-After refresh, a saved LangSmith target is selected but enters `credentials_required` until the key is entered again. Removing or changing a target clears any matching ephemeral credentials immediately.
+The provider has no serializer, hydration path, storage key, URL reader, or module-global fallback. Tests fail if target fields are added to the existing control-plane preference schema. A full document reload constructs the default session again.
+
+Settings maintains a local draft separate from the effective session. Typing never reconfigures the runtime. `Use custom target` validates and atomically replaces the matching effective slot. `Use shared development` immediately replaces that slot with `{ kind: 'shared' }` and clears its draft, including the key.
+
+Closing Settings does not clear an applied custom target. Navigating to another capability with the same adapter reuses it. Navigating to the other adapter uses that adapter's independent slot. `runtimeAdapter: 'none'` always uses the existing static behavior and exposes no custom-target form.
 
 ## Endpoint validation
 
 - Require an absolute HTTP or HTTPS URL.
 - Allow HTTP only for `localhost`, `127.0.0.1`, and `[::1]` development targets.
-- Reject URL user information, fragments, and query strings.
-- Normalize trailing slashes without changing the path.
-- Reject values containing control characters.
-- Never echo a rejected raw value into Activity or diagnostics.
-- Display the normalized origin and path only after successful validation.
+- Reject URL user information, fragments, query strings, control characters, and empty values.
+- Use URL parsing to normalize scheme, host casing, and default ports. Preserve the pathname exactly, including whether a non-root path ends in a slash; `/agent` and `/agent/` may be different endpoints.
+- Require a non-empty key for Custom LangSmith, but never render the key outside its password input.
+- Validate the draft before committing it. Invalid drafts do not replace a working target or remount the iframe.
+- Never echo rejected raw values into errors, Activity, diagnostics, or analytics.
+- Display the normalized origin and path only after validation succeeds.
 
-The UI derives and displays the exact Angular runtime origin from the selected capability's iframe URL. It explains that the custom server must allow that runtime origin—not the top-level workspace origin—in `Access-Control-Allow-Origin`. Local fake servers assert the received browser `Origin`, and production smoke asserts that the displayed required origin exactly matches the mounted runtime iframe origin. The application does not attempt to bypass CORS.
+The UI derives and displays the exact Angular runtime origin that the custom server must allow through CORS. It explains that this is the iframe origin, not necessarily the top-level workspace origin. The application does not attempt to bypass CORS.
 
-Compatible runtime deployments must permit validated targets in `connect-src`. Supporting arbitrary validated HTTPS endpoints inherently requires HTTPS network egress from the child runtime; local development additionally requires the allowlisted loopback HTTP origins. Deployment tests inspect the effective policy and prove a validated fake target is reachable. This allowance never changes the exact destination chosen by the Agent client, relaxes parent-message authorization, or permits Threadplane to proxy the request.
+Compatible runtime deployments must permit validated HTTPS destinations in `connect-src` and the allowlisted loopback HTTP destinations in local development. Deployment tests inspect the effective policy. This network allowance does not relax parent-message authorization or permit Threadplane to proxy a request.
 
 ## Runtime compatibility
 
-The workspace registry adds `runtimeAdapter: 'langgraph' | 'ag-ui' | 'none'`.
+The existing registry field remains authoritative:
 
-- LangSmith targets are available to `langgraph` entries.
-- AG-UI targets are available to `ag-ui` entries. Runtime-portability entries that consume the AG-UI Agent contract are classified as `ag-ui`; there is no unnamed compatibility exception.
-- `none` entries show the target selector as unavailable with a truthful explanation.
-- Switching to an incompatible target is prevented before iframe configuration.
+```ts
+type RuntimeAdapter = 'langgraph' | 'ag-ui' | 'none';
+```
+
+- `langgraph` entries use the LangGraph session slot and expose Custom LangSmith.
+- `ag-ui` entries use the AG-UI session slot and expose Custom AG-UI.
+- `none` entries show a concise explanation that runtime configuration is unavailable.
+- The current manifest classification and its drift tests determine compatibility; there is no product-name heuristic or unnamed exception.
+- A LangSmith target retains each capability's existing assistant or graph identifier. The user supplies only the API URL and key.
+
+## Settings experience
+
+The shared Settings utility adds a `Runtime target` section below Language and before Theme.
+
+For a compatible capability it contains:
+
+1. A two-option selector: Shared development or the adapter-compatible custom target.
+2. An Endpoint field for AG-UI, or API URL and API key fields for LangSmith.
+3. `Use custom target` as the explicit apply action.
+4. `Use shared development` when custom configuration exists; this is the explicit clear action.
+5. Inline validation and the exact runtime origin required for CORS.
+6. A persistent-in-session note: `Kept in this tab until refresh. Nothing is saved.`
+
+The API key uses a password input with browser autofill disabled as far as the platform permits. The UI does not offer reveal, copy, save, rename, or target-history actions. The active Runtime section shows only target kind plus sanitized origin and path. It never shows the key.
+
+Mobile uses the existing control-plane utility panel. Fields and actions meet the 44px target baseline, the panel owns its scroll, and closing it restores focus to Settings.
 
 ## Secure configuration protocol
 
-Version 2 extends the existing private runtime bridge with child-ready, host-intent, configure, and acknowledge messages. Exact message names are centralized in `@threadplane/cockpit-runtime-bridge`.
+Version 2 extends the existing private runtime bridge with child-ready, configure, configured, configuration-failure, and operation-failure messages. Exact message names and parsers live in `@threadplane/cockpit-runtime-bridge`.
 
 ```ts
 interface RuntimeChildReadyMessage {
   type: 'tplane:runtime-child-ready';
   version: 2;
   nonce: string;
-}
-
-interface RuntimeHostMessage {
-  type: 'tplane:runtime-host';
-  version: 2;
-  nonce: string;
-  generation: number;
 }
 
 interface RuntimeConfigureMessage {
@@ -117,111 +136,136 @@ interface RuntimeConfiguredMessage {
   nonce: string;
   generation: number;
 }
+
+type RuntimeFailureMessage =
+  | {
+      type: 'tplane:runtime-configuration-failed';
+      version: 2;
+      nonce: string;
+      generation: number;
+      code: 'incompatible_bridge';
+    }
+  | {
+      type: 'tplane:runtime-operation-failed';
+      version: 2;
+      nonce: string;
+      generation: number;
+      code: 'unauthorized' | 'network_blocked';
+    };
 ```
 
-Security rules:
+The full protocol follows these rules:
 
-- The parent sends only to the exact iframe origin; never `*`.
-- Compatible child builds receive an exact `allowedParentOrigins` list generated from the repository deployment configuration for production, named previews, and local development. Tests may inject explicit origins. Wildcards, suffix matching, and arbitrary referrer-derived authority are forbidden.
-- The child accepts configuration only when `window.parent` is the message source, the referrer origin exactly matches one `allowedParentOrigins` entry, and the message origin equals that referrer origin.
-- The unified host sets `referrerPolicy="origin"` on runtime iframes, and runtime deployment headers must not suppress that referrer. Deployment smoke verifies that the child receives the exact parent origin required for authorization.
-- Both sides validate protocol version, message shape, nonce, generation, source window, and origin.
-- Before Angular bootstrap, an allowed-parent child installs its listener, creates a fresh nonce, and sends `runtime-child-ready` to its exact referrer origin. The parent listener is installed before assigning the iframe source.
-- The parent validates the ready message and responds to that exact source with `runtime-host` followed by `runtime-configure`, echoing the nonce and current generation. The child repeats ready and the parent repeats host/configure on bounded timers until the matching `runtime-configured` acknowledgement ends the handshake.
-- The first valid configure payload accepted for a nonce and generation is authoritative. An identical duplicate re-sends `runtime-configured` without reconstructing the Agent client or repeating bootstrap. A conflicting payload for an accepted nonce and generation is rejected and reported with an allowlisted protocol error code.
-- An embed whose referrer origin is allowlisted is recognized immediately and fails closed with `incompatible_bridge` if the handshake does not complete before the bounded deadline. It never bootstraps the Shared development default, even if every parent message is lost.
-- A standalone window uses its registry default immediately. An embed whose referrer origin is not allowlisted is unrecognized, ignores every configuration message, and may use the existing registry default.
-- The child Agent client may retain the key in a private in-memory closure or client object only for the acknowledged generation. Disposing or superseding that generation destroys the client reference; the child exposes no credential setter, reader, persistence path, diagnostic field, or serialized copy.
-- Messages are never logged, serialized to diagnostics, or copied into DOM attributes.
-- A newer generation invalidates every older configure or health response.
-- The acknowledgement reveals no credential or endpoint value.
+- The parent sends only to the iframe's exact origin; never `*`.
+- Compatible child builds receive an exact `allowedParentOrigins` array generated from repository deployment configuration for the production Website, supported Website previews, and explicit localhost development origins. The retired production Cockpit origin is not included. Wildcards, suffix matching, and referrer-derived additions are forbidden.
+- A child is a recognized embed only when `window.parent !== window`, `document.referrer` parses to an exact member of `allowedParentOrigins`, and the incoming message source and origin match that parent. The runtime iframe keeps `referrerPolicy="origin"`, and deployment smoke verifies the referrer is not suppressed.
+- The child accepts configuration only from `window.parent`, that exact recognized parent origin, the expected source window, and the current protocol version.
+- A recognized child installs its listener before Angular bootstrap, creates a fresh nonce, and announces ready to its exact parent origin. A standalone window bootstraps its registry default immediately. An embedded window with a missing or unallowlisted referrer ignores configuration messages and uses its existing unrecognized-embed fallback.
+- The parent listener exists before iframe navigation. It echoes the nonce and current generation in the configure message.
+- Both sides validate message shape, nonce, generation, source, and origin.
+- Ready and configure messages retry on bounded timers until the matching acknowledgement arrives.
+- The first valid payload for a nonce and generation is authoritative. An identical duplicate only repeats the acknowledgement; a conflicting duplicate is rejected with an allowlisted failure code.
+- A recognized embed fails closed if configuration does not complete before the bounded deadline. It does not silently bootstrap Shared development.
+- A standalone or unrecognized embed keeps its existing registry default and ignores configuration messages.
+- Messages and payloads are never logged, serialized, placed in DOM attributes, or copied into diagnostics.
+- A newer generation invalidates older configure, acknowledgement, and failure messages.
+- Configuration and operation failure messages contain allowlisted status codes only, never endpoint values, keys, authorization headers, error messages, or remote response text.
 
-The protocol does not make an untrusted custom endpoint safe. It only protects configuration transport between the unified parent and the known Angular iframe.
+The protocol protects configuration transport between the known workspace and known Angular iframe. It does not make an untrusted custom endpoint safe.
 
-## Angular bootstrap integration
+## Angular bootstrap and client integration
 
-Add a shared Angular runtime-target provider used by all compatible Cockpit applications.
+A shared pre-bootstrap target resolver is used by every compatible embedded Angular example application.
 
-- The lightweight bridge responder installs before Angular bootstrap.
-- A recognized unified embed waits for valid configuration for a bounded interval and fails closed on timeout.
-- A standalone or unrecognized embed uses its existing registry default as defined by the host-detection rules above.
-- A shared `provideCockpitAgent(...)` integration resolves the selected target before `bootstrapApplication(...)` and delegates to `@threadplane/langgraph` or `@threadplane/ag-ui` as declared by the registry.
-- Component-scoped Agent providers are migrated explicitly; a registry-derived drift test rejects compatible applications that bypass the target provider.
-- Static render-only examples remain unchanged and declare `runtimeAdapter: 'none'`.
+- A recognized embed waits for the valid configuration message before constructing Angular providers.
+- The resolver maps Shared development to the current environment configuration.
+- It maps Custom AG-UI to `provideAgent({ url: endpoint })`.
+- It maps Custom LangSmith to the existing capability assistant ID plus `apiUrl` and an explicit SDK `apiKey` client option.
+- `@threadplane/langgraph` adds a narrowly typed `apiKey?: string | null` client option and passes it directly to the installed LangGraph SDK `Client`.
+- The runtime resolver creates a generation-bound `reportOperationFailure` callback and supplies it through private adapter integration hooks. Existing AG-UI and LangGraph error catch points call the hook only when a classifier can prove HTTP 401/403 or a fetch/network failure. The callback sends `runtime-operation-failed` through the installed bridge. Unknown application errors remain in the Angular UI and are not reported to the parent.
+- The Agent client exists only for the accepted generation. Superseding or clearing the generation destroys the Angular application/client reference before mounting the replacement.
+- Component-scoped Agent providers are migrated explicitly. Registry-derived drift coverage rejects compatible applications that bypass the resolver.
+- Static render-only applications remain unchanged and declare `runtimeAdapter: 'none'`.
 
-The migration must cover production and Cockpit entry points. No application may read a key from `window`, URL parameters, local storage, or session storage.
+The key may exist only in the explicitly generation-bound volatile references needed to use it: the root session state, the transient configure message, the child resolver/provider configuration, and the SDK client. JavaScript strings cannot be zeroed in place, so disposal means cancelling work and dropping every reachable reference owned by the application. No additional credential cache or reader is introduced.
 
-## Runtime state
+Standalone examples still bootstrap immediately from their existing environment. No application reads target data from `window`, URL parameters, local storage, session storage, IndexedDB, or cookies.
 
-Extend the control-plane state with:
+## Runtime state and data flow
+
+Add the following runtime phases to the current controller:
 
 ```ts
-type RuntimePhase =
-  | ExistingRuntimePhase
-  | 'credentials_required'
+type CustomRuntimePhase =
   | 'configuring'
   | 'unauthorized'
   | 'network_blocked'
   | 'incompatible_bridge';
 ```
 
-Required behavior:
+Data flows as follows:
 
-- `credentials_required` blocks mounting or configuring a LangSmith target until a key is entered.
-- Clearing credentials increments generation, cancels checks, disposes the configured child client, unmounts the runtime iframe, and remains unmounted in `credentials_required` until a replacement key exists.
-- `configuring` covers the nonce-bound target handshake.
-- An explicit 401 or 403 response becomes `unauthorized` without exposing response bodies.
-- Fetch rejection or an opaque browser failure becomes `network_blocked` and explains CORS or network causes without pretending to distinguish them.
-- A configuration timeout or wrong protocol version becomes `incompatible_bridge`.
-- Existing Ready, Recheck, Reload, and recovery behavior remains available after successful configuration.
-- Any effective runtime configuration change—target kind, selected target ID, normalized endpoint, or LangSmith key—increments generation, cancels checks, disposes the old child client, and remounts the runtime iframe for a fresh pre-bootstrap handshake.
-- Effective-configuration equality includes the selected target ID, kind, normalized endpoint, and the current in-memory key value. Selecting a different saved target therefore remounts even when two targets point to the same endpoint.
-- Renaming a target, editing an unselected target, or re-selecting the already active unchanged configuration does not remount. Recheck and Reload retain their existing semantics.
+1. Settings validates a draft and commits an adapter slot.
+2. The provider derives an effective target for the current manifest entry.
+3. Any effective change increments the configuration generation, cancels active checks, disposes the old iframe/client, and mounts a new iframe.
+4. The parent and child complete the configuration handshake before Angular bootstrap.
+5. The existing runtime-ready handshake continues after bootstrap.
+6. The generation-bound adapter failure reporter may update the parent only with `unauthorized` or `network_blocked`; all other Agent errors remain inside the runtime.
 
-## Settings experience
+Effective equality includes adapter, target kind, normalized endpoint, and—for LangSmith—the current in-memory key. Reapplying an identical configuration does not remount. Editing a draft does not remount. Recheck and Reload retain their existing semantics after configuration.
 
-Settings contains a Runtime target section:
+`Ready` continues to mean that the embedded runtime booted and accepted its configuration. It does not claim that an arbitrary remote server passed a universal health check. A 401 or 403 observed during an Agent operation becomes `unauthorized`. Fetch rejection or an opaque browser failure becomes `network_blocked` and explains that CORS or network policy may be responsible. A configuration timeout or protocol mismatch becomes `incompatible_bridge`.
 
-- Target type selector.
-- Saved target selector.
-- Add, rename, and remove custom endpoint metadata.
-- Endpoint or API URL field.
-- Password input for the current LangSmith key.
-- Clear credentials action.
-- Connection requirements and inline validation.
-- The exact runtime origin the custom server must allow for CORS.
+Using Shared development or replacing a LangSmith configuration increments generation, cancels checks, disposes the client, and unmounts the configured runtime before mounting the replacement. No stale key-bearing client may remain reachable.
 
-Saving a LangSmith URL does not imply that credentials were saved. The UI labels the key `For this tab only` and shows `Credentials required after refresh`.
+## Diagnostics, Activity, and analytics
 
-## Diagnostics and privacy
-
-Diagnostics may include:
+Diagnostics and Activity may include:
 
 - Target kind.
-- Sanitized origin and path.
 - Adapter kind.
 - Runtime phase and allowlisted reason code.
 - Protocol version and configuration generation.
 
-Diagnostics must not include keys, authorization headers, raw postMessage payloads, prompts, response bodies, or rejected raw URLs. Existing analytics may record target kind and allowlisted outcome only; this release does not add endpoint values or expand behavioral tracking.
+They must not include endpoint origins or paths, keys, authorization headers, raw messages, raw drafts, rejected values, prompts, response bodies, or remote error text. The sanitized endpoint is visible only in the active Settings and Runtime UI for the current tab. Existing analytics may record target kind and allowlisted outcome only. This release does not add endpoint values or expand behavioral tracking.
+
+## Document lifecycle and browser restoration
+
+In-shell routing retains the root provider and therefore retains both adapter slots. A top-level navigation or reload fires `pagehide`; the provider synchronously resets both slots and clears mounted draft inputs before the document can enter the back-forward cache. A `pageshow` event with `persisted === true` defensively resets the provider again, so browser Back cannot revive a custom target from a cached document.
+
+The form uses non-identifying field names. Endpoint fields use `autocomplete="off"`; the password input uses `autocomplete="new-password"` to avoid treating the value as a reusable login. The application never requests browser credential storage. Browser or password-manager behavior outside the application's control is not treated as an application persistence path, but E2E verifies that the DOM and provider state are empty after reload and a back-forward-cache restoration.
+
+## Error handling
+
+- Invalid input leaves the current effective target untouched and focuses the first invalid field.
+- A failed handshake keeps Settings and non-Run modes usable and offers Reload or Shared development.
+- Unauthorized and network failures do not clear the user's in-memory configuration automatically; using Shared development or refreshing does.
+- Navigating to `runtimeAdapter: 'none'` leaves both adapter slots untouched but never sends either to the static iframe.
+- If the browser blocks required storage APIs, custom targets are unaffected because they do not use storage.
 
 ## Testing
 
-- Pure validation tests for URL rules and credential separation.
-- Preference serialization tests proving keys cannot be represented or persisted.
-- Redaction tests across diagnostics, Activity, errors, and analytics property bags.
-- Runtime bridge contract tests for exact parent allowlists, ready/host/configure retries, idempotent duplicates, conflicting duplicates, origin, source, nonce, generation, stale replies, lost messages, timeouts, and unknown messages.
-- Angular bootstrap tests for custom configuration, standalone fallback, and component-scoped providers.
+- Pure URL validation and normalization tests.
+- Provider lifetime tests proving values survive in-shell mode/capability navigation and reset after provider remount.
+- Lifecycle tests for `pagehide`, persisted `pageshow`, reload, and back-forward-cache restoration.
+- Structural tests proving runtime-target fields cannot enter control-plane preferences or any storage serializer.
+- Redaction tests across diagnostics, Activity, error objects, DOM attributes, and analytics property bags; sanitized endpoint text is permitted only in the active Settings and Runtime UI.
+- Runtime bridge contract tests for exact allowlists, retries, idempotent duplicates, conflicting duplicates, origin, source, nonce, generation, stale replies, lost messages, timeouts, and unknown messages.
+- `@threadplane/langgraph` tests proving the explicit key reaches the SDK `Client` and never appears in public diagnostics.
+- Angular bootstrap tests for custom configuration, generation replacement, disposal, standalone fallback, and component-scoped providers.
 - Registry-derived coverage for every compatible Angular application.
-- Browser E2E with local fake AG-UI and LangSmith servers, including exact request-origin assertions, CSP reachability, Ready, acknowledgement loss, unauthorized, CORS/network failure, refresh, live credential clearing, and target switching.
-- Production smoke continues to use Shared development, asserts the displayed CORS origin equals the mounted iframe origin, and verifies the deployed child referrer and connection policies. No real user key is required in CI.
+- Browser E2E with local fake AG-UI and LangSmith servers, including CORS origin assertions, CSP reachability, successful streaming, 401/403, network failure, reload clearing, live clearing, same-adapter navigation, and cross-adapter navigation.
+- Production smoke continues to use Shared development and verifies that custom controls exist without entering a real endpoint or key.
+- Repository scans reject runtime target storage keys and credential-bearing URL/message/log patterns.
+- Because `@threadplane/langgraph` gains a public client option, run the smallest relevant API-doc and public agent-context generators and review their diffs.
 
 ## Acceptance criteria
 
-1. A user can run a compatible workspace against a custom AG-UI endpoint.
-2. A user can run a compatible workspace against a LangSmith URL and tab-memory API key.
-3. Refresh retains endpoint metadata and forgets the key.
-4. Repository search and automated tests prove no key persistence or URL transport path exists.
-5. Every compatible Angular runtime uses the shared target integration.
-6. Failure states are actionable and contain no secret or arbitrary remote response text.
-7. Shared development and standalone example behavior remain unchanged.
+1. A user can run an AG-UI-compatible capability against a custom AG-UI endpoint.
+2. A user can run a LangGraph-compatible capability against a LangSmith URL and API key.
+3. Both configurations survive in-shell navigation within the current document and disappear after full refresh, top-level navigation away, back-forward-cache restoration, or tab close.
+4. Automated tests and repository scans prove that endpoint URLs and keys have no persistence, URL, analytics, diagnostics, Activity, or logging path.
+5. Every compatible Angular runtime uses the shared pre-bootstrap resolver.
+6. Replacing or clearing a target disposes the prior key-bearing client and rejects stale bridge messages.
+7. Failure states are actionable and contain no secret or arbitrary remote response text.
+8. Shared development and standalone example behavior remain unchanged.

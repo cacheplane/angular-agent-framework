@@ -57,12 +57,16 @@ function snapshot(phase: RuntimePhase): RuntimeSnapshot {
 const statusCases = [
   ['not_configured', 'Not configured', 'circle-slash'],
   ['invalid_configuration', 'Invalid runtime URL', 'triangle-alert'],
+  ['configuring', 'Configuring', 'loader-circle'],
   ['connecting', 'Connecting', 'loader-circle'],
   ['checking', 'Checking', 'loader-circle'],
   ['ready', 'Ready', 'circle-check'],
   ['unresponsive', 'Unresponsive', 'triangle-alert'],
   ['reloading', 'Reloading', 'loader-circle'],
   ['error', 'Error', 'triangle-alert'],
+  ['unauthorized', 'Unauthorized', 'triangle-alert'],
+  ['network_blocked', 'Network blocked', 'triangle-alert'],
+  ['incompatible_bridge', 'Incompatible runtime', 'triangle-alert'],
 ] as const satisfies ReadonlyArray<readonly [RuntimePhase, string, string]>;
 
 function renderSection(
@@ -130,10 +134,8 @@ describe('RuntimeSection', () => {
     ).toBe('unresponsive');
     const target = document.querySelector('[data-runtime-target]');
     expect(target?.textContent).toBe('https://runtime.test/path');
-    expect(target?.getAttribute('title')).toBe('https://runtime.test/path');
-    expect(target?.getAttribute('aria-label')).toBe(
-      'Runtime target https://runtime.test/path'
-    );
+    expect(target?.getAttribute('title')).toBeNull();
+    expect(target?.getAttribute('aria-label')).toBeNull();
     expect(document.querySelector('[data-runtime-announcement]')).toBe(
       screen.getByRole('status')
     );
@@ -147,12 +149,16 @@ describe('RuntimeSection', () => {
 
   it.each([
     ['invalid_configuration', 'start'],
+    ['configuring', 'center'],
     ['connecting', 'center'],
     ['checking', 'center'],
     ['ready', 'center'],
     ['unresponsive', 'center'],
     ['reloading', 'center'],
     ['error', 'center'],
+    ['unauthorized', 'center'],
+    ['network_blocked', 'center'],
+    ['incompatible_bridge', 'center'],
   ] as const)(
     'places the %s layout at its explicit %s anchor',
     (phase, placement) => {
@@ -167,13 +173,13 @@ describe('RuntimeSection', () => {
 
   it('binds configured Runtime menu centering to the placement hook', () => {
     expect(cockpitCss).toMatch(
-      /\[data-control-plane-overflow-menu-root\]\[data-overflow-placement="center"\]\s*>\s*\[data-control-plane-overflow-menu\]\s*\{[\s\S]*?left:\s*50%;[\s\S]*?right:\s*auto;[\s\S]*?transform:\s*translateX\(-50%\);/
+      /\[data-control-plane-overflow-menu-root\]\[data-overflow-placement=["']center["']\]\s*>\s*\[data-control-plane-overflow-menu\]\s*\{[\s\S]*?left:\s*50%;[\s\S]*?right:\s*auto;[\s\S]*?transform:\s*translateX\(-50%\);/
     );
   });
 
   it('right-aligns the configured Runtime menu for coarse pointers', () => {
     expect(cockpitCss).toMatch(
-      /@media \(pointer:\s*coarse\)\s*\{[\s\S]*?\[data-control-plane-overflow-menu-root\]\[data-overflow-placement="center"\]\s*>\s*\[data-control-plane-overflow-menu\]\s*\{[\s\S]*?left:\s*auto;[\s\S]*?right:\s*0;[\s\S]*?transform:\s*none;/
+      /@media \(pointer:\s*coarse\)\s*\{[\s\S]*?\[data-control-plane-overflow-menu-root\]\[data-overflow-placement=["']center["']\]\s*>\s*\[data-control-plane-overflow-menu\]\s*\{[\s\S]*?left:\s*auto;[\s\S]*?right:\s*0;[\s\S]*?transform:\s*none;/
     );
   });
 
@@ -185,6 +191,45 @@ describe('RuntimeSection', () => {
     expect(document.body.textContent).not.toContain('password');
     expect(document.body.textContent).not.toContain('token=secret');
     expect(screen.getByText('Checked Aug 31, 2026, 10:00 AM')).toBeTruthy();
+  });
+
+  it('shows the active custom target kind and sanitized location without credentials', () => {
+    const customLocation = 'https://api.example.test/langgraph';
+    renderSection('ready', {
+      runtimeTargetView: {
+        kind: 'langsmith',
+        label: 'Custom LangSmith',
+        origin: 'https://api.example.test',
+        pathname: '/langgraph',
+        location: customLocation,
+      },
+    });
+
+    expect(screen.getByText('Custom LangSmith')).toBeTruthy();
+    expect(screen.getByText(customLocation)).toBeTruthy();
+    for (const element of document.querySelectorAll(
+      '[data-runtime-section], [data-runtime-section] *'
+    )) {
+      for (const attribute of element.attributes) {
+        expect(attribute.value).not.toContain(customLocation);
+      }
+    }
+    expect(document.body.textContent).not.toContain('test-key-redact-me');
+  });
+
+  it('shows unavailable target metadata for static adapters', () => {
+    renderSection('ready', {
+      runtimeTargetView: {
+        kind: 'none',
+        label: 'Runtime target unavailable',
+        origin: null,
+        pathname: null,
+        location: null,
+      },
+    });
+
+    expect(screen.getByText('Runtime target unavailable')).toBeTruthy();
+    expect(screen.queryByText('Shared development')).toBeNull();
   });
 
   it('shows Not checked yet until a check completes', () => {
@@ -213,7 +258,7 @@ describe('RuntimeSection', () => {
     expect(screen.queryByRole('button', { name: 'Open runtime' })).toBeNull();
   });
 
-  it.each(['connecting', 'checking', 'reloading'] as const)(
+  it.each(['configuring', 'connecting', 'checking', 'reloading'] as const)(
     'disables Recheck while %s',
     (phase) => {
       renderSection(phase);
@@ -224,16 +269,20 @@ describe('RuntimeSection', () => {
     }
   );
 
-  it.each(['ready', 'unresponsive', 'error'] as const)(
-    'enables Recheck while %s',
-    (phase) => {
-      renderSection(phase);
-      expect(
-        (screen.getByRole('button', { name: 'Recheck' }) as HTMLButtonElement)
-          .disabled
-      ).toBe(false);
-    }
-  );
+  it.each([
+    'ready',
+    'unresponsive',
+    'error',
+    'unauthorized',
+    'network_blocked',
+    'incompatible_bridge',
+  ] as const)('enables Recheck while %s', (phase) => {
+    renderSection(phase);
+    expect(
+      (screen.getByRole('button', { name: 'Recheck' }) as HTMLButtonElement)
+        .disabled
+    ).toBe(false);
+  });
 
   it('disables Reload only while reloading and keeps Open runtime accessible', () => {
     const { rerender } = render(
@@ -424,6 +473,10 @@ describe('RuntimeSection', () => {
     [
       'a fresh route for the same capability',
       { capability: 'streaming', routeGeneration: 1 },
+    ],
+    [
+      'a replacement runtime target',
+      { capability: 'streaming', targetGeneration: 1 },
     ],
   ] as const)(
     'does not announce a stale copy outcome after %s',

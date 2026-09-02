@@ -113,18 +113,16 @@ export function Hero() {
           {/* Right column — generative UI dashboard */}
           <div>
             <a
-              href="https://cockpit.threadplane.ai/langgraph/core-capabilities/streaming/overview/python"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/docs/chat/guides/generative-ui?mode=run"
               onClick={() =>
                 track(analyticsEvents.marketingCtaClick, {
-                  cta_id: 'hero_demo_open_cockpit',
+                  cta_id: 'hero_demo_open_workspace',
                   track: 'developer',
                   surface: 'home',
                 })
               }
               className="hero-demo-link"
-              aria-label="Open the generative UI example running in cockpit"
+              aria-label="Open the generative UI example in the Website workspace"
             >
               <BrowserFrame
                 url="demo.threadplane.ai"
@@ -143,19 +141,17 @@ export function Hero() {
             </a>
             <p className="hero-demo-caption">
               <a
-                href="https://cockpit.threadplane.ai/langgraph/core-capabilities/streaming/overview/python"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/docs/chat/guides/generative-ui?mode=run"
                 onClick={() =>
                   track(analyticsEvents.marketingCtaClick, {
-                    cta_id: 'hero_demo_open_cockpit_caption',
+                    cta_id: 'hero_demo_open_workspace_caption',
                     track: 'developer',
                     surface: 'home',
                   })
                 }
                 className="hero-demo-caption-link"
               >
-                Open in cockpit →
+                Open interactive workspace →
               </a>
             </p>
           </div>

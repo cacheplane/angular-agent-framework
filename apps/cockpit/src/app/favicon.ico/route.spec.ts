@@ -1,23 +1,16 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { describe, expect, it, vi } from 'vitest';
-
-const capabilityResolver = vi.hoisted(() => vi.fn());
-
-vi.mock('../../lib/cockpit-page', () => ({
-  getCockpitPageModel: capabilityResolver,
-}));
+import { describe, expect, it } from 'vitest';
 
 import { GET } from './route';
 
 describe('GET /favicon.ico', () => {
-  it('redirects permanently to the same-origin SVG without resolving a capability', () => {
+  it('redirects permanently to the same-origin SVG', () => {
     const response = GET(new Request('https://cockpit.test/favicon.ico'));
 
     expect(response.status).toBe(308);
     expect(response.headers.get('location')).toBe('/icon.svg');
     expect(response.headers.get('cache-control')).toBe('public, max-age=86400');
-    expect(capabilityResolver).not.toHaveBeenCalled();
   });
 
   it('keeps the redirect relative when the request URL was normalized', () => {

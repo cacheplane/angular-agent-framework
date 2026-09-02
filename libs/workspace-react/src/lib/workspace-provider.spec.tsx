@@ -15,6 +15,11 @@ import {
   useWorkspace,
   type WorkspaceProviderProps,
 } from './workspace-provider';
+import { RuntimeTargetProvider } from './runtime/runtime-target-provider';
+import {
+  useAgUiRuntimeTarget,
+  useLangGraphRuntimeTarget,
+} from './runtime/runtime-target-provider';
 
 const identity: WorkspaceIdentity = {
   id: 'langgraph:core-capabilities:streaming:overview:python',
@@ -87,7 +92,61 @@ function Readout() {
   );
 }
 
+function RuntimeGenerationReadout() {
+  const workspace = useWorkspace();
+  return (
+    <output aria-label="Runtime generations">
+      {JSON.stringify({
+        adapter:
+          workspace.resolution.kind === 'mapped'
+            ? workspace.resolution.identity.runtimeAdapter
+            : 'none',
+        phase: workspace.runtimeController.snapshot.phase,
+        targetGeneration: workspace.runtimeController.snapshot.targetGeneration,
+        frameGeneration: workspace.runtimeController.snapshot.frameGeneration,
+        routeGeneration: workspace.runtimeController.snapshot.routeGeneration,
+      })}
+    </output>
+  );
+}
+
+function RuntimeTargetControls() {
+  const agUi = useAgUiRuntimeTarget();
+  const langgraph = useLangGraphRuntimeTarget();
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() =>
+          langgraph.applyCustomTarget(
+            'https://api.example.test/langgraph',
+            'test-key-redact-me'
+          )
+        }
+      >
+        Apply LangGraph
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          agUi.applyCustomTarget('https://agents.example.test/ag-ui')
+        }
+      >
+        Apply AG-UI
+      </button>
+    </>
+  );
+}
+
 type ProviderHarnessProps = Omit<WorkspaceProviderProps, 'children'>;
+
+function TestedWorkspaceProvider(props: WorkspaceProviderProps) {
+  return (
+    <RuntimeTargetProvider>
+      <WorkspaceProvider {...props} />
+    </RuntimeTargetProvider>
+  );
+}
 
 const providerProps = (
   overrides: Partial<ProviderHarnessProps> = {}
@@ -117,9 +176,9 @@ describe('WorkspaceProvider route mode ownership', () => {
 
   it('initializes a syntactically valid and available query mode', () => {
     render(
-      <WorkspaceProvider {...providerProps()}>
+      <TestedWorkspaceProvider {...providerProps()}>
         <Readout />
-      </WorkspaceProvider>
+      </TestedWorkspaceProvider>
     );
 
     expect(screen.getByLabelText('Active mode').textContent).toBe('Code');
@@ -136,7 +195,7 @@ describe('WorkspaceProvider route mode ownership', () => {
     };
     const replaceMode = vi.fn();
     const rendered = render(
-      <WorkspaceProvider
+      <TestedWorkspaceProvider
         {...providerProps({
           resolution: limitedResolution,
           presentation: { ...presentation, identity: limitedIdentity },
@@ -146,7 +205,7 @@ describe('WorkspaceProvider route mode ownership', () => {
         })}
       >
         <Readout />
-      </WorkspaceProvider>
+      </TestedWorkspaceProvider>
     );
 
     expect(screen.getByLabelText('Active mode').textContent).toBe('Docs');
@@ -154,7 +213,7 @@ describe('WorkspaceProvider route mode ownership', () => {
 
     replaceMode.mockClear();
     rendered.rerender(
-      <WorkspaceProvider
+      <TestedWorkspaceProvider
         {...providerProps({
           resolution: limitedResolution,
           presentation: { ...presentation, identity: limitedIdentity },
@@ -164,23 +223,23 @@ describe('WorkspaceProvider route mode ownership', () => {
         })}
       >
         <Readout />
-      </WorkspaceProvider>
+      </TestedWorkspaceProvider>
     );
     await waitFor(() => expect(replaceMode).toHaveBeenCalledWith('Docs'));
   });
 
   it('restores modes from route updates and browser Back/Forward events', async () => {
     const rendered = render(
-      <WorkspaceProvider {...providerProps({ requestedMode: 'code' })}>
+      <TestedWorkspaceProvider {...providerProps({ requestedMode: 'code' })}>
         <Readout />
-      </WorkspaceProvider>
+      </TestedWorkspaceProvider>
     );
     expect(screen.getByLabelText('Active mode').textContent).toBe('Code');
 
     rendered.rerender(
-      <WorkspaceProvider {...providerProps({ requestedMode: 'docs' })}>
+      <TestedWorkspaceProvider {...providerProps({ requestedMode: 'docs' })}>
         <Readout />
-      </WorkspaceProvider>
+      </TestedWorkspaceProvider>
     );
     await waitFor(() =>
       expect(screen.getByLabelText('Active mode').textContent).toBe('Docs')
@@ -198,7 +257,7 @@ describe('WorkspaceProvider route mode ownership', () => {
   it('normalizes repeated popstate mode values through the route default', async () => {
     const replaceMode = vi.fn();
     render(
-      <WorkspaceProvider
+      <TestedWorkspaceProvider
         {...providerProps({
           routeKind: 'workspace',
           routePath: identity.workspacePath,
@@ -207,7 +266,7 @@ describe('WorkspaceProvider route mode ownership', () => {
         })}
       >
         <Readout />
-      </WorkspaceProvider>
+      </TestedWorkspaceProvider>
     );
     expect(screen.getByLabelText('Active mode').textContent).toBe('Code');
 
@@ -231,7 +290,7 @@ describe('WorkspaceProvider route mode ownership', () => {
     const replaceMode = vi.fn();
     const trackModeChange = vi.fn();
     render(
-      <WorkspaceProvider
+      <TestedWorkspaceProvider
         {...providerProps({
           requestedMode: 'docs',
           pushMode,
@@ -240,7 +299,7 @@ describe('WorkspaceProvider route mode ownership', () => {
         })}
       >
         <Readout />
-      </WorkspaceProvider>
+      </TestedWorkspaceProvider>
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Select Run' }));
@@ -264,9 +323,9 @@ describe('WorkspaceProvider route mode ownership', () => {
   it('forwards focus restoration intent to the identity navigation adapter', () => {
     const pushIdentity = vi.fn();
     render(
-      <WorkspaceProvider {...providerProps({ pushIdentity })}>
+      <TestedWorkspaceProvider {...providerProps({ pushIdentity })}>
         <Readout />
-      </WorkspaceProvider>
+      </TestedWorkspaceProvider>
     );
 
     fireEvent.click(
@@ -293,7 +352,7 @@ describe('WorkspaceProvider route mode ownership', () => {
     };
     const replaceMode = vi.fn();
     const rendered = render(
-      <WorkspaceProvider
+      <TestedWorkspaceProvider
         {...providerProps({
           resolution: { kind: 'mapped', identity: limitedIdentity },
           presentation: { ...presentation, identity: limitedIdentity },
@@ -302,7 +361,7 @@ describe('WorkspaceProvider route mode ownership', () => {
         })}
       >
         <Readout />
-      </WorkspaceProvider>
+      </TestedWorkspaceProvider>
     );
 
     act(() => {
@@ -317,7 +376,7 @@ describe('WorkspaceProvider route mode ownership', () => {
     expect(replaceMode).not.toHaveBeenCalled();
 
     rendered.rerender(
-      <WorkspaceProvider
+      <TestedWorkspaceProvider
         {...providerProps({
           resolution: { kind: 'mapped', identity: destinationIdentity },
           presentation: { ...presentation, identity: destinationIdentity },
@@ -327,11 +386,85 @@ describe('WorkspaceProvider route mode ownership', () => {
         })}
       >
         <Readout />
-      </WorkspaceProvider>
+      </TestedWorkspaceProvider>
     );
     await waitFor(() =>
       expect(screen.getByLabelText('Active mode').textContent).toBe('Run')
     );
     expect(replaceMode).not.toHaveBeenCalled();
+  });
+
+  it('selects the active adapter slot while the controller alone owns target generation', () => {
+    const runtimeContent = {
+      ...contentBundle,
+      runtimeUrl: 'https://runtime.example.test/frame',
+    };
+    const renderTree = (nextResolution: WorkspaceResolution) => (
+      <RuntimeTargetProvider>
+        <RuntimeTargetControls />
+        <WorkspaceProvider
+          {...providerProps({
+            resolution: nextResolution,
+            presentation: {
+              ...presentation,
+              identity:
+                nextResolution.kind === 'mapped'
+                  ? nextResolution.identity
+                  : identity,
+            },
+            contentBundle: runtimeContent,
+          })}
+        >
+          <RuntimeGenerationReadout />
+        </WorkspaceProvider>
+      </RuntimeTargetProvider>
+    );
+    const rendered = render(renderTree(resolution));
+    const readGenerations = () =>
+      JSON.parse(
+        screen.getByLabelText('Runtime generations').textContent ?? ''
+      );
+
+    expect(readGenerations()).toMatchObject({
+      adapter: 'langgraph',
+      phase: 'configuring',
+      targetGeneration: 0,
+      frameGeneration: 0,
+      routeGeneration: 0,
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Apply AG-UI' }));
+    expect(readGenerations()).toMatchObject({
+      adapter: 'langgraph',
+      targetGeneration: 0,
+      frameGeneration: 0,
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Apply LangGraph' }));
+    expect(readGenerations()).toMatchObject({
+      adapter: 'langgraph',
+      targetGeneration: 1,
+      frameGeneration: 1,
+      routeGeneration: 0,
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply LangGraph' }));
+    expect(readGenerations().targetGeneration).toBe(1);
+
+    const agUiIdentity: WorkspaceIdentity = {
+      ...identity,
+      id: 'ag-ui:agents:streaming:overview:python',
+      product: 'ag-ui',
+      runtimeAdapter: 'ag-ui',
+    };
+    rendered.rerender(renderTree({ kind: 'mapped', identity: agUiIdentity }));
+    expect(readGenerations()).toMatchObject({
+      adapter: 'ag-ui',
+      targetGeneration: 2,
+      frameGeneration: 2,
+      routeGeneration: 0,
+    });
+    expect(screen.getByLabelText('Runtime generations').outerHTML).not.toMatch(
+      /api\.example\.test|agents\.example\.test|test-key-redact-me/i
+    );
   });
 });

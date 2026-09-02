@@ -1,9 +1,14 @@
 // SPDX-License-Identifier: MIT
 import { describe, it, expect, vi } from 'vitest';
 import { Observable } from 'rxjs';
-import type { AbstractAgent, BaseEvent } from '@ag-ui/client';
+import type { BaseEvent } from '@ag-ui/client';
 import type { RunAgentInput } from '@ag-ui/core';
-import { provideAgent, AGENT } from './provide-agent';
+import { TestBed } from '@angular/core/testing';
+import { provideAgent, injectAgent, AGENT } from './provide-agent';
+import {
+  createRuntimeProtectedFetch,
+  ɵAG_UI_RUNTIME_OPERATION_REPORTER,
+} from './runtime-operation-reporter';
 
 /**
  * Minimal stub that satisfies the AbstractAgent shape for provider testing.
@@ -58,6 +63,140 @@ class StubAgent {
 }
 
 describe('provideAgent', () => {
+  it('rejects a hostile signal before invoking fetch without reporting', async () => {
+    const reportOperationFailure = vi.fn();
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const nativeSignal = new AbortController().signal;
+    const hostileSignal = new Proxy(nativeSignal, {
+      get() {
+        throw Object.assign(new Error('test-key-redact-me'), { status: 401 });
+      },
+      getOwnPropertyDescriptor(target, property) {
+        if (property === 'status') {
+          return { configurable: true, enumerable: false, writable: false, value: 401 };
+        }
+        return Reflect.getOwnPropertyDescriptor(target, property);
+      },
+    });
+    const protectedFetch = createRuntimeProtectedFetch(reportOperationFailure);
+
+    const error = await protectedFetch('https://agent.example/run', { signal: hostileSignal })
+      .catch((reason: unknown) => reason);
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(reportOperationFailure).not.toHaveBeenCalled();
+    expect(error).toMatchObject({ message: 'The runtime request failed.' });
+    expect(error).not.toHaveProperty('cause');
+    vi.unstubAllGlobals();
+  });
+
+  it('preserves already-aborted and race-aborted native signals without reporting', async () => {
+    const reportOperationFailure = vi.fn();
+    const protectedFetch = createRuntimeProtectedFetch(reportOperationFailure);
+    const alreadyAborted = new AbortController();
+    alreadyAborted.abort();
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const alreadyAbortedError = await protectedFetch(
+      'https://agent.example/run',
+      { signal: alreadyAborted.signal },
+    ).catch((reason: unknown) => reason);
+
+    const race = new AbortController();
+    fetchMock.mockImplementationOnce(() => {
+      race.abort();
+      return Promise.reject(new Error('test-key-redact-me'));
+    });
+    const raceError = await protectedFetch(
+      'https://agent.example/run',
+      { signal: race.signal },
+    ).catch((reason: unknown) => reason);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(reportOperationFailure).not.toHaveBeenCalled();
+    expect(alreadyAbortedError).toMatchObject({ name: 'AbortError' });
+    expect(raceError).toMatchObject({ name: 'AbortError' });
+    expect(JSON.stringify(raceError)).not.toContain('test-key-redact-me');
+    vi.unstubAllGlobals();
+  });
+
+  it.each([401, 403])('reports installed-client HTTP %s without retaining response secrets', async status => {
+    const reportOperationFailure = vi.fn();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('test-key-redact-me', { status })));
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    TestBed.configureTestingModule({
+      providers: [
+        provideAgent({ url: 'https://agent.example/run' }),
+        {
+          provide: ɵAG_UI_RUNTIME_OPERATION_REPORTER,
+          useValue: reportOperationFailure,
+        },
+      ],
+    });
+
+    await TestBed.runInInjectionContext(() => injectAgent().submit({ message: 'hello' }));
+
+    expect(reportOperationFailure).toHaveBeenCalledExactlyOnceWith('unauthorized');
+    expect(JSON.stringify(reportOperationFailure.mock.calls)).not.toContain('test-key-redact-me');
+    const runtime = TestBed.runInInjectionContext(() => injectAgent());
+    expect(runtime.error()).toMatchObject({ message: 'The server ran into an error. You can try again.' });
+    expect(runtime.error()?.cause).toBeUndefined();
+    expect(JSON.stringify(runtime.error())).not.toContain('test-key-redact-me');
+    expect(JSON.stringify(errorSpy.mock.calls)).not.toContain('test-key-redact-me');
+    errorSpy.mockRestore();
+    TestBed.resetTestingModule();
+    vi.unstubAllGlobals();
+  });
+
+  it('reports only an actual installed-client fetch rejection as network_blocked', async () => {
+    const reportOperationFailure = vi.fn();
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('test-key-redact-me')));
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    TestBed.configureTestingModule({
+      providers: [
+        provideAgent({ url: 'https://agent.example/run' }),
+        { provide: ɵAG_UI_RUNTIME_OPERATION_REPORTER, useValue: reportOperationFailure },
+      ],
+    });
+
+    const runtime = TestBed.runInInjectionContext(() => injectAgent());
+    await runtime.submit({ message: 'hello' });
+
+    expect(reportOperationFailure).toHaveBeenCalledExactlyOnceWith('network_blocked');
+    expect(runtime.error()).toMatchObject({ message: 'The server ran into an error. You can try again.' });
+    expect(runtime.error()?.cause).toBeUndefined();
+    expect(JSON.stringify(errorSpy.mock.calls)).not.toContain('test-key-redact-me');
+    errorSpy.mockRestore();
+    TestBed.resetTestingModule();
+    vi.unstubAllGlobals();
+  });
+
+  it('keeps unknown installed-client HTTP failures local while still sanitizing them', async () => {
+    const reportOperationFailure = vi.fn();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+      new Response('test-key-redact-me', { status: 500 }),
+    ));
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    TestBed.configureTestingModule({
+      providers: [
+        provideAgent({ url: 'https://agent.example/run' }),
+        { provide: ɵAG_UI_RUNTIME_OPERATION_REPORTER, useValue: reportOperationFailure },
+      ],
+    });
+
+    const runtime = TestBed.runInInjectionContext(() => injectAgent());
+    await runtime.submit({ message: 'hello' });
+
+    expect(reportOperationFailure).not.toHaveBeenCalled();
+    expect(JSON.stringify(runtime.error())).not.toContain('test-key-redact-me');
+    expect(JSON.stringify(errorSpy.mock.calls)).not.toContain('test-key-redact-me');
+    errorSpy.mockRestore();
+    TestBed.resetTestingModule();
+    vi.unstubAllGlobals();
+  });
+
   it('returns a provider array', () => {
     const providers = provideAgent({ url: 'http://example.test/agent' });
     expect(Array.isArray(providers)).toBe(true);
@@ -83,7 +222,8 @@ describe('provideAgent', () => {
 
     const providers = provideAgent({ url: 'http://example.test/agent' });
     const agentProvider = providers[0] as any;
-    const agent = agentProvider.useFactory();
+    TestBed.configureTestingModule({});
+    const agent = TestBed.runInInjectionContext(() => agentProvider.useFactory());
 
     expect(agent).toBeDefined();
     expect(typeof agent.submit).toBe('function');
@@ -97,6 +237,7 @@ describe('provideAgent', () => {
     expect(agent.events$).toBeDefined();
 
     vi.doUnmock('@ag-ui/client');
+    TestBed.resetTestingModule();
   });
 
   it('passes config fields to HttpAgent constructor', () => {

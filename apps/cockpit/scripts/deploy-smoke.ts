@@ -1,55 +1,309 @@
+import * as http from 'node:http';
+import * as https from 'node:https';
 import { resolve } from 'node:path';
 import {
   cockpitManifest,
+  getCanonicalWebsiteWorkspaceHref,
   getWorkspaceDestinationPath,
+  resolveLegacyPath,
+  resolveLegacyRequestMode,
+  type CockpitManifestEntry,
+  type WorkspaceMode,
+  type WorkspaceResolution,
 } from '@threadplane/cockpit-registry';
 
-export interface DeploySmokeOptions {
-  url: string;
-  websiteUrl?: string;
-  expectedTitle?: string;
-  dryRun?: boolean;
-  retries?: number;
-  retryDelayMs?: number;
-  fetchImpl?: typeof fetch;
-  sleep?: (delayMs: number) => Promise<void>;
+export type DeploySmokeMode = 'preview' | 'production';
+
+export interface RedirectSmokeRequest {
+  readonly origin: string;
+  readonly path: string;
+  readonly headers?: Readonly<Record<string, string>>;
 }
 
-export type ParsedDeploySmokeArgs = DeploySmokeOptions;
+export interface RedirectSmokeResponse {
+  readonly status: number;
+  readonly headers: Readonly<Record<string, string | undefined>>;
+}
 
-const DEFAULT_EXPECTED_TITLE = 'Cockpit';
+export type RedirectSmokeRequestImpl = (
+  request: RedirectSmokeRequest
+) => Promise<RedirectSmokeResponse>;
+
+export interface RedirectSmokeCase {
+  readonly name: string;
+  readonly path: string;
+  readonly expectedStatus: 308 | 404;
+  readonly expectedLocation?: string;
+  readonly headers?: Readonly<Record<string, string>>;
+  readonly raw?: boolean;
+}
+
+export interface DeploySmokeOptions {
+  readonly url: string;
+  readonly mode?: DeploySmokeMode;
+  readonly dryRun?: boolean;
+  readonly retries?: number;
+  readonly retryDelayMs?: number;
+  readonly requestImpl?: RedirectSmokeRequestImpl;
+  readonly sleep?: (delayMs: number) => Promise<void>;
+}
+
+export interface ParsedDeploySmokeArgs {
+  url: string;
+  mode: DeploySmokeMode;
+  dryRun: boolean;
+  retries: number;
+  retryDelayMs: number;
+}
+
+const WEBSITE_ORIGIN = 'https://threadplane.ai';
 const DEFAULT_RETRIES = 0;
 const DEFAULT_RETRY_DELAY_MS = 2000;
+const ALL_MODES: readonly WorkspaceMode[] = ['Docs', 'Run', 'Code', 'API'];
+const ROOT_STREAMING_LEGACY_PATH =
+  '/langgraph/core-capabilities/streaming/overview/python';
 const defaultSleep = (delayMs: number): Promise<void> =>
-  new Promise((resolvePromise) => {
-    setTimeout(resolvePromise, delayMs);
-  });
+  new Promise((resolvePromise) => setTimeout(resolvePromise, delayMs));
 
-export const getRegistryWebsiteDestinations = (): string[] =>
-  [
-    ...new Set(
-      cockpitManifest
-        .filter((entry) => entry.availableModes.length > 0)
-        .map(getWorkspaceDestinationPath)
-    ),
-  ].sort();
+type MappedWorkspaceResolution = Extract<
+  WorkspaceResolution,
+  { kind: 'mapped' }
+>;
 
-export const getRedirectDisabledProbePath = (): string => {
-  const streaming = cockpitManifest.find(
-    (entry) => entry.product === 'langgraph' && entry.topic === 'streaming'
-  );
-  if (!streaming) {
-    throw new Error(
-      'Deploy smoke requires the registry-owned LangGraph streaming route'
+const rootResolution = (): MappedWorkspaceResolution => {
+  const resolution = resolveLegacyPath(ROOT_STREAMING_LEGACY_PATH);
+  if (!resolution || resolution.kind !== 'mapped') {
+    throw new Error('Redirect smoke requires the registry streaming route');
+  }
+  return resolution;
+};
+
+const expectedLocation = (
+  resolution: WorkspaceResolution,
+  rawMode: string | string[] | undefined
+): string => {
+  const mode = resolveLegacyRequestMode(rawMode, resolution);
+  return new URL(
+    getCanonicalWebsiteWorkspaceHref(resolution, mode),
+    `${WEBSITE_ORIGIN}/`
+  ).toString();
+};
+
+const redirectCase = (
+  name: string,
+  path: string,
+  resolution: WorkspaceResolution,
+  rawMode?: string | string[],
+  headers?: Readonly<Record<string, string>>
+): RedirectSmokeCase => ({
+  name,
+  path,
+  expectedStatus: 308,
+  expectedLocation: expectedLocation(resolution, rawMode),
+  ...(headers ? { headers } : {}),
+});
+
+const notFoundCase = (
+  name: string,
+  path: string,
+  raw = false
+): RedirectSmokeCase => ({ name, path, expectedStatus: 404, raw });
+
+export const RAW_MALFORMED_REQUEST_TARGETS = [
+  `/${ROOT_STREAMING_LEGACY_PATH}`,
+  ROOT_STREAMING_LEGACY_PATH.replace(
+    '/core-capabilities/',
+    '/./core-capabilities/'
+  ),
+  ROOT_STREAMING_LEGACY_PATH.replace(
+    '/core-capabilities/',
+    '/../core-capabilities/'
+  ),
+  ROOT_STREAMING_LEGACY_PATH.replace(
+    '/core-capabilities/',
+    '/%2e/core-capabilities/'
+  ),
+  ROOT_STREAMING_LEGACY_PATH.replace(
+    '/core-capabilities/',
+    '/%2e%2e/core-capabilities/'
+  ),
+  ROOT_STREAMING_LEGACY_PATH.replace('/overview/', '/%2Foverview/'),
+  ROOT_STREAMING_LEGACY_PATH.replace('/overview/', '/%5Coverview/'),
+  ROOT_STREAMING_LEGACY_PATH.replace('/overview/', '/\\overview/'),
+] as const;
+
+const entryResolution = (
+  entry: CockpitManifestEntry
+): MappedWorkspaceResolution => {
+  const resolution = resolveLegacyPath(entry.legacyPath);
+  if (!resolution || resolution.kind !== 'mapped') {
+    throw new Error(`Manifest route is not resolvable: ${entry.id}`);
+  }
+  return resolution;
+};
+
+const buildPreviewCases = (): RedirectSmokeCase[] => {
+  const cases: RedirectSmokeCase[] = [];
+  const root = rootResolution();
+  for (const [name, path] of [
+    ['root default redirect', '/'],
+    ['root Docs ignored', '/?mode=docs'],
+    ['root Run redirect', '/?mode=run'],
+    ['root Code ignored', '/?mode=code'],
+    ['root API ignored', '/?mode=api'],
+    ['root invalid mode ignored', '/?mode=invalid'],
+    ['root duplicate modes ignored', '/?mode=docs&mode=run'],
+    [
+      'root unrelated query stripped',
+      '/?return_to=https%3A%2F%2Fattacker.test&utm_source=legacy',
+    ],
+  ] as const) {
+    cases.push(redirectCase(name, path, root, 'run'));
+  }
+
+  for (const entry of cockpitManifest) {
+    const resolution = entryResolution(entry);
+    cases.push(
+      redirectCase(`${entry.id} missing mode`, entry.legacyPath, resolution)
+    );
+    for (const mode of entry.availableModes) {
+      cases.push(
+        redirectCase(
+          `${entry.id} available mode ${mode}`,
+          `${entry.legacyPath}?mode=${mode.toLowerCase()}`,
+          resolution,
+          mode.toLowerCase()
+        )
+      );
+    }
+    for (const mode of ALL_MODES.filter(
+      (candidate) => !entry.availableModes.includes(candidate)
+    )) {
+      cases.push(
+        redirectCase(
+          `${entry.id} unavailable mode ${mode}`,
+          `${entry.legacyPath}?mode=${mode.toLowerCase()}`,
+          resolution,
+          mode.toLowerCase()
+        )
+      );
+    }
+    cases.push(
+      redirectCase(
+        `${entry.id} invalid mode`,
+        `${entry.legacyPath}?mode=invalid`,
+        resolution,
+        'invalid'
+      ),
+      redirectCase(
+        `${entry.id} duplicate modes`,
+        `${entry.legacyPath}?mode=docs&mode=run`,
+        resolution,
+        ['docs', 'run']
+      ),
+      redirectCase(
+        `${entry.id} unrelated query stripping`,
+        `${entry.legacyPath}?return_to=https%3A%2F%2Fattacker.test&utm_source=legacy`,
+        resolution
+      )
     );
   }
-  return streaming.legacyPath;
+
+  const workspaceOnly = cockpitManifest.find((entry) =>
+    getWorkspaceDestinationPath(entry).startsWith('/workspace/')
+  );
+  if (!workspaceOnly)
+    throw new Error('Expected a workspace-only manifest entry');
+  cases.push(
+    redirectCase(
+      'workspace Docs serialization',
+      `${workspaceOnly.legacyPath}?mode=docs`,
+      entryResolution(workspaceOnly),
+      'docs'
+    )
+  );
+
+  cases.push(
+    notFoundCase('unknown path 404', '/unknown'),
+    notFoundCase('partial path 404', '/langgraph/core-capabilities/streaming'),
+    notFoundCase('extra path 404', `${ROOT_STREAMING_LEGACY_PATH}/extra`),
+    notFoundCase('trailing slash 404', `${ROOT_STREAMING_LEGACY_PATH}/`),
+    redirectCase(
+      'hostile forwarding headers ignored',
+      ROOT_STREAMING_LEGACY_PATH,
+      root,
+      undefined,
+      {
+        forwarded: 'host=attacker.test;proto=http',
+        'x-forwarded-host': 'attacker.test',
+        'x-forwarded-proto': 'http',
+        referer: 'https://attacker.test/redirect',
+      }
+    ),
+    {
+      name: 'favicon permanent redirect',
+      path: '/favicon.ico',
+      expectedStatus: 308,
+      expectedLocation: '/icon.svg',
+    },
+    ...RAW_MALFORMED_REQUEST_TARGETS.map((path, index) =>
+      notFoundCase(`raw malformed ${index + 1}: ${path}`, path, true)
+    )
+  );
+  return cases;
 };
+
+const buildProductionCases = (): RedirectSmokeCase[] => {
+  const root = rootResolution();
+  const docsBacked = cockpitManifest.find((entry) =>
+    getWorkspaceDestinationPath(entry).startsWith('/docs/')
+  );
+  const workspaceOnly = cockpitManifest.find((entry) =>
+    getWorkspaceDestinationPath(entry).startsWith('/workspace/')
+  );
+  if (!docsBacked || !workspaceOnly) {
+    throw new Error(
+      'Redirect smoke requires Docs-backed and workspace-only routes'
+    );
+  }
+  return [
+    redirectCase('root production redirect', '/', root, 'run'),
+    redirectCase(
+      'Docs-backed production redirect',
+      docsBacked.legacyPath,
+      entryResolution(docsBacked)
+    ),
+    redirectCase(
+      'workspace-only production redirect',
+      workspaceOnly.legacyPath,
+      entryResolution(workspaceOnly)
+    ),
+    notFoundCase('unknown production 404', '/unknown'),
+    {
+      name: 'favicon production redirect',
+      path: '/favicon.ico',
+      expectedStatus: 308,
+      expectedLocation: '/icon.svg',
+    },
+    ...RAW_MALFORMED_REQUEST_TARGETS.slice(0, 3).map((path, index) =>
+      notFoundCase(
+        `raw malformed production canary ${index + 1}: ${path}`,
+        path,
+        true
+      )
+    ),
+  ];
+};
+
+export const buildRedirectSmokeCases = (
+  mode: DeploySmokeMode
+): RedirectSmokeCase[] =>
+  mode === 'preview' ? buildPreviewCases() : buildProductionCases();
 
 export const parseDeploySmokeArgs = (argv: string[]): ParsedDeploySmokeArgs => {
   const options: ParsedDeploySmokeArgs = {
     url: 'http://127.0.0.1:3000',
-    expectedTitle: DEFAULT_EXPECTED_TITLE,
+    mode: 'preview',
     dryRun: false,
     retries: DEFAULT_RETRIES,
     retryDelayMs: DEFAULT_RETRY_DELAY_MS,
@@ -57,134 +311,159 @@ export const parseDeploySmokeArgs = (argv: string[]): ParsedDeploySmokeArgs => {
 
   for (let index = 0; index < argv.length; index += 1) {
     const current = argv[index];
-
-    if (current === '--url' && argv[index + 1]) {
-      options.url = argv[index + 1];
+    const next = argv[index + 1];
+    if (current === '--url' && next) {
+      options.url = next;
       index += 1;
-      continue;
-    }
-
-    if (current === '--expected-title' && argv[index + 1]) {
-      options.expectedTitle = argv[index + 1];
+    } else if (current === '--mode' && next) {
+      if (next !== 'preview' && next !== 'production') {
+        throw new Error('--mode must be preview or production');
+      }
+      options.mode = next;
       index += 1;
-      continue;
-    }
-
-    if (current === '--website-url' && argv[index + 1]) {
-      options.websiteUrl = argv[index + 1];
-      index += 1;
-      continue;
-    }
-
-    if (current === '--dry-run') {
+    } else if (current === '--dry-run') {
       options.dryRun = true;
-      continue;
-    }
-
-    if (current === '--retries' && argv[index + 1]) {
-      options.retries = Number(argv[index + 1]);
+    } else if (current === '--retries' && next) {
+      options.retries = Number(next);
       index += 1;
-      continue;
-    }
-
-    if (current === '--retry-delay-ms' && argv[index + 1]) {
-      options.retryDelayMs = Number(argv[index + 1]);
+    } else if (current === '--retry-delay-ms' && next) {
+      options.retryDelayMs = Number(next);
       index += 1;
     }
   }
-
   return options;
+};
+
+export const requestExactTarget: RedirectSmokeRequestImpl = ({
+  origin,
+  path,
+  headers,
+}) =>
+  new Promise((resolvePromise, reject) => {
+    const target = new URL(origin);
+    const requester =
+      target.protocol === 'https:' ? https.request : http.request;
+    const request = requester(
+      {
+        protocol: target.protocol,
+        hostname: target.hostname,
+        port: target.port || undefined,
+        method: 'GET',
+        path,
+        headers,
+      },
+      (response) => {
+        response.resume();
+        response.on('end', () => {
+          const normalizedHeaders = Object.fromEntries(
+            Object.entries(response.headers).map(([key, value]) => [
+              key.toLowerCase(),
+              Array.isArray(value) ? value.join(', ') : value,
+            ])
+          );
+          resolvePromise({
+            status: response.statusCode ?? 0,
+            headers: normalizedHeaders,
+          });
+        });
+      }
+    );
+    request.on('error', reject);
+    request.end();
+  });
+
+class RedirectContractError extends Error {}
+
+const verifyCase = (
+  mode: DeploySmokeMode,
+  smokeCase: RedirectSmokeCase,
+  response: RedirectSmokeResponse
+): void => {
+  const rawGateHint = smokeCase.raw
+    ? ' Raw Path rejection failed; verify the Vercel project WAF Raw Path prerequisite before promotion.'
+    : '';
+  if (response.status !== smokeCase.expectedStatus) {
+    throw new RedirectContractError(
+      `[${mode}] ${smokeCase.name}: expected ${smokeCase.expectedStatus}, received ${response.status}.${rawGateHint}`
+    );
+  }
+  const location = response.headers.location;
+  if (smokeCase.expectedLocation !== undefined) {
+    if (location !== smokeCase.expectedLocation) {
+      throw new RedirectContractError(
+        `[${mode}] ${smokeCase.name}: expected Location ${
+          smokeCase.expectedLocation
+        }, received ${location ?? '<missing>'}.${rawGateHint}`
+      );
+    }
+  } else if (location !== undefined) {
+    throw new RedirectContractError(
+      `[${mode}] ${smokeCase.name}: expected no Location, received ${location}.${rawGateHint}`
+    );
+  }
 };
 
 export const runDeploySmoke = async ({
   url,
-  websiteUrl,
-  expectedTitle = DEFAULT_EXPECTED_TITLE,
+  mode = 'preview',
   dryRun = false,
   retries = DEFAULT_RETRIES,
   retryDelayMs = DEFAULT_RETRY_DELAY_MS,
-  fetchImpl = fetch,
+  requestImpl = requestExactTarget,
   sleep = defaultSleep,
 }: DeploySmokeOptions): Promise<string> => {
-  if (dryRun) {
-    return `dry-run:${url}:${expectedTitle}`;
+  const target = new URL(url);
+  if (target.pathname !== '/' || target.search || target.hash) {
+    throw new Error('Deploy smoke --url must be an absolute origin');
   }
+  const origin = target.origin;
+  const cases = buildRedirectSmokeCases(mode);
+  if (dryRun) return `dry-run:${mode}:${origin}:${cases.length}`;
 
-  let attemptsRemaining = retries + 1;
-  let lastError: Error | null = null;
-
-  while (attemptsRemaining > 0) {
-    try {
-      const response = await fetchImpl(url);
-
-      if (!response.ok) {
-        throw new Error(`Deploy smoke failed for ${url}: ${response.status} ${response.statusText}`);
-      }
-
-      const html = await response.text();
-
-      if (!html.includes(expectedTitle)) {
-        throw new Error(`Deploy smoke failed for ${url}: missing title ${expectedTitle}`);
-      }
-
-      if (websiteUrl) {
-        const destinations = getRegistryWebsiteDestinations();
-        for (const destination of destinations) {
-          const destinationUrl = new URL(destination, websiteUrl).toString();
-          const destinationResponse = await fetchImpl(destinationUrl);
-          if (!destinationResponse.ok) {
-            throw new Error(
-              `Deploy smoke failed for ${destinationUrl}: ${destinationResponse.status} ${destinationResponse.statusText}`
-            );
-          }
-        }
-
-        const redirectProbeUrl = new URL(
-          getRedirectDisabledProbePath(),
-          url
-        ).toString();
-        const redirectProbeResponse = await fetchImpl(redirectProbeUrl, {
-          redirect: 'manual',
+  for (const smokeCase of cases) {
+    let attempt = 0;
+    while (true) {
+      try {
+        const response = await requestImpl({
+          origin,
+          path: smokeCase.path,
+          ...(smokeCase.headers ? { headers: smokeCase.headers } : {}),
         });
-        if (
-          !redirectProbeResponse.ok ||
-          (redirectProbeResponse.status >= 300 &&
-            redirectProbeResponse.status < 400)
-        ) {
+        verifyCase(mode, smokeCase, response);
+        break;
+      } catch (error: unknown) {
+        if (error instanceof RedirectContractError) throw error;
+        if (attempt >= retries) {
+          const message =
+            error instanceof Error ? error.message : String(error);
           throw new Error(
-            `Deploy smoke failed for ${redirectProbeUrl}: legacy redirects must remain disabled before activation`
+            `[${mode}] ${smokeCase.name}: transport failed: ${message}`
           );
         }
-
-        return `pass:${url}:${expectedTitle}:website:${destinations.length}:redirects-off`;
+        attempt += 1;
+        await sleep(retryDelayMs);
       }
-
-      return `pass:${url}:${expectedTitle}`;
-    } catch (error: unknown) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-      attemptsRemaining -= 1;
-
-      if (attemptsRemaining === 0) {
-        throw lastError;
-      }
-
-      await sleep(retryDelayMs);
     }
   }
-
-  throw lastError ?? new Error(`Deploy smoke failed for ${url}`);
+  return `pass:${mode}:${origin}:${cases.length}`;
 };
 
-if (process.argv[1] === resolve(process.cwd(), 'apps/cockpit/scripts/deploy-smoke.ts')) {
-  const options = parseDeploySmokeArgs(process.argv.slice(2));
-
-  runDeploySmoke(options)
-    .then((result) => {
-      process.stdout.write(`${result}\n`);
-    })
-    .catch((error: unknown) => {
-      const message = error instanceof Error ? error.message : String(error);
-      process.stderr.write(`${message}\n`);
-      process.exitCode = 1;
-    });
+if (
+  process.argv[1] ===
+  resolve(process.cwd(), 'apps/cockpit/scripts/deploy-smoke.ts')
+) {
+  try {
+    const options = parseDeploySmokeArgs(process.argv.slice(2));
+    runDeploySmoke(options)
+      .then((result) => process.stdout.write(`${result}\n`))
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : String(error);
+        process.stderr.write(`${message}\n`);
+        process.exitCode = 1;
+      });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    process.stderr.write(`${message}\n`);
+    process.exitCode = 1;
+  }
 }

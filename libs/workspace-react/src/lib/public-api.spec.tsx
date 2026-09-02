@@ -7,6 +7,7 @@ import {
   CodeModePanel,
   DocsModePanel,
   RunModePanel,
+  RuntimeTargetProvider,
   WorkspaceProvider,
   WorkspaceShell,
   useRuntimeController,
@@ -75,37 +76,39 @@ describe('@threadplane/workspace-react public boundary', () => {
     const modes: readonly WorkspaceMode[] = ['Docs', 'Run', 'Code', 'API'];
 
     render(
-      <WorkspaceProvider
-        resolution={resolution}
-        presentation={{
-          kind: 'docs-only',
-          docsPath: resolution.docsPath,
-          title: resolution.title,
-          runnable: false,
-        }}
-        contentBundle={{
-          codeFiles: {},
-          promptFiles: {},
-          runtimeUrl: null,
-          docSections: [],
-          narrativeDocs: [],
-        }}
-        routeKind="docs"
-        routePath={resolution.docsPath}
-        requestedMode="docs"
-        docsSlot={<article>workspace docs</article>}
-        pushIdentity={vi.fn()}
-        pushMode={vi.fn()}
-        replaceMode={vi.fn()}
-        getSessionId={() => 'public-boundary-session'}
-      >
-        <WorkspaceShell navigationTree={[]} manifest={[]} />
-        <DocsModePanel resolution={resolution}>docs</DocsModePanel>
-        <RunModePanel resolution={resolution}>run</RunModePanel>
-        <CodeModePanel resolution={resolution}>code</CodeModePanel>
-        <ApiModePanel resolution={resolution}>api</ApiModePanel>
-        <WorkspaceReadout />
-      </WorkspaceProvider>
+      <RuntimeTargetProvider>
+        <WorkspaceProvider
+          resolution={resolution}
+          presentation={{
+            kind: 'docs-only',
+            docsPath: resolution.docsPath,
+            title: resolution.title,
+            runnable: false,
+          }}
+          contentBundle={{
+            codeFiles: {},
+            promptFiles: {},
+            runtimeUrl: null,
+            docSections: [],
+            narrativeDocs: [],
+          }}
+          routeKind="docs"
+          routePath={resolution.docsPath}
+          requestedMode="docs"
+          docsSlot={<article>workspace docs</article>}
+          pushIdentity={vi.fn()}
+          pushMode={vi.fn()}
+          replaceMode={vi.fn()}
+          getSessionId={() => 'public-boundary-session'}
+        >
+          <WorkspaceShell navigationTree={[]} manifest={[]} />
+          <DocsModePanel resolution={resolution}>docs</DocsModePanel>
+          <RunModePanel resolution={resolution}>run</RunModePanel>
+          <CodeModePanel resolution={resolution}>code</CodeModePanel>
+          <ApiModePanel resolution={resolution}>api</ApiModePanel>
+          <WorkspaceReadout />
+        </WorkspaceProvider>
+      </RuntimeTargetProvider>
     );
 
     expect(screen.getByText('docs').dataset.workspaceMode).toBe('Docs');

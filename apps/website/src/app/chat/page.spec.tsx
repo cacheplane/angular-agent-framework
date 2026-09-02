@@ -30,4 +30,16 @@ describe('ChatPage', () => {
     );
     expect(cta?.getAttribute('data-surface')).toBe('dark');
   });
+
+  it('opens generative UI in the same-origin Website workspace', async () => {
+    const ui = await ChatPage();
+    render(ui);
+
+    const link = screen.getByRole('link', { name: 'See it live →' });
+    expect(link.getAttribute('href')).toBe(
+      '/docs/chat/guides/generative-ui?mode=run'
+    );
+    expect(link.getAttribute('target')).toBeNull();
+    expect(link.getAttribute('rel')).toBeNull();
+  });
 });

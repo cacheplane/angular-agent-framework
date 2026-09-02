@@ -7,6 +7,7 @@ import type {
 /** Serializable capability content owned by the Cockpit registry. */
 export interface RegisteredCapabilityModule {
   readonly id: string;
+  readonly runtimeAdapter: RuntimeAdapter;
   readonly manifestIdentity: {
     readonly product: string;
     readonly section: string;
@@ -27,6 +28,7 @@ export interface RegisteredCapabilityModule {
 const capabilityModuleData: RegisteredCapabilityModule[] = [
   {
     id: 'langgraph-streaming-python',
+    runtimeAdapter: 'langgraph',
     manifestIdentity: {
       product: 'langgraph',
       section: 'core-capabilities',
@@ -50,6 +52,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'langgraph-persistence-python',
+    runtimeAdapter: 'langgraph',
     manifestIdentity: {
       product: 'langgraph',
       section: 'core-capabilities',
@@ -73,6 +76,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'langgraph-interrupts-python',
+    runtimeAdapter: 'langgraph',
     manifestIdentity: {
       product: 'langgraph',
       section: 'core-capabilities',
@@ -96,6 +100,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'langgraph-memory-python',
+    runtimeAdapter: 'langgraph',
     manifestIdentity: {
       product: 'langgraph',
       section: 'core-capabilities',
@@ -117,6 +122,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'langgraph-durable-execution-python',
+    runtimeAdapter: 'langgraph',
     manifestIdentity: {
       product: 'langgraph',
       section: 'core-capabilities',
@@ -144,6 +150,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'langgraph-subgraphs-python',
+    runtimeAdapter: 'langgraph',
     manifestIdentity: {
       product: 'langgraph',
       section: 'core-capabilities',
@@ -167,6 +174,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'langgraph-time-travel-python',
+    runtimeAdapter: 'langgraph',
     manifestIdentity: {
       product: 'langgraph',
       section: 'core-capabilities',
@@ -190,6 +198,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'langgraph-deployment-runtime-python',
+    runtimeAdapter: 'langgraph',
     manifestIdentity: {
       product: 'langgraph',
       section: 'core-capabilities',
@@ -217,6 +226,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'langgraph-client-tools-python',
+    runtimeAdapter: 'langgraph',
     manifestIdentity: {
       product: 'langgraph',
       section: 'core-capabilities',
@@ -242,6 +252,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'ag-ui-interrupts-python',
+    runtimeAdapter: 'ag-ui',
     manifestIdentity: {
       product: 'ag-ui',
       section: 'core-capabilities',
@@ -266,6 +277,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'ag-ui-streaming-python',
+    runtimeAdapter: 'ag-ui',
     manifestIdentity: {
       product: 'ag-ui',
       section: 'core-capabilities',
@@ -290,6 +302,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'ag-ui-tool-views-python',
+    runtimeAdapter: 'ag-ui',
     manifestIdentity: {
       product: 'ag-ui',
       section: 'core-capabilities',
@@ -315,6 +328,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'ag-ui-json-render-python',
+    runtimeAdapter: 'ag-ui',
     manifestIdentity: {
       product: 'ag-ui',
       section: 'core-capabilities',
@@ -341,6 +355,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'ag-ui-client-tools-python',
+    runtimeAdapter: 'ag-ui',
     manifestIdentity: {
       product: 'ag-ui',
       section: 'core-capabilities',
@@ -369,6 +384,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'ag-ui-a2ui-python',
+    runtimeAdapter: 'ag-ui',
     manifestIdentity: {
       product: 'ag-ui',
       section: 'core-capabilities',
@@ -393,6 +409,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'ag-ui-subagents-python',
+    runtimeAdapter: 'ag-ui',
     manifestIdentity: {
       product: 'ag-ui',
       section: 'core-capabilities',
@@ -417,6 +434,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'deep-agents-memory-python',
+    runtimeAdapter: 'langgraph',
     manifestIdentity: {
       product: 'deep-agents',
       section: 'core-capabilities',
@@ -438,6 +456,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'deep-agents-planning-python',
+    runtimeAdapter: 'langgraph',
     manifestIdentity: {
       product: 'deep-agents',
       section: 'core-capabilities',
@@ -461,6 +480,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'deep-agents-filesystem-python',
+    runtimeAdapter: 'langgraph',
     manifestIdentity: {
       product: 'deep-agents',
       section: 'core-capabilities',
@@ -484,6 +504,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'deep-agents-subagents-python',
+    runtimeAdapter: 'langgraph',
     manifestIdentity: {
       product: 'deep-agents',
       section: 'core-capabilities',
@@ -507,6 +528,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'deep-agents-skills-python',
+    runtimeAdapter: 'langgraph',
     manifestIdentity: {
       product: 'deep-agents',
       section: 'core-capabilities',
@@ -528,6 +550,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'render-spec-rendering-python',
+    runtimeAdapter: 'none',
     manifestIdentity: {
       product: 'render',
       section: 'core-capabilities',
@@ -551,6 +574,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'render-element-rendering-python',
+    runtimeAdapter: 'none',
     manifestIdentity: {
       product: 'render',
       section: 'core-capabilities',
@@ -574,6 +598,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'render-state-management-python',
+    runtimeAdapter: 'none',
     manifestIdentity: {
       product: 'render',
       section: 'core-capabilities',
@@ -597,6 +622,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'render-registry-python',
+    runtimeAdapter: 'none',
     manifestIdentity: {
       product: 'render',
       section: 'core-capabilities',
@@ -618,6 +644,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'render-repeat-loops-python',
+    runtimeAdapter: 'none',
     manifestIdentity: {
       product: 'render',
       section: 'core-capabilities',
@@ -641,6 +668,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'render-computed-functions-python',
+    runtimeAdapter: 'none',
     manifestIdentity: {
       product: 'render',
       section: 'core-capabilities',
@@ -666,6 +694,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'chat-messages-python',
+    runtimeAdapter: 'langgraph',
     manifestIdentity: {
       product: 'chat',
       section: 'core-capabilities',
@@ -687,6 +716,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'chat-input-python',
+    runtimeAdapter: 'langgraph',
     manifestIdentity: {
       product: 'chat',
       section: 'core-capabilities',
@@ -708,6 +738,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'chat-interrupts-python',
+    runtimeAdapter: 'langgraph',
     manifestIdentity: {
       product: 'chat',
       section: 'core-capabilities',
@@ -729,6 +760,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'chat-tool-calls-python',
+    runtimeAdapter: 'langgraph',
     manifestIdentity: {
       product: 'chat',
       section: 'core-capabilities',
@@ -750,6 +782,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'chat-subagents-python',
+    runtimeAdapter: 'langgraph',
     manifestIdentity: {
       product: 'chat',
       section: 'core-capabilities',
@@ -771,6 +804,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'chat-threads-python',
+    runtimeAdapter: 'langgraph',
     manifestIdentity: {
       product: 'chat',
       section: 'core-capabilities',
@@ -792,6 +826,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'chat-timeline-python',
+    runtimeAdapter: 'langgraph',
     manifestIdentity: {
       product: 'chat',
       section: 'core-capabilities',
@@ -813,6 +848,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'chat-generative-ui-python',
+    runtimeAdapter: 'langgraph',
     manifestIdentity: {
       product: 'chat',
       section: 'core-capabilities',
@@ -836,6 +872,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'chat-debug-python',
+    runtimeAdapter: 'langgraph',
     manifestIdentity: {
       product: 'chat',
       section: 'core-capabilities',
@@ -857,6 +894,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'chat-theming-python',
+    runtimeAdapter: 'langgraph',
     manifestIdentity: {
       product: 'chat',
       section: 'core-capabilities',
@@ -878,6 +916,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'chat-a2ui-python',
+    runtimeAdapter: 'langgraph',
     manifestIdentity: {
       product: 'chat',
       section: 'core-capabilities',
@@ -899,6 +938,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'runtimes-microsoft-agent-framework-python',
+    runtimeAdapter: 'ag-ui',
     manifestIdentity: {
       product: 'runtimes',
       section: 'core-capabilities',
@@ -927,6 +967,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'runtimes-aws-strands-python',
+    runtimeAdapter: 'ag-ui',
     manifestIdentity: {
       product: 'runtimes',
       section: 'core-capabilities',
@@ -953,6 +994,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
   },
   {
     id: 'runtimes-mastra-angular',
+    runtimeAdapter: 'ag-ui',
     manifestIdentity: {
       product: 'runtimes',
       section: 'core-capabilities',
@@ -1026,10 +1068,9 @@ const isApiExtractable = (path: string): boolean =>
 
 export const deriveAvailableModes = (options: {
   docsPath: string;
-  runtimeAdapter: RuntimeAdapter;
   descriptor?: RegisteredCapabilityModule;
 }): readonly WorkspaceMode[] => {
-  const { descriptor, docsPath, runtimeAdapter } = options;
+  const { descriptor, docsPath } = options;
   const codeAndBackendAssets = [
     ...(descriptor?.codeAssetPaths ?? []),
     ...(descriptor?.backendAssetPaths ?? []),
@@ -1039,10 +1080,7 @@ export const deriveAvailableModes = (options: {
   if (docsPath.length > 0 || (descriptor?.docsAssetPaths?.length ?? 0) > 0) {
     modes.push('Docs');
   }
-  if (
-    runtimeAdapter !== 'none' &&
-    Boolean(descriptor?.runtimeUrl || descriptor?.devPort)
-  ) {
+  if (descriptor?.runtimeUrl || descriptor?.devPort) {
     modes.push('Run');
   }
   if (codeAndBackendAssets.length > 0) {

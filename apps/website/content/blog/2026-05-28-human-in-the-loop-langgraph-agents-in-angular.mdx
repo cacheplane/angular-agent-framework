@@ -11,13 +11,13 @@ This is how to pause a LangGraph agent in Angular for human approval before it r
 
 The example is a refund agent: it drafts a refund, then stops and asks an operator to approve, edit, or cancel before any charge is reversed.
 
-Everything below is running code from the cockpit example at `cockpit/langgraph/interrupts`.
+Everything below is running code from the workspace example at `cockpit/langgraph/interrupts`.
 Clone the repo, run `nx serve cockpit-langgraph-interrupts-angular`, and follow along.
 
 <div style={{ marginTop: 40, marginBottom: 44 }}>
 <CardGroup cols={2}>
-  <Card title="Run the live demo" icon="▶" external href="https://cockpit.threadplane.ai/langgraph/core-capabilities/interrupts/overview/python">
-    The refund agent running in the cockpit. Walk the approve / edit / cancel flow yourself.
+  <Card title="Run the live demo" icon="▶" href="/docs/langgraph/guides/interrupts?mode=run">
+    The refund agent running in the docs workspace. Walk the approve / edit / cancel flow yourself.
   </Card>
   <Card title="View the source" icon="⌥" external href="https://github.com/cacheplane/angular-agent-framework/tree/main/cockpit/langgraph/interrupts">
     The exact graph.py and Angular component from this post.
@@ -54,7 +54,7 @@ That lets you reuse one approval dialog across multiple agents.
 
 <figure>
   <img src="/blog/2026-05-28-human-in-the-loop-langgraph-agents-in-angular/1.png" alt="The refund agent's welcome screen with two suggestion chips: 'Refund a duplicate charge' and 'Refund a chargeback.'" width="1280" height="800" />
-  <figcaption>The cockpit refund example.</figcaption>
+  <figcaption>The live refund workspace.</figcaption>
 </figure>
 
 ## Scaffold

@@ -423,7 +423,7 @@ export function WorkspaceShell({
               {panelHeading('Run')}
               <WorkspacePanelBoundary
                 mode="Run"
-                resetKey={`${identityKey}:${runtimeController.frameGeneration}`}
+                resetKey={`${identityKey}:${runtimeController.targetGeneration}:${runtimeController.frameGeneration}`}
               >
                 <RunMode
                   entryTitle={entryTitle}
@@ -431,6 +431,7 @@ export function WorkspaceShell({
                   capabilitySlug={capability}
                   frameRef={runtimeController.frameRef}
                   frameGeneration={runtimeController.frameGeneration}
+                  targetGeneration={runtimeController.targetGeneration}
                   onFrameLoad={runtimeController.onFrameLoad}
                   runtimePhase={runtimeController.snapshot.phase}
                   getSessionId={getSessionId}

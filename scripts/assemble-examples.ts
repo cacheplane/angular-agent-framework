@@ -9,9 +9,21 @@
  *   npx tsx scripts/assemble-examples.ts --skip-build
  */
 import { execSync } from 'child_process';
-import { cpSync, mkdirSync, rmSync, existsSync, writeFileSync, readFileSync } from 'fs';
+import {
+  cpSync,
+  mkdirSync,
+  rmSync,
+  existsSync,
+  writeFileSync,
+  readFileSync,
+} from 'fs';
 import { resolve } from 'path';
 import { capabilities as registryCapabilities } from '../apps/cockpit/scripts/capability-registry';
+import {
+  GENERATED_RUNTIME_PARENT_ORIGINS_MODULE,
+  generateRuntimeParentOriginPolicy,
+  parseRuntimeParentPreviewOrigins,
+} from './generate-runtime-parent-origins';
 
 // DEPLOY-GATE HAZARD: ci.yml's deploy steps diff `github.event.before..sha` to
 // decide whether examples/cockpit redeploy. Runs waiting in the CI-main
@@ -25,6 +37,22 @@ import { capabilities as registryCapabilities } from '../apps/cockpit/scripts/ca
 const root = resolve(__dirname, '..');
 const deployDir = resolve(root, 'deploy/examples');
 const skipBuild = process.argv.includes('--skip-build');
+const runtimeParentOriginSource = JSON.parse(
+  readFileSync(resolve(root, 'runtime-parent-origins.json'), 'utf8')
+) as unknown;
+const runtimeParentOriginPolicy = generateRuntimeParentOriginPolicy(
+  runtimeParentOriginSource,
+  parseRuntimeParentPreviewOrigins(
+    process.env['RUNTIME_PARENT_PREVIEW_ORIGINS']
+  )
+);
+
+// Always replace the compiled input, including when CI supplies no preview.
+// This prevents a prior preview origin from surviving into a later build.
+writeFileSync(
+  resolve(root, GENERATED_RUNTIME_PARENT_ORIGINS_MODULE),
+  runtimeParentOriginPolicy.compiledChildModule
+);
 
 // Derive the staged-example list from the capability registry — the single
 // source of truth (every entry has an `angularProject` that builds to
@@ -40,10 +68,13 @@ const capabilities = registryCapabilities.map((c) => ({
 
 if (!skipBuild) {
   console.log(`Building all ${capabilities.length} Angular apps...`);
-  execSync("npx nx run-many -t build --projects='cockpit-*-angular' --skip-nx-cache", {
-    cwd: root,
-    stdio: 'inherit',
-  });
+  execSync(
+    "npx nx run-many -t build --projects='cockpit-*-angular' --skip-nx-cache",
+    {
+      cwd: root,
+      stdio: 'inherit',
+    }
+  );
 }
 
 if (existsSync(deployDir)) rmSync(deployDir, { recursive: true });
@@ -68,7 +99,7 @@ for (const cap of capabilities) {
     const html = readFileSync(indexPath, 'utf-8');
     const fixed = html.replace(
       '<base href="/">',
-      `<base href="/${cap.product}/${cap.topic}/">`,
+      `<base href="/${cap.product}/${cap.topic}/">`
     );
     writeFileSync(indexPath, fixed);
   }
@@ -84,7 +115,10 @@ const funcDir = resolve(outputDir, 'functions/api/[[...path]].func');
 // NOTE: deliberately NOT under functions/api/ — that would re-trigger the
 // langgraph proxy rule on the rewrite (check: true causes re-evaluation,
 // and ^/api/(.*) would catch /api/ag-ui-proxy/* and shadow the function).
-const agUiFuncDir = resolve(outputDir, 'functions/ag-ui-proxy/[[...path]].func');
+const agUiFuncDir = resolve(
+  outputDir,
+  'functions/ag-ui-proxy/[[...path]].func'
+);
 
 // Copy static files to the output directory
 mkdirSync(staticDir, { recursive: true });
@@ -96,58 +130,106 @@ for (const cap of capabilities) {
 
 // Build the langgraph proxy serverless function (existing)
 mkdirSync(funcDir, { recursive: true });
-execSync(`npx esbuild scripts/examples-middleware.ts --bundle --format=cjs --platform=node --outfile=${funcDir}/index.js`, {
-  cwd: root,
-  stdio: 'inherit',
-});
-writeFileSync(resolve(funcDir, '.vc-config.json'), JSON.stringify({
-  runtime: 'nodejs20.x',
-  handler: 'index.js',
-  launcherType: 'Nodejs',
-  shouldAddHelpers: true,
-}, null, 2));
+execSync(
+  `npx esbuild scripts/examples-middleware.ts --bundle --format=cjs --platform=node --outfile=${funcDir}/index.js`,
+  {
+    cwd: root,
+    stdio: 'inherit',
+  }
+);
+writeFileSync(
+  resolve(funcDir, '.vc-config.json'),
+  JSON.stringify(
+    {
+      runtime: 'nodejs20.x',
+      handler: 'index.js',
+      launcherType: 'Nodejs',
+      shouldAddHelpers: true,
+    },
+    null,
+    2
+  )
+);
 
 // Build the AG-UI proxy serverless function (forwards /ag-ui/<topic>/agent
 // requests to the Railway-hosted FastAPI runtime with origin allowlist +
 // Upstash rate limit + X-Internal-Token injection).
 mkdirSync(agUiFuncDir, { recursive: true });
-execSync(`npx esbuild scripts/ag-ui-proxy.ts --bundle --format=cjs --platform=node --outfile=${agUiFuncDir}/index.js`, {
-  cwd: root,
-  stdio: 'inherit',
-});
-writeFileSync(resolve(agUiFuncDir, '.vc-config.json'), JSON.stringify({
-  runtime: 'nodejs20.x',
-  handler: 'index.js',
-  launcherType: 'Nodejs',
-  shouldAddHelpers: true,
-}, null, 2));
+execSync(
+  `npx esbuild scripts/ag-ui-proxy.ts --bundle --format=cjs --platform=node --outfile=${agUiFuncDir}/index.js`,
+  {
+    cwd: root,
+    stdio: 'inherit',
+  }
+);
+writeFileSync(
+  resolve(agUiFuncDir, '.vc-config.json'),
+  JSON.stringify(
+    {
+      runtime: 'nodejs20.x',
+      handler: 'index.js',
+      launcherType: 'Nodejs',
+      shouldAddHelpers: true,
+    },
+    null,
+    2
+  )
+);
 
 // Write output config with proper routing
-writeFileSync(resolve(outputDir, 'config.json'), JSON.stringify({
-  version: 3,
-  routes: [
-    // AG-UI proxy: /ag-ui/<topic>/agent[/rest] → ag-ui-proxy function.
-    // Mirrors the langgraph rule exactly: dest names the catch-all function
-    // (`[[...path]]`), which invokes it while PRESERVING the original request
-    // URL in req.url. The function (scripts/ag-ui-proxy.ts) parses the topic
-    // out of `/ag-ui/<topic>/agent`. A function is only reachable when a route
-    // dest names it like this — the filesystem handle does NOT auto-serve
-    // catch-all functions. Must precede the filesystem handle so static
-    // index.html lookups for /ag-ui/<topic>/ still resolve.
-    { src: '^/ag-ui/([^/]+)/agent(/.*)?$', dest: '/ag-ui-proxy/[[...path]]', check: true },
-    // Runtimes product (cockpit/runtimes/<topic>/) is AG-UI-served through
-    // the same proxy function; the function accepts either path prefix and
-    // still targets upstream /agent/<topic>.
-    { src: '^/runtimes/([^/]+)/agent(/.*)?$', dest: '/ag-ui-proxy/[[...path]]', check: true },
-    { src: '^/api/(.*)', dest: '/api/[[...path]]', check: true },
-    { handle: 'filesystem' },
-    { src: '^/(langgraph|deep-agents|render|chat|ag-ui|runtimes)/([^/]+)/(.+\\..+)$', dest: '/$1/$2/$3' },
-    { src: '^/(langgraph|deep-agents|render|chat|ag-ui|runtimes)/([^/]+)(/.*)?$', dest: '/$1/$2/index.html' },
-    { handle: 'error' },
-    { status: 404, src: '.*', dest: '/404.html' },
-  ],
-}, null, 2));
+writeFileSync(
+  resolve(outputDir, 'config.json'),
+  JSON.stringify(
+    {
+      version: 3,
+      routes: [
+        {
+          src: '^/(langgraph|deep-agents|render|chat|ag-ui|runtimes)(/.*)?$',
+          headers: runtimeParentOriginPolicy.deploymentHeaders,
+          continue: true,
+        },
+        // AG-UI proxy: /ag-ui/<topic>/agent[/rest] → ag-ui-proxy function.
+        // Mirrors the langgraph rule exactly: dest names the catch-all function
+        // (`[[...path]]`), which invokes it while PRESERVING the original request
+        // URL in req.url. The function (scripts/ag-ui-proxy.ts) parses the topic
+        // out of `/ag-ui/<topic>/agent`. A function is only reachable when a route
+        // dest names it like this — the filesystem handle does NOT auto-serve
+        // catch-all functions. Must precede the filesystem handle so static
+        // index.html lookups for /ag-ui/<topic>/ still resolve.
+        {
+          src: '^/ag-ui/([^/]+)/agent(/.*)?$',
+          dest: '/ag-ui-proxy/[[...path]]',
+          check: true,
+        },
+        // Runtimes product (cockpit/runtimes/<topic>/) is AG-UI-served through
+        // the same proxy function; the function accepts either path prefix and
+        // still targets upstream /agent/<topic>.
+        {
+          src: '^/runtimes/([^/]+)/agent(/.*)?$',
+          dest: '/ag-ui-proxy/[[...path]]',
+          check: true,
+        },
+        { src: '^/api/(.*)', dest: '/api/[[...path]]', check: true },
+        { handle: 'filesystem' },
+        {
+          src: '^/(langgraph|deep-agents|render|chat|ag-ui|runtimes)/([^/]+)/(.+\\..+)$',
+          dest: '/$1/$2/$3',
+        },
+        {
+          src: '^/(langgraph|deep-agents|render|chat|ag-ui|runtimes)/([^/]+)(/.*)?$',
+          dest: '/$1/$2/index.html',
+        },
+        { handle: 'error' },
+        { status: 404, src: '.*', dest: '/404.html' },
+      ],
+    },
+    null,
+    2
+  )
+);
 
-console.log('✅ .vercel/output/ (Build Output API with langgraph + AG-UI proxies)');
+console.log(
+  '✅ .vercel/output/ (Build Output API with langgraph + AG-UI proxies)'
+);
 
 console.log(`\nAssembled ${capabilities.length} apps + proxy to ${deployDir}`);

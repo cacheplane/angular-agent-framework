@@ -102,14 +102,6 @@ export const validateManifest = (
     if (entry.legacyPath !== expectedLegacyPath) {
       errors.push(`Invalid legacyPath for ${entry.id}: ${entry.legacyPath}`);
     }
-
-    const isRunnable = entry.availableModes.includes('Run');
-    if (isRunnable && entry.runtimeAdapter === 'none') {
-      errors.push(`Runnable entry has no runtime adapter: ${entry.id}`);
-    }
-    if (!isRunnable && entry.runtimeAdapter !== 'none') {
-      errors.push(`Non-runnable entry has a runtime adapter: ${entry.id}`);
-    }
   }
 
   for (const entry of manifest) {

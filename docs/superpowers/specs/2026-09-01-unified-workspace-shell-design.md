@@ -2,7 +2,7 @@
 
 ## Status
 
-Approved through interactive design review on 2026-09-01. This is release 1 of the unified control-plane program.
+Approved through interactive design review on 2026-09-01. Release 1 shipped in PR #949. The Cockpit surface retirement design now governs migration steps 6 and 7.
 
 ## Summary
 
@@ -130,7 +130,7 @@ No library may import from an application directory.
 - Canonical metadata for docs pages omits `mode`.
 - Unknown or incompatible modes fall back to the route's truthful default.
 
-Legacy Cockpit paths map through the registry. Redirect activation is a separate, reversible deployment step after production smoke proves the new destination.
+Legacy Cockpit paths map through the registry. Release 1 kept redirect activation separate and reversible while production parity was established. The follow-up retirement design governs the later, exhaustively preflighted permanent cutover and its forward-recovery contract.
 
 ## Information architecture
 
@@ -162,8 +162,8 @@ Docs page actions stay in the existing top-right ellipsis menu. The main article
 3. Render the existing Docs mode inside the workspace shell on website docs routes.
 4. Enable Run, Code, and API for mapped pages and add `/workspace/...` routes.
 5. Reach unit, E2E, accessibility, and production-smoke parity.
-6. Activate registry-driven redirects from legacy Cockpit URLs.
-7. Observe production before removing the fallback deployment in a later task.
+6. Activate registry-driven redirects from legacy Cockpit URLs as specified by `2026-09-01-cockpit-surface-retirement-design.md`.
+7. Remove the fallback interactive surface while retaining the redirect compatibility domain, as specified by that follow-up.
 
 Each step must be deployable without a flag-day dependency on the next.
 
@@ -173,7 +173,7 @@ Each step must be deployable without a flag-day dependency on the next.
 - A mode panel failure is contained by a panel boundary and does not replace Docs or navigation.
 - Existing Runtime and Activity error boundaries remain active.
 - Invalid legacy routes return the existing not-found behavior rather than a guessed redirect.
-- A failed redirect rollout can be reversed without rebuilding the unified workspace.
+- Before permanent cutover, a failed redirect rollout leaves the legacy deployment untouched. After permanent 308 promotion, recovery follows the retirement design and preserves stable Website destinations rather than assuming cached redirects can be recalled.
 
 ## Testing
 

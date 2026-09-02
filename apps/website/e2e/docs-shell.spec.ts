@@ -1,6 +1,13 @@
 import { test, expect } from '@playwright/test';
 
 const ARTICLE = '/docs/langgraph/getting-started/introduction';
+const PAGE_ACTION_LABELS = [
+  'On this page',
+  'Copy page as Markdown',
+  'Open in ChatGPT',
+  'View as Markdown',
+  'Edit on GitHub',
+];
 
 async function expectWorkspaceReady(page: import('@playwright/test').Page) {
   await expect(page.locator('[data-workspace-shell]')).toHaveAttribute(
@@ -113,5 +120,204 @@ test.describe('docs shell layout', () => {
     // The header and prev/next sit inside the article's horizontal padding.
     expect(article - header).toBeLessThanOrEqual(48);
     expect(header).toBe(prevNext);
+  });
+});
+
+test.describe('Page actions', () => {
+  for (const width of [320, 768, 1024, 1440]) {
+    test(`stays aligned and contained at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(ARTICLE);
+      await expectWorkspaceReady(page);
+
+      const header = page.locator('.docs-page-header');
+      const trigger = page.getByRole('button', { name: 'Page actions' });
+      await expect(header).toBeVisible();
+      await expect(trigger).toBeVisible();
+
+      const [headerBox, triggerBox] = await Promise.all([
+        header.boundingBox(),
+        trigger.boundingBox(),
+      ]);
+      expect(headerBox).not.toBeNull();
+      expect(triggerBox).not.toBeNull();
+      if (!headerBox || !triggerBox) throw new Error('Expected Page actions geometry');
+
+      expect(triggerBox.width).toBeGreaterThanOrEqual(44);
+      expect(triggerBox.height).toBeGreaterThanOrEqual(44);
+      expect(triggerBox.x).toBeGreaterThanOrEqual(headerBox.x);
+      expect(triggerBox.x + triggerBox.width).toBeLessThanOrEqual(
+        headerBox.x + headerBox.width,
+      );
+      expect(
+        Math.abs(
+          triggerBox.x + triggerBox.width -
+            (headerBox.x + headerBox.width),
+        ),
+      ).toBeLessThanOrEqual(1);
+      expect(triggerBox.y).toBeGreaterThanOrEqual(headerBox.y);
+      expect(triggerBox.y + triggerBox.height).toBeLessThanOrEqual(
+        headerBox.y + headerBox.height,
+      );
+      expect(
+        Math.abs(
+          triggerBox.y + triggerBox.height / 2 -
+            (headerBox.y + headerBox.height / 2),
+        ),
+      ).toBeLessThanOrEqual(1);
+
+      await trigger.click();
+      const menu = page.getByRole('menu');
+      await expect(menu).toBeVisible();
+      await expect
+        .poll(() =>
+          menu
+            .getByRole('menuitem')
+            .evaluateAll((items) => items.map((item) => item.textContent?.trim())),
+        )
+        .toEqual(PAGE_ACTION_LABELS);
+
+      const menuBox = await menu.boundingBox();
+      expect(menuBox).not.toBeNull();
+      if (!menuBox) throw new Error('Expected open Page actions menu geometry');
+      const viewport = await page.evaluate(() => ({
+        height: window.visualViewport?.height ?? window.innerHeight,
+        width: window.visualViewport?.width ?? window.innerWidth,
+        x: window.visualViewport?.offsetLeft ?? 0,
+        y: window.visualViewport?.offsetTop ?? 0,
+      }));
+      const safeInset = 8;
+      expect(menuBox.x).toBeGreaterThanOrEqual(viewport.x + safeInset);
+      expect(menuBox.y).toBeGreaterThanOrEqual(viewport.y + safeInset);
+      expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(
+        viewport.x + viewport.width - safeInset,
+      );
+      expect(menuBox.y + menuBox.height).toBeLessThanOrEqual(
+        viewport.y + viewport.height - safeInset,
+      );
+
+      const documentGeometry = await page.evaluate(() => {
+        const articleScroller = document.querySelector('.docs-workspace-article');
+        if (!(articleScroller instanceof HTMLElement)) {
+          throw new Error('Expected docs article scroller');
+        }
+        return {
+          articleClientWidth: articleScroller.clientWidth,
+          articleScrollWidth: articleScroller.scrollWidth,
+          rootClientWidth: document.documentElement.clientWidth,
+          rootScrollWidth: document.documentElement.scrollWidth,
+        };
+      });
+      expect(documentGeometry.articleScrollWidth).toBeLessThanOrEqual(
+        documentGeometry.articleClientWidth,
+      );
+      expect(documentGeometry.rootScrollWidth).toBeLessThanOrEqual(
+        documentGeometry.rootClientWidth,
+      );
+    });
+  }
+
+  test('reveals its tooltip for fine-pointer hover and keyboard focus', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1024, height: 900 });
+    await page.goto(ARTICLE);
+    await expectWorkspaceReady(page);
+    expect(await page.evaluate(() => matchMedia('(pointer: fine)').matches)).toBe(true);
+
+    const trigger = page.getByRole('button', { name: 'Page actions' });
+    const tooltip = page.getByRole('tooltip', { name: 'Page actions' });
+    await expect(tooltip).toBeHidden();
+
+    await trigger.hover();
+    await expect(tooltip).toBeVisible();
+    await page.mouse.move(1, 1);
+    await expect(tooltip).toBeHidden();
+
+    await trigger.focus();
+    await page.keyboard.press('Shift+Tab');
+    await page.keyboard.press('Tab');
+    await expect(trigger).toBeFocused();
+    expect(await trigger.evaluate((element) => element.matches(':focus-visible'))).toBe(
+      true,
+    );
+    await expect(tooltip).toBeVisible();
+
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('menu')).toBeVisible();
+    await expect(page.getByRole('tooltip')).toHaveCount(0);
+
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('menu')).toHaveCount(0);
+    await expect(trigger).toBeFocused();
+    await expect(tooltip).toBeVisible();
+  });
+
+  test('keeps a visible system-color trigger boundary and focus indicator', async ({
+    page,
+  }) => {
+    await page.emulateMedia({ forcedColors: 'active' });
+    await page.setViewportSize({ width: 1024, height: 900 });
+    await page.goto(ARTICLE);
+    await expectWorkspaceReady(page);
+
+    const trigger = page.getByRole('button', { name: 'Page actions' });
+    await trigger.focus();
+    await expect(page.getByRole('tooltip', { name: 'Page actions' })).toBeVisible();
+    const styles = await trigger.evaluate((element) => {
+      const reference = document.createElement('div');
+      reference.style.color = 'CanvasText';
+      reference.style.backgroundColor = 'Canvas';
+      reference.style.outline = '2px solid Highlight';
+      reference.style.forcedColorAdjust = 'none';
+      document.body.append(reference);
+
+      const style = getComputedStyle(element);
+      const referenceStyle = getComputedStyle(reference);
+      const result = {
+        system: {
+          canvas: referenceStyle.backgroundColor,
+          canvasText: referenceStyle.color,
+          highlight: referenceStyle.outlineColor,
+        },
+        trigger: {
+          backgroundColor: style.backgroundColor,
+          borderColor: style.borderTopColor,
+          borderStyle: style.borderTopStyle,
+          borderWidth: style.borderTopWidth,
+          outlineColor: style.outlineColor,
+          outlineStyle: style.outlineStyle,
+          outlineWidth: style.outlineWidth,
+        },
+      };
+      reference.remove();
+      return result;
+    });
+
+    expect(styles.trigger.backgroundColor).toBe(styles.system.canvas);
+    expect(styles.trigger.borderColor).toBe(styles.system.canvasText);
+    expect(styles.trigger.borderColor).not.toBe(styles.trigger.backgroundColor);
+    expect(styles.trigger.borderStyle).not.toBe('none');
+    expect(Number.parseFloat(styles.trigger.borderWidth)).toBeGreaterThan(0);
+    expect(styles.trigger.outlineColor).toBe(styles.system.highlight);
+    expect(styles.trigger.outlineStyle).not.toBe('none');
+    expect(Number.parseFloat(styles.trigger.outlineWidth)).toBeGreaterThan(0);
+  });
+
+  test('removes the tooltip transition when reduced motion is requested', async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.setViewportSize({ width: 1024, height: 900 });
+    await page.goto(ARTICLE);
+    await expectWorkspaceReady(page);
+
+    const trigger = page.getByRole('button', { name: 'Page actions' });
+    await trigger.focus();
+    const tooltip = page.getByRole('tooltip', { name: 'Page actions' });
+    await expect(tooltip).toBeVisible();
+    expect(
+      await tooltip.evaluate((element) => getComputedStyle(element).transitionDuration),
+    ).toBe('0s');
   });
 });

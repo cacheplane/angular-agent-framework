@@ -1,7 +1,15 @@
 // SPDX-License-Identifier: MIT
 import type { Client, StreamMode, ThreadState } from '@langchain/langgraph-sdk';
 import type { AgentQueueEntry, AgentTransport, LangGraphClientOptions, LangGraphSubmitOptions, StreamEvent } from '../agent.types';
-import { createLangGraphClient } from '../client/create-langgraph-client';
+import {
+  createLangGraphClient,
+  ɵcreateProtectedLangGraphClient,
+} from '../client/create-langgraph-client';
+import {
+  createLangGraphRuntimeFetch,
+  projectLangGraphOperationFailure,
+  type RuntimeOperationFailureReporter,
+} from '../runtime-operation-reporter';
 
 /**
  * Production transport that connects to a LangGraph Platform API via HTTP and SSE.
@@ -20,17 +28,36 @@ import { createLangGraphClient } from '../client/create-langgraph-client';
 export class FetchStreamTransport implements AgentTransport {
   private client: Client;
   private onThreadId?: (id: string) => void;
+  private readonly protectErrors: boolean;
+  private readonly reportOperationFailure?: RuntimeOperationFailureReporter;
+  /** @internal True only when this adapter installed its SDK error boundary. */
+  readonly protectsOperationErrors: boolean;
 
   /**
    * @param apiUrl - Base URL of the LangGraph Platform API
    * @param onThreadId - Optional callback invoked when a new thread is created
    * @param clientOptions - Optional SDK client tuning (e.g. `maxRetries`)
    */
-  constructor(apiUrl: string, onThreadId?: (id: string) => void, clientOptions?: LangGraphClientOptions) {
+  constructor(
+    apiUrl: string,
+    onThreadId?: (id: string) => void,
+    clientOptions?: LangGraphClientOptions,
+    /** @internal Cockpit generation-bound failure reporting hook. */
+    reportOperationFailure?: RuntimeOperationFailureReporter,
+  ) {
     // createLangGraphClient handles the absolute-URL normalization
     // required by the SDK when `apiUrl` is a relative `/api`-style
     // path proxied by middleware in production.
-    this.client = createLangGraphClient(apiUrl, clientOptions);
+    this.protectErrors = typeof clientOptions?.apiKey === 'string' || reportOperationFailure !== undefined;
+    this.protectsOperationErrors = this.protectErrors;
+    this.reportOperationFailure = reportOperationFailure;
+    this.client = this.protectErrors
+      ? ɵcreateProtectedLangGraphClient(
+          apiUrl,
+          clientOptions,
+          createLangGraphRuntimeFetch(reportOperationFailure),
+        )
+      : createLangGraphClient(apiUrl, clientOptions);
     this.onThreadId = onThreadId;
   }
 
@@ -44,20 +71,36 @@ export class FetchStreamTransport implements AgentTransport {
   ): AsyncIterable<StreamEvent> {
     let thread = threadId;
     if (!thread) {
-      const t = await this.client.threads.create();
-      thread = t.thread_id;
-      this.onThreadId?.(thread);
+      try {
+        const t = await this.client.threads.create();
+        thread = t.thread_id;
+      } catch (error) {
+        this.rethrowOperationError(error, signal);
+      }
+      try {
+        this.onThreadId?.(thread);
+      } catch (error) {
+        this.rethrowLocalError(error, signal);
+      }
     }
 
-    const run = this.client.runs.stream(
-      thread,
-      assistantId,
-      buildRunPayload(payload, signal, options),
-    );
-
-    for await (const event of run) {
-      yield normalizeSdkEvent(event.event as StreamEvent['type'], event.data);
+    let runPayload: ReturnType<typeof buildRunPayload>;
+    try {
+      runPayload = buildRunPayload(payload, signal, options);
+    } catch (error) {
+      return this.rethrowLocalError(error, signal);
     }
+    let run: ReturnType<Client['runs']['stream']>;
+    try {
+      run = this.client.runs.stream(
+        thread,
+        assistantId,
+        runPayload,
+      );
+    } catch (error) {
+      this.rethrowOperationError(error, signal);
+    }
+    yield* this.iterateSdkRun(run, signal);
   }
 
   /** Join an already-started run without creating a new thread. */
@@ -68,14 +111,16 @@ export class FetchStreamTransport implements AgentTransport {
     signal: AbortSignal,
   ): AsyncIterable<StreamEvent> {
     // SDK joinStream: joins an already-started run without creating a new one.
-    const run = this.client.runs.joinStream(threadId, runId, {
-      signal,
-      ...(lastEventId !== undefined ? { lastEventId } : {}),
-    });
-
-    for await (const event of run) {
-      yield normalizeSdkEvent(event.event as StreamEvent['type'], event.data);
+    let run: ReturnType<Client['runs']['joinStream']>;
+    try {
+      run = this.client.runs.joinStream(threadId, runId, {
+        signal,
+        ...(lastEventId !== undefined ? { lastEventId } : {}),
+      });
+    } catch (error) {
+      this.rethrowOperationError(error, signal);
     }
+    yield* this.iterateSdkRun(run, signal);
   }
 
   /** Create a pending server-side run using LangGraph's enqueue strategy. */
@@ -86,28 +131,50 @@ export class FetchStreamTransport implements AgentTransport {
     signal: AbortSignal,
     options?: LangGraphSubmitOptions,
   ): Promise<AgentQueueEntry> {
-    const run = await this.client.runs.create(threadId, assistantId, {
-      ...buildRunPayload(payload, signal, options),
-      multitaskStrategy: 'enqueue',
-    });
-
-    return {
-      id: run.run_id,
-      threadId: run.thread_id ?? threadId,
-      values: payload,
-      options: { multitaskStrategy: 'enqueue', signal },
-      createdAt: run.created_at ? new Date(run.created_at) : new Date(),
-    };
+    let runPayload: ReturnType<typeof buildRunPayload> & { multitaskStrategy: 'enqueue' };
+    try {
+      runPayload = {
+        ...buildRunPayload(payload, signal, options),
+        multitaskStrategy: 'enqueue',
+      };
+    } catch (error) {
+      return this.rethrowLocalError(error, signal);
+    }
+    let run: Awaited<ReturnType<Client['runs']['create']>>;
+    try {
+      run = await this.client.runs.create(threadId, assistantId, runPayload);
+    } catch (error) {
+      return this.rethrowOperationError(error, signal);
+    }
+    try {
+      return {
+        id: run.run_id,
+        threadId: run.thread_id ?? threadId,
+        values: payload,
+        options: { multitaskStrategy: 'enqueue', signal },
+        createdAt: run.created_at ? new Date(run.created_at) : new Date(),
+      };
+    } catch (error) {
+      return this.rethrowLocalError(error, signal);
+    }
   }
 
   /** Cancel a server-side run. */
   async cancelRun(threadId: string, runId: string, signal: AbortSignal): Promise<void> {
-    await this.client.runs.cancel(threadId, runId, false, 'interrupt', { signal });
+    try {
+      await this.client.runs.cancel(threadId, runId, false, 'interrupt', { signal });
+    } catch (error) {
+      this.rethrowOperationError(error, signal);
+    }
   }
 
   /** Load persisted checkpoint history for a thread. */
   async getHistory(threadId: string, signal: AbortSignal): Promise<ThreadState[]> {
-    return this.client.threads.getHistory(threadId, { signal });
+    try {
+      return await this.client.threads.getHistory(threadId, { signal });
+    } catch (error) {
+      return this.rethrowOperationError(error, signal);
+    }
   }
 
   /** Update server-side thread state, e.g. to remove messages for regenerate rollback. */
@@ -121,7 +188,47 @@ export class FetchStreamTransport implements AgentTransport {
     if (options?.asNode !== undefined) {
       body.asNode = options.asNode;
     }
-    await this.client.threads.updateState(threadId, body);
+    try {
+      await this.client.threads.updateState(threadId, body);
+    } catch (error) {
+      this.rethrowOperationError(error, _signal);
+    }
+  }
+
+  private rethrowOperationError(error: unknown, signal: AbortSignal): never {
+    if (!this.protectErrors) throw error;
+    return projectLangGraphOperationFailure(error, signal, this.reportOperationFailure);
+  }
+
+  private rethrowLocalError(error: unknown, signal: AbortSignal): never {
+    if (!this.protectErrors) throw error;
+    return projectLangGraphOperationFailure(error, signal, undefined);
+  }
+
+  private async *iterateSdkRun(
+    run: ReturnType<Client['runs']['stream']> | ReturnType<Client['runs']['joinStream']>,
+    signal: AbortSignal,
+  ): AsyncIterable<StreamEvent> {
+    let iterator: AsyncIterator<{ event: string; data: unknown }>;
+    try {
+      iterator = run[Symbol.asyncIterator]();
+    } catch (error) {
+      return this.rethrowOperationError(error, signal);
+    }
+    while (true) {
+      let next: IteratorResult<{ event: string; data: unknown }>;
+      try {
+        next = await iterator.next();
+      } catch (error) {
+        return this.rethrowOperationError(error, signal);
+      }
+      if (next.done) return;
+      try {
+        yield normalizeSdkEvent(next.value.event as StreamEvent['type'], next.value.data);
+      } catch (error) {
+        return this.rethrowLocalError(error, signal);
+      }
+    }
   }
 }
 

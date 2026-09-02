@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { afterEach, describe, it, expect, vi, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import {
   LangGraphThreadsAdapter,
@@ -7,12 +7,22 @@ import {
   LANGGRAPH_CLIENT,
 } from './threads-adapter';
 import type { Client } from '@langchain/langgraph-sdk';
-import { createLangGraphClient } from '../client/create-langgraph-client';
+import {
+  createLangGraphClient,
+  ɵcreateProtectedLangGraphClient,
+} from '../client/create-langgraph-client';
 import { LANGGRAPH_CLIENT_OPTIONS } from '../client/client-options';
+import { ɵLANGGRAPH_RUNTIME_OPERATION_REPORTER } from '../runtime-operation-reporter';
 
 vi.mock('../client/create-langgraph-client', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../client/create-langgraph-client')>();
-  return { ...actual, createLangGraphClient: vi.fn(actual.createLangGraphClient) };
+  return {
+    ...actual,
+    createLangGraphClient: vi.fn(actual.createLangGraphClient),
+    ɵcreateProtectedLangGraphClient: vi.fn(
+      actual.ɵcreateProtectedLangGraphClient
+    ),
+  };
 });
 
 function mockClient(searchReturn: unknown[] = []): {
@@ -153,6 +163,121 @@ describe('LangGraphThreadsAdapter client options', () => {
   beforeEach(() => {
     TestBed.resetTestingModule();
     vi.mocked(createLangGraphClient).mockClear();
+    vi.mocked(ɵcreateProtectedLangGraphClient).mockClear();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  for (const operation of ['refresh', 'create', 'delete'] as const) {
+    for (const status of [401, 403] as const) {
+      it(`reports ${status} from adapter-created ${operation} as unauthorized`, async () => {
+        const reportOperationFailure = vi.fn();
+        const fetchMock = vi.fn().mockResolvedValue(
+          new Response('test-key-redact-me-poison-body', { status })
+        );
+        vi.stubGlobal('fetch', fetchMock);
+        TestBed.configureTestingModule({
+          providers: [
+            {
+              provide: LANGGRAPH_THREADS_CONFIG,
+              useValue: { apiUrl: 'https://runtime.example/api' },
+            },
+            {
+              provide: LANGGRAPH_CLIENT_OPTIONS,
+              useValue: { apiKey: 'test-key-redact-me', maxRetries: 0 },
+            },
+            {
+              provide: ɵLANGGRAPH_RUNTIME_OPERATION_REPORTER,
+              useValue: reportOperationFailure,
+            },
+          ],
+        });
+
+        const adapter = TestBed.inject(LangGraphThreadsAdapter);
+        if (operation === 'refresh') await adapter.refresh();
+        if (operation === 'create') await adapter.create();
+        if (operation === 'delete') {
+          await adapter.delete('thread-1').catch(() => undefined);
+        }
+
+        expect(fetchMock).toHaveBeenCalled();
+        expect(reportOperationFailure).toHaveBeenCalledExactlyOnceWith(
+          'unauthorized'
+        );
+      });
+    }
+  }
+
+  it('reports network_blocked once after adapter-created client retry exhaustion', async () => {
+    const reportOperationFailure = vi.fn();
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValue(new TypeError('test-key-redact-me'));
+    vi.stubGlobal('fetch', fetchMock);
+    const errorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
+    TestBed.configureTestingModule({
+      providers: [
+        {
+          provide: LANGGRAPH_THREADS_CONFIG,
+          useValue: { apiUrl: 'https://runtime.example/api' },
+        },
+        {
+          provide: LANGGRAPH_CLIENT_OPTIONS,
+          useValue: { apiKey: 'test-key-redact-me', maxRetries: 1 },
+        },
+        {
+          provide: ɵLANGGRAPH_RUNTIME_OPERATION_REPORTER,
+          useValue: reportOperationFailure,
+        },
+      ],
+    });
+
+    await TestBed.inject(LangGraphThreadsAdapter).refresh();
+
+    expect(fetchMock).toHaveBeenCalled();
+    expect(reportOperationFailure).toHaveBeenCalledExactlyOnceWith(
+      'network_blocked'
+    );
+    expect(JSON.stringify(errorSpy.mock.calls)).not.toContain(
+      'test-key-redact-me'
+    );
+    errorSpy.mockRestore();
+  });
+
+  it('does not classify an arbitrary injected-client error by status', async () => {
+    const reportOperationFailure = vi.fn();
+    const remoteError = Object.assign(new Error('ordinary app failure'), {
+      status: 401,
+    });
+    const client = {
+      threads: { search: vi.fn().mockRejectedValue(remoteError) },
+    } as unknown as Client;
+    const errorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: LANGGRAPH_THREADS_CONFIG, useValue: { apiUrl: 'http://x' } },
+        { provide: LANGGRAPH_CLIENT, useValue: client },
+        {
+          provide: ɵLANGGRAPH_RUNTIME_OPERATION_REPORTER,
+          useValue: reportOperationFailure,
+        },
+      ],
+    });
+
+    await TestBed.inject(LangGraphThreadsAdapter).refresh();
+
+    expect(reportOperationFailure).not.toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalledWith(
+      '[LangGraphThreadsAdapter.refresh] failed:',
+      remoteError
+    );
+    errorSpy.mockRestore();
   });
 
   it('threads LANGGRAPH_CLIENT_OPTIONS into createLangGraphClient', () => {
@@ -164,6 +289,27 @@ describe('LangGraphThreadsAdapter client options', () => {
     });
     TestBed.inject(LangGraphThreadsAdapter);
     expect(createLangGraphClient).toHaveBeenCalledWith('http://x', { maxRetries: 0 });
+  });
+
+  it('passes an explicit api key to the threads SDK client', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        {
+          provide: LANGGRAPH_THREADS_CONFIG,
+          useValue: { apiUrl: 'https://runtime.example/api' },
+        },
+        {
+          provide: LANGGRAPH_CLIENT_OPTIONS,
+          useValue: { apiKey: 'test-key-redact-me', maxRetries: 0 },
+        },
+      ],
+    });
+    TestBed.inject(LangGraphThreadsAdapter);
+    expect(ɵcreateProtectedLangGraphClient).toHaveBeenCalledWith(
+      'https://runtime.example/api',
+      { apiKey: 'test-key-redact-me', maxRetries: 0 },
+      expect.any(Function)
+    );
   });
 
   it('passes undefined options when the token is absent', () => {
@@ -187,5 +333,93 @@ describe('LangGraphThreadsAdapter client options', () => {
     });
     TestBed.inject(LangGraphThreadsAdapter);
     expect(createLangGraphClient).not.toHaveBeenCalled();
+  });
+
+  it('does not retain or log remote error text when an explicit key is configured', async () => {
+    const remoteError = new Error('remote echoed test-key-redact-me');
+    const client = {
+      threads: { search: vi.fn().mockRejectedValue(remoteError) },
+    } as unknown as Client;
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    TestBed.configureTestingModule({
+      providers: [
+        {
+          provide: LANGGRAPH_THREADS_CONFIG,
+          useValue: { apiUrl: 'https://runtime.example/api' },
+        },
+        {
+          provide: LANGGRAPH_CLIENT_OPTIONS,
+          useValue: { apiKey: 'test-key-redact-me' },
+        },
+        { provide: LANGGRAPH_CLIENT, useValue: client },
+      ],
+    });
+
+    await TestBed.inject(LangGraphThreadsAdapter).refresh();
+
+    expect(JSON.stringify(errorSpy.mock.calls)).not.toContain('test-key-redact-me');
+    expect(errorSpy).toHaveBeenCalledWith(
+      '[LangGraphThreadsAdapter.refresh] failed:',
+      expect.objectContaining({ name: 'LangGraphRequestError' }),
+    );
+    errorSpy.mockRestore();
+  });
+
+  it('rethrows a sanitized threads error when an explicit key is configured', async () => {
+    const client = {
+      threads: {
+        get: vi.fn().mockRejectedValue(new Error('remote echoed test-key-redact-me')),
+      },
+    } as unknown as Client;
+    TestBed.configureTestingModule({
+      providers: [
+        {
+          provide: LANGGRAPH_THREADS_CONFIG,
+          useValue: { apiUrl: 'https://runtime.example/api' },
+        },
+        {
+          provide: LANGGRAPH_CLIENT_OPTIONS,
+          useValue: { apiKey: 'test-key-redact-me' },
+        },
+        { provide: LANGGRAPH_CLIENT, useValue: client },
+      ],
+    });
+
+    const error = await TestBed.inject(LangGraphThreadsAdapter)
+      .getThread('thread-1')
+      .catch((reason: unknown) => reason);
+
+    expect(error).toMatchObject({
+      name: 'LangGraphRequestError',
+      message: 'The LangGraph request failed.',
+    });
+    expect(JSON.stringify(error)).not.toContain('test-key-redact-me');
+  });
+
+  it('fails closed when getThread receives hostile status/response getters with a key', async () => {
+    const hostile = new Proxy({}, {
+      get() { throw new Error('test-key-redact-me'); },
+      getOwnPropertyDescriptor() { throw new Error('test-key-redact-me'); },
+    });
+    const client = {
+      threads: { get: vi.fn().mockRejectedValue(hostile) },
+    } as unknown as Client;
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: LANGGRAPH_THREADS_CONFIG, useValue: { apiUrl: 'https://runtime.example/api' } },
+        { provide: LANGGRAPH_CLIENT_OPTIONS, useValue: { apiKey: 'test-key-redact-me' } },
+        { provide: LANGGRAPH_CLIENT, useValue: client },
+      ],
+    });
+
+    const error = await TestBed.inject(LangGraphThreadsAdapter)
+      .getThread('thread-1')
+      .catch((reason: unknown) => reason);
+
+    expect(error).toMatchObject({
+      name: 'LangGraphRequestError',
+      message: 'The LangGraph request failed.',
+    });
+    expect(JSON.stringify(error)).not.toContain('test-key-redact-me');
   });
 });

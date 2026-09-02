@@ -28,7 +28,12 @@ describe('backendCommand', () => {
 
   it('returns null when the capability has no pythonDir', () => {
     const noPy: Capability = {
-      id: 'x', product: 'render', topic: 'x', angularProject: 'cockpit-render-x-angular', port: 4499,
+      id: 'x',
+      runtimeAdapter: 'none',
+      product: 'render',
+      topic: 'x',
+      angularProject: 'cockpit-render-x-angular',
+      port: 4499,
     };
     expect(backendCommand(noPy)).toBeNull();
   });

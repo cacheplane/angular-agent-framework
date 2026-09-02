@@ -1,9 +1,18 @@
 // SPDX-License-Identifier: MIT
 import { installEmbeddedTheme } from '@threadplane/example-layouts';
+import { ɵLANGGRAPH_RUNTIME_OPERATION_REPORTER } from '@threadplane/langgraph';
+import { bootstrapWithCockpitHarness } from '@threadplane/cockpit-telemetry';
 import { appConfig } from './app/app.config';
 import { TimelineComponent } from './app/timeline.component';
-import { bootstrapWithCockpitHarness } from '@threadplane/cockpit-telemetry';
+import { environment } from './environments/environment';
 
 installEmbeddedTheme();
 
-bootstrapWithCockpitHarness(TimelineComponent, appConfig);
+void bootstrapWithCockpitHarness(TimelineComponent, appConfig, {
+  runtime: {
+    adapter: 'langgraph',
+    sharedApiUrl: environment.langGraphApiUrl,
+    assistantId: environment.streamingAssistantId,
+    operationReporterToken: ɵLANGGRAPH_RUNTIME_OPERATION_REPORTER,
+  },
+}).catch(() => undefined);

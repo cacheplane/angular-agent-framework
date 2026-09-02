@@ -42,6 +42,7 @@ import {
   type RuntimeActivityInput,
 } from './runtime/session-activity';
 import { copyRuntimeDiagnostics } from './runtime/runtime-diagnostics';
+import { useEffectiveRuntimeTarget } from './runtime/runtime-target-provider';
 import { useRuntimeController } from './runtime/use-runtime-controller';
 import type {
   WorkspaceContextValue,
@@ -192,6 +193,9 @@ export function WorkspaceProvider({
     resolution.kind === 'mapped'
       ? resolution.identity.topic
       : resolution.docsPath;
+  const runtimeAdapter =
+    resolution.kind === 'mapped' ? resolution.identity.runtimeAdapter : 'none';
+  const effectiveRuntimeTarget = useEffectiveRuntimeTarget(runtimeAdapter);
 
   const appendActivity = useCallback((input: RuntimeActivityInput) => {
     dispatchActivity({
@@ -212,6 +216,7 @@ export function WorkspaceProvider({
       ? contentBundle.runtimeUrl
       : null,
     capability,
+    effectiveTarget: effectiveRuntimeTarget,
     onActivity: appendActivity,
     onTerminalTransition: handleTerminalTransition,
   });
@@ -242,12 +247,7 @@ export function WorkspaceProvider({
         lastNormalizationRef.current = null;
       }
     },
-    [
-      modeAvailability,
-      replaceMode,
-      resolution,
-      routeKind,
-    ]
+    [modeAvailability, replaceMode, resolution, routeKind]
   );
 
   const resolutionKey = routeIdentityKey(resolution);
@@ -366,7 +366,12 @@ export function WorkspaceProvider({
 
   const copyDiagnostics = useCallback(async () => {
     const snapshot = runtimeController.snapshot;
-    const outcome = await copyRuntimeDiagnostics(snapshot, events);
+    const outcome = await copyRuntimeDiagnostics(
+      snapshot,
+      events,
+      undefined,
+      runtimeController.runtimeContext
+    );
     appendActivity(
       createLocalActivityInput(capability, {
         kind:

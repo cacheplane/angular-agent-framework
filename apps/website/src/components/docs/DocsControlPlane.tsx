@@ -3,17 +3,13 @@
 import {
   BookOpen,
   Braces,
-  Cloud,
   Code2,
   ExternalLink,
-  Gauge,
-  MonitorCog,
   Play,
   Search,
 } from 'lucide-react';
 import {
   ControlPlaneActionBar,
-  ControlPlaneEnvironmentList,
   ControlPlaneIconButton,
   ControlPlanePane,
   ControlPlaneRail,
@@ -26,14 +22,6 @@ import {
   getLibraryConfig,
   type LibraryId,
 } from '../../lib/docs-config';
-import {
-  buildCockpitHandoffProperties,
-  buildCockpitModeHref,
-  COCKPIT_ENVIRONMENT_LABEL,
-  resolveCockpitIdentity,
-} from '../../lib/cockpit-links';
-import { track } from '../../lib/analytics/client';
-import { analyticsEvents } from '../../lib/analytics/events';
 import { DocsNavigation } from './DocsSidebar';
 
 export interface DocsControlPlaneProps {
@@ -57,12 +45,10 @@ export function DocsContextContent({
   mobile = false,
   onNavigate,
   onSearchHandoff,
-  showRuntime = true,
 }: DocsControlPlaneProps & {
   mobile?: boolean;
   onNavigate?: () => void;
   onSearchHandoff?: () => void;
-  showRuntime?: boolean;
 }) {
   const preferences = useControlPlanePreferences('docs');
   const library = activeLibrary ? getLibraryConfig(activeLibrary) : undefined;
@@ -81,49 +67,6 @@ export function DocsContextContent({
     onNavigate?.();
     window.requestAnimationFrame(dispatchSearch);
   };
-  const identity = {
-    library: activeLibrary ?? '',
-    section: activeSection,
-    slug: activeSlug,
-  };
-  const target = resolveCockpitIdentity(
-    identity.library,
-    identity.section,
-    identity.slug
-  );
-  const runtimeHref = buildCockpitModeHref(identity, 'Run');
-  const trackHandoff = (mode: 'Run' | 'Code' | 'API') =>
-    track(
-      analyticsEvents.docsCockpitHandoff,
-      buildCockpitHandoffProperties(identity, mode)
-    );
-  const runtimeRows = [
-    {
-      label: 'Environment',
-      value: COCKPIT_ENVIRONMENT_LABEL,
-      icon: <Cloud size={15} aria-hidden="true" />,
-    },
-    {
-      label: 'Destination',
-      value: 'Cockpit',
-      icon: <MonitorCog size={15} aria-hidden="true" />,
-    },
-    ...(target
-      ? [
-          {
-            label: 'Capability',
-            value: target.topic,
-            icon: <Gauge size={15} aria-hidden="true" />,
-          },
-        ]
-      : []),
-    {
-      label: 'Mode',
-      value: 'Run',
-      icon: <Play size={15} aria-hidden="true" />,
-    },
-  ];
-
   return (
     <div data-docs-control-plane-context data-mobile={mobile || undefined}>
       <ControlPlaneSection title="Scope" collapsible={false}>
@@ -152,27 +95,6 @@ export function DocsContextContent({
         />
       </ControlPlaneSection>
 
-      {showRuntime ? (
-        <div data-docs-runtime-preview>
-          <ControlPlaneSection
-            title="Runtime"
-            summary="Cockpit"
-            open={preferences.expanded.Runtime ?? false}
-            onOpenChange={(open) => preferences.setExpanded('Runtime', open)}
-          >
-            <ControlPlaneEnvironmentList rows={runtimeRows} />
-            <ControlPlaneActionBar label="Runtime actions">
-              <ControlPlaneIconButton
-                label="Open controls in Cockpit"
-                icon={<ExternalLink size={16} aria-hidden="true" />}
-                href={runtimeHref}
-                onClick={() => trackHandoff('Run')}
-              />
-            </ControlPlaneActionBar>
-          </ControlPlaneSection>
-        </div>
-      ) : null}
-
       <ControlPlaneSection title="Actions" collapsible={false}>
         <ControlPlaneActionBar label="Docs actions">
           <ControlPlaneIconButton
@@ -196,19 +118,11 @@ export function DocsContextContent({
 }
 
 export function DocsControlPlane(props: DocsControlPlaneProps) {
-  const identity = {
-    library: props.activeLibrary ?? '',
-    section: props.activeSection,
-    slug: props.activeSlug,
-  };
   const currentPath = props.activeLibrary
     ? `/docs/${props.activeLibrary}/${props.activeSection}/${props.activeSlug}`
     : '/docs';
-  const handoff = (mode: 'Run' | 'Code' | 'API') =>
-    track(
-      analyticsEvents.docsCockpitHandoff,
-      buildCockpitHandoffProperties(identity, mode)
-    );
+  const disabledReason = (mode: 'Run' | 'Code' | 'API') =>
+    `${mode} is unavailable because this page has no workspace capability.`;
 
   return (
     <div className="docs-control-plane" data-docs-control-plane>
@@ -225,20 +139,20 @@ export function DocsControlPlane(props: DocsControlPlaneProps) {
             <ControlPlaneRailItem
               label="Run"
               icon={<Play size={18} aria-hidden="true" />}
-              href={buildCockpitModeHref(identity, 'Run')}
-              onSelect={() => handoff('Run')}
+              disabled
+              disabledReason={disabledReason('Run')}
             />
             <ControlPlaneRailItem
               label="Code"
               icon={<Code2 size={18} aria-hidden="true" />}
-              href={buildCockpitModeHref(identity, 'Code')}
-              onSelect={() => handoff('Code')}
+              disabled
+              disabledReason={disabledReason('Code')}
             />
             <ControlPlaneRailItem
               label="API"
               icon={<Braces size={18} aria-hidden="true" />}
-              href={buildCockpitModeHref(identity, 'API')}
-              onSelect={() => handoff('API')}
+              disabled
+              disabledReason={disabledReason('API')}
             />
           </>
         }

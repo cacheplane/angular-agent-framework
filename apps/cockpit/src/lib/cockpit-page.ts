@@ -1,174 +1,98 @@
 import {
-  cockpitManifest,
-  getWorkspaceDestinationPath,
+  getCanonicalWebsiteWorkspaceHref,
   resolveLegacyPath,
-  toWorkspaceIdentity,
-  type CockpitProduct,
-  type CockpitSection,
-  type CockpitPageId,
-  type CockpitLanguage,
-  type WorkspaceMode,
+  resolveLegacyRequestMode,
   type WorkspaceResolution,
 } from '@threadplane/cockpit-registry';
-import {
-  buildNavigationTree,
-  getWorkspacePresentation,
-  resolveCockpitEntry,
-  toCockpitPath,
-  type NavigationProduct,
-  type WorkspacePresentation,
-} from '@threadplane/cockpit-shell';
 
-export { cockpitManifest };
+const ROOT_STREAMING_LEGACY_PATH =
+  '/langgraph/core-capabilities/streaming/overview/python';
 
-export interface CockpitPageModel {
-  entry: ReturnType<typeof resolveCockpitEntry>;
-  resolution: WorkspaceResolution;
-  presentation: WorkspacePresentation;
-  navigationTree: NavigationProduct[];
-  canonicalPath: string;
-}
-
-const DEFAULT_COCKPIT_SLUG = [
-  'langgraph',
-  'core-capabilities',
-  'streaming',
-  'overview',
-  'python',
-] as const;
-
-const QUERY_MODES: Record<string, WorkspaceMode> = {
-  docs: 'Docs',
-  run: 'Run',
-  code: 'Code',
-  api: 'API',
-};
-
-export interface UnifiedWorkspaceRedirectEnvironment {
-  readonly UNIFIED_WORKSPACE_REDIRECTS_ENABLED?: string;
-  readonly NEXT_PUBLIC_WEBSITE_ORIGIN?: string;
+export interface CockpitRedirectEnvironment {
+  readonly COCKPIT_WEBSITE_ORIGIN?: string;
   readonly NODE_ENV?: string;
 }
 
-export function getUnifiedWorkspaceRedirectOrigin(
-  environment: UnifiedWorkspaceRedirectEnvironment = process.env
-): string | null {
-  if (environment.UNIFIED_WORKSPACE_REDIRECTS_ENABLED !== 'true') return null;
-  const rawOrigin = environment.NEXT_PUBLIC_WEBSITE_ORIGIN;
-  if (!rawOrigin) return null;
+export function getCockpitWebsiteOrigin(
+  environment: CockpitRedirectEnvironment = process.env
+): string {
+  const rawOrigin = environment.COCKPIT_WEBSITE_ORIGIN;
 
-  try {
-    const url = new URL(rawOrigin);
-    if (
-      url.username ||
-      url.password ||
-      url.pathname !== '/' ||
-      url.search ||
-      url.hash
-    ) {
-      return null;
-    }
-
-    const secure = url.protocol === 'https:';
-    const developmentLocalhost =
-      environment.NODE_ENV === 'development' &&
-      url.protocol === 'http:' &&
-      url.hostname === 'localhost';
-    return secure || developmentLocalhost ? url.origin : null;
-  } catch {
-    return null;
+  if (!rawOrigin) {
+    throw new Error('COCKPIT_WEBSITE_ORIGIN must be configured');
   }
+
+  let url: URL;
+  try {
+    url = new URL(rawOrigin);
+  } catch {
+    throw new Error('COCKPIT_WEBSITE_ORIGIN must be a valid absolute origin');
+  }
+
+  const hasCanonicalOriginForm =
+    rawOrigin === url.origin || rawOrigin === `${url.origin}/`;
+  const hasOnlyOrigin =
+    !url.username &&
+    !url.password &&
+    url.pathname === '/' &&
+    !url.search &&
+    !url.hash;
+  const canonicalWebsiteOrigin = url.origin === 'https://threadplane.ai';
+  const developmentLocalhost =
+    environment.NODE_ENV === 'development' &&
+    url.protocol === 'http:' &&
+    url.hostname === 'localhost';
+
+  if (
+    !hasCanonicalOriginForm ||
+    !hasOnlyOrigin ||
+    (!canonicalWebsiteOrigin && !developmentLocalhost)
+  ) {
+    throw new Error(
+      'COCKPIT_WEBSITE_ORIGIN must be https://threadplane.ai, or HTTP localhost in development'
+    );
+  }
+
+  return url.origin;
 }
 
-const appendAvailableMode = (
-  destinationPath: string,
-  mode: string | string[] | undefined,
-  availableModes: readonly WorkspaceMode[]
-): string => {
-  if (typeof mode !== 'string') return destinationPath;
-  const parsed = QUERY_MODES[mode.toLowerCase()];
-  if (!parsed || !availableModes.includes(parsed)) return destinationPath;
-  return `${destinationPath}?mode=${parsed.toLowerCase()}`;
+const normalizeRequestedMode = (
+  modeValues: readonly string[]
+): string | string[] | undefined => {
+  if (modeValues.length === 0) return undefined;
+  return modeValues.length === 1 ? modeValues[0] : [...modeValues];
 };
 
 const toWebsiteRedirect = (
-  origin: string,
   resolution: WorkspaceResolution,
-  mode: string | string[] | undefined
-): string | null => {
-  if (resolution.kind !== 'mapped') return null;
-  const destinationPath = getWorkspaceDestinationPath(resolution.identity);
-  return new URL(
-    appendAvailableMode(
-      destinationPath,
-      mode,
-      resolution.identity.availableModes
-    ),
-    `${origin}/`
-  ).toString();
+  modeValues: readonly string[],
+  environment: CockpitRedirectEnvironment
+): string => {
+  const mode = resolveLegacyRequestMode(
+    normalizeRequestedMode(modeValues),
+    resolution
+  );
+  const href = getCanonicalWebsiteWorkspaceHref(resolution, mode);
+  return new URL(href, `${getCockpitWebsiteOrigin(environment)}/`).toString();
 };
 
 export function getLegacyWebsiteRedirect(
   legacyPath: string,
-  mode: string | string[] | undefined,
-  environment: UnifiedWorkspaceRedirectEnvironment = process.env
+  modeValues: readonly string[],
+  environment: CockpitRedirectEnvironment = process.env
 ): string | null {
-  const origin = getUnifiedWorkspaceRedirectOrigin(environment);
-  if (!origin) return null;
   const resolution = resolveLegacyPath(legacyPath);
-  return resolution ? toWebsiteRedirect(origin, resolution, mode) : null;
+  return resolution
+    ? toWebsiteRedirect(resolution, modeValues, environment)
+    : null;
 }
 
 export function getRootWebsiteRedirect(
-  mode: string | string[] | undefined,
-  environment: UnifiedWorkspaceRedirectEnvironment = process.env
-): string | null {
-  const origin = getUnifiedWorkspaceRedirectOrigin(environment);
-  if (!origin) return null;
-  return toWebsiteRedirect(origin, getCockpitPageModel().resolution, mode);
-}
-
-export function normalizeRequestedMode(
-  mode: string | string[] | undefined
-): string | null {
-  return Array.isArray(mode) ? mode.join(',') : mode ?? null;
-}
-
-export function getCanonicalCockpitRedirect(
-  model: CockpitPageModel,
-  mode: string | string[] | undefined
+  environment: CockpitRedirectEnvironment = process.env
 ): string {
-  if (typeof mode !== 'string') return model.canonicalPath;
-  const parsed = QUERY_MODES[mode.toLowerCase()];
-  if (
-    !parsed ||
-    model.resolution.kind !== 'mapped' ||
-    !model.resolution.identity.availableModes.includes(parsed)
-  ) {
-    return model.canonicalPath;
+  const resolution = resolveLegacyPath(ROOT_STREAMING_LEGACY_PATH);
+  if (!resolution) {
+    throw new Error('The Cockpit root streaming capability is not registered');
   }
-  return `${model.canonicalPath}?mode=${parsed.toLowerCase()}`;
-}
-
-export function getCockpitPageModel(slug: string[] = []): CockpitPageModel {
-  const resolvedEntry = resolveCockpitEntry({
-    manifest: cockpitManifest,
-    product: (slug[0] ?? DEFAULT_COCKPIT_SLUG[0]) as CockpitProduct,
-    section: (slug[1] ?? DEFAULT_COCKPIT_SLUG[1]) as CockpitSection,
-    topic: slug[2] ?? DEFAULT_COCKPIT_SLUG[2],
-    page: (slug[3] ?? DEFAULT_COCKPIT_SLUG[3]) as CockpitPageId,
-    language: (slug[4] ?? DEFAULT_COCKPIT_SLUG[4]) as CockpitLanguage,
-  });
-  const resolution: WorkspaceResolution = {
-    kind: 'mapped',
-    identity: toWorkspaceIdentity(resolvedEntry),
-  };
-
-  return {
-    entry: resolvedEntry,
-    resolution,
-    presentation: getWorkspacePresentation(resolution),
-    navigationTree: buildNavigationTree(cockpitManifest),
-    canonicalPath: toCockpitPath(resolvedEntry),
-  };
+  return toWebsiteRedirect(resolution, ['run'], environment);
 }

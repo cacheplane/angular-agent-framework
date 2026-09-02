@@ -30,10 +30,9 @@ The design remains rail-first and context-led. It does not become a dashboard, l
 
 ## Preference model
 
-Create a versioned preference migration from both predecessor records:
+Create a versioned preference migration from `threadplane:control-plane:v1`, whose exact `ControlPlanePreferencesV1` shape contains Docs and Cockpit disclosure state plus `cockpit.activeMode`.
 
-- `threadplane:control-plane:v1`, whose exact `ControlPlanePreferencesV1` shape contains Docs and Cockpit disclosure state plus `cockpit.activeMode`.
-- `threadplane:runtime-targets:v1`, whose exact `RuntimeTargetPreferencesV1` shape contains `selectedTargetId` and `savedTargets` but no credentials.
+Runtime target kind, endpoint URL, API URL, and API key remain structurally absent from every preference record. The memory-only runtime-target provider has no migration or storage path.
 
 The new authoritative `threadplane:workspace-preferences:v2` record stores only non-secret state:
 
@@ -45,8 +44,6 @@ interface WorkspacePreferencesV2 {
   pins: string[];
   recents: string[];
   activityFilter: 'all' | 'runtime' | 'navigation' | 'errors';
-  selectedTargetId: string;
-  savedTargets: SavedRuntimeTarget[];
 }
 ```
 
@@ -59,8 +56,8 @@ Rules:
 - Recents are unique, newest first, and updated only on a successful workspace navigation.
 - The current workspace may appear in Pinned but is not duplicated in Recent rendering.
 - A failed or malformed migration falls back to defaults without deleting unrelated browser data.
-- When no v2 record exists, migration validates each predecessor independently, preserves every valid disclosure and target field, maps `cockpit.activeMode` to `lastMode`, and writes v2 only after constructing a complete valid record. The predecessor keys remain during this release for rollback but are no longer authoritative after a successful v2 write.
-- Activity events and API keys are structurally absent from the preference type.
+- When no v2 record exists, migration validates the predecessor, preserves every valid disclosure field, maps `cockpit.activeMode` to `lastMode`, and writes v2 only after constructing a complete valid record. The predecessor key remains during this release for rollback but is no longer authoritative after a successful v2 write.
+- Activity events, runtime endpoints, target kinds, and API keys are structurally absent from the preference type.
 - On initial navigation, an explicit valid `mode` query wins, followed by the canonical route default from release 1. `lastMode` never overrides a deep link or the Docs default; it is used only by mode-preserving in-shell navigation that has no explicit destination mode.
 
 ## Context hierarchy
@@ -91,7 +88,7 @@ Palette groups:
 - Modes.
 - Safe runtime commands.
 
-Safe runtime commands are limited to Recheck, Reload runtime, Open runtime, Copy diagnostics, and Configure runtime. Disabled commands remain discoverable with a reason. Clearing Activity stays in the Activity menu. Removing targets and clearing credentials stay in Settings.
+Safe runtime commands are limited to Recheck, Reload runtime, Open runtime, Copy diagnostics, and Configure runtime. Disabled commands remain discoverable with a reason. Clearing Activity stays in the Activity menu. Switching back to Shared development remains in Settings.
 
 Behavior:
 
@@ -166,7 +163,7 @@ Add focused Chromium, Firefox, and WebKit shell E2E. The full capability matrix 
 
 ## Testing
 
-- Two-record-to-v2 preference migration, field preservation, route precedence, bounds, deduplication, and malformed storage tests.
+- V1-to-v2 preference migration, field preservation, route precedence, bounds, deduplication, malformed storage, and runtime-target exclusion tests.
 - Pure palette indexing and matching tests.
 - Docs search parity and single-shortcut-handler tests.
 - Component tests for keyboard traversal, focus restoration, pressed pin state, filtered Activity, and menu placement.
@@ -180,7 +177,7 @@ Add focused Chromium, Firefox, and WebKit shell E2E. The full capability matrix 
 ## Acceptance criteria
 
 1. A keyboard-only user can reach any capability, mode, pin, recent item, or safe runtime command through the palette.
-2. Pins and recents survive refresh without storing Activity or credentials.
+2. Pins and recents survive refresh without storing Activity, runtime endpoints, target kinds, or credentials.
 3. Activity filters work without mutating history or attention state.
 4. No active navigation treatment uses a left border or partial rounded edge.
 5. Page-specific secondary actions remain in a polished three-dot menu.
