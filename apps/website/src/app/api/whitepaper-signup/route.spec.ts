@@ -34,26 +34,6 @@ vi.mock('../../../lib/growth/form-route', async (importOriginal) => ({
   }),
 }));
 
-// These no-op modules isolate the legacy handler during the required RED run.
-vi.mock('fs', () => ({
-  default: { appendFileSync: vi.fn(), mkdirSync: vi.fn() },
-}));
-vi.mock('../../../../lib/resend', () => ({
-  FROM: '',
-  addToAudience: vi.fn(),
-  sendEmail: vi.fn(),
-}));
-vi.mock('../../../../lib/loops', () => ({
-  loopsSendEvent: vi.fn(),
-  loopsUpsertContact: vi.fn(),
-}));
-vi.mock('../../../../lib/drip', () => ({
-  scheduleWhitepaperDrip: vi.fn(),
-}));
-vi.mock('../../../lib/analytics/server', () => ({
-  captureWhitepaperConversion: vi.fn(),
-}));
-
 import type { PublicFormPolicy } from '../../../lib/growth/form-policy';
 import { POST } from './route';
 
