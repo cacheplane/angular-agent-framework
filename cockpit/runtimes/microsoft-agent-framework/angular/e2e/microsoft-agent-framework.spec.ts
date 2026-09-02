@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { test, expect } from '@playwright/test';
+import { submitAndWaitForResponse } from '@threadplane-internal/e2e-harness';
 
 // First proof outside unit tests that the neutral Agent contract's interrupt
 // path works against a genuinely non-LangGraph AG-UI backend: the Microsoft
@@ -32,5 +33,24 @@ test.describe('cockpit runtimes/microsoft-agent-framework: expense approval', ()
     await expect(dialog).toBeVisible({ timeout: 30_000 });
     await dialog.getByRole('button', { name: 'Approve' }).click();
     await expect(page.getByText(/has been submitted for reimbursement/i)).toBeVisible({ timeout: 30_000 });
+  });
+});
+
+// Delegation over the same non-LangGraph bridge: the orchestrator's
+// `research_policy` tool streams the tool-less `policy_researcher`
+// specialist, and the queue-merge emitter (src/subagent_emitter.py)
+// translates its deltas into SUBAGENT_STARTED / attributed TEXT_MESSAGE_* /
+// SUBAGENT_FINISHED wire events. The @threadplane/ag-ui reducer keys the
+// subagent to its spawning toolCallId, so <chat-tool-calls> renders the
+// delegation inline as a <chat-subagent-card> instead of a tool-call chip.
+test.describe('cockpit runtimes/microsoft-agent-framework: subagent delegation', () => {
+  test('rt-maf: delegated policy research renders a streaming subagent card', async ({ page }) => {
+    const bubble = await submitAndWaitForResponse(
+      page,
+      'Should I submit a $900 conference travel expense? Research the policy first',
+    );
+    await expect(page.locator('chat-subagent-card')).toHaveCount(1);
+    await expect(page.locator('chat-subagent-card')).toContainText('policy_researcher');
+    await expect(bubble).toContainText(/policy|expense/i);
   });
 });

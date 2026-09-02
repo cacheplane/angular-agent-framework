@@ -34,6 +34,32 @@
           }
         ]
       }
+    },
+    {
+      "match": { "userMessage": "conference travel", "hasToolResult": true },
+      "response": {
+        "content": "Yes — submit the $900 conference travel expense. It is under the $1,500 travel cap; attach itemized receipts since it exceeds the $75 receipts threshold."
+      }
+    },
+    {
+      "match": { "systemMessage": "expense-policy researcher" },
+      "response": {
+        "content": "- Travel expenses up to $1,500 per trip are reimbursable with manager approval.\n- Any expense over the $75 receipts threshold requires itemized receipts.\n- Conference travel must be filed within 30 days of the trip end date."
+      }
+    },
+    {
+      "match": { "userMessage": "conference travel" },
+      "response": {
+        "toolCalls": [
+          {
+            "name": "research_policy",
+            "arguments": {
+              "category": "travel",
+              "amount": 900
+            }
+          }
+        ]
+      }
     }
   ]
 }
