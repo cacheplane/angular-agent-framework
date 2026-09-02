@@ -501,4 +501,41 @@ describe('/api/unsubscribe', () => {
     expect(valid.status).toBe(200);
     expect(validHarness.stopContact).toHaveBeenCalledTimes(1);
   });
+
+  it('escapes a verified token before echoing it into the confirmation form', async () => {
+    // The signature check is the real gate, so reaching this branch needs a
+    // token the verifier accepts. Mocking only the verifier proves the escaping
+    // itself rather than re-testing the signature.
+    vi.resetModules();
+    vi.doMock('@threadplane-internal/growth', async (importOriginal) => ({
+      ...(await importOriginal<Record<string, unknown>>()),
+      verifyGrowthActionToken: () => ({
+        contactId,
+        purpose: 'unsubscribe',
+        issuedAt: now,
+        eventNonce: 'campaign-v1-step-1',
+      }),
+    }));
+    const { createUnsubscribeRoute } = await import('./route');
+    const hostile = '"><script>alert(1)</script>';
+    const route = createUnsubscribeRoute({
+      now: () => now,
+      loadTokenKeyring: () => tokenKeyring,
+      createDatabase: () => executor(),
+      stopLegacyEmailUnsubscribe: vi.fn(),
+      stopContact: vi.fn(),
+    });
+
+    const response = await route.GET(
+      request(
+        `/api/unsubscribe?token=${encodeURIComponent(hostile)}`
+      ) as never
+    );
+    const body = await response.text();
+
+    expect(body).not.toContain('<script>alert(1)</script>');
+    expect(body).toContain('&quot;&gt;&lt;script&gt;');
+    vi.doUnmock('@threadplane-internal/growth');
+    vi.resetModules();
+  });
 });

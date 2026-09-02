@@ -40,6 +40,25 @@ interface PostInput {
   token: string;
 }
 
+function escapeHtmlAttribute(value: string): string {
+  return value.replace(/[&<>"'`]/gu, (character) => {
+    switch (character) {
+      case '&':
+        return '&amp;';
+      case '<':
+        return '&lt;';
+      case '>':
+        return '&gt;';
+      case '"':
+        return '&quot;';
+      case "'":
+        return '&#39;';
+      default:
+        return '&#96;';
+    }
+  });
+}
+
 function htmlResponse(title: string, message: string, form = ''): NextResponse {
   return new NextResponse(
     `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title></head><body><main><h1>${title}</h1><p>${message}</p>${form}</main></body></html>`,
@@ -67,7 +86,7 @@ function confirmationResponse(token: string): NextResponse {
   return htmlResponse(
     'Confirm email preference',
     'Submit this form to update the contact preference.',
-    `<form method="post" action="/api/unsubscribe"><input type="hidden" name="token" value="${token}"><button type="submit">Confirm</button></form>`
+    `<form method="post" action="/api/unsubscribe"><input type="hidden" name="token" value="${escapeHtmlAttribute(token)}"><button type="submit">Confirm</button></form>`
   );
 }
 

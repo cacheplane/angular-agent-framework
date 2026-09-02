@@ -271,4 +271,40 @@ describe('/api/growth/stop', () => {
     expect(new Set(shapes.map(({ status }) => status))).toEqual(new Set([400]));
     expect(new Set(shapes.map(({ body }) => body)).size).toBe(1);
   });
+
+  it('escapes a verified token before echoing it into the confirmation form', async () => {
+    // The signature check is the real gate, so reaching this branch needs a
+    // token the verifier accepts. Mocking only the verifier proves the escaping
+    // itself rather than re-testing the signature.
+    vi.resetModules();
+    vi.doMock('@threadplane-internal/growth', async (importOriginal) => ({
+      ...(await importOriginal<Record<string, unknown>>()),
+      verifyGrowthActionToken: () => ({
+        contactId,
+        purpose: 'founder_stop',
+        issuedAt: now,
+        eventNonce: 'campaign-v1-step-1',
+      }),
+    }));
+    const { createFounderStopRoute } = await import('./route');
+    const hostile = '"><script>alert(1)</script>';
+    const route = createFounderStopRoute({
+      now: () => now,
+      loadTokenKeyring: () => keyring,
+      createDatabase: () => executor(),
+      stopContact: vi.fn(),
+    });
+
+    const response = await route.GET(
+      request(
+        `/api/growth/stop?token=${encodeURIComponent(hostile)}`
+      ) as never
+    );
+    const body = await response.text();
+
+    expect(body).not.toContain('<script>alert(1)</script>');
+    expect(body).toContain('&quot;&gt;&lt;script&gt;');
+    vi.doUnmock('@threadplane-internal/growth');
+    vi.resetModules();
+  });
 });
