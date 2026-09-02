@@ -5,8 +5,10 @@ ag-ui-a2ui-toolkit==0.0.2
     # via ag-ui-langgraph
 ag-ui-langgraph==0.0.40
     # via examples-ag-ui-python
-ag-ui-protocol==0.1.19
-    # via ag-ui-langgraph
+ag-ui-protocol==0.1.22
+    # via
+    #   ag-ui-langgraph
+    #   examples-ag-ui-python
 annotated-doc==0.0.4
     # via fastapi
 annotated-types==0.7.0
