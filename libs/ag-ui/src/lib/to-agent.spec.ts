@@ -1272,4 +1272,24 @@ describe('SUBAGENT_* lifecycle projection', () => {
       { id: 'm-1', role: 'assistant', content: 'Checking flights', delivery: expect.objectContaining({ phase: 'streaming' }) },
     ]);
   });
+
+  it('a wrapper read before SUBAGENT_STARTED reflects the real identity once STARTED arrives (no stale name/toolCallId)', () => {
+    const source = new StubAgent();
+    const agent = toAgent(source as never);
+    // Attributed content arrives first (buffer-not-drop) and a consumer reads
+    // the projection — caching a wrapper off the placeholder identity —
+    // before SUBAGENT_STARTED ever shows up.
+    source.emit({ type: 'TEXT_MESSAGE_START', messageId: 'm-1', role: 'assistant', subagentRunId: 'sa-late' } as never);
+    source.emit({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm-1', delta: 'early', subagentRunId: 'sa-late' } as never);
+    const before = agent.subagents!().get('sa-late');
+    expect(before?.name).toBe('');
+    expect(before?.toolCallId).toBe('sa-late');
+
+    source.emit({ type: 'SUBAGENT_STARTED', subagentRunId: 'sa-late', name: 'researcher', parentToolCallId: 'call-9' } as never);
+
+    const after = agent.subagents!().get('sa-late');
+    expect(after?.name).toBe('researcher');
+    expect(after?.toolCallId).toBe('call-9');
+    expect(after?.messages()[0]).toMatchObject({ id: 'm-1', content: 'early' });
+  });
 });

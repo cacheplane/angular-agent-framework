@@ -98,11 +98,31 @@ describe('reduceEvent SUBAGENT_* lifecycle', () => {
     const store = makeStore();
     reduceEvent(ev({ type: 'TEXT_MESSAGE_START', messageId: 'm-1', role: 'assistant', subagentRunId: 'sa-late' }), store);
     reduceEvent(ev({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm-1', delta: 'early', subagentRunId: 'sa-late' }), store);
-    reduceEvent(ev({ type: 'SUBAGENT_STARTED', subagentRunId: 'sa-late', name: 'researcher' }), store);
-    const content = store.activities().get('sa-late')!.content();
+    const beforeGeneration = store.activities().get('sa-late')!.generation;
+    reduceEvent(ev({ type: 'SUBAGENT_STARTED', subagentRunId: 'sa-late', name: 'researcher', parentToolCallId: 'call-9' }), store);
+    const entry = store.activities().get('sa-late')!;
+    const content = entry.content();
     expect(content['name']).toBe('researcher');
+    expect(content['toolCallId']).toBe('call-9');
     const msgs = content['messages'] as Array<Record<string, unknown>>;
     expect(msgs[0]).toMatchObject({ content: 'early' });
+    // The placeholder identity from the buffer-not-drop entry must not leak
+    // into a wrapper cached before STARTED arrived — identity changes force a
+    // fresh generation so to-agent.ts's (id, generation)-keyed cache rebuilds.
+    expect(entry.generation).not.toBe(beforeGeneration);
+  });
+
+  it('resume cycle: a re-announce after a fresh RUN_STARTED does not duplicate or lose identity', () => {
+    const store = makeStore();
+    reduceEvent(ev({ type: 'SUBAGENT_STARTED', subagentRunId: 'sa-1', name: 'researcher' }), store);
+    reduceEvent(ev({ type: 'SUBAGENT_FINISHED', subagentRunId: 'sa-1', outcome: { type: 'suspended', interruptIds: ['i-1'] } }), store);
+    reduceEvent(ev({ type: 'RUN_STARTED' }), store);
+    expect(store.activities().size).toBe(0); // new run clears activities
+    reduceEvent(ev({ type: 'SUBAGENT_STARTED', subagentRunId: 'sa-1', name: 'researcher' }), store);
+    expect(store.activities().size).toBe(1);
+    const entry = store.activities().get('sa-1')!;
+    expect(entry.content()['status']).toBe('running');
+    expect(entry.content()['name']).toBe('researcher');
   });
 
   it('SUBAGENT_FINISHED success completes; suspended stays running; re-announce after suspend does not duplicate', () => {

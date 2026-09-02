@@ -484,17 +484,43 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
       const e = event as unknown as {
         subagentRunId: string; name: string; description?: string; parentToolCallId?: string;
       };
-      const entry = ensureSubagentEntry(e.subagentRunId, store);
-      // Fills identity in without resetting content a pre-STARTED attributed
-      // event already buffered; a post-suspend re-announce is a no-op update.
-      entry.content.update((c) => ({
-        ...c,
+      const existing = store.activities().get(e.subagentRunId);
+      const existingContent = existing?.content();
+      const nextToolCallId = e.parentToolCallId
+        ?? (existingContent?.['toolCallId'] as string | undefined)
+        ?? e.subagentRunId;
+      // Identity is "placeholder" when this is the first sighting, or when a
+      // buffer-not-drop entry (created by an attributed content event that
+      // arrived before STARTED) still carries its placeholder name/toolCallId.
+      // to-agent.ts's wrapper cache keys on (id, generation) and snapshots
+      // name/toolCallId at creation — a content-only update on the SAME
+      // generation would leave an already-cached wrapper permanently stale,
+      // so identity changes must land on a freshly allocated generation.
+      const identityChanged = !existing
+        || existingContent?.['name'] !== e.name
+        || existingContent?.['toolCallId'] !== nextToolCallId;
+      const mergedContent: Record<string, unknown> = {
+        ...(existingContent ?? { messages: [], toolCalls: [] }),
         name: e.name,
         ...(e.description !== undefined ? { description: e.description } : {}),
-        ...(e.parentToolCallId !== undefined ? { toolCallId: e.parentToolCallId } : {}),
+        toolCallId: nextToolCallId,
         status: 'running',
-      }));
-      store.activities.update((m) => new Map(m));
+      };
+      if (identityChanged) {
+        const entry: ActivityEntry = {
+          messageId: e.subagentRunId,
+          activityType: 'subagent',
+          generation: store.allocateDeliveryGeneration(`activity:${e.subagentRunId}`),
+          content: signal<Record<string, unknown>>(mergedContent),
+        };
+        const map = new Map(store.activities());
+        map.set(e.subagentRunId, entry);
+        store.activities.set(map);   // membership/identity change → new ref
+      } else {
+        // Re-announce (e.g. after a suspend) with unchanged identity: content-
+        // only update, no map churn — mirrors ACTIVITY_DELTA's idiom.
+        existing.content.update((c) => ({ ...c, ...mergedContent }));
+      }
       return;
     }
     case 'SUBAGENT_FINISHED': {
@@ -512,8 +538,7 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
         ...(e.result !== undefined
           ? { state: { ...((c['state'] as Record<string, unknown>) ?? {}), result: e.result } }
           : {}),
-      }));
-      store.activities.update((m) => new Map(m));
+      }));  // content-only change → inner signal, no map churn
       return;
     }
     case 'SUBAGENT_ERROR': {
@@ -524,8 +549,7 @@ export function reduceEvent(event: BaseEvent, store: ReducerStore): void {
         ...c,
         status: 'error',
         state: { ...((c['state'] as Record<string, unknown>) ?? {}), error: e.message },
-      }));
-      store.activities.update((m) => new Map(m));
+      }));  // content-only change → inner signal, no map churn
       return;
     }
     case 'ACTIVITY_SNAPSHOT': {
@@ -620,6 +644,23 @@ function ensureSubagentEntry(subagentRunId: string, store: ReducerStore): Activi
 function routeSubagentContentEvent(subagentRunId: string, event: BaseEvent, store: ReducerStore): void {
   const entry = ensureSubagentEntry(subagentRunId, store); // buffer-not-drop: creates on first sight
   const e = event as unknown as Record<string, unknown>;
+
+  // TOOL_CALL_ARGS/END mutate the shared argsBuffers map — a side effect.
+  // Compute that up front so the content.update callback below stays a pure
+  // function of its input, same as every other content.update in this file.
+  let parsedArgs: Record<string, unknown> | undefined;
+  if (event.type === 'TOOL_CALL_ARGS') {
+    // Same accumulated-buffer rule as the parent handler: deltas are JSON
+    // fragments; parse the accumulation, keep last-good args.
+    const buffers = (store.argsBuffers ??= new Map<string, string>());
+    const key = `subagent:${e['toolCallId']}`;
+    const buffer = (buffers.get(key) ?? '') + ((e['delta'] as string) ?? '');
+    buffers.set(key, buffer);
+    parsedArgs = tryParseArgs(buffer);
+  } else if (event.type === 'TOOL_CALL_END') {
+    store.argsBuffers?.delete(`subagent:${e['toolCallId']}`);
+  }
+
   entry.content.update((c) => {
     const messages = [...((c['messages'] as Array<Record<string, unknown>>) ?? [])];
     const toolCalls = [...((c['toolCalls'] as Array<Record<string, unknown>>) ?? [])];
@@ -641,29 +682,24 @@ function routeSubagentContentEvent(subagentRunId: string, event: BaseEvent, stor
       case 'TOOL_CALL_START':
         toolCalls.push({ id: e['toolCallId'], name: e['toolCallName'], args: {}, status: 'running' });
         return { ...c, toolCalls };
-      case 'TOOL_CALL_ARGS': {
-        // Same accumulated-buffer rule as the parent handler: deltas are JSON
-        // fragments; parse the accumulation, keep last-good args.
-        const buffers = (store.argsBuffers ??= new Map<string, string>());
-        const key = `subagent:${e['toolCallId']}`;
-        const buffer = (buffers.get(key) ?? '') + ((e['delta'] as string) ?? '');
-        buffers.set(key, buffer);
-        const args = tryParseArgs(buffer);
-        return args === undefined
+      case 'TOOL_CALL_ARGS':
+        return parsedArgs === undefined
           ? c
-          : { ...c, toolCalls: toolCalls.map((t) => (t['id'] === e['toolCallId'] ? { ...t, args } : t)) };
-      }
-      case 'TOOL_CALL_END': {
-        store.argsBuffers?.delete(`subagent:${e['toolCallId']}`);
+          : { ...c, toolCalls: toolCalls.map((t) => (t['id'] === e['toolCallId'] ? { ...t, args: parsedArgs } : t)) };
+      case 'TOOL_CALL_END':
         return { ...c, toolCalls: toolCalls.map((t) => (t['id'] === e['toolCallId'] ? { ...t, status: 'complete' } : t)) };
+      case 'TOOL_CALL_RESULT': {
+        // ag_ui_langgraph serialises tool results via normalize_tool_content()
+        // which always returns a string — parse it the same way the parent
+        // TOOL_CALL_RESULT handler does so downstream consumers get an object.
+        const raw = e['content'];
+        const result = typeof raw === 'string' ? safeParseJson(raw) : raw;
+        return { ...c, toolCalls: toolCalls.map((t) => (t['id'] === e['toolCallId'] ? { ...t, result } : t)) };
       }
-      case 'TOOL_CALL_RESULT':
-        return { ...c, toolCalls: toolCalls.map((t) => (t['id'] === e['toolCallId'] ? { ...t, result: e['content'] } : t)) };
       default:
         return c;
     }
-  });
-  store.activities.update((m) => new Map(m));
+  });  // content-only change → inner signal, no map churn
 }
 
 /** Loosely-typed RUN_FINISHED outcome. @ag-ui/core@0.0.59 ships the strict
