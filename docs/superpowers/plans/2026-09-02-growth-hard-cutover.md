@@ -83,7 +83,7 @@
 
 - No planned file changes.
 
-- [ ] **Step 1: Fetch and inspect divergence**
+- [x] **Step 1: Fetch and inspect divergence**
 
 ```bash
 git fetch origin
@@ -93,7 +93,7 @@ git log --oneline --left-right HEAD...origin/main
 
 Expected: only the committed design and this uncommitted plan are local. Stop if any unrelated working-tree change appears.
 
-- [ ] **Step 2: Rebase the design commit onto current main**
+- [x] **Step 2: Rebase the design commit onto current main**
 
 Temporarily leave the uncommitted plan untouched only if Git can preserve it safely; otherwise stage it nowhere and use a non-destructive temporary patch file outside the repository. Run:
 
@@ -103,7 +103,7 @@ git rebase origin/main
 
 Expected: clean rebase. If a conflict touches the design or any growth/lifecycle file, stop and resolve from current repository truth rather than accepting either side wholesale.
 
-- [ ] **Step 3: Re-run the merged-foundation baseline**
+- [x] **Step 3: Re-run the merged-foundation baseline**
 
 ```bash
 NX_DAEMON=false npx nx run-many -t test --projects=growth,lifecycle --outputStyle=static
@@ -119,7 +119,7 @@ Expected: PASS before implementation begins.
 - Modify: `libs/growth/src/lib/jobs.ts`
 - Modify: `libs/growth/test/jobs.integration.spec.ts`
 
-- [ ] **Step 1: Add a failing SQL-shape assertion**
+- [x] **Step 1: Add a failing SQL-shape assertion**
 
 In the existing `materializes only post-launch approvals` unit test, assert the enrollment query contains this contact-level backstop:
 
@@ -129,7 +129,7 @@ expect(sql).toMatch(
 );
 ```
 
-- [ ] **Step 2: Run the focused unit test and prove it fails**
+- [x] **Step 2: Run the focused unit test and prove it fails**
 
 Run:
 
@@ -139,7 +139,7 @@ npx -y node@22 ./node_modules/vitest/vitest.mjs run --config libs/growth/vite.co
 
 Expected: FAIL because `materializeCampaignEnrollment()` does not query `growth_jobs legacy`.
 
-- [ ] **Step 3: Add the minimal eligibility predicate**
+- [x] **Step 3: Add the minimal eligibility predicate**
 
 In the `eligible` CTE in `materializeCampaignEnrollment()`, place this before the existing `campaign.enrolled:v1` check:
 
@@ -152,7 +152,7 @@ and not exists (
 )
 ```
 
-- [ ] **Step 4: Add a real-database integration case**
+- [x] **Step 4: Add a real-database integration case**
 
 In `libs/growth/test/jobs.integration.spec.ts`, create two approved post-launch contacts. Give one a terminal legacy marker:
 
@@ -168,7 +168,7 @@ insert into growth_jobs (
 
 Call `materializeCampaignEnrollment()` and assert only the control contact receives `campaign.enrolled:v1` plus three `send_step` jobs. Then add a later `form.outreach_approved` activity and update `outreach_approved_at` for the imported contact; call again and assert it is still excluded.
 
-- [ ] **Step 5: Run unit tests, then the disposable-Neon integration test**
+- [x] **Step 5: Run unit tests, then the disposable-Neon integration test**
 
 Run the unit command from Step 2. Expected: PASS.
 
@@ -180,7 +180,7 @@ NX_DAEMON=false npx nx test-integration growth --outputStyle=static
 
 Expected: PASS, including the new imported-contact case.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add libs/growth/src/lib/jobs.ts libs/growth/src/lib/jobs.spec.ts libs/growth/test/jobs.integration.spec.ts
@@ -194,7 +194,7 @@ git commit -S -m "fix: exclude imported contacts from lifecycle campaign"
 - Modify: `scripts/import-resend-lifecycle.spec.ts`
 - Modify: `scripts/import-resend-lifecycle.mts`
 
-- [ ] **Step 1: Add failing importer tests**
+- [x] **Step 1: Add failing importer tests**
 
 Add cases proving:
 
@@ -233,7 +233,7 @@ The marker row must be:
 
 Provider IDs remain in Neon but must not appear in CLI output or thrown error text.
 
-- [ ] **Step 2: Run the operator test and prove it fails**
+- [x] **Step 2: Run the operator test and prove it fails**
 
 ```bash
 npx -y node@22 ./node_modules/vitest/vitest.mjs run --config libs/growth/vite.operator-cli.config.mts scripts/import-resend-lifecycle.spec.ts
@@ -241,7 +241,7 @@ npx -y node@22 ./node_modules/vitest/vitest.mjs run --config libs/growth/vite.op
 
 Expected: FAIL because contacts without schedules have no marker and no timing guard exists.
 
-- [ ] **Step 3: Implement marker creation inside the existing import transaction**
+- [x] **Step 3: Implement marker creation inside the existing import transaction**
 
 After `importContact()` returns each contact, insert the deterministic marker with `ON CONFLICT (idempotency_key) DO NOTHING`, validate an existing row exactly on replay, and add separate aggregate result fields:
 
@@ -267,7 +267,7 @@ const payload = {
 
 Validate this exact payload on replay so the later cancellation query cannot silently miss an older row.
 
-- [ ] **Step 4: Implement a pure timing preflight**
+- [x] **Step 4: Implement a pure timing preflight**
 
 Add constants and a pure exported helper:
 
@@ -314,7 +314,7 @@ Inside the successful import transaction, persist the authority used by the sepa
 
 `snapshot_identity` hashes only opaque provider IDs and structural separators, never email or other PII. `ON CONFLICT` must read and validate the exact stored counts, deadline, and identity; it must not move the deadline. Add only the deadline timestamp and remaining seconds to aggregate CLI output.
 
-- [ ] **Step 5: Run focused tests and type/build checks**
+- [x] **Step 5: Run focused tests and type/build checks**
 
 Run the command from Step 2, then:
 
@@ -325,7 +325,7 @@ NX_DAEMON=false npx nx build growth --outputStyle=static
 
 Expected: all PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add scripts/import-resend-lifecycle.mts scripts/import-resend-lifecycle.spec.ts
@@ -344,7 +344,7 @@ git commit -S -m "feat: mark imported lifecycle contacts"
 - Modify: `package-lock.json`
 - Modify: `docs/superpowers/runbooks/2026-08-31-growth-lifecycle-cutover.md`
 
-- [ ] **Step 1: Write the failing operator contract tests**
+- [x] **Step 1: Write the failing operator contract tests**
 
 Define a dependency-injected `mainCancelResendLifecycle()` and test:
 
@@ -381,7 +381,7 @@ export async function mainCancelResendLifecycle(
 ): Promise<number>;
 ```
 
-- [ ] **Step 2: Run the new spec and prove it fails**
+- [x] **Step 2: Run the new spec and prove it fails**
 
 ```bash
 npx -y node@22 ./node_modules/vitest/vitest.mjs run --config libs/growth/vite.operator-cli.config.mts scripts/cancel-resend-lifecycle.spec.ts
@@ -389,7 +389,7 @@ npx -y node@22 ./node_modules/vitest/vitest.mjs run --config libs/growth/vite.op
 
 Expected: FAIL because the file is absent.
 
-- [ ] **Step 3: Implement bounded inventory loading and guards**
+- [x] **Step 3: Implement bounded inventory loading and guards**
 
 Read and validate `legacy:resend:cutover:v1:configuration`, including deadline, counts, and snapshot identity. Reconstruct the complete immutable inventory with two queries that do not filter on job status or provider state:
 
@@ -427,7 +427,7 @@ order by provider_email_id
 
 Include both `pending` and locally `cancelled` jobs while `payload->>'provider_state' = 'scheduled'`. Reject null/duplicate/unbounded IDs, unknown job state, count/snapshot-identity drift, database-environment mismatch, a currently scheduled provider ID outside the full immutable imported schedule set, or an expired stored deadline before the first cancel call. Do not require equality with the unresolved subset yet; missing unresolved IDs must pass exact-record recovery first.
 
-- [ ] **Step 4: Implement exact settlement**
+- [x] **Step 4: Implement exact settlement**
 
 After each successful provider cancellation, use one transaction to update the exact job and insert a stable activity:
 
@@ -451,7 +451,7 @@ returning id
 
 Insert `legacy.resend_schedule_cancelled` with `event_key = 'legacy:resend:scheduled:' || job_id || ':cancelled'`. On provider failure, preserve the local job status, leave `payload.provider_state='scheduled'`, write one closed error category, and continue only long enough to produce a complete unresolved aggregate. Never mark an absent-but-unconfirmed provider record as cancelled.
 
-- [ ] **Step 5: Re-list and require zero**
+- [x] **Step 5: Re-list and require zero**
 
 Before issuing a cancel, classify each unresolved imported ID from the current scheduled list. If it is absent, call `emails.get(id)`:
 
@@ -473,7 +473,7 @@ After the per-record cancellation pass, use the same bounded pagination as the i
 
 If the deadline passes at any checkpoint, stop further mutation, persist the unresolved state, and fail.
 
-- [ ] **Step 6: Wire repository commands**
+- [x] **Step 6: Wire repository commands**
 
 Add:
 
@@ -483,11 +483,11 @@ Add:
 
 Add `scripts/cancel-resend-lifecycle*` to `growthLifecycleControlPlane` and its spec to `vite.operator-cli.config.mts`. Update the lockfile only through `npm install --package-lock-only --ignore-scripts` if package metadata actually changes; reject unrelated removals.
 
-- [ ] **Step 7: Replace the legacy drain runbook section**
+- [x] **Step 7: Replace the legacy drain runbook section**
 
 Document the exact sequence: Vercel Firewall block, in-flight request drain, stable provider inventories, final importer dry run, timing preflight, apply, cancellation dry run, cancellation apply, exact-record recovery, final provider re-list, hard-boundary deploy, and firewall removal. Replace rollback instructions so no prior website deployment may receive the three form POSTs: block them first, keep them blocked until a Neon-only boundary is restored, and reconcile accepted Neon/provider effects before reopening. Use placeholders for counts and never show provider IDs.
 
-- [ ] **Step 8: Run operator, growth, and lint checks**
+- [x] **Step 8: Run operator, growth, and lint checks**
 
 ```bash
 NX_DAEMON=false npx nx test-operator-cli growth --outputStyle=static
@@ -497,7 +497,7 @@ NX_DAEMON=false npx nx lint growth --outputStyle=static
 
 Expected: all PASS.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add scripts/cancel-resend-lifecycle.mts scripts/cancel-resend-lifecycle.spec.ts libs/growth/project.json libs/growth/vite.operator-cli.config.mts package.json package-lock.json docs/superpowers/runbooks/2026-08-31-growth-lifecycle-cutover.md
@@ -523,7 +523,7 @@ git commit -S -m "feat: reconcile scheduled lifecycle mail"
 - Modify: `package.json`
 - Modify: `package-lock.json`
 
-- [ ] **Step 1: Port the focused helper tests, then harden the policy tests**
+- [x] **Step 1: Port the focused helper tests, then harden the policy tests**
 
 Use the source draft versions as the starting point, but change the policy expectations to:
 
@@ -544,7 +544,7 @@ expect(getFormPolicy({ GROWTH_FORM_POLICY: 'growth_v1' })).toEqual({
 
 Retain tests for bounded body streaming, immutable retry snapshots, acquisition-session UUIDs, PII-free nudges, timeout, and secret-safe errors.
 
-- [ ] **Step 2: Run the focused website tests and prove they fail**
+- [x] **Step 2: Run the focused website tests and prove they fail**
 
 ```bash
 npx -y node@22 ./node_modules/vitest/vitest.mjs run --config apps/website/vite.config.mts apps/website/src/app/api/_internal/read-bounded-body.spec.ts apps/website/src/lib/growth/form-client.spec.ts apps/website/src/lib/growth/form-policy.spec.ts apps/website/src/lib/growth/form-route.spec.ts apps/website/src/lib/growth/lifecycle-client.spec.ts
@@ -552,7 +552,7 @@ npx -y node@22 ./node_modules/vitest/vitest.mjs run --config apps/website/vite.c
 
 Expected: FAIL because the files are absent.
 
-- [ ] **Step 3: Port helpers from the source draft using `apply_patch`**
+- [x] **Step 3: Port helpers from the source draft using `apply_patch`**
 
 Port the six focused modules without copying any other source-worktree file. Preserve dependency injection and closed errors. Add only this path to `apps/website/tsconfig.json`:
 
@@ -562,7 +562,7 @@ Port the six focused modules without copying any other source-worktree file. Pre
 
 Add `server-only@^0.0.1` to the root package metadata and lockfile without accepting the draft's unrelated dependency changes.
 
-- [ ] **Step 4: Remove legacy from the policy type and runtime**
+- [x] **Step 4: Remove legacy from the policy type and runtime**
 
 The final policy module must have no `LEGACY_POLICY` and no default:
 
@@ -587,7 +587,7 @@ export function getFormPolicy(
 }
 ```
 
-- [ ] **Step 5: Run focused tests and the website type/build surface**
+- [x] **Step 5: Run focused tests and the website type/build surface**
 
 Run the command from Step 2. Expected: PASS.
 
@@ -597,7 +597,7 @@ GROWTH_FORM_POLICY=growth_v1 NX_DAEMON=false npx nx test website --outputStyle=s
 
 Expected: existing website tests plus new helpers PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/website/src/app/api/_internal apps/website/src/lib/growth apps/website/tsconfig.json package.json package-lock.json
@@ -615,7 +615,7 @@ git commit -S -m "feat: add durable website growth boundary"
 - Modify: `apps/website/src/app/api/leads/route.ts`
 - Modify: `apps/website/src/app/api/leads/route.spec.ts`
 
-- [ ] **Step 1: Port and rewrite route tests as growth-only contracts**
+- [x] **Step 1: Port and rewrite route tests as growth-only contracts**
 
 Start from the source draft's `growth_v1` describes. Delete every expectation for NDJSON, Loops, Resend Audience, synchronous email, legacy analytics, or `legacyPost`. Add a common assertion per route:
 
@@ -628,7 +628,7 @@ expect(accept.mock.invocationCallOrder[0]).toBeLessThan(
 
 Required cases per route: committed success, stale/missing policy `409`, malformed/oversized body `400`, invalid email `400`, invalid UUID `400`, database/keyring setup `503`, Neon transaction `503`, post-commit nudge failure still `200`, and same-UUID replay without duplicate logical jobs.
 
-- [ ] **Step 2: Run the three route specs and prove the growth-only expectations fail**
+- [x] **Step 2: Run the three route specs and prove the growth-only expectations fail**
 
 ```bash
 npx -y node@22 ./node_modules/vitest/vitest.mjs run --config apps/website/vite.config.mts apps/website/src/app/api/whitepaper-signup/route.spec.ts apps/website/src/app/api/newsletter/route.spec.ts apps/website/src/app/api/leads/route.spec.ts
@@ -636,7 +636,7 @@ npx -y node@22 ./node_modules/vitest/vitest.mjs run --config apps/website/vite.c
 
 Expected: FAIL while the current routes still import and execute legacy helpers.
 
-- [ ] **Step 3: Replace the routes with their source-draft durable branches only**
+- [x] **Step 3: Replace the routes with their source-draft durable branches only**
 
 Remove `legacyPost()` and all imports of `fs`, `path`, `getSourcePage`, website email templates, `lib/drip`, `lib/loops`, `lib/resend`, and `lib/analytics/server`. Each route must follow only:
 
@@ -656,7 +656,7 @@ return jsonResponse({ ok: true });
 
 No code path may send or schedule email from the request.
 
-- [ ] **Step 4: Add cross-route static boundary assertions**
+- [x] **Step 4: Add cross-route static boundary assertions**
 
 Create `apps/website/src/lib/growth/hard-cutover-boundary.spec.ts`. Read only the three production route source files and reject these patterns:
 
@@ -674,7 +674,7 @@ const forbidden = [
 ];
 ```
 
-- [ ] **Step 5: Run focused and full website unit tests**
+- [x] **Step 5: Run focused and full website unit tests**
 
 Run the command from Step 2, then:
 
@@ -684,7 +684,7 @@ GROWTH_FORM_POLICY=growth_v1 NX_DAEMON=false npx nx test website --outputStyle=s
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/website/src/app/api/whitepaper-signup apps/website/src/app/api/newsletter apps/website/src/app/api/leads apps/website/src/lib/growth/hard-cutover-boundary.spec.ts
@@ -701,7 +701,7 @@ git commit -S -m "feat: persist acquisition forms in neon"
 - Modify: `apps/website/playwright.config.ts`
 - Modify: `apps/website/e2e/website.spec.ts`
 
-- [ ] **Step 1: Port focused component tests and add hard-cutover assertions**
+- [x] **Step 1: Port focused component tests and add hard-cutover assertions**
 
 Each form spec must prove:
 
@@ -714,7 +714,7 @@ Each form spec must prove:
 
 Add a `SiteFooter` test proving it passes the exact policy object to `Footer` on marketing routes and still renders nothing on `/docs` routes.
 
-- [ ] **Step 2: Run focused component tests and prove they fail**
+- [x] **Step 2: Run focused component tests and prove they fail**
 
 ```bash
 npx -y node@22 ./node_modules/vitest/vitest.mjs run --config apps/website/vite.config.mts apps/website/src/components/landing/WhitePaperBlock.spec.tsx apps/website/src/components/shared/AnnouncementToast.spec.tsx apps/website/src/components/shared/Footer.spec.tsx apps/website/src/components/shared/SiteFooter.spec.tsx apps/website/src/components/contact/ContactForm.spec.tsx apps/website/src/components/pricing/LeadForm.spec.tsx
@@ -722,19 +722,19 @@ npx -y node@22 ./node_modules/vitest/vitest.mjs run --config apps/website/vite.c
 
 Expected: FAIL because current components submit the legacy payload.
 
-- [ ] **Step 3: Port only the growth form behavior**
+- [x] **Step 3: Port only the growth form behavior**
 
 Use `growthFormRequestSnapshot()` unconditionally. Accept `PublicFormPolicy` as a server-provided prop, render its matching disclosure, send the immutable snapshot, retain it after an uncertain failure, and clear it after success or a user fact change. Do not port visual redesign hunks.
 
-- [ ] **Step 4: Thread policy through pages without unrelated changes**
+- [x] **Step 4: Thread policy through pages without unrelated changes**
 
 In every listed server page/layout, add only `getFormPolicy()`, create `const formPolicy = getFormPolicy()`, and pass it to the relevant form. The root layout passes it through `SiteFooter` and directly to `AnnouncementToast`; `SiteFooter` passes it to `Footer`. `ag-ui/page.tsx` passes it to its existing `WhitePaperBlock`. Compare each reconstructed file against `origin/main` and ensure the diff contains no unrelated text, structure, style, telemetry, privacy, or cockpit changes.
 
-- [ ] **Step 5: Update local Playwright environment and four form assertions**
+- [x] **Step 5: Update local Playwright environment and four form assertions**
 
 Set `GROWTH_FORM_POLICY: 'growth_v1'` in `createLocalWebServerEnvironment()`. Update only contact, pricing, newsletter, and whitepaper E2E payload expectations to require UUID-shaped `submission_id` and the exact policy version. Keep network interception so E2E does not require Neon or send email.
 
-- [ ] **Step 6: Run component tests and browser form flows**
+- [x] **Step 6: Run component tests and browser form flows**
 
 Run Step 2. Expected: PASS.
 
@@ -744,7 +744,7 @@ GROWTH_FORM_POLICY=growth_v1 NX_DAEMON=false npx nx e2e website --outputStyle=st
 
 Expected: four selected tests PASS with no external provider call.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 Stage only the named files, inspect `git diff --cached`, then:
 
@@ -760,7 +760,7 @@ git commit -S -m "feat: submit growth approval envelopes"
 - Create the four route directories/specs listed under “Stop and orchestration adapters”.
 - Modify: `vercel.json`
 
-- [ ] **Step 1: Port all five route specs and correct legacy unsubscribe expectations**
+- [x] **Step 1: Port all five route specs and correct legacy unsubscribe expectations**
 
 For the raw-email compatibility case, replace the source-draft test that treats internal failure as success. The required matrix is:
 
@@ -774,7 +774,7 @@ Add the same retry distinction for signed human confirmation and RFC one-click P
 
 Retain exact raw-body webhook verification, size limits, HMAC timestamp/replay checks, no-cookie confirmation pages, one-click POST parsing, closed errors, database cleanup, and cron-disabled behavior.
 
-- [ ] **Step 2: Run route tests and prove they fail**
+- [x] **Step 2: Run route tests and prove they fail**
 
 ```bash
 npx -y node@22 ./node_modules/vitest/vitest.mjs run --config apps/website/vite.config.mts apps/website/src/app/api/unsubscribe/route.spec.ts apps/website/src/app/api/growth/stop/route.spec.ts apps/website/src/app/api/growth/replies/google/route.spec.ts apps/website/src/app/api/webhooks/resend/route.spec.ts apps/website/src/app/api/cron/lifecycle/route.spec.ts
@@ -782,7 +782,7 @@ npx -y node@22 ./node_modules/vitest/vitest.mjs run --config apps/website/vite.c
 
 Expected: FAIL because four routes are absent and legacy unsubscribe is not durable.
 
-- [ ] **Step 3: Port the adapters and fix false-success unsubscribe**
+- [x] **Step 3: Port the adapters and fix false-success unsubscribe**
 
 In the raw-email GET branch, keep known/unknown non-enumeration but move `successResponse()` inside the successful database operation:
 
@@ -812,7 +812,7 @@ try {
 }
 ```
 
-- [ ] **Step 4: Register exactly one Vercel cron**
+- [x] **Step 4: Register exactly one Vercel cron**
 
 Add only:
 
@@ -824,7 +824,7 @@ Add only:
 
 The route must still return disabled without invoking Dawn unless `LIFECYCLE_CRON_ENABLED` is exactly `true`.
 
-- [ ] **Step 5: Run focused tests, website tests, and config checks**
+- [x] **Step 5: Run focused tests, website tests, and config checks**
 
 Run Step 2. Expected: PASS.
 
@@ -834,7 +834,7 @@ GROWTH_FORM_POLICY=growth_v1 NX_DAEMON=false npx nx test website --outputStyle=s
 
 Expected: PASS, including one cron registration and failure-path tests.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/website/src/app/api/unsubscribe apps/website/src/app/api/growth apps/website/src/app/api/webhooks apps/website/src/app/api/cron vercel.json
@@ -850,11 +850,11 @@ git commit -S -m "feat: expose lifecycle stop and dispatch routes"
 - Modify: `package-lock.json` only as required.
 - Modify: `apps/website/src/lib/growth/hard-cutover-boundary.spec.ts`
 
-- [ ] **Step 1: Expand the boundary test before deletion**
+- [x] **Step 1: Expand the boundary test before deletion**
 
 Assert the legacy modules and preview route do not exist and production source contains no imports or calls to them. Also assert no affected route imports `apps/website/src/lib/analytics/server.ts`.
 
-- [ ] **Step 2: Run the boundary test and prove it fails**
+- [x] **Step 2: Run the boundary test and prove it fails**
 
 ```bash
 npx -y node@22 ./node_modules/vitest/vitest.mjs run --config apps/website/vite.config.mts apps/website/src/lib/growth/hard-cutover-boundary.spec.ts
@@ -862,11 +862,11 @@ npx -y node@22 ./node_modules/vitest/vitest.mjs run --config apps/website/vite.c
 
 Expected: FAIL because the legacy modules still exist.
 
-- [ ] **Step 3: Delete only the now-unreferenced legacy implementation**
+- [x] **Step 3: Delete only the now-unreferenced legacy implementation**
 
 Delete `apps/website/lib/{drip,loops,resend}.ts`, `/api/email-preview`, and all `apps/website/emails/*.ts`. Confirm first that `rg` finds no remaining import outside those files. Remove `resend` from `apps/website/package.json` only if no website source imports it; keep the root/lifecycle dependency used by the operator and Dawn delivery.
 
-- [ ] **Step 4: Regenerate only required package metadata**
+- [x] **Step 4: Regenerate only required package metadata**
 
 ```bash
 npm install --package-lock-only --ignore-scripts
@@ -874,7 +874,7 @@ npm install --package-lock-only --ignore-scripts
 
 Inspect the lockfile and revert any unrelated mechanical drift with a targeted patch; do not copy the dirty source lockfile.
 
-- [ ] **Step 5: Prove the legacy surface is gone**
+- [x] **Step 5: Prove the legacy surface is gone**
 
 ```bash
 rg -n "scheduleWhitepaperDrip|loopsUpsertContact|loopsSendEvent|addToAudience|whitepaper-signups\.ndjson|leads\.ndjson|unsubscribed\.ndjson|legacyPost" apps/website
@@ -884,7 +884,7 @@ Expected: no production matches; only explicit forbidden-pattern strings inside 
 
 Run the boundary test. Expected: PASS.
 
-- [ ] **Step 6: Run website lint and production build**
+- [x] **Step 6: Run website lint and production build**
 
 ```bash
 GROWTH_FORM_POLICY=growth_v1 NX_DAEMON=false npx nx lint website --outputStyle=static
@@ -893,7 +893,7 @@ GROWTH_FORM_POLICY=growth_v1 NX_DAEMON=false npx nx build website --outputStyle=
 
 Expected: PASS. Inspect `dist/apps/website/.next` and verify the affected functions contain no legacy module or NDJSON path.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add -A apps/website package-lock.json
@@ -906,7 +906,7 @@ git commit -S -m "refactor: remove legacy website email pipeline"
 
 - Review all changed files; create no planned new production code.
 
-- [ ] **Step 1: Verify scope before broad tests**
+- [x] **Step 1: Verify scope before broad tests**
 
 ```bash
 git status --short
@@ -917,7 +917,7 @@ git diff --check origin/main...HEAD
 
 Expected: only files named in this plan and the committed design spec. No generated docs, `data/`, `tsconfig.tsbuildinfo`, telemetry, privacy, cockpit, or visual-redesign files.
 
-- [ ] **Step 2: Run all repository-native project gates**
+- [x] **Step 2: Run all repository-native project gates**
 
 ```bash
 GROWTH_FORM_POLICY=growth_v1 NX_DAEMON=false npx nx run-many -t test lint build --projects=growth,lifecycle,website --outputStyle=static
@@ -928,7 +928,7 @@ NX_DAEMON=false npx nx run growth:test-integration --outputStyle=static
 
 Expected: every target PASS using the disposable Neon integration database for the final command.
 
-- [ ] **Step 3: Run production-mode website E2E**
+- [x] **Step 3: Run production-mode website E2E**
 
 Build first, then:
 
