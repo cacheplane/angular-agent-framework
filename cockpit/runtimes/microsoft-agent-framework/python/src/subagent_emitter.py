@@ -1,0 +1,205 @@
+# SPDX-License-Identifier: MIT
+"""SUBAGENT_* emitter for the `research_policy` delegation tool.
+
+The MAF AG-UI bridge is a pure pull-driven async generator with no writer a
+tool body could reach: the specialist's streamed updates are consumed
+entirely inside the tool and only the return string surfaces (as
+TOOL_CALL_RESULT). Measured in docs/wire-capture-subagents.md, which also
+names the injection seam implemented here: wrap ``AgentFrameworkAgent.run``
+— the exact method the FastAPI endpoint consumes (`_endpoint.py:212`) —
+with a queue-merge generator.
+
+How the seam works (``SubagentEmittingAgent`` / ``wrap_agent_run``):
+
+1. ``run()`` creates an ``asyncio.Queue`` and publishes it (plus a small
+   correlation map) through a module-level ``ContextVar``. The delegation
+   tool executes on the same async call chain, so the value propagates
+   into the tool body.
+2. A pump task drains the inner bridge generator into that queue. This is
+   required for LIVE interleaving: while the tool runs, the bridge
+   generator is suspended awaiting the next provider update, so a naive
+   "drain between inner yields" design would batch every child delta until
+   the tool returned. With the pump-task merge, a ``put_nowait`` from the
+   tool body wakes the outer consumer immediately.
+3. The tool body calls the ``delegation_*`` helpers below, which build the
+   typed ``ag_ui.core`` events and enqueue them:
+
+       SUBAGENT_STARTED {subagentRunId: <tid>-sub, parentToolCallId: <tid>}
+       TEXT_MESSAGE_START/CONTENT.../END   (streamed specialist deltas)
+       SUBAGENT_FINISHED outcome=success   (or SUBAGENT_ERROR on failure)
+
+Correlation: the pump records every TOOL_CALL_START's ``toolCallId`` by
+tool name as it passes through the queue. The bridge yields the complete
+TOOL_CALL_START/ARGS/END lifecycle for the delegation call BEFORE the
+framework invokes the tool (both run on the pump task's driving chain), so
+``current_tool_call_id("research_policy")`` is deterministically populated
+by the time the tool body runs. If a caller ever invokes the tool outside
+the wrapped run, the helpers fall back to a generated ``sub-<hex8>`` run id
+with ``parentToolCallId`` omitted — and with no queue at all they are pure
+no-ops, which is what keeps unit tests and direct agent runs side-effect
+free.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import uuid
+from contextvars import ContextVar
+from dataclasses import dataclass, field
+from typing import Any
+
+from ag_ui.core import (
+    BaseEvent,
+    EventType,
+    SubagentErrorEvent,
+    SubagentFinishedEvent,
+    SubagentFinishedSuccessOutcome,
+    SubagentStartedEvent,
+    TextMessageContentEvent,
+    TextMessageEndEvent,
+    TextMessageStartEvent,
+)
+DELEGATION_TOOL_NAME = "research_policy"
+
+
+@dataclass
+class _Delegation:
+    """Lifecycle of one delegation call, keyed by parent tool-call id."""
+
+    run_id: str
+    message_id: str
+    message_open: bool = False
+    finished: bool = False
+
+
+@dataclass
+class _EmitterSession:
+    """Per-run channel shared between the run wrapper and the tool body."""
+
+    queue: asyncio.Queue[Any]
+    tool_call_ids: dict[str, str] = field(default_factory=dict)
+    runs: dict[str | None, _Delegation] = field(default_factory=dict)
+
+
+_event_queue: ContextVar[_EmitterSession | None] = ContextVar(
+    "maf_subagent_emitter_session", default=None
+)
+
+
+def current_tool_call_id(tool_name: str) -> str | None:
+    """The wire toolCallId of the most recent TOOL_CALL_START for a tool.
+
+    Deterministically populated before the tool body runs (see module
+    docstring); ``None`` outside a wrapped run.
+    """
+    session = _event_queue.get()
+    if session is None:
+        return None
+    return session.tool_call_ids.get(tool_name)
+
+
+def emit(event: BaseEvent) -> None:
+    """Enqueue one AG-UI event onto the live run stream; no-op unwrapped."""
+    session = _event_queue.get()
+    if session is not None:
+        session.queue.put_nowait(event)
+
+
+def delegation_started(tid: str | None, name: str) -> None:
+    """Announce the specialist run. Ids derive from the delegation tool-call
+    id; without one (unwrapped fallback) a ``sub-<hex8>`` run id is generated
+    and ``parentToolCallId`` omitted."""
+    session = _event_queue.get()
+    run_id = f"{tid}-sub" if tid else f"sub-{uuid.uuid4().hex[:8]}"
+    if session is not None:
+        session.runs[tid] = _Delegation(run_id=run_id, message_id=f"{run_id}-m1")
+    emit(
+        SubagentStartedEvent(
+            type=EventType.SUBAGENT_STARTED,
+            subagent_run_id=run_id,
+            name=name,
+            parent_tool_call_id=tid,
+        )
+    )
+
+
+def _active(tid: str | None) -> _Delegation | None:
+    session = _event_queue.get()
+    if session is None:
+        return None
+    delegation = session.runs.get(tid)
+    if delegation is None or delegation.finished:
+        return None
+    return delegation
+
+
+def delegation_delta(tid: str | None, text: str) -> None:
+    """Stream one specialist text delta, lazily opening the attributed
+    message (so a zero-delta run emits no empty message)."""
+    delegation = _active(tid)
+    if delegation is None or not text:
+        return
+    if not delegation.message_open:
+        delegation.message_open = True
+        emit(
+            TextMessageStartEvent(
+                type=EventType.TEXT_MESSAGE_START,
+                message_id=delegation.message_id,
+                role="assistant",
+                subagent_run_id=delegation.run_id,
+            )
+        )
+    emit(
+        TextMessageContentEvent(
+            type=EventType.TEXT_MESSAGE_CONTENT,
+            message_id=delegation.message_id,
+            delta=text,
+            subagent_run_id=delegation.run_id,
+        )
+    )
+
+
+def _close_message(delegation: _Delegation) -> None:
+    if delegation.message_open:
+        delegation.message_open = False
+        emit(
+            TextMessageEndEvent(
+                type=EventType.TEXT_MESSAGE_END,
+                message_id=delegation.message_id,
+                subagent_run_id=delegation.run_id,
+            )
+        )
+
+
+def delegation_finished(tid: str | None) -> None:
+    """Close the open child message and finish the subagent with success."""
+    delegation = _active(tid)
+    if delegation is None:
+        return
+    delegation.finished = True
+    _close_message(delegation)
+    emit(
+        SubagentFinishedEvent(
+            type=EventType.SUBAGENT_FINISHED,
+            subagent_run_id=delegation.run_id,
+            outcome=SubagentFinishedSuccessOutcome(),
+        )
+    )
+
+
+def delegation_error(tid: str | None, message: str) -> None:
+    """Close the open child message and report the specialist failure. The
+    tool re-raises afterwards, so the bridge's own tool-error path still
+    runs normally."""
+    delegation = _active(tid)
+    if delegation is None:
+        return
+    delegation.finished = True
+    _close_message(delegation)
+    emit(
+        SubagentErrorEvent(
+            type=EventType.SUBAGENT_ERROR,
+            subagent_run_id=delegation.run_id,
+            message=message,
+        )
+    )

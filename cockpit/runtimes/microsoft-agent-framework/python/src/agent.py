@@ -14,8 +14,13 @@ contract surfaces measured in the 2026-08-31 runtime-portability matrix:
   protocol-standard ``RUN_FINISHED.outcome = {type: 'interrupt', ...}`` and
   resumes from the client's top-level ``resume`` entries.
 
-No subagents surface: the MAF bridge emits no per-subagent
-ACTIVITY_SNAPSHOT/ACTIVITY_DELTA stream (measured red upstream).
+- subagents: ``research_policy`` delegates to the tool-less
+  ``policy_researcher`` specialist Agent and streams its deltas through the
+  ``delegation_*`` helpers in src/subagent_emitter.py, which merge standard
+  ``SUBAGENT_*`` + attributed child ``TEXT_MESSAGE_*`` events into the run
+  stream at the run-wrapper seam (the MAF bridge natively emits NOTHING for
+  nested-agent activity inside a tool — measured red upstream and in
+  docs/wire-capture-subagents.md).
 
 Model client: Azure OpenAI is the DEFAULT path — when
 ``AZURE_OPENAI_ENDPOINT`` is set the client routes to Azure (key auth via
@@ -31,6 +36,8 @@ from agent_framework import Agent, tool
 from agent_framework.ag_ui import AgentFrameworkAgent
 from agent_framework.openai import OpenAIChatCompletionClient
 from pydantic import BaseModel, Field
+
+from . import subagent_emitter
 
 _POLICIES = {
     "meals": {"limit_usd": 300, "receipt_required_over_usd": 25, "notes": "Team meals require attendee count in the memo."},
@@ -97,6 +104,10 @@ def submit_expense(expense: Expense) -> str:
 
 _INSTRUCTIONS = """You are an expense approval copilot.
 
+Before recommending whether to submit an expense, delegate the policy
+research to the specialist by calling `research_policy` with the category
+and amount.
+
 When the user asks to file an expense:
 1. FIRST call `lookup_expense_policy` with the expense category.
 2. THEN call `submit_expense` with the complete structured expense
@@ -138,12 +149,63 @@ def build_chat_client() -> OpenAIChatCompletionClient:
     )
 
 
+policy_researcher = Agent(
+    name="policy_researcher",
+    instructions=(
+        "You are an expense-policy researcher. Given an expense category and "
+        "amount, summarize the applicable policy rules in 3 short bullets."
+    ),
+    client=build_chat_client(),
+)
+
+
+@tool(
+    name="research_policy",
+    description="Delegate policy research for this expense to a specialist.",
+)
+async def research_policy(category: str, amount: float) -> str:
+    """Delegate policy research for this expense to a specialist.
+
+    Streams the ``policy_researcher`` specialist and mirrors each text delta
+    onto the AG-UI wire as attributed SUBAGENT_* / TEXT_MESSAGE_* events via
+    src/subagent_emitter.py (no-ops outside the wrapped run).
+
+    Args:
+        category: Expense category, e.g. 'meals' or 'travel'.
+        amount: Expense amount in USD.
+
+    Returns:
+        The specialist's complete policy summary.
+    """
+    # Deterministically recorded by the run wrapper's pump before this body
+    # runs (the bridge streams TOOL_CALL_START/ARGS/END first); None when
+    # invoked outside a wrapped run.
+    tid = subagent_emitter.current_tool_call_id("research_policy")
+    subagent_emitter.delegation_started(tid, policy_researcher.name)
+    parts: list[str] = []
+    try:
+        prompt = (
+            f"Expense category: {category}. Amount: ${amount:.2f}. "
+            "Summarize the applicable policy rules."
+        )
+        async for update in policy_researcher.run(prompt, stream=True):
+            text = update.text
+            if text:
+                parts.append(text)
+                subagent_emitter.delegation_delta(tid, text)
+    except Exception as exc:
+        subagent_emitter.delegation_error(tid, str(exc))
+        raise
+    subagent_emitter.delegation_finished(tid)
+    return "".join(parts)
+
+
 agent = AgentFrameworkAgent(
     agent=Agent(
         name="expense_approval_copilot",
         instructions=_INSTRUCTIONS,
         client=build_chat_client(),
-        tools=[lookup_expense_policy, submit_expense],
+        tools=[lookup_expense_policy, research_policy, submit_expense],
     ),
     name="ExpenseApprovalCopilot",
     description="Files expense reports with policy lookup, shared state, and human approval.",
