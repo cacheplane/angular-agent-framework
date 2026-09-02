@@ -8,14 +8,7 @@ When an assistant message starts with `---a2ui_JSON---`, the chat streaming pipe
 
 ## Runtime Flow
 
-```text
-assistant text starts with ---a2ui_JSON---
-  -> content classifier switches to A2UI mode
-  -> createA2uiMessageParser() parses JSONL messages
-  -> createA2uiSurfaceStore() applies those messages by surface id
-  -> ChatComponent passes surface + state into A2uiSurfaceComponent
-  -> A2uiSurfaceComponent renders progressive state through your catalog
-```
+<A2uiMessageFlow />
 
 This is why A2UI sits between chat and render. Chat owns message streaming. A2UI owns the protocol shapes. `A2uiSurfaceComponent` turns the accumulated surface state into a render spec and delegates to `@threadplane/render`, so handlers, render events, and json-render state bindings use the same path for both the preferred `state` input and the legacy `surface` input.
 

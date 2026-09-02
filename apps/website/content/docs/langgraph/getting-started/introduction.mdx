@@ -8,6 +8,13 @@
 This guide walks you through the complete workflow: build a LangGraph agent in Python, run it locally, connect it to an Angular app with `injectAgent()`, and deploy to production.
 </Callout>
 
+## How it fits
+
+<StackDiagram
+  highlight="langgraph"
+  caption="The LangGraph adapter implements the Agent contract natively against LangGraph Platform — threads, runs, and checkpoints included."
+/>
+
 ## What is `injectAgent()`?
 
 `injectAgent()` is an Angular function that creates a reactive, streaming connection to a LangGraph agent. Configured globally via `provideAgent({...})` at bootstrap, it returns an object whose properties are Angular Signals — meaning your templates update automatically as the agent streams responses, token by token.

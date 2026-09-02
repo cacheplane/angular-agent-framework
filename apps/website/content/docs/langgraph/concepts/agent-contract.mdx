@@ -6,13 +6,10 @@ The `Agent` contract is the spine between runtime adapters and chat UI.
 
 The UI shouldn't care whether a response came from LangGraph Platform, AG-UI, a local mock, or a custom HTTP service. That's the point. The boundary is explicit: adapters translate runtime events into Angular signals and a small action surface.
 
-```text
-LangGraph Platform -- @threadplane/langgraph --+
-                                        +-- Agent -- @threadplane/chat
-AG-UI backend ------ @threadplane/ag-ui -------+
-
-custom backend ------ your adapter -----+
-```
+<StackDiagram
+  highlight="contract"
+  caption="Every adapter — including one you write — meets the UI at the same Agent contract."
+/>
 
 ## The Contract Surface
 
