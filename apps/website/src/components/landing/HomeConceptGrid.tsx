@@ -29,7 +29,7 @@ const CARDS: ConceptCard[] = [
   {
     anchor: '#ship',
     title: 'Ship',
-    sentence: 'Threads live behind the Agent contract — they outlast reloads and deploys.',
+    sentence: 'Threads live behind the contract, not in components — a persistent backend carries them across reloads and deploys.',
     diagram: <ShipConcept />,
   },
   {
