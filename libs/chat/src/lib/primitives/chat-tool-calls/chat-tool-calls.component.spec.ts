@@ -398,6 +398,48 @@ describe('ChatToolCallsComponent — subagent cards anchored to spawning task ca
     expect(fullText).toContain('search');
   });
 
+  it('anchors the card by the Subagent.toolCallId FIELD even when the map key differs', () => {
+    // The AG-UI adapter keys subagents() by subagentRunId (e.g. `<toolCallId>-sub`
+    // for Strands' native SUBAGENT_* events) — only the wrapper's toolCallId
+    // field is guaranteed to match the spawning call.
+    const agent = mockAgent({
+      withSubagents: true,
+      toolCalls: [
+        { id: 'call_t', name: 'research_availability', args: {}, status: 'success' as never },
+      ],
+    });
+    const sub: Subagent = {
+      toolCallId: 'call_t',
+      name: 'availability_researcher',
+      status: signal('running'),
+      messages: signal([{
+        id: 'm1',
+        role: 'assistant',
+        content: 'checking calendars',
+        delivery: staticDelivery('m1'),
+      }]),
+      state: signal({}),
+    };
+    agent.subagents!.set(new Map([['call_t-sub', sub]]));
+
+    const fixture = TestBed.createComponent(SubagentHost);
+    fixture.componentInstance.agent = agent;
+    fixture.componentInstance.message = {
+      id: 'a1',
+      role: 'assistant',
+      content: '',
+      toolCallIds: ['call_t'],
+      delivery: staticDelivery('a1'),
+    };
+    fixture.detectChanges();
+
+    const cards = fixture.nativeElement.querySelectorAll('chat-subagent-card');
+    expect(cards.length).toBe(1);
+    expect(cards[0].textContent).toContain('availability_researcher');
+    // The spawning call renders AS the card, not as a generic tool-call chip.
+    expect(fixture.nativeElement.querySelectorAll('chat-tool-call-card').length).toBe(0);
+  });
+
   it('renders two separate subagent cards for two task calls (not collapsed into one strip)', () => {
     const agent = mockAgent({
       withSubagents: true,
