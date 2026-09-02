@@ -54,10 +54,11 @@ Shared state is a Mastra working-memory object under a Zod schema. The bridge em
 
 That places Mastra alongside Microsoft Agent Framework and apart from AWS Strands, whose bridge emits snapshots only.
 
-## Subagents surface as lifecycle plus final text
+## Subagents stream through a tee ahead of the bridge
 
-An in-tree injector in the hosting service watches the wire for delegation tool frames — Mastra names them `agent-<childKey>` — and adds `SUBAGENT_STARTED` on the tool-call start, one attributed text message carrying the child's final text, and `SUBAGENT_FINISHED` on the result.
-The child's incremental tokens never reach the wire because `@ag-ui/mastra` drops its `tool-output` chunks and buffers the delegation burst until it resolves, which is why this cell is Partial.
+Mastra forwards every chunk of a delegated child on the parent stream as a public `tool-output` chunk, but `@ag-ui/mastra` drops those chunks and withholds the delegation tool call — Mastra names it `agent-<childKey>` — until the child resolves.
+The hosting service wraps the agent so that each chunk is observed before the bridge processes it, and a per-run injector emits the delegation tool call eagerly, `SUBAGENT_STARTED`, one `TEXT_MESSAGE_CONTENT` per child delta attributed to the subagent, and `SUBAGENT_FINISHED` on the result, while dropping the bridge's later copy of the same tool call.
+The card therefore mounts as soon as the delegation begins and its text grows while the child runs, which is what makes this cell Supported.
 
 ## Next steps
 

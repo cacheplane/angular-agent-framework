@@ -45,7 +45,7 @@ A committed transcript replayed through the real client proves what the runtime 
 | LangGraph (baseline) | Yes | Yes | Yes | Yes | Yes |
 | AWS Strands | Yes | Yes | Partial | Yes | Yes |
 | Microsoft Agent Framework | Yes | Yes | Yes | Yes | Yes |
-| Mastra | Yes | Yes | Yes | Yes | Partial |
+| Mastra | Yes | Yes | Yes | Yes | Yes |
 
 Messages, tool calls, and shared state crossed three non-LangGraph runtimes with zero changes to the adapter.
 Not one line.
@@ -123,7 +123,7 @@ They were only findable by pointing the adapter at software written by people wh
 
 ## What stayed partial
 
-Two cells did not go fully green.
+One cell did not go fully green.
 
 **Shared state on Strands is partial.**
 Its bridge sends whole-document snapshots and never sends a patch, and a tool only contributes state if it opts in through a per-tool hook.
@@ -138,11 +138,12 @@ The cause is the upstream bridge, not the protocol and not us.
 
 The protocol standardized the events — `SUBAGENT_STARTED`, `SUBAGENT_FINISHED`, `SUBAGENT_ERROR`, plus a `subagentRunId` attribution field on ordinary content events — and the adapter consumes them directly.
 What no runtime does is emit them natively.
-Each one reports delegation in its own dialect: Strands surfaces the specialist's tool use and forwards its token stream, Microsoft Agent Framework streams the specialist's updates in-process into the tool body where the in-tree emitter merges them across the bridge boundary, and Mastra reports the delegation through its tool frames and returns the child's final text.
-So each demo backend carries a small emitter — roughly 125 to 310 lines each — that translates its runtime's dialect into the standard events at the bridge boundary.
+Each one reports delegation in its own dialect: Strands surfaces the specialist's tool use and forwards its token stream, Microsoft Agent Framework streams the specialist's updates in-process into the tool body where the in-tree emitter merges them across the bridge boundary, and Mastra forwards the child's chunks on the parent stream, where its bridge drops them and withholds the delegation tool call until the child resolves.
+So each demo backend carries a small emitter — roughly 190 to 360 lines each — that translates its runtime's dialect into the standard events at the bridge boundary.
 
-Two of the three cards stream live.
-Mastra's fills in at completion, because its bridge does not forward child tokens to the wire; that is the one Partial cell, and it belongs to the runtime's bridge rather than to the protocol or the adapter.
+All three cards stream live.
+Mastra's took one more seam than the others: the emitter observes the runtime's public stream through a tee ahead of the bridge, emits the delegation tool call eagerly, and forwards the child's deltas itself, because the bridge would otherwise have painted the card only at completion.
+That extra seam belongs to the runtime's bridge rather than to the protocol or the adapter, and the bridge itself is left unmodified.
 If you are building on server-declared subagents today, the contract to target is the protocol's own events; the emitter is the per-runtime cost, and it is small.
 
 ## What the deploy check found
@@ -171,7 +172,7 @@ That is now measured against three implementations in two languages.
 
 Interrupts are portable as of these fixes, and they were not before, in a way no amount of internal testing would have revealed.
 
-Subagents are portable through a per-runtime emitter that speaks the protocol's own events, streaming on two of the three runtimes and lifecycle-plus-final-text on the third.
+Subagents are portable through a per-runtime emitter that speaks the protocol's own events, streaming on all three runtimes.
 
 The matrix now lives in the [adapter guide](/docs/choosing-an-adapter), with a cause column on every gap.
 Split three ways: the protocol cannot express it, the upstream bridge does not emit it, or our adapter failed to consume it.
