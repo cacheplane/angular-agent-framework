@@ -654,13 +654,32 @@ body:has([data-website-workspace-host]) {
 }
 /* mdx — diagram kit (components/docs/diagrams/*) */
 .tp-diagram-figure {
+  /* The cover layers must match the surface behind the figure; marketing
+   * sections re-point this at their tinted surface. */
+  --diagram-scroll-bg: var(--color-surface);
   margin: 24px 0;
   overflow-x: auto;
+  /* Scroll shadows (cover layers scroll with the content, shadow layers
+   * don't), visible through the SVG's transparent dot-grid ground. They
+   * appear only on the clipped side, so a fully visible diagram stays clean
+   * and a clipped one advertises the internal scroll. */
+  background:
+    linear-gradient(to right, var(--diagram-scroll-bg) 40%, rgba(255, 255, 255, 0)) left / 48px 100%,
+    linear-gradient(to left, var(--diagram-scroll-bg) 40%, rgba(255, 255, 255, 0)) right / 48px 100%,
+    radial-gradient(farthest-side at 0 50%, rgba(28, 28, 28, 0.16), transparent) left / 16px 100%,
+    radial-gradient(farthest-side at 100% 50%, rgba(28, 28, 28, 0.16), transparent) right / 16px 100%;
+  background-repeat: no-repeat;
+  background-attachment: local, local, scroll, scroll;
 }
 .tp-diagram-svg {
   display: block;
   width: 100%;
-  min-width: 480px;
+  /* Floor the render width: shrinking the SVG shrinks its text with it
+   * (10.5px meta was hitting ~7.9px on phones at the old 480px floor). 600
+   * keeps type at ≥94% of designed size, and — unlike a full 640 floor —
+   * still fits the ~632px desktop article column without a stray scrollbar.
+   * Narrower viewports scroll the figure; the scroll shadows advertise it. */
+  min-width: 600px;
   max-width: 680px;
   margin: 0 auto;
 }

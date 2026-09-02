@@ -55,3 +55,59 @@ test('diffFixtures: unpairable entries are listed, not errored', () => {
   assert.deepEqual(d.unmatchedCommitted, ['only-committed||']);
   assert.deepEqual(d.unmatchedRecorded, ['only-recorded||']);
 });
+
+const withMeta = (e: FixtureEntry, metadata: Record<string, string>): FixtureEntry => ({ ...e, metadata });
+
+test('diffFixtures: matching metadata hashes report no prompt change', () => {
+  const meta = { systemHash: 'aaaa1111', toolsHash: 'bbbb2222' };
+  const d = diffFixtures([withMeta(text('hi', 'hello'), meta)], [withMeta(text('hi', 'hello world'), meta)]);
+  assert.equal(d.promptChanged.length, 0);
+  assert.equal(d.changed.length, 0);
+});
+
+test('diffFixtures: changed systemHash is bucketed as promptChanged, not changed', () => {
+  const d = diffFixtures(
+    [withMeta(text('hi', 'hello'), { systemHash: 'aaaa1111', toolsHash: 'bbbb2222' })],
+    [withMeta(text('hi', 'hello there'), { systemHash: 'cccc3333', toolsHash: 'bbbb2222' })]
+  );
+  assert.equal(d.promptChanged.length, 1);
+  assert.match(d.promptChanged[0].reason, /systemHash: aaaa1111 -> cccc3333/);
+  assert.doesNotMatch(d.promptChanged[0].reason, /toolsHash/);
+  assert.equal(d.changed.length, 0);
+});
+
+test('diffFixtures: changed toolsHash only is reported as promptChanged', () => {
+  const d = diffFixtures(
+    [withMeta(tool('plan', ['research']), { systemHash: 'aaaa1111', toolsHash: 'bbbb2222' })],
+    [withMeta(tool('plan', ['research']), { systemHash: 'aaaa1111', toolsHash: 'dddd4444' })]
+  );
+  assert.equal(d.promptChanged.length, 1);
+  assert.match(d.promptChanged[0].reason, /toolsHash: bbbb2222 -> dddd4444/);
+  assert.doesNotMatch(d.promptChanged[0].reason, /systemHash/);
+});
+
+test('diffFixtures: absent metadata on either side is never a prompt change', () => {
+  // committed has metadata, recorded does not — and vice versa — and neither has any
+  const d = diffFixtures(
+    [
+      withMeta(text('a', 'x'), { systemHash: 'aaaa1111' }),
+      text('b', 'x'),
+      text('c', 'x'),
+    ],
+    [
+      text('a', 'x'),
+      withMeta(text('b', 'x'), { systemHash: 'eeee5555' }),
+      text('c', 'x'),
+    ]
+  );
+  assert.equal(d.promptChanged.length, 0);
+});
+
+test('diffFixtures: structural drift and prompt change are reported independently', () => {
+  const d = diffFixtures(
+    [withMeta(tool('plan', ['research']), { systemHash: 'aaaa1111' })],
+    [withMeta(tool('plan', ['book']), { systemHash: 'cccc3333' })]
+  );
+  assert.equal(d.changed.length, 1);
+  assert.equal(d.promptChanged.length, 1);
+});

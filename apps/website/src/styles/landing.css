@@ -1509,4 +1509,7 @@
    flex column, instead of filling the container like the surrounding text. */
 .stack-diagram-section .tp-diagram-figure {
   width: 100%;
+  /* The section sits on the tinted surface; the scroll-shadow cover layers
+     must match it or they read as white bars at the figure edges. */
+  --diagram-scroll-bg: var(--color-surface-tinted);
 }
