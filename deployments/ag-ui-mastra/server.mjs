@@ -23,6 +23,7 @@ import { dirname, resolve } from 'node:path';
 import { MastraAgent } from '@ag-ui/mastra';
 import { createMastra } from './agents.mjs';
 import { createSubagentInjector } from './subagent-emitter.mjs';
+import { withDelegationTee } from './streaming-tee.mjs';
 
 const AG_UI_INTERNAL_TOKEN = process.env.AG_UI_INTERNAL_TOKEN;
 if (!AG_UI_INTERNAL_TOKEN) {
@@ -100,27 +101,40 @@ export function createAgUiServer() {
       connection: 'keep-alive',
     });
 
+    // One injector per run with two inputs, both writing through the same
+    // SSE frame writer:
+    // - `chunk()`: raw Mastra fullStream chunks observed through the stream
+    //   tee BEFORE the bridge processes them — the eager TOOL_CALL_* +
+    //   SUBAGENT_STARTED on the delegation `tool-call`, the child's
+    //   attributed TEXT_MESSAGE_* deltas from `tool-output`, and
+    //   SUBAGENT_FINISHED/ERROR on `tool-result`.
+    // - `eventsFor()`: the bridge's own AG-UI events, with its later buffered
+    //   TOOL_CALL_START/ARGS/END copies for a synthesized id dropped.
+    const injector = createSubagentInjector();
+    const write = (event) => res.write(sseFrame(event));
+    const observe = (chunk) => {
+      for (const e of injector.chunk(chunk)) write(e);
+    };
+
     // A fresh bridge per request: MastraAgent carries per-run state.
     // resourceId scopes Mastra memory (threads live under a resource);
-    // keying it by AG-UI threadId gives per-conversation memory.
+    // keying it by AG-UI threadId gives per-conversation memory. The bridge
+    // receives the teed agent; it is otherwise unmodified.
     const bridge = new MastraAgent({
       agentId: topic,
-      agent,
+      agent: withDelegationTee(agent, observe),
       resourceId: input.threadId,
     });
 
-    // One injector per run: turns delegation tool calls (`agent-<childKey>`)
-    // into SUBAGENT_* frames around the events the bridge already emits.
-    const injector = createSubagentInjector();
     const sub = bridge.run(input).subscribe({
       next: (event) => {
-        for (const e of injector.eventsFor(event)) res.write(sseFrame(e));
+        for (const e of injector.eventsFor(event)) write(e);
       },
       error: (err) => {
         // Map failures into the protocol instead of killing the socket:
         // the client finalizes the run as an error rather than hanging.
         const runError = { type: 'RUN_ERROR', message: String(err?.message ?? err) };
-        for (const e of injector.eventsFor(runError)) res.write(sseFrame(e));
+        for (const e of injector.eventsFor(runError)) write(e);
         res.end();
       },
       complete: () => {
