@@ -1,0 +1,89 @@
+name: aimock fixture drift
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Weekly, Monday 09:00 UTC. Advisory only — never a merge gate. The @drift
+    # e2e subset runs against the LIVE provider through aimock's record proxy;
+    # a red run means today's model no longer satisfies our contract
+    # assertions. Recordings are uploaded as an artifact either way.
+    - cron: '0 9 * * 1'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+env:
+  DO_NOT_TRACK: '1'
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install uv
+        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
+      - run: npm ci
+      - name: Cache examples-chat python venv
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: examples/chat/python/.venv
+          key: uv-examples-chat-${{ runner.os }}-${{ hashFiles('examples/chat/python/uv.lock') }}
+      - name: Sync examples-chat python
+        working-directory: examples/chat/python
+        run: uv sync
+      - run: npx playwright install --with-deps chromium
+      - name: Run @drift subset against the live provider
+        id: drift-run
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          AIMOCK_MODE: record
+          AIMOCK_RECORD_DIR: ${{ runner.temp }}/recordings
+        working-directory: examples/chat/angular
+        run: npx playwright test --config e2e/playwright.config.ts --grep @drift
+      - name: Structural diff vs committed fixtures
+        if: always()
+        working-directory: examples/chat/angular
+        run: |
+          mkdir -p "${{ runner.temp }}/recordings"
+          npx tsx ../../../libs/e2e-harness/src/drift.ts "${{ runner.temp }}/recordings" e2e/fixtures | tee "${{ runner.temp }}/drift-report.json"
+      - name: Upload recordings artifact
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: aimock-recordings
+          path: ${{ runner.temp }}/recordings
+          if-no-files-found: warn
+      - name: Open issue on drift
+        if: failure()
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const fs = require('fs');
+            const { owner, repo } = context.repo;
+            let report = '(drift report unavailable)';
+            try { report = fs.readFileSync(process.env.RUNNER_TEMP + '/drift-report.json', 'utf8'); } catch {}
+            const trigger = context.eventName === 'schedule' ? 'scheduled' : 'manually dispatched';
+            await github.rest.issues.create({
+              owner, repo,
+              title: 'aimock drift: @drift subset failed against the live provider',
+              body: [
+                `The ${trigger} fixture drift check failed.`,
+                '',
+                `Run: ${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`,
+                '',
+                'Structural diff of recordings vs committed fixtures:',
+                '```json',
+                report.slice(0, 6000),
+                '```',
+              ].join('\n'),
+              labels: ['drift'],
+            });
