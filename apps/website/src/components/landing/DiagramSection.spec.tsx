@@ -15,5 +15,7 @@ describe('DiagramSection', () => {
     expect(getByText('The headline').tagName).toBe('H2');
     expect(container.querySelector('section')?.getAttribute('aria-labelledby')).toBe('j-heading');
     expect(container.querySelector('figure.tp-diagram-figure')).not.toBeNull();
+    expect(getByText('The body.').className).toContain('stack-diagram-body');
+    expect(getByText('Journey')).toBeTruthy();
   });
 });

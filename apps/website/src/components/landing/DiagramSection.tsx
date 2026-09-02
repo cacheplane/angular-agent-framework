@@ -15,6 +15,9 @@ interface DiagramSectionProps {
 /**
  * A landing section framing any kit diagram with a centered header + body.
  * The `.stack-diagram-*` classes predate the generalization and are shared.
+ * Always rendered on a tinted surface — landing.css pins the diagram
+ * scroll-shadow cover to `--color-surface-tinted`, so surface is deliberately
+ * not parameterized here.
  */
 export function DiagramSection({ id, eyebrow, headline, body, children }: DiagramSectionProps) {
   return (

@@ -1488,7 +1488,7 @@
   background: var(--color-border);
 }
 
-/* StackDiagramSection — components/landing/StackDiagramSection.tsx */
+/* DiagramSection — components/landing/DiagramSection.tsx (wrapped by StackDiagramSection) */
 .stack-diagram-section {
   display: flex;
   flex-direction: column;
