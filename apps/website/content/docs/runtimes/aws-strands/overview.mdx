@@ -21,7 +21,7 @@ The hosted example runs at [examples.threadplane.ai/runtimes/aws-strands](https:
 | Tool calls | Supported | `check_availability` executes server-side with no pause. |
 | Shared state | Partial | Snapshot-only, and opt-in per tool. See below. |
 | Interrupts | Supported | `book_meeting` parks in `tool_context.interrupt(...)`. |
-| Subagents | Not available | The bridge emits no `ACTIVITY` events at all. |
+| Subagents | Supported (streaming) | An in-tree emitter rides the bridge's tool-stream handler and forwards the specialist's streamed tokens as `SUBAGENT_*` events. |
 
 ## Shared state is partial, and the reason matters
 
@@ -31,11 +31,11 @@ Because the adapter applies a `STATE_SNAPSHOT` as a full replacement, every hook
 
 Shared state does work on Strands. It is snapshot-only, it is opt-in per tool, and it puts the burden of assembling the whole object on each hook. That is a real constraint to design around, not a rounding error, which is why the measured matrix records it as partial rather than green.
 
-## Subagents are not available
+## How subagents surface
 
-The Strands bridge routes delegation through a `CUSTOM` `MultiAgentHandoff` event plus `STEP_*` events, and emits zero `ACTIVITY` events. The Threadplane subagent projection keys on an `activityType` of `subagent`, so there is nothing for it to consume.
+Strands wraps every value an async-generator tool yields as a `tool_stream_event`, and the bridge dispatches those events to a per-tool `ToolBehavior.tool_stream_event_handler`. The example's delegation tool re-yields the specialist's `stream_async` output, and an in-tree emitter registered as that handler (`src/subagent_emitter.py`) translates it into `SUBAGENT_STARTED`, attributed `TEXT_MESSAGE_*` deltas carrying `subagentRunId`, and `SUBAGENT_FINISHED` — so the subagent card streams the specialist's tokens live.
 
-This is an upstream gap rather than an adapter defect, and it is shared by every third-party runtime measured so far. Multi-agent routes also crash the stale PyPI wheel, which is one reason the example pins the bridge to a git reference instead.
+The wire capture behind this cell is committed at [`cockpit/runtimes/aws-strands/python/docs/wire-capture-subagents.md`](https://github.com/cacheplane/angular-agent-framework/tree/main/cockpit/runtimes/aws-strands/python/docs/wire-capture-subagents.md). Multi-agent routes crash the stale PyPI wheel, which is one reason the example pins the bridge to a git reference instead.
 
 ## Model access
 

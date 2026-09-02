@@ -21,7 +21,7 @@ The hosted example runs at [examples.threadplane.ai/runtimes/mastra](https://exa
 | Tool calls | Supported | `check_conditions` executes server-side with no pause. |
 | Shared state | Supported | A working-memory packing list, over snapshots and real JSON-Patch deltas. |
 | Interrupts | Supported | `reserve_campsite` suspends the run and resumes from a persisted snapshot. |
-| Subagents | Not available | `ACTIVITY_*` is reserved for background tasks and observational memory. |
+| Subagents | Partial | The bridge emits delegation tool frames; an in-tree injector adds `SUBAGENT_*` lifecycle and the child's final text — the runtime's bridge does not forward child tokens. |
 
 ## Upstream ships no HTTP endpoint
 
@@ -35,11 +35,11 @@ This is the honest shape of the Mastra integration. The adapter needed no change
 
 Mastra persists memory and suspended-run snapshots to LibSQL file storage. Resume loads the suspended snapshot back, so the database path has to survive between HTTP requests and across restarts. An in-memory store breaks resume, and an ephemeral filesystem orphans every pending interrupt on redeploy.
 
-## Subagents are not available
+## How subagents surface
 
-Mastra reserves the `ACTIVITY_*` events for background tasks and observational memory. The Threadplane subagent projection keys on an `activityType` of `subagent`, which Mastra does not emit and does not intend to.
+Mastra registers a child agent as a delegation tool named `agent-<childKey>`, so a delegation crosses the wire as ordinary `TOOL_CALL_*` frames whose result carries the child's final text. An in-tree injector in the hosting service (`deployments/ag-ui-mastra/subagent-emitter.mjs`) keys off those frames: it emits `SUBAGENT_STARTED` when the delegation tool call starts, an attributed text message carrying the child's final text, and `SUBAGENT_FINISHED` when the result lands.
 
-As with the other two runtimes, this is an upstream modeling difference rather than an adapter defect.
+The cell is Partial rather than green because the runtime's bridge does not forward child tokens: the child's deltas exist in-process, but `@ag-ui/mastra` drops its `tool-output` chunks and buffers the delegation burst until it resolves, so the card fills in at completion instead of streaming. That is a property of the bridge, not of the protocol or the adapter. The wire capture behind this cell is committed at [`cockpit/runtimes/mastra/angular/docs/wire-capture-subagents.md`](https://github.com/cacheplane/angular-agent-framework/tree/main/cockpit/runtimes/mastra/angular/docs/wire-capture-subagents.md).
 
 ## How the Mastra row was measured
 

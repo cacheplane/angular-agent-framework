@@ -54,11 +54,10 @@ Shared state is a Mastra working-memory object under a Zod schema. The bridge em
 
 That places Mastra alongside Microsoft Agent Framework and apart from AWS Strands, whose bridge emits snapshots only.
 
-## Subagents emit nothing the adapter can read
+## Subagents surface as lifecycle plus final text
 
-Mastra reserves the `ACTIVITY_*` events for background tasks and observational memory. The Threadplane subagent projection keys on an `activityType` of `subagent`, which Mastra does not emit.
-
-The AG-UI protocol has carried dedicated `SUBAGENT_STARTED`, `SUBAGENT_FINISHED`, and `SUBAGENT_ERROR` events since `@ag-ui/core` 0.0.59. No runtime measured here emits them yet.
+An in-tree injector in the hosting service watches the wire for delegation tool frames — Mastra names them `agent-<childKey>` — and adds `SUBAGENT_STARTED` on the tool-call start, one attributed text message carrying the child's final text, and `SUBAGENT_FINISHED` on the result.
+The child's incremental tokens never reach the wire because `@ag-ui/mastra` drops its `tool-output` chunks and buffers the delegation burst until it resolves, which is why this cell is Partial.
 
 ## Next steps
 

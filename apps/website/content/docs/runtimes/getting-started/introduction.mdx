@@ -39,9 +39,9 @@ TypeScript. Messages, tool calls, state, and interrupts all work, against a hand
 | Runtime | Messages | Tool calls | State | Interrupts | Subagents |
 |---|---|---|---|---|---|
 | **LangGraph** (via the AG-UI bridge) | Yes | Yes | Yes | Yes | Yes |
-| **AWS Strands** (Python) | Yes | Yes | Partial | Yes | No |
-| **Microsoft Agent Framework** (Python) | Yes | Yes | Yes | Yes | No |
-| **Mastra** (TypeScript) | Yes | Yes | Yes | Yes | No |
+| **AWS Strands** (Python) | Yes | Yes | Partial | Yes | Yes |
+| **Microsoft Agent Framework** (Python) | Yes | Yes | Yes | Yes | Yes |
+| **Mastra** (TypeScript) | Yes | Yes | Yes | Yes | Partial |
 
 Every gap in that table is caused by an upstream integration, not by the AG-UI protocol and not by a defect in `@threadplane/ag-ui`. The full cause analysis, including the two adapter defects that were found and fixed, lives in [Choosing an adapter](/docs/choosing-an-adapter).
 
@@ -88,7 +88,7 @@ Three differences turned up repeatedly, and each runtime page returns to them.
 
 **Resume payloads are not portable.** The adapter derives the wire shape from how the interrupt arrived, so application code passes one neutral `submit({ resume })` regardless of runtime.
 
-**Subagents are unavailable on every third-party runtime.** The three runtimes model delegation in three different ways, and none of them emits the dedicated `SUBAGENT_*` events that `@ag-ui/core` has carried since 0.0.59. Treat server-declared subagents as a capability of LangGraph and of backends you control.
+**Subagents now work on every runtime measured here** — streaming on AWS Strands and Microsoft Agent Framework, and as lifecycle-plus-final-text on Mastra. Each backend ships a small emitter that translates its native delegation signals into the protocol's `SUBAGENT_*` events, which `@threadplane/ag-ui` consumes directly. The per-runtime pages show the emitter and the wire capture behind each cell.
 
 ## Further reading
 
