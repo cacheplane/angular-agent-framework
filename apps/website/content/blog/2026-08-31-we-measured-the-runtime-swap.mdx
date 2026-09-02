@@ -138,7 +138,7 @@ The cause is the upstream bridge, not the protocol and not us.
 
 The protocol standardized the events — `SUBAGENT_STARTED`, `SUBAGENT_FINISHED`, `SUBAGENT_ERROR`, plus a `subagentRunId` attribution field on ordinary content events — and the adapter consumes them directly.
 What no runtime does is emit them natively.
-Each one reports delegation in its own dialect: Strands surfaces the specialist's tool use and forwards its token stream, Microsoft Agent Framework streams the specialist's updates through the bridge boundary, and Mastra reports the delegation through its tool frames and returns the child's final text.
+Each one reports delegation in its own dialect: Strands surfaces the specialist's tool use and forwards its token stream, Microsoft Agent Framework streams the specialist's updates in-process into the tool body where the in-tree emitter merges them across the bridge boundary, and Mastra reports the delegation through its tool frames and returns the child's final text.
 So each demo backend carries a small emitter — roughly 125 to 310 lines each — that translates its runtime's dialect into the standard events at the bridge boundary.
 
 Two of the three cards stream live.
@@ -177,7 +177,8 @@ The matrix now lives in the [adapter guide](/docs/choosing-an-adapter), with a c
 Split three ways: the protocol cannot express it, the upstream bridge does not emit it, or our adapter failed to consume it.
 That third category is the one I care about keeping honest, and it is currently empty.
 
-The transcripts are committed as test fixtures, verbatim from the wire.
+The transcripts for messages, tool calls, state, and interrupts are committed as test fixtures, verbatim from the wire.
+The subagent captures are committed as wire-capture documents alongside each backend, and the subagent transcript the suite replays is synthetic, built to the event shape those captures record.
 Interrupt detection and resume shaping are now pinned to what three real runtimes actually sent us on a specific day.
 The next regression in either one fails a test.
 

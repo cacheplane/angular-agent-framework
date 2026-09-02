@@ -87,7 +87,7 @@ Reach for the smallest layer that covers your test. Don't stand up aimock when a
 ## Measured runtime support
 
 The AG-UI adapter is protocol-first, so "any AG-UI backend plugs in" is a claim that can be tested rather than asserted.
-On 2026-08-31 we tested it against three runtimes that have nothing to do with LangGraph, in two languages.
+We tested it against three runtimes that have nothing to do with LangGraph, in two languages — first on 2026-08-31, and most recently on 2026-09-02 for the subagent cells.
 
 | Runtime | Messages | Tool calls | State | Interrupts | Subagents | Cause of any gap |
 |---|---|---|---|---|---|---|
@@ -132,7 +132,7 @@ Unlike the Strands and Microsoft Agent Framework rows, it is not served by the s
 The protocol standardized the events — `SUBAGENT_STARTED`, `SUBAGENT_FINISHED`, `SUBAGENT_ERROR`, plus `subagentRunId` attribution on ordinary content events — and `@threadplane/ag-ui` consumes them directly.
 What differs per runtime is how the emitter learns about the delegation.
 Strands surfaces the specialist's tool use and streamed tokens through a per-tool stream handler, so the card streams live.
-Microsoft Agent Framework merges the specialist's streamed updates through the bridge boundary, so the card streams live there too.
+On Microsoft Agent Framework the specialist's updates stream in-process into the tool body, and the in-tree emitter merges them across the bridge boundary, so the card streams live there too.
 Mastra reports delegation through its tool frames and returns the child's final text; its bridge does not forward child tokens, so the card fills in at completion — the one Partial cell, a property of the runtime's bridge rather than of the protocol or the adapter.
 Each demo backend ships its emitter in tree, roughly 125 to 310 lines per runtime.
 
@@ -141,8 +141,8 @@ Each demo backend ships its emitter in tree, roughly 125 to 310 lines per runtim
 Each runtime got a real server, started against the upstream AG-UI integration and driven with live model calls.
 The raw Server-Sent Events were captured off the wire, then replayed event-for-event through the pinned `@ag-ui/client` — schema parse plus `verifyEvents` — and through the adapter reducer itself.
 
-The captures are committed at [`libs/ag-ui/fixtures/runtime-transcripts/`](https://github.com/cacheplane/angular-agent-framework/tree/main/libs/ag-ui/fixtures/runtime-transcripts), verbatim from the wire.
-The adapter test suite replays them on every run.
+The captures for messages, tool calls, state, and interrupts are committed at [`libs/ag-ui/fixtures/runtime-transcripts/`](https://github.com/cacheplane/angular-agent-framework/tree/main/libs/ag-ui/fixtures/runtime-transcripts), verbatim from the wire, and the adapter test suite replays them on every run.
+The subagent captures are committed as a `wire-capture-subagents.md` document alongside each backend under `cockpit/runtimes/<runtime>/`; the subagent transcript the suite replays is synthetic, built to the event shape those captures record.
 
 ### Runnable examples
 
