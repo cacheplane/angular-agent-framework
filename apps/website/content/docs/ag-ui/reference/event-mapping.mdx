@@ -177,6 +177,24 @@ If `message` is omitted, no user message is appended, but `runAgent()` still run
 
 `ACTIVITY_SNAPSHOT` and `ACTIVITY_DELTA` events project into the AG-UI-specific `subagents()` signal. Use that signal for progress cards and nested task views backed by AG-UI activity streams.
 
+### `SUBAGENT_*` events
+
+The adapter also consumes the protocol's first-class subagent lifecycle events:
+
+| Event | Required fields | Optional fields | Effect |
+|---|---|---|---|
+| `SUBAGENT_STARTED` | `subagentRunId`, `name` | `description`, `parentSubagentRunId`, `parentToolCallId`, `parentMessageId` | Creates (or fills in) the subagent's entry with status `running`. |
+| `SUBAGENT_FINISHED` | `subagentRunId` | `result`, `outcome` (`{ type: 'success' }` or `{ type: 'suspended', interruptIds? }`) | Marks the entry `complete`; a `suspended` outcome keeps it `running`. |
+| `SUBAGENT_ERROR` | `subagentRunId`, `message` | `code` | Marks the entry `error` and records the message. |
+
+Alongside the lifecycle events, ordinary content events (`TEXT_MESSAGE_START/CONTENT/END` and `TOOL_CALL_START/ARGS/END/RESULT`) may carry a `subagentRunId` attribution field. The routing rule: an attributed text or tool event feeds the child's card, never the parent transcript. An attributed content event that arrives before `SUBAGENT_STARTED` still gets a card, which `SUBAGENT_STARTED` then fills in with identity.
+
+Entries in the `subagents()` map are keyed by `subagentRunId`. The `Subagent.toolCallId` field carries `parentToolCallId ?? subagentRunId` and is what anchors the card to its delegation tool call in `<chat>`.
+
+A `suspended` outcome keeps the card in the `running` state: the subagent run resumes under the same `subagentRunId`, and the interrupt itself surfaces through the runtime-neutral `interrupt()` signal, not through the card.
+
+The legacy convention — `ACTIVITY_SNAPSHOT`/`ACTIVITY_DELTA` with an `activityType` of `subagent` — remains supported and projects into the same signal.
+
 ## Unsupported protocol areas
 
-The adapter supports `CUSTOM` `on_interrupt` events for the runtime-neutral `interrupt()` signal, and it supports ACTIVITY-backed subagent progress. It does not implement history or time-travel. Unknown protocol events are ignored rather than treated as errors.
+The adapter supports `CUSTOM` `on_interrupt` events for the runtime-neutral `interrupt()` signal, and it supports subagent progress through both the `SUBAGENT_*` events and the ACTIVITY-backed convention. It does not implement history or time-travel. Unknown protocol events are ignored rather than treated as errors.

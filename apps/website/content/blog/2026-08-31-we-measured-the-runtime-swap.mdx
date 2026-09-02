@@ -43,9 +43,9 @@ A committed transcript replayed through the real client proves what the runtime 
 | Runtime | Messages | Tool calls | State | Interrupts | Subagents |
 | --- | --- | --- | --- | --- | --- |
 | LangGraph (baseline) | Yes | Yes | Yes | Yes | Yes |
-| AWS Strands | Yes | Yes | Partial | Yes | No |
-| Microsoft Agent Framework | Yes | Yes | Yes | Yes | No |
-| Mastra | Yes | Yes | Yes | Yes | No |
+| AWS Strands | Yes | Yes | Partial | Yes | Yes |
+| Microsoft Agent Framework | Yes | Yes | Yes | Yes | Yes |
+| Mastra | Yes | Yes | Yes | Yes | Partial |
 
 Messages, tool calls, and shared state crossed three non-LangGraph runtimes with zero changes to the adapter.
 Not one line.
@@ -121,9 +121,9 @@ Both defects share a root.
 Neither would have been found by another demo, another end-to-end test, or another review of our own code.
 They were only findable by pointing the adapter at software written by people who had never heard of us.
 
-## What stayed red
+## What stayed partial
 
-Two cells did not go green.
+Two cells did not go fully green.
 
 **Shared state on Strands is partial.**
 Its bridge sends whole-document snapshots and never sends a patch, and a tool only contributes state if it opts in through a per-tool hook.
@@ -134,25 +134,16 @@ That is a real hazard.
 It is documented in the example.
 The cause is the upstream bridge, not the protocol and not us.
 
-**Subagents are red for all three.**
-This one surprised me, and it is the finding I would most want another framework author to read.
+**Subagents were the last column to converge, and the fix was one seam per runtime.**
 
-It is tempting to write that as three bugs.
-It is not.
-Strands models delegation as a handoff custom event alongside step boundaries.
-Mastra treats the activity event family as belonging to background work and observational memory.
-That is a defensible reading of the same specification.
-Microsoft Agent Framework does emit activity snapshots, but at the granularity of an executor, and it never emits the incremental form.
+The protocol standardized the events — `SUBAGENT_STARTED`, `SUBAGENT_FINISHED`, `SUBAGENT_ERROR`, plus a `subagentRunId` attribution field on ordinary content events — and the adapter consumes them directly.
+What no runtime does is emit them natively.
+Each one reports delegation in its own dialect: Strands surfaces the specialist's tool use and forwards its token stream, Microsoft Agent Framework streams the specialist's updates in-process into the tool body where the in-tree emitter merges them across the bridge boundary, and Mastra reports the delegation through its tool frames and returns the child's final text.
+So each demo backend carries a small emitter — roughly 125 to 310 lines each — that translates its runtime's dialect into the standard events at the bridge boundary.
 
-Three runtimes, three different mental models of what a subagent is, and none of them wrong on their own terms.
-Meanwhile our own projection keys on an activity type of `subagent`, which is a convention our demo backends adopt and nobody else has any reason to.
-`@ag-ui/core` 0.0.59 added dedicated subagent events.
-As of this measurement, no runtime emits them.
-
-I think that is an ecosystem finding, not a defect report.
-Delegation is the surface where the AG-UI vocabulary is agreed on in syntax and not yet in meaning.
-If you are building on server-declared subagents today, build on a backend you control.
-You are ahead of the ecosystem, not portable across it.
+Two of the three cards stream live.
+Mastra's fills in at completion, because its bridge does not forward child tokens to the wire; that is the one Partial cell, and it belongs to the runtime's bridge rather than to the protocol or the adapter.
+If you are building on server-declared subagents today, the contract to target is the protocol's own events; the emitter is the per-runtime cost, and it is small.
 
 ## What the deploy check found
 
@@ -180,13 +171,14 @@ That is now measured against three implementations in two languages.
 
 Interrupts are portable as of these fixes, and they were not before, in a way no amount of internal testing would have revealed.
 
-Subagents are not portable today, and the reason is upstream disagreement rather than a missing feature on anyone's list.
+Subagents are portable through a per-runtime emitter that speaks the protocol's own events, streaming on two of the three runtimes and lifecycle-plus-final-text on the third.
 
 The matrix now lives in the [adapter guide](/docs/choosing-an-adapter), with a cause column on every gap.
 Split three ways: the protocol cannot express it, the upstream bridge does not emit it, or our adapter failed to consume it.
 That third category is the one I care about keeping honest, and it is currently empty.
 
-The transcripts are committed as test fixtures, verbatim from the wire.
+The transcripts for messages, tool calls, state, and interrupts are committed as test fixtures, verbatim from the wire.
+The subagent captures are committed as wire-capture documents alongside each backend, and the subagent transcript the suite replays is synthetic, built to the event shape those captures record.
 Interrupt detection and resume shaping are now pinned to what three real runtimes actually sent us on a specific day.
 The next regression in either one fails a test.
 

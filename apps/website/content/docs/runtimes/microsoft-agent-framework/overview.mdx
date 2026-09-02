@@ -21,9 +21,9 @@ The hosted example runs at [examples.threadplane.ai/runtimes/microsoft-agent-fra
 | Tool calls | Supported | `lookup_expense_policy` executes server-side with no pause. |
 | Shared state | Supported | `predict_state_config` streams a tool argument into frontend state. |
 | Interrupts | Supported | `submit_expense` declares `approval_mode="always_require"`. |
-| Subagents | Not available | The bridge emits no per-subagent activity stream. |
+| Subagents | Supported (streaming) | An in-tree queue-merge emitter at the bridge boundary streams the specialist's deltas as `SUBAGENT_*` events. |
 
-This is the most complete third-party row in the measured matrix: four of five surfaces are green, and the fifth is red on every runtime tested.
+This is the most complete third-party row in the measured matrix: all five surfaces are green.
 
 ## Predictive state is the interesting part
 
@@ -39,11 +39,11 @@ The bridge then streams the `expense` argument of `submit_expense` into frontend
 
 Unlike AWS Strands, this runtime emits real deltas, so state does not have to be reassembled in full on every update.
 
-## Subagents are not available
+## How subagents surface
 
-The bridge emits coarse executor-level activity snapshots and constructs `ACTIVITY_DELTA` nowhere. The Threadplane subagent projection keys on an `activityType` of `subagent`, which no third-party runtime emits.
+The bridge itself forwards nothing from a specialist agent running inside a tool body — only the tool's final result string reaches the wire natively. The example therefore wraps the bridge agent's run with an in-tree queue-merge emitter (`src/subagent_emitter.py`): the delegation tool streams the specialist's updates into a shared queue, a pump task merges that queue with the bridge's own event stream, and the merged stream carries `SUBAGENT_STARTED`, attributed `TEXT_MESSAGE_*` deltas with `subagentRunId`, and `SUBAGENT_FINISHED` — live, while the bridge generator is still suspended inside the tool.
 
-This is an upstream gap rather than an adapter defect. The AG-UI protocol has carried dedicated `SUBAGENT_*` events since `@ag-ui/core` 0.0.59, and adopting them is upstream work.
+The wire capture behind this cell is committed at [`cockpit/runtimes/microsoft-agent-framework/python/docs/wire-capture-subagents.md`](https://github.com/cacheplane/angular-agent-framework/tree/main/cockpit/runtimes/microsoft-agent-framework/python/docs/wire-capture-subagents.md).
 
 ## Model access
 

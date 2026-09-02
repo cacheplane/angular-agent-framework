@@ -87,14 +87,14 @@ Reach for the smallest layer that covers your test. Don't stand up aimock when a
 ## Measured runtime support
 
 The AG-UI adapter is protocol-first, so "any AG-UI backend plugs in" is a claim that can be tested rather than asserted.
-On 2026-08-31 we tested it against three runtimes that have nothing to do with LangGraph, in two languages.
+We tested it against three runtimes that have nothing to do with LangGraph, in two languages — first on 2026-08-31, and most recently on 2026-09-02 for the subagent cells.
 
 | Runtime | Messages | Tool calls | State | Interrupts | Subagents | Cause of any gap |
 |---|---|---|---|---|---|---|
 | **LangGraph** (via the AG-UI bridge) | Yes | Yes | Yes | Yes | Yes | — |
-| **AWS Strands** (Python) | Yes | Yes | Partial | Yes | No | State + subagents: upstream |
-| **Microsoft Agent Framework** (Python) | Yes | Yes | Yes | Yes | No | Subagents: upstream |
-| **Mastra** (TypeScript) | Yes | Yes | Yes | Yes | No | Subagents: upstream |
+| **AWS Strands** (Python) | Yes | Yes | Partial | Yes | Yes | State: upstream. Subagents: a small in-tree emitter translates native delegation signals to the protocol's `SUBAGENT_*` events |
+| **Microsoft Agent Framework** (Python) | Yes | Yes | Yes | Yes | Yes | Subagents: a small in-tree emitter translates native delegation signals to the protocol's `SUBAGENT_*` events |
+| **Mastra** (TypeScript) | Yes | Yes | Yes | Yes | Partial | Subagents: lifecycle and final text via the emitter; the runtime's bridge does not forward child token streams |
 
 Every gap in that table falls into one of three causes, and the distinction is the point of the column:
 
@@ -102,7 +102,8 @@ Every gap in that table falls into one of three causes, and the distinction is t
 - **Upstream integration** — the protocol can express it, but the runtime's AG-UI bridge does not emit the events. Fixable upstream.
 - **Our adapter** — `@threadplane/ag-ui` failed to consume something the wire already carried. Our bug, and our responsibility.
 
-No cell in the current matrix is caused by the protocol, and no cell is caused by a bug in our adapter — the two that were are fixed.
+No cell in the current matrix is caused by the protocol.
+The protocol carries first-class subagent events (`SUBAGENT_STARTED`, `SUBAGENT_FINISHED`, `SUBAGENT_ERROR`, and a `subagentRunId` attribution field on content events), and `@threadplane/ag-ui` consumes them; a backend reaches them with a small emitter at its bridge boundary.
 
 ### Reading the individual cells
 
@@ -127,22 +128,21 @@ You pass one neutral `submit({ resume })`, and the adapter derives the wire shap
 Its cells come from a real Mastra server driven with live model calls, and its transcripts are committed and replayed like the others.
 Unlike the Strands and Microsoft Agent Framework rows, it is not served by the shared FastAPI deployment: upstream ships no plain AG-UI HTTP endpoint, so its backend is a separate Node service.
 
-**Subagents are red for every third-party runtime, and none of those reds are a bug.**
-The three runtimes do not fail to implement one thing; they model delegation three different ways.
-Strands routes handoffs through a `CUSTOM` event plus step events, with no `ACTIVITY` events at all.
-Mastra reserves `ACTIVITY_*` for background tasks and observational memory.
-Microsoft Agent Framework emits coarse executor-level activity snapshots and constructs `ACTIVITY_DELTA` nowhere.
-The Threadplane subagent projection keys on an `activityType` of `subagent`, which is a convention our own demo backend adopts.
-The protocol has carried dedicated `SUBAGENT_STARTED`, `SUBAGENT_FINISHED`, and `SUBAGENT_ERROR` events since `@ag-ui/core` 0.0.59, and no runtime emits them yet.
-Treat server-declared subagents as a capability of LangGraph and of backends you control, until that changes.
+**Subagents work through one emitter per backend.**
+The protocol standardized the events — `SUBAGENT_STARTED`, `SUBAGENT_FINISHED`, `SUBAGENT_ERROR`, plus `subagentRunId` attribution on ordinary content events — and `@threadplane/ag-ui` consumes them directly.
+What differs per runtime is how the emitter learns about the delegation.
+Strands surfaces the specialist's tool use and streamed tokens through a per-tool stream handler, so the card streams live.
+On Microsoft Agent Framework the specialist's updates stream in-process into the tool body, and the in-tree emitter merges them across the bridge boundary, so the card streams live there too.
+Mastra reports delegation through its tool frames and returns the child's final text; its bridge does not forward child tokens, so the card fills in at completion — the one Partial cell, a property of the runtime's bridge rather than of the protocol or the adapter.
+Each demo backend ships its emitter in tree, roughly 125 to 310 lines per runtime.
 
 ### How this was measured
 
 Each runtime got a real server, started against the upstream AG-UI integration and driven with live model calls.
 The raw Server-Sent Events were captured off the wire, then replayed event-for-event through the pinned `@ag-ui/client` — schema parse plus `verifyEvents` — and through the adapter reducer itself.
 
-The captures are committed at [`libs/ag-ui/fixtures/runtime-transcripts/`](https://github.com/cacheplane/angular-agent-framework/tree/main/libs/ag-ui/fixtures/runtime-transcripts), verbatim from the wire.
-The adapter test suite replays them on every run.
+The captures for messages, tool calls, state, and interrupts are committed at [`libs/ag-ui/fixtures/runtime-transcripts/`](https://github.com/cacheplane/angular-agent-framework/tree/main/libs/ag-ui/fixtures/runtime-transcripts), verbatim from the wire, and the adapter test suite replays them on every run.
+The subagent captures are committed as a `wire-capture-subagents.md` document alongside each backend under `cockpit/runtimes/<runtime>/`; the subagent transcript the suite replays is synthetic, built to the event shape those captures record.
 
 ### Runnable examples
 

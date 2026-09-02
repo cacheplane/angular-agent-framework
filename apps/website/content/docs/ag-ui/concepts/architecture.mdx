@@ -74,7 +74,7 @@ Every AG-UI event is passed through the reducer. The reducer updates Angular sig
 - `interrupt` cleared on `RUN_STARTED` and set by the `CUSTOM` `on_interrupt` event.
 - `events$` for runtime-neutral custom-event side effects.
 - `customEvents` for accumulated non-`on_interrupt` `CUSTOM` events used by live a2ui and app-specific reactive UI.
-- `subagents` for `ACTIVITY_*` events with `activityType: 'subagent'`.
+- `subagents` for `SUBAGENT_*` events and for `ACTIVITY_*` events with `activityType: 'subagent'`.
 
 When the user submits input, the adapter builds a user message, appends it locally, adds it to the AG-UI source with `source.addMessage()`, then calls `source.runAgent()`.
 
@@ -183,7 +183,7 @@ The AG-UI adapter currently covers:
 - Custom events from non-`on_interrupt` `CUSTOM` events, surfaced through both `events$` and `customEvents`.
 - Interrupts from `CUSTOM` events named `on_interrupt`.
 - Browser client tools via `AgUiAgent.clientTools`.
-- Subagent progress from `ACTIVITY_SNAPSHOT` and `ACTIVITY_DELTA` events whose `activityType` is `subagent`.
+- Subagent progress from `SUBAGENT_STARTED`/`SUBAGENT_FINISHED`/`SUBAGENT_ERROR` events with `subagentRunId`-attributed content, and from `ACTIVITY_SNAPSHOT`/`ACTIVITY_DELTA` events whose `activityType` is `subagent`.
 - Citations stored under `state.citations`.
 
 These features are intentionally out of scope for the AG-UI adapter today:

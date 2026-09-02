@@ -67,11 +67,10 @@ StrandsAgentConfig(
 
 Because the adapter applies a snapshot as a full replacement, both hooks return the complete state object. A hook that returns a partial object silently drops whatever the other hook had written.
 
-## Subagents emit nothing the adapter can read
+## Subagents stream through a per-tool handler
 
-Delegation is routed through a `CUSTOM` `MultiAgentHandoff` event plus `STEP_*` events, with no `ACTIVITY` events at any point. The Threadplane subagent projection keys on an `activityType` of `subagent`, so there is nothing to project.
-
-The AG-UI protocol has carried dedicated `SUBAGENT_STARTED`, `SUBAGENT_FINISHED`, and `SUBAGENT_ERROR` events since `@ag-ui/core` 0.0.59. No runtime measured here emits them yet.
+An in-tree emitter registered as the delegation tool's `ToolBehavior.tool_stream_event_handler` consumes the specialist's re-yielded `stream_async` events as they cross the bridge.
+It emits `SUBAGENT_STARTED`, the specialist's tokens as `TEXT_MESSAGE_*` deltas attributed with `subagentRunId`, and `SUBAGENT_FINISHED`, nested between the delegation tool call's `TOOL_CALL_END` and `TOOL_CALL_RESULT`.
 
 ## Next steps
 

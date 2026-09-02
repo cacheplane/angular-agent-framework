@@ -54,11 +54,10 @@ The bridge emits `STATE_SNAPSHOT` followed by real `STATE_DELTA` events as the a
 
 This is the meaningful contrast with AWS Strands, whose bridge emits snapshots only and requires each hook to return the complete state object. On Microsoft Agent Framework, ordinary delta application is enough.
 
-## Subagent activity is too coarse to project
+## Subagents stream through a queue-merge wrapper
 
-The bridge emits executor-level activity snapshots and constructs `ACTIVITY_DELTA` nowhere. The Threadplane subagent projection keys on an `activityType` of `subagent`, which is a convention adopted by Threadplane's own demo backends and by no third-party runtime.
-
-The AG-UI protocol has carried dedicated `SUBAGENT_STARTED`, `SUBAGENT_FINISHED`, and `SUBAGENT_ERROR` events since `@ag-ui/core` 0.0.59. No runtime measured here emits them yet.
+An in-tree emitter wraps the bridge agent's run: the delegation tool streams the specialist's updates into a queue, and a pump task merges that queue with the bridge's own event stream.
+The merged stream carries `SUBAGENT_STARTED`, the specialist's tokens as `TEXT_MESSAGE_*` deltas attributed with `subagentRunId`, and `SUBAGENT_FINISHED`, delivered live while the bridge generator is still suspended inside the tool.
 
 ## Next steps
 

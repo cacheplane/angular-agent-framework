@@ -196,7 +196,7 @@ Messages and state live in memory on the client.
 | --- | --- | --- | --- |
 | Streaming chat, tool calls, generative UI | Yes | Yes | Parity |
 | Interrupts / approvals | Yes, first-class | Yes, via a `CUSTOM` event | Protocol — AG-UI defines no interrupt event |
-| Subagent delegation | Yes, inferred client-side | Yes, server-declared | Protocol — and AG-UI's model is better |
+| Subagent delegation | Yes, inferred client-side (with server-announced bindings) | Yes, server-declared via the protocol's `SUBAGENT_*` events | Protocol — dedicated subagent events exist on the wire |
 | Thread list, rename, delete | Yes | No | Protocol — no thread CRUD exists |
 | Reload and restore a conversation | Yes | No | Protocol — no "fetch state of thread X" |
 | Checkpoint history, time travel, branching | Yes | No | Protocol — no checkpoint concept |
@@ -293,17 +293,18 @@ So what our parity data demonstrates is a **transport swap over one runtime**.
 It is not a runtime swap.
 
 That distinction matters for anyone reading this as a portability argument.
-Whether the neutral `Agent` contract holds up against a genuinely non-LangGraph AG-UI backend — CrewAI, Mastra, Pydantic AI, something you wrote — is untested by us.
+Whether the neutral `Agent` contract holds up against a non-LangGraph AG-UI backend we have not measured — CrewAI, Pydantic AI, something you wrote — is untested by us.
+The backends we have measured since, Mastra among them, are covered in [We Measured the Runtime Swap](/blog/we-measured-the-runtime-swap).
 I believe it holds, because the contract is built on the protocol event vocabulary rather than on any runtime's shapes.
 But belief is not measurement, and I am not going to dress one up as the other.
 
 Two smaller caveats.
-The interrupt path currently depends on a `CUSTOM` event name that the LangGraph bridge emits, so an unrelated AG-UI backend would need to adopt that convention.
-And the subagent path depends on the backend emitting native `ACTIVITY` events, which our demo backend does deliberately.
+The interrupt path accepts two conventions — the protocol-standard `RUN_FINISHED` interrupt outcome, and the `CUSTOM` `on_interrupt` event the LangGraph bridge emits — and within a single run the first signal wins.
+And the subagent path rests on the protocol's `SUBAGENT_*` events, which the adapter consumes directly; each measured runtime reaches them through a small in-tree emitter, as [the measurement post](/blog/we-measured-the-runtime-swap#what-stayed-partial) records.
 
-*Editor's note, added after publication: we went and measured it.*
-*Three genuinely non-LangGraph backends, two languages, wire transcripts replayed through the shipped client.*
-*The results, including two adapter defects the exercise exposed, are in [We Measured the Runtime Swap](/blog/we-measured-the-runtime-swap).*
+*Editor's note: the measurement exists.*
+*Three genuinely non-LangGraph backends, two languages, wire transcripts replayed through the shipped client — covering messages, tool calls, state, interrupts, and subagents.*
+*The results are in [We Measured the Runtime Swap](/blog/we-measured-the-runtime-swap).*
 
 ## Conclusion
 
