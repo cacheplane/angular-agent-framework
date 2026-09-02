@@ -7,6 +7,9 @@ interface DiagramNodeProps {
   title: string;
   eyebrow?: string;
   meta?: string;
+  /** 'accent' has two conventions: concept/marketing compositions accent the single
+   * PAYOFF node (what the customer gets); StackDiagram uses it as a subject
+   * highlight ("the node this page is about"). 'dim' marks inputs/externals. */
   tone?: 'neutral' | 'accent' | 'dim';
   /** 'middle' centers text horizontally (title-only summary nodes). */
   align?: 'start' | 'middle';

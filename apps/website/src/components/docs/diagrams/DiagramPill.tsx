@@ -6,7 +6,10 @@ interface DiagramPillProps {
   w: number;
   label: string;
   /** 'accent' (default) for a payoff-adjacent pill; 'neutral' for an event
-   * label that should not compete with the card's one accented node. */
+   * label that should not compete with the card's one accented node. The
+   * default preserves the older docs diagrams, but NEW compositions should
+   * pass 'neutral' — pills label events/gates, and an accent pill competes
+   * with the payoff node. */
   tone?: 'accent' | 'neutral';
 }
 

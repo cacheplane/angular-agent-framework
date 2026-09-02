@@ -21,7 +21,8 @@ interface DiagramFrameProps {
    * Compact rhythm: 18px inter-node gaps, edges stop 4px short of the node they arrive at
    * (arrowhead fills the rest), 16px outer margins, and a uniform viewHeight of 240 across the
    * homepage concept-card set — so every card in that set is the same height regardless of
-   * viewWidth or node count.
+   * viewWidth or node count. Second rhythm, for node↔pill gaps: 12px (segment lengths flex to
+   * fit; pills abut their segments).
    */
   scale?: 'docs' | 'marketing' | 'compact';
   children: ReactNode;
