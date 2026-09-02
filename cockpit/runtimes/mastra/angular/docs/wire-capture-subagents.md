@@ -220,3 +220,27 @@ Notes:
 - Child deltas: single final chunk — bridge drops tool-output upstream
   (`case "tool-output": break` in @ag-ui/mastra), so the one
   TEXT_MESSAGE_CONTENT carries the child's entire final text.
+
+## Browser verification
+
+Live check 2026-09-02: real-key `deployments/ag-ui-mastra` on the topic port +
+`npx nx serve cockpit-runtimes-mastra-angular`, driving "Plan a trip to Bear
+Lake this weekend - what will the weather be?" in the real UI. Screenshot of
+the completed, expanded card: `e2e/manual/subagent-card-live.png`.
+
+- The card renders from the injected events with ZERO component code:
+  `chat-tool-calls` groups on `parentToolCallId` and mounts
+  `chat-subagent-card` — header `weather_forecaster` + the delegation
+  toolCallId + a `complete` pill + "1 message(s)"; expanding shows the
+  child's full 3-bullet forecast; the parent's own summary streams below.
+- Honest timing note: the card does NOT visibly pass through a
+  running/empty-body phase on this runtime. A timestamped SSE probe through
+  the dev proxy shows the bridge withholds `TOOL_CALL_START` until the
+  delegation resolves — RUN_STARTED at t=0, then a ~5s silent gap while the
+  child runs, then TOOL_CALL_START → SUBAGENT_STARTED → … →
+  SUBAGENT_FINISHED → TOOL_CALL_RESULT all inside ~40ms. STARTED→FINISHED
+  are ~35ms apart on the wire, so the card mounts effectively already
+  complete (a Playwright observer that awaited card attachment read
+  `data-state="done"` on first sight). The emitter is not the limiter;
+  @ag-ui/mastra's buffered tool-call flush is (same upstream drop/buffer
+  behavior documented above).
