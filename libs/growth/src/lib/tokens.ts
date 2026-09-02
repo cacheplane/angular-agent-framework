@@ -9,8 +9,6 @@ const UUID_V4_PATTERN =
 const BASE64URL_PATTERN = /^[A-Za-z0-9_-]+$/u;
 const OPTIONAL_IDENTIFIER_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]*$/u;
 const UNKNOWN_KEY_SECRET = Buffer.alloc(TOKEN_HMAC_BYTE_LENGTH);
-const UNSUBSCRIBE_ACTION_URL_PREFIX =
-  'https://threadplane.ai/api/unsubscribe?token=';
 interface UnsubscribeActionUrlState {
   readonly contactId: string;
   readonly value: string;
@@ -112,7 +110,9 @@ function validatedKeys(keyring: GrowthTokenKeyring): readonly GrowthTokenKey[] {
   for (const key of keys) {
     assertKey(key);
     if (versions.has(key.version)) {
-      throw new Error(`Duplicate growth action token key version: ${key.version}`);
+      throw new Error(
+        `Duplicate growth action token key version: ${key.version}`
+      );
     }
     versions.add(key.version);
   }
@@ -159,6 +159,29 @@ function assertPurpose(purpose: unknown): GrowthTokenPurpose {
   return purpose;
 }
 
+export function normalizeGrowthPublicActionOrigin(value: string): string {
+  if (typeof value !== 'string' || value.trim() !== value) {
+    throw new Error('Growth public action origin must be a bare HTTPS origin');
+  }
+  try {
+    const url = new URL(value);
+    if (
+      url.protocol !== 'https:' ||
+      url.username ||
+      url.password ||
+      url.pathname !== '/' ||
+      url.search ||
+      url.hash ||
+      url.origin !== value
+    ) {
+      throw new Error('invalid origin');
+    }
+    return url.origin;
+  } catch {
+    throw new Error('Growth public action origin must be a bare HTTPS origin');
+  }
+}
+
 function canonicalPayload(payload: WirePayload): string {
   return JSON.stringify({
     c: payload.c,
@@ -194,17 +217,23 @@ export function createGrowthActionToken(
       ? {}
       : { r: optionalBoundedText('Reason', input.reason) }),
   };
-  const encodedPayload = Buffer.from(canonicalPayload(wirePayload), 'utf8').toString(
-    'base64url'
-  );
-  return `${TOKEN_VERSION}.${encodedPayload}.${sign(encodedPayload, key.secret)}`;
+  const encodedPayload = Buffer.from(
+    canonicalPayload(wirePayload),
+    'utf8'
+  ).toString('base64url');
+  return `${TOKEN_VERSION}.${encodedPayload}.${sign(
+    encodedPayload,
+    key.secret
+  )}`;
 }
 
 export function createUnsubscribeActionUrl(
   input: CreateUnsubscribeActionUrlInput,
-  key: GrowthTokenKey
+  key: GrowthTokenKey,
+  publicActionOrigin: string
 ): UnsubscribeActionUrl {
   const contactId = assertContactId(input.contactId);
+  const origin = normalizeGrowthPublicActionOrigin(publicActionOrigin);
   const token = createGrowthActionToken(
     { ...input, contactId, purpose: 'unsubscribe' },
     key
@@ -214,7 +243,7 @@ export function createUnsubscribeActionUrl(
     actionUrl,
     Object.freeze({
       contactId,
-      value: `${UNSUBSCRIBE_ACTION_URL_PREFIX}${token}`,
+      value: `${origin}/api/unsubscribe?token=${token}`,
     })
   );
   return actionUrl;
@@ -249,7 +278,8 @@ export function unsubscribeActionUrlValueForContact(
 }
 
 function fixedWidthHmac(value: string): { bytes: Buffer; valid: boolean } {
-  const syntacticallyValid = value.length === 43 && BASE64URL_PATTERN.test(value);
+  const syntacticallyValid =
+    value.length === 43 && BASE64URL_PATTERN.test(value);
   const decoded = syntacticallyValid
     ? Buffer.from(value, 'base64url')
     : Buffer.alloc(0);
@@ -283,7 +313,11 @@ function parseWirePayload(encodedPayload: string): WirePayload | null {
     const decoded = Buffer.from(encodedPayload, 'base64url');
     if (decoded.toString('base64url') !== encodedPayload) return null;
     const candidate = JSON.parse(decoded.toString('utf8')) as unknown;
-    if (candidate === null || typeof candidate !== 'object' || Array.isArray(candidate)) {
+    if (
+      candidate === null ||
+      typeof candidate !== 'object' ||
+      Array.isArray(candidate)
+    ) {
       return null;
     }
     const record = candidate as Record<string, unknown>;
@@ -319,7 +353,9 @@ function parseWirePayload(encodedPayload: string): WirePayload | null {
       p: record['p'],
       ...(record['r'] === undefined ? {} : { r: record['r'] as string }),
     };
-    return canonicalPayload(payload) === decoded.toString('utf8') ? payload : null;
+    return canonicalPayload(payload) === decoded.toString('utf8')
+      ? payload
+      : null;
   } catch {
     return null;
   }
@@ -344,23 +380,26 @@ export function verifyGrowthActionToken(
     signingKey?.secret ?? UNKNOWN_KEY_SECRET
   );
   const signatureValid = compareTokenHmac(providedHmac, expectedHmac);
-  if (!signatureValid || version !== TOKEN_VERSION || !wirePayload || !signingKey) {
+  if (
+    !signatureValid ||
+    version !== TOKEN_VERSION ||
+    !wirePayload ||
+    !signingKey
+  ) {
     return null;
   }
 
   const now = validDate('now', options.now ?? new Date());
   if (
     options.maxAgeSeconds !== undefined &&
-    (!Number.isSafeInteger(options.maxAgeSeconds) ||
-      options.maxAgeSeconds <= 0)
+    (!Number.isSafeInteger(options.maxAgeSeconds) || options.maxAgeSeconds <= 0)
   ) {
     throw new Error('maxAgeSeconds must be a positive integer');
   }
   const nowMilliseconds = now.getTime();
   if (
     wirePayload.p !== options.expectedPurpose ||
-    wirePayload.i >
-      nowMilliseconds + TOKEN_CLOCK_SKEW_SECONDS * 1_000 ||
+    wirePayload.i > nowMilliseconds + TOKEN_CLOCK_SKEW_SECONDS * 1_000 ||
     (options.maxAgeSeconds !== undefined &&
       nowMilliseconds - wirePayload.i > options.maxAgeSeconds * 1_000)
   ) {

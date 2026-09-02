@@ -13,6 +13,7 @@ import {
   markProviderAcceptanceUnknown,
   markInternalNotificationUnknown,
   markProviderRejection,
+  normalizeGrowthPublicActionOrigin,
   normalizeRecipientEmail,
   persistJobArtifact,
   readLifecycleJobContext,
@@ -705,6 +706,17 @@ function requiredEnvironmentText(
   return value;
 }
 
+function requiredEnvironmentCanonicalValue(
+  environment: RuntimeEnvironment,
+  name: string
+): string {
+  const value = environment[name];
+  if (value === undefined || value.length === 0) {
+    throw new Error(`${name} is required`);
+  }
+  return value;
+}
+
 function recipientPolicyFromEnvironment(
   environment: RuntimeEnvironment,
   runtime: LifecycleRuntimeConfiguration
@@ -745,6 +757,7 @@ export function createDefaultLifecycleJobDependencies(
     | {
         founderNotificationEmail: string;
         recipientPolicy: RecipientDeliveryPolicy;
+        publicActionOrigin: string;
         resend: Resend;
         tokenKey: GrowthTokenKey;
       }
@@ -770,9 +783,16 @@ export function createDefaultLifecycleJobDependencies(
         'The configured founder notification address must be on the non-production allowlist'
       );
     }
+    const publicActionOrigin = normalizeGrowthPublicActionOrigin(
+      requiredEnvironmentCanonicalValue(
+        environment,
+        'GROWTH_PUBLIC_ACTION_ORIGIN'
+      )
+    );
     cachedMailRuntime = {
       founderNotificationEmail,
       recipientPolicy,
+      publicActionOrigin,
       resend: new Resend(apiKey),
       tokenKey: loadGrowthTokenKeyring(environment).active,
     };
@@ -782,7 +802,8 @@ export function createDefaultLifecycleJobDependencies(
   return {
     now,
     readJobContext: readLifecycleJobContext,
-    createUnsubscribeUrl: createUnsubscribeActionUrl,
+    createUnsubscribeUrl: (input, key) =>
+      createUnsubscribeActionUrl(input, key, mailRuntime().publicActionOrigin),
     sendRecipient: (executor, input, policy) => {
       const { resend } = mailRuntime();
       return sendRecipientEmail(executor, input, policy, {

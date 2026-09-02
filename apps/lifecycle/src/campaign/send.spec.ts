@@ -39,7 +39,8 @@ const UNSUBSCRIBE = createUnsubscribeActionUrl(
     issuedAt: NOW,
     eventNonce: 'campaign-step-1',
   },
-  TOKEN_KEY
+  TOKEN_KEY,
+  'https://website.test'
 );
 
 function job(
@@ -851,6 +852,54 @@ describe('loadLifecycleRuntimeConfiguration', () => {
     ).toThrow(/environment.*match/iu);
   });
 
+  it('requires a bare HTTPS public action origin and uses it for unsubscribe links', () => {
+    const environment = {
+      CAMPAIGN_ENABLED: 'false',
+      CAMPAIGN_ENROLLMENT_ENABLED: 'false',
+      DELIVERY_ENABLED: 'true',
+      DELIVERY_ENVIRONMENT: 'preview',
+      GROWTH_DATABASE_ENVIRONMENT: 'preview',
+      RESEND_API_KEY: 'test-key',
+      RESEND_SENDER_VERIFIED: 'true',
+      RESEND_TRACKING_DISABLED: 'true',
+      RESEND_NON_PRODUCTION_ALLOWLIST:
+        'brian@threadplane.ai,founder@threadplane.ai',
+      RESEND_NON_PRODUCTION_REDIRECT_TO: 'founder@threadplane.ai',
+      FOUNDER_NOTIFICATION_EMAIL: 'founder@threadplane.ai',
+      GROWTH_ACTION_TOKEN_ACTIVE_VERSION: '1',
+      GROWTH_ACTION_TOKEN_ACTIVE_SECRET:
+        'runtime-policy-test-token-secret-material',
+    };
+
+    const missing = createDefaultLifecycleJobDependencies(environment);
+    expect(() => missing.tokenKey).toThrow(/GROWTH_PUBLIC_ACTION_ORIGIN/u);
+
+    for (const invalidOrigin of [
+      'http://website-preview.example',
+      'https://website-preview.example/api/unsubscribe',
+      ' https://website-preview.example',
+      'https://website-preview.example ',
+    ]) {
+      const invalid = createDefaultLifecycleJobDependencies({
+        ...environment,
+        GROWTH_PUBLIC_ACTION_ORIGIN: invalidOrigin,
+      });
+      expect(() => invalid.tokenKey).toThrow(/public action origin/iu);
+    }
+
+    const configured = createDefaultLifecycleJobDependencies({
+      ...environment,
+      GROWTH_PUBLIC_ACTION_ORIGIN: 'https://website-preview.example',
+    });
+    const actionUrl = configured.createUnsubscribeUrl(
+      { contactId: CONTACT_ID, issuedAt: NOW },
+      configured.tokenKey
+    );
+    expect(unsubscribeActionUrlValue(actionUrl)).toMatch(
+      /^https:\/\/website-preview\.example\/api\/unsubscribe\?token=g1\./u
+    );
+  });
+
   it('classifies a malformed internal Resend success shape as unknown', async () => {
     resendSend.mockResolvedValueOnce({ data: null, error: null });
     const dependencies = createDefaultLifecycleJobDependencies({
@@ -866,6 +915,7 @@ describe('loadLifecycleRuntimeConfiguration', () => {
         'brian@threadplane.ai,founder@threadplane.ai',
       RESEND_NON_PRODUCTION_REDIRECT_TO: 'founder@threadplane.ai',
       FOUNDER_NOTIFICATION_EMAIL: 'founder@threadplane.ai',
+      GROWTH_PUBLIC_ACTION_ORIGIN: 'https://website.test',
       GROWTH_ACTION_TOKEN_ACTIVE_VERSION: '1',
       GROWTH_ACTION_TOKEN_ACTIVE_SECRET:
         'runtime-policy-test-token-secret-material',

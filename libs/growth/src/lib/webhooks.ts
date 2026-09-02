@@ -1,5 +1,6 @@
 import type { SqlExecutor, SqlTransaction } from './database.ts';
 import type { GrowthDeliveryStatus } from './models.ts';
+import type { DeliveryEnvironment } from './resend.ts';
 import {
   stopContact,
   type CanonicalStopReason,
@@ -83,6 +84,7 @@ interface WebhookActivityRow extends Record<string, unknown> {
 }
 
 export interface ProcessResendWebhookDependencies {
+  databaseEnvironment: DeliveryEnvironment;
   stopContact: (
     executor: SqlExecutor,
     input: StopContactInput
@@ -94,6 +96,7 @@ export type ProcessResendWebhookResult =
       applied: false;
       reason:
         | 'ignored_event_type'
+        | 'environment_mismatch'
         | 'unmatched_job'
         | 'retryable_unmatched_job';
     }
@@ -448,12 +451,29 @@ function transactionExecutor(transaction: SqlTransaction): SqlExecutor {
   };
 }
 
-const defaultDependencies: ProcessResendWebhookDependencies = { stopContact };
+export function loadGrowthDatabaseEnvironment(
+  environment: Record<string, string | undefined> = process.env
+): DeliveryEnvironment {
+  const value = environment['GROWTH_DATABASE_ENVIRONMENT'];
+  if (value === 'production' || value === 'preview' || value === 'test') {
+    return value;
+  }
+  throw new Error(
+    'GROWTH_DATABASE_ENVIRONMENT must be production, preview, or test'
+  );
+}
+
+function defaultWebhookDependencies(): ProcessResendWebhookDependencies {
+  return {
+    databaseEnvironment: loadGrowthDatabaseEnvironment(),
+    stopContact,
+  };
+}
 
 export async function processVerifiedResendWebhook(
   executor: SqlExecutor,
   input: { providerEventId: string; payload: unknown },
-  dependencies: ProcessResendWebhookDependencies = defaultDependencies
+  dependencies: ProcessResendWebhookDependencies = defaultWebhookDependencies()
 ): Promise<ProcessResendWebhookResult> {
   const providerEventId = boundedText(
     input.providerEventId,
@@ -462,6 +482,9 @@ export async function processVerifiedResendWebhook(
   );
   const event = parseSupportedEvent(input.payload);
   if (!event) return { applied: false, reason: 'ignored_event_type' };
+  if (event.tags['environment'] !== dependencies.databaseEnvironment) {
+    return { applied: false, reason: 'environment_mismatch' };
+  }
   const eventKey = `resend:${providerEventId}`;
   const projection = activityProjection(event);
   const activityData = {

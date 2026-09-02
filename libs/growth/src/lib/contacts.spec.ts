@@ -1132,6 +1132,10 @@ describe('deleteContact', () => {
     )?.sql;
     expect(cancellationSql).toMatch(/delivery\.submission_authorized/u);
     expect(cancellationSql).toMatch(/bounded_stop_race/u);
+    expect(cancellationSql).toMatch(
+      /growth_activity submission_authorization/u
+    );
+    expect(cancellationSql).not.toMatch(/growth_activity authorization/u);
     expect(cancellationSql).toMatch(/set status = case[\s\S]*then 'failed'/u);
     expect(cancellationSql).toMatch(
       /delivery_status = case[\s\S]*then 'unknown'/u

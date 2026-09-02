@@ -74,6 +74,8 @@ describeDatabase(
       const contactId = randomUUID();
       const jobId = randomUUID();
       const leaseToken = randomUUID();
+      const approvedAt = new Date('2099-01-01T00:00:00.000Z');
+      const approvalEventKey = `stop-integration:approval:${contactId}`;
       contactIds.add(contactId);
       await stopExecutor.execute(
         `insert into growth_contacts (
@@ -84,8 +86,27 @@ describeDatabase(
           contactId,
           `${contactId}@example.com`,
           `stop-integration:${contactId}`,
-          new Date('2099-01-01T00:00:00.000Z'),
+          approvedAt,
         ]
+      );
+      await stopExecutor.execute(
+        `insert into growth_activity (
+           event_key, contact_id, kind, occurred_at, data
+         ) values
+           ($1, $2, 'form.outreach_approved', $3,
+            jsonb_build_object(
+              'source_form', 'pricing',
+              'verification', 'server_verified'
+            )),
+           ('campaign:v1:' || $2::text || ':enrolled', $2,
+            'campaign.enrolled:v1', $3,
+            jsonb_build_object(
+              'campaign_version', 'v1',
+              'approval_event_key', $1::text,
+              'approval_kind', 'form.outreach_approved',
+              'approval_at', $3::timestamptz
+            ))`,
+        [approvalEventKey, contactId, approvedAt]
       );
       await stopExecutor.execute(
         `insert into growth_jobs (
@@ -93,7 +114,13 @@ describeDatabase(
            lease_token, idempotency_key, payload
          ) values (
            $1, 'send_step', $2, 'leased', $3, $4, $5, $6,
-           '{"campaign_version":"v1","step":1}'::jsonb
+           jsonb_build_object(
+             'campaign_version', 'v1',
+             'step', 1,
+             'approval_event_key', $7::text,
+             'approval_kind', 'form.outreach_approved',
+             'approval_at', $3::timestamptz
+           )
          )`,
         [
           jobId,
@@ -102,6 +129,7 @@ describeDatabase(
           new Date('2099-01-01T00:10:00.000Z'),
           leaseToken,
           `stop-integration:${jobId}`,
+          approvalEventKey,
         ]
       );
       return { contactId, jobId, leaseToken };

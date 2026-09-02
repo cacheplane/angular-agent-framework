@@ -595,15 +595,15 @@ export async function stopContact(
       `/* growth:lock-stop-jobs */
        select j.id, j.kind, j.contact_id, j.project_id, j.status,
               j.delivery_status, j.provider_email_id, j.lease_token, j.payload,
-              authorization.event_key as authorization_event_key,
-              authorization.contact_id as authorization_contact_id,
-              authorization.project_id as authorization_project_id,
-              authorization.kind as authorization_kind,
-              authorization.occurred_at as authorization_occurred_at,
-              authorization.data as authorization_data
+              submission_authorization.event_key as authorization_event_key,
+              submission_authorization.contact_id as authorization_contact_id,
+              submission_authorization.project_id as authorization_project_id,
+              submission_authorization.kind as authorization_kind,
+              submission_authorization.occurred_at as authorization_occurred_at,
+              submission_authorization.data as authorization_data
        from growth_jobs j
-       left join growth_activity authorization
-         on authorization.event_key =
+       left join growth_activity submission_authorization
+         on submission_authorization.event_key =
            'job:' || j.id::text || ':submission-authorized:' || j.lease_token::text
        where j.contact_id = $1
        order by j.id

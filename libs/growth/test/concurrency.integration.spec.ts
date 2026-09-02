@@ -86,6 +86,18 @@ describeDatabase(
           approvedAt,
         ]
       );
+      await executor.execute(
+        `insert into growth_activity (
+           event_key, contact_id, kind, occurred_at, data
+         ) values (
+           $1, $2, 'form.outreach_approved', $3,
+           jsonb_build_object(
+             'source_form', 'pricing',
+             'verification', 'server_verified'
+           )
+         )`,
+        [`concurrency-integration:approval:${contactId}`, contactId, approvedAt]
+      );
       return contactId;
     }
 

@@ -186,6 +186,45 @@ describe('Dawn lifecycle service authorization', () => {
     expect(response.status).toBe(401);
     expect(fetch).not.toHaveBeenCalled();
   });
+
+  it('exposes the Vercel deployment id only on an authenticated health response', async () => {
+    const fetch = vi.fn().mockResolvedValue(Response.json({ status: 'ready' }));
+    const adapter = createLifecycleVercelAdapter(
+      { fetch },
+      () => 'secret',
+      () => 'dpl_preview_a'
+    );
+
+    const response = await adapter.fetch(
+      new Request('https://lifecycle.test/api/healthz', {
+        headers: { authorization: 'Bearer secret' },
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('x-threadplane-deployment-id')).toBe(
+      'dpl_preview_a'
+    );
+  });
+
+  it('does not expose the Vercel deployment id before bearer authentication', async () => {
+    const fetch = vi.fn();
+    const readDeploymentId = vi.fn(() => 'dpl_preview_a');
+    const adapter = createLifecycleVercelAdapter(
+      { fetch },
+      () => 'secret',
+      readDeploymentId
+    );
+
+    const response = await adapter.fetch(
+      new Request('https://lifecycle.test/api/healthz')
+    );
+
+    expect(response.status).toBe(401);
+    expect(response.headers.has('x-threadplane-deployment-id')).toBe(false);
+    expect(readDeploymentId).not.toHaveBeenCalled();
+    expect(fetch).not.toHaveBeenCalled();
+  });
 });
 
 describe('dispatchLifecycleJobs', () => {
@@ -359,7 +398,8 @@ describe('dispatchLifecycleJobs', () => {
     };
     const unsubscribeUrl = createUnsubscribeActionUrl(
       { contactId, issuedAt: NOW },
-      { version: 1, secret: 'dispatcher-real-handler-token-secret-material' }
+      { version: 1, secret: 'dispatcher-real-handler-token-secret-material' },
+      'https://website.test'
     );
     const sendRecipient = vi.fn().mockResolvedValue({
       accepted: true,

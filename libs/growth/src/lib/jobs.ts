@@ -1448,16 +1448,16 @@ export async function recordProviderAcceptance(
            and current.provider_email_id is null
            and exists (
              select 1
-             from growth_activity authorization
-             where authorization.contact_id = current.contact_id
-               and authorization.project_id is not distinct from current.project_id
-               and authorization.kind = 'delivery.submission_authorized'
-               and authorization.event_key =
+             from growth_activity submission_authorization
+             where submission_authorization.contact_id = current.contact_id
+               and submission_authorization.project_id is not distinct from current.project_id
+               and submission_authorization.kind = 'delivery.submission_authorized'
+               and submission_authorization.event_key =
                  'job:' || current.id::text ||
                  ':submission-authorized:' || $2::text
-               and authorization.data->>'lease_token' = $2::text
-               and authorization.data->>'bounded_stop_race' = 'true'
-               and authorization.occurred_at <= $3
+               and submission_authorization.data->>'lease_token' = $2::text
+               and submission_authorization.data->>'bounded_stop_race' = 'true'
+               and submission_authorization.occurred_at <= $3
            )
          returning current.*`,
         [
@@ -1497,16 +1497,16 @@ export async function recordProviderAcceptance(
            and current.lease_until is null
            and exists (
              select 1
-             from growth_activity authorization
-             where authorization.contact_id = current.contact_id
-               and authorization.project_id is not distinct from current.project_id
-               and authorization.kind = 'delivery.submission_authorized'
-               and authorization.event_key =
+             from growth_activity submission_authorization
+             where submission_authorization.contact_id = current.contact_id
+               and submission_authorization.project_id is not distinct from current.project_id
+               and submission_authorization.kind = 'delivery.submission_authorized'
+               and submission_authorization.event_key =
                  'job:' || current.id::text ||
                  ':submission-authorized:' || $2::text
-               and authorization.data->>'lease_token' = $2::text
-               and authorization.data->>'bounded_stop_race' = 'true'
-               and authorization.occurred_at <= $3
+               and submission_authorization.data->>'lease_token' = $2::text
+               and submission_authorization.data->>'bounded_stop_race' = 'true'
+               and submission_authorization.occurred_at <= $3
            )
            and exists (
              select 1
@@ -1805,16 +1805,16 @@ export async function markProviderAcceptanceUnknown(
            and current.provider_email_id is null
            and exists (
              select 1
-             from growth_activity authorization
-             where authorization.contact_id = current.contact_id
-               and authorization.project_id is not distinct from current.project_id
-               and authorization.kind = 'delivery.submission_authorized'
-               and authorization.event_key =
+             from growth_activity submission_authorization
+             where submission_authorization.contact_id = current.contact_id
+               and submission_authorization.project_id is not distinct from current.project_id
+               and submission_authorization.kind = 'delivery.submission_authorized'
+               and submission_authorization.event_key =
                  'job:' || current.id::text ||
                  ':submission-authorized:' || $2::text
-               and authorization.data->>'lease_token' = $2::text
-               and authorization.data->>'bounded_stop_race' = 'true'
-               and authorization.occurred_at <= $3
+               and submission_authorization.data->>'lease_token' = $2::text
+               and submission_authorization.data->>'bounded_stop_race' = 'true'
+               and submission_authorization.occurred_at <= $3
            )
          returning current.*`,
         [input.jobId, input.leaseToken, occurredAt, errorCode]

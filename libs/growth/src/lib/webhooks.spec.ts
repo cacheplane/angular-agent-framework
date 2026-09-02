@@ -1,4 +1,12 @@
-import { describe, expect, it, vi } from 'vitest';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+} from 'vitest';
 import type { WebhookEventPayload } from 'resend';
 
 import type {
@@ -17,6 +25,14 @@ const now = new Date('2026-09-01T12:00:00.000Z');
 const jobId = '00000000-0000-4000-8000-000000000001';
 const contactId = '00000000-0000-4000-8000-000000000002';
 const providerEmailId = 'resend-email-1';
+
+beforeEach(() => {
+  vi.stubEnv('GROWTH_DATABASE_ENVIRONMENT', 'production');
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 const sdkBaseEmailData = {
   created_at: now.toISOString(),
@@ -97,7 +113,15 @@ function executorWith(
     string,
     (parameters: readonly unknown[], sql: string) => SqlQueryResult<TestRow>
   >
-): { executor: SqlExecutor; calls: string[] } {
+): {
+  executor: SqlExecutor;
+  calls: string[];
+  runTransaction: Mock<
+    (
+      operation: (transaction: SqlTransaction) => Promise<unknown>
+    ) => Promise<unknown>
+  >;
+} {
   const calls: string[] = [];
   const transaction: SqlTransaction = {
     async execute<Row extends Record<string, unknown>>(
@@ -113,11 +137,16 @@ function executorWith(
       return handler(parameters, sql) as SqlQueryResult<Row>;
     },
   };
+  const runTransaction = vi.fn(
+    async (operation: (transaction: SqlTransaction) => Promise<unknown>) =>
+      operation(transaction)
+  );
   return {
     calls,
+    runTransaction,
     executor: {
       execute: transaction.execute,
-      transaction: async (operation) => operation(transaction),
+      transaction: runTransaction as SqlExecutor['transaction'],
     },
   };
 }
@@ -196,13 +225,63 @@ function webhookHarness(
   const stopContact = vi
     .fn()
     .mockResolvedValue({ applied: true, effective: true });
-  const dependencies: ProcessResendWebhookDependencies = { stopContact };
+  const dependencies: ProcessResendWebhookDependencies = {
+    databaseEnvironment: 'production',
+    stopContact,
+  };
   return { ...harness, stopContact, dependencies };
 }
 
 describe('processVerifiedResendWebhook', () => {
   it('keeps supported parser fixtures assignable to the pinned Resend webhook union', () => {
     expect(supportedSdkFixtures).toHaveLength(7);
+  });
+
+  it.each([undefined, 'Preview', 'production '])(
+    'fails closed before database access when GROWTH_DATABASE_ENVIRONMENT is %s',
+    async (databaseEnvironment) => {
+      vi.unstubAllEnvs();
+      if (databaseEnvironment !== undefined) {
+        vi.stubEnv('GROWTH_DATABASE_ENVIRONMENT', databaseEnvironment);
+      }
+      const harness = executorWith({});
+
+      await expect(
+        processVerifiedResendWebhook(harness.executor, {
+          providerEventId: 'msg_invalid_database_environment',
+          payload: event('email.delivered'),
+        })
+      ).rejects.toThrow(/GROWTH_DATABASE_ENVIRONMENT/u);
+      expect(harness.calls).toEqual([]);
+      expect(harness.runTransaction).not.toHaveBeenCalled();
+    }
+  );
+
+  it.each([
+    ['a different environment', { environment: 'production' }],
+    ['a missing environment tag', undefined],
+  ])('acknowledges %s without any database access', async (_label, tags) => {
+    const harness = webhookHarness();
+
+    await expect(
+      processVerifiedResendWebhook(
+        harness.executor,
+        {
+          providerEventId: 'msg_wrong_environment',
+          payload: event('email.delivered', { tags }),
+        },
+        {
+          ...harness.dependencies,
+          databaseEnvironment: 'preview',
+        } as ProcessResendWebhookDependencies
+      )
+    ).resolves.toEqual({
+      applied: false,
+      reason: 'environment_mismatch',
+    });
+    expect(harness.calls).toEqual([]);
+    expect(harness.runTransaction).not.toHaveBeenCalled();
+    expect(harness.stopContact).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -345,7 +424,9 @@ describe('processVerifiedResendWebhook', () => {
         harness.executor,
         {
           providerEventId: 'msg_bad_tags',
-          payload: event('email.delivered', { tags: { job_kind: 'fulfill' } }),
+          payload: event('email.delivered', {
+            tags: { environment: 'production', job_kind: 'fulfill' },
+          }),
         },
         harness.dependencies
       )
@@ -411,16 +492,12 @@ describe('processVerifiedResendWebhook', () => {
       },
     });
     await expect(
-      processVerifiedResendWebhook(
-        replay.executor,
-        input,
-        replay.dependencies
-      )
+      processVerifiedResendWebhook(replay.executor, input, replay.dependencies)
     ).resolves.toEqual({ applied: false, reason: 'replay' });
     expect(replay.calls).toEqual(['read-resend-webhook-activity']);
   });
 
-  it('acknowledges an unmatched untagged provider event without reserving its replay key', async () => {
+  it('acknowledges an untagged provider event before database access', async () => {
     const harness = executorWith({
       'read-resend-webhook-activity': () => ({ rows: [] }),
       'discover-resend-webhook-job': () => ({ rows: [] }),
@@ -431,40 +508,49 @@ describe('processVerifiedResendWebhook', () => {
         providerEventId: 'msg_legacy_unmatched',
         payload: event('email.delivered', { tags: undefined }),
       })
-    ).resolves.toEqual({ applied: false, reason: 'unmatched_job' });
-    expect(harness.calls).toEqual([
-      'read-resend-webhook-activity',
-      'discover-resend-webhook-job',
-    ]);
+    ).resolves.toEqual({ applied: false, reason: 'environment_mismatch' });
+    expect(harness.calls).toEqual([]);
   });
 
   it.each([
-    {
-      environment: 'production',
-      job_kind: 'send_step',
-    },
-    {
-      environment: 'production',
-      job_kind: 'fulfill',
-      campaign_version: 'v1',
-    },
-    {
-      environment: 'unknown',
-      job_kind: 'fulfill',
-    },
-  ])('does not create an account-wide retry storm for noncanonical tags %#', async (tags) => {
-    const harness = executorWith({
-      'read-resend-webhook-activity': () => ({ rows: [] }),
-      'discover-resend-webhook-job': () => ({ rows: [] }),
-    });
+    [
+      {
+        environment: 'production',
+        job_kind: 'send_step',
+      },
+      'unmatched_job',
+    ],
+    [
+      {
+        environment: 'production',
+        job_kind: 'fulfill',
+        campaign_version: 'v1',
+      },
+      'unmatched_job',
+    ],
+    [
+      {
+        environment: 'unknown',
+        job_kind: 'fulfill',
+      },
+      'environment_mismatch',
+    ],
+  ] as const)(
+    'does not create an account-wide retry storm for noncanonical tags %#',
+    async (tags, reason) => {
+      const harness = executorWith({
+        'read-resend-webhook-activity': () => ({ rows: [] }),
+        'discover-resend-webhook-job': () => ({ rows: [] }),
+      });
 
-    await expect(
-      processVerifiedResendWebhook(harness.executor, {
-        providerEventId: 'msg_noncanonical_tags',
-        payload: event('email.delivered', { tags }),
-      })
-    ).resolves.toEqual({ applied: false, reason: 'unmatched_job' });
-  });
+      await expect(
+        processVerifiedResendWebhook(harness.executor, {
+          providerEventId: 'msg_noncanonical_tags',
+          payload: event('email.delivered', { tags }),
+        })
+      ).resolves.toEqual({ applied: false, reason });
+    }
+  );
 
   it('does not regress a terminal delivered status on delayed or failure events', async () => {
     const delivered = jobRow({ delivery_status: 'delivered' });

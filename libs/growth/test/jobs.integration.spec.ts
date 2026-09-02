@@ -240,7 +240,7 @@ describeDatabase(
 
         const beforeAcceptance = await leaseDueJobs(sessionExecutor, {
           kinds: ['send_step'],
-          now: enrollmentAt,
+          now: new Date(enrollmentAt.getTime() + 5 * 60_000),
           batchSize: 10,
           leaseDurationMs: 2 * 60 * 60_000,
           campaignEnabled: true,
@@ -362,19 +362,27 @@ describeDatabase(
       );
       const genericJobId = randomUUID();
       const ambiguousJobId = randomUUID();
+      const enrichmentJobId = randomUUID();
+      const submissionId = randomUUID();
       await executor.execute(
         `insert into growth_jobs (
-           id, kind, contact_id, status, available_at, idempotency_key
+           id, kind, contact_id, status, available_at, idempotency_key, payload
          ) values
-           ($1, 'fulfill', $3, 'pending', $4, $5),
-           ($2, 'notify', $3, 'pending', $4, $6)`,
+           ($1, 'fulfill', $4, 'pending', $5, $6, '{}'::jsonb),
+           ($2, 'notify', $4, 'pending', $5, $7,
+            jsonb_build_object('submission_id', $9::text)),
+           ($3, 'enrich', $4, 'completed', $5, $8,
+            jsonb_build_object('submission_id', $9::text))`,
         [
           genericJobId,
           ambiguousJobId,
+          enrichmentJobId,
           contactId,
           new Date('2097-11-01T00:00:00.000Z'),
           `fulfill:${genericJobId}`,
           `notify:${ambiguousJobId}`,
+          `enrich:${enrichmentJobId}`,
+          submissionId,
         ]
       );
       const leased = await leaseDueJobs(executor, {

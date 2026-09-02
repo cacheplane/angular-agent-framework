@@ -32,7 +32,9 @@ function dawnRequestFromVercelRewrite(request: Request): Request | null {
 export function createLifecycleVercelAdapter(
   dawnApp: DawnFetchApp,
   readSecret: () => string | undefined = () =>
-    process.env['LIFECYCLE_SERVICE_SECRET']
+    process.env['LIFECYCLE_SERVICE_SECRET'],
+  readDeploymentId: () => string | undefined = () =>
+    process.env['VERCEL_DEPLOYMENT_ID']
 ): LifecycleVercelAdapter {
   return {
     async fetch(request: Request): Promise<Response> {
@@ -48,7 +50,17 @@ export function createLifecycleVercelAdapter(
       }
       const dawnRequest = dawnRequestFromVercelRewrite(request);
       if (!dawnRequest) return jsonError(404, 'Not found');
-      return dawnApp.fetch(dawnRequest);
+      const response = await dawnApp.fetch(dawnRequest);
+      if (new URL(dawnRequest.url).pathname !== '/healthz') return response;
+      const deploymentId = readDeploymentId()?.trim();
+      if (!deploymentId) return response;
+      const headers = new Headers(response.headers);
+      headers.set('x-threadplane-deployment-id', deploymentId);
+      return new Response(response.body, {
+        headers,
+        status: response.status,
+        statusText: response.statusText,
+      });
     },
   };
 }

@@ -1040,16 +1040,16 @@ export async function deleteContact(
            and target.lease_token is not null
            and exists (
              select 1
-             from growth_activity authorization
-             where authorization.contact_id = target.contact_id
-               and authorization.project_id is not distinct from target.project_id
-               and authorization.kind = 'delivery.submission_authorized'
-               and authorization.event_key =
+             from growth_activity submission_authorization
+             where submission_authorization.contact_id = target.contact_id
+               and submission_authorization.project_id is not distinct from target.project_id
+               and submission_authorization.kind = 'delivery.submission_authorized'
+               and submission_authorization.event_key =
                  'job:' || target.id::text ||
                  ':submission-authorized:' || target.lease_token::text
-               and authorization.data->>'lease_token' = target.lease_token::text
-               and authorization.data->>'bounded_stop_race' = 'true'
-               and authorization.occurred_at <= $2
+               and submission_authorization.data->>'lease_token' = target.lease_token::text
+               and submission_authorization.data->>'bounded_stop_race' = 'true'
+               and submission_authorization.occurred_at <= $2
            )
        )
        update growth_jobs

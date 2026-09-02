@@ -30,13 +30,14 @@ describe('growth action tokens', () => {
         issuedAt,
         eventNonce: 'send-step-1',
       },
-      keyring.active
+      keyring.active,
+      'https://threadplane-preview.example'
     );
     const value = unsubscribeActionUrlValue(actionUrl);
     const token = new URL(value).searchParams.get('token');
 
     expect(value).toMatch(
-      /^https:\/\/threadplane\.ai\/api\/unsubscribe\?token=g1\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]{43}$/u
+      /^https:\/\/threadplane-preview\.example\/api\/unsubscribe\?token=g1\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]{43}$/u
     );
     expect(token).not.toBeNull();
     expect(
@@ -46,9 +47,9 @@ describe('growth action tokens', () => {
         now: issuedAt,
       })
     ).toMatchObject({ contactId, purpose: 'unsubscribe' });
-    expect(() =>
-      unsubscribeActionUrlValue(value as never)
-    ).toThrow(/unsubscribe action URL/iu);
+    expect(() => unsubscribeActionUrlValue(value as never)).toThrow(
+      /unsubscribe action URL/iu
+    );
     expect(unsubscribeActionUrlValueForContact(actionUrl, contactId)).toBe(
       value
     );
@@ -58,6 +59,22 @@ describe('growth action tokens', () => {
         '00000000-0000-4000-8000-000000000777'
       )
     ).toThrow(/contact/iu);
+  });
+
+  it.each([
+    'http://threadplane-preview.example',
+    'https://user:password@threadplane-preview.example',
+    'https://threadplane-preview.example/path',
+    'https://threadplane-preview.example?environment=preview',
+    'https://threadplane-preview.example#preview',
+  ])('rejects a non-HTTPS or non-origin public action URL %s', (origin) => {
+    expect(() =>
+      createUnsubscribeActionUrl(
+        { contactId, issuedAt },
+        keyring.active,
+        origin
+      )
+    ).toThrow(/public action origin/iu);
   });
 
   it('signs canonical versioned bytes without putting an email in the token URL', () => {
@@ -175,8 +192,7 @@ describe('growth action tokens', () => {
       verifyGrowthActionToken(expiredToken, {
         ...options,
         now: new Date(
-          issuedAt.getTime() +
-            (FOUNDER_STOP_TOKEN_MAX_AGE_SECONDS + 1) * 1_000
+          issuedAt.getTime() + (FOUNDER_STOP_TOKEN_MAX_AGE_SECONDS + 1) * 1_000
         ),
       })
     ).toBeNull();

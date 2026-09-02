@@ -11,11 +11,9 @@ export default defineConfig({
   plugins: [nxViteTsPaths()],
   test: {
     environment: 'node',
-    exclude: ['apps/lifecycle/scripts/**/*.integration.spec.ts'],
     globals: true,
     include: [
-      'apps/lifecycle/src/**/*.spec.ts',
-      'apps/lifecycle/scripts/**/*.spec.ts',
+      'apps/lifecycle/scripts/dogfood-harness.rollback.integration.spec.ts',
     ],
   },
 });

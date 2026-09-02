@@ -3,6 +3,9 @@ import { z } from 'zod';
 export default z
   .object({
     trigger: z.enum(['cron', 'nudge']),
+    dogfood_fixture_marker: z
+      .literal('threadplane-preview-dogfood-v1')
+      .optional(),
     submission_id: z.uuid().optional(),
     result: z
       .object({

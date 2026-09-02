@@ -1081,6 +1081,8 @@ describe('leased transitions', () => {
         expect(sql).toMatch(/delivery_status = 'unknown'/u);
         expect(sql).toMatch(/provider_acceptance_interrupted_by_deletion/u);
         expect(sql).toMatch(/delivery\.submission_authorized/u);
+        expect(sql).toMatch(/growth_activity submission_authorization/u);
+        expect(sql).not.toMatch(/growth_activity authorization/u);
         expect(sql).toMatch(/delivery\.acceptance_unknown/u);
         expect(sql).toMatch(/authorized_worker_interrupted_by_deletion/u);
         expect(sql).toMatch(/manual_review/u);
@@ -1526,6 +1528,8 @@ describe('leased transitions', () => {
         expect(sql).toMatch(/current\.status = 'cancelled'/u);
         expect(sql).toMatch(/delivery_status = 'unknown'/u);
         expect(sql).toMatch(/delivery\.submission_authorized/u);
+        expect(sql).toMatch(/growth_activity submission_authorization/u);
+        expect(sql).not.toMatch(/growth_activity authorization/u);
         return {
           rows: [
             {

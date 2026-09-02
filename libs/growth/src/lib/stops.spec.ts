@@ -253,6 +253,8 @@ describe('stopContact', () => {
       'lock-stop-jobs': (_parameters, sql) => {
         expect(sql).toMatch(/for update/u);
         expect(sql).toMatch(/order by j\.id/u);
+        expect(sql).toMatch(/growth_activity submission_authorization/u);
+        expect(sql).not.toMatch(/growth_activity authorization/u);
         return {
           rows: [
             ordinaryPending,
@@ -1316,6 +1318,8 @@ describe('authorizeLeasedJobForSubmission', () => {
         ]);
         expect(sql).toMatch(/current\.status = 'cancelled'/u);
         expect(sql).toMatch(/delivery\.submission_authorized/u);
+        expect(sql).toMatch(/growth_activity submission_authorization/u);
+        expect(sql).not.toMatch(/growth_activity authorization/u);
         expect(sql).toMatch(/provider_email_id = \$4/u);
         expect(sql).toMatch(/delivery_status = \$5/u);
         return {

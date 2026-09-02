@@ -229,12 +229,15 @@ describeDatabase(
 
     it('keeps raw email out of every reporting view except contact overview', async () => {
       const emailColumns = await executor.execute<{ table_name: string }>(`
-        select distinct table_name
-        from information_schema.columns
-        where table_schema = 'public'
-          and table_name like 'growth\\_%' escape '\\'
-          and column_name like '%email%'
-        order by table_name
+        select distinct columns.table_name
+        from information_schema.columns columns
+        join information_schema.views reporting_view
+          on reporting_view.table_schema = columns.table_schema
+         and reporting_view.table_name = columns.table_name
+        where columns.table_schema = 'public'
+          and columns.table_name like 'growth\\_%' escape '\\'
+          and columns.column_name like '%email%'
+        order by columns.table_name
       `);
 
       expect(emailColumns.rows.map(({ table_name }) => table_name)).toEqual([

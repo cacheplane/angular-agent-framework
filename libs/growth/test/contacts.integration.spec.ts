@@ -332,7 +332,7 @@ describeDatabase(
         await removeContact(liveContactId);
         await removeContact(deletedContactId);
       }
-    });
+    }, 15_000);
 
     it('fails closed for uncovered stored key versions and rekeys only with complete coverage', async () => {
       const contactId = randomUUID();

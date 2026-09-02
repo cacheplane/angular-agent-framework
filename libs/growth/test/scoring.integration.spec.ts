@@ -47,6 +47,7 @@ describeDatabase(
       const linkedProjectId = randomUUID();
       const unlinkedProjectId = randomUUID();
       const eventPrefix = `scoring-integration:${contactId}`;
+      const claimedAt = new Date('2099-01-01T00:00:00.000Z');
       const registry: GrowthScoreContentRegistry = {
         version: 'content-registry:v1',
         entries: [],
@@ -67,10 +68,12 @@ describeDatabase(
           ]
         );
         await executor.execute(
-          `insert into growth_projects (id, contact_id, claim_key_hash)
+          `insert into growth_projects (
+             id, contact_id, claim_key_hash, claim_consumed_at, claim_method
+           )
            values
-             ($1, $3, $4),
-             ($2, $5, $6)`,
+             ($1, $3, $4, $7, 'one_time_secret'),
+             ($2, $5, $6, null, null)`,
           [
             linkedProjectId,
             unlinkedProjectId,
@@ -78,25 +81,37 @@ describeDatabase(
             `scoring-integration:${linkedProjectId}`,
             otherContactId,
             `scoring-integration:${unlinkedProjectId}`,
+            claimedAt,
           ]
         );
         await executor.execute(
           `insert into growth_activity (
              event_key, contact_id, project_id, kind, occurred_at, data
            ) values
-             ($1, $5, null, 'docs:install_command_copied', now(), '{}'),
-             ($2, null, $7, 'transport.connected', now(), '{}'),
-             ($3, null, $8, 'runtime.first_stream_completed', now(), '{}'),
-             ($4, $6, $7, 'thread.persisted', now(), '{}')`,
+             ($1, $6, null, 'docs:install_command_copied', now(),
+              '{"qualifying_projection":true}'::jsonb),
+             ($2, null, $8, 'transport.connected', now(),
+              '{"qualifying_projection":true}'::jsonb),
+             ($3, null, $9, 'runtime.first_stream_completed', now(),
+              '{"qualifying_projection":true}'::jsonb),
+             ($4, $7, $8, 'thread.persisted', now(),
+              '{"qualifying_projection":true}'::jsonb),
+             ($5, $6, $8, 'project.claimed', $10,
+              jsonb_build_object(
+                'claim_method', 'one_time_secret',
+                'relationship', 'self_claimed_project'
+              ))`,
           [
             `${eventPrefix}:direct`,
             `${eventPrefix}:linked-anonymous`,
             `${eventPrefix}:unlinked-anonymous`,
             `${eventPrefix}:conflicting-dual-attribution`,
+            `${eventPrefix}:claim`,
             contactId,
             otherContactId,
             linkedProjectId,
             unlinkedProjectId,
+            claimedAt,
           ]
         );
 

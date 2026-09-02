@@ -26,7 +26,8 @@ const unsubscribeActionUrl = createUnsubscribeActionUrl(
     issuedAt: now,
     eventNonce: 'resend-contract-test',
   },
-  { version: 1, secret: 'resend-contract-test-token-secret!!' }
+  { version: 1, secret: 'resend-contract-test-token-secret!!' },
+  'https://website.test'
 );
 const unsubscribeUrl = unsubscribeActionUrlValue(unsubscribeActionUrl);
 const founderStopToken = createGrowthActionToken(
@@ -584,7 +585,8 @@ describe('sendRecipientEmail', () => {
         issuedAt: now,
         eventNonce: 'wrong-contact',
       },
-      { version: 1, secret: 'resend-contract-test-token-secret!!' }
+      { version: 1, secret: 'resend-contract-test-token-secret!!' },
+      'https://website.test'
     );
 
     await expect(
