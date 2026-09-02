@@ -18,6 +18,7 @@ export const SCOPE_KEYS = [
   'examples_ag_ui',
   'posthog',
   'scripts_tests',
+  'growth_lifecycle',
 ];
 
 const GLOBAL_CI_FILES = new Set([
@@ -68,7 +69,13 @@ const LINT_ONLY_FILES = new Set(['eslint.config.mjs']);
 
 /** Subset of SCOPE_KEYS that own jobs running `nx lint`. Flipped true
  *  when a LINT_ONLY_FILES entry changes. */
-const LINT_SCOPE_KEYS = ['library', 'cockpit', 'website', 'examples_chat'];
+const LINT_SCOPE_KEYS = [
+  'library',
+  'cockpit',
+  'website',
+  'examples_chat',
+  'growth_lifecycle',
+];
 
 /** The per-product `matrix.spec.ts` / `footprint.spec.ts` files sit at
  *  cockpit/<product>/, which is outside every project root. `nx affected`

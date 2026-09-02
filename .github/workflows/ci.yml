@@ -34,6 +34,7 @@ jobs:
       website_e2e: ${{ steps.scope.outputs.website_e2e }}
       posthog: ${{ steps.scope.outputs.posthog }}
       scripts_tests: ${{ steps.scope.outputs.scripts_tests }}
+      growth_lifecycle: ${{ steps.scope.outputs.growth_lifecycle }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -213,6 +214,42 @@ jobs:
       - name: Verify generated API docs are committed
         run: git diff --exit-code -- apps/website/content/docs/*/api/api-docs.json
       - run: npx nx build website
+
+  growth-lifecycle:
+    name: Growth lifecycle — Node 22
+    needs: ci-scope
+    if: github.event_name == 'push' || needs.ci-scope.outputs.growth_lifecycle == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx nx lint growth
+      - run: npx nx test growth
+      - run: npx nx run growth:test-operator-cli
+      - run: npx nx build growth
+      - run: npx nx test google-mailbox-poller
+      - run: npx nx lint google-mailbox-poller
+
+  lifecycle:
+    name: Lifecycle — Node 24
+    needs: ci-scope
+    if: github.event_name == 'push' || needs.ci-scope.outputs.growth_lifecycle == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx nx lint lifecycle
+      - run: npx nx test lifecycle
+      - run: npx nx run lifecycle:check
+      - run: npx nx build lifecycle
 
   cockpit:
     name: Cockpit — build / test
@@ -584,6 +621,8 @@ jobs:
       - website-e2e
       - posthog-sync-plan
       - scripts-tests
+      - growth-lifecycle
+      - lifecycle
     if: ${{ always() && github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
@@ -604,6 +643,8 @@ jobs:
           RESULT_WEBSITE_E2E: ${{ needs.website-e2e.result }}
           RESULT_POSTHOG: ${{ needs.posthog-sync-plan.result }}
           RESULT_SCRIPTS_TESTS: ${{ needs.scripts-tests.result }}
+          RESULT_GROWTH_LIFECYCLE: ${{ needs.growth-lifecycle.result }}
+          RESULT_LIFECYCLE: ${{ needs.lifecycle.result }}
           SCOPE_LIBRARY: ${{ needs.ci-scope.outputs.library }}
           SCOPE_ANGULAR_COMPATIBILITY: ${{ needs.ci-scope.outputs.angular_compatibility }}
           SCOPE_WEBSITE: ${{ needs.ci-scope.outputs.website }}
@@ -617,6 +658,7 @@ jobs:
           SCOPE_WEBSITE_E2E: ${{ needs.ci-scope.outputs.website_e2e }}
           SCOPE_POSTHOG: ${{ needs.ci-scope.outputs.posthog }}
           SCOPE_SCRIPTS_TESTS: ${{ needs.ci-scope.outputs.scripts_tests }}
+          SCOPE_GROWTH_LIFECYCLE: ${{ needs.ci-scope.outputs.growth_lifecycle }}
         run: |
           set -euo pipefail
 
@@ -675,6 +717,8 @@ jobs:
           require_scoped "website_e2e" "Website — e2e" "$RESULT_WEBSITE_E2E" "$SCOPE_WEBSITE_E2E"
           require_scoped "posthog" "PostHog — dashboards-as-code drift check" "$RESULT_POSTHOG" "$SCOPE_POSTHOG"
           require_scoped "scripts_tests" "Scripts — generator / proxy vitest suites" "$RESULT_SCRIPTS_TESTS" "$SCOPE_SCRIPTS_TESTS"
+          require_scoped "growth_lifecycle" "Growth lifecycle — Node 22" "$RESULT_GROWTH_LIFECYCLE" "$SCOPE_GROWTH_LIFECYCLE"
+          require_scoped "growth_lifecycle" "Lifecycle — Node 24" "$RESULT_LIFECYCLE" "$SCOPE_GROWTH_LIFECYCLE"
 
           if [[ "$failed" -ne 0 ]]; then
             exit 1
@@ -686,18 +730,18 @@ jobs:
     name: Deploy → Vercel
     timeout-minutes: 30 # fail fast instead of blocking the main concurrency group on a hang
     needs:
-      [
-        library,
-        website,
-        cockpit,
-        cockpit-examples-build,
-        cockpit-smoke,
-        cockpit-deploy-smoke,
-        examples-chat-smoke,
-        examples-chat-e2e,
-        cockpit-e2e-summary,
-        website-e2e,
-      ]
+      - library
+      - website
+      - cockpit
+      - cockpit-examples-build
+      - cockpit-smoke
+      - cockpit-deploy-smoke
+      - examples-chat-smoke
+      - examples-chat-e2e
+      - cockpit-e2e-summary
+      - website-e2e
+      - growth-lifecycle
+      - lifecycle
     runs-on: ubuntu-latest
     # Only deploy on pushes to main, not on pull requests
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'

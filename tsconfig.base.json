@@ -48,6 +48,7 @@
       "@threadplane/telemetry/browser": ["libs/telemetry/src/browser/public-api.ts"],
       "@threadplane/telemetry/node": ["libs/telemetry/src/node/index.ts"],
       "@threadplane/telemetry/shared": ["libs/telemetry/src/shared/public-api.ts"],
+      "@threadplane-internal/growth": ["libs/growth/src/index.ts"],
       "@threadplane-internal/e2e-harness": ["libs/e2e-harness/src/index.ts"],
       "@threadplane-internal/e2e-harness/global-teardown": ["libs/e2e-harness/src/global-teardown.ts"]
     },

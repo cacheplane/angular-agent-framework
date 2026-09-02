@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -44,6 +45,36 @@ const EXAMPLES_CHAT_TAGS = [
   'scope:examples-chat',
 ];
 const POSTHOG_TAGS = ['scope:posthog'];
+const GROWTH_LIFECYCLE_TAGS = ['scope:growth-lifecycle'];
+
+function nxAffectedFiles(file) {
+  return JSON.parse(
+    execFileSync(
+      'npx',
+      ['nx', 'show', 'projects', '--affected', `--files=${file}`, '--json'],
+      { encoding: 'utf8' }
+    )
+  );
+}
+
+function listedOperatorCliTestFiles() {
+  return execFileSync(
+    'npx',
+    [
+      'vitest',
+      'list',
+      '--config',
+      'libs/growth/vite.operator-cli.config.mts',
+      '--filesOnly',
+    ],
+    { encoding: 'utf8' }
+  )
+    .trim()
+    .split('\n')
+    .filter(Boolean)
+    .map((file) => file.replace(`${process.cwd()}/`, ''))
+    .sort();
+}
 
 describe('Angular compatibility project tags', () => {
   for (const projectFile of [
@@ -95,6 +126,7 @@ describe('classifyFromAffected — lint-only files', () => {
     assert.equal(scope.cockpit, true);
     assert.equal(scope.website, true);
     assert.equal(scope.examples_chat, true);
+    assert.equal(scope.growth_lifecycle, true);
     // E2e / smoke / deploy / posthog scopes: false
     assert.equal(scope.website_e2e, false);
     assert.equal(scope.cockpit_e2e, false);
@@ -122,6 +154,62 @@ describe('classifyFromAffected — lint-only files', () => {
     assert.equal(scope.cockpit_e2e, true);
     assert.equal(scope.cockpit_examples, true);
     assert.equal(scope.cockpit_smoke, true);
+  });
+});
+
+describe('growth lifecycle project ownership', () => {
+  for (const projectFile of [
+    'libs/growth/project.json',
+    'apps/lifecycle/project.json',
+    'tools/google-mailbox-poller/project.json',
+  ]) {
+    it(`${projectFile} owns the growth lifecycle scope`, async () => {
+      const project = JSON.parse(await readFile(projectFile, 'utf8'));
+      assert.ok(project.tags?.includes('scope:growth-lifecycle'));
+    });
+  }
+
+  for (const [file, owner] of [
+    ['libs/growth/src/lib/jobs.ts', 'growth'],
+    ['apps/lifecycle/src/dispatcher.ts', 'lifecycle'],
+    ['tools/google-mailbox-poller/Code.gs', 'google-mailbox-poller'],
+    ['scripts/apply-migrations.mts', 'growth'],
+    ['scripts/growth-control.mts', 'growth'],
+    ['scripts/import-resend-lifecycle.mts', 'growth'],
+    ['migrations/0001_rate_limit_events.sql', 'growth'],
+    ['migrations/0002_growth_control_plane.sql', 'growth'],
+    ['migrations/0003_growth_reporting_views.sql', 'growth'],
+    ['migrations/9999_future_growth_feature.sql', 'growth'],
+  ]) {
+    it(`Nx selects ${owner} when ${file} changes`, () => {
+      assert.ok(nxAffectedFiles(file).includes(owner));
+    });
+  }
+
+  it('runs exactly the three database/operator CLI suites in its dedicated target', async () => {
+    const project = JSON.parse(
+      await readFile('libs/growth/project.json', 'utf8')
+    );
+
+    assert.equal(
+      project.targets?.['test-operator-cli']?.options?.configFile,
+      'libs/growth/vite.operator-cli.config.mts'
+    );
+    assert.deepEqual(listedOperatorCliTestFiles(), [
+      'scripts/apply-migrations.spec.ts',
+      'scripts/growth-control.spec.ts',
+      'scripts/import-resend-lifecycle.spec.ts',
+    ]);
+  });
+
+  it('maps an affected growth-lifecycle project to the CI lane', () => {
+    const scope = classifyFromAffected(
+      ['libs/growth/src/lib/jobs.ts'],
+      [{ name: 'growth', tags: GROWTH_LIFECYCLE_TAGS }]
+    );
+
+    assert.equal(scope.growth_lifecycle, true);
+    assert.equal(scope.website, false);
   });
 });
 
@@ -447,7 +535,7 @@ describe('classifyFromAffected — examples/ag-ui', () => {
 });
 
 describe('SCOPE_KEYS export', () => {
-  it('contains the 13 documented scope keys', () => {
+  it('contains the 14 documented scope keys', () => {
     assert.deepEqual(SCOPE_KEYS, [
       'library',
       'angular_compatibility',
@@ -462,6 +550,7 @@ describe('SCOPE_KEYS export', () => {
       'examples_ag_ui',
       'posthog',
       'scripts_tests',
+      'growth_lifecycle',
     ]);
   });
 });
