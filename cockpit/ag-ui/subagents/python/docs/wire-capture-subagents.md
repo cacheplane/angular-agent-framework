@@ -153,3 +153,95 @@ The stock `EventEncoder` camelCases the pydantic fields (`subagentRunId`,
 `parentToolCallId`) with no extra configuration, and the ordering from §2a
 held (START 7 → END 246 → SUBAGENT_STARTED 260). The scratch edit was reverted;
 only this doc and the SDK bump land from Task 0.
+
+## After the emitter
+
+Captured 2026-09-02 against the shipped scenario (`SubagentEmittingAgent`
+mounted in `src/server.py`, per-token `subagent_activity` deltas from
+`SubagentStreamHandler`), same `RunAgentInput` as §2. No keys or org ids
+appeared in the stream; only repetitive delta runs, `STATE_SNAPSHOT`s and the
+bridge's RAW mirrors are elided, marked with `# [elided: ...]`. The model
+delegated three times again (research → booking → itinerary); the first round
+is shown, the other two are shape-identical.
+
+```
+1    {"type":"RUN_STARTED","threadId":"capture-thread-2","runId":"capture-run-2"}
+3    {"type":"STEP_STARTED","stepName":"orchestrator"}
+7    {"type":"TOOL_CALL_START","toolCallId":"call_CN5GEDy9byHqg18I9dAhnUDB","toolCallName":"task","parentMessageId":"lc_run--01a06373-7a61-7cb2-a616-3b1e3ee01e57"}
+9    {"type":"TOOL_CALL_ARGS","toolCallId":"call_CN5GEDy9byHqg18I9dAhnUDB","delta":"{\""}
+     # [elided: 141 more TOOL_CALL_ARGS deltas spelling {"role":"research","task_description":"..."}]
+292  {"type":"TOOL_CALL_END","toolCallId":"call_CN5GEDy9byHqg18I9dAhnUDB"}
+301  {"type":"STEP_FINISHED","stepName":"orchestrator"}
+302  {"type":"STEP_STARTED","stepName":"tools"}
+304  {"type":"RAW","event":{"event":"on_tool_start","name":"task"}}
+306  {"type":"SUBAGENT_STARTED","subagentRunId":"call_CN5GEDy9byHqg18I9dAhnUDB-sub","name":"research","parentToolCallId":"call_CN5GEDy9byHqg18I9dAhnUDB"}
+308  {"type":"TEXT_MESSAGE_START","messageId":"call_CN5GEDy9byHqg18I9dAhnUDB-sub-m1","role":"assistant","subagentRunId":"call_CN5GEDy9byHqg18I9dAhnUDB-sub"}
+310  {"type":"TEXT_MESSAGE_CONTENT","messageId":"call_CN5GEDy9byHqg18I9dAhnUDB-sub-m1","delta":"L","subagentRunId":"call_CN5GEDy9byHqg18I9dAhnUDB-sub"}
+312  {"type":"TEXT_MESSAGE_CONTENT","messageId":"call_CN5GEDy9byHqg18I9dAhnUDB-sub-m1","delta":"AX","subagentRunId":"call_CN5GEDy9byHqg18I9dAhnUDB-sub"}
+     # [elided: 490 more TEXT_MESSAGE_CONTENT deltas — the CHILD's text, one raw token each, every one carrying subagentRunId]
+1294 {"type":"TEXT_MESSAGE_END","messageId":"call_CN5GEDy9byHqg18I9dAhnUDB-sub-m1","subagentRunId":"call_CN5GEDy9byHqg18I9dAhnUDB-sub"}
+1295 {"type":"SUBAGENT_FINISHED","subagentRunId":"call_CN5GEDy9byHqg18I9dAhnUDB-sub","outcome":{"type":"success"}}
+1296 {"type":"RAW","event":{"event":"on_tool_end","name":"task"}}
+1297 {"type":"TOOL_CALL_RESULT","messageId":"605c4334-e164-4569-86a4-f12476801d87","toolCallId":"call_CN5GEDy9byHqg18I9dAhnUDB","content":"LAX: Central Terminal Area with Terminals 1–8 plus the Tom Bradley International ..."}
+1302 {"type":"STEP_FINISHED","stepName":"tools"}
+     # [elided: booking round — TOOL_CALL_START call_bCmw9AhTCKRuYWOLAb7hzTQF (1307) → ARGS → END (1586) → SUBAGENT_STARTED name=booking (1600) → TEXT_MESSAGE_START -sub-m1 (1602) → 710 deltas → TEXT_MESSAGE_END (3024) → SUBAGENT_FINISHED success (3025) → TOOL_CALL_RESULT (3027)]
+     # [elided: itinerary round — TOOL_CALL_START call_E725YycIoO2TUaKOug1lcdR7 (3037) → END (3312) → SUBAGENT_STARTED name=itinerary (3326) → 276 deltas → TEXT_MESSAGE_END (3882) → SUBAGENT_FINISHED success (3883) → TOOL_CALL_RESULT (3885)]
+3896 {"type":"TEXT_MESSAGE_START","messageId":"lc_run--01a06375-457d-7611-adea-cd992b954a70","role":"assistant"}
+     # [elided: 243 TEXT_MESSAGE_CONTENT deltas — the ORCHESTRATOR's own summary, no subagentRunId]
+4386 {"type":"TEXT_MESSAGE_END","messageId":"lc_run--01a06375-457d-7611-adea-cd992b954a70"}
+4403 {"type":"MESSAGES_SNAPSHOT", ...}
+4404 {"type":"RUN_FINISHED","threadId":"capture-thread-2","runId":"01a06373-7a57-7222-b98e-9e82a76738a9"}
+```
+
+Event tally (4,404 events): 1 RUN_STARTED, 8 STEP_STARTED, 8 STEP_FINISHED,
+3 TOOL_CALL_START, 415 TOOL_CALL_ARGS, 3 TOOL_CALL_END, 3 SUBAGENT_STARTED,
+3 TEXT_MESSAGE_START(sub), 1,478 TEXT_MESSAGE_CONTENT(sub),
+3 TEXT_MESSAGE_END(sub), 3 SUBAGENT_FINISHED, 3 TOOL_CALL_RESULT,
+1 TEXT_MESSAGE_START, 243 TEXT_MESSAGE_CONTENT, 1 TEXT_MESSAGE_END,
+9 STATE_SNAPSHOT, 1 MESSAGES_SNAPSHOT, 1 RUN_FINISHED, 2,217 RAW. No CUSTOM,
+no ACTIVITY_*, no SUBAGENT_ERROR.
+
+**Child deltas: streaming, one raw token per event** (1,478 attributed content
+events across three rounds: 492 + 710 + 276) — the §2 accumulator is gone and
+each delta is a few bytes instead of the full text-so-far. Every child event
+carries `subagentRunId` derived from the wire `toolCallId` (`<toolCallId>-sub`
+/ `<toolCallId>-sub-m1`), `SUBAGENT_STARTED.parentToolCallId` matches the
+bridge-native `TOOL_CALL_START.toolCallId` verbatim, and the `TOOL_CALL_RESULT`
+content equals the joined child deltas. The `subagent_activity` CUSTOM events
+were consumed (0 on the wire); their RAW `on_custom_event` mirrors (1,487)
+still pass through because the bridge yields them before
+`_handle_single_event` — the same mirror the ACTIVITY pipeline shipped, and
+the client ignores RAW.
+
+**Measured order, `TOOL_CALL_START` vs `SUBAGENT_STARTED`:** START 7 → END
+292 → SUBAGENT_STARTED 306 (and 1307 → 1586 → 1600; 3037 → 3312 → 3326). The
+tool call is fully announced (start, args, end) before the tool body runs,
+so the reducer attaches the card to an already-known `parentToolCallId`; the
+`SUBAGENT_*` block nests between `TOOL_CALL_END` and `TOOL_CALL_RESULT`.
+
+## Browser verification
+
+2026-09-02, live backend (real `OPENAI_API_KEY`, uvicorn on :5326) + `npx nx
+serve cockpit-ag-ui-subagents-angular --port 4326`, driven headlessly with
+Playwright (the §2 prompt typed into the composer). Screenshot, taken while
+the research card was still `running`:
+`cockpit/ag-ui/subagents/angular/e2e/manual/subagent-card-live.png`.
+
+What rendered: the `task` dispatch produced an inline `<chat-subagent-card>`
+anchored to its tool call — header `research` + wire `toolCallId` +
+`running` badge + "1 message(s)" — with the specialist's transcript streaming
+inside it, then booking and itinerary cards in turn, then the orchestrator's
+own summary bubble. The child text never leaked into the parent bubble, and
+each card persists (collapsed, `complete`) after its subagent finishes.
+
+Did the card text stream mid-run: **yes**. Polling `agent.subagents()` and
+the card's `innerText` every 150ms showed the research card mount at t≈8.9s
+(empty, `running` — `SUBAGENT_STARTED` lands before the child's first token;
+gpt-5-mini's reasoning latency kept it empty until t≈47.7s) and then grow
+monotonically while `running`: message lengths 22 → 56 → 113 → 147 → 223 →
+262 → 299 → 330 → 367 → 401 → 431 → 506 → 540 chars across consecutive
+150ms samples (t≈47.7s → 49.6s), reaching 5,336 chars before flipping to
+`complete` and collapsing (card `innerText` 592 → 58 chars). Booking
+(2,890 chars) and itinerary (1,206 chars) behaved identically. This confirms
+the attributed `TEXT_MESSAGE_CONTENT` deltas render progressively in the
+card, not as one post-hoc paste.
