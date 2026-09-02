@@ -1,5 +1,6 @@
 {
   "name": "examples-ag-ui-python",
+  "tags": ["scope:examples-ag-ui"],
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "sourceRoot": "examples/ag-ui/python/src",
