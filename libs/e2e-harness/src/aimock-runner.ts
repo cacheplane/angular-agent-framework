@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
-import { LLMock } from '@copilotkit/aimock';
+// The aimock package is declared via an npm alias in the root package.json so
+// application code refers to it by its neutral name only.
+import { LLMock } from 'aimock';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
