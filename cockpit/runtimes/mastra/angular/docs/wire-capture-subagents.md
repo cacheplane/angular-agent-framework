@@ -221,12 +221,13 @@ Notes:
   (`case "tool-output": break` in @ag-ui/mastra), so the one
   TEXT_MESSAGE_CONTENT carries the child's entire final text.
 
-## Browser verification
+## Browser verification (pre-streaming, superseded below)
 
 Live check 2026-09-02: real-key `deployments/ag-ui-mastra` on the topic port +
 `npx nx serve cockpit-runtimes-mastra-angular`, driving "Plan a trip to Bear
-Lake this weekend - what will the weather be?" in the real UI. Screenshot of
-the completed, expanded card: `e2e/manual/subagent-card-live.png`.
+Lake this weekend - what will the weather be?" in the real UI. The screenshot
+referenced here was replaced by the post-streaming capture (see "Browser
+verification (after streaming)").
 
 - The card renders from the injected events with ZERO component code:
   `chat-tool-calls` groups on `parentToolCallId` and mounts
@@ -316,3 +317,86 @@ entry (`Subagent.toolCallId` is the anchor). A `SUBAGENT_STARTED` with no
 prior `TOOL_CALL_START` for its `parentToolCallId` therefore renders NO card:
 synthesizing the eager `TOOL_CALL_START/ARGS/END` on the `tool-call` chunk
 is required, not optional, for the card to appear before the child finishes.
+
+## After streaming
+
+Live smoke 2026-09-02 against the committed stream tee
+(`deployments/ag-ui-mastra/streaming-tee.mjs`) + the chunk-aware injector
+(`subagent-emitter.mjs`) wired in `server.mjs`. Pins unchanged
+(`@ag-ui/mastra@1.1.2`, `@mastra/core@1.63.2`); the bridge itself is not
+modified. Request: `POST /agent/mastra` with the same delegation prompt,
+timestamped from the request start (scrubbed):
+
+```
+t=  169ms {"type":"RUN_STARTED","threadId":"t-live-…","runId":"r-live-…"}
+t= 1578ms {"type":"TOOL_CALL_START","parentMessageId":"5764473e-…","toolCallId":"call_nXsj…","toolCallName":"agent-weather_forecaster"}   ← eager (synthesized on the tool-call chunk)
+t= 1578ms {"type":"TOOL_CALL_ARGS","toolCallId":"call_nXsj…","delta":"{\"prompt\":\"What is the weather forecast for Bear Lake this w…"}
+t= 1578ms {"type":"TOOL_CALL_END","toolCallId":"call_nXsj…"}
+t= 1578ms {"type":"SUBAGENT_STARTED","subagentRunId":"call_nXsj…-sub","name":"weather_forecaster","parentToolCallId":"call_nXsj…"}
+t= 6263ms {"type":"TEXT_MESSAGE_START","messageId":"call_nXsj…-sub-m1","role":"assistant","subagentRunId":"call_nXsj…-sub"}
+t= 6266ms {"type":"TEXT_MESSAGE_CONTENT","messageId":"call_nXsj…-sub-m1","delta":"Here's","subagentRunId":"call_nXsj…-sub"}
+t= 6306ms {"type":"TEXT_MESSAGE_CONTENT",…,"delta":" the",…}
+t= 6314ms {"type":"TEXT_MESSAGE_CONTENT",…,"delta":" weather",…}
+   … x94 attributed deltas, 399 chars, t=6266→7183ms …
+t= 7183ms {"type":"TEXT_MESSAGE_END","messageId":"call_nXsj…-sub-m1","subagentRunId":"call_nXsj…-sub"}
+t= 7382ms {"type":"SUBAGENT_FINISHED","subagentRunId":"call_nXsj…-sub","outcome":{"type":"success"}}
+t= 7382ms {"type":"TOOL_CALL_RESULT","toolCallId":"call_nXsj…","content":"{\"text\":\"Here's the weather forecast for Bear Lake this weekend:…","messageId":"731b3738-…","role":"tool"}
+t= 8138ms {"type":"STATE_SNAPSHOT","snapshot":{}}
+          {"type":"TEXT_MESSAGE_CHUNK",…}   x68 — the parent's own summary
+          {"type":"RUN_FINISHED",…}
+```
+
+Event-type totals: 1 each RUN_STARTED / TOOL_CALL_START / TOOL_CALL_ARGS /
+TOOL_CALL_END / SUBAGENT_STARTED / TEXT_MESSAGE_START / TEXT_MESSAGE_END /
+SUBAGENT_FINISHED / TOOL_CALL_RESULT / STATE_SNAPSHOT / RUN_FINISHED,
+94 TEXT_MESSAGE_CONTENT (all carrying `subagentRunId`), 68 TEXT_MESSAGE_CHUNK.
+
+Verified on the wire:
+
+- Eager `TOOL_CALL_START` + `SUBAGENT_STARTED` land at t=1.6 s, ~4.7 s before
+  the first attributed delta and ~5.8 s before `TOOL_CALL_RESULT` — the gap
+  the pre-streaming capture spent silent.
+- Exactly ONE `TOOL_CALL_START` for the delegation id: the bridge's buffered
+  copy (flushed at `tool-result`) is dropped by the injector's dedupe.
+- `SUBAGENT_FINISHED` precedes `TOOL_CALL_RESULT` (both written when the
+  `tool-result` chunk is observed, before the bridge processes it).
+- The ~4.7 s between STARTED and the first delta is the child's own inner
+  `updateWorkingMemory` tool call plus model latency, not buffering: the raw
+  tap shows the same inner call preceding the child's `text-start`.
+
+Caveats and the fallback design:
+
+- Suspended delegations: if a child ever emitted `tool-call-suspended`, the
+  bridge would retract its buffered tool call (never emit START), but the
+  eager START is already painted; the injector closes the card with
+  `SUBAGENT_FINISHED {outcome:{type:'suspended'}}` and lets the bridge's
+  CUSTOM on_interrupt + RUN_FINISHED interrupt outcome through. The demo's
+  delegation does not suspend (no suspending tools on the child); this path
+  is unit-tested only.
+- Inner sub-agent tool calls stay out of scope (ignored under `tool-output`).
+- Alternative considered: subclassing the bridge and overriding its chunk
+  processor. Rejected because it couples to three TS-private methods, the
+  bridge's `clone()` constructs the base class (dropping overrides), and the
+  method signatures drift on upstream `main`. The Proxy tee touches only the
+  public agent surface the bridge reads (`'getMemory' in agent`, `stream`,
+  `resumeStream`, `getMemory`, `listTools`, `model`) and remains the fallback
+  design should the public seam ever move.
+
+## Browser verification (after streaming)
+
+Live check 2026-09-02, same servers, driving the real UI with "Plan a trip to
+Bear Lake this weekend - what will the weather be?". Screenshot of the
+completed, expanded card: `e2e/manual/subagent-card-live.png`.
+
+- The card mounts in the `running` state with "0 message(s)" at ~2.5–3.5 s
+  after send — before any child text exists — because the eager
+  `TOOL_CALL_START` gives `chat-tool-calls` the tool-call entry to anchor on.
+- Headless 150 ms poll of the card's `innerText` length while
+  `data-state="running"` (distinct samples): 67 → 110 → 188 → 261 → 279 →
+  306 → 330 → 457 → 494 chars (t=3454 ms → 10827 ms), then `done` (the card
+  collapses to its header, 68 chars) at t=10982 ms. Text visibly grows inside
+  the running card; the earlier capture never left `running` visible at all.
+- A second, interactive run through the dev browser pane showed the same
+  shape at coarser (1 s, throttled) sampling: 67 → 131 → 474 chars while
+  `running`, then `done`.
+- The parent's own summary streams below the card afterwards, unchanged.
