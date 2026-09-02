@@ -17,6 +17,32 @@ function realAgent() {
   });
 }
 
+/** Fake agent whose stream() yields two chunks and carries a sibling prop. */
+function fakeAgent(trace = []) {
+  return {
+    getMemory() {},
+    listTools() {},
+    async stream() {
+      return {
+        fullStream: (async function* () {
+          yield { type: 'a' };
+          yield { type: 'b' };
+        })(),
+        text: 'x',
+      };
+    },
+    async resumeStream() {
+      return {
+        fullStream: (async function* () {
+          yield { type: 'r1' };
+        })(),
+        usage: 'u',
+      };
+    },
+    _trace: trace,
+  };
+}
+
 // ── Task 0 feasibility: the bridge's agent contract survives the Proxy ────
 test('proxy over a real Agent still satisfies the bridge contract', async () => {
   const agent = realAgent();
@@ -42,4 +68,92 @@ test('proxy over a real Agent still satisfies the bridge contract', async () => 
   const seen = [];
   for await (const c of result.fullStream) seen.push(c.type);
   assert.deepEqual(seen, ['start']);
+});
+
+// ── Task 1: ordering, passthrough, resumeStream, `this`, observer errors ──
+test('observer sees each chunk BEFORE the consumer receives it', async () => {
+  const trace = [];
+  const proxy = withDelegationTee(fakeAgent(), (c) => trace.push(`obs:${c.type}`));
+  const result = await proxy.stream([], {});
+  for await (const c of result.fullStream) trace.push(`out:${c.type}`);
+  assert.deepEqual(trace, ['obs:a', 'out:a', 'obs:b', 'out:b']);
+});
+
+test('non-fullStream properties of the stream result are preserved', async () => {
+  const proxy = withDelegationTee(fakeAgent(), () => {});
+  const result = await proxy.stream([], {});
+  assert.equal(result.text, 'x');
+});
+
+test('resumeStream is wrapped the same way', async () => {
+  const trace = [];
+  const proxy = withDelegationTee(fakeAgent(), (c) => trace.push(`obs:${c.type}`));
+  const result = await proxy.resumeStream({}, {});
+  assert.equal(result.usage, 'u');
+  for await (const c of result.fullStream) trace.push(`out:${c.type}`);
+  assert.deepEqual(trace, ['obs:r1', 'out:r1']);
+});
+
+test('stream/resumeStream receive the original arguments', async () => {
+  const calls = [];
+  const agent = {
+    getMemory() {},
+    async stream(...args) {
+      calls.push(['stream', ...args]);
+      return { fullStream: (async function* () {})() };
+    },
+    async resumeStream(...args) {
+      calls.push(['resume', ...args]);
+      return { fullStream: (async function* () {})() };
+    },
+  };
+  const proxy = withDelegationTee(agent, () => {});
+  await proxy.stream('msgs', { runId: 'r' });
+  await proxy.resumeStream({ approved: true }, { runId: 'r2' });
+  assert.deepEqual(calls, [
+    ['stream', 'msgs', { runId: 'r' }],
+    ['resume', { approved: true }, { runId: 'r2' }],
+  ]);
+});
+
+test('other members forward with `this` bound to the real agent (#private fields work)', () => {
+  class Probe extends Agent {
+    #secret = 'hidden';
+    readSecret() {
+      return this.#secret;
+    }
+  }
+  const agent = new Probe({ id: 'p', name: 'p', instructions: 'p', model: 'openai/gpt-4o-mini' });
+  const proxy = withDelegationTee(agent, () => {});
+  // Calling through the proxy must not throw "Cannot read private member".
+  assert.equal(proxy.readSecret(), 'hidden');
+  assert.equal(proxy.id, 'p');
+  assert.equal(typeof proxy.getMemory, 'function');
+});
+
+test('a throwing observer does not break the consumer', async () => {
+  const warnings = [];
+  const originalWarn = console.warn;
+  console.warn = (...args) => warnings.push(args);
+  try {
+    const proxy = withDelegationTee(fakeAgent(), (c) => {
+      if (c.type === 'a') throw new Error('observer boom');
+    });
+    const result = await proxy.stream([], {});
+    const seen = [];
+    for await (const c of result.fullStream) seen.push(c.type);
+    assert.deepEqual(seen, ['a', 'b']);
+    assert.equal(warnings.length, 1);
+    assert.match(String(warnings[0][0]), /observer/);
+  } finally {
+    console.warn = originalWarn;
+  }
+});
+
+test('a stream result without fullStream is returned untouched', async () => {
+  const agent = { getMemory() {}, async stream() { return { processDataStream() {} }; } };
+  const proxy = withDelegationTee(agent, () => {});
+  const result = await proxy.stream([], {});
+  assert.equal(typeof result.processDataStream, 'function');
+  assert.equal(result.fullStream, undefined);
 });
