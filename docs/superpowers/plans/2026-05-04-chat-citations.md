@@ -44,7 +44,7 @@
 
 - **TDD:** failing test → implement → green → commit, per task.
 - **Commit style:** `feat(chat): ...`, `feat(langgraph): ...`, `feat(ag-ui): ...`, `chore(release): ...`.
-- **Hard constraint:** no a React agent UI framework / chatgpt / chatbot-kit / etc. references anywhere.
+- **Hard constraint:** no a competing React framework / chatgpt / chatbot-kit / etc. references anywhere.
 - **Test command:** `npx nx run <lib>:test` (e.g. `npx nx run chat:test`).
 - **Lint command:** `npx nx run <lib>:lint`.
 - **All chat selectors are prefixed `chat-` or `chat-md-`** to satisfy `@angular-eslint/component-selector` rule.

@@ -2,14 +2,14 @@
 
 ## Goal
 
-Migrate the user-facing libraries, demo apps, marketing site, and verification client from `PolyForm-Noncommercial-1.0.0` to `MIT`. Keep the entitlement-issuing minting service (`apps/minting-service/`) on its existing proprietary terms. Result: any developer can `npm install @cacheplane/chat` and use it commercially without a license fee, in line with industry SDK norms (a React agent UI framework, LangChain, Vercel AI SDK).
+Migrate the user-facing libraries, demo apps, marketing site, and verification client from `PolyForm-Noncommercial-1.0.0` to `MIT`. Keep the entitlement-issuing minting service (`apps/minting-service/`) on its existing proprietary terms. Result: any developer can `npm install @cacheplane/chat` and use it commercially without a license fee, in line with industry SDK norms (a competing React framework, LangChain, Vercel AI SDK).
 
 ## Motivation
 
 `PolyForm-Noncommercial-1.0.0` blocks commercial use without a separate paid license. This creates friction:
 
 - **Adoption:** anyone evaluating the library has to engage legal review before commercial use; many corps disqualify on first scan.
-- **Ecosystem positioning:** SDK competitors (a React agent UI framework MIT, LangChain MIT, Vercel AI SDK Apache) are all permissively licensed. The non-commercial restriction signals "different category" rather than "alternative choice."
+- **Ecosystem positioning:** SDK competitors (a competing React framework MIT, LangChain MIT, Vercel AI SDK Apache) are all permissively licensed. The non-commercial restriction signals "different category" rather than "alternative choice."
 - **Community contribution:** non-OSI license discourages drive-by PRs and prevents inclusion in many corp tooling lists.
 
 Future revenue is planned via:

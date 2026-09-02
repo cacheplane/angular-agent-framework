@@ -9,7 +9,7 @@
 
 ## 1. Goals
 
-Surface assistant reasoning content as a first-class UI affordance, and turn tool-call rendering into a a React agent UI framework-style extension surface while keeping a polished default that matches what users see in ChatGPT-style products.
+Surface assistant reasoning content as a first-class UI affordance, and turn tool-call rendering into a competing-React-framework-style extension surface while keeping a polished default that matches what users see in ChatGPT-style products.
 
 Concretely:
 
@@ -325,7 +325,7 @@ A "What's new in chat 0.0.19" callout in the appropriate changelog page (locatio
 
 ### 10.4 Hard constraint
 
-Never reference any chat-UI library this work was inspired by. No `a React agent UI framework` / `chatgpt` / `chatbot-kit` references in code, comments, commits, PR bodies, or docs. The aesthetic and extensibility patterns described here are independently arrived at.
+Never reference any chat-UI library this work was inspired by. No `a competing React framework` / `chatgpt` / `chatbot-kit` references in code, comments, commits, PR bodies, or docs. The aesthetic and extensibility patterns described here are independently arrived at.
 
 ---
 

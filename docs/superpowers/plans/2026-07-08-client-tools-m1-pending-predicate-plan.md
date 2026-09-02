@@ -166,7 +166,7 @@ Run:
 ```bash
 git diff --check
 git diff --name-only
-rg -n "hashbrown|a React agent UI framework|chatgpt|claude" libs docs apps/website/content/docs || true
+rg -n "hashbrown|<vendor>|chatgpt|claude" libs docs apps/website/content/docs || true
 ```
 
 Expected: no whitespace errors; changed files match M1 scope; forbidden external names are absent from code and generated docs except already-existing design/plan markdown where allowed.

@@ -2321,7 +2321,7 @@ git push origin chat-v0.0.15
 ## Self-review notes
 
 - **Spec coverage**: All three active phases mapped to task sets. Phase 4 explicitly deferred per spec.
-- **Constraint enforcement**: No a React agent UI framework / inspirational-library references in any task body, code, or commit message.
+- **Constraint enforcement**: No a competing React framework / inspirational-library references in any task body, code, or commit message.
 - **Type consistency**: `ChatWelcomeComponent`, `ChatWelcomeSuggestionComponent`, `classifiers: Map<string, ContentClassifier>`, `showWelcome: Signal<boolean>`, `welcomeDisabled: InputSignal<boolean>` consistent across tasks.
 - **Test before code**: Every new module follows write-test → run-fail → implement → run-pass.
 - **Exact commands**: Every step that runs a tool gives the exact command + expected outcome.

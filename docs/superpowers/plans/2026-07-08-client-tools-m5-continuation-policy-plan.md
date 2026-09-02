@@ -413,7 +413,7 @@ Check:
 
 ```bash
 git diff --name-only origin/main
-(git diff origin/main --name-only; git ls-files --others --exclude-standard) | rg -v '^docs/superpowers/' | xargs rg -n 'hashbrown|a React agent UI framework|chatgpt|claude' || true
+(git diff origin/main --name-only; git ls-files --others --exclude-standard) | rg -v '^docs/superpowers/' | xargs rg -n 'hashbrown|<vendor>|chatgpt|claude' || true
 ```
 
 Expected:

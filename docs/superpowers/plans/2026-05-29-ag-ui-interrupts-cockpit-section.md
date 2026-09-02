@@ -6,7 +6,7 @@
 
 **Architecture:** The adapter bridges the AG-UI `CUSTOM`/`on_interrupt` event into `Agent.interrupt` and resumes via `runAgent({ forwardedProps: { command: { resume } } })`. Each cockpit example is fully standalone: its own duplicated LangGraph graph served by a uvicorn `ag-ui-langgraph` FastAPI app. E2E uses a new AG-UI-specific harness setup that points the graph's `ChatOpenAI` at an `aimock` replay server seeded from recorded fixtures.
 
-**Tech Stack:** Angular 20/21, TypeScript, RxJS, `@ag-ui/client`; Python LangGraph + `ag-ui-langgraph` + FastAPI/uvicorn; Nx; Playwright + `the former fixture dependency`.
+**Tech Stack:** Angular 20/21, TypeScript, RxJS, `@ag-ui/client`; Python LangGraph + `ag-ui-langgraph` + FastAPI/uvicorn; Nx; Playwright + `aimock`.
 
 **Spec:** `docs/superpowers/specs/2026-05-29-ag-ui-interrupts-cockpit-section-design.md`
 
@@ -652,7 +652,7 @@ Run the manual recorder against a live model to capture the LLM exchanges (refun
 # with a real OPENAI_API_KEY exported:
 npx tsx cockpit/ag-ui/interrupts/angular/e2e/manual/interrupts.manual.ts   # writes/append fixtures
 ```
-(Mirror exactly how `cockpit/langgraph/interrupts/angular/e2e/manual/interrupts.manual.ts` records into `fixtures/interrupts.json` — same fixture entry shape consumed by `the former fixture dependency`.) Commit the resulting `fixtures/interrupts.json`.
+(Mirror exactly how `cockpit/langgraph/interrupts/angular/e2e/manual/interrupts.manual.ts` records into `fixtures/interrupts.json` — same fixture entry shape consumed by `aimock`.) Commit the resulting `fixtures/interrupts.json`.
 
 - [ ] **Step 4: Run e2e (replay)**
 

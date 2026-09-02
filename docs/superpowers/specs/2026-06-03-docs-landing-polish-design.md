@@ -50,7 +50,7 @@ Marks reuse the existing, shipped, trademark-cleared assets from
 | Card | Logo `src` | Attribution |
 |------|-----------|-------------|
 | LangGraph | `/logos/langgraph.svg` | LangChain |
-| AG-UI | `/logos/runtimes/a React agent UI framework.svg` | AG-UI · a React agent UI framework |
+| AG-UI | `/logos/runtimes/ag-ui.svg` | AG-UI |
 | A2UI | `/logos/providers/google.svg` | Google |
 | json-render | `/logos/surface/vercel.svg` | Vercel |
 
@@ -146,7 +146,7 @@ Update `apps/website/e2e/docs.spec.ts` (the "Docs landing page" block):
 - Hero h1 now reads "Start building with Threadplane" (update the existing
   `toContainText` assertion).
 - The four fork-card vendor logo `<img>` elements are present (assert by `src`:
-  `langgraph.svg`, `a React agent UI framework.svg`, `google.svg`, `vercel.svg`).
+  `langgraph.svg`, `ag-ui.svg`, `google.svg`, `vercel.svg`).
 - A copy button is present on the backend snippets (assert by `aria-label`
   containing "Copy install command").
 - All existing link-target, step-heading, and search-prompt assertions still

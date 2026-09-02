@@ -12,7 +12,7 @@
 
 **Branch:** `claude/examples-chat-phase-5-genui`, branched from `origin/main` (currently `57a0d721` — tip after PR #228 a2ui v1 migration).
 
-**Hard constraint:** Never reference hashbrown / a React agent UI framework / chatgpt / chatbot-kit / claude in code, comments, commit messages, or PR titles/bodies. Mentions in markdown spec/plan docs are OK as third-party library names; do not propagate.
+**Hard constraint:** Never reference hashbrown / a competing React framework / chatgpt / chatbot-kit / claude in code, comments, commit messages, or PR titles/bodies. Mentions in markdown spec/plan docs are OK as third-party library names; do not propagate.
 
 ---
 
@@ -77,12 +77,12 @@ git log --oneline -1              # must be 57a0d721 or later (PR #228 a2ui v1 m
 
 **File:** `examples/chat/python/src/schemas/a2ui_v1.py`
 
-The A2UI v1 schema documentation is ~770 lines of structured prompt + JSON schema. Copy it verbatim from the L4 reference at `/Users/blove/repos/SC-a React agent UI framework-C1/L4/backend-dynamic/schema.py` (the `SCHEMA_PROMPT` triple-quoted string spanning lines 9-887). The reference's text already targets the canonical Google A2UI v1 protocol, which matches our v1 parser exactly after PR #228.
+The A2UI v1 schema documentation is ~770 lines of structured prompt + JSON schema. Copy it verbatim from the L4 reference at `/Users/blove/repos/SC-<vendor>-C1/L4/backend-dynamic/schema.py` (the `SCHEMA_PROMPT` triple-quoted string spanning lines 9-887). The reference's text already targets the canonical Google A2UI v1 protocol, which matches our v1 parser exactly after PR #228.
 
 - [ ] **Step 1: Read the source**
 
 ```bash
-sed -n '9,887p' /Users/blove/repos/SC-a React agent UI framework-C1/L4/backend-dynamic/schema.py | head -40
+sed -n '9,887p' /Users/blove/repos/SC-<vendor>-C1/L4/backend-dynamic/schema.py | head -40
 ```
 
 This shows the start of the `SCHEMA_PROMPT = """..."""` block. The full constant ends at line 887 (the `""".strip()` closure).
@@ -155,7 +155,7 @@ The `[... copy the full JSON schema body ...]` placeholder must be replaced with
 
 ```bash
 # After creating the module file with everything BEFORE the JSON schema section:
-sed -n '58,829p' /Users/blove/repos/SC-a React agent UI framework-C1/L4/backend-dynamic/schema.py >> /tmp/a2ui_schema_body.txt
+sed -n '58,829p' /Users/blove/repos/SC-<vendor>-C1/L4/backend-dynamic/schema.py >> /tmp/a2ui_schema_body.txt
 # Then manually paste the contents into the module file inside the triple-quoted string,
 # replacing the placeholder line.
 ```
@@ -165,7 +165,7 @@ Or simpler — just use Bash + Python to copy the entire SCHEMA_PROMPT constant 
 ```bash
 python3 -c "
 import re
-src = open('/Users/blove/repos/SC-a React agent UI framework-C1/L4/backend-dynamic/schema.py').read()
+src = open('/Users/blove/repos/SC-<vendor>-C1/L4/backend-dynamic/schema.py').read()
 m = re.search(r'SCHEMA_PROMPT = \"\"\"(.+?)\"\"\"\\.strip\\(\\)', src, re.DOTALL)
 prompt_body = m.group(1)
 out = '''# SPDX-License-Identifier: MIT

@@ -54,7 +54,7 @@ This bug surfaces specifically when content arrays contain both `reasoning` and 
 
 Two well-known consumer libraries handle this differently:
 
-**a React agent UI framework** (`packages/runtime/src/agents/langgraph/event-source.ts`) — emits explicit `TextMessageStart` / `TextMessageContent` (with delta) / `TextMessageEnd` events through an RxJS `scan`. Downstream consumers append deltas. There is no dedupe logic — the wire protocol is delta-only by design.
+**a competing React framework** (`packages/runtime/src/agents/langgraph/event-source.ts`) — emits explicit `TextMessageStart` / `TextMessageContent` (with delta) / `TextMessageEnd` events through an RxJS `scan`. Downstream consumers append deltas. There is no dedupe logic — the wire protocol is delta-only by design.
 
 **Hashbrown** (`packages/core/src/utils/assistant-message.ts`) — `updateAssistantMessage` is a single-line append: `existing.content + delta.choices[0].delta.content`. Pure delta protocol from the OpenAI SDK chat completions API.
 
@@ -64,7 +64,7 @@ The `@ngaf/langgraph` adapter is the only one of the three trying to recover del
 
 ## Approach
 
-Stay with the snapshot+dedupe model — converting to a a React agent UI framework-style delta protocol is a much larger refactor that would change the public `Message` shape and break downstream consumers. Instead, harden the existing pipeline by capturing a real chunk sequence, replaying it as a unit test, and applying a targeted fix.
+Stay with the snapshot+dedupe model — converting to a competing-React-framework-style delta protocol is a much larger refactor that would change the public `Message` shape and break downstream consumers. Instead, harden the existing pipeline by capturing a real chunk sequence, replaying it as a unit test, and applying a targeted fix.
 
 ### Step 1 — capture
 
@@ -121,7 +121,7 @@ Add unit tests for the three currently-untested helpers, in addition to the capt
 
 ## Out of scope (defer)
 
-- **Migrating to a a React agent UI framework-style delta-event protocol.** Bigger refactor; changes public `Message` shape; not justified by this single bug.
+- **Migrating to a competing-React-framework-style delta-event protocol.** Bigger refactor; changes public `Message` shape; not justified by this single bug.
 - **Replacing `extractText` / `extractReasoning` / `accumulateReasoning`.** Just shipped in PR #217 with their own tests; leave them.
 - **Refactor toward a single `applyMessageUpdate(state, incoming) → state` primitive.** Tempting (cleaner mental model) but risks regressions in subagent tracking, queue replay, history sync, and other surfaces depending on the current helper boundaries. Defer.
 - **Finding D (thread restoration on reload).** Separate brainstorm/spec/plan.

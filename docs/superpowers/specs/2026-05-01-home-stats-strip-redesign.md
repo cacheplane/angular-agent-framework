@@ -17,7 +17,7 @@ The strip's visual format (big number + label) forces synthetic numbers onto cla
 
 ## Goal
 
-Replace the strip with **4 positioning claims** that differentiate NGAF against the actual competitive set (a React agent UI framework, Vercel AI SDK 5, assistant-ui, vanilla AG-UI/LangGraph wiring). Each claim must be defensible against a current competitor product page.
+Replace the strip with **4 positioning claims** that differentiate NGAF against the actual competitive set (a competing React framework, Vercel AI SDK 5, assistant-ui, vanilla AG-UI/LangGraph wiring). Each claim must be defensible against a current competitor product page.
 
 ## Non-goals
 
@@ -28,7 +28,7 @@ Replace the strip with **4 positioning claims** that differentiate NGAF against 
 
 ## Competitive context (from research, 2026-05-01)
 
-- **a React agent UI framework** ships `@a React agent UI frameworknext/angular` with services + headless UI + chat components. Full Angular customization is tier-gated. No A2UI renderer on the Angular side.
+- **a competing React framework** ships its `next/angular` package with services + headless UI + chat components. Full Angular customization is tier-gated. No A2UI renderer on the Angular side.
 - **Vercel AI SDK 5** has official Angular support with signal-based primitives, but does not speak LangGraph natively.
 - **assistant-ui** is React-only.
 - **AG-UI** is a protocol; Angular is one of its listed renderers. Not a UI library.
@@ -37,7 +37,7 @@ Implication: NGAF cannot claim "first/only Angular agent framework." It *can* cl
 
 ## Claims that will NOT appear
 
-- "First Angular agent framework" — false (a React agent UI framework, Vercel AI SDK).
+- "First Angular agent framework" — false (a competing React framework, Vercel AI SDK).
 - "Built on signals" / "Zoneless" / "Modern Angular" — baseline.
 - "Open source" alone — every competitor is OSS.
 - "Cockpit DevTools" — not yet a shipped product surface; the libs under `libs/cockpit-*` are contracts only.
@@ -101,8 +101,8 @@ No big numbers. No icons in v1 (icons can be added in a follow-up if a designer 
 
 ### Risk and mitigation
 
-- **A2UI claim has a short shelf-life.** a React agent UI framework blogged about React + A2UI in early 2026; Angular parity is plausible within 6 months. The claim is true today; revisit on the next quarterly content review.
-- **Naming a React agent UI framework indirectly via "tier gates."** The copy says "No tier gates on Angular" without naming a React agent UI framework. Defensible factual statement; not a comparative ad.
+- **A2UI claim has a short shelf-life.** a competing React framework blogged about React + A2UI in early 2026; Angular parity is plausible within 6 months. The claim is true today; revisit on the next quarterly content review.
+- **Naming a competing React framework indirectly via "tier gates."** The copy says "No tier gates on Angular" without naming a competing React framework. Defensible factual statement; not a comparative ad.
 - **LangGraph parity claim depends on the README parity table staying current.** If `@ngaf/langgraph` drifts behind upstream `useStream()`, this card becomes a liability. Add a note in the lib README that the parity table is load-bearing for marketing copy.
 
 ## Testing

@@ -6,7 +6,7 @@
 
 **Architecture:** Each cockpit example owns its own e2e dir next to its Angular app. Per-example `playwright.config.ts` calls `createGlobalSetup({ ... })` from the shared lib with this app's specifics (langgraph cwd, Angular project name + port, fixtures dir). CI runs all of them via `nx run-many --target=e2e --projects=cockpit-*-angular --parallel=1`.
 
-**Tech Stack:** `the former fixture dependency`, Playwright, Nx, TypeScript path aliases.
+**Tech Stack:** `aimock`, Playwright, Nx, TypeScript path aliases.
 
 **Spec:** [docs/superpowers/specs/2026-05-15-cockpit-aimock-harness-lib-design.md](../specs/2026-05-15-cockpit-aimock-harness-lib-design.md)
 
@@ -168,7 +168,7 @@ Write `libs/internal/aimock-harness/README.md`:
 ```markdown
 # @ngaf-internal/aimock-harness
 
-Internal-only library that wraps [`the former fixture dependency`](https://github.com/a React agent UI framework/aimock) for our cockpit example aimock e2e suite.
+Internal-only library that wraps `aimock` for our cockpit example aimock e2e suite.
 
 NOT published. The `@ngaf-internal/*` namespace is reserved for internal libraries that are tightly coupled to repo-specific orchestration (langgraph + Angular dev server boot) and shouldn't appear in consumer-facing API surfaces.
 
@@ -1258,7 +1258,7 @@ Report when CI completes.
   - Risks (path alias, port collisions) → Task 0 + `--parallel=1` flag in Task 10
 - [x] Placeholder scan: no TBD/TODO. Path-alias and `<DISTINCTIVE_PHRASE>` are intentional implementer-fills based on Task 0 / Task 8 Step 4 findings.
 - [x] Type consistency: `AimockHandle`, `AimockStartOptions`, `startAimock`, `sendPromptAndWait`, `createGlobalSetup`, `CreateGlobalSetupOpts` all consistent across tasks.
-- [x] Constraints: `the former fixture dependency` only in TS imports, package.json, plan/spec/README. Not in commit messages.
+- [x] Constraints: `aimock` only in TS imports, package.json, plan/spec/README. Not in commit messages.
 
 ## Execution handoff
 

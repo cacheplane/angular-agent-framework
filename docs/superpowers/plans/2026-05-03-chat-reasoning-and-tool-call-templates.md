@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Surface model reasoning content as a first-class collapsible pill above the assistant response, and turn tool-call rendering into a a React agent UI framework-style extension surface via a `chatToolCallTemplate` directive while keeping a polished default that auto-collapses completed cards and groups sequential same-name calls.
+**Goal:** Surface model reasoning content as a first-class collapsible pill above the assistant response, and turn tool-call rendering into a competing-React-framework-style extension surface via a `chatToolCallTemplate` directive while keeping a polished default that auto-collapses completed cards and groups sequential same-name calls.
 
 **Architecture:** One new primitive (`<chat-reasoning>`), one new directive (`chatToolCallTemplate`), augmentations to two existing primitives (`<chat-tool-calls>`, `<chat-tool-call-card>`), two new optional `Message` fields (`reasoning`, `reasoningDurationMs`) populated by both adapters from provider-agnostic sources (LangGraph complex-content reasoning blocks and AG-UI `REASONING_MESSAGE_*` events). Single-PR shipment across `@ngaf/chat`, `@ngaf/langgraph`, and `@ngaf/ag-ui`.
 
@@ -10,7 +10,7 @@
 
 **Reference spec:** `docs/superpowers/specs/2026-05-03-chat-reasoning-and-tool-call-templates-design.md`
 
-**Hard constraint:** Never reference any chat-UI library this work was inspired by — no `a React agent UI framework` / `chatgpt` / `chatbot-kit` / similar references in code, comments, commits, PR bodies, or docs. Aesthetic and extensibility patterns are independently arrived at.
+**Hard constraint:** Never reference any chat-UI library this work was inspired by — no `a competing React framework` / `chatgpt` / `chatbot-kit` / similar references in code, comments, commits, PR bodies, or docs. Aesthetic and extensibility patterns are independently arrived at.
 
 ---
 
@@ -3626,4 +3626,4 @@ git push origin chat-v0.0.19 langgraph-v0.0.11 ag-ui-v0.0.3
 
 - **Type consistency:** `Message.reasoning?: string`, `Message.reasoningDurationMs?: number` defined in Task 1.1 and consumed everywhere. `ToolCallStatus` re-used (not redefined). `ChatToolCallTemplateContext` defined in Task 3.2 and referenced in Task 10.2. `summarizeGroup` exported from `group-summary.ts` (Task 4.2) and consumed in `chat-tool-calls.component.ts` (Task 4.3) and tested in Task 4.1.
 
-- **Hard constraint adherence:** plan body, code samples, commit messages, and PR body contain no references to `a React agent UI framework`, `chatgpt`, `chatbot-kit`, or similar.
+- **Hard constraint adherence:** plan body, code samples, commit messages, and PR body contain no references to `a competing React framework`, `chatgpt`, `chatbot-kit`, or similar.

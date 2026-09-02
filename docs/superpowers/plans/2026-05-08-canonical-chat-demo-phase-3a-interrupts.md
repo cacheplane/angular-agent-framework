@@ -12,7 +12,7 @@
 
 **Branch:** `claude/examples-chat-phase-3a-interrupts`, branched from `origin/main` (currently `794c914f`).
 
-**Hard constraint:** Never reference hashbrown / a React agent UI framework / chatgpt / chatbot-kit / claude in code, comments, commit messages, or PR titles/bodies. Mentions in markdown spec/plan docs are OK as third-party library names; do not propagate.
+**Hard constraint:** Never reference hashbrown / a competing React framework / chatgpt / chatbot-kit / claude in code, comments, commit messages, or PR titles/bodies. Mentions in markdown spec/plan docs are OK as third-party library names; do not propagate.
 
 ---
 

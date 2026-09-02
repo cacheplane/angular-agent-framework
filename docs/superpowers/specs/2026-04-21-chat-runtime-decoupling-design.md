@@ -6,13 +6,13 @@
 
 ## Problem
 
-`@cacheplane/chat` imports `AgentRef`, `SubagentStreamRef`, `Interrupt`, `ThreadState`, `ToolCallWithResult`, and `ResourceStatus` from `@cacheplane/langgraph` across nearly every primitive and composition. `@cacheplane/langgraph` is a LangGraph SDK adapter — its types are LangGraph-shaped (`BaseMessage` from `@langchain/core`, `Interrupt`/`ThreadState` from `@langchain/langgraph-sdk`). Consequently, chat's public API is LangGraph-specific: a user cannot drive chat primitives from a React agent UI framework's AG-UI runtime, Mastra, CrewAI, Microsoft Agent Framework, or a custom backend without re-implementing `AgentRef`.
+`@cacheplane/chat` imports `AgentRef`, `SubagentStreamRef`, `Interrupt`, `ThreadState`, `ToolCallWithResult`, and `ResourceStatus` from `@cacheplane/langgraph` across nearly every primitive and composition. `@cacheplane/langgraph` is a LangGraph SDK adapter — its types are LangGraph-shaped (`BaseMessage` from `@langchain/core`, `Interrupt`/`ThreadState` from `@langchain/langgraph-sdk`). Consequently, chat's public API is LangGraph-specific: a user cannot drive chat primitives from the competing React framework's AG-UI runtime, Mastra, CrewAI, Microsoft Agent Framework, or a custom backend without re-implementing `AgentRef`.
 
 `@cacheplane/render` has **no** dependency on `@cacheplane/langgraph` and is already decoupled from the agent runtime (though it remains coupled to the Angular framework — out of scope for this spec).
 
 ## Goal
 
-Chat primitives accept a runtime-neutral `ChatAgent` contract. Existing LangGraph users are served by an adapter. A new optional adapter lets any AG-UI-compatible backend (LangGraph Platform, CrewAI, Mastra, Microsoft AF, AG2, Pydantic AI, AWS Strands, a React agent UI framework runtime) drive chat without changes to chat itself. The AG-UI package is optional — chat does not depend on it.
+Chat primitives accept a runtime-neutral `ChatAgent` contract. Existing LangGraph users are served by an adapter. A new optional adapter lets any AG-UI-compatible backend (LangGraph Platform, CrewAI, Mastra, Microsoft AF, AG2, Pydantic AI, AWS Strands, a competing React framework runtime) drive chat without changes to chat itself. The AG-UI package is optional — chat does not depend on it.
 
 ## Non-goals
 
@@ -190,7 +190,7 @@ Treat documentation as a first-class deliverable of each phase, not a follow-up:
 - **Capability matrix** — a table listing each primitive/composition and which runtimes it supports (core / interrupts / subagents / history).
 - **Migration guide** — dedicated page for the `@cacheplane/langgraph` → `@cacheplane/langgraph` rename plus primitive input changes.
 - **API reference** — `ChatAgent`, `ChatMessage`, etc. documented with examples for each adapter.
-- **Examples repo / apps/website demos** — at least one AG-UI-driven demo (e.g., against a Mastra or a React agent UI framework backend) to prove the decoupling end-to-end.
+- **Examples repo / apps/website demos** — at least one AG-UI-driven demo (e.g., against a Mastra or a competing React framework backend) to prove the decoupling end-to-end.
 
 Website updates ship with each phase's PR; no phase is considered complete until docs are aligned.
 
