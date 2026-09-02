@@ -320,6 +320,12 @@ export async function materializeCampaignEnrollment(
            )
            and not exists (
              select 1
+             from growth_jobs legacy
+             where legacy.contact_id = c.id
+               and legacy.kind = 'legacy'
+           )
+           and not exists (
+             select 1
              from growth_activity a
              where a.event_key = 'campaign:v1:' || c.id::text || ':enrolled'
            )

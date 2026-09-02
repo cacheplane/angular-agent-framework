@@ -217,6 +217,104 @@ describeDatabase(
       ).toBe(true);
     });
 
+    it('permanently excludes contacts with a terminal legacy marker', async () => {
+      const launchAt = new Date('2097-10-01T00:00:00.000Z');
+      const approvedAt = new Date('2097-10-01T00:00:00.000Z');
+      const enrollmentAt = new Date('2097-10-01T12:00:00.000Z');
+      const imported = await createContact(approvedAt);
+      const control = await createContact(approvedAt);
+      await executor.execute(
+        `insert into growth_jobs (
+           kind, contact_id, status, available_at, idempotency_key, payload
+         ) values (
+           'legacy', $1, 'cancelled', $2,
+           $3,
+           '{"legacy_type":"contact_marker","provider":"resend"}'::jsonb
+         )`,
+        [imported, approvedAt, `legacy:resend:contact:${imported}`]
+      );
+
+      const first = await materializeCampaignEnrollment(executor, {
+        enrollmentEnabled: true,
+        enrollmentStartAt: launchAt,
+        now: enrollmentAt,
+        batchSize: 10,
+      });
+
+      expect(first).toEqual({ enrolledContactIds: [control], createdJobs: 3 });
+      const firstActivities = await executor.execute<{
+        contact_id: string;
+        count: string;
+      }>(
+        `select contact_id, count(*)::text as count
+         from growth_activity
+         where kind = 'campaign.enrolled:v1'
+           and contact_id = any($1::uuid[])
+         group by contact_id`,
+        [[imported, control]]
+      );
+      expect(firstActivities.rows).toEqual([
+        { contact_id: control, count: '1' },
+      ]);
+      const firstJobs = await executor.execute<{
+        contact_id: string;
+        count: string;
+      }>(
+        `select contact_id, count(*)::text as count
+         from growth_jobs
+         where kind = 'send_step'
+           and contact_id = any($1::uuid[])
+         group by contact_id`,
+        [[imported, control]]
+      );
+      expect(firstJobs.rows).toEqual([{ contact_id: control, count: '3' }]);
+
+      const laterApprovalAt = new Date('2097-10-01T13:00:00.000Z');
+      await executor.execute(
+        `insert into growth_activity (
+           event_key, contact_id, kind, occurred_at, data
+         ) values ($1, $2, 'form.outreach_approved', $3, $4::jsonb)`,
+        [
+          `jobs-integration:approval:later:${imported}`,
+          imported,
+          laterApprovalAt,
+          JSON.stringify({
+            source_form: 'pricing',
+            verification: 'server_verified',
+          }),
+        ]
+      );
+      await executor.execute(
+        `update growth_contacts
+         set outreach_approved_at = $2
+         where id = $1`,
+        [imported, laterApprovalAt]
+      );
+
+      const replay = await materializeCampaignEnrollment(executor, {
+        enrollmentEnabled: true,
+        enrollmentStartAt: launchAt,
+        now: new Date('2097-10-01T13:01:00.000Z'),
+        batchSize: 10,
+      });
+
+      expect(replay).toEqual({ enrolledContactIds: [], createdJobs: 0 });
+      const importedActivity = await executor.execute<{ count: string }>(
+        `select count(*)::text as count
+         from growth_activity
+         where contact_id = $1 and kind = 'campaign.enrolled:v1'`,
+        [imported]
+      );
+      expect(importedActivity.rows).toEqual([{ count: '0' }]);
+      const importedJobs = await executor.execute<{ count: string }>(
+        `select count(*)::text as count
+         from growth_jobs
+         where contact_id = $1 and kind = 'send_step'`,
+        [imported]
+      );
+      expect(importedJobs.rows).toEqual([{ count: '0' }]);
+    });
+
     it('anchors fixed elapsed-hour cadence across DST and never compresses after pause', async () => {
       const enrollmentAt = new Date('2026-03-07T19:00:00.000Z');
       const contactId = await createContact(enrollmentAt);
