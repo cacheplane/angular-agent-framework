@@ -43,10 +43,11 @@ free.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import uuid
 from contextvars import ContextVar
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, AsyncGenerator
 
 from ag_ui.core import (
     BaseEvent,
@@ -59,6 +60,8 @@ from ag_ui.core import (
     TextMessageEndEvent,
     TextMessageStartEvent,
 )
+from agent_framework.ag_ui import AgentFrameworkAgent
+
 DELEGATION_TOOL_NAME = "research_policy"
 
 
@@ -203,3 +206,88 @@ def delegation_error(tid: str | None, message: str) -> None:
             message=message,
         )
     )
+
+
+class _PumpFailure:
+    """Sentinel carrying an inner-generator exception across the queue."""
+
+    def __init__(self, exc: BaseException) -> None:
+        self.exc = exc
+
+
+_DONE = object()
+
+
+def _record_tool_call(session: _EmitterSession, event: Any) -> None:
+    if getattr(event, "type", None) == EventType.TOOL_CALL_START:
+        session.tool_call_ids[event.tool_call_name] = event.tool_call_id
+
+
+class SubagentEmittingAgent(AgentFrameworkAgent):
+    """AgentFrameworkAgent whose ``run`` merges tool-enqueued SUBAGENT_*
+    events into the bridge stream via the pump-task queue.
+
+    Constructed from an already-configured ``AgentFrameworkAgent`` (shares
+    its config and approval-state store rather than re-running ``__init__``),
+    so the endpoint's ``isinstance(agent, AgentFrameworkAgent)`` dispatch
+    and approval resume flow are untouched.
+    """
+
+    def __init__(self, inner: AgentFrameworkAgent) -> None:
+        self._inner = inner
+        self.agent = inner.agent
+        self.name = inner.name
+        self.description = inner.description
+        self.config = inner.config
+        self._approval_state_store = inner._approval_state_store
+
+    async def run(
+        self, input_data: dict[str, Any]
+    ) -> AsyncGenerator[BaseEvent, None]:
+        queue: asyncio.Queue[Any] = asyncio.Queue()
+        session = _EmitterSession(queue=queue)
+        token = _event_queue.set(session)
+        inner_gen = self._inner.run(input_data)
+
+        async def _pump() -> None:
+            try:
+                async for event in inner_gen:
+                    _record_tool_call(session, event)
+                    queue.put_nowait(event)
+            except asyncio.CancelledError:
+                raise
+            except BaseException as exc:  # propagate to the consumer, never swallow
+                queue.put_nowait(_PumpFailure(exc))
+            else:
+                queue.put_nowait(_DONE)
+
+        # create_task copies the current context AFTER the ContextVar set,
+        # so the tool body (which executes on the pump's driving chain)
+        # sees this session.
+        pump = asyncio.create_task(_pump())
+        try:
+            while True:
+                item = await queue.get()
+                if item is _DONE:
+                    break
+                if isinstance(item, _PumpFailure):
+                    raise item.exc
+                yield item
+        finally:
+            # Consumer break / client disconnect (GeneratorExit) or pump
+            # failure: cancel and await the pump so no task is orphaned,
+            # then close the inner generator.
+            pump.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await pump
+            with contextlib.suppress(Exception):
+                await inner_gen.aclose()
+            # reset raises ValueError if a GC-driven aclose runs the finally
+            # in a different context than the one that set the var.
+            with contextlib.suppress(ValueError):
+                _event_queue.reset(token)
+
+
+def wrap_agent_run(agent: AgentFrameworkAgent) -> SubagentEmittingAgent:
+    """Wrap an AgentFrameworkAgent so its run stream carries SUBAGENT_*."""
+    return SubagentEmittingAgent(agent)
