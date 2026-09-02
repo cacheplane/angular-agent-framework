@@ -686,6 +686,19 @@ body:has([data-website-workspace-host]) {
 .tp-diagram-figure[data-scale="marketing"] .tp-diagram-svg {
   max-width: 860px;
 }
+/* Compact scale: card-sized diagrams (~320 viewBox). No floor — a compact
+ * figure fills its card and never scrolls; legibility comes from the larger
+ * type ramp below, not from render width. */
+.tp-diagram-figure[data-scale="compact"] .tp-diagram-svg {
+  min-width: 0;
+  max-width: 100%;
+}
+.tp-diagram-figure[data-scale="compact"] .tp-diagram-eyebrow { font-size: 10px; }
+.tp-diagram-figure[data-scale="compact"] .tp-diagram-title { font-size: 13.5px; }
+.tp-diagram-figure[data-scale="compact"] .tp-diagram-node[data-title="sans"] .tp-diagram-title { font-size: 12px; }
+.tp-diagram-figure[data-scale="compact"] .tp-diagram-meta { font-size: 11px; }
+.tp-diagram-figure[data-scale="compact"] .tp-diagram-pill text { font-size: 10.5px; }
+.tp-diagram-node[data-meta="mono"] .tp-diagram-meta { font-family: var(--font-mono); }
 .tp-diagram-dot { fill: var(--color-border); }
 .tp-diagram-caption {
   font-family: var(--font-inter);

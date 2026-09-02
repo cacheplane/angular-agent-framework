@@ -13,8 +13,8 @@ interface DiagramFrameProps {
   /** Accessible one-sentence description of what the diagram shows. */
   label: string;
   caption?: string;
-  /** Marketing pages render the same SVG larger. */
-  scale?: 'docs' | 'marketing';
+  /** Marketing pages render the same SVG larger; compact cards render it small with a bigger type ramp. */
+  scale?: 'docs' | 'marketing' | 'compact';
   children: ReactNode;
 }
 

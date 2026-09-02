@@ -76,6 +76,24 @@ describe('diagram kit primitives', () => {
     expect(container.querySelector('g.tp-diagram-node')?.getAttribute('data-title')).toBe('sans');
   });
 
+  it('DiagramFrame accepts the compact scale', () => {
+    const { container } = render(
+      <DiagramFrame slug="c" viewWidth={320} viewHeight={150} label="x" scale="compact">
+        <g />
+      </DiagramFrame>
+    );
+    expect(container.querySelector('figure')?.getAttribute('data-scale')).toBe('compact');
+  });
+
+  it('DiagramNode renders a mono meta when metaStyle is mono', () => {
+    const { container } = render(
+      <svg>
+        <DiagramNode x={0} y={0} w={200} h={64} title="spec" meta='{ "component": "Form" }' metaStyle="mono" />
+      </svg>
+    );
+    expect(container.querySelector('g.tp-diagram-node')?.getAttribute('data-meta')).toBe('mono');
+  });
+
   it('DiagramPill renders a centered label', () => {
     const { container } = render(
       <svg>
