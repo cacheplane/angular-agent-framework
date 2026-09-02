@@ -1,27 +1,40 @@
 """In-process verification of the research subagent's reason → tool → answer
-loop and its structured `subagent_activity` transcript emission.
+loop and the standard SUBAGENT_* sequence it produces on the wire.
 
 Runs the enriched subgraph with a FAKE tool-calling chat model (no network):
 turn 0 returns an AIMessage carrying a `lookup` tool_call; turn 1 returns the
-final answer. We intercept every `adispatch_custom_event` the subgraph nodes
-fire and assert the ORDER + payloads of the structured phases:
+final answer. We intercept every `subagent_activity` payload the subgraph
+nodes dispatch, bracket them with the `research` tool body's `started` /
+`finished`, and push them through `SubagentEmittingAgent` exactly as the
+bridge would (as CUSTOM events in `LangGraphAgent.run`) — asserting the
+ORDER + fields of the standard events:
 
-    message_start(0) → tool_call(0, …) → tool_result(0, …)
-    → message_start(1) → finished-by-tool? no → final answer
+    SUBAGENT_STARTED → TEXT_MESSAGE_START(m1) → TEXT_MESSAGE_END(m1)
+    → TOOL_CALL_START/ARGS/END(lookup, parent m1) → TOOL_CALL_RESULT(lookup)
+    → TEXT_MESSAGE_START(m2) → TEXT_MESSAGE_END(m2) → SUBAGENT_FINISHED
 
-(Live `message` token events come from SubagentStreamHandler, which the fake
-model doesn't drive — so this test asserts the node-emitted phases only, which
-is exactly the transcript skeleton the L2 transform consumes.)
+(Live `message` deltas come from SubagentStreamHandler, which the fake model
+does not drive — so the answer turn has no TEXT_MESSAGE_CONTENT here; the
+handler's own tests cover the per-token deltas.)
 """
+import json
 from typing import Any
 
 import pytest
+from ag_ui.core import CustomEvent, EventType, RunAgentInput
+from ag_ui_langgraph import LangGraphAgent
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import Runnable
+from langgraph.graph import END, MessagesState, StateGraph
 
 import src.graph as graph_mod
 from src.graph import _build_research_subgraph
+from src.streaming.subagent_emitting_agent import SubagentEmittingAgent
 from src.streaming.subagent_stream_handler import SubagentRunState
+
+TID = "tc-research"
+RUN_ID = f"{TID}-sub"
+M1, M2 = f"{TID}-sub-m1", f"{TID}-sub-m2"
 
 
 class _FakeToolCallingModel(Runnable):
@@ -55,48 +68,61 @@ class _FakeToolCallingModel(Runnable):
         return self.invoke(input, config, **kwargs)
 
 
-@pytest.mark.asyncio
-async def test_subgraph_emits_reason_tool_answer_transcript():
-    events: list[dict] = []
+def _noop_graph():
+    g = StateGraph(MessagesState)
+    g.add_node("noop", lambda state: {})
+    g.set_entry_point("noop")
+    g.add_edge("noop", END)
+    return g.compile()
+
+
+async def _run_subgraph_and_collect_payloads() -> tuple[list[dict], dict, _FakeToolCallingModel]:
+    payloads: list[dict] = []
 
     async def fake_emit(payload: dict) -> None:
-        events.append({"subagent_id": "tc-research", **payload})
+        payloads.append({"subagent_id": TID, **payload})
 
     fake_model = _FakeToolCallingModel()
-    run_state = SubagentRunState("tc-research")
     subgraph = _build_research_subgraph(
-        fake_emit, run_state, llm_factory=lambda force_answer: fake_model
+        fake_emit, SubagentRunState(TID), llm_factory=lambda force_answer: fake_model
     )
+    result = await subgraph.ainvoke({"topic": "Angular signals", "messages": [], "iterations": 0})
+    return payloads, result, fake_model
 
-    result = await subgraph.ainvoke(
-        {"topic": "Angular signals", "messages": [], "iterations": 0}
+
+async def _expand(monkeypatch, payloads: list[dict]) -> list:
+    async def fake_run(self, input):
+        for p in payloads:
+            yield CustomEvent(type=EventType.CUSTOM, name="subagent_activity", value=p)
+
+    monkeypatch.setattr(LangGraphAgent, "run", fake_run)
+    agent = SubagentEmittingAgent(name="chat", graph=_noop_graph())
+    run_input = RunAgentInput(
+        thread_id="t", run_id="r", messages=[], tools=[], context=[], state={}, forwarded_props={}
     )
+    return [ev async for ev in agent.run(run_input)]
 
-    phases = [(e["phase"], e) for e in events]
-    phase_names = [p for p, _ in phases]
 
-    # Full structured phase sequence the node loop emits.
-    assert phase_names == [
-        "message_start",  # turn 0 opens
-        "tool_call",      # turn 0 calls lookup
+@pytest.mark.asyncio
+async def test_subgraph_emits_reason_tool_answer_phases():
+    payloads, result, fake_model = await _run_subgraph_and_collect_payloads()
+
+    # Full structured phase sequence the node loop dispatches.
+    assert [p["phase"] for p in payloads] == [
+        "message_start",  # turn 1 opens
+        "tool_call",      # turn 1 calls lookup
         "tool_result",    # tool node runs lookup
-        "message_start",  # turn 1 opens (forced-answer turn)
-    ], phase_names
+        "message_start",  # turn 2 opens (forced-answer turn)
+    ]
+    by_phase = {p["phase"]: p for p in payloads}
+    assert [p["message_id"] for p in payloads if p["phase"] == "message_start"] == [M1, M2]
 
-    by_phase = {p: e for p, e in phases}
-
-    # message_start ids follow <tool_call_id>-sub-m<n>: m1 then m2.
-    starts = [e["message_id"] for p, e in phases if p == "message_start"]
-    assert starts == ["tc-research-sub-m1", "tc-research-sub-m2"], starts
-
-    # tool_call carries id/name/args + the originating message id (m1).
     tc = by_phase["tool_call"]
-    assert tc["message_id"] == "tc-research-sub-m1"
+    assert tc["message_id"] == M1
     assert tc["tool_call_id"] == "call_lookup_1"
     assert tc["name"] == "lookup"
     assert tc["args"] == {"query": "angular signals"}
 
-    # tool_result carries the matching tool_call_id and the lookup result text.
     tr = by_phase["tool_result"]
     assert tr["tool_call_id"] == "call_lookup_1"
     assert isinstance(tr["content"], str) and "signal" in tr["content"].lower()
@@ -108,6 +134,43 @@ async def test_subgraph_emits_reason_tool_answer_transcript():
     assert isinstance(last, AIMessage)
     assert not last.tool_calls
     assert "Signals" in last.content
+
+
+@pytest.mark.asyncio
+async def test_subgraph_run_expands_to_the_standard_subagent_sequence(monkeypatch):
+    payloads, _, _ = await _run_subgraph_and_collect_payloads()
+    # Bracket with what the `research` tool body dispatches around ainvoke.
+    script = [
+        {"subagent_id": TID, "phase": "started", "name": "research"},
+        *payloads,
+        {"subagent_id": TID, "phase": "finished", "status": "complete"},
+    ]
+    out = await _expand(monkeypatch, script)
+
+    assert [(ev.type, getattr(ev, "message_id", None) or getattr(ev, "tool_call_id", None)) for ev in out] == [
+        (EventType.SUBAGENT_STARTED, None),
+        (EventType.TEXT_MESSAGE_START, M1),
+        (EventType.TEXT_MESSAGE_END, M1),
+        (EventType.TOOL_CALL_START, "call_lookup_1"),
+        (EventType.TOOL_CALL_ARGS, "call_lookup_1"),
+        (EventType.TOOL_CALL_END, "call_lookup_1"),
+        (EventType.TOOL_CALL_RESULT, "call_lookup_1-result"),
+        (EventType.TEXT_MESSAGE_START, M2),
+        (EventType.TEXT_MESSAGE_END, M2),
+        (EventType.SUBAGENT_FINISHED, None),
+    ]
+    assert not any(ev.type == EventType.CUSTOM for ev in out)
+    assert all(ev.subagent_run_id == RUN_ID for ev in out)
+
+    assert out[0].name == "research"
+    assert out[0].parent_tool_call_id == TID
+    assert out[3].tool_call_name == "lookup"
+    assert out[3].parent_message_id == M1
+    assert json.loads(out[4].delta) == {"query": "angular signals"}
+    assert out[6].tool_call_id == "call_lookup_1"
+    assert out[6].role == "tool"
+    assert "signal" in out[6].content.lower()
+    assert out[9].outcome.type == "success"
 
 
 @pytest.mark.asyncio

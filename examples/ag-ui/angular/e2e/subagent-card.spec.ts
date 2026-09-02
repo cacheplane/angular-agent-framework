@@ -26,9 +26,9 @@ interface SubagentProbe {
 // each carrying `toolCallIds`/reasoning) and `toolCalls()` (the child's own
 // `lookup` calls, rendered as <chat-tool-call-card>). We read the projected map
 // directly rather than scraping the rendered card: it IS the data the card
-// renders, and asserting on it proves the ACTIVITY snapshot/delta pipeline
-// reconstructed the full reason→tool→answer transcript and settled to
-// `complete`, independent of card layout.
+// renders, and asserting on it proves the SUBAGENT_* + subagentRunId-attributed
+// event stream reconstructed the full reason→tool→answer transcript and
+// settled to `complete`, independent of card layout.
 async function readSubagents(page: Page): Promise<SubagentProbe> {
   return page.evaluate(() => {
     const ng = (window as unknown as { ng?: { getComponent?: (el: Element) => unknown } }).ng;
@@ -64,10 +64,12 @@ async function readSubagents(page: Page): Promise<SubagentProbe> {
 // `research` tool, the langgraph child subgraph runs a genuine reason → tool →
 // answer loop (an LLM call that returns a `lookup` tool_call, the offline
 // `lookup` tool, then a second plain LLM call that writes the summary), and the
-// AG-UI server converts the subagent_activity CUSTOM events into native
-// ACTIVITY_SNAPSHOT/ACTIVITY_DELTA. The @threadplane/ag-ui reducer projects the
-// activity to agent.subagents() (the ordered transcript chat-subagent-card
-// renders) and the child's research text must stay OUT of the parent's bubble.
+// AG-UI server's SubagentEmittingAgent expands the subagent_activity CUSTOM
+// events into the protocol's SUBAGENT_STARTED/FINISHED plus subagentRunId-
+// attributed TEXT_MESSAGE_* / TOOL_CALL_* events. The @threadplane/ag-ui
+// reducer projects them to agent.subagents() (the ordered transcript
+// chat-subagent-card renders) and the child's research text must stay OUT of
+// the parent's bubble.
 test('research delegation reconstructs the multi-message subagent transcript', async ({
   page,
 }) => {

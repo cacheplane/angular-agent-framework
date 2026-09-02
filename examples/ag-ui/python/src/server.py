@@ -15,7 +15,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from ag_ui_langgraph import add_langgraph_fastapi_endpoint
 
 from .graph import _builder
-from .streaming.activity_emitting_agent import ActivityEmittingAgent
+from .streaming.subagent_emitting_agent import SubagentEmittingAgent
 
 # The exported graph is checkpointer-free for LangGraph Platform (which manages
 # persistence). The standalone ag-ui-langgraph endpoint reads graph state via
@@ -42,4 +42,8 @@ def ok() -> dict:
     return {"ok": True}
 
 
-add_langgraph_fastapi_endpoint(app, ActivityEmittingAgent(name="chat", graph=graph), path="/agent")
+# SubagentEmittingAgent expands the research subagent's `subagent_activity`
+# CUSTOM events into the protocol's SUBAGENT_* + subagentRunId-attributed
+# content events (see streaming/subagent_emitting_agent.py).
+agent = SubagentEmittingAgent(name="chat", graph=graph)
+add_langgraph_fastapi_endpoint(app, agent, path="/agent")
