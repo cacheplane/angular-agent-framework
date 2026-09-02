@@ -94,6 +94,47 @@ describe('reduceEvent SUBAGENT_* lifecycle', () => {
     expect(store.toolCalls()).toHaveLength(0);
   });
 
+  it('attributed TOOL_CALL_START links the toolCallId onto the child message via parentMessageId', () => {
+    const store = makeStore();
+    reduceEvent(ev({ type: 'SUBAGENT_STARTED', subagentRunId: 'sa-1', name: 'researcher' }), store);
+    reduceEvent(ev({ type: 'TEXT_MESSAGE_START', messageId: 'sa-1-m1', role: 'assistant', subagentRunId: 'sa-1' }), store);
+    reduceEvent(ev({ type: 'TOOL_CALL_START', toolCallId: 't-1', toolCallName: 'web_search', subagentRunId: 'sa-1', parentMessageId: 'sa-1-m1' }), store);
+    const content = store.activities().get('sa-1')!.content();
+    const msgs = content['messages'] as Array<Record<string, unknown>>;
+    const calls = content['toolCalls'] as Array<Record<string, unknown>>;
+    expect(msgs.find((m) => m['id'] === 'sa-1-m1')).toMatchObject({ toolCallIds: ['t-1'] });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toMatchObject({ id: 't-1', name: 'web_search' });
+  });
+
+  it('attributed TOOL_CALL_START with a parentMessageId for an unseen message creates a child message slot', () => {
+    const store = makeStore();
+    reduceEvent(ev({ type: 'SUBAGENT_STARTED', subagentRunId: 'sa-1', name: 'researcher' }), store);
+    reduceEvent(ev({ type: 'TOOL_CALL_START', toolCallId: 't-1', toolCallName: 'web_search', subagentRunId: 'sa-1', parentMessageId: 'sa-1-m1' }), store);
+    const msgs = store.activities().get('sa-1')!.content()['messages'] as Array<Record<string, unknown>>;
+    expect(msgs).toHaveLength(1);
+    expect(msgs[0]).toMatchObject({ id: 'sa-1-m1', role: 'assistant', content: '', toolCallIds: ['t-1'] });
+  });
+
+  it('attributed TOOL_CALL_START without a parentMessageId attaches to the most recently opened child message', () => {
+    const store = makeStore();
+    reduceEvent(ev({ type: 'SUBAGENT_STARTED', subagentRunId: 'sa-1', name: 'researcher' }), store);
+    reduceEvent(ev({ type: 'TEXT_MESSAGE_START', messageId: 'sa-1-m1', role: 'assistant', subagentRunId: 'sa-1' }), store);
+    reduceEvent(ev({ type: 'TOOL_CALL_START', toolCallId: 't-1', toolCallName: 'web_search', subagentRunId: 'sa-1' }), store);
+    const msgs = store.activities().get('sa-1')!.content()['messages'] as Array<Record<string, unknown>>;
+    expect(msgs.find((m) => m['id'] === 'sa-1-m1')).toMatchObject({ toolCallIds: ['t-1'] });
+  });
+
+  it('attributed TOOL_CALL_START without a parentMessageId and no open child message leaves messages untouched', () => {
+    const store = makeStore();
+    reduceEvent(ev({ type: 'SUBAGENT_STARTED', subagentRunId: 'sa-1', name: 'researcher' }), store);
+    reduceEvent(ev({ type: 'TOOL_CALL_START', toolCallId: 't-1', toolCallName: 'web_search', subagentRunId: 'sa-1' }), store);
+    const content = store.activities().get('sa-1')!.content();
+    expect(content['messages']).toEqual([]);
+    const calls = content['toolCalls'] as Array<Record<string, unknown>>;
+    expect(calls).toMatchObject([{ id: 't-1', name: 'web_search' }]);
+  });
+
   it('an attributed event before SUBAGENT_STARTED creates the entry instead of dropping (buffer-not-drop)', () => {
     const store = makeStore();
     reduceEvent(ev({ type: 'TEXT_MESSAGE_START', messageId: 'm-1', role: 'assistant', subagentRunId: 'sa-late' }), store);

@@ -1271,6 +1271,12 @@ describe('SUBAGENT_* lifecycle projection', () => {
     expect(sa?.messages()).toEqual([
       { id: 'm-1', role: 'assistant', content: 'Checking flights', delivery: expect.objectContaining({ phase: 'streaming' }) },
     ]);
+
+    // Attributed TOOL_CALL_START with parentMessageId must link the call
+    // onto the child message's toolCallIds so chat-subagent-card can draw
+    // it — not just append to the entry's toolCalls[].
+    source.emit({ type: 'TOOL_CALL_START', toolCallId: 't-1', toolCallName: 'web_search', subagentRunId: 'sa-1', parentMessageId: 'm-1' } as never);
+    expect(agent.subagents!().get('sa-1')?.messages()[0].toolCallIds).toEqual(['t-1']);
   });
 
   it('a wrapper read before SUBAGENT_STARTED reflects the real identity once STARTED arrives (no stale name/toolCallId)', () => {
