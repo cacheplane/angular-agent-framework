@@ -91,10 +91,10 @@ describe('Dawn generated storage isolation', () => {
     });
     expect(config).toEqual({ appDir: 'src/app', build: { targets: ['hono'] } });
     expect(vercel['rewrites']).toEqual([
-      { source: '/:path*', destination: '/api/:path*' },
+      { source: '/:path*', destination: '/api' },
     ]);
     expect(vercel['functions']).toEqual({
-      'api/[...path].ts': { maxDuration: 60 },
+      'api/index.ts': { maxDuration: 60 },
     });
     expect(vercel['outputDirectory']).toBe('public');
     expect(tsconfig.extends).toBe('./tsconfig.runtime-base.json');

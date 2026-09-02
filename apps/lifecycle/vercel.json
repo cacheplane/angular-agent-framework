@@ -5,9 +5,9 @@
   "outputDirectory": "public",
   "framework": null,
   "functions": {
-    "api/[...path].ts": {
+    "api/index.ts": {
       "maxDuration": 60
     }
   },
-  "rewrites": [{ "source": "/:path*", "destination": "/api/:path*" }]
+  "rewrites": [{ "source": "/:path*", "destination": "/api" }]
 }

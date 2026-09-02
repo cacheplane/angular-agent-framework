@@ -83,7 +83,7 @@ export async function verifyVercelAdapter(
     );
   }
   const apiEntry = (await import(
-    `${pathToFileURL(resolve(appRoot, 'api/[...path].ts')).href}?verify=1`
+    `${pathToFileURL(resolve(appRoot, 'api/index.ts')).href}?verify=1`
   )) as { default?: { fetch?: unknown } };
   if (typeof apiEntry.default?.fetch !== 'function') {
     throw new Error('Lifecycle Vercel entry is not fetch-compatible');
