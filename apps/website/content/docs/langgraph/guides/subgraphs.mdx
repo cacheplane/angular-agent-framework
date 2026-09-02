@@ -169,6 +169,8 @@ Because `ResearchState` has no `messages` key, the child cannot read the transcr
 
 The `subagents()` signal contains a Map of active child streams. Tool-dispatched children — Deep Agents' default `task` tool or your own delegation tools — are keyed by tool-call id and named by their `subagent_type`. Plain subgraph nodes are keyed by their namespace segment and named by node; they register on their first streamed event and settle with the run.
 
+Nested delegation — a subagent that itself dispatches a delegation tool — surfaces as its own entry too, keyed by its namespace path (truncated at the innermost delegation segment) and treated like a plain subgraph stream. Each level of delegation gets its own stream; the map stays flat, so there's no parent/child linking between the entries.
+
 ```typescript
 // In a shared file (e.g. agent.ts):
 // import { createAgentRef } from '@threadplane/chat';

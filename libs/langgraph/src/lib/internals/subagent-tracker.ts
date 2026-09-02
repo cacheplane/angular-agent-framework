@@ -170,19 +170,26 @@ export class SubagentTracker {
       return toolCallId;
     };
 
-    for (const [toolCallId, subagent] of this.subagents) {
-      if (subagent.kind !== 'tool' || mapped.has(toolCallId)) continue;
-      if (subagent.toolCall.args['description'] === description) {
-        return establish(toolCallId);
+    // The description rungs are only meaningful with a real description.
+    // ensureToolStreamAttribution calls this with '' precisely to skip them:
+    // without this guard, a subagent whose `description` arg is literally ''
+    // exact-matches every empty-description probe, bypassing the positional
+    // rung's one-candidate safety check.
+    if (description) {
+      for (const [toolCallId, subagent] of this.subagents) {
+        if (subagent.kind !== 'tool' || mapped.has(toolCallId)) continue;
+        if (subagent.toolCall.args['description'] === description) {
+          return establish(toolCallId);
+        }
       }
-    }
 
-    for (const [toolCallId, subagent] of this.subagents) {
-      if (subagent.kind !== 'tool' || mapped.has(toolCallId)) continue;
-      const subagentDescription = subagent.toolCall.args['description'];
-      if (typeof subagentDescription !== 'string' || !subagentDescription) continue;
-      if (description.includes(subagentDescription) || subagentDescription.includes(description)) {
-        return establish(toolCallId);
+      for (const [toolCallId, subagent] of this.subagents) {
+        if (subagent.kind !== 'tool' || mapped.has(toolCallId)) continue;
+        const subagentDescription = subagent.toolCall.args['description'];
+        if (typeof subagentDescription !== 'string' || !subagentDescription) continue;
+        if (description.includes(subagentDescription) || subagentDescription.includes(description)) {
+          return establish(toolCallId);
+        }
       }
     }
 
@@ -417,7 +424,13 @@ export function isChildNamespace(namespace: string[] | string | undefined): bool
 
 /** Resolved identity of a child stream, derived from its event namespace. */
 export interface ChildStreamRef {
-  /** Map key: the tool-call id for `tools:` namespaces, else the namespace segment itself. */
+  /**
+   * Map key: the tool-call id for a single `tools:` namespace; for a nested
+   * delegation, the namespace path truncated at (and including) the
+   * innermost `tools:` segment, so trailing internal-node segments don't
+   * fragment one grandchild into several entries; else the namespace segment
+   * itself.
+   */
   key: string;
   /** Display name; for subgraph nodes, the node name. Unused on the tool path. */
   name: string;
@@ -431,25 +444,45 @@ export interface ChildStreamRef {
  * Any other segment (e.g. `research:<uuid>` from a compiled graph added with
  * `add_node`) identifies a plain subgraph child: the full segment is the key
  * (unique per invocation) and the part before the first ':' is the node name.
+ *
+ * A namespace with MORE than one `tools:` segment is a nested delegation — a
+ * subagent that itself dispatched a delegation tool. That stream registers as
+ * its own subgraph-kind entry keyed by the namespace path truncated at the
+ * innermost `tools:` segment (inclusive), so trailing internal-node segments
+ * after it (the grandchild's own `model:`/`agent:` steps) don't fragment one
+ * grandchild into several map entries. Subgraph entries are skipped by every
+ * attribution-ladder rung, so a grandchild can neither merge into the outer
+ * child's card nor mis-attach to a sibling. Linking it to its parent card (a
+ * delegation tree) is deliberately not modeled; the flat map is the contract.
  */
 export function childStreamRefFromNamespace(namespace: string[]): ChildStreamRef | undefined {
-  for (const segment of namespace) {
-    if (segment.startsWith('tools:')) {
-      return { key: segment.slice(6), name: '', kind: 'tool' };
+  const toolSegments = namespace.filter((segment) => segment.startsWith('tools:'));
+  if (toolSegments.length > 1) {
+    let lastToolsIndex = -1;
+    for (let i = namespace.length - 1; i >= 0; i -= 1) {
+      if (namespace[i].startsWith('tools:')) {
+        lastToolsIndex = i;
+        break;
+      }
     }
+    const innermost = namespace[lastToolsIndex];
+    const colon = innermost.indexOf(':');
+    return {
+      // The innermost segment's node name is 'tools' for a delegation-tool
+      // child — an intentionally generic card label; there's no
+      // subagent_type to name it from.
+      key: namespace.slice(0, lastToolsIndex + 1).join('|'),
+      name: colon > 0 ? innermost.slice(0, colon) : innermost,
+      kind: 'subgraph',
+    };
+  }
+  if (toolSegments.length === 1) {
+    return { key: toolSegments[0].slice(6), name: '', kind: 'tool' };
   }
   const first = namespace[0];
   if (!first) return undefined;
   const colon = first.indexOf(':');
   return { key: first, name: colon > 0 ? first.slice(0, colon) : first, kind: 'subgraph' };
-}
-
-export function extractToolCallIdFromNamespace(namespace: string[] | undefined): string | undefined {
-  if (!namespace) return undefined;
-  for (const segment of namespace) {
-    if (segment.startsWith('tools:')) return segment.slice(6);
-  }
-  return undefined;
 }
 
 function parseToolCallArgs(args: Record<string, unknown> | string): Record<string, unknown> {

@@ -2847,8 +2847,10 @@ describe('createStreamManagerBridge', () => {
       messageMetadata: { checkpoint_ns: 'tools:aa5c61a1-e3ee-ea36|model' },
     } satisfies StreamEvent]);
 
-    // Attribution only arrives later, via a values event carrying the child's
-    // first human message, which the description ladder matches on.
+    // The messages event above already attributed the namespace positionally
+    // (ensureToolStreamAttribution, #847), so this values event finds the
+    // mapping in place — the description ladder is short-circuited here. See
+    // subagent-tracker.spec.ts for direct ladder coverage.
     transport.emit([{
       type: 'values|tools:aa5c61a1-e3ee-ea36' as StreamEvent['type'],
       namespace: ['tools:aa5c61a1-e3ee-ea36'],
