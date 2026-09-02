@@ -39,6 +39,12 @@ function readSseFixture(name: string): BaseEvent[] {
     .map((line) => JSON.parse(line.slice('data:'.length)) as BaseEvent);
 }
 
+/** Parse a plain JSON-array transcript (synthetic, not an SSE capture). */
+function readJsonFixture(name: string): BaseEvent[] {
+  const raw = readFileSync(join(FIXTURES_DIR, name), 'utf8');
+  return JSON.parse(raw) as BaseEvent[];
+}
+
 function makeStore(generation = 'run-generation-1'): ReducerStore {
   let sequence = 0;
   return {
@@ -278,5 +284,64 @@ describe('toAgent end-to-end — Strands interrupt transcript through the adapte
     expect(agent.status()).toBe('idle');
     expect(agent.isLoading()).toBe(false);
     expect(agent.error()).toBeUndefined();
+  });
+});
+
+describe('toAgent end-to-end — synthetic subagent-lifecycle transcript', () => {
+  // Source: subagent-lifecycle.json — a synthetic (not vendor-captured) wire
+  // sequence pinning the SUBAGENT_STARTED/FINISHED contract: a parent tool
+  // call (call-9) spawns a subagentRunId-attributed child (sa-1) whose
+  // TEXT_MESSAGE_* events must route into subagents(), never the parent
+  // transcript, while the parent's own TOOL_CALL_END/RESULT for call-9 stay
+  // on the parent side because they carry no subagentRunId.
+  class StubAgent {
+    state: Record<string, unknown> = {};
+    private readonly subscribers: Array<{
+      onEvent?: (p: { event: BaseEvent; input: { runId?: string } }) => void;
+    }> = [];
+    subscribe(sub: { onEvent?: (p: { event: BaseEvent; input: { runId?: string } }) => void }) {
+      this.subscribers.push(sub);
+      return { unsubscribe: () => undefined };
+    }
+    emit(event: BaseEvent, callbackRunId?: string): void {
+      for (const sub of this.subscribers) sub.onEvent?.({ event, input: { runId: callbackRunId } });
+    }
+    runAgent = vi.fn(async () => ({ result: undefined, newMessages: [] }));
+    abortRun = vi.fn();
+    addMessage = vi.fn();
+    setMessages = vi.fn();
+  }
+
+  it('routes the child transcript into subagents() and keeps the parent transcript to its own two messages', async () => {
+    const stub = new StubAgent();
+    const agent = toAgent(stub as unknown as AbstractAgent);
+    let finishRun!: () => void;
+    stub.runAgent.mockImplementationOnce(() => new Promise((resolve) => {
+      finishRun = () => resolve({ result: undefined, newMessages: [] });
+    }));
+
+    const submitted = agent.submit({ message: 'Can you check availability and confirm?' });
+    for (const event of readJsonFixture('subagent-lifecycle.json')) {
+      stub.emit(event, 'run-subagent-1');
+    }
+    finishRun();
+    await submitted;
+
+    const parentAssistantMessages = agent.messages().filter((m) => m.role === 'assistant');
+    expect(parentAssistantMessages).toHaveLength(2);
+    expect(parentAssistantMessages.map((m) => m.id)).toEqual(['m-parent-1', 'm-parent-2']);
+
+    const subagents = agent.subagents!();
+    expect(subagents.size).toBe(1);
+    const sa = subagents.get('sa-1');
+    expect(sa).toBeDefined();
+    expect(sa!.toolCallId).toBe('call-9');
+    expect(sa!.name).toBe('researcher');
+    expect(sa!.status()).toBe('complete');
+    expect(sa!.messages()).toHaveLength(1);
+    expect(sa!.messages()[0]).toMatchObject({ id: 'sa-1-m1', content: 'Checking availability' });
+
+    // The child's messageId must never leak into the parent transcript.
+    expect(agent.messages().some((m) => m.id === 'sa-1-m1')).toBe(false);
   });
 });

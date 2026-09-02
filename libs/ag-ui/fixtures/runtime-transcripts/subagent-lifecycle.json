@@ -1,0 +1,19 @@
+[
+  { "type": "RUN_STARTED", "threadId": "thread-subagent-lifecycle", "runId": "run-subagent-1" },
+  { "type": "TEXT_MESSAGE_START", "messageId": "m-parent-1", "role": "assistant" },
+  { "type": "TEXT_MESSAGE_CONTENT", "messageId": "m-parent-1", "delta": "Let me check that for you." },
+  { "type": "TEXT_MESSAGE_END", "messageId": "m-parent-1" },
+  { "type": "TOOL_CALL_START", "toolCallId": "call-9", "toolCallName": "research_availability", "parentMessageId": "m-parent-1" },
+  { "type": "SUBAGENT_STARTED", "subagentRunId": "sa-1", "name": "researcher", "parentToolCallId": "call-9" },
+  { "type": "TEXT_MESSAGE_START", "messageId": "sa-1-m1", "role": "assistant", "subagentRunId": "sa-1" },
+  { "type": "TEXT_MESSAGE_CONTENT", "messageId": "sa-1-m1", "delta": "Checking ", "subagentRunId": "sa-1" },
+  { "type": "TEXT_MESSAGE_CONTENT", "messageId": "sa-1-m1", "delta": "availability", "subagentRunId": "sa-1" },
+  { "type": "TEXT_MESSAGE_END", "messageId": "sa-1-m1", "subagentRunId": "sa-1" },
+  { "type": "SUBAGENT_FINISHED", "subagentRunId": "sa-1", "outcome": { "type": "success" } },
+  { "type": "TOOL_CALL_END", "toolCallId": "call-9" },
+  { "type": "TOOL_CALL_RESULT", "messageId": "m-result-1", "toolCallId": "call-9", "content": "Availability confirmed for Tuesday.", "role": "tool" },
+  { "type": "TEXT_MESSAGE_START", "messageId": "m-parent-2", "role": "assistant" },
+  { "type": "TEXT_MESSAGE_CONTENT", "messageId": "m-parent-2", "delta": "You're all set for Tuesday." },
+  { "type": "TEXT_MESSAGE_END", "messageId": "m-parent-2" },
+  { "type": "RUN_FINISHED", "threadId": "thread-subagent-lifecycle", "runId": "run-subagent-1", "outcome": { "type": "success" } }
+]
