@@ -220,7 +220,6 @@ export default async function DocsPage({ params }: DocsRouteProps) {
           activeLibrary: library as LibraryId,
           activeSection: section,
           activeSlug: slug,
-          pageTitle: doc.title,
         }}
       />
     </>

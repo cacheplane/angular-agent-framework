@@ -115,7 +115,6 @@ describe('DocsControlPlane', () => {
         activeLibrary={null}
         activeSection=""
         activeSlug=""
-        pageTitle="Overview"
       />
     );
 
@@ -144,7 +143,6 @@ describe('DocsControlPlane', () => {
         activeLibrary="langgraph"
         activeSection="guides"
         activeSlug="streaming"
-        pageTitle="Streaming"
       />
     );
 
@@ -167,7 +165,6 @@ describe('DocsControlPlane', () => {
         activeLibrary="langgraph"
         activeSection="guides"
         activeSlug="streaming"
-        pageTitle="Streaming"
       />
     );
 
@@ -192,7 +189,6 @@ describe('DocsControlPlane', () => {
         activeLibrary="langgraph"
         activeSection="guides"
         activeSlug="streaming"
-        pageTitle="Streaming"
       />
     );
 
@@ -207,7 +203,6 @@ describe('DocsControlPlane', () => {
         activeLibrary="langgraph"
         activeSection="guides"
         activeSlug="streaming"
-        pageTitle="Streaming"
       />
     );
 
@@ -225,7 +220,6 @@ describe('DocsControlPlane', () => {
         activeLibrary="langgraph"
         activeSection="guides"
         activeSlug="streaming"
-        pageTitle="Streaming"
       />
     );
 
@@ -250,7 +244,6 @@ describe('DocsControlPlane', () => {
         activeLibrary="langgraph"
         activeSection="guides"
         activeSlug="streaming"
-        pageTitle="Streaming"
       />
     );
 
@@ -283,7 +276,6 @@ describe('DocsControlPlane', () => {
         activeLibrary="langgraph"
         activeSection="guides"
         activeSlug="streaming"
-        pageTitle="Streaming"
       />
     );
 
@@ -307,7 +299,6 @@ describe('DocsControlPlane', () => {
         activeLibrary="langgraph"
         activeSection="guides"
         activeSlug="streaming"
-        pageTitle="Streaming"
       />
     );
 
@@ -326,7 +317,6 @@ describe('DocsControlPlane', () => {
         activeLibrary="langgraph"
         activeSection="guides"
         activeSlug="streaming"
-        pageTitle="Streaming"
       />
     );
 
@@ -358,7 +348,6 @@ describe('DocsControlPlane — library-neutral', () => {
         activeLibrary={null}
         activeSection=""
         activeSlug=""
-        pageTitle="Choosing an adapter"
       />,
     );
 
@@ -379,7 +368,6 @@ describe('DocsControlPlane — library-neutral', () => {
         activeLibrary={null}
         activeSection=""
         activeSlug=""
-        pageTitle="Overview"
         runHref="/docs/langgraph/guides/streaming?mode=run"
       />,
     );
@@ -406,7 +394,6 @@ describe('DocsControlPlane — library-neutral', () => {
         activeLibrary={null}
         activeSection=""
         activeSlug=""
-        pageTitle="Choosing an adapter"
       />,
     );
 
@@ -420,7 +407,6 @@ describe('DocsControlPlane — library-neutral', () => {
         activeLibrary={null}
         activeSection=""
         activeSlug=""
-        pageTitle="Choosing an adapter"
       />,
     );
 
@@ -442,7 +428,6 @@ describe('DocsContextContent', () => {
         activeLibrary="render"
         activeSection="guides"
         activeSlug="specs"
-        pageTitle="Specs & Elements"
         mobile
       />
     );
@@ -460,7 +445,6 @@ describe('DocsContextContent', () => {
         activeLibrary="ag-ui"
         activeSection="getting-started"
         activeSlug="introduction"
-        pageTitle="Introduction"
       />,
     );
 

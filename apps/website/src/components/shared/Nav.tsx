@@ -2,13 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  DOCS_INDEX_TITLE,
-  findDocsPage,
-  getLibraryConfig,
-  specialDocsPages,
-  type LibraryId,
-} from '../../lib/docs-config';
+import { getLibraryConfig, type LibraryId } from '../../lib/docs-config';
 import {
   trackCtaClick,
   trackExternalLinkClick,
@@ -147,13 +141,6 @@ export function Nav() {
   // reader was inside LangGraph's docs.
   const docsLibrary = (getLibraryConfig(activeLibrary)?.id ??
     null) as LibraryId | null;
-  const specialDocsPage = specialDocsPages.find(
-    (page) => page.path === pathname
-  );
-  const docsPageTitle =
-    findDocsPage(activeLibrary, activeSection, activeSlug)?.title ??
-    specialDocsPage?.title ??
-    (pathname === '/docs' ? DOCS_INDEX_TITLE : 'Documentation');
   const navRef = useRef<HTMLElement>(null);
   const mobileTriggerRef = useRef<HTMLButtonElement>(null);
   const mobileDialogRef = useRef<HTMLDivElement>(null);
@@ -444,7 +431,6 @@ export function Nav() {
                   activeLibrary={docsLibrary}
                   activeSection={activeSection || 'getting-started'}
                   activeSlug={activeSlug || 'introduction'}
-                  pageTitle={docsPageTitle}
                   mobile
                   onNavigate={() => closeMobileMenu()}
                   onSearchHandoff={() => closeMobileMenu(true)}

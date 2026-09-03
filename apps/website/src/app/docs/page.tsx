@@ -8,7 +8,6 @@ import { Pill } from '../../components/ui/Pill';
 import { CopyButton } from '../../components/docs/CopyButton';
 import { DocsControlPlane } from '../../components/docs/DocsControlPlane';
 import { DocsSearch } from '../../components/docs/DocsSearch';
-import { DOCS_INDEX_TITLE } from '../../lib/docs-config';
 import { createPageMetadata } from '../../lib/site-metadata';
 import {
   getCanonicalWebsiteWorkspaceHref,
@@ -175,7 +174,6 @@ export default function DocsLandingPage() {
         activeLibrary={null}
         activeSection=""
         activeSlug=""
-        pageTitle={DOCS_INDEX_TITLE}
         runHref={DEFAULT_EXAMPLE_RUN_HREF}
       />
       {/* Deliberately outside the article measure the [slug] route uses — the

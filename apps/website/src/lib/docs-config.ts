@@ -62,13 +62,6 @@ export interface SpecialDocsPage {
   description: string;
 }
 
-/**
- * What the docs root calls itself in the control plane's Scope card. Shared so
- * the page and the mobile drawer, which resolve the title independently,
- * cannot drift into naming the same page two different things.
- */
-export const DOCS_INDEX_TITLE = 'Overview';
-
 export const specialDocsPages: SpecialDocsPage[] = [
   {
     path: '/docs/choosing-an-adapter',

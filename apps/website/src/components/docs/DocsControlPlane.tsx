@@ -25,7 +25,6 @@ export interface DocsControlPlaneProps {
   activeLibrary: LibraryId | null;
   activeSection: string;
   activeSlug: string;
-  pageTitle: string;
   /**
    * Where the Run rail item goes on a page that has no example of its own.
    *

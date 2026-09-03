@@ -26,17 +26,16 @@ describe('Docs mobile navigation', () => {
     pathnameRef.current = '/docs/langgraph/guides/streaming';
   });
 
-  it('names the docs index the same way the page does', () => {
+  it('renders the docs control plane with a working search trigger on the docs index', () => {
     pathnameRef.current = '/docs';
     render(<Nav />);
     fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
     const dialog = screen.getByRole('dialog', { name: 'Mobile navigation' });
 
-    // The page passes pageTitle="Overview"; Nav derives its own title from
-    // the URL independently. That comparison used to be visible through the
-    // Scope card, which is gone (Task 3) — the trail is the shell header's
-    // job now. What is left to verify here is that the docs index still
-    // renders its control plane content correctly, search included.
+    // The docs index (`/docs`) is library-neutral and has no section or slug
+    // segments in its URL. What matters here is that the drawer still mounts
+    // its control plane content for that page and exposes the search
+    // trigger, rather than rendering nothing or throwing on the empty path.
     expect(within(dialog).getByRole('button', { name: 'Search docs' })).toBeTruthy();
   });
 

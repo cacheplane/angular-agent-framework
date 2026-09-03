@@ -60,7 +60,6 @@ describe('unified docs workspace route', () => {
       activeLibrary: 'langgraph',
       activeSection: 'guides',
       activeSlug: 'streaming',
-      pageTitle: 'Streaming',
     });
   });
 
