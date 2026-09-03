@@ -18,11 +18,11 @@ export function validateHeroRecording(input: unknown): HeroRecording {
   if (!Array.isArray(rec.runs) || rec.runs.length < HERO_RECORDING_RUN_COUNT) {
     throw new Error(`hero recording needs at least three runs, got ${rec.runs?.length ?? 0}`);
   }
-  rec.runs.forEach((run, i) => {
+  rec.runs.forEach((run: Partial<RecordedRun>, i: number) => {
     if (typeof run.label !== 'string') throw new Error(`run ${i} has no label`);
     if (!Array.isArray(run.events)) throw new Error(`run ${i} has no events`);
     if (run.events.length === 0) throw new Error(`run ${i} has no events`);
-    run.events.forEach((e, j) => {
+    (run.events as readonly Partial<RecordedEvent>[]).forEach((e: Partial<RecordedEvent>, j: number) => {
       if (typeof e?.tMs !== 'number' || !Number.isFinite(e.tMs)) throw new Error(`run ${i} event ${j} has no numeric tMs`);
       if (typeof e.event !== 'object' || e.event === null) throw new Error(`run ${i} event ${j} has no event`);
     });
