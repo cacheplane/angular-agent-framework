@@ -8,6 +8,7 @@ import { GitHubStarsPill } from '../../components/contact/GitHubStarsPill';
 import { SlaCard } from '../../components/contact/SlaCard';
 import { AltChannelRow } from '../../components/contact/AltChannelRow';
 import { createPageMetadata } from '../../lib/site-metadata';
+import { getFormPolicy } from '../../lib/growth/form-policy';
 
 export const metadata = createPageMetadata({
   title: 'Talk to an engineer — Threadplane',
@@ -17,6 +18,7 @@ export const metadata = createPageMetadata({
 });
 
 export default function ContactPage() {
+  const formPolicy = getFormPolicy();
   return (
     <Section surface="canvas" ariaLabelledBy="contact-heading">
       <Container>
@@ -32,7 +34,7 @@ export default function ContactPage() {
             <SlaCard />
           </div>
           <Suspense>
-            <ContactForm />
+            <ContactForm formPolicy={formPolicy} />
           </Suspense>
           <div className="contact-page-links-row">
             <GitHubStarsPill />

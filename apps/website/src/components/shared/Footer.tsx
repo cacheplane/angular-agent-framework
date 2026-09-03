@@ -1,6 +1,12 @@
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
+import type { PublicFormPolicy } from '../../lib/growth/form-policy';
+import {
+  FORM_POLICY_REFRESH_MESSAGE,
+  growthFormRequestSnapshot,
+  type GrowthFormRequestSnapshot,
+} from '../../lib/growth/form-client';
 import { analyticsEvents, type CtaId } from '../../lib/analytics/events';
 import { track, trackCtaClick, trackExternalLinkClick } from '../../lib/analytics/client';
 import { DEMOS, demoCtaSuffix } from '../../lib/demos';
@@ -25,9 +31,15 @@ function NpmIcon() {
   );
 }
 
-function NewsletterForm() {
+function NewsletterForm({ formPolicy }: { formPolicy: PublicFormPolicy }) {
   const [email, setEmail] = useState('');
-  const [state, setState] = useState<'idle' | 'submitting' | 'done' | 'error'>('idle');
+  const [state, setState] = useState<
+    'idle' | 'submitting' | 'done' | 'error' | 'stale'
+  >('idle');
+  const submissionSnapshot = useRef<GrowthFormRequestSnapshot<{
+    email: string;
+  }> | null>(null);
+  const disclosureId = 'footer-newsletter-growth-disclosure';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,12 +50,30 @@ function NewsletterForm() {
       source_section: 'newsletter-form',
     });
     try {
+      const snapshot = growthFormRequestSnapshot(submissionSnapshot.current, {
+        email,
+      });
+      submissionSnapshot.current = snapshot;
       const res = await fetch('/api/newsletter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({
+          ...snapshot.facts,
+          acquisition_session_id: snapshot.acquisition_session_id,
+          submission_id: snapshot.submission_id,
+          policy_version: formPolicy.version,
+        }),
       });
+      if (res.status === 409) {
+        submissionSnapshot.current = null;
+        setState('stale');
+        return;
+      }
+      if (res.status >= 400 && res.status < 500) {
+        submissionSnapshot.current = null;
+      }
       if (!res.ok) throw new Error();
+      submissionSnapshot.current = null;
       track(analyticsEvents.marketingNewsletterSignupSuccess, {
         surface: 'footer',
         source_section: 'newsletter-form',
@@ -63,6 +93,19 @@ function NewsletterForm() {
     return <p className="text-sm mb-4 footer-newsletter-success">✓ You&apos;re subscribed!</p>;
   }
 
+  if (state === 'stale') {
+    return (
+      <div role="alert" className="mb-4 max-w-xs">
+        <p className="text-xs footer-newsletter-disclosure">
+          {FORM_POLICY_REFRESH_MESSAGE}
+        </p>
+        <Button type="button" onClick={() => window.location.reload()}>
+          Refresh page
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2 mb-4 max-w-xs">
       <label htmlFor="footer-email" className="sr-only">Email address</label>
@@ -77,11 +120,15 @@ function NewsletterForm() {
         disabled={state === 'submitting'}
         className="text-sm rounded-lg px-3 py-2 flex-1 min-w-0 footer-newsletter-input"
       />
+      <p id={disclosureId} className="text-xs footer-newsletter-disclosure">
+        {formPolicy.disclosures.newsletter}
+      </p>
       <Button
         type="submit"
         variant="primary"
         size="md"
         disabled={state === 'submitting' || !email}
+        aria-describedby={disclosureId}
       >
         {state === 'submitting' ? '...' : 'Subscribe'}
       </Button>
@@ -89,7 +136,7 @@ function NewsletterForm() {
   );
 }
 
-export function Footer() {
+export function Footer({ formPolicy }: { formPolicy: PublicFormPolicy }) {
   /**
    * `ctaId` defaults to a slug of the label. Pass it explicitly when the visible
    * text changes but the analytics series should stay continuous — renaming
@@ -120,7 +167,7 @@ export function Footer() {
             <p className="text-sm mb-4 footer-tagline">
               The Angular UI layer for production agents.
             </p>
-            <NewsletterForm />
+            <NewsletterForm formPolicy={formPolicy} />
             {/* Social links */}
             <div className="flex items-center gap-4">
               <a href="https://github.com/cacheplane/angular-agent-framework"

@@ -2,6 +2,8 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('server-only', () => ({}));
 import PricingPage, { metadata } from './page';
 
 vi.mock('../../components/pricing/LeadForm', () => ({ LeadForm: () => null }));

@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -19,6 +20,11 @@ const PAGE_SIZE = 100;
 const MAX_PAGES = 100;
 const MAX_TOTAL_RECORDS = PAGE_SIZE * MAX_PAGES;
 const SOURCE = 'resend_legacy_import';
+const MIN_CANCELLATION_WORK_MS = 30 * 60_000;
+const DELIVERY_SAFETY_MARGIN_MS = 5 * 60_000;
+const CUTOVER_CONFIGURATION_EVENT_KEY =
+  'legacy:resend:cutover:v1:configuration';
+const CUTOVER_CONFIGURATION_KIND = 'legacy.resend_cutover_configured';
 const USAGE =
   'Usage: npm run growth:import-resend -- --dry-run | --apply --expected-contacts N --expected-scheduled N [--allow-database-url-apply]';
 
@@ -80,8 +86,10 @@ export interface ResendLifecycleImportResult {
   contacts_created: number;
   contacts_existing: number;
   contacts_rekeyed: number;
-  legacy_jobs_created: number;
-  legacy_jobs_existing: number;
+  legacy_contact_markers_created: number;
+  legacy_contact_markers_existing: number;
+  legacy_scheduled_jobs_created: number;
+  legacy_scheduled_jobs_existing: number;
   legacy_provider_cancellations_required: number;
 }
 
@@ -96,6 +104,7 @@ type FailureCode =
   | 'provider_emails_list_failed'
   | 'provider_emails_pagination_invalid'
   | 'provider_emails_payload_invalid'
+  | 'snapshot_cancellation_window_insufficient'
   | 'snapshot_count_drift'
   | 'snapshot_identity_conflict'
   | 'snapshot_scheduled_recipient_invalid'
@@ -110,6 +119,23 @@ class ImportFailure extends Error {
 
 function fail(code: FailureCode): never {
   throw new ImportFailure(code);
+}
+
+export function cancellationDeadline(
+  snapshot: ResendLifecycleSnapshot,
+  snapshotAt: Date
+): Date | null {
+  if (snapshot.scheduledEmails.length === 0) return null;
+  const earliest = Math.min(
+    ...snapshot.scheduledEmails.map(({ scheduled_at }) =>
+      new Date(scheduled_at).getTime()
+    )
+  );
+  const deadline = new Date(earliest - DELIVERY_SAFETY_MARGIN_MS);
+  if (deadline.getTime() - snapshotAt.getTime() < MIN_CANCELLATION_WORK_MS) {
+    fail('snapshot_cancellation_window_insufficient');
+  }
+  return deadline;
 }
 
 function boundedProviderId(value: unknown): string {
@@ -128,12 +154,43 @@ function validIsoDate(
   value: unknown,
   code: 'provider_contacts_payload_invalid' | 'provider_emails_payload_invalid'
 ): string {
-  if (
-    typeof value !== 'string' ||
-    value.length > 100 ||
-    !/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}(?::?\d{2})?)$/u.test(
+  if (typeof value !== 'string' || value.length > 100) {
+    fail(code);
+  }
+  const match =
+    /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2}):(\d{2})(?:\.\d{1,9})?(Z|[+-]\d{2}(?::?\d{2})?)$/u.exec(
       value
-    )
+    );
+  if (!match) fail(code);
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  const second = Number(match[6]);
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [
+    31,
+    leapYear ? 29 : 28,
+    31,
+    30,
+    31,
+    30,
+    31,
+    31,
+    30,
+    31,
+    30,
+    31,
+  ];
+  if (
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > (daysInMonth[month - 1] ?? 0) ||
+    hour > 23 ||
+    minute > 59 ||
+    second > 59
   ) {
     fail(code);
   }
@@ -448,6 +505,95 @@ function canonicalJson(value: unknown): string {
   return JSON.stringify(normalize(value));
 }
 
+function preparedCancellationDeadline(
+  prepared: ReturnType<typeof prepareSnapshot>
+): Date | null {
+  if (prepared.scheduled.length === 0) return null;
+  return new Date(
+    Math.min(
+      ...prepared.scheduled.map(({ scheduledAt }) => scheduledAt.getTime())
+    ) - DELIVERY_SAFETY_MARGIN_MS
+  );
+}
+
+function snapshotIdentity(
+  prepared: ReturnType<typeof prepareSnapshot>
+): string {
+  const contactIds = prepared.contacts.map(({ contact }) => contact.id).sort();
+  const scheduledMessageIds = prepared.scheduled
+    .map(({ email }) => email.id)
+    .sort();
+  const identity = [
+    'contacts',
+    String(contactIds.length),
+    ...contactIds,
+    'scheduled_messages',
+    String(scheduledMessageIds.length),
+    ...scheduledMessageIds,
+  ].join('\0');
+  return createHash('sha256').update(identity).digest('hex');
+}
+
+async function persistCutoverConfiguration(
+  transaction: SqlTransaction,
+  prepared: ReturnType<typeof prepareSnapshot>,
+  snapshotAt: Date
+): Promise<Date> {
+  const deadline = preparedCancellationDeadline(prepared);
+  const data = {
+    snapshot_at: snapshotAt.toISOString(),
+    cancellation_deadline: deadline?.toISOString() ?? null,
+    expected_contacts: prepared.contacts.length,
+    expected_scheduled: prepared.scheduled.length,
+    snapshot_identity: snapshotIdentity(prepared),
+  };
+  const inserted = await transaction.execute<ImportAliasActivityRow>(
+    `/* growth:import-insert-cutover-configuration */
+     insert into growth_activity (
+       event_key, occurred_at, kind, data
+     ) values ($1, $2, $3, $4::jsonb)
+     on conflict (event_key) do nothing
+     returning event_key, contact_id, project_id, kind, occurred_at, data`,
+    [
+      CUTOVER_CONFIGURATION_EVENT_KEY,
+      snapshotAt,
+      CUTOVER_CONFIGURATION_KIND,
+      JSON.stringify(data),
+    ]
+  );
+  if (inserted.rows.length > 0) return snapshotAt;
+
+  const replay = await transaction.execute<ImportAliasActivityRow>(
+    `/* growth:import-read-cutover-configuration */
+     select event_key, contact_id, project_id, kind, occurred_at, data
+     from growth_activity
+     where event_key = $1`,
+    [CUTOVER_CONFIGURATION_EVENT_KEY]
+  );
+  const row = replay.rows[0];
+  const storedSnapshotAt = row
+    ? new Date(row.occurred_at)
+    : new Date(Number.NaN);
+  if (
+    !row ||
+    Number.isNaN(storedSnapshotAt.getTime()) ||
+    row.event_key !== CUTOVER_CONFIGURATION_EVENT_KEY ||
+    row.contact_id !== null ||
+    row.project_id !== null ||
+    row.kind !== CUTOVER_CONFIGURATION_KIND
+  ) {
+    fail('snapshot_identity_conflict');
+  }
+  const replayData = {
+    ...data,
+    snapshot_at: storedSnapshotAt.toISOString(),
+  };
+  if (canonicalJson(row.data) !== canonicalJson(replayData)) {
+    fail('snapshot_identity_conflict');
+  }
+  return storedSnapshotAt;
+}
+
 async function importContact(
   transaction: SqlTransaction,
   prepared: PreparedContact,
@@ -637,6 +783,65 @@ function validateLegacyReplay(
   }
 }
 
+async function importContactMarker(
+  transaction: SqlTransaction,
+  providerContactId: string,
+  contact: ImportContactRow,
+  availableAt: Date,
+  result: ResendLifecycleImportResult
+): Promise<void> {
+  const idempotencyKey = `legacy:resend:contact:${providerContactId}`;
+  const payload = {
+    imported: true,
+    legacy_type: 'contact_marker',
+    provider: 'resend',
+    provider_contact_id: providerContactId,
+  };
+  const inserted = await transaction.execute<ImportLegacyJobRow>(
+    `/* growth:import-insert-contact-marker */
+     insert into growth_jobs (
+       kind, contact_id, status, available_at, idempotency_key,
+       payload, provider_email_id, delivery_status
+     ) values (
+       'legacy', $1, 'cancelled', $2, $3, $4::jsonb, null, 'not_submitted'
+     )
+     on conflict (idempotency_key) do nothing
+     returning id, contact_id, kind, status, available_at,
+               idempotency_key, payload, provider_email_id,
+               delivery_status`,
+    [contact.id, availableAt, idempotencyKey, JSON.stringify(payload)]
+  );
+  if (inserted.rows.length > 0) {
+    result.legacy_contact_markers_created += 1;
+    return;
+  }
+
+  const replay = await transaction.execute<ImportLegacyJobRow>(
+    `/* growth:import-read-contact-marker */
+     select id, contact_id, kind, status, available_at,
+            idempotency_key, payload, provider_email_id,
+            delivery_status
+     from growth_jobs
+     where idempotency_key = $1`,
+    [idempotencyKey]
+  );
+  const row = replay.rows[0];
+  if (
+    !row ||
+    row.kind !== 'legacy' ||
+    row.contact_id !== contact.id ||
+    row.status !== 'cancelled' ||
+    new Date(row.available_at).getTime() !== availableAt.getTime() ||
+    row.idempotency_key !== idempotencyKey ||
+    row.provider_email_id !== null ||
+    row.delivery_status !== 'not_submitted' ||
+    canonicalJson(row.payload) !== canonicalJson(payload)
+  ) {
+    fail('snapshot_identity_conflict');
+  }
+  result.legacy_contact_markers_existing += 1;
+}
+
 export async function importResendLifecycleSnapshot(
   executor: SqlExecutor,
   snapshot: ResendLifecycleSnapshot,
@@ -677,24 +882,44 @@ export async function importResendLifecycleSnapshot(
       throw new Error('rotation_coverage_failed');
     }
 
+    const cutoverSnapshotAt = await persistCutoverConfiguration(
+      transaction,
+      prepared,
+      occurredAt
+    );
+
     const result: ResendLifecycleImportResult = {
       contacts_created: 0,
       contacts_existing: 0,
       contacts_rekeyed: 0,
-      legacy_jobs_created: 0,
-      legacy_jobs_existing: 0,
+      legacy_contact_markers_created: 0,
+      legacy_contact_markers_existing: 0,
+      legacy_scheduled_jobs_created: 0,
+      legacy_scheduled_jobs_existing: 0,
       legacy_provider_cancellations_required: 0,
     };
     const contactsByEmail = new Map<string, ImportContactRow>();
-    for (const contact of prepared.contacts) {
-      contactsByEmail.set(
-        contact.normalizedEmail,
-        await importContact(transaction, contact, keyring, occurredAt, result)
+    for (const preparedContact of prepared.contacts) {
+      const contact = await importContact(
+        transaction,
+        preparedContact,
+        keyring,
+        occurredAt,
+        result
       );
+      await importContactMarker(
+        transaction,
+        preparedContact.contact.id,
+        contact,
+        cutoverSnapshotAt,
+        result
+      );
+      contactsByEmail.set(preparedContact.normalizedEmail, contact);
     }
 
     const payload = {
       imported: true,
+      legacy_type: 'scheduled_message',
       provider: 'resend',
       provider_state: 'scheduled',
     };
@@ -725,7 +950,7 @@ export async function importResendLifecycleSnapshot(
         ]
       );
       if (inserted.rows.length > 0) {
-        result.legacy_jobs_created += 1;
+        result.legacy_scheduled_jobs_created += 1;
         continue;
       }
       const replay = await transaction.execute<ImportLegacyJobRow>(
@@ -744,7 +969,7 @@ export async function importResendLifecycleSnapshot(
         providerEmailId: scheduled.email.id,
         payload,
       });
-      result.legacy_jobs_existing += 1;
+      result.legacy_scheduled_jobs_existing += 1;
     }
 
     const transactionExecutor: SqlExecutor = {
@@ -917,6 +1142,9 @@ export async function mainImportResendLifecycle(
     ) {
       fail('snapshot_count_drift');
     }
+    const snapshotAt = dependencies.now?.() ?? new Date();
+    if (Number.isNaN(snapshotAt.getTime())) fail('database_import_failed');
+    const deadline = cancellationDeadline(snapshot, snapshotAt);
     let keyring: EmailHmacKeyring;
     try {
       keyring = dependencies.loadKeyring(dependencies.environment);
@@ -934,7 +1162,7 @@ export async function mainImportResendLifecycle(
         executor,
         snapshot,
         keyring,
-        dependencies.now?.() ?? new Date()
+        snapshotAt
       );
     } catch (error) {
       if (error instanceof ImportFailure) throw error;
@@ -945,6 +1173,10 @@ export async function mainImportResendLifecycle(
         command: 'import-resend-lifecycle',
         mode: 'apply',
         ...result,
+        cancellation_deadline: deadline?.toISOString() ?? null,
+        cancellation_remaining_seconds: deadline
+          ? Math.floor((deadline.getTime() - snapshotAt.getTime()) / 1000)
+          : null,
       })
     );
     return 0;

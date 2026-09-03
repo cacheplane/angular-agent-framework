@@ -1,5 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
+
+vi.mock('server-only', () => ({}));
 import SolutionPage from './page';
 import { getAllSolutionSlugs } from '../../../lib/solutions-data';
 

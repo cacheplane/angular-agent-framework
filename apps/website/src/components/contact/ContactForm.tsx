@@ -1,35 +1,31 @@
 // SPDX-License-Identifier: MIT
 'use client';
 
-import React, { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import React, { useRef, useState } from 'react';
 import { Button } from '../ui/Button';
 import { track } from '../../lib/analytics/client';
 import { analyticsEvents } from '../../lib/analytics/events';
+import type { PublicFormPolicy } from '../../lib/growth/form-policy';
+import {
+  FORM_POLICY_REFRESH_MESSAGE,
+  growthFormRequestSnapshot,
+  type GrowthFormRequestSnapshot,
+} from '../../lib/growth/form-client';
 
-type Status = 'idle' | 'sending' | 'sent' | 'error';
+type Status = 'idle' | 'sending' | 'sent' | 'error' | 'stale';
 
-function sanitizeReferrerHost(): string | undefined {
-  if (typeof document === 'undefined' || !document.referrer) return undefined;
-  try {
-    return new URL(document.referrer).hostname;
-  } catch {
-    return undefined;
-  }
-}
-
-export function ContactForm() {
-  const params = useSearchParams();
+export function ContactForm({
+  formPolicy,
+}: {
+  formPolicy: PublicFormPolicy;
+}) {
   const [status, setStatus] = useState<Status>('idle');
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [company, setCompany] = useState('');
   const [message, setMessage] = useState('');
-
-  const sourcePage = params.get('source') ?? 'contact_direct';
-  const trackParam = (params.get('track') ?? 'enterprise') as string;
-  const ctaId = params.get('cta_id') ?? undefined;
-  const paper = params.get('paper') ?? undefined;
+  const submissionSnapshot = useRef<GrowthFormRequestSnapshot | null>(null);
+  const disclosureId = 'contact-form-growth-disclosure';
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -40,22 +36,34 @@ export function ContactForm() {
       source_section: 'contact-form',
     });
     try {
+      const snapshot = growthFormRequestSnapshot(submissionSnapshot.current, {
+        form_kind: 'contact',
+        email,
+        ...(name ? { name } : {}),
+        ...(company ? { company } : {}),
+        ...(message ? { message } : {}),
+      });
+      submissionSnapshot.current = snapshot;
       const res = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email,
-          name: name || undefined,
-          company: company || undefined,
-          message: message || undefined,
-          source_page: sourcePage,
-          track: trackParam,
-          cta_id: ctaId,
-          paper,
-          referrer_host: sanitizeReferrerHost(),
+          ...snapshot.facts,
+          acquisition_session_id: snapshot.acquisition_session_id,
+          submission_id: snapshot.submission_id,
+          policy_version: formPolicy.version,
         }),
       });
+      if (res.status === 409) {
+        submissionSnapshot.current = null;
+        setStatus('stale');
+        return;
+      }
+      if (res.status >= 400 && res.status < 500) {
+        submissionSnapshot.current = null;
+      }
       if (res.ok) {
+        submissionSnapshot.current = null;
         track(analyticsEvents.marketingLeadFormSuccess, {
           surface: 'contact',
           source_section: 'contact-form',
@@ -77,6 +85,22 @@ export function ContactForm() {
       });
       setStatus('error');
     }
+  }
+
+  if (status === 'stale') {
+    return (
+      <div role="alert" className="contact-form">
+        <p className="contact-form-disclosure">{FORM_POLICY_REFRESH_MESSAGE}</p>
+        <Button
+          type="button"
+          variant="primary"
+          size="lg"
+          onClick={() => window.location.reload()}
+        >
+          Refresh page
+        </Button>
+      </div>
+    );
   }
 
   if (status === 'sent') {
@@ -130,7 +154,16 @@ export function ContactForm() {
           className="contact-form-input contact-form-textarea"
         />
       </label>
-      <Button variant="primary" size="lg" type="submit" disabled={status === 'sending'}>
+      <p id={disclosureId} className="contact-form-disclosure">
+        {formPolicy.disclosures.contact}
+      </p>
+      <Button
+        variant="primary"
+        size="lg"
+        type="submit"
+        disabled={status === 'sending'}
+        aria-describedby={disclosureId}
+      >
         {status === 'sending' ? 'Sending…' : 'Send'}
       </Button>
       {status === 'error' && (

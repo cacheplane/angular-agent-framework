@@ -8,6 +8,7 @@ import { WhitePaperBlock } from '../../components/landing/WhitePaperBlock';
 import { FinalCTA } from '../../components/landing/FinalCTA';
 import { SOLUTIONS } from '../../lib/solutions-data';
 import { createPageMetadata } from '../../lib/site-metadata';
+import { getFormPolicy } from '../../lib/growth/form-policy';
 
 export const metadata = createPageMetadata({
   title: 'Solutions — Threadplane',
@@ -17,6 +18,7 @@ export const metadata = createPageMetadata({
 });
 
 export default function SolutionsIndexPage() {
+  const formPolicy = getFormPolicy();
   return (
     <>
       {/* Hero */}
@@ -74,7 +76,7 @@ export default function SolutionsIndexPage() {
         </Container>
       </Section>
 
-      <WhitePaperBlock />
+      <WhitePaperBlock formPolicy={formPolicy} />
       <FinalCTA />
     </>
   );

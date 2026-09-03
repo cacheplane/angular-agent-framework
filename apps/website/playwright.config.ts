@@ -84,6 +84,9 @@ export const createWebsitePlaywrightConfig = (
             cwd: '../..',
             url: localURL,
             reuseExistingServer,
+            // Server pages read the growth form policy while rendering, so the
+            // local server carries the switch the deployed environment sets.
+            env: { GROWTH_FORM_POLICY: 'growth_v1' },
             timeout: bfcacheRuntimeTest ? 180_000 : 60_000,
           },
           {

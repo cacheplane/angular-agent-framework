@@ -1,80 +1,125 @@
-import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-import { sendEmail, FROM, addToAudience } from '../../../../lib/resend';
-import { loopsUpsertContact, loopsSendEvent } from '../../../../lib/loops';
-import { scheduleWhitepaperDrip, type PaperId } from '../../../../lib/drip';
-import { whitepaperDownloadHtml } from '../../../../emails/whitepaper-download';
-import { angularDownloadHtml } from '../../../../emails/angular-download';
-import { renderDownloadHtml } from '../../../../emails/render-download';
-import { chatDownloadHtml } from '../../../../emails/chat-download';
-import { captureWhitepaperConversion } from '../../../lib/analytics/server';
-import { getSourcePage } from '@threadplane/telemetry/shared';
+// The website intentionally consumes the growth library through its internal boundary.
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import { normalizeRecipientEmail } from '@threadplane-internal/growth';
 
-const SIGNUPS_FILE = path.join(process.cwd(), 'data', 'whitepaper-signups.ndjson');
+import { matchesSubmittedFormPolicy } from '../../../lib/growth/form-policy';
+import {
+  defaultGrowthFormRouteDependencies,
+  jsonResponse,
+  readBoundedJsonObject,
+  stalePolicyResponse,
+  strictText,
+  validGrowthFormIdentities,
+  type GrowthFormRouteDependencies,
+} from '../../../lib/growth/form-route';
 
-const VALID_PAPERS: PaperId[] = ['overview', 'angular', 'render', 'chat'];
+const MAX_BODY_BYTES = 16_384;
 
-const DOWNLOAD_EMAILS: Record<PaperId, (name?: string) => string> = {
-  overview: whitepaperDownloadHtml,
-  angular: angularDownloadHtml,
-  render: renderDownloadHtml,
-  chat: chatDownloadHtml,
-};
+type PaperId = 'overview' | 'angular' | 'render' | 'chat';
 
-const DOWNLOAD_SUBJECTS: Record<PaperId, string> = {
-  overview: 'Your Enterprise Agent UI Guide for Angular',
-  angular: 'Your Enterprise Guide to Agent UI in Angular',
-  render: 'Your Enterprise Guide to Generative UI',
-  chat: 'Your Enterprise Guide to Agent Chat Interfaces',
-};
+const VALID_PAPERS: readonly PaperId[] = [
+  'overview',
+  'angular',
+  'render',
+  'chat',
+];
 
-export async function POST(req: NextRequest) {
-  let body: { name?: string; email?: string; paper?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
-  }
+export function createWhitepaperSignupRoute(
+  dependencies: GrowthFormRouteDependencies = defaultGrowthFormRouteDependencies()
+): { POST: (request: Request) => Promise<Response> } {
+  return {
+    async POST(request: Request): Promise<Response> {
+      const body = await readBoundedJsonObject(request, MAX_BODY_BYTES);
+      if (!body) return jsonResponse({ error: 'Invalid JSON' }, 400);
 
-  const name = (body.name || '').trim().slice(0, 200);
-  const email = (body.email || '').trim().slice(0, 320);
-  const paper = (VALID_PAPERS.includes(body.paper as PaperId) ? body.paper : 'overview') as PaperId;
-  const sourcePage = getSourcePage(req.headers.get('referer'));
+      let policy;
+      try {
+        policy = dependencies.getPolicy();
+      } catch {
+        return jsonResponse({ error: 'Unable to accept request' }, 503);
+      }
 
-  if (!email || !email.includes('@')) {
-    return NextResponse.json({ error: 'Valid email required' }, { status: 400 });
-  }
+      let submissionId;
+      let acquisitionSessionId;
+      let name;
+      let email;
+      let submittedPaper;
+      try {
+        const policyVersion = strictText(body, 'policy_version', 100);
+        if (!matchesSubmittedFormPolicy(policy, policyVersion || undefined)) {
+          return stalePolicyResponse(policy);
+        }
+        submissionId = strictText(body, 'submission_id', 36);
+        acquisitionSessionId = strictText(body, 'acquisition_session_id', 36);
+        name = strictText(body, 'name', 200);
+        email = strictText(body, 'email', 254);
+        submittedPaper = strictText(body, 'paper', 20) || 'overview';
+      } catch {
+        return jsonResponse({ error: 'Invalid form submission' }, 400);
+      }
+      if (!validGrowthFormIdentities(submissionId, acquisitionSessionId)) {
+        return jsonResponse({ error: 'Invalid submission' }, 400);
+      }
+      if (!VALID_PAPERS.includes(submittedPaper as PaperId)) {
+        return jsonResponse({ error: 'Invalid paper' }, 400);
+      }
 
-  // Persist signup to NDJSON (always, even if email fails)
-  const entry = JSON.stringify({ name, email, paper, ts: new Date().toISOString() }) + '\n';
-  try {
-    fs.mkdirSync(path.dirname(SIGNUPS_FILE), { recursive: true });
-    fs.appendFileSync(SIGNUPS_FILE, entry, 'utf8');
-  } catch (err) {
-    console.error('Failed to write signup:', err);
-  }
+      let normalizedEmail;
+      try {
+        normalizedEmail = normalizeRecipientEmail(email);
+      } catch {
+        return jsonResponse({ error: 'Valid email required' }, 400);
+      }
 
-  // Send download confirmation + schedule drip + sync contacts (best-effort)
-  try {
-    const downloadHtml = DOWNLOAD_EMAILS[paper](name || undefined);
-    await Promise.all([
-      sendEmail({
-        from: FROM,
-        to: email,
-        subject: DOWNLOAD_SUBJECTS[paper],
-        html: downloadHtml,
-      }),
-      scheduleWhitepaperDrip(email, paper),
-      addToAudience(email, name || undefined),
-      loopsUpsertContact({ email, firstName: name || undefined, source: `whitepaper-${paper}` }),
-      loopsSendEvent({ email, eventName: 'whitepaper_downloaded', properties: { paper } }),
-    ]);
-  } catch (err) {
-    console.error('[whitepaper-signup] email pipeline failed:', err);
-  }
+      let database;
+      let keyring;
+      try {
+        keyring = dependencies.loadKeyring();
+        database = dependencies.createDatabase();
+      } catch {
+        return jsonResponse({ error: 'Unable to accept request' }, 503);
+      }
 
-  await captureWhitepaperConversion({ email, paper, sourcePage });
+      let accepted = false;
+      try {
+        await dependencies.accept(database, {
+          submissionId,
+          email: normalizedEmail,
+          displayName: name || undefined,
+          form: { kind: 'whitepaper', paper: submittedPaper as PaperId },
+          source: 'website',
+          sourceForm: 'whitepaper',
+          noticeText: policy.disclosures.whitepaper,
+          noticeVersion: `${policy.version}.whitepaper`,
+          policyVersion: policy.version,
+          acquisitionSessionId: acquisitionSessionId || undefined,
+          occurredAt: dependencies.now(),
+          keyring,
+        });
+        accepted = true;
+      } catch {
+        // The response below reports the failure without echoing provider detail.
+      }
 
-  return NextResponse.json({ ok: true });
+      try {
+        await database.close?.();
+      } catch {
+        return unableToAccept();
+      }
+      if (!accepted) return unableToAccept();
+
+      // The durable jobs remain available to the scheduled dispatcher.
+      await dependencies.nudge({ submissionId }).catch(() => undefined);
+      return jsonResponse({ ok: true });
+    },
+  };
 }
+
+function unableToAccept(): Response {
+  return jsonResponse(
+    { error: 'Unable to accept request', retryable: true },
+    503
+  );
+}
+
+export const { POST } = createWhitepaperSignupRoute();
