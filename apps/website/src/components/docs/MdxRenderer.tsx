@@ -1,6 +1,7 @@
 import { MDXRemote } from 'next-mdx-remote/rsc';
 import { tokens } from '@threadplane/design-tokens';
 import { Callout } from './mdx/Callout';
+import { CalloutAction, CalloutActions } from './mdx/CalloutActions';
 import { Steps, Step } from './mdx/Steps';
 import { Tabs, Tab } from './mdx/Tabs';
 import { Card, CardGroup } from './mdx/Card';
@@ -38,6 +39,8 @@ const DIAGRAM_DIMENSIONS: Record<string, { width: number; height: number }> = {
 
 const mdxComponents = {
   Callout,
+  CalloutActions,
+  CalloutAction,
   Steps,
   Step,
   Tabs,

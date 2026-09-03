@@ -381,6 +381,44 @@ body:has([data-website-workspace-host]) {
 .mdx-callout-body > :first-child { margin-top: 0; }
 .mdx-callout-body > :last-child { margin-bottom: 0; }
 
+/* Callout CTA buttons. The band states what the callout is; these state what
+ * to do about it. Tone-aware, so a tip's button is green and an info's blue. */
+[data-mdx="callout-actions"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+[data-mdx="callout-action"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--callout-tone-text);
+  font-family: var(--font-inter);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+[data-mdx="callout-action"][data-variant="primary"] {
+  background: var(--callout-tone-text);
+  color: var(--color-surface);
+}
+[data-mdx="callout-action"][data-variant="primary"]:hover {
+  filter: brightness(1.1);
+}
+[data-mdx="callout-action"][data-variant="secondary"] {
+  background: transparent;
+  color: var(--callout-tone-text);
+}
+[data-mdx="callout-action"][data-variant="secondary"]:hover {
+  background: var(--callout-tone-surface);
+}
+
 /* Docs prose links.
  *
  * MdxRenderer carries `prose prose-slate` and sets `--tw-prose-links`, but
@@ -1648,6 +1686,7 @@ body:has([data-website-workspace-host]) {
 /* One focus ring for the docs chrome. Buttons and links that had no
  * :focus-visible affordance at all. */
 [data-docs-navlink]:focus-visible,
+[data-mdx="callout-action"]:focus-visible,
 .docs-prose a:not([data-mdx-chrome]):focus-visible,
 .docs-crumb-link:focus-visible,
 .docs-toc-link:focus-visible,
