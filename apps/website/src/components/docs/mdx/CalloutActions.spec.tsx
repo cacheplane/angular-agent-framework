@@ -25,6 +25,30 @@ describe('CalloutAction', () => {
     expect(link.getAttribute('rel')).toBeNull();
   });
 
+  it('treats a protocol-relative href as external', () => {
+    render(<CalloutAction href="//example.com">Off-site</CalloutAction>);
+
+    const link = screen.getByRole('link', { name: 'Off-site' });
+    expect(link.getAttribute('target')).toBe('_blank');
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer');
+  });
+
+  it('treats a mailto href as external', () => {
+    render(<CalloutAction href="mailto:someone@example.com">Email us</CalloutAction>);
+
+    const link = screen.getByRole('link', { name: 'Email us' });
+    expect(link.getAttribute('target')).toBe('_blank');
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer');
+  });
+
+  it('keeps a same-document hash href in the same tab', () => {
+    render(<CalloutAction href="#section">Jump down</CalloutAction>);
+
+    const link = screen.getByRole('link', { name: 'Jump down' });
+    expect(link.getAttribute('target')).toBeNull();
+    expect(link.getAttribute('rel')).toBeNull();
+  });
+
   it('defaults to the primary variant and opts out of the prose link rule', () => {
     render(<CalloutAction href="/docs">Docs</CalloutAction>);
 

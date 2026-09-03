@@ -25,12 +25,28 @@ interface CalloutActionProps {
   children: ReactNode;
 }
 
+/**
+ * An href is internal only if it stays on this document or this site:
+ * same-document (`#section`), site-relative (`/docs/...`, `?query`).
+ * Everything else — including a protocol-relative `//host/path` (which
+ * *looks* site-relative but resolves against whatever host the current
+ * scheme applies to, i.e. leaves the site) and `mailto:`/`tel:` URIs — is
+ * external.
+ */
+function isExternalHref(href: string): boolean {
+  const isSiteRelative =
+    (href.startsWith('/') && !href.startsWith('//')) ||
+    href.startsWith('#') ||
+    href.startsWith('?');
+  return !isSiteRelative;
+}
+
 export function CalloutAction({
   href,
   variant = 'primary',
   children,
 }: CalloutActionProps) {
-  const isExternal = href.startsWith('http');
+  const isExternal = isExternalHref(href);
 
   return (
     <Link
