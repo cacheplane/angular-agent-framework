@@ -22,6 +22,16 @@ Read the spec. Then note these repo facts, which are not guessable:
 4. **Route specs run in the node environment.** They start with `// @vitest-environment node`. Component specs use `// @vitest-environment jsdom`. Getting this wrong produces confusing failures.
 5. **`next dev` does not exercise output file tracing.** Task 5 exists because of that: a route reading `content/docs` at request time works in dev and fails in a real build unless the config is updated.
 
+### The `checkpointer` test fixture, verified
+
+Tasks 4 and 7 both search for `checkpointer` and assert a hit. That choice was checked against real content before the plan was written, so a failing test there means the pipeline is broken, not that the term was a bad guess:
+
+- It appears **16 times** in `apps/website/content/docs/langgraph/guides/persistence.mdx`, **7 of them outside fenced code** — so it survives the indexer's code stripping.
+- It appears in the headings `Python: Checkpointer Setup` and `Checkpoint Recovery`, so there is a real anchor for a deep link to land on.
+- It is in **no page title anywhere** in `docs-config.ts` — which is exactly why today's title-only search cannot find it, and why the test proves the feature rather than passing trivially.
+
+If a `checkpointer` assertion fails, fix the pipeline. Do not swap in an easier search term.
+
 ### Existing signatures you will use
 
 ```ts
