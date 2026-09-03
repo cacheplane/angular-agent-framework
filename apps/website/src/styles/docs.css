@@ -1192,6 +1192,21 @@ body:has([data-website-workspace-host]) {
   font-weight: 600;
 }
 
+/* At narrow widths the full four-rung trail (Docs / <Library> / <Section> /
+ * <Page>) wraps to two lines and grows the header. The docs trail is always
+ * exactly these four rungs — built in
+ * apps/website/src/app/docs/[library]/[section]/[slug]/page.tsx's
+ * `contextTrail` — so these positional child selectors are safe only as long
+ * as that stays true; if the trail ever gains or loses a rung, revisit this.
+ * Hide the 1st (Docs) and 3rd (section, plain text already) rungs, leaving
+ * <Library> / <Page> on one line. */
+@media (max-width: 768px) {
+  .website-workspace-host [data-workspace-trail-list] > li:nth-child(1),
+  .website-workspace-host [data-workspace-trail-list] > li:nth-child(3) {
+    display: none;
+  }
+}
+
 /* DocsPageHeader */
 .docs-page-header {
   display: flex;
