@@ -38,15 +38,25 @@ function originOf(url: string): string | null {
 }
 
 export function createHeroBridge(env: BridgeEnv): HeroBridge {
-  const parentOrigin = originOf(env.referrer);
-  const allowed = parentOrigin !== null && isAllowedParentOrigin(parentOrigin);
-  if (!allowed && env.parent !== env.self) {
-    console.warn('[hero] parent origin not allowlisted; frame state will not be posted', parentOrigin);
+  // The parent origin normally comes from the referrer. Under a strict
+  // Referrer-Policy it is empty, so the bridge also learns the origin from the
+  // first allowlisted inbound message and replays the latest state to it.
+  const fromReferrer = originOf(env.referrer);
+  let parentOrigin: string | null =
+    fromReferrer !== null && isAllowedParentOrigin(fromReferrer) ? fromReferrer : null;
+  let lastState: HeroFrameState | null = null;
+  const embedded = env.parent !== env.self;
+  if (parentOrigin === null && embedded) {
+    console.warn('[hero] parent origin not known from the referrer; waiting for an allowlisted message', fromReferrer);
   }
+  const post = (state: HeroFrameState) => {
+    if (!embedded || parentOrigin === null) return;
+    env.parent.postMessage({ type: HERO_MESSAGE_TYPE, state }, parentOrigin);
+  };
   return {
     postState(state) {
-      if (!allowed || env.parent === env.self) return;
-      env.parent.postMessage({ type: HERO_MESSAGE_TYPE, state }, parentOrigin as string);
+      lastState = state;
+      post(state);
     },
     onVisibility(cb) {
       const handler = (e: MessageEvent) => {
@@ -54,6 +64,10 @@ export function createHeroBridge(env: BridgeEnv): HeroBridge {
         if (!isAllowedParentOrigin(e.origin)) return;
         const d = e.data as { type?: string; visible?: unknown } | null;
         if (!d || d.type !== HERO_MESSAGE_TYPE || typeof d.visible !== 'boolean') return;
+        if (parentOrigin === null) {
+          parentOrigin = e.origin;
+          if (lastState !== null) post(lastState);
+        }
         cb(d.visible);
       };
       env.self.addEventListener('message', handler);

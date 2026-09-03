@@ -1078,9 +1078,11 @@ export function HeroDemo() {
     return () => window.removeEventListener('message', onMessage);
   }, []);
 
-  // Website → frame visibility.
+  // Website → frame visibility. Posted while mounting too (on the iframe's
+  // load event) so a frame whose referrer was stripped can learn our origin
+  // from this message and replay its `ready` state to us.
   useEffect(() => {
-    if (state !== 'ready') return;
+    if (state !== 'mounting' && state !== 'ready') return;
     iframeRef.current?.contentWindow?.postMessage({ type: MESSAGE_TYPE, visible }, HERO_DEMO_ORIGIN);
   }, [visible, state]);
 
@@ -1100,7 +1102,7 @@ export function HeroDemo() {
             src={HERO_POSTER}
             width={POSTER_W}
             height={POSTER_H}
-            alt="Threadplane chat replaying a recorded LangGraph run: a user prompt, streamed reply, tool progress and an approval panel"
+            alt="Threadplane chat replaying a recorded LangGraph run: a user prompt, a request_approval tool call, and the streamed three-step cleanup plan"
             className="hero-demo-poster"
             loading="eager"
             decoding="async"
@@ -1114,6 +1116,7 @@ export function HeroDemo() {
               title="Threadplane live demo"
               className="hero-demo-iframe"
               allow="clipboard-write"
+              onLoad={() => iframeRef.current?.contentWindow?.postMessage({ type: MESSAGE_TYPE, visible: true }, HERO_DEMO_ORIGIN)}
             />
           ) : null}
           {needsClick && !mounted ? (

@@ -92,4 +92,20 @@ describe('isAllowedParentOrigin', () => {
     expect(isAllowedParentOrigin('https://sub.foo.vercel.app')).toBe(false);
     expect(isAllowedParentOrigin('https://evil.example')).toBe(false);
   });
+  it('learns the parent origin from the first allowlisted message when the referrer is empty, and replays the last state', () => {
+    const post = vi.fn();
+    const parent = { postMessage: post } as unknown as Window;
+    const listeners: ((e: MessageEvent) => void)[] = [];
+    const self = { addEventListener: (_: string, l: (e: MessageEvent) => void) => listeners.push(l), removeEventListener: vi.fn() } as unknown as Window;
+    const b = createHeroBridge({ referrer: '', parent, self });
+    b.postState('ready');
+    expect(post).not.toHaveBeenCalled();
+    const seen: boolean[] = [];
+    b.onVisibility((v) => seen.push(v));
+    listeners[0]({ origin: 'https://threadplane.ai', source: parent, data: { type: 'tplane-hero', visible: true } } as unknown as MessageEvent);
+    expect(post).toHaveBeenCalledWith({ type: 'tplane-hero', state: 'ready' }, 'https://threadplane.ai');
+    expect(seen).toEqual([true]);
+    b.postState('scripted');
+    expect(post).toHaveBeenLastCalledWith({ type: 'tplane-hero', state: 'scripted' }, 'https://threadplane.ai');
+  });
 });

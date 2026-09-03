@@ -2,7 +2,7 @@
 /**
  * NOT a test. Captures a frame of the hero walkthrough as the website's
  * server-rendered poster (1200x720, webp). Run through record-hero.config.ts:
- *   npx playwright test --config examples/chat/angular/e2e/record-hero-poster.record.ts
+ *   npx playwright test --config examples/chat/angular/e2e/record-hero.config.ts record-hero-poster
  *
  * The beat is the FIRST STREAMED REPLY: the approval interrupt has just been
  * accepted by the scripted cursor and the answer is on screen. The earlier
