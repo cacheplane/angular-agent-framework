@@ -32,22 +32,6 @@ const DELIVERY_STATUS_PRECEDENCE: Readonly<
   suppressed: 3,
   complained: 4,
 };
-// Resend's wire payload gained `message_id` after the pinned SDK types were
-// written, and transactional mail carries null broadcast/template ids.
-const BASE_DATA_KEYS = new Set([
-  'broadcast_id',
-  'created_at',
-  'email_id',
-  'from',
-  'message_id',
-  'subject',
-  'tags',
-  'template_id',
-  'to',
-  'bounce',
-  'failed',
-  'suppressed',
-]);
 
 type SupportedResendEventType =
   | 'email.sent'
@@ -169,11 +153,14 @@ function boundedRecord(
   );
 }
 
+const MAX_DATA_KEYS = 32;
+const MAX_HEADER_ENTRIES = 32;
+
+// Known keys are validated; unknown keys are ignored rather than fatal, because
+// Resend has added keys (message_id, headers) without notice and each addition
+// used to turn every delivery event into a 400. The total key count stays bounded.
 function validateProviderBaseData(data: Record<string, unknown>): void {
-  if (
-    Object.keys(data).length > BASE_DATA_KEYS.size ||
-    Object.keys(data).some((key) => !BASE_DATA_KEYS.has(key))
-  ) {
+  if (Object.keys(data).length > MAX_DATA_KEYS) {
     throw new Error('Invalid Resend webhook payload');
   }
   boundedDate(data['created_at']);
@@ -194,6 +181,18 @@ function validateProviderBaseData(data: Record<string, unknown>): void {
   }
   if (data['message_id'] !== undefined && data['message_id'] !== null) {
     boundedText(data['message_id'], 998);
+  }
+  if (data['headers'] !== undefined && data['headers'] !== null) {
+    const headers = data['headers'];
+    if (!Array.isArray(headers) || headers.length > MAX_HEADER_ENTRIES) {
+      throw new Error('Invalid Resend webhook payload');
+    }
+    for (const header of headers) {
+      const entry = plainObject(header);
+      if (!entry) throw new Error('Invalid Resend webhook payload');
+      boundedText(entry['name'], 128);
+      boundedText(entry['value'], 2_000);
+    }
   }
 }
 
