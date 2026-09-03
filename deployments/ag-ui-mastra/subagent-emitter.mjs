@@ -42,8 +42,40 @@
 //   Terminal cleanup: RUN_ERROR / RUN_FINISHED with delegations still pending
 //   closes open child messages and emits SUBAGENT_ERROR per pending id,
 //   exactly once, before the terminal frame.
+//
+// STAND-DOWN (forward compatibility). This whole module exists only because
+// @ag-ui/mastra 1.1.2 drops the child stream. Upstream is expected to grow its
+// own sub-agent surface (@ag-ui/core 0.0.59 already ships the SUBAGENT_*
+// schemas, and the LangGraph integration already emits them behind
+// `subagent_visibility`). The day the installed bridge emits SUBAGENT_* itself,
+// injecting too would put duplicates on the wire — and a duplicate
+// SUBAGENT_STARTED for one subagentRunId is a HARD AG-UI verifier error, while
+// two distinct ids paint two cards for one delegation. So the first bridge
+// SUBAGENT_* latches `bridgeEmitsSubagentEvents` (see createBridgeCapability),
+// after which `chunk()` injects nothing and `eventsFor()` is a passthrough.
+//
+// KNOWN LIMIT: the tee sees a chunk BEFORE the bridge does, so the delegation
+// already in flight at the moment of detection has our SUBAGENT_STARTED on the
+// wire already and cannot be retracted — it is closed neutrally instead. Only
+// that first delegation of the first run after an upgrade is affected; the
+// latch is process-wide, so every run after it starts retired. The clean exit
+// is still to DELETE this module and the tee once upstream lands.
 
 const AGENT_TOOL_PREFIX = 'agent-';
+
+/**
+ * Shared, sticky record of whether the installed bridge emits SUBAGENT_* itself.
+ *
+ * Create ONE per process and pass it to every run's injector. The latch must
+ * outlive a single run: `createSubagentInjector` is called per request, so a
+ * per-injector flag would re-learn on every run and duplicate the first
+ * delegation of each one.
+ *
+ * @returns {{ bridgeEmitsSubagentEvents: boolean }}
+ */
+export function createBridgeCapability() {
+  return { bridgeEmitsSubagentEvents: false };
+}
 
 /**
  * @typedef {object} Entry
@@ -83,12 +115,15 @@ function failureMessage(parsed) {
 /**
  * Create a per-run injector.
  *
+ * @param {{ bridgeEmitsSubagentEvents: boolean }} [capability] the shared
+ *   stand-down latch (see {@link createBridgeCapability}). Defaults to a
+ *   private one, which is only right for a single-run test.
  * @returns {{ chunk(chunk: object): object[], eventsFor(event: object): object[] }}
  *   `chunk` returns the AG-UI events to write for a raw Mastra chunk (usually
  *   none); `eventsFor` returns, for each outbound bridge event, the ordered
  *   list of frames to write (injections plus, unless deduped, the event).
  */
-export function createSubagentInjector() {
+export function createSubagentInjector(capability = createBridgeCapability()) {
   /** @type {Map<string, Entry>} pending delegations by toolCallId */
   const pending = new Map();
   /** Ids whose TOOL_CALL_START/ARGS/END were synthesized — bridge copies drop. */
@@ -153,8 +188,29 @@ export function createSubagentInjector() {
     return [...closeMessage(entry), { type: 'SUBAGENT_ERROR', subagentRunId: entry.subagentRunId, message }];
   }
 
+  /**
+   * The bridge emitted SUBAGENT_* itself, so it owns the surface from here on
+   * and this injector retires (for this run and, via the shared latch, every
+   * later one). Anything we already announced has to be closed first: an open
+   * subagent at RUN_FINISHED is a hard verifier error. The close is NEUTRAL —
+   * SUBAGENT_FINISHED with no `outcome`, since the delegation neither succeeded
+   * nor failed, we simply stopped owning it. `synthesized` is deliberately kept
+   * so the bridge's buffered TOOL_CALL_* copies still dedupe against the eager
+   * ones already on the wire.
+   */
+  function standDown() {
+    capability.bridgeEmitsSubagentEvents = true;
+    const out = [...pending.values()].flatMap((entry) => [
+      ...closeMessage(entry),
+      { type: 'SUBAGENT_FINISHED', subagentRunId: entry.subagentRunId },
+    ]);
+    pending.clear();
+    return out;
+  }
+
   return {
     chunk(chunk) {
+      if (capability.bridgeEmitsSubagentEvents) return [];
       const payload = chunk?.payload ?? {};
       switch (chunk?.type) {
         case 'start':
@@ -243,6 +299,19 @@ export function createSubagentInjector() {
 
     eventsFor(event) {
       switch (event.type) {
+        // Forward compatibility: the day the bridge emits these itself, retire
+        // rather than double-emit (a duplicate SUBAGENT_STARTED for one
+        // subagentRunId is a hard verifier error; two distinct ids paint two
+        // cards). Our own injections are written straight to the socket and
+        // never re-enter here, so a SUBAGENT_* at this point is always the
+        // bridge's.
+        case 'SUBAGENT_STARTED':
+        case 'SUBAGENT_FINISHED':
+        case 'SUBAGENT_ERROR': {
+          if (capability.bridgeEmitsSubagentEvents) return [event];
+          return [...standDown(), event];
+        }
+
         case 'TOOL_CALL_START': {
           if (synthesized.has(event.toolCallId)) return []; // eager copy already on the wire
           const name = event.toolCallName ?? '';
