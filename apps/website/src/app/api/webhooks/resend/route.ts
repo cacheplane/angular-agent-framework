@@ -99,18 +99,35 @@ export function createResendWebhookRoute(
         return response(503);
       }
       try {
-        const result = await dependencies.processVerifiedResendWebhook(database, {
-          providerEventId: id,
-          payload: verifiedPayload,
-        });
-        if (
-          !result.applied &&
-          result.reason === 'retryable_unmatched_job'
-        ) {
-          return response(503);
-        }
-        return response(200);
-      } catch {
+        const result = await dependencies.processVerifiedResendWebhook(
+          database,
+          {
+            providerEventId: id,
+            payload: verifiedPayload,
+          }
+        );
+        const status =
+          !result.applied && result.reason === 'retryable_unmatched_job'
+            ? 503
+            : 200;
+        console.info(
+          JSON.stringify({
+            route: 'webhooks/resend',
+            status,
+            applied: result.applied,
+            reason: result.applied ? undefined : result.reason,
+          })
+        );
+        return response(status);
+      } catch (error) {
+        console.info(
+          JSON.stringify({
+            route: 'webhooks/resend',
+            status: 400,
+            reason: 'payload_rejected',
+            message: error instanceof Error ? error.message : 'unknown',
+          })
+        );
         return response(400);
       } finally {
         await database.close?.();

@@ -335,16 +335,72 @@ describe('processVerifiedResendWebhook', () => {
     ).resolves.toMatchObject({ applied: true });
   });
 
-  it('still rejects unknown data keys so the closed schema stays enforced', async () => {
-    const harness = executorWith({});
+  it('accepts the real Resend payload for a message with custom headers (headers array present)', async () => {
+    // Captured verbatim from the production webhook event log on
+    // 2026-09-03: recipient messages carry List-Unsubscribe, the job id,
+    // Bcc, and Reply-To as a `headers` array. Rejecting it left every
+    // recipient delivery stuck at "submitted".
+    const harness = webhookHarness();
 
     await expect(
-      processVerifiedResendWebhook(harness.executor, {
-        providerEventId: 'msg_unknown_key',
-        payload: event('email.delivered', { headers: [] }),
+      processVerifiedResendWebhook(
+        harness.executor,
+        {
+          providerEventId: 'msg_headers_shape',
+          payload: event('email.delivered', {
+            message_id: '<111-222-333@email.example.com>',
+            headers: [
+              {
+                name: 'List-Unsubscribe',
+                value: '<https://threadplane.ai/api/unsubscribe?token=g1.abc>',
+              },
+              {
+                name: 'List-Unsubscribe-Post',
+                value: 'List-Unsubscribe=One-Click',
+              },
+              {
+                name: 'X-Threadplane-Job-ID',
+                value: '68add347-ef99-414c-b96f-89475cf4ee26',
+              },
+              {
+                name: 'Bcc',
+                value: 'Brian at Threadplane <brian@threadplane.ai>',
+              },
+              {
+                name: 'Reply-To',
+                value: 'Brian at Threadplane <brian@threadplane.ai>',
+              },
+            ],
+          }),
+        },
+        harness.dependencies
+      )
+    ).resolves.toMatchObject({ applied: true });
+  });
+
+  it('ignores unknown data keys instead of failing the whole event, within a bounded key count', async () => {
+    const harness = webhookHarness();
+
+    await expect(
+      processVerifiedResendWebhook(
+        harness.executor,
+        {
+          providerEventId: 'msg_unknown_key',
+          payload: event('email.delivered', { some_future_field: 'x' }),
+        },
+        harness.dependencies
+      )
+    ).resolves.toMatchObject({ applied: true });
+
+    const tooMany = Object.fromEntries(
+      Array.from({ length: 40 }, (_, index) => [`k${index}`, 'v'])
+    );
+    await expect(
+      processVerifiedResendWebhook(executorWith({}).executor, {
+        providerEventId: 'msg_too_many_keys',
+        payload: event('email.delivered', tooMany),
       })
     ).rejects.toThrow(/Invalid Resend webhook payload/u);
-    expect(harness.runTransaction).not.toHaveBeenCalled();
   });
 
   it('marks only a permanent bounce as a hard-bounce stop', async () => {
