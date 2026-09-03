@@ -1,7 +1,8 @@
 import { isValidElement, type ComponentType, type ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
-import { DocsBreadcrumb } from '../../../../../components/docs/DocsBreadcrumb';
 import { DocsPageHeader } from '../../../../../components/docs/DocsPageHeader';
+import { LibraryMark } from '../../../../../components/docs/LibraryMark';
+import { DocsSearchFooter } from '../../../../../components/docs/DocsSearchFooter';
 import { DocsTOC } from '../../../../../components/docs/DocsTOC';
 import { MdxRenderer } from '../../../../../components/docs/MdxRenderer';
 import { WebsiteWorkspace } from '../../../../../components/workspace/WebsiteWorkspace';
@@ -13,6 +14,7 @@ interface ElementProps {
   requestedMode?: string | null;
   resolution?: { kind?: string; identity?: { availableModes?: string[] } };
   contentBundle?: { runtimeUrl?: string | null };
+  contextTrail?: readonly { label: string; href?: string; icon?: ReactNode }[];
 }
 
 function findElement(
@@ -60,7 +62,6 @@ describe('unified docs workspace route', () => {
       activeLibrary: 'langgraph',
       activeSection: 'guides',
       activeSlug: 'streaming',
-      pageTitle: 'Streaming',
     });
   });
 
@@ -74,13 +75,53 @@ describe('unified docs workspace route', () => {
 
     expect(workspace?.props.resolution).toMatchObject({ kind: 'docs-only' });
     expect(
-      findElement(slot, DocsBreadcrumb as ComponentType<never>)
-    ).toBeTruthy();
-    expect(
       findElement(slot, DocsPageHeader as ComponentType<never>)
     ).toBeTruthy();
     expect(findElement(slot, MdxRenderer as ComponentType<never>)).toBeTruthy();
     expect(findElement(slot, DocsTOC as ComponentType<never>)).toBeTruthy();
+  });
+
+  it('invites a search at the foot of a content page', async () => {
+    const tree = await route('langgraph', 'guides', 'testing');
+    const workspace = findElement(
+      tree,
+      WebsiteWorkspace as ComponentType<never>
+    );
+
+    expect(
+      findElement(
+        workspace?.props.docsSlot,
+        DocsSearchFooter as ComponentType<never>
+      )
+    ).toBeTruthy();
+  });
+
+  it('hands the shell one accurate trail instead of four renditions', async () => {
+    const tree = await route('ag-ui', 'getting-started', 'introduction');
+    const workspace = findElement(
+      tree,
+      WebsiteWorkspace as ComponentType<never>
+    );
+
+    // Docs titles, not manifest identity: the derived label read
+    // "Ag Ui / Getting Started / Overview".
+    const trail = workspace?.props.contextTrail ?? [];
+    expect(trail.map(({ label, href }) => ({ label, href }))).toEqual([
+      { label: 'Docs', href: '/docs' },
+      { label: 'AG-UI', href: '/docs/ag-ui/getting-started/introduction' },
+      { label: 'Getting Started', href: undefined },
+      { label: 'Introduction', href: undefined },
+    ]);
+
+    // Only the library rung carries the mark; the rest are plain labels.
+    trail.forEach((crumb, index) => {
+      if (index === 1) {
+        expect(isValidElement(crumb.icon)).toBe(true);
+        expect((crumb.icon as React.ReactElement).type).toBe(LibraryMark);
+      } else {
+        expect(crumb.icon).toBeUndefined();
+      }
+    });
   });
 
   it('keeps canonical metadata independent of the workspace mode query', async () => {

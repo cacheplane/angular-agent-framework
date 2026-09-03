@@ -14,6 +14,7 @@ import {
   type CockpitManifestEntry,
   type WorkspaceMode,
 } from '@threadplane/cockpit-registry';
+import type { WorkspaceCrumb } from './workspace-contracts';
 import type { NavigationProduct } from '@threadplane/cockpit-shell';
 import { Menu } from 'lucide-react';
 import { ApiMode } from './components/api-mode/api-mode';
@@ -91,6 +92,15 @@ export interface WorkspaceShellProps {
   readonly entry?: CockpitManifestEntry;
   readonly themeControl?: ReactNode;
   readonly headerActions?: ReactNode;
+  /**
+   * An accurate location trail supplied by the host.
+   *
+   * Absent, the header keeps the label derived from the manifest identity —
+   * which is what cockpit wants and what a docs route does not: the manifest's
+   * `toLabel()` casing and `page: 'overview'` made a docs page read
+   * "Ag Ui / Getting Started / Overview".
+   */
+  readonly contextTrail?: readonly WorkspaceCrumb[];
   readonly ariaLabel?: string;
   readonly modeNavigationLabel?: string;
   readonly contextPaneLabel?: string;
@@ -108,6 +118,7 @@ export function WorkspaceShell({
   entry: suppliedEntry,
   themeControl,
   headerActions,
+  contextTrail,
   ariaLabel = 'Workspace shell',
   modeNavigationLabel = 'Workspace modes',
   contextPaneLabel = 'Workspace context',
@@ -397,9 +408,47 @@ export function WorkspaceShell({
             >
               <Menu size={20} strokeWidth={2} aria-hidden="true" />
             </button>
-            <p className="text-[var(--ds-text-muted)] font-mono text-xs truncate">
-              {contextLabel}
-            </p>
+            {contextTrail && contextTrail.length > 0 ? (
+              <nav aria-label="Breadcrumb" data-workspace-trail>
+                <ol data-workspace-trail-list>
+                  {contextTrail.map((crumb, index) => {
+                    const isLast = index === contextTrail.length - 1;
+                    const icon = crumb.icon ? (
+                      <span data-workspace-trail-icon aria-hidden="true">
+                        {crumb.icon}
+                      </span>
+                    ) : null;
+                    return (
+                      <li key={`${crumb.label}-${index}`}>
+                        {crumb.href && !isLast ? (
+                          <a href={crumb.href} data-workspace-trail-link>
+                            {icon}
+                            {crumb.label}
+                          </a>
+                        ) : (
+                          <span
+                            data-workspace-trail-current={isLast || undefined}
+                            aria-current={isLast ? 'page' : undefined}
+                          >
+                            {icon}
+                            {crumb.label}
+                          </span>
+                        )}
+                        {isLast ? null : (
+                          <span data-workspace-trail-separator aria-hidden="true">
+                            /
+                          </span>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ol>
+              </nav>
+            ) : (
+              <p className="text-[var(--ds-text-muted)] font-mono text-xs truncate">
+                {contextLabel}
+              </p>
+            )}
           </div>
           {headerActions ? (
             <div className="shrink-0" data-workspace-header-actions>

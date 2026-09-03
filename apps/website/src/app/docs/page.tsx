@@ -4,12 +4,15 @@ import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
 import { Card } from '../../components/ui/Card';
-import { Pill } from '../../components/ui/Pill';
 import { CopyButton } from '../../components/docs/CopyButton';
 import { DocsControlPlane } from '../../components/docs/DocsControlPlane';
 import { DocsSearch } from '../../components/docs/DocsSearch';
-import { DOCS_INDEX_TITLE } from '../../lib/docs-config';
+import { DocsSearchFooter } from '../../components/docs/DocsSearchFooter';
 import { createPageMetadata } from '../../lib/site-metadata';
+import {
+  getCanonicalWebsiteWorkspaceHref,
+  resolveWorkspacePath,
+} from '@threadplane/cockpit-registry';
 
 export const metadata = createPageMetadata({
   title: 'Documentation — Threadplane',
@@ -18,6 +21,21 @@ export const metadata = createPageMetadata({
   pathname: '/docs',
   type: 'website',
 });
+
+/**
+ * The example the index's Run rail item opens.
+ *
+ * Resolved through the registry rather than written as a path: this
+ * capability publishes a `docsPath`, so `getWorkspaceDestinationPath()` makes
+ * its canonical destination the docs route and `/workspace/langgraph/streaming`
+ * 404s. Today this yields `/docs/langgraph/guides/streaming?mode=run`, and it
+ * stays correct if that docs path moves. A renamed or removed capability
+ * resolves to null, and Run falls back to disabled rather than to a dead link.
+ */
+const DEFAULT_EXAMPLE_RESOLUTION = resolveWorkspacePath('/workspace/langgraph/streaming');
+const DEFAULT_EXAMPLE_RUN_HREF = DEFAULT_EXAMPLE_RESOLUTION
+  ? getCanonicalWebsiteWorkspaceHref(DEFAULT_EXAMPLE_RESOLUTION, 'Run')
+  : undefined;
 
 interface Backend {
   title: string;
@@ -156,7 +174,7 @@ export default function DocsLandingPage() {
         activeLibrary={null}
         activeSection=""
         activeSlug=""
-        pageTitle={DOCS_INDEX_TITLE}
+        runHref={DEFAULT_EXAMPLE_RUN_HREF}
       />
       {/* Deliberately outside the article measure the [slug] route uses — the
        * card grids need their own width, and the prose column would flatten
@@ -310,18 +328,7 @@ export default function DocsLandingPage() {
       </Section>
 
       {/* Search prompt */}
-      <Section surface="tinted" tight ariaLabelledBy="search-prompt-heading">
-        <Container>
-          <div className="docs-index-search-inner">
-            <h2 id="search-prompt-heading" className="docs-index-search-heading">
-              Looking for something specific?
-            </h2>
-            <p className="docs-index-search-copy">
-              Press <Pill variant="neutral">⌘K</Pill> to search the docs.
-            </p>
-          </div>
-        </Container>
-      </Section>
+      <DocsSearchFooter />
       </div>
     </div>
   );

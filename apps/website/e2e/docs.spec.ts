@@ -48,7 +48,7 @@ test.describe('Docs landing page', () => {
 test.describe('Docs slug page', () => {
   const route = '/docs/langgraph/getting-started/introduction';
 
-  test('keeps page scroll fixed when focusing the bottom control-plane action', async ({
+  test('keeps page scroll fixed when focusing the last control-plane nav link', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1024, height: 900 });
@@ -62,14 +62,21 @@ test.describe('Docs slug page', () => {
     const pane = page.locator(
       '[data-cockpit-desktop-navigation] [data-control-plane-pane]',
     );
-    const search = pane.getByRole('button', { name: 'Search docs' });
+    // Search moved to the top of the pane (was the bottom Actions-bar item
+    // this test used to focus), so it can no longer stand in for "something
+    // near the bottom of the scrollable pane". The last link in the Learn
+    // section tree still sits at the bottom of the pane's content and is
+    // rendered on every docs page, so it exercises the same bug class: focus
+    // deep in the pane must scroll the pane, not the window.
+    const lastNavLink = pane.locator('.docs-sidebar-section-link').last();
     await expect(pane).toBeVisible();
+    await expect(lastNavLink).toBeVisible();
     await pane.evaluate((element) => {
       element.scrollTop = 0;
     });
     await page.evaluate(() => window.scrollTo(0, 0));
 
-    await search.focus();
+    await lastNavLink.focus();
 
     await expect.poll(() => pane.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
     expect(await page.evaluate(() => window.scrollY)).toBe(0);
@@ -82,12 +89,14 @@ test.describe('Docs slug page', () => {
     await expect(page.locator('article').first()).toBeVisible();
   });
 
-  test('renders the branded chrome (sidebar mark, page-header eyebrow, prev/next direction)', async ({ page }) => {
+  test('renders the branded chrome (sidebar mark, breadcrumb trail, prev/next direction)', async ({ page }) => {
     await page.goto(route);
     // Sidebar shows the active library's logo mark
     await expect(page.locator('aside img[src="/logos/langgraph.svg"]').first()).toBeVisible();
-    // Branded page header eyebrow
-    await expect(page.getByText(/LangGraph\s+·\s+Getting Started/i).first()).toBeVisible();
+    // The lib · section label moved into the shell's breadcrumb trail.
+    const breadcrumb = page.locator('nav[aria-label="Breadcrumb"]').first();
+    await expect(breadcrumb).toContainText('LangGraph');
+    await expect(breadcrumb).toContainText('Getting Started');
     // Prev/Next: introduction is the first page, so a "Next →" card is present
     await expect(page.getByText('Next →').first()).toBeVisible();
     // Per-page LLM actions trigger

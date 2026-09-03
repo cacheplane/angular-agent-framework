@@ -62,13 +62,6 @@ export interface SpecialDocsPage {
   description: string;
 }
 
-/**
- * What the docs root calls itself in the control plane's Scope card. Shared so
- * the page and the mobile drawer, which resolve the title independently,
- * cannot drift into naming the same page two different things.
- */
-export const DOCS_INDEX_TITLE = 'Overview';
-
 export const specialDocsPages: SpecialDocsPage[] = [
   {
     path: '/docs/choosing-an-adapter',
@@ -515,7 +508,7 @@ export function getLibraryConfig(libraryId: string): DocsLibrary | undefined {
  * Where a library's breadcrumb rung points.
  *
  * There is no `/docs/<library>` index route, so the rung links the library's
- * introduction page instead. Both the visible {@link DocsBreadcrumb} and the
+ * introduction page instead. Both the shell header's `contextTrail` and the
  * BreadcrumbList structured data on the same page call this, because Google
  * expects the markup to match what the user sees — deriving both from one
  * function is what makes that true by construction rather than by comment.

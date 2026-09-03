@@ -45,7 +45,6 @@ export default function ChoosingAnAdapterPage() {
         activeLibrary={null}
         activeSection=""
         activeSlug=""
-        pageTitle={PAGE_TITLE}
       />
       <div className="flex-1 flex min-w-0 docs-shell-body">
         <div className="flex-1 min-w-0">
