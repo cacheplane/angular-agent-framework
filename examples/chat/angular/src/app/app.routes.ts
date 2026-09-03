@@ -32,6 +32,10 @@ function modeMatcher(modeName: string): UrlMatcher {
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'embed' },
   {
+    path: 'hero',
+    loadComponent: () => import('./hero/hero-mode.component').then((m) => m.HeroMode),
+  },
+  {
     path: '',
     loadComponent: () =>
       import('./shell/demo-shell.component').then((m) => m.DemoShell),
