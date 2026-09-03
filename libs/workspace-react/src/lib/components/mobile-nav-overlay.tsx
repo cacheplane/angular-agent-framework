@@ -327,7 +327,10 @@ export function MobileNavOverlay({
           'a[href], button:not(:disabled), [tabindex]:not([tabindex="-1"])'
         ) ?? []
       );
-    focusable()[0]?.focus();
+    // A utility panel mounting in the same commit that opens the drawer
+    // focuses its own heading first, and child effects run before this one.
+    // Claiming the first tabbable control unconditionally would undo that.
+    if (!dialog?.contains(document.activeElement)) focusable()[0]?.focus();
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
