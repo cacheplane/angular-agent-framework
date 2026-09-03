@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { validateRuntimeParentOrigins } from '@threadplane/cockpit-runtime-bridge';
 import {
   cockpitManifest,
@@ -30,11 +31,12 @@ const EXAMPLES_URL =
   process.env['EXAMPLES_URL'] ?? 'https://examples.threadplane.ai';
 const DEMO_URL = process.env['DEMO_URL'] ?? 'https://demo.threadplane.ai';
 const WEBSITE_URL = process.env['WEBSITE_URL'] ?? 'https://threadplane.ai';
+// Playwright transpiles specs to CJS, so `import.meta.url` here compiles to a
+// `require` the ESM-loaded output cannot resolve and the whole file fails to
+// load. `__dirname` is what the emitted module actually has. Don't "modernise"
+// this back to import.meta.url.
 const runtimeParentOriginSource = JSON.parse(
-  readFileSync(
-    new URL('../../../runtime-parent-origins.json', import.meta.url),
-    'utf8'
-  )
+  readFileSync(join(__dirname, '../../../runtime-parent-origins.json'), 'utf8')
 ) as { readonly baseOrigins?: unknown };
 const runtimeParentPreviewOrigins = (
   process.env['RUNTIME_PARENT_PREVIEW_ORIGINS'] ?? ''
