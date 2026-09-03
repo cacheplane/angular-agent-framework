@@ -1216,3 +1216,42 @@
   gap: 12px;
   flex-wrap: wrap;
 }
+
+/* Privacy policy — app/privacy/page.tsx */
+.privacy-inner {
+  max-width: 720px;
+}
+.privacy-eyebrow {
+  margin-bottom: 16px;
+}
+.privacy-h1 {
+  font-family: var(--font-garamond);
+  font-size: var(--text-h1);
+  line-height: var(--text-h1--line-height);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+  margin-bottom: 16px;
+  letter-spacing: -0.02em;
+}
+.privacy-h2 {
+  font-family: var(--font-garamond);
+  font-size: var(--text-h2);
+  color: var(--color-text-primary);
+  margin: 0;
+  margin-top: 32px;
+  margin-bottom: 12px;
+}
+.privacy-body {
+  font-family: var(--font-inter);
+  font-size: var(--text-body-lg);
+  line-height: var(--text-body-lg--line-height);
+  color: var(--color-text-secondary);
+  margin: 0;
+  margin-bottom: 16px;
+  max-width: 60ch;
+}
+.privacy-link {
+  color: var(--color-text-primary);
+  text-decoration: underline;
+}

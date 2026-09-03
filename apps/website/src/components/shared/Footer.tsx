@@ -307,13 +307,20 @@ export function Footer({ formPolicy }: { formPolicy: PublicFormPolicy }) {
         {/* Bottom bar */}
         <div className="mt-12 pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs footer-bottom-bar">
           <span>&copy; {new Date().getFullYear()} Threadplane. All rights reserved.</span>
-          <span>
+          <span className="footer-legal-links">
             <Link
               href="/pricing"
               className="transition-colors footer-legal-link"
               onClick={() => trackFooterCta('Pricing Bottom', '/pricing')}
             >
               Pricing
+            </Link>
+            <Link
+              href="/privacy"
+              className="transition-colors footer-legal-link"
+              onClick={() => trackFooterCta('Privacy Bottom', '/privacy')}
+            >
+              Privacy
             </Link>
           </span>
         </div>

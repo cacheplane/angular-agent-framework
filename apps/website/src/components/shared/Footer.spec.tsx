@@ -127,3 +127,13 @@ describe('Footer newsletter growth policy', () => {
     expect(screen.queryByText(/subscribed/i)).toBeNull();
   });
 });
+
+describe('Footer legal navigation', () => {
+  it('links the canonical privacy policy from the bottom bar', () => {
+    render(<Footer formPolicy={formPolicy} />);
+
+    expect(
+      screen.getByRole('link', { name: /privacy/i }).getAttribute('href')
+    ).toBe('/privacy');
+  });
+});
