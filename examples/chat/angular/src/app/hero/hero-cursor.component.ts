@@ -30,10 +30,10 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
         pointer-events: none;
         opacity: 0;
         transition: transform 600ms cubic-bezier(.2,.7,.2,1), opacity 200ms ease;
-        will-change: transform;
       }
       :host([data-visible='true']) {
         opacity: 1;
+        will-change: transform;
       }
       :host([data-pressed='true']) svg {
         transform: scale(.85);

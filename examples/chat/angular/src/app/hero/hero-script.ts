@@ -30,9 +30,11 @@ export interface ScriptClock {
   sleep(ms: number): Promise<void>;
 }
 
-export type HeroScriptState = 'idle' | 'waiting' | 'running' | 'paused' | 'done' | 'stopped';
+export type HeroScriptState = 'idle' | 'waiting' | 'running' | 'paused' | 'done' | 'stopped' | 'error';
 
 export const HOLD_AFTER_DONE_MS = 8000;
+/** How long a single waitFor() may poll before the run is declared failed. */
+export const WAIT_TIMEOUT_MS = 30_000;
 const POLL_MS = 50;
 const SETTLE_MS = 400;
 
@@ -41,8 +43,13 @@ const realClock: ScriptClock = { sleep: (ms) => new Promise((r) => setTimeout(r,
 export class HeroScriptRunner {
   readonly state = signal<HeroScriptState>('idle');
   private visible = false;
-  private stopped = false;
-  private wake: (() => void) | null = null;
+  /**
+   * Generation token. Every start() takes a fresh one and stop() burns the
+   * current one, so a run suspended in a sleep or behind the visibility gate
+   * cannot resume and drive the host after it has been superseded.
+   */
+  private gen = 0;
+  private readonly wakes = new Set<() => void>();
 
   constructor(private readonly host: HeroScriptHost, private readonly clock: ScriptClock = realClock) {}
 
@@ -50,85 +57,128 @@ export class HeroScriptRunner {
     this.visible = v;
     if (v) {
       if (this.state() === 'paused') this.state.set('running');
-      this.wake?.();
+      this.wakeAll();
     } else if (this.state() === 'running') {
       this.state.set('paused');
     }
   }
 
   stop(): void {
-    this.stopped = true;
+    this.gen += 1;
     this.state.set('stopped');
-    this.wake?.();
+    this.wakeAll();
   }
 
-  /** Runs one full walkthrough. Resolves when done or stopped. */
+  /** Runs one full walkthrough. Resolves when done, stopped or failed. */
   async start(): Promise<void> {
-    this.stopped = false;
+    const g = ++this.gen;
     this.state.set('waiting');
-    await this.gate();
-    if (this.stopped) return;
-    this.state.set('running');
+    try {
+      await this.gate(g);
+      if (g !== this.gen) return;
+      this.state.set('running');
 
-    await this.step(() => this.host.moveCursor('composer'));
-    await this.step(() => this.host.typeInto(HERO_PROMPTS[0]));
-    await this.step(() => this.host.moveCursor('send'));
-    await this.step(() => this.host.send());
-    await this.waitFor(() => this.host.hasInterrupt());
-    await this.step(() => this.host.moveCursor('accept'));
-    await this.step(() => this.host.acceptInterrupt());
-    await this.waitFor(() => !this.host.isRunning() && !this.host.hasInterrupt());
-    await this.step(() => this.clock.sleep(SETTLE_MS));
-    await this.step(() => this.host.moveCursor('composer'));
-    await this.step(() => this.host.typeInto(HERO_PROMPTS[1]));
-    await this.step(() => this.host.moveCursor('send'));
-    await this.step(() => this.host.send());
-    await this.waitFor(() => !this.host.isRunning());
-    if (this.stopped) return;
-    this.state.set('done');
+      await this.step(g, () => this.host.moveCursor('composer'));
+      await this.step(g, () => this.host.typeInto(HERO_PROMPTS[0]));
+      await this.step(g, () => this.host.moveCursor('send'));
+      await this.step(g, () => this.host.send());
+      if (!(await this.waitFor(g, () => this.host.hasInterrupt()))) return;
+      await this.step(g, () => this.host.moveCursor('accept'));
+      await this.step(g, () => this.host.acceptInterrupt());
+      if (!(await this.waitFor(g, () => !this.host.isRunning() && !this.host.hasInterrupt()))) return;
+      if (!this.host.reducedMotion) await this.step(g, () => this.clock.sleep(SETTLE_MS));
+      await this.step(g, () => this.host.moveCursor('composer'));
+      await this.step(g, () => this.host.typeInto(HERO_PROMPTS[1]));
+      await this.step(g, () => this.host.moveCursor('send'));
+      await this.step(g, () => this.host.send());
+      if (!(await this.waitFor(g, () => !this.host.isRunning()))) return;
+      if (g !== this.gen) return;
+      this.state.set('done');
+    } catch (err) {
+      console.error('hero script failed', err);
+      if (g === this.gen) this.state.set('error');
+    }
   }
 
   /**
    * Loops start() with a hold and a fresh replay between passes until stopped.
-   * Note: start() resets `stopped = false` at its top, so a stop() that races
-   * with the very beginning of a new start() call can be lost. Accepted
-   * tradeoff — the loop is only ever driven by this class's own callers.
+   * A failed pass (or a failing replay) is retried once after the hold; a
+   * second consecutive failure ends the loop rather than spinning forever.
    */
   async loop(): Promise<void> {
-    while (!this.stopped) {
+    let failures = 0;
+    for (;;) {
       await this.start();
-      if (this.stopped) return;
+      if (this.state() === 'stopped') return;
+      if (this.state() === 'error') {
+        failures += 1;
+        if (failures > 1) {
+          this.state.set('stopped');
+          return;
+        }
+        await this.clock.sleep(HOLD_AFTER_DONE_MS);
+        if (this.state() === 'stopped') return;
+        continue;
+      }
+
       await this.clock.sleep(HOLD_AFTER_DONE_MS);
-      if (this.stopped) return;
-      await this.host.restartReplay();
+      if (this.state() === 'stopped') return;
+      try {
+        await this.host.restartReplay();
+        failures = 0;
+      } catch (err) {
+        console.error('hero script replay restart failed', err);
+        failures += 1;
+        if (failures > 1) {
+          this.state.set('stopped');
+          return;
+        }
+        await this.clock.sleep(HOLD_AFTER_DONE_MS);
+        if (this.state() === 'stopped') return;
+      }
     }
   }
 
-  private async step(fn: () => Promise<void>): Promise<void> {
-    if (this.stopped) return;
-    await this.gate();
-    if (this.stopped) return;
+  private async step(g: number, fn: () => Promise<void>): Promise<void> {
+    if (g !== this.gen) return;
+    await this.gate(g);
+    if (g !== this.gen) return;
     await fn();
   }
 
-  private async waitFor(pred: () => boolean): Promise<void> {
-    while (!this.stopped) {
-      await this.gate();
-      if (this.stopped) return;
-      if (pred()) return;
+  /**
+   * Polls until `pred` holds. Returns false when the run should end — either it
+   * was superseded, or the condition never arrived within WAIT_TIMEOUT_MS.
+   */
+  private async waitFor(g: number, pred: () => boolean): Promise<boolean> {
+    let elapsed = 0;
+    while (g === this.gen) {
+      await this.gate(g);
+      if (g !== this.gen) return false;
+      if (pred()) return true;
+      if (elapsed >= WAIT_TIMEOUT_MS) {
+        this.state.set('error');
+        return false;
+      }
       await this.clock.sleep(POLL_MS);
-      await new Promise((r) => setTimeout(r, 0)); // yield a macrotask even with a zero-delay clock
+      elapsed += POLL_MS;
     }
+    return false;
   }
 
   /** Blocks while hidden. */
-  private gate(): Promise<void> {
-    if (this.visible || this.stopped) return Promise.resolve();
+  private gate(g: number): Promise<void> {
+    if (this.visible || g !== this.gen) return Promise.resolve();
     return new Promise((resolve) => {
-      this.wake = () => {
-        this.wake = null;
+      const wake = () => {
+        this.wakes.delete(wake);
         resolve();
       };
+      this.wakes.add(wake);
     });
+  }
+
+  private wakeAll(): void {
+    for (const wake of [...this.wakes]) wake();
   }
 }

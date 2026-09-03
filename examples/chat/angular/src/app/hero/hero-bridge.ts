@@ -10,6 +10,14 @@ export const HERO_PARENT_ORIGINS: readonly string[] = [
   'http://127.0.0.1:4308',
 ];
 
+/** Preview deployments of the website: `https://<slug>.vercel.app`, one label deep. */
+const VERCEL_PREVIEW_ORIGIN = /^https:\/\/[a-z0-9-]+\.vercel\.app$/;
+
+/** True for the website's own origins and for its Vercel preview deployments. */
+export function isAllowedParentOrigin(origin: string): boolean {
+  return HERO_PARENT_ORIGINS.includes(origin) || VERCEL_PREVIEW_ORIGIN.test(origin);
+}
+
 export interface HeroBridge {
   postState(state: HeroFrameState): void;
   onVisibility(cb: (visible: boolean) => void): () => void;
@@ -31,7 +39,10 @@ function originOf(url: string): string | null {
 
 export function createHeroBridge(env: BridgeEnv): HeroBridge {
   const parentOrigin = originOf(env.referrer);
-  const allowed = parentOrigin !== null && HERO_PARENT_ORIGINS.includes(parentOrigin);
+  const allowed = parentOrigin !== null && isAllowedParentOrigin(parentOrigin);
+  if (!allowed && env.parent !== env.self) {
+    console.warn('[hero] parent origin not allowlisted; frame state will not be posted', parentOrigin);
+  }
   return {
     postState(state) {
       if (!allowed || env.parent === env.self) return;
@@ -39,7 +50,8 @@ export function createHeroBridge(env: BridgeEnv): HeroBridge {
     },
     onVisibility(cb) {
       const handler = (e: MessageEvent) => {
-        if (!HERO_PARENT_ORIGINS.includes(e.origin)) return;
+        if (e.source !== env.parent) return;
+        if (!isAllowedParentOrigin(e.origin)) return;
         const d = e.data as { type?: string; visible?: unknown } | null;
         if (!d || d.type !== HERO_MESSAGE_TYPE || typeof d.visible !== 'boolean') return;
         cb(d.visible);
