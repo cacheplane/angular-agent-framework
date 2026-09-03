@@ -295,7 +295,7 @@ export class HeroMode implements HeroScriptHost {
     this.runner?.stop();
     this.runner = new HeroScriptRunner(this);
     this.runner.setVisible(this.visible());
-    this.bridge.postState('scripted');
+    this.bridge.postState(this.visible() ? 'scripted' : 'paused');
     void this.runner.loop();
   }
 
@@ -323,11 +323,24 @@ export class HeroMode implements HeroScriptHost {
     if (this.mode() === 'live') return;
     this.runner?.stop();
     this.runner = null;
-    void this.replayAgent.stop();
+    this.replayAgent.stop().catch((err) => console.warn('[hero] replay stop failed', err));
+    this.clearComposer();
     this.cursorVisible.set(false);
     this.liveThreadId.set(null);
     this.mode.set('live');
     this.bridge.postState('live');
+  }
+
+  /**
+   * A takeover mid-script can land while the walkthrough has half-typed a
+   * prompt into the composer. Left alone, that text survives the swap to the
+   * live agent and looks like the visitor's own (unsent) words.
+   */
+  private clearComposer(): void {
+    const textarea = composerOf(this.surface());
+    if (!textarea) return;
+    textarea.value = '';
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
   replay(event?: Event): void {

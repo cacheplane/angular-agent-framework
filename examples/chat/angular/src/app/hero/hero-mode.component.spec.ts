@@ -123,6 +123,32 @@ describe('HeroMode', () => {
     fx.detectChanges();
     expect(fx.componentInstance.mode()).toBe('live');
   });
+
+  it('a rejecting replay stop does not throw and takeover still lands live', async () => {
+    const replayAgent = fx.componentInstance.activeAgent();
+    (replayAgent as { stop: () => Promise<void> }).stop = () => Promise.reject(new Error('x'));
+
+    expect(() => fx.componentInstance.takeControl()).not.toThrow();
+    fx.detectChanges();
+    // Let the rejected promise's .catch() microtask settle.
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(fx.componentInstance.mode()).toBe('live');
+  });
+
+  it('clears the half-typed composer on takeover', async () => {
+    const el = fx.nativeElement as HTMLElement;
+    await fx.componentInstance.typeInto('hello');
+    fx.detectChanges();
+
+    fx.componentInstance.takeControl();
+    fx.detectChanges();
+
+    const textarea = el.querySelector<HTMLTextAreaElement>('textarea[aria-label="Type a message"]')!;
+    expect(textarea.value).toBe('');
+    expect(el.querySelector<HTMLButtonElement>('button[aria-label="Send message"]')!.disabled).toBe(true);
+  });
 });
 
 describe('HeroMode visibility', () => {
@@ -193,5 +219,39 @@ describe('HeroMode visibility', () => {
     setDocumentHidden(false);
     onVisible(false);
     expect(fx.componentInstance.visible()).toBe(false);
+  });
+});
+
+describe('HeroMode embedded initial frame state', () => {
+  it('does not announce scripted before the parent confirms visibility', async () => {
+    const originalParent = Object.getOwnPropertyDescriptor(window, 'parent');
+    Object.defineProperty(window, 'parent', { configurable: true, value: {} });
+    try {
+      HeroMode.disableAutoBootForTests();
+      TestBed.configureTestingModule({ imports: [HeroMode] });
+      TestBed.overrideComponent(HeroMode, {
+        set: {
+          providers: HeroMode.providersForTest(
+            new HeroReplayTransport({ sleep: async () => void 0 }, async () => recording),
+          ),
+        },
+      });
+      const fx = TestBed.createComponent(HeroMode);
+      const states: string[] = [];
+      const bridge: HeroBridge = {
+        postState: (s) => states.push(s),
+        onVisibility: () => () => void 0,
+      };
+      fx.componentInstance.bridge = bridge;
+      fx.detectChanges();
+      await fx.componentInstance.boot();
+      fx.detectChanges();
+
+      expect(states).toEqual(['ready', 'paused']);
+      expect(states).not.toContain('scripted');
+    } finally {
+      HeroMode.enableAutoBoot();
+      if (originalParent) Object.defineProperty(window, 'parent', originalParent);
+    }
   });
 });
