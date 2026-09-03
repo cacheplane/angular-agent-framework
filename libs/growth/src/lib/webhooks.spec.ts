@@ -312,6 +312,41 @@ describe('processVerifiedResendWebhook', () => {
     }
   });
 
+  it('accepts the documented Resend payload shape: message_id present and null optional ids', async () => {
+    // Resend's wire payload gained `message_id` after SDK 6.10 pinned its
+    // types, and transactional mail carries null broadcast/template ids.
+    // Both must parse, or every real event answers 400 and delivery state
+    // never leaves "submitted".
+    const harness = webhookHarness();
+
+    await expect(
+      processVerifiedResendWebhook(
+        harness.executor,
+        {
+          providerEventId: 'msg_documented_shape',
+          payload: event('email.delivered', {
+            broadcast_id: null,
+            template_id: null,
+            message_id: '<111-222-333@email.example.com>',
+          }),
+        },
+        harness.dependencies
+      )
+    ).resolves.toMatchObject({ applied: true });
+  });
+
+  it('still rejects unknown data keys so the closed schema stays enforced', async () => {
+    const harness = executorWith({});
+
+    await expect(
+      processVerifiedResendWebhook(harness.executor, {
+        providerEventId: 'msg_unknown_key',
+        payload: event('email.delivered', { headers: [] }),
+      })
+    ).rejects.toThrow(/Invalid Resend webhook payload/u);
+    expect(harness.runTransaction).not.toHaveBeenCalled();
+  });
+
   it('marks only a permanent bounce as a hard-bounce stop', async () => {
     const hard = webhookHarness();
     await processVerifiedResendWebhook(
