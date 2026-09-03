@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { vi, describe, expect, it } from 'vitest';
+
+vi.mock('server-only', () => ({}));
 import { LIBRARY_HREF } from '../app/solutions/[slug]/page';
 import { SOLUTIONS } from './solutions-data';
 

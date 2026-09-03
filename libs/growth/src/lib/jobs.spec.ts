@@ -151,6 +151,9 @@ describe('campaign enrollment', () => {
         expect(sql).toMatch(
           /stop\.occurred_at\s*>=\s*c\.outreach_approved_at/u
         );
+        expect(sql).toMatch(
+          /not exists \([\s\S]*from growth_jobs legacy[\s\S]*legacy\.contact_id = c\.id[\s\S]*legacy\.kind = 'legacy'/u
+        );
         expect(sql).toMatch(/campaign\.enrolled:v1/u);
         expect(sql).toMatch(/'approval_event_key',\s*e\.approval_event_key/u);
         expect(sql).toMatch(/'approval_kind',\s*e\.approval_kind/u);

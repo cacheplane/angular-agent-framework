@@ -186,7 +186,7 @@ describe('growth lifecycle project ownership', () => {
     });
   }
 
-  it('runs exactly the three database/operator CLI suites in its dedicated target', async () => {
+  it('runs exactly the four database/operator CLI suites in its dedicated target', async () => {
     const project = JSON.parse(
       await readFile('libs/growth/project.json', 'utf8')
     );
@@ -197,6 +197,7 @@ describe('growth lifecycle project ownership', () => {
     );
     assert.deepEqual(listedOperatorCliTestFiles(), [
       'scripts/apply-migrations.spec.ts',
+      'scripts/cancel-resend-lifecycle.spec.ts',
       'scripts/growth-control.spec.ts',
       'scripts/import-resend-lifecycle.spec.ts',
     ]);

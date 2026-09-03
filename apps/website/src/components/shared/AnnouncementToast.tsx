@@ -1,5 +1,11 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import type { PublicFormPolicy } from '../../lib/growth/form-policy';
+import {
+  FORM_POLICY_REFRESH_MESSAGE,
+  growthFormRequestSnapshot,
+  type GrowthFormRequestSnapshot,
+} from '../../lib/growth/form-client';
 import { analyticsEvents } from '../../lib/analytics/events';
 import {
   track,
@@ -15,14 +21,23 @@ const ANNOUNCEMENT_DATE = '2026-04-07';
 const STORAGE_KEY = `dismissed-announcement-${ANNOUNCEMENT_DATE}`;
 const DELAY_MS = 30_000;
 
-type Step = 'cta' | 'form' | 'sent';
+type Step = 'cta' | 'form' | 'sent' | 'stale';
 
-export function AnnouncementToast() {
+export function AnnouncementToast({
+  formPolicy,
+}: {
+  formPolicy: PublicFormPolicy;
+}) {
   const [visible, setVisible] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState<Step>('cta');
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const submissionSnapshot = useRef<GrowthFormRequestSnapshot<{
+    email: string;
+    paper: 'overview';
+  }> | null>(null);
+  const disclosureId = 'toast-whitepaper-growth-disclosure';
 
   const [timerDone, setTimerDone] = useState(false);
   const [scrolledEnough, setScrolledEnough] = useState(false);
@@ -94,11 +109,31 @@ export function AnnouncementToast() {
       paper: 'overview',
     });
     try {
-      await fetch('/api/whitepaper-signup', {
+      const snapshot = growthFormRequestSnapshot(submissionSnapshot.current, {
+        email,
+        paper: 'overview' as const,
+      });
+      submissionSnapshot.current = snapshot;
+      const response = await fetch('/api/whitepaper-signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({
+          ...snapshot.facts,
+          acquisition_session_id: snapshot.acquisition_session_id,
+          submission_id: snapshot.submission_id,
+          policy_version: formPolicy.version,
+        }),
       });
+      if (response.status === 409) {
+        submissionSnapshot.current = null;
+        setStep('stale');
+        setSubmitting(false);
+        return;
+      }
+      if (response.status >= 400 && response.status < 500) {
+        submissionSnapshot.current = null;
+      }
+      submissionSnapshot.current = null;
       track(analyticsEvents.marketingWhitepaperSignupSuccess, {
         surface: 'toast',
         source_section: 'announcement-toast',
@@ -192,12 +227,16 @@ export function AnnouncementToast() {
             autoFocus
             className="toast-input"
           />
+          <p id={disclosureId} className="toast-disclosure">
+            {formPolicy.disclosures.whitepaper}
+          </p>
           <div className="toast-button-row">
             <Button
               type="submit"
               variant="primary"
               size="md"
               disabled={submitting || !email}
+              aria-describedby={disclosureId}
             >
               {submitting ? 'Sending...' : '↓ Send me the guide'}
             </Button>
@@ -218,6 +257,22 @@ export function AnnouncementToast() {
             or download directly
           </a>
         </form>
+      )}
+
+      {step === 'stale' && (
+        <div className="toast-mt-section" role="alert">
+          <p className="toast-disclosure">{FORM_POLICY_REFRESH_MESSAGE}</p>
+          <div className="toast-button-row">
+            <Button
+              type="button"
+              variant="primary"
+              size="md"
+              onClick={() => window.location.reload()}
+            >
+              Refresh page
+            </Button>
+          </div>
+        </div>
       )}
 
       {step === 'sent' && (

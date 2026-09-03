@@ -123,8 +123,11 @@ describe('Cockpit surface retirement', () => {
     expect(files).toContain('project.json');
     expect(files).toContain('vite.config.mts');
     expect(files).toContain('.env.example');
-    expect(files).toContain('emails/newsletter-welcome.ts');
-    expect(files).toContain('lib/resend.ts');
+    // Nested files outside src/, proving the scan descends past the top level.
+    // The previous canaries lived in emails/ and lib/resend.ts, both removed
+    // with the legacy email pipeline.
+    expect(files).toContain('content/CLAUDE.md.template');
+    expect(files).toContain('lib/design-tokens.ts');
     expect(files).toContain('public/CLAUDE.md');
     expect(files).toContain('scripts/computed-style-snapshot.js');
     expect(files).not.toContain('next.config.spec.ts');

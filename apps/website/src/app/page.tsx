@@ -18,6 +18,7 @@ import { RecentArticles } from '../components/landing/RecentArticles';
 import { Section } from '../components/ui/Section';
 import { Container } from '../components/ui/Container';
 import { createPageMetadata, LONG_SUBHEAD, PRIMARY_TAGLINE } from '../lib/site-metadata';
+import { getFormPolicy } from '../lib/growth/form-policy';
 
 export const metadata = createPageMetadata({
   title: PRIMARY_TAGLINE,
@@ -27,6 +28,7 @@ export const metadata = createPageMetadata({
 });
 
 export default async function HomePage() {
+  const formPolicy = getFormPolicy();
   const [streamPanes, renderPanes, shipPanes, approvePanes] = await Promise.all(
     (['stream', 'render', 'ship', 'approve'] as const).map((key) =>
       buildPanes(SECTION_MEDIA[key], SECTION_MEDIA[key].video?.url ?? ''),
@@ -134,7 +136,7 @@ export default async function HomePage() {
       />
 
       <PilotBlock />
-      <WhitePaperBlock />
+      <WhitePaperBlock formPolicy={formPolicy} />
       <Promises />
       <ProofStrip />
       <HomeFAQ />
