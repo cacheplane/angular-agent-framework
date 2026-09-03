@@ -120,6 +120,44 @@ describe('Website Playwright configuration', () => {
     expect(shell).toContain("url.searchParams.has('cockpit_cap')");
   });
 
+  it('seeds the runtime origin bypass only when both the origin and the examples secret are set', () => {
+    const base = createWebsitePlaywrightConfig({
+      BASE_URL: 'https://threadplane-pr-7-cacheplane.vercel.app',
+      VERCEL_AUTOMATION_BYPASS_SECRET: 'website-secret',
+    });
+    expect(base.globalSetup).toBeUndefined();
+    expect(base.use?.storageState).toBeUndefined();
+
+    const originOnly = createWebsitePlaywrightConfig({
+      BASE_URL: 'https://threadplane-pr-7-cacheplane.vercel.app',
+      VERCEL_AUTOMATION_BYPASS_SECRET: 'website-secret',
+      RUNTIME_BYPASS_ORIGIN:
+        'https://threadplane-examples-pr-7-cacheplane.vercel.app',
+    });
+    expect(originOnly.globalSetup).toBeUndefined();
+
+    const both = createWebsitePlaywrightConfig({
+      BASE_URL: 'https://threadplane-pr-7-cacheplane.vercel.app',
+      VERCEL_AUTOMATION_BYPASS_SECRET: 'website-secret',
+      VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET: 'examples-secret',
+      RUNTIME_BYPASS_ORIGIN:
+        'https://threadplane-examples-pr-7-cacheplane.vercel.app',
+    });
+    expect(both.globalSetup).toMatch(/runtime-bypass-setup\.ts$/);
+    expect(both.use?.storageState).toMatch(
+      /dist\/apps\/website\/e2e-runtime-bypass\/storage-state\.json$/
+    );
+    // The examples secret must never ride the global header, which reaches
+    // the Website origin on every request.
+    expect(JSON.stringify(both.use?.extraHTTPHeaders)).not.toContain(
+      'examples-secret'
+    );
+    expect(both.use?.extraHTTPHeaders).toEqual({
+      'x-vercel-protection-bypass': 'website-secret',
+      'x-vercel-set-bypass-cookie': 'true',
+    });
+  });
+
   it('starts Website, all migrated runtime apps under custom-runtime E2E, and the fixture', () => {
     const config = createWebsitePlaywrightConfig({});
 
