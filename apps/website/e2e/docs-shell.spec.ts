@@ -33,9 +33,32 @@ test.describe('DocsTOC rail', () => {
     // Nothing is active at the top: the first heading is below the reading line.
     await expect(page.locator('.docs-toc-link[data-active]')).toHaveCount(0);
 
+    // The reading line lands a heading as "active" once its top crosses
+    // scrollRoot.top + scrollRoot.clientHeight * 0.25 (see DocsTOC.tsx). A
+    // hard-coded `scrollTop: 4000` broke the last time this page's content
+    // grew (a callout pushed everything below it further down the article),
+    // so compute the scroll offset that puts a specific heading right at
+    // that line instead of relying on a pixel constant that content edits
+    // keep invalidating.
+    const targetHeadingId = 'connect-with-angular';
     const articleScroller = page.locator('.docs-workspace-article');
-    await articleScroller.evaluate((element) =>
-      element.scrollTo({ top: 4000, behavior: 'instant' }),
+    const scrollTop = await articleScroller.evaluate((scrollRoot, headingId) => {
+      const heading = document.getElementById(headingId);
+      if (!heading) throw new Error(`missing heading #${headingId}`);
+      // Heading's distance from the top of the scroller's content, i.e.
+      // where its rect top would be if scrollTop were 0.
+      const headingTopAtZero =
+        heading.getBoundingClientRect().top -
+        scrollRoot.getBoundingClientRect().top +
+        scrollRoot.scrollTop;
+      const line = scrollRoot.clientHeight * 0.25;
+      // A couple of extra pixels so the heading's top is unambiguously at
+      // or above the line, matching DocsTOC's `<=` comparison.
+      return Math.max(0, Math.round(headingTopAtZero - line + 2));
+    }, targetHeadingId);
+    await articleScroller.evaluate(
+      (element, top) => element.scrollTo({ top, behavior: 'instant' }),
+      scrollTop,
     );
     await expect
       .poll(() =>
@@ -43,7 +66,7 @@ test.describe('DocsTOC rail', () => {
           .locator('.docs-toc-link[data-active]')
           .evaluateAll((els) => els.map((e) => e.getAttribute('href'))),
       )
-      .toEqual(['#connect-with-angular']);
+      .toEqual([`#${targetHeadingId}`]);
 
     // ...and it follows the scroll rather than latching on the first match.
     await articleScroller.evaluate((element) =>
