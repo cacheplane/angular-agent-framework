@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { docsConfig, specialDocsPages, type LibraryId } from '../../lib/docs-config';
 import { analyticsEvents } from '../../lib/analytics/events';
 import { track } from '../../lib/analytics/client';
+import { searchTokens } from '../../lib/docs-search-tokens';
 
 interface SearchablePage {
   title: string;
@@ -13,15 +14,6 @@ interface SearchablePage {
   section?: string;
   library?: LibraryId;
   libraryTitle: string;
-}
-
-const SEARCH_STOP_WORDS = new Set(['a', 'an', 'and', 'for', 'in', 'of', 'on', 'or', 'the', 'to', 'with']);
-
-function searchTokens(value: string): string[] {
-  return value
-    .toLowerCase()
-    .split(/[^a-z0-9@.-]+/)
-    .filter((token) => token.length > 0 && !SEARCH_STOP_WORDS.has(token));
 }
 
 function searchableText(page: SearchablePage): string {
