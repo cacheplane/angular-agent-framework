@@ -138,6 +138,49 @@ describe('indexDocSections edge cases', () => {
     expect(all).not.toContain('title=');
   });
 
+  it('keeps underscores inside identifiers while unwrapping emphasis', () => {
+    const [section] = indexDocSections('# T\n\nUse **TEXT_MESSAGE_CONTENT** with _care_.\n');
+    expect(section.text).toContain('TEXT_MESSAGE_CONTENT');
+    expect(section.text).toContain('care');
+    expect(section.text).not.toContain('**');
+    expect(section.text).not.toContain('_care_');
+  });
+
+  it('indexes link text but not link targets', () => {
+    const [section] = indexDocSections('# T\n\nSee [Installation](/docs/langgraph/install) first.\n');
+    expect(section.text).toContain('Installation');
+    expect(section.text).not.toContain('/docs/langgraph/install');
+  });
+
+  it('indexes image alt text but not the image target', () => {
+    const [section] = indexDocSections('# T\n\n![Architecture diagram](/img/arch.png) shows the flow.\n');
+    expect(section.text).toContain('Architecture diagram');
+    expect(section.text).not.toContain('/img/arch.png');
+  });
+
+  it('unwraps single- and double-asterisk emphasis', () => {
+    const [section] = indexDocSections('# T\n\nThis is *italic* and **bold** text.\n');
+    expect(section.text).toContain('italic');
+    expect(section.text).toContain('bold');
+    expect(section.text).not.toContain('*');
+  });
+
+  it('unwraps double-underscore emphasis', () => {
+    const [section] = indexDocSections('# T\n\nThis is __strongly__ stated.\n');
+    expect(section.text).toContain('strongly');
+    expect(section.text).not.toContain('__');
+  });
+
+  it('leaves multiple links on one line without runaway matching', () => {
+    const [section] = indexDocSections(
+      '# T\n\nSee [Installation](/docs/a) and [Quickstart](/docs/b) both.\n'
+    );
+    expect(section.text).toContain('Installation');
+    expect(section.text).toContain('Quickstart');
+    expect(section.text).not.toContain('/docs/a');
+    expect(section.text).not.toContain('/docs/b');
+  });
+
   it('drops empty sections produced by a heading with no body text', () => {
     const source = '# Title\n\n## Empty section\n\n## Next section\n\nSome text.\n';
     const sections = indexDocSections(source);

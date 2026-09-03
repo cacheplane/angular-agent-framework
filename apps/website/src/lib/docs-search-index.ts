@@ -23,6 +23,21 @@ function toSearchableText(source: string): string {
     })
     // Closing component tags: drop.
     .replace(/<\/[A-Z][\w.]*>/g, ' ')
+    // Markdown links and images: keep the text/alt, drop the target. The target is a
+    // URL, not content — indexing it makes "github" or "docs" match nearly every page
+    // that happens to link somewhere, and a raw `[text](url)` reads as broken in a
+    // snippet. Non-greedy character classes (no nested `[`/`(`) keep this from running
+    // away on a line with several links.
+    .replace(/!?\[([^[\]]*)\]\([^()]*\)/g, '$1')
+    // Emphasis: unwrap to inner text. Double markers first, so `**bold**` doesn't leave
+    // stray single markers behind for the single-marker passes to trip over.
+    .replace(/\*\*([^*]+?)\*\*/g, '$1')
+    .replace(/__([^_]+?)__/g, '$1')
+    .replace(/\*([^*\n]+?)\*/g, '$1')
+    // Single-underscore emphasis only opens/closes at a word boundary, same as
+    // CommonMark's intraword rule — so `_care_` unwraps but `TEXT_MESSAGE_CONTENT`,
+    // whose underscores sit between word characters, is left untouched.
+    .replace(/(?<!\w)_(?!_)([^_\n]+?)(?<!_)_(?!\w)/g, '$1')
     .replace(/`([^`]+)`/g, '$1')
     .replace(/\s+/g, ' ')
     .trim();
