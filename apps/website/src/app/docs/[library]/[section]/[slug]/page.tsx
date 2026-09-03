@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { MdxRenderer } from '../../../../../components/docs/MdxRenderer';
 import { DocsSearch } from '../../../../../components/docs/DocsSearch';
 import { DocsPageHeader } from '../../../../../components/docs/DocsPageHeader';
+import { LibraryMark } from '../../../../../components/docs/LibraryMark';
 import { PageActions } from '../../../../../components/docs/PageActions';
 import { DocsPrevNext } from '../../../../../components/docs/DocsPrevNext';
 import { DocsSearchFooter } from '../../../../../components/docs/DocsSearchFooter';
@@ -131,7 +132,11 @@ export default async function DocsPage({ params }: DocsRouteProps) {
   // the section rung carries no href because there is no section index route.
   const contextTrail = [
     { label: 'Docs', href: '/docs' },
-    { label: libConfig.title, href: libraryIntroPath(library) },
+    {
+      label: libConfig.title,
+      href: libraryIntroPath(library),
+      icon: <LibraryMark library={library as LibraryId} size={16} />,
+    },
     { label: getDocsSection(library, section)?.title ?? section },
     { label: doc.title },
   ];
@@ -148,7 +153,6 @@ export default async function DocsPage({ params }: DocsRouteProps) {
            * 1920). */}
           <div className="px-4 sm:px-6 md:px-12 md:max-w-3xl pt-6">
             <DocsPageHeader
-              library={library as LibraryId}
               actions={
                 <PageActions
                   library={library}

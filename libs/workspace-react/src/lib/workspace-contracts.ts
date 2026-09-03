@@ -82,4 +82,10 @@ export interface WorkspaceContextValue {
 export interface WorkspaceCrumb {
   readonly label: string;
   readonly href?: string;
+  /**
+   * Decorative adornment rendered before the label — a product or library
+   * mark. Purely visual: the label already names the thing, so the shell
+   * hides it from assistive tech.
+   */
+  readonly icon?: ReactNode;
 }

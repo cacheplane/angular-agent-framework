@@ -1574,3 +1574,9 @@
   color: var(--ds-text-primary);
   font-weight: 600;
 }
+[data-workspace-trail-icon] {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 6px;
+  vertical-align: middle;
+}

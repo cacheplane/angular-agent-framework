@@ -413,10 +413,16 @@ export function WorkspaceShell({
                 <ol data-workspace-trail-list>
                   {contextTrail.map((crumb, index) => {
                     const isLast = index === contextTrail.length - 1;
+                    const icon = crumb.icon ? (
+                      <span data-workspace-trail-icon aria-hidden="true">
+                        {crumb.icon}
+                      </span>
+                    ) : null;
                     return (
                       <li key={`${crumb.label}-${index}`}>
                         {crumb.href && !isLast ? (
                           <a href={crumb.href} data-workspace-trail-link>
+                            {icon}
                             {crumb.label}
                           </a>
                         ) : (
@@ -424,6 +430,7 @@ export function WorkspaceShell({
                             data-workspace-trail-current={isLast || undefined}
                             aria-current={isLast ? 'page' : undefined}
                           >
+                            {icon}
                             {crumb.label}
                           </span>
                         )}

@@ -1207,28 +1207,15 @@ body:has([data-website-workspace-host]) {
   }
 }
 
-/* DocsPageHeader */
+/* DocsPageHeader — now hosts only the actions slot; the library mark and
+ * section label it used to carry both moved into the shell header's trail. */
 .docs-page-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 16px;
   margin-top: 12px;
   margin-bottom: 20px;
-}
-.docs-page-header-lib {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-.docs-page-header-label {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-weight: 700;
-  color: var(--color-accent);
 }
 .docs-page-header-actions {
   flex: 0 0 auto;

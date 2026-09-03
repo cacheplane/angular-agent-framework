@@ -607,4 +607,29 @@ describe('WorkspaceShell header trail', () => {
     // The earlier rung still links, so this is not passing because nothing rendered.
     expect(within(nav).getByRole('link', { name: 'Docs' }).getAttribute('href')).toBe('/docs');
   });
+
+  it('renders a crumb icon inside that rung, hidden from assistive tech', () => {
+    renderWorkspace({
+      requestedMode: 'docs',
+      contextTrail: [
+        { label: 'Docs', href: '/docs' },
+        {
+          label: 'AG-UI',
+          href: '/docs/ag-ui/getting-started/introduction',
+          icon: <svg data-testid="library-mark" />,
+        },
+        { label: 'Introduction' },
+      ],
+    });
+
+    const nav = screen.getByRole('navigation', { name: 'Breadcrumb' });
+    const agUiLink = within(nav).getByRole('link', { name: 'AG-UI' });
+    const mark = within(agUiLink).getByTestId('library-mark');
+    expect(mark.parentElement?.hasAttribute('data-workspace-trail-icon')).toBe(true);
+    expect(mark.parentElement?.getAttribute('aria-hidden')).toBe('true');
+
+    // A rung with no icon renders no icon wrapper at all.
+    const docsLink = within(nav).getByRole('link', { name: 'Docs' });
+    expect(docsLink.querySelector('[data-workspace-trail-icon]')).toBeNull();
+  });
 });

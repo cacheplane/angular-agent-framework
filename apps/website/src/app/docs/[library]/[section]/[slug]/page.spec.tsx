@@ -1,6 +1,7 @@
 import { isValidElement, type ComponentType, type ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 import { DocsPageHeader } from '../../../../../components/docs/DocsPageHeader';
+import { LibraryMark } from '../../../../../components/docs/LibraryMark';
 import { DocsSearchFooter } from '../../../../../components/docs/DocsSearchFooter';
 import { DocsTOC } from '../../../../../components/docs/DocsTOC';
 import { MdxRenderer } from '../../../../../components/docs/MdxRenderer';
@@ -13,7 +14,7 @@ interface ElementProps {
   requestedMode?: string | null;
   resolution?: { kind?: string; identity?: { availableModes?: string[] } };
   contentBundle?: { runtimeUrl?: string | null };
-  contextTrail?: readonly { label: string; href?: string }[];
+  contextTrail?: readonly { label: string; href?: string; icon?: ReactNode }[];
 }
 
 function findElement(
@@ -104,12 +105,23 @@ describe('unified docs workspace route', () => {
 
     // Docs titles, not manifest identity: the derived label read
     // "Ag Ui / Getting Started / Overview".
-    expect(workspace?.props.contextTrail).toEqual([
+    const trail = workspace?.props.contextTrail ?? [];
+    expect(trail.map(({ label, href }) => ({ label, href }))).toEqual([
       { label: 'Docs', href: '/docs' },
       { label: 'AG-UI', href: '/docs/ag-ui/getting-started/introduction' },
-      { label: 'Getting Started' },
-      { label: 'Introduction' },
+      { label: 'Getting Started', href: undefined },
+      { label: 'Introduction', href: undefined },
     ]);
+
+    // Only the library rung carries the mark; the rest are plain labels.
+    trail.forEach((crumb, index) => {
+      if (index === 1) {
+        expect(isValidElement(crumb.icon)).toBe(true);
+        expect((crumb.icon as React.ReactElement).type).toBe(LibraryMark);
+      } else {
+        expect(crumb.icon).toBeUndefined();
+      }
+    });
   });
 
   it('keeps canonical metadata independent of the workspace mode query', async () => {

@@ -1,26 +1,22 @@
 import type { ReactNode } from 'react';
-import { LibraryMark } from './LibraryMark';
-import type { LibraryId } from '../../lib/docs-config';
 
 interface Props {
-  library: LibraryId;
   /** Right-aligned slot for per-page actions (Spec 2). Optional. */
   actions?: ReactNode;
 }
 
 /**
- * The mark-and-actions row above an article.
+ * The row above an article that carries the page actions.
  *
- * It used to also print "<library> · <section>", which the shell header's
- * breadcrumb trail now states. Two renditions of the same location, stacked,
- * is what made the page look like it had duplicate breadcrumbs.
+ * It used to also render the library mark and print "<library> · <section>".
+ * Both have moved into the shell header's breadcrumb trail, which already
+ * names the library and section — restating either here was a second
+ * rendition of the same location. This row now exists only to host
+ * `actions`.
  */
-export function DocsPageHeader({ library, actions }: Props) {
+export function DocsPageHeader({ actions }: Props) {
   return (
     <div className="docs-page-header">
-      <div className="docs-page-header-lib">
-        <LibraryMark library={library} size={34} />
-      </div>
       {actions ? <div className="docs-page-header-actions">{actions}</div> : null}
     </div>
   );
