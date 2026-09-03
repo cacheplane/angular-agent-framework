@@ -4,6 +4,37 @@ import { resolve } from 'node:path';
 import { createWebsitePlaywrightConfig } from '../playwright.config';
 
 describe('Website Playwright configuration', () => {
+  it('sends the Vercel automation bypass only when CI supplies it', () => {
+    const withoutSecret = createWebsitePlaywrightConfig({});
+    expect(withoutSecret.use?.extraHTTPHeaders).toBeUndefined();
+
+    const withSecret = createWebsitePlaywrightConfig({
+      VERCEL_AUTOMATION_BYPASS_SECRET: 'sentinel-value',
+    });
+    expect(withSecret.use?.extraHTTPHeaders).toEqual({
+      'x-vercel-protection-bypass': 'sentinel-value',
+      'x-vercel-set-bypass-cookie': 'true',
+    });
+  });
+
+  it('keeps the production-smoke spec loadable under Playwright CJS transpilation', () => {
+    const smoke = readFileSync(
+      resolve(__dirname, '../e2e/platform-production-smoke.spec.ts'),
+      'utf8'
+    );
+
+    // Playwright transpiles specs to CJS, so the ESM-only meta object compiles
+    // to a `require` the loaded module cannot resolve and the file silently
+    // fails to collect — the job then reports "No tests found" rather than
+    // failing. Strip comments first: the spec names the trap in prose so it is
+    // not reintroduced, and that mention must not trip this guard.
+    const code = smoke
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(^|[^:])\/\/.*$/gm, '$1');
+
+    expect(code).not.toContain('import.meta');
+  });
+
   it('derives the production embedding assertion from the authoritative origin source', () => {
     const smoke = readFileSync(
       resolve(__dirname, '../e2e/platform-production-smoke.spec.ts'),
