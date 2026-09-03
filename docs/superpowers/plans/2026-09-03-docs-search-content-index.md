@@ -19,6 +19,7 @@ Read the spec. Then note these repo facts, which are not guessable:
 1. **Website tests need an env var.** `GROWTH_FORM_POLICY=growth_v1` or the app throws at import. Every website command below includes it.
 2. **Targeted test runs must start from the project directory.** `cd apps/website` first. From the repo root vitest reports "No test files found" and exits 1 — a wrong CWD, not a broken command.
 3. **Unused imports are ESLint ERRORS here,** not warnings.
+3b. **`cockpit-retirement.spec.ts` fails spuriously when vitest runs from `apps/website`.** It computes `WEBSITE_ROOT = join(process.cwd(), 'apps/website')`, which double-joins when the CWD is already `apps/website`, producing 3 failures. This is pre-existing and unrelated to any task here — verified: the file is byte-identical to `origin/main`, and `nx test website` from the repo root passes. If you see it in a broad `src/lib` run, ignore it; do not "fix" it as part of this work.
 4. **Route specs run in the node environment.** They start with `// @vitest-environment node`. Component specs use `// @vitest-environment jsdom`. Getting this wrong produces confusing failures.
 5. **`next dev` does not exercise output file tracing.** Task 5 exists because of that: a route reading `content/docs` at request time works in dev and fails in a real build unless the config is updated.
 
