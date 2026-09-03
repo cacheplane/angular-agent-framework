@@ -354,6 +354,56 @@ jobs:
       - run: npm ci
       - run: npx tsx apps/cockpit/scripts/deploy-smoke.ts --url https://cockpit.threadplane.ai --mode preview --dry-run
 
+  cockpit-preview-smoke:
+    name: Cockpit — immutable preview smoke
+    timeout-minutes: 20
+    needs: ci-scope
+    # PR-side twin of the deploy job's cockpit verification. Deploys a
+    # throwaway preview of the redirect service and runs the exhaustive smoke
+    # against it, so platform behaviour (deployment protection, the CDN's
+    # slash collapse, route ordering) is exercised before merge. Needs
+    # repository secrets, so same-repo PRs and merge-queue candidates only;
+    # the token-free dry-run job above still covers forks.
+    if: >-
+      github.event_name != 'push' &&
+      needs.ci-scope.outputs.cockpit_deploy_smoke == 'true' &&
+      (github.event_name == 'merge_group' || github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Prepare cockpit Vercel project (preview)
+        run: |
+          mkdir -p .vercel
+          cat > .vercel/project.json <<EOF
+          {"projectId":"${{ secrets.VERCEL_COCKPIT_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"threadplane-cockpit"}
+          EOF
+          npx vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+          rm -rf .vercel/output
+      - name: Build cockpit redirect service (preview)
+        env:
+          COCKPIT_WEBSITE_ORIGIN: https://threadplane.ai
+        run: |
+          npx vercel build --local-config vercel.cockpit.json --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy throwaway cockpit preview
+        id: deploy_cockpit_preview
+        run: |
+          url=$(npx vercel deploy --prebuilt --archive=tgz --skip-domain --yes --env COCKPIT_WEBSITE_ORIGIN=https://threadplane.ai --token=${{ secrets.VERCEL_TOKEN }} | tail -n 1)
+          echo "deployment_url=$url" >> "$GITHUB_OUTPUT"
+      - name: Exhaustively verify the cockpit preview
+        run: |
+          if [ -z "${VERCEL_AUTOMATION_BYPASS_SECRET}" ]; then
+            echo "::error::VERCEL_COCKPIT_AUTOMATION_BYPASS_SECRET is unset — the protected cockpit preview cannot be verified. Enable 'Protection Bypass for Automation' on the Vercel threadplane-cockpit project and store the value as this repository secret."
+            exit 1
+          fi
+          npx tsx apps/cockpit/scripts/deploy-smoke.ts --url "${{ steps.deploy_cockpit_preview.outputs.deployment_url }}" --mode preview --retries 20 --retry-delay-ms 5000
+        env:
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_COCKPIT_AUTOMATION_BYPASS_SECRET }}
+
   examples-chat-smoke:
     name: examples/chat — python smoke
     needs: ci-scope

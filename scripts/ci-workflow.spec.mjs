@@ -591,6 +591,44 @@ describe('CI workflow', () => {
     );
   });
 
+  it('smokes a throwaway cockpit preview on same-repo PRs and queue candidates', async () => {
+    const workflow = await readWorkflow();
+    const job = readJobBlock(workflow, 'cockpit-preview-smoke');
+    const ifBlock = readJobFieldBlock(job, 'if');
+
+    assert.deepEqual(readJobNeeds(job), ['ci-scope']);
+    assert.match(ifBlock, /github\.event_name != 'push'/);
+    assert.match(ifBlock, /needs\.ci-scope\.outputs\.cockpit_deploy_smoke == 'true'/);
+    assert.match(
+      ifBlock,
+      /github\.event_name == 'merge_group' \|\| github\.event\.pull_request\.head\.repo\.full_name == github\.repository/
+    );
+
+    const prepare = readNamedStep(job, 'Prepare cockpit Vercel project (preview)');
+    const build = readNamedStep(job, 'Build cockpit redirect service (preview)');
+    const deploy = readNamedStep(job, 'Deploy throwaway cockpit preview');
+    const smoke = readNamedStep(job, 'Exhaustively verify the cockpit preview');
+
+    assert.match(prepare, /"projectName":"threadplane-cockpit"/);
+    assert.match(prepare, /vercel pull --yes --environment=preview/);
+    assert.match(build, /vercel build --local-config vercel\.cockpit\.json/);
+    assert.doesNotMatch(build, /--prod/);
+    assert.match(deploy, /id:\s*deploy_cockpit_preview/);
+    assert.match(deploy, /vercel deploy --prebuilt --archive=tgz --skip-domain --yes/);
+    assert.doesNotMatch(deploy, /--prod/);
+    assert.match(deploy, /--env COCKPIT_WEBSITE_ORIGIN=https:\/\/threadplane\.ai/);
+    assert.match(
+      smoke,
+      /VERCEL_AUTOMATION_BYPASS_SECRET:\s*\$\{\{ secrets\.VERCEL_COCKPIT_AUTOMATION_BYPASS_SECRET \}\}/
+    );
+    assert.match(smoke, /-z "\$\{VERCEL_AUTOMATION_BYPASS_SECRET\}"/);
+    assert.match(
+      smoke,
+      /--url "\$\{\{ steps\.deploy_cockpit_preview\.outputs\.deployment_url \}\}"[\s\S]*--mode preview/
+    );
+    assert.doesNotMatch(job, /vercel promote/);
+  });
+
   it('gates Cockpit deployment on the production Website smoke even for Cockpit-only changes', async () => {
     const deployJob = await readDeployJob();
     const websiteOrCockpit =
