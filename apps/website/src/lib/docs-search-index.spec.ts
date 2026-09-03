@@ -181,6 +181,17 @@ describe('indexDocSections edge cases', () => {
     expect(section.text).not.toContain('/docs/b');
   });
 
+  it('does not let a > inside a quoted attribute value terminate the tag match', () => {
+    // A naive [^>]* attribute scan stops at the first >, even inside a quoted value,
+    // and leaks the rest of the tag into indexed text as raw markup.
+    const source = '# T\n\n<Callout title="a > b" type="tip">\nBody prose.\n</Callout>\n';
+    const [section] = indexDocSections(source);
+    expect(section.text).toContain('a > b');
+    expect(section.text).toContain('Body prose');
+    expect(section.text).not.toContain('type="tip"');
+    expect(section.text).not.toContain('"');
+  });
+
   it('drops empty sections produced by a heading with no body text', () => {
     const source = '# Title\n\n## Empty section\n\n## Next section\n\nSome text.\n';
     const sections = indexDocSections(source);
