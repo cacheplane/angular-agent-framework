@@ -816,7 +816,14 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 
 ### Task 5: Trace the content into the deployed function
 
-**This is the task that fails in production if skipped, and passes every local test if it is.** `next dev` reads from the working tree, so nothing before this point exercises file tracing.
+> **Findings from executing this task — the premise below was partly wrong.**
+>
+> 1. **`@vercel/nft` already traces the content without the include.** It statically resolves the `fs.readFileSync` + `path.join(process.cwd(), …)` pattern in `lib/docs.ts` and walks the real directory at build time. Measured: **122 `.mdx` paths in the route's `.nft.json` both before and after** adding the include, and an unmodified-config `output: 'standalone'` build served non-empty `checkpointer` results. The include was kept anyway — it is cheap, it is documented in `route.ts`, and it removes reliance on an nft heuristic that is not guaranteed to hold under Vercel's builder, which is not bit-identical to a local build. But it is belt-and-braces, not the load-bearing fix this section claimed.
+> 2. **The Step 4 verification below does not verify tracing.** `next start` does not consume `.nft.json` at all — only Vercel's builder or an `output: 'standalone'` build do. And `nx build website` emits to `dist/apps/website`, not `apps/website/.next`. So running Step 4 as written returns results whether or not tracing is correct. To actually test tracing locally you must build with `output: 'standalone'` and run the standalone server. **A green Step 4 is not evidence.**
+>
+> Net: the change is correct and worth keeping, the risk was lower than stated, and the verification recipe needed fixing. Anyone adding a future runtime-read asset should check a real Vercel deploy log rather than trusting a local `next start`.
+
+**This was written as the task that fails in production if skipped, and passes every local test if it is.** `next dev` reads from the working tree, so nothing before this point exercises file tracing.
 
 `apps/website/next.config.ts` traces `cockpit/**` md/py/ts, a Mastra mjs, and `nx.json` — nothing under `apps/website/content`. `api/markdown` reads MDX and deploys fine only because `generateStaticParams()` makes it build-time output. The search route reads at request time.
 
