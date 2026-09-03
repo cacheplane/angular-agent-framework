@@ -198,6 +198,53 @@ describe('indexDocSections edge cases', () => {
     expect(sections.find((s) => s.heading === 'Empty section')).toBeUndefined();
     expect(sections.find((s) => s.heading === 'Next section')?.text).toContain('Some text');
   });
+
+  it('strips an un-fenced import line so it never leaks into a snippet', () => {
+    // Real docs never have an un-fenced import today -- every import lives inside a
+    // fenced code block, already dropped -- but a doc that imports a component for
+    // real JSX use would otherwise leak the import statement into indexed text.
+    const source = "# T\n\nimport { Callout } from '@/components/Callout';\n\nActual prose here.\n";
+    const [section] = indexDocSections(source);
+    expect(section.text).not.toContain('import');
+    expect(section.text).not.toContain('Callout');
+    expect(section.text).toContain('Actual prose here');
+  });
+});
+
+describe('indexDocSections derives structure from extractHeadings, not a second scan', () => {
+  // This is what makes desync impossible by construction rather than by test: the
+  // non-preamble sections, in order, are exactly extractHeadings' own output. There
+  // is no second place in this file that decides what a heading is or where a
+  // section boundary falls, so the two cannot drift into disagreement -- there is
+  // nothing left for them to disagree about.
+  it('emits one non-preamble section per heading extractHeadings finds, same order, same heading/anchor', () => {
+    const source = [
+      '# Title',
+      '',
+      'Preamble prose.',
+      '',
+      '## First',
+      '',
+      'First body.',
+      '',
+      '### Nested `code`',
+      '',
+      'Nested body.',
+      '',
+      '## Nested_underscore section',
+      '',
+      'Third body.',
+    ].join('\n');
+
+    const headings = extractHeadings(source);
+    const sections = indexDocSections(source);
+    const nonPreamble = sections.filter((s) => s.heading !== null);
+
+    expect(headings.length).toBeGreaterThan(0);
+    expect(nonPreamble.map((s) => [s.heading, s.anchor])).toEqual(
+      headings.map((h) => [h.text, h.id])
+    );
+  });
 });
 
 describe('anchor parity with the rendered table of contents', () => {

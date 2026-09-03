@@ -6,9 +6,11 @@ export type { DocsSearchHit };
 export interface IndexedDoc {
   library: string;
   libraryTitle: string;
+  /** The docs-config category this page lives under, e.g. "guides". Singular, unrelated to `sections` below. */
   section: string;
   slug: string;
   title: string;
+  /** Heading-level blocks within the page body, produced by `indexDocSections`. Unrelated to `section` above. */
   sections: DocSection[];
 }
 

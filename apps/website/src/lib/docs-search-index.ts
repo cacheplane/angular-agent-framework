@@ -78,7 +78,12 @@ function stripComponentTags(text: string): string {
  */
 function toSearchableText(source: string): string {
   const withoutFencedCode = source.replace(/```[\s\S]*?```/g, ' ');
-  const withoutTags = stripComponentTags(withoutFencedCode);
+  // Un-fenced imports never occur in the corpus today (every import lives inside a
+  // fenced block, already stripped above), but a doc that imports a component for
+  // real JSX use would otherwise leak `import { Foo } from '...'` into a snippet.
+  // Mirrors extractFirstParagraph's same stripping in docs.ts.
+  const withoutImports = withoutFencedCode.replace(/^import\s.+$/gm, '');
+  const withoutTags = stripComponentTags(withoutImports);
 
   return withoutTags
     // Markdown links and images: keep the text/alt, drop the target. The target is a
@@ -106,9 +111,16 @@ function toSearchableText(source: string): string {
 /**
  * Split a doc body into one record per heading, plus one for the preamble.
  *
- * Anchors come from `extractHeadings` rather than a second slugifier. That
- * file hand-rolls GitHub-style slugification, and having one approximation is
- * a known quantity while two that drift apart is a bug generator.
+ * Headings and anchors come entirely from `extractHeadings` — there is no
+ * second scan here for fences or `##`/`###` lines. `extractHeadings` reports
+ * the source line each heading sits on, so this function only needs to slice
+ * the line array between consecutive heading lines; it never has to decide
+ * for itself what counts as a heading. That makes the two ways of reading a
+ * doc's structure (TOC and search index) structurally the same scan, so they
+ * cannot silently disagree about which body lines belong to which heading —
+ * unlike re-implementing the fence/heading logic a second time and pairing
+ * the two scans by position, which stays correct only as long as both scans
+ * happen to be written identically.
  */
 export function indexDocSections(source: string): DocSection[] {
   const body = stripFrontmatter(source);
@@ -116,40 +128,21 @@ export function indexDocSections(source: string): DocSection[] {
   const lines = body.split('\n');
 
   const sections: DocSection[] = [];
-  let current: { heading: string | null; anchor: string | null; lines: string[] } = {
-    heading: null,
-    anchor: null,
-    lines: [],
-  };
-  let headingIndex = 0;
-  let inCodeBlock = false;
-
-  const flush = () => {
-    const text = toSearchableText(current.lines.join('\n'));
+  const pushSection = (heading: string | null, anchor: string | null, start: number, end: number) => {
+    const text = toSearchableText(lines.slice(start, end).join('\n'));
     if (text.length > 0) {
-      sections.push({ heading: current.heading, anchor: current.anchor, text });
+      sections.push({ heading, anchor, text });
     }
   };
 
-  for (const line of lines) {
-    // Track fences so a `## ` inside a code sample never starts a section.
-    if (line.trim().startsWith('```')) inCodeBlock = !inCodeBlock;
+  const firstHeadingLine = headings[0]?.line ?? lines.length;
+  pushSection(null, null, 0, firstHeadingLine);
 
-    const match = inCodeBlock ? null : line.match(/^#{2,3}\s+(.+)$/);
-    if (match) {
-      flush();
-      const heading = headings[headingIndex];
-      headingIndex += 1;
-      current = {
-        heading: heading?.text ?? match[1].replace(/`/g, ''),
-        anchor: heading?.id ?? null,
-        lines: [],
-      };
-      continue;
-    }
-    current.lines.push(line);
-  }
-  flush();
+  headings.forEach((heading, index) => {
+    const start = heading.line + 1;
+    const end = headings[index + 1]?.line ?? lines.length;
+    pushSection(heading.text, heading.id, start, end);
+  });
 
   return sections;
 }
