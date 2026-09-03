@@ -381,6 +381,47 @@ body:has([data-website-workspace-host]) {
 .mdx-callout-body > :first-child { margin-top: 0; }
 .mdx-callout-body > :last-child { margin-bottom: 0; }
 
+/* Docs prose links.
+ *
+ * MdxRenderer carries `prose prose-slate` and sets `--tw-prose-links`, but
+ * Tailwind Typography is not active in this app: a stylesheet walk in the
+ * loaded page finds zero rules matching `.prose`. Every docs link therefore
+ * rendered as plain body text (measured: rgb(28,28,28), no decoration,
+ * weight 400). These rules are the real link styling. Scoped to .docs-prose
+ * so blog and marketing pages keep their own treatment.
+ *
+ * `[data-mdx-chrome]` is the opt-out for anchors that are components, not
+ * text: cards, feature chips, heading anchors, callout CTA buttons. They
+ * carry their own affordance and an underline would corrupt it.
+ */
+.docs-prose a:not([data-mdx-chrome]) {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+.docs-prose a:not([data-mdx-chrome]):hover {
+  text-decoration-thickness: 2px;
+}
+
+/* A callout's links take its tone, so a warning callout does not sprout
+ * accent-blue links, and gain weight to carry against the tinted ground. */
+[data-mdx="callout"] .mdx-callout-body a:not([data-mdx-chrome]) {
+  color: var(--callout-tone-text);
+  font-weight: 500;
+}
+
+/* Absolute hrefs read as off-site before they are clicked. Decorative: the
+ * glyph inherits currentColor and is not announced. */
+.docs-prose a[href^="http"]:not([data-mdx-chrome])::after {
+  content: '\2197';
+  display: inline-block;
+  margin-left: 2px;
+  font-size: 0.85em;
+  text-decoration: none;
+  vertical-align: baseline;
+}
+
 /* mdx — Steps / Step */
 .mdx-steps-list {
   display: flex;
@@ -1590,6 +1631,7 @@ body:has([data-website-workspace-host]) {
 /* One focus ring for the docs chrome. Buttons and links that had no
  * :focus-visible affordance at all. */
 [data-docs-navlink]:focus-visible,
+.docs-prose a:not([data-mdx-chrome]):focus-visible,
 .docs-crumb-link:focus-visible,
 .docs-toc-link:focus-visible,
 .docs-sidebar-search-trigger:focus-visible,

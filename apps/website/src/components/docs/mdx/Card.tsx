@@ -30,7 +30,7 @@ export function Card({
     ? { target: '_blank', rel: 'noopener noreferrer' }
     : {};
   return (
-    <Link href={href} className="mdx-card-link" {...externalProps}>
+    <Link href={href} className="mdx-card-link" data-mdx-chrome="" {...externalProps}>
       <div data-mdx="card">
         <div className="mdx-card-row">
           <div>

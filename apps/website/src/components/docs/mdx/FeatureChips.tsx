@@ -23,7 +23,7 @@ export function FeatureChips() {
   return (
     <div className="mdx-chip-row">
       {CHIPS.map((chip) => (
-        <Link key={chip.title} href={chip.href} className="mdx-chip-link">
+        <Link key={chip.title} href={chip.href} className="mdx-chip-link" data-mdx-chrome="">
           <div data-mdx="feature-chip">
             <div className="mdx-chip-icon">{chip.icon}</div>
             <div className="mdx-chip-title">{chip.title}</div>

@@ -50,6 +50,32 @@ const CONTRACTS: StyleContract[] = [
     },
   },
   {
+    file: 'docs.css',
+    selector: '.docs-prose a:not([data-mdx-chrome])',
+    why: 'Tailwind Typography is inert in this app — `.prose` emits zero rules, so `--tw-prose-links` on MdxRenderer set a variable nothing read and every docs link rendered as plain body text (measured: rgb(28,28,28), no decoration). This rule is the only thing making a docs link look like a link.',
+    requires: {
+      color: /color:\s*var\(--color-accent\)/,
+      'text-decoration': /text-decoration:\s*underline/,
+    },
+  },
+  {
+    file: 'docs.css',
+    selector: '[data-mdx="callout"] .mdx-callout-body a:not([data-mdx-chrome])',
+    why: "A callout's body text is already muted, so an accent-blue link inside a warning callout reads as a rendering error. Losing this leaves callout links legible but wrongly toned — the failure nobody reports.",
+    requires: {
+      color: /color:\s*var\(--callout-tone-text\)/,
+      'font-weight': /font-weight:\s*500/,
+    },
+  },
+  {
+    file: 'docs.css',
+    selector: '.docs-prose a[href^="http"]:not([data-mdx-chrome])::after',
+    why: 'The only signal that a docs link leaves the site. Losing it renders an off-site link identically to an in-site one, which is invisible until someone loses their place.',
+    requires: {
+      content: /content:/,
+    },
+  },
+  {
     file: '../app/global.css',
     selector: 'pre.shiki',
     why: "Shiki writes the theme background inline on the <pre> but emits no padding, so losing this sits the code flush against the dark surface's edges — on the homepage Code tabs, /langgraph, /render, /chat and every /solutions page. Deleted once already in #863, on a docs-only survey that concluded `.shiki` matched nothing.",
