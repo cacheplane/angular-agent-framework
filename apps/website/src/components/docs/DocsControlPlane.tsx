@@ -17,11 +17,7 @@ import {
   ControlPlaneSection,
   useControlPlanePreferences,
 } from '@threadplane/ui-react';
-import {
-  getDocsSection,
-  getLibraryConfig,
-  type LibraryId,
-} from '../../lib/docs-config';
+import { getLibraryConfig, type LibraryId } from '../../lib/docs-config';
 import { DocsNavigation } from './DocsSidebar';
 
 export interface DocsControlPlaneProps {
@@ -50,7 +46,6 @@ export function DocsContextContent({
   activeLibrary,
   activeSection,
   activeSlug,
-  pageTitle,
   mobile = false,
   onNavigate,
   onSearchHandoff,
@@ -61,9 +56,6 @@ export function DocsContextContent({
 }) {
   const preferences = useControlPlanePreferences('docs');
   const library = activeLibrary ? getLibraryConfig(activeLibrary) : undefined;
-  const section = activeLibrary
-    ? getDocsSection(activeLibrary, activeSection)
-    : undefined;
   const openSearch = () => {
     if (!mobile) {
       dispatchSearch();
@@ -78,16 +70,19 @@ export function DocsContextContent({
   };
   return (
     <div data-docs-control-plane-context data-mobile={mobile || undefined}>
-      <ControlPlaneSection title="Scope" collapsible={false}>
-        <div className="docs-control-plane-scope">
-          {/* A neutral page has no library and no section. Say only what is
-           * true — inventing them is how the mobile drawer came to claim
-           * "LangGraph / Getting Started" on the adapter-comparison page. */}
-          <span>{library?.title ?? 'Docs'}</span>
-          {library && section ? <span>{section.title}</span> : null}
-          <strong>{pageTitle}</strong>
-        </div>
-      </ControlPlaneSection>
+      <button
+        type="button"
+        className="docs-control-plane-search-trigger"
+        onClick={openSearch}
+        data-docs-control-plane-search
+      >
+        <span className="docs-control-plane-search-inner">
+          <Search size={14} aria-hidden="true" />
+          <span className="docs-control-plane-search-label">Search docs</span>
+        </span>
+        {/* Hidden where there is no keyboard to press it — see docs.css. */}
+        <kbd className="docs-control-plane-search-kbd" aria-hidden="true">⌘K</kbd>
+      </button>
 
       <ControlPlaneSection
         title="Learn"
@@ -104,14 +99,9 @@ export function DocsContextContent({
         />
       </ControlPlaneSection>
 
-      <ControlPlaneSection title="Actions" collapsible={false}>
-        <ControlPlaneActionBar label="Docs actions">
-          <ControlPlaneIconButton
-            label="Search docs"
-            icon={<Search size={16} aria-hidden="true" />}
-            onClick={openSearch}
-          />
-          {library?.demoUrl ? (
+      {library?.demoUrl ? (
+        <ControlPlaneSection title="Actions" collapsible={false}>
+          <ControlPlaneActionBar label="Docs actions">
             <ControlPlaneIconButton
               label={library.demoLabel ?? 'Open live demo'}
               icon={<ExternalLink size={16} aria-hidden="true" />}
@@ -119,9 +109,9 @@ export function DocsContextContent({
               target="_blank"
               rel="noopener noreferrer"
             />
-          ) : null}
-        </ControlPlaneActionBar>
-      </ControlPlaneSection>
+          </ControlPlaneActionBar>
+        </ControlPlaneSection>
+      ) : null}
     </div>
   );
 }

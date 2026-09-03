@@ -937,7 +937,22 @@ body:has([data-website-workspace-host]) {
 .docs-sidebar-section-link {
   font-size: 0.825rem;
 }
-.docs-sidebar-search-trigger {
+/* Control-plane search trigger.
+ *
+ * Replaces the Scope card, which restated the breadcrumb the shell header now
+ * owns. Styled as an input rather than a button because it opens a search
+ * dialog, and the ⌘K hint is a hint: on a coarse pointer there is no ⌘K to
+ * press, so it is hidden and the button itself is the affordance. Rules
+ * inherited from the retired sidebar trigger this replaces. */
+.docs-control-plane-search-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  margin-bottom: 12px;
+  border-radius: var(--radius-md);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   color: var(--color-text-muted);
@@ -945,19 +960,20 @@ body:has([data-website-workspace-host]) {
   box-shadow: var(--shadow-sm);
   transition: border-color 120ms ease, box-shadow 120ms ease;
 }
-.docs-sidebar-search-trigger:hover {
+.docs-control-plane-search-trigger:hover {
   border-color: var(--color-border-strong);
 }
-.docs-sidebar-search-inner {
+.docs-control-plane-search-inner {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   min-width: 0;
 }
-.docs-sidebar-search-label {
+.docs-control-plane-search-label {
+  font-family: var(--font-inter);
   font-size: 0.8rem;
 }
-.docs-sidebar-search-kbd {
+.docs-control-plane-search-kbd {
   font-family: var(--font-mono);
   font-size: 0.65rem;
   color: var(--color-text-muted);
@@ -967,9 +983,10 @@ body:has([data-website-workspace-host]) {
   padding: 2px 6px;
   line-height: 1.2;
 }
-.docs-sidebar-search-kbd {
-  font-size: 0.65rem;
-  padding: 2px 8px;
+@media (pointer: coarse) {
+  .docs-control-plane-search-kbd {
+    display: none;
+  }
 }
 .docs-sidebar-top-link {
   font-size: 0.825rem;
@@ -1634,7 +1651,7 @@ body:has([data-website-workspace-host]) {
 .docs-prose a:not([data-mdx-chrome]):focus-visible,
 .docs-crumb-link:focus-visible,
 .docs-toc-link:focus-visible,
-.docs-sidebar-search-trigger:focus-visible,
+.docs-control-plane-search-trigger:focus-visible,
 .docs-sidebar-lib-trigger:focus-visible,
 .docs-sidebar-lib-item:focus-visible,
 .docs-sidebar-section-toggle:focus-visible,
@@ -1822,22 +1839,6 @@ body:has([data-website-workspace-host]) {
 }
 [data-docs-control-plane-context] [data-control-plane-section-content] {
   padding: 2px 0 8px;
-}
-.docs-control-plane-scope {
-  margin: 0 8px;
-  padding: 10px;
-  border-radius: 8px;
-  background: var(--color-surface-dim);
-  display: grid;
-  gap: 3px;
-  color: var(--color-text-muted);
-  font-family: var(--font-inter);
-  font-size: 11px;
-}
-.docs-control-plane-scope strong {
-  color: var(--color-text-primary);
-  font-size: 13px;
-  font-weight: 600;
 }
 .docs-sidebar-library { position: relative; margin: 2px 8px 10px; }
 .docs-sidebar-lib-trigger {

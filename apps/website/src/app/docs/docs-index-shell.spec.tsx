@@ -17,11 +17,8 @@ describe('docs index', () => {
   it('wears the same control plane as every other docs route', () => {
     render(<DocsLandingPage />);
 
-    const scope = screen.getByRole('heading', { name: 'Scope' }).closest('section');
-    if (!scope) throw new Error('Expected a Scope section');
-    // Library-neutral: the index is where you pick one, so it claims none.
-    expect(within(scope).getByText('Docs')).toBeTruthy();
-    expect(within(scope).getByText('Overview')).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Scope' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Search docs' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Choose a library' })).toBeTruthy();
   });
 

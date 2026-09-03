@@ -159,30 +159,7 @@ describe('DocsControlPlane', () => {
     }
   });
 
-  it('shows truthful scope without the retired Cockpit Runtime preview', () => {
-    render(
-      <DocsControlPlane
-        activeLibrary="langgraph"
-        activeSection="guides"
-        activeSlug="streaming"
-        pageTitle="Streaming"
-      />
-    );
-
-    const scope = screen
-      .getByRole('heading', { name: 'Scope' })
-      .closest('section');
-    if (!scope) throw new Error('Expected Scope section');
-    expect(within(scope).getByText('LangGraph')).toBeTruthy();
-    expect(within(scope).getByText('Guides')).toBeTruthy();
-    expect(within(scope).getByText('Streaming')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Environment' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Runtime' })).toBeNull();
-    expect(screen.queryByText('Cockpit')).toBeNull();
-    expect(screen.queryByRole('link', { name: /Open controls/ })).toBeNull();
-  });
-
-  it('keeps search as a real icon action', () => {
+  it('leads with search instead of restating the breadcrumb', () => {
     const listener = vi.fn();
     document.addEventListener('keydown', listener);
     render(
@@ -194,11 +171,33 @@ describe('DocsControlPlane', () => {
       />
     );
 
+    // The trail is the shell header's job now; a Scope card here said the
+    // same thing a third time.
+    expect(screen.queryByRole('heading', { name: 'Scope' })).toBeNull();
+
     fireEvent.click(screen.getByRole('button', { name: 'Search docs' }));
     expect(listener).toHaveBeenCalledWith(
       expect.objectContaining({ key: 'k', metaKey: true })
     );
     document.removeEventListener('keydown', listener);
+
+    expect(screen.queryByRole('button', { name: 'Environment' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Runtime' })).toBeNull();
+    expect(screen.queryByText('Cockpit')).toBeNull();
+  });
+
+  it('drops the Actions bar when search was its only member', () => {
+    render(
+      <DocsControlPlane
+        activeLibrary="langgraph"
+        activeSection="guides"
+        activeSlug="streaming"
+        pageTitle="Streaming"
+      />
+    );
+
+    // LangGraph publishes no demoUrl, so nothing is left to put in Actions.
+    expect(screen.queryByRole('toolbar', { name: 'Docs actions' })).toBeNull();
   });
 
   it('connects nested Learn disclosures to their controlled content', () => {
@@ -400,7 +399,7 @@ describe('DocsControlPlane — library-neutral', () => {
     }
   });
 
-  it('states only what it knows in Scope', () => {
+  it('offers search on a library-neutral page too', () => {
     render(
       <DocsControlPlane
         activeLibrary={null}
@@ -410,11 +409,8 @@ describe('DocsControlPlane — library-neutral', () => {
       />,
     );
 
-    const scope = screen.getByRole('heading', { name: 'Scope' }).closest('section');
-    if (!scope) throw new Error('Expected Scope section');
-    expect(within(scope).getByText('Choosing an adapter')).toBeTruthy();
-    expect(within(scope).queryByText('LangGraph')).toBeNull();
-    expect(within(scope).queryByText('Getting Started')).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Scope' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Search docs' })).toBeTruthy();
   });
 
   it('offers an unselected picker and no section tree', () => {
@@ -450,10 +446,11 @@ describe('DocsContextContent', () => {
       />
     );
 
-    expect(screen.getByRole('heading', { name: 'Scope' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Search docs' })).toBeTruthy();
+    // json-render publishes no demoUrl, so Actions has nothing left to hold.
+    expect(screen.queryByRole('toolbar', { name: 'Docs actions' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Learn' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Runtime' })).toBeNull();
-    expect(screen.getByRole('toolbar', { name: 'Docs actions' })).toBeTruthy();
   });
 
   it('keeps explicit standalone demo actions', () => {
