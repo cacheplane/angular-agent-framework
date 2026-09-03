@@ -1,6 +1,7 @@
 import { isValidElement, type ComponentType, type ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 import { DocsPageHeader } from '../../../../../components/docs/DocsPageHeader';
+import { DocsSearchFooter } from '../../../../../components/docs/DocsSearchFooter';
 import { DocsTOC } from '../../../../../components/docs/DocsTOC';
 import { MdxRenderer } from '../../../../../components/docs/MdxRenderer';
 import { WebsiteWorkspace } from '../../../../../components/workspace/WebsiteWorkspace';
@@ -77,6 +78,21 @@ describe('unified docs workspace route', () => {
     ).toBeTruthy();
     expect(findElement(slot, MdxRenderer as ComponentType<never>)).toBeTruthy();
     expect(findElement(slot, DocsTOC as ComponentType<never>)).toBeTruthy();
+  });
+
+  it('invites a search at the foot of a content page', async () => {
+    const tree = await route('langgraph', 'guides', 'testing');
+    const workspace = findElement(
+      tree,
+      WebsiteWorkspace as ComponentType<never>
+    );
+
+    expect(
+      findElement(
+        workspace?.props.docsSlot,
+        DocsSearchFooter as ComponentType<never>
+      )
+    ).toBeTruthy();
   });
 
   it('hands the shell one accurate trail instead of four renditions', async () => {

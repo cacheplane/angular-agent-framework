@@ -390,13 +390,22 @@ body:has([data-website-workspace-host]) {
   gap: 8px;
   margin-top: 12px;
 }
+/* The tone custom properties below are set on [data-mdx="callout"] and
+ * resolve for every current use of <CalloutActions> — it is documented as
+ * callout-only, but nothing enforces that. If it is ever rendered outside a
+ * callout, --callout-tone-text/--callout-tone-surface are undefined, which
+ * makes `border` and `background` invalid at computed-value time; they reset
+ * to their initial values (no border, transparent background) while
+ * `color: var(--color-surface)` on the primary variant still resolves to
+ * white, producing an invisible white-on-white button. The fallbacks make
+ * that case degrade to something visible instead of silently disappearing. */
 [data-mdx="callout-action"] {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 7px 14px;
   border-radius: var(--radius-md);
-  border: 1px solid var(--callout-tone-text);
+  border: 1px solid var(--callout-tone-text, var(--color-accent));
   font-family: var(--font-inter);
   font-size: 13px;
   font-weight: 600;
@@ -405,7 +414,7 @@ body:has([data-website-workspace-host]) {
   transition: background-color 120ms ease, color 120ms ease;
 }
 [data-mdx="callout-action"][data-variant="primary"] {
-  background: var(--callout-tone-text);
+  background: var(--callout-tone-text, var(--color-accent));
   color: var(--color-surface);
 }
 [data-mdx="callout-action"][data-variant="primary"]:hover {
@@ -413,10 +422,10 @@ body:has([data-website-workspace-host]) {
 }
 [data-mdx="callout-action"][data-variant="secondary"] {
   background: transparent;
-  color: var(--callout-tone-text);
+  color: var(--callout-tone-text, var(--color-accent));
 }
 [data-mdx="callout-action"][data-variant="secondary"]:hover {
-  background: var(--callout-tone-surface);
+  background: var(--callout-tone-surface, var(--color-surface-dim));
 }
 
 /* Docs prose links.
@@ -1685,6 +1694,7 @@ body:has([data-website-workspace-host]) {
  * :focus-visible affordance at all. */
 [data-docs-navlink]:focus-visible,
 [data-mdx="callout-action"]:focus-visible,
+.docs-index-search-button:focus-visible,
 .docs-prose a:not([data-mdx-chrome]):focus-visible,
 .website-workspace-host [data-workspace-trail-link]:focus-visible,
 .docs-toc-link:focus-visible,

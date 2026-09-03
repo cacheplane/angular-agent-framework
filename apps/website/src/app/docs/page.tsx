@@ -4,10 +4,10 @@ import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';
 import { Eyebrow } from '../../components/ui/Eyebrow';
 import { Card } from '../../components/ui/Card';
-import { Pill } from '../../components/ui/Pill';
 import { CopyButton } from '../../components/docs/CopyButton';
 import { DocsControlPlane } from '../../components/docs/DocsControlPlane';
 import { DocsSearch } from '../../components/docs/DocsSearch';
+import { DocsSearchFooter } from '../../components/docs/DocsSearchFooter';
 import { createPageMetadata } from '../../lib/site-metadata';
 import {
   getCanonicalWebsiteWorkspaceHref,
@@ -328,18 +328,7 @@ export default function DocsLandingPage() {
       </Section>
 
       {/* Search prompt */}
-      <Section surface="tinted" tight ariaLabelledBy="search-prompt-heading">
-        <Container>
-          <div className="docs-index-search-inner">
-            <h2 id="search-prompt-heading" className="docs-index-search-heading">
-              Looking for something specific?
-            </h2>
-            <p className="docs-index-search-copy">
-              Press <Pill variant="neutral">⌘K</Pill> to search the docs.
-            </p>
-          </div>
-        </Container>
-      </Section>
+      <DocsSearchFooter />
       </div>
     </div>
   );

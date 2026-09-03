@@ -5,6 +5,7 @@ import { DocsSearch } from '../../../../../components/docs/DocsSearch';
 import { DocsPageHeader } from '../../../../../components/docs/DocsPageHeader';
 import { PageActions } from '../../../../../components/docs/PageActions';
 import { DocsPrevNext } from '../../../../../components/docs/DocsPrevNext';
+import { DocsSearchFooter } from '../../../../../components/docs/DocsSearchFooter';
 import {
   DEFAULT_DOCS_DESCRIPTION,
   getAllDocSlugs,
@@ -201,6 +202,12 @@ export default async function DocsPage({ params }: DocsRouteProps) {
         </div>
         <DocsTOC headings={headings} />
       </div>
+      {/* Sibling to docs-article-layout, not nested inside its article column:
+       * that column excludes the TOC rail's width, so a full-width band placed
+       * inside it would be narrower than the scrollable docs-workspace-article
+       * area it should span. This is as wide as that area gets without
+       * restructuring the layout further. */}
+      <DocsSearchFooter />
     </div>
   );
 
