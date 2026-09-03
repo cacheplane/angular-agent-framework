@@ -32,6 +32,7 @@ const snapshot = createRuntimeSnapshot(parseRuntimeTarget(null), entry.topic);
 
 const renderOverlay = ({
   initialOpen = true,
+  initialActiveUtility = null,
   onPresenceChange = vi.fn(),
   strict = false,
   variant = 'mobile',
@@ -41,6 +42,7 @@ const renderOverlay = ({
   onContextAction = vi.fn(),
 }: {
   initialOpen?: boolean;
+  initialActiveUtility?: CockpitUtility;
   onPresenceChange?: ReturnType<typeof vi.fn>;
   strict?: boolean;
   variant?: 'mobile' | 'tablet';
@@ -65,7 +67,8 @@ const renderOverlay = ({
 
   function Harness() {
     const [isOpen, setIsOpen] = useState(initialOpen);
-    const [activeUtility, setActiveUtility] = useState<CockpitUtility>(null);
+    const [activeUtility, setActiveUtility] =
+      useState<CockpitUtility>(initialActiveUtility);
     const [, setSharedState] = useState(0);
     setOpen = setIsOpen;
     bumpSharedState = () => setSharedState((value) => value + 1);
@@ -263,6 +266,43 @@ describe('MobileNavOverlay', () => {
       expect(document.activeElement).toBe(invoker);
     }
   );
+
+  it.each([
+    ['Activity', 'activity'],
+    ['Settings', 'settings'],
+  ] as const)(
+    'leaves the %s panel heading focused when the utility opens the drawer',
+    (heading, utility) => {
+      // The tablet rail selects the utility and opens the context surface in
+      // one batch, so the panel mounts in the same commit that opens the
+      // dialog. The panel focuses its own heading; the drawer must not then
+      // pull focus back to its first tabbable control.
+      const result = renderOverlay({
+        initialOpen: false,
+        initialActiveUtility: utility,
+        variant: 'tablet',
+        controlPlaneLayout: 'pane',
+      });
+
+      result.reopen();
+
+      expect(document.activeElement).toBe(
+        within(dialog()).getByRole('heading', { name: heading })
+      );
+    }
+  );
+
+  it('still claims drawer focus when no panel claims it first', () => {
+    const result = renderOverlay({ initialOpen: false });
+
+    result.reopen();
+
+    // Which control wins is the document-order first tabbable, and jsdom
+    // groups a selector list by selector instead of document order -- so
+    // assert the drawer took focus rather than naming the element.
+    expect(document.activeElement).not.toBe(document.body);
+    expect(dialog().contains(document.activeElement)).toBe(true);
+  });
 
   it.each([
     ['Escape', () => fireEvent.keyDown(document, { key: 'Escape' })],

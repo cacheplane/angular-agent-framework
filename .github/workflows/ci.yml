@@ -644,6 +644,17 @@ jobs:
             playwright-${{ runner.os }}-
       - run: npx playwright install --with-deps chromium
       - run: npx nx e2e website --skip-nx-cache
+      # The production-smoke spec is testIgnore'd outside PRODUCTION_SMOKE mode,
+      # so a module-load error in it is invisible until the post-merge Production
+      # smoke job runs against main — too late to gate a PR. Collect it here:
+      # --list loads every spec without hitting production.
+      - name: Production-smoke spec must load
+        env:
+          PRODUCTION_SMOKE: 'true'
+          BASE_URL: https://threadplane.ai
+        run: |
+          npx playwright test apps/website/e2e/platform-production-smoke.spec.ts \
+            --config apps/website/playwright.config.ts --list
 
   required-pr-checks:
     name: CI — required
