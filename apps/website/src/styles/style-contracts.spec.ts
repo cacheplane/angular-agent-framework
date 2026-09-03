@@ -205,15 +205,22 @@ function baseDeclarationsFor(css: string, selector: string): string {
 // hand a contract the wrong block's contents instead of erroring, exactly
 // the failure mode declarationsFor() already avoids by merging every rule
 // that matches a selector. So this merges every block for the query too.
+//
+// Matching is on the *complete* query text (the text between `@media` and
+// the opening `{`, trimmed) rather than a substring, so a compound query
+// like `(pointer: coarse) and (min-width: 600px)` is a different query and
+// never gets folded into a plainer `(pointer: coarse)` lookup.
 function mediaBlock(css: string, query: string): string {
-  const needle = `@media ${query}`;
   const blocks: string[] = [];
   let searchFrom = 0;
 
   for (;;) {
-    const start = css.indexOf(needle, searchFrom);
+    const start = css.indexOf('@media', searchFrom);
     if (start === -1) break;
     const open = css.indexOf('{', start);
+    if (open === -1) break;
+
+    const actualQuery = css.slice(start + '@media'.length, open).trim();
     let depth = 0;
     let end = -1;
 
@@ -229,7 +236,9 @@ function mediaBlock(css: string, query: string): string {
     }
 
     if (end === -1) break;
-    blocks.push(css.slice(open + 1, end));
+    if (actualQuery === query) {
+      blocks.push(css.slice(open + 1, end));
+    }
     searchFrom = end + 1;
   }
 
@@ -311,6 +320,15 @@ describe('style contracts', () => {
       expect(
         declarationsFor(mediaBlock(css, '(pointer: coarse)'), '.docs-control-plane-search-kbd')
       ).toMatch(/display:\s*none/);
+    });
+
+    it('does not merge a compound query into a simpler one', () => {
+      const compoundCss = `
+        @media (pointer: coarse) { .a { color: red; } }
+        @media (pointer: coarse) and (min-width: 600px) { .b { color: blue; } }
+      `;
+      expect(mediaBlock(compoundCss, '(pointer: coarse)')).toContain('.a');
+      expect(mediaBlock(compoundCss, '(pointer: coarse)')).not.toContain('.b');
     });
   });
 });
