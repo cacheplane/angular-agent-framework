@@ -39,3 +39,12 @@ describe('FinalCTA', () => {
     expect(link.getAttribute('rel')).toBeNull();
   });
 });
+
+describe('FinalCTA caption surface', () => {
+  it('renders no trailing caption', () => {
+    const { container } = render(<FinalCTA />);
+
+    expect(container.querySelector('.final-cta-caption')).toBeNull();
+    expect(document.body.textContent ?? '').not.toMatch(/installation is inert/i);
+  });
+});

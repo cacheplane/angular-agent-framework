@@ -72,7 +72,6 @@ export default async function AgUiPage() {
         headline="The adapter is the only part that speaks AG-UI"
         body="Everything above the seam is plain Angular — signals in, components out. toAgent() keeps the protocol at the boundary, so nothing in your UI changes when the backend does."
         highlight="ag-ui"
-        caption="Four of the seven AG-UI runtimes shown; the rest speak the same protocol."
       />
 
       <FeatureBlock

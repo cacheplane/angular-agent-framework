@@ -6,7 +6,6 @@ import { Pill } from '../../components/ui/Pill';
 import { FeatureBlock } from '../../components/landing/FeatureBlock';
 import { BrowserFrame } from '../../components/ui/BrowserFrame';
 import { WhitePaperBlock } from '../../components/landing/WhitePaperBlock';
-import { Promises } from '../../components/landing/Promises';
 import { FinalCTA } from '../../components/landing/FinalCTA';
 import { DiagramSection } from '../../components/landing/DiagramSection';
 import { PilotJourney } from '../../components/docs/diagrams';
@@ -126,7 +125,7 @@ export default function PilotToProdPage() {
         headline="Production-ready, not demo-ready."
         body="Observability, error boundaries, fallback strategies, deploy paths, on-call runbook. The stuff that makes the difference between a demo and an app you can leave running on a Friday afternoon."
         rows={[
-          { claim: 'Tracing, metrics, error budgets', api: 'OpenTelemetry hooks' },
+          { claim: 'Tracing, metrics, error budgets', api: 'Distributed tracing hooks' },
           { claim: 'Fallbacks across every agent surface', api: 'readiness + fallback' },
           { claim: 'Load tested, on-call ready', api: 'runbook, yours' },
         ]}
@@ -184,7 +183,6 @@ export default function PilotToProdPage() {
       </Section>
 
       <WhitePaperBlock formPolicy={formPolicy} />
-      <Promises />
 
       {/* Contact anchor */}
       <Section id="contact" surface="white" ariaLabelledBy="contact-heading">

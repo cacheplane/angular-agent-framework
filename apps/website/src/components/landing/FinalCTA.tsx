@@ -12,8 +12,6 @@ interface FinalCTAProps {
   primary?: { label: string; href: string; external?: boolean } | null;
   /** Optional secondary CTA. Defaults to the live Website workspace. */
   secondary?: { label: string; href: string; external?: boolean } | null;
-  /** Optional trailing caption. Defaults to licensing and telemetry line. Pass null to hide. */
-  caption?: string | null;
   /**
    * 'dark' renders on the dark band. Rule (amended 2026-08-31): dark closes
    * PRODUCT pages — the homepage (pairing with the Yes wall) and the four
@@ -32,7 +30,6 @@ export function FinalCTA({
   subtext = 'Install the framework, read the docs, and have a streaming chat in your app this afternoon.',
   primary = null,
   secondary = DEFAULT_SECONDARY,
-  caption = 'All packages are MIT · Production support available · Installation is inert',
   variant = 'default',
 }: FinalCTAProps = {}) {
   return (
@@ -78,11 +75,6 @@ export function FinalCTA({
               </Button>
             ) : null}
           </div>
-          {caption ? (
-            <p className="final-cta-caption">
-              {caption}
-            </p>
-          ) : null}
         </div>
       </Container>
     </Section>
