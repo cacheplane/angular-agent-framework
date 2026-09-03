@@ -28,7 +28,7 @@ The page optimizes for comprehension, quickstart entry, and activation. Not for 
 | Takeover gesture | Visible "Take control" pill, plus any pointer-down or focus inside the surface. |
 | Primary CTA | "Install Threadplane" opens an install dialog. The dialog's quickstart link and the final CTA land on a new "Try without a backend" docs page. |
 | No-backend path | Shipped in this release. A new docs page, verified from a clean `ng new` app before launch. |
-| Yes Wall | Eight questions shown (two per group), in-place expand to all seventeen. No new route. |
+| Yes Wall | Eight questions shown (two per group), in-place expand to all sixteen. No new route. |
 | Runtime parity | Its own section below the hero, not merged into it. |
 | Branch base | `origin/main`. The old brainstorm branch carries one stray, superseded commit and is not used. |
 
@@ -90,21 +90,20 @@ poster → playRequested (mobile or reduced-motion: user pressed "Play walkthrou
 
 ### 4.3 The `/hero` route (examples/chat side)
 
-A new `HeroMode` component registered beside `embed`, `popup`, and `sidebar`, hosted under `DemoShell` so it inherits client tools, the A2UI catalog, and model options.
+A new top-level lazy route `/hero` with its own `HeroMode` component. It is deliberately **not** hosted under `DemoShell`: the shell's `provideAgent` uses module-scope thread state and a palette, neither of which the hero wants. `HeroMode` provides two agents at component level through two `AgentRef`s:
 
-- **Agent as a signal.** `HeroMode` binds `<chat [agent]="agent()">`. It starts on a replay agent created with `provideAgent`-equivalent wiring around a `ReplayTransport`; takeover sets the signal to the shell's live `DEMO_AGENT`. Verify during implementation that `<chat>` re-binds cleanly when its `agent` input changes; if it does not, wrap the composition in `@if` keyed on the agent so it remounts.
-- **ReplayTransport** implements the LangGraph adapter's `AgentTransport`. `stream()` yields the events of a committed fixture (`examples/chat/angular/src/assets/hero-replay.json`) honoring each event's relative timestamp, scaled by a speed factor, and aborts on the signal. Two recorded runs are stored: the initial prompt run, and the resume run after approval. `joinStream` and `createQueuedRun` are not implemented.
-- **Recording** is a one-off `RecordingTransport` wrapper around the real transport, enabled by a query flag in dev only, that captures `{ tMs, event }` pairs to the console for pasting into the fixture. The fixture is regenerated when the demo backend's prompt or tools change; a spec asserts the fixture parses and contains a tool call, an interrupt, and a generative payload.
-- **Script runner** is a small pure state machine with an injected clock so it is testable:
-  1. wait for `visible`;
-  2. show the cursor SVG at the composer, type the prompt character by character at 40ms;
-  3. submit through the agent API (`agent.submit`), not by dispatching DOM events;
-  4. wait for the interrupt to appear, move the cursor to the Approve control over 600ms, press it visually, then call the agent's resume path with the same payload the panel would send;
-  5. wait for the run to end, hold 4s, then loop with a Replay affordance visible.
-  It pauses on `visible: false` and on `document.hidden`, and resumes where it left off. Under `prefers-reduced-motion` typing is instant and the cursor still moves but does not animate.
-- **Status pill** in the frame's top bar: `● Replaying a recorded LangGraph run` while scripted; `● Live · LangGraph · new thread` after takeover. This is the honesty marker and must never be hidden.
-- **Takeover.** Triggered by the "Take control" pill, `pointerdown` anywhere on the surface, or `focusin` on any control inside it. It stops the runner, hides the cursor, sets the agent signal to the live agent on a fresh thread, dims the replayed transcript to 45% opacity, inserts the divider "You are live. The walkthrough above was a recording; this thread is new.", and shows the existing welcome suggestion chips. A "Replay walkthrough" link returns to the scripted state on a fresh replay agent.
-- The live agent uses the shell's existing LangGraph config and telemetry. Nothing new is configured for the backend.
+- **Replay agent**: `provideAgent(HERO_REPLAY_REF, () => ({ assistantId: 'hero-replay', transport: inject(HeroReplayTransport) }))`.
+- **Live agent**: `provideAgent(HERO_LIVE_REF, () => ({ apiUrl: environment.langGraphApiUrl, assistantId: environment.assistantId, threadId, onThreadId }))`, the same backend the canonical demo uses.
+
+`HeroMode` binds `<chat [agent]="activeAgent()">` and `<chat-interrupt-panel [agent]="activeAgent()">`; `activeAgent` is a signal that starts on the replay agent and switches to the live agent on takeover. `ChatComponent.agent` is a signal input and every internal read goes through it, so the swap is a plain input change.
+
+- **HeroReplayTransport** (injectable) implements the LangGraph adapter's `AgentTransport`. It loads `public/hero-replay.json` once (served at `/hero-replay.json`, so the recording never enters the initial bundle), then answers each `stream()` call with the next recorded run in order, pacing events by their recorded gaps clamped to a 30 ms floor and a 600 ms ceiling, and stopping on the abort signal. `reset()` rewinds to the first run. `createQueuedRun`, `cancelRun`, `getHistory` are no-ops like `FakeStreamTransport`; `joinStream` yields nothing.
+- **The recording** is three runs from one scripted session against the aimock-backed backend (deterministic, no API key): the destructive-cleanup prompt that pauses on `request_approval`, the resume run after Accept, and the contact-form prompt that renders an A2UI surface. A `HeroRecordingTransport` wraps `FetchStreamTransport`, stamps each event with milliseconds since the run started, and exposes the runs on `window.__heroRecording`. It is active only when `/hero?record=1` is opened in a non-production build. A Playwright `.record.ts` script drives it and writes the fixture. A spec asserts the fixture has three runs and contains an interrupt event and an A2UI payload.
+- **Script runner** is a small class with an injected host interface and clock so it is unit-testable: wait for visible, show the cursor at the composer, type the first prompt character by character (40 ms), click Send, wait for `interrupt()` to be set, move the cursor to Accept (600 ms) and press it, wait for the run to finish, type the second prompt, send, wait for the run to finish, hold, then restart on a fresh replay (`switchThread(null)` on the replay agent plus `reset()` on the transport). It pauses on `visible: false` or `document.hidden` and resumes where it stopped. Under `prefers-reduced-motion` typing is instant and the cursor jumps. Typing and sending go through the real composer DOM (`textarea[aria-label="Type a message"]` and the Send button) because the composer has no public draft API; Accept goes through the same `onInterruptAction('accept')` path a user click takes.
+- **Status pill** in the frame's top bar: `Replaying a recorded LangGraph run` while scripted; `Live · LangGraph · new thread` after takeover. This is the honesty marker and is never hidden.
+- **Takeover.** Triggered by the "Take control" pill, `pointerdown` anywhere on the surface, or `focusin` on any control inside it. It stops the runner, hides the cursor, and swaps `activeAgent` to the live agent, whose thread is new and empty. A banner above the composer reads "You are live on a new LangGraph thread. The walkthrough was a recording." and the existing welcome suggestion chips render. A "Replay walkthrough" link returns to the replay agent and restarts the script. (Brainstorm mockups showed the replayed transcript dimmed under the live one; `<chat>` renders one agent's transcript, so the banner replaces the dimmed transcript.)
+- **Bridge.** The frame posts `{ type: 'tplane-hero', state }` to `window.parent` and accepts `{ type: 'tplane-hero', visible }` only from an allowlisted parent origin (threadplane.ai, www.threadplane.ai, localhost:3000, 127.0.0.1:4308).
+- The live agent uses the demo's existing LangGraph config and telemetry. Nothing new is configured for the backend.
 
 ### 4.4 InstallDialog
 
@@ -156,7 +155,7 @@ Persist reuses the Ship block's panes. Test has a code pane only. Each block kee
 
 **CodingAgentQuickstart.** Heading `Give your coding agent the Angular agent UI playbook.` The brief's seven-step prompt rendered from `positioning.ts` in a code block with copy. Links: `Copy setup prompt`, `Read AGENTS.md` (`/AGENTS.md`), `Open the full agent reference` (`/llms-full.txt`), `Start the human quickstart`. Event `home_coding_agent_prompt`; prompt text never enters analytics.
 
-**YesWall.** Data unchanged. Renders the first two questions of each group; a button `See all 17 production-readiness questions` (count computed from data) expands the rest in place with `aria-expanded` and `aria-controls`. Event `home_production_readiness_expand`. The aside copy is regenerated from the count. Questions whose answer depends on the backend keep their existing qualification in the API pairing.
+**YesWall.** Data unchanged. Renders the first two questions of each group; a button `See all 16 production-readiness questions` (count computed from data) expands the rest in place with `aria-expanded` and `aria-controls`. Event `home_production_readiness_expand`. The aside copy is regenerated from the count. Questions whose answer depends on the backend keep their existing qualification in the API pairing.
 
 **ScopeTable.** Heading `Why Threadplane`. The brief's four-row table (raw stream SDK, backend agent framework, generative-UI renderer, React-first agent UI) as a static, responsive table that scrolls horizontally inside its own container on narrow widths. No competitor is named.
 
@@ -199,7 +198,7 @@ export const CODING_AGENT_PROMPT: string;
 
 ### 9.2 Derived trust facts
 
-`apps/website/src/lib/compat-facts.ts` reads `libs/chat/package.json` at build time and exports `{ license, angularRange }`, formatting the peer range as `Angular 20–22`. A spec asserts the formatted string against the manifest. No component types a version.
+The Angular range comes from the existing `WEBSITE_SUPPORTED_ANGULAR_MAJORS` in `apps/website/src/components/pricing/angular-support.mjs`, which `angular-support-copy.spec.ts` already verifies against `libs/langgraph/package.json`. A `formatAngularRange()` helper renders it as `Angular 20–22`. The license word in the trust line is asserted by a spec against `libs/chat/package.json`'s `license` field. No component types a version.
 
 ### 9.3 Drift guards
 
