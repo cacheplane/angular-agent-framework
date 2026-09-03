@@ -77,6 +77,21 @@ function readNamedStep(job, name) {
 }
 
 describe('CI workflow', () => {
+  it('scopes every vercel promote to the team that owns the deployment', async () => {
+    const workflow = await readFile('.github/workflows/ci.yml', 'utf8');
+    const promotes = workflow
+      .split('\n')
+      .filter((line) => line.includes('vercel promote'));
+
+    assert.ok(promotes.length >= 2, 'expected Website and cockpit promotions');
+    for (const line of promotes) {
+      // `promote` takes a bare URL and cannot read .vercel/project.json, so
+      // without --scope it uses the token's default team and fails.
+      assert.match(line, /--scope=/, `unscoped vercel promote: ${line.trim()}`);
+    }
+  });
+
+
   it('runs in a merge queue and reports the required context there', async () => {
     const workflow = await readFile('.github/workflows/ci.yml', 'utf8');
 
@@ -368,7 +383,7 @@ describe('CI workflow', () => {
     assert.match(freshnessStep, /fresh=true.*GITHUB_OUTPUT/);
     assert.match(
       promoteStep,
-      /vercel promote "\$\{\{ steps\.deploy_website\.outputs\.deployment_url \}\}" --yes/
+      /vercel promote "\$\{\{ steps\.deploy_website\.outputs\.deployment_url \}\}" --scope=\$\{\{ secrets\.VERCEL_ORG_ID \}\} --yes/
     );
     assert.match(
       promoteStep,
@@ -519,7 +534,7 @@ describe('CI workflow', () => {
     assert.match(promotionFreshnessStep, /fresh=true.*GITHUB_OUTPUT/);
     assert.match(
       promoteStep,
-      /vercel promote "\$\{\{ steps\.deploy_cockpit\.outputs\.deployment_url \}\}" --yes/
+      /vercel promote "\$\{\{ steps\.deploy_cockpit\.outputs\.deployment_url \}\}" --scope=\$\{\{ secrets\.VERCEL_ORG_ID \}\} --yes/
     );
     assert.match(
       promoteStep,
