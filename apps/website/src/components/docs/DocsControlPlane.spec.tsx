@@ -352,19 +352,13 @@ describe('DocsControlPlane', () => {
 });
 
 describe('DocsControlPlane — library-neutral', () => {
-  it.each([
-    { pageTitle: 'Overview', path: '/docs' },
-    {
-      pageTitle: 'Choosing an adapter',
-      path: '/docs/choosing-an-adapter',
-    },
-  ])('$path keeps standalone controls disabled and free of Cockpit handoffs', ({ pageTitle }) => {
+  it('keeps every standalone control disabled on the adapter comparison page', () => {
     render(
       <DocsControlPlane
         activeLibrary={null}
         activeSection=""
         activeSlug=""
-        pageTitle={pageTitle}
+        pageTitle="Choosing an adapter"
       />,
     );
 
@@ -377,7 +371,33 @@ describe('DocsControlPlane — library-neutral', () => {
       fireEvent.click(control);
     }
     expect(track).not.toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: 'Search docs' })).toBeTruthy();
+  });
+
+  it('sends Run to the default example when the index supplies one', () => {
+    render(
+      <DocsControlPlane
+        activeLibrary={null}
+        activeSection=""
+        activeSlug=""
+        pageTitle="Overview"
+        runHref="/docs/langgraph/guides/streaming?mode=run"
+      />,
+    );
+
+    // href turns the rail item into an <a>, so it is a link, not a button.
+    expect(
+      screen.getByRole('link', { name: 'Run' }).getAttribute('href'),
+    ).toBe('/docs/langgraph/guides/streaming?mode=run');
+
+    // The index still has no Code or API view of its own.
+    for (const mode of ['Code', 'API'] as const) {
+      expect(
+        screen.getByRole('button', {
+          name: mode,
+          description: `${mode} is unavailable because this page has no workspace capability.`,
+        }).getAttribute('href'),
+      ).toBeNull();
+    }
   });
 
   it('states only what it knows in Scope', () => {

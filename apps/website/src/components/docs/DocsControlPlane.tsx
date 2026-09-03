@@ -30,6 +30,15 @@ export interface DocsControlPlaneProps {
   activeSection: string;
   activeSlug: string;
   pageTitle: string;
+  /**
+   * Where the Run rail item goes on a page that has no example of its own.
+   *
+   * Only the docs index supplies this. Run normally means "run the example on
+   * this page", and a docs-only page correctly has none — but the index is not
+   * a capability page at all, so the canonical example is the only meaningful
+   * target. Absent, Run stays disabled.
+   */
+  runHref?: string;
 }
 
 const dispatchSearch = () =>
@@ -136,12 +145,20 @@ export function DocsControlPlane(props: DocsControlPlaneProps) {
               href={currentPath}
               active
             />
-            <ControlPlaneRailItem
-              label="Run"
-              icon={<Play size={18} aria-hidden="true" />}
-              disabled
-              disabledReason={disabledReason('Run')}
-            />
+            {props.runHref ? (
+              <ControlPlaneRailItem
+                label="Run"
+                icon={<Play size={18} aria-hidden="true" />}
+                href={props.runHref}
+              />
+            ) : (
+              <ControlPlaneRailItem
+                label="Run"
+                icon={<Play size={18} aria-hidden="true" />}
+                disabled
+                disabledReason={disabledReason('Run')}
+              />
+            )}
             <ControlPlaneRailItem
               label="Code"
               icon={<Code2 size={18} aria-hidden="true" />}
