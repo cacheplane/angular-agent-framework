@@ -200,7 +200,9 @@ export class HeroMode implements HeroScriptHost {
       console.error('hero recording unavailable; staying live', err);
       this.mode.set('live');
       this.bridge.postState('ready');
-      return;
+      // In record mode the fixture is the artifact being produced, so a missing
+      // (or stale) one must not stop the script from driving the live agent.
+      if (!isRecordMode()) return;
     }
     this.bridge.postState('ready');
     // Opened directly (or in record mode): no embedder will drive visibility.
