@@ -2,5 +2,11 @@
   "buildCommand": "npx nx build website",
   "outputDirectory": "dist/apps/website/.next",
   "framework": "nextjs",
-  "installCommand": "npm ci"
+  "installCommand": "npm ci",
+  "crons": [
+    {
+      "path": "/api/cron/lifecycle",
+      "schedule": "* * * * *"
+    }
+  ]
 }

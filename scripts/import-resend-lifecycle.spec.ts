@@ -12,6 +12,7 @@ import {
   stopContact,
 } from '../libs/growth/src/index.ts';
 import {
+  cancellationDeadline,
   importResendLifecycleSnapshot,
   mainImportResendLifecycle,
   snapshotResendLifecycle,
@@ -133,6 +134,7 @@ function mainHarness(overrides?: {
   client?: ResendLifecycleClient;
   environment?: Record<string, string | undefined>;
   executor?: SqlExecutor;
+  now?: () => Date;
 }) {
   const output: string[] = [];
   const errors: string[] = [];
@@ -158,6 +160,7 @@ function mainHarness(overrides?: {
       loadKeyring,
       writeOutput: (line: string) => output.push(line),
       writeError: (line: string) => errors.push(line),
+      now: overrides?.now,
     },
   };
 }
@@ -274,6 +277,31 @@ describe('snapshotResendLifecycle', () => {
     });
   });
 
+  it('rejects an impossible scheduled calendar date with the safe payload error', async () => {
+    const provider = paginatedClient({
+      emailPages: [
+        [
+          {
+            id: 'invalid_scheduled_date',
+            to: ['one@example.com'],
+            created_at: '2026-02-01T00:00:00.000Z',
+            scheduled_at: '2026-02-31T12:00:00.000Z',
+            last_event: 'scheduled',
+          },
+        ],
+      ],
+    });
+    let outcome = 'resolved';
+
+    try {
+      await snapshotResendLifecycle(provider.client);
+    } catch (error) {
+      outcome = error instanceof Error ? error.message : 'unknown_error';
+    }
+
+    expect(outcome).toBe('provider_emails_payload_invalid');
+  });
+
   it('accepts the PostgreSQL-style timestamp shape returned by live Resend contacts', async () => {
     const provider = paginatedClient({
       contactPages: [
@@ -387,6 +415,17 @@ describe('snapshotResendLifecycle', () => {
       /provider_contacts_pagination_invalid/u
     );
     expect(provider.contactsList).toHaveBeenCalledTimes(100);
+  });
+});
+
+describe('cancellationDeadline', () => {
+  it('returns null without attempting a timing comparison when no messages are scheduled', () => {
+    expect(
+      cancellationDeadline(
+        { contacts: fixtureSnapshot().contacts, scheduledEmails: [] },
+        new Date(Number.NaN)
+      )
+    ).toBeNull();
   });
 });
 
@@ -552,6 +591,129 @@ describe('redacted dry run and guards', () => {
     expect(harness.createExecutor).not.toHaveBeenCalled();
   });
 
+  it('rejects an unsafe cancellation window before loading keys or opening Neon', async () => {
+    const provider = paginatedClient({
+      emailPages: [
+        [
+          {
+            id: 'email_scheduled_1',
+            to: ['first.person@example.com'],
+            created_at: '2026-09-01T00:00:00.000Z',
+            scheduled_at: '2026-09-01T12:34:59.999Z',
+            last_event: 'scheduled',
+          },
+        ],
+      ],
+    });
+    const nowFn = vi.fn(() => now);
+    const harness = mainHarness({
+      client: provider.client,
+      environment: {
+        RESEND_API_KEY: 're_secret_value',
+        TEST_DATABASE_URL: 'postgres://test-safe',
+      },
+      now: nowFn,
+    });
+
+    const exitCode = await mainImportResendLifecycle(
+      ['--apply', '--expected-contacts', '1', '--expected-scheduled', '1'],
+      harness.dependencies
+    );
+
+    expect(exitCode).toBe(1);
+    expect(harness.errors).toEqual([
+      'Resend lifecycle import failed: snapshot_cancellation_window_insufficient',
+    ]);
+    expect(nowFn).toHaveBeenCalledTimes(1);
+    expect(harness.loadKeyring).not.toHaveBeenCalled();
+    expect(harness.createExecutor).not.toHaveBeenCalled();
+    expect(provider.cancel).not.toHaveBeenCalled();
+  });
+
+  it('accepts the exact 35-minute cancellation boundary', async () => {
+    const provider = paginatedClient({
+      emailPages: [
+        [
+          {
+            id: 'email_scheduled_1',
+            to: ['first.person@example.com'],
+            created_at: '2026-09-01T00:00:00.000Z',
+            scheduled_at: '2026-09-01T12:35:00.000Z',
+            last_event: 'scheduled',
+          },
+        ],
+      ],
+    });
+    const state: ImportState = {
+      contacts: new Map(),
+      jobs: new Map(),
+      activities: new Map(),
+      nextContact: 1,
+    };
+    const nowFn = vi.fn(() => now);
+    const harness = mainHarness({
+      client: provider.client,
+      executor: importExecutor(state),
+      environment: {
+        RESEND_API_KEY: 're_secret_value',
+        TEST_DATABASE_URL: 'postgres://test-safe',
+      },
+      now: nowFn,
+    });
+
+    const exitCode = await mainImportResendLifecycle(
+      ['--apply', '--expected-contacts', '1', '--expected-scheduled', '1'],
+      harness.dependencies
+    );
+
+    expect(exitCode).toBe(0);
+    expect(nowFn).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(String(harness.output[0]))).toMatchObject({
+      cancellation_deadline: '2026-09-01T12:30:00.000Z',
+      cancellation_remaining_seconds: 1800,
+    });
+  });
+
+  it('applies a zero-schedule snapshot with null deadline output', async () => {
+    const provider = paginatedClient({ emailPages: [[]] });
+    const state: ImportState = {
+      contacts: new Map(),
+      jobs: new Map(),
+      activities: new Map(),
+      nextContact: 1,
+    };
+    const harness = mainHarness({
+      client: provider.client,
+      executor: importExecutor(state),
+      environment: {
+        RESEND_API_KEY: 're_secret_value',
+        TEST_DATABASE_URL: 'postgres://test-safe',
+      },
+      now: () => now,
+    });
+
+    const exitCode = await mainImportResendLifecycle(
+      ['--apply', '--expected-contacts', '1', '--expected-scheduled', '0'],
+      harness.dependencies
+    );
+
+    expect(exitCode).toBe(0);
+    expect(JSON.parse(String(harness.output[0]))).toEqual({
+      command: 'import-resend-lifecycle',
+      mode: 'apply',
+      contacts_created: 1,
+      contacts_existing: 0,
+      contacts_rekeyed: 0,
+      legacy_contact_markers_created: 1,
+      legacy_contact_markers_existing: 0,
+      legacy_scheduled_jobs_created: 0,
+      legacy_scheduled_jobs_existing: 0,
+      legacy_provider_cancellations_required: 0,
+      cancellation_deadline: null,
+      cancellation_remaining_seconds: null,
+    });
+  });
+
   it('applies only after exact counts and passes TEST_DATABASE_URL explicitly', async () => {
     const state: ImportState = {
       contacts: new Map(),
@@ -566,6 +728,7 @@ describe('redacted dry run and guards', () => {
         RESEND_API_KEY: 're_secret_value',
         TEST_DATABASE_URL: 'postgres://test-safe',
       },
+      now: () => now,
     });
 
     const exitCode = await mainImportResendLifecycle(
@@ -576,12 +739,22 @@ describe('redacted dry run and guards', () => {
     expect(exitCode).toBe(0);
     expect(harness.createExecutor).toHaveBeenCalledWith('postgres://test-safe');
     expect(harness.loadKeyring).toHaveBeenCalledTimes(1);
-    expect(JSON.parse(String(harness.output[0]))).toMatchObject({
+    const line = String(harness.output[0]);
+    expect(JSON.parse(line)).toEqual({
       command: 'import-resend-lifecycle',
       mode: 'apply',
       contacts_created: 1,
-      legacy_jobs_created: 1,
+      contacts_existing: 0,
+      contacts_rekeyed: 0,
+      legacy_contact_markers_created: 1,
+      legacy_contact_markers_existing: 0,
+      legacy_scheduled_jobs_created: 1,
+      legacy_scheduled_jobs_existing: 0,
+      legacy_provider_cancellations_required: 0,
+      cancellation_deadline: '2026-09-03T11:55:00.000Z',
+      cancellation_remaining_seconds: 172500,
     });
+    expect(line).not.toMatch(/@|provider_contact_|provider_email_/u);
   });
 
   it('uses only DATABASE_URL with the explicit environment-bound acknowledgement', async () => {
@@ -598,6 +771,7 @@ describe('redacted dry run and guards', () => {
         RESEND_API_KEY: 're_secret_value',
         DATABASE_URL: 'postgres://environment-bound',
       },
+      now: () => now,
     });
 
     const exitCode = await mainImportResendLifecycle(
@@ -636,6 +810,10 @@ interface ImportState {
   activities: Map<string, Record<string, unknown>>;
   nextContact: number;
   failAtMarker?: string;
+  queries?: Array<{
+    sql: string;
+    parameters: readonly unknown[];
+  }>;
 }
 
 function importExecutor(state: ImportState): SqlExecutor {
@@ -644,6 +822,7 @@ function importExecutor(state: ImportState): SqlExecutor {
       sql: string,
       parameters: readonly unknown[] = []
     ): Promise<SqlQueryResult<Row>> {
+      state.queries?.push({ sql, parameters: [...parameters] });
       const marker = /\/\* growth:([a-z0-9-]+) \*\//u.exec(sql)?.[1];
       if (marker === state.failAtMarker) throw new Error('injected failure');
       if (marker === 'lock-resend-lifecycle-import') return { rows: [] };
@@ -711,6 +890,52 @@ function importExecutor(state: ImportState): SqlExecutor {
         contact.email_hmac_key_version = Number(parameters[1]);
         contact.email_lookup_hmac = String(parameters[2]);
         return { rows: [contact] } as SqlQueryResult<Row>;
+      }
+      if (marker === 'import-insert-cutover-configuration') {
+        const key = String(parameters[0]);
+        if (state.activities.has(key)) {
+          return { rows: [] } as SqlQueryResult<Row>;
+        }
+        const activity = {
+          event_key: key,
+          contact_id: null,
+          project_id: null,
+          occurred_at: parameters[1],
+          kind: parameters[2],
+          data: JSON.parse(String(parameters[3])),
+        };
+        state.activities.set(key, activity);
+        return { rows: [activity] } as SqlQueryResult<Row>;
+      }
+      if (marker === 'import-read-cutover-configuration') {
+        const activity = state.activities.get(String(parameters[0]));
+        return { rows: activity ? [activity] : [] } as SqlQueryResult<Row>;
+      }
+      if (marker === 'import-insert-contact-marker') {
+        const idempotencyKey = String(parameters[2]);
+        if (state.jobs.has(idempotencyKey)) {
+          return { rows: [] } as SqlQueryResult<Row>;
+        }
+        const job = {
+          id: `00000000-0000-4000-8000-${String(state.jobs.size + 100).padStart(
+            12,
+            '0'
+          )}`,
+          kind: 'legacy',
+          contact_id: parameters[0],
+          status: 'cancelled',
+          available_at: parameters[1],
+          provider_email_id: null,
+          idempotency_key: idempotencyKey,
+          delivery_status: 'not_submitted',
+          payload: JSON.parse(String(parameters[3])),
+        };
+        state.jobs.set(idempotencyKey, job);
+        return { rows: [job] } as SqlQueryResult<Row>;
+      }
+      if (marker === 'import-read-contact-marker') {
+        const job = state.jobs.get(String(parameters[0]));
+        return { rows: job ? [job] : [] } as SqlQueryResult<Row>;
       }
       if (marker === 'import-insert-legacy-job') {
         const idempotencyKey = String(parameters[3]);
@@ -840,6 +1065,18 @@ function importExecutor(state: ImportState): SqlExecutor {
   };
 }
 
+function recordedQuery(state: ImportState, marker: string) {
+  const query = state.queries?.find(({ sql }) =>
+    sql.includes(`/* growth:${marker} */`)
+  );
+  if (!query) throw new Error(`Expected recorded query for ${marker}`);
+  return query;
+}
+
+function compactSql(sql: string): string {
+  return sql.replace(/\s+/gu, ' ').trim();
+}
+
 function fixtureSnapshot(): ResendLifecycleSnapshot {
   return {
     contacts: [
@@ -879,7 +1116,432 @@ function fixtureSnapshot(): ResendLifecycleSnapshot {
   };
 }
 
+function oneContactSnapshot(scheduledAt?: string): ResendLifecycleSnapshot {
+  const fixture = fixtureSnapshot();
+  return {
+    contacts: fixture.contacts.slice(0, 1),
+    scheduledEmails:
+      scheduledAt === undefined
+        ? []
+        : [
+            {
+              ...(fixture
+                .scheduledEmails[0] as ResendLifecycleSnapshot['scheduledEmails'][number]),
+              scheduled_at: scheduledAt,
+            },
+          ],
+  };
+}
+
+const expectedFixtureSnapshotIdentity =
+  '60242884d71c5e0f7b23323b4af191a1a59aca157e150d2ab1315362dfcf5e3d';
+
 describe('importResendLifecycleSnapshot', () => {
+  it('creates one terminal legacy marker for a contact with no scheduled messages', async () => {
+    const state: ImportState = {
+      contacts: new Map(),
+      jobs: new Map(),
+      activities: new Map(),
+      nextContact: 1,
+      queries: [],
+    };
+
+    const result = await importResendLifecycleSnapshot(
+      importExecutor(state),
+      oneContactSnapshot(),
+      keyring,
+      now
+    );
+
+    expect(result).toEqual({
+      contacts_created: 1,
+      contacts_existing: 0,
+      contacts_rekeyed: 0,
+      legacy_contact_markers_created: 1,
+      legacy_contact_markers_existing: 0,
+      legacy_scheduled_jobs_created: 0,
+      legacy_scheduled_jobs_existing: 0,
+      legacy_provider_cancellations_required: 0,
+    });
+    expect(state.jobs).toHaveLength(1);
+    const markerKey = 'legacy:resend:contact:provider_contact_1';
+    const markerPayload = {
+      imported: true,
+      legacy_type: 'contact_marker',
+      provider: 'resend',
+      provider_contact_id: 'provider_contact_1',
+    };
+    const marker = state.jobs.get(markerKey);
+    const importedContact = state.contacts.get('first.person@example.com');
+    expect({
+      contact_id: marker?.['contact_id'],
+      kind: marker?.['kind'],
+      status: marker?.['status'],
+      available_at: marker?.['available_at'],
+      idempotency_key: marker?.['idempotency_key'],
+      payload: marker?.['payload'],
+      provider_email_id: marker?.['provider_email_id'],
+      delivery_status: marker?.['delivery_status'],
+    }).toEqual({
+      contact_id: importedContact?.id,
+      kind: 'legacy',
+      status: 'cancelled',
+      available_at: now,
+      idempotency_key: markerKey,
+      payload: markerPayload,
+      provider_email_id: null,
+      delivery_status: 'not_submitted',
+    });
+    const markerInsert = recordedQuery(state, 'import-insert-contact-marker');
+    expect(compactSql(markerInsert.sql)).toContain(
+      'insert into growth_jobs ( kind, contact_id, status, available_at, idempotency_key, payload, provider_email_id, delivery_status )'
+    );
+    expect(compactSql(markerInsert.sql)).toContain(
+      "values ( 'legacy', $1, 'cancelled', $2, $3, $4::jsonb, null, 'not_submitted' )"
+    );
+    expect(compactSql(markerInsert.sql)).toContain(
+      'on conflict (idempotency_key) do nothing'
+    );
+    expect(markerInsert.parameters).toEqual([
+      importedContact?.id,
+      now,
+      markerKey,
+      JSON.stringify(markerPayload),
+    ]);
+    expect(
+      state.contacts.get('first.person@example.com')?.outreach_approved_at
+    ).toBeNull();
+    expect(
+      state.activities.get('legacy:resend:cutover:v1:configuration')?.['data']
+    ).toMatchObject({
+      cancellation_deadline: null,
+      expected_contacts: 1,
+      expected_scheduled: 0,
+    });
+  });
+
+  it('creates a contact marker and a separate provider-bound scheduled legacy job', async () => {
+    const state: ImportState = {
+      contacts: new Map(),
+      jobs: new Map(),
+      activities: new Map(),
+      nextContact: 1,
+      queries: [],
+    };
+
+    const result = await importResendLifecycleSnapshot(
+      importExecutor(state),
+      oneContactSnapshot('2026-09-03T12:00:00.000Z'),
+      keyring,
+      now
+    );
+
+    expect(result).toMatchObject({
+      legacy_contact_markers_created: 1,
+      legacy_contact_markers_existing: 0,
+      legacy_scheduled_jobs_created: 1,
+      legacy_scheduled_jobs_existing: 0,
+    });
+    expect(state.jobs).toHaveLength(2);
+    const scheduledKey = 'legacy:resend:scheduled:provider_email_1';
+    const scheduledPayload = {
+      imported: true,
+      legacy_type: 'scheduled_message',
+      provider: 'resend',
+      provider_state: 'scheduled',
+    };
+    const scheduled = state.jobs.get(scheduledKey);
+    const importedContact = state.contacts.get('first.person@example.com');
+    const scheduledAt = new Date('2026-09-03T12:00:00.000Z');
+    expect({
+      contact_id: scheduled?.['contact_id'],
+      kind: scheduled?.['kind'],
+      status: scheduled?.['status'],
+      available_at: scheduled?.['available_at'],
+      idempotency_key: scheduled?.['idempotency_key'],
+      payload: scheduled?.['payload'],
+      provider_email_id: scheduled?.['provider_email_id'],
+      delivery_status: scheduled?.['delivery_status'],
+    }).toEqual({
+      contact_id: importedContact?.id,
+      kind: 'legacy',
+      status: 'pending',
+      available_at: scheduledAt,
+      idempotency_key: scheduledKey,
+      payload: scheduledPayload,
+      provider_email_id: 'provider_email_1',
+      delivery_status: 'not_submitted',
+    });
+    const scheduledInsert = recordedQuery(state, 'import-insert-legacy-job');
+    expect(compactSql(scheduledInsert.sql)).toContain(
+      'insert into growth_jobs ( kind, contact_id, status, available_at, idempotency_key, payload, provider_email_id, delivery_status )'
+    );
+    expect(compactSql(scheduledInsert.sql)).toContain(
+      "values ( 'legacy', $1, 'pending', $2, $4, $5::jsonb, $3, 'not_submitted' )"
+    );
+    expect(compactSql(scheduledInsert.sql)).toContain(
+      'on conflict (idempotency_key) do nothing'
+    );
+    expect(scheduledInsert.parameters).toEqual([
+      importedContact?.id,
+      scheduledAt,
+      'provider_email_1',
+      scheduledKey,
+      JSON.stringify(scheduledPayload),
+    ]);
+  });
+
+  it('reapplies the same snapshot without duplicating either legacy row type', async () => {
+    const state: ImportState = {
+      contacts: new Map(),
+      jobs: new Map(),
+      activities: new Map(),
+      nextContact: 1,
+    };
+    const executor = importExecutor(state);
+    const snapshot = oneContactSnapshot('2026-09-03T12:00:00.000Z');
+    await importResendLifecycleSnapshot(executor, snapshot, keyring, now);
+
+    const result = await importResendLifecycleSnapshot(
+      executor,
+      snapshot,
+      keyring,
+      now
+    );
+
+    expect(result).toMatchObject({
+      legacy_contact_markers_created: 0,
+      legacy_contact_markers_existing: 1,
+      legacy_scheduled_jobs_created: 0,
+      legacy_scheduled_jobs_existing: 1,
+    });
+    expect(state.jobs).toHaveLength(2);
+  });
+
+  it.each([
+    ['status', (row: Record<string, unknown>) => (row['status'] = 'pending')],
+    [
+      'provider binding',
+      (row: Record<string, unknown>) =>
+        (row['provider_email_id'] = 'conflicting_message'),
+    ],
+    [
+      'delivery status',
+      (row: Record<string, unknown>) => (row['delivery_status'] = 'submitted'),
+    ],
+    [
+      'payload',
+      (row: Record<string, unknown>) =>
+        (row['payload'] = {
+          imported: true,
+          legacy_type: 'contact_marker',
+          provider: 'resend',
+        }),
+    ],
+  ] as const)(
+    'rejects a contact marker with conflicting %s',
+    async (_name, tamper) => {
+      const state: ImportState = {
+        contacts: new Map(),
+        jobs: new Map(),
+        activities: new Map(),
+        nextContact: 1,
+      };
+      const executor = importExecutor(state);
+      const snapshot = oneContactSnapshot();
+      await importResendLifecycleSnapshot(executor, snapshot, keyring, now);
+      const marker = state.jobs.get('legacy:resend:contact:provider_contact_1');
+      if (!marker) throw new Error('Fixture contact marker missing');
+      tamper(marker);
+
+      await expect(
+        importResendLifecycleSnapshot(executor, snapshot, keyring, now)
+      ).rejects.toThrow(/^snapshot_identity_conflict$/u);
+    }
+  );
+
+  it('never grants outreach approval while importing an existing contact', async () => {
+    const lookup = createEmailLookupHmac(
+      'first.person@example.com',
+      keyring.active
+    );
+    const approvedAt = new Date('2026-08-31T12:00:00.000Z');
+    const existing = {
+      id: contactId,
+      email_normalized: 'first.person@example.com',
+      email_lookup_hmac: lookup.digest,
+      email_hmac_key_version: lookup.keyVersion,
+      outreach_approved_at: approvedAt,
+      deleted_at: null,
+      updated_at: approvedAt,
+    };
+    const state: ImportState = {
+      contacts: new Map([['first.person@example.com', existing]]),
+      jobs: new Map(),
+      activities: new Map(),
+      nextContact: 2,
+    };
+
+    await importResendLifecycleSnapshot(
+      importExecutor(state),
+      oneContactSnapshot(),
+      keyring,
+      now
+    );
+
+    expect(existing.outreach_approved_at).toEqual(approvedAt);
+  });
+
+  it.each([
+    [
+      'missing legacy type',
+      {
+        imported: true,
+        provider: 'resend',
+        provider_state: 'scheduled',
+      },
+    ],
+    [
+      'extra conflicting property',
+      {
+        imported: true,
+        legacy_type: 'scheduled_message',
+        provider: 'resend',
+        provider_state: 'scheduled',
+        conflicting: true,
+      },
+    ],
+  ] as const)(
+    'rejects a scheduled-message payload with %s on replay',
+    async (_name, conflictingPayload) => {
+      const state: ImportState = {
+        contacts: new Map(),
+        jobs: new Map(),
+        activities: new Map(),
+        nextContact: 1,
+      };
+      const executor = importExecutor(state);
+      const snapshot = oneContactSnapshot('2026-09-03T12:00:00.000Z');
+      await importResendLifecycleSnapshot(executor, snapshot, keyring, now);
+      const scheduled = state.jobs.get(
+        'legacy:resend:scheduled:provider_email_1'
+      );
+      if (!scheduled) throw new Error('Fixture scheduled job missing');
+      scheduled['payload'] = conflictingPayload;
+
+      await expect(
+        importResendLifecycleSnapshot(executor, snapshot, keyring, now)
+      ).rejects.toThrow(/^snapshot_identity_conflict$/u);
+    }
+  );
+
+  it('persists one immutable cutover configuration and validates it on replay', async () => {
+    const state: ImportState = {
+      contacts: new Map(),
+      jobs: new Map(),
+      activities: new Map(),
+      nextContact: 1,
+      queries: [],
+    };
+    const executor = importExecutor(state);
+    const snapshot = fixtureSnapshot();
+    await importResendLifecycleSnapshot(executor, snapshot, keyring, now);
+    const eventKey = 'legacy:resend:cutover:v1:configuration';
+    const configuration = state.activities.get(eventKey);
+    const expectedData = {
+      snapshot_at: now.toISOString(),
+      cancellation_deadline: '2026-09-03T11:55:00.000Z',
+      expected_contacts: 2,
+      expected_scheduled: 2,
+      snapshot_identity: expectedFixtureSnapshotIdentity,
+    };
+
+    expect(configuration).toEqual({
+      event_key: eventKey,
+      contact_id: null,
+      project_id: null,
+      kind: 'legacy.resend_cutover_configured',
+      occurred_at: now,
+      data: expectedData,
+    });
+    const configurationInsert = recordedQuery(
+      state,
+      'import-insert-cutover-configuration'
+    );
+    const configurationSql = compactSql(configurationInsert.sql);
+    expect(configurationSql).toContain(
+      'insert into growth_activity ( event_key, occurred_at, kind, data ) values ($1, $2, $3, $4::jsonb)'
+    );
+    expect(configurationSql).toContain('on conflict (event_key) do nothing');
+    expect(configurationSql).not.toContain('do update');
+    expect(configurationSql).not.toMatch(/\bupdate growth_activity\b/u);
+    expect(configurationInsert.parameters).toEqual([
+      eventKey,
+      now,
+      'legacy.resend_cutover_configured',
+      JSON.stringify(expectedData),
+    ]);
+    expect(JSON.stringify(configuration)).not.toMatch(
+      /@|provider_contact_|provider_email_/u
+    );
+    const immutableConfiguration = structuredClone(configuration);
+    const reorderedSnapshot: ResendLifecycleSnapshot = {
+      contacts: [...snapshot.contacts].reverse(),
+      scheduledEmails: [...snapshot.scheduledEmails].reverse(),
+    };
+
+    await importResendLifecycleSnapshot(
+      executor,
+      reorderedSnapshot,
+      keyring,
+      new Date('2026-09-02T12:00:00.000Z')
+    );
+
+    expect(state.activities.get(eventKey)).toEqual(immutableConfiguration);
+  });
+
+  it.each([
+    ['cancellation_deadline', '2026-09-03T11:54:59.999Z'],
+    ['expected_contacts', 999],
+    ['expected_scheduled', 999],
+    ['snapshot_identity', '0'.repeat(64)],
+  ] as const)(
+    'rejects conflicting cutover configuration %s without replacing it',
+    async (field, conflictingValue) => {
+      const state: ImportState = {
+        contacts: new Map(),
+        jobs: new Map(),
+        activities: new Map(),
+        nextContact: 1,
+      };
+      const executor = importExecutor(state);
+      const snapshot = fixtureSnapshot();
+      const eventKey = 'legacy:resend:cutover:v1:configuration';
+      await importResendLifecycleSnapshot(executor, snapshot, keyring, now);
+      const configuration = state.activities.get(eventKey);
+      const data = configuration?.['data'] as
+        | Record<string, unknown>
+        | undefined;
+      if (!data) throw new Error('Fixture cutover configuration missing');
+      data[field] = conflictingValue;
+
+      await expect(
+        importResendLifecycleSnapshot(
+          executor,
+          snapshot,
+          keyring,
+          new Date('2026-09-02T12:00:00.000Z')
+        )
+      ).rejects.toThrow(/^snapshot_identity_conflict$/u);
+
+      const persistedData = state.activities.get(eventKey)?.['data'] as
+        | Record<string, unknown>
+        | undefined;
+      expect(persistedData?.[field]).toEqual(conflictingValue);
+      expect(state.activities.get(eventKey)?.['occurred_at']).toEqual(now);
+    }
+  );
+
   it('imports contacts, then applies provider unsubscribe through the canonical stop without provider mutation', async () => {
     const state: ImportState = {
       contacts: new Map(),
@@ -900,8 +1562,10 @@ describe('importResendLifecycleSnapshot', () => {
       contacts_created: 2,
       contacts_existing: 0,
       contacts_rekeyed: 0,
-      legacy_jobs_created: 2,
-      legacy_jobs_existing: 0,
+      legacy_contact_markers_created: 2,
+      legacy_contact_markers_existing: 0,
+      legacy_scheduled_jobs_created: 2,
+      legacy_scheduled_jobs_existing: 0,
       legacy_provider_cancellations_required: 1,
     });
     expect([...state.contacts.values()]).toEqual(
@@ -923,6 +1587,7 @@ describe('importResendLifecycleSnapshot', () => {
           available_at: new Date('2026-09-03T12:00:00.000Z'),
           payload: {
             imported: true,
+            legacy_type: 'scheduled_message',
             provider: 'resend',
             provider_state: 'scheduled',
           },
@@ -971,8 +1636,10 @@ describe('importResendLifecycleSnapshot', () => {
       contacts_created: 0,
       contacts_existing: 2,
       contacts_rekeyed: 0,
-      legacy_jobs_created: 0,
-      legacy_jobs_existing: 2,
+      legacy_contact_markers_created: 0,
+      legacy_contact_markers_existing: 2,
+      legacy_scheduled_jobs_created: 0,
+      legacy_scheduled_jobs_existing: 2,
       legacy_provider_cancellations_required: 1,
     });
     expect(approved.outreach_approved_at).toEqual(
@@ -1008,7 +1675,7 @@ describe('importResendLifecycleSnapshot', () => {
       now
     );
 
-    expect(result.legacy_jobs_existing).toBe(2);
+    expect(result.legacy_scheduled_jobs_existing).toBe(2);
     expect(first['status']).toBe('cancelled');
     expect(second['delivery_status']).toBe('delivered');
   });

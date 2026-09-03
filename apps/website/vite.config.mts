@@ -10,6 +10,9 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
+    // Server pages read the growth form policy at render time, so the unit
+    // suite carries the same switch the deployed environment sets.
+    env: { GROWTH_FORM_POLICY: 'growth_v1' },
     include: ['src/**/*.spec.ts', 'src/**/*.spec.tsx', 'scripts/**/*.spec.ts'],
   },
 });

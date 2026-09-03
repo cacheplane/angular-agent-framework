@@ -17,6 +17,7 @@ import { Pill } from '../../../components/ui/Pill';
 import { Card } from '../../../components/ui/Card';
 import { WhitePaperBlock } from '../../../components/landing/WhitePaperBlock';
 import { FinalCTA } from '../../../components/landing/FinalCTA';
+import { getFormPolicy } from '../../../lib/growth/form-policy';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -166,6 +167,7 @@ function Capabilities({ items }: { items: ProofPoint[] }) {
 }
 
 export default async function SolutionPage({ params }: PageProps) {
+  const formPolicy = getFormPolicy();
   const { slug } = await params;
   const solution = getSolutionBySlug(slug);
   if (!solution) notFound();
@@ -200,7 +202,7 @@ export default async function SolutionPage({ params }: PageProps) {
       <Capabilities items={solution.proofPoints} />
       <SolutionCodeBlock code={solution.code} />
       {solution.demo && <SolutionDemoBlock clip={solution.demo} />}
-      <WhitePaperBlock />
+      <WhitePaperBlock formPolicy={formPolicy} />
       <FinalCTA
         headline={solution.ctaHeadline}
         subtext={solution.ctaSubtext}

@@ -1,5 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
+
+vi.mock('server-only', () => ({}));
 import PilotToProdPage from './page';
 
 vi.mock('../../lib/analytics/client', () => ({
