@@ -135,7 +135,11 @@ export default async function DocsPage({ params }: DocsRouteProps) {
     {
       label: libConfig.title,
       href: libraryIntroPath(library),
-      icon: <LibraryMark library={library as LibraryId} size={16} />,
+      // 20, not the component's default 24: the trail's line box is ~20px
+      // (13px text at 1.5), so a larger chip would grow the header row. The
+      // logo inside is 60% of the chip, and at size 16 that left a 10px mark
+      // in a 14px box, which read as a smudge rather than a logo.
+      icon: <LibraryMark library={library as LibraryId} size={20} />,
     },
     { label: getDocsSection(library, section)?.title ?? section },
     { label: doc.title },
