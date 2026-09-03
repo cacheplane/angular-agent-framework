@@ -1,6 +1,5 @@
 import { isValidElement, type ComponentType, type ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
-import { DocsBreadcrumb } from '../../../../../components/docs/DocsBreadcrumb';
 import { DocsPageHeader } from '../../../../../components/docs/DocsPageHeader';
 import { DocsTOC } from '../../../../../components/docs/DocsTOC';
 import { MdxRenderer } from '../../../../../components/docs/MdxRenderer';
@@ -13,6 +12,7 @@ interface ElementProps {
   requestedMode?: string | null;
   resolution?: { kind?: string; identity?: { availableModes?: string[] } };
   contentBundle?: { runtimeUrl?: string | null };
+  contextTrail?: readonly { label: string; href?: string }[];
 }
 
 function findElement(
@@ -74,13 +74,27 @@ describe('unified docs workspace route', () => {
 
     expect(workspace?.props.resolution).toMatchObject({ kind: 'docs-only' });
     expect(
-      findElement(slot, DocsBreadcrumb as ComponentType<never>)
-    ).toBeTruthy();
-    expect(
       findElement(slot, DocsPageHeader as ComponentType<never>)
     ).toBeTruthy();
     expect(findElement(slot, MdxRenderer as ComponentType<never>)).toBeTruthy();
     expect(findElement(slot, DocsTOC as ComponentType<never>)).toBeTruthy();
+  });
+
+  it('hands the shell one accurate trail instead of four renditions', async () => {
+    const tree = await route('ag-ui', 'getting-started', 'introduction');
+    const workspace = findElement(
+      tree,
+      WebsiteWorkspace as ComponentType<never>
+    );
+
+    // Docs titles, not manifest identity: the derived label read
+    // "Ag Ui / Getting Started / Overview".
+    expect(workspace?.props.contextTrail).toEqual([
+      { label: 'Docs', href: '/docs' },
+      { label: 'AG-UI', href: '/docs/ag-ui/getting-started/introduction' },
+      { label: 'Getting Started' },
+      { label: 'Introduction' },
+    ]);
   });
 
   it('keeps canonical metadata independent of the workspace mode query', async () => {

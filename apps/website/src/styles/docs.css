@@ -1151,36 +1151,34 @@ body:has([data-website-workspace-host]) {
   font-weight: 500;
 }
 
-/* DocsBreadcrumb — the crumb/separator typography the migration left
- * inconsistent is reconciled below, on the list rather than the links. */
-.docs-crumb-nav {
-  margin-bottom: 16px;
-}
-.docs-crumb-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  row-gap: 4px;
-  /* Typography on the LIST, not the links: the separators are siblings of the
-   * links inside each li, and when only the links carried 13px the first two
-   * separators inherited body's 16px/24px and floated 3px high (findings §3). */
+/* Shell header location trail (workspace-shell.tsx renders the structure).
+ *
+ * Every selector is scoped under .website-workspace-host, and not for
+ * tidiness: workspace.css in the shell library styles the same attributes at
+ * the same specificity, so an unscoped rule here would win or lose on
+ * stylesheet order alone. The host class makes the site's treatment
+ * deterministically more specific.
+ *
+ * Typography on the LIST, not the links: the separators are siblings of the
+ * links inside each li, and when only the links carried 13px the first two
+ * separators inherited body's 16px/24px and floated 3px high. */
+.website-workspace-host [data-workspace-trail] ol[data-workspace-trail-list] {
   font-family: var(--font-inter);
   font-size: 13px;
   line-height: 1.5;
+  color: var(--color-text-muted);
 }
-.docs-crumb-link {
+.website-workspace-host [data-workspace-trail-link] {
   color: var(--color-text-muted);
   text-decoration: none;
 }
-.docs-crumb-sep {
-  margin: 0 8px;
+.website-workspace-host [data-workspace-trail-link]:hover {
+  color: var(--color-accent);
+}
+.website-workspace-host [data-workspace-trail-separator] {
   color: var(--color-text-muted);
 }
-.docs-crumb-current {
-  text-decoration: none;
+.website-workspace-host [data-workspace-trail-current] {
   color: var(--color-text-primary);
   font-weight: 600;
 }
@@ -1688,7 +1686,7 @@ body:has([data-website-workspace-host]) {
 [data-docs-navlink]:focus-visible,
 [data-mdx="callout-action"]:focus-visible,
 .docs-prose a:not([data-mdx-chrome]):focus-visible,
-.docs-crumb-link:focus-visible,
+.website-workspace-host [data-workspace-trail-link]:focus-visible,
 .docs-toc-link:focus-visible,
 .docs-control-plane-search-trigger:focus-visible,
 .docs-sidebar-lib-trigger:focus-visible,

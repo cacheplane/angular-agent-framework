@@ -366,8 +366,8 @@ describe('website docs bindings', () => {
 });
 
 describe('docs breadcrumb routes', () => {
-  // The docs BreadcrumbList and the visible <DocsBreadcrumb> both link the
-  // library rung through `libraryIntroPath()`. This pins the property that path
+  // The docs BreadcrumbList and the shell header's visible `contextTrail` both
+  // link the library rung through `libraryIntroPath()`. This pins the property that path
   // has to satisfy: it must be a real route, and the bare `/docs/<library>` it
   // stands in for must remain absent (there is no index route for it, so a crumb
   // pointing there would 404).

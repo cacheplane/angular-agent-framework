@@ -34,6 +34,7 @@ import {
   type TrackRuntimeAction,
   type TrackRuntimeTransition,
   type WorkspaceContextPaneRenderer,
+  type WorkspaceCrumb,
 } from '@threadplane/workspace-react';
 import { ThemeProvider } from '@threadplane/ui-react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -55,6 +56,8 @@ export interface WebsiteWorkspaceProps {
   readonly requestedMode?: string | null;
   readonly docsSlot?: ReactNode;
   readonly docsContext?: DocsControlPlaneProps;
+  /** Docs routes supply their own trail; workspace routes keep the derived one. */
+  readonly contextTrail?: readonly WorkspaceCrumb[];
 }
 
 interface WebsiteWorkspaceRegistration {
@@ -173,6 +176,7 @@ function WebsiteWorkspaceSurface({
   requestedMode,
   docsSlot,
   docsContext,
+  contextTrail,
 }: WebsiteWorkspaceProps) {
   const router = useRouter();
   const isWorkspaceRoute = routeKind === 'workspace';
@@ -331,6 +335,7 @@ function WebsiteWorkspaceSurface({
           <WorkspaceShell
             rootElement="section"
             navigationTree={navigationTree}
+            contextTrail={contextTrail}
             ariaLabel={
               isWorkspaceRoute ? 'Website workspace' : 'Documentation workspace'
             }
@@ -477,6 +482,7 @@ export function WebsiteWorkspace(props: WebsiteWorkspaceProps) {
     props.requestedMode,
     props.docsSlot,
     props.docsContext,
+    props.contextTrail,
   ]);
 
   if (!layout) return <WebsiteWorkspaceSurface {...props} />;

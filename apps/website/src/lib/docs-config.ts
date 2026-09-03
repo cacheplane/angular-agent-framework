@@ -515,7 +515,7 @@ export function getLibraryConfig(libraryId: string): DocsLibrary | undefined {
  * Where a library's breadcrumb rung points.
  *
  * There is no `/docs/<library>` index route, so the rung links the library's
- * introduction page instead. Both the visible {@link DocsBreadcrumb} and the
+ * introduction page instead. Both the shell header's `contextTrail` and the
  * BreadcrumbList structured data on the same page call this, because Google
  * expects the markup to match what the user sees — deriving both from one
  * function is what makes that true by construction rather than by comment.

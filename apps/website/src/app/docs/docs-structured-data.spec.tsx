@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { isValidElement, type ReactNode } from 'react';
-import { render, screen } from '@testing-library/react';
 import DocsPage, { generateMetadata } from './[library]/[section]/[slug]/page';
-import { DocsBreadcrumb } from '../../components/docs/DocsBreadcrumb';
-import { docsConfig, type LibraryId } from '../../lib/docs-config';
-import { getDocBySlug } from '../../lib/docs';
+import { docsConfig } from '../../lib/docs-config';
 import { getSitemapRoutes } from '../../lib/site-metadata';
 
 interface Slug {
@@ -51,6 +48,25 @@ function nodeOfType(nodes: Record<string, unknown>[], type: string): Record<stri
   return nodes.find((node) => node['@type'] === type);
 }
 
+function findWorkspaceContextTrail(
+  node: ReactNode
+): { label: string; href?: string }[] | undefined {
+  if (Array.isArray(node)) {
+    for (const child of node) {
+      const found = findWorkspaceContextTrail(child);
+      if (found) return found;
+    }
+    return undefined;
+  }
+  if (!isValidElement(node)) return undefined;
+  const props = node.props as {
+    contextTrail?: { label: string; href?: string }[];
+    children?: ReactNode;
+  };
+  if (props.contextTrail) return props.contextTrail;
+  return findWorkspaceContextTrail(props.children);
+}
+
 describe('docs page structured data', () => {
   // The tautology this replaces compared `resolveDocDescription` against
   // `getDocMetadata`, which calls it — both sides were the same function. The
@@ -74,28 +90,19 @@ describe('docs page structured data', () => {
     expect(nodes.map((node) => node['@type'])).toEqual(['TechArticle', 'BreadcrumbList']);
   });
 
-  // Google expects the breadcrumb markup to correspond to the visible trail, so
-  // the JSON-LD is checked against what <DocsBreadcrumb> actually renders rather
-  // than against a second copy of the same string.
-  it('links the same library URL the visible breadcrumb links', async () => {
+  it('links the same library URL the visible trail links', async () => {
     for (const sample of SAMPLES) {
-      const doc = getDocBySlug(sample.library, sample.section, sample.slug);
+      const tree = await DocsPage({ params: Promise.resolve(sample) });
       const nodes = await renderedJsonLd(sample);
       const crumbs = nodeOfType(nodes, 'BreadcrumbList')?.itemListElement as
         | { name: string; item: string }[]
         | undefined;
 
-      const { unmount } = render(
-        <DocsBreadcrumb
-          library={sample.library as LibraryId}
-          section={sample.section}
-          slug={sample.slug}
-          title={doc?.title ?? ''}
-        />,
-      );
+      // The trail the shell header renders, taken from the route itself, so
+      // this cannot pass by agreeing with a component the route dropped.
+      const trail = findWorkspaceContextTrail(tree);
       const libraryTitle = docsConfig.find((lib) => lib.id === sample.library)?.title ?? '';
-      const visibleHref = screen.getByRole('link', { name: libraryTitle }).getAttribute('href');
-      unmount();
+      const visibleHref = trail?.find((crumb) => crumb.label === libraryTitle)?.href;
 
       const label = `${sample.library}/${sample.section}/${sample.slug}`;
       expect([label, crumbs?.find((crumb) => crumb.name === libraryTitle)?.item]).toEqual([
