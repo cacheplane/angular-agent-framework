@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 /**
  * Playwright config for recording the hero walkthrough fixture. Mirrors
  * `record-demo.config.ts` — same aimock-backed global setup — but captures no

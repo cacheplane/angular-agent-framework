@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, expect, it } from 'vitest';
 import { validateHeroRecording, type HeroRecording } from './hero-recording.types';
 

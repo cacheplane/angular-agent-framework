@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, expect, it, vi } from 'vitest';
 import { HERO_PARENT_ORIGINS, createHeroBridge, isAllowedParentOrigin } from './hero-bridge';
 

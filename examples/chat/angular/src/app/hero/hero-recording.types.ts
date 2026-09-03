@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { StreamEvent } from '@threadplane/langgraph';
 
 /** One transport event with its offset from the start of its run. */

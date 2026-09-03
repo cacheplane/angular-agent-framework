@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { Component, signal } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { ChatComponent, ChatInterruptPanelComponent, type Agent } from '@threadplane/chat';

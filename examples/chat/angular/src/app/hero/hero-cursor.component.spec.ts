@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, expect, it } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { HeroCursorComponent } from './hero-cursor.component';

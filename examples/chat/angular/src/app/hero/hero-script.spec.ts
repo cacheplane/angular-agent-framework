@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, expect, it, vi } from 'vitest';
 import { HERO_PROMPTS, HOLD_AFTER_DONE_MS, HeroScriptRunner, type HeroScriptHost } from './hero-script';
 
