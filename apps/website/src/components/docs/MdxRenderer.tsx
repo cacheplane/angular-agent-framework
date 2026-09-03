@@ -1,5 +1,4 @@
 import { MDXRemote } from 'next-mdx-remote/rsc';
-import { tokens } from '@threadplane/design-tokens';
 import { Callout } from './mdx/Callout';
 import { CalloutAction, CalloutActions } from './mdx/CalloutActions';
 import { Steps, Step } from './mdx/Steps';
@@ -99,13 +98,7 @@ interface MdxRendererProps {
 
 export function MdxRenderer({ source }: MdxRendererProps) {
   return (
-    <div className="docs-prose prose prose-slate max-w-none"
-      style={{
-        '--tw-prose-body': tokens.colors.textSecondary,
-        '--tw-prose-headings': tokens.colors.textPrimary,
-        '--tw-prose-code': tokens.colors.accent,
-        '--tw-prose-links': tokens.colors.accent,
-      } as React.CSSProperties}>
+    <div className="docs-prose">
       <MDXRemote
         source={source}
         components={mdxComponents}
