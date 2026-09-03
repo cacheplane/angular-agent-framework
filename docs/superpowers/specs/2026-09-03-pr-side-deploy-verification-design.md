@@ -56,6 +56,12 @@ embedded runtime handshake is exercised too.
 - Playwright's `extraHTTPHeaders` is global to the browser context. A page
   that embeds an iframe from a second protected project needs a second
   secret sent only to that origin.
+- Probed 2026-09-03 against a protected cockpit deployment: a request that
+  carries a valid `_vercel_jwt` cookie for that origin **and** an
+  `x-vercel-protection-bypass` header holding a different project's secret is
+  served (308 from the app); the wrong header alone is refused (302 to SSO).
+  So the Website secret riding the global header does not break the cookie
+  seeded for the examples origin.
 - `resolveRuntimeUrl` in `libs/cockpit-shell` reads
   `NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL` at build time, defaulting to
   `https://examples.threadplane.ai`.
