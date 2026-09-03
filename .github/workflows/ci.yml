@@ -1077,7 +1077,11 @@ jobs:
           fi
       - name: Promote verified Website artifact unchanged
         if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.website == 'true' && steps.website_promotion_freshness.outputs.fresh == 'true'
-        run: npx vercel promote "${{ steps.deploy_website.outputs.deployment_url }}" --yes --token=${{ secrets.VERCEL_TOKEN }}
+        # `promote` takes a bare deployment URL, so unlike build/deploy/pull it
+        # cannot read the team from .vercel/project.json and falls back to the
+        # token's default team — a personal one here, which fails with
+        # "Deployment doesn't belong to current team". Scope it explicitly.
+        run: npx vercel promote "${{ steps.deploy_website.outputs.deployment_url }}" --scope=${{ secrets.VERCEL_ORG_ID }} --yes --token=${{ secrets.VERCEL_TOKEN }}
       - name: Verify deployed website
         if: steps.freshness.outputs.stale != 'true' && ((steps.affected.outputs.website == 'true' && steps.website_promotion_freshness.outputs.fresh == 'true') || steps.affected.outputs.cockpit == 'true')
         run: npx nx e2e website --skip-nx-cache
@@ -1125,7 +1129,11 @@ jobs:
           fi
       - name: Promote verified cockpit artifact unchanged
         if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true' && steps.cockpit_promotion_freshness.outputs.fresh == 'true'
-        run: npx vercel promote "${{ steps.deploy_cockpit.outputs.deployment_url }}" --yes --token=${{ secrets.VERCEL_TOKEN }}
+        # `promote` takes a bare deployment URL, so unlike build/deploy/pull it
+        # cannot read the team from .vercel/project.json and falls back to the
+        # token's default team — a personal one here, which fails with
+        # "Deployment doesn't belong to current team". Scope it explicitly.
+        run: npx vercel promote "${{ steps.deploy_cockpit.outputs.deployment_url }}" --scope=${{ secrets.VERCEL_ORG_ID }} --yes --token=${{ secrets.VERCEL_TOKEN }}
       - name: Verify production cockpit redirects
         if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true' && steps.cockpit_promotion_freshness.outputs.fresh == 'true'
         run: npx tsx apps/cockpit/scripts/deploy-smoke.ts --url https://cockpit.threadplane.ai --mode production --retries 20 --retry-delay-ms 5000
