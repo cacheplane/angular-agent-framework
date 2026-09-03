@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // Diagnostic differ: compares recorded fixtures (arg 1: directory) against the
 // committed fixtures directory. Prints a JSON DriftReport to stdout and a
 // human summary to stderr. Exit code is ALWAYS 0 unless inputs are unreadable —

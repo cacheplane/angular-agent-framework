@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 /**
  * Component-scoped CSS variables for the chat-debug devtools chrome.
  *

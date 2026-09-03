@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { getTestBed } from '@angular/core/testing';
 import {
   BrowserTestingModule,

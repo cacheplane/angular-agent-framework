@@ -1,5 +1,4 @@
 // libs/chat/src/lib/styles/chat-scroll-bubble.styles.ts
-// SPDX-License-Identifier: MIT
 export const CHAT_SCROLL_BUBBLE_STYLES = `
   :host {
     position: absolute;

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { mockAgent } from './mock-agent';
 import { staticDelivery, type AgentWithHistory } from '../agent';
 

@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/chat-citations/chat-citations.component.spec.ts
-// SPDX-License-Identifier: MIT
 import { Component, signal } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { ChatCitationsComponent, ChatCitationCardTemplateDirective } from './chat-citations.component';

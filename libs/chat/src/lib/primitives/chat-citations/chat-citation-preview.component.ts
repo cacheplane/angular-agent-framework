@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/chat-citations/chat-citation-preview.component.ts
-// SPDX-License-Identifier: MIT
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import type { Citation } from '../../agent/citation';
 import {

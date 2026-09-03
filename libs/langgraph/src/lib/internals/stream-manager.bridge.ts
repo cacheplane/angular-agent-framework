@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { signal, type Signal } from '@angular/core';
 import { Observable, takeUntil } from 'rxjs';
 import {

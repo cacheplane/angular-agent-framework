@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // The aimock package is declared via an npm alias in the root package.json so
 // application code refers to it by its neutral name only.
 import { LLMock } from 'aimock';

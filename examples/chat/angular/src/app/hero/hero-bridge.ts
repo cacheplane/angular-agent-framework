@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 export type HeroFrameState = 'ready' | 'scripted' | 'paused' | 'live' | 'replay';
 export const HERO_MESSAGE_TYPE = 'tplane-hero';
 /** Only these embedders receive frame state or can pause the script. */

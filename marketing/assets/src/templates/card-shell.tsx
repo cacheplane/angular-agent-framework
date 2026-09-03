@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { brand } from '../brand';
 import type { CardInput } from '../types';
 

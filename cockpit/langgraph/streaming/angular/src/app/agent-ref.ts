@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { createAgentRef } from '@threadplane/chat';
 
 /** State shape for the streaming cockpit (LangGraph MessagesState). */

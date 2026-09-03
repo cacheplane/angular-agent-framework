@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { computed, signal } from '@angular/core';
 
 export interface ItineraryStop {

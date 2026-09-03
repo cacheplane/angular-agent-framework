@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { Routes, UrlMatcher, UrlMatchResult, UrlSegment } from '@angular/router';
 
 /** Matcher factory: collapses `<mode>` and `<mode>/<threadId>` into a

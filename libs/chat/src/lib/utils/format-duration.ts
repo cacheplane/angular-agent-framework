@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 /**
  * Render a millisecond duration as a human-readable label suitable for
  * the chat-reasoning "Thought for Ns" pill.

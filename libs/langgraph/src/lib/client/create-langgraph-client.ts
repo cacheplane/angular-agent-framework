@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { Client } from '@langchain/langgraph-sdk';
 import type { LangGraphClientOptions } from '../agent.types';
 

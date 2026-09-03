@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { LangGraphClientOptions } from '@threadplane/langgraph';
 
 /**

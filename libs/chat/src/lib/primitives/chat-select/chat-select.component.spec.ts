@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/chat-select/chat-select.component.spec.ts
-// SPDX-License-Identifier: MIT
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChatSelectComponent, type ChatSelectOption } from './chat-select.component';

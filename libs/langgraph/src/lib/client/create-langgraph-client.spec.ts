@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const clientConstructor = vi.hoisted(() =>

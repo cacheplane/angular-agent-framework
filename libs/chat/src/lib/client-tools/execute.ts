@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { StandardSchemaV1 } from '@threadplane/render';
 import type { AnyFunctionToolDef, FunctionToolHandlerContext } from './tool-def';
 import type { ClientToolResult } from './client-tools-capability';

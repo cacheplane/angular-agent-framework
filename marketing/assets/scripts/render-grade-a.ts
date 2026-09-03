@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 //
 // Renders the "Graded A for Trust" campaign cards (x-card + og-card) to PNG.
 // Usage: npx tsx marketing/assets/scripts/render-grade-a.ts

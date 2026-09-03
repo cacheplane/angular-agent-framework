@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { isUserMessage, isAssistantMessage, type Message } from './message';
 import {
   completeDelivery,

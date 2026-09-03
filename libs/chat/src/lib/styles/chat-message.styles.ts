@@ -1,5 +1,4 @@
 // libs/chat/src/lib/styles/chat-message.styles.ts
-// SPDX-License-Identifier: MIT
 export const CHAT_MESSAGE_STYLES = `
   :host { display: block; }
   :host([data-role="user"]) {

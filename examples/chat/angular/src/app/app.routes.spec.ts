@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, expect, it } from 'vitest';
 import { routes } from './app.routes';
 import { HeroMode } from './hero/hero-mode.component';

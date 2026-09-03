@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { Component, computed, input } from '@angular/core';
 
 @Component({

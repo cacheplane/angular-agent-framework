@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // Minimal RFC-6902 JSON Patch implementation, scoped to the ops the AG-UI
 // reducer actually receives via STATE_DELTA events: add, replace, remove,
 // move, copy, test. Pure ESM, zero deps. Replaces a CommonJS-only third-party

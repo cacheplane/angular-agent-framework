@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/chat-project-list/chat-project-list.component.ts
-// SPDX-License-Identifier: MIT
 import {
   Component,
   ChangeDetectionStrategy,

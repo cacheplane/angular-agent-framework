@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 /**
  * Terminal result of one response attempt.
  *

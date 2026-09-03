@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: MIT
 """Tests for threadplane.middleware.langgraph.middleware — no LangChain import required."""
 import pytest
 

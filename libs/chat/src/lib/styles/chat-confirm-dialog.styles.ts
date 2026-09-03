@@ -1,5 +1,4 @@
 // libs/chat/src/lib/styles/chat-confirm-dialog.styles.ts
-// SPDX-License-Identifier: MIT
 export const CHAT_CONFIRM_DIALOG_STYLES = `
   :host { display: contents; }
   .chat-confirm-dialog__scrim {

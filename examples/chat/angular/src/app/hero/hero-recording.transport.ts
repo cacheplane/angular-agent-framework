@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { AgentQueueEntry, AgentTransport, LangGraphSubmitOptions, StreamEvent } from '@threadplane/langgraph';
 import type { ThreadState } from '@langchain/langgraph-sdk';
 import type { HeroRecording, RecordedRun } from './hero-recording.types';

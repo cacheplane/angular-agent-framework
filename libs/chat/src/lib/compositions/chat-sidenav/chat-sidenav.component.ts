@@ -1,5 +1,4 @@
 // libs/chat/src/lib/compositions/chat-sidenav/chat-sidenav.component.ts
-// SPDX-License-Identifier: MIT
 import {
   Component,
   ChangeDetectionStrategy,

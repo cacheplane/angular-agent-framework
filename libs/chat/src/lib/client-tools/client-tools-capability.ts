@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { Signal } from '@angular/core';
 import type { ToolCall } from '../agent/tool-call';
 import type { ClientToolSpec } from './to-json-schema';

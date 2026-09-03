@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // One-time OAuth 2.0 bootstrapper for the X adapter.
 // Run via: pnpm marketing:channels:x:auth
 

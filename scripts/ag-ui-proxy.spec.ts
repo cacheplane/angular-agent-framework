@@ -1,5 +1,4 @@
 // scripts/ag-ui-proxy.spec.ts
-// SPDX-License-Identifier: MIT
 //
 // Behavior contract for the AG-UI examples proxy, added with the Mastra
 // topic→upstream map. The load-bearing assertions: every EXISTING /ag-ui

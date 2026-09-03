@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 //
 // Transcript-driven interrupt-detection tests.
 //

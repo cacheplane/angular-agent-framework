@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: MIT
 """LangGraph client-tools graph (LangGraph-direct path).
 
 The browser declares the tools (get_weather/weather_card/confirm_booking) and

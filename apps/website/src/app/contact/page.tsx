@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import React, { Suspense } from 'react';
 import { Container } from '../../components/ui/Container';
 import { Section } from '../../components/ui/Section';

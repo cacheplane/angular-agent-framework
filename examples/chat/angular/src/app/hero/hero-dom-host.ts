@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 /**
  * The hero walkthrough drives the REAL chat UI (no mocked composer), so it has
  * to reach into the rendered DOM. Keeping that layer here — as pure functions

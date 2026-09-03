@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 export interface HttpOpts {
   method: 'GET' | 'POST' | 'PATCH' | 'DELETE';
   url: string;

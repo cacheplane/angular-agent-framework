@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import type { RenderHost } from '@threadplane/render';
 import { emitBinding } from './emit-binding';

@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/chat-history-search-palette/chat-history-search-palette.component.spec.ts
-// SPDX-License-Identifier: MIT
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
 import { ChatHistorySearchPaletteComponent, type ThreadMatch } from './chat-history-search-palette.component';

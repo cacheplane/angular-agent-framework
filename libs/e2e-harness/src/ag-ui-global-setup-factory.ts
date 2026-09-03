@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { spawn, type ChildProcess } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 import { resolve } from 'node:path';

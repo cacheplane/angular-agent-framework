@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // Unit tests for the SUBAGENT_* injector — synthetic AG-UI event sequences,
 // exact injected ordering asserted field-for-field against the contract in
 // cockpit/runtimes/mastra/angular/docs/wire-capture-subagents.md.

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { effect } from '@angular/core';
 import { views, type ViewRegistry } from '@threadplane/render';
 import type { RenderEvent, RenderViewEntry } from '@threadplane/render';

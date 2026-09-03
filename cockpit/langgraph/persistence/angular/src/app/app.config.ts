@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { ApplicationConfig } from '@angular/core';
 import { provideChat } from '@threadplane/chat';
 

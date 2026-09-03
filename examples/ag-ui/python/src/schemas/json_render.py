@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: MIT
 """json-render protocol schema documentation, used as the system prompt
 for the `generate_json_render_spec` sub-LLM tool. Targets the
 @json-render/core Spec shape: { root, elements, state }."""

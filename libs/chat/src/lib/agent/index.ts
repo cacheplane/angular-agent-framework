@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 export type { Agent } from './agent';
 export { AgentError, AGENT_ERROR_MESSAGES } from './agent-error';
 export type { AgentErrorKind } from './agent-error';

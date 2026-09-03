@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { A2uiComponent } from '@threadplane/a2ui';
 
 // `[^{}]` (no nested braces) + a length bound keep the scan linear on

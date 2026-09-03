@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { Component } from '@angular/core';
 import { ChatComponent, ChatWelcomeSuggestionComponent, a2uiBasicCatalog } from '@threadplane/chat';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';

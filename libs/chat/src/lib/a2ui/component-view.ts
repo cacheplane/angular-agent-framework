@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { A2uiComponent } from '@threadplane/a2ui';
 
 /** Chat-internal projection of an A2UI component, materialized by the

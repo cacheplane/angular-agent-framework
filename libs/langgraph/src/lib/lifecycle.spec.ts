@@ -1,5 +1,4 @@
 // @vitest-environment jsdom
-// SPDX-License-Identifier: MIT
 import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideAgent, type AgentConfig } from './agent.provider';

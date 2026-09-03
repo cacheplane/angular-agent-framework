@@ -1,5 +1,4 @@
 // libs/chat/src/lib/markdown/citations-resolver.service.spec.ts
-// SPDX-License-Identifier: MIT
 import { TestBed } from '@angular/core/testing';
 import { CitationsResolverService } from './citations-resolver.service';
 import type { Message } from '../agent/message';

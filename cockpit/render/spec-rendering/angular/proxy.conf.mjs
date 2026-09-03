@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { portsFor } from '../../../../cockpit/ports.mjs';
 
 const { langgraph } = portsFor('cockpit-render-spec-rendering-angular');

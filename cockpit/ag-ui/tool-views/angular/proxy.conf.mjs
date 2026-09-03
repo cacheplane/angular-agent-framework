@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { portsFor } from '../../../../cockpit/ports.mjs';
 const { langgraph: backend } = portsFor('cockpit-ag-ui-tool-views-angular');
 export default {

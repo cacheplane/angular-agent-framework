@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: MIT
 """Tests for the `research_policy` delegation scenario — the tool is a
 registered async `@tool` that hands expense-policy research to the tool-less
 `policy_researcher` specialist. No live model calls: these tests only

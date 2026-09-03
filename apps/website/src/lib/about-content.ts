@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 /**
  * The first-person prose rendered on /about.
  *

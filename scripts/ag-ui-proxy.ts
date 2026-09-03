@@ -1,5 +1,4 @@
 // scripts/ag-ui-proxy.ts
-// SPDX-License-Identifier: MIT
 /**
  * Vercel Node serverless function that proxies AG-UI requests from
  * examples.threadplane.ai to the Railway-hosted FastAPI runtime

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 /**
  * NOT a test. Drives /hero?record=1 (the scripted walkthrough runs against the
  * live agent wrapped in HeroRecordingTransport) and writes the captured runs

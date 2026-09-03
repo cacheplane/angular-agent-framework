@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { RenderEvent } from '@threadplane/render';
 
 export interface ChatRenderEvent {

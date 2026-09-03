@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 export function applyAngularLane(packageJson, selectedLane) {
   return {
     ...packageJson,

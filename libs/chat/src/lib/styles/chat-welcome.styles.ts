@@ -1,5 +1,4 @@
 // libs/chat/src/lib/styles/chat-welcome.styles.ts
-// SPDX-License-Identifier: MIT
 export const CHAT_WELCOME_STYLES = `
   :host {
     display: flex;

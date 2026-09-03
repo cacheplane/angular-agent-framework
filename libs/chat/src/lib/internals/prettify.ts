@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 /**
  * @internal
  * Identity mapped type that flattens an object type so editor quick-info shows

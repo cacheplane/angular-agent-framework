@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/chat-thread-list/chat-thread-list.component.spec.ts
-// SPDX-License-Identifier: MIT
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it, vi } from 'vitest';
 import {

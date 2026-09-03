@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { GENERATED_KEYS } from './generated-keys';
 
 export const environment = {

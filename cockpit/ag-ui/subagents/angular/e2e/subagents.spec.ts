@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { test, expect, type Page } from '@playwright/test';
 import { submitAndWaitForResponse } from '@threadplane-internal/e2e-harness';
 

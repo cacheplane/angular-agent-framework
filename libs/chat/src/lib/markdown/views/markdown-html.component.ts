@@ -1,5 +1,4 @@
 // libs/chat/src/lib/markdown/views/markdown-html.component.ts
-// SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, input, computed } from '@angular/core';
 import type {
   MarkdownHtmlBlockNode,

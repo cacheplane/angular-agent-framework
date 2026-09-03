@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/chat-history-search-palette/chat-history-search-palette.component.ts
-// SPDX-License-Identifier: MIT
 import {
   Component,
   ChangeDetectionStrategy,

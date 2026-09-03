@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { AgentError, AGENT_ERROR_MESSAGES, type AgentErrorKind } from './agent-error';
 
 /**

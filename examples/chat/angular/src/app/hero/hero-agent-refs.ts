@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { createAgentRef } from '@threadplane/chat';
 
 /** Replay agent: HeroReplayTransport, no backend. */

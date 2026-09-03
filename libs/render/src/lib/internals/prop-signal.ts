@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { StateStore, ComputedFunction, PropResolutionContext } from '@json-render/core';
 import type { RepeatScope } from '../contexts/repeat-scope';
 

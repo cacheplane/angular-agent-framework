@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // Delegation stream tee: observe a Mastra Agent's `fullStream` chunks before
 // the @ag-ui/mastra bridge consumes them.
 //

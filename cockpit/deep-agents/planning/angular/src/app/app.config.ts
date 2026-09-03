@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { injectCockpitRuntimeConnection } from '@threadplane/cockpit-telemetry';
 import { ApplicationConfig } from '@angular/core';
 import { provideAgent } from '@threadplane/langgraph';

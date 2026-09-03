@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { signal, untracked, type Signal } from '@angular/core';
 import type { Spec } from '@json-render/core';
 import { createPartialJsonParser } from '@cacheplane/partial-json';

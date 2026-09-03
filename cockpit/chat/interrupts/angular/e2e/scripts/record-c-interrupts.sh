@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: MIT
 #
 # Capture aimock fixtures for the c-interrupts graph by running the standalone
 # langgraph dev server against aimock in --record mode. Drives TWO booking

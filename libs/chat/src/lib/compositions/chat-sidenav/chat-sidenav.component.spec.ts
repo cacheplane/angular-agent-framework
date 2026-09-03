@@ -1,5 +1,4 @@
 // libs/chat/src/lib/compositions/chat-sidenav/chat-sidenav.component.spec.ts
-// SPDX-License-Identifier: MIT
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';

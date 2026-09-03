@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import { CHAT_PROJECT_LIST_STYLES } from './chat-project-list.styles';
 

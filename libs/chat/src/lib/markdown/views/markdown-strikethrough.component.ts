@@ -1,5 +1,4 @@
 // libs/chat/src/lib/markdown/views/markdown-strikethrough.component.ts
-// SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 import type { MarkdownStrikethroughNode } from '@cacheplane/partial-markdown';
 import { MarkdownChildrenComponent } from '../markdown-children.component';

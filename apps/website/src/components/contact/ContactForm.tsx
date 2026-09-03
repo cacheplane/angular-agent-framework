@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 'use client';
 
 import React, { useRef, useState } from 'react';

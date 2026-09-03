@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 export interface DemoSpec {
   label: string;
   json: string;

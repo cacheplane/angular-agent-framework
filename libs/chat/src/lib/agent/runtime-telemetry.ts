@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 export type AgentRuntimeTelemetryEvent =
   | 'tplane:runtime_instance_created'
   | 'tplane:runtime_request_created'

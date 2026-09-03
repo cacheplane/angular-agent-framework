@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { views, type ViewRegistry } from '@threadplane/render';
 import { A2uiAudioPlayerComponent } from './audio-player.component';
 import { A2uiButtonComponent } from './button.component';

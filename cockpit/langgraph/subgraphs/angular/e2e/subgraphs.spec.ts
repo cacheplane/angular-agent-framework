@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { test, expect } from '@playwright/test';
 
 // Distinctive line from the research subgraph's brief. It exists only in the

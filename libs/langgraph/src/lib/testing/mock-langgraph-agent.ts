@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { computed, signal, WritableSignal } from '@angular/core';
 import type {
   LangGraphAgent,

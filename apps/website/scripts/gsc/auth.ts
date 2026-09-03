@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { createSign } from 'node:crypto';
 
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 //
 // Manual (live-LLM) counterpart to subgraphs.spec.ts. Run against a real
 // OpenAI key with the example served on its cockpit port — the routing

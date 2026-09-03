@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 export type TemplateId = 'x-card' | 'og-card';
 
 export interface CardInput {

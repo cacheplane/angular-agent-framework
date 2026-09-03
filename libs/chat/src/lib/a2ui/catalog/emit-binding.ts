@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { RenderHost } from '@threadplane/render';
 
 /** Writes a typed value to the render state store if the prop has a binding path. */

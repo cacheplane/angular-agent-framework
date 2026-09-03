@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, expect, test } from 'vitest';
 import { createA2uiMessageParser } from './parser';
 

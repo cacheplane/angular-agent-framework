@@ -1,5 +1,4 @@
 // scripts/ag-ui-demo-middleware.ts
-// SPDX-License-Identifier: MIT
 /**
  * Vercel Node serverless proxy for the AG-UI demo
  * (ag-ui.threadplane.ai). Forwards /agent* to the Railway-hosted

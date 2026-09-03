@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // SUBAGENT_* injection for Mastra delegation tool calls.
 //
 // Mastra surfaces a registered sub-agent as an ordinary backend tool named

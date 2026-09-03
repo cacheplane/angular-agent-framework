@@ -1,5 +1,4 @@
 // libs/ag-ui/src/lib/testing/provide-fake-agent.ts
-// SPDX-License-Identifier: MIT
 import { type Provider } from '@angular/core';
 import type { FakeAgentConfig } from '@threadplane/chat/testing';
 import { AGENT } from '../provide-agent';

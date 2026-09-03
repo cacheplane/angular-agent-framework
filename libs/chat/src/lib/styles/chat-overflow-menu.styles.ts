@@ -1,5 +1,4 @@
 // libs/chat/src/lib/styles/chat-overflow-menu.styles.ts
-// SPDX-License-Identifier: MIT
 export const CHAT_OVERFLOW_MENU_STYLES = `
   :host { display: contents; }
   .chat-overflow-menu__scrim {

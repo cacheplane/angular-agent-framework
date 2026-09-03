@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 /**
  * Recorded demo clips, hosted on Vercel Blob (store `ngaf-website-assets`)
  * rather than committed to the repo — they are large binaries that would bloat

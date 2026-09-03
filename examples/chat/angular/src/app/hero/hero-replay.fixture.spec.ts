@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 /// <reference types="node" />
 // The app build type-checks src/**/*.ts with `types: []`; this spec is the one
 // file that reads from disk, so it pulls in the node globals it needs itself.

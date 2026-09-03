@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 export interface Author {
   name: string;
   role?: string;

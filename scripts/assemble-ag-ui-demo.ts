@@ -1,6 +1,5 @@
 #!/usr/bin/env npx tsx
 // scripts/assemble-ag-ui-demo.ts
-// SPDX-License-Identifier: MIT
 /**
  * Build the examples/ag-ui Angular app and assemble it into the Vercel
  * deploy directory at deploy/ag-ui-demo/.

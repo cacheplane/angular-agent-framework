@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { ReactElement } from 'react';
 import type { CardInput, TemplateId } from '../types';
 import { XCard } from './x-card';

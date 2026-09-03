@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import type { ClientToolViewProps } from '@threadplane/chat';
 import { injectRenderHost } from '@threadplane/render';

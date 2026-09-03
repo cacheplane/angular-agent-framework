@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // Provider
 export { provideAgent } from './lib/agent.provider';
 export type { AgentConfig } from './lib/agent.provider';

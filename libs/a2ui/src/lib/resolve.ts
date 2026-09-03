@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { getByPointer } from './pointer.js';
 import { isFunctionCall, isPathRef } from './guards.js';
 import {

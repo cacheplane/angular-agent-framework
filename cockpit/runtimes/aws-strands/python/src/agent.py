@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: MIT
 """Meeting scheduler copilot — AWS Strands backend.
 
 A genuinely non-LangGraph AG-UI backend exercising the neutral Agent

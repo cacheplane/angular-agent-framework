@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // Note: kept self-contained (no `../shared` import) so ng-packagr can compile
 // this entry point in isolation. The trim+truncate hardening is duplicated
 // from shared/properties.ts on purpose — it's a few lines, and the alternative

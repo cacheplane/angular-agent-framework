@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { effect, inject, untracked, type WritableSignal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Router, NavigationEnd, type NavigationExtras } from '@angular/router';

@@ -1,5 +1,4 @@
 // libs/chat/src/lib/styles/chat-trace.styles.ts
-// SPDX-License-Identifier: MIT
 export const CHAT_TRACE_STYLES = `
   :host { display: block; font-size: var(--tplane-chat-font-size-sm); }
   .chat-trace__header {

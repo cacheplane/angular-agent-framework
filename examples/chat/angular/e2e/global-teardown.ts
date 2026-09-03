@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { freePort, killTree } from './process-utils';
 
 const LANGGRAPH_PORT = 2024;

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { defineConfig, devices } from '@playwright/test';
 import { portsFor } from '../../../../../cockpit/ports.mjs';
 

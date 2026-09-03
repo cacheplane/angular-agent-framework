@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 const DEFAULT_POSTHOG_HOST = 'https://us.i.posthog.com';
 
 export function toSafeAnalyticsString(value: unknown, maxLength = 200): string | undefined {

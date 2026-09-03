@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 /** @vitest-environment jsdom */
 import React, { Suspense, act, startTransition, useLayoutEffect } from 'react';
 import { createRoot, type Root } from 'react-dom/client';

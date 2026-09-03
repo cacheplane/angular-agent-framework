@@ -1,5 +1,4 @@
 // libs/chat/src/lib/styles/chat-history-search-palette.styles.ts
-// SPDX-License-Identifier: MIT
 export const CHAT_HISTORY_SEARCH_PALETTE_STYLES = `
   :host { display: contents; }
   .chat-history-search-palette__scrim {

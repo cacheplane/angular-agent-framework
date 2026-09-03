@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 //
 // Consumer-side guarantee: with the partial-markdown version chat depends on,
 // a triple-backtick fence whose opener is split across streamed chunks still

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 export { A2UI_WIRE_VERSION, A2UI_MIME_TYPE, A2UI_BASIC_CATALOG_ID } from './lib/types.js';
 export type {
   A2uiTheme,

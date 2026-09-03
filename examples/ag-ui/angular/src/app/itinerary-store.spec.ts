@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ItineraryStore, ITINERARY_STORAGE_KEY } from './itinerary-store';
 

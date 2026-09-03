@@ -1,5 +1,4 @@
 // libs/chat/src/lib/styles/chat-message-list.styles.ts
-// SPDX-License-Identifier: MIT
 export const CHAT_MESSAGE_LIST_STYLES = `
   :host {
     display: flex;

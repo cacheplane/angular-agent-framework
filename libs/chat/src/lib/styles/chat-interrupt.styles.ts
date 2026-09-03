@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 export const CHAT_INTERRUPT_STYLES = `
   :host { display: block; }
   .chat-interrupt {

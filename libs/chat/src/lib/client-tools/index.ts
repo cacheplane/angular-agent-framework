@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 export { action, view, ask, tools } from './tools';
 export { deriveJsonSchema } from './to-json-schema';
 export type {

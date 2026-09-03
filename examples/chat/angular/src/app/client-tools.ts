@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { inject } from '@angular/core';
 import { tools, action, view, ask, type ClientToolRegistry } from '@threadplane/chat';
 import { z } from 'zod/v4';

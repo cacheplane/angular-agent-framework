@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 //
 // Testing strategy for the helpers in this file:
 //

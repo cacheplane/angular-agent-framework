@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 /**
  * Development environment configuration for the canonical demo.
  *

@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-// SPDX-License-Identifier: MIT
 /**
  * Captures the streaming chunk sequence produced by the LangGraph
  * SDK for a real `gpt-5 + reasoning.effort=high` run against the

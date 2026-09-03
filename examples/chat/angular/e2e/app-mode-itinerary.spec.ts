@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // App-mode itinerary cockpit — structural e2e. These assert layout/DOM, NOT
 // map tiles (the WebGL/vector map does not render reliably in the automated
 // browser, and the bundle is keyless in CI). App mode is reached via the

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 //
 // Tripwire for the `*.manual.ts` tier.
 //

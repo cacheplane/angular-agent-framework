@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import { Component } from '@angular/core';
 import { normalizeViewEntry, type A2uiViewEntry } from './views';

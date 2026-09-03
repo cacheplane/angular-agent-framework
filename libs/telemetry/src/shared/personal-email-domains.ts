@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 export const PERSONAL_EMAIL_DOMAINS: ReadonlySet<string> = new Set([
   'gmail.com',
   'yahoo.com',

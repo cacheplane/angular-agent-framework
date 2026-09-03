@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // Manual record-mode harness. Run against a live OpenAI key to capture new
 // fixture entries into cockpit/ag-ui/subagents/angular/e2e/fixtures/subagents.json.
 //

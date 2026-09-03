@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/chat-input/chat-input.component.ts
-// SPDX-License-Identifier: MIT
 import {
   Component,
   computed,

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 /**
  * NOT a test. Captures a frame of the hero walkthrough as the website's
  * server-rendered poster (1200x720, webp). Run through record-hero.config.ts:

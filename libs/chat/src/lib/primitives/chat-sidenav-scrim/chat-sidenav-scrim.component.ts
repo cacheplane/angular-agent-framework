@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/chat-sidenav-scrim/chat-sidenav-scrim.component.ts
-// SPDX-License-Identifier: MIT
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 /**

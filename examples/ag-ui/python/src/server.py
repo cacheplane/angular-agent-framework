@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: MIT
 """Standalone AG-UI server for the examples/ag-ui demo.
 
 Wraps the (transport-agnostic) chat graph with ag-ui-langgraph and serves it

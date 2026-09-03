@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 /**
  * Shared Zod schemas for the client-tools demo.
  *

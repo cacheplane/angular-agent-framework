@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, expect, it } from 'vitest';
 import { HeroRecordingTransport } from './hero-recording.transport';
 import type { AgentTransport, StreamEvent } from '@threadplane/langgraph';

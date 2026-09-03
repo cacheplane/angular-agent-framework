@@ -1,5 +1,4 @@
 // scripts/langgraph-proxy.ts
-// SPDX-License-Identifier: MIT
 /**
  * Vercel Node serverless function factory for proxying to a LangGraph
  * Cloud deployment. Injects `x-api-key` server-side from

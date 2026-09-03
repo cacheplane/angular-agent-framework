@@ -1,5 +1,4 @@
 // libs/chat/src/lib/styles/chat-citations.styles.ts
-// SPDX-License-Identifier: MIT
 
 const CHAT_CITATION_SOURCE_VISUAL_STYLES = `
   .chat-citation-source-icon {

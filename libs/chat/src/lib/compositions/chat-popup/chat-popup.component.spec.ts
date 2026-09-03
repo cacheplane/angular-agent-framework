@@ -1,5 +1,4 @@
 // libs/chat/src/lib/compositions/chat-popup/chat-popup.component.spec.ts
-// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { ChatPopupComponent } from './chat-popup.component';

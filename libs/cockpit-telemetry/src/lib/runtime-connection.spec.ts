@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // @vitest-environment jsdom
 import { Component, inject } from '@angular/core';
 import { TestBed } from '@angular/core/testing';

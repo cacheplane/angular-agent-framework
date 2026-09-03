@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { highlightJson } from './json-highlight';
 
 describe('highlightJson', () => {

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { toDisplayText } from './to-display-text';
 
 describe('toDisplayText', () => {

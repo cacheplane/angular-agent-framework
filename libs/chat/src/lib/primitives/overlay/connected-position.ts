@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/overlay/connected-position.ts
-// SPDX-License-Identifier: MIT
 //
 // Minimal port of CDK's FlexibleConnectedPositionStrategy fit logic
 // (~/repos/components/src/cdk/overlay/position/flexible-connected-position-strategy.ts):

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { expect, type Locator, type Page } from '@playwright/test';
 
 export function attachBrowserHygiene(page: Page): {

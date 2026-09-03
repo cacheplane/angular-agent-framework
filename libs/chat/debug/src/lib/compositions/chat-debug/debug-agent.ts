@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { Signal } from '@angular/core';
 
 export interface DebugAgentCheckpoint {

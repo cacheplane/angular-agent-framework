@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 export const WEBSITE_SUPPORTED_ANGULAR_MAJORS = Object.freeze([20, 21, 22]);
 
 export const WEBSITE_SUPPORTED_ANGULAR_VERSIONS = `Angular ${WEBSITE_SUPPORTED_ANGULAR_MAJORS.join(

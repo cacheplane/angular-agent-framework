@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 /// <reference types="google.maps" />
 import { Injectable } from '@angular/core';
 

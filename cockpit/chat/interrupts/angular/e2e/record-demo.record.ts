@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 /**
  * Records the human-in-the-loop loop as a screen capture for the website.
  *
