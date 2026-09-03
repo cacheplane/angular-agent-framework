@@ -13,6 +13,10 @@ export const createWebsitePlaywrightConfig = (
   const runtimeURL = 'http://localhost:4300';
   const productionSmoke = environment['PRODUCTION_SMOKE'] === 'true';
   const bfcacheRuntimeTest = environment['CUSTOM_RUNTIME_BFCACHE'] === 'true';
+  // The public-copy gate must read what a visitor receives, and `next dev`
+  // serves a different bundle than production. This mode serves the already
+  // completed Nx production build instead.
+  const productionMode = environment['WEBSITE_E2E_MODE'] === 'production';
   const baseURL = environment['BASE_URL'] ?? localURL;
   const shouldStartLocalServer = !productionSmoke && !environment['BASE_URL'];
   const reuseExistingServer =
@@ -64,7 +68,14 @@ export const createWebsitePlaywrightConfig = (
     webServer: shouldStartLocalServer
       ? [
           {
-            command: bfcacheRuntimeTest
+            command: productionMode
+              ? // `nx serve --configuration=production` runs with the dist
+                // directory as its cwd, and dist carries no `content/`. Routes
+                // that read MDX at request time — /blog among them — then serve
+                // an empty list, so the gate would pass against a page no
+                // visitor sees. Link the content in before serving.
+                `NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL='' npx nx build website --configuration=production --skip-nx-cache && ln -sfn ../../../apps/website/content dist/apps/website/content && npx nx serve website --configuration=production --port=${localPort} --skip-nx-cache`
+              : bfcacheRuntimeTest
               ? `NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL='' npx nx build website --configuration=production --skip-nx-cache && npx nx serve website --configuration=production --port=${localPort} --skip-nx-cache`
               : `NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL='' npx next dev apps/website --hostname ${localHost} --port ${localPort}`,
             cwd: '../..',
@@ -73,7 +84,13 @@ export const createWebsitePlaywrightConfig = (
             // Server pages read the growth form policy while rendering, so the
             // local server carries the switch the deployed environment sets.
             env: { GROWTH_FORM_POLICY: 'growth_v1' },
-            timeout: bfcacheRuntimeTest ? 180_000 : 60_000,
+            // A production run builds before it serves, which outlasts the
+            // BFCache budget; each mode gets the time it actually needs.
+            timeout: productionMode
+              ? 300_000
+              : bfcacheRuntimeTest
+              ? 180_000
+              : 60_000,
           },
           {
             command: bfcacheRuntimeTest

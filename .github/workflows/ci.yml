@@ -644,6 +644,15 @@ jobs:
             playwright-${{ runner.os }}-
       - run: npx playwright install --with-deps chromium
       - run: npx nx e2e website --skip-nx-cache
+      # The public-copy gate reads served output, and `next dev` serves a
+      # different bundle than production. Run it a second time against a real
+      # production build so a claim that only appears in the built output — in a
+      # generated bundle or a response body — cannot reach the site unnoticed.
+      - name: Public copy boundary (production build)
+        env:
+          GROWTH_FORM_POLICY: growth_v1
+          WEBSITE_E2E_MODE: production
+        run: npx nx e2e website --skip-nx-cache --grep "public copy boundary|canonical policy surface"
       # The production-smoke spec is testIgnore'd outside PRODUCTION_SMOKE mode,
       # so a module-load error in it is invisible until the post-merge Production
       # smoke job runs against main — too late to gate a PR. Collect it here:

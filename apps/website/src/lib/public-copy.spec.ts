@@ -5,40 +5,15 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
+import {
+  BANNED_CLAIMS,
+  NARRATIVE_MENTIONS,
+  RETIRED_ROUTE_PATTERN,
+  findBarredCopy,
+} from './public-copy-contract';
+
 const WEBSITE_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const CONTENT_ROOT = join(WEBSITE_ROOT, 'content');
-
-/**
- * Claims this site does not make.
- *
- * Each of these asserts something absolute about behavior that no test keeps
- * true. A published guarantee that quietly stops holding is worse than no
- * guarantee, so `/privacy` describes categories and purposes instead and these
- * phrasings are barred from every public surface.
- */
-const BANNED_CLAIMS: ReadonlyArray<readonly [string, RegExp]> = [
-  ['phone-home claim', /phon(?:e|ing) home/iu],
-  ['installation inertness claim', /installation is inert/iu],
-  ['off-by-default claim', /off by default/iu],
-  ['what-we-wont-do positioning', /what we (?:won'|won’|will not )t? ?do/iu],
-  ['nothing-emitted guarantee', /no telemetry is emitted/iu],
-  ['never-collected list', /we (?:never|do not) collect/iu],
-];
-
-/**
- * Narrative uses of the word, as opposed to the identifier.
- *
- * `telemetry` is the real name of a public config field, so the word cannot be
- * banned outright without making the API tables wrong. What is barred is prose
- * that markets it — the surrounding sentences, not the field.
- */
-const NARRATIVE_MENTIONS: ReadonlyArray<readonly [string, RegExp]> = [
-  ['opt-in telemetry positioning', /telemetry is opt-in/iu],
-  ['browser-telemetry positioning', /browser telemetry/iu],
-  ['debugging-and-telemetry aside', /for debugging and telemetry/iu],
-  ['we-have-telemetry framing', /we have telemetry/iu],
-  ['telemetry hooks aside', /telemetry hooks/iu],
-];
 
 function publicContentFiles(directory: string): string[] {
   const found: string[] = [];
@@ -51,19 +26,6 @@ function publicContentFiles(directory: string): string[] {
     }
   }
   return found;
-}
-
-function offendersIn(
-  source: string,
-  patterns: ReadonlyArray<readonly [string, RegExp]>
-): string[] {
-  const hits: string[] = [];
-  source.split('\n').forEach((line, index) => {
-    for (const [label, pattern] of patterns) {
-      if (pattern.test(line)) hits.push(`${index + 1} — ${label}`);
-    }
-  });
-  return hits;
 }
 
 function offenders(
@@ -97,7 +59,7 @@ describe('public copy', () => {
     for (const path of publicContentFiles(CONTENT_ROOT)) {
       const lines = readFileSync(path, 'utf8').split('\n');
       lines.forEach((line, index) => {
-        if (/\/docs\/telemetry|\/api\/markdown\/telemetry/u.test(line)) {
+        if (RETIRED_ROUTE_PATTERN.test(line)) {
           hits.push(`${relative(WEBSITE_ROOT, path)}:${index + 1}`);
         }
       });
@@ -145,7 +107,7 @@ describe('generated public API docs', () => {
       join(CONTENT_ROOT, 'docs', library, 'api', 'api-docs.json'),
       'utf8'
     );
-    expect(offendersIn(source, BANNED_CLAIMS)).toEqual([]);
+    expect(findBarredCopy(source, BANNED_CLAIMS)).toEqual([]);
   });
 
   it('no longer ships the retired library', () => {
