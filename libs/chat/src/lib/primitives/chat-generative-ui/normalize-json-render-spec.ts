@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { Spec, UIElement } from '@json-render/core';
 
 /**

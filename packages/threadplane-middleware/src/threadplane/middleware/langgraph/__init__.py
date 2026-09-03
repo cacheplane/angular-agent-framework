@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: MIT
 """threadplane-middleware — LangGraph middleware for client-declared tools."""
 
 from threadplane.middleware.langgraph.middleware import (

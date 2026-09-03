@@ -1,5 +1,4 @@
 // scripts/demo-middleware.ts
-// SPDX-License-Identifier: MIT
 /**
  * Vercel Serverless Function proxy for the canonical-demo deployment
  * (demo.threadplane.ai). Wraps the shared langgraph-proxy factory with:

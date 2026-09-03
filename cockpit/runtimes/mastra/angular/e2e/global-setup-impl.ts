@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // Hand-rolled global setup for the ONLY cockpit cap whose backend is not
 // Python: the rt-mastra topic is served by the deployments/ag-ui-mastra
 // Node service. This mirrors createAgUiGlobalSetup (libs/e2e-harness) —

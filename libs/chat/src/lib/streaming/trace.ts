@@ -1,5 +1,4 @@
 // libs/chat/src/lib/streaming/trace.ts
-// SPDX-License-Identifier: MIT
 //
 // localStorage / window-flag-gated debug tracer for @threadplane/chat streaming.
 // Off by default. Enable via:

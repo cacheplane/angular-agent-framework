@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { ToolCall } from '../agent/tool-call';
 
 /** Inputs for {@link selectPendingClientToolCalls}. */

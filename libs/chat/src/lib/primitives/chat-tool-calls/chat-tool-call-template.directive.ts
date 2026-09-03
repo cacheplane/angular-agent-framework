@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/chat-tool-calls/chat-tool-call-template.directive.ts
-// SPDX-License-Identifier: MIT
 import { Directive, TemplateRef, inject, input } from '@angular/core';
 import type { ToolCall, ToolCallStatus } from '../../agent';
 

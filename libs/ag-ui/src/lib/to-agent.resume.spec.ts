@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 //
 // Transcript-driven resume-payload tests.
 //

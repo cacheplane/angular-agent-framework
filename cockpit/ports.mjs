@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 /**
  * @typedef {{ angular: number; langgraph: number }} CapPorts
  * @typedef {Record<string, CapPorts>} PortsRegistry

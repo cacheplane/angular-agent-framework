@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { computed, signal, type Signal } from '@angular/core';
 import type {
   A2uiMessage, A2uiSurface, A2uiComponent,

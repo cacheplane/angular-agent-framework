@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, computed } from '@angular/core';
 import { ChatComponent, ChatWelcomeSuggestionComponent } from '@threadplane/chat';
 import { injectAgent } from '@threadplane/langgraph';

@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 /**
  * Render-state-store sync event. Adapters emit this when the runtime
  * publishes a state-snapshot intended for the chat library's render store

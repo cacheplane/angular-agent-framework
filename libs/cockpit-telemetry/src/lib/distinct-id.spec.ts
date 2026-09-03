@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // @vitest-environment jsdom
 import { describe, test, expect, beforeEach } from 'vitest';
 import { readCockpitConfigFromIframe } from './distinct-id';

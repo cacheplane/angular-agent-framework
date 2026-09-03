@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import {
   Component,
   input,

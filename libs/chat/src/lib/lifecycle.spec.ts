@@ -1,5 +1,4 @@
 // @vitest-environment jsdom
-// SPDX-License-Identifier: MIT
 import { describe, test, expect, beforeEach } from 'vitest';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { ChatComponent } from './compositions/chat/chat.component';

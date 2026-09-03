@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-// SPDX-License-Identifier: MIT
 
 /**
  * Does this cap own one of the nx-affected projects?

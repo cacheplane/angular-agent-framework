@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import type { ViewProps } from '@threadplane/chat';
 import { z } from 'zod/v4';

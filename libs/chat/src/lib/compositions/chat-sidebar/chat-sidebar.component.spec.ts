@@ -1,5 +1,4 @@
 // libs/chat/src/lib/compositions/chat-sidebar/chat-sidebar.component.spec.ts
-// SPDX-License-Identifier: MIT
 import { describe, it, expect, afterEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { EnvironmentInjector, createEnvironmentInjector, runInInjectionContext } from '@angular/core';

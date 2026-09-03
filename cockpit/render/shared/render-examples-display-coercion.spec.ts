@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 //
 // Fitness guard for the value-coercion bug class (PR #771 numeric $state
 // bindings dropped, PR #773 "[object Object]" flash for unresolved bindings).

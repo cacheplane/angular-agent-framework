@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 'use client';
 import { useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 

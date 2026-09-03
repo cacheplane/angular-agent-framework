@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { codeToHtml } from 'shiki';
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';

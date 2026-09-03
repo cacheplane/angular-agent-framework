@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { ReactNode } from 'react';
 import { Section } from '../ui/Section';
 import { Container } from '../ui/Container';

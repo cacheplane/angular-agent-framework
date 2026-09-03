@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { test, expect } from '@playwright/test';
 import { messageInput, openDemo, sendButton, waitForFinalAssistant } from './test-helpers';
 

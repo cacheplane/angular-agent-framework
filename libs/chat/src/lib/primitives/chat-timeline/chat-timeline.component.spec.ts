@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import { signal, computed } from '@angular/core';
 import { mockAgent } from '../../testing/mock-agent';

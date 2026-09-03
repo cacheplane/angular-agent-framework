@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, it, expect, vi } from 'vitest';
 import { Observable } from 'rxjs';
 import type { BaseEvent } from '@ag-ui/client';

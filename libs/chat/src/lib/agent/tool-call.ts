@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 export type ToolCallStatus = 'pending' | 'running' | 'complete' | 'error';
 
 export interface ToolCall {

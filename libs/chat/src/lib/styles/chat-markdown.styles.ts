@@ -1,5 +1,4 @@
 // libs/chat/src/lib/styles/chat-markdown.styles.ts
-// SPDX-License-Identifier: MIT
 //
 // Scoped to the `chat-streaming-md` element selector (not `:host`) because
 // the component renders markdown via innerHTML and uses

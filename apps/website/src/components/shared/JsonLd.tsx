@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { JsonLdNode } from '../../lib/structured-data';
 
 /**

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { InjectionToken, inject, type Provider } from '@angular/core';
 import { HttpAgent } from '@ag-ui/client';
 import type { AgentRef, AgentRuntimeTelemetrySink } from '@threadplane/chat';

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 export type CockpitEventName =
   | 'cockpit:recipe_opened'
   | 'cockpit:mode_switched'

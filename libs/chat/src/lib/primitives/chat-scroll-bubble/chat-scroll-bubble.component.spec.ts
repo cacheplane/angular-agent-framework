@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/chat-scroll-bubble/chat-scroll-bubble.component.spec.ts
-// SPDX-License-Identifier: MIT
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
 import { ChatScrollBubbleComponent } from './chat-scroll-bubble.component';

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 /**
  * Wraps an emit function so it becomes a no-op once `isDestroyed()` returns
  * true. Prevents Angular NG0953 ("emit on a destroyed OutputRef") when a late

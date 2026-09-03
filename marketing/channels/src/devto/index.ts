@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { ChannelAdapter, Draft, PostMetrics, PostResult } from '../types';
 import { validateDraft } from '../validation';
 import { postDevTo } from './post';

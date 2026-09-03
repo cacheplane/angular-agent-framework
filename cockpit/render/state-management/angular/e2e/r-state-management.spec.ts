@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { expect, test } from '@playwright/test';
 
 test.describe('Render State Management Example', () => {

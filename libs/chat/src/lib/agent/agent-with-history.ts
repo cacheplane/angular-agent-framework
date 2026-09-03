@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { Signal } from '@angular/core';
 import type { Agent } from './agent';
 import type { AgentCheckpoint } from './agent-checkpoint';

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { DestroyRef, effect, inject } from '@angular/core';
 import type { Agent } from '../agent';
 import type { ToolCall } from '../agent/tool-call';

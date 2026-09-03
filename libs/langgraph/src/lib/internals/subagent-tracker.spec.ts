@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 //
 // Direct unit coverage for the subagent attribution ladder. The tracker is a
 // plain class, so these tests drive it without the stream-manager bridge.

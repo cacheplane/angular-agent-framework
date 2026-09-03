@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, it, expect, vi } from 'vitest';
 import { z } from 'zod/v4';
 import { action } from './tools';

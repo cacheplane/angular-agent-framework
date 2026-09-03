@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { Component, signal } from '@angular/core';
 import { TitleCasePipe } from '@angular/common';
 import { ChatComponent } from '@threadplane/chat';

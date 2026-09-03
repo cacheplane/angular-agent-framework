@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { Injectable, signal, type Signal } from '@angular/core';
 import type { AgentLifecycle } from './lifecycle';
 

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { bootstrapApplication } from '@angular/platform-browser';
 import type {
   ApplicationConfig,

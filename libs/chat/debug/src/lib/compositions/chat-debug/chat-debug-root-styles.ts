@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 const CHAT_DEBUG_ROOT_STYLES = `
 @layer tplane-chat-debug {
   :root {

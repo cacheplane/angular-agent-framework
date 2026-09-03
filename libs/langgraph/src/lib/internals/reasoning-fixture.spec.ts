@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, it } from 'vitest';
 import {
   REASONING_FIXTURE_EVENTS,

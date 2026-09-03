@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { ClientToolSpec, ClientToolsState, OpenAIFunctionTool } from './types.js';
 
 /** Read the catalog from state.tools, falling back to state.client_tools; drop nameless. */

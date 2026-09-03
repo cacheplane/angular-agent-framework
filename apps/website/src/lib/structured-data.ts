@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { getCanonicalUrl, ogImagePath, resolveModifiedTime, SITE_NAME } from './site-metadata';
 import { SHORT_POSITIONING_DESCRIPTION } from './positioning';
 import type { Author } from './blog-authors';

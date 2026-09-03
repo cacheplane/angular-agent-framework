@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: MIT
 """Tests for the SUBAGENT_* emitter — drives the `delegation_*` helpers and
 the queue-merge run wrapper with a fake inner bridge generator plus a
 scripted tool enqueue (the fake generator calls the helpers between its own

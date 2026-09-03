@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 /**
  * Playwright config for recording the HITL demo clip from the canonical demo
  * shell. Mirrors `playwright.config.ts` — same aimock-backed global setup —

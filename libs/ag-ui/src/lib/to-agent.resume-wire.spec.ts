@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 //
 // Wire-level resume tests against the REAL @ag-ui/client HttpAgent (0.0.59).
 //

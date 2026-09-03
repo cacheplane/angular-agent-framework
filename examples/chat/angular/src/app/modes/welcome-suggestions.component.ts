@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import {
   ChatWelcomeSuggestionComponent,

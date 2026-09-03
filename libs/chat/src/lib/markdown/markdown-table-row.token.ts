@@ -1,5 +1,4 @@
 // libs/chat/src/lib/markdown/markdown-table-row.token.ts
-// SPDX-License-Identifier: MIT
 import { InjectionToken, Signal, signal } from '@angular/core';
 
 /**

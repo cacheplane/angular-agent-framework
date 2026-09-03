@@ -1,5 +1,4 @@
 // libs/chat/src/lib/streaming/streaming-markdown.table-stream.spec.ts
-// SPDX-License-Identifier: MIT
 //
 // Regression: a streaming table must render as a <table> as it arrives, not as
 // raw "| a | b |" paragraph text. Explicit document phases keep the parser open

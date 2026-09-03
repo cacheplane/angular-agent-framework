@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { NormalizedEntry } from '../render.types';
 
 function isPromise(v: unknown): v is Promise<unknown> {

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import type { Spec } from '@json-render/core';
 import { RenderElementComponent } from '@threadplane/render';

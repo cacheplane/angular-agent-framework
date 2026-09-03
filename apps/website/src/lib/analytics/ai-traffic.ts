@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 /**
  * Pure classification helpers for AI crawler traffic and AI-engine referrals.
  *

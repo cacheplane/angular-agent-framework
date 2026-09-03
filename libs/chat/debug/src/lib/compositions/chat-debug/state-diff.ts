@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 /**
  * Represents a single entry in a state diff.
  * - `added`: key exists in `after` but not `before`

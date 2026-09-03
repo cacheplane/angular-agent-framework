@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/chat-tool-views/chat-tool-views.component.ts
-// SPDX-License-Identifier: MIT
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import type { Spec, StateStore } from '@json-render/core';
 import type { RenderEvent, ViewRegistry } from '@threadplane/render';

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { Injectable, InjectionToken, inject, signal, type Signal, type WritableSignal } from '@angular/core';
 import type { Client, Thread as SdkThread } from '@langchain/langgraph-sdk';
 import type { Thread } from '@threadplane/chat';

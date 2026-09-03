@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/overlay/overlay-container.ts
-// SPDX-License-Identifier: MIT
 
 const CONTAINER_CLASS = 'chat-overlay-container';
 const STYLE_ID = 'chat-overlay-structure';

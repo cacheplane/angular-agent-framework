@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { describe, it } from 'node:test';

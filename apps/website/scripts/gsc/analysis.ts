@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { InspectionResult, SearchAnalyticsRow } from './api';
 
 /** Queries ranking just off page one — the cheapest ranking wins available. */

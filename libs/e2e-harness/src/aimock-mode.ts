@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { dirname, join } from 'node:path';
 import type { AimockStartOptions } from './aimock-runner';
 

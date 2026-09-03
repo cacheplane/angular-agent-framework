@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { InjectionToken, makeEnvironmentProviders } from '@angular/core';
 import type { ViewRegistry } from './views';
 

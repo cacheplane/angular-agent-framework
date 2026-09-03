@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 // Types
 export type {
   AngularComponentInputs,

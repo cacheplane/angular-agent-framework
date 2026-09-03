@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 //
 // Palette + wordmark lifted verbatim from apps/website/src/app/opengraph-image.tsx
 // so marketing cards and the site share one visual language. The plane logo is

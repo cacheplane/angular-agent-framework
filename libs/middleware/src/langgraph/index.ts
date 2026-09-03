@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 export type { ClientToolSpec, ClientToolsState, OpenAIFunctionTool, BaseMessage } from './types.js';
 export {
   clientToolSpecs,

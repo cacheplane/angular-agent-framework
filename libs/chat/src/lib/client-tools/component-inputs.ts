@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { InputSignal, InputSignalWithTransform, Type } from '@angular/core';
 import type { StandardSchemaV1, StandardSchemaInferOutput } from '@threadplane/render';
 import type { Prettify } from '../internals/prettify';

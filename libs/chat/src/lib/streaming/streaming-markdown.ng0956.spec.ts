@@ -1,5 +1,4 @@
 // libs/chat/src/lib/streaming/streaming-markdown.ng0956.spec.ts
-// SPDX-License-Identifier: MIT
 //
 // Regression guard for NG0956 ("tracking expression caused re-creation of the
 // DOM structure") during STREAMING markdown.

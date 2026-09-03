@@ -1,5 +1,4 @@
 // libs/chat/src/lib/a2ui/envelope-normalizer.ts
-// SPDX-License-Identifier: MIT
 
 const ENVELOPE_KEYS = ['createSurface', 'updateComponents', 'updateDataModel', 'deleteSurface'] as const;
 

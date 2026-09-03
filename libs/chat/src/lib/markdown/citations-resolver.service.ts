@@ -1,5 +1,4 @@
 // libs/chat/src/lib/markdown/citations-resolver.service.ts
-// SPDX-License-Identifier: MIT
 import { Injectable, computed, signal, type Signal } from '@angular/core';
 import type { CitationDefinition } from '@cacheplane/partial-markdown';
 import type { Message } from '../agent/message';

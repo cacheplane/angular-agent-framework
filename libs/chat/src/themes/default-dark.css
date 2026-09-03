@@ -1,6 +1,5 @@
 /*
  * @threadplane/chat — default dark theme
- * SPDX-License-Identifier: MIT
  *
  * The lib's `:host` defaults on `<a2ui-surface>` already declare these
  * exact values — this preset is a no-op @import for symmetry/docs and

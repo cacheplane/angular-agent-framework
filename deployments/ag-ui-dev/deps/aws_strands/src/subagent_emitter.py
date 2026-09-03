@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: MIT
 """SUBAGENT_* emitter for the `research_availability` delegation tool.
 
 The Strands bridge natively drops a child agent's text deltas: an

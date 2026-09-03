@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { TestBed } from '@angular/core/testing';
 import { provideRender } from '@threadplane/render';
 

@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: MIT
 """A2UI v0.9 protocol schema documentation, used as the system prompt for
 the A2UI GenUI flow. Derived from the official A2UI v0.9 stable schemas
 (server_to_client.json, common_types.json, and the basic catalog at

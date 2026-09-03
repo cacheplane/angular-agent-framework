@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // @ag-ui/client@0.0.52 — EventType is a string enum with uppercase values.
 // Discriminator strings (e.g. 'RUN_STARTED') match EventType enum members
 // verbatim; the switch cases below use the string literals directly so this

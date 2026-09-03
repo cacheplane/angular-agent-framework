@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 function parsePointer(pointer: string): string[] {
   if (!pointer || pointer === '/') return [];
   return pointer.split('/').filter(Boolean);

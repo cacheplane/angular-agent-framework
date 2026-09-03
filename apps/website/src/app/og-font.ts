@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 /**
  * Shared font loading for the `opengraph-image` routes.
  *

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import { Annotation, MessagesAnnotation, StateGraph, END } from '@langchain/langgraph';
 import { AIMessage, ToolMessage, HumanMessage } from '@langchain/core/messages';

@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 export interface RenderHandlerEvent {
   readonly type: 'handler';
   readonly action: string;

@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/chat-reasoning/chat-reasoning.component.ts
-// SPDX-License-Identifier: MIT
 import {
   Component, ChangeDetectionStrategy,
   computed, effect, input, signal,

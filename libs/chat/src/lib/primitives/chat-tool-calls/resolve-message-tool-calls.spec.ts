@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import { mockAgent } from '../../testing/mock-agent';
 import type { Message, ToolCall } from '../../agent';

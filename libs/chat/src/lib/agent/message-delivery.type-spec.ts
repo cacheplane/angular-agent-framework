@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { Equal, Expect } from '../../testing/type-assert';
 import {
   completeDelivery,

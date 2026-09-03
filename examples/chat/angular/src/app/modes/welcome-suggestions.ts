@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 /**
  * Welcome suggestion prompts shown in each mode's empty state. Kept in
  * one file so all three modes ship the same list — and so adding a

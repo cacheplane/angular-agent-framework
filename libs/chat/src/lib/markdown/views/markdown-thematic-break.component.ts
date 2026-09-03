@@ -1,5 +1,4 @@
 // libs/chat/src/lib/markdown/views/markdown-thematic-break.component.ts
-// SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 import type { MarkdownThematicBreakNode } from '@cacheplane/partial-markdown';
 

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import { signal, computed, type WritableSignal } from '@angular/core';
 import { getInterrupt } from './chat-interrupt.component';

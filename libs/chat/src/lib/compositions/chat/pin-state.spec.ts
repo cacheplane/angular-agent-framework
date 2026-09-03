@@ -1,5 +1,4 @@
 // libs/chat/src/lib/compositions/chat/pin-state.spec.ts
-// SPDX-License-Identifier: MIT
 import { describe, expect, it } from 'vitest';
 import { isPinned } from './chat.component';
 

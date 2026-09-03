@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { DemoSpec } from '../../../../spec-rendering/angular/src/app/specs';
 
 export const COMPUTED_FUNCTIONS_SPECS: DemoSpec[] = [

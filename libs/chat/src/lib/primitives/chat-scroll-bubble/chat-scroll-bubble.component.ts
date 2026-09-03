@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/chat-scroll-bubble/chat-scroll-bubble.component.ts
-// SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, input, output, computed } from '@angular/core';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 import { CHAT_SCROLL_BUBBLE_STYLES } from '../../styles/chat-scroll-bubble.styles';

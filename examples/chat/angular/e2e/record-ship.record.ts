@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 /**
  * Records durability for the website's Ship section: send a message, reload the
  * page, and watch the conversation come back. The thread lives in a LangGraph

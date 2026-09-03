@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { AgentQueueEntry, AgentTransport, LangGraphSubmitOptions, StreamEvent } from '../agent.types';
 import type { ThreadState } from '@langchain/langgraph-sdk';
 

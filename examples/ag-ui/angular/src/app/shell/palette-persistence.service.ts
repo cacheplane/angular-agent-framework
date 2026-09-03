@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { Injectable } from '@angular/core';
 
 const KEY = 'threadplane-ag-ui-demo:palette';

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { Component, input, ElementRef, viewChild } from '@angular/core';
 import { StreamingSimulator } from './streaming-simulator';
 

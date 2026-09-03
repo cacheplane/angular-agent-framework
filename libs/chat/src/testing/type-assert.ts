@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 /**
  * Compile-time type-assertion helpers.
  *

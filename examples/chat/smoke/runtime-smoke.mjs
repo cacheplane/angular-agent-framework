@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-// SPDX-License-Identifier: MIT
 import { spawn } from 'node:child_process';
 import { realpathSync } from 'node:fs';
 import { createServer } from 'node:net';

@@ -1,5 +1,4 @@
 // libs/chat/src/lib/styles/chat-input.styles.ts
-// SPDX-License-Identifier: MIT
 export const CHAT_INPUT_STYLES = `
 :host {
   display: block;

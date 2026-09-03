@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { AIMessage, HumanMessage, ToolMessage } from '@langchain/core/messages';
 import { describe, expect, it } from 'vitest';
 import { createInMemoryClientToolExecutionStore } from './langgraph/client-tool-execution-store';

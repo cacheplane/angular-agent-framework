@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { Type } from '@angular/core';
 import type { AngularRegistry, NormalizedEntry, RenderViewEntry } from './render.types';
 import { DefaultFallbackComponent } from './default-fallback.component';

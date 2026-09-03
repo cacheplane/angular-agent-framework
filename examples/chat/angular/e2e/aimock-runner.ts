@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 export {
   startAimock,
   type AimockHandle,

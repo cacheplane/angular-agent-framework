@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 /**
  * Records generative UI for the website's Render section: the agent emits a
  * json-render spec and the demo mounts it as real Angular components.

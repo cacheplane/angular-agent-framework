@@ -1,5 +1,4 @@
 // libs/chat/src/lib/compositions/chat-popup/chat-popup.component.ts
-// SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, input, model, DestroyRef, inject, DOCUMENT, effect } from '@angular/core';
 import type { Agent } from '../../agent';
 import type { ViewRegistry } from '@threadplane/render';

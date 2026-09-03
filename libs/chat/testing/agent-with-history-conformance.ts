@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import type { AgentWithHistory, AgentCheckpoint } from '@threadplane/chat';
 import { runAgentConformance } from './agent-conformance';

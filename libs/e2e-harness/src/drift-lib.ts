@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // Structural fixture differ. Never a gate by itself: the @drift spec results
 // are the gate; this explains a red run. Compares tool names, response kind,
 // and a coarse length bucket — deliberately NOT byte equality and NOT meaning.

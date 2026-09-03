@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 //
 // @threadplane/marketing-metrics — Metrics ingestion for the marketing pipeline.
 // Skeleton only. Implementation lands in the metrics-ingest sub-spec.

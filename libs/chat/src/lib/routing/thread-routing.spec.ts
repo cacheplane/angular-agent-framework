@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { signal } from '@angular/core';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';

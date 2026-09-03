@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/chat-confirm-dialog/chat-confirm-dialog.component.ts
-// SPDX-License-Identifier: MIT
 import {
   Component,
   ChangeDetectionStrategy,

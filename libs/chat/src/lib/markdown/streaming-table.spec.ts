@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 //
 // Consumer-side guarantee: with the partial-markdown version chat depends on, a
 // streaming table header renders as a `table` immediately — before the delimiter

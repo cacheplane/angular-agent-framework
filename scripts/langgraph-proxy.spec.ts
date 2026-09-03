@@ -1,5 +1,4 @@
 // scripts/langgraph-proxy.spec.ts
-// SPDX-License-Identifier: MIT
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createProxyHandler } from './langgraph-proxy';
 

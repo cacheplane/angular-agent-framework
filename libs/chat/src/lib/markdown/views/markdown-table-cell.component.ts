@@ -1,5 +1,4 @@
 // libs/chat/src/lib/markdown/views/markdown-table-cell.component.ts
-// SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, input, inject, computed } from '@angular/core';
 import type { MarkdownTableCellNode } from '@cacheplane/partial-markdown';
 import { MarkdownChildrenComponent } from '../markdown-children.component';

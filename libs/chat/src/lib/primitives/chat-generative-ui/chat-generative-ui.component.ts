@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/chat-generative-ui/chat-generative-ui.component.ts
-// SPDX-License-Identifier: MIT
 import {
   Component,
   computed,

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 export interface Persistence {
   read<T = unknown>(key: string): T | undefined;
   write<T = unknown>(key: string, value: T): void;

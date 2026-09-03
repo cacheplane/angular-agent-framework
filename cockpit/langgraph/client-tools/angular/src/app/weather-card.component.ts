@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import type { ClientToolViewProps } from '@threadplane/chat';
 import { weatherCardSchema } from './schemas';

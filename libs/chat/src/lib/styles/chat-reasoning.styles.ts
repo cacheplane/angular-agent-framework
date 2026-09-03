@@ -1,5 +1,4 @@
 // libs/chat/src/lib/styles/chat-reasoning.styles.ts
-// SPDX-License-Identifier: MIT
 //
 // Style block for the chat-reasoning primitive. Pill-shaped header with
 // a chevron + label; expanded body sits below the header with a thin

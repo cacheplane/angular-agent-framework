@@ -1,5 +1,4 @@
 // libs/langgraph/src/lib/internals/extract-citations.spec.ts
-// SPDX-License-Identifier: MIT
 import { extractCitations } from './extract-citations';
 
 describe('extractCitations', () => {

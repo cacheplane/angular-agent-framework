@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 declare const THREADPLANE_CHAT_DEBUG: boolean;
 declare const ngDevMode: boolean;
 

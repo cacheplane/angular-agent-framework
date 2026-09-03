@@ -1,5 +1,4 @@
 // libs/chat/src/lib/markdown/views/markdown-citation-reference.component.spec.ts
-// SPDX-License-Identifier: MIT
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { CitationsResolverService } from '../citations-resolver.service';

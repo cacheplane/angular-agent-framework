@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { Signal } from '@angular/core';
 import type { ResourceStatus as NgResourceStatus } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';

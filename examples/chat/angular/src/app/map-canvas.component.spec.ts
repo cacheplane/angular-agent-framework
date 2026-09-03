@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, it, expect, afterEach } from 'vitest';
 import { readAppColorScheme } from './map-canvas.component';
 

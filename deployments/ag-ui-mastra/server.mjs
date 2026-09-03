@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // AG-UI HTTP/SSE hosting service for Mastra agents (Lane B).
 //
 // Upstream @ag-ui/mastra ships NO plain AG-UI HTTP endpoint — only the

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, it, expect, beforeAll } from 'vitest';
 import { renderMath, katexLoaded } from './katex-loader';
 

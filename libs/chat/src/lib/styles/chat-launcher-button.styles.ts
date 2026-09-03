@@ -1,5 +1,4 @@
 // libs/chat/src/lib/styles/chat-launcher-button.styles.ts
-// SPDX-License-Identifier: MIT
 export const CHAT_LAUNCHER_BUTTON_STYLES = `
   :host { display: inline-block; }
   .chat-launcher-button {

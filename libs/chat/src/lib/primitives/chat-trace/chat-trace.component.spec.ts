@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/chat-trace/chat-trace.component.spec.ts
-// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { signal, computed } from '@angular/core';

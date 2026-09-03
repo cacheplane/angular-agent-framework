@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 export const ANGULAR_PEER_RANGE = '^20.0.0 || ^21.0.0 || ^22.0.0';
 export const SUPPORTED_ANGULAR_MAJORS = Object.freeze([20, 21, 22]);
 

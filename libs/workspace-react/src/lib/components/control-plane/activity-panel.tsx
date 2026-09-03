@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 'use client';
 
 import { Circle, CircleCheck, TriangleAlert } from 'lucide-react';

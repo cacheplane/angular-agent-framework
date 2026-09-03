@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: MIT
 """client-tools middleware: bind client-declared tool stubs and route their
 calls to END so the browser executes them and re-runs with a ToolMessage."""
 from __future__ import annotations

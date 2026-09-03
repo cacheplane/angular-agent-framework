@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: MIT
 """Streaming callback handler that sidebands a parent LLM's growing
 tool_call.arguments as A2UI-partial custom events.
 

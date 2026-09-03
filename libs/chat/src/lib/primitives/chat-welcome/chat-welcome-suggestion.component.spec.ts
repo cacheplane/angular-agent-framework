@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // NOTE: Angular signal-based inputs cannot be exercised via
 // componentRef.setInput() under vitest JIT (NG0303). We follow the established
 // pattern used by streaming-markdown.component.spec.ts and use a

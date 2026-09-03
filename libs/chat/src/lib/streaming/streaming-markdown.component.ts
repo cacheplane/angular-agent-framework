@@ -1,5 +1,4 @@
 // libs/chat/src/lib/streaming/streaming-markdown.component.ts
-// SPDX-License-Identifier: MIT
 import {
   ChangeDetectionStrategy,
   Component,

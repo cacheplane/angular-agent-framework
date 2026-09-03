@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { Routes } from '@angular/router';
 import { EmbedMode } from './modes/embed-mode.component';
 import { PopupMode } from './modes/popup-mode.component';

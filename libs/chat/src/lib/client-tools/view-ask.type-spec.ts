@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { Component, input } from '@angular/core';
 import { z } from 'zod/v4';
 import type {

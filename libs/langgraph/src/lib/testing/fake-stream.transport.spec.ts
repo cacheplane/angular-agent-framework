@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import { FakeStreamTransport } from './fake-stream.transport';
 import type { StreamEvent } from '../agent.types';

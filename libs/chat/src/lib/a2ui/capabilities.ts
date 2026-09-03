@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { A2UI_BASIC_CATALOG_ID, type A2uiClientCapabilities } from '@threadplane/a2ui';
 
 /**

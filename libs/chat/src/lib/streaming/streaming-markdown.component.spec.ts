@@ -1,5 +1,4 @@
 // libs/chat/src/lib/streaming/streaming-markdown.component.spec.ts
-// SPDX-License-Identifier: MIT
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';

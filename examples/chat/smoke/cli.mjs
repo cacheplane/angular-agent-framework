@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-// SPDX-License-Identifier: MIT
 /**
  * Smoke generator for a fresh consumer of the canonical examples/chat demo.
  *

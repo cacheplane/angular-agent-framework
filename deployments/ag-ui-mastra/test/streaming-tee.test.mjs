@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // Unit tests for the delegation stream tee — a Proxy over a Mastra Agent
 // that lets an observer see every `fullStream` chunk BEFORE the @ag-ui/mastra
 // bridge consumes it, while every other member forwards to the real agent.

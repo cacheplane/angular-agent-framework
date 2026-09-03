@@ -1,5 +1,4 @@
 // libs/example-layouts/src/lib/example-split-layout.component.ts
-// SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({

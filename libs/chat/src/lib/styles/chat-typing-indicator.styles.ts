@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 export const CHAT_TYPING_INDICATOR_STYLES = `
   /* Sit in the same centered column as chat-message-list so the dots
      don't flash at the scroll container's left edge before the assistant

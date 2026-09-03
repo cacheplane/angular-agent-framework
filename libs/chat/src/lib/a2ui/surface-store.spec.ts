@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, expect, test } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { createA2uiSurfaceStore } from './surface-store';

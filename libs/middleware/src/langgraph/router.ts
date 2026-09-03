@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { routeAfterAgent } from './middleware.js';
 import type { ClientToolsState } from './types.js';
 

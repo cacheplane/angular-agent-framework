@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import type { A2uiSurface, A2uiComponent } from '@threadplane/a2ui';
 import { surfaceToSpec } from './surface-to-spec';

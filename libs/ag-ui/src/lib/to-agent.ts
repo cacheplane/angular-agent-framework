@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { computed, signal, type Signal } from '@angular/core';
 import { Subject } from 'rxjs';
 import type { AbstractAgent } from '@ag-ui/client';

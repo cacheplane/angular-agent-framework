@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/chat-message-actions/chat-message-actions.component.ts
-// SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, input, output, signal, inject, DOCUMENT } from '@angular/core';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 import { CHAT_MESSAGE_ACTIONS_STYLES } from '../../styles/chat-message-actions.styles';

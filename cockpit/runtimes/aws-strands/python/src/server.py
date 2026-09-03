@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: MIT
 from fastapi import FastAPI
 from ag_ui_strands import add_strands_fastapi_endpoint
 

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 export async function getGitHubStars(
   repo = 'cacheplane/angular-agent-framework',
 ): Promise<number | null> {

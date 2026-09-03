@@ -1,6 +1,5 @@
 #!/usr/bin/env npx tsx
 // scripts/assemble-demo.ts
-// SPDX-License-Identifier: MIT
 /**
  * Build the canonical-demo Angular app and assemble it into the Vercel
  * deploy directory at deploy/demo/.

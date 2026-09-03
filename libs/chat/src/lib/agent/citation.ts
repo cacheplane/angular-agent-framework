@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 /**
  * Provider-agnostic citation entry. Populated by adapters from message
  * metadata (LangGraph additional_kwargs.citations, AG-UI STATE_DELTA at

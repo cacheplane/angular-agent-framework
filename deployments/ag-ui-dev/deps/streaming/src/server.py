@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: MIT
 from fastapi import FastAPI
 from ag_ui_langgraph import LangGraphAgent, add_langgraph_fastapi_endpoint
 from .graph import graph

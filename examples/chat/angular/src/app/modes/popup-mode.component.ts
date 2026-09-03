@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { ChatPopupComponent, a2uiBasicCatalog } from '@threadplane/chat';
 import { DemoShell } from '../shell/demo-shell.component';

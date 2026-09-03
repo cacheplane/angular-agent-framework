@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 //
 // @threadplane/marketing-agent — LangGraph drafting agent for the marketing pipeline.
 // Skeleton only. Implementation lands in the content-agent sub-spec.
