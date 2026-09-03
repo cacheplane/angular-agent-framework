@@ -994,6 +994,12 @@ Deploy the merged commit, verify unauthenticated rejection and authenticated rea
 
 - [ ] **Step 6: Prepare—but do not promote—the website deployment**
 
+> **This step is not achievable on this project and was never verified before it was written.** The `threadplane` Vercel project promotes every `main` deployment automatically; `main` is the only branch that has ever reached production, across at least the last 40 production deployments. Merging the cutover pull request therefore *is* the promotion, and it happened seconds after #968 merged on 2026-09-03, before any firewall block, drain, snapshot, import, or cancellation had run.
+>
+> Task 11's ordering depends on the same false assumption: it blocks form ingress, reconciles the legacy provider state, and only then promotes the hard boundary. On this project the boundary is already live the moment the code lands.
+>
+> Any future cutover of this shape must either disable automatic production promotion on the project first, or be re-sequenced so the legacy provider inventory is imported and cancelled **before** the code merges.
+
 Build/deploy the merged website artifact with `growth_v1`. Verify configuration, database reachability, lifecycle reachability, and bundle absence of legacy code on its deployment URL. Do not route production form traffic to it yet.
 
 - [x] **Step 7: Prepare and verify the rollback control before cutover**
@@ -1042,6 +1048,8 @@ Run cancellation dry-run, approve its aggregate inventory, then apply. Require o
 If any condition fails, keep the firewall and all campaign switches off. Follow the prepared rollback order if deployment rollback is required. Do not claim cutover completion or route form POSTs to a prior deployment.
 
 - [ ] **Step 6: Promote the hard-boundary website while forms remain blocked**
+
+> Superseded on this project — see the note on Task 10 Step 6. Promotion is automatic on merge, so there is no separate promote to hold until forms are blocked.
 
 Promote the prepared website deployment. Verify production is on the merged commit, `growth_v1` is active, and static/runtime probes find no NDJSON, Loops, Audience, direct send, or provider scheduling path.
 

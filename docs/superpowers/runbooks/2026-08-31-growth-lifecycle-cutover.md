@@ -2,6 +2,12 @@
 
 Status: **LOCAL implementation and harness only.** No disposable database, preview, or production action in this runbook has been performed. No Neon migration/import, Resend/Google read or write, Vercel deployment, Dawn deployed request, or switch change is implied by local test results.
 
+## Deployment promotion is automatic
+
+The `threadplane` Vercel project promotes every `main` deployment to production automatically, and `main` is the only branch that has ever reached production. There is no "build but do not promote" state for the website: **merging is promoting.** Sequence any cutover around that, and never write a step that depends on holding a merged commit back from production.
+
+The `threadplane-lifecycle` project behaves the same way on `main`.
+
 ## Gate classes
 
 - **LOCAL**: repository-only and safe with fake fixtures; no provider or database connection.
