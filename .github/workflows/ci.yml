@@ -5,6 +5,13 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # A merge queue runs each candidate on a gh-readonly-queue/* ref. Every
+  # verification job already falls through to the ci-scope outputs when the
+  # event is not `push`, so they scope themselves here exactly as they do on a
+  # pull request. The deploy jobs additionally require
+  # `github.ref == 'refs/heads/main'`, which a queue ref never matches, so a
+  # queued candidate can never promote to production.
+  merge_group:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
@@ -60,6 +67,15 @@ jobs:
           if [ "${{ github.event_name }}" = "push" ]; then
             node scripts/ci-scope.mjs \
               --event push \
+              --output "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "${{ github.event_name }}" = "merge_group" ]; then
+            node scripts/ci-scope.mjs \
+              --event pull_request \
+              --base "${{ github.event.merge_group.base_sha }}" \
+              --head "${{ github.event.merge_group.head_sha }}" \
               --output "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -676,7 +692,10 @@ jobs:
       - scripts-tests
       - growth-lifecycle
       - lifecycle
-    if: ${{ always() && github.event_name == 'pull_request' }}
+    # `CI — required` is the only required status context. A merge queue
+    # waits on it for each candidate, so it must report on merge_group too —
+    # otherwise every queued merge blocks forever on a check that never runs.
+    if: ${{ always() && (github.event_name == 'pull_request' || github.event_name == 'merge_group') }}
     runs-on: ubuntu-latest
     steps:
       - name: Verify scoped CI jobs

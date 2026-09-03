@@ -77,6 +77,53 @@ function readNamedStep(job, name) {
 }
 
 describe('CI workflow', () => {
+  it('runs in a merge queue and reports the required context there', async () => {
+    const workflow = await readFile('.github/workflows/ci.yml', 'utf8');
+
+    assert.match(
+      workflow,
+      /^  merge_group:\s*$/m,
+      'ci.yml must trigger on merge_group or a merge queue blocks forever'
+    );
+
+    const required = readJobBlock(workflow, 'required-pr-checks');
+    assert.match(
+      required,
+      /github\.event_name == 'merge_group'/,
+      'CI — required is the only required context; it must report inside the queue'
+    );
+  });
+
+  it('never lets a merge-queue candidate promote to production', async () => {
+    const workflow = await readFile('.github/workflows/ci.yml', 'utf8');
+
+    // A queue candidate builds on refs/heads/gh-readonly-queue/*, so every job
+    // that touches production must be pinned to refs/heads/main. Without this
+    // the queue would deploy unmerged candidates.
+    for (const job of [
+      'deploy',
+      'demo-deploy',
+      'ag-ui-demo-deploy',
+      'production-smoke',
+    ]) {
+      const block = readJobBlock(workflow, job);
+      assert.match(
+        block,
+        /github\.ref == 'refs\/heads\/main'/,
+        `${job} must be pinned to refs/heads/main so a queue ref cannot deploy`
+      );
+    }
+  });
+
+  it('scopes a merge-queue candidate from the merge group range', async () => {
+    const workflow = await readFile('.github/workflows/ci.yml', 'utf8');
+    const scope = readJobBlock(workflow, 'ci-scope');
+
+    assert.match(scope, /github\.event\.merge_group\.base_sha/);
+    assert.match(scope, /github\.event\.merge_group\.head_sha/);
+  });
+
+
   async function readWorkflow() {
     return readFile('.github/workflows/ci.yml', 'utf8');
   }
@@ -908,7 +955,7 @@ describe('CI workflow', () => {
     assert.match(requiredPrChecksJob, /name:\s*CI — required/);
     assert.match(
       requiredPrChecksJob,
-      /if:\s*\$\{\{\s*always\(\)\s*&&\s*github\.event_name == 'pull_request'\s*\}\}/
+      /if:\s*\$\{\{\s*always\(\)\s*&&\s*\(github\.event_name == 'pull_request'\s*\|\|\s*github\.event_name == 'merge_group'\)\s*\}\}/
     );
 
     assert.deepEqual(readJobNeeds(requiredPrChecksJob), expectedNeeds);
