@@ -12,6 +12,7 @@
     "generate-whitepaper": "npx tsx apps/website/scripts/generate-whitepaper.ts",
     "db:migrate": "tsx scripts/apply-migrations.mts",
     "growth:control": "tsx scripts/growth-control.mts",
+    "growth:cancel-resend": "tsx scripts/cancel-resend-lifecycle.mts",
     "growth:import-resend": "tsx scripts/import-resend-lifecycle.mts",
     "marketing:channels:x:auth": "tsx --env-file=.env marketing/channels/src/x/auth-cli.ts",
     "marketing:channels:x:smoke": "tsx --env-file=.env marketing/channels/scripts/smoke.ts",
@@ -128,6 +129,7 @@
     "rehype-pretty-code": "^0.14.3",
     "rehype-slug": "^6.0.0",
     "rxjs": "~7.8.0",
+    "server-only": "^0.0.1",
     "shiki": "^4.0.2"
   },
   "nx": {

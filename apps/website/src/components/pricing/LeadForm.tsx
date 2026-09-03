@@ -1,5 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import type { PublicFormPolicy } from '../../lib/growth/form-policy';
+import {
+  FORM_POLICY_REFRESH_MESSAGE,
+  growthFormRequestSnapshot,
+  type GrowthFormRequestSnapshot,
+} from '../../lib/growth/form-client';
 import { analyticsEvents } from '../../lib/analytics/events';
 import { track } from '../../lib/analytics/client';
 import { Container } from '../ui/Container';
@@ -8,9 +14,13 @@ import { Eyebrow } from '../ui/Eyebrow';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 
-export function LeadForm() {
-  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+export function LeadForm({ formPolicy }: { formPolicy: PublicFormPolicy }) {
+  const [status, setStatus] = useState<
+    'idle' | 'sending' | 'sent' | 'error' | 'stale'
+  >('idle');
   const [pilotInterest, setPilotInterest] = useState<'yes' | 'maybe' | 'no'>('maybe');
+  const submissionSnapshot = useRef<GrowthFormRequestSnapshot | null>(null);
+  const disclosureId = 'lead-form-growth-disclosure';
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -22,12 +32,37 @@ export function LeadForm() {
       source_section: 'lead-form',
     });
     try {
+      const snapshot = growthFormRequestSnapshot(submissionSnapshot.current, {
+        form_kind: 'pricing',
+        email: String(data['email'] ?? ''),
+        name: String(data['name'] ?? ''),
+        company: String(data['company'] ?? ''),
+        message: String(data['message'] ?? ''),
+        team_size: String(data['team_size'] ?? ''),
+        timeline: String(data['timeline'] ?? ''),
+        pilot_interest: pilotInterest,
+      });
+      submissionSnapshot.current = snapshot;
       const res = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, pilot_interest: pilotInterest }),
+        body: JSON.stringify({
+          ...snapshot.facts,
+          acquisition_session_id: snapshot.acquisition_session_id,
+          submission_id: snapshot.submission_id,
+          policy_version: formPolicy.version,
+        }),
       });
+      if (res.status === 409) {
+        submissionSnapshot.current = null;
+        setStatus('stale');
+        return;
+      }
+      if (res.status >= 400 && res.status < 500) {
+        submissionSnapshot.current = null;
+      }
       if (res.ok) {
+        submissionSnapshot.current = null;
         track(analyticsEvents.marketingLeadFormSuccess, {
           surface: 'pricing',
           source_section: 'lead-form',
@@ -72,7 +107,23 @@ export function LeadForm() {
           </div>
 
           <div className="lead-form-grid">
-            {status === 'sent' ? (
+            {status === 'stale' ? (
+              <Card padding="lg">
+                <div role="alert">
+                  <p className="lead-form-disclosure">
+                    {FORM_POLICY_REFRESH_MESSAGE}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="md"
+                    onClick={() => window.location.reload()}
+                  >
+                    Refresh page
+                  </Button>
+                </div>
+              </Card>
+            ) : status === 'sent' ? (
               <Card padding="lg">
                 <p className="lead-form-sent-message">
                   Thanks &mdash; we&apos;ll be in touch within one business day.
@@ -182,12 +233,16 @@ export function LeadForm() {
                     className="lead-form-input lead-form-textarea"
                   />
 
+                  <p id={disclosureId} className="lead-form-disclosure">
+                    {formPolicy.disclosures.contact}
+                  </p>
                   <Button
                     type="submit"
                     variant="primary"
                     size="md"
                     disabled={status === 'sending'}
                     className="lead-form-submit"
+                    aria-describedby={disclosureId}
                   >
                     {status === 'sending' ? 'Sending…' : 'Request enterprise quote'}
                   </Button>

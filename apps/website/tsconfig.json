@@ -38,7 +38,8 @@
       ],
       "@threadplane/telemetry/browser": [
         "../../libs/telemetry/src/browser/public-api.ts"
-      ]
+      ],
+      "@threadplane-internal/growth": ["../../libs/growth/src/index.ts"]
     }
   },
   "include": [

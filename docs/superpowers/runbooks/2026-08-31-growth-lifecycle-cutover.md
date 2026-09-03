@@ -2,6 +2,12 @@
 
 Status: **LOCAL implementation and harness only.** No disposable database, preview, or production action in this runbook has been performed. No Neon migration/import, Resend/Google read or write, Vercel deployment, Dawn deployed request, or switch change is implied by local test results.
 
+## Deployment promotion is automatic
+
+The `threadplane` Vercel project promotes every `main` deployment to production automatically, and `main` is the only branch that has ever reached production. There is no "build but do not promote" state for the website: **merging is promoting.** Sequence any cutover around that, and never write a step that depends on holding a merged commit back from production.
+
+The `threadplane-lifecycle` project behaves the same way on `main`.
+
 ## Gate classes
 
 - **LOCAL**: repository-only and safe with fake fixtures; no provider or database connection.
@@ -217,11 +223,11 @@ Create a separate protected Vercel project with root `apps/lifecycle`, monorepo 
 
 Environment ownership is strict:
 
-| Owner                     | Values                                                                                                                                                                                                                                                                                                                                                                     |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Website preview project   | preview growth `DATABASE_URL`; `GROWTH_DATABASE_ENVIRONMENT=preview`; growth token/email HMAC keyrings; `RESEND_WEBHOOK_SECRET`; `GOOGLE_REPLY_HMAC_SECRET`; `CRON_SECRET`; lifecycle origin and shared service secret; `LIFECYCLE_CRON_ENABLED=false`                                                                                                                     |
+| Owner                     | Values                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Website preview project   | preview growth `DATABASE_URL`; `GROWTH_DATABASE_ENVIRONMENT=preview`; growth token/email HMAC keyrings; `RESEND_WEBHOOK_SECRET`; `GOOGLE_REPLY_HMAC_SECRET`; `CRON_SECRET`; lifecycle origin and shared service secret; `LIFECYCLE_CRON_ENABLED=false`                                                                                                                                                                  |
 | Lifecycle preview project | preview growth `DATABASE_URL`; app-dedicated preview `DAWN_DATABASE_URL`; shared lifecycle service secret; Anthropic/Resend keys; growth action-token keyring; public custom-domain alias for the exact Website preview deployment as `GROWTH_PUBLIC_ACTION_ORIGIN`; founder address; delivery environment/allowlist/redirect; immutable cohort timestamp; sender flags; all delivery/enrollment/leasing switches false |
-| Vercel project settings   | root directory, parent-file access, Node 24, protected preview access policy                                                                                                                                                                                                                                                                                               |
+| Vercel project settings   | root directory, parent-file access, Node 24, protected preview access policy                                                                                                                                                                                                                                                                                                                                            |
 
 Preview and production must use separate growth databases and separate Dawn stores. `DAWN_DATABASE_URL` must never alias or fall back to growth `DATABASE_URL`. No value may use a `NEXT_PUBLIC_` name.
 
@@ -283,39 +289,92 @@ From one received allowlisted message, verify and record pass/fail without copyi
 
 Do not enable production recipient delivery if any item is absent or if provider tracking is active.
 
-## 6. Legacy Resend reconciliation
+## 6. Legacy Resend hard-boundary reconciliation
 
 ### LOCAL
 
-The importer unit gate is provider-free:
+The importer and cancellation operator gates are provider-free:
 
 ```bash
-npx -y node@22 ./node_modules/vitest/vitest.mjs run scripts/import-resend-lifecycle.spec.ts
+npx -y node@22 ./node_modules/vitest/vitest.mjs run --config libs/growth/vite.operator-cli.config.mts scripts/import-resend-lifecycle.spec.ts scripts/cancel-resend-lifecycle.spec.ts
 ```
 
 ### PREVIEW LIVE — explicit authorization required
 
-Run a fresh aggregate-only provider snapshot, privately record the current counts, then import into an authorized preview/disposable target. The dry run reads the live Resend provider even though it does not write. Never reuse the historical 14-contact/17-scheduled observation. Before apply, require `TEST_DATABASE_URL` to be present and `DATABASE_URL` to be absent; the importer rejects both variables together and rejects the production acknowledgement in this mode:
+Exercise the same ordered procedure below against the authorized preview/disposable target before production. Use `TEST_DATABASE_URL`, omit `DATABASE_URL`, and omit `--allow-database-url-apply` from both apply commands. Provider and database reads are live even during dry runs; applies mutate the authorized target. Require aggregate JSON only, zero newly granted approvals, a stable importer rerun, exact-record cancellation, and a successful zero-work cancellation rerun.
+
+Never reuse historical observations. Record only approved placeholder counts in durable evidence:
 
 ```bash
+EXPECTED_CONTACTS=<current-aggregate-count>
+EXPECTED_SCHEDULED=<current-aggregate-count>
 npm run growth:import-resend -- --dry-run
 test -n "${TEST_DATABASE_URL:-}" && test -z "${DATABASE_URL:-}"
 env -u DATABASE_URL npm run growth:import-resend -- --apply --expected-contacts "$EXPECTED_CONTACTS" --expected-scheduled "$EXPECTED_SCHEDULED"
+npm run growth:cancel-resend -- --dry-run
+env -u DATABASE_URL npm run growth:cancel-resend -- --apply --expected-scheduled "$EXPECTED_SCHEDULED"
+env -u DATABASE_URL npm run growth:cancel-resend -- --apply --expected-scheduled "$EXPECTED_SCHEDULED"
+npm run growth:cancel-resend -- --dry-run
 ```
-
-Require aggregate JSON only, zero newly granted approvals, stable idempotent rerun, and contact-scoped legacy cancellation counts. This apply mutates a database and is not a local-only check.
 
 ### PRODUCTION LIVE — explicit authorization required
 
-After preview reconciliation and deployed stop surfaces, repeat the immediately-current dry run and apply with the production acknowledgement. The dry run is a live provider read. Before apply, require the environment-bound `DATABASE_URL` to be present and `TEST_DATABASE_URL` to be absent; the acknowledgement never permits fallback to a test target and the importer rejects both variables together:
+Perform this as one attended sequence. Do not print, paste, export, or record addresses, subjects, provider identifiers, raw provider failures, credentials, or database URLs. Stop on any count drift, unknown state, deadline failure, unverified provider record, or nonzero final inventory.
+
+1. **Block legacy ingress with Vercel Firewall.** Add an exact temporary block for `POST /api/leads`, `POST /api/newsletter`, and `POST /api/whitepaper-signup`. Verify all three POST paths are blocked while unrelated reads remain available. Keep this block in place through the hard-boundary deployment.
+
+   The rule below was installed against production, verified, and removed on 2026-09-02. The three condition groups are OR'd; the two conditions inside each are AND'd, so only those exact method/path pairs match.
+
+   ```json
+   {
+     "name": "growth-cutover-form-block",
+     "active": true,
+     "conditionGroup": [
+       { "conditions": [ { "type": "method", "op": "eq", "value": "POST" }, { "type": "path", "op": "eq", "value": "/api/whitepaper-signup" } ] },
+       { "conditions": [ { "type": "method", "op": "eq", "value": "POST" }, { "type": "path", "op": "eq", "value": "/api/newsletter" } ] },
+       { "conditions": [ { "type": "method", "op": "eq", "value": "POST" }, { "type": "path", "op": "eq", "value": "/api/leads" } ] }
+     ],
+     "action": { "mitigate": { "action": "deny" } }
+   }
+   ```
+
+   Install with `PATCH /v1/security/firewall/config` and an `{"action":"rules.insert","id":null,"value":<rule>}` body; remove with `{"action":"rules.remove","id":"<rule id>","value":null}`. Read the result back from `/v1/security/firewall/config/active` and require the expected custom-rule count.
+
+   Observed verification results: the three POSTs returned `403`; `GET /`, `/pricing`, `/contact`, and `/docs` returned `200`; `GET /api/newsletter` returned its own `405`; the unrelated `POST /api/ingest` returned its own `400`. After removal all three POSTs returned the application's own `400`.
+
+   **The block returns `403`, not a retryable status.** Vercel's WAF mitigations are `log`, `challenge`, `deny`, `bypass`, and `rate_limit`; there is no 503-with-`Retry-After` option. Cutover safety is unaffected — nothing gets through — but do not assume a well-behaved client will retry on its own, and do not describe the block to anyone as a temporary maintenance response that resolves itself.
+2. **Drain in-flight requests.** Wait for every request admitted before the firewall rule to finish, then require zero in-flight legacy form requests and stable legacy side-effect counters.
+3. **Require stable provider inventories.** Take two attended, aggregate-only Resend inventories separated by the approved observation interval. Continue only when contact and scheduled-message counts match exactly. Set `EXPECTED_CONTACTS` and `EXPECTED_SCHEDULED` from that immediately current stable observation; the values below are placeholders, never historical defaults.
+4. **Run the final importer dry run.** It reads Resend without mutation and must reproduce the approved aggregate counts.
+5. **Run the timing preflight.** Require `DATABASE_URL` present, `TEST_DATABASE_URL` absent, and enough wall-clock time to complete before the importer-recorded cancellation deadline. A positive scheduled count requires a non-null future deadline; zero scheduled requires a null deadline.
+6. **Apply the import.** Use the explicit production-database acknowledgement. Require exact counts, immutable configuration identity, zero new outreach approvals, and no provider mutation.
+7. **Run cancellation dry run.** It reads Neon and Resend and emits aggregate counts only. Require no unexpected provider-scheduled records and no invalid or ambiguous imported records.
+8. **Apply cancellation.** Use the same explicit database acknowledgement and expected scheduled count. The operator cancels only one exact provider-bound record at a time, settles only its matching legacy job, and never derives a target from a recipient.
+9. **Use exact-record recovery when interrupted.** Rerun the same apply command. For an imported unresolved ID absent from the scheduled list, the operator must use exact `get(id)`: `canceled` settles Neon without a second cancel; `scheduled` remains eligible; missing, malformed, delivered, sent, failed, or otherwise ambiguous results halt the cutover unresolved.
+10. **Require the final provider re-list.** The operator's bounded paginated re-list and an immediate cancellation dry run must report zero unresolved imported schedules, zero unexpected provider schedules, and zero provider scheduled messages remaining. A full-settlement apply rerun must issue zero cancellations.
+11. **Deploy the hard boundary.** Deploy the reviewed Neon-only form implementation while the firewall still blocks all three POST paths. Verify the deployed artifact contains no legacy NDJSON, Loops, or provider-scheduled campaign path before routing traffic to it.
+12. **Remove the firewall block.** Remove the three exact POST blocks only after the hard-boundary deployment, health checks, and zero-inventory reconciliation all pass. Submit the approved canaries and reconcile their Neon/provider effects by aggregate and exact fixture keys.
+
+Failure handling has two explicit branches:
+
+- **Pre-import insufficient-window failure: no database or provider mutation occurred.** Restore all three blocked acquisition POST routes and choose a later safe window. Record the closed failure class, remove the temporary firewall rule deliberately, and do not leave ingress accidentally blocked after abandoning this attempt.
+- **Post-import or cancellation failure: keep all three acquisition POST routes blocked.** Do not route traffic to an earlier handler or remove any of the three firewall blocks. Reconcile Neon and Resend under the exact-record recovery procedure, then deploy or restore the reviewed Neon-only hard boundary. Restore ingress only after a reviewed Neon-only boundary is active and every accepted Neon and provider effect is reconciled. Treat the block as an attended incident control with a named owner until that safe boundary is restored; never reopen merely to end the incident.
+
+The attended command sequence is:
 
 ```bash
+EXPECTED_CONTACTS=<current-aggregate-count>
+EXPECTED_SCHEDULED=<current-aggregate-count>
 npm run growth:import-resend -- --dry-run
 test -n "${DATABASE_URL:-}" && test -z "${TEST_DATABASE_URL:-}"
 env -u TEST_DATABASE_URL npm run growth:import-resend -- --apply --expected-contacts "$EXPECTED_CONTACTS" --expected-scheduled "$EXPECTED_SCHEDULED" --allow-database-url-apply
+npm run growth:cancel-resend -- --dry-run
+env -u TEST_DATABASE_URL npm run growth:cancel-resend -- --apply --expected-scheduled "$EXPECTED_SCHEDULED" --allow-database-url-apply
+env -u TEST_DATABASE_URL npm run growth:cancel-resend -- --apply --expected-scheduled "$EXPECTED_SCHEDULED" --allow-database-url-apply
+npm run growth:cancel-resend -- --dry-run
 ```
 
-The importer never mutates Resend. If it reports pending legacy cancellations, an authorized operator must query exact IDs only in a restricted non-recorded database session, cancel each individually in Resend, verify the per-ID count equals the aggregate, and destroy the ephemeral checklist. Never bulk-cancel, export, log, or paste provider IDs.
+The importer never mutates Resend. `growth:cancel-resend` is the only legacy-provider cancellation path. Never use a bulk action, recipient-derived lookup, dashboard checklist, or ad hoc provider command.
 
 ## 7. Shadow, allowlist, launch, and rollback
 
@@ -333,7 +392,9 @@ Then set `DELIVERY_ENABLED=true` with campaign enrollment/leasing false and rest
 4. Enable leasing last, first for internal/test recipients, then a small new-whitepaper cohort.
 5. Review daily before expansion; use the thresholds in the operations runbook.
 
-Immediate halt: set campaign leasing false, then delivery false if recipient safety is uncertain, then enrollment false. Leave cron on only if it is needed for fulfillment/recovery and is behaving correctly; otherwise disable cron too. Preserve ledgers, unknown outcomes, recovery state, cohort timestamp, and provider records. Roll back code only after switches are confirmed and leases settle/expire.
+Immediate halt: set campaign leasing false, then delivery false if recipient safety is uncertain, then enrollment false. Leave cron on only if it is needed for fulfillment/recovery and is behaving correctly; otherwise disable cron too. Preserve ledgers, unknown outcomes, recovery state, cohort timestamp, and provider records.
+
+Before rolling back to any prior deployment, first restore the exact Vercel Firewall blocks for `POST /api/leads`, `POST /api/newsletter`, and `POST /api/whitepaper-signup`; no prior deployment may receive those requests. Keep all three paths blocked until the reviewed Neon-only hard boundary is restored. While blocked, reconcile every request already accepted by Neon and every corresponding provider effect, including unknown or interrupted outcomes, before reopening ingress. Never reopen a form path merely because code rollback completed.
 
 ## Appendix A: secret-free dogfood evidence template
 

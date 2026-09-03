@@ -37,6 +37,20 @@ export const createWebsitePlaywrightConfig = (
     retries: environment['CI'] ? 2 : 0,
     use: {
       baseURL,
+      // Vercel deployment protection answers 302 -> vercel.com/sso-api for every
+      // path on a preview, so a browser-driven check lands on an SSO page and
+      // times out. When CI supplies the project's automation bypass, send it so
+      // the preview is reachable. Every URL this suite touches is a first-party
+      // Threadplane origin. Unset locally and in production runs.
+      ...(environment['VERCEL_AUTOMATION_BYPASS_SECRET']
+        ? {
+            extraHTTPHeaders: {
+              'x-vercel-protection-bypass':
+                environment['VERCEL_AUTOMATION_BYPASS_SECRET'],
+              'x-vercel-set-bypass-cookie': 'true',
+            },
+          }
+        : {}),
       // Custom-target coverage carries an obvious fixture key. Keep browser
       // artifacts disabled so request headers and page state are never retained.
       trace: 'off',
@@ -70,6 +84,9 @@ export const createWebsitePlaywrightConfig = (
             cwd: '../..',
             url: localURL,
             reuseExistingServer,
+            // Server pages read the growth form policy while rendering, so the
+            // local server carries the switch the deployed environment sets.
+            env: { GROWTH_FORM_POLICY: 'growth_v1' },
             timeout: bfcacheRuntimeTest ? 180_000 : 60_000,
           },
           {

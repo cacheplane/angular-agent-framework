@@ -1,5 +1,11 @@
 import { test, expect } from '@playwright/test';
 
+// Mirrored from apps/website/src/lib/growth/form-policy.ts, which is server-only
+// and therefore cannot be imported into a Playwright spec.
+const GROWTH_FORM_POLICY_VERSION = 'growth_v1.2026-09-01';
+const UUID_V4 =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
+
 const docsRoute = '/docs/langgraph/getting-started/introduction';
 
 async function expectNoHorizontalOverflow(
@@ -88,7 +94,7 @@ test('contact page submits a lead payload and renders success state', async ({ p
     });
   });
 
-  await page.goto('/contact?source=e2e_contact&track=enterprise');
+  await page.goto('/contact');
   const contactForm = page.locator('main form').first();
   await contactForm.getByRole('textbox', { name: 'Email', exact: true }).fill('jane@acme.com');
   await contactForm.getByRole('textbox', { name: 'Name' }).fill('Jane Smith');
@@ -98,13 +104,14 @@ test('contact page submits a lead payload and renders success state', async ({ p
 
   await expect(page.getByText("Thanks. We'll be in touch within one business day.")).toBeVisible();
   expect(leadPayload).toMatchObject({
+    form_kind: 'contact',
     email: 'jane@acme.com',
     name: 'Jane Smith',
     company: 'Acme',
     message: 'We are evaluating Threadplane.',
-    source_page: 'e2e_contact',
-    track: 'enterprise',
+    policy_version: GROWTH_FORM_POLICY_VERSION,
   });
+  expect(leadPayload?.['submission_id']).toMatch(UUID_V4);
 });
 
 test('pricing lead form posts to /api/leads and renders success state', async ({ page }) => {
@@ -128,11 +135,14 @@ test('pricing lead form posts to /api/leads and renders success state', async ({
 
   await expect(page.getByText(/we'll be in touch within one business day/i)).toBeVisible();
   expect(leadPayload).toMatchObject({
+    form_kind: 'pricing',
     email: 'jane@acme.com',
     name: 'Jane Smith',
     company: 'Acme',
     message: 'Volume seats and security review.',
+    policy_version: GROWTH_FORM_POLICY_VERSION,
   });
+  expect(leadPayload?.['submission_id']).toMatch(UUID_V4);
 });
 
 test('footer newsletter form posts to /api/newsletter and renders success state', async ({ page }) => {
@@ -152,7 +162,11 @@ test('footer newsletter form posts to /api/newsletter and renders success state'
   await footer.getByRole('button', { name: 'Subscribe' }).click();
 
   await expect(page.getByText("✓ You're subscribed!")).toBeVisible();
-  expect(payload).toEqual({ email: 'reader@acme.com' });
+  expect(payload).toMatchObject({
+    email: 'reader@acme.com',
+    policy_version: GROWTH_FORM_POLICY_VERSION,
+  });
+  expect(payload?.['submission_id']).toMatch(UUID_V4);
 });
 
 test('whitepaper signup form posts to /api/whitepaper-signup and renders success state', async ({ page }) => {
@@ -171,7 +185,12 @@ test('whitepaper signup form posts to /api/whitepaper-signup and renders success
   await page.locator('#whitepaper-block').getByRole('button', { name: 'Download (free)' }).click();
 
   await expect(page.getByText(/check your inbox/i)).toBeVisible();
-  expect(payload).toEqual({ email: 'reader@acme.com', paper: 'chat' });
+  expect(payload).toMatchObject({
+    email: 'reader@acme.com',
+    paper: 'chat',
+    policy_version: GROWTH_FORM_POLICY_VERSION,
+  });
+  expect(payload?.['submission_id']).toMatch(UUID_V4);
 });
 
 test('docs page renders sidebar and content', async ({ page }) => {

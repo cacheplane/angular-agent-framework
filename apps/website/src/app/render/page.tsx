@@ -13,6 +13,7 @@ import { RenderCodeShowcase } from '../../components/landing/render/RenderCodeSh
 import { createPageMetadata } from '../../lib/site-metadata';
 import { SECTION_MEDIA } from '../../lib/section-media';
 import { buildPanes } from '../../lib/build-panes';
+import { getFormPolicy } from '../../lib/growth/form-policy';
 
 export const metadata = createPageMetadata({
   title: '@threadplane/render — Generative UI for Angular',
@@ -22,6 +23,7 @@ export const metadata = createPageMetadata({
 });
 
 export default async function RenderPage() {
+  const formPolicy = getFormPolicy();
   const panes = await buildPanes(SECTION_MEDIA.libRender, SECTION_MEDIA.libRender.video?.url ?? '');
 
   return (
@@ -91,7 +93,7 @@ export default async function RenderPage() {
         visual={<RenderCodeShowcase />}
       />
 
-      <WhitePaperBlock paper="render" />
+      <WhitePaperBlock formPolicy={formPolicy} paper="render" />
       <FinalCTA variant="dark" />
     </>
   );

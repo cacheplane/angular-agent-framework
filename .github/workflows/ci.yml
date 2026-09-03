@@ -181,6 +181,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      # Server pages read the growth form policy while rendering, so the build
+      # needs the same switch the deployed environment sets. It is not a secret.
+      GROWTH_FORM_POLICY: growth_v1
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -640,6 +644,17 @@ jobs:
             playwright-${{ runner.os }}-
       - run: npx playwright install --with-deps chromium
       - run: npx nx e2e website --skip-nx-cache
+      # The production-smoke spec is testIgnore'd outside PRODUCTION_SMOKE mode,
+      # so a module-load error in it is invisible until the post-merge Production
+      # smoke job runs against main — too late to gate a PR. Collect it here:
+      # --list loads every spec without hitting production.
+      - name: Production-smoke spec must load
+        env:
+          PRODUCTION_SMOKE: 'true'
+          BASE_URL: https://threadplane.ai
+        run: |
+          npx playwright test apps/website/e2e/platform-production-smoke.spec.ts \
+            --config apps/website/playwright.config.ts --list
 
   required-pr-checks:
     name: CI — required
@@ -994,9 +1009,17 @@ jobs:
           npx vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
       - name: Verify Website preview runtime embedding policy
         if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.website == 'true'
-        run: npx playwright test apps/website/e2e/platform-production-smoke.spec.ts --config apps/website/playwright.config.ts --grep "unified runtime embedding policy" --reporter=list
+        run: |
+          # Without the bypass the preview answers 302 -> vercel.com/sso-api and
+          # this check times out on an SSO page instead of the app. Say so.
+          if [ -z "${VERCEL_AUTOMATION_BYPASS_SECRET}" ]; then
+            echo "::error::VERCEL_AUTOMATION_BYPASS_SECRET is unset — the protected Website preview cannot be verified. Enable 'Protection Bypass for Automation' on the Vercel website project and store the value as this repository secret."
+            exit 1
+          fi
+          npx playwright test apps/website/e2e/platform-production-smoke.spec.ts --config apps/website/playwright.config.ts --grep "unified runtime embedding policy" --reporter=list
         env:
           PRODUCTION_SMOKE: 'true'
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
           BASE_URL: ${{ steps.deploy_website.outputs.preview_origin }}
           WEBSITE_URL: ${{ steps.deploy_website.outputs.preview_origin }}
           EXAMPLES_URL: https://examples.threadplane.ai

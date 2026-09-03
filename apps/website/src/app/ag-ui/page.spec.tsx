@@ -1,5 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
+
+vi.mock('server-only', () => ({}));
 import AgUiPage from './page';
 import { BACKENDS } from '../../components/landing/ag-ui/BackendsGrid';
 

@@ -1,5 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import type { PublicFormPolicy } from '../../lib/growth/form-policy';
+import {
+  FORM_POLICY_REFRESH_MESSAGE,
+  growthFormRequestSnapshot,
+  type GrowthFormRequestSnapshot,
+} from '../../lib/growth/form-client';
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';
@@ -18,6 +24,7 @@ type WhitepaperId = 'overview' | 'angular' | 'render' | 'chat';
 interface WhitePaperBlockProps {
   /** Whitepaper variant. Determines PDF path + analytics tag. */
   paper?: WhitepaperId;
+  formPolicy: PublicFormPolicy;
 }
 
 const PDF_PATHS: Record<WhitepaperId, { href: string; download: string }> = {
@@ -27,10 +34,20 @@ const PDF_PATHS: Record<WhitepaperId, { href: string; download: string }> = {
   chat: { href: '/whitepapers/chat.pdf', download: 'angular-chat-guide.pdf' },
 };
 
-export function WhitePaperBlock({ paper = 'overview' }: WhitePaperBlockProps = {}) {
+export function WhitePaperBlock({
+  formPolicy,
+  paper = 'overview',
+}: WhitePaperBlockProps) {
   const pdf = PDF_PATHS[paper];
   const [email, setEmail] = useState('');
-  const [state, setState] = useState<'idle' | 'submitting' | 'done' | 'error'>('idle');
+  const [state, setState] = useState<
+    'idle' | 'submitting' | 'done' | 'error' | 'stale'
+  >('idle');
+  const submissionSnapshot = useRef<GrowthFormRequestSnapshot<{
+    email: string;
+    paper: WhitepaperId;
+  }> | null>(null);
+  const disclosureId = `wp-${paper}-growth-disclosure`;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,12 +59,31 @@ export function WhitePaperBlock({ paper = 'overview' }: WhitePaperBlockProps = {
       paper,
     });
     try {
+      const snapshot = growthFormRequestSnapshot(submissionSnapshot.current, {
+        email,
+        paper,
+      });
+      submissionSnapshot.current = snapshot;
       const res = await fetch('/api/whitepaper-signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, paper }),
+        body: JSON.stringify({
+          ...snapshot.facts,
+          acquisition_session_id: snapshot.acquisition_session_id,
+          submission_id: snapshot.submission_id,
+          policy_version: formPolicy.version,
+        }),
       });
+      if (res.status === 409) {
+        submissionSnapshot.current = null;
+        setState('stale');
+        return;
+      }
+      if (res.status >= 400 && res.status < 500) {
+        submissionSnapshot.current = null;
+      }
       if (!res.ok) throw new Error('whitepaper_signup_failed');
+      submissionSnapshot.current = null;
       track(analyticsEvents.marketingWhitepaperSignupSuccess, {
         surface: 'home_whitepaper',
         source_section: 'whitepaper-block',
@@ -104,6 +140,18 @@ export function WhitePaperBlock({ paper = 'overview' }: WhitePaperBlockProps = {
                   Or download directly.
                 </a>
               </div>
+            ) : state === 'stale' ? (
+              <div role="alert" className="wp-form">
+                <p className="wp-disclosure">{FORM_POLICY_REFRESH_MESSAGE}</p>
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="lg"
+                  onClick={() => window.location.reload()}
+                >
+                  Refresh page
+                </Button>
+              </div>
             ) : (
               <form onSubmit={submit} className="wp-form">
                 <label htmlFor="wp-email" className="sr-only">Email address</label>
@@ -118,11 +166,15 @@ export function WhitePaperBlock({ paper = 'overview' }: WhitePaperBlockProps = {
                   disabled={state === 'submitting'}
                   className="wp-email-input"
                 />
+                <p id={disclosureId} className="wp-disclosure">
+                  {formPolicy.disclosures.whitepaper}
+                </p>
                 <Button
                   type="submit"
                   variant="primary"
                   size="lg"
                   disabled={state === 'submitting' || !email}
+                  aria-describedby={disclosureId}
                 >
                   {state === 'submitting' ? 'Sending…' : 'Download (free)'}
                 </Button>
