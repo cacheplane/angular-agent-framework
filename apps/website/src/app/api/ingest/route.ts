@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
   const payload = readPayload(body);
   if (!payload) {
     return jsonWithCors(
-      { error: 'Invalid telemetry payload' },
+      { error: 'Invalid event payload' },
       { status: 400 }
     );
   }
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
   const posthog = getPostHogClient();
   if (!posthog) {
     return jsonWithCors(
-      { error: 'Telemetry ingest is not configured' },
+      { error: 'Event ingest is not configured' },
       { status: 503 }
     );
   }
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
     console.error('[telemetry-ingest] capture failed:', err);
     await posthog.shutdown().catch(() => undefined);
     return jsonWithCors(
-      { error: 'Telemetry ingest failed' },
+      { error: 'Event ingest failed' },
       { status: 502 }
     );
   }

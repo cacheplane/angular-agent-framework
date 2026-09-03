@@ -347,7 +347,7 @@ The parts you will want on day thirty:
 - **Generative UI.** When the agent wants to render a richer surface than a tool-call card, `@threadplane/render` lets the backend stream a UI spec and the frontend resolves it against a registry of your approved Angular components.
   No arbitrary code, no `eval`, no design-system bypass.
   The agent picks from a menu you control.
-- **Observability.** `@threadplane/telemetry` ships a PostHog-shaped sink that is *off by default*. Turn it on per-environment, point it at your own analytics, never ship app content to a vendor you did not pick.
+- **Observability.** `@threadplane/telemetry` ships a PostHog-shaped sink your application supplies and configures per environment. Point it at your own analytics rather than at a vendor you did not pick.
 - **Testing.** Because the contract is signals all the way down, the testing story is "write a signal, the chat re-renders." `@threadplane/ag-ui` ships a `FakeAgent` you can hand-feed events to in a unit test. No SSE harness, no fixture loader, no test-only DI dance.
 
 Each of those is its own post.

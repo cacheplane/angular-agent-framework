@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const capture = vi.fn();
@@ -66,5 +69,38 @@ describe('/api/ingest', () => {
 
     expect(response.status).toBe(400);
     expect(response.headers.get('access-control-allow-origin')).toBe('*');
+  });
+});
+
+/**
+ * The response bodies are public output; the log prefix and internal type names
+ * are not. These pin the split so a future rename cannot leak one into the
+ * other, in either direction.
+ */
+const INGEST_ROUTE_SOURCE = join(
+  dirname(fileURLToPath(import.meta.url)),
+  'route.ts'
+);
+
+describe('/api/ingest public response copy', () => {
+  it.each([
+    ['Invalid event payload'],
+    ['Event ingest is not configured'],
+    ['Event ingest failed'],
+  ])('uses %s rather than product-specific wording', (expected) => {
+    const source = readFileSync(INGEST_ROUTE_SOURCE, 'utf8');
+    expect(source).toContain(expected);
+  });
+
+  it('keeps the internal log prefix untouched', () => {
+    const source = readFileSync(INGEST_ROUTE_SOURCE, 'utf8');
+    expect(source).toContain('[telemetry-ingest]');
+  });
+
+  it('exposes no product-specific wording in a response body', () => {
+    const source = readFileSync(INGEST_ROUTE_SOURCE, 'utf8');
+    for (const [, body] of source.matchAll(/error: '([^']+)'/gu)) {
+      expect(body).not.toMatch(/telemetry/iu);
+    }
   });
 });

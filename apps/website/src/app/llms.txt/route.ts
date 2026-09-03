@@ -28,7 +28,7 @@ function buildLlmsTxt(): string {
     '- @threadplane/a2ui — protocol types, JSONL parser, dynamic value resolver, and pointer helpers for A2UI streams',
     '- @threadplane/middleware — LangGraph.js helpers for browser-executed client tools',
     '- threadplane-middleware — Python LangGraph helpers for browser-executed client tools',
-    '- @threadplane/telemetry — browser, Node, and shared telemetry helpers with privacy controls',
+    '- @threadplane/telemetry — browser, Node, and shared instrumentation helpers',
     '',
     '## Install',
     '# LangGraph backend:',

@@ -38,7 +38,7 @@ bootstrapApplication(AppComponent, {
 | `toMessage` | `(msg: unknown) => BaseMessage` | Custom message deserializer for non-standard message formats. |
 | `transport` | `AgentTransport` | Optional transport instance. Defaults to `FetchStreamTransport` when omitted. |
 | `clientOptions` | `LangGraphClientOptions` | LangGraph SDK client tuning (e.g. `maxRetries`). See [Client tuning](#client-tuning-retry-budget) below. |
-| `telemetry` | `AgentRuntimeTelemetrySink \| false` | Optional app-owned telemetry sink. No telemetry is emitted unless this is provided. |
+| `telemetry` | `AgentRuntimeTelemetrySink \| false` | Optional app-owned sink. Supply one to receive runtime lifecycle events. |
 | `subagentToolNames` | `string[]` | Tool names that indicate a subagent invocation. |
 | `transcriptNodeNames` | `string[]` | LangGraph node names whose `messages-tuple` chunks should stream into the main chat transcript. Omit to accept all top-level chunks. |
 

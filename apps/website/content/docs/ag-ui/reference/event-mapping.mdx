@@ -157,7 +157,7 @@ For every other custom event name, it emits:
 { type: 'custom', name, data: value }
 ```
 
-Use `state` for durable UI state. Use `events$` for transient events, telemetry hooks, or UI side effects that should not be stored as conversation state.
+Use `state` for durable UI state. Use `events$` for transient events, observability hooks, or UI side effects that should not be stored as conversation state.
 
 Every non-`on_interrupt` `CUSTOM` event is fanned out to **two** surfaces, not one. Alongside the `events$` emission above, the reducer also appends `{ name, data }` to the AG-UI-specific `customEvents()` signal documented on [`injectAgent()`](/docs/ag-ui/api/inject-agent#ag-ui-specific-surface) and [`toAgent()`](/docs/ag-ui/api/to-agent). Reach for the signal when you want an accumulated per-run snapshot for reactive rendering (for example, `a2ui-partial` generative UI); reach for `events$` when you want a transient stream for side-effects or telemetry.
 

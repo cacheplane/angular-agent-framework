@@ -26,7 +26,7 @@ bootstrapApplication(AppComponent, {
 | `agentId` | `string` | Optional agent identifier forwarded to the backend. |
 | `threadId` | `string` | Optional thread identifier for session continuity. |
 | `headers` | `Record<string, string>` | Optional custom HTTP headers included on every request. |
-| `telemetry` | `AgentRuntimeTelemetrySink \| false` | Optional app-owned telemetry sink. No telemetry is emitted unless this is provided. |
+| `telemetry` | `AgentRuntimeTelemetrySink \| false` | Optional app-owned sink. Supply one to receive runtime lifecycle events. |
 
 ## Static vs factory config
 

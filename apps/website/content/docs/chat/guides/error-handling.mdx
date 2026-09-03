@@ -17,7 +17,7 @@ class AgentError extends Error {
   readonly kind: AgentErrorKind;   // 'connection' | 'auth' | 'server' | 'interrupted' | 'aborted'
   readonly retryable: boolean;     // could retrying the same request plausibly succeed?
   readonly status?: number;        // HTTP status, when the failure came from a response
-  readonly cause: unknown;         // the original raw error, preserved for debugging/telemetry
+  readonly cause: unknown;         // the original raw error, preserved for debugging and diagnostics
 }
 ```
 
