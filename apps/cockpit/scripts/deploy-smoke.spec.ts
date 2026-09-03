@@ -312,7 +312,7 @@ describe('redirect deploy smoke contract', () => {
     expect(sleep).toHaveBeenCalledTimes(1);
   });
 
-  it('identifies the Vercel Raw Path prerequisite when a raw canary is normalized', async () => {
+  it('identifies the raw-path rejection route when a raw canary is normalized', async () => {
     const cases = buildRedirectSmokeCases('production');
     const requestImpl = vi.fn(async (request: RedirectSmokeRequest) => {
       const smokeCase = cases.find(
@@ -329,7 +329,103 @@ describe('redirect deploy smoke contract', () => {
         mode: 'production',
         requestImpl,
       })
-    ).rejects.toThrow(/WAF Raw Path prerequisite/);
+    ).rejects.toThrow(/vercel\.cockpit\.json/);
+  });
+
+  it('accepts only the platform same-origin slash collapse for a consecutive-slash probe', async () => {
+    // Vercel's CDN collapses consecutive slashes and answers 308 to the
+    // single-slash path on the same origin before any route, rewrite, or
+    // function runs, so that probe can never reach the 404 route. The only
+    // acceptable non-404 answer is that exact normalization; a redirect off
+    // the deployment from a malformed path is still a contract failure.
+    const cases = buildRedirectSmokeCases('preview');
+    const slashCase = cases.find(
+      (smokeCase) => smokeCase.raw && smokeCase.path.includes('//')
+    );
+    const dotCase = cases.find(
+      (smokeCase) => smokeCase.raw && smokeCase.path.includes('/./')
+    );
+    if (!slashCase || !dotCase) throw new Error('Expected raw canaries');
+    expect(slashCase.platformNormalizedPath).toBe(
+      '/langgraph/core-capabilities/streaming/overview/python'
+    );
+    expect(dotCase.platformNormalizedPath).toBeUndefined();
+
+    const impl = (answer: (request: RedirectSmokeRequest) => RedirectSmokeResponse | null) =>
+      vi.fn(async (request: RedirectSmokeRequest) =>
+        answer(request) ?? responseFor(request, cases)
+      );
+
+    await expect(
+      runDeploySmoke({
+        url: previewUrl,
+        mode: 'preview',
+        requestImpl: impl((request) =>
+          request.path === slashCase.path
+            ? {
+                status: 308,
+                // The platform answers with a relative Location.
+                headers: {
+                  location:
+                    '/langgraph/core-capabilities/streaming/overview/python',
+                },
+              }
+            : null
+        ),
+      })
+    ).resolves.toBe(`pass:preview:${previewUrl}:${cases.length}`);
+
+    await expect(
+      runDeploySmoke({
+        url: previewUrl,
+        mode: 'preview',
+        requestImpl: impl((request) =>
+          request.path === slashCase.path
+            ? {
+                status: 308,
+                headers: {
+                  location: `${previewUrl}/langgraph/core-capabilities/streaming/overview/python`,
+                },
+              }
+            : null
+        ),
+      })
+    ).resolves.toBe(`pass:preview:${previewUrl}:${cases.length}`);
+
+    await expect(
+      runDeploySmoke({
+        url: previewUrl,
+        mode: 'preview',
+        requestImpl: impl((request) =>
+          request.path === slashCase.path
+            ? {
+                status: 308,
+                headers: {
+                  location:
+                    'https://threadplane.ai/docs/langgraph/guides/streaming?mode=run',
+                },
+              }
+            : null
+        ),
+      })
+    ).rejects.toThrow(/raw malformed 1.*expected 404, received 308/);
+
+    await expect(
+      runDeploySmoke({
+        url: previewUrl,
+        mode: 'preview',
+        requestImpl: impl((request) =>
+          request.path === dotCase.path
+            ? {
+                status: 308,
+                headers: {
+                  location: `${previewUrl}/langgraph/core-capabilities/streaming/overview/python`,
+                },
+              }
+            : null
+        ),
+      })
+    ).rejects.toThrow(/expected 404, received 308/);
   });
 
   it('sends the automation bypass on every probe only when a secret is supplied', async () => {
