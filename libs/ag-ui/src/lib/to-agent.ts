@@ -32,7 +32,7 @@ import {
 import { createClientToolsCapability } from './client-tools';
 
 export interface ToAgentOptions {
-  /** Optional app-owned telemetry sink. No telemetry is emitted unless this is provided. */
+  /** Optional app-owned sink. Supply one to receive runtime lifecycle events. */
   telemetry?: AgentRuntimeTelemetrySink | false;
   /**
    * A2UI client capabilities (catalog negotiation) to advertise to the agent.

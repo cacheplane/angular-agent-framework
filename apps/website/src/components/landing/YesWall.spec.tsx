@@ -11,11 +11,11 @@ describe('YesWall', () => {
     vi.clearAllMocks();
   });
 
-  it('renders 16 questions across 4 groups', () => {
+  it('renders 15 questions across 4 groups', () => {
     render(<YesWall />);
     const total = YES_WALL_GROUPS.reduce((n, g) => n + g.rows.length, 0);
     expect(YES_WALL_GROUPS).toHaveLength(4);
-    expect(total).toBe(16);
+    expect(total).toBe(15);
     for (const group of YES_WALL_GROUPS) {
       expect(screen.getByText(group.label)).toBeTruthy();
       for (const row of group.rows) {
@@ -27,7 +27,7 @@ describe('YesWall', () => {
 
   it('answers every question Yes', () => {
     render(<YesWall />);
-    expect(screen.getAllByText('Yes')).toHaveLength(16);
+    expect(screen.getAllByText('Yes')).toHaveLength(15);
   });
 
   it('renders the dark specimen chrome', () => {
@@ -43,5 +43,18 @@ describe('YesWall', () => {
     render(<YesWall />);
     const link = screen.getByRole('link', { name: /Every question answered/ });
     expect(link.getAttribute('href')).toBe('/docs');
+  });
+});
+
+describe('YesWall promise surface', () => {
+  it('makes no installation or phone-home claim', () => {
+    render(<YesWall />);
+
+    const wall = document.body.textContent ?? '';
+    expect(wall).not.toMatch(/phon(e|ing) home/i);
+    expect(wall).not.toMatch(/installation is inert/i);
+    expect(
+      YES_WALL_GROUPS.flatMap((group) => group.rows).map((row) => row.question)
+    ).not.toContain('Can I install it without phoning home?');
   });
 });

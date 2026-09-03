@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import sitemap from '../app/sitemap';
 import { getAllPosts } from './blog';
 import { getPostLastModified, getSitemapEntries, hasGitHistory, parseGitLog } from './sitemap-dates';
+import { getSitemapRoutes } from './site-metadata';
 
 const SHA_A = 'a'.repeat(40);
 const SHA_B = 'b'.repeat(40);
@@ -169,5 +170,17 @@ describe('getPostLastModified', () => {
         entries.get(route)?.toISOString(),
       ]);
     }
+  });
+});
+
+describe('canonical privacy policy discovery', () => {
+  it('publishes /privacy in the sitemap route inventory', () => {
+    expect(getSitemapRoutes()).toContain('/privacy');
+  });
+
+  it('emits /privacy as a real sitemap entry', () => {
+    expect(sitemap().map((entry) => new URL(entry.url).pathname)).toContain(
+      '/privacy'
+    );
   });
 });

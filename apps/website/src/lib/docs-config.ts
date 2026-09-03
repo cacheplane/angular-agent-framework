@@ -5,7 +5,6 @@ export type LibraryId =
   | 'ag-ui'
   | 'a2ui'
   | 'middleware'
-  | 'telemetry'
   | 'runtimes'
   | 'deep-agents';
 
@@ -424,41 +423,6 @@ export const docsConfig: DocsLibrary[] = [
               'lastMessage',
             ],
           },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'telemetry',
-    title: 'Telemetry',
-    description: 'Browser and Node telemetry setup, privacy controls, and events',
-    group: 'library',
-    sections: [
-      {
-        title: 'Getting Started',
-        id: 'getting-started',
-        color: 'blue',
-        pages: [
-          { title: 'Introduction', slug: 'introduction', section: 'getting-started' },
-          { title: 'Installation', slug: 'installation', section: 'getting-started' },
-        ],
-      },
-      {
-        title: 'Guides',
-        id: 'guides',
-        color: 'blue',
-        pages: [
-          { title: 'Browser', slug: 'browser', section: 'guides' },
-          { title: 'Node', slug: 'node', section: 'guides' },
-          { title: 'Privacy and Opt-Out', slug: 'privacy-and-opt-out', section: 'guides' },
-        ],
-      },
-      {
-        title: 'Reference',
-        id: 'reference',
-        color: 'blue',
-        pages: [
-          { title: 'Events', slug: 'events', section: 'reference' },
         ],
       },
     ],

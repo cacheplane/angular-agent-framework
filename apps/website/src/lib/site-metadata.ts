@@ -144,7 +144,7 @@ export function createPageMetadata({
 }
 
 export function getSitemapRoutes(): string[] {
-  const staticRoutes = ['/', '/langgraph', '/render', '/chat', '/ag-ui', '/pricing', '/solutions', '/pilot-to-prod', '/docs', '/blog', '/about', '/contact'];
+  const staticRoutes = ['/', '/langgraph', '/render', '/chat', '/ag-ui', '/pricing', '/solutions', '/pilot-to-prod', '/docs', '/blog', '/about', '/contact', '/privacy'];
   const solutionRoutes = getAllSolutionSlugs().map((slug) => `/solutions/${slug}`);
   const docsRoutes = docsConfig.flatMap((library) =>
     library.sections.flatMap((section) =>

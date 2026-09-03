@@ -111,7 +111,7 @@ provideAgent({
 });
 ```
 
-The config maps to the AG-UI `HttpAgent` options exposed by this package, plus an optional telemetry sink:
+The config maps to the AG-UI `HttpAgent` options exposed by this package, plus an optional lifecycle event sink:
 
 | Option | Type | Description |
 |---|---|---|
@@ -119,7 +119,7 @@ The config maps to the AG-UI `HttpAgent` options exposed by this package, plus a
 | `agentId` | `string` | Optional. Identifies a specific agent on the backend. |
 | `threadId` | `string` | Optional. Resume an existing conversation thread. |
 | `headers` | `Record<string, string>` | Optional. Custom request headers (auth, tracing). |
-| `telemetry` | `AgentRuntimeTelemetrySink \| false` | Optional. App-owned telemetry sink — opt-in, emits nothing unless supplied. See [`@threadplane/telemetry`](/docs/telemetry/getting-started/introduction). |
+| `telemetry` | `AgentRuntimeTelemetrySink \| false` | Optional. App-owned sink for runtime lifecycle events. |
 
 ### Factory config for route params and DI
 

@@ -68,7 +68,6 @@ describe('website docs bindings', () => {
     expect(slugs).toContainEqual({ library: 'chat', section: 'getting-started', slug: 'introduction' });
     expect(slugs).toContainEqual({ library: 'ag-ui', section: 'concepts', slug: 'architecture' });
     expect(slugs).toContainEqual({ library: 'a2ui', section: 'getting-started', slug: 'introduction' });
-    expect(slugs).toContainEqual({ library: 'telemetry', section: 'guides', slug: 'privacy-and-opt-out' });
   });
 
   it('loads every configured doc page', () => {
@@ -257,7 +256,7 @@ describe('website docs bindings', () => {
   });
 
   it('has generated API docs for every documented package surface', () => {
-    const librariesWithApiDocs = ['langgraph', 'chat', 'render', 'ag-ui', 'a2ui', 'middleware', 'telemetry'];
+    const librariesWithApiDocs = ['langgraph', 'chat', 'render', 'ag-ui', 'a2ui', 'middleware'];
     const missingApiDocs = librariesWithApiDocs.filter((library) => {
       const apiDocsPath = path.join(contentRoot, library, 'api', 'api-docs.json');
       if (!fs.existsSync(apiDocsPath)) return true;
@@ -379,5 +378,26 @@ describe('docs breadcrumb routes', () => {
       expect([library.id, routes.has(libraryIntroPath(library.id))]).toEqual([library.id, true]);
       expect([library.id, routes.has(`/docs/${library.id}`)]).toEqual([library.id, false]);
     }
+  });
+});
+
+describe('retired telemetry docs library', () => {
+  it('is absent from the docs configuration', () => {
+    expect(docsConfig.map((library) => library.id)).not.toContain('telemetry');
+  });
+
+  it('contributes no route to the sitemap inventory', () => {
+    expect(
+      getSitemapRoutes().filter((route) => route.startsWith('/docs/telemetry'))
+    ).toEqual([]);
+  });
+
+  it('contributes no searchable page', () => {
+    const pages = docsConfig.flatMap((library) =>
+      library.sections.flatMap((section) =>
+        section.pages.map((page) => `${library.id}/${page.section}/${page.slug}`)
+      )
+    );
+    expect(pages.filter((page) => page.startsWith('telemetry/'))).toEqual([]);
   });
 });

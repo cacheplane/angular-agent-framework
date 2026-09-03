@@ -49,7 +49,6 @@ export const YES_WALL_GROUPS: readonly YesGroup[] = [
       { question: 'Can I unit-test components that depend on an agent?', api: 'provideFakeAgent' },
       { question: 'Can I run all of it inside my own VPC?', api: 'self-host, no runtime SaaS' },
       { question: 'Can I use every package commercially without a license fee?', api: 'MIT, all packages' },
-      { question: 'Can I install it without phoning home?', api: 'installation is inert' },
     ],
   },
 ];

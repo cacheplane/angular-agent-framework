@@ -40,7 +40,7 @@ export interface AgentConfig<
   transport?: AgentTransport;
   /** Tuning options for the default transport's LangGraph SDK client (e.g. retry budget). */
   clientOptions?: LangGraphClientOptions;
-  /** Optional app-owned telemetry sink. No telemetry is emitted unless this is provided. */
+  /** Optional app-owned sink. Supply one to receive runtime lifecycle events. */
   telemetry?: AgentRuntimeTelemetrySink | false;
   /** Tool names that indicate a subagent invocation. */
   subagentToolNames?: string[];

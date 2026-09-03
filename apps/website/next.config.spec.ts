@@ -15,3 +15,43 @@ describe('website next.config rewrites', () => {
     expect(apiRule.destination).toBe('https://us.i.posthog.com/:path*');
   });
 });
+
+/**
+ * The dedicated telemetry docs library is retired in favour of one canonical
+ * policy. Delivered links and search results outlive a deletion, so every
+ * retired path — both the public routes and the markdown API that mirrors
+ * them — has to land somewhere real rather than 404.
+ */
+describe('website next.config redirects', () => {
+  const retired = [
+    '/docs/telemetry',
+    '/docs/telemetry/:path*',
+    '/api/markdown/telemetry',
+    '/api/markdown/telemetry/:path*',
+  ];
+
+  it('permanently redirects every retired telemetry route to the policy', async () => {
+    expect(typeof config.redirects).toBe('function');
+    const redirects = await config.redirects!();
+
+    for (const source of retired) {
+      const rule = redirects.find(
+        (r: { source: string }) => r.source === source
+      );
+      expect(rule, `missing redirect for ${source}`).toBeTruthy();
+      expect(rule.destination).toBe('/privacy');
+      expect(rule.permanent).toBe(true);
+    }
+  });
+
+  it('redirects the exact roots as well as their descendants', async () => {
+    const sources = (await config.redirects!()).map(
+      (r: { source: string }) => r.source
+    );
+
+    for (const base of ['/docs/telemetry', '/api/markdown/telemetry']) {
+      expect(sources).toContain(base);
+      expect(sources).toContain(`${base}/:path*`);
+    }
+  });
+});

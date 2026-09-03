@@ -21,7 +21,7 @@ export interface AgentConfig {
   threadId?: string;
   /** Extra HTTP headers sent with every request (e.g. auth tokens). */
   headers?: Record<string, string>;
-  /** Optional app-owned telemetry sink. No telemetry is emitted unless this is provided. */
+  /** Optional app-owned sink. Supply one to receive runtime lifecycle events. */
   telemetry?: AgentRuntimeTelemetrySink | false;
 }
 

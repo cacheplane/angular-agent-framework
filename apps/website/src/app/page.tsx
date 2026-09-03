@@ -11,7 +11,6 @@ import { buildPanes } from '../lib/build-panes';
 import { PilotBlock } from '../components/landing/PilotBlock';
 import { ProofStrip } from '../components/landing/ProofStrip';
 import { WhitePaperBlock } from '../components/landing/WhitePaperBlock';
-import { Promises } from '../components/landing/Promises';
 import { HomeFAQ } from '../components/landing/HomeFAQ';
 import { FinalCTA } from '../components/landing/FinalCTA';
 import { RecentArticles } from '../components/landing/RecentArticles';
@@ -46,7 +45,6 @@ export default async function HomePage() {
         eyebrow="Architecture"
         headline="Your UI talks to one contract, never to a runtime"
         body="Your Angular components consume a signal-shaped Agent contract. Adapters implement it — swap the runtime underneath without touching the UI."
-        caption="The chat surface never imports a runtime SDK — only the contract."
       />
 
       <HomeConceptGrid />
@@ -137,7 +135,6 @@ export default async function HomePage() {
 
       <PilotBlock />
       <WhitePaperBlock formPolicy={formPolicy} />
-      <Promises />
       <ProofStrip />
       <HomeFAQ />
       <RecentArticles />

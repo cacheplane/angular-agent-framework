@@ -83,6 +83,10 @@
   border-top: 1px solid var(--color-border);
   color: var(--color-text-muted);
 }
+.footer-legal-links {
+  display: inline-flex;
+  gap: 16px;
+}
 .footer-legal-link:hover {
   color: var(--color-accent);
 }
