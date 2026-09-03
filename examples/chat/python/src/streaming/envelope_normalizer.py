@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: MIT
 """Normalises the four envelope-args shapes the parent LLM may emit into
 a canonical envelope list. Parity with libs/chat/src/lib/a2ui/envelope-normalizer.ts.
 

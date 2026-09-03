@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 export const CHAT_SUGGESTIONS_STYLES = `
   :host { display: block; }
   .chat-suggestions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }

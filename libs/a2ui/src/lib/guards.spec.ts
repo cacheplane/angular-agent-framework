@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, expect, test } from 'vitest';
 import { isPathRef, isFunctionCall } from './guards';
 

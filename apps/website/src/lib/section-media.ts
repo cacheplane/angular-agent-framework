@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { AG_UI_CLIP, HITL_CLIP, LANGGRAPH_CLIP, RENDER_CLIP, SHIP_CLIP, type DemoClip } from './demo-media';
 import type { SolutionCodeBlocks } from './solutions-data';
 

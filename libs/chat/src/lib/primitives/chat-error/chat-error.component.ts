@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/chat-error/chat-error.component.ts
-// SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 import type { Agent } from '../../agent';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';

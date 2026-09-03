@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, expect, it } from 'vitest';
 import { SOLUTIONS, getSolutionBySlug } from './solutions-data';
 import { DEMO_CDN } from './demo-media';

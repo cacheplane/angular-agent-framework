@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 /** Returns true when `value` is an A2UI dynamic path reference. */
 export function isPathRef(value: unknown): value is { path: string } {
   return typeof value === 'object' && value !== null

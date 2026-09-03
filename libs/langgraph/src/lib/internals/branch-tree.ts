@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { ThreadState } from '@langchain/langgraph-sdk';
 import type { AgentBranchTree, AgentBranchTreeFork } from '../agent.types';
 

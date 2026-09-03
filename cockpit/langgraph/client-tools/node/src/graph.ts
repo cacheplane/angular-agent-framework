@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 /**
  * LangGraph client-tools graph (LangGraph.js / TypeScript path).
  *

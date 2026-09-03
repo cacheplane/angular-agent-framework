@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { SecurityContext } from '@angular/core';
 import type { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 

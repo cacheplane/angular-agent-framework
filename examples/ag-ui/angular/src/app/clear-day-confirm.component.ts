@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { injectRenderHost } from '@threadplane/render';
 import { ItineraryStore } from './itinerary-store';

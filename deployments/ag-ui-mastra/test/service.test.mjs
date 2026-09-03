@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // Transcript-shape tests for the ag-ui-mastra service.
 //
 // Each surface's SSE event sequence is asserted against the MEASURED shapes

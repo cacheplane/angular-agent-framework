@@ -1,5 +1,4 @@
 // libs/chat/src/lib/markdown/markdown-children.component.ts
-// SPDX-License-Identifier: MIT
 import {
   Component,
   ChangeDetectionStrategy,

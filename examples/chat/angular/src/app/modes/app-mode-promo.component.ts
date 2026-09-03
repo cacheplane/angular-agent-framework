@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 /**

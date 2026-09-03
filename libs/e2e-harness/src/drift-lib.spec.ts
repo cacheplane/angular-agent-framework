@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
 import { summarizeEntry, diffFixtures, type FixtureEntry } from './drift-lib';

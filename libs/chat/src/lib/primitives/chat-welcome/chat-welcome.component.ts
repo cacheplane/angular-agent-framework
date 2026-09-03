@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { CHAT_HOST_TOKENS } from '../../styles/chat-tokens';
 import { CHAT_WELCOME_STYLES } from '../../styles/chat-welcome.styles';

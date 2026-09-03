@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 interface DiagramNodeProps {
   x: number;
   y: number;

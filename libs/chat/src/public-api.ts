@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 // Shared types
 export type { ChatConfig } from './lib/provide-chat';
 export type { MessageTemplateType } from './lib/chat.types';

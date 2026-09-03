@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // @vitest-environment jsdom
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';

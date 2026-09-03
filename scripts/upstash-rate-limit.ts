@@ -1,5 +1,4 @@
 // scripts/upstash-rate-limit.ts
-// SPDX-License-Identifier: MIT
 /**
  * Per-IP token-bucket rate limit backed by Upstash Redis, shaped to the
  * createProxyHandler `checkRateLimit` contract. Sibling to the Neon-backed

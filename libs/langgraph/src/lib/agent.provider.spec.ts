@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideAgent, AGENT_CONFIG, AGENT } from './agent.provider';

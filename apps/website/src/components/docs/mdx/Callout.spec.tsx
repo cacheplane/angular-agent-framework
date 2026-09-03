@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // @vitest-environment jsdom
 import React from 'react';
 import { describe, expect, it } from 'vitest';

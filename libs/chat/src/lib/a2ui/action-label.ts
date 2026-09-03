@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 /**
  * Synthesize a short human-readable label for a serialized A2UI action
  * message, so the chat composition can render "Search flights" instead

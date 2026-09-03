@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // Pure, DOM-free display helpers over Citation. Shared by the inline marker,
 // the preview card, and the sources panel so provenance rendering stays DRY.
 import type { Citation } from './citation';

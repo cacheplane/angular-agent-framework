@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 /** Serialized result for a browser-executed client tool. */
 export type ClientToolResult =
   | { readonly ok: true; readonly value: unknown }

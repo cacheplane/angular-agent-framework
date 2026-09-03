@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, input, computed, signal } from '@angular/core';
 import type { DebugAgent, DebugAgentWithHistory } from '../debug-agent';
 import { CHAT_DEBUG_TOKENS } from '../chat-debug-tokens';

@@ -1,10 +1,9 @@
-// SPDX-License-Identifier: MIT
 // Unit tests for the SUBAGENT_* injector — synthetic AG-UI event sequences,
 // exact injected ordering asserted field-for-field against the contract in
 // cockpit/runtimes/mastra/angular/docs/wire-capture-subagents.md.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createSubagentInjector } from '../subagent-emitter.mjs';
+import { createSubagentInjector, createBridgeCapability } from '../subagent-emitter.mjs';
 
 const TID = 'call_aUfV9K0RCDZdZK3NWt9dRDKx';
 
@@ -463,4 +462,109 @@ test('chunk: agent-* tool-call with NO prior start/step-start omits parentMessag
   const [start] = injector.chunk(toolCallChunk());
   assert.equal(start.type, 'TOOL_CALL_START');
   assert.equal('parentMessageId' in start, false, 'key must be absent, not present with an undefined value');
+});
+
+// --- stand-down guard ------------------------------------------------------
+// Forward compatibility: the day @ag-ui/mastra emits its own SUBAGENT_* events,
+// this injector must retire rather than double-emit. A duplicate
+// SUBAGENT_STARTED for one subagentRunId is a hard AG-UI verifier error, and
+// two distinct ids paint two cards for one delegation.
+
+const bridgeStarted = (tid = TID) => ({
+  type: 'SUBAGENT_STARTED',
+  subagentRunId: `bridge-${tid}`,
+  name: 'weather_forecaster',
+  parentToolCallId: tid,
+});
+
+test('stand-down: a bridge SUBAGENT_STARTED stops all further chunk injection', () => {
+  const injector = createSubagentInjector();
+  injector.eventsFor(bridgeStarted());
+
+  assert.deepEqual(injector.chunk(stepStartChunk), []);
+  assert.deepEqual(injector.chunk(toolCallChunk()), [], 'must not synthesize TOOL_CALL_*/SUBAGENT_STARTED');
+  assert.deepEqual(injector.chunk(childTextStart), []);
+  assert.deepEqual(injector.chunk(childDelta('hi')), []);
+  assert.deepEqual(injector.chunk(toolResultChunk(SUCCESS_RESULT)), []);
+});
+
+test('stand-down: the bridge SUBAGENT_* event itself passes through untouched', () => {
+  const injector = createSubagentInjector();
+  const ev = bridgeStarted();
+  assert.deepEqual(injector.eventsFor(ev), [ev]);
+});
+
+test('stand-down: SUBAGENT_FINISHED and SUBAGENT_ERROR also latch it', () => {
+  for (const ev of [
+    { type: 'SUBAGENT_FINISHED', subagentRunId: 'b-1', outcome: { type: 'success' } },
+    { type: 'SUBAGENT_ERROR', subagentRunId: 'b-1', message: 'nope' },
+  ]) {
+    const injector = createSubagentInjector();
+    assert.deepEqual(injector.eventsFor(ev), [ev]);
+    assert.deepEqual(injector.chunk(toolCallChunk()), [], `${ev.type} must latch stand-down`);
+  }
+});
+
+test('stand-down mid-delegation closes our in-flight child message and subagent first', () => {
+  const injector = createSubagentInjector();
+  injector.chunk(stepStartChunk);
+  injector.chunk(toolCallChunk());
+  injector.chunk(childTextStart);
+  injector.chunk(childDelta('partial'));
+
+  const ev = bridgeStarted();
+  // Our already-announced subagent must be closed, or RUN_FINISHED trips the
+  // verifier's "subagents are still active" rule. Neutral close: no outcome —
+  // the delegation did not actually succeed or fail, we simply stopped owning it.
+  assert.deepEqual(injector.eventsFor(ev), [
+    { type: 'TEXT_MESSAGE_END', messageId: M1, subagentRunId: SUB },
+    { type: 'SUBAGENT_FINISHED', subagentRunId: SUB },
+    ev,
+  ]);
+});
+
+test('stand-down still drops bridge copies of TOOL_CALL_* we already synthesized', () => {
+  const injector = createSubagentInjector();
+  injector.chunk(stepStartChunk);
+  injector.chunk(toolCallChunk());
+  injector.eventsFor(bridgeStarted());
+
+  // Those three are already on the wire from the eager synthesis — letting the
+  // bridge's buffered copies through now would duplicate the tool call.
+  assert.deepEqual(injector.eventsFor(delegationStart()), []);
+  assert.deepEqual(injector.eventsFor({ type: 'TOOL_CALL_ARGS', toolCallId: TID, delta: '{}' }), []);
+  assert.deepEqual(injector.eventsFor({ type: 'TOOL_CALL_END', toolCallId: TID }), []);
+});
+
+test('stand-down: TOOL_CALL_RESULT and RUN_FINISHED pass through with no injection', () => {
+  const injector = createSubagentInjector();
+  injector.chunk(stepStartChunk);
+  injector.chunk(toolCallChunk());
+  injector.eventsFor(bridgeStarted());
+
+  const result = delegationResult(JSON.stringify(SUCCESS_RESULT));
+  assert.deepEqual(injector.eventsFor(result), [result]);
+  const finished = { type: 'RUN_FINISHED', threadId: 't-1', runId: 'r-1' };
+  assert.deepEqual(injector.eventsFor(finished), [finished], 'no cleanup — we no longer own any subagent');
+});
+
+test('stand-down latches across runs through a shared capability', () => {
+  const capability = createBridgeCapability();
+  const firstRun = createSubagentInjector(capability);
+  firstRun.eventsFor(bridgeStarted());
+
+  // A per-injector flag would re-learn every run and duplicate the first
+  // delegation of each one; the latch is shared so later runs start retired.
+  const secondRun = createSubagentInjector(capability);
+  secondRun.chunk(stepStartChunk);
+  assert.deepEqual(secondRun.chunk(toolCallChunk()), []);
+});
+
+test('injectors with independent capabilities do not affect each other', () => {
+  const stoodDown = createSubagentInjector(createBridgeCapability());
+  stoodDown.eventsFor(bridgeStarted());
+
+  const fresh = createSubagentInjector(createBridgeCapability());
+  fresh.chunk(stepStartChunk);
+  assert.deepEqual(fresh.chunk(toolCallChunk()), eagerToolCall);
 });

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { Component, input } from '@angular/core';
 import type { Spec } from '@json-render/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';

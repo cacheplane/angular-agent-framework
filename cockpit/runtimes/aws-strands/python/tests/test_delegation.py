@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: MIT
 """Tests for the `research_availability` delegation scenario — the tool is a
 registered async-generator `@tool` that hands availability research to the
 tool-less `availability_researcher` specialist. No live model calls: these

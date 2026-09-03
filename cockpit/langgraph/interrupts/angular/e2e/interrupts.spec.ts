@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { test, expect } from '@playwright/test';
 
 test.describe('cockpit interrupts: refund approval', () => {

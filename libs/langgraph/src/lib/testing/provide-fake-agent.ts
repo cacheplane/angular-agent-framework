@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { type Provider } from '@angular/core';
 import type { FakeAgentConfig } from '@threadplane/chat/testing';
 import { provideAgent } from '../agent.provider';

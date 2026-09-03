@@ -1,5 +1,4 @@
 // libs/ag-ui/src/lib/testing/fake-agent.spec.ts
-// SPDX-License-Identifier: MIT
 import { describe, it, expect, vi } from 'vitest';
 import { toArray, lastValueFrom } from 'rxjs';
 import { EventType, type RunAgentInput, type BaseEvent } from '@ag-ui/client';

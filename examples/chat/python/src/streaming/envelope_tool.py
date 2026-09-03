@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: MIT
 """Parent-LLM-bound tool that emits A2UI v0.9 envelopes as structured tool
 arguments. Replaces the old two-LLM `generate_a2ui_schema` flow (parent
 calls a sub-LLM that produces envelopes); the parent now emits envelopes

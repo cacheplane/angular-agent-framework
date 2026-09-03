@@ -1,5 +1,4 @@
 // libs/chat/src/lib/a2ui/envelope-normalizer.spec.ts
-// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import { normalizeEnvelopeArgs } from './envelope-normalizer';
 

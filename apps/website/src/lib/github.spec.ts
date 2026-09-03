@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { getGitHubStars } from './github';
 

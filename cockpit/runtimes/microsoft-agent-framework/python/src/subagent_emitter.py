@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: MIT
 """SUBAGENT_* emitter for the `research_policy` delegation tool.
 
 The MAF AG-UI bridge is a pure pull-driven async generator with no writer a

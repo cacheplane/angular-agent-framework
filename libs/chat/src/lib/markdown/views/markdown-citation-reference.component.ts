@@ -1,5 +1,4 @@
 // libs/chat/src/lib/markdown/views/markdown-citation-reference.component.ts
-// SPDX-License-Identifier: MIT
 import {
   ChangeDetectionStrategy, Component, DestroyRef, DOCUMENT, computed, inject, input, signal,
 } from '@angular/core';

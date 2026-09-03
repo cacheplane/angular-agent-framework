@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { ChannelAdapter, ChannelId } from './types';
 import { XAdapter } from './x';
 import { DevToAdapter } from './devto';

@@ -1,5 +1,4 @@
 // libs/chat/testing/reasoning-fixture.ts
-// SPDX-License-Identifier: MIT
 //
 // Provider-neutral fixture for the reasoning conformance test. Both
 // adapters (langgraph + AG-UI) translate this abstract sequence into

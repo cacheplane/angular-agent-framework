@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 // --- Protocol constants ---
 
 /** Wire version stamped on every A2UI v0.9-family envelope. */

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 export const CHAT_ERROR_STYLES = `
   :host { display: block; }
   .chat-error {

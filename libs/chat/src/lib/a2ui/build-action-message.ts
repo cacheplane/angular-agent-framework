@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { A2UI_WIRE_VERSION } from '@threadplane/a2ui';
 import type { A2uiSurface, A2uiActionMessage } from '@threadplane/a2ui';
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env -S npx tsx
-// SPDX-License-Identifier: MIT
 //
 // Throwaway aimock scaffold generator.
 // Usage: npx tsx scripts/generate-aimock-scaffold.ts --cap <id>
@@ -44,8 +43,7 @@ function findCap(capId: string): Capability {
 }
 
 function playwrightConfig(port: number): string {
-  return `// SPDX-License-Identifier: MIT
-import { defineConfig, devices } from '@playwright/test';
+  return `import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: '.',
@@ -66,8 +64,7 @@ export default defineConfig({
 }
 
 function globalSetupImpl(cap: Capability): string {
-  return `// SPDX-License-Identifier: MIT
-import { resolve } from 'node:path';
+  return `import { resolve } from 'node:path';
 import { createGlobalSetup } from '../../../../../libs/e2e-harness/src';
 
 export default createGlobalSetup({
@@ -109,8 +106,7 @@ function fixtureSkeleton(): string {
 }
 
 function specSkeleton(capId: string): string {
-  return `// SPDX-License-Identifier: MIT
-import { test, expect } from '@playwright/test';
+  return `import { test, expect } from '@playwright/test';
 import { submitAndWaitForResponse } from '../../../../../libs/e2e-harness/src';
 
 test('${capId}: TODO — describe behavior', async ({ page }) => {

@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: MIT
 #
 # Generic aimock fixture recorder for a single cockpit cap.
 # Reads cap metadata from apps/cockpit/scripts/capability-registry.ts via tsx,

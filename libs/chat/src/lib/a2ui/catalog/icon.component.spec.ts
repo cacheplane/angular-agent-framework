@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import { A2uiIconComponent, toMaterialSymbolName } from './icon.component';
 

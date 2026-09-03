@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { InjectionToken, inject, type Provider, type Signal } from '@angular/core';
 import type { BaseMessage } from '@langchain/core/messages';
 import type { BagTemplate } from '@langchain/langgraph-sdk';

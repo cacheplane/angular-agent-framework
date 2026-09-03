@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: MIT
 """Tests for the SUBAGENT_* emitter — drives the tool_stream_event_handler
 with synthetic Strands events (shapes copied from the Task-0 wire capture in
 docs/wire-capture-subagents.md) and asserts the exact emitted AG-UI sequence

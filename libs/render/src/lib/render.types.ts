@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { Type } from '@angular/core';
 import type { Spec, StateStore, ComputedFunction } from '@json-render/core';
 import type { StandardSchemaV1 } from './standard-schema';

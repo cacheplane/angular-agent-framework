@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { signal } from '@angular/core';
 import type { StateStore, StateModel } from '@json-render/core';
 

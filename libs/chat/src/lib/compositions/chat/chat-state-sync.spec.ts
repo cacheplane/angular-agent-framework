@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 /**
  * Tests for the agent.state() → render store sync effect in ChatComponent.
  *

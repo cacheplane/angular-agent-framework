@@ -1,5 +1,4 @@
 // scripts/rate-limit.ts
-// SPDX-License-Identifier: MIT
 /**
  * Per-IP sliding-window rate limit backed by Neon Postgres.
  *

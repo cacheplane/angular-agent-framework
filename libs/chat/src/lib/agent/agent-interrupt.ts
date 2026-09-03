@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 export interface AgentInterrupt {
   /** Stable identifier for this interrupt instance. */
   id: string;

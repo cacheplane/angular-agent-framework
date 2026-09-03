@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideChat, CHAT_CONFIG } from './provide-chat';

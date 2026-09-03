@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/chat-tool-calls/chat-tool-calls.component.ts
-// SPDX-License-Identifier: MIT
 import {
   Component, ChangeDetectionStrategy,
   computed, contentChildren, input, signal,

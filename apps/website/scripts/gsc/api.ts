@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { getAccessToken } from './auth';
 
 const BASE = 'https://www.googleapis.com/webmasters/v3';

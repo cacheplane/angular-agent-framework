@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 export type JsonTokenKind = 'key' | 'string' | 'punct' | 'number' | 'literal' | 'plain';
 
 export interface JsonToken {

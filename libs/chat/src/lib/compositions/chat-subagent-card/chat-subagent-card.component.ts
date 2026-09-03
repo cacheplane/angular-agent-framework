@@ -1,5 +1,4 @@
 // libs/chat/src/lib/compositions/chat-subagent-card/chat-subagent-card.component.ts
-// SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, input, computed, effect } from '@angular/core';
 import { ChatTraceComponent, type TraceState } from '../../primitives/chat-trace/chat-trace.component';
 import { ChatToolCallCardComponent, type ToolCallInfo } from '../chat-tool-call-card/chat-tool-call-card.component';

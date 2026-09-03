@@ -1,5 +1,4 @@
 // libs/chat/src/lib/markdown/markdown-children.component.spec.ts
-// SPDX-License-Identifier: MIT
 import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Component, signal, Type, input } from '@angular/core';

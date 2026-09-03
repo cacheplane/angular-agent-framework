@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/chat-overflow-menu/chat-overflow-menu.component.ts
-// SPDX-License-Identifier: MIT
 import {
   Component,
   ChangeDetectionStrategy,

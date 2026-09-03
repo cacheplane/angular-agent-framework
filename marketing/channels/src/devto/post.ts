@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { http } from '../http';
 import { writeDryRunResult } from '../dry-run';
 import type { Draft, PostResult } from '../types';

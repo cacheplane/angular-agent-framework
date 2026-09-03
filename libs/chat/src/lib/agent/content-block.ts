@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 export type ContentBlock =
   | { type: 'text'; text: string }
   | { type: 'image'; url: string; alt?: string }

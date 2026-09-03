@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { InjectionToken } from '@angular/core';
 import type { Equal, Expect } from '../../testing/type-assert';
 import type { Agent } from './agent';

@@ -1,5 +1,4 @@
 // scripts/rate-limit.spec.ts
-// SPDX-License-Identifier: MIT
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const sqlMock = vi.fn();

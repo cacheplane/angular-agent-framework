@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, expect, test, vi, afterEach } from 'vitest';
 import { createA2uiFunctionRegistry } from './functions';
 import { resolveDynamic } from './resolve';

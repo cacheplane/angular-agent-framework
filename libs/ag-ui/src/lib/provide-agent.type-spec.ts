@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { createAgentRef } from '@threadplane/chat';
 import type { Equal, Expect } from '../testing/type-assert';
 import { injectAgent } from './provide-agent';

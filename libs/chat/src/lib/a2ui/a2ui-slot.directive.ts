@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import {
   Directive, Input, ViewContainerRef, ComponentRef, Type, inject,
 } from '@angular/core';

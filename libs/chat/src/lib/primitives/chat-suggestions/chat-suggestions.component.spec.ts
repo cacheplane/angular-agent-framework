@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // NOTE: Angular signal-based inputs cannot be exercised via TestBed.createComponent +
 // componentRef.setInput() under vitest JIT without the analogjs Angular vite plugin —
 // setInput() throws NG0303 because JIT does not process signal-input metadata.

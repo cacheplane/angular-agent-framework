@@ -1,5 +1,4 @@
 // libs/chat/src/lib/styles/chat-tokens.spec.ts
-// SPDX-License-Identifier: MIT
 import { describe, expect, it } from 'vitest';
 import { ROOT_TOKEN_STYLES } from './chat-tokens';
 

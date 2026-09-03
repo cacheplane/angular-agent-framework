@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { ContentBlock } from './content-block';
 import type { Citation } from './citation';
 import type { MessageDelivery } from './message-delivery';

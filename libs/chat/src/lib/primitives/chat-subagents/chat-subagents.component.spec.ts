@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import { signal, computed, type WritableSignal } from '@angular/core';
 import { activeSubagentsFromAgent } from './chat-subagents.component';

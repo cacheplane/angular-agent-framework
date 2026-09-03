@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 /**
  * The failure class of an {@link AgentError}, used to drive UI and retry logic:
  *

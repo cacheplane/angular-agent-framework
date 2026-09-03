@@ -1,5 +1,4 @@
 // libs/ag-ui/src/lib/testing/fake-agent.ts
-// SPDX-License-Identifier: MIT
 import {
   AbstractAgent,
   EventType,

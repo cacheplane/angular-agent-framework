@@ -1,5 +1,4 @@
 // libs/chat/src/lib/markdown/views/markdown-inline-code.component.ts
-// SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 import type { MarkdownInlineCodeNode } from '@cacheplane/partial-markdown';
 

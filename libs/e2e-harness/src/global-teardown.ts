@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { ChildProcess } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 import { createServer } from 'node:net';

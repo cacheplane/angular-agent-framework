@@ -1,5 +1,4 @@
 // libs/ag-ui/src/lib/bridge-citations-state.spec.ts
-// SPDX-License-Identifier: MIT
 import { bridgeCitationsState } from './bridge-citations-state';
 import type { Message } from '@threadplane/chat';
 

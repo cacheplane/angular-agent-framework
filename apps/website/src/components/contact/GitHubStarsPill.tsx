@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import React from 'react';
 import { Pill } from '../ui/Pill';
 import { getGitHubStars } from '../../lib/github';

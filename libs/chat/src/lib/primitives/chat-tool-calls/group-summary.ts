@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/chat-tool-calls/group-summary.ts
-// SPDX-License-Identifier: MIT
 
 /**
  * Default summary text for a group of N consecutive same-name tool calls.

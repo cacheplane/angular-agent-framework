@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { Type } from '@angular/core';
 import type { StandardSchemaV1, StandardSchemaInferOutput } from '@threadplane/render';
 import type {

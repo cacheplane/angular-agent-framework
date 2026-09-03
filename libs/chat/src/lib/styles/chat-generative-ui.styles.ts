@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 export const CHAT_GENERATIVE_UI_STYLES = `
   :host {
     display: block;

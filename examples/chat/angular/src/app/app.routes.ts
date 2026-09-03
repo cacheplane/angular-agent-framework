@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { Routes, UrlMatcher, UrlMatchResult, UrlSegment } from '@angular/router';
 
 /** Matcher factory: collapses `<mode>` and `<mode>/<threadId>` into a
@@ -31,6 +30,11 @@ function modeMatcher(modeName: string): UrlMatcher {
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'embed' },
+  {
+    path: 'hero',
+    pathMatch: 'full',
+    loadComponent: () => import('./hero/hero-mode.component').then((m) => m.HeroMode),
+  },
   {
     path: '',
     loadComponent: () =>

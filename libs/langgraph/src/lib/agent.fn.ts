@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import {
   inject, DestroyRef, computed, effect,
   isSignal, signal, Signal,

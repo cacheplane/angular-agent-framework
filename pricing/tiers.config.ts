@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 export type TierSlug = 'community' | 'production_assurance' | 'enterprise';
 
 export interface TierConfig {

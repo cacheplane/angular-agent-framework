@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // AG-UI HTTP/SSE hosting service for Mastra agents (Lane B).
 //
 // Upstream @ag-ui/mastra ships NO plain AG-UI HTTP endpoint — only the
@@ -22,8 +21,13 @@ import { pathToFileURL } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { MastraAgent } from '@ag-ui/mastra';
 import { createMastra } from './agents.mjs';
-import { createSubagentInjector } from './subagent-emitter.mjs';
+import { createSubagentInjector, createBridgeCapability } from './subagent-emitter.mjs';
 import { withDelegationTee } from './streaming-tee.mjs';
+
+// Process-wide, so the stand-down latch survives across runs: once the
+// installed @ag-ui/mastra is seen emitting SUBAGENT_* itself, every later run
+// starts already retired instead of re-learning (and double-emitting) each time.
+const bridgeCapability = createBridgeCapability();
 
 const AG_UI_INTERNAL_TOKEN = process.env.AG_UI_INTERNAL_TOKEN;
 if (!AG_UI_INTERNAL_TOKEN) {
@@ -110,7 +114,7 @@ export function createAgUiServer() {
     //   SUBAGENT_FINISHED/ERROR on `tool-result`.
     // - `eventsFor()`: the bridge's own AG-UI events, with its later buffered
     //   TOOL_CALL_START/ARGS/END copies for a synthesized id dropped.
-    const injector = createSubagentInjector();
+    const injector = createSubagentInjector(bridgeCapability);
     const write = (event) => res.write(sseFrame(event));
     const observe = (chunk) => {
       for (const e of injector.chunk(chunk)) write(e);

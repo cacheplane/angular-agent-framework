@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: MIT
 from fastapi import FastAPI
 from agent_framework_ag_ui import add_agent_framework_fastapi_endpoint
 

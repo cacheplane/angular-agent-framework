@@ -1,5 +1,4 @@
 // libs/chat/src/lib/styles/chat-message-actions.styles.ts
-// SPDX-License-Identifier: MIT
 //
 // Action-button row underneath assistant messages. Hidden by default, fades
 // in on hover/focus of the parent chat-message, always visible on mobile.

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { BaseMessage } from '@langchain/core/messages';
 
 /** A frontend-declared client tool: name + description + JSON-Schema parameters. */

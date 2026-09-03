@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { NextResponse, type NextFetchEvent, type NextRequest } from 'next/server';
 import { normalizePostHogHost, toSafeAnalyticsString } from '@threadplane/telemetry/shared';
 import { analyticsEvents, type AnalyticsEventName, type AnalyticsProperties } from './lib/analytics/events';

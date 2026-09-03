@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { resolveAimockLaunch } from './aimock-mode';
 

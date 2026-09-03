@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { effect, type Signal } from '@angular/core';
 import type { LangGraphAgent } from '../agent.types';
 

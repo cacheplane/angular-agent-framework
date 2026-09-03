@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 'use client';
 import { type ReactNode } from 'react';
 import { TabGroup, type TabPane } from '../ui/TabGroup';

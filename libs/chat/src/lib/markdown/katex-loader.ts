@@ -1,5 +1,4 @@
 // libs/chat/src/lib/markdown/katex-loader.ts
-// SPDX-License-Identifier: MIT
 import { signal } from '@angular/core';
 
 /**

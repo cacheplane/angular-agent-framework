@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { toJSONSchema } from 'zod/v4';
 import type { StandardSchemaV1 } from '@threadplane/render';
 

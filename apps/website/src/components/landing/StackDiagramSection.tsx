@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { ReactNode } from 'react';
 import { DiagramSection } from './DiagramSection';
 import { StackDiagram, type StackHighlight } from '../docs/diagrams';

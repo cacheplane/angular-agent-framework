@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import { AgentError } from './agent-error';
 import { toAgentError, isAbortError } from './to-agent-error';

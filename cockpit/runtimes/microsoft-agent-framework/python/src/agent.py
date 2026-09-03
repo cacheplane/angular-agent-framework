@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: MIT
 """Expense approval copilot — Microsoft Agent Framework backend.
 
 A genuinely non-LangGraph AG-UI backend exercising the neutral Agent

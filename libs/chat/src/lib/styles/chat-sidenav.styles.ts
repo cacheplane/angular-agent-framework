@@ -1,5 +1,4 @@
 // libs/chat/src/lib/styles/chat-sidenav.styles.ts
-// SPDX-License-Identifier: MIT
 export const CHAT_SIDENAV_STYLES = `
   /*
    * In expanded / collapsed modes the sidenav is "always visible" beside the

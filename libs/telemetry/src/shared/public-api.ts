@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 export type { ThreadplaneEvent, ThreadplaneNodeEvent, ThreadplaneBrowserEvent } from './events';
 export {
   getEmailDomain,

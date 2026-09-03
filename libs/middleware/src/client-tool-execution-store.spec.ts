@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, expect, it } from 'vitest';
 import { createInMemoryClientToolExecutionStore } from './langgraph/client-tool-execution-store';
 import type { ClientToolExecutionRecord, ClientToolResult } from './langgraph/client-tool-execution-store';

@@ -1,5 +1,4 @@
 // libs/chat/src/lib/markdown/markdown-view-registry.ts
-// SPDX-License-Identifier: MIT
 import { InjectionToken } from '@angular/core';
 import type { ViewRegistry } from '@threadplane/render';
 

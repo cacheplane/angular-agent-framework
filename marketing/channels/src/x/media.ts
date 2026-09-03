@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { http } from '../http';
 import type { XAuth } from './auth';
 

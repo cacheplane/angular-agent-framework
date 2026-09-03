@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/chat-subagents/chat-subagents.component.ts
-// SPDX-License-Identifier: MIT
 import {
   Component,
   computed,

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 //
 // Drift tripwire against the OFFICIAL A2UI v0.9 JSON schemas vendored in
 // libs/a2ui/schemas/ (see the README there for source URLs + refresh steps).

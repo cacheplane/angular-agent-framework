@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // Mastra agent definitions for the `mastra` runtime-portability topic
 // (cockpit/runtimes/mastra/). This service IS that topic's backend — the
 // registry entry has no pythonDir, so unlike the Python lane there is no

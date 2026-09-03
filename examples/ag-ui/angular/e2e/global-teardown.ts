@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 export default async function globalTeardown(): Promise<void> {
   const state = globalThis.__AIMOCK_E2E_STATE__;
   if (!state) return;

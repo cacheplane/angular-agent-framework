@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // Conformance suite: verifies LangGraphAgent satisfies the runtime-neutral
 // Agent contract defined in @threadplane/chat.
 //

@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: MIT
 #
 # Re-record every aimock fixture in the cockpit suite.
 #

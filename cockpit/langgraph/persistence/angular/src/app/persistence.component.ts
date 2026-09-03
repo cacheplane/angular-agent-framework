@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { injectCockpitRuntimeConnection } from '@threadplane/cockpit-telemetry';
 import { Component, signal } from '@angular/core';
 import { ChatComponent, ChatWelcomeSuggestionComponent } from '@threadplane/chat';

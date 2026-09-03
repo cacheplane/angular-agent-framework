@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { CardShell } from './card-shell';
 import type { CardInput } from '../types';
 

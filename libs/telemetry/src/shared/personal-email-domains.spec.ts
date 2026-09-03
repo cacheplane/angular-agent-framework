@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, expect, it } from 'vitest';
 import { PERSONAL_EMAIL_DOMAINS, isPersonalEmailDomain } from './personal-email-domains';
 

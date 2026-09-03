@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 'use client';
 
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';

@@ -1,5 +1,4 @@
 // libs/chat/src/lib/compositions/chat-timeline-slider/chat-timeline-slider.component.ts
-// SPDX-License-Identifier: MIT
 import {
   Component, computed, input, output, signal,
   ChangeDetectionStrategy,

@@ -1,5 +1,4 @@
 // libs/chat/src/lib/markdown/cacheplane-markdown-views.spec.ts
-// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import { cacheplaneMarkdownViews } from './cacheplane-markdown-views';
 import { MarkdownMathComponent } from './views/markdown-math.component';

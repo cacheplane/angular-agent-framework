@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 /**
  * Records the human-in-the-loop approval loop on the canonical demo shell —
  * the same surface as demo.threadplane.ai, so the clip matches the homepage

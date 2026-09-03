@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { ClientToolResult } from './client-tools-capability';
 import type { AnyFunctionToolDef } from './tool-def';
 

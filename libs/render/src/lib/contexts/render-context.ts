@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { InjectionToken } from '@angular/core';
 import type { StateStore, ComputedFunction } from '@json-render/core';
 import type { AngularRegistry } from '../render.types';

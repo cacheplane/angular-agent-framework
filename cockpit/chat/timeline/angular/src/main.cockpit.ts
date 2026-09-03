@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { installEmbeddedTheme } from '@threadplane/example-layouts';
 import { ɵLANGGRAPH_RUNTIME_OPERATION_REPORTER } from '@threadplane/langgraph';
 import { bootstrapWithCockpitHarness } from '@threadplane/cockpit-telemetry';

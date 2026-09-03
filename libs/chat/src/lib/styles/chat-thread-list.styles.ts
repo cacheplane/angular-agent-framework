@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 export const CHAT_THREAD_LIST_STYLES = `
   :host { display: block; padding: var(--tplane-chat-space-2); }
   .chat-thread-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 2px; }

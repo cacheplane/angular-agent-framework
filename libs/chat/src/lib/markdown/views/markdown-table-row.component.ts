@@ -1,5 +1,4 @@
 // libs/chat/src/lib/markdown/views/markdown-table-row.component.ts
-// SPDX-License-Identifier: MIT
 import { NgComponentOutlet } from '@angular/common';
 import { Component, ChangeDetectionStrategy, input, computed, inject, type Type } from '@angular/core';
 import type { ViewRegistry } from '@threadplane/render';

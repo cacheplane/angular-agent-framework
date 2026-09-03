@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { computed, signal } from '@angular/core';
 import type { AbstractAgent } from '@ag-ui/client';
 import type { Tool, Message } from '@ag-ui/core';

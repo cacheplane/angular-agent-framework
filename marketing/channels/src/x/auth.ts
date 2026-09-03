@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { http } from '../http';
 
 const TOKEN_URL = 'https://api.x.com/2/oauth2/token';

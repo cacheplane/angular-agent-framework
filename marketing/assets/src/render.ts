@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import satori from 'satori';
 import { Resvg } from '@resvg/resvg-js';
 import { loadFonts } from './fonts';

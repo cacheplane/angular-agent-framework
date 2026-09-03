@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { Injectable, inject, effect, untracked, Injector, runInInjectionContext } from '@angular/core';
 import posthog from 'posthog-js';
 import { COCKPIT_TELEMETRY_CONFIG } from './tokens';

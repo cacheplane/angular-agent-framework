@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/chat-confirm-dialog/chat-confirm-dialog.component.spec.ts
-// SPDX-License-Identifier: MIT
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
 import { ChatConfirmDialogComponent } from './chat-confirm-dialog.component';

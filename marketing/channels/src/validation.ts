@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { ChannelId, Draft } from './types';
 
 export class ValidationError extends Error {

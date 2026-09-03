@@ -1,5 +1,4 @@
 // libs/chat/src/lib/markdown/views/markdown-image.component.ts
-// SPDX-License-Identifier: MIT
 import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
 import type { MarkdownImageNode } from '@cacheplane/partial-markdown';
 

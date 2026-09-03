@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { InjectionToken, inject } from '@angular/core';
 
 /**

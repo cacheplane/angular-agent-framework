@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: MIT
 """SUBAGENT_* emitter for the `research` delegation tool.
 
 The graph cannot reach the AG-UI wire directly: the research subgraph's nodes,

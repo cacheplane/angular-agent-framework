@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 /** A geographic bounding box (LatLngBoundsLiteral-compatible). */
 export interface Bounds {
   north: number;

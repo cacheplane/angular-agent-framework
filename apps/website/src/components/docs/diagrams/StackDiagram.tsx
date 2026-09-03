@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { DiagramFrame } from './DiagramFrame';
 import { DiagramNode } from './DiagramNode';
 import { DiagramEdge } from './DiagramEdge';

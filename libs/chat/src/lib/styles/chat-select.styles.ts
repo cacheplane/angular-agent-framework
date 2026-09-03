@@ -1,5 +1,4 @@
 // libs/chat/src/lib/styles/chat-select.styles.ts
-// SPDX-License-Identifier: MIT
 export const CHAT_SELECT_STYLES = `
   :host {
     display: inline-block;

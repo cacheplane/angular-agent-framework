@@ -1,5 +1,4 @@
 // libs/chat/src/lib/primitives/chat-citations/chat-citations.component.ts
-// SPDX-License-Identifier: MIT
 import {
   ChangeDetectionStrategy, Component, ContentChild, Directive, TemplateRef,
   computed, inject, input, signal,

@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 /**
  * Runtime-neutral snapshot of a point in an agent's execution history.
  *

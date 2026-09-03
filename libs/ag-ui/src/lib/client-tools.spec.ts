@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, it, expect, vi } from 'vitest';
 import { signal } from '@angular/core';
 import { Subject } from 'rxjs';

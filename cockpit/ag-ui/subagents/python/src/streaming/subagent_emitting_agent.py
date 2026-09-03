@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: MIT
 """SUBAGENT_* emitter for the `task` delegation tool.
 
 The graph cannot reach the AG-UI wire directly: the `task` tool body and

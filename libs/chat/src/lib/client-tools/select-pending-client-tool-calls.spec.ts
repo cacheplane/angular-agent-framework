@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, expect, it } from 'vitest';
 import type { ToolCall } from '../agent/tool-call';
 import { selectPendingClientToolCalls } from './select-pending-client-tool-calls';

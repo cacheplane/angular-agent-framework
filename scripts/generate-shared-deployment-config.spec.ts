@@ -1,5 +1,4 @@
 // scripts/generate-shared-deployment-config.spec.ts
-// SPDX-License-Identifier: MIT
 import { execSync } from 'child_process';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';

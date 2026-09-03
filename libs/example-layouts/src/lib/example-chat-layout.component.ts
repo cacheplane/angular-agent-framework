@@ -1,5 +1,4 @@
 // libs/example-layouts/src/lib/example-chat-layout.component.ts
-// SPDX-License-Identifier: MIT
 import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 
 @Component({

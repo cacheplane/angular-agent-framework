@@ -1,5 +1,4 @@
 // libs/chat/src/lib/styles/chat-tokens.ts
-// SPDX-License-Identifier: MIT
 
 const LIGHT_TOKENS = `
   --tplane-chat-bg: rgb(255, 255, 255);

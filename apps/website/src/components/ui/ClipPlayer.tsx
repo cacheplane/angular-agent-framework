@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { ReactNode } from 'react';
 import { BrowserFrame } from './BrowserFrame';
 import type { DemoClip } from '../../lib/demo-media';

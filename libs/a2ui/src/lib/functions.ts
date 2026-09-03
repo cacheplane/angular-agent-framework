@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // A2UI v0.9 client-side functions (basic catalog `functions` map).
 // Arg shapes follow the official catalog schema at
 // https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json.

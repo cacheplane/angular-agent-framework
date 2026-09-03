@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { Component, computed, input, OnDestroy, viewChild, ElementRef, effect, signal } from '@angular/core';
 import {
   RenderSpecComponent,

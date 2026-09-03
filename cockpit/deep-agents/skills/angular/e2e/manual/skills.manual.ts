@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 //
 // Live-model manual check. Not run by CI (playwright matches *.spec.ts only).
 //   npx nx run cockpit:serve-skills

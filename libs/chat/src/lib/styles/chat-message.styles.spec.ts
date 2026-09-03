@@ -1,5 +1,4 @@
 // libs/chat/src/lib/styles/chat-message.styles.spec.ts
-// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import { CHAT_MESSAGE_STYLES } from './chat-message.styles';
 

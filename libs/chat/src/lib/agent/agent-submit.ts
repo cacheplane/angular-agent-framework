@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { ContentBlock } from './content-block';
 
 export interface AgentSubmitInput {

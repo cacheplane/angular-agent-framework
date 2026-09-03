@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';

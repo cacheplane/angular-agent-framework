@@ -1,5 +1,4 @@
 // libs/chat/src/lib/compositions/chat/chat.component.ts
-// SPDX-License-Identifier: MIT
 import {
   Component, ChangeDetectionStrategy, input, model, output, computed, effect, signal, untracked, viewChild, ElementRef,
   DestroyRef, inject, Injector, runInInjectionContext,

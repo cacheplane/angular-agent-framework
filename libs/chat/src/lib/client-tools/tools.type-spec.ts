@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import type { Equal, Expect } from '../../testing/type-assert';
 import type { FunctionToolDef, ClientToolDef, FunctionToolHandlerContext } from './tool-def';
 import { action, tools } from './tools';

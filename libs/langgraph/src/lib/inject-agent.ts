@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { inject } from '@angular/core';
 import type { BagTemplate } from '@langchain/langgraph-sdk';
 import type { AgentRef } from '@threadplane/chat';

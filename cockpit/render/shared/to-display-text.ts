@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 /**
  * Coerce a resolved element prop (which may be a string, number, boolean, or —
  * for an unresolved/object binding — something else) into display text.

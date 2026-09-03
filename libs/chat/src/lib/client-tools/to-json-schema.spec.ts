@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 // Must use zod/v4 z — the root 'zod' package exports a v3 runtime that lacks
 // _zod.def internals required by toJSONSchema. All schema construction goes

@@ -1,4 +1,3 @@
-<!-- SPDX-License-Identifier: MIT -->
 # AG-UI Itinerary example (Angular)
 
 A trip-planner demo where the agent edits a live itinerary UI over the

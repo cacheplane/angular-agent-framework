@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-
 /**
  * Shared config for the adapters' `provideFakeAgent()` helpers
  * (@threadplane/langgraph and @threadplane/ag-ui). Drives an in-process

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { describe, it, expect } from 'vitest';
 import type { A2uiSurface, A2uiComponent } from '@threadplane/a2ui';
 import { buildA2uiActionMessage } from './build-action-message';

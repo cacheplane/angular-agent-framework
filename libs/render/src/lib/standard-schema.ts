@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 // Vendored from the Standard Schema spec (https://standardschema.dev) — the
 // spec is published expressly to be copied in rather than depended on. Zero
 // runtime; types only. Lets a RenderViewEntry carry any spec-compliant
