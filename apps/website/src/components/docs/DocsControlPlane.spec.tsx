@@ -198,6 +198,7 @@ describe('DocsControlPlane', () => {
 
     // LangGraph publishes no demoUrl, so nothing is left to put in Actions.
     expect(screen.queryByRole('toolbar', { name: 'Docs actions' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Search docs' })).toBeTruthy();
   });
 
   it('connects nested Learn disclosures to their controlled content', () => {

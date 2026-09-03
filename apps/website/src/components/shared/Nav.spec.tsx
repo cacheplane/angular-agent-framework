@@ -32,13 +32,12 @@ describe('Docs mobile navigation', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
     const dialog = screen.getByRole('dialog', { name: 'Mobile navigation' });
 
-    // The page passes pageTitle="Overview"; Nav derives its own title. When
-    // they drift, the same page is called two different things depending on
-    // viewport width.
-    const scope = within(dialog).getByRole('heading', { name: 'Scope' }).closest('section');
-    if (!scope) throw new Error('Expected a Scope section');
-    expect(within(scope).getByText('Overview')).toBeTruthy();
-    expect(within(scope).queryByText('Documentation')).toBeNull();
+    // The page passes pageTitle="Overview"; Nav derives its own title from
+    // the URL independently. That comparison used to be visible through the
+    // Scope card, which is gone (Task 3) — the trail is the shell header's
+    // job now. What is left to verify here is that the docs index still
+    // renders its control plane content correctly, search included.
+    expect(within(dialog).getByRole('button', { name: 'Search docs' })).toBeTruthy();
   });
 
   it('does not invent a library on a library-neutral docs page', () => {
@@ -49,16 +48,13 @@ describe('Docs mobile navigation', () => {
 
     // `/docs/choosing-an-adapter` has no library segment. Falling back to
     // 'langgraph' made the Scope card read "LangGraph / Getting Started /
-    // Documentation" — three fabrications in the one card whose job is saying
-    // where you are.
-    const scope = within(dialog).getByRole('heading', { name: 'Scope' }).closest('section');
-    if (!scope) throw new Error('Expected a Scope section');
-    expect(within(scope).queryByText('LangGraph')).toBeNull();
-    expect(within(scope).queryByText('Getting Started')).toBeNull();
-    expect(within(scope).getByText('Choosing an adapter')).toBeTruthy();
-
+    // Documentation" — three fabrications in the one card whose job was
+    // saying where you are. That card is gone now (Task 3); what remains
+    // observable is that the drawer still does not fabricate a library
+    // selection for a library-neutral page.
     expect(within(dialog).queryByRole('button', { name: 'LangGraph' })).toBeNull();
     expect(within(dialog).getByRole('button', { name: 'Choose a library' })).toBeTruthy();
+    expect(within(dialog).getByRole('button', { name: 'Search docs' })).toBeTruthy();
   });
 
   afterEach(() => {
@@ -203,7 +199,7 @@ describe('Docs mobile navigation', () => {
 
     expect(screen.getByRole('dialog', { name: 'Mobile navigation' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Docs' }).getAttribute('data-active')).not.toBeNull();
-    expect(screen.getByRole('heading', { name: 'Scope' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Search docs' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Learn' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Settings' })).toBeNull();
     expect(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close menu' })).toBeTruthy();

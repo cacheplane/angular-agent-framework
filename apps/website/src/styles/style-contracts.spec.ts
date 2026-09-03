@@ -199,21 +199,41 @@ function baseDeclarationsFor(css: string, selector: string): string {
   return '';
 }
 
+// Two rules with the same `@media` query are legitimate CSS — the second
+// docs.css author to add a `(pointer: coarse)` block should not have to know
+// about the first one. Returning only the first match here would silently
+// hand a contract the wrong block's contents instead of erroring, exactly
+// the failure mode declarationsFor() already avoids by merging every rule
+// that matches a selector. So this merges every block for the query too.
 function mediaBlock(css: string, query: string): string {
-  const start = css.indexOf(`@media ${query}`);
-  if (start === -1) return '';
-  const open = css.indexOf('{', start);
-  let depth = 0;
+  const needle = `@media ${query}`;
+  const blocks: string[] = [];
+  let searchFrom = 0;
 
-  for (let index = open; index < css.length; index += 1) {
-    if (css[index] === '{') depth += 1;
-    if (css[index] === '}') {
-      depth -= 1;
-      if (depth === 0) return css.slice(open + 1, index);
+  for (;;) {
+    const start = css.indexOf(needle, searchFrom);
+    if (start === -1) break;
+    const open = css.indexOf('{', start);
+    let depth = 0;
+    let end = -1;
+
+    for (let index = open; index < css.length; index += 1) {
+      if (css[index] === '{') depth += 1;
+      if (css[index] === '}') {
+        depth -= 1;
+        if (depth === 0) {
+          end = index;
+          break;
+        }
+      }
     }
+
+    if (end === -1) break;
+    blocks.push(css.slice(open + 1, end));
+    searchFrom = end + 1;
   }
 
-  return '';
+  return blocks.join('\n');
 }
 
 describe('style contracts', () => {
@@ -285,6 +305,12 @@ describe('style contracts', () => {
 
     it('removes tooltip transitions when reduced motion is requested', () => {
       expect(declarationsFor(mediaBlock(css, '(prefers-reduced-motion: reduce)'), '.docs-page-actions *')).toMatch(/transition:\s*none\s*!important/);
+    });
+
+    it('hides the shortcut hint on coarse pointers', () => {
+      expect(
+        declarationsFor(mediaBlock(css, '(pointer: coarse)'), '.docs-control-plane-search-kbd')
+      ).toMatch(/display:\s*none/);
     });
   });
 });

@@ -74,7 +74,6 @@ export function DocsContextContent({
         type="button"
         className="docs-control-plane-search-trigger"
         onClick={openSearch}
-        data-docs-control-plane-search
       >
         <span className="docs-control-plane-search-inner">
           <Search size={14} aria-hidden="true" />
