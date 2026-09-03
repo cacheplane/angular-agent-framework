@@ -7,7 +7,6 @@ import agUiApiDocs from '../../../content/docs/ag-ui/api/api-docs.json';
 import chatApiDocs from '../../../content/docs/chat/api/api-docs.json';
 import middlewareApiDocs from '../../../content/docs/middleware/api/api-docs.json';
 import renderApiDocs from '../../../content/docs/render/api/api-docs.json';
-import telemetryApiDocs from '../../../content/docs/telemetry/api/api-docs.json';
 
 const API_DOCS: Record<string, unknown> = {
   a2ui: a2uiApiDocs,
@@ -16,7 +15,6 @@ const API_DOCS: Record<string, unknown> = {
   chat: chatApiDocs,
   middleware: middlewareApiDocs,
   render: renderApiDocs,
-  telemetry: telemetryApiDocs,
 };
 
 function loadApiDocs(): string {

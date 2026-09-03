@@ -208,7 +208,6 @@ export default async function SolutionPage({ params }: PageProps) {
         subtext={solution.ctaSubtext}
         primary={{ label: 'Talk to us', href: '/pricing#lead-form' }}
         secondary={{ label: 'Read the docs →', href: '/docs' }}
-        caption={null}
       />
     </>
   );

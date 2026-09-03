@@ -20,6 +20,19 @@ export const nextConfig: WithNxOptions = {
     ],
   },
   skipTrailingSlashRedirect: true,
+  // The dedicated telemetry docs library is retired in favour of the single
+  // canonical policy. Delivered links and indexed search results outlive the
+  // deletion, so every retired path lands on /privacy rather than a 404.
+  redirects: async () => [
+    { source: '/docs/telemetry', destination: '/privacy', permanent: true },
+    { source: '/docs/telemetry/:path*', destination: '/privacy', permanent: true },
+    { source: '/api/markdown/telemetry', destination: '/privacy', permanent: true },
+    {
+      source: '/api/markdown/telemetry/:path*',
+      destination: '/privacy',
+      permanent: true,
+    },
+  ],
   rewrites: async () => [
     {
       source: '/ingest/static/:path*',

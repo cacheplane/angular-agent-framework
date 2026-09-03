@@ -37,12 +37,25 @@ test('landing page renders feature blocks (Stream/Render/Ship)', async ({ page }
   await expect(page.locator('#ship-heading')).toBeVisible();
 });
 
-test('landing page states the all-MIT and explicit-telemetry commitments', async ({ page }) => {
+test('landing page no longer carries the retired promises section', async ({ page }) => {
   await page.goto('/');
   const main = page.locator('main');
 
-  await expect(main).toContainText('every package is MIT');
-  await expect(main).toContainText('No hidden telemetry');
+  await expect(main).not.toContainText("What we won't do");
+  await expect(main).not.toContainText('No hidden telemetry');
+  await expect(main).not.toContainText('Installation is inert');
+});
+
+test('every page links the canonical privacy policy from the footer', async ({ page }) => {
+  await page.goto('/');
+
+  const link = page.locator('footer a[href="/privacy"]');
+  await expect(link).toBeVisible();
+  await link.click();
+  await expect(page).toHaveURL(/\/privacy$/u);
+  await expect(
+    page.getByRole('heading', { level: 1, name: /privacy/i })
+  ).toBeVisible();
 });
 
 test('pricing page presents three software and support paths', async ({ page }) => {
@@ -397,7 +410,9 @@ test('/llms-full.txt includes generated API reference content', async ({ request
   expect(body).toContain('### a2ui');
   expect(body).toContain('### langgraph');
   expect(body).toContain('### chat');
-  expect(body).toContain('### telemetry');
+  // The dedicated telemetry docs library is retired, so its generated API
+  // section no longer ships in the public bundle.
+  expect(body).not.toContain('### telemetry');
   expect(body).not.toContain('API reference not yet generated');
 });
 

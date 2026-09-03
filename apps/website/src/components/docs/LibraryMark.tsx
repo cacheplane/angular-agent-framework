@@ -13,7 +13,6 @@ const MARKS: Record<LibraryId, MarkEntry> = {
   render: { kind: 'logo', src: '/logos/surface/vercel.svg' },
   chat: { kind: 'glyph', glyph: 'chat' },
   middleware: { kind: 'glyph', glyph: 'middleware' },
-  telemetry: { kind: 'glyph', glyph: 'pulse' },
   runtimes: { kind: 'glyph', glyph: 'layers' },
   'deep-agents': { kind: 'glyph', glyph: 'branch' },
 };

@@ -88,12 +88,6 @@ const SUPPORTING: SupportingLib[] = [
     href: '/docs/middleware/getting-started/introduction',
     glyph: 'middleware',
   },
-  {
-    title: 'Telemetry',
-    blurb: 'Browser & Node events',
-    href: '/docs/telemetry/getting-started/introduction',
-    glyph: 'pulse',
-  },
 ];
 
 function ChatGlyph() {

@@ -37,8 +37,8 @@ test.describe('Docs landing page', () => {
     await expect(page.locator('main a[href="/docs/choosing-an-adapter"]').first()).toBeVisible();
     await expect(page.locator('main a[href="/docs/render/concepts/json-render-vs-a2ui"]').first()).toBeVisible();
 
-    // Supporting libraries
-    await expect(page.locator('main a[href="/docs/telemetry/getting-started/introduction"]').first()).toBeVisible();
+    // The retired telemetry library must not reappear as a card.
+    await expect(page.locator('main a[href^="/docs/telemetry"]')).toHaveCount(0);
 
     // Search prompt
     await expect(page.getByText('Looking for something specific?').first()).toBeVisible();
@@ -191,4 +191,21 @@ test.describe('Docs search', () => {
     await expect(page.getByRole('option', { name: /Choosing an adapter/i })).toBeVisible();
     await expect(page.getByText('No results found')).toHaveCount(0);
   });
+});
+
+test.describe('Retired telemetry docs library', () => {
+  for (const route of [
+    '/docs/telemetry',
+    '/docs/telemetry/getting-started/introduction',
+    '/api/markdown/telemetry',
+    '/api/markdown/telemetry/getting-started/introduction',
+  ]) {
+    test(`redirects ${route} to the canonical policy`, async ({ page }) => {
+      await page.goto(route);
+      await expect(page).toHaveURL(/\/privacy$/u);
+      await expect(
+        page.getByRole('heading', { level: 1, name: /privacy/i })
+      ).toBeVisible();
+    });
+  }
 });
