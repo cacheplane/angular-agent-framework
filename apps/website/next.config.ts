@@ -17,6 +17,11 @@ export const nextConfig: WithNxOptions = {
       '../../cockpit/**/*.ts',
       '../../deployments/ag-ui-mastra/*.mjs',
       '../../nx.json',
+      // The docs search route reads these at request time. Unlike
+      // api/markdown it cannot be statically generated, so without this the
+      // route deploys with no corpus and returns empty for every query —
+      // silently, and only in production.
+      'content/docs/**/*.mdx',
     ],
   },
   skipTrailingSlashRedirect: true,

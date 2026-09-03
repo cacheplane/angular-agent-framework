@@ -159,6 +159,71 @@ test.describe('Docs slug page', () => {
     await page.goto('/docs/langgraph/getting-started/introduction');
     await expect(page.locator('nav[aria-label="Breadcrumb"]')).toHaveCount(1);
   });
+
+  test('finds a term that appears only in body prose and lands on its section', async ({ page }) => {
+    // Desktop breakpoint: the "Search docs" control-plane button is directly
+    // visible without opening the mobile navigation dialog first (see
+    // workspace-shell.spec.ts's desktop-rail tests).
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(route);
+
+    // Open by clicking the trigger, matching workspace-shell.spec.ts. A
+    // keyboard shortcut would depend on how the runner maps Meta, and the
+    // button is the affordance a real user has anyway. The control may also
+    // exist in the mobile drawer's DOM, so scope to the first match.
+    await page.getByRole('button', { name: 'Search docs' }).first().click();
+
+    const dialog = page.getByRole('dialog', { name: 'Search documentation' });
+    await expect(dialog).toBeVisible();
+
+    // "checkpointer" is prose inside the persistence guide (7 occurrences
+    // outside fenced code) and is in no page title anywhere in
+    // docs-config.ts, so a title-only search returns nothing for it. This
+    // only passes if server-side content search is genuinely wired up.
+    await dialog
+      .getByRole('combobox', { name: 'Search documentation...' })
+      .fill('checkpointer');
+
+    const hit = dialog.getByRole('option').filter({ hasText: /checkpointer/i }).first();
+    await expect(hit).toBeVisible({ timeout: 10000 });
+
+    // Prove the match came from server-side content search, not the instant
+    // client-side title matcher: it must sit under the "In page content"
+    // group, and its own row must show a snippet containing the term (a
+    // future regression that merely surfaced a title match must not keep
+    // this green).
+    await expect(dialog.getByText('In page content')).toBeVisible();
+    await expect(hit.locator('.docs-search-result-snippet')).toContainText(/checkpointer/i);
+
+    await hit.click();
+
+    // The deep link must land on a real section anchor, not just a
+    // well-formed but dangling fragment that scrolls nowhere.
+    await expect(page).toHaveURL(/\/docs\/langgraph\/.*#.+/);
+    const url = new URL(page.url());
+    expect(url.hash.length).toBeGreaterThan(1);
+    await expect(page.locator(url.hash)).toBeVisible();
+  });
+
+  test('search shows the empty state for a term that appears nowhere in the docs', async ({ page }) => {
+    // Negative control: without this, a matcher that returns everything for
+    // everything would make the content-hit test above pass by accident.
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(route);
+
+    await page.getByRole('button', { name: 'Search docs' }).first().click();
+
+    const dialog = page.getByRole('dialog', { name: 'Search documentation' });
+    await expect(dialog).toBeVisible();
+
+    // Confirmed absent from the whole docs content/config tree via grep.
+    await dialog
+      .getByRole('combobox', { name: 'Search documentation...' })
+      .fill('zqxvantibrackle');
+
+    await expect(dialog.getByText('No results found')).toBeVisible({ timeout: 10000 });
+    await expect(dialog.getByRole('option')).toHaveCount(0);
+  });
 });
 
 test.describe('a2ui docs', () => {
