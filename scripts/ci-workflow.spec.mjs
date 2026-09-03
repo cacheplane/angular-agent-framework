@@ -556,6 +556,41 @@ describe('CI workflow', () => {
     );
   });
 
+  it('verifies every protected immutable preview with its own automation bypass', async () => {
+    // Vercel deployment protection answers every path on an unaliased
+    // deployment with 302 -> vercel.com/sso-api. Bypass secrets are issued per
+    // project, so the Website and cockpit checks each need their own, and a
+    // missing one must fail with a message that says what to provision rather
+    // than as an opaque "expected 308, received 302".
+    const deployJob = await readDeployJob();
+    const websiteStep = readNamedStep(
+      deployJob,
+      'Verify Website preview runtime embedding policy'
+    );
+    const cockpitStep = readNamedStep(
+      deployJob,
+      'Exhaustively verify immutable cockpit preview'
+    );
+
+    assert.match(
+      websiteStep,
+      /VERCEL_AUTOMATION_BYPASS_SECRET:\s*\$\{\{ secrets\.VERCEL_AUTOMATION_BYPASS_SECRET \}\}/
+    );
+    assert.match(websiteStep, /-z "\$\{VERCEL_AUTOMATION_BYPASS_SECRET\}"/);
+    assert.match(
+      cockpitStep,
+      /VERCEL_AUTOMATION_BYPASS_SECRET:\s*\$\{\{ secrets\.VERCEL_COCKPIT_AUTOMATION_BYPASS_SECRET \}\}/
+    );
+    assert.match(cockpitStep, /-z "\$\{VERCEL_AUTOMATION_BYPASS_SECRET\}"/);
+    assert.match(cockpitStep, /::error::[^\n]*threadplane-cockpit/);
+    assert.match(cockpitStep, /exit 1/);
+    assert.doesNotMatch(
+      cockpitStep,
+      /secrets\.VERCEL_AUTOMATION_BYPASS_SECRET/,
+      'the cockpit preview must not reuse the Website project secret'
+    );
+  });
+
   it('gates Cockpit deployment on the production Website smoke even for Cockpit-only changes', async () => {
     const deployJob = await readDeployJob();
     const websiteOrCockpit =
