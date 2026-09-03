@@ -137,6 +137,28 @@ describe('HeroMode', () => {
     expect(fx.componentInstance.mode()).toBe('live');
   });
 
+  it('reduced motion: typeInto sets the value instantly but keeps a reading pause before resolving', async () => {
+    fx.componentInstance.reducedMotion = true;
+    const el = fx.nativeElement as HTMLElement;
+    const textarea = el.querySelector<HTMLTextAreaElement>('textarea[aria-label="Type a message"]')!;
+
+    const started = performance.now();
+    const typing = fx.componentInstance.typeInto('abc');
+    // Instant: the value is set synchronously, before any timer fires.
+    expect(textarea.value).toBe('abc');
+
+    await typing;
+    expect(performance.now() - started).toBeGreaterThanOrEqual(1200);
+  });
+
+  it('reduced motion: moveCursor holds for a reading pause instead of resolving instantly', async () => {
+    fx.componentInstance.reducedMotion = true;
+
+    const started = performance.now();
+    await fx.componentInstance.moveCursor('composer');
+    expect(performance.now() - started).toBeGreaterThanOrEqual(600);
+  });
+
   it('clears the half-typed composer on takeover', async () => {
     const el = fx.nativeElement as HTMLElement;
     await fx.componentInstance.typeInto('hello');
