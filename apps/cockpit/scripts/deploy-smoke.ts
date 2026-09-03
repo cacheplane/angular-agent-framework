@@ -36,6 +36,15 @@ export interface RedirectSmokeCase {
   readonly expectedLocation?: string;
   readonly headers?: Readonly<Record<string, string>>;
   readonly raw?: boolean;
+  /**
+   * Vercel's CDN collapses consecutive slashes and answers 308 to the
+   * single-slash path on the same origin before any route, rewrite, or
+   * function runs, so a raw probe carrying `//` can never reach the 404
+   * route in vercel.cockpit.json. The only acceptable non-404 answer for such
+   * a probe is that exact same-origin normalization — never a redirect off
+   * the deployment.
+   */
+  readonly platformNormalizedPath?: string;
 }
 
 export interface DeploySmokeOptions {
@@ -117,7 +126,15 @@ const notFoundCase = (
   name: string,
   path: string,
   raw = false
-): RedirectSmokeCase => ({ name, path, expectedStatus: 404, raw });
+): RedirectSmokeCase => ({
+  name,
+  path,
+  expectedStatus: 404,
+  raw,
+  ...(raw && path.includes('//')
+    ? { platformNormalizedPath: path.replace(/\/{2,}/g, '/') }
+    : {}),
+});
 
 export const RAW_MALFORMED_REQUEST_TARGETS = [
   `/${ROOT_STREAMING_LEGACY_PATH}`,
@@ -384,14 +401,44 @@ export const requestExactTarget: RedirectSmokeRequestImpl = ({
 
 class RedirectContractError extends Error {}
 
+const isPlatformNormalization = (
+  origin: string,
+  smokeCase: RedirectSmokeCase,
+  response: RedirectSmokeResponse
+): boolean => {
+  const location = response.headers.location;
+  if (
+    smokeCase.platformNormalizedPath === undefined ||
+    response.status !== 308 ||
+    location === undefined
+  ) {
+    return false;
+  }
+  // The platform answers with a relative Location; resolve both sides
+  // against the deployment origin so only that exact same-origin target
+  // passes.
+  let resolved: string;
+  try {
+    resolved = new URL(location, `${origin}/`).toString();
+  } catch {
+    return false;
+  }
+  return (
+    resolved ===
+    new URL(smokeCase.platformNormalizedPath, `${origin}/`).toString()
+  );
+};
+
 const verifyCase = (
   mode: DeploySmokeMode,
+  origin: string,
   smokeCase: RedirectSmokeCase,
   response: RedirectSmokeResponse
 ): void => {
   const rawGateHint = smokeCase.raw
-    ? ' Raw Path rejection failed; verify the Vercel project WAF Raw Path prerequisite before promotion.'
+    ? ' Raw-path rejection failed; verify the 404 route in vercel.cockpit.json still precedes framework routing before promotion.'
     : '';
+  if (isPlatformNormalization(origin, smokeCase, response)) return;
   if (response.status !== smokeCase.expectedStatus) {
     const protectionHint =
       response.status === 302 &&
@@ -454,7 +501,7 @@ export const runDeploySmoke = async ({
           path: smokeCase.path,
           ...(headers ? { headers } : {}),
         });
-        verifyCase(mode, smokeCase, response);
+        verifyCase(mode, origin, smokeCase, response);
         break;
       } catch (error: unknown) {
         if (error instanceof RedirectContractError) throw error;
