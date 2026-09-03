@@ -16,7 +16,7 @@
 - Workflow guards run with `node --test --test-reporter=tap scripts/ci-workflow.spec.mjs`.
 - Commit messages end with `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`.
 - Never `echo` a secret. Pipe values into `gh secret set`.
-- `apps/website/test-results/` is gitignored; generated storage state goes there.
+- `dist/` is gitignored and never uploaded as a CI artifact; generated storage state goes to `dist/apps/website/e2e-runtime-bypass/storage-state.json`. (`apps/website/test-results/` is uploaded on failure by other lanes, so the bypass cookie must not live there.)
 
 ---
 
@@ -105,7 +105,7 @@ describe('runtime bypass setup', () => {
 
   it('writes storage state under the gitignored test-results directory', () => {
     expect(RUNTIME_BYPASS_STORAGE_STATE).toMatch(
-      /apps\/website\/test-results\/runtime-bypass-storage-state\.json$/
+      /dist\/apps\/website\/e2e-runtime-bypass\/storage-state\.json$/
     );
   });
 });
@@ -253,7 +253,7 @@ Append inside the `describe('Website Playwright configuration', ...)` block in `
     });
     expect(both.globalSetup).toMatch(/runtime-bypass-setup\.ts$/);
     expect(both.use?.storageState).toMatch(
-      /apps\/website\/test-results\/runtime-bypass-storage-state\.json$/
+      /dist\/apps\/website\/e2e-runtime-bypass\/storage-state\.json$/
     );
     // The examples secret must never ride the global header, which reaches
     // the Website origin on every request.
