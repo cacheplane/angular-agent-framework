@@ -50,6 +50,32 @@ const CONTRACTS: StyleContract[] = [
     },
   },
   {
+    file: 'docs.css',
+    selector: '.docs-prose a:not([data-mdx-chrome])',
+    why: 'Tailwind Typography is inert in this app — `.prose` emits zero rules, so `--tw-prose-links` on MdxRenderer set a variable nothing read and every docs link rendered as plain body text (measured: rgb(28,28,28), no decoration). This rule is the only thing making a docs link look like a link.',
+    requires: {
+      color: /color:\s*var\(--color-accent\)/,
+      'text-decoration': /text-decoration:\s*underline/,
+    },
+  },
+  {
+    file: 'docs.css',
+    selector: '[data-mdx="callout"] .mdx-callout-body a:not([data-mdx-chrome])',
+    why: "A callout's body text is already muted, so an accent-blue link inside a warning callout reads as a rendering error. Losing this leaves callout links legible but wrongly toned — the failure nobody reports.",
+    requires: {
+      color: /color:\s*var\(--callout-tone-text\)/,
+      'font-weight': /font-weight:\s*500/,
+    },
+  },
+  {
+    file: 'docs.css',
+    selector: '.docs-prose a[href^="http"]:not([data-mdx-chrome])::after',
+    why: 'The only signal that a docs link leaves the site. Losing it renders an off-site link identically to an in-site one, which is invisible until someone loses their place.',
+    requires: {
+      content: /content:/,
+    },
+  },
+  {
     file: '../app/global.css',
     selector: 'pre.shiki',
     why: "Shiki writes the theme background inline on the <pre> but emits no padding, so losing this sits the code flush against the dark surface's edges — on the homepage Code tabs, /langgraph, /render, /chat and every /solutions page. Deleted once already in #863, on a docs-only survey that concluded `.shiki` matched nothing.",
@@ -173,21 +199,50 @@ function baseDeclarationsFor(css: string, selector: string): string {
   return '';
 }
 
+// Two rules with the same `@media` query are legitimate CSS — the second
+// docs.css author to add a `(pointer: coarse)` block should not have to know
+// about the first one. Returning only the first match here would silently
+// hand a contract the wrong block's contents instead of erroring, exactly
+// the failure mode declarationsFor() already avoids by merging every rule
+// that matches a selector. So this merges every block for the query too.
+//
+// Matching is on the *complete* query text (the text between `@media` and
+// the opening `{`, trimmed) rather than a substring, so a compound query
+// like `(pointer: coarse) and (min-width: 600px)` is a different query and
+// never gets folded into a plainer `(pointer: coarse)` lookup.
 function mediaBlock(css: string, query: string): string {
-  const start = css.indexOf(`@media ${query}`);
-  if (start === -1) return '';
-  const open = css.indexOf('{', start);
-  let depth = 0;
+  const blocks: string[] = [];
+  let searchFrom = 0;
 
-  for (let index = open; index < css.length; index += 1) {
-    if (css[index] === '{') depth += 1;
-    if (css[index] === '}') {
-      depth -= 1;
-      if (depth === 0) return css.slice(open + 1, index);
+  for (;;) {
+    const start = css.indexOf('@media', searchFrom);
+    if (start === -1) break;
+    const open = css.indexOf('{', start);
+    if (open === -1) break;
+
+    const actualQuery = css.slice(start + '@media'.length, open).trim();
+    let depth = 0;
+    let end = -1;
+
+    for (let index = open; index < css.length; index += 1) {
+      if (css[index] === '{') depth += 1;
+      if (css[index] === '}') {
+        depth -= 1;
+        if (depth === 0) {
+          end = index;
+          break;
+        }
+      }
     }
+
+    if (end === -1) break;
+    if (actualQuery === query) {
+      blocks.push(css.slice(open + 1, end));
+    }
+    searchFrom = end + 1;
   }
 
-  return '';
+  return blocks.join('\n');
 }
 
 describe('style contracts', () => {
@@ -259,6 +314,21 @@ describe('style contracts', () => {
 
     it('removes tooltip transitions when reduced motion is requested', () => {
       expect(declarationsFor(mediaBlock(css, '(prefers-reduced-motion: reduce)'), '.docs-page-actions *')).toMatch(/transition:\s*none\s*!important/);
+    });
+
+    it('hides the shortcut hint on coarse pointers', () => {
+      expect(
+        declarationsFor(mediaBlock(css, '(pointer: coarse)'), '.docs-control-plane-search-kbd')
+      ).toMatch(/display:\s*none/);
+    });
+
+    it('does not merge a compound query into a simpler one', () => {
+      const compoundCss = `
+        @media (pointer: coarse) { .a { color: red; } }
+        @media (pointer: coarse) and (min-width: 600px) { .b { color: blue; } }
+      `;
+      expect(mediaBlock(compoundCss, '(pointer: coarse)')).toContain('.a');
+      expect(mediaBlock(compoundCss, '(pointer: coarse)')).not.toContain('.b');
     });
   });
 });

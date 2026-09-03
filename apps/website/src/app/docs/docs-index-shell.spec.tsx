@@ -17,11 +17,8 @@ describe('docs index', () => {
   it('wears the same control plane as every other docs route', () => {
     render(<DocsLandingPage />);
 
-    const scope = screen.getByRole('heading', { name: 'Scope' }).closest('section');
-    if (!scope) throw new Error('Expected a Scope section');
-    // Library-neutral: the index is where you pick one, so it claims none.
-    expect(within(scope).getByText('Docs')).toBeTruthy();
-    expect(within(scope).getByText('Overview')).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Scope' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Search docs' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Choose a library' })).toBeTruthy();
   });
 
@@ -52,5 +49,15 @@ describe('docs index', () => {
     // screen at once, so they have to agree.
     expect(pickerNames).toContain('json-render');
     expect(pickerNames).not.toContain('Render');
+  });
+
+  it('wires Run to the canonical default example route', () => {
+    render(<DocsLandingPage />);
+
+    // Registry-derived, not hardcoded: /workspace/langgraph/streaming 404s
+    // because that capability's canonical destination is its docs route.
+    expect(
+      screen.getByRole('link', { name: 'Run' }).getAttribute('href'),
+    ).toBe('/docs/langgraph/guides/streaming?mode=run');
   });
 });

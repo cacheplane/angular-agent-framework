@@ -331,39 +331,83 @@ test.describe('workspace shell', () => {
     }
   });
 
-  for (const path of ['/docs', '/docs/choosing-an-adapter']) {
-    test(`docs-only ${path} keeps operational modes focusable and local`, async ({
-      page,
-    }) => {
-      await page.setViewportSize({ width: 1440, height: 900 });
-      await page.goto(path);
+  test('docs-only /docs/choosing-an-adapter keeps operational modes focusable and local', async ({
+    page,
+  }) => {
+    const path = '/docs/choosing-an-adapter';
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(path);
 
-      const controlPlane = page.locator('[data-docs-control-plane]');
-      await expect(controlPlane).toBeVisible();
-      for (const mode of ['Run', 'Code', 'API'] as const) {
-        const control = controlPlane.getByRole('button', {
-          name: mode,
-          exact: true,
-        });
-        await expect(control).toHaveAttribute('aria-disabled', 'true');
-        await expect(control).toHaveAccessibleDescription(
-          new RegExp(
-            `${mode} is unavailable because this page has no workspace capability`,
-            'i'
-          )
-        );
-        await expect(control).not.toHaveAttribute('href', /.+/);
-        await expect(control).not.toHaveAttribute('target', /.+/);
-        await control.focus();
-        await expect(control).toBeFocused();
-        await control.click({ force: true });
-        await expect(page).toHaveURL(path);
-      }
-      await expect(
-        controlPlane.getByRole('button', { name: 'Search docs' })
-      ).toBeVisible();
-    });
-  }
+    const controlPlane = page.locator('[data-docs-control-plane]');
+    await expect(controlPlane).toBeVisible();
+    for (const mode of ['Run', 'Code', 'API'] as const) {
+      const control = controlPlane.getByRole('button', {
+        name: mode,
+        exact: true,
+      });
+      await expect(control).toHaveAttribute('aria-disabled', 'true');
+      await expect(control).toHaveAccessibleDescription(
+        new RegExp(
+          `${mode} is unavailable because this page has no workspace capability`,
+          'i'
+        )
+      );
+      await expect(control).not.toHaveAttribute('href', /.+/);
+      await expect(control).not.toHaveAttribute('target', /.+/);
+      await control.focus();
+      await expect(control).toBeFocused();
+      await control.click({ force: true });
+      await expect(page).toHaveURL(path);
+    }
+    await expect(
+      controlPlane.getByRole('button', { name: 'Search docs' })
+    ).toBeVisible();
+  });
+
+  test('docs-only /docs keeps Code and API disabled but Run is a live link to the canonical example', async ({
+    page,
+  }) => {
+    const path = '/docs';
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(path);
+
+    const controlPlane = page.locator('[data-docs-control-plane]');
+    await expect(controlPlane).toBeVisible();
+
+    for (const mode of ['Code', 'API'] as const) {
+      const control = controlPlane.getByRole('button', {
+        name: mode,
+        exact: true,
+      });
+      await expect(control).toHaveAttribute('aria-disabled', 'true');
+      await expect(control).toHaveAccessibleDescription(
+        new RegExp(
+          `${mode} is unavailable because this page has no workspace capability`,
+          'i'
+        )
+      );
+      await expect(control).not.toHaveAttribute('href', /.+/);
+      await expect(control).not.toHaveAttribute('target', /.+/);
+    }
+
+    await expect(
+      controlPlane.getByRole('button', { name: 'Search docs' })
+    ).toBeVisible();
+
+    const run = controlPlane.getByRole('link', { name: 'Run', exact: true });
+    await expect(run).toHaveAttribute(
+      'href',
+      '/docs/langgraph/guides/streaming?mode=run'
+    );
+    // Prove the destination actually resolves rather than 404ing.
+    const [response] = await Promise.all([
+      page.waitForNavigation(),
+      run.click(),
+    ]);
+    expect(response?.status()).toBe(200);
+    await expect(page).toHaveURL('/docs/langgraph/guides/streaming?mode=run');
+    await expect(page.locator('[data-workspace-shell]')).toBeVisible();
+  });
 
   test('uses workspace fallbacks only when a shared Docs path would lose identity', async ({
     page,

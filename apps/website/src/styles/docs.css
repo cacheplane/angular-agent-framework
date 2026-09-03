@@ -381,6 +381,94 @@ body:has([data-website-workspace-host]) {
 .mdx-callout-body > :first-child { margin-top: 0; }
 .mdx-callout-body > :last-child { margin-bottom: 0; }
 
+/* Callout CTA buttons. The band states what the callout is; these state what
+ * to do about it. Tone-aware, so a tip's button is green and an info's blue. */
+[data-mdx="callout-actions"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+/* The tone custom properties below are set on [data-mdx="callout"] and
+ * resolve for every current use of <CalloutActions> — it is documented as
+ * callout-only, but nothing enforces that. If it is ever rendered outside a
+ * callout, --callout-tone-text/--callout-tone-surface are undefined, which
+ * makes `border` and `background` invalid at computed-value time; they reset
+ * to their initial values (no border, transparent background) while
+ * `color: var(--color-surface)` on the primary variant still resolves to
+ * white, producing an invisible white-on-white button. The fallbacks make
+ * that case degrade to something visible instead of silently disappearing. */
+[data-mdx="callout-action"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--callout-tone-text, var(--color-accent));
+  font-family: var(--font-inter);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+[data-mdx="callout-action"][data-variant="primary"] {
+  background: var(--callout-tone-text, var(--color-accent));
+  color: var(--color-surface);
+}
+[data-mdx="callout-action"][data-variant="primary"]:hover {
+  filter: brightness(1.1);
+}
+[data-mdx="callout-action"][data-variant="secondary"] {
+  background: transparent;
+  color: var(--callout-tone-text, var(--color-accent));
+}
+[data-mdx="callout-action"][data-variant="secondary"]:hover {
+  background: var(--callout-tone-surface, var(--color-surface-dim));
+}
+
+/* Docs prose links.
+ *
+ * MdxRenderer carries `prose prose-slate` and sets `--tw-prose-links`, but
+ * Tailwind Typography is not active in this app: a stylesheet walk in the
+ * loaded page finds zero rules matching `.prose`. Every docs link therefore
+ * rendered as plain body text (measured: rgb(28,28,28), no decoration,
+ * weight 400). These rules are the real link styling. Scoped to .docs-prose
+ * so blog and marketing pages keep their own treatment.
+ *
+ * `[data-mdx-chrome]` is the opt-out for anchors that are components, not
+ * text: cards, feature chips, heading anchors, callout CTA buttons. They
+ * carry their own affordance and an underline would corrupt it.
+ */
+.docs-prose a:not([data-mdx-chrome]) {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+.docs-prose a:not([data-mdx-chrome]):hover {
+  text-decoration-thickness: 2px;
+}
+
+/* A callout's links take its tone, so a warning callout does not sprout
+ * accent-blue links, and gain weight to carry against the tinted ground. */
+[data-mdx="callout"] .mdx-callout-body a:not([data-mdx-chrome]) {
+  color: var(--callout-tone-text);
+  font-weight: 500;
+}
+
+/* Absolute hrefs read as off-site before they are clicked. Decorative: the
+ * glyph inherits currentColor and is not announced. */
+.docs-prose a[href^="http"]:not([data-mdx-chrome])::after {
+  content: '\2197';
+  display: inline-block;
+  margin-left: 2px;
+  font-size: 0.85em;
+  text-decoration: none;
+  vertical-align: baseline;
+}
+
 /* mdx — Steps / Step */
 .mdx-steps-list {
   display: flex;
@@ -896,7 +984,22 @@ body:has([data-website-workspace-host]) {
 .docs-sidebar-section-link {
   font-size: 0.825rem;
 }
-.docs-sidebar-search-trigger {
+/* Control-plane search trigger.
+ *
+ * Replaces the Scope card, which restated the breadcrumb the shell header now
+ * owns. Styled as an input rather than a button because it opens a search
+ * dialog, and the ⌘K hint is a hint: on a coarse pointer there is no ⌘K to
+ * press, so it is hidden and the button itself is the affordance. Rules
+ * inherited from the retired sidebar trigger this replaces. */
+.docs-control-plane-search-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  margin-bottom: 12px;
+  border-radius: var(--radius-md);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   color: var(--color-text-muted);
@@ -904,19 +1007,20 @@ body:has([data-website-workspace-host]) {
   box-shadow: var(--shadow-sm);
   transition: border-color 120ms ease, box-shadow 120ms ease;
 }
-.docs-sidebar-search-trigger:hover {
+.docs-control-plane-search-trigger:hover {
   border-color: var(--color-border-strong);
 }
-.docs-sidebar-search-inner {
+.docs-control-plane-search-inner {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   min-width: 0;
 }
-.docs-sidebar-search-label {
+.docs-control-plane-search-label {
+  font-family: var(--font-inter);
   font-size: 0.8rem;
 }
-.docs-sidebar-search-kbd {
+.docs-control-plane-search-kbd {
   font-family: var(--font-mono);
   font-size: 0.65rem;
   color: var(--color-text-muted);
@@ -926,9 +1030,10 @@ body:has([data-website-workspace-host]) {
   padding: 2px 6px;
   line-height: 1.2;
 }
-.docs-sidebar-search-kbd {
-  font-size: 0.65rem;
-  padding: 2px 8px;
+@media (pointer: coarse) {
+  .docs-control-plane-search-kbd {
+    display: none;
+  }
 }
 .docs-sidebar-top-link {
   font-size: 0.825rem;
@@ -1055,62 +1160,47 @@ body:has([data-website-workspace-host]) {
   font-weight: 500;
 }
 
-/* DocsBreadcrumb — the crumb/separator typography the migration left
- * inconsistent is reconciled below, on the list rather than the links. */
-.docs-crumb-nav {
-  margin-bottom: 16px;
-}
-.docs-crumb-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  row-gap: 4px;
-  /* Typography on the LIST, not the links: the separators are siblings of the
-   * links inside each li, and when only the links carried 13px the first two
-   * separators inherited body's 16px/24px and floated 3px high (findings §3). */
+/* Shell header location trail (workspace-shell.tsx renders the structure).
+ *
+ * Every selector is scoped under .website-workspace-host, and not for
+ * tidiness: workspace.css in the shell library styles the same attributes at
+ * the same specificity, so an unscoped rule here would win or lose on
+ * stylesheet order alone. The host class makes the site's treatment
+ * deterministically more specific.
+ *
+ * Typography on the LIST, not the links: the separators are siblings of the
+ * links inside each li, and when only the links carried 13px the first two
+ * separators inherited body's 16px/24px and floated 3px high. */
+.website-workspace-host [data-workspace-trail] ol[data-workspace-trail-list] {
   font-family: var(--font-inter);
   font-size: 13px;
   line-height: 1.5;
+  color: var(--color-text-muted);
 }
-.docs-crumb-link {
+.website-workspace-host [data-workspace-trail-link] {
   color: var(--color-text-muted);
   text-decoration: none;
 }
-.docs-crumb-sep {
-  margin: 0 8px;
+.website-workspace-host [data-workspace-trail-link]:hover {
+  color: var(--color-accent);
+}
+.website-workspace-host [data-workspace-trail-separator] {
   color: var(--color-text-muted);
 }
-.docs-crumb-current {
-  text-decoration: none;
+.website-workspace-host [data-workspace-trail-current] {
   color: var(--color-text-primary);
   font-weight: 600;
 }
 
-/* DocsPageHeader */
+/* DocsPageHeader — now hosts only the actions slot; the library mark and
+ * section label it used to carry both moved into the shell header's trail. */
 .docs-page-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 16px;
   margin-top: 12px;
   margin-bottom: 20px;
-}
-.docs-page-header-lib {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-.docs-page-header-label {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-weight: 700;
-  color: var(--color-accent);
 }
 .docs-page-header-actions {
   flex: 0 0 auto;
@@ -1590,9 +1680,12 @@ body:has([data-website-workspace-host]) {
 /* One focus ring for the docs chrome. Buttons and links that had no
  * :focus-visible affordance at all. */
 [data-docs-navlink]:focus-visible,
-.docs-crumb-link:focus-visible,
+[data-mdx="callout-action"]:focus-visible,
+.docs-index-search-button:focus-visible,
+.docs-prose a:not([data-mdx-chrome]):focus-visible,
+.website-workspace-host [data-workspace-trail-link]:focus-visible,
 .docs-toc-link:focus-visible,
-.docs-sidebar-search-trigger:focus-visible,
+.docs-control-plane-search-trigger:focus-visible,
 .docs-sidebar-lib-trigger:focus-visible,
 .docs-sidebar-lib-item:focus-visible,
 .docs-sidebar-section-toggle:focus-visible,
@@ -1780,22 +1873,6 @@ body:has([data-website-workspace-host]) {
 }
 [data-docs-control-plane-context] [data-control-plane-section-content] {
   padding: 2px 0 8px;
-}
-.docs-control-plane-scope {
-  margin: 0 8px;
-  padding: 10px;
-  border-radius: 8px;
-  background: var(--color-surface-dim);
-  display: grid;
-  gap: 3px;
-  color: var(--color-text-muted);
-  font-family: var(--font-inter);
-  font-size: 11px;
-}
-.docs-control-plane-scope strong {
-  color: var(--color-text-primary);
-  font-size: 13px;
-  font-weight: 600;
 }
 .docs-sidebar-library { position: relative; margin: 2px 8px 10px; }
 .docs-sidebar-lib-trigger {

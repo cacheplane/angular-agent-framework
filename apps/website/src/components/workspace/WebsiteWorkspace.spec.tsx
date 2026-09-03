@@ -246,7 +246,6 @@ describe('WebsiteWorkspace', () => {
           activeLibrary: 'langgraph',
           activeSection: 'guides',
           activeSlug: resolution.kind === 'mapped' ? 'streaming' : 'testing',
-          pageTitle: resolution.kind === 'mapped' ? 'Streaming' : 'Testing',
         },
       });
 

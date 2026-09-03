@@ -227,7 +227,7 @@
   margin: 0;
   margin-bottom: 12px;
 }
-.docs-index-search-copy {
+.docs-index-search-button {
   font-family: var(--font-inter);
   font-size: var(--text-body);
   line-height: var(--text-body--line-height);
@@ -236,6 +236,15 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: border-color 120ms ease;
+}
+.docs-index-search-button:hover {
+  border-color: var(--color-border-strong);
 }
 
 /* Choosing-an-adapter page — app/docs/choosing-an-adapter/page.tsx */

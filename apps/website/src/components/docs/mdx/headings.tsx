@@ -33,7 +33,7 @@ function headingText(node: ReactNode): string {
  */
 function HeadingAnchor({ id, children }: { id: string; children: ReactNode }) {
   const label = headingText(children).replace(/\s+/g, ' ').trim() || id;
-  return <a href={`#${id}`} aria-label={`Link to ${label}`} className="heading-anchor" />;
+  return <a href={`#${id}`} aria-label={`Link to ${label}`} className="heading-anchor" data-mdx-chrome="" />;
 }
 
 /** MDX component overrides that add permalink anchors to H2/H3. */

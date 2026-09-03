@@ -2,10 +2,11 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { MdxRenderer } from '../../../../../components/docs/MdxRenderer';
 import { DocsSearch } from '../../../../../components/docs/DocsSearch';
-import { DocsBreadcrumb } from '../../../../../components/docs/DocsBreadcrumb';
 import { DocsPageHeader } from '../../../../../components/docs/DocsPageHeader';
+import { LibraryMark } from '../../../../../components/docs/LibraryMark';
 import { PageActions } from '../../../../../components/docs/PageActions';
 import { DocsPrevNext } from '../../../../../components/docs/DocsPrevNext';
+import { DocsSearchFooter } from '../../../../../components/docs/DocsSearchFooter';
 import {
   DEFAULT_DOCS_DESCRIPTION,
   getAllDocSlugs,
@@ -27,6 +28,7 @@ import { DocsTOC } from '../../../../../components/docs/DocsTOC';
 import { extractHeadings } from '../../../../../lib/extract-headings';
 import {
   findDocsPage,
+  getDocsSection,
   getLibraryConfig,
   libraryIntroPath,
   type LibraryId,
@@ -111,9 +113,9 @@ export default async function DocsPage({ params }: DocsRouteProps) {
     dateModified: getDocLastModified(pathname)?.toISOString(),
   });
 
-  // Mirrors the visible <DocsBreadcrumb>, which links the library rung through
-  // the same `libraryIntroPath()` — there is no /docs/<library> route, so a
-  // crumb pointing there would 404.
+  // Mirrors the visible trail the shell header renders from `contextTrail`,
+  // which links the library rung through the same `libraryIntroPath()` — there
+  // is no /docs/<library> route, so a crumb pointing there would 404.
   //
   // The section rung the visible trail shows between library and page is
   // deliberately absent: it is plain text there because no section index route
@@ -124,6 +126,24 @@ export default async function DocsPage({ params }: DocsRouteProps) {
     { name: libConfig.title, pathname: libraryIntroPath(library) },
     { name: doc.title, pathname },
   ]);
+
+  // The one visible trail on this page. The shell header renders it; nothing
+  // else on the page restates it. Section titles come from docs-config, and
+  // the section rung carries no href because there is no section index route.
+  const contextTrail = [
+    { label: 'Docs', href: '/docs' },
+    {
+      label: libConfig.title,
+      href: libraryIntroPath(library),
+      // 20, not the component's default 24: the trail's line box is ~20px
+      // (13px text at 1.5), so a larger chip would grow the header row. The
+      // logo inside is 60% of the chip, and at size 16 that left a 10px mark
+      // in a 14px box, which read as a smudge rather than a logo.
+      icon: <LibraryMark library={library as LibraryId} size={20} />,
+    },
+    { label: getDocsSection(library, section)?.title ?? section },
+    { label: doc.title },
+  ];
 
   const docsSlot = (
     <div className="docs-workspace-article">
@@ -136,15 +156,7 @@ export default async function DocsPage({ params }: DocsRouteProps) {
            * ~500px right of the prose it belongs to (1272px vs 768px at
            * 1920). */}
           <div className="px-4 sm:px-6 md:px-12 md:max-w-3xl pt-6">
-            <DocsBreadcrumb
-              library={library as LibraryId}
-              section={section}
-              slug={slug}
-              title={doc.title}
-            />
             <DocsPageHeader
-              library={library as LibraryId}
-              section={section}
               actions={
                 <PageActions
                   library={library}
@@ -198,6 +210,12 @@ export default async function DocsPage({ params }: DocsRouteProps) {
         </div>
         <DocsTOC headings={headings} />
       </div>
+      {/* Sibling to docs-article-layout, not nested inside its article column:
+       * that column excludes the TOC rail's width, so a full-width band placed
+       * inside it would be narrower than the scrollable docs-workspace-article
+       * area it should span. This is as wide as that area gets without
+       * restructuring the layout further. */}
+      <DocsSearchFooter />
     </div>
   );
 
@@ -212,11 +230,11 @@ export default async function DocsPage({ params }: DocsRouteProps) {
         navigationTree={workspacePage.navigationTree}
         routePath={pathname}
         docsSlot={docsSlot}
+        contextTrail={contextTrail}
         docsContext={{
           activeLibrary: library as LibraryId,
           activeSection: section,
           activeSlug: slug,
-          pageTitle: doc.title,
         }}
       />
     </>

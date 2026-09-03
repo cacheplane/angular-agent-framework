@@ -2,7 +2,7 @@
 import React from 'react';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   cockpitManifest,
@@ -17,6 +17,7 @@ import type {
 } from '@threadplane/cockpit-shell';
 import { WorkspaceProvider } from './workspace-provider';
 import { WorkspaceShell } from './workspace-shell';
+import type { WorkspaceCrumb } from './workspace-contracts';
 import { RuntimeTargetProvider } from './runtime/runtime-target-provider';
 
 const runModeFault = vi.hoisted(() => ({ shouldThrow: false }));
@@ -79,6 +80,7 @@ function renderWorkspace(options: {
   requestedMode?: string | null;
   docsSlot?: React.ReactNode;
   rootElement?: 'main' | 'section';
+  contextTrail?: readonly WorkspaceCrumb[];
 }) {
   const selectedResolution = options.resolution ?? resolution;
   const selectedPresentation = options.presentation ?? presentation;
@@ -107,6 +109,7 @@ function renderWorkspace(options: {
           navigationTree={[]}
           manifest={cockpitManifest}
           rootElement={options.rootElement}
+          contextTrail={options.contextTrail}
         />
       </WorkspaceProvider>
     </RuntimeTargetProvider>
@@ -538,5 +541,95 @@ describe('WorkspaceShell persistent panel composition', () => {
       'Docs panel unavailable.'
     );
     expect(screen.getByRole('button', { name: RUN_RAIL_ITEM })).toBeTruthy();
+  });
+});
+
+describe('WorkspaceShell header trail', () => {
+  afterEach(() => {
+    window.localStorage.clear();
+    window.history.replaceState({}, '', '/');
+  });
+
+  it('keeps the derived mono label when no host supplies a trail', () => {
+    renderWorkspace({ requestedMode: 'docs' });
+
+    // Cockpit passes no trail, so nothing about its header may change.
+    expect(screen.queryByRole('navigation', { name: 'Breadcrumb' })).toBeNull();
+    expect(screen.getByText('LangGraph / Core Capabilities / Streaming')).toBeTruthy();
+  });
+
+  it('renders a supplied trail as a real breadcrumb', () => {
+    renderWorkspace({
+      requestedMode: 'docs',
+      contextTrail: [
+        { label: 'Docs', href: '/docs' },
+        { label: 'AG-UI', href: '/docs/ag-ui/getting-started/introduction' },
+        { label: 'Getting Started' },
+        { label: 'Introduction' },
+      ],
+    });
+
+    const nav = screen.getByRole('navigation', { name: 'Breadcrumb' });
+    expect(nav).toBeTruthy();
+
+    // Rungs with an href link; rungs without are plain text, because no
+    // section index route exists to point the section rung at.
+    expect(within(nav).getByRole('link', { name: 'Docs' }).getAttribute('href')).toBe('/docs');
+    expect(
+      within(nav).getByRole('link', { name: 'AG-UI' }).getAttribute('href'),
+    ).toBe('/docs/ag-ui/getting-started/introduction');
+    expect(within(nav).queryByRole('link', { name: 'Getting Started' })).toBeNull();
+
+    // The last rung is the current page and is never a link.
+    const current = within(nav).getByText('Introduction');
+    expect(current.getAttribute('aria-current')).toBe('page');
+    expect(current.tagName).not.toBe('A');
+
+    // The derived label must not also be present — that was the duplication.
+    expect(screen.queryByText('LangGraph / Core Capabilities / Streaming')).toBeNull();
+  });
+
+  it('never links the last rung, even when it carries an href', () => {
+    renderWorkspace({
+      requestedMode: 'docs',
+      contextTrail: [
+        { label: 'Docs', href: '/docs' },
+        { label: 'Introduction', href: '/docs/ag-ui/getting-started/introduction' },
+      ],
+    });
+
+    const nav = screen.getByRole('navigation', { name: 'Breadcrumb' });
+    // You are already on this page; linking it is a dead control.
+    expect(within(nav).queryByRole('link', { name: 'Introduction' })).toBeNull();
+    const current = within(nav).getByText('Introduction');
+    expect(current.tagName).not.toBe('A');
+    expect(current.getAttribute('aria-current')).toBe('page');
+    // The earlier rung still links, so this is not passing because nothing rendered.
+    expect(within(nav).getByRole('link', { name: 'Docs' }).getAttribute('href')).toBe('/docs');
+  });
+
+  it('renders a crumb icon inside that rung, hidden from assistive tech', () => {
+    renderWorkspace({
+      requestedMode: 'docs',
+      contextTrail: [
+        { label: 'Docs', href: '/docs' },
+        {
+          label: 'AG-UI',
+          href: '/docs/ag-ui/getting-started/introduction',
+          icon: <svg data-testid="library-mark" />,
+        },
+        { label: 'Introduction' },
+      ],
+    });
+
+    const nav = screen.getByRole('navigation', { name: 'Breadcrumb' });
+    const agUiLink = within(nav).getByRole('link', { name: 'AG-UI' });
+    const mark = within(agUiLink).getByTestId('library-mark');
+    expect(mark.parentElement?.hasAttribute('data-workspace-trail-icon')).toBe(true);
+    expect(mark.parentElement?.getAttribute('aria-hidden')).toBe('true');
+
+    // A rung with no icon renders no icon wrapper at all.
+    const docsLink = within(nav).getByRole('link', { name: 'Docs' });
+    expect(docsLink.querySelector('[data-workspace-trail-icon]')).toBeNull();
   });
 });
