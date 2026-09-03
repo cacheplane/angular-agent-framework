@@ -38,7 +38,7 @@ function fakeHost(): FakeHost {
   return host;
 }
 
-const clock = { sleep: async () => {} };
+const clock = { sleep: async () => void 0 };
 
 describe('HeroScriptRunner', () => {
   it('waits for visibility before typing', async () => {
