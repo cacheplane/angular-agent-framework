@@ -27,13 +27,23 @@ export const createWebsitePlaywrightConfig = (
     testMatch: bfcacheRuntimeTest
       ? '**/custom-runtime-bfcache.spec.ts'
       : undefined,
+    // The public-copy gate crawls every sitemap route. Against a prebuilt
+    // production server that is seconds; against `next dev` each route compiles
+    // on demand, which is far too slow to belong in the ordinary suite. It runs
+    // in production mode only, where its answers are the ones that matter.
     testIgnore: productionSmoke
-      ? undefined
+      ? '**/public-copy.spec.ts'
+      : productionMode
+      ? [
+          '**/platform-production-smoke.spec.ts',
+          '**/custom-runtime-bfcache.spec.ts',
+        ]
       : bfcacheRuntimeTest
-      ? '**/platform-production-smoke.spec.ts'
+      ? ['**/platform-production-smoke.spec.ts', '**/public-copy.spec.ts']
       : [
           '**/platform-production-smoke.spec.ts',
           '**/custom-runtime-bfcache.spec.ts',
+          '**/public-copy.spec.ts',
         ],
     fullyParallel: true,
     // Match the cockpit configs: 2 retries on CI to absorb transient Next.js

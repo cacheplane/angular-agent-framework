@@ -73,7 +73,10 @@ describe('Website Playwright configuration', () => {
     });
 
     expect(config.webServer).toBeUndefined();
-    expect(config.testIgnore).toBeUndefined();
+    // The smoke job hits the deployed site, so it runs every spec except the
+    // public-copy gate, which exists to check a locally built production
+    // server before the code is deployed at all.
+    expect(config.testIgnore).toBe('**/public-copy.spec.ts');
   });
 
   it('starts Website, all migrated runtime apps under custom-runtime E2E, and the fixture', () => {
@@ -110,6 +113,10 @@ describe('Website Playwright configuration', () => {
     expect(config.testIgnore).toEqual([
       '**/platform-production-smoke.spec.ts',
       '**/custom-runtime-bfcache.spec.ts',
+      // The public-copy gate crawls every sitemap route, which is seconds
+      // against a prebuilt server and minutes against `next dev`. It belongs to
+      // production mode, not the ordinary dev suite.
+      '**/public-copy.spec.ts',
     ]);
     expect(config.use).toEqual(
       expect.objectContaining({ baseURL: 'http://127.0.0.1:4308' })
