@@ -216,6 +216,87 @@ describe('generateEnrichmentArtifact', () => {
     });
   });
 
+  it('tells the model there are exactly three campaign slots and names the allowed angle ids', async () => {
+    const { deps, parse } = dependencies();
+
+    await generateEnrichmentArtifact(INPUT, SIGNAL, deps);
+
+    const system = String(parse.mock.calls[0]?.[0].system ?? '');
+    expect(system).toMatch(/exactly three/u);
+    expect(system).toMatch(/null/u);
+    for (const angle of [
+      'streaming_foundation',
+      'debugging_layers',
+      'event_state_boundary',
+    ]) {
+      expect(system).toContain(angle);
+    }
+  });
+
+  it('pads a short drafts array to three slots with null instead of failing', async () => {
+    const { deps, parse } = dependencies({
+      ...ARTIFACT,
+      drafts: [ARTIFACT.drafts[0]],
+    });
+
+    await expect(
+      generateEnrichmentArtifact(INPUT, SIGNAL, deps)
+    ).resolves.toEqual({
+      ...ARTIFACT,
+      drafts: [ARTIFACT.drafts[0], null, null],
+    });
+    expect(parse).toHaveBeenCalledOnce();
+  });
+
+  it('pads an empty drafts array to three null slots', async () => {
+    const { deps } = dependencies({ ...ARTIFACT, drafts: [] });
+
+    await expect(
+      generateEnrichmentArtifact(INPUT, SIGNAL, deps)
+    ).resolves.toEqual({ ...ARTIFACT, drafts: [null, null, null] });
+  });
+
+  it('nulls a repeated angle so that slot falls back to default copy', async () => {
+    const { deps } = dependencies({
+      ...ARTIFACT,
+      drafts: [
+        { angle_id: 'streaming_foundation', source_id: 'source-1' },
+        { angle_id: 'streaming_foundation', source_id: 'source-1' },
+        { angle_id: 'debugging_layers', source_id: 'source-1' },
+      ],
+    });
+
+    await expect(
+      generateEnrichmentArtifact(INPUT, SIGNAL, deps)
+    ).resolves.toMatchObject({
+      drafts: [
+        { angle_id: 'streaming_foundation', source_id: 'source-1' },
+        null,
+        { angle_id: 'debugging_layers', source_id: 'source-1' },
+      ],
+    });
+  });
+
+  it('asks the model for distinct angles across the three slots', async () => {
+    const { deps, parse } = dependencies();
+
+    await generateEnrichmentArtifact(INPUT, SIGNAL, deps);
+
+    expect(String(parse.mock.calls[0]?.[0].system ?? '')).toMatch(/distinct/u);
+  });
+
+  it('truncates more than three drafts to the three campaign slots', async () => {
+    const { deps, parse } = dependencies({
+      ...ARTIFACT,
+      drafts: [...ARTIFACT.drafts, ARTIFACT.drafts[0]],
+    });
+
+    await expect(
+      generateEnrichmentArtifact(INPUT, SIGNAL, deps)
+    ).resolves.toEqual(ARTIFACT);
+    expect(parse).toHaveBeenCalledOnce();
+  });
+
   it('makes exactly one strict messages.parse call with fixed limits, signal, timeout, and retries disabled', async () => {
     const { deps, createClient, parse } = dependencies();
 
@@ -309,9 +390,26 @@ describe('generateEnrichmentArtifact', () => {
     expect(parse).toHaveBeenCalledOnce();
   });
 
-  it('rejects model attempts to alter immutable deterministic score metadata', async () => {
+  it('omits sources and deterministic score fields from the wire schema so the model cannot echo them', async () => {
+    const { deps, parse } = dependencies();
+
+    await generateEnrichmentArtifact(INPUT, SIGNAL, deps);
+
+    const format = parse.mock.calls[0]?.[0].output_config?.format as
+      | { schema?: { properties?: Record<string, unknown> } }
+      | undefined;
+    const properties = format?.schema?.properties ?? {};
+    expect(properties).not.toHaveProperty('sources');
+    expect(properties).not.toHaveProperty('score_version');
+    expect(properties).not.toHaveProperty('score_reasons');
+    expect(properties).toHaveProperty('cited_signals');
+    expect(properties).toHaveProperty('drafts');
+  });
+
+  it('always carries the deterministic score metadata from the input, ignoring model output', async () => {
     const { deps, parse } = dependencies({
       ...ARTIFACT,
+      score_version: 'tampered',
       score_reasons: [
         {
           code: 'docs.install_command_copied',
@@ -323,24 +421,56 @@ describe('generateEnrichmentArtifact', () => {
 
     await expect(
       generateEnrichmentArtifact(INPUT, SIGNAL, deps)
-    ).rejects.toThrow(/deterministic score/u);
+    ).resolves.toEqual(ARTIFACT);
     expect(parse).toHaveBeenCalledOnce();
   });
 
-  it('rejects an invented source id even when the evidence metadata matches', async () => {
-    const { deps, parse } = dependencies({
+  it('derives sources from the bounded evidence for cited ids instead of trusting model provenance', async () => {
+    const { deps } = dependencies({
       ...ARTIFACT,
-      cited_signals: [{ signal: 'Claim', source_ids: ['source-99'] }],
-      sources: [{ ...ARTIFACT.sources[0], id: 'source-99' }],
+      sources: [
+        {
+          id: 'source-1',
+          url: 'https://elsewhere.invalid/',
+          retrieved_at: '2026-09-01T12:00:00Z',
+          content_hash: 'f'.repeat(64),
+        },
+      ],
     });
 
     await expect(
       generateEnrichmentArtifact(INPUT, SIGNAL, deps)
-    ).rejects.toThrow(/source/u);
-    expect(parse).toHaveBeenCalledOnce();
+    ).resolves.toEqual(ARTIFACT);
   });
 
-  it('rejects source ids swapped across two bounded evidence pages', async () => {
+  it('drops signals that cite ids outside the bounded evidence and nulls drafts that pointed at them', async () => {
+    const { deps } = dependencies({
+      ...ARTIFACT,
+      cited_signals: [
+        ...ARTIFACT.cited_signals,
+        { signal: 'Invented', source_ids: ['once'] },
+        { signal: 'Mixed', source_ids: ['source-1', 'source-99'] },
+      ],
+      drafts: [
+        ARTIFACT.drafts[0],
+        { angle_id: 'debugging_layers', source_id: 'source-99' },
+        null,
+      ],
+    });
+
+    await expect(
+      generateEnrichmentArtifact(INPUT, SIGNAL, deps)
+    ).resolves.toEqual({
+      ...ARTIFACT,
+      cited_signals: [
+        ...ARTIFACT.cited_signals,
+        { signal: 'Mixed', source_ids: ['source-1'] },
+      ],
+      drafts: [ARTIFACT.drafts[0], null, null],
+    });
+  });
+
+  it('emits each cited evidence page once, in evidence order, with exact provenance', async () => {
     const secondPage = {
       canonicalUrl: 'https://threadplane.ai/about',
       retrievedAt: '2026-09-01T12:01:00.000Z',
@@ -348,17 +478,13 @@ describe('generateEnrichmentArtifact', () => {
       facts: ['Second fact.'],
       snippets: ['Second snippet.'],
     };
-    const { deps, parse } = dependencies({
+    const { deps } = dependencies({
       ...ARTIFACT,
-      sources: [
-        {
-          id: 'source-1',
-          url: secondPage.canonicalUrl,
-          retrieved_at: secondPage.retrievedAt,
-          content_hash: secondPage.contentHash,
-        },
-        { ...ARTIFACT.sources[0], id: 'source-2' },
+      cited_signals: [
+        { signal: 'About claim', source_ids: ['source-2', 'source-2'] },
+        { signal: 'Home claim', source_ids: ['source-1'] },
       ],
+      sources: [],
     });
 
     await expect(
@@ -367,45 +493,11 @@ describe('generateEnrichmentArtifact', () => {
         SIGNAL,
         deps
       )
-    ).rejects.toThrow(/source/u);
-    expect(parse).toHaveBeenCalledOnce();
-  });
-
-  it('rejects duplicate source ids', async () => {
-    const { deps, parse } = dependencies({
-      ...ARTIFACT,
-      sources: [ARTIFACT.sources[0], ARTIFACT.sources[0]],
-    });
-
-    await expect(
-      generateEnrichmentArtifact(INPUT, SIGNAL, deps)
-    ).rejects.toThrow(/unique/u);
-    expect(parse).toHaveBeenCalledOnce();
-  });
-
-  it('rejects company evidence without non-empty sources and cited signals', async () => {
-    const { deps, parse } = dependencies({
-      ...ARTIFACT,
-      sources: [],
-      cited_signals: [],
-    });
-
-    await expect(
-      generateEnrichmentArtifact(INPUT, SIGNAL, deps)
-    ).rejects.toThrow(/provenance/u);
-    expect(parse).toHaveBeenCalledOnce();
-  });
-
-  it('rejects an emitted source that no cited signal references', async () => {
-    const secondPage = {
-      canonicalUrl: 'https://threadplane.ai/about',
-      retrievedAt: '2026-09-01T12:01:00.000Z',
-      contentHash: 'b'.repeat(64),
-      facts: ['Second fact.'],
-      snippets: ['Second snippet.'],
-    };
-    const { deps, parse } = dependencies({
-      ...ARTIFACT,
+    ).resolves.toMatchObject({
+      cited_signals: [
+        { signal: 'About claim', source_ids: ['source-2'] },
+        { signal: 'Home claim', source_ids: ['source-1'] },
+      ],
       sources: [
         ARTIFACT.sources[0],
         {
@@ -416,15 +508,68 @@ describe('generateEnrichmentArtifact', () => {
         },
       ],
     });
+  });
+
+  it('fails closed when company evidence exists but no signal survives filtering', async () => {
+    const { deps, parse } = dependencies({
+      ...ARTIFACT,
+      cited_signals: [{ signal: 'Invented', source_ids: ['source-99'] }],
+    });
 
     await expect(
-      generateEnrichmentArtifact(
-        { ...INPUT, companyPages: [...INPUT.companyPages, secondPage] },
-        SIGNAL,
-        deps
-      )
-    ).rejects.toThrow(/uncited source/u);
+      generateEnrichmentArtifact(INPUT, SIGNAL, deps)
+    ).rejects.toThrow(/provenance/u);
     expect(parse).toHaveBeenCalledOnce();
+  });
+
+  it('tolerates grammar-unenforceable bounds on the wire and normalizes them before the strict parse', async () => {
+    const { deps } = dependencies({
+      ...ARTIFACT,
+      summary: ARTIFACT.summary,
+      cited_signals: [
+        { signal: 'No ids', source_ids: [] },
+        { signal: '', source_ids: ['source-1'] },
+        ...Array.from({ length: 9 }, (_, index) => ({
+          signal: `Signal ${index + 1}`,
+          source_ids: ['source-1', 'source-1', 'source-1', 'source-1'],
+        })),
+      ],
+      company_profile: { name: '', description: 'Desc', industry: '' },
+      drafts: [
+        { angle_id: 'not_an_angle', source_id: 'source-1' },
+        { angle_id: 'debugging_layers', source_id: '' },
+        { angle_id: 'event_state_boundary', source_id: 'source-1' },
+      ],
+    });
+
+    const artifact = await generateEnrichmentArtifact(INPUT, SIGNAL, deps);
+
+    expect(artifact.cited_signals).toHaveLength(8);
+    expect(artifact.cited_signals[0]).toEqual({
+      signal: 'Signal 1',
+      source_ids: ['source-1'],
+    });
+    expect(artifact.company_profile).toEqual({
+      name: null,
+      description: 'Desc',
+      industry: null,
+    });
+    expect(artifact.drafts).toEqual([
+      null,
+      null,
+      { angle_id: 'event_state_boundary', source_id: 'source-1' },
+    ]);
+  });
+
+  it('accepts a neutral response whose only signal has no source ids', async () => {
+    const { deps } = dependencies({
+      ...NEUTRAL_ARTIFACT,
+      cited_signals: [{ signal: 'Form submitted', source_ids: [] }],
+    });
+
+    await expect(
+      generateEnrichmentArtifact(NEUTRAL_INPUT, SIGNAL, deps)
+    ).resolves.toEqual(NEUTRAL_ARTIFACT);
   });
 
   it('accepts a null-profile neutral artifact without company provenance', async () => {
@@ -435,19 +580,29 @@ describe('generateEnrichmentArtifact', () => {
     ).resolves.toEqual(NEUTRAL_ARTIFACT);
   });
 
-  it('rejects neutral-mode company claims', async () => {
+  it('strips neutral-mode company claims, fabricated sources, and drafts', async () => {
     const { deps, parse } = dependencies({
       ...NEUTRAL_ARTIFACT,
       company_profile: {
         name: 'Claimed Company',
-        description: null,
+        description: 'Made up',
         industry: null,
       },
+      cited_signals: [{ signal: 'Invented', source_ids: ['contact'] }],
+      sources: [
+        {
+          id: 'contact',
+          url: 'https://placeholder.invalid/contact',
+          retrieved_at: '2024-01-01T00:00:00.000Z',
+          content_hash: '0'.repeat(64),
+        },
+      ],
+      drafts: [{ angle_id: 'streaming_foundation', source_id: 'contact' }],
     });
 
     await expect(
       generateEnrichmentArtifact(NEUTRAL_INPUT, SIGNAL, deps)
-    ).rejects.toThrow(/neutral provenance/iu);
+    ).resolves.toEqual(NEUTRAL_ARTIFACT);
     expect(parse).toHaveBeenCalledOnce();
   });
 });

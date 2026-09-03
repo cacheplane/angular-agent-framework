@@ -194,8 +194,16 @@ export function renderCampaignTemplate(step: CampaignStep): CampaignDraft {
   return normalizeCampaignDraft(CAMPAIGN_TEMPLATES[parsedStep]);
 }
 
+const FINAL_STEP_NOTICE = 'This is my last automated follow-up.';
+
 export function renderEvidenceCampaignTemplate(
-  angle: CampaignEvidenceAngle
+  angle: CampaignEvidenceAngle,
+  options: { finalStep?: boolean } = {}
 ): CampaignDraft {
-  return normalizeCampaignDraft(EVIDENCE_TEMPLATES[angle]);
+  const template = EVIDENCE_TEMPLATES[angle];
+  return normalizeCampaignDraft(
+    options.finalStep
+      ? { ...template, body: `${template.body}\n\n${FINAL_STEP_NOTICE}` }
+      : template
+  );
 }
