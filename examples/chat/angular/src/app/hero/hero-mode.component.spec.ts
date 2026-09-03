@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
-import { describe, expect, it, beforeEach } from 'vitest';
+import { describe, expect, it, beforeEach, afterEach } from 'vitest';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { HeroMode } from './hero-mode.component';
 import { HeroReplayTransport } from './hero-replay.transport';
+import type { HeroBridge } from './hero-bridge';
 import type { HeroRecording } from './hero-recording.types';
 
 const recording: HeroRecording = {
@@ -15,10 +16,16 @@ const recording: HeroRecording = {
   ],
 };
 
+function flush(): Promise<void> {
+  return new Promise((resolve) => setTimeout(() => requestAnimationFrame(() => setTimeout(() => resolve(), 0)), 0));
+}
+
 describe('HeroMode', () => {
   let fx: ComponentFixture<HeroMode>;
 
   beforeEach(async () => {
+    // The five markup specs must not start a real walkthrough on real timers.
+    HeroMode.disableAutoBootForTests();
     TestBed.configureTestingModule({ imports: [HeroMode] });
     TestBed.overrideComponent(HeroMode, {
       set: {
@@ -30,6 +37,10 @@ describe('HeroMode', () => {
     fx = TestBed.createComponent(HeroMode);
     fx.detectChanges();
     await fx.whenStable();
+  });
+
+  afterEach(() => {
+    HeroMode.enableAutoBoot();
   });
 
   it('starts in replay mode with the recorded pill and a Take control button', () => {
@@ -76,5 +87,111 @@ describe('HeroMode', () => {
     (fx.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('button[data-hero-take-control]')!.click();
     fx.detectChanges();
     expect(states).toContain('live');
+  });
+
+  it('ignores focusin raised while a scripted action is driving the DOM', async () => {
+    const surface = (fx.nativeElement as HTMLElement).querySelector('[data-hero-surface]')!;
+    // ChatInputComponent.onSubmit() refocuses the textarea on a rAF, which used
+    // to bubble a focusin and flip the hero live on its very first send.
+    const typing = fx.componentInstance.typeInto('hi');
+    surface.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    expect(fx.componentInstance.mode()).toBe('replay');
+    await typing;
+
+    const sending = fx.componentInstance.send();
+    surface.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    expect(fx.componentInstance.mode()).toBe('replay');
+    await sending;
+    fx.detectChanges();
+    await flush();
+    expect(fx.componentInstance.mode()).toBe('replay');
+  });
+
+  it('the scripted send really submits, and a later focusin still takes over', async () => {
+    const el = fx.nativeElement as HTMLElement;
+    await fx.componentInstance.typeInto('hi');
+    fx.detectChanges();
+    await fx.componentInstance.send();
+    fx.detectChanges();
+    await flush();
+    // Guards the test above against passing vacuously on a no-op send.
+    expect(el.querySelector<HTMLTextAreaElement>('textarea[aria-label="Type a message"]')!.value).toBe('');
+    expect(fx.componentInstance.mode()).toBe('replay');
+
+    // A focusin outside a scripted action is still a real user, and still wins.
+    el.querySelector('[data-hero-surface]')!.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    fx.detectChanges();
+    expect(fx.componentInstance.mode()).toBe('live');
+  });
+});
+
+describe('HeroMode visibility', () => {
+  let fx: ComponentFixture<HeroMode>;
+  let states: string[];
+  let onVisible: (v: boolean) => void;
+  let hidden = false;
+  const originalHidden = Object.getOwnPropertyDescriptor(Document.prototype, 'hidden');
+
+  function setDocumentHidden(v: boolean): void {
+    hidden = v;
+    document.dispatchEvent(new Event('visibilitychange'));
+  }
+
+  beforeEach(async () => {
+    hidden = false;
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => hidden });
+    HeroMode.disableAutoBootForTests();
+    TestBed.configureTestingModule({ imports: [HeroMode] });
+    TestBed.overrideComponent(HeroMode, {
+      set: {
+        providers: HeroMode.providersForTest(
+          new HeroReplayTransport({ sleep: async () => void 0 }, async () => recording),
+        ),
+      },
+    });
+    fx = TestBed.createComponent(HeroMode);
+    states = [];
+    const bridge: HeroBridge = {
+      postState: (s) => states.push(s),
+      onVisibility: (cb) => {
+        onVisible = cb;
+        return () => void 0;
+      },
+    };
+    fx.componentInstance.bridge = bridge;
+    fx.detectChanges();
+    await fx.componentInstance.boot();
+    fx.detectChanges();
+  });
+
+  afterEach(() => {
+    HeroMode.enableAutoBoot();
+    delete (document as unknown as { hidden?: unknown }).hidden;
+    if (originalHidden) Object.defineProperty(Document.prototype, 'hidden', originalHidden);
+  });
+
+  it('boots the runner: ready then scripted', () => {
+    expect(states.indexOf('ready')).toBeGreaterThan(-1);
+    expect(states.indexOf('scripted')).toBeGreaterThan(states.indexOf('ready'));
+  });
+
+  it('keeps the embed and document visibility sources independent', () => {
+    onVisible(true);
+    expect(fx.componentInstance.visible()).toBe(true);
+
+    setDocumentHidden(true);
+    expect(fx.componentInstance.visible()).toBe(false);
+    expect(states.at(-1)).toBe('paused');
+
+    // The regression: reading the same field it writes latched this off forever.
+    setDocumentHidden(false);
+    expect(fx.componentInstance.visible()).toBe(true);
+    expect(states.at(-1)).toBe('scripted');
+  });
+
+  it('a hidden embed still wins over a visible document', () => {
+    setDocumentHidden(false);
+    onVisible(false);
+    expect(fx.componentInstance.visible()).toBe(false);
   });
 });

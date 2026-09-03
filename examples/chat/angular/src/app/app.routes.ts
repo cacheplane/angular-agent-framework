@@ -33,6 +33,7 @@ export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'embed' },
   {
     path: 'hero',
+    pathMatch: 'full',
     loadComponent: () => import('./hero/hero-mode.component').then((m) => m.HeroMode),
   },
   {

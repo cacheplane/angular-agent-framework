@@ -5,18 +5,19 @@ import {
   DestroyRef,
   ElementRef,
   EnvironmentInjector,
+  InjectionToken,
   afterNextRender,
   computed,
   createEnvironmentInjector,
   inject,
   signal,
   type Provider,
+  type WritableSignal,
 } from '@angular/core';
 import {
   ChatComponent,
   ChatInterruptPanelComponent,
   a2uiBasicCatalog,
-  type Agent,
   type AgentRef,
   type InterruptAction,
 } from '@threadplane/chat';
@@ -32,13 +33,27 @@ import { WelcomeSuggestionsComponent } from '../modes/welcome-suggestions.compon
 import { HERO_LIVE_REF, HERO_REPLAY_REF } from './hero-agent-refs';
 import { browserHeroBridge, type HeroBridge } from './hero-bridge';
 import { HeroCursorComponent } from './hero-cursor.component';
+import {
+  composerOf,
+  cursorPointFor,
+  pressButton,
+  sendButtonOf,
+  acceptButtonOf,
+  typeIntoTextarea,
+} from './hero-dom-host';
 import { HeroRecordingTransport } from './hero-recording.transport';
 import { HeroReplayTransport } from './hero-replay.transport';
 import { HeroScriptRunner, type CursorTarget, type HeroScriptHost } from './hero-script';
 
 export type HeroModeKind = 'replay' | 'live';
 const TYPE_DELAY_MS = 40;
-const liveThreadId = signal<string | null>(null);
+
+/**
+ * The live agent's thread id, held per component instance (NOT at module
+ * scope): a second visit to /hero must start a genuinely new thread, which is
+ * what the "new thread" pill promises.
+ */
+const HERO_LIVE_THREAD_ID = new InjectionToken<WritableSignal<string | null>>('HERO_LIVE_THREAD_ID');
 
 function isRecordMode(): boolean {
   if (environment.production || typeof location === 'undefined') return false;
@@ -57,9 +72,13 @@ function scopedAgent(ref: AgentRef<Record<string, unknown>>, config: AgentConfig
   return injector.get(ref.token) as LangGraphAgent;
 }
 
-function heroProviders(replay: HeroReplayTransport = new HeroReplayTransport()): Provider[] {
+function heroProviders(replay?: HeroReplayTransport): Provider[] {
   return [
-    { provide: HeroReplayTransport, useValue: replay },
+    // useFactory, not useValue: this array is built once at decorator time, so
+    // a `new HeroReplayTransport()` here would be a module singleton and would
+    // carry its runIndex across route re-entries.
+    { provide: HeroReplayTransport, useFactory: () => replay ?? new HeroReplayTransport() },
+    { provide: HERO_LIVE_THREAD_ID, useFactory: () => signal<string | null>(null) },
     {
       provide: HERO_REPLAY_REF.token,
       useFactory: () =>
@@ -70,8 +89,9 @@ function heroProviders(replay: HeroReplayTransport = new HeroReplayTransport()):
     },
     {
       provide: HERO_LIVE_REF.token,
-      useFactory: () =>
-        scopedAgent(HERO_LIVE_REF, {
+      useFactory: () => {
+        const liveThreadId = inject(HERO_LIVE_THREAD_ID);
+        return scopedAgent(HERO_LIVE_REF, {
           apiUrl: environment.langGraphApiUrl,
           assistantId: environment.assistantId,
           threadId: liveThreadId,
@@ -81,7 +101,8 @@ function heroProviders(replay: HeroReplayTransport = new HeroReplayTransport()):
                 new FetchStreamTransport(environment.langGraphApiUrl, (id) => liveThreadId.set(id)),
               )
             : undefined,
-        }),
+        });
+      },
     },
   ];
 }
@@ -105,7 +126,7 @@ function heroProviders(replay: HeroReplayTransport = new HeroReplayTransport()):
           }
         </span>
       </div>
-      <div class="hero__surface" data-hero-surface (pointerdown)="takeControl()" (focusin)="takeControl()">
+      <div class="hero__surface" data-hero-surface (pointerdown)="takeControl()" (focusin)="onFocusIn()">
         @if (mode() === 'live') {
           <p class="hero__banner" data-hero-banner role="status">
             You are live on a new LangGraph thread. The walkthrough was a recording.
@@ -153,26 +174,44 @@ function heroProviders(replay: HeroReplayTransport = new HeroReplayTransport()):
   ],
 })
 export class HeroMode implements HeroScriptHost {
-  /** The spec substitutes a preloaded replay transport through this. */
+  /**
+   * TEST SEAM. The spec substitutes a preloaded replay transport through this
+   * so it never reaches the network for `/hero-replay.json`.
+   */
   static providersForTest(replay?: HeroReplayTransport): Provider[] {
     return heroProviders(replay);
+  }
+
+  /**
+   * TEST SEAM. Specs that only assert on markup would otherwise start a real
+   * walkthrough with real timers on `afterNextRender`.
+   */
+  static autoBoot = true;
+  static disableAutoBootForTests(): void {
+    HeroMode.autoBoot = false;
+  }
+  static enableAutoBoot(): void {
+    HeroMode.autoBoot = true;
   }
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly destroyRef = inject(DestroyRef);
   private readonly replayTransport = inject(HeroReplayTransport);
+  private readonly liveThreadId = inject(HERO_LIVE_THREAD_ID);
   private readonly replayAgent = injectAgent(HERO_REPLAY_REF) as LangGraphAgent;
   private readonly liveAgent = injectAgent(HERO_LIVE_REF) as LangGraphAgent;
 
   readonly mode = signal<HeroModeKind>(isRecordMode() ? 'live' : 'replay');
-  readonly activeAgent = computed<Agent>(() => (this.mode() === 'live' ? this.liveAgent : this.replayAgent));
+  readonly activeAgent = computed<LangGraphAgent>(() =>
+    this.mode() === 'live' ? this.liveAgent : this.replayAgent,
+  );
   protected readonly catalog = a2uiBasicCatalog();
   readonly cursorX = signal(0);
   readonly cursorY = signal(0);
   readonly cursorVisible = signal(false);
   readonly cursorPressed = signal(false);
 
-  /** Replaced by the spec; browser bridge by default. */
+  /** TEST SEAM. Replaced by the spec; browser bridge by default. */
   bridge: HeroBridge =
     typeof window === 'undefined'
       ? { postState: () => undefined, onVisibility: () => () => undefined }
@@ -181,54 +220,112 @@ export class HeroMode implements HeroScriptHost {
     typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   private runner: HeroScriptRunner | null = null;
-  private visible = false;
+
+  /**
+   * Two INDEPENDENT visibility sources, ANDed. Collapsing them into one field
+   * makes `document.hidden` latch: once a tab-away pauses the hero it can
+   * never resume, because the resume reads the field it just cleared.
+   */
+  private readonly embedVisible = signal(false);
+  private readonly docVisible = signal(typeof document === 'undefined' ? true : !document.hidden);
+  readonly visible = computed(() => this.embedVisible() && this.docVisible());
+
+  /**
+   * True while a host action (typing, sending, accepting) is driving the DOM.
+   * `ChatInputComponent.onSubmit()` refocuses the textarea on a
+   * `requestAnimationFrame` after a click, which would otherwise fire our
+   * `focusin` takeover and make the walkthrough take control of itself on its
+   * very first send.
+   */
+  private scriptDriving = false;
 
   constructor() {
-    afterNextRender(() => void this.boot());
+    afterNextRender(() => {
+      if (HeroMode.autoBoot) void this.boot();
+    });
     this.destroyRef.onDestroy(() => this.runner?.stop());
   }
 
-  private async boot(): Promise<void> {
-    const off = this.bridge.onVisibility((v) => this.setVisible(v));
-    this.destroyRef.onDestroy(off);
-    const onDocVis = () => this.setVisible(this.visible && !document.hidden);
-    document.addEventListener('visibilitychange', onDocVis);
-    this.destroyRef.onDestroy(() => document.removeEventListener('visibilitychange', onDocVis));
+  /** Public so a spec can boot explicitly with `autoBoot` disabled. */
+  async boot(): Promise<void> {
     try {
-      await this.replayTransport.ready();
-    } catch (err) {
-      console.error('hero recording unavailable; staying live', err);
-      this.mode.set('live');
+      const off = this.bridge.onVisibility((v) => this.setEmbedVisible(v));
+      this.destroyRef.onDestroy(off);
+      const onDocVis = () => {
+        this.docVisible.set(!document.hidden);
+        this.applyVisibility();
+      };
+      document.addEventListener('visibilitychange', onDocVis);
+      this.destroyRef.onDestroy(() => document.removeEventListener('visibilitychange', onDocVis));
+      // A re-entered route gets a fresh injector but the transport may be a
+      // spec-supplied instance; either way the walkthrough starts from run 0.
+      this.replayTransport.reset();
+
+      // In record mode the fixture is the artifact being produced, so there is
+      // nothing to await — the script drives the LIVE agent from the start.
+      if (isRecordMode()) {
+        this.bridge.postState('ready');
+        this.startWhenUnembedded();
+        return;
+      }
+
+      try {
+        await this.replayTransport.ready();
+      } catch (err) {
+        console.error('hero recording unavailable; staying live', err);
+        this.mode.set('live');
+        this.bridge.postState('ready');
+        return;
+      }
       this.bridge.postState('ready');
-      // In record mode the fixture is the artifact being produced, so a missing
-      // (or stale) one must not stop the script from driving the live agent.
-      if (!isRecordMode()) return;
+      this.startWhenUnembedded();
+    } catch (err) {
+      console.error('hero boot failed; staying live', err);
+      this.mode.set('live');
     }
-    this.bridge.postState('ready');
-    // Opened directly (or in record mode): no embedder will drive visibility.
-    if (window.parent === window) this.setVisible(true);
+  }
+
+  /** Opened directly (or in record mode): no embedder will drive visibility. */
+  private startWhenUnembedded(): void {
+    if (typeof window !== 'undefined' && window.parent === window) this.setEmbedVisible(true);
     this.startRunner();
   }
 
   private startRunner(): void {
     this.runner?.stop();
     this.runner = new HeroScriptRunner(this);
-    this.runner.setVisible(this.visible);
+    this.runner.setVisible(this.visible());
     this.bridge.postState('scripted');
     void this.runner.loop();
   }
 
-  private setVisible(v: boolean): void {
-    this.visible = v;
+  private setEmbedVisible(v: boolean): void {
+    this.embedVisible.set(v);
+    this.applyVisibility();
+  }
+
+  private applyVisibility(): void {
+    const v = this.visible();
     this.runner?.setVisible(v);
     if (this.mode() === 'replay' && this.runner) this.bridge.postState(v ? 'scripted' : 'paused');
+  }
+
+  /**
+   * Focus moving into the surface is a takeover signal — unless WE moved it.
+   * Pointerdown and the pill are never gated: a real click must always win.
+   */
+  onFocusIn(): void {
+    if (this.scriptDriving) return;
+    this.takeControl();
   }
 
   takeControl(): void {
     if (this.mode() === 'live') return;
     this.runner?.stop();
     this.runner = null;
+    void this.replayAgent.stop();
     this.cursorVisible.set(false);
+    this.liveThreadId.set(null);
     this.mode.set('live');
     this.bridge.postState('live');
   }
@@ -246,45 +343,69 @@ export class HeroMode implements HeroScriptHost {
 
   protected async onInterruptAction(action: InterruptAction): Promise<void> {
     const agent = this.activeAgent();
-    if (!agent.interrupt?.()) return;
-    const resume = action === 'ignore' ? 'denied' : 'approved';
-    await agent.submit(null as never, { command: { resume } } as never);
+    const interrupt = agent.interrupt?.();
+    if (!interrupt) return;
+
+    let resume: unknown;
+    switch (action) {
+      case 'accept':
+        resume = 'approved';
+        break;
+      case 'edit': {
+        const reason = (interrupt.value as { reason?: string })?.reason ?? '';
+        const edited = window.prompt(`Edit your response (current proposal: "${reason}"):`, 'approved');
+        if (edited == null) return;
+        resume = edited;
+        break;
+      }
+      case 'respond': {
+        const text = window.prompt('Respond to the agent:', '');
+        if (text == null) return;
+        resume = text;
+        break;
+      }
+      case 'ignore':
+        resume = 'denied';
+        break;
+    }
+
+    await agent.submit(null, { command: { resume } } as never);
   }
 
-  // HeroScriptHost
+  // ── HeroScriptHost ────────────────────────────────────────────────────────
+
   async typeInto(text: string): Promise<void> {
-    const ta = this.textarea();
-    if (!ta) return;
-    const set = (value: string) => {
-      ta.value = value;
-      ta.dispatchEvent(new Event('input', { bubbles: true }));
-    };
-    if (this.reducedMotion) {
-      set(text);
-      return;
-    }
-    for (let i = 1; i <= text.length; i++) {
-      set(text.slice(0, i));
-      await sleep(TYPE_DELAY_MS);
-    }
+    // Deliberately does NOT focus the textarea: that would trip the takeover.
+    await this.driving(() =>
+      typeIntoTextarea(composerOf(this.surface()), text, TYPE_DELAY_MS, this.reducedMotion),
+    );
   }
 
   async send(): Promise<void> {
-    await this.press(this.sendButton());
+    await this.driving(async () => {
+      await this.pressWithCursor(sendButtonOf(this.surface()));
+    });
   }
 
   async acceptInterrupt(): Promise<void> {
-    await this.press(this.acceptButton());
+    await this.driving(async () => {
+      // The visual press is cosmetic; the resume is resolved directly so a
+      // relabelled Accept button cannot silently stall the walkthrough.
+      this.cursorPressed.set(true);
+      await sleep(this.reducedMotion ? 0 : 120);
+      this.cursorPressed.set(false);
+      await this.onInterruptAction('accept');
+    });
   }
 
   async moveCursor(target: CursorTarget): Promise<void> {
+    const root = this.surface();
     const el =
-      target === 'composer' ? this.textarea() : target === 'send' ? this.sendButton() : this.acceptButton();
-    if (!el) return;
-    const surface = this.surface().getBoundingClientRect();
-    const r = el.getBoundingClientRect();
-    this.cursorX.set(Math.round(r.left - surface.left + Math.min(r.width / 2, 40)));
-    this.cursorY.set(Math.round(r.top - surface.top + r.height / 2));
+      target === 'composer' ? composerOf(root) : target === 'send' ? sendButtonOf(root) : acceptButtonOf(root);
+    const point = cursorPointFor(root, el);
+    if (!point) return;
+    this.cursorX.set(point.x);
+    this.cursorY.set(point.y);
     this.cursorVisible.set(true);
     await sleep(this.reducedMotion ? 0 : 650);
   }
@@ -302,28 +423,42 @@ export class HeroMode implements HeroScriptHost {
     this.replayAgent.switchThread(null);
   }
 
-  private surface(): HTMLElement {
-    return this.host.nativeElement.querySelector('[data-hero-surface]') as HTMLElement;
+  // ── Internals ─────────────────────────────────────────────────────────────
+
+  /**
+   * Marks the window in which focus moves are ours. The flag clears a
+   * macrotask AND a frame later, so the composer's post-submit
+   * `requestAnimationFrame(() => textarea.focus())` still lands inside it.
+   */
+  private async driving(fn: () => Promise<void>): Promise<void> {
+    this.scriptDriving = true;
+    try {
+      await fn();
+    } finally {
+      await sleep(0);
+      await nextFrame();
+      this.scriptDriving = false;
+    }
   }
-  private textarea(): HTMLTextAreaElement | null {
-    return this.surface().querySelector('textarea[aria-label="Type a message"]');
-  }
-  private sendButton(): HTMLButtonElement | null {
-    return this.surface().querySelector('button[aria-label="Send message"]');
-  }
-  private acceptButton(): HTMLButtonElement | null {
-    const buttons = Array.from(this.surface().querySelectorAll<HTMLButtonElement>('chat-interrupt-panel button'));
-    return buttons.find((b) => /accept/i.test(b.textContent ?? '')) ?? null;
-  }
-  private async press(el: HTMLButtonElement | null): Promise<void> {
+
+  private async pressWithCursor(el: HTMLButtonElement | null): Promise<void> {
     if (!el) return;
     this.cursorPressed.set(true);
     await sleep(this.reducedMotion ? 0 : 120);
-    el.click();
+    pressButton(el);
     this.cursorPressed.set(false);
+  }
+
+  private surface(): HTMLElement {
+    return this.host.nativeElement.querySelector('[data-hero-surface]') as HTMLElement;
   }
 }
 
 function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
+}
+
+function nextFrame(): Promise<void> {
+  if (typeof requestAnimationFrame !== 'function') return Promise.resolve();
+  return new Promise((r) => requestAnimationFrame(() => r()));
 }
