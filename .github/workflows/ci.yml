@@ -1009,9 +1009,17 @@ jobs:
           npx vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
       - name: Verify Website preview runtime embedding policy
         if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.website == 'true'
-        run: npx playwright test apps/website/e2e/platform-production-smoke.spec.ts --config apps/website/playwright.config.ts --grep "unified runtime embedding policy" --reporter=list
+        run: |
+          # Without the bypass the preview answers 302 -> vercel.com/sso-api and
+          # this check times out on an SSO page instead of the app. Say so.
+          if [ -z "${VERCEL_AUTOMATION_BYPASS_SECRET}" ]; then
+            echo "::error::VERCEL_AUTOMATION_BYPASS_SECRET is unset — the protected Website preview cannot be verified. Enable 'Protection Bypass for Automation' on the Vercel website project and store the value as this repository secret."
+            exit 1
+          fi
+          npx playwright test apps/website/e2e/platform-production-smoke.spec.ts --config apps/website/playwright.config.ts --grep "unified runtime embedding policy" --reporter=list
         env:
           PRODUCTION_SMOKE: 'true'
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
           BASE_URL: ${{ steps.deploy_website.outputs.preview_origin }}
           WEBSITE_URL: ${{ steps.deploy_website.outputs.preview_origin }}
           EXAMPLES_URL: https://examples.threadplane.ai
