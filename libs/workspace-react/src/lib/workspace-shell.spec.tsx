@@ -588,4 +588,23 @@ describe('WorkspaceShell header trail', () => {
     // The derived label must not also be present — that was the duplication.
     expect(screen.queryByText('LangGraph / Core Capabilities / Streaming')).toBeNull();
   });
+
+  it('never links the last rung, even when it carries an href', () => {
+    renderWorkspace({
+      requestedMode: 'docs',
+      contextTrail: [
+        { label: 'Docs', href: '/docs' },
+        { label: 'Introduction', href: '/docs/ag-ui/getting-started/introduction' },
+      ],
+    });
+
+    const nav = screen.getByRole('navigation', { name: 'Breadcrumb' });
+    // You are already on this page; linking it is a dead control.
+    expect(within(nav).queryByRole('link', { name: 'Introduction' })).toBeNull();
+    const current = within(nav).getByText('Introduction');
+    expect(current.tagName).not.toBe('A');
+    expect(current.getAttribute('aria-current')).toBe('page');
+    // The earlier rung still links, so this is not passing because nothing rendered.
+    expect(within(nav).getByRole('link', { name: 'Docs' }).getAttribute('href')).toBe('/docs');
+  });
 });

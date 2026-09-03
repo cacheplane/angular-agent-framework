@@ -1542,6 +1542,12 @@
 
 /* Shell header location trail. Structure lives in workspace-shell.tsx; a host
  * may restyle it through these attributes. This is the floor, not the design. */
+[data-workspace-trail] {
+  /* Replaces the `truncate` the old <p> carried. Without min-width: 0 a flex
+   * child cannot shrink below its content size, so a long or many-rung trail
+   * would force the header row wider instead of yielding space. */
+  min-width: 0;
+}
 [data-workspace-trail] ol[data-workspace-trail-list] {
   list-style: none;
   padding: 0;
