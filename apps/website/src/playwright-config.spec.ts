@@ -75,8 +75,49 @@ describe('Website Playwright configuration', () => {
     expect(config.webServer).toBeUndefined();
     // The smoke job hits the deployed site, so it runs every spec except the
     // public-copy gate, which exists to check a locally built production
-    // server before the code is deployed at all.
-    expect(config.testIgnore).toBe('**/public-copy.spec.ts');
+    // server before the code is deployed at all, and the custom-target specs,
+    // which drive a fixture runtime this config did not start.
+    expect(config.testIgnore).toEqual([
+      '**/public-copy.spec.ts',
+      '**/custom-runtime-targets.spec.ts',
+      '**/custom-runtime-bfcache.spec.ts',
+    ]);
+  });
+
+  it('skips the fixture-driven specs when BASE_URL points at a deployed site', () => {
+    // The deploy job re-runs the ordinary suite against production with only
+    // BASE_URL set. No local server starts in that mode, so the custom-target
+    // specs would dial a fixture on 127.0.0.1:4399 that does not exist and fail
+    // every case with ECONNREFUSED — after the site was already promoted.
+    const config = createWebsitePlaywrightConfig({
+      BASE_URL: 'https://threadplane.ai',
+    });
+
+    expect(config.webServer).toBeUndefined();
+    expect(config.use).toEqual(
+      expect.objectContaining({ baseURL: 'https://threadplane.ai' })
+    );
+    expect(config.testIgnore).toEqual([
+      '**/platform-production-smoke.spec.ts',
+      '**/custom-runtime-bfcache.spec.ts',
+      '**/public-copy.spec.ts',
+      '**/custom-runtime-targets.spec.ts',
+    ]);
+  });
+
+  it('holds the runtime frame by its session params rather than the local host', () => {
+    // The reduced-motion check needs the runtime to stay in its connecting
+    // state so the loader is on screen. Refusing `http://localhost:4300` only
+    // does that against the local example app; against the deployed site the
+    // frame loads from the production runtime origin, the handshake completes,
+    // and the loader is gone before the assertion runs.
+    const shell = readFileSync(
+      resolve(__dirname, '../e2e/workspace-shell.spec.ts'),
+      'utf8'
+    );
+
+    expect(shell).not.toContain("page.route('http://localhost:4300/**'");
+    expect(shell).toContain("url.searchParams.has('cockpit_cap')");
   });
 
   it('starts Website, all migrated runtime apps under custom-runtime E2E, and the fixture', () => {

@@ -22,29 +22,43 @@ export const createWebsitePlaywrightConfig = (
   const reuseExistingServer =
     environment['PLAYWRIGHT_REUSE_EXISTING_SERVER'] === 'true';
 
+  // The public-copy gate crawls every sitemap route. Against a prebuilt
+  // production server that is seconds; against `next dev` each route compiles
+  // on demand, which is far too slow to belong in the ordinary suite. It runs
+  // in production mode only, where its answers are the ones that matter.
+  const modeIgnores: readonly string[] = productionSmoke
+    ? ['**/public-copy.spec.ts']
+    : productionMode
+    ? [
+        '**/platform-production-smoke.spec.ts',
+        '**/custom-runtime-bfcache.spec.ts',
+      ]
+    : bfcacheRuntimeTest
+    ? ['**/platform-production-smoke.spec.ts', '**/public-copy.spec.ts']
+    : [
+        '**/platform-production-smoke.spec.ts',
+        '**/custom-runtime-bfcache.spec.ts',
+        '**/public-copy.spec.ts',
+      ];
+  // The custom-target specs drive the fixture runtime on 127.0.0.1:4399 and
+  // the local example apps, which exist only because this config starts them.
+  // A run against a deployed BASE_URL — the post-promotion verification, the
+  // production smoke — starts nothing, so every case would dial a fixture that
+  // is not there and fail with ECONNREFUSED after the site already promoted.
+  const fixtureDrivenSpecs: readonly string[] = [
+    '**/custom-runtime-targets.spec.ts',
+    '**/custom-runtime-bfcache.spec.ts',
+  ];
+  const testIgnore = shouldStartLocalServer
+    ? [...modeIgnores]
+    : [...new Set([...modeIgnores, ...fixtureDrivenSpecs])];
+
   return defineConfig({
     testDir: './e2e',
     testMatch: bfcacheRuntimeTest
       ? '**/custom-runtime-bfcache.spec.ts'
       : undefined,
-    // The public-copy gate crawls every sitemap route. Against a prebuilt
-    // production server that is seconds; against `next dev` each route compiles
-    // on demand, which is far too slow to belong in the ordinary suite. It runs
-    // in production mode only, where its answers are the ones that matter.
-    testIgnore: productionSmoke
-      ? '**/public-copy.spec.ts'
-      : productionMode
-      ? [
-          '**/platform-production-smoke.spec.ts',
-          '**/custom-runtime-bfcache.spec.ts',
-        ]
-      : bfcacheRuntimeTest
-      ? ['**/platform-production-smoke.spec.ts', '**/public-copy.spec.ts']
-      : [
-          '**/platform-production-smoke.spec.ts',
-          '**/custom-runtime-bfcache.spec.ts',
-          '**/public-copy.spec.ts',
-        ],
+    testIgnore,
     fullyParallel: true,
     // Match the cockpit configs: 2 retries on CI to absorb transient Next.js
     // dev-server startup flake; 0 locally for fast feedback.
