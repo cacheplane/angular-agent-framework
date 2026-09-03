@@ -21,6 +21,17 @@ describe('DocsSearchFooter', () => {
 
   it('keeps the shortcut as a hint', () => {
     const { container } = render(<DocsSearchFooter />);
-    expect(container.querySelector('[data-ui="pill"]')?.textContent).toBe('⌘K');
+    const pill = container.querySelector('[data-ui="pill"]');
+    expect(pill?.textContent).toBe('⌘K');
+    // Decoration, not part of the accessible name — see the exact-name
+    // assertion below, which would fail if this regressed.
+    expect(pill?.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('keeps the ⌘K pill out of the button accessible name', () => {
+    render(<DocsSearchFooter />);
+    expect(
+      screen.getByRole('button', { name: 'Search the docs' })
+    ).toBeTruthy();
   });
 });
