@@ -25,6 +25,16 @@ const MAX_PAGE_BYTES = 250 * 1024;
 const REQUEST_TIMEOUT_MS = 5_000;
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 
+// Raised when a target fails the SSRF controls. Unlike a transport or
+// content failure, a security violation never degrades to "no evidence";
+// it propagates so the caller can treat the domain as suspect.
+export class CompanyFetchSecurityError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'CompanyFetchSecurityError';
+  }
+}
+
 export interface CompanyRequestInit extends RequestInit {
   resolvedAddresses: readonly string[];
 }
@@ -175,7 +185,9 @@ function pinnedHttpsFetch(
 ): Promise<Response> {
   const address = init.resolvedAddresses[0];
   if (!address || !isPublicAddress(address)) {
-    throw new Error('Pinned HTTPS request requires a validated public address');
+    throw new CompanyFetchSecurityError(
+      'Pinned HTTPS request requires a validated public address'
+    );
   }
   const headers = new Headers(init.headers);
   headers.set('host', url.hostname);
@@ -244,7 +256,7 @@ function validatedCompanyHostname(companyDomain: string): string {
       companyDomain
     )
   ) {
-    throw new Error('Invalid company_domain');
+    throw new CompanyFetchSecurityError('Invalid company_domain');
   }
   return companyDomain.toLowerCase();
 }
@@ -349,7 +361,9 @@ async function resolvePublicAddresses(
   if (addresses.length === 0) throw new Error('Company domain did not resolve');
   for (const address of addresses) {
     if (!isPublicAddress(address)) {
-      throw new Error(`Company domain resolved to unsafe address: ${address}`);
+      throw new CompanyFetchSecurityError(
+        `Company domain resolved to unsafe address: ${address}`
+      );
     }
   }
   return addresses;
@@ -364,7 +378,7 @@ function validatedRedirectUrl(
   try {
     redirect = new URL(location, current);
   } catch {
-    throw new Error('Invalid company redirect');
+    throw new CompanyFetchSecurityError('Invalid company redirect');
   }
   if (
     redirect.protocol !== 'https:' ||
@@ -373,7 +387,7 @@ function validatedRedirectUrl(
     (redirect.port !== '' && redirect.port !== '443') ||
     redirect.hostname.toLowerCase() !== hostname
   ) {
-    throw new Error('Unsafe company redirect');
+    throw new CompanyFetchSecurityError('Unsafe company redirect');
   }
   return redirect;
 }
@@ -435,10 +449,7 @@ async function readBoundedBody(response: Response): Promise<Uint8Array> {
 }
 
 function cleanText(value: string): string {
-  return value
-    .replace(/\s+/gu, ' ')
-    .trim()
-    .slice(0, 240);
+  return value.replace(/\s+/gu, ' ').trim().slice(0, 240);
 }
 
 const EXECUTABLE_ELEMENTS = new Set(['script', 'style', 'noscript']);
@@ -449,10 +460,7 @@ function nodeText(node: DefaultTreeAdapterTypes.Node): string {
   while (pending.length > 0) {
     const candidate = pending.pop();
     if (!candidate) break;
-    if (
-      'tagName' in candidate &&
-      EXECUTABLE_ELEMENTS.has(candidate.tagName)
-    ) {
+    if ('tagName' in candidate && EXECUTABLE_ELEMENTS.has(candidate.tagName)) {
       continue;
     }
     if (candidate.nodeName === '#text') {
@@ -460,7 +468,11 @@ function nodeText(node: DefaultTreeAdapterTypes.Node): string {
       continue;
     }
     if ('childNodes' in candidate) {
-      for (let index = candidate.childNodes.length - 1; index >= 0; index -= 1) {
+      for (
+        let index = candidate.childNodes.length - 1;
+        index >= 0;
+        index -= 1
+      ) {
         const child = candidate.childNodes[index];
         if (child) pending.push(child);
       }
@@ -483,7 +495,11 @@ function collectElements(
       if (tagNames.has(candidate.tagName)) elements.push(candidate);
     }
     if ('childNodes' in candidate) {
-      for (let index = candidate.childNodes.length - 1; index >= 0; index -= 1) {
+      for (
+        let index = candidate.childNodes.length - 1;
+        index >= 0;
+        index -= 1
+      ) {
         const child = candidate.childNodes[index];
         if (child) pending.push(child);
       }
@@ -605,10 +621,15 @@ export async function fetchCompanyEvidence(
         );
         break;
       }
+    } catch (error) {
+      // A page that is oversized, missing, slow, or otherwise unusable is
+      // skipped so the remaining pages still yield evidence. The caller's
+      // own abort and any SSRF violation propagate.
+      signal.throwIfAborted();
+      if (error instanceof CompanyFetchSecurityError) throw error;
     } finally {
       timeout.clear();
     }
   }
-
   return evidence;
 }

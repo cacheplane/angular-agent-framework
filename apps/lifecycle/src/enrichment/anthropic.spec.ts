@@ -256,6 +256,35 @@ describe('generateEnrichmentArtifact', () => {
     ).resolves.toEqual({ ...ARTIFACT, drafts: [null, null, null] });
   });
 
+  it('nulls a repeated angle so that slot falls back to default copy', async () => {
+    const { deps } = dependencies({
+      ...ARTIFACT,
+      drafts: [
+        { angle_id: 'streaming_foundation', source_id: 'source-1' },
+        { angle_id: 'streaming_foundation', source_id: 'source-1' },
+        { angle_id: 'debugging_layers', source_id: 'source-1' },
+      ],
+    });
+
+    await expect(
+      generateEnrichmentArtifact(INPUT, SIGNAL, deps)
+    ).resolves.toMatchObject({
+      drafts: [
+        { angle_id: 'streaming_foundation', source_id: 'source-1' },
+        null,
+        { angle_id: 'debugging_layers', source_id: 'source-1' },
+      ],
+    });
+  });
+
+  it('asks the model for distinct angles across the three slots', async () => {
+    const { deps, parse } = dependencies();
+
+    await generateEnrichmentArtifact(INPUT, SIGNAL, deps);
+
+    expect(String(parse.mock.calls[0]?.[0].system ?? '')).toMatch(/distinct/u);
+  });
+
   it('truncates more than three drafts to the three campaign slots', async () => {
     const { deps, parse } = dependencies({
       ...ARTIFACT,

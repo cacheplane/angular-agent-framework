@@ -46,7 +46,7 @@ const SYSTEM_PROMPT =
   'Produce one bounded factual research artifact from the supplied evidence. ' +
   'The only citable source ids are the ids of the supplied companyPages entries; score identifiers, form fields, and project ids are not sources. ' +
   'Use neutral language for unknowns and leave company_profile fields null when no companyPages evidence supports them. ' +
-  `drafts must contain exactly three entries, one per campaign slot in order. Each entry is either null or an object selecting one angle_id from [${ANGLE_IDS}] plus one cited companyPages source_id; use null for a slot with no cited angle. ` +
+  `drafts must contain exactly three entries, one per campaign slot in order. Each entry is either null or an object selecting one angle_id from [${ANGLE_IDS}] plus one cited companyPages source_id; use a distinct angle_id in each slot and null for a slot with no cited angle. ` +
   'Never write recipient prose or personalized claims.';
 
 type WireArtifact = z.infer<typeof WIRE_ARTIFACT_SCHEMA>;
@@ -104,13 +104,16 @@ function normalizeArtifact(
       retrieved_at: page.retrievedAt,
       content_hash: page.contentHash,
     }));
+  const usedAngles = new Set<string>();
   const drafts = Array.from({ length: CAMPAIGN_SLOT_COUNT }, (_, index) => {
     const draft = wire.drafts[index] ?? null;
     if (draft === null || !citedIds.has(draft.source_id)) return null;
     const angle = CampaignEvidenceAngleSchema.safeParse(draft.angle_id);
-    return angle.success
-      ? { angle_id: angle.data, source_id: draft.source_id }
-      : null;
+    // A repeated angle would send the same email twice, so only the first
+    // slot keeps it and later repeats fall back to the step's default copy.
+    if (!angle.success || usedAngles.has(angle.data)) return null;
+    usedAngles.add(angle.data);
+    return { angle_id: angle.data, source_id: draft.source_id };
   });
   return {
     summary: wire.summary,

@@ -240,7 +240,9 @@ function draftFor(
         source_ids.includes(selection.source_id)
       );
     if (selection !== null && cited) {
-      return renderEvidenceCampaignTemplate(selection.angle_id);
+      return renderEvidenceCampaignTemplate(selection.angle_id, {
+        finalStep: step === 3,
+      });
     }
   }
   return renderCampaignTemplate(STEP_NAMES[step]);

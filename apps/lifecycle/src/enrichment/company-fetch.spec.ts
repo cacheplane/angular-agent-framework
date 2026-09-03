@@ -36,6 +36,67 @@ function dependencies(
   };
 }
 
+function okPage(): Response {
+  return new Response(
+    '<html><head><title>Example</title></head><body><h1>Example company</h1><p>Safe public evidence.</p></body></html>',
+    { status: 200, headers: { 'content-type': 'text/html' } }
+  );
+}
+
+describe('fetchCompanyEvidence page resilience', () => {
+  it('skips a page that answers 404 and keeps the others', async () => {
+    const fetch = vi.fn(async (url: URL) =>
+      url.pathname === '/about' ? new Response(null, { status: 404 }) : okPage()
+    );
+    const deps = dependencies({ fetch });
+
+    const evidence = await fetchCompanyEvidence(
+      'example.com',
+      new AbortController().signal,
+      deps
+    );
+
+    expect(evidence.map((page) => page.canonicalUrl)).toEqual([
+      'https://example.com/',
+      'https://example.com/pricing',
+    ]);
+  });
+
+  it('returns no evidence when every page fails instead of throwing', async () => {
+    const deps = dependencies({
+      fetch: vi.fn(async () => new Response(null, { status: 503 })),
+    });
+
+    await expect(
+      fetchCompanyEvidence('example.com', new AbortController().signal, deps)
+    ).resolves.toEqual([]);
+    expect(deps.fetch).toHaveBeenCalledTimes(3);
+  });
+
+  it('still rejects when the caller aborts mid-way', async () => {
+    const parent = new AbortController();
+    const fetch = vi.fn(async () => {
+      parent.abort(new Error('caller aborted'));
+      throw new Error('page failed');
+    });
+    const deps = dependencies({ fetch });
+
+    await expect(
+      fetchCompanyEvidence('example.com', parent.signal, deps)
+    ).rejects.toThrow(/caller aborted/u);
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+
+  it('still rejects an invalid company domain before fetching anything', async () => {
+    const deps = dependencies();
+
+    await expect(
+      fetchCompanyEvidence('not a domain', new AbortController().signal, deps)
+    ).rejects.toThrow(/company_domain/u);
+    expect(deps.fetch).not.toHaveBeenCalled();
+  });
+});
+
 describe('fetchCompanyEvidence SSRF controls', () => {
   it('shares one five-second deadline across DNS and every redirect for a page', async () => {
     vi.useFakeTimers();
@@ -136,14 +197,20 @@ describe('fetchCompanyEvidence SSRF controls', () => {
           request,
         }
       );
-      const rejection = expect(result).rejects.toMatchObject({
+      await vi.advanceTimersByTimeAsync(5_000);
+      const [firstOptions] = request.mock.calls[0] ?? [];
+      expect(firstOptions?.signal?.aborted).toBe(true);
+      expect(firstOptions?.signal?.reason).toMatchObject({
         name: 'TimeoutError',
       });
 
+      // The timed-out page is skipped; the remaining two pages each get
+      // their own five-second deadline and the call resolves without
+      // evidence rather than rejecting.
       await vi.advanceTimersByTimeAsync(5_000);
-
-      await rejection;
-      expect(request).toHaveBeenCalledOnce();
+      await vi.advanceTimersByTimeAsync(5_000);
+      await expect(result).resolves.toEqual([]);
+      expect(request).toHaveBeenCalledTimes(3);
     } finally {
       vi.useRealTimers();
     }
@@ -228,7 +295,7 @@ describe('fetchCompanyEvidence SSRF controls', () => {
         request,
         createTimeoutSignal: (signal) => ({ signal, clear: vi.fn() }),
       })
-    ).rejects.toThrow(/HTTP 500/u);
+    ).resolves.toEqual([]);
 
     expect(firstDestroy).toHaveBeenCalled();
   });
@@ -261,7 +328,7 @@ describe('fetchCompanyEvidence SSRF controls', () => {
         request,
         createTimeoutSignal: (signal) => ({ signal, clear: vi.fn() }),
       })
-    ).rejects.toBeInstanceOf(RangeError);
+    ).resolves.toEqual([]);
 
     expect(incoming?.destroy).toHaveBeenCalledOnce();
     expect(incoming?.destroyed).toBe(true);
@@ -407,8 +474,8 @@ describe('fetchCompanyEvidence SSRF controls', () => {
 
     await expect(
       fetchCompanyEvidence('example.com', new AbortController().signal, deps)
-    ).rejects.toThrow(/redirect limit/u);
-    expect(deps.fetch).toHaveBeenCalledTimes(4);
+    ).resolves.toEqual([]);
+    expect(deps.fetch).toHaveBeenCalledTimes(6);
   });
 
   it('cancels a redirect response body before following it', async () => {
@@ -426,7 +493,7 @@ describe('fetchCompanyEvidence SSRF controls', () => {
 
     await expect(
       fetchCompanyEvidence('example.com', new AbortController().signal, deps)
-    ).rejects.toThrow(/stop after redirect/u);
+    ).resolves.toEqual([]);
     expect(cancel).toHaveBeenCalledOnce();
   });
 
@@ -435,24 +502,48 @@ describe('fetchCompanyEvidence SSRF controls', () => {
     const response = new Response(new ReadableStream<Uint8Array>({ cancel }), {
       status: 500,
     });
-    const deps = dependencies({ fetch: vi.fn().mockResolvedValue(response) });
+    const deps = dependencies({
+      fetch: vi
+        .fn()
+        .mockResolvedValueOnce(response)
+        .mockImplementation(async () => okPage()),
+    });
 
-    await expect(
-      fetchCompanyEvidence('example.com', new AbortController().signal, deps)
-    ).rejects.toThrow(/HTTP 500/u);
+    const evidence = await fetchCompanyEvidence(
+      'example.com',
+      new AbortController().signal,
+      deps
+    );
+
+    expect(evidence.map((page) => page.canonicalUrl)).toEqual([
+      'https://example.com/about',
+      'https://example.com/pricing',
+    ]);
     expect(cancel).toHaveBeenCalledOnce();
   });
 
-  it('cancels an advertised oversized body before throwing', async () => {
+  it('cancels an advertised oversized body, skips that page, and keeps the others', async () => {
     const cancel = vi.fn();
     const response = new Response(new ReadableStream<Uint8Array>({ cancel }), {
       headers: { 'content-length': String(250 * 1024 + 1) },
     });
-    const deps = dependencies({ fetch: vi.fn().mockResolvedValue(response) });
+    const deps = dependencies({
+      fetch: vi
+        .fn()
+        .mockResolvedValueOnce(response)
+        .mockImplementation(async () => okPage()),
+    });
 
-    await expect(
-      fetchCompanyEvidence('example.com', new AbortController().signal, deps)
-    ).rejects.toThrow(/250 KiB/u);
+    const evidence = await fetchCompanyEvidence(
+      'example.com',
+      new AbortController().signal,
+      deps
+    );
+
+    expect(evidence.map((page) => page.canonicalUrl)).toEqual([
+      'https://example.com/about',
+      'https://example.com/pricing',
+    ]);
     expect(cancel).toHaveBeenCalledOnce();
   });
 
@@ -468,12 +559,15 @@ describe('fetchCompanyEvidence SSRF controls', () => {
       cancel,
     });
     const deps = dependencies({
-      fetch: vi.fn().mockResolvedValue(new Response(body)),
+      fetch: vi
+        .fn()
+        .mockResolvedValueOnce(new Response(body))
+        .mockImplementation(async () => okPage()),
     });
 
     await expect(
       fetchCompanyEvidence('example.com', new AbortController().signal, deps)
-    ).rejects.toThrow(/250 KiB/u);
+    ).resolves.toHaveLength(2);
     expect(reads).toBeGreaterThanOrEqual(2);
     expect(cancel).toHaveBeenCalledOnce();
   });
@@ -491,11 +585,16 @@ describe('fetchCompanyEvidence SSRF controls', () => {
       cancel,
       releaseLock,
     } as unknown as ReadableStreamDefaultReader<Uint8Array>);
-    const deps = dependencies({ fetch: vi.fn().mockResolvedValue(response) });
+    const deps = dependencies({
+      fetch: vi
+        .fn()
+        .mockResolvedValueOnce(response)
+        .mockImplementation(async () => okPage()),
+    });
 
     await expect(
       fetchCompanyEvidence('example.com', new AbortController().signal, deps)
-    ).rejects.toThrow(/body read failed/u);
+    ).resolves.toHaveLength(2);
     expect(cancel).toHaveBeenCalledOnce();
     expect(releaseLock).toHaveBeenCalledOnce();
   });
@@ -514,7 +613,7 @@ describe('fetchCompanyEvidence SSRF controls', () => {
 
     await expect(
       fetchCompanyEvidence('example.com', new AbortController().signal, deps)
-    ).rejects.toThrow(/timed out/u);
+    ).resolves.toEqual([]);
     expect(createTimeoutSignal).toHaveBeenCalledWith(
       expect.any(AbortSignal),
       5_000
@@ -527,12 +626,14 @@ describe('fetchCompanyEvidence SSRF controls', () => {
 
   it('decodes HTML entities only once when extracting evidence', async () => {
     const deps = dependencies({
-      fetch: vi.fn().mockResolvedValue(
-        new Response(
-          '<html><head><title>Example &amp;lt;script&amp;gt;alert(1)&amp;lt;/script&amp;gt;</title></head></html>',
-          { headers: { 'content-type': 'text/html' } }
-        )
-      ),
+      fetch: vi
+        .fn()
+        .mockResolvedValue(
+          new Response(
+            '<html><head><title>Example &amp;lt;script&amp;gt;alert(1)&amp;lt;/script&amp;gt;</title></head></html>',
+            { headers: { 'content-type': 'text/html' } }
+          )
+        ),
     });
 
     const [evidence] = await fetchCompanyEvidence(
@@ -549,12 +650,14 @@ describe('fetchCompanyEvidence SSRF controls', () => {
 
   it('removes executable elements whose closing tag contains whitespace', async () => {
     const deps = dependencies({
-      fetch: vi.fn().mockResolvedValue(
-        new Response(
-          '<html><body><script><p>malicious executable text</p></script ><p>Safe public evidence.</p></body></html>',
-          { headers: { 'content-type': 'text/html' } }
-        )
-      ),
+      fetch: vi
+        .fn()
+        .mockResolvedValue(
+          new Response(
+            '<html><body><script><p>malicious executable text</p></script ><p>Safe public evidence.</p></body></html>',
+            { headers: { 'content-type': 'text/html' } }
+          )
+        ),
     });
 
     const [evidence] = await fetchCompanyEvidence(
@@ -571,12 +674,14 @@ describe('fetchCompanyEvidence SSRF controls', () => {
 
   it('preserves document order across paragraph and list-item snippets', async () => {
     const deps = dependencies({
-      fetch: vi.fn().mockResolvedValue(
-        new Response(
-          '<html><body><li>First evidence.</li><p>Second evidence.</p></body></html>',
-          { headers: { 'content-type': 'text/html' } }
-        )
-      ),
+      fetch: vi
+        .fn()
+        .mockResolvedValue(
+          new Response(
+            '<html><body><li>First evidence.</li><p>Second evidence.</p></body></html>',
+            { headers: { 'content-type': 'text/html' } }
+          )
+        ),
     });
 
     const [evidence] = await fetchCompanyEvidence(
@@ -585,20 +690,19 @@ describe('fetchCompanyEvidence SSRF controls', () => {
       deps
     );
 
-    expect(evidence?.snippets).toEqual([
-      'First evidence.',
-      'Second evidence.',
-    ]);
+    expect(evidence?.snippets).toEqual(['First evidence.', 'Second evidence.']);
   });
 
   it('excludes executable descendants nested inside evidence elements', async () => {
     const deps = dependencies({
-      fetch: vi.fn().mockResolvedValue(
-        new Response(
-          '<html><body><p>Safe evidence.<script>malicious executable text</script></p></body></html>',
-          { headers: { 'content-type': 'text/html' } }
-        )
-      ),
+      fetch: vi
+        .fn()
+        .mockResolvedValue(
+          new Response(
+            '<html><body><p>Safe evidence.<script>malicious executable text</script></p></body></html>',
+            { headers: { 'content-type': 'text/html' } }
+          )
+        ),
     });
 
     const [evidence] = await fetchCompanyEvidence(
@@ -612,7 +716,9 @@ describe('fetchCompanyEvidence SSRF controls', () => {
 
   it('handles deeply nested bounded HTML without exhausting the call stack', async () => {
     const depth = 18_000;
-    const body = `<html><body><p>${'<b>'.repeat(depth)}Safe evidence.${'</b>'.repeat(depth)}</p></body></html>`;
+    const body = `<html><body><p>${'<b>'.repeat(
+      depth
+    )}Safe evidence.${'</b>'.repeat(depth)}</p></body></html>`;
     const deps = dependencies({
       fetch: vi.fn().mockResolvedValue(
         new Response(body, {
@@ -633,12 +739,14 @@ describe('fetchCompanyEvidence SSRF controls', () => {
   it('applies the snippet limit after removing duplicates', async () => {
     const duplicates = '<p>Duplicate evidence.</p>'.repeat(6);
     const deps = dependencies({
-      fetch: vi.fn().mockResolvedValue(
-        new Response(
-          `<html><body>${duplicates}<p>Unique evidence.</p></body></html>`,
-          { headers: { 'content-type': 'text/html' } }
-        )
-      ),
+      fetch: vi
+        .fn()
+        .mockResolvedValue(
+          new Response(
+            `<html><body>${duplicates}<p>Unique evidence.</p></body></html>`,
+            { headers: { 'content-type': 'text/html' } }
+          )
+        ),
     });
 
     const [evidence] = await fetchCompanyEvidence(
