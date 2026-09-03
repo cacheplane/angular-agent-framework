@@ -26,16 +26,20 @@ declare global {
  */
 export class HeroRecordingTransport implements AgentTransport {
   private readonly runs: RecordedRun[] = [];
+  private readonly recordedAt = new Date().toISOString();
   constructor(private readonly inner: AgentTransport, private readonly now: () => number = () => performance.now()) {}
 
-  recording(): HeroRecording { return { version: 1, recordedAt: new Date().toISOString(), runs: [...this.runs] }; }
+  recording(): HeroRecording { return { version: 1, recordedAt: this.recordedAt, runs: [...this.runs] }; }
 
   async *stream(assistantId: string, threadId: string | null, payload: unknown, signal: AbortSignal, options?: LangGraphSubmitOptions): AsyncIterable<StreamEvent> {
     const start = this.now();
-    const events: { tMs: number; event: StreamEvent }[] = [];
-    const index = this.runs.length;
-    this.runs.push({ label: RUN_LABELS[index] ?? `run-${index + 1}`, events });
+    let events: { tMs: number; event: StreamEvent }[] | null = null;
     for await (const event of this.inner.stream(assistantId, threadId, payload, signal, options)) {
+      if (events === null) {
+        events = [];
+        const index = this.runs.length;
+        this.runs.push({ label: RUN_LABELS[index] ?? `run-${index + 1}`, events });
+      }
       events.push({ tMs: Math.round(this.now() - start), event });
       this.publish();
       yield event;

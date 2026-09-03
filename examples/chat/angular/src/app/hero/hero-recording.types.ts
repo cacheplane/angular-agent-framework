@@ -21,6 +21,7 @@ export function validateHeroRecording(input: unknown): HeroRecording {
   rec.runs.forEach((run, i) => {
     if (typeof run.label !== 'string') throw new Error(`run ${i} has no label`);
     if (!Array.isArray(run.events)) throw new Error(`run ${i} has no events`);
+    if (run.events.length === 0) throw new Error(`run ${i} has no events`);
     run.events.forEach((e, j) => {
       if (typeof e?.tMs !== 'number' || !Number.isFinite(e.tMs)) throw new Error(`run ${i} event ${j} has no numeric tMs`);
       if (typeof e.event !== 'object' || e.event === null) throw new Error(`run ${i} event ${j} has no event`);

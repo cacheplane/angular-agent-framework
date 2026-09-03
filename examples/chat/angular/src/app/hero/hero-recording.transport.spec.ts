@@ -24,4 +24,38 @@ describe('HeroRecordingTransport', () => {
     for (let i = 0; i < 4; i++) for await (const _ of t.stream('a', null, {}, sig)) { /* drain */ }
     expect(t.recording().runs.map((r) => r.label)).toEqual(['prompt', 'resume', 'genui', 'run-4']);
   });
+  it('does not register a run that throws before yielding any event, and re-labels the next run as prompt', async () => {
+    const throwingInner: AgentTransport = {
+      stream() {
+        return {
+          [Symbol.asyncIterator]() {
+            return { next: () => Promise.reject(new Error('boom')) };
+          },
+        };
+      },
+    };
+    const t = new HeroRecordingTransport(throwingInner, () => 0);
+    const sig = new AbortController().signal;
+    await expect((async () => { for await (const _ of t.stream('a', null, {}, sig)) { /* drain */ } })()).rejects.toThrow('boom');
+    expect(t.recording().runs).toEqual([]);
+
+    const successful = new HeroRecordingTransport(innerWith([{ type: 'values' }]), () => 0);
+    for await (const _ of successful.stream('a', null, {}, sig)) { /* drain */ }
+    expect(successful.recording().runs.map((r) => r.label)).toEqual(['prompt']);
+  });
+  it('registers a run with one event even if the consumer stops iterating early', async () => {
+    const t = new HeroRecordingTransport(innerWith([{ type: 'values' }, { type: 'messages' }]), () => 0);
+    const sig = new AbortController().signal;
+    for await (const _ of t.stream('a', null, {}, sig)) break;
+    expect(t.recording().runs).toHaveLength(1);
+    expect(t.recording().runs[0].events).toHaveLength(1);
+  });
+  it('recordedAt is stable across recording() calls', async () => {
+    const t = new HeroRecordingTransport(innerWith([{ type: 'values' }]), () => 0);
+    const sig = new AbortController().signal;
+    for await (const _ of t.stream('a', null, {}, sig)) { /* drain */ }
+    const first = t.recording().recordedAt;
+    const second = t.recording().recordedAt;
+    expect(first).toBe(second);
+  });
 });

@@ -66,4 +66,42 @@ describe('HeroReplayTransport', () => {
     await collect(t.stream('hero', null, {}, sig));
     expect(load).toHaveBeenCalledTimes(1);
   });
+  it('ready() resolves after a successful load and does not call load twice', async () => {
+    const load = vi.fn(async () => recording);
+    const t = new HeroReplayTransport(fakeClock(), load);
+    await t.ready();
+    await t.ready();
+    expect(load).toHaveBeenCalledTimes(1);
+  });
+  it('ready() rejects on a failed load, and retries load on the next ready() call', async () => {
+    let attempt = 0;
+    const load = vi.fn(async () => {
+      attempt += 1;
+      if (attempt === 1) throw new Error('fixture missing');
+      return recording;
+    });
+    const t = new HeroReplayTransport(fakeClock(), load);
+    await expect(t.ready()).rejects.toThrow('fixture missing');
+    await expect(t.ready()).resolves.toBeUndefined();
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+  it('clamps gaps to the 30ms floor even when tMs goes backwards', async () => {
+    const clock = fakeClock();
+    const backwards: HeroRecording = {
+      version: 1,
+      recordedAt: '2026-09-02T00:00:00.000Z',
+      runs: [
+        { label: 'prompt', events: [
+          { tMs: 100, event: { type: 'values' } },
+          { tMs: 50, event: { type: 'values' } },
+        ] },
+        { label: 'resume', events: [{ tMs: 0, event: { type: 'values' } }] },
+        { label: 'genui', events: [{ tMs: 0, event: { type: 'values' } }] },
+      ],
+    };
+    const t = new HeroReplayTransport(clock, async () => backwards);
+    await collect(t.stream('hero', null, {}, new AbortController().signal));
+    expect(clock.waits[0]).toBeGreaterThanOrEqual(30);
+    expect(clock.waits[1]).toBeGreaterThanOrEqual(30);
+  });
 });

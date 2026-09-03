@@ -26,4 +26,8 @@ describe('validateHeroRecording', () => {
   it('rejects non-objects', () => {
     expect(() => validateHeroRecording(null)).toThrow(/object/);
   });
+  it('rejects a run with zero events', () => {
+    const bad = { ...good, runs: [{ label: 'prompt', events: [] }, good.runs[1], good.runs[2]] };
+    expect(() => validateHeroRecording(bad)).toThrow(/no events/);
+  });
 });

@@ -62,5 +62,8 @@ export class HeroReplayTransport implements AgentTransport {
   async getHistory(): Promise<ThreadState[]> { return []; }
   async *joinStream(): AsyncIterable<StreamEvent> { yield* []; }
 
-  private getRecording(): Promise<HeroRecording> { this.recording ??= this.load(); return this.recording; }
+  private getRecording(): Promise<HeroRecording> {
+    this.recording ??= this.load().catch((err) => { this.recording = null; throw err; });
+    return this.recording;
+  }
 }
