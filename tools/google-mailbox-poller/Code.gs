@@ -192,7 +192,7 @@ function gmailSeedVerificationFromMessage_(message) {
 
 function referenceMessageIds_(value) {
   if (typeof value !== 'string') return [];
-  var boundedValue = value.slice(Math.max(0, value.length - 8_000));
+  var boundedValue = value.slice(Math.max(0, value.length - 8000));
   var matches = boundedValue.match(/<[^<>\s\r\n]+>/g) || [];
   var normalized = matches
     .map(normalizedRfcMessageId_)
@@ -203,7 +203,7 @@ function referenceMessageIds_(value) {
   var total = normalized.reduce(function (sum, messageId) {
     return sum + messageId.length;
   }, 0);
-  while (normalized.length > 0 && total > 4_000) {
+  while (normalized.length > 0 && total > 4000) {
     total -= normalized.shift().length;
   }
   return normalized;
@@ -318,7 +318,7 @@ function validPageToken_(value) {
 }
 
 function validSourceOffset_(value) {
-  return Number.isInteger(value) && value >= 0 && value <= 1_000_000;
+  return Number.isInteger(value) && value >= 0 && value <= 1000000;
 }
 
 function validPageState_(page) {

@@ -312,7 +312,7 @@ describe('redirect deploy smoke contract', () => {
     expect(sleep).toHaveBeenCalledTimes(1);
   });
 
-  it('identifies the Vercel Raw Path prerequisite when a raw canary is normalized', async () => {
+  it('identifies the raw-path rejection route when a raw canary is normalized', async () => {
     const cases = buildRedirectSmokeCases('production');
     const requestImpl = vi.fn(async (request: RedirectSmokeRequest) => {
       const smokeCase = cases.find(
@@ -329,7 +329,170 @@ describe('redirect deploy smoke contract', () => {
         mode: 'production',
         requestImpl,
       })
-    ).rejects.toThrow(/WAF Raw Path prerequisite/);
+    ).rejects.toThrow(/vercel\.cockpit\.json/);
+  });
+
+  it('accepts only the platform same-origin slash collapse for a consecutive-slash probe', async () => {
+    // Vercel's CDN collapses consecutive slashes and answers 308 to the
+    // single-slash path on the same origin before any route, rewrite, or
+    // function runs, so that probe can never reach the 404 route. The only
+    // acceptable non-404 answer is that exact normalization; a redirect off
+    // the deployment from a malformed path is still a contract failure.
+    const cases = buildRedirectSmokeCases('preview');
+    const slashCase = cases.find(
+      (smokeCase) => smokeCase.raw && smokeCase.path.includes('//')
+    );
+    const dotCase = cases.find(
+      (smokeCase) => smokeCase.raw && smokeCase.path.includes('/./')
+    );
+    if (!slashCase || !dotCase) throw new Error('Expected raw canaries');
+    expect(slashCase.platformNormalizedPath).toBe(
+      '/langgraph/core-capabilities/streaming/overview/python'
+    );
+    expect(dotCase.platformNormalizedPath).toBeUndefined();
+
+    const impl = (answer: (request: RedirectSmokeRequest) => RedirectSmokeResponse | null) =>
+      vi.fn(async (request: RedirectSmokeRequest) =>
+        answer(request) ?? responseFor(request, cases)
+      );
+
+    await expect(
+      runDeploySmoke({
+        url: previewUrl,
+        mode: 'preview',
+        requestImpl: impl((request) =>
+          request.path === slashCase.path
+            ? {
+                status: 308,
+                // The platform answers with a relative Location.
+                headers: {
+                  location:
+                    '/langgraph/core-capabilities/streaming/overview/python',
+                },
+              }
+            : null
+        ),
+      })
+    ).resolves.toBe(`pass:preview:${previewUrl}:${cases.length}`);
+
+    await expect(
+      runDeploySmoke({
+        url: previewUrl,
+        mode: 'preview',
+        requestImpl: impl((request) =>
+          request.path === slashCase.path
+            ? {
+                status: 308,
+                headers: {
+                  location: `${previewUrl}/langgraph/core-capabilities/streaming/overview/python`,
+                },
+              }
+            : null
+        ),
+      })
+    ).resolves.toBe(`pass:preview:${previewUrl}:${cases.length}`);
+
+    await expect(
+      runDeploySmoke({
+        url: previewUrl,
+        mode: 'preview',
+        requestImpl: impl((request) =>
+          request.path === slashCase.path
+            ? {
+                status: 308,
+                headers: {
+                  location:
+                    'https://threadplane.ai/docs/langgraph/guides/streaming?mode=run',
+                },
+              }
+            : null
+        ),
+      })
+    ).rejects.toThrow(/raw malformed 1.*expected 404, received 308/);
+
+    await expect(
+      runDeploySmoke({
+        url: previewUrl,
+        mode: 'preview',
+        requestImpl: impl((request) =>
+          request.path === dotCase.path
+            ? {
+                status: 308,
+                headers: {
+                  location: `${previewUrl}/langgraph/core-capabilities/streaming/overview/python`,
+                },
+              }
+            : null
+        ),
+      })
+    ).rejects.toThrow(/expected 404, received 308/);
+  });
+
+  it('sends the automation bypass on every probe only when a secret is supplied', async () => {
+    // Vercel deployment protection answers every path on an unaliased
+    // deployment with 302 -> vercel.com/sso-api, so the immutable cockpit
+    // artifact can only be verified with the project's automation bypass.
+    const cases = buildRedirectSmokeCases('preview');
+    const withSecret = vi.fn(async (request: RedirectSmokeRequest) => {
+      const { 'x-vercel-protection-bypass': bypass, ...rest } =
+        request.headers ?? {};
+      if (bypass !== 'cockpit-bypass-sentinel') {
+        throw new Error(`Missing bypass on ${request.path}`);
+      }
+      return responseFor(
+        { ...request, headers: Object.keys(rest).length ? rest : undefined },
+        cases
+      );
+    });
+
+    await expect(
+      runDeploySmoke({
+        url: previewUrl,
+        mode: 'preview',
+        requestImpl: withSecret,
+        bypassSecret: 'cockpit-bypass-sentinel',
+      })
+    ).resolves.toBe(`pass:preview:${previewUrl}:${cases.length}`);
+    expect(withSecret).toHaveBeenCalledTimes(cases.length);
+    expect(withSecret).toHaveBeenCalledWith(
+      expect.objectContaining({
+        path: '/langgraph/core-capabilities/streaming/overview/python',
+        headers: expect.objectContaining({
+          'x-forwarded-host': 'attacker.test',
+          'x-vercel-protection-bypass': 'cockpit-bypass-sentinel',
+        }),
+      })
+    );
+
+    const withoutSecret = vi.fn(async (request: RedirectSmokeRequest) =>
+      responseFor(request, cases)
+    );
+    await runDeploySmoke({
+      url: previewUrl,
+      mode: 'preview',
+      requestImpl: withoutSecret,
+    });
+    for (const [request] of withoutSecret.mock.calls) {
+      expect(request.headers ?? {}).not.toHaveProperty(
+        'x-vercel-protection-bypass'
+      );
+    }
+  });
+
+  it('names Vercel deployment protection when a probe lands on the SSO redirect', async () => {
+    const requestImpl = vi.fn(async () => ({
+      status: 302,
+      headers: {
+        location:
+          'https://vercel.com/sso-api?url=https%3A%2F%2Fimmutable-preview.vercel.app%2F&nonce=abc',
+      },
+    }));
+
+    await expect(
+      runDeploySmoke({ url: previewUrl, mode: 'preview', requestImpl })
+    ).rejects.toThrow(
+      /expected 308, received 302.*deployment protection.*automation bypass/i
+    );
   });
 
   it('formats dry-run output with the selected mode and case count', async () => {

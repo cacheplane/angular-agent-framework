@@ -4,6 +4,7 @@ import {
   campaignDraftViolations,
   normalizeCampaignDraft,
   renderCampaignTemplate,
+  renderEvidenceCampaignTemplate,
 } from './templates.js';
 
 function wordCount(value: string): number {
@@ -32,6 +33,20 @@ describe('renderCampaignTemplate', () => {
     expect(renderCampaignTemplate('day-8').body).toContain(
       'last automated follow-up'
     );
+  });
+
+  it('appends the last-follow-up notice to an evidence template only for the final step', () => {
+    const final = renderEvidenceCampaignTemplate('event_state_boundary', {
+      finalStep: true,
+    });
+    const earlier = renderEvidenceCampaignTemplate('event_state_boundary');
+
+    expect(final.body).toContain('last automated follow-up');
+    expect(final.body.endsWith('This is my last automated follow-up.')).toBe(
+      true
+    );
+    expect(campaignDraftViolations(final)).toEqual([]);
+    expect(earlier.body).not.toContain('last automated follow-up');
   });
 
   it('rejects an unknown campaign step at runtime', () => {

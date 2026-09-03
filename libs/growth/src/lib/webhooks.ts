@@ -32,11 +32,14 @@ const DELIVERY_STATUS_PRECEDENCE: Readonly<
   suppressed: 3,
   complained: 4,
 };
+// Resend's wire payload gained `message_id` after the pinned SDK types were
+// written, and transactional mail carries null broadcast/template ids.
 const BASE_DATA_KEYS = new Set([
   'broadcast_id',
   'created_at',
   'email_id',
   'from',
+  'message_id',
   'subject',
   'tags',
   'template_id',
@@ -184,9 +187,14 @@ function validateProviderBaseData(data: Record<string, unknown>): void {
     throw new Error('Invalid Resend webhook payload');
   }
   for (const recipient of data['to']) boundedText(recipient, 254);
-  if (data['broadcast_id'] !== undefined)
-    boundedText(data['broadcast_id'], 256);
-  if (data['template_id'] !== undefined) boundedText(data['template_id'], 256);
+  for (const key of ['broadcast_id', 'template_id'] as const) {
+    if (data[key] !== undefined && data[key] !== null) {
+      boundedText(data[key], 256);
+    }
+  }
+  if (data['message_id'] !== undefined && data['message_id'] !== null) {
+    boundedText(data['message_id'], 998);
+  }
 }
 
 function validateClosedDetails(

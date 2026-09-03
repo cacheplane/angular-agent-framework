@@ -248,6 +248,40 @@ describe('prepareCampaignMessage', () => {
     ).toMatchObject({ status: 'ready', subject: 'A practical place to start' });
   });
 
+  it('closes the sequence on the final step even when evidence copy is selected', () => {
+    const cited = artifact({
+      cited_signals: [
+        { signal: 'Bounded source fact', source_ids: ['source-1'] },
+      ],
+      sources: [
+        {
+          id: 'source-1',
+          url: 'https://example.com/about',
+          retrieved_at: '2026-09-01T12:00:00.000Z',
+          content_hash: 'a'.repeat(64),
+        },
+      ],
+      drafts: [
+        { angle_id: 'streaming_foundation', source_id: 'source-1' },
+        { angle_id: 'debugging_layers', source_id: 'source-1' },
+        { angle_id: 'event_state_boundary', source_id: 'source-1' },
+      ],
+    });
+
+    const message = prepareCampaignMessage({
+      context: context({ enrichmentArtifact: cited }),
+      job: job('send_step', { campaign_version: 'v1', step: 3 }),
+      now: new Date('2026-09-09T12:05:00.000Z'),
+      unsubscribeUrl: UNSUBSCRIBE,
+    });
+
+    expect(message).toMatchObject({
+      status: 'ready',
+      subject: 'One event-state boundary',
+    });
+    expect(JSON.stringify(message)).toContain('last automated follow-up');
+  });
+
   it('falls back per fixed step when an artifact draft violates copy checks', () => {
     const invalid = artifact({
       drafts: [

@@ -1077,7 +1077,11 @@ jobs:
           fi
       - name: Promote verified Website artifact unchanged
         if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.website == 'true' && steps.website_promotion_freshness.outputs.fresh == 'true'
-        run: npx vercel promote "${{ steps.deploy_website.outputs.deployment_url }}" --yes --token=${{ secrets.VERCEL_TOKEN }}
+        # `promote` takes a bare deployment URL, so unlike build/deploy/pull it
+        # cannot read the team from .vercel/project.json and falls back to the
+        # token's default team — a personal one here, which fails with
+        # "Deployment doesn't belong to current team". Scope it explicitly.
+        run: npx vercel promote "${{ steps.deploy_website.outputs.deployment_url }}" --scope=${{ secrets.VERCEL_ORG_ID }} --yes --token=${{ secrets.VERCEL_TOKEN }}
       - name: Verify deployed website
         if: steps.freshness.outputs.stale != 'true' && ((steps.affected.outputs.website == 'true' && steps.website_promotion_freshness.outputs.fresh == 'true') || steps.affected.outputs.cockpit == 'true')
         run: npx nx e2e website --skip-nx-cache
@@ -1107,7 +1111,17 @@ jobs:
       - name: Exhaustively verify immutable cockpit preview
         if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true'
         run: |
+          # Deployment protection answers every path on the unaliased artifact
+          # with 302 -> vercel.com/sso-api, which the smoke reports as
+          # "expected 308, received 302". Bypass secrets are issued per Vercel
+          # project, so the Website secret cannot open this one. Say so.
+          if [ -z "${VERCEL_AUTOMATION_BYPASS_SECRET}" ]; then
+            echo "::error::VERCEL_COCKPIT_AUTOMATION_BYPASS_SECRET is unset — the protected immutable cockpit preview cannot be verified. Enable 'Protection Bypass for Automation' on the Vercel threadplane-cockpit project and store the value as this repository secret."
+            exit 1
+          fi
           npx tsx apps/cockpit/scripts/deploy-smoke.ts --url "${{ steps.deploy_cockpit.outputs.deployment_url }}" --mode preview --retries 20 --retry-delay-ms 5000
+        env:
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_COCKPIT_AUTOMATION_BYPASS_SECRET }}
       - name: Check this commit is still the tip before cockpit promotion
         if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true'
         id: cockpit_promotion_freshness
@@ -1125,7 +1139,11 @@ jobs:
           fi
       - name: Promote verified cockpit artifact unchanged
         if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true' && steps.cockpit_promotion_freshness.outputs.fresh == 'true'
-        run: npx vercel promote "${{ steps.deploy_cockpit.outputs.deployment_url }}" --yes --token=${{ secrets.VERCEL_TOKEN }}
+        # `promote` takes a bare deployment URL, so unlike build/deploy/pull it
+        # cannot read the team from .vercel/project.json and falls back to the
+        # token's default team — a personal one here, which fails with
+        # "Deployment doesn't belong to current team". Scope it explicitly.
+        run: npx vercel promote "${{ steps.deploy_cockpit.outputs.deployment_url }}" --scope=${{ secrets.VERCEL_ORG_ID }} --yes --token=${{ secrets.VERCEL_TOKEN }}
       - name: Verify production cockpit redirects
         if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true' && steps.cockpit_promotion_freshness.outputs.fresh == 'true'
         run: npx tsx apps/cockpit/scripts/deploy-smoke.ts --url https://cockpit.threadplane.ai --mode production --retries 20 --retry-delay-ms 5000
