@@ -147,4 +147,34 @@ describe('searchIndexedDocs', () => {
       expect(hit.marks[i][0]).toBeGreaterThanOrEqual(hit.marks[i - 1][1]);
     }
   });
+
+  it('matches and scores case-insensitively across mixed-case title, heading and body', () => {
+    const mixedCase: IndexedDoc[] = [
+      {
+        library: 'chat',
+        libraryTitle: 'Chat',
+        section: 'guides',
+        slug: 'mixed-case',
+        title: 'MIXEDcase Widget',
+        sections: [
+          {
+            heading: 'ConFig Section',
+            anchor: 'config-section',
+            text: 'Some Prose mentioning WIDGET behavior in a Sentence.',
+          },
+        ],
+      },
+    ];
+    const hits = searchIndexedDocs(mixedCase, 'widget');
+    expect(hits).toHaveLength(1);
+    expect(hits[0].title).toBe('MIXEDcase Widget');
+    // Matches in all three fields (title, heading via a second query below,
+    // and body) must all be found regardless of the query's or the source
+    // text's casing -- a half-converted lower-casing refactor would make
+    // exactly one of these fields silently case-sensitive.
+    const headingHits = searchIndexedDocs(mixedCase, 'CONFIG');
+    expect(headingHits).toHaveLength(1);
+    const bodyHits = searchIndexedDocs(mixedCase, 'SENTENCE');
+    expect(bodyHits).toHaveLength(1);
+  });
 });

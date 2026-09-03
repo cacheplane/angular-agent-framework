@@ -20,8 +20,9 @@ const TITLE_WEIGHT = 3;
 const HEADING_WEIGHT = 2;
 const TEXT_WEIGHT = 1;
 
-function countWeighted(haystack: string, token: string, weight: number): number {
-  return haystack.toLowerCase().includes(token) ? weight : 0;
+/** `haystack` must already be lower-cased — callers hoist that conversion so it happens once per field per section, not once per token. */
+function countWeighted(lowerHaystack: string, token: string, weight: number): number {
+  return lowerHaystack.includes(token) ? weight : 0;
 }
 
 /** True for whitespace — the only boundary `toSearchableText` leaves behind. */
@@ -72,10 +73,16 @@ function mergeRanges(ranges: [number, number][]): [number, number][] {
  */
 function buildSnippet(text: string, tokens: string[]): { snippet: string; marks: [number, number][] } {
   const lower = text.toLowerCase();
-  const first = tokens
+  const firstMatch = tokens
     .map((token) => lower.indexOf(token))
     .filter((index) => index >= 0)
-    .sort((a, b) => a - b)[0] ?? 0;
+    .sort((a, b) => a - b)[0];
+  // No token appears in this section's text at all when the query matched
+  // only the page title (or only the heading) — the AND-check in
+  // searchIndexedDocs still passed because those fields carried the match.
+  // There is nothing to center a window on, so start the snippet at 0
+  // rather than leaving `first` undefined.
+  const first = firstMatch ?? 0;
 
   const rawStart = Math.max(0, first - SNIPPET_RADIUS);
   const rawEnd = Math.min(text.length, first + SNIPPET_RADIUS);
@@ -85,6 +92,10 @@ function buildSnippet(text: string, tokens: string[]): { snippet: string; marks:
   const suffix = end < text.length ? '…' : '';
   const snippet = `${prefix}${text.slice(start, end)}${suffix}`;
 
+  // Marks are re-derived by scanning the rendered snippet rather than reused
+  // from the haystack scan above: they describe what is visible to the
+  // reader, so a token occurring in `text` outside this window correctly
+  // produces no mark.
   const snippetLower = snippet.toLowerCase();
   const rawMarks: [number, number][] = [];
   for (const token of tokens) {
@@ -105,17 +116,21 @@ export function searchIndexedDocs(docs: IndexedDoc[], query: string): DocsSearch
   const scored: { score: number; length: number; hit: DocsSearchHit }[] = [];
 
   for (const doc of docs) {
+    const lowerTitle = doc.title.toLowerCase();
     for (const section of doc.sections) {
-      const haystack = `${doc.title} ${section.heading ?? ''} ${section.text}`.toLowerCase();
-      // AND semantics, matching the instant client matcher.
+      const lowerHeading = (section.heading ?? '').toLowerCase();
+      const lowerText = section.text.toLowerCase();
+      // AND semantics, matching the instant client matcher. Each field is
+      // lower-cased once above rather than once per token below.
+      const haystack = `${lowerTitle} ${lowerHeading} ${lowerText}`;
       if (!tokens.every((token) => haystack.includes(token))) continue;
 
       const score = tokens.reduce(
         (total, token) =>
           total +
-          countWeighted(doc.title, token, TITLE_WEIGHT) +
-          countWeighted(section.heading ?? '', token, HEADING_WEIGHT) +
-          countWeighted(section.text, token, TEXT_WEIGHT),
+          countWeighted(lowerTitle, token, TITLE_WEIGHT) +
+          countWeighted(lowerHeading, token, HEADING_WEIGHT) +
+          countWeighted(lowerText, token, TEXT_WEIGHT),
         0
       );
 
