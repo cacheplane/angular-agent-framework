@@ -71,3 +71,15 @@ export interface WorkspaceContextValue {
   openRuntime(): 'requested' | 'failed';
   copyDiagnostics(): Promise<'succeeded' | 'failed'>;
 }
+
+/**
+ * One rung of the shell header's location trail.
+ *
+ * A rung with no `href` is plain text. That is not an oversight: the docs
+ * tree has no section index route, so its section rung has nowhere to point,
+ * and inventing a URL for it would 404.
+ */
+export interface WorkspaceCrumb {
+  readonly label: string;
+  readonly href?: string;
+}

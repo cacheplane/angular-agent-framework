@@ -1539,3 +1539,32 @@
     animation: none !important;
   }
 }
+
+/* Shell header location trail. Structure lives in workspace-shell.tsx; a host
+ * may restyle it through these attributes. This is the floor, not the design. */
+[data-workspace-trail] ol[data-workspace-trail-list] {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  row-gap: 4px;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--ds-text-muted);
+}
+[data-workspace-trail-link] {
+  color: var(--ds-text-muted);
+  text-decoration: none;
+}
+[data-workspace-trail-link]:hover {
+  color: var(--ds-text-primary);
+}
+[data-workspace-trail-separator] {
+  margin: 0 8px;
+}
+[data-workspace-trail-current] {
+  color: var(--ds-text-primary);
+  font-weight: 600;
+}
