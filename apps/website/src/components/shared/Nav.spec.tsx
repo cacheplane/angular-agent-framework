@@ -26,7 +26,7 @@ describe('Docs mobile navigation', () => {
     pathnameRef.current = '/docs/langgraph/guides/streaming';
   });
 
-  it('renders the docs control plane with a working search trigger on the docs index', () => {
+  it('mounts the docs control plane, search trigger included, on the library-neutral docs index', () => {
     pathnameRef.current = '/docs';
     render(<Nav />);
     fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
@@ -36,6 +36,10 @@ describe('Docs mobile navigation', () => {
     // segments in its URL. What matters here is that the drawer still mounts
     // its control plane content for that page and exposes the search
     // trigger, rather than rendering nothing or throwing on the empty path.
+    // The trigger's click-to-dispatch behavior itself (drawer close, focus
+    // restore, cmd+k dispatch) is the same handler on every route and is
+    // already covered by 'closes the drawer before dispatching mobile
+    // search' below — asserting it again here would just be that same test.
     expect(within(dialog).getByRole('button', { name: 'Search docs' })).toBeTruthy();
   });
 
