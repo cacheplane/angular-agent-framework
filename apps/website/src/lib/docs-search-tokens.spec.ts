@@ -1,5 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { searchTokens } from './docs-search-tokens';
+import { SEARCH_STOP_WORDS, searchTokens } from './docs-search-tokens';
+
+describe('SEARCH_STOP_WORDS', () => {
+  it('pins the exact list, because both sides of search depend on it', () => {
+    // The tokenizer is shared so the client's instant matcher and the server
+    // route agree on what a query means. Quietly adding or removing a word
+    // changes every query on both sides identically, so no behavioural test
+    // elsewhere would fail — this is the only thing that catches it.
+    expect([...SEARCH_STOP_WORDS].sort()).toEqual([
+      'a', 'an', 'and', 'for', 'in', 'of', 'on', 'or', 'the', 'to', 'with',
+    ]);
+  });
+});
 
 describe('searchTokens', () => {
   it('lowercases and splits on non-token characters', () => {
