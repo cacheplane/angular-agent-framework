@@ -25,11 +25,17 @@ git checkout main && git pull
 #    package.json, updates package-lock.json, and stages the result.
 npx nx release version --specifier=patch
 
-# 2. Changelog + commit + tag + GitHub Release.
+# 2. Regenerate the public agent-context files. They embed the release
+#    version, and the Website unit suite fails the release commit until
+#    `apps/website/public/{AGENTS,CLAUDE}.md` say the new version.
+npm run generate-agent-context
+git add apps/website/public/AGENTS.md apps/website/public/CLAUDE.md
+
+# 3. Changelog + commit + tag + GitHub Release.
 #    Pass the BARE version — see the warning below.
 npx nx release changelog 0.0.57
 
-# 3. Push. The Publish workflow fires on the tag and publishes to npm
+# 4. Push. The Publish workflow fires on the tag and publishes to npm
 #    with provenance via OIDC trusted publishing.
 git push origin main --tags
 ```
@@ -43,7 +49,7 @@ git push origin main --tags
 > Always `--dry-run` step 2 first and check the printed tag URL before
 > committing to it.
 
-Step 3 is what actually ships. You can also publish from your machine with
+Step 4 is what actually ships. You can also publish from your machine with
 `npx nx release publish --groups=publishable`, but preferring the tag-driven
 workflow means no local npm credentials are needed and provenance is attested
 by CI.
