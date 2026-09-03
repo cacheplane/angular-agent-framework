@@ -1112,6 +1112,67 @@ Then pass the trail to the workspace:
       />
 ```
 
+- [ ] **Step 4b: Re-source the structured-data cross-check**
+
+`apps/website/src/app/docs/docs-structured-data.spec.tsx` is the one place that proves the BreadcrumbList JSON-LD matches the *visible* trail — Google requires that correspondence, and the test earns its keep by rendering the real thing rather than comparing two copies of the same string. Its test `links the same library URL the visible breadcrumb links` currently renders `<DocsBreadcrumb>` and reads the library rung's href off the DOM. Deleting the component must not delete the guarantee.
+
+The spec already calls `DocsPage(...)` and walks the returned tree (see its `renderedJsonLd` helper), so the visible trail is available from the same call as data. Re-source it: walk that tree for the `WebsiteWorkspace` element and read `props.contextTrail`. That is stronger than the old version, which rendered a component the route might no longer use.
+
+Replace the body of that test with:
+
+```tsx
+  it('links the same library URL the visible trail links', async () => {
+    for (const sample of SAMPLES) {
+      const tree = await DocsPage({ params: Promise.resolve(sample) });
+      const nodes = await renderedJsonLd(sample);
+      const crumbs = nodeOfType(nodes, 'BreadcrumbList')?.itemListElement as
+        | { name: string; item: string }[]
+        | undefined;
+
+      // The trail the shell header renders, taken from the route itself, so
+      // this cannot pass by agreeing with a component the route dropped.
+      const trail = findWorkspaceContextTrail(tree);
+      const libraryTitle = docsConfig.find((lib) => lib.id === sample.library)?.title ?? '';
+      const visibleHref = trail?.find((crumb) => crumb.label === libraryTitle)?.href;
+
+      const label = `${sample.library}/${sample.section}/${sample.slug}`;
+      expect([label, crumbs?.find((crumb) => crumb.name === libraryTitle)?.item]).toEqual([
+        label,
+        `https://threadplane.ai${visibleHref}`,
+      ]);
+    }
+  });
+```
+
+and add this helper beside `nodeOfType`:
+
+```tsx
+function findWorkspaceContextTrail(
+  node: ReactNode
+): { label: string; href?: string }[] | undefined {
+  if (Array.isArray(node)) {
+    for (const child of node) {
+      const found = findWorkspaceContextTrail(child);
+      if (found) return found;
+    }
+    return undefined;
+  }
+  if (!isValidElement(node)) return undefined;
+  const props = node.props as {
+    contextTrail?: { label: string; href?: string }[];
+    children?: ReactNode;
+  };
+  if (props.contextTrail) return props.contextTrail;
+  return findWorkspaceContextTrail(props.children);
+}
+```
+
+Then remove the now-unused `DocsBreadcrumb` import, and the `render`/`screen` imports and `getDocBySlug` import if nothing else in the file uses them (check — other tests may).
+
+Leave the test `points every non-final breadcrumb rung at a route that exists` untouched. It validates the JSON-LD against the sitemap and is independent of how the trail is rendered.
+
+Two comment references also go stale and should be corrected in the same commit: `apps/website/src/lib/docs-config.ts:518` and `apps/website/src/lib/docs.spec.ts:369` both name `<DocsBreadcrumb>` as the visible trail. Point them at the shell header's `contextTrail` instead.
+
 - [ ] **Step 5: Delete `DocsBreadcrumb` and trim `DocsPageHeader`**
 
 ```bash
