@@ -316,6 +316,27 @@ npm run growth:cancel-resend -- --dry-run
 Perform this as one attended sequence. Do not print, paste, export, or record addresses, subjects, provider identifiers, raw provider failures, credentials, or database URLs. Stop on any count drift, unknown state, deadline failure, unverified provider record, or nonzero final inventory.
 
 1. **Block legacy ingress with Vercel Firewall.** Add an exact temporary block for `POST /api/leads`, `POST /api/newsletter`, and `POST /api/whitepaper-signup`. Verify all three POST paths are blocked while unrelated reads remain available. Keep this block in place through the hard-boundary deployment.
+
+   The rule below was installed against production, verified, and removed on 2026-09-02. The three condition groups are OR'd; the two conditions inside each are AND'd, so only those exact method/path pairs match.
+
+   ```json
+   {
+     "name": "growth-cutover-form-block",
+     "active": true,
+     "conditionGroup": [
+       { "conditions": [ { "type": "method", "op": "eq", "value": "POST" }, { "type": "path", "op": "eq", "value": "/api/whitepaper-signup" } ] },
+       { "conditions": [ { "type": "method", "op": "eq", "value": "POST" }, { "type": "path", "op": "eq", "value": "/api/newsletter" } ] },
+       { "conditions": [ { "type": "method", "op": "eq", "value": "POST" }, { "type": "path", "op": "eq", "value": "/api/leads" } ] }
+     ],
+     "action": { "mitigate": { "action": "deny" } }
+   }
+   ```
+
+   Install with `PATCH /v1/security/firewall/config` and an `{"action":"rules.insert","id":null,"value":<rule>}` body; remove with `{"action":"rules.remove","id":"<rule id>","value":null}`. Read the result back from `/v1/security/firewall/config/active` and require the expected custom-rule count.
+
+   Observed verification results: the three POSTs returned `403`; `GET /`, `/pricing`, `/contact`, and `/docs` returned `200`; `GET /api/newsletter` returned its own `405`; the unrelated `POST /api/ingest` returned its own `400`. After removal all three POSTs returned the application's own `400`.
+
+   **The block returns `403`, not a retryable status.** Vercel's WAF mitigations are `log`, `challenge`, `deny`, `bypass`, and `rate_limit`; there is no 503-with-`Retry-After` option. Cutover safety is unaffected — nothing gets through — but do not assume a well-behaved client will retry on its own, and do not describe the block to anyone as a temporary maintenance response that resolves itself.
 2. **Drain in-flight requests.** Wait for every request admitted before the firewall rule to finish, then require zero in-flight legacy form requests and stable legacy side-effect counters.
 3. **Require stable provider inventories.** Take two attended, aggregate-only Resend inventories separated by the approved observation interval. Continue only when contact and scheduled-message counts match exactly. Set `EXPECTED_CONTACTS` and `EXPECTED_SCHEDULED` from that immediately current stable observation; the values below are placeholders, never historical defaults.
 4. **Run the final importer dry run.** It reads Resend without mutation and must reproduce the approved aggregate counts.

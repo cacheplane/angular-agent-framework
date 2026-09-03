@@ -960,19 +960,19 @@ Require all branch protections and review gates to pass. Re-read the live check 
 
 - No repository edits. Follow `docs/superpowers/runbooks/2026-08-31-growth-lifecycle-cutover.md`.
 
-- [ ] **Step 1: Re-read provider state before mutation**
+- [x] **Step 1: Re-read provider state before mutation**
 
 Verify the current Vercel team/project linkage, the live website project, the lifecycle project, available Neon Marketplace installation, and production environment metadata. Never assume preview resource IDs or historical Resend counts apply to production.
 
-- [ ] **Step 2: Provision two distinct production Neon resources**
+- [x] **Step 2: Provision two distinct production Neon resources**
 
 Create one Growth production resource connected to both website and lifecycle projects as `DATABASE_URL`, and a separate Dawn production resource connected only to lifecycle as `DAWN_DATABASE_URL`. Require different resource IDs and production-only environment scope.
 
-- [ ] **Step 3: Apply and verify migrations**
+- [x] **Step 3: Apply and verify migrations**
 
 Run database preflight, apply the committed migrations to Growth production, and verify reporting views. Initialize Dawn storage only through the lifecycle service's supported deployment path. Do not alias Dawn storage to Growth.
 
-- [ ] **Step 4: Install production secrets and fail-closed flags**
+- [x] **Step 4: Install production secrets and fail-closed flags**
 
 Website: growth database environment, form policy, token/email keyrings, webhook secret, Google reply secret, cron secret, lifecycle URL and service secret.
 
@@ -996,7 +996,7 @@ Deploy the merged commit, verify unauthenticated rejection and authenticated rea
 
 Build/deploy the merged website artifact with `growth_v1`. Verify configuration, database reachability, lifecycle reachability, and bundle absence of legacy code on its deployment URL. Do not route production form traffic to it yet.
 
-- [ ] **Step 7: Prepare and verify the rollback control before cutover**
+- [x] **Step 7: Prepare and verify the rollback control before cutover**
 
 Create the exact Vercel Firewall rule definition used to block the three form POST paths and verify it can be installed without affecting ordinary GET traffic. Record the current and prepared deployment identifiers privately. The rollback order is fixed: disable campaign/enrollment and recipient delivery as appropriate; install and verify the three-route block; wait for in-flight requests; select a prior deployment only behind that block; reconcile Neon jobs and all provider effects; restore a deployment that retains the Neon-only form boundary; then remove the block. Forms must never reopen on the old NDJSON/Loops/Resend scheduling implementation.
 
@@ -1008,7 +1008,7 @@ Create the exact Vercel Firewall rule definition used to block the three form PO
 
 - [ ] **Step 1: Install and verify the temporary form-route block**
 
-Create a Vercel Firewall rule that returns a retryable maintenance response only for POST requests to:
+Create a Vercel Firewall rule that denies only POST requests to:
 
 ```text
 /api/whitepaper-signup
