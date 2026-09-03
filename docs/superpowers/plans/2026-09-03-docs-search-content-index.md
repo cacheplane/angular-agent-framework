@@ -1179,14 +1179,20 @@ Append inside the `Docs slug page` describe in `apps/website/e2e/docs.spec.ts`:
 ```ts
   test('finds a term that appears only in body prose and lands on its section', async ({ page }) => {
     await page.goto(route);
-    await page.keyboard.press('Meta+k');
+
+    // Open by clicking the trigger, matching workspace-shell.spec.ts. A
+    // keyboard shortcut would depend on how the runner maps Meta, and the
+    // button is the affordance a real user has anyway.
+    await page.getByRole('button', { name: 'Search docs' }).first().click();
 
     const dialog = page.getByRole('dialog', { name: 'Search documentation' });
     await expect(dialog).toBeVisible();
 
     // "checkpointer" is prose inside the persistence guide and is in no page
     // title, so a title-only search returns nothing for it.
-    await dialog.getByRole('combobox').fill('checkpointer');
+    await dialog
+      .getByRole('combobox', { name: 'Search documentation...' })
+      .fill('checkpointer');
 
     const hit = dialog.getByRole('option').filter({ hasText: /checkpointer/i }).first();
     await expect(hit).toBeVisible({ timeout: 10000 });
