@@ -919,7 +919,7 @@
       {
         "name": "telemetry",
         "type": "false | AgentRuntimeTelemetrySink",
-        "description": "Optional app-owned telemetry sink. No telemetry is emitted unless this is provided.",
+        "description": "Optional app-owned sink. Supply one to receive runtime lifecycle events.",
         "optional": true
       },
       {
@@ -1061,7 +1061,7 @@
       {
         "name": "telemetry",
         "type": "false | AgentRuntimeTelemetrySink",
-        "description": "Optional app-owned telemetry sink. No telemetry is emitted unless this is provided.",
+        "description": "Optional app-owned sink. Supply one to receive runtime lifecycle events.",
         "optional": true
       },
       {

@@ -46,13 +46,24 @@ function publicContentFiles(directory: string): string[] {
     const path = join(directory, entry.name);
     if (entry.isDirectory()) {
       found.push(...publicContentFiles(path));
-      // Only hand-authored content. Generated API JSON is projected rather than
-      // written, and cleaning it is the projection's job, not an author's.
-    } else if (/\.mdx$/u.test(entry.name)) {
+    } else if (/\.(?:mdx|json)$/u.test(entry.name)) {
       found.push(path);
     }
   }
   return found;
+}
+
+function offendersIn(
+  source: string,
+  patterns: ReadonlyArray<readonly [string, RegExp]>
+): string[] {
+  const hits: string[] = [];
+  source.split('\n').forEach((line, index) => {
+    for (const [label, pattern] of patterns) {
+      if (pattern.test(line)) hits.push(`${index + 1} — ${label}`);
+    }
+  });
+  return hits;
 }
 
 function offenders(
@@ -111,5 +122,37 @@ describe('public copy', () => {
         /\|\s*`telemetry`\s*\|/u
       );
     }
+  });
+});
+
+/**
+ * Generated API JSON is projected rather than authored, so the guard belongs
+ * with the generator. This asserts the projection is actually wired in: the
+ * committed output is public, and it is the thing readers see.
+ */
+describe('generated public API docs', () => {
+  const libraries = [
+    'a2ui',
+    'ag-ui',
+    'chat',
+    'langgraph',
+    'middleware',
+    'render',
+  ];
+
+  it.each(libraries)('%s carries no barred claim', (library) => {
+    const source = readFileSync(
+      join(CONTENT_ROOT, 'docs', library, 'api', 'api-docs.json'),
+      'utf8'
+    );
+    expect(offendersIn(source, BANNED_CLAIMS)).toEqual([]);
+  });
+
+  it('no longer ships the retired library', () => {
+    expect(
+      publicContentFiles(CONTENT_ROOT).filter((path) =>
+        path.includes(`${join('docs', 'telemetry')}`)
+      )
+    ).toEqual([]);
   });
 });

@@ -1,6 +1,17 @@
 import Anthropic from '@anthropic-ai/sdk';
 import fs from 'fs';
 import path from 'path';
+import { assertPublicDocOutput } from './public-doc-projection';
+
+/** The six libraries whose generated API docs the website publishes. */
+const PUBLIC_API_LIBRARIES = [
+  'a2ui',
+  'ag-ui',
+  'chat',
+  'langgraph',
+  'middleware',
+  'render',
+] as const;
 
 const client = new Anthropic();
 const MODEL = process.env['ANTHROPIC_MODEL'] ?? 'claude-sonnet-4-6';
@@ -53,12 +64,15 @@ function loadApiDocs(): string {
     throw new Error('Run generate-api-docs first: npx tsx apps/website/scripts/generate-api-docs.ts');
   }
 
-  const sections = fs.readdirSync(API_DOCS_ROOT)
-    .sort()
+  // An allowlist, not a directory walk: a retired library that reappears on
+  // disk must not silently feed the narrative generator again.
+  const sections = PUBLIC_API_LIBRARIES
     .map((library) => {
       const apiDocsPath = path.join(API_DOCS_ROOT, library, 'api', 'api-docs.json');
       if (!fs.existsSync(apiDocsPath)) return null;
-      return `### ${library}\n\n${fs.readFileSync(apiDocsPath, 'utf8')}`;
+      const source = fs.readFileSync(apiDocsPath, 'utf8');
+      assertPublicDocOutput(library, source);
+      return `### ${library}\n\n${source}`;
     })
     .filter((section): section is string => section !== null);
 

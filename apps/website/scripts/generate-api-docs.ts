@@ -2,6 +2,10 @@
 import { Application, TSConfigReader, ReflectionKind } from 'typedoc';
 import fs from 'fs';
 import path from 'path';
+import {
+  assertPublicDocOutput,
+  projectPublicDocEntries,
+} from './public-doc-projection';
 
 interface ApiParam {
   name: string;
@@ -210,16 +214,6 @@ const LIBRARIES: LibraryEntryConfig[] = [
   { docSlug: 'ag-ui',     entryPoints: ['libs/ag-ui/src/public-api.ts'] },
   { docSlug: 'a2ui',      entryPoints: ['libs/a2ui/src/index.ts'] },
   { docSlug: 'middleware', entryPoints: ['libs/middleware/src/langgraph/index.ts'] },
-  {
-    docSlug: 'telemetry',
-    entryPoints: [
-      'libs/telemetry/src/index.ts',
-      'libs/telemetry/src/browser/public-api.ts',
-      'libs/telemetry/src/node/index.ts',
-      'libs/telemetry/src/shared/public-api.ts',
-    ],
-    tsconfig: 'libs/telemetry/tsconfig.spec.json',
-  },
 ];
 
 async function generateForLibrary(cfg: LibraryEntryConfig): Promise<void> {
@@ -248,9 +242,22 @@ async function generateForLibrary(cfg: LibraryEntryConfig): Promise<void> {
 
   const entries = collectApiEntries(project.children ?? []);
 
+  // TSDoc is written as code comments but published as copy. Fail on the raw
+  // entries first: a barred claim in a doc comment also ships in the .d.ts and
+  // in every IDE tooltip, and the projection below cannot reach either. Silently
+  // cleaning the website would hide the claim rather than remove it, so the
+  // author is sent back to the source.
+  assertPublicDocOutput(`${cfg.docSlug} (source TSDoc)`, JSON.stringify(entries));
+
+  // Then project and check again, so anything the patterns above phrase
+  // differently still cannot reach the published file.
+  const publicEntries = projectPublicDocEntries(entries);
+  const serialized = JSON.stringify(publicEntries, null, 2);
+  assertPublicDocOutput(cfg.docSlug, serialized);
+
   fs.mkdirSync(outDir, { recursive: true });
-  fs.writeFileSync(path.join(outDir, 'api-docs.json'), JSON.stringify(entries, null, 2));
-  console.log(`✓ ${cfg.docSlug}/api/api-docs.json (${entries.length} entries)`);
+  fs.writeFileSync(path.join(outDir, 'api-docs.json'), serialized);
+  console.log(`✓ ${cfg.docSlug}/api/api-docs.json (${publicEntries.length} entries)`);
 }
 
 function findPackageRoot(entryPoint: string): string {
