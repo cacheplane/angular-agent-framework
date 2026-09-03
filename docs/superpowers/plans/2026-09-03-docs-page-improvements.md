@@ -147,7 +147,7 @@ Append to `apps/website/src/styles/docs.css` immediately after the line `.mdx-ca
 }
 ```
 
-Then add the prose link to the shared docs focus ring. In `apps/website/src/styles/docs.css`, find the selector list beginning `[data-docs-navlink]:focus-visible,` (around line 1592) and add this line directly after it:
+Then add the prose link to the shared docs focus ring. In `apps/website/src/styles/docs.css`, find the selector list beginning `[data-docs-navlink]:focus-visible,` (around line 1633) and add this line directly after it:
 
 ```css
 .docs-prose a:not([data-mdx-chrome]):focus-visible,
@@ -445,7 +445,7 @@ The `Scope` section repeats the breadcrumb trail, which Task 5 gives a single ow
 
 **Files:**
 - Modify: `apps/website/src/components/docs/DocsControlPlane.tsx`
-- Modify: `apps/website/src/styles/docs.css:899-928` (replace) and the focus-ring list (~line 1595)
+- Modify: `apps/website/src/styles/docs.css:940-972` (replace) and the focus-ring list (~line 1633)
 - Test: `apps/website/src/components/docs/DocsControlPlane.spec.tsx`, `apps/website/src/app/docs/docs-index-shell.spec.tsx`
 
 - [ ] **Step 1: Write the failing tests**
@@ -602,7 +602,7 @@ Two clean-ups follow, and both are ESLint **errors** if skipped:
 
 - [ ] **Step 4: Replace the orphaned sidebar-search CSS**
 
-In `apps/website/src/styles/docs.css`, delete the block from `.docs-sidebar-search-trigger {` through the end of `.docs-sidebar-search-kbd { ... }` (lines 899-928 — nothing in any `.tsx` references these class names) and put this in its place:
+In `apps/website/src/styles/docs.css`, delete the block from `.docs-sidebar-search-trigger {` (line 940) through the end of the SECOND `.docs-sidebar-search-kbd { ... }` rule (line 972 — there are two, the second overriding `font-size`/`padding`; delete both). Nothing in any `.tsx` references these class names and put this in its place:
 
 ```css
 /* Control-plane search trigger.
@@ -658,7 +658,7 @@ In `apps/website/src/styles/docs.css`, delete the block from `.docs-sidebar-sear
 }
 ```
 
-Then in the focus-ring selector list (~line 1595), replace the line `.docs-sidebar-search-trigger:focus-visible,` with:
+Then in the focus-ring selector list (~line 1633, which begins `[data-docs-navlink]:focus-visible,`), replace the line `.docs-sidebar-search-trigger:focus-visible,` with:
 
 ```css
 .docs-control-plane-search-trigger:focus-visible,
@@ -968,7 +968,7 @@ With the shell able to render a trail, the website supplies it and the two dupli
 - Modify: `apps/website/src/app/docs/[library]/[section]/[slug]/page.tsx`
 - Delete: `apps/website/src/components/docs/DocsBreadcrumb.tsx`
 - Modify: `apps/website/src/components/docs/DocsPageHeader.tsx`
-- Modify: `apps/website/src/styles/docs.css:1058-1090` (the `.docs-crumb-*` block) and the focus-ring list
+- Modify: `apps/website/src/styles/docs.css:1099-1132` (the `.docs-crumb-*` block) and the focus-ring list
 - Test: `apps/website/src/app/docs/[library]/[section]/[slug]/page.spec.tsx`
 
 - [ ] **Step 1: Write the failing tests**
@@ -1171,7 +1171,7 @@ Then drop the now-unused `section` prop at the call site in `page.tsx`:
 
 - [ ] **Step 6: Move the crumb typography onto the shell's attributes**
 
-In `apps/website/src/styles/docs.css`, replace the whole `.docs-crumb-*` block (lines 1058-1090, from the `/* DocsBreadcrumb — ... */` comment through `.docs-crumb-current { ... }`) with:
+In `apps/website/src/styles/docs.css`, replace the whole `.docs-crumb-*` block (lines 1099-1132, from the `/* DocsBreadcrumb — ... */` comment through the end of `.docs-crumb-current { ... }`, stopping before `/* DocsPageHeader */`) with:
 
 ```css
 /* Shell header location trail (workspace-shell.tsx renders the structure).
@@ -1207,7 +1207,7 @@ In `apps/website/src/styles/docs.css`, replace the whole `.docs-crumb-*` block (
 }
 ```
 
-In the focus-ring selector list (~line 1592), replace `.docs-crumb-link:focus-visible,` with:
+In the focus-ring selector list (~line 1633), replace `.docs-crumb-link:focus-visible,` with:
 
 ```css
 .website-workspace-host [data-workspace-trail-link]:focus-visible,
@@ -1747,7 +1747,7 @@ Expected: PASS, 2 tests.
 
 - [ ] **Step 5: Style the button**
 
-In `apps/website/src/styles/pages.css`, replace the `.docs-index-search-copy` rule (lines 230-238) with:
+In `apps/website/src/styles/pages.css`, replace the `.docs-index-search-copy` rule (lines 230-239) with:
 
 ```css
 .docs-index-search-button {
