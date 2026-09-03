@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-import { Injectable } from '@angular/core';
 import type { AgentQueueEntry, AgentTransport, LangGraphSubmitOptions, StreamEvent } from '@threadplane/langgraph';
 import type { ThreadState } from '@langchain/langgraph-sdk';
 import { validateHeroRecording, type HeroRecording } from './hero-recording.types';
@@ -24,7 +23,6 @@ async function fetchRecording(): Promise<HeroRecording> {
  * AgentTransport that answers each `stream()` call with the next recorded run.
  * Backs the hero's replay agent. No backend, no LLM. NOT for production apps.
  */
-@Injectable()
 export class HeroReplayTransport implements AgentTransport {
   private readonly clock: ReplayClock;
   private readonly load: () => Promise<HeroRecording>;
