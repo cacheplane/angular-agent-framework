@@ -46,6 +46,12 @@ import { HeroScriptRunner, type CursorTarget, type HeroScriptHost } from './hero
 
 export type HeroModeKind = 'replay' | 'live';
 const TYPE_DELAY_MS = 40;
+/**
+ * Reduced motion removes animation, not reading time: a visitor who never
+ * sees the cursor glide or the prompt type out still needs a moment to read
+ * what just appeared before the walkthrough moves on.
+ */
+const READ_PAUSE_MS = 1200;
 
 /**
  * The live agent's thread id, held per component instance (NOT at module
@@ -215,7 +221,8 @@ export class HeroMode implements HeroScriptHost {
     typeof window === 'undefined'
       ? { postState: () => undefined, onVisibility: () => () => undefined }
       : browserHeroBridge();
-  readonly reducedMotion =
+  /** TEST SEAM. Overridable the same way `bridge` is, instead of mocking matchMedia globally. */
+  reducedMotion =
     typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   private runner: HeroScriptRunner | null = null;
@@ -388,9 +395,13 @@ export class HeroMode implements HeroScriptHost {
 
   async typeInto(text: string): Promise<void> {
     // Deliberately does NOT focus the textarea: that would trip the takeover.
-    await this.driving(() =>
-      typeIntoTextarea(composerOf(this.surface()), text, TYPE_DELAY_MS, this.reducedMotion),
-    );
+    await this.driving(async () => {
+      await typeIntoTextarea(composerOf(this.surface()), text, TYPE_DELAY_MS, this.reducedMotion);
+      // Reduced motion writes the whole prompt in one tick; without a pause
+      // here it would be typed and sent in the same tick and a reduced-motion
+      // visitor would never get to read it.
+      if (this.reducedMotion) await sleep(READ_PAUSE_MS);
+    });
   }
 
   async send(): Promise<void> {
@@ -419,7 +430,9 @@ export class HeroMode implements HeroScriptHost {
     this.cursorX.set(point.x);
     this.cursorY.set(point.y);
     this.cursorVisible.set(true);
-    await sleep(this.reducedMotion ? 0 : 650);
+    // Reduced motion skips the glide (the cursor jumps) but still holds
+    // briefly so the target is readable before the next scripted action.
+    await sleep(this.reducedMotion ? READ_PAUSE_MS / 2 : 650);
   }
 
   hasInterrupt(): boolean {
