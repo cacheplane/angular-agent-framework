@@ -1014,6 +1014,14 @@ jobs:
       - name: Deploy immutable Website preview
         if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.website == 'true'
         id: deploy_website
+        env:
+          # Server pages read the growth form policy while rendering, so this
+          # build needs it exactly as the `website` job does. It cannot come
+          # from `vercel pull`: the project marks GROWTH_FORM_POLICY sensitive
+          # for preview/production, and Vercel never returns a sensitive value,
+          # so the pulled .env omits it and `vercel build` throws
+          # "GROWTH_FORM_POLICY must be growth_v1". It is not a secret.
+          GROWTH_FORM_POLICY: growth_v1
         run: |
           npx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
           url=$(npx vercel deploy --prebuilt --archive=tgz --prod --skip-domain --yes --token=${{ secrets.VERCEL_TOKEN }} | tail -n 1)
