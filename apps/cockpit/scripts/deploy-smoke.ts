@@ -46,6 +46,14 @@ export interface DeploySmokeOptions {
   readonly retryDelayMs?: number;
   readonly requestImpl?: RedirectSmokeRequestImpl;
   readonly sleep?: (delayMs: number) => Promise<void>;
+  /**
+   * Vercel "Protection Bypass for Automation" secret for the project that
+   * owns the deployment. Deployment protection answers every path on an
+   * unaliased deployment with 302 -> vercel.com/sso-api, so the immutable
+   * artifact can only be probed when each request carries this header. The
+   * secret is issued per project: the cockpit one is not the Website one.
+   */
+  readonly bypassSecret?: string;
 }
 
 export interface ParsedDeploySmokeArgs {
@@ -57,6 +65,8 @@ export interface ParsedDeploySmokeArgs {
 }
 
 const WEBSITE_ORIGIN = 'https://threadplane.ai';
+const BYPASS_HEADER = 'x-vercel-protection-bypass';
+const BYPASS_SECRET_ENV = 'VERCEL_AUTOMATION_BYPASS_SECRET';
 const DEFAULT_RETRIES = 0;
 const DEFAULT_RETRY_DELAY_MS = 2000;
 const ALL_MODES: readonly WorkspaceMode[] = ['Docs', 'Run', 'Code', 'API'];
@@ -383,8 +393,15 @@ const verifyCase = (
     ? ' Raw Path rejection failed; verify the Vercel project WAF Raw Path prerequisite before promotion.'
     : '';
   if (response.status !== smokeCase.expectedStatus) {
+    const protectionHint =
+      response.status === 302 &&
+      (response.headers.location ?? '').startsWith(
+        'https://vercel.com/sso-api'
+      )
+        ? ` The deployment answered with Vercel deployment protection, not the redirect service; supply the owning project's automation bypass secret via ${BYPASS_SECRET_ENV}.`
+        : '';
     throw new RedirectContractError(
-      `[${mode}] ${smokeCase.name}: expected ${smokeCase.expectedStatus}, received ${response.status}.${rawGateHint}`
+      `[${mode}] ${smokeCase.name}: expected ${smokeCase.expectedStatus}, received ${response.status}.${rawGateHint}${protectionHint}`
     );
   }
   const location = response.headers.location;
@@ -411,6 +428,7 @@ export const runDeploySmoke = async ({
   retryDelayMs = DEFAULT_RETRY_DELAY_MS,
   requestImpl = requestExactTarget,
   sleep = defaultSleep,
+  bypassSecret,
 }: DeploySmokeOptions): Promise<string> => {
   const target = new URL(url);
   if (target.pathname !== '/' || target.search || target.hash) {
@@ -420,14 +438,21 @@ export const runDeploySmoke = async ({
   const cases = buildRedirectSmokeCases(mode);
   if (dryRun) return `dry-run:${mode}:${origin}:${cases.length}`;
 
+  const bypassHeaders: Readonly<Record<string, string>> | undefined =
+    bypassSecret ? { [BYPASS_HEADER]: bypassSecret } : undefined;
+
   for (const smokeCase of cases) {
+    const headers =
+      smokeCase.headers || bypassHeaders
+        ? { ...smokeCase.headers, ...bypassHeaders }
+        : undefined;
     let attempt = 0;
     while (true) {
       try {
         const response = await requestImpl({
           origin,
           path: smokeCase.path,
-          ...(smokeCase.headers ? { headers: smokeCase.headers } : {}),
+          ...(headers ? { headers } : {}),
         });
         verifyCase(mode, smokeCase, response);
         break;
@@ -454,7 +479,10 @@ if (
 ) {
   try {
     const options = parseDeploySmokeArgs(process.argv.slice(2));
-    runDeploySmoke(options)
+    // Read the secret from the environment, never argv, so it stays out of
+    // process listings and CI step logs.
+    const bypassSecret = process.env[BYPASS_SECRET_ENV] || undefined;
+    runDeploySmoke({ ...options, ...(bypassSecret ? { bypassSecret } : {}) })
       .then((result) => process.stdout.write(`${result}\n`))
       .catch((error: unknown) => {
         const message = error instanceof Error ? error.message : String(error);

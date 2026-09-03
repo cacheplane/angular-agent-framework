@@ -1111,7 +1111,17 @@ jobs:
       - name: Exhaustively verify immutable cockpit preview
         if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true'
         run: |
+          # Deployment protection answers every path on the unaliased artifact
+          # with 302 -> vercel.com/sso-api, which the smoke reports as
+          # "expected 308, received 302". Bypass secrets are issued per Vercel
+          # project, so the Website secret cannot open this one. Say so.
+          if [ -z "${VERCEL_AUTOMATION_BYPASS_SECRET}" ]; then
+            echo "::error::VERCEL_COCKPIT_AUTOMATION_BYPASS_SECRET is unset — the protected immutable cockpit preview cannot be verified. Enable 'Protection Bypass for Automation' on the Vercel threadplane-cockpit project and store the value as this repository secret."
+            exit 1
+          fi
           npx tsx apps/cockpit/scripts/deploy-smoke.ts --url "${{ steps.deploy_cockpit.outputs.deployment_url }}" --mode preview --retries 20 --retry-delay-ms 5000
+        env:
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_COCKPIT_AUTOMATION_BYPASS_SECRET }}
       - name: Check this commit is still the tip before cockpit promotion
         if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true'
         id: cockpit_promotion_freshness

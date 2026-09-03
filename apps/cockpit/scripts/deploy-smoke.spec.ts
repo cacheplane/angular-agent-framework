@@ -332,6 +332,73 @@ describe('redirect deploy smoke contract', () => {
     ).rejects.toThrow(/WAF Raw Path prerequisite/);
   });
 
+  it('sends the automation bypass on every probe only when a secret is supplied', async () => {
+    // Vercel deployment protection answers every path on an unaliased
+    // deployment with 302 -> vercel.com/sso-api, so the immutable cockpit
+    // artifact can only be verified with the project's automation bypass.
+    const cases = buildRedirectSmokeCases('preview');
+    const withSecret = vi.fn(async (request: RedirectSmokeRequest) => {
+      const { 'x-vercel-protection-bypass': bypass, ...rest } =
+        request.headers ?? {};
+      if (bypass !== 'cockpit-bypass-sentinel') {
+        throw new Error(`Missing bypass on ${request.path}`);
+      }
+      return responseFor(
+        { ...request, headers: Object.keys(rest).length ? rest : undefined },
+        cases
+      );
+    });
+
+    await expect(
+      runDeploySmoke({
+        url: previewUrl,
+        mode: 'preview',
+        requestImpl: withSecret,
+        bypassSecret: 'cockpit-bypass-sentinel',
+      })
+    ).resolves.toBe(`pass:preview:${previewUrl}:${cases.length}`);
+    expect(withSecret).toHaveBeenCalledTimes(cases.length);
+    expect(withSecret).toHaveBeenCalledWith(
+      expect.objectContaining({
+        path: '/langgraph/core-capabilities/streaming/overview/python',
+        headers: expect.objectContaining({
+          'x-forwarded-host': 'attacker.test',
+          'x-vercel-protection-bypass': 'cockpit-bypass-sentinel',
+        }),
+      })
+    );
+
+    const withoutSecret = vi.fn(async (request: RedirectSmokeRequest) =>
+      responseFor(request, cases)
+    );
+    await runDeploySmoke({
+      url: previewUrl,
+      mode: 'preview',
+      requestImpl: withoutSecret,
+    });
+    for (const [request] of withoutSecret.mock.calls) {
+      expect(request.headers ?? {}).not.toHaveProperty(
+        'x-vercel-protection-bypass'
+      );
+    }
+  });
+
+  it('names Vercel deployment protection when a probe lands on the SSO redirect', async () => {
+    const requestImpl = vi.fn(async () => ({
+      status: 302,
+      headers: {
+        location:
+          'https://vercel.com/sso-api?url=https%3A%2F%2Fimmutable-preview.vercel.app%2F&nonce=abc',
+      },
+    }));
+
+    await expect(
+      runDeploySmoke({ url: previewUrl, mode: 'preview', requestImpl })
+    ).rejects.toThrow(
+      /expected 308, received 302.*deployment protection.*automation bypass/i
+    );
+  });
+
   it('formats dry-run output with the selected mode and case count', async () => {
     await expect(
       runDeploySmoke({ url: previewUrl, mode: 'preview', dryRun: true })
