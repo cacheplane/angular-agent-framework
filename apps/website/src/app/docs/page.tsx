@@ -33,9 +33,9 @@ export const metadata = createPageMetadata({
  * stays correct if that docs path moves. A renamed or removed capability
  * resolves to null, and Run falls back to disabled rather than to a dead link.
  */
-const DEFAULT_EXAMPLE = resolveWorkspacePath('/workspace/langgraph/streaming');
-const DEFAULT_EXAMPLE_RUN_HREF = DEFAULT_EXAMPLE
-  ? getCanonicalWebsiteWorkspaceHref(DEFAULT_EXAMPLE, 'Run')
+const DEFAULT_EXAMPLE_RESOLUTION = resolveWorkspacePath('/workspace/langgraph/streaming');
+const DEFAULT_EXAMPLE_RUN_HREF = DEFAULT_EXAMPLE_RESOLUTION
+  ? getCanonicalWebsiteWorkspaceHref(DEFAULT_EXAMPLE_RESOLUTION, 'Run')
   : undefined;
 
 interface Backend {

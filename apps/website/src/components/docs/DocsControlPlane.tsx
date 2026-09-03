@@ -145,20 +145,13 @@ export function DocsControlPlane(props: DocsControlPlaneProps) {
               href={currentPath}
               active
             />
-            {props.runHref ? (
-              <ControlPlaneRailItem
-                label="Run"
-                icon={<Play size={18} aria-hidden="true" />}
-                href={props.runHref}
-              />
-            ) : (
-              <ControlPlaneRailItem
-                label="Run"
-                icon={<Play size={18} aria-hidden="true" />}
-                disabled
-                disabledReason={disabledReason('Run')}
-              />
-            )}
+            <ControlPlaneRailItem
+              label="Run"
+              icon={<Play size={18} aria-hidden="true" />}
+              href={props.runHref}
+              disabled={!props.runHref}
+              disabledReason={disabledReason('Run')}
+            />
             <ControlPlaneRailItem
               label="Code"
               icon={<Code2 size={18} aria-hidden="true" />}
