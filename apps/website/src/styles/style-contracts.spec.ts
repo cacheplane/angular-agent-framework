@@ -172,6 +172,39 @@ const CONTRACTS: StyleContract[] = [
       'max-width': /max-width:\s*420px/,
     },
   },
+  {
+    file: 'forms.css',
+    selector: '[data-ui="form-control"]',
+    why: 'Every form control shares one height and one focus ring. If either goes, inputs silently drift back to five sizes and lose keyboard visibility.',
+    requires: {
+      height: /height:\s*var\(--form-control-height\)/,
+    },
+  },
+  {
+    file: 'forms.css',
+    selector: '[data-ui="form-control"]:focus-visible',
+    why: 'WCAG 2.2 focus appearance. Without this ring keyboard users cannot see which field is active.',
+    requires: {
+      'box-shadow': /box-shadow:\s*var\(--form-focus-ring\)/,
+    },
+  },
+  {
+    file: 'forms.css',
+    selector: '[data-ui="form-control"][aria-invalid="true"]',
+    why: 'Errors are text plus a ring. Losing the ring leaves the icon-and-text line as the only cue, which reads as help text at a glance.',
+    requires: {
+      'box-shadow': /box-shadow:\s*var\(--form-error-ring\)/,
+    },
+  },
+  {
+    file: 'forms.css',
+    selector: '[data-ui="form-row"]',
+    why: 'The footer newsletter row once put its disclosure inside the flex row and the input collapsed to 26px. The row must only ever hold controls.',
+    requires: {
+      display: /display:\s*flex/,
+      gap: /gap:/,
+    },
+  },
 ];
 
 function baseDeclarationsFor(css: string, selector: string): string {

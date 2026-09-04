@@ -171,10 +171,13 @@ test('footer newsletter form posts to /api/newsletter and renders success state'
 
   await page.goto('/');
   const footer = page.locator('footer');
-  await footer.getByLabel('Email address').fill('reader@acme.com');
+  const input = footer.getByLabel('Email');
+  // Regression guard: the disclosure once sat inside the flex row and the input collapsed to 26px.
+  expect((await input.boundingBox())?.width ?? 0).toBeGreaterThan(160);
+  await input.fill('reader@acme.com');
   await footer.getByRole('button', { name: 'Subscribe' }).click();
 
-  await expect(page.getByText("✓ You're subscribed!")).toBeVisible();
+  await expect(footer.getByRole('status')).toContainText('Subscribed.');
   expect(payload).toMatchObject({
     email: 'reader@acme.com',
     policy_version: GROWTH_FORM_POLICY_VERSION,

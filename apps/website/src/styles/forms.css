@@ -1,0 +1,226 @@
+/*
+ * Lead-form kit. Every form on the marketing site composes these rules.
+ * Spec: docs/superpowers/specs/2026-09-03-lead-forms-system-design.md
+ *
+ * Tokens below are website-scoped and derive from @threadplane/design-tokens.
+ * They are the only place a form size, ring, or status color is defined.
+ */
+:root {
+  --form-control-height: 44px;
+  --form-control-height-compact: 36px;
+  --form-control-radius: 8px;
+  --form-focus-ring: 0 0 0 3px var(--color-accent-glow);
+  --color-status-success: #1a7a40;
+  --color-status-error: var(--color-angular-red);
+  --form-error-ring: 0 0 0 3px color-mix(in srgb, var(--color-status-error) 18%, transparent);
+}
+
+/* Field: label, control, help, error */
+[data-ui="field"] {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+[data-ui="field-label"] {
+  font-family: var(--font-inter);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+[data-ui="field-optional"] {
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+[data-ui="field-help"] {
+  margin: 0;
+  font-family: var(--font-inter);
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+[data-ui="field-error"] {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-family: var(--font-inter);
+  font-size: 12px;
+  color: var(--color-status-error);
+}
+[data-ui="field-error"]::before {
+  content: "!";
+  display: inline-grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-status-error);
+  color: var(--color-text-inverted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* Controls */
+[data-ui="form-control"] {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  height: var(--form-control-height);
+  padding: 0 14px;
+  font-family: var(--font-inter);
+  font-size: var(--text-body);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--form-control-radius);
+  outline: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+[data-ui="form-control"]::placeholder {
+  color: var(--color-text-muted);
+}
+[data-ui="form-control"][data-multiline] {
+  height: auto;
+  min-height: calc(var(--form-control-height) * 2.4);
+  padding: 11px 14px;
+  resize: vertical;
+  line-height: var(--text-body--line-height);
+}
+[data-ui="form-control"][data-compact] {
+  height: var(--form-control-height-compact);
+  padding: 0 12px;
+  font-size: 14px;
+}
+[data-ui="form-control"]:focus-visible {
+  border-color: var(--color-accent);
+  box-shadow: var(--form-focus-ring);
+}
+[data-ui="form-control"][aria-invalid="true"] {
+  border-color: var(--color-status-error);
+  box-shadow: var(--form-error-ring);
+}
+[data-ui="form-control"]:disabled {
+  color: var(--color-text-muted);
+  background: var(--color-surface-dim);
+}
+/* Chevron stroke '%23737373' mirrors --color-text-muted; update both together. */
+select[data-ui="form-control"] {
+  appearance: none;
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' fill='none' stroke='%23737373' stroke-width='1.5'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+
+/* Layout helpers */
+[data-ui="form"] {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+[data-ui="form"][data-compact] {
+  gap: 10px;
+}
+[data-ui="form-row"] {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+[data-ui="form-row"] > [data-ui="field"],
+[data-ui="form-row"] > [data-ui="form-control"] {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+/* A compact form's row button matches the compact control height. */
+[data-ui="form"][data-compact] [data-ui="form-row"] [data-ui="button"] {
+  height: var(--form-control-height-compact);
+}
+[data-ui="form-disclosure"] {
+  margin: 0;
+  font-family: var(--font-inter);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+/* Card */
+[data-ui="form-card"] {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  box-shadow: var(--shadow-lg);
+}
+[data-ui="form-card"][data-compact] {
+  padding: 18px;
+  box-shadow: var(--shadow-md);
+}
+
+/* Submit: both labels occupy the same grid cell so the width never changes */
+[data-ui="button"][data-submit] > span:first-child {
+  display: inline-grid;
+}
+[data-ui="button"][data-submit] [data-slot] {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+}
+[data-ui="button"][data-submit]:not([data-pending]) [data-slot="pending"],
+[data-ui="button"][data-submit][data-pending] [data-slot="label"] {
+  visibility: hidden;
+}
+
+/* Status blocks */
+[data-ui="form-status"] {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: var(--form-control-radius);
+  font-family: var(--font-inter);
+  font-size: var(--text-body);
+  line-height: var(--text-body--line-height);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-tinted);
+}
+[data-ui="form-status"][data-tone="success"] {
+  border-color: var(--color-accent-border);
+  background: var(--color-accent-surface);
+}
+[data-ui="form-status"][data-tone="failure"] {
+  border-color: color-mix(in srgb, var(--color-status-error) 25%, transparent);
+  background: color-mix(in srgb, var(--color-status-error) 5%, transparent);
+}
+[data-ui="form-status"][data-tone="stale"] {
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-dim);
+}
+[data-ui="form-status"][data-tone="stale"] [data-ui="form-status-icon"] {
+  color: var(--color-text-secondary);
+}
+[data-ui="form-status-icon"] {
+  flex: 0 0 auto;
+  font-weight: 700;
+}
+[data-ui="form-status"][data-tone="success"] [data-ui="form-status-icon"] {
+  color: var(--color-status-success);
+}
+[data-ui="form-status"][data-tone="failure"] [data-ui="form-status-icon"] {
+  color: var(--color-status-error);
+}
+[data-ui="form-status-body"] {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+[data-ui="form-status-body"] p {
+  margin: 0;
+}
+[data-ui="form-status"] a {
+  color: var(--color-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="form-control"] {
+    transition: none;
+  }
+}

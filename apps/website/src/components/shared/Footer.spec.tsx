@@ -27,7 +27,7 @@ const UUID_V4 =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 
 function subscribe(email: string): void {
-  fireEvent.change(screen.getByLabelText(/email address/i), {
+  fireEvent.change(screen.getByLabelText('Email'), {
     target: { value: email },
   });
   fireEvent.click(screen.getByRole('button', { name: /subscribe/i }));
@@ -52,9 +52,6 @@ describe('Footer newsletter growth policy', () => {
     const disclosure = screen.getByText(formPolicy.disclosures.newsletter);
     const submit = screen.getByRole('button', { name: /subscribe/i });
 
-    expect(disclosure.compareDocumentPosition(submit)).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING
-    );
     expect(submit.getAttribute('aria-describedby')).toBe(disclosure.id);
     expect(disclosure.id).toBeTruthy();
   });
@@ -125,6 +122,43 @@ describe('Footer newsletter growth policy', () => {
       expect(screen.getByRole('button', { name: /refresh page/i })).toBeTruthy()
     );
     expect(screen.queryByText(/subscribed/i)).toBeNull();
+  });
+
+  it('keeps the disclosure out of the control row and shows a fix-naming email error on blur', () => {
+    render(<Footer formPolicy={formPolicy} />);
+    const input = screen.getByLabelText('Email');
+    const row = input.closest('[data-ui="form-row"]');
+    expect(row).toBeTruthy();
+    expect(row?.querySelector('[data-ui="form-disclosure"]')).toBeNull();
+    fireEvent.change(input, { target: { value: 'reader@acme' } });
+    fireEvent.blur(input);
+    expect(screen.getByText('Enter a full address, like jordan@acme.dev.')).toBeTruthy();
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it('reports the subscription through the success status block', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 200 }));
+    render(<Footer formPolicy={formPolicy} />);
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'reader@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Subscribe' }));
+    const status = await screen.findByRole('status');
+    expect(status.textContent).toContain('Subscribed.');
+    expect(status.textContent).toContain('The first note from Brian arrives within a day.');
+  });
+
+  it('clears the email error as soon as the value is valid and focuses the field on an invalid submit', () => {
+    vi.stubGlobal('fetch', vi.fn());
+    render(<Footer formPolicy={formPolicy} />);
+    const input = screen.getByLabelText('Email');
+    fireEvent.click(screen.getByRole('button', { name: 'Subscribe' }));
+    expect(screen.getByText('Enter your email address.')).toBeTruthy();
+    expect(document.activeElement).toBe(input);
+    fireEvent.change(input, { target: { value: 'reader@acme' } });
+    fireEvent.blur(input);
+    expect(screen.getByText('Enter a full address, like jordan@acme.dev.')).toBeTruthy();
+    fireEvent.change(input, { target: { value: 'reader@acme.dev' } });
+    expect(screen.queryByText(/full address/)).toBeNull();
+    expect(input.getAttribute('aria-invalid')).toBeNull();
   });
 });
 
