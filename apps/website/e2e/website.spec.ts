@@ -87,35 +87,29 @@ test('pricing page is responsive without page-level horizontal overflow', async 
   }
 });
 
-test('pricing page lead form validates required fields', async ({ page }) => {
+test('pricing plan buttons lead to the enterprise contact intent', async ({ page }) => {
   await page.goto('/pricing');
-  const leadForm = page.locator('#lead-form form');
-  await expect(leadForm).toBeVisible();
-  await leadForm.getByRole('button', { name: 'Request enterprise quote' }).click();
-  await expect(leadForm).toBeVisible();
-  expect(await leadForm.evaluate((form) => (form as HTMLFormElement).checkValidity())).toBe(false);
+  await expect(page.getByRole('link', { name: 'Talk to Sales' })).toHaveAttribute('href', '/contact?intent=enterprise&entry=pricing_tier_enterprise');
+  await expect(page.getByRole('link', { name: 'Request a conversation' })).toHaveAttribute('href', '/contact?intent=enterprise&entry=pricing_enterprise_band');
+  await expect(page.locator('#lead-form')).toHaveCount(0);
 });
 
 test('contact page submits a lead payload and renders success state', async ({ page }) => {
   let leadPayload: Record<string, unknown> | undefined;
   await page.route('**/api/leads', async (route) => {
     leadPayload = route.request().postDataJSON();
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ ok: true }),
-    });
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true }) });
   });
 
   await page.goto('/contact');
-  const contactForm = page.locator('main form').first();
-  await contactForm.getByRole('textbox', { name: 'Email', exact: true }).fill('jane@acme.com');
-  await contactForm.getByRole('textbox', { name: 'Name' }).fill('Jane Smith');
-  await contactForm.getByRole('textbox', { name: 'Company' }).fill('Acme');
-  await contactForm.getByRole('textbox', { name: 'Message' }).fill('We are evaluating Threadplane.');
-  await contactForm.getByRole('button', { name: 'Send' }).click();
+  const form = page.locator('main form').first();
+  await form.getByLabel('Work email').fill('jane@acme.com');
+  await form.getByLabel('Name').fill('Jane Smith');
+  await form.getByLabel('Company').fill('Acme');
+  await form.getByLabel('What are you shipping?').fill('We are evaluating Threadplane.');
+  await form.getByRole('button', { name: 'Send to Brian' }).click();
 
-  await expect(page.getByText("Thanks. We'll be in touch within one business day.")).toBeVisible();
+  await expect(page.getByRole('status')).toContainText('Sent.');
   expect(leadPayload).toMatchObject({
     form_kind: 'contact',
     email: 'jane@acme.com',
@@ -127,35 +121,33 @@ test('contact page submits a lead payload and renders success state', async ({ p
   expect(leadPayload?.['submission_id']).toMatch(UUID_V4);
 });
 
-test('pricing lead form posts to /api/leads and renders success state', async ({ page }) => {
+test('contact page enterprise intent posts the pricing form kind with a timeline', async ({ page }) => {
   let leadPayload: Record<string, unknown> | undefined;
   await page.route('**/api/leads', async (route) => {
     leadPayload = route.request().postDataJSON();
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ ok: true }),
-    });
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true }) });
   });
 
-  await page.goto('/pricing#lead-form');
-  const leadForm = page.locator('#lead-form form');
-  await leadForm.getByLabel('Name').fill('Jane Smith');
-  await leadForm.getByLabel('Work email').fill('jane@acme.com');
-  await leadForm.getByLabel('Company').fill('Acme');
-  await leadForm.getByLabel('Tell us about your use case').fill('Volume seats and security review.');
-  await leadForm.getByRole('button', { name: 'Request enterprise quote' }).click();
+  await page.goto('/contact?intent=enterprise&entry=pricing_tier_enterprise');
+  const form = page.locator('main form').first();
+  await form.getByRole('button', { name: 'Request a conversation' }).click();
+  await expect(form.getByText('Enter your email address.')).toBeVisible();
 
-  await expect(page.getByText(/we'll be in touch within one business day/i)).toBeVisible();
+  await form.getByLabel('Work email').fill('jane@acme.com');
+  await form.getByLabel('Company').fill('Acme');
+  await form.getByLabel('Timeline').selectOption('this_quarter');
+  await form.getByLabel('Tell us about your use case').fill('Volume seats and security review.');
+  await form.getByRole('button', { name: 'Request a conversation' }).click();
+
+  await expect(page.getByRole('status')).toContainText('Sent.');
   expect(leadPayload).toMatchObject({
     form_kind: 'pricing',
     email: 'jane@acme.com',
-    name: 'Jane Smith',
     company: 'Acme',
+    timeline: 'this_quarter',
     message: 'Volume seats and security review.',
     policy_version: GROWTH_FORM_POLICY_VERSION,
   });
-  expect(leadPayload?.['submission_id']).toMatch(UUID_V4);
 });
 
 test('footer newsletter form posts to /api/newsletter and renders success state', async ({ page }) => {
