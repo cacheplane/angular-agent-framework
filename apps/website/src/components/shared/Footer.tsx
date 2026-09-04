@@ -1,18 +1,15 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import type { PublicFormPolicy } from '../../lib/growth/form-policy';
-import {
-  FORM_POLICY_REFRESH_MESSAGE,
-  growthFormRequestSnapshot,
-  type GrowthFormRequestSnapshot,
-} from '../../lib/growth/form-client';
+import { FORM_POLICY_REFRESH_MESSAGE } from '../../lib/growth/form-client';
 import { analyticsEvents, type CtaId } from '../../lib/analytics/events';
-import { track, trackCtaClick, trackExternalLinkClick } from '../../lib/analytics/client';
+import { trackCtaClick, trackExternalLinkClick } from '../../lib/analytics/client';
 import { DEMOS, demoCtaSuffix } from '../../lib/demos';
 import { LogoMark } from '../ui/LogoMark';
 import { Button } from '../ui/Button';
 import { Eyebrow } from '../ui/Eyebrow';
+import { Field, FormStatus, SubmitButton, TextInput, emailError, useGrowthForm } from '../form';
 
 function GitHubIcon() {
   return (
@@ -33,105 +30,75 @@ function NpmIcon() {
 
 function NewsletterForm({ formPolicy }: { formPolicy: PublicFormPolicy }) {
   const [email, setEmail] = useState('');
-  const [state, setState] = useState<
-    'idle' | 'submitting' | 'done' | 'error' | 'stale'
-  >('idle');
-  const submissionSnapshot = useRef<GrowthFormRequestSnapshot<{
-    email: string;
-  }> | null>(null);
+  const [emailMessage, setEmailMessage] = useState<string | null>(null);
+  const form = useGrowthForm<{ email: string }>({
+    route: '/api/newsletter',
+    formPolicy,
+    events: {
+      submit: analyticsEvents.marketingNewsletterSignupSubmit,
+      success: analyticsEvents.marketingNewsletterSignupSuccess,
+      fail: analyticsEvents.marketingNewsletterSignupFail,
+    },
+    analytics: { surface: 'footer', source_section: 'newsletter-form' },
+  });
   const disclosureId = 'footer-newsletter-growth-disclosure';
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
-    setState('submitting');
-    track(analyticsEvents.marketingNewsletterSignupSubmit, {
-      surface: 'footer',
-      source_section: 'newsletter-form',
-    });
-    try {
-      const snapshot = growthFormRequestSnapshot(submissionSnapshot.current, {
-        email,
-      });
-      submissionSnapshot.current = snapshot;
-      const res = await fetch('/api/newsletter', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...snapshot.facts,
-          acquisition_session_id: snapshot.acquisition_session_id,
-          submission_id: snapshot.submission_id,
-          policy_version: formPolicy.version,
-        }),
-      });
-      if (res.status === 409) {
-        submissionSnapshot.current = null;
-        setState('stale');
-        return;
-      }
-      if (res.status >= 400 && res.status < 500) {
-        submissionSnapshot.current = null;
-      }
-      if (!res.ok) throw new Error();
-      submissionSnapshot.current = null;
-      track(analyticsEvents.marketingNewsletterSignupSuccess, {
-        surface: 'footer',
-        source_section: 'newsletter-form',
-      });
-      setState('done');
-    } catch {
-      track(analyticsEvents.marketingNewsletterSignupFail, {
-        surface: 'footer',
-        source_section: 'newsletter-form',
-        error_reason: 'api_error',
-      });
-      setState('error');
-    }
+    const problem = emailError(email);
+    setEmailMessage(problem);
+    if (problem) return;
+    void form.submit({ email: email.trim() });
   };
 
-  if (state === 'done') {
-    return <p className="text-sm mb-4 footer-newsletter-success">✓ You&apos;re subscribed!</p>;
+  if (form.status === 'sent') {
+    return (
+      <div className="footer-newsletter">
+        <FormStatus tone="success" title="Subscribed." detail="The first note from Brian arrives within a day." />
+      </div>
+    );
   }
 
-  if (state === 'stale') {
+  if (form.status === 'stale') {
     return (
-      <div role="alert" className="mb-4 max-w-xs">
-        <p className="text-xs footer-newsletter-disclosure">
-          {FORM_POLICY_REFRESH_MESSAGE}
-        </p>
-        <Button type="button" onClick={() => window.location.reload()}>
-          Refresh page
-        </Button>
+      <div className="footer-newsletter">
+        <FormStatus tone="stale" title="This page is out of date." detail={FORM_POLICY_REFRESH_MESSAGE}>
+          <Button type="button" size="md" onClick={() => window.location.reload()}>
+            Refresh page
+          </Button>
+        </FormStatus>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2 mb-4 max-w-xs">
-      <label htmlFor="footer-email" className="sr-only">Email address</label>
-      <input
-        id="footer-email"
-        type="email"
-        autoComplete="email"
-        placeholder="Email address"
-        value={email}
-        onChange={e => setEmail(e.target.value)}
-        required
-        disabled={state === 'submitting'}
-        className="text-sm rounded-lg px-3 py-2 flex-1 min-w-0 footer-newsletter-input"
-      />
-      <p id={disclosureId} className="text-xs footer-newsletter-disclosure">
+    <form onSubmit={handleSubmit} className="footer-newsletter" data-ui="form" data-compact="" noValidate>
+      <Field id="footer-email" label="Email" error={emailMessage}>
+        <div data-ui="form-row">
+          <TextInput
+            compact
+            type="email"
+            autoComplete="email"
+            inputMode="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (emailMessage) setEmailMessage(emailError(e.target.value));
+            }}
+            onBlur={() => setEmailMessage(emailError(email))}
+            disabled={form.status === 'pending'}
+          />
+          <SubmitButton size="md" pending={form.status === 'pending'} pendingLabel="Subscribing…" aria-describedby={disclosureId}>
+            Subscribe
+          </SubmitButton>
+        </div>
+      </Field>
+      <p id={disclosureId} data-ui="form-disclosure">
         {formPolicy.disclosures.newsletter}
       </p>
-      <Button
-        type="submit"
-        variant="primary"
-        size="md"
-        disabled={state === 'submitting' || !email}
-        aria-describedby={disclosureId}
-      >
-        {state === 'submitting' ? '...' : 'Subscribe'}
-      </Button>
+      {form.status === 'failed' ? (
+        <FormStatus tone="failure" title="That did not send." detail="Try again in a moment." />
+      ) : null}
     </form>
   );
 }

@@ -50,14 +50,9 @@
   max-width: 36ch;
   line-height: 1.6;
 }
-.footer-newsletter-success {
-  color: #1a7a40;
-}
-.footer-newsletter-input {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-primary);
-  outline: none;
+.footer-newsletter {
+  max-width: 320px;
+  margin-bottom: 16px;
 }
 .footer-column-eyebrow {
   margin-bottom: 4px;

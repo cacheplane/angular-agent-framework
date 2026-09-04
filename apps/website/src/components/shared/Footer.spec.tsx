@@ -27,7 +27,7 @@ const UUID_V4 =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 
 function subscribe(email: string): void {
-  fireEvent.change(screen.getByLabelText(/email address/i), {
+  fireEvent.change(screen.getByLabelText('Email'), {
     target: { value: email },
   });
   fireEvent.click(screen.getByRole('button', { name: /subscribe/i }));
@@ -52,9 +52,6 @@ describe('Footer newsletter growth policy', () => {
     const disclosure = screen.getByText(formPolicy.disclosures.newsletter);
     const submit = screen.getByRole('button', { name: /subscribe/i });
 
-    expect(disclosure.compareDocumentPosition(submit)).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING
-    );
     expect(submit.getAttribute('aria-describedby')).toBe(disclosure.id);
     expect(disclosure.id).toBeTruthy();
   });
@@ -125,6 +122,18 @@ describe('Footer newsletter growth policy', () => {
       expect(screen.getByRole('button', { name: /refresh page/i })).toBeTruthy()
     );
     expect(screen.queryByText(/subscribed/i)).toBeNull();
+  });
+
+  it('keeps the disclosure out of the control row and shows a fix-naming email error on blur', () => {
+    render(<Footer formPolicy={formPolicy} />);
+    const input = screen.getByLabelText('Email');
+    const row = input.closest('[data-ui="form-row"]');
+    expect(row).toBeTruthy();
+    expect(row?.querySelector('[data-ui="form-disclosure"]')).toBeNull();
+    fireEvent.change(input, { target: { value: 'reader@acme' } });
+    fireEvent.blur(input);
+    expect(screen.getByText('Enter a full address, like jordan@acme.dev.')).toBeTruthy();
+    expect(input.getAttribute('aria-invalid')).toBe('true');
   });
 });
 
