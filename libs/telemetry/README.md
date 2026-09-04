@@ -1,7 +1,9 @@
 # @threadplane/telemetry
 
-Explicit, opt-in telemetry helpers for Threadplane applications. Installing this
-package does not execute telemetry code or make network requests.
+Explicit capture helpers for applications built with
+[Threadplane](https://github.com/cacheplane/angular-agent-framework), the AI
+agent UI framework for Angular. Every send is one the application asked for:
+this package has no ambient collection path.
 
 <p align="center">
   <a href="https://www.npmjs.com/package/@threadplane/telemetry">
@@ -15,19 +17,22 @@ package does not execute telemetry code or make network requests.
   </a>
 </p>
 
-## Trust contract
+## How sending works
 
-- **Installation is inert.** The package has no install lifecycle scripts.
-- **Browser telemetry is opt-in.** It stays disabled unless an application calls
-  `provideThreadplaneTelemetry({ enabled: true })`.
-- **Node telemetry is explicit.** An event is sent only when application code
+- **No install lifecycle scripts.** The manifest declares none, so `npm install`
+  runs no code from this package.
+- **The browser service starts disabled.** It sends nothing until an application
+  calls `provideThreadplaneTelemetry({ enabled: true })`.
+- **Node capture is explicit.** An event is sent only where application code
   calls a capture helper.
 - **Disable controls win.** `TPLANE_TELEMETRY_DISABLED`, `DO_NOT_TRACK`, CI
   detection, or `disableTelemetry()` prevent sends before a network call.
+- **Point it anywhere.** `TPLANE_TELEMETRY_INGEST_URL`, or an `endpoint` or
+  `sink` on the browser provider, routes events to infrastructure you control.
 
-Threadplane telemetry never collects message content, prompts, completions, tool
-inputs or outputs, credentials, project paths, raw environment variables, or
-personally identifiable information.
+The event categories, purposes, and retention that apply to Threadplane's own
+properties are described at
+[threadplane.ai/privacy](https://threadplane.ai/privacy).
 
 ## Install
 

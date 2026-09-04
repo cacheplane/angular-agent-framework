@@ -1,6 +1,6 @@
 # @threadplane/langgraph
 
-Adapter that wraps a LangGraph agent into the runtime-neutral `Agent` contract from `@threadplane/chat`. The Angular equivalent of LangGraph's React `useStream()` hook — signal-driven access to messages, status, tool calls, interrupts, subagents, branch history, and thread persistence.
+The LangGraph adapter for [Threadplane](https://github.com/cacheplane/angular-agent-framework), the AI agent UI framework for Angular. Wraps a LangGraph agent into the runtime-neutral `Agent` contract that `@threadplane/chat` consumes — the Angular counterpart to LangGraph's React `useStream()` hook, with signal-driven access to messages, status, tool calls, interrupts, subagents, branch history, and thread persistence.
 
 <p align="center">
   <a href="https://www.npmjs.com/package/@threadplane/langgraph">
@@ -27,7 +27,7 @@ Adapter that wraps a LangGraph agent into the runtime-neutral `Agent` contract f
 ## Install
 
 ```bash
-npm install @threadplane/langgraph @threadplane/chat @langchain/core @langchain/langgraph-sdk
+npm install @threadplane/chat @threadplane/langgraph @langchain/core @langchain/langgraph-sdk marked
 ```
 
 **Peer dependencies:**
@@ -39,6 +39,8 @@ npm install @threadplane/langgraph @threadplane/chat @langchain/core @langchain/
 @langchain/langgraph-sdk   ^1.7.4
 rxjs                       ~7.8.0
 ```
+
+`marked` is the markdown parser peer that `@threadplane/chat` requires when assistant messages are rendered through `<chat>`.
 
 ## Quick start
 

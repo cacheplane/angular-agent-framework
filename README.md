@@ -1,18 +1,18 @@
 <p align="center">
   <img
     src="https://threadplane.ai/assets/hero.svg"
-    alt="Threadplane — agent UI primitives for Angular"
+    alt="Threadplane — the AI agent UI framework for Angular"
     width="100%"
   />
 </p>
 
 <p align="center">
-  <em>Threadplane — Production-ready chat, threads, and generative UI for AI agents.</em>
+  <em>The AI agent UI framework for Angular.</em>
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@threadplane/langgraph">
-    <img alt="npm version" src="https://img.shields.io/npm/v/@threadplane%2Flanggraph?color=6C8EFF&labelColor=080B14&style=flat-square" />
+  <a href="https://www.npmjs.com/package/@threadplane/chat">
+    <img alt="npm version" src="https://img.shields.io/npm/v/@threadplane%2Fchat?color=6C8EFF&labelColor=080B14&style=flat-square" />
   </a>
   <a href="https://angular.dev">
     <img alt="Angular 20 | 21 | 22" src="https://img.shields.io/badge/Angular-20%20%7C%2021%20%7C%2022-6C8EFF?labelColor=080B14&style=flat-square" />
@@ -33,71 +33,185 @@
 
 ---
 
-Threadplane is a production-ready agent UI framework for Angular. `@threadplane/chat` provides chat surfaces (headless primitives, opinionated compositions, interrupts, generative UI). `@threadplane/langgraph` adapts a LangGraph Platform endpoint into Angular Signals via `provideAgent()` + `injectAgent()`. `@threadplane/ag-ui` bridges any AG-UI-compatible backend into the same chat surface. `@threadplane/render` renders JSON specs to Angular components inside your design system.
+**Threadplane is the open-source Angular AI agent UI framework.** Chat, durable
+threads, human approvals, tool progress, subagents, and generative UI — built on
+Angular Signals and dependency injection, for Angular 20–22. Your backend stays
+where it is: Threadplane adapts a LangGraph or AG-UI agent into a runtime-neutral
+`Agent` contract that the UI consumes, and renders generated UI with the design
+system components you already own.
 
-`injectAgent()` is the Angular equivalent of LangGraph's React `useStream()` hook, projected through a runtime-neutral `Agent` contract that `@threadplane/chat` consumes. Configure it once with `provideAgent({...})`, inject it into any Angular 20–22 component, and get signal-driven access to messages, status, tool calls, interrupts, subagents, history, and thread management — no subscriptions, no `async` pipe, no zone.js required.
+`MIT · Angular 20–22 · no account, no cloud`
 
 ---
 
 ## Install
 
 ```bash
-npm install @threadplane/langgraph @threadplane/chat
+npm install @threadplane/chat @threadplane/langgraph @langchain/core @langchain/langgraph-sdk marked
 ```
 
-**Peer dependencies:** `@angular/core ^20.0.0 || ^21.0.0 || ^22.0.0`, `@langchain/core ^1.1.33`, `@langchain/langgraph-sdk ^1.7.4`, `rxjs ~7.8.0`
+Talking to an AG-UI endpoint instead:
+
+```bash
+npm install @threadplane/chat @threadplane/ag-ui @ag-ui/client @ag-ui/core marked
+```
+
+**Peer dependencies:**
+
+```
+@angular/core              ^20.0.0 || ^21.0.0 || ^22.0.0   # every Angular package here
+marked                     ^15.0.0 || ^16.0.0              # @threadplane/chat
+rxjs                       ~7.8.0                          # @threadplane/chat and both adapters
+@langchain/core            ^1.1.33                         # @threadplane/langgraph
+@langchain/langgraph-sdk   ^1.7.4                          # @threadplane/langgraph
+@ag-ui/client              *                               # @threadplane/ag-ui
+@ag-ui/core                *                               # @threadplane/ag-ui
+```
+
+Each package README lists that package's full peer set.
 
 ---
 
-## 30-Second Example
+## First success: a chat surface with no backend
+
+Start with the fake agent. It streams a canned reply in the browser, so the UI
+can be built and tested before a server, a graph, or an API key exists.
 
 ```typescript
-// app.config.ts — wire the adapter once
-import { provideAgent } from '@threadplane/langgraph';
+// app.config.ts — no server, no LLM, deterministic output
+import { ApplicationConfig } from '@angular/core';
+import { provideFakeAgent } from '@threadplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideAgent({
-      apiUrl: 'https://your-langgraph-platform.com',
-      assistantId: 'my-agent',
-    }),
+    provideFakeAgent({ tokens: ['Hello', ' from', ' Threadplane'] }),
   ],
 };
+```
 
-// support-chat.component.ts
+```typescript
+// support-agent.component.ts
 import { Component } from '@angular/core';
-import { ChatComponent as ThreadplaneChatComponent } from '@threadplane/chat';
 import { injectAgent } from '@threadplane/langgraph';
+import { ChatComponent } from '@threadplane/chat';
 
 @Component({
-  selector: 'app-support-chat',
-  imports: [ThreadplaneChatComponent],
-  template: `
-    <chat [agent]="chat" />
-
-    @if (chat.isLoading()) {
-      <span>Streaming…</span>
-    }
-
-    <button (click)="send()">Send</button>
-  `,
+  imports: [ChatComponent],
+  template: `<chat [agent]="agent" />`,
 })
-export class SupportChatComponent {
-  protected readonly chat = injectAgent();
-
-  send() {
-    void this.chat.submit({ message: 'Hello' });
-  }
+export class SupportAgentComponent {
+  protected readonly agent = injectAgent();
 }
 ```
 
-`chat.messages()` and `chat.status()` are Angular Signals. Bind them directly in your template — no subscriptions, no `async` pipe, no zone.js required.
+`agent.messages()` and `agent.status()` are Angular Signals. Bind them directly
+in a template — no subscriptions, no `async` pipe, no zone.js required. The same
+fake agent is what tests run against: swap the transport, never the component.
+
+Walkthrough: [Try without a backend](https://threadplane.ai/docs/chat/getting-started/try-without-a-backend).
 
 ---
 
-## Feature Comparison
+## One UI, two adapters
 
-| Feature | `injectAgent()` (Angular) | `useStream()` (React) |
+When the UI works, point it at a real runtime. Only the provider changes — the
+component above is untouched, because `@threadplane/chat` consumes the
+runtime-neutral `Agent` contract rather than any adapter type.
+
+```typescript
+// LangGraph Platform, or a local `langgraph dev` server
+import { provideAgent } from '@threadplane/langgraph';
+
+provideAgent({ apiUrl: 'http://localhost:2024', assistantId: 'agent' });
+```
+
+```typescript
+// Any AG-UI-compatible endpoint
+import { provideAgent } from '@threadplane/ag-ui';
+
+provideAgent({ url: 'http://localhost:8000/agent' });
+```
+
+Which one to pick: [Choosing an adapter](https://threadplane.ai/docs/choosing-an-adapter).
+
+---
+
+## See it running
+
+- [demo.threadplane.ai](https://demo.threadplane.ai) — the LangGraph demo:
+  streaming, durable threads, interrupts, subagents, and generative UI.
+- [ag-ui.threadplane.ai](https://ag-ui.threadplane.ai) — the same chat surface
+  over an AG-UI backend.
+- [Generative UI, live in the docs](https://threadplane.ai/docs/chat/guides/generative-ui?mode=run).
+
+---
+
+## Packages
+
+Published packages follow a patch-only `0.0.x` release policy: no minor or major
+bump silently changes a lockfile.
+
+| Package | Purpose | License |
+|---|---|---|
+| `@threadplane/chat` | The Angular agent chat surface: `<chat>`, headless primitives, opinionated compositions, interrupts, subagents, generative UI | MIT |
+| `@threadplane/langgraph` | LangGraph adapter; `provideAgent()` / `injectAgent()` expose a LangGraph run as Angular Signals | MIT |
+| `@threadplane/ag-ui` | AG-UI adapter; bridges any `@ag-ui/client`-compatible backend into the same chat surface | MIT |
+| `@threadplane/render` | `@json-render/core`-backed Angular render engine that maps JSON specs to your own components | MIT |
+| `@threadplane/a2ui` | A2UI protocol types, streaming parser, and dynamic-value resolver; pure TypeScript, no Angular dependency | MIT |
+| `@threadplane/middleware` | Backend middleware for client-declared tools; the `/langgraph` entrypoint targets LangGraph.js | MIT |
+| `@threadplane/telemetry` | Explicit Node and browser capture helpers for applications that choose to send events | MIT |
+
+Generated UI renders through a registry you control:
+
+```typescript
+import { provideViews, views } from '@threadplane/render';
+
+provideViews(views({ KpiCard: KpiCardComponent, DisruptionsTable: DisruptionsTableComponent }));
+```
+
+An agent can render those components and nothing else, so generative UI stays
+inside your design system.
+
+---
+
+## Architecture
+
+<p align="center">
+  <img
+    src="https://threadplane.ai/assets/arch-diagram.svg"
+    alt="Threadplane architecture: Angular Component → injectAgent() → StreamManager Bridge → LangGraph Platform, with signals returned reactively"
+    width="100%"
+  />
+</p>
+
+`provideAgent()` creates the agent's internal `BehaviorSubject`s at
+injection-context time — once, when the provider factory runs. `injectAgent()`
+retrieves the configured agent in any component. The `StreamManager` bridge (the
+only file that touches `@langchain/langgraph-sdk` internals) pushes stream events
+into those subjects. `toSignal()` converts each subject to an Angular Signal,
+also at construction time. Dynamic actions (`submit`, `stop`, `switchThread`)
+push into the existing subjects — no new subjects are ever created after
+construction. This architecture is required because `toSignal()` must be called
+in an injection context and cannot be called again later.
+
+The runtime-neutral `Agent` contract is the stability boundary between adapters
+and the chat surface. `@threadplane/chat` consumes `Agent` — not
+`LangGraphAgent` — so swapping `@threadplane/langgraph` for
+`@threadplane/ag-ui` requires no changes to chat components or templates.
+
+**Reliability:** every pull request runs the "Library — lint / test / build" CI
+job across all packages. Testing uses `MockAgentTransport` to swap the transport
+layer, so `injectAgent()` itself never needs to be mocked — just substitute the
+transport.
+
+---
+
+## The Signals surface
+
+`injectAgent()` is the Angular counterpart to LangGraph's React `useStream()`
+hook, projected through the runtime-neutral `Agent` contract.
+
+| Capability | `injectAgent()` (Angular) | `useStream()` (React) |
 |---|---|---|
 | Streaming state as reactive primitives | Angular Signals | React state |
 | Messages signal | `messages()` | `messages` |
@@ -121,50 +235,27 @@ export class SupportChatComponent {
 
 ---
 
-## Packages
-
-All packages are published at version `0.0.47` under a patch-only `0.0.x` release policy.
-
-| Package | Purpose | License |
-|---|---|---|
-| `@threadplane/chat` | Drop-in agent chat UI for Angular: headless primitives and opinionated compositions (`<chat>`, popup, sidebar, interrupts, GenUI) | MIT |
-| `@threadplane/langgraph` | LangGraph adapter; `provideAgent()`/`injectAgent()` exposes a LangGraph run as Angular Signals | MIT |
-| `@threadplane/ag-ui` | AG-UI adapter; bridges any `@ag-ui/client`-compatible backend into the chat surface | MIT |
-| `@threadplane/render` | `@json-render/core`-backed Angular engine that renders JSON specs to components (powers GenUI) | MIT |
-| `@threadplane/a2ui` | A2UI protocol types, streaming parser, and dynamic-value resolver; pure TypeScript, no Angular dependency | MIT |
-| `@threadplane/telemetry` | Explicit Node and opt-in browser telemetry helpers | MIT |
-
----
-
-## Architecture
-
-<p align="center">
-  <img
-    src="https://threadplane.ai/assets/arch-diagram.svg"
-    alt="Threadplane architecture: Angular Component → injectAgent() → StreamManager Bridge → LangGraph Platform, with signals returned reactively"
-    width="100%"
-  />
-</p>
-
-`provideAgent()` creates the agent's internal `BehaviorSubject`s at injection-context time — once, when the provider factory runs. `injectAgent()` retrieves the configured `LangGraphAgent` in any component. The `StreamManager` bridge (the only file that touches `@langchain/langgraph-sdk` internals) pushes stream events into those subjects. `toSignal()` converts each subject to an Angular Signal, also at construction time. Dynamic actions (`submit`, `stop`, `switchThread`) push into the existing subjects — no new subjects are ever created after construction. This architecture is required because `toSignal()` must be called in an injection context and cannot be called again later.
-
-The runtime-neutral `Agent` contract is the stability boundary between adapters and the chat surface. `@threadplane/chat` consumes `Agent` — not `LangGraphAgent` — so swapping `@threadplane/langgraph` for `@threadplane/ag-ui` requires no changes to your chat components or templates.
-
-**Reliability:** Every pull request runs the "Library — lint / test / build" CI job across all packages. Testing uses `MockAgentTransport` to swap the transport layer, so you never need to mock `injectAgent()` itself — just substitute the transport. The patch-only `0.0.x` release policy ensures no minor or major version bumps silently break your lockfile.
-
----
-
 ## Documentation
 
-- [LangGraph Quickstart](https://threadplane.ai/docs/langgraph/getting-started/quickstart)
-- [injectAgent() API](https://threadplane.ai/docs/langgraph/api/inject-agent)
-- [Choosing an adapter (LangGraph vs AG-UI)](https://threadplane.ai/docs/choosing-an-adapter)
-- [Chat Introduction](https://threadplane.ai/docs/chat/getting-started/introduction)
-- [Human-in-the-Loop / Interrupts](https://threadplane.ai/docs/langgraph/guides/interrupts)
-- [Subgraph and Subagent Streaming](https://threadplane.ai/docs/langgraph/guides/subgraphs)
+- [Try without a backend](https://threadplane.ai/docs/chat/getting-started/try-without-a-backend)
+- [LangGraph quickstart](https://threadplane.ai/docs/langgraph/getting-started/quickstart)
+- [AG-UI quickstart](https://threadplane.ai/docs/ag-ui/getting-started/quickstart)
+- [Choosing an adapter](https://threadplane.ai/docs/choosing-an-adapter)
+- [`injectAgent()` API](https://threadplane.ai/docs/langgraph/api/inject-agent)
+- [Chat introduction](https://threadplane.ai/docs/chat/getting-started/introduction)
+- [Human approvals and interrupts](https://threadplane.ai/docs/langgraph/guides/interrupts)
+- [Durable threads](https://threadplane.ai/docs/langgraph/guides/persistence)
+- [Subgraph and subagent streaming](https://threadplane.ai/docs/langgraph/guides/subgraphs)
 
 ---
 
-## License
+## License and data handling
 
-Every published package in this repository is released under the **MIT License** — free for commercial and noncommercial use, modification, and redistribution with the required notice.
+Every published package in this repository is released under the **MIT
+License** — free for commercial and noncommercial use, modification, and
+redistribution with the required notice.
+
+There is no account to create and no Threadplane service between the application
+and the agent backend: adapters talk to the endpoint that is configured. How
+Threadplane handles data on its own properties is described at
+[threadplane.ai/privacy](https://threadplane.ai/privacy).

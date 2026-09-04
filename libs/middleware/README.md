@@ -1,7 +1,8 @@
 # @threadplane/middleware
 
-Backend middleware for the [Threadplane](https://github.com/cacheplane/angular-agent-framework)
-client-tools capability — frontend-declared tools the model calls and the browser executes.
+The backend half of client tools in [Threadplane](https://github.com/cacheplane/angular-agent-framework),
+the AI agent UI framework for Angular. Client tools are declared in the browser: the model
+calls them, and the browser executes them.
 
 The `@threadplane/middleware/langgraph` entrypoint is the LangGraph.js twin of the Python
 `threadplane-middleware` package: it binds client-declared tool stubs onto your model and

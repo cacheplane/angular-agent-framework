@@ -1,7 +1,7 @@
 {
   "name": "@threadplane/middleware",
   "version": "0.0.2",
-  "description": "Backend middleware for the Threadplane client-tools capability. The /langgraph entrypoint targets LangGraph.js.",
+  "description": "Backend middleware for Threadplane client tools — the model calls, the browser executes. LangGraph.js entrypoint.",
   "keywords": ["langgraph", "agent", "client-tools", "middleware", "threadplane"],
   "license": "MIT",
   "type": "module",
