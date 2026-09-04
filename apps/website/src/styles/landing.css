@@ -850,6 +850,46 @@
   padding: 16px 20px;
 }
 
+/* A code pane must never hide its payload with no signal that it is hiding
+ * anything.
+ *
+ * These panes were `white-space: pre` (the <pre> default) plus
+ * `overflow-x: auto`, and macOS overlay scrollbars draw NOTHING until a scroll
+ * is already under way. So the runtime-parity pane — the page's central
+ * mechanism claim — ended mid-string at `assistantId: 'agent` (measured
+ * scrollWidth 609 vs clientWidth 550 at 1440px, and ~126-260px of overflow at
+ * 390px) and looked complete. Wrapping, in two steps:
+ *
+ *   1. `pre-wrap` soft-wraps at whitespace already in the source, so a long
+ *      argument list folds onto a second line. Indentation and blank lines
+ *      survive and no token is split. This alone clears every pane on the
+ *      homepage at 1440 and 768.
+ *   2. `break-word` is the backstop for what step 1 cannot fold: a run with no
+ *      whitespace in it that is wider than the whole pane — a dotted assertion
+ *      chain like `expect(fixture.nativeElement.textContent).toContain('Hello`
+ *      (474px in a 348px pane at 390px). `break-word`, unlike `anywhere`, only
+ *      splits a word that cannot fit on a line of its own, so it never changes
+ *      a line that already wraps at a space, and it leaves min-content sizing
+ *      alone so the grid columns do not collapse.
+ *
+ * Wrapping, not a scrollbar, is what carries this: `scrollbar-width` and
+ * `::-webkit-scrollbar` were both measured at 0px of layout gutter on macOS —
+ * the platform keeps the overlay scrollbar either way, which is the whole bug.
+ * The thin scrollbar below is a real improvement only where scrollbars are
+ * classic (Windows, Linux, macOS with "always show"), so it stays as polish and
+ * not as the affordance.
+ *
+ * Do not drop `pre-wrap` back to `pre`; the failure is silent by construction.
+ * Held by a style contract (styles/style-contracts.spec.ts). */
+.shiki[data-ui="highlighted-code"] > pre.shiki,
+.install-dialog-code {
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 35%) transparent;
+}
+
 /* RenderCodeShowcase — components/landing/render/RenderCodeShowcase.tsx */
 .render-code {
   padding: 80px 32px;
@@ -1387,6 +1427,16 @@
   margin: 0 0 8px; padding: 10px 12px; border-radius: 8px; overflow-x: auto;
   background: #1c1c1e; color: #e8e8e8; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.5;
 }
+/* The install command is the primary CTA's whole payload and it is a single
+ * shell line — 774px of it in a 470px pane, so the reader saw
+ * `npm install @threadplane/chat @threadplane/langgraph @langcha…` and nothing
+ * told them the rest existed. It has no meaningful line breaks, so wrapping is
+ * strictly better than scrolling here: `anywhere` is the last resort for a
+ * package name longer than a narrow pane. Held by a style contract. */
+.install-dialog-command {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 .install-dialog-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
 .install-dialog-trust { margin: 12px 0 0; font-size: 12px; color: var(--color-text-muted); }
 
@@ -1429,34 +1479,79 @@
   visibility: hidden;
   transition: opacity 300ms ease, visibility 0s linear 300ms;
 }
+/* The control had chrome already — `background: #111` with a black drop
+ * shadow — but the poster it sits on is a near-black chat surface, so on a
+ * phone (the only viewport that shows it: autoplay is off below 768px) it read
+ * as bare white text floating over the screenshot. A light pill with a dark
+ * ring is legible on this poster and on any lighter one that replaces it, and
+ * the row is sized to a 44px touch target. */
 .hero-demo-play,
 .hero-demo-fallback {
+  /* Centred by auto margins between two zero insets, not by
+     `left: 50%` + `translateX(-50%)`: with only `left` set, an absolutely
+     positioned box may shrink-to-fit into the remaining HALF of the stage, and
+     on a phone that folded "Play walkthrough" onto two lines. */
   position: absolute;
-  left: 50%;
+  left: 0;
+  right: 0;
   bottom: 20px;
-  transform: translateX(-50%);
-  padding: 10px 16px;
+  width: fit-content;
+  max-width: calc(100% - 32px);
+  margin-inline: auto;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 20px;
   border-radius: 999px;
-  border: 0;
-  background: #111;
-  color: #fff;
+  border: 1px solid rgb(0 0 0 / 12%);
+  background: rgb(248 248 248 / 97%);
+  color: #111;
   font-family: var(--font-inter);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
-  box-shadow: 0 6px 18px rgb(0 0 0 / 25%);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
+}
+.hero-demo-play::before {
+  content: '▶';
+  font-size: 10px;
+  line-height: 1;
 }
 .hero-demo-play:focus-visible,
 .hero-demo-fallback:focus-visible {
-  outline: 2px solid #fff;
+  outline: 2px solid #111;
   outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgb(255 255 255 / 90%);
 }
 @media (prefers-reduced-motion: reduce) {
   .hero-demo-iframe,
   .hero-demo-poster,
   .hero-demo[data-state='ready'] .hero-demo-poster {
     transition: none;
+  }
+}
+/* The poster is a 1200x720 desktop capture. Held at the desktop aspect ratio a
+ * 390px phone renders it at 0.325 scale, which turns every line of the chat
+ * into a grey smudge — the hero then proves nothing. Narrowing the stage lets
+ * `object-fit: cover` crop instead of shrink: at 390px the stage measures
+ * 348x435, the image scales 0.60 instead of 0.29 and the visible window is
+ * ~576 of the poster's 1200 columns, so the prompt bubble and the streamed plan
+ * are read at roughly twice the size. `40%` starts that window at the poster's
+ * text column (x=245) rather than in
+ * its empty left gutter. The stage also governs the iframe, so a phone that
+ * taps Play gets a taller, more usable chat viewport than the 16:9 letterbox.
+ *
+ * This is damage control on a desktop asset, not a mobile design: a poster
+ * captured at phone width is the real fix. */
+@media (max-width: 767px) {
+  .hero-demo-stage {
+    aspect-ratio: 4 / 5;
+  }
+  .hero-demo-poster {
+    object-position: 40% top;
   }
 }
 

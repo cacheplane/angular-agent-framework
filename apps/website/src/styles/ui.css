@@ -245,6 +245,24 @@
   border: 1px solid transparent;
   box-shadow: none;
 }
+/* Keyboard focus ring.
+ *
+ * Without this the UA default applies — `outline: auto 1px rgb(0, 95, 204)` in
+ * Chrome — which is a thin blue hairline drawn against the primary button's
+ * own `--color-accent` (#004090) fill. Effectively invisible, and the place it
+ * matters most is the one place focus lands programmatically: closing the
+ * install dialog returns focus to the "Install Threadplane" trigger, and the
+ * keyboard user could not see where they were.
+ *
+ * The offset ring is `--color-accent`, which the dark section scope above
+ * re-points to #64c3fd, so it stays high-contrast on both surfaces. The inner
+ * `--color-surface` halo separates ring from fill on `primary`, where fill and
+ * ring are otherwise the same colour family. Held by a style contract. */
+[data-ui="button"]:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--color-surface);
+}
 
 /* UI primitive — FAQ.
  * The summary::-webkit-details-marker hide, open-state chevron rotation, and

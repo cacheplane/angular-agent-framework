@@ -77,7 +77,11 @@ export function InstallDialog({ open, onClose }: InstallDialogProps) {
 
         <li className="install-dialog-step">
           <h3 className="install-dialog-step-title">Run this in your Angular project</h3>
-          <pre className="install-dialog-code"><code data-testid="install-command">{option.command}</code></pre>
+          {/* The command is one shell line, not code with meaningful line
+              breaks — it wraps rather than scrolls, so the whole of it is
+              visible at every width. Copy takes `option.command` from state,
+              so the button still copies the single unwrapped string. */}
+          <pre className="install-dialog-code install-dialog-command"><code data-testid="install-command">{option.command}</code></pre>
           <p className="install-dialog-step-note">{option.peersNote}</p>
         </li>
 
