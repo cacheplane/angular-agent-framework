@@ -861,6 +861,8 @@ jobs:
       - examples-ag-ui-e2e
       - cockpit-e2e-summary
       - website-e2e
+      - website-preview-e2e
+      - cockpit-preview-smoke
       - posthog-sync-plan
       - scripts-tests
       - growth-lifecycle
@@ -886,6 +888,8 @@ jobs:
           RESULT_EXAMPLES_AG_UI_E2E: ${{ needs.examples-ag-ui-e2e.result }}
           RESULT_COCKPIT_E2E: ${{ needs.cockpit-e2e-summary.result }}
           RESULT_WEBSITE_E2E: ${{ needs.website-e2e.result }}
+          RESULT_WEBSITE_PREVIEW_E2E: ${{ needs.website-preview-e2e.result }}
+          RESULT_COCKPIT_PREVIEW_SMOKE: ${{ needs.cockpit-preview-smoke.result }}
           RESULT_POSTHOG: ${{ needs.posthog-sync-plan.result }}
           RESULT_SCRIPTS_TESTS: ${{ needs.scripts-tests.result }}
           RESULT_GROWTH_LIFECYCLE: ${{ needs.growth-lifecycle.result }}
@@ -904,6 +908,11 @@ jobs:
           SCOPE_POSTHOG: ${{ needs.ci-scope.outputs.posthog }}
           SCOPE_SCRIPTS_TESTS: ${{ needs.ci-scope.outputs.scripts_tests }}
           SCOPE_GROWTH_LIFECYCLE: ${{ needs.ci-scope.outputs.growth_lifecycle }}
+          # The preview lanes need repository secrets, so they skip on fork
+          # PRs. Their scope keys are computed from changed files alone, so on
+          # a fork they can be in scope yet legitimately skipped. This mirrors
+          # the lanes' own `if` so the gate only demands them when they could run.
+          PREVIEW_LANES_ELIGIBLE: ${{ github.event_name == 'merge_group' || github.event.pull_request.head.repo.full_name == github.repository }}
         run: |
           set -euo pipefail
 
@@ -939,6 +948,22 @@ jobs:
             fi
           }
 
+          # Scoped check for the PR-side preview lanes: enforced only when the
+          # lanes were eligible to run; otherwise treated as unselected, where
+          # only a real failure or cancellation is an error.
+          require_preview() {
+            local scope_key="$1"
+            local label="$2"
+            local result="$3"
+            local scoped="$4"
+
+            if [[ "$PREVIEW_LANES_ELIGIBLE" == "true" ]]; then
+              require_scoped "$scope_key" "$label" "$result" "$scoped"
+            else
+              require_scoped "$scope_key" "$label" "$result" "false"
+            fi
+          }
+
           require_always "CI scope" "$RESULT_CI_SCOPE"
           require_scoped "library" "Library — lint / test / build" "$RESULT_LIBRARY" "$SCOPE_LIBRARY"
           require_scoped \
@@ -960,6 +985,8 @@ jobs:
             "$SCOPE_EXAMPLES_AG_UI"
           require_scoped "cockpit_e2e" "Cockpit — e2e" "$RESULT_COCKPIT_E2E" "$SCOPE_COCKPIT_E2E"
           require_scoped "website_e2e" "Website — e2e" "$RESULT_WEBSITE_E2E" "$SCOPE_WEBSITE_E2E"
+          require_preview "website_e2e" "Website — e2e (deployed preview)" "$RESULT_WEBSITE_PREVIEW_E2E" "$SCOPE_WEBSITE_E2E"
+          require_preview "cockpit_deploy_smoke" "Cockpit — immutable preview smoke" "$RESULT_COCKPIT_PREVIEW_SMOKE" "$SCOPE_COCKPIT_DEPLOY_SMOKE"
           require_scoped "posthog" "PostHog — dashboards-as-code drift check" "$RESULT_POSTHOG" "$SCOPE_POSTHOG"
           require_scoped "scripts_tests" "Scripts — generator / proxy vitest suites" "$RESULT_SCRIPTS_TESTS" "$SCOPE_SCRIPTS_TESTS"
           require_scoped "growth_lifecycle" "Growth lifecycle — Node 22" "$RESULT_GROWTH_LIFECYCLE" "$SCOPE_GROWTH_LIFECYCLE"

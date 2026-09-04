@@ -716,6 +716,35 @@ describe('CI workflow', () => {
     assert.doesNotMatch(job, /vercel remove/);
   });
 
+  it('requires both PR-side preview verifications through the scoped gate', async () => {
+    const required = await readRequiredPrChecksJob();
+    const needs = readJobNeeds(required);
+
+    assert.ok(needs.includes('website-preview-e2e'));
+    assert.ok(needs.includes('cockpit-preview-smoke'));
+    assert.match(
+      required,
+      /RESULT_WEBSITE_PREVIEW_E2E:\s*\$\{\{ needs\.website-preview-e2e\.result \}\}/
+    );
+    assert.match(
+      required,
+      /RESULT_COCKPIT_PREVIEW_SMOKE:\s*\$\{\{ needs\.cockpit-preview-smoke\.result \}\}/
+    );
+    assert.match(
+      required,
+      /PREVIEW_LANES_ELIGIBLE:\s*\$\{\{ github\.event_name == 'merge_group' \|\| github\.event\.pull_request\.head\.repo\.full_name == github\.repository \}\}/
+    );
+    assert.match(required, /require_preview\(\) \{/);
+    assert.match(
+      required,
+      /require_preview "website_e2e" "Website — e2e \(deployed preview\)" "\$RESULT_WEBSITE_PREVIEW_E2E" "\$SCOPE_WEBSITE_E2E"/
+    );
+    assert.match(
+      required,
+      /require_preview "cockpit_deploy_smoke" "Cockpit — immutable preview smoke" "\$RESULT_COCKPIT_PREVIEW_SMOKE" "\$SCOPE_COCKPIT_DEPLOY_SMOKE"/
+    );
+  });
+
   it('gates Cockpit deployment on the production Website smoke even for Cockpit-only changes', async () => {
     const deployJob = await readDeployJob();
     const websiteOrCockpit =
@@ -1121,6 +1150,8 @@ describe('CI workflow', () => {
       'examples-ag-ui-e2e',
       'cockpit-e2e-summary',
       'website-e2e',
+      'website-preview-e2e',
+      'cockpit-preview-smoke',
       'posthog-sync-plan',
       'scripts-tests',
       'growth-lifecycle',
