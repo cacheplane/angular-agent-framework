@@ -46,6 +46,7 @@ export function ContactForm({ formPolicy, intent = 'contact', entryPoint }: Cont
   const [timeline, setTimeline] = useState<Timeline | ''>('');
   const [message, setMessage] = useState('');
   const [emailMessage, setEmailMessage] = useState<string | null>(null);
+  const [companyMessage, setCompanyMessage] = useState<string | null>(null);
   const [timelineMessage, setTimelineMessage] = useState<string | null>(null);
 
   const form = useGrowthForm({
@@ -63,16 +64,23 @@ export function ContactForm({ formPolicy, intent = 'contact', entryPoint }: Cont
     },
   });
   const disclosureId = 'contact-form-growth-disclosure';
+  const companyError = 'Tell us the company so we can prepare.';
   const timelineError = 'Choose a timeline so we can route this.';
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const emailProblem = emailError(email);
+    const companyProblem = enterprise ? requiredError(company, companyError) : null;
     const timelineProblem = enterprise ? requiredError(timeline, timelineError) : null;
     setEmailMessage(emailProblem);
+    setCompanyMessage(companyProblem);
     setTimelineMessage(timelineProblem);
     if (emailProblem) {
       document.getElementById('contact-email')?.focus();
+      return;
+    }
+    if (companyProblem) {
+      document.getElementById('contact-company')?.focus();
       return;
     }
     if (timelineProblem) {
@@ -82,10 +90,10 @@ export function ContactForm({ formPolicy, intent = 'contact', entryPoint }: Cont
     void form.submit({
       form_kind: enterprise ? 'pricing' : 'contact',
       email: email.trim(),
-      ...(name ? { name } : {}),
-      ...(company ? { company } : {}),
+      ...(name.trim() ? { name: name.trim() } : {}),
+      ...(company.trim() ? { company: company.trim() } : {}),
       ...(enterprise && timeline ? { timeline } : {}),
-      ...(message ? { message } : {}),
+      ...(message.trim() ? { message: message.trim() } : {}),
     });
   }
 
@@ -121,8 +129,16 @@ export function ContactForm({ formPolicy, intent = 'contact', entryPoint }: Cont
       <Field id="contact-name" label="Name" optional>
         <TextInput type="text" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} />
       </Field>
-      <Field id="contact-company" label="Company" optional={!enterprise}>
-        <TextInput type="text" autoComplete="organization" value={company} onChange={(e) => setCompany(e.target.value)} />
+      <Field id="contact-company" label="Company" optional={!enterprise} error={companyMessage}>
+        <TextInput
+          type="text"
+          autoComplete="organization"
+          value={company}
+          onChange={(e) => {
+            setCompany(e.target.value);
+            if (companyMessage) setCompanyMessage(requiredError(e.target.value, companyError));
+          }}
+        />
       </Field>
       {enterprise ? (
         <Field id="contact-timeline" label="Timeline" error={timelineMessage}>

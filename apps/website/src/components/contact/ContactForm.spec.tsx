@@ -86,6 +86,7 @@ describe('ContactForm', () => {
       'marketing:lead_form_success',
       expect.objectContaining({ surface: 'contact' })
     );
+    await waitFor(() => expect(screen.getByRole('status').textContent).toContain('Sent.'));
   });
 
   it('submits with all optional fields populated', async () => {
@@ -126,6 +127,12 @@ describe('ContactForm', () => {
         expect.objectContaining({ surface: 'contact' })
       )
     );
+    await waitFor(() => {
+      expect(screen.getByRole('alert').textContent).toContain('That did not send.');
+      expect(screen.getByRole('link', { name: 'brian@threadplane.ai' }).getAttribute('href')).toBe(
+        'mailto:brian@threadplane.ai'
+      );
+    });
   });
 });
 
@@ -290,5 +297,27 @@ describe('ContactForm growth policy', () => {
     fireEvent.change(screen.getByLabelText(/work email/i), { target: { value: 'jane@acme.com' } });
     fireEvent.click(screen.getByRole('button', { name: /request a conversation/i }));
     expect(screen.getByText('Choose a timeline so we can route this.')).toBeTruthy();
+  });
+
+  it('in enterprise intent requires a company and focuses it before the timeline', () => {
+    vi.stubGlobal('fetch', vi.fn());
+    render(<ContactForm formPolicy={formPolicy} intent="enterprise" />);
+    fireEvent.change(screen.getByLabelText(/work email/i), { target: { value: 'jane@acme.com' } });
+    fireEvent.click(screen.getByRole('button', { name: /request a conversation/i }));
+    expect(screen.getByText('Tell us the company so we can prepare.')).toBeTruthy();
+    expect(document.activeElement).toBe(screen.getByLabelText(/company/i));
+  });
+
+  it('does not post whitespace-only optional facts', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200 });
+    vi.stubGlobal('fetch', fetchMock);
+    render(<ContactForm formPolicy={formPolicy} />);
+    fill({ email: 'jane@acme.com', name: '   ', company: ' Acme ', message: ' ' });
+    send();
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const sent = sentBody(fetchMock, 0);
+    expect(sent.name).toBeUndefined();
+    expect(sent.message).toBeUndefined();
+    expect(sent.company).toBe('Acme');
   });
 });
