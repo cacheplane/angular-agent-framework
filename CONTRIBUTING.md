@@ -195,6 +195,32 @@ branch protection and has no rulesets, so the unprivileged
 `GET /repos/{owner}/{repo}/rules/branches/main` endpoint returns `[]` and is
 not an alternative.
 
+### PR-side deploy verification
+
+Two lanes run the deploy job's verification on pull requests against real
+Vercel previews, so deploy-only failures surface before merge:
+
+- **Website — e2e (deployed preview)** builds and deploys the Website and
+  the examples as previews under deterministic aliases
+  (`threadplane-pr-<n>-cacheplane.vercel.app` and
+  `threadplane-examples-pr-<n>-cacheplane.vercel.app`; `mq-<sha8>` for
+  merge-queue candidates) and runs the ordinary suite against the Website
+  alias. The runtime iframe loads because the examples are assembled with
+  the Website alias in their parent-origin policy and Playwright seeds the
+  examples origin's bypass cookie (`apps/website/e2e/runtime-bypass-setup.ts`).
+  A later push re-points both aliases; the deployments behind them are kept.
+- **Cockpit — immutable preview smoke** deploys a throwaway cockpit preview,
+  runs the exhaustive redirect smoke against it, and removes it.
+
+Both need repository secrets and therefore skip on fork PRs; the required
+gate only demands them when they were eligible to run. Each Vercel project
+has its own Protection Bypass for Automation secret:
+`VERCEL_AUTOMATION_BYPASS_SECRET` (Website),
+`VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET`, and
+`VERCEL_COCKPIT_AUTOMATION_BYPASS_SECRET`. A secret added while a run is in
+flight does not reach that run; re-run after provisioning. Never pass
+`--skip-domain` to a preview deploy; Vercel requires it to accompany `--prod`.
+
 ## Code review
 
 Every PR gets a genuine advisory AI code review

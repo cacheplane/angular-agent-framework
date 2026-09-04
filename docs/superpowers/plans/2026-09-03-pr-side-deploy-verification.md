@@ -699,16 +699,16 @@ Append inside the `describe('CI workflow', ...)` block in `scripts/ci-workflow.s
     );
     assert.match(
       required,
-      /require_scoped "website_e2e" "Website — e2e \(deployed preview\)" "\$RESULT_WEBSITE_PREVIEW_E2E" "\$SCOPE_WEBSITE_E2E"/
+      /require_preview "website_e2e" "Website — e2e \(deployed preview\)" "\$RESULT_WEBSITE_PREVIEW_E2E" "\$SCOPE_WEBSITE_E2E"/
     );
     assert.match(
       required,
-      /require_scoped "cockpit_deploy_smoke" "Cockpit — immutable preview smoke" "\$RESULT_COCKPIT_PREVIEW_SMOKE" "\$SCOPE_COCKPIT_DEPLOY_SMOKE"/
+      /require_preview "cockpit_deploy_smoke" "Cockpit — immutable preview smoke" "\$RESULT_COCKPIT_PREVIEW_SMOKE" "\$SCOPE_COCKPIT_DEPLOY_SMOKE"/
     );
   });
 ```
 
-Note on forks: both jobs skip there, `require_scoped` treats `skipped` as acceptable, so the gate stays green on forks without these lanes.
+Note on forks: `require_scoped` demands `success` for any in-scope job, and the scope keys are file-derived, so on a fork PR the lanes can be in scope yet legitimately skipped. The gate therefore uses a `require_preview` wrapper that applies the scoped rule only when `PREVIEW_LANES_ELIGIBLE` (the lanes' own same-repo-or-merge-queue clause) is true; see the implementation in `ci.yml`.
 
 - [ ] **Step 2: Run the guard to verify it fails**
 
@@ -731,11 +731,17 @@ In the step `env:` block, add after `RESULT_WEBSITE_E2E: ${{ needs.website-e2e.r
           RESULT_COCKPIT_PREVIEW_SMOKE: ${{ needs.cockpit-preview-smoke.result }}
 ```
 
+Also add, after the last `SCOPE_*` line:
+
+```yaml
+          PREVIEW_LANES_ELIGIBLE: ${{ github.event_name == 'merge_group' || github.event.pull_request.head.repo.full_name == github.repository }}
+```
+
 In the `run:` script, add after the line `require_scoped "website_e2e" "Website — e2e" "$RESULT_WEBSITE_E2E" "$SCOPE_WEBSITE_E2E"`:
 
 ```bash
-          require_scoped "website_e2e" "Website — e2e (deployed preview)" "$RESULT_WEBSITE_PREVIEW_E2E" "$SCOPE_WEBSITE_E2E"
-          require_scoped "cockpit_deploy_smoke" "Cockpit — immutable preview smoke" "$RESULT_COCKPIT_PREVIEW_SMOKE" "$SCOPE_COCKPIT_DEPLOY_SMOKE"
+          require_preview "website_e2e" "Website — e2e (deployed preview)" "$RESULT_WEBSITE_PREVIEW_E2E" "$SCOPE_WEBSITE_E2E"
+          require_preview "cockpit_deploy_smoke" "Cockpit — immutable preview smoke" "$RESULT_COCKPIT_PREVIEW_SMOKE" "$SCOPE_COCKPIT_DEPLOY_SMOKE"
 ```
 
 - [ ] **Step 4: Run the guards and validate YAML**

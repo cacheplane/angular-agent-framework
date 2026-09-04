@@ -743,6 +743,7 @@ describe('CI workflow', () => {
       required,
       /require_preview "cockpit_deploy_smoke" "Cockpit — immutable preview smoke" "\$RESULT_COCKPIT_PREVIEW_SMOKE" "\$SCOPE_COCKPIT_DEPLOY_SMOKE"/
     );
+    assert.match(required, /was eligible and in scope \$\{scope_key\} but was skipped/);
   });
 
   it('gates Cockpit deployment on the production Website smoke even for Cockpit-only changes', async () => {

@@ -957,6 +957,12 @@ jobs:
             local result="$3"
             local scoped="$4"
 
+            if [[ "$PREVIEW_LANES_ELIGIBLE" == "true" && "$scoped" == "true" && "$result" == "skipped" ]]; then
+              echo "::error::${label} was eligible and in scope ${scope_key} but was skipped — its job-level if no longer matches the gate's PREVIEW_LANES_ELIGIBLE expression."
+              failed=1
+              return
+            fi
+
             if [[ "$PREVIEW_LANES_ELIGIBLE" == "true" ]]; then
               require_scoped "$scope_key" "$label" "$result" "$scoped"
             else
