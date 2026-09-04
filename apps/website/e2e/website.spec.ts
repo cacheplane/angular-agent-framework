@@ -73,8 +73,8 @@ test('pricing page routes software and support CTAs without checkout', async ({ 
   await page.goto('/pricing');
 
   await expect(page.getByRole('link', { name: 'Install from npm' })).toHaveAttribute('href', /npmjs\.com\/package\/@threadplane\/chat/);
-  await expect(page.getByRole('link', { name: 'Discuss assurance' })).toHaveAttribute('href', '/contact?source=pricing_production_assurance');
-  await expect(page.getByRole('link', { name: 'Talk to Sales' })).toHaveAttribute('href', '/contact?source=pricing_tier_enterprise');
+  await expect(page.getByRole('link', { name: 'Discuss assurance' })).toHaveAttribute('href', '/contact?intent=enterprise&entry=pricing_tier_production_assurance');
+  await expect(page.getByRole('link', { name: 'Talk to Sales' })).toHaveAttribute('href', '/contact?intent=enterprise&entry=pricing_tier_enterprise');
   await expect(page.locator('form[action*="checkout"]')).toHaveCount(0);
 });
 
