@@ -34,7 +34,6 @@ export default async function ContactPage({
   const intent = readIntent(params.intent);
   const entryPoint = readEntryPoint(params.entry);
   const formPolicy = getFormPolicy();
-  const githubStarsPill = await GitHubStarsPill();
   return (
     <Section surface="tinted" ariaLabelledBy="contact-heading">
       <Container>
@@ -59,7 +58,7 @@ export default async function ContactPage({
                 <a className="contact-chip" href="https://github.com/cacheplane/angular-agent-framework/issues">GitHub issues</a>
                 <a className="contact-chip" href="https://discord.gg/cacheplane">Discord</a>
               </div>
-              {githubStarsPill}
+              <GitHubStarsPill />
             </div>
           </div>
           <FormCard>

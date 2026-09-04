@@ -5,6 +5,7 @@ import { render, screen } from '@testing-library/react';
 
 vi.mock('../../lib/analytics/client', () => ({ track: vi.fn(), trackCtaClick: vi.fn(), trackExternalLinkClick: vi.fn() }));
 vi.mock('server-only', () => ({}));
+vi.mock('../../components/contact/GitHubStarsPill', () => ({ GitHubStarsPill: () => <span data-testid="stars" /> }));
 
 import ContactPage from './page';
 
@@ -18,6 +19,7 @@ describe('ContactPage', () => {
     expect(screen.getByRole('link', { name: 'brian@threadplane.ai' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'GitHub issues' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Discord' })).toBeTruthy();
+    expect(screen.getByTestId('stars')).toBeTruthy();
   });
 
   it('renders the enterprise variant from the intent query and passes the entry point through', async () => {
