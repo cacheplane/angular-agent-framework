@@ -83,10 +83,10 @@ function openForm(): void {
 }
 
 function fillAndSubmit(email: string): void {
-  fireEvent.change(screen.getByLabelText(/email address/i), {
+  fireEvent.change(screen.getByLabelText('Work email'), {
     target: { value: email },
   });
-  fireEvent.click(screen.getByRole('button', { name: /send me the guide/i }));
+  fireEvent.click(screen.getByRole('button', { name: 'Get the field report' }));
 }
 
 async function flush(): Promise<void> {
@@ -120,7 +120,7 @@ describe('AnnouncementToast growth policy', () => {
     openForm();
 
     const disclosure = screen.getByText(formPolicy.disclosures.whitepaper);
-    const submit = screen.getByRole('button', { name: /send me the guide/i });
+    const submit = screen.getByRole('button', { name: 'Get the field report' });
 
     expect(disclosure.id).toBeTruthy();
     expect(submit.getAttribute('aria-describedby')).toBe(disclosure.id);
@@ -156,5 +156,39 @@ describe('AnnouncementToast growth policy', () => {
     await flush();
     expect(screen.getByRole('button', { name: /refresh page/i })).toBeTruthy();
     expect(screen.queryByText(/check your inbox/i)).toBeNull();
+  });
+
+  it('reports a failed send instead of pretending it succeeded', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500 }));
+    openForm();
+
+    fillAndSubmit('reader@acme.com');
+
+    await flush();
+    expect(screen.getByRole('alert').textContent).toContain('That did not send.');
+  });
+
+  it('validates on blur and focuses the field on an invalid submit', () => {
+    vi.stubGlobal('fetch', vi.fn());
+    openForm();
+
+    const input = screen.getByLabelText('Work email');
+    fireEvent.click(screen.getByRole('button', { name: 'Get the field report' }));
+    expect(screen.getByText('Enter your email address.')).toBeTruthy();
+    expect(document.activeElement).toBe(input);
+
+    fireEvent.change(input, { target: { value: 'reader@acme' } });
+    fireEvent.blur(input);
+    expect(screen.getByText('Enter a full address, like jordan@acme.dev.')).toBeTruthy();
+  });
+
+  it('shows the sent confirmation on success', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 200 }));
+    openForm();
+
+    fillAndSubmit('reader@example.com');
+
+    await flush();
+    expect(screen.getByRole('status').textContent).toContain('Check your inbox.');
   });
 });
