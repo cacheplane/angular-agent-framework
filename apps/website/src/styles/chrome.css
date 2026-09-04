@@ -457,7 +457,7 @@
   display: inline-flex;
   align-items: center;
   min-height: 24px;
-  margin-top: 10px;
+  margin-top: 0;
   font-size: 12px;
   color: var(--color-text-muted);
   text-decoration: underline;

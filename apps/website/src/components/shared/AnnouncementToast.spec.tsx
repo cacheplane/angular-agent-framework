@@ -173,6 +173,8 @@ describe('AnnouncementToast growth policy', () => {
     openForm();
 
     const input = screen.getByLabelText('Work email');
+    act(() => { (document.activeElement as HTMLElement | null)?.blur(); });
+    expect(document.activeElement).not.toBe(input);
     fireEvent.click(screen.getByRole('button', { name: 'Get the field report' }));
     expect(screen.getByText('Enter your email address.')).toBeTruthy();
     expect(document.activeElement).toBe(input);
