@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 
 const trackMock = vi.hoisted(() => vi.fn());
 vi.mock('../../lib/analytics/client', () => ({ track: trackMock }));
@@ -109,12 +109,59 @@ describe('useGrowthForm', () => {
 
     let done: Promise<void> = Promise.resolve();
     act(() => { done = result.current.submit({ form_kind: 'contact', email: 'jane@acme.com' }); });
-    await waitFor(() => expect(result.current.status).toBe('pending'));
+    expect(result.current.status).toBe('pending');
 
     await act(async () => { resolve({ ok: true, status: 200 }); await done; });
     expect(result.current.status).toBe('sent');
 
     act(() => result.current.reset());
     expect(result.current.status).toBe('idle');
+  });
+
+  it('clears the snapshot on a 400 so the next attempt with the same facts gets a new id', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 400 });
+    vi.stubGlobal('fetch', fetchMock);
+    const { result } = renderHook(() => useGrowthForm(options()));
+    await act(() => result.current.submit({ form_kind: 'contact', email: 'jane@acme.com' }));
+    await act(() => result.current.submit({ form_kind: 'contact', email: 'jane@acme.com' }));
+    expect(body(fetchMock, 0).submission_id).not.toBe(body(fetchMock, 1).submission_id);
+    expect(result.current.status).toBe('failed');
+  });
+
+  it('clears the snapshot on 409 as well', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 409 });
+    vi.stubGlobal('fetch', fetchMock);
+    const { result } = renderHook(() => useGrowthForm(options()));
+    await act(() => result.current.submit({ form_kind: 'contact', email: 'jane@acme.com' }));
+    await act(() => result.current.submit({ form_kind: 'contact', email: 'jane@acme.com' }));
+    expect(body(fetchMock, 0).submission_id).not.toBe(body(fetchMock, 1).submission_id);
+  });
+
+  it('ignores a second submit while one is in flight', async () => {
+    let resolve: (value: unknown) => void = () => undefined;
+    const fetchMock = vi.fn().mockReturnValue(new Promise((r) => { resolve = r; }));
+    vi.stubGlobal('fetch', fetchMock);
+    const { result } = renderHook(() => useGrowthForm(options()));
+    let first: Promise<void> = Promise.resolve();
+    act(() => { first = result.current.submit({ form_kind: 'contact', email: 'jane@acme.com' }); });
+    await act(() => result.current.submit({ form_kind: 'contact', email: 'jane@acme.com' }));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(trackMock).toHaveBeenCalledTimes(1);
+    await act(async () => { resolve({ ok: true, status: 200 }); await first; });
+    expect(result.current.status).toBe('sent');
+  });
+
+  it('keeps submit and reset identities stable across renders and sends a stable acquisition session id', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 500 });
+    vi.stubGlobal('fetch', fetchMock);
+    const { result, rerender } = renderHook(() => useGrowthForm(options()));
+    const { submit, reset } = result.current;
+    rerender();
+    expect(result.current.submit).toBe(submit);
+    expect(result.current.reset).toBe(reset);
+    await act(() => result.current.submit({ form_kind: 'contact', email: 'jane@acme.com' }));
+    await act(() => result.current.submit({ form_kind: 'contact', email: 'jane@acme.com' }));
+    expect(body(fetchMock, 0).acquisition_session_id).toMatch(UUID_V4);
+    expect(body(fetchMock, 0).acquisition_session_id).toBe(body(fetchMock, 1).acquisition_session_id);
   });
 });

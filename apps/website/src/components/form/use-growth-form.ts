@@ -21,7 +21,7 @@ export interface UseGrowthFormOptions {
   analytics: AnalyticsProperties;
 }
 
-export interface GrowthFormController<Facts extends GrowthFormFacts> {
+export interface GrowthFormController<Facts extends GrowthFormFacts = GrowthFormFacts> {
   status: GrowthFormStatus;
   /** Posts the facts. Resolves after the status has settled; never throws. */
   submit: (facts: Facts) => Promise<void>;
@@ -38,12 +38,19 @@ export interface GrowthFormController<Facts extends GrowthFormFacts> {
 export function useGrowthForm<Facts extends GrowthFormFacts = GrowthFormFacts>(
   options: UseGrowthFormOptions
 ): GrowthFormController<Facts> {
-  const { route, formPolicy, events, analytics } = options;
   const [status, setStatus] = useState<GrowthFormStatus>('idle');
   const snapshotRef = useRef<GrowthFormRequestSnapshot<Facts> | null>(null);
+  const inFlight = useRef(false);
+  // `latest` is read only inside event handlers (submit), never during render,
+  // so submit/reset can keep stable [] deps while still seeing fresh options.
+  const latest = useRef(options);
+  latest.current = options;
 
-  const submit = useCallback(
-    async (facts: Facts) => {
+  const submit = useCallback(async (facts: Facts) => {
+    if (inFlight.current) return;
+    inFlight.current = true;
+    const { route, formPolicy, events, analytics } = latest.current;
+    try {
       setStatus('pending');
       track(events.submit, analytics);
       try {
@@ -79,9 +86,10 @@ export function useGrowthForm<Facts extends GrowthFormFacts = GrowthFormFacts>(
         track(events.fail, { ...analytics, error_reason: 'network_error' });
         setStatus('failed');
       }
-    },
-    [route, formPolicy.version, events, analytics]
-  );
+    } finally {
+      inFlight.current = false;
+    }
+  }, []);
 
   const reset = useCallback(() => setStatus('idle'), []);
 

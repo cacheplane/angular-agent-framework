@@ -5,4 +5,9 @@ export { SubmitButton } from './SubmitButton';
 export { FormStatus } from './FormStatus';
 export { emailError, requiredError } from './validators';
 export { useGrowthForm } from './use-growth-form';
-export type { GrowthFormStatus, GrowthFormController, UseGrowthFormOptions } from './use-growth-form';
+export type {
+  GrowthFormStatus,
+  GrowthFormController,
+  UseGrowthFormOptions,
+  GrowthFormRoute,
+} from './use-growth-form';

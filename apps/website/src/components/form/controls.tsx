@@ -1,3 +1,4 @@
+'use client';
 import { useContext } from 'react';
 import type { InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
 import { FieldContext } from './field-context';
