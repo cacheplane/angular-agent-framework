@@ -65,11 +65,12 @@ export const AGENT_CONFIG = new InjectionToken<AgentConfig>('AGENT_CONFIG');
  */
 export const AGENT = new InjectionToken<LangGraphAgent>('AGENT');
 
-/** @internal — shared factory that reads AGENT_CONFIG and constructs the singleton. */
-function agentFactory<T>(): LangGraphAgent<T> {
-  // useFactory runs in an injection context, so the legacy `agent()`
-  // factory's `inject(DestroyRef)` calls work.
-  const config = inject(AGENT_CONFIG) as AgentConfig<T>;
+/**
+ * @internal — builds a LangGraphAgent from an already-resolved config.
+ * Must be called from an injection context (the legacy `agent()` factory calls
+ * `inject(DestroyRef)`).
+ */
+function createAgentFromConfig<T>(config: AgentConfig<T>): LangGraphAgent<T> {
   if (config.assistantId === undefined) {
     throw new Error(
       'provideAgent: `assistantId` is required to construct the AGENT singleton.',
@@ -89,6 +90,13 @@ function agentFactory<T>(): LangGraphAgent<T> {
     ...(config.subagentToolNames !== undefined ? { subagentToolNames: config.subagentToolNames } : {}),
     ...(config.transcriptNodeNames !== undefined ? { transcriptNodeNames: config.transcriptNodeNames } : {}),
   });
+}
+
+/** @internal — shared factory that reads AGENT_CONFIG and constructs the singleton. */
+function agentFactory<T>(): LangGraphAgent<T> {
+  // useFactory runs in an injection context, so the legacy `agent()`
+  // factory's `inject(DestroyRef)` calls work.
+  return createAgentFromConfig(inject(AGENT_CONFIG) as AgentConfig<T>);
 }
 
 function isAgentRef<T>(x: unknown): x is AgentRef<T> {
@@ -116,6 +124,24 @@ function isAgentRef<T>(x: unknown): x is AgentRef<T> {
  * the state shape from `provideAgent` to `injectAgent` without repeating the
  * generic at every call site.
  *
+ * **Several agents at one injector level.** Each `provideAgent(ref, …)` call
+ * builds its own agent from its own config, so two (or more) refs may be
+ * provided side by side in a single `providers` array and `injectAgent(refA)`
+ * / `injectAgent(refB)` return distinct agents. The ref-less `injectAgent()`
+ * resolves a single shared token, which can only point at one of them: when
+ * more than one ref is provided at the same level the **last** call wins.
+ * Always inject by ref when an injector provides more than one agent.
+ *
+ * @example Two agents in one providers array
+ * ```ts
+ * export const LIVE = createAgentRef<ChatState>('live');
+ * export const REPLAY = createAgentRef<ChatState>('replay');
+ * providers: [
+ *   provideAgent(LIVE, { assistantId: 'chat' }),
+ *   provideAgent(REPLAY, { assistantId: 'chat', transport: replayTransport }),
+ * ];
+ * // component: injectAgent(LIVE) !== injectAgent(REPLAY)
+ * ```
  * @example Factory config reading route params
  * ```ts
  * providers: [
@@ -155,13 +181,30 @@ export function provideAgent<T = Record<string, unknown>>(
   const resolveConfig = (): AgentConfig<T> =>
     typeof configOrFactory === 'function' ? (configOrFactory as () => AgentConfig<T>)() : configOrFactory;
 
-  const providers: Provider[] = [
-    // AGENT_CONFIG resolves the config once (running the factory in an
-    // injection context if a factory was passed). AGENT reads the resolved
-    // config from here, so the factory is invoked exactly once.
-    { provide: AGENT_CONFIG, useFactory: resolveConfig },
-    { provide: AGENT, useFactory: agentFactory<T> },
+  if (!ref) {
+    return [
+      // AGENT_CONFIG resolves the config once (running the factory in an
+      // injection context if a factory was passed). AGENT reads the resolved
+      // config from here, so the factory is invoked exactly once.
+      { provide: AGENT_CONFIG, useFactory: resolveConfig },
+      { provide: AGENT, useFactory: agentFactory<T> },
+    ];
+  }
+
+  // Ref form: this call gets its OWN config token and its OWN agent factory, so
+  // N refs can coexist in one `providers` array without colliding. The shared
+  // AGENT / AGENT_CONFIG tokens alias this call's pair — with a single ref that
+  // reproduces the old `useExisting` identity exactly (`injectAgent()` and
+  // `injectAgent(ref)` return the same instance, and the config factory still
+  // runs exactly once); with several refs the shared tokens can only mean one
+  // thing, so the last call wins.
+  const refConfig = new InjectionToken<AgentConfig<T>>(
+    `AGENT_CONFIG(${ref.token.toString()})`,
+  );
+  return [
+    { provide: refConfig, useFactory: resolveConfig },
+    { provide: ref.token, useFactory: () => createAgentFromConfig(inject(refConfig)) },
+    { provide: AGENT_CONFIG, useExisting: refConfig },
+    { provide: AGENT, useExisting: ref.token },
   ];
-  if (ref) providers.push({ provide: ref.token, useExisting: AGENT });
-  return providers;
 }
