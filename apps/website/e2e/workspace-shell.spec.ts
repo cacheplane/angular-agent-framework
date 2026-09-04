@@ -779,10 +779,7 @@ test.describe('workspace shell', () => {
     // params Run mode stamps on every runtime URL rather than by host: against
     // the deployed site the frame loads from the production runtime origin,
     // and a `localhost:4300` route lets it reach ready before the assertion.
-    await page.route(
-      (url) => url.searchParams.has('cockpit_cap'),
-      (route) => route.abort()
-    );
+    await page.route('http://localhost:4300/**', (request) => request.abort());
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${streamingDocsPath}?mode=run`);
     await page.getByRole('button', { name: 'Open navigation' }).click();
