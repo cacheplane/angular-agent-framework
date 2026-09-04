@@ -1,0 +1,5 @@
+# Durable Execution
+
+Durable execution keeps a LangGraph run alive across process restarts and long waits. The checkpointer records every super-step, so a run that is interrupted, redeployed, or paused for a human can resume from its last checkpoint instead of starting over.
+
+This page is the live example for durable execution. Use **Run** to drive the agent, **Code** to read the Angular and Python sources, and **API** for the extracted reference. The checkpointer configuration the example relies on is written up in the [Persistence guide](/docs/langgraph/guides/persistence).

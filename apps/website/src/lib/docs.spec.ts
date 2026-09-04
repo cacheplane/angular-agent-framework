@@ -2,22 +2,45 @@ import { describe, expect, it } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { getAllDocSlugs, getDocBySlug, getDocMetadata, stripFrontmatter } from './docs';
-import { allDocsPages, docsConfig, findDocsPage, libraryIntroPath, specialDocsPages } from './docs-config';
+import { cockpitManifest } from '@threadplane/cockpit-registry';
+import {
+  getAllDocSlugs,
+  getDocBySlug,
+  getDocMetadata,
+  stripFrontmatter,
+} from './docs';
+import {
+  allDocsPages,
+  docsConfig,
+  findDocsPage,
+  libraryIntroPath,
+  specialDocsPages,
+} from './docs-config';
 import { getCanonicalUrl, getSitemapRoutes } from './site-metadata';
 
-const internalDocsLinkPattern = /(?:href=["']|\]\()(?<href>\/docs\/[^"')#\s]+)/g;
-const mdxLinkPattern = /(?:href=["']|\]\()(?<href>[^"')\s]+\.mdx(?:#[^"')\s]+)?)/g;
+const internalDocsLinkPattern =
+  /(?:href=["']|\]\()(?<href>\/docs\/[^"')#\s]+)/g;
+const mdxLinkPattern =
+  /(?:href=["']|\]\()(?<href>[^"')\s]+\.mdx(?:#[^"')\s]+)?)/g;
 
 function findInternalDocsLinks(content: string): string[] {
-  return Array.from(content.matchAll(internalDocsLinkPattern), (match) => match.groups?.href)
+  return Array.from(
+    content.matchAll(internalDocsLinkPattern),
+    (match) => match.groups?.href
+  )
     .filter((href): href is string => Boolean(href))
     .map((href) => href.split('?')[0]);
 }
 
 // Resolved relative to this spec file so the path stays correct regardless of
 // the runner's cwd (apps/website/ vs workspace root).
-const contentRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'content', 'docs');
+const contentRoot = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '..',
+  '..',
+  'content',
+  'docs'
+);
 
 function walkMdxFiles(dir: string): string[] {
   return fs.readdirSync(dir).flatMap((entry) => {
@@ -28,11 +51,23 @@ function walkMdxFiles(dir: string): string[] {
   });
 }
 
-function getConfiguredDocPath({ library, section, slug }: { library: string; section: string; slug: string }): string {
+function getConfiguredDocPath({
+  library,
+  section,
+  slug,
+}: {
+  library: string;
+  section: string;
+  slug: string;
+}): string {
   return path.join(contentRoot, library, section, `${slug}.mdx`);
 }
 
-function getAllConfiguredDocFiles(): Array<{ id: string; filePath: string; content: string }> {
+function getAllConfiguredDocFiles(): Array<{
+  id: string;
+  filePath: string;
+  content: string;
+}> {
   const configured = getAllDocSlugs().map(({ library, section, slug }) => {
     const filePath = getConfiguredDocPath({ library, section, slug });
     return {
@@ -53,21 +88,53 @@ function getAllConfiguredDocFiles(): Array<{ id: string; filePath: string; conte
 }
 
 function findPackageImports(content: string): string[] {
-  const imports = Array.from(content.matchAll(/from\s+['"](?<pkg>@threadplane\/[^'"]+)['"]/g), (match) => match.groups?.pkg);
-  const dynamicImports = Array.from(content.matchAll(/import\(\s*['"](?<pkg>@threadplane\/[^'"]+)['"]\s*\)/g), (match) => match.groups?.pkg);
-  return [...imports, ...dynamicImports].filter((pkg): pkg is string => Boolean(pkg));
+  const imports = Array.from(
+    content.matchAll(/from\s+['"](?<pkg>@threadplane\/[^'"]+)['"]/g),
+    (match) => match.groups?.pkg
+  );
+  const dynamicImports = Array.from(
+    content.matchAll(/import\(\s*['"](?<pkg>@threadplane\/[^'"]+)['"]\s*\)/g),
+    (match) => match.groups?.pkg
+  );
+  return [...imports, ...dynamicImports].filter((pkg): pkg is string =>
+    Boolean(pkg)
+  );
 }
 
 describe('website docs bindings', () => {
   it('lists all doc slugs from config', () => {
     const slugs = getAllDocSlugs();
     expect(slugs.length).toBe(allDocsPages.length);
-    expect(slugs).toContainEqual({ library: 'langgraph', section: 'getting-started', slug: 'introduction' });
-    expect(slugs).toContainEqual({ library: 'langgraph', section: 'guides', slug: 'streaming' });
-    expect(slugs).toContainEqual({ library: 'render', section: 'getting-started', slug: 'introduction' });
-    expect(slugs).toContainEqual({ library: 'chat', section: 'getting-started', slug: 'introduction' });
-    expect(slugs).toContainEqual({ library: 'ag-ui', section: 'concepts', slug: 'architecture' });
-    expect(slugs).toContainEqual({ library: 'a2ui', section: 'getting-started', slug: 'introduction' });
+    expect(slugs).toContainEqual({
+      library: 'langgraph',
+      section: 'getting-started',
+      slug: 'introduction',
+    });
+    expect(slugs).toContainEqual({
+      library: 'langgraph',
+      section: 'guides',
+      slug: 'streaming',
+    });
+    expect(slugs).toContainEqual({
+      library: 'render',
+      section: 'getting-started',
+      slug: 'introduction',
+    });
+    expect(slugs).toContainEqual({
+      library: 'chat',
+      section: 'getting-started',
+      slug: 'introduction',
+    });
+    expect(slugs).toContainEqual({
+      library: 'ag-ui',
+      section: 'concepts',
+      slug: 'architecture',
+    });
+    expect(slugs).toContainEqual({
+      library: 'a2ui',
+      section: 'getting-started',
+      slug: 'introduction',
+    });
   });
 
   it('loads every configured doc page', () => {
@@ -77,7 +144,9 @@ describe('website docs bindings', () => {
   });
 
   it('does not leave tracked MDX docs outside the configured docs inventory', () => {
-    const configuredPaths = new Set(getAllDocSlugs().map((slug) => getConfiguredDocPath(slug)));
+    const configuredPaths = new Set(
+      getAllDocSlugs().map((slug) => getConfiguredDocPath(slug))
+    );
     for (const page of specialDocsPages) {
       configuredPaths.add(path.join(contentRoot, page.contentPath));
     }
@@ -113,7 +182,7 @@ describe('website docs bindings', () => {
     });
     expect(metadata?.description).toContain('AG-UI protocol events');
     expect(metadata?.description).not.toBe(
-      'Adapter for AG-UI-compatible backends including CrewAI, Mastra, Microsoft AF, AG2, Pydantic AI, and AWS Strands',
+      'Adapter for AG-UI-compatible backends including CrewAI, Mastra, Microsoft AF, AG2, Pydantic AI, and AWS Strands'
     );
   });
 
@@ -126,17 +195,28 @@ describe('website docs bindings', () => {
     for (const { library, section, slug } of slugs) {
       const description = getDocMetadata(library, section, slug)?.description;
       expect(description, `${library}/${section}/${slug}`).toBeTruthy();
-      expect(description!.length, `${library}/${section}/${slug}`).toBeLessThanOrEqual(160);
-      expect(description!.endsWith('...'), `${library}/${section}/${slug}`).toBe(false);
+      expect(
+        description!.length,
+        `${library}/${section}/${slug}`
+      ).toBeLessThanOrEqual(160);
+      expect(
+        description!.endsWith('...'),
+        `${library}/${section}/${slug}`
+      ).toBe(false);
     }
   });
 
   it('derives mostly unique descriptions from page content', () => {
     const descriptions = getAllDocSlugs()
-      .map(({ library, section, slug }) => getDocMetadata(library, section, slug)?.description)
+      .map(
+        ({ library, section, slug }) =>
+          getDocMetadata(library, section, slug)?.description
+      )
       .filter((description): description is string => Boolean(description));
 
-    const duplicateDescriptions = descriptions.filter((description, index) => descriptions.indexOf(description) !== index);
+    const duplicateDescriptions = descriptions.filter(
+      (description, index) => descriptions.indexOf(description) !== index
+    );
     expect(duplicateDescriptions).toHaveLength(0);
   });
 
@@ -148,14 +228,17 @@ describe('website docs bindings', () => {
     const metadata = getDocMetadata('chat', 'guides', 'custom-catalogs');
 
     expect(metadata?.description).toBe(
-      'Compose custom component catalogs for generative UI using ViewRegistry composition.',
+      'Compose custom component catalogs for generative UI using ViewRegistry composition.'
     );
   });
 
   it('never leaks frontmatter keys into a derived description', () => {
     for (const { library, section, slug } of getAllDocSlugs()) {
-      const description = getDocMetadata(library, section, slug)?.description ?? '';
-      expect(description, `/docs/${library}/${section}/${slug}`).not.toMatch(/^title:/);
+      const description =
+        getDocMetadata(library, section, slug)?.description ?? '';
+      expect(description, `/docs/${library}/${section}/${slug}`).not.toMatch(
+        /^title:/
+      );
     }
   });
 
@@ -163,12 +246,16 @@ describe('website docs bindings', () => {
     for (const { library, section, slug } of getAllDocSlugs()) {
       const doc = getDocBySlug(library, section, slug);
 
-      expect(doc?.body.startsWith('---'), `/docs/${library}/${section}/${slug}`).toBe(false);
+      expect(
+        doc?.body.startsWith('---'),
+        `/docs/${library}/${section}/${slug}`
+      ).toBe(false);
     }
   });
 
   it('strips a frontmatter block before the body is handed to MDX', () => {
-    const source = '---\ntitle: X\ndescription: D.\n---\n\n# Heading\n\nBody.\n';
+    const source =
+      '---\ntitle: X\ndescription: D.\n---\n\n# Heading\n\nBody.\n';
 
     expect(stripFrontmatter(source)).toBe('# Heading\n\nBody.\n');
   });
@@ -189,11 +276,16 @@ describe('website docs bindings', () => {
   });
 
   it('resolves canonical URLs against the production origin', () => {
-    expect(getCanonicalUrl('/docs/langgraph/guides/streaming')).toBe('https://threadplane.ai/docs/langgraph/guides/streaming');
+    expect(getCanonicalUrl('/docs/langgraph/guides/streaming')).toBe(
+      'https://threadplane.ai/docs/langgraph/guides/streaming'
+    );
   });
 
   it('does not contain stale or broken internal docs links', () => {
-    const validDocsRoutes = new Set(['/docs', ...getSitemapRoutes().filter((route) => route.startsWith('/docs/'))]);
+    const validDocsRoutes = new Set([
+      '/docs',
+      ...getSitemapRoutes().filter((route) => route.startsWith('/docs/')),
+    ]);
     const brokenLinks: string[] = [];
 
     for (const { library, section, slug } of getAllDocSlugs()) {
@@ -256,12 +348,26 @@ describe('website docs bindings', () => {
   });
 
   it('has generated API docs for every documented package surface', () => {
-    const librariesWithApiDocs = ['langgraph', 'chat', 'render', 'ag-ui', 'a2ui', 'middleware'];
+    const librariesWithApiDocs = [
+      'langgraph',
+      'chat',
+      'render',
+      'ag-ui',
+      'a2ui',
+      'middleware',
+    ];
     const missingApiDocs = librariesWithApiDocs.filter((library) => {
-      const apiDocsPath = path.join(contentRoot, library, 'api', 'api-docs.json');
+      const apiDocsPath = path.join(
+        contentRoot,
+        library,
+        'api',
+        'api-docs.json'
+      );
       if (!fs.existsSync(apiDocsPath)) return true;
 
-      const entries = JSON.parse(fs.readFileSync(apiDocsPath, 'utf8')) as unknown[];
+      const entries = JSON.parse(
+        fs.readFileSync(apiDocsPath, 'utf8')
+      ) as unknown[];
       return entries.length === 0;
     });
 
@@ -329,8 +435,15 @@ describe('website docs bindings', () => {
       const doc = getDocBySlug(library, section, slug);
       if (!doc?.content.includes('Auto-rendered from api-docs.json')) continue;
 
-      const apiDocsPath = path.join(contentRoot, library, 'api', 'api-docs.json');
-      const entries = JSON.parse(fs.readFileSync(apiDocsPath, 'utf8')) as Array<{ name: string }>;
+      const apiDocsPath = path.join(
+        contentRoot,
+        library,
+        'api',
+        'api-docs.json'
+      );
+      const entries = JSON.parse(
+        fs.readFileSync(apiDocsPath, 'utf8')
+      ) as Array<{ name: string }>;
       const names = new Set(entries.map((entry) => entry.name));
 
       // Group pages declare the exports they cover; every one must exist.
@@ -338,7 +451,9 @@ describe('website docs bindings', () => {
       if (configured) {
         const missing = configured.filter((name) => !names.has(name));
         if (missing.length > 0) {
-          unresolvedApiPages.push(`${library}/api/${slug} → ${missing.join(', ')}`);
+          unresolvedApiPages.push(
+            `${library}/api/${slug} → ${missing.join(', ')}`
+          );
         }
         continue;
       }
@@ -357,11 +472,30 @@ describe('website docs bindings', () => {
   });
 
   it('returns null for non-existent library', () => {
-    expect(getDocBySlug('nonexistent', 'getting-started', 'introduction')).toBeNull();
+    expect(
+      getDocBySlug('nonexistent', 'getting-started', 'introduction')
+    ).toBeNull();
   });
 
   it('returns null metadata for non-existent docs', () => {
     expect(getDocMetadata('langgraph', 'guides', 'nonexistent')).toBeNull();
+  });
+
+  it('publishes a docs page for every capability the registry maps', () => {
+    const configured = new Set(
+      docsConfig.flatMap((library) =>
+        library.sections.flatMap((section) =>
+          section.pages.map(
+            (page) => `/docs/${library.id}/${section.id}/${page.slug}`
+          )
+        )
+      )
+    );
+    for (const entry of cockpitManifest) {
+      expect(configured.has(entry.docsPath), entry.docsPath).toBe(true);
+      const file = path.join(contentRoot, '..', `${entry.docsPath}.mdx`);
+      expect(fs.existsSync(file), file).toBe(true);
+    }
   });
 });
 
@@ -375,8 +509,14 @@ describe('docs breadcrumb routes', () => {
     const routes = new Set(getSitemapRoutes());
 
     for (const library of docsConfig) {
-      expect([library.id, routes.has(libraryIntroPath(library.id))]).toEqual([library.id, true]);
-      expect([library.id, routes.has(`/docs/${library.id}`)]).toEqual([library.id, false]);
+      expect([library.id, routes.has(libraryIntroPath(library.id))]).toEqual([
+        library.id,
+        true,
+      ]);
+      expect([library.id, routes.has(`/docs/${library.id}`)]).toEqual([
+        library.id,
+        false,
+      ]);
     }
   });
 });
@@ -395,7 +535,9 @@ describe('retired telemetry docs library', () => {
   it('contributes no searchable page', () => {
     const pages = docsConfig.flatMap((library) =>
       library.sections.flatMap((section) =>
-        section.pages.map((page) => `${library.id}/${page.section}/${page.slug}`)
+        section.pages.map(
+          (page) => `${library.id}/${page.section}/${page.slug}`
+        )
       )
     );
     expect(pages.filter((page) => page.startsWith('telemetry/'))).toEqual([]);

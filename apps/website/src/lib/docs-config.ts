@@ -67,7 +67,8 @@ export const specialDocsPages: SpecialDocsPage[] = [
     path: '/docs/choosing-an-adapter',
     contentPath: 'choosing-an-adapter/index.mdx',
     title: 'Choosing an adapter',
-    description: 'Decide between @threadplane/langgraph and @threadplane/ag-ui for your Angular agent UI.',
+    description:
+      'Decide between @threadplane/langgraph and @threadplane/ag-ui for your Angular agent UI.',
   },
 ];
 
@@ -84,9 +85,21 @@ export const docsConfig: DocsLibrary[] = [
         id: 'getting-started',
         color: 'blue',
         pages: [
-          { title: 'Introduction', slug: 'introduction', section: 'getting-started' },
-          { title: 'Quick Start', slug: 'quickstart', section: 'getting-started' },
-          { title: 'Installation', slug: 'installation', section: 'getting-started' },
+          {
+            title: 'Introduction',
+            slug: 'introduction',
+            section: 'getting-started',
+          },
+          {
+            title: 'Quick Start',
+            slug: 'quickstart',
+            section: 'getting-started',
+          },
+          {
+            title: 'Installation',
+            slug: 'installation',
+            section: 'getting-started',
+          },
         ],
       },
       {
@@ -96,6 +109,11 @@ export const docsConfig: DocsLibrary[] = [
         pages: [
           { title: 'Streaming', slug: 'streaming', section: 'guides' },
           { title: 'Persistence', slug: 'persistence', section: 'guides' },
+          {
+            title: 'Durable Execution',
+            slug: 'durable-execution',
+            section: 'guides',
+          },
           { title: 'Interrupts', slug: 'interrupts', section: 'guides' },
           { title: 'Memory', slug: 'memory', section: 'guides' },
           { title: 'Time Travel', slug: 'time-travel', section: 'guides' },
@@ -110,11 +128,31 @@ export const docsConfig: DocsLibrary[] = [
         id: 'concepts',
         color: 'red',
         pages: [
-          { title: 'Agent Contract', slug: 'agent-contract', section: 'concepts' },
-          { title: 'Angular Signals', slug: 'angular-signals', section: 'concepts' },
-          { title: 'LangGraph Basics', slug: 'langgraph-basics', section: 'concepts' },
-          { title: 'Agent Architecture', slug: 'agent-architecture', section: 'concepts' },
-          { title: 'State Management', slug: 'state-management', section: 'concepts' },
+          {
+            title: 'Agent Contract',
+            slug: 'agent-contract',
+            section: 'concepts',
+          },
+          {
+            title: 'Angular Signals',
+            slug: 'angular-signals',
+            section: 'concepts',
+          },
+          {
+            title: 'LangGraph Basics',
+            slug: 'langgraph-basics',
+            section: 'concepts',
+          },
+          {
+            title: 'Agent Architecture',
+            slug: 'agent-architecture',
+            section: 'concepts',
+          },
+          {
+            title: 'State Management',
+            slug: 'state-management',
+            section: 'concepts',
+          },
         ],
       },
       {
@@ -124,9 +162,21 @@ export const docsConfig: DocsLibrary[] = [
         pages: [
           { title: 'injectAgent()', slug: 'inject-agent', section: 'api' },
           { title: 'provideAgent()', slug: 'provide-agent', section: 'api' },
-          { title: 'FetchStreamTransport', slug: 'fetch-stream-transport', section: 'api' },
-          { title: 'MockAgentTransport', slug: 'mock-stream-transport', section: 'api' },
-          { title: 'LangGraphThreadsAdapter', slug: 'langgraph-threads-adapter', section: 'api' },
+          {
+            title: 'FetchStreamTransport',
+            slug: 'fetch-stream-transport',
+            section: 'api',
+          },
+          {
+            title: 'MockAgentTransport',
+            slug: 'mock-stream-transport',
+            section: 'api',
+          },
+          {
+            title: 'LangGraphThreadsAdapter',
+            slug: 'langgraph-threads-adapter',
+            section: 'api',
+          },
         ],
       },
     ],
@@ -144,9 +194,21 @@ export const docsConfig: DocsLibrary[] = [
         id: 'getting-started',
         color: 'blue',
         pages: [
-          { title: 'Introduction', slug: 'introduction', section: 'getting-started' },
-          { title: 'Quick Start', slug: 'quickstart', section: 'getting-started' },
-          { title: 'Installation', slug: 'installation', section: 'getting-started' },
+          {
+            title: 'Introduction',
+            slug: 'introduction',
+            section: 'getting-started',
+          },
+          {
+            title: 'Quick Start',
+            slug: 'quickstart',
+            section: 'getting-started',
+          },
+          {
+            title: 'Installation',
+            slug: 'installation',
+            section: 'getting-started',
+          },
         ],
       },
       {
@@ -157,6 +219,7 @@ export const docsConfig: DocsLibrary[] = [
           { title: 'Component Registry', slug: 'registry', section: 'guides' },
           { title: 'State Store', slug: 'state-store', section: 'guides' },
           { title: 'Specs & Elements', slug: 'specs', section: 'guides' },
+          { title: 'Repeat Loops', slug: 'repeat-loops', section: 'guides' },
           { title: 'Events & Handlers', slug: 'events', section: 'guides' },
           { title: 'Lifecycle Signals', slug: 'lifecycle', section: 'guides' },
         ],
@@ -166,7 +229,11 @@ export const docsConfig: DocsLibrary[] = [
         id: 'concepts',
         color: 'red',
         pages: [
-          { title: 'JSON Render vs A2UI', slug: 'json-render-vs-a2ui', section: 'concepts' },
+          {
+            title: 'JSON Render vs A2UI',
+            slug: 'json-render-vs-a2ui',
+            section: 'concepts',
+          },
         ],
       },
       {
@@ -174,10 +241,22 @@ export const docsConfig: DocsLibrary[] = [
         id: 'api',
         color: 'blue',
         pages: [
-          { title: 'RenderSpecComponent', slug: 'render-spec-component', section: 'api' },
-          { title: 'defineAngularRegistry()', slug: 'define-angular-registry', section: 'api' },
+          {
+            title: 'RenderSpecComponent',
+            slug: 'render-spec-component',
+            section: 'api',
+          },
+          {
+            title: 'defineAngularRegistry()',
+            slug: 'define-angular-registry',
+            section: 'api',
+          },
           { title: 'views()', slug: 'views', section: 'api' },
-          { title: 'signalStateStore()', slug: 'signal-state-store', section: 'api' },
+          {
+            title: 'signalStateStore()',
+            slug: 'signal-state-store',
+            section: 'api',
+          },
           { title: 'provideRender()', slug: 'provide-render', section: 'api' },
         ],
       },
@@ -211,12 +290,28 @@ export const docsConfig: DocsLibrary[] = [
           { title: 'Markdown Rendering', slug: 'markdown', section: 'guides' },
           { title: 'Generative UI', slug: 'generative-ui', section: 'guides' },
           { title: 'Client Tools', slug: 'client-tools', section: 'guides' },
-          { title: 'Custom A2UI Catalogs', slug: 'custom-catalogs', section: 'guides' },
+          {
+            title: 'Custom A2UI Catalogs',
+            slug: 'custom-catalogs',
+            section: 'guides',
+          },
           { title: 'Streaming', slug: 'streaming', section: 'guides' },
           { title: 'Configuration', slug: 'configuration', section: 'guides' },
-          { title: 'Error Handling', slug: 'error-handling', section: 'guides' },
-          { title: 'Writing an Adapter', slug: 'writing-an-adapter', section: 'guides' },
-          { title: 'Thread Routing', slug: 'thread-routing', section: 'guides' },
+          {
+            title: 'Error Handling',
+            slug: 'error-handling',
+            section: 'guides',
+          },
+          {
+            title: 'Writing an Adapter',
+            slug: 'writing-an-adapter',
+            section: 'guides',
+          },
+          {
+            title: 'Thread Routing',
+            slug: 'thread-routing',
+            section: 'guides',
+          },
           { title: 'Lifecycle Signals', slug: 'lifecycle', section: 'guides' },
         ],
       },
@@ -225,8 +320,16 @@ export const docsConfig: DocsLibrary[] = [
         id: 'concepts',
         color: 'red',
         pages: [
-          { title: 'Primitives vs Compositions', slug: 'primitives-vs-compositions', section: 'concepts' },
-          { title: 'Message Model', slug: 'message-model', section: 'concepts' },
+          {
+            title: 'Primitives vs Compositions',
+            slug: 'primitives-vs-compositions',
+            section: 'concepts',
+          },
+          {
+            title: 'Message Model',
+            slug: 'message-model',
+            section: 'concepts',
+          },
         ],
       },
       {
@@ -238,15 +341,43 @@ export const docsConfig: DocsLibrary[] = [
           { title: 'ChatPopup', slug: 'chat-popup', section: 'components' },
           { title: 'ChatSidebar', slug: 'chat-sidebar', section: 'components' },
           { title: 'ChatSidenav', slug: 'chat-sidenav', section: 'components' },
-          { title: 'ChatMessageList', slug: 'chat-message-list', section: 'components' },
+          {
+            title: 'ChatMessageList',
+            slug: 'chat-message-list',
+            section: 'components',
+          },
           { title: 'ChatTrace', slug: 'chat-trace', section: 'components' },
           { title: 'ChatInput', slug: 'chat-input', section: 'components' },
-          { title: 'ChatReasoning', slug: 'chat-reasoning', section: 'components' },
-          { title: 'ChatInterruptPanel', slug: 'chat-interrupt-panel', section: 'components' },
-          { title: 'ChatToolCalls', slug: 'chat-tool-calls', section: 'components' },
-          { title: 'chatToolCallTemplate', slug: 'chat-tool-call-template', section: 'components' },
-          { title: 'ChatToolCallCard', slug: 'chat-tool-call-card', section: 'components' },
-          { title: 'ChatSubagentCard', slug: 'chat-subagent-card', section: 'components' },
+          {
+            title: 'ChatReasoning',
+            slug: 'chat-reasoning',
+            section: 'components',
+          },
+          {
+            title: 'ChatInterruptPanel',
+            slug: 'chat-interrupt-panel',
+            section: 'components',
+          },
+          {
+            title: 'ChatToolCalls',
+            slug: 'chat-tool-calls',
+            section: 'components',
+          },
+          {
+            title: 'chatToolCallTemplate',
+            slug: 'chat-tool-call-template',
+            section: 'components',
+          },
+          {
+            title: 'ChatToolCallCard',
+            slug: 'chat-tool-call-card',
+            section: 'components',
+          },
+          {
+            title: 'ChatSubagentCard',
+            slug: 'chat-subagent-card',
+            section: 'components',
+          },
           { title: 'ChatDebug', slug: 'chat-debug', section: 'components' },
           { title: 'ChatSelect', slug: 'chat-select', section: 'components' },
         ],
@@ -257,8 +388,16 @@ export const docsConfig: DocsLibrary[] = [
         color: 'red',
         pages: [
           { title: 'Overview', slug: 'overview', section: 'a2ui' },
-          { title: 'A2uiSurfaceComponent', slug: 'surface-component', section: 'a2ui' },
-          { title: 'createA2uiSurfaceStore()', slug: 'surface-store', section: 'a2ui' },
+          {
+            title: 'A2uiSurfaceComponent',
+            slug: 'surface-component',
+            section: 'a2ui',
+          },
+          {
+            title: 'createA2uiSurfaceStore()',
+            slug: 'surface-store',
+            section: 'a2ui',
+          },
           { title: 'Component Catalog', slug: 'catalog', section: 'a2ui' },
         ],
       },
@@ -270,8 +409,16 @@ export const docsConfig: DocsLibrary[] = [
           { title: 'provideChat()', slug: 'provide-chat', section: 'api' },
           { title: 'ChatConfig', slug: 'chat-config', section: 'api' },
           { title: 'mockAgent()', slug: 'mock-agent', section: 'api' },
-          { title: 'createContentClassifier()', slug: 'content-classifier', section: 'api' },
-          { title: 'createParseTreeStore()', slug: 'parse-tree-store', section: 'api' },
+          {
+            title: 'createContentClassifier()',
+            slug: 'content-classifier',
+            section: 'api',
+          },
+          {
+            title: 'createParseTreeStore()',
+            slug: 'parse-tree-store',
+            section: 'api',
+          },
         ],
       },
     ],
@@ -279,7 +426,8 @@ export const docsConfig: DocsLibrary[] = [
   {
     id: 'ag-ui',
     title: 'AG-UI',
-    description: 'Adapter for AG-UI-compatible backends including CrewAI, Mastra, Microsoft AF, AG2, Pydantic AI, and AWS Strands',
+    description:
+      'Adapter for AG-UI-compatible backends including CrewAI, Mastra, Microsoft AF, AG2, Pydantic AI, and AWS Strands',
     group: 'adapter',
     tagline: 'Any AG-UI backend',
     demoUrl: 'https://ag-ui.threadplane.ai',
@@ -289,9 +437,21 @@ export const docsConfig: DocsLibrary[] = [
         id: 'getting-started',
         color: 'blue',
         pages: [
-          { title: 'Introduction', slug: 'introduction', section: 'getting-started' },
-          { title: 'Quick Start', slug: 'quickstart', section: 'getting-started' },
-          { title: 'Installation', slug: 'installation', section: 'getting-started' },
+          {
+            title: 'Introduction',
+            slug: 'introduction',
+            section: 'getting-started',
+          },
+          {
+            title: 'Quick Start',
+            slug: 'quickstart',
+            section: 'getting-started',
+          },
+          {
+            title: 'Installation',
+            slug: 'installation',
+            section: 'getting-started',
+          },
         ],
       },
       {
@@ -311,8 +471,16 @@ export const docsConfig: DocsLibrary[] = [
           { title: 'Citations', slug: 'citations', section: 'guides' },
           { title: 'Custom Events', slug: 'custom-events', section: 'guides' },
           { title: 'Interrupts', slug: 'interrupts', section: 'guides' },
+          { title: 'Client Tools', slug: 'client-tools', section: 'guides' },
+          { title: 'Tool Views', slug: 'tool-views', section: 'guides' },
+          { title: 'JSON Render', slug: 'json-render', section: 'guides' },
+          { title: 'Subagents', slug: 'subagents', section: 'guides' },
           { title: 'Testing', slug: 'testing', section: 'guides' },
-          { title: 'Troubleshooting', slug: 'troubleshooting', section: 'guides' },
+          {
+            title: 'Troubleshooting',
+            slug: 'troubleshooting',
+            section: 'guides',
+          },
         ],
       },
       {
@@ -320,7 +488,11 @@ export const docsConfig: DocsLibrary[] = [
         id: 'reference',
         color: 'blue',
         pages: [
-          { title: 'Event Mapping', slug: 'event-mapping', section: 'reference' },
+          {
+            title: 'Event Mapping',
+            slug: 'event-mapping',
+            section: 'reference',
+          },
         ],
       },
       {
@@ -347,8 +519,16 @@ export const docsConfig: DocsLibrary[] = [
         id: 'getting-started',
         color: 'blue',
         pages: [
-          { title: 'Introduction', slug: 'introduction', section: 'getting-started' },
-          { title: 'Quick Start', slug: 'quickstart', section: 'getting-started' },
+          {
+            title: 'Introduction',
+            slug: 'introduction',
+            section: 'getting-started',
+          },
+          {
+            title: 'Quick Start',
+            slug: 'quickstart',
+            section: 'getting-started',
+          },
         ],
       },
       {
@@ -356,9 +536,17 @@ export const docsConfig: DocsLibrary[] = [
         id: 'guides',
         color: 'blue',
         pages: [
-          { title: 'Message Protocol', slug: 'message-protocol', section: 'guides' },
+          {
+            title: 'Message Protocol',
+            slug: 'message-protocol',
+            section: 'guides',
+          },
           { title: 'Data Model', slug: 'data-model', section: 'guides' },
-          { title: 'Validating & Adapting', slug: 'adapters-and-validation', section: 'guides' },
+          {
+            title: 'Validating & Adapting',
+            slug: 'adapters-and-validation',
+            section: 'guides',
+          },
         ],
       },
       {
@@ -367,7 +555,11 @@ export const docsConfig: DocsLibrary[] = [
         color: 'blue',
         pages: [
           { title: 'Schema', slug: 'schema', section: 'reference' },
-          { title: 'Parser, Resolver, and Guards', slug: 'parser-resolver-guards', section: 'reference' },
+          {
+            title: 'Parser, Resolver, and Guards',
+            slug: 'parser-resolver-guards',
+            section: 'reference',
+          },
         ],
       },
     ],
@@ -383,8 +575,16 @@ export const docsConfig: DocsLibrary[] = [
         id: 'getting-started',
         color: 'blue',
         pages: [
-          { title: 'Introduction', slug: 'introduction', section: 'getting-started' },
-          { title: 'Quick Start', slug: 'quickstart', section: 'getting-started' },
+          {
+            title: 'Introduction',
+            slug: 'introduction',
+            section: 'getting-started',
+          },
+          {
+            title: 'Quick Start',
+            slug: 'quickstart',
+            section: 'getting-started',
+          },
         ],
       },
       {
@@ -392,8 +592,16 @@ export const docsConfig: DocsLibrary[] = [
         id: 'guides',
         color: 'blue',
         pages: [
-          { title: 'LangGraph.js Client Tools', slug: 'langgraph-client-tools', section: 'guides' },
-          { title: 'Python LangGraph Middleware', slug: 'python-langgraph', section: 'guides' },
+          {
+            title: 'LangGraph.js Client Tools',
+            slug: 'langgraph-client-tools',
+            section: 'guides',
+          },
+          {
+            title: 'Python LangGraph Middleware',
+            slug: 'python-langgraph',
+            section: 'guides',
+          },
         ],
       },
       {
@@ -424,7 +632,8 @@ export const docsConfig: DocsLibrary[] = [
   {
     id: 'runtimes',
     title: 'Runtimes',
-    description: 'Measured AG-UI runtime integrations behind @threadplane/ag-ui',
+    description:
+      'Measured AG-UI runtime integrations behind @threadplane/ag-ui',
     // Reference material *behind* the AG-UI adapter, not an adapter you pick.
     group: 'library',
     sections: [
@@ -433,7 +642,11 @@ export const docsConfig: DocsLibrary[] = [
         id: 'getting-started',
         color: 'blue',
         pages: [
-          { title: 'Introduction', slug: 'introduction', section: 'getting-started' },
+          {
+            title: 'Introduction',
+            slug: 'introduction',
+            section: 'getting-started',
+          },
         ],
       },
       {
@@ -443,7 +656,11 @@ export const docsConfig: DocsLibrary[] = [
         pages: [
           { title: 'Overview', slug: 'overview', section: 'aws-strands' },
           { title: 'Quickstart', slug: 'quickstart', section: 'aws-strands' },
-          { title: 'How It Connects', slug: 'how-it-connects', section: 'aws-strands' },
+          {
+            title: 'How It Connects',
+            slug: 'how-it-connects',
+            section: 'aws-strands',
+          },
         ],
       },
       {
@@ -451,9 +668,21 @@ export const docsConfig: DocsLibrary[] = [
         id: 'microsoft-agent-framework',
         color: 'red',
         pages: [
-          { title: 'Overview', slug: 'overview', section: 'microsoft-agent-framework' },
-          { title: 'Quickstart', slug: 'quickstart', section: 'microsoft-agent-framework' },
-          { title: 'How It Connects', slug: 'how-it-connects', section: 'microsoft-agent-framework' },
+          {
+            title: 'Overview',
+            slug: 'overview',
+            section: 'microsoft-agent-framework',
+          },
+          {
+            title: 'Quickstart',
+            slug: 'quickstart',
+            section: 'microsoft-agent-framework',
+          },
+          {
+            title: 'How It Connects',
+            slug: 'how-it-connects',
+            section: 'microsoft-agent-framework',
+          },
         ],
       },
       {
@@ -463,7 +692,11 @@ export const docsConfig: DocsLibrary[] = [
         pages: [
           { title: 'Overview', slug: 'overview', section: 'mastra' },
           { title: 'Quickstart', slug: 'quickstart', section: 'mastra' },
-          { title: 'How It Connects', slug: 'how-it-connects', section: 'mastra' },
+          {
+            title: 'How It Connects',
+            slug: 'how-it-connects',
+            section: 'mastra',
+          },
         ],
       },
     ],
@@ -482,7 +715,11 @@ export const docsConfig: DocsLibrary[] = [
         id: 'getting-started',
         color: 'blue',
         pages: [
-          { title: 'Introduction', slug: 'introduction', section: 'getting-started' },
+          {
+            title: 'Introduction',
+            slug: 'introduction',
+            section: 'getting-started',
+          },
         ],
       },
       {
@@ -528,11 +765,21 @@ export const allDocsPages: DocsPage[] = docsConfig.flatMap((l) =>
   l.sections.flatMap((s) => s.pages)
 );
 
-export function findDocsPage(library: string, section: string, slug: string): DocsPage | undefined {
-  return getLibraryPages(library).find((p) => p.section === section && p.slug === slug);
+export function findDocsPage(
+  library: string,
+  section: string,
+  slug: string
+): DocsPage | undefined {
+  return getLibraryPages(library).find(
+    (p) => p.section === section && p.slug === slug
+  );
 }
 
-export function getPrevNextPages(library: string, section: string, slug: string): { prev: DocsPage | null; next: DocsPage | null } {
+export function getPrevNextPages(
+  library: string,
+  section: string,
+  slug: string
+): { prev: DocsPage | null; next: DocsPage | null } {
   const pages = getLibraryPages(library);
   const idx = pages.findIndex((p) => p.section === section && p.slug === slug);
   return {
@@ -541,7 +788,10 @@ export function getPrevNextPages(library: string, section: string, slug: string)
   };
 }
 
-export function getDocsSection(library: string, sectionId: string): DocsSection | undefined {
+export function getDocsSection(
+  library: string,
+  sectionId: string
+): DocsSection | undefined {
   const lib = getLibraryConfig(library);
   return lib?.sections.find((s) => s.id === sectionId);
 }
