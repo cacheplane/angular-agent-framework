@@ -1,6 +1,7 @@
-import { describe, expect, it, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { HeroMode } from './hero-mode.component';
+import { TYPE_DELAY_MS } from './hero-script';
 import { HeroReplayTransport } from './hero-replay.transport';
 import type { HeroBridge } from './hero-bridge';
 import type { HeroRecording } from './hero-recording.types';
@@ -136,22 +137,31 @@ describe('HeroMode', () => {
     expect(fx.componentInstance.mode()).toBe('live');
   });
 
-  it('types fast enough not to bore: a prompt-sized string beats the old 40ms/char crawl', async () => {
+  it('types one character at a time at the shared TYPE_DELAY_MS cadence', async () => {
     const el = fx.nativeElement as HTMLElement;
     const textarea = el.querySelector<HTMLTextAreaElement>('textarea[aria-label="Type a message"]')!;
     const seen: string[] = [];
     textarea.addEventListener('input', () => seen.push(textarea.value));
     const text = 'x'.repeat(50);
 
-    const started = performance.now();
-    await fx.componentInstance.typeInto(text);
-    const elapsed = performance.now() - started;
+    // Fake timers, not a wall-clock budget: asserting `elapsed < 2000ms` on real
+    // timers both flaked under load and added real seconds to the suite, which
+    // destabilised neighbouring specs. This pins the cadence itself.
+    vi.useFakeTimers();
+    try {
+      const done = fx.componentInstance.typeInto(text);
+      await vi.advanceTimersByTimeAsync(TYPE_DELAY_MS * 20);
+      // Partway through: this is typing, not a paste.
+      expect(seen.length).toBeGreaterThan(0);
+      expect(seen.length).toBeLessThan(50);
+      await vi.advanceTimersByTimeAsync(TYPE_DELAY_MS * 40);
+      await done;
+    } finally {
+      vi.useRealTimers();
+    }
 
-    // Still character by character — this is typing, not a paste.
     expect(seen).toHaveLength(50);
     expect(textarea.value).toBe(text);
-    // 50 chars at the old TYPE_DELAY_MS of 40 took over 2s; at 9ms it is ~0.5s.
-    expect(elapsed).toBeLessThan(2000);
   });
 
   it('reduced motion: typeInto sets the value in one tick, leaving the reading pause to the runner', async () => {
