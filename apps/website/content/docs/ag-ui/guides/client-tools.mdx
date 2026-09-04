@@ -1,5 +1,9 @@
+---
+description: Declare a tool in the Angular app, let an AG-UI agent call it, and submit the result back to continue the run with no server-side implementation.
+---
+
 # Client Tools
 
-An AG-UI agent can call tools that live in the browser. The Angular app declares the tool, the adapter forwards the agent's call, and the result flows back into the run without a server round trip.
+An AG-UI agent can call tools that live in the browser. The Angular app declares the tool, the backend ends its turn when the agent calls it, the browser runs it, and the result is submitted back as a tool message so the run continues. The tool has no server-side implementation.
 
 This page is the live example for client tools over AG-UI. Use **Run** to drive the agent, **Code** to read the Angular and Python sources, and **API** for the extracted reference. The browser-side tool contract is documented in the [Chat client tools guide](/docs/chat/guides/client-tools).

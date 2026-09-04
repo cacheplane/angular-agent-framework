@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { cockpitManifest } from '@threadplane/cockpit-registry';
+import {
+  NO_COCKPIT_DOCS_LINK,
+  cockpitManifest,
+} from '@threadplane/cockpit-registry';
 import {
   getAllDocSlugs,
   getDocBySlug,
@@ -492,8 +495,14 @@ describe('website docs bindings', () => {
       )
     );
     for (const entry of cockpitManifest) {
+      if (entry.docsPath === NO_COCKPIT_DOCS_LINK) continue;
       expect(configured.has(entry.docsPath), entry.docsPath).toBe(true);
-      const file = path.join(contentRoot, '..', `${entry.docsPath}.mdx`);
+      // contentRoot already points at apps/website/content/docs, so strip the
+      // leading /docs/ segment before joining.
+      const file = path.join(
+        contentRoot,
+        `${entry.docsPath.replace(/^\/docs\//, '')}.mdx`
+      );
       expect(fs.existsSync(file), file).toBe(true);
     }
   });

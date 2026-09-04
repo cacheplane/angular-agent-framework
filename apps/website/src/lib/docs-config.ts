@@ -473,7 +473,7 @@ export const docsConfig: DocsLibrary[] = [
           { title: 'Interrupts', slug: 'interrupts', section: 'guides' },
           { title: 'Client Tools', slug: 'client-tools', section: 'guides' },
           { title: 'Tool Views', slug: 'tool-views', section: 'guides' },
-          { title: 'JSON Render', slug: 'json-render', section: 'guides' },
+          { title: 'Generative UI', slug: 'json-render', section: 'guides' },
           { title: 'Subagents', slug: 'subagents', section: 'guides' },
           { title: 'Testing', slug: 'testing', section: 'guides' },
           {
