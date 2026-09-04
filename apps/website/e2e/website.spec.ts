@@ -25,9 +25,10 @@ test('landing page renders hero headline', async ({ page }) => {
   expect(headline?.toLowerCase()).toContain('angular');
 });
 
-test('landing page renders the Yes wall', async ({ page }) => {
+test('landing page renders the dark proof band', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('#yes-wall-heading')).toBeVisible();
+  await expect(page.locator('#proof-heading')).toBeVisible();
+  await expect(page.locator('#proof[data-surface="dark"]')).toBeVisible();
 });
 
 test('landing page renders feature blocks (Stream/Render/Ship)', async ({ page }) => {

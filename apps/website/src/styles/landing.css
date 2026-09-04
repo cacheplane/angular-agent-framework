@@ -1077,34 +1077,35 @@
   color: var(--color-chat-purple);
 }
 
-/* ---------- Yes wall (dark specimen, spec change A + treatment B) ---------- */
-/* Match FinalCTA's containment: the glow and watermark stay inside the band. */
-#yes-wall {
+/* ---------- Proof strip (dark contrast band, top of the homepage) ----------
+ * Formerly a light tinted strip low on the page. It now occupies the single
+ * dark band under the logo ribbon: same cells and sources, re-toned for the
+ * dark surface scope in ui.css. Containment for the watermark and glow lives
+ * on #proof, mirroring FinalCTA. */
+#proof {
   overflow: clip;
 }
-.yes-wall {
+.proof-strip {
   position: relative;
 }
-/* 330px italic Garamond watermark, gradient-filled, bleeding off the right.
- * The div holds no text (screen readers + getAllByText stay clean); the glyph
- * comes from the data attribute. */
-.yes-wall-watermark::after {
+/* Gradient-filled Garamond watermark bleeding off the right edge. */
+.proof-strip-watermark::after {
   content: attr(data-watermark-text);
 }
-.yes-wall-watermark {
+.proof-strip-watermark {
   position: absolute;
   right: -40px;
-  top: -20px;
+  top: -78px;
   font-family: var(--font-garamond);
   font-style: italic;
   font-weight: 800;
-  font-size: clamp(160px, 24vw, 330px);
+  font-size: clamp(150px, 21vw, 300px);
   line-height: 0.76;
   letter-spacing: -0.04em;
   background: linear-gradient(
     160deg,
-    rgba(100, 195, 253, 0.16),
-    rgba(100, 195, 253, 0.03) 70%
+    rgba(100, 195, 253, 0.11),
+    rgba(100, 195, 253, 0.02) 70%
   );
   -webkit-background-clip: text;
   background-clip: text;
@@ -1112,8 +1113,8 @@
   pointer-events: none;
   user-select: none;
 }
-/* Radial accent glow rising behind the watermark (treatment B). */
-.yes-wall::before {
+/* Radial accent glow rising behind the watermark. */
+.proof-strip::before {
   content: '';
   position: absolute;
   top: -160px;
@@ -1128,154 +1129,29 @@
   );
   pointer-events: none;
 }
-.yes-wall-grid {
+/* The rail header stacks ABOVE the cells here: four big Garamond numerals need
+ * the full container width to stay on one line. */
+.proof-strip-grid {
   position: relative;
   display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: 64px;
+  gap: 46px;
 }
-.yes-wall-group {
-  display: grid;
-  grid-template-columns: 112px 1fr;
-}
-.yes-wall-group + .yes-wall-group {
-  margin-top: 34px;
-}
-.yes-wall-group-numeral {
-  font-family: var(--font-garamond);
-  font-size: 62px;
-  font-weight: 700;
-  line-height: 0.85;
-  letter-spacing: -0.03em;
-  color: var(--color-border-strong);
-  padding-top: 14px;
-}
-.yes-wall-group-rows {
-  border-top: 2px solid var(--color-text-primary);
-}
-.yes-wall-group-label {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-accent);
-  margin: 0;
-  padding: 13px 0 5px;
-}
-/* The answer is SECOND in the DOM (question first, for screen-reader order)
- * but placed visually first via grid areas. */
-.yes-wall-row {
-  display: grid;
-  grid-template-columns: 33px 1fr 250px;
-  grid-template-areas: 'yes question api';
-  gap: 0 13px;
-  align-items: baseline;
-  border-top: 1px solid var(--color-border);
-  padding: 12px 0;
-  transition: background 140ms ease;
-}
-.yes-wall-row:hover {
-  background: var(--color-accent-surface);
-}
-.yes-wall-question {
-  grid-area: question;
-  font-family: var(--font-inter);
-  font-size: 16px;
-  line-height: 1.45;
-  color: var(--color-text-primary);
-  margin: 0;
-}
-.yes-wall-yes {
-  grid-area: yes;
-  font-family: var(--font-garamond);
-  font-style: italic;
-  font-weight: 700;
-  font-size: 20px;
-  color: var(--color-accent);
-  text-shadow: 0 0 16px var(--color-accent-glow);
-}
-.yes-wall-api {
-  grid-area: api;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--color-text-muted);
-  text-align: right;
-  margin: 0;
-}
-.yes-wall-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  margin-top: 34px;
-  padding-top: 20px;
-  border-top: 1px solid var(--color-border);
-}
-.yes-wall-footer-link {
-  font-family: var(--font-inter);
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--color-accent);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.yes-wall-footer-count {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-  margin: 0;
-}
-
-/* Responsive: the specimen devices are the fragile part. */
-@media (max-width: 900px) {
-  .yes-wall-grid {
-    grid-template-columns: 1fr;
-    gap: 40px;
-  }
-  .yes-wall-group {
-    grid-template-columns: 1fr;
-  }
-  .yes-wall-group-numeral {
-    font-size: 40px;
-    padding: 0 0 8px;
-  }
-  .yes-wall-watermark {
-    font-size: 140px;
-    right: -16px;
-  }
-  .yes-wall-row {
-    grid-template-columns: 33px 1fr;
-    grid-template-areas:
-      'yes question'
-      '. api';
-    gap: 4px 13px;
-  }
-  .yes-wall-api {
-    text-align: left;
-  }
-}
-
-/* ---------- Proof strip (light, paper elevation — spec change D) ---------- */
-.proof-strip-grid {
-  display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: 64px;
-  align-items: start;
+.proof-strip-grid > [data-ui="section-header"] {
+  max-width: 620px;
 }
 .proof-strip-cells {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 18px;
+  gap: 20px;
   list-style: none;
   margin: 0;
   padding: 0;
 }
 .proof-strip-cell {
   position: relative;
+  /* Grid items default to min-width:auto; the long mono source URLs would then
+   * push the four columns past the container. */
+  min-width: 0;
   background: var(--color-surface);
   background-image: linear-gradient(
     180deg,
@@ -1289,6 +1165,20 @@
     0 1px 2px rgba(0, 0, 0, 0.04),
     0 12px 28px -12px rgba(28, 28, 28, 0.14);
 }
+/* On the dark band the paper gradient inverts: a faint lift off the surface
+ * token rather than a white sheet. The token re-scope in ui.css handles the
+ * rest (background, border, text). */
+[data-ui="section"][data-surface="dark"] .proof-strip-cell {
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.01)
+  );
+  border-color: var(--color-border-strong);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.35),
+    0 16px 34px -16px rgba(0, 0, 0, 0.6);
+}
 /* 1px top highlight so the card reads as paper, not an outline. */
 .proof-strip-cell::before {
   content: '';
@@ -1300,6 +1190,14 @@
     90deg,
     transparent,
     rgba(255, 255, 255, 0.9),
+    transparent
+  );
+}
+[data-ui="section"][data-surface="dark"] .proof-strip-cell::before {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.16),
     transparent
   );
 }
@@ -1332,18 +1230,39 @@
 }
 .proof-strip-source {
   display: inline-block;
+  max-width: 100%;
   font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--color-text-muted);
   margin-top: 9px;
+  overflow-wrap: anywhere;
+}
+[data-ui="section"][data-surface="dark"] .proof-strip-source {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--color-accent-border-hover);
+}
+[data-ui="section"][data-surface="dark"] .proof-strip-source:hover {
+  color: var(--color-accent-hover);
+  text-decoration-color: currentColor;
 }
 @media (max-width: 900px) {
   .proof-strip-grid {
-    grid-template-columns: 1fr;
     gap: 32px;
   }
+  .proof-strip-cells {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .proof-strip-watermark {
+    font-size: 130px;
+    right: -16px;
+    top: -46px;
+  }
+}
+@media (max-width: 560px) {
   .proof-strip-cells {
     grid-template-columns: 1fr;
   }
@@ -1353,8 +1272,8 @@
 .logo-ribbon {
   background: var(--color-canvas);
   border-top: 1px solid var(--color-border);
-  /* No border-bottom: the Yes wall directly below draws its own accent seam
-   * at the boundary; two hairlines would stack. */
+  /* No border-bottom: the dark proof band directly below draws its own accent
+   * seam at the boundary; two hairlines would stack. */
 }
 .logo-ribbon-line {
   display: flex;

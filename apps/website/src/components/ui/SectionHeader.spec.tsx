@@ -9,7 +9,7 @@ describe('SectionHeader', () => {
         variant="rail"
         eyebrow="The Yes wall"
         heading="Yes, it does that."
-        headingId="yes-wall-heading"
+        headingId="proof-heading"
         aside="Sixteen questions teams ask before they commit."
       />,
     );
@@ -17,7 +17,7 @@ describe('SectionHeader', () => {
     expect(root?.getAttribute('data-variant')).toBe('rail');
     expect(screen.getByText('The Yes wall')).toBeTruthy();
     const h2 = screen.getByRole('heading', { level: 2 });
-    expect(h2.id).toBe('yes-wall-heading');
+    expect(h2.id).toBe('proof-heading');
     expect(h2.textContent).toBe('Yes, it does that.');
     expect(screen.getByText(/Sixteen questions/)).toBeTruthy();
   });
