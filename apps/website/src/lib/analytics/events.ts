@@ -120,6 +120,8 @@ export type AnalyticsProperties = {
   result_count?: number;
   query_length?: number;
   error_reason?: string;
+  /** Which CTA carried the visitor to a form; e.g. `pricing_tier_enterprise`. */
+  entry_point?: string;
   ai_crawler?: string;
   ai_source?: string;
   user_agent?: string;
