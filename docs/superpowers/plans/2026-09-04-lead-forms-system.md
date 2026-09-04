@@ -143,9 +143,9 @@ Expected: FAIL, four new cases, each with "ENOENT" or "missing declaration" for 
   --form-control-height-compact: 36px;
   --form-control-radius: 8px;
   --form-focus-ring: 0 0 0 3px var(--color-accent-glow);
-  --form-error-ring: 0 0 0 3px rgba(221, 0, 49, 0.18);
   --color-status-success: #1a7a40;
   --color-status-error: var(--color-angular-red);
+  --form-error-ring: 0 0 0 3px color-mix(in srgb, var(--color-status-error) 18%, transparent);
 }
 
 /* Field: label, control, help, error */
@@ -283,15 +283,15 @@ select[data-ui="form-control"] {
 }
 
 /* Submit: both labels occupy the same grid cell so the width never changes */
-[data-ui="submit"] > span:first-child {
+[data-ui="button"][data-submit] > span:first-child {
   display: inline-grid;
 }
-[data-ui="submit"] [data-slot] {
+[data-ui="button"][data-submit] [data-slot] {
   grid-area: 1 / 1;
   white-space: nowrap;
 }
-[data-ui="submit"]:not([data-pending]) [data-slot="pending"],
-[data-ui="submit"][data-pending] [data-slot="label"] {
+[data-ui="button"][data-submit]:not([data-pending]) [data-slot="pending"],
+[data-ui="button"][data-submit][data-pending] [data-slot="label"] {
   visibility: hidden;
 }
 
@@ -314,8 +314,8 @@ select[data-ui="form-control"] {
   background: var(--color-accent-surface);
 }
 [data-ui="form-status"][data-tone="failure"] {
-  border-color: rgba(221, 0, 49, 0.25);
-  background: rgba(221, 0, 49, 0.05);
+  border-color: color-mix(in srgb, var(--color-status-error) 25%, transparent);
+  background: color-mix(in srgb, var(--color-status-error) 5%, transparent);
 }
 [data-ui="form-status-icon"] {
   flex: 0 0 auto;
@@ -688,6 +688,8 @@ describe('SubmitButton', () => {
     expect(button.type).toBe('submit');
     expect(button.disabled).toBe(false);
     expect(button.getAttribute('data-pending')).toBeNull();
+    expect(button.getAttribute('data-submit')).toBe('');
+    expect(button.getAttribute('data-ui')).toBe('button');
     expect(button.querySelector('[data-slot="pending"]')?.textContent).toBe('Sending…');
 
     rerender(<SubmitButton pending pendingLabel="Sending…">Send to Brian</SubmitButton>);
@@ -778,7 +780,7 @@ export function SubmitButton({ children, pending = false, pendingLabel, disabled
     <Button
       {...rest}
       type="submit"
-      data-ui="submit"
+      data-submit=""
       data-pending={pending ? '' : undefined}
       aria-busy={pending || undefined}
       disabled={pending || disabled}
@@ -790,7 +792,7 @@ export function SubmitButton({ children, pending = false, pendingLabel, disabled
 }
 ```
 
-Note: `Button` sets `type="button"` before spreading `buttonAttrs`, so the explicit `type="submit"` here wins; `data-ui="submit"` is spread after `data-ui="button"` for the same reason. Verify by reading `apps/website/src/components/ui/Button.tsx:78-90`.
+Note: `Button` sets `type="button"` before spreading `buttonAttrs`, so the explicit `type="submit"` here wins. The marker is a separate `data-submit` attribute so `data-ui="button"` and every base button rule in `ui.css` survive. Verify by reading `apps/website/src/components/ui/Button.tsx:78-90`.
 
 `FormStatus.tsx`:
 
