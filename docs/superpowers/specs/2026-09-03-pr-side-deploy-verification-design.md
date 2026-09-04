@@ -105,8 +105,9 @@ deployments.
      `vercel pull --environment=preview`, `vercel build` (no `--prod`) with
      `NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL=https://<examples alias>` and
      `GROWTH_FORM_POLICY=growth_v1`, `vercel deploy --prebuilt --archive=tgz
-     --skip-domain --yes` (no `--prod`), capture the URL,
-     `vercel alias set <url> <website alias>`.
+     --yes` (no `--prod`, and no `--skip-domain`: Vercel requires that flag
+     to accompany `--prod`), validate the captured URL is a bare https
+     origin, `vercel alias set <url> <website alias>`.
   5. Guard: fail with a provisioning message if either
      `VERCEL_AUTOMATION_BYPASS_SECRET` or
      `VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET` is empty.
@@ -123,10 +124,14 @@ secret. When `VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET` and
 `RUNTIME_BYPASS_ORIGIN` are both set, the config also registers a
 `globalSetup` script and points `use.storageState` at a file the script
 writes. The script requests
-`${RUNTIME_BYPASS_ORIGIN}/?x-vercel-protection-bypass=<examples secret>&x-vercel-set-bypass-cookie=true`
-with a Playwright request context, which makes Vercel answer with the
-`_vercel_jwt` bypass cookie scoped to that origin, and saves the resulting
-cookies as storage state. Every browser context then carries the examples
+`${RUNTIME_BYPASS_ORIGIN}/?x-vercel-protection-bypass=<examples secret>&x-vercel-set-bypass-cookie=samesitenone`
+with a Playwright request context (redirects not followed), which makes
+Vercel answer with the `_vercel_jwt` bypass cookie scoped to that origin;
+the cookies are normalized to `SameSite=None; Secure` (the iframe is
+cross-site) and saved as storage state. In this mode the global header
+carries only `x-vercel-protection-bypass` for the Website secret and no
+`x-vercel-set-bypass-cookie`, so the runtime origin is never asked to issue
+a cookie for a wrong-project secret. Every browser context then carries the examples
 cookie, so the runtime iframe and its subresources load without any spec
 importing a custom fixture. The examples secret travels only in that one
 setup request; the Website secret keeps travelling only as the global
@@ -145,11 +150,15 @@ examples secret never appears in `extraHTTPHeaders`.
 - Steps: `npm ci`; write `.vercel/project.json` for the cockpit project;
   `vercel pull --environment=preview`; `vercel build --local-config
   vercel.cockpit.json` with `COCKPIT_WEBSITE_ORIGIN=https://threadplane.ai`
-  (no `--prod`); `vercel deploy --prebuilt --archive=tgz --skip-domain --yes
-  --env COCKPIT_WEBSITE_ORIGIN=https://threadplane.ai` (no `--prod`); guard
+  (no `--prod`); `vercel deploy --prebuilt --archive=tgz --yes
+  --env COCKPIT_WEBSITE_ORIGIN=https://threadplane.ai` (no `--prod`, no
+  `--skip-domain`); validate the captured URL is a bare https origin; guard
   on `VERCEL_COCKPIT_AUTOMATION_BYPASS_SECRET`; run
   `apps/cockpit/scripts/deploy-smoke.ts --mode preview --retries 20
-  --retry-delay-ms 5000` against the captured URL.
+  --retry-delay-ms 5000` against the captured URL; finally
+  `vercel remove <url> --safe --yes --scope=<team>` on every outcome, so
+  throwaway artifacts do not accumulate (`--safe` never touches an aliased,
+  i.e. production, deployment).
 - No alias is needed; the smoke takes the bare deployment URL.
 - The token-free `cockpit-deploy-smoke` dry-run job stays unchanged so forks
   keep a check.
