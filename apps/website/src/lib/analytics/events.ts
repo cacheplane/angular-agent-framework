@@ -69,7 +69,6 @@ export type CtaId =
   // Why this exists section
   | 'home_why_pilot_to_prod'
   // Yes Wall section
-  | 'home_yes_wall_docs'
   // Pricing tier CTAs
   | 'pricing_tier_community'
   | 'pricing_tier_production_assurance'

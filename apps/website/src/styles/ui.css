@@ -153,16 +153,11 @@
 [data-ui="section"][data-surface="tinted"] {
   background: var(--color-surface-tinted);
 }
-/* Treatment D: the proof strip's tinted band is a whisper of gradient. Scoped
- * to #proof so other tinted sections keep the flat token. */
-#proof[data-ui="section"][data-surface="tinted"] {
-  background: linear-gradient(180deg, #fdfdfd, #f6f6f6);
-}
 [data-ui="section"][data-surface="white"] {
   background: var(--color-surface);
 }
 
-/* Dark section scope (homepage Yes wall + FinalCTA dark variant).
+/* Dark section scope (homepage proof band + FinalCTA dark variant).
  * Values mirror libs/design-tokens/src/lib/dark.ts — the website hardwires
  * the light theme in TS, so dark sections re-scope the CSS variables instead.
  * If dark.ts changes, update here. Treatment B (spec): the canvas is a subtle

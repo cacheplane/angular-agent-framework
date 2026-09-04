@@ -1,6 +1,6 @@
 import { Hero } from '../components/landing/Hero';
 import { LogoRibbon } from '../components/landing/LogoRibbon';
-import { YesWall } from '../components/landing/YesWall';
+import { ProofStrip } from '../components/landing/ProofStrip';
 import { FeatureBlock } from '../components/landing/FeatureBlock';
 import { StackDiagramSection } from '../components/landing/StackDiagramSection';
 import { HomeConceptGrid } from '../components/landing/HomeConceptGrid';
@@ -9,7 +9,6 @@ import { MediumSwitcher } from '../components/landing/MediumSwitcher';
 import { SECTION_MEDIA } from '../lib/section-media';
 import { buildPanes } from '../lib/build-panes';
 import { PilotBlock } from '../components/landing/PilotBlock';
-import { ProofStrip } from '../components/landing/ProofStrip';
 import { WhitePaperBlock } from '../components/landing/WhitePaperBlock';
 import { HomeFAQ } from '../components/landing/HomeFAQ';
 import { FinalCTA } from '../components/landing/FinalCTA';
@@ -38,7 +37,7 @@ export default async function HomePage() {
     <>
       <Hero />
       <LogoRibbon />
-      <YesWall />
+      <ProofStrip />
 
       <StackDiagramSection
         id="architecture"
@@ -108,8 +107,6 @@ export default async function HomePage() {
       />
 
       {/*
-        The homepage claims human-in-the-loop in the Yes wall, but nothing
-        before this section showed it.
         This is the only section whose heading the approval clip actually
         illustrates — the same rule the solutions pages follow.
       */}
@@ -135,7 +132,6 @@ export default async function HomePage() {
 
       <PilotBlock />
       <WhitePaperBlock formPolicy={formPolicy} />
-      <ProofStrip />
       <HomeFAQ />
       <RecentArticles />
       <FinalCTA variant="dark" />
