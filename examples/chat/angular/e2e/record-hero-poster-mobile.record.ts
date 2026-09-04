@@ -13,6 +13,12 @@
  * bubble behind it, and a still of a live Accept / Edit / Respond dialog
  * invites taps that do nothing.
  *
+ * The 2500ms wait is shared with the desktop recorder and is about the scripted
+ * cursor, not the text: at 1500ms it is still parked where it pressed Accept,
+ * which at phone width drops the arrowhead onto the word `retain` in step 3.
+ * By 2500ms it has reached the composer, which reads as the walkthrough about
+ * to type again rather than as a smudge on the prose.
+ *
  * Geometry: 390x650 is the phone design width the reviews already use, and it
  * is exactly 3:5 — the ratio `.hero-demo-stage` holds below 768px — so
  * `object-fit: cover` crops nothing. The frame is captured at
@@ -22,7 +28,7 @@
  *
  *   npx playwright test --config examples/chat/angular/e2e/record-hero.config.ts record-hero-poster-mobile
  */
-import { test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { resolve } from 'node:path';
 import sharp from 'sharp';
 
@@ -41,7 +47,11 @@ test('capture mobile hero poster', async ({ page }) => {
   const interruptPanel = page.locator('chat-interrupt-panel');
   await interruptPanel.waitFor({ timeout: 60_000 });
   await interruptPanel.waitFor({ state: 'detached', timeout: 60_000 });
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(2500);
+  // Guards the beat: `.hero__take` ships in normal flow, and a composer with
+  // the next prompt already typed into it means the wait has drifted late.
+  await expect(page.locator('.hero__take')).toBeVisible();
+  await expect(page.locator('[data-hero-surface] textarea')).toHaveValue('');
   const png = await page.screenshot({ type: 'png', fullPage: false });
   await sharp(png).resize({ width: SHIP_WIDTH }).webp({ quality: 55, effort: 6 }).toFile(OUT);
   console.log(`wrote ${OUT}`);

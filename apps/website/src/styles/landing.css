@@ -1540,7 +1540,7 @@
     aspect-ratio: 3 / 5;
   }
   /* The phone poster shows the demo's whole frame, right down to its own
-     "Take control ↗" button — which lands 18-29px above the stage floor and
+     "Take control ↗" button — which lands 20-29px above the stage floor and
      is a still, so tapping it does nothing. Dropping the live control from
      20px to 12px parks it squarely on top of that dead one instead of
      half-covering it, so a phone sees one button, not two. */
