@@ -10,7 +10,7 @@ import { JsonLd } from '../components/shared/JsonLd';
 import { rootJsonLd } from '../lib/structured-data';
 import {
   DEFAULT_META_DESCRIPTION,
-  DEFAULT_SOCIAL_IMAGE,
+  DEFAULT_SOCIAL_IMAGE_META,
   LONG_SUBHEAD,
   PRIMARY_TAGLINE,
   SITE_NAME,
@@ -48,13 +48,13 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: SITE_NAME,
     url: '/',
-    images: [DEFAULT_SOCIAL_IMAGE],
+    images: [DEFAULT_SOCIAL_IMAGE_META],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Threadplane',
     description: LONG_SUBHEAD,
-    images: [DEFAULT_SOCIAL_IMAGE],
+    images: [DEFAULT_SOCIAL_IMAGE_META],
   },
 };
 

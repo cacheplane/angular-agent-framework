@@ -7,6 +7,21 @@ import { SITE_ORIGIN } from './site-origin';
 export { SITE_ORIGIN };
 export const SITE_NAME = 'Threadplane';
 export const DEFAULT_SOCIAL_IMAGE = '/opengraph-image';
+
+/**
+ * The default card as an object, not a bare URL.
+ *
+ * Next's file-convention metadata (the `alt`/`size` exports in
+ * `app/opengraph-image.tsx`) is overridden the moment `openGraph.images` is set
+ * explicitly, so a bare string shipped `og:image` alone — no dimensions for a
+ * platform to lay the card out before fetching it, and no alt text at all.
+ */
+export const DEFAULT_SOCIAL_IMAGE_META = {
+  url: DEFAULT_SOCIAL_IMAGE,
+  width: 1200,
+  height: 630,
+  alt: 'Threadplane — the AI agent UI framework for Angular. Chat, threads, approvals, and generative UI on Signals and DI, for LangGraph and AG-UI.',
+} as const;
 export {
   CODING_AGENT_PROMPT,
   COMPONENT_SNIPPET,
@@ -106,7 +121,8 @@ export interface PageMetadataOptions {
   description: string;
   pathname: string;
   type?: 'article' | 'website';
-  /** Social image path; resolved against `metadataBase` from the root layout. */
+  /** Social image path; resolved against `metadataBase` from the root layout.
+   *  Omit to get {@link DEFAULT_SOCIAL_IMAGE_META}, which carries dimensions and alt. */
   image?: string;
   /** Present only for article-type pages; omitted entirely for landing pages. */
   article?: ArticleMetadata;
@@ -117,7 +133,7 @@ export function createPageMetadata({
   description,
   pathname,
   type = 'article',
-  image = DEFAULT_SOCIAL_IMAGE,
+  image,
   article,
 }: PageMetadataOptions): Metadata {
   const canonicalPath = getCanonicalPath(pathname);
@@ -136,7 +152,7 @@ export function createPageMetadata({
       url: canonicalPath,
       siteName: SITE_NAME,
       type,
-      images: [image],
+      images: [image ?? DEFAULT_SOCIAL_IMAGE_META],
       ...(article && {
         publishedTime: article.publishedTime,
         modifiedTime: resolveModifiedTime(article.publishedTime, article.modifiedTime),
@@ -148,7 +164,7 @@ export function createPageMetadata({
       card: 'summary_large_image',
       title,
       description,
-      images: [image],
+      images: [image ?? DEFAULT_SOCIAL_IMAGE_META],
     },
   };
 }

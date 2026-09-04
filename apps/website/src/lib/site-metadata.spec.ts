@@ -134,6 +134,17 @@ describe('createPageMetadata article fields', () => {
     expect(openGraph['tags']).toEqual(['angular', 'ag-ui']);
   });
 
+  it('ships the default card with dimensions and alt, not a bare URL', () => {
+    // A bare string overrides Next's file-convention metadata, so og:image:width,
+    // og:image:height and og:image:alt never reached the HTML.
+    const metadata = createPageMetadata({ title: 't', description: 'd', pathname: '/', type: 'website' });
+    const openGraph = metadata.openGraph as { images: { url: string; width: number; height: number; alt: string }[] };
+    expect(openGraph.images[0].url).toBe('/opengraph-image');
+    expect(openGraph.images[0].width).toBe(1200);
+    expect(openGraph.images[0].height).toBe(630);
+    expect(openGraph.images[0].alt).toMatch(/agent UI framework for Angular/);
+  });
+
   it('accepts a page-specific social image', () => {
     const metadata = createPageMetadata({
       title: 'Post — Threadplane',
