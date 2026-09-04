@@ -57,9 +57,23 @@ export type AnalyticsSurface =
  * derive cta_id dynamically from a human label.
  */
 export type CtaId =
-  // Hero (Spec 2)
+  // Hero (spec 2026-09-02 homepage rebuild)
   | 'hero_install'
+  | 'hero_install_open'
+  | 'hero_quickstart'
+  | 'hero_live_demo'
+  | 'hero_github'
+  | 'hero_demo_takeover'
+  | 'hero_demo_replay'
+  | 'hero_demo_play'
+  | 'hero_demo_fallback_open'
   | 'hero_talk_to_engineers'
+  // Homepage sections
+  | 'home_runtime_parity_toggle'
+  | 'home_adapter_guide'
+  | 'home_coding_agent_prompt'
+  | 'home_coding_agent_link'
+  // retired 2026-09-02, remove after 90 days
   | 'hero_demo_open_workspace'
   | 'hero_demo_open_workspace_caption'
   | 'hero_proof_pill'
@@ -68,7 +82,6 @@ export type CtaId =
   | 'home_whitepaper_direct_inline'
   // Why this exists section
   | 'home_why_pilot_to_prod'
-  // Yes Wall section
   // Pricing tier CTAs
   | 'pricing_tier_community'
   | 'pricing_tier_production_assurance'
@@ -114,6 +127,8 @@ export type AnalyticsProperties = {
   surface?: AnalyticsSurface;
   library?: AnalyticsLibrary;
   paper?: WhitepaperId;
+  /** Install/parity variant. */
+  adapter?: 'fake' | 'langgraph' | 'ag_ui';
   email_domain?: string;
   company?: string;
   is_success?: boolean;

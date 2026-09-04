@@ -21,6 +21,7 @@ async function expectNoHorizontalOverflow(
 test('landing page renders hero headline', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#hero-heading')).toBeVisible();
+  await expect(page.locator('#hero-heading')).toHaveText('The AI agent UI framework for Angular.');
   const headline = await page.locator('#hero-heading').textContent();
   expect(headline?.toLowerCase()).toContain('angular');
 });
@@ -31,11 +32,13 @@ test('landing page renders the dark proof band', async ({ page }) => {
   await expect(page.locator('#proof[data-surface="dark"]')).toBeVisible();
 });
 
-test('landing page renders feature blocks (Stream/Render/Ship)', async ({ page }) => {
+test('landing page renders feature blocks (Stream/Persist/Approve/Render/Test)', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#stream-heading')).toBeVisible();
+  await expect(page.locator('#persist-heading')).toBeVisible();
+  await expect(page.locator('#approve-heading')).toBeVisible();
   await expect(page.locator('#render-heading')).toBeVisible();
-  await expect(page.locator('#ship-heading')).toBeVisible();
+  await expect(page.locator('#test-heading')).toBeVisible();
 });
 
 test('landing page no longer carries the retired promises section', async ({ page }) => {

@@ -6,7 +6,7 @@
  * file in any route folder.
  */
 import { ImageResponse } from 'next/og';
-import { POSITIONING_PROOF_POINTS, PRIMARY_TAGLINE, SHORT_POSITIONING_DESCRIPTION } from '../lib/positioning';
+import { HERO_H1, POSITIONING_PROOF_POINTS, PRIMARY_TAGLINE, SHORT_POSITIONING_DESCRIPTION } from '../lib/positioning';
 import { loadCardFonts } from './og-font';
 
 // Node runtime (not edge) so we can read the bundled Garamond TTF off disk.
@@ -61,7 +61,7 @@ export default async function OpenGraphImage() {
             maxWidth: 980,
           }}
         >
-          Build fullstack agentic Angular apps.
+          {HERO_H1}
         </div>
 
         {/* Subhead */}

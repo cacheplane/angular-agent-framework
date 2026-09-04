@@ -1,7 +1,10 @@
+'use client';
+
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';
 import { Button } from '../ui/Button';
+import { trackCtaClick } from '../../lib/analytics/client';
 
 const TIMELINE = [
   { phase: '01', title: 'Discover', body: 'Map your stack, surfaces, and the agentic work that earns its keep.' },
@@ -28,10 +31,11 @@ export function PilotBlock() {
               <span className="pilot-rail-line" aria-hidden="true" />
             </div>
             <h2 id="pilot-heading" className="pilot-heading">
-              Ship your first Angular agent in 8 weeks.
+              Shipping inside a large Angular platform?
             </h2>
             <p className="pilot-subhead">
-              Pilot-to-Prod is a concierge delivery — concrete outcomes, your engineers in the driver&apos;s seat, no lock-in.
+              Bring your backend, security model, and design system. Work directly with Threadplane
+              engineers on architecture, rollout, testing, and production hardening.
             </p>
             <div className="pilot-rows">
               {OUTCOMES.map((o) => (
@@ -42,8 +46,17 @@ export function PilotBlock() {
               ))}
             </div>
             <div className="pilot-cta-row">
-              <Button variant="primary" size="lg" href="/pilot-to-prod">See the program</Button>
-              <Button variant="secondary" size="lg" href="/pilot-to-prod#contact">Book a call</Button>
+              <Button
+                variant="primary"
+                size="lg"
+                href="/contact?source=home_enterprise&track=enterprise"
+                onClick={() =>
+                  trackCtaClick({ cta_id: 'hero_talk_to_engineers', track: 'enterprise', surface: 'home' })
+                }
+              >
+                Talk to an engineer
+              </Button>
+              <Button variant="secondary" size="lg" href="/pilot-to-prod">See the pilot program</Button>
             </div>
           </div>
 

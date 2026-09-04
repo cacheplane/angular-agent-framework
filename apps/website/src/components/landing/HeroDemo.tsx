@@ -1,0 +1,145 @@
+'use client';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { BrowserFrame } from '../ui/BrowserFrame';
+import { trackCtaClick } from '../../lib/analytics/client';
+
+export const HERO_DEMO_ORIGIN = 'https://demo.threadplane.ai';
+export const HERO_DEMO_URL = `${HERO_DEMO_ORIGIN}/hero`;
+export const HERO_POSTER = '/screenshots/hero-walkthrough-poster.webp';
+const POSTER_W = 1200;
+const POSTER_H = 720;
+const READY_TIMEOUT_MS = 8000;
+const MIN_AUTOPLAY_WIDTH = 768;
+const MESSAGE_TYPE = 'tplane-hero';
+
+type State = 'poster' | 'playRequested' | 'mounting' | 'ready' | 'fallback';
+
+function autoplayAllowed(): boolean {
+  if (typeof window === 'undefined') return false;
+  if (window.innerWidth < MIN_AUTOPLAY_WIDTH) return false;
+  return !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+/**
+ * Hero demo: server-rendered poster (the LCP), iframe mounted after hydration
+ * when the hero is visible on a wide, motion-tolerant viewport, crossfaded in
+ * when the frame reports ready.
+ */
+export function HeroDemo() {
+  const [state, setState] = useState<State>('poster');
+  const [visible, setVisible] = useState(false);
+  const [needsClick, setNeedsClick] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const lastFrameState = useRef<string | null>(null);
+
+  // Visibility.
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver((entries) => setVisible(entries.some((e) => e.isIntersecting)), {
+      threshold: 0.25,
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  // Decide whether to mount.
+  useEffect(() => {
+    if (!visible) return;
+    if (state !== 'poster' && state !== 'playRequested') return;
+    if (state === 'playRequested' || autoplayAllowed()) setState('mounting');
+    else setNeedsClick(true);
+  }, [visible, state]);
+
+  // Ready timeout → fallback.
+  useEffect(() => {
+    if (state !== 'mounting') return;
+    const t = setTimeout(() => setState((s) => (s === 'mounting' ? 'fallback' : s)), READY_TIMEOUT_MS);
+    return () => clearTimeout(t);
+  }, [state]);
+
+  // Frame → website messages.
+  useEffect(() => {
+    const onMessage = (e: MessageEvent) => {
+      if (e.origin !== HERO_DEMO_ORIGIN) return;
+      const d = e.data as { type?: string; state?: string } | null;
+      if (!d || d.type !== MESSAGE_TYPE || typeof d.state !== 'string') return;
+      if (d.state === 'ready') setState((s) => (s === 'mounting' || s === 'fallback' ? 'ready' : s));
+      if (d.state === lastFrameState.current) return;
+      lastFrameState.current = d.state;
+      if (d.state === 'live') trackCtaClick({ cta_id: 'hero_demo_takeover', track: 'developer', surface: 'home' });
+      if (d.state === 'replay') trackCtaClick({ cta_id: 'hero_demo_replay', track: 'developer', surface: 'home' });
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, []);
+
+  const mounted = state === 'mounting' || state === 'ready' || state === 'fallback';
+
+  // Website → frame visibility. Posted whenever the iframe is mounted — while
+  // mounting, once ready, and after the ready timeout has already dropped us
+  // into `fallback` (and again on the iframe's load event) — so a frame whose
+  // referrer was stripped can learn our origin from this message and replay
+  // its `ready` state to us late.
+  useEffect(() => {
+    if (!mounted) return;
+    iframeRef.current?.contentWindow?.postMessage({ type: MESSAGE_TYPE, visible }, HERO_DEMO_ORIGIN);
+  }, [visible, mounted]);
+
+  const play = useCallback(() => {
+    trackCtaClick({ cta_id: 'hero_demo_play', track: 'developer', surface: 'home' });
+    setNeedsClick(false);
+    setState('playRequested');
+  }, []);
+
+  return (
+    <div ref={rootRef} className="hero-demo" data-hero-demo data-state={state}>
+      <BrowserFrame url="demo.threadplane.ai/hero" elevation="lg" className="hero-demo-frame">
+        <div className="hero-demo-stage">
+          <img
+            src={HERO_POSTER}
+            width={POSTER_W}
+            height={POSTER_H}
+            alt="Threadplane chat replaying a recorded LangGraph run: a user prompt, a request_approval tool call, and the streamed three-step cleanup plan"
+            className="hero-demo-poster"
+            loading="eager"
+            decoding="async"
+            // React 19 lowercases this attribute; the spec asserts the DOM value.
+            fetchPriority="high"
+          />
+          {mounted ? (
+            <iframe
+              ref={iframeRef}
+              src={HERO_DEMO_URL}
+              title="Threadplane live demo"
+              className="hero-demo-iframe"
+              allow="clipboard-write"
+              onLoad={() =>
+                iframeRef.current?.contentWindow?.postMessage({ type: MESSAGE_TYPE, visible: true }, HERO_DEMO_ORIGIN)
+              }
+            />
+          ) : null}
+          {needsClick && !mounted ? (
+            <button type="button" className="hero-demo-play" onClick={play}>
+              Play walkthrough
+            </button>
+          ) : null}
+          {state === 'fallback' ? (
+            <a
+              className="hero-demo-fallback"
+              href={HERO_DEMO_ORIGIN}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() =>
+                trackCtaClick({ cta_id: 'hero_demo_fallback_open', track: 'developer', surface: 'home' })
+              }
+            >
+              Open the live demo →
+            </a>
+          ) : null}
+        </div>
+      </BrowserFrame>
+    </div>
+  );
+}
