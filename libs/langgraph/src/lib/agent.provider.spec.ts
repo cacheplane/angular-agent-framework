@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
+import { InjectionToken, inject } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { createAgentRef } from '@threadplane/chat';
 import { provideAgent, AGENT_CONFIG, AGENT } from './agent.provider';
+import { injectAgent } from './inject-agent';
 import { MockAgentTransport } from './transport/mock-stream.transport';
 
 describe('provideAgent', () => {
@@ -84,5 +87,113 @@ describe('provideAgent', () => {
     expect(typeof ag.submit).toBe('function');
     // AGENT reads the already-resolved AGENT_CONFIG, so the factory ran once.
     expect(calls).toBe(1);
+  });
+
+  describe('AgentRef isolation', () => {
+    interface StateA { which: string }
+    interface StateB { which: string }
+
+    it('gives each ref its own agent and its own config in ONE providers array', async () => {
+      const REF_A = createAgentRef<StateA>('ref-a');
+      const REF_B = createAgentRef<StateB>('ref-b');
+      const transportA = new MockAgentTransport();
+      const transportB = new MockAgentTransport();
+      TestBed.configureTestingModule({
+        providers: [
+          provideAgent(REF_A, {
+            apiUrl: '',
+            assistantId: 'graph-a',
+            transport: transportA,
+            initialValues: { which: 'a' },
+          }),
+          provideAgent(REF_B, {
+            apiUrl: '',
+            assistantId: 'graph-b',
+            transport: transportB,
+            initialValues: { which: 'b' },
+          }),
+        ],
+      });
+
+      const agentA = TestBed.runInInjectionContext(() => injectAgent(REF_A));
+      const agentB = TestBed.runInInjectionContext(() => injectAgent(REF_B));
+
+      // Distinct instances...
+      expect(agentA).not.toBe(agentB);
+      // ...each built from ITS OWN config, not the last one registered.
+      expect(agentA.value()).toEqual({ which: 'a' });
+      expect(agentB.value()).toEqual({ which: 'b' });
+
+      // And each is wired to its own transport: a submit on A must not reach B.
+      void agentA.submit({ message: 'to-a' });
+      await Promise.resolve();
+      expect(transportA.streams.length).toBe(1);
+      expect(transportB.streams.length).toBe(0);
+      agentA.stop();
+    });
+
+    it('keeps single-ref behaviour identical: injectAgent() resolves the same instance', () => {
+      const REF = createAgentRef<StateA>('single');
+      const transport = new MockAgentTransport();
+      TestBed.configureTestingModule({
+        providers: [
+          provideAgent(REF, {
+            apiUrl: '',
+            assistantId: 'single-graph',
+            transport,
+            initialValues: { which: 'single' },
+          }),
+        ],
+      });
+
+      const byRef = TestBed.runInInjectionContext(() => injectAgent(REF));
+      const bare = TestBed.runInInjectionContext(() => injectAgent());
+      expect(bare).toBe(byRef);
+      expect(TestBed.inject(AGENT)).toBe(byRef);
+      // The internal AGENT_CONFIG token still resolves for a ref-provided agent.
+      expect(TestBed.inject(AGENT_CONFIG).assistantId).toBe('single-graph');
+      expect(TestBed.inject(AGENT_CONFIG).transport).toBe(transport);
+    });
+
+    it('resolves a ref config factory lazily inside an injection context, exactly once', () => {
+      const REF = createAgentRef<StateA>('lazy');
+      const ASSISTANT_ID = new InjectionToken<string>('ASSISTANT_ID');
+      let calls = 0;
+      TestBed.configureTestingModule({
+        providers: [
+          { provide: ASSISTANT_ID, useValue: 'from-di' },
+          provideAgent(REF, () => {
+            calls += 1;
+            // Only legal if the factory runs in an injection context.
+            return {
+              apiUrl: '',
+              assistantId: inject(ASSISTANT_ID),
+              transport: new MockAgentTransport(),
+              initialValues: { which: 'lazy' },
+            };
+          }),
+        ],
+      });
+      // Not run at decoration time.
+      expect(calls).toBe(0);
+
+      const agent = TestBed.runInInjectionContext(() => injectAgent(REF));
+      expect(agent.value()).toEqual({ which: 'lazy' });
+      expect(TestBed.inject(AGENT_CONFIG).assistantId).toBe('from-di');
+      // Ref agent and AGENT_CONFIG share one resolution of the factory.
+      expect(calls).toBe(1);
+      expect(TestBed.runInInjectionContext(() => injectAgent())).toBe(agent);
+      expect(calls).toBe(1);
+    });
+
+    it('throws the same assistantId error through a ref token', () => {
+      const REF = createAgentRef<StateA>('no-assistant');
+      TestBed.configureTestingModule({
+        providers: [provideAgent(REF, { apiUrl: 'http://localhost' })],
+      });
+      expect(() =>
+        TestBed.runInInjectionContext(() => injectAgent(REF)),
+      ).toThrow(/`assistantId` is required to construct the AGENT singleton/);
+    });
   });
 });
