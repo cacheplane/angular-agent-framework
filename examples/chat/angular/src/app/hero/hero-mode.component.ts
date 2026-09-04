@@ -54,6 +54,22 @@ const TYPE_DELAY_MS = 40;
 const READ_PAUSE_MS = 1200;
 
 /**
+ * The embed handshake is a race the frame cannot win on its own. The parent
+ * posts `{ visible: true }` on the iframe's `load` event, but this component
+ * only registers its `message` listener inside `boot()` — after the lazy route
+ * chunk has loaded and Angular has rendered — so that single post can land
+ * before anyone is listening and be lost forever. Rather than trusting one
+ * message, a frame that has not yet heard from its embedder keeps announcing
+ * `ready`; the parent answers every announcement with the current visibility.
+ */
+export const HERO_READY_ANNOUNCE_MS = 500;
+export const HERO_READY_ANNOUNCE_MAX_MS = 10_000;
+
+function isEmbedded(): boolean {
+  return typeof window !== 'undefined' && window.parent !== window;
+}
+
+/**
  * The live agent's thread id, held per component instance (NOT at module
  * scope): a second visit to /hero must start a genuinely new thread, which is
  * what the "new thread" pill promises.
@@ -173,7 +189,10 @@ function heroProviders(replay?: HeroReplayTransport): Provider[] {
       .hero__interrupt { padding: 8px 12px 0; }
       .hero__banner { margin: 0; padding: 8px 12px; font: 13px/1.4 system-ui, sans-serif; background: rgba(47,111,79,.08); border-bottom: 1px solid rgba(47,111,79,.3); }
       .hero__link { margin-left: 8px; background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; cursor: pointer; font: inherit; }
-      .hero__take { position: absolute; left: 50%; bottom: 72px; transform: translateX(-50%); z-index: 10; padding: 8px 14px; border-radius: 999px; border: 0; background: #111; color: #fff; font: 600 13px/1 system-ui, sans-serif; cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+      /* In normal flow, NOT absolutely positioned: floating it over the surface
+         put it on top of the streaming answer at 768px and on top of the empty
+         welcome copy at 390px, and it half-covered the composer's send button. */
+      .hero__take { flex: none; align-self: center; margin: 8px 12px 12px; padding: 8px 14px; border-radius: 999px; border: 0; background: #111; color: #fff; font: 600 13px/1 system-ui, sans-serif; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
       .hero__take:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
     `,
   ],
@@ -245,11 +264,16 @@ export class HeroMode implements HeroScriptHost {
    */
   private scriptDriving = false;
 
+  /** Set by the FIRST visibility message; ends the `ready` re-announcements. */
+  private embedderAnswered = false;
+  private readyAnnounce: ReturnType<typeof setInterval> | null = null;
+
   constructor() {
     afterNextRender(() => {
       if (HeroMode.autoBoot) void this.boot();
     });
     this.destroyRef.onDestroy(() => this.runner?.stop());
+    this.destroyRef.onDestroy(() => this.stopAnnouncingReady());
   }
 
   /** Public so a spec can boot explicitly with `autoBoot` disabled. */
@@ -270,7 +294,7 @@ export class HeroMode implements HeroScriptHost {
       // In record mode the fixture is the artifact being produced, so there is
       // nothing to await — the script drives the LIVE agent from the start.
       if (isRecordMode()) {
-        this.bridge.postState('ready');
+        this.announceReady();
         this.startWhenUnembedded();
         return;
       }
@@ -280,10 +304,10 @@ export class HeroMode implements HeroScriptHost {
       } catch (err) {
         console.error('hero recording unavailable; staying live', err);
         this.mode.set('live');
-        this.bridge.postState('ready');
+        this.announceReady();
         return;
       }
-      this.bridge.postState('ready');
+      this.announceReady();
       this.startWhenUnembedded();
     } catch (err) {
       console.error('hero boot failed; staying live', err);
@@ -305,7 +329,38 @@ export class HeroMode implements HeroScriptHost {
     void this.runner.loop();
   }
 
+  /**
+   * Posts `ready`, then — while embedded and still unanswered — keeps posting
+   * it so a parent that missed the first exchange still learns the frame is up
+   * and re-sends its visibility. Capped, because a page that is genuinely not
+   * listening (an embedder that never implements the protocol) should not have
+   * this frame talking to it forever.
+   */
+  private announceReady(): void {
+    this.bridge.postState('ready');
+    this.stopAnnouncingReady();
+    if (this.embedderAnswered || !isEmbedded()) return;
+    const deadline = Date.now() + HERO_READY_ANNOUNCE_MAX_MS;
+    this.readyAnnounce = setInterval(() => {
+      if (this.embedderAnswered || Date.now() >= deadline) {
+        this.stopAnnouncingReady();
+        return;
+      }
+      this.bridge.postState('ready');
+    }, HERO_READY_ANNOUNCE_MS);
+  }
+
+  private stopAnnouncingReady(): void {
+    if (this.readyAnnounce === null) return;
+    clearInterval(this.readyAnnounce);
+    this.readyAnnounce = null;
+  }
+
   private setEmbedVisible(v: boolean): void {
+    // Any visibility message — true or false — proves the embedder is on the
+    // other end of the handshake, so the announcements have done their job.
+    this.embedderAnswered = true;
+    this.stopAnnouncingReady();
     this.embedVisible.set(v);
     this.applyVisibility();
   }

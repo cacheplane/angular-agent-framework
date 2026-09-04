@@ -29,9 +29,20 @@ export function HeroDemo() {
   const [state, setState] = useState<State>('poster');
   const [visible, setVisible] = useState(false);
   const [needsClick, setNeedsClick] = useState(false);
+  /**
+   * True once the frame's window has actually navigated to the demo origin —
+   * proven by the iframe's `load` event, or by the frame having spoken to us.
+   * A freshly created iframe's `contentWindow` is still `about:blank`, and
+   * posting to it with the demo's target origin is silently dropped (and logs
+   * "the target origin ... does not match the recipient window's origin"), so
+   * the visibility handshake must not start before this flips.
+   */
+  const [frameLoaded, setFrameLoaded] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const lastFrameState = useRef<string | null>(null);
+  /** Read by the message handler, which is registered once and never re-bound. */
+  const visibleRef = useRef(false);
 
   // Visibility.
   useEffect(() => {
@@ -59,13 +70,27 @@ export function HeroDemo() {
     return () => clearTimeout(t);
   }, [state]);
 
+  const postVisibility = useCallback((v: boolean) => {
+    iframeRef.current?.contentWindow?.postMessage({ type: MESSAGE_TYPE, visible: v }, HERO_DEMO_ORIGIN);
+  }, []);
+
   // Frame → website messages.
   useEffect(() => {
     const onMessage = (e: MessageEvent) => {
       if (e.origin !== HERO_DEMO_ORIGIN) return;
       const d = e.data as { type?: string; state?: string } | null;
       if (!d || d.type !== MESSAGE_TYPE || typeof d.state !== 'string') return;
-      if (d.state === 'ready') setState((s) => (s === 'mounting' || s === 'fallback' ? 'ready' : s));
+      // The frame spoke, so its window has navigated — safe to post to even if
+      // we somehow never saw the iframe's own load event.
+      setFrameLoaded(true);
+      if (d.state === 'ready') {
+        setState((s) => (s === 'mounting' || s === 'fallback' ? 'ready' : s));
+        // Answer EVERY `ready`, not just the first. The frame re-announces
+        // `ready` until it has heard a visibility message, so this ack is what
+        // recovers the handshake when our first post was lost — otherwise the
+        // frame sits on its empty welcome state and never starts.
+        postVisibility(visibleRef.current);
+      }
       if (d.state === lastFrameState.current) return;
       lastFrameState.current = d.state;
       if (d.state === 'live') trackCtaClick({ cta_id: 'hero_demo_takeover', track: 'developer', surface: 'home' });
@@ -73,19 +98,20 @@ export function HeroDemo() {
     };
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-  }, []);
+  }, [postVisibility]);
 
   const mounted = state === 'mounting' || state === 'ready' || state === 'fallback';
 
-  // Website → frame visibility. Posted whenever the iframe is mounted — while
-  // mounting, once ready, and after the ready timeout has already dropped us
-  // into `fallback` (and again on the iframe's load event) — so a frame whose
-  // referrer was stripped can learn our origin from this message and replay
-  // its `ready` state to us late.
+  // Website → frame visibility. Posted whenever the iframe is mounted AND has
+  // navigated — while mounting, once ready, and after the ready timeout has
+  // already dropped us into `fallback` — so a frame whose referrer was
+  // stripped can learn our origin from this message and replay its `ready`
+  // state to us late.
   useEffect(() => {
-    if (!mounted) return;
-    iframeRef.current?.contentWindow?.postMessage({ type: MESSAGE_TYPE, visible }, HERO_DEMO_ORIGIN);
-  }, [visible, mounted]);
+    visibleRef.current = visible;
+    if (!mounted || !frameLoaded) return;
+    postVisibility(visible);
+  }, [visible, mounted, frameLoaded, postVisibility]);
 
   const play = useCallback(() => {
     trackCtaClick({ cta_id: 'hero_demo_play', track: 'developer', surface: 'home' });
@@ -115,9 +141,7 @@ export function HeroDemo() {
               title="Threadplane live demo"
               className="hero-demo-iframe"
               allow="clipboard-write"
-              onLoad={() =>
-                iframeRef.current?.contentWindow?.postMessage({ type: MESSAGE_TYPE, visible: true }, HERO_DEMO_ORIGIN)
-              }
+              onLoad={() => setFrameLoaded(true)}
             />
           ) : null}
           {needsClick && !mounted ? (

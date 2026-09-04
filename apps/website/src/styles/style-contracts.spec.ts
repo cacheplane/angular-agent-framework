@@ -214,6 +214,44 @@ const CONTRACTS: StyleContract[] = [
       'grid-template-columns': /grid-template-columns:/,
     },
   },
+  {
+    file: 'landing.css',
+    selector: '.shiki[data-ui="highlighted-code"] > pre.shiki',
+    why: 'A code pane that clips is silent: macOS overlay scrollbars draw nothing until a scroll starts (measured — `scrollbar-width` and `::-webkit-scrollbar` both leave 0px of layout gutter there), so the runtime-parity pane shipped ending mid-string at `assistantId: \'agent` (scrollWidth 609 / clientWidth 550 at 1440px) and looked complete. Wrapping is the fix, not the scrollbar: `pre-wrap` folds at existing whitespace and `break-word` catches the run that has none. Losing either leaves a pane that hides its payload with no affordance.',
+    requires: {
+      'white-space': /white-space:\s*pre-wrap/,
+      'overflow-wrap': /overflow-wrap:\s*break-word/,
+      'overflow-x': /overflow-x:\s*auto/,
+    },
+  },
+  {
+    file: 'landing.css',
+    selector: '.install-dialog-command',
+    why: 'The install command is the primary CTA\'s entire payload — 774px of shell in a 470px pane, so the reader saw `npm install @threadplane/chat @threadplane/langgraph @langcha…`. It is one line with no meaningful breaks, so it must wrap rather than scroll. Losing this silently truncates the one string the page exists to hand over.',
+    requires: {
+      'white-space': /white-space:\s*pre-wrap/,
+      'overflow-wrap': /overflow-wrap:\s*anywhere/,
+    },
+  },
+  {
+    file: 'ui.css',
+    selector: '[data-ui="button"]:focus-visible',
+    why: "Without this the UA default `outline: auto 1px rgb(0, 95, 204)` draws a blue hairline on the primary button's own #004090 fill — invisible. Closing the install dialog returns focus to that button, so the keyboard user is left with no idea where they are. The ring uses --color-accent, which the dark section scope re-points, so it survives on both surfaces.",
+    requires: {
+      outline: /outline:\s*2px\s+solid\s+var\(--color-accent\)/,
+      'outline-offset': /outline-offset:\s*2px/,
+    },
+  },
+  {
+    file: 'landing.css',
+    selector: '.hero-demo-play',
+    why: 'The play control only ever renders on phones (autoplay is off below 768px) and sits on a near-black poster. It previously had `background: #111` and a black shadow, which read as bare white text with no button chrome. The light fill and dark ring are what make it look clickable.',
+    requires: {
+      background: /background:\s*rgb\(248 248 248/,
+      border: /border:\s*1px solid/,
+      'min-height': /min-height:\s*44px/,
+    },
+  },
 ];
 
 function baseDeclarationsFor(css: string, selector: string): string {
