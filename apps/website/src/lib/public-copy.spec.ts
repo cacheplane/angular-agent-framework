@@ -306,11 +306,15 @@ const RETIRED_ROUTE_RULE: ReadonlyArray<readonly [string, RegExp]> = [
  * files are `scripts/verify-angular-support.mjs` (the Angular badge and peer
  * block) and `scripts/mit-cutover.spec.mjs`.
  *
- * No overlap with `mit-cutover.spec.mjs`: it looks for retired *licensing*
- * vocabulary ("PolyForm", "commercial license", "dual-licensed", "license
- * token", "@threadplane/licensing"), and only in `README.md` and
- * `libs/chat/README.md`. Different words, different concern, seven READMEs it
- * never opens. Nothing here is reported twice.
+ * No overlap with `mit-cutover.spec.mjs`: it looks for the retired *licensing*
+ * vocabulary — read its own `retiredTerms` list for the exact strings — and
+ * only in `README.md` and `libs/chat/README.md`. Different words, different
+ * concern, seven READMEs it never opens. Nothing here is reported twice.
+ *
+ * Do not spell those terms out here. That spec bans them anywhere under
+ * `apps/website/src`, so naming them in this comment turns it red — which is
+ * why it assembles its own list with `.join('')` rather than writing the
+ * literals. This comment did exactly that and broke CI.
  *
  * These are prose, so they get the plain line scan that `content/**` gets —
  * none of the AST machinery above, which exists only because `src/**` mixes
