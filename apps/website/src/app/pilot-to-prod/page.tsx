@@ -195,7 +195,7 @@ export default function PilotToProdPage() {
             <p className="pilot-contact-body">
               30-minute discovery call. We&apos;ll dig into your Angular surface, your agent-eligible workflows, and whether Pilot-to-Prod is the right fit. No pitch deck.
             </p>
-            <Button variant="primary" size="lg" href="/pricing#lead-form">
+            <Button variant="primary" size="lg" href="/pricing#enterprise">
               Request a discovery call
             </Button>
           </div>

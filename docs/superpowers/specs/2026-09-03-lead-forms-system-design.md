@@ -65,7 +65,7 @@ Fields: Work email (required), Name (optional), Company (optional), "What are yo
 **Enterprise variant**, `/contact?intent=enterprise`, read on the server so it renders without a flash:
 
 - eyebrow "Enterprise"; heading unchanged;
-- a required Timeline select after Company: This quarter, Next quarter, 6+ months, Just exploring;
+- Company becomes required ("Tell us the company so we can prepare.") and a required Timeline select follows it: This quarter, Next quarter, 6+ months, Just exploring;
 - textarea prompt "Tell us about your use case";
 - button "Request a conversation";
 - posts to `/api/leads` with `form_kind: 'pricing'` and `timeline`, which the route already accepts; analytics surface `pricing`, plus `entry_point` naming the pricing button that linked here.

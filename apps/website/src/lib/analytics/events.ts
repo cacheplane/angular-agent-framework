@@ -74,6 +74,7 @@ export type CtaId =
   | 'pricing_tier_community'
   | 'pricing_tier_production_assurance'
   | 'pricing_tier_enterprise'
+  | 'pricing_enterprise_band'
   // Footer product links
   | 'footer_pilot_to_prod'
   | 'footer_ag_ui'

@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 vi.mock('server-only', () => ({}));
 import PricingPage, { metadata } from './page';
 
-vi.mock('../../components/pricing/LeadForm', () => ({ LeadForm: () => null }));
+vi.mock('../../components/pricing/EnterpriseCtaBand', () => ({ EnterpriseCtaBand: () => null }));
 vi.mock('../../components/landing/FinalCTA', () => ({ FinalCTA: () => null }));
 vi.mock('../../lib/analytics/client', () => ({ trackCtaClick: vi.fn() }));
 

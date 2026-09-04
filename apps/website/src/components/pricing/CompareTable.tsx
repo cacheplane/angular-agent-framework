@@ -22,12 +22,12 @@ const CTAS: Record<TierConfig['slug'], PlanCta> = {
   production_assurance: {
     label: 'Discuss assurance',
     ctaId: 'pricing_tier_production_assurance',
-    href: '/contact?source=pricing_production_assurance',
+    href: '/contact?intent=enterprise&entry=pricing_tier_production_assurance',
   },
   enterprise: {
     label: 'Talk to Sales',
     ctaId: 'pricing_tier_enterprise',
-    href: '/contact?source=pricing_tier_enterprise',
+    href: '/contact?intent=enterprise&entry=pricing_tier_enterprise',
   },
 };
 

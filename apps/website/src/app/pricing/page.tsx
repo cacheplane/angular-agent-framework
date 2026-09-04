@@ -4,11 +4,10 @@ import { Eyebrow } from '../../components/ui/Eyebrow';
 import { CompareTable } from '../../components/pricing/CompareTable';
 import { ArchitectureBoundary, PricingComparison } from '../../components/pricing/PricingDetails';
 import { PricingFAQ } from '../../components/pricing/PricingFAQ';
-import { LeadForm } from '../../components/pricing/LeadForm';
+import { EnterpriseCtaBand } from '../../components/pricing/EnterpriseCtaBand';
 import { FinalCTA } from '../../components/landing/FinalCTA';
 import { createPageMetadata } from '../../lib/site-metadata';
 import { WEBSITE_SUPPORTED_ANGULAR_VERSIONS } from '../../components/pricing/angular-support.mjs';
-import { getFormPolicy } from '../../lib/growth/form-policy';
 
 export const metadata = createPageMetadata({
   title: 'Pricing — Threadplane',
@@ -19,7 +18,6 @@ export const metadata = createPageMetadata({
 });
 
 export default function PricingPage() {
-  const formPolicy = getFormPolicy();
   return (
     <>
       <Section surface="canvas" ariaLabelledBy="pricing-heading">
@@ -63,7 +61,7 @@ export default function PricingPage() {
 
       <PricingFAQ />
 
-      <LeadForm formPolicy={formPolicy} />
+      <EnterpriseCtaBand />
       <FinalCTA />
     </>
   );

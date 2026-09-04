@@ -205,6 +205,15 @@ const CONTRACTS: StyleContract[] = [
       gap: /gap:/,
     },
   },
+  {
+    file: 'pages.css',
+    selector: '.contact-band',
+    why: 'Heading column and form card are grid siblings; without the grid the card drops below the heading and the page reads as the old single column.',
+    requires: {
+      display: /display:\s*grid/,
+      'grid-template-columns': /grid-template-columns:/,
+    },
+  },
 ];
 
 function baseDeclarationsFor(css: string, selector: string): string {
