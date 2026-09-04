@@ -5,6 +5,23 @@ export const HERO_EYEBROW = 'Open-source · Angular · LangGraph & AG-UI';
 export const HERO_H1 = 'The AI agent UI framework for Angular.';
 export const HERO_SUBHEAD =
   'Chat, threads, approvals, and generative UI on Signals and DI. Your backend stays where it is.';
+
+/**
+ * The subhead, split so Hero.tsx can marker-highlight the boundary claim.
+ * HERO_SUBHEAD stays the single source of truth: positioning.spec.ts asserts
+ * these segments join back to it character for character, so the two cannot
+ * drift. Exactly one segment is highlighted — a second one in a sentence this
+ * short reads as decoration and cancels the emphasis.
+ */
+export interface HeroSubheadSegment {
+  text: string;
+  highlight?: boolean;
+}
+export const HERO_SUBHEAD_SEGMENTS: readonly HeroSubheadSegment[] = [
+  { text: 'Chat, threads, approvals, and generative UI on Signals and DI. ' },
+  { text: 'Your backend stays where it is.', highlight: true },
+];
+
 export const HERO_PRIMARY_LABEL = 'Install Threadplane';
 export const HERO_SECONDARY_LABEL = 'See it running in the docs →';
 export const HERO_SECONDARY_HREF = '/docs/chat/guides/generative-ui?mode=run';

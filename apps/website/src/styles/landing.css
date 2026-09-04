@@ -67,6 +67,16 @@
 .hero-stack .hero-subhead {
   max-width: 40em;
 }
+/* The centered hero wraps the highlighted boundary claim mid-phrase — measured
+ * at 768px it orphaned a lone "Your" in its own pill at the end of line 1, and
+ * at 1440px it split into two staggered boxes. inline-block makes the phrase
+ * wrap as one unit, so it drops whole onto its own line instead. max-width is
+ * the safety valve: below ~360px the phrase is wider than the measure, and
+ * without it a shrink-to-fit box would overflow the page rather than wrap. */
+.hero-stack .hero-subhead .marker-highlight {
+  display: inline-block;
+  max-width: 100%;
+}
 .hero-stack .hero-cta-row {
   justify-content: center;
 }

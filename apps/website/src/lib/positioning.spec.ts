@@ -14,6 +14,7 @@ import {
   HERO_SECONDARY_HREF,
   HERO_SECONDARY_LABEL,
   HERO_SUBHEAD,
+  HERO_SUBHEAD_SEGMENTS,
   HERO_TRUST_LINE,
   HOME_DESCRIPTION,
   HOME_TITLE,
@@ -51,6 +52,17 @@ describe('positioning: hero copy', () => {
       'Open-source Angular AI agent UI framework for LangGraph and AG-UI: chat, durable threads, human approvals, and generative UI with Signals and DI.',
     );
     expect(HOME_DESCRIPTION.length).toBeLessThanOrEqual(160);
+  });
+
+  it('subhead segments join back to HERO_SUBHEAD, with exactly one highlight', () => {
+    // The segments exist only so Hero.tsx can marker-highlight one phrase.
+    // If they ever stop reassembling the source-of-truth string, the rendered
+    // subhead silently diverges from the copy every other surface quotes.
+    expect(HERO_SUBHEAD_SEGMENTS.map((s) => s.text).join('')).toBe(HERO_SUBHEAD);
+    expect(HERO_SUBHEAD_SEGMENTS.filter((s) => s.highlight)).toHaveLength(1);
+    expect(HERO_SUBHEAD_SEGMENTS.find((s) => s.highlight)?.text).toBe(
+      'Your backend stays where it is.',
+    );
   });
 
   it('pins the hero action labels and the secondary destination', () => {
