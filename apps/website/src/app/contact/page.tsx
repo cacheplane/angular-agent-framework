@@ -15,6 +15,7 @@ export const metadata = createPageMetadata({
   type: 'website',
 });
 
+// Entry points are analytics keys: lowercase snake_case, e.g. pricing_tier_enterprise. Anything else is dropped.
 const ENTRY_POINT = /^[a-z0-9_]{1,64}$/u;
 
 function readIntent(value: string | undefined): ContactIntent {
@@ -58,13 +59,13 @@ export default async function ContactPage({
                 <a className="contact-chip" href="https://github.com/cacheplane/angular-agent-framework/issues">GitHub issues</a>
                 <a className="contact-chip" href="https://discord.gg/cacheplane">Discord</a>
               </div>
-              <GitHubStarsPill />
+              <Suspense fallback={null}>
+                <GitHubStarsPill />
+              </Suspense>
             </div>
           </div>
           <FormCard>
-            <Suspense>
-              <ContactForm formPolicy={formPolicy} intent={intent} entryPoint={entryPoint} />
-            </Suspense>
+            <ContactForm formPolicy={formPolicy} intent={intent} entryPoint={entryPoint} />
           </FormCard>
         </div>
       </Container>
