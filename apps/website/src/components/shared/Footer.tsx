@@ -47,7 +47,10 @@ function NewsletterForm({ formPolicy }: { formPolicy: PublicFormPolicy }) {
     e.preventDefault();
     const problem = emailError(email);
     setEmailMessage(problem);
-    if (problem) return;
+    if (problem) {
+      document.getElementById('footer-email')?.focus();
+      return;
+    }
     void form.submit({ email: email.trim() });
   };
 
