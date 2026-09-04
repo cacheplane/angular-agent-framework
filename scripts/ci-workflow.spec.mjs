@@ -591,6 +591,163 @@ describe('CI workflow', () => {
     );
   });
 
+  it('smokes a throwaway cockpit preview on same-repo PRs and queue candidates', async () => {
+    const workflow = await readWorkflow();
+    const job = readJobBlock(workflow, 'cockpit-preview-smoke');
+    const ifBlock = readJobFieldBlock(job, 'if');
+
+    assert.deepEqual(readJobNeeds(job), ['ci-scope']);
+    assert.match(ifBlock, /github\.event_name != 'push'/);
+    assert.match(ifBlock, /needs\.ci-scope\.outputs\.cockpit_deploy_smoke == 'true'/);
+    assert.match(
+      ifBlock,
+      /github\.event_name == 'merge_group' \|\| github\.event\.pull_request\.head\.repo\.full_name == github\.repository/
+    );
+
+    const prepare = readNamedStep(job, 'Prepare cockpit Vercel project (preview)');
+    const build = readNamedStep(job, 'Build cockpit redirect service (preview)');
+    const deploy = readNamedStep(job, 'Deploy throwaway cockpit preview');
+    const smoke = readNamedStep(job, 'Exhaustively verify the cockpit preview');
+
+    assert.match(prepare, /"projectName":"threadplane-cockpit"/);
+    assert.match(prepare, /vercel pull --yes --environment=preview/);
+    assert.match(build, /vercel build --local-config vercel\.cockpit\.json/);
+    assert.doesNotMatch(build, /--prod/);
+    assert.match(deploy, /id:\s*deploy_cockpit_preview/);
+    assert.match(deploy, /vercel deploy --prebuilt --archive=tgz --yes/);
+    assert.doesNotMatch(deploy, /--skip-domain/);
+    assert.doesNotMatch(deploy, /--prod/);
+    assert.match(deploy, /--env COCKPIT_WEBSITE_ORIGIN=https:\/\/threadplane\.ai/);
+    assert.match(
+      smoke,
+      /VERCEL_AUTOMATION_BYPASS_SECRET:\s*\$\{\{ secrets\.VERCEL_COCKPIT_AUTOMATION_BYPASS_SECRET \}\}/
+    );
+    assert.match(smoke, /-z "\$\{VERCEL_AUTOMATION_BYPASS_SECRET\}"/);
+    assert.match(
+      smoke,
+      /--url "\$\{\{ steps\.deploy_cockpit_preview\.outputs\.deployment_url \}\}"[\s\S]*--mode preview/
+    );
+    assert.doesNotMatch(job, /vercel promote/);
+    assert.match(deploy, /set -euo pipefail/);
+    assert.match(deploy, /new URL\(process\.argv\[1\]\)/);
+    assert.match(smoke, /--retries 20 --retry-delay-ms 5000/);
+    const cleanup = readNamedStep(job, 'Remove the throwaway cockpit preview');
+    assert.match(cleanup, /if:\s*always\(\) && steps\.deploy_cockpit_preview\.outputs\.deployment_url != ''/);
+    assert.match(cleanup, /continue-on-error:\s*true/);
+    const rawCleanup = readNamedStep(workflow, 'Remove the throwaway cockpit preview');
+    assert.match(rawCleanup, /Removal runs on every outcome/);
+    assert.match(
+      cleanup,
+      /vercel remove "\$\{\{ steps\.deploy_cockpit_preview\.outputs\.deployment_url \}\}" --safe --yes --scope=\$\{\{ secrets\.VERCEL_ORG_ID \}\}/
+    );
+  });
+
+  it('runs the Website suite against a deterministic aliased preview with a matching examples preview', async () => {
+    const workflow = await readWorkflow();
+    const job = readJobBlock(workflow, 'website-preview-e2e');
+    const ifBlock = readJobFieldBlock(job, 'if');
+
+    assert.deepEqual(readJobNeeds(job), ['ci-scope']);
+    assert.match(ifBlock, /github\.event_name != 'push'/);
+    assert.match(ifBlock, /needs\.ci-scope\.outputs\.website_e2e == 'true'/);
+    assert.match(
+      ifBlock,
+      /github\.event_name == 'merge_group' \|\| github\.event\.pull_request\.head\.repo\.full_name == github\.repository/
+    );
+
+    const aliases = readNamedStep(job, 'Derive deterministic preview aliases');
+    const guard = readNamedStep(job, 'Require preview bypass secrets');
+    const assemble = readNamedStep(job, 'Build and assemble Angular examples for the preview');
+    const examples = readNamedStep(job, 'Deploy examples preview and alias it');
+    const website = readNamedStep(job, 'Build, deploy, and alias the Website preview');
+    const suite = readNamedStep(job, 'Run the Website suite against the aliased preview');
+
+    assert.match(aliases, /id:\s*aliases/);
+    assert.match(aliases, /key="pr-\$\{\{ github\.event\.pull_request\.number \}\}"/);
+    assert.match(aliases, /key="mq-\$\(echo "\$\{\{ github\.event\.merge_group\.head_sha \}\}" \| cut -c1-8\)"/);
+    assert.match(aliases, /website=threadplane-\$\{key\}-cacheplane\.vercel\.app/);
+    assert.match(aliases, /examples=threadplane-examples-\$\{key\}-cacheplane\.vercel\.app/);
+
+    assert.match(guard, /-z "\$\{VERCEL_AUTOMATION_BYPASS_SECRET\}"/);
+    assert.match(guard, /-z "\$\{VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET\}"/);
+    assert.match(guard, /VERCEL_AUTOMATION_BYPASS_SECRET:\s*\$\{\{ secrets\.VERCEL_AUTOMATION_BYPASS_SECRET \}\}/);
+    assert.match(guard, /VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET:\s*\$\{\{ secrets\.VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET \}\}/);
+
+    // The examples are assembled with the Website alias in their policy and
+    // the Website is built with the examples alias as its runtime base.
+    assert.match(
+      assemble,
+      /RUNTIME_PARENT_PREVIEW_ORIGINS:\s*https:\/\/\$\{\{ steps\.aliases\.outputs\.website \}\}/
+    );
+    assert.match(examples, /working-directory:\s*deploy\/examples/);
+    assert.match(examples, /"projectName":"threadplane-examples"/);
+    assert.match(examples, /vercel pull --yes --environment=preview/);
+    assert.match(examples, /vercel deploy --prebuilt --yes/);
+    assert.doesNotMatch(examples, /--prod/);
+    assert.match(examples, /set -euo pipefail/);
+    assert.match(examples, /new URL\(process\.argv\[1\]\)/);
+    assert.match(
+      examples,
+      /vercel alias set "\$url" "\$\{\{ steps\.aliases\.outputs\.examples \}\}" --scope=\$\{\{ secrets\.VERCEL_ORG_ID \}\}/
+    );
+
+    assert.match(website, /"projectName":"threadplane"/);
+    assert.match(website, /vercel pull --yes --environment=preview/);
+    assert.match(
+      website,
+      /NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL:\s*https:\/\/\$\{\{ steps\.aliases\.outputs\.examples \}\}/
+    );
+    assert.match(website, /GROWTH_FORM_POLICY:\s*growth_v1/);
+    assert.match(website, /vercel build --token/);
+    assert.match(website, /vercel deploy --prebuilt --archive=tgz --yes/);
+    assert.doesNotMatch(website, /--skip-domain/);
+    assert.doesNotMatch(website, /--prod/);
+    assert.match(website, /set -euo pipefail/);
+    assert.match(website, /new URL\(process\.argv\[1\]\)/);
+    assert.match(
+      website,
+      /vercel alias set "\$url" "\$\{\{ steps\.aliases\.outputs\.website \}\}" --scope=\$\{\{ secrets\.VERCEL_ORG_ID \}\}/
+    );
+
+    assert.match(suite, /BASE_URL:\s*https:\/\/\$\{\{ steps\.aliases\.outputs\.website \}\}/);
+    assert.match(suite, /RUNTIME_BYPASS_ORIGIN:\s*https:\/\/\$\{\{ steps\.aliases\.outputs\.examples \}\}/);
+    assert.match(suite, /VERCEL_AUTOMATION_BYPASS_SECRET:\s*\$\{\{ secrets\.VERCEL_AUTOMATION_BYPASS_SECRET \}\}/);
+    assert.match(suite, /VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET:\s*\$\{\{ secrets\.VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET \}\}/);
+    assert.match(suite, /npx nx e2e website --skip-nx-cache/);
+    assert.doesNotMatch(job, /vercel promote/);
+    assert.doesNotMatch(job, /vercel remove/);
+  });
+
+  it('requires both PR-side preview verifications through the scoped gate', async () => {
+    const required = await readRequiredPrChecksJob();
+    const needs = readJobNeeds(required);
+
+    assert.ok(needs.includes('website-preview-e2e'));
+    assert.ok(needs.includes('cockpit-preview-smoke'));
+    assert.match(
+      required,
+      /RESULT_WEBSITE_PREVIEW_E2E:\s*\$\{\{ needs\.website-preview-e2e\.result \}\}/
+    );
+    assert.match(
+      required,
+      /RESULT_COCKPIT_PREVIEW_SMOKE:\s*\$\{\{ needs\.cockpit-preview-smoke\.result \}\}/
+    );
+    assert.match(
+      required,
+      /PREVIEW_LANES_ELIGIBLE:\s*\$\{\{ github\.event_name == 'merge_group' \|\| github\.event\.pull_request\.head\.repo\.full_name == github\.repository \}\}/
+    );
+    assert.match(required, /require_preview\(\) \{/);
+    assert.match(
+      required,
+      /require_preview "website_e2e" "Website — e2e \(deployed preview\)" "\$RESULT_WEBSITE_PREVIEW_E2E" "\$SCOPE_WEBSITE_E2E"/
+    );
+    assert.match(
+      required,
+      /require_preview "cockpit_deploy_smoke" "Cockpit — immutable preview smoke" "\$RESULT_COCKPIT_PREVIEW_SMOKE" "\$SCOPE_COCKPIT_DEPLOY_SMOKE"/
+    );
+    assert.match(required, /was eligible and in scope \$\{scope_key\} but was skipped/);
+  });
+
   it('gates Cockpit deployment on the production Website smoke even for Cockpit-only changes', async () => {
     const deployJob = await readDeployJob();
     const websiteOrCockpit =
@@ -996,6 +1153,8 @@ describe('CI workflow', () => {
       'examples-ag-ui-e2e',
       'cockpit-e2e-summary',
       'website-e2e',
+      'website-preview-e2e',
+      'cockpit-preview-smoke',
       'posthog-sync-plan',
       'scripts-tests',
       'growth-lifecycle',

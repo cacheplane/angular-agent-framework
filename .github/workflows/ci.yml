@@ -354,6 +354,70 @@ jobs:
       - run: npm ci
       - run: npx tsx apps/cockpit/scripts/deploy-smoke.ts --url https://cockpit.threadplane.ai --mode preview --dry-run
 
+  cockpit-preview-smoke:
+    name: Cockpit — immutable preview smoke
+    timeout-minutes: 20
+    needs: ci-scope
+    # PR-side twin of the deploy job's cockpit verification. Deploys a
+    # throwaway preview of the redirect service and runs the exhaustive smoke
+    # against it, so platform behaviour (deployment protection, the CDN's
+    # slash collapse, route ordering) is exercised before merge. Needs
+    # repository secrets, so same-repo PRs and merge-queue candidates only;
+    # the token-free dry-run job above still covers forks.
+    if: >-
+      github.event_name != 'push' &&
+      needs.ci-scope.outputs.cockpit_deploy_smoke == 'true' &&
+      (github.event_name == 'merge_group' || github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Prepare cockpit Vercel project (preview)
+        run: |
+          mkdir -p .vercel
+          cat > .vercel/project.json <<'EOF'
+          {"projectId":"${{ secrets.VERCEL_COCKPIT_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"threadplane-cockpit"}
+          EOF
+          npx vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+          rm -rf .vercel/output
+      - name: Build cockpit redirect service (preview)
+        env:
+          COCKPIT_WEBSITE_ORIGIN: https://threadplane.ai
+        run: |
+          npx vercel build --local-config vercel.cockpit.json --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy throwaway cockpit preview
+        id: deploy_cockpit_preview
+        run: |
+          set -euo pipefail
+          url=$(npx vercel deploy --prebuilt --archive=tgz --yes --env COCKPIT_WEBSITE_ORIGIN=https://threadplane.ai --token=${{ secrets.VERCEL_TOKEN }} | tail -n 1)
+          url=$(node -e 'const parsed = new URL(process.argv[1]); if (parsed.protocol !== "https:" || parsed.username || parsed.password || parsed.pathname !== "/" || parsed.search || parsed.hash) throw new Error("Vercel returned a non-origin cockpit preview URL"); process.stdout.write(parsed.origin)' "$url")
+          echo "deployment_url=$url" >> "$GITHUB_OUTPUT"
+      - name: Exhaustively verify the cockpit preview
+        run: |
+          if [ -z "${VERCEL_AUTOMATION_BYPASS_SECRET}" ]; then
+            echo "::error::VERCEL_COCKPIT_AUTOMATION_BYPASS_SECRET is unset — the protected cockpit preview cannot be verified. Enable 'Protection Bypass for Automation' on the Vercel threadplane-cockpit project and store the value as this repository secret."
+            exit 1
+          fi
+          npx tsx apps/cockpit/scripts/deploy-smoke.ts --url "${{ steps.deploy_cockpit_preview.outputs.deployment_url }}" --mode preview --retries 20 --retry-delay-ms 5000
+        env:
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_COCKPIT_AUTOMATION_BYPASS_SECRET }}
+      - name: Remove the throwaway cockpit preview
+        # Removal runs on every outcome, including a failed smoke: the smoke
+        # log carries the full probe-by-probe report, and keeping a failed
+        # artifact would only accumulate protected deployments nobody can
+        # open without the bypass.
+        # The artifact exists only to be smoked. `--safe` refuses to remove a
+        # deployment that carries an alias, so this can never touch the
+        # production artifact. `remove` takes a bare URL, so, like `promote`,
+        # it needs the team scope spelled out.
+        if: always() && steps.deploy_cockpit_preview.outputs.deployment_url != ''
+        continue-on-error: true
+        run: npx vercel remove "${{ steps.deploy_cockpit_preview.outputs.deployment_url }}" --safe --yes --scope=${{ secrets.VERCEL_ORG_ID }} --token=${{ secrets.VERCEL_TOKEN }}
+
   examples-chat-smoke:
     name: examples/chat — python smoke
     needs: ci-scope
@@ -681,6 +745,107 @@ jobs:
           npx playwright test apps/website/e2e/platform-production-smoke.spec.ts \
             --config apps/website/playwright.config.ts --list
 
+  website-preview-e2e:
+    name: Website — e2e (deployed preview)
+    timeout-minutes: 40
+    needs: ci-scope
+    # PR-side twin of the deploy job's post-promotion verification. The
+    # ordinary suite runs against a real, protected Vercel preview of the
+    # Website whose runtime iframe loads from a matching examples preview, so
+    # remote-target assumptions and platform behaviour surface before merge.
+    # Two deterministic aliases break the ordering problem: the examples are
+    # assembled with the Website alias in their parent-origin policy, and the
+    # Website is built with the examples alias as its runtime base. A later
+    # push re-points both aliases; the deployments behind them are kept for
+    # inspection. Needs repository secrets, so same-repo PRs and merge-queue
+    # candidates only.
+    if: >-
+      github.event_name != 'push' &&
+      needs.ci-scope.outputs.website_e2e == 'true' &&
+      (github.event_name == 'merge_group' || github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Cache Playwright browsers
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+      - run: npx playwright install --with-deps chromium
+      - name: Derive deterministic preview aliases
+        id: aliases
+        run: |
+          if [ "${{ github.event_name }}" = "merge_group" ]; then
+            key="mq-$(echo "${{ github.event.merge_group.head_sha }}" | cut -c1-8)"
+          else
+            key="pr-${{ github.event.pull_request.number }}"
+          fi
+          echo "website=threadplane-${key}-cacheplane.vercel.app" >> "$GITHUB_OUTPUT"
+          echo "examples=threadplane-examples-${key}-cacheplane.vercel.app" >> "$GITHUB_OUTPUT"
+      - name: Require preview bypass secrets
+        # Both previews sit behind deployment protection, and bypass secrets
+        # are issued per Vercel project. Fail before creating anything.
+        run: |
+          if [ -z "${VERCEL_AUTOMATION_BYPASS_SECRET}" ]; then
+            echo "::error::VERCEL_AUTOMATION_BYPASS_SECRET is unset — the protected Website preview cannot be verified. Enable 'Protection Bypass for Automation' on the Vercel threadplane project and store the value as this repository secret."
+            exit 1
+          fi
+          if [ -z "${VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET}" ]; then
+            echo "::error::VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET is unset — the runtime iframe from the protected examples preview cannot load. Enable 'Protection Bypass for Automation' on the Vercel threadplane-examples project and store the value as this repository secret."
+            exit 1
+          fi
+        env:
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET }}
+      - name: Build and assemble Angular examples for the preview
+        run: npx tsx scripts/assemble-examples.ts
+        env:
+          RUNTIME_PARENT_PREVIEW_ORIGINS: https://${{ steps.aliases.outputs.website }}
+      - name: Deploy examples preview and alias it
+        working-directory: deploy/examples
+        run: |
+          set -euo pipefail
+          mkdir -p .vercel
+          cat > .vercel/project.json <<'EOF'
+          {"projectId":"${{ secrets.VERCEL_EXAMPLES_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"threadplane-examples"}
+          EOF
+          npx vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+          url=$(npx vercel deploy --prebuilt --yes --token=${{ secrets.VERCEL_TOKEN }} | tail -n 1)
+          url=$(node -e 'const parsed = new URL(process.argv[1]); if (parsed.protocol !== "https:" || parsed.username || parsed.password || parsed.pathname !== "/" || parsed.search || parsed.hash) throw new Error("Vercel returned a non-origin examples preview URL"); process.stdout.write(parsed.origin)' "$url")
+          echo "examples deployment: $url"
+          npx vercel alias set "$url" "${{ steps.aliases.outputs.examples }}" --scope=${{ secrets.VERCEL_ORG_ID }} --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Build, deploy, and alias the Website preview
+        env:
+          GROWTH_FORM_POLICY: growth_v1
+          NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL: https://${{ steps.aliases.outputs.examples }}
+        run: |
+          set -euo pipefail
+          mkdir -p .vercel
+          cat > .vercel/project.json <<'EOF'
+          {"projectId":"${{ secrets.VERCEL_WEBSITE_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"threadplane"}
+          EOF
+          npx vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+          rm -rf .vercel/output
+          npx vercel build --token=${{ secrets.VERCEL_TOKEN }}
+          url=$(npx vercel deploy --prebuilt --archive=tgz --yes --token=${{ secrets.VERCEL_TOKEN }} | tail -n 1)
+          url=$(node -e 'const parsed = new URL(process.argv[1]); if (parsed.protocol !== "https:" || parsed.username || parsed.password || parsed.pathname !== "/" || parsed.search || parsed.hash) throw new Error("Vercel returned a non-origin Website preview URL"); process.stdout.write(parsed.origin)' "$url")
+          echo "website deployment: $url"
+          npx vercel alias set "$url" "${{ steps.aliases.outputs.website }}" --scope=${{ secrets.VERCEL_ORG_ID }} --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Run the Website suite against the aliased preview
+        run: npx nx e2e website --skip-nx-cache
+        env:
+          BASE_URL: https://${{ steps.aliases.outputs.website }}
+          RUNTIME_BYPASS_ORIGIN: https://${{ steps.aliases.outputs.examples }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET }}
+
   required-pr-checks:
     name: CI — required
     needs:
@@ -697,6 +862,8 @@ jobs:
       - examples-ag-ui-e2e
       - cockpit-e2e-summary
       - website-e2e
+      - website-preview-e2e
+      - cockpit-preview-smoke
       - posthog-sync-plan
       - scripts-tests
       - growth-lifecycle
@@ -722,6 +889,8 @@ jobs:
           RESULT_EXAMPLES_AG_UI_E2E: ${{ needs.examples-ag-ui-e2e.result }}
           RESULT_COCKPIT_E2E: ${{ needs.cockpit-e2e-summary.result }}
           RESULT_WEBSITE_E2E: ${{ needs.website-e2e.result }}
+          RESULT_WEBSITE_PREVIEW_E2E: ${{ needs.website-preview-e2e.result }}
+          RESULT_COCKPIT_PREVIEW_SMOKE: ${{ needs.cockpit-preview-smoke.result }}
           RESULT_POSTHOG: ${{ needs.posthog-sync-plan.result }}
           RESULT_SCRIPTS_TESTS: ${{ needs.scripts-tests.result }}
           RESULT_GROWTH_LIFECYCLE: ${{ needs.growth-lifecycle.result }}
@@ -740,6 +909,11 @@ jobs:
           SCOPE_POSTHOG: ${{ needs.ci-scope.outputs.posthog }}
           SCOPE_SCRIPTS_TESTS: ${{ needs.ci-scope.outputs.scripts_tests }}
           SCOPE_GROWTH_LIFECYCLE: ${{ needs.ci-scope.outputs.growth_lifecycle }}
+          # The preview lanes need repository secrets, so they skip on fork
+          # PRs. Their scope keys are computed from changed files alone, so on
+          # a fork they can be in scope yet legitimately skipped. This mirrors
+          # the lanes' own `if` so the gate only demands them when they could run.
+          PREVIEW_LANES_ELIGIBLE: ${{ github.event_name == 'merge_group' || github.event.pull_request.head.repo.full_name == github.repository }}
         run: |
           set -euo pipefail
 
@@ -775,6 +949,28 @@ jobs:
             fi
           }
 
+          # Scoped check for the PR-side preview lanes: enforced only when the
+          # lanes were eligible to run; otherwise treated as unselected, where
+          # only a real failure or cancellation is an error.
+          require_preview() {
+            local scope_key="$1"
+            local label="$2"
+            local result="$3"
+            local scoped="$4"
+
+            if [[ "$PREVIEW_LANES_ELIGIBLE" == "true" && "$scoped" == "true" && "$result" == "skipped" ]]; then
+              echo "::error::${label} was eligible and in scope ${scope_key} but was skipped — its job-level if no longer matches the gate's PREVIEW_LANES_ELIGIBLE expression."
+              failed=1
+              return
+            fi
+
+            if [[ "$PREVIEW_LANES_ELIGIBLE" == "true" ]]; then
+              require_scoped "$scope_key" "$label" "$result" "$scoped"
+            else
+              require_scoped "$scope_key" "$label" "$result" "false"
+            fi
+          }
+
           require_always "CI scope" "$RESULT_CI_SCOPE"
           require_scoped "library" "Library — lint / test / build" "$RESULT_LIBRARY" "$SCOPE_LIBRARY"
           require_scoped \
@@ -796,6 +992,8 @@ jobs:
             "$SCOPE_EXAMPLES_AG_UI"
           require_scoped "cockpit_e2e" "Cockpit — e2e" "$RESULT_COCKPIT_E2E" "$SCOPE_COCKPIT_E2E"
           require_scoped "website_e2e" "Website — e2e" "$RESULT_WEBSITE_E2E" "$SCOPE_WEBSITE_E2E"
+          require_preview "website_e2e" "Website — e2e (deployed preview)" "$RESULT_WEBSITE_PREVIEW_E2E" "$SCOPE_WEBSITE_E2E"
+          require_preview "cockpit_deploy_smoke" "Cockpit — immutable preview smoke" "$RESULT_COCKPIT_PREVIEW_SMOKE" "$SCOPE_COCKPIT_DEPLOY_SMOKE"
           require_scoped "posthog" "PostHog — dashboards-as-code drift check" "$RESULT_POSTHOG" "$SCOPE_POSTHOG"
           require_scoped "scripts_tests" "Scripts — generator / proxy vitest suites" "$RESULT_SCRIPTS_TESTS" "$SCOPE_SCRIPTS_TESTS"
           require_scoped "growth_lifecycle" "Growth lifecycle — Node 22" "$RESULT_GROWTH_LIFECYCLE" "$SCOPE_GROWTH_LIFECYCLE"

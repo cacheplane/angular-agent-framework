@@ -1,4 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
+import { resolve } from 'node:path';
+import { RUNTIME_BYPASS_STORAGE_STATE } from './e2e/runtime-bypass-setup';
 
 type WebsitePlaywrightEnvironment = Readonly<
   Record<string, string | undefined>
@@ -21,6 +23,15 @@ export const createWebsitePlaywrightConfig = (
   const shouldStartLocalServer = !productionSmoke && !environment['BASE_URL'];
   const reuseExistingServer =
     environment['PLAYWRIGHT_REUSE_EXISTING_SERVER'] === 'true';
+
+  // A PR preview embeds its runtime from a second protected Vercel project.
+  // extraHTTPHeaders is global, so that origin needs its own bypass, seeded
+  // once as a cookie by e2e/runtime-bypass-setup.ts. Both variables must be
+  // present; the deploy job and local runs set neither.
+  const runtimeBypass = Boolean(
+    environment['RUNTIME_BYPASS_ORIGIN'] &&
+      environment['VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET']
+  );
 
   // The public-copy gate crawls every sitemap route. Against a prebuilt
   // production server that is seconds; against `next dev` each route compiles
@@ -59,6 +70,9 @@ export const createWebsitePlaywrightConfig = (
       ? '**/custom-runtime-bfcache.spec.ts'
       : undefined,
     testIgnore,
+    globalSetup: runtimeBypass
+      ? resolve(__dirname, 'e2e', 'runtime-bypass-setup.ts')
+      : undefined,
     fullyParallel: true,
     // Match the cockpit configs: 2 retries on CI to absorb transient Next.js
     // dev-server startup flake; 0 locally for fast feedback.
@@ -75,7 +89,15 @@ export const createWebsitePlaywrightConfig = (
             extraHTTPHeaders: {
               'x-vercel-protection-bypass':
                 environment['VERCEL_AUTOMATION_BYPASS_SECRET'],
-              'x-vercel-set-bypass-cookie': 'true',
+              // extraHTTPHeaders is global, so with a runtime bypass in play
+              // this header would also reach the examples origin, asking it
+              // to set a cookie for a secret that belongs to the Website
+              // project. The bypass header alone still authorizes every
+              // Website request; only skip the cookie request when a
+              // runtime bypass is active.
+              ...(runtimeBypass
+                ? {}
+                : { 'x-vercel-set-bypass-cookie': 'true' }),
             },
           }
         : {}),
@@ -83,6 +105,7 @@ export const createWebsitePlaywrightConfig = (
       // artifacts disabled so request headers and page state are never retained.
       trace: 'off',
       video: 'off',
+      ...(runtimeBypass ? { storageState: RUNTIME_BYPASS_STORAGE_STATE } : {}),
     },
     // Declare chromium as the only browser project. This suppresses the
     // misleading "missing system dependencies" warning for webkit/firefox.
