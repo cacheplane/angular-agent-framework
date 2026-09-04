@@ -7,29 +7,54 @@ interface ControlExtras {
   compact?: boolean;
 }
 
-function useControlAttributes(compact: boolean, explicitId: string | undefined) {
+/**
+ * Field-derived describedby ids come first, then any caller-supplied ids.
+ * An explicit `id` prop still overrides the field's id.
+ */
+function useControlAttributes(
+  compact: boolean,
+  explicitId: string | undefined,
+  callerDescribedBy: string | undefined
+) {
   const field = useContext(FieldContext);
+  const describedBy = [field?.describedBy, callerDescribedBy].filter(Boolean).join(' ') || undefined;
   return {
     id: explicitId ?? field?.id,
-    'aria-describedby': field?.describedBy,
+    'aria-describedby': describedBy,
     'aria-invalid': field?.invalid ? true : undefined,
     'data-ui': 'form-control' as const,
     'data-compact': compact ? '' : undefined,
   };
 }
 
-export function TextInput({ compact = false, id, ...rest }: InputHTMLAttributes<HTMLInputElement> & ControlExtras) {
-  const attributes = useControlAttributes(compact, id);
+export function TextInput({
+  compact = false,
+  id,
+  'aria-describedby': describedBy,
+  ...rest
+}: InputHTMLAttributes<HTMLInputElement> & ControlExtras) {
+  const attributes = useControlAttributes(compact, id, describedBy);
   return <input {...attributes} {...rest} />;
 }
 
-export function TextArea({ compact = false, id, ...rest }: TextareaHTMLAttributes<HTMLTextAreaElement> & ControlExtras) {
-  const attributes = useControlAttributes(compact, id);
+export function TextArea({
+  compact = false,
+  id,
+  'aria-describedby': describedBy,
+  ...rest
+}: TextareaHTMLAttributes<HTMLTextAreaElement> & ControlExtras) {
+  const attributes = useControlAttributes(compact, id, describedBy);
   return <textarea {...attributes} data-multiline="" {...rest} />;
 }
 
-export function Select({ compact = false, id, children, ...rest }: SelectHTMLAttributes<HTMLSelectElement> & ControlExtras) {
-  const attributes = useControlAttributes(compact, id);
+export function Select({
+  compact = false,
+  id,
+  'aria-describedby': describedBy,
+  children,
+  ...rest
+}: SelectHTMLAttributes<HTMLSelectElement> & ControlExtras) {
+  const attributes = useControlAttributes(compact, id, describedBy);
   return (
     <select {...attributes} {...rest}>
       {children}

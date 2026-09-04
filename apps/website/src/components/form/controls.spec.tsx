@@ -53,4 +53,24 @@ describe('form controls', () => {
     render(<TextInput id="lone" aria-label="Lone" />);
     expect(screen.getByLabelText('Lone').id).toBe('lone');
   });
+
+  it('lets an explicit id win over the Field id while keeping the field description', () => {
+    render(
+      <Field id="c-email" label="Work email" help="We reply from a real inbox.">
+        <TextInput id="explicit" />
+      </Field>
+    );
+    const input = screen.getByRole('textbox');
+    expect(input.id).toBe('explicit');
+    expect(input.getAttribute('aria-describedby')).toBe('c-email-help');
+  });
+
+  it('merges a caller aria-describedby after the field ids', () => {
+    render(
+      <Field id="c-email" label="Work email" error="Enter a full address, like jordan@acme.dev.">
+        <TextInput aria-describedby="extra-note" />
+      </Field>
+    );
+    expect(screen.getByLabelText('Work email').getAttribute('aria-describedby')).toBe('c-email-error extra-note');
+  });
 });
