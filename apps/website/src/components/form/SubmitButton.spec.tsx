@@ -21,4 +21,16 @@ describe('SubmitButton', () => {
     expect(pending.getAttribute('data-pending')).toBe('');
     expect(pending.getAttribute('aria-busy')).toBe('true');
   });
+
+  it('forwards button props such as variant, size, and aria-describedby', () => {
+    render(
+      <SubmitButton pendingLabel="Sending…" variant="secondary" size="lg" aria-describedby="disc">
+        Subscribe
+      </SubmitButton>
+    );
+    const button = screen.getByRole('button', { name: 'Subscribe' });
+    expect(button.getAttribute('data-variant')).toBe('secondary');
+    expect(button.getAttribute('data-size')).toBe('lg');
+    expect(button.getAttribute('aria-describedby')).toBe('disc');
+  });
 });

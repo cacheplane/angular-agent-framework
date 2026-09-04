@@ -22,7 +22,7 @@ export function FormStatus({ tone, title, detail, children }: FormStatusProps) {
           <strong>{title}</strong>
           {detail ? <> {detail}</> : null}
         </p>
-        {children ? <div>{children}</div> : null}
+        {children ? <div data-ui="form-status-action">{children}</div> : null}
       </div>
     </div>
   );

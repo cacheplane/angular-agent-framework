@@ -185,6 +185,13 @@ select[data-ui="form-control"] {
   border-color: color-mix(in srgb, var(--color-status-error) 25%, transparent);
   background: color-mix(in srgb, var(--color-status-error) 5%, transparent);
 }
+[data-ui="form-status"][data-tone="stale"] {
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-dim);
+}
+[data-ui="form-status"][data-tone="stale"] [data-ui="form-status-icon"] {
+  color: var(--color-text-secondary);
+}
 [data-ui="form-status-icon"] {
   flex: 0 0 auto;
   font-weight: 700;
