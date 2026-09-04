@@ -641,43 +641,6 @@
   line-height: 1.2;
 }
 
-/* ContactForm — components/contact/ContactForm.tsx */
-.contact-form-sent {
-  color: var(--color-text-primary);
-  padding: 24px;
-}
-.contact-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  max-width: 480px;
-}
-.contact-form-label {
-  font-size: var(--text-body);
-  color: var(--color-text-primary);
-}
-.contact-form-optional {
-  color: var(--color-text-muted);
-}
-.contact-form-input {
-  display: block;
-  width: 100%;
-  padding: 10px 12px;
-  font-size: var(--text-body);
-  font-family: var(--font-inter);
-  color: var(--color-text-primary);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  margin-top: 4px;
-}
-.contact-form-textarea {
-  resize: vertical;
-}
-.contact-form-error {
-  color: #c00;
-}
-
 /* AltChannelRow — components/contact/AltChannelRow.tsx */
 .contact-alt-row {
   display: flex;
@@ -694,19 +657,6 @@
 }
 .contact-alt-sep {
   color: var(--color-text-muted);
-}
-
-/* SlaCard — components/contact/SlaCard.tsx */
-.sla-card {
-  padding: 20px;
-  max-width: 480px;
-}
-.sla-card-text {
-  margin: 0;
-  color: var(--color-text-primary);
-  font-size: var(--text-body);
-  font-family: var(--font-inter);
-  line-height: var(--text-body--line-height);
 }
 
 /* GitHubStarsPill — components/contact/GitHubStarsPill.tsx */
