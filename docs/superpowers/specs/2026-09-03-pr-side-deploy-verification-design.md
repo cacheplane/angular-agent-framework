@@ -156,10 +156,15 @@ examples secret never appears in `extraHTTPHeaders`.
 
 ### Required gate
 
-Both jobs are added to `required-pr-checks.needs`, to its `RESULT_*` /
-`SCOPE_*` env, and to the `require_scoped` table under the `website_e2e`
-and `cockpit_deploy_smoke` scope keys respectively. On forks the jobs are
-skipped, which `require_scoped` already tolerates.
+Both jobs are added to `required-pr-checks.needs` and to its `RESULT_*` env.
+`require_scoped` demands `success` for any in-scope job, and the scope keys
+are computed from changed files alone, so on a fork PR the lanes can be in
+scope yet legitimately skipped. A wrapper `require_preview` therefore
+applies the scoped rule only when `PREVIEW_LANES_ELIGIBLE` (the same
+same-repo-or-merge-queue expression the jobs use) is true, and otherwise
+treats the lane as unselected, where only a real failure or cancellation is
+an error. The wrapper is used for the `website_e2e` and
+`cockpit_deploy_smoke` entries.
 
 ### Provisioning
 
