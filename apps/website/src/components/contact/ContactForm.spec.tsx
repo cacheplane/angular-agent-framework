@@ -30,7 +30,7 @@ function fill(fields: {
   company?: string;
   message?: string;
 }): void {
-  fireEvent.change(screen.getByLabelText(/email/i), {
+  fireEvent.change(screen.getByLabelText(/work email/i), {
     target: { value: fields.email },
   });
   if (fields.name !== undefined) {
@@ -44,14 +44,14 @@ function fill(fields: {
     });
   }
   if (fields.message !== undefined) {
-    fireEvent.change(screen.getByLabelText(/message/i), {
+    fireEvent.change(screen.getByLabelText(/what are you shipping/i), {
       target: { value: fields.message },
     });
   }
 }
 
 function send(): void {
-  fireEvent.click(screen.getByRole('button', { name: /^send$/i }));
+  fireEvent.click(screen.getByRole('button', { name: /send to brian/i }));
 }
 
 function sentBody(fetchMock: ReturnType<typeof vi.fn>, call: number) {
@@ -134,7 +134,7 @@ describe('ContactForm growth policy', () => {
     render(<ContactForm formPolicy={formPolicy} />);
 
     const disclosure = screen.getByText(formPolicy.disclosures.contact);
-    const button = screen.getByRole('button', { name: /^send$/i });
+    const button = screen.getByRole('button', { name: /send to brian/i });
 
     expect(disclosure.id).toBeTruthy();
     expect(button.getAttribute('aria-describedby')).toBe(disclosure.id);
@@ -241,6 +241,54 @@ describe('ContactForm growth policy', () => {
     await waitFor(() =>
       expect(screen.getByRole('button', { name: /refresh page/i })).toBeTruthy()
     );
-    expect(screen.queryByText(/we'll be in touch/i)).toBeNull();
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+
+  it('validates the email on blur, names the fix, and blocks submit until fixed', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    render(<ContactForm formPolicy={formPolicy} />);
+    const email = screen.getByLabelText(/work email/i);
+    fireEvent.change(email, { target: { value: 'jane@acme' } });
+    fireEvent.blur(email);
+    expect(screen.getByText('Enter a full address, like jordan@acme.dev.')).toBeTruthy();
+    send();
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(email);
+    fireEvent.change(email, { target: { value: 'jane@acme.com' } });
+    expect(screen.queryByText('Enter a full address, like jordan@acme.dev.')).toBeNull();
+  });
+
+  it('in enterprise intent posts the pricing form kind with the timeline and entry point', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200 });
+    vi.stubGlobal('fetch', fetchMock);
+    render(<ContactForm formPolicy={formPolicy} intent="enterprise" entryPoint="pricing_tier_enterprise" />);
+
+    fireEvent.change(screen.getByLabelText(/work email/i), { target: { value: 'jane@acme.com' } });
+    fireEvent.change(screen.getByLabelText(/company/i), { target: { value: 'Acme' } });
+    fireEvent.change(screen.getByLabelText(/timeline/i), { target: { value: 'this_quarter' } });
+    fireEvent.change(screen.getByLabelText(/tell us about your use case/i), { target: { value: 'Volume seats.' } });
+    fireEvent.click(screen.getByRole('button', { name: /request a conversation/i }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(sentBody(fetchMock, 0)).toMatchObject({
+      form_kind: 'pricing',
+      email: 'jane@acme.com',
+      company: 'Acme',
+      timeline: 'this_quarter',
+      message: 'Volume seats.',
+    });
+    expect(trackMock).toHaveBeenCalledWith(
+      'marketing:lead_form_submit',
+      expect.objectContaining({ surface: 'pricing', entry_point: 'pricing_tier_enterprise' })
+    );
+  });
+
+  it('in enterprise intent requires a timeline and says so', () => {
+    vi.stubGlobal('fetch', vi.fn());
+    render(<ContactForm formPolicy={formPolicy} intent="enterprise" />);
+    fireEvent.change(screen.getByLabelText(/work email/i), { target: { value: 'jane@acme.com' } });
+    fireEvent.click(screen.getByRole('button', { name: /request a conversation/i }));
+    expect(screen.getByText('Choose a timeline so we can route this.')).toBeTruthy();
   });
 });
