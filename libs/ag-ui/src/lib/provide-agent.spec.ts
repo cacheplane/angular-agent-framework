@@ -2,7 +2,9 @@ import { describe, it, expect, vi } from 'vitest';
 import { Observable } from 'rxjs';
 import type { BaseEvent } from '@ag-ui/client';
 import type { RunAgentInput } from '@ag-ui/core';
+import { InjectionToken, inject } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { createAgentRef } from '@threadplane/chat';
 import { provideAgent, injectAgent, AGENT } from './provide-agent';
 import {
   createRuntimeProtectedFetch,
@@ -262,5 +264,84 @@ describe('provideAgent', () => {
 
     expect(agentProvider.provide).toBe(AGENT);
     expect(typeof agentProvider.useFactory).toBe('function');
+  });
+
+  describe('AgentRef isolation', () => {
+    it('gives each ref its own agent and its own config in ONE providers array', async () => {
+      const REF_A = createAgentRef<Record<string, unknown>>('ref-a');
+      const REF_B = createAgentRef<Record<string, unknown>>('ref-b');
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(new Response('', { status: 500 }));
+      vi.stubGlobal('fetch', fetchMock);
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      TestBed.configureTestingModule({
+        providers: [
+          provideAgent(REF_A, { url: 'http://a.example/agent' }),
+          provideAgent(REF_B, { url: 'http://b.example/agent' }),
+        ],
+      });
+
+      const agentA = TestBed.runInInjectionContext(() => injectAgent(REF_A));
+      const agentB = TestBed.runInInjectionContext(() => injectAgent(REF_B));
+
+      // Distinct instances...
+      expect(agentA).not.toBe(agentB);
+      // ...each wired to ITS OWN config, not to the last one registered.
+      await agentA.submit({ message: 'to-a' });
+      await agentB.submit({ message: 'to-b' });
+      const urls = fetchMock.mock.calls.map(([input]) => String(input));
+      expect(urls).toEqual(['http://a.example/agent', 'http://b.example/agent']);
+
+      errorSpy.mockRestore();
+      TestBed.resetTestingModule();
+      vi.unstubAllGlobals();
+    });
+
+    it('keeps single-ref behaviour identical: injectAgent() resolves the same instance', () => {
+      const REF = createAgentRef<Record<string, unknown>>('single');
+      TestBed.configureTestingModule({
+        providers: [provideAgent(REF, { url: 'http://single.example/agent' })],
+      });
+
+      const byRef = TestBed.runInInjectionContext(() => injectAgent(REF));
+      const bare = TestBed.runInInjectionContext(() => injectAgent());
+      expect(bare).toBe(byRef);
+      expect(TestBed.inject(AGENT)).toBe(byRef);
+      TestBed.resetTestingModule();
+    });
+
+    it('resolves a ref config factory lazily inside an injection context, exactly once', async () => {
+      const REF = createAgentRef<Record<string, unknown>>('lazy');
+      const AGENT_URL = new InjectionToken<string>('AGENT_URL');
+      const fetchMock = vi.fn().mockResolvedValue(new Response('', { status: 500 }));
+      vi.stubGlobal('fetch', fetchMock);
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      let calls = 0;
+      TestBed.configureTestingModule({
+        providers: [
+          { provide: AGENT_URL, useValue: 'http://from-di.example/agent' },
+          provideAgent(REF, () => {
+            calls += 1;
+            // Only legal if the factory runs in an injection context.
+            return { url: inject(AGENT_URL) };
+          }),
+        ],
+      });
+      // Not run at decoration time.
+      expect(calls).toBe(0);
+
+      const agent = TestBed.runInInjectionContext(() => injectAgent(REF));
+      expect(calls).toBe(1);
+      // The DI-read url reached the underlying HttpAgent.
+      await agent.submit({ message: 'hello' });
+      expect(String(fetchMock.mock.calls[0][0])).toBe('http://from-di.example/agent');
+      // The bare token aliases the ref token, so no second evaluation.
+      expect(TestBed.runInInjectionContext(() => injectAgent())).toBe(agent);
+      expect(calls).toBe(1);
+      errorSpy.mockRestore();
+      TestBed.resetTestingModule();
+      vi.unstubAllGlobals();
+    });
   });
 });

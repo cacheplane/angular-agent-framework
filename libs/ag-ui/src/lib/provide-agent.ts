@@ -73,6 +73,14 @@ function isAgentRef<T>(x: unknown): x is AgentRef<T> {
  * the state shape from `provideAgent` to `injectAgent` without repeating the
  * generic at every call site.
  *
+ * **Several agents at one injector level.** Each `provideAgent(ref, …)` call
+ * builds its own agent, so two (or more) refs may be provided side by side in a
+ * single `providers` array and `injectAgent(refA)` / `injectAgent(refB)` return
+ * distinct agents. The ref-less `injectAgent()` resolves a single shared token,
+ * which can only point at one of them: when more than one ref is provided at
+ * the same level the **last** call wins. Always inject by ref when an injector
+ * provides more than one agent.
+ *
  * @example Typed state via AgentRef
  * ```ts
  * interface TripState { day: number; places: string[]; }
@@ -96,11 +104,18 @@ export function provideAgent<T = Record<string, unknown>>(
 ): Provider[] {
   const ref = isAgentRef<T>(refOrConfig) ? refOrConfig : undefined;
   const configOrFactory = (ref ? maybeConfig : refOrConfig) as AgentConfig | (() => AgentConfig);
-  const providers: Provider[] = [
-    { provide: AGENT, useFactory: () => buildAgUiAgent(configOrFactory) },
+  if (!ref) {
+    return [{ provide: AGENT, useFactory: () => buildAgUiAgent(configOrFactory) }];
+  }
+  // Ref form: the agent is built under this call's own ref token, so N refs can
+  // coexist in one `providers` array. The shared AGENT token aliases it — with a
+  // single ref that reproduces the old `useExisting` identity exactly (one
+  // instance, one config evaluation); with several refs AGENT can only mean one
+  // thing, so the last call wins.
+  return [
+    { provide: ref.token, useFactory: () => buildAgUiAgent(configOrFactory) },
+    { provide: AGENT, useExisting: ref.token },
   ];
-  if (ref) providers.push({ provide: ref.token, useExisting: AGENT });
-  return providers;
 }
 
 /**
