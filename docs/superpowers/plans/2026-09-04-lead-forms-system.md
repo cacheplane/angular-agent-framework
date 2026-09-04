@@ -257,9 +257,14 @@ select[data-ui="form-control"] {
   gap: 8px;
   align-items: flex-start;
 }
-[data-ui="form-row"] > [data-ui="field"] {
-  flex: 1 1 200px;
+[data-ui="form-row"] > [data-ui="field"],
+[data-ui="form-row"] > [data-ui="form-control"] {
+  flex: 1 1 160px;
   min-width: 0;
+}
+/* A compact form's row button matches the compact control height. */
+[data-ui="form"][data-compact] [data-ui="form-row"] [data-ui="button"] {
+  height: var(--form-control-height-compact);
 }
 [data-ui="form-disclosure"] {
   margin: 0;
@@ -1244,7 +1249,10 @@ function NewsletterForm({ formPolicy }: { formPolicy: PublicFormPolicy }) {
     e.preventDefault();
     const problem = emailError(email);
     setEmailMessage(problem);
-    if (problem) return;
+    if (problem) {
+      document.getElementById('footer-email')?.focus();
+      return;
+    }
     void form.submit({ email: email.trim() });
   };
 
@@ -2256,7 +2264,10 @@ export function WhitePaperBlock({ formPolicy, paper = 'overview' }: WhitePaperBl
     e.preventDefault();
     const problem = emailError(email);
     setEmailMessage(problem);
-    if (problem) return;
+    if (problem) {
+      document.getElementById(inputId)?.focus();
+      return;
+    }
     void form.submit({ email: email.trim(), paper });
   };
 
@@ -2437,7 +2448,10 @@ Replace `handleSubmit` with:
     e.preventDefault();
     const problem = emailError(email);
     setEmailMessage(problem);
-    if (problem) return;
+    if (problem) {
+      document.getElementById('toast-email')?.focus();
+      return;
+    }
     void form.submit({ email: email.trim(), paper: 'overview' });
   };
 

@@ -88,13 +88,13 @@ Disclosure moves below the input row, which fixes the collapsed input. A visible
 
 ## 5. Behavior and copy
 
-- **Validation** runs on blur, never per keystroke; an error clears as soon as the value is valid; submit runs a final pass and moves focus to the first invalid field.
+- **Validation** runs on blur, never per keystroke; an error clears as soon as the value is valid; submit runs a final pass and moves focus to the first invalid field on every surface, including the single-field ones.
 - **Error copy names the fix**: "Enter a full address, like jordan@acme.dev." and "Choose a timeline so we can route this." Errors are text plus an icon beside the field, linked by `aria-describedby`, never color alone.
 - **Work email** is the label on contact, enterprise, and whitepaper; any address is accepted. The newsletter label is "Email".
 - **Pending buttons** keep their width. Labels: "Sending…", "Sending…", "Sending the guide…", "Subscribing…".
 - **Failure copy** says "That did not send." and offers the surface's fallback: the founder address, the direct PDF, or "try again".
 - **Stale policy** keeps its refresh path, rendered through `FormStatus`.
-- **Disclosures** keep their text, since they are the stored consent record, and render as one muted paragraph above the button on every surface.
+- **Disclosures** keep their text, since they are the stored consent record, and render as one muted paragraph directly above the button on the stacked forms (contact, enterprise, whitepaper, toast). The footer's compact row is the exception: its disclosure renders below the input-and-button row, outside the row, so it can never take the input's space again. The button references the disclosure by `aria-describedby` on every surface.
 - **Voice**: no contractions, declarative sentences. Replaces "We'll be in touch" and "You're subscribed".
 
 ## 6. Accessibility
