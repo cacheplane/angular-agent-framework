@@ -6,26 +6,6 @@ import type {
   WorkspaceResolution,
 } from './manifest.types';
 
-/**
- * Published Docs paths shared by more than one capability need an explicit
- * reverse mapping. This table is deliberately independent of manifest order.
- */
-export const PRIMARY_CAPABILITY_BY_DOCS_PATH: Readonly<Record<string, string>> =
-  {
-    '/docs/langgraph/guides/persistence':
-      'langgraph:core-capabilities:persistence:overview:python',
-    '/docs/chat/guides/client-tools':
-      'langgraph:core-capabilities:client-tools:overview:python',
-    '/docs/chat/components/chat-tool-calls':
-      'chat:core-capabilities:tool-calls:overview:python',
-    '/docs/render/getting-started/introduction':
-      'render:getting-started:overview:overview:python',
-    '/docs/chat/components/chat-subagent-card':
-      'chat:core-capabilities:subagents:overview:python',
-    '/docs/render/guides/specs':
-      'render:core-capabilities:spec-rendering:overview:python',
-  };
-
 export const toWorkspaceIdentity = (
   entry: CockpitManifestEntry
 ): WorkspaceIdentity => ({
@@ -46,11 +26,10 @@ export const toWorkspaceIdentity = (
 export const getWorkspaceDestinationPath = (
   identity: Pick<WorkspaceIdentity, 'id' | 'docsPath' | 'workspacePath'>
 ): string => {
-  if (!identity.docsPath) return identity.workspacePath;
-  const primaryId = PRIMARY_CAPABILITY_BY_DOCS_PATH[identity.docsPath];
-  return primaryId && primaryId !== identity.id
-    ? identity.workspacePath
-    : identity.docsPath;
+  if (!identity.docsPath) {
+    throw new Error(`Manifest entry without a docs path: ${identity.id}`);
+  }
+  return identity.docsPath;
 };
 
 const mapped = (entry: CockpitManifestEntry): WorkspaceResolution => ({
@@ -64,14 +43,12 @@ export const resolveDocsWorkspace = (
   manifest: readonly CockpitManifestEntry[] = cockpitManifest
 ): WorkspaceResolution => {
   const matches = manifest.filter((entry) => entry.docsPath === docsPath);
-  const primaryId = PRIMARY_CAPABILITY_BY_DOCS_PATH[docsPath];
-  const primary = primaryId
-    ? matches.find((entry) => entry.id === primaryId)
-    : matches.length === 1
-    ? matches[0]
-    : undefined;
-
-  if (primary) return mapped(primary);
+  if (matches.length === 1) return mapped(matches[0]);
+  if (matches.length > 1) {
+    throw new Error(
+      `Docs path ${docsPath} is published by ${matches.length} manifest entries`
+    );
+  }
 
   return {
     kind: 'docs-only',
