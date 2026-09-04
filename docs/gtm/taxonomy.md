@@ -125,8 +125,24 @@ Browser events never fire unless the consumer explicitly opts in. See `libs/tele
 
 **Hero**
 
-- `hero_install` — primary, copy-to-clipboard
-- `hero_talk_to_engineers` — secondary, → `/contact`
+- `hero_install_open` — primary button opens the install dialog
+- `hero_install` — copy in the dialog; property `adapter: fake | langgraph | ag_ui`
+- `hero_quickstart` — dialog footer link and final CTA primary; property `adapter`
+- `hero_live_demo` — hero text link → docs run surface; final CTA secondary
+- `hero_demo_play` — "Play walkthrough" pressed (mobile / reduced motion)
+- `hero_demo_takeover` — visitor took control of the hero demo (frame reported `live`)
+- `hero_demo_replay` — visitor restarted the walkthrough
+- `hero_demo_fallback_open` — poster fallback link → demo.threadplane.ai
+- `hero_talk_to_engineers` — enterprise section CTA (moved from the hero 2026-09-02)
+- retired 2026-09-02: `hero_demo_open_workspace`, `hero_demo_open_workspace_caption`, `hero_proof_pill`
+
+**Homepage sections**
+
+- `home_runtime_parity_toggle` — property `adapter`
+- `home_adapter_guide` — parity CTA → `/docs/choosing-an-adapter`
+- `home_coding_agent_prompt` — prompt copied (prompt text is never sent)
+- `home_coding_agent_link` — property `cta_text` names which link
+- retired 2026-09-04: `home_production_readiness_expand`, `home_yes_wall_docs` (the Yes wall was replaced by the reliability band)
 
 **Nav**
 

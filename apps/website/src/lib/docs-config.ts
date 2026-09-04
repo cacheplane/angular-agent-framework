@@ -196,6 +196,7 @@ export const docsConfig: DocsLibrary[] = [
         pages: [
           { title: 'Introduction', slug: 'introduction', section: 'getting-started' },
           { title: 'Quick Start', slug: 'quickstart', section: 'getting-started' },
+          { title: 'Try without a backend', slug: 'try-without-a-backend', section: 'getting-started' },
           { title: 'Installation', slug: 'installation', section: 'getting-started' },
           { title: 'Changelog', slug: 'changelog', section: 'getting-started' },
         ],

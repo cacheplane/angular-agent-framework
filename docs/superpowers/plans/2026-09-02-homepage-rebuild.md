@@ -179,8 +179,8 @@ export const HERO_H1 = 'The AI agent UI framework for Angular.';
 export const HERO_SUBHEAD =
   'Chat, threads, approvals, and generative UI on Signals and DI. Your backend stays where it is.';
 export const HERO_PRIMARY_LABEL = 'Install Threadplane';
-export const HERO_SECONDARY_LABEL = 'See it running in Cockpit →';
-export const HERO_SECONDARY_HREF = 'https://cockpit.threadplane.ai';
+export const HERO_SECONDARY_LABEL = 'See it running in the docs →';
+export const HERO_SECONDARY_HREF = '/docs/chat/guides/generative-ui?mode=run'; // cockpit.threadplane.ai is retired (cockpit-retirement.spec.ts)
 
 /** Kept for layout.tsx default title and the OG image alt. */
 export const PRIMARY_TAGLINE = 'Threadplane — Angular AI Agent UI Framework';
@@ -411,7 +411,7 @@ Replace the `**Hero**` bullet list with:
 - `hero_install_open` — primary button opens the install dialog
 - `hero_install` — copy in the dialog; property `adapter: fake | langgraph | ag_ui`
 - `hero_quickstart` — dialog footer link and final CTA primary; property `adapter`
-- `hero_live_demo` — hero text link → cockpit; final CTA secondary
+- `hero_live_demo` — hero text link → docs run surface; final CTA secondary
 - `hero_demo_play` — "Play walkthrough" pressed (mobile / reduced motion)
 - `hero_demo_takeover` — visitor took control of the hero demo (frame reported `live`)
 - `hero_demo_replay` — visitor restarted the walkthrough
@@ -1222,11 +1222,11 @@ describe('Hero', () => {
     expect(trackCtaClickMock).toHaveBeenCalledWith(expect.objectContaining({ cta_id: 'hero_install_open', track: 'developer', surface: 'home' }));
   });
 
-  it('secondary link goes to cockpit and fires hero_live_demo', async () => {
+  it('secondary link goes to the docs run surface and fires hero_live_demo', async () => {
     const { Hero } = await import('./Hero');
     render(<Hero />);
-    const link = screen.getByRole('link', { name: /See it running in Cockpit/ });
-    expect(link.getAttribute('href')).toBe('https://cockpit.threadplane.ai');
+    const link = screen.getByRole('link', { name: /See it running in the docs/ });
+    expect(link.getAttribute('href')).toBe(HERO_SECONDARY_HREF);
     fireEvent.click(link);
     expect(trackCtaClickMock).toHaveBeenCalledWith(expect.objectContaining({ cta_id: 'hero_live_demo' }));
   });
@@ -2291,7 +2291,7 @@ export default async function HomePage() {
         headline="Prove the Angular UI before you connect the backend."
         subtext="Start with a fake agent, render a real Threadplane surface, then swap in LangGraph or AG-UI when the integration is ready."
         primary={{ label: 'Start the quickstart', href: INSTALL_OPTIONS[0].quickstartHref }}
-        secondary={{ label: 'Run live examples', href: 'https://cockpit.threadplane.ai', external: true }}
+        secondary={{ label: 'Run live examples', href: HERO_SECONDARY_HREF }}
         caption="MIT · no account, no cloud · Talk to an engineer: /contact"
       />
       <RecentArticles />
@@ -2301,6 +2301,14 @@ export default async function HomePage() {
 ```
 
 Verify `toolProgress()` and `mockLangGraphAgent()` exist in the adapter's public API (they do per `libs/langgraph/src/lib/agent.types.ts` and `public-api.ts`). Make the caption's "Talk to an engineer" a real link if `FinalCTA` accepts a ReactNode caption; if it only accepts a string, add a `captionLink?: { label; href }` prop to `FinalCTA` and render it after the caption text. Re-export `INSTALL_OPTIONS` from `site-metadata.ts` (Task 1 did).
+
+- [ ] **Step 1b: OG image headline and hero-string drift guards**
+
+`apps/website/src/app/opengraph-image.tsx` hardcodes the visible headline `Build fullstack agentic Angular apps.`; replace it with `HERO_H1` from positioning so the OG card, `<title>` and H1 agree (spec §10). Add to `positioning.spec.ts`: `expect(HERO_PRIMARY_LABEL).toBe('Install Threadplane'); expect(HERO_SECONDARY_LABEL).toBe('See it running in the docs →'); expect(HERO_SECONDARY_HREF).toBe('/docs/chat/guides/generative-ui?mode=run');` and `expect(INSTALL_OPTIONS[0].quickstartHref).toBe('/docs/chat/getting-started/try-without-a-backend');`.
+
+- [ ] **Step 1c: HeroDemo polish from review**
+
+In `landing.css`, make the poster fade rather than vanish: `.hero-demo-poster { transition: opacity 300ms ease; }` and `.hero-demo[data-state="ready"] .hero-demo-poster { opacity: 0; visibility: hidden; transition: opacity 300ms ease, visibility 0s linear 300ms; }` (replace the plain `visibility: hidden` rule). In `HeroDemo.tsx`, let the visibility effect keep posting while `fallback` too (drop the `ready`-only guard: post whenever the iframe is mounted), so a frame that learns the parent origin late can still recover; keep the spec green and add one assertion that a `visible` post happens in `fallback`.
 
 - [ ] **Step 2: Update `website.spec.ts`**
 

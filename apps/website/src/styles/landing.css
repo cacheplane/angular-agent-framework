@@ -10,12 +10,6 @@
  */
 
 /* Hero — components/landing/Hero.tsx */
-.hero-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 64px;
-  align-items: center;
-}
 .hero-eyebrow {
   margin-bottom: 16px;
 }
@@ -58,98 +52,43 @@
   box-decoration-break: clone;
 }
 
-.hero-chip-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  list-style: none;
-  padding: 0;
-  margin: 0 0 28px;
-  max-width: 54ch;
-}
-.hero-chip-row li {
-  display: inline-flex;
-}
-.hero-chip {
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  color: var(--color-text-secondary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-  padding: 5px 11px;
-  white-space: nowrap;
-  text-decoration: none;
-  display: inline-block;
-}
-/* Invisible tap-area extension (parity with the deleted proof pills):
- * the chip renders ~29px tall; padding lifts the touch target toward the
- * 44px ideal without shifting layout. */
-@media (max-width: 640px) {
-  .hero-chip {
-    padding-top: 9px;
-    padding-bottom: 9px;
-    margin-top: -4px;
-    margin-bottom: -4px;
-  }
-}
-.hero-chip:hover,
-.hero-chip:focus-visible {
-  border-color: var(--color-accent-border-hover);
-  color: var(--color-text-primary);
-}
-
 .hero-cta-row {
   display: flex;
   gap: 12px;
   margin-bottom: 24px;
   flex-wrap: wrap;
 }
-.hero-caption {
-  margin: 0;
-  font-family: var(--font-inter);
-  font-size: var(--text-body);
-  line-height: var(--text-body--line-height);
-  color: var(--color-text-muted);
-  font-style: italic;
-  max-width: 60ch;
-}
-.hero-demo-link {
-  display: block;
-  text-decoration: none;
-}
-.hero-demo-frame {
-  width: 100%;
-}
-.hero-demo-img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-.hero-demo-caption {
-  margin: 12px 0 0;
+.hero-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  font-family: var(--font-inter);
-  font-size: 13px;
-  color: var(--color-text-muted);
 }
-.hero-demo-caption-link {
+.hero-stack .hero-subhead {
+  max-width: 40em;
+}
+.hero-stack .hero-cta-row {
+  justify-content: center;
+}
+.hero-text-link {
   color: var(--color-accent);
-  text-decoration: none;
   font-weight: 600;
-  /* 16px-tall text link; pad the tap target without shifting layout. */
+  text-decoration: none;
   display: inline-block;
   padding: 8px 4px;
   margin: -8px -4px;
 }
-@keyframes blink { to { visibility: hidden; } }
-@media (max-width: 900px) {
-  .hero-grid {
-    /* minmax(0,…): bare 1fr keeps an auto minimum, so one wide child pushed
-     * the stacked column past the viewport (findings §2). */
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 40px !important;
-  }
+.hero-text-link:hover,
+.hero-text-link:focus-visible {
+  text-decoration: underline;
 }
+.hero-trust {
+  margin: 12px 0 0;
+  font-family: var(--font-inter);
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+@keyframes blink { to { visibility: hidden; } }
 /* FeatureBlock — components/landing/FeatureBlock.tsx */
 .feature-block-grid {
   display: grid;
@@ -709,18 +648,7 @@
   color: var(--color-text-muted);
 }
 
-/* DemoModal — components/landing/DemoModal.tsx */
-.demo-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(16, 18, 32, .55);
-  animation: demoModalBackdrop .16s ease-out;
-}
-@keyframes demoModalBackdrop { from { opacity: 0 } to { opacity: 1 } }
+/* DemoModal — components/landing/DemoModal.tsx (backdrop provided by [data-ui="modal"] in ui.css) */
 @keyframes demoModalFrame { from { transform: scale(.96); opacity: .6 } to { transform: scale(1); opacity: 1 } }
 .demo-modal__frame {
   width: min(96vw, calc(90vh * 16 / 10));
@@ -785,17 +713,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.demo-modal__close {
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-  border: none;
-  cursor: pointer;
-  background: var(--color-accent-surface);
-  color: var(--color-text-secondary);
-  font-size: 16px;
-  line-height: 1;
-}
 .demo-modal__iframe {
   width: 100%;
   height: 100%;
@@ -827,7 +744,7 @@
   .demo-modal__body { aspect-ratio: auto; flex: 1 1 auto; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .demo-modal, .demo-modal__frame { animation: none !important; }
+  .demo-modal__frame { animation: none !important; }
 }
 
 /* DemoShowcase — components/landing/DemoShowcase.tsx */
@@ -1271,16 +1188,46 @@
 /* ---------- LogoRibbon — components/landing/LogoRibbon.tsx ---------- */
 .logo-ribbon {
   background: var(--color-canvas);
+  padding: 32px 0;
   border-top: 1px solid var(--color-border);
   /* No border-bottom: the dark proof band directly below draws its own accent
    * seam at the boundary; two hairlines would stack. */
+}
+.logo-ribbon-heading {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 600;
+}
+.logo-ribbon-lede {
+  margin: 0 0 20px;
+  max-width: 60em;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+.logo-ribbon-groups {
+  display: grid;
+  gap: 14px;
+}
+.logo-ribbon-group {
+  display: grid;
+  grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
+  gap: 12px 24px;
+  align-items: center;
+}
+.logo-ribbon-group-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.logo-ribbon-note {
+  font-size: 12px;
+  color: var(--color-text-muted);
 }
 .logo-ribbon-line {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 10px 26px;
-  padding: 16px 0;
 }
 .logo-ribbon-label {
   font-family: var(--font-mono);
@@ -1307,12 +1254,10 @@
   font-weight: 500;
   color: var(--color-text-secondary);
 }
-.logo-ribbon-more {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
+@media (max-width: 767px) {
+  .logo-ribbon-group {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Shared rail for the three CodeShowcase intros — the last centered kicker
@@ -1420,4 +1365,262 @@
 }
 .home-concept-link:hover {
   text-decoration: underline;
+}
+
+.install-dialog { padding: 28px 28px 20px; }
+.install-dialog-title { margin: 0 32px 4px 0; font-size: 22px; line-height: 1.2; }
+.install-dialog-lede { margin: 0 0 16px; color: var(--color-text-muted); font-size: 14px; }
+.install-dialog-steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+.install-dialog-step { position: relative; padding-left: 34px; margin-bottom: 18px; counter-increment: step; }
+.install-dialog-step::before {
+  content: counter(step); position: absolute; left: 0; top: 0; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--color-text-primary); color: var(--color-surface); font-size: 12px; font-weight: 700;
+  display: grid; place-items: center;
+}
+.install-dialog-step-title { margin: 0 0 8px; font-size: 15px; line-height: 22px; }
+.install-dialog-step-note { margin: 6px 0 0; font-size: 12.5px; color: var(--color-text-muted); }
+.install-dialog-seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden; }
+.install-dialog-seg-btn { padding: 7px 12px; border: 0; background: transparent; font: inherit; font-size: 13px; cursor: pointer; }
+.install-dialog-seg-btn[aria-checked="true"] { background: var(--color-text-primary); color: var(--color-surface); }
+.install-dialog-seg-btn:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+.install-dialog-code {
+  margin: 0 0 8px; padding: 10px 12px; border-radius: 8px; overflow-x: auto;
+  background: #1c1c1e; color: #e8e8e8; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.5;
+}
+.install-dialog-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+.install-dialog-trust { margin: 12px 0 0; font-size: 12px; color: var(--color-text-muted); }
+
+/* HeroDemo — poster → iframe stage (Task 5; the old .hero-demo-link/-img/
+   -caption rules above are removed with the old Hero markup in Task 6). */
+.hero-demo {
+  width: 100%;
+  max-width: 1200px;
+  margin: 40px auto 0;
+}
+.hero-demo-frame {
+  width: 100%;
+}
+.hero-demo-stage {
+  position: relative;
+  aspect-ratio: 1200 / 720;
+  background: #0f1116;
+}
+.hero-demo-poster {
+  display: block;
+  transition: opacity 300ms ease;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.hero-demo-iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+.hero-demo[data-state='ready'] .hero-demo-iframe {
+  opacity: 1;
+}
+.hero-demo[data-state='ready'] .hero-demo-poster {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 300ms ease, visibility 0s linear 300ms;
+}
+.hero-demo-play,
+.hero-demo-fallback {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 0;
+  background: #111;
+  color: #fff;
+  font-family: var(--font-inter);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 25%);
+}
+.hero-demo-play:focus-visible,
+.hero-demo-fallback:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-demo-iframe,
+  .hero-demo-poster,
+  .hero-demo[data-state='ready'] .hero-demo-poster {
+    transition: none;
+  }
+}
+
+/* ---------- RuntimeParity — components/landing/RuntimeParity.tsx ---------- */
+.parity {
+  margin-top: 24px;
+}
+.parity-toggle {
+  display: inline-flex;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.parity-toggle-btn {
+  padding: 8px 16px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.parity-toggle-btn[aria-checked='true'] {
+  background: var(--color-text-primary);
+  color: var(--color-surface);
+}
+.parity-toggle-btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+.parity-panes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.parity-pane {
+  min-width: 0;
+}
+.parity-pane .shiki {
+  overflow-x: auto;
+}
+.parity-pane-label {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.parity-pane-file {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+.parity-pane-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #2f6f4f22;
+  color: #2f6f4f;
+}
+.parity-pane[data-pinned] {
+  outline: 2px solid #2f6f4f66;
+  outline-offset: 6px;
+  border-radius: 8px;
+}
+.parity-qualifier {
+  margin: 20px 0 0;
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+.parity-cta {
+  color: var(--color-accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+@media (max-width: 767px) {
+  .parity-panes {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- ThreeSteps — components/landing/ThreeSteps.tsx ---------- */
+.three-steps {
+  list-style: none;
+  margin: 24px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  counter-reset: s;
+}
+.three-step {
+  counter-increment: s;
+  min-width: 0;
+}
+.three-step-title {
+  margin: 0 0 6px;
+  font-size: 17px;
+}
+.three-step-title::before {
+  content: counter(s) ' · ';
+  color: var(--color-accent);
+}
+.three-step-body {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+.three-step-code .shiki {
+  overflow-x: auto;
+  font-size: 12.5px;
+}
+@media (max-width: 1023px) {
+  .three-steps {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Coding-agent quickstart (Task 11) ───────────────────────────────────── */
+.coding-agent-prompt {
+  margin: 20px 0 16px;
+  padding: 16px;
+  border-radius: 10px;
+  overflow-x: auto;
+  background: #1c1c1e;
+  color: #e8e8e8;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.coding-agent-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+/* ── Scope table (Task 13) ───────────────────────────────────────────────── */
+.scope-table-wrap {
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+.scope-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.scope-table th,
+.scope-table td {
+  text-align: left;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+}
+
+.scope-table thead th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
 }

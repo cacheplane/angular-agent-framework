@@ -50,4 +50,22 @@ describe('SECTION_MEDIA', () => {
       expect(known, `${key} -> ${media.live.featured}`).toContain(media.live.featured);
     }
   });
+
+  it('gives persist a video, code, and live tab like ship', () => {
+    const { persist } = SECTION_MEDIA;
+    expect(persist.video).toBeTruthy();
+    expect(persist.code?.length).toBeGreaterThan(0);
+    expect(persist.live).toBeTruthy();
+  });
+
+  it('gives test a code-only proof block', () => {
+    const { test } = SECTION_MEDIA;
+    expect(test.video).toBeUndefined();
+    expect(test.live).toBeUndefined();
+    expect(test.code?.length).toBeGreaterThan(0);
+  });
+
+  it('shows provideFakeAgent in the test code sample', () => {
+    expect(SECTION_MEDIA.test.code?.[0].source).toContain('provideFakeAgent(');
+  });
 });

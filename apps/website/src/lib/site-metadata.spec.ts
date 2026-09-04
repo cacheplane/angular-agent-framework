@@ -5,6 +5,8 @@ import {
   clampMetaDescription,
   DEFAULT_META_DESCRIPTION,
   HERO_SUBHEAD,
+  HOME_DESCRIPTION,
+  HOME_TITLE,
   LONG_SUBHEAD,
   POSITIONING_PROOF_POINTS,
   PRIMARY_TAGLINE,
@@ -16,12 +18,12 @@ import { resolveWebsiteDir } from './website-dir';
 
 describe('site positioning copy', () => {
   it('exports the approved primary tagline and supporting copy', () => {
-    expect(PRIMARY_TAGLINE).toBe('Threadplane. Durable threads, interrupts, subagents, planning, memory, and generative UI.');
-    expect(LONG_SUBHEAD).toContain('fullstack agentic Angular framework');
-    expect(LONG_SUBHEAD).toContain('LangGraph and AG-UI-compatible agents');
-    expect(LONG_SUBHEAD).toContain('Vercel json-render and Google A2UI');
-    expect(HERO_SUBHEAD).toContain('Everything after it takes six months.');
-    expect(HERO_SUBHEAD).toContain('keeps your backend exactly where it is');
+    expect(PRIMARY_TAGLINE).toBe('Threadplane — Angular AI Agent UI Framework');
+    expect(LONG_SUBHEAD).toContain('open-source Angular AI agent UI framework');
+    expect(LONG_SUBHEAD).toContain('LangGraph and AG-UI');
+    expect(HERO_SUBHEAD).toBe(
+      'Chat, threads, approvals, and generative UI on Signals and DI. Your backend stays where it is.',
+    );
     expect(POSITIONING_PROOF_POINTS.map((p) => p.label)).toEqual([
       'LangGraph + AG-UI',
       'Durable threads',
@@ -53,6 +55,18 @@ describe('site positioning copy', () => {
     expect(metadata.description).toBe(DEFAULT_META_DESCRIPTION);
     expect(metadata.openGraph?.description).toBe(DEFAULT_META_DESCRIPTION);
     expect(metadata.twitter?.description).toBe(DEFAULT_META_DESCRIPTION);
+  });
+
+  it('homepage metadata uses the category title and an un-clamped description', () => {
+    const metadata = createPageMetadata({
+      title: HOME_TITLE,
+      description: HOME_DESCRIPTION,
+      pathname: '/',
+      type: 'website',
+    });
+
+    expect(metadata.title).toBe('Threadplane — Angular AI Agent UI Framework');
+    expect(metadata.description).toBe(HOME_DESCRIPTION);
   });
 });
 

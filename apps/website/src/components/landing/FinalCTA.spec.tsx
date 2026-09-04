@@ -1,13 +1,16 @@
 // @vitest-environment jsdom
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { FinalCTA } from './FinalCTA';
 
+const trackCtaClickMock = vi.hoisted(() => vi.fn());
 vi.mock('../../lib/analytics/client', () => ({
   track: vi.fn(),
-  trackCtaClick: vi.fn(),
+  trackCtaClick: trackCtaClickMock,
   trackExternalLinkClick: vi.fn(),
 }));
+
+beforeEach(() => trackCtaClickMock.mockClear());
 
 describe('FinalCTA', () => {
   it('defaults to the tinted surface (used by 4 non-home pages)', () => {
@@ -36,6 +39,56 @@ describe('FinalCTA', () => {
     );
     expect(link.getAttribute('target')).toBeNull();
     expect(link.getAttribute('rel')).toBeNull();
+  });
+
+  it('fires trackCtaClick with the given ctaId when the primary CTA is clicked', () => {
+    render(
+      <FinalCTA
+        primary={{ label: 'Start the quickstart', href: '/docs/quickstart', ctaId: 'hero_quickstart' }}
+      />,
+    );
+    fireEvent.click(screen.getByRole('link', { name: 'Start the quickstart' }));
+    expect(trackCtaClickMock).toHaveBeenCalledWith({
+      cta_id: 'hero_quickstart',
+      track: 'developer',
+      surface: 'final_cta',
+      destination_url: '/docs/quickstart',
+    });
+  });
+
+  it('fires trackCtaClick with the given ctaId when the secondary CTA is clicked', () => {
+    render(
+      <FinalCTA
+        primary={{ label: 'Start the quickstart', href: '/docs/quickstart' }}
+        secondary={{ label: 'Run live examples', href: '/docs/run', ctaId: 'hero_live_demo' }}
+      />,
+    );
+    fireEvent.click(screen.getByRole('link', { name: 'Run live examples' }));
+    expect(trackCtaClickMock).toHaveBeenCalledWith({
+      cta_id: 'hero_live_demo',
+      track: 'developer',
+      surface: 'final_cta',
+      destination_url: '/docs/run',
+    });
+  });
+
+  it('does not fire tracking when a CTA has no ctaId', () => {
+    render(<FinalCTA primary={{ label: 'Start the quickstart', href: '/docs/quickstart' }} />);
+    fireEvent.click(screen.getByRole('link', { name: 'Start the quickstart' }));
+    expect(trackCtaClickMock).not.toHaveBeenCalled();
+  });
+
+  it('joins caption and captionLink with " · "', () => {
+    render(
+      <FinalCTA
+        primary={{ label: 'Start the quickstart', href: '/docs/quickstart' }}
+        caption="MIT · no account, no cloud"
+        captionLink={{ label: 'Talk to an engineer', href: '/contact' }}
+      />,
+    );
+    const caption = screen.getByText(/MIT · no account, no cloud/);
+    expect(caption.textContent).toBe('MIT · no account, no cloud · Talk to an engineer');
+    expect(screen.getByRole('link', { name: 'Talk to an engineer' }).getAttribute('href')).toBe('/contact');
   });
 });
 

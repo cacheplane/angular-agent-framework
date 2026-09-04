@@ -1,14 +1,21 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, within } from '@testing-library/react';
-import { HERO_CAPABILITIES, HERO_SUBHEAD } from '../../lib/positioning';
+import { render, screen, fireEvent } from '@testing-library/react';
+import {
+  HERO_EYEBROW,
+  HERO_H1,
+  HERO_SECONDARY_HREF,
+  HERO_SUBHEAD,
+  HERO_TRUST_LINE,
+} from '../../lib/positioning';
 
 const trackMock = vi.hoisted(() => vi.fn());
-const writeTextMock = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
+const trackCtaClickMock = vi.hoisted(() => vi.fn());
 
 vi.mock('../../lib/analytics/client', () => ({
   track: trackMock,
+  trackCtaClick: trackCtaClickMock,
 }));
 
 // Stub design-system primitives — they don't import React (rely on Next's
@@ -34,75 +41,49 @@ vi.mock('../ui/Button', () => ({
       <button onClick={onClick}>{children}</button>
     ),
 }));
+vi.mock('./HeroDemo', () => ({ HeroDemo: () => <div data-testid="hero-demo" /> }));
+vi.mock('./InstallDialog', () => ({
+  InstallDialog: ({ open }: { open: boolean }) => (open ? <div role="dialog" aria-label="Install Threadplane" /> : null),
+}));
 
 beforeEach(() => {
   trackMock.mockClear();
-  writeTextMock.mockClear();
-  Object.assign(navigator, { clipboard: { writeText: writeTextMock } });
+  trackCtaClickMock.mockClear();
 });
 
 describe('Hero', () => {
-  it('renders the locked H1, problem-first subhead, and capability chips', async () => {
+  it('renders the category eyebrow, H1, subhead and trust line from positioning', async () => {
     const { Hero } = await import('./Hero');
     render(<Hero />);
-    expect(screen.getByRole('heading', { level: 1 }).textContent)
-      .toBe('Ship production agent UIs in Angular.');
-    const subhead = document.querySelector('.hero-subhead');
-    expect(subhead?.textContent).toBe(HERO_SUBHEAD);
-    const row = screen.getByRole('list', { name: 'Capabilities' });
-    for (const cap of HERO_CAPABILITIES) {
-      const link = within(row).getByRole('link', { name: cap.label });
-      expect(link.getAttribute('href')).toBe(cap.href);
-    }
-    expect(document.querySelector('.hero-proof-row')).toBeNull();
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(HERO_H1);
+    expect(screen.getByText(HERO_EYEBROW)).toBeTruthy();
+    expect(document.querySelector('.hero-subhead')?.textContent).toBe(HERO_SUBHEAD);
+    expect(document.querySelector('.hero-trust')?.textContent).toBe(HERO_TRUST_LINE);
+    expect(document.querySelector('.hero-chip-row')).toBeNull();
+    expect(screen.queryByText(/six months/)).toBeNull();
+    expect(screen.queryByRole('link', { name: /Talk to our engineers/ })).toBeNull();
   });
 
-  it('primary CTA copies the install command and fires cta_id=hero_install', async () => {
+  it('primary button opens the install dialog and fires hero_install_open', async () => {
     const { Hero } = await import('./Hero');
     render(<Hero />);
-    const btn = screen.getByRole('button', { name: /Install LangGraph starter/i });
-    fireEvent.click(btn);
-    expect(writeTextMock).toHaveBeenCalledWith('npm install @threadplane/chat @threadplane/langgraph');
-    expect(trackMock).toHaveBeenCalledWith('marketing:cta_click', expect.objectContaining({
-      cta_id: 'hero_install',
-      track: 'developer',
-      surface: 'home',
-    }));
+    fireEvent.click(screen.getByRole('button', { name: 'Install Threadplane' }));
+    expect(screen.getByRole('dialog', { name: 'Install Threadplane' })).toBeTruthy();
+    expect(trackCtaClickMock).toHaveBeenCalledWith(expect.objectContaining({ cta_id: 'hero_install_open', track: 'developer', surface: 'home' }));
   });
 
-  it('secondary CTA links to /contact and fires cta_id=hero_talk_to_engineers', async () => {
+  it('secondary link goes to the docs run surface and fires hero_live_demo', async () => {
     const { Hero } = await import('./Hero');
     render(<Hero />);
-    const link = screen.getByRole('link', { name: /Talk to our engineers/i });
-    expect(link.getAttribute('href')).toBe('/contact?source=home_hero&track=enterprise');
+    const link = screen.getByRole('link', { name: /See it running in the docs/ });
+    expect(link.getAttribute('href')).toBe(HERO_SECONDARY_HREF);
     fireEvent.click(link);
-    expect(trackMock).toHaveBeenCalledWith('marketing:cta_click', expect.objectContaining({
-      cta_id: 'hero_talk_to_engineers',
-      track: 'enterprise',
-      surface: 'home',
-    }));
+    expect(trackCtaClickMock).toHaveBeenCalledWith(expect.objectContaining({ cta_id: 'hero_live_demo' }));
   });
 
-  it('opens the generative UI demo in the same-origin Website workspace', async () => {
+  it('mounts the demo below the copy', async () => {
     const { Hero } = await import('./Hero');
     render(<Hero />);
-
-    const links = screen.getAllByRole('link', {
-      name: /open (?:the generative UI example|interactive workspace)/i,
-    });
-    expect(links).toHaveLength(2);
-    for (const link of links) {
-      expect(link.getAttribute('href')).toBe(
-        '/docs/chat/guides/generative-ui?mode=run'
-      );
-      expect(link.getAttribute('target')).toBeNull();
-      expect(link.getAttribute('rel')).toBeNull();
-    }
-
-    fireEvent.click(links[0]);
-    expect(trackMock).toHaveBeenCalledWith(
-      'marketing:cta_click',
-      expect.objectContaining({ cta_id: 'hero_demo_open_workspace' })
-    );
+    expect(screen.getByTestId('hero-demo')).toBeTruthy();
   });
 });

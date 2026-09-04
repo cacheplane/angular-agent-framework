@@ -23,7 +23,16 @@ export interface SectionMedia {
 }
 
 export const SECTION_MEDIA: Record<
-  'stream' | 'render' | 'ship' | 'approve' | 'libLanggraph' | 'libChat' | 'libAgUi' | 'libRender',
+  | 'stream'
+  | 'render'
+  | 'ship'
+  | 'persist'
+  | 'test'
+  | 'approve'
+  | 'libLanggraph'
+  | 'libChat'
+  | 'libAgUi'
+  | 'libRender',
   SectionMedia
 > = {
   stream: {
@@ -82,6 +91,56 @@ const catalog = views({
   // your own records) and the conversation survives a reload, a new tab,
   // or a different device — the messages live in the checkpoint, not here.
   threadId: signal(threadIdFromUrl()),
+});`,
+      },
+    ],
+  },
+  persist: {
+    video: SHIP_CLIP,
+    live: { featured: 'tell-me-about-coral' },
+    code: [
+      {
+        label: 'app.config.ts — durable threads',
+        language: 'typescript',
+        source: `provideAgent(DEMO_AGENT, {
+  apiUrl: 'https://your-deployment.langgraph.app',
+  // The thread id is the durability boundary. Persist it (URL, storage,
+  // your own records) and the conversation survives a reload, a new tab,
+  // or a different device — the messages live in the checkpoint, not here.
+  threadId: signal(threadIdFromUrl()),
+});`,
+      },
+    ],
+  },
+  test: {
+    code: [
+      {
+        label: 'Code',
+        language: 'typescript',
+        source: `import { TestBed } from '@angular/core/testing';
+import { provideFakeAgent } from '@threadplane/langgraph';
+import { SupportAgentComponent } from './support-agent.component';
+
+it('renders the streamed reply', async () => {
+  TestBed.configureTestingModule({
+    imports: [SupportAgentComponent],
+    providers: [provideFakeAgent({ tokens: ['Hello', ' from', ' Threadplane'], delayMs: 0 })],
+  });
+  const fixture = TestBed.createComponent(SupportAgentComponent);
+  fixture.detectChanges();
+
+  const textarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
+  textarea.value = 'What can Threadplane do?';
+  textarea.dispatchEvent(new Event('input'));
+  fixture.detectChanges();
+
+  const send: HTMLButtonElement = fixture.nativeElement.querySelector('button[aria-label="Send message"]');
+  send.click();
+
+  await fixture.whenStable();
+  fixture.detectChanges();
+
+  expect(fixture.nativeElement.textContent).toContain('Hello from Threadplane');
 });`,
       },
     ],
