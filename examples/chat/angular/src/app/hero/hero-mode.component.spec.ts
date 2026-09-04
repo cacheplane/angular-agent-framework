@@ -1,6 +1,7 @@
-import { describe, expect, it, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { HeroMode } from './hero-mode.component';
+import { TYPE_DELAY_MS } from './hero-script';
 import { HeroReplayTransport } from './hero-replay.transport';
 import type { HeroBridge } from './hero-bridge';
 import type { HeroRecording } from './hero-recording.types';
@@ -136,7 +137,34 @@ describe('HeroMode', () => {
     expect(fx.componentInstance.mode()).toBe('live');
   });
 
-  it('reduced motion: typeInto sets the value instantly but keeps a reading pause before resolving', async () => {
+  it('types one character at a time at the shared TYPE_DELAY_MS cadence', async () => {
+    const el = fx.nativeElement as HTMLElement;
+    const textarea = el.querySelector<HTMLTextAreaElement>('textarea[aria-label="Type a message"]')!;
+    const seen: string[] = [];
+    textarea.addEventListener('input', () => seen.push(textarea.value));
+    const text = 'x'.repeat(50);
+
+    // Fake timers, not a wall-clock budget: asserting `elapsed < 2000ms` on real
+    // timers both flaked under load and added real seconds to the suite, which
+    // destabilised neighbouring specs. This pins the cadence itself.
+    vi.useFakeTimers();
+    try {
+      const done = fx.componentInstance.typeInto(text);
+      await vi.advanceTimersByTimeAsync(TYPE_DELAY_MS * 20);
+      // Partway through: this is typing, not a paste.
+      expect(seen.length).toBeGreaterThan(0);
+      expect(seen.length).toBeLessThan(50);
+      await vi.advanceTimersByTimeAsync(TYPE_DELAY_MS * 40);
+      await done;
+    } finally {
+      vi.useRealTimers();
+    }
+
+    expect(seen).toHaveLength(50);
+    expect(textarea.value).toBe(text);
+  });
+
+  it('reduced motion: typeInto sets the value in one tick, leaving the reading pause to the runner', async () => {
     fx.componentInstance.reducedMotion = true;
     const el = fx.nativeElement as HTMLElement;
     const textarea = el.querySelector<HTMLTextAreaElement>('textarea[aria-label="Type a message"]')!;
@@ -147,15 +175,19 @@ describe('HeroMode', () => {
     expect(textarea.value).toBe('abc');
 
     await typing;
-    expect(performance.now() - started).toBeGreaterThanOrEqual(1200);
+    // The old READ_PAUSE_MS lived here and made this leg take 1.2s. That hold
+    // is now HOLD_AFTER_TYPING_MS in the runner, where BOTH motion settings
+    // get it, so this host call must no longer carry a pacing pause of its own.
+    expect(performance.now() - started).toBeLessThan(400);
   });
 
-  it('reduced motion: moveCursor holds for a reading pause instead of resolving instantly', async () => {
-    fx.componentInstance.reducedMotion = true;
-
-    const started = performance.now();
-    await fx.componentInstance.moveCursor('composer');
-    expect(performance.now() - started).toBeGreaterThanOrEqual(600);
+  it('moveCursor holds for the same beat with or without reduced motion', async () => {
+    for (const reducedMotion of [false, true]) {
+      fx.componentInstance.reducedMotion = reducedMotion;
+      const started = performance.now();
+      await fx.componentInstance.moveCursor('composer');
+      expect(performance.now() - started).toBeGreaterThanOrEqual(600);
+    }
   });
 
   it('clears the half-typed composer on takeover', async () => {

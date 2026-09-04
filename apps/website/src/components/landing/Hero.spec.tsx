@@ -58,6 +58,10 @@ describe('Hero', () => {
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(HERO_H1);
     expect(screen.getByText(HERO_EYEBROW)).toBeTruthy();
     expect(document.querySelector('.hero-subhead')?.textContent).toBe(HERO_SUBHEAD);
+    expect(document.querySelector('.hero-subhead .marker-highlight')?.textContent).toBe(
+      'Your backend stays where it is.',
+    );
+    expect(document.querySelectorAll('.hero-subhead .marker-highlight')).toHaveLength(1);
     expect(document.querySelector('.hero-trust')?.textContent).toBe(HERO_TRUST_LINE);
     expect(document.querySelector('.hero-chip-row')).toBeNull();
     expect(screen.queryByText(/six months/)).toBeNull();

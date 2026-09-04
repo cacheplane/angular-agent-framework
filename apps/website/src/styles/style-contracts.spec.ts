@@ -252,6 +252,15 @@ const CONTRACTS: StyleContract[] = [
       'min-height': /min-height:\s*44px/,
     },
   },
+  {
+    file: 'landing.css',
+    selector: '.marker-highlight',
+    why: 'The hero subhead is centered and the highlighted boundary claim wraps at every width below ~1200px (it wraps mid-phrase at 390px). Without box-decoration-break: clone the browser paints ONE background box spanning the union of the wrapped lines, so the marker bleeds across the full paragraph width and past the text it is meant to emphasise — it still renders, just wrongly. The negative margins cancel the padding so the highlight does not shift the line box.',
+    requires: {
+      'box-decoration-break': /[^-]box-decoration-break:\s*clone/,
+      '-webkit-box-decoration-break': /-webkit-box-decoration-break:\s*clone/,
+    },
+  },
 ];
 
 function baseDeclarationsFor(css: string, selector: string): string {

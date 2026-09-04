@@ -12,7 +12,7 @@ import {
   HERO_PRIMARY_LABEL,
   HERO_SECONDARY_HREF,
   HERO_SECONDARY_LABEL,
-  HERO_SUBHEAD,
+  HERO_SUBHEAD_SEGMENTS,
   HERO_TRUST_LINE,
 } from '../../lib/positioning';
 import { HeroDemo } from './HeroDemo';
@@ -32,7 +32,15 @@ export function Hero() {
         <div className="hero-stack">
           <Eyebrow tone="accent" className="hero-eyebrow">{HERO_EYEBROW}</Eyebrow>
           <h1 id="hero-heading" className="hero-heading">{HERO_H1}</h1>
-          <p className="hero-subhead">{HERO_SUBHEAD}</p>
+          <p className="hero-subhead">
+            {HERO_SUBHEAD_SEGMENTS.map((segment) =>
+              segment.highlight ? (
+                <span className="marker-highlight" key={segment.text}>{segment.text}</span>
+              ) : (
+                <React.Fragment key={segment.text}>{segment.text}</React.Fragment>
+              ),
+            )}
+          </p>
           <div className="hero-cta-row">
             <Button variant="primary" size="lg" onClick={openInstall}>{HERO_PRIMARY_LABEL}</Button>
             <a
