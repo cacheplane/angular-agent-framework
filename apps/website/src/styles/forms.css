@@ -130,6 +130,10 @@ select[data-ui="form-control"] {
   flex: 1 1 160px;
   min-width: 0;
 }
+/* A row button matches the control height so the pair sits flush. */
+[data-ui="form-row"] [data-ui="button"] {
+  height: var(--form-control-height);
+}
 /* A compact form's row button matches the compact control height. */
 [data-ui="form"][data-compact] [data-ui="form-row"] [data-ui="button"] {
   height: var(--form-control-height-compact);
