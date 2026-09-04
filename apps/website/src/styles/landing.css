@@ -1228,46 +1228,16 @@
 /* ---------- LogoRibbon — components/landing/LogoRibbon.tsx ---------- */
 .logo-ribbon {
   background: var(--color-canvas);
-  padding: 32px 0;
   border-top: 1px solid var(--color-border);
   /* No border-bottom: the dark proof band directly below draws its own accent
    * seam at the boundary; two hairlines would stack. */
-}
-.logo-ribbon-heading {
-  margin: 0 0 4px;
-  font-size: 18px;
-  font-weight: 600;
-}
-.logo-ribbon-lede {
-  margin: 0 0 20px;
-  max-width: 60em;
-  color: var(--color-text-muted);
-  font-size: 14px;
-}
-.logo-ribbon-groups {
-  display: grid;
-  gap: 14px;
-}
-.logo-ribbon-group {
-  display: grid;
-  grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
-  gap: 12px 24px;
-  align-items: center;
-}
-.logo-ribbon-group-head {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.logo-ribbon-note {
-  font-size: 12px;
-  color: var(--color-text-muted);
 }
 .logo-ribbon-line {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 10px 26px;
+  padding: 16px 0;
 }
 .logo-ribbon-label {
   font-family: var(--font-mono);
@@ -1294,10 +1264,12 @@
   font-weight: 500;
   color: var(--color-text-secondary);
 }
-@media (max-width: 767px) {
-  .logo-ribbon-group {
-    grid-template-columns: 1fr;
-  }
+.logo-ribbon-more {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
 }
 
 /* Shared rail for the three CodeShowcase intros — the last centered kicker
