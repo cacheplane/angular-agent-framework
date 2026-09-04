@@ -82,6 +82,13 @@ export const CURSOR_MOVE_MS = 650;
  * database backups, and register that nothing at all happens until someone
  * approves it. Approving instantly says the opposite — that the gate is a
  * formality — which is the one thing this demo must not say.
+ *
+ * CALIBRATED TO THE PROPOSAL COPY, which is currently ~60 words: four
+ * seconds is enough to skim that and take its weight, not to read it word for
+ * word. The two are coupled and nothing enforces the coupling — if the
+ * recorded `request_approval` text in `public/hero-replay.json` grows, this
+ * has to grow with it. A reader who cannot get through the proposal cannot
+ * feel what approving it means, and the beat silently stops working.
  */
 export const INTERRUPT_DWELL_MS = 4000;
 
@@ -93,9 +100,14 @@ export const HOLD_AFTER_ANSWER_MS = 2000;
 
 /**
  * After the generated form has rendered, before the loop starts over. The
- * form is the payoff of the second prompt, so it gets the longest look.
+ * form is the payoff of the second prompt, so it gets the longest single
+ * look — but not an unbounded one. This was 8000 when typing ate half the
+ * loop and the hold was cheap; now that the walkthrough is tight, a third of
+ * the runtime spent on a form that has stopped changing is the likeliest
+ * place for a viewer to leave BEFORE seeing a whole cycle, which is the one
+ * thing the loop exists to deliver.
  */
-export const HOLD_AFTER_DONE_MS = 8000;
+export const HOLD_AFTER_DONE_MS = 5000;
 
 /**
  * How long a single waitFor() may poll before the run is declared failed.
