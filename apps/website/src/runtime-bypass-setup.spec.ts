@@ -16,7 +16,7 @@ describe('runtime bypass setup', () => {
         'examples-secret'
       )
     ).toBe(
-      'https://threadplane-examples-pr-7-cacheplane.vercel.app/?x-vercel-protection-bypass=examples-secret&x-vercel-set-bypass-cookie=true'
+      'https://threadplane-examples-pr-7-cacheplane.vercel.app/?x-vercel-protection-bypass=examples-secret&x-vercel-set-bypass-cookie=samesitenone'
     );
   });
 
@@ -128,7 +128,7 @@ describe('runtime bypass setup', () => {
       ).resolves.toBe('seeded');
 
       expect(requestPath).toBe(
-        `/?x-vercel-protection-bypass=${secret}&x-vercel-set-bypass-cookie=true`
+        `/?x-vercel-protection-bypass=${secret}&x-vercel-set-bypass-cookie=samesitenone`
       );
 
       expect(existsSync(RUNTIME_BYPASS_STORAGE_STATE)).toBe(true);

@@ -614,7 +614,8 @@ describe('CI workflow', () => {
     assert.match(build, /vercel build --local-config vercel\.cockpit\.json/);
     assert.doesNotMatch(build, /--prod/);
     assert.match(deploy, /id:\s*deploy_cockpit_preview/);
-    assert.match(deploy, /vercel deploy --prebuilt --archive=tgz --skip-domain --yes/);
+    assert.match(deploy, /vercel deploy --prebuilt --archive=tgz --yes/);
+    assert.doesNotMatch(deploy, /--skip-domain/);
     assert.doesNotMatch(deploy, /--prod/);
     assert.match(deploy, /--env COCKPIT_WEBSITE_ORIGIN=https:\/\/threadplane\.ai/);
     assert.match(
@@ -682,7 +683,7 @@ describe('CI workflow', () => {
     assert.match(examples, /vercel deploy --prebuilt --yes/);
     assert.doesNotMatch(examples, /--prod/);
     assert.match(examples, /set -euo pipefail/);
-    assert.match(examples, /if \[ -z "\$url" \]/);
+    assert.match(examples, /new URL\(process\.argv\[1\]\)/);
     assert.match(
       examples,
       /vercel alias set "\$url" "\$\{\{ steps\.aliases\.outputs\.examples \}\}" --scope=\$\{\{ secrets\.VERCEL_ORG_ID \}\}/
@@ -696,10 +697,11 @@ describe('CI workflow', () => {
     );
     assert.match(website, /GROWTH_FORM_POLICY:\s*growth_v1/);
     assert.match(website, /vercel build --token/);
-    assert.match(website, /vercel deploy --prebuilt --archive=tgz --skip-domain --yes/);
+    assert.match(website, /vercel deploy --prebuilt --archive=tgz --yes/);
+    assert.doesNotMatch(website, /--skip-domain/);
     assert.doesNotMatch(website, /--prod/);
     assert.match(website, /set -euo pipefail/);
-    assert.match(website, /if \[ -z "\$url" \]/);
+    assert.match(website, /new URL\(process\.argv\[1\]\)/);
     assert.match(
       website,
       /vercel alias set "\$url" "\$\{\{ steps\.aliases\.outputs\.website \}\}" --scope=\$\{\{ secrets\.VERCEL_ORG_ID \}\}/

@@ -393,7 +393,7 @@ jobs:
         id: deploy_cockpit_preview
         run: |
           set -euo pipefail
-          url=$(npx vercel deploy --prebuilt --archive=tgz --skip-domain --yes --env COCKPIT_WEBSITE_ORIGIN=https://threadplane.ai --token=${{ secrets.VERCEL_TOKEN }} | tail -n 1)
+          url=$(npx vercel deploy --prebuilt --archive=tgz --yes --env COCKPIT_WEBSITE_ORIGIN=https://threadplane.ai --token=${{ secrets.VERCEL_TOKEN }} | tail -n 1)
           if [ -z "$url" ]; then
             echo "::error::vercel deploy produced no deployment URL for the throwaway cockpit preview."
             exit 1
@@ -817,10 +817,7 @@ jobs:
           EOF
           npx vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
           url=$(npx vercel deploy --prebuilt --yes --token=${{ secrets.VERCEL_TOKEN }} | tail -n 1)
-          if [ -z "$url" ]; then
-            echo "::error::vercel deploy produced no deployment URL for the examples preview."
-            exit 1
-          fi
+          url=$(node -e 'const parsed = new URL(process.argv[1]); if (parsed.protocol !== "https:" || parsed.username || parsed.password || parsed.pathname !== "/" || parsed.search || parsed.hash) throw new Error("Vercel returned a non-origin examples preview URL"); process.stdout.write(parsed.origin)' "$url")
           echo "examples deployment: $url"
           npx vercel alias set "$url" "${{ steps.aliases.outputs.examples }}" --scope=${{ secrets.VERCEL_ORG_ID }} --token=${{ secrets.VERCEL_TOKEN }}
       - name: Build, deploy, and alias the Website preview
@@ -836,11 +833,8 @@ jobs:
           npx vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
           rm -rf .vercel/output
           npx vercel build --token=${{ secrets.VERCEL_TOKEN }}
-          url=$(npx vercel deploy --prebuilt --archive=tgz --skip-domain --yes --token=${{ secrets.VERCEL_TOKEN }} | tail -n 1)
-          if [ -z "$url" ]; then
-            echo "::error::vercel deploy produced no deployment URL for the Website preview."
-            exit 1
-          fi
+          url=$(npx vercel deploy --prebuilt --archive=tgz --yes --token=${{ secrets.VERCEL_TOKEN }} | tail -n 1)
+          url=$(node -e 'const parsed = new URL(process.argv[1]); if (parsed.protocol !== "https:" || parsed.username || parsed.password || parsed.pathname !== "/" || parsed.search || parsed.hash) throw new Error("Vercel returned a non-origin Website preview URL"); process.stdout.write(parsed.origin)' "$url")
           echo "website deployment: $url"
           npx vercel alias set "$url" "${{ steps.aliases.outputs.website }}" --scope=${{ secrets.VERCEL_ORG_ID }} --token=${{ secrets.VERCEL_TOKEN }}
       - name: Run the Website suite against the aliased preview

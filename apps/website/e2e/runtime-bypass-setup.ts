@@ -9,7 +9,7 @@ import { dirname, resolve } from 'node:path';
  * extraHTTPHeaders is global, so the Website project's secret would reach
  * the runtime origin and be rejected. Vercel issues a per-origin `_vercel_jwt`
  * bypass cookie when a request carries the owning project's secret together
- * with `x-vercel-set-bypass-cookie=true`; this setup obtains that cookie once
+ * with `x-vercel-set-bypass-cookie=samesitenone`; this setup obtains that cookie once
  * and stores it as storage state, so every browser context carries it and
  * the runtime iframe and its subresources load. The examples secret travels
  * only in this one request.
@@ -59,7 +59,7 @@ export function buildRuntimeBypassUrl(origin: string, secret: string): string {
   }
   const url = new URL(parsed.origin);
   url.searchParams.set('x-vercel-protection-bypass', secret);
-  url.searchParams.set('x-vercel-set-bypass-cookie', 'true');
+  url.searchParams.set('x-vercel-set-bypass-cookie', 'samesitenone');
   return url.toString();
 }
 
