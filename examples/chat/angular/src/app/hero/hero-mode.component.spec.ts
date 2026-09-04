@@ -136,7 +136,25 @@ describe('HeroMode', () => {
     expect(fx.componentInstance.mode()).toBe('live');
   });
 
-  it('reduced motion: typeInto sets the value instantly but keeps a reading pause before resolving', async () => {
+  it('types fast enough not to bore: a prompt-sized string beats the old 40ms/char crawl', async () => {
+    const el = fx.nativeElement as HTMLElement;
+    const textarea = el.querySelector<HTMLTextAreaElement>('textarea[aria-label="Type a message"]')!;
+    const seen: string[] = [];
+    textarea.addEventListener('input', () => seen.push(textarea.value));
+    const text = 'x'.repeat(50);
+
+    const started = performance.now();
+    await fx.componentInstance.typeInto(text);
+    const elapsed = performance.now() - started;
+
+    // Still character by character — this is typing, not a paste.
+    expect(seen).toHaveLength(50);
+    expect(textarea.value).toBe(text);
+    // 50 chars at the old TYPE_DELAY_MS of 40 took over 2s; at 9ms it is ~0.5s.
+    expect(elapsed).toBeLessThan(2000);
+  });
+
+  it('reduced motion: typeInto sets the value in one tick, leaving the reading pause to the runner', async () => {
     fx.componentInstance.reducedMotion = true;
     const el = fx.nativeElement as HTMLElement;
     const textarea = el.querySelector<HTMLTextAreaElement>('textarea[aria-label="Type a message"]')!;
@@ -147,15 +165,19 @@ describe('HeroMode', () => {
     expect(textarea.value).toBe('abc');
 
     await typing;
-    expect(performance.now() - started).toBeGreaterThanOrEqual(1200);
+    // The old READ_PAUSE_MS lived here and made this leg take 1.2s. That hold
+    // is now HOLD_AFTER_TYPING_MS in the runner, where BOTH motion settings
+    // get it, so this host call must no longer carry a pacing pause of its own.
+    expect(performance.now() - started).toBeLessThan(400);
   });
 
-  it('reduced motion: moveCursor holds for a reading pause instead of resolving instantly', async () => {
-    fx.componentInstance.reducedMotion = true;
-
-    const started = performance.now();
-    await fx.componentInstance.moveCursor('composer');
-    expect(performance.now() - started).toBeGreaterThanOrEqual(600);
+  it('moveCursor holds for the same beat with or without reduced motion', async () => {
+    for (const reducedMotion of [false, true]) {
+      fx.componentInstance.reducedMotion = reducedMotion;
+      const started = performance.now();
+      await fx.componentInstance.moveCursor('composer');
+      expect(performance.now() - started).toBeGreaterThanOrEqual(600);
+    }
   });
 
   it('clears the half-typed composer on takeover', async () => {
