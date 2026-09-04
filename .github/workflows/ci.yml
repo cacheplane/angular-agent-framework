@@ -379,7 +379,7 @@ jobs:
       - name: Prepare cockpit Vercel project (preview)
         run: |
           mkdir -p .vercel
-          cat > .vercel/project.json <<EOF
+          cat > .vercel/project.json <<'EOF'
           {"projectId":"${{ secrets.VERCEL_COCKPIT_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"threadplane-cockpit"}
           EOF
           npx vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
@@ -392,7 +392,12 @@ jobs:
       - name: Deploy throwaway cockpit preview
         id: deploy_cockpit_preview
         run: |
+          set -euo pipefail
           url=$(npx vercel deploy --prebuilt --archive=tgz --skip-domain --yes --env COCKPIT_WEBSITE_ORIGIN=https://threadplane.ai --token=${{ secrets.VERCEL_TOKEN }} | tail -n 1)
+          if [ -z "$url" ]; then
+            echo "::error::vercel deploy produced no deployment URL for the throwaway cockpit preview."
+            exit 1
+          fi
           echo "deployment_url=$url" >> "$GITHUB_OUTPUT"
       - name: Exhaustively verify the cockpit preview
         run: |
@@ -403,6 +408,14 @@ jobs:
           npx tsx apps/cockpit/scripts/deploy-smoke.ts --url "${{ steps.deploy_cockpit_preview.outputs.deployment_url }}" --mode preview --retries 20 --retry-delay-ms 5000
         env:
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_COCKPIT_AUTOMATION_BYPASS_SECRET }}
+      - name: Remove the throwaway cockpit preview
+        # The artifact exists only to be smoked. `--safe` refuses to remove a
+        # deployment that carries an alias, so this can never touch the
+        # production artifact. `remove` takes a bare URL, so, like `promote`,
+        # it needs the team scope spelled out.
+        if: always() && steps.deploy_cockpit_preview.outputs.deployment_url != ''
+        continue-on-error: true
+        run: npx vercel remove "${{ steps.deploy_cockpit_preview.outputs.deployment_url }}" --safe --yes --scope=${{ secrets.VERCEL_ORG_ID }} --token=${{ secrets.VERCEL_TOKEN }}
 
   examples-chat-smoke:
     name: examples/chat — python smoke

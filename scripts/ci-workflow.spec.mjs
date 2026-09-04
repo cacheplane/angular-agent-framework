@@ -627,6 +627,16 @@ describe('CI workflow', () => {
       /--url "\$\{\{ steps\.deploy_cockpit_preview\.outputs\.deployment_url \}\}"[\s\S]*--mode preview/
     );
     assert.doesNotMatch(job, /vercel promote/);
+    assert.match(deploy, /set -euo pipefail/);
+    assert.match(deploy, /if \[ -z "\$url" \]/);
+    assert.match(smoke, /--retries 20 --retry-delay-ms 5000/);
+    const cleanup = readNamedStep(job, 'Remove the throwaway cockpit preview');
+    assert.match(cleanup, /if:\s*always\(\) && steps\.deploy_cockpit_preview\.outputs\.deployment_url != ''/);
+    assert.match(cleanup, /continue-on-error:\s*true/);
+    assert.match(
+      cleanup,
+      /vercel remove "\$\{\{ steps\.deploy_cockpit_preview\.outputs\.deployment_url \}\}" --safe --yes --scope=\$\{\{ secrets\.VERCEL_ORG_ID \}\}/
+    );
   });
 
   it('gates Cockpit deployment on the production Website smoke even for Cockpit-only changes', async () => {
