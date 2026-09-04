@@ -39,10 +39,10 @@ describe('CompareTable', () => {
       '@threadplane/chat',
     );
     expect(screen.getByRole('link', { name: 'Discuss assurance' }).getAttribute('href')).toBe(
-      '/contact?source=pricing_production_assurance',
+      '/contact?intent=enterprise&entry=pricing_tier_production_assurance',
     );
     expect(screen.getByRole('link', { name: 'Talk to Sales' }).getAttribute('href')).toBe(
-      '/contact?source=pricing_tier_enterprise',
+      '/contact?intent=enterprise&entry=pricing_tier_enterprise',
     );
   });
 });

@@ -206,7 +206,7 @@ export default async function SolutionPage({ params }: PageProps) {
       <FinalCTA
         headline={solution.ctaHeadline}
         subtext={solution.ctaSubtext}
-        primary={{ label: 'Talk to us', href: '/pricing#lead-form' }}
+        primary={{ label: 'Talk to us', href: '/pricing#enterprise' }}
         secondary={{ label: 'Read the docs →', href: '/docs' }}
       />
     </>

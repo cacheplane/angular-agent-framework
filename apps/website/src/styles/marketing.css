@@ -326,139 +326,32 @@
 @media (prefers-reduced-motion: reduce) {
 }
 
-/* LeadForm — components/pricing/LeadForm.tsx */
-.lead-form-wrap {
-  max-width: 1080px;
+/* EnterpriseCtaBand — components/pricing/EnterpriseCtaBand.tsx */
+.enterprise-band {
+  max-width: 640px;
   margin: 0 auto;
-}
-.lead-form-header {
-  margin-bottom: 48px;
-  max-width: 720px;
-}
-.lead-form-rail {
+  text-align: center;
   display: flex;
-  align-items: baseline;
-  gap: 14px;
-  margin-bottom: 12px;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
 }
-.lead-form-rail-line {
-  flex: 1;
-  height: 1px;
-  background: var(--color-border);
+.enterprise-band-eyebrow {
+  margin-bottom: 4px;
 }
-.lead-form-eyebrow {
-  margin-bottom: 0;
-}
-.lead-form-heading {
+.enterprise-band-heading {
   font-family: var(--font-garamond);
-  font-weight: 700;
-  font-size: clamp(28px, 3.5vw, 42px);
+  font-size: var(--text-h2);
+  line-height: var(--text-h2--line-height);
   color: var(--color-text-primary);
-  margin-top: 0;
-  margin-bottom: 16px;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
+  margin: 0;
 }
-.lead-form-subhead {
+.enterprise-band-lede {
   font-family: var(--font-inter);
   font-size: var(--text-body-lg);
   line-height: var(--text-body-lg--line-height);
   color: var(--color-text-secondary);
-  margin: 0;
-}
-.lead-form-p2p-link {
-  display: inline-block;
-  margin-top: 10px;
-  font-weight: 600;
-  color: var(--color-accent);
-}
-.lead-form-grid {
-  max-width: 640px;
-}
-.lead-form-sent-message {
-  text-align: center;
-  color: var(--color-text-secondary);
-  margin: 0;
-}
-.lead-form-form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.lead-form-input {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-primary);
-  border-radius: var(--radius-md);
-  padding: 10px 14px;
-  width: 100%;
-  font-family: var(--font-inter);
-  font-size: 14px;
-  outline: none;
-}
-.lead-form-input:focus {
-  border-color: var(--color-accent);
-  box-shadow: var(--shadow-focus);
-}
-.lead-form-field-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-.lead-form-field-label {
-  display: block;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 4px;
-}
-.lead-form-select {
-  padding: 9px 14px;
-}
-.lead-form-fieldset {
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 10px 14px;
-  margin: 0;
-}
-.lead-form-legend {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 0 6px;
-}
-.lead-form-radio-row {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-top: 6px;
-}
-.lead-form-radio-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-family: var(--font-inter);
-  color: var(--color-text-secondary);
-  cursor: pointer;
-}
-.lead-form-textarea {
-  resize: vertical;
-}
-.lead-form-submit {
-  width: 100%;
-  justify-content: center;
-  margin-top: 4px;
-}
-.lead-form-error {
-  font-size: 13px;
-  text-align: center;
-  color: var(--color-angular-red);
-  margin: 0;
+  margin: 0 0 8px;
 }
 
 /* PricingFAQ — components/pricing/PricingFAQ.tsx */
