@@ -189,7 +189,10 @@ function heroProviders(replay?: HeroReplayTransport): Provider[] {
       .hero__interrupt { padding: 8px 12px 0; }
       .hero__banner { margin: 0; padding: 8px 12px; font: 13px/1.4 system-ui, sans-serif; background: rgba(47,111,79,.08); border-bottom: 1px solid rgba(47,111,79,.3); }
       .hero__link { margin-left: 8px; background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; cursor: pointer; font: inherit; }
-      .hero__take { position: absolute; left: 50%; bottom: 72px; transform: translateX(-50%); z-index: 10; padding: 8px 14px; border-radius: 999px; border: 0; background: #111; color: #fff; font: 600 13px/1 system-ui, sans-serif; cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+      /* In normal flow, NOT absolutely positioned: floating it over the surface
+         put it on top of the streaming answer at 768px and on top of the empty
+         welcome copy at 390px, and it half-covered the composer's send button. */
+      .hero__take { flex: none; align-self: center; margin: 8px 12px 12px; padding: 8px 14px; border-radius: 999px; border: 0; background: #111; color: #fff; font: 600 13px/1 system-ui, sans-serif; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
       .hero__take:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
     `,
   ],
