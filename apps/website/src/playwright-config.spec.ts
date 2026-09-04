@@ -152,9 +152,10 @@ describe('Website Playwright configuration', () => {
     expect(JSON.stringify(both.use?.extraHTTPHeaders)).not.toContain(
       'examples-secret'
     );
+    // The set-cookie header is dropped so the runtime origin is never asked
+    // to issue a cookie for a wrong-project secret.
     expect(both.use?.extraHTTPHeaders).toEqual({
       'x-vercel-protection-bypass': 'website-secret',
-      'x-vercel-set-bypass-cookie': 'true',
     });
   });
 

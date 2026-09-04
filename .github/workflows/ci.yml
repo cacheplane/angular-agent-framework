@@ -394,10 +394,7 @@ jobs:
         run: |
           set -euo pipefail
           url=$(npx vercel deploy --prebuilt --archive=tgz --yes --env COCKPIT_WEBSITE_ORIGIN=https://threadplane.ai --token=${{ secrets.VERCEL_TOKEN }} | tail -n 1)
-          if [ -z "$url" ]; then
-            echo "::error::vercel deploy produced no deployment URL for the throwaway cockpit preview."
-            exit 1
-          fi
+          url=$(node -e 'const parsed = new URL(process.argv[1]); if (parsed.protocol !== "https:" || parsed.username || parsed.password || parsed.pathname !== "/" || parsed.search || parsed.hash) throw new Error("Vercel returned a non-origin cockpit preview URL"); process.stdout.write(parsed.origin)' "$url")
           echo "deployment_url=$url" >> "$GITHUB_OUTPUT"
       - name: Exhaustively verify the cockpit preview
         run: |
@@ -409,6 +406,10 @@ jobs:
         env:
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_COCKPIT_AUTOMATION_BYPASS_SECRET }}
       - name: Remove the throwaway cockpit preview
+        # Removal runs on every outcome, including a failed smoke: the smoke
+        # log carries the full probe-by-probe report, and keeping a failed
+        # artifact would only accumulate protected deployments nobody can
+        # open without the bypass.
         # The artifact exists only to be smoked. `--safe` refuses to remove a
         # deployment that carries an alias, so this can never touch the
         # production artifact. `remove` takes a bare URL, so, like `promote`,

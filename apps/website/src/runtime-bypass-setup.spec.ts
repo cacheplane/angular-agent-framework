@@ -149,6 +149,47 @@ describe('runtime bypass setup', () => {
     }
   });
 
+  it('seeds a normalized cookie from a loopback 307 bypass response', async () => {
+    rmSync(RUNTIME_BYPASS_STORAGE_STATE, { force: true });
+    const server = createServer((_req, res) => {
+      res.statusCode = 307;
+      res.setHeader('Location', '/');
+      res.setHeader(
+        'Set-Cookie',
+        '_vercel_jwt=abc307; Path=/; HttpOnly; SameSite=Lax'
+      );
+      res.end();
+    });
+    await new Promise<void>((res) => server.listen(0, '127.0.0.1', res));
+    const port = (server.address() as AddressInfo).port;
+    const secret = 'loopback-secret-307';
+
+    try {
+      await expect(
+        seedRuntimeBypass({
+          RUNTIME_BYPASS_ORIGIN: `http://127.0.0.1:${port}`,
+          VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET: secret,
+        })
+      ).resolves.toBe('seeded');
+
+      expect(existsSync(RUNTIME_BYPASS_STORAGE_STATE)).toBe(true);
+      const state = JSON.parse(
+        readFileSync(RUNTIME_BYPASS_STORAGE_STATE, 'utf8')
+      );
+      const cookie = state.cookies.find(
+        (c: { name: string }) => c.name === '_vercel_jwt'
+      );
+      expect(cookie).toMatchObject({
+        value: 'abc307',
+        sameSite: 'None',
+        secure: true,
+      });
+    } finally {
+      await new Promise<void>((res) => server.close(() => res()));
+      rmSync(RUNTIME_BYPASS_STORAGE_STATE, { force: true });
+    }
+  });
+
   it('rejects with the status code when the loopback response sets no cookie', async () => {
     const server = createServer((_req, res) => {
       res.statusCode = 302;

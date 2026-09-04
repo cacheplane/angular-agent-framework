@@ -629,11 +629,13 @@ describe('CI workflow', () => {
     );
     assert.doesNotMatch(job, /vercel promote/);
     assert.match(deploy, /set -euo pipefail/);
-    assert.match(deploy, /if \[ -z "\$url" \]/);
+    assert.match(deploy, /new URL\(process\.argv\[1\]\)/);
     assert.match(smoke, /--retries 20 --retry-delay-ms 5000/);
     const cleanup = readNamedStep(job, 'Remove the throwaway cockpit preview');
     assert.match(cleanup, /if:\s*always\(\) && steps\.deploy_cockpit_preview\.outputs\.deployment_url != ''/);
     assert.match(cleanup, /continue-on-error:\s*true/);
+    const rawCleanup = readNamedStep(workflow, 'Remove the throwaway cockpit preview');
+    assert.match(rawCleanup, /Removal runs on every outcome/);
     assert.match(
       cleanup,
       /vercel remove "\$\{\{ steps\.deploy_cockpit_preview\.outputs\.deployment_url \}\}" --safe --yes --scope=\$\{\{ secrets\.VERCEL_ORG_ID \}\}/

@@ -89,7 +89,15 @@ export const createWebsitePlaywrightConfig = (
             extraHTTPHeaders: {
               'x-vercel-protection-bypass':
                 environment['VERCEL_AUTOMATION_BYPASS_SECRET'],
-              'x-vercel-set-bypass-cookie': 'true',
+              // extraHTTPHeaders is global, so with a runtime bypass in play
+              // this header would also reach the examples origin, asking it
+              // to set a cookie for a secret that belongs to the Website
+              // project. The bypass header alone still authorizes every
+              // Website request; only skip the cookie request when a
+              // runtime bypass is active.
+              ...(runtimeBypass
+                ? {}
+                : { 'x-vercel-set-bypass-cookie': 'true' }),
             },
           }
         : {}),
