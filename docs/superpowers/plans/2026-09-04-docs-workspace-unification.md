@@ -491,10 +491,17 @@ In `apps/website/e2e/workspace-shell.spec.ts`: change line 7 to `const durableEx
 
 In `apps/website/e2e/platform-production-smoke.spec.ts`: delete the `workspaceOnly` lookup (lines 143–145), change the throw to `if (!docsBacked) throw new Error('Production smoke requires a Docs-backed route');`, and delete the `'workspace-only production redirect'` case (lines 165–170). Leave the rest; Part C removes the whole redirect block.
 
+In `apps/cockpit/scripts/deploy-smoke.ts` (still deployed until Part C): `buildPreviewCases` (around line 239) and `buildProductionCases` (around line 288) each look up a workspace-only entry with `getWorkspaceDestinationPath(entry).startsWith('/workspace/')` and throw when none exists. Delete those lookups and the cases built from them (`'workspace Docs serialization'` in preview mode; `'workspace-only production redirect'` in production mode), and change the production guard to `if (!docsBacked) throw new Error('Redirect smoke requires a Docs-backed route');`. Update `apps/cockpit/scripts/deploy-smoke.spec.ts` so no assertion expects those two cases (the `'workspace Docs serialization'` `expect(...some(...))` and any `workspace-only` label check), then run `cd apps/cockpit && npx vitest run deploy-smoke` → all passing, and `npx tsx apps/cockpit/scripts/deploy-smoke.ts --url https://cockpit.threadplane.ai --mode preview --dry-run` → prints a `dry-run:preview:…` line.
+
+Also in this task:
+- `libs/cockpit-registry/src/lib/manifest.types.ts`: change `WorkspaceIdentity.docsPath` from `string | null` to `string`, and in `workspace-resolution.ts` `toWorkspaceIdentity` use `docsPath: entry.docsPath` (drop `|| null`). Fix any type errors this surfaces (they will be sites that handled `null`; delete the null branch).
+- `.github/workflows/ci.yml`, job `cockpit`: add `cockpit-shell` to the `run-many` project list (`--projects=cockpit,cockpit-docs,cockpit-registry,cockpit-shell,workspace-react`) so the fixture updated in A1 is actually verified by CI; update the guard test `'runs the cockpit sibling libraries that own vitest specs'` in `scripts/ci-workflow.spec.mjs` to expect it.
+
 - [ ] **Step 6: Verify**
 
 Run: `npx nx test website --skip-nx-cache 2>&1 | tail -3` → success.
-Run: `npx nx run-many -t test --projects=cockpit-registry,cockpit-shell,workspace-react --skip-nx-cache 2>&1 | tail -3` → success.
+Run: `npx nx run-many -t test --projects=cockpit,cockpit-registry,cockpit-shell,workspace-react --skip-nx-cache 2>&1 | tail -3` → success (`cockpit` covers the deploy smoke).
+Run: `node --test --test-reporter=tap scripts/ci-workflow.spec.mjs 2>&1 | grep -E "^not ok|^# (pass|fail)"` → `# fail 0`.
 Run: `npx nx lint website --skip-nx-cache 2>&1 | grep problems` → `0 errors`.
 Run: `npx nx build website --skip-nx-cache 2>&1 | tail -3` → success (static params for the six pages generate).
 Run: `npx nx e2e website --skip-nx-cache 2>&1 | grep -E "passed|failed"` → all passed.
