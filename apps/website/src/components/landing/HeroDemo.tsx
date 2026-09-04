@@ -6,10 +6,27 @@ import { trackCtaClick } from '../../lib/analytics/client';
 export const HERO_DEMO_ORIGIN = 'https://demo.threadplane.ai';
 export const HERO_DEMO_URL = `${HERO_DEMO_ORIGIN}/hero`;
 export const HERO_POSTER = '/screenshots/hero-walkthrough-poster.webp';
+/**
+ * The phone-width capture of the same walkthrough beat (585x975, 3:5). It is
+ * a separate render, not a crop: the desktop poster shrunk to a ~348px phone
+ * stage is an unreadable smudge, and cropping it slices the right edge off
+ * every line of prose. Recorded by
+ * `examples/chat/angular/e2e/record-hero-poster-mobile.record.ts`.
+ */
+export const HERO_POSTER_MOBILE = '/screenshots/hero-walkthrough-poster-mobile.webp';
 const POSTER_W = 1200;
 const POSTER_H = 720;
+const POSTER_MOBILE_W = 585;
+const POSTER_MOBILE_H = 975;
 const READY_TIMEOUT_MS = 8000;
 const MIN_AUTOPLAY_WIDTH = 768;
+/**
+ * Kept in lockstep with the `@media (max-width: 767px)` block in landing.css
+ * that gives `.hero-demo-stage` its 3:5 portrait ratio, and with
+ * MIN_AUTOPLAY_WIDTH above: the phone poster is served exactly where the stage
+ * is portrait and exactly where the iframe does not autoplay.
+ */
+export const HERO_POSTER_MOBILE_MEDIA = '(max-width: 767px)';
 const MESSAGE_TYPE = 'tplane-hero';
 
 type State = 'poster' | 'playRequested' | 'mounting' | 'ready' | 'fallback';
@@ -123,17 +140,33 @@ export function HeroDemo() {
     <div ref={rootRef} className="hero-demo" data-hero-demo data-state={state}>
       <BrowserFrame url="demo.threadplane.ai/hero" elevation="lg" className="hero-demo-frame">
         <div className="hero-demo-stage">
-          <img
-            src={HERO_POSTER}
-            width={POSTER_W}
-            height={POSTER_H}
-            alt="Threadplane chat replaying a recorded LangGraph run: a user prompt, a request_approval tool call, and the streamed three-step cleanup plan"
-            className="hero-demo-poster"
-            loading="eager"
-            decoding="async"
-            // React 19 lowercases this attribute; the spec asserts the DOM value.
-            fetchPriority="high"
-          />
+          {/*
+            A <picture> rather than srcset/sizes: the two posters are different
+            renders of the same moment at different aspect ratios, so the choice
+            is art direction — the browser must pick by viewport, not by device
+            pixel ratio. The <img> keeps every LCP attribute; the stage's own
+            aspect-ratio (not these intrinsic dimensions) sizes the box, so the
+            source swap can shift nothing.
+          */}
+          <picture>
+            <source
+              media={HERO_POSTER_MOBILE_MEDIA}
+              srcSet={HERO_POSTER_MOBILE}
+              width={POSTER_MOBILE_W}
+              height={POSTER_MOBILE_H}
+            />
+            <img
+              src={HERO_POSTER}
+              width={POSTER_W}
+              height={POSTER_H}
+              alt="Threadplane chat replaying a recorded LangGraph run: a user prompt, a request_approval tool call, and the streamed three-step cleanup plan"
+              className="hero-demo-poster"
+              loading="eager"
+              decoding="async"
+              // React 19 lowercases this attribute; the spec asserts the DOM value.
+              fetchPriority="high"
+            />
+          </picture>
           {mounted ? (
             <iframe
               ref={iframeRef}

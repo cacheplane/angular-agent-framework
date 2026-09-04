@@ -245,11 +245,20 @@ const CONTRACTS: StyleContract[] = [
   {
     file: 'landing.css',
     selector: '.hero-demo-play',
-    why: 'The play control only ever renders on phones (autoplay is off below 768px) and sits on a near-black poster. It previously had `background: #111` and a black shadow, which read as bare white text with no button chrome. The light fill and dark ring are what make it look clickable.',
+    why: 'The play control only ever renders on phones (autoplay is off below 768px) and sits on a near-black poster. It previously had `background: #111` and a black shadow, which read as bare white text with no button chrome. The light fill and dark ring are what make it look clickable. The fill is also fully opaque: at 97% the phone poster\'s own "Take control ↗" text read straight through it.',
     requires: {
-      background: /background:\s*rgb\(248 248 248/,
+      background: /background:\s*rgb\(248 248 248\)/,
       border: /border:\s*1px solid/,
       'min-height': /min-height:\s*44px/,
+    },
+  },
+  {
+    file: 'landing.css',
+    selector: '.hero-demo-stage picture',
+    why: 'The hero poster — the page\'s LCP element — is `height: 100%` of the stage. Wrapping it in a <picture> for the phone-width source put an inline box with no height of its own in between, so without an explicit block height here the percentage resolves against `auto` and the poster collapses to nothing.',
+    requires: {
+      display: /display:\s*block/,
+      height: /height:\s*100%/,
     },
   },
   {
@@ -418,6 +427,46 @@ describe('style contracts', () => {
       `;
       expect(mediaBlock(compoundCss, '(pointer: coarse)')).toContain('.a');
       expect(mediaBlock(compoundCss, '(pointer: coarse)')).not.toContain('.b');
+    });
+  });
+
+  describe('landing.css hero demo stage ratio', () => {
+    const css = loadStylesheet('landing.css');
+    const phone = mediaBlock(css, '(max-width: 767px)');
+
+    /**
+     * The stage box, not the image, is what `object-fit: cover` crops against.
+     * The phone poster is a 390x650 capture, so the stage has to hold 3:5 below
+     * the breakpoint; at the desktop 1200/720 it would letterbox the portrait
+     * frame down to a two-line sliver. This replaces a `4 / 5` +
+     * `object-position: 40% top` pair that existed only to crop the DESKTOP
+     * capture into something readable, which sliced the right edge off every
+     * line of prose.
+     */
+    it('holds the phone poster ratio below the breakpoint', () => {
+      expect(declarationsFor(phone, '.hero-demo-stage')).toMatch(/aspect-ratio:\s*3\s*\/\s*5/);
+    });
+
+    it('keeps the desktop stage at the desktop capture ratio', () => {
+      expect(baseDeclarationsFor(css, '.hero-demo-stage')).toMatch(/aspect-ratio:\s*1200\s*\/\s*720/);
+    });
+
+    /**
+     * With the asset and the stage on the same ratio, cover crops nothing.
+     * A re-introduced object-position would mean someone is cropping again.
+     */
+    it('does not nudge the poster away from its own frame', () => {
+      expect(declarationsFor(phone, '.hero-demo-poster')).not.toMatch(/object-position:/);
+      expect(baseDeclarationsFor(css, '.hero-demo-poster')).not.toMatch(/object-position:/);
+    });
+
+    /**
+     * Guards the two assertions above against passing vacuously: landing.css
+     * carries several `(max-width: 767px)` blocks, and mediaBlock() merges
+     * them, so an empty merge would satisfy every `not.toMatch` here.
+     */
+    it('actually found the phone block', () => {
+      expect(phone).toContain('.hero-demo-stage');
     });
   });
 });

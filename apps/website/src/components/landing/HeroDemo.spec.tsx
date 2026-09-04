@@ -78,6 +78,65 @@ describe('HeroDemo', () => {
     expect(container.querySelector('iframe')).toBeNull();
   });
 
+  /**
+   * The desktop poster shrunk into a ~348px phone stage is an unreadable
+   * smudge, so a phone gets its own capture. Both sources have to reach the
+   * markup, the <source> has to precede the <img> (a <picture> takes the FIRST
+   * matching source, and an <img> that came first would win every time), and
+   * the media query has to stay on the same 768px boundary as the stage's
+   * portrait ratio in landing.css and as MIN_AUTOPLAY_WIDTH.
+   */
+  it('offers a phone-width poster source ahead of the desktop img', async () => {
+    installEnv();
+    const { HeroDemo, HERO_POSTER, HERO_POSTER_MOBILE, HERO_POSTER_MOBILE_MEDIA } = await import('./HeroDemo');
+    const { container } = render(<HeroDemo />);
+    const picture = container.querySelector('picture') as HTMLElement;
+    expect(picture).toBeTruthy();
+    const source = picture.querySelector('source') as HTMLSourceElement;
+    expect(source.getAttribute('srcset')).toBe(HERO_POSTER_MOBILE);
+    expect(HERO_POSTER_MOBILE).not.toBe(HERO_POSTER);
+    expect(source.getAttribute('media')).toBe('(max-width: 767px)');
+    expect(HERO_POSTER_MOBILE_MEDIA).toBe('(max-width: 767px)');
+    // 585x975 — the 3:5 phone capture, so `object-fit: cover` crops nothing.
+    expect(source.getAttribute('width')).toBe('585');
+    expect(source.getAttribute('height')).toBe('975');
+    expect([...picture.children].map((el) => el.tagName)).toEqual(['SOURCE', 'IMG']);
+  });
+
+  /**
+   * Both posters are recorded artifacts, not build output, so a rename or a
+   * lost file would ship a hero with a broken image and nothing would fail
+   * until someone looked at the page.
+   */
+  it('ships both posters, with the phone one no heavier than the desktop one', async () => {
+    const { HERO_POSTER, HERO_POSTER_MOBILE } = await import('./HeroDemo');
+    const { resolveWebsiteDir } = await import('../../lib/website-dir');
+    const { statSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const sizeOf = (publicPath: string) =>
+      statSync(join(resolveWebsiteDir(), 'public', publicPath)).size;
+    expect(sizeOf(HERO_POSTER)).toBeGreaterThan(0);
+    // A phone downloads only this one, so it must not cost more than what it
+    // replaces — the whole point is a lighter, legible LCP on the small screen.
+    expect(sizeOf(HERO_POSTER_MOBILE)).toBeLessThanOrEqual(sizeOf(HERO_POSTER));
+  });
+
+  /**
+   * The poster is the LCP element on every viewport. Wrapping it in a
+   * <picture> must not cost it its priority hints or its class, or the swap
+   * buys legibility and pays for it in load time.
+   */
+  it('keeps the poster eager and high priority inside the picture', async () => {
+    installEnv();
+    const { HeroDemo } = await import('./HeroDemo');
+    const { container } = render(<HeroDemo />);
+    const img = container.querySelector('picture > img') as HTMLImageElement;
+    expect(img.getAttribute('loading')).toBe('eager');
+    expect(img.getAttribute('fetchpriority')).toBe('high');
+    expect(img.getAttribute('decoding')).toBe('async');
+    expect(img.className).toBe('hero-demo-poster');
+  });
+
   it('mounts the iframe when visible on desktop and reveals it on ready from the demo origin', async () => {
     installEnv();
     const { HeroDemo } = await import('./HeroDemo');
