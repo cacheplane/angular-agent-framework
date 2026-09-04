@@ -1198,14 +1198,6 @@
   flex-direction: column;
   gap: 12px;
 }
-.contact-band-channels-label {
-  font-family: var(--font-mono);
-  font-size: var(--text-eyebrow);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-  margin: 0;
-}
 .contact-chips {
   display: flex;
   flex-wrap: wrap;

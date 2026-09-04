@@ -641,24 +641,6 @@
   line-height: 1.2;
 }
 
-/* AltChannelRow — components/contact/AltChannelRow.tsx */
-.contact-alt-row {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  flex-wrap: wrap;
-  margin: 0;
-}
-.contact-alt-link {
-  color: var(--color-accent);
-  text-decoration: none;
-  font-size: var(--text-body);
-  font-family: var(--font-inter);
-}
-.contact-alt-sep {
-  color: var(--color-text-muted);
-}
-
 /* GitHubStarsPill — components/contact/GitHubStarsPill.tsx */
 .gh-stars-pill-link {
   text-decoration: none;
