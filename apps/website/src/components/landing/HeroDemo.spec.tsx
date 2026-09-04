@@ -110,6 +110,60 @@ describe('HeroDemo', () => {
     expect(post).toHaveBeenCalledWith({ type: 'tplane-hero', visible: true }, 'https://demo.threadplane.ai');
   });
 
+  /**
+   * A freshly created iframe's contentWindow is still `about:blank`, so posting
+   * with the demo's target origin is dropped and logs a console error on every
+   * single load. Nothing may be posted before the frame has navigated.
+   */
+  it('posts nothing to the frame before it has navigated', async () => {
+    installEnv();
+    const { HeroDemo } = await import('./HeroDemo');
+    const { container } = render(<HeroDemo />);
+    act(() => {
+      ioCallback?.([{ isIntersecting: true }]);
+    });
+    const iframe = container.querySelector('iframe') as HTMLIFrameElement;
+    const post = stubContentWindow(iframe);
+    act(() => {
+      ioCallback?.([{ isIntersecting: false }]);
+    });
+    act(() => {
+      ioCallback?.([{ isIntersecting: true }]);
+    });
+    expect(post).not.toHaveBeenCalled();
+    // Guards the assertion above against passing vacuously on a dead spy.
+    act(() => {
+      fireEvent.load(iframe);
+    });
+    expect(post).toHaveBeenCalledWith({ type: 'tplane-hero', visible: true }, 'https://demo.threadplane.ai');
+  });
+
+  /**
+   * The frame re-announces `ready` until it hears a visibility message, so the
+   * parent must answer EVERY announcement — that ack is what recovers the
+   * handshake when the first post was lost.
+   */
+  it('re-posts the current visibility on every ready announcement', async () => {
+    installEnv();
+    const { HeroDemo } = await import('./HeroDemo');
+    const { container } = render(<HeroDemo />);
+    act(() => {
+      ioCallback?.([{ isIntersecting: true }]);
+    });
+    const post = stubContentWindow(container.querySelector('iframe') as HTMLIFrameElement);
+    act(() => {
+      frameReady();
+    });
+    // A `ready` proves the frame navigated, so the ack lands with no load event.
+    expect(post).toHaveBeenCalledWith({ type: 'tplane-hero', visible: true }, 'https://demo.threadplane.ai');
+
+    post.mockClear();
+    act(() => {
+      frameReady();
+    });
+    expect(post).toHaveBeenCalledWith({ type: 'tplane-hero', visible: true }, 'https://demo.threadplane.ai');
+  });
+
   it('ignores ready from a foreign origin and falls back after the timeout', async () => {
     installEnv();
     const { HeroDemo } = await import('./HeroDemo');
@@ -139,6 +193,9 @@ describe('HeroDemo', () => {
     });
     const iframe = container.querySelector('iframe') as HTMLIFrameElement;
     const post = stubContentWindow(iframe);
+    act(() => {
+      fireEvent.load(iframe);
+    });
     act(() => {
       vi.advanceTimersByTime(8000);
     });

@@ -276,3 +276,68 @@ describe('HeroMode embedded initial frame state', () => {
     }
   });
 });
+
+/**
+ * The production stall: the parent's single `visible` post landed before this
+ * component registered its `message` listener, so the frame sat on the empty
+ * welcome state forever. The frame must keep announcing itself until answered.
+ */
+describe('HeroMode embedded ready re-announcement', () => {
+  const originalParent = Object.getOwnPropertyDescriptor(window, 'parent');
+  let fx: ComponentFixture<HeroMode>;
+  let states: string[];
+  let onVisible: (v: boolean) => void;
+
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  const readyCount = () => states.filter((s) => s === 'ready').length;
+
+  beforeEach(async () => {
+    Object.defineProperty(window, 'parent', { configurable: true, value: {} });
+    HeroMode.disableAutoBootForTests();
+    TestBed.configureTestingModule({ imports: [HeroMode] });
+    TestBed.overrideComponent(HeroMode, {
+      set: {
+        providers: HeroMode.providersForTest(
+          new HeroReplayTransport({ sleep: async () => void 0 }, async () => recording),
+        ),
+      },
+    });
+    fx = TestBed.createComponent(HeroMode);
+    states = [];
+    onVisible = () => void 0;
+    fx.componentInstance.bridge = {
+      postState: (s) => states.push(s),
+      onVisibility: (cb) => {
+        onVisible = cb;
+        return () => void 0;
+      },
+    };
+    fx.detectChanges();
+    await fx.componentInstance.boot();
+    fx.detectChanges();
+  });
+
+  afterEach(() => {
+    HeroMode.enableAutoBoot();
+    if (originalParent) Object.defineProperty(window, 'parent', originalParent);
+  });
+
+  it('keeps re-announcing ready while the embedder has not answered', async () => {
+    // HERO_READY_ANNOUNCE_MS is 500, so ~1.2s must carry at least two repeats
+    // on top of the announcement boot() already made.
+    expect(readyCount()).toBe(1);
+    await sleep(1200);
+    expect(readyCount()).toBeGreaterThanOrEqual(3);
+  });
+
+  it('stops re-announcing as soon as a visibility message arrives', async () => {
+    await sleep(600);
+    // Guards this test against passing vacuously on a frame that never announced.
+    expect(readyCount()).toBeGreaterThanOrEqual(2);
+
+    onVisible(true);
+    const settled = readyCount();
+    await sleep(1200);
+    expect(readyCount()).toBe(settled);
+  });
+});
