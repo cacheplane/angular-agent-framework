@@ -639,6 +639,81 @@ describe('CI workflow', () => {
     );
   });
 
+  it('runs the Website suite against a deterministic aliased preview with a matching examples preview', async () => {
+    const workflow = await readWorkflow();
+    const job = readJobBlock(workflow, 'website-preview-e2e');
+    const ifBlock = readJobFieldBlock(job, 'if');
+
+    assert.deepEqual(readJobNeeds(job), ['ci-scope']);
+    assert.match(ifBlock, /github\.event_name != 'push'/);
+    assert.match(ifBlock, /needs\.ci-scope\.outputs\.website_e2e == 'true'/);
+    assert.match(
+      ifBlock,
+      /github\.event_name == 'merge_group' \|\| github\.event\.pull_request\.head\.repo\.full_name == github\.repository/
+    );
+
+    const aliases = readNamedStep(job, 'Derive deterministic preview aliases');
+    const guard = readNamedStep(job, 'Require preview bypass secrets');
+    const assemble = readNamedStep(job, 'Build and assemble Angular examples for the preview');
+    const examples = readNamedStep(job, 'Deploy examples preview and alias it');
+    const website = readNamedStep(job, 'Build, deploy, and alias the Website preview');
+    const suite = readNamedStep(job, 'Run the Website suite against the aliased preview');
+
+    assert.match(aliases, /id:\s*aliases/);
+    assert.match(aliases, /key="pr-\$\{\{ github\.event\.pull_request\.number \}\}"/);
+    assert.match(aliases, /key="mq-\$\(echo "\$\{\{ github\.event\.merge_group\.head_sha \}\}" \| cut -c1-8\)"/);
+    assert.match(aliases, /website=threadplane-\$\{key\}-cacheplane\.vercel\.app/);
+    assert.match(aliases, /examples=threadplane-examples-\$\{key\}-cacheplane\.vercel\.app/);
+
+    assert.match(guard, /-z "\$\{VERCEL_AUTOMATION_BYPASS_SECRET\}"/);
+    assert.match(guard, /-z "\$\{VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET\}"/);
+    assert.match(guard, /VERCEL_AUTOMATION_BYPASS_SECRET:\s*\$\{\{ secrets\.VERCEL_AUTOMATION_BYPASS_SECRET \}\}/);
+    assert.match(guard, /VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET:\s*\$\{\{ secrets\.VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET \}\}/);
+
+    // The examples are assembled with the Website alias in their policy and
+    // the Website is built with the examples alias as its runtime base.
+    assert.match(
+      assemble,
+      /RUNTIME_PARENT_PREVIEW_ORIGINS:\s*https:\/\/\$\{\{ steps\.aliases\.outputs\.website \}\}/
+    );
+    assert.match(examples, /working-directory:\s*deploy\/examples/);
+    assert.match(examples, /"projectName":"threadplane-examples"/);
+    assert.match(examples, /vercel pull --yes --environment=preview/);
+    assert.match(examples, /vercel deploy --prebuilt --yes/);
+    assert.doesNotMatch(examples, /--prod/);
+    assert.match(examples, /set -euo pipefail/);
+    assert.match(examples, /if \[ -z "\$url" \]/);
+    assert.match(
+      examples,
+      /vercel alias set "\$url" "\$\{\{ steps\.aliases\.outputs\.examples \}\}" --scope=\$\{\{ secrets\.VERCEL_ORG_ID \}\}/
+    );
+
+    assert.match(website, /"projectName":"threadplane"/);
+    assert.match(website, /vercel pull --yes --environment=preview/);
+    assert.match(
+      website,
+      /NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL:\s*https:\/\/\$\{\{ steps\.aliases\.outputs\.examples \}\}/
+    );
+    assert.match(website, /GROWTH_FORM_POLICY:\s*growth_v1/);
+    assert.match(website, /vercel build --token/);
+    assert.match(website, /vercel deploy --prebuilt --archive=tgz --skip-domain --yes/);
+    assert.doesNotMatch(website, /--prod/);
+    assert.match(website, /set -euo pipefail/);
+    assert.match(website, /if \[ -z "\$url" \]/);
+    assert.match(
+      website,
+      /vercel alias set "\$url" "\$\{\{ steps\.aliases\.outputs\.website \}\}" --scope=\$\{\{ secrets\.VERCEL_ORG_ID \}\}/
+    );
+
+    assert.match(suite, /BASE_URL:\s*https:\/\/\$\{\{ steps\.aliases\.outputs\.website \}\}/);
+    assert.match(suite, /RUNTIME_BYPASS_ORIGIN:\s*https:\/\/\$\{\{ steps\.aliases\.outputs\.examples \}\}/);
+    assert.match(suite, /VERCEL_AUTOMATION_BYPASS_SECRET:\s*\$\{\{ secrets\.VERCEL_AUTOMATION_BYPASS_SECRET \}\}/);
+    assert.match(suite, /VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET:\s*\$\{\{ secrets\.VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET \}\}/);
+    assert.match(suite, /npx nx e2e website --skip-nx-cache/);
+    assert.doesNotMatch(job, /vercel promote/);
+    assert.doesNotMatch(job, /vercel remove/);
+  });
+
   it('gates Cockpit deployment on the production Website smoke even for Cockpit-only changes', async () => {
     const deployJob = await readDeployJob();
     const websiteOrCockpit =

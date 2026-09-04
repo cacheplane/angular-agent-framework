@@ -744,6 +744,113 @@ jobs:
           npx playwright test apps/website/e2e/platform-production-smoke.spec.ts \
             --config apps/website/playwright.config.ts --list
 
+  website-preview-e2e:
+    name: Website — e2e (deployed preview)
+    timeout-minutes: 40
+    needs: ci-scope
+    # PR-side twin of the deploy job's post-promotion verification. The
+    # ordinary suite runs against a real, protected Vercel preview of the
+    # Website whose runtime iframe loads from a matching examples preview, so
+    # remote-target assumptions and platform behaviour surface before merge.
+    # Two deterministic aliases break the ordering problem: the examples are
+    # assembled with the Website alias in their parent-origin policy, and the
+    # Website is built with the examples alias as its runtime base. A later
+    # push re-points both aliases; the deployments behind them are kept for
+    # inspection. Needs repository secrets, so same-repo PRs and merge-queue
+    # candidates only.
+    if: >-
+      github.event_name != 'push' &&
+      needs.ci-scope.outputs.website_e2e == 'true' &&
+      (github.event_name == 'merge_group' || github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Cache Playwright browsers
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+      - run: npx playwright install --with-deps chromium
+      - name: Derive deterministic preview aliases
+        id: aliases
+        run: |
+          if [ "${{ github.event_name }}" = "merge_group" ]; then
+            key="mq-$(echo "${{ github.event.merge_group.head_sha }}" | cut -c1-8)"
+          else
+            key="pr-${{ github.event.pull_request.number }}"
+          fi
+          echo "website=threadplane-${key}-cacheplane.vercel.app" >> "$GITHUB_OUTPUT"
+          echo "examples=threadplane-examples-${key}-cacheplane.vercel.app" >> "$GITHUB_OUTPUT"
+      - name: Require preview bypass secrets
+        # Both previews sit behind deployment protection, and bypass secrets
+        # are issued per Vercel project. Fail before creating anything.
+        run: |
+          if [ -z "${VERCEL_AUTOMATION_BYPASS_SECRET}" ]; then
+            echo "::error::VERCEL_AUTOMATION_BYPASS_SECRET is unset — the protected Website preview cannot be verified. Enable 'Protection Bypass for Automation' on the Vercel threadplane project and store the value as this repository secret."
+            exit 1
+          fi
+          if [ -z "${VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET}" ]; then
+            echo "::error::VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET is unset — the runtime iframe from the protected examples preview cannot load. Enable 'Protection Bypass for Automation' on the Vercel threadplane-examples project and store the value as this repository secret."
+            exit 1
+          fi
+        env:
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET }}
+      - name: Build and assemble Angular examples for the preview
+        run: npx tsx scripts/assemble-examples.ts
+        env:
+          RUNTIME_PARENT_PREVIEW_ORIGINS: https://${{ steps.aliases.outputs.website }}
+      - name: Deploy examples preview and alias it
+        working-directory: deploy/examples
+        run: |
+          set -euo pipefail
+          mkdir -p .vercel
+          cat > .vercel/project.json <<'EOF'
+          {"projectId":"${{ secrets.VERCEL_EXAMPLES_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"threadplane-examples"}
+          EOF
+          npx vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+          url=$(npx vercel deploy --prebuilt --yes --token=${{ secrets.VERCEL_TOKEN }} | tail -n 1)
+          if [ -z "$url" ]; then
+            echo "::error::vercel deploy produced no deployment URL for the examples preview."
+            exit 1
+          fi
+          echo "examples deployment: $url"
+          npx vercel alias set "$url" "${{ steps.aliases.outputs.examples }}" --scope=${{ secrets.VERCEL_ORG_ID }} --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Build, deploy, and alias the Website preview
+        env:
+          GROWTH_FORM_POLICY: growth_v1
+          NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL: https://${{ steps.aliases.outputs.examples }}
+        run: |
+          set -euo pipefail
+          mkdir -p .vercel
+          cat > .vercel/project.json <<'EOF'
+          {"projectId":"${{ secrets.VERCEL_WEBSITE_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"threadplane"}
+          EOF
+          npx vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+          rm -rf .vercel/output
+          npx vercel build --token=${{ secrets.VERCEL_TOKEN }}
+          url=$(npx vercel deploy --prebuilt --archive=tgz --skip-domain --yes --token=${{ secrets.VERCEL_TOKEN }} | tail -n 1)
+          if [ -z "$url" ]; then
+            echo "::error::vercel deploy produced no deployment URL for the Website preview."
+            exit 1
+          fi
+          echo "website deployment: $url"
+          npx vercel alias set "$url" "${{ steps.aliases.outputs.website }}" --scope=${{ secrets.VERCEL_ORG_ID }} --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Run the Website suite against the aliased preview
+        run: npx nx e2e website --skip-nx-cache
+        env:
+          BASE_URL: https://${{ steps.aliases.outputs.website }}
+          RUNTIME_BYPASS_ORIGIN: https://${{ steps.aliases.outputs.examples }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET }}
+
   required-pr-checks:
     name: CI — required
     needs:
