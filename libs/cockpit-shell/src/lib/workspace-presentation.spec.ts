@@ -257,7 +257,7 @@ describe('getCapabilityPresentation', () => {
 
     expect(presentation).toMatchObject({
       kind: 'capability',
-      docsPath: '/docs/langgraph/guides/persistence',
+      docsPath: '/docs/langgraph/guides/durable-execution',
       docsAssetPaths: [
         'cockpit/langgraph/durable-execution/python/docs/guide.md',
       ],
