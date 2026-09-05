@@ -1,4 +1,8 @@
-import { fetchCompanyEvidence } from '../../../lifecycle/src/enrichment/company-fetch.js';
+import {
+  fetchCompanyEvidence,
+  type CompanyFetchOverrides,
+  type CompanyPageDiagnostic,
+} from '../../../lifecycle/src/enrichment/company-fetch.js';
 import type { CompanyPageEvidence } from '../../../lifecycle/src/enrichment/schema.js';
 
 const expectedPaths = ['/', '/about', '/pricing'];
@@ -7,7 +11,8 @@ export async function acquireCompanies(
   signal: AbortSignal,
   capture: (
     domain: string,
-    signal: AbortSignal
+    signal: AbortSignal,
+    options?: Pick<CompanyFetchOverrides, 'onDiagnostic'>
   ) => Promise<CompanyPageEvidence[]> = fetchCompanyEvidence
 ) {
   if (
@@ -36,14 +41,18 @@ export async function acquireCompanies(
     reason: 'unavailable' | 'capture_failed' | null;
     redirectedPathsIndeterminate: boolean;
     filteredIdentityItems: number;
+    pageDiagnostics: CompanyPageDiagnostic[];
   }[] = [];
   for (const [index, domain] of domains.entries()) {
     signal.throwIfAborted();
     const id = `public-${index + 1}`;
     let pages: CompanyPageEvidence[] = [],
       failed = false;
+    const pageDiagnostics: CompanyPageDiagnostic[] = [];
     try {
-      pages = await capture(domain, signal);
+      pages = await capture(domain, signal, {
+        onDiagnostic: (diagnostic) => pageDiagnostics.push(diagnostic),
+      });
     } catch {
       signal.throwIfAborted();
       failed = true;
@@ -92,6 +101,7 @@ export async function acquireCompanies(
         (path) => !expectedPaths.includes(path)
       ),
       filteredIdentityItems,
+      pageDiagnostics,
     });
   }
   return {
