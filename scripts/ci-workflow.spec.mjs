@@ -1,6 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -1142,6 +1143,78 @@ describe('CI workflow', () => {
     );
   });
 
+  it('exports Growth Research scope and verifies it under Node 24 without paid credentials', async () => {
+    const workflow = await readWorkflow();
+    const scope = readJobBlock(workflow, 'ci-scope');
+    const job = readJobBlock(workflow, 'growth-research');
+    assert.match(
+      scope,
+      /growth_research:\s*\$\{\{ steps\.scope\.outputs\.growth_research \}\}/
+    );
+    assert.deepEqual(readJobNeeds(job), ['ci-scope']);
+    assert.match(
+      job,
+      /if: github\.event_name == 'push' \|\| needs\.ci-scope\.outputs\.growth_research == 'true'/
+    );
+    assert.match(job, /node-version:\s*24(?:\s|$)/m);
+    assert.match(job, /run: npm ci --ignore-scripts(?:\s|$)/m);
+    for (const target of ['lint', 'test', 'check', 'build']) {
+      assert.match(
+        job,
+        new RegExp(`run: npx nx ${target} growth-research(?:\\s|$)`, 'm')
+      );
+    }
+    assert.doesNotMatch(
+      job,
+      /secrets\.|research-pilot|smoke-langsmith|test-memory-integration/
+    );
+  });
+
+  it('requires Growth Research success whenever it is in scope', async () => {
+    const job = await readRequiredPrChecksJob();
+    assert.ok(readJobNeeds(job).includes('growth-research'));
+    assert.match(
+      job,
+      /RESULT_GROWTH_RESEARCH:\s*\$\{\{\s*needs\.growth-research\.result\s*\}\}/
+    );
+    assert.match(
+      job,
+      /SCOPE_GROWTH_RESEARCH:\s*\$\{\{\s*needs\.ci-scope\.outputs\.growth_research\s*\}\}/
+    );
+    const step = readNamedStep(job, 'Verify scoped CI jobs');
+    const script = step
+      .slice(step.indexOf('        run: |') + '        run: |'.length)
+      .replace(/^ {10}/gm, '');
+    const environment = { ...process.env, PREVIEW_LANES_ELIGIBLE: 'false' };
+    for (const [, key] of step.matchAll(
+      /^ {10}((?:RESULT|SCOPE)_[A-Z0-9_]+):/gm
+    )) {
+      environment[key] = key.startsWith('RESULT_') ? 'skipped' : 'false';
+    }
+    environment.RESULT_CI_SCOPE = 'success';
+    for (const [scope, result, expected] of [
+      ['true', 'success', 0],
+      ['true', 'failure', 1],
+      ['true', 'skipped', 1],
+      ['true', 'cancelled', 1],
+      ['false', 'skipped', 0],
+    ]) {
+      const run = spawnSync('bash', ['-c', script], {
+        encoding: 'utf8',
+        env: {
+          ...environment,
+          SCOPE_GROWTH_RESEARCH: scope,
+          RESULT_GROWTH_RESEARCH: result,
+        },
+      });
+      assert.equal(
+        run.status,
+        expected,
+        `scope=${scope}, result=${result}: ${run.stdout}\n${run.stderr}`
+      );
+    }
+  });
+
   it('provides one stable required PR check that waits for scoped CI jobs', async () => {
     const requiredPrChecksJob = await readRequiredPrChecksJob();
     const expectedNeeds = [
@@ -1164,6 +1237,7 @@ describe('CI workflow', () => {
       'scripts-tests',
       'growth-lifecycle',
       'lifecycle',
+      'growth-research',
     ];
 
     assert.match(requiredPrChecksJob, /name:\s*CI — required/);

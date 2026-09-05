@@ -3,8 +3,21 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/growth-research/src",
   "projectType": "application",
-  "tags": ["scope:internal", "scope:growth-research", "type:app", "runtime:node24"],
+  "tags": [
+    "scope:internal",
+    "scope:growth-research",
+    "type:app",
+    "runtime:node24"
+  ],
   "targets": {
+    "pilot": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "tsx apps/growth-research/scripts/research-pilot.mts",
+        "forwardAllArgs": true
+      }
+    },
     "smoke-langsmith": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -17,7 +30,9 @@
     "test-memory-integration": {
       "executor": "nx:run-commands",
       "cache": false,
-      "options": { "command": "npx vitest run --config apps/growth-research/vitest.memory-integration.config.ts --reporter=verbose" }
+      "options": {
+        "command": "npx vitest run --config apps/growth-research/vitest.memory-integration.config.ts --reporter=verbose"
+      }
     },
     "test": {
       "executor": "@nx/vitest:test",
@@ -28,7 +43,10 @@
       "cache": false,
       "options": {
         "cwd": "apps/growth-research",
-        "commands": ["node scripts/dawn-cli.mts check", "node ../../node_modules/typescript/bin/tsc --noEmit -p tsconfig.json"],
+        "commands": [
+          "node scripts/dawn-cli.mts check",
+          "node ../../node_modules/typescript/bin/tsc --noEmit -p tsconfig.json"
+        ],
         "parallel": false
       }
     },
@@ -38,7 +56,11 @@
       "outputs": ["{projectRoot}/.deployment"],
       "options": {
         "cwd": "apps/growth-research",
-        "commands": ["node scripts/dawn-cli.mts build --clean", "node scripts/package-langsmith.mts", "node scripts/verify-langsmith-artifact.mts"],
+        "commands": [
+          "node scripts/dawn-cli.mts build --clean",
+          "node scripts/package-langsmith.mts",
+          "node scripts/verify-langsmith-artifact.mts"
+        ],
         "parallel": false
       }
     },

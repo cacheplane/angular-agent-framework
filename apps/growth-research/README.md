@@ -1,4 +1,101 @@
-# Growth research compatibility application
+# Growth research application
+
+## Local company research pilot
+
+The local pilot compares one bounded Dawn agent with the existing lifecycle enrichment
+generator on identical captured company evidence. It has no Growth database connection,
+does not resolve people or employment, and cannot send email. The managed deployment
+still exposes only the synthetic compatibility graph documented below. Pilot routes,
+operator adapters, and their generated graph are excluded from its staged artifact.
+
+Use Node 24 and the existing workspace dependencies. Build before running the agent:
+
+```sh
+npx nx build growth-research
+npx tsx apps/growth-research/scripts/research-pilot.mts synthetic --output /absolute/private/pilot
+npx tsx apps/growth-research/scripts/research-pilot.mts acquire --output /absolute/private/pilot --domains threadplane.ai,dawnai.org,neon.tech,vercel.com,resend.com,langchain.com
+```
+
+These commands return UUIDs for immutable JSON files in the selected output directory.
+Acquisition records include complete, partial, empty and failed outcomes. The existing
+fetcher can skip unusable pages, so missing paths have an unknown reason; redirects may
+make the original path indeterminate. Review the captured corpus before model calls:
+remove personal biography/contact snippets, retain empty cases and failures, and fill
+expected claims/unknowns from the actual captured evidence. Save the reviewed corpus
+under a new name/version. Acquisition is preparation, not a human quality label.
+
+Set `GROWTH_RESEARCH_PILOT_MODE=local-company-only` and configure `OPENAI_API_KEY`
+for the agent or `ANTHROPIC_API_KEY` for the baseline through the operator environment.
+Never include keys in arguments, fixtures, reports or commits. The local in-process
+case context is also required: an environment flag alone cannot authorize pilot tools.
+
+```sh
+npx tsx apps/growth-research/scripts/research-pilot.mts run --output /absolute/private/pilot --corpus /absolute/private/pilot/CORPUS_UUID.json --approach agent
+npx tsx apps/growth-research/scripts/research-pilot.mts run --output /absolute/private/pilot --corpus /absolute/private/pilot/CORPUS_UUID.json --approach baseline
+npx tsx apps/growth-research/scripts/research-pilot.mts inspect --output /absolute/private/pilot --run RUN_UUID
+```
+
+Each case/approach/repetition has a separate run ID, deadline, budget and terminal
+record. Runs execute sequentially. The agent permits six provider requests, six evidence
+reads, 1,024 output tokens per request, no provider retries, a 20-second request timeout,
+and a 90-second run deadline. It can use the evidence skill and plan, read only captured
+case evidence, and submit a candidate. It cannot delegate, use memory, fetch URLs or
+read arbitrary files. Candidate acceptance is structural validation, not a truth label.
+Explicit inspection shows company sources and candidate findings; ordinary progress
+prints only opaque IDs and outcome codes. Reports use restrictive atomic writes and
+refuse overwrites. Preserve the final index and all failed attempts when comparing runs.
+
+The baseline uses its existing provider/model and 1,200-token/30-second request bounds.
+It receives company mode, synthetic adapter form context and zero progress score.
+Its raw citations are captured before production normalization. It does not return
+quotes: `not_provided` is distinct from failing or passing exact-quote validation.
+Provider failure records retain known request/usage/citation diagnostics. Missing usage
+and cost are unavailable, never zero. This comparison measures whole approaches with
+different providers/models; it does not isolate Dawn's causal contribution.
+
+Raw automatic tracing is disabled for local pilot runs. The record reports
+`tracing: unavailable`; this slice does not claim sanitized LangSmith tracing is live.
+No research findings are automatically published to Growth or typed memory.
+
+### Human comparison
+
+Each invocation emits a blinded review packet. To combine baseline and agent results
+for the same corpus, pass their index UUIDs; mixed corpus hashes/classes are rejected:
+
+```sh
+npx tsx apps/growth-research/scripts/research-pilot.mts review --output /absolute/private/pilot --indices BASELINE_INDEX_UUID,AGENT_INDEX_UUID
+npx tsx apps/growth-research/scripts/research-pilot.mts score --output /absolute/private/pilot --packet PACKET_UUID --labels /absolute/private/pilot/human-labels.json
+```
+
+The packet omits model and approach labels. Reviewers inspect each claim and profile
+against the captured sources, including failed cases. `human-labels.json` is an array:
+
+```json
+[{"reviewId":"RUN_UUID","supportedClaims":0,"reviewedClaims":0,"supportedFields":0,"applicableFields":0,"correctAbstentions":3,"applicableAbstentions":3,"contradictionsMissed":0}]
+```
+
+Use actual UUIDs and counts for each case. Reviewed claim count must match the packet;
+applicable fields and abstentions come from its expected unknowns. Imported labels and
+per-approach scores are persisted as a new review artifact. Aggregate quality scores
+remain unavailable while reviews are incomplete, preventing success-only denominators.
+Human semantic review is not replaced by model grading or string matching.
+
+### Dogfooding findings ledger
+
+| Finding | Evidence / owning layer | Status and next verification |
+| --- | --- | --- |
+| Nullable tool fields become required strings | Dawn 0.8.24 compiler JSON schema conversion; observed generated submit schema and failed unknown-field submissions | Upstream core and LangChain conversion regression/fix in progress. Pilot uses the supported authored Zod schema export; a package upgrade must rerun the original extraction probe before declaring the upstream defect released. |
+| Bound model calls bypass subclass generation hooks | Real bound-model regression in this application | Guards, request counts and JSON usage capture live at the actual provider fetch boundary; generated graph tests verify it. |
+| Page capture yields empty, partial, or mostly navigation evidence | Company-only acquisition against the six documented domains | Outcomes retained. Evaluate extraction improvements separately; do not hide failures by swapping cases. |
+| Baseline provider rejects billing state | Live baseline synthetic calls returned a classified billing rejection | External provider funding/configuration required; no quality comparison can be claimed from failed calls. |
+| Managed interruption precedes later child checkpoint | Recorded local/cloud Agent Server 0.13.4-node24 probe | Still a live-person integration gate; local cancellation tests are not proof of managed cancellation. |
+| Disabled memory and shared harness persistence behavior | Earlier synthetic compatibility probe on Dawn 0.8.24 | Reproduction-needed against current Dawn before assigning a fix. Pilot has no memory and graph tests use isolated state. |
+
+Keep source snapshots, generated reports and review labels outside git. The full growth
+funnel/contact journey and real install/runtime-triggered enrichment are subsequent
+slices, after supported company context and the managed data lifecycle are verified.
+
+## Synthetic compatibility deployment
 
 Private synthetic Dawn application, separate from lifecycle and the Python cockpit.
 Published Dawn packages are pinned to `0.8.24`; the app and deployment require Node 24.
