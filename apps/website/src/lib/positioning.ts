@@ -59,11 +59,11 @@ export const RELIABILITY_RECEIPTS: readonly ReliabilityReceipt[] = [
     claim: 'Signed provenance on every release',
     detail: 'npm provenance attestations from OIDC trusted publishing, and a SLSA provenance file on each GitHub release.',
     sourceLabel: 'npmjs.com · provenance',
-    sourceHref: 'https://www.npmjs.com/package/@threadplane/chat#provenance',
+    sourceHref: 'https://www.npmjs.com/package/@threadplane/chat',
   },
   {
     claim: 'Three runtimes exercised end to end',
-    detail: 'LangGraph, AG-UI and Mastra backends deployed and driven by browser tests on every merge, against one Angular contract.',
+    detail: 'LangGraph, Mastra and AWS Strands backends run and driven by browser tests on every merge, against one Angular contract.',
     sourceLabel: 'runtime portability matrix',
     sourceHref: '/docs/choosing-an-adapter',
   },

@@ -172,6 +172,20 @@ describe('homepage restructure copy (live-stage spec §3)', () => {
       const { hostname, pathname } = new URL(r.sourceHref, 'https://threadplane.ai');
       expect(hostname.startsWith('api.'), r.sourceHref).toBe(false);
       expect(pathname.startsWith('/api/'), r.sourceHref).toBe(false);
+
+      if (r.sourceHref.startsWith('/docs/')) {
+        const slug = r.sourceHref.replace(/^\/docs\//, '');
+        const candidates = [
+          path.join(resolveWebsiteDir(), 'content', 'docs', `${slug}.mdx`),
+          path.join(resolveWebsiteDir(), 'content', 'docs', slug, 'index.mdx'),
+        ];
+        expect(candidates.some((p) => fs.existsSync(p)), r.sourceHref).toBe(true);
+      } else if (r.sourceHref.startsWith('/')) {
+        expect(
+          fs.existsSync(path.join(resolveWebsiteDir(), 'src', 'app', r.sourceHref.slice(1), 'page.tsx')),
+          r.sourceHref,
+        ).toBe(true);
+      }
     }
   });
 
