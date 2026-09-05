@@ -307,7 +307,7 @@ describe('prepareCampaignMessage', () => {
     expect(prepared.html).not.toMatch(
       /<(?:img|script|style|div|span|table)\b/iu
     );
-    expect(prepared.html.replace(/<[^>]+>/gu, '')).not.toContain('unsubscribe');
+    expect(prepared.html).toContain(`href="${unsubscribeUrl}">here</a>`);
     expect(prepared.text).toContain(
       `Is this email not relevant to you? Stop here: ${unsubscribeUrl}`
     );
