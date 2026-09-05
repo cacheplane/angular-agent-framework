@@ -86,6 +86,26 @@ describe('sliceRegion', () => {
       /unterminated/
     );
   });
+
+  it('keeps nested regions intact and ends at the matching endregion', () => {
+    const source = [
+      '// #region outer',
+      'const a = 1;',
+      '// #region inner',
+      'const b = 2;',
+      '// #endregion',
+      'const c = 3;',
+      '// #endregion',
+    ].join('\n');
+    expect(sliceRegion(source, 'outer', 'f.ts')).toBe(
+      ['const a = 1;', '// #region inner', 'const b = 2;', '// #endregion', 'const c = 3;'].join('\n')
+    );
+    expect(sliceRegion(source, 'inner', 'f.ts')).toBe('const b = 2;');
+  });
+
+  it('accepts an HTML marker with no space before the comment close', () => {
+    expect(sliceRegion('<!-- #region t-->\n<p>hi</p>\n<!-- #endregion-->\n', 't', 'x.html')).toBe('<p>hi</p>');
+  });
 });
 
 describe('fenceFor', () => {

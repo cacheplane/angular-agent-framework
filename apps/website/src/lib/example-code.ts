@@ -40,7 +40,7 @@ export function resolveExampleFile(file: string, context: ExampleCodeContext): s
   return path;
 }
 
-const REGION_START = /^\s*(?:\/\/|#|<!--)\s*#?region\s+(\S+)\s*(?:-->)?\s*$/;
+const REGION_START = /^\s*(?:\/\/|#|<!--)\s*#?region\s+(\S+?)\s*(?:-->)?\s*$/;
 const REGION_END = /^\s*(?:\/\/|#|<!--)\s*#?endregion\b/;
 
 export function sliceRegion(source: string, region: string, filePath: string): string {
@@ -49,7 +49,20 @@ export function sliceRegion(source: string, region: string, filePath: string): s
   if (start === -1) {
     throw new ExampleCodeError(`${filePath}: no "#region ${region}" marker`);
   }
-  const end = lines.findIndex((line, index) => index > start && REGION_END.test(line));
+  let depth = 1;
+  let end = -1;
+  for (let index = start + 1; index < lines.length; index++) {
+    const line = lines[index];
+    if (REGION_START.test(line)) {
+      depth++;
+    } else if (REGION_END.test(line)) {
+      depth--;
+      if (depth === 0) {
+        end = index;
+        break;
+      }
+    }
+  }
   if (end === -1) {
     throw new ExampleCodeError(`${filePath}: "#region ${region}" is unterminated`);
   }
