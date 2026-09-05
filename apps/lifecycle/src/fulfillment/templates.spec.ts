@@ -1,9 +1,24 @@
 import { describe, expect, it } from 'vitest';
 
+import { campaignDraftViolations } from '../campaign/templates.js';
 import { renderFulfillmentTemplate } from './templates.js';
 
 const URL_PATTERN = /https:\/\/[^\s]+/gu;
 const HTML_PATTERN = /<\/?[a-z][^>]*>/iu;
+const CONTRACTION_PATTERN = /\b\w+['’]\w+\b/u;
+
+function everyFulfillmentMessage() {
+  return [
+    renderFulfillmentTemplate({ context: 'whitepaper', paper: 'overview' }),
+    renderFulfillmentTemplate({ context: 'newsletter' }),
+    renderFulfillmentTemplate({ context: 'contact' }),
+    renderFulfillmentTemplate({ context: 'pricing' }),
+    renderFulfillmentTemplate({
+      context: 'project-connect',
+      claimedSignals: ['thread.persisted'],
+    }),
+  ];
+}
 
 describe('renderFulfillmentTemplate', () => {
   it.each([
@@ -35,20 +50,24 @@ describe('renderFulfillmentTemplate', () => {
         paper,
       });
 
-      expect(message).toEqual({
-        subject,
-        body: `Here is the guide you requested:\n\n${url}`,
-      });
+      expect(message.subject).toBe(subject);
+      expect(
+        message.body.startsWith(`Here is the guide you requested:\n${url}\n\n`)
+      ).toBe(true);
+      expect(message.body.match(URL_PATTERN)).toEqual([url]);
     }
   );
 
   it('welcomes a newsletter signup without adding another request', () => {
-    expect(renderFulfillmentTemplate({ context: 'newsletter' })).toEqual({
-      subject: 'Welcome to Threadplane',
-      body: expect.stringMatching(
-        /^Thanks for signing up\. I’ll keep these notes focused on practical engineering work with agent interfaces\.$/u
-      ),
-    });
+    const message = renderFulfillmentTemplate({ context: 'newsletter' });
+
+    expect(message.subject).toBe('Welcome to Threadplane');
+    expect(message.body.startsWith('You are on the list.')).toBe(true);
+    expect(message.body).toContain(
+      'practical engineering work with agent interfaces'
+    );
+    expect(message.body).not.toMatch(URL_PATTERN);
+    expect(message.body).not.toContain('?');
   });
 
   it.each(['contact', 'pricing'] as const)(
@@ -82,8 +101,10 @@ describe('renderFulfillmentTemplate', () => {
         claimedSignals: [claim],
       });
 
+      expect(message.body.startsWith('You connected your project.')).toBe(true);
       expect(message.body).toContain(expectedFact);
       expect(message.body).toContain('you shared');
+      expect(message.body).toContain('keep any follow-up to that context');
       expect(message.body).not.toMatch(
         /I saw you|we noticed|based on your activity|tracking|telemetry/iu
       );
@@ -131,19 +152,37 @@ describe('renderFulfillmentTemplate', () => {
     expect(() => renderFulfillmentTemplate(input as never)).toThrow();
   });
 
-  it('keeps every recipient message plain and compact', () => {
-    const messages = [
-      renderFulfillmentTemplate({ context: 'whitepaper', paper: 'overview' }),
-      renderFulfillmentTemplate({ context: 'newsletter' }),
-      renderFulfillmentTemplate({ context: 'contact' }),
-      renderFulfillmentTemplate({ context: 'pricing' }),
-      renderFulfillmentTemplate({
-        context: 'project-connect',
-        claimedSignals: ['thread.persisted'],
-      }),
-    ];
+  it('writes every recipient message in the campaign register', () => {
+    for (const message of everyFulfillmentMessage()) {
+      // No contractions, no "thanks for" openers, no greeting baked into the
+      // body (send.ts adds "Hey <name>," at send time), and every line short.
+      expect(message.body).not.toMatch(CONTRACTION_PATTERN);
+      expect(message.body).not.toMatch(/^thanks/iu);
+      expect(message.body).not.toMatch(/^hey\b/iu);
+      expect(message.body).not.toMatch(/\blet['’]?s\b/iu);
+      for (const line of message.body.split('\n')) {
+        expect(line.trim().split(/\s+/u).filter(Boolean).length).toBeLessThan(
+          25
+        );
+      }
+    }
+  });
 
-    for (const message of messages) {
+  it('stays inside the recipient-copy checks shared with the campaign', () => {
+    for (const message of everyFulfillmentMessage()) {
+      expect(campaignDraftViolations(message)).toEqual([]);
+    }
+    for (const paper of ['angular', 'render', 'chat'] as const) {
+      expect(
+        campaignDraftViolations(
+          renderFulfillmentTemplate({ context: 'whitepaper', paper })
+        )
+      ).toEqual([]);
+    }
+  });
+
+  it('keeps every recipient message plain and compact', () => {
+    for (const message of everyFulfillmentMessage()) {
       expect(typeof message.subject).toBe('string');
       expect(typeof message.body).toBe('string');
       expect(message.subject).not.toMatch(/[\r\n]/u);
