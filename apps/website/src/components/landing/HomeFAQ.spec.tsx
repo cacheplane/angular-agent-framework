@@ -6,7 +6,7 @@ import { HomeFAQ } from './HomeFAQ';
 
 describe('HomeFAQ', () => {
   it('asks only what the page above did not answer', () => {
-    render(<HomeFAQ />);
+    const { container } = render(<HomeFAQ />);
     const questions = [
       'Is Threadplane a backend agent framework?',
       'Can I use my existing Angular component library and design system?',
@@ -16,6 +16,7 @@ describe('HomeFAQ', () => {
     for (const q of questions) expect(screen.getByText(q)).toBeTruthy();
     expect(screen.queryByText('Does Threadplane require LangGraph?')).toBeNull();
     expect(screen.queryByText(/raw streaming SDK/)).toBeNull();
-    expect(document.body.querySelectorAll('summary')).toHaveLength(4);
+    expect(container.querySelectorAll('summary')).toHaveLength(4);
+    expect(container.querySelectorAll('a')).toHaveLength(4);
   });
 });

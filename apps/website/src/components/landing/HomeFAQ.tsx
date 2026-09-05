@@ -3,8 +3,10 @@ import { Section } from '../ui/Section';
 import { Eyebrow } from '../ui/Eyebrow';
 import { FAQ, type FAQItem } from '../ui/FAQ';
 
-// Four questions the page above does not answer (live-stage spec §3). Copy here is scanned by
-// lib/public-copy-contract.ts; absolute claims and retired routes are barred.
+// Four questions the page above does not answer (live-stage spec §3). Copy here
+// is scanned by lib/public-copy-contract.ts: absolute claims ("installation is
+// inert") and retired routes (/docs/telemetry/**) are barred — a previous FAQ
+// answer shipped both and only the production crawl caught it.
 const ITEMS: FAQItem[] = [
   {
     q: 'Is Threadplane a backend agent framework?',
