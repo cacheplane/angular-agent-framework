@@ -31,7 +31,7 @@ export function TeamsBlock({ formPolicy }: { formPolicy: PublicFormPolicy }) {
   return (
     <Section surface="tinted" id="teams" ariaLabelledBy="pilot-heading">
       <Container>
-        <div className="pilot-block-grid">
+        <div className="pilot-block-grid teams-block-grid">
           <div>
             <div className="pilot-rail">
               <Eyebrow tone="accent" className="pilot-eyebrow">For teams</Eyebrow>
@@ -73,8 +73,8 @@ export function TeamsBlock({ formPolicy }: { formPolicy: PublicFormPolicy }) {
             </div>
             <div className="teams-report">
               <Eyebrow tone="accent" className="wp-eyebrow">Field report</Eyebrow>
-              <div className="wp-cover-badge">18 pages · free</div>
-              <p className="teams-report-title">From Prototype to Production</p>
+              <div className="teams-report-badge">18 pages · free</div>
+              <h3 id="teams-report-heading" className="teams-report-title">From Prototype to Production</h3>
               <p className="teams-report-desc">Six production-readiness dimensions for Angular AI teams. Error boundaries, fallbacks, observability, deploy. Free.</p>
               <WhitePaperForm paper="overview" formPolicy={formPolicy} surface="home_whitepaper" sourceSection="teams-block" idPrefix="teams-wp" />
             </div>

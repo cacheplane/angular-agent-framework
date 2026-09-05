@@ -480,6 +480,9 @@
 }
 
 /* TeamsBlock: phases stacked over the field report card. */
+.teams-block-grid {
+  align-items: start;
+}
 .teams-aside {
   display: flex;
   flex-direction: column;
@@ -491,12 +494,20 @@
   border-radius: 12px;
   background: var(--color-canvas);
 }
+.teams-report-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin: 6px 0 0;
+}
 .teams-report-title {
   font-family: var(--font-garamond);
   font-size: 26px;
   font-weight: 700;
   line-height: 1.1;
-  margin: 10px 0 6px;
+  margin: 8px 0 6px;
   color: var(--color-text-primary);
 }
 .teams-report-desc {

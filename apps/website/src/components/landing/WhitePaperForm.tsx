@@ -7,10 +7,14 @@ import {
   type GrowthFormRequestSnapshot,
 } from '../../lib/growth/form-client';
 import { Button } from '../ui/Button';
-import { analyticsEvents } from '../../lib/analytics/events';
+import {
+  analyticsEvents,
+  type AnalyticsSurface,
+  type WhitepaperId,
+} from '../../lib/analytics/events';
 import { track, trackWhitepaperDownloadClick } from '../../lib/analytics/client';
 
-export type WhitepaperId = 'overview' | 'angular' | 'render' | 'chat';
+export type { WhitepaperId };
 
 export const PDF_PATHS: Record<WhitepaperId, { href: string; download: string }> = {
   overview: { href: '/whitepaper.pdf', download: 'angular-agent-readiness-guide.pdf' },
@@ -23,7 +27,7 @@ interface WhitePaperFormProps {
   paper: WhitepaperId;
   formPolicy: PublicFormPolicy;
   /** Analytics surface + section, so the teams block and the library pages report separately. */
-  surface: string;
+  surface: AnalyticsSurface;
   sourceSection: string;
   /** Ids must be unique per page; two forms on one page would collide. */
   idPrefix: string;
