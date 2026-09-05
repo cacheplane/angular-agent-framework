@@ -104,15 +104,15 @@ export const CURSOR_MOVE_MS = 650;
  * approves it. Approving instantly says the opposite — that the gate is a
  * formality — which is the one thing this demo must not say.
  *
- * CALIBRATED TO THE PROPOSAL COPY, which is currently ~40 words: four
- * seconds is enough to skim that and take its weight, not to read it word for
- * word. It was ~60 words until the first prompt was rewritten to the bare
- * destructive request; the shorter proposal is what the model actually emits
- * unprompted, so the budget is now generous rather than tight. The two are
- * coupled and nothing enforces the coupling — if the recorded
- * `request_approval` text in `public/hero-replay.json` grows, this has to
- * grow with it. A reader who cannot get through the proposal cannot feel what
- * approving it means, and the beat silently stops working.
+ * CALIBRATED TO THE PROPOSAL COPY, which is currently 18 words: `delete_backups`
+ * composes it in code (`approval_reason` in examples/chat/python/src/backups.py)
+ * from the ids and the total size, so four seconds is enough to read it whole
+ * and take its weight. It was ~60 words when the model wrote it unprompted,
+ * then ~40 once the first prompt became the bare destructive request. The
+ * Python test `test_approval_reason_is_compact_enough_for_the_hero_dwell`
+ * keeps the five-id case under 60 words; if that budget or the ids grow, this
+ * has to grow with them. A reader who cannot get through the proposal cannot
+ * feel what approving it means, and the beat silently stops working.
  */
 export const INTERRUPT_DWELL_MS = 4000;
 
