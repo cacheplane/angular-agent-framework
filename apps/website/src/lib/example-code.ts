@@ -17,18 +17,29 @@ export class ExampleCodeError extends Error {
   override readonly name = 'ExampleCodeError';
 }
 
-export function resolveExampleFile(file: string, context: ExampleCodeContext): string {
+export function resolveExampleFile(
+  file: string,
+  context: ExampleCodeContext
+): string {
   const matches = context.assetPaths.filter(
     (path) => path === file || path.endsWith(`/${file}`)
   );
   if (matches.length === 0) {
     throw new ExampleCodeError(
-      `${context.docsPath}: <ExampleCode file="${file}"> matches none of the page's example files: ${context.assetPaths.join(', ')}`
+      `${
+        context.docsPath
+      }: <ExampleCode file="${file}"> matches none of the page's example files: ${context.assetPaths.join(
+        ', '
+      )}`
     );
   }
   if (matches.length > 1) {
     throw new ExampleCodeError(
-      `${context.docsPath}: <ExampleCode file="${file}"> is ambiguous: ${matches.join(', ')}. Use the full path.`
+      `${
+        context.docsPath
+      }: <ExampleCode file="${file}"> is ambiguous: ${matches.join(
+        ', '
+      )}. Use the full path.`
     );
   }
   const [path] = matches;
@@ -43,9 +54,15 @@ export function resolveExampleFile(file: string, context: ExampleCodeContext): s
 const REGION_START = /^\s*(?:\/\/|#|<!--)\s*#?region\s+(\S+?)\s*(?:-->)?\s*$/;
 const REGION_END = /^\s*(?:\/\/|#|<!--)\s*#?endregion\b/;
 
-export function sliceRegion(source: string, region: string, filePath: string): string {
+export function sliceRegion(
+  source: string,
+  region: string,
+  filePath: string
+): string {
   const lines = source.split('\n');
-  const start = lines.findIndex((line) => REGION_START.exec(line)?.[1] === region);
+  const start = lines.findIndex(
+    (line) => REGION_START.exec(line)?.[1] === region
+  );
   if (start === -1) {
     throw new ExampleCodeError(`${filePath}: no "#region ${region}" marker`);
   }
@@ -64,7 +81,9 @@ export function sliceRegion(source: string, region: string, filePath: string): s
     }
   }
   if (end === -1) {
-    throw new ExampleCodeError(`${filePath}: "#region ${region}" is unterminated`);
+    throw new ExampleCodeError(
+      `${filePath}: "#region ${region}" is unterminated`
+    );
   }
   const body = lines.slice(start + 1, end);
   const nonEmpty = body.filter((line) => line.trim().length > 0);
@@ -72,7 +91,9 @@ export function sliceRegion(source: string, region: string, filePath: string): s
     nonEmpty.length === 0
       ? 0
       : Math.min(...nonEmpty.map((line) => /^\s*/.exec(line)![0].length));
-  return body.map((line) => line.slice(Math.min(indent, line.length))).join('\n');
+  return body
+    .map((line) => line.slice(Math.min(indent, line.length)))
+    .join('\n');
 }
 
 const FENCE_LANG: Record<string, string> = {
@@ -92,7 +113,10 @@ const FENCE_LANG: Record<string, string> = {
 export function fenceFor(code: string, filePath: string): string {
   const ext = filePath.slice(filePath.lastIndexOf('.') + 1);
   const lang = FENCE_LANG[ext] ?? 'text';
-  const longestRun = Math.max(0, ...(code.match(/`+/g) ?? []).map((run) => run.length));
+  const longestRun = Math.max(
+    0,
+    ...(code.match(/`+/g) ?? []).map((run) => run.length)
+  );
   const fence = '`'.repeat(Math.max(3, longestRun + 1));
   const body = code.endsWith('\n') ? code.slice(0, -1) : code;
   return `${fence}${lang}\n${body}\n${fence}`;

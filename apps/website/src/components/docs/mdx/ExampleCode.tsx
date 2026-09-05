@@ -35,7 +35,9 @@ export function createExampleCode(
       // There is no context to name the page, so the caller's route does it:
       // a build failure that says only "some page" is not actionable.
       throw new ExampleCodeError(
-        `${pageDocsPath ?? 'this page'}: <ExampleCode file="${file}"> is only valid on a docs page with a mapped example`
+        `${
+          pageDocsPath ?? 'this page'
+        }: <ExampleCode file="${file}"> is only valid on a docs page with a mapped example`
       );
     }
     const path = resolveExampleFile(file, context);
@@ -52,7 +54,11 @@ export function createExampleCode(
         aria-label={heading}
       >
         <div className="mdx-example-code-title">{heading}</div>
-        <MDXRemote source={fenceFor(code, path)} components={{ pre: Pre }} options={mdxCompileOptions} />
+        <MDXRemote
+          source={fenceFor(code, path)}
+          components={{ pre: Pre }}
+          options={mdxCompileOptions}
+        />
       </div>
     );
   };

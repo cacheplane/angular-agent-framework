@@ -16,8 +16,10 @@ const context: ExampleCodeContext = {
     'cockpit/langgraph/streaming/python/src/graph.py',
   ],
   sources: {
-    'cockpit/langgraph/streaming/angular/src/app/streaming.component.ts': 'export class StreamingComponent {}',
-    'cockpit/langgraph/streaming/angular/src/app/app.config.ts': 'export const appConfig = {};',
+    'cockpit/langgraph/streaming/angular/src/app/streaming.component.ts':
+      'export class StreamingComponent {}',
+    'cockpit/langgraph/streaming/angular/src/app/app.config.ts':
+      'export const appConfig = {};',
     'cockpit/langgraph/streaming/python/src/graph.py': 'graph = None',
   },
 };
@@ -31,12 +33,17 @@ describe('resolveExampleFile', () => {
 
   it('accepts a full repo-relative path', () => {
     expect(
-      resolveExampleFile('cockpit/langgraph/streaming/python/src/graph.py', context)
+      resolveExampleFile(
+        'cockpit/langgraph/streaming/python/src/graph.py',
+        context
+      )
     ).toBe('cockpit/langgraph/streaming/python/src/graph.py');
   });
 
   it('throws with the page and file when nothing matches', () => {
-    expect(() => resolveExampleFile('missing.ts', context)).toThrow(ExampleCodeError);
+    expect(() => resolveExampleFile('missing.ts', context)).toThrow(
+      ExampleCodeError
+    );
     expect(() => resolveExampleFile('missing.ts', context)).toThrow(
       /\/docs\/langgraph\/guides\/streaming.*missing\.ts/
     );
@@ -48,12 +55,16 @@ describe('resolveExampleFile', () => {
       assetPaths: ['a/index.ts', 'b/index.ts'],
       sources: { 'a/index.ts': '', 'b/index.ts': '' },
     };
-    expect(() => resolveExampleFile('index.ts', ambiguous)).toThrow(/ambiguous/);
+    expect(() => resolveExampleFile('index.ts', ambiguous)).toThrow(
+      /ambiguous/
+    );
   });
 
   it('throws when the asset is declared but its source was not readable', () => {
     const unread: ExampleCodeContext = { ...context, sources: {} };
-    expect(() => resolveExampleFile('graph.py', unread)).toThrow(/could not be read/);
+    expect(() => resolveExampleFile('graph.py', unread)).toThrow(
+      /could not be read/
+    );
   });
 });
 
@@ -69,22 +80,34 @@ describe('sliceRegion', () => {
       '}',
     ].join('\n');
     expect(sliceRegion(source, 'submit', 'x.ts')).toBe(
-      ['send(text: string) {', '  this.agent.submit({ message: text });', '}'].join('\n')
+      [
+        'send(text: string) {',
+        '  this.agent.submit({ message: text });',
+        '}',
+      ].join('\n')
     );
   });
 
   it('accepts the Python and HTML marker forms', () => {
-    expect(sliceRegion('# region g\ngraph = 1\n# endregion\n', 'g', 'x.py')).toBe('graph = 1');
     expect(
-      sliceRegion('<!-- #region t -->\n<p>hi</p>\n<!-- #endregion -->\n', 't', 'x.html')
+      sliceRegion('# region g\ngraph = 1\n# endregion\n', 'g', 'x.py')
+    ).toBe('graph = 1');
+    expect(
+      sliceRegion(
+        '<!-- #region t -->\n<p>hi</p>\n<!-- #endregion -->\n',
+        't',
+        'x.html'
+      )
     ).toBe('<p>hi</p>');
   });
 
   it('throws naming the file when the region is missing or unterminated', () => {
-    expect(() => sliceRegion('const a = 1;', 'nope', 'x.ts')).toThrow(/x\.ts.*nope/);
-    expect(() => sliceRegion('// #region open\nconst a = 1;', 'open', 'x.ts')).toThrow(
-      /unterminated/
+    expect(() => sliceRegion('const a = 1;', 'nope', 'x.ts')).toThrow(
+      /x\.ts.*nope/
     );
+    expect(() =>
+      sliceRegion('// #region open\nconst a = 1;', 'open', 'x.ts')
+    ).toThrow(/unterminated/);
   });
 
   it('keeps nested regions intact and ends at the matching endregion', () => {
@@ -98,13 +121,25 @@ describe('sliceRegion', () => {
       '// #endregion',
     ].join('\n');
     expect(sliceRegion(source, 'outer', 'f.ts')).toBe(
-      ['const a = 1;', '// #region inner', 'const b = 2;', '// #endregion', 'const c = 3;'].join('\n')
+      [
+        'const a = 1;',
+        '// #region inner',
+        'const b = 2;',
+        '// #endregion',
+        'const c = 3;',
+      ].join('\n')
     );
     expect(sliceRegion(source, 'inner', 'f.ts')).toBe('const b = 2;');
   });
 
   it('accepts an HTML marker with no space before the comment close', () => {
-    expect(sliceRegion('<!-- #region t-->\n<p>hi</p>\n<!-- #endregion-->\n', 't', 'x.html')).toBe('<p>hi</p>');
+    expect(
+      sliceRegion(
+        '<!-- #region t-->\n<p>hi</p>\n<!-- #endregion-->\n',
+        't',
+        'x.html'
+      )
+    ).toBe('<p>hi</p>');
   });
 });
 
@@ -116,7 +151,9 @@ describe('fenceFor', () => {
   });
 
   it('uses a longer fence than any backtick run inside the code', () => {
-    expect(fenceFor('const s = `a```b`;', 'x.ts')).toBe('````ts\nconst s = `a```b`;\n````');
+    expect(fenceFor('const s = `a```b`;', 'x.ts')).toBe(
+      '````ts\nconst s = `a```b`;\n````'
+    );
   });
 
   it('strips one trailing newline so the fence closes on its own line', () => {
@@ -126,6 +163,8 @@ describe('fenceFor', () => {
 
 describe('exampleTitle', () => {
   it('is the basename', () => {
-    expect(exampleTitle('cockpit/langgraph/streaming/python/src/graph.py')).toBe('graph.py');
+    expect(
+      exampleTitle('cockpit/langgraph/streaming/python/src/graph.py')
+    ).toBe('graph.py');
   });
 });
