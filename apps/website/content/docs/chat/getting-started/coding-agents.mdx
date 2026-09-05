@@ -1,11 +1,13 @@
 ---
 title: Coding agents
-description: A maintained setup prompt for Claude Code, Codex and other coding agents adding Threadplane to an Angular app, plus the machine-readable references they should read first.
+description: A maintained setup prompt for Claude Code, Codex and other coding agents adding Threadplane to an Angular app, plus the references they should read first.
 ---
 
 # Coding agents
 
 Threadplane publishes maintained, machine-readable setup context. Give your coding agent the prompt below; it starts with a fake agent, verifies the Angular surface, then connects LangGraph or AG-UI.
+
+The prompt starts from provideFakeAgent(), renders the smallest accessible chat surface, adds a focused test, and only then explains the LangGraph or AG-UI configuration.
 
 ```text
 Add Threadplane to this Angular application.
