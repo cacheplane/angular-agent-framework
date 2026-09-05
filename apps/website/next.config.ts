@@ -22,6 +22,8 @@ export const nextConfig: WithNxOptions = {
       // route deploys with no corpus and returns empty for every query —
       // silently, and only in production.
       'content/docs/**/*.mdx',
+      // Growth validates blog observations against the catalog at request time.
+      'content/blog/**/*.mdx',
     ],
   },
   skipTrailingSlashRedirect: true,

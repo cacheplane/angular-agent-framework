@@ -47,6 +47,12 @@ function executorWith(
       parameters: readonly unknown[] = []
     ): Promise<SqlQueryResult<Row>> {
       const marker = /\/\* growth:([a-z0-9-]+) \*\//u.exec(sql)?.[1];
+      if (
+        sql.includes(
+          "pg_advisory_xact_lock_shared(hashtextextended('growth-observation-privacy-v1'"
+        )
+      )
+        return { rows: [] };
       const handler = marker ? handlers[marker] : undefined;
       if (!marker || !handler) {
         throw new Error(`Unexpected SQL marker: ${marker ?? 'missing'}`);
