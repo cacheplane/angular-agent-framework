@@ -172,7 +172,7 @@ export function normalizeCampaignDraft(candidate: unknown): CampaignDraft {
 const CAMPAIGN_TEMPLATES: Record<CampaignStep, CampaignDraft> = {
   immediate: {
     subject: 'Engineer to engineer',
-    body: `Thanks for taking a look at Threadplane.\n\nA lot of teams hit the same point.\nThe idea is clear.\nGetting it working cleanly in production is where things get messy.\n\nI am the founding engineer, and I am offering short engineer-to-engineer sessions to think through implementation, unblock technical questions, and avoid the common mistakes.\n\nNo sales pitch.\nJust a practical conversation about your use case and what it would take to get it working.\n\nYou can grab a time here:\n${FOUNDER_BOOKING_URL}`,
+    body: `A lot of teams hit the same point.\nThe idea is clear.\nGetting it working cleanly in production is where things get messy.\n\nI am the founding engineer, and I am offering short engineer-to-engineer sessions to think through implementation, unblock technical questions, and avoid the common mistakes.\n\nNo sales pitch.\nJust a practical conversation about your use case and what it would take to get it working.\n\nYou can grab a time here:\n${FOUNDER_BOOKING_URL}`,
   },
   'day-3': {
     subject: 'Get your agent UI into production',
