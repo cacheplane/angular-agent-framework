@@ -9,10 +9,7 @@ import { DocsControlPlane } from '../../components/docs/DocsControlPlane';
 import { DocsSearch } from '../../components/docs/DocsSearch';
 import { DocsSearchFooter } from '../../components/docs/DocsSearchFooter';
 import { createPageMetadata } from '../../lib/site-metadata';
-import {
-  getCanonicalWebsiteWorkspaceHref,
-  resolveDocsWorkspace,
-} from '@threadplane/cockpit-registry';
+import { DEFAULT_EXAMPLE_RUN_HREF } from '../../lib/docs-index-example';
 
 export const metadata = createPageMetadata({
   title: 'Documentation — Threadplane',
@@ -21,19 +18,6 @@ export const metadata = createPageMetadata({
   pathname: '/docs',
   type: 'website',
 });
-
-/**
- * The example the index's Run rail item opens, resolved through the registry
- * so a renamed or removed capability yields null and Run falls back to
- * disabled rather than to a dead link.
- */
-const DEFAULT_EXAMPLE_RESOLUTION = resolveDocsWorkspace(
-  '/docs/langgraph/guides/streaming',
-  'Streaming'
-);
-const DEFAULT_EXAMPLE_RUN_HREF = DEFAULT_EXAMPLE_RESOLUTION
-  ? getCanonicalWebsiteWorkspaceHref(DEFAULT_EXAMPLE_RESOLUTION, 'Run')
-  : undefined;
 
 interface Backend {
   title: string;

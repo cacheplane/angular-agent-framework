@@ -462,7 +462,6 @@ describe('WebsiteWorkspace', () => {
       resolution,
       presentation: mappedPresentation(resolution),
       routePath: '/docs/langgraph/guides/durable-execution',
-      docsSlot: undefined,
     });
     await waitFor(() => expect(activeWorkspaceMode()).toBe('Run'));
 
@@ -731,7 +730,6 @@ describe('WebsiteWorkspace', () => {
       resolution: source,
       presentation: mappedPresentation(source),
       routePath: '/docs/langgraph/guides/durable-execution',
-      docsSlot: undefined,
     });
     await waitFor(() => expect(activeWorkspaceMode()).toBe('Docs'));
 
@@ -776,7 +774,6 @@ describe('WebsiteWorkspace', () => {
       resolution: source,
       presentation: mappedPresentation(source),
       routePath: '/docs/langgraph/guides/durable-execution',
-      docsSlot: undefined,
     });
     await waitFor(() => expect(activeWorkspaceMode()).toBe('Code'));
     mocks.replace.mockClear();

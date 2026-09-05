@@ -1,8 +1,6 @@
 import {
   cockpitManifest,
-  getWorkspaceDestinationPath,
   resolveDocsWorkspace,
-  type CockpitManifestEntry,
   type WorkspaceResolution,
 } from '@threadplane/cockpit-registry';
 import {
@@ -34,8 +32,4 @@ export async function getWebsiteWorkspacePage(options: {
     contentBundle: await getContentBundle(presentation),
     navigationTree: buildNavigationTree(cockpitManifest),
   };
-}
-
-export function getWebsiteWorkspaceHref(entry: CockpitManifestEntry): string {
-  return getWorkspaceDestinationPath(entry);
 }
