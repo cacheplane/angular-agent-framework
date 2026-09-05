@@ -13,11 +13,23 @@
  * bubble behind it, and a still of a live Accept / Edit / Respond dialog
  * invites taps that do nothing.
  *
- * The 2500ms wait is shared with the desktop recorder and is about the scripted
+ * The 2800ms wait is shared with the desktop recorder and is about the scripted
  * cursor, not the text: at 1500ms it is still parked where it pressed Accept,
  * which at phone width drops the arrowhead onto the word `retain` in step 3.
- * By 2500ms it has reached the composer, which reads as the walkthrough about
- * to type again rather than as a smudge on the prose.
+ * By 2800ms it has reached the composer, which reads as the walkthrough about
+ * to type again rather than as a smudge on the prose. See that recorder for the
+ * measured timeline; PHONE WIDTH IS THE BINDING CONSTRAINT on the value, because
+ * the composer here starts filling at ~2970ms while the desktop capture has
+ * until ~3200ms. The previous 2500ms was measured against an older
+ * `public/hero-replay.json` and dropped the arrowhead onto "Nothing has been
+ * deleted yet" once that recording changed, so re-measure whenever it does.
+ *
+ * The height budget is just as coupled, and to the FIXTURE rather than the
+ * replay: `e2e/fixtures/hero-approval.json` supplies the answer text, and its
+ * opening line has to fit on ONE line at 390px (about 44 characters) or the
+ * whole block shifts up and the first line is sliced off the top edge. A draft
+ * that opened "Approved. Here is the cleanup I would run once you confirm the
+ * backup locations:" wrapped to two lines and did exactly that.
  *
  * Geometry: 390x650 is the phone design width the reviews already use, and it
  * is exactly 3:5 — the ratio `.hero-demo-stage` holds below 768px — so
@@ -47,11 +59,14 @@ test('capture mobile hero poster', async ({ page }) => {
   const interruptPanel = page.locator('chat-interrupt-panel');
   await interruptPanel.waitFor({ timeout: 60_000 });
   await interruptPanel.waitFor({ state: 'detached', timeout: 60_000 });
-  await page.waitForTimeout(2500);
+  await page.waitForTimeout(2800);
   // Guards the beat: `.hero__take` ships in normal flow, and a composer with
-  // the next prompt already typed into it means the wait has drifted late.
+  // the next prompt already typed into it means the wait has drifted late. The
+  // a2ui check catches a capture that drifted PAST typing into the second run,
+  // where the composer has cleared again and would satisfy the check above.
   await expect(page.locator('.hero__take')).toBeVisible();
   await expect(page.locator('[data-hero-surface] textarea')).toHaveValue('');
+  await expect(page.locator('a2ui-surface')).toHaveCount(0);
   const png = await page.screenshot({ type: 'png', fullPage: false });
   await sharp(png).resize({ width: SHIP_WIDTH }).webp({ quality: 55, effort: 6 }).toFile(OUT);
   console.log(`wrote ${OUT}`);

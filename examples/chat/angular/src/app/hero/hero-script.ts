@@ -2,13 +2,29 @@ import { signal } from '@angular/core';
 
 /**
  * The two prompts must stay VERBATIM: aimock fixtures match on the exact user
- * message (see e2e/fixtures/interrupt-approval.json and contact-form.json), so
+ * message (see e2e/fixtures/hero-approval.json and contact-form.json), so
  * rewording either one breaks recording.
+ *
+ * The first prompt asks for a destructive cleanup and NOTHING ELSE. It names
+ * no tool and does not ask to be consulted, because the whole point of the
+ * beat is that it does not have to: the graph's system prompt
+ * (examples/chat/python/src/graph.py) instructs the model to call
+ * `request_approval` before a destructive action, so the pause is the
+ * product's behavior rather than something the user negotiated. An earlier
+ * version of this prompt spelled out "call request_approval before doing
+ * anything destructive so I can review your plan", which named an internal
+ * tool no visitor could know AND inverted the claim — it made the guardrail
+ * look like a feature you have to request. Verified live against gpt-5-mini
+ * before this fixture was written: 12 of 12 runs of the bare prompt called
+ * `request_approval` first, with no other tool call and no prompting.
+ *
+ * `hero-approval.json` is a fixture of its OWN rather than an edit to
+ * `interrupt-approval.json`: that scenario (and `record-demo.record.ts`) still
+ * exercises the older, explicit phrasing on purpose, so the two texts are no
+ * longer byte-identical and must not be unified.
  */
 export const HERO_PROMPTS = [
-  'I want to clean up old database backups older than 90 days. Walk me through ' +
-    'what you would delete, and call request_approval before doing anything ' +
-    'destructive so I can review your plan.',
+  'Clean up our old database backups, anything older than 90 days.',
   'Show me a contact form with fields for name, email address, subject, and a multi-line message, plus a Send button.',
 ] as const;
 
@@ -83,12 +99,15 @@ export const CURSOR_MOVE_MS = 650;
  * approves it. Approving instantly says the opposite — that the gate is a
  * formality — which is the one thing this demo must not say.
  *
- * CALIBRATED TO THE PROPOSAL COPY, which is currently ~60 words: four
+ * CALIBRATED TO THE PROPOSAL COPY, which is currently ~40 words: four
  * seconds is enough to skim that and take its weight, not to read it word for
- * word. The two are coupled and nothing enforces the coupling — if the
- * recorded `request_approval` text in `public/hero-replay.json` grows, this
- * has to grow with it. A reader who cannot get through the proposal cannot
- * feel what approving it means, and the beat silently stops working.
+ * word. It was ~60 words until the first prompt was rewritten to the bare
+ * destructive request; the shorter proposal is what the model actually emits
+ * unprompted, so the budget is now generous rather than tight. The two are
+ * coupled and nothing enforces the coupling — if the recorded
+ * `request_approval` text in `public/hero-replay.json` grows, this has to
+ * grow with it. A reader who cannot get through the proposal cannot feel what
+ * approving it means, and the beat silently stops working.
  */
 export const INTERRUPT_DWELL_MS = 4000;
 
