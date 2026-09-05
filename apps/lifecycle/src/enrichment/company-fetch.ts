@@ -60,6 +60,33 @@ export type HttpsRequestFactory = (
 export interface CompanyFetchOverrides
   extends Partial<CompanyFetchDependencies> {
   request?: HttpsRequestFactory;
+  /** Observational only: observer exceptions never affect capture. */
+  onDiagnostic?: (diagnostic: CompanyPageDiagnostic) => void;
+}
+
+export interface CompanyPageDiagnostic {
+  requestedPath: (typeof PAGE_PATHS)[number];
+  outcome:
+    | 'captured'
+    | 'access_denied'
+    | 'rate_limited'
+    | 'http_error'
+    | 'page_too_large'
+    | 'timeout'
+    | 'transport_failure'
+    | 'redirect_rejected'
+    | 'missing_location'
+    | 'redirect_limit'
+    | 'security_rejected';
+  status?: number;
+  /** Known body bytes read, or advertised bytes when rejected before reading. */
+  bytes?: number;
+}
+
+class CompanyPageTooLargeError extends Error {
+  constructor(readonly bytes: number) {
+    super('Company page exceeds 250 KiB');
+  }
 }
 
 function defaultTimeoutSignal(
@@ -411,7 +438,7 @@ async function readBoundedBody(response: Response): Promise<Uint8Array> {
     Number.parseInt(advertisedLength, 10) > MAX_PAGE_BYTES
   ) {
     await cancelResponseBody(response);
-    throw new Error('Company page exceeds 250 KiB');
+    throw new CompanyPageTooLargeError(Number.parseInt(advertisedLength, 10));
   }
   if (!response.body) return new Uint8Array();
 
@@ -424,7 +451,7 @@ async function readBoundedBody(response: Response): Promise<Uint8Array> {
       if (done) break;
       totalBytes += value.byteLength;
       if (totalBytes > MAX_PAGE_BYTES) {
-        throw new Error('Company page exceeds 250 KiB');
+        throw new CompanyPageTooLargeError(totalBytes);
       }
       chunks.push(value);
     }
@@ -572,6 +599,25 @@ export async function fetchCompanyEvidence(
 
   for (const path of PAGE_PATHS) {
     let currentUrl = new URL(path, `https://${hostname}/`);
+    let status: number | undefined;
+    let outcome: CompanyPageDiagnostic['outcome'] | undefined;
+    const report = (
+      result: CompanyPageDiagnostic['outcome'],
+      bytes?: number
+    ) => {
+      try {
+        overrides.onDiagnostic?.({
+          requestedPath: path,
+          outcome: result,
+          ...(status === undefined ? {} : { status }),
+          ...(bytes === undefined || !Number.isSafeInteger(bytes)
+            ? {}
+            : { bytes }),
+        });
+      } catch {
+        // Observers cannot alter evidence, security rejection, or cancellation.
+      }
+    };
     const timeout = dependencies.createTimeoutSignal(
       signal,
       REQUEST_TIMEOUT_MS
@@ -594,19 +640,35 @@ export async function fetchCompanyEvidence(
             'user-agent': 'ThreadplaneCompanyResearch/1.0',
           },
         });
+        status = response.status;
         if (REDIRECT_STATUSES.has(response.status)) {
           const location = response.headers.get('location');
           await cancelResponseBody(response);
-          if (!location)
+          if (!location) {
+            outcome = 'missing_location';
             throw new Error('Company redirect is missing Location');
+          }
           redirects += 1;
           if (redirects > MAX_REDIRECTS) {
+            outcome = 'redirect_limit';
             throw new Error('Company redirect limit exceeded');
           }
-          currentUrl = validatedRedirectUrl(location, currentUrl, hostname);
+          try {
+            currentUrl = validatedRedirectUrl(location, currentUrl, hostname);
+          } catch (error) {
+            outcome = 'redirect_rejected';
+            throw error;
+          }
+          status = undefined;
           continue;
         }
         if (!response.ok) {
+          outcome =
+            response.status === 403
+              ? 'access_denied'
+              : response.status === 429
+              ? 'rate_limited'
+              : 'http_error';
           await cancelResponseBody(response);
           throw new Error(`Company page returned HTTP ${response.status}`);
         }
@@ -619,6 +681,7 @@ export async function fetchCompanyEvidence(
             ...extractEvidence(body),
           })
         );
+        report('captured', body.byteLength);
         break;
       }
     } catch (error) {
@@ -626,6 +689,17 @@ export async function fetchCompanyEvidence(
       // skipped so the remaining pages still yield evidence. The caller's
       // own abort and any SSRF violation propagate.
       signal.throwIfAborted();
+      report(
+        outcome ??
+          (error instanceof CompanyFetchSecurityError
+            ? 'security_rejected'
+            : error instanceof CompanyPageTooLargeError
+            ? 'page_too_large'
+            : timeout.signal.aborted
+            ? 'timeout'
+            : 'transport_failure'),
+        error instanceof CompanyPageTooLargeError ? error.bytes : undefined
+      );
       if (error instanceof CompanyFetchSecurityError) throw error;
     } finally {
       timeout.clear();

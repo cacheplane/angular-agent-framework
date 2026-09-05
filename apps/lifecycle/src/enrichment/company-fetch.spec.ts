@@ -9,10 +9,156 @@ import {
   fetchCompanyEvidence,
   resolveWithNodeDns,
   type CompanyFetchDependencies,
+  type CompanyPageDiagnostic,
   type CompanyRequestInit,
 } from './company-fetch.js';
 
 const NOW = new Date('2026-09-01T12:00:00.000Z');
+
+describe('page diagnostics', () => {
+  it.each([
+    [403, 'access_denied'],
+    [429, 'rate_limited'],
+    [503, 'http_error'],
+  ] as const)(
+    'reports HTTP %s without response content',
+    async (status, outcome) => {
+      const diagnostics: CompanyPageDiagnostic[] = [];
+      await expect(
+        fetchCompanyEvidence('example.com', new AbortController().signal, {
+          ...dependencies({
+            fetch: async () => new Response('private body', { status }),
+          }),
+          onDiagnostic: (diagnostic) => diagnostics.push(diagnostic),
+        })
+      ).resolves.toEqual([]);
+      expect(diagnostics).toEqual(
+        ['/', '/about', '/pricing'].map((requestedPath) => ({
+          requestedPath,
+          outcome,
+          status,
+        }))
+      );
+    }
+  );
+
+  it('records requested paths for redirected captures and isolates observer exceptions', async () => {
+    const diagnostics: CompanyPageDiagnostic[] = [];
+    const pages = await fetchCompanyEvidence(
+      'example.com',
+      new AbortController().signal,
+      {
+        ...dependencies({
+          fetch: async (url) =>
+            url.pathname === '/about'
+              ? new Response(null, {
+                  status: 302,
+                  headers: { location: '/company?token=private' },
+                })
+              : okPage(),
+        }),
+        onDiagnostic: (diagnostic) => {
+          diagnostics.push(diagnostic);
+          throw new Error('observer');
+        },
+      }
+    );
+    expect(pages).toHaveLength(3);
+    expect(diagnostics.map((d) => d.requestedPath)).toEqual([
+      '/',
+      '/about',
+      '/pricing',
+    ]);
+    expect(
+      diagnostics.every(
+        (d) =>
+          d.outcome === 'captured' && d.status === 200 && (d.bytes ?? 0) > 0
+      )
+    ).toBe(true);
+    expect(JSON.stringify(diagnostics)).not.toContain('private');
+  });
+
+  it.each([
+    'missing_location',
+    'redirect_limit',
+    'redirect_rejected',
+    'security_rejected',
+    'page_too_large',
+    'transport_failure',
+    'timeout',
+  ] as const)('classifies %s without weakening policy', async (outcome) => {
+    const diagnostics: CompanyPageDiagnostic[] = [];
+    const ownTimeout = AbortSignal.abort(new Error('private timeout'));
+    const operation = fetchCompanyEvidence(
+      'example.com',
+      new AbortController().signal,
+      {
+        ...dependencies({
+          ...(outcome === 'timeout'
+            ? {
+                createTimeoutSignal: () => ({
+                  signal: ownTimeout,
+                  clear: () => undefined,
+                }),
+              }
+            : {}),
+          resolve: async () => [
+            outcome === 'security_rejected' ? '127.0.0.1' : '93.184.216.34',
+          ],
+          fetch: async () => {
+            if (outcome === 'transport_failure')
+              throw new Error('private transport');
+            if (outcome === 'page_too_large')
+              return new Response('x', {
+                headers: { 'content-length': '256001' },
+              });
+            return new Response(null, {
+              status: 302,
+              headers:
+                outcome === 'missing_location'
+                  ? {}
+                  : {
+                      location:
+                        outcome === 'redirect_rejected'
+                          ? 'https://other.example/?secret=private'
+                          : '/loop',
+                    },
+            });
+          },
+        }),
+        onDiagnostic: (diagnostic) => {
+          diagnostics.push(diagnostic);
+          throw new Error('observer');
+        },
+      }
+    );
+    if (outcome === 'security_rejected' || outcome === 'redirect_rejected')
+      await expect(operation).rejects.toThrow(/unsafe/iu);
+    else await expect(operation).resolves.toEqual([]);
+    expect(diagnostics[0]).toMatchObject({ requestedPath: '/', outcome });
+    expect(JSON.stringify(diagnostics)).not.toContain('private');
+  });
+
+  it('does not classify caller cancellation as a timeout or let an observer mask it', async () => {
+    const controller = new AbortController();
+    const reason = new Error('caller stopped');
+    const observer = vi.fn(() => {
+      throw new Error('observer');
+    });
+    await expect(
+      fetchCompanyEvidence('example.com', controller.signal, {
+        ...dependencies({
+          fetch: async () => {
+            controller.abort(reason);
+            throw reason;
+          },
+        }),
+        onDiagnostic: observer,
+      })
+    ).rejects.toBe(reason);
+    expect(observer).not.toHaveBeenCalled();
+  });
+});
 
 function dependencies(
   overrides: Partial<CompanyFetchDependencies> = {}
