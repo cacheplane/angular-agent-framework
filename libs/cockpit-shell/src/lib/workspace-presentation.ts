@@ -40,7 +40,6 @@ export type CapabilityPresentation =
       promptAssetPaths: string[];
       codeAssetPaths: string[];
       backendAssetPaths: string[];
-      docsAssetPaths: string[];
       runtimeUrl?: string;
       devPort?: number;
     };
@@ -59,7 +58,6 @@ export type WorkspacePresentation =
       promptAssetPaths: string[];
       codeAssetPaths: string[];
       backendAssetPaths: string[];
-      docsAssetPaths: string[];
       runtimeUrl?: string;
       devPort?: number;
       runnable: boolean;
@@ -211,7 +209,6 @@ export const getCapabilityPresentation = (
     promptAssetPaths: [...(module?.promptAssetPaths ?? entry.promptAssetPaths)],
     codeAssetPaths: [...(module?.codeAssetPaths ?? entry.codeAssetPaths)],
     backendAssetPaths: [...(module?.backendAssetPaths ?? [])],
-    docsAssetPaths: [...(module?.docsAssetPaths ?? [])],
     runtimeUrl: module?.runtimeUrl,
     devPort: module?.devPort,
   };
@@ -255,7 +252,6 @@ export const getWorkspacePresentation = (
     promptAssetPaths: [...descriptor.promptAssetPaths],
     codeAssetPaths: [...descriptor.codeAssetPaths],
     backendAssetPaths: [...(descriptor.backendAssetPaths ?? [])],
-    docsAssetPaths: [...(descriptor.docsAssetPaths ?? [])],
     runtimeUrl: descriptor.runtimeUrl,
     devPort: descriptor.devPort,
     runnable: Boolean(descriptor.runtimeUrl || descriptor.devPort),

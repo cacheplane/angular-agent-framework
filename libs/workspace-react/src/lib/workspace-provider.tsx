@@ -28,7 +28,6 @@ import {
 import type {
   RuntimeFrameTelemetry,
   TrackModeChange,
-  TrackNarrativeAction,
   TrackNavigation,
   TrackRuntimeAction,
   TrackRuntimeTransition,
@@ -73,7 +72,6 @@ export interface WorkspaceProviderProps {
   readonly getSessionId: WorkspaceSessionIdProvider;
   readonly runtimeTelemetry?: RuntimeFrameTelemetry;
   readonly trackNavigation?: TrackNavigation;
-  readonly trackNarrativeAction?: TrackNarrativeAction;
   readonly trackModeChange?: TrackModeChange;
   readonly trackRuntimeAction?: TrackRuntimeAction;
   readonly trackRuntimeTransition?: TrackRuntimeTransition;
@@ -165,7 +163,6 @@ export function WorkspaceProvider({
   getSessionId,
   runtimeTelemetry,
   trackNavigation,
-  trackNarrativeAction,
   trackModeChange,
   trackRuntimeAction,
   trackRuntimeTransition,
@@ -407,7 +404,6 @@ export function WorkspaceProvider({
       getSessionId,
       runtimeTelemetry,
       trackNavigation,
-      trackNarrativeAction,
       trackModeChange,
       selectMode,
       setActiveUtility,
@@ -444,7 +440,6 @@ export function WorkspaceProvider({
       selectMode,
       setActiveUtility,
       trackModeChange,
-      trackNarrativeAction,
       trackNavigation,
     ]
   );

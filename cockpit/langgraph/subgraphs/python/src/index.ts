@@ -12,7 +12,6 @@ export interface CockpitCapabilityModule {
   promptAssetPaths: string[];
   codeAssetPaths: string[];
   backendAssetPaths: string[];
-  docsAssetPaths: string[];
   runtimeUrl?: string;
   devPort?: number;
 }
@@ -36,7 +35,6 @@ export const langgraphSubgraphsPythonModule: CockpitCapabilityModule = {
   backendAssetPaths: [
     'cockpit/langgraph/subgraphs/python/src/graph.py',
   ],
-  docsAssetPaths: ['cockpit/langgraph/subgraphs/python/docs/guide.md'],
   runtimeUrl: 'langgraph/subgraphs',
   devPort: 4305,
 };

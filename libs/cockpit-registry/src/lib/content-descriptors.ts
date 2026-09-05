@@ -20,7 +20,6 @@ export interface RegisteredCapabilityModule {
   readonly promptAssetPaths: readonly string[];
   readonly codeAssetPaths: readonly string[];
   readonly backendAssetPaths?: readonly string[];
-  readonly docsAssetPaths?: readonly string[];
   readonly runtimeUrl?: string;
   readonly devPort?: number;
 }
@@ -46,7 +45,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/langgraph/streaming/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/langgraph/streaming/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/langgraph/streaming/python/docs/guide.md'],
     runtimeUrl: 'langgraph/streaming',
     devPort: 4300,
   },
@@ -70,7 +68,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/langgraph/persistence/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/langgraph/persistence/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/langgraph/persistence/python/docs/guide.md'],
     runtimeUrl: 'langgraph/persistence',
     devPort: 4301,
   },
@@ -94,7 +91,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/langgraph/interrupts/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/langgraph/interrupts/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/langgraph/interrupts/python/docs/guide.md'],
     runtimeUrl: 'langgraph/interrupts',
     devPort: 4302,
   },
@@ -116,7 +112,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/langgraph/memory/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/langgraph/memory/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/langgraph/memory/python/docs/guide.md'],
     runtimeUrl: 'langgraph/memory',
     devPort: 4303,
   },
@@ -142,9 +137,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
     backendAssetPaths: [
       'cockpit/langgraph/durable-execution/python/src/graph.py',
     ],
-    docsAssetPaths: [
-      'cockpit/langgraph/durable-execution/python/docs/guide.md',
-    ],
     runtimeUrl: 'langgraph/durable-execution',
     devPort: 4304,
   },
@@ -168,7 +160,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/langgraph/subgraphs/angular/src/app/subgraphs.component.ts',
     ],
     backendAssetPaths: ['cockpit/langgraph/subgraphs/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/langgraph/subgraphs/python/docs/guide.md'],
     runtimeUrl: 'langgraph/subgraphs',
     devPort: 4305,
   },
@@ -192,7 +183,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/langgraph/time-travel/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/langgraph/time-travel/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/langgraph/time-travel/python/docs/guide.md'],
     runtimeUrl: 'langgraph/time-travel',
     devPort: 4306,
   },
@@ -217,9 +207,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
     ],
     backendAssetPaths: [
       'cockpit/langgraph/deployment-runtime/python/src/graph.py',
-    ],
-    docsAssetPaths: [
-      'cockpit/langgraph/deployment-runtime/python/docs/guide.md',
     ],
     runtimeUrl: 'langgraph/deployment-runtime',
     devPort: 4307,
@@ -246,7 +233,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/langgraph/client-tools/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/langgraph/client-tools/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/langgraph/client-tools/python/docs/guide.md'],
     runtimeUrl: 'langgraph/client-tools',
     devPort: 4308,
   },
@@ -271,7 +257,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/ag-ui/interrupts/python/src/graph.py',
       'cockpit/ag-ui/interrupts/python/src/server.py',
     ],
-    docsAssetPaths: ['cockpit/ag-ui/interrupts/python/docs/guide.md'],
     runtimeUrl: 'ag-ui/interrupts',
     devPort: 4320,
   },
@@ -296,7 +281,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/ag-ui/streaming/python/src/graph.py',
       'cockpit/ag-ui/streaming/python/src/server.py',
     ],
-    docsAssetPaths: ['cockpit/ag-ui/streaming/python/docs/guide.md'],
     runtimeUrl: 'ag-ui/streaming',
     devPort: 4321,
   },
@@ -322,7 +306,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/ag-ui/tool-views/python/src/graph.py',
       'cockpit/ag-ui/tool-views/python/src/server.py',
     ],
-    docsAssetPaths: ['cockpit/ag-ui/tool-views/python/docs/guide.md'],
     runtimeUrl: 'ag-ui/tool-views',
     devPort: 4322,
   },
@@ -349,7 +332,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/ag-ui/json-render/python/src/graph.py',
       'cockpit/ag-ui/json-render/python/src/server.py',
     ],
-    docsAssetPaths: ['cockpit/ag-ui/json-render/python/docs/guide.md'],
     runtimeUrl: 'ag-ui/json-render',
     devPort: 4323,
   },
@@ -378,7 +360,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/ag-ui/client-tools/python/src/graph.py',
       'cockpit/ag-ui/client-tools/python/src/server.py',
     ],
-    docsAssetPaths: ['cockpit/ag-ui/client-tools/python/docs/guide.md'],
     runtimeUrl: 'ag-ui/client-tools',
     devPort: 4325,
   },
@@ -403,7 +384,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/ag-ui/a2ui/python/src/graph.py',
       'cockpit/ag-ui/a2ui/python/src/server.py',
     ],
-    docsAssetPaths: ['cockpit/ag-ui/a2ui/python/docs/guide.md'],
     runtimeUrl: 'ag-ui/a2ui',
     devPort: 4324,
   },
@@ -428,7 +408,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/ag-ui/subagents/python/src/graph.py',
       'cockpit/ag-ui/subagents/python/src/server.py',
     ],
-    docsAssetPaths: ['cockpit/ag-ui/subagents/python/docs/guide.md'],
     runtimeUrl: 'ag-ui/subagents',
     devPort: 4326,
   },
@@ -450,7 +429,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/deep-agents/memory/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/deep-agents/memory/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/deep-agents/memory/python/docs/guide.md'],
     runtimeUrl: 'deep-agents/memory',
     devPort: 4313,
   },
@@ -474,7 +452,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/deep-agents/planning/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/deep-agents/planning/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/deep-agents/planning/python/docs/guide.md'],
     runtimeUrl: 'deep-agents/planning',
     devPort: 4310,
   },
@@ -498,7 +475,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/deep-agents/filesystem/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/deep-agents/filesystem/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/deep-agents/filesystem/python/docs/guide.md'],
     runtimeUrl: 'deep-agents/filesystem',
     devPort: 4311,
   },
@@ -522,7 +498,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/deep-agents/subagents/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/deep-agents/subagents/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/deep-agents/subagents/python/docs/guide.md'],
     runtimeUrl: 'deep-agents/subagents',
     devPort: 4312,
   },
@@ -544,7 +519,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/deep-agents/skills/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/deep-agents/skills/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/deep-agents/skills/python/docs/guide.md'],
     runtimeUrl: 'deep-agents/skills',
     devPort: 4314,
   },
@@ -568,7 +542,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/render/spec-rendering/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/render/spec-rendering/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/render/spec-rendering/python/docs/guide.md'],
     runtimeUrl: 'render/spec-rendering',
     devPort: 4401,
   },
@@ -592,7 +565,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/render/element-rendering/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/render/element-rendering/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/render/element-rendering/python/docs/guide.md'],
     runtimeUrl: 'render/element-rendering',
     devPort: 4402,
   },
@@ -616,7 +588,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/render/state-management/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/render/state-management/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/render/state-management/python/docs/guide.md'],
     runtimeUrl: 'render/state-management',
     devPort: 4403,
   },
@@ -638,7 +609,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/render/registry/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/render/registry/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/render/registry/python/docs/guide.md'],
     runtimeUrl: 'render/registry',
     devPort: 4404,
   },
@@ -662,7 +632,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/render/repeat-loops/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/render/repeat-loops/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/render/repeat-loops/python/docs/guide.md'],
     runtimeUrl: 'render/repeat-loops',
     devPort: 4405,
   },
@@ -688,7 +657,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
     backendAssetPaths: [
       'cockpit/render/computed-functions/python/src/graph.py',
     ],
-    docsAssetPaths: ['cockpit/render/computed-functions/python/docs/guide.md'],
     runtimeUrl: 'render/computed-functions',
     devPort: 4406,
   },
@@ -710,7 +678,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/chat/messages/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/chat/messages/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/chat/messages/python/docs/guide.md'],
     runtimeUrl: 'chat/messages',
     devPort: 4501,
   },
@@ -732,7 +699,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/chat/input/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/chat/input/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/chat/input/python/docs/guide.md'],
     runtimeUrl: 'chat/input',
     devPort: 4502,
   },
@@ -754,7 +720,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/chat/interrupts/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/chat/interrupts/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/chat/interrupts/python/docs/guide.md'],
     runtimeUrl: 'chat/interrupts',
     devPort: 4503,
   },
@@ -776,7 +741,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/chat/tool-calls/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/chat/tool-calls/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/chat/tool-calls/python/docs/guide.md'],
     runtimeUrl: 'chat/tool-calls',
     devPort: 4504,
   },
@@ -798,7 +762,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/chat/subagents/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/chat/subagents/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/chat/subagents/python/docs/guide.md'],
     runtimeUrl: 'chat/subagents',
     devPort: 4505,
   },
@@ -820,7 +783,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/chat/threads/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/chat/threads/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/chat/threads/python/docs/guide.md'],
     runtimeUrl: 'chat/threads',
     devPort: 4506,
   },
@@ -842,7 +804,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/chat/timeline/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/chat/timeline/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/chat/timeline/python/docs/guide.md'],
     runtimeUrl: 'chat/timeline',
     devPort: 4507,
   },
@@ -866,7 +827,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/chat/generative-ui/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/chat/generative-ui/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/chat/generative-ui/python/docs/guide.md'],
     runtimeUrl: 'chat/generative-ui',
     devPort: 4508,
   },
@@ -888,7 +848,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/chat/debug/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/chat/debug/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/chat/debug/python/docs/guide.md'],
     runtimeUrl: 'chat/debug',
     devPort: 4509,
   },
@@ -910,7 +869,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/chat/theming/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/chat/theming/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/chat/theming/python/docs/guide.md'],
     runtimeUrl: 'chat/theming',
     devPort: 4510,
   },
@@ -932,7 +890,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/chat/a2ui/angular/src/app/app.config.ts',
     ],
     backendAssetPaths: ['cockpit/chat/a2ui/python/src/graph.py'],
-    docsAssetPaths: ['cockpit/chat/a2ui/python/docs/guide.md'],
     runtimeUrl: 'chat/a2ui',
     devPort: 4511,
   },
@@ -958,9 +915,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
     backendAssetPaths: [
       'cockpit/runtimes/microsoft-agent-framework/python/src/agent.py',
       'cockpit/runtimes/microsoft-agent-framework/python/src/server.py',
-    ],
-    docsAssetPaths: [
-      'cockpit/runtimes/microsoft-agent-framework/python/docs/guide.md',
     ],
     runtimeUrl: 'runtimes/microsoft-agent-framework',
     devPort: 4330,
@@ -988,7 +942,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'cockpit/runtimes/aws-strands/python/src/agent.py',
       'cockpit/runtimes/aws-strands/python/src/server.py',
     ],
-    docsAssetPaths: ['cockpit/runtimes/aws-strands/python/docs/guide.md'],
     runtimeUrl: 'runtimes/aws-strands',
     devPort: 4331,
   },
@@ -1016,7 +969,6 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       'deployments/ag-ui-mastra/agents.mjs',
       'deployments/ag-ui-mastra/server.mjs',
     ],
-    docsAssetPaths: ['cockpit/runtimes/mastra/angular/docs/guide.md'],
     runtimeUrl: 'runtimes/mastra',
     devPort: 4332,
   },
@@ -1035,9 +987,6 @@ const freezeCapabilityDescriptor = (
     codeAssetPaths: freezeAssetPaths(descriptor.codeAssetPaths),
     ...(descriptor.backendAssetPaths
       ? { backendAssetPaths: freezeAssetPaths(descriptor.backendAssetPaths) }
-      : {}),
-    ...(descriptor.docsAssetPaths
-      ? { docsAssetPaths: freezeAssetPaths(descriptor.docsAssetPaths) }
       : {}),
   });
 
@@ -1077,7 +1026,7 @@ export const deriveAvailableModes = (options: {
   ];
   const modes: WorkspaceMode[] = [];
 
-  if (docsPath.length > 0 || (descriptor?.docsAssetPaths?.length ?? 0) > 0) {
+  if (docsPath.length > 0) {
     modes.push('Docs');
   }
   if (descriptor?.runtimeUrl || descriptor?.devPort) {

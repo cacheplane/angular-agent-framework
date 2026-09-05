@@ -10,7 +10,6 @@ import {
   extractTsDocSections,
   extractPyDocSections,
 } from './extract-docs';
-import { renderMarkdown } from './render-markdown';
 
 /**
  * Paths in the manifest are repo-root-relative (e.g., "apps/cockpit/src/app/page.tsx").
@@ -27,18 +26,13 @@ export function findWorkspaceRoot(startDir: string = process.cwd()): string {
   }
 }
 
-export interface NarrativeDoc {
-  title: string;
-  html: string;
-  sourceFile: string;
-}
-
 export interface ContentBundle {
   codeFiles: Record<string, string>;
+  /** Raw text of every readable code or backend asset, keyed like codeFiles. */
+  codeSources: Record<string, string>;
   promptFiles: Record<string, string>;
   runtimeUrl: string | null;
   docSections: DocSection[];
-  narrativeDocs: NarrativeDoc[];
 }
 
 export function resolveRuntimeUrl(options: {
@@ -145,10 +139,10 @@ export async function getContentBundle(
   if (presentation.kind === 'docs-only') {
     return {
       codeFiles: {},
+      codeSources: {},
       promptFiles: {},
       runtimeUrl: null,
       docSections: [],
-      narrativeDocs: [],
     };
   }
 
@@ -158,12 +152,14 @@ export async function getContentBundle(
   const docSections: DocSection[] = [];
 
   const codeFiles: Record<string, string> = {};
+  const codeSources: Record<string, string> = {};
   for (const path of allCodePaths) {
     const source = readFileSafe(workspaceRoot, path);
     if (source === null) {
       codeFiles[path] = `File not found: ${path}`;
     } else {
       codeFiles[path] = await highlightCode(source, path);
+      codeSources[path] = source;
 
       // Extract doc sections
       const fileName = path.split('/').pop() ?? path;
@@ -190,25 +186,11 @@ export async function getContentBundle(
     devPort: presentation.devPort,
   });
 
-  const narrativeDocs: NarrativeDoc[] = [];
-  const docPaths = presentation.docsAssetPaths ?? [];
-  for (const path of docPaths) {
-    const source = readFileSafe(workspaceRoot, path);
-    if (source) {
-      try {
-        const rendered = await renderMarkdown(source);
-        const fileName = path.split('/').pop() ?? path;
-        narrativeDocs.push({
-          title: rendered.title,
-          html: rendered.html,
-          sourceFile: fileName,
-        });
-      } catch {
-        // A broken narrative asset must not prevent the rest of the Cockpit
-        // bundle, or later valid narratives, from loading.
-      }
-    }
-  }
-
-  return { codeFiles, promptFiles, runtimeUrl, docSections, narrativeDocs };
+  return {
+    codeFiles,
+    codeSources,
+    promptFiles,
+    runtimeUrl,
+    docSections,
+  };
 }

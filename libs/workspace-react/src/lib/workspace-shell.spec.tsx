@@ -54,23 +54,16 @@ const presentation: WorkspacePresentation = {
   promptAssetPaths: [],
   codeAssetPaths: ['example.ts'],
   backendAssetPaths: [],
-  docsAssetPaths: ['guide.md'],
   runtimeUrl: 'langgraph/streaming',
   devPort: 4300,
   runnable: true,
 };
 const contentBundle: ContentBundle = {
   codeFiles: { 'example.ts': '<pre><code>source</code></pre>' },
+  codeSources: { 'example.ts': 'source' },
   promptFiles: {},
   runtimeUrl: 'https://runtime.example.test/demo',
   docSections: [],
-  narrativeDocs: [
-    {
-      title: 'Streaming guide',
-      html: '<h1>Registry narrative</h1>',
-      sourceFile: 'guide.md',
-    },
-  ],
 };
 
 function renderWorkspace(options: {
@@ -368,11 +361,17 @@ describe('WorkspaceShell persistent panel composition', () => {
     expect(screen.getByText('Product')).toBeTruthy();
   });
 
-  it('uses registry narrative Docs when no server slot is present', () => {
+  it('renders nothing in the Docs panel when no server slot is present', () => {
     renderWorkspace({ requestedMode: 'docs' });
-    expect(
-      screen.getByRole('heading', { name: 'Registry narrative' })
-    ).toBeTruthy();
+    const panel = screen.getByRole('region', { name: 'Docs workspace panel' });
+    expect(panel.querySelector('h1')).toBeNull();
+    // A crashed panel falls back to WorkspacePanelBoundary's
+    // role="alert" markup; assert that fallback never fired.
+    expect(panel.querySelector('[role="alert"]')).toBeNull();
+    // With no docsSlot, the panel should render only its heading text
+    // ("<entryTitle> Docs") and nothing else -- distinguishing a
+    // cleanly empty panel from one that silently swallowed a crash.
+    expect(panel.textContent?.trim()).toBe(`${identity.title} Docs`);
   });
 
   it('does not mount Run for docs-only or mapped identities without Run', () => {

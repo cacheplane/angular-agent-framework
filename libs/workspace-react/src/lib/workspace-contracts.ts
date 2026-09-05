@@ -11,7 +11,6 @@ import type {
 import type {
   RuntimeFrameTelemetry,
   TrackModeChange,
-  TrackNarrativeAction,
   TrackNavigation,
   WorkspaceSessionIdProvider,
 } from './host-services';
@@ -60,7 +59,6 @@ export interface WorkspaceContextValue {
   readonly getSessionId: WorkspaceSessionIdProvider;
   readonly runtimeTelemetry?: RuntimeFrameTelemetry;
   readonly trackNavigation?: TrackNavigation;
-  readonly trackNarrativeAction?: TrackNarrativeAction;
   readonly trackModeChange?: TrackModeChange;
   selectMode(mode: WorkspaceMode): void;
   setActiveUtility(utility: WorkspaceUtility): void;

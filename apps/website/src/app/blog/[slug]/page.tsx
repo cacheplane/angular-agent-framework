@@ -110,7 +110,7 @@ export default async function BlogPostPage({ params }: Params) {
             <TagChips tags={post.frontmatter.tags} />
           ) : null}
         </header>
-        <MdxRenderer source={post.content} />
+        <MdxRenderer source={post.content} docsPath={`/blog/${slug}`} />
       </article>
         <DocsTOC headings={headings} />
       </div>

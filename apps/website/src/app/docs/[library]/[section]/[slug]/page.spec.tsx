@@ -13,8 +13,17 @@ interface ElementProps {
   docsSlot?: ReactNode;
   requestedMode?: string | null;
   resolution?: { kind?: string; identity?: { availableModes?: string[] } };
-  contentBundle?: { runtimeUrl?: string | null };
+  contentBundle?: {
+    runtimeUrl?: string | null;
+    codeSources?: Record<string, string>;
+  };
   contextTrail?: readonly { label: string; href?: string; icon?: ReactNode }[];
+  docsContext?: unknown;
+  docsPath?: string;
+  exampleCode?: {
+    assetPaths?: readonly string[];
+    sources?: Record<string, string>;
+  } | null;
 }
 
 function findElement(
@@ -63,6 +72,20 @@ describe('unified docs workspace route', () => {
       activeSection: 'guides',
       activeSlug: 'streaming',
     });
+
+    const mdx = findElement(
+      workspace?.props.docsSlot,
+      MdxRenderer as ComponentType<never>
+    );
+    expect(mdx?.props.exampleCode?.assetPaths).toContain(
+      'cockpit/langgraph/streaming/angular/src/app/streaming.component.ts'
+    );
+    // The server-rendered <ExampleCode> keeps the raw sources; the client
+    // boundary must not carry a second copy of them into the RSC payload.
+    expect(Object.keys(mdx?.props.exampleCode?.sources ?? {})).toContain(
+      'cockpit/langgraph/streaming/angular/src/app/streaming.component.ts'
+    );
+    expect(workspace?.props.contentBundle?.codeSources).toEqual({});
   });
 
   it('keeps an unmapped page as a complete server Docs slot', async () => {
@@ -78,6 +101,12 @@ describe('unified docs workspace route', () => {
       findElement(slot, DocsPageHeader as ComponentType<never>)
     ).toBeTruthy();
     expect(findElement(slot, MdxRenderer as ComponentType<never>)).toBeTruthy();
+    expect(
+      findElement(slot, MdxRenderer as ComponentType<never>)?.props.exampleCode
+    ).toBeNull();
+    expect(
+      findElement(slot, MdxRenderer as ComponentType<never>)?.props.docsPath
+    ).toBe('/docs/langgraph/guides/testing');
     expect(findElement(slot, DocsTOC as ComponentType<never>)).toBeTruthy();
   });
 

@@ -18,9 +18,9 @@ import {
   MiddlewareHowItFits,
   TelemetryHowItFits,
 } from './diagrams';
-import rehypePrettyCode from 'rehype-pretty-code';
-import rehypeSlug from 'rehype-slug';
-import remarkGfm from 'remark-gfm';
+import { mdxCompileOptions } from './mdx-options';
+import { createExampleCode } from './mdx/ExampleCode';
+import type { ExampleCodeContext } from '../../lib/example-code';
 
 /**
  * Intrinsic size of each SVG diagram in `public/blog/diagrams`.
@@ -87,28 +87,28 @@ const mdxComponents = {
   ...mdxHeadingComponents,
 };
 
-const rehypeOptions = {
-  theme: 'tokyo-night',
-  keepBackground: true,
-};
-
 interface MdxRendererProps {
   source: string;
+  /** Present on docs pages that embed a runnable example; null elsewhere. */
+  exampleCode?: ExampleCodeContext | null;
+  /** Route of the page being rendered, so a docs-only failure can name it. */
+  docsPath?: string;
 }
 
-export function MdxRenderer({ source }: MdxRendererProps) {
+export function MdxRenderer({
+  source,
+  exampleCode = null,
+  docsPath,
+}: MdxRendererProps) {
   return (
     <div className="docs-prose">
       <MDXRemote
         source={source}
-        components={mdxComponents}
-        options={{
-          mdxOptions: {
-            remarkPlugins: [remarkGfm],
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        rehypePlugins: [rehypeSlug, [rehypePrettyCode, rehypeOptions] as any],
-          },
+        components={{
+          ...mdxComponents,
+          ExampleCode: createExampleCode(exampleCode, docsPath),
         }}
+        options={mdxCompileOptions}
       />
     </div>
   );

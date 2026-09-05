@@ -12,7 +12,6 @@ export interface CockpitCapabilityModule {
   promptAssetPaths: string[];
   codeAssetPaths: string[];
   backendAssetPaths: string[];
-  docsAssetPaths: string[];
   runtimeUrl?: string;
   devPort?: number;
 }
@@ -44,7 +43,6 @@ export const runtimesMastraAngularModule: CockpitCapabilityModule = {
     'deployments/ag-ui-mastra/agents.mjs',
     'deployments/ag-ui-mastra/server.mjs',
   ],
-  docsAssetPaths: ['cockpit/runtimes/mastra/angular/docs/guide.md'],
   runtimeUrl: 'runtimes/mastra',
   devPort: 4332,
 };
