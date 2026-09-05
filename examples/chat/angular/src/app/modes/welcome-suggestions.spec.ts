@@ -71,4 +71,11 @@ describe('suggestionsForAppMode with a featured id', () => {
 
     expect(featured.id).toBe(ITINERARY_SUGGESTIONS[0].id);
   });
+
+  it('the approval chip sends the hero prompt verbatim so the demo runs the same scenario', async () => {
+    const { HERO_PROMPTS } = await import('../hero/hero-script');
+    const chip = MORE_SUGGESTIONS.find((s) => s.id === 'approve-before-a-destructive');
+    expect(chip?.value).toBe(HERO_PROMPTS[0]);
+    expect(chip?.value).not.toMatch(/request_approval/);
+  });
 });

@@ -1,7 +1,8 @@
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
-import { ChatPopupComponent, a2uiBasicCatalog } from '@threadplane/chat';
+import { ChatPopupComponent } from '@threadplane/chat';
 import { DemoShell } from '../shell/demo-shell.component';
 import { DEMO_AGENT } from '../shell/shell-tokens';
+import { demoViews } from '../demo-views';
 import { WelcomeSuggestionsComponent } from './welcome-suggestions.component';
 import { AppModePromoComponent } from './app-mode-promo.component';
 
@@ -48,8 +49,8 @@ import { AppModePromoComponent } from './app-mode-promo.component';
 export class PopupMode {
   protected readonly agent = inject(DEMO_AGENT);
   protected readonly shell = inject(DemoShell);
-  // Phase 4: A2UI component catalog forwarded to <chat-popup>.
-  protected readonly catalog = a2uiBasicCatalog();
+  // A2UI catalog + registered tool views — see demo-views.ts.
+  protected readonly catalog = demoViews();
 
   protected send(text: string): void {
     void this.agent.submit({ message: text });

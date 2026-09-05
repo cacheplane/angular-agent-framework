@@ -460,3 +460,20 @@ class TestEmitInPlaceCoalescing:
         assert keys == ["createSurface", "updateDataModel", "updateDataModel", "updateComponents"], (
             f"expected createSurface first, rest in emission order, got {keys}"
         )
+
+
+@pytest.mark.smoke
+def test_backup_tools_are_server_tools():
+    from src.graph import SERVER_TOOLS
+    names = {t.name for t in SERVER_TOOLS}
+    assert {"list_backups", "delete_backups", "request_approval", "search_documents", "research"} <= names
+
+
+@pytest.mark.smoke
+def test_system_prompt_routes_cleanup_to_the_executable_tools():
+    from src.graph import SYSTEM_PROMPT
+    assert "list_backups" in SYSTEM_PROMPT
+    assert "delete_backups" in SYSTEM_PROMPT
+    # The destructive tool gates itself; the prompt must not send the model
+    # to the generic gate first, or the walkthrough gains a second pause.
+    assert "do not call `request_approval` first" in SYSTEM_PROMPT

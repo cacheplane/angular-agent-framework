@@ -4969,7 +4969,7 @@
   {
     "name": "ChatToolViewsComponent",
     "kind": "class",
-    "description": "Renders a frontend component for a tool call by reusing the chat\ncomposition's `views` registry. A tool call whose `name` matches a\nregistry key is bridged into a synthetic one-element render spec\n(`{ root: name, elements: { [name]: { type: name, props } } }`) and\nrendered through the existing render-spec pipeline.\n\nProps merge the live `args` (present while the call streams) with the\n`result` (on completion) and always include `status`, so a view\ncomponent can show its own loading/empty/error states. `RenderElement`\nfilters props down to the component's declared inputs, so extra keys\n(and a `status` a component chooses not to declare) are harmless.",
+    "description": "Renders a frontend component for a tool call by reusing the chat\ncomposition's `views` registry. A tool call whose `name` matches a\nregistry key is bridged into a synthetic one-element render spec\n(`{ root: name, elements: { [name]: { type: name, props } } }`) and\nrendered through the existing render-spec pipeline.\n\nProps merge the live `args` (present while the call streams) with the\n`result` (on completion; a JSON-object string result is parsed first,\nsince that is how a LangGraph ToolMessage carries a dict return) and\nalways include `status`, so a view\ncomponent can show its own loading/empty/error states. `RenderElement`\nfilters props down to the component's declared inputs, so extra keys\n(and a `status` a component chooses not to declare) are harmless.",
     "params": [],
     "examples": [],
     "properties": [
