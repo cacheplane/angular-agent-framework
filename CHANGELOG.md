@@ -1,3 +1,30 @@
+## 0.0.66 (2026-09-05)
+
+### 🚀 Features
+
+- **growth:** add synthetic Dawn research app for LangSmith ([#1003](https://github.com/cacheplane/angular-agent-framework/pull/1003))
+- **growth:** link install and development runtime to founder outreach ([#1004](https://github.com/cacheplane/angular-agent-framework/pull/1004))
+- **telemetry:** collect installs and development progress for founder outreach ([#1007](https://github.com/cacheplane/angular-agent-framework/pull/1007))
+- **website:** lead-form kit and footer newsletter fix ([#994](https://github.com/cacheplane/angular-agent-framework/pull/994))
+- **website:** contact page on the form kit; enterprise form merges into it ([#995](https://github.com/cacheplane/angular-agent-framework/pull/995))
+- **website:** replace the Yes wall with the reliability band ([#996](https://github.com/cacheplane/angular-agent-framework/pull/996))
+- **website:** homepage rebuild — category hero, live demo, install dialog ([#997](https://github.com/cacheplane/angular-agent-framework/pull/997))
+- **website:** phone-width hero poster, re-recorded desktop poster, redesigned OG card ([#1002](https://github.com/cacheplane/angular-agent-framework/pull/1002))
+
+### 🩹 Fixes
+
+- **growth:** accept Resend's current webhook payload shape ([#989](https://github.com/cacheplane/angular-agent-framework/pull/989))
+- **growth:** accept Resend webhook payloads that carry a headers array; log every outcome ([#991](https://github.com/cacheplane/angular-agent-framework/pull/991))
+- **hero:** drop the internal tool name from the walkthrough prompt ([#1006](https://github.com/cacheplane/angular-agent-framework/pull/1006))
+- **langgraph:** adopt a transport-created thread id instead of aborting the run ([#1005](https://github.com/cacheplane/angular-agent-framework/pull/1005))
+- **langgraph, ag-ui:** give each AgentRef its own agent instead of aliasing one token ([#1000](https://github.com/cacheplane/angular-agent-framework/pull/1000))
+- **release:** update internal peer ranges with synchronized versions ([#1007](https://github.com/cacheplane/angular-agent-framework/pull/1007))
+- **telemetry:** keep contributor workspace installation inert ([#1007](https://github.com/cacheplane/angular-agent-framework/pull/1007))
+- **telemetry:** provide inert install bridges in source checkouts ([#1007](https://github.com/cacheplane/angular-agent-framework/pull/1007))
+- **telemetry:** exclude automated browsers from developer collection ([#1007](https://github.com/cacheplane/angular-agent-framework/pull/1007))
+- **website:** readable code panes, self-healing hero handshake, focus ring, mobile hero ([#998](https://github.com/cacheplane/angular-agent-framework/pull/998))
+- **website:** restore the works-with ribbon and subhead highlight; retime the hero walkthrough ([#999](https://github.com/cacheplane/angular-agent-framework/pull/999))
+
 ## 0.0.65 (2026-09-03)
 
 ### 🚀 Features
