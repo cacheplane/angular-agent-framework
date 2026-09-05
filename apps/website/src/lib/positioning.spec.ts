@@ -152,3 +152,35 @@ describe('positioning: coding-agent prompt', () => {
     expect(CODING_AGENT_PROMPT).not.toMatch(/api[_ -]?key/i);
   });
 });
+
+describe('homepage restructure copy (live-stage spec §3)', () => {
+  it('pins the final-mile heading and aside', async () => {
+    const { FINAL_MILE_HEADING, FINAL_MILE_ASIDE } = await import('./positioning');
+    expect(FINAL_MILE_HEADING).toBe('Angular teams are building agents. The last mile is still messy.');
+    expect(FINAL_MILE_ASIDE).toBe('What you start with, and what Threadplane adds.');
+  });
+
+  it('carries three reliability receipts, each linking a human-readable page', async () => {
+    const { RELIABILITY_RECEIPTS } = await import('./positioning');
+    expect(RELIABILITY_RECEIPTS.map((r) => r.claim)).toEqual([
+      'Signed provenance on every release',
+      'Three runtimes exercised end to end',
+      'No content telemetry, no cloud',
+    ]);
+    for (const r of RELIABILITY_RECEIPTS) {
+      expect(r.sourceLabel.length).toBeGreaterThan(0);
+      const { hostname, pathname } = new URL(r.sourceHref, 'https://threadplane.ai');
+      expect(hostname.startsWith('api.'), r.sourceHref).toBe(false);
+      expect(pathname.startsWith('/api/'), r.sourceHref).toBe(false);
+    }
+  });
+
+  it('carries the three prove-it rows the final CTA absorbs from the Test section', async () => {
+    const { PROVE_IT_ROWS } = await import('./positioning');
+    expect(PROVE_IT_ROWS).toEqual([
+      { claim: 'No key, no server, no network', api: 'provideFakeAgent()' },
+      { claim: 'Script tool calls and interrupts', api: 'mockLangGraphAgent()' },
+      { claim: 'Same UI code in test and production', api: 'Agent' },
+    ]);
+  });
+});
