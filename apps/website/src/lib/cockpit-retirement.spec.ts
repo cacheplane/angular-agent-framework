@@ -223,4 +223,40 @@ describe('Cockpit surface retirement', () => {
     expect(post).not.toContain('alt="The cockpit ag-ui/interrupts welcome screen');
     expect(post).toContain('alt="The Threadplane docs workspace');
   });
+
+  it('keeps the retired product name out of user-facing Website copy', () => {
+    const USER_FACING = /\.(?:mdx|md|tsx)$/;
+    const ALLOWED_TOKENS = [
+      /cockpit\/[a-z-]+\/[a-z-]+/g, // example repository paths
+      /apps\/cockpit\//g, // tooling paths (removed by Part C)
+      /@threadplane\/cockpit-[a-z-]+/g, // package names
+      /cockpit-[a-z-]+-angular/g, // Nx project names
+      /cockpit-(?:registry|shell|runtime-bridge|telemetry|docs|testing|ui)/g,
+      /cockpit_(?:did|cap|phk|host)/g, // runtime bridge query params
+      /Cockpit(?:ManifestEntry|ManifestIdentity)/g, // type names
+      /cockpit-retirement/g, // this guard's own file name
+      /cockpit-ag-ui-interrupts/g, // real project/app identifier (cockpit/ag-ui/interrupts)
+      /cockpit\/ports\.mjs/g, // real repo file path
+      /cockpit\/deep-agents/g, // real repo directory path
+      /cockpit\/runtimes\/<runtime>\//g, // real repo directory path (templated)
+      /serve:cockpit\b/g, // real Nx target name
+      /\("cockpit", "deep-agents-memory"\)/g, // real LangGraph memory namespace literal
+    ];
+    const sources = sourceFiles(WEBSITE_ROOT)
+      .filter((path) => USER_FACING.test(path))
+      .map((path) => ({
+        relativePath: relative(WEBSITE_ROOT, path),
+        content: readFileSync(path, 'utf8'),
+      }));
+
+    const violations = sources.flatMap(({ relativePath, content }) =>
+      content.split('\n').flatMap((line, index) => {
+        let scrubbed = line;
+        for (const token of ALLOWED_TOKENS) scrubbed = scrubbed.replace(token, '');
+        return /cockpit/i.test(scrubbed) ? [`${relativePath}:${index + 1}`] : [];
+      })
+    );
+
+    expect(violations).toEqual([]);
+  });
 });
