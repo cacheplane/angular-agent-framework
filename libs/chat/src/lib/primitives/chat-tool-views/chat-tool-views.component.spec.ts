@@ -86,6 +86,36 @@ describe('ChatToolViewsComponent', () => {
     expect(el.querySelector('.tool-result')?.textContent).toContain('true');
   });
 
+  it('parses a JSON-object string result into props (LangGraph ToolMessage content)', () => {
+    agent.toolCalls.set([
+      {
+        id: 'c1', name: 'weather_card',
+        args: { location: 'San Francisco' },
+        status: 'complete',
+        result: '{"temperatureF": 68, "conditions": "Sunny"}',
+      },
+    ] as ToolCall[]);
+    const fixture = mountHost(agent, msg);
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.temp')?.textContent).toContain('68');
+    expect(el.querySelector('.loc')?.textContent).toContain('San Francisco');
+    expect(el.querySelector('.tool-result')?.textContent).toContain('true');
+  });
+
+  it('leaves a non-object string result alone', () => {
+    agent.toolCalls.set([
+      { id: 'c1', name: 'weather_card', args: { location: 'SF' }, status: 'complete', result: 'Human response: approved' },
+      { id: 'c2', name: 'weather_card', args: { location: 'LA' }, status: 'complete', result: '[1, 2]' },
+    ] as ToolCall[]);
+    const twoCalls: Message = { id: 'm2', role: 'assistant', content: '', toolCallIds: ['c1', 'c2'] };
+    const fixture = mountHost(agent, twoCalls);
+    const el = fixture.nativeElement as HTMLElement;
+    const temps = Array.from(el.querySelectorAll('.temp')).map((n) => n.textContent?.trim());
+    expect(temps).toEqual(['', '']);
+    const locs = Array.from(el.querySelectorAll('.loc')).map((n) => n.textContent?.trim());
+    expect(locs).toEqual(['SF', 'LA']);
+  });
+
   it('passes error lifecycle state to the registered view', () => {
     agent.toolCalls.set([
       {

@@ -13,23 +13,26 @@
  * bubble behind it, and a still of a live Accept / Edit / Respond dialog
  * invites taps that do nothing.
  *
- * The 2800ms wait is shared with the desktop recorder and is about the scripted
- * cursor, not the text: at 1500ms it is still parked where it pressed Accept,
- * which at phone width drops the arrowhead onto the word `retain` in step 3.
- * By 2800ms it has reached the composer, which reads as the walkthrough about
- * to type again rather than as a smudge on the prose. See that recorder for the
- * measured timeline; PHONE WIDTH IS THE BINDING CONSTRAINT on the value, because
- * the composer here starts filling at ~2970ms while the desktop capture has
- * until ~3200ms. The previous 2500ms was measured against an older
- * `public/hero-replay.json` and dropped the arrowhead onto "Nothing has been
- * deleted yet" once that recording changed, so re-measure whenever it does.
+ * The wait is about the scripted cursor, not the text. Until the resumed answer
+ * finishes and HOLD_AFTER_ANSWER_MS elapses the cursor stays parked where it
+ * pressed Accept, which at phone width drops the arrowhead onto the
+ * `delete_backups` tool chip. It then glides to the composer for CURSOR_MOVE_MS
+ * and typing starts the moment it arrives, so the only clean frame is mid-glide:
+ * cursor en route, composer still empty. Measured against the 2026-09-05
+ * recording by sampling the DOM every 250ms after the panel detaches: parked
+ * until ~4.6s, gliding until ~5.3s, typing from ~5.4s, send at ~8.5s. 5000ms
+ * is late in the glide, past the answer text and above the composer. Runs drift
+ * by up to a second, so if a capture shows
+ * the arrowhead back on the chip, re-run rather than retune. (7400ms landed
+ * AFTER the second prompt had been sent, which the assertions below cannot
+ * catch: the composer has cleared again by then.) The desktop recorder keeps
+ * its own value because its Accept spot is empty space. Re-measure whenever
+ * `public/hero-replay.json` changes.
  *
- * The height budget is just as coupled, and to the FIXTURE rather than the
- * replay: `e2e/fixtures/hero-approval.json` supplies the answer text, and its
- * opening line has to fit on ONE line at 390px (about 44 characters) or the
- * whole block shifts up and the first line is sliced off the top edge. A draft
- * that opened "Approved. Here is the cleanup I would run once you confirm the
- * backup locations:" wrapped to two lines and did exactly that.
+ * The height budget is just as coupled, and to the REPLAY: the opening line
+ * of the recorded post-approval answer in `public/hero-replay.json` has to fit
+ * on ONE line at 390px (about 44 characters) or the whole block shifts up and
+ * the first line is sliced off the top edge. Re-check it on every re-record.
  *
  * Geometry: 390x650 is the phone design width the reviews already use, and it
  * is exactly 3:5 — the ratio `.hero-demo-stage` holds below 768px — so
@@ -59,7 +62,7 @@ test('capture mobile hero poster', async ({ page }) => {
   const interruptPanel = page.locator('chat-interrupt-panel');
   await interruptPanel.waitFor({ timeout: 60_000 });
   await interruptPanel.waitFor({ state: 'detached', timeout: 60_000 });
-  await page.waitForTimeout(2800);
+  await page.waitForTimeout(5000);
   // Guards the beat: `.hero__take` ships in normal flow, and a composer with
   // the next prompt already typed into it means the wait has drifted late. The
   // a2ui check catches a capture that drifted PAST typing into the second run,

@@ -16,7 +16,9 @@ import { ChatGenerativeUiComponent } from '../chat-generative-ui/chat-generative
  * rendered through the existing render-spec pipeline.
  *
  * Props merge the live `args` (present while the call streams) with the
- * `result` (on completion) and always include `status`, so a view
+ * `result` (on completion; a JSON-object string result is parsed first,
+ * since that is how a LangGraph ToolMessage carries a dict return) and
+ * always include `status`, so a view
  * component can show its own loading/empty/error states. `RenderElement`
  * filters props down to the component's declared inputs, so extra keys
  * (and a `status` a component chooses not to declare) are harmless.
@@ -65,7 +67,7 @@ export class ChatToolViewsComponent {
 /** Wraps a tool call into a synthetic single-element render spec. */
 function toToolViewSpec(tc: ToolCall): Spec {
   const args = isRecord(tc.args) ? tc.args : {};
-  const result = isRecord(tc.result) ? tc.result : {};
+  const result = resultRecord(tc.result);
   return {
     root: tc.name,
     elements: {
@@ -88,6 +90,25 @@ function toClientToolLifecycle(tc: ToolCall): ClientToolLifecycle {
     ...(hasResult ? { result: tc.result } : {}),
     ...(tc.error !== undefined ? { error: tc.error } : {}),
   };
+}
+
+/**
+ * The result as a props record. A LangGraph ToolMessage carries a tool's
+ * dict return as a JSON STRING (ToolNode serialises it), so a string that
+ * parses to a plain object is spread the same way an object result is.
+ * Anything else — prose, arrays, malformed JSON — contributes no props.
+ */
+function resultRecord(result: unknown): Record<string, unknown> {
+  if (isRecord(result)) return result;
+  if (typeof result !== 'string') return {};
+  const text = result.trim();
+  if (!text.startsWith('{')) return {};
+  try {
+    const parsed: unknown = JSON.parse(text);
+    return isRecord(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {

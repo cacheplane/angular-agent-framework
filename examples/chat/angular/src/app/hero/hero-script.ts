@@ -1,9 +1,10 @@
 import { signal } from '@angular/core';
 
 /**
- * The two prompts must stay VERBATIM: aimock fixtures match on the exact user
- * message (see e2e/fixtures/hero-approval.json and contact-form.json), so
- * rewording either one breaks recording.
+ * The two prompts must stay VERBATIM. The first is also the demo's
+ * "Approve before a destructive action" chip (welcome-suggestions.ts, pinned
+ * by its spec) and the recording in public/hero-replay.json was made from it;
+ * the second matches the aimock fixture e2e/fixtures/contact-form.json.
  *
  * The first prompt asks for a destructive cleanup and NOTHING ELSE. It names
  * no tool and does not ask to be consulted, because the whole point of the
@@ -15,13 +16,17 @@ import { signal } from '@angular/core';
  * anything destructive so I can review your plan", which named an internal
  * tool no visitor could know AND inverted the claim — it made the guardrail
  * look like a feature you have to request. Verified live against gpt-5-mini
- * before this fixture was written: 12 of 12 runs of the bare prompt called
- * `request_approval` first, with no other tool call and no prompting.
+ * before this fixture was written: 12 of 12 runs of the bare prompt paused
+ * for approval first, and (after the executable tools landed) every measured
+ * run listed the inventory before asking — see scripts/measure_approval_turn.py
+ * in the Python package.
  *
- * `hero-approval.json` is a fixture of its OWN rather than an edit to
- * `interrupt-approval.json`: that scenario (and `record-demo.record.ts`) still
- * exercises the older, explicit phrasing on purpose, so the two texts are no
- * longer byte-identical and must not be unified.
+ * `interrupt-approval.json` and `record-demo.record.ts` still exercise the
+ * older, explicit phrasing of this request on purpose, so the two texts are
+ * not byte-identical and must not be unified. The hero itself is recorded
+ * LIVE (record-hero-live.config.ts): with real tools behind the pause, the
+ * post-approval turn is executed, not scripted, and aimock cannot stage a
+ * list → delete → resume sequence.
  */
 export const HERO_PROMPTS = [
   'Clean up our old database backups, anything older than 90 days.',
@@ -99,15 +104,15 @@ export const CURSOR_MOVE_MS = 650;
  * approves it. Approving instantly says the opposite — that the gate is a
  * formality — which is the one thing this demo must not say.
  *
- * CALIBRATED TO THE PROPOSAL COPY, which is currently ~40 words: four
- * seconds is enough to skim that and take its weight, not to read it word for
- * word. It was ~60 words until the first prompt was rewritten to the bare
- * destructive request; the shorter proposal is what the model actually emits
- * unprompted, so the budget is now generous rather than tight. The two are
- * coupled and nothing enforces the coupling — if the recorded
- * `request_approval` text in `public/hero-replay.json` grows, this has to
- * grow with it. A reader who cannot get through the proposal cannot feel what
- * approving it means, and the beat silently stops working.
+ * CALIBRATED TO THE PROPOSAL COPY, which is currently 18 words: `delete_backups`
+ * composes it in code (`approval_reason` in examples/chat/python/src/backups.py)
+ * from the ids and the total size, so four seconds is enough to read it whole
+ * and take its weight. It was ~60 words when the model wrote it unprompted,
+ * then ~40 once the first prompt became the bare destructive request. The
+ * Python test `test_approval_reason_is_compact_enough_for_the_hero_dwell`
+ * keeps the five-id case under 60 words; if that budget or the ids grow, this
+ * has to grow with them. A reader who cannot get through the proposal cannot
+ * feel what approving it means, and the beat silently stops working.
  */
 export const INTERRUPT_DWELL_MS = 4000;
 

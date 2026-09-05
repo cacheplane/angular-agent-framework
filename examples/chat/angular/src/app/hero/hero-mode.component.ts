@@ -16,7 +16,6 @@ import {
 import {
   ChatComponent,
   ChatInterruptPanelComponent,
-  a2uiBasicCatalog,
   type AgentRef,
   type InterruptAction,
 } from '@threadplane/chat';
@@ -28,6 +27,7 @@ import {
   type LangGraphAgent,
 } from '@threadplane/langgraph';
 import { environment } from '../../environments/environment';
+import { demoViews } from '../demo-views';
 import { WelcomeSuggestionsComponent } from '../modes/welcome-suggestions.component';
 import { HERO_LIVE_REF, HERO_REPLAY_REF } from './hero-agent-refs';
 import { browserHeroBridge, type HeroBridge } from './hero-bridge';
@@ -92,6 +92,16 @@ function scopedAgent(ref: AgentRef<Record<string, unknown>>, config: AgentConfig
   return injector.get(ref.token) as LangGraphAgent;
 }
 
+/**
+ * Same filter the demo shell applies: the canonical graph has side-effect LLM
+ * nodes (generate_title), and only the generate node's tokens belong in the
+ * transcript. Without it the title's tokens land on the just-completed answer
+ * and trip the streaming-markdown contract, which stops the next turn from
+ * rendering. The replay agent needs it too — the recording carries the same
+ * events the live run did.
+ */
+const TRANSCRIPT_NODE_NAMES = ['generate'];
+
 function heroProviders(replay?: HeroReplayTransport): Provider[] {
   return [
     // useFactory, not useValue: this array is built once at decorator time, so
@@ -105,6 +115,7 @@ function heroProviders(replay?: HeroReplayTransport): Provider[] {
         scopedAgent(HERO_REPLAY_REF, {
           assistantId: 'hero-replay',
           transport: inject(HeroReplayTransport),
+          transcriptNodeNames: TRANSCRIPT_NODE_NAMES,
         }),
     },
     {
@@ -116,6 +127,7 @@ function heroProviders(replay?: HeroReplayTransport): Provider[] {
           assistantId: environment.assistantId,
           threadId: liveThreadId,
           onThreadId: (id: string) => liveThreadId.set(id),
+          transcriptNodeNames: TRANSCRIPT_NODE_NAMES,
           transport: isRecordMode()
             ? new HeroRecordingTransport(
                 new FetchStreamTransport(environment.langGraphApiUrl, (id) => liveThreadId.set(id)),
@@ -228,7 +240,7 @@ export class HeroMode implements HeroScriptHost {
   readonly activeAgent = computed<LangGraphAgent>(() =>
     this.mode() === 'live' ? this.liveAgent : this.replayAgent,
   );
-  protected readonly catalog = a2uiBasicCatalog();
+  protected readonly catalog = demoViews();
   readonly cursorX = signal(0);
   readonly cursorY = signal(0);
   readonly cursorVisible = signal(false);

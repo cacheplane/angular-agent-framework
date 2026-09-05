@@ -4,9 +4,13 @@ import { validateHeroRecording, type HeroRecording } from './hero-recording.type
 
 export interface ReplayClock { sleep(ms: number): Promise<void>; }
 
-/** Floor keeps tokens visibly streaming even when the recording was near-atomic
- *  (aimock replay is); ceiling keeps long model pauses from stalling the hero. */
-export const REPLAY_MIN_GAP_MS = 30;
+/** The recording is a live stream (record-hero-live.config.ts), so tokens replay
+ *  at the pace the model actually produced them: the floor only guards against
+ *  a negative gap. It was 30ms while near-atomic aimock recordings needed help
+ *  to look like streaming; with ~700 token events in the GenUI run that floor
+ *  alone would stretch a 5s stream to 23s. The ceiling keeps long model pauses
+ *  (reasoning, tool round-trips) from stalling the hero. */
+export const REPLAY_MIN_GAP_MS = 0;
 export const REPLAY_MAX_GAP_MS = 600;
 export const HERO_RECORDING_URL = '/hero-replay.json';
 

@@ -1,12 +1,14 @@
 /**
- * Playwright config for recording the hero walkthrough fixture. Mirrors
- * `record-demo.config.ts` — same aimock-backed global setup — but captures no
- * video: the artifact is `public/hero-replay.json`, not a clip.
+ * Playwright config for the hero POSTER recorders. Mirrors
+ * `record-demo.config.ts` — same aimock-backed global setup, so the demo
+ * boots without an API key — but captures stills, not a clip.
  *
- * `testMatch` picks up only the hero record script, so recording never runs in
- * CI and the e2e suite never records.
+ * `record-hero-fixture.record.ts` also matches `testMatch`, but must NOT be
+ * run through this config: the fixture is recorded against the real model via
+ * `record-hero-live.config.ts`, because the post-approval turn now executes
+ * real tools and aimock cannot stage that sequence.
  *
- *   npx playwright test --config examples/chat/angular/e2e/record-hero.config.ts record-hero-fixture
+ *   npx playwright test --config examples/chat/angular/e2e/record-hero.config.ts record-hero-poster
  */
 import { defineConfig } from '@playwright/test';
 

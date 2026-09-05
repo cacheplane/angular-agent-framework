@@ -31,11 +31,11 @@ describe('HeroReplayTransport', () => {
     expect(first).toHaveLength(3);
     expect(second).toEqual([{ type: 'values' }]);
   });
-  it('paces by recorded gaps clamped to [30, 600] ms', async () => {
+  it('paces by recorded gaps at their real speed, capped at 600 ms', async () => {
     const clock = fakeClock();
     const t = new HeroReplayTransport(clock, async () => recording);
     await collect(t.stream('hero', null, {}, new AbortController().signal));
-    expect(clock.waits).toEqual([30, 30, 600]);
+    expect(clock.waits).toEqual([0, 5, 600]);
   });
   it('stops when the signal aborts', async () => {
     const t = new HeroReplayTransport(fakeClock(), async () => recording);
@@ -84,7 +84,7 @@ describe('HeroReplayTransport', () => {
     await expect(t.ready()).resolves.toBeUndefined();
     expect(load).toHaveBeenCalledTimes(2);
   });
-  it('clamps gaps to the 30ms floor even when tMs goes backwards', async () => {
+  it('never sleeps a negative gap when tMs goes backwards', async () => {
     const clock = fakeClock();
     const backwards: HeroRecording = {
       version: 1,
@@ -100,7 +100,7 @@ describe('HeroReplayTransport', () => {
     };
     const t = new HeroReplayTransport(clock, async () => backwards);
     await collect(t.stream('hero', null, {}, new AbortController().signal));
-    expect(clock.waits[0]).toBeGreaterThanOrEqual(30);
-    expect(clock.waits[1]).toBeGreaterThanOrEqual(30);
+    expect(clock.waits[0]).toBe(100);
+    expect(clock.waits[1]).toBe(0);
   });
 });
