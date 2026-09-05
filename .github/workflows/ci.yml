@@ -916,7 +916,7 @@ jobs:
             "$RESULT_ANGULAR_COMPATIBILITY" \
             "$SCOPE_ANGULAR_COMPATIBILITY"
           require_scoped "website" "Website — lint / test / build" "$RESULT_WEBSITE" "$SCOPE_WEBSITE"
-          require_scoped "cockpit" "Cockpit — build / test" "$RESULT_COCKPIT" "$SCOPE_COCKPIT"
+          require_scoped "cockpit" "Workspace libraries — lint / test" "$RESULT_COCKPIT" "$SCOPE_COCKPIT"
           require_scoped "cockpit_examples" "Cockpit — build all examples" "$RESULT_COCKPIT_EXAMPLES" "$SCOPE_COCKPIT_EXAMPLES"
           require_scoped "cockpit_smoke" "Cockpit — representative capability smoke" "$RESULT_COCKPIT_SMOKE" "$SCOPE_COCKPIT_SMOKE"
           require_scoped "examples_chat" "examples/chat — python smoke" "$RESULT_EXAMPLES_CHAT_SMOKE" "$SCOPE_EXAMPLES_CHAT"

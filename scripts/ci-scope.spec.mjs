@@ -625,4 +625,23 @@ describe('classifyFromAffected — cockpit e2e matrix stays scoped to its own ca
     // this just confirms it was not swept in here.
     assert.ok(cockpitRegistry.tags.includes('scope:cockpit-e2e'));
   });
+
+  it('a registry change does flip cockpit_e2e, so the negative case above is not vacuous', async () => {
+    const cockpitRegistry = JSON.parse(
+      await readFile('libs/cockpit-registry/project.json', 'utf8')
+    );
+    const website = JSON.parse(
+      await readFile('apps/website/project.json', 'utf8')
+    );
+
+    const scope = classifyFromAffected(
+      ['libs/cockpit-registry/src/lib/manifest.ts'],
+      [
+        { name: 'website', tags: website.tags },
+        { name: 'cockpit-registry', tags: cockpitRegistry.tags },
+      ]
+    );
+
+    assert.equal(scope.cockpit_e2e, true);
+  });
 });
