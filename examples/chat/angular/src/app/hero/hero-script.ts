@@ -1,9 +1,10 @@
 import { signal } from '@angular/core';
 
 /**
- * The two prompts must stay VERBATIM: aimock fixtures match on the exact user
- * message (see e2e/fixtures/hero-approval.json and contact-form.json), so
- * rewording either one breaks recording.
+ * The two prompts must stay VERBATIM. The first is also the demo's
+ * "Approve before a destructive action" chip (welcome-suggestions.ts, pinned
+ * by its spec) and the recording in public/hero-replay.json was made from it;
+ * the second matches the aimock fixture e2e/fixtures/contact-form.json.
  *
  * The first prompt asks for a destructive cleanup and NOTHING ELSE. It names
  * no tool and does not ask to be consulted, because the whole point of the
@@ -15,13 +16,17 @@ import { signal } from '@angular/core';
  * anything destructive so I can review your plan", which named an internal
  * tool no visitor could know AND inverted the claim — it made the guardrail
  * look like a feature you have to request. Verified live against gpt-5-mini
- * before this fixture was written: 12 of 12 runs of the bare prompt called
- * `request_approval` first, with no other tool call and no prompting.
+ * before this fixture was written: 12 of 12 runs of the bare prompt paused
+ * for approval first, and (after the executable tools landed) every measured
+ * run listed the inventory before asking — see scripts/measure_approval_turn.py
+ * in the Python package.
  *
- * `hero-approval.json` is a fixture of its OWN rather than an edit to
- * `interrupt-approval.json`: that scenario (and `record-demo.record.ts`) still
- * exercises the older, explicit phrasing on purpose, so the two texts are no
- * longer byte-identical and must not be unified.
+ * `interrupt-approval.json` and `record-demo.record.ts` still exercise the
+ * older, explicit phrasing of this request on purpose, so the two texts are
+ * not byte-identical and must not be unified. The hero itself is recorded
+ * LIVE (record-hero-live.config.ts): with real tools behind the pause, the
+ * post-approval turn is executed, not scripted, and aimock cannot stage a
+ * list → delete → resume sequence.
  */
 export const HERO_PROMPTS = [
   'Clean up our old database backups, anything older than 90 days.',

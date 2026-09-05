@@ -89,11 +89,12 @@ export const MORE_SUGGESTIONS: readonly WelcomeSuggestion[] = [
     description: 'Try Effort = high — shows step-by-step chain-of-thought output.',
   },
   {
+    // The id is linked from the website (`section-media.ts`); keep it stable.
     id: 'approve-before-a-destructive',
     label: 'Approve before a destructive action',
-    value:
-      'I want to clean up old database backups older than 90 days. Walk me through what you would delete, and call request_approval before doing anything destructive so I can review your plan.',
-    description: 'Pauses mid-run for your approval before proceeding.',
+    // Byte-identical to HERO_PROMPTS[0]: the demo runs the hero's scenario.
+    value: 'Clean up our old database backups, anything older than 90 days.',
+    description: 'Lists the backups, then pauses for your approval before deleting any.',
   },
   {
     id: 'dispatch-a-research-subagent',

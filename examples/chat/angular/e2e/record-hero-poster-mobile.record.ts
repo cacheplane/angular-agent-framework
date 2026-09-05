@@ -24,12 +24,10 @@
  * `public/hero-replay.json` and dropped the arrowhead onto "Nothing has been
  * deleted yet" once that recording changed, so re-measure whenever it does.
  *
- * The height budget is just as coupled, and to the FIXTURE rather than the
- * replay: `e2e/fixtures/hero-approval.json` supplies the answer text, and its
- * opening line has to fit on ONE line at 390px (about 44 characters) or the
- * whole block shifts up and the first line is sliced off the top edge. A draft
- * that opened "Approved. Here is the cleanup I would run once you confirm the
- * backup locations:" wrapped to two lines and did exactly that.
+ * The height budget is just as coupled, and to the REPLAY: the opening line
+ * of the recorded post-approval answer in `public/hero-replay.json` has to fit
+ * on ONE line at 390px (about 44 characters) or the whole block shifts up and
+ * the first line is sliced off the top edge. Re-check it on every re-record.
  *
  * Geometry: 390x650 is the phone design width the reviews already use, and it
  * is exactly 3:5 — the ratio `.hero-demo-stage` holds below 768px — so
