@@ -2501,6 +2501,71 @@ describe('createStreamManagerBridge', () => {
     destroy$.next();
   });
 
+  it('adopts a thread id created mid-stream by a custom transport instead of aborting the run', async () => {
+    // A consumer-supplied transport creates the thread itself and reports the
+    // id back through the configured thread-id signal while the first run is
+    // still streaming. The bridge has no thread of its own yet, so this is an
+    // adoption — it must NOT be mistaken for a thread switch and must not
+    // abort the run that just started.
+    const transport = new MockAgentTransport();
+    const streamSpy = vi.spyOn(transport, 'stream');
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const threadId$ = new BehaviorSubject<string | null>(null);
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport },
+      subjects,
+      threadId$: threadId$.asObservable(),
+      destroy$: destroy$.asObservable(),
+    });
+
+    const submitted = bridge.submit({});
+    await new Promise(r => setTimeout(r, 10));
+
+    threadId$.next('thread-created-by-transport');
+
+    transport.emit([{ type: 'values', values: { count: 1 } }]);
+    await new Promise(r => setTimeout(r, 10));
+
+    const signal = streamSpy.mock.calls[0][3] as AbortSignal;
+    expect(signal.aborted).toBe(false);
+    expect(subjects.values$.value).toEqual({ count: 1 });
+    expect(subjects.status$.value).not.toBe(ResourceStatus.Error);
+
+    transport.close();
+    await submitted;
+    destroy$.next();
+  });
+
+  it('still aborts and resets when a known thread id switches to a different one mid-stream', async () => {
+    const transport = new MockAgentTransport();
+    const streamSpy = vi.spyOn(transport, 'stream');
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const threadId$ = new BehaviorSubject<string | null>('thread-1');
+    const bridge = createStreamManagerBridge({
+      options: { apiUrl: '', assistantId: 'test', transport },
+      subjects,
+      threadId$: threadId$.asObservable(),
+      destroy$: destroy$.asObservable(),
+    });
+
+    bridge.submit({});
+    await new Promise(r => setTimeout(r, 10));
+    transport.emit([{ type: 'values', values: { count: 1 } }]);
+    await new Promise(r => setTimeout(r, 10));
+    expect(subjects.values$.value).toEqual({ count: 1 });
+
+    threadId$.next('thread-2');
+    await new Promise(r => setTimeout(r, 10));
+
+    const signal = streamSpy.mock.calls[0][3] as AbortSignal;
+    expect(signal.aborted).toBe(true);
+    expect(subjects.values$.value).toEqual({});
+    expect(subjects.messages$.value).toEqual([]);
+    destroy$.next();
+  });
+
   it('stop() aborts the active stream and sets status to Idle (user-stop is not an error)', async () => {
     const transport = new MockAgentTransport();
     const subjects = makeSubjects();
