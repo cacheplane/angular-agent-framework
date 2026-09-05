@@ -154,8 +154,9 @@ describe('positioning: coding-agent prompt', () => {
 });
 
 describe('homepage restructure copy (live-stage spec §3)', () => {
-  it('pins the final-mile heading and aside', async () => {
-    const { FINAL_MILE_HEADING, FINAL_MILE_ASIDE } = await import('./positioning');
+  it('pins the final-mile eyebrow, heading and aside', async () => {
+    const { FINAL_MILE_EYEBROW, FINAL_MILE_HEADING, FINAL_MILE_ASIDE } = await import('./positioning');
+    expect(FINAL_MILE_EYEBROW).toBe('Where Threadplane fits');
     expect(FINAL_MILE_HEADING).toBe('Angular teams are building agents. The last mile is still messy.');
     expect(FINAL_MILE_ASIDE).toBe('What you start with, and what Threadplane adds.');
   });

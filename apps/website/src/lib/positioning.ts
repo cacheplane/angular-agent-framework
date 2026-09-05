@@ -43,6 +43,7 @@ export function formatAngularRange(majors: readonly number[]): string {
 export const HERO_TRUST_LINE = `MIT · ${formatAngularRange(WEBSITE_SUPPORTED_ANGULAR_MAJORS)} · no account, no cloud`;
 
 // ── The final mile (live-stage spec §3, block 3) ─────────────────────────────
+export const FINAL_MILE_EYEBROW = 'Where Threadplane fits';
 export const FINAL_MILE_HEADING = 'Angular teams are building agents. The last mile is still messy.';
 export const FINAL_MILE_ASIDE = 'What you start with, and what Threadplane adds.';
 
