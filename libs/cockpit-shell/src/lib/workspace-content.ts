@@ -35,6 +35,8 @@ export interface NarrativeDoc {
 
 export interface ContentBundle {
   codeFiles: Record<string, string>;
+  /** Raw text of every readable code or backend asset, keyed like codeFiles. */
+  codeSources: Record<string, string>;
   promptFiles: Record<string, string>;
   runtimeUrl: string | null;
   docSections: DocSection[];
@@ -145,6 +147,7 @@ export async function getContentBundle(
   if (presentation.kind === 'docs-only') {
     return {
       codeFiles: {},
+      codeSources: {},
       promptFiles: {},
       runtimeUrl: null,
       docSections: [],
@@ -158,12 +161,14 @@ export async function getContentBundle(
   const docSections: DocSection[] = [];
 
   const codeFiles: Record<string, string> = {};
+  const codeSources: Record<string, string> = {};
   for (const path of allCodePaths) {
     const source = readFileSafe(workspaceRoot, path);
     if (source === null) {
       codeFiles[path] = `File not found: ${path}`;
     } else {
       codeFiles[path] = await highlightCode(source, path);
+      codeSources[path] = source;
 
       // Extract doc sections
       const fileName = path.split('/').pop() ?? path;
@@ -210,5 +215,12 @@ export async function getContentBundle(
     }
   }
 
-  return { codeFiles, promptFiles, runtimeUrl, docSections, narrativeDocs };
+  return {
+    codeFiles,
+    codeSources,
+    promptFiles,
+    runtimeUrl,
+    docSections,
+    narrativeDocs,
+  };
 }

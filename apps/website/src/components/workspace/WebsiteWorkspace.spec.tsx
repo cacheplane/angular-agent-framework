@@ -66,6 +66,7 @@ import { WebsiteWorkspace, WebsiteWorkspaceRoot } from './WebsiteWorkspace';
 
 const emptyContent: ContentBundle = {
   codeFiles: {},
+  codeSources: {},
   promptFiles: {},
   runtimeUrl: null,
   docSections: [],

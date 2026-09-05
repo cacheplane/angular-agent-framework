@@ -191,6 +191,9 @@ describe('getContentBundle', () => {
     expect(bundle.docSections).toEqual([]);
     expect(bundle.narrativeDocs).toEqual([]);
     expect(mockExistsSync).toHaveBeenCalledTimes(1);
+    expect(bundle.codeSources).toEqual({
+      'cockpit/langgraph/streaming/python/src/index.ts': 'const x = 1;',
+    });
   });
 
   it('returns a placeholder string when a code file is missing', async () => {
@@ -220,6 +223,7 @@ describe('getContentBundle', () => {
     expect(bundle.runtimeUrl).toBeNull();
     expect(bundle.docSections).toEqual([]);
     expect(bundle.narrativeDocs).toEqual([]);
+    expect(bundle.codeSources).toEqual({});
   });
 
   it('falls back to unhighlighted code when Shiki fails', async () => {
@@ -263,6 +267,7 @@ describe('getContentBundle', () => {
     expect(bundle.narrativeDocs).toEqual([]);
     expect(mockReadFileSync).not.toHaveBeenCalled();
     expect(mockCodeToHtml).not.toHaveBeenCalled();
+    expect(bundle.codeSources).toEqual({});
   });
 
   it('extracts docSections from code and backend files', async () => {

@@ -87,6 +87,7 @@ describe('@threadplane/workspace-react public boundary', () => {
           }}
           contentBundle={{
             codeFiles: {},
+            codeSources: {},
             promptFiles: {},
             runtimeUrl: null,
             docSections: [],

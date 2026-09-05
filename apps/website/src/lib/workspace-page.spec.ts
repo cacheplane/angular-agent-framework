@@ -74,6 +74,7 @@ describe('getWebsiteWorkspacePage', () => {
     });
     expect(page.contentBundle).toEqual({
       codeFiles: {},
+      codeSources: {},
       promptFiles: {},
       runtimeUrl: null,
       docSections: [],

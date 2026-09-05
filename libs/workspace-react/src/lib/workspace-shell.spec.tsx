@@ -61,6 +61,7 @@ const presentation: WorkspacePresentation = {
 };
 const contentBundle: ContentBundle = {
   codeFiles: { 'example.ts': '<pre><code>source</code></pre>' },
+  codeSources: { 'example.ts': 'source' },
   promptFiles: {},
   runtimeUrl: 'https://runtime.example.test/demo',
   docSections: [],
