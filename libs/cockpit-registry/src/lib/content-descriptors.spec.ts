@@ -297,7 +297,9 @@ describe('registry content descriptors', () => {
         )
       );
       expect(entry.availableModes.includes('API')).toBe(apiAssets.length > 0);
-      expect(entry.availableModes.includes('Docs')).toBe(entry.docsPath.length > 0);
+      expect(entry.availableModes.includes('Docs')).toBe(
+        entry.docsPath.length > 0
+      );
     }
   });
 });
