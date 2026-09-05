@@ -30,8 +30,6 @@ const identity: WorkspaceIdentity = {
   language: 'python',
   title: 'Streaming',
   docsPath: '/docs/langgraph/guides/streaming',
-  workspacePath: '/workspace/langgraph/streaming',
-  legacyPath: '/langgraph/core-capabilities/streaming/overview/python',
   runtimeAdapter: 'langgraph',
   availableModes: ['Docs', 'Run', 'Code', 'API'],
 };
@@ -81,7 +79,7 @@ function Readout() {
         type="button"
         onClick={() =>
           workspace.hostServices.navigate({
-            path: identity.legacyPath,
+            path: identity.docsPath,
             restoreFocus: 'mobile-navigation-trigger',
           })
         }
@@ -154,8 +152,7 @@ const providerProps = (
   resolution,
   presentation,
   contentBundle,
-  routeKind: 'docs',
-  routePath: identity.docsPath ?? identity.workspacePath,
+  routePath: identity.docsPath,
   requestedMode: 'code',
   docsSlot: <article>Server docs</article>,
   pushIdentity: vi.fn(),
@@ -167,11 +164,7 @@ const providerProps = (
 
 describe('WorkspaceProvider route mode ownership', () => {
   beforeEach(() => {
-    window.history.replaceState(
-      {},
-      '',
-      identity.docsPath ?? identity.workspacePath
-    );
+    window.history.replaceState({}, '', identity.docsPath);
   });
 
   it('initializes a syntactically valid and available query mode', () => {
@@ -199,7 +192,6 @@ describe('WorkspaceProvider route mode ownership', () => {
         {...providerProps({
           resolution: limitedResolution,
           presentation: { ...presentation, identity: limitedIdentity },
-          routeKind: 'workspace',
           requestedMode: 'run',
           replaceMode,
         })}
@@ -217,7 +209,6 @@ describe('WorkspaceProvider route mode ownership', () => {
         {...providerProps({
           resolution: limitedResolution,
           presentation: { ...presentation, identity: limitedIdentity },
-          routeKind: 'workspace',
           requestedMode: 'preview',
           replaceMode,
         })}
@@ -259,8 +250,7 @@ describe('WorkspaceProvider route mode ownership', () => {
     render(
       <TestedWorkspaceProvider
         {...providerProps({
-          routeKind: 'workspace',
-          routePath: identity.workspacePath,
+          routePath: identity.docsPath,
           requestedMode: 'code',
           replaceMode,
         })}
@@ -274,15 +264,15 @@ describe('WorkspaceProvider route mode ownership', () => {
       window.history.replaceState(
         {},
         '',
-        `${identity.workspacePath}?mode=api&mode=docs`
+        `${identity.docsPath}?mode=api&mode=docs`
       );
       window.dispatchEvent(new PopStateEvent('popstate'));
     });
 
     await waitFor(() =>
-      expect(screen.getByLabelText('Active mode').textContent).toBe('Run')
+      expect(screen.getByLabelText('Active mode').textContent).toBe('Docs')
     );
-    expect(replaceMode).toHaveBeenCalledWith('Run');
+    expect(replaceMode).toHaveBeenCalledWith('Docs');
   });
 
   it('pushes explicit user mode changes, records Activity, and preserves the mode through utility switches', () => {
@@ -331,7 +321,7 @@ describe('WorkspaceProvider route mode ownership', () => {
     fireEvent.click(
       screen.getByRole('button', { name: 'Navigate with focus' })
     );
-    expect(pushIdentity).toHaveBeenCalledWith(identity.legacyPath, {
+    expect(pushIdentity).toHaveBeenCalledWith(identity.docsPath, {
       restoreFocus: 'mobile-navigation-trigger',
     });
   });
@@ -347,7 +337,6 @@ describe('WorkspaceProvider route mode ownership', () => {
       topic: 'memory',
       title: 'Memory',
       docsPath: '/docs/langgraph/guides/memory',
-      workspacePath: '/workspace/langgraph/memory',
       availableModes: ['Docs', 'Run'],
     };
     const replaceMode = vi.fn();

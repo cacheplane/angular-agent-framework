@@ -92,7 +92,6 @@ describe('@threadplane/workspace-react public boundary', () => {
             docSections: [],
             narrativeDocs: [],
           }}
-          routeKind="docs"
           routePath={resolution.docsPath}
           requestedMode="docs"
           docsSlot={<article>workspace docs</article>}

@@ -17,14 +17,12 @@ export const toWorkspaceIdentity = (
   language: entry.language,
   title: entry.title,
   docsPath: entry.docsPath,
-  workspacePath: entry.workspacePath,
-  legacyPath: entry.legacyPath,
   runtimeAdapter: entry.runtimeAdapter,
   availableModes: entry.availableModes,
 });
 
 export const getWorkspaceDestinationPath = (
-  identity: Pick<WorkspaceIdentity, 'id' | 'docsPath' | 'workspacePath'>
+  identity: Pick<WorkspaceIdentity, 'id' | 'docsPath'>
 ): string => {
   if (!identity.docsPath) {
     throw new Error(`Manifest entry without a docs path: ${identity.id}`);
@@ -58,58 +56,9 @@ export const resolveDocsWorkspace = (
   };
 };
 
-export const resolveWorkspacePath = (
-  workspacePath: string,
-  manifest: readonly CockpitManifestEntry[] = cockpitManifest
-): WorkspaceResolution | null => {
-  const entry = manifest.find(
-    (candidate) => candidate.workspacePath === workspacePath
-  );
-  return entry ? mapped(entry) : null;
-};
-
-export const resolveLegacyPath = (
-  legacyPath: string,
-  manifest: readonly CockpitManifestEntry[] = cockpitManifest
-): WorkspaceResolution | null => {
-  const entry = manifest.find(
-    (candidate) => candidate.legacyPath === legacyPath
-  );
-  return entry ? mapped(entry) : null;
-};
-
 export const getRouteDefaultMode = (
-  resolution: WorkspaceResolution | null,
-  routeKind: 'docs' | 'workspace'
-): WorkspaceMode => {
-  if (routeKind === 'docs' || !resolution || resolution.kind === 'docs-only') {
-    return 'Docs';
-  }
-
-  return resolution.identity.availableModes.includes('Run') ? 'Run' : 'Docs';
-};
-
-const LEGACY_REQUEST_MODES: Readonly<Record<string, WorkspaceMode>> = {
-  docs: 'Docs',
-  run: 'Run',
-  code: 'Code',
-  api: 'API',
-};
-
-export const resolveLegacyRequestMode = (
-  rawMode: string | string[] | undefined,
-  resolution: WorkspaceResolution
-): WorkspaceMode => {
-  const fallback = getRouteDefaultMode(resolution, 'workspace');
-  if (typeof rawMode !== 'string' || resolution.kind !== 'mapped') {
-    return fallback;
-  }
-
-  const requested = LEGACY_REQUEST_MODES[rawMode.toLowerCase()];
-  return requested && resolution.identity.availableModes.includes(requested)
-    ? requested
-    : fallback;
-};
+  _resolution: WorkspaceResolution | null
+): WorkspaceMode => 'Docs';
 
 export const getCanonicalWebsiteWorkspaceHref = (
   resolution: WorkspaceResolution,

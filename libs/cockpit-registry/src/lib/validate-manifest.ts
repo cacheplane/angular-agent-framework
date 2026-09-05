@@ -18,8 +18,6 @@ export const validateManifest = (
   const errors: string[] = [];
   const identities = new Set<string>();
   const stableIds = new Set<string>();
-  const workspacePaths = new Set<string>();
-  const legacyPaths = new Set<string>();
 
   for (const entry of manifest) {
     const key = identityKey(entry);
@@ -42,18 +40,6 @@ export const validateManifest = (
     } else {
       stableIds.add(entry.id);
     }
-
-    if (workspacePaths.has(entry.workspacePath)) {
-      errors.push(`Duplicate workspace path: ${entry.workspacePath}`);
-    } else {
-      workspacePaths.add(entry.workspacePath);
-    }
-
-    if (legacyPaths.has(entry.legacyPath)) {
-      errors.push(`Duplicate legacy path: ${entry.legacyPath}`);
-    } else {
-      legacyPaths.add(entry.legacyPath);
-    }
   }
 
   const docsPaths = new Set<string>();
@@ -75,18 +61,6 @@ export const validateManifest = (
       !/^\/docs\/[a-z0-9-]+\/[a-z0-9-]+\/[a-z0-9-]+$/.test(entry.docsPath)
     ) {
       errors.push(`Invalid docsPath for ${entry.id}: ${entry.docsPath}`);
-    }
-
-    const expectedWorkspacePath = `/workspace/${entry.product}/${entry.topic}`;
-    if (entry.workspacePath !== expectedWorkspacePath) {
-      errors.push(
-        `Invalid workspacePath for ${entry.id}: ${entry.workspacePath}`
-      );
-    }
-
-    const expectedLegacyPath = `/${entry.product}/${entry.section}/${entry.topic}/${entry.page}/${entry.language}`;
-    if (entry.legacyPath !== expectedLegacyPath) {
-      errors.push(`Invalid legacyPath for ${entry.id}: ${entry.legacyPath}`);
     }
   }
 

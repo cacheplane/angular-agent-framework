@@ -90,19 +90,18 @@ describe('validateCockpitManifest', () => {
     );
   });
 
-  it.each([
-    ['stable ID', 'id', 'Duplicate stable ID'],
-    ['workspace path', 'workspacePath', 'Duplicate workspace path'],
-    ['legacy path', 'legacyPath', 'Duplicate legacy path'],
-  ] as const)('rejects duplicate %ss', (_label, field, errorCategory) => {
-    const first = getLangGraphEntry('streaming');
-    const second = getLangGraphEntry('interrupts');
-    const invalidManifest = [first, { ...second, [field]: first[field] }];
+  it.each([['stable ID', 'id', 'Duplicate stable ID']] as const)(
+    'rejects duplicate %ss',
+    (_label, field, errorCategory) => {
+      const first = getLangGraphEntry('streaming');
+      const second = getLangGraphEntry('interrupts');
+      const invalidManifest = [first, { ...second, [field]: first[field] }];
 
-    expect(validateManifest(invalidManifest)).toContain(
-      `${errorCategory}: ${first[field]}`
-    );
-  });
+      expect(validateManifest(invalidManifest)).toContain(
+        `${errorCategory}: ${first[field]}`
+      );
+    }
+  );
 
   it('rejects two entries that publish the same Docs path', () => {
     const first = getLangGraphEntry('streaming');
@@ -122,17 +121,16 @@ describe('validateCockpitManifest', () => {
     );
   });
 
-  it.each([
-    ['docsPath', 'docs/not-absolute'],
-    ['workspacePath', 'workspace/langgraph/streaming'],
-    ['legacyPath', 'langgraph/core-capabilities/streaming/overview/python'],
-  ] as const)('rejects an invalid %s', (field, value) => {
-    const entry = getLangGraphEntry('streaming');
+  it.each([['docsPath', 'docs/not-absolute']] as const)(
+    'rejects an invalid %s',
+    (field, value) => {
+      const entry = getLangGraphEntry('streaming');
 
-    expect(validateManifest([{ ...entry, [field]: value }])).toContain(
-      `Invalid ${field} for ${entry.id}: ${value}`
-    );
-  });
+      expect(validateManifest([{ ...entry, [field]: value }])).toContain(
+        `Invalid ${field} for ${entry.id}: ${value}`
+      );
+    }
+  );
 
   it('accepts runnable static entries with no configurable runtime adapter', () => {
     const entry = getLangGraphEntry('streaming');

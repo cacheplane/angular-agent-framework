@@ -548,17 +548,6 @@ function auditThreadsRootProviders(
  * the whole suite stayed green. These assertions are the missing coupling.
  */
 describe('cockpit capability wiring', () => {
-  const resolveCockpitConfig = (fileName: string): string => {
-    const workspaceConfigPath = resolve(
-      process.cwd(),
-      'apps/cockpit',
-      fileName
-    );
-    return existsSync(workspaceConfigPath)
-      ? workspaceConfigPath
-      : resolve(process.cwd(), fileName);
-  };
-
   const manifestKey = (e: {
     product: string;
     section: string;
@@ -2690,31 +2679,4 @@ describe('cockpit capability wiring', () => {
     );
   });
 
-  it('has no direct project references to capability example lanes', () => {
-    const tsconfig = JSON.parse(
-      readFileSync(resolveCockpitConfig('tsconfig.json'), 'utf8')
-    ) as { references?: Array<{ path: string }> };
-
-    expect(
-      (tsconfig.references ?? []).filter((reference) =>
-        reference.path.startsWith('../../cockpit/')
-      )
-    ).toEqual([]);
-  });
-
-  it('keeps redirect deployment inputs without tracing interactive content assets', () => {
-    const project = JSON.parse(
-      readFileSync(resolveCockpitConfig('project.json'), 'utf8')
-    ) as {
-      targets: { build: { inputs: string[] } };
-      namedInputs: Record<string, string[]>;
-    };
-
-    expect(project.targets.build.inputs).toEqual([
-      'default',
-      'deploymentConfig',
-      '^default',
-    ]);
-    expect(project.namedInputs['contentAssets']).toBeUndefined();
-  });
 });

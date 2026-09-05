@@ -59,7 +59,6 @@ export interface WorkspaceProviderProps {
   readonly resolution: WorkspaceResolution;
   readonly presentation: WorkspacePresentation;
   readonly contentBundle: ContentBundle;
-  readonly routeKind: 'docs' | 'workspace';
   /** Path represented by resolution; popstate for any other path belongs to the host router. */
   readonly routePath: string;
   readonly requestedMode: string | null;
@@ -133,12 +132,11 @@ const routeIdentityKey = (resolution: WorkspaceResolution): string =>
 const normalizedMode = (
   rawMode: string | null,
   resolution: WorkspaceResolution,
-  routeKind: 'docs' | 'workspace',
   availability: WorkspaceModeAvailabilityMap
 ): WorkspaceMode => {
   const requested = parseControlPlaneMode(rawMode);
   if (requested && availability[requested].available) return requested;
-  return getRouteDefaultMode(resolution, routeKind);
+  return getRouteDefaultMode(resolution);
 };
 
 const createLocalActivityInput = (
@@ -157,14 +155,13 @@ export function WorkspaceProvider({
   resolution,
   presentation,
   contentBundle,
-  routeKind,
   routePath,
   requestedMode,
   docsSlot = null,
   pushIdentity,
   pushMode,
   replaceMode,
-  resolveIdentityHref = (entry) => entry.workspacePath,
+  resolveIdentityHref = (entry) => entry.docsPath,
   getSessionId,
   runtimeTelemetry,
   trackNavigation,
@@ -180,7 +177,7 @@ export function WorkspaceProvider({
     [presentation, resolution]
   );
   const [activeMode, setActiveMode] = useState<WorkspaceMode>(() =>
-    normalizedMode(requestedMode, resolution, routeKind, modeAvailability)
+    normalizedMode(requestedMode, resolution, modeAvailability)
   );
   const [activeUtility, setActiveUtilityState] =
     useState<WorkspaceUtility>(null);
@@ -224,12 +221,7 @@ export function WorkspaceProvider({
   const applyRouteMode = useCallback(
     (rawMode: string | null, normalizeUrl: boolean) => {
       const requested = parseControlPlaneMode(rawMode);
-      const nextMode = normalizedMode(
-        rawMode,
-        resolution,
-        routeKind,
-        modeAvailability
-      );
+      const nextMode = normalizedMode(rawMode, resolution, modeAvailability);
       setActiveMode(nextMode);
       if (
         normalizeUrl &&
@@ -247,7 +239,7 @@ export function WorkspaceProvider({
         lastNormalizationRef.current = null;
       }
     },
-    [modeAvailability, replaceMode, resolution, routeKind]
+    [modeAvailability, replaceMode, resolution]
   );
 
   const resolutionKey = routeIdentityKey(resolution);

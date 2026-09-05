@@ -11,7 +11,6 @@ import {
 import {
   capabilityModules,
   resolveDocsWorkspace,
-  resolveWorkspacePath,
 } from '@threadplane/cockpit-registry';
 
 describe('resolveCockpitEntry', () => {
@@ -431,7 +430,10 @@ describe('getWorkspacePresentation', () => {
   });
 
   it('shapes a mapped workspace identity with registry-owned descriptor assets', () => {
-    const resolution = resolveWorkspacePath('/workspace/langgraph/streaming');
+    const resolution = resolveDocsWorkspace(
+      '/docs/langgraph/guides/streaming',
+      'Streaming'
+    );
     expect(resolution).not.toBeNull();
     if (!resolution) return;
 

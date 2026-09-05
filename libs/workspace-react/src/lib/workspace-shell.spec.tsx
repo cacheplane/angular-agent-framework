@@ -91,11 +91,9 @@ function renderWorkspace(options: {
         resolution={selectedResolution}
         presentation={selectedPresentation}
         contentBundle={selectedContent}
-        routeKind="docs"
         routePath={
           selectedResolution.kind === 'mapped'
-            ? selectedResolution.identity.docsPath ??
-              selectedResolution.identity.workspacePath
+            ? selectedResolution.identity.docsPath
             : selectedResolution.docsPath
         }
         requestedMode={options.requestedMode ?? 'docs'}
@@ -336,8 +334,7 @@ describe('WorkspaceShell persistent panel composition', () => {
           resolution={resolution}
           presentation={presentation}
           contentBundle={contentBundle}
-          routeKind="workspace"
-          routePath={identity.legacyPath}
+          routePath={identity.docsPath}
           requestedMode="docs"
           pushIdentity={vi.fn()}
           pushMode={vi.fn()}
@@ -409,8 +406,7 @@ describe('WorkspaceShell persistent panel composition', () => {
           resolution={{ kind: 'mapped', identity: limitedIdentity }}
           presentation={{ ...presentation, identity: limitedIdentity }}
           contentBundle={contentBundle}
-          routeKind="docs"
-          routePath={limitedIdentity.docsPath ?? limitedIdentity.workspacePath}
+          routePath={limitedIdentity.docsPath}
           requestedMode="docs"
           docsSlot={<article>Limited article</article>}
           pushIdentity={vi.fn()}

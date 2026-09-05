@@ -102,8 +102,6 @@ const mappedResolution = (
     language: 'python',
     title: topic,
     docsPath,
-    workspacePath: `/workspace/langgraph/${topic}`,
-    legacyPath: `/langgraph/core-capabilities/${topic}/overview/python`,
     runtimeAdapter: 'langgraph',
     availableModes,
   },
@@ -166,7 +164,6 @@ describe('WebsiteWorkspace', () => {
       resolution: docsOnlyResolution,
       presentation: docsOnlyPresentation,
       contentBundle: emptyContent,
-      routeKind: 'docs',
       routePath: '/docs/langgraph/guides/testing',
       requestedMode: null,
     });
@@ -485,7 +482,6 @@ describe('WebsiteWorkspace', () => {
       resolveHref({
         id: 'langgraph:core-capabilities:durable-execution:overview:python',
         docsPath: '/docs/langgraph/guides/durable-execution',
-        workspacePath: '/workspace/langgraph/durable-execution',
       } as never)
     ).toBe('/docs/langgraph/guides/durable-execution');
   });

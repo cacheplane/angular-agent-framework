@@ -4,29 +4,23 @@ import { join } from 'node:path';
 import { validateRuntimeParentOrigins } from '@threadplane/cockpit-runtime-bridge';
 import {
   cockpitManifest,
-  getCanonicalWebsiteWorkspaceHref,
   getWorkspaceDestinationPath,
-  resolveLegacyPath,
-  resolveLegacyRequestMode,
 } from '@threadplane/cockpit-registry';
 
 /**
- * Production platform smoke: verifies the Website, legacy Cockpit redirects,
- * deployed examples, canonical demo, and shared runtimes as one product.
+ * Production platform smoke: verifies the Website, deployed examples,
+ * canonical demo, and shared runtimes as one product.
  *
  * Requires:
- *   COCKPIT_URL - e.g. https://cockpit.threadplane.ai
  *   EXAMPLES_URL - e.g. https://examples.threadplane.ai
  *   OPENAI_API_KEY - optional; enables the single live-provider canary
  *
  * Run:
- *   PRODUCTION_SMOKE=true COCKPIT_URL=https://cockpit.threadplane.ai \
+ *   PRODUCTION_SMOKE=true \
  *   EXAMPLES_URL=https://examples.threadplane.ai \
  *   npx playwright test apps/website/e2e/platform-production-smoke.spec.ts
  */
 
-const COCKPIT_URL =
-  process.env['COCKPIT_URL'] ?? 'https://cockpit.threadplane.ai';
 const EXAMPLES_URL =
   process.env['EXAMPLES_URL'] ?? 'https://examples.threadplane.ai';
 const DEMO_URL = process.env['DEMO_URL'] ?? 'https://demo.threadplane.ai';
@@ -130,51 +124,6 @@ const WEBSITE_DESTINATIONS = [
   ...new Set(cockpitManifest.map(getWorkspaceDestinationPath)),
 ].sort();
 
-const expectedRedirect = (legacyPath: string): string => {
-  const resolution = resolveLegacyPath(legacyPath);
-  if (!resolution) throw new Error(`Expected registry path ${legacyPath}`);
-  const mode = resolveLegacyRequestMode(undefined, resolution);
-  return new URL(
-    getCanonicalWebsiteWorkspaceHref(resolution, mode),
-    `${WEBSITE_URL}/`
-  ).toString();
-};
-
-const docsBacked = cockpitManifest.find((entry) =>
-  getWorkspaceDestinationPath(entry).startsWith('/docs/')
-);
-if (!docsBacked)
-  throw new Error('Production smoke requires a Docs-backed route');
-
-const COCKPIT_REDIRECT_CASES = [
-  {
-    name: 'root production redirect',
-    path: '/',
-    status: 308,
-    location: expectedRedirect(
-      '/langgraph/core-capabilities/streaming/overview/python'
-    ),
-  },
-  {
-    name: 'Docs-backed production redirect',
-    path: docsBacked.legacyPath,
-    status: 308,
-    location: expectedRedirect(docsBacked.legacyPath),
-  },
-  {
-    name: 'unknown production 404',
-    path: '/unknown',
-    status: 404,
-    location: undefined,
-  },
-  {
-    name: 'favicon production redirect',
-    path: '/favicon.ico',
-    status: 308,
-    location: '/icon.svg',
-  },
-] as const;
-
 test.describe('Production: registry-owned Website destinations load', () => {
   for (const destination of WEBSITE_DESTINATIONS) {
     test(`${destination} is reachable`, async ({ request }) => {
@@ -223,19 +172,6 @@ test.describe('Production: render example apps load', () => {
       });
       expect(response?.status()).toBe(200);
       await expect(page.locator('body')).not.toBeEmpty({ timeout: 10_000 });
-    });
-  }
-});
-
-test.describe('Production: legacy Cockpit redirect service', () => {
-  for (const smokeCase of COCKPIT_REDIRECT_CASES) {
-    test(smokeCase.name, async ({ request }) => {
-      const response = await request.get(`${COCKPIT_URL}${smokeCase.path}`, {
-        maxRedirects: 0,
-      });
-
-      expect(response.status()).toBe(smokeCase.status);
-      expect(response.headers()['location']).toBe(smokeCase.location);
     });
   }
 });

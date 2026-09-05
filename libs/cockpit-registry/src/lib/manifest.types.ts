@@ -34,8 +34,6 @@ export interface WorkspaceIdentity {
   language: CockpitLanguage;
   title: string;
   docsPath: string;
-  workspacePath: string;
-  legacyPath: string;
   runtimeAdapter: RuntimeAdapter;
   availableModes: readonly WorkspaceMode[];
 }
@@ -97,8 +95,6 @@ export interface CockpitManifestEntry extends CockpitManifestIdentity {
   entryKind: CockpitEntryKind;
   runtimeClass: CockpitRuntimeClass;
   docsPath: string;
-  workspacePath: string;
-  legacyPath: string;
   runtimeAdapter: RuntimeAdapter;
   availableModes: readonly WorkspaceMode[];
   promptAssetPaths: string[];

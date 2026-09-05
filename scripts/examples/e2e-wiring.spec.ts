@@ -137,8 +137,6 @@ describe('cockpit e2e wiring', () => {
     expect(
       existsSync(join(repoRoot, 'apps/cockpit/e2e/production-smoke.spec.ts'))
     ).toBe(false);
-    expect(smoke).toContain('getCanonicalWebsiteWorkspaceHref');
-    expect(smoke).toContain('smokeCase.location');
     expect(smoke).toContain('getWorkspaceDestinationPath');
     expect(smoke).toContain('EXAMPLES_URL');
     expect(smoke).toContain('DEMO_URL');
