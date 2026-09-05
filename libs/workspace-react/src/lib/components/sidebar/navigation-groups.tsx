@@ -61,10 +61,10 @@ function ProductGroup({
           cursor: 'pointer',
         }}
       >
-        <span className="cockpit-nav-group-label">{label}</span>
+        <span className="workspace-nav-group-label">{label}</span>
         <span
-          className={`cockpit-nav-caret${
-            open ? ' cockpit-nav-caret--open' : ''
+          className={`workspace-nav-caret${
+            open ? ' workspace-nav-caret--open' : ''
           }`}
           aria-hidden="true"
         >
@@ -107,7 +107,7 @@ function ProductGroup({
                       });
                     }}
                     aria-current={isActive ? 'page' : undefined}
-                    className="cockpit-nav-item"
+                    className="workspace-nav-item"
                   >
                     {stripProductPrefix(entry.title)}
                   </a>
@@ -131,7 +131,7 @@ export function NavigationGroups({
 }: NavigationGroupsProps) {
   return (
     <nav
-      aria-label="Cockpit navigation"
+      aria-label="Documentation navigation"
       style={{ display: 'flex', flexDirection: 'column', gap: 4 }}
     >
       {tree.map((product) => {

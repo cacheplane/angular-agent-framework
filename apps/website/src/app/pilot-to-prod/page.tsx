@@ -108,7 +108,7 @@ export default function PilotToProdPage() {
         visual={
           <BrowserFrame url="threadplane.ai/docs · Run" elevation="md">
             <img
-              src="/screenshots/cockpit-run.webp"
+              src="/screenshots/workspace-run.webp"
               alt="Threadplane Website workspace — live chat surface ready to receive a message"
               className="pilot-screenshot"
               loading="lazy"

@@ -73,7 +73,7 @@ function observePrivacyChannels(page: Page): {
 }
 
 const desktopControlPlane = (page: Page) =>
-  page.locator('[data-cockpit-desktop-navigation]');
+  page.locator('[data-workspace-desktop-navigation]');
 
 const runtimeFrame = (page: Page, title: string): FrameLocator =>
   page.frameLocator(`iframe[title="${title} live example"]`);

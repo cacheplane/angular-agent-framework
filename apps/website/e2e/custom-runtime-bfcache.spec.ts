@@ -5,7 +5,7 @@ const FIXTURE_ORIGIN = 'http://127.0.0.1:4399';
 const FIXTURE_KEY = 'test-key-redact-me';
 
 const desktopControlPlane = (page: Page) =>
-  page.locator('[data-cockpit-desktop-navigation]');
+  page.locator('[data-workspace-desktop-navigation]');
 
 async function openSettings(page: Page): Promise<void> {
   await desktopControlPlane(page)

@@ -126,7 +126,7 @@ function RuntimeStatus({ phase }: { phase: RuntimePhase }) {
           aria-hidden="true"
           className={
             presentation.icon === LoaderCircle
-              ? 'cockpit-runtime-status-loader'
+              ? 'workspace-runtime-status-loader'
               : undefined
           }
         />

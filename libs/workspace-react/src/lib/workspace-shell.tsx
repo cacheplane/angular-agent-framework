@@ -274,7 +274,7 @@ export function WorkspaceShell({
     (utility: Exclude<CockpitControlPlaneProps['activeUtility'], null>) => {
       document
         .querySelector<HTMLElement>(
-          `[data-cockpit-desktop-navigation] [data-cockpit-utility="${utility}"] button`
+          `[data-workspace-desktop-navigation] [data-workspace-utility="${utility}"] button`
         )
         ?.focus();
     },
@@ -335,15 +335,15 @@ export function WorkspaceShell({
   return (
     <RootElement
       aria-label={ariaLabel}
-      className="cockpit-shell h-screen overflow-hidden"
+      className="workspace-shell h-screen overflow-hidden"
       data-workspace-shell=""
       data-workspace-kind={resolution.kind}
       data-workspace-mode={activeMode}
       data-hydrated={hydrated ? 'true' : 'false'}
     >
       <div
-        className="cockpit-shell-navigation min-h-0 overflow-hidden"
-        data-cockpit-desktop-navigation
+        className="workspace-shell-navigation min-h-0 overflow-hidden"
+        data-workspace-desktop-navigation
         inert={isMobileModalActive ? true : undefined}
         aria-hidden={isMobileModalActive ? true : undefined}
       >
@@ -382,7 +382,7 @@ export function WorkspaceShell({
 
       <section
         className="grid grid-rows-[auto_1fr] grid-cols-[minmax(0,1fr)] overflow-hidden bg-[var(--ds-surface)]"
-        data-cockpit-workspace
+        data-workspace-surface
         inert={isAdaptiveSurfaceActive ? true : undefined}
         aria-hidden={isAdaptiveSurfaceActive ? true : undefined}
       >
@@ -390,7 +390,7 @@ export function WorkspaceShell({
           <div className="flex items-center gap-3 min-w-0">
             <button
               ref={mobileNavigationTriggerRef}
-              className="cockpit-mobile-navigation-trigger"
+              className="workspace-mobile-navigation-trigger"
               onClick={() => setIsNavigationOpen(true)}
               aria-label="Open navigation"
               aria-expanded={isNavigationOpen}
@@ -400,7 +400,7 @@ export function WorkspaceShell({
             </button>
             <button
               ref={tabletContextTriggerRef}
-              className="cockpit-tablet-context-trigger"
+              className="workspace-tablet-context-trigger"
               onClick={() => setIsTabletContextOpen(true)}
               aria-label="Open context"
               aria-expanded={isTabletContextOpen}
