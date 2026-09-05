@@ -59,7 +59,6 @@ const STEP_NAMES: Record<1 | 2 | 3, CampaignStep> = {
   2: 'day-3',
   3: 'day-8',
 };
-const FIVE_MINUTES_MS = 5 * 60_000;
 const RETRY_DELAY_MS = 60_000;
 // V1 intentionally qualifies no marketing content until a closed repository
 // registry is approved. Verified form and linked-project signals still score.
@@ -184,9 +183,12 @@ export interface LifecycleRuntimeConfiguration {
 
 type RuntimeEnvironment = Record<string, string | undefined>;
 
-export type PreparedCampaignMessage =
-  | { status: 'deferred'; availableAt: Date }
-  | { status: 'ready'; subject: string; text: string };
+export type PreparedCampaignMessage = {
+  status: 'ready';
+  subject: string;
+  text: string;
+  html: string;
+};
 
 function campaignStep(job: GrowthJob): 1 | 2 | 3 {
   const step = job.payload['step'];
@@ -234,6 +236,8 @@ function draftFor(
   step: 1 | 2 | 3,
   artifact: EnrichmentArtifact | null
 ): CampaignDraft {
+  // Every step is the founder session offer. A cited research angle only
+  // changes which flavor of that offer goes out.
   if (artifact) {
     const selection = artifact.drafts[step - 1];
     const cited =
@@ -250,45 +254,104 @@ function draftFor(
   return renderCampaignTemplate(STEP_NAMES[step]);
 }
 
+const FIRST_NAME_PATTERN = /^[A-Za-z][A-Za-z'’-]{0,29}$/u;
+const PLAIN_NAME_PATTERN = /^[A-Za-z'’.-]+(?:\s[A-Za-z'’.-]+){0,5}$/u;
+
+/**
+ * "Hey <first name>," when the persisted display name is a plain name and its
+ * first word is a plain first name; otherwise "Hey there,". Display names are
+ * free-text form input, so a name carrying digits, punctuation, or a URL
+ * anywhere is discarded as a whole and never reaches the email.
+ */
+export function campaignGreeting(
+  displayName: string | null | undefined
+): string {
+  const name = (displayName ?? '').trim();
+  if (name.length > 60 || !PLAIN_NAME_PATTERN.test(name)) return 'Hey there,';
+  const first = name.split(/\s+/u)[0] ?? '';
+  return FIRST_NAME_PATTERN.test(first) ? `Hey ${first},` : 'Hey there,';
+}
+
 function signedText(
   body: string,
   unsubscribeUrl: UnsubscribeActionUrl
 ): string {
-  return `${body}\n\n—\nBrian\n\nTo stop these emails: ${unsubscribeActionUrlValue(
+  return `${body}\n\n—\nBrian\n\nIs this email not relevant to you? Stop here: ${unsubscribeActionUrlValue(
     unsubscribeUrl
   )}`;
+}
+
+const HTML_ESCAPES: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+};
+const BODY_LINK_PATTERN = /https:\/\/[^\s<>()"'“”‘’\]}]+/gu;
+
+function escapeHtml(value: string): string {
+  return value.replace(
+    /[&<>"']/gu,
+    (character) => HTML_ESCAPES[character] ?? character
+  );
+}
+
+function htmlLine(line: string): string {
+  let rendered = '';
+  let cursor = 0;
+  for (const match of line.matchAll(BODY_LINK_PATTERN)) {
+    const start = match.index;
+    const trailing = /[.,;:!]+$/u.exec(match[0])?.[0] ?? '';
+    const link = match[0].slice(0, match[0].length - trailing.length);
+    rendered += escapeHtml(line.slice(cursor, start));
+    rendered += `<a href="${escapeHtml(link)}">${escapeHtml(link)}</a>`;
+    rendered += escapeHtml(trailing);
+    cursor = start + match[0].length;
+  }
+  return rendered + escapeHtml(line.slice(cursor));
+}
+
+/**
+ * A plain HTML alternative for the text part: the same paragraphs, bare HTTPS
+ * links as anchors, and a one-word unsubscribe link instead of the long signed
+ * URL. No layout, images, styles, or tracking.
+ */
+function signedHtml(
+  body: string,
+  unsubscribeUrl: UnsubscribeActionUrl
+): string {
+  const paragraphs = body
+    .split('\n\n')
+    .map((paragraph) => paragraph.split('\n').map(htmlLine).join('<br>'))
+    .map((paragraph) => `<p>${paragraph}</p>`);
+  const unsubscribe = escapeHtml(unsubscribeActionUrlValue(unsubscribeUrl));
+  return [
+    ...paragraphs,
+    '<p>—<br>Brian</p>',
+    `<p>Is this email not relevant to you? Click <a href="${unsubscribe}">here</a>.</p>`,
+  ].join('\n');
 }
 
 export function prepareCampaignMessage(input: {
   context: LifecycleJobContext;
   job: GrowthJob;
-  now: Date;
   unsubscribeUrl: UnsubscribeActionUrl;
 }): PreparedCampaignMessage {
-  const step = campaignStep(input.job);
   const genericHello =
     input.context.campaignEnrollmentReason === 'install_runtime';
   const artifact = genericHello
     ? null
     : validArtifact(input.context.enrichmentArtifact, input.context.contactId);
-  if (step === 1 && !artifact && !genericHello) {
-    if (!input.context.enrollmentAt) {
-      throw new DeterministicLifecycleJobError(
-        'Campaign enrollment timestamp is required'
-      );
-    }
-    const availableAt = new Date(
-      input.context.enrollmentAt.getTime() + FIVE_MINUTES_MS
-    );
-    if (input.now.getTime() < availableAt.getTime()) {
-      return { status: 'deferred', availableAt };
-    }
-  }
-  const draft = draftFor(step, artifact);
+  const draft = draftFor(campaignStep(input.job), artifact);
+  const body = `${campaignGreeting(input.context.displayName)}\n\n${
+    draft.body
+  }`;
   return {
     status: 'ready',
     subject: draft.subject,
-    text: signedText(draft.body, input.unsubscribeUrl),
+    text: signedText(body, input.unsubscribeUrl),
+    html: signedHtml(body, input.unsubscribeUrl),
   };
 }
 
@@ -341,6 +404,7 @@ async function dispatchRecipient(
   job: GrowthJob,
   subject: string,
   text: string,
+  html: string,
   unsubscribeUrl: UnsubscribeActionUrl,
   signal: AbortSignal,
   dependencies: LifecycleJobDependencies
@@ -349,7 +413,7 @@ async function dispatchRecipient(
   signal.throwIfAborted();
   const result = await dependencies.sendRecipient(
     executor,
-    { jobId: job.id, leaseToken, subject, text, unsubscribeUrl, signal },
+    { jobId: job.id, leaseToken, subject, text, html, unsubscribeUrl, signal },
     dependencies.recipientPolicy
   );
   if (result.accepted) return 'completed';
@@ -425,6 +489,7 @@ export async function dispatchLifecycleAppOwnedJob(
       job,
       message.subject,
       signedText(message.body, unsubscribeUrl),
+      signedHtml(message.body, unsubscribeUrl),
       unsubscribeUrl,
       signal,
       dependencies
@@ -439,24 +504,14 @@ export async function dispatchLifecycleAppOwnedJob(
     const message = prepareCampaignMessage({
       context,
       job,
-      now,
       unsubscribeUrl,
     });
-    if (message.status === 'deferred') {
-      await dependencies.deferJob(executor, {
-        jobId: job.id,
-        leaseToken,
-        now,
-        availableAt: message.availableAt,
-        errorCode: 'awaiting_enrichment_artifact',
-      });
-      return 'deferred';
-    }
     return dispatchRecipient(
       executor,
       job,
       message.subject,
       message.text,
+      message.html,
       unsubscribeUrl,
       signal,
       dependencies
