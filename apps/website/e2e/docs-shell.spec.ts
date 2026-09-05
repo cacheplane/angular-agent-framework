@@ -105,7 +105,7 @@ test.describe('docs shell layout', () => {
       parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')),
     );
     const tops = async () => ({
-      plane: await page.locator('[data-cockpit-desktop-navigation]').evaluate((el) => Math.round(el.getBoundingClientRect().top)),
+      plane: await page.locator('[data-workspace-desktop-navigation]').evaluate((el) => Math.round(el.getBoundingClientRect().top)),
       toc: await page.locator('.docs-toc').evaluate((el) => Math.round(el.getBoundingClientRect().top)),
     });
 

@@ -262,7 +262,7 @@ for (const viewport of [
     );
     await expectNoHorizontalOverflow(page, `Docs at ${viewport.width}px`);
 
-    const desktopControlPlane = page.locator('[data-cockpit-desktop-navigation]');
+    const desktopControlPlane = page.locator('[data-workspace-desktop-navigation]');
     await expect(page.getByRole('button', { name: 'Open menu' })).toBeHidden();
     if (viewport.width >= 1024) {
       await expect(desktopControlPlane).toBeVisible();
@@ -306,7 +306,7 @@ for (const viewport of [
         name: 'Documentation control plane',
       });
       await expect(dialog).toBeVisible();
-      await expect(page.locator('[data-cockpit-workspace]')).toHaveAttribute('inert', '');
+      await expect(page.locator('[data-workspace-surface]')).toHaveAttribute('inert', '');
       await expect(page.locator('nav.nav-bar')).toHaveAttribute('inert', '');
 
       const close = dialog.getByRole('button', { name: 'Close navigation' });
@@ -338,7 +338,7 @@ test('docs forced colors preserve control boundaries and keyboard focus', async 
   );
 
   const run = page
-    .locator('[data-cockpit-desktop-navigation]')
+    .locator('[data-workspace-desktop-navigation]')
     .getByRole('button', { name: 'Run', exact: true });
   await run.focus();
   const styles = await run.evaluate((element) => {
@@ -371,7 +371,7 @@ test('docs reduced motion disables mobile drawer transitions and animations', as
   });
   await expect(overlay).toBeVisible();
   const motion = await overlay.evaluate((element) => {
-    const panel = element.querySelector('.cockpit-mobile-control-plane-panel');
+    const panel = element.querySelector('.workspace-mobile-control-plane-panel');
     const overlayStyle = getComputedStyle(element);
     const panelStyle = panel ? getComputedStyle(panel) : null;
     return {

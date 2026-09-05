@@ -60,7 +60,7 @@ test.describe('Docs slug page', () => {
     );
 
     const pane = page.locator(
-      '[data-cockpit-desktop-navigation] [data-control-plane-pane]',
+      '[data-workspace-desktop-navigation] [data-control-plane-pane]',
     );
     // Search moved to the top of the pane (was the bottom Actions-bar item
     // this test used to focus), so it can no longer stand in for "something

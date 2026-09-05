@@ -91,7 +91,9 @@ describe('ApiMode', () => {
       );
       expect(heading.className).toMatch(/(?:^|\s)font-sans(?:\s|$)/);
       expect(heading.className).toMatch(/(?:^|\s)tracking-normal(?:\s|$)/);
-      expect(heading.className).toMatch(/(?:^|\s)cockpit-api-heading(?:\s|$)/);
+      expect(heading.className).toMatch(
+        /(?:^|\s)workspace-api-heading(?:\s|$)/
+      );
     }
 
     expect(screen.getByRole('heading', { name: 'stream' }).className).toMatch(
@@ -116,7 +118,7 @@ describe('ApiMode', () => {
       'utf8'
     );
     expect(css).toMatch(
-      /\.cockpit-prose \.cockpit-api-heading\s*\{[\s\S]*font-family:\s*var\(--font-inter\),\s*var\(--ds-font-sans\)[\s\S]*letter-spacing:\s*normal/
+      /\.workspace-prose \.workspace-api-heading\s*\{[\s\S]*font-family:\s*var\(--font-inter\),\s*var\(--ds-font-sans\)[\s\S]*letter-spacing:\s*normal/
     );
   });
 
@@ -131,8 +133,10 @@ describe('ApiMode', () => {
       'utf8'
     );
 
-    expect(css).toContain('.cockpit-shell pre.shiki');
-    expect(css).toMatch(/\[data-theme=['"]dark['"]\] \.cockpit-shell \.shiki/);
+    expect(css).toContain('.workspace-shell pre.shiki');
+    expect(css).toMatch(
+      /\[data-theme=['"]dark['"]\] \.workspace-shell \.shiki/
+    );
     expect(css).not.toMatch(/(?:^|\n)pre\.shiki\s*\{/);
     expect(css).not.toMatch(/\[data-theme=['"]dark['"]\] \.shiki[,\s{]/);
   });
