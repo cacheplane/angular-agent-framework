@@ -16,7 +16,7 @@ export const toWorkspaceIdentity = (
   page: entry.page,
   language: entry.language,
   title: entry.title,
-  docsPath: entry.docsPath || null,
+  docsPath: entry.docsPath,
   workspacePath: entry.workspacePath,
   legacyPath: entry.legacyPath,
   runtimeAdapter: entry.runtimeAdapter,

@@ -131,13 +131,6 @@ describe('redirect deploy smoke contract', () => {
     expect(
       cases.some(
         (smokeCase) =>
-          smokeCase.name.includes('workspace Docs serialization') &&
-          smokeCase.expectedLocation?.includes('?mode=docs')
-      )
-    ).toBe(true);
-    expect(
-      cases.some(
-        (smokeCase) =>
           smokeCase.name.includes('unrelated query') &&
           !smokeCase.expectedLocation?.includes('return_to')
       )
@@ -201,7 +194,6 @@ describe('redirect deploy smoke contract', () => {
     for (const label of [
       'root',
       'Docs-backed',
-      'workspace-only',
       'unknown',
       'favicon',
       'raw malformed',

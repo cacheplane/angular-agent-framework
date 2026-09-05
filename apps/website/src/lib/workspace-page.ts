@@ -2,7 +2,6 @@ import {
   cockpitManifest,
   getWorkspaceDestinationPath,
   resolveDocsWorkspace,
-  resolveWorkspacePath,
   type CockpitManifestEntry,
   type WorkspaceResolution,
 } from '@threadplane/cockpit-registry';
@@ -27,21 +26,6 @@ export async function getWebsiteWorkspacePage(options: {
   title: string;
 }): Promise<WebsiteWorkspacePageModel> {
   const resolution = resolveDocsWorkspace(options.docsPath, options.title);
-  const presentation = getWorkspacePresentation(resolution);
-
-  return {
-    resolution,
-    presentation,
-    contentBundle: await getContentBundle(presentation),
-    navigationTree: buildNavigationTree(cockpitManifest),
-  };
-}
-
-export async function getWebsiteWorkspaceRoutePage(
-  workspacePath: string
-): Promise<WebsiteWorkspacePageModel | null> {
-  const resolution = resolveWorkspacePath(workspacePath);
-  if (!resolution) return null;
   const presentation = getWorkspacePresentation(resolution);
 
   return {

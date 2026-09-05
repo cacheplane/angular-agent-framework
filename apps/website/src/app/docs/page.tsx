@@ -11,7 +11,7 @@ import { DocsSearchFooter } from '../../components/docs/DocsSearchFooter';
 import { createPageMetadata } from '../../lib/site-metadata';
 import {
   getCanonicalWebsiteWorkspaceHref,
-  resolveWorkspacePath,
+  resolveDocsWorkspace,
 } from '@threadplane/cockpit-registry';
 
 export const metadata = createPageMetadata({
@@ -23,16 +23,14 @@ export const metadata = createPageMetadata({
 });
 
 /**
- * The example the index's Run rail item opens.
- *
- * Resolved through the registry rather than written as a path: this
- * capability publishes a `docsPath`, so `getWorkspaceDestinationPath()` makes
- * its canonical destination the docs route and `/workspace/langgraph/streaming`
- * 404s. Today this yields `/docs/langgraph/guides/streaming?mode=run`, and it
- * stays correct if that docs path moves. A renamed or removed capability
- * resolves to null, and Run falls back to disabled rather than to a dead link.
+ * The example the index's Run rail item opens, resolved through the registry
+ * so a renamed or removed capability yields null and Run falls back to
+ * disabled rather than to a dead link.
  */
-const DEFAULT_EXAMPLE_RESOLUTION = resolveWorkspacePath('/workspace/langgraph/streaming');
+const DEFAULT_EXAMPLE_RESOLUTION = resolveDocsWorkspace(
+  '/docs/langgraph/guides/streaming',
+  'Streaming'
+);
 const DEFAULT_EXAMPLE_RUN_HREF = DEFAULT_EXAMPLE_RESOLUTION
   ? getCanonicalWebsiteWorkspaceHref(DEFAULT_EXAMPLE_RESOLUTION, 'Run')
   : undefined;
