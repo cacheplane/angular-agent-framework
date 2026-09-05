@@ -45,7 +45,7 @@ from langsmith import traceable
 
 from threadplane.middleware.langgraph import announce_subagent, bind_client_tools, client_tool_names
 
-from src.backups import Backup
+from src.backups import Backup, delete_backups, list_backups
 from src.streaming.a2ui_partial_handler import A2uiPartialHandler
 from src.streaming.envelope_tool import render_a2ui_surface
 from src.streaming.envelope_normalizer import normalize_envelope_args
@@ -151,6 +151,15 @@ SYSTEM_PROMPT = (
     "call `request_approval` with a clear `reason` BEFORE doing the action. "
     "Do not assume permission. The human's response will tell you whether to "
     "proceed, modify, or stop. "
+    "Exception — backup cleanup. When the user asks to clean up, prune, or "
+    "delete database backups, first call `list_backups` with the age "
+    "threshold they gave (in days) to see exactly what qualifies, then call "
+    "`delete_backups` with the exact ids you intend to remove, excluding any "
+    "row marked `retain: true`. `delete_backups` pauses for the human's "
+    "approval by itself, so do not call `request_approval` first. Once the "
+    "tool returns, reply in two or three short sentences: what was deleted, "
+    "how much space it freed, and what was kept and why. Do not restate the "
+    "table and do not propose further steps unless the human declined. "
     "When the user asks for in-depth research on a focused topic (history, "
     "motivation, comparison, deep-dive on something they want explained), "
     "call the `research` tool to dispatch a subagent that focuses on that "
@@ -354,6 +363,11 @@ async def research(
     return "(no research returned)"
 
 
+# Server-side tools bound on every turn. generate() appends the ONE GenUI tool
+# for the current mode; ToolNode below is bound to both GenUI tools so either
+# side of that conditional resolves at execution time.
+SERVER_TOOLS = [search_documents, request_approval, research, list_backups, delete_backups]
+
 # Used by emit_generated_surface to prepend the chat composition's
 # content-classifier sentinel for A2UI mode. The classifier triggers
 # rendering when an AI message content begins with this prefix.
@@ -487,7 +501,7 @@ async def generate(state: State, config: RunnableConfig) -> dict:
     # browser-declared tool by name (add_stop/move_stop/clear_day/day_card).
     llm = bind_client_tools(
         ChatOpenAI(**kwargs),
-        [search_documents, request_approval, research, gen_ui_tool],
+        [*SERVER_TOOLS, gen_ui_tool],
         state,
     )
     # Append A2UI v0.9 schema to system prompt when in a2ui mode, so the parent
@@ -769,7 +783,7 @@ async def attach_citations(state: State) -> dict:
 _builder = StateGraph(State)
 _builder.add_node("generate", generate)
 _builder.add_node("tools", ToolNode([
-    search_documents, request_approval, research,
+    *SERVER_TOOLS,
     render_a2ui_surface, generate_json_render_spec,
 ]))
 _builder.add_node("emit_generated_surface", emit_generated_surface)
