@@ -157,6 +157,7 @@ describe('prepareCampaignMessage', () => {
           'Get your agent UI into production',
           'Free engineering session with the Threadplane founder',
         ][step - 1],
+        template: ['immediate', 'day-3', 'day-8'][step - 1],
       });
       if (prepared.status !== 'ready') throw new Error('expected ready');
       expect(prepared.text).toContain(unsubscribeActionUrlValue(UNSUBSCRIBE));
@@ -252,6 +253,11 @@ describe('prepareCampaignMessage', () => {
           'Streaming first, then the rest',
           'Three checks when the UI stalls',
           'One boundary that makes agent UIs testable',
+        ][step - 1],
+        template: [
+          'streaming_foundation',
+          'debugging_layers',
+          'event_state_boundary',
         ][step - 1],
       });
       if (prepared.status !== 'ready') throw new Error('expected ready');
@@ -458,6 +464,7 @@ describe('dispatchLifecycleAppOwnedJob', () => {
         text: expect.stringContaining('Stop here: '),
         html: expect.stringContaining('Click <a href="'),
         unsubscribeUrl: UNSUBSCRIBE,
+        campaignTemplate: 'immediate',
       }),
       deps.recipientPolicy
     );
@@ -546,6 +553,11 @@ describe('dispatchLifecycleAppOwnedJob', () => {
           'https://threadplane.ai/whitepapers/chat.pdf'
         ),
       }),
+      deps.recipientPolicy
+    );
+    expect(deps.sendRecipient).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.not.objectContaining({ campaignTemplate: expect.anything() }),
       deps.recipientPolicy
     );
     const sent = vi.mocked(deps.sendRecipient).mock.calls[0]?.[1];

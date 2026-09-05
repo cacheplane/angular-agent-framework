@@ -32,6 +32,7 @@ import {
   type RecipientEmailInput,
   type RecipientSendResult,
   type SqlExecutor,
+  type CampaignTemplateId,
   type UnsubscribeActionUrl,
 } from '../growth.js';
 import { Resend } from 'resend';
@@ -188,6 +189,12 @@ export type PreparedCampaignMessage = {
   subject: string;
   text: string;
   html: string;
+  /** The template id that rendered this message, attributed as a provider tag. */
+  template: CampaignTemplateId;
+};
+
+type SelectedCampaignDraft = CampaignDraft & {
+  readonly template: CampaignTemplateId;
 };
 
 function campaignStep(job: GrowthJob): 1 | 2 | 3 {
@@ -235,7 +242,7 @@ function validArtifact(
 function draftFor(
   step: 1 | 2 | 3,
   artifact: EnrichmentArtifact | null
-): CampaignDraft {
+): SelectedCampaignDraft {
   // Every step is the founder session offer. A cited research angle only
   // changes which flavor of that offer goes out.
   if (artifact) {
@@ -246,12 +253,18 @@ function draftFor(
         source_ids.includes(selection.source_id)
       );
     if (selection !== null && cited) {
-      return renderEvidenceCampaignTemplate(selection.angle_id, {
-        finalStep: step === 3,
-      });
+      return {
+        ...renderEvidenceCampaignTemplate(selection.angle_id, {
+          finalStep: step === 3,
+        }),
+        template: selection.angle_id,
+      };
     }
   }
-  return renderCampaignTemplate(STEP_NAMES[step]);
+  return {
+    ...renderCampaignTemplate(STEP_NAMES[step]),
+    template: STEP_NAMES[step],
+  };
 }
 
 const FIRST_NAME_PATTERN = /^[A-Za-z][A-Za-z'’-]{0,29}$/u;
@@ -353,6 +366,7 @@ export function prepareCampaignMessage(input: {
     subject: draft.subject,
     text: signedText(body, input.unsubscribeUrl),
     html: signedHtml(body, input.unsubscribeUrl),
+    template: draft.template,
   };
 }
 
@@ -397,7 +411,10 @@ function formSource(
 
 function enrichmentDrafts(context: LifecycleJobContext): CampaignDraft[] {
   const artifact = validArtifact(context.enrichmentArtifact, context.contactId);
-  return ([1, 2, 3] as const).map((step) => draftFor(step, artifact));
+  return ([1, 2, 3] as const).map((step) => {
+    const { subject, body } = draftFor(step, artifact);
+    return { subject, body };
+  });
 }
 
 async function dispatchRecipient(
@@ -408,13 +425,23 @@ async function dispatchRecipient(
   html: string,
   unsubscribeUrl: UnsubscribeActionUrl,
   signal: AbortSignal,
-  dependencies: LifecycleJobDependencies
+  dependencies: LifecycleJobDependencies,
+  campaignTemplate?: CampaignTemplateId
 ): Promise<GrowthDispatchResult> {
   const leaseToken = requireLease(job);
   signal.throwIfAborted();
   const result = await dependencies.sendRecipient(
     executor,
-    { jobId: job.id, leaseToken, subject, text, html, unsubscribeUrl, signal },
+    {
+      jobId: job.id,
+      leaseToken,
+      subject,
+      text,
+      html,
+      unsubscribeUrl,
+      signal,
+      ...(campaignTemplate === undefined ? {} : { campaignTemplate }),
+    },
     dependencies.recipientPolicy
   );
   if (result.accepted) return 'completed';
@@ -518,7 +545,8 @@ export async function dispatchLifecycleAppOwnedJob(
       message.html,
       unsubscribeUrl,
       signal,
-      dependencies
+      dependencies,
+      message.template
     );
   }
 
