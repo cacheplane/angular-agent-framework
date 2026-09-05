@@ -1,0 +1,9 @@
+---
+description: Stream a json-render UI spec with AG-UI shared state and let @threadplane/render resolve $state bindings into a live Angular component tree.
+---
+
+# Generative UI
+
+An AG-UI agent can stream a declarative json-render specification together with shared state. `STATE_SNAPSHOT` and `STATE_DELTA` events keep that state current, and `@threadplane/render` resolves the spec's `$state` bindings against it, so the agent shapes the interface and its data rather than only its text.
+
+This page is the live example for generative UI over AG-UI. Use **Run** to drive the agent, **Code** to read the Angular and Python sources, and **API** for the extracted reference. The rendering engine is introduced in the [Render introduction](/docs/render/getting-started/introduction), and the AG-UI state events in the [event mapping reference](/docs/ag-ui/reference/event-mapping).

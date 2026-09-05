@@ -50,7 +50,10 @@ const expectedRuntimeParentOrigins = validateRuntimeParentOrigins([
   ...(baseRuntimeParentOrigins ?? []),
   ...runtimeParentPreviewOrigins,
 ]);
-if (baseRuntimeParentOrigins === null || expectedRuntimeParentOrigins === null) {
+if (
+  baseRuntimeParentOrigins === null ||
+  expectedRuntimeParentOrigins === null
+) {
   throw new Error('Invalid runtime parent origin smoke policy');
 }
 
@@ -140,12 +143,8 @@ const expectedRedirect = (legacyPath: string): string => {
 const docsBacked = cockpitManifest.find((entry) =>
   getWorkspaceDestinationPath(entry).startsWith('/docs/')
 );
-const workspaceOnly = cockpitManifest.find((entry) =>
-  getWorkspaceDestinationPath(entry).startsWith('/workspace/')
-);
-if (!docsBacked || !workspaceOnly) {
-  throw new Error('Production smoke requires Docs-backed and workspace routes');
-}
+if (!docsBacked)
+  throw new Error('Production smoke requires a Docs-backed route');
 
 const COCKPIT_REDIRECT_CASES = [
   {
@@ -161,12 +160,6 @@ const COCKPIT_REDIRECT_CASES = [
     path: docsBacked.legacyPath,
     status: 308,
     location: expectedRedirect(docsBacked.legacyPath),
-  },
-  {
-    name: 'workspace-only production redirect',
-    path: workspaceOnly.legacyPath,
-    status: 308,
-    location: expectedRedirect(workspaceOnly.legacyPath),
   },
   {
     name: 'unknown production 404',
@@ -259,13 +252,9 @@ test.describe('Production: unified runtime embedding policy', () => {
       .find((directive) => directive.trim().startsWith('frame-ancestors'));
 
     expect(response.status()).toBe(200);
-    const actualFrameAncestors = frameAncestors
-      ?.trim()
-      .split(/\s+/)
-      .slice(1);
-    const validatedFrameAncestors = validateRuntimeParentOrigins(
-      actualFrameAncestors
-    );
+    const actualFrameAncestors = frameAncestors?.trim().split(/\s+/).slice(1);
+    const validatedFrameAncestors =
+      validateRuntimeParentOrigins(actualFrameAncestors);
     expect(validatedFrameAncestors).not.toBeNull();
     if (runtimeParentPreviewOrigins.length > 0) {
       expect(validatedFrameAncestors).toEqual(expectedRuntimeParentOrigins);

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { cockpitManifest } from './manifest';
-import { PRIMARY_CAPABILITY_BY_DOCS_PATH } from './workspace-resolution';
 import { validateCockpitManifest, validateManifest } from './validate-manifest';
 import type { CockpitManifestEntry } from './manifest.types';
 
@@ -14,25 +13,8 @@ const getLangGraphEntry = (topic: string): CockpitManifestEntry => {
 };
 
 describe('validateCockpitManifest', () => {
-  it('accepts the authoritative manifest and explicit reverse mappings', () => {
+  it('accepts the authoritative manifest', () => {
     expect(validateManifest(cockpitManifest)).toEqual([]);
-
-    const docsPathCounts = new Map<string, number>();
-    for (const entry of cockpitManifest) {
-      if (!entry.docsPath) continue;
-      docsPathCounts.set(
-        entry.docsPath,
-        (docsPathCounts.get(entry.docsPath) ?? 0) + 1
-      );
-    }
-    const duplicateDocsPaths = [...docsPathCounts]
-      .filter(([, count]) => count > 1)
-      .map(([docsPath]) => docsPath)
-      .sort();
-
-    expect(Object.keys(PRIMARY_CAPABILITY_BY_DOCS_PATH).sort()).toEqual(
-      duplicateDocsPaths
-    );
   });
 
   it('rejects duplicate canonical identities', () => {
@@ -122,22 +104,21 @@ describe('validateCockpitManifest', () => {
     );
   });
 
-  it('rejects ambiguous reverse Docs mappings without an explicit primary mapping', () => {
-    const persistenceEntries = cockpitManifest.filter(
-      (entry) => entry.docsPath === '/docs/langgraph/guides/persistence'
-    );
+  it('rejects two entries that publish the same Docs path', () => {
+    const first = getLangGraphEntry('streaming');
+    const second = getLangGraphEntry('interrupts');
+    const invalidManifest = [first, { ...second, docsPath: first.docsPath }];
 
-    expect(
-      validateManifest(persistenceEntries, { primaryDocsMappings: {} })
-    ).toContain(
-      'Ambiguous Docs path without an explicit primary capability: /docs/langgraph/guides/persistence'
+    expect(validateManifest(invalidManifest)).toContain(
+      `Duplicate Docs path: ${first.docsPath}`
     );
-    expect(
-      validateManifest(persistenceEntries, {
-        primaryDocsMappings: PRIMARY_CAPABILITY_BY_DOCS_PATH,
-      })
-    ).not.toContain(
-      'Ambiguous Docs path without an explicit primary capability: /docs/langgraph/guides/persistence'
+  });
+
+  it('rejects an entry without a Docs path', () => {
+    const entry = getLangGraphEntry('streaming');
+
+    expect(validateManifest([{ ...entry, docsPath: '' }])).toContain(
+      `Missing docsPath for ${entry.id}`
     );
   });
 

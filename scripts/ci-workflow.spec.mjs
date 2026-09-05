@@ -943,7 +943,12 @@ describe('CI workflow', () => {
     assert.ok(runMany, 'cockpit job should run tests via nx run-many');
 
     const projects = runMany[1].split(',');
-    for (const project of ['cockpit', 'cockpit-docs', 'cockpit-registry']) {
+    for (const project of [
+      'cockpit',
+      'cockpit-docs',
+      'cockpit-registry',
+      'cockpit-shell',
+    ]) {
       assert.ok(
         projects.includes(project),
         `cockpit job should run \`nx test ${project}\``
