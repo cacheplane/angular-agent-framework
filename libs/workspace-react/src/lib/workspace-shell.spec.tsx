@@ -286,10 +286,10 @@ describe('WorkspaceShell persistent panel composition', () => {
     expect(css).toMatch(
       /@media \(min-width: 64rem\)[\s\S]*grid-template-columns:\s*328px minmax\(0, 1fr\)/
     );
-    expect(css).toContain('.cockpit-tablet-context-trigger');
-    expect(css).toContain('.cockpit-tablet-context-surface');
+    expect(css).toContain('.workspace-tablet-context-trigger');
+    expect(css).toContain('.workspace-tablet-context-surface');
     expect(css).toMatch(
-      /\.cockpit-tablet-context-surface \.cockpit-control-plane\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\)/
+      /\.workspace-tablet-context-surface \.workspace-control-plane\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\)/
     );
   });
 

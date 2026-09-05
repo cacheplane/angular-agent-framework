@@ -80,7 +80,7 @@ body:has([data-website-workspace-host]) {
   overflow: hidden;
 }
 
-.website-workspace-host .cockpit-shell {
+.website-workspace-host .workspace-shell {
   height: calc(100dvh - var(--nav-h));
 }
 
@@ -95,7 +95,7 @@ body:has([data-website-workspace-host]) {
 }
 
 @media (min-width: 48rem) and (max-width: 63.999rem) {
-  .website-workspace-host .cockpit-tablet-context-surface {
+  .website-workspace-host .workspace-tablet-context-surface {
     top: var(--nav-h);
   }
 }

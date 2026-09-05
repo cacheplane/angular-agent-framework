@@ -57,7 +57,7 @@ test('the docs column starts directly under the nav at a tablet width', async ({
     .first()
     .evaluate((el) => el.getBoundingClientRect().bottom);
   const shellTop = await page
-    .locator('.website-workspace-host .cockpit-shell')
+    .locator('.website-workspace-host .workspace-shell')
     .evaluate((el) => el.getBoundingClientRect().top);
 
   expect(Math.abs(shellTop - navBottom)).toBeLessThanOrEqual(1);

@@ -31,9 +31,9 @@ export function CockpitSidebar({
   const product = PRODUCT_LABELS[entry.product] ?? entry.product;
 
   return (
-    <div data-cockpit-context-content>
+    <div data-workspace-context-content>
       <ControlPlaneSection title="Scope" collapsible={false}>
-        <div className="cockpit-control-plane-scope">
+        <div className="workspace-control-plane-scope">
           <span>{product}</span>
           <span>
             {entry.section

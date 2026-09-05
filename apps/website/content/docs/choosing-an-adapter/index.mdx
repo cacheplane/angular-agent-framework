@@ -80,7 +80,7 @@ Three layers of test doubles, smallest scope first:
 |---|---|---|---|
 | **Contract mock** | `mockAgent()` (chat) / `mockLangGraphAgent()` (langgraph) | nothing — you set `messages()`, `status()` directly | component/unit tests |
 | **Fake backend** | `provideFakeAgent({ tokens })` (both adapters) | the real adapter pipeline; canned wire events | adapter-integration tests, in-browser, no server |
-| **LLM fixture replay** | aimock (cockpit/examples e2e) | the whole stack incl. a real graph; only the LLM is replayed | full end-to-end |
+| **LLM fixture replay** | aimock (workspace examples e2e) | the whole stack incl. a real graph; only the LLM is replayed | full end-to-end |
 
 Reach for the smallest layer that covers your test. Don't stand up aimock when a `mockAgent` unit test suffices; don't hand-roll a transport when `provideFakeAgent` exists.
 

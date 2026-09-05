@@ -72,7 +72,7 @@ function DocArticle({ section }: { section: DocSection }) {
         {section.params.length > 0 ? (
           <div>
             <h5
-              className="cockpit-api-heading text-xs font-sans font-semibold tracking-normal mb-1.5"
+              className="workspace-api-heading text-xs font-sans font-semibold tracking-normal mb-1.5"
               style={{ color: 'var(--ds-text-muted)' }}
             >
               Parameters
@@ -124,7 +124,7 @@ function DocArticle({ section }: { section: DocSection }) {
         {section.returns ? (
           <div>
             <h5
-              className="cockpit-api-heading text-xs font-sans font-semibold tracking-normal mb-1.5"
+              className="workspace-api-heading text-xs font-sans font-semibold tracking-normal mb-1.5"
               style={{ color: 'var(--ds-text-muted)' }}
             >
               Returns
@@ -168,11 +168,11 @@ export function ApiMode({ docSections, hasCodeFiles = false }: ApiModeProps) {
       aria-label="API mode"
       className="h-full overflow-auto py-6 px-4 md:px-8"
     >
-      <div className="cockpit-prose cockpit-prose--wide">
+      <div className="workspace-prose workspace-prose--wide">
         {tsSections.length > 0 ? (
           <div>
             <h3
-              className="cockpit-api-heading text-xs font-sans font-semibold tracking-normal mb-3"
+              className="workspace-api-heading text-xs font-sans font-semibold tracking-normal mb-3"
               style={{ color: 'var(--ds-accent)' }}
             >
               {LANGUAGE_LABELS[tsSections[0]?.language] ?? 'TypeScript'}
@@ -189,7 +189,7 @@ export function ApiMode({ docSections, hasCodeFiles = false }: ApiModeProps) {
         {pySections.length > 0 ? (
           <div>
             <h3
-              className="cockpit-api-heading text-xs font-sans font-semibold tracking-normal mb-3"
+              className="workspace-api-heading text-xs font-sans font-semibold tracking-normal mb-3"
               style={{ color: 'var(--ds-accent)' }}
             >
               {LANGUAGE_LABELS[pySections[0]?.language] ?? 'Python'}

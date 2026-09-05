@@ -72,7 +72,7 @@ The `<chat-approval-card>` you build today survives the backend you swap in next
 
 Three pieces:
 
-- **AG-UI-fronted LangGraph backend.** The same compiled graph as the LangGraph post, duplicated under `cockpit/ag-ui/interrupts/python` because cockpit examples are standalone.
+- **AG-UI-fronted LangGraph backend.** The same compiled graph as the LangGraph post, duplicated under `cockpit/ag-ui/interrupts/python` because example apps are standalone.
   Wrapped with `ag-ui-langgraph`'s `LangGraphAgent(name, graph)` + `add_langgraph_fastapi_endpoint(app, agent, path='/agent')` and served by `uvicorn`.
   When `interrupt()` fires inside the graph, `ag-ui-langgraph` emits a `CUSTOM` AG-UI event with `name: 'on_interrupt'` and a `value` carrying the interrupt payload — serialized as a JSON string via `dump_json_safe`.
   The uvicorn server needs a `MemorySaver` checkpointer (`langgraph dev` and LangGraph Platform inject one automatically; plain uvicorn does not, and `aget_state` raises "No checkpointer set" without it).
@@ -166,7 +166,7 @@ def request_approval(state: RefundState) -> dict:
     }
 ```
 
-This file is **duplicated** into `cockpit/ag-ui/interrupts/python/src/graph.py` per the cockpit standalone-examples convention — copy, do not import across examples.
+This file is **duplicated** into `cockpit/ag-ui/interrupts/python/src/graph.py` per the standalone-examples convention — copy, do not import across examples.
 The graph itself does not know it will be served over AG-UI.
 
 </Step>
@@ -246,7 +246,7 @@ const WELCOME_SUGGESTIONS = [
 ] as const;
 
 /**
- * Refund authorization cockpit example.
+ * Refund authorization example.
  *
  * The LangGraph backend acknowledges the refund draft, then pauses at
  * `request_approval` with a structured interrupt payload of the form
