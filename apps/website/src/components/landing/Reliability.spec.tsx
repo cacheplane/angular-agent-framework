@@ -26,6 +26,7 @@ describe('Reliability', () => {
     expect(list.querySelectorAll('li')).toHaveLength(3);
     for (const r of RELIABILITY_RECEIPTS) {
       expect(screen.getByText(r.claim)).toBeTruthy();
+      expect(screen.getByText(r.detail)).toBeTruthy();
       const link = screen.getByRole('link', { name: r.sourceLabel });
       expect(link.getAttribute('href')).toBe(r.sourceHref);
       const external = r.sourceHref.startsWith('http');
@@ -53,13 +54,23 @@ describe('Reliability', () => {
     expect(screen.getByText('Works with')).toBeTruthy();
     for (const item of RIBBON_ITEMS) expect(screen.getByText(item.name)).toBeTruthy();
     expect(screen.getByText(`+ ${RIBBON_MORE_COUNT} more`)).toBeTruthy();
-    for (const img of Array.from(container.querySelectorAll('img.reliability-logo'))) {
+    const logos = container.querySelectorAll('img.reliability-logo');
+    expect(logos).toHaveLength(RIBBON_ITEMS.length);
+    for (const img of Array.from(logos)) {
       expect(img.getAttribute('aria-hidden')).toBe('true');
       expect(img.getAttribute('alt')).toBe('');
     }
     expect(container.textContent).not.toMatch(/trusted by|customers|our clients|powered by/i);
     expect(screen.getByRole('link', { name: 'Choose an adapter →' }).getAttribute('href')).toBe('/docs/choosing-an-adapter');
-    expect(container.querySelector('.reliability-works-with')?.getAttribute('aria-label')).toBe('Works with your agent stack');
+    expect(screen.getByRole('list', { name: 'Works with' })).toBeTruthy();
+  });
+
+  it('orders cells, receipts, then the works-with line', () => {
+    const { container } = render(<Reliability />);
+    const children = container.querySelector('.proof-strip-grid')!.children;
+    expect(children[1].className).toBe('proof-strip-cells');
+    expect(children[2].className).toBe('reliability-receipts');
+    expect(children[3].className).toBe('reliability-works-with');
   });
 
   it('links every number and receipt to a human-readable page, never a raw API', () => {

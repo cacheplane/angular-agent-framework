@@ -1044,11 +1044,8 @@
   color: var(--color-chat-purple);
 }
 
-/* ---------- Proof strip (dark contrast band, top of the homepage) ----------
- * Formerly a light tinted strip low on the page. It now occupies the single
- * dark band under the logo ribbon: same cells and sources, re-toned for the
- * dark surface scope in ui.css. Containment for the watermark and glow lives
- * on #proof, mirroring FinalCTA. */
+/* Reliability band — Reliability.tsx. The .proof-strip-* rules below are ITS
+ * rules (they predate the rename); do not delete them with ProofStrip.tsx. */
 #proof {
   overflow: clip;
 }
@@ -1227,7 +1224,7 @@
   list-style: none;
   margin: 0;
   padding: 24px 0 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid var(--color-border);
 }
 .reliability-receipt {
   min-width: 0;
@@ -1254,16 +1251,28 @@
   flex-wrap: wrap;
   gap: 10px 22px;
   padding-top: 22px;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid var(--color-border);
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
 }
-.reliability-works-with-label,
-.reliability-works-with-more {
+.reliability-works-with-label {
   font-family: var(--font-mono);
   font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--color-text-muted);
+}
+.reliability-works-with-more {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+.reliability-works-with-cta {
+  margin-left: auto;
 }
 .reliability-works-with-item {
   display: inline-flex;
@@ -1283,20 +1292,15 @@
   color: var(--color-text-secondary);
 }
 .reliability-works-with-link {
-  margin-left: auto;
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--color-accent);
 }
-@media (max-width: 860px) {
-  .reliability-receipts {
-    grid-template-columns: 1fr;
-  }
-  .reliability-works-with-link {
-    margin-left: 0;
-  }
+[data-ui="section"][data-surface="dark"] .reliability-works-with-link:hover {
+  color: var(--color-accent-hover);
+  text-decoration-color: currentColor;
 }
 @media (max-width: 900px) {
   .proof-strip-grid {
@@ -1309,6 +1313,17 @@
     font-size: 130px;
     right: -16px;
     top: -46px;
+  }
+  .reliability-receipts {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .reliability-works-with-cta {
+    margin-left: 0;
+  }
+}
+@media (max-width: 640px) {
+  .reliability-receipts {
+    grid-template-columns: 1fr;
   }
 }
 @media (max-width: 560px) {

@@ -3,6 +3,7 @@ import { Section } from '../ui/Section';
 import { SectionHeader } from '../ui/SectionHeader';
 import { WEBSITE_SUPPORTED_ANGULAR_MAJORS } from '../pricing/angular-support.mjs';
 import { RELIABILITY_RECEIPTS } from '../../lib/positioning';
+import { AdapterGuideLink } from './AdapterGuideLink';
 
 interface ProofCell {
   /** Big Garamond numeral, or null when the cell renders a live badge. */
@@ -159,10 +160,16 @@ export function Reliability() {
                 );
               })}
             </ul>
-            <div className="reliability-works-with" aria-label="Works with your agent stack">
-              <span className="reliability-works-with-label">Works with</span>
+            <ul
+              className="reliability-works-with"
+              role="list"
+              aria-labelledby="reliability-works-with-label"
+            >
+              <li className="reliability-works-with-label" id="reliability-works-with-label">
+                Works with
+              </li>
               {RIBBON_ITEMS.map((item) => (
-                <span className="reliability-works-with-item" key={item.name}>
+                <li className="reliability-works-with-item" key={item.name}>
                   <img
                     src={item.logoSrc}
                     alt=""
@@ -172,13 +179,13 @@ export function Reliability() {
                     className="reliability-logo"
                   />
                   <span className="reliability-works-with-name">{item.name}</span>
-                </span>
+                </li>
               ))}
-              <span className="reliability-works-with-more">+ {RIBBON_MORE_COUNT} more</span>
-              <a className="reliability-works-with-link" href="/docs/choosing-an-adapter">
-                Choose an adapter →
-              </a>
-            </div>
+              <li className="reliability-works-with-more">+ {RIBBON_MORE_COUNT} more</li>
+              <li className="reliability-works-with-cta">
+                <AdapterGuideLink className="reliability-works-with-link" />
+              </li>
+            </ul>
           </div>
         </div>
       </Container>
