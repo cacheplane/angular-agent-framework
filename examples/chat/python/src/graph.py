@@ -45,6 +45,7 @@ from langsmith import traceable
 
 from threadplane.middleware.langgraph import announce_subagent, bind_client_tools, client_tool_names
 
+from src.backups import Backup
 from src.streaming.a2ui_partial_handler import A2uiPartialHandler
 from src.streaming.envelope_tool import render_a2ui_surface
 from src.streaming.envelope_normalizer import normalize_envelope_args
@@ -420,6 +421,11 @@ class State(TypedDict):
     # Trip itinerary the frontend client tools (add_stop/move_stop/...)
     # mutate. per-thread checkpoint; last-write-wins (plain key)
     itinerary: list[Stop]
+    # Demo-owned backup inventory the list_backups / delete_backups tools act
+    # on. Seeded from src/backups.py on first use; per-thread checkpoint,
+    # last-write-wins (plain key). See the module docstring for why it lives
+    # in State rather than in a tool-local variable.
+    backups: Optional[list[Backup]]
 
 
 def build_system_prompt(gen_ui_mode: str, client_tools: list, itinerary: list) -> str:
