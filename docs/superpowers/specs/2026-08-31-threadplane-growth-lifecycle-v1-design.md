@@ -674,7 +674,6 @@ apps/lifecycle should declare Dawn Core/CLI/LangGraph/Postgres Storage/SDK 0.8.2
 Copy constraints:
 
 - All recipient fulfillment, welcome, acknowledgment, and campaign mail is authored as plain text. Since 2026-09-05 the sender also attaches a plain HTML alternative rendered from that text (paragraphs and HTTPS anchors only) so the unsubscribe footer can read “click here” instead of the long signed URL; the sender rejects any HTML part containing images, scripts, styles, forms, event handlers, or a missing unsubscribe anchor.
-- Every recipient-facing email (campaign steps and fulfillment) ends with the business postal address on a single plain line directly after the unsubscribe line, in both the text and HTML parts, because CAN-SPAM requires a valid physical postal address on commercial mail. The address is sourced from the single exported constant `BUSINESS_POSTAL_ADDRESS` in the campaign templates; the HTML part renders it as one escaped `<p>` so the sender's paragraphs-and-links-only check still passes.
 - Internal research and operational notifications are plain text as well.
 - Each campaign step is at most 120 words.
 - At most one question and at most one useful link.
