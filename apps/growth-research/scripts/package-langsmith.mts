@@ -43,6 +43,9 @@ async function contained(root: string, path: string): Promise<void> {
 async function copySource(root: string, path: string, output: string): Promise<void> {
   await contained(root, path);
   const name = basename(path);
+  const local = relative(root, path);
+  if (local === 'src/app/enrichment/company-pilot') return;
+  if (local.startsWith('src/pilot/') && !['context.ts', 'contracts.ts', 'validation.ts'].includes(name)) return;
   if (name.startsWith('.') || name === 'node_modules' || /\.(spec|test)\.[cm]?ts$/.test(name)) return;
   if ((await lstat(path)).isDirectory()) {
     await mkdir(output, { recursive: true });
@@ -116,7 +119,9 @@ export async function stageLangSmith(appRoot: string): Promise<string> {
   const config = await readObject(join(root, '.dawn/build/langgraph.json'));
   const generatedGraphs = object(config['graphs'], 'graphs');
   const specialistId = '/enrichment/research/subagents/researcher#agent';
-  if (Object.keys(generatedGraphs).some(key => key !== graphId && key !== specialistId)) throw new Error('Unexpected generated graph');
+  const pilotId = '/enrichment/company-pilot#agent';
+  if (Object.keys(generatedGraphs).some(key => key !== graphId && key !== specialistId && key !== pilotId)) throw new Error('Unexpected generated graph');
+  if (pilotId in generatedGraphs && generatedGraphs[pilotId] !== './.dawn/build/enrichment-company-pilot.ts:graph') throw new Error('Unexpected pilot graph');
   if (specialistId in generatedGraphs) {
     if (generatedGraphs[specialistId] !== './.dawn/build/enrichment-research-subagents-researcher.ts:graph') throw new Error('Unexpected specialist graph entry');
     await validateReference(root, generatedGraphs[specialistId], 'specialist graph');
@@ -141,6 +146,7 @@ export async function stageLangSmith(appRoot: string): Promise<string> {
   await copyFile(join(root, 'dawn.config.ts'), join(output, 'dawn.config.ts'));
   const copySchemas = async (path: string, target: string): Promise<void> => {
     await contained(root, path);
+    if (['.dawn/routes/enrichment/company-pilot', '.dawn/routes/enrichment-company-pilot'].includes(relative(root, path))) return;
     if ((await lstat(path)).isDirectory()) {
       await mkdir(target, { recursive: true });
       for (const name of await readdir(path)) await copySchemas(join(path, name), join(target, name));
@@ -151,6 +157,7 @@ export async function stageLangSmith(appRoot: string): Promise<string> {
   };
   await copySchemas(join(root, '.dawn/routes'), join(output, '.dawn/routes'));
   for (const name of await readdir(join(root, '.dawn/build'))) {
+    if (name === 'enrichment-company-pilot.ts') continue;
     if (!name.endsWith('.ts')) continue;
     await contained(root, join(root, '.dawn/build', name));
     await copyFile(join(root, '.dawn/build', name), join(output, '.dawn/build', name));

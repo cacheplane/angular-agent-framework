@@ -5,7 +5,7 @@ import { candidateMemoryStore, syntheticEmbedder, trustedFixtureScope } from './
 export default {
   appDir: 'src/app',
   build: { targets: ['langsmith'] },
-  toolOutput: { noOffloadTools: ['readFixture', 'coordinatorSummary', 'readSkill', 'writeTodos', 'recall', 'remember'] },
+  toolOutput: { noOffloadTools: ['readFixture', 'coordinatorSummary', 'readSkill', 'writeTodos', 'recall', 'remember', 'readEvidence', 'submitCandidate'] },
   summarization: { enabled: false },
   memory: {
     store: candidateMemoryStore,
