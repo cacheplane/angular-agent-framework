@@ -26,7 +26,11 @@ describe('Reliability', () => {
     expect(list.querySelectorAll('li')).toHaveLength(3);
     for (const r of RELIABILITY_RECEIPTS) {
       expect(screen.getByText(r.claim)).toBeTruthy();
-      expect(screen.getByRole('link', { name: r.sourceLabel }).getAttribute('href')).toBe(r.sourceHref);
+      const link = screen.getByRole('link', { name: r.sourceLabel });
+      expect(link.getAttribute('href')).toBe(r.sourceHref);
+      const external = r.sourceHref.startsWith('http');
+      expect(link.getAttribute('target')).toBe(external ? '_blank' : null);
+      expect(link.getAttribute('rel')).toBe(external ? 'noopener noreferrer' : null);
     }
   });
 
@@ -55,6 +59,7 @@ describe('Reliability', () => {
     }
     expect(container.textContent).not.toMatch(/trusted by|customers|our clients|powered by/i);
     expect(screen.getByRole('link', { name: 'Choose an adapter →' }).getAttribute('href')).toBe('/docs/choosing-an-adapter');
+    expect(container.querySelector('.reliability-works-with')?.getAttribute('aria-label')).toBe('Works with your agent stack');
   });
 
   it('links every number and receipt to a human-readable page, never a raw API', () => {
