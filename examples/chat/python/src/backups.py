@@ -65,3 +65,31 @@ def age_days(backup: Backup) -> int:
 
 def older_than(inventory: list[Backup], days: int) -> list[Backup]:
     return [b for b in inventory if age_days(b) >= days]
+
+
+@tool
+def list_backups(
+    older_than_days: int,
+    state: Annotated[dict, InjectedState],
+    tool_call_id: Annotated[str, InjectedToolCallId],
+) -> Command:
+    """List database backups whose age is at least `older_than_days` days.
+
+    Read-only. Returns JSON with `older_than_days`, the matching `backups`
+    (each with id, location, created_at, size_gb, and `retain: true` when
+    the backup is under a retention hold and must never be deleted), and
+    `total`, the size of the whole inventory. Pass 0 to list everything.
+    """
+    inventory = inventory_of(state)
+    rows = older_than(inventory, older_than_days)
+    content = json.dumps(
+        {"older_than_days": older_than_days, "backups": rows, "total": len(inventory)}
+    )
+    # Writes the inventory back even on a read so the FIRST touch seeds the
+    # checkpoint: from here on the thread owns its rows explicitly.
+    return Command(
+        update={
+            "backups": inventory,
+            "messages": [ToolMessage(content=content, tool_call_id=tool_call_id)],
+        }
+    )
