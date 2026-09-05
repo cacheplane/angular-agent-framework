@@ -164,6 +164,16 @@ The `Agent` contract from `@threadplane/chat` is intentionally runtime-neutral. 
 
 Both adapters are MIT-licensed and live in the same monorepo.
 
+## Frequently asked
+
+**Does Threadplane require LangGraph?** No. `@threadplane/ag-ui` connects any AG-UI-compatible backend, and `@threadplane/langgraph` is the direct LangGraph adapter.
+
+**What is the difference between the two adapters?** Both implement the same `Agent` contract. LangGraph adds native threads, checkpoints, history, and branch mapping; AG-UI maps the protocol's events and depends on what the backend emits.
+
+**How does Threadplane differ from a raw streaming SDK?** A streaming SDK gives you events. Threadplane gives you the Angular state model, chat UX, threads, approvals, generated UI, recovery, and tests on top of them.
+
+**How does it compare with other Angular agent UI libraries?** Threadplane is the runtime-neutral Angular UI layer: direct LangGraph and AG-UI adapters, a fake-agent test path, design-system-owned generated UI, and no hosted layer in the loop.
+
 ## Next steps
 
 - [LangGraph quickstart](/docs/langgraph/getting-started/quickstart) if your backend is LangGraph Platform and you want native streaming, checkpoints, threads, interrupts, and history APIs.

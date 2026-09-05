@@ -397,6 +397,10 @@ Setting the `threadId` signal (or calling `switchThread()`) loads the target thr
 </Step>
 </Steps>
 
+## Where threads and checkpoints live
+
+In your backend's persistence layer. Threadplane exposes thread, history, and resume behavior in the UI; durability comes from the runtime you operate.
+
 ## What's Next
 
 <CardGroup cols={2}>

@@ -102,3 +102,7 @@ Replace `provideFakeAgent(...)` with one line and keep every component as it is:
 - **AG-UI**: `provideAgent({ url: 'http://localhost:8000/agent' })` from `@threadplane/ag-ui` — [AG-UI quickstart](/docs/ag-ui/getting-started/quickstart)
 
 Not every backend emits every capability; see [Choosing an adapter](/docs/choosing-an-adapter).
+
+## Testing without a model
+
+`provideFakeAgent()` streams canned tokens in-process, and the mock transports script tool calls and interrupts, so component specs stay deterministic and fast. See the [testing guide](/docs/langgraph/guides/testing).
