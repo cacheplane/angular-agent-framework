@@ -51,7 +51,6 @@ export interface WebsiteWorkspaceProps {
   readonly contentBundle: ContentBundle;
   readonly navigationTree: NavigationProduct[];
   readonly routePath: string;
-  readonly routeKind?: 'docs' | 'workspace';
   /** Test/alternate-host override. Website routes normally read this in-browser. */
   readonly requestedMode?: string | null;
   readonly docsSlot?: ReactNode;
@@ -172,14 +171,12 @@ function WebsiteWorkspaceSurface({
   contentBundle,
   navigationTree,
   routePath,
-  routeKind = 'docs',
   requestedMode,
   docsSlot,
   docsContext,
   contextTrail,
 }: WebsiteWorkspaceProps) {
   const router = useRouter();
-  const isWorkspaceRoute = routeKind === 'workspace';
   const routerRef = useRef(router);
   routerRef.current = router;
   const [discoveredRouteMode, setDiscoveredRouteMode] =
@@ -316,7 +313,7 @@ function WebsiteWorkspaceSurface({
           resolution={resolution}
           presentation={presentation}
           contentBundle={contentBundle}
-          routeKind={routeKind}
+          routeKind="docs"
           routePath={routePath}
           requestedMode={routeMode}
           docsSlot={docsSlot}
@@ -336,21 +333,11 @@ function WebsiteWorkspaceSurface({
             rootElement="section"
             navigationTree={navigationTree}
             contextTrail={contextTrail}
-            ariaLabel={
-              isWorkspaceRoute ? 'Website workspace' : 'Documentation workspace'
-            }
-            modeNavigationLabel={
-              isWorkspaceRoute ? 'Workspace modes' : 'Documentation modes'
-            }
-            contextPaneLabel={
-              isWorkspaceRoute ? 'Workspace context' : 'Documentation context'
-            }
-            mobileDialogLabel={
-              isWorkspaceRoute
-                ? 'Workspace control plane'
-                : 'Documentation control plane'
-            }
-            mobileTitle={isWorkspaceRoute ? 'Workspace' : 'Documentation'}
+            ariaLabel="Documentation workspace"
+            modeNavigationLabel="Documentation modes"
+            contextPaneLabel="Documentation context"
+            mobileDialogLabel="Documentation control plane"
+            mobileTitle="Documentation"
             renderContextPane={docsContext ? renderContextPane : undefined}
             onContextAction={handleContextAction}
             onMobileModalPresenceChange={handleMobileModalPresenceChange}
@@ -478,7 +465,6 @@ export function WebsiteWorkspace(props: WebsiteWorkspaceProps) {
     props.contentBundle,
     props.navigationTree,
     props.routePath,
-    props.routeKind,
     props.requestedMode,
     props.docsSlot,
     props.docsContext,

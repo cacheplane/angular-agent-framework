@@ -33,7 +33,7 @@ export interface WorkspaceIdentity {
   page: string;
   language: CockpitLanguage;
   title: string;
-  docsPath: string | null;
+  docsPath: string;
   workspacePath: string;
   legacyPath: string;
   runtimeAdapter: RuntimeAdapter;

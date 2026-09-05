@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { cockpitManifest } from './manifest';
 import {
-  PRIMARY_CAPABILITY_BY_DOCS_PATH,
   getCanonicalWebsiteWorkspaceHref,
   getWorkspaceDestinationPath,
   getRouteDefaultMode,
@@ -69,21 +68,35 @@ describe('workspace identity resolution', () => {
     }
   });
 
-  it('uses an explicit primary capability for duplicate Docs paths, not manifest order', () => {
-    const docsPath = '/docs/render/guides/specs';
-    const reversedManifest = [...cockpitManifest].reverse();
-
-    expect(PRIMARY_CAPABILITY_BY_DOCS_PATH[docsPath]).toBe(
-      'render:core-capabilities:spec-rendering:overview:python'
-    );
+  it('gives every manifest entry a unique docs path so no override table is needed', () => {
+    const seen = new Map<string, string>();
+    for (const entry of cockpitManifest) {
+      expect(entry.docsPath, entry.id).not.toBe('');
+      const previous = seen.get(entry.docsPath);
+      expect(
+        previous,
+        `${entry.id} shares ${entry.docsPath} with ${previous}`
+      ).toBeUndefined();
+      seen.set(entry.docsPath, entry.id);
+    }
     expect(
-      resolveDocsWorkspace(docsPath, 'Specs', reversedManifest)
+      resolveDocsWorkspace(
+        '/docs/langgraph/guides/durable-execution',
+        'Durable Execution'
+      )
     ).toMatchObject({
       kind: 'mapped',
       identity: {
-        id: 'render:core-capabilities:spec-rendering:overview:python',
+        id: 'langgraph:core-capabilities:durable-execution:overview:python',
       },
     });
+    expect(
+      getWorkspaceDestinationPath({
+        id: 'langgraph:core-capabilities:durable-execution:overview:python',
+        docsPath: '/docs/langgraph/guides/durable-execution',
+        workspacePath: '/workspace/langgraph/durable-execution',
+      })
+    ).toBe('/docs/langgraph/guides/durable-execution');
   });
 
   it('returns a discriminated docs-only resolution for an unmapped valid Docs page', () => {
@@ -139,9 +152,9 @@ describe('canonical Website workspace destinations', () => {
       if (!resolution) continue;
 
       const expectedDefault = getRouteDefaultMode(resolution, 'workspace');
-      const unavailableMode = (
-        ['Run', 'Code', 'API', 'Docs'] as const
-      ).find((mode) => !entry.availableModes.includes(mode));
+      const unavailableMode = (['Run', 'Code', 'API', 'Docs'] as const).find(
+        (mode) => !entry.availableModes.includes(mode)
+      );
 
       expect(resolveLegacyRequestMode(undefined, resolution)).toBe(
         expectedDefault
@@ -196,7 +209,7 @@ describe('canonical Website workspace destinations', () => {
     }
   });
 
-  it('omits Docs mode on a canonical Docs path and includes it on a secondary workspace path', () => {
+  it('omits Docs mode on every canonical Docs path', () => {
     const primary = resolveLegacyPath(
       '/langgraph/core-capabilities/persistence/overview/python'
     );
@@ -211,16 +224,13 @@ describe('canonical Website workspace destinations', () => {
       '/docs/langgraph/guides/persistence'
     );
     expect(getCanonicalWebsiteWorkspaceHref(secondary, 'Docs')).toBe(
-      '/workspace/langgraph/durable-execution?mode=docs'
+      '/docs/langgraph/guides/durable-execution'
     );
-    expect(getCanonicalWebsiteWorkspaceHref(primary, 'Run')).toBe(
-      '/docs/langgraph/guides/persistence?mode=run'
+    expect(getCanonicalWebsiteWorkspaceHref(secondary, 'Run')).toBe(
+      '/docs/langgraph/guides/durable-execution?mode=run'
     );
     expect(getCanonicalWebsiteWorkspaceHref(primary, 'Code')).toBe(
       '/docs/langgraph/guides/persistence?mode=code'
-    );
-    expect(getCanonicalWebsiteWorkspaceHref(primary, 'API')).toBe(
-      '/docs/langgraph/guides/persistence?mode=api'
     );
   });
 

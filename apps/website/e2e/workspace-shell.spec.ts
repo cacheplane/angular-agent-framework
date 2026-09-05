@@ -4,8 +4,7 @@ const streamingDocsPath = '/docs/langgraph/guides/streaming';
 const persistenceDocsPath = '/docs/langgraph/guides/persistence';
 const mappedDocsOnlyPath = '/docs/langgraph/getting-started/introduction';
 const unmappedDocsOnlyPath = '/docs/langgraph/getting-started/installation';
-const workspaceOnlyPath = '/workspace/langgraph/durable-execution';
-const deepAgentsDocsPath = '/docs/deep-agents/capabilities/planning';
+const durableExecutionDocsPath = '/docs/langgraph/guides/durable-execution';
 const RUN_RAIL_ITEM = /^Run(?:,|$)/;
 
 declare global {
@@ -409,28 +408,25 @@ test.describe('workspace shell', () => {
     await expect(page.locator('[data-workspace-shell]')).toBeVisible();
   });
 
-  test('uses workspace fallbacks only when a shared Docs path would lose identity', async ({
+  test('serves the formerly workspace-only capabilities as docs pages with Run available', async ({
     page,
   }) => {
-    const response = await page.goto(workspaceOnlyPath);
+    const response = await page.goto(durableExecutionDocsPath);
     expect(response?.status()).toBe(200);
-    await expect(page).toHaveURL(workspaceOnlyPath);
-    await expect(page.locator('[data-workspace-shell]')).toHaveAttribute(
-      'aria-label',
-      'Website workspace'
-    );
-    await expectMode(page, 'Run');
-
-    await page.goto(deepAgentsDocsPath);
-    await expect(page).toHaveURL(deepAgentsDocsPath);
+    await expect(page).toHaveURL(durableExecutionDocsPath);
     await expect(page.locator('[data-workspace-shell]')).toHaveAttribute(
       'aria-label',
       'Documentation workspace'
     );
     await expectMode(page, 'Docs');
+    await modeButton(page, 'Run').click();
+    await expect(page).toHaveURL(`${durableExecutionDocsPath}?mode=run`);
     await expect(
-      page.locator('iframe[title="Deep Agents Planning live example"]')
+      page.locator('iframe[title="LangGraph Durable Execution live example"]')
     ).toBeAttached();
+
+    const missing = await page.goto('/workspace/langgraph/durable-execution');
+    expect(missing?.status()).toBe(404);
   });
 
   test('renders the full desktop rail and context at the 64rem breakpoint', async ({
