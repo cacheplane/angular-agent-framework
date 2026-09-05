@@ -29,7 +29,7 @@
  *   EXAMPLES_URL=https://examples.threadplane.ai npx tsx scripts/verify-ag-ui-runtime.ts
  */
 import { pathToFileURL } from 'url';
-import { capabilities } from '../apps/cockpit/scripts/capability-registry';
+import { capabilities } from '@threadplane/cockpit-registry';
 
 const EXAMPLES_URL = process.env['EXAMPLES_URL'] ?? 'https://examples.threadplane.ai';
 const RAILWAY_URL =

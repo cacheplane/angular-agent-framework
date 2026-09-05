@@ -467,10 +467,20 @@ describe('classifyFromAffected — apps + fallback paths via namedInputs', () =>
     assert.equal(scope.cockpit, false);
   });
 
-  it('capability-registry.ts change marks apps/cockpit affected → all cockpit_*', () => {
+  it('capability-registry.ts change marks cockpit-registry affected → cockpit scopes', () => {
     const scope = classifyFromAffected(
-      ['apps/cockpit/scripts/capability-registry.ts'],
-      [{ name: 'cockpit', tags: COCKPIT_APP_TAGS }]
+      ['libs/cockpit-registry/src/lib/capability-registry.ts'],
+      [
+        {
+          name: 'cockpit-registry',
+          tags: [
+            'scope:cockpit',
+            'scope:cockpit-deploy-smoke',
+            'scope:cockpit-e2e',
+            'scope:cockpit-examples',
+          ],
+        },
+      ]
     );
     assert.equal(scope.cockpit, true);
     assert.equal(scope.cockpit_examples, true);

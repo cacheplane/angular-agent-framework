@@ -52,7 +52,7 @@ fork.
 ## Running locally
 
 ```sh
-npx tsx apps/cockpit/scripts/serve-example.ts --capability=rt-mastra
+npx tsx scripts/examples/serve-example.ts --capability=rt-mastra
 ```
 
 Angular dev server on :4332. The serve script only auto-starts Python

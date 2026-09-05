@@ -44,7 +44,7 @@ cp cockpit/runtimes/aws-strands/python/.env.example \
 One command starts the Python backend and the Angular dev server together.
 
 ```bash
-npx tsx apps/cockpit/scripts/serve-example.ts --capability=rt-strands
+npx tsx scripts/examples/serve-example.ts --capability=rt-strands
 ```
 
 The script runs `uv sync` in `cockpit/runtimes/aws-strands/python` on the way, so the first start takes longer than later ones.

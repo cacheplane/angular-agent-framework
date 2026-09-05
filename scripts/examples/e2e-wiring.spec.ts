@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { capabilities } from './scripts/capability-registry';
+import { capabilities } from '@threadplane/cockpit-registry';
 // @ts-expect-error — .mjs ES module without .d.ts; the e2e tsconfig uses
 // allowJs:true but this top-level test file doesn't go through that config.
 // eslint-disable-next-line @nx/enforce-module-boundaries -- repo-root port registry is intentionally outside an Nx project.

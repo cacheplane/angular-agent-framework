@@ -47,7 +47,7 @@ AG_UI_INTERNAL_TOKEN=dev-local-token \
 ```
 
 Then in another terminal: `npx nx run cockpit-runtimes-mastra-angular:serve:cockpit --port 4332`
-(or `npx tsx apps/cockpit/scripts/serve-example.ts --capability=rt-mastra`,
+(or `npx tsx scripts/examples/serve-example.ts --capability=rt-mastra`,
 which starts the Angular side; this Node service must be started manually as
 above — the serve script only auto-starts Python backends). The example's
 `proxy.conf.mjs` forwards `/agent` → `http://localhost:5332/agent/mastra` and

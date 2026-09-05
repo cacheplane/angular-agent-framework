@@ -1,6 +1,6 @@
 import { spawn, type ChildProcess } from 'child_process';
 import { fileURLToPath } from 'node:url';
-import { capabilities, findCapability, type Capability } from './capability-registry';
+import { capabilities, findCapability, type Capability } from '@threadplane/cockpit-registry';
 
 /** Empty base URL makes resolveRuntimeUrl fall through to http://localhost:<devPort>. */
 export const COCKPIT_RUNTIME_ENV = { NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL: '' } as const;
@@ -27,8 +27,8 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
 
   if (!capabilityArg && !allMode) {
     console.log('Usage:');
-    console.log('  npx tsx apps/cockpit/scripts/serve-example.ts --capability=streaming');
-    console.log('  npx tsx apps/cockpit/scripts/serve-example.ts --all');
+    console.log('  npx tsx scripts/examples/serve-example.ts --capability=streaming');
+    console.log('  npx tsx scripts/examples/serve-example.ts --all');
     console.log('\nCapabilities:');
     capabilities.forEach((c) => console.log(`  ${c.id.padEnd(22)} port ${c.port}  ${c.product}/${c.topic}`));
     process.exit(0);

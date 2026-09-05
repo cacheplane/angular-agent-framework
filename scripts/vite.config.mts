@@ -15,7 +15,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: true,
-    include: ['*.spec.ts', '*.spec.mjs'],
+    include: ['*.spec.ts', '*.spec.mjs', 'examples/**/*.spec.ts'],
     exclude: [
       // node:test suites — run by ci.yml directly, not by vitest.
       'ci-scope.spec.mjs',

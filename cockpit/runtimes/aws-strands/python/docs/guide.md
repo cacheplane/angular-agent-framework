@@ -39,7 +39,7 @@ exporter noise. See `.env.example`.
 ## Running locally
 
 ```sh
-npx tsx apps/cockpit/scripts/serve-example.ts --capability=rt-strands
+npx tsx scripts/examples/serve-example.ts --capability=rt-strands
 ```
 
 Angular dev server on :4331, uvicorn backend on :5331 (`/agent`, health at

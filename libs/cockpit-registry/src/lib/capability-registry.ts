@@ -1,4 +1,4 @@
-import type { RuntimeAdapter } from '@threadplane/cockpit-registry';
+import type { RuntimeAdapter } from './manifest.types';
 
 /**
  * Single source of truth for all cockpit capability examples.

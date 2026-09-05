@@ -5,3 +5,4 @@ export * from './lib/manifest.types';
 export * from './lib/resolve-language';
 export * from './lib/validate-manifest';
 export * from './lib/workspace-resolution';
+export * from './lib/capability-registry';

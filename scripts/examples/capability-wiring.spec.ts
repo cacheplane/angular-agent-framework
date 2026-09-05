@@ -1,8 +1,8 @@
 import {
+  capabilities,
   capabilityModules,
   cockpitManifest,
 } from '@threadplane/cockpit-registry';
-import { capabilities } from './scripts/capability-registry';
 import {
   auditRuntimeTargetSource,
   hasExactImportBinding,
@@ -538,7 +538,7 @@ function auditThreadsRootProviders(
 /**
  * The cockpit site is assembled from three lists that nothing forced to agree:
  *
- *  - `apps/cockpit/scripts/capability-registry.ts` — what serve/build/deploy know about;
+ *  - `libs/cockpit-registry/src/lib/capability-registry.ts` — what serve/build/deploy know about;
  *  - `libs/cockpit-registry` `cockpitManifest` — what the Next route can resolve;
  *  - registry-owned `capabilityModules` — what supplies a page's assets.
  *

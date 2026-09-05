@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { capabilities } from './scripts/capability-registry';
-import { inspectRuntimeTargetSource } from './runtime-wiring-audit';
+import { capabilities } from '@threadplane/cockpit-registry';
+import { inspectRuntimeTargetSource } from '../../scripts/examples/runtime-wiring-audit';
 
 /**
  * Guard for a failure mode production smoke cannot see.

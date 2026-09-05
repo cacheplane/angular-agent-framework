@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
-import { capabilities } from './capability-registry';
+import { capabilities } from '@threadplane/cockpit-registry';
 
 type LangGraphManifest = {
   graphs: Record<string, string>;

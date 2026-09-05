@@ -59,98 +59,98 @@
     "serve-streaming": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsx apps/cockpit/scripts/serve-example.ts --capability=streaming",
+        "command": "npx tsx scripts/examples/serve-example.ts --capability=streaming",
         "cwd": "."
       }
     },
     "serve-persistence": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsx apps/cockpit/scripts/serve-example.ts --capability=persistence",
+        "command": "npx tsx scripts/examples/serve-example.ts --capability=persistence",
         "cwd": "."
       }
     },
     "serve-interrupts": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsx apps/cockpit/scripts/serve-example.ts --capability=interrupts",
+        "command": "npx tsx scripts/examples/serve-example.ts --capability=interrupts",
         "cwd": "."
       }
     },
     "serve-memory": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsx apps/cockpit/scripts/serve-example.ts --capability=memory",
+        "command": "npx tsx scripts/examples/serve-example.ts --capability=memory",
         "cwd": "."
       }
     },
     "serve-durable-execution": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsx apps/cockpit/scripts/serve-example.ts --capability=durable-execution",
+        "command": "npx tsx scripts/examples/serve-example.ts --capability=durable-execution",
         "cwd": "."
       }
     },
     "serve-subgraphs": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsx apps/cockpit/scripts/serve-example.ts --capability=subgraphs",
+        "command": "npx tsx scripts/examples/serve-example.ts --capability=subgraphs",
         "cwd": "."
       }
     },
     "serve-time-travel": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsx apps/cockpit/scripts/serve-example.ts --capability=time-travel",
+        "command": "npx tsx scripts/examples/serve-example.ts --capability=time-travel",
         "cwd": "."
       }
     },
     "serve-deployment-runtime": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsx apps/cockpit/scripts/serve-example.ts --capability=deployment-runtime",
+        "command": "npx tsx scripts/examples/serve-example.ts --capability=deployment-runtime",
         "cwd": "."
       }
     },
     "serve-planning": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsx apps/cockpit/scripts/serve-example.ts --capability=da-planning",
+        "command": "npx tsx scripts/examples/serve-example.ts --capability=da-planning",
         "cwd": "."
       }
     },
     "serve-filesystem": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsx apps/cockpit/scripts/serve-example.ts --capability=da-filesystem",
+        "command": "npx tsx scripts/examples/serve-example.ts --capability=da-filesystem",
         "cwd": "."
       }
     },
     "serve-da-subagents": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsx apps/cockpit/scripts/serve-example.ts --capability=da-subagents",
+        "command": "npx tsx scripts/examples/serve-example.ts --capability=da-subagents",
         "cwd": "."
       }
     },
     "serve-da-memory": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsx apps/cockpit/scripts/serve-example.ts --capability=da-memory",
+        "command": "npx tsx scripts/examples/serve-example.ts --capability=da-memory",
         "cwd": "."
       }
     },
     "serve-skills": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsx apps/cockpit/scripts/serve-example.ts --capability=da-skills",
+        "command": "npx tsx scripts/examples/serve-example.ts --capability=da-skills",
         "cwd": "."
       }
     },
     "serve-all": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsx apps/cockpit/scripts/serve-example.ts --all",
+        "command": "npx tsx scripts/examples/serve-example.ts --all",
         "cwd": "."
       }
     }
@@ -170,7 +170,7 @@
       "{workspaceRoot}/scripts/rate-limit.ts",
       "{workspaceRoot}/apps/cockpit/scripts/deploy-smoke.ts",
       "{workspaceRoot}/scripts/generate-shared-deployment-config.ts",
-      "{workspaceRoot}/apps/cockpit/scripts/capability-registry.ts"
+      "{workspaceRoot}/libs/cockpit-registry/src/lib/capability-registry.ts"
     ]
   }
 }
