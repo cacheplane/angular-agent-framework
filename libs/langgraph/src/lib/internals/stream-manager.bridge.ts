@@ -140,9 +140,14 @@ export interface StreamManagerBridge {
 export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = BagTemplate>(
   { options, subjects, threadId$, destroy$, reportOperationFailure }: StreamManagerBridgeOptions<T, ResolvedBag>
 ): StreamManagerBridge {
-  // Intercept onThreadId to update currentThreadId when the transport
-  // auto-creates a thread. Without this, each submit() creates a new thread
-  // because currentThreadId stays null.
+  // Intercept onThreadId so currentThreadId tracks a thread the DEFAULT
+  // transport auto-creates. Without this, each submit() would create a new
+  // thread because currentThreadId stays null. This wrapper only reaches the
+  // transport the bridge constructs below — a consumer-supplied transport owns
+  // its own creation callback, so it must report created ids through the
+  // configured `onThreadId` or the thread-id signal (see AgentConfig.transport).
+  // Either route is handled: the thread-id subscription treats a null
+  // currentThreadId as adoption rather than a switch.
   const userOnThreadId = options.onThreadId;
   const wrappedOnThreadId = (id: string) => {
     currentThreadId = id;
@@ -161,7 +166,6 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
   let lastOptions: LangGraphSubmitOptions | undefined;
   let abortController: AbortController | null = null;
   let historyAbortController: AbortController | null = null;
-  let hasSeenThreadId = false;
   const userAbortedControllers = new WeakSet<AbortController>();
   const toolProgressMap = new Map<string, ToolProgress>();
   // Message ids whose content is known-final (installed by a canonical
@@ -422,10 +426,15 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     void refreshHistory();
   }
 
-  // Track threadId changes
+  // Track threadId changes.
+  //
+  // A null currentThreadId means the bridge is not on a thread yet, so an
+  // incoming id is an ADOPTION — typically the thread a transport just created
+  // for the run that is streaming right now. Resetting there would abort the
+  // bridge's own in-flight run. Only a KNOWN id changing to a different id (or
+  // to null) is a genuine switch, and only that resets.
   threadId$.pipe(takeUntil(destroy$)).subscribe(id => {
-    const shouldReset = hasSeenThreadId && currentThreadId !== id;
-    hasSeenThreadId = true;
+    const shouldReset = currentThreadId !== null && currentThreadId !== id;
     setThreadId(id, shouldReset);
   });
 

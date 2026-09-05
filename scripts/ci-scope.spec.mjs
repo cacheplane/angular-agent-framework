@@ -174,6 +174,7 @@ describe('growth lifecycle project ownership', () => {
     ['tools/google-mailbox-poller/Code.gs', 'google-mailbox-poller'],
     ['scripts/apply-migrations.mts', 'growth'],
     ['scripts/growth-control.mts', 'growth'],
+    ['scripts/growth-observability.mts', 'growth'],
     ['scripts/import-resend-lifecycle.mts', 'growth'],
     ['migrations/0001_rate_limit_events.sql', 'growth'],
     ['migrations/0002_growth_control_plane.sql', 'growth'],
@@ -185,7 +186,7 @@ describe('growth lifecycle project ownership', () => {
     });
   }
 
-  it('runs exactly the four database/operator CLI suites in its dedicated target', async () => {
+  it('runs the database/operator CLI suites in its dedicated target', async () => {
     const project = JSON.parse(
       await readFile('libs/growth/project.json', 'utf8')
     );
@@ -198,6 +199,7 @@ describe('growth lifecycle project ownership', () => {
       'scripts/apply-migrations.spec.ts',
       'scripts/cancel-resend-lifecycle.spec.ts',
       'scripts/growth-control.spec.ts',
+      'scripts/growth-observability.spec.ts',
       'scripts/import-resend-lifecycle.spec.ts',
     ]);
   });

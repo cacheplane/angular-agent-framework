@@ -10,6 +10,7 @@
       "{workspaceRoot}/scripts/apply-migrations*",
       "{workspaceRoot}/scripts/growth-database-preflight*",
       "{workspaceRoot}/scripts/growth-control*",
+      "{workspaceRoot}/scripts/growth-observability*",
       "{workspaceRoot}/scripts/import-resend-lifecycle*",
       "{workspaceRoot}/scripts/cancel-resend-lifecycle*"
     ]
