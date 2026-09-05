@@ -1,7 +1,7 @@
 {
   "name": "@threadplane/langgraph",
   "version": "0.0.65",
-  "description": "LangGraph adapter for @threadplane/chat \u2014 Angular bindings for LangGraph Platform.",
+  "description": "LangGraph adapter for the Angular AI agent UI — provideAgent()/injectAgent() expose a run as Angular Signals.",
   "keywords": [
     "angular",
     "langgraph",

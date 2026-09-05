@@ -1,6 +1,7 @@
 {
   "name": "@threadplane/chat",
   "version": "0.0.65",
+  "description": "The Angular AI agent chat UI: <chat>, headless primitives, interrupts, subagents, and generative UI on Signals.",
   "exports": {
     "./chat.css": "./chat.css",
     "./themes/default-dark.css": "./themes/default-dark.css",

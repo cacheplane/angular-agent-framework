@@ -1,6 +1,6 @@
 # @threadplane/ag-ui
 
-Adapter that wraps an [AG-UI](https://github.com/ag-ui-protocol/ag-ui) `AbstractAgent` into the runtime-neutral `Agent` contract from `@threadplane/chat`. Works with any AG-UI-compatible backend.
+The AG-UI adapter for [Threadplane](https://github.com/cacheplane/angular-agent-framework), the AI agent UI framework for Angular. Wraps an [AG-UI](https://github.com/ag-ui-protocol/ag-ui) `AbstractAgent` into the runtime-neutral `Agent` contract that `@threadplane/chat` consumes, so any AG-UI-compatible backend drives the same chat surface.
 
 <p align="center">
   <a href="https://www.npmjs.com/package/@threadplane/ag-ui">
@@ -32,7 +32,7 @@ Part of [Threadplane](https://github.com/cacheplane/angular-agent-framework).
 ## Install
 
 ```bash
-npm install @threadplane/ag-ui @threadplane/chat @ag-ui/client @ag-ui/core marked
+npm install @threadplane/chat @threadplane/ag-ui @ag-ui/client @ag-ui/core marked
 ```
 
 **Peer dependencies:** `@threadplane/chat: *`, `@angular/core: ^20.0.0 || ^21.0.0 || ^22.0.0`, `@ag-ui/client: *`, `@ag-ui/core: *`, `rxjs: ~7.8.0`

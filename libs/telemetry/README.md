@@ -1,7 +1,9 @@
 # @threadplane/telemetry
 
-Explicit telemetry helpers and automatic development browser collection for supported Threadplane runtimes. Installing this
-package does not execute telemetry code or make network requests.
+Explicit capture helpers and automatic development runtime collection for
+applications built with [Threadplane](https://github.com/cacheplane/angular-agent-framework),
+the AI agent UI framework for Angular. The automatic path starts only when a
+supported development integration is used, as described below.
 
 <p align="center">
   <a href="https://www.npmjs.com/package/@threadplane/telemetry">
@@ -15,19 +17,22 @@ package does not execute telemetry code or make network requests.
   </a>
 </p>
 
-## Trust contract
+## How sending works
 
-- **Installation is inert.** The package has no install lifecycle scripts.
-- **The legacy browser service is opt-in.** It stays disabled unless an application calls
-  `provideThreadplaneTelemetry({ enabled: true })`.
-- **Node telemetry is explicit.** An event is sent only when application code
+- **No install lifecycle scripts.** The manifest declares none, so `npm install`
+  runs no code from this package.
+- **The legacy browser service starts disabled.** It sends nothing until an application
+  calls `provideThreadplaneTelemetry({ enabled: true })`.
+- **Node capture is explicit.** An event is sent only where application code
   calls a capture helper.
-- **Node disable controls win.** `TPLANE_TELEMETRY_DISABLED`, `DO_NOT_TRACK`, CI
-  detection, or `disableTelemetry()` prevent the explicit Node helper from sending.
+- **Disable controls win.** `TPLANE_TELEMETRY_DISABLED`, `DO_NOT_TRACK`, CI
+  detection, or `disableTelemetry()` prevent explicit Node helper sends before a network call.
+- **Point it anywhere.** `TPLANE_TELEMETRY_INGEST_URL`, or an `endpoint` or
+  `sink` on the browser provider, routes explicit helper events to infrastructure you control.
 
-These explicit telemetry helpers never collect message content, prompts, completions, tool
-inputs or outputs, credentials, project paths, raw environment variables, or
-personally identifiable information.
+The event categories, purposes, and retention that apply to Threadplane's own
+properties are described at
+[threadplane.ai/privacy](https://threadplane.ai/privacy).
 
 The automatic install collector embedded in `@threadplane/chat`, `@threadplane/langgraph`,
 `@threadplane/ag-ui`, and `@threadplane/render` is a separate collection path. It can

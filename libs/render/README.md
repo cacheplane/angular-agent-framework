@@ -1,6 +1,6 @@
 # @threadplane/render
 
-`@json-render/core`-backed Angular render engine — maps JSON specs to Angular components via a registry, used internally by `@threadplane/chat` for generative-UI rendering.
+The generative-UI render engine of [Threadplane](https://github.com/cacheplane/angular-agent-framework), the AI agent UI framework for Angular. `@json-render/core`-backed: it maps a JSON spec to Angular components through a registry you define, so agent-generated UI can only render the design-system components you registered. `@threadplane/chat` uses it for generative UI.
 
 <p>
   <a href="https://www.npmjs.com/package/@threadplane/render">
