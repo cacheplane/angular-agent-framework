@@ -492,6 +492,28 @@ function cleanText(value: string): string {
 }
 
 const EXECUTABLE_ELEMENTS = new Set(['script', 'style', 'noscript']);
+const CHROME_ROLES = new Set(['navigation', 'menu', 'menubar', 'contentinfo']);
+
+function excludesEvidence(element: DefaultTreeAdapterTypes.Element): boolean {
+  // Header lists commonly hold navigation without a nav landmark. Keep hero
+  // headings and paragraphs, and keep product lists elsewhere in the page.
+  if (element.tagName === 'ul' || element.tagName === 'ol') {
+    let parent = element.parentNode;
+    while (parent) {
+      if ('tagName' in parent && parent.tagName === 'header') return true;
+      parent = 'parentNode' in parent ? parent.parentNode : null;
+    }
+  }
+  return (
+    EXECUTABLE_ELEMENTS.has(element.tagName) ||
+    element.tagName === 'nav' ||
+    element.tagName === 'footer' ||
+    (element.attrs.find((attribute) => attribute.name === 'role')?.value ?? '')
+      .toLowerCase()
+      .split(/\s+/u)
+      .some((role) => CHROME_ROLES.has(role))
+  );
+}
 
 function nodeText(node: DefaultTreeAdapterTypes.Node): string {
   const text: string[] = [];
@@ -499,7 +521,7 @@ function nodeText(node: DefaultTreeAdapterTypes.Node): string {
   while (pending.length > 0) {
     const candidate = pending.pop();
     if (!candidate) break;
-    if ('tagName' in candidate && EXECUTABLE_ELEMENTS.has(candidate.tagName)) {
+    if ('tagName' in candidate && excludesEvidence(candidate)) {
       continue;
     }
     if (candidate.nodeName === '#text') {
@@ -522,7 +544,8 @@ function nodeText(node: DefaultTreeAdapterTypes.Node): string {
 
 function collectElements(
   node: DefaultTreeAdapterTypes.Node,
-  tagNames: ReadonlySet<string>
+  tagNames: ReadonlySet<string>,
+  stopAtMatch = false
 ): DefaultTreeAdapterTypes.Element[] {
   const elements: DefaultTreeAdapterTypes.Element[] = [];
   const pending: DefaultTreeAdapterTypes.Node[] = [node];
@@ -530,8 +553,11 @@ function collectElements(
     const candidate = pending.pop();
     if (!candidate) break;
     if ('tagName' in candidate) {
-      if (EXECUTABLE_ELEMENTS.has(candidate.tagName)) continue;
-      if (tagNames.has(candidate.tagName)) elements.push(candidate);
+      if (excludesEvidence(candidate)) continue;
+      if (tagNames.has(candidate.tagName)) {
+        elements.push(candidate);
+        if (stopAtMatch) continue;
+      }
     }
     if ('childNodes' in candidate) {
       for (
@@ -548,7 +574,7 @@ function collectElements(
 }
 
 function textValues(
-  document: DefaultTreeAdapterTypes.Document,
+  roots: DefaultTreeAdapterTypes.Node[],
   tagNames: string | readonly string[],
   limit: number
 ): string[] {
@@ -556,7 +582,9 @@ function textValues(
   const selectedTags = new Set(
     typeof tagNames === 'string' ? [tagNames] : tagNames
   );
-  for (const element of collectElements(document, selectedTags)) {
+  for (const element of roots.flatMap((root) =>
+    collectElements(root, selectedTags)
+  )) {
     const value = cleanText(nodeText(element));
     if (value && !values.includes(value)) values.push(value);
     if (values.length === limit) break;
@@ -590,11 +618,20 @@ export function extractEvidence(
   const html = new TextDecoder('utf-8', { fatal: false }).decode(body);
   const document = parse(html);
   const facts = [
-    ...textValues(document, 'title', 1),
-    ...textValues(document, 'h1', 3),
+    ...textValues([document], 'title', 1),
+    ...textValues([document], 'h1', 3),
     ...descriptionValues(document, 2),
   ].slice(0, 6);
-  const snippets = textValues(document, ['p', 'li'], 6);
+  const mainSnippets = textValues(
+    // Nested main elements share one root; do not repeatedly scan their subtree.
+    collectElements(document, new Set(['main']), true),
+    ['p', 'li'],
+    6
+  );
+  // Some sites put substantive hero content outside an empty main landmark.
+  const snippets = mainSnippets.length
+    ? mainSnippets
+    : textValues([document], ['p', 'li'], 6);
   return { facts, snippets };
 }
 
