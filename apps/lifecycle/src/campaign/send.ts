@@ -48,6 +48,7 @@ import { renderFulfillmentTemplate } from '../fulfillment/templates.js';
 import { renderInternalNotificationSummary } from '../notifications/templates.js';
 import { DeterministicLifecycleJobError } from '../job-errors.js';
 import {
+  BUSINESS_POSTAL_ADDRESS,
   renderCampaignTemplate,
   renderEvidenceCampaignTemplate,
   type CampaignDraft,
@@ -279,7 +280,7 @@ function signedText(
 ): string {
   return `${body}\n\n—\nBrian\n\nIs this email not relevant to you? Stop here: ${unsubscribeActionUrlValue(
     unsubscribeUrl
-  )}`;
+  )}\n${BUSINESS_POSTAL_ADDRESS}`;
 }
 
 const HTML_ESCAPES: Record<string, string> = {
@@ -315,8 +316,9 @@ function htmlLine(line: string): string {
 
 /**
  * A plain HTML alternative for the text part: the same paragraphs, bare HTTPS
- * links as anchors, and a one-word unsubscribe link instead of the long signed
- * URL. No layout, images, styles, or tracking.
+ * links as anchors, a one-word unsubscribe link instead of the long signed
+ * URL, and the business postal address as the final line. No layout, images,
+ * styles, or tracking.
  */
 function signedHtml(
   body: string,
@@ -331,6 +333,7 @@ function signedHtml(
     ...paragraphs,
     '<p>—<br>Brian</p>',
     `<p>Is this email not relevant to you? Click <a href="${unsubscribe}">here</a>.</p>`,
+    `<p>${escapeHtml(BUSINESS_POSTAL_ADDRESS)}</p>`,
   ].join('\n');
 }
 

@@ -22,6 +22,16 @@ export const FOUNDER_BOOKING_URL =
   'https://calendar.app.google/nK961tWHZd21izKR6';
 
 /**
+ * The business postal address every recipient-facing email prints after its
+ * unsubscribe line. CAN-SPAM requires a valid physical postal address on
+ * commercial mail, so the footer in `send.ts` renders this single constant in
+ * both the text and HTML parts. Keep it on one line; the HTML part escapes it
+ * into a bare `<p>`.
+ */
+export const BUSINESS_POSTAL_ADDRESS =
+  '2843 NW Lolo Dr, Bend, OR 97703, United States';
+
+/**
  * Every link recipient copy may carry, across campaign steps and fulfillment
  * mail. The four PDFs are the whitepaper fulfillment deliverables.
  */
