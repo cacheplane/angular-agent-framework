@@ -12,9 +12,19 @@ export type CampaignEvidenceAngle =
   | 'event_state_boundary';
 
 const CampaignStepSchema = z.enum(['immediate', 'day-3', 'day-8']);
+
+/**
+ * Brian's Google Calendar appointment-schedule booking page. This is the only
+ * scheduling link recipient copy may carry; every other calendar host or path
+ * is still rejected by the draft checks below.
+ */
+export const FOUNDER_BOOKING_URL =
+  'https://calendar.app.google/REPLACE_WITH_BRIAN_BOOKING_LINK';
+
 const APPROVED_CAMPAIGN_LINKS = new Set([
   'https://threadplane.ai/docs',
   'https://threadplane.ai/pilot-to-prod',
+  FOUNDER_BOOKING_URL,
 ]);
 const URL_PATTERN = /https?:\/\/[^\s<>()"'“”‘’\]}]+/giu;
 const EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/iu;
@@ -161,8 +171,8 @@ export function normalizeCampaignDraft(candidate: unknown): CampaignDraft {
 
 const CAMPAIGN_TEMPLATES: Record<CampaignStep, CampaignDraft> = {
   immediate: {
-    subject: 'A practical place to start',
-    body: 'Thanks for taking a look at Threadplane. One practical starting point is to get a streamed response working end to end, then add persistence and interrupts as the product needs them.\n\nWhat are you building?\n\nhttps://threadplane.ai/docs',
+    subject: 'Engineer to engineer',
+    body: `Thanks for taking a look at Threadplane.\n\nA lot of teams hit the same point.\nThe idea is clear.\nGetting it working cleanly in production is where things get messy.\n\nI am the founder, and I am offering short engineer-to-engineer sessions to think through implementation, unblock technical questions, and avoid the common mistakes.\n\nNo sales pitch.\nJust a practical conversation about your use case and what it would take to get it working.\n\nYou can grab a time here:\n${FOUNDER_BOOKING_URL}`,
   },
   'day-3': {
     subject: 'One debugging shortcut',

@@ -70,7 +70,7 @@ The system remains intentionally lean:
 
 ### Delivery and reply policy
 
-- Campaign and fulfillment email is plain text and should read as a direct message from Brian.
+- Campaign and fulfillment email is authored as plain text and should read as a direct message from Brian. A plain HTML alternative (paragraphs and links only, no layout or tracking) rides alongside so the unsubscribe footer is a one-word link.
 - Resend is used for transport, provider message identifiers, and verified delivery webhooks.
 - New campaign jobs are held in Neon until due; Resend must not schedule the future campaign steps.
 - Google Workspace is the reply mailbox. A Google Apps Script poller sends only bounded message metadata and reply headers to the signed reply endpoint; it does not persist message bodies in Threadplane.

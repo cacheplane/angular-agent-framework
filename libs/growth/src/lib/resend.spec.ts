@@ -199,6 +199,84 @@ describe('sendRecipientEmail', () => {
     expect(test.markProviderAcceptanceUnknown).not.toHaveBeenCalled();
   });
 
+  it('forwards a plain-paragraph HTML alternative that links the unsubscribe URL', async () => {
+    const test = harness();
+    const html = `<p>Hi Sam,</p><p>Here is the <a href="https://threadplane.ai/docs">note</a>.</p><p>To stop these emails, click <a href="${unsubscribeUrl}">here</a>.</p>`;
+
+    await expect(
+      sendRecipientEmail(
+        test.database,
+        { ...message, html },
+        productionPolicy(),
+        test.dependencies
+      )
+    ).resolves.toEqual({ accepted: true, providerEmailId });
+    const payload = test.send.mock.calls[0]?.[0] as Record<string, unknown>;
+    expect(payload['html']).toBe(html);
+    expect(payload['text']).toBe(message.text);
+  });
+
+  it.each([
+    [
+      'a tracking image',
+      '<p>Hi</p><img src="https://tracker.example/pixel.gif">',
+    ],
+    ['a script', '<p>Hi</p><script>alert(1)</script>'],
+    ['a style block', '<style>p{color:red}</style><p>Hi</p>'],
+    ['an inline style', '<p style="color:red">Hi</p>'],
+    [
+      'an event handler',
+      '<p><a href="https://threadplane.ai/docs" onclick="x()">Docs</a></p>',
+    ],
+    ['a non-HTTPS anchor', '<p><a href="javascript:alert(1)">Docs</a></p>'],
+    [
+      'an unquoted anchor',
+      '<p><a href=https://threadplane.ai/docs>Docs</a></p>',
+    ],
+    ['an unknown element', '<div><p>Hi</p></div>'],
+    ['an HTML comment', '<p>Hi</p><!-- hidden -->'],
+    [
+      'no unsubscribe link',
+      '<p>Hi</p><p><a href="https://threadplane.ai/docs">Docs</a></p>',
+    ],
+  ])(
+    'rejects an HTML alternative containing %s before authorization',
+    async (_case, fragment) => {
+      const test = harness();
+      const html = fragment.includes(unsubscribeUrl)
+        ? fragment
+        : _case === 'no unsubscribe link'
+        ? fragment
+        : `${fragment}<p><a href="${unsubscribeUrl}">here</a></p>`;
+
+      await expect(
+        sendRecipientEmail(
+          test.database,
+          { ...message, html },
+          productionPolicy(),
+          test.dependencies
+        )
+      ).rejects.toThrow();
+      expect(test.authorizeLeasedJobForSubmission).not.toHaveBeenCalled();
+      expect(test.send).not.toHaveBeenCalled();
+    }
+  );
+
+  it('rejects an HTML alternative that repeats the unsubscribe link', async () => {
+    const test = harness();
+    const html = `<p><a href="${unsubscribeUrl}">here</a> or <a href="${unsubscribeUrl}">here</a></p>`;
+
+    await expect(
+      sendRecipientEmail(
+        test.database,
+        { ...message, html },
+        productionPolicy(),
+        test.dependencies
+      )
+    ).rejects.toThrow(/exactly once/u);
+    expect(test.send).not.toHaveBeenCalled();
+  });
+
   it('uses a separate fulfillment tag contract without campaign tags', async () => {
     const test = harness({
       job: job({

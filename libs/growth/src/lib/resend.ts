@@ -58,6 +58,13 @@ export interface RecipientEmailInput {
   leaseToken: string;
   subject: string;
   text: string;
+  /**
+   * Optional HTML alternative for the same message. It must stay a plain
+   * rendering of the text part: paragraphs and HTTPS anchors only, no images,
+   * scripts, styles, forms, or event handlers, and it must carry the same
+   * unsubscribe link as the text part.
+   */
+  html?: string;
   unsubscribeUrl: UnsubscribeActionUrl;
   signal?: AbortSignal;
 }
@@ -73,6 +80,7 @@ export interface RecipientEmailProviderPayload {
   replyTo: typeof RECIPIENT_EMAIL_SENDER;
   subject: string;
   text: string;
+  html?: string;
   headers: {
     'List-Unsubscribe': string;
     'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click';
@@ -113,6 +121,51 @@ export type RecipientSendResult =
         | 'provider_rejected'
         | 'provider_outcome_unknown';
     };
+
+const HTML_MAXIMUM = 40_000;
+const FORBIDDEN_HTML_ELEMENT_PATTERN =
+  /<(?:img|picture|source|script|style|link|iframe|frame|object|embed|svg|video|audio|form|input|button|select|textarea|meta|base|template|math)\b/iu;
+const HTML_EVENT_HANDLER_PATTERN = /\son[a-z]+\s*=/iu;
+const HTML_RESOURCE_ATTRIBUTE_PATTERN =
+  /\s(?:src|srcset|style|background|poster|ping|formaction|action|data)\s*=/iu;
+const HTML_TAG_PATTERN = /<\/?([a-z][a-z0-9]*)\b[^>]*>/giu;
+const ALLOWED_HTML_ELEMENTS = new Set(['p', 'br', 'a']);
+const HTML_ANCHOR_PATTERN = /<a\b([^>]*)>/giu;
+const HTML_HREF_PATTERN = /\bhref\s*=\s*"([^"]*)"/iu;
+
+function optionalPlainHtml(
+  field: string,
+  value: string | undefined,
+  unsubscribeUrl: string
+): string | undefined {
+  if (value === undefined) return undefined;
+  const html = requiredBoundedText(field, value, HTML_MAXIMUM, true);
+  if (
+    FORBIDDEN_HTML_ELEMENT_PATTERN.test(html) ||
+    HTML_EVENT_HANDLER_PATTERN.test(html) ||
+    HTML_RESOURCE_ATTRIBUTE_PATTERN.test(html) ||
+    /<!--|<!doctype|<\?/iu.test(html)
+  ) {
+    throw new Error(`${field} must be plain paragraphs and links only`);
+  }
+  for (const match of html.matchAll(HTML_TAG_PATTERN)) {
+    if (!ALLOWED_HTML_ELEMENTS.has((match[1] ?? '').toLowerCase())) {
+      throw new Error(`${field} must be plain paragraphs and links only`);
+    }
+  }
+  let unsubscribeAnchors = 0;
+  for (const match of html.matchAll(HTML_ANCHOR_PATTERN)) {
+    const href = HTML_HREF_PATTERN.exec(match[1] ?? '')?.[1];
+    if (typeof href !== 'string' || !href.startsWith('https://')) {
+      throw new Error(`${field} anchors must use HTTPS hrefs`);
+    }
+    if (href === unsubscribeUrl) unsubscribeAnchors += 1;
+  }
+  if (unsubscribeAnchors !== 1) {
+    throw new Error(`${field} must link the unsubscribe URL exactly once`);
+  }
+  return html;
+}
 
 function requiredBoundedText(
   field: string,
@@ -271,7 +324,11 @@ export async function sendRecipientEmail(
   const leaseToken = validUuid('leaseToken', input.leaseToken);
   const subject = requiredBoundedText('subject', input.subject, 200);
   const text = requiredBoundedText('text', input.text, 20_000, true);
-  unsubscribeActionUrlValue(input.unsubscribeUrl);
+  const html = optionalPlainHtml(
+    'html',
+    input.html,
+    unsubscribeActionUrlValue(input.unsubscribeUrl)
+  );
   const authorizedAt = dependencies.now();
   if (Number.isNaN(authorizedAt.getTime()))
     throw new Error('now must be valid');
@@ -335,6 +392,7 @@ export async function sendRecipientEmail(
         replyTo: RECIPIENT_EMAIL_SENDER,
         subject,
         text,
+        ...(html === undefined ? {} : { html }),
         headers: {
           'List-Unsubscribe': `<${unsubscribeUrl}>`,
           'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',

@@ -665,21 +665,21 @@ apps/lifecycle should declare Dawn Core/CLI/LangGraph/Postgres Storage/SDK 0.8.2
 
 ### Campaign
 
-| Step | Due                                                                       | Purpose                                                                                                         |
-| ---- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| 1    | As soon as artifact is ready; neutral fallback no later than five minutes | Acknowledge guide/product context, offer one useful observation, ask what they are building.                    |
-| 2    | Day 3                                                                     | Help with one missing activation milestone and ask for the blocking detail.                                     |
-| 3    | Day 8                                                                     | Offer concise architecture help, ask one reply-oriented question, and state it is the last automated follow-up. |
+| Step | Due                                                 | Purpose                                                                                                                            |
+| ---- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | Immediately on enrollment (research is not awaited) | Founder session offer: thank them, name the pilot-to-production gap, offer an engineer-to-engineer session, link the booking page. |
+| 2    | Day 3                                               | Help with one missing activation milestone and ask for the blocking detail.                                                        |
+| 3    | Day 8                                               | Offer concise architecture help, ask one reply-oriented question, and state it is the last automated follow-up.                    |
 
 Copy constraints:
 
-- All recipient fulfillment, welcome, acknowledgment, and campaign mail uses Resend’s text field rather than an HTML template.
+- All recipient fulfillment, welcome, acknowledgment, and campaign mail is authored as plain text. Since 2026-09-05 the sender also attaches a plain HTML alternative rendered from that text (paragraphs and HTTPS anchors only) so the unsubscribe footer can read “click here” instead of the long signed URL; the sender rejects any HTML part containing images, scripts, styles, forms, event handlers, or a missing unsubscribe anchor.
 - Internal research and operational notifications are plain text as well.
 - Each campaign step is at most 120 words.
-- One question and at most one useful link.
+- At most one question and at most one useful link.
 - No banner, button, HTML layout, tracking pixel, open tracking, or click rewriting.
 - Never say “I saw you…” based on telemetry.
-- No calendar link in v1.
+- The only scheduling link allowed is Brian’s Google Calendar appointment-schedule booking page (`FOUNDER_BOOKING_URL` in the campaign templates); every other calendar host or path is rejected.
 - From and Reply-To are Brian at Threadplane <brian@threadplane.ai>.
 - BCC Brian on every recipient-facing email that may begin a conversation. The email carries X-Threadplane-Job-ID so the Google poller can register the BCC seed’s actual RFC Message-ID; seed copies are never treated as recipient replies.
 
