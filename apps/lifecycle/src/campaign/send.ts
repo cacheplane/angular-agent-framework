@@ -76,6 +76,7 @@ export interface LifecycleJobContext {
   emailClassification: 'work' | 'personal' | 'unknown';
   formSubmission: Record<string, unknown>;
   enrollmentAt: Date | null;
+  campaignEnrollmentReason?: 'install_runtime' | null;
   enrichmentArtifact: GrowthArtifact | null;
 }
 
@@ -174,6 +175,7 @@ export interface LifecycleJobDependencies {
 
 export interface LifecycleRuntimeConfiguration {
   campaignEnrollmentEnabled: boolean;
+  installRuntimeHelloEnabled: boolean;
   campaignEnrollmentStartAt?: Date;
   campaignEnabled: boolean;
   deliveryEnabled: boolean;
@@ -264,11 +266,12 @@ export function prepareCampaignMessage(input: {
   unsubscribeUrl: UnsubscribeActionUrl;
 }): PreparedCampaignMessage {
   const step = campaignStep(input.job);
-  const artifact = validArtifact(
-    input.context.enrichmentArtifact,
-    input.context.contactId
-  );
-  if (step === 1 && !artifact) {
+  const genericHello =
+    input.context.campaignEnrollmentReason === 'install_runtime';
+  const artifact = genericHello
+    ? null
+    : validArtifact(input.context.enrichmentArtifact, input.context.contactId);
+  if (step === 1 && !artifact && !genericHello) {
     if (!input.context.enrollmentAt) {
       throw new DeterministicLifecycleJobError(
         'Campaign enrollment timestamp is required'
@@ -662,6 +665,10 @@ export function loadLifecycleRuntimeConfiguration(
     'CAMPAIGN_ENROLLMENT_ENABLED'
   );
   const campaignEnabled = exactBoolean(environment, 'CAMPAIGN_ENABLED');
+  const installRuntimeHelloEnabled = exactBoolean(
+    environment,
+    'GROWTH_INSTALL_RUNTIME_HELLO_ENABLED'
+  );
   const deliveryEnabled = exactBoolean(environment, 'DELIVERY_ENABLED');
   let campaignEnrollmentStartAt: Date | undefined;
   if (campaignEnrollmentEnabled) {
@@ -682,6 +689,7 @@ export function loadLifecycleRuntimeConfiguration(
   }
   return {
     campaignEnrollmentEnabled,
+    installRuntimeHelloEnabled,
     ...(campaignEnrollmentStartAt ? { campaignEnrollmentStartAt } : {}),
     campaignEnabled,
     deliveryEnabled,
