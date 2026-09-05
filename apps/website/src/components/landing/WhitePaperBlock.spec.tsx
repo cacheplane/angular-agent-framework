@@ -74,12 +74,14 @@ describe('WhitePaperBlock', () => {
   });
 
   it('validates on blur, focuses the field on an invalid submit, and clears once valid', () => {
-    vi.stubGlobal('fetch', vi.fn());
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
     render(<WhitePaperBlock formPolicy={formPolicy} />);
     const input = screen.getByLabelText('Work email');
     fireEvent.click(screen.getByRole('button', { name: 'Get the field report' }));
     expect(screen.getByText('Enter your email address.')).toBeTruthy();
     expect(document.activeElement).toBe(input);
+    expect(fetchMock).not.toHaveBeenCalled();
     fireEvent.change(input, { target: { value: 'reader@acme' } });
     fireEvent.blur(input);
     expect(screen.getByText('Enter a full address, like jordan@acme.dev.')).toBeTruthy();

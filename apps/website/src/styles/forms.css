@@ -131,6 +131,7 @@ select[data-ui="form-control"] {
   min-width: 0;
 }
 /* A row button matches the control height so the pair sits flush. */
+/* Ties on specificity with [data-ui="button"][data-size="lg"] in ui.css; wins only because forms.css is imported after ui.css in global.css. */
 [data-ui="form-row"] [data-ui="button"] {
   height: var(--form-control-height);
 }
