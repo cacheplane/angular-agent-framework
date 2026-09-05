@@ -32,13 +32,33 @@ test('landing page renders the dark proof band', async ({ page }) => {
   await expect(page.locator('#proof[data-surface="dark"]')).toBeVisible();
 });
 
-test('landing page renders feature blocks (Stream/Persist/Approve/Render/Test)', async ({ page }) => {
+test('landing page renders the spine in order (live-stage spec §3)', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('#stream-heading')).toBeVisible();
-  await expect(page.locator('#persist-heading')).toBeVisible();
-  await expect(page.locator('#approve-heading')).toBeVisible();
-  await expect(page.locator('#render-heading')).toBeVisible();
-  await expect(page.locator('#test-heading')).toBeVisible();
+  const ids = [
+    'hero-heading',
+    'proof-heading',
+    'why-heading',
+    'stream-heading',
+    'persist-heading',
+    'approve-heading',
+    'render-heading',
+    'final-cta-heading',
+    'pilot-heading',
+    'faq-heading',
+  ];
+  const tops: number[] = [];
+  for (const id of ids) {
+    const el = page.locator(`#${id}`);
+    await expect(el).toBeAttached();
+    tops.push((await el.boundingBox())?.y ?? -1);
+  }
+  expect([...tops].sort((a, b) => a - b)).toEqual(tops);
+  await expect(page.locator('#test-heading')).toHaveCount(0);
+  await expect(page.locator('#parity-heading')).toHaveCount(0);
+  await expect(page.locator('#how-it-works-heading')).toHaveCount(0);
+  await expect(page.locator('#coding-agent-heading')).toHaveCount(0);
+  await expect(page.locator('#whitepaper-block')).toHaveCount(0);
+  await expect(page.locator('main form')).toHaveCount(1);
 });
 
 test('landing page no longer carries the retired promises section', async ({ page }) => {
@@ -165,7 +185,7 @@ test('footer newsletter form posts to /api/newsletter and renders success state'
     });
   });
 
-  await page.goto('/');
+  await page.goto('/pricing');
   const footer = page.locator('footer');
   const input = footer.getByLabel('Email');
   // Regression guard: the disclosure once sat inside the flex row and the input collapsed to 26px.
@@ -519,7 +539,7 @@ test('representative docs pages do not create page-level horizontal overflow', a
 
 test('marketing pages link to downloadable whitepaper PDFs', async ({ page }) => {
   const expectedDownloads: Record<string, string> = {
-    '/': '/whitepaper.pdf',
+    '/ag-ui': '/whitepaper.pdf',
     '/langgraph': '/whitepapers/angular.pdf',
     '/render': '/whitepapers/render.pdf',
     '/chat': '/whitepapers/chat.pdf',

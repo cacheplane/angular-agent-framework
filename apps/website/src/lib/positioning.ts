@@ -199,12 +199,6 @@ export const appConfig: ApplicationConfig = {
   },
 ];
 
-/** Runtime-parity section: only the config pane differs. */
-export const PARITY_SNIPPETS = {
-  langgraph: INSTALL_OPTIONS[1].providerSnippet,
-  ag_ui: INSTALL_OPTIONS[2].providerSnippet,
-} as const;
-
 // ── Coding-agent quickstart prompt ───────────────────────────────────────────
 export const CODING_AGENT_PROMPT = `Add Threadplane to this Angular application.
 

@@ -19,7 +19,6 @@ import {
   HOME_DESCRIPTION,
   HOME_TITLE,
   INSTALL_OPTIONS,
-  PARITY_SNIPPETS,
   PINNED_COMPONENT_SNIPPET,
 } from './positioning';
 import { WEBSITE_SUPPORTED_ANGULAR_MAJORS } from '../components/pricing/angular-support.mjs';
@@ -120,7 +119,6 @@ describe('positioning: install options', () => {
     expect(parses(RENDER_SNIPPET)).toBe(true);
     expect(parses(PINNED_COMPONENT_SNIPPET)).toBe(true);
     for (const opt of INSTALL_OPTIONS) expect(parses(opt.providerSnippet), opt.key).toBe(true);
-    for (const s of Object.values(PARITY_SNIPPETS)) expect(parses(s)).toBe(true);
   });
 
   it('the pinned runtime-parity pane is adapter-neutral', () => {

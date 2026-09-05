@@ -373,7 +373,8 @@
   }
 }
 
-/* PilotBlock — components/landing/PilotBlock.tsx */
+/* .pilot-* — components/landing/TeamsBlock.tsx (rules predate the rename;
+ * PilotBlock.tsx was retired by the homepage restructure). */
 .pilot-block-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -823,7 +824,8 @@
   .demo-modal__frame { animation: none !important; }
 }
 
-/* DemoShowcase — components/landing/DemoShowcase.tsx */
+/* .demo-showcase-* — retired with DemoShowcase.tsx (homepage restructure).
+ * Kept only until the remaining demo surfaces stop borrowing these rules. */
 .demo-showcase {
   max-width: 760px;
   margin: 0 auto;
@@ -1398,7 +1400,8 @@
   }
 }
 
-/* ---------- LogoRibbon — components/landing/LogoRibbon.tsx ---------- */
+/* ---------- .logo-ribbon-* — retired with LogoRibbon.tsx; the ribbon now
+ * lives inside components/landing/Reliability.tsx ---------- */
 .logo-ribbon {
   background: var(--color-canvas);
   border-top: 1px solid var(--color-border);
@@ -1713,7 +1716,9 @@
   }
 }
 
-/* ---------- RuntimeParity — components/landing/RuntimeParity.tsx ---------- */
+/* ---------- .parity-* — RuntimeParity.tsx was retired by the homepage
+ * restructure; components/landing/AdapterGuideLink.tsx still uses
+ * `.parity-cta` ---------- */
 .parity {
   margin-top: 24px;
 }
@@ -1792,7 +1797,8 @@
   }
 }
 
-/* ---------- ThreeSteps — components/landing/ThreeSteps.tsx ---------- */
+/* ---------- .three-steps-* — retired with ThreeSteps.tsx (homepage
+ * restructure) ---------- */
 .three-steps {
   list-style: none;
   margin: 24px 0 0;
