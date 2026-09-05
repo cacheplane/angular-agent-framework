@@ -16,7 +16,6 @@ import {
 import {
   ChatComponent,
   ChatInterruptPanelComponent,
-  a2uiBasicCatalog,
   type AgentRef,
   type InterruptAction,
 } from '@threadplane/chat';
@@ -28,6 +27,7 @@ import {
   type LangGraphAgent,
 } from '@threadplane/langgraph';
 import { environment } from '../../environments/environment';
+import { demoViews } from '../demo-views';
 import { WelcomeSuggestionsComponent } from '../modes/welcome-suggestions.component';
 import { HERO_LIVE_REF, HERO_REPLAY_REF } from './hero-agent-refs';
 import { browserHeroBridge, type HeroBridge } from './hero-bridge';
@@ -228,7 +228,7 @@ export class HeroMode implements HeroScriptHost {
   readonly activeAgent = computed<LangGraphAgent>(() =>
     this.mode() === 'live' ? this.liveAgent : this.replayAgent,
   );
-  protected readonly catalog = a2uiBasicCatalog();
+  protected readonly catalog = demoViews();
   readonly cursorX = signal(0);
   readonly cursorY = signal(0);
   readonly cursorVisible = signal(false);
