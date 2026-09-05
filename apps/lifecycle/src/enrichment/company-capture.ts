@@ -23,14 +23,18 @@ export function createCompanyCapture(
           report({ provider: 'direct', ...diagnostic }),
       });
     } else if (provider === 'firecrawl') {
-      const apiKey = environment['FIRECRAWL_API_KEY']?.trim();
-      if (!apiKey) {
+      const secret = environment['COMPANY_SCRAPER_SECRET']?.trim();
+      if (!secret) {
         report({ provider: 'firecrawl', outcome: 'missing_key' });
         signal.throwIfAborted();
         throw new Error('company_capture_missing_key');
       }
       evidence = await fetchFirecrawlCompanyEvidence(domain, signal, {
-        apiKey,
+        secret,
+        serviceUrl: environment['COMPANY_SCRAPER_URL'] ?? '',
+        allowLocalHttp:
+          environment['NODE_ENV'] === 'development' ||
+          environment['NODE_ENV'] === 'test',
         onDiagnostic: report,
       });
     } else {

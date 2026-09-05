@@ -27,10 +27,11 @@ export interface FirecrawlDiagnostic {
   apiStatus?: number;
   pageStatus?: number;
   bytes?: number;
-  credits?: number;
 }
 export interface FirecrawlOptions {
-  apiKey: string;
+  serviceUrl: string;
+  secret: string;
+  allowLocalHttp?: boolean;
   fetch?: typeof fetch;
   resolve?: CompanyFetchDependencies['resolve'];
   now?: () => Date;
@@ -40,6 +41,33 @@ class FirecrawlError extends Error {
   constructor(readonly code: Failure) {
     super(code);
     this.name = 'FirecrawlError';
+  }
+}
+
+function serviceEndpoint(value: string, allowLocalHttp = false): string {
+  try {
+    const url = new URL(value);
+    const loopback =
+      allowLocalHttp &&
+      url.protocol === 'http:' &&
+      (url.hostname === '127.0.0.1' || url.hostname === '[::1]');
+    if (
+      value !== value.trim() ||
+      url.username ||
+      url.password ||
+      url.pathname !== '/' ||
+      url.search ||
+      url.hash ||
+      value.includes('?') ||
+      value.includes('#') ||
+      url.hostname === 'api.firecrawl.dev' ||
+      (!loopback && (url.protocol !== 'https:' || url.port))
+    ) {
+      throw new Error();
+    }
+    return new URL('/scrape', url).toString();
+  } catch {
+    throw new FirecrawlError('configuration');
   }
 }
 
@@ -155,34 +183,31 @@ export async function fetchFirecrawlCompanyEvidence(
   };
   try {
     combined.throwIfAborted();
-    if (!options.apiKey?.trim()) throw new FirecrawlError('configuration');
+    if (!options.secret || /\s/u.test(options.secret))
+      throw new FirecrawlError('configuration');
+    const endpoint = serviceEndpoint(
+      options.serviceUrl,
+      options.allowLocalHttp
+    );
     const hostname = await abortable(
       validatePublicCompanyHostname(domain, combined, options.resolve),
       combined
     );
     combined.throwIfAborted();
     const requestedUrl = `https://${hostname}/`;
-    const pending = (options.fetch ?? fetch)(
-      'https://api.firecrawl.dev/v2/scrape',
-      {
-        method: 'POST',
-        redirect: 'error',
-        signal: combined,
-        headers: {
-          authorization: `Bearer ${options.apiKey}`,
-          'content-type': 'application/json',
-          accept: 'application/json',
-        },
-        body: JSON.stringify({
-          url: requestedUrl,
-          formats: ['html'],
-          onlyMainContent: true,
-          maxAge: 0,
-          timeout: 10000,
-          proxy: 'basic',
-        }),
-      }
-    );
+    const pending = (options.fetch ?? fetch)(endpoint, {
+      method: 'POST',
+      redirect: 'error',
+      signal: combined,
+      headers: {
+        authorization: `Bearer ${options.secret}`,
+        'content-type': 'application/json',
+        accept: 'application/json',
+      },
+      body: JSON.stringify({
+        url: requestedUrl,
+      }),
+    });
     void pending.then(
       (response) => {
         if (combined.aborted) dispose(response.body);
@@ -200,11 +225,8 @@ export async function fetchFirecrawlCompanyEvidence(
     }
     const result = record(await boundedJson(response, combined, diagnostic));
     combined.throwIfAborted();
-    if (result.success !== true) throw new FirecrawlError('invalid_response');
-    const data = record(result.data);
-    const metadata = record(data.metadata);
-    const source = safeUrl(metadata.sourceURL);
-    const final = safeUrl(metadata.url);
+    const source = safeUrl(result.sourceURL);
+    const final = safeUrl(result.url);
     if (source.toString() !== requestedUrl)
       throw new FirecrawlError('invalid_provenance');
     await abortable(
@@ -212,7 +234,7 @@ export async function fetchFirecrawlCompanyEvidence(
       combined
     );
     combined.throwIfAborted();
-    const status = metadata.statusCode;
+    const status = result.pageStatusCode;
     if (
       typeof status !== 'number' ||
       !Number.isInteger(status) ||
@@ -221,12 +243,6 @@ export async function fetchFirecrawlCompanyEvidence(
     )
       throw new FirecrawlError('invalid_response');
     diagnostic.pageStatus = status;
-    if (
-      typeof metadata.creditsUsed === 'number' &&
-      Number.isSafeInteger(metadata.creditsUsed) &&
-      metadata.creditsUsed >= 0
-    )
-      diagnostic.credits = metadata.creditsUsed;
     if (status !== 404 && (status < 200 || status >= 300))
       throw new FirecrawlError('page_http_error');
     if (status === 404) {
@@ -235,9 +251,9 @@ export async function fetchFirecrawlCompanyEvidence(
       combined.throwIfAborted();
       return [];
     }
-    if (typeof data.html !== 'string')
+    if (typeof result.content !== 'string')
       throw new FirecrawlError('invalid_response');
-    const body = Buffer.from(data.html, 'utf8');
+    const body = Buffer.from(result.content, 'utf8');
     const extracted = extractEvidence(body);
     if (!extracted.facts.length && !extracted.snippets.length) {
       diagnostic.outcome = 'no_evidence';

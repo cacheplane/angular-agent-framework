@@ -57,10 +57,13 @@ describe('configured company capture', () => {
     const signal = new AbortController().signal;
     await createCompanyCapture({
       LIFECYCLE_COMPANY_CAPTURE_PROVIDER: 'firecrawl',
-      FIRECRAWL_API_KEY: 'fixture-key',
+      COMPANY_SCRAPER_SECRET: 'fixture-key',
+      COMPANY_SCRAPER_URL: 'https://scraper.example.com',
     })('example.com', signal);
     expect(managed).toHaveBeenCalledWith('example.com', signal, {
-      apiKey: 'fixture-key',
+      secret: 'fixture-key',
+      serviceUrl: 'https://scraper.example.com',
+      allowLocalHttp: false,
       onDiagnostic: expect.any(Function),
     });
     expect(direct).not.toHaveBeenCalled();
@@ -82,7 +85,8 @@ describe('configured company capture', () => {
     async (key) => {
       const capture = createCompanyCapture({
         LIFECYCLE_COMPANY_CAPTURE_PROVIDER: 'firecrawl',
-        FIRECRAWL_API_KEY: key,
+        COMPANY_SCRAPER_SECRET: key,
+        COMPANY_SCRAPER_URL: 'https://scraper.example.com',
       });
       await expect(
         capture('example.com', new AbortController().signal)
@@ -97,7 +101,8 @@ describe('configured company capture', () => {
     await expect(
       createCompanyCapture({
         LIFECYCLE_COMPANY_CAPTURE_PROVIDER: 'firecrawl',
-        FIRECRAWL_API_KEY: 'fixture-key',
+        COMPANY_SCRAPER_SECRET: 'fixture-key',
+        COMPANY_SCRAPER_URL: 'https://scraper.example.com',
       })('example.com', new AbortController().signal)
     ).rejects.toThrow('firecrawl_provider_error');
     expect(managed).toHaveBeenCalledTimes(1);

@@ -1,0 +1,10 @@
+{
+  "name": "company-scraper",
+  "tags": ["scope:growth-lifecycle", "type:app", "runtime:node22"],
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": { "command": "node --test deployments/company-scraper/*.test.cjs" }
+    }
+  }
+}

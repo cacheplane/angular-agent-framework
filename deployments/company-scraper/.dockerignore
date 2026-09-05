@@ -1,0 +1,4 @@
+*
+!Dockerfile
+!upstream.patch
+!company-handler.cjs

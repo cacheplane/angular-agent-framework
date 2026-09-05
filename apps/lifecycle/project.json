@@ -30,7 +30,8 @@
         "cwd": "apps/lifecycle",
         "commands": [
           "npx -y node@24 ../../node_modules/@dawn-ai/cli/dist/index.js check",
-          "npx -y node@24 ../../node_modules/typescript/bin/tsc --noEmit -p tsconfig.json"
+          "npx -y node@24 ../../node_modules/typescript/bin/tsc --noEmit -p tsconfig.json",
+          "npx -y node@24 --test ../../deployments/company-scraper/*.test.cjs"
         ],
         "parallel": false
       }

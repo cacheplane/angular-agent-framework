@@ -10,11 +10,12 @@ const html =
 const metadata = {
   sourceURL: 'https://example.com/',
   url: 'https://www.example.com/',
-  statusCode: 200,
+  pageStatusCode: 200,
 };
 const payload = (data = {}) => ({
-  success: true,
-  data: { html, metadata, ...data },
+  content: html,
+  ...metadata,
+  ...data,
 });
 function setup(body: unknown = payload()) {
   const fetch = vi
@@ -22,7 +23,8 @@ function setup(body: unknown = payload()) {
     .mockResolvedValue(Response.json(body));
   const resolve = vi.fn().mockResolvedValue(['93.184.216.34']);
   const options: FirecrawlOptions = {
-    apiKey: 'test-key',
+    serviceUrl: 'https://scraper.example.com',
+    secret: 'test-key',
     fetch,
     resolve,
     now: () => new Date('2026-09-01T12:00:00Z'),
@@ -36,6 +38,37 @@ const run = (
 ) => fetchFirecrawlCompanyEvidence(domain, signal, options);
 afterEach(() => vi.useRealTimers());
 describe('Firecrawl homepage evidence', () => {
+  it.each([
+    'http://scraper.example.com',
+    'http://127.0.0.1:33003',
+    'https://user:password@scraper.example.com',
+    'https://scraper.example.com/path',
+    'https://scraper.example.com/?token=value',
+    'https://scraper.example.com/#hash',
+    'https://api.firecrawl.dev',
+    'https://scraper.example.com:444',
+  ])(
+    'rejects invalid service configuration %s before network',
+    async (serviceUrl) => {
+      const { options, fetch, resolve } = setup();
+      await expect(run({ ...options, serviceUrl })).rejects.toThrow(
+        'configuration'
+      );
+      expect(fetch).not.toHaveBeenCalled();
+      expect(resolve).not.toHaveBeenCalled();
+    }
+  );
+  it('permits an explicitly configured local loopback service', async () => {
+    const { options, fetch } = setup();
+    await expect(
+      run({
+        ...options,
+        serviceUrl: 'http://127.0.0.1:33003',
+        allowLocalHttp: true,
+      })
+    ).resolves.toHaveLength(1);
+    expect(fetch.mock.calls[0][0]).toBe('http://127.0.0.1:33003/scrape');
+  });
   it('uses exactly one fixed authenticated scrape and maps extracted HTML with actual URL provenance', async () => {
     const { fetch, options } = setup();
     const result = await run(options);
@@ -50,7 +83,7 @@ describe('Firecrawl homepage evidence', () => {
     ]);
     expect(fetch).toHaveBeenCalledTimes(1);
     const [url, init] = fetch.mock.calls[0];
-    expect(url).toBe('https://api.firecrawl.dev/v2/scrape');
+    expect(url).toBe('https://scraper.example.com/scrape');
     expect(init).toMatchObject({
       method: 'POST',
       redirect: 'error',
@@ -58,16 +91,11 @@ describe('Firecrawl homepage evidence', () => {
     });
     expect(JSON.parse(String(init?.body))).toEqual({
       url: 'https://example.com/',
-      formats: ['html'],
-      onlyMainContent: true,
-      maxAge: 0,
-      timeout: 10000,
-      proxy: 'basic',
     });
   });
   it('requires the key before DNS or network', async () => {
     const { options, fetch, resolve } = setup();
-    await expect(run({ ...options, apiKey: ' ' })).rejects.toThrow(
+    await expect(run({ ...options, secret: ' ' })).rejects.toThrow(
       'configuration'
     );
     expect(fetch).not.toHaveBeenCalled();
@@ -91,7 +119,12 @@ describe('Firecrawl homepage evidence', () => {
   });
   it.each([
     { ...metadata, sourceURL: 'https://unrelated.com/' },
-    { sourceURL: metadata.sourceURL, ogUrl: metadata.url, statusCode: 200 },
+    {
+      sourceURL: metadata.sourceURL,
+      url: undefined,
+      ogUrl: metadata.url,
+      pageStatusCode: 200,
+    },
     { ...metadata, url: 'http://example.com/' },
     { ...metadata, url: 'https://127.0.0.1/' },
     { ...metadata, url: 'https://example.com/?token=secret' },
@@ -100,9 +133,7 @@ describe('Firecrawl homepage evidence', () => {
     { ...metadata, url: 'https://example.com:444/' },
     { ...metadata, url: `https://example.com/${'x'.repeat(500)}` },
   ])('rejects invalid provenance %#', async (invalid) => {
-    await expect(
-      run(setup(payload({ metadata: invalid })).options)
-    ).rejects.toThrow();
+    await expect(run(setup(payload(invalid)).options)).rejects.toThrow();
   });
   it('validates final hostname DNS', async () => {
     const { options, resolve } = setup();
@@ -112,9 +143,9 @@ describe('Firecrawl homepage evidence', () => {
     await expect(run(options)).rejects.toThrow('security_rejected');
   });
   it.each([
-    payload({ html: '' }),
-    payload({ metadata: { ...metadata, statusCode: 404 } }),
-    payload({ html: '<script>secret</script>' }),
+    payload({ content: '' }),
+    payload({ pageStatusCode: 404 }),
+    payload({ content: '<script>secret</script>' }),
   ])('returns no evidence for empty or missing pages %#', async (body) => {
     await expect(run(setup(body).options)).resolves.toEqual([]);
   });
@@ -138,7 +169,7 @@ describe('Firecrawl homepage evidence', () => {
     { success: true, data: null },
     {
       success: true,
-      data: { html, metadata: { ...metadata, statusCode: 503 } },
+      ...payload({ pageStatusCode: 503 }),
     },
   ])('rejects provider failures %#', async (body) => {
     await expect(run(setup(body).options)).rejects.toThrow();
@@ -281,7 +312,7 @@ describe('Firecrawl homepage evidence', () => {
       { length: 10 },
       (_, i) => `<p>${i}${'p'.repeat(300)}</p>`
     ).join('')}<style>private</style>`;
-    const result = await run(setup(payload({ html: body })).options);
+    const result = await run(setup(payload({ content: body })).options);
     expect(result[0].facts.length).toBeLessThanOrEqual(6);
     expect(result[0].snippets).toHaveLength(6);
     expect(
@@ -296,9 +327,7 @@ describe('Firecrawl homepage evidence', () => {
     await expect(run(options)).rejects.toThrow(/^invalid_response$/);
   });
   it('ignores observer errors and exposes only bounded diagnostic fields', async () => {
-    const { options } = setup(
-      payload({ metadata: { ...metadata, creditsUsed: 1, private: 'secret' } })
-    );
+    const { options } = setup(payload({ creditsUsed: 1, private: 'secret' }));
     const diagnostics: unknown[] = [];
     expect(
       await run({
@@ -316,7 +345,6 @@ describe('Firecrawl homepage evidence', () => {
         apiStatus: 200,
         pageStatus: 200,
         bytes: expect.any(Number),
-        credits: 1,
       },
     ]);
   });
