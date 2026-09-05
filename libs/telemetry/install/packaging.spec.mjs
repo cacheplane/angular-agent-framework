@@ -5,6 +5,15 @@ import { resolve } from 'node:path';
 const json = async (path) => JSON.parse(await readFile(resolve(path), 'utf8'));
 describe('install collector package assembly', () => {
   it.each(['chat', 'langgraph', 'ag-ui', 'render'])(
+    'provides an inert %s source bridge before package preparation',
+    async (name) => {
+      expect(await readFile(resolve(`libs/${name}/.install-collector/development-install.mjs`), 'utf8'))
+        .toBe('export const installationToken = null;\n');
+      expect(await readFile(resolve(`libs/${name}/.install-collector/development-install.d.ts`), 'utf8'))
+        .toBe('export declare const installationToken: string | null;\n');
+    }
+  );
+  it.each(['chat', 'langgraph', 'ag-ui', 'render'])(
     'keeps the %s contributor workspace lifecycle inert',
     async (name) => {
       const directory = await mkdtemp(resolve(tmpdir(), 'threadplane-workspace-hook-'));
