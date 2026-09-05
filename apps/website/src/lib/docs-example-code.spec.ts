@@ -16,6 +16,9 @@ import {
  *
  * PENDING_PAGES lists mapped pages not yet rewritten. Each product PR removes
  * its pages; a page that gains an include must leave the list in the same PR.
+ *
+ * The scan is textual: the tag must not appear in prose, fenced code, or MDX
+ * comments on any docs page, or it counts as an include.
  */
 const PENDING_PAGES = new Set<string>([
   '/docs/a2ui/getting-started/introduction',
@@ -134,6 +137,11 @@ describe('docs pages teach through their example', () => {
   const pages = mappedPages();
   const mappedPaths = new Set(pages.map((page) => page.docsPath));
 
+  it('sees the registry and the content tree', () => {
+    expect(pages.length).toBeGreaterThan(30);
+    expect(allDocsMdx().length).toBeGreaterThan(50);
+  });
+
   it('has an MDX file for every mapped page', () => {
     for (const page of pages) {
       expect(
@@ -160,19 +168,23 @@ describe('docs pages teach through their example', () => {
       .filter((page) => !PENDING_PAGES.has(page.docsPath))
       .filter((page) => includesIn(mdxFor(page.docsPath)).length === 0)
       .map((page) => page.docsPath);
-    expect(missing).toEqual([]);
+    expect(
+      missing,
+      'mapped pages with no <ExampleCode>; rewrite them or add them to PENDING_PAGES'
+    ).toEqual([]);
   });
 
   it('resolves every include against the capability assets', () => {
     for (const page of pages) {
       const context = contextFor(page);
       for (const include of includesIn(mdxFor(page.docsPath))) {
-        const label = `${page.docsPath} <ExampleCode file="${include.file}">`;
-        expect(include.file, label).not.toBe('');
-        const path = resolveExampleFile(include.file, context);
-        if (include.region) {
+        const { file, region } = include;
+        const label = `${page.docsPath} <ExampleCode file="${file}">`;
+        expect(file, label).not.toBe('');
+        const path = resolveExampleFile(file, context);
+        if (region) {
           expect(
-            () => sliceRegion(context.sources[path], include.region!, path),
+            () => sliceRegion(context.sources[path], region, path),
             label
           ).not.toThrow();
         }
@@ -185,6 +197,6 @@ describe('docs pages teach through their example', () => {
       .map((file) => '/' + relative(CONTENT_ROOT, file).replace(/\.mdx$/, ''))
       .filter((docsPath) => !mappedPaths.has(docsPath))
       .filter((docsPath) => includesIn(mdxFor(docsPath)).length > 0);
-    expect(offenders).toEqual([]);
+    expect(offenders, 'docs-only pages must not use <ExampleCode>').toEqual([]);
   });
 });
