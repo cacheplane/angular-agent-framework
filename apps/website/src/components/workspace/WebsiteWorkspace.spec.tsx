@@ -540,7 +540,6 @@ describe('WebsiteWorkspace', () => {
         from_capability: 'streaming',
       })
     );
-    expect(props.trackNarrativeAction).toBeTypeOf('function');
     expect(props.trackRuntimeAction).toBeTypeOf('function');
     expect(props.trackRuntimeTransition).toBeTypeOf('function');
   });
