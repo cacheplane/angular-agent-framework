@@ -81,9 +81,8 @@ export const RIBBON_MORE_COUNT = 4;
  * works-with line as its footer, so the multi-runtime claim sits inside the
  * trust argument instead of floating above it as a separate strip.
  *
- * Supersedes ProofStrip + LogoRibbon on the homepage (see the restructure
- * plan, Task 9) — both components stay in place and keep working until that
- * task removes them from page.tsx.
+ * Replaces ProofStrip and LogoRibbon, both deleted with the homepage
+ * restructure.
  *
  * "Works with" is a compatibility claim, never a customer claim: logos are
  * `alt="" aria-hidden` beside visible names, and no wording may imply these

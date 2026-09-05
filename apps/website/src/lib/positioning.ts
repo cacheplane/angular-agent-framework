@@ -64,9 +64,9 @@ export const RELIABILITY_RECEIPTS: readonly ReliabilityReceipt[] = [
   },
   {
     claim: 'Three runtimes exercised end to end',
-    detail: 'LangGraph, Mastra and AWS Strands backends run and driven by browser tests on every merge, against one Angular contract.',
+    detail: 'LangGraph, Mastra and AWS Strands backends, each driven by browser tests on every merge against one Angular contract.',
     sourceLabel: 'runtime portability matrix',
-    sourceHref: '/docs/choosing-an-adapter',
+    sourceHref: '/docs/choosing-an-adapter#measured-runtime-support',
   },
   {
     claim: 'No content telemetry, no cloud',

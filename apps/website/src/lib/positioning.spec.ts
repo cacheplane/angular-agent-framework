@@ -166,7 +166,7 @@ describe('homepage restructure copy (live-stage spec §3)', () => {
       expect(pathname.startsWith('/api/'), r.sourceHref).toBe(false);
 
       if (r.sourceHref.startsWith('/docs/')) {
-        const slug = r.sourceHref.replace(/^\/docs\//, '');
+        const slug = pathname.replace(/^\/docs\//, '');
         const candidates = [
           path.join(resolveWebsiteDir(), 'content', 'docs', `${slug}.mdx`),
           path.join(resolveWebsiteDir(), 'content', 'docs', slug, 'index.mdx'),
