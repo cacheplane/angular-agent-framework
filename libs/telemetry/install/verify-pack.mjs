@@ -115,6 +115,15 @@ const request=new EventEmitter();request.destroy=()=>{};request.end=body=>{fs.ap
       `${name} missing install disclosure`
     );
   }
+  // npm ci caches lockfile tarballs, but a fresh runner may have no registry
+  // metadata for their semver ranges. Resolve dependencies with scripts disabled
+  // before the strictly offline, intercepted lifecycle scenarios below.
+  const prime = join(temporary, 'dependency-cache');
+  await mkdir(prime);
+  await writeFile(join(prime, 'package.json'), JSON.stringify({ private: true }));
+  await run('npm', [
+    'install', '--ignore-scripts', '--legacy-peer-deps', '--no-audit', '--no-fund', ...tarballs,
+  ], { cwd: prime });
   for (const scenario of ['ci', 'unknown', 'disabled', 'ignore-scripts']) {
     const cwd = join(temporary, scenario),
       home = join(cwd, 'home'),

@@ -59,7 +59,7 @@ export async function verifyAngularInstallBridge(parseCollectionBatch) {
     }
     await run('npm', [
       'install',
-      '--offline',
+      '--prefer-offline',
       '--ignore-scripts',
       '--legacy-peer-deps',
       '--no-audit',
