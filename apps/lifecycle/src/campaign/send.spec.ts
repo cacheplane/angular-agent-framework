@@ -26,7 +26,7 @@ import {
   type LifecycleJobDependencies,
 } from './send.js';
 import { DeterministicLifecycleJobError } from '../job-errors.js';
-import { BUSINESS_POSTAL_ADDRESS, FOUNDER_BOOKING_URL } from './templates.js';
+import { FOUNDER_BOOKING_URL } from './templates.js';
 
 const NOW = new Date('2026-09-01T12:03:00.000Z');
 const CONTACT_ID = '00000000-0000-4000-8000-000000000002';
@@ -161,13 +161,6 @@ describe('prepareCampaignMessage', () => {
       if (prepared.status !== 'ready') throw new Error('expected ready');
       expect(prepared.text).toContain(unsubscribeActionUrlValue(UNSUBSCRIBE));
       expect(prepared.text).toContain('\n\n—\nBrian\n');
-      expect(
-        prepared.text.endsWith(
-          `${unsubscribeActionUrlValue(
-            UNSUBSCRIBE
-          )}\n${BUSINESS_POSTAL_ADDRESS}`
-        )
-      ).toBe(true);
       if (step === 3)
         expect(prepared.text).toContain('This is my last automated follow-up.');
     }
@@ -266,13 +259,6 @@ describe('prepareCampaignMessage', () => {
         '\n\n—\nBrian\n\nIs this email not relevant to you? Stop here: '
       );
       expect(prepared.text).toContain(unsubscribeActionUrlValue(UNSUBSCRIBE));
-      expect(
-        prepared.text.endsWith(
-          `${unsubscribeActionUrlValue(
-            UNSUBSCRIBE
-          )}\n${BUSINESS_POSTAL_ADDRESS}`
-        )
-      ).toBe(true);
       expect(prepared.text).not.toContain('ada@example.com');
     }
   );
@@ -314,7 +300,7 @@ describe('prepareCampaignMessage', () => {
     expect(prepared.html).toContain('<p>—<br>Brian</p>');
     expect(
       prepared.html.endsWith(
-        `<p>Is this email not relevant to you? Click <a href="${unsubscribeUrl}">here</a>.</p>\n<p>${BUSINESS_POSTAL_ADDRESS}</p>`
+        `<p>Is this email not relevant to you? Click <a href="${unsubscribeUrl}">here</a>.</p>`
       )
     ).toBe(true);
     expect(prepared.html.split(unsubscribeUrl)).toHaveLength(2);
@@ -323,7 +309,7 @@ describe('prepareCampaignMessage', () => {
     );
     expect(prepared.html).toContain(`href="${unsubscribeUrl}">here</a>`);
     expect(prepared.text).toContain(
-      `Is this email not relevant to you? Stop here: ${unsubscribeUrl}\n${BUSINESS_POSTAL_ADDRESS}`
+      `Is this email not relevant to you? Stop here: ${unsubscribeUrl}`
     );
   });
 
