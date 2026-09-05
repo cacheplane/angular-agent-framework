@@ -12,7 +12,6 @@ export interface CockpitCapabilityModule {
   promptAssetPaths: string[];
   codeAssetPaths: string[];
   backendAssetPaths: string[];
-  docsAssetPaths: string[];
   runtimeUrl?: string;
   devPort?: number;
 }
@@ -36,7 +35,6 @@ export const renderRepeatLoopsPythonModule: CockpitCapabilityModule = {
     'cockpit/render/repeat-loops/angular/src/app/app.config.ts',
   ],
   backendAssetPaths: ['cockpit/render/repeat-loops/python/src/graph.py'],
-  docsAssetPaths: ['cockpit/render/repeat-loops/python/docs/guide.md'],
   runtimeUrl: 'render/repeat-loops',
   devPort: 4405,
 };

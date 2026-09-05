@@ -178,7 +178,6 @@ describe('registry content descriptors', () => {
         descriptor.promptAssetPaths,
         descriptor.codeAssetPaths,
         descriptor.backendAssetPaths,
-        descriptor.docsAssetPaths,
       ]) {
         if (assetPaths) {
           expect(Object.isFrozen(assetPaths), descriptor.id).toBe(true);
@@ -210,7 +209,6 @@ describe('registry content descriptors', () => {
         ...descriptor.promptAssetPaths,
         ...descriptor.codeAssetPaths,
         ...(descriptor.backendAssetPaths ?? []),
-        ...(descriptor.docsAssetPaths ?? []),
       ]) {
         expect(
           existsSync(new URL(assetPath, workspaceRoot)),
@@ -299,10 +297,7 @@ describe('registry content descriptors', () => {
         )
       );
       expect(entry.availableModes.includes('API')).toBe(apiAssets.length > 0);
-      expect(entry.availableModes.includes('Docs')).toBe(
-        entry.docsPath.length > 0 ||
-          (descriptor?.docsAssetPaths?.length ?? 0) > 0
-      );
+      expect(entry.availableModes.includes('Docs')).toBe(entry.docsPath.length > 0);
     }
   });
 });

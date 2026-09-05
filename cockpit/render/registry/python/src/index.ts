@@ -12,7 +12,6 @@ export interface CockpitCapabilityModule {
   promptAssetPaths: string[];
   codeAssetPaths: string[];
   backendAssetPaths: string[];
-  docsAssetPaths: string[];
   runtimeUrl?: string;
   devPort?: number;
 }
@@ -36,7 +35,6 @@ export const renderRegistryPythonModule: CockpitCapabilityModule = {
   backendAssetPaths: [
     'cockpit/render/registry/python/src/graph.py',
   ],
-  docsAssetPaths: ['cockpit/render/registry/python/docs/guide.md'],
   runtimeUrl: 'render/registry',
   devPort: 4404,
 };

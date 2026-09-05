@@ -12,7 +12,6 @@ export interface CockpitCapabilityModule {
   promptAssetPaths: string[];
   codeAssetPaths: string[];
   backendAssetPaths: string[];
-  docsAssetPaths: string[];
   runtimeUrl?: string;
   devPort?: number;
 }
@@ -36,7 +35,6 @@ export const langgraphTimeTravelPythonModule: CockpitCapabilityModule = {
   backendAssetPaths: [
     'cockpit/langgraph/time-travel/python/src/graph.py',
   ],
-  docsAssetPaths: ['cockpit/langgraph/time-travel/python/docs/guide.md'],
   runtimeUrl: 'langgraph/time-travel',
   devPort: 4306,
 };

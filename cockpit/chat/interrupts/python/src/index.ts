@@ -12,7 +12,6 @@ export interface CockpitCapabilityModule {
   promptAssetPaths: string[];
   codeAssetPaths: string[];
   backendAssetPaths: string[];
-  docsAssetPaths: string[];
   runtimeUrl?: string;
   devPort?: number;
 }
@@ -36,7 +35,6 @@ export const chatInterruptsPythonModule: CockpitCapabilityModule = {
   backendAssetPaths: [
     'cockpit/chat/interrupts/python/src/graph.py',
   ],
-  docsAssetPaths: ['cockpit/chat/interrupts/python/docs/guide.md'],
   runtimeUrl: 'chat/interrupts',
   devPort: 4503,
 };

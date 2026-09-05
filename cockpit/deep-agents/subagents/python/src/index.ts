@@ -12,7 +12,6 @@ export interface CockpitCapabilityModule {
   promptAssetPaths: string[];
   codeAssetPaths: string[];
   backendAssetPaths: string[];
-  docsAssetPaths: string[];
   runtimeUrl?: string;
   devPort?: number;
 }
@@ -36,7 +35,6 @@ export const deepAgentsSubagentsPythonModule: CockpitCapabilityModule = {
   backendAssetPaths: [
     'cockpit/deep-agents/subagents/python/src/graph.py',
   ],
-  docsAssetPaths: ['cockpit/deep-agents/subagents/python/docs/guide.md'],
   runtimeUrl: 'deep-agents/subagents',
   devPort: 4312,
 };
