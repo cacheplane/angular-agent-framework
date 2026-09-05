@@ -49,11 +49,11 @@ describe('NavigationGroups capability link instrumentation', () => {
   });
 
   it('uses complete rounded sidebar states without a left marker', () => {
-    const item = declarationsFor(workspaceCss, '.cockpit-nav-item');
-    const hover = declarationsFor(workspaceCss, '.cockpit-nav-item:hover');
+    const item = declarationsFor(workspaceCss, '.workspace-nav-item');
+    const hover = declarationsFor(workspaceCss, '.workspace-nav-item:hover');
     const active = declarationsFor(
       workspaceCss,
-      ".cockpit-nav-item[aria-current='page']"
+      ".workspace-nav-item[aria-current='page']"
     );
 
     expect(item).toMatch(/border-radius:\s*(?:6px|7px)/);
@@ -175,23 +175,23 @@ describe('NavigationGroups capability link instrumentation', () => {
     const template = document.createElement('template');
     template.innerHTML = html;
     const chevrons = template.content.querySelectorAll(
-      '.cockpit-nav-caret > svg.lucide-chevron-right'
+      '.workspace-nav-caret > svg.lucide-chevron-right'
     );
 
-    expect(html).toContain('cockpit-nav-group-label');
+    expect(html).toContain('workspace-nav-group-label');
     expect(chevrons.length).toBeGreaterThan(0);
     for (const chevron of chevrons) {
       expect(chevron.getAttribute('width')).toBe('15');
       expect(chevron.getAttribute('height')).toBe('15');
       expect(chevron.getAttribute('stroke-width')).toBe('2');
       expect(chevron.parentElement?.className).toContain(
-        'cockpit-nav-caret--open'
+        'workspace-nav-caret--open'
       );
     }
-    expect(declarationsFor(workspaceCss, '.cockpit-nav-caret')).toMatch(
+    expect(declarationsFor(workspaceCss, '.workspace-nav-caret')).toMatch(
       /transition:[^;]*transform\s+150ms\s+ease/
     );
-    expect(declarationsFor(workspaceCss, '.cockpit-nav-caret--open')).toMatch(
+    expect(declarationsFor(workspaceCss, '.workspace-nav-caret--open')).toMatch(
       /transform:\s*rotate\(90deg\)/
     );
     expect(html).not.toContain('text-transform:uppercase');
@@ -218,7 +218,9 @@ describe('NavigationGroups capability link instrumentation', () => {
 
     const landmarks = container.querySelectorAll('nav');
     expect(landmarks).toHaveLength(1);
-    expect(landmarks[0]?.getAttribute('aria-label')).toBe('Cockpit navigation');
+    expect(landmarks[0]?.getAttribute('aria-label')).toBe(
+      'Documentation navigation'
+    );
     const disclosure = container.querySelector<HTMLButtonElement>(
       'button[aria-expanded]'
     );

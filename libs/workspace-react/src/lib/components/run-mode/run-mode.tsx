@@ -110,7 +110,7 @@ export function RunMode({
     return (
       <section aria-label="Run mode" className="grid place-items-center h-full">
         <div
-          className="cockpit-runtime-loading"
+          className="workspace-runtime-loading"
           aria-label="Preparing runtime"
         />
       </section>

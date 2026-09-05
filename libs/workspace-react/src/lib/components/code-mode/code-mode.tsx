@@ -23,9 +23,9 @@ function CodeFileContent({
   content: string | undefined;
 }) {
   if (!content) {
-    return <p className="cockpit-code-pane__empty">No source available for {getTabLabel(path)}</p>;
+    return <p className="workspace-code-pane__empty">No source available for {getTabLabel(path)}</p>;
   }
-  return <div className="cockpit-code-pane" dangerouslySetInnerHTML={{ __html: content }} />;
+  return <div className="workspace-code-pane" dangerouslySetInnerHTML={{ __html: content }} />;
 }
 
 export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFiles, promptFiles, capability }: CodeModeProps) {
@@ -154,8 +154,8 @@ export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFi
                     value={path}
                     className={
                       isPromptPath(path)
-                        ? 'text-[var(--ds-accent)]/70 data-[state=active]:text-[var(--ds-accent)] cockpit-tab-trigger'
-                        : 'cockpit-tab-trigger'
+                        ? 'text-[var(--ds-accent)]/70 data-[state=active]:text-[var(--ds-accent)] workspace-tab-trigger'
+                        : 'workspace-tab-trigger'
                     }
                   >
                     <span>{label}</span>
@@ -173,7 +173,7 @@ export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFi
                           handleClose(path);
                         }
                       }}
-                      className="cockpit-tab-trigger__close"
+                      className="workspace-tab-trigger__close"
                     >×</span>
                   </TabsTrigger>
                 );
@@ -191,9 +191,9 @@ export function CodeMode({ entryTitle, codeAssetPaths, backendAssetPaths, codeFi
               return (
                 <TabsContent key={path} value={path} className="flex-1 overflow-auto">
                   {content ? (
-                    <pre className="cockpit-code-pane cockpit-code-pane--plain">{content}</pre>
+                    <pre className="workspace-code-pane workspace-code-pane--plain">{content}</pre>
                   ) : (
-                    <p className="cockpit-code-pane__empty">No content for {getTabLabel(path)}</p>
+                    <p className="workspace-code-pane__empty">No content for {getTabLabel(path)}</p>
                   )}
                 </TabsContent>
               );

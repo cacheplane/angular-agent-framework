@@ -62,10 +62,10 @@ describe('FileTree', () => {
       'utf8'
     );
     const rowRule = css.match(
-      /\.cockpit-file-tree__file,\s*\.cockpit-file-tree__folder\s*\{([^}]*)\}/
+      /\.workspace-file-tree__file,\s*\.workspace-file-tree__folder\s*\{([^}]*)\}/
     )?.[1];
     const activeRule = css.match(
-      /\.cockpit-file-tree__file\[aria-current=["']true["']\]\s*\{([^}]*)\}/
+      /\.workspace-file-tree__file\[aria-current=["']true["']\]\s*\{([^}]*)\}/
     )?.[1];
 
     expect(rowRule).not.toMatch(/border-left/);

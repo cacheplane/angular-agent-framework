@@ -60,7 +60,7 @@ export function NarrativeDocs({
         <article
           key={doc.sourceFile}
           onClick={handleClick}
-          className="docs-article cockpit-prose"
+          className="docs-article workspace-prose"
           dangerouslySetInnerHTML={{ __html: doc.html }}
         />
       ))}

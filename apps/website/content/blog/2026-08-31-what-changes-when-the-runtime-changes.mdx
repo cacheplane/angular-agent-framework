@@ -174,7 +174,7 @@ Anything reaching for `AgentWithHistory` — or for the `langGraph*`-prefixed me
 
 ### The test harness forks
 
-Each cockpit pair uses a different end-to-end harness entry point: `createGlobalSetup` for the LangGraph twin, `createAgUiGlobalSetup` for the AG-UI twin.
+Each workspace pair uses a different end-to-end harness entry point: `createGlobalSetup` for the LangGraph twin, `createAgUiGlobalSetup` for the AG-UI twin.
 Different backend process, different port wiring, different fixture replay.
 A runtime swap is a test-infrastructure change, not only an app change.
 

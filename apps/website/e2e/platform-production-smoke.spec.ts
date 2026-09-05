@@ -285,7 +285,7 @@ test.describe('Production: unified runtime embedding policy', () => {
     });
 
     await page.goto(`${WEBSITE_URL}/docs/langgraph/guides/streaming?mode=run`);
-    const controls = page.locator('[data-cockpit-desktop-navigation]');
+    const controls = page.locator('[data-workspace-desktop-navigation]');
     await controls
       .getByRole('button', { name: 'Settings', exact: true })
       .click();

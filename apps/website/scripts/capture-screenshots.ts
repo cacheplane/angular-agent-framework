@@ -29,7 +29,7 @@ export const DEFAULT_WEBSITE_URL =
   'https://threadplane.ai/docs/langgraph/guides/streaming?mode=run';
 export const WORKSPACE_READY_SELECTOR =
   '[data-workspace-shell][data-hydrated="true"]';
-export const WORKSPACE_CONTENT_SELECTOR = '[data-cockpit-workspace]';
+export const WORKSPACE_CONTENT_SELECTOR = '[data-workspace-surface]';
 
 export interface CaptureTarget {
   /** Output filename (without extension). */
@@ -48,16 +48,16 @@ export interface CaptureTarget {
 export const CAPTURE_TARGETS: readonly CaptureTarget[] = [
   // Hero collage back frame + Stream FeatureBlock + Pilot "Build" block.
   // The "Run" mode shows the live chat surface — captures real product UI.
-  { name: 'cockpit-run', mode: 'Run', settleMs: 4000 },
+  { name: 'workspace-run', mode: 'Run', settleMs: 4000 },
   // Hero collage front frame replacement — Code mode shows the agent
   // source code in a tabbed code panel.
-  { name: 'cockpit-code', mode: 'Code', settleMs: 1500 },
+  { name: 'workspace-code', mode: 'Code', settleMs: 1500 },
   // Render FeatureBlock visual — Docs mode shows narrative documentation
   // (well-structured content, looks like rendered output).
-  { name: 'cockpit-docs', mode: 'Docs', settleMs: 1500 },
+  { name: 'workspace-docs', mode: 'Docs', settleMs: 1500 },
   // API mode shows the API reference renderer — useful alternative
   // for the Render block visual.
-  { name: 'cockpit-api', mode: 'API', settleMs: 1500 },
+  { name: 'workspace-api', mode: 'API', settleMs: 1500 },
 ];
 
 export interface CaptureArgs {

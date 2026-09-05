@@ -15,7 +15,7 @@ declare global {
 }
 
 const modeButton = (page: Page, mode: 'Docs' | 'Run' | 'Code' | 'API') =>
-  page.locator('[data-cockpit-desktop-navigation]').getByRole('button', {
+  page.locator('[data-workspace-desktop-navigation]').getByRole('button', {
     name: mode === 'Run' ? RUN_RAIL_ITEM : mode,
     exact: mode !== 'Run',
   });
@@ -269,7 +269,7 @@ test.describe('workspace shell', () => {
     await expectMode(page, 'Docs');
     await expect(shell).toHaveAttribute('data-e2e-shell-lifetime', 'original');
     await page
-      .locator('[data-cockpit-desktop-navigation]')
+      .locator('[data-workspace-desktop-navigation]')
       .getByRole('button', { name: 'Activity', exact: true })
       .click();
     await expect(page.getByText('Mode changed to Code')).toBeVisible();
@@ -277,7 +277,7 @@ test.describe('workspace shell', () => {
       page.locator('[data-activity-capability]').first()
     ).toContainText('streaming');
     await page
-      .locator('[data-cockpit-desktop-navigation]')
+      .locator('[data-workspace-desktop-navigation]')
       .getByRole('button', { name: 'Activity', exact: true })
       .click();
     await page.goBack();
@@ -436,7 +436,7 @@ test.describe('workspace shell', () => {
     await page.goto(streamingDocsPath);
     await expectNoHorizontalOverflow(page, 'desktop workspace');
 
-    const desktop = page.locator('[data-cockpit-desktop-navigation]');
+    const desktop = page.locator('[data-workspace-desktop-navigation]');
     await expect(desktop).toBeVisible();
     await expect(desktop.locator('[data-control-plane-rail]')).toBeVisible();
     await expect(desktop.locator('[data-control-plane-pane]')).toBeVisible();
@@ -463,7 +463,7 @@ test.describe('workspace shell', () => {
       await expectNoHorizontalOverflow(page, `Website at ${viewport.width}px`);
 
       const desktopNavigation = page.locator(
-        '[data-cockpit-desktop-navigation]'
+        '[data-workspace-desktop-navigation]'
       );
       const mobileTrigger = page.getByRole('button', {
         name: 'Open navigation',
@@ -536,7 +536,7 @@ test.describe('workspace shell', () => {
     await page.goto(streamingDocsPath);
     await expectNoHorizontalOverflow(page, 'tablet workspace');
 
-    const desktop = page.locator('[data-cockpit-desktop-navigation]');
+    const desktop = page.locator('[data-workspace-desktop-navigation]');
     await expect(desktop.locator('[data-control-plane-rail]')).toBeVisible();
     await expect(desktop.locator('[data-control-plane-pane]')).toBeHidden();
     const contextTrigger = page.getByRole('button', { name: 'Open context' });
@@ -586,7 +586,7 @@ test.describe('workspace shell', () => {
     await expectNoHorizontalOverflow(page, 'mobile workspace');
 
     await expect(
-      page.locator('[data-cockpit-desktop-navigation]')
+      page.locator('[data-workspace-desktop-navigation]')
     ).toBeHidden();
     await expect(page.getByRole('button', { name: 'Open menu' })).toBeHidden();
     const trigger = page.getByRole('button', { name: 'Open navigation' });
@@ -629,7 +629,7 @@ test.describe('workspace shell', () => {
     });
     const lateAnnouncement = page.locator('[data-late-announcement]');
     await expect(lateAnnouncement).toBeHidden();
-    await expect(page.locator('[data-cockpit-workspace]')).toHaveAttribute(
+    await expect(page.locator('[data-workspace-surface]')).toHaveAttribute(
       'inert',
       ''
     );
@@ -789,7 +789,7 @@ test.describe('workspace shell', () => {
     await expect(dialog).toBeVisible();
     const motion = await dialog.evaluate((element) => {
       const panel = element.querySelector(
-        '.cockpit-mobile-control-plane-panel'
+        '.workspace-mobile-control-plane-panel'
       );
       const overlayStyle = getComputedStyle(element);
       const panelStyle = panel ? getComputedStyle(panel) : null;
@@ -800,7 +800,7 @@ test.describe('workspace shell', () => {
         panelTransition: panelStyle?.transitionDuration,
       };
     });
-    const loader = dialog.locator('.cockpit-runtime-status-loader');
+    const loader = dialog.locator('.workspace-runtime-status-loader');
     await expect(loader).toBeVisible();
     expect(
       await loader.evaluate(

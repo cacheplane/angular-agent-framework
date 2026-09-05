@@ -54,7 +54,7 @@ It cannot tell you that your graph's conditional edge routes correctly, that you
 Push the seam out to the provider and all of that is under test, because none of it was replaced.
 
 Replacing the model — and only the model — is also what makes it cheap enough to run everywhere: no API spend, no rate limits, no coin flips.
-We have 53 fixture files holding 169 entries across 36 apps — 34 cockpit capabilities and two example apps — all on the same harness.
+We have 53 fixture files holding 169 entries across 36 apps — 34 workspace capabilities and two example apps — all on the same harness.
 
 This is the outer tier.
 For in-process fakes at the unit level, the [testing guide](/docs/langgraph/guides/testing) covers `provideFakeAgent()`, `mockLangGraphAgent()`, and `MockAgentTransport`, which are a different tool for a different job.

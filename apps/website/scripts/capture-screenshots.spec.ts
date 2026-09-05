@@ -39,7 +39,7 @@ describe('Website workspace screenshot capture', () => {
     expect(WORKSPACE_READY_SELECTOR).toBe(
       '[data-workspace-shell][data-hydrated="true"]'
     );
-    expect(WORKSPACE_CONTENT_SELECTOR).toBe('[data-cockpit-workspace]');
+    expect(WORKSPACE_CONTENT_SELECTOR).toBe('[data-workspace-surface]');
     expect(workspaceModeSelector('Code')).toBe(
       '[data-workspace-shell][data-workspace-mode="Code"]'
     );
@@ -52,10 +52,10 @@ describe('Website workspace screenshot capture', () => {
 
   it('preserves all four modes and output basenames', () => {
     expect(CAPTURE_TARGETS.map(({ name, mode }) => ({ name, mode }))).toEqual([
-      { name: 'cockpit-run', mode: 'Run' },
-      { name: 'cockpit-code', mode: 'Code' },
-      { name: 'cockpit-docs', mode: 'Docs' },
-      { name: 'cockpit-api', mode: 'API' },
+      { name: 'workspace-run', mode: 'Run' },
+      { name: 'workspace-code', mode: 'Code' },
+      { name: 'workspace-docs', mode: 'Docs' },
+      { name: 'workspace-api', mode: 'API' },
     ]);
   });
 

@@ -29,7 +29,7 @@ export function FileTree({ paths, activePath, onSelect }: FileTreeProps) {
   }, []);
 
   return (
-    <ul className="cockpit-file-tree">
+    <ul className="workspace-file-tree">
       {tree.map((node, i) => (
         <Node
           key={`${i}-${node.label}`}
@@ -67,11 +67,11 @@ function Node({ node, depth, folderId, activePath, collapsedFolders, onToggleFol
           data-file-row
           aria-current={isActive ? 'true' : undefined}
           onClick={() => onSelect(node.path)}
-          className="cockpit-file-tree__file"
+          className="workspace-file-tree__file"
           style={{ paddingLeft: `${0.75 + depth * 0.75}rem` }}
         >
-          <span className="cockpit-file-tree__label" data-file-label>{node.label}</span>
-          {chip ? <span className="cockpit-file-tree__chip" aria-hidden="true">{chip}</span> : null}
+          <span className="workspace-file-tree__label" data-file-label>{node.label}</span>
+          {chip ? <span className="workspace-file-tree__chip" aria-hidden="true">{chip}</span> : null}
         </button>
       </li>
     );
@@ -86,18 +86,18 @@ function Node({ node, depth, folderId, activePath, collapsedFolders, onToggleFol
         data-folder-row
         aria-expanded={!isCollapsed}
         onClick={() => onToggleFolder(folderId)}
-        className="cockpit-file-tree__folder"
+        className="workspace-file-tree__folder"
         style={{ paddingLeft: `${0.5 + depth * 0.75}rem` }}
       >
         <span
-          className={`cockpit-file-tree__caret${isCollapsed ? '' : ' cockpit-file-tree__caret--open'}`}
+          className={`workspace-file-tree__caret${isCollapsed ? '' : ' workspace-file-tree__caret--open'}`}
           aria-hidden="true"
         >
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
             <path d="M3.5 2.5 6.5 5 3.5 7.5" />
           </svg>
         </span>
-        <span className="cockpit-file-tree__label">{folder.label}</span>
+        <span className="workspace-file-tree__label">{folder.label}</span>
       </button>
       {!isCollapsed ? (
         <ul>
