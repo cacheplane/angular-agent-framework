@@ -98,6 +98,12 @@ export class ChatComponent {
 </Tab>
 </Tabs>
 
+### The running example
+
+The demo in the Run tab is the smallest real integration of this pattern. The component below is the one that renders it: it injects the agent configured in `app.config.ts` and hands it to the prebuilt `<chat>` composition, which owns message rendering, input, and the typing indicator.
+
+<ExampleCode file="streaming.component.ts" />
+
 ## Stream status
 
 The `status()` signal reports the current lifecycle state of the SSE connection:
