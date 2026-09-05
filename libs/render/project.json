@@ -30,7 +30,15 @@
         },
         "development": {}
       },
-      "defaultConfiguration": "production"
+      "defaultConfiguration": "production",
+      "inputs": [
+        "production",
+        "^production",
+        "!{projectRoot}/.install-collector/**",
+        "{workspaceRoot}/libs/telemetry/install/*",
+        "!{projectRoot}/src/lib/package-version.ts"
+      ],
+      "dependsOn": ["^build", "prepare-install"]
     },
     "nx-release-publish": {
       "options": {
@@ -44,7 +52,26 @@
       "executor": "@nx/vitest:test",
       "options": {
         "configFile": "libs/render/vite.config.mts"
+      },
+      "dependsOn": ["prepare-install"]
+    },
+    "prepare-install": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "{workspaceRoot}/libs/telemetry/install/*.cjs",
+        "{workspaceRoot}/libs/telemetry/install/assemble-package.mjs",
+        "{projectRoot}/package.json"
+      ],
+      "outputs": [
+        "{projectRoot}/.install-collector",
+        "{projectRoot}/src/lib/package-version.ts"
+      ],
+      "options": {
+        "command": "node libs/telemetry/install/assemble-package.mjs render",
+        "forwardAllArgs": false
       }
     }
-  }
+  },
+  "implicitDependencies": ["telemetry"]
 }

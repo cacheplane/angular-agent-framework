@@ -11,6 +11,7 @@
   ],
   "peerDependencies": {
     "@threadplane/chat": "*",
+    "@threadplane/telemetry": "^0.0.65",
     "@angular/core": "^20.0.0 || ^21.0.0 || ^22.0.0",
     "@ag-ui/client": "*",
     "@ag-ui/core": "*",
@@ -26,5 +27,20 @@
   "bugs": {
     "url": "https://github.com/cacheplane/angular-agent-framework/issues"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "exports": {
+    "./development-install": {
+      "types": "./.install-collector/development-install.d.ts",
+      "default": "./.install-collector/development-install.mjs"
+    }
+  },
+  "imports": {
+    "#development-install": {
+      "types": "./.install-collector/development-install.d.ts",
+      "default": "@threadplane/ag-ui/development-install"
+    }
+  },
+  "scripts": {
+    "postinstall": "node install/postinstall.cjs"
+  }
 }

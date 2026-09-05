@@ -21,7 +21,11 @@ export interface AgentConfig {
   threadId?: string;
   /** Extra HTTP headers sent with every request (e.g. auth tokens). */
   headers?: Record<string, string>;
-  /** Optional app-owned sink. Supply one to receive runtime lifecycle events. */
+  /**
+   * Omit to enable automatic development-only collection. Set `false` to disable.
+   * An app-owned sink replaces the automatic destination and receives the
+   * existing runtime lifecycle callbacks.
+   */
   telemetry?: AgentRuntimeTelemetrySink | false;
 }
 

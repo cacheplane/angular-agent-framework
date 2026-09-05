@@ -3,6 +3,7 @@ import {
   isSignal, signal, Signal,
 } from '@angular/core';
 import { AGENT_CONFIG } from './agent.provider';
+import { registerDevelopmentRuntimePolicy } from '@threadplane/telemetry/browser';
 import type { AgentLifecycle } from './lifecycle';
 import { AgentLifecycleRegistry } from './agent-lifecycle-registry';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
@@ -485,7 +486,7 @@ export function agent<
     if (outcome === 'success') batch?.acknowledge();
   }
 
-  return {
+  return registerDevelopmentRuntimePolicy<LangGraphAgent<T, InferBag<T, Bag>>>({
     // ── Runtime-neutral surface (AgentWithHistory) ────────────────────────
     messages:  messagesNeutral,
     status:    statusNeutral,
@@ -656,7 +657,7 @@ export function agent<
         ? []
         : toolCalls$.value.filter(tc => (tc.aiMessage as unknown as Record<string, unknown>)['id'] === id);
     },
-  };
+  }, () => options.telemetry === undefined);
 }
 
 // ── Private translation helpers (moved from to-agent.ts) ─────────────────────

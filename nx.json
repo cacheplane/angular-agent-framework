@@ -60,6 +60,7 @@
       "preVersionCommand": "npx nx run-many -t build --projects=chat,langgraph,ag-ui,render,a2ui,telemetry",
       "updateDependents": "auto",
       "preserveLocalDependencyProtocols": true,
+      "preserveMatchingDependencyRanges": false,
       "currentVersionResolver": "git-tag",
       "fallbackCurrentVersionResolver": "disk",
       "manifestRootsToUpdate": [

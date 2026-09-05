@@ -63,6 +63,8 @@ export interface AngularRegistry {
  * components. Every field is optional.
  */
 export interface RenderConfig {
+  /** Set false to disable automatic development browser collection for this render tree. */
+  telemetry?: boolean;
   /** Component registry mapping spec element `type`s to Angular components. */
   registry?: AngularRegistry;
   /** Backing state store that `$bindState` paths read from and interactive elements write to. */

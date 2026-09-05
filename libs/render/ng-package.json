@@ -4,5 +4,22 @@
   "lib": {
     "entryFile": "src/public-api.ts"
   },
-  "assets": [{ "input": ".", "glob": "LICENSE.md", "output": "." }]
+  "assets": [
+    {
+      "input": ".install-collector",
+      "glob": "development-install.*",
+      "output": ".install-collector"
+    },
+    {
+      "input": ".",
+      "glob": "LICENSE.md",
+      "output": "."
+    },
+    {
+      "input": ".install-collector",
+      "glob": "*.cjs",
+      "output": "install"
+    }
+  ],
+  "keepLifecycleScripts": true
 }

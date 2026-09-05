@@ -17,6 +17,8 @@ import {
   SITE_ORIGIN,
 } from '../lib/site-metadata';
 import { getFormPolicy } from '../lib/growth/form-policy';
+import { WebsiteSignals } from '../components/shared/WebsiteSignals';
+import { websiteContentCatalog } from '../lib/growth/website-content';
 
 const garamond = EB_Garamond({
   subsets: ['latin'],
@@ -78,6 +80,7 @@ export default function RootLayout({
           reason — do not mount its component builders individually.
         */}
         <JsonLd data={rootJsonLd()} />
+        <WebsiteSignals catalog={websiteContentCatalog()} />
         <Nav />
         <div id="site-content">
           <main>

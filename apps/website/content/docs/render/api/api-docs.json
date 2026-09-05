@@ -171,6 +171,12 @@
         "type": "InputSignal<StateStore | undefined>",
         "description": "",
         "optional": false
+      },
+      {
+        "name": "telemetry",
+        "type": "InputSignal<boolean | undefined>",
+        "description": "Disable automatic development collection for this render tree.",
+        "optional": false
       }
     ],
     "methods": [
@@ -275,6 +281,12 @@
         "name": "store",
         "type": "StateStore",
         "description": "Backing state store that `$bindState` paths read from and interactive elements write to.",
+        "optional": true
+      },
+      {
+        "name": "telemetry",
+        "type": "boolean",
+        "description": "Set false to disable automatic development browser collection for this render tree.",
         "optional": true
       }
     ],

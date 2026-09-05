@@ -3,6 +3,7 @@ import { useCallback, useRef, useState, type KeyboardEvent } from 'react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { trackCtaClick } from '../../lib/analytics/client';
+import { observeInstallCopy } from '../../lib/growth/website-collector';
 import {
   COMPONENT_SNIPPET,
   HERO_PRIMARY_LABEL,
@@ -37,7 +38,9 @@ export function InstallDialog({ open, onClose }: InstallDialogProps) {
   const copy = useCallback(async () => {
     trackCtaClick({ cta_id: 'hero_install', adapter: option.key, track: 'developer', surface: 'home' });
     try {
-      await navigator.clipboard?.writeText(option.command);
+      if (!navigator.clipboard?.writeText) return;
+      await navigator.clipboard.writeText(option.command);
+      observeInstallCopy(option.command);
       setCopied(true);
       setTimeout(() => setCopied(false), COPY_FEEDBACK_MS);
     } catch {

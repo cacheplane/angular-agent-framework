@@ -6,6 +6,8 @@ import { INSTALL_OPTIONS } from '../../lib/positioning';
 
 const trackCtaClickMock = vi.hoisted(() => vi.fn());
 const writeTextMock = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
+const observeCopy = vi.hoisted(() => vi.fn());
+vi.mock('../../lib/growth/website-collector', () => ({ observeInstallCopy: observeCopy }));
 vi.mock('../../lib/analytics/client', () => ({ trackCtaClick: trackCtaClickMock, track: vi.fn() }));
 vi.mock('../ui/Button', () => ({
   Button: ({ children, href, onClick }: { children: React.ReactNode; href?: string; onClick?: () => void }) =>
@@ -15,10 +17,21 @@ vi.mock('../ui/Button', () => ({
 beforeEach(() => {
   trackCtaClickMock.mockClear();
   writeTextMock.mockClear();
+  observeCopy.mockClear();
   Object.assign(navigator, { clipboard: { writeText: writeTextMock } });
 });
 
 describe('InstallDialog', () => {
+  it('records Growth copy evidence only after clipboard success', async () => {
+    const { InstallDialog } = await import('./InstallDialog');
+    render(<InstallDialog open onClose={vi.fn()} />);
+    writeTextMock.mockRejectedValueOnce(new Error('blocked'));
+    fireEvent.click(screen.getByRole('button', {name: 'Copy install command'}));
+    await vi.waitFor(() => expect(writeTextMock).toHaveBeenCalled());
+    expect(observeCopy).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', {name: 'Copy install command'}));
+    await vi.waitFor(() => expect(observeCopy).toHaveBeenCalledWith(INSTALL_OPTIONS[0].command));
+  });
   it('opens on the fake-agent variant and shows its command and snippet', async () => {
     const { InstallDialog } = await import('./InstallDialog');
     render(<InstallDialog open onClose={vi.fn()} />);

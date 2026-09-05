@@ -6,6 +6,7 @@ import { signal, effect, DestroyRef, inject, Injector, runInInjectionContext } f
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HumanMessage, AIMessage } from '@langchain/core/messages';
 import { ChatComponent } from './chat.component';
+import { DEVELOPMENT_COLLECTION_POLICY, registerDevelopmentRuntimePolicy } from '@threadplane/telemetry/browser';
 import { messageContent } from '../shared/message-utils';
 import { createContentClassifier, type ContentClassifier } from '../../streaming/content-classifier';
 import { mockAgent } from '../../testing/mock-agent';
@@ -27,6 +28,24 @@ import {
   type ToolCall,
   type Message,
 } from '../../agent';
+
+describe('ChatComponent development collection destination policy', () => {
+  it('passes the current adapter policy to descendants and keeps app-owned agents disabled', () => {
+    TestBed.configureTestingModule({});
+    const fx = TestBed.createComponent(ChatComponent);
+    const appOwned = mockAgent();
+    fx.componentRef.setInput('agent', appOwned);
+    const policy = fx.debugElement.injector.get(DEVELOPMENT_COLLECTION_POLICY, null);
+    expect(policy).toBeTypeOf('function');
+    expect(policy?.()).toBe(false);
+    const enabled = registerDevelopmentRuntimePolicy(mockAgent(), () => true);
+    fx.componentRef.setInput('agent', enabled);
+    expect(policy?.()).toBe(true);
+    const customSink = registerDevelopmentRuntimePolicy(mockAgent(), () => false);
+    fx.componentRef.setInput('agent', customSink);
+    expect(policy?.()).toBe(false);
+  });
+});
 
 describe('markdownDocument', () => {
   it('maps streaming delivery generation, phase, and content', () => {

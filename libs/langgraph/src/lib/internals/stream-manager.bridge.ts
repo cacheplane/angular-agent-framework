@@ -1,4 +1,9 @@
-import { signal, type Signal } from '@angular/core';
+import { isDevMode, signal, type Signal } from '@angular/core';
+// eslint-disable-next-line @nx/enforce-module-boundaries -- Keep the postinstall module external through ng-packagr.
+import { installationToken } from '#development-install';
+declare const ngDevMode: boolean;
+import { createDevelopmentRuntime } from '@threadplane/telemetry/browser';
+import { THREADPLANE_PACKAGE_VERSION as packageVersion } from '../package-version';
 import { Observable, takeUntil } from 'rxjs';
 import {
   ResourceStatus,
@@ -140,6 +145,11 @@ export interface StreamManagerBridge {
 export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = BagTemplate>(
   { options, subjects, threadId$, destroy$, reportOperationFailure }: StreamManagerBridgeOptions<T, ResolvedBag>
 ): StreamManagerBridge {
+  const developmentRuntime = createDevelopmentRuntime({
+    integration: 'langgraph', packageName: '@threadplane/langgraph', packageVersion,
+    installationToken: (typeof ngDevMode === 'undefined' || ngDevMode) && isDevMode() ? installationToken : null,
+    enabled: () => options.telemetry === undefined,
+  });
   // Intercept onThreadId so currentThreadId tracks a thread the DEFAULT
   // transport auto-creates. Without this, each submit() would create a new
   // thread because currentThreadId stays null. This wrapper only reaches the
@@ -179,6 +189,10 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
   const messageDeliveries = new Map<string, MessageDelivery>();
   const deliveryRevision = signal(0);
   type DeliveryAttempt = {
+    startedAt: number;
+    rootTerminalEvidence: boolean;
+    resumedInterrupt: boolean;
+    externalSignal?: AbortSignal;
     generation: string;
     messageIds: Set<string>;
     finalizedMessageIds: Set<string>;
@@ -214,6 +228,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
   );
 
   function captureRuntimeRequestTelemetry(requestType: string): void {
+    developmentRuntime.touch();
     captureAgentRuntimeTelemetry(options.telemetry, 'tplane:runtime_request_created', {
       ...telemetryProperties,
       requestType,
@@ -246,6 +261,9 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     }
     attemptSequence += 1;
     const attempt: DeliveryAttempt = {
+      startedAt: Date.now(),
+      rootTerminalEvidence: false,
+      resumedInterrupt: false,
       generation: `attempt-${attemptSequence}-${Math.random().toString(36).slice(2, 10)}`,
       messageIds: new Set(),
       finalizedMessageIds: new Set(),
@@ -323,6 +341,12 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
 
     if (!isCurrentExecution(controller, attempt)) return null;
     if (!attempt.terminalOutcome) finalizeAttempt(attempt, outcome);
+    if (attempt.terminalOutcome === 'success' && attempt.rootTerminalEvidence
+      && !controller.signal.aborted && !attempt.externalSignal?.aborted
+      && !subjects.error$.value && !subjects.interrupt$.value && subjects.interrupts$.value.length === 0) {
+      developmentRuntime.milestone('runtime.first_stream_completed', Date.now() - attempt.startedAt);
+      if (attempt.resumedInterrupt) developmentRuntime.milestone('interrupt.handled');
+    }
     return attempt.terminalOutcome ?? outcome;
   }
 
@@ -358,6 +382,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
       attempt.currentAssistantMessageId = id;
       attempt.messageIds.add(id);
       attempt.sawAssistantChunk = true;
+      attempt.rootTerminalEvidence = false;
       setDelivery(id, streamingDelivery(attempt.generation));
     }
   }
@@ -372,7 +397,6 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     if (
       !attempt
       || attempt.terminalOutcome
-      || !attempt.sawAssistantChunk
       || (getEventNamespace(event)?.length ?? 0) > 0
     ) return;
     const baseType = getBaseEventType(event.type);
@@ -381,7 +405,8 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     // evidence: after assistant chunks, a close without one of these markers
     // is classified as interrupted.
     if (baseType === 'values' || baseType === 'messages/complete' || baseType === 'checkpoints') {
-      attempt.currentStepHasTerminalEvidence = true;
+      if (hasDevelopmentEventPayload(event)) attempt.rootTerminalEvidence = true;
+      if (attempt.sawAssistantChunk) attempt.currentStepHasTerminalEvidence = true;
     }
   }
 
@@ -439,6 +464,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
   });
 
   destroy$.subscribe(() => {
+    developmentRuntime.dispose();
     invalidateQueueDrain();
     abortController?.abort();
     historyAbortController?.abort();
@@ -454,6 +480,7 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
   async function refreshHistory(force = false, isRelevant: () => boolean = () => true): Promise<void> {
     const getHistory = transport.getHistory?.bind(transport);
     if (!currentThreadId || !getHistory) return;
+    developmentRuntime.touch();
 
     historyAbortController?.abort();
     const controller = new AbortController();
@@ -487,6 +514,9 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
           delete (restoredValues as { messages?: unknown }).messages;
           subjects.messages$.next(preserveIds(subjects.messages$.value, restoredMessages));
           subjects.values$.next(restoredValues);
+          if (!force && !activeAttempt && (restoredMessages.length > 0 || Object.keys(restoredValues as object).length > 0)) {
+            developmentRuntime.milestone('thread.persisted');
+          }
           // Rebuild derived subjects from the new authoritative messages$.
           // Tool-call results displayed by chat-tool-calls come from
           // toolCalls$, which is built from messages$; without this, the
@@ -695,6 +725,9 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
     const attempt = beginAttempt(
       requestType === 'resubmit' || (isRecord(opts?.command) && 'resume' in opts.command),
     );
+    attempt.externalSignal = opts?.signal;
+    attempt.resumedInterrupt = isRecord(opts?.command) && 'resume' in opts.command
+      && (!!subjects.interrupt$.value || subjects.interrupts$.value.length > 0);
     const startedAt = Date.now();
     captureRuntimeRequestTelemetry(requestType);
     captureAgentRuntimeTelemetry(options.telemetry, 'tplane:stream_started', telemetryProperties);
@@ -812,6 +845,9 @@ export function createStreamManagerBridge<T, ResolvedBag extends BagTemplate = B
   function processEvent(event: StreamEvent): void {
     const baseType = getBaseEventType(event.type);
     const namespace = getEventNamespace(event);
+    if (hasDevelopmentEventPayload(event)) {
+      developmentRuntime.milestone('transport.connected');
+    }
 
     if (baseType === 'checkpoints' || baseType === 'messages/complete') {
       markNormalTerminal(event);
@@ -1390,6 +1426,45 @@ function hydrateInterruptsFromHistory<T, B extends BagTemplate>(
         typeof subjects.interrupt$.next
       >[0],
     );
+  }
+}
+
+/** Growth evidence is stricter than the legacy stream projection fallbacks. */
+function hasDevelopmentEventPayload(event: StreamEvent): boolean {
+  const baseType = getBaseEventType(event.type);
+  if (isMessagesEvent(event.type)) {
+    const payload = Array.isArray(event.messages) ? event.messages : event['data'];
+    if (Array.isArray(payload)) {
+      return payload.length === 0 || (normalizeMessages(event)?.length ?? 0) > 0;
+    }
+    // Older custom transports flatten arrays into numeric event properties.
+    return Object.keys(event).some(key => /^\d+$/.test(key))
+      && (normalizeMessages(event)?.length ?? 0) > 0;
+  }
+  // An explicitly malformed SDK payload cannot borrow namespace/metadata keys
+  // from extractEventData's compatibility fallback as proof of decoded state.
+  const payload = 'data' in event ? event['data']
+    : baseType in event ? event[baseType]
+    : Object.fromEntries(Object.entries(event).filter(([key]) =>
+        !['type', 'namespace', 'messageMetadata'].includes(key)));
+  switch (baseType) {
+    case 'values':
+    case 'updates':
+    case 'checkpoints':
+    case 'metadata':
+      return isRecord(payload) && ('data' in event || baseType in event || Object.keys(payload).length > 0);
+    case 'error':
+      return safeReadEventError(event) !== undefined;
+    case 'interrupt':
+      return isRecord(event['interrupt']);
+    case 'interrupts':
+      return Array.isArray(event['interrupts']) && event['interrupts'].every(isRecord);
+    case 'custom':
+      return 'data' in event;
+    case 'tools':
+      return isRecord(payload) && typeof payload['event'] === 'string' && typeof payload['name'] === 'string';
+    default:
+      return false;
   }
 }
 

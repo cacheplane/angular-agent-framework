@@ -1,9 +1,9 @@
 # @threadplane/telemetry
 
-Explicit capture helpers for applications built with
-[Threadplane](https://github.com/cacheplane/angular-agent-framework), the AI
-agent UI framework for Angular. Every send is one the application asked for:
-this package has no ambient collection path.
+Explicit capture helpers and automatic development runtime collection for
+applications built with [Threadplane](https://github.com/cacheplane/angular-agent-framework),
+the AI agent UI framework for Angular. The automatic path starts only when a
+supported development integration is used, as described below.
 
 <p align="center">
   <a href="https://www.npmjs.com/package/@threadplane/telemetry">
@@ -21,18 +21,107 @@ this package has no ambient collection path.
 
 - **No install lifecycle scripts.** The manifest declares none, so `npm install`
   runs no code from this package.
-- **The browser service starts disabled.** It sends nothing until an application
+- **The legacy browser service starts disabled.** It sends nothing until an application
   calls `provideThreadplaneTelemetry({ enabled: true })`.
 - **Node capture is explicit.** An event is sent only where application code
   calls a capture helper.
 - **Disable controls win.** `TPLANE_TELEMETRY_DISABLED`, `DO_NOT_TRACK`, CI
-  detection, or `disableTelemetry()` prevent sends before a network call.
+  detection, or `disableTelemetry()` prevent explicit Node helper sends before a network call.
 - **Point it anywhere.** `TPLANE_TELEMETRY_INGEST_URL`, or an `endpoint` or
-  `sink` on the browser provider, routes events to infrastructure you control.
+  `sink` on the browser provider, routes explicit helper events to infrastructure you control.
 
 The event categories, purposes, and retention that apply to Threadplane's own
 properties are described at
 [threadplane.ai/privacy](https://threadplane.ai/privacy).
+
+The automatic install collector embedded in `@threadplane/chat`, `@threadplane/langgraph`,
+`@threadplane/ag-ui`, and `@threadplane/render` is a separate collection path. It can
+include configured Git name/full email and repository-owner hints, including CI;
+see the package READMEs and [Privacy](https://threadplane.ai/privacy). This package
+retains its own inert install and explicit helper behavior.
+
+## Automatic development runtime collection
+
+LangGraph and AG-UI adapters and the supported JSON renderer use this package's
+lazy development collector when they are actually used. Angular's `isDevMode()`
+must be true and browser APIs must be available before identity/storage/network
+work. Production builds, SSR, imports, unused runtime construction, and automated
+browsers reporting `navigator.webdriver` are inert.
+A development build served on a remote hostname is still development software.
+
+Events contain random event IDs, a browser-origin UUID, an inactivity session UUID,
+package/version, integration, timestamps, closed progress milestones, and an optional
+opaque installation token from that integration's own package. The token contains no
+email or Git metadata. Successful
+completion can include a broad duration bucket. No conversation content, endpoint,
+thread/run ID, URL, Git identity, or account result is included. The browser-origin
+identity is not a verified person, repository, or account.
+
+The browser UUID and 30-minute inactivity session use localStorage where available;
+storage failure falls back to page memory and reports the identity's scope.
+Milestones deduplicate per integration/session. Immutable initialization envelopes
+survive reloads, so an active session can fetch announcements without new milestone
+claims. Changing a package version or installation token within a session starts a
+new initialization envelope and event ID, including same-version reinstalls. Old
+pending/replayed envelopes retain their original token. Milestone deduplication is
+unchanged.
+
+Published adapter packages ship a null `./development-install` export. An enabled
+non-CI install atomically replaces it with a random package-local UUID, registers the
+same token in the install observation, and never puts install identity into browser
+code. Angular production builds remove the token. CI and disabled lifecycle runs
+first reset prior state to null. Read-only or copied packages may retain an older
+token if reset fails; skipped scripts leave the file unchanged. This correlation is
+not proof of a unique developer or installation. Browser opt-outs remain effective
+independently of the package file.
+
+The credential-free HTTPS POST goes to `https://threadplane.ai/api/growth/collect/v1/runtime`.
+Durable acknowledgments are independent of console display. There is an initial exchange,
+at most one active refresh per five minutes, and coalesced milestones with at least ten
+seconds between requests. The collector caps work at 50 pending events, 20 per request,
+24 hours of age, three attempts, and a three-second request/response deadline.
+It respects server Retry-After, never polls while idle, and does not promise delivery
+on unload. Expired/overflow/exhausted events are discarded with aggregate local counters.
+
+Code-owned announcements have package/version applicability and expiry; they display
+as plain console text at most once per stored identity (best effort across browsers/tabs),
+with optional approved documentation links. No HTML or remote code executes. A display,
+link click, login, or registration is not required for acknowledgment or attribution.
+
+Disable from application bootstrap, before constructing adapters or render trees:
+
+```ts
+import { setDevelopmentCollectionEnabled } from '@threadplane/telemetry/browser';
+setDevelopmentCollectionEnabled(false);
+```
+
+Or run in the browser console before starting the runtime:
+
+```js
+localStorage.setItem('THREADPLANE_TELEMETRY_DISABLED', '1');
+// Reload the page to stop any request already in flight.
+```
+
+`window.__THREADPLANE_TELEMETRY_DISABLED__ = true` is also checked at use/send time.
+Programmatic disable immediately aborts pending requests and clears queued work.
+Remove the storage/window override and call `setDevelopmentCollectionEnabled(true)`
+to enable subsequent use again. Node environment variables do not configure a compiled
+browser app.
+
+Adapter `telemetry: false` disables collection. A supplied custom sink replaces the
+automatic destination and retains its existing lifecycle callback contract. Chat passes
+that choice to nested JSON renderers; an unknown app-owned agent defaults to no automatic
+collection in its chat subtree. Standalone render supports `provideRender({ telemetry: false })`
+and `<render-spec [telemetry]="false" ... />`. A child cannot override a disabled parent.
+
+Use `getDevelopmentCollectionDiagnostics()` for page-local aggregate acknowledged,
+failure, discarded, and pending counts. It returns no identifiers or event content.
+A usable install email can qualify for the generic founder hello after its first
+linked development activation, without a claim click or lead form. This is a narrow
+eligibility path, not verified email ownership or account membership; unsubscribe,
+reply, bounce, and suppression controls still apply. Runtime evidence alone does not
+approve a contact. Generic AG-UI has
+no verified prior-history restoration signal; it does not claim `thread.persisted`.
 
 ## Install
 

@@ -15,3 +15,16 @@ export type {
 } from './service';
 export { isLocalAnalyticsHost, shouldCaptureAnalytics } from './properties';
 export type { CaptureConfig } from './properties';
+export {
+  createDevelopmentRuntime,
+  setDevelopmentCollectionEnabled,
+  getDevelopmentCollectionDiagnostics,
+  DEVELOPMENT_COLLECTION_POLICY,
+  registerDevelopmentRuntimePolicy,
+  isDevelopmentRuntimeEnabled,
+} from './development/runtime';
+export type {
+  DevelopmentRuntime,
+  DevelopmentRuntimeOptions,
+  DevelopmentMilestone,
+} from './development/types';

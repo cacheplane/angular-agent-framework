@@ -59,6 +59,12 @@ jobs:
         env:
           RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
 
+      - name: Verify installed collectors and development-only bundles
+        run: |
+          npx nx build growth --skip-nx-cache
+          npx nx run telemetry:test-install-pack --skip-nx-cache
+          npx nx run telemetry:test-development-bundle --skip-nx-cache
+
       # Trusted publishing is configured per-package on npm; no NPM_TOKEN needed.
       # The OIDC token from id-token: write authenticates this workflow as a
       # trusted publisher for each @threadplane/* package. Provenance attestations are

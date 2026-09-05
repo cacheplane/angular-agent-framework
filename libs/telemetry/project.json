@@ -63,6 +63,20 @@
     },
     "lint": {
       "executor": "@nx/eslint:lint"
+    },
+    "test-install-pack": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node libs/telemetry/install/verify-pack.mjs"
+      }
+    },
+    "test-development-bundle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node libs/telemetry/scripts/verify-development-bundle.mjs"
+      }
     }
   }
 }

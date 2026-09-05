@@ -81,6 +81,11 @@ keys/
 # Aborted fixture-record runs strand raw recordings under a committed path
 **/e2e/fixtures/.staging/
 
+# Shared install collector staged before each library is packaged.
+libs/*/.install-collector/*
+!libs/*/.install-collector/development-install.mjs
+!libs/*/.install-collector/development-install.d.ts
+
 # Growth research generated deployment artifacts
 apps/growth-research/.dawn/
 apps/growth-research/.deployment/
