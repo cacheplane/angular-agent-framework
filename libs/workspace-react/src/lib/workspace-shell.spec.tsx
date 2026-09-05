@@ -365,6 +365,13 @@ describe('WorkspaceShell persistent panel composition', () => {
     renderWorkspace({ requestedMode: 'docs' });
     const panel = screen.getByRole('region', { name: 'Docs workspace panel' });
     expect(panel.querySelector('h1')).toBeNull();
+    // A crashed panel falls back to WorkspacePanelBoundary's
+    // role="alert" markup; assert that fallback never fired.
+    expect(panel.querySelector('[role="alert"]')).toBeNull();
+    // With no docsSlot, the panel should render only its heading text
+    // ("<entryTitle> Docs") and nothing else -- distinguishing a
+    // cleanly empty panel from one that silently swallowed a crash.
+    expect(panel.textContent?.trim()).toBe(`${identity.title} Docs`);
   });
 
   it('does not mount Run for docs-only or mapped identities without Run', () => {
