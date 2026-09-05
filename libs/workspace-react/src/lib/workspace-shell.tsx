@@ -25,7 +25,6 @@ import {
   type WorkspaceContextPaneRenderer,
 } from './components/control-plane/cockpit-control-plane';
 import { MobileNavOverlay } from './components/mobile-nav-overlay';
-import { NarrativeDocs } from './components/narrative-docs/narrative-docs';
 import { RunMode } from './components/run-mode/run-mode';
 import { PRODUCT_LABELS } from './navigation-labels';
 import { useWorkspace } from './workspace-provider';
@@ -149,7 +148,6 @@ export function WorkspaceShell({
     getSessionId,
     runtimeTelemetry,
     trackNavigation,
-    trackNarrativeAction,
     selectMode,
     setActiveUtility,
     setExpanded,
@@ -520,15 +518,7 @@ export function WorkspaceShell({
             >
               {panelHeading('Docs')}
               <WorkspacePanelBoundary mode="Docs" resetKey={identityKey}>
-                {docsSlot !== null ? (
-                  docsSlot
-                ) : (
-                  <NarrativeDocs
-                    narrativeDocs={contentBundle.narrativeDocs}
-                    capability={capability}
-                    trackNarrativeAction={trackNarrativeAction}
-                  />
-                )}
+                {docsSlot}
               </WorkspacePanelBoundary>
             </div>
           ) : null}

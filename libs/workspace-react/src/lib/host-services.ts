@@ -12,15 +12,6 @@ export interface WorkspaceNavigationAnalytics {
 
 export type TrackNavigation = (event: WorkspaceNavigationAnalytics) => void;
 
-export interface WorkspaceNarrativeAnalytics {
-  readonly capability?: string;
-  readonly surface: 'docs_code_snippet' | 'agentic_prompt';
-}
-
-export type TrackNarrativeAction = (
-  event: WorkspaceNarrativeAnalytics
-) => void;
-
 export interface WorkspaceModeChangeAnalytics {
   readonly capability: string;
   readonly fromMode: WorkspaceMode;

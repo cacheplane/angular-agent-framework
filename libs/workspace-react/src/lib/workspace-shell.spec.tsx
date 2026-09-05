@@ -54,7 +54,6 @@ const presentation: WorkspacePresentation = {
   promptAssetPaths: [],
   codeAssetPaths: ['example.ts'],
   backendAssetPaths: [],
-  docsAssetPaths: ['guide.md'],
   runtimeUrl: 'langgraph/streaming',
   devPort: 4300,
   runnable: true,
@@ -362,11 +361,10 @@ describe('WorkspaceShell persistent panel composition', () => {
     expect(screen.getByText('Product')).toBeTruthy();
   });
 
-  it('uses registry narrative Docs when no server slot is present', () => {
+  it('renders nothing in the Docs panel when no server slot is present', () => {
     renderWorkspace({ requestedMode: 'docs' });
-    expect(
-      screen.getByRole('heading', { name: 'Registry narrative' })
-    ).toBeTruthy();
+    const panel = screen.getByRole('region', { name: 'Docs workspace panel' });
+    expect(panel.querySelector('h1')).toBeNull();
   });
 
   it('does not mount Run for docs-only or mapped identities without Run', () => {

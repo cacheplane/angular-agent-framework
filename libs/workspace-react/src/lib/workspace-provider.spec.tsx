@@ -43,7 +43,6 @@ const presentation: WorkspacePresentation = {
   promptAssetPaths: [],
   codeAssetPaths: ['example.ts'],
   backendAssetPaths: [],
-  docsAssetPaths: ['guide.md'],
   runtimeUrl: 'langgraph/streaming',
   devPort: 4300,
   runnable: true,
