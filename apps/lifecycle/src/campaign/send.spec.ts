@@ -548,6 +548,37 @@ describe('dispatchLifecycleAppOwnedJob', () => {
       }),
       deps.recipientPolicy
     );
+    const sent = vi.mocked(deps.sendRecipient).mock.calls[0]?.[1];
+    expect(sent?.text.startsWith('Hey Ada,\n\nHere is the guide')).toBe(true);
+    expect(
+      sent?.html?.startsWith('<p>Hey Ada,</p>\n<p>Here is the guide')
+    ).toBe(true);
+    expect(sent?.html).toContain(
+      '<a href="https://threadplane.ai/whitepapers/chat.pdf">'
+    );
+  });
+
+  it('falls back to the generic greeting on fulfillment when the display name is unusable', async () => {
+    const deps = dependencies({
+      readJobContext: vi
+        .fn()
+        .mockResolvedValue(
+          context({ displayName: 'Click https://evil.example' })
+        ),
+    });
+    const fulfill = job('fulfill', {
+      form_kind: 'newsletter',
+      submission_id: '00000000-0000-4000-8000-000000000012',
+    });
+
+    await expect(
+      dispatchLifecycleAppOwnedJob({} as SqlExecutor, fulfill, {}, deps)
+    ).resolves.toBe('completed');
+    const sent = vi.mocked(deps.sendRecipient).mock.calls[0]?.[1];
+    expect(sent?.text.startsWith('Hey there,\n\nYou are on the list.')).toBe(
+      true
+    );
+    expect(sent?.text).not.toContain('evil.example');
   });
 
   it('builds one bounded enrichment artifact and persists it once', async () => {

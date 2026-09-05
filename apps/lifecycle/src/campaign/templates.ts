@@ -21,9 +21,17 @@ const CampaignStepSchema = z.enum(['immediate', 'day-3', 'day-8']);
 export const FOUNDER_BOOKING_URL =
   'https://calendar.app.google/nK961tWHZd21izKR6';
 
+/**
+ * Every link recipient copy may carry, across campaign steps and fulfillment
+ * mail. The four PDFs are the whitepaper fulfillment deliverables.
+ */
 const APPROVED_CAMPAIGN_LINKS = new Set([
   'https://threadplane.ai/docs',
   'https://threadplane.ai/pilot-to-prod',
+  'https://threadplane.ai/whitepaper.pdf',
+  'https://threadplane.ai/whitepapers/angular.pdf',
+  'https://threadplane.ai/whitepapers/render.pdf',
+  'https://threadplane.ai/whitepapers/chat.pdf',
   FOUNDER_BOOKING_URL,
 ]);
 const URL_PATTERN = /https?:\/\/[^\s<>()"'“”‘’\]}]+/giu;

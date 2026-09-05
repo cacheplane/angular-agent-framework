@@ -70,6 +70,12 @@ const PROJECT_FACTS: Record<z.infer<typeof ProjectSignalSchema>, string> = {
   'project.returned_7d': 'returned to the project within a week',
 };
 
+/**
+ * Recipient copy in Brian's register: no contractions, no "thanks for"
+ * openers, one thought per line, no marketing tone. The "Hey <name>,"
+ * greeting is added at send time; every body here stays inside the
+ * recipient-copy checks in campaign/templates.ts.
+ */
 export function renderFulfillmentTemplate(
   candidate: unknown
 ): RecipientTemplate {
@@ -80,23 +86,23 @@ export function renderFulfillmentTemplate(
       const paper = WHITEPAPERS[input.paper];
       return {
         subject: paper.subject,
-        body: `Here is the guide you requested:\n\n${paper.url}`,
+        body: `Here is the guide you requested:\n${paper.url}\n\nRead it when you have a quiet hour.\nIf something in it does not hold up in your own code, reply and tell me.`,
       };
     }
     case 'newsletter':
       return {
         subject: 'Welcome to Threadplane',
-        body: 'Thanks for signing up. I’ll keep these notes focused on practical engineering work with agent interfaces.',
+        body: 'You are on the list.\n\nI write these notes about practical engineering work with agent interfaces.\nStreaming, state, interrupts, and the boundaries that make them testable.\nNo hype.\n\nIf one of them misses the mark, reply and tell me.',
       };
     case 'contact':
       return {
         subject: 'Your contact request',
-        body: 'Thanks for reaching out. I’ll reply to the contact request you submitted.',
+        body: 'I have your contact request.\nI will read it and reply myself.',
       };
     case 'pricing':
       return {
         subject: 'Your pricing request',
-        body: 'Thanks for reaching out. I’ll reply to the pricing request you submitted.',
+        body: 'I have your pricing request.\nI will read it and reply myself.',
       };
     case 'project-connect': {
       const facts = input.claimedSignals.map((signal) => PROJECT_FACTS[signal]);
@@ -106,7 +112,7 @@ export function renderFulfillmentTemplate(
           : `${facts.slice(0, -1).join(', ')}, and ${facts.at(-1)}`;
       return {
         subject: 'Your connected Threadplane project',
-        body: `Thanks for explicitly connecting your project. In that connection, you shared that you ${joinedFacts}. I’ll keep any follow-up to that context.`,
+        body: `You connected your project.\nIn that connection, you shared that you ${joinedFacts}.\n\nI will keep any follow-up to that context.\nNothing else.`,
       };
     }
   }

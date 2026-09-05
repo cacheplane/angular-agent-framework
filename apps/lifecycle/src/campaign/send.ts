@@ -259,7 +259,8 @@ const PLAIN_NAME_PATTERN = /^[A-Za-z'’.-]+(?:\s[A-Za-z'’.-]+){0,5}$/u;
 
 /**
  * "Hey <first name>," when the persisted display name is a plain name and its
- * first word is a plain first name; otherwise "Hey there,". Display names are
+ * first word is a plain first name; otherwise "Hey there,". Campaign steps and
+ * fulfillment mail both open with it. Display names are
  * free-text form input, so a name carrying digits, punctuation, or a URL
  * anywhere is discarded as a whole and never reaches the email.
  */
@@ -484,12 +485,15 @@ export async function dispatchLifecycleAppOwnedJob(
       { contactId: context.contactId, issuedAt: now, eventNonce: job.id },
       dependencies.tokenKey
     );
+    // Fulfillment mail is the first message a contact gets from Brian, so it
+    // opens the same way every campaign step does.
+    const body = `${campaignGreeting(context.displayName)}\n\n${message.body}`;
     return dispatchRecipient(
       executor,
       job,
       message.subject,
-      signedText(message.body, unsubscribeUrl),
-      signedHtml(message.body, unsubscribeUrl),
+      signedText(body, unsubscribeUrl),
+      signedHtml(body, unsubscribeUrl),
       unsubscribeUrl,
       signal,
       dependencies
