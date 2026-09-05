@@ -186,16 +186,16 @@ const CAMPAIGN_TEMPLATES: Record<CampaignStep, CampaignDraft> = {
 
 const EVIDENCE_TEMPLATES: Record<CampaignEvidenceAngle, CampaignDraft> = {
   streaming_foundation: {
-    subject: 'A streaming foundation',
-    body: 'One useful starting pattern is to get a streamed response working end to end before layering in persistence and interrupts. It keeps the first integration boundary small.\n\nWould that sequence help?\n\nhttps://threadplane.ai/docs',
+    subject: 'Streaming first, then the rest',
+    body: `Most agent UIs go wrong before the first streamed response works end to end.\nGet that boundary solid first, then layer in persistence and interrupts.\n\nI am the founding engineer, and I am happy to work through that sequence with you and your team in a short hands-on session.\n\nNo sales.\nJust engineer to engineer.\n\nGrab a time here:\n${FOUNDER_BOOKING_URL}`,
   },
   debugging_layers: {
-    subject: 'A debugging sequence',
-    body: 'A practical debugging order is transport, state updates, then rendering. It turns an agent UI problem into three smaller checks.\n\nWhich layer would be most useful to isolate?\n\nhttps://threadplane.ai/docs',
+    subject: 'Three checks when the UI stalls',
+    body: `When an agent UI stalls, I isolate transport, state updates, and rendering, in that order.\nIt turns one vague problem into three small checks.\n\nIf you are stuck on any of them, I can walk through it with you and your team in a 30-minute hands-on session.\n\nNo sales.\nJust a founding engineer helping you get your code working.\n\nBook a time with me:\n${FOUNDER_BOOKING_URL}`,
   },
   event_state_boundary: {
-    subject: 'One event-state boundary',
-    body: 'A narrow boundary between agent events and UI state makes streaming, retries, and tests easier to reason about.\n\nWould a concrete pattern be useful?',
+    subject: 'One boundary that makes agent UIs testable',
+    body: `A narrow boundary between agent events and UI state makes streaming, retries, and tests much easier to reason about.\n\nAs the founding engineer of Threadplane, I want to get on a call with you and your team to look at that boundary in your code and fix anything in the way.\n\nNo sales.\nJust help, and some feedback for me to improve the product.\n\nGrab some time on my calendar:\n${FOUNDER_BOOKING_URL}`,
   },
 };
 

@@ -176,7 +176,7 @@ describe('prepareCampaignMessage', () => {
     ).toThrow(DeterministicLifecycleJobError);
   });
 
-  it('keeps the fixed final offer even for a closed evidence-linked artifact', () => {
+  it('renders the evidence-flavored final offer for a closed evidence-linked artifact', () => {
     const cited = artifact({
       cited_signals: [
         { signal: 'Bounded source fact', source_ids: ['source-1'] },
@@ -204,7 +204,7 @@ describe('prepareCampaignMessage', () => {
       })
     ).toMatchObject({
       status: 'ready',
-      subject: 'Free engineering session with the Threadplane founder',
+      subject: 'One boundary that makes agent UIs testable',
     });
   });
 
@@ -238,7 +238,7 @@ describe('prepareCampaignMessage', () => {
   });
 
   it.each([1, 2, 3] as const)(
-    'renders the fixed founder offer for step %i regardless of research drafts',
+    'maps the validated research angle at index %i to only that fixed step',
     (step) => {
       const prepared = prepareCampaignMessage({
         context: context(),
@@ -249,9 +249,9 @@ describe('prepareCampaignMessage', () => {
       expect(prepared).toMatchObject({
         status: 'ready',
         subject: [
-          'Engineer to engineer',
-          'Get your agent UI into production',
-          'Free engineering session with the Threadplane founder',
+          'Streaming first, then the rest',
+          'Three checks when the UI stalls',
+          'One boundary that makes agent UIs testable',
         ][step - 1],
       });
       if (prepared.status !== 'ready') throw new Error('expected ready');
@@ -263,14 +263,17 @@ describe('prepareCampaignMessage', () => {
     }
   );
 
-  it('sends the founder offer as step one even when a research artifact exists', () => {
+  it('sends the streaming-flavored offer as step one when research is cited', () => {
     expect(
       prepareCampaignMessage({
         context: context(),
         job: job('send_step', { campaign_version: 'v1', step: 1 }),
         unsubscribeUrl: UNSUBSCRIBE,
       })
-    ).toMatchObject({ status: 'ready', subject: 'Engineer to engineer' });
+    ).toMatchObject({
+      status: 'ready',
+      subject: 'Streaming first, then the rest',
+    });
   });
 
   it('sends step one immediately without waiting for a research artifact', () => {
@@ -311,15 +314,8 @@ describe('prepareCampaignMessage', () => {
   });
 
   it('escapes body text and keeps only bare links as anchors in the HTML part', () => {
-    const invalid = artifact({
-      drafts: [
-        { angle_id: 'streaming_foundation', source_id: 'source-1' },
-        { angle_id: 'debugging_layers', source_id: 'source-1' },
-        { angle_id: 'event_state_boundary', source_id: 'source-1' },
-      ],
-    });
     const prepared = prepareCampaignMessage({
-      context: context({ enrichmentArtifact: invalid }),
+      context: context({ enrichmentArtifact: null }),
       job: job('send_step', { campaign_version: 'v1', step: 2 }),
       unsubscribeUrl: UNSUBSCRIBE,
     });
@@ -352,7 +348,7 @@ describe('prepareCampaignMessage', () => {
 
   it('opens every step with the greeting and escapes it in the HTML part', () => {
     const prepared = prepareCampaignMessage({
-      context: context({ displayName: "O'Brien" }),
+      context: context({ displayName: "O'Brien", enrichmentArtifact: null }),
       job: job('send_step', { campaign_version: 'v1', step: 2 }),
       unsubscribeUrl: UNSUBSCRIBE,
     });
