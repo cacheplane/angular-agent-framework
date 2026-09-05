@@ -126,6 +126,7 @@ describe('classifyFromAffected — lint-only files', () => {
     assert.equal(scope.website, true);
     assert.equal(scope.examples_chat, true);
     assert.equal(scope.growth_lifecycle, true);
+    assert.equal(scope.growth_research, true);
     // E2e / smoke / deploy / posthog scopes: false
     assert.equal(scope.website_e2e, false);
     assert.equal(scope.cockpit_e2e, false);
@@ -153,6 +154,35 @@ describe('classifyFromAffected — lint-only files', () => {
     assert.equal(scope.cockpit_e2e, true);
     assert.equal(scope.cockpit_examples, true);
     assert.equal(scope.cockpit_smoke, true);
+  });
+});
+
+describe('growth research project ownership', () => {
+  it('maps the actual Growth Research project tag to its own CI lane', async () => {
+    const project = JSON.parse(
+      await readFile('apps/growth-research/project.json', 'utf8')
+    );
+    const scope = classifyFromAffected(
+      ['apps/growth-research/src/pilot/context.ts'],
+      [{ name: project.name, tags: project.tags }]
+    );
+    assert.deepEqual(scope, { ...emptyScope(), growth_research: true });
+  });
+
+  it('Nx selects Growth Research for a pilot source change', () => {
+    assert.ok(
+      nxAffectedFiles('apps/growth-research/src/pilot/context.ts').includes(
+        'growth-research'
+      )
+    );
+  });
+
+  it('leaves Growth Research out of unrelated website-only scopes', () => {
+    const scope = classifyFromAffected(
+      ['apps/website/src/app/page.tsx'],
+      [{ name: 'website', tags: WEBSITE_TAGS }]
+    );
+    assert.equal(scope.growth_research, false);
   });
 });
 
@@ -562,7 +592,7 @@ describe('classifyFromAffected — examples/ag-ui', () => {
 });
 
 describe('SCOPE_KEYS export', () => {
-  it('contains the 14 documented scope keys', () => {
+  it('contains the 15 documented scope keys', () => {
     assert.deepEqual(SCOPE_KEYS, [
       'library',
       'angular_compatibility',
@@ -578,6 +608,7 @@ describe('SCOPE_KEYS export', () => {
       'posthog',
       'scripts_tests',
       'growth_lifecycle',
+      'growth_research',
     ]);
   });
 });
