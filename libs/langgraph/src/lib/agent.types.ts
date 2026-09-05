@@ -277,7 +277,15 @@ export interface AgentOptions<T, _ResolvedBag extends BagTemplate> {
   throttle?: number | false;
   /** Custom message deserializer for non-standard message formats. */
   toMessage?: (msg: unknown) => BaseMessage;
-  /** Custom transport. Defaults to FetchStreamTransport. */
+  /**
+   * Custom transport. Defaults to FetchStreamTransport.
+   *
+   * A custom transport owns its own thread creation, so the runtime cannot
+   * observe it directly: report every thread id the transport creates through
+   * this config's {@link AgentOptions.onThreadId} or through the `threadId`
+   * signal, otherwise the runtime keeps sending `null` and a new thread is
+   * created on each submit.
+   */
   transport?: AgentTransport;
   /** Tuning options for the default transport's LangGraph SDK client (e.g. retry budget). */
   clientOptions?: LangGraphClientOptions;

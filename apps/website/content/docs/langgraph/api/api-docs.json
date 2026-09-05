@@ -949,7 +949,7 @@
       {
         "name": "transport",
         "type": "AgentTransport",
-        "description": "Custom transport. Defaults to FetchStreamTransport.",
+        "description": "Custom transport. Defaults to FetchStreamTransport.\n\nA custom transport owns its own thread creation, so the runtime cannot\nobserve it directly: report every thread id the transport creates through\nAgentConfig.onThreadId or through the `threadId` signal, otherwise\nthe runtime keeps sending `null` and a new thread is created on each submit.",
         "optional": true
       }
     ],
@@ -1091,7 +1091,7 @@
       {
         "name": "transport",
         "type": "AgentTransport",
-        "description": "Custom transport. Defaults to FetchStreamTransport.",
+        "description": "Custom transport. Defaults to FetchStreamTransport.\n\nA custom transport owns its own thread creation, so the runtime cannot\nobserve it directly: report every thread id the transport creates through\nthis config's AgentOptions.onThreadId or through the `threadId`\nsignal, otherwise the runtime keeps sending `null` and a new thread is\ncreated on each submit.",
         "optional": true
       }
     ],
