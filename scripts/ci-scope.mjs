@@ -12,7 +12,6 @@ export const SCOPE_KEYS = [
   'cockpit',
   'cockpit_examples',
   'cockpit_smoke',
-  'cockpit_deploy_smoke',
   'cockpit_e2e',
   'examples_chat',
   'examples_ag_ui',
@@ -83,9 +82,8 @@ const LINT_SCOPE_KEYS = [
  *  cockpit/<product>/, which is outside every project root. `nx affected`
  *  therefore attributes them to the `root` project, and `root` carries no
  *  `scope:` tag — so a PR touching only these specs produced an empty scope
- *  and skipped the very job that runs them. They execute under
- *  `nx test cockpit` (see apps/cockpit/vite.config.mts), so map them onto the
- *  cockpit scope by path. */
+ *  and skipped the job that owns cockpit changes. Map them onto the cockpit
+ *  scope by path so that job still runs. */
 const COCKPIT_ROOTLESS_SPEC = /^cockpit\/[^/]+\/[^/]+\.spec\.ts$/;
 
 export function emptyScope() {

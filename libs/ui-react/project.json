@@ -5,7 +5,6 @@
   "projectType": "library",
   "tags": [
     "scope:cockpit",
-    "scope:cockpit-deploy-smoke",
     "scope:cockpit-e2e",
     "scope:cockpit-examples",
     "scope:shared",
