@@ -34,7 +34,10 @@ import {
   type LibraryId,
 } from '../../../../../lib/docs-config';
 import { WebsiteWorkspace } from '../../../../../components/workspace/WebsiteWorkspace';
-import { getWebsiteWorkspacePage } from '../../../../../lib/workspace-page';
+import {
+  getExampleCodeContext,
+  getWebsiteWorkspacePage,
+} from '../../../../../lib/workspace-page';
 import fs from 'fs';
 import path from 'path';
 
@@ -168,7 +171,10 @@ export default async function DocsPage({ params }: DocsRouteProps) {
             />
           </div>
           <article className="flex-1 py-8 px-4 sm:px-6 md:px-12 md:max-w-3xl">
-            <MdxRenderer source={doc.body} />
+            <MdxRenderer
+              source={doc.body}
+              exampleCode={getExampleCodeContext(workspacePage)}
+            />
           </article>
           {section === 'api' &&
             (() => {

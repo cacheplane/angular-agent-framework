@@ -4,7 +4,10 @@ import { compile } from '@tailwindcss/node';
 import { Scanner } from '@tailwindcss/oxide';
 import { describe, expect, it } from 'vitest';
 import { nextConfig } from '../../next.config';
-import { getWebsiteWorkspacePage } from './workspace-page';
+import {
+  getExampleCodeContext,
+  getWebsiteWorkspacePage,
+} from './workspace-page';
 
 const workspaceRoot = process.cwd().endsWith('/apps/website')
   ? resolve(process.cwd(), '../..')
@@ -101,6 +104,30 @@ describe('getWebsiteWorkspacePage', () => {
       runnable: false,
     });
     expect(page.contentBundle.runtimeUrl).toBeNull();
+  });
+
+  it('builds an example-code context for a page with code assets', async () => {
+    const model = await getWebsiteWorkspacePage({
+      docsPath: '/docs/langgraph/guides/streaming',
+      title: 'Streaming',
+    });
+    const context = getExampleCodeContext(model);
+
+    expect(context?.docsPath).toBe('/docs/langgraph/guides/streaming');
+    expect(context?.assetPaths).toEqual([
+      'cockpit/langgraph/streaming/angular/src/app/streaming.component.ts',
+      'cockpit/langgraph/streaming/angular/src/app/app.config.ts',
+      'cockpit/langgraph/streaming/python/src/graph.py',
+    ]);
+    expect(Object.keys(context?.sources ?? {})).toEqual(context?.assetPaths);
+  });
+
+  it('has no example-code context for a docs-only page', async () => {
+    const model = await getWebsiteWorkspacePage({
+      docsPath: '/docs/langgraph/guides/testing',
+      title: 'Testing',
+    });
+    expect(getExampleCodeContext(model)).toBeNull();
   });
 
   it('traces registry-owned workspace assets in production bundles', () => {

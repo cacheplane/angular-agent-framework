@@ -19,6 +19,8 @@ import {
   TelemetryHowItFits,
 } from './diagrams';
 import { mdxCompileOptions } from './mdx-options';
+import { createExampleCode } from './mdx/ExampleCode';
+import type { ExampleCodeContext } from '../../lib/example-code';
 
 /**
  * Intrinsic size of each SVG diagram in `public/blog/diagrams`.
@@ -87,14 +89,19 @@ const mdxComponents = {
 
 interface MdxRendererProps {
   source: string;
+  /** Present on docs pages that embed a runnable example; null elsewhere. */
+  exampleCode?: ExampleCodeContext | null;
 }
 
-export function MdxRenderer({ source }: MdxRendererProps) {
+export function MdxRenderer({ source, exampleCode = null }: MdxRendererProps) {
   return (
     <div className="docs-prose">
       <MDXRemote
         source={source}
-        components={mdxComponents}
+        components={{
+          ...mdxComponents,
+          ExampleCode: createExampleCode(exampleCode),
+        }}
         options={mdxCompileOptions}
       />
     </div>

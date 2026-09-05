@@ -15,6 +15,8 @@ interface ElementProps {
   resolution?: { kind?: string; identity?: { availableModes?: string[] } };
   contentBundle?: { runtimeUrl?: string | null };
   contextTrail?: readonly { label: string; href?: string; icon?: ReactNode }[];
+  docsContext?: unknown;
+  exampleCode?: { assetPaths?: readonly string[] } | null;
 }
 
 function findElement(
@@ -63,6 +65,14 @@ describe('unified docs workspace route', () => {
       activeSection: 'guides',
       activeSlug: 'streaming',
     });
+
+    const mdx = findElement(
+      workspace?.props.docsSlot,
+      MdxRenderer as ComponentType<never>
+    );
+    expect(mdx?.props.exampleCode?.assetPaths).toContain(
+      'cockpit/langgraph/streaming/angular/src/app/streaming.component.ts'
+    );
   });
 
   it('keeps an unmapped page as a complete server Docs slot', async () => {
@@ -78,6 +88,9 @@ describe('unified docs workspace route', () => {
       findElement(slot, DocsPageHeader as ComponentType<never>)
     ).toBeTruthy();
     expect(findElement(slot, MdxRenderer as ComponentType<never>)).toBeTruthy();
+    expect(
+      findElement(slot, MdxRenderer as ComponentType<never>)?.props.exampleCode
+    ).toBeNull();
     expect(findElement(slot, DocsTOC as ComponentType<never>)).toBeTruthy();
   });
 
