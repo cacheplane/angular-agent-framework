@@ -6,6 +6,20 @@ const extract = (html: string) =>
   extractEvidence(new TextEncoder().encode(html));
 
 describe('company evidence content selection', () => {
+  it('excludes unmarked header link lists without removing hero headings or paragraphs', () => {
+    expect(
+      extract(
+        '<header><h1>Email for developers</h1><div><ul><li><button>Features</button></li><li><a href="/ai">AI</a></li></ul></div><p>Transactional email infrastructure.</p></header><section><ul><li>Email APIs with delivery webhooks.</li></ul></section>'
+      )
+    ).toEqual({
+      facts: ['Email for developers'],
+      snippets: [
+        'Transactional email infrastructure.',
+        'Email APIs with delivery webhooks.',
+      ],
+    });
+  });
+
   it.each(['footer', 'div role="contentinfo"'])(
     'excludes unmarked footer link groups in %s while retaining company metadata',
     (tag) => {

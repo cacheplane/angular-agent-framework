@@ -495,6 +495,15 @@ const EXECUTABLE_ELEMENTS = new Set(['script', 'style', 'noscript']);
 const CHROME_ROLES = new Set(['navigation', 'menu', 'menubar', 'contentinfo']);
 
 function excludesEvidence(element: DefaultTreeAdapterTypes.Element): boolean {
+  // Header lists commonly hold navigation without a nav landmark. Keep hero
+  // headings and paragraphs, and keep product lists elsewhere in the page.
+  if (element.tagName === 'ul' || element.tagName === 'ol') {
+    let parent = element.parentNode;
+    while (parent) {
+      if ('tagName' in parent && parent.tagName === 'header') return true;
+      parent = 'parentNode' in parent ? parent.parentNode : null;
+    }
+  }
   return (
     EXECUTABLE_ELEMENTS.has(element.tagName) ||
     element.tagName === 'nav' ||
