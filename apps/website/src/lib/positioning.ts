@@ -110,25 +110,6 @@ export class SupportAgentComponent {
 }`;
 
 /**
- * Pinned "what does not change" pane of the runtime-parity section. Unlike
- * COMPONENT_SNIPPET (used for the dialog/three-steps), this must not import
- * from an adapter package — `injectAgent` comes from whichever adapter you
- * picked, so the pinned pane stays adapter-neutral and true under AG-UI too.
- */
-export const PINNED_COMPONENT_SNIPPET = `import { Component } from '@angular/core';
-import { ChatComponent, type Agent } from '@threadplane/chat';
-
-@Component({
-  imports: [ChatComponent],
-  template: \`<chat [agent]="agent" />\`,
-})
-export class SupportAgentComponent {
-  // injectAgent() comes from the adapter you chose above;
-  // the component only depends on the runtime-neutral Agent contract.
-  protected readonly agent: Agent = injectAgent();
-}`;
-
-/**
  * Step 3 of the mechanism section: registering your own design-system
  * components so generated UI can only render what you already own.
  * Mirrors the real API — `provideViews(views({ … }))` from @threadplane/render.

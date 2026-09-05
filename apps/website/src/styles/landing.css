@@ -725,7 +725,10 @@
   color: var(--color-text-muted);
 }
 
-/* DemoModal — components/landing/DemoModal.tsx (backdrop provided by [data-ui="modal"] in ui.css) */
+/* DemoModal — components/landing/DemoModal.tsx. The component is currently
+ * unmounted (orphaned by the homepage restructure, pending plan 3); these
+ * rules are kept for when it is remounted. Backdrop provided by
+ * [data-ui="modal"] in ui.css. */
 @keyframes demoModalFrame { from { transform: scale(.96); opacity: .6 } to { transform: scale(1); opacity: 1 } }
 .demo-modal__frame {
   width: min(96vw, calc(90vh * 16 / 10));
@@ -822,94 +825,6 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .demo-modal__frame { animation: none !important; }
-}
-
-/* .demo-showcase-* — retired with DemoShowcase.tsx (homepage restructure).
- * Kept only until the remaining demo surfaces stop borrowing these rules. */
-.demo-showcase {
-  max-width: 760px;
-  margin: 0 auto;
-}
-.demo-showcase__rail {
-  display: flex;
-  align-items: baseline;
-  gap: 14px;
-}
-.demo-showcase__rail-line {
-  flex: 1;
-  height: 1px;
-  background: var(--color-border);
-}
-.demo-showcase__eyebrow {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-accent);
-  margin: 0;
-}
-.demo-showcase__heading {
-  font-family: var(--font-garamond);
-  font-size: var(--text-h2);
-  line-height: var(--text-h2--line-height);
-  font-weight: 700;
-  color: var(--color-text-primary);
-  margin: 10px 0 8px;
-  letter-spacing: -0.015em;
-}
-.demo-showcase__subhead {
-  font-family: var(--font-inter);
-  font-size: var(--text-body-lg);
-  line-height: var(--text-body-lg--line-height);
-  color: var(--color-text-secondary);
-  max-width: 560px;
-  margin: 0 0 20px;
-}
-.demo-showcase__launch-btn {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  background: linear-gradient(180deg, rgba(16, 18, 32, .15), rgba(16, 18, 32, .45));
-  border: none;
-  cursor: pointer;
-}
-.demo-showcase__launch-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, .95);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #15161f;
-  font-size: 22px;
-}
-.demo-showcase__launch-label {
-  font-family: var(--font-inter);
-  font-weight: 600;
-  font-size: 13px;
-  color: #fff;
-  background: rgba(0, 0, 0, .5);
-  padding: 8px 14px;
-  border-radius: 8px;
-}
-.demo-showcase__cta-row {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-top: 18px;
-}
-.demo-showcase__caption {
-  font-family: var(--font-inter);
-  font-size: var(--text-caption);
-  color: var(--color-text-muted);
-  margin: 14px 0 0;
 }
 
 /* HighlightedCode — components/landing/HighlightedCode.tsx
@@ -1400,54 +1315,6 @@
   }
 }
 
-/* ---------- .logo-ribbon-* — retired with LogoRibbon.tsx; the ribbon now
- * lives inside components/landing/Reliability.tsx ---------- */
-.logo-ribbon {
-  background: var(--color-canvas);
-  border-top: 1px solid var(--color-border);
-  /* No border-bottom: the dark proof band directly below draws its own accent
-   * seam at the boundary; two hairlines would stack. */
-}
-.logo-ribbon-line {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px 26px;
-  padding: 16px 0;
-}
-.logo-ribbon-label {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-}
-.logo-ribbon-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  white-space: nowrap;
-}
-.logo-ribbon-logo {
-  width: 16px;
-  height: 16px;
-  object-fit: contain;
-}
-.logo-ribbon-name {
-  font-family: var(--font-inter);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--color-text-secondary);
-}
-.logo-ribbon-more {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-}
-
 /* Shared rail for the three CodeShowcase intros — the last centered kicker
  * grammar, unified with the sitewide rail anatomy. */
 .show-intro-rail {
@@ -1716,144 +1583,13 @@
   }
 }
 
-/* ---------- .parity-* — RuntimeParity.tsx was retired by the homepage
- * restructure; components/landing/AdapterGuideLink.tsx still uses
- * `.parity-cta` ---------- */
-.parity {
-  margin-top: 24px;
-}
-.parity-toggle {
-  display: inline-flex;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  overflow: hidden;
-  margin-bottom: 16px;
-}
-.parity-toggle-btn {
-  padding: 8px 16px;
-  border: 0;
-  background: transparent;
-  font: inherit;
-  font-size: 14px;
-  cursor: pointer;
-}
-.parity-toggle-btn[aria-checked='true'] {
-  background: var(--color-text-primary);
-  color: var(--color-surface);
-}
-.parity-toggle-btn:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: -2px;
-}
-.parity-panes {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-}
-.parity-pane {
-  min-width: 0;
-}
-.parity-pane .shiki {
-  overflow-x: auto;
-}
-.parity-pane-label {
-  margin: 0 0 8px;
-  font-size: 13px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.parity-pane-file {
-  font-family: var(--font-mono);
-  font-weight: 400;
-  color: var(--color-text-muted);
-}
-.parity-pane-badge {
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: #2f6f4f22;
-  color: #2f6f4f;
-}
-.parity-pane[data-pinned] {
-  outline: 2px solid #2f6f4f66;
-  outline-offset: 6px;
-  border-radius: 8px;
-}
-.parity-qualifier {
-  margin: 20px 0 0;
-  font-size: 14px;
-  color: var(--color-text-muted);
-}
+/* .parity-cta — RuntimeParity.tsx was retired by the homepage restructure,
+ * but components/landing/AdapterGuideLink.tsx still defaults its className
+ * to `.parity-cta`, so this one rule stays live. */
 .parity-cta {
   color: var(--color-accent);
   font-weight: 600;
   text-decoration: none;
-}
-@media (max-width: 767px) {
-  .parity-panes {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ---------- .three-steps-* — retired with ThreeSteps.tsx (homepage
- * restructure) ---------- */
-.three-steps {
-  list-style: none;
-  margin: 24px 0 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
-  counter-reset: s;
-}
-.three-step {
-  counter-increment: s;
-  min-width: 0;
-}
-.three-step-title {
-  margin: 0 0 6px;
-  font-size: 17px;
-}
-.three-step-title::before {
-  content: counter(s) ' · ';
-  color: var(--color-accent);
-}
-.three-step-body {
-  margin: 0 0 12px;
-  font-size: 14px;
-  color: var(--color-text-muted);
-}
-.three-step-code .shiki {
-  overflow-x: auto;
-  font-size: 12.5px;
-}
-@media (max-width: 1023px) {
-  .three-steps {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ── Coding-agent quickstart (Task 11) ───────────────────────────────────── */
-.coding-agent-prompt {
-  margin: 20px 0 16px;
-  padding: 16px;
-  border-radius: 10px;
-  overflow-x: auto;
-  background: #1c1c1e;
-  color: #e8e8e8;
-  font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: 13px;
-  line-height: 1.55;
-  white-space: pre-wrap;
-}
-
-.coding-agent-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
 }
 
 /* ── Scope table (Task 13) ───────────────────────────────────────────────── */
