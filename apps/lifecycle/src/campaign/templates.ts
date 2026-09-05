@@ -175,8 +175,8 @@ const CAMPAIGN_TEMPLATES: Record<CampaignStep, CampaignDraft> = {
     body: `Thanks for taking a look at Threadplane.\n\nA lot of teams hit the same point.\nThe idea is clear.\nGetting it working cleanly in production is where things get messy.\n\nI am the founder, and I am offering short engineer-to-engineer sessions to think through implementation, unblock technical questions, and avoid the common mistakes.\n\nNo sales pitch.\nJust a practical conversation about your use case and what it would take to get it working.\n\nYou can grab a time here:\n${FOUNDER_BOOKING_URL}`,
   },
   'day-3': {
-    subject: 'One debugging shortcut',
-    body: 'If an agent UI stalls, I usually isolate transport, state updates, and rendering in that order. It turns a vague integration problem into three small checks.\n\nWhich layer is blocking you?\n\nhttps://threadplane.ai/docs',
+    subject: 'Get your agent UI into production',
+    body: `Even with agents writing much of our code today, teams still get stuck.\n\nI can help you work through any issue with Threadplane in a 30-minute hands-on session: fix the bug, and get your code working.\n\nNo sales.\nJust the founder meeting with you and your engineering team.\n\nBook a time with me:\n${FOUNDER_BOOKING_URL}`,
   },
   'day-8': {
     subject: 'One last architecture note',

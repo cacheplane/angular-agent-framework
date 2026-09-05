@@ -236,9 +236,9 @@ function draftFor(
   step: 1 | 2 | 3,
   artifact: EnrichmentArtifact | null
 ): CampaignDraft {
-  // Step one is always the founder session offer; research angles only shape
-  // the two follow-ups.
-  if (step !== 1 && artifact) {
+  // Steps one and two are always the founder session offers; a research
+  // angle only shapes the final follow-up.
+  if (step === 3 && artifact) {
     const selection = artifact.drafts[step - 1];
     const cited =
       selection !== null &&
@@ -258,7 +258,7 @@ function signedText(
   body: string,
   unsubscribeUrl: UnsubscribeActionUrl
 ): string {
-  return `${body}\n\n—\nBrian\n\nTo stop these emails: ${unsubscribeActionUrlValue(
+  return `${body}\n\n—\nBrian\n\nIs this email not relevant to you? Stop here: ${unsubscribeActionUrlValue(
     unsubscribeUrl
   )}`;
 }
@@ -311,7 +311,7 @@ function signedHtml(
   return [
     ...paragraphs,
     '<p>—<br>Brian</p>',
-    `<p>To stop these emails, click <a href="${unsubscribe}">here</a>.</p>`,
+    `<p>Is this email not relevant to you? Click <a href="${unsubscribe}">here</a>.</p>`,
   ].join('\n');
 }
 

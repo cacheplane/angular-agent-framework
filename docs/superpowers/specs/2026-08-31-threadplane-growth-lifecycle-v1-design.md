@@ -668,7 +668,7 @@ apps/lifecycle should declare Dawn Core/CLI/LangGraph/Postgres Storage/SDK 0.8.2
 | Step | Due                                                 | Purpose                                                                                                                            |
 | ---- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | 1    | Immediately on enrollment (research is not awaited) | Founder session offer: thank them, name the pilot-to-production gap, offer an engineer-to-engineer session, link the booking page. |
-| 2    | Day 3                                               | Help with one missing activation milestone and ask for the blocking detail.                                                        |
+| 2    | Day 3                                               | Second founder offer: teams still get stuck, offer a 30-minute hands-on session with the founder, link the booking page.           |
 | 3    | Day 8                                               | Offer concise architecture help, ask one reply-oriented question, and state it is the last automated follow-up.                    |
 
 Copy constraints:

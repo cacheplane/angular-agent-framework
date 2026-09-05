@@ -153,7 +153,7 @@ describe('prepareCampaignMessage', () => {
         status: 'ready',
         subject: [
           'Engineer to engineer',
-          'One debugging shortcut',
+          'Get your agent UI into production',
           'One last architecture note',
         ][step - 1],
       });
@@ -198,10 +198,10 @@ describe('prepareCampaignMessage', () => {
     expect(
       prepareCampaignMessage({
         context: context({ enrichmentArtifact: cited }),
-        job: job('send_step', { campaign_version: 'v1', step: 2 }),
+        job: job('send_step', { campaign_version: 'v1', step: 3 }),
         unsubscribeUrl: UNSUBSCRIBE,
       })
-    ).toMatchObject({ status: 'ready', subject: 'A debugging sequence' });
+    ).toMatchObject({ status: 'ready', subject: 'One event-state boundary' });
   });
 
   it.each([
@@ -246,12 +246,14 @@ describe('prepareCampaignMessage', () => {
         status: 'ready',
         subject: [
           'Engineer to engineer',
-          'A debugging sequence',
+          'Get your agent UI into production',
           'One event-state boundary',
         ][step - 1],
       });
       if (prepared.status !== 'ready') throw new Error('expected ready');
-      expect(prepared.text).toContain('\n\n—\nBrian\n\nTo stop these emails: ');
+      expect(prepared.text).toContain(
+        '\n\n—\nBrian\n\nIs this email not relevant to you? Stop here: '
+      );
       expect(prepared.text).toContain(unsubscribeActionUrlValue(UNSUBSCRIBE));
       expect(prepared.text).not.toContain('ada@example.com');
     }
@@ -291,7 +293,7 @@ describe('prepareCampaignMessage', () => {
     expect(prepared.html).toContain('<p>—<br>Brian</p>');
     expect(
       prepared.html.endsWith(
-        `<p>To stop these emails, click <a href="${unsubscribeUrl}">here</a>.</p>`
+        `<p>Is this email not relevant to you? Click <a href="${unsubscribeUrl}">here</a>.</p>`
       )
     ).toBe(true);
     expect(prepared.html.split(unsubscribeUrl)).toHaveLength(2);
@@ -299,7 +301,9 @@ describe('prepareCampaignMessage', () => {
       /<(?:img|script|style|div|span|table)\b/iu
     );
     expect(prepared.html.replace(/<[^>]+>/gu, '')).not.toContain('unsubscribe');
-    expect(prepared.text).toContain(`To stop these emails: ${unsubscribeUrl}`);
+    expect(prepared.text).toContain(
+      `Is this email not relevant to you? Stop here: ${unsubscribeUrl}`
+    );
   });
 
   it('escapes body text and keeps only bare links as anchors in the HTML part', () => {
@@ -317,9 +321,11 @@ describe('prepareCampaignMessage', () => {
     });
 
     expect(prepared.html).toContain(
-      '<p><a href="https://threadplane.ai/docs">https://threadplane.ai/docs</a></p>'
+      `me:<br><a href="${FOUNDER_BOOKING_URL}">${FOUNDER_BOOKING_URL}</a></p>`
     );
-    expect(prepared.html).toMatch(/^<p>[^<]+<\/p>\n<p>[^<]+<\/p>\n<p><a /u);
+    expect(prepared.html).toMatch(
+      /^<p>[^<]+<\/p>\n<p>[^<]+<\/p>\n<p>[^<]+<br>/u
+    );
     expect(prepared.html).not.toContain('&lt;');
   });
 
@@ -417,8 +423,8 @@ describe('dispatchLifecycleAppOwnedJob', () => {
         jobId: send.id,
         leaseToken: LEASE_TOKEN,
         subject: 'Engineer to engineer',
-        text: expect.stringContaining('To stop these emails: '),
-        html: expect.stringContaining('click <a href="'),
+        text: expect.stringContaining('Stop here: '),
+        html: expect.stringContaining('Click <a href="'),
         unsubscribeUrl: UNSUBSCRIBE,
       }),
       deps.recipientPolicy

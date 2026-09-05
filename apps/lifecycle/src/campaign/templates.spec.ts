@@ -15,7 +15,7 @@ function wordCount(value: string): number {
 describe('renderCampaignTemplate', () => {
   it.each([
     ['immediate', 'Engineer to engineer', 0, 1],
-    ['day-3', 'One debugging shortcut', 1, 1],
+    ['day-3', 'Get your agent UI into production', 0, 1],
     ['day-8', 'One last architecture note', 1, 0],
   ] as const)(
     'returns the fixed neutral %s template',
@@ -41,6 +41,16 @@ describe('renderCampaignTemplate', () => {
     ).toBe(true);
     expect(message.body).toContain('No sales pitch.');
     expect(message.body).not.toMatch(/\b(?:I saw you|checked out)\b/iu);
+    expect(message.body).not.toMatch(/\b\w+'\w+\b/u);
+  });
+
+  it('follows up with a hands-on session offer that links only to the booking page', () => {
+    const message = renderCampaignTemplate('day-3');
+
+    expect(
+      message.body.endsWith(`Book a time with me:\n${FOUNDER_BOOKING_URL}`)
+    ).toBe(true);
+    expect(message.body).toContain('No sales.');
     expect(message.body).not.toMatch(/\b\w+'\w+\b/u);
   });
 
