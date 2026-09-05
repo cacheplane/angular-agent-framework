@@ -100,7 +100,7 @@ export class ChatComponent {
 
 ### The running example
 
-The demo in the Run tab is the smallest real integration of this pattern. The component below is the one that renders it: it injects the agent configured in `app.config.ts` and hands it to the prebuilt `<chat>` composition, which owns message rendering, input, and the typing indicator.
+The demo in the Run tab is the smallest real integration of this pattern. The snippet above sketches the pieces by hand; the real component uses the prebuilt `<chat>` composition instead. It injects the agent configured in `app.config.ts` and hands it to `<chat>`, which owns message rendering, input, and the typing indicator.
 
 <ExampleCode file="streaming.component.ts" />
 

@@ -670,6 +670,7 @@ body:has([data-website-workspace-host]) {
   border: 1px solid var(--docs-code-border);
   border-bottom: 1px solid var(--docs-code-title-rule);
   border-radius: 0.75rem 0.75rem 0 0;
+  overflow-wrap: anywhere;
 }
 .docs-prose .mdx-example-code [data-rehype-pretty-code-figure] {
   margin: 0;
