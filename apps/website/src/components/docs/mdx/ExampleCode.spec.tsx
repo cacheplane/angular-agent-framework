@@ -26,7 +26,11 @@ const context: ExampleCodeContext = {
 
 function findMdx(
   node: ReactNode
-): ReactElement<{ source: string; components: object }> | null {
+): ReactElement<{
+  source: string;
+  components: object;
+  options?: unknown;
+}> | null {
   if (Array.isArray(node)) {
     for (const child of node) {
       const found = findMdx(child);

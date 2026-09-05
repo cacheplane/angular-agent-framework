@@ -12,8 +12,8 @@ three different code versions:
 1. The running example under `cockpit/<product>/<topic>/` (Angular app plus
    a Python or TypeScript backend), shown live in the Run tab and as
    highlighted source in the Code tab.
-2. A walkthrough at `cockpit/<product>/<topic>/python/docs/guide.md` (40
-   files, about 6,000 lines) written with `<Summary>`, `<Prompt>` and
+2. A walkthrough at `cockpit/<product>/<topic>/python/docs/guide.md` (41
+   files, about 4,800 lines) written with `<Summary>`, `<Prompt>` and
    `<Steps>` tags for the workspace's narrative-docs panel. On the Website
    the docs page's own MDX fills the Docs tab, so these walkthroughs are
    never rendered anywhere.
@@ -101,15 +101,19 @@ Props:
 - `title` (optional): overrides the title bar, which defaults to the
   basename.
 
-Rendering: whole-file includes render the bundle's existing highlighted HTML.
-Region includes need raw source, so `ContentBundle` gains `codeSources:
-Record<string, string>` (raw text keyed like `codeFiles`) and the component
-highlights the slice with the same `highlightCode`. Output is wrapped in the
-same markup `Pre` produces (`mdx-pre-wrap`, `mdx-pre`, the copy button and
-its analytics event, `data-title`) so every existing style and the copy
-behaviour apply unchanged and `CodeGroup` can tab several `ExampleCode`
-blocks. The Code tab's markers stay visible there; they read as the
-documentation anchors they are.
+Rendering: both whole-file and region includes work from raw source, so
+`ContentBundle` gains `codeSources: Record<string, string>` (raw text keyed
+like `codeFiles`). The component synthesizes a fenced block from the
+requested slice and renders it through `MDXRemote` with the page's own
+compile options (`components/docs/mdx-options.ts`) and `pre: Pre`, so
+highlighting, the copy button and its analytics event, and every `mdx-pre`
+style come from the one existing code pipeline rather than a second one.
+The bundle's highlighted `codeFiles` continues to serve the Code tab only.
+The block is wrapped in a titled card (`mdx-example-code`). Tabbing several
+`ExampleCode` blocks through `CodeGroup` is not supported in PR 1, because
+`CodeGroup` derives its tab labels from a child's `data-title` prop; PR 2
+decides whether to add that. The Code tab's markers stay visible there; they
+read as the documentation anchors they are.
 
 ### 2. Guards
 
@@ -154,8 +158,8 @@ Delete `components/narrative-docs/*`, the `narrativeDocs` branch in
 `workspace-shell.tsx`, the Summary/Prompt/Steps handling and `renderMarkdown`
 in `render-markdown.ts` (keep `highlightCode` and its helpers, moving them if
 that empties the file), `narrativeDocs` from `ContentBundle`, `docsAssetPaths`
-from the descriptor type, `workspace-presentation.ts` and all 40 descriptors,
-and every spec case that covered them. The 40 `guide.md` files stay on disk
+from the descriptor type, `workspace-presentation.ts` and all 41 descriptors,
+and every spec case that covered them. The 41 `guide.md` files stay on disk
 until the product PR that absorbs them deletes them; after PR 1 nothing
 references them.
 

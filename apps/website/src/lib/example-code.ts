@@ -52,6 +52,8 @@ export function resolveExampleFile(
 }
 
 const REGION_START = /^\s*(?:\/\/|#|<!--)\s*#?region\s+(\S+?)\s*(?:-->)?\s*$/;
+/** Any region start, named or not, so nesting depth stays balanced. */
+const REGION_ANY_START = /^\s*(?:\/\/|#|<!--)\s*#?region\b/;
 const REGION_END = /^\s*(?:\/\/|#|<!--)\s*#?endregion\b/;
 
 export function sliceRegion(
@@ -70,7 +72,7 @@ export function sliceRegion(
   let end = -1;
   for (let index = start + 1; index < lines.length; index++) {
     const line = lines[index];
-    if (REGION_START.test(line)) {
+    if (REGION_ANY_START.test(line)) {
       depth++;
     } else if (REGION_END.test(line)) {
       depth--;

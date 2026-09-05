@@ -132,6 +132,27 @@ describe('sliceRegion', () => {
     expect(sliceRegion(source, 'inner', 'f.ts')).toBe('const b = 2;');
   });
 
+  it('counts an unnamed nested region so the outer slice is not cut short', () => {
+    const source = [
+      '// #region outer',
+      'const a = 1;',
+      '// #region',
+      'const b = 2;',
+      '// #endregion',
+      'const c = 3;',
+      '// #endregion',
+    ].join('\n');
+    expect(sliceRegion(source, 'outer', 'f.ts')).toBe(
+      [
+        'const a = 1;',
+        '// #region',
+        'const b = 2;',
+        '// #endregion',
+        'const c = 3;',
+      ].join('\n')
+    );
+  });
+
   it('accepts an HTML marker with no space before the comment close', () => {
     expect(
       sliceRegion(
