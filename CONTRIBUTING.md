@@ -219,6 +219,37 @@ own Protection Bypass for Automation secret:
 flight does not reach that run; re-run after provisioning. Never pass
 `--skip-domain` to a preview deploy; Vercel requires it to accompany `--prod`.
 
+## Docs pages and example code
+
+A docs page whose capability ships a runnable example (the page shows Run and
+Code tabs) teaches through that example. Its code comes from the example
+files, never from a hand-typed copy:
+
+```mdx
+<ExampleCode file="streaming.component.ts" />
+<ExampleCode file="graph.py" region="stream-modes" title="Stream modes" />
+```
+
+- `file` is a basename or a repo-relative path among the capability's
+  `codeAssetPaths` and `backendAssetPaths` in
+  `libs/cockpit-registry/src/lib/content-descriptors.ts`. An unknown or
+  ambiguous name fails the build.
+- `region` names a marker pair in that file. Markers are `// #region name` …
+  `// #endregion` in TypeScript, `# region name` … `# endregion` in Python,
+  and `<!-- #region name -->` … `<!-- #endregion -->` in HTML. Regions may
+  nest. The marker lines are stripped from the rendered Code tab and the
+  slice is de-indented; keep region names meaningful, since they surface in
+  the build error when a region is missing or unterminated.
+- Hand-written fences stay allowed for fragments the example does not cover,
+  such as another runtime's variant.
+
+`apps/website/src/lib/docs-example-code.spec.ts` fails when a mapped page
+includes nothing, when an include does not resolve, or when a docs-only page
+uses the tag. Its scan is textual, so the tag must not appear in prose,
+fenced code, or MDX comments on any docs page. Pages not yet rewritten sit in
+its `PENDING_PAGES` list; a page that gains its first include must leave the
+list in the same change.
+
 ## Code review
 
 Every PR gets a genuine advisory AI code review
