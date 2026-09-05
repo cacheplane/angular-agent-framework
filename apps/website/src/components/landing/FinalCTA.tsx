@@ -137,9 +137,9 @@ export function FinalCTA({
                   <a href={captionLink.href}>{captionLink.label}</a>
                 </>
               ) : null}
-              {captionLinks.map((link) => (
+              {captionLinks.map((link, i) => (
                 <span key={link.href}>
-                  {' · '}
+                  {caption || captionLink || i > 0 ? ' · ' : null}
                   <a href={link.href}>{link.label}</a>
                 </span>
               ))}

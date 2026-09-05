@@ -103,6 +103,10 @@ describe('FinalCTA', () => {
     const list = screen.getByRole('list', { name: 'What you can prove first' });
     expect(list.querySelectorAll('li')).toHaveLength(2);
     expect(screen.getByText('provideFakeAgent()')).toBeTruthy();
+    const heading = screen.getByRole('heading', { level: 2 });
+    expect(list.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(list.querySelector('.final-cta-prove-row-claim')?.textContent).toBe('No key, no server, no network');
+    expect(list.querySelector('.final-cta-prove-row-api')?.textContent).toBe('provideFakeAgent()');
   });
 
   it('renders no rows list when rows are omitted', () => {
@@ -125,6 +129,19 @@ describe('FinalCTA', () => {
     expect(screen.getByRole('link', { name: 'Setup prompt for coding agents' }).getAttribute('href')).toBe(
       '/docs/chat/getting-started/coding-agents',
     );
+  });
+
+  it('does not lead with a separator when captionLinks is the only caption content', () => {
+    const { container } = render(
+      <FinalCTA
+        primary={{ label: 'Go', href: '/go' }}
+        captionLinks={[
+          { label: 'A', href: '/a' },
+          { label: 'B', href: '/b' },
+        ]}
+      />,
+    );
+    expect(container.querySelector('.final-cta-caption')?.textContent).toBe('A · B');
   });
 });
 

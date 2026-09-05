@@ -575,7 +575,7 @@
 /* Prove-it rows above the closing headline. FinalCTA.tsx `rows`. */
 .final-cta-rows {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 12px 24px;
   list-style: none;
   margin: 0 0 28px;
@@ -599,12 +599,6 @@
   color: var(--color-accent);
   overflow-wrap: anywhere;
 }
-@media (max-width: 640px) {
-  .final-cta-rows {
-    grid-template-columns: 1fr;
-  }
-}
-
 /* FinalCTA dark variant — the Yes wall's partner section. */
 [data-surface="dark"] .final-cta-inner {
   position: relative;
