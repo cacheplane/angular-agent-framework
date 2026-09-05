@@ -1,7 +1,27 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, mkdtemp, readdir, rm } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 const json = async (path) => JSON.parse(await readFile(resolve(path), 'utf8'));
 describe('install collector package assembly', () => {
+  it.each(['chat', 'langgraph', 'ag-ui', 'render'])(
+    'keeps the %s contributor workspace lifecycle inert',
+    async (name) => {
+      const directory = await mkdtemp(resolve(tmpdir(), 'threadplane-workspace-hook-'));
+      try {
+        const output = execFileSync(process.execPath, [resolve(`libs/${name}/install/postinstall.cjs`)], {
+          cwd: directory,
+          env: { PATH: process.env.PATH },
+          encoding: 'utf8',
+          timeout: 3000,
+        });
+        expect(output).toBe('');
+        expect(await readdir(directory)).toEqual([]);
+      } finally {
+        await rm(directory, { recursive: true, force: true });
+      }
+    }
+  );
   it.each(['chat', 'langgraph', 'ag-ui', 'render'])(
     'explicitly ships the shared hook in %s and includes it in build inputs',
     async (name) => {

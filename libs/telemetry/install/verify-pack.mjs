@@ -43,6 +43,9 @@ const request=new EventEmitter();request.destroy=()=>{};request.end=body=>{fs.ap
         ])
       ).stdout
     )[0];
+    const packagedHook = (await run('tar', ['-xOf', join(temporary, packed.filename), 'package/install/postinstall.cjs'])).stdout;
+    assert.equal(packagedHook, await readFile(resolve('libs/telemetry/install/postinstall.cjs'), 'utf8'), `${name} must ship the shared real hook`);
+    assert.notEqual(packagedHook, await readFile(resolve(`libs/${name}/install/postinstall.cjs`), 'utf8'), `${name} must not ship its contributor stub`);
     if (name === 'chat') {
       for (const subpath of [
         './chat.css',
