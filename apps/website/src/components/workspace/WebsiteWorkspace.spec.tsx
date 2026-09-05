@@ -70,7 +70,6 @@ const emptyContent: ContentBundle = {
   promptFiles: {},
   runtimeUrl: null,
   docSections: [],
-  narrativeDocs: [],
 };
 
 const docsOnlyResolution: WorkspaceResolution = {
@@ -119,7 +118,6 @@ const mappedPresentation = (
     promptAssetPaths: [],
     codeAssetPaths: ['example.ts'],
     backendAssetPaths: [],
-    docsAssetPaths: [],
     runnable: resolution.identity.availableModes.includes('Run'),
   };
 };

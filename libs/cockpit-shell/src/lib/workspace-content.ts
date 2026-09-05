@@ -10,7 +10,6 @@ import {
   extractTsDocSections,
   extractPyDocSections,
 } from './extract-docs';
-import { renderMarkdown } from './render-markdown';
 
 /**
  * Paths in the manifest are repo-root-relative (e.g., "apps/cockpit/src/app/page.tsx").
@@ -27,12 +26,6 @@ export function findWorkspaceRoot(startDir: string = process.cwd()): string {
   }
 }
 
-export interface NarrativeDoc {
-  title: string;
-  html: string;
-  sourceFile: string;
-}
-
 export interface ContentBundle {
   codeFiles: Record<string, string>;
   /** Raw text of every readable code or backend asset, keyed like codeFiles. */
@@ -40,7 +33,6 @@ export interface ContentBundle {
   promptFiles: Record<string, string>;
   runtimeUrl: string | null;
   docSections: DocSection[];
-  narrativeDocs: NarrativeDoc[];
 }
 
 export function resolveRuntimeUrl(options: {
@@ -151,7 +143,6 @@ export async function getContentBundle(
       promptFiles: {},
       runtimeUrl: null,
       docSections: [],
-      narrativeDocs: [],
     };
   }
 
@@ -195,32 +186,11 @@ export async function getContentBundle(
     devPort: presentation.devPort,
   });
 
-  const narrativeDocs: NarrativeDoc[] = [];
-  const docPaths = presentation.docsAssetPaths ?? [];
-  for (const path of docPaths) {
-    const source = readFileSafe(workspaceRoot, path);
-    if (source) {
-      try {
-        const rendered = await renderMarkdown(source);
-        const fileName = path.split('/').pop() ?? path;
-        narrativeDocs.push({
-          title: rendered.title,
-          html: rendered.html,
-          sourceFile: fileName,
-        });
-      } catch {
-        // A broken narrative asset must not prevent the rest of the Cockpit
-        // bundle, or later valid narratives, from loading.
-      }
-    }
-  }
-
   return {
     codeFiles,
     codeSources,
     promptFiles,
     runtimeUrl,
     docSections,
-    narrativeDocs,
   };
 }

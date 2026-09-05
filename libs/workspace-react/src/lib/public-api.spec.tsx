@@ -91,7 +91,6 @@ describe('@threadplane/workspace-react public boundary', () => {
             promptFiles: {},
             runtimeUrl: null,
             docSections: [],
-            narrativeDocs: [],
           }}
           routePath={resolution.docsPath}
           requestedMode="docs"

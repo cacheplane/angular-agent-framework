@@ -142,9 +142,6 @@ describe('runtimes capability presentation', () => {
       'deployments/ag-ui-mastra/agents.mjs',
       'deployments/ag-ui-mastra/server.mjs',
     ]);
-    expect(presentation.docsAssetPaths).toEqual([
-      'cockpit/runtimes/mastra/angular/docs/guide.md',
-    ]);
     expect(presentation.runtimeUrl).toBe('runtimes/mastra');
     expect(presentation.devPort).toBe(4332);
 
@@ -162,7 +159,6 @@ describe('runtimes capability presentation', () => {
       ...presentation.promptAssetPaths,
       ...presentation.codeAssetPaths,
       ...presentation.backendAssetPaths,
-      ...presentation.docsAssetPaths,
     ]) {
       expect(
         existsSync(join(workspaceRoot, path)),
@@ -243,7 +239,7 @@ describe('getCapabilityPresentation', () => {
     });
   });
 
-  it('includes durable execution docs assets from the capability module', () => {
+  it('resolves the durable execution docs path from the capability module', () => {
     const entry = resolveCockpitEntry({
       manifest: cockpitManifest,
       product: 'langgraph',
@@ -257,9 +253,6 @@ describe('getCapabilityPresentation', () => {
     expect(presentation).toMatchObject({
       kind: 'capability',
       docsPath: '/docs/langgraph/guides/durable-execution',
-      docsAssetPaths: [
-        'cockpit/langgraph/durable-execution/python/docs/guide.md',
-      ],
     });
   });
 
@@ -328,7 +321,6 @@ describe('getCapabilityPresentation', () => {
         promptAssetPaths: descriptor?.promptAssetPaths,
         codeAssetPaths: descriptor?.codeAssetPaths,
         backendAssetPaths: descriptor?.backendAssetPaths ?? [],
-        docsAssetPaths: descriptor?.docsAssetPaths ?? [],
         runtimeUrl: descriptor?.runtimeUrl,
         devPort: descriptor?.devPort,
       });
@@ -448,7 +440,6 @@ describe('getWorkspacePresentation', () => {
       promptAssetPaths: descriptor?.promptAssetPaths,
       codeAssetPaths: descriptor?.codeAssetPaths,
       backendAssetPaths: descriptor?.backendAssetPaths,
-      docsAssetPaths: descriptor?.docsAssetPaths,
       runtimeUrl: descriptor?.runtimeUrl,
       devPort: descriptor?.devPort,
       runnable: true,

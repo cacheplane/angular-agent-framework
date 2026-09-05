@@ -81,7 +81,6 @@ describe('getWebsiteWorkspacePage', () => {
       promptFiles: {},
       runtimeUrl: null,
       docSections: [],
-      narrativeDocs: [],
     });
   });
 

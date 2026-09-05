@@ -65,13 +65,6 @@ const contentBundle: ContentBundle = {
   promptFiles: {},
   runtimeUrl: 'https://runtime.example.test/demo',
   docSections: [],
-  narrativeDocs: [
-    {
-      title: 'Streaming guide',
-      html: '<h1>Registry narrative</h1>',
-      sourceFile: 'guide.md',
-    },
-  ],
 };
 
 function renderWorkspace(options: {

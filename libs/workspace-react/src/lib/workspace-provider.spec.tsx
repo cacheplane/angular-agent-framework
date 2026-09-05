@@ -55,7 +55,6 @@ const contentBundle: ContentBundle = {
   promptFiles: {},
   runtimeUrl: null,
   docSections: [],
-  narrativeDocs: [],
 };
 
 function Readout() {
