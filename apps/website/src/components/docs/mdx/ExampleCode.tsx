@@ -26,11 +26,16 @@ export interface ExampleCodeProps {
  * style are identical to a hand-written block. Anything unresolvable throws
  * at build time: a docs page without its code is wrong, not degraded.
  */
-export function createExampleCode(context: ExampleCodeContext | null) {
+export function createExampleCode(
+  context: ExampleCodeContext | null,
+  pageDocsPath?: string
+) {
   return function ExampleCode({ file, region, title }: ExampleCodeProps) {
     if (!context) {
+      // There is no context to name the page, so the caller's route does it:
+      // a build failure that says only "some page" is not actionable.
       throw new ExampleCodeError(
-        `<ExampleCode file="${file}"> is only valid on a docs page with a mapped example`
+        `${pageDocsPath ?? 'this page'}: <ExampleCode file="${file}"> is only valid on a docs page with a mapped example`
       );
     }
     const path = resolveExampleFile(file, context);

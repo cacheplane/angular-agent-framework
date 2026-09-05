@@ -91,16 +91,22 @@ interface MdxRendererProps {
   source: string;
   /** Present on docs pages that embed a runnable example; null elsewhere. */
   exampleCode?: ExampleCodeContext | null;
+  /** Route of the page being rendered, so a docs-only failure can name it. */
+  docsPath?: string;
 }
 
-export function MdxRenderer({ source, exampleCode = null }: MdxRendererProps) {
+export function MdxRenderer({
+  source,
+  exampleCode = null,
+  docsPath,
+}: MdxRendererProps) {
   return (
     <div className="docs-prose">
       <MDXRemote
         source={source}
         components={{
           ...mdxComponents,
-          ExampleCode: createExampleCode(exampleCode),
+          ExampleCode: createExampleCode(exampleCode, docsPath),
         }}
         options={mdxCompileOptions}
       />

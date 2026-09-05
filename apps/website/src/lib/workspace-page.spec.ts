@@ -119,7 +119,9 @@ describe('getWebsiteWorkspacePage', () => {
       'cockpit/langgraph/streaming/angular/src/app/app.config.ts',
       'cockpit/langgraph/streaming/python/src/graph.py',
     ]);
-    expect(Object.keys(context?.sources ?? {})).toEqual(context?.assetPaths);
+    expect([...Object.keys(context?.sources ?? {})].sort()).toEqual(
+      [...(context?.assetPaths ?? [])].sort()
+    );
   });
 
   it('has no example-code context for a docs-only page', async () => {

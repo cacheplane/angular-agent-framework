@@ -29,11 +29,23 @@ describe('MdxRenderer', () => {
         },
       })
     );
-    const without = findMdx(MdxRenderer({ source: '# x' }));
+    const without = findMdx(
+      MdxRenderer({ source: '# x', docsPath: '/docs/only' })
+    );
 
     expect(typeof withContext?.props.components['ExampleCode']).toBe(
       'function'
     );
+    // Not just "a function": an unresolvable file must fail against THIS
+    // page's context, which a hard-coded createExampleCode(null) could not do.
+    expect(() =>
+      (
+        withContext?.props.components['ExampleCode'] as (p: {
+          file: string;
+        }) => unknown
+      )({ file: 'nope.ts' })
+    ).toThrow(/\/docs\/p/);
+
     expect(typeof without?.props.components['ExampleCode']).toBe('function');
     expect(() =>
       (
@@ -42,5 +54,12 @@ describe('MdxRenderer', () => {
         }) => unknown
       )({ file: 'b.ts' })
     ).toThrow(/mapped example/);
+    expect(() =>
+      (
+        without?.props.components['ExampleCode'] as (p: {
+          file: string;
+        }) => unknown
+      )({ file: 'b.ts' })
+    ).toThrow(/\/docs\/only/);
   });
 });

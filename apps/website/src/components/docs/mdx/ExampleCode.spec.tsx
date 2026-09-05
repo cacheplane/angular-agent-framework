@@ -73,9 +73,10 @@ describe('ExampleCode', () => {
   });
 
   it('throws on a docs-only page', () => {
-    const ExampleCode = createExampleCode(null);
+    const ExampleCode = createExampleCode(null, '/docs/x');
     expect(() => ExampleCode({ file: 'streaming.component.ts' })).toThrow(ExampleCodeError);
     expect(() => ExampleCode({ file: 'streaming.component.ts' })).toThrow(/mapped example/);
+    expect(() => ExampleCode({ file: 'streaming.component.ts' })).toThrow(/\/docs\/x/);
   });
 
   it('throws on an unknown file', () => {
