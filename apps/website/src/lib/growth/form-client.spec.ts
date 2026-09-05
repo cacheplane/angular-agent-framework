@@ -14,6 +14,39 @@ describe('growth form request snapshots', () => {
     sessionStorage.clear();
     vi.restoreAllMocks();
   });
+  it('replaces malformed readable storage instead of reusing earlier memory', () => {
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({
+        id: '30000000-0000-4000-8000-000000000003',
+        expiresAt: 2000,
+      })
+    );
+    const prior = getAcquisitionSessionId(1000);
+    sessionStorage.setItem(SESSION_KEY, '{invalid');
+    expect(getAcquisitionSessionId(1000)).not.toBe(prior);
+  });
+  it('keeps a memory session when reads work but storage writes fail', () => {
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('read only');
+    });
+    const id = getAcquisitionSessionId();
+    expect(getAcquisitionSessionId()).toBe(id);
+  });
+  it('shares one memory identity between website activity and form snapshots when storage is blocked', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+    const id = getAcquisitionSessionId();
+    expect(getAcquisitionSessionId()).toBe(id);
+    expect(
+      growthFormRequestSnapshot(null, { email: 'synthetic@example.invalid' })
+        .acquisition_session_id
+    ).toBe(id);
+  });
 
   it('reuses only a valid unexpired acquisition session UUID', () => {
     sessionStorage.setItem(

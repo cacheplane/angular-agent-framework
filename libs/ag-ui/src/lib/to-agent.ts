@@ -1,4 +1,9 @@
-import { computed, signal, type Signal } from '@angular/core';
+import { computed, isDevMode, signal, type Signal } from '@angular/core';
+// eslint-disable-next-line @nx/enforce-module-boundaries -- Keep the postinstall module external through ng-packagr.
+import { installationToken } from '#development-install';
+declare const ngDevMode: boolean;
+import { createDevelopmentRuntime, registerDevelopmentRuntimePolicy } from '@threadplane/telemetry/browser';
+import { THREADPLANE_PACKAGE_VERSION as packageVersion } from './package-version';
 import { Subject } from 'rxjs';
 import type { AbstractAgent } from '@ag-ui/client';
 import type { ResumeEntry } from '@ag-ui/core';
@@ -32,7 +37,11 @@ import {
 import { createClientToolsCapability } from './client-tools';
 
 export interface ToAgentOptions {
-  /** Optional app-owned sink. Supply one to receive runtime lifecycle events. */
+  /**
+   * Omit to enable automatic development-only collection. Set `false` to disable.
+   * An app-owned sink replaces the automatic destination and receives the
+   * existing runtime lifecycle callbacks.
+   */
   telemetry?: AgentRuntimeTelemetrySink | false;
   /**
    * A2UI client capabilities (catalog negotiation) to advertise to the agent.
@@ -154,9 +163,15 @@ function createAgentAdapter(
     allocateDeliveryGeneration,
   };
   const telemetryProperties = { transport: 'ag-ui' as const, surface: 'to_agent' };
+  const developmentRuntime = createDevelopmentRuntime({
+    integration: 'ag-ui', packageName: '@threadplane/ag-ui', packageVersion,
+    installationToken: (typeof ngDevMode === 'undefined' || ngDevMode) && isDevMode() ? installationToken : null,
+    enabled: () => options.telemetry === undefined,
+  });
   interface AdapterRun extends ReducerDeliveryRun {
     startedAt: number;
     telemetrySettled: boolean;
+    resumedInterrupt: boolean;
   }
   let activeRun: AdapterRun | null = null;
   const runsByProtocolId = new Map<string, AdapterRun>();
@@ -203,7 +218,8 @@ function createAgentAdapter(
     telemetryProperties,
   );
 
-  function beginRun(requestType: string, allowBaselineTail = false): AdapterRun {
+  function beginRun(requestType: string, allowBaselineTail = false, resumedInterrupt = false): AdapterRun {
+    developmentRuntime.touch();
     if (activeRun && activeRun.outcome === undefined) {
       const supersededRun = activeRun;
       finalizeDeliveryRun(store, supersededRun, 'interrupted');
@@ -221,6 +237,7 @@ function createAgentAdapter(
         : undefined,
       startedAt: Date.now(),
       telemetrySettled: false,
+      resumedInterrupt,
     };
     activeRun = run;
     store.deliveryRun = run;
@@ -280,8 +297,9 @@ function createAgentAdapter(
     requestType: string,
     parameters?: RunParameters,
     allowBaselineTail = false,
+    resumedInterrupt = false,
   ): Promise<void> {
-    const run = beginRun(requestType, allowBaselineTail);
+    const run = beginRun(requestType, allowBaselineTail, resumedInterrupt);
     const tools = clientToolsCap.catalogAsAgUiTools();
     const runParameters = parameters === undefined && tools.length === 0
       ? undefined
@@ -334,12 +352,21 @@ function createAgentAdapter(
         return;
       }
       if (event.type === 'RUN_ERROR' && run.outcome === 'aborted') return;
+      const hasDevelopmentEvidence = event.type !== 'RUN_FINISHED' || hasValidFinishedOutcome(event);
+      if (run.outcome === undefined && hasDevelopmentEvidence && supportedDevelopmentEventTypes.has(event.type)) {
+        developmentRuntime.milestone('transport.connected');
+      }
       if (event.type === 'RUN_ERROR' && options.protectOperationErrors) {
         failRun(run, undefined);
         return;
       }
+      const wasPending = run.outcome === undefined;
       reduceEvent(event, store);
       if (run && event.type === 'RUN_FINISHED' && run.outcome === 'success') {
+        if (wasPending && hasDevelopmentEvidence && !store.interrupt() && !store.error()) {
+          developmentRuntime.milestone('runtime.first_stream_completed', Date.now() - run.startedAt);
+          if (run.resumedInterrupt) developmentRuntime.milestone('interrupt.handled');
+        }
         finishRunTelemetry(run);
       } else if (run && event.type === 'RUN_ERROR' && run.outcome === 'error') {
         failRunTelemetry((event as { message?: unknown }).message ?? event, run);
@@ -410,7 +437,7 @@ function createAgentAdapter(
     return w;
   }
 
-  return {
+  return registerDevelopmentRuntimePolicy<AgUiAgent>({
     messages:  store.messages,
     status:    store.status,
     isLoading: store.isLoading,
@@ -448,6 +475,7 @@ function createAgentAdapter(
           'resume',
           buildResumeRunParameters(input.resume, pendingInterrupt),
           true,
+          pendingInterrupt !== undefined,
         );
         return;
       }
@@ -527,7 +555,26 @@ function createAgentAdapter(
 
       await executeRun('regenerate');
     },
-  };
+  }, () => options.telemetry === undefined);
+}
+
+const supportedDevelopmentEventTypes = new Set([
+  'RUN_STARTED', 'RUN_FINISHED', 'RUN_ERROR', 'TEXT_MESSAGE_START', 'TEXT_MESSAGE_CONTENT',
+  'TEXT_MESSAGE_END', 'REASONING_MESSAGE_START', 'REASONING_MESSAGE_CONTENT', 'REASONING_MESSAGE_CHUNK',
+  'REASONING_MESSAGE_END', 'TOOL_CALL_START', 'TOOL_CALL_ARGS', 'TOOL_CALL_END', 'TOOL_CALL_RESULT',
+  'STATE_SNAPSHOT', 'STATE_DELTA', 'MESSAGES_SNAPSHOT', 'CUSTOM', 'SUBAGENT_STARTED',
+  'SUBAGENT_FINISHED', 'SUBAGENT_ERROR', 'ACTIVITY_SNAPSHOT', 'ACTIVITY_DELTA',
+]);
+
+/** A malformed outcome must not turn the reducer's legacy fallback into evidence. */
+function hasValidFinishedOutcome(event: { type: string }): boolean {
+  const outcome = (event as { outcome?: unknown }).outcome;
+  // The AG-UI schema explicitly accepts absent/null outcomes for older servers.
+  if (outcome == null) return true;
+  if (typeof outcome !== 'object' || Array.isArray(outcome)) return false;
+  const value = outcome as Record<string, unknown>;
+  if (value['type'] === 'success') return true;
+  return value['type'] === 'interrupt' && Array.isArray(value['interrupts']);
 }
 
 function protectedAgentError(): AgentError {

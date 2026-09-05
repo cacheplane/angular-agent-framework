@@ -4,6 +4,7 @@ import {
   DestroyRef, inject, Injector, runInInjectionContext,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { DEVELOPMENT_COLLECTION_POLICY, isDevelopmentRuntimeEnabled } from '@threadplane/telemetry/browser';
 import { KeyValuePipe } from '@angular/common';
 import type { Agent, Message, MessageDelivery } from '../../agent';
 import { ChatReasoningComponent } from '../../primitives/chat-reasoning/chat-reasoning.component';
@@ -105,6 +106,14 @@ export function isPinned(
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
     { provide: CHAT_LIFECYCLE, useFactory: createChatLifecycle },
+    {
+      provide: DEVELOPMENT_COLLECTION_POLICY,
+      useFactory: () => {
+        const host = inject(ChatComponent);
+        const parent = inject(DEVELOPMENT_COLLECTION_POLICY, { optional: true, skipSelf: true });
+        return () => (parent?.() ?? true) && isDevelopmentRuntimeEnabled(host.agent());
+      },
+    },
   ],
   styles: [CHAT_HOST_TOKENS, `
     :host {

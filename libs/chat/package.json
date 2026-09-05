@@ -6,13 +6,18 @@
     "./themes/default-dark.css": "./themes/default-dark.css",
     "./themes/default-light.css": "./themes/default-light.css",
     "./themes/material-dark.css": "./themes/material-dark.css",
-    "./themes/material-light.css": "./themes/material-light.css"
+    "./themes/material-light.css": "./themes/material-light.css",
+    "./development-install": {
+      "types": "./.install-collector/development-install.d.ts",
+      "default": "./.install-collector/development-install.mjs"
+    }
   },
   "dependencies": {
     "@cacheplane/partial-json": ">=0.1.1 <0.3.0",
     "@cacheplane/partial-markdown": "0.5.8"
   },
   "peerDependencies": {
+    "@threadplane/telemetry": "^0.0.65",
     "zod": "^3.25.0",
     "@angular/core": "^20.0.0 || ^21.0.0 || ^22.0.0",
     "@angular/common": "^20.0.0 || ^21.0.0 || ^22.0.0",
@@ -45,5 +50,14 @@
     "**/chat-tokens.ts",
     "./fesm2022/threadplane-chat.mjs",
     "**/*.css"
-  ]
+  ],
+  "imports": {
+    "#development-install": {
+      "types": "./.install-collector/development-install.d.ts",
+      "default": "@threadplane/chat/development-install"
+    }
+  },
+  "scripts": {
+    "postinstall": "node install/postinstall.cjs"
+  }
 }

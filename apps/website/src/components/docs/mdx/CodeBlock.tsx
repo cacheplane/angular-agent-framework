@@ -2,6 +2,7 @@
 import { useRef, useState } from 'react';
 import { analyticsEvents } from '../../../lib/analytics/events';
 import { track } from '../../../lib/analytics/client';
+import { observeInstallCopy } from '../../../lib/growth/website-collector';
 
 function CopyIcon() {
   return (
@@ -27,6 +28,7 @@ export function Pre({ children, className, ...props }: React.HTMLAttributes<HTML
   const copy = async () => {
     const text = ref.current?.textContent ?? '';
     await navigator.clipboard.writeText(text);
+    observeInstallCopy(text);
     track(analyticsEvents.docsCopyCodeClick, {
       surface: 'docs',
       cta_id: 'copy_code',

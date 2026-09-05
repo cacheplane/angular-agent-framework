@@ -13,6 +13,7 @@ export default [
       '**/.vercel',
       '**/.vercel/**',
       '**/next-env.d.ts',
+      '**/.install-collector/**',
     ],
   },
   {

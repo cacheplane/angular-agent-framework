@@ -12,6 +12,150 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+const developmentEvidence = vi.hoisted(() => ({ events: [] as string[], touches: 0, disposed: 0 }));
+vi.mock('@threadplane/telemetry/browser', async (importOriginal) => ({
+  ...await importOriginal<object>(),
+  createDevelopmentRuntime: (options: { enabled?: () => boolean }) => ({
+    touch: () => { if (options.enabled?.() !== false) developmentEvidence.touches++; },
+    milestone: (kind: string) => { if (options.enabled?.() !== false) developmentEvidence.events.push(kind); },
+    dispose: () => { developmentEvidence.disposed++; },
+  }),
+}));
+
+describe('automatic development evidence', () => {
+  function setup(telemetry?: false | ReturnType<typeof vi.fn>) {
+    developmentEvidence.events = []; developmentEvidence.touches = 0; developmentEvidence.disposed = 0;
+    const transport = new MockAgentTransport();
+    const subjects = makeSubjects();
+    const destroy$ = new Subject<void>();
+    const bridge = createStreamManagerBridge({ options: { apiUrl: '', assistantId: 'test', transport, telemetry }, subjects, threadId$: of(null), destroy$ });
+    return { transport, subjects, destroy$, bridge };
+  }
+
+  it('requires root terminal evidence and disposes with the bridge', async () => {
+    const { transport, bridge, destroy$ } = setup();
+    expect(developmentEvidence.touches).toBe(0);
+    const run = bridge.submit({});
+    transport.emit([{ type: 'values', data: { done: true } }]); transport.close();
+    await run;
+    expect(developmentEvidence.touches).toBeGreaterThan(0);
+    expect(developmentEvidence.events).toContain('transport.connected');
+    expect(developmentEvidence.events).toContain('runtime.first_stream_completed');
+    destroy$.next();
+    expect(developmentEvidence.disposed).toBe(1);
+  });
+
+  it.each([
+    [],
+    [{ type: 'unknown' }],
+    [{ type: 'values', data: {}, namespace: ['child:1'] }],
+    [{ type: 'values', data: {} }, { type: 'error', error: new Error('failed') }],
+    [{ type: 'values', data: { __interrupt__: [{ value: {} }] } }],
+    [{ type: 'messages/partial', data: [{ id: 'ai', type: 'ai', content: 'unfinished' }] }],
+  ])('does not complete on an unqualified close %j', async (...events) => {
+    const { transport, bridge, destroy$ } = setup();
+    const run = bridge.submit({});
+    transport.emit(events as StreamEvent[]); transport.close(); await run;
+    expect(developmentEvidence.events).not.toContain('runtime.first_stream_completed');
+    destroy$.next();
+  });
+
+  it.each([false, vi.fn()] as const)('respects explicit sinks %s', async telemetry => {
+    const { transport, bridge, destroy$ } = setup(telemetry);
+    const run = bridge.submit({}); transport.emit([{ type: 'values', data: { done: true } }]); transport.close(); await run;
+    expect(developmentEvidence.events).toEqual([]); expect(developmentEvidence.touches).toBe(0);
+    if (telemetry) expect(telemetry).toHaveBeenCalled();
+    destroy$.next();
+  });
+
+  it.each([
+    { type: 'messages/complete', data: { unexpected: true } },
+    { type: 'messages/complete', data: [123] },
+    { type: 'messages/complete' },
+    { type: 'values', data: null },
+    { type: 'values', data: null, namespace: [] },
+    { type: 'values', data: 'invalid' },
+    { type: 'values' },
+    { type: 'checkpoints', data: null },
+  ])('does not treat malformed known terminal payloads as development evidence: %j', async event => {
+    const { transport, bridge, destroy$ } = setup();
+    const run = bridge.submit({});
+    transport.emit([event as StreamEvent]); transport.close();
+    await run;
+    expect(developmentEvidence.events).not.toContain('transport.connected');
+    expect(developmentEvidence.events).not.toContain('runtime.first_stream_completed');
+    destroy$.next();
+  });
+
+  it('records restored nonempty remote state, excluding empty history and run refresh', async () => {
+    const { transport, bridge, destroy$ } = setup();
+    bridge.switchThread('empty'); await Promise.resolve(); await Promise.resolve();
+    expect(developmentEvidence.events).not.toContain('thread.persisted');
+    transport.history = [makeThreadState('checkpoint')];
+    bridge.switchThread('restored'); await Promise.resolve(); await Promise.resolve();
+    expect(developmentEvidence.events).toContain('thread.persisted');
+    developmentEvidence.events = [];
+    const run = bridge.submit({}); transport.emit([{ type: 'values', data: { done: true } }]); transport.close(); await run;
+    expect(developmentEvidence.events).not.toContain('thread.persisted');
+    destroy$.next();
+  });
+
+  it('counts only real pending interrupt resumes that finish successfully', async () => {
+    const { transport, bridge, destroy$ } = setup();
+    let invocation = 0;
+    transport.stream = async function* () {
+      yield ++invocation === 1
+        ? { type: 'values', data: { __interrupt__: [{ value: {} }] } }
+        : { type: 'values', data: { done: true } };
+    };
+    await bridge.submit({});
+    expect(developmentEvidence.events).not.toContain('runtime.first_stream_completed');
+    await bridge.submit(null, { command: { resume: true } });
+    expect(developmentEvidence.events).toContain('interrupt.handled');
+    developmentEvidence.events = [];
+    await bridge.submit(null, { command: { resume: true } });
+    expect(developmentEvidence.events).not.toContain('interrupt.handled');
+    destroy$.next();
+  });
+
+  it.each(['stop', 'dispose', 'thread switch', 'external abort'])('excludes completion after %s', async action => {
+    const { transport, bridge, destroy$ } = setup();
+    const external = new AbortController();
+    const run = bridge.submit({}, action === 'external abort' ? { signal: external.signal } : undefined);
+    transport.emit([{ type: 'values', data: { done: true } }]);
+    await vi.waitFor(() => expect(developmentEvidence.events).toContain('transport.connected'));
+    if (action === 'stop') await bridge.stop();
+    else if (action === 'dispose') destroy$.next();
+    else if (action === 'thread switch') bridge.switchThread(null);
+    else external.abort();
+    transport.close(); await run;
+    expect(developmentEvidence.events).not.toContain('runtime.first_stream_completed');
+    expect(developmentEvidence.events).not.toContain('interrupt.handled');
+    if (action !== 'dispose') destroy$.next();
+  });
+
+  it('records successful joined runs through the same evidence rules', async () => {
+    const { bridge, destroy$ } = setup();
+    bridge.switchThread('joined');
+    await bridge.joinStream('run-1');
+    expect(developmentEvidence.events).toContain('transport.connected');
+    expect(developmentEvidence.events).toContain('runtime.first_stream_completed');
+    destroy$.next();
+  });
+
+  it('does not call a history load prior state when a run began while it was pending', async () => {
+    const { transport, bridge, destroy$ } = setup();
+    let resolveHistory!: (history: ThreadState[]) => void;
+    transport.getHistory = () => new Promise(resolve => { resolveHistory = resolve; });
+    bridge.switchThread('pending');
+    const run = bridge.submit({});
+    resolveHistory([makeThreadState('current-run-state')]);
+    await Promise.resolve(); await Promise.resolve();
+    expect(developmentEvidence.events).not.toContain('thread.persisted');
+    destroy$.next(); transport.close(); await run;
+  });
+});
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FIXTURE = JSON.parse(
   readFileSync(

@@ -30,7 +30,15 @@
         },
         "development": {}
       },
-      "defaultConfiguration": "production"
+      "defaultConfiguration": "production",
+      "inputs": [
+        "production",
+        "^production",
+        "!{projectRoot}/.install-collector/**",
+        "{workspaceRoot}/libs/telemetry/install/*",
+        "!{projectRoot}/src/lib/package-version.ts"
+      ],
+      "dependsOn": ["^build", "prepare-install"]
     },
     "nx-release-publish": {
       "options": {
@@ -44,13 +52,32 @@
       "executor": "@nx/vitest:test",
       "options": {
         "configFile": "libs/ag-ui/vite.config.mts"
-      }
+      },
+      "dependsOn": ["prepare-install"]
     },
     "type-tests": {
       "executor": "nx:run-commands",
       "options": {
         "command": "npx tsc --noEmit -p libs/ag-ui/tsconfig.type-tests.json"
       }
+    },
+    "prepare-install": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "{workspaceRoot}/libs/telemetry/install/*.cjs",
+        "{workspaceRoot}/libs/telemetry/install/assemble-package.mjs",
+        "{projectRoot}/package.json"
+      ],
+      "outputs": [
+        "{projectRoot}/.install-collector",
+        "{projectRoot}/src/lib/package-version.ts"
+      ],
+      "options": {
+        "command": "node libs/telemetry/install/assemble-package.mjs ag-ui",
+        "forwardAllArgs": false
+      }
     }
-  }
+  },
+  "implicitDependencies": ["telemetry"]
 }

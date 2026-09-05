@@ -182,6 +182,69 @@ so there is no adapter-specific mock. See
 
 ---
 
+## Installation collection
+
+This package includes automatic first-party installation collection, including CI.
+It reports the package/version, basic execution environment, a random installation
+identifier, configured Git display name and full email, and a recognized repository
+hosting provider/owner when available. CI is labeled separately; install counts are
+not developer counts, and Git identity is an unverified hint. A usable install email
+can qualify for the generic founder hello after a linked development activation;
+this does not verify email ownership, employment, or account membership. Existing
+unsubscribe, reply, bounce, and suppression controls still apply.
+
+An enabled non-CI install writes a random package-local correlation token to the
+`./development-install` export. It contains no email or Git metadata and is separate
+from the home installation ID. Published packages contain null; development runtime
+events can carry the installed token. Production bundles remove it and do not collect
+runtime events. CI alone cannot create an eligible bridge or trigger a hello.
+
+Disabled and CI lifecycle runs first try to reset an earlier token to null. Copied or
+cached packages can retain tokens: read-only packages may prevent that reset, and
+skipped scripts leave existing files unchanged. A token therefore does not prove a
+unique installation or developer. The independent browser opt-out below still stops
+runtime transmission, including when a stale token remains.
+
+Set `DO_NOT_TRACK=1` or `TPLANE_TELEMETRY_DISABLED=1` before installing to disable
+collection before identity reads, persistence, or network. Package-manager controls
+such as `--ignore-scripts` also prevent the hook from running. Installation succeeds
+independently of collection, with one request and a five-second execution budget.
+
+The random ID is stored at `~/.threadplane/installation-id` where writable; otherwise
+it lasts for one invocation. Git includes, system config, and command/environment
+identity overrides are not inspected. Unsupported checkout/configuration layouts,
+blocked scripts or network, and reused caches can leave gaps or duplicate identities.
+Raw repository URLs/names, local paths, source code, credentials, and application
+content are excluded from install reports. See [Privacy](https://threadplane.ai/privacy).
+
 ## License
 
 MIT. See [LICENSE](../../LICENSE).
+
+## Development browser collection
+
+Supported LangGraph/AG-UI runtime use and real JSON-render component mounts automatically
+report development progress to Threadplane. Angular development mode and browser APIs
+are required. Production builds, SSR, imports, and unused adapter construction are inert.
+Reports contain package/version, integration, closed milestones, timestamps, a random
+browser-origin ID, and a session with a 30-minute inactivity boundary. They exclude
+prompts, messages, application state, private URLs, thread/run IDs, and credentials.
+The IDs describe an origin/session, not a verified person or repository.
+
+Set adapter `telemetry: false` to disable automatic collection; a custom sink replaces
+the automatic destination while preserving its existing callbacks. Chat carries that
+choice into nested JSON renderers. Standalone render supports
+`provideRender({ telemetry: false })` or `<render-spec [telemetry]="false" ... />`.
+
+For a page-wide control, call `setDevelopmentCollectionEnabled(false)` from
+`@threadplane/telemetry/browser` before creating runtimes. From the browser console,
+run `localStorage.setItem('THREADPLANE_TELEMETRY_DISABLED', '1')` and reload.
+Node environment variables do not configure a compiled browser app.
+
+The credential-free announcement exchange records progress before returning optional
+plain-text console announcements. No click or registration is required. It has bounded
+queues/retries and a three-second request deadline; collection failures do not affect
+application use. A linked eligible install email can receive the generic founder hello;
+runtime evidence alone does not approve a contact. See the
+[telemetry controls and collection details](https://github.com/cacheplane/angular-agent-framework/tree/main/libs/telemetry#automatic-development-runtime-collection)
+and [Privacy](https://threadplane.ai/privacy).

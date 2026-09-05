@@ -1,4 +1,5 @@
 import {
+  afterEveryRender,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -7,14 +8,21 @@ import {
   inject,
   Injector,
   input,
+  isDevMode,
   OnInit,
   reflectComponentType,
   runInInjectionContext,
   signal,
+  viewChildren,
   type Signal,
   type Type,
 } from '@angular/core';
 import { NgComponentOutlet } from '@angular/common';
+// eslint-disable-next-line @nx/enforce-module-boundaries -- Keep the postinstall module external through ng-packagr.
+import { installationToken } from '#development-install';
+declare const ngDevMode: boolean;
+import { createDevelopmentRuntime, DEVELOPMENT_COLLECTION_POLICY } from '@threadplane/telemetry/browser';
+import { THREADPLANE_PACKAGE_VERSION as packageVersion } from './package-version';
 import {
   evaluateVisibility,
   resolveBindings,
@@ -107,10 +115,30 @@ export class RenderElementComponent implements OnInit {
   private readonly repeatScope = inject(REPEAT_SCOPE, { optional: true });
   readonly parentInjector = inject(Injector);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly collectionPolicy = inject(DEVELOPMENT_COLLECTION_POLICY, { optional: true });
+  private readonly outlets = viewChildren(NgComponentOutlet);
+  private readonly observedInstances = new WeakSet<object>();
+  private readonly development = createDevelopmentRuntime({
+    integration: 'render', packageName: '@threadplane/render', packageVersion,
+    installationToken: (typeof ngDevMode === 'undefined' || ngDevMode) && isDevMode() ? installationToken : null,
+    enabled: () => this.collectionPolicy?.() ?? true,
+  });
 
   private destroyed = false;
 
   constructor() {
+    this.destroyRef.onDestroy(() => this.development.dispose());
+    afterEveryRender(() => {
+      if (this.destroyed || !this.visible() || this.notReady()) return;
+      const component = this.componentClass();
+      if (!component) return;
+      for (const outlet of this.outlets()) {
+        const instance = outlet.componentInstance;
+        if (outlet.ngComponentOutlet !== component || !instance || this.observedInstances.has(instance)) continue;
+        this.observedInstances.add(instance);
+        this.development.milestone('generative_ui.rendered');
+      }
+    });
     this.destroyRef.onDestroy(() => {
       const el = this.element();
       if (el && (el as any)['lifecycle'] && this.ctx.emitEvent) {

@@ -14,6 +14,7 @@ import {
 import { LANGGRAPH_CLIENT_OPTIONS } from './client/client-options';
 import { AGENT_CONFIG } from './agent.provider';
 import { AgentError } from '@threadplane/chat';
+import { isDevelopmentRuntimeEnabled } from '@threadplane/telemetry/browser';
 import { ɵLANGGRAPH_RUNTIME_OPERATION_REPORTER } from './runtime-operation-reporter';
 
 vi.mock('./client/create-langgraph-client', async (importOriginal) => {
@@ -60,6 +61,13 @@ function threadState(
 
 describe('agent', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
+
+  it('propagates automatic collection policy to consumers of the returned agent', () => {
+    for (const telemetry of [undefined, false, vi.fn()] as const) {
+      const ref = withInjectionContext(() => agent({ assistantId: 'test', transport: new MockAgentTransport(), telemetry }));
+      expect(isDevelopmentRuntimeEnabled(ref)).toBe(telemetry === undefined);
+    }
+  });
 
   it('returns a ref with initial idle status', () => {
     const transport = new MockAgentTransport();

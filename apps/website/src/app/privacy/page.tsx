@@ -28,7 +28,9 @@ export default function PrivacyPage() {
     <Section surface="canvas" ariaLabelledBy="privacy-heading">
       <Container>
         <div className="privacy-inner">
-          <Eyebrow tone="accent" className="privacy-eyebrow">Legal</Eyebrow>
+          <Eyebrow tone="accent" className="privacy-eyebrow">
+            Legal
+          </Eyebrow>
           <h1 id="privacy-heading" className="privacy-h1">
             Privacy
           </h1>
@@ -51,18 +53,51 @@ export default function PrivacyPage() {
           <p className="privacy-body">
             We record how pages are used — pages viewed, referring source, and
             broad technical details such as browser and approximate region — to
-            understand what people find useful. This is used in aggregate.
+            understand what people find useful. We also record content topics,
+            campaign and referral context, and interactions with setup commands.
+            A short-lived website session can connect this activity to a form
+            you submit, helping us understand your interest and respond in
+            context. We use both aggregate reporting and individual activity
+            history.
           </p>
 
           <h2 className="privacy-h2">Product analytics</h2>
           <p className="privacy-body">
-            Threadplane software may report operational facts about how the
-            product is running so we can see which capabilities work in real
-            deployments. These reports describe activity, not content. We do not
-            want and do not seek the substance of what your application is
-            doing: prompts, messages, tool inputs and outputs, application
-            state, and source code are outside what this reporting is designed
-            to carry.
+            Installing Threadplane chat, LangGraph, AG-UI, or render packages
+            can automatically report package and environment details, a random
+            installation identifier, configured Git name and full email, and the
+            repository hosting provider and owner when available. This includes
+            CI installations, which are labeled as automation. Set
+            DO_NOT_TRACK=1 or TPLANE_TELEMETRY_DISABLED=1 before installation to
+            disable this collection. A usable install-captured email may receive
+            a short founder welcome sequence after the first linked development
+            browser use, with at most three emails and an unsubscribe option. CI
+            installation alone does not trigger this sequence.
+          </p>
+          <p className="privacy-body">
+            In Angular development builds, supported browser runtimes
+            automatically report package versions and progress such as a working
+            connection, completed interaction, restored conversation, or mounted
+            component. Production builds and server-side execution do not run
+            this automatic browser collection. A random browser-origin
+            identifier and a session with a 30-minute inactivity boundary
+            connect these reports; they do not identify a repository or verified
+            person. Storage failures fall back to memory. An opaque
+            package-local token can link development use to an installation; it
+            contains no email. Copied or cached installed packages can retain an
+            earlier token, so this link does not verify who is operating the
+            browser.
+          </p>
+          <p className="privacy-body">
+            Set the browser localStorage key THREADPLANE_TELEMETRY_DISABLED to
+            1, use the programmatic browser disable control, or configure
+            telemetry: false to disable automatic runtime collection. A custom
+            telemetry sink replaces the automatic destination for that runtime.
+            Development announcements may appear in the console; no click is
+            required to record progress. These reports exclude prompts,
+            messages, tool inputs and outputs, application state, source code,
+            private URLs, and credentials. They do not authorize marketing
+            email.
           </p>
 
           <h2 className="privacy-h2">How the information is used</h2>
@@ -95,8 +130,11 @@ export default function PrivacyPage() {
             stops further marketing email. Replying to ask us to stop has the
             same effect. To request deletion of the information we hold about
             you, or to ask what that is, email{' '}
-            <a className="privacy-link" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> and we will
-            act on it. Some records are kept where we are required to keep them.
+            <a className="privacy-link" href={`mailto:${CONTACT_EMAIL}`}>
+              {CONTACT_EMAIL}
+            </a>{' '}
+            and we will act on it. Some records are kept where we are required
+            to keep them.
           </p>
 
           <h2 className="privacy-h2">Security</h2>
@@ -121,7 +159,10 @@ export default function PrivacyPage() {
           <h2 className="privacy-h2">Contact</h2>
           <p className="privacy-body">
             Questions about this page or about the information we hold:{' '}
-            <a className="privacy-link" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
+            <a className="privacy-link" href={`mailto:${CONTACT_EMAIL}`}>
+              {CONTACT_EMAIL}
+            </a>
+            .
           </p>
         </div>
       </Container>

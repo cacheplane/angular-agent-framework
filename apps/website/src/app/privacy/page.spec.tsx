@@ -25,7 +25,7 @@ import PrivacyPage, { metadata } from './page';
 /**
  * One canonical policy replaces the previous scattering of analytics promises.
  * These assertions pin what it must say and, just as importantly, what it must
- * never grow back into: a per-event catalog, an installation-behavior claim, or
+ * never grow back into: a per-event catalog or
  * an absolute guarantee that a future change could quietly falsify.
  */
 describe('privacy policy metadata', () => {
@@ -44,6 +44,21 @@ describe('privacy policy content', () => {
     render(<PrivacyPage />);
     return document.body.textContent ?? '';
   };
+  it('discloses install identity collection and its disable control', () => {
+    const body = text();
+    expect(body).toMatch(/install/i);
+    expect(body).toMatch(/Git.*email/i);
+    expect(body).toContain('DO_NOT_TRACK');
+    expect(body).toMatch(/CI/);
+  });
+  it('explains development-only runtime collection and browser disable controls', () => {
+    const body = text();
+    expect(body).toMatch(/development builds/i);
+    expect(body).toMatch(/production builds.*do not/is);
+    expect(body).toContain('THREADPLANE_TELEMETRY_DISABLED');
+    expect(body).toMatch(/browser-origin identifier/i);
+    expect(body).toMatch(/custom telemetry sink/i);
+  });
 
   it('names the information Threadplane collects', () => {
     const body = text();
@@ -89,7 +104,6 @@ describe('privacy policy content', () => {
   });
 
   it.each([
-    ['an installation behavior claim', /install/i],
     ['a never-collected list', /never collect|we will never|do not collect/i],
     ['an absolute guarantee', /\bguarantee/i],
     ['a per-event catalog', /event name|event catalog|property name/i],

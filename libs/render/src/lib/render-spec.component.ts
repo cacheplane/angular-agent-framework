@@ -10,6 +10,7 @@ import {
   output,
 } from '@angular/core';
 import type { ComputedFunction, Spec, StateStore } from '@json-render/core';
+import { DEVELOPMENT_COLLECTION_POLICY } from '@threadplane/telemetry/browser';
 
 import { RenderElementComponent } from './render-element.component';
 import { RENDER_CONFIG } from './provide-render';
@@ -45,6 +46,15 @@ import { makeGuardedEmit } from './internals/guarded-emit';
   changeDetection: ChangeDetectionStrategy.OnPush,
   viewProviders: [
     {
+      provide: DEVELOPMENT_COLLECTION_POLICY,
+      useFactory: () => {
+        const host = inject(RenderSpecComponent);
+        const parent = inject(DEVELOPMENT_COLLECTION_POLICY, { optional: true, skipSelf: true });
+        const config = inject(RENDER_CONFIG, { optional: true });
+        return () => (parent?.() ?? true) && host.telemetry() !== false && config?.telemetry !== false;
+      },
+    },
+    {
       provide: RENDER_CONTEXT,
       useFactory: () => inject(RenderSpecComponent)._context(),
     },
@@ -63,6 +73,8 @@ export class RenderSpecComponent implements OnInit {
   readonly handlers = input<Record<string, (params: Record<string, unknown>) => unknown | Promise<unknown>> | undefined>(undefined);
   readonly loading = input<boolean>(false);
   readonly events = output<RenderEvent>();
+  /** Disable automatic development collection for this render tree. */
+  readonly telemetry = input<boolean | undefined>(undefined);
 
   private readonly config = inject(RENDER_CONFIG, { optional: true });
   private readonly viewRegistry = inject(VIEW_REGISTRY, { optional: true });

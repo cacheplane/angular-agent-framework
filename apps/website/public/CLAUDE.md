@@ -12,6 +12,29 @@ Supported Angular majors: 20, 21, and 22.
 ## Install
 npm install @threadplane/chat @threadplane/langgraph @langchain/core @langchain/langgraph-sdk marked
 
+The chat, LangGraph, AG-UI, and render packages include automatic install collection
+for local and CI execution: package/environment details, a random installation ID,
+configured Git name/full email, and repository provider/owner hints when available.
+Set `DO_NOT_TRACK=1` or `TPLANE_TELEMETRY_DISABLED=1` before installation to disable
+it. Package-manager script controls are respected. A usable install email can qualify
+for a short founder welcome sequence after linked development-browser use, capped
+at three emails with unsubscribe and reply stops. CI alone does not trigger it.
+The package-local correlation token contains no email; copied/cached packages can
+retain it, so it does not verify a person. No registration is required.
+See https://threadplane.ai/privacy.
+
+
+Supported runtime/browser collection is automatic only in Angular development mode.
+Production builds, SSR, imports, and unused construction are inert. It sends closed
+progress milestones with package/version and random browser-origin/session IDs, never
+conversation content or private URLs. Adapter `telemetry: false` disables it; a custom
+sink replaces the automatic destination, including nested chat JSON rendering. Use
+`setDevelopmentCollectionEnabled(false)` from `@threadplane/telemetry/browser`, or set
+browser localStorage `THREADPLANE_TELEMETRY_DISABLED=1` and reload. Development console
+announcements need no click to acknowledge progress. Linked non-CI install and runtime
+evidence can qualify the install email for the founder sequence described above.
+Standalone render also accepts `provideRender({ telemetry: false })`.
+
 ## Key requirement
 `injectAgent()` MUST be called within an Angular injection context (component constructor or field initializer). Calling it in ngOnInit or any async context throws "NG0203: inject() must be called from an injection context".
 

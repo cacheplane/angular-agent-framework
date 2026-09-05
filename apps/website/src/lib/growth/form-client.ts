@@ -1,53 +1,14 @@
-const ACQUISITION_SESSION_KEY = 'threadplane_acquisition_session_v1';
-const ACQUISITION_SESSION_TTL_MS = 30 * 60 * 1_000;
-const UUID_V4 =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
+import { getAcquisitionSession } from './acquisition-session';
 
 export const FORM_POLICY_REFRESH_MESSAGE =
   'This form changed. Refresh the page before submitting again.';
-
-interface StoredSession {
-  id: string;
-  expiresAt: number;
-}
 
 function newUuid(): string {
   return globalThis.crypto.randomUUID();
 }
 
 export function getAcquisitionSessionId(now = Date.now()): string {
-  try {
-    const raw = sessionStorage.getItem(ACQUISITION_SESSION_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as StoredSession;
-      if (
-        typeof parsed.id === 'string' &&
-        UUID_V4.test(parsed.id) &&
-        typeof parsed.expiresAt === 'number' &&
-        Number.isFinite(parsed.expiresAt) &&
-        parsed.expiresAt > now &&
-        parsed.expiresAt <= now + ACQUISITION_SESSION_TTL_MS
-      ) {
-        return parsed.id.toLowerCase();
-      }
-    }
-  } catch {
-    // Storage availability must not block form submission.
-  }
-
-  const id = newUuid();
-  if (!UUID_V4.test(id)) {
-    throw new Error('A secure UUID generator is required');
-  }
-  try {
-    sessionStorage.setItem(
-      ACQUISITION_SESSION_KEY,
-      JSON.stringify({ id, expiresAt: now + ACQUISITION_SESSION_TTL_MS })
-    );
-  } catch {
-    // The request can still carry the in-memory acquisition identity.
-  }
-  return id;
+  return getAcquisitionSession(now).id;
 }
 
 export type GrowthFormJsonPrimitive = boolean | number | string | null;

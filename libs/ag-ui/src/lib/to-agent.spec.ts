@@ -9,6 +9,116 @@ import {
   type AgentRuntimeTelemetryPayload,
 } from '@threadplane/chat';
 import { toAgent, ɵtoAgentWithProtectedErrors } from './to-agent';
+import { isDevelopmentRuntimeEnabled } from '@threadplane/telemetry/browser';
+
+const developmentEvidence = vi.hoisted(() => ({ events: [] as string[], touches: 0 }));
+vi.mock('@threadplane/telemetry/browser', async (importOriginal) => ({
+  ...await importOriginal<object>(),
+  createDevelopmentRuntime: (options: { enabled?: () => boolean }) => ({
+    touch: () => { if (options.enabled?.() !== false) developmentEvidence.touches++; },
+    milestone: (kind: string) => { if (options.enabled?.() !== false) developmentEvidence.events.push(kind); },
+    dispose: () => undefined,
+  }),
+}));
+
+describe('automatic development evidence', () => {
+  it.each(['invalid', { type: 'unknown' }])('does not count a malformed RUN_FINISHED outcome: %j', async outcome => {
+    developmentEvidence.events = [];
+    const stub = new StubAgent();
+    const agent = toAgent(stub as unknown as AbstractAgent);
+    stub.runAgent.mockImplementationOnce(async () => {
+      stub.emit({ type: 'RUN_FINISHED', outcome } as unknown as BaseEvent);
+      return { result: undefined, newMessages: [] };
+    });
+    await agent.submit({});
+    expect(developmentEvidence.events).not.toContain('transport.connected');
+    expect(developmentEvidence.events).not.toContain('runtime.first_stream_completed');
+  });
+  it('propagates the automatic destination policy with the returned agent', () => {
+    for (const telemetry of [undefined, false, vi.fn()] as const) {
+      const agent = toAgent(new StubAgent() as unknown as AbstractAgent, { telemetry });
+      expect(isDevelopmentRuntimeEnabled(agent)).toBe(telemetry === undefined);
+    }
+  });
+  it('requires a current RUN_FINISHED success, and ignores construction and empty close', async () => {
+    developmentEvidence.events = []; developmentEvidence.touches = 0;
+    const stub = new StubAgent();
+    const agent = toAgent(stub as unknown as AbstractAgent);
+    expect(developmentEvidence.touches).toBe(0);
+    await agent.submit({});
+    expect(developmentEvidence.touches).toBe(1);
+    expect(developmentEvidence.events).toEqual([]);
+    stub.runAgent.mockImplementationOnce(async () => {
+      stub.emit({ type: 'UNKNOWN' } as BaseEvent);
+      expect(developmentEvidence.events).toEqual([]);
+      stub.emit({ type: 'RUN_STARTED', runId: 'success' } as BaseEvent);
+      stub.emit({ type: 'RUN_FINISHED', runId: 'success' } as BaseEvent);
+      return { result: undefined, newMessages: [] };
+    });
+    await agent.submit({});
+    expect(developmentEvidence.events).toContain('transport.connected');
+    expect(developmentEvidence.events).toContain('runtime.first_stream_completed');
+    expect(developmentEvidence.events).not.toContain('thread.persisted');
+  });
+
+  it.each([false, vi.fn()] as const)('suppresses automatic events for an explicit sink %s', async telemetry => {
+    developmentEvidence.events = []; developmentEvidence.touches = 0;
+    const stub = new StubAgent();
+    const agent = toAgent(stub as unknown as AbstractAgent, { telemetry });
+    stub.runAgent.mockImplementationOnce(async () => {
+      stub.emit({ type: 'RUN_FINISHED' } as BaseEvent);
+      return { result: undefined, newMessages: [] };
+    });
+    await agent.submit({});
+    expect(developmentEvidence.events).toEqual([]);
+    expect(developmentEvidence.touches).toBe(0);
+    if (telemetry) expect(telemetry).toHaveBeenCalled();
+  });
+
+  it('counts a completed real interrupt resume, but not bare resumes, failures, stops or stale runs', async () => {
+    developmentEvidence.events = [];
+    const stub = new StubAgent();
+    const agent = toAgent(stub as unknown as AbstractAgent);
+    stub.runAgent.mockImplementationOnce(async () => {
+      stub.emit({ type: 'RUN_FINISHED' } as BaseEvent);
+      return { result: undefined, newMessages: [] };
+    });
+    await agent.submit({ resume: true });
+    expect(developmentEvidence.events).not.toContain('interrupt.handled');
+    stub.runAgent.mockImplementationOnce(async () => {
+      stub.emit({ type: 'RUN_STARTED', runId: 'paused' } as BaseEvent);
+      stub.emit({ type: 'RUN_FINISHED', runId: 'paused', outcome: { type: 'interrupt', interrupts: [{ id: 'i', value: {} }] } } as BaseEvent);
+      return { result: undefined, newMessages: [] };
+    });
+    await agent.submit({});
+    developmentEvidence.events = [];
+    stub.runAgent.mockImplementationOnce(async () => {
+      stub.emit({ type: 'RUN_STARTED', runId: 'resumed' } as BaseEvent);
+      stub.emit({ type: 'RUN_FINISHED', runId: 'resumed' } as BaseEvent);
+      return { result: undefined, newMessages: [] };
+    });
+    await agent.submit({ resume: true });
+    expect(developmentEvidence.events).toContain('interrupt.handled');
+    developmentEvidence.events = [];
+    stub.runAgent.mockImplementationOnce(async () => {
+      stub.emit({ type: 'RUN_STARTED', runId: 'failed' } as BaseEvent);
+      stub.emit({ type: 'RUN_FINISHED', runId: 'resumed' } as BaseEvent, 'resumed');
+      stub.emit({ type: 'RUN_ERROR', runId: 'failed', message: 'failed' } as BaseEvent);
+      stub.emit({ type: 'RUN_FINISHED', runId: 'failed' } as BaseEvent);
+      return { result: undefined, newMessages: [] };
+    });
+    await agent.submit({});
+    expect(developmentEvidence.events).not.toContain('runtime.first_stream_completed');
+    developmentEvidence.events = [];
+    stub.runAgent.mockImplementationOnce(async () => {
+      await agent.stop();
+      stub.emit({ type: 'RUN_FINISHED' } as BaseEvent);
+      return { result: undefined, newMessages: [] };
+    });
+    await agent.submit({});
+    expect(developmentEvidence.events).not.toContain('runtime.first_stream_completed');
+  });
+});
 
 /**
  * Minimal concrete subclass of AbstractAgent for unit testing.

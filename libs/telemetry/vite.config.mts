@@ -6,7 +6,11 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: true,
-    include: ['src/**/*.spec.ts', 'scripts/**/*.spec.mjs'],
+    include: [
+      'src/**/*.spec.ts',
+      'scripts/**/*.spec.mjs',
+      'install/**/*.spec.mjs',
+    ],
     setupFiles: ['src/test-setup.ts'],
   },
 });

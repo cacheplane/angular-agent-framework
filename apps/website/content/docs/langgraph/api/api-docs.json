@@ -919,7 +919,7 @@
       {
         "name": "telemetry",
         "type": "false | AgentRuntimeTelemetrySink",
-        "description": "Optional app-owned sink. Supply one to receive runtime lifecycle events.",
+        "description": "Omit to enable automatic development-only collection. Set `false` to disable.\nAn app-owned sink replaces the automatic destination and receives the\nexisting runtime lifecycle callbacks.",
         "optional": true
       },
       {
@@ -1061,7 +1061,7 @@
       {
         "name": "telemetry",
         "type": "false | AgentRuntimeTelemetrySink",
-        "description": "Optional app-owned sink. Supply one to receive runtime lifecycle events.",
+        "description": "Omit to enable automatic development-only collection. Set `false` to disable.\nAn app-owned sink replaces the automatic destination and receives the\nexisting runtime lifecycle callbacks.",
         "optional": true
       },
       {

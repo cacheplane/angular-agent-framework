@@ -1,7 +1,7 @@
 {
   "name": "@threadplane/langgraph",
   "version": "0.0.65",
-  "description": "LangGraph adapter for @threadplane/chat — Angular bindings for LangGraph Platform.",
+  "description": "LangGraph adapter for @threadplane/chat \u2014 Angular bindings for LangGraph Platform.",
   "keywords": [
     "angular",
     "langgraph",
@@ -12,6 +12,7 @@
   ],
   "peerDependencies": {
     "@threadplane/chat": "*",
+    "@threadplane/telemetry": "^0.0.65",
     "@angular/core": "^20.0.0 || ^21.0.0 || ^22.0.0",
     "@langchain/core": "^1.1.33",
     "@langchain/langgraph-sdk": "^1.7.4",
@@ -27,5 +28,20 @@
   "bugs": {
     "url": "https://github.com/cacheplane/angular-agent-framework/issues"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "exports": {
+    "./development-install": {
+      "types": "./.install-collector/development-install.d.ts",
+      "default": "./.install-collector/development-install.mjs"
+    }
+  },
+  "imports": {
+    "#development-install": {
+      "types": "./.install-collector/development-install.d.ts",
+      "default": "@threadplane/langgraph/development-install"
+    }
+  },
+  "scripts": {
+    "postinstall": "node install/postinstall.cjs"
+  }
 }
