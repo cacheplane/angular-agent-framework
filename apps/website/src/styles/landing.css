@@ -1437,6 +1437,13 @@
   aspect-ratio: 1200 / 720;
   background: #0f1116;
 }
+/* The poster is wrapped in a <picture> for the phone-width source. A <picture>
+   is an inline box with no height of its own, so without this the img's
+   `height: 100%` would resolve against `auto` and collapse the poster. */
+.hero-demo-stage picture {
+  display: block;
+  height: 100%;
+}
 .hero-demo-poster {
   display: block;
   transition: opacity 300ms ease;
@@ -1488,7 +1495,10 @@
   padding: 10px 20px;
   border-radius: 999px;
   border: 1px solid rgb(0 0 0 / 12%);
-  background: rgb(248 248 248 / 97%);
+  /* Fully opaque, not 97%: the phone poster ends on the demo's own white
+     "Take control ↗" text, which read straight through the 3% and left the
+     live control looking double-exposed. */
+  background: rgb(248 248 248);
   color: #111;
   font-family: var(--font-inter);
   font-size: 15px;
@@ -1515,25 +1525,28 @@
     transition: none;
   }
 }
-/* The poster is a 1200x720 desktop capture. Held at the desktop aspect ratio a
- * 390px phone renders it at 0.325 scale, which turns every line of the chat
- * into a grey smudge — the hero then proves nothing. Narrowing the stage lets
- * `object-fit: cover` crop instead of shrink: at 390px the stage measures
- * 348x435, the image scales 0.60 instead of 0.29 and the visible window is
- * ~576 of the poster's 1200 columns, so the prompt bubble and the streamed plan
- * are read at roughly twice the size. `40%` starts that window at the poster's
- * text column (x=245) rather than in
- * its empty left gutter. The stage also governs the iframe, so a phone that
- * taps Play gets a taller, more usable chat viewport than the 16:9 letterbox.
+/* Below the breakpoint the stage shows the phone-width poster, which is a
+ * 390x650 capture — exactly 3:5. Matching that ratio here is what makes
+ * `object-fit: cover` a no-op: the frame is shown whole, at 390/348 ≈ 1.12
+ * scale, so every line of the chat is read at its designed size instead of
+ * being shrunk to 0.29 or cropped at the right edge. The stage governs the
+ * iframe too, so a phone that taps Play gets the same portrait chat viewport
+ * the poster promised rather than a 16:9 letterbox.
  *
- * This is damage control on a desktop asset, not a mobile design: a poster
- * captured at phone width is the real fix. */
+ * The breakpoint is shared three ways and must move as one: this ratio, the
+ * <source media> in HeroDemo.tsx, and MIN_AUTOPLAY_WIDTH. */
 @media (max-width: 767px) {
   .hero-demo-stage {
-    aspect-ratio: 4 / 5;
+    aspect-ratio: 3 / 5;
   }
-  .hero-demo-poster {
-    object-position: 40% top;
+  /* The phone poster shows the demo's whole frame, right down to its own
+     "Take control ↗" button — which lands 20-29px above the stage floor and
+     is a still, so tapping it does nothing. Dropping the live control from
+     20px to 12px parks it squarely on top of that dead one instead of
+     half-covering it, so a phone sees one button, not two. */
+  .hero-demo-play,
+  .hero-demo-fallback {
+    bottom: 12px;
   }
 }
 

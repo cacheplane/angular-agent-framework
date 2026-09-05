@@ -80,3 +80,7 @@ keys/
 
 # Aborted fixture-record runs strand raw recordings under a committed path
 **/e2e/fixtures/.staging/
+
+# Growth research generated deployment artifacts
+apps/growth-research/.dawn/
+apps/growth-research/.deployment/
