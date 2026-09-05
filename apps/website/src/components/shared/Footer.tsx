@@ -106,7 +106,13 @@ function NewsletterForm({ formPolicy }: { formPolicy: PublicFormPolicy }) {
   );
 }
 
-export function Footer({ formPolicy }: { formPolicy: PublicFormPolicy }) {
+export function Footer({
+  formPolicy,
+  showNewsletter = true,
+}: {
+  formPolicy: PublicFormPolicy;
+  showNewsletter?: boolean;
+}) {
   /**
    * `ctaId` defaults to a slug of the label. Pass it explicitly when the visible
    * text changes but the analytics series should stay continuous — renaming
@@ -137,7 +143,7 @@ export function Footer({ formPolicy }: { formPolicy: PublicFormPolicy }) {
             <p className="text-sm mb-4 footer-tagline">
               The Angular UI layer for production agents.
             </p>
-            <NewsletterForm formPolicy={formPolicy} />
+            {showNewsletter ? <NewsletterForm formPolicy={formPolicy} /> : null}
             {/* Social links */}
             <div className="flex items-center gap-4">
               <a href="https://github.com/cacheplane/angular-agent-framework"
