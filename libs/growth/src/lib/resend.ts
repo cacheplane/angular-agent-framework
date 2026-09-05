@@ -53,11 +53,41 @@ export interface RecipientDeliveryPolicy {
   nonProductionRedirectTo?: string;
 }
 
+/**
+ * The closed set of campaign template ids a send_step may be attributed to.
+ * Provider tags are the only per-template signal webhooks and reply handling
+ * can see, so every value here is a fixed identifier and never contact data.
+ */
+export const CAMPAIGN_TEMPLATE_IDS = [
+  'immediate',
+  'day-3',
+  'day-8',
+  'streaming_foundation',
+  'debugging_layers',
+  'event_state_boundary',
+] as const;
+export type CampaignTemplateId = (typeof CAMPAIGN_TEMPLATE_IDS)[number];
+const CAMPAIGN_TEMPLATE_ID_SET: ReadonlySet<string> = new Set(
+  CAMPAIGN_TEMPLATE_IDS
+);
+
+export function isCampaignTemplateId(
+  value: unknown
+): value is CampaignTemplateId {
+  return typeof value === 'string' && CAMPAIGN_TEMPLATE_ID_SET.has(value);
+}
+
 export interface RecipientEmailInput {
   jobId: string;
   leaseToken: string;
   subject: string;
   text: string;
+  /**
+   * Which campaign template rendered this message. Required for send_step
+   * jobs and forbidden otherwise; it is emitted as the bounded
+   * `campaign_template` provider tag.
+   */
+  campaignTemplate?: CampaignTemplateId;
   /**
    * Optional HTML alternative for the same message. It must stay a plain
    * rendering of the text part: paragraphs and HTTPS anchors only, no images,
@@ -291,13 +321,19 @@ function effectiveRecipient(
 function campaignTags(
   environment: DeliveryEnvironment,
   kind: string,
-  payload: Record<string, unknown>
+  payload: Record<string, unknown>,
+  campaignTemplate: unknown
 ): { name: string; value: string }[] {
   const tags = [
     { name: 'environment', value: environment },
     { name: 'job_kind', value: kind },
   ];
-  if (kind !== 'send_step') return tags;
+  if (kind !== 'send_step') {
+    if (campaignTemplate !== undefined) {
+      throw new Error('Only send_step carries a campaign template');
+    }
+    return tags;
+  }
   const campaignVersion = payload['campaign_version'];
   const step = payload['step'];
   if (campaignVersion !== 'v1' || (step !== 1 && step !== 2 && step !== 3)) {
@@ -305,9 +341,13 @@ function campaignTags(
       'send_step requires a registered campaign version and step'
     );
   }
+  if (!isCampaignTemplateId(campaignTemplate)) {
+    throw new Error('send_step requires a registered campaign template');
+  }
   tags.push(
     { name: 'campaign_version', value: campaignVersion },
-    { name: 'campaign_step', value: String(step) }
+    { name: 'campaign_step', value: String(step) },
+    { name: 'campaign_template', value: campaignTemplate }
   );
   return tags;
 }
@@ -379,7 +419,12 @@ export async function sendRecipientEmail(
     job.idempotencyKey,
     256
   );
-  const tags = campaignTags(policy.environment, job.kind, job.payload);
+  const tags = campaignTags(
+    policy.environment,
+    job.kind,
+    job.payload,
+    input.campaignTemplate
+  );
 
   input.signal?.throwIfAborted();
   let response: ResendResponse;

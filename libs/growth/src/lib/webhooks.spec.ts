@@ -169,6 +169,7 @@ function event(
         job_kind: 'send_step',
         campaign_version: 'v1',
         campaign_step: '1',
+        campaign_template: 'immediate',
       },
       ...(type === 'email.failed'
         ? { failed: { reason: 'provider_rejected' } }
@@ -614,6 +615,27 @@ describe('processVerifiedResendWebhook', () => {
     [
       {
         environment: 'production',
+        job_kind: 'send_step',
+        campaign_version: 'v1',
+        campaign_step: '1',
+        campaign_template: 'day-4',
+      },
+      'unmatched_job',
+    ],
+    [
+      {
+        environment: 'production',
+        job_kind: 'send_step',
+        campaign_version: 'v1',
+        campaign_step: '1',
+        campaign_template: 'immediate',
+        extra: 'x',
+      },
+      'unmatched_job',
+    ],
+    [
+      {
+        environment: 'production',
         job_kind: 'fulfill',
         campaign_version: 'v1',
       },
@@ -640,6 +662,37 @@ describe('processVerifiedResendWebhook', () => {
           payload: event('email.delivered', { tags }),
         })
       ).resolves.toEqual({ applied: false, reason });
+    }
+  );
+
+  it.each([
+    {
+      environment: 'production',
+      job_kind: 'send_step',
+      campaign_version: 'v1',
+      campaign_step: '1',
+    },
+    {
+      environment: 'production',
+      job_kind: 'send_step',
+      campaign_version: 'v1',
+      campaign_step: '1',
+      campaign_template: 'streaming_foundation',
+    },
+  ])(
+    'retries an unmatched canonical send_step event with or without a template tag %#',
+    async (tags) => {
+      const harness = executorWith({
+        'read-resend-webhook-activity': () => ({ rows: [] }),
+        'discover-resend-webhook-job': () => ({ rows: [] }),
+      });
+
+      await expect(
+        processVerifiedResendWebhook(harness.executor, {
+          providerEventId: 'msg_canonical_tags',
+          payload: event('email.delivered', { tags }),
+        })
+      ).resolves.toEqual({ applied: false, reason: 'retryable_unmatched_job' });
     }
   );
 

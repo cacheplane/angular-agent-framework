@@ -142,6 +142,7 @@ const message = {
   subject: 'A Threadplane architecture note',
   text: 'Hi Sam,\n\nHere is the architecture note.\n\nBrian',
   unsubscribeUrl: unsubscribeActionUrl,
+  campaignTemplate: 'immediate' as const,
 };
 
 describe('sendRecipientEmail', () => {
@@ -178,6 +179,7 @@ describe('sendRecipientEmail', () => {
           { name: 'job_kind', value: 'send_step' },
           { name: 'campaign_version', value: 'v1' },
           { name: 'campaign_step', value: '1' },
+          { name: 'campaign_template', value: 'immediate' },
         ],
       },
       { idempotencyKey: 'campaign:v1:contact:step:1' }
@@ -277,6 +279,73 @@ describe('sendRecipientEmail', () => {
     expect(test.send).not.toHaveBeenCalled();
   });
 
+  it.each([
+    'immediate',
+    'day-3',
+    'day-8',
+    'streaming_foundation',
+    'debugging_layers',
+    'event_state_boundary',
+  ] as const)('tags a send_step with the %s template', async (template) => {
+    const test = harness();
+
+    await sendRecipientEmail(
+      test.database,
+      { ...message, campaignTemplate: template },
+      productionPolicy(),
+      test.dependencies
+    );
+
+    expect(test.send.mock.calls[0]?.[0]).toMatchObject({
+      tags: expect.arrayContaining([
+        { name: 'campaign_template', value: template },
+      ]),
+    });
+  });
+
+  it.each([
+    undefined,
+    '',
+    'day-4',
+    'immediate; developer@example.com',
+    'IMMEDIATE',
+  ])(
+    'rejects a send_step whose template is outside the closed allowlist (%j)',
+    async (template) => {
+      const test = harness();
+
+      await expect(
+        sendRecipientEmail(
+          test.database,
+          { ...message, campaignTemplate: template as never },
+          productionPolicy(),
+          test.dependencies
+        )
+      ).rejects.toThrow(/campaign template/u);
+      expect(test.send).not.toHaveBeenCalled();
+    }
+  );
+
+  it('rejects a campaign template on a non-campaign job', async () => {
+    const test = harness({
+      job: job({
+        kind: 'fulfill',
+        idempotencyKey: 'fulfill:whitepaper:contact',
+        payload: { fulfillment_kind: 'whitepaper' },
+      }),
+    });
+
+    await expect(
+      sendRecipientEmail(
+        test.database,
+        message,
+        productionPolicy(),
+        test.dependencies
+      )
+    ).rejects.toThrow(/campaign template/u);
+    expect(test.send).not.toHaveBeenCalled();
+  });
+
   it('uses a separate fulfillment tag contract without campaign tags', async () => {
     const test = harness({
       job: job({
@@ -288,7 +357,7 @@ describe('sendRecipientEmail', () => {
 
     await sendRecipientEmail(
       test.database,
-      message,
+      { ...message, campaignTemplate: undefined },
       productionPolicy(),
       test.dependencies
     );
