@@ -87,6 +87,10 @@ export function createCanonicalPackageJson(srcPkg) {
   const out = {
     name: srcPkg.name,
     version: srcPkg.version,
+    // The npm page's subtitle. This manifest is an allowlist, so a field left
+    // out here is a field that never ships, however carefully it is authored
+    // in libs/telemetry/package.json.
+    description: srcPkg.description,
     license: srcPkg.license,
     publishConfig: srcPkg.publishConfig,
     repository: srcPkg.repository,

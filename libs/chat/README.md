@@ -1,8 +1,6 @@
 # @threadplane/chat
 
-Drop-in agent chat UI for Angular 20–22. Headless UI primitives plus opinionated compositions that read a runtime-neutral `Agent` contract — ship a production chat surface in days without coupling to a specific backend.
-
-Part of [Threadplane](https://github.com/cacheplane/angular-agent-framework).
+The chat surface of [Threadplane](https://github.com/cacheplane/angular-agent-framework), the AI agent UI framework for Angular. Headless primitives plus opinionated compositions read a runtime-neutral `Agent` contract, so the UI is built once and runs over LangGraph or AG-UI without changes. Angular 20–22, on Signals and DI.
 
 <p>
   <a href="https://www.npmjs.com/package/@threadplane/chat">
