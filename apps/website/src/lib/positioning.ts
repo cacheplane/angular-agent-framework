@@ -65,7 +65,7 @@ export const RELIABILITY_RECEIPTS: readonly ReliabilityReceipt[] = [
     claim: 'Three runtimes exercised end to end',
     detail: 'LangGraph, AG-UI and Mastra backends deployed and driven by browser tests on every merge, against one Angular contract.',
     sourceLabel: 'runtime portability matrix',
-    sourceHref: '/docs/runtimes/getting-started/introduction',
+    sourceHref: '/docs/choosing-an-adapter',
   },
   {
     claim: 'No content telemetry, no cloud',
