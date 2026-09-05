@@ -567,7 +567,7 @@ const supportedDevelopmentEventTypes = new Set([
 ]);
 
 /** A malformed outcome must not turn the reducer's legacy fallback into evidence. */
-function hasValidFinishedOutcome(event: { type: string }): boolean {
+function hasValidFinishedOutcome(event: object): boolean {
   const outcome = (event as { outcome?: unknown }).outcome;
   // The AG-UI schema explicitly accepts absent/null outcomes for older servers.
   if (outcome == null) return true;

@@ -144,11 +144,13 @@ describe('automatic development runtime', () => {
     expect(fetcher).not.toHaveBeenCalled();
   });
 
-  it.each(['production', 'runtime', 'global', 'window', 'storage', 'ssr'])(
+  it.each(['production', 'runtime', 'global', 'window', 'storage', 'ssr', 'automation'])(
     'is inert when disabled by %s',
     async (reason) => {
       if (reason === 'production') mode.development = false;
       if (reason === 'global') api.setDevelopmentCollectionEnabled(false);
+      if (reason === 'automation')
+        vi.stubGlobal('navigator', { webdriver: true });
       if (reason === 'window')
         disabledWindow().__THREADPLANE_TELEMETRY_DISABLED__ = true;
       if (reason === 'storage')
@@ -163,6 +165,7 @@ describe('automatic development runtime', () => {
       handle.milestone('transport.connected');
       await advance(300000);
       expect(fetcher).not.toHaveBeenCalled();
+      if (reason === 'automation') expect(reads).not.toHaveBeenCalled();
       expect(
         reads.mock.calls.every(
           ([key]) => key === 'THREADPLANE_TELEMETRY_DISABLED'

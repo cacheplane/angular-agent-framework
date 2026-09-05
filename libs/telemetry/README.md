@@ -40,7 +40,8 @@ retains its own inert install and explicit helper behavior.
 LangGraph and AG-UI adapters and the supported JSON renderer use this package's
 lazy development collector when they are actually used. Angular's `isDevMode()`
 must be true and browser APIs must be available before identity/storage/network
-work. Production builds, SSR, imports, and unused runtime construction are inert.
+work. Production builds, SSR, imports, unused runtime construction, and automated
+browsers reporting `navigator.webdriver` are inert.
 A development build served on a remote hostname is still development software.
 
 Events contain random event IDs, a browser-origin UUID, an inactivity session UUID,

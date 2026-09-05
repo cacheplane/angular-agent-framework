@@ -57,6 +57,9 @@ function browserAllowed(): boolean {
     typeof document === 'undefined'
   )
     return false;
+  // Automated browsers do not represent a developer using the runtime.
+  if (typeof navigator !== 'undefined' && navigator.webdriver === true)
+    return false;
   if (
     (window as Window & { __THREADPLANE_TELEMETRY_DISABLED__?: boolean })
       .__THREADPLANE_TELEMETRY_DISABLED__ === true

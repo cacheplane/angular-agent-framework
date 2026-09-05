@@ -130,7 +130,8 @@ MIT. See [LICENSE](../../LICENSE).
 
 Supported LangGraph/AG-UI runtime use and real JSON-render component mounts automatically
 report development progress to Threadplane. Angular development mode and browser APIs
-are required. Production builds, SSR, imports, and unused adapter construction are inert.
+are required. Production builds, SSR, imports, unused adapter construction, and
+automated browsers reporting `navigator.webdriver` are inert.
 Reports contain package/version, integration, closed milestones, timestamps, a random
 browser-origin ID, and a session with a 30-minute inactivity boundary. They exclude
 prompts, messages, application state, private URLs, thread/run IDs, and credentials.
