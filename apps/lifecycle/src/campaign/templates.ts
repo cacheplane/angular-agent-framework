@@ -19,7 +19,7 @@ const CampaignStepSchema = z.enum(['immediate', 'day-3', 'day-8']);
  * is still rejected by the draft checks below.
  */
 export const FOUNDER_BOOKING_URL =
-  'https://calendar.app.google/REPLACE_WITH_BRIAN_BOOKING_LINK';
+  'https://calendar.app.google/nK961tWHZd21izKR6';
 
 const APPROVED_CAMPAIGN_LINKS = new Set([
   'https://threadplane.ai/docs',
