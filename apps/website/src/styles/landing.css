@@ -1216,6 +1216,88 @@
   color: var(--color-accent-hover);
   text-decoration-color: currentColor;
 }
+/* Reliability receipts: a second line under the four cells, same grammar,
+ * smaller type. Reliability.tsx. Always rendered inside the dark #proof
+ * band, so --color-text-* and --color-accent already resolve to the dark
+ * re-scope from ui.css without any extra [data-surface="dark"] scoping. */
+.reliability-receipts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  list-style: none;
+  margin: 0;
+  padding: 24px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+.reliability-receipt {
+  min-width: 0;
+}
+.reliability-receipt-claim {
+  font-family: var(--font-inter);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+.reliability-receipt-detail {
+  font-family: var(--font-inter);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  margin: 6px 0 0;
+}
+/* Works-with footer line, inside the dark band. */
+.reliability-works-with {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+.reliability-works-with-label,
+.reliability-works-with-more {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+.reliability-works-with-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+.reliability-logo {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+.reliability-works-with-name {
+  font-family: var(--font-inter);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+.reliability-works-with-link {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+@media (max-width: 860px) {
+  .reliability-receipts {
+    grid-template-columns: 1fr;
+  }
+  .reliability-works-with-link {
+    margin-left: 0;
+  }
+}
 @media (max-width: 900px) {
   .proof-strip-grid {
     gap: 32px;
