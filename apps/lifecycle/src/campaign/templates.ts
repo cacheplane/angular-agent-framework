@@ -179,8 +179,8 @@ const CAMPAIGN_TEMPLATES: Record<CampaignStep, CampaignDraft> = {
     body: `Even with agents writing much of our code today, teams still get stuck.\n\nI can help you work through any issue with Threadplane in a 30-minute hands-on session: fix the bug, and get your code working.\n\nNo sales.\nJust the founder meeting with you and your engineering team.\n\nBook a time with me:\n${FOUNDER_BOOKING_URL}`,
   },
   'day-8': {
-    subject: 'One last architecture note',
-    body: 'A clean boundary between agent events and UI state makes streaming, retries, and tests much easier to reason about. If you reply with the rough shape of your stack, I can point to a relevant pattern.\n\nWould that be useful?\n\nThis is my last automated follow-up.',
+    subject: 'Free engineering session with the Threadplane founder',
+    body: `One last note.\n\nAs the founder of Threadplane, I want to get on a call with you and your team to help you fix any bugs and get your code working.\n\nNo sales.\nJust help, and some feedback for me to improve the product.\n\nGrab some time on my calendar:\n${FOUNDER_BOOKING_URL}\n\nThis is my last automated follow-up.`,
   },
 };
 

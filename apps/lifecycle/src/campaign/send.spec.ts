@@ -154,7 +154,7 @@ describe('prepareCampaignMessage', () => {
         subject: [
           'Engineer to engineer',
           'Get your agent UI into production',
-          'One last architecture note',
+          'Free engineering session with the Threadplane founder',
         ][step - 1],
       });
       if (prepared.status !== 'ready') throw new Error('expected ready');
@@ -175,7 +175,7 @@ describe('prepareCampaignMessage', () => {
     ).toThrow(DeterministicLifecycleJobError);
   });
 
-  it('renders only a closed evidence-linked angle selection deterministically', () => {
+  it('keeps the fixed final offer even for a closed evidence-linked artifact', () => {
     const cited = artifact({
       cited_signals: [
         { signal: 'Bounded source fact', source_ids: ['source-1'] },
@@ -201,7 +201,10 @@ describe('prepareCampaignMessage', () => {
         job: job('send_step', { campaign_version: 'v1', step: 3 }),
         unsubscribeUrl: UNSUBSCRIBE,
       })
-    ).toMatchObject({ status: 'ready', subject: 'One event-state boundary' });
+    ).toMatchObject({
+      status: 'ready',
+      subject: 'Free engineering session with the Threadplane founder',
+    });
   });
 
   it.each([
@@ -234,7 +237,7 @@ describe('prepareCampaignMessage', () => {
   });
 
   it.each([1, 2, 3] as const)(
-    'maps the validated AI draft at index %i to only that fixed step',
+    'renders the fixed founder offer for step %i regardless of research drafts',
     (step) => {
       const prepared = prepareCampaignMessage({
         context: context(),
@@ -247,7 +250,7 @@ describe('prepareCampaignMessage', () => {
         subject: [
           'Engineer to engineer',
           'Get your agent UI into production',
-          'One event-state boundary',
+          'Free engineering session with the Threadplane founder',
         ][step - 1],
       });
       if (prepared.status !== 'ready') throw new Error('expected ready');

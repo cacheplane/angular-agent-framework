@@ -49,7 +49,6 @@ import { renderInternalNotificationSummary } from '../notifications/templates.js
 import { DeterministicLifecycleJobError } from '../job-errors.js';
 import {
   renderCampaignTemplate,
-  renderEvidenceCampaignTemplate,
   type CampaignDraft,
   type CampaignStep,
 } from './templates.js';
@@ -232,25 +231,9 @@ function validArtifact(
   return parsed.data;
 }
 
-function draftFor(
-  step: 1 | 2 | 3,
-  artifact: EnrichmentArtifact | null
-): CampaignDraft {
-  // Steps one and two are always the founder session offers; a research
-  // angle only shapes the final follow-up.
-  if (step === 3 && artifact) {
-    const selection = artifact.drafts[step - 1];
-    const cited =
-      selection !== null &&
-      artifact.cited_signals.some(({ source_ids }) =>
-        source_ids.includes(selection.source_id)
-      );
-    if (selection !== null && cited) {
-      return renderEvidenceCampaignTemplate(selection.angle_id, {
-        finalStep: step === 3,
-      });
-    }
-  }
+function draftFor(step: 1 | 2 | 3): CampaignDraft {
+  // Every step is a fixed founder session offer. Research artifacts still
+  // gate and inform the internal summary, but they no longer select copy.
   return renderCampaignTemplate(STEP_NAMES[step]);
 }
 
@@ -320,13 +303,7 @@ export function prepareCampaignMessage(input: {
   job: GrowthJob;
   unsubscribeUrl: UnsubscribeActionUrl;
 }): PreparedCampaignMessage {
-  const step = campaignStep(input.job);
-  const genericHello =
-    input.context.campaignEnrollmentReason === 'install_runtime';
-  const artifact = genericHello
-    ? null
-    : validArtifact(input.context.enrichmentArtifact, input.context.contactId);
-  const draft = draftFor(step, artifact);
+  const draft = draftFor(campaignStep(input.job));
   return {
     status: 'ready',
     subject: draft.subject,
@@ -374,9 +351,8 @@ function formSource(
   throw new DeterministicLifecycleJobError('Persisted form kind is invalid');
 }
 
-function enrichmentDrafts(context: LifecycleJobContext): CampaignDraft[] {
-  const artifact = validArtifact(context.enrichmentArtifact, context.contactId);
-  return ([1, 2, 3] as const).map((step) => draftFor(step, artifact));
+function enrichmentDrafts(): CampaignDraft[] {
+  return ([1, 2, 3] as const).map((step) => draftFor(step));
 }
 
 async function dispatchRecipient(
@@ -625,7 +601,7 @@ export async function dispatchLifecycleAppOwnedJob(
       scoreVersion: parsed?.score_version ?? 'growth-score:v1:unscored',
       scoreReasons: parsed?.score_reasons ?? [],
       evidenceSourceUrls: parsed?.sources.map(({ url }) => url) ?? [],
-      drafts: enrichmentDrafts(context),
+      drafts: enrichmentDrafts(),
       founderStopUrl: `https://threadplane.ai/api/growth/stop?token=${founderStopToken}`,
     });
     signal.throwIfAborted();
