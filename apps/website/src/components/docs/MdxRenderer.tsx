@@ -18,9 +18,7 @@ import {
   MiddlewareHowItFits,
   TelemetryHowItFits,
 } from './diagrams';
-import rehypePrettyCode from 'rehype-pretty-code';
-import rehypeSlug from 'rehype-slug';
-import remarkGfm from 'remark-gfm';
+import { mdxCompileOptions } from './mdx-options';
 
 /**
  * Intrinsic size of each SVG diagram in `public/blog/diagrams`.
@@ -87,11 +85,6 @@ const mdxComponents = {
   ...mdxHeadingComponents,
 };
 
-const rehypeOptions = {
-  theme: 'tokyo-night',
-  keepBackground: true,
-};
-
 interface MdxRendererProps {
   source: string;
 }
@@ -102,13 +95,7 @@ export function MdxRenderer({ source }: MdxRendererProps) {
       <MDXRemote
         source={source}
         components={mdxComponents}
-        options={{
-          mdxOptions: {
-            remarkPlugins: [remarkGfm],
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        rehypePlugins: [rehypeSlug, [rehypePrettyCode, rehypeOptions] as any],
-          },
-        }}
+        options={mdxCompileOptions}
       />
     </div>
   );

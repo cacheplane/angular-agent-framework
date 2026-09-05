@@ -1,0 +1,67 @@
+import { isValidElement, type ReactElement, type ReactNode } from 'react';
+import { describe, expect, it } from 'vitest';
+import { MDXRemote } from 'next-mdx-remote/rsc';
+import { ExampleCodeError, type ExampleCodeContext } from '../../../lib/example-code';
+import { createExampleCode } from './ExampleCode';
+
+const context: ExampleCodeContext = {
+  docsPath: '/docs/langgraph/guides/streaming',
+  assetPaths: ['cockpit/langgraph/streaming/angular/src/app/streaming.component.ts'],
+  sources: {
+    'cockpit/langgraph/streaming/angular/src/app/streaming.component.ts': [
+      'class StreamingComponent {',
+      '  // #region send',
+      '  send(text: string) {}',
+      '  // #endregion',
+      '}',
+    ].join('\n'),
+  },
+};
+
+function findMdx(node: ReactNode): ReactElement<{ source: string; components: object }> | null {
+  if (Array.isArray(node)) {
+    for (const child of node) {
+      const found = findMdx(child);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (!isValidElement<{ source: string; components: object; children?: ReactNode }>(node)) return null;
+  if (node.type === MDXRemote) return node;
+  return findMdx(node.props.children);
+}
+
+describe('ExampleCode', () => {
+  it('renders the whole file as a fence through MDXRemote with the file title', () => {
+    const ExampleCode = createExampleCode(context);
+    const element = ExampleCode({ file: 'streaming.component.ts' });
+    const mdx = findMdx(element);
+
+    expect(element.props['data-example-file']).toBe(
+      'cockpit/langgraph/streaming/angular/src/app/streaming.component.ts'
+    );
+    expect(mdx?.props.source).toBe(
+      '```ts\n' + context.sources['cockpit/langgraph/streaming/angular/src/app/streaming.component.ts'] + '\n```'
+    );
+    expect(Object.keys(mdx?.props.components ?? {})).toEqual(['pre']);
+  });
+
+  it('renders a region and records it on the wrapper', () => {
+    const ExampleCode = createExampleCode(context);
+    const element = ExampleCode({ file: 'streaming.component.ts', region: 'send', title: 'send()' });
+
+    expect(element.props['data-example-region']).toBe('send');
+    expect(findMdx(element)?.props.source).toBe('```ts\nsend(text: string) {}\n```');
+  });
+
+  it('throws on a docs-only page', () => {
+    const ExampleCode = createExampleCode(null);
+    expect(() => ExampleCode({ file: 'streaming.component.ts' })).toThrow(ExampleCodeError);
+    expect(() => ExampleCode({ file: 'streaming.component.ts' })).toThrow(/mapped example/);
+  });
+
+  it('throws on an unknown file', () => {
+    const ExampleCode = createExampleCode(context);
+    expect(() => ExampleCode({ file: 'nope.ts' })).toThrow(ExampleCodeError);
+  });
+});
