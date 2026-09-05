@@ -654,11 +654,14 @@ body:has([data-website-workspace-host]) {
 
 /* mdx — ExampleCode (code included from the page's live example). The fence
  * inside is an ordinary rehype-pretty-code figure; only the title bar and the
- * outer margin are new, so the figure's own margin is collapsed here. */
-.mdx-example-code {
+ * outer margin are new, so the figure's own margin is collapsed here. Scoped
+ * to .docs-prose like the other code-block rules. */
+.docs-prose .mdx-example-code {
   margin: 1.5rem 0;
+  box-shadow: var(--docs-code-shadow);
+  border-radius: 0.75rem;
 }
-.mdx-example-code-title {
+.docs-prose .mdx-example-code-title {
   padding: 6px 14px;
   font-family: var(--font-mono);
   font-size: 0.7rem;
@@ -674,6 +677,8 @@ body:has([data-website-workspace-host]) {
 .docs-prose .mdx-example-code [data-rehype-pretty-code-figure] pre {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
+  border-top: 0;
+  box-shadow: none;
 }
 
 /* mdx — CodeGroup */

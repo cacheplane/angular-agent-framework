@@ -36,10 +36,17 @@ export function createExampleCode(context: ExampleCodeContext | null) {
     const path = resolveExampleFile(file, context);
     const source = context.sources[path];
     const code = region ? sliceRegion(source, region, path) : source;
+    const heading = title ?? exampleTitle(path);
 
     return (
-      <div className="mdx-example-code" data-example-file={path} data-example-region={region}>
-        <div className="mdx-example-code-title">{title ?? exampleTitle(path)}</div>
+      <div
+        className="mdx-example-code"
+        data-example-file={path}
+        data-example-region={region}
+        role="group"
+        aria-label={heading}
+      >
+        <div className="mdx-example-code-title">{heading}</div>
         <MDXRemote source={fenceFor(code, path)} components={{ pre: Pre }} options={mdxCompileOptions} />
       </div>
     );
