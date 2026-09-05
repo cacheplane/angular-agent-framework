@@ -77,6 +77,8 @@ Angular specs for the tool view's three states. The hero e2e continues to run on
 
 **Measurement gate before re-recording.** This spec asserts that real tools make the model's turn compact, on the reasoning that it is verbose precisely because it can only describe. That is a hypothesis. It must be measured live before committing to a re-recording, the way the two prompt hypotheses were. If the turn is still thousands of characters with tools in hand, stop and rethink rather than trimming by hand.
 
+**Measured 2026-09-05 (10 live runs, gpt-5-mini, `examples/chat/python/scripts/measure_approval_turn.py`):** interrupt from `delete_backups` in 10/10, `request_approval` in 0/10; `list_backups` first in 10/10; the three deletable rows removed and the two retained rows kept in 10/10; post-approval turn median **196 chars / 1 line**, max 228. Gate passed; recording proceeds. One wrinkle: in 4/10 runs the model's first `delete_backups` call included a retained id and was refused before any interrupt, and it re-called with the correct set — the guardrail doing its job, at the cost of one extra tool chip before the pause. The committed take is one with a single call.
+
 ## 6. Out of scope
 
 Making this the canonical interrupt story in the docs guide and the cockpit capability example. "Gate the destructive tool in code" is better guidance than what the interrupts guide teaches today, but that is a follow-up once the pattern has proven itself here.
