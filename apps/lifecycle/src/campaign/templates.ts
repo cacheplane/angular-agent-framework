@@ -12,9 +12,19 @@ export type CampaignEvidenceAngle =
   | 'event_state_boundary';
 
 const CampaignStepSchema = z.enum(['immediate', 'day-3', 'day-8']);
+
+/**
+ * Brian's Google Calendar appointment-schedule booking page. This is the only
+ * scheduling link recipient copy may carry; every other calendar host or path
+ * is still rejected by the draft checks below.
+ */
+export const FOUNDER_BOOKING_URL =
+  'https://calendar.app.google/nK961tWHZd21izKR6';
+
 const APPROVED_CAMPAIGN_LINKS = new Set([
   'https://threadplane.ai/docs',
   'https://threadplane.ai/pilot-to-prod',
+  FOUNDER_BOOKING_URL,
 ]);
 const URL_PATTERN = /https?:\/\/[^\s<>()"'“”‘’\]}]+/giu;
 const EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/iu;
@@ -161,31 +171,31 @@ export function normalizeCampaignDraft(candidate: unknown): CampaignDraft {
 
 const CAMPAIGN_TEMPLATES: Record<CampaignStep, CampaignDraft> = {
   immediate: {
-    subject: 'A practical place to start',
-    body: 'Thanks for taking a look at Threadplane. One practical starting point is to get a streamed response working end to end, then add persistence and interrupts as the product needs them.\n\nWhat are you building?\n\nhttps://threadplane.ai/docs',
+    subject: 'Engineer to engineer',
+    body: `A lot of teams hit the same point.\nThe idea is clear.\nGetting it working cleanly in production is where things get messy.\n\nI am the founding engineer, and I am offering short engineer-to-engineer sessions to think through implementation, unblock technical questions, and avoid the common mistakes.\n\nNo sales pitch.\nJust a practical conversation about your use case and what it would take to get it working.\n\nYou can grab a time here:\n${FOUNDER_BOOKING_URL}`,
   },
   'day-3': {
-    subject: 'One debugging shortcut',
-    body: 'If an agent UI stalls, I usually isolate transport, state updates, and rendering in that order. It turns a vague integration problem into three small checks.\n\nWhich layer is blocking you?\n\nhttps://threadplane.ai/docs',
+    subject: 'Get your agent UI into production',
+    body: `Even with agents writing much of our code today, teams still get stuck.\n\nI can help you work through any issue with Threadplane in a 30-minute hands-on session: fix the bug, and get your code working.\n\nNo sales.\nJust a founding engineer meeting with you and your engineering team.\n\nBook a time with me:\n${FOUNDER_BOOKING_URL}`,
   },
   'day-8': {
-    subject: 'One last architecture note',
-    body: 'A clean boundary between agent events and UI state makes streaming, retries, and tests much easier to reason about. If you reply with the rough shape of your stack, I can point to a relevant pattern.\n\nWould that be useful?\n\nThis is my last automated follow-up.',
+    subject: 'Free engineering session with the Threadplane founder',
+    body: `One last note.\n\nAs the founder of Threadplane, I want to get on a call with you and your team to help you fix any bugs and get your code working.\n\nNo sales.\nJust help, and some feedback for me to improve the product.\n\nGrab some time on my calendar:\n${FOUNDER_BOOKING_URL}\n\nThis is my last automated follow-up.`,
   },
 };
 
 const EVIDENCE_TEMPLATES: Record<CampaignEvidenceAngle, CampaignDraft> = {
   streaming_foundation: {
-    subject: 'A streaming foundation',
-    body: 'One useful starting pattern is to get a streamed response working end to end before layering in persistence and interrupts. It keeps the first integration boundary small.\n\nWould that sequence help?\n\nhttps://threadplane.ai/docs',
+    subject: 'Streaming first, then the rest',
+    body: `Most agent UIs go wrong before the first streamed response works end to end.\nGet that boundary solid first, then layer in persistence and interrupts.\n\nI am the founding engineer, and I am happy to work through that sequence with you and your team in a short hands-on session.\n\nNo sales.\nJust engineer to engineer.\n\nGrab a time here:\n${FOUNDER_BOOKING_URL}`,
   },
   debugging_layers: {
-    subject: 'A debugging sequence',
-    body: 'A practical debugging order is transport, state updates, then rendering. It turns an agent UI problem into three smaller checks.\n\nWhich layer would be most useful to isolate?\n\nhttps://threadplane.ai/docs',
+    subject: 'Three checks when the UI stalls',
+    body: `When an agent UI stalls, I isolate transport, state updates, and rendering, in that order.\nIt turns one vague problem into three small checks.\n\nIf you are stuck on any of them, I can walk through it with you and your team in a 30-minute hands-on session.\n\nNo sales.\nJust a founding engineer helping you get your code working.\n\nBook a time with me:\n${FOUNDER_BOOKING_URL}`,
   },
   event_state_boundary: {
-    subject: 'One event-state boundary',
-    body: 'A narrow boundary between agent events and UI state makes streaming, retries, and tests easier to reason about.\n\nWould a concrete pattern be useful?',
+    subject: 'One boundary that makes agent UIs testable',
+    body: `A narrow boundary between agent events and UI state makes streaming, retries, and tests much easier to reason about.\n\nAs the founding engineer of Threadplane, I want to get on a call with you and your team to look at that boundary in your code and fix anything in the way.\n\nNo sales.\nJust help, and some feedback for me to improve the product.\n\nGrab some time on my calendar:\n${FOUNDER_BOOKING_URL}`,
   },
 };
 

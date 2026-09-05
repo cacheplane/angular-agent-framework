@@ -20,11 +20,13 @@ import {
   dispatchLifecycleAppOwnedJob,
   LIFECYCLE_SCORE_CONTENT_REGISTRY_V1,
   loadLifecycleRuntimeConfiguration,
+  campaignGreeting,
   prepareCampaignMessage,
   type LifecycleJobContext,
   type LifecycleJobDependencies,
 } from './send.js';
 import { DeterministicLifecycleJobError } from '../job-errors.js';
+import { FOUNDER_BOOKING_URL } from './templates.js';
 
 const NOW = new Date('2026-09-01T12:03:00.000Z');
 const CONTACT_ID = '00000000-0000-4000-8000-000000000002';
@@ -135,10 +137,9 @@ describe('prepareCampaignMessage', () => {
           campaignEnrollmentReason: 'install_runtime',
         },
         job: job('send_step', { campaign_version: 'v1', step: 1 }),
-        now: new Date('2026-09-01T12:00:00.000Z'),
         unsubscribeUrl: UNSUBSCRIBE,
       })
-    ).toMatchObject({ status: 'ready', subject: 'A practical place to start' });
+    ).toMatchObject({ status: 'ready', subject: 'Engineer to engineer' });
   });
 
   it.each([1, 2, 3] as const)(
@@ -147,15 +148,14 @@ describe('prepareCampaignMessage', () => {
       const prepared = prepareCampaignMessage({
         context: { ...context(), campaignEnrollmentReason: 'install_runtime' },
         job: job('send_step', { campaign_version: 'v1', step }),
-        now: NOW,
         unsubscribeUrl: UNSUBSCRIBE,
       });
       expect(prepared).toMatchObject({
         status: 'ready',
         subject: [
-          'A practical place to start',
-          'One debugging shortcut',
-          'One last architecture note',
+          'Engineer to engineer',
+          'Get your agent UI into production',
+          'Free engineering session with the Threadplane founder',
         ][step - 1],
       });
       if (prepared.status !== 'ready') throw new Error('expected ready');
@@ -171,13 +171,12 @@ describe('prepareCampaignMessage', () => {
       prepareCampaignMessage({
         context: { ...context(), campaignEnrollmentReason: 'install_runtime' },
         job: job('send_step', { campaign_version: 'v1', step: 4 }),
-        now: NOW,
         unsubscribeUrl: UNSUBSCRIBE,
       })
     ).toThrow(DeterministicLifecycleJobError);
   });
 
-  it('renders only a closed evidence-linked angle selection deterministically', () => {
+  it('renders the evidence-flavored final offer for a closed evidence-linked artifact', () => {
     const cited = artifact({
       cited_signals: [
         { signal: 'Bounded source fact', source_ids: ['source-1'] },
@@ -200,11 +199,13 @@ describe('prepareCampaignMessage', () => {
     expect(
       prepareCampaignMessage({
         context: context({ enrichmentArtifact: cited }),
-        job: job('send_step', { campaign_version: 'v1', step: 1 }),
-        now: NOW,
+        job: job('send_step', { campaign_version: 'v1', step: 3 }),
         unsubscribeUrl: UNSUBSCRIBE,
       })
-    ).toMatchObject({ status: 'ready', subject: 'A streaming foundation' });
+    ).toMatchObject({
+      status: 'ready',
+      subject: 'One boundary that makes agent UIs testable',
+    });
   });
 
   it.each([
@@ -224,13 +225,12 @@ describe('prepareCampaignMessage', () => {
     const prepared = prepareCampaignMessage({
       context: context({ enrichmentArtifact: unsafe }),
       job: job('send_step', { campaign_version: 'v1', step: 1 }),
-      now: new Date('2026-09-01T12:05:00.000Z'),
       unsubscribeUrl: UNSUBSCRIBE,
     });
 
     expect(prepared).toMatchObject({
       status: 'ready',
-      subject: 'A practical place to start',
+      subject: 'Engineer to engineer',
     });
     if (prepared.status === 'ready') {
       expect(prepared.text).not.toContain(inventedClaim);
@@ -238,98 +238,127 @@ describe('prepareCampaignMessage', () => {
   });
 
   it.each([1, 2, 3] as const)(
-    'maps the validated AI draft at index %i to only that fixed step',
+    'maps the validated research angle at index %i to only that fixed step',
     (step) => {
       const prepared = prepareCampaignMessage({
         context: context(),
         job: job('send_step', { campaign_version: 'v1', step }),
-        now: NOW,
         unsubscribeUrl: UNSUBSCRIBE,
       });
 
       expect(prepared).toMatchObject({
         status: 'ready',
         subject: [
-          'A streaming foundation',
-          'A debugging sequence',
-          'One event-state boundary',
+          'Streaming first, then the rest',
+          'Three checks when the UI stalls',
+          'One boundary that makes agent UIs testable',
         ][step - 1],
       });
       if (prepared.status !== 'ready') throw new Error('expected ready');
-      expect(prepared.text).toContain('\n\n—\nBrian\n\nTo stop these emails: ');
+      expect(prepared.text).toContain(
+        '\n\n—\nBrian\n\nIs this email not relevant to you? Stop here: '
+      );
       expect(prepared.text).toContain(unsubscribeActionUrlValue(UNSUBSCRIBE));
       expect(prepared.text).not.toContain('ada@example.com');
     }
   );
 
-  it('uses a valid artifact immediately without imposing the five-minute wait', () => {
+  it('sends the streaming-flavored offer as step one when research is cited', () => {
     expect(
       prepareCampaignMessage({
         context: context(),
         job: job('send_step', { campaign_version: 'v1', step: 1 }),
-        now: new Date('2026-09-01T12:00:30.000Z'),
         unsubscribeUrl: UNSUBSCRIBE,
       })
-    ).toMatchObject({ status: 'ready', subject: 'A streaming foundation' });
-  });
-
-  it('defers step one only until enrollment plus five minutes when no valid artifact exists', () => {
-    expect(
-      prepareCampaignMessage({
-        context: context({ enrichmentArtifact: null }),
-        job: job('send_step', { campaign_version: 'v1', step: 1 }),
-        now: NOW,
-        unsubscribeUrl: UNSUBSCRIBE,
-      })
-    ).toEqual({
-      status: 'deferred',
-      availableAt: new Date('2026-09-01T12:05:00.000Z'),
+    ).toMatchObject({
+      status: 'ready',
+      subject: 'Streaming first, then the rest',
     });
   });
 
-  it('uses the corresponding neutral template after the five-minute deadline', () => {
+  it('sends step one immediately without waiting for a research artifact', () => {
     expect(
       prepareCampaignMessage({
-        context: context({ enrichmentArtifact: null }),
+        context: context({ enrichmentArtifact: null, enrollmentAt: null }),
         job: job('send_step', { campaign_version: 'v1', step: 1 }),
-        now: new Date('2026-09-01T12:05:00.000Z'),
         unsubscribeUrl: UNSUBSCRIBE,
       })
-    ).toMatchObject({ status: 'ready', subject: 'A practical place to start' });
+    ).toMatchObject({ status: 'ready', subject: 'Engineer to engineer' });
   });
 
-  it('closes the sequence on the final step even when evidence copy is selected', () => {
-    const cited = artifact({
-      cited_signals: [
-        { signal: 'Bounded source fact', source_ids: ['source-1'] },
-      ],
-      sources: [
-        {
-          id: 'source-1',
-          url: 'https://example.com/about',
-          retrieved_at: '2026-09-01T12:00:00.000Z',
-          content_hash: 'a'.repeat(64),
-        },
-      ],
-      drafts: [
-        { angle_id: 'streaming_foundation', source_id: 'source-1' },
-        { angle_id: 'debugging_layers', source_id: 'source-1' },
-        { angle_id: 'event_state_boundary', source_id: 'source-1' },
-      ],
+  it('renders a plain HTML alternative with a one-word unsubscribe link', () => {
+    const prepared = prepareCampaignMessage({
+      context: context(),
+      job: job('send_step', { campaign_version: 'v1', step: 1 }),
+      unsubscribeUrl: UNSUBSCRIBE,
     });
+    const unsubscribeUrl = unsubscribeActionUrlValue(UNSUBSCRIBE);
 
-    const message = prepareCampaignMessage({
-      context: context({ enrichmentArtifact: cited }),
-      job: job('send_step', { campaign_version: 'v1', step: 3 }),
-      now: new Date('2026-09-09T12:05:00.000Z'),
+    expect(prepared.html).toContain(
+      `here:<br><a href="${FOUNDER_BOOKING_URL}">${FOUNDER_BOOKING_URL}</a></p>`
+    );
+    expect(prepared.html).toContain('<p>—<br>Brian</p>');
+    expect(
+      prepared.html.endsWith(
+        `<p>Is this email not relevant to you? Click <a href="${unsubscribeUrl}">here</a>.</p>`
+      )
+    ).toBe(true);
+    expect(prepared.html.split(unsubscribeUrl)).toHaveLength(2);
+    expect(prepared.html).not.toMatch(
+      /<(?:img|script|style|div|span|table)\b/iu
+    );
+    expect(prepared.html).toContain(`href="${unsubscribeUrl}">here</a>`);
+    expect(prepared.text).toContain(
+      `Is this email not relevant to you? Stop here: ${unsubscribeUrl}`
+    );
+  });
+
+  it('escapes body text and keeps only bare links as anchors in the HTML part', () => {
+    const prepared = prepareCampaignMessage({
+      context: context({ enrichmentArtifact: null }),
+      job: job('send_step', { campaign_version: 'v1', step: 2 }),
       unsubscribeUrl: UNSUBSCRIBE,
     });
 
-    expect(message).toMatchObject({
-      status: 'ready',
-      subject: 'One event-state boundary',
+    expect(prepared.html).toContain(
+      `me:<br><a href="${FOUNDER_BOOKING_URL}">${FOUNDER_BOOKING_URL}</a></p>`
+    );
+    expect(prepared.html).toMatch(
+      /^<p>Hey Ada,<\/p>\n<p>[^<]+<\/p>\n<p>[^<]+<\/p>\n<p>[^<]+<br>/u
+    );
+    expect(prepared.html).not.toContain('&lt;');
+  });
+
+  it.each([
+    ['Ada', 'Hey Ada,'],
+    ['Ada Lovelace', 'Hey Ada,'],
+    ["  O'Brien  ", "Hey O'Brien,"],
+    ['Anne-Marie Smith', 'Hey Anne-Marie,'],
+    [null, 'Hey there,'],
+    ['', 'Hey there,'],
+    ['Click https://evil.example', 'Hey there,'],
+    ['<b>Ada</b>', 'Hey there,'],
+    ['ada@example.com', 'Hey there,'],
+    ['Ada123', 'Hey there,'],
+    ['A'.repeat(31), 'Hey there,'],
+    ['Bcc: victim@example.com', 'Hey there,'],
+  ])('greets display name %j as %s', (displayName, greeting) => {
+    expect(campaignGreeting(displayName)).toBe(greeting);
+  });
+
+  it('opens every step with the greeting and escapes it in the HTML part', () => {
+    const prepared = prepareCampaignMessage({
+      context: context({ displayName: "O'Brien", enrichmentArtifact: null }),
+      job: job('send_step', { campaign_version: 'v1', step: 2 }),
+      unsubscribeUrl: UNSUBSCRIBE,
     });
-    expect(JSON.stringify(message)).toContain('last automated follow-up');
+
+    expect(prepared.text.startsWith("Hey O'Brien,\n\nEven with agents")).toBe(
+      true
+    );
+    expect(
+      prepared.html.startsWith('<p>Hey O&#39;Brien,</p>\n<p>Even with')
+    ).toBe(true);
   });
 
   it('falls back per fixed step when an artifact draft violates copy checks', () => {
@@ -345,10 +374,9 @@ describe('prepareCampaignMessage', () => {
       prepareCampaignMessage({
         context: context({ enrichmentArtifact: invalid }),
         job: job('send_step', { campaign_version: 'v1', step: 1 }),
-        now: new Date('2026-09-01T12:05:00.000Z'),
         unsubscribeUrl: UNSUBSCRIBE,
       })
-    ).toMatchObject({ status: 'ready', subject: 'A practical place to start' });
+    ).toMatchObject({ status: 'ready', subject: 'Engineer to engineer' });
   });
 });
 
@@ -426,7 +454,9 @@ describe('dispatchLifecycleAppOwnedJob', () => {
       expect.objectContaining({
         jobId: send.id,
         leaseToken: LEASE_TOKEN,
-        subject: 'A practical place to start',
+        subject: 'Engineer to engineer',
+        text: expect.stringContaining('Stop here: '),
+        html: expect.stringContaining('Click <a href="'),
         unsubscribeUrl: UNSUBSCRIBE,
       }),
       deps.recipientPolicy

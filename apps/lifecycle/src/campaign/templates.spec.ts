@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  FOUNDER_BOOKING_URL,
   campaignDraftViolations,
   normalizeCampaignDraft,
   renderCampaignTemplate,
@@ -13,20 +14,73 @@ function wordCount(value: string): number {
 
 describe('renderCampaignTemplate', () => {
   it.each([
-    ['immediate', 'A practical place to start'],
-    ['day-3', 'One debugging shortcut'],
-    ['day-8', 'One last architecture note'],
-  ] as const)('returns the fixed neutral %s template', (step, subject) => {
-    const message = renderCampaignTemplate(step);
+    ['immediate', 'Engineer to engineer', 0, 1],
+    ['day-3', 'Get your agent UI into production', 0, 1],
+    ['day-8', 'Free engineering session with the Threadplane founder', 0, 1],
+  ] as const)(
+    'returns the fixed neutral %s template',
+    (step, subject, questions, links) => {
+      const message = renderCampaignTemplate(step);
 
-    expect(message.subject).toBe(subject);
-    expect(wordCount(message.body)).toBeLessThanOrEqual(120);
-    expect(message.body.match(/\?/gu) ?? []).toHaveLength(1);
-    expect(message.body.match(/https:\/\/[^\s]+/gu) ?? []).toHaveLength(
-      step === 'day-8' ? 0 : 1
+      expect(message.subject).toBe(subject);
+      expect(wordCount(message.body)).toBeLessThanOrEqual(120);
+      expect(message.body.match(/\?/gu) ?? []).toHaveLength(questions);
+      expect(message.body.match(/https:\/\/[^\s]+/gu) ?? []).toHaveLength(
+        links
+      );
+      expect(campaignDraftViolations(message)).toEqual([]);
+      expect(message.body).not.toMatch(/\nBrian$/u);
+    }
+  );
+
+  it('opens with a founder session offer that links only to the booking page', () => {
+    const message = renderCampaignTemplate('immediate');
+
+    expect(
+      message.body.endsWith(`You can grab a time here:\n${FOUNDER_BOOKING_URL}`)
+    ).toBe(true);
+    expect(message.body).toContain('No sales pitch.');
+    expect(message.body).not.toMatch(/\b(?:I saw you|checked out)\b/iu);
+    expect(message.body).not.toMatch(/\b\w+'\w+\b/u);
+  });
+
+  it('follows up with a hands-on session offer that links only to the booking page', () => {
+    const message = renderCampaignTemplate('day-3');
+
+    expect(
+      message.body.endsWith(`Book a time with me:\n${FOUNDER_BOOKING_URL}`)
+    ).toBe(true);
+    expect(message.body).toContain('No sales.');
+    expect(message.body).not.toMatch(/\b\w+'\w+\b/u);
+  });
+
+  it('closes with a final founder offer that links only to the booking page', () => {
+    const message = renderCampaignTemplate('day-8');
+
+    expect(message.body.startsWith('One last note.')).toBe(true);
+    expect(message.body).toContain(
+      `Grab some time on my calendar:\n${FOUNDER_BOOKING_URL}`
     );
-    expect(campaignDraftViolations(message)).toEqual([]);
-    expect(message.body).not.toMatch(/\nBrian$/u);
+    expect(message.body).not.toMatch(/\b\w+'\w+\b/u);
+  });
+
+  it('accepts only the approved booking page as a scheduling link', () => {
+    expect(
+      campaignDraftViolations({
+        subject: 'Hello',
+        body: `Grab a time here:\n${FOUNDER_BOOKING_URL}`,
+      })
+    ).toEqual([]);
+    for (const link of [
+      'https://calendar.app.google/someone-else',
+      'https://calendly.com/threadplane/demo',
+      'https://cal.com/threadplane/demo',
+      'https://calendar.google.com/calendar/appointments/schedules/abc',
+    ]) {
+      expect(
+        campaignDraftViolations({ subject: 'Hello', body: `Book at ${link}` })
+      ).not.toEqual([]);
+    }
   });
 
   it('marks day 8 as the last automated follow-up', () => {
