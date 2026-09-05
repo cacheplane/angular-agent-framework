@@ -6,7 +6,6 @@
   "tags": [
     "scope:angular-compatibility",
     "scope:cockpit",
-    "scope:cockpit-deploy-smoke",
     "scope:cockpit-e2e",
     "scope:cockpit-examples",
     "scope:cockpit-smoke",

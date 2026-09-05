@@ -3,7 +3,7 @@
 // Throwaway aimock scaffold generator.
 // Usage: npx tsx scripts/generate-aimock-scaffold.ts --cap <id>
 //
-// For a cap in apps/cockpit/scripts/capability-registry.ts with a pythonDir,
+// For a cap in libs/cockpit-registry/src/lib/capability-registry.ts with a pythonDir,
 // creates the per-cap aimock e2e directory under
 // cockpit/<product>/<topic>/angular/e2e/ (5 files), adds the e2e Nx target
 // to cockpit/<product>/<topic>/angular/project.json, and appends a matrix
@@ -14,7 +14,7 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { capabilities, type Capability } from '../apps/cockpit/scripts/capability-registry';
+import { capabilities, type Capability } from '@threadplane/cockpit-registry';
 
 const REPO_ROOT = resolve(__dirname, '..');
 
@@ -36,7 +36,7 @@ function parseArgs(): { capId: string } {
 
 function findCap(capId: string): Capability {
   const cap = capabilities.find((c) => c.id === capId);
-  if (!cap) die(`cap "${capId}" not found in apps/cockpit/scripts/capability-registry.ts`);
+  if (!cap) die(`cap "${capId}" not found in libs/cockpit-registry/src/lib/capability-registry.ts`);
   if (!cap.pythonDir) die(`cap "${capId}" has no pythonDir (in-process cap not eligible for aimock e2e)`);
   if (cap.pythonPort === undefined) die(`cap "${capId}" has no pythonPort`);
   return cap;

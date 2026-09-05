@@ -1,6 +1,6 @@
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
-import { capabilities, type CapabilityFramework } from '../apps/cockpit/scripts/capability-registry';
+import { capabilities, type CapabilityFramework } from '@threadplane/cockpit-registry';
 
 /**
  * Bridge-agent detection (langgraph topics only).

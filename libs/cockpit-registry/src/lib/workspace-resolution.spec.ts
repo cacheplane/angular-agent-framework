@@ -4,10 +4,7 @@ import {
   getCanonicalWebsiteWorkspaceHref,
   getWorkspaceDestinationPath,
   getRouteDefaultMode,
-  resolveLegacyRequestMode,
   resolveDocsWorkspace,
-  resolveLegacyPath,
-  resolveWorkspacePath,
 } from './workspace-resolution';
 
 describe('workspace identity resolution', () => {
@@ -19,33 +16,6 @@ describe('workspace identity resolution', () => {
       expect(entry.id).toBe(
         `${entry.product}:${entry.section}:${entry.topic}:${entry.page}:${entry.language}`
       );
-    }
-  });
-
-  it('round-trips canonical workspace and legacy paths', () => {
-    for (const entry of cockpitManifest) {
-      expect(resolveWorkspacePath(entry.workspacePath)).toMatchObject({
-        kind: 'mapped',
-        identity: { id: entry.id },
-      });
-      expect(resolveLegacyPath(entry.legacyPath)).toMatchObject({
-        kind: 'mapped',
-        identity: { id: entry.id },
-      });
-    }
-  });
-
-  it('round-trips every canonical Website destination to the same stable identity', () => {
-    for (const entry of cockpitManifest) {
-      const destination = getWorkspaceDestinationPath(entry);
-      const resolution = destination.startsWith('/docs/')
-        ? resolveDocsWorkspace(destination, entry.title)
-        : resolveWorkspacePath(destination);
-
-      expect(resolution).toMatchObject({
-        kind: 'mapped',
-        identity: { id: entry.id },
-      });
     }
   });
 
@@ -94,7 +64,6 @@ describe('workspace identity resolution', () => {
       getWorkspaceDestinationPath({
         id: 'langgraph:core-capabilities:durable-execution:overview:python',
         docsPath: '/docs/langgraph/guides/durable-execution',
-        workspacePath: '/workspace/langgraph/durable-execution',
       })
     ).toBe('/docs/langgraph/guides/durable-execution');
   });
@@ -113,28 +82,17 @@ describe('workspace identity resolution', () => {
     });
   });
 
-  it('uses Docs for Docs and docs-only routes and Run only for runnable workspace routes', () => {
+  it('defaults every route to Docs', () => {
     const mappedDocs = resolveDocsWorkspace(
       '/docs/langgraph/guides/streaming',
       'Streaming'
-    );
-    const runnableWorkspace = resolveWorkspacePath(
-      '/workspace/langgraph/streaming'
-    );
-    const narrativeOnlyWorkspace = resolveWorkspacePath(
-      '/workspace/langgraph/overview'
     );
     const docsOnly = resolveDocsWorkspace(
       '/docs/langgraph/api/inject-agent',
       'Inject an agent into Angular'
     );
-
-    expect(getRouteDefaultMode(mappedDocs, 'docs')).toBe('Docs');
-    expect(getRouteDefaultMode(docsOnly, 'docs')).toBe('Docs');
-    expect(getRouteDefaultMode(runnableWorkspace, 'workspace')).toBe('Run');
-    expect(getRouteDefaultMode(narrativeOnlyWorkspace, 'workspace')).toBe(
-      'Docs'
-    );
+    expect(getRouteDefaultMode(mappedDocs)).toBe('Docs');
+    expect(getRouteDefaultMode(docsOnly)).toBe('Docs');
   });
 
   it('never fuzzy-matches Docs slugs', () => {
@@ -145,80 +103,15 @@ describe('workspace identity resolution', () => {
 });
 
 describe('canonical Website workspace destinations', () => {
-  it('applies the legacy Cockpit default to absent, duplicate, invalid, and unavailable modes for every manifest entry', () => {
-    for (const entry of cockpitManifest) {
-      const resolution = resolveLegacyPath(entry.legacyPath);
-      expect(resolution).not.toBeNull();
-      if (!resolution) continue;
-
-      const expectedDefault = getRouteDefaultMode(resolution, 'workspace');
-      const unavailableMode = (['Run', 'Code', 'API', 'Docs'] as const).find(
-        (mode) => !entry.availableModes.includes(mode)
-      );
-
-      expect(resolveLegacyRequestMode(undefined, resolution)).toBe(
-        expectedDefault
-      );
-      expect(resolveLegacyRequestMode(['run', 'code'], resolution)).toBe(
-        expectedDefault
-      );
-      expect(resolveLegacyRequestMode('invalid', resolution)).toBe(
-        expectedDefault
-      );
-      if (unavailableMode) {
-        expect(
-          resolveLegacyRequestMode(unavailableMode.toLowerCase(), resolution)
-        ).toBe(expectedDefault);
-      }
-    }
-  });
-
-  it('resolves valid legacy modes case-insensitively and defaults runnable and narrative-only requests correctly', () => {
-    const runnable = resolveLegacyPath(
-      '/langgraph/core-capabilities/streaming/overview/python'
-    );
-    const narrativeOnly = resolveLegacyPath(
-      '/langgraph/getting-started/overview/overview/python'
-    );
-    expect(runnable).not.toBeNull();
-    expect(narrativeOnly).not.toBeNull();
-    if (!runnable || !narrativeOnly) return;
-
-    expect(resolveLegacyRequestMode('CoDe', runnable)).toBe('Code');
-    expect(resolveLegacyRequestMode(undefined, runnable)).toBe('Run');
-    expect(resolveLegacyRequestMode('run', narrativeOnly)).toBe('Docs');
-    expect(resolveLegacyRequestMode(['docs'], narrativeOnly)).toBe('Docs');
-  });
-
-  it('serializes every manifest entry and mode to its canonical relative Website href', () => {
-    for (const entry of cockpitManifest) {
-      const resolution = resolveLegacyPath(entry.legacyPath);
-      expect(resolution).not.toBeNull();
-      if (!resolution) continue;
-
-      const destinationPath = getWorkspaceDestinationPath(entry);
-      for (const mode of ['Docs', 'Run', 'Code', 'API'] as const) {
-        const expectedHref =
-          mode === 'Docs' && destinationPath.startsWith('/docs/')
-            ? destinationPath
-            : `${destinationPath}?mode=${mode.toLowerCase()}`;
-        expect(getCanonicalWebsiteWorkspaceHref(resolution, mode)).toBe(
-          expectedHref
-        );
-      }
-    }
-  });
-
   it('omits Docs mode on every canonical Docs path', () => {
-    const primary = resolveLegacyPath(
-      '/langgraph/core-capabilities/persistence/overview/python'
+    const primary = resolveDocsWorkspace(
+      '/docs/langgraph/guides/persistence',
+      'Persistence'
     );
-    const secondary = resolveLegacyPath(
-      '/langgraph/core-capabilities/durable-execution/overview/python'
+    const secondary = resolveDocsWorkspace(
+      '/docs/langgraph/guides/durable-execution',
+      'Durable Execution'
     );
-    expect(primary).not.toBeNull();
-    expect(secondary).not.toBeNull();
-    if (!primary || !secondary) return;
 
     expect(getCanonicalWebsiteWorkspaceHref(primary, 'Docs')).toBe(
       '/docs/langgraph/guides/persistence'

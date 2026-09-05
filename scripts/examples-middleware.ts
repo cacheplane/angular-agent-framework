@@ -15,7 +15,6 @@ const SHARED_DEPLOYMENT_URL = 'https://cockpit-dev-219a15942c545a00a03a9a41905d7
 
 const ALLOWED_ORIGINS = [
   'https://examples.threadplane.ai',
-  'https://cockpit.threadplane.ai',
   'http://localhost:4320',
   'http://localhost:4321',
 ] as const;

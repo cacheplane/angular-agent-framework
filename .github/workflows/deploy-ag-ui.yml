@@ -6,7 +6,7 @@ on:
     paths:
       - 'cockpit/ag-ui/**/python/**'
       - 'cockpit/runtimes/**/python/**'
-      - 'apps/cockpit/scripts/capability-registry.ts'
+      - 'libs/cockpit-registry/src/lib/capability-registry.ts'
       - 'scripts/generate-ag-ui-deployment-config.ts'
       - 'deployments/ag-ui-dev/**'
   workflow_dispatch:

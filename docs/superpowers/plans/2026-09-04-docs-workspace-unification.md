@@ -804,7 +804,7 @@ In `scripts/ci-workflow.spec.mjs`:
 - In `'verifies every protected immutable preview with its own automation bypass'` (line 559): delete the `cockpitStep` lookup and every assertion on it, keep the Website assertions.
 - In `'requires both PR-side preview verifications through the scoped gate'` (line 721): rename to `'requires the Website preview verification through the scoped gate'`; delete the `cockpit-preview-smoke` needs assertion, the `RESULT_COCKPIT_PREVIEW_SMOKE` assertion, and the cockpit `require_preview` assertion.
 - In the exact-`needs` fixture (line ~1150): delete `'cockpit-deploy-smoke'` and `'cockpit-preview-smoke'`.
-- In `'runs the cockpit sibling libraries that own vitest specs'` (line 933): the expected `run-many` project list becomes `cockpit-registry,workspace-react` (drop `cockpit` and `cockpit-docs`); read the test and adjust its assertion accordingly.
+- In `'runs the cockpit sibling libraries that own vitest specs'` (line 933): the expected `run-many` project list becomes `cockpit-registry,cockpit-shell,workspace-react` (drop `cockpit` and `cockpit-docs`; `cockpit-shell` was added in Task A3); read the test and adjust its assertion accordingly.
 - In `'binds Vercel deploys to the renamed Threadplane projects'` (line ~732): delete the `threadplane-cockpit` assertion.
 - Add:
 
@@ -829,7 +829,7 @@ Expected: `carries no cockpit redirect deployment` fails, plus any test that now
 - [ ] **Step 3: Edit `ci.yml`**
 
 - Delete jobs `cockpit-deploy-smoke` and `cockpit-preview-smoke` entirely.
-- `cockpit` job: delete `- run: npx nx build cockpit --skip-nx-cache`; change the `run-many` projects to `cockpit-registry,workspace-react`; rename the job's `name` to `Workspace libraries — lint / test`.
+- `cockpit` job: delete `- run: npx nx build cockpit --skip-nx-cache`; change the `run-many` projects to `cockpit-registry,cockpit-shell,workspace-react`; rename the job's `name` to `Workspace libraries — lint / test`.
 - `ci-scope` job outputs: delete `cockpit_deploy_smoke: ...`.
 - `required-pr-checks`: delete `- cockpit-deploy-smoke` and `- cockpit-preview-smoke` from `needs`; delete `RESULT_COCKPIT_DEPLOY_SMOKE`, `RESULT_COCKPIT_PREVIEW_SMOKE`, `SCOPE_COCKPIT_DEPLOY_SMOKE` from env; delete the `require_scoped "cockpit_deploy_smoke" ...` and `require_preview "cockpit_deploy_smoke" ...` lines. Keep `require_preview` and `PREVIEW_LANES_ELIGIBLE` for the Website lane.
 - `deploy` job: in `Detect deploy-relevant changes`, remove the `cockpit_changed` computation and the `cockpit=` output line; remove `|| steps.affected.outputs.cockpit == 'true'` from the `Cache Playwright browsers`, `Install Playwright browsers`, and `Verify deployed website` conditions; delete the seven steps from `Prepare cockpit Vercel project` through `Verify production cockpit redirects` (lines 1288–1347).

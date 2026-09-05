@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { backendCommand, COCKPIT_RUNTIME_ENV, formatAllModeSummary } from './serve-example';
-import { capabilities, findCapability, type Capability } from './capability-registry';
+import { capabilities, findCapability, type Capability } from '@threadplane/cockpit-registry';
 
 describe('backendCommand', () => {
   it('uses uvicorn on the registry pythonPort for AG-UI caps', () => {

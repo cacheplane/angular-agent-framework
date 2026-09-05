@@ -155,10 +155,6 @@ describe('generate runtime parent origins', () => {
       resolve(__dirname, './project.json'),
       'utf8'
     );
-    const cockpitProject = readFileSync(
-      resolve(__dirname, '../apps/cockpit/project.json'),
-      'utf8'
-    );
     const workflow = readFileSync(
       resolve(__dirname, '../.github/workflows/ci.yml'),
       'utf8'
@@ -170,8 +166,6 @@ describe('generate runtime parent origins', () => {
     expect(assembly).toContain('RUNTIME_PARENT_PREVIEW_ORIGINS');
     expect(scriptsProject).toContain('runtime-parent-origins.json');
     expect(scriptsProject).toContain('generate-runtime-parent-origins.ts');
-    expect(cockpitProject).toContain('runtime-parent-origins.json');
-    expect(cockpitProject).toContain('generate-runtime-parent-origins.ts');
     expect(workflow).toContain('runtime-parent-origins\\.json');
     expect(workflow).toContain('generate-runtime-parent-origins');
     expect(workflow).toContain('RUNTIME_PARENT_PREVIEW_ORIGINS');

@@ -228,7 +228,6 @@ describe('Cockpit surface retirement', () => {
     const USER_FACING = /\.(?:mdx|md|tsx)$/;
     const ALLOWED_TOKENS = [
       /cockpit\/[a-z-]+\/[a-z-]+/g, // example repository paths
-      /apps\/cockpit\//g, // tooling paths (removed by Part C)
       /@threadplane\/cockpit-[a-z-]+/g, // package names
       /cockpit-[a-z-]+-angular/g, // Nx project names
       /cockpit-(?:registry|shell|runtime-bridge|telemetry|docs|testing|ui)/g,

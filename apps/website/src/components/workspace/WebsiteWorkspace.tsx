@@ -313,7 +313,6 @@ function WebsiteWorkspaceSurface({
           resolution={resolution}
           presentation={presentation}
           contentBundle={contentBundle}
-          routeKind="docs"
           routePath={routePath}
           requestedMode={routeMode}
           docsSlot={docsSlot}

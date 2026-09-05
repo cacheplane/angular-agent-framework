@@ -58,9 +58,6 @@
       "path": "./libs/ui-react"
     },
     {
-      "path": "./apps/cockpit"
-    },
-    {
       "path": "./libs/a2ui"
     }
   ]

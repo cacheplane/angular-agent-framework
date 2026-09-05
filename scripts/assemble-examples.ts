@@ -18,7 +18,7 @@ import {
   readFileSync,
 } from 'fs';
 import { resolve } from 'path';
-import { capabilities as registryCapabilities } from '../apps/cockpit/scripts/capability-registry';
+import { capabilities as registryCapabilities } from '@threadplane/cockpit-registry';
 import {
   GENERATED_RUNTIME_PARENT_ORIGINS_MODULE,
   generateRuntimeParentOriginPolicy,

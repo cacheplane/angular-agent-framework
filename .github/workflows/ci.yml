@@ -34,7 +34,6 @@ jobs:
       cockpit: ${{ steps.scope.outputs.cockpit }}
       cockpit_examples: ${{ steps.scope.outputs.cockpit_examples }}
       cockpit_smoke: ${{ steps.scope.outputs.cockpit_smoke }}
-      cockpit_deploy_smoke: ${{ steps.scope.outputs.cockpit_deploy_smoke }}
       examples_chat: ${{ steps.scope.outputs.examples_chat }}
       examples_ag_ui: ${{ steps.scope.outputs.examples_ag_ui }}
       cockpit_e2e: ${{ steps.scope.outputs.cockpit_e2e }}
@@ -291,7 +290,7 @@ jobs:
       - run: npx nx build growth-research
 
   cockpit:
-    name: Cockpit — build / test
+    name: Workspace libraries — lint / test
     needs: ci-scope
     if: github.event_name == 'push' || needs.ci-scope.outputs.cockpit == 'true'
     runs-on: ubuntu-latest
@@ -302,17 +301,17 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx nx build cockpit --skip-nx-cache
-      # cockpit-docs, cockpit-registry and workspace-react carry `test` targets
-      # that nothing in CI invoked: `nx test` does not walk `^test`, and the
-      # `library` job runs a hardcoded LIBS list that excludes all three. Name
-      # them here so their specs actually execute. They all share the
-      # `scope:cockpit` tag, so ci-scope already gates this job correctly for
-      # changes under any of them. workspace-react's only other scope tag is
-      # `scope:shared`, which is not a SCOPE_KEY — adding it to LIBS would not
-      # have run it, because a workspace-react change never flips `library`.
+      # cockpit-registry, cockpit-shell and workspace-react carry `test`
+      # targets that nothing in CI invoked: `nx test` does not walk `^test`,
+      # and the `library` job runs a hardcoded LIBS list that excludes all
+      # three. Name them here so their specs actually execute. They all share
+      # the `scope:cockpit` tag, so ci-scope already gates this job correctly
+      # for changes under any of them. workspace-react's only other scope tag
+      # is `scope:shared`, which is not a SCOPE_KEY — adding it to LIBS would
+      # not have run it, because a workspace-react change never flips
+      # `library`.
       - run: npx nx lint workspace-react
-      - run: npx nx run-many -t test --projects=cockpit,cockpit-docs,cockpit-registry,cockpit-shell,workspace-react --skip-nx-cache
+      - run: npx nx run-many -t test --projects=cockpit-registry,cockpit-shell,workspace-react --skip-nx-cache
   cockpit-examples-build:
     name: Cockpit — build all examples
     needs: ci-scope
@@ -357,85 +356,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx nx run-many -t smoke --projects=cockpit-ag-ui-interrupts-python,cockpit-ag-ui-streaming-python,cockpit-deep-agents-planning-python,cockpit-deep-agents-filesystem-python,cockpit-deep-agents-subagents-python,cockpit-deep-agents-memory-python,cockpit-deep-agents-skills-python,cockpit-langgraph-persistence-python,cockpit-langgraph-durable-execution-python,cockpit-langgraph-streaming-python,cockpit-langgraph-interrupts-python,cockpit-langgraph-memory-python,cockpit-langgraph-subgraphs-python,cockpit-langgraph-time-travel-python,cockpit-langgraph-deployment-runtime-python,cockpit-chat-messages-python,cockpit-render-spec-rendering-python,cockpit-runtimes-microsoft-agent-framework-python,cockpit-runtimes-aws-strands-python --skip-nx-cache
-
-  cockpit-deploy-smoke:
-    name: Cockpit — deploy smoke dry-run
-    timeout-minutes: 30 # fail fast instead of blocking the main concurrency group on a hang
-    needs: ci-scope
-    if: github.event_name == 'push' || needs.ci-scope.outputs.cockpit_deploy_smoke == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npx tsx apps/cockpit/scripts/deploy-smoke.ts --url https://cockpit.threadplane.ai --mode preview --dry-run
-
-  cockpit-preview-smoke:
-    name: Cockpit — immutable preview smoke
-    timeout-minutes: 20
-    needs: ci-scope
-    # PR-side twin of the deploy job's cockpit verification. Deploys a
-    # throwaway preview of the redirect service and runs the exhaustive smoke
-    # against it, so platform behaviour (deployment protection, the CDN's
-    # slash collapse, route ordering) is exercised before merge. Needs
-    # repository secrets, so same-repo PRs and merge-queue candidates only;
-    # the token-free dry-run job above still covers forks.
-    if: >-
-      github.event_name != 'push' &&
-      needs.ci-scope.outputs.cockpit_deploy_smoke == 'true' &&
-      (github.event_name == 'merge_group' || github.event.pull_request.head.repo.full_name == github.repository)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - name: Prepare cockpit Vercel project (preview)
-        run: |
-          mkdir -p .vercel
-          cat > .vercel/project.json <<'EOF'
-          {"projectId":"${{ secrets.VERCEL_COCKPIT_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"threadplane-cockpit"}
-          EOF
-          npx vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-          rm -rf .vercel/output
-      - name: Build cockpit redirect service (preview)
-        env:
-          COCKPIT_WEBSITE_ORIGIN: https://threadplane.ai
-        run: |
-          npx vercel build --local-config vercel.cockpit.json --token=${{ secrets.VERCEL_TOKEN }}
-      - name: Deploy throwaway cockpit preview
-        id: deploy_cockpit_preview
-        run: |
-          set -euo pipefail
-          url=$(npx vercel deploy --prebuilt --archive=tgz --yes --env COCKPIT_WEBSITE_ORIGIN=https://threadplane.ai --token=${{ secrets.VERCEL_TOKEN }} | tail -n 1)
-          url=$(node -e 'const parsed = new URL(process.argv[1]); if (parsed.protocol !== "https:" || parsed.username || parsed.password || parsed.pathname !== "/" || parsed.search || parsed.hash) throw new Error("Vercel returned a non-origin cockpit preview URL"); process.stdout.write(parsed.origin)' "$url")
-          echo "deployment_url=$url" >> "$GITHUB_OUTPUT"
-      - name: Exhaustively verify the cockpit preview
-        run: |
-          if [ -z "${VERCEL_AUTOMATION_BYPASS_SECRET}" ]; then
-            echo "::error::VERCEL_COCKPIT_AUTOMATION_BYPASS_SECRET is unset — the protected cockpit preview cannot be verified. Enable 'Protection Bypass for Automation' on the Vercel threadplane-cockpit project and store the value as this repository secret."
-            exit 1
-          fi
-          npx tsx apps/cockpit/scripts/deploy-smoke.ts --url "${{ steps.deploy_cockpit_preview.outputs.deployment_url }}" --mode preview --retries 20 --retry-delay-ms 5000
-        env:
-          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_COCKPIT_AUTOMATION_BYPASS_SECRET }}
-      - name: Remove the throwaway cockpit preview
-        # Removal runs on every outcome, including a failed smoke: the smoke
-        # log carries the full probe-by-probe report, and keeping a failed
-        # artifact would only accumulate protected deployments nobody can
-        # open without the bypass.
-        # The artifact exists only to be smoked. `--safe` refuses to remove a
-        # deployment that carries an alias, so this can never touch the
-        # production artifact. `remove` takes a bare URL, so, like `promote`,
-        # it needs the team scope spelled out.
-        if: always() && steps.deploy_cockpit_preview.outputs.deployment_url != ''
-        continue-on-error: true
-        run: npx vercel remove "${{ steps.deploy_cockpit_preview.outputs.deployment_url }}" --safe --yes --scope=${{ secrets.VERCEL_ORG_ID }} --token=${{ secrets.VERCEL_TOKEN }}
 
   examples-chat-smoke:
     name: examples/chat — python smoke
@@ -875,14 +795,12 @@ jobs:
       - cockpit
       - cockpit-examples-build
       - cockpit-smoke
-      - cockpit-deploy-smoke
       - examples-chat-smoke
       - examples-chat-e2e
       - examples-ag-ui-e2e
       - cockpit-e2e-summary
       - website-e2e
       - website-preview-e2e
-      - cockpit-preview-smoke
       - posthog-sync-plan
       - scripts-tests
       - growth-lifecycle
@@ -903,14 +821,12 @@ jobs:
           RESULT_COCKPIT: ${{ needs.cockpit.result }}
           RESULT_COCKPIT_EXAMPLES: ${{ needs.cockpit-examples-build.result }}
           RESULT_COCKPIT_SMOKE: ${{ needs.cockpit-smoke.result }}
-          RESULT_COCKPIT_DEPLOY_SMOKE: ${{ needs.cockpit-deploy-smoke.result }}
           RESULT_EXAMPLES_CHAT_SMOKE: ${{ needs.examples-chat-smoke.result }}
           RESULT_EXAMPLES_CHAT_E2E: ${{ needs.examples-chat-e2e.result }}
           RESULT_EXAMPLES_AG_UI_E2E: ${{ needs.examples-ag-ui-e2e.result }}
           RESULT_COCKPIT_E2E: ${{ needs.cockpit-e2e-summary.result }}
           RESULT_WEBSITE_E2E: ${{ needs.website-e2e.result }}
           RESULT_WEBSITE_PREVIEW_E2E: ${{ needs.website-preview-e2e.result }}
-          RESULT_COCKPIT_PREVIEW_SMOKE: ${{ needs.cockpit-preview-smoke.result }}
           RESULT_POSTHOG: ${{ needs.posthog-sync-plan.result }}
           RESULT_SCRIPTS_TESTS: ${{ needs.scripts-tests.result }}
           RESULT_GROWTH_LIFECYCLE: ${{ needs.growth-lifecycle.result }}
@@ -922,7 +838,6 @@ jobs:
           SCOPE_COCKPIT: ${{ needs.ci-scope.outputs.cockpit }}
           SCOPE_COCKPIT_EXAMPLES: ${{ needs.ci-scope.outputs.cockpit_examples }}
           SCOPE_COCKPIT_SMOKE: ${{ needs.ci-scope.outputs.cockpit_smoke }}
-          SCOPE_COCKPIT_DEPLOY_SMOKE: ${{ needs.ci-scope.outputs.cockpit_deploy_smoke }}
           SCOPE_EXAMPLES_CHAT: ${{ needs.ci-scope.outputs.examples_chat }}
           SCOPE_EXAMPLES_AG_UI: ${{ needs.ci-scope.outputs.examples_ag_ui }}
           SCOPE_COCKPIT_E2E: ${{ needs.ci-scope.outputs.cockpit_e2e }}
@@ -1001,10 +916,9 @@ jobs:
             "$RESULT_ANGULAR_COMPATIBILITY" \
             "$SCOPE_ANGULAR_COMPATIBILITY"
           require_scoped "website" "Website — lint / test / build" "$RESULT_WEBSITE" "$SCOPE_WEBSITE"
-          require_scoped "cockpit" "Cockpit — build / test" "$RESULT_COCKPIT" "$SCOPE_COCKPIT"
+          require_scoped "cockpit" "Workspace libraries — lint / test" "$RESULT_COCKPIT" "$SCOPE_COCKPIT"
           require_scoped "cockpit_examples" "Cockpit — build all examples" "$RESULT_COCKPIT_EXAMPLES" "$SCOPE_COCKPIT_EXAMPLES"
           require_scoped "cockpit_smoke" "Cockpit — representative capability smoke" "$RESULT_COCKPIT_SMOKE" "$SCOPE_COCKPIT_SMOKE"
-          require_scoped "cockpit_deploy_smoke" "Cockpit — deploy smoke dry-run" "$RESULT_COCKPIT_DEPLOY_SMOKE" "$SCOPE_COCKPIT_DEPLOY_SMOKE"
           require_scoped "examples_chat" "examples/chat — python smoke" "$RESULT_EXAMPLES_CHAT_SMOKE" "$SCOPE_EXAMPLES_CHAT"
           require_scoped "examples_chat" "examples/chat — e2e" "$RESULT_EXAMPLES_CHAT_E2E" "$SCOPE_EXAMPLES_CHAT"
           require_scoped \
@@ -1015,7 +929,6 @@ jobs:
           require_scoped "cockpit_e2e" "Cockpit — e2e" "$RESULT_COCKPIT_E2E" "$SCOPE_COCKPIT_E2E"
           require_scoped "website_e2e" "Website — e2e" "$RESULT_WEBSITE_E2E" "$SCOPE_WEBSITE_E2E"
           require_preview "website_e2e" "Website — e2e (deployed preview)" "$RESULT_WEBSITE_PREVIEW_E2E" "$SCOPE_WEBSITE_E2E"
-          require_preview "cockpit_deploy_smoke" "Cockpit — immutable preview smoke" "$RESULT_COCKPIT_PREVIEW_SMOKE" "$SCOPE_COCKPIT_DEPLOY_SMOKE"
           require_scoped "posthog" "PostHog — dashboards-as-code drift check" "$RESULT_POSTHOG" "$SCOPE_POSTHOG"
           require_scoped "scripts_tests" "Scripts — generator / proxy vitest suites" "$RESULT_SCRIPTS_TESTS" "$SCOPE_SCRIPTS_TESTS"
           require_scoped "growth_lifecycle" "Growth lifecycle — Node 22" "$RESULT_GROWTH_LIFECYCLE" "$SCOPE_GROWTH_LIFECYCLE"
@@ -1037,7 +950,6 @@ jobs:
       - cockpit
       - cockpit-examples-build
       - cockpit-smoke
-      - cockpit-deploy-smoke
       - examples-chat-smoke
       - examples-chat-e2e
       - cockpit-e2e-summary
@@ -1132,7 +1044,7 @@ jobs:
 
           changed_files="$(git diff --name-only "$base_sha" "$head_sha")"
           deploy_relevant=false
-          if printf '%s\n' "$changed_files" | grep -E '^(\.github/workflows/ci\.yml|runtime-parent-origins\.json|vercel\.(json|cockpit\.json|examples\.json)|apps/(website|cockpit)/.*|cockpit/.*|examples/chat/.*|libs/.*|scripts/(assemble-examples|deploy-smoke|demo-middleware|generate-runtime-parent-origins|langgraph-proxy|rate-limit)\.ts|scripts/assemble-demo\.ts)$' >/dev/null; then
+          if printf '%s\n' "$changed_files" | grep -E '^(\.github/workflows/ci\.yml|runtime-parent-origins\.json|vercel\.(json|examples\.json)|apps/website/.*|cockpit/.*|examples/chat/.*|libs/.*|scripts/(assemble-examples|demo-middleware|generate-runtime-parent-origins|langgraph-proxy|rate-limit)\.ts|scripts/assemble-demo\.ts)$' >/dev/null; then
             deploy_relevant=true
           fi
 
@@ -1173,7 +1085,6 @@ jobs:
       #   VERCEL_TOKEN               — vercel.com/account/tokens
       #   VERCEL_ORG_ID              — Vercel team id
       #   VERCEL_WEBSITE_PROJECT_ID  — website project id
-      #   VERCEL_COCKPIT_PROJECT_ID  — cockpit project id
       #   VERCEL_EXAMPLES_PROJECT_ID — examples project id
       - if: steps.deploy_preflight.outputs.relevant == 'true' || steps.examples_changed.outputs.changed == 'true'
         run: npm ci
@@ -1192,28 +1103,18 @@ jobs:
           changed_files="$(git diff --name-only "$base_sha" "$head_sha")"
 
           website_changed=false
-          cockpit_changed=false
 
           if printf '%s\n' "$affected_projects" | grep -Fx 'website' >/dev/null; then
             website_changed=true
-          fi
-
-          if printf '%s\n' "$affected_projects" | grep -Fx 'cockpit' >/dev/null; then
-            cockpit_changed=true
           fi
 
           if printf '%s\n' "$changed_files" | grep -E '^(\.github/workflows/ci\.yml|vercel\.json)$' >/dev/null; then
             website_changed=true
           fi
 
-          if printf '%s\n' "$changed_files" | grep -E '^(\.github/workflows/ci\.yml|vercel\.cockpit\.json)$' >/dev/null; then
-            cockpit_changed=true
-          fi
-
           echo "website=$website_changed" >> "$GITHUB_OUTPUT"
-          echo "cockpit=$cockpit_changed" >> "$GITHUB_OUTPUT"
       - name: Cache Playwright browsers
-        if: steps.freshness.outputs.stale != 'true' && (steps.affected.outputs.website == 'true' || steps.affected.outputs.cockpit == 'true')
+        if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.website == 'true'
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/.cache/ms-playwright
@@ -1221,7 +1122,7 @@ jobs:
           restore-keys: |
             playwright-${{ runner.os }}-
       - name: Install Playwright browsers
-        if: steps.freshness.outputs.stale != 'true' && (steps.affected.outputs.website == 'true' || steps.affected.outputs.cockpit == 'true')
+        if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.website == 'true'
         run: npx playwright install --with-deps chromium
       - name: Prepare website Vercel project
         if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.website == 'true'
@@ -1304,70 +1205,10 @@ jobs:
         # "Deployment doesn't belong to current team". Scope it explicitly.
         run: npx vercel promote "${{ steps.deploy_website.outputs.deployment_url }}" --scope=${{ secrets.VERCEL_ORG_ID }} --yes --token=${{ secrets.VERCEL_TOKEN }}
       - name: Verify deployed website
-        if: steps.freshness.outputs.stale != 'true' && ((steps.affected.outputs.website == 'true' && steps.website_promotion_freshness.outputs.fresh == 'true') || steps.affected.outputs.cockpit == 'true')
+        if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.website == 'true' && steps.website_promotion_freshness.outputs.fresh == 'true'
         run: npx nx e2e website --skip-nx-cache
         env:
           BASE_URL: https://threadplane.ai
-      - name: Prepare cockpit Vercel project
-        if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true'
-        run: |
-          mkdir -p .vercel
-          cat > .vercel/project.json <<EOF
-          {"projectId":"${{ secrets.VERCEL_COCKPIT_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","projectName":"threadplane-cockpit"}
-          EOF
-          npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-          rm -rf .vercel/output
-      - name: Build cockpit redirect service
-        if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true'
-        env:
-          COCKPIT_WEBSITE_ORIGIN: https://threadplane.ai
-        run: |
-          npx vercel build --prod --local-config vercel.cockpit.json --token=${{ secrets.VERCEL_TOKEN }}
-      - name: Deploy immutable cockpit artifact
-        if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true'
-        id: deploy_cockpit
-        run: |
-          url=$(npx vercel deploy --prebuilt --archive=tgz --prod --skip-domain --yes --env COCKPIT_WEBSITE_ORIGIN=https://threadplane.ai --token=${{ secrets.VERCEL_TOKEN }} | tail -n 1)
-          echo "deployment_url=$url" >> "$GITHUB_OUTPUT"
-      - name: Exhaustively verify immutable cockpit preview
-        if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true'
-        run: |
-          # Deployment protection answers every path on the unaliased artifact
-          # with 302 -> vercel.com/sso-api, which the smoke reports as
-          # "expected 308, received 302". Bypass secrets are issued per Vercel
-          # project, so the Website secret cannot open this one. Say so.
-          if [ -z "${VERCEL_AUTOMATION_BYPASS_SECRET}" ]; then
-            echo "::error::VERCEL_COCKPIT_AUTOMATION_BYPASS_SECRET is unset — the protected immutable cockpit preview cannot be verified. Enable 'Protection Bypass for Automation' on the Vercel threadplane-cockpit project and store the value as this repository secret."
-            exit 1
-          fi
-          npx tsx apps/cockpit/scripts/deploy-smoke.ts --url "${{ steps.deploy_cockpit.outputs.deployment_url }}" --mode preview --retries 20 --retry-delay-ms 5000
-        env:
-          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_COCKPIT_AUTOMATION_BYPASS_SECRET }}
-      - name: Check this commit is still the tip before cockpit promotion
-        if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true'
-        id: cockpit_promotion_freshness
-        run: |
-          tip="$(git ls-remote origin refs/heads/main | cut -f1)"
-          if [ -z "$tip" ]; then
-            echo "::error::Could not resolve the tip of main after preview verification; refusing the irreversible Cockpit redirect promotion."
-            exit 1
-          fi
-          if [ "$tip" != "${{ github.sha }}" ]; then
-            echo "fresh=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::main advanced to ${tip} during Cockpit preview verification; leaving the production alias untouched for the newer run."
-          else
-            echo "fresh=true" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Promote verified cockpit artifact unchanged
-        if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true' && steps.cockpit_promotion_freshness.outputs.fresh == 'true'
-        # `promote` takes a bare deployment URL, so unlike build/deploy/pull it
-        # cannot read the team from .vercel/project.json and falls back to the
-        # token's default team — a personal one here, which fails with
-        # "Deployment doesn't belong to current team". Scope it explicitly.
-        run: npx vercel promote "${{ steps.deploy_cockpit.outputs.deployment_url }}" --scope=${{ secrets.VERCEL_ORG_ID }} --yes --token=${{ secrets.VERCEL_TOKEN }}
-      - name: Verify production cockpit redirects
-        if: steps.freshness.outputs.stale != 'true' && steps.affected.outputs.cockpit == 'true' && steps.cockpit_promotion_freshness.outputs.fresh == 'true'
-        run: npx tsx apps/cockpit/scripts/deploy-smoke.ts --url https://cockpit.threadplane.ai --mode production --retries 20 --retry-delay-ms 5000
 
   demo-deploy:
     name: Canonical demo → Vercel
@@ -1644,7 +1485,6 @@ jobs:
         env:
           PRODUCTION_SMOKE: 'true'
           BASE_URL: https://threadplane.ai
-          COCKPIT_URL: https://cockpit.threadplane.ai
           WEBSITE_URL: https://threadplane.ai
           EXAMPLES_URL: https://examples.threadplane.ai
           RUNTIME_PARENT_PREVIEW_ORIGINS: ${{ needs.deploy.outputs.runtime_parent_preview_origin }}

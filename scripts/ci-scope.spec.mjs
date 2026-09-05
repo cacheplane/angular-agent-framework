@@ -19,7 +19,6 @@ const PUBLISHABLE_LIB_TAGS = [
   'scope:cockpit',
   'scope:cockpit-examples',
   'scope:cockpit-smoke',
-  'scope:cockpit-deploy-smoke',
   'scope:cockpit-e2e',
   'scope:examples-chat',
 ];
@@ -33,12 +32,6 @@ const COCKPIT_CAP_PYTHON_TAGS = [
   'scope:cockpit-smoke',
 ];
 const WEBSITE_TAGS = ['scope:website', 'scope:website-e2e'];
-const COCKPIT_APP_TAGS = [
-  'scope:cockpit',
-  'scope:cockpit-examples',
-  'scope:cockpit-deploy-smoke',
-  'scope:cockpit-e2e',
-];
 const EXAMPLES_CHAT_TAGS = [
   'scope:angular-compatibility',
   'scope:examples-chat',
@@ -132,7 +125,6 @@ describe('classifyFromAffected — lint-only files', () => {
     assert.equal(scope.cockpit_e2e, false);
     assert.equal(scope.cockpit_smoke, false);
     assert.equal(scope.cockpit_examples, false);
-    assert.equal(scope.cockpit_deploy_smoke, false);
     assert.equal(scope.posthog, false);
   });
 
@@ -281,7 +273,6 @@ describe('classifyFromAffected — rootless cockpit specs', () => {
     );
     assert.equal(scope.cockpit_e2e, false);
     assert.equal(scope.cockpit_smoke, false);
-    assert.equal(scope.cockpit_deploy_smoke, false);
     assert.equal(scope.cockpit_examples, false);
   });
 });
@@ -298,7 +289,6 @@ describe('classifyFromAffected — publishable lib broadcast', () => {
     assert.equal(scope.cockpit, true);
     assert.equal(scope.cockpit_examples, true);
     assert.equal(scope.cockpit_smoke, true);
-    assert.equal(scope.cockpit_deploy_smoke, true);
     assert.equal(scope.cockpit_e2e, true);
     assert.equal(scope.examples_chat, true);
     assert.equal(scope.angular_compatibility, true);
@@ -307,7 +297,7 @@ describe('classifyFromAffected — publishable lib broadcast', () => {
 });
 
 describe('classifyFromAffected — cockpit runtime bridge', () => {
-  it('selects Cockpit, examples, deploy smoke, and browser coverage through existing scopes', async () => {
+  it('selects Cockpit, examples, and browser coverage through existing scopes', async () => {
     const project = JSON.parse(
       await readFile('libs/cockpit-runtime-bridge/project.json', 'utf8')
     );
@@ -318,7 +308,6 @@ describe('classifyFromAffected — cockpit runtime bridge', () => {
 
     assert.equal(scope.cockpit, true);
     assert.equal(scope.cockpit_examples, true);
-    assert.equal(scope.cockpit_deploy_smoke, true);
     assert.equal(scope.cockpit_e2e, true);
   });
 });
@@ -467,14 +456,22 @@ describe('classifyFromAffected — apps + fallback paths via namedInputs', () =>
     assert.equal(scope.cockpit, false);
   });
 
-  it('capability-registry.ts change marks apps/cockpit affected → all cockpit_*', () => {
+  it('capability-registry.ts change marks cockpit-registry affected → cockpit scopes', () => {
     const scope = classifyFromAffected(
-      ['apps/cockpit/scripts/capability-registry.ts'],
-      [{ name: 'cockpit', tags: COCKPIT_APP_TAGS }]
+      ['libs/cockpit-registry/src/lib/capability-registry.ts'],
+      [
+        {
+          name: 'cockpit-registry',
+          tags: [
+            'scope:cockpit',
+            'scope:cockpit-e2e',
+            'scope:cockpit-examples',
+          ],
+        },
+      ]
     );
     assert.equal(scope.cockpit, true);
     assert.equal(scope.cockpit_examples, true);
-    assert.equal(scope.cockpit_deploy_smoke, true);
     assert.equal(scope.cockpit_e2e, true);
   });
 
@@ -486,20 +483,6 @@ describe('classifyFromAffected — apps + fallback paths via namedInputs', () =>
 
     assert.equal(scope.website, true);
     assert.equal(scope.website_e2e, true);
-    assert.equal(scope.cockpit_e2e, false);
-  });
-
-  it('the Cockpit Vercel gate selects redirect build and deploy smoke', async () => {
-    const project = JSON.parse(
-      await readFile('apps/cockpit/project.json', 'utf8')
-    );
-    const scope = classifyFromAffected(
-      ['vercel.cockpit.json'],
-      [{ name: project.name, tags: project.tags }]
-    );
-
-    assert.equal(scope.cockpit, true);
-    assert.equal(scope.cockpit_deploy_smoke, true);
     assert.equal(scope.cockpit_e2e, false);
   });
 
@@ -592,7 +575,7 @@ describe('classifyFromAffected — examples/ag-ui', () => {
 });
 
 describe('SCOPE_KEYS export', () => {
-  it('contains the 15 documented scope keys', () => {
+  it('contains the 14 documented scope keys', () => {
     assert.deepEqual(SCOPE_KEYS, [
       'library',
       'angular_compatibility',
@@ -601,7 +584,6 @@ describe('SCOPE_KEYS export', () => {
       'cockpit',
       'cockpit_examples',
       'cockpit_smoke',
-      'cockpit_deploy_smoke',
       'cockpit_e2e',
       'examples_chat',
       'examples_ag_ui',
@@ -613,51 +595,53 @@ describe('SCOPE_KEYS export', () => {
   });
 });
 
-describe('classifyFromAffected — cockpit shell does not own the e2e matrix', () => {
+describe('classifyFromAffected — cockpit e2e matrix stays scoped to its own caps', () => {
   // The cockpit-e2e matrix dispatches `nx e2e` for the standalone Angular cap
-  // apps under cockpit/**; none of them depends on the apps/cockpit Next.js
-  // shell, and no workflow runs the shell's own `e2e` target. A
-  // `scope:cockpit-e2e` tag on the shell therefore cannot select any real
-  // work — it can only over-select. It used to: apps/cockpit imports from
-  // apps/website, so a website-only PR made the shell nx-affected, flipped
-  // cockpit_e2e true, and (with no cap affected) hit the dispatcher's
-  // full-fleet fallback. PR #932 changed three apps/website/src files and ran
-  // the whole cap matrix.
-  it('apps/cockpit is not tagged scope:cockpit-e2e', async () => {
-    const project = JSON.parse(
-      await readFile('apps/cockpit/project.json', 'utf8')
-    );
-
-    assert.ok(
-      !project.tags.includes('scope:cockpit-e2e'),
-      'the cockpit shell must not select the cockpit-e2e cap matrix'
-    );
-  });
-
+  // apps under cockpit/**. A website-only change must not incidentally flip
+  // cockpit_e2e just because some sibling cockpit library is also nx-affected
+  // (PR #932 regressed this when a now-retired app statically imported from
+  // the Website, so a website-only PR ran the whole cap matrix).
   it('a website-only change leaves cockpit_e2e false', async () => {
-    const cockpit = JSON.parse(
-      await readFile('apps/cockpit/project.json', 'utf8')
+    const cockpitRegistry = JSON.parse(
+      await readFile('libs/cockpit-registry/project.json', 'utf8')
     );
     const website = JSON.parse(
       await readFile('apps/website/project.json', 'utf8')
     );
 
-    // The real nx-affected set for PR #932 was [website, cockpit, scripts]:
-    // apps/cockpit statically depends on apps/website.
+    // libs/cockpit-registry is not affected by a website-only change, so it
+    // must not appear in the affected set here — only `website` does.
     const scope = classifyFromAffected(
       [
         'apps/website/src/app/layout.tsx',
         'apps/website/src/components/shared/SiteFooter.tsx',
       ],
-      [
-        { name: 'website', tags: website.tags },
-        { name: 'cockpit', tags: cockpit.tags },
-      ]
+      [{ name: 'website', tags: website.tags }]
     );
 
     assert.equal(scope.cockpit_e2e, false);
-    // The shell still builds and tests — it consumes the changed website code.
-    assert.equal(scope.cockpit, true);
     assert.equal(scope.website, true);
+    // cockpit-registry legitimately owns cockpit-e2e when it IS affected —
+    // this just confirms it was not swept in here.
+    assert.ok(cockpitRegistry.tags.includes('scope:cockpit-e2e'));
+  });
+
+  it('a registry change does flip cockpit_e2e, so the negative case above is not vacuous', async () => {
+    const cockpitRegistry = JSON.parse(
+      await readFile('libs/cockpit-registry/project.json', 'utf8')
+    );
+    const website = JSON.parse(
+      await readFile('apps/website/project.json', 'utf8')
+    );
+
+    const scope = classifyFromAffected(
+      ['libs/cockpit-registry/src/lib/manifest.ts'],
+      [
+        { name: 'website', tags: website.tags },
+        { name: 'cockpit-registry', tags: cockpitRegistry.tags },
+      ]
+    );
+
+    assert.equal(scope.cockpit_e2e, true);
   });
 });

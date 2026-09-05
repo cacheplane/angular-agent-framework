@@ -16,7 +16,7 @@ import { startAimock, type AimockHandle } from '@threadplane-internal/e2e-harnes
 
 const ports = portsFor('cockpit-runtimes-mastra-angular');
 const angularProject = 'cockpit-runtimes-mastra-angular';
-// Parsed by apps/cockpit/cockpit-e2e-wiring.spec.ts (accepts backendCwd for
+// Parsed by scripts/examples/e2e-wiring.spec.ts (accepts backendCwd for
 // Node-hosted backends alongside langgraphCwd/pythonCwd — keep the
 // `backendCwd: '<path>'` literal shape).
 const wiring = { backendCwd: 'deployments/ag-ui-mastra' };

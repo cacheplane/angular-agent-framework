@@ -17,8 +17,8 @@ const topicNames = [
 ] as const;
 
 // Resolve from this file, not process.cwd(). These specs run under
-// `nx test cockpit`, whose cwd is apps/cockpit — a cwd-relative root silently
-// points at apps/cockpit/cockpit/... and turns every existence assertion into
+// `nx test cockpit-registry`, whose cwd is libs/cockpit-registry — a cwd-relative root silently
+// points at libs/cockpit-registry/cockpit/... and turns every existence assertion into
 // a vacuous pass (or an unrelated ENOENT).
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const chatRoot = path.join(repoRoot, 'cockpit', 'chat');

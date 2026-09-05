@@ -38,7 +38,7 @@ cause, and each is fixed by the install above:
 | --- | --- |
 | `Cannot find module 'posthog-node'` when building `website` | Installed only into `apps/website/node_modules`, never hoisted. The walk up from the worktree's `apps/website/` never passes through the main checkout's. |
 | `Could not resolve "node_modules/katex/dist/katex.min.css"` | Referenced by literal path from the workspace root, not by module resolution — so there is no upward walk to inherit through. |
-| `Next.js inferred your workspace root, but it may not be correct` when building `cockpit` | Turbopack resolves its own workspace root and will not compile outside it. |
+| `Next.js inferred your workspace root, but it may not be correct` when building `website` | Turbopack resolves its own workspace root and will not compile outside it. |
 
 Do not fix these by copying individual packages from the main checkout. The list
 keeps growing, a partial copy pulls in a package without its transitive
@@ -48,17 +48,18 @@ Do not run `npm install` in a worktree on macOS either: it rewrites
 `package-lock.json` and drops the Linux `@next/swc-*` bindings, which breaks CI.
 `npm ci` is the safe command.
 
-One more worktree-only trap, after install: `nx build cockpit` can die with a
+One more worktree-only trap, after install: `nx build website` can die with a
 Turbopack panic — `FileSystemPath(...).join(...) leaves the filesystem root` —
-whenever a website `.next` cache exists anywhere in the workspace
-(`apps/website/.next` from `next dev`/e2e, or `dist/apps/website` from a build).
-Those caches contain a `node_modules` symlink whose relative target resolves
-through the *main* checkout's root; the path is valid on disk, but Turbopack's
-virtual filesystem refuses to traverse above its project root and panics.
-Pinning `turbopack.root` does not help. Clear the caches instead:
+whenever a stale website `.next` cache exists anywhere in the workspace
+(`apps/website/.next` from `next dev`/e2e, or `dist/apps/website` from a
+previous build). Those caches contain a `node_modules` symlink whose relative
+target resolves through the *main* checkout's root; the path is valid on
+disk, but Turbopack's virtual filesystem refuses to traverse above its
+project root and panics. Pinning `turbopack.root` does not help. Clear the
+caches instead:
 
 ```bash
-rm -rf apps/website/.next dist/apps/website && npx nx build cockpit
+rm -rf apps/website/.next dist/apps/website && npx nx build website
 ```
 
 CI never hits this — its jobs build from fresh checkouts that are not nested
@@ -197,8 +198,8 @@ not an alternative.
 
 ### PR-side deploy verification
 
-Two lanes run the deploy job's verification on pull requests against real
-Vercel previews, so deploy-only failures surface before merge:
+One lane runs the deploy job's verification on pull requests against a real
+Vercel preview, so deploy-only failures surface before merge:
 
 - **Website — e2e (deployed preview)** builds and deploys the Website and
   the examples as previews under deterministic aliases
@@ -209,15 +210,12 @@ Vercel previews, so deploy-only failures surface before merge:
   the Website alias in their parent-origin policy and Playwright seeds the
   examples origin's bypass cookie (`apps/website/e2e/runtime-bypass-setup.ts`).
   A later push re-points both aliases; the deployments behind them are kept.
-- **Cockpit — immutable preview smoke** deploys a throwaway cockpit preview,
-  runs the exhaustive redirect smoke against it, and removes it.
 
-Both need repository secrets and therefore skip on fork PRs; the required
-gate only demands them when they were eligible to run. Each Vercel project
-has its own Protection Bypass for Automation secret:
-`VERCEL_AUTOMATION_BYPASS_SECRET` (Website),
-`VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET`, and
-`VERCEL_COCKPIT_AUTOMATION_BYPASS_SECRET`. A secret added while a run is in
+It needs repository secrets and therefore skips on fork PRs; the required
+gate only demands it when it was eligible to run. Each Vercel project has its
+own Protection Bypass for Automation secret:
+`VERCEL_AUTOMATION_BYPASS_SECRET` (Website) and
+`VERCEL_EXAMPLES_AUTOMATION_BYPASS_SECRET`. A secret added while a run is in
 flight does not reach that run; re-run after provisioning. Never pass
 `--skip-domain` to a preview deploy; Vercel requires it to accompany `--prod`.
 

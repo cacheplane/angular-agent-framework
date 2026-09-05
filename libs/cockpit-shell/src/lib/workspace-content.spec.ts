@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import {
   capabilityModules,
   cockpitManifest,
-  resolveWorkspacePath,
+  resolveDocsWorkspace,
   type CockpitManifestEntry,
 } from '@threadplane/cockpit-registry';
 import {
@@ -351,7 +351,10 @@ describe('getContentBundle', () => {
   });
 
   it('loads workspace-only capabilities from the same registry assets', async () => {
-    const resolution = resolveWorkspacePath('/workspace/deep-agents/memory');
+    const resolution = resolveDocsWorkspace(
+      '/docs/deep-agents/capabilities/memory',
+      'Deep Agents Memory'
+    );
     expect(resolution).not.toBeNull();
     if (!resolution) return;
     const presentation = getWorkspacePresentation(resolution);

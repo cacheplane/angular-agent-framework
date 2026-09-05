@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
+import { basename, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { capabilities } from './scripts/capability-registry';
+import { capabilities } from '@threadplane/cockpit-registry';
 // @ts-expect-error — .mjs ES module without .d.ts; the e2e tsconfig uses
 // allowJs:true but this top-level test file doesn't go through that config.
 // eslint-disable-next-line @nx/enforce-module-boundaries -- repo-root port registry is intentionally outside an Nx project.
@@ -43,7 +43,8 @@ function listProjectJsonFiles(root: string): string[] {
 
 function listFiles(
   root: string,
-  predicate: (filePath: string) => boolean
+  predicate: (filePath: string) => boolean,
+  excludeDirNames: readonly string[] = []
 ): string[] {
   const out: string[] = [];
   const stack = [root];
@@ -51,6 +52,9 @@ function listFiles(
   while (stack.length) {
     const dir = stack.pop()!;
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.isDirectory() && excludeDirNames.includes(entry.name)) {
+        continue;
+      }
       const fullPath = join(dir, entry.name);
       if (entry.isDirectory()) {
         stack.push(fullPath);
@@ -134,11 +138,18 @@ describe('cockpit e2e wiring', () => {
     );
     const websiteConfig = readRepoFile('apps/website/playwright.config.ts');
 
-    expect(
-      existsSync(join(repoRoot, 'apps/cockpit/e2e/production-smoke.spec.ts'))
-    ).toBe(false);
-    expect(smoke).toContain('getCanonicalWebsiteWorkspaceHref');
-    expect(smoke).toContain('smokeCase.location');
+    // Assert this against the whole tree, not just the retired
+    // apps/cockpit path: any `production-smoke.spec.ts` anywhere else would
+    // be an undetected duplicate of the one file Website is meant to own.
+    // Website's file is named `platform-production-smoke.spec.ts` (a
+    // different basename), so it never matches this exact-name check.
+    const productionSmokeSpecs = listFiles(
+      repoRoot,
+      (filePath) => basename(filePath) === 'production-smoke.spec.ts',
+      ['node_modules', 'dist', '.next', '.git']
+    ).map((filePath) => relative(repoRoot, filePath));
+
+    expect(productionSmokeSpecs).toEqual([]);
     expect(smoke).toContain('getWorkspaceDestinationPath');
     expect(smoke).toContain('EXAMPLES_URL');
     expect(smoke).toContain('DEMO_URL');

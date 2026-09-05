@@ -1,6 +1,6 @@
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { dirname, resolve } from 'path';
-import { capabilities } from '../apps/cockpit/scripts/capability-registry';
+import { capabilities } from '@threadplane/cockpit-registry';
 
 type LangGraphManifest = {
   graphs: Record<string, string>;

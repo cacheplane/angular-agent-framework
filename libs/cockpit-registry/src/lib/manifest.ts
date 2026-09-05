@@ -198,8 +198,6 @@ const createEntry = (
     entryKind: isDocsOnly ? 'docs-only' : 'capability',
     runtimeClass: isDocsOnly ? 'docs-only' : getRuntimeClass(topic),
     docsPath,
-    workspacePath: `/workspace/${product}/${topic}`,
-    legacyPath: `/${product}/${section}/${topic}/${page}/python`,
     runtimeAdapter,
     availableModes: deriveAvailableModes({
       docsPath,

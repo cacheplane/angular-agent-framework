@@ -7,7 +7,7 @@ import ts from 'typescript';
 const REPO_ROOT = resolve(import.meta.dirname, '..');
 const REGISTRY_PATH = join(
   REPO_ROOT,
-  'apps/cockpit/scripts/capability-registry.ts',
+  'libs/cockpit-registry/src/lib/capability-registry.ts',
 );
 
 function unwrapExpression(expression) {

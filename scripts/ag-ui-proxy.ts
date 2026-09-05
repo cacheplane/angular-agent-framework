@@ -51,7 +51,6 @@ function upstreamBaseFor(topic: string): string | null {
 
 const ALLOWED_ORIGINS = new Set<string>([
   'https://examples.threadplane.ai',
-  'https://cockpit.threadplane.ai',
   'http://localhost:4320',
   'http://localhost:4321',
 ]);

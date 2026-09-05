@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Generic aimock fixture recorder for a single cockpit cap.
-# Reads cap metadata from apps/cockpit/scripts/capability-registry.ts via tsx,
+# Reads cap metadata from libs/cockpit-registry/src/lib/capability-registry.ts via tsx,
 # drives one or more prompts through aimock --record mode, merges captured
 # fixtures into the cap's e2e/fixtures/<id>.json.
 #
@@ -27,7 +27,7 @@ cd "$REPO_ROOT"
 
 # Look up cap metadata via the registry.
 read -r CAP_PRODUCT CAP_TOPIC CAP_GRAPH CAP_PORT CAP_PYPORT CAP_PYDIR < <(npx tsx -e "
-import { capabilities } from './apps/cockpit/scripts/capability-registry';
+import { capabilities } from '@threadplane/cockpit-registry';
 const c = capabilities.find(x => x.id === '$CAP_ID');
 if (!c) { console.error('cap not found: $CAP_ID'); process.exit(1); }
 if (!c.pythonDir || c.pythonPort === undefined) { console.error('cap missing pythonDir/pythonPort'); process.exit(1); }

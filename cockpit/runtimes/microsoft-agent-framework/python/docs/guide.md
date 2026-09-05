@@ -31,7 +31,7 @@ harness intercepts model calls). See `.env.example`.
 ## Running locally
 
 ```sh
-npx tsx apps/cockpit/scripts/serve-example.ts --capability=rt-maf
+npx tsx scripts/examples/serve-example.ts --capability=rt-maf
 ```
 
 Angular dev server on :4330, uvicorn backend on :5330 (`/agent`, health at
