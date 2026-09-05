@@ -2,6 +2,8 @@
 
 The six publishable libraries (`@threadplane/chat`, `@threadplane/langgraph`, `@threadplane/ag-ui`, `@threadplane/render`, `@threadplane/a2ui`, `@threadplane/telemetry`) ship together at a synchronized version via Nx Release. During the `0.0.x` exploratory phase, only patch bumps are used.
 
+Nx updates internal dependency and peer ranges with the synchronized release. `preserveMatchingDependencyRanges` is disabled so a prior `^0.0.x` peer range cannot block the next patch or leave companion packages on incompatible versions. External dependency ranges remain unchanged.
+
 ## Standard release (second release onward)
 
 > First release? See **[First `@threadplane` release](#first-threadplane-release)** below — the flow is different because there's no prior package under the new npm org yet.
@@ -49,10 +51,13 @@ git push origin main --tags
 > Always `--dry-run` step 2 first and check the printed tag URL before
 > committing to it.
 
-Step 4 is what actually ships. You can also publish from your machine with
-`npx nx release publish --groups=publishable`, but preferring the tag-driven
-workflow means no local npm credentials are needed and provenance is attested
-by CI.
+Step 4 is what actually ships. Prefer the tag-driven workflow: it rebuilds the
+versioned sources, runs the package gates, and publishes with provenance without
+local npm credentials. If publishing locally, first rebuild all six packages
+and Growth, then run `telemetry:test-install-pack` and
+`telemetry:test-development-bundle` before `npx nx release publish --groups=publishable`.
+The version command's pre-build embeds the old runtime version; a rebuild after
+versioning is required to align collector payloads with the new package manifests.
 
 ### Check the lockfile before pushing
 
@@ -133,6 +138,6 @@ While the API is still settling we bump only the patch component (`0.0.1` → `0
 
 When the API stabilizes enough to make compatibility promises, transition to `0.1.0` and start using minor/major bumps with conventional-commit-driven semver.
 
-## Why peerDeps use `*` between Threadplane libs
+## Internal peer dependencies
 
-Caret-prefixed ranges (`^0.0.1`) in `0.0.x` don't include subsequent patches because npm semver treats `0.0.x` as breaking. Using `"*"` for inter-Threadplane peerDeps during this phase avoids the range-narrowing problem; the synchronized release group ensures all libs ship the same version anyway. Switch back to `^X.Y.Z` once we hit `0.1.0`.
+Caret-prefixed ranges (`^0.0.1`) do not include subsequent `0.0.x` patches. Nx updates internal peers during each synchronized release so a newly installed package resolves compatible companion APIs. Do not preserve stale narrow ranges or manually restore wildcard peers after versioning.
