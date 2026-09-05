@@ -214,7 +214,7 @@ export function CockpitControlPlane({
         title="Settings"
         onClose={() => closeUtility('settings', settingsRef)}
       >
-        <div className="cockpit-control-plane-setting">
+        <div className="workspace-control-plane-setting">
           <span>Language</span>
           {entry ? (
             <LanguagePicker
@@ -232,7 +232,7 @@ export function CockpitControlPlane({
           runtimeOrigin={runtimeOrigin}
         />
         {themeControl ? (
-          <div className="cockpit-control-plane-setting">
+          <div className="workspace-control-plane-setting">
             <span>Theme</span>
             {themeControl}
           </div>
@@ -283,8 +283,8 @@ export function CockpitControlPlane({
 
   return (
     <div
-      className="cockpit-control-plane"
-      data-cockpit-control-plane
+      className="workspace-control-plane"
+      data-workspace-control-plane
       data-mobile={mobile || undefined}
     >
       {layout === 'full' ? (
@@ -306,18 +306,18 @@ export function CockpitControlPlane({
             <>
               <span
                 ref={activityRef}
-                className="cockpit-control-plane-utility-anchor"
-                data-cockpit-utility="activity"
+                className="workspace-control-plane-utility-anchor"
+                data-workspace-utility="activity"
               >
                 <ControlPlaneRailItem
                   label={activityLabel}
                   icon={
-                    <span data-cockpit-activity-icon>
+                    <span data-workspace-activity-icon>
                       <ActivityIcon size={18} aria-hidden="true" />
                       {attention ? (
                         <span
                           aria-hidden="true"
-                          data-cockpit-activity-attention
+                          data-workspace-activity-attention
                         />
                       ) : null}
                     </span>
@@ -329,8 +329,8 @@ export function CockpitControlPlane({
               </span>
               <span
                 ref={settingsRef}
-                className="cockpit-control-plane-utility-anchor"
-                data-cockpit-utility="settings"
+                className="workspace-control-plane-utility-anchor"
+                data-workspace-utility="settings"
               >
                 <ControlPlaneRailItem
                   label="Settings"

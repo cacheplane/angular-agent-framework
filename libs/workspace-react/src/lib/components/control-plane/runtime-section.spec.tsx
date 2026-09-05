@@ -101,7 +101,7 @@ describe('RuntimeSection', () => {
       /@media \(forced-colors:\s*active\)[\s\S]*?\[data-runtime-status\]\[data-runtime-phase\]\s*\{[\s\S]*?color:\s*CanvasText;/
     );
     expect(cockpitCss).toMatch(
-      /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*?\.cockpit-runtime-status-loader[\s\S]*?animation:\s*none/
+      /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*?\.workspace-runtime-status-loader[\s\S]*?animation:\s*none/
     );
   });
 

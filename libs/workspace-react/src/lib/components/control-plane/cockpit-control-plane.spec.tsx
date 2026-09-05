@@ -140,8 +140,8 @@ describe('CockpitControlPlane', () => {
 
   it('keeps context headings on the shared sentence-case sans contract', () => {
     for (const selector of [
-      '[data-cockpit-context-content] [data-control-plane-section-trigger]',
-      '[data-cockpit-context-content] [data-control-plane-section-heading]',
+      '[data-workspace-context-content] [data-control-plane-section-trigger]',
+      '[data-workspace-context-content] [data-control-plane-section-heading]',
     ]) {
       const declarations = declarationsFor(cockpitCss, selector);
       expect(declarations).toMatch(
@@ -238,7 +238,7 @@ describe('CockpitControlPlane', () => {
       utilities.map((button) => button.getAttribute('aria-label'))
     ).toEqual(['Activity, 1 unread problem', 'Settings']);
     expect(
-      document.querySelector('[data-cockpit-activity-attention]')?.textContent
+      document.querySelector('[data-workspace-activity-attention]')?.textContent
     ).toBe('');
     fireEvent.click(
       screen.getByRole('button', { name: 'Activity, 1 unread problem' })
@@ -350,13 +350,13 @@ describe('CockpitControlPlane', () => {
     // hover, which in dark is rgb(28,28,28) inside the rail's rgb(44,44,44)
     // -- a fixed ring would read as a lighter halo whenever Run is hovered.
     expect(cockpitCss).toMatch(
-      /\[data-control-plane-rail-status\]\s*\{[^}]*border:\s*2px solid var\(--cockpit-rail-status-ring\)/
+      /\[data-control-plane-rail-status\]\s*\{[^}]*border:\s*2px solid var\(--workspace-rail-status-ring\)/
     );
     expect(cockpitCss).toMatch(
-      /\[data-control-plane-rail-item\]\s*\{[^}]*--cockpit-rail-status-ring:\s*var\(--ds-surface-tinted\)/
+      /\[data-control-plane-rail-item\]\s*\{[^}]*--workspace-rail-status-ring:\s*var\(--ds-surface-tinted\)/
     );
     expect(cockpitCss).toMatch(
-      /\[data-control-plane-rail-item\][^{]*:hover\s*\{[^}]*--cockpit-rail-status-ring:\s*var\(--ds-surface\)/
+      /\[data-control-plane-rail-item\][^{]*:hover\s*\{[^}]*--workspace-rail-status-ring:\s*var\(--ds-surface\)/
     );
     // Forced colors overrides background, so the dot needs an explicit
     // treatment like the runtime pill it sits beside.

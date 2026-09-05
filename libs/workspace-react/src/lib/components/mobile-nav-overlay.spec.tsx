@@ -220,7 +220,9 @@ describe('MobileNavOverlay', () => {
   it('renders the tablet context as a pane-only, non-mobile one-column control plane', () => {
     renderOverlay({ variant: 'tablet', controlPlaneLayout: 'pane' });
     const overlay = dialog();
-    const controlPlane = overlay.querySelector('[data-cockpit-control-plane]');
+    const controlPlane = overlay.querySelector(
+      '[data-workspace-control-plane]'
+    );
 
     expect(controlPlane?.getAttribute('data-mobile')).toBeNull();
     expect(
@@ -774,7 +776,7 @@ describe('MobileNavOverlay', () => {
     expect(
       within(dialog()).getByRole('button', { name: 'Close navigation' })
         .classList
-    ).toContain('cockpit-mobile-control-plane-close');
+    ).toContain('workspace-mobile-control-plane-close');
 
     const workspaceRoot = process.cwd().endsWith('/libs/workspace-react')
       ? resolve(process.cwd(), '../..')
@@ -786,36 +788,36 @@ describe('MobileNavOverlay', () => {
       'utf8'
     );
     expect(css).toMatch(
-      /@media \(pointer: coarse\)[\s\S]*\.cockpit-mobile-navigation-trigger[\s\S]*\.cockpit-mobile-control-plane-close/
+      /@media \(pointer: coarse\)[\s\S]*\.workspace-mobile-navigation-trigger[\s\S]*\.workspace-mobile-control-plane-close/
     );
     expect(css).toMatch(
-      /\.cockpit-mobile-navigation-trigger[\s\S]*min-width:\s*44px[\s\S]*min-height:\s*44px/
+      /\.workspace-mobile-navigation-trigger[\s\S]*min-width:\s*44px[\s\S]*min-height:\s*44px/
     );
     expect(css).toMatch(
-      /\.cockpit-mobile-navigation-trigger\s*\{[^}]*flex:\s*none;[^}]*min-width:\s*44px;[^}]*min-height:\s*44px;/
+      /\.workspace-mobile-navigation-trigger\s*\{[^}]*flex:\s*none;[^}]*min-width:\s*44px;[^}]*min-height:\s*44px;/
     );
     expect(css).toMatch(
-      /\.cockpit-mobile-control-plane-close[\s\S]*min-width:\s*44px[\s\S]*min-height:\s*44px/
+      /\.workspace-mobile-control-plane-close[\s\S]*min-width:\s*44px[\s\S]*min-height:\s*44px/
     );
-    expect(css).toContain('.cockpit-mobile-navigation-trigger:focus-visible');
-    expect(css).toContain('.cockpit-tablet-context-trigger:focus-visible');
+    expect(css).toContain('.workspace-mobile-navigation-trigger:focus-visible');
+    expect(css).toContain('.workspace-tablet-context-trigger:focus-visible');
     expect(css).toMatch(
-      /\.cockpit-mobile-control-plane\s*\{[^}]*position:\s*fixed;[^}]*z-index:\s*50;/
-    );
-    expect(css).toMatch(
-      /\.cockpit-mobile-control-plane\[data-variant=["']mobile["']\]\s*\{[^}]*inset:\s*0;/
+      /\.workspace-mobile-control-plane\s*\{[^}]*position:\s*fixed;[^}]*z-index:\s*50;/
     );
     expect(css).toMatch(
-      /@media \(forced-colors: active\)[\s\S]*\.cockpit-tablet-context-trigger[\s\S]*border:\s*1px solid CanvasText/
+      /\.workspace-mobile-control-plane\[data-variant=["']mobile["']\]\s*\{[^}]*inset:\s*0;/
     );
     expect(css).toMatch(
-      /@media \(pointer: coarse\)[\s\S]*\.cockpit-tablet-context-trigger[\s\S]*min-width:\s*44px[\s\S]*min-height:\s*44px/
+      /@media \(forced-colors: active\)[\s\S]*\.workspace-tablet-context-trigger[\s\S]*border:\s*1px solid CanvasText/
     );
     expect(css).toMatch(
-      /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.cockpit-mobile-control-plane[\s\S]*transition:\s*none\s*!important/
+      /@media \(pointer: coarse\)[\s\S]*\.workspace-tablet-context-trigger[\s\S]*min-width:\s*44px[\s\S]*min-height:\s*44px/
     );
     expect(css).toMatch(
-      /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.cockpit-runtime-status-loader[\s\S]*animation:\s*none\s*!important/
+      /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.workspace-mobile-control-plane[\s\S]*transition:\s*none\s*!important/
+    );
+    expect(css).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.workspace-runtime-status-loader[\s\S]*animation:\s*none\s*!important/
     );
   });
 });

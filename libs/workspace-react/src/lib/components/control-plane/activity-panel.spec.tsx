@@ -55,12 +55,12 @@ describe('ActivityPanel', () => {
   it('styles stable timeline hooks with neutral, error, and recovery states', () => {
     expect(cockpitCss).toMatch(/\[data-activity-connector\]/);
     expect(cockpitCss).toMatch(
-      /\[data-activity-severity=["']error["']\][\s\S]*?var\(--cockpit-state-error/
+      /\[data-activity-severity=["']error["']\][\s\S]*?var\(--workspace-state-error/
     );
     expect(cockpitCss).toMatch(
-      /\[data-activity-kind=["']runtime_recovered["']\][\s\S]*?var\(--cockpit-state-success/
+      /\[data-activity-kind=["']runtime_recovered["']\][\s\S]*?var\(--workspace-state-success/
     );
-    expect(cockpitCss).toMatch(/\[data-cockpit-activity-attention\]/);
+    expect(cockpitCss).toMatch(/\[data-workspace-activity-attention\]/);
   });
 
   it('uses compact local time while preserving machine and accessible datetimes', () => {

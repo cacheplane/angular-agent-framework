@@ -369,22 +369,22 @@ export function MobileNavOverlay({
       data-variant={variant}
       className={
         variant === 'tablet'
-          ? 'cockpit-mobile-control-plane cockpit-tablet-context-surface fixed z-50'
-          : 'cockpit-mobile-control-plane fixed inset-0 z-50'
+          ? 'workspace-mobile-control-plane workspace-tablet-context-surface fixed z-50'
+          : 'workspace-mobile-control-plane fixed inset-0 z-50'
       }
       onClickCapture={interceptWorkspaceNavigation}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) requestClose('trigger');
       }}
     >
-      <div className="cockpit-mobile-control-plane-panel">
-        <header className="cockpit-mobile-control-plane-header">
+      <div className="workspace-mobile-control-plane-panel">
+        <header className="workspace-mobile-control-plane-header">
           <span>{title}</span>
           <button
             type="button"
             onClick={() => requestClose('trigger')}
             aria-label="Close navigation"
-            className="cockpit-mobile-control-plane-close"
+            className="workspace-mobile-control-plane-close"
           >
             <X size={20} strokeWidth={2} aria-hidden="true" />
           </button>
