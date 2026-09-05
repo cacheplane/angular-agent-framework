@@ -17,9 +17,19 @@ npx tsx apps/growth-research/scripts/research-pilot.mts acquire --output /absolu
 ```
 
 These commands return UUIDs for immutable JSON files in the selected output directory.
-Acquisition records include complete, partial, empty and failed outcomes. The existing
-fetcher can skip unusable pages, so missing paths have an unknown reason; redirects may
-make the original path indeterminate. Review the captured corpus before model calls:
+Acquisition records include complete, partial, empty and failed outcomes. Each capture's
+`pageDiagnostics` records the original requested path, a bounded outcome code, HTTP
+status and known byte count when available. Outcomes distinguish capture, access denial
+(403), rate limiting (429), other HTTP failures, oversized pages, request timeout,
+transport failure, rejected redirects, missing redirect locations, exhausted redirect
+budget and security rejection. Diagnostics emitted before a security rejection remain
+in the failed capture; caller cancellation still rejects acquisition. Diagnostics contain
+no response bodies, exception messages or redirect URLs. `access_denied` records HTTP
+403; it does not prove bot detection. Missing diagnostic entries can mean a page was
+not attempted or an older injected capture function did not support diagnostics. The
+250 KiB page limit, five-second timeout, three-total-redirect budget, exact-host redirect
+policy and SSRF controls are unchanged. The existing unavailable-path summary uses final URLs and can
+remain indeterminate after redirects. Review the captured corpus before model calls:
 remove personal biography/contact snippets, retain empty cases and failures, and fill
 expected claims/unknowns from the actual captured evidence. Save the reviewed corpus
 under a new name/version. Acquisition is preparation, not a human quality label.
