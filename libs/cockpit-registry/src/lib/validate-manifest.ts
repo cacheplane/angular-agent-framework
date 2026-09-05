@@ -2,7 +2,6 @@ import type {
   CockpitManifestEntry,
   CockpitManifestIdentity,
 } from './manifest.types';
-import { PRIMARY_CAPABILITY_BY_DOCS_PATH } from './workspace-resolution';
 
 const identityKey = ({
   product,
@@ -13,21 +12,14 @@ const identityKey = ({
 }: CockpitManifestIdentity): string =>
   `${product}/${section}/${topic}/${page}/${language}`;
 
-export interface ValidateManifestOptions {
-  primaryDocsMappings?: Readonly<Record<string, string>>;
-}
-
 export const validateManifest = (
-  manifest: readonly CockpitManifestEntry[],
-  options: ValidateManifestOptions = {}
+  manifest: readonly CockpitManifestEntry[]
 ): string[] => {
   const errors: string[] = [];
   const identities = new Set<string>();
   const stableIds = new Set<string>();
   const workspacePaths = new Set<string>();
   const legacyPaths = new Set<string>();
-  const primaryDocsMappings =
-    options.primaryDocsMappings ?? PRIMARY_CAPABILITY_BY_DOCS_PATH;
 
   for (const entry of manifest) {
     const key = identityKey(entry);
@@ -64,22 +56,16 @@ export const validateManifest = (
     }
   }
 
-  const docsPathEntries = new Map<string, CockpitManifestEntry[]>();
+  const docsPaths = new Set<string>();
   for (const entry of manifest) {
-    if (entry.docsPath) {
-      const entries = docsPathEntries.get(entry.docsPath) ?? [];
-      entries.push(entry);
-      docsPathEntries.set(entry.docsPath, entries);
+    if (!entry.docsPath) {
+      errors.push(`Missing docsPath for ${entry.id}`);
+      continue;
     }
-  }
-
-  for (const [docsPath, entries] of docsPathEntries) {
-    if (entries.length < 2) continue;
-    const primaryId = primaryDocsMappings[docsPath];
-    if (!primaryId || !entries.some((entry) => entry.id === primaryId)) {
-      errors.push(
-        `Ambiguous Docs path without an explicit primary capability: ${docsPath}`
-      );
+    if (docsPaths.has(entry.docsPath)) {
+      errors.push(`Duplicate Docs path: ${entry.docsPath}`);
+    } else {
+      docsPaths.add(entry.docsPath);
     }
   }
 

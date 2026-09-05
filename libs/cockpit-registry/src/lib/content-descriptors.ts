@@ -131,7 +131,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       language: 'python',
     },
     title: 'LangGraph Durable Execution (Python)',
-    docsPath: '/docs/langgraph/guides/persistence',
+    docsPath: '/docs/langgraph/guides/durable-execution',
     promptAssetPaths: [
       'cockpit/langgraph/durable-execution/python/prompts/durable-execution.md',
     ],
@@ -311,7 +311,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       language: 'python',
     },
     title: 'AG-UI Tool Views (Python)',
-    docsPath: '/docs/chat/components/chat-tool-calls',
+    docsPath: '/docs/ag-ui/guides/tool-views',
     promptAssetPaths: ['cockpit/ag-ui/tool-views/python/prompts/tool-views.md'],
     codeAssetPaths: [
       'cockpit/ag-ui/tool-views/angular/src/app/tool-views.component.ts',
@@ -337,7 +337,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       language: 'python',
     },
     title: 'AG-UI JSON Render (Python)',
-    docsPath: '/docs/render/getting-started/introduction',
+    docsPath: '/docs/ag-ui/guides/json-render',
     promptAssetPaths: [
       'cockpit/ag-ui/json-render/python/prompts/json-render.md',
     ],
@@ -364,7 +364,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       language: 'python',
     },
     title: 'AG-UI Client Tools (Python)',
-    docsPath: '/docs/chat/guides/client-tools',
+    docsPath: '/docs/ag-ui/guides/client-tools',
     promptAssetPaths: [
       'cockpit/ag-ui/client-tools/python/prompts/client-tools.md',
     ],
@@ -418,7 +418,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       language: 'python',
     },
     title: 'AG-UI Subagents (Python)',
-    docsPath: '/docs/chat/components/chat-subagent-card',
+    docsPath: '/docs/ag-ui/guides/subagents',
     promptAssetPaths: ['cockpit/ag-ui/subagents/python/prompts/subagents.md'],
     codeAssetPaths: [
       'cockpit/ag-ui/subagents/angular/src/app/subagents.component.ts',
@@ -653,7 +653,7 @@ const capabilityModuleData: RegisteredCapabilityModule[] = [
       language: 'python',
     },
     title: 'Render Repeat Loops (Python)',
-    docsPath: '/docs/render/guides/specs',
+    docsPath: '/docs/render/guides/repeat-loops',
     promptAssetPaths: [
       'cockpit/render/repeat-loops/python/prompts/repeat-loops.md',
     ],

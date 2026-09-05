@@ -242,7 +242,7 @@ export const getWorkspacePresentation = (
   if (!descriptor) {
     return {
       kind: 'docs-only',
-      docsPath: resolution.identity.docsPath ?? '',
+      docsPath: resolution.identity.docsPath,
       title: resolution.identity.title,
       runnable: false,
     };
@@ -251,7 +251,7 @@ export const getWorkspacePresentation = (
   return {
     kind: 'capability',
     identity: cloneWorkspaceIdentity(resolution.identity),
-    docsPath: resolution.identity.docsPath ?? descriptor.docsPath,
+    docsPath: resolution.identity.docsPath,
     promptAssetPaths: [...descriptor.promptAssetPaths],
     codeAssetPaths: [...descriptor.codeAssetPaths],
     backendAssetPaths: [...(descriptor.backendAssetPaths ?? [])],

@@ -293,7 +293,7 @@ jobs:
       # `scope:shared`, which is not a SCOPE_KEY — adding it to LIBS would not
       # have run it, because a workspace-react change never flips `library`.
       - run: npx nx lint workspace-react
-      - run: npx nx run-many -t test --projects=cockpit,cockpit-docs,cockpit-registry,workspace-react --skip-nx-cache
+      - run: npx nx run-many -t test --projects=cockpit,cockpit-docs,cockpit-registry,cockpit-shell,workspace-react --skip-nx-cache
   cockpit-examples-build:
     name: Cockpit — build all examples
     needs: ci-scope

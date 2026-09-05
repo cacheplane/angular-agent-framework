@@ -236,20 +236,6 @@ const buildPreviewCases = (): RedirectSmokeCase[] => {
     );
   }
 
-  const workspaceOnly = cockpitManifest.find((entry) =>
-    getWorkspaceDestinationPath(entry).startsWith('/workspace/')
-  );
-  if (!workspaceOnly)
-    throw new Error('Expected a workspace-only manifest entry');
-  cases.push(
-    redirectCase(
-      'workspace Docs serialization',
-      `${workspaceOnly.legacyPath}?mode=docs`,
-      entryResolution(workspaceOnly),
-      'docs'
-    )
-  );
-
   cases.push(
     notFoundCase('unknown path 404', '/unknown'),
     notFoundCase('partial path 404', '/langgraph/core-capabilities/streaming'),
@@ -285,13 +271,8 @@ const buildProductionCases = (): RedirectSmokeCase[] => {
   const docsBacked = cockpitManifest.find((entry) =>
     getWorkspaceDestinationPath(entry).startsWith('/docs/')
   );
-  const workspaceOnly = cockpitManifest.find((entry) =>
-    getWorkspaceDestinationPath(entry).startsWith('/workspace/')
-  );
-  if (!docsBacked || !workspaceOnly) {
-    throw new Error(
-      'Redirect smoke requires Docs-backed and workspace-only routes'
-    );
+  if (!docsBacked) {
+    throw new Error('Redirect smoke requires a Docs-backed route');
   }
   return [
     redirectCase('root production redirect', '/', root, 'run'),
@@ -299,11 +280,6 @@ const buildProductionCases = (): RedirectSmokeCase[] => {
       'Docs-backed production redirect',
       docsBacked.legacyPath,
       entryResolution(docsBacked)
-    ),
-    redirectCase(
-      'workspace-only production redirect',
-      workspaceOnly.legacyPath,
-      entryResolution(workspaceOnly)
     ),
     notFoundCase('unknown production 404', '/unknown'),
     {
@@ -442,9 +418,7 @@ const verifyCase = (
   if (response.status !== smokeCase.expectedStatus) {
     const protectionHint =
       response.status === 302 &&
-      (response.headers.location ?? '').startsWith(
-        'https://vercel.com/sso-api'
-      )
+      (response.headers.location ?? '').startsWith('https://vercel.com/sso-api')
         ? ` The deployment answered with Vercel deployment protection, not the redirect service; supply the owning project's automation bypass secret via ${BYPASS_SECRET_ENV}.`
         : '';
     throw new RedirectContractError(

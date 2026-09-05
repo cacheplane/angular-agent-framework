@@ -266,15 +266,12 @@ describe('registry-derived legacy Website redirects', () => {
     ).toBe(expectedHref(docsOnly, 'Docs'));
   });
 
-  it('serializes Docs mode truthfully for docs and workspace destinations', () => {
+  it('serializes Docs mode truthfully for docs destinations', () => {
     const docsDestination = cockpitManifest.find((entry) =>
       getWorkspaceDestinationPath(entry).startsWith('/docs/')
     );
-    const workspaceDestination = cockpitManifest.find((entry) =>
-      getWorkspaceDestinationPath(entry).startsWith('/workspace/')
-    );
-    if (!docsDestination || !workspaceDestination) {
-      throw new Error('Expected docs and workspace fixtures');
+    if (!docsDestination) {
+      throw new Error('Expected a docs fixture');
     }
 
     expect(
@@ -284,14 +281,6 @@ describe('registry-derived legacy Website redirects', () => {
         productionEnvironment
       )
     ).toBe(expectedHref(docsDestination, 'Docs'));
-    expect(
-      getLegacyWebsiteRedirect(
-        workspaceDestination.legacyPath,
-        ['docs'],
-        productionEnvironment
-      )
-    ).toBe(expectedHref(workspaceDestination, 'Docs'));
-    expect(expectedHref(workspaceDestination, 'Docs')).toContain('?mode=docs');
   });
 
   it('returns null for unknown, partial, extra, malformed, and trailing paths', () => {

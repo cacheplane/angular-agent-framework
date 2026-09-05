@@ -53,9 +53,8 @@ export const COCKPIT_DOCS_LINKS: Readonly<Record<string, string>> = {
     '/docs/langgraph/getting-started/introduction',
   'langgraph/core-capabilities/persistence':
     '/docs/langgraph/guides/persistence',
-  // Durable execution is the checkpointer story; persistence is where it is written up.
   'langgraph/core-capabilities/durable-execution':
-    '/docs/langgraph/guides/persistence',
+    '/docs/langgraph/guides/durable-execution',
   'langgraph/core-capabilities/streaming': '/docs/langgraph/guides/streaming',
   'langgraph/core-capabilities/interrupts': '/docs/langgraph/guides/interrupts',
   'langgraph/core-capabilities/memory': '/docs/langgraph/guides/memory',
@@ -72,13 +71,11 @@ export const COCKPIT_DOCS_LINKS: Readonly<Record<string, string>> = {
   // AG-UI has no streaming guide; event mapping is where token streaming is specified.
   'ag-ui/core-capabilities/streaming': '/docs/ag-ui/reference/event-mapping',
   'ag-ui/core-capabilities/interrupts': '/docs/ag-ui/guides/interrupts',
-  'ag-ui/core-capabilities/tool-views': '/docs/chat/components/chat-tool-calls',
-  'ag-ui/core-capabilities/json-render':
-    '/docs/render/getting-started/introduction',
-  'ag-ui/core-capabilities/client-tools': '/docs/chat/guides/client-tools',
+  'ag-ui/core-capabilities/tool-views': '/docs/ag-ui/guides/tool-views',
+  'ag-ui/core-capabilities/json-render': '/docs/ag-ui/guides/json-render',
+  'ag-ui/core-capabilities/client-tools': '/docs/ag-ui/guides/client-tools',
   'ag-ui/core-capabilities/a2ui': '/docs/a2ui/getting-started/introduction',
-  'ag-ui/core-capabilities/subagents':
-    '/docs/chat/components/chat-subagent-card',
+  'ag-ui/core-capabilities/subagents': '/docs/ag-ui/guides/subagents',
 
   // render
   'render/getting-started/overview':
@@ -89,8 +86,7 @@ export const COCKPIT_DOCS_LINKS: Readonly<Record<string, string>> = {
   'render/core-capabilities/state-management':
     '/docs/render/guides/state-store',
   'render/core-capabilities/registry': '/docs/render/guides/registry',
-  // Repeat loops are a spec feature, documented under "Repeat Loops" in the specs guide.
-  'render/core-capabilities/repeat-loops': '/docs/render/guides/specs',
+  'render/core-capabilities/repeat-loops': '/docs/render/guides/repeat-loops',
   // `$computed` resolves against the `functions` map registered by provideRender().
   'render/core-capabilities/computed-functions':
     '/docs/render/api/provide-render',
