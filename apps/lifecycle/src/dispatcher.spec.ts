@@ -21,6 +21,9 @@ import {
 } from './campaign/send.js';
 
 const NOW = new Date('2026-09-01T12:00:00.000Z');
+const EMAIL_KEYRING = {
+  active: { version: 1, secret: 'dispatcher-email-test-secret-material' },
+};
 
 afterEach(() => vi.useRealTimers());
 
@@ -61,6 +64,13 @@ function dependencies(
     dispatchLeasedJob: vi.fn().mockResolvedValue('completed'),
     isRecoveryPaused: vi.fn().mockResolvedValue(false),
     leaseDueJobs: vi.fn().mockResolvedValue([]),
+    loadEmailKeyring: vi.fn(() => EMAIL_KEYRING),
+    processInstallRuntimeActivations: vi.fn().mockResolvedValue({
+      approved: 0,
+      ineligible: 0,
+      conflicted: 0,
+      disabled: false,
+    }),
     materializeCampaignEnrollment: vi.fn().mockResolvedValue({
       enrolledContactIds: [],
       createdJobs: 0,
@@ -280,6 +290,7 @@ describe('dispatchLifecycleJobs', () => {
         batchSize: 10,
         campaignEnabled: false,
         campaignEnrollmentEnabled: true,
+        installRuntimeHelloEnabled: true,
         campaignEnrollmentStartAt: start,
         signal: new AbortController().signal,
       },
@@ -295,12 +306,51 @@ describe('dispatchLifecycleJobs', () => {
         batchSize: 10,
       }
     );
+    expect(deps.loadEmailKeyring).toHaveBeenCalledOnce();
+    expect(deps.processInstallRuntimeActivations).toHaveBeenCalledWith(
+      expect.anything(),
+      { enabled: true, limit: 10, now: NOW, keyring: EMAIL_KEYRING }
+    );
+    expect(
+      vi.mocked(deps.processInstallRuntimeActivations).mock
+        .invocationCallOrder[0]
+    ).toBeLessThan(
+      materializeCampaignEnrollment.mock.invocationCallOrder[0] ?? 0
+    );
     expect(
       materializeCampaignEnrollment.mock.invocationCallOrder[0]
     ).toBeLessThan(
       leaseDueJobs.mock.invocationCallOrder[0] ?? Number.POSITIVE_INFINITY
     );
   });
+
+  it.each([undefined, false])(
+    'keeps form and claim enrollment working without new keys when hello rollout is %s',
+    async (installRuntimeHelloEnabled) => {
+      const deps = dependencies({
+        loadEmailKeyring: vi.fn(() => {
+          throw new Error('new HMAC keys are not configured');
+        }),
+      });
+      await expect(
+        dispatchLifecycleJobs(
+          {
+            batchSize: 10,
+            campaignEnabled: true,
+            campaignEnrollmentEnabled: true,
+            installRuntimeHelloEnabled,
+            campaignEnrollmentStartAt: NOW,
+            signal: new AbortController().signal,
+          },
+          deps
+        )
+      ).resolves.toMatchObject({ leased: 0 });
+      expect(deps.materializeCampaignEnrollment).toHaveBeenCalledOnce();
+      expect(deps.leaseDueJobs).toHaveBeenCalledOnce();
+      expect(deps.loadEmailKeyring).not.toHaveBeenCalled();
+      expect(deps.processInstallRuntimeActivations).not.toHaveBeenCalled();
+    }
+  );
 
   it('does no enrollment work when enrollment is disabled', async () => {
     const deps = dependencies();
@@ -310,12 +360,41 @@ describe('dispatchLifecycleJobs', () => {
         batchSize: 10,
         campaignEnabled: true,
         campaignEnrollmentEnabled: false,
+        installRuntimeHelloEnabled: true,
         signal: new AbortController().signal,
       },
       deps
     );
 
     expect(deps.materializeCampaignEnrollment).not.toHaveBeenCalled();
+    expect(deps.processInstallRuntimeActivations).not.toHaveBeenCalled();
+    expect(deps.loadEmailKeyring).not.toHaveBeenCalled();
+  });
+
+  it('stops before enrollment and leasing if activation processing is cancelled', async () => {
+    const controller = new AbortController();
+    const deps = dependencies({
+      processInstallRuntimeActivations: vi.fn().mockImplementation(async () => {
+        controller.abort(new Error('activation cancelled'));
+        return { approved: 0, ineligible: 0, conflicted: 0, disabled: false };
+      }),
+    });
+    await expect(
+      dispatchLifecycleJobs(
+        {
+          batchSize: 10,
+          campaignEnabled: true,
+          campaignEnrollmentEnabled: true,
+          installRuntimeHelloEnabled: true,
+          campaignEnrollmentStartAt: NOW,
+          signal: controller.signal,
+        },
+        deps
+      )
+    ).rejects.toThrow('activation cancelled');
+    expect(deps.materializeCampaignEnrollment).not.toHaveBeenCalled();
+    expect(deps.leaseDueJobs).not.toHaveBeenCalled();
+    expect(deps.createDatabase().close).toHaveBeenCalledOnce();
   });
 
   it.each([0, 26, 1.5])(

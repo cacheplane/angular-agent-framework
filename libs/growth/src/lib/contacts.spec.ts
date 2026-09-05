@@ -3,8 +3,17 @@ import type {
   SqlQueryResult,
   SqlTransaction,
 } from './database.ts';
+// The observation transaction is exercised against Neon in observability-redaction.integration.spec.ts.
+vi.mock('./observability/redaction.ts', () => ({
+  redactContactObservationEvidence: vi.fn(async () => undefined),
+}));
+vi.mock('./observability/store.ts', () => ({
+  privacyLock: vi.fn(async () => undefined),
+}));
 import {
   approveContactFromForm,
+  approveContactFromInstallRuntimeInTransaction,
+  normalizeInstallRuntimeEmail,
   CONTACT_HARD_STOP_REASONS,
   deleteContact,
   reauthorizeContact,
@@ -123,6 +132,220 @@ function contactRow(overrides: TestRow = {}): TestRow {
     ...overrides,
   };
 }
+
+describe('install/runtime contact approval', () => {
+  const input = {
+    email: ' Person@Example.COM ',
+    keyring,
+    now: occurredAt,
+    installObservationId: '11111111-1111-4111-8111-111111111111',
+    runtimeObservationId: '22222222-2222-4222-8222-222222222222',
+  };
+  const id = String(contactRow().id);
+
+  it.each([
+    '',
+    'bad',
+    'person@localhost',
+    'a..b@example.com',
+    'person@-example.com',
+    'no-reply@example.com',
+    'noreply+tag@example.com',
+    'do_not_reply@example.com',
+    '123+person@users.noreply.github.com',
+    'dependabot@example.com',
+    'renovate[bot]@example.com',
+    'github-actions@example.com',
+    'bot+build@example.com',
+  ])(
+    'excludes unusable or automated email %s before database access',
+    async (email) => {
+      expect(normalizeInstallRuntimeEmail(email)).toBeNull();
+      const harness = executorWith({});
+      expect(
+        await approveContactFromInstallRuntimeInTransaction(harness.executor, {
+          ...input,
+          email,
+        })
+      ).toBeNull();
+      expect(harness.calls).toEqual([]);
+    }
+  );
+
+  it('normalizes a personal address without inferring company membership', () => {
+    expect(normalizeInstallRuntimeEmail(' Person+Threadplane@Gmail.COM ')).toBe(
+      'person+threadplane@gmail.com'
+    );
+  });
+
+  it('creates a contact and approves it with only linked-install provenance', async () => {
+    const harness = executorWith({
+      'lock-email': () => ({ rows: [] }),
+      'find-install-runtime-contact': () => ({ rows: [] }),
+      'insert-install-runtime-contact': () => ({ rows: [contactRow()] }),
+      'find-hard-stops': () => ({ rows: [] }),
+      'insert-activity': () => ({ rows: [{ event_key: 'inserted' }] }),
+      'set-install-runtime-approval': () => ({ rows: [{ id }] }),
+    });
+    expect(
+      await approveContactFromInstallRuntimeInTransaction(
+        harness.executor,
+        input
+      )
+    ).toBe(id);
+    expect(harness.transactions.count).toBe(0);
+    const creation = harness.calls.find(
+      (call) => call.marker === 'insert-install-runtime-contact'
+    );
+    expect(creation?.parameters).toEqual([
+      'person@example.com',
+      createEmailLookupHmac(input.email, keyring.active).digest,
+      2,
+    ]);
+    const activity = harness.calls.find(
+      (call) => call.marker === 'insert-activity'
+    );
+    expect(activity?.parameters).toEqual([
+      `install_runtime.outreach_approved:${id}`,
+      id,
+      occurredAt,
+      'install_runtime.outreach_approved',
+      JSON.stringify({
+        provenance: 'linked_install_runtime',
+        install_observation_id: input.installObservationId,
+        runtime_observation_id: input.runtimeObservationId,
+      }),
+      null,
+    ]);
+    expect(
+      harness.calls.find(
+        (call) => call.marker === 'set-install-runtime-approval'
+      )?.sql
+    ).toContain('outreach_approved_at is null');
+    expect(harness.calls.some((call) => call.marker.includes('form'))).toBe(
+      false
+    );
+  });
+
+  it('approves an existing unapproved contact without overwriting contact facts', async () => {
+    const harness = executorWith({
+      'lock-email': () => ({ rows: [] }),
+      'find-install-runtime-contact': () => ({ rows: [contactRow()] }),
+      'find-hard-stops': () => ({ rows: [] }),
+      'insert-activity': () => ({ rows: [{ event_key: 'inserted' }] }),
+      'set-install-runtime-approval': () => ({ rows: [{ id }] }),
+    });
+    expect(
+      await approveContactFromInstallRuntimeInTransaction(
+        harness.executor,
+        input
+      )
+    ).toBe(id);
+    expect(
+      harness.calls.filter((call) =>
+        /insert.*contact|update-contact-facts/.test(call.marker)
+      )
+    ).toEqual([]);
+  });
+
+  it('returns an existing approval without another event or timestamp change', async () => {
+    const harness = executorWith({
+      'lock-email': () => ({ rows: [] }),
+      'find-install-runtime-contact': () => ({
+        rows: [contactRow({ outreach_approved_at: occurredAt })],
+      }),
+      'find-hard-stops': () => ({ rows: [] }),
+    });
+    expect(
+      await approveContactFromInstallRuntimeInTransaction(
+        harness.executor,
+        input
+      )
+    ).toBe(id);
+    expect(
+      harness.calls.some(
+        (call) =>
+          call.marker === 'insert-activity' ||
+          call.marker === 'set-install-runtime-approval'
+      )
+    ).toBe(false);
+  });
+
+  it.each(CONTACT_HARD_STOP_REASONS)(
+    'never reauthorizes a contact stopped for %s',
+    async (reason) => {
+      const harness = executorWith({
+        'lock-email': () => ({ rows: [] }),
+        'find-install-runtime-contact': () => ({
+          rows: [
+            contactRow({
+              outreach_approved_at: new Date('2026-08-01T00:00:00Z'),
+            }),
+          ],
+        }),
+        'find-hard-stops': () => ({
+          rows: [{ kind: reason, occurred_at: occurredAt }],
+        }),
+      });
+      expect(
+        await approveContactFromInstallRuntimeInTransaction(
+          harness.executor,
+          input
+        )
+      ).toBeNull();
+      expect(
+        harness.calls.some(
+          (call) =>
+            call.marker === 'insert-activity' ||
+            call.marker === 'set-install-runtime-approval'
+        )
+      ).toBe(false);
+    }
+  );
+
+  it('keeps a deleted contact ineligible when its email survives only as a HMAC', async () => {
+    const harness = executorWith({
+      'lock-email': () => ({ rows: [] }),
+      'find-install-runtime-contact': () => ({
+        rows: [contactRow({ deleted_at: occurredAt })],
+      }),
+      'find-hard-stops': () => ({ rows: [] }),
+    });
+    expect(
+      await approveContactFromInstallRuntimeInTransaction(
+        harness.executor,
+        input
+      )
+    ).toBeNull();
+    expect(
+      harness.calls.find(
+        (call) => call.marker === 'find-install-runtime-contact'
+      )?.sql
+    ).toContain('contact.lookup_alias_added');
+  });
+
+  it('fails closed if the keyring cannot look up an older deleted contact', async () => {
+    const harness = executorWith({
+      'lock-email': () => ({ rows: [] }),
+      'read-key-versions': () => ({ rows: [{ email_hmac_key_version: 3 }] }),
+    });
+    await expect(
+      approveContactFromInstallRuntimeInTransaction(harness.executor, input)
+    ).rejects.toThrow(/coverage/);
+  });
+
+  it('rejects ambiguous matches instead of approving an arbitrary contact', async () => {
+    const harness = executorWith({
+      'lock-email': () => ({ rows: [] }),
+      'find-install-runtime-contact': () => ({
+        rows: [contactRow(), contactRow({ id: 'other' })],
+      }),
+    });
+    await expect(
+      approveContactFromInstallRuntimeInTransaction(harness.executor, input)
+    ).rejects.toThrow(/multiple/);
+  });
+});
 
 describe('approveContactFromForm', () => {
   it('normalizes direct facts, preserves a private lookup, and records exact approval provenance', async () => {

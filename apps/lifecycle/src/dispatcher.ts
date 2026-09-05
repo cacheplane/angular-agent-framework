@@ -5,6 +5,7 @@ import {
   isGoogleMailboxRecoveryPaused,
   leaseDueJobs,
   materializeCampaignEnrollment,
+  processInstallRuntimeActivations,
   renewJobLease,
   type GrowthAppJobHandlers,
   type GrowthDispatchDependencies,
@@ -15,6 +16,7 @@ import {
 
 import { createLifecycleAppJobHandlers } from './campaign/send.js';
 import { DeterministicLifecycleJobError } from './job-errors.js';
+import { loadEmailHmacKeyring } from './email-keyring.js';
 
 export { DeterministicLifecycleJobError } from './job-errors.js';
 
@@ -33,6 +35,7 @@ export interface LifecycleDispatcherInput {
   batchSize: number;
   campaignEnabled: boolean;
   campaignEnrollmentEnabled?: boolean;
+  installRuntimeHelloEnabled?: boolean;
   campaignEnrollmentStartAt?: Date;
   signal: AbortSignal;
 }
@@ -55,6 +58,8 @@ export interface LifecycleDispatcherDependencies {
   isRecoveryPaused: typeof isGoogleMailboxRecoveryPaused;
   leaseDueJobs: typeof leaseDueJobs;
   materializeCampaignEnrollment: typeof materializeCampaignEnrollment;
+  processInstallRuntimeActivations: typeof processInstallRuntimeActivations;
+  loadEmailKeyring: typeof loadEmailHmacKeyring;
   now: () => Date;
   renewJobLease: typeof renewJobLease;
   quarantineJob: typeof failLeasedJob;
@@ -69,6 +74,8 @@ const defaultDependencies: LifecycleDispatcherDependencies = {
   isRecoveryPaused: isGoogleMailboxRecoveryPaused,
   leaseDueJobs,
   materializeCampaignEnrollment,
+  processInstallRuntimeActivations,
+  loadEmailKeyring: loadEmailHmacKeyring,
   now: () => new Date(),
   renewJobLease,
   quarantineJob: failLeasedJob,
@@ -157,6 +164,15 @@ export async function dispatchLifecycleJobs(
         throw new Error(
           'campaignEnrollmentStartAt is required when enrollment is enabled'
         );
+      }
+      if (input.installRuntimeHelloEnabled === true) {
+        await dependencies.processInstallRuntimeActivations(executor, {
+          enabled: true,
+          limit: batchSize,
+          now: dependencies.now(),
+          keyring: dependencies.loadEmailKeyring(),
+        });
+        input.signal.throwIfAborted();
       }
       await dependencies.materializeCampaignEnrollment(executor, {
         enrollmentEnabled: true,

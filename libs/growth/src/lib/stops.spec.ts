@@ -41,6 +41,12 @@ function executorWith(
       parameters: readonly unknown[] = []
     ): Promise<SqlQueryResult<Row>> {
       const marker = /\/\* growth:([a-z0-9-]+) \*\//u.exec(sql)?.[1];
+      if (
+        sql.includes(
+          "pg_advisory_xact_lock_shared(hashtextextended('growth-observation-privacy-v1'"
+        )
+      )
+        return { rows: [] };
       const handler = marker ? handlers[marker] : undefined;
       if (marker === 'acquire-google-reconcile-advisory-lock' && !handler) {
         return { rows: [{}] } as SqlQueryResult<Row>;

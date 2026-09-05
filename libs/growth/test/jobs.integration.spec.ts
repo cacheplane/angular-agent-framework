@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { cleanContactObservationFences } from './observability-fixtures.ts';
 import { resolve } from 'node:path';
 
 import {
@@ -47,6 +48,7 @@ describeDatabase(
 
     afterEach(async () => {
       for (const contactId of contactIds) {
+        await cleanContactObservationFences(executor, contactId);
         await executor.execute(
           `delete from growth_artifacts
            where contact_id = $1

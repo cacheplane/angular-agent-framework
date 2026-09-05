@@ -2,6 +2,7 @@ import type { SqlExecutor, SqlTransaction } from './database.ts';
 import { CONTACT_HARD_STOP_REASONS } from './contacts.ts';
 import { normalizeEmail } from './crypto.ts';
 import type { GrowthArtifact, GrowthJob } from './models.ts';
+import { privacyLock } from './observability/store.ts';
 
 const FULFILLMENT_ALLOWED_PRIOR_STOPS = new Set([
   'unsubscribe',
@@ -45,6 +46,7 @@ interface ArtifactRow extends Record<string, unknown> {
 }
 
 interface LifecycleJobContextRow extends Record<string, unknown> {
+  campaign_enrollment_reason?: string | null;
   contact_id: string;
   display_name: string | null;
   company_name: string | null;
@@ -209,6 +211,35 @@ export interface MaterializeCampaignEnrollmentInput {
   batchSize: number;
 }
 
+/** Only persisted, still-applicable installation/runtime evidence admits this approval. */
+function installRuntimeApproval(alias: 'approval' | 'authoritative'): string {
+  return `(${alias}.kind = 'install_runtime.outreach_approved'
+    and ${alias}.data->>'provenance' = 'linked_install_runtime'
+    and exists (
+      select 1 from growth_install_runtime_links link
+      join growth_observations i on i.id=link.install_observation_id
+      join growth_observations r on r.id=link.runtime_observation_id
+      join growth_observation_identities identity on identity.observation_id=i.id
+      where link.contact_id=c.id and link.outcome='approved'
+        and i.id::text=${alias}.data->>'install_observation_id'
+        and r.id::text=${alias}.data->>'runtime_observation_id'
+        and i.redacted_at is null and r.redacted_at is null
+        and i.source='install' and r.source='runtime' and r.kind='runtime.session_started'
+        and i.properties->>'environment'<>'ci'
+        and i.installation_token_digest=r.installation_token_digest
+        and i.properties->>'packageName'=r.properties->>'packageName'
+        and i.properties->>'packageVersion'=r.properties->>'packageVersion'
+        and identity.email_normalized=c.email_normalized
+        and not exists(select 1 from growth_observations removed
+          where removed.source='install' and removed.installation_token_digest=i.installation_token_digest
+            and removed.redacted_at is not null)
+        and not exists(select 1 from growth_observations other
+          join growth_observation_identities other_identity on other_identity.observation_id=other.id
+          where other.source='install' and other.installation_token_digest=i.installation_token_digest
+            and other_identity.email_normalized<>identity.email_normalized)
+    ))`;
+}
+
 export async function materializeCampaignEnrollment(
   executor: SqlExecutor,
   input: MaterializeCampaignEnrollmentInput
@@ -224,6 +255,7 @@ export async function materializeCampaignEnrollment(
   }
 
   return executor.transaction(async (transaction) => {
+    await privacyLock(transaction);
     await transaction.execute(
       `/* growth:lock-campaign-enrollment */
        select pg_advisory_xact_lock(
@@ -305,6 +337,7 @@ export async function materializeCampaignEnrollment(
                  approval.kind = 'contact.reauthorized'
                  and approval.data->>'provenance' = 'founder_action'
                )
+               or ${installRuntimeApproval('approval')}
              )
            order by approval.event_key
            limit 1
@@ -342,6 +375,7 @@ export async function materializeCampaignEnrollment(
                 $2,
                 jsonb_build_object(
                   'campaign_version', 'v1',
+                  'enrollment_reason', case when e.approval_kind='install_runtime.outreach_approved' then 'install_runtime' else null end,
                   'enrollment_start_at', $1::timestamptz,
                   'approval_event_key', e.approval_event_key,
                   'approval_kind', e.approval_kind,
@@ -515,6 +549,14 @@ export async function leaseDueJobs(
                  j.payload->>'step' = '1'
                  and (
                    exists (
+                     select 1 from growth_activity enrollment
+                     where enrollment.event_key='campaign:v1:' || j.contact_id::text || ':enrolled'
+                       and enrollment.contact_id=j.contact_id
+                       and enrollment.data->>'enrollment_reason'='install_runtime'
+                       and enrollment.data->>'approval_kind'='install_runtime.outreach_approved'
+                   )
+                   or
+                   exists (
                      select 1
                      from growth_artifacts artifact
                      join growth_jobs enrichment
@@ -569,6 +611,7 @@ export async function leaseDueJobs(
 }
 
 export interface GrowthLifecycleJobContext {
+  campaignEnrollmentReason?: 'install_runtime' | null;
   contactId: string;
   displayName: string | null;
   companyName: string | null;
@@ -593,6 +636,7 @@ export async function readLifecycleJobContext(
               as email_classification,
             submission.form_submission,
             enrollment.occurred_at as enrollment_at,
+            enrollment.enrollment_reason as campaign_enrollment_reason,
             artifact.id as artifact_id,
             artifact.job_id as artifact_job_id,
             artifact.project_id as artifact_project_id,
@@ -625,7 +669,8 @@ export async function readLifecycleJobContext(
        limit 1
      ) submission on true
      left join lateral (
-       select a.occurred_at
+       select a.occurred_at, case when a.data->>'approval_kind'='install_runtime.outreach_approved'
+         then a.data->>'enrollment_reason' else null end as enrollment_reason
        from growth_activity a
        where a.contact_id = c.id
          and a.kind = 'campaign.enrolled:v1'
@@ -680,6 +725,10 @@ export async function readLifecycleJobContext(
       : null;
   return {
     contactId: row.contact_id,
+    campaignEnrollmentReason:
+      row.campaign_enrollment_reason === 'install_runtime'
+        ? 'install_runtime'
+        : null,
     displayName: row.display_name,
     companyName: row.company_name,
     companyDomain: row.company_domain,
@@ -711,6 +760,7 @@ export async function authorizeLeasedJobForSubmission(
   }
 
   return executor.transaction(async (transaction) => {
+    await privacyLock(transaction);
     await transaction.execute(
       `/* growth:acquire-google-reconcile-advisory-lock */
        select pg_advisory_xact_lock(hashtextextended('google-mailbox-reconciliation', 0))`
@@ -791,6 +841,7 @@ export async function authorizeLeasedJobForSubmission(
                authoritative.kind = 'contact.reauthorized'
                and authoritative.data->>'provenance' = 'founder_action'
              )
+             or ${installRuntimeApproval('authoritative')}
            )
          limit 1
        ) approval on true

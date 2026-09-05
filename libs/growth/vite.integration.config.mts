@@ -27,6 +27,9 @@ export default defineConfig({
   test: {
     environment: 'node',
     fileParallelism: false,
+    // Real Neon transactions include network round trips and cold compute startup.
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
     globals: true,
     include: ['libs/growth/test/**/*.integration.spec.ts'],
   },

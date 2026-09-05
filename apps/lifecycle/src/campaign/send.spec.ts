@@ -127,6 +127,56 @@ function context(
 }
 
 describe('prepareCampaignMessage', () => {
+  it('prepares the install-runtime hello immediately without research', () => {
+    expect(
+      prepareCampaignMessage({
+        context: {
+          ...context({ enrichmentArtifact: null }),
+          campaignEnrollmentReason: 'install_runtime',
+        },
+        job: job('send_step', { campaign_version: 'v1', step: 1 }),
+        now: new Date('2026-09-01T12:00:00.000Z'),
+        unsubscribeUrl: UNSUBSCRIBE,
+      })
+    ).toMatchObject({ status: 'ready', subject: 'A practical place to start' });
+  });
+
+  it.each([1, 2, 3] as const)(
+    'keeps install-runtime step %i generic even when research is available',
+    (step) => {
+      const prepared = prepareCampaignMessage({
+        context: { ...context(), campaignEnrollmentReason: 'install_runtime' },
+        job: job('send_step', { campaign_version: 'v1', step }),
+        now: NOW,
+        unsubscribeUrl: UNSUBSCRIBE,
+      });
+      expect(prepared).toMatchObject({
+        status: 'ready',
+        subject: [
+          'A practical place to start',
+          'One debugging shortcut',
+          'One last architecture note',
+        ][step - 1],
+      });
+      if (prepared.status !== 'ready') throw new Error('expected ready');
+      expect(prepared.text).toContain(unsubscribeActionUrlValue(UNSUBSCRIBE));
+      expect(prepared.text).toContain('\n\n—\nBrian\n');
+      if (step === 3)
+        expect(prepared.text).toContain('This is my last automated follow-up.');
+    }
+  );
+
+  it('rejects a fourth install-runtime sequence step', () => {
+    expect(() =>
+      prepareCampaignMessage({
+        context: { ...context(), campaignEnrollmentReason: 'install_runtime' },
+        job: job('send_step', { campaign_version: 'v1', step: 4 }),
+        now: NOW,
+        unsubscribeUrl: UNSUBSCRIBE,
+      })
+    ).toThrow(DeterministicLifecycleJobError);
+  });
+
   it('renders only a closed evidence-linked angle selection deterministically', () => {
     const cited = artifact({
       cited_signals: [
@@ -358,6 +408,93 @@ function dependencies(
 }
 
 describe('dispatchLifecycleAppOwnedJob', () => {
+  it('sends the install-runtime hello through the shared recipient boundary without research', async () => {
+    const deps = dependencies({
+      readJobContext: vi.fn().mockResolvedValue(
+        context({
+          campaignEnrollmentReason: 'install_runtime',
+          enrichmentArtifact: null,
+        })
+      ),
+    });
+    const send = job('send_step', { campaign_version: 'v1', step: 1 });
+    await expect(
+      dispatchLifecycleAppOwnedJob({} as SqlExecutor, send, {}, deps)
+    ).resolves.toBe('completed');
+    expect(deps.sendRecipient).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        jobId: send.id,
+        leaseToken: LEASE_TOKEN,
+        subject: 'A practical place to start',
+        unsubscribeUrl: UNSUBSCRIBE,
+      }),
+      deps.recipientPolicy
+    );
+    expect(deps.deferJob).not.toHaveBeenCalled();
+    expect(deps.fetchCompanyEvidence).not.toHaveBeenCalled();
+    expect(deps.generateArtifact).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    'contact_stopped',
+    'contact_unapproved',
+    'contact_deleted',
+  ] as const)(
+    'preserves the shared %s delivery stop for an install-runtime hello',
+    async (reason) => {
+      const deps = dependencies({
+        readJobContext: vi.fn().mockResolvedValue(
+          context({
+            campaignEnrollmentReason: 'install_runtime',
+            enrichmentArtifact: null,
+          })
+        ),
+        sendRecipient: vi.fn().mockResolvedValue({ accepted: false, reason }),
+      });
+      await expect(
+        dispatchLifecycleAppOwnedJob(
+          {} as SqlExecutor,
+          job('send_step', { campaign_version: 'v1', step: 1 }),
+          {},
+          deps
+        )
+      ).resolves.toBe('cancelled');
+      expect(deps.cancelJob).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ errorCode: reason })
+      );
+      expect(deps.generateArtifact).not.toHaveBeenCalled();
+    }
+  );
+
+  it.each(['campaign_disabled', 'delivery_disabled'] as const)(
+    'keeps an install-runtime hello deferred while %s',
+    async (reason) => {
+      const deps = dependencies({
+        readJobContext: vi.fn().mockResolvedValue(
+          context({
+            campaignEnrollmentReason: 'install_runtime',
+            enrichmentArtifact: null,
+          })
+        ),
+        sendRecipient: vi.fn().mockResolvedValue({ accepted: false, reason }),
+      });
+      await expect(
+        dispatchLifecycleAppOwnedJob(
+          {} as SqlExecutor,
+          job('send_step', { campaign_version: 'v1', step: 1 }),
+          {},
+          deps
+        )
+      ).resolves.toBe('deferred');
+      expect(deps.deferJob).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ errorCode: reason })
+      );
+    }
+  );
+
   it('fulfills the persisted form request through the recipient boundary', async () => {
     const deps = dependencies();
     const fulfill = job('fulfill', {
@@ -766,12 +903,33 @@ describe('loadLifecycleRuntimeConfiguration', () => {
     });
   });
 
-  it('defaults all three delivery switches off', () => {
+  it('defaults delivery and install-runtime activation switches off', () => {
     expect(loadLifecycleRuntimeConfiguration({})).toMatchObject({
       campaignEnrollmentEnabled: false,
       campaignEnabled: false,
       deliveryEnabled: false,
+      installRuntimeHelloEnabled: false,
     });
+  });
+
+  it('enables install-runtime hello only with the exact configured boolean', () => {
+    expect(
+      loadLifecycleRuntimeConfiguration({
+        GROWTH_INSTALL_RUNTIME_HELLO_ENABLED: 'true',
+      })
+    ).toMatchObject({ installRuntimeHelloEnabled: true });
+    expect(
+      loadLifecycleRuntimeConfiguration({
+        GROWTH_INSTALL_RUNTIME_HELLO_ENABLED: 'false',
+      })
+    ).toMatchObject({ installRuntimeHelloEnabled: false });
+    for (const value of ['TRUE', '1', ' true ', '']) {
+      expect(() =>
+        loadLifecycleRuntimeConfiguration({
+          GROWTH_INSTALL_RUNTIME_HELLO_ENABLED: value,
+        })
+      ).toThrow(/GROWTH_INSTALL_RUNTIME_HELLO_ENABLED/);
+    }
   });
 
   it('runs enrichment with every mail environment variable absent and delivery disabled', async () => {
