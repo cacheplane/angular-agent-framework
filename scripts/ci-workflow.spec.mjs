@@ -998,12 +998,16 @@ describe('CI workflow', () => {
   });
 
   it('carries no cockpit redirect deployment anywhere', async () => {
-    const workflow = await readWorkflow();
-    assert.doesNotMatch(workflow, /vercel\.cockpit\.json/);
-    assert.doesNotMatch(workflow, /threadplane-cockpit/);
-    assert.doesNotMatch(workflow, /VERCEL_COCKPIT_/);
-    assert.doesNotMatch(workflow, /deploy-smoke\.ts/);
-    assert.doesNotMatch(workflow, /cockpit\.threadplane\.ai/);
+    const workflowFiles = await readWorkflowFiles();
+    assert.ok(workflowFiles.length > 0, 'expected workflow files to inspect');
+
+    for (const { name, text } of workflowFiles) {
+      assert.doesNotMatch(text, /vercel\.cockpit\.json/, `${name}`);
+      assert.doesNotMatch(text, /threadplane-cockpit/, `${name}`);
+      assert.doesNotMatch(text, /VERCEL_COCKPIT_/, `${name}`);
+      assert.doesNotMatch(text, /deploy-smoke\.ts/, `${name}`);
+      assert.doesNotMatch(text, /cockpit\.threadplane\.ai/, `${name}`);
+    }
   });
 });
 

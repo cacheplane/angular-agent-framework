@@ -83,7 +83,10 @@ const LINT_SCOPE_KEYS = [
  *  therefore attributes them to the `root` project, and `root` carries no
  *  `scope:` tag — so a PR touching only these specs produced an empty scope
  *  and skipped the job that owns cockpit changes. Map them onto the cockpit
- *  scope by path so that job still runs. */
+ *  scope by path so that job still runs. They actually execute under the
+ *  `cockpit` job through `cockpit-registry`'s vitest `test.include` globs
+ *  (libs/cockpit-registry/vite.config.mts), which is what runs them today —
+ *  this regex only decides which CI scope a change to them lights up. */
 const COCKPIT_ROOTLESS_SPEC = /^cockpit\/[^/]+\/[^/]+\.spec\.ts$/;
 
 export function emptyScope() {
