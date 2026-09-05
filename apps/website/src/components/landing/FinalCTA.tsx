@@ -24,6 +24,11 @@ interface FinalCTAProps {
   caption?: string | null;
   /** Optional link rendered after the caption text (e.g. "Talk to an engineer"). */
   captionLink?: { label: string; href: string } | null;
+  /** Optional claim/api rows rendered above the headline (the homepage's
+   *  "prove it without a backend" moment). Omitted everywhere else. */
+  rows?: readonly { readonly claim: string; readonly api: string }[];
+  /** Further caption links, rendered after `captionLink`. */
+  captionLinks?: readonly { label: string; href: string }[];
   /**
    * 'dark' renders on the dark band. Rule (amended 2026-08-31): dark closes
    * PRODUCT pages — the homepage and the four library pages. Commerce pages
@@ -44,6 +49,8 @@ export function FinalCTA({
   secondary = DEFAULT_SECONDARY,
   caption = null,
   captionLink = null,
+  rows = [],
+  captionLinks = [],
   variant = 'default',
 }: FinalCTAProps = {}) {
   return (
@@ -58,6 +65,16 @@ export function FinalCTA({
             <div className="final-cta-mark" aria-hidden="true">
               →
             </div>
+          ) : null}
+          {rows.length > 0 ? (
+            <ul className="final-cta-rows" role="list" aria-label="What you can prove first">
+              {rows.map((row) => (
+                <li className="final-cta-prove-row" key={row.claim}>
+                  <span className="final-cta-prove-row-claim">{row.claim}</span>
+                  <span className="final-cta-prove-row-api">{row.api}</span>
+                </li>
+              ))}
+            </ul>
           ) : null}
           <h2 id="final-cta-heading" className="final-cta-heading">
             {headline}
@@ -111,7 +128,7 @@ export function FinalCTA({
               </Button>
             ) : null}
           </div>
-          {caption || captionLink ? (
+          {caption || captionLink || captionLinks.length > 0 ? (
             <p className="final-cta-caption">
               {caption}
               {captionLink ? (
@@ -120,6 +137,12 @@ export function FinalCTA({
                   <a href={captionLink.href}>{captionLink.label}</a>
                 </>
               ) : null}
+              {captionLinks.map((link) => (
+                <span key={link.href}>
+                  {' · '}
+                  <a href={link.href}>{link.label}</a>
+                </span>
+              ))}
             </p>
           ) : null}
         </div>
