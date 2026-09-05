@@ -18,7 +18,7 @@
 - Libraries: `npx nx test cockpit-shell`, `npx nx test workspace-react`, `npx nx test cockpit-registry`
 - Full: `npx nx run-many -t test --projects=cockpit-registry,cockpit-shell,workspace-react,website`
 - Lint: `npx nx run-many -t lint --projects=cockpit-registry,cockpit-shell,workspace-react,website` (lint ERRORS block; warnings do not)
-- Build: `rm -rf apps/website/.next && npx nx build website`
+- Build: `rm -rf apps/website/.next dist/apps/website/.next && GROWTH_FORM_POLICY=growth_v1 npx nx build website` (the prod build requires that env var, as ci.yml sets; output lands in `dist/apps/website/.next`)
 
 ---
 
