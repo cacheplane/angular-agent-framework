@@ -478,6 +478,34 @@
   color: var(--color-text-secondary);
   margin-top: 2px;
 }
+
+/* TeamsBlock: phases stacked over the field report card. */
+.teams-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.teams-report {
+  padding: 22px 24px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-canvas);
+}
+.teams-report-title {
+  font-family: var(--font-garamond);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 10px 0 6px;
+  color: var(--color-text-primary);
+}
+.teams-report-desc {
+  font-family: var(--font-inter);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  margin: 0 0 16px;
+}
 @media (max-width: 900px) {
   .pilot-block-grid {
     /* minmax(0,…): bare 1fr keeps an auto minimum, so one wide child pushed
