@@ -37,7 +37,7 @@ import {
 import { Resend } from 'resend';
 
 import { generateEnrichmentArtifact } from '../enrichment/anthropic.js';
-import { fetchCompanyEvidence } from '../enrichment/company-fetch.js';
+import { createCompanyCapture } from '../enrichment/company-capture.js';
 import { buildResearchInput } from '../enrichment/research-input.js';
 import {
   EnrichmentArtifactSchema,
@@ -886,7 +886,7 @@ export function createDefaultLifecycleJobDependencies(
     claimInternalNotification: claimInternalNotificationSubmission,
     markInternalNotificationUnknown,
     failJob: failLeasedJob,
-    fetchCompanyEvidence,
+    fetchCompanyEvidence: createCompanyCapture(environment),
     async readDeterministicScore(executor, contactId) {
       const score = await recomputeContactScore(executor, {
         contactId,

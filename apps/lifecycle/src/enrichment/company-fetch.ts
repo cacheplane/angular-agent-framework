@@ -381,7 +381,7 @@ function isPublicAddress(address: string): boolean {
 async function resolvePublicAddresses(
   hostname: string,
   signal: AbortSignal,
-  dependencies: CompanyFetchDependencies
+  dependencies: Pick<CompanyFetchDependencies, 'resolve'>
 ): Promise<readonly string[]> {
   const addresses = await dependencies.resolve(hostname, signal);
   signal.throwIfAborted();
@@ -394,6 +394,18 @@ async function resolvePublicAddresses(
     }
   }
   return addresses;
+}
+
+/** Reuse the direct fetcher's hostname and public-address policy for providers. */
+export async function validatePublicCompanyHostname(
+  domain: string,
+  signal: AbortSignal,
+  resolve: CompanyFetchDependencies['resolve'] = resolveWithNodeDns
+): Promise<string> {
+  const hostname = validatedCompanyHostname(domain);
+  signal.throwIfAborted();
+  await resolvePublicAddresses(hostname, signal, { resolve });
+  return hostname;
 }
 
 function validatedRedirectUrl(
@@ -572,7 +584,7 @@ function descriptionValues(
   return values;
 }
 
-function extractEvidence(
+export function extractEvidence(
   body: Uint8Array
 ): Pick<CompanyPageEvidence, 'facts' | 'snippets'> {
   const html = new TextDecoder('utf-8', { fatal: false }).decode(body);

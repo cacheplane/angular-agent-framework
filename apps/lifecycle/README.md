@@ -26,3 +26,11 @@ The app's Vercel project must use `apps/lifecycle` as its root directory, enable
 Keep `LIFECYCLE_CRON_ENABLED` unset or set to anything other than the exact value `true` until the preview dogfood checklist in `docs/superpowers/runbooks/2026-08-31-growth-lifecycle-cutover.md` passes. In particular, verify outer auth on all Dawn surfaces, named-thread dispatch, duplicate invocation behavior, recovery pause/resume, cancellation/AbortSignal propagation, and Dawn persistence across fresh instances. Send findings to Dawn task `01a05e2f-7e93-7bd0-af74-f13d5a7719cd` for generalized backport.
 
 Use [DOGFOOD.md](./DOGFOOD.md) for the provider-free setup, probe, and exact cleanup commands. The harness binds the growth target to a database-owned comment sentinel and binds each authenticated lifecycle health response to Vercel's `VERCEL_DEPLOYMENT_ID`; it also validates lifecycle origins in memory before making requests.
+
+## Company evidence capture
+
+`LIFECYCLE_COMPANY_CAPTURE_PROVIDER` defaults to `direct`, preserving the existing company-page fetch. To explicitly enable managed homepage capture, set it to exactly `firecrawl` and configure the server-only `FIRECRAWL_API_KEY`. Configuration is checked only when enrichment needs company evidence; it does not gate email delivery. Invalid configuration and provider failures use the existing enrichment retry handling, without a direct-fetch fallback.
+
+Firecrawl capture makes one fresh homepage request with the basic proxy, a 10-second provider timeout, a 15-second total deadline, and a 2 MiB response limit. The existing HTML extractor produces the same bounded evidence schema. It accepts a changed final company hostname only when Firecrawl reports the requested source URL and a valid public HTTPS final URL. Local checks validate the input and final hostnames; Firecrawl owns remote DNS resolution and intermediate redirect safety. This is a provider trust boundary, not the direct fetcher's DNS-pinned transport.
+
+Capture logs contain provider, outcome, status, byte count, and reported credits where available (direct capture also identifies the fixed requested path). They exclude page text, company URLs, and credentials. Keep the default provider until an account key is configured and an authenticated capture is verified; public keyless experiments do not verify the production account integration.
