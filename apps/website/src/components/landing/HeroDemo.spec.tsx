@@ -107,8 +107,26 @@ describe('HeroDemo', () => {
    * Both posters are recorded artifacts, not build output, so a rename or a
    * lost file would ship a hero with a broken image and nothing would fail
    * until someone looked at the page.
+   *
+   * The phone poster's budget is ABSOLUTE, not a comparison against the desktop
+   * poster. It was written as `mobile <= desktop` first, on the reasoning that a
+   * phone downloads one instead of the other, and that coupling was wrong: both
+   * files are re-recorded together, so re-recording the walkthrough shrank the
+   * desktop capture 38.1KB -> 33.0KB and failed the phone poster for content it
+   * does not contain. The phone poster is not justified on bytes anyway. Below
+   * 768px `.hero-demo-stage` is `aspect-ratio: 3 / 5` with `object-fit: cover`,
+   * so the 1200x720 desktop capture covering that portrait box shows about 36%
+   * of its own width — the phone poster exists because that crop is unusable,
+   * and it would still be worth shipping if it cost slightly more.
+   *
+   * The ceiling is what the recorder actually budgeted against when it chose to
+   * ship 1.5x rather than 2x ("2x would cost ~51KB"): the mid-30s KB. Raise it
+   * only with a reason, and never by simply pasting in whatever the file now
+   * weighs — the point is to notice a poster that got expensive.
    */
-  it('ships both posters, with the phone one no heavier than the desktop one', async () => {
+  const HERO_POSTER_MOBILE_MAX_BYTES = 36_000;
+
+  it('ships both posters, with the phone one inside its byte budget', async () => {
     const { HERO_POSTER, HERO_POSTER_MOBILE } = await import('./HeroDemo');
     const { resolveWebsiteDir } = await import('../../lib/website-dir');
     const { statSync } = await import('node:fs');
@@ -116,9 +134,8 @@ describe('HeroDemo', () => {
     const sizeOf = (publicPath: string) =>
       statSync(join(resolveWebsiteDir(), 'public', publicPath)).size;
     expect(sizeOf(HERO_POSTER)).toBeGreaterThan(0);
-    // A phone downloads only this one, so it must not cost more than what it
-    // replaces — the whole point is a lighter, legible LCP on the small screen.
-    expect(sizeOf(HERO_POSTER_MOBILE)).toBeLessThanOrEqual(sizeOf(HERO_POSTER));
+    expect(sizeOf(HERO_POSTER_MOBILE)).toBeGreaterThan(0);
+    expect(sizeOf(HERO_POSTER_MOBILE)).toBeLessThanOrEqual(HERO_POSTER_MOBILE_MAX_BYTES);
   });
 
   /**
