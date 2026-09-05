@@ -737,7 +737,7 @@ In `libs/cockpit-registry/src/lib/workspace-resolution.spec.ts`: delete the test
 ```
 
 In `libs/workspace-react/src/lib/workspace-provider.spec.tsx`: delete `legacyPath` from the identity fixture (line 34); replace `path: identity.legacyPath` (line 84) and `identity.legacyPath` (line 334) with `identity.docsPath`; delete every `routeKind: 'workspace',` (lines 202, 220, 262) — the tests then exercise the docs default, so change any expectation that relied on the Run default to `'Docs'` (the assertions near lines 210–215 expect `'Docs'` already; re-read each after the edit).
-In `libs/workspace-react/src/lib/workspace-shell.spec.tsx`: replace `routeKind="workspace"` (line 339) with `routeKind="docs"` and `routePath={identity.legacyPath}` (line 340) with `routePath={identity.docsPath ?? '/docs'}`.
+In `libs/workspace-react/src/lib/workspace-shell.spec.tsx`: replace `routeKind="workspace"` (line 339) with `routeKind="docs"` and `routePath={identity.legacyPath}` (line 340) with `routePath={identity.docsPath}`.
 In `apps/website/src/components/workspace/WebsiteWorkspace.spec.tsx:106`: delete the `legacyPath:` line from the fixture.
 
 - [ ] **Step 2: Run to verify they fail**
@@ -767,6 +767,7 @@ git rm -r apps/cockpit vercel.cockpit.json libs/cockpit-docs libs/cockpit-testin
 ```
 
 - `tsconfig.base.json`: delete the `@threadplane/cockpit-docs`, `@threadplane/cockpit-testing`, `@threadplane/cockpit-ui` path entries (lines 26, 38, 39). `apps/website/tsconfig.json`: delete the `@threadplane/cockpit-docs` entry (line 23).
+- `resolveWorkspacePath` in `libs/cockpit-registry/src/lib/workspace-resolution.ts` and the `workspacePath` field on `WorkspaceIdentity` / `CockpitManifestEntry` (`manifest.types.ts`, `manifest.ts`, `toWorkspaceIdentity`, and the `Duplicate workspace path` / `Invalid workspacePath` checks in `validate-manifest.ts`), plus every spec case and fixture that references them (`workspace-resolution.spec.ts`, `validate-manifest.spec.ts`, `cockpit-shell/**/*.spec.ts`, `workspace-react/**/sidebar/*.spec.tsx`, `WebsiteWorkspace.spec.tsx`). Nothing outside tests reads either after Part A.
 - `apps/website/e2e/platform-production-smoke.spec.ts`: delete `expectedRedirect`, `docsBacked`, `COCKPIT_REDIRECT_CASES`, and the test(s) that iterate them; delete the now-unused imports (`resolveLegacyPath`, `resolveLegacyRequestMode`, `getCanonicalWebsiteWorkspaceHref` if unused, `COCKPIT_URL` env reads). Keep `WEBSITE_DESTINATIONS` and every Website-facing test.
 - `scripts/ag-ui-proxy.ts:54` and `scripts/examples-middleware.ts:18`: delete the `'https://cockpit.threadplane.ai',` line.
 - `git grep -n "cockpit.threadplane.ai" -- . ':!docs/superpowers' ':!CONTRIBUTING.md'` → only `apps/website/src/lib/cockpit-retirement.spec.ts` (the guard's own constant) and `.github/workflows/ci.yml` (removed in Task C3) may remain.
