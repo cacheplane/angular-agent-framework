@@ -25,6 +25,7 @@ export async function workflow(
     batchSize: configuredBatchSize(),
     campaignEnabled: configuration.campaignEnabled,
     campaignEnrollmentEnabled: configuration.campaignEnrollmentEnabled,
+    installRuntimeHelloEnabled: configuration.installRuntimeHelloEnabled,
     campaignEnrollmentStartAt: configuration.campaignEnrollmentStartAt,
     signal: context.signal,
   });

@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { cleanContactObservationFences } from './observability-fixtures.ts';
 import { resolve } from 'node:path';
 
 import {
@@ -52,6 +53,7 @@ describeDatabase(
     });
 
     async function removeContact(contactId: string): Promise<void> {
+      await cleanContactObservationFences(executor, contactId);
       await executor.execute(
         `delete from growth_artifacts
          where contact_id = $1
@@ -666,6 +668,7 @@ describeDatabase(
         ).toBe(true);
       } finally {
         await staleWorker?.close?.();
+        await cleanContactObservationFences(executor, contactId);
         await executor.execute(
           'delete from growth_artifacts where project_id = $1',
           [projectId]

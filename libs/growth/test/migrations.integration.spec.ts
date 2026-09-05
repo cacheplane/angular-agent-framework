@@ -32,7 +32,7 @@ describeDatabase(
       await executor?.close?.();
     });
 
-    it('applies repeatably and exposes exactly five growth tables and five reporting views', async () => {
+    it('applies repeatably and exposes the exact growth tables and reporting views', async () => {
       const directory = resolve(process.cwd(), 'migrations');
 
       await applyMigrations({ directory, executor });
@@ -51,8 +51,18 @@ describeDatabase(
       expect(tables.rows.map(({ table_name }) => table_name)).toEqual([
         'growth_activity',
         'growth_artifacts',
+        'growth_collection_budgets',
         'growth_contacts',
+        'growth_install_runtime_links',
         'growth_jobs',
+        'growth_observation_facts',
+        'growth_observation_form_links',
+        'growth_observation_identities',
+        'growth_observation_operations',
+        'growth_observation_redactions',
+        'growth_observation_subjects',
+        'growth_observation_work',
+        'growth_observations',
         'growth_projects',
       ]);
 
@@ -69,6 +79,9 @@ describeDatabase(
         'growth_funnel_daily_v1',
         'growth_job_health_v1',
         'growth_legacy_progress_v1',
+        'growth_observation_source_health_v1',
+        'growth_observation_subject_overview_v1',
+        'growth_observation_work_health_v1',
       ]);
 
       const ledger = await executor.execute<{
@@ -83,6 +96,10 @@ describeDatabase(
         { checksum_length: 64, name: '0001_rate_limit_events.sql' },
         { checksum_length: 64, name: '0002_growth_control_plane.sql' },
         { checksum_length: 64, name: '0003_growth_reporting_views.sql' },
+        { checksum_length: 64, name: '0004_growth_observability.sql' },
+        { checksum_length: 64, name: '0005_growth_observability_views.sql' },
+        { checksum_length: 64, name: '0006_growth_form_observations.sql' },
+        { checksum_length: 64, name: '0007_growth_install_runtime.sql' },
       ]);
     });
 
