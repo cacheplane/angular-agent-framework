@@ -237,6 +237,24 @@ function draftFor(step: 1 | 2 | 3): CampaignDraft {
   return renderCampaignTemplate(STEP_NAMES[step]);
 }
 
+const FIRST_NAME_PATTERN = /^[A-Za-z][A-Za-z'’-]{0,29}$/u;
+const PLAIN_NAME_PATTERN = /^[A-Za-z'’.-]+(?:\s[A-Za-z'’.-]+){0,5}$/u;
+
+/**
+ * "Hey <first name>," when the persisted display name is a plain name and its
+ * first word is a plain first name; otherwise "Hey there,". Display names are
+ * free-text form input, so a name carrying digits, punctuation, or a URL
+ * anywhere is discarded as a whole and never reaches the email.
+ */
+export function campaignGreeting(
+  displayName: string | null | undefined
+): string {
+  const name = (displayName ?? '').trim();
+  if (name.length > 60 || !PLAIN_NAME_PATTERN.test(name)) return 'Hey there,';
+  const first = name.split(/\s+/u)[0] ?? '';
+  return FIRST_NAME_PATTERN.test(first) ? `Hey ${first},` : 'Hey there,';
+}
+
 function signedText(
   body: string,
   unsubscribeUrl: UnsubscribeActionUrl
@@ -304,11 +322,14 @@ export function prepareCampaignMessage(input: {
   unsubscribeUrl: UnsubscribeActionUrl;
 }): PreparedCampaignMessage {
   const draft = draftFor(campaignStep(input.job));
+  const body = `${campaignGreeting(input.context.displayName)}\n\n${
+    draft.body
+  }`;
   return {
     status: 'ready',
     subject: draft.subject,
-    text: signedText(draft.body, input.unsubscribeUrl),
-    html: signedHtml(draft.body, input.unsubscribeUrl),
+    text: signedText(body, input.unsubscribeUrl),
+    html: signedHtml(body, input.unsubscribeUrl),
   };
 }
 

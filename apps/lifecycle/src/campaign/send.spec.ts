@@ -20,6 +20,7 @@ import {
   dispatchLifecycleAppOwnedJob,
   LIFECYCLE_SCORE_CONTENT_REGISTRY_V1,
   loadLifecycleRuntimeConfiguration,
+  campaignGreeting,
   prepareCampaignMessage,
   type LifecycleJobContext,
   type LifecycleJobDependencies,
@@ -327,9 +328,41 @@ describe('prepareCampaignMessage', () => {
       `me:<br><a href="${FOUNDER_BOOKING_URL}">${FOUNDER_BOOKING_URL}</a></p>`
     );
     expect(prepared.html).toMatch(
-      /^<p>[^<]+<\/p>\n<p>[^<]+<\/p>\n<p>[^<]+<br>/u
+      /^<p>Hey Ada,<\/p>\n<p>[^<]+<\/p>\n<p>[^<]+<\/p>\n<p>[^<]+<br>/u
     );
     expect(prepared.html).not.toContain('&lt;');
+  });
+
+  it.each([
+    ['Ada', 'Hey Ada,'],
+    ['Ada Lovelace', 'Hey Ada,'],
+    ["  O'Brien  ", "Hey O'Brien,"],
+    ['Anne-Marie Smith', 'Hey Anne-Marie,'],
+    [null, 'Hey there,'],
+    ['', 'Hey there,'],
+    ['Click https://evil.example', 'Hey there,'],
+    ['<b>Ada</b>', 'Hey there,'],
+    ['ada@example.com', 'Hey there,'],
+    ['Ada123', 'Hey there,'],
+    ['A'.repeat(31), 'Hey there,'],
+    ['Bcc: victim@example.com', 'Hey there,'],
+  ])('greets display name %j as %s', (displayName, greeting) => {
+    expect(campaignGreeting(displayName)).toBe(greeting);
+  });
+
+  it('opens every step with the greeting and escapes it in the HTML part', () => {
+    const prepared = prepareCampaignMessage({
+      context: context({ displayName: "O'Brien" }),
+      job: job('send_step', { campaign_version: 'v1', step: 2 }),
+      unsubscribeUrl: UNSUBSCRIBE,
+    });
+
+    expect(prepared.text.startsWith("Hey O'Brien,\n\nEven with agents")).toBe(
+      true
+    );
+    expect(
+      prepared.html.startsWith('<p>Hey O&#39;Brien,</p>\n<p>Even with')
+    ).toBe(true);
   });
 
   it('falls back per fixed step when an artifact draft violates copy checks', () => {
