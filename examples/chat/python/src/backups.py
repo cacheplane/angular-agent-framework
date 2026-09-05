@@ -93,3 +93,96 @@ def list_backups(
             "messages": [ToolMessage(content=content, tool_call_id=tool_call_id)],
         }
     )
+
+
+_APPROVAL_WORDS = ("approve", "yes", "ok", "okay", "confirm", "proceed", "go ahead")
+
+
+def is_approval(response: object) -> bool:
+    """True only for an unambiguous yes. Free text that merely mentions
+    approval ("approve the prod ones but keep staging") is NOT a yes — the
+    model gets the words back and re-plans instead."""
+    text = str(response or "").strip().lower()
+    if not text:
+        return False
+    if text.startswith(("approve", "approved")):
+        return True
+    return text in _APPROVAL_WORDS
+
+
+def approval_reason(targets: list[Backup]) -> str:
+    total_gb = round(sum(b["size_gb"] for b in targets), 1)
+    ids = ", ".join(b["id"] for b in targets)
+    return (
+        f"Delete {len(targets)} backups ({total_gb} GB): {ids}. "
+        "This permanently removes them from storage and cannot be undone."
+    )
+
+
+def _refusal(ids: list[str], error: str, tool_call_id: str) -> Command:
+    content = json.dumps({"deleted": [], "refused": ids, "error": error})
+    return Command(update={"messages": [ToolMessage(content=content, tool_call_id=tool_call_id)]})
+
+
+@tool
+def delete_backups(
+    ids: list[str],
+    state: Annotated[dict, InjectedState],
+    tool_call_id: Annotated[str, InjectedToolCallId],
+) -> Command:
+    """Permanently delete the backups with these ids.
+
+    This tool PAUSES for the human's approval on its own before deleting
+    anything, so do not call `request_approval` first. Pass only ids
+    returned by `list_backups`, and never an id whose backup carries
+    `retain: true` — the call is refused outright, nothing is deleted, and
+    you must call again without it. Returns JSON: `deleted` (ids removed),
+    `freed_gb`, and `remaining` (rows left in the inventory). If the human
+    declines, `declined` is true, nothing is deleted, and `human_response`
+    carries their words so you can adjust the plan.
+    """
+    # Everything above the interrupt() call is idempotent on purpose:
+    # LangGraph re-runs this function on resume, and interrupt() returns the
+    # human's answer on that second pass. request_approval in graph.py works
+    # the same way and is the precedent.
+    inventory = inventory_of(state)
+    by_id = {b["id"]: b for b in inventory}
+    if not ids:
+        return _refusal([], "No ids given; call list_backups first.", tool_call_id)
+    unknown = [i for i in ids if i not in by_id]
+    if unknown:
+        return _refusal(unknown, f"Unknown backup ids: {', '.join(unknown)}. Nothing was deleted.", tool_call_id)
+    retained = [i for i in ids if by_id[i].get("retain")]
+    if retained:
+        return _refusal(
+            retained,
+            f"Refused: {', '.join(retained)} tagged retain and cannot be deleted. Nothing was deleted.",
+            tool_call_id,
+        )
+
+    targets = [by_id[i] for i in ids]
+    # The guardrail. There is no path to the deletion below that skips this
+    # line, so a prompt cannot talk past it and neither can a jailbreak.
+    decision = interrupt({"type": "approval_request", "reason": approval_reason(targets), "ids": ids})
+
+    if not is_approval(decision):
+        content = json.dumps(
+            {"deleted": [], "declined": True, "human_response": str(decision or ""), "remaining": len(inventory)}
+        )
+        return Command(update={"messages": [ToolMessage(content=content, tool_call_id=tool_call_id)]})
+
+    doomed = set(ids)
+    remaining = [b for b in inventory if b["id"] not in doomed]
+    content = json.dumps(
+        {
+            "deleted": ids,
+            "freed_gb": round(sum(b["size_gb"] for b in targets), 1),
+            "remaining": len(remaining),
+        }
+    )
+    return Command(
+        update={
+            "backups": remaining,
+            "messages": [ToolMessage(content=content, tool_call_id=tool_call_id)],
+        }
+    )
