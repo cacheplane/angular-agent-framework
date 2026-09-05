@@ -7,7 +7,7 @@
   line-height: 1.6;
 }
 
-/* Shared prose layer — docs + api + code mode content */
+/* Shared prose layer — API mode content */
 .workspace-prose {
   max-width: 42rem;
   font-size: 0.9rem;

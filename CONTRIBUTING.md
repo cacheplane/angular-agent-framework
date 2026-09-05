@@ -237,9 +237,10 @@ files, never from a hand-typed copy:
 - `region` names a marker pair in that file. Markers are `// #region name` …
   `// #endregion` in TypeScript, `# region name` … `# endregion` in Python,
   and `<!-- #region name -->` … `<!-- #endregion -->` in HTML. Regions may
-  nest. The marker lines are stripped from the rendered Code tab and the
-  slice is de-indented; keep region names meaningful, since they surface in
-  the build error when a region is missing or unterminated.
+  nest. The marker lines are stripped from the slice on the docs page and
+  the slice is de-indented. The Code tab shows the whole file, markers
+  included, and the region name surfaces in the build error when a region is
+  missing or unterminated, so keep the names meaningful.
 - Hand-written fences stay allowed for fragments the example does not cover,
   such as another runtime's variant.
 
