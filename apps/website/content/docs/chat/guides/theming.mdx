@@ -26,7 +26,7 @@ The compiled graph is exported as `graph`, which is the symbol `langgraph.json` 
 
 ### The application configuration
 
-`provideAgent()` registers the agent for the whole application. This example resolves its connection details at runtime from the host that serves the demo, which is why its factory reads them rather than hard-coding them. It sits beside `provideChat({})`, which registers the chat library's own providers. There is no theme option on `provideChat`: theming is CSS, not configuration.
+`provideAgent()` registers the agent for the whole application, and this example resolves its connection details at runtime from the host that serves the demo, which is why its factory reads them rather than hard-coding them. It sits beside `provideChat({})`, which registers the chat library's own providers. There is no theme option on `provideChat`: theming is CSS, not configuration.
 
 <ExampleCode file="app.config.ts" />
 
@@ -50,13 +50,13 @@ A preset is nothing more than a map of custom property names to values. These fo
 
 <ExampleCode file="theming.component.ts" region="apply-theme" title="theming.component.ts — applying a preset at runtime" />
 
-<Callout type="note" title="Runtime switching is optional">
+<Callout type="info" title="Runtime switching is optional">
 Setting the properties in a static stylesheet is enough for a fixed theme. The example writes them from TypeScript only because the picker changes them after load.
 </Callout>
 
 ## Where the token defaults come from
 
-You do not import a stylesheet to get the defaults. The first chat component to load appends a single `<style id="tplane-chat-root-tokens">` element to `<head>` with every default token declared on `:root`, and the injection is idempotent and skipped during server-side rendering.
+You do not import a stylesheet to get the defaults. The stylesheet is appended when the chat styles module first evaluates: a single `<style id="tplane-chat-root-tokens">` element goes onto `<head>` with every default token declared on `:root`, and the injection is idempotent and skipped during server-side rendering. The top-level compositions repeat the call from their constructors as a fallback for bundlers that strip the module side effect.
 
 That block is wrapped in `@layer tplane-chat`. Unlayered CSS beats layered CSS in the cascade, so a plain `:root { --tplane-chat-primary: … }` rule in your own stylesheet wins over the library defaults no matter which file the browser loads first, and no matter how specific the library rule is.
 
@@ -66,20 +66,20 @@ That block is wrapped in `@layer tplane-chat`. Unlayered CSS beats layered CSS i
 
 | Token | Light | Dark | Purpose |
 |---|---|---|---|
-| `--tplane-chat-bg` | `rgb(255 255 255)` | `rgb(17 17 17)` | Window background |
-| `--tplane-chat-surface` | `rgb(255 255 255)` | `rgb(28 28 28)` | Cards, the input pill |
-| `--tplane-chat-surface-alt` | `rgb(251 251 251)` | `rgb(44 44 44)` | Secondary fills, such as the thread sidebar |
-| `--tplane-chat-primary` | `rgb(28 28 28)` | `rgb(255 255 255)` | User bubble background, primary buttons |
-| `--tplane-chat-on-primary` | `rgb(255 255 255)` | `rgb(28 28 28)` | Text on those primary surfaces |
-| `--tplane-chat-text` | `rgb(28 28 28)` | `rgb(245 245 245)` | Assistant text, headings |
-| `--tplane-chat-text-muted` | `rgb(115 115 115)` | `rgb(160 160 160)` | Labels, placeholders, metadata |
-| `--tplane-chat-separator` | `rgb(229 229 229)` | `rgb(45 45 45)` | Hairlines and borders |
-| `--tplane-chat-muted` | `rgb(200 200 200)` | `rgb(60 60 60)` | Quiet borders, such as suggestion chips |
-| `--tplane-chat-error-bg` | `#fef2f2` | `rgb(45 21 21)` | Error background |
+| `--tplane-chat-bg` | `rgb(255, 255, 255)` | `rgb(17, 17, 17)` | Window background |
+| `--tplane-chat-surface` | `rgb(255, 255, 255)` | `rgb(28, 28, 28)` | Cards, the input pill |
+| `--tplane-chat-surface-alt` | `rgb(251, 251, 251)` | `rgb(44, 44, 44)` | Secondary fills, such as the thread sidebar |
+| `--tplane-chat-primary` | `rgb(28, 28, 28)` | `rgb(255, 255, 255)` | User bubble background, primary buttons |
+| `--tplane-chat-on-primary` | `rgb(255, 255, 255)` | `rgb(28, 28, 28)` | Text on those primary surfaces |
+| `--tplane-chat-text` | `rgb(28, 28, 28)` | `rgb(245, 245, 245)` | Assistant text, headings |
+| `--tplane-chat-text-muted` | `rgb(115, 115, 115)` | `rgb(160, 160, 160)` | Labels, placeholders, metadata |
+| `--tplane-chat-separator` | `rgb(229, 229, 229)` | `rgb(45, 45, 45)` | Hairlines and borders |
+| `--tplane-chat-muted` | `rgb(200, 200, 200)` | `rgb(60, 60, 60)` | Quiet borders, such as suggestion chips |
+| `--tplane-chat-error-bg` | `#fef2f2` | `rgb(45, 21, 21)` | Error background |
 | `--tplane-chat-error-border` | `#fecaca` | `#dc2626` | Error border |
 | `--tplane-chat-error-text` | `#dc2626` | `#fca5a5` | Error text |
 | `--tplane-chat-destructive` | `#dc2626` | `#ef4444` | Destructive confirm button |
-| `--tplane-chat-warning-bg` | `#fffbeb` | `rgb(45 35 21)` | Warning background |
+| `--tplane-chat-warning-bg` | `#fffbeb` | `rgb(45, 35, 21)` | Warning background |
 | `--tplane-chat-warning-text` | `#b45309` | `#fbbf24` | Warning text |
 | `--tplane-chat-success` | `#16a34a` | `#4ade80` | Success state |
 
@@ -90,12 +90,13 @@ Three shadow tokens, `--tplane-chat-shadow-sm`, `--tplane-chat-shadow-md`, and `
 | Token | Default | Purpose |
 |---|---|---|
 | `--tplane-chat-radius-bubble` | `15px` | User message bubble and suggestion chips |
+| `--tplane-chat-radius-input` | `20px` | Declared for consumers; no chat component reads it today |
 | `--tplane-chat-radius-card` | `8px` | Tool call cards, citations, generative UI surfaces |
 | `--tplane-chat-radius-button` | `8px` | Buttons in panels and lists |
 | `--tplane-chat-radius-launcher` | `9999px` | Circular launcher button |
 | `--tplane-chat-max-width` | `48rem` | Message column and input width |
 | `--tplane-chat-edge-pad` | `16px` | Horizontal padding at the edges of the conversation |
-| `--tplane-chat-space-1` … `--tplane-chat-space-8` | `4px` … `32px` | Internal spacing scale |
+| `--tplane-chat-space-1` … `--tplane-chat-space-6`, `--tplane-chat-space-8` | `4px` … `24px`, `32px` | Internal spacing scale |
 | `--tplane-chat-sidenav-width-expanded` | `280px` | Expanded thread navigation width |
 | `--tplane-chat-sidenav-width-collapsed` | `56px` | Collapsed thread navigation width |
 
@@ -111,7 +112,7 @@ Three shadow tokens, `--tplane-chat-shadow-sm`, `--tplane-chat-shadow-md`, and `
 | `--tplane-chat-line-height` | `1.6` | Assistant text |
 | `--tplane-chat-line-height-tight` | `1.5` | User bubble |
 
-Three further families are declared alongside these and follow the same override rule: `--tplane-chat-citation-*` for citation markers and the sources panel, `--tplane-chat-z-*` for the overlay, drawer, and modal layers, and `--a2ui-*` for generative UI surfaces rendered inside the conversation.
+Three further families are declared alongside these and follow the same override rule: `--tplane-chat-citation-*` for citation markers and the sources panel, `--tplane-chat-z-*` for the overlay, drawer, and modal layers, and `--a2ui-*` for generative UI surfaces rendered inside the conversation. Four ready-made presets ship as `@threadplane/chat/themes/{default,material}-{light,dark}.css` and set only `--a2ui-*` values; see [the A2UI overview](/docs/chat/a2ui/overview) for what those surfaces render.
 
 ## Light and dark mode
 
@@ -189,6 +190,7 @@ Custom properties written against the earlier `--chat-*` names are inert. Rename
 | `--chat-user-bg` | `--tplane-chat-primary` |
 | `--chat-user-text` | `--tplane-chat-on-primary` |
 | `--chat-radius-message` | `--tplane-chat-radius-bubble` |
+| `--chat-radius-input` | `--tplane-chat-radius-input` |
 | `--chat-radius-card` | `--tplane-chat-radius-card` |
 | `--chat-max-width` | `--tplane-chat-max-width` |
 | `--chat-error-bg` | `--tplane-chat-error-bg` |
@@ -215,5 +217,8 @@ Custom properties written against the earlier `--chat-*` names are inert. Rename
   </Card>
   <Card title="Layout modes" href="/docs/chat/guides/layout-modes">
     Inline, popup, and sidebar surfaces for the same conversation.
+  </Card>
+  <Card title="A2UI" href="/docs/chat/a2ui/overview">
+    Generative UI surfaces rendered inside the conversation, and the `--a2ui-*` tokens that theme them.
   </Card>
 </CardGroup>
