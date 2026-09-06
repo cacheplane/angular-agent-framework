@@ -1,3 +1,7 @@
+---
+description: The createContentClassifier() factory, the ContentClassifier signal surface, and how content type is detected from the first non-whitespace character.
+---
+
 # createContentClassifier()
 
 Factory function that creates a `ContentClassifier` — a stateful, per-message service that detects content type from the token stream and routes to the appropriate parser.
@@ -15,7 +19,7 @@ import type { ContentClassifier, ContentType } from '@threadplane/chat';
 function createContentClassifier(): ContentClassifier
 ```
 
-**Returns:** `ContentClassifier` — a stateful classifier instance. Must be called within an Angular injection context (signals require it).
+**Returns:** `ContentClassifier` — a stateful classifier instance. It creates plain signals, so it can be constructed outside an Angular injection context.
 
 ## ContentClassifier Interface
 
@@ -65,7 +69,7 @@ type ContentType = 'pending' | 'markdown' | 'json-render' | 'a2ui' | 'mixed';
 | `markdown` | Plain text / markdown prose |
 | `json-render` | JSON spec detected (first non-whitespace is `{`) |
 | `a2ui` | A2UI payload detected via `---a2ui_JSON---` prefix, parsed as JSONL messages |
-| `mixed` | Markdown followed by structured content |
+| `mixed` | Reserved. The current implementation never emits this value. |
 
 ### a2uiSurfaces
 
@@ -73,7 +77,7 @@ When the content type is `a2ui`, this signal contains all parsed A2UI surfaces w
 
 ### errors
 
-Parse errors are captured but don't stop the classifier. Partial results continue to render. Useful for diagnostics — check this signal when debugging unexpected rendering behavior or malformed agent output.
+Parse errors are captured but do not stop the classifier. Partial results continue to render. Useful for diagnostics — check this signal when debugging unexpected rendering behavior or malformed agent output.
 
 ## Usage
 
