@@ -1,3 +1,8 @@
+---
+title: Introduction
+description: What the Threadplane LangGraph middleware does, the TypeScript and Python entry points, and the routing flow for browser-executed client tools.
+---
+
 # Introduction
 
 Threadplane publishes middleware for backend graphs that need browser-executed client tools. The browser declares tools, the model can call those tools, and the backend routes client-tool-only turns back to the browser for execution.
@@ -43,7 +48,7 @@ If a turn mixes server tool calls and client tool calls, server tools win the fi
 
 ## TypeScript public surface
 
-`@threadplane/middleware/langgraph` exports:
+`@threadplane/middleware/langgraph` exports the routing helpers:
 
 | API | Purpose |
 |-----|---------|
@@ -56,6 +61,18 @@ If a turn mixes server tool calls and client tool calls, server tools win the fi
 | `hasServerToolCall()` | Checks whether the last message calls a server or unknown tool. |
 | `routeAfterAgent()` | Lower-level routing helper used by `clientToolsRouter()`. |
 | `lastMessage()` | Reads the last message from state. |
+
+The same entry point also exports a deduplication surface, for backends that must tolerate the same client-tool result arriving twice:
+
+| API | Purpose |
+|-----|---------|
+| `createInMemoryClientToolExecutionStore()` | An execution store held in process, for tests and single-instance backends. |
+| `createPostgresClientToolExecutionStore()` | An execution store backed by a Postgres table. |
+| `THREADPLANE_CLIENT_TOOL_EXECUTIONS_SCHEMA` | The table definition that store expects. |
+| `extractClientToolResultMessages()` | Extracts serialized client-tool results from LangGraph `ToolMessage`s. |
+| `recordClientToolResults()` | Records first-seen results and reports which tool-call ids were redeliveries. |
+| `filterDuplicateClientToolResultMessages()` | Removes those redelivered result messages before continuation logic sees them. |
+| `lookupClientToolExecutions()` | Reads prior executions back for reload reconciliation. |
 
 ## Python public surface
 
@@ -70,6 +87,8 @@ If a turn mixes server tool calls and client tool calls, server tools win the fi
 | `has_server_tool_call()` | Checks whether the last message calls a server or unknown tool. |
 | `route_after_agent()` | Routing helper for conditional edges. |
 | `last_message()` | Reads the last message from state. |
+| `a2ui_client_capabilities(state)` | Reads the A2UI client capabilities the frontend advertised, or `None` when it advertised none. |
+| `announce_subagent(config, tool_call_id)` | Emits a custom event binding a child graph's stream namespace to the tool call that started it. |
 
 ## When to use it
 

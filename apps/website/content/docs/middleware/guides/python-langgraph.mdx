@@ -1,3 +1,8 @@
+---
+title: Python LangGraph Middleware
+description: The threadplane-middleware Python package — binding browser-declared client tools per run and routing client-tool-only turns to END.
+---
+
 # Python LangGraph Middleware
 
 The Python package is `threadplane-middleware`. It is the Python LangGraph twin of `@threadplane/middleware/langgraph`: it binds browser-declared client-tool stubs onto a chat model and routes client-tool-only turns to `END`.
@@ -20,7 +25,7 @@ Call `bind_client_tools()` inside your agent node. The browser sends the tool ca
 from langchain_openai import ChatOpenAI
 from threadplane.middleware.langgraph import bind_client_tools
 
-SERVER_TOOLS = [search_tool]
+SERVER_TOOLS = []  # your server-side LangChain tools
 base_llm = ChatOpenAI(model="gpt-4o-mini")
 
 def agent_node(state):
@@ -72,9 +77,11 @@ route_after_agent(state, server_tool_names, tools_node="server_tools", end="done
 
 ```python
 from threadplane.middleware.langgraph import (
+    a2ui_client_capabilities,
+    announce_subagent,
     bind_client_tools,
-    client_tool_specs,
     client_tool_names,
+    client_tool_specs,
     has_client_tool_call,
     has_server_tool_call,
     last_message,
@@ -84,11 +91,17 @@ from threadplane.middleware.langgraph import (
 
 | Helper | Purpose |
 |--------|---------|
+| `bind_client_tools(llm, server_tools, state)` | Bind server tools plus the run's client-tool stubs onto a model. |
 | `client_tool_specs(state)` | Convert the run catalog into OpenAI function-tool dicts. |
 | `client_tool_names(state)` | Return the set of client-declared tool names. |
 | `has_client_tool_call(state)` | Check whether the last message calls a known client tool. |
 | `has_server_tool_call(state, server_tool_names)` | Check whether the last message calls a server or unknown tool. |
+| `route_after_agent(state, server_tool_names)` | Return the server tools node or the end label for a conditional edge. |
 | `last_message(state)` | Return the last message from `state["messages"]`, or `None`. |
+| `a2ui_client_capabilities(state)` | Return the A2UI capabilities the frontend advertised, or `None`. |
+| `announce_subagent(config, tool_call_id)` | Emit a custom event binding a child graph's stream namespace to the tool call that started it. |
+
+That import list is the package's full `__all__`.
 
 ## Frontend contract
 

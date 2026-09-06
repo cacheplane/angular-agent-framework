@@ -1,3 +1,8 @@
+---
+title: LangGraph.js Client Tools
+description: How the TypeScript middleware reads the client-tool catalog from state, converts it for the model, and routes server-tool and client-tool turns.
+---
+
 # LangGraph.js Client Tools
 
 Client tools are frontend-declared tools that the model can call but the browser executes. The backend only exposes tool schemas to the model and decides whether a turn should continue on the server or end so the client can run a local tool.
@@ -54,10 +59,16 @@ The router sends the graph to the server tool node when the last model message i
 The router returns `END` when the last model message has only known client-tool calls or no tool calls.
 
 ```ts
-.addConditionalEdges('agent', clientToolsRouter(['lookupOrder']), ['tools', END])
+.addConditionalEdges(
+  'agent',
+  (state) => clientToolsRouter(['lookupOrder'], { toolsNode: 'server_tools' })(state),
+  ['server_tools', END],
+)
 ```
 
 Use `serverToolNames` to disambiguate tools you actually execute on the backend.
+
+Two rules govern the destination name. Every node named in the path map must already exist on the graph, or `.compile()` throws *"Found edge ending at unknown node"*. And the node cannot be called `tools`, because `clientToolsChannel()` declares a `tools` state channel and LangGraph rejects a node name that collides with a channel — hence the `toolsNode` override above.
 
 ## Mixed tool calls
 
@@ -80,11 +91,11 @@ import {
 } from '@threadplane/middleware/langgraph';
 ```
 
-`routeAfterAgent(state, serverToolNames, opts)` is the primitive behind `clientToolsRouter()`. The default destinations are `'tools'` and `'__end__'`, but you can override them:
+`routeAfterAgent(state, serverToolNames, opts)` is the primitive behind `clientToolsRouter()`. The default destinations are `'tools'` and `'__end__'`. Because `'tools'` is unusable as a node name on a graph that carries the client-tool channels, override it whenever a server tool node exists:
 
 ```ts
 routeAfterAgent(state, ['lookupOrder'], {
-  toolsNode: 'serverTools',
+  toolsNode: 'server_tools',
   end: '__end__',
 });
 ```
