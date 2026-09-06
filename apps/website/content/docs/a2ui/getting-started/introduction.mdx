@@ -14,7 +14,7 @@ The running example is a flight booking flow. The agent authors each screen as a
 
 The Run tab shows the prebuilt `<chat>` composition with the A2UI catalog registered on it. Choose the welcome suggestion "Book LAX → JFK" and the agent replies with a booking form rather than with prose: origin and destination pickers already set to those two airports, a departure date, a passenger count, and a fare class.
 
-Fill the form and press "Search flights". The button does not post a chat message; it sends a structured A2UI action back to the agent, which searches the flight fixtures and answers with a second surface listing the matching flights. Selecting one produces a third surface, the booking confirmation, whose "Modify search" button returns to the form with the earlier values already filled in.
+Fill the form and press "Search flights". The button does not post a chat message; it sends a structured A2UI action back to the agent, which searches the flight fixtures and answers with a second surface listing the matching flights. Selecting one produces a third surface, the booking confirmation, whose "Modify search" button returns to the form with the earlier values already filled in. The model authors both the results list and the confirmation surface at request time, so their exact layout and wording vary from run to run; only the form's shape is prescribed.
 
 The second suggestion, "Book SFO → SEA", runs the same pattern on a different route, which is worth trying because nothing about the form is hardcoded on the client.
 
@@ -24,7 +24,7 @@ Four files carry the feature: a LangGraph graph that authors the surfaces, a Fas
 
 ### The component shape the model must satisfy
 
-A2UI v0.9 components are flat. Each entry carries an `id`, a `component` name from the catalog, and its props at the same level of the same object. The example models that as a Pydantic class and uses it as the structured-output schema for the LLM, so the model authors the component list under a validator instead of free-typing JSON.
+A2UI v0.9 components are flat. Each entry carries an `id`, a `component` name from the catalog, and its props at the same level of the same object. The example models that as a Pydantic class and nests it inside the structured-output schema, so the model authors the component list under a validator instead of free-typing JSON.
 
 <ExampleCode file="graph.py" region="component-schema" title="graph.py — the component schema" />
 
@@ -44,7 +44,7 @@ The model authors the components; the code writes the wire format. `_wrap_envelo
 
 <ExampleCode file="graph.py" region="envelope-wrapping" title="graph.py — the envelope wrapping" />
 
-Order matters, and the comment above the function states it: `createSurface` first, then `updateComponents`, then `updateDataModel`.
+The demo emits `createSurface`, then `updateComponents`, then `updateDataModel`. The protocol requires only that `createSurface` comes first and that a component with id `root` is defined before anything paints.
 
 <Callout type="info" title="The sentinel is what switches the client into A2UI mode">
 `A2UI_PREFIX` is `---a2ui_JSON---`. The content classifier in `@threadplane/chat` looks for exactly that string at the start of assistant content and routes the rest of the message into the A2UI pipeline instead of the markdown renderer.
@@ -52,7 +52,7 @@ Order matters, and the comment above the function states it: `createSurface` fir
 
 ### The node that authors the form
 
-`build_form` runs on the first turn and again on a "Modify search" turn. It recovers any prior submission from the message history, seeds the origin and destination from a phrase such as "I want to fly LAX to JFK", substitutes those values into the system prompt as the form defaults, and asks the model for a `BookingFormSpec`.
+`build_form` runs on the first turn and again on a "Modify search" turn. It recovers any prior submission from the message history, or, on a true first turn, seeds the origin and destination from a phrase such as "I want to fly LAX to JFK", substitutes those values into the system prompt as the form defaults, and asks the model for a `BookingFormSpec`.
 
 <ExampleCode file="graph.py" region="build-form-node" title="graph.py — the build_form node" />
 
@@ -114,7 +114,7 @@ No handler wiring appears here: `<chat>` builds the action message from the surf
 
 ## What the package owns
 
-The demo shows the protocol from the agent side. The package is the same protocol expressed as TypeScript, and its public entry point exports four groups of tools:
+The demo shows the protocol from the agent side. The package is the same protocol expressed as TypeScript, and its public entry point exports five groups of tools:
 
 | Area | Exports |
 |------|---------|
