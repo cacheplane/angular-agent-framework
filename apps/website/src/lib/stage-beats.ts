@@ -110,11 +110,13 @@ export function timeAt(p: number, ready: StageReadyMessage): number {
         : Math.round(lerp(mid, b.endMs, (f - 0.5) / 0.5));
     }
     case 'approve': {
+      const holdPin = Math.min(ready.hold.startMs + 1, ready.hold.endMs);
       if (f < APPROVE_HOLD.from)
-        return Math.round(
-          lerp(b.startMs, ready.hold.startMs, f / APPROVE_HOLD.from)
-        );
-      if (f < APPROVE_HOLD.to) return ready.hold.startMs;
+        return Math.round(lerp(b.startMs, holdPin, f / APPROVE_HOLD.from));
+      // One millisecond INSIDE the hold: the frame treats a boundary instant as
+      // belonging to the outgoing run (phaseReachedAt subtracts an epsilon), so
+      // pinning at hold.startMs exactly would report `stream`, not `pause`.
+      if (f < APPROVE_HOLD.to) return holdPin;
       return Math.round(
         lerp(
           ready.hold.endMs,
