@@ -109,6 +109,7 @@ export function createAgUiServer() {
       connection: 'keep-alive',
     });
 
+    // #region run-and-stream
     // One injector per run with two inputs, both writing through the same
     // SSE frame writer:
     // - `chunk()`: raw Mastra fullStream chunks observed through the stream
@@ -118,7 +119,6 @@ export function createAgUiServer() {
     //   SUBAGENT_FINISHED/ERROR on `tool-result`.
     // - `eventsFor()`: the bridge's own AG-UI events, with its later buffered
     //   TOOL_CALL_START/ARGS/END copies for a synthesized id dropped.
-    // #region run-and-stream
     const injector = createSubagentInjector(bridgeCapability);
     const write = (event) => res.write(sseFrame(event));
     const observe = (chunk) => {
