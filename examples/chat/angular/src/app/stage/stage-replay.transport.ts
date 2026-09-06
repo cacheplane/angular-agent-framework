@@ -88,13 +88,21 @@ export class StageReplayTransport implements AgentTransport {
   }
   private wakeAll(): void { for (const w of [...this.wakers]) w(); }
 
-  /** The latest snapshot recorded after no more runs than have been started on replay. */
+  /**
+   * The snapshot recorded at exactly this replay position, or none.
+   *
+   * A stale snapshot is deliberately NOT served: the bridge treats history as
+   * authoritative at the close of every run and projects it over the
+   * transcript (stream-manager.bridge.ts, finalizeClosedAttempt →
+   * refreshHistory(force: true)), so answering an at-or-before snapshot would
+   * snap the replayed transcript back to whatever the recorder last captured.
+   * Serving nothing leaves the streamed transcript alone. The recorder must
+   * therefore capture a snapshot after every run it wants restored (the
+   * reload run above all).
+   */
   async getHistory(_thread: string, _signal: AbortSignal): Promise<ThreadState[]> {
     const rec = await this.getRecording();
-    const snapshot = [...rec.histories]
-      .sort((a, b) => a.afterRun - b.afterRun)
-      .filter((h) => h.afterRun <= this.runIndex)
-      .pop();
+    const snapshot = rec.histories.find((h) => h.afterRun === this.runIndex);
     return (snapshot?.states ?? []) as ThreadState[];
   }
   async createQueuedRun(_a: string, threadId: string, payload: unknown, _s: AbortSignal, options?: LangGraphSubmitOptions): Promise<AgentQueueEntry> {

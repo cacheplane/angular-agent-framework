@@ -45,7 +45,7 @@ describe('StageReplayTransport', () => {
     await take(t.stream('chat', 'thread-1', {}, new AbortController().signal), 1);
     expect(t.applied()).toBe(1);
   });
-  it('serves the latest history snapshot recorded at or before the runs started so far', async () => {
+  it('serves the history snapshot recorded at exactly this position, and never a stale one', async () => {
     const withHistory = { ...MINIMAL, histories: [{ afterRun: 1, states: [{ values: { messages: [] } } as never] }] };
     const t = new StageReplayTransport(async () => withHistory);
     await t.ready();
@@ -54,6 +54,10 @@ describe('StageReplayTransport', () => {
     const sig = new AbortController().signal;
     await take(t.stream('chat', 'thread-1', {}, sig), 9); // run 0 → runIndex 1
     expect(await t.getHistory('thread-1', sig)).toHaveLength(1);
+    await take(t.stream('chat', 'thread-1', {}, sig), 9); // run 2 → runIndex 3
+    // The bridge projects history over the transcript at every run close, so a
+    // snapshot from an earlier position must not be answered.
+    expect(await t.getHistory('thread-1', sig)).toEqual([]);
   });
   it('reset() rewinds to the first run and clears applied', async () => {
     const t = new StageReplayTransport(async () => MINIMAL);
