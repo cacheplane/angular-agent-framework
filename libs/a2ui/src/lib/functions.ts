@@ -393,8 +393,9 @@ export function warnUnknownA2uiFunction(name: string): void {
 
 /**
  * Creates an A2UI client-side function registry containing the standard
- * basic-catalog functions (`formatString`, `formatNumber`, `formatCurrency`,
- * `formatDate`, `pluralize`, `and`, `or`, `not`), optionally extended or
+ * basic-catalog functions — `formatString`, `formatNumber`, `formatCurrency`,
+ * `formatDate`, `pluralize`, `and`, `or`, `not`, plus the check-rule validators
+ * `required`, `regex`, `length`, `numeric`, and `email` — optionally extended or
  * overridden with custom implementations.
  *
  * @example

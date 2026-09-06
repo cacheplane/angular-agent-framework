@@ -1,12 +1,16 @@
+---
+description: Surfaces, flat components, dynamic values, the four v0.9 envelopes, and how a rendered surface sends an action message back to the agent.
+---
+
 # The A2UI message protocol
 
 A2UI is a declarative, streamed wire format: the agent describes a UI, sends it as newline-delimited JSON, and the client renders it and ships actions back.
 
-This page walks the shapes. Everything here is what `@threadplane/a2ui` types and parses; rendering belongs to `@threadplane/chat`'s [`<a2ui-surface>`](/docs/chat/getting-started/introduction). Threadplane implements the **A2UI v0.9.1 stable release**: every envelope carries `"version": "v0.9"`, and the standardized MIME type is `application/a2ui+json` (exported as `A2UI_MIME_TYPE`).
+This page walks the shapes. Everything here is what `@threadplane/a2ui` types and parses; rendering belongs to `@threadplane/chat`'s [`<a2ui-surface>`](/docs/chat/a2ui/surface-component). Threadplane implements the **A2UI v0.9.1 stable release**: every envelope carries `"version": "v0.9"`, and the standardized MIME type is `application/a2ui+json` (exported as `A2UI_MIME_TYPE`).
 
-## What's a surface?
+## What is a surface?
 
-A surface is one self-contained unit of UI. It owns its own component set and its own data model, and it's addressed by a `surfaceId`.
+A surface is one self-contained unit of UI. It owns its own component set and its own data model, and it is addressed by a `surfaceId`.
 
 Every envelope carries that `surfaceId`. An `updateDataModel` for `"booking"` only touches the `booking` surface's data; an `updateComponents` for `"booking"` only defines its components. One stream can drive several surfaces in parallel, kept separate by id.
 
@@ -36,9 +40,9 @@ Containers reference their children with `A2uiChildren`, which has two forms:
 
   The container instantiates `componentId` once per element of the array at `path`. Each instance resolves its dynamic values against that element — relative paths inside the template resolve per item. The [data model guide](/docs/a2ui/guides/data-model) covers how that per-item resolution works.
 
-## What's a dynamic value?
+## What is a dynamic value?
 
-A prop that's either a literal baked into the message, a reference into the data model, or a client-side function call.
+A prop that is either a literal baked into the message, a reference into the data model, or a client-side function call.
 
 In v0.9 literals are **bare values** — no wrapper objects:
 
@@ -58,7 +62,7 @@ A function call is `{"call":"formatDate","args":{...}}` — a typed invocation o
 
 ## What are the four envelopes?
 
-The stream is a sequence of envelope objects, each with a `version` field and exactly one envelope key. The parser recognizes four keys; anything else is ignored (which keeps the client forward-compatible with future protocol versions).
+The stream is a sequence of envelope objects, and each envelope should carry a `version` field and exactly one envelope key. The parser reads only the first key it recognizes, in the order `createSurface`, `updateComponents`, `updateDataModel`, `deleteSurface`, and it defaults a missing `version` to `v0.9`. A line with none of those four keys is ignored, which keeps the client forward-compatible with future protocol versions.
 
 ### `createSurface`
 
@@ -118,16 +122,16 @@ A user interacts — clicks the Button — and the client sends an `A2uiActionMe
 Details worth pinning down:
 
 - **Context is resolved.** The inbound Button's `action.event.context` is a plain object whose values are dynamic values (often `{ path }` bindings). The outbound message's `action.context` is the same keys with each value already resolved against the current data model — here `{ "path": "/origin" }` became `["LAX"]`.
-- **`label` is a Threadplane extension.** It's derived from the source component's authored text — for a Button-with-Text-child, the child Text's bare literal string ("Search flights"). It's optional; the transcript renderer uses it to label the user bubble, and backends may ignore it.
+- **`label` is a Threadplane extension.** It is derived from the source component's authored text — for a Button-with-Text-child, the child Text's bare literal string ("Search flights"). It is optional; the transcript renderer uses it to label the user bubble, and backends may ignore it.
 
-The client's current data model is only attached as `metadata.a2uiClientDataModel` when the surface's `createSurface` set `sendDataModel: true`. It's omitted otherwise. When present, it's an `A2uiClientDataModel` — `{ surfaces: Record<surfaceId, Record<string, unknown>> }`, the per-surface **live** model keyed by `surfaceId` — user edits included, renderer-internal keys stripped. See [the schema reference](/docs/a2ui/reference/schema#outbound-action-messages) for the full outbound shape.
+The client's current data model is only attached as `metadata.a2uiClientDataModel` when the surface's `createSurface` set `sendDataModel: true`. It is omitted otherwise. When present, it is an `A2uiClientDataModel` — `{ surfaces: Record<surfaceId, Record<string, unknown>> }`, the per-surface **live** model keyed by `surfaceId` — user edits included, renderer-internal keys stripped. See [the schema reference](/docs/a2ui/reference/schema#outbound-action-messages) for the full outbound shape.
 
 ## Relationship to Google's A2UI
 
-Threadplane implements Google's open [A2UI protocol](https://a2ui.org) ([source](https://github.com/google/A2UI)) at the **v0.9.1 stable release**: the same envelopes, the same flat component shape, the same basic catalog, and the same `v0.9` wire version you'll see stamped on every message. The linked spec is the normative reference; `@threadplane/a2ui` is its TypeScript type system and parsing layer.
+Threadplane implements Google's open [A2UI protocol](https://a2ui.org) ([source](https://github.com/google/A2UI)) at the **v0.9.1 stable release**: the same envelopes, the same flat component shape, the same basic catalog, and the same `v0.9` wire version stamped on every message. The linked spec is the normative reference; `@threadplane/a2ui` is its TypeScript type system and parsing layer.
 
 ## Next
 
 - [Working with the data model](/docs/a2ui/guides/data-model) — pointers, immutability, and template scopes.
 - [Validating and adapting an A2UI stream](/docs/a2ui/guides/adapters-and-validation) — guards and test payloads.
-- Rendering these surfaces in Angular: [`<a2ui-surface>`](/docs/chat/getting-started/introduction) in `@threadplane/chat`.
+- Rendering these surfaces in Angular: [`<a2ui-surface>`](/docs/chat/a2ui/surface-component) in `@threadplane/chat`.
