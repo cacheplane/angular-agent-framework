@@ -35,7 +35,7 @@ Omitting `tools` would inherit the main agent's tools instead, which is the oppo
 
 <ExampleCode file="graph.py" region="orchestrator" title="graph.py — the orchestrator" />
 
-<Callout type="note" title="A third specialist you did not declare">
+<Callout type="info" title="A third specialist you did not declare">
 Unless it is explicitly disabled, `create_deep_agent` inserts a `general-purpose` subagent ahead of the specs you pass, with the main agent's model and tools. The `task` tool description therefore lists three agent types rather than two. The demo does not disable it; the system prompt simply names the two specialists it wants, which is enough to keep the orchestrator on them.
 </Callout>
 

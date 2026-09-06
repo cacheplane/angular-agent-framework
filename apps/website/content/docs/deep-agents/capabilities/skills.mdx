@@ -112,7 +112,7 @@ A custom event is a live signal and is not replayed when a thread is reopened. T
 
 <ExampleCode file="skills.component.ts" region="skills-sources" title="skills.component.ts — the two readers" />
 
-`agent.customEvents()` is a Signal of every custom event received in this session, so the live reader walks it newest first and takes the most recent payload under the event name the graph emits, while `agent.value()` is the agent state the adapter projects from the latest checkpoint, which carries the key even though the run stream does not.
+`agent.customEvents()` holds the custom events of the current run, cleared when a new run starts, so the live reader walks it newest first and takes the most recent payload under the event name the graph emits, while `agent.value()` is the agent state the adapter projects from the latest checkpoint, which carries the key even though the run stream does not.
 
 ### What the agent actually opened
 

@@ -111,8 +111,9 @@ WEATHER_ANALYST: SubAgent = {
 def build_subagents_agent():
     """Build the orchestrator.
 
-    Passing `subagents` is what installs `SubAgentMiddleware` and, with it, the
-    `task` tool. The orchestrator gets no lookup tools of its own so it has no
+    `SubAgentMiddleware` and the `task` tool ship by default through the
+    `general-purpose` subagent; passing `subagents` puts these specialists on
+    that tool. The orchestrator gets no lookup tools of its own so it has no
     way to answer without delegating.
     """
     return create_deep_agent(
