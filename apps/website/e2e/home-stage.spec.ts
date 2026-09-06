@@ -10,7 +10,16 @@ async function scrollAct(page: Page, p: number) {
       behavior: 'instant',
     });
   }, p);
-  await page.waitForTimeout(350); // the engine lerps 0.18/frame; ~20 frames to settle
+  // The engine writes `--sc-p` and the cue opacities from `scrollY` on ONE
+  // requestAnimationFrame after the scroll event (the 0.18/frame lerp applies
+  // to <video> playheads only; this page has none). The scroll event lands in
+  // the frame after scrollTo, so two nested frames are past the engine's write.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+      )
+  );
 }
 const progress = (page: Page) =>
   page.evaluate(() =>
@@ -35,6 +44,8 @@ test.describe('homepage stage', () => {
     );
     await expect(act.locator('.stage-pin')).toHaveCSS('position', 'sticky');
     await expect(page.getByTestId('stage-still-beat')).toHaveCount(0);
+    // This runs well inside StageAct's 8 s READY_TIMEOUT_MS (after which the
+    // act is swapped for the stills and [data-stage-act] disappears).
     // The engine's layout() sets the act's inline height to span × 100vh.
     await expect(page.locator('html')).toHaveClass(/sc-ready/);
     const heights = await page.evaluate(() => ({
@@ -50,6 +61,8 @@ test.describe('homepage stage', () => {
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/');
+    // With the rAF settle this takes ~1-2 s, well inside StageAct's 8 s
+    // READY_TIMEOUT_MS after which the act is swapped for the stills.
     await expect(page.locator('html')).toHaveClass(/sc-ready/);
     await scrollAct(page, 0.05);
     expect(await progress(page)).toBeGreaterThan(0);
@@ -88,22 +101,33 @@ test.describe('homepage stage', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/');
     const act = page.locator('[data-stage-act]');
+    // After READY_TIMEOUT_MS (8 s) StageAct swaps the act for the stills and
+    // [data-stage-act] is gone, so a `ready` that never arrives fails here,
+    // on the state attribute, rather than later on a vanished locator.
     await expect(act).toHaveAttribute('data-state', 'ready', {
-      timeout: 20_000,
+      timeout: 8_000,
     });
+    // `data-state="ready"` only proves the iframe answered; the engine's
+    // layout (html.sc-ready) is what makes the act 6 viewports tall.
+    await expect(page.locator('html')).toHaveClass(/sc-ready/);
+    // Once ready arrived the fallback timer is cleared, so the waits below
+    // only cover the live frame's own latency.
     await scrollAct(page, 0.1);
     await expect(act).toHaveAttribute('data-sc-verify-state', /^stream:\d+$/, {
-      timeout: 15_000,
+      timeout: 10_000,
     });
     const a = await act.getAttribute('data-sc-verify-state');
-    await scrollAct(page, 0.55);
+    // Inside the approve hold: approve spans 0.4167..0.8167 of the act and the
+    // hold is 35–70% of it (0.5567..0.6967). 0.68 also sits on the last hold
+    // line's plateau (its cue opens at 0.65, full from ~0.678).
+    await scrollAct(page, 0.68);
     await expect(act).toHaveAttribute('data-sc-verify-state', /^pause:\d+$/, {
-      timeout: 15_000,
+      timeout: 10_000,
     });
     expect(await act.getAttribute('data-sc-verify-state')).not.toBe(a);
     await scrollAct(page, 1);
     await expect(act).toHaveAttribute('data-sc-verify-state', /^render:\d+$/, {
-      timeout: 20_000,
+      timeout: 10_000,
     });
   });
 
