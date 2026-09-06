@@ -4,6 +4,7 @@ import { provideRouter } from '@angular/router';
 import { StageMode } from './stage-mode.component';
 import { StageReplayTransport } from './stage-replay.transport';
 import { MINIMAL } from './stage-recording.fixtures';
+import { buildTimeline } from './stage-timeline';
 
 describe('StageMode', () => {
   let fx: ComponentFixture<StageMode>;
@@ -160,7 +161,13 @@ describe('StageMode', () => {
     };
     await fx.componentInstance.boot(new URLSearchParams('t=0'));
     fx.detectChanges();
-    expect(posted[0]).toMatchObject({ totalMs: expect.any(Number) });
+    const tl = buildTimeline(MINIMAL);
+    const reload = tl.runs.find((r) => r.run.action.kind === 'reload');
+    expect(posted[0]).toMatchObject({
+      totalMs: expect.any(Number),
+      hold: tl.hold,
+      reloadEndMs: reload ? reload.endMs : null,
+    });
     expect(posted.some((p) => (p as { phase?: string }).phase === 'stream')).toBe(true);
   });
 

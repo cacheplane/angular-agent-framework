@@ -33,12 +33,43 @@ describe('createStageBridge', () => {
   it('posts ready and applied state to the parent only', () => {
     const e = env();
     const bridge = createStageBridge({ referrer: e.referrer, parent: e.parent, self: e.self });
-    bridge.postReady({ totalMs: 9000, beats: [{ beat: 'stream', startMs: 0, endMs: 1000 }] });
+    bridge.postReady({
+      totalMs: 9000,
+      beats: [{ beat: 'stream', startMs: 0, endMs: 1000 }],
+      hold: { startMs: 5000, endMs: 8000 },
+      reloadEndMs: 1600,
+    });
     bridge.postState({ applied: 3, phase: 'stream', t: 120 });
     expect((e.parent.postMessage as ReturnType<typeof vi.fn>).mock.calls.map((c) => c[0])).toEqual([
-      { type: STAGE_MESSAGE_TYPE, ready: true, totalMs: 9000, beats: [{ beat: 'stream', startMs: 0, endMs: 1000 }] },
+      {
+        type: STAGE_MESSAGE_TYPE,
+        ready: true,
+        totalMs: 9000,
+        beats: [{ beat: 'stream', startMs: 0, endMs: 1000 }],
+        hold: { startMs: 5000, endMs: 8000 },
+        reloadEndMs: 1600,
+      },
       { type: STAGE_MESSAGE_TYPE, applied: 3, phase: 'stream', t: 120 },
     ]);
+  });
+
+  it('postReady carries the hold and the reload boundary the parent maps scroll through', () => {
+    const posted: unknown[] = [];
+    const parent = { postMessage: (m: unknown) => posted.push(m) } as unknown as Window;
+    const self = { addEventListener: () => undefined, removeEventListener: () => undefined } as unknown as Window;
+    const bridge = createStageBridge({ referrer: 'https://threadplane.ai/', parent, self });
+    bridge.postReady({
+      totalMs: 9000,
+      beats: [{ beat: 'stream', startMs: 0, endMs: 1000 }],
+      hold: { startMs: 5000, endMs: 8000 },
+      reloadEndMs: 1600,
+    });
+    expect(posted[0]).toMatchObject({
+      type: STAGE_MESSAGE_TYPE,
+      ready: true,
+      hold: { startMs: 5000, endMs: 8000 },
+      reloadEndMs: 1600,
+    });
   });
 
   it('posts nothing when not embedded', () => {

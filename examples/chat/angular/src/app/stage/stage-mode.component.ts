@@ -365,7 +365,13 @@ export class StageMode {
         await this.replayTransport.recordingData(),
       );
       this.controller.set(controller);
-      this.bridge.postReady({ totalMs: tl.totalMs, beats: tl.beats });
+      const reload = tl.runs.find((r) => r.run.action.kind === 'reload');
+      this.bridge.postReady({
+        totalMs: tl.totalMs,
+        beats: tl.beats,
+        hold: tl.hold,
+        reloadEndMs: reload ? reload.endMs : null,
+      });
       const off = this.bridge.onSeek((t) => this.requestSeek(t));
       this.destroyRef.onDestroy(off);
       await controller.seek(Number(params.get('t')) || 0);

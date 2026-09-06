@@ -6,6 +6,10 @@ export const STAGE_MESSAGE_TYPE = 'tplane-stage';
 export interface StageReady {
   totalMs: number;
   beats: readonly TimelineBeat[];
+  /** The authored hold at the interrupt (timeline ms). */
+  hold: { readonly startMs: number; readonly endMs: number };
+  /** End of the persist beat's reload run, or null when the recording has none. */
+  reloadEndMs: number | null;
 }
 
 export interface StageState {
@@ -64,7 +68,13 @@ export function createStageBridge(env: BridgeEnv): StageBridge {
       return () => env.self.removeEventListener('message', handler);
     },
     postReady(ready) {
-      post({ ready: true, totalMs: ready.totalMs, beats: ready.beats });
+      post({
+        ready: true,
+        totalMs: ready.totalMs,
+        beats: ready.beats,
+        hold: ready.hold,
+        reloadEndMs: ready.reloadEndMs,
+      });
     },
     postState(state) {
       post({ applied: state.applied, phase: state.phase, t: state.t });
