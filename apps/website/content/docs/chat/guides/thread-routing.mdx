@@ -64,7 +64,7 @@ Never generate a thread id in the browser. Use the value handed to `onThreadId`,
 
 ### The sidebar and the thread list
 
-The `<chat>` composition owns the transcript, the input, and the loading and error states. It also renders its own `<chat-thread-list>` in a sidebar, shown at widths of 768px and up whenever the `[threads]` input it receives is non-empty. The same `[threads]` and `[activeThreadId]` inputs that feed the template's explicit list also feed that built-in one, which is why `<chat>` re-emits `threadSelected` — it is passing along the selection its own internal list produced. Because the demo passes `[threads]` to both `<chat>` and the explicit `<chat-thread-list>` in the template, a desktop viewport shows two thread lists side by side; that is a defect in the example, not a pattern to copy.
+The `<chat>` composition owns the transcript, the input, and the loading and error states, so the template adds the list beside it. `<chat>` can also render a `<chat-thread-list>` of its own, in a sidebar shown at widths of 768px and up whenever its `[threads]` input is non-empty, and it re-emits that list's `threadSelected`. The demo leaves those inputs unbound and mounts one explicit list instead, so that the list can carry the row actions shown below.
 
 <ExampleCode file="threads.component.ts" region="chat-and-sidebar" title="threads.component.ts — the template" />
 

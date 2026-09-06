@@ -1151,7 +1151,7 @@
       {
         "name": "spec",
         "type": "Signal<Spec | null>",
-        "description": "Convert the A2UI surface to a json-render Spec for rendering.\n Prefers `state().surface` (the progressively-built wire surface)\n over the legacy `surface` input. surfaceToSpec handles\n children-id-list → spec.children translation + reserved-key\n filtering + path-ref → $bindState rewriting; the rendered tree\n then uses render-element's standard input-mapping\n (`childKeys: el.children`) so catalog components receive the\n inputs they actually declare.\n\n This supersedes the earlier slot-based progressive renderer,\n which mounted root components but never populated their\n childKeys input — leaving Columns/Rows/etc. with no children.",
+        "description": "Convert the A2UI surface to a json-render Spec for rendering.\n Prefers `state().surface` (the progressively-built wire surface)\n over the legacy `surface` input. surfaceToSpec handles\n children-id-list → spec.children translation + reserved-key\n filtering + path-ref → $bindState rewriting; the rendered tree\n then uses render-element's standard input-mapping\n (`childKeys: el.children`) so catalog components receive the\n inputs they actually declare.\n\n An earlier slot-based progressive renderer mounted root components\n but never populated their childKeys input, leaving Columns/Rows/etc.\n with no children; the spec conversion replaced it.",
         "optional": false
       },
       {
@@ -9211,7 +9211,7 @@
       "description": ""
     },
     "examples": [
-      "```ts\nconst interrupt = getInterrupt(agent);\nif (interrupt) agent.resume('approved');\n```"
+      "```ts\nconst interrupt = getInterrupt(agent);\nif (interrupt) agent.submit({ resume: 'approved' });\n```"
     ]
   },
   {

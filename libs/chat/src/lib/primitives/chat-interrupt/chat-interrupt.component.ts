@@ -22,7 +22,7 @@ import { CHAT_INTERRUPT_STYLES } from '../../styles/chat-interrupt.styles';
  * @example
  * ```ts
  * const interrupt = getInterrupt(agent);
- * if (interrupt) agent.resume('approved');
+ * if (interrupt) agent.submit({ resume: 'approved' });
  * ```
  */
 export function getInterrupt(agent: Agent): AgentInterrupt | undefined {

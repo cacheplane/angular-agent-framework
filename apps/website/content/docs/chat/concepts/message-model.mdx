@@ -56,12 +56,12 @@ The assistant template is the only one that reads `delivery`. `streaming` on `<c
 
 ### The input strip
 
-The typing indicator and the input both take the agent and need nothing else. `<chat-input>` calls `agent.submit()` itself and then emits `submitted` with the same trimmed text, which is what turns a keystroke into a `user` message in the list above.
+The typing indicator and the input both take the agent and need nothing else. `<chat-input>` calls `agent.submit()` itself, which is what turns a keystroke into a `user` message in the list above, and then emits `submitted` with the same trimmed text.
 
 <ExampleCode file="messages.component.ts" region="input-strip" title="messages.component.ts — the input strip" />
 
 <Callout type="warning" title="Do not submit from (submitted)">
-The output fires after the message has already been sent. A handler that calls `submit()` again posts the user message twice. The demo itself does this: its `(submitted)` handler submits a second time after `<chat-input>` has already submitted, which is a defect in the example. Your own application should bind `(submitted)` only for side effects such as analytics, not for submission.
+The output fires after the message has already been sent. A handler that calls `submit()` again posts the user message twice. The demo binds nothing to it; bind `(submitted)` only for side effects such as analytics, never for submission.
 </Callout>
 
 ### The component class
