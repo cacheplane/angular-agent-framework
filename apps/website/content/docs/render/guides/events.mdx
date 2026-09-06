@@ -1,3 +1,7 @@
+---
+description: How spec elements dispatch actions through the on property, how handlers are registered and resolved, and what the render-spec events output reports.
+---
+
 # Events
 
 Elements in a spec can define event handlers via the `on` property. When a rendered component calls its `emit` function, the library looks up the corresponding action binding and dispatches it to a registered handler.
@@ -36,7 +40,13 @@ Each binding has:
 | Property | Type | Description |
 |----------|------|-------------|
 | `action` | `string` | The key used to look up the handler function |
-| `params` | `Record<string, unknown>` | Parameters passed to the handler |
+| `params?` | `Record<string, DynamicValue>` | Optional parameters passed to the handler |
+
+The `ActionBinding` type in `@json-render/core` also declares `confirm`, `onSuccess`, `onError`, and `preventDefault`. This renderer reads only `action` and `params`; the other four fields are accepted by the spec format but are not honored here.
+
+<Callout type="warning" title="Params are not resolved">
+Params are passed through verbatim. A `$state` expression inside `params` is **not** resolved before the handler runs. Read dynamic values from the store inside the handler instead.
+</Callout>
 
 ### Multiple Handlers per Event
 
@@ -188,7 +198,7 @@ User clicks button
     --> UI re-renders
 ```
 
-Here's a complete example:
+The following is a complete example:
 
 ```typescript
 const spec: Spec = {
@@ -226,7 +236,7 @@ const handlers = {
 
 ## Async Handlers
 
-Handlers can be asynchronous. The library does not await the return value, but you can use async functions for server calls or other asynchronous operations:
+Handlers can be asynchronous. The library does not await the return value before continuing, though a returned Promise is observed so the `handler` render event can carry its settled `result`:
 
 ```typescript
 const handlers = {
@@ -264,7 +274,7 @@ onEvent(event: RenderEvent) {
       console.log('handler ran:', event.action, event.params, event.result);
       break;
     case 'stateChange':
-      console.log('state changed:', event.path, '=', event.value);
+      console.log('state changed:', event.snapshot);
       break;
     case 'lifecycle':
       console.log('lifecycle:', event.event, event.scope, event.elementType);
@@ -281,11 +291,15 @@ onEvent(event: RenderEvent) {
 | `type` | Interface | Fires when | Notable fields |
 |--------|-----------|------------|----------------|
 | `'handler'` | `RenderHandlerEvent` | A handler finishes running | `action`, `params`, `result?` |
-| `'stateChange'` | `RenderStateChangeEvent` | The store value changes | `path`, `value`, `snapshot` |
-| `'lifecycle'` | `RenderLifecycleEvent` | A spec or element mounts/destroys | `event` (`'mounted'` \| `'destroyed'`), `scope` (`'spec'` \| `'element'`), `elementKey?`, `elementType?` |
+| `'stateChange'` | `RenderStateChangeEvent` | The store value changes | `path` (always `'/'`), `value` (the full snapshot), `snapshot` |
+| `'lifecycle'` | `RenderLifecycleEvent` | The spec mounts or is destroyed | `event` (`'mounted'` \| `'destroyed'`), `scope` (`'spec'` \| `'element'`), `elementKey?`, `elementType?` |
 | `'result'` | `RenderResultEvent` | A mounted view component calls `injectRenderHost().result(value)` | `value`, `elementKey?` |
 
-All four interfaces are exported from `@threadplane/render`. This output is the single source the [Lifecycle guide](/docs/render/guides/lifecycle) builds its `RENDER_LIFECYCLE` signals on top of -- both observe the same stream, so there's no double-counting.
+A `stateChange` event does not report which path changed: the store notifies subscribers without a path, so `path` is always `'/'` and `value` is the same full snapshot as `snapshot`. Diff the snapshot yourself if you need the changed key.
+
+Element-scope lifecycle events (`scope: 'element'`) fire only for elements that carry a truthy `lifecycle` field in the spec. `UIElement` does not declare that field, so in practice the two spec-scope events are the only lifecycle events most applications see.
+
+All four interfaces are exported from `@threadplane/render`. This output is the single source the [Lifecycle guide](/docs/render/guides/lifecycle) builds its `RENDER_LIFECYCLE` signals on top of -- both observe the same stream, so there is no double-counting.
 
 ## Next Steps
 

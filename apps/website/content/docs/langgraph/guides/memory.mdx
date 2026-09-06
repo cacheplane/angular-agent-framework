@@ -119,7 +119,7 @@ The `Annotated[..., add]` fields append on every write; the plain fields are rep
 
 ## Short-term memory (thread-scoped)
 
-Short-term memory is the kind the demo uses: state fields accumulated inside one thread. State updates are checkpointed, so reconnecting with the same `threadId` restores the fields the graph wrote, the demo's `memory` dict among them. Declaring `messages` with the `add_messages` reducer is what makes the transcript accumulate the same way.
+Short-term memory is the kind the demo uses: state fields accumulated inside one thread. State updates are checkpointed, so reconnecting with the same `threadId` restores the fields the graph wrote, the demo's `memory` dict among them. The demo declares `messages` with the `add_messages` reducer, which is what makes the transcript accumulate the same way rather than being replaced on every turn.
 
 ```python
 # Same thread, two invocations — the second one sees what the first learned

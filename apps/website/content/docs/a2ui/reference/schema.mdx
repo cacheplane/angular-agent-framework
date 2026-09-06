@@ -1,6 +1,10 @@
+---
+description: The TypeScript model of the A2UI v0.9 protocol: constants, dynamic values, actions, the basic-catalog components, envelopes, and outbound messages.
+---
+
 # A2UI Schema
 
-The `@threadplane/a2ui` schema is a TypeScript model of the A2UI v0.9 protocol shapes the framework uses. It's a contract for agent output and custom integrations, but it's not a runtime validator.
+The `@threadplane/a2ui` schema is a TypeScript model of the A2UI v0.9 protocol shapes the framework uses. It is a contract for agent output and custom integrations, but it is not a runtime validator.
 
 ## Protocol constants
 
@@ -108,9 +112,9 @@ The basic-catalog component shapes are:
 | `ChoicePicker` | `options` (array of `{ label, value }`), `value`, `variant`, `displayStyle`, `filterable`, `label` |
 | `Slider` | `value`, `max`, `min`, `label` |
 
-Note that `Button` has no text prop — its label is a `child` Text component referenced by id. `ChoicePicker` replaces the pre-v0.9 `MultipleChoice` component.
+Note that `Button` has no text prop — its label is a `child` Text component referenced by id.
 
-Several fields are constrained to a fixed enum. Emit one of the listed values — an unknown value isn't validated at the protocol layer, but a renderer may ignore it or fall back to a default:
+Several fields are constrained to a fixed enum. Emit one of the listed values — an unknown value is not validated at the protocol layer, but a renderer may ignore it or fall back to a default:
 
 | Field | On | Allowed values |
 |-------|----|----------------|
@@ -126,7 +130,7 @@ Several fields are constrained to a fixed enum. Emit one of the listed values �
 | `direction` | `List` | `'vertical'` \| `'horizontal'` |
 | `axis` | `Divider` | `'horizontal'` \| `'vertical'` |
 
-`Tabs` is the one container that doesn't use `A2uiChildren`. Its `tabs` field is an array of `{ title: DynamicString; child: string }` pairs.
+`Tabs` is the one container that does not use `A2uiChildren`. Its `tabs` field is an array of `{ title: DynamicString; child: string }` pairs.
 
 The union of the basic-catalog shapes is exported as `A2uiCatalogComponent`. The broader `A2uiComponent` also admits non-basic-catalog components (`A2uiComponentBase & Record<string, unknown>`) — renderers treat unknown `component` strings as unrenderable and fall back gracefully.
 

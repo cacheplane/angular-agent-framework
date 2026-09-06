@@ -69,6 +69,18 @@ export const activeThreadIdState = signal<string | null>(null);
           [activeThreadId]="activeThreadId() ?? ''"
           [actions]="threadActions"
           (threadSelected)="onThreadSelected($event)" />
+        <!-- The Unarchive action is only built for a list in archived
+             mode, so archiving is a round trip only when a second list
+             renders the archived threads. -->
+        @if (threadsSvc.archivedThreads().length) {
+          <h3 class="cap">Archived</h3>
+          <chat-thread-list
+            [threads]="threadsSvc.archivedThreads()"
+            [activeThreadId]="activeThreadId() ?? ''"
+            [actions]="threadActions"
+            [mode]="'archived'"
+            (threadSelected)="onThreadSelected($event)" />
+        }
       </div>
     </example-chat-layout>
     <!-- #endregion -->

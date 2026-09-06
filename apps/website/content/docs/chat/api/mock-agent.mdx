@@ -1,11 +1,16 @@
+---
+description: The mockAgent() testing helper - its options, the writable signals it exposes, and the call logs tests assert against.
+---
+
 # mockAgent()
 
-`mockAgent()` creates a runtime-neutral `Agent` mock with writable signals for testing `@threadplane/chat` components. Use it when you're testing chat UI behavior and don't need LangGraph-specific fields.
+`mockAgent()` creates a runtime-neutral `Agent` mock with writable signals for testing `@threadplane/chat` components. Use it when you are testing chat UI behavior and do not need LangGraph-specific fields.
 
 **Import:**
 
 ```typescript
 import {
+  AgentError,
   completeDelivery,
   mockAgent,
   staticDelivery,
@@ -27,12 +32,12 @@ function mockAgent(opts?: MockAgentOptions): MockAgent
 | `messages` | `Message[]` | `[]` | Initial runtime-neutral messages |
 | `status` | `AgentStatus` | `'idle'` | Initial agent status |
 | `isLoading` | `boolean` | `false` | Whether the agent is currently running |
-| `error` | `unknown` | `null` | Initial error value |
+| `error` | `AgentError` | `undefined` | Initial error value |
 | `toolCalls` | `ToolCall[]` | `[]` | Initial tool-call list |
 | `state` | `Record<string, unknown>` | `{}` | Initial agent state |
 | `withInterrupt` | `boolean` | `false` | Include a writable `interrupt` signal |
 | `withSubagents` | `boolean` | `false` | Include a writable `subagents` signal |
-| `history` | `AgentCheckpoint[]` | `undefined` | Include history and return an `AgentWithHistory`-compatible mock |
+| `history` | `AgentCheckpoint[]` | `undefined` | Enables the optional writable `history` signal, seeded with these checkpoints |
 | `events$` | `Observable<AgentEvent>` | `EMPTY` | Event stream the mock exposes via `events$` (defaults to RxJS `EMPTY`) |
 
 ## Basic Test Usage
@@ -81,7 +86,9 @@ agent.messages.set([{
 
 agent.status.set('error');
 agent.isLoading.set(false);
-agent.error.set(new Error('Connection failed'));
+agent.error.set(
+  new AgentError({ kind: 'connection', message: 'Connection failed', retryable: true }),
+);
 agent.messages.set([{
   id: 'm1',
   role: 'assistant',

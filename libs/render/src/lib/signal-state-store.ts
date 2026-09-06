@@ -43,7 +43,7 @@ function setByPath(obj: unknown, segments: string[], value: unknown): unknown {
  * @example
  * ```ts
  * const store = signalStateStore({ count: 0 });
- * store.set('count', 1);
+ * store.set('/count', 1);
  * ```
  */
 export function signalStateStore(initialState: StateModel = {}): StateStore {

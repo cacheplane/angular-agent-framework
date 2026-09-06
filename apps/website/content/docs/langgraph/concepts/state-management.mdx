@@ -1,3 +1,7 @@
+---
+description: How LangGraph thread state reaches Angular Signals — designing the Python state, pinning its TypeScript shape, and keeping UI state separate
+---
+
 # State Management
 
 How agent state flows from LangGraph's server-side state machine into Angular Signals — and why the separation between server state and UI state makes your app simpler, not more complex.
@@ -37,7 +41,7 @@ Components using `OnPush` re-render only when signal values change. No manual `d
 
 ## Python State Design
 
-On the Python side, your agent's state is a `TypedDict`. The fields you define here are exactly what `agent<T>()` exposes in TypeScript. For me, getting the Python state design right is the most important architectural decision in your agent — everything downstream inherits its shape, so it's worth slowing down for.
+On the Python side, your agent's state is a `TypedDict`. The fields you define here are exactly what the state type you pin with `createAgentRef<T>()` — and pass to `provideAgent(ref, …)` and `injectAgent(ref)` — exposes in TypeScript. Getting the Python state design right is the most important architectural decision in an agent: everything downstream inherits its shape, so it is worth slowing down for.
 
 ### The TypedDict Pattern
 
@@ -63,7 +67,7 @@ from typing_extensions import TypedDict, Annotated
 from operator import add
 
 class AgentState(TypedDict):
-    # Annotated[list, add] means: append new items, don't replace
+    # Annotated[list, add] means: append new items, do not replace
     messages: Annotated[list, add]
     tool_results: Annotated[list, add]
 
@@ -94,7 +98,7 @@ class ProjectState(MessagesState):
 
 ### Reducers: How State Merges
 
-When a node returns `{"messages": [new_msg]}`, LangGraph doesn't replace the messages list — it **calls the reducer** to merge the update. This is what `Annotated[list, add]` means: use Python's `operator.add` to concatenate lists.
+When a node returns `{"messages": [new_msg]}`, LangGraph does not replace the messages list — it **calls the reducer** to merge the update. This is what `Annotated[list, add]` means: use Python's `operator.add` to concatenate lists.
 
 ```python
 from typing_extensions import TypedDict, Annotated
@@ -130,7 +134,7 @@ Nodes return only the fields they change. LangGraph merges partial updates into 
 
 ## TypeScript Interface Mapping
 
-The TypeScript interface you pass to `agent<T>()` is your contract with the Python state. Every Python state field maps to a TypeScript property. The types don't need to match exactly — they just need to be compatible with the JSON that LangGraph streams back.
+The TypeScript interface you pin with `createAgentRef<T>()` is your contract with the Python state. Every Python state field maps to a TypeScript property. The types do not need to match exactly — they just need to be compatible with the JSON that LangGraph streams back.
 
 <Tabs>
 <Tab label="Python state">
@@ -212,7 +216,7 @@ const messages = agent.messages();   // Signal<Message[]>
 
 ## State Updates During Streaming
 
-The agent doesn't wait until it's finished to send state updates. It streams partial state updates as each node completes. Your Angular signals update incrementally throughout the run.
+The agent does not wait until it is finished to send state updates. It streams partial state updates as each node completes. Your Angular signals update incrementally throughout the run.
 
 ### How Partial Updates Arrive
 
@@ -278,7 +282,7 @@ const score = computed(() => agent.value().analysis?.score ?? 0);
 ```
 
 <Callout type="tip" title="No manual subscriptions">
-`injectAgent()` uses `toSignal()` internally with `requireSync: false`. Signals always have a value — even before the first stream update. You never need to handle `undefined` explicitly for the signal itself, though individual state fields may be `null` until the agent populates them.
+`injectAgent()` uses `toSignal()` internally with an explicit `initialValue`. Signals always have a value — even before the first stream update. You never need to handle `undefined` explicitly for the signal itself, though individual state fields may be `null` until the agent populates them.
 </Callout>
 
 ## Thread State vs Application State
@@ -287,7 +291,7 @@ There are two kinds of state in a LangGraph Angular app, and keeping them separa
 
 **Thread state** is owned by LangGraph Platform. You read it through `injectAgent()` signals. You never write to it directly — you only send new input via `.submit()`.
 
-**Application state** is owned by your Angular component or service. It's UI-only: sidebar visibility, active tab, selected message, form input values. It has nothing to do with the agent.
+**Application state** is owned by your Angular component or service. It is UI-only: sidebar visibility, active tab, selected message, form input values. It has nothing to do with the agent.
 
 ```typescript
 // Defined once (e.g. in agent.ts):
@@ -325,7 +329,7 @@ export class ChatComponent {
 }
 ```
 
-<Callout type="warning" title="Don't mirror thread state into Angular signals">
+<Callout type="warning" title="Do not mirror thread state into Angular signals">
 A common mistake is copying `agent.messages()` into a local signal to "control" it. This creates stale state bugs and defeats the purpose of the reactive signal model. Read thread state directly from `agent.*` signals and derive what you need with `computed()`.
 </Callout>
 
@@ -338,7 +342,7 @@ Thread: "user_123_session"
 │
 ├── Checkpoint 1  ← After call_model: { messages: [HumanMessage, AIMessage] }
 ├── Checkpoint 2  ← After tool_node: { messages: [..., ToolMessage] }
-├── Checkpoint 3  ← After call_model: { messages: [..., AIMessage("Here's what I found...")] }
+├── Checkpoint 3  ← After call_model: { messages: [..., AIMessage("Here is what I found...")] }
 └── (current)
 ```
 
@@ -351,16 +355,26 @@ Thread: "user_123_session"
 **Interrupt persistence** — When the agent raises an `Interrupt`, the checkpoint captures everything. The agent can be resumed hours or days later.
 
 ```typescript
+import { inject, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { injectAgent, provideAgent } from '@threadplane/langgraph';
+
 // app.config.ts — configure threadId/onThreadId on the provider
 // (CHAT_AGENT = createAgentRef<ChatState>('chat'), declared in agent.ts)
-provideAgent(CHAT_AGENT, {
-  apiUrl: '...',
+// The factory form runs inside an injection context, so it can inject router
+// services — a plain object literal at bootstrap cannot.
+provideAgent(CHAT_AGENT, () => {
+  const route = inject(ActivatedRoute);
+  const router = inject(Router);
+  return {
+    apiUrl: '...',
 
-  // Same threadId = restored conversation history
-  threadId: signal(this.route.snapshot.params['threadId']),
+    // Same threadId = restored conversation history
+    threadId: signal(route.snapshot.params['threadId']),
 
-  // New threadId auto-created for new conversations
-  onThreadId: (id) => this.router.navigate(['/chat', id]),
+    // New threadId auto-created for new conversations
+    onThreadId: (id: string) => router.navigate(['/chat', id]),
+  };
 });
 
 // component.ts
@@ -419,13 +433,14 @@ def planner_node(state: ResearchState) -> dict:
     }
 
 def researcher_node(state: ResearchState) -> dict:
-    # Runs once per plan step in a loop
+    # A node returns ONE dict, so accumulate across the loop and return once
+    findings = []
     for step in state["plan"]:
-        result = search(step)
-        yield {
-            "findings": [result],  # Each iteration appends
-            "progress": state["progress"] + (80 // len(state["plan"])),
-        }
+        findings.append(search(step))
+    return {
+        "findings": findings,  # Appended via reducer
+        "progress": state["progress"] + 80,
+    }
 ```
 
 </Tab>
@@ -473,7 +488,7 @@ protected readonly agent = injectAgent(RESEARCH_AGENT);
     </div>
     <p>{{ agent.value().progress }}% complete</p>
 
-    <!-- Live plan as it's built -->
+    <!-- Live plan as it is built -->
     <ol class="plan">
       @for (step of agent.value().plan; track step) {
         <li>{{ step }}</li>

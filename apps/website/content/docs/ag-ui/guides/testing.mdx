@@ -1,15 +1,19 @@
+---
+description: Test AG-UI components with provideFakeAgent(), the neutral mockAgent(), or a scripted AbstractAgent, and know which double covers which surface.
+---
+
 # Testing
 
 `@threadplane/ag-ui` gives you two test doubles, smallest scope first:
 
 - **`provideFakeAgent()`** — a one-call fake backend that runs the real adapter pipeline and streams canned tokens. No server, no LLM.
-- **`mockAgent()`** (from `@threadplane/chat`) — a writable-signal mock for component/unit tests. The AG-UI agent _is_ the neutral `Agent` contract, so there is no AG-UI-specific mock — use the neutral one directly.
+- **`mockAgent()`** (from `@threadplane/chat`) — a writable-signal mock for component/unit tests. It covers the neutral `Agent` surface; a component that reads the AG-UI extensions needs one of the doubles above instead.
 
 See [Choosing an adapter → Testing](/docs/choosing-an-adapter#testing) for when to use each test double.
 
 ## Fake backend: `provideFakeAgent()`
 
-`provideFakeAgent({ tokens, reasoningTokens, delayMs })` wires a fake backend into Angular DI in one call. It exercises the **real adapter pipeline** — `injectAgent()`, status transitions, message accumulation — but the wire events are canned, so there's no server and no LLM. Use it for adapter-integration tests, in-browser demos, and offline development.
+`provideFakeAgent({ tokens, reasoningTokens, delayMs })` wires a fake backend into Angular DI in one call. It exercises the **real adapter pipeline** — `injectAgent()`, status transitions, message accumulation — but the wire events are canned, so there is no server and no LLM. Use it for adapter-integration tests, in-browser demos, and offline development.
 
 It drops in exactly where `provideAgent()` would go — the call shape matches the LangGraph adapter:
 
@@ -87,15 +91,17 @@ describe('chat via provideFakeAgent', () => {
 
 ## Contract mock: `mockAgent()`
 
-For component and unit tests where you don't need a streaming pipeline at all, use the neutral `mockAgent(initial)` from `@threadplane/chat`. It returns an `Agent` whose state surface is exposed as **writable signals** — set state directly and assert your component reacts. Nothing is real.
+For component and unit tests where you do not need a streaming pipeline at all, use the neutral `mockAgent(initial)` from `@threadplane/chat`. It returns an `Agent` whose state surface is exposed as **writable signals** — set state directly and assert your component reacts. Nothing is real.
 
-The AG-UI adapter exposes exactly the neutral `Agent` contract, so there is no AG-UI-specific mock — `mockAgent()` is the right tool.
+`mockAgent()` covers the neutral `Agent` surface. A component that reads the AG-UI extensions (`customEvents`, `clientTools`, `subagents`) needs `provideFakeAgent()` or a scripted `AbstractAgent` instead, because `mockAgent()` implements only `Agent`.
 
 ```typescript
-import { mockAgent } from '@threadplane/chat';
+import { mockAgent, staticDelivery } from '@threadplane/chat';
 
 const m = mockAgent({ status: 'running' });
-m.messages.set([{ role: 'assistant', content: 'Hello!' }]);
+m.messages.set([
+  { id: '1', role: 'assistant', content: 'Hello!', delivery: staticDelivery('1') },
+]);
 
 expect(m.messages()[0].content).toBe('Hello!');
 expect(m.status()).toBe('running');
@@ -103,7 +109,7 @@ expect(m.status()).toBe('running');
 
 ## Testing tool calls, state, and custom events
 
-`FakeAgent` only scripts `RUN_*`, `REASONING_MESSAGE_*`, and `TEXT_MESSAGE_*` events — it never emits `TOOL_CALL_*`, `STATE_SNAPSHOT`/`STATE_DELTA`, or `CUSTOM`. To exercise the reducer's headline non-text features — tool-call rendering, shared state, citations, custom events — script your own `AbstractAgent` and feed it through `toAgent()`. The adapter reduces your scripted events into `toolCalls()`, `state()`, and `customEvents()` exactly as it would real wire events.
+`provideFakeAgent()` only produces `RUN_*`, `REASONING_MESSAGE_*`, and `TEXT_MESSAGE_*` events — it never emits `TOOL_CALL_*`, `STATE_SNAPSHOT`/`STATE_DELTA`, or `CUSTOM`. To exercise the reducer's headline non-text features — tool-call rendering, shared state, citations, custom events — either pass a `script` of raw events to a directly-constructed `FakeAgent`, or script your own `AbstractAgent` and feed it through `toAgent()`. The adapter reduces your scripted events into `toolCalls()`, `state()`, and `customEvents()` exactly as it would real wire events.
 
 ```typescript
 import { describe, it, expect } from 'vitest';
@@ -147,4 +153,4 @@ describe('scripted AG-UI events', () => {
 });
 ```
 
-`customEvents()` is the AG-UI-specific signal — `toAgent()` returns an `AgUiAgent`, so it's reachable directly here without a cast. A `CUSTOM` event named `on_interrupt` would instead populate `agent.interrupt()`; see the [Interrupts guide](/docs/ag-ui/guides/interrupts).
+`customEvents()` is the AG-UI-specific signal — `toAgent()` returns an `AgUiAgent`, so it is reachable directly here without a cast. A `CUSTOM` event named `on_interrupt` would instead populate `agent.interrupt()`; see the [Interrupts guide](/docs/ag-ui/guides/interrupts).

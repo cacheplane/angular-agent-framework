@@ -8,7 +8,7 @@ description: Run the AWS Strands runtime example locally, backend and Angular ap
 This runs the example from a clone of the [monorepo](https://github.com/cacheplane/angular-agent-framework). The backend is a uvicorn process on port 5331; the Angular dev server is on port 4331 and proxies `/agent` to it.
 
 <Callout type="info" title="Prerequisites">
-Node.js 20 or newer, Python 3.11 or newer, [`uv`](https://docs.astral.sh/uv/), and an OpenAI API key. No AWS account and no AWS credentials are required.
+Node.js 20 or newer, Python 3.12 or newer, [`uv`](https://docs.astral.sh/uv/), and an OpenAI API key. No AWS account and no AWS credentials are required.
 </Callout>
 
 <Steps>
@@ -41,13 +41,13 @@ cp cockpit/runtimes/aws-strands/python/.env.example \
 </Step>
 <Step title="Start both halves">
 
-One command starts the Python backend and the Angular dev server together.
+One command starts the Angular dev server and the Python backend together.
 
 ```bash
 npx tsx scripts/examples/serve-example.ts --capability=rt-strands
 ```
 
-The script runs `uv sync` in `cockpit/runtimes/aws-strands/python` on the way, so the first start takes longer than later ones.
+The script runs `uv sync` in `cockpit/runtimes/aws-strands/python` on the way, so the first start takes longer than later ones. Two processes appear in the output, one per half; stopping the script stops both.
 
 </Step>
 <Step title="Open the app">
@@ -57,11 +57,12 @@ Visit `http://localhost:4331`. The backend answers on `http://localhost:5331/age
 </Step>
 <Step title="Exercise every surface">
 
-Three prompts cover the measured surfaces in order.
+The app opens with two welcome suggestions, and one of them covers the tool call, the shared state, and the interrupt in a single turn.
 
-1. *"What is my availability on Thursday?"* — streams a message and calls `check_availability`, which mirrors its result into shared state.
-2. *"Book the 2pm slot to talk about the roadmap."* — calls `book_meeting`, which parks in an interrupt and renders an approval card.
-3. Approve or decline the card — the run resumes and the agent confirms the outcome.
+1. Send **Book the Q3 roadmap review**, which submits *"Book a Q3 roadmap review meeting with the platform team on Tuesday."* The agent calls `check_availability` first, and the requested day and its open slots appear in the "Shared state — schedule" panel beside the transcript. Then it calls `book_meeting`, the run stops, and a card titled "Booking approval required" shows the topic and the chosen slot above Cancel and Approve.
+2. Approve or cancel the card. The run resumes and the agent confirms in one sentence either that the meeting is booked or that nothing was booked. The panel keeps the booking as it was snapshotted before the pause, because no hook writes state after the interrupt resolves.
+3. The second suggestion, **Book a design critique**, runs the same two steps for the web team on Thursday.
+4. For the subagent surface, type a research request instead: *"Find a slot for Ada and Grace next week — research their availability first."* The agent calls `research_availability`, and the specialist's answer streams token by token inside a subagent card rather than into the parent bubble.
 
 </Step>
 </Steps>

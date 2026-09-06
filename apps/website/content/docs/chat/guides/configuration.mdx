@@ -1,6 +1,18 @@
+---
+description: What provideChat() and the CHAT_CONFIG token actually do — a carrier for your own components' shared defaults, not a way to configure the built-in chat UI.
+---
+
 # Configuration
 
 `@threadplane/chat` leans on Angular's dependency injection for shared configuration. The `provideChat()` function registers a `ChatConfig` object under the `CHAT_CONFIG` injection token.
+
+<Callout type="warning" title="provideChat() does not change what the library renders">
+No component in `@threadplane/chat` injects `CHAT_CONFIG`. `provideChat()` is a
+carrier for your own components and wrappers: it stores values you can read back
+with `inject(CHAT_CONFIG)`. It does not alter `<chat>`, `<chat-input>`, or any
+other built-in component — including `assistantName` and `avatarLabel`, which no
+built-in component displays. Everything `<chat>` renders is driven by its inputs.
+</Callout>
 
 ## provideChat()
 
@@ -111,12 +123,15 @@ export const routes: Routes = [
 ];
 ```
 
-## Using Configuration Without provideChat()
+## Using the library without provideChat()
 
-All composition components ship with sensible defaults. If you don't call `provideChat()`, components will:
+Skipping `provideChat()` costs nothing. The built-in components never read
+`CHAT_CONFIG`, so `ChatComponent`, `ChatInputComponent`, and the rest behave
+identically with or without it. The defaults documented above (`"A"`,
+`"Assistant"`) are values your own components can fall back to when they read the
+token optionally — they are not applied by the library.
 
-- Use `"A"` as the avatar label
-- Use `"Assistant"` as the assistant name
-- Have no injected `CHAT_CONFIG`
-
-So you can use `ChatComponent`, `ChatInputComponent`, and the rest without any global configuration for basic chat. Generative UI is controlled by the `ChatComponent` `[views]`, `[store]`, and `[handlers]` inputs.
+Everything the built-in UI does is controlled through component inputs instead:
+generative UI through `[views]`, `[store]`, and `[handlers]` on `<chat>`, and
+appearance through the `--tplane-chat-*` custom properties covered in the
+[Theming guide](/docs/chat/guides/theming).

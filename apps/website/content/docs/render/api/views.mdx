@@ -1,11 +1,11 @@
 ---
 title: views()
-description: Create and compose view registries for generative UI rendering
+description: API reference for views() and provideViews() -- building an immutable view registry, composing it, per-view fallbacks, and how render-spec resolves it.
 ---
 
 # views()
 
-Creates an immutable view registry mapping names to Angular components. Views are rendered inline in the chat when the agent produces a JSON spec.
+Creates an immutable view registry mapping spec element `type` names to Angular components. A view registry drives `<render-spec>` when it is provided through `provideViews()`, and it is also the shape the chat components accept for their generative-UI path.
 
 ## Usage
 
@@ -19,24 +19,30 @@ const ui = views({
 });
 ```
 
-Pass to the chat component:
+Provide it once, then render specs whose element `type` values match the registered names:
+
+```typescript
+// app.config.ts
+import { provideViews } from '@threadplane/render';
+
+export const appConfig: ApplicationConfig = {
+  providers: [provideViews(ui)],
+};
+```
+
+```html
+<render-spec [spec]="spec" />
+```
+
+The same registry is what the chat component accepts on its `views` input:
 
 ```html
 <chat [agent]="stream" [views]="ui" />
 ```
 
-Or provide globally via DI:
-
-```typescript
-import { provideViews } from '@threadplane/render';
-
-// app.config.ts
-providers: [provideViews(ui)]
-```
-
 ## Composition
 
-Compose registries via object spread. Last key wins for overrides:
+Compose registries via object spread. The last key wins for overrides:
 
 ```typescript
 const all = views({
@@ -48,7 +54,7 @@ const all = views({
 
 ## Per-View Fallbacks
 
-Each entry can be a bare component or a `{ component, fallback }` object. The fallback mounts while a state-bound prop on the view is still unresolved -- the same shape `defineAngularRegistry()` accepts:
+Each entry is either a bare component class or a `{ component, fallback }` object. The fallback mounts while any resolved prop on the element is still `undefined` -- the same shape `defineAngularRegistry()` accepts:
 
 ```typescript
 const ui = views({
@@ -66,11 +72,11 @@ const ui = views({
 
 ### `views(map)`
 
-Creates a frozen `ViewRegistry` from a `Record<string, Type<unknown>>`.
+Creates a frozen `ViewRegistry`.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `map` | `Record<string, Type<unknown>>` | Name → Angular component mapping |
+| `map` | `Record<string, Type<unknown> \| RenderViewEntry>` | Name → component class, or a `{ component, fallback?, schema?, description? }` entry |
 | **Returns** | `ViewRegistry` | Frozen immutable registry |
 
 ### `withViews(base, additions)`
@@ -108,7 +114,7 @@ const restricted = withoutViews(base, 'dangerous-widget', 'internal-tool');
 
 ### `provideViews(registry)`
 
-Angular DI provider. Works at app level or route level:
+Angular DI provider for the `VIEW_REGISTRY` token. Works at the application injector or on a route:
 
 ```typescript
 // Global
@@ -118,15 +124,15 @@ providers: [provideViews(ui)]
 { path: 'planning', providers: [provideViews(planningViews)] }
 ```
 
-`<render-spec>` and `<render-element>` consume `VIEW_REGISTRY` as a third-priority fallback in registry resolution. The full priority order is: the `[registry]` template input → `RENDER_CONFIG.registry` (from `provideRender(...)`) → `VIEW_REGISTRY` (from `provideViews(...)`) → the existing empty fallback. So `provideViews(myRegistry)` drives rendering when no `provideRender({ registry })` is wired and no `[registry]` input is bound.
+`<render-spec>` consumes `VIEW_REGISTRY` as a third-priority fallback in registry resolution. The full priority order is: the `[registry]` template input → `RENDER_CONFIG.registry` (from `provideRender(...)`) → `VIEW_REGISTRY` (from `provideViews(...)`) → an empty registry. So `provideViews(myRegistry)` drives rendering when no `provideRender({ registry })` is wired and no `[registry]` input is bound. `<render-element>` never reads the token itself; it uses the registry `<render-spec>` already resolved and shared through `RENDER_CONTEXT`.
 
 ### `toRenderRegistry(registry)`
 
-Converts a `ViewRegistry` to the low-level `AngularRegistry` type used by `<render-spec>`. Called internally by the chat component — most developers won't need this.
+Converts a `ViewRegistry` to the low-level `AngularRegistry` type the render components consume. Called internally by `<render-spec>` and by the chat components -- most developers do not need it directly.
 
 ## View Components
 
-View components are standard Angular standalone components. They receive props as `input()` signals:
+View components are standard Angular standalone components. They receive resolved props as `input()` signals:
 
 ```typescript
 @Component({
@@ -144,30 +150,11 @@ export class PlanChecklistComponent {
 }
 ```
 
-## How Specs Are Detected
-
-The chat component checks each message for a `ui` field containing a valid spec:
-
-```json
-{
-  "type": "tool",
-  "content": "...",
-  "ui": {
-    "root": "plan",
-    "elements": {
-      "plan": {
-        "type": "plan-checklist",
-        "props": { "title": "My Plan" }
-      }
-    }
-  }
-}
-```
-
-The `type` in the spec is matched against the view registry to resolve the Angular component.
+The element `type` in the spec is matched against the registry key to resolve the component class, so the names in `views({ ... })` are the allowlist of what a spec is permitted to render. For how the chat components decide that a streamed assistant message is a spec at all, see [json-render vs A2UI](/docs/render/concepts/json-render-vs-a2ui).
 
 ## Related
 
 - [defineAngularRegistry()](/docs/render/api/define-angular-registry) -- the low-level `AngularRegistry` that `toRenderRegistry()` converts a `ViewRegistry` into
 - [provideRender()](/docs/render/api/provide-render) -- global render config, including a registry
+- [json-render vs A2UI](/docs/render/concepts/json-render-vs-a2ui) -- how chat classifies streamed content into the json-render, A2UI, and markdown paths
 - [Chat generative-UI guide](/docs/chat/guides/generative-ui) -- wiring `views()` into chat so an agent can stream specs that render inline

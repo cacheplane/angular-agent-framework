@@ -1,6 +1,10 @@
+---
+description: Bind the chat composition to an AG-UI backend in three steps: install the packages, register provideAgent(), and read the agent with injectAgent().
+---
+
 # Quick Start
 
-Let's bind `<chat>` from `@threadplane/chat` to an AG-UI backend in 5 minutes.
+Bind `<chat>` from `@threadplane/chat` to an AG-UI backend in 5 minutes.
 
 <Callout type="info" title="Prerequisites">
 Angular 20–22 project using a Node.js version supported by that Angular major. If you need setup help, see the [Installation](/docs/ag-ui/getting-started/installation) guide.
@@ -48,7 +52,7 @@ No backend yet? Swap to `provideFakeAgent({})` - it serves canned streaming resp
 <Step title="Use in a component">
 
 ```ts
-import { Component, inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { ChatComponent } from '@threadplane/chat';
 import { injectAgent } from '@threadplane/ag-ui';
 
@@ -63,7 +67,7 @@ export class StreamingComponent {
 }
 ```
 
-That's it. The `<chat>` composition handles streaming messages, tool calls, errors, and submit - all bound to the AG-UI backend through the `Agent` contract.
+That is all. The `<chat>` composition handles streaming messages, tool calls, errors, and submit - all bound to the AG-UI backend through the `Agent` contract.
 
 </Step>
 </Steps>
@@ -79,7 +83,7 @@ That's it. The `<chat>` composition handles streaming messages, tool calls, erro
 
 ## Switching backends without changing UI
 
-For me, the runtime-neutral `Agent` contract is the whole payoff: your component never learns which protocol it's talking to. The cost is a thin translation layer per adapter, but you pay it once and your UI code stops caring.
+The runtime-neutral `Agent` contract is the payoff: your component never learns which protocol it is talking to. The cost is a thin translation layer per adapter, paid once, after which the UI code stops caring.
 
 So swapping backends is a one-line change in `app.config.ts`, and the component code stays the same:
 
@@ -90,4 +94,4 @@ So swapping backends is a one-line change in `app.config.ts`, and the component 
 + providers: [provideAgent({ url: '...' })],  // AG-UI
 ```
 
-These are two different `provideAgent` functions from two different packages — the import source changes along with the config key (`apiUrl` for LangGraph, `url` for AG-UI). It's not one symbol that accepts both.
+These are two different `provideAgent` functions from two different packages — the import source changes along with the config key (`apiUrl` for LangGraph, `url` for AG-UI). It is not one symbol that accepts both.

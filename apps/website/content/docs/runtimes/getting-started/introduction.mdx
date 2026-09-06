@@ -43,11 +43,11 @@ TypeScript. Messages, tool calls, state, and interrupts all work, against a hand
 | **Microsoft Agent Framework** (Python) | Yes | Yes | Yes | Yes | Yes |
 | **Mastra** (TypeScript) | Yes | Yes | Yes | Yes | Yes |
 
-Every gap in that table is caused by an upstream integration, not by the AG-UI protocol and not by a defect in `@threadplane/ag-ui`. The full cause analysis, including the two adapter defects that were found and fixed, lives in [Choosing an adapter](/docs/choosing-an-adapter).
+Every gap in that table is caused by an upstream integration, not by the AG-UI protocol and not by a defect in `@threadplane/ag-ui`. The full cause analysis lives in [Choosing an adapter](/docs/choosing-an-adapter).
 
 ## What is the same everywhere
 
-The Angular side does not change between these three runtimes. Each example uses the same provider call and the same component body:
+The Angular side does not change between these three runtimes. Each example binds through the same two calls, `provideAgent()` and `injectAgent()`. In your own application the provider takes the endpoint URL directly:
 
 ```ts
 // app.config.ts
@@ -78,6 +78,8 @@ export class App {
 }
 ```
 
+The examples in this repository wrap that same `provideAgent()` call in a factory, because they resolve their endpoint at runtime rather than hard-coding it, and each one renders a shared-state panel and an approval card around `<chat>`. Neither difference reaches the adapter: the configuration it receives is still a single `url`.
+
 What changes is the backend, its hosting lane, and the wire conventions it happens to use. The **How It Connects** page for each runtime records those conventions as they were measured.
 
 ## What is different everywhere
@@ -88,7 +90,7 @@ Three differences turned up repeatedly, and each runtime page returns to them.
 
 **Resume payloads are not portable.** The adapter derives the wire shape from how the interrupt arrived, so application code passes one neutral `submit({ resume })` regardless of runtime.
 
-**Subagents now stream on every runtime measured here** — AWS Strands, Microsoft Agent Framework, and Mastra. Each backend ships a small emitter that translates its native delegation signals into the protocol's `SUBAGENT_*` events, which `@threadplane/ag-ui` consumes directly. The per-runtime pages show the emitter and the wire capture behind each cell.
+**Subagents now stream on every runtime measured here** — AWS Strands, Microsoft Agent Framework, and Mastra. Each backend ships a small emitter that translates its native delegation signals into the protocol's `SUBAGENT_*` events, which `@threadplane/ag-ui` consumes directly. The per-runtime pages describe the emitter and link the wire capture behind each cell.
 
 ## Further reading
 
@@ -96,4 +98,4 @@ Three differences turned up repeatedly, and each runtime page returns to them.
 - [AG-UI adapter introduction](/docs/ag-ui/getting-started/introduction) — the adapter these runtimes bind through.
 - [What changes when the runtime changes](/blog/what-changes-when-the-runtime-changes) — the argument for measuring portability.
 - [We measured the runtime swap](/blog/we-measured-the-runtime-swap) — the results write-up.
-- [`libs/ag-ui/fixtures/runtime-transcripts/`](https://github.com/cacheplane/angular-agent-framework/tree/main/libs/ag-ui/fixtures/runtime-transcripts) — the captured Server-Sent Events, verbatim from the wire.
+- [`libs/ag-ui/fixtures/runtime-transcripts/`](https://github.com/cacheplane/angular-agent-framework/tree/main/libs/ag-ui/fixtures/runtime-transcripts) — the captured Server-Sent Events, verbatim from the wire, plus one synthetic subagent transcript built to the shape those captures record.

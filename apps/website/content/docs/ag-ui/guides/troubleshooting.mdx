@@ -1,3 +1,7 @@
+---
+description: Diagnose AG-UI integration failures — nothing renders, loading never stops, errors stay hidden, state or citations do not arrive, retry does nothing.
+---
+
 # Troubleshooting
 
 Most AG-UI integration issues are event-shape problems. Start by checking what your backend actually emits against the [Event Mapping](/docs/ag-ui/reference/event-mapping).
@@ -55,6 +59,8 @@ It sets `isLoading` back to `false` on:
 - `RUN_FINISHED`
 - `RUN_ERROR`
 - `onRunFailed`
+- a pause — a `CUSTOM` `on_interrupt` event, or a `RUN_FINISHED` carrying `outcome: { type: 'interrupt' }`
+- `stop()`, which aborts the active run
 
 If loading never stops, your backend likely did not emit a terminal event or the AG-UI source did not report a failure.
 
@@ -133,11 +139,15 @@ Cancellation depends on the AG-UI source implementation. `HttpAgent` supports ab
 
 Pass the index of the assistant message you want to replace, not the user message.
 
+## Retry does nothing
+
+`retry()` re-runs the last submitted input. It is a silent no-op in two cases: a run is already in flight, or nothing has been submitted on this agent yet. Neither case throws and neither sets `error`, so a retry button that appears to do nothing usually means one of the two. Check `isLoading()` before calling it, and note that a fresh agent has nothing to retry until the first `submit()`.
+
 ## History or time-travel does not work
 
 History and time-travel are not implemented by the AG-UI adapter today.
 
-Current scope is messages, status/loading/error, tool calls, state/custom events, reasoning messages, message snapshots, interrupts from `CUSTOM` `on_interrupt` events, subagent progress from `SUBAGENT_*` and `ACTIVITY_*` events, and citations from state.
+Current scope is messages, status/loading/error, tool calls, state/custom events, reasoning messages, message snapshots, interrupts from `CUSTOM` `on_interrupt` events and from `RUN_FINISHED` interrupt outcomes, subagent progress from `SUBAGENT_*` and `ACTIVITY_*` events, and citations from state.
 
 Use `@threadplane/langgraph` if you need LangGraph Platform thread history APIs, or write a custom adapter against the `@threadplane/chat` `Agent` contract if you need AG-UI plus product-specific behavior.
 

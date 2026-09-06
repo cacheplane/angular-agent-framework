@@ -8,11 +8,11 @@ description: Run the Mastra runtime example locally against the Node AG-UI hosti
 This runs the example from a clone of the [monorepo](https://github.com/cacheplane/angular-agent-framework). The backend is **not** Python: it is the Node service in `deployments/ag-ui-mastra`, listening on port 5332. The Angular dev server is on port 4332.
 
 <Callout type="info" title="Prerequisites">
-Node.js 20 or newer and an OpenAI API key. No Python toolchain is involved in this example.
+Node.js 22 or newer and an OpenAI API key. No Python toolchain is involved in this example.
 </Callout>
 
 <Callout type="warning" title="Two terminals, and the Node service starts by hand">
-`serve-example.ts` auto-starts Python backends only. For Mastra it starts the Angular side, and you start the Node service yourself.
+`serve-example.ts` auto-starts Python backends only, and this example has none. For Mastra it starts the Angular dev server alone, so the Node AG-UI service is a second terminal that you start yourself.
 </Callout>
 
 <Steps>
@@ -71,10 +71,13 @@ Visit `http://localhost:4332`. The service exposes an unauthenticated health che
 </Step>
 <Step title="Exercise every surface">
 
-1. *"Start a packing list with a tent and two sleeping bags."* — writes the list into working memory, which reaches the frontend as shared state.
-2. *"What are the trail conditions at Point Reyes?"* — calls `check_conditions`.
-3. *"Reserve the Sky Camp site for two nights."* — calls `reserve_campsite`, which suspends the run and renders an approval card.
-4. Approve or decline the card — the run resumes from the persisted snapshot and the agent confirms the outcome.
+The app opens with three welcome suggestions, one per surface.
+
+1. **Start a packing list** submits *"Start a packing list titled 'Yosemite Weekend' with a tent (1) and two sleeping bags."* The agent writes the list into Mastra working memory, which reaches the frontend as a `STATE_SNAPSHOT` followed by real JSON-Patch `STATE_DELTA` events, and the side panel fills in as it is written.
+2. **Check trail conditions** submits *"What are the conditions at Yosemite Valley right now?"* and the agent calls the backend tool `check_conditions`, which returns a fixed forecast so the demo behaves the same on every run.
+3. **Reserve the campsite** submits *"Please reserve the North Pines campsite for 2 nights."* `reserve_campsite` calls Mastra's `suspend()` instead of booking anything, and an approval card shows the site, the number of nights, and the total.
+4. Approve or cancel the card. The run resumes from the snapshot persisted in LibSQL and the agent either confirms the reservation with a confirmation number or reports that nothing was booked.
+5. For the subagent surface, ask for a forecast — for example *"What is the weather forecast for North Pines this weekend?"* The agent delegates to the `weather_forecaster` child agent rather than answering itself, and the child's answer streams into a subagent card while it is still being written.
 
 </Step>
 </Steps>

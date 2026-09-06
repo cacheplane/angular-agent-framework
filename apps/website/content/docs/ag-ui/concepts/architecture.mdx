@@ -1,3 +1,7 @@
+---
+description: How the AG-UI adapter reduces protocol events into Angular signals, which providers register an agent, and what the adapter deliberately leaves out.
+---
+
 # Architecture
 
 `@threadplane/ag-ui` is an adapter. It does not replace `@threadplane/chat`, and it does not define a new chat runtime.
@@ -63,7 +67,7 @@ const agent = injectAgent();
 
 ## Runtime data flow
 
-`toAgent()` subscribes to `source.subscribe({ onEvent, onRunFailed })`.
+`toAgent()` subscribes to `source.subscribe({ onRunInitialized, onEvent, onRunFailed })`.
 
 Every AG-UI event is passed through the reducer. The reducer updates Angular signals:
 
@@ -71,7 +75,7 @@ Every AG-UI event is passed through the reducer. The reducer updates Angular sig
 - `status`, `isLoading`, and `error` for run lifecycle.
 - `toolCalls` for tool call starts, arguments, results, and completion.
 - `state` for AG-UI state snapshots and JSON Patch deltas.
-- `interrupt` cleared on `RUN_STARTED` and set by the `CUSTOM` `on_interrupt` event.
+- `interrupt` cleared on `RUN_STARTED`, and set by the `CUSTOM` `on_interrupt` event or by a `RUN_FINISHED` carrying `outcome: { type: 'interrupt' }`.
 - `events$` for runtime-neutral custom-event side effects.
 - `customEvents` for accumulated non-`on_interrupt` `CUSTOM` events used by live a2ui and app-specific reactive UI.
 - `subagents` for `SUBAGENT_*` events and for `ACTIVITY_*` events with `activityType: 'subagent'`.
@@ -145,6 +149,29 @@ This is the cleanest way to derive `threadId` (or auth headers) from runtime sta
 - **Recreate the provider.** Inject `provideAgent({ ..., threadId: newId })` from a fresh injector when the active thread changes. Any prior message history must come from your own host service — pre-populate `setMessages()` on the source before the adapter boots, or render a "loading…" surface while you fetch it.
 - **Use the LangGraph adapter instead.** `@threadplane/langgraph` accepts `threadId: Signal<string | null>` and hydrates messages from the latest checkpoint on every change. See its [Persistence guide](/docs/langgraph/guides/persistence). Use AG-UI when your runtime publishes events without checkpoint storage; use LangGraph when the server owns durable thread state.
 
+### Typed state and several agents at one level
+
+`provideAgent()` has a second overload that takes an `AgentRef` first. The ref carries the state shape from the provider to `injectAgent(ref)`, and it registers the agent under the ref's own token, so more than one agent can be provided at a single injector level:
+
+```ts
+import { createAgentRef } from '@threadplane/chat';
+import { provideAgent, injectAgent } from '@threadplane/ag-ui';
+
+export const TRIP = createAgentRef<TripState>('trip');
+export const SUPPORT = createAgentRef<SupportState>('support');
+
+providers: [
+  provideAgent(TRIP, { url: '/api/trip' }),
+  provideAgent(SUPPORT, { url: '/api/support' }),
+];
+
+// component
+const trip = injectAgent(TRIP);       // AgUiAgent<TripState>
+const support = injectAgent(SUPPORT); // AgUiAgent<SupportState>
+```
+
+The ref form also aliases the shared token that the no-argument `injectAgent()` reads. That token can only point at one agent, so when several refs are provided at the same level the **last** `provideAgent(ref, …)` call wins — inject by ref whenever an injector provides more than one agent. See [provideAgent()](/docs/ag-ui/api/provide-agent) for the full rule.
+
 Use `provideFakeAgent()` when you need the UI to run without a backend:
 
 ```ts
@@ -168,6 +195,8 @@ In Angular apps, prefer the provider API so the agent instance is scoped by DI. 
 
 `stop()` calls `source.abortRun()`. The actual cancellation behavior depends on the AG-UI source. `HttpAgent` implements abort behavior; a custom source may treat it as a no-op unless you implement cancellation.
 
+`retry()` re-runs the last submitted input without re-appending it to the message history. It clears `error` and sets loading, and it silently does nothing while a run is already in flight or when no input has been submitted yet.
+
 `regenerate(index)` is supported by the shared `Agent` contract. It requires the target message to be an assistant message, finds the preceding user message, trims later messages, syncs the trimmed list back to the AG-UI source with `setMessages()`, and runs again. It throws if another run is loading.
 
 ## Current scope
@@ -181,14 +210,14 @@ The AG-UI adapter currently covers:
 - Shared state from `STATE_SNAPSHOT` and `STATE_DELTA`.
 - Message replacement from `MESSAGES_SNAPSHOT`.
 - Custom events from non-`on_interrupt` `CUSTOM` events, surfaced through both `events$` and `customEvents`.
-- Interrupts from `CUSTOM` events named `on_interrupt`.
+- Interrupts from `CUSTOM` events named `on_interrupt`, or from a `RUN_FINISHED` carrying `outcome: { type: 'interrupt' }`.
 - Browser client tools via `AgUiAgent.clientTools`.
 - Subagent progress from `SUBAGENT_STARTED`/`SUBAGENT_FINISHED`/`SUBAGENT_ERROR` events with `subagentRunId`-attributed content, and from `ACTIVITY_SNAPSHOT`/`ACTIVITY_DELTA` events whose `activityType` is `subagent`.
 - Citations stored under `state.citations`.
 
 These features are intentionally out of scope for the AG-UI adapter today:
 
-- **History and time-travel.** AG-UI is an event-stream protocol — it doesn't define a server-side "fetch state of thread X" endpoint, so the adapter can't hydrate prior messages on a `threadId` change the way a checkpoint-aware runtime can. The [Provider choices](#provider-choices) section above describes the two patterns AG-UI consumers use to work around this.
+- **History and time-travel.** AG-UI is an event-stream protocol — it does not define a server-side "fetch state of thread X" endpoint, so the adapter cannot hydrate prior messages on a `threadId` change the way a checkpoint-aware runtime can. The [Provider choices](#provider-choices) section above describes the two patterns AG-UI consumers use to work around this.
 
 If server-side history or time-travel is central to your product, use the LangGraph adapter for that surface or build a custom adapter against the `@threadplane/chat` `Agent` contract. The [Writing an Adapter guide](/docs/chat/guides/writing-an-adapter#hydrating-from-a-server-stored-thread) walks through the thread-loading design choice in detail.
 

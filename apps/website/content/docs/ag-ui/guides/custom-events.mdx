@@ -1,3 +1,7 @@
+---
+description: How an AG-UI backend produces CUSTOM events, which delivery paths reach the adapter under ag-ui-langgraph, and how Angular reads the customEvents signal.
+---
+
 # Custom Events
 
 AG-UI `CUSTOM` events let a backend node push arbitrary data to the Angular client while a run is in progress. The adapter accumulates these events into a `customEvents` signal on the `AgUiAgent` returned by `injectAgent()` — reachable directly, no cast required (shown in [Reading Custom Events](#reading-custom-events-in-angular) below).
@@ -17,25 +21,7 @@ The special `CUSTOM` event with `name: "on_interrupt"` is handled separately —
 
 ## Where Custom Events Come From
 
-A LangGraph node emits a custom event by writing to the stream writer with `stream_mode='custom'`:
-
-```python
-from langchain_core.runnables import RunnableConfig
-from langgraph.config import get_stream_writer
-
-def analysis_node(state: State, config: RunnableConfig) -> State:
-    writer = get_stream_writer()
-
-    # Emit a partial result as the node runs
-    writer({"name": "analysis_progress", "data": {"step": "scoring", "pct": 42}})
-
-    # ... do more work ...
-
-    writer({"name": "analysis_progress", "data": {"step": "scoring", "pct": 100}})
-    return state
-```
-
-The `ag-ui-langgraph` package surfaces this as an AG-UI `CUSTOM` event on the wire:
+Exactly one wire event feeds `customEvents`: an AG-UI `CUSTOM` frame whose `name` is anything other than `on_interrupt`. Every backend path below is judged by whether it produces that frame.
 
 ```json
 {
@@ -46,6 +32,38 @@ The `ag-ui-langgraph` package surfaces this as an AG-UI `CUSTOM` event on the wi
 ```
 
 The adapter JSON-parses `value` when it arrives as a string, so consumers always receive the structured object. The event is appended to `customEvents` as `{ name: "analysis_progress", data: { step: "scoring", pct: 42 } }`.
+
+### The working path under ag-ui-langgraph
+
+The `ag-ui-langgraph` bridge consumes the graph through `astream_events`, and it forwards every `on_custom_event` it sees one-for-one as an AG-UI `CUSTOM` frame carrying the same name and payload. LangChain's `adispatch_custom_event` is what puts an `on_custom_event` on that stream, so it is the call a node (or a callback handler running inside one) makes to reach `customEvents`:
+
+```python
+from langchain_core.callbacks import adispatch_custom_event
+from langchain_core.runnables import RunnableConfig
+
+async def analysis_node(state: State, config: RunnableConfig) -> State:
+    # Emit a partial result as the node runs
+    await adispatch_custom_event(
+        "analysis_progress", {"step": "scoring", "pct": 42}
+    )
+
+    # ... do more work ...
+
+    await adispatch_custom_event(
+        "analysis_progress", {"step": "scoring", "pct": 100}
+    )
+    return state
+```
+
+The event name becomes `CustomStreamEvent.name` and the payload becomes `CustomStreamEvent.data`. This is the mechanism the [subagents example](/docs/ag-ui/guides/subagents) uses to stream child-agent tokens from a callback handler.
+
+<Callout type="warning" title="get_stream_writer does not survive ag-ui-langgraph">
+Writing to `get_stream_writer()` with `stream_mode='custom'` does **not** produce a `CUSTOM` frame under `ag-ui-langgraph`. The bridge reads `astream_events`, where a stream-writer write surfaces at most as a raw event, so nothing is appended to `customEvents`. Use `adispatch_custom_event` instead. Other AG-UI runtimes that emit `CUSTOM` frames directly are unaffected by this constraint — the adapter only cares that a `CUSTOM` frame arrives.
+</Callout>
+
+### Graph state is a different signal
+
+The other way for an `ag-ui-langgraph` node to push data mid-run is to return it as a top-level graph state field. The bridge auto-emits state as `STATE_SNAPSHOT` and `STATE_DELTA` frames, and the adapter reduces those into `agent.state()` — not into `customEvents`. Reach for state when the client needs the current value of something, and for a `CUSTOM` event when the client needs the individual occurrences. The [Generative UI guide](/docs/ag-ui/guides/json-render) takes the state route for exactly this reason.
 
 ## Reading Custom Events in Angular
 
@@ -97,7 +115,6 @@ When you only need to derive a value, `computed` is more concise:
 import { Component, ChangeDetectionStrategy, computed } from '@angular/core';
 import { ChatComponent } from '@threadplane/chat';
 import { injectAgent } from '@threadplane/ag-ui';
-import type { CustomStreamEvent } from '@threadplane/ag-ui';
 
 @Component({
   standalone: true,
@@ -113,7 +130,7 @@ export class AnalysisComponent {
 
   protected readonly progressEvents = computed(() =>
     this.agent.customEvents().filter(
-      (e): e is CustomStreamEvent => e.name === 'analysis_progress',
+      (e) => e.name === 'analysis_progress',
     ),
   );
 }

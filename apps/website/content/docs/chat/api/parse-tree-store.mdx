@@ -1,3 +1,7 @@
+---
+description: The createParseTreeStore() factory that bridges the partial-JSON parser to a Spec signal, plus the per-element accumulation state it exposes.
+---
+
 # createParseTreeStore()
 
 Factory function that creates a `ParseTreeStore` — a bridge between the `@cacheplane/partial-json` parser and Angular's signal-based `Spec` rendering. It materializes the parse tree into a `Spec` signal with structural sharing on each push.
@@ -19,7 +23,7 @@ function createParseTreeStore(parser: PartialJsonParser): ParseTreeStore
 |-----------|------|-------------|
 | `parser` | `PartialJsonParser` | A parser instance from `createPartialJsonParser()` in `@cacheplane/partial-json` |
 
-**Returns:** `ParseTreeStore` — must be called within an Angular injection context.
+**Returns:** `ParseTreeStore`. It creates plain signals, so it can be constructed outside an Angular injection context.
 
 ## ParseTreeStore Interface
 

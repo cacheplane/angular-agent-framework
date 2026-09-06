@@ -1,3 +1,7 @@
+---
+description: Every component in the built-in A2UI catalog - its Angular class, selector, props and defaults, plus how bound inputs write values back.
+---
+
 # Component Catalog
 
 The built-in A2UI catalog provides 18 Angular components implementing the A2UI v0.9 basic catalog — display, layout, interactive controls, media, and advanced inputs. Pass `a2uiBasicCatalog()` to the `ChatComponent` `views` input to enable A2UI rendering, or instantiate it directly for custom setups.
@@ -103,6 +107,7 @@ Arranges children horizontally with a flex row layout.
 | `childKeys` | `string[]` | Ordered list of child component IDs (from the wire `children` array) |
 | `justify` | `'start' \| 'center' \| 'end' \| 'spaceAround' \| 'spaceBetween' \| 'spaceEvenly' \| 'stretch'` | Main-axis arrangement. Defaults to `start` |
 | `align` | `'start' \| 'center' \| 'end' \| 'stretch'` | Cross-axis alignment. Defaults to `stretch` |
+| `gap` | `number \| 'small' \| 'medium' \| 'large' \| undefined` | Space between children. A number is a spacing unit rendered as `n * 4` pixels; `small`/`medium`/`large` render as 8/12/16 pixels. Unset falls back to the stylesheet default |
 | `spec` | `Spec` | Injected automatically by the render engine |
 
 ### Column
@@ -118,6 +123,7 @@ Arranges children vertically with a flex column layout.
 | `childKeys` | `string[]` | Ordered list of child component IDs |
 | `justify` | `'start' \| 'center' \| 'end' \| 'spaceAround' \| 'spaceBetween' \| 'spaceEvenly' \| 'stretch'` | Main-axis arrangement. Defaults to `start` |
 | `align` | `'start' \| 'center' \| 'end' \| 'stretch'` | Cross-axis alignment. Defaults to `stretch` |
+| `gap` | `number \| 'small' \| 'medium' \| 'large' \| undefined` | Space between children. A number is a spacing unit rendered as `n * 4` pixels; `small`/`medium`/`large` render as 8/12/16 pixels. Unset falls back to the stylesheet default |
 | `spec` | `Spec` | Injected automatically by the render engine |
 
 ### Card
@@ -197,6 +203,10 @@ Renders a button that dispatches an action when clicked. On the wire, a Button h
 
 Context values can be path references (resolved at click time) or bare literals. The resulting `A2uiActionMessage` is emitted on `<a2ui-surface>`'s `(action)` output.
 
+<Callout type="info" title="Bound inputs write back through emitBinding()">
+The five components below (`TextField`, `CheckBox`, `ChoicePicker`, `DateTimeInput`, `Slider`) do not declare an `emit` prop. A user edit is written back by calling `emitBinding()` against the component's `_bindings` map, which the render engine populates from the path references in the wire payload.
+</Callout>
+
 ### TextField
 
 A text input with optional label, supporting single-line, multi-line, numeric, and obscured variants.
@@ -213,7 +223,6 @@ A text input with optional label, supporting single-line, multi-line, numeric, a
 | `placeholder` | `string` | Placeholder text |
 | `validationRegexp` | `string` | Client-side validation pattern |
 | `_bindings` | `Record<string, string>` | Auto-populated from path references |
-| `emit` | injected | Event emitter provided by the render engine |
 
 ```json
 {
@@ -239,11 +248,10 @@ A labeled checkbox with two-way binding for its checked state.
 | `label` | `string` | Checkbox label |
 | `value` | `boolean` | Current checked state (resolved from a path reference) |
 | `_bindings` | `Record<string, string>` | Auto-populated from path references |
-| `emit` | injected | Event emitter provided by the render engine |
 
 ### ChoicePicker
 
-Selects one or more options from a list. Replaces the pre-v0.9 `MultipleChoice` component.
+Selects one or more options from a list.
 
 | A2UI type | Angular component | Selector |
 |-----------|-------------------|----------|
@@ -258,7 +266,6 @@ Selects one or more options from a list. Replaces the pre-v0.9 `MultipleChoice` 
 | `displayStyle` | `'checkbox' \| 'chips'` | Visual style. Defaults to `checkbox` |
 | `filterable` | `boolean` | Shows a client-side option filter input when `true` |
 | `_bindings` | `Record<string, string>` | Auto-populated from path references |
-| `emit` | injected | Event emitter provided by the render engine |
 
 ```json
 {
@@ -291,7 +298,6 @@ A date, time, or datetime input with two-way binding.
 | `min` | `string` | ISO 8601 lower bound (native `min`) |
 | `max` | `string` | ISO 8601 upper bound (native `max`) |
 | `_bindings` | `Record<string, string>` | Auto-populated from path references |
-| `emit` | injected | Event emitter provided by the render engine |
 
 The HTML input type (`date`, `time`, or `datetime-local`) is derived internally from `enableDate` and `enableTime`.
 
@@ -319,9 +325,8 @@ A range slider input with two-way binding.
 | `label` | `string` | Slider label |
 | `value` | `number` | Current value (bind via a path reference) |
 | `min` | `number` | Minimum value. Defaults to `0` |
-| `max` | `number` | Maximum value |
+| `max` | `number` | Maximum value. Defaults to `100` |
 | `_bindings` | `Record<string, string>` | Auto-populated from path references |
-| `emit` | injected | Event emitter provided by the render engine |
 
 ```json
 {
@@ -397,7 +402,7 @@ Renders an HTML5 `<video>` element with native controls.
 
 | Prop | Type | Description |
 |------|------|-------------|
-| `url` | `string` | **Required.** Video source URL |
+| `url` | `string` | Video source URL. Defaults to the empty string |
 
 ```json
 {
@@ -417,7 +422,7 @@ Renders an HTML5 `<audio>` element with native controls.
 
 | Prop | Type | Description |
 |------|------|-------------|
-| `url` | `string` | **Required.** Audio source URL |
+| `url` | `string` | Audio source URL. Defaults to the empty string |
 | `description` | `string` | A description of the audio, such as a title or summary |
 
 ```json
@@ -461,14 +466,12 @@ The v0.9 basic catalog defines typed client-side functions that can appear in `{
 <CardGroup cols={2}>
   <Card
     title="A2UI Overview"
-    icon="book-open"
     href="/docs/chat/a2ui/overview"
   >
     How the A2UI protocol works end-to-end.
   </Card>
   <Card
     title="Surface Component"
-    icon="layers"
     href="/docs/chat/a2ui/surface-component"
   >
     Render surfaces and understand dynamic value resolution.

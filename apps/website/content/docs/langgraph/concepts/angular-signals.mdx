@@ -1,9 +1,13 @@
+---
+description: How injectAgent() exposes agent state as Angular Signals, and how to derive, combine, and react to them with computed() and effect()
+---
+
 # Angular Signals
 
-Angular Signals are the reactive primitive that powers `injectAgent()`. If you're coming from a Python AI/agent background and wondering how Angular handles real-time streaming data, you're in the right place. Every property on a LangGraphAgent is a Signal, so your templates update automatically as tokens arrive — no manual subscriptions, no async pipes, no RxJS boilerplate.
+Angular Signals are the reactive primitive that powers `injectAgent()`. Developers coming from a Python AI or agent background often wonder how Angular handles real-time streaming data, and this page answers that. Every property on a LangGraphAgent is a Signal, so your templates update automatically as tokens arrive — no manual subscriptions, no async pipes, no RxJS boilerplate.
 
 <Callout type="info" title="For Python developers">
-Think of Signals like a Python property with built-in change notification. When the value changes, every consumer — templates, computed values, effects — re-evaluates automatically. If you've used Pydantic models with validators that react to field changes, Signals are the Angular equivalent but deeply integrated into the rendering engine.
+Think of Signals like a Python property with built-in change notification. When the value changes, every consumer — templates, computed values, effects — re-evaluates automatically. For anyone who has used Pydantic models with validators that react to field changes, Signals are the Angular equivalent but deeply integrated into the rendering engine.
 </Callout>
 
 ## What Are Angular Signals?
@@ -28,7 +32,7 @@ const doubled = computed(() => count() * 2);
 console.log(doubled()); // 4
 ```
 
-Here's the key insight: Angular knows which Signals a template reads. When those Signals change, it re-renders only the affected parts of the DOM. No diffing the entire tree, no zone.js overhead.
+The key insight: Angular knows which Signals a template reads. When those Signals change, it re-renders only the affected parts of the DOM. No diffing the entire tree, no zone.js overhead.
 
 ## How `injectAgent` Uses Signals Internally
 
@@ -77,7 +81,7 @@ protected readonly chat = injectAgent(CHAT_AGENT);
 
 chat.messages();   // Signal<Message[]>
 chat.status();     // Signal<'idle' | 'running' | 'error'>
-chat.error();      // Signal<unknown>
+chat.error();      // Signal<AgentError | undefined>
 chat.isLoading();  // Signal<boolean>
 
 // LangGraph-specific (see note below):
@@ -153,7 +157,7 @@ If the agent fails or the connection drops, the status transitions to `'error'` 
 
 ```typescript
 console.log(chat.status());     // 'error'
-console.log(chat.error());      // HttpErrorResponse { status: 500, ... }
+console.log(chat.error());      // AgentError { kind: 'server', retryable: true, status: 500, ... }
 console.log(chat.isLoading());  // false
 ```
 </Step>
@@ -187,12 +191,9 @@ const activeTools = computed(() => chat.toolCalls());
 const errorDisplay = computed(() => {
   const err = chat.error();
   if (!err) return null;
-  if (err instanceof HttpErrorResponse) {
-    return err.status === 429
-      ? 'Rate limited. Please wait a moment.'
-      : `Server error (${err.status})`;
-  }
-  return 'An unexpected error occurred.';
+  if (err.status === 429) return 'Rate limited. Please wait a moment.';
+  if (err.kind === 'auth') return 'Your credentials were rejected.';
+  return err.message;
 });
 
 // Combine multiple signals into a single view model
@@ -259,7 +260,7 @@ Writing to a Signal inside an `effect()` can create infinite loops. If you need 
 
 ## Template Patterns
 
-Angular's new control flow syntax (`@if`, `@for`, `@switch`) works naturally with Signals. Here's a complete chat template that handles every lifecycle state.
+Angular's new control flow syntax (`@if`, `@for`, `@switch`) works naturally with Signals. The template below handles every lifecycle state.
 
 ```typescript
 import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, ViewChild } from '@angular/core';
@@ -340,9 +341,9 @@ export class ChatComponent {
   errorDisplay = computed(() => {
     const err = this.chat.error();
     if (!err) return '';
-    return err instanceof HttpErrorResponse
-      ? `Error ${err.status}: ${err.statusText}`
-      : 'Connection lost. Please retry.';
+    return err.status
+      ? `Error ${err.status}: ${err.message}`
+      : err.message;
   });
 
   scrollEffect = effect(() => {
@@ -375,7 +376,7 @@ export class ChatComponent {
 
 ## OnPush Change Detection
 
-Every component using `injectAgent()` should use `ChangeDetectionStrategy.OnPush`. Here's why it works and why it's efficient.
+Every component using `injectAgent()` should use `ChangeDetectionStrategy.OnPush`. The reason it works, and why it is efficient, is below.
 
 With the default change detection strategy, Angular checks every component in the tree on every browser event — clicks, timers, HTTP responses. For a streaming agent emitting dozens of tokens per second, that means hundreds of unnecessary checks across your entire app.
 
@@ -510,7 +511,7 @@ When the Python agent calls `search_knowledge_base`, the tool call streams to An
 
 ## Performance: Signals vs Alternatives
 
-High-frequency token streaming puts real pressure on a frontend framework. Here's why Signals with OnPush hold up better than the alternatives.
+High-frequency token streaming puts real pressure on a frontend framework. Signals with OnPush hold up better than the alternatives, for the reasons below.
 
 | Approach | Token update cost | Memory overhead | Cleanup required |
 |---|---|---|---|
@@ -546,8 +547,5 @@ Signals use referential equality (`===`) by default. `injectAgent()` creates new
   </Card>
   <Card title="Interrupts" href="/docs/langgraph/guides/interrupts">
     Build human-in-the-loop approval flows that pause and resume the agent.
-  </Card>
-  <Card title="OnPush Guide" href="/docs/langgraph/concepts/angular-signals">
-    Deep dive into change detection optimization for streaming applications.
   </Card>
 </CardGroup>

@@ -1,3 +1,7 @@
+---
+description: The ChatSidenavComponent thread list - its inputs and outputs, the Thread and ThreadActionAdapter shapes, named projection slots, and drawer mode.
+---
+
 # ChatSidenavComponent
 
 `ChatSidenavComponent` is the conversation sidebar: the thread list, projects, search, and the new-chat action. Pair it with a runtime's thread store to turn a single chat surface into a multi-conversation app.
@@ -152,7 +156,7 @@ The framework handles the confirmation dialog for `delete`, the inline editor fo
 <Callout type="warning" title="Refresh your thread list after every successful action">
   Optimistic overrides are cleared in a `finally` block. If an adapter method
   resolves but the `threads` input still holds the old data, the row snaps back
-  to its previous state — which reads as "rename didn't work."
+  to its previous state — which reads as "the rename did not work."
 </Callout>
 
 ## Drawer mode

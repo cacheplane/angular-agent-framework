@@ -1,3 +1,7 @@
+---
+description: The two levels of @threadplane/chat UI — styled compositions like chat and chat-sidebar, versus headless primitives you assemble yourself — and how to choose.
+---
+
 # Primitives vs Compositions
 
 `@threadplane/chat` gives you two levels of UI.
@@ -43,7 +47,7 @@ Use `<chat>` when you want the library to own the chat shell.
 />
 ```
 
-`<chat-debug>` is also a composition. It's built for development and inspection, not end-user chat layout, and ships from the debug-only secondary entry point.
+`<chat-debug>` is also a composition. It is built for development and inspection, not end-user chat layout, and ships from the debug-only secondary entry point.
 
 ```ts
 import { ChatDebugComponent } from '@threadplane/chat/debug';
@@ -54,13 +58,15 @@ import { ChatDebugComponent } from '@threadplane/chat/debug';
 <chat-debug [agent]="agent" />
 ```
 
-Use `chat-debug` when you need timeline and state inspection while building. Don't treat it as a customer-facing control surface unless you intentionally design around that.
+Use `chat-debug` when you need timeline and state inspection while building. Do not treat it as a customer-facing control surface unless you intentionally design around that.
 
-Three more compositions wrap `<chat>` in a layout shell. Each takes `[agent]` and forwards the rest of the `<chat>` inputs:
+Three more compositions place chat inside a layout shell:
 
-- `<chat-sidenav>` — a collapsible side panel with a built-in footer launcher.
-- `<chat-popup>` — a floating launcher button that opens chat in an overlay.
-- `<chat-sidebar>` — a docked rail pinned to the edge of the viewport.
+- `<chat-popup>` — a floating launcher button that opens chat in an overlay. Wraps `<chat>`.
+- `<chat-sidebar>` — a docked rail pinned to the edge of the viewport. Wraps `<chat>`.
+- `<chat-sidenav>` — a collapsible thread and project navigation panel with a built-in footer launcher. It sits beside a chat surface rather than wrapping one, so you still render `<chat>` yourself.
+
+`<chat-popup>` and `<chat-sidebar>` forward a fixed set of inputs to the inner `<chat>`: `agent`, `views`, `clientTools`, `modelOptions`, and `showModelPicker`, plus the two-way `selectedModel`. Anything else on the `<chat>` API — `store`, `handlers`, `threads` — needs `<chat>` directly.
 
 ```ts
 import {
@@ -70,7 +76,7 @@ import {
 } from '@threadplane/chat';
 ```
 
-See the [Layout Modes](/docs/chat/guides/layout-modes) guide for when to reach for each. If you use `<chat-sidenav>`, pass `[agent]="agent"` and `[debug]="true"` to get the built-in footer launcher instead of adding a separate floating debug button.
+See the [Layout Modes](/docs/chat/guides/layout-modes) guide for when to reach for each. `<chat-sidenav>` renders the built-in footer launcher by default: `[debug]` is already `true`, so pass `[debug]="false"` to suppress it.
 
 ## Primitives
 
@@ -165,9 +171,9 @@ The mapping is:
 
 Give `<chat>` a parent with height. The composition uses flex layout and `height: 100%`; without a constrained parent, it can collapse.
 
-Don't pass a raw backend client to chat primitives. They need the `Agent` contract from `@threadplane/chat`, not a LangGraph SDK client or AG-UI `AbstractAgent`.
+Do not pass a raw backend client to chat primitives. They need the `Agent` contract from `@threadplane/chat`, not a LangGraph SDK client or AG-UI `AbstractAgent`.
 
-Don't mix two agents in one shell unless you mean it. `chat-message-list`, `chat-input`, tool-call UI, and debug UI should usually point at the same `Agent` instance.
+Do not mix two agents in one shell unless you mean it. `chat-message-list`, `chat-input`, tool-call UI, and debug UI should usually point at the same `Agent` instance.
 
 If you use primitives, you own the behaviors the composition normally provides: auto-scroll, empty state, error display, reasoning placement, tool-call placement, subagent placement, and interrupt display.
 

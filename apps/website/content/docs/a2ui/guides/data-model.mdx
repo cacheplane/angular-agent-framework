@@ -1,3 +1,7 @@
+---
+description: Read and write an A2UI surface data model with the pointer helpers, apply updateDataModel envelopes, and resolve dynamic values in scope.
+---
+
 # Working with the data model
 
 A surface's data lives in a plain object, and you read and write it through three pointer helpers plus a resolver. This guide covers all four.
@@ -28,7 +32,7 @@ next.user.name;     // "Bob"
 original.user.name; // "Alice" — unchanged
 ```
 
-It also creates intermediate objects along the way, so you don't have to pre-build nesting:
+It also creates intermediate objects along the way, so you do not have to pre-build nesting:
 
 ```ts
 setByPointer({}, '/a/b/c', 42); // { a: { b: { c: 42 } } }
@@ -42,7 +46,7 @@ import { deleteByPointer } from '@threadplane/a2ui';
 deleteByPointer({ a: 1, b: 2 }, '/a'); // { b: 2 }
 ```
 
-If the parent of the target doesn't exist, `deleteByPointer` returns the original model unchanged rather than fabricating a path to delete from.
+If the parent of the target does not exist, `deleteByPointer` returns the original model unchanged rather than fabricating a path to delete from.
 
 One v0.9-specific rule: deleting an **array index** does not splice. The index is set to `undefined` and the array's length is preserved, so sibling indices stay stable for other bindings:
 
@@ -52,7 +56,7 @@ deleteByPointer({ items: ['a', 'b', 'c'] }, '/items/1');
 ```
 
 <Callout type="warning" title="No RFC-6901 escaping">
-These helpers use JSON-Pointer-style syntax but do **not** implement RFC 6901's `~0` / `~1` unescaping. A path is split on `/` and the segments are used as literal keys. So keys that themselves contain `/` or `~` aren't addressable — there's no escape sequence to reach them.
+These helpers use JSON-Pointer-style syntax but do **not** implement RFC 6901's `~0` / `~1` unescaping. A path is split on `/` and the segments are used as literal keys. So keys that themselves contain `/` or `~` are not addressable: there is no escape sequence to reach them.
 </Callout>
 
 ## Applying updateDataModel envelopes
@@ -90,11 +94,11 @@ Nesting is just JSON: `value: { name: 'Ada', address: { city: 'London' } }` writ
 
 ## Resolving dynamic values
 
-`resolveDynamic` collapses a component's prop to a concrete value against the model. The order is fixed:
+`resolveDynamic` collapses a component's prop to a concrete value against the model. Its full signature is `resolveDynamic(value, model, scope?, registry?)` — the function registry is the optional fourth argument, after `scope`. The resolution order is fixed:
 
 1. `null` / `undefined` pass through as-is.
 2. Arrays are mapped recursively — each element resolved in turn.
-3. A `{ call }` function-call value executes through the function registry passed to `resolveDynamic` (standard set: `formatString`, `formatNumber`, `formatCurrency`, `formatDate`, `pluralize`, `and`, `or`, `not`); args resolve recursively, so they may be bindings or nested calls. Without a registry, or for unknown names, the value resolves to `undefined`. Checked before path refs so a call's `args` never masquerade as a binding.
+3. A `{ call }` function-call value executes through the function registry passed as the fourth argument (standard set: `formatString`, `formatNumber`, `formatCurrency`, `formatDate`, `pluralize`, `and`, `or`, `not`, plus the validators `required`, `regex`, `length`, `numeric`, and `email`); args resolve recursively, so they may be bindings or nested calls. Without a registry, or for unknown names, the value resolves to `undefined`. Checked before path refs so a call's `args` never masquerade as a binding.
 4. A `{ path }` reference reads from the model.
 5. Anything else — a bare string, number, boolean, or plain object — passes through unchanged. Bare values *are* the v0.9 literal form; there are no wrapper objects.
 
@@ -115,7 +119,7 @@ A missing path resolves to `undefined`, never an error. That keeps a half-stream
 
 How do you resolve a relative path, like inside a repeated template row?
 
-`resolveDynamic` takes an optional third argument, an `A2uiScope`:
+`resolveDynamic` takes an `A2uiScope` as its optional third argument:
 
 ```ts
 export interface A2uiScope {
@@ -133,7 +137,7 @@ Path resolution depends on the leading slash:
 resolveDynamic({ path: 'name' }, model, { basePath: '', item: undefined }); // "Brian"
 ```
 
-With `basePath: ''`, the relative path `name` resolves to `/name`. That's the lever children **templates** pull. When a container's `children` is `{ "path": "/items", "componentId": "tpl" }`, it repeats the template component over the array at `/items` and resolves each instance's props with a per-item scope:
+With `basePath: ''`, the relative path `name` resolves to `/name`. That is the lever children **templates** pull. When a container's `children` is `{ "path": "/items", "componentId": "tpl" }`, it repeats the template component over the array at `/items` and resolves each instance's props with a per-item scope:
 
 ```ts
 items.forEach((_, i) => {
@@ -144,7 +148,7 @@ items.forEach((_, i) => {
 ```
 
 <Callout type="warning" title="scope.item is informational">
-`A2uiScope` carries an `item` field, but the resolver only reads `basePath` to rewrite relative paths. `item` is typed for callers that want the bound element on hand, yet `resolveDynamic` itself never touches it. Don't expect setting `item` to change resolution.
+`A2uiScope` carries an `item` field, but the resolver only reads `basePath` to rewrite relative paths. `item` is typed for callers that want the bound element on hand, yet `resolveDynamic` itself never touches it. Do not expect setting `item` to change resolution.
 </Callout>
 
 ## Next

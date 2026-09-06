@@ -1,3 +1,7 @@
+---
+description: The A2uiSurfaceStore that accumulates streamed A2UI messages into per-surface state, and the readiness signals the renderer consumes.
+---
+
 # createA2uiSurfaceStore()
 
 Factory function that creates an `A2uiSurfaceStore` — a reactive store that accumulates A2UI messages into a live `Map` of surfaces.
@@ -168,14 +172,12 @@ The `components` map is keyed by component ID. The `dataModel` is a plain object
 <CardGroup cols={2}>
   <Card
     title="Surface Component"
-    icon="layers"
     href="/docs/chat/a2ui/surface-component"
   >
     Render a surface using A2uiSurfaceComponent.
   </Card>
   <Card
     title="Component Catalog"
-    icon="grid"
     href="/docs/chat/a2ui/catalog"
   >
     All 18 built-in components and their props.

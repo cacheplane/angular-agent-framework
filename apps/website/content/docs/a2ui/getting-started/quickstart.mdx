@@ -1,12 +1,16 @@
+---
+description: Parse an A2UI JSONL stream, apply an updateDataModel envelope with the pointer helpers, and resolve a dynamic value with resolveDynamic.
+---
+
 # Quick Start
 
 Parse an A2UI stream, build its data model, and resolve a dynamic value — end to end, in a few minutes.
 
-`@threadplane/a2ui` is the protocol layer. It parses the JSONL message stream, gives you typed envelopes, and resolves dynamic values against a data model. It does not render anything. Rendering is `@threadplane/chat`'s [`<a2ui-surface>`](/docs/chat/getting-started/introduction). This library is what sits underneath it.
+`@threadplane/a2ui` is the protocol layer. It parses the JSONL message stream, gives you typed envelopes, and resolves dynamic values against a data model. It does not render anything. Rendering is `@threadplane/chat`'s [`<a2ui-surface>`](/docs/chat/a2ui/surface-component). This library is what sits underneath it.
 
 ## Goals
 
-By the end of this page you'll be able to:
+By the end of this page you will be able to:
 
 - Install `@threadplane/a2ui`.
 - Parse a newline-delimited A2UI stream into typed messages.
@@ -23,7 +27,7 @@ The package has no peer dependencies.
 
 ## Parse a stream
 
-Let's start with a real stream. An agent emits A2UI as newline-delimited JSON — one envelope per line, each stamped with `"version": "v0.9"`. Here's a booking form, in emission order: the surface is created first, then its data, then the component tree (whose first component is `root`).
+Start with a real stream. An agent emits A2UI as newline-delimited JSON — one envelope per line, each stamped with `"version": "v0.9"`. Here is a booking form, in emission order: the surface is created first, then its data, then the component tree (whose first component is `root`).
 
 ```text
 ---a2ui_JSON---
@@ -45,14 +49,14 @@ const messages = parser.push(
 // messages -> 1 message: { version: 'v0.9', createSurface: { surfaceId: 's1', catalogId: '...' } }
 ```
 
-The parser is line-oriented. A line is only parsed once a newline arrives, so partial JSON buffers until it's complete:
+The parser is line-oriented. A line is only parsed once a newline arrives, so partial JSON buffers until it is complete:
 
 ```ts
 parser.push('{"version":"v0.9","deleteSurface":');  // -> []  (incomplete, buffered)
 parser.push('{"surfaceId":"s1"}}\n');               // -> 1 message
 ```
 
-That buffering is deliberate. Agent output streams in fragments, and a half-finished line shouldn't throw mid-render. A missing `version` field defaults to `v0.9`, and unknown envelope keys — such as future v1.0 messages — are skipped rather than treated as errors.
+That buffering is deliberate. Agent output streams in fragments, and a half-finished line must not throw mid-render. A missing `version` field defaults to `v0.9`, and unknown envelope keys — such as future v1.0 messages — are skipped rather than treated as errors.
 
 ## Build the data model
 
@@ -107,7 +111,7 @@ A bare literal (string, number, boolean) passes through unchanged. A `{ path }` 
 
 ## Conclusion
 
-That's the full loop: stream in, model built, value resolved. From here, the three guides go deeper:
+That is the full loop: stream in, model built, value resolved. From here, the three guides go deeper:
 
 - [The A2UI message protocol](/docs/a2ui/guides/message-protocol) — surfaces, components, dynamic values, and the four envelopes.
 - [Working with the data model](/docs/a2ui/guides/data-model) — the pointer helpers, immutability, and scopes.

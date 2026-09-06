@@ -1,3 +1,7 @@
+---
+description: Install @threadplane/ag-ui and its peers, register provideAgent() in an Angular app config, and read the agent in a component.
+---
+
 # Installation
 
 Supported Angular majors: 20, 21, and 22.
@@ -24,7 +28,8 @@ npm install @threadplane/chat @threadplane/ag-ui @ag-ui/client @ag-ui/core marke
 
 | Package             | Version                             |
 | ------------------- | ----------------------------------- |
-| `@threadplane/chat` | `*`                                 |
+| `@threadplane/chat` | `0.0.66`                            |
+| `@threadplane/telemetry` | `^0.0.66`                      |
 | `@angular/core`     | `^20.0.0 \|\| ^21.0.0 \|\| ^22.0.0` |
 | `@ag-ui/client`     | `*`                                 |
 | `@ag-ui/core`       | `*`                                 |
@@ -60,7 +65,7 @@ export const appConfig: ApplicationConfig = {
 ## Use in a component
 
 ```ts
-import { Component, inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { ChatComponent } from '@threadplane/chat';
 import { injectAgent } from '@threadplane/ag-ui';
 
@@ -93,7 +98,7 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-`FakeAgent` extends `AbstractAgent` and emits a canned `RUN_STARTED -> TEXT_MESSAGE_START -> TEXT_MESSAGE_CONTENT x N -> TEXT_MESSAGE_END -> RUN_FINISHED` sequence. It's a drop-in replacement for `provideAgent({ url })` while you're prototyping.
+`FakeAgent` extends `AbstractAgent` and emits a canned `RUN_STARTED -> TEXT_MESSAGE_START -> TEXT_MESSAGE_CONTENT x N -> TEXT_MESSAGE_END -> RUN_FINISHED` sequence. It is a drop-in replacement for the ref-less `provideAgent({ url })` while you are prototyping.
 
 `provideFakeAgent` accepts:
 
@@ -117,9 +122,12 @@ import { Observable } from 'rxjs';
 import { toAgent } from '@threadplane/ag-ui';
 
 class MyCustomAgent extends AbstractAgent {
-  protected run(input: RunAgentInput): Observable<BaseEvent> {
+  run(input: RunAgentInput): Observable<BaseEvent> {
     // Your custom transport (WebSocket, in-process worker, etc.)
     // emits BaseEvent events.
+    return new Observable<BaseEvent>((observer) => {
+      observer.complete();
+    });
   }
 }
 

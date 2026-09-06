@@ -1,3 +1,7 @@
+---
+description: Attach sources to AG-UI assistant messages through state.citations, which field names the bridge normalizes, and when the merge runs.
+---
+
 # Citations
 
 `@threadplane/ag-ui` can copy citations from AG-UI state onto chat messages.
@@ -75,6 +79,9 @@ The bridge normalizes a few common field names:
 | `title` | `title` or `name` |
 | `url` | `url`, `href`, or `source` |
 | `snippet` | `snippet`, `content`, or `excerpt` |
+| `sourceType` | `sourceType` string |
+| `iconUrl` | `iconUrl` string |
+| `publishedAt` | `publishedAt` as a string, a number, or a `Date` |
 | `extra` | `extra` object |
 
 String entries are also accepted:
@@ -102,7 +109,7 @@ Citations are merged after:
 
 They are not merged after plain text events. If your backend streams the final answer first and citations later, send a state event after citation data is available.
 
-If your backend sends citations before the matching message exists, send another state event after the message is created or use `MESSAGES_SNAPSHOT` with messages that already include citations.
+If your backend sends citations before the matching message exists, send another state event after the message is created, or send a `MESSAGES_SNAPSHOT`: the adapter re-bridges the current `state.citations` over the replaced list.
 
 ## Manual bridge
 
@@ -123,6 +130,6 @@ Most apps should not need this directly. The built-in AG-UI reducer already call
 
 Citation matching is by message id, not by order. Stable message ids matter.
 
-The bridge returns messages unchanged when `state.citations` is missing, not an object, or the entry for a message is empty.
+The bridge returns messages unchanged when `state.citations` is missing, is not an object, or the entry for a message is absent, not an array, or empty.
 
 The bridge normalizes citation shape; it does not fetch metadata, validate URLs, or deduplicate sources across messages.

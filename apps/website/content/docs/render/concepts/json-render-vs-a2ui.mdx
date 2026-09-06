@@ -136,7 +136,7 @@ const registry = views({
 });
 ```
 
-`views()` produces a `ViewRegistry` -- the shape chat catalogs consume. `defineAngularRegistry()` produces the `AngularRegistry` that `<render-spec>` consumes directly. `toRenderRegistry()` converts the former into the latter, so a chat catalog and a direct render share one component map. Use `views()` when you're wiring components into chat; use `defineAngularRegistry()` when you're driving `<render-spec>` yourself. See the [Registry guide](/docs/render/guides/registry) for the low-level registry, and the [chat views guide](/docs/chat/guides/generative-ui) for the chat-facing path.
+`views()` produces a `ViewRegistry` -- the shape chat catalogs consume. `defineAngularRegistry()` produces the `AngularRegistry` that `<render-spec>` consumes directly. `toRenderRegistry()` converts the former into the latter, so a chat catalog and a direct render share one component map. Use `views()` when you are wiring components into chat; use `defineAngularRegistry()` when you are driving `<render-spec>` yourself. See the [Registry guide](/docs/render/guides/registry) for the low-level registry, and the [chat views guide](/docs/chat/guides/generative-ui) for the chat-facing path.
 
 A2UI catalogs use the same underlying registry shape in chat. Component names such as `Text`, `Button`, `Card`, `Column`, `Row`, `TextField`, `CheckBox`, `ChoicePicker`, and `Slider` resolve to Angular components.
 
@@ -166,7 +166,7 @@ Validation in A2UI is part of the component/action protocol. It is not the same 
 
 ## Actions And Handlers
 
-json-render actions are local render events. A rendered component calls `emit()`, and `RenderSpecComponent` invokes the matching handler from `[handlers]`.
+json-render actions are local render events. A rendered component calls `emit()`, and `RenderElementComponent` invokes the matching handler from the element's `on[event]` bindings.
 
 A2UI actions produce `A2uiActionMessage` objects:
 

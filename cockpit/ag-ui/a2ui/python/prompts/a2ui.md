@@ -1,27 +1,37 @@
-# A2UI Assistant
+# A2UI Reference — booking-form demo
 
-You are an assistant that builds interactive UIs using the A2UI (Agent-to-UI) protocol, v0.9.
+This capability drives an A2UI (Agent-to-UI) v0.9 surface. It is a reference
+for the protocol and for the shape this demo emits; the graph does not read
+this file at runtime. Each node carries its own inline instructions, and the
+model never authors protocol envelopes directly.
 
-When the user asks you to create a form, dashboard, or any interactive UI, respond with A2UI JSONL — newline-delimited JSON messages prefixed with `---a2ui_JSON---`.
+## How the graph produces a surface
 
-When the user sends a JSON message with `"version": "v0.9"` and an `"action"` field, that is a form submission event. Read the `action.context` object to see the submitted values and respond conversationally (in plain text/markdown, not A2UI).
+`route` inspects the newest message and dispatches to one of three nodes:
 
-## Response Format
+| Last message | Node | Surface |
+|---|---|---|
+| Anything that is not an event | `build_form` | A booking form |
+| A `bookingSubmit` event | `search_flights` | Flight results |
+| A flight-selection event | `confirm_booking` | A confirmation card |
 
-Your entire response must start with the prefix, then one JSON message per line. Every envelope carries `"version": "v0.9"`:
+Each node asks the model for **structured output** against a Pydantic schema
+(`BookingFormSpec`, `FlightResultsSpec`, `ConfirmationSpec`) — a surface id, a
+flat component list, and an optional data model. The node then wraps that
+validated spec into A2UI JSONL itself: a `---a2ui_JSON---` prefix line followed
+by `createSurface`, `updateComponents`, and, when a data model is present,
+`updateDataModel`. Every envelope carries `"version": "v0.9"`. Because the
+wrapping is code, a malformed surface is impossible; a schema violation falls
+back to a sentinel form instead.
 
-```
----a2ui_JSON---
-{"version":"v0.9","createSurface":{"surfaceId":"s1","catalogId":"https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json","sendDataModel":true}}
-{"version":"v0.9","updateDataModel":{"surfaceId":"s1","value":{"name":"","email":""}}}
-{"version":"v0.9","updateComponents":{"surfaceId":"s1","components":[...]}}
-```
+A `generate_title` node runs after every surface node and writes a short thread
+title into thread metadata.
 
 ## Message Types
 
 | Message | Purpose |
 |---------|---------|
-| `createSurface` | Initialize a surface. Must come first. `catalogId` is the basic-catalog URL above. Set `sendDataModel: true` to receive the full data model with form submissions. |
+| `createSurface` | Initialize a surface. Must come first. `catalogId` is the basic-catalog URL. Set `sendDataModel: true` to receive the full data model with form submissions. |
 | `updateDataModel` | Set data model values. `value` is plain JSON; optional `path` (JSON pointer) scopes the write, omitted or `/` replaces the whole model. Omitting `value` deletes the key at `path`. |
 | `updateComponents` | Define the component tree. Components are FLAT: each has `id`, a `component` type string, and its props at the same level. Exactly one component must have `id: "root"`. |
 | `deleteSurface` | Remove a surface. |
@@ -81,27 +91,27 @@ Use `{"path": "/fieldName"}` as a prop value to bind it to the data model. When 
 {"id": "name", "component": "TextField", "label": "Name", "value": {"path": "/name"}}
 ```
 
-Do NOT include a `_bindings` prop — the renderer generates bindings automatically from path references.
+A `_bindings` prop is never emitted — the renderer generates bindings automatically from path references.
 
 ## Actions
 
-Buttons can have an event action that sends data back to you. The event wraps a `name` and a plain-object `context`:
+Buttons carry an event action that sends data back to the graph. The event wraps a `name` and a plain-object `context`:
 
 ```json
 {
   "action": {
     "event": {
-      "name": "formSubmit",
+      "name": "bookingSubmit",
       "context": {
-        "name": {"path": "/name"},
-        "email": {"path": "/email"}
+        "formId": "booking",
+        "origin": {"path": "/origin"}
       }
     }
   }
 }
 ```
 
-Context values can be path references (resolved at click time) or literal values.
+Context values can be path references (resolved at click time) or literal values. An event arrives back as a human-role JSON message, which is what `route` matches on.
 
 ## Validation (checks)
 
@@ -137,12 +147,10 @@ Compose with `and`, `or`, `not`:
 }
 ```
 
-## Rules
+## Invariants the emitted surfaces hold
 
-1. Always start with `---a2ui_JSON---` on the first line.
-2. One JSON message per line, no trailing commas or extra whitespace. Every envelope has `"version": "v0.9"`.
-3. Always send `createSurface` first, then `updateDataModel`, then `updateComponents`.
-4. Every component referenced in `children` / `child` / `trigger` / `content` must have a matching `id` in the components array.
-5. Exactly one component must have `id: "root"` — put it early in the first `updateComponents` so rendering can start immediately.
-6. Do NOT include `_bindings` in component definitions.
-7. When responding to a form submission (a `"version": "v0.9"` action message), respond in plain markdown — do NOT emit A2UI JSONL.
+1. The message body starts with `---a2ui_JSON---`, then one JSON envelope per line, every one carrying `"version": "v0.9"`.
+2. `createSurface` comes first, then `updateComponents`, then `updateDataModel` when there is a data model.
+3. Every component referenced in `children` / `child` / `trigger` / `content` has a matching `id` in the components array.
+4. Exactly one component has `id: "root"`, early in the components array so rendering can start immediately.
+5. No component definition carries `_bindings`.

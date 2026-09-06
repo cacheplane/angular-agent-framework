@@ -1,3 +1,8 @@
+---
+title: signalStateStore()
+description: API reference for signalStateStore() -- the signal-backed StateStore implementation, its JSON Pointer path rules, immutable updates, and reactive behavior.
+---
+
 # signalStateStore()
 
 Creates a reactive state store backed by Angular Signals that implements the `StateStore` interface from `@json-render/core`.
@@ -26,13 +31,16 @@ A `StateStore` object with the following interface:
 
 ```typescript
 interface StateStore {
-  get(path: string): unknown;
-  set(path: string, value: unknown): void;
-  update(updates: Record<string, unknown>): void;
-  getSnapshot(): StateModel;
-  subscribe(listener: () => void): () => void;
+  get: (path: string) => unknown;
+  set: (path: string, value: unknown) => void;
+  update: (updates: Record<string, unknown>) => void;
+  getSnapshot: () => StateModel;
+  getServerSnapshot?: () => StateModel;
+  subscribe: (listener: () => void) => () => void;
 }
 ```
+
+`getServerSnapshot` is an optional member of the `@json-render/core` interface used for server-side rendering. `signalStateStore()` does not implement it, so consumers fall back to `getSnapshot()`.
 
 ## Methods
 
@@ -63,7 +71,7 @@ Sets a single value at the given path. Performs an immutable update -- the path 
 store.set('/user/name', 'Bob');
 store.get('/user/name'); // 'Bob'
 
-// No-op if value hasn't changed
+// No-op if the value has not changed
 store.set('/user/name', 'Bob'); // no notification
 ```
 
@@ -135,6 +143,10 @@ Paths follow the [RFC 6901](https://datatracker.ietf.org/doc/html/rfc6901) JSON 
 | `/items/0` | First array element |
 | `/items/2/name` | `name` property of third array element |
 | `/a~1b` | Property named `a/b` |
+
+<Callout type="warning" title="The leading slash is required">
+A path without a leading `/` silently drops its first segment. `store.get('count')` returns the entire state object, and `store.set('count', 1)` replaces the entire state with `1` rather than writing `/count`. Always write `'/count'`.
+</Callout>
 
 ## Reactive Behavior
 

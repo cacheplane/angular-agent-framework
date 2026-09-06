@@ -1,6 +1,10 @@
+---
+description: Run the chat UI with no backend using provideFakeAgent(), what the canned stream contains, and when to construct FakeAgent with a script instead.
+---
+
 # Fake Agent
 
-`FakeAgent` is an in-process AG-UI `AbstractAgent` for frontend work when the backend isn't ready yet.
+`FakeAgent` is an in-process AG-UI `AbstractAgent` for frontend work when the backend is not ready yet.
 
 It emits a canned stream:
 
@@ -11,7 +15,7 @@ It emits a canned stream:
 5. `TEXT_MESSAGE_END`
 6. `RUN_FINISHED`
 
-It's for demos, story-like development, and tests. It's not a production transport.
+It is for demos, story-like development, and tests. It is not a production transport.
 
 ## Use the provider
 
@@ -93,11 +97,12 @@ That gives you the same `Agent` contract as `provideFakeAgent()`.
 | `tokens` | `string[]` | A short canned greeting | Emitted as text deltas in order. |
 | `reasoningTokens` | `string[]` | `[]` | Emitted before text deltas. |
 | `delayMs` | `number` | `60` | Delay between events after the initial start delay. |
+| `script` | `readonly { when: 'initial' \| { toolMessageFor: string }; events: readonly BaseEvent[] }[]` | `[]` | Constructor only — not part of `FakeAgentConfig`, so `provideFakeAgent()` cannot set it. Supplies a raw AG-UI event sequence per branch, wrapped in `RUN_STARTED` / `RUN_FINISHED`. |
 
 ## What it does not do
 
-`FakeAgent` does not call a model, execute tools, persist history, or simulate interrupts.
+`provideFakeAgent()` does not call a model, execute tools, persist history, or simulate interrupts. Constructed directly, `FakeAgent` accepts a `script` of raw AG-UI events for tests that need an exact stream, so tool calls, state, and interrupts are reachable that way.
 
-It's deliberately small. Use it to keep UI work moving, not to validate backend behavior.
+It is deliberately small. Use it to keep UI work moving, not to validate backend behavior.
 
 For backend integration, test against your real AG-UI endpoint and the event map in [Event Mapping](/docs/ag-ui/reference/event-mapping).

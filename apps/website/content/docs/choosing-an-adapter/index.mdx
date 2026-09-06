@@ -70,24 +70,24 @@ import { provideAgent as provideLangGraphAgent } from '@threadplane/langgraph';
 import { provideAgent as provideAgUiAgent } from '@threadplane/ag-ui';
 ```
 
-Each adapter uses its own private DI token internally, so providing both does not cause a runtime DI collision — but the developer ergonomics get awkward, and `<chat [agent]="agent" />` can only bind one Agent at a time. We recommend picking one adapter per app.
+Each adapter uses its own private DI token internally, so providing both does not cause a runtime DI collision — but the developer ergonomics get awkward, and `<chat [agent]="agent" />` can only bind one Agent at a time. Pick one adapter per app.
 
 ## Testing
 
 Three layers of test doubles, smallest scope first:
 
-| Layer | Use | What's real | When |
+| Layer | Use | What is real | When |
 |---|---|---|---|
 | **Contract mock** | `mockAgent()` (chat) / `mockLangGraphAgent()` (langgraph) | nothing — you set `messages()`, `status()` directly | component/unit tests |
 | **Fake backend** | `provideFakeAgent({ tokens })` (both adapters) | the real adapter pipeline; canned wire events | adapter-integration tests, in-browser, no server |
 | **LLM fixture replay** | aimock (workspace examples e2e) | the whole stack incl. a real graph; only the LLM is replayed | full end-to-end |
 
-Reach for the smallest layer that covers your test. Don't stand up aimock when a `mockAgent` unit test suffices; don't hand-roll a transport when `provideFakeAgent` exists.
+Reach for the smallest layer that covers your test. Do not stand up aimock when a `mockAgent` unit test suffices, and do not hand-roll a transport when `provideFakeAgent` exists.
 
 ## Measured runtime support
 
 The AG-UI adapter is protocol-first, so "any AG-UI backend plugs in" is a claim that can be tested rather than asserted.
-We tested it against three runtimes that have nothing to do with LangGraph, in two languages — first on 2026-08-31, and most recently on 2026-09-02 for the subagent cells.
+It was tested against three runtimes that have nothing to do with LangGraph, in two languages — first on 2026-08-31, and most recently on 2026-09-02 for the subagent cells.
 
 | Runtime | Messages | Tool calls | State | Interrupts | Subagents | Cause of any gap |
 |---|---|---|---|---|---|---|
@@ -100,7 +100,7 @@ Every gap in that table falls into one of three causes, and the distinction is t
 
 - **Protocol** — the AG-UI event vocabulary has no way to express the capability. Nothing an adapter or a backend author can do about it today.
 - **Upstream integration** — the protocol can express it, but the runtime's AG-UI bridge does not emit the events. Fixable upstream.
-- **Our adapter** — `@threadplane/ag-ui` failed to consume something the wire already carried. Our bug, and our responsibility.
+- **This adapter** — `@threadplane/ag-ui` failed to consume something the wire already carried. A Threadplane bug, and a Threadplane responsibility.
 
 No cell in the current matrix is caused by the protocol.
 The protocol carries first-class subagent events (`SUBAGENT_STARTED`, `SUBAGENT_FINISHED`, `SUBAGENT_ERROR`, and a `subagentRunId` attribution field on content events), and `@threadplane/ag-ui` consumes them; a backend reaches them with a small emitter at its bridge boundary.
@@ -135,7 +135,7 @@ Strands surfaces the specialist's tool use and streamed tokens through a per-too
 On Microsoft Agent Framework the specialist's updates stream in-process into the tool body, and the in-tree emitter merges them across the bridge boundary, so the card streams live there too.
 Mastra streams the child's chunks in-process on the parent stream, but its bridge drops them and withholds the delegation tool call until the child resolves; the in-tree emitter therefore observes the runtime's public stream through a tee ahead of the bridge, emits the delegation tool call eagerly, and forwards the child's deltas under the subagent identity, so the card mounts while the child runs and streams live there too.
 All three cards stream live; the Mastra card streams through the tee rather than through the bridge, a property of the runtime's bridge rather than of the protocol or the adapter.
-Each demo backend ships its emitter in tree, roughly 190 to 360 lines per runtime.
+Each demo backend ships its emitter in tree, roughly 200 to 430 lines per runtime.
 
 ### How this was measured
 
@@ -153,7 +153,7 @@ Each runtime has a standalone Angular example bound through `@threadplane/ag-ui`
 - [`cockpit/runtimes/microsoft-agent-framework`](https://github.com/cacheplane/angular-agent-framework/tree/main/cockpit/runtimes/microsoft-agent-framework) — Python, hosted in that same FastAPI deployment, running beside the Strands and LangGraph topics in one process.
 - [`cockpit/runtimes/mastra`](https://github.com/cacheplane/angular-agent-framework/tree/main/cockpit/runtimes/mastra) — TypeScript, hosted by a Node AG-UI service, because the upstream Mastra integration ships an in-process bridge rather than an HTTP endpoint.
 
-In all three, the Angular component is ordinary `<chat [agent]="agent" />` over `injectAgent()`.
+In all three, the component binds the agent through `injectAgent()` and renders `<chat [agent]="agent" />`; the shared-state panels and approval cards around it are demo-specific, and each example wraps `provideAgent()` in a factory only because it resolves its endpoint at runtime.
 
 ## Why two adapters?
 

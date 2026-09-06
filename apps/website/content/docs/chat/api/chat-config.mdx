@@ -1,6 +1,12 @@
+---
+description: The ChatConfig interface accepted by provideChat(), its three optional fields, and how to read the CHAT_CONFIG token from your own components.
+---
+
 # ChatConfig
 
 `ChatConfig` is the configuration interface accepted by `provideChat()`. The object is stored under `CHAT_CONFIG` for application code that wants shared chat defaults.
+
+No library component reads `CHAT_CONFIG` today. Every field below is a value your own components inject and apply; the shipped chat components ignore the token entirely.
 
 **Import:**
 

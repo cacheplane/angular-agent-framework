@@ -1,3 +1,7 @@
+---
+description: Install @threadplane/chat with a LangGraph or AG-UI adapter, confirm the Angular and peer-dependency requirements, and render a first chat surface.
+---
+
 # Installation
 
 Install `@threadplane/chat`, a runtime adapter, and the markdown parser. Every
@@ -21,7 +25,7 @@ The chat UI needs something to talk to. Two officially supported adapters cover 
 - **`@threadplane/langgraph`** — pick this if your backend is LangGraph or LangGraph Platform.
 - **`@threadplane/ag-ui`** — pick this for an AG-UI-compatible backend such as CrewAI, Mastra, Microsoft Agent Framework, AG2, Pydantic AI, or AWS Strands.
 
-Both adapters expose the same `Agent` contract to `@threadplane/chat`, so swapping later is a one-line change. If you don't have a backend yet, use `mockAgent()` from `@threadplane/chat` to wire up the UI first.
+Both adapters expose the same `Agent` contract to `@threadplane/chat`, so swapping later is a one-line change. If you do not have a backend yet, use `mockAgent()` from `@threadplane/chat` to wire up the UI first.
 
 </Step>
 </Steps>
@@ -36,20 +40,36 @@ npm install @threadplane/chat @threadplane/langgraph @langchain/core @langchain/
 npm install @threadplane/chat @threadplane/ag-ui @ag-ui/client @ag-ui/core marked
 ```
 
-`@threadplane/chat` also uses `@threadplane/render`, `@threadplane/a2ui`,
-`@json-render/core`, RxJS, and Zod as peer dependencies. npm 7 and later
-install required peers automatically. KaTeX is optional.
+`@threadplane/chat` also uses `@threadplane/telemetry`, `@threadplane/render`,
+`@threadplane/a2ui`, `@json-render/core`, RxJS, and Zod as peer dependencies.
+npm 7 and later install required peers automatically. KaTeX is optional.
 
 <Callout type="info" title="Full peer dependency list">
-  `@threadplane/chat` declares peers on `@angular/core`, `@angular/common`,
-  `@angular/platform-browser`, `@angular/router` (all `^20.0.0 || ^21.0.0 ||
-  ^22.0.0`), plus `@threadplane/render`, `@threadplane/a2ui`,
-  `@json-render/core` (`^0.16.0`), `@langchain/core` (`^1.1.33`), `rxjs`
-  (`~7.8.0`), `marked` (`^15 || ^16`), `zod` (`^3.25.0`), and optional `katex`
-  (`^0.16.0 || ^0.17.0`). npm 7+ installs all required peers automatically.
+These are the peers `@threadplane/chat@0.0.66` declares. npm 7 and later install
+every required peer for you, so the install command above is enough.
+
+| Peer | Range | Required |
+|---|---|---|
+| `@angular/core` | `^20.0.0 \|\| ^21.0.0 \|\| ^22.0.0` | yes |
+| `@angular/common` | `^20.0.0 \|\| ^21.0.0 \|\| ^22.0.0` | yes |
+| `@angular/platform-browser` | `^20.0.0 \|\| ^21.0.0 \|\| ^22.0.0` | yes |
+| `@angular/router` | `^20.0.0 \|\| ^21.0.0 \|\| ^22.0.0` | yes |
+| `@threadplane/telemetry` | `^0.0.66` | yes |
+| `@threadplane/render` | `0.0.66` | yes |
+| `@threadplane/a2ui` | `0.0.66` | yes |
+| `@json-render/core` | `^0.16.0` | yes |
+| `@langchain/core` | `^1.1.33` | yes |
+| `rxjs` | `~7.8.0` | yes |
+| `marked` | `^15.0.0 \|\| ^16.0.0` | yes |
+| `zod` | `^3.25.0` | yes |
+| `katex` | `^0.16.0 \|\| ^0.17.0` | optional |
+
+Installing `@threadplane/chat` therefore also brings in `@threadplane/telemetry`,
+`@threadplane/render`, `@threadplane/a2ui`, `@json-render/core`,
+`@langchain/core`, `rxjs`, `marked`, and `zod`.
 </Callout>
 
-## 2. Configure the runtime and chat
+## 2. Configure the runtime
 
 ```ts
 import {
@@ -57,7 +77,6 @@ import {
   provideZonelessChangeDetection,
 } from '@angular/core';
 import { provideAgent } from '@threadplane/langgraph';
-import { provideChat } from '@threadplane/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -66,15 +85,20 @@ export const appConfig: ApplicationConfig = {
       apiUrl: 'http://localhost:2024',
       assistantId: 'chat',
     }),
-    provideChat({
-      assistantName: 'Assistant',
-      avatarLabel: 'AI',
-    }),
   ],
 };
 ```
 
-`provideChat()` is optional when you do not need shared defaults.
+That is the only provider `<chat>` needs.
+
+<Callout type="warning" title="provideChat() does not configure the built-in components">
+`provideChat()` parks a `ChatConfig` object on the `CHAT_CONFIG` injection token
+for your own components to read. No component in `@threadplane/chat` injects that
+token, so calling it changes nothing about what `<chat>` renders — including
+`assistantName` and `avatarLabel`, which no built-in component displays. Call it
+only when your own wrappers inject `CHAT_CONFIG`. See
+[Configuration](/docs/chat/guides/configuration).
+</Callout>
 
 ## 3. Render your first chat
 
@@ -93,8 +117,9 @@ export class AppComponent {
 }
 ```
 
-If you do not have a backend yet, use `mockAgent()` from
-`@threadplane/chat/testing` to exercise the UI.
+If you do not have a backend yet, use `mockAgent()` from `@threadplane/chat` to
+exercise the UI. The `@threadplane/chat/testing` entry point is separate: it
+carries the conformance runners and fixtures, not `mockAgent()`.
 
 ## Troubleshooting
 

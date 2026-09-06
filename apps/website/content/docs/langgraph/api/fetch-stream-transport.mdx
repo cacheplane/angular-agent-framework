@@ -1,32 +1,50 @@
+---
+description: FetchStreamTransport is the production LangGraph transport — it wraps the SDK client, streams runs, joins and cancels them, and loads checkpoint history.
+---
+
 # FetchStreamTransport
 
 `FetchStreamTransport` is the production transport for LangGraph Platform. It wraps the LangGraph SDK client, creates threads when needed, starts streaming runs, joins queued runs, cancels runs, loads history, and updates thread state for operations such as regenerate rollback.
 
 ## When you interact with it directly
 
-In most apps you never instantiate `FetchStreamTransport` directly. When no custom transport is configured, `provideAgent()` creates one from the resolved `apiUrl` and `onThreadId` callback.
+In most apps you never instantiate `FetchStreamTransport` directly. When no custom transport is configured, the runtime creates one from the resolved `apiUrl`, `onThreadId`, and `clientOptions`.
 
 You reach for it explicitly when you want to share a transport instance, inspect behavior in tests, or implement a custom transport by matching the same `AgentTransport` interface.
 
 ```ts
 // app.config.ts
+import { signal, type ApplicationConfig } from '@angular/core';
 import { provideAgent, FetchStreamTransport } from '@threadplane/langgraph';
 
-const transport = new FetchStreamTransport(
-  'http://localhost:2024',
-  (threadId) => localStorage.setItem('threadId', threadId),
-);
+const apiUrl = 'http://localhost:2024';
+const threadId = signal<string | null>(localStorage.getItem('threadId'));
+
+const transport = new FetchStreamTransport(apiUrl, (id) => {
+  threadId.set(id);
+  localStorage.setItem('threadId', id);
+});
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({
-      apiUrl: 'http://localhost:2024',
+      apiUrl,
       assistantId: 'support-agent',
+      threadId,
       transport,
     }),
   ],
 };
 ```
+
+<Callout type="warning" title="A custom transport has to report the ids it creates">
+The runtime only wraps `onThreadId` for the transport it constructs itself. A
+transport you pass in owns its own thread creation, so every id it creates must
+reach the runtime through the configured `onThreadId` callback or through the
+`threadId` signal — as above, where the constructor callback writes both. Report
+neither and the runtime keeps sending `null`, so every `submit()` starts a fresh
+thread.
+</Callout>
 
 ## How it works
 
@@ -53,21 +71,18 @@ The transport handles:
 <CardGroup cols={3}>
   <Card
     title="Streaming Guide"
-    icon="wave-sine"
     href="/docs/langgraph/guides/streaming"
   >
     Learn how the SSE lifecycle maps to resource signals and how to handle reconnects.
   </Card>
   <Card
     title="Deployment"
-    icon="server"
     href="/docs/langgraph/guides/deployment"
   >
     Server configuration for SSE: headers, timeouts, and edge runtime considerations.
   </Card>
   <Card
     title="MockAgentTransport"
-    icon="flask"
     href="/docs/langgraph/api/mock-stream-transport"
   >
     The test-time counterpart — push values synchronously without a real server.

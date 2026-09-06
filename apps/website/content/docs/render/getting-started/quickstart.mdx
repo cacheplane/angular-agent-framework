@@ -1,3 +1,7 @@
+---
+description: Render a JSON spec as a live Angular component tree: build a component, define a registry, write a spec, then add reactive state with signalStateStore().
+---
+
 # Quick Start
 
 Render a JSON spec as a live Angular component tree in 5 minutes.
@@ -9,7 +13,7 @@ Angular 20–22 project with `@threadplane/render` installed. See the [Installat
 <Steps>
 <Step title="Create a component to render">
 
-Let's start with a simple Angular component for the spec to render. Every rendered component receives inputs matching the `AngularComponentInputs` interface -- your custom props are spread alongside the standard inputs.
+Start with a simple Angular component for the spec to render. Every rendered component receives inputs matching the `AngularComponentInputs` interface -- your custom props are spread alongside the standard inputs.
 
 ```typescript
 // text.component.ts
@@ -47,7 +51,7 @@ export const uiRegistry = defineAngularRegistry({
 </Step>
 <Step title="Build a spec">
 
-Now let's describe the UI tree itself. A spec is a flat map of elements, and the `root` key points to the entry element.
+Now describe the UI tree itself. A spec is a flat map of elements, and the `root` key points to the entry element.
 
 ```typescript
 // app.component.ts
@@ -136,7 +140,7 @@ Clicking the button updates the store, which reactively updates the rendered `Te
 
 ## Using Spec-Embedded State
 
-You can also embed initial state right in the spec. When you don't pass an external store, `RenderSpecComponent` creates an internal `signalStateStore` from `spec.state` for you:
+You can also embed initial state right in the spec. `RenderSpecComponent` creates an internal `signalStateStore` from `spec.state` when neither a `[store]` input nor a `store` in `provideRender()` is present. The internal store is created once for the component instance and reused across spec changes -- a later spec's `state` is not re-applied.
 
 ```typescript
 spec: Spec = {

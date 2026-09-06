@@ -16,9 +16,9 @@ This page records the AG-UI wire behavior measured for Mastra on 2026-08-31. It 
 | `/ok` | `GET` | None | Health check. |
 | `/agent/mastra` | `POST` | `X-Internal-Token` | `RunAgentInput` JSON in, Server-Sent Events out. |
 
-The service refuses to boot without `AG_UI_INTERNAL_TOKEN`, rejects any non-health route without a matching header, and maps an error from the underlying observable to a `RUN_ERROR` frame rather than dropping the socket. Every other route returns `401 {"detail":"unauthorized"}`.
+The service refuses to boot without `AG_UI_INTERNAL_TOKEN`, rejects any non-health route without a matching header, and maps an error from the underlying observable to a `RUN_ERROR` frame rather than dropping the socket. Any route other than `/ok` that arrives without a matching header returns `401 {"detail":"unauthorized"}`; with a valid token, an unknown path or method returns `404 {"detail":"not found"}` and an unregistered topic returns `404 {"detail":"no such topic: <topic>"}`.
 
-On the Angular side this is still an ordinary `provideAgent({ url: '/agent' })`. The token is injected by the dev proxy in front of the app, never by the browser.
+In your own application this is still an ordinary `provideAgent({ url: '/agent' })`; the example in this repository passes a factory only because it resolves its endpoint at runtime. The token is injected by the dev proxy in front of the app, never by the browser.
 
 ## Interrupts arrive by both conventions
 

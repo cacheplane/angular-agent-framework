@@ -1,6 +1,10 @@
+---
+description: How planning, tool execution, subagents, and checkpoints work in a LangGraph agent, and which injectAgent() signal surfaces each one in Angular
+---
+
 # Agent Architecture
 
-How AI agents work — the planning, execution, and tool-calling lifecycle that `injectAgent()` connects your Angular app to. Let's walk the Python patterns behind modern agents and see exactly how each one surfaces in Angular through `@threadplane/langgraph`.
+How AI agents work — the planning, execution, and tool-calling lifecycle that `injectAgent()` connects your Angular app to. This page walks the Python patterns behind modern agents and see exactly how each one surfaces in Angular through `@threadplane/langgraph`.
 
 <Callout type="info" title="Python + Angular, both sides">
 Every section below shows the Python backend code first, then the Angular frontend code that consumes it. You need both halves to build a production agent application — LangGraph handles the intelligence, `injectAgent()` handles the reactivity.
@@ -8,7 +12,7 @@ Every section below shows the Python backend code first, then the Angular fronte
 
 ## The Agent Loop
 
-Every agent follows a five-phase cycle. It's worth understanding, because each phase maps to a specific `injectAgent()` signal in your Angular app.
+Every agent follows a five-phase cycle. It is worth understanding, because each phase maps to a specific `injectAgent()` signal in your Angular app.
 
 <Steps>
 <Step title="Receive">
@@ -194,11 +198,11 @@ export class ReactAgentComponent {
 </Tab>
 </Tabs>
 
-Here's the key insight: `should_continue` is the decision point. If the LLM's response contains `tool_calls`, the graph routes to the `tools` node. If not, it ends. After tools execute, the graph loops back to `model` so the LLM can reason about the tool results. This loop continues until the LLM responds without requesting any tools.
+The key insight: `should_continue` is the decision point. If the LLM's response contains `tool_calls`, the graph routes to the `tools` node. If not, it ends. After tools execute, the graph loops back to `model` so the LLM can reason about the tool results. This loop continues until the LLM responds without requesting any tools.
 
 ## Tool Calling Deep Dive
 
-Tools are how agents interact with the outside world. You'll want both halves here — the Python definition and the Angular consumption.
+Tools are how agents interact with the outside world. Both halves matter here — the Python definition and the Angular consumption.
 
 ### Defining Tools in Python
 
@@ -506,8 +510,8 @@ export class AgentComponent {
   error = computed(() => this.agent.error());
 
   retry() {
-    // Re-submit the last message to retry
-    this.agent.submit(this.lastInput);
+    // Re-run the last submitted input; clears error() and sets loading
+    this.agent.retry();
   }
 }
 ```
@@ -591,8 +595,7 @@ Bind to those fields when you render the timeline (for the raw per-node metadata
         <button
           [class.active]="checkpoint.id === currentCheckpoint()"
           (click)="timeTravel(checkpoint.id)">
-          <span class="node">{{ checkpoint.node }}</span>
-          <span class="time">{{ checkpoint.timestamp | date:'medium' }}</span>
+          <span class="node">{{ checkpoint.label }}</span>
         </button>
       }
     </div>
@@ -625,7 +628,7 @@ When you submit from a previous checkpoint, LangGraph creates a new branch from 
 
 ## Choosing an Architecture
 
-Not every application needs a multi-agent swarm. Here's how I'd pick the right level of complexity — and why simpler usually wins until it can't.
+Not every application needs a multi-agent swarm. Here is how to pick the right level of complexity — and why simpler usually wins until it does not.
 
 ### Single Agent with Tools
 

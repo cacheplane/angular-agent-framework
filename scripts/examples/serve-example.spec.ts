@@ -1,5 +1,6 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { backendCommand, COCKPIT_RUNTIME_ENV, formatAllModeSummary } from './serve-example';
+import { backendCommand, formatAllModeSummary } from './serve-example';
 import { capabilities, findCapability, type Capability } from '@threadplane/cockpit-registry';
 
 describe('backendCommand', () => {
@@ -38,12 +39,16 @@ describe('backendCommand', () => {
     expect(backendCommand(noPy)).toBeNull();
   });
 
-  it('exposes an empty runtime base URL so the cockpit iframe targets localhost', () => {
-    expect(COCKPIT_RUNTIME_ENV).toEqual({ NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL: '' });
-  });
-
   it('formats the all-mode startup summary from the registry count', () => {
-    expect(formatAllModeSummary()).toBe(`\nStarting cockpit + all ${capabilities.length} examples\n`);
+    expect(formatAllModeSummary()).toBe(`\nStarting all ${capabilities.length} examples\n`);
     expect(formatAllModeSummary()).not.toContain('14 examples');
+  });
+});
+
+describe('serve-example orchestration', () => {
+  it('starts no shell app of its own — only the example and its backend', () => {
+    const source = readFileSync(new URL('./serve-example.ts', import.meta.url), 'utf8');
+    expect(source).not.toContain('nx serve cockpit');
+    expect(source).not.toContain('4201');
   });
 });

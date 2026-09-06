@@ -38,11 +38,11 @@ The return value is the commit: LangGraph saves the state a node returns before 
 
 ### The node that ends the run
 
-`generate` is where the shape changes. The first two nodes append to the message list they received, so the intermediate analysis and outline accumulate in state. The last node returns two messages, and because `messages` has no reducer that return replaces the list. Note what it takes as the first of the two: `state["messages"][-1]` is the plan node's response, not the original question, so the thread the reader is left with is the outline re-labeled as a user turn plus the final answer.
+`generate` is where the shape changes. The first two nodes append to the message list they received, so the intermediate analysis and outline accumulate in state. The last node returns two messages, and because `messages` has no reducer that return replaces the list. It scans backwards for the newest human message rather than reading `state["messages"][-1]`, which by that point is the plan node's outline, so the pair it commits is the user's original question and the final answer.
 
 <ExampleCode file="graph.py" region="generate" title="graph.py — the generate node" />
 
-The scratch work exists for exactly as long as the run needs it: once `generate` commits, the thread holds those two messages and nothing else.
+The scratch work exists for exactly as long as the run needs it: once `generate` commits, the thread holds the question and the answer, and the analysis and outline are gone.
 
 ### Wiring the three nodes
 

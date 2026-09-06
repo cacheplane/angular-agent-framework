@@ -5,14 +5,15 @@ import type { ThreadState } from '@threadplane/langgraph';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
 
 /**
- * TimeTravelComponent demonstrates replaying and branching conversation history.
+ * TimeTravelComponent demonstrates selecting and forking from past checkpoints.
  *
  * Layout: chat panel (flex-1) + checkpoint timeline sidebar (w-72).
  *
  * Key integration points:
- * - `stream.history()` -- array of ThreadState snapshots
- * - `stream.branch()` -- current branch identifier
- * - `stream.setBranch(id)` -- switch to a different checkpoint
+ * - `agent.langGraphHistory()` -- array of ThreadState snapshots
+ * - `agent.branch()` -- current branch identifier
+ * - `agent.setBranch(id)` -- record a checkpoint as the active branch
+ * - `agent.submit(input, { checkpointId })` -- run from a past checkpoint
  */
 @Component({
   selector: 'app-time-travel',
@@ -173,10 +174,10 @@ import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
               <div class="actions">
                 <button
                   class="btn"
-                  title="Replay from this checkpoint"
-                  (click)="replay(state, i)"
+                  title="Select this checkpoint as the active branch"
+                  (click)="select(state, i)"
                 >
-                  Replay
+                  Select
                 </button>
                 <button
                   class="btn"
@@ -219,20 +220,34 @@ export class TimeTravelComponent {
   }
 
   // #region branch
-  /** Replay the conversation from the given checkpoint. */
-  protected replay(state: ThreadState<any>, index: number): void {
+  /**
+   * Mark a checkpoint as the active branch.
+   *
+   * `setBranch()` records the identifier in the agent's `branch()` signal.
+   * It starts no run: it is a pointer the interface can read back.
+   */
+  protected select(state: ThreadState<any>, index: number): void {
     if (state.checkpoint?.checkpoint_id) {
       this.selectedIndex.set(index);
       this.agent.setBranch(state.checkpoint.checkpoint_id);
     }
   }
 
-  /** Fork the conversation from the given checkpoint. */
+  /**
+   * Start a new run from the given checkpoint.
+   *
+   * Passing `checkpointId` to `submit()` resumes the thread at that point
+   * rather than at its tip, so the new run hangs off the chosen checkpoint
+   * and the original path stays intact.
+   */
   protected fork(state: ThreadState<any>, index: number): void {
-    if (state.checkpoint?.checkpoint_id) {
-      this.selectedIndex.set(index);
-      this.agent.setBranch(state.checkpoint.checkpoint_id);
-    }
+    const checkpointId = state.checkpoint?.checkpoint_id;
+    if (!checkpointId) return;
+    this.selectedIndex.set(index);
+    void this.agent.submit(
+      { message: 'Try a different approach from here.' },
+      { checkpointId },
+    );
   }
   // #endregion
 }

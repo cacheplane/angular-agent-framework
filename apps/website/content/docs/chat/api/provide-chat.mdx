@@ -1,3 +1,7 @@
+---
+description: How provideChat() registers the CHAT_CONFIG token, what ChatConfig carries, and why the values are for components you write yourself.
+---
+
 # provideChat()
 
 `provideChat` is the provider factory that registers `@threadplane/chat` configuration in Angular's dependency injection system. Call it in your `ApplicationConfig` or at the route level when you need a shared `CHAT_CONFIG` value.
@@ -123,11 +127,7 @@ export const routes: Routes = [
 
 ### Without provideChat()
 
-All chat components work without `provideChat()`. They use defaults:
-
-- Avatar label: `"A"`
-- Assistant name: `"Assistant"`
-- Generative UI still requires the `[views]` input on `ChatComponent`
+All chat components work without `provideChat()`. No library component reads `CHAT_CONFIG` today, so the `avatarLabel` and `assistantName` values are conventions for wrapper components you write yourself rather than settings the shipped components consume. Generative UI still requires the `[views]` input on `ChatComponent`.
 
 ```typescript
 // This works fine without provideChat()
@@ -154,21 +154,18 @@ export class SimpleChatComponent {
 <CardGroup cols={3}>
   <Card
     title="ChatConfig"
-    icon="settings"
     href="/docs/chat/api/chat-config"
   >
     Full ChatConfig interface reference.
   </Card>
   <Card
     title="Generative UI"
-    icon="layout"
     href="/docs/chat/guides/generative-ui"
   >
     Set up view registries for dynamic UI components.
   </Card>
   <Card
     title="Configuration Guide"
-    icon="book"
     href="/docs/chat/guides/configuration"
   >
     Configuration patterns and best practices.

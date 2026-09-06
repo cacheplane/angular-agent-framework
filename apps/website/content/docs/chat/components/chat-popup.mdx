@@ -1,3 +1,7 @@
+---
+description: The ChatPopupComponent launcher and overlay window - inputs, outputs, methods, projection slots, and how to reposition the fixed launcher.
+---
+
 # ChatPopupComponent
 
 `ChatPopupComponent` is a composition that renders a floating launcher button in the bottom-right corner of the screen. Clicking the launcher opens a chat window as an overlay. The window can be toggled open and closed without destroying conversation state.
@@ -69,7 +73,8 @@ export class AppComponent {
 
 | Slot | Selector | Description |
 |------|----------|-------------|
-| Header content | `[chatHeader]` | Projected into the chat window header bar. Replaces the default title |
+| Header content | `[chatHeader]` | Forwarded to the inner `<chat>` window header bar, which is empty by default |
+| Welcome suggestions | `[chatWelcomeSuggestions]` | Forwarded to the inner `<chat>` welcome-state suggestion area |
 
 ### Methods
 
@@ -121,12 +126,12 @@ Project content into the window header with the `[chatHeader]` slot:
 
 ## Styling
 
-The popup uses the standard `--tplane-chat-*` token system. To adjust the launcher position:
+The popup uses the standard `--tplane-chat-*` token system. The launcher position is not tokenized: the host is `position: fixed; bottom: 1rem; right: 1rem`, so move it by overriding those properties on the host element from a global stylesheet:
 
 ```css
 chat-popup {
-  --tplane-chat-launcher-offset-x: 1.5rem;
-  --tplane-chat-launcher-offset-y: 1.5rem;
+  bottom: 1.5rem;
+  right: 1.5rem;
 }
 ```
 

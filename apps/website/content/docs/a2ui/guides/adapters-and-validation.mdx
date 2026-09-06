@@ -1,3 +1,7 @@
+---
+description: Consume an A2UI stream with the parser, narrow dynamic values with the guards, build test payloads, and back a custom renderer.
+---
+
 # Validating and adapting an A2UI stream
 
 Take a streaming agent response, turn it into typed A2UI messages, narrow the dynamic values, and feed a renderer — with the right amount of validation for your trust level.
@@ -51,7 +55,7 @@ isFunctionCall({ call: 'formatString' });   // true
 In v0.9, literals are bare JSON values — `"x"`, `5`, `true`, `["a", "b"]` — with no wrapper objects. A `typeof` check (or simply not matching either guard) is all it takes to identify one, so there are no literal guards to import.
 </Callout>
 
-For most rendering you don't branch on guards at all — `resolveDynamic` already handles literals, paths, arrays, function calls, and passthrough in one call. Reach for the guards when you need to *narrow a type* or make a decision before resolving.
+For most rendering you do not branch on guards at all — `resolveDynamic` already handles literals, paths, arrays, function calls, and passthrough in one call. Reach for the guards when you need to *narrow a type* or make a decision before resolving.
 
 ## Build payloads for tests
 
@@ -89,11 +93,11 @@ function renderText(props: { text: unknown }, model: Record<string, unknown>) {
 }
 ```
 
-The full mechanics — component resolution, event dispatch, action emission, surface store — are exactly what Threadplane's own Angular renderer, `@threadplane/chat`'s [`<a2ui-surface>`](/docs/chat/getting-started/introduction), already implements. If you're on Angular, use it rather than re-deriving it. A custom renderer makes sense when you're on another platform or have rendering needs the component doesn't cover.
+The full mechanics — component resolution, event dispatch, action emission, surface store — are exactly what Threadplane's own Angular renderer, `@threadplane/chat`'s [`<a2ui-surface>`](/docs/chat/a2ui/surface-component), already implements. If you are on Angular, use it rather than re-deriving it. A custom renderer makes sense when you are on another platform or have rendering needs the component does not cover.
 
 ## A tradeoff: the parser swallows parse errors
 
-For me, the parser's silent-skip behavior is the right default — it's what lets a half-streamed line not blow up a live render, and it's why feeding raw agent output Just Works. The cost is honest: the parser is not a validator. It will quietly drop a malformed line and ignore an unknown envelope, so a structurally-wrong payload simply produces fewer messages, not an error you can catch.
+The parser's silent-skip behavior is the right default: it is what lets a half-streamed line avoid blowing up a live render, and it is what makes feeding raw agent output straight through work. The cost is real: the parser is not a validator. It will quietly drop a malformed line and ignore an unknown envelope, so a structurally-wrong payload simply produces fewer messages, not an error you can catch.
 
 So the rule of thumb: if you need strictness, validate the parsed `A2uiMessage[]` *after* `push` returns — assert the envelope kinds and shapes you expect, rather than counting on the parser to reject bad input. The parser optimizes for streaming resilience; strict validation is your boundary's job.
 
