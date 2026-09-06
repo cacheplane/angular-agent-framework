@@ -76,9 +76,9 @@ The adapter exposes `messages`, `status`, `isLoading`, `error`, `toolCalls`, `st
 | AG-UI event | Surface | Behavior |
 | --- | --- | --- |
 | `RUN_STARTED` | `status`, `isLoading`, `error`, `interrupt`, `customEvents`, `subagents` | Sets `status` to `running` and `isLoading` to `true`; clears the error, the pending interrupt, the accumulated custom events, the subagent map, and any unfinished tool-argument buffer. Ignored when the event's run id does not match the run already bound to this delivery. |
-| `RUN_FINISHED` (no outcome, or a success outcome) | `status`, `isLoading`, `messages` | Completes the run, sets `status` to `idle` and `isLoading` to `false`, and settles the run's messages. |
+| `RUN_FINISHED` (no outcome, or a success outcome) | `status`, `isLoading`, `messages` | Completes the run, sets `status` to `idle` and `isLoading` to `false`, and settles the run's messages. Ignored on the same run-id gate as `RUN_STARTED`. |
 | `RUN_FINISHED` (outcome `{ type: 'interrupt' }`) | `interrupt`, `status`, `isLoading` | Sets `interrupt` to `{ id, value: { interrupts, runId }, resumable: true }`, ends the run as paused, and returns the agent to `idle`. A `CUSTOM` `on_interrupt` that already paused this run keeps its own value. |
-| `RUN_ERROR` | `status`, `isLoading`, `error` | Ends the run as failed, sets `status` to `error`, stops loading, and stores the event's `message` as an error (the raw event when no message is present). |
+| `RUN_ERROR` | `status`, `isLoading`, `error` | Ends the run as failed, sets `status` to `error`, stops loading, and stores the event's `message` as an error (the raw event when no message is present). Ignored on the same run-id gate as `RUN_STARTED`. |
 | `STEP_STARTED`, `STEP_FINISHED` | none | Not reduced. Node boundaries pass through untouched. |
 
 ### Messages
@@ -160,7 +160,7 @@ Every non-interrupt custom event is fanned out to two surfaces, not one. Reach f
 
 | AG-UI event | Surface | Behavior |
 | --- | --- | --- |
-| `SUBAGENT_STARTED` | `subagents` | Creates the entry for `subagentRunId` with status `running`, or fills in the identity of an entry a child content event created first. `toolCallId` becomes `parentToolCallId ?? subagentRunId`. |
+| `SUBAGENT_STARTED` | `subagents` | Creates the entry for `subagentRunId` with status `running`, or fills in the identity of an entry a child content event created first. `toolCallId` becomes `parentToolCallId`, else the id an earlier activity entry recorded, else `subagentRunId`. |
 | `SUBAGENT_FINISHED` | `subagents` | Marks the entry `complete` and records `result`. An outcome of `{ type: 'suspended' }` keeps it `running`. |
 | `SUBAGENT_ERROR` | `subagents` | Marks the entry `error` and records `message`. |
 | `ACTIVITY_SNAPSHOT` | `subagents` | Creates or merges an activity entry; `replace: true` overwrites its content rather than merging. Entries with `activityType: 'subagent'` project into `subagents()`. |
@@ -176,7 +176,7 @@ Text and tool events may also carry a `subagentRunId`. An attributed content eve
 
 ## Submit, stop, and failures
 
-`agent.submit({ message })` builds a local user message, appends it to `messages` and to the source agent's own list, and starts the run. When `message` is omitted no user message is appended, and the run still starts — that is the path `submit({ resume })` takes to continue a paused run. `agent.retry()` re-runs the last input without appending the message again, and `agent.regenerate(index)` truncates the transcript back to the preceding user message before re-running.
+`agent.submit({ message })` builds a local user message, appends it to `messages` and to the source agent's own list, and starts the run. When `message` is omitted no user message is appended and the run still starts. `submit({ resume })` is a separate path: it clears the pending interrupt and replays the run with the resume payload, shaped by how that interrupt arrived. `agent.retry()` re-runs the last input without appending the message again, and `agent.regenerate(index)` truncates the transcript back to the preceding user message before re-running.
 
 `agent.stop()` ends the current run locally as aborted, clears the error, and calls `source.abortRun()`. Whether the backend stops producing depends on the AG-UI source implementation.
 
