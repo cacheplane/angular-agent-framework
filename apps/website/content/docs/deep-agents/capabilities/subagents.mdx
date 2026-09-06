@@ -1,6 +1,6 @@
 ---
 title: Subagents
-description: Passing subagents to create_deep_agent installs a task tool, and every dispatch runs as a real child graph that renders as its own card.
+description: Passing subagents to create_deep_agent puts your specialists on the task tool, and every dispatch runs as a real child graph that renders as its own card.
 ---
 
 # Subagents
@@ -9,7 +9,7 @@ Delegation in Deep Agents is one tool. `SubAgentMiddleware` registers a tool nam
 
 ## What the demo does
 
-The Run tab shows the prebuilt `<chat>` composition beside a sidebar holding the specialist roster and a live dispatch count. The first welcome suggestion asks for a brief on KASE and KDEN, covering field data and weather at both, and the orchestrator answers by dispatching four specialists in a single turn: four cards appear in the conversation at once, each expanded while its child works and collapsed to a status pill when it reports. The second suggestion asks for the field data at KSFO alone, which is one dispatch and one card, so the two suggestions are the fan-out and the single case side by side. The orchestrator has no lookup tools of its own, so there is no run in which it answers without delegating.
+The Run tab shows the prebuilt `<chat>` composition beside a sidebar holding the specialist roster and a live dispatch count. The first welcome suggestion asks for a brief on KASE and KDEN, covering field data and weather at both, and the orchestrator answers by dispatching four specialists in a single turn: four cards appear in the conversation at once, each expanded while its child works and collapsed to its header row when it reports. The second suggestion asks for the field data at KSFO alone, which is one dispatch and one card, so the two suggestions are the fan-out and the single case side by side. The orchestrator has no lookup tools of its own, so there is no run in which it answers without delegating.
 
 ## How it is built
 
@@ -31,7 +31,7 @@ Omitting `tools` would inherit the main agent's tools instead, which is the oppo
 
 ### Installing the task tool
 
-`create_deep_agent` assembles a middleware stack. Passing `subagents` is what puts `SubAgentMiddleware` on that stack, and the middleware is what registers `task`. The demo passes no tools of its own, so delegation is the only path to an answer.
+`create_deep_agent` assembles a middleware stack, and `SubAgentMiddleware` is already on it: the factory adds a `general-purpose` subagent unless that one is explicitly disabled, so the `task` tool ships by default. Passing `subagents` is what puts your own specialists on that tool. The demo passes no tools of its own, so delegation is the only path to an answer.
 
 <ExampleCode file="graph.py" region="orchestrator" title="graph.py — the orchestrator" />
 
@@ -78,12 +78,12 @@ The `<chat>` composition already renders every dispatch as a card inside the con
 
 Two independent things have to happen for a `task` call to render as a child agent, and they come from opposite ends of the run.
 
-The first is registration. When the orchestrator's message carries a `task` tool call, the tracker records a dispatch keyed by the tool-call id, reading `subagent_type` out of the arguments. That name becomes the card's label, and a call with no usable `subagent_type` is ignored rather than tracked. Registration is also what makes the card its own thing in the transcript: `<chat-tool-calls>` groups adjacent calls of the same name into one collapsed strip, but a call that spawned a subagent is always its own group, so four `task` calls in one turn stay four cards instead of collapsing into a single grouped strip.
+The first is registration. When the orchestrator's message carries a `task` tool call, the tracker records a dispatch keyed by the tool-call id, reading `subagent_type` out of the arguments. That name becomes the card's label, and a call with no usable `subagent_type` is ignored rather than tracked. Registration is also what makes the card its own thing in the transcript: `<chat-tool-calls>` groups adjacent calls of the same name into one collapsed strip, but a call that spawned a subagent is always its own group, so four `task` calls in one turn stay four cards instead of collapsing into a single grouped strip. A dispatch is invisible while it is still `pending` — the map behind `subagents()` filters those out — so those four calls briefly render as one grouped tool-call strip before their cards appear.
 
 The second is attribution: deciding which child stream belongs to which dispatch. This is the part that is not free. A child runs under a `tools:<id>` namespace whose id is a checkpoint identifier assigned independently of the parent's tool-call id, and the two are not linked anywhere on the wire. So the adapter matches on content instead. `SubAgentMiddleware` seeds each child with a single human message whose content is the dispatch `description`, verbatim, and the adapter matches that first message against the `description` argument of each unclaimed dispatch — exactly first, then by containment either way.
 
 <Callout type="warning" title="Why the prompt insists on one airport per dispatch">
-The description match is the only signal that survives parallel fan-out. With one child outstanding the adapter can fall back to claiming the single unmatched dispatch, but with four outstanding at once there is nothing positional to fall back on: arrival order is not dispatch order, and guessing would put one specialist's transcript in another specialist's card. Descriptions that name their airport keep the four apart. Two dispatches whose descriptions are identical give the ladder nothing to tell them apart.
+The deepagents `task` tool cannot announce its binding, so inside this graph the description is the only signal that survives fan-out; a graph that announces its children through the [Threadplane middleware](/docs/langgraph/guides/subgraphs) gets an exact binding instead. With one child outstanding the adapter can fall back to claiming the single unmatched dispatch, but with four outstanding at once there is nothing positional to fall back on: arrival order is not dispatch order, and guessing would put one specialist's transcript in another specialist's card. Descriptions that name their airport keep the four apart. Two dispatches whose descriptions are identical give the ladder nothing to tell them apart: the exact rung claims the first unmapped dispatch, so the second child lands on the wrong card rather than on none.
 </Callout>
 
 Until a stream is attributed its chunks are held rather than dropped, and they are replayed into the card the moment the match lands. A dispatch that never matches shows an empty card, which is a worse card but never a wrong one.

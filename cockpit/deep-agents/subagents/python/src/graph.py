@@ -5,10 +5,11 @@
 `tools:<call_id>` namespace, and the child is seeded with the orchestrator's
 `description` before its first token.
 
-That ordering is what lets the frontend attribute child output structurally
-rather than by guessing: the SubagentTracker registers the dispatch from the
-`task` call and matches the child namespace exactly. On the Angular side the
-only wiring needed is `subagentToolNames: ['task']`.
+That ordering is what lets the frontend attribute child output: the
+SubagentTracker registers the dispatch from the `task` call, then matches the
+child stream by its description — exact match first, then containment either
+way, then a single remaining candidate. On the Angular side the only wiring
+needed is `subagentToolNames: ['task']`.
 
 Parallel fan-out works: two `task` calls in one turn produce two children with
 distinct namespaces, distinct transcripts, and no cross-wiring.

@@ -20,11 +20,12 @@ const SUGGESTIONS = [
 /**
  * SubagentsComponent shows real child agents, not a tool-call log.
  *
- * `SubAgentMiddleware` runs each `task` dispatch as its own graph in a
- * `tools:<call_id>` namespace, so a child's tokens arrive tagged with which
- * dispatch produced them. Attribution is therefore structural: the tracker
- * matches namespaces, and does not have to guess from message ordering. That
- * is what makes parallel fan-out render correctly — four children streaming at
+ * `SubAgentMiddleware` runs each `task` dispatch as its own graph in its own
+ * namespace, and seeds it with the dispatch `description`. The tracker
+ * registers the dispatch from the `task` call and attributes the child stream
+ * by matching that description — exact match first, then containment either
+ * way, then a single remaining candidate. Descriptions that name their airport
+ * are what make parallel fan-out render correctly: four children streaming at
  * once land in four separate cards rather than interleaving into one.
  *
  * The cards are rendered inline by the `<chat>` composition and persist after
