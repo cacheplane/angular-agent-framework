@@ -31,6 +31,10 @@ describe('phaseAt', () => {
     expect(phaseAt(tl, tl.runs[5].startMs)).toBe('resume');
     expect(phaseAt(tl, tl.totalMs)).toBe('render');
   });
+  it('separates the approve submit run (streaming) from the authored hold', () => {
+    expect(phaseAt(tl, tl.runs[4].startMs + 1)).toBe('stream');
+    expect(phaseAt(tl, tl.hold.startMs + 1)).toBe('pause');
+  });
 });
 
 describe('phaseReachedAt', () => {

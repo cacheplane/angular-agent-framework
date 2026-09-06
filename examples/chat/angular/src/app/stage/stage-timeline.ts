@@ -83,10 +83,11 @@ export function phaseAt(tl: StageTimeline, t: number): StagePhase {
   }
   if (current.run.action.kind === 'resume') return 'resume';
   // The beats and the phases are almost the same vocabulary, except that the
-  // `approve` beat is rendered as two phases: everything up to the resume run
-  // is the pause (the request being made and then held), and the resume run
-  // itself is `resume`, handled above.
-  return current.run.beat === 'approve' ? 'pause' : current.run.beat;
+  // `approve` beat spans three phases: the submit run that streams up to the
+  // interrupt is `stream`, the authored hold is `pause` (returned above), and
+  // the resume run is `resume` (also above). Reporting the submit run as
+  // `pause` would leave a parent unable to tell streaming from held.
+  return current.run.beat === 'approve' ? 'stream' : current.run.beat;
 }
 
 /**

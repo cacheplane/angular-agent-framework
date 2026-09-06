@@ -9,6 +9,7 @@ import {
   effect,
   inject,
   signal,
+  viewChild,
   type Provider,
   type WritableSignal,
 } from '@angular/core';
@@ -67,6 +68,23 @@ const RUN_START_CAP_MS = 2000;
 /** How long the record host waits for a reload's history refresh to land. */
 const RELOAD_CAP_MS = 10_000;
 const POLL_MS = 50;
+
+/**
+ * Where the devtools panel sits, by frame width. `none` is the phone path: the
+ * website renders stills there, so a docked panel would only eat the chat.
+ */
+export type StageDock = 'right' | 'bottom' | 'none';
+
+const WIDE_QUERY = '(min-width: 1024px)';
+const MEDIUM_QUERY = '(min-width: 768px)';
+
+/** SSR/test-safe: without `matchMedia` we assume the wide frame the stage is authored for. */
+function readStageDock(): StageDock {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return 'right';
+  if (window.matchMedia(WIDE_QUERY).matches) return 'right';
+  if (window.matchMedia(MEDIUM_QUERY).matches) return 'bottom';
+  return 'none';
+}
 
 function isRecordMode(): boolean {
   if (environment.production || typeof location === 'undefined') return false;
@@ -139,7 +157,7 @@ function stageProviders(replay?: StageReplayTransport): Provider[] {
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: stageProviders(),
   template: `
-    <div class="stage">
+    <div class="stage" [attr.data-phase]="controller()?.phase()" [attr.data-dock]="dock()">
       <div class="stage__bar">
         <span class="stage__url">demo.threadplane.ai</span>
         <span class="stage__pill" data-stage-pill [attr.data-live]="recording !== null">
@@ -167,13 +185,28 @@ function stageProviders(replay?: StageReplayTransport): Provider[] {
           </div>
           <chat [agent]="agent" [views]="catalog"></chat>
         </div>
-        <chat-debug
-          [agent]="debugAgent"
-          dock="right"
-          [defaultOpen]="true"
-          launcher="none"
-          storageKey="stage-debug"
-        />
+        <!-- The dock input is read once (the panel restores it after the first
+             render), so the two docks are two ELEMENTS under distinct storage
+             keys, not one element with a bound input. -->
+        @if (dock() === 'right') {
+          <chat-debug
+            [agent]="debugAgent"
+            dock="right"
+            [defaultOpen]="true"
+            launcher="none"
+            [storageKey]="storageKey + '-right'"
+            (openChange)="onDebugOpenChange($event)"
+          />
+        } @else if (dock() === 'bottom') {
+          <chat-debug
+            [agent]="debugAgent"
+            dock="bottom"
+            [defaultOpen]="true"
+            launcher="none"
+            [storageKey]="storageKey + '-bottom'"
+            (openChange)="onDebugOpenChange($event)"
+          />
+        }
       </div>
     </div>
   `,
@@ -191,7 +224,11 @@ function stageProviders(replay?: StageReplayTransport): Provider[] {
       /* chat-debug's right dock is position: fixed at width: var(--panel-size, 420px)
          (libs/chat/debug/.../chat-debug.component.ts, .panel--right), so it is out of
          flow and would sit ON TOP of the transcript. 420 + 16 gutter = 436px. */
-      .stage__column { flex: 1; min-width: 0; display: flex; flex-direction: column; padding-right: var(--stage-devtools-width, 436px); }
+      .stage__column { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+      .stage[data-dock='right'] .stage__column { padding-right: var(--stage-devtools-width, 436px); }
+      /* The bottom dock is fixed to the viewport bottom at 40vh; below 768px no
+         panel renders at all, so the column keeps its full height. */
+      .stage[data-dock='bottom'] .stage__column { padding-bottom: 40vh; }
       .stage__column > chat { flex: 1; min-height: 0; }
       .stage__interrupt:empty { display: none; }
       .stage__interrupt { padding: 8px 12px 0; }
@@ -225,12 +262,25 @@ export class StageMode {
   /**
    * The devtools' agent contract types `state` as `Signal<Record<string,
    * unknown>>` while the untyped LangGraph agent exposes `Signal<unknown>`, so
-   * the SAME object needs a cast at this one read site.
+   * the SAME object needs a cast at this one read site. `DebugAgentWithHistory`
+   * is not exported from `@threadplane/chat/debug`, so the with-history half of
+   * the input's union is extracted from the input type itself — the panel's
+   * Timeline tab only appears for an agent that carries `history`.
    */
-  protected readonly debugAgent = this.agent as unknown as NonNullable<
-    ReturnType<ChatDebugComponent['agent']>
+  protected readonly debugAgent = this.agent as unknown as Extract<
+    NonNullable<ReturnType<ChatDebugComponent['agent']>>,
+    { history: unknown }
   >;
   protected readonly catalog = demoViews();
+
+  /**
+   * Per-load key. The panel persists `open` under its storage key and closes
+   * itself on any document click, so a shared key would carry `open: false`
+   * into the next load and the stage would render with no devtools at all.
+   */
+  protected readonly storageKey = `stage-debug-${Date.now()}`;
+  protected readonly dock = signal<StageDock>(readStageDock());
+  private readonly debugPanel = viewChild(ChatDebugComponent);
 
   readonly timeline = signal<StageTimeline | null>(null);
   readonly controller = signal<StageController | null>(null);
@@ -246,6 +296,13 @@ export class StageMode {
   private seekFrame: number | null = null;
 
   constructor() {
+    this.watchDock();
+    this.destroyRef.onDestroy(() => {
+      if (this.seekFrame !== null && typeof cancelAnimationFrame === 'function') {
+        cancelAnimationFrame(this.seekFrame);
+      }
+      this.seekFrame = null;
+    });
     afterNextRender(() => {
       if (StageMode.autoBoot) {
         void this.boot(new URLSearchParams(typeof location === 'undefined' ? '' : location.search));
@@ -256,6 +313,31 @@ export class StageMode {
       if (!c) return;
       this.publish({ applied: c.applied(), phase: c.phase(), t: c.t() });
     });
+  }
+
+  /**
+   * The devtools panel dismisses itself on ANY document click (and on Escape),
+   * which on the stage means the first click in the transcript would hide it
+   * for good. The stage is a display surface, so a close is reversed the
+   * instant it is reported.
+   */
+  protected onDebugOpenChange(open: boolean): void {
+    if (open) return;
+    this.debugPanel()?.setOpen(true);
+  }
+
+  /** Re-reads the dock whenever the frame crosses a breakpoint. */
+  private watchDock(): void {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const update = () => this.dock.set(readStageDock());
+    for (const query of [WIDE_QUERY, MEDIUM_QUERY]) {
+      const mql = window.matchMedia(query);
+      // `addEventListener` is missing on older MediaQueryList shims (and on the
+      // stubs a spec installs), so an absent listener must not break the stage.
+      if (typeof mql?.addEventListener !== 'function') continue;
+      mql.addEventListener('change', update);
+      this.destroyRef.onDestroy(() => mql.removeEventListener('change', update));
+    }
   }
 
   /** Public so a spec (or the still recorder's harness) can boot explicitly. */
@@ -347,9 +429,13 @@ export class StageMode {
         // markReload() fires, so it MUST wait for the adoption's history
         // refresh: closing the run first stamps an index the replay's
         // getHistory() (which keys on runIndex) can never serve.
-        const before = rec.recording().histories.length;
         const id = this.threadId();
         agent.switchThread(null);
+        // Baseline AFTER the detach has been given a turn: a refresh still in
+        // flight from the previous beat would otherwise land and satisfy the
+        // growth check below without the adoption having refreshed at all.
+        await sleep(0);
+        const before = rec.recording().histories.length;
         agent.switchThread(id);
         await waitUntil(
           () => !agent.isThreadLoading() && rec.recording().histories.length > before,
