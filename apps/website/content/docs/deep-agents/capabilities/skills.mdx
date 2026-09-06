@@ -1,11 +1,11 @@
 ---
 title: Skills
-description: A skill is a folder with a SKILL.md. SkillsMiddleware puts only the frontmatter in the system prompt and leaves the body on the backend until a request matches.
+description: SkillsMiddleware puts only a skill's frontmatter in the system prompt and leaves the body on the backend until a request matches.
 ---
 
 # Skills
 
-A skill is a folder with a `SKILL.md` whose YAML frontmatter carries a `name` and a `description`, following the [agentskills.io](https://agentskills.io) specification. `SkillsMiddleware` scans a mount for those folders, and puts only the frontmatter into the system prompt: one line per skill giving the name, the description, and the path to read for the full instructions. The body stays on the backend until a request matches. That two-stage load is what progressive disclosure means, and the running example is built to make both stages visible.
+A skill is a folder with a `SKILL.md` whose YAML frontmatter carries a `name` and a `description`, following the [agentskills.io](https://agentskills.io) specification. `SkillsMiddleware` scans a mount for those folders, and puts only the frontmatter into the system prompt: a short entry per skill giving the name, the description, and the path to read for the full instructions. The body stays on the backend until a request matches. That two-stage load is what progressive disclosure means, and the running example is built to make both stages visible.
 
 ## What the demo does
 
@@ -15,7 +15,7 @@ Then exactly one skill opens. `runway-analysis` picks up an outline, the path of
 
 ## How it is built
 
-Three files carry the capability: a Python graph that seeds the skill mount, builds the agent, and republishes one private key, an application config, and the Angular component that renders the panel. Open the Code tab to read them in place.
+Three files carry the capability: a Python graph that seeds the skill mount, builds the agent, and republishes the middleware's private state, `skills_metadata` and `skills_load_errors`, an application config, and the Angular component that renders the panel. Open the Code tab to read them in place.
 
 ### The names the graph and the panel agree on
 
@@ -25,7 +25,7 @@ The mount point, the store namespace, and the name of the custom stream event ar
 
 ### A skill on disk
 
-The frontmatter is the part the model sees first, so the `description` is written as a matching rule rather than as a summary. This is the whole of `skills/runway-analysis/SKILL.md`:
+The frontmatter is the part the model sees first, so the `description` is written as a matching rule rather than as a summary, and its `name` must match the directory the file sits in, which is what makes the folder the unit rather than the file. This is the whole of `skills/runway-analysis/SKILL.md`:
 
 ```markdown
 ---
@@ -57,7 +57,7 @@ Always name the margin you applied. A verdict without the margin is not
 reviewable.
 ```
 
-Step 2 is the second stage of the disclosure: the margin table costs nothing until the `SKILL.md` sends the agent to it. The `name` must match the directory the file sits in, which is what makes the folder the unit rather than the file.
+Step 2 is the second stage of the disclosure: the margin table costs nothing until the `SKILL.md` sends the agent to it.
 
 ### Seeding the skill mount
 
@@ -65,7 +65,7 @@ Step 2 is the second stage of the disclosure: the margin table costs nothing unt
 
 <ExampleCode file="graph.py" region="seed-store" title="graph.py — seeding the store" />
 
-Nothing writes to the store after import, so the agent sees `/skills/` as a stable read-only mount even though the machinery serving it is the same `StoreBackend` a writable mount would use.
+Nothing in the demo writes to the store after import, so `/skills/` stays stable for the whole run, even though the machinery serving it is the same `StoreBackend` a writable mount would use.
 
 <Callout type="warning" title="CompositeBackend strips the route prefix">
 Seed the store at `/runway-analysis/SKILL.md`, not `/skills/runway-analysis/SKILL.md`. The composite removes the matched prefix before delegating and re-adds it to the paths it returns, so a store seeded with the prefix surfaces to the agent as `/skills/skills/runway-analysis/...` and the scan finds nothing.
@@ -92,13 +92,13 @@ is deliberately short. When a request matches a skill, read its `SKILL.md` with
 file are the authority, and your recollection is not.
 ```
 
-### Announcing a private state key
+### Announcing the private state keys
 
-`SkillsMiddleware` declares `skills_metadata` annotated with `PrivateStateAttr`, so the loaded index is deliberately absent from the agent's declared input and output and never reaches the `values` stream. A panel bound to the settled state alone would therefore stay empty until the run finished. A small middleware announces the key on a channel the client does receive while the run is going.
+`SkillsMiddleware` declares `skills_metadata` and `skills_load_errors` annotated with `PrivateStateAttr`, so the loaded index is deliberately absent from the agent's declared input and output and never reaches the `values` stream. A panel bound to the settled state alone would therefore stay empty until the run finished. A small middleware announces both keys on a channel the client does receive while the run is going, guarded because `get_stream_writer` raises outside a streaming context.
 
-<ExampleCode file="graph.py" region="visibility-middleware" title="graph.py — republishing skills_metadata" />
+<ExampleCode file="graph.py" region="visibility-middleware" title="graph.py — republishing skills_metadata and skills_load_errors" />
 
-This is the same application-side shim the [memory capability](/docs/deep-agents/capabilities/memory) uses, and it is worth naming as such rather than mistaking it for a framework feature. `get_stream_writer` raises outside a streaming context, which is why the emit is guarded.
+This is the same application-side shim the [memory capability](/docs/deep-agents/capabilities/memory) uses, and it is worth naming as such rather than mistaking it for a framework feature.
 
 ### Providing the agent
 
@@ -112,15 +112,15 @@ A custom event is a live signal and is not replayed when a thread is reopened. T
 
 <ExampleCode file="skills.component.ts" region="skills-sources" title="skills.component.ts — the two readers" />
 
-`agent.customEvents()` is a Signal of every custom event received in this session, so the live reader walks it newest first and takes the most recent payload under the event name the graph emits. `agent.value()` is the agent state the adapter projects from the latest checkpoint, which carries the key even though the run stream does not. The label the panel shows distinguishes the two rather than blending them: `live` means the visibility middleware announced the index during this run, and `checkpoint` is what a reopened thread looks like.
+`agent.customEvents()` is a Signal of every custom event received in this session, so the live reader walks it newest first and takes the most recent payload under the event name the graph emits, while `agent.value()` is the agent state the adapter projects from the latest checkpoint, which carries the key even though the run stream does not.
 
 ### What the agent actually opened
 
-The other half of the panel needs no shim at all. Reading a skill is a `read_file` call, an ordinary tool call on the runtime-neutral `agent.toolCalls()` Signal, so the paths are already on the client.
+The label the panel shows distinguishes the two sources rather than blending them: `live` means the visibility middleware announced the index during this run, and `checkpoint` is what a reopened thread looks like. The other half of the panel needs no shim at all. Reading a skill is a `read_file` call, an ordinary tool call on the runtime-neutral `agent.toolCalls()` Signal, so the paths are already on the client.
 
 <ExampleCode file="skills.component.ts" region="opened-paths" title="skills.component.ts — the opened paths" />
 
-Each entry of `skills_metadata` carries the `path` of its `SKILL.md`, and everything before the last slash of that path is the skill's directory. Matching the opened paths against that prefix is what attributes a read to a skill, and it is why the margin table counts as opening `runway-analysis` rather than as an unrelated file read.
+Each entry of `skills_metadata` carries the `path` of its `SKILL.md`, and everything before the last slash of that path is the skill's directory, so matching the opened paths against that prefix is what attributes a read to a skill and is why the margin table counts as opening `runway-analysis` rather than as an unrelated file read.
 
 <ExampleCode file="skills.component.ts" region="skills-projection" title="skills.component.ts — attributing reads to skills" />
 
@@ -130,7 +130,7 @@ The sidebar renders the source label, then one card per skill: the name, the des
 
 <ExampleCode file="skills.component.ts" region="skills-panel" title="skills.component.ts — the skill index panel" />
 
-Rendering both halves in one column is the point. The index is what the prompt paid for, and the read paths are what the request actually cost.
+Rendering both halves in one column is the point, because the index is what the prompt paid for and the read paths are what the request actually cost.
 
 ## The skill that stays closed
 
