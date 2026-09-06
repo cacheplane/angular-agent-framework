@@ -1,296 +1,151 @@
+---
+description: How the time travel example checkpoints every turn, lists the checkpoints in a timeline sidebar, and selects one, plus the history signals and the branch tree
+---
+
 # Time Travel
 
-Time travel lets you inspect earlier states and replay alternate execution paths. `injectAgent()` exposes the full checkpoint history and branch navigation through Angular Signals. Use it to debug agent decisions, explore alternate paths, and build undo/redo experiences.
+Time travel is the ability to look at what an agent's state was a few steps ago, and to start a run from there instead of from the end of the conversation. LangGraph writes a checkpoint after every step of a run, and `injectAgent()` exposes that checkpoint history as Angular Signals. The running example is a chat with a checkpoint timeline beside it, and this guide walks the three files that make it work.
 
 <Callout type="info" title="Use cases">
 Debug agent decisions, explore alternate paths, and build undo/redo experiences for your users. Time travel works with any LangGraph agent that persists checkpoints to a thread.
 </Callout>
 
-## How checkpointing works
+## What the demo does
 
-Time travel depends on checkpointing on the agent side. LangGraph automatically saves a checkpoint after every node execution when you compile your graph with a checkpointer.
+The Run tab shows the prebuilt `<chat>` composition next to a Timeline sidebar. Before you send anything, the sidebar reads "No checkpoints yet. Send a message to begin." Ask the assistant a question and the sidebar fills with numbered rows, each carrying a label, the full checkpoint identifier, and two buttons, Replay and Fork.
 
-<Tabs>
-<Tab label="agent.py">
+Send two or three messages so the timeline has entries to move between, then click Replay or Fork on an earlier row: the row highlights, and the component records that checkpoint identifier as the active branch.
 
-```python
-from langgraph.graph import END, START, MessagesState, StateGraph
-from langgraph.checkpoint.memory import MemorySaver
-from langchain_openai import ChatOpenAI
+## How it is built
 
-llm = ChatOpenAI(model="gpt-5-mini")
+Three files carry the feature: a graph that leaves checkpointing to the platform, an application config that registers the agent, and a component that renders the checkpoint history. Open the Code tab to read them in place.
 
-def call_model(state: MessagesState) -> dict:
-    response = llm.invoke(state["messages"])
-    return {"messages": [response]}
+### A graph the platform checkpoints
 
-builder = StateGraph(MessagesState)
-builder.add_node("call_model", call_model)
-builder.add_edge(START, "call_model")
-builder.add_edge("call_model", END)
+The backend is a single streaming node over `MessagesState`, with a system prompt read from the capability's prompt file. Nothing in it mentions time travel, because the checkpoints come from the server that runs it.
 
-# Compile with a checkpointer to enable time travel
-checkpointer = MemorySaver()
-graph = builder.compile(checkpointer=checkpointer)
+<ExampleCode file="graph.py" />
 
-# Run the graph with a thread ID
-config = {"configurable": {"thread_id": "user_123"}}
-result = graph.invoke(
-    {"messages": [("user", "What is LangGraph?")]},
-    config=config,
-)
+`compile()` is called with no checkpointer, since the LangGraph API server provides persistence itself; the [Persistence guide](/docs/langgraph/guides/persistence) covers the checkpointer choices for a graph you embed in your own process.
 
-# Browse checkpoint history server-side
-for state in graph.get_state_history(config):
-    print(f"Step: {state.metadata.get('step', '?')}")
-    print(f"  Checkpoint: {state.config['configurable']['checkpoint_id']}")
-    print(f"  Messages: {len(state.values.get('messages', []))}")
+### The provider
 
-# Replay from a specific checkpoint
-past_config = {
-    "configurable": {
-        "thread_id": "user_123",
-        "checkpoint_id": "<checkpoint-id-from-history>",
-    }
-}
-past_state = graph.get_state(past_config)
-```
+The example resolves its connection details at runtime from the host that serves it, which is why `provideAgent()` takes a factory. Your own application passes `apiUrl` and `assistantId` directly.
 
-</Tab>
-<Tab label="history-viewer.component.ts">
+<ExampleCode file="app.config.ts" />
 
-```typescript
-import { Component, computed, ChangeDetectionStrategy } from '@angular/core';
-import { injectAgent } from '@threadplane/langgraph';
+### Reading the checkpoint history
 
-@Component({
-  selector: 'app-history-viewer',
-  templateUrl: './history-viewer.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class HistoryViewerComponent {
-  protected readonly agent = injectAgent();
+The component injects the agent and derives the timeline from it. `langGraphHistory()` is LangGraph's own view of the thread: an array of `ThreadState` snapshots. `selectedIndex` is local interface state, holding the row the user clicked last.
 
-  readonly checkpoints = computed(() => this.agent.history());
-  readonly rawCheckpoints = computed(() => this.agent.langGraphHistory());
-  readonly checkpointCount = computed(() => this.agent.history().length);
+<ExampleCode file="time-travel.component.ts" region="history" title="time-travel.component.ts — the history signals" />
 
-  readonly activeIndex = computed(() =>
-    this.checkpoints().length - 1
-  );
+Nothing in the component fetches that history: the framework loads it when a thread is selected and refreshes it when a run completes.
 
-  fork(index: number) {
-    const checkpoint = this.rawCheckpoints()[index]?.checkpoint;
-    if (!checkpoint) return;
-    this.agent.submit(
-      { message: 'Try a different approach' },
-      { checkpoint }
-    );
-  }
+### The timeline sidebar
 
-  formatTime(isoString: string): string {
-    return new Date(isoString).toLocaleTimeString();
-  }
-}
-```
+The `<chat>` composition owns the transcript, the input, and the loading and error states, so the template only adds the sidebar. Each row renders its position in the history, a label, the checkpoint identifier, and the two action buttons.
 
-</Tab>
-</Tabs>
+<ExampleCode file="time-travel.component.ts" region="timeline" title="time-travel.component.ts — the timeline sidebar" />
 
-## Browsing execution history
+`checkpoint_id` is optional on a `ThreadState`, which is why the identifier line and both handlers guard on it.
 
-The `history()` signal contains runtime-neutral `AgentCheckpoint` entries for the thread. For LangGraph-specific checkpoint metadata, `langGraphHistory()` exposes the raw `ThreadState[]`. The framework loads this history with `threads.getHistory()` when a thread is selected and refreshes it after a run completes.
+### Selecting a checkpoint
+
+Replay and Fork run the same two statements: record the clicked row so the sidebar can highlight it, then hand the checkpoint identifier to `setBranch()`.
+
+<ExampleCode file="time-travel.component.ts" region="branch" title="time-travel.component.ts — replay and fork" />
+
+<Callout type="warning" title="setBranch() records a pointer; it does not start a run">
+`setBranch(id)` writes the identifier into the `branch()` signal, and that is all it does. No run starts, and the next `submit()` continues from the tip of the thread as usual. To run from a past checkpoint, pass that checkpoint to `submit()` yourself, as [Running from a past checkpoint](#running-from-a-past-checkpoint) shows.
+</Callout>
+
+## Reading the history two ways
+
+`history()` and `langGraphHistory()` describe the same thread at two levels. The first is the runtime-neutral shape every adapter that keeps checkpoints can produce; the second is LangGraph's own.
 
 ```typescript
-// agent.ts (shared):
-// import { createAgentRef } from '@threadplane/chat';
-// export const MY_AGENT = createAgentRef<AgentState>('my-agent');
+const agent = injectAgent();
 
-// Configured globally in app.config.ts via provideAgent(MY_AGENT, { ... threadId }).
-const agent = injectAgent(MY_AGENT);
-
-// Runtime-neutral execution timeline
+// Runtime-neutral: AgentCheckpoint[], each with id, label, and values.
 const checkpoints = computed(() => agent.history());
-const checkpointCount = computed(() => agent.history().length);
 
-// Raw LangGraph checkpoints
+// Raw LangGraph: ThreadState[], each with checkpoint, parent_checkpoint,
+// metadata, created_at, next, tasks, and the full values snapshot.
 const rawCheckpoints = computed(() => agent.langGraphHistory());
-
-// Access a specific checkpoint
-const latestCheckpoint = computed(() => {
-  const history = agent.history();
-  return history[history.length - 1];
-});
 ```
 
-Each runtime-neutral checkpoint exposes `id`, `label`, and `values`. Each raw `ThreadState` entry exposes `checkpoint`, `parent_checkpoint`, `metadata`, `created_at`, and the full `values` snapshot, giving you complete visibility into every step of execution.
+The example reads the raw signal because it renders LangGraph's `checkpoint` object directly; `history()` would hand it the same identifier as an adapter-opaque `id`.
 
-## Forking from a checkpoint
+## Running from a past checkpoint
 
-Submit with a specific checkpoint to branch execution from an earlier state. That creates a new branch in the thread graph while leaving the original path intact.
+`submit()` accepts LangGraph's run options, and two of them address a checkpoint: `checkpoint` takes a `ThreadState.checkpoint` object, and `checkpointId` takes only its identifier. Passing either starts the run from that point in the thread rather than from its tip, which is what creates a second path out of one checkpoint.
 
 ```typescript
-forkFromCheckpoint(index: number) {
+protected forkFrom(index: number, message: string): void {
   const checkpoint = this.agent.langGraphHistory()[index]?.checkpoint;
   if (!checkpoint) return;
-  this.agent.submit(
-    { message: 'Try a different approach' },
-    { checkpoint }
-  );
-}
-
-// Fork with a completely different input
-retryWithAlternative(index: number, newInput: string) {
-  const checkpoint = this.agent.langGraphHistory()[index]?.checkpoint;
-  if (!checkpoint) return;
-  this.agent.submit(
-    { message: newInput },
-    { checkpoint }
-  );
+  void this.agent.submit({ message }, { checkpoint });
 }
 ```
 
-## Branch navigation
+The original path is left intact, so the earlier checkpoints stay in the history and the new run hangs off the one you named.
 
-Use `branch()`, `setBranch()`, and `experimentalBranchTree()` to navigate between execution branches. Branches are automatically created when you fork from a checkpoint, and the branch tree is derived from raw `ThreadState.parent_checkpoint` relationships.
+## Navigating branches
+
+`branch()` holds the identifier the application last set, and `setBranch()` writes it. `experimentalBranchTree()` turns the flat history into a tree by linking each `ThreadState` to its `parent_checkpoint`, so a checkpoint with two children becomes a fork with one sequence per alternate path.
 
 ```typescript
-// Current branch identifier
+// The identifier the application last selected.
 const activeBranch = computed(() => agent.branch());
 
-// Full branch tree for custom time-travel UIs
+// A sequence of nodes and forks, for a custom time-travel interface.
 const branchTree = computed(() => agent.experimentalBranchTree());
-
-// Switch to a different branch
-selectBranch(branchId: string) {
-  agent.setBranch(branchId);
-}
 ```
 
-## Building a history UI
+An `AgentBranchTree` is a `sequence` whose items are either a `node`, carrying one `ThreadState` and the path that reached it, or a `fork`, carrying a list of alternate sequences. The signal is named `experimental` deliberately: treat its shape as unsettled.
 
-Expose checkpoint history directly in your component to let users scrub through execution steps or rewind to any earlier state.
+## Reading history on the server
 
-<Tabs>
-<Tab label="history-viewer.component.ts">
-```typescript
-import { Component, computed, ChangeDetectionStrategy } from '@angular/core';
-import { injectAgent } from '@threadplane/langgraph';
+The signals above are the client's view. When you embed the graph in your own process rather than serving it through LangGraph Platform, the compiled graph exposes the same history in Python, and the [Persistence guide](/docs/langgraph/guides/persistence) covers the checkpointer that case needs.
 
-@Component({
-  selector: 'app-history-viewer',
-  templateUrl: './history-viewer.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class HistoryViewerComponent {
-  protected readonly agent = injectAgent();
+```python
+config = {"configurable": {"thread_id": "user_123"}}
 
-  readonly checkpoints = computed(() => this.agent.history());
-  readonly rawCheckpoints = computed(() => this.agent.langGraphHistory());
-  readonly activeIndex = computed(() =>
-    this.checkpoints().length - 1
-  );
+# Every checkpoint recorded for the thread.
+for state in graph.get_state_history(config):
+    print(state.config["configurable"]["checkpoint_id"], state.next)
 
-  fork(index: number) {
-    const checkpoint = this.rawCheckpoints()[index]?.checkpoint;
-    if (!checkpoint) return;
-    this.agent.submit(
-      { message: 'Try a different approach' },
-      { checkpoint }
-    );
-  }
-
-  formatTime(isoString: string): string {
-    return new Date(isoString).toLocaleTimeString();
-  }
-}
+# Read one past checkpoint by id.
+past_state = graph.get_state(
+    {
+        "configurable": {
+            "thread_id": "user_123",
+            "checkpoint_id": "<checkpoint-id-from-history>",
+        }
+    }
+)
 ```
-</Tab>
-<Tab label="history-viewer.component.html">
-```html
-<ul class="checkpoint-list">
-  @for (cp of checkpoints(); track cp.id; let i = $index) {
-    <li [class.active]="i === activeIndex()">
-      <span class="step">Step {{ i + 1 }}</span>
-      <span class="time">{{ cp.label ?? cp.id }}</span>
-      <button (click)="fork(i)">Fork from here</button>
-    </li>
-  }
-</ul>
-```
-</Tab>
-</Tabs>
 
 ## Comparing checkpoints
 
-Diff two checkpoints to understand exactly what changed between execution steps. This is useful for understanding tool call results, message additions, or state mutations.
+Two checkpoints and a diff tell you what a step actually changed, which is often faster than reading the transcript for it. The runtime-neutral `history()` is enough here, because `values` is the whole state snapshot.
 
 ```typescript
-compareCheckpoints(indexA: number, indexB: number) {
+protected compare(indexA: number, indexB: number) {
   const history = this.agent.history();
-  const stateA = history[indexA]?.values;
-  const stateB = history[indexB]?.values;
+  const before = history[indexA]?.values;
+  const after = history[indexB]?.values;
+  if (!before || !after) return null;
 
-  if (!stateA || !stateB) return null;
-
-  // Compare message counts
-  const messagesAdded = (stateB.messages?.length ?? 0)
-    - (stateA.messages?.length ?? 0);
-
-  // Identify changed keys
-  const changedKeys = Object.keys({ ...stateA, ...stateB }).filter(
-    key => JSON.stringify(stateA[key]) !== JSON.stringify(stateB[key])
+  const changedKeys = Object.keys({ ...before, ...after }).filter(
+    (key) => JSON.stringify(before[key]) !== JSON.stringify(after[key]),
   );
-
-  return { messagesAdded, changedKeys };
+  return { changedKeys };
 }
 ```
 
-Use the comparison result to render a diff view, highlight changed fields in your UI, or log what the agent touched during a specific step.
-
-## Replaying with modified input
-
-Combine forking with new input to explore how the agent would have responded differently. This is the core of the undo/redo experience.
-
-```typescript
-// agent.ts (shared):
-// import { createAgentRef } from '@threadplane/chat';
-// export const MY_AGENT = createAgentRef<AgentState>('my-agent');
-
-@Component({
-  selector: 'app-replay',
-  templateUrl: './replay.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class ReplayComponent {
-  protected readonly agent = injectAgent(MY_AGENT);
-
-  readonly history = computed(() => this.agent.history());
-  readonly rawHistory = computed(() => this.agent.langGraphHistory());
-  readonly canUndo = computed(() => this.history().length > 1);
-
-  undo() {
-    const history = this.history();
-    if (history.length < 2) return;
-
-    // Go back one step
-    const previousCheckpoint = this.rawHistory()[history.length - 2]?.checkpoint;
-    if (!previousCheckpoint) return;
-    this.agent.submit({}, {
-      checkpoint: previousCheckpoint,
-    });
-  }
-
-  replayWith(index: number, newMessage: string) {
-    const checkpoint = this.rawHistory()[index]?.checkpoint;
-    if (!checkpoint) return;
-    this.agent.submit(
-      { message: newMessage },
-      { checkpoint }
-    );
-  }
-}
-```
+Use the result to render a diff view, highlight changed fields, or log what the agent touched during a step.
 
 <Callout type="tip" title="Debugging workflow">
 Time travel is most useful during development. Inspect why an agent chose a particular path by comparing adjacent checkpoints, then fork to test alternatives without restarting the conversation. Combine `history()` with Angular DevTools to watch checkpoint arrays update in real time as the agent streams.
