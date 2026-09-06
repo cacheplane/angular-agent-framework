@@ -38,6 +38,7 @@ class DemoTextComponent {
   readonly loading = input(false);
 }
 
+// #region child-rendering
 @Component({
   selector: 'demo-heading',
   standalone: true,
@@ -63,6 +64,7 @@ class DemoHeadingComponent {
   readonly emit = input<(event: string) => void>(() => {});
   readonly loading = input(false);
 }
+// #endregion
 
 @Component({
   selector: 'demo-badge',
@@ -272,6 +274,7 @@ class DemoCardComponent {
         </span>
       </div>
 
+      <!-- #region render-surface -->
       <!-- Left: live render output -->
       <div primary>
         <div class="cap">Live Render Output</div>
@@ -281,6 +284,7 @@ class DemoCardComponent {
           <div class="placeholder">Press play to start streaming…</div>
         }
       </div>
+      <!-- #endregion -->
 
       <!-- Right: syntax-colored streaming JSON -->
       <div secondary>
@@ -300,12 +304,14 @@ class DemoCardComponent {
   `,
 })
 export class SpecRenderingComponent implements OnDestroy {
+  // #region streaming-source
   protected readonly specs = SPEC_RENDERING_SPECS;
   protected activeIndex = 0;
 
   protected readonly simulator = new StreamingSimulator(this.specs[0].json);
 
   protected readonly jsonTokens = computed(() => highlightJson(this.simulator.rawJson()));
+  // #endregion
 
   private readonly jsonScroll = viewChild<ElementRef<HTMLElement>>('jsonScroll');
 
@@ -321,6 +327,7 @@ export class SpecRenderingComponent implements OnDestroy {
     });
   }
 
+  // #region registry-and-store
   protected readonly registry = defineAngularRegistry({
     Text: DemoTextComponent,
     Heading: DemoHeadingComponent,
@@ -329,6 +336,7 @@ export class SpecRenderingComponent implements OnDestroy {
   });
 
   protected readonly store = signalStateStore({});
+  // #endregion
 
   protected percent(): number {
     return Math.round(this.simulator.progress() * 100);

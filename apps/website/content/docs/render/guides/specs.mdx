@@ -1,22 +1,104 @@
+---
+description: How the spec rendering example streams a JSON spec into a live component tree, plus the spec format: root, elements, props, children, visibility and repeat.
+---
+
 # Specs
 
-A spec is the JSON object that describes your entire UI tree. It tells `@threadplane/render` what to render, how to wire state, and when to show or hide an element.
+A spec is the JSON object that describes an entire UI tree. It names a root element, holds every element in one flat map, and says for each element which component renders it, what props it receives, which children it owns, and when it is visible. The running example streams three specs in one character at a time and renders each one as it arrives, so the format on this page is the format you can watch being parsed.
 
-## Spec Format
+## What the demo does
 
-Every spec has three top-level properties:
+The Run tab is split in two. The left side is the live render output, the right side is the raw JSON as it streams, and the bar along the bottom is a transport: play and pause, a track you can scrub to any character, a character count, and 1x, 2x and 4x speeds.
+
+Three tabs across the top pick the spec. "Heading + Text" is a heading with one text child. "Card + Badge" is a card holding a badge and a paragraph. "Nested Layout" is a heading over two cards, each with its own text child. Picking a tab restarts the stream against that spec, and elements appear as soon as their props arrive, with skeleton placeholders standing in until they do.
+
+## How it is built
+
+The example is one Angular file plus an application config. Open the Code tab to read them in place.
+
+### The spec the demo streams
+
+The three specs are plain JSON strings the component ships with. This is the first one, and it is the whole format in miniature: a `root` key, a flat `elements` map, and a `children` array that holds keys rather than nested objects.
+
+```json
+{
+  "root": "root",
+  "elements": {
+    "root": {
+      "type": "Heading",
+      "props": { "content": "Welcome to Spec Rendering" },
+      "children": ["desc"]
+    },
+    "desc": {
+      "type": "Text",
+      "props": { "content": "This UI is rendered entirely from a JSON specification." }
+    }
+  }
+}
+```
+
+Nothing in the spec names an Angular class: `Heading` and `Text` are registry keys, resolved at render time.
+
+### The application configuration
+
+`provideRender()` registers the render feature. This example passes an empty options object, because the registry and the store travel as inputs on the render surface instead.
+
+<ExampleCode file="app.config.ts" />
+
+### The registry names the element types
+
+Every `type` string in a spec has to resolve to something. `defineAngularRegistry()` is where the four names the three specs use are bound to components, and `signalStateStore()` is the store that prop expressions and visibility conditions read from.
+
+<ExampleCode file="spec-rendering.component.ts" region="registry-and-store" title="spec-rendering.component.ts — the registry and the store" />
+
+The store starts empty here because these specs use literal props rather than state expressions.
+
+### Mounting the root element
+
+`<render-spec>` takes the spec, the registry, the store and a `loading` flag. It renders exactly one element, the one named by `spec.root`.
+
+<ExampleCode file="spec-rendering.component.ts" region="render-surface" title="spec-rendering.component.ts — the render surface" />
+
+While the simulator has produced no spec at all, the template shows a placeholder instead.
+
+### Children render because a component renders them
+
+An element's `children` array reaches the mounted component as a `childKeys` input, and the full `spec` arrives with it. A component that wants children loops over the keys and mounts a `<render-element>` for each, which is how the flat map turns into a tree of any depth.
+
+<ExampleCode file="spec-rendering.component.ts" region="child-rendering" title="spec-rendering.component.ts — a component that renders its children" />
+
+The text component in the same file declares `childKeys` and never loops over it, so a text element is a leaf even when a spec gives it children.
+
+### A partial spec still renders
+
+The spec does not arrive whole. A partial JSON parser consumes the stream character by character and materializes whatever is complete so far, so the value handed to `<render-spec>` grows one element and one prop at a time.
+
+<ExampleCode file="spec-rendering.component.ts" region="streaming-source" title="spec-rendering.component.ts — the streaming source" />
+
+<Callout type="tip" title="Design elements for a half-built spec">
+A prop can be missing on the first mount and present a frame later. Give every input a default, and use the `loading` input to draw a placeholder rather than an empty element.
+</Callout>
+
+### The agent is not in the render path
+
+The capability also ships a backend, and it is worth being clear about what it does not do. This single-node LangGraph agent talks about render specs in prose; it never produces the specs on screen, which this example streams locally.
+
+<ExampleCode file="graph.py" />
+
+## Spec format
+
+A spec has one required key for the entry point, one for the elements, and an optional seed for state.
 
 ```typescript
 import type { Spec } from '@json-render/core';
 
 const spec: Spec = {
-  root: 'page',                // key of the root element
-  elements: {                  // flat map of element definitions
-    page: { /* ... */ },
-    header: { /* ... */ },
-    content: { /* ... */ },
+  root: 'page',
+  elements: {
+    page: { type: 'Container', props: {}, children: ['heading'] },
+    heading: { type: 'Text', props: { content: 'My App' } },
   },
-  state: {                     // (optional) initial state
+  state: {
     title: 'My App',
   },
 };
@@ -24,106 +106,75 @@ const spec: Spec = {
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `root` | `string` | The key in `elements` that is the entry point for rendering |
-| `elements` | `Record<string, UIElement>` | A flat map of all element definitions, keyed by unique identifiers |
-| `state` | `object` | (Optional) Initial state used to create an internal state store when no external store is provided |
+| `root` | `string` | The key in `elements` that rendering starts from |
+| `elements` | `Record<string, UIElement>` | A flat map of every element definition, keyed by a unique string |
+| `state` | `Record<string, unknown>` | Optional. Seeds the internal state store that `<render-spec>` creates when no store is supplied |
 
 <Callout type="info" title="Flat element map">
-Elements are stored in a flat map rather than a nested tree. Parent-child relationships are expressed through the `children` property, which contains keys pointing to other elements in the map. This keeps lookups fast and makes specs easy to generate from server-side tools.
+Elements are stored in a flat map rather than a nested tree. Parent-child relationships are expressed through the `children` property, which holds keys pointing at other entries in the same map. That keeps lookups constant-time and makes a spec easy for a model to emit and to patch one element at a time.
 </Callout>
 
-## UIElement Properties
+## Element properties
 
-Each element in the `elements` map is a `UIElement` object:
+Each entry in `elements` is a `UIElement`:
 
 ```typescript
-{
-  type: 'Card',                           // registry component name
-  props: {                                // inputs for the component
-    title: 'Static value',
-    count: { $state: '/counter' },        // reactive state expression
-    email: { $bindState: '/form/email' }, // two-way binding
-  },
-  children: ['header', 'body'],           // child element keys
-  visible: { $state: '/showCard' },       // conditional visibility
-  repeat: { statePath: '/items' },        // loop over state array
-  on: {                                   // event handlers
-    submit: { action: 'handleSubmit', params: {} },
-  },
+interface UIElement {
+  type: string;
+  props: Record<string, unknown>;
+  children?: string[];
+  visible?: VisibilityCondition;
+  repeat?: { statePath: string; key?: string };
+  on?: Record<string, ActionBinding | ActionBinding[]>;
+  watch?: Record<string, ActionBinding | ActionBinding[]>;
 }
 ```
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `type` | `string` | The name used to look up the component in the registry |
-| `props` | `Record<string, unknown>` | Input values for the component. Can be static or dynamic expressions |
-| `children` | `string[]` | Keys of child elements in the `elements` map |
-| `visible` | `unknown` | Visibility condition -- evaluated by `@json-render/core` |
-| `repeat` | `{ statePath: string }` | Repeat configuration for rendering lists |
-| `on` | `Record<string, EventBinding>` | Event handler bindings |
+| `type` | `string` | The name looked up in the registry |
+| `props` | `Record<string, unknown>` | Inputs for the component. Static values or expressions |
+| `children` | `string[]` | Keys of child elements in the same `elements` map |
+| `visible` | `VisibilityCondition` | Visibility condition, evaluated against the store |
+| `repeat` | `{ statePath: string; key?: string }` | Render this element once per item in a state array |
+| `on` | `Record<string, ActionBinding \| ActionBinding[]>` | Event name to the action or actions it fires |
+| `watch` | `Record<string, ActionBinding \| ActionBinding[]>` | State path to the actions that fire when the value there changes |
 
-## Prop Expressions
+## Prop expressions
 
-Props can be static values or dynamic expressions resolved by `@json-render/core`:
+A prop is a literal unless it is an object with one of these reserved keys. Expressions are resolved fresh whenever the store or the surrounding repeat scope changes.
 
-### $state -- Read from State
+| Expression | Resolves to |
+|------------|-------------|
+| `{ $state: '/user/name' }` | The value at that JSON Pointer path in the store |
+| `{ $bindState: '/form/email' }` | The value at that path, plus the path itself in `bindings` |
+| `{ $item: 'name' }` | A field on the current repeat item. Use `''` for the whole item |
+| `{ $bindItem: 'name' }` | The same field, plus its absolute path in `bindings` |
+| `{ $index: true }` | The current zero-based repeat index |
+| `{ $cond, $then, $else }` | `$then` when the condition holds, otherwise `$else` |
+| `{ $computed: 'uppercase', args }` | The return value of a registered function, called with resolved `args` |
+| `{ $template: 'Hi ${/user/name}' }` | The string with each `${/path}` replaced by the value at that path |
 
-Reads a value from the state store at the given JSON Pointer path:
+Arrays and plain objects are walked, so an expression nested inside a prop object is resolved too.
 
-```typescript
-props: {
-  label: { $state: '/user/name' },  // resolves to store.get('/user/name')
-}
-```
+### Two-way binding
 
-### $bindState -- Two-Way Binding
-
-Like `$state`, but also populates the `bindings` input so the component can write back to the store:
+`$bindState` resolves like `$state` and additionally populates the component's `bindings` input with the path, so the component can write back:
 
 ```typescript
 props: {
   value: { $bindState: '/form/email' },
 }
-// Component receives:
-//   value = 'current email value'
+// The component receives:
+//   value = the current value at /form/email
 //   bindings = { value: '/form/email' }
 ```
 
-### $item -- Repeat Item Value
+`$bindItem` does the same inside a repeat loop, resolving the item-relative path against the item's base path.
 
-Inside a `repeat` loop, `$item` resolves to the current array item. Pass an empty string to get the whole item, or a path to access a nested property:
+### Computed values
 
-```typescript
-props: {
-  label: { $item: '' },         // the full item
-  name: { $item: 'name' },      // item.name (for object items)
-}
-```
-
-### $index -- Repeat Index
-
-Inside a `repeat` loop, `$index` resolves to the current zero-based iteration index:
-
-```typescript
-props: {
-  position: { $index: true },   // 0, 1, 2, ...
-}
-```
-
-### $computed -- Computed Function
-
-Calls a registered computed function with the given arguments:
-
-```typescript
-props: {
-  label: {
-    $computed: 'uppercase',
-    args: { text: { $state: '/name' } }
-  },
-}
-```
-
-The `$computed` value names a function you register in a `functions` map. Each function is a `ComputedFunction` from `@json-render/core` -- `(args: Record<string, unknown>) => unknown`. The `args` object is resolved first (so `{ $state: '/name' }` becomes the current value at `/name`), then passed to your function:
+`$computed` names a function in the `functions` map. Each function is a `ComputedFunction` from `@json-render/core`, so it takes a record of already-resolved arguments and returns a value:
 
 ```typescript
 import type { ComputedFunction } from '@json-render/core';
@@ -133,189 +184,64 @@ const functions: Record<string, ComputedFunction> = {
 };
 ```
 
-Wire the map through the `[functions]` input on `<render-spec>`:
-
-```html
-<render-spec [spec]="spec" [registry]="registry" [functions]="functions" />
-```
-
-Or register it globally via `provideRender()` so every `<render-spec>` resolves it:
-
 ```typescript
-import { provideRender } from '@threadplane/render';
-
-provideRender({
-  registry: myRegistry,
-  functions: {
-    uppercase: (args) => String(args['text']).toUpperCase(),
-  },
-});
-```
-
-With either wiring, the `$computed` expression above resolves `label` to the uppercased value of `/name`. The input takes priority over the `provideRender()` config when both are present.
-
-## Children
-
-The `children` property is an array of element keys that reference other entries in the `elements` map:
-
-```typescript
-const spec: Spec = {
-  root: 'page',
-  elements: {
-    page: {
-      type: 'Container',
-      props: {},
-      children: ['heading', 'body'],
-    },
-    heading: {
-      type: 'Text',
-      props: { label: 'Welcome' },
-    },
-    body: {
-      type: 'Text',
-      props: { label: 'Page content here' },
-    },
-  },
-};
-```
-
-The rendered `ContainerComponent` receives `childKeys: ['heading', 'body']` and the full `spec`, enabling it to recursively render its children using `RenderElementComponent`.
-
-### Deeply Nested Trees
-
-Because children reference keys in the same flat map, you can build arbitrarily deep trees:
-
-```typescript
-elements: {
-  root: { type: 'Container', props: {}, children: ['level1'] },
-  level1: { type: 'Container', props: {}, children: ['level2'] },
-  level2: { type: 'Container', props: {}, children: ['leaf'] },
-  leaf: { type: 'Text', props: { label: 'Deep content' } },
+props: {
+  label: { $computed: 'uppercase', args: { text: { $state: '/name' } } },
 }
 ```
 
-## Conditional Rendering
+Pass the map through the `[functions]` input on `<render-spec>`, or register it once with [`provideRender()`](/docs/render/api/provide-render). An unregistered name resolves to `undefined` and logs a warning.
 
-The `visible` property controls whether an element is rendered. When the condition evaluates to a falsy value, the element and all its children are excluded from the DOM.
+## Conditional rendering
 
-### Static Visibility
+The `visible` property decides whether an element mounts. When it evaluates to false the element and everything under it stays out of the DOM. Omitting it means visible.
+
+```typescript
+{ type: 'Text', props: { content: 'Never shown' }, visible: false }
+
+{ type: 'Text', props: { content: 'Shown when the flag is truthy' },
+  visible: { $state: '/showMessage' } }
+
+{ type: 'Text', props: { content: 'Shown when the count is over five' },
+  visible: { $state: '/count', gt: 5 } }
+```
+
+A single condition reads `$state`, `$item` or `$index` and applies at most one comparison operator: `eq`, `neq`, `gt`, `gte`, `lt` or `lte`. With no operator it checks truthiness, and `not: true` inverts the result. An array of conditions is an implicit AND; `{ $and: [...] }` and `{ $or: [...] }` are the explicit forms and may nest.
+
+## Repeat loops
+
+`repeat` renders one copy of the element for each item in a state array:
 
 ```typescript
 {
-  type: 'Text',
-  props: { label: 'Always hidden' },
-  visible: false,
+  type: 'ListItem',
+  props: {
+    label: { $item: 'name' },
+    position: { $index: true },
+  },
+  repeat: { statePath: '/todos' },
 }
 ```
 
-### State-Driven Visibility
+For each item the renderer builds a repeat scope holding the item, its index and its base path (`/todos/0`, `/todos/1`, and so on), provides that scope through a child injector, and resolves the element's props inside it, so `$item`, `$bindItem` and `$index` mean something different in every copy.
 
-```typescript
-{
-  type: 'Text',
-  props: { label: 'Conditionally shown' },
-  visible: { $state: '/showMessage' },
-}
-```
-
-When `/showMessage` is `true` in the state store, the element renders. When it is `false`, it is removed.
-
-### Default Visibility
-
-When `visible` is omitted or `undefined`, the element is visible by default.
-
-## Repeat Loops
-
-The `repeat` property renders an element once for each item in a state array:
-
-```typescript
-const spec: Spec = {
-  root: 'list',
-  elements: {
-    list: {
-      type: 'ListItem',
-      props: {
-        label: { $item: 'name' },
-        index: { $index: true },
-      },
-      repeat: { statePath: '/todos' },
-    },
-  },
-  state: {
-    todos: [
-      { name: 'Buy groceries' },
-      { name: 'Write docs' },
-      { name: 'Ship feature' },
-    ],
-  },
-};
-```
-
-For each item in the array at `/todos`, the library:
-
-1. Creates a `RepeatScope` with the `item`, `index`, and `basePath` (e.g., `/todos/0`)
-2. Provides the scope via a child `Injector` using the `REPEAT_SCOPE` token
-3. Resolves props using the repeat scope context -- `$item` and `$index` expressions are evaluated per-iteration
-4. Renders the component with the resolved inputs
-
-<Callout type="info" title="Repeat and visibility">
-When an element has `repeat`, visibility evaluation is handled differently -- all items are rendered. To conditionally render individual repeat items, use conditional logic within the rendered component itself.
+<Callout type="info" title="Repeat elements skip the visibility check">
+An element with `repeat` renders every item. To hide individual items, branch inside the component that renders them.
 </Callout>
 
-## Complete Example
+The [repeat loops guide](/docs/render/guides/repeat-loops) covers the scope and the write-back paths in full.
 
-Let's put it together. Here's a spec that combines children, state expressions, conditional rendering, and repeat loops:
-
-```typescript
-const spec: Spec = {
-  root: 'app',
-  elements: {
-    app: {
-      type: 'Container',
-      props: {},
-      children: ['title', 'toggle', 'list'],
-    },
-    title: {
-      type: 'Text',
-      props: { label: { $state: '/heading' } },
-    },
-    toggle: {
-      type: 'Button',
-      props: { label: 'Toggle List' },
-      on: { click: { action: 'toggleList', params: {} } },
-    },
-    list: {
-      type: 'ListItem',
-      props: {
-        name: { $item: 'name' },
-        position: { $index: true },
-      },
-      visible: { $state: '/showList' },
-      repeat: { statePath: '/items' },
-    },
-  },
-  state: {
-    heading: 'My Todo List',
-    showList: true,
-    items: [
-      { name: 'First task' },
-      { name: 'Second task' },
-    ],
-  },
-};
-```
-
-## Next Steps
+## What's Next
 
 <CardGroup cols={2}>
-  <Card title="Registry Guide" href="/docs/render/guides/registry">
-    How components receive props and render children
+  <Card title="Component Registry" href="/docs/render/guides/registry">
+    How type names resolve and what a registered component receives
+  </Card>
+  <Card title="State Store" href="/docs/render/guides/state-store">
+    Reading and writing the store that expressions resolve against
   </Card>
   <Card title="Events Guide" href="/docs/render/guides/events">
     Event handler bindings and action dispatch
-  </Card>
-  <Card title="State Store Guide" href="/docs/render/guides/state-store">
-    Managing reactive state with signalStateStore()
   </Card>
   <Card title="RenderSpecComponent API" href="/docs/render/api/render-spec-component">
     Full API reference for the entry-point component
