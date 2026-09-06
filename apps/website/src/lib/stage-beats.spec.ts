@@ -80,9 +80,10 @@ describe('timeAt', () => {
   it('pins time at the interrupt through the hold and resumes past the threshold', () => {
     const a = beatWindows()[2];
     const at = (f: number) => timeAt(a.from + (a.to - a.from) * f, READY);
-    expect(at(APPROVE_HOLD.from)).toBe(READY.hold.startMs);
-    expect(at(0.5)).toBe(READY.hold.startMs);
-    expect(at(APPROVE_HOLD.to - 1e-6)).toBe(READY.hold.startMs);
+    // Pinned one millisecond inside the hold, so the frame reports `pause`.
+    expect(at(APPROVE_HOLD.from)).toBe(READY.hold.startMs + 1);
+    expect(at(0.5)).toBe(READY.hold.startMs + 1);
+    expect(at(APPROVE_HOLD.to - 1e-6)).toBe(READY.hold.startMs + 1);
     expect(at(APPROVE_HOLD.to)).toBe(READY.hold.endMs);
     expect(at(1)).toBe(READY.beats[2].endMs);
   });
