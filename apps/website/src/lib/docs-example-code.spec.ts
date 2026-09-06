@@ -45,7 +45,6 @@ const PENDING_PAGES = new Set<string>([
   '/docs/deep-agents/capabilities/planning',
   '/docs/deep-agents/capabilities/skills',
   '/docs/deep-agents/capabilities/subagents',
-  '/docs/langgraph/guides/deployment',
   '/docs/render/api/provide-render',
   '/docs/render/api/render-spec-component',
   '/docs/render/guides/registry',
