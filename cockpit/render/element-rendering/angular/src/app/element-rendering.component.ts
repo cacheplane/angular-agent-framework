@@ -391,6 +391,7 @@ export class ElementRenderingComponent implements OnDestroy {
     this.store.subscribe(() => {
       this.showDetail.set(this.store.get('/showDetail') as boolean ?? true);
     });
+    // #endregion
 
     // Auto-scroll JSON pane
     effect(() => {
@@ -403,7 +404,6 @@ export class ElementRenderingComponent implements OnDestroy {
       }
     });
   }
-  // #endregion
 
   // #region visibility-toggle
   protected onToggleDetail(_event: Event): void {

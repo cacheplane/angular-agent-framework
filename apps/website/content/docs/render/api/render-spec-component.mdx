@@ -123,7 +123,7 @@ interface RenderContext {
 }
 ```
 
-The context is a `computed` signal, so it is rebuilt when any input or the configuration changes. A component mounted inside the tree can inject it directly:
+The context is a `computed` signal, so it is rebuilt when any input changes. A component mounted inside the tree can inject it directly:
 
 ```typescript
 import { inject } from '@angular/core';
