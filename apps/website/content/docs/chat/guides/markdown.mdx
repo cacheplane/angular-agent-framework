@@ -1,3 +1,7 @@
+---
+description: How chat renders assistant markdown — the streaming node renderer, the renderMarkdown() helper, the 26-node registry, and per-instance node overrides.
+---
+
 # Markdown Rendering
 
 AI messages in `@threadplane/chat` can render full markdown -- headings, code blocks, tables, lists, blockquotes, math, HTML nodes, and inline formatting. Use `<chat-streaming-md>` for the live node-based renderer. Use `renderMarkdown()` only when you need a small sanitized-HTML helper in a custom template.
@@ -120,46 +124,22 @@ interface StreamingMarkdownDocument {
 
 Use the exported `markdownDocument(content, delivery)` helper to derive it from message content and the adapter-owned `Message.delivery`. Within one generation, streaming content must be append-only. Complete the same generation once, then leave its content unchanged. A retry or replacement starts a new generation. The component uses those guarantees to preserve parser and rendered-node identity while chunks arrive.
 
-It resolves each markdown node type against `MARKDOWN_VIEW_REGISTRY` — a chat-internal DI token exported from `@threadplane/chat`.
+It resolves each markdown node type against `MARKDOWN_VIEW_REGISTRY` — a chat-internal DI token exported from `@threadplane/chat` and consumed by the markdown node components.
 
-By default the component provides `cacheplaneMarkdownViews` (the full 22-node registry) on its own component injector. You can override this at two levels:
+Every `<chat-streaming-md>` instance provides `MARKDOWN_VIEW_REGISTRY` on its own
+component injector, from `[viewRegistry]` when you pass one and from
+`cacheplaneMarkdownViews` (the full 26-node registry) otherwise.
 
-- **App-wide** — provide a custom registry in your root or feature providers.
-- **Per-instance** — pass a `ViewRegistry` via the `[viewRegistry]` input; the component uses that value instead of the DI tree.
+<Callout type="warning" title="There is no app-wide markdown override">
+Because the component always provides the token itself, a
+`MARKDOWN_VIEW_REGISTRY` provider in your root or route providers is shadowed and
+never reaches the markdown node components. `[viewRegistry]` on
+`<chat-streaming-md>` is the only override point.
+</Callout>
 
 ## Overriding Markdown Components
 
-### App-wide override
-
-To replace a node-type renderer for every `<chat-streaming-md>` in your app, provide a custom `MARKDOWN_VIEW_REGISTRY` in your application config:
-
-```typescript
-import { ApplicationConfig } from '@angular/core';
-import { MARKDOWN_VIEW_REGISTRY, cacheplaneMarkdownViews } from '@threadplane/chat';
-import { overrideViews } from '@threadplane/render';
-import { MyCodeBlockComponent } from './my-code-block.component';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    {
-      provide: MARKDOWN_VIEW_REGISTRY,
-      useValue: overrideViews(cacheplaneMarkdownViews, {
-        'code-block': MyCodeBlockComponent,
-      }),
-    },
-  ],
-};
-```
-
-`overrideViews(base, overrides)` replaces every key listed in `overrides` and preserves all other entries from `base`. Import it from `@threadplane/render` (chat does not re-export it).
-
-<Callout type="info" title="overrideViews vs withViews">
-Use `overrideViews` when replacing an existing node type. Use `withViews` when adding a brand-new node type that `cacheplaneMarkdownViews` does not yet cover — `withViews` is additive-only and the base registry wins on conflicts. See the [render views API](/docs/render/api/views) for full signatures.
-</Callout>
-
-### Per-instance override
-
-Pass a `ViewRegistry` directly to a single `<chat-streaming-md>` via its `[viewRegistry]` input. The component uses the provided value and ignores the DI tree for that instance:
+Pass a `ViewRegistry` directly to a `<chat-streaming-md>` via its `[viewRegistry]` input:
 
 ```typescript
 import { Component } from '@angular/core';
@@ -190,6 +170,17 @@ export class CustomChatComponent {
   });
 }
 ```
+
+`overrideViews(base, overrides)` replaces every key listed in `overrides` and preserves all other entries from `base`. Import it from `@threadplane/render` (chat does not re-export it).
+
+<Callout type="info" title="overrideViews vs withViews">
+Use `overrideViews` when replacing an existing node type. Use `withViews` when adding a brand-new node type that `cacheplaneMarkdownViews` does not yet cover — `withViews` is additive-only and the base registry wins on conflicts. See the [render views API](/docs/render/api/views) for full signatures.
+</Callout>
+
+`<chat>` renders assistant markdown through its own `<chat-streaming-md>`, and
+does not forward a `[viewRegistry]`. To ship a custom node renderer inside a
+conversation, project your own `ai` message template into
+`<chat-message-list>` and mount `<chat-streaming-md [viewRegistry]="…">` there.
 
 ## Node-Type Reference
 

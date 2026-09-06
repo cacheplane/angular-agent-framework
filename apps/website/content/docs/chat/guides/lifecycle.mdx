@@ -1,6 +1,18 @@
+---
+description: The CHAT_LIFECYCLE token exposes per-instance signals for readiness, first submit, submit count and last submit time — and where in the injector tree they are reachable.
+---
+
 # Chat Lifecycle Signals
 
 `@threadplane/chat` exposes per-instance lifecycle signals via the `CHAT_LIFECYCLE` injection token. Subscribe to them for debugging, custom dashboards, or telemetry integrations.
+
+<Callout type="warning" title="The token is scoped to one chat instance">
+`ChatComponent` provides `CHAT_LIFECYCLE` in its own `providers` array, so the
+signals describe that one `<chat>` element and are reachable only from its
+injector: content you project into `<chat>`, or a component `<chat>` itself
+creates. A component elsewhere in the tree calling `inject(CHAT_LIFECYCLE)` hits
+a `NullInjectorError`.
+</Callout>
 
 ## Interface
 
@@ -23,13 +35,20 @@ export const CHAT_LIFECYCLE = new InjectionToken<ChatLifecycle>('CHAT_LIFECYCLE'
 
 ## Subscribing
 
+Inject the token from a component projected into `<chat>` — a header, a welcome
+suggestion strip, a footer badge:
+
 ```typescript
 import { Component, inject, effect } from '@angular/core';
 import { CHAT_LIFECYCLE } from '@threadplane/chat';
 
-@Component({ /* ... */ })
-export class MyComponent {
-  private lifecycle = inject(CHAT_LIFECYCLE);
+@Component({
+  selector: 'app-chat-header',
+  standalone: true,
+  template: `<span>{{ lifecycle.messageCount() }} sent</span>`,
+})
+export class ChatHeaderComponent {
+  protected readonly lifecycle = inject(CHAT_LIFECYCLE);
 
   constructor() {
     effect(() => {
@@ -41,9 +60,52 @@ export class MyComponent {
 }
 ```
 
+```html
+<chat [agent]="agent">
+  <app-chat-header chatHeader />
+</chat>
+```
+
+### Reading the signals from outside `<chat>`
+
+A component that is not inside a `<chat>` injector has two options. Inject
+optionally and handle the absent case:
+
+```typescript
+private readonly lifecycle = inject(CHAT_LIFECYCLE, { optional: true });
+```
+
+Or hold a view reference to the `<chat>` element and read the token off its
+injector:
+
+```typescript
+import { Component, Injector, viewChild } from '@angular/core';
+import { injectAgent } from '@threadplane/langgraph';
+import { CHAT_LIFECYCLE, ChatComponent } from '@threadplane/chat';
+
+@Component({
+  selector: 'app-chat-page',
+  standalone: true,
+  imports: [ChatComponent],
+  template: `<chat #surface [agent]="agent" />`,
+})
+export class ChatPageComponent {
+  protected readonly agent = injectAgent();
+  private readonly surface = viewChild.required('surface', { read: Injector });
+
+  protected lifecycle() {
+    return this.surface().get(CHAT_LIFECYCLE);
+  }
+}
+```
+
 ## Reset semantics
 
-| Signal | Resets on `clearThread()`? |
+`ChatComponent.clearThread()` is the public method that resets local view state
+for a new thread. Call it on a `<chat>` view reference when you switch threads
+yourself.
+
+| Signal | Resets on `ChatComponent.clearThread()`? |
 |--------|----------------------------|
 | `componentReady` | no |
 | `firstMessageSent` | **no (sticky for life of `<chat>`)** |

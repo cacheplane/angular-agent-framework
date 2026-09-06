@@ -1,3 +1,7 @@
+---
+description: Implement the runtime-neutral Agent contract for a custom backend — the required fields, a working in-process example, the conformance suite, and publishing notes.
+---
+
 # Writing an Adapter
 
 Learn how to implement a custom `Agent` adapter so `@threadplane/chat` components work with any backend — a custom RPC service, an in-process mock, or an exotic streaming protocol.
@@ -19,7 +23,7 @@ Every `@threadplane/chat` primitive and composition accepts an `Agent` object. T
 import type { Agent } from '@threadplane/chat';
 ```
 
-An `Agent` is a set of Angular **signals** (reactive state) plus an RxJS **observable** of events, a `submit` method to send a message or resume an interrupted run, and a `stop` method to abort the in-flight run.
+An `Agent` is a set of Angular **signals** (reactive state) plus an RxJS **observable** of events, a `submit` method to send a message or resume an interrupted run, a `stop` method to abort the in-flight run, and `retry` / `regenerate` methods to re-run a turn.
 
 ## Field-by-Field Reference
 
@@ -28,18 +32,20 @@ An `Agent` is a set of Angular **signals** (reactive state) plus an RxJS **obser
 | `messages` | `Signal<Message[]>` | A signal of the conversation messages so far |
 | `status` | `Signal<AgentStatus>` | `'idle' \| 'running' \| 'error'` |
 | `isLoading` | `Signal<boolean>` | `true` while a run is in flight |
-| `error` | `Signal<unknown>` | Last error, or `null` |
+| `error` | `Signal<AgentError \| undefined>` | Last classified error, or `undefined` when the agent is healthy |
 | `toolCalls` | `Signal<ToolCall[]>` | Tool invocations and their results |
-| `state` | `Signal<Record<string, unknown>>` | Backend-defined state snapshot |
+| `state` | `Signal<TState>` | Backend-defined state snapshot. `Agent<TState = unknown>`, so an untyped adapter returns `Signal<unknown>` |
 | `events$` | `Observable<AgentEvent>` | Discriminated `state_update` / `custom` events |
 | `submit` | `(input, opts?) => Promise<void>` | Send a message or resume |
 | `stop` | `() => Promise<void>` | Abort the in-flight run |
+| `retry` | `() => Promise<void>` | Re-run the last submitted input after a failure, clearing `error`. No-op when a run is in flight or there is nothing to retry |
 | `regenerate` | `(assistantMessageIndex: number) => Promise<void>` | Discard the assistant message at the index and everything after it, then re-run against the trimmed tail |
 | `interrupt?` | `Signal<AgentInterrupt \| undefined>` | (optional) Current pause-for-input |
 | `subagents?` | `Signal<Map<string, Subagent>>` | (optional) Spawned subagents |
+| `clientTools?` | `ClientToolsCapability` | (optional) Client-declared, client-executed tools — see [Client Tools](#client-tools-optional) below |
 
 <Callout type="info" title="Optional fields">
-`interrupt` and `subagents` are optional. Runtimes that do not support these concepts can leave them undefined. Components that need them gracefully fall back when they are absent.
+`interrupt`, `subagents`, and `clientTools` are optional. Runtimes that do not support these concepts can leave them undefined. Components that need them gracefully fall back when they are absent.
 </Callout>
 
 <Callout type="tip" title="events$ and signals">
@@ -48,7 +54,7 @@ The design invariant is: **state lives on signals; `events$` carries only things
 
 ## Worked Example: An In-Process Echo Adapter
 
-Below is a complete `EchoAgent` factory — roughly 80 lines — that satisfies the full `Agent` contract without any network call. It shows the signal pattern clearly and is a solid starting point for your own adapter.
+Below is a complete `EchoAgent` factory that satisfies the full `Agent` contract without any network call. It shows the signal pattern clearly and is a solid starting point for your own adapter.
 
 On `submit`, the factory appends a complete user message and starts an assistant delivery generation. After a short delay it completes that same generation with a successful echo; stopping early completes it as aborted. There are no tool calls, custom events, or interrupts.
 
@@ -56,7 +62,7 @@ On `submit`, the factory appends a complete user message and starts an assistant
 import { signal, type Signal } from '@angular/core';
 import { EMPTY, type Observable } from 'rxjs';
 import type {
-  Agent, Message, AgentStatus, ToolCall,
+  Agent, AgentError, Message, AgentStatus, ToolCall,
   AgentEvent, AgentSubmitInput, AgentSubmitOptions,
 } from '@threadplane/chat';
 import {
@@ -74,14 +80,16 @@ export function createEchoAgent(opts: EchoAgentOptions = {}): Agent {
   const messages = signal<Message[]>([]);
   const status = signal<AgentStatus>('idle');
   const isLoading = signal(false);
-  const error = signal<unknown>(null);
+  const error = signal<AgentError | undefined>(undefined);
   const toolCalls = signal<ToolCall[]>([]);
   const state = signal<Record<string, unknown>>({});
   let pending: ReturnType<typeof setTimeout> | undefined;
   let activeReply: { id: string; generation: string } | undefined;
+  let lastInput: AgentSubmitInput | undefined;
 
   const submit = async (input: AgentSubmitInput, _opts?: AgentSubmitOptions) => {
     if (input.message === undefined) return;
+    lastInput = input;
 
     const text = typeof input.message === 'string'
       ? input.message
@@ -112,7 +120,7 @@ export function createEchoAgent(opts: EchoAgentOptions = {}): Agent {
 
     status.set('running');
     isLoading.set(true);
-    error.set(null);
+    error.set(undefined);
 
     pending = setTimeout(() => {
       messages.update((prev) => prev.map((message) =>
@@ -147,6 +155,13 @@ export function createEchoAgent(opts: EchoAgentOptions = {}): Agent {
     isLoading.set(false);
   };
 
+  const retry = async () => {
+    // No-op while a run is in flight or when nothing has been submitted yet.
+    if (isLoading() || lastInput === undefined) return;
+    error.set(undefined);
+    await submit(lastInput);
+  };
+
   const regenerate = async (assistantMessageIndex: number) => {
     // Discard the assistant message at the index AND everything after it,
     // keeping the preceding user message, then re-run against the trimmed tail.
@@ -167,6 +182,7 @@ export function createEchoAgent(opts: EchoAgentOptions = {}): Agent {
     events$: EMPTY satisfies Observable<AgentEvent>,
     submit,
     stop,
+    retry,
     regenerate,
   };
 }
@@ -178,7 +194,7 @@ function cryptoRandomId(): string {
 
 ## Wiring It Into a Component
 
-For me, the cleanest approach is to register your factory behind an Angular injection token and inject it into your component. It's a touch more boilerplate than a bare `new`, but it keeps the wiring testable and swappable.
+The cleanest approach is to register your factory behind an Angular injection token and inject it into your component. It is a little more boilerplate than a bare `new`, but it keeps the wiring testable and swappable.
 
 ```typescript
 // app.config.ts
@@ -253,16 +269,16 @@ Use `runAgentWithHistoryConformance` from `@threadplane/chat/testing` in your sp
 
 `AgentWithHistory` is a structural choice — exposing the checkpoint list. There is a parallel behavioral choice an adapter has to make:
 
-**When `threadId` changes to a non-null id the consumer didn't just create, should `messages` and `values` re-populate from the server's record of that thread?**
+**When `threadId` changes to a non-null id the consumer did not just create, should `messages` and `values` re-populate from the server's record of that thread?**
 
 The chat UI assumes "yes" implicitly — clicking a thread in a sidebar list, or rehydrating a saved id on reload, both rely on the adapter pulling the prior conversation back into view. If the adapter only clears local state on a thread switch, the UI shows an empty welcome surface and the user loses their conversation.
 
 How adapters in this repo answer the question:
 
 - **`@threadplane/langgraph`** answers *yes*. On every `threadId` change the bridge calls `transport.getHistory(id)` (LangGraph SDK `client.threads.getHistory`), takes the latest checkpoint, and seeds `messages$` and `values$` before any new user turn. The LangGraph protocol exposes a checkpoint endpoint per thread, so this is straightforward. See the [LangGraph persistence guide](/docs/langgraph/guides/persistence) for the consumer-side shape.
-- **`@threadplane/ag-ui`** answers *no, by design*. The AG-UI protocol is event-stream-only — it doesn't define a server-side "get the messages on this thread" endpoint. The adapter's `threadId` is therefore a plain string accepted once at construction, and switching threads means tearing down the provider and creating a new one (or pre-loading messages from the host service before the agent boots). See [AG-UI architecture › Provider choices](/docs/ag-ui/concepts/architecture#provider-choices).
+- **`@threadplane/ag-ui`** answers *no, by design*. The AG-UI protocol is event-stream-only — it does not define a server-side "get the messages on this thread" endpoint. The adapter's `threadId` is therefore a plain string accepted once at construction, and switching threads means tearing down the provider and creating a new one (or pre-loading messages from the host service before the agent boots). See [AG-UI architecture › Provider choices](/docs/ag-ui/concepts/architecture#provider-choices).
 
-If your protocol does store thread state, follow the LangGraph adapter's pattern: react to `threadId` changes, fetch the latest checkpoint, and surface a `isThreadLoading` signal so the UI can show a skeleton while the fetch runs. If it doesn't, follow AG-UI and be explicit in your docs that consumers own the load step.
+If your protocol does store thread state, follow the LangGraph adapter's pattern: react to `threadId` changes, fetch the latest checkpoint, and surface a `isThreadLoading` signal so the UI can show a skeleton while the fetch runs. If it does not, follow AG-UI and be explicit in your docs that consumers own the load step.
 
 ## Client Tools (Optional)
 
@@ -315,16 +331,18 @@ Want to distribute your adapter as an npm package? Keep the following in mind.
 {
   "peerDependencies": {
     "@angular/core": "^20.0.0 || ^21.0.0 || ^22.0.0",
-    "@threadplane/chat": "^0.0.2",
+    "@threadplane/chat": ">=0.0.66 <0.1.0",
     "rxjs": "^7.0.0"
   },
   "devDependencies": {
-    "@threadplane/chat": "^0.0.2"
+    "@threadplane/chat": "0.0.66"
   }
 }
 ```
 
 The `@threadplane/chat/testing` entry point is part of the same package as the main entry point, so there is nothing extra to install for the conformance tests.
+
+While `@threadplane/chat` is pre-1.0, every patch release can carry a breaking change, so `^0.0.x` matches only that one exact version. Use an explicit range instead, and widen it as you verify newer releases. The adapters in this repository pin the exact version they were built against.
 
 **Naming convention:** `@your-org/your-backend-agent` works well (e.g., `@acme/supabase-realtime-agent`). The `-agent` suffix signals that the package satisfies the `Agent` contract.
 
@@ -335,21 +353,18 @@ The `@threadplane/chat/testing` entry point is part of the same package as the m
 <CardGroup cols={3}>
   <Card
     title="Configuration"
-    icon="settings"
     href="/docs/chat/guides/configuration"
   >
     All provideChat() options for global chat configuration.
   </Card>
   <Card
     title="ChatComponent"
-    icon="layout"
     href="/docs/chat/components/chat"
   >
     Deep dive into the ChatComponent API and inputs.
   </Card>
   <Card
     title="AG-UI Adapter"
-    icon="plug"
     href="/docs/ag-ui/getting-started/introduction"
   >
     The built-in AG-UI adapter for compatible backends.

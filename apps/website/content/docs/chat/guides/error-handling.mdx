@@ -1,3 +1,7 @@
+---
+description: The structured AgentError on the agent error signal — its failure kinds, the retryable flag, the built-in chat-error UI, and classifying failures in a custom adapter.
+---
+
 # Error Handling
 
 When a run fails, `@threadplane/chat` surfaces a structured `AgentError` on the agent's `error` signal instead of a bare `Error`. It carries a machine-readable failure `kind`, a `retryable` flag, an optional HTTP `status`, and the original `cause` — so you can render cause-specific copy, decide whether to offer a retry, and keep the raw error for telemetry.
@@ -44,7 +48,7 @@ if (err) {
 }
 ```
 
-`agent.retry()` re-runs the last request and clears `error`. It's a no-op when a run is in flight or there is nothing to retry.
+`agent.retry()` re-runs the last request and clears `error`. It is a no-op when a run is in flight or there is nothing to retry.
 
 ## The built-in error UI
 
@@ -139,21 +143,18 @@ import {
 <CardGroup cols={3}>
   <Card
     title="Writing an Adapter"
-    icon="plug"
     href="/docs/chat/guides/writing-an-adapter"
   >
     Normalize backend failures with `toAgentError()` in a custom adapter.
   </Card>
   <Card
     title="Lifecycle Signals"
-    icon="activity"
     href="/docs/chat/guides/lifecycle"
   >
     Per-instance signals for debugging, loading, and error states.
   </Card>
   <Card
     title="Theming"
-    icon="palette"
     href="/docs/chat/guides/theming"
   >
     Style the error surface with chat theme variables.

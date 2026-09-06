@@ -1,12 +1,17 @@
+---
+description: The four ready-made chat layouts — embedded, popup, sidebar, and the sidenav navigation panel — with when to reach for each and how to drive them.
+---
+
 # Layout Modes
 
-`@threadplane/chat` ships three ready-made layout compositions. Pick the one that best fits how chat lives inside your app.
+`@threadplane/chat` ships four ready-made layout compositions. Pick the one that best fits how chat lives inside your app.
 
 | Mode | Component | Best for |
 |---|---|---|
 | Embedded | `<chat>` | Chat is the primary purpose of the page |
 | Popup | `<chat-popup>` | Non-intrusive assistant overlay on any page |
 | Sidebar | `<chat-sidebar>` | Copilot panel alongside existing app content |
+| Sidenav | `<chat-sidenav>` | A thread and project navigation rail next to a full-page chat |
 
 ## Embedded — `<chat>`
 
@@ -150,6 +155,64 @@ Toggle the sidebar from a nav button:
 </chat-sidebar>
 ```
 
+## Sidenav — `<chat-sidenav>`
+
+The sidenav composition is the conversation navigation rail: a thread list, an
+optional project list, a search action, and a new-chat action. It is the one
+composition here that does **not** wrap `<chat>`. All of its content slots are
+named and target regions inside the rail, so a `<chat>` placed between the tags
+is silently dropped. Render the chat as a sibling and lay the two out yourself.
+
+**When to pick this mode:**
+- The product is a full-page chat with many saved conversations
+- You want ChatGPT-style thread and project navigation beside the conversation
+- You already have a thread store to feed the list
+
+```typescript
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { injectAgent } from '@threadplane/langgraph';
+import { ChatComponent, ChatSidenavComponent } from '@threadplane/chat';
+import type { Thread } from '@threadplane/chat';
+
+@Component({
+  selector: 'app-chat-shell',
+  standalone: true,
+  imports: [ChatSidenavComponent, ChatComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: [`
+    :host { display: flex; height: 100dvh; }
+    .chat-pane { flex: 1; min-width: 0; }
+  `],
+  template: `
+    <chat-sidenav
+      [agent]="chatAgent"
+      [threads]="threads()"
+      [activeThreadId]="activeThreadId()"
+      (newChat)="activeThreadId.set(null)"
+      (threadSelected)="activeThreadId.set($event)"
+    />
+    <main class="chat-pane">
+      <chat [agent]="chatAgent" />
+    </main>
+  `,
+})
+export class ChatShellComponent {
+  protected readonly chatAgent = injectAgent();
+  protected readonly threads = signal<Thread[]>([]);
+  protected readonly activeThreadId = signal<string | null>(null);
+}
+```
+
+`[mode]` switches between `'expanded'`, `'collapsed'`, and `'drawer'`, and the
+component emits `(modeChange)` when the user presses Cmd/Ctrl+B. Cmd/Ctrl+K
+emits `(searchOpened)` so you can open your own command palette.
+
+<Callout type="tip" title="The devtools launcher is on by default">
+When `@threadplane/chat/debug` is part of your build and `[agent]` is bound,
+`<chat-sidenav>` renders a Devtools launcher in its footer. `[debug]` already
+defaults to `true`; pass `[debug]="false"` to suppress it.
+</Callout>
+
 ## Choosing a Mode
 
 | Question | Answer |
@@ -158,5 +221,6 @@ Toggle the sidebar from a nav button:
 | Should chat be invisible until needed? | Use `<chat-popup>` |
 | Should chat and app content coexist? | Use `<chat-sidebar>` |
 | Should the sidebar push content aside? | Use `<chat-sidebar [pushContent]="true">` |
+| Do users need to browse many saved conversations? | Add `<chat-sidenav>` beside `<chat>` |
 
-All three compositions share the same `--tplane-chat-*` token system, so whichever mode you land on, it'll match your brand. Next, head to [Theming](/docs/chat/guides/theming) to customize colors, shapes, and typography across all modes at once.
+All four compositions share the same `--tplane-chat-*` token system, so whichever mode you land on, it will match your brand. Next, head to [Theming](/docs/chat/guides/theming) to customize colors, shapes, and typography across all modes at once.
