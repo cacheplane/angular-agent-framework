@@ -21,7 +21,6 @@ import {
  * comments on any docs page, or it counts as an include.
  */
 const PENDING_PAGES = new Set<string>([
-  '/docs/a2ui/getting-started/introduction',
   '/docs/chat/a2ui/overview',
   '/docs/chat/components/chat-debug',
   '/docs/chat/components/chat-input',
