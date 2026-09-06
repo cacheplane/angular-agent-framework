@@ -1,137 +1,203 @@
+---
+description: Declare tools in the browser, ship the catalog to a LangGraph graph as client_tools, and carry each browser-produced result back into the run.
+---
+
 # Client Tools
 
-Client tools are tools you declare **in the browser** that the model calls and the browser executes — no server-side implementation. There are three kinds:
+Client tools are tools you declare in the browser that the model calls and the browser executes, with no server-side implementation. The Angular app declares them, the `@threadplane/langgraph` adapter merges the catalog into every run payload under the `client_tools` key, and the graph binds those declarations onto the model and ends its turn when one is called. The browser then produces the result and hands it back, either as a new run or as a direct write to the thread. This guide walks the running example, from the graph to the components the model fills.
 
 | Helper | Kind | What it does |
 |---|---|---|
-| `action()` | function | Runs an async handler in the browser; its resolved return value becomes the tool result sent back to the model. |
-| `view()` | render-only component | The model fills the component's props from the schema; the card renders inline and the call is auto-acknowledged once it mounts. |
-| `ask()` | interactive component | The model fills the component's props; the value the component emits back becomes the tool result (human-in-the-loop). |
+| `action()` | function | Runs a handler in the browser; its resolved return value becomes the tool result. |
+| `view()` | render-only component | The model fills the component's inputs from the schema; the card renders inline and the call is acknowledged once it mounts. |
+| `ask()` | interactive component | The model fills the component's inputs; the value the component emits back becomes the tool result. |
 
-Tools are arguments-typed by a [Standard Schema](https://standardschema.dev) (e.g. a Zod object). The catalog is shipped to the model by the adapter; the backend graph binds the client stubs and ends its turn so the browser executes them.
-
-<Callout type="info" title="Adapter-neutral">
-  The same declarations work with `@threadplane/langgraph` and `@threadplane/ag-ui` — only the `provideAgent`/`injectAgent` imports change.
+<Callout type="info" title="Adapter-neutral declarations">
+`tools`, `action`, `view`, and `ask` come from `@threadplane/chat`, so the same registry works on `@threadplane/langgraph` and `@threadplane/ag-ui`. Only the `provideAgent`/`injectAgent` imports and the backend wiring change. The [AG-UI twin of this guide](/docs/ag-ui/guides/client-tools) walks the same three declarations over the AG-UI transport.
 </Callout>
 
-## Declaring a registry
+## What the demo does
 
-`tools({...})` collects named tools into a frozen registry. Pass it to `<chat>` via `[clientTools]`:
+The Run tab shows the prebuilt `<chat>` composition in front of a LangGraph agent wired to five browser-executed tools. Ask "What is the weather in San Francisco?" and the model calls `get_weather`, whose handler runs in the page and returns a reading the model then summarizes in one sentence.
 
-```typescript
-import { Component } from '@angular/core';
-import { ChatComponent, tools, action, view, ask } from '@threadplane/chat';
-import { injectAgent } from '@threadplane/langgraph';
-import { z } from 'zod/v4';
-import { WeatherCardComponent } from './weather-card.component';
-import { ConfirmBookingComponent } from './confirm-booking.component';
+Ask it to show a weather card for Tokyo and the model calls `weather_card` instead, filling an Angular component's inputs with readings it invents, and the card renders inline in the transcript. Ask it to book a table and `confirm_booking` mounts a card with Confirm and Cancel buttons, and whichever you click becomes the tool result that resumes the run.
 
-const clientTools = tools({
-  get_weather: action(
-    'Look up the current weather for a location.',
-    z.object({ location: z.string() }),
-    async ({ location }) => ({ location, temperatureF: 68, conditions: 'Sunny' }),
-  ),
-  weather_card: view(
-    'Display a weather card for a location.',
-    z.object({ location: z.string(), temperatureF: z.number(), conditions: z.string() }),
-    WeatherCardComponent,
-  ),
-  confirm_booking: ask(
-    'Ask the user to confirm a booking before finalizing it.',
-    z.object({ summary: z.string() }),
-    ConfirmBookingComponent,
-  ),
-});
+Two further prompts exercise the edges. A quiet weather snapshot calls `weather_snapshot`, which renders the same card and ends the turn with no spoken summary after it. A request to test stopping a slow browser tool calls `slow_status_check`, which waits three seconds and can be cancelled with the stop button.
 
-@Component({
-  selector: 'app-client-tools',
-  standalone: true,
-  imports: [ChatComponent],
-  template: `<chat [agent]="agent" [clientTools]="clientTools" />`,
-})
-export class ClientToolsComponent {
-  protected readonly agent = injectAgent();
-  protected readonly clientTools = clientTools;
-}
-```
+## How it is built
 
-The object keys (`get_weather`, `weather_card`, `confirm_booking`) are the tool names the model sees. `tools()` preserves each tool's precise generic type, so downstream lookups stay typed.
+Six files carry the feature: a graph that binds the browser's declarations and ends its turn, an application config, the schemas the registry and its components share, the file that declares the registry and passes it to `<chat>`, and the two components the model fills. Open the Code tab to read them in place.
 
-## Typed component props with `ViewProps`
+### The graph binds client stubs and ends the turn
 
-For `view()` and `ask()`, the component's signal inputs are checked against the schema output at compile time — every field the schema produces must be a declared `input()` with an assignable type (the component may declare extra inputs the schema doesn't fill). Derive the input types directly from the schema with `ViewProps<typeof schema>` so the two never drift:
+The graph has one node. Its `State` declares a `client_tools` channel alongside `messages`, because that is the key the LangGraph adapter writes the catalog to, and `bind_client_tools` reads it there to bind the declarations onto the model for this invocation. There are no server tools, so `route` returns `END` unconditionally.
 
-```typescript
-import { Component, input } from '@angular/core';
-import type { ViewProps } from '@threadplane/chat';
+<ExampleCode file="graph.py" />
+
+`bind_client_tools(llm, [], state)` converts each catalog entry into an OpenAI function-tool dictionary and calls `llm.bind_tools` with it; the empty list is where your own server tools would go.
+
+<Callout type="info" title="Why the turn ends on a tool call">
+The browser, not the graph, produces the result. Ending the run is the signal the adapter waits for: a client tool call counts as pending only once the run is no longer loading. A graph that looped back to a tools node would leave the browser nothing to do.
+</Callout>
+
+<Callout type="warning" title="Read the catalog from the key your adapter writes">
+`bind_client_tools` reads `state["tools"]` first and falls back to `state["client_tools"]`, so one graph serves both adapters. The LangGraph adapter writes `client_tools`; declare that channel or the merged value is dropped, the model is bound with nothing, and the demo goes quiet with no error.
+</Callout>
+
+This graph compiles without a checkpointer, because it runs under the LangGraph server, which provides one. That is the opposite of the AG-UI twin, which serves the same graph from its own FastAPI process and therefore brings its own saver.
+
+### Providing the agent
+
+`provideAgent()` from `@threadplane/langgraph` registers the agent at the application root, and `provideChat({})` registers the chat defaults. The example resolves its `apiUrl` and `assistantId` at runtime because the host that serves the demo decides which runtime is attached; your own application passes them directly. The `CLIENT_TOOLS_AGENT_REF` argument is a typed reference, covered under [typed agent state](#typed-agent-state) below.
+
+<ExampleCode file="app.config.ts" />
+
+### Declaring the tool registry
+
+`tools()` builds a name-keyed registry, and each entry is one of three declarations from `@threadplane/chat`. `action()` takes a handler that runs in the browser and may return a promise, `view()` takes a component the model fills, and `ask()` takes a component that reports a value back. Every entry carries a description the model reads and a schema authored with `zod/v4`. The `weather_card`, `weather_snapshot`, and `confirm_booking` entries take their schemas from `schemas.ts`, the file the registry and the two components it points at all import from.
+
+```ts
 import { z } from 'zod/v4';
 
+/** Schema for the `weather_card` view tool. */
 export const weatherCardSchema = z.object({
   location: z.string(),
   temperatureF: z.number(),
   conditions: z.string(),
+  humidity: z.number(),
+  windMph: z.number(),
 });
 
-// { location: string; temperatureF: number; conditions: string }
-type Inputs = ViewProps<typeof weatherCardSchema>;
-
-@Component({
-  selector: 'app-weather-card',
-  standalone: true,
-  template: `<div>{{ location() }}: {{ temperatureF() }}°F, {{ conditions() }}</div>`,
-})
-export class WeatherCardComponent {
-  location = input.required<string>();
-  temperatureF = input.required<number>();
-  conditions = input.required<string>();
-}
+/** Schema for the `confirm_booking` ask tool. */
+export const confirmBookingSchema = z.object({ summary: z.string() });
 ```
 
-Under `strict: true`, the typed `view`/`ask` overloads report a compile error at the `view(...)`/`ask(...)` call site if the component's inputs diverge from the schema — mismatches become build errors, not silent runtime failures.
+<ExampleCode file="client-tools.component.ts" region="tool-registry" title="client-tools.component.ts — the registry" />
 
-## Typed handler args with `ToolArgs`
+The object keys are the tool names the model sees, and `weather_snapshot` shows the fourth argument: options. It reuses the weather card with `{ followUp: false }`, which is what makes it terminal.
 
-For `action()`, the handler argument type is inferred from the schema automatically. When you want to name that type — e.g. to write the handler separately — use `ToolArgs<typeof schema>` (an alias of the schema's inferred output):
-
-```typescript
-import { action, type ToolArgs } from '@threadplane/chat';
-import { z } from 'zod/v4';
-
-const moveSchema = z.object({ fromDay: z.number(), toDay: z.number() });
-
-async function moveStop(args: ToolArgs<typeof moveSchema>) {
-  // args is { fromDay: number; toDay: number }
-  return reorder(args.fromDay, args.toDay);
-}
-
-const move = action('Move a stop to another day.', moveSchema, moveStop);
-```
-
-## Terminal tools with `followUp: false`
-
-By default, resolving a client tool starts a new run so the model can react to the result. Pass `followUp: false` when a tool **ends the turn** — a summary card, a confirmation receipt, anything the model has nothing further to say about. The result is still recorded on the server; the model simply is not asked to respond to it.
-
-```typescript
-const clientTools = tools({
-  trip_summary: view(
-    'Show a final trip summary card. Call this last — it ends the turn.',
-    z.object({ title: z.string(), days: z.array(z.string()) }),
-    TripSummaryCardComponent,
-    { followUp: false },
-  ),
-});
-```
-
-Follow-up is decided **per tool-call group**, not per tool. If the model calls three tools in one turn and any one of them wants a follow-up, the whole group continues in a single run once every result has settled. Only when *every* tool in the group is terminal does the turn end.
-
-<Callout type="warning" title="Your transport must support durable writes">
-  A terminal group has no follow-up run to carry its results, so the adapter writes them to the server directly. On `@threadplane/langgraph` that uses the transport's `updateState`. If a **custom transport does not implement `updateState`**, `flush()` rejects when terminal results are staged. The results stay buffered and an ordinary next message can still carry them, but a browser page reload first loses that in-memory fallback and leaves the server thread with an unanswered tool call. If you supply your own transport and use terminal tools, implement `updateState`.
+<Callout type="warning" title="Author schemas with zod/v4">
+The catalog the model sees is derived by `deriveJsonSchema`, which calls `toJSONSchema` from `zod/v4`. A validator it cannot convert throws with the tool name in the message.
 </Callout>
 
-## Re-running tools safely with `idempotent`
+### Passing the registry to chat
 
-`action()` also accepts `idempotent`. It matters only when you supply a `[clientToolExecutionGuard]` — a durable store that claims each tool call before the browser executes it, so a handler with real side effects cannot run twice across a reload or a reconnect.
+The registry reaches the UI through one input. `<chat [clientTools]="clientTools">` builds a coordinator for that registry, which ships the catalog to the agent, runs function tools, mounts view and ask components, and settles each call.
+
+<ExampleCode file="client-tools.component.ts" region="chat-wiring" title="client-tools.component.ts — the chat wiring" />
+
+The `messageCount` computed is there to prove the typed dependency-injection path compiles: `agent.value()` is a `ClientToolsState`, so a field that does not exist on that shape is a build error.
+
+### The view component the model fills
+
+`weather_card` is a `view`: the model supplies the props, the card renders inline, and the coordinator acknowledges the call itself with `{ shown: true }`. The component types its inputs through `ClientToolViewProps<typeof weatherCardSchema>`, which is the schema's output plus two framework-supplied props, `status` and `clientTool`.
+
+<ExampleCode file="weather-card.component.ts" />
+
+Inputs are optional because props arrive while the call streams, so the card reads `clientTool()?.phase` and shows a loading badge until the phase is `complete` and the readings have arrived.
+
+### The ask component that resumes the run
+
+`confirm_booking` is an `ask`: the model fills `summary`, and the run waits for a person. The component injects the render host and calls `result({ confirmed })`, which the coordinator matches to the pending call by tool name and settles as that call's result.
+
+<ExampleCode file="confirm-booking.component.ts" />
+
+<Callout type="tip" title="Why the card freezes after the answer">
+Settling writes the emitted value onto the local tool call, and the mounted component is re-rendered with the merged props. That is why `confirmed` is declared with a default of `undefined`: while it is undefined the buttons are live, and once the user answers the template branches to a frozen line with no buttons.
+</Callout>
+
+### Stopping a tool that is still running
+
+A function handler receives a context object as its second argument, carrying an `AbortSignal`. `slow_status_check` waits three seconds through a helper that rejects the moment the signal aborts.
+
+<ExampleCode file="client-tools.component.ts" region="abortable-delay" title="client-tools.component.ts — the abortable delay" />
+
+The executor wraps the agent's `stop`, so pressing stop aborts every in-flight handler, and a cancelled call is recorded without starting a new run.
+
+## The round trip in one pass
+
+<Steps>
+<Step title="The catalog ships with the run">
+The coordinator converts the registry into specs, each with a name, a description, and a JSON Schema, and the adapter merges them into every outbound payload as `client_tools`.
+</Step>
+<Step title="The model calls a tool and the graph ends the turn">
+Because the tool has no server implementation, the run finishes with a tool call that carries no result.
+</Step>
+<Step title="The browser sees the call as pending">
+Pending calls are those whose name is in the catalog, whose result is undefined, and which this client has not resolved yet, and only while the agent is not loading.
+</Step>
+<Step title="The browser produces the result">
+A function handler runs, a view is acknowledged on mount, and an ask waits for the user's value.
+</Step>
+<Step title="The result is recorded and the run usually continues">
+The result is written onto the local tool call and staged as a tool message addressed to the call id. A group that wants a follow-up starts the next run and carries the staged messages with it; a terminal group is written to the thread instead.
+</Step>
+</Steps>
+
+## Settle, flush, and resolve on LangGraph
+
+The adapter implements three operations for a produced result, and the coordinator picks between them.
+
+`settle(id, result)` records the result: the value is written onto the local tool call so the transcript card freezes, and a tool message with the deterministic id `client-tool-result-<callId>` is staged in memory. `resolve(id, result)` settles and then issues a new run on the same thread with `{ messages: [<the staged tool messages>], client_tools: <the catalog> }`, which is the normal path. `flush()` makes staged results durable without continuing: on `@threadplane/langgraph` it writes them into the thread with one `threads.updateState` call, so no run is started and the graph's resume point is untouched.
+
+That is the sharpest difference from the AG-UI adapter, where `flush()` is a deliberate no-op because `settle` has already placed the tool message in the message list the next run carries.
+
+The choice matters at the edges. A tool declared with `followUp: false`, like `weather_snapshot` in this example, is settled and flushed instead of resolved, so the rendered card is the final answer and no summary follows. A cancelled call takes the same path, because continuing the run is exactly what the user asked not to happen.
+
+Follow-up is decided per tool-call group, not per tool. If the model calls three tools in one turn and any one of them wants a follow-up, the whole group continues in a single run once every result has settled. Only when every tool in the group is terminal does the group flush instead.
+
+<Callout type="warning" title="A custom transport needs updateState">
+`flush()` writes through the transport's `updateState`. The default transport implements it. If you supply your own and it does not, the adapter never installs a persist function, a non-empty `flush()` rejects with that reason, and the results stay staged. They still ride along on the next ordinary submit, which prepends them to that run's message list, but a page reload first loses them and leaves the server thread holding an unanswered tool call.
+</Callout>
+
+<Callout type="info" title="Staged results belong to their thread">
+Each staged result is stamped with the thread it settled on. Switching threads discards the staging buffer, and a result settled for a thread you have left is dropped with a warning rather than written to the thread you moved to.
+</Callout>
+
+## Stopping and continuation limits
+
+Pressing stop while a client tool is running aborts the handler, records a cancelled result so the server never holds an unanswered tool call, and does not start a new run. The cancelled call is not re-executed.
+
+Handlers receive an `AbortSignal` in their second argument. Forward it to `fetch` so in-flight work actually stops:
+
+```typescript
+const search = action(
+  'Search the catalog.',
+  z.object({ query: z.string() }),
+  async ({ query }, { signal }) => {
+    const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`, { signal });
+    return res.json();
+  },
+);
+```
+
+Runaway loops are capped. A model that keeps calling client tools is stopped after ten continuation groups per user turn. Tune that with `[clientToolContinuationPolicy]`:
+
+```typescript
+import type { ClientToolContinuationPolicy } from '@threadplane/chat';
+
+@Component({
+  template: `
+    <chat
+      [agent]="agent"
+      [clientTools]="clientTools"
+      [clientToolContinuationPolicy]="policy"
+    />
+  `,
+})
+export class ClientToolsComponent {
+  protected readonly policy: ClientToolContinuationPolicy = {
+    maxTurns: 5, // 0 disables the cap
+    onLimit: (event) => console.warn('client tool loop stopped', event.toolNames),
+  };
+}
+```
+
+When the cap trips, tools that already produced a real result keep it; tools that never ran are settled with a limit error so the thread stays valid. The run does not continue. `<chat>` also emits the same event through its `(clientToolContinuationLimit)` output.
+
+## Re-running tools safely with idempotent
+
+`action()` accepts an `idempotent` option. It matters only when you supply a `[clientToolExecutionGuard]`, a durable store that claims each tool call before the browser executes it, so a handler with real side effects cannot run twice across a reload or a reconnect.
 
 ```typescript
 const clientTools = tools({
@@ -150,60 +216,43 @@ const clientTools = tools({
 });
 ```
 
-Tools are treated as non-idempotent by default. Mark a tool `idempotent: true` only when re-running it is genuinely harmless — reads, pure computations, lookups.
+Tools are treated as non-idempotent by default. Mark a tool `idempotent: true` only when re-running it is genuinely harmless: reads, pure computations, lookups.
 
 <Callout type="info" title="Exactly-once has a limit">
-  The guard gives you at-most-once *dispatch*, not exactly-once *effects*. If a handler completes its side effect and the browser dies before recording the result, the guard fails closed and reports the call as interrupted. For true end-to-end idempotency, have the handler pass its own idempotency key to the downstream service.
+The guard gives you at-most-once dispatch, not exactly-once effects. If a handler completes its side effect and the browser dies before recording the result, the guard fails closed and reports the call as interrupted. For true end-to-end idempotency, have the handler pass its own idempotency key to the downstream service.
 </Callout>
 
-## Stopping and continuation limits
+## Typed props and typed handler arguments
 
-**Stop cancels cleanly.** Pressing stop while a client tool is running aborts the handler, records a cancelled result so the server never holds an unanswered tool call, and does **not** start a new run. The cancelled call will not re-execute.
+The `view` and `ask` overloads are typed against the paired component: every field the schema produces must be a declared `input()` on that component with an assignable type, so a schema change is a compile error at the `view(...)` or `ask(...)` call site rather than a silent runtime gap. The component may declare extra inputs the schema does not fill.
 
-Handlers receive an `AbortSignal` — forward it to `fetch` so in-flight work actually stops:
+Author the component from the schema so the two cannot drift. `ClientToolViewProps<typeof schema>` is the schema output plus the framework-supplied `status` and `clientTool`, which is what both components in this example use. `ViewProps<typeof schema>` is the schema output alone, for a component that does not read the lifecycle.
 
-```typescript
-const search = action(
-  'Search the catalog.',
-  z.object({ query: z.string() }),
-  async ({ query }, { signal }) => {
-    const res = await fetch(`/api/search?q=${query}`, { signal });
-    return res.json();
-  },
-);
-```
-
-**Runaway loops are capped.** A model that keeps calling client tools is stopped after 10 continuation groups per user turn. Tune it with `[clientToolContinuationPolicy]`:
+For `action()`, the handler argument type is inferred from the schema automatically. When you want to name that type, to write the handler separately, use `ToolArgs<typeof schema>`:
 
 ```typescript
-@Component({
-  template: `
-    <chat
-      [agent]="agent"
-      [clientTools]="clientTools"
-      [clientToolContinuationPolicy]="policy"
-    />
-  `,
-})
-export class ClientToolsComponent {
-  protected readonly policy = {
-    maxTurns: 5,                       // 0 disables the cap
-    onLimit: (e) => console.warn('client tool loop stopped', e.toolNames),
-  };
+import { action, type ToolArgs } from '@threadplane/chat';
+import { z } from 'zod/v4';
+
+const moveSchema = z.object({ fromDay: z.number(), toDay: z.number() });
+
+async function moveStop(args: ToolArgs<typeof moveSchema>) {
+  // args is { fromDay: number; toDay: number }
+  return reorder(args.fromDay, args.toDay);
 }
-```
 
-When the cap trips, tools that already produced a real result keep it; tools that never ran are recorded with a limit error so the thread stays valid. The run does not continue.
+const move = action('Move a stop to another day.', moveSchema, moveStop);
+```
 
 ## Reading client-tool results on the server
 
-When a client tool resolves, its result travels back to your graph as a **tool message keyed by tool-call id, with no tool name on it**. Both adapters send the same minimal shape:
+A client-tool result reaches your graph as a tool message keyed by tool-call id, with no tool name on it. Both adapters send the same minimal shape:
 
 ```json
 { "id": "client-tool-result-call_abc", "role": "tool", "tool_call_id": "call_abc", "content": "{\"saved\":1}" }
 ```
 
-That matters the moment a node tries to find those results. The intuitive filter is by name, and it fails silently — matching nothing, forever, with no error:
+That matters the moment a node tries to find those results. The intuitive filter is by name, and it fails silently, matching nothing, forever, with no error:
 
 ```python
 # Wrong: client-tool results carry no name, so this is always empty.
@@ -227,34 +276,52 @@ def results_for(messages: list, tool_name: str) -> list:
 ```
 
 <Callout type="info" title="Why not just send the name?">
-  For AG-UI this is fixed by the protocol: `ToolMessageSchema` in `@ag-ui/core`
-  defines exactly `id`, `role`, `content`, `toolCallId`, and optional `error` /
-  `encryptedValue`, and parses in strip mode — an extra `name` would be dropped
-  on the wire. Matching on the call id is the portable approach across both
-  adapters.
+For AG-UI this is fixed by the protocol: `ToolMessageSchema` in `@ag-ui/core` defines exactly `id`, `role`, `content`, `toolCallId`, and optional `error` and `encryptedValue`, and parses in strip mode, so an extra `name` would be dropped on the wire. Matching on the call id is the portable approach across both adapters.
 </Callout>
 
 ## Typed agent state
 
-Tool handlers and components often read agent state. Pair the registry with a typed `AgentRef` so `agent.state()` / `agent.value()` carry your state shape instead of `Record<string, unknown>` — see [Typed state via AgentRef](/docs/langgraph/api/provide-agent#typed-state-via-agentref):
+Tool handlers and components often read agent state. Pair the registry with a typed `AgentRef` so `agent.state()` and `agent.value()` carry your state shape instead of `Record<string, unknown>`. The example declares one that mirrors the graph's `State`, passes it to `provideAgent` in `app.config.ts`, and reads it back through `injectAgent`:
 
 ```typescript
 import { createAgentRef } from '@threadplane/chat';
-import { injectAgent } from '@threadplane/langgraph';
+import type { BaseMessage } from '@langchain/core/messages';
 
-interface ClientToolsState { messages: unknown[]; client_tools: unknown[]; }
-export const CLIENT_TOOLS = createAgentRef<ClientToolsState>('client-tools');
+export interface ClientToolsState {
+  messages: BaseMessage[];
+  client_tools: unknown[];
+}
 
-// component
-protected readonly agent = injectAgent(CLIENT_TOOLS); // LangGraphAgent<ClientToolsState>
+export const CLIENT_TOOLS_AGENT_REF = createAgentRef<ClientToolsState>('client-tools');
+
+// component: injectAgent(CLIENT_TOOLS_AGENT_REF) is a LangGraphAgent<ClientToolsState>
 ```
+
+[Typed state via AgentRef](/docs/langgraph/api/provide-agent#typed-state-via-agentref) covers the rest of the pattern.
+
+## Mixing server tools and client tools
+
+Nothing about this design is exclusive. Pass your server tools as the second argument of `bind_client_tools(llm, server_tools, state)`, and route a server tool call to your tools node while a client tool call still ends the turn. The `route_after_agent` helper in the same middleware module makes that split: it returns the tools node when the last message calls a server tool, and the end node when the last message calls only client tools or no tools at all.
+
+```python
+from langgraph.graph import END
+from threadplane.middleware.langgraph import bind_client_tools, route_after_agent
+
+graph.add_conditional_edges(
+    "agent",
+    lambda s: route_after_agent(s, ["search"]),
+    {"tools": "tools", "__end__": END},
+)
+```
+
+Keep the tool names in the registry aligned with the names in the system prompt. The prompt in this example tells the model which tool to call for each kind of request, and a rename on one side alone is the most common reason a demo goes quiet.
 
 ## API reference
 
 ```typescript
 import {
   tools, action, view, ask,
-  type ViewProps, type ToolArgs,
+  type ClientToolViewProps, type ViewProps, type ToolArgs,
   type ClientToolDef, type ClientToolRegistry,
   type ClientToolExecutionOptions, type ClientToolContinuationOptions,
   type ClientToolContinuationPolicy, type ClientToolContinuationLimitEvent,
@@ -264,15 +331,16 @@ import {
 
 | Export | Purpose |
 |---|---|
-| `action(description, schema, handler, options?)` | Declare a function tool (handler return → result) |
-| `view(description, schema, component, options?)` | Declare a render-only component tool (auto-acknowledged) |
-| `ask(description, schema, component, options?)` | Declare an interactive component tool (emitted value → result) |
+| `action(description, schema, handler, options?)` | Declare a function tool (handler return becomes the result) |
+| `view(description, schema, component, options?)` | Declare a render-only component tool (acknowledged on mount) |
+| `ask(description, schema, component, options?)` | Declare an interactive component tool (emitted value becomes the result) |
 | `tools(map)` | Freeze a name-keyed registry for `[clientTools]` |
+| `ClientToolViewProps<S>` | Schema output plus the framework-supplied `status` and `clientTool` |
 | `ViewProps<S>` | Component input prop bag inferred from a schema |
 | `ToolArgs<S>` | Handler argument type inferred from a schema |
 | `ClientToolDef` / `ClientToolRegistry` | The tool-definition union and frozen-registry types |
-| `ClientToolContinuationOptions` | `{ followUp? }` — accepted by `view()` and `ask()` |
-| `ClientToolExecutionOptions` | `{ followUp?, idempotent? }` — accepted by `action()` |
+| `ClientToolContinuationOptions` | `{ followUp? }`, accepted by `view()` and `ask()` |
+| `ClientToolExecutionOptions` | `{ followUp?, idempotent? }`, accepted by `action()` |
 | `ClientToolContinuationPolicy` | `{ maxTurns?, onLimit? }` for `[clientToolContinuationPolicy]` |
 | `ClientToolExecutionStore` / `ClientToolExecutionGuard` | Durable claim store for `[clientToolExecutionGuard]` |
 
@@ -281,35 +349,26 @@ Component inputs on `<chat>`:
 | Input | Purpose |
 |---|---|
 | `[clientTools]` | The frozen registry from `tools({...})` |
-| `[clientToolContinuationPolicy]` | Cap runaway continuation loops (default 10 groups per turn) |
+| `[clientToolContinuationPolicy]` | Cap runaway continuation loops (default ten groups per turn) |
 | `[clientToolExecutionGuard]` | Durable claim-before-execute for non-idempotent tools |
 
 <Callout type="info" title="Writing your own adapter?">
-  The `settle` / `flush` / `resolve` contract behind these features is documented in [Writing an Adapter › Client Tools](/docs/chat/guides/writing-an-adapter#client-tools-optional).
+The `settle` / `flush` / `resolve` contract behind these features is documented in [Writing an Adapter › Client Tools](/docs/chat/guides/writing-an-adapter#client-tools-optional).
 </Callout>
 
-## What's next
+## What's Next
 
-<CardGroup cols={3}>
-  <Card
-    title="Generative UI"
-    icon="layout"
-    href="/docs/chat/guides/generative-ui"
-  >
+<CardGroup cols={2}>
+  <Card title="AG-UI Client Tools" href="/docs/ag-ui/guides/client-tools">
+    The same three declarations over the AG-UI transport, where the catalog travels as a protocol field.
+  </Card>
+  <Card title="Generative UI" href="/docs/chat/guides/generative-ui">
     Render agent-emitted UI specs with `[views]`, distinct from model-called tools.
   </Card>
-  <Card
-    title="provideAgent()"
-    icon="code"
-    href="/docs/langgraph/api/provide-agent"
-  >
-    Typed agent state via `AgentRef` and client-tuning options.
+  <Card title="provideAgent()" href="/docs/langgraph/api/provide-agent">
+    Typed agent state via `AgentRef` and the rest of the adapter options.
   </Card>
-  <Card
-    title="Error Handling"
-    icon="alert-triangle"
-    href="/docs/chat/guides/error-handling"
-  >
-    Classified errors and Retry when a tool call or run fails.
+  <Card title="Error Handling" href="/docs/chat/guides/error-handling">
+    Classified errors and Retry when a tool call or a run fails.
   </Card>
 </CardGroup>

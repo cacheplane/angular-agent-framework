@@ -22,6 +22,7 @@ import { CLIENT_TOOLS_AGENT_REF, type ClientToolsState } from './agent-ref';
  * that every field the schema produces is a declared `input()` on the paired
  * component. Mismatches become errors here, not silent runtime failures.
  */
+// #region tool-registry
 const clientTools = tools({
   get_weather: action(
     'Look up the current weather for a location.',
@@ -53,7 +54,9 @@ const clientTools = tools({
     ConfirmBookingComponent,
   ),
 });
+// #endregion
 
+// #region abortable-delay
 function waitForAbortableDelay(ms: number, signal: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
     if (signal.aborted) {
@@ -71,7 +74,9 @@ function waitForAbortableDelay(ms: number, signal: AbortSignal): Promise<void> {
     );
   });
 }
+// #endregion
 
+// #region chat-wiring
 @Component({
   selector: 'app-client-tools',
   standalone: true,
@@ -97,3 +102,4 @@ export class ClientToolsComponent {
     return s.messages.length;
   });
 }
+// #endregion
