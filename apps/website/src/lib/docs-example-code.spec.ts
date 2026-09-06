@@ -21,18 +21,6 @@ import {
  * comments on any docs page, or it counts as an include.
  */
 const PENDING_PAGES = new Set<string>([
-  '/docs/chat/a2ui/overview',
-  '/docs/chat/components/chat-debug',
-  '/docs/chat/components/chat-input',
-  '/docs/chat/components/chat-interrupt-panel',
-  '/docs/chat/components/chat-subagent-card',
-  '/docs/chat/components/chat-tool-calls',
-  '/docs/chat/components/chat-trace',
-  '/docs/chat/concepts/message-model',
-  '/docs/chat/guides/client-tools',
-  '/docs/chat/guides/generative-ui',
-  '/docs/chat/guides/theming',
-  '/docs/chat/guides/thread-routing',
 ]);
 
 const findWorkspaceRoot = (): string => {
