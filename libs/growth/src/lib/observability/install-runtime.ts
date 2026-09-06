@@ -2,6 +2,7 @@ import type { SqlExecutor } from '../database.ts';
 import type { EmailHmacKeyring } from '../crypto.ts';
 import { approveContactFromInstallRuntimeInTransaction } from '../contacts.ts';
 import { privacyLock, assertIdentityKeyCoverage } from './store.ts';
+import { enqueueInstallRuntimeEnrichment } from './install-runtime-enrichment.ts';
 
 /** Resolve admitted evidence in the existing lifecycle tick; never invoked by public payloads. */
 export async function processInstallRuntimeActivations(
@@ -103,6 +104,15 @@ export async function processInstallRuntimeActivations(
         values($1,$2,$3,$4,$5)`,
         [runtime.id, installation?.id ?? null, contactId, outcome, input.now]
       );
+      if (outcome === 'approved' && contactId && installation?.email_normalized) {
+        await enqueueInstallRuntimeEnrichment(tx, {
+          contactId,
+          installObservationId: installation.id,
+          runtimeObservationId: runtime.id,
+          email: installation.email_normalized,
+          now: input.now,
+        });
+      }
       counts[outcome]++;
     }
     return counts;

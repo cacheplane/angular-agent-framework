@@ -16,6 +16,35 @@ function dependencies() {
   };
 }
 describe('observation operator boundary', () => {
+  it.each([
+    ['funnel', '--from', '2026-09-04', '--to', '2026-09-05'],
+    ['journey', '--contact', '11111111-1111-4111-8111-111111111111'],
+  ])('supports read-only %s without keyring or processing', async (...args) => {
+    const close = vi.fn(async () => undefined);
+    const deps = {
+      ...dependencies(),
+      createDatabase: vi.fn(() => ({
+        execute: vi.fn(async () => ({ rows: [] })),
+        close,
+        transaction: vi.fn(),
+      })),
+    };
+    expect(await runGrowthObservability(args, deps)).toBe(0);
+    expect(close).toHaveBeenCalledOnce();
+    expect(deps.loadKeyring).not.toHaveBeenCalled();
+  });
+  it.each([
+    ['funnel', '--from', '2026-01-01', '--to', '2026-09-05'],
+    ['funnel', '--from', '2026-09-05', '--to', '2026-09-04'],
+    ['journey', '--contact', 'private@example.invalid'],
+  ])(
+    'rejects invalid report arguments before connecting: %s',
+    async (...args) => {
+      const deps = dependencies();
+      expect(await runGrowthObservability(args, deps)).toBe(2);
+      expect(deps.createDatabase).not.toHaveBeenCalled();
+    }
+  );
   it('allows redacted reads with processing disabled and closes the executor', async () => {
     const execute = vi.fn(async () => ({ rows: [] })),
       close = vi.fn(async () => undefined);

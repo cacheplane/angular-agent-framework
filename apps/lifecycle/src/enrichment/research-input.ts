@@ -1,26 +1,11 @@
 import { z } from 'zod';
+import { isPersonalEmailDomain } from '../growth.js';
 
 import {
   CompanyPageEvidenceSchema,
   DeterministicScoreReasonSchema,
   type CompanyPageEvidence,
 } from './schema.js';
-
-const PERSONAL_EMAIL_DOMAINS = new Set([
-  'aol.com',
-  'gmail.com',
-  'googlemail.com',
-  'hotmail.com',
-  'icloud.com',
-  'live.com',
-  'me.com',
-  'msn.com',
-  'outlook.com',
-  'proton.me',
-  'protonmail.com',
-  'yahoo.com',
-  'ymail.com',
-]);
 
 const DomainSchema = z
   .string()
@@ -39,6 +24,7 @@ const FormFactsSchema = z
       'contact',
       'pricing',
       'project-claim',
+      'install_runtime',
     ]),
     emailClassification: z.enum(['work', 'personal', 'unknown']),
     displayName: z.string().min(1).max(120).optional(),
@@ -106,7 +92,7 @@ export function buildResearchInput(candidate: unknown): ResearchInput {
   const researchMode =
     emailClassification !== 'personal' &&
     domain &&
-    !PERSONAL_EMAIL_DOMAINS.has(domain)
+    !isPersonalEmailDomain(domain)
       ? 'company'
       : 'neutral';
 

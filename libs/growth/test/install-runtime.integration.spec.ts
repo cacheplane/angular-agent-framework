@@ -103,7 +103,7 @@ describe('install-runtime founder activation', () => {
     emails.push(install.events[0].identity!.gitEmail!);
     return { install, runtime };
   }
-  it('resolves a runtime that arrived before install and enrolls once without enrichment', async () => {
+  it('resolves a runtime that arrived before install and enrolls without waiting for optional enrichment', async () => {
     const now = new Date();
     const { install, runtime } = fixture(now);
     await acceptObservationBatch(db, 'runtime', runtime, {
@@ -158,10 +158,14 @@ describe('install-runtime founder activation', () => {
       batchSize: 20,
     });
     const jobs = await db.execute<{ id: string }>(
-      "select id from growth_jobs where contact_id=$1 order by payload->>'step'",
+      "select id from growth_jobs where contact_id=$1 and kind='send_step' order by payload->>'step'",
       [contact.id]
     );
     expect(jobs.rows).toHaveLength(3);
+    const enrichment = await db.execute<{status: string; payload: Record<string,string>}>(
+      "select status,payload from growth_jobs where contact_id=$1 and kind='enrich'", [contact.id]
+    );
+    expect(enrichment.rows).toEqual([expect.objectContaining({status: 'pending', payload: expect.objectContaining({source: 'install_runtime'})})]);
     expect(
       await readLifecycleJobContext(db, { jobId: jobs.rows[0].id })
     ).toMatchObject({ campaignEnrollmentReason: 'install_runtime' });
