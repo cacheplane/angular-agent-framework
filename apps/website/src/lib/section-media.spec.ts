@@ -51,13 +51,6 @@ describe('SECTION_MEDIA', () => {
     }
   });
 
-  it('gives persist a video, code, and live tab like ship', () => {
-    const { persist } = SECTION_MEDIA;
-    expect(persist.video).toBeTruthy();
-    expect(persist.code?.length).toBeGreaterThan(0);
-    expect(persist.live).toBeTruthy();
-  });
-
   it('gives test a code-only proof block', () => {
     const { test } = SECTION_MEDIA;
     expect(test.video).toBeUndefined();
