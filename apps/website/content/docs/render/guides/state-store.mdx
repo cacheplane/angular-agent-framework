@@ -1,192 +1,211 @@
+---
+description: How the state management example seeds a signal-backed store, resolves $state props against JSON Pointer paths, and re-renders when the host writes.
+---
+
 # State Store
 
-The state store holds the reactive state that drives your rendered UI. `@threadplane/render` provides `signalStateStore()`, an Angular Signals-backed implementation of the `StateStore` interface from `@json-render/core`.
+The state store holds the values a rendered spec reads from and writes back to. `@threadplane/render` ships `signalStateStore()`, an Angular signal-backed implementation of the `StateStore` interface from `@json-render/core`. The running example seeds one store with a user and a settings object, streams three specs whose props point at those values, and puts form controls next to the render output so you can watch a write land.
 
-## Creating a State Store
+## What the demo does
 
-```typescript
-import { signalStateStore } from '@threadplane/render';
+The Run tab is split in two. On the left is the live render output; on the right is the raw JSON as it streams in, with a State Controls panel underneath it and a transport along the bottom. Press play and the spec arrives character by character, materializing into rendered elements as each one completes.
 
-const store = signalStateStore({
-  user: { name: 'Alice', age: 30 },
-  items: ['apple', 'banana', 'cherry'],
-  isVisible: true,
-});
+The tabs at the top switch between three specs. "User Profile" is a heading with two text children bound to `/user/name` and `/user/age`. "Nested Paths" renders the same two values plus `/settings/theme` as labelled rows. "Form Display" wraps two of the rows in a card.
+
+Type in the Name field and the rendered output changes as you type, because the field writes straight to the store and every element bound to `/user/name` resolves again. Switching the Theme select does the same for `/settings/theme`, which the second and third specs display.
+
+## How it is built
+
+The example is one Angular component file and an application config, with the three specs in a `specs.ts` beside them. The capability also ships a `graph.py`, a single-node LangGraph agent that answers questions about state management, but it plays no part in what the Run tab renders: the specs come from a local streaming simulator.
+
+### The application configuration
+
+`provideRender()` registers the render feature. This example passes an empty options object, because it supplies the registry and the store per instance instead.
+
+<ExampleCode file="app.config.ts" />
+
+### The registry and the seeded store
+
+`defineAngularRegistry()` maps the four `type` strings the specs use to the components that render them. `signalStateStore()` takes the initial state object, and that object is the whole state tree the three specs address.
+
+<ExampleCode file="state-management.component.ts" region="registry-and-store" title="state-management.component.ts — the registry and the store" />
+
+Every pointer on this page, in the specs and in the controls, is a path into that seed.
+
+### The specs address the seed by pointer
+
+A spec prop is either a literal or an expression object. `{ "$state": "/user/name" }` is the expression that reads a pointer out of the store. This is the User Profile spec from `specs.ts`:
+
+```json
+{
+  "root": "root",
+  "elements": {
+    "root": {
+      "type": "Heading",
+      "props": { "content": "User Profile" },
+      "children": ["name", "age"]
+    },
+    "name": { "type": "Text", "props": { "content": { "$state": "/user/name" } } },
+    "age": { "type": "Text", "props": { "content": { "$state": "/user/age" } } }
+  }
+}
 ```
 
-The function accepts an optional initial state object (defaults to `{}`). It returns a `StateStore` that uses Angular Signals internally, so any state change automatically triggers Angular's change detection.
+The other two specs use the same expressions against `Label` elements, which is why one store serves all three.
 
-## JSON Pointer Paths
+### Mounting the surface with an explicit store
 
-All state access uses [JSON Pointer](https://datatracker.ietf.org/doc/html/rfc6901) paths. A JSON Pointer is a string that identifies a specific value within a JSON document.
+`<render-spec>` receives the materialized spec, the registry, the store, and a `loading` flag driven by the simulator.
+
+<ExampleCode file="state-management.component.ts" region="render-surface" title="state-management.component.ts — the render surface" />
+
+Passing `[store]` is what makes the controls and the rendered elements talk to the same state.
+
+### A resolved prop arrives as an ordinary input
+
+Nothing in a registered component knows about the store. The element's props arrive as inputs of the same name, already resolved, so `value` here holds whatever sits at the pointer the spec named.
+
+<ExampleCode file="state-management.component.ts" region="label-view" title="state-management.component.ts — a component behind a bound prop" />
+
+`loading` is true while the spec is still streaming, which is what selects the skeleton branch.
+
+### Reading and writing from the host component
+
+The component that owns the store reads and writes it directly. `get()` takes a pointer and returns the current value; `set()` takes a pointer and the new value.
+
+<ExampleCode file="state-management.component.ts" region="state-accessors" title="state-management.component.ts — reading and writing the store" />
+
+The State Controls panel is plain Angular markup outside the render tree, and it calls those two methods.
+
+<ExampleCode file="state-management.component.ts" region="state-controls" title="state-management.component.ts — the state controls" />
+
+Because the store is backed by a signal, a write re-runs prop resolution for every mounted element that reads the written pointer.
+
+## How a binding resolves
+
+The pieces meet in a fixed order, and no view component subscribes to anything.
+
+`RenderElementComponent` builds a prop resolution context from `store.getSnapshot()`, which reads the underlying signal. `resolveElementProps()` from `@json-render/core` then walks the element's props and replaces each `{ $state: '/path' }` expression with the value at that pointer, leaving literals alone. The result becomes the mounted component's inputs, filtered down to the names that component declares.
+
+That whole chain lives inside Angular computed signals, so a `set()` on the store invalidates the snapshot, re-resolves the props of every element that reads it, and re-renders. An element's `visible` condition and a `repeat` element's `statePath` read the store through the same context, so a single write can also show, hide, or re-count elements.
+
+## JSON Pointer paths
+
+Every read and write addresses state with a [JSON Pointer](https://datatracker.ietf.org/doc/html/rfc6901) path. Against the seed in this example:
 
 | Path | Resolves to |
 |------|-------------|
 | `/user/name` | `'Alice'` |
 | `/user/age` | `30` |
-| `/items/0` | `'apple'` |
-| `/items/2` | `'cherry'` |
-| `/isVisible` | `true` |
+| `/settings/theme` | `'dark'` |
+| `/` | the whole state object |
+| `/missing` | `undefined` |
 
-Paths always start with `/`. Each segment separated by `/` traverses one level deeper into the object. Array elements are accessed by index.
+Paths start with `/`, and each segment traverses one level deeper. Array elements are addressed by index, so `/items/2` is the third element of `items`.
 
 ### Escaping
 
-JSON Pointer defines two escape sequences for special characters in property names:
+A property name that itself contains `/` or `~` is escaped in the pointer:
 
 - `~0` represents `~`
 - `~1` represents `/`
 
-For example, to access a property named `a/b`, the pointer would be `/a~1b`.
+A property named `a/b` is addressed as `/a~1b`, and one named `c~d` as `/c~0d`.
 
-## Reading State
+## What the store exposes
 
-Use `get()` to read a value at a path:
+`signalStateStore(initialState)` returns the five-method `StateStore` interface, and nothing else.
 
-```typescript
-const store = signalStateStore({ user: { name: 'Alice' } });
+| Method | Behavior |
+|--------|----------|
+| `get(path)` | The value at the pointer, or `undefined` if the path does not resolve |
+| `set(path, value)` | Immutable write: clones the path to the target. Skipped when the new value is referentially equal to the current one |
+| `update(updates)` | A record of pointer to value, applied together, notifying subscribers once. No notification if nothing changed |
+| `getSnapshot()` | The whole state object |
+| `subscribe(listener)` | Registers a change listener and returns the function that removes it |
 
-store.get('/user/name');  // 'Alice'
-store.get('/user');       // { name: 'Alice' }
-store.get('/missing');    // undefined
-```
+Writing an array element by index preserves the array, so `set('/items/1', 'B')` on `['a', 'b', 'c']` leaves `['a', 'B', 'c']`. The [`signalStateStore()` reference](/docs/render/api/signal-state-store) has the signature of each method.
 
-## Writing State
+## Two-way bindings
 
-### Single Value
+The controls in this example sit outside the render tree, so they call the store themselves. A component mounted *by* the renderer writes back a different way: the spec marks the prop with `$bindState` instead of `$state`.
 
-Use `set()` to write a single value. The store performs an immutable update -- it clones the path to the target and sets the new value. If the new value is referentially equal to the current one, the update is skipped.
-
-```typescript
-store.set('/user/name', 'Bob');
-store.get('/user/name'); // 'Bob'
-```
-
-### Batch Updates
-
-Use `update()` to set multiple values in a single operation. This triggers only one notification to subscribers, regardless of how many values change.
-
-```typescript
-store.update({
-  '/user/name': 'Charlie',
-  '/user/age': 25,
-  '/isVisible': false,
-});
-```
-
-If none of the values actually change (all are referentially equal), no notification is triggered.
-
-## Snapshots
-
-Use `getSnapshot()` to get the entire state object:
-
-```typescript
-const store = signalStateStore({ x: 1, y: 2 });
-store.getSnapshot(); // { x: 1, y: 2 }
-
-store.set('/x', 10);
-store.getSnapshot(); // { x: 10, y: 2 }
-```
-
-## Subscribing to Changes
-
-Use `subscribe()` to register a callback that is invoked whenever the state changes. The function returns an unsubscribe function.
-
-```typescript
-const store = signalStateStore({ count: 0 });
-
-const unsubscribe = store.subscribe(() => {
-  console.log('State changed:', store.getSnapshot());
-});
-
-store.set('/count', 1); // logs: State changed: { count: 1 }
-store.set('/count', 2); // logs: State changed: { count: 2 }
-
-unsubscribe(); // stop listening
-store.set('/count', 3); // no log -- unsubscribed
-```
-
-## Reactive Behavior with Angular Signals
-
-Under the hood, `signalStateStore()` wraps the state in an Angular `signal()`. This means:
-
-- Components using `OnPush` change detection automatically update when the state changes
-- Props resolved via `$state` expressions in specs are re-evaluated when the underlying signal updates
-- The store fits Angular's reactivity model -- no RxJS or manual subscription management needed
-
-```typescript
-// In a spec, $state props are automatically reactive
+```json
 {
-  type: 'Text',
-  props: {
-    label: { $state: '/user/name' },  // re-evaluated on state change
-  },
+  "type": "Input",
+  "props": {
+    "value": { "$bindState": "/user/name" },
+    "label": "Name"
+  }
 }
 ```
 
-## Working with Arrays
+The prop still resolves to the current value at that pointer, and the pointer itself arrives in the `bindings` input keyed by prop name — here, `{ value: '/user/name' }`. To write, read the pointer out of `bindings` and set it through the element-scoped render host.
 
-The store preserves array types when updating elements by index:
+```ts
+import { Component, inject, input } from '@angular/core';
+import { injectRenderHost } from '@threadplane/render';
 
-```typescript
-const store = signalStateStore({ items: ['a', 'b', 'c'] });
+@Component({
+  selector: 'app-name-field',
+  standalone: true,
+  template: `<input [value]="value()" (input)="write($any($event.target).value)" />`,
+})
+export class NameFieldComponent {
+  readonly value = input('');
+  readonly bindings = input<Record<string, string>>({});
 
-store.set('/items/1', 'B');
-store.get('/items/1');    // 'B'
-store.get('/items');      // ['a', 'B', 'c']
+  private readonly host = injectRenderHost();
 
-// The items value is still an array
-Array.isArray(store.get('/items')); // true
+  write(next: string) {
+    const path = this.bindings()['value'];
+    if (path) {
+      this.host.set(path, next);
+    }
+  }
+}
 ```
 
-## Providing the Store
+`injectRenderHost()` returns the host for the element the component was mounted for. Its `set(path, value)` writes the render store, which puts the write back on the same resolution chain as any other.
 
-Let's wire the store in. You have three ways to provide one, and `RenderSpecComponent` resolves it using this priority chain:
+## Where the store comes from
 
-<Steps>
-<Step title="Input (highest priority)">
+`RenderSpecComponent` resolves the store in a fixed order: the `store` input first, then the store on the `provideRender()` configuration, then an internal one.
 
-Pass a store directly to `<render-spec>`:
+The input is what this example uses, and it wins over everything else:
 
 ```html
-<render-spec [spec]="spec" [store]="store" />
+<render-spec [spec]="spec()" [registry]="registry" [store]="store" />
 ```
 
-</Step>
-<Step title="Global config (via provideRender)">
+A store on the configuration serves every surface in the application that does not pass one:
 
-Set a store in `provideRender()`:
-
-```typescript
+```ts
 provideRender({
   registry: myRegistry,
   store: signalStateStore({ theme: 'dark' }),
-})
+});
 ```
 
-</Step>
-<Step title="Internal (from spec.state)">
+With neither, the surface creates its own store from `spec.state`:
 
-If no external store is provided, `RenderSpecComponent` creates an internal `signalStateStore()` from `spec.state`:
-
-```typescript
+```ts
 const spec: Spec = {
   root: 'root',
   elements: { /* ... */ },
-  state: { message: 'Hello' }, // used to create an internal store
+  state: { message: 'Hello' },
 };
 ```
 
-</Step>
-</Steps>
+<Callout type="info" title="The internal store is created once">
+The internal store is built the first time it is needed and reused for the life of the surface, so a later spec carrying a different `state` object does not replace it. Pass a store you own whenever anything outside the render tree needs to read or write the same values.
+</Callout>
 
-## Testing Rendered Output
+## Testing a store-driven render
 
-Because `signalStateStore()` is a plain factory and `RenderSpecComponent` is a standard standalone component, you can test the full render path in `TestBed` with no server and no LLM. Build a spec, mount `<render-spec>` with a store you control, mutate the store, and assert the projected component updated.
+`signalStateStore()` is a plain factory and `RenderSpecComponent` is a standard standalone component, so the whole render path fits in `TestBed` with no server and no model. Mount the surface with a store you control, write to it, and assert the rendered output followed.
 
-This spec renders a `Text` component bound to `/message`, then checks that writing the store re-renders it:
-
-```typescript
+```ts
 import { Component, input } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { RenderSpecComponent, defineAngularRegistry, signalStateStore } from '@threadplane/render';
@@ -198,53 +217,46 @@ import type { Spec } from '@json-render/core';
   template: `<span data-testid="text">{{ label() }}</span>`,
 })
 class TextComponent {
-  readonly label = input<string>('');
+  readonly label = input('');
 }
 
-describe('render output', () => {
-  it('re-renders when the store changes', () => {
-    const spec: Spec = {
-      root: 'msg',
-      elements: {
-        msg: { type: 'Text', props: { label: { $state: '/message' } } },
-      },
-    };
-    const store = signalStateStore({ message: 'hello' });
-    const registry = defineAngularRegistry({ Text: TextComponent });
+it('re-renders when the store changes', () => {
+  const spec: Spec = {
+    root: 'msg',
+    elements: { msg: { type: 'Text', props: { label: { $state: '/message' } } } },
+  };
+  const store = signalStateStore({ message: 'hello' });
 
-    const fixture = TestBed.createComponent(RenderSpecComponent);
-    fixture.componentRef.setInput('spec', spec);
-    fixture.componentRef.setInput('registry', registry);
-    fixture.componentRef.setInput('store', store);
-    fixture.detectChanges();
+  const fixture = TestBed.createComponent(RenderSpecComponent);
+  fixture.componentRef.setInput('spec', spec);
+  fixture.componentRef.setInput('registry', defineAngularRegistry({ Text: TextComponent }));
+  fixture.componentRef.setInput('store', store);
+  fixture.detectChanges();
 
-    const span = (): HTMLElement =>
-      fixture.nativeElement.querySelector('[data-testid="text"]');
-    expect(span().textContent?.trim()).toBe('hello');
+  const text = (): HTMLElement => fixture.nativeElement.querySelector('[data-testid="text"]');
+  expect(text().textContent?.trim()).toBe('hello');
 
-    store.set('/message', 'updated');
-    fixture.detectChanges();
-    expect(span().textContent?.trim()).toBe('updated');
-    expect(store.get('/message')).toBe('updated');
-  });
+  store.set('/message', 'updated');
+  fixture.detectChanges();
+  expect(text().textContent?.trim()).toBe('updated');
 });
 ```
 
-The same pattern covers handlers (assert the store after the rendered component calls `emit`), visibility (toggle a `$state` flag and assert the element appears or disappears), and repeat loops (set an array and count the rendered rows).
+The same shape covers visibility, by toggling a bound flag and asserting the element appeared or disappeared, and repeat loops, by setting an array and counting the rendered rows.
 
-## Next Steps
+## What's Next
 
 <CardGroup cols={2}>
   <Card title="signalStateStore() API" href="/docs/render/api/signal-state-store">
-    Full API reference for the state store factory
+    The signature and behavior of each store method.
   </Card>
-  <Card title="Specs Guide" href="/docs/render/guides/specs">
-    How $state expressions connect props to the store
+  <Card title="Specs" href="/docs/render/guides/specs">
+    The spec format that $state and $bindState expressions live in.
   </Card>
-  <Card title="Registry Guide" href="/docs/render/guides/registry">
-    Two-way bindings with $bindState
+  <Card title="Component Registry" href="/docs/render/guides/registry">
+    What a registered component receives, including the bindings input.
   </Card>
-  <Card title="Events Guide" href="/docs/render/guides/events">
-    Updating state in response to events
+  <Card title="Events" href="/docs/render/guides/events">
+    Updating state in response to events fired by rendered elements.
   </Card>
 </CardGroup>

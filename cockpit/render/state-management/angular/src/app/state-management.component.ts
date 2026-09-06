@@ -64,6 +64,7 @@ class DemoHeadingComponent {
   readonly loading = input(false);
 }
 
+// #region label-view
 @Component({
   selector: 'demo-label',
   standalone: true,
@@ -103,6 +104,7 @@ class DemoLabelComponent {
   readonly emit = input<(event: string) => void>(() => {});
   readonly loading = input(false);
 }
+// #endregion label-view
 
 @Component({
   selector: 'demo-card',
@@ -341,6 +343,7 @@ class DemoCardComponent {
       </div>
 
       <!-- Left: live render output -->
+      <!-- #region render-surface -->
       <div primary>
         <div class="cap">Live Render Output</div>
         @if (simulator.spec(); as renderedSpec) {
@@ -349,6 +352,7 @@ class DemoCardComponent {
           <div class="placeholder">Press play to start streaming…</div>
         }
       </div>
+      <!-- #endregion render-surface -->
 
       <!-- Right: syntax-colored streaming JSON + state controls -->
       <div secondary style="display: flex; flex-direction: column; height: 100%;">
@@ -361,6 +365,7 @@ class DemoCardComponent {
           </div>
         </div>
 
+        <!-- #region state-controls -->
         <div class="controls">
           <div class="cap">State Controls</div>
           <div class="control-row">
@@ -380,6 +385,7 @@ class DemoCardComponent {
           </div>
           <p class="control-hint">Edits update the state store live. Elements bound via <code>$state</code> react instantly.</p>
         </div>
+        <!-- #endregion state-controls -->
       </div>
 
       <!-- Transport -->
@@ -409,6 +415,7 @@ export class StateManagementComponent implements OnDestroy {
     });
   }
 
+  // #region registry-and-store
   protected readonly registry = defineAngularRegistry({
     Text: DemoTextComponent,
     Heading: DemoHeadingComponent,
@@ -417,7 +424,9 @@ export class StateManagementComponent implements OnDestroy {
   });
 
   protected readonly store = signalStateStore({ user: { name: 'Alice', age: 30 }, settings: { theme: 'dark' } });
+  // #endregion registry-and-store
 
+  // #region state-accessors
   protected getState(path: string): unknown {
     return this.store.get(path);
   }
@@ -425,6 +434,7 @@ export class StateManagementComponent implements OnDestroy {
   protected setState(path: string, value: unknown): void {
     this.store.set(path, value);
   }
+  // #endregion state-accessors
 
   protected percent(): number {
     return Math.round(this.simulator.progress() * 100);
