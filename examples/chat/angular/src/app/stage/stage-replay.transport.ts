@@ -30,7 +30,8 @@ export class StageReplayTransport implements AgentTransport {
   /** Bumped by reset(); a stream whose generation is stale ends itself. */
   private generation = 0;
   /** Index of the next run `stream()` will answer. Reload runs are skipped. */
-  runIndex = 0;
+  private nextRun = 0;
+  get runIndex(): number { return this.nextRun; }
   private readonly appliedCount = signal(0);
   readonly appliedSignal = this.appliedCount.asReadonly();
 
@@ -49,20 +50,24 @@ export class StageReplayTransport implements AgentTransport {
     this.t = t;
     this.wakeAll();
   }
+  /**
+   * `t` is deliberately left alone; the controller re-seeks after resetting.
+   */
   reset(): void {
     this.generation += 1;
-    this.runIndex = 0;
+    this.nextRun = 0;
     this.appliedCount.set(0);
     this.wakeAll();
   }
 
   async *stream(_a: string, _thread: string | null, _payload: unknown, abortSignal: AbortSignal, _o?: LangGraphSubmitOptions): AsyncIterable<StreamEvent> {
-    const tl = await this.ready();
     const gen = this.generation;
-    while (tl.runs[this.runIndex]?.run.action.kind === 'reload') this.runIndex += 1;
-    const entry = tl.runs[this.runIndex];
+    const tl = await this.ready();
+    if (abortSignal.aborted || gen !== this.generation) return;
+    while (tl.runs[this.nextRun]?.run.action.kind === 'reload') this.nextRun += 1;
+    const entry = tl.runs[this.nextRun];
     if (!entry) return;
-    this.runIndex += 1;
+    this.nextRun += 1;
     for (const { tMs, event } of entry.run.events) {
       while (entry.startMs + tMs > this.t) {
         if (abortSignal.aborted || gen !== this.generation) return;
