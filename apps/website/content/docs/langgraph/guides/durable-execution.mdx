@@ -10,7 +10,7 @@ This page is the live example for durable execution over LangGraph. Use **Run** 
 
 ## What the demo does
 
-The Run tab shows the prebuilt `<chat>` composition beside a sidebar titled Pipeline, listing three steps: Analyze, Plan, and Generate. Send any question and the sidebar tracks the run. Each step turns from a hollow circle to a spinner while its node is executing and to a green check once the run has moved past it, because the graph writes the name of the node it just finished into state and the component reads that field back.
+The Run tab shows the prebuilt `<chat>` composition beside a sidebar titled Pipeline, listing three steps: Analyze, Plan, and Generate. Send any question and the sidebar tracks the run. Each step shows the spinner once its own node has committed and the next one is running, and turns green when a later node commits. The graph writes the name of the node it just finished, so the indicator trails execution by one step, and nothing spins while the first node runs. The component reads that field back out of state.
 
 Two things are worth watching. The first is how long each step holds: the graph makes a separate model call per node, so the answer you eventually read is the third of three passes rather than one long generation. The second is where the sidebar stops. The final step stays marked active rather than complete when the run ends, because `generate` is the last name the graph ever writes and there is no fourth step for the indicator to advance to.
 
@@ -38,11 +38,11 @@ The return value is the commit: LangGraph saves the state a node returns before 
 
 ### The node that ends the run
 
-`generate` is where the shape changes. The first two nodes append to the message list they received, so the intermediate analysis and outline accumulate in state. The last node returns only two messages — the user's question and the final answer — and because `messages` has no reducer, that return replaces the list.
+`generate` is where the shape changes. The first two nodes append to the message list they received, so the intermediate analysis and outline accumulate in state. The last node returns two messages, and because `messages` has no reducer that return replaces the list. Note what it takes as the first of the two: `state["messages"][-1]` is the plan node's response, not the original question, so the thread the reader is left with is the outline re-labeled as a user turn plus the final answer.
 
 <ExampleCode file="graph.py" region="generate" title="graph.py — the generate node" />
 
-The scratch work exists for exactly as long as the run needs it and is not part of the thread the reader is left with.
+The scratch work exists for exactly as long as the run needs it: once `generate` commits, the thread holds those two messages and nothing else.
 
 ### Wiring the three nodes
 
@@ -79,7 +79,7 @@ The component holds the node order and the labels it renders for them. This list
 
 <ExampleCode file="durable-execution.component.ts" region="steps-model" title="durable-execution.component.ts — the step model" />
 
-`injectAgent()` returns the agent registered above, and `value()` is the graph state as a signal. The `steps` computed reads `step` out of it, finds that name in the ordered list, and marks everything before it complete, that entry active, and everything after it pending. An unknown or missing `step` leaves every entry pending, which is the state before the first submission.
+`injectAgent()` returns the agent registered above, and `value()` is the graph state as a signal. The `steps` computed reads `step` out of it, finds that name in the ordered list, and marks everything before it complete, that entry active, and everything after it pending. An unknown or missing `step` leaves every entry pending, which is the state before the first submission, and a second question in the same thread starts from the stale `generate` value, because nothing clears the field.
 
 <ExampleCode file="durable-execution.component.ts" region="agent" title="durable-execution.component.ts — the agent and the derived steps" />
 
@@ -87,7 +87,7 @@ No polling and no subscription: the `step` field arrives with the state updates 
 
 ### The layout
 
-`<chat>` takes the agent in the main slot and renders the conversation, the input, the loading state, and errors. The sidebar slot is the pipeline, rendered straight from the `steps` signal with a spinner, a check, or a hollow circle per entry.
+`<chat>` takes the agent in the main slot and renders the conversation, the input, the loading state, and errors. The sidebar slot is the pipeline, rendered straight from the `steps` signal with a spinner, a check, or a pending circle per entry.
 
 <ExampleCode file="durable-execution.component.ts" region="layout" title="durable-execution.component.ts — the template" />
 
@@ -111,14 +111,14 @@ The `<chat>` composition already renders the retry. Its error banner shows a Ret
 `reload()` performs the same re-submission without clearing the error first. Reach for `retry()` in a UI and `reload()` when you want the previous error to stay on screen while the new attempt runs.
 
 <Callout type="info" title="A retry is a new run, not a rewind">
-Re-submitting starts a fresh run against the thread, and the thread still holds everything the failed attempt committed. That is the point — the completed work survives — but it also means a retry does not undo those messages. When a failed attempt leaves state the next one should not see, `regenerate(index)` is the call that rolls back first: it removes the assistant message at that index and everything after it, then re-runs against the trimmed thread.
+Re-submitting starts a fresh run against the thread, and the thread still holds everything the failed attempt committed. That is the point — the completed work survives — but it also means a retry does not undo those messages. When a failed attempt leaves state the next one should not see, `regenerate(index)` is the call that rolls back first: it removes everything after the user message that preceded that index — the assistant turn and any tool messages with it — then re-runs against the trimmed thread; it throws rather than no-ops while a run is loading or when the index is not an assistant message.
 </Callout>
 
 ### submit(null) resumes; it does not retry
 
 `submit(null)` starts a run with no new input. LangGraph advances whatever the thread still has pending, which is why it is the resume call for a graph paused at an `interrupt()` — see the [Interrupts guide](/docs/langgraph/guides/interrupts).
 
-It is not the retry. Once a run has reached the end of the graph the thread has nothing pending, and `submit(null)` does nothing at all: no run starts and no error is raised. `regenerate()` is the one path that resumes a finished thread this way, and it can only do so because it first repositions the thread to the entry node — LangGraph's `as_node` parameter, applied through the transport's `updateState` — before submitting null.
+It is not the retry. Once a run has reached the end of the graph the thread has nothing pending, and `submit(null)` does nothing at all: the run completes immediately without executing a node, the thread is unchanged and no error is raised. `regenerate()` is the one path that resumes a finished thread this way, and it can only do so because it first repositions the thread to the entry node — LangGraph's `as_node` parameter, applied through the transport's `updateState` — before submitting null.
 
 <Callout type="warning" title="Guard the retry affordance">
 Both `retry()` and `reload()` are silent no-ops when the agent has nothing to re-submit. Render the button from `error()` rather than unconditionally, as `<chat>` does, so the user is never offered a control that cannot do anything.
