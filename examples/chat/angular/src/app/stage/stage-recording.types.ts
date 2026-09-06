@@ -60,12 +60,17 @@ export function validateStageRecording(input: unknown): StageRecording {
     }
     if (!Array.isArray(run.events)) throw new Error(`run ${i} has no events`);
     if (run.events.length === 0 && run.action.kind !== 'reload') throw new Error(`run ${i} has no events`);
+    let prevTMs = -Infinity;
     (run.events as readonly Partial<RecordedEvent>[]).forEach((e: Partial<RecordedEvent>, j: number) => {
       if (typeof e?.tMs !== 'number' || !Number.isFinite(e.tMs)) throw new Error(`run ${i} event ${j} has no numeric tMs`);
       if (typeof e.event !== 'object' || e.event === null) throw new Error(`run ${i} event ${j} has no event`);
+      if (e.tMs < prevTMs) throw new Error(`run ${i} events are not in time order`);
+      prevTMs = e.tMs;
     });
     if (beatsSeen[beatsSeen.length - 1] !== run.beat) beatsSeen.push(run.beat);
   });
+  const resumeRuns = rec.runs.filter((r: StageRun) => r.action.kind === 'resume');
+  if (resumeRuns.length !== 1) throw new Error('stage recording supports exactly one resume run');
   const missing = STAGE_BEATS.filter((b) => !beatsSeen.includes(b));
   if (missing.length > 0) {
     throw new Error(`stage recording is missing beats: ${missing.join(', ')}`);

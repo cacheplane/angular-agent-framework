@@ -1,7 +1,7 @@
 // examples/chat/angular/src/app/stage/stage-recording.types.spec.ts
 import { describe, expect, it } from 'vitest';
 import { validateStageRecording } from './stage-recording.types';
-import { MINIMAL } from './stage-recording.fixtures';
+import { MINIMAL, ev } from './stage-recording.fixtures';
 
 describe('validateStageRecording', () => {
   it('accepts a well-formed recording', () => {
@@ -33,5 +33,17 @@ describe('validateStageRecording', () => {
   it('rejects a history with a non-numeric afterRun', () => {
     const bad = { ...MINIMAL, histories: [{ afterRun: 'x', states: [] }] };
     expect(() => validateStageRecording(bad)).toThrow(/afterRun/);
+  });
+  it('rejects a second resume run', () => {
+    const resumeRun = MINIMAL.runs.find((r) => r.action.kind === 'resume')!;
+    const bad = { ...MINIMAL, runs: [...MINIMAL.runs, resumeRun] };
+    expect(() => validateStageRecording(bad)).toThrow(/one resume/);
+  });
+  it('rejects events that are not in time order', () => {
+    const bad = {
+      ...MINIMAL,
+      runs: MINIMAL.runs.map((r, i) => (i === 0 ? { ...r, events: [ev(50), ev(0)] } : r)),
+    };
+    expect(() => validateStageRecording(bad)).toThrow(/time order/);
   });
 });

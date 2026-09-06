@@ -1,7 +1,11 @@
 // examples/chat/angular/src/app/stage/stage-timeline.ts
 import type { StageBeat, StageRecording, StageRun } from './stage-recording.types';
 
-/** Recorded-time room given to a reload run, which streams nothing: enough for the transcript to visibly blank and restore. */
+/**
+ * Floor on the recorded-time room given to a reload run, which streams
+ * nothing: enough for the transcript to visibly blank and restore. A reload
+ * that does carry events is never shorter than this floor.
+ */
 export const RELOAD_MS = 600;
 /**
  * The authored hold at the interrupt, in recorded milliseconds. Between the
@@ -28,12 +32,19 @@ export interface TimelineBeat {
 export interface StageTimeline {
   readonly runs: readonly TimelineRun[];
   readonly beats: readonly TimelineBeat[];
+  /**
+   * The single authored hold at the interrupt (spec §6). A recording carries
+   * exactly one resume run, so there is exactly one hold; a second resume
+   * run is unsupported and would silently overwrite this field.
+   */
   readonly hold: { readonly startMs: number; readonly endMs: number };
   readonly totalMs: number;
 }
 
 function durationOf(run: StageRun): number {
-  if (run.action.kind === 'reload') return RELOAD_MS;
+  if (run.action.kind === 'reload') {
+    return Math.max(RELOAD_MS, (run.events[run.events.length - 1]?.tMs ?? 0) + 1);
+  }
   const last = run.events[run.events.length - 1]?.tMs ?? 0;
   return Math.max(last, 1);
 }
@@ -65,7 +76,13 @@ export function buildTimeline(rec: StageRecording): StageTimeline {
 /** Names the phase active at t: stream/persist/render follow the run's beat; pause and resume mark the interrupt. */
 export function phaseAt(tl: StageTimeline, t: number): StagePhase {
   if (t >= tl.hold.startMs && t < tl.hold.endMs) return 'pause';
-  const current = [...tl.runs].reverse().find((r) => r.startMs <= t) ?? tl.runs[0];
+  let current = tl.runs[0];
+  for (let i = tl.runs.length - 1; i >= 0; i--) {
+    if (tl.runs[i].startMs <= t) {
+      current = tl.runs[i];
+      break;
+    }
+  }
   if (current.run.action.kind === 'resume') return 'resume';
   return current.run.beat;
 }
