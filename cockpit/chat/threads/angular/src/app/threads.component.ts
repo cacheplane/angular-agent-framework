@@ -14,7 +14,7 @@ import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
 // component-scoped provideAgent() config (threadId + onThreadId) and the
 // component. Module scope is safe: each demo app bootstraps one
 // ThreadsComponent instance.
-const activeThreadIdState = signal<string | null>(null);
+export const activeThreadIdState = signal<string | null>(null);
 // #endregion
 
 /**

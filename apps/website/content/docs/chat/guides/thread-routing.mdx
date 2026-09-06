@@ -26,7 +26,7 @@ A thread id is a UUID, which makes a poor sidebar label. The `generate_title` no
 
 <ExampleCode file="graph.py" region="title-write" title="graph.py — the title write" />
 
-The write is idempotent: the node reads the thread first and returns early when a title is already present, so later turns cost nothing.
+The write is idempotent: the node reads the thread first and returns early when a title is already present, so later turns cost nothing. The write itself sits inside a `try`/`except` that swallows failures, so a title write that fails never blocks the run.
 
 ### Wiring the title node into the graph
 
@@ -40,7 +40,7 @@ This graph calls `compile()` with no checkpointer, because the LangGraph API ser
 
 ### Registering the thread store
 
-`LangGraphThreadsAdapter` is a root-provided service that wraps `client.threads.*` from `@langchain/langgraph-sdk`. It reads its base URL from `LANGGRAPH_THREADS_CONFIG`, and that token is the reason this application config is longer than most.
+`LangGraphThreadsAdapter` is a root-provided service that wraps `client.threads.*` from `@langchain/langgraph-sdk`. It reads its base URL from `LANGGRAPH_THREADS_CONFIG`, and that token is the reason this application config is longer than most. The second root token, `LANGGRAPH_CLIENT_OPTIONS`, carries the client options — auth headers, retries — that both the adapter and the component-scoped `provideAgent` read.
 
 <ExampleCode file="app.config.ts" />
 
@@ -68,7 +68,7 @@ Never generate a thread id in the browser. Use the value handed to `onThreadId`,
 
 ### The sidebar and the thread list
 
-The `<chat>` composition owns the transcript, the input, and the loading and error states, so the template only has to add a list. `<chat-thread-list>` takes the threads to render, the id to highlight, and an action adapter for the row menu.
+The `<chat>` composition owns the transcript, the input, and the loading and error states. It also renders its own `<chat-thread-list>` in a sidebar, shown at widths of 768px and up whenever the `[threads]` input it receives is non-empty. The same `[threads]` and `[activeThreadId]` inputs that feed the template's explicit list also feed that built-in one, which is why `<chat>` re-emits `threadSelected` — it is passing along the selection its own internal list produced. Because the demo passes `[threads]` to both `<chat>` and the explicit `<chat-thread-list>` in the template, a desktop viewport shows two thread lists side by side; that is a defect in the example, not a pattern to copy.
 
 <ExampleCode file="threads.component.ts" region="chat-and-sidebar" title="threads.component.ts — the template" />
 
@@ -92,7 +92,7 @@ The store is a snapshot, not a subscription, so something has to re-fetch it. `r
 
 <ExampleCode file="threads.component.ts" region="refresh-on-run-end" title="threads.component.ts — initial fetch and refresh" />
 
-Both calls must run inside an injection context, because `refreshOnRunEnd()` uses an Angular effect.
+`refreshOnRunEnd()` must run inside an injection context, because it uses an Angular effect; `refresh()` is a plain async call.
 
 ### Switching and creating
 
@@ -100,7 +100,7 @@ Two handlers close the loop. Selecting a row tells the agent to load that thread
 
 <ExampleCode file="threads.component.ts" region="switch-and-create" title="threads.component.ts — switching and creating" />
 
-`switchThread(id)` resets the agent's derived state and reloads that thread's server-side messages, while `create()` returns `null` when the request fails, which is why the result is checked before it is used.
+Each handler calls both `agent.switchThread(id)` and `activeThreadId.set(id)` because the two calls serve different consumers: the adapter watches the `activeThreadId` signal to drive the sidebar highlight, while `switchThread(id)` resets the agent's own derived state and re-fetches that thread's server-side history. `create()` returns `null` when the request fails, which is why the result is checked before it is used.
 
 ## Routing a URL to a thread
 
@@ -120,6 +120,7 @@ Given the module-scoped signal and the store the example already has, adding the
 import { Component, inject } from '@angular/core';
 import { injectThreadRouting } from '@threadplane/chat';
 import { LangGraphThreadsAdapter } from '@threadplane/langgraph';
+import { activeThreadIdState } from './threads.component';
 
 @Component({ /* ... */ })
 export class ShellComponent {
@@ -134,13 +135,15 @@ export class ShellComponent {
 }
 ```
 
-`injectThreadRouting()` calls `inject(Router)` internally, so it must run in an injection context: a constructor body, as above, or a field initializer. The `validate` callback receives every candidate id the URL produces. `getThread()` resolves `null` for a thread the server does not have — a deleted id, or one pasted from another environment — and rethrows genuine network errors, so a redirect happens only when the thread is really gone.
+`injectThreadRouting()` calls `inject(Router)` internally, so it must run in an injection context: a constructor body, as above, or a field initializer. The `validate` callback receives every candidate id the URL produces. `getThread()` resolves `null` for both outcomes the server reports as "missing" — a 404 for a thread it does not have (a deleted id, or one pasted from another environment) and a 422 for an id that is not even a valid UUID — and rethrows genuine network errors, so a redirect happens only when the thread is really gone.
 
 ### Custom URL shapes
 
 The defaults are `/` for the welcome state and `/<threadId>` for a conversation. Supply `toCommands` and `threadIdFromUrl` for mode-prefixed or nested paths:
 
 ```typescript
+import { activeThreadIdState } from './threads.component';
+
 const MODES = ['embed', 'popup', 'sidebar'] as const;
 type DemoMode = (typeof MODES)[number];
 
@@ -168,6 +171,8 @@ injectThreadRouting({
 
 ```typescript
 import { injectThreadRouting, type ThreadRoutingConfig } from '@threadplane/chat';
+import { WritableSignal } from '@angular/core';
+import { NavigationExtras } from '@angular/router';
 
 export interface ThreadRoutingConfig {
   /** App-owned signal that is the source of truth for the active thread. */
