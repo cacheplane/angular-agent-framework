@@ -87,7 +87,11 @@ export function sliceRegion(
       `${filePath}: "#region ${region}" is unterminated`
     );
   }
-  const body = lines.slice(start + 1, end);
+  // Inner markers are the file's own comments, but they are noise on a docs
+  // page, so every marker line inside the slice is dropped as well.
+  const body = lines
+    .slice(start + 1, end)
+    .filter((line) => !REGION_ANY_START.test(line) && !REGION_END.test(line));
   const nonEmpty = body.filter((line) => line.trim().length > 0);
   const indent =
     nonEmpty.length === 0
