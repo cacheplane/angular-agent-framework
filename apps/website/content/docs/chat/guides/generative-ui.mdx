@@ -32,15 +32,15 @@ A tool result is not message content, so a post-processing node moves it. `wrap_
 
 <ExampleCode file="graph.py" region="wrap-spec-into-ai" title="graph.py — locating the specification" />
 
-The node returns early when there is nothing to wrap, which is what makes it safe on every pass of the tool loop.
+The node returns early when this turn produced no `render_spec` result at all; the guard that makes it safe on every pass of the loop is the content check in the next region.
 
 ### Rewriting the message in place
 
-The rest of the node replaces both messages, keeping their ids so LangGraph's `add_messages` reducer matches and replaces rather than appends.
+The rest of `wrap_spec_into_ai` replaces both messages, keeping their ids so LangGraph's `add_messages` reducer matches and replaces rather than appends.
 
 <ExampleCode file="graph.py" region="rewrite-message-content" title="graph.py — rewriting the message content" />
 
-The tool message becomes a short placeholder and the assistant message takes the specification JSON, stripped of a code fence if the model wrapped one around it.
+The tool message becomes a short placeholder and the assistant message takes the specification JSON, stripped of a code fence if the model wrapped one around it. The early return on an already-filled parent message is what stops a second pass from wrapping the same payload twice.
 
 <Callout type="info" title="Why the message and not the state">
 The specification travels as message content because that is what the client classifies. `DashboardState` in this example adds no fields of its own to `MessagesState`: the layout lives in the message, and the numbers arrive as the state updates below.
@@ -56,11 +56,11 @@ The keys it builds, such as `/on_time/value` and `/recent_disruptions`, are exac
 
 ### The graph wiring
 
-The wiring shows the loop. `agent` calls the tools and the `tools` node runs them; `wrap_spec_into_ai` post-processes the result and returns to the agent; the turn ends through `emit_state`, a short conversational summary, and background title generation.
+The wiring shows the loop. `agent` calls the tools and the `tools` node runs them; `wrap_spec_into_ai` post-processes the result and returns to the agent; the turn ends through `emit_state`, a short conversational summary, and background title generation. `should_continue` routes to `finalize` instead of `tools` when the six-iteration cap is hit, so orphaned `tool_calls` are stripped from the last AI message before the turn ends. See the [persistence guide](/docs/langgraph/guides/persistence) for the no-checkpointer rule the last line follows and its one exception.
 
 <ExampleCode file="graph.py" region="graph-wiring" title="graph.py — graph wiring" />
 
-The last line calls `compile()` with no checkpointer, because this graph is served by the LangGraph API server, which supplies persistence itself. See the [persistence guide](/docs/langgraph/guides/persistence) for that rule and its one exception.
+The last line calls `compile()` with no checkpointer, because this graph is served by the LangGraph API server, which supplies persistence itself.
 
 ### Registering the agent
 
@@ -88,12 +88,12 @@ The pieces meet in the browser in a fixed order.
 
 The content classifier in `@threadplane/chat` inspects each assistant message as it streams and decides its type from the first non-whitespace character. A `{` classifies the message as `json-render`; the `---a2ui_JSON---` prefix classifies it as A2UI; anything else is markdown. That single-character rule is why the system prompt insists on raw JSON with no prose and no code fence around it.
 
-From there the content goes through `@cacheplane/partial-json`, which materializes a best-effort `Spec` on every chunk, so a signal holds a usable specification long before the JSON closes. The composition mounts that specification as `<chat-generative-ui>`, which renders it through `<render-spec>` from `@threadplane/render` using the registry you passed. The surface also receives a `loading` input, true while the agent is still streaming, which a view component can read to draw a placeholder.
+From there the content goes through `@cacheplane/partial-json`, and a `ParseTreeStore` materializes a best-effort `Spec` from the parse tree on every chunk, so a signal holds a usable specification long before the JSON closes. The composition mounts that specification as `<chat-generative-ui>`, which renders it through `<render-spec>` from `@threadplane/render` using the registry you passed. The surface also receives a `loading` input, true while the agent is still streaming, which a view component can read to draw a placeholder.
 
 The data takes the other path. The LangGraph adapter surfaces a custom event named `state_update` on the agent's event stream, and the composition writes its payload straight into the render store, keys included. Because `emit_state` already emits JSON Pointer keys, a binding of `{ "$state": "/on_time/value" }` resolves the moment the event lands.
 
 <Callout type="info" title="Pointers, not top-level keys">
-This is the one place the LangGraph path differs from AG-UI. An AG-UI agent puts its data in graph state, and the composition maps each top-level state key `k` to the pointer `/k`. Here the graph names the pointers itself, so a nested value like `/on_time/value` needs no state field to hold it.
+This is the one place the LangGraph path differs from AG-UI. An AG-UI agent puts its data in graph state, and the composition maps each top-level key `k` of any adapter's `state()` to the pointer `/k`. Here the graph names the pointers itself, so a nested value like `/on_time/value` needs no state field to hold it.
 </Callout>
 
 ## Writing a view component
@@ -121,6 +121,13 @@ export class StatCardComponent {
   readonly delta = input<string | null>(null);
 
   readonly isSkeleton = computed(() => this.value() == null);
+
+  readonly formattedValue = computed(() => {
+    const v = this.value();
+    if (v == null) return '';
+    if (typeof v === 'number') return v.toLocaleString();
+    return String(v);
+  });
 }
 ```
 
