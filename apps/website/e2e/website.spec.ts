@@ -21,7 +21,7 @@ async function expectNoHorizontalOverflow(
 test('landing page renders hero headline', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#hero-heading')).toBeVisible();
-  await expect(page.locator('#hero-heading')).toHaveText('The AI agent UI framework for Angular.');
+  await expect(page.locator('#hero-heading')).toHaveText('The open-source thread plane for enterprise agents.');
   const headline = await page.locator('#hero-heading').textContent();
   expect(headline?.toLowerCase()).toContain('angular');
 });

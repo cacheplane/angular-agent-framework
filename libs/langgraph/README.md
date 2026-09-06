@@ -1,6 +1,6 @@
 # @threadplane/langgraph
 
-The LangGraph adapter for [Threadplane](https://github.com/cacheplane/angular-agent-framework), the AI agent UI framework for Angular. Wraps a LangGraph agent into the runtime-neutral `Agent` contract that `@threadplane/chat` consumes — the Angular counterpart to LangGraph's React `useStream()` hook, with signal-driven access to messages, status, tool calls, interrupts, subagents, branch history, and thread persistence.
+The LangGraph adapter for [Threadplane](https://github.com/cacheplane/angular-agent-framework), the open-source thread plane for enterprise agents. Wraps a LangGraph agent into the runtime-neutral `Agent` contract that `@threadplane/chat` consumes — the Angular counterpart to LangGraph's React `useStream()` hook, with signal-driven access to messages, status, tool calls, interrupts, subagents, branch history, and thread persistence.
 
 <p align="center">
   <a href="https://www.npmjs.com/package/@threadplane/langgraph">
