@@ -4,21 +4,21 @@ description: How the spec rendering example streams a JSON spec into a live comp
 
 # Specs
 
-A spec is the JSON object that describes an entire UI tree. It names a root element, holds every element in one flat map, and says for each element which component renders it, what props it receives, which children it owns, and when it is visible. The running example streams three specs in one character at a time and renders each one as it arrives, so the format on this page is the format you can watch being parsed.
+A spec is the JSON object that describes an entire UI tree. It names a root element, holds every element in one flat map, and says for each element which component renders it, what props it receives, which children it owns, and when it is visible. The running example streams three specs one character at a time and renders each one as it arrives, so the format on this page is the format you can watch being parsed.
 
 ## What the demo does
 
 The Run tab is split in two. The left side is the live render output, the right side is the raw JSON as it streams, and the bar along the bottom is a transport: play and pause, a track you can scrub to any character, a character count, and 1x, 2x and 4x speeds.
 
-Three tabs across the top pick the spec. "Heading + Text" is a heading with one text child. "Card + Badge" is a card holding a badge and a paragraph. "Nested Layout" is a heading over two cards, each with its own text child. Picking a tab restarts the stream against that spec, and elements appear as soon as their props arrive, with skeleton placeholders standing in until they do.
+Three tabs across the top pick the spec. "Heading + Text" is a heading with one text child. "Card + Badge" is a card holding a badge and a paragraph. "Nested Layout" is a heading over two cards, each with its own text child. Picking a tab restarts the stream against that spec, and elements appear as soon as their props arrive. The Text, Heading and Card components draw a skeleton placeholder while they wait; the Badge component has none, so a badge simply appears once its label arrives.
 
 ## How it is built
 
-The example is one Angular file plus an application config. Open the Code tab to read them in place.
+The Code tab holds the component and the application config. Open it to read them in place.
 
 ### The spec the demo streams
 
-The three specs are plain JSON strings the component ships with. This is the first one, and it is the whole format in miniature: a `root` key, a flat `elements` map, and a `children` array that holds keys rather than nested objects.
+The three specs live in `specs.ts`, beside the component, as plain JSON strings. This is the first one, and it is the whole format in miniature: a `root` key, a flat `elements` map, and a `children` array that holds keys rather than nested objects.
 
 ```json
 {
@@ -31,7 +31,9 @@ The three specs are plain JSON strings the component ships with. This is the fir
     },
     "desc": {
       "type": "Text",
-      "props": { "content": "This UI is rendered entirely from a JSON specification." }
+      "props": {
+        "content": "This UI is rendered entirely from a JSON specification. Each element maps to a registered Angular component."
+      }
     }
   }
 }
@@ -71,7 +73,7 @@ The text component in the same file declares `childKeys` and never loops over it
 
 ### A partial spec still renders
 
-The spec does not arrive whole. A partial JSON parser consumes the stream character by character and materializes whatever is complete so far, so the value handed to `<render-spec>` grows one element and one prop at a time.
+The spec does not arrive whole. `StreamingSimulator`, a shared helper that sits beside the examples rather than in the block below, is the piece that feeds characters into an incremental JSON parser and materializes whatever is complete so far, so the value handed to `<render-spec>` grows one element and one prop at a time.
 
 <ExampleCode file="spec-rendering.component.ts" region="streaming-source" title="spec-rendering.component.ts — the streaming source" />
 
@@ -108,7 +110,7 @@ const spec: Spec = {
 |----------|------|-------------|
 | `root` | `string` | The key in `elements` that rendering starts from |
 | `elements` | `Record<string, UIElement>` | A flat map of every element definition, keyed by a unique string |
-| `state` | `Record<string, unknown>` | Optional. Seeds the internal state store that `<render-spec>` creates when no store is supplied |
+| `state` | `Record<string, unknown>` | Optional. Seeds the internal state store that `<render-spec>` creates when neither a `[store]` input nor a `provideRender({ store })` is supplied. The internal store is created once and is not re-seeded by a later spec |
 
 <Callout type="info" title="Flat element map">
 Elements are stored in a flat map rather than a nested tree. Parent-child relationships are expressed through the `children` property, which holds keys pointing at other entries in the same map. That keeps lookups constant-time and makes a spec easy for a model to emit and to patch one element at a time.
@@ -126,6 +128,8 @@ interface UIElement {
   visible?: VisibilityCondition;
   repeat?: { statePath: string; key?: string };
   on?: Record<string, ActionBinding | ActionBinding[]>;
+  // Part of the spec schema; the Angular renderer does not act on it today
+  // (use `on` bindings or an effect over the store).
   watch?: Record<string, ActionBinding | ActionBinding[]>;
 }
 ```
@@ -136,9 +140,9 @@ interface UIElement {
 | `props` | `Record<string, unknown>` | Inputs for the component. Static values or expressions |
 | `children` | `string[]` | Keys of child elements in the same `elements` map |
 | `visible` | `VisibilityCondition` | Visibility condition, evaluated against the store |
-| `repeat` | `{ statePath: string; key?: string }` | Render this element once per item in a state array |
+| `repeat` | `{ statePath: string; key?: string }` | Render this element once per item in a state array. `key` is schema-level and is not used by the Angular renderer |
 | `on` | `Record<string, ActionBinding \| ActionBinding[]>` | Event name to the action or actions it fires |
-| `watch` | `Record<string, ActionBinding \| ActionBinding[]>` | State path to the actions that fire when the value there changes |
+| `watch` | `Record<string, ActionBinding \| ActionBinding[]>` | State path to the actions that fire when the value there changes. Part of the spec schema; the Angular renderer does not act on it today (use `on` bindings or an effect over the store) |
 
 ## Prop expressions
 
@@ -162,9 +166,9 @@ Arrays and plain objects are walked, so an expression nested inside a prop objec
 `$bindState` resolves like `$state` and additionally populates the component's `bindings` input with the path, so the component can write back:
 
 ```typescript
-props: {
+const props = {
   value: { $bindState: '/form/email' },
-}
+};
 // The component receives:
 //   value = the current value at /form/email
 //   bindings = { value: '/form/email' }
@@ -185,9 +189,9 @@ const functions: Record<string, ComputedFunction> = {
 ```
 
 ```typescript
-props: {
+const props = {
   label: { $computed: 'uppercase', args: { text: { $state: '/name' } } },
-}
+};
 ```
 
 Pass the map through the `[functions]` input on `<render-spec>`, or register it once with [`provideRender()`](/docs/render/api/provide-render). An unregistered name resolves to `undefined` and logs a warning.
@@ -197,13 +201,25 @@ Pass the map through the `[functions]` input on `<render-spec>`, or register it 
 The `visible` property decides whether an element mounts. When it evaluates to false the element and everything under it stays out of the DOM. Omitting it means visible.
 
 ```typescript
-{ type: 'Text', props: { content: 'Never shown' }, visible: false }
+import type { UIElement } from '@json-render/core';
 
-{ type: 'Text', props: { content: 'Shown when the flag is truthy' },
-  visible: { $state: '/showMessage' } }
+const never: UIElement = {
+  type: 'Text',
+  props: { content: 'Never shown' },
+  visible: false,
+};
 
-{ type: 'Text', props: { content: 'Shown when the count is over five' },
-  visible: { $state: '/count', gt: 5 } }
+const whenFlag: UIElement = {
+  type: 'Text',
+  props: { content: 'Shown when the flag is truthy' },
+  visible: { $state: '/showMessage' },
+};
+
+const whenOverFive: UIElement = {
+  type: 'Text',
+  props: { content: 'Shown when the count is over five' },
+  visible: { $state: '/count', gt: 5 },
+};
 ```
 
 A single condition reads `$state`, `$item` or `$index` and applies at most one comparison operator: `eq`, `neq`, `gt`, `gte`, `lt` or `lte`. With no operator it checks truthiness, and `not: true` inverts the result. An array of conditions is an implicit AND; `{ $and: [...] }` and `{ $or: [...] }` are the explicit forms and may nest.
@@ -213,14 +229,16 @@ A single condition reads `$state`, `$item` or `$index` and applies at most one c
 `repeat` renders one copy of the element for each item in a state array:
 
 ```typescript
-{
+import type { UIElement } from '@json-render/core';
+
+const item: UIElement = {
   type: 'ListItem',
   props: {
     label: { $item: 'name' },
     position: { $index: true },
   },
   repeat: { statePath: '/todos' },
-}
+};
 ```
 
 For each item the renderer builds a repeat scope holding the item, its index and its base path (`/todos/0`, `/todos/1`, and so on), provides that scope through a child injector, and resolves the element's props inside it, so `$item`, `$bindItem` and `$index` mean something different in every copy.
