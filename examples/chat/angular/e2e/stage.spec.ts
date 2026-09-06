@@ -1,15 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { attachBrowserHygiene } from './test-helpers';
-import type { StageState } from '../src/app/stage/stage-bridge';
 import type { StageTimeline } from '../src/app/stage/stage-timeline';
-
-// Mirrors the augmentation in stage-mode.component.ts, which the e2e tsconfig does not pull in.
-declare global {
-  interface Window {
-    __stageTimeline?: StageTimeline;
-    __stageApplied?: StageState;
-  }
-}
 
 /**
  * The /stage route replays the committed `public/stage-replay.json` beside the
@@ -33,8 +24,12 @@ test.describe('stage replay', () => {
     const hygiene = attachBrowserHygiene(page);
     const tl = await timeline(page);
     await expect(page.getByRole('region', { name: 'Chat devtools' })).toBeVisible();
+    // +1: strictly inside the hold. The boundary instant still belongs to the
+    // outgoing run (phaseReachedAt in stage-timeline.ts renders t minus an epsilon).
     await page.goto(`/stage?t=${tl.hold.startMs + 1}`);
     await expect(page.locator('chat-interrupt-panel')).toBeAttached({ timeout: 60_000 });
+    // Guards the transcript pin: the panel and the newest content sit in view.
+    await expect(page.locator('chat-interrupt-panel')).toBeInViewport({ timeout: 60_000 });
     // The pause comes from delete_backups, after list_backups has rendered its
     // registered tool view — the inventory the visitor is being asked about.
     await expect(page.locator('app-backup-table [data-state="rows"]')).toBeAttached();
@@ -55,6 +50,8 @@ test.describe('stage replay', () => {
     const tl = await timeline(page);
     await page.goto(`/stage?t=${tl.totalMs}`);
     await expect(page.locator('a2ui-surface').first()).toBeAttached({ timeout: 90_000 });
+    // Guards the transcript pin: the generated form is the newest content.
+    await expect(page.locator('a2ui-surface').first()).toBeInViewport({ timeout: 90_000 });
     await expect(page.locator('chat-interrupt-panel')).toHaveCount(0);
     await page.getByRole('tab', { name: 'Timeline' }).click();
     await expect(page.getByRole('region', { name: 'Chat devtools' })).toContainText(/checkpoint/i);

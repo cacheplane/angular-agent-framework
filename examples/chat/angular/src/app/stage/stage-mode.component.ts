@@ -297,6 +297,8 @@ export class StageMode {
   private seekTarget: number | null = null;
   private seekFrame: number | null = null;
   private pinFrame: number | null = null;
+  /** A publish landed while a pin pair was in flight; one more pair follows it. */
+  private pinPending = false;
 
   constructor() {
     this.watchDock();
@@ -307,6 +309,7 @@ export class StageMode {
       }
       this.seekFrame = null;
       this.pinFrame = null;
+      this.pinPending = false;
     });
     afterNextRender(() => {
       if (StageMode.autoBoot) {
@@ -419,19 +422,43 @@ export class StageMode {
    * (the backup table), the A2UI surface, and the interrupt panel — which sits
    * above the chat and shrinks it — have rendered, and the newest content ends
    * up below the fold: at the hold the transcript sat ~700px above its bottom.
-   * Live token cadence hides the same gap. One frame per seek, last wins; two
-   * frames deep so the views render in the first and layout settles in the
-   * second. `.chat-scroll` is the chat's own scroll container
+   * Live token cadence hides the same gap.
+   *
+   * Scheduling: one pair of frames is in flight at a time — the views render
+   * in the first, layout settles in the second, and the scroll write lands at
+   * the end of the second. A publish that arrives while a pair is in flight
+   * re-arms exactly one more pair after it, so content that renders after
+   * the pending pair's inner frame is still pinned rather than dropped.
+   *
+   * This deliberately overrides the chat's own unpin-on-user-scroll: the
+   * stage is a scrubbed display surface, not a reading surface, so a viewer
+   * who scrolls up is re-pinned on the next applied seek.
+   *
+   * `.chat-scroll` is the chat's own scroll container
    * (libs/chat/.../chat.component.ts, `#scrollContainer`); it exposes no
    * scroll API.
+   * TODO: replace with a public scrollToBottom() on ChatComponent
+   * (libs/chat/src/lib/compositions/chat/chat.component.ts, today protected
+   * onScrollBubbleClick) so this stops depending on the private .chat-scroll
+   * class.
    */
   private pinTranscript(): void {
-    if (typeof requestAnimationFrame !== 'function' || this.pinFrame !== null) return;
+    if (typeof requestAnimationFrame !== 'function') return;
+    if (this.pinFrame !== null) {
+      this.pinPending = true;
+      return;
+    }
     this.pinFrame = requestAnimationFrame(() => {
+      // The pair now owns every publish that arrived before this frame fired.
+      this.pinPending = false;
       this.pinFrame = requestAnimationFrame(() => {
         this.pinFrame = null;
         const el = this.host.nativeElement.querySelector<HTMLElement>('chat .chat-scroll');
         if (el) el.scrollTop = el.scrollHeight;
+        if (this.pinPending) {
+          this.pinPending = false;
+          this.pinTranscript();
+        }
       });
     });
   }

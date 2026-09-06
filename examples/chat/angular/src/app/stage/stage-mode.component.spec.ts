@@ -36,20 +36,57 @@ describe('StageMode', () => {
     expect(window.__stageApplied?.t).toBe(25);
   });
 
-  it('pins the transcript to its newest content once a seek settles', async () => {
+  /** The chat's scroll container, with jsdom's zero layout replaced by a tall transcript. */
+  async function bootWithScroller(): Promise<HTMLElement> {
     // The chat shows its welcome screen until a message lands, so the scroll
     // container only exists once the first run has been applied.
     await fx.componentInstance.boot(new URLSearchParams('t=0'));
     fx.detectChanges();
     const scroller = (fx.nativeElement as HTMLElement).querySelector<HTMLElement>('chat .chat-scroll');
-    expect(scroller).toBeTruthy();
+    if (!scroller) throw new Error('chat .chat-scroll did not render');
     // jsdom lays nothing out: stand in for a transcript taller than its box.
-    Object.defineProperty(scroller, 'scrollHeight', { configurable: true, value: 2400 });
+    Object.defineProperty(scroller, 'scrollHeight', { configurable: true, writable: true, value: 2400 });
     Object.defineProperty(scroller, 'scrollTop', { configurable: true, writable: true, value: 0 });
+    return scroller;
+  }
+
+  const frame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
+
+  /** Polls frame by frame so the test pins the BEHAVIOR, not how many frames deep it lands. */
+  async function pinnedWithin(scroller: HTMLElement, frames: number): Promise<boolean> {
+    for (let i = 0; i < frames; i++) {
+      if (scroller.scrollTop === scroller.scrollHeight) return true;
+      await frame();
+    }
+    return scroller.scrollTop === scroller.scrollHeight;
+  }
+
+  it('pins the transcript to its newest content once a seek settles', async () => {
+    const scroller = await bootWithScroller();
     await fx.componentInstance.controller()?.seek(25);
     fx.detectChanges();
-    await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
-    expect(scroller?.scrollTop).toBe(2400);
+    expect(await pinnedWithin(scroller, 6)).toBe(true);
+    expect(scroller.scrollTop).toBe(2400);
+  });
+
+  it('re-arms one more pin when a publish lands while a pair is in flight', async () => {
+    const scroller = await bootWithScroller();
+    const c = fx.componentInstance.controller();
+    if (!c) throw new Error('no controller');
+    // The first publish schedules the pair; the second lands while that pair
+    // is still in flight, so it must re-arm one more pair rather than be dropped.
+    await c.seek(25);
+    fx.detectChanges();
+    await c.seek(30);
+    fx.detectChanges();
+    // The content that grows AFTER the first pair's inner frame: the two-frame
+    // pair alone would pin at 2400 and leave the new 1200px below the fold.
+    await frame();
+    await frame();
+    expect(scroller.scrollTop).toBe(2400);
+    Object.defineProperty(scroller, 'scrollHeight', { configurable: true, writable: true, value: 3600 });
+    expect(await pinnedWithin(scroller, 6)).toBe(true);
+    expect(scroller.scrollTop).toBe(3600);
   });
 
   it('posts ready and state through the bridge', async () => {

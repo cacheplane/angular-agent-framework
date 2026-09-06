@@ -14,23 +14,16 @@
  * the devtools docked right. Below 768px the stage renders NO devtools (see
  * `readStageDock` — the phone path is chat only, a docked panel would eat the
  * transcript), so the phone still is the chat at 390x650 (3:5, the phone
- * ratio the hero poster uses), captured at deviceScaleFactor 2 so the shipped
- * 585-wide file is a crisp downscale rather than a 1.5x upscale of a 390px
- * raster.
+ * ratio the hero poster uses). `deviceScaleFactor: 2` applies to BOTH sizes:
+ * the desktop still is a 2400-wide raster downscaled to 1200, and the phone
+ * still a 780-wide raster downscaled to 585 — crisp downscales rather than a
+ * 1x raster shipped as-is or a 1.5x upscale of a 390px one.
  */
 import { expect, test } from '@playwright/test';
 import { resolve } from 'node:path';
 import sharp from 'sharp';
-import type { StageState } from '../src/app/stage/stage-bridge';
+import type { StageBeat } from '../src/app/stage/stage-recording.types';
 import type { StageTimeline } from '../src/app/stage/stage-timeline';
-
-// Mirrors the augmentation in stage-mode.component.ts, which the e2e tsconfig does not pull in.
-declare global {
-  interface Window {
-    __stageTimeline?: StageTimeline;
-    __stageApplied?: StageState;
-  }
-}
 
 const OUT_DIR = resolve(__dirname, '../../../../apps/website/public/screenshots');
 const SIZES = [
@@ -46,12 +39,20 @@ test('capture stage stills', async ({ page }) => {
   await page.goto('/stage?t=0');
   await page.waitForFunction(() => !!window.__stageTimeline);
   const tl = await page.evaluate(() => window.__stageTimeline as StageTimeline);
+  const endOf = (b: StageBeat) => {
+    const hit = tl.beats.find((x) => x.beat === b);
+    if (!hit) throw new Error(`recording has no "${b}" beat`);
+    return hit.endMs;
+  };
   const settle: Record<string, number> = {
-    stream: tl.beats[0].endMs,
-    persist: tl.beats[1].endMs,
+    stream: endOf('stream'),
+    persist: endOf('persist'),
     approve: tl.hold.startMs + Math.round((tl.hold.endMs - tl.hold.startMs) / 2),
     render: tl.totalMs,
   };
+  // Collected, not asserted per file: a throw mid-loop would leave the set
+  // half rewritten. Every offender is listed once after both loops.
+  const oversized: string[] = [];
   for (const size of SIZES) {
     await page.setViewportSize({ width: size.width, height: size.height });
     for (const [beat, t] of Object.entries(settle)) {
@@ -75,8 +76,9 @@ test('capture stage stills', async ({ page }) => {
         .resize({ width: size.ship })
         .webp({ quality: 60, effort: 6 })
         .toFile(out);
-      expect(info.size, `${out} exceeds ${MAX_BYTES} bytes`).toBeLessThanOrEqual(MAX_BYTES);
+      if (info.size > MAX_BYTES) oversized.push(`${out} (${info.size} bytes)`);
       console.log(`wrote ${out} (${Math.round(info.size / 1024)} KB)`);
     }
   }
+  expect(oversized, `stills over ${MAX_BYTES} bytes:\n${oversized.join('\n')}`).toEqual([]);
 });
