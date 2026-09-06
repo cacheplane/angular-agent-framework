@@ -12,7 +12,6 @@ export interface CockpitCapabilityModule {
   promptAssetPaths: string[];
   codeAssetPaths: string[];
   backendAssetPaths: string[];
-  docsAssetPaths: string[];
   runtimeUrl?: string;
   devPort?: number;
 }
@@ -37,7 +36,6 @@ export const runtimesMicrosoftAgentFrameworkPythonModule: CockpitCapabilityModul
     'cockpit/runtimes/microsoft-agent-framework/python/src/agent.py',
     'cockpit/runtimes/microsoft-agent-framework/python/src/server.py',
   ],
-  docsAssetPaths: ['cockpit/runtimes/microsoft-agent-framework/python/docs/guide.md'],
   runtimeUrl: 'runtimes/microsoft-agent-framework',
   devPort: 4330,
 };

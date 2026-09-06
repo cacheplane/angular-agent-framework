@@ -29,7 +29,6 @@ import {
   readWorkspaceModeQuery,
   type RuntimeTerminalTransition,
   type TrackModeChange,
-  type TrackNarrativeAction,
   type TrackNavigation,
   type TrackRuntimeAction,
   type TrackRuntimeTransition,
@@ -112,17 +111,6 @@ const trackNavigation: TrackNavigation = ({
     capability,
     category,
     from_capability: fromCapability,
-  });
-};
-
-const trackNarrativeAction: TrackNarrativeAction = ({
-  capability,
-  surface,
-}) => {
-  track(analyticsEvents.docsWorkspaceNarrativeAction, {
-    surface: 'docs',
-    capability,
-    narrative_surface: surface,
   });
 };
 
@@ -323,7 +311,6 @@ function WebsiteWorkspaceSurface({
           getSessionId={getWebsiteWorkspaceSessionId}
           runtimeTelemetry={RUNTIME_FRAME_TELEMETRY}
           trackNavigation={trackNavigation}
-          trackNarrativeAction={trackNarrativeAction}
           trackModeChange={trackModeChange}
           trackRuntimeAction={trackRuntimeAction}
           trackRuntimeTransition={trackRuntimeTransition}

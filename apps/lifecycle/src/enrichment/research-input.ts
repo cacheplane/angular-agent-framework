@@ -114,7 +114,12 @@ export function buildResearchInput(candidate: unknown): ResearchInput {
     researchMode,
     formFacts,
     deterministicScore: parsed.deterministicScore,
-    companyPages: researchMode === 'company' ? parsed.companyPages : [],
+    companyPages:
+      researchMode === 'company'
+        ? parsed.companyPages.filter(
+            (page) => page.facts.length > 0 || page.snippets.length > 0
+          )
+        : [],
     ...(parsed.linkedProjectSummary
       ? { linkedProjectSummary: parsed.linkedProjectSummary }
       : {}),

@@ -1,6 +1,6 @@
 import type { SqlExecutor, SqlTransaction } from './database.ts';
 import type { GrowthDeliveryStatus } from './models.ts';
-import type { DeliveryEnvironment } from './resend.ts';
+import { isCampaignTemplateId, type DeliveryEnvironment } from './resend.ts';
 import {
   stopContact,
   type CanonicalStopReason,
@@ -432,12 +432,17 @@ function isThreadplaneGrowthSend(tags: Record<string, string>): boolean {
     );
   }
   if (tags['job_kind'] !== 'send_step') return false;
+  // Sends accepted before the template tag shipped carry four tags; newer
+  // sends carry a fifth, bounded to the closed template allowlist.
+  const template = tags['campaign_template'];
+  const expectedTagCount = template === undefined ? 4 : 5;
   return (
-    Object.keys(tags).length === 4 &&
+    Object.keys(tags).length === expectedTagCount &&
     tags['campaign_version'] === 'v1' &&
     (tags['campaign_step'] === '1' ||
       tags['campaign_step'] === '2' ||
-      tags['campaign_step'] === '3')
+      tags['campaign_step'] === '3') &&
+    (template === undefined || isCampaignTemplateId(template))
   );
 }
 

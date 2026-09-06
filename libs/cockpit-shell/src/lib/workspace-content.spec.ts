@@ -21,13 +21,11 @@ import {
 const testEntry = cockpitManifest[0] as CockpitManifestEntry;
 
 // Stable mock function references, hoisted so vi.mock factories can access them
-const { mockExistsSync, mockReadFileSync, mockCodeToHtml, mockRenderMarkdown } =
-  vi.hoisted(() => ({
-    mockExistsSync: vi.fn(),
-    mockReadFileSync: vi.fn(),
-    mockCodeToHtml: vi.fn(),
-    mockRenderMarkdown: vi.fn(),
-  }));
+const { mockExistsSync, mockReadFileSync, mockCodeToHtml } = vi.hoisted(() => ({
+  mockExistsSync: vi.fn(),
+  mockReadFileSync: vi.fn(),
+  mockCodeToHtml: vi.fn(),
+}));
 
 vi.mock('node:fs', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:fs')>();
@@ -45,10 +43,6 @@ vi.mock('node:fs', async (importOriginal) => {
 vi.mock('shiki', () => ({
   default: { codeToHtml: mockCodeToHtml },
   codeToHtml: mockCodeToHtml,
-}));
-
-vi.mock('./render-markdown', () => ({
-  renderMarkdown: mockRenderMarkdown,
 }));
 
 describe('resolveRuntimeUrl', () => {
@@ -145,7 +139,6 @@ describe('getContentBundle', () => {
   afterEach(() => {
     mockReadFileSync.mockReset();
     mockCodeToHtml.mockReset();
-    mockRenderMarkdown.mockReset();
     vi.unstubAllEnvs();
   });
 
@@ -169,7 +162,6 @@ describe('getContentBundle', () => {
       ],
       codeAssetPaths: ['cockpit/langgraph/streaming/python/src/index.ts'],
       backendAssetPaths: [],
-      docsAssetPaths: [],
       runtimeUrl: 'langgraph/streaming',
       devPort: 4300,
     };
@@ -189,8 +181,10 @@ describe('getContentBundle', () => {
     });
     expect(bundle.runtimeUrl).toBe('http://localhost:4300');
     expect(bundle.docSections).toEqual([]);
-    expect(bundle.narrativeDocs).toEqual([]);
     expect(mockExistsSync).toHaveBeenCalledTimes(1);
+    expect(bundle.codeSources).toEqual({
+      'cockpit/langgraph/streaming/python/src/index.ts': 'const x = 1;',
+    });
   });
 
   it('returns a placeholder string when a code file is missing', async () => {
@@ -207,7 +201,6 @@ describe('getContentBundle', () => {
       promptAssetPaths: [],
       codeAssetPaths: ['missing/file.ts'],
       backendAssetPaths: [],
-      docsAssetPaths: [],
       runtimeUrl: undefined,
       devPort: undefined,
     };
@@ -219,7 +212,7 @@ describe('getContentBundle', () => {
     );
     expect(bundle.runtimeUrl).toBeNull();
     expect(bundle.docSections).toEqual([]);
-    expect(bundle.narrativeDocs).toEqual([]);
+    expect(bundle.codeSources).toEqual({});
   });
 
   it('falls back to unhighlighted code when Shiki fails', async () => {
@@ -233,7 +226,6 @@ describe('getContentBundle', () => {
       promptAssetPaths: [],
       codeAssetPaths: ['some/file.ts'],
       backendAssetPaths: [],
-      docsAssetPaths: [],
       runtimeUrl: undefined,
       devPort: undefined,
     };
@@ -244,7 +236,6 @@ describe('getContentBundle', () => {
       '<pre><code>const y = 2;</code></pre>'
     );
     expect(bundle.docSections).toEqual([]);
-    expect(bundle.narrativeDocs).toEqual([]);
   });
 
   it('returns empty maps for a docs-only presentation', async () => {
@@ -260,9 +251,9 @@ describe('getContentBundle', () => {
     expect(bundle.promptFiles).toEqual({});
     expect(bundle.runtimeUrl).toBeNull();
     expect(bundle.docSections).toEqual([]);
-    expect(bundle.narrativeDocs).toEqual([]);
     expect(mockReadFileSync).not.toHaveBeenCalled();
     expect(mockCodeToHtml).not.toHaveBeenCalled();
+    expect(bundle.codeSources).toEqual({});
   });
 
   it('extracts docSections from code and backend files', async () => {
@@ -286,7 +277,6 @@ describe('getContentBundle', () => {
       promptAssetPaths: ['prompts/streaming.md'],
       codeAssetPaths: ['src/streaming.component.ts'],
       backendAssetPaths: ['src/graph.py'],
-      docsAssetPaths: [],
       runtimeUrl: undefined,
       devPort: undefined,
     };
@@ -299,10 +289,9 @@ describe('getContentBundle', () => {
     expect(bundle.docSections[0].language).toBe('typescript');
     expect(bundle.docSections[1].title).toBe('StreamingGraph');
     expect(bundle.docSections[1].language).toBe('python');
-    expect(bundle.narrativeDocs).toEqual([]);
   });
 
-  it('contains missing prompt and narrative assets', async () => {
+  it('contains missing prompt assets', async () => {
     mockReadFileSync.mockImplementation(() => {
       throw new Error('ENOENT');
     });
@@ -314,7 +303,6 @@ describe('getContentBundle', () => {
       promptAssetPaths: ['missing/prompt.md'],
       codeAssetPaths: [],
       backendAssetPaths: [],
-      docsAssetPaths: ['missing/guide.md'],
     };
 
     const bundle = await getContentBundle(presentation);
@@ -322,7 +310,6 @@ describe('getContentBundle', () => {
     expect(bundle.promptFiles).toEqual({
       'missing/prompt.md': 'File not found: missing/prompt.md',
     });
-    expect(bundle.narrativeDocs).toEqual([]);
   });
 
   it('contains absolute and traversal paths without reading outside the workspace', async () => {
@@ -333,7 +320,6 @@ describe('getContentBundle', () => {
       promptAssetPaths: ['../outside-prompt.md'],
       codeAssetPaths: ['/private/secret.ts', '../outside-code.ts'],
       backendAssetPaths: [],
-      docsAssetPaths: ['/private/secret.md', '../outside-doc.md'],
     };
 
     const bundle = await getContentBundle(presentation);
@@ -345,9 +331,7 @@ describe('getContentBundle', () => {
     expect(bundle.promptFiles).toEqual({
       '../outside-prompt.md': 'File not found: ../outside-prompt.md',
     });
-    expect(bundle.narrativeDocs).toEqual([]);
     expect(mockReadFileSync).not.toHaveBeenCalled();
-    expect(mockRenderMarkdown).not.toHaveBeenCalled();
   });
 
   it('loads workspace-only capabilities from the same registry assets', async () => {
@@ -370,10 +354,6 @@ describe('getContentBundle', () => {
       return 'export const memory = true;';
     });
     mockCodeToHtml.mockResolvedValue('<pre class="shiki">code</pre>');
-    mockRenderMarkdown.mockResolvedValue({
-      title: 'Deep Agents Memory',
-      html: '<h1>Deep Agents Memory</h1><p>Narrative.</p>',
-    });
     vi.stubEnv('NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL', '');
 
     const bundle = await getContentBundle(presentation);
@@ -385,47 +365,6 @@ describe('getContentBundle', () => {
     expect(Object.keys(bundle.promptFiles)).toEqual(
       descriptor?.promptAssetPaths ?? []
     );
-    expect(bundle.narrativeDocs.map((doc) => doc.sourceFile)).toEqual(
-      descriptor?.docsAssetPaths?.map((path) => path.split('/').at(-1)) ?? []
-    );
     expect(bundle.runtimeUrl).toBe('http://localhost:4313');
-  });
-
-  it('skips a narrative rendering failure and continues loading the bundle', async () => {
-    mockReadFileSync.mockImplementation((filePath: unknown) => {
-      const path = String(filePath);
-      if (path.endsWith('code.ts')) return 'export const code = true;';
-      if (path.endsWith('prompt.md')) return '# Prompt';
-      if (path.endsWith('broken.md')) return '# Broken';
-      if (path.endsWith('valid.md')) return '# Valid';
-      throw new Error('ENOENT');
-    });
-    mockCodeToHtml.mockResolvedValue('<pre class="shiki">code</pre>');
-    mockRenderMarkdown
-      .mockRejectedValueOnce(new Error('Marked failed'))
-      .mockResolvedValueOnce({ title: 'Valid', html: '<h1>Valid</h1>' });
-
-    const presentation: CapabilityPresentation = {
-      kind: 'capability',
-      entry: testEntry,
-      docsPath: '/docs/test',
-      promptAssetPaths: ['prompt.md'],
-      codeAssetPaths: ['code.ts'],
-      backendAssetPaths: [],
-      docsAssetPaths: ['broken.md', 'valid.md'],
-    };
-
-    await expect(getContentBundle(presentation)).resolves.toMatchObject({
-      codeFiles: { 'code.ts': '<pre class="shiki">code</pre>' },
-      promptFiles: { 'prompt.md': '# Prompt' },
-      narrativeDocs: [
-        {
-          title: 'Valid',
-          html: '<h1>Valid</h1>',
-          sourceFile: 'valid.md',
-        },
-      ],
-    });
-    expect(mockRenderMarkdown).toHaveBeenCalledTimes(2);
   });
 });

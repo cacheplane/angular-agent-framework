@@ -66,10 +66,10 @@ import { WebsiteWorkspace, WebsiteWorkspaceRoot } from './WebsiteWorkspace';
 
 const emptyContent: ContentBundle = {
   codeFiles: {},
+  codeSources: {},
   promptFiles: {},
   runtimeUrl: null,
   docSections: [],
-  narrativeDocs: [],
 };
 
 const docsOnlyResolution: WorkspaceResolution = {
@@ -118,7 +118,6 @@ const mappedPresentation = (
     promptAssetPaths: [],
     codeAssetPaths: ['example.ts'],
     backendAssetPaths: [],
-    docsAssetPaths: [],
     runnable: resolution.identity.availableModes.includes('Run'),
   };
 };
@@ -541,7 +540,6 @@ describe('WebsiteWorkspace', () => {
         from_capability: 'streaming',
       })
     );
-    expect(props.trackNarrativeAction).toBeTypeOf('function');
     expect(props.trackRuntimeAction).toBeTypeOf('function');
     expect(props.trackRuntimeTransition).toBeTypeOf('function');
   });

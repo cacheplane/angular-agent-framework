@@ -34,7 +34,10 @@ import {
   type LibraryId,
 } from '../../../../../lib/docs-config';
 import { WebsiteWorkspace } from '../../../../../components/workspace/WebsiteWorkspace';
-import { getWebsiteWorkspacePage } from '../../../../../lib/workspace-page';
+import {
+  getExampleCodeContext,
+  getWebsiteWorkspacePage,
+} from '../../../../../lib/workspace-page';
 import fs from 'fs';
 import path from 'path';
 
@@ -168,7 +171,11 @@ export default async function DocsPage({ params }: DocsRouteProps) {
             />
           </div>
           <article className="flex-1 py-8 px-4 sm:px-6 md:px-12 md:max-w-3xl">
-            <MdxRenderer source={doc.body} />
+            <MdxRenderer
+              source={doc.body}
+              exampleCode={getExampleCodeContext(workspacePage)}
+              docsPath={pathname}
+            />
           </article>
           {section === 'api' &&
             (() => {
@@ -226,7 +233,11 @@ export default async function DocsPage({ params }: DocsRouteProps) {
       <WebsiteWorkspace
         resolution={workspacePage.resolution}
         presentation={workspacePage.presentation}
-        contentBundle={workspacePage.contentBundle}
+        // Raw sources exist only for the server-rendered `<ExampleCode>` above
+        // (docsSlot already captured them); the workspace shell renders the
+        // highlighted `codeFiles`, so shipping them again would only add dead
+        // weight to this client boundary's RSC payload.
+        contentBundle={{ ...workspacePage.contentBundle, codeSources: {} }}
         navigationTree={workspacePage.navigationTree}
         routePath={pathname}
         docsSlot={docsSlot}

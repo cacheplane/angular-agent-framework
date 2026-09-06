@@ -20,7 +20,6 @@ export const analyticsEvents = {
   docsSidebarSectionToggle: 'docs:sidebar_section_toggle',
   docsWorkspaceNavigation: 'docs:workspace_navigation',
   docsWorkspaceModeSwitched: 'docs:workspace_mode_switched',
-  docsWorkspaceNarrativeAction: 'docs:workspace_narrative_action',
   docsWorkspaceRuntimeAction: 'docs:workspace_runtime_action',
   docsWorkspaceRuntimeStatusChanged: 'docs:workspace_runtime_status_changed',
   blogCtaClick: 'blog:cta_click',

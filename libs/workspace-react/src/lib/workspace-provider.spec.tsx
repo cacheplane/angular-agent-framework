@@ -43,7 +43,6 @@ const presentation: WorkspacePresentation = {
   promptAssetPaths: [],
   codeAssetPaths: ['example.ts'],
   backendAssetPaths: [],
-  docsAssetPaths: ['guide.md'],
   runtimeUrl: 'langgraph/streaming',
   devPort: 4300,
   runnable: true,
@@ -51,10 +50,10 @@ const presentation: WorkspacePresentation = {
 
 const contentBundle: ContentBundle = {
   codeFiles: { 'example.ts': '<pre>source</pre>' },
+  codeSources: { 'example.ts': 'source' },
   promptFiles: {},
   runtimeUrl: null,
   docSections: [],
-  narrativeDocs: [],
 };
 
 function Readout() {

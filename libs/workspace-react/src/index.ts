@@ -43,7 +43,6 @@ export * from './lib/components/control-plane/control-plane-overflow-menu';
 export * from './lib/components/control-plane/runtime-section';
 export * from './lib/components/mobile-nav-overlay';
 export * from './lib/components/modes/mode-switcher';
-export * from './lib/components/narrative-docs/narrative-docs';
 export * from './lib/components/run-mode/run-mode';
 export * from './lib/components/sidebar/cockpit-sidebar';
 export * from './lib/components/sidebar/language-picker';

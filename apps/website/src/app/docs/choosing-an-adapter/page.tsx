@@ -52,7 +52,7 @@ export default function ChoosingAnAdapterPage() {
             aria-label={PAGE_TITLE}
             className="flex-1 py-8 px-4 sm:px-6 md:px-12 md:max-w-3xl"
           >
-            <MdxRenderer source={source} />
+            <MdxRenderer source={source} docsPath="/docs/choosing-an-adapter" />
           </article>
         </div>
         {/* This page carries as many headings as any library page, so it gets

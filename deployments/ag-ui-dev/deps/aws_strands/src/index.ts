@@ -12,7 +12,6 @@ export interface CockpitCapabilityModule {
   promptAssetPaths: string[];
   codeAssetPaths: string[];
   backendAssetPaths: string[];
-  docsAssetPaths: string[];
   runtimeUrl?: string;
   devPort?: number;
 }
@@ -37,7 +36,6 @@ export const runtimesAwsStrandsPythonModule: CockpitCapabilityModule = {
     'cockpit/runtimes/aws-strands/python/src/agent.py',
     'cockpit/runtimes/aws-strands/python/src/server.py',
   ],
-  docsAssetPaths: ['cockpit/runtimes/aws-strands/python/docs/guide.md'],
   runtimeUrl: 'runtimes/aws-strands',
   devPort: 4331,
 };

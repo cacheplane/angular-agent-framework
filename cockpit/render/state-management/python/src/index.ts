@@ -12,7 +12,6 @@ export interface CockpitCapabilityModule {
   promptAssetPaths: string[];
   codeAssetPaths: string[];
   backendAssetPaths: string[];
-  docsAssetPaths: string[];
   runtimeUrl?: string;
   devPort?: number;
 }
@@ -36,7 +35,6 @@ export const renderStateManagementPythonModule: CockpitCapabilityModule = {
   backendAssetPaths: [
     'cockpit/render/state-management/python/src/graph.py',
   ],
-  docsAssetPaths: ['cockpit/render/state-management/python/docs/guide.md'],
   runtimeUrl: 'render/state-management',
   devPort: 4403,
 };

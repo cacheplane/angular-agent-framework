@@ -41,6 +41,25 @@ function validCandidate() {
 }
 
 describe('buildResearchInput', () => {
+  it('omits empty captured pages instead of requiring citations for absent evidence', () => {
+    const result = buildResearchInput({
+      ...validCandidate(),
+      companyPages: [{ ...COMPANY_PAGE, facts: [], snippets: [] }],
+    });
+    expect(result.companyPages).toEqual([]);
+  });
+
+  it('keeps meaningful evidence when another captured page is empty', () => {
+    const result = buildResearchInput({
+      ...validCandidate(),
+      companyPages: [
+        { ...COMPANY_PAGE, facts: [], snippets: [] },
+        COMPANY_PAGE,
+      ],
+    });
+    expect(result.companyPages).toEqual([COMPANY_PAGE]);
+  });
+
   it.each([
     'gmail.com',
     'googlemail.com',

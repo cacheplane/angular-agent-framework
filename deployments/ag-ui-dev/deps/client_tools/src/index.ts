@@ -12,7 +12,6 @@ export interface CockpitCapabilityModule {
   promptAssetPaths: string[];
   codeAssetPaths: string[];
   backendAssetPaths: string[];
-  docsAssetPaths: string[];
   runtimeUrl?: string;
   devPort?: number;
 }
@@ -41,7 +40,6 @@ export const agUiClientToolsPythonModule: CockpitCapabilityModule = {
     'cockpit/ag-ui/client-tools/python/src/graph.py',
     'cockpit/ag-ui/client-tools/python/src/server.py',
   ],
-  docsAssetPaths: ['cockpit/ag-ui/client-tools/python/docs/guide.md'],
   runtimeUrl: 'ag-ui/client-tools',
   devPort: 4325,
 };

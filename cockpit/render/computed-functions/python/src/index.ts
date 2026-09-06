@@ -12,7 +12,6 @@ export interface CockpitCapabilityModule {
   promptAssetPaths: string[];
   codeAssetPaths: string[];
   backendAssetPaths: string[];
-  docsAssetPaths: string[];
   runtimeUrl?: string;
   devPort?: number;
 }
@@ -36,7 +35,6 @@ export const renderComputedFunctionsPythonModule: CockpitCapabilityModule = {
   backendAssetPaths: [
     'cockpit/render/computed-functions/python/src/graph.py',
   ],
-  docsAssetPaths: ['cockpit/render/computed-functions/python/docs/guide.md'],
   runtimeUrl: 'render/computed-functions',
   devPort: 4406,
 };
