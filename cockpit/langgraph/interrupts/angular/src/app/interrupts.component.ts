@@ -125,7 +125,6 @@ const WELCOME_SUGGESTIONS = [
 })
 export class InterruptsComponent {
   protected readonly suggestions = WELCOME_SUGGESTIONS;
-  // #region resume
   protected readonly editing = signal(false);
   protected readonly editAmount = signal<number | null>(null);
 
@@ -135,6 +134,7 @@ export class InterruptsComponent {
     void this.agent.submit({ message: text });
   }
 
+  // #region resume
   protected onAction(action: ChatApprovalAction): void {
     if (action === 'approve') {
       void this.agent.submit({ resume: { approved: true } });

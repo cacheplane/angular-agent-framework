@@ -44,7 +44,7 @@ Splitting extraction from narration is deliberate: the card needs typed fields, 
 
 <ExampleCode file="graph.py" region="request-approval" title="graph.py — the interrupt" />
 
-Notice the `kind` field on the payload. It is not required by LangGraph; it is how the frontend tells this interrupt apart from any other one the graph might raise. Notice too that the node validates what came back: a resume value that is not a dictionary, or one without `approved`, is treated as a rejection.
+Notice the `kind` field on the payload. It is not required by LangGraph; it is how the frontend tells this interrupt apart from any other one the graph might raise. Notice too that the node validates what came back: a resume value that is not a dictionary, or one whose `approved` is missing or false, is treated as a rejection.
 
 <Callout type="tip" title="A resumed node re-executes from the top">
 LangGraph resumes by running the interrupting node again, and `interrupt()` returns the resume value instead of pausing a second time. Every line above the `interrupt()` call therefore runs twice, so keep that stretch free of side effects. Reading state, as the example does, is safe; charging a card there is not.
@@ -56,10 +56,10 @@ After the pause the graph branches. A conditional edge sends an approved refund 
 
 <ExampleCode file="graph.py" region="graph" title="graph.py — issuing and routing" />
 
-`compile()` is called with no checkpointer, because the LangGraph API server provides persistence and rejects a graph that brings its own. The [Persistence guide](/docs/langgraph/guides/persistence) covers the checkpointer choices for a graph you embed in your own process.
+`compile()` is called with no checkpointer, because the LangGraph API server provides persistence and either rejects or ignores a graph that brings its own. The [Persistence guide](/docs/langgraph/guides/persistence) covers the checkpointer choices for a graph you embed in your own process.
 
 <Callout type="warning" title="Interrupts require a checkpointer somewhere">
-A paused graph is a stored checkpoint. Serving through `langgraph dev` or LangGraph Platform gives you that for free, and passing your own saver there is an error. Embedding the graph in your own process is the case where you must supply one yourself, or `interrupt()` has nowhere to save the pause.
+A paused graph is a stored checkpoint. Serving through `langgraph dev` or LangGraph Platform gives you that for free. `langgraph dev` refuses to load a graph that compiles its own saver, and a deployment ignores it, so leave it off in both cases.
 </Callout>
 
 ### The agent provider
@@ -157,7 +157,7 @@ Nothing changes on the client. Each pause raises one interrupt, the card matches
 
 ## Typed interrupt payloads with BagTemplate
 
-By default an interrupt payload is untyped: the normalized `interrupt()` signal exposes `value` as `unknown`, and the example casts at the template boundary. The `BagTemplate` generic gives the raw signal a real type instead.
+By default an interrupt payload is untyped: the normalized `interrupt()` signal exposes `value` as `unknown`, and the example lets it reach the template untyped, giving the payload a shape only where `submitEdit()` declares its parameter. The `BagTemplate` generic gives the raw signal a real type instead.
 
 Typing the bag means naming the agent, so this variation declares a ref with `createAgentRef()` and passes it to both `provideAgent()` and `injectAgent()`, where the example uses the unnamed form.
 
@@ -217,7 +217,7 @@ async def check_stale_interrupts():
         metadata={"interrupt_type": "approval"},
     )
     for thread in threads:
-        created = thread.updated_at
+        created = thread["updated_at"]
         if (now() - created).total_seconds() > 3600:  # 1 hour timeout
             await client.runs.create(
                 thread["thread_id"],
