@@ -40,11 +40,11 @@ The `data_model` is what path bindings such as `{"path": "/origin"}` resolve aga
 
 ### Wrapping a surface in v0.9 envelopes
 
-The model authors the components; the code writes the wire format. `_wrap_envelopes` emits the sentinel prefix and then one JSON envelope per line, each stamped `"version": "v0.9"`.
+The model authors the components; the code writes the wire format. `_wrap_envelopes` emits the sentinel prefix and then one JSON envelope per line, each stamped `"version": "v0.9"`. The protocol requires only that `createSurface` comes first and that a component with id `root` is defined before anything paints.
 
 <ExampleCode file="graph.py" region="envelope-wrapping" title="graph.py — the envelope wrapping" />
 
-The demo emits `createSurface`, then `updateComponents`, then `updateDataModel`. The protocol requires only that `createSurface` comes first and that a component with id `root` is defined before anything paints.
+The demo emits `createSurface`, then `updateComponents`, then `updateDataModel`.
 
 <Callout type="info" title="The sentinel is what switches the client into A2UI mode">
 `A2UI_PREFIX` is `---a2ui_JSON---`. The content classifier in `@threadplane/chat` looks for exactly that string at the start of assistant content and routes the rest of the message into the A2UI pipeline instead of the markdown renderer.
@@ -109,7 +109,7 @@ The parser recognizes four envelope keys:
 | Envelope | Purpose |
 | --- | --- |
 | `createSurface` | Creates a surface and declares its component catalog, theme, and `sendDataModel` behavior. Must come first. |
-| `updateComponents` | Adds or replaces components on a surface, merged incrementally by `id`. One component should have `id: "root"`; the surface-to-spec conversion falls back to the first component when none is named `root`. |
+| `updateComponents` | Adds or replaces components on a surface, merged incrementally by `id`. One component must have `id: "root"`; the surface store will not commit a surface without one. The surface-to-spec conversion itself falls back to the first component, which matters only when you drive `<a2ui-surface>` directly. |
 | `updateDataModel` | Sets (or deletes) data at a JSON-pointer `path` in the surface data model. |
 | `deleteSurface` | Removes a surface. |
 
@@ -128,7 +128,7 @@ On the wire, each envelope from `_wrap_envelopes` is one newline-delimited JSON 
 {"version":"v0.9","updateDataModel":{...}}
 ```
 
-Components are flat objects discriminated by the `component` string. This is the demo's submit button and its label, as the graph emits them:
+Components are flat objects discriminated by the `component` string. This is the demo's submit button, with its action context abridged to two of its six keys:
 
 ```json
 {
@@ -141,7 +141,8 @@ Components are flat objects discriminated by the `component` string. This is the
       "name": "bookingSubmit",
       "context": {
         "formId": "booking",
-        "origin": { "path": "/origin" }
+        "origin": { "path": "/origin" },
+        "dest": { "path": "/dest" }
       }
     }
   }
@@ -193,6 +194,8 @@ The other action form, `{ "functionCall": { "call": ..., "args": ... } }`, execu
 
 Use local handlers for client-owned behavior. Use A2UI event actions for agent-bound events.
 
+This is the standalone `<a2ui-surface>`, documented in full at [the surface component page](/docs/chat/a2ui/surface-component); `state()` here is the surface state your host holds, not a value the demo above provides.
+
 ```html
 <a2ui-surface
   [state]="state()"
@@ -237,7 +240,7 @@ Schema-valid messages are not enough to make UI executable. Your catalog must co
 
 Do not use pre-v0.9 envelope names such as `surfaceUpdate`, `dataModelUpdate`, or `beginRendering` — the current parser recognizes only `createSurface`, `updateComponents`, `updateDataModel`, and `deleteSurface`, and silently ignores anything else. Likewise, the pre-v0.9 type-keyed component wrappers and `literalString`-style value wrappers are gone: components are flat, and literals are bare values.
 
-Progressive rendering is per component, not per surface. The surface store materializes an `A2uiComponentView` for each component and flips its `ready` flag once every binding it references has resolved at least once; until then the catalog entry's fallback is mounted in its place. A component whose binding never arrives keeps showing its fallback.
+Progressive rendering is per component, not per surface. The surface-to-spec conversion leaves each data-model prop as a `$bindState` binding, and the render element defers mounting a component while any bound prop is still undefined, showing the catalog entry's fallback, or the library default when the entry declares none, in its place. The surface store also tracks a monotonic `ready` flag per `A2uiComponentView` for hosts that drive their own progressive renderer. A component whose binding never arrives keeps showing its fallback.
 
 ## What's Next
 
