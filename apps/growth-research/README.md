@@ -1,12 +1,47 @@
 # Growth research application
 
+## Managed company enrichment
+
+The staged application exposes `growth_company`, a private compiled adapter around
+the generated Dawn company agent. Lifecycle captures bounded company evidence and
+submits `{ request }`; the managed thread returns `values.result`. The agent cannot
+write Growth records or send email. The local comparison harness remains available
+for evaluation, independently of the production rollout switch.
+
+Set `GROWTH_RESEARCH_PRODUCTION_MODE=managed-company-only`, `OPENAI_API_KEY`, and
+the dedicated `DAWN_DATABASE_URL`. Initialize `growth_research_execution_claims`
+using `createClaimStore().initialize()` before enabling invocation. Its opaque,
+single-use attempt fence prevents managed replay from resetting paid-call budgets.
+Do not remove an unsettled fence or mark it settled based only on elapsed time.
+An otherwise valid request that expires before execution records an atomic,
+already-settled rejection fence without invoking the agent. This permits cleanup
+after the managed run becomes terminal. A rejection never updates an existing
+fence, so a late replay cannot declare an earlier writer settled.
+
+Configure `GROWTH_RESEARCH_TRACE_PROJECT_ID` for manually exported, sanitized
+model/tool spans. The exporter accepts `GROWTH_RESEARCH_TRACE_API_KEY` and
+`GROWTH_RESEARCH_TRACE_WORKSPACE_ID`, with platform-injected key fallbacks.
+Missing configuration or rejected exports emit a bounded diagnostic code without
+page content or credentials; they do not fail enrichment. Disable automatic
+tracing with the supported runtime settings and verify actual exported payloads
+using synthetic evidence before submitting company pages. Thread checkpoints and
+LangSmith traces are different stores; trace deletion can remain asynchronous.
+
+Build with `npx nx build growth-research`. If creating a source tarball on macOS,
+use `COPYFILE_DISABLE=1` and inspect its entries with a platform-independent tar
+reader: AppleDouble `._*` files can otherwise be interpreted as TypeScript on the
+server. Never archive environment files or local evaluation records.
+
+Code and deployment health do not establish rollout readiness. Verify semantic
+quality, lost-acknowledgement reconciliation, cancellation/provider draining,
+checkpoint deletion and sanitized tracing before enabling automatic publication.
+
 ## Local company research pilot
 
 The local pilot compares one bounded Dawn agent with the existing lifecycle enrichment
 generator on identical captured company evidence. It has no Growth database connection,
-does not resolve people or employment, and cannot send email. The managed deployment
-still exposes only the synthetic compatibility graph documented below. Pilot routes,
-operator adapters, and their generated graph are excluded from its staged artifact.
+does not resolve people or employment, and cannot send email. The company graph is
+private to the managed adapter; evaluation CLI adapters are excluded from staging.
 
 Use Node 24 and the existing workspace dependencies. Build before running the agent:
 
@@ -250,7 +285,6 @@ uses the same thread and smoke ID after a direct run; cleanup verifies ownership
 and rejects active or interrupted runs, then deletes the fixture thread and verifies
 absence. Interrupted fixtures require the separate operator procedure described above.
 
-This application is restricted to synthetic compatibility work. It does not collect
-real people or companies, publish account facts, or dispatch campaigns. Live use still
-requires trusted scopes, source controls, budget enforcement, a durable Growth work
-ledger, publication validation and cross-store deletion safeguards.
+The compatibility routes described in this section are restricted to synthetic
+work. The separately gated `growth_company` adapter is the production candidate
+described above; its presence does not enable contact-triggered execution.

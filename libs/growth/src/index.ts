@@ -7,6 +7,7 @@ export * from './lib/database.ts';
 export * from './lib/dispatcher.ts';
 export * from './lib/forms.ts';
 export * from './lib/jobs.ts';
+export * from './lib/research-jobs.ts';
 export * from './lib/models.ts';
 export * from './lib/resend.ts';
 export * from './lib/replies.ts';

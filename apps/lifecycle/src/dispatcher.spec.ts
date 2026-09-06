@@ -258,7 +258,14 @@ describe('dispatchLifecycleJobs', () => {
     expect(leaseDueJobs).toHaveBeenCalledWith(expect.anything(), {
       batchSize: 25,
       campaignEnabled: false,
-      kinds: ['fulfill', 'enrich', 'notify', 'send_step', 'reply_reconcile'],
+      kinds: [
+        'fulfill',
+        'enrich',
+        'notify',
+        'send_step',
+        'reply_reconcile',
+        'research_cleanup',
+      ],
       leaseDurationMs: 60_000,
       now: NOW,
     });

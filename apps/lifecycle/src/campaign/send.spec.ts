@@ -130,6 +130,18 @@ function context(
 }
 
 describe('prepareCampaignMessage', () => {
+  it('uses generic copy when the newest artifact is company research even if content resembles legacy drafts', () => {
+    const stored = { ...artifact(), kind: 'company_enrichment.v1' };
+    const prepared = prepareCampaignMessage({
+      context: context({ enrichmentArtifact: stored }),
+      job: job('send_step', { campaign_version: 'v1', step: 1 }),
+      unsubscribeUrl: UNSUBSCRIBE,
+    });
+    expect(prepared).toMatchObject({
+      subject: 'Engineer to engineer',
+      template: 'immediate',
+    });
+  });
   it('prepares the install-runtime hello immediately without research', () => {
     expect(
       prepareCampaignMessage({
@@ -647,15 +659,13 @@ describe('dispatchLifecycleAppOwnedJob', () => {
 
   it('enriches an admitted install domain without inventing a form submission', async () => {
     const deps = dependencies({
-      readJobContext: vi
-        .fn()
-        .mockResolvedValue(
-          context({
-            formSubmission: {},
-            companyDomain: null,
-            emailClassification: 'unknown',
-          })
-        ),
+      readJobContext: vi.fn().mockResolvedValue(
+        context({
+          formSubmission: {},
+          companyDomain: null,
+          emailClassification: 'unknown',
+        })
+      ),
       readInstallRuntimeEnrichmentContext: vi
         .fn()
         .mockResolvedValue({ companyDomain: 'neon.tech' }),

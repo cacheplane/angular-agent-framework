@@ -14,7 +14,7 @@ const candidate = {
   unknowns: ['description', 'industry'],
   claims: [
     {
-      text: 'Atlas builds tools.',
+      text: 'Atlas Synthetic builds observability software.',
       citations: [
         {
           sourceId: 'source-1',
@@ -97,6 +97,31 @@ describe('company pilot contracts', () => {
       ).reasonCodes
     ).toContain('quote_not_found');
   });
+  it('does not join separate snippets into one exact quote', () => {
+    const c = structuredClone(fixtureCase(0));
+    const page = c.pages[0];
+    if (!page) throw new Error('page required');
+    page.snippets = ['First excerpt.', 'Second excerpt.'];
+    const value = {
+      ...candidate,
+      claims: [
+        {
+          text: 'Two facts.',
+          citations: [
+            { sourceId: 'source-1', quote: 'First excerpt. Second excerpt.' },
+          ],
+        },
+      ],
+    };
+    expect(validateCandidate(value, c).reasonCodes).toContain(
+      'quote_not_found'
+    );
+    value.claims = ['First excerpt.', 'Second excerpt.'].map((quote) => ({
+      text: quote,
+      citations: [{ sourceId: 'source-1', quote }],
+    }));
+    expect(validateCandidate(value, c).status).toBe('structurally_valid');
+  });
   it('requires local operator authorization and counts failed reads before enforcing caps', () => {
     expect(() => readEvidence({ sourceId: 'source-1' })).toThrow();
     vi.stubEnv('GROWTH_RESEARCH_PILOT_MODE', 'local-company-only');
@@ -138,7 +163,7 @@ describe('company pilot contracts', () => {
     vi.stubEnv('GROWTH_RESEARCH_PILOT_MODE', 'local-company-only');
     const ctx = createPilotContext(c);
     withPilotContext(ctx, () => {
-      submitCandidate(candidate);
+      submitCandidate({ ...candidate, claims: [] });
       submitCandidate({ ...candidate, email: 'bad' });
     });
     expect(ctx.candidate).toBeUndefined();
@@ -154,3 +179,69 @@ function fixtureCase(index: number) {
   if (!fixture) throw new Error('Synthetic fixture is required');
   return fixture;
 }
+
+it('offers bounded copy-ready citations without changing the captured snapshot', () => {
+  vi.stubEnv('GROWTH_RESEARCH_PILOT_MODE', 'local-company-only');
+  const c = structuredClone(fixtureCase(0));
+  const page = c.pages[0];
+  if (!page) throw new Error('page required');
+  page.snippets = ['A separate excerpt.', 'x'.repeat(300)];
+  const ctx = createPilotContext(c);
+  const result = withPilotContext(ctx, () =>
+    readEvidence({ sourceId: 'source-1' })
+  );
+  expect(result).toMatchObject({
+    citationOptions: [
+      {
+        sourceId: 'source-1',
+        quote: 'Atlas Synthetic builds observability software.',
+      },
+      { sourceId: 'source-1', quote: 'A separate excerpt.' },
+      { sourceId: 'source-1', quote: 'x'.repeat(240) },
+    ],
+  });
+  expect(ctx.case).toEqual(c);
+});
+
+it('requires one citation and byte-for-byte extractive claim text', () => {
+  const c = fixtureCase(0);
+  const quote = 'Atlas Synthetic builds observability software.';
+  const value = {
+    ...candidate,
+    claims: [{ text: quote, citations: [{ sourceId: 'source-1', quote }] }],
+  };
+  expect(validateCandidate(value, c).status).toBe('structurally_valid');
+  for (const text of [
+    'Atlas builds observability software.',
+    quote.toLowerCase(),
+    quote + ' ',
+    quote.slice(0, -1),
+  ]) {
+    expect(
+      validateCandidate(
+        {
+          ...value,
+          claims: [{ text, citations: [{ sourceId: 'source-1', quote }] }],
+        },
+        c
+      ).reasonCodes
+    ).toContain('claim_not_exact_excerpt');
+  }
+  expect(
+    validateCandidate(
+      {
+        ...value,
+        claims: [
+          {
+            text: quote,
+            citations: [
+              { sourceId: 'source-1', quote },
+              { sourceId: 'source-1', quote },
+            ],
+          },
+        ],
+      },
+      c
+    ).reasonCodes
+  ).toContain('claim_not_exact_excerpt');
+});

@@ -84,7 +84,7 @@ export async function readGrowthFunnel(
     count(*) filter(where exists(select 1 from growth_activity a where a.contact_id=states.id and a.kind='delivery.delivered')) as delivered_contacts,
     count(*) filter(where exists(select 1 from growth_activity a where a.contact_id=states.id and a.kind='campaign.reply_received')) as replied_contacts,
     count(*) filter(where deleted_at is not null or stop_kind='deletion' or (stop_at is not null and (outreach_approved_at is null or stop_at >= outreach_approved_at))) as currently_stopped_contacts,
-    count(*) filter(where exists(select 1 from growth_artifacts a join growth_jobs j on j.id=a.job_id where a.contact_id=states.id and j.kind='enrich' and a.kind='enrichment.v1' and a.schema_version=1)) as enriched_contacts
+    count(*) filter(where exists(select 1 from growth_artifacts a join growth_jobs j on j.id=a.job_id where a.contact_id=states.id and j.kind='enrich' and a.kind in ('enrichment.v1','company_enrichment.v1') and a.schema_version=1)) as enriched_contacts
     from states`,
     [...parameters, CONTACT_HARD_STOP_REASONS]
   );
@@ -158,14 +158,33 @@ export async function readContactJourney(db: SqlExecutor, contactId: string) {
   );
   const artifacts = await db.execute(
     `select a.id,a.job_id,a.kind,a.schema_version,a.created_at,
-    left(a.content->'company_profile'->>'name',120) as company_name,
-    left(a.content->'company_profile'->>'description',500) as company_description,
-    left(a.content->'company_profile'->>'industry',120) as company_industry,
-    (select jsonb_agg(jsonb_build_object('id',left(s->>'id',40),'url',left(s->>'url',500),'retrieved_at',left(s->>'retrieved_at',40),'content_hash',left(s->>'content_hash',64)))
+    left((case when a.kind='company_enrichment.v1' then a.content->'profile' else a.content->'company_profile' end)->>'name',120) as company_name,
+    left((case when a.kind='company_enrichment.v1' then a.content->'profile' else a.content->'company_profile' end)->>'description',500) as company_description,
+    left((case when a.kind='company_enrichment.v1' then a.content->'profile' else a.content->'company_profile' end)->>'industry',120) as company_industry,
+    case when a.kind='company_enrichment.v1' then (
+      select jsonb_agg(jsonb_build_object('text',left(claim->>'text',300),'citations',(
+        select jsonb_agg(jsonb_build_object('sourceId',left(citation->>'sourceId',40),'quote',left(citation->>'quote',240)))
+        from (select citation from jsonb_array_elements(case when jsonb_typeof(claim->'citations')='array' then claim->'citations' else '[]'::jsonb end) citation limit 3) citations
+      ))) from (select claim from jsonb_array_elements(case when jsonb_typeof(a.content->'claims')='array' then a.content->'claims' else '[]'::jsonb end) claim limit 12) claims
+    ) end as claims,
+    case when a.kind='company_enrichment.v1' and jsonb_typeof(a.content->'claims')='array' then jsonb_array_length(a.content->'claims')>12 else false end as claims_truncated,
+    case when a.kind='company_enrichment.v1' then (
+      select jsonb_agg(left(unknown_field,40)) from (select unknown_field from jsonb_array_elements_text(case when jsonb_typeof(a.content->'unknowns')='array' then a.content->'unknowns' else '[]'::jsonb end) unknown_field limit 3) unknown_fields
+    ) end as unknowns,
+    case when a.kind='company_enrichment.v1' then jsonb_build_object(
+      'attemptId',left(a.content->'execution'->>'attemptId',128),
+      'threadId',left(a.content->'execution'->>'threadId',128),
+      'runId',left(a.content->'execution'->>'runId',128),
+      'generationRef',left(a.content->'execution'->>'generationRef',100),
+      'model',left(a.content->'execution'->>'model',100),
+      'generatorVersion',left(a.content->'execution'->>'generatorVersion',100)
+    ) end as execution,
+    case when a.kind='company_enrichment.v1' then left(a.content->'validation'->>'status',40) end as validation_status,
+    (select jsonb_agg(jsonb_build_object('id',left(s->>'id',40),'url',left(coalesce(s->>'canonicalUrl',s->>'url'),500),'retrieved_at',left(coalesce(s->>'retrievedAt',s->>'retrieved_at'),40),'content_hash',left(coalesce(s->>'contentHash',s->>'content_hash'),64)))
       from (select s from jsonb_array_elements(case when jsonb_typeof(a.content->'sources')='array' then a.content->'sources' else '[]'::jsonb end) s limit 3) sources) as sources,
     case when jsonb_typeof(a.content->'sources')='array' then jsonb_array_length(a.content->'sources')>3 else false end as sources_truncated
     from growth_artifacts a join growth_jobs j on j.id=a.job_id
-    where a.contact_id=$1 and j.kind='enrich' and a.kind='enrichment.v1' and a.schema_version=1
+    where a.contact_id=$1 and j.kind='enrich' and a.kind in ('enrichment.v1','company_enrichment.v1') and a.schema_version=1
       and not exists(select 1 from growth_contacts c where c.id=$1 and c.deleted_at is not null)
     order by a.created_at desc,a.id desc limit 2`,
     [contactId]
@@ -197,7 +216,8 @@ export async function readContactJourney(db: SqlExecutor, contactId: string) {
       'Latest evidence only; truncation is explicit per section.',
       'Only persisted direct observation links are shown; anonymous browsing is unavailable.',
       'Company research is a candidate-domain profile, not verified employment. Missing profile fields mean unavailable.',
-      'Only enrichment.v1 schema 1 artifacts are summarized. Source URLs omit query/fragment; unsafe or encoded paths are unavailable.',
+      'Dawn profiles summarize first-party company pages. Exact source excerpts preserve website wording, including marketing or conflicting statements; structural validation is not independent fact verification.',
+      'Only enrichment.v1 and company_enrichment.v1 schema 1 artifacts are summarized. Source URLs omit query/fragment; unsafe or encoded paths are unavailable.',
       'Control state is current; earlier activation approval does not override stops. Reads are not a transaction snapshot.',
     ],
   };

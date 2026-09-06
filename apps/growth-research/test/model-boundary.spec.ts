@@ -57,6 +57,16 @@ it('captures reported provider usage after tool binding and closes the pilot mar
   await withPilotContext(context, () =>
     bound.invoke([{ role: 'system', content: '[LOCAL_COMPANY_PILOT]' }])
   );
+  expect(context.events).toContainEqual({
+    kind: 'model',
+    callIndex: 1,
+    startedAt: expect.any(Number),
+    endedAt: expect.any(Number),
+    outcome: 'succeeded',
+    inputTokens: 12,
+    outputTokens: 4,
+  });
+  expect(JSON.stringify(context.events)).not.toContain('do-not-retain');
   expect(context.modelCalls).toBe(1);
   expect(context.inputTokens).toBe(12);
   expect(context.outputTokens).toBe(4);
@@ -151,3 +161,66 @@ it('aborts an unresponsive provider after the configured 20 second request deadl
   expect(Date.now() - started).toBeLessThan(27_000);
   expect(requests).toBe(1);
 }, 30_000);
+
+it('tracks a response body until cancellation settles and prevents late usage mutation', async () => {
+  vi.stubEnv('GROWTH_RESEARCH_PILOT_MODE', 'local-company-only');
+  let received!: () => void;
+  const ready = new Promise<void>((resolve) => {
+    received = resolve;
+  });
+  const baseURL = await endpoint((_request, response) => {
+    response.writeHead(200, { 'content-type': 'application/json' });
+    response.write('{');
+    received();
+  });
+  const fixture = syntheticCorpus.cases[0];
+  if (!fixture) throw new Error('fixture required');
+  const context = createPilotContext(fixture);
+  const model = new BoundedChatOpenAI({
+    apiKey: 'test',
+    configuration: { baseURL },
+  });
+  const work = withPilotContext(context, () => model.invoke('stalled body'));
+  const failure = expect(work).rejects.toThrow();
+  await ready;
+  expect(context.pendingOperations.size).toBe(1);
+  context.closed = true;
+  context.controller.abort();
+  await failure;
+  expect(context.pendingOperations.size).toBe(0);
+  expect(context.inputTokens).toBeNull();
+});
+
+it('records failed model transport without provider errors, credentials or prompt text', async () => {
+  vi.stubEnv('GROWTH_RESEARCH_PILOT_MODE', 'local-company-only');
+  const baseURL = await endpoint((_request, response) => {
+    response.writeHead(503, { 'content-type': 'application/json' });
+    response.end(
+      JSON.stringify({
+        error: { message: 'SECRET malicious@example.com sk-private' },
+      })
+    );
+  });
+  const fixture = syntheticCorpus.cases[0];
+  if (!fixture) throw new Error('fixture required');
+  const context = createPilotContext(fixture);
+  const model = new BoundedChatOpenAI({
+    apiKey: 'sk-private',
+    configuration: { baseURL },
+  });
+  await withPilotContext(context, () =>
+    expect(model.invoke('SECRET prompt')).rejects.toThrow()
+  );
+  expect(context.events).toEqual([
+    {
+      kind: 'model',
+      callIndex: 1,
+      startedAt: expect.any(Number),
+      endedAt: expect.any(Number),
+      outcome: 'failed',
+    },
+  ]);
+  expect(JSON.stringify(context.events)).not.toMatch(
+    /SECRET|example.com|sk-private|127.0.0.1/
+  );
+});

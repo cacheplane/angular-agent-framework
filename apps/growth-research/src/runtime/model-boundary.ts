@@ -6,6 +6,8 @@ import {
   countModelRequest,
   getPilotContext,
   recordRejectedSubmission,
+  trackPilotOperation,
+  type PilotEvent,
 } from '../pilot/context.js';
 
 export const providerLimits = {
@@ -49,47 +51,89 @@ export class BoundedChatOpenAI extends ChatOpenAI {
           const context = getPilotContext();
           if (context) {
             countModelRequest();
-            const response = await fetch(input, {
-              ...init,
-              signal: init?.signal
-                ? AbortSignal.any([init.signal, context.controller.signal])
-                : context.controller.signal,
-            });
-            if (
-              response.ok &&
-              response.headers.get('content-type')?.includes('application/json')
-            ) {
-              const body = (await response.clone().json()) as {
-                choices?: {
-                  message?: {
-                    tool_calls?: {
-                      function?: { name?: string; arguments?: string };
-                    }[];
-                  };
-                }[];
-                usage?: { prompt_tokens?: number; completion_tokens?: number };
+            return trackPilotOperation(context, async () => {
+              const event: PilotEvent = {
+                kind: 'model',
+                callIndex: context.modelCalls,
+                startedAt: Date.now(),
+                endedAt: 0,
+                outcome: 'failed',
               };
-              const usage = body.usage;
-              for (const choice of body.choices ?? []) {
-                for (const call of choice.message?.tool_calls ?? []) {
-                  if (call.function?.name !== 'submitCandidate') continue;
-                  let value: unknown;
-                  try {
-                    value = JSON.parse(call.function.arguments ?? 'null');
-                  } catch {
-                    value = null;
+              try {
+                const transport = await fetch(input, {
+                  ...init,
+                  signal: AbortSignal.any([
+                    ...(init?.signal ? [init.signal] : []),
+                    context.controller.signal,
+                    AbortSignal.timeout(providerLimits.timeout),
+                  ]),
+                });
+                // Drain the network body inside the tracked operation. LangGraph
+                // can reject its invocation before the underlying fetch settles.
+                const bytes = await transport.arrayBuffer();
+                assertPilotContext();
+                const response = new Response(bytes, {
+                  status: transport.status,
+                  statusText: transport.statusText,
+                  headers: transport.headers,
+                });
+                if (
+                  response.ok &&
+                  response.headers
+                    .get('content-type')
+                    ?.includes('application/json')
+                ) {
+                  const body = (await response.clone().json()) as {
+                    choices?: {
+                      message?: {
+                        tool_calls?: {
+                          function?: { name?: string; arguments?: string };
+                        }[];
+                      };
+                    }[];
+                    usage?: {
+                      prompt_tokens?: number;
+                      completion_tokens?: number;
+                    };
+                  };
+                  const usage = body.usage;
+                  if (
+                    Number.isSafeInteger(usage?.prompt_tokens) &&
+                    (usage?.prompt_tokens ?? -1) >= 0
+                  )
+                    event.inputTokens = usage?.prompt_tokens;
+                  if (
+                    Number.isSafeInteger(usage?.completion_tokens) &&
+                    (usage?.completion_tokens ?? -1) >= 0
+                  )
+                    event.outputTokens = usage?.completion_tokens;
+                  assertPilotContext();
+                  for (const choice of body.choices ?? []) {
+                    for (const call of choice.message?.tool_calls ?? []) {
+                      if (call.function?.name !== 'submitCandidate') continue;
+                      let value: unknown;
+                      try {
+                        value = JSON.parse(call.function.arguments ?? 'null');
+                      } catch {
+                        value = null;
+                      }
+                      recordRejectedSubmission(value);
+                    }
                   }
-                  recordRejectedSubmission(value);
+                  if (typeof usage?.prompt_tokens === 'number')
+                    context.inputTokens =
+                      (context.inputTokens ?? 0) + usage.prompt_tokens;
+                  if (typeof usage?.completion_tokens === 'number')
+                    context.outputTokens =
+                      (context.outputTokens ?? 0) + usage.completion_tokens;
                 }
+                event.outcome = response.ok ? 'succeeded' : 'failed';
+                return response;
+              } finally {
+                event.endedAt = Date.now();
+                context.events.push(event);
               }
-              if (typeof usage?.prompt_tokens === 'number')
-                context.inputTokens =
-                  (context.inputTokens ?? 0) + usage.prompt_tokens;
-              if (typeof usage?.completion_tokens === 'number')
-                context.outputTokens =
-                  (context.outputTokens ?? 0) + usage.completion_tokens;
-            }
-            return response;
+            });
           }
           return fetch(input, init);
         },

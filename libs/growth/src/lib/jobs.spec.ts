@@ -404,6 +404,9 @@ describe('job leasing', () => {
         expect(sql).not.toMatch(/form\.outreach_approved/u);
         expect(sql).toMatch(/campaign\.enrolled:v1/u);
         expect(sql).toMatch(/enrichment\.v1/u);
+        expect(sql).toContain(
+          "stored.kind in ('enrichment.v1', 'company_enrichment.v1')"
+        );
         expect(sql).toMatch(
           /target\.kind = 'send_step'[\s\S]*source\.payload->>'submission_id' =\s*target\.payload->>'submission_id'/u
         );

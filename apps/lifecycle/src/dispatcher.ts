@@ -29,6 +29,7 @@ const LEASED_KINDS = [
   'notify',
   'send_step',
   'reply_reconcile',
+  'research_cleanup',
 ] as const;
 
 export interface LifecycleDispatcherInput {
