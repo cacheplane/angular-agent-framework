@@ -1,3 +1,7 @@
+---
+description: Install @threadplane/langgraph, satisfy its peer dependencies, register provideAgent(), and verify the setup against a running LangGraph server.
+---
+
 # Installation
 
 Detailed setup guide for `injectAgent()` in your Angular application.
@@ -32,15 +36,20 @@ npm install @threadplane/langgraph @threadplane/chat @langchain/core @langchain/
 
 | Package | Version |
 |---------|---------|
-| `@threadplane/chat` | `*` |
+| `@threadplane/chat` | `0.0.66` |
+| `@threadplane/telemetry` | `^0.0.66` |
 | `@angular/core` | `^20.0.0 \|\| ^21.0.0 \|\| ^22.0.0` |
 | `@langchain/core` | `^1.1.33` |
 | `@langchain/langgraph-sdk` | `^1.7.4` |
 | `rxjs` | `~7.8.0` |
 
+The pin on `@threadplane/chat` is exact, because the two packages are released together; the other ranges are ordinary semver.
+
+npm 7 and newer install peer dependencies automatically, so the command above is enough. It is worth knowing what arrives with it: `@threadplane/chat` declares its own peers — `@threadplane/telemetry`, `@threadplane/render`, `@threadplane/a2ui`, `zod`, `@json-render/core`, `marked`, the `@angular/common`, `@angular/platform-browser`, and `@angular/router` packages, and an optional `katex` for math rendering.
+
 ## Configure the provider
 
-Add `provideAgent()` to your application configuration. This is the single source of truth for the agent singleton — `injectAgent()` consumes the config and takes no arguments of its own.
+Add `provideAgent()` to your application configuration. This is the single source of truth for the agent — `injectAgent()` consumes the config and takes at most a typed `AgentRef`.
 
 ```typescript
 // app.config.ts
@@ -110,8 +119,8 @@ import { injectAgent } from '@threadplane/langgraph';
 export class TestComponent {
   protected readonly test = injectAgent();
 
-  ngOnInit() {
-    console.log(this.test.status()); // 'idle' - setup is correct
+  constructor() {
+    console.log(this.test.status()); // 'idle' — setup is correct
   }
 }
 ```

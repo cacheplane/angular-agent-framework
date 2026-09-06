@@ -1,3 +1,7 @@
+---
+description: Build a streaming Angular chat component against a LangGraph Platform assistant with provideAgent() and injectAgent() in about five minutes.
+---
+
 # Quick Start
 
 Build a streaming chat component with `injectAgent()` in 5 minutes.
@@ -17,7 +21,7 @@ Angular 20–22 project using a Node.js version supported by that Angular major.
 npm install @threadplane/langgraph @threadplane/chat @langchain/core @langchain/langgraph-sdk
 ```
 
-Most npm clients install peer dependencies automatically. Listing the LangChain peers explicitly keeps strict package managers quiet. They may still ask you to install the Angular and RxJS peers listed in the [Installation](/docs/langgraph/getting-started/installation) guide if your app does not already provide them.
+npm 7 and newer install peer dependencies automatically, so this command also brings in `@threadplane/telemetry` and the peers `@threadplane/chat` declares — `@threadplane/render`, `@threadplane/a2ui`, `zod`, `@json-render/core`, and `marked`. Listing the LangChain peers explicitly keeps stricter package managers quiet; the full contract is in the [Installation](/docs/langgraph/getting-started/installation) guide.
 
 </Step>
 <Step title="Configure the provider">
@@ -26,6 +30,7 @@ Add `provideAgent()` to your application config with your LangGraph Platform URL
 
 ```typescript
 // app.config.ts
+import type { ApplicationConfig } from '@angular/core';
 import { provideAgent } from '@threadplane/langgraph';
 
 export const appConfig: ApplicationConfig = {
@@ -46,7 +51,7 @@ Persisting a `threadId` so conversations survive a page refresh is opt-in — le
 </Step>
 <Step title="Create a chat component">
 
-Now let's wire up the UI. Call `injectAgent()` in a component field initializer — every property on the returned ref is an Angular Signal.
+Now wire up the UI. Call `injectAgent()` in a component field initializer — every property on the returned ref is an Angular Signal.
 
 <Tabs>
 <Tab label="TypeScript">
@@ -54,10 +59,13 @@ Now let's wire up the UI. Call `injectAgent()` in a component field initializer 
 ```typescript
 // chat.component.ts
 import { Component, ChangeDetectionStrategy, signal, computed } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { injectAgent } from '@threadplane/langgraph';
 
 @Component({
   selector: 'app-chat',
+  standalone: true,
+  imports: [FormsModule],
   templateUrl: './chat.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
