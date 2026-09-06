@@ -14,9 +14,9 @@ The example serves a single AG-UI endpoint from FastAPI.
 | Route | Method | Notes |
 |---|---|---|
 | `/agent` | `POST` | `RunAgentInput` JSON in, Server-Sent Events out. |
-| `/ok` | `GET` | Unauthenticated health check. |
+| `/ok` | `GET` | Health check. No route in the local example is authenticated; the token gate belongs to the shared deployment, not to the FastAPI app. |
 
-On the Angular side that is an ordinary `provideAgent({ url: '/agent' })`. Nothing about the adapter configuration is Microsoft-specific.
+In your own application that is an ordinary `provideAgent({ url: '/agent' })`. The example in this repository passes a factory instead, only because it resolves its endpoint at runtime. Nothing about the adapter configuration is Microsoft-specific either way.
 
 ## Interrupts use the outcome convention
 
