@@ -184,8 +184,8 @@ export class ChatComponent {
   readonly hasError = computed(() => this.chat.status() === 'error');
 
   retry() {
-    // Re-stream using the same thread so context is preserved
-    this.chat.submit(null);
+    // Clears the error and re-submits the last input on the same thread
+    this.chat.retry();
   }
 }
 ```
@@ -197,7 +197,9 @@ export class ChatComponent {
 @if (hasError()) {
   <div class="error-banner">
     <p>{{ chat.error()?.message }}</p>
-    <button (click)="retry()">Retry</button>
+    @if (chat.error()?.retryable) {
+      <button (click)="retry()">Retry</button>
+    }
   </div>
 }
 ```
@@ -205,10 +207,10 @@ export class ChatComponent {
 </Tab>
 </Tabs>
 
-Calling `submit(null)` opens a fresh stream against the current thread state without adding a new user message. That resumes the run only when the thread still has pending work, such as an interrupted or failed run; after a run that finished there is nothing left to execute and the call is a no-op, so `chat.reload()` is the reliable retry. Pass `submit({ message })` only when you have new input to send.
+`retry()` clears the error, then re-runs the last submission on the same thread; it is a no-op while a run is already in flight or when there is nothing to retry. `reload()` re-runs the last submission the same way but leaves the error signal alone, which is useful when you want to keep showing the failure state while the retry attempt is in progress. `submit(null)` opens a stream against the current thread state without a new user message and resumes only pending work, such as an interrupted or failed run; otherwise it is a no-op. Pass `submit({ message })` only when you have new input to send.
 
 <Callout type="warning" title="Network errors vs agent errors">
-`error()` surfaces both transport-level failures (lost connection, 5xx) and application-level errors returned by the agent graph. Check `error().cause` for the underlying HTTP status when you need to distinguish them.
+`error()` returns an `AgentError` whose `kind` distinguishes the failure class — `'connection'`, `'auth'`, `'server'`, `'interrupted'`, or `'aborted'` — whose `status` carries the HTTP status code when the failure came from an HTTP response, whose `retryable` says whether attempting the request again could plausibly succeed, and whose `cause` preserves the original raw error for debugging or telemetry.
 </Callout>
 
 ## Throttle configuration
