@@ -84,6 +84,87 @@ export const PROVE_IT_ROWS = [
   { claim: 'Same UI code in test and production', api: 'Agent' },
 ] as const;
 
+// ── The stage rail (live-stage spec §4–6): the copy that stacks beside the
+// pinned demo. Strings are verbatim from the four capability acts; the still
+// alt text describes public/screenshots/stage-<beat>.webp at the beat's settle.
+export type StageBeatKey = 'stream' | 'persist' | 'approve' | 'render';
+export interface StageRailBeat {
+  beat: StageBeatKey;
+  eyebrow: string;
+  headline: string;
+  body: string;
+  rows: readonly { claim: string; api: string }[];
+  cta: { label: string; href: string };
+  /** Alt text for the fallback still: what the frame shows at this beat's settle. */
+  stillAlt: string;
+}
+
+export const STAGE_RAIL: readonly StageRailBeat[] = [
+  {
+    beat: 'stream',
+    eyebrow: 'Stream',
+    headline: 'The UI stays reactive through tokens, tools, errors, and state changes.',
+    body: 'injectAgent() hands back signals: messages(), status(), error(), isLoading(), and tool progress. Nothing to subscribe to, nothing to tear down.',
+    rows: [
+      { claim: 'Signals, not promises', api: 'injectAgent()' },
+      { claim: 'Tool progress as it happens', api: 'toolProgress()' },
+      { claim: 'Same contract on LangGraph and AG-UI', api: 'Agent' },
+    ],
+    cta: { label: 'Read the streaming guide', href: '/docs/langgraph/guides/streaming' },
+    stillAlt:
+      'Threadplane chat beside its devtools: a streamed answer about Angular signals with a Sources row of three citations, and the devtools Timeline listing seven checkpoints',
+  },
+  {
+    beat: 'persist',
+    eyebrow: 'Persist',
+    headline: 'A user can leave, return, inspect history, and continue.',
+    body: 'Thread selection, history, branch and replay UI in the Angular app. Durability itself comes from the runtime and persistence layer you connect — Threadplane exposes it, it does not fake it.',
+    rows: [
+      { claim: 'Conversations restore across sessions', api: 'threadId + checkpoints' },
+      { claim: 'Branch or replay from any point', api: 'branch / replay' },
+      { claim: 'error() / status() / reload() on every agent', api: 'boundary signals' },
+    ],
+    cta: { label: 'Persistence patterns', href: '/docs/langgraph/guides/persistence' },
+    stillAlt:
+      'The thread restored after a reload and forked from an earlier checkpoint: a "Make it a haiku instead." turn with its three-line haiku reply, the cleanup prompt just sent beneath it, and the devtools Timeline showing ten checkpoints across two steps',
+  },
+  {
+    beat: 'approve',
+    eyebrow: 'Approve',
+    headline: 'Irreversible work pauses for a human decision.',
+    body: 'interrupt() freezes the run inside the checkpoint. Your UI renders the proposal; submit({ resume }) continues with the decision on the record.',
+    rows: [
+      { claim: 'The pause is a checkpoint, not a modal', api: 'interrupt()' },
+      { claim: 'The proposal renders in your UI', api: '<chat-interrupt-panel>' },
+      { claim: 'The decision lands beside the action it gated', api: 'submit({ resume })' },
+    ],
+    cta: { label: 'Interrupt patterns', href: '/docs/langgraph/guides/interrupts' },
+    stillAlt:
+      'The agent paused inside delete_backups: an "Agent paused — review needed" panel with Accept, Edit, Respond and Ignore above a five-row table of backups, two marked retain, and the devtools Timeline holding at ten checkpoints',
+  },
+  {
+    beat: 'render',
+    eyebrow: 'Render',
+    headline: 'Agent output becomes components from your design system.',
+    body: 'The agent emits constrained structured output. Angular renders registered components — json-render and A2UI both speak it — with per-component fallback and a readiness gate. No generated code runs.',
+    rows: [
+      { claim: 'Your design system, not a chat widget', api: '@threadplane/render' },
+      { claim: 'Unknown specs degrade per component', api: 'fallback + readiness gate' },
+      { claim: 'Schema on the server, trust in the client', api: 'validated specs' },
+    ],
+    cta: { label: 'See @threadplane/render', href: '/render' },
+    stillAlt:
+      "A generated contact form — Name, Email address, Subject, Message and a Send button — rendered from the agent's A2UI output inside the chat, with the render_a2ui_surface tool call above it",
+  },
+];
+
+/** Spec §6: the copy that advances while recorded time is pinned at the interrupt. */
+export const STAGE_HOLD_LINES: readonly string[] = [
+  'The pause is a checkpoint, not a modal',
+  'The run is frozen in durable state. Scroll all you like; nothing happens until someone decides',
+  'Keep scrolling to approve',
+];
+
 // ── Install variants: the ONE place install commands live on the website ─────
 export type InstallVariant = 'fake' | 'langgraph' | 'ag_ui';
 

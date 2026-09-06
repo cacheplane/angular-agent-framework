@@ -19,6 +19,8 @@ import {
   HOME_DESCRIPTION,
   HOME_TITLE,
   INSTALL_OPTIONS,
+  STAGE_HOLD_LINES,
+  STAGE_RAIL,
 } from './positioning';
 import { WEBSITE_SUPPORTED_ANGULAR_MAJORS } from '../components/pricing/angular-support.mjs';
 import { resolveWebsiteDir } from './website-dir';
@@ -188,5 +190,20 @@ describe('homepage restructure copy (live-stage spec §3)', () => {
       { claim: 'Script tool calls and interrupts', api: 'mockLangGraphAgent()' },
       { claim: 'Same UI code in test and production', api: 'Agent' },
     ]);
+  });
+});
+
+describe('STAGE_RAIL', () => {
+  it('has one entry per beat in beat order, three rows each, a cta, and still alt text', () => {
+    expect(STAGE_RAIL.map((b) => b.beat)).toEqual(['stream', 'persist', 'approve', 'render']);
+    for (const b of STAGE_RAIL) {
+      expect(b.rows).toHaveLength(3);
+      expect(b.cta.href).toMatch(/^\//);
+      expect(b.stillAlt.length).toBeGreaterThan(40);
+    }
+  });
+  it('carries the three hold lines from the spec, ending on the threshold instruction', () => {
+    expect(STAGE_HOLD_LINES).toHaveLength(3);
+    expect(STAGE_HOLD_LINES[2]).toBe('Keep scrolling to approve');
   });
 });
