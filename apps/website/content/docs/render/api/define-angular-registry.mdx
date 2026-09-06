@@ -1,3 +1,8 @@
+---
+title: defineAngularRegistry()
+description: API reference for defineAngularRegistry() -- the entry shapes it accepts, the normalized registry it returns, per-component fallbacks, and schema-gated mounting.
+---
+
 # defineAngularRegistry()
 
 Creates an `AngularRegistry` that maps element type names to Angular component classes.
@@ -26,8 +31,8 @@ function defineAngularRegistry(
 
 ```typescript
 interface RenderViewEntry {
-  component: AngularComponentRenderer;
-  fallback?: AngularComponentRenderer;
+  component: Type<unknown>;
+  fallback?: Type<unknown>;
   schema?: StandardSchemaV1;
   description?: string;
 }
@@ -37,7 +42,7 @@ Use the object form to configure a custom per-entry fallback, a Standard Schema 
 
 ### Returns
 
-An `AngularRegistry` object with a single entry accessor:
+An `AngularRegistry` object with two accessors:
 
 ```typescript
 interface AngularRegistry {
@@ -112,7 +117,7 @@ export class MyComponent {
 
 ### Per-Component Fallbacks
 
-Each entry can be a bare component class or a `{ component, fallback }` object. The `fallback` mounts while any state-bound prop on the element is still unresolved -- useful for streaming UI, where structure arrives before data:
+Each entry can be a bare component class or a `{ component, fallback }` object. The `fallback` mounts while any resolved prop on the element is still `undefined` -- typically a `$state` binding that has not arrived yet. This is useful for streaming UI, where structure arrives before data:
 
 ```typescript
 import { defineAngularRegistry } from '@threadplane/render';
@@ -154,6 +159,10 @@ const registry = defineAngularRegistry({
 ```
 
 While props are missing or fail validation, the fallback renders. Once the props pass validation and the component mounts, later updates do not move that element back to the fallback.
+
+<Callout type="warning" title="Validation is synchronous only">
+The mount gate reads the schema result synchronously. A schema whose `validate()` returns a Promise does not gate the mount -- the element is treated as ready. Use a synchronous validator such as Zod.
+</Callout>
 
 ## Internal Behavior
 

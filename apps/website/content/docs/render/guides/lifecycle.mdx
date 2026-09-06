@@ -1,6 +1,26 @@
+---
+description: How RENDER_LIFECYCLE exposes mount, state-change, and handler signals, why provideRender() is required, and what mountCount actually counts.
+---
+
 # Render Lifecycle Signals
 
-The `@threadplane/render` library exposes per-context lifecycle signals via the `RENDER_LIFECYCLE` injection token. All five signals derive from the existing `RenderEvent` stream via `RenderLifecycleService.notify*` methods — they share one event source, so there's no double-counting.
+The `@threadplane/render` library exposes per-context lifecycle signals through the `RENDER_LIFECYCLE` injection token. The signals are fed by the same `RenderEvent` stream `<render-spec>` emits, through three `notify*` methods on `RenderLifecycleService`, so there is no double-counting.
+
+## Prerequisite: provideRender()
+
+`RENDER_LIFECYCLE` is provided by `provideRender()`, and by nothing else. Call it at the application injector (or a feature route's) before injecting the token:
+
+```typescript
+// app.config.ts
+import { ApplicationConfig } from '@angular/core';
+import { provideRender } from '@threadplane/render';
+
+export const appConfig: ApplicationConfig = {
+  providers: [provideRender({ registry })],
+};
+```
+
+Without `provideRender()` the token has no provider at all, so `inject(RENDER_LIFECYCLE)` throws a `NullInjectorError`. `<render-spec>` itself injects the backing service optionally, so a spec still renders without the provider -- the signals simply never exist. The scope of the signals follows the `provideRender()` call: one set per injector that calls it.
 
 ## Interface
 
@@ -23,19 +43,25 @@ export interface RenderLifecycle {
 export const RENDER_LIFECYCLE = new InjectionToken<RenderLifecycle>('RENDER_LIFECYCLE');
 ```
 
-## Derivation
+## How the signals are fed
 
-All signals derive from `RenderEvent` (see [Events](/docs/render/guides/events)) — `RenderLifecycleService` subscribes to the stream emitted by `RenderSpecComponent` and updates the signals:
+`RenderLifecycleService` does not subscribe to anything. `RenderSpecComponent` taps every `RenderEvent` it emits and pushes it into the service, which updates the signals:
 
-| Signal | Source event |
-|--------|--------------|
-| `firstMountAt` | first `RenderLifecycleEvent` with `event === 'mounted'` |
+| Signal | Pushed by |
+|--------|-----------|
+| `firstMountAt` | the first `RenderLifecycleEvent` with `event === 'mounted'` |
 | `mountCount` | every `RenderLifecycleEvent` with `event === 'mounted'` |
 | `lastMountAt` | every `RenderLifecycleEvent` with `event === 'mounted'` |
 | `lastStateChangeAt` | every `RenderStateChangeEvent` |
 | `lastHandlerInvokedAt` | every `RenderHandlerEvent` |
 
-## Subscribing
+Only mounts are recorded. `destroyed` lifecycle events are pushed through the same tap but the service ignores them, so nothing decrements and no signal reports teardown. See the [Events guide](/docs/render/guides/events) for the full event union.
+
+<Callout type="warning" title="mountCount counts spec mounts, not elements">
+`<render-spec>` emits exactly one spec-scope `mounted` event, in `ngOnInit`. Element-scope `mounted` events come from `<render-element>`, and it emits one only when the element carries a truthy `lifecycle` field in the spec -- a field `UIElement` does not declare. For a spec whose elements do not set it, `mountCount` reaches `1` and stays there, and `lastMountAt` keeps the timestamp of that single mount. Treat these two signals as "the spec mounted at", not as a live element census.
+</Callout>
+
+## Reading the signals
 
 ```typescript
 import { Component, inject, effect } from '@angular/core';
@@ -56,6 +82,19 @@ export class MyComponent {
 }
 ```
 
+`lastStateChangeAt` and `lastHandlerInvokedAt` are the two signals that keep moving in an ordinary application: every store write and every dispatched handler updates one of them.
+
 ## Reset semantics
 
-`firstMountAt` is sticky for the life of the render context — once set, it does not reset. The remaining four signals update on every relevant event.
+`firstMountAt` is sticky for the life of the render context -- once set, it does not reset. The remaining four signals update on every relevant event, and none of them reset when a spec is replaced or destroyed.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Events Guide" href="/docs/render/guides/events">
+    The RenderEvent union these signals are derived from
+  </Card>
+  <Card title="provideRender() API" href="/docs/render/api/provide-render">
+    The provider that registers RENDER_LIFECYCLE
+  </Card>
+</CardGroup>
