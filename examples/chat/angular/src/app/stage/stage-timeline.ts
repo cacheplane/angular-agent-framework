@@ -82,7 +82,11 @@ export function phaseAt(tl: StageTimeline, t: number): StagePhase {
     }
   }
   if (current.run.action.kind === 'resume') return 'resume';
-  return current.run.beat;
+  // The beats and the phases are almost the same vocabulary, except that the
+  // `approve` beat is rendered as two phases: everything up to the resume run
+  // is the pause (the request being made and then held), and the resume run
+  // itself is `resume`, handled above.
+  return current.run.beat === 'approve' ? 'pause' : current.run.beat;
 }
 
 /**
