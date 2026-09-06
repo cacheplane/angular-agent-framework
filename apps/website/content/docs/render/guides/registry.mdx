@@ -26,7 +26,7 @@ The registry travels as an input on the render surface instead, which is the for
 
 ### What a registered component receives
 
-Every registered component is a plain standalone Angular component. `content` is the element's own prop from the spec; the five inputs under it are the framework inputs the renderer supplies for every element it mounts.
+Every registered component is a plain standalone Angular component. `content` is the element's own prop from the spec; the five framework inputs at the bottom of the class are what the renderer supplies for every element it mounts.
 
 <ExampleCode file="registry.component.ts" region="text-view" title="registry.component.ts — a registered component" />
 
@@ -68,21 +68,22 @@ The capability also ships a backend, and it is worth being clear about what it d
 
 ## What an entry holds
 
-A registered value can be a bare component class or a full entry object. `defineAngularRegistry()` normalizes both into the same shape: a component, a guaranteed fallback, and the optional `schema` and `description` an entry may declare.
+This is an illustrative registry, not the one the demo builds; it exists to show the shape an entry can take. A registered value can be a bare component class or a full entry object. `defineAngularRegistry()` normalizes both into the same shape: a component, a guaranteed fallback, and the optional `schema` and `description` an entry may declare.
 
 ```ts
+// component imports omitted
 import { defineAngularRegistry } from '@threadplane/render';
 
 const registry = defineAngularRegistry({
-  Text: DemoTextComponent,
+  Text: TextComponent,
   Card: {
-    component: DemoCardComponent,
+    component: CardComponent,
     fallback: CardSkeletonComponent,
     description: 'A titled container that renders its children.',
   },
 });
 
-registry.getEntry('Text')?.component; // DemoTextComponent
+registry.getEntry('Text')?.component; // TextComponent
 registry.getEntry('Text')?.fallback;  // DefaultFallbackComponent
 registry.getEntry('Card')?.fallback;  // CardSkeletonComponent
 registry.getEntry('Unknown');         // undefined
@@ -148,7 +149,7 @@ the component receives `value` resolved to the stored value and `bindings` set t
 `injectRenderHost()` gives a mounted component the element-scoped host, which is the supported way to write state, fire events, and announce a result.
 
 ```ts
-import { Component, inject, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { injectRenderHost } from '@threadplane/render';
 
 @Component({
