@@ -5,19 +5,19 @@ description: How the AWS Strands example books meetings over AG-UI, and why its 
 
 # AWS Strands overview
 
-[AWS Strands](https://strandsagents.com) is an open-source Python agent SDK from AWS. Its AG-UI bridge, `ag-ui-strands`, turns a Strands `Agent` into an AG-UI event stream, which is all `@threadplane/ag-ui` needs in order to bind it to `<chat>`. The running example is a meeting scheduler that looks up open slots, pauses for human approval before it books anything, and delegates research to a specialist, and this page walks the files that make it work.
+[AWS Strands](https://strandsagents.com) is an open-source Python agent SDK from AWS. Its AG-UI bridge, `ag-ui-strands`, turns a Strands `Agent` into an AG-UI event stream, which is all `@threadplane/ag-ui` needs in order to bind it to `<chat>`. The running example is a meeting scheduler that looks up open slots, pauses for human approval before it books anything, and delegates research to a specialist, and this page walks the files that make it work. The Angular component it renders is the same UI code the LangGraph-backed examples use; only the provider and the backend behind it differ.
 
 ## What the demo does
 
-The Run tab shows the prebuilt `<chat>` composition in front of a Strands agent served over AG-UI, with a side panel titled "Shared state — schedule" to the right of the transcript. Two welcome suggestions set it up: "Book the Q3 roadmap review" asks for a Tuesday meeting with the platform team, and "Book a design critique" asks for the same thing on Thursday.
+The Run tab shows the prebuilt `<chat>` composition in front of a Strands agent served over AG-UI, with a side panel titled "Shared state — schedule" to the right of the transcript. Two welcome suggestions set it up: "Book the Q3 roadmap review" asks for a Tuesday meeting with the platform team, and "Book a design critique" runs the same two steps for the web team on Thursday.
 
-Either one runs the same two steps. The agent calls `check_availability` for the requested weekday, and that day and its open slots appear in the side panel. Then it calls `book_meeting`, the run stops, and a modal card titled "Booking approval required" shows the topic and the chosen slot above two buttons, Cancel and Approve. Approve resumes the run and the agent confirms the booking in one sentence; Cancel resumes it with a rejection and nothing is booked. Either way the panel ends up showing the booking and its status.
+The agent calls `check_availability` for the requested weekday, and that day and its open slots appear in the side panel. Then it calls `book_meeting`, the run stops, and a modal card titled "Booking approval required" shows the topic and the chosen slot above two buttons, Cancel and Approve. Approve resumes the run and the agent confirms the booking in one sentence; Cancel resumes it with a rejection and nothing is booked. Either way the panel keeps showing the booking as it was snapshotted before the pause; the final booked or declined status lives only in the agent's confirmation sentence, because no hook emits state after the interrupt resolves.
 
 Delegation is the third thing to try. Type a research request instead, for example "Find a slot for Ada and Grace next week — research their availability first", and the agent calls `research_availability`. That call renders as a subagent card carrying the specialist's own answer, streamed token by token inside the card rather than into the parent bubble.
 
 ## How it is built
 
-Four files carry the example: a Python module holding the Strands agent and its tools, a FastAPI server that mounts it, an application config that registers the agent, and a component that renders the state panel and the approval card. Open the Code tab to read them in place. A fifth file next to the agent, `subagent_emitter.py`, holds the translation from the specialist's stream into the protocol's subagent events.
+Four files carry the example: a Python module holding the Strands agent and its tools, a FastAPI server that mounts it, an application config that registers the agent, and a component that renders the state panel and the approval card. Open the Code tab to read them in place. `subagent_emitter.py`, a fifth file in the same backend directory and not shown in the Code tab, holds the translation from the specialist's stream into the protocol's subagent events.
 
 ### An ordinary backend tool
 
@@ -83,9 +83,7 @@ provideAgent({
 
 <ExampleCode file="aws-strands.component.ts" region="shared-state" title="aws-strands.component.ts — state signals" />
 
-The panel is plain Angular template code reading those Signals.
-
-<ExampleCode file="aws-strands.component.ts" region="state-panel" title="aws-strands.component.ts — the state panel" />
+The panel itself is plain Angular template code reading those two Signals, with a placeholder line for the empty case.
 
 ### The approval card
 
@@ -129,15 +127,11 @@ Strands wraps every value an async-generator tool yields as a `tool_stream_event
 
 The handler registered on `research_availability` closes that gap. `subagent_emitter.py` translates the specialist's stream into `SUBAGENT_STARTED`, attributed `TEXT_MESSAGE_*` deltas carrying `subagentRunId`, and `SUBAGENT_FINISHED`, deriving every identifier from the tool call identifier the bridge already put on the wire. The adapter routes those attributed events into a subagent entry instead of the parent transcript, which is why the card streams the specialist's tokens live.
 
-The wire capture behind that matrix cell is committed beside the backend as `docs/wire-capture-subagents.md`, before and after the emitter. Multi-agent routes crash the stale published wheel, which is one reason the example pins the bridge to a git reference instead.
+The wire capture behind that matrix cell is committed beside the backend at [`docs/wire-capture-subagents.md`](https://github.com/cacheplane/angular-agent-framework/blob/main/cockpit/runtimes/aws-strands/python/docs/wire-capture-subagents.md), before and after the emitter. Multi-agent routes crash the stale published wheel, which is one reason the example pins the bridge to a git reference instead.
 
 ## Model access
 
-Strands' native OpenAI provider is used on a plain `OPENAI_API_KEY`. No AWS credentials are involved anywhere in this example, despite the runtime's name.
-
-<ExampleCode file="agent.py" region="model" title="agent.py — the model client" />
-
-`OPENAI_BASE_URL` is honored when it is set, which is how the end-to-end harness replays recorded model calls against this backend.
+Strands' native OpenAI provider is used on a plain `OPENAI_API_KEY`. No AWS credentials are involved anywhere in this example, despite the runtime's name. `OPENAI_BASE_URL` is honored when it is set, which is how the end-to-end harness replays recorded model calls against this backend.
 
 ## What's Next
 
@@ -151,7 +145,7 @@ Strands' native OpenAI provider is used on a plain `OPENAI_API_KEY`. No AWS cred
   <Card title="Subagents" href="/docs/ag-ui/guides/subagents">
     How the adapter attributes a delegated run to the tool call that spawned it.
   </Card>
-  <Card title="Event mapping" href="/docs/ag-ui/reference/event-mapping">
-    Every AG-UI event and the adapter state it updates.
+  <Card title="AWS Strands quickstart" href="/docs/runtimes/aws-strands/quickstart">
+    Run this backend locally and point an Angular application at it.
   </Card>
 </CardGroup>
