@@ -172,36 +172,49 @@ export function isChecked(beat: StageBeat, p: number): boolean {
 
 /**
  * `data-sc-cue` for a beat's rail block: "from to rampIn rampOut" as fractions
- * of act progress. The first beat greets (full at p = 0), the middle ones fade
- * in and out inside their window, and the last ends at its settle point so it
- * crossfades into the closing ledger (`closeCue`).
+ * of act progress (the engine's ramps default to 0.3 of the window each). The
+ * first beat greets (full at p = 0), the middle ones fade in and out inside
+ * their window, and the last ends at its settle point so it crossfades into
+ * the closing ledger (`closeCue`). The render block arrives over the first
+ * tenth of its window: the approve block has fully left by then, so nothing
+ * crossfades, and its window is short enough that the default ramp would keep
+ * the block below full for the first third of the beat.
+ *
+ * Every cue's plateau (opacity 1) contains one of the scroll-craft harness's
+ * sample points, which the spec checks with the engine's own ramp model.
  */
 export function cueFor(beat: StageBeat): string {
   const w = WINDOWS[STAGE_BEATS.indexOf(beat)];
   if (beat === STAGE_BEATS[0]) return `0 ${fmt(w.to)} 0 0.3`;
   if (beat === STAGE_BEATS[STAGE_BEATS.length - 1])
-    return `${fmt(w.from)} ${fmt(settleAt(beat))}`;
+    return `${fmt(w.from)} ${fmt(settleAt(beat))} 0.1`;
   return `${fmt(w.from)} ${fmt(w.to)}`;
 }
 
+/** How far past the threshold the hold line lingers, as a fraction of the approve span. */
+export const HOLD_LINE_OVERSHOOT = 0.2;
+
 /**
- * Cue for the hold line inside the approve beat: the hold range, overshooting
- * the threshold by 12% of the approve span so "Keep scrolling to approve"
- * lingers and is still readable as the resume begins.
+ * Cue for the hold line inside the approve beat: opens where the hold starts,
+ * overshoots the threshold by `HOLD_LINE_OVERSHOOT` of the approve span so
+ * "Keep scrolling to approve" is still readable as the resume begins, and
+ * leaves over the last fifth of that so it is at full strength across the
+ * threshold itself.
  */
 export function holdCue(): string {
   const a = APPROVE_WINDOW;
   const span = a.to - a.from;
   const from = a.from + span * APPROVE_HOLD.from;
-  const to = Math.min(APPROVE_THRESHOLD_P + span * 0.12, 1);
-  return `${fmt(from)} ${fmt(to)}`;
+  const to = Math.min(APPROVE_THRESHOLD_P + span * HOLD_LINE_OVERSHOOT, 1);
+  return `${fmt(from)} ${fmt(to)} 0.3 0.2`;
 }
 
 /**
  * Cue for the closing ledger: fades in at the render settle and holds to the
- * end. Its window is the render tail alone, so the ramp-in takes 60% of it —
- * the ledger is fully in well before the act's last pixel of scroll.
+ * end. Its window is the render tail alone, so the ramp-in takes a fifth of
+ * it, the same beat as the last check filling — the ledger is fully in with
+ * 2% of the act's scroll still to go rather than on its last pixel.
  */
 export function closeCue(): string {
-  return `${fmt(settleAt('render'))} 1 0.6 0`;
+  return `${fmt(settleAt('render'))} 1 0.2 0`;
 }

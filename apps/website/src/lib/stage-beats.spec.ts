@@ -11,6 +11,7 @@ import {
   crossedThreshold,
   cueFor,
   holdCue,
+  HOLD_LINE_OVERSHOOT,
   inHold,
   isChecked,
   segmentState,
@@ -156,7 +157,7 @@ describe('cueFor', () => {
     expect(cueFor('stream')).toBe(`0 ${fmt(stream.to)} 0 0.3`);
     expect(cueFor('stream')).toMatch(/^0 0\.21\d+ 0 0\.3$/);
     expect(cueFor('render')).toBe(
-      `${fmt(render.from)} ${fmt(settleAt('render'))}`
+      `${fmt(render.from)} ${fmt(settleAt('render'))} 0.1`
     );
     expect(cueFor('persist')).toBe(`${fmt(persist.from)} ${fmt(persist.to)}`);
   });
@@ -197,7 +198,7 @@ describe('settleAt / segmentState', () => {
 describe('holdCue / closeCue', () => {
   it('opens the hold line exactly where inHold starts and lingers past the threshold', () => {
     const cue = holdCue();
-    expect(cue.split(' ')).toHaveLength(2);
+    expect(cue.split(' ')).toHaveLength(4);
     const [from, to] = cue.split(' ').map(Number);
     const a = beatWindows()[2];
     // The cue is printed to 4 decimals, so compare against the exact edge and
@@ -207,14 +208,56 @@ describe('holdCue / closeCue', () => {
     expect(inHold(edge + 1e-6)).toBe(true);
     expect(inHold(edge - 1e-6)).toBe(false);
     expect(to).toBeGreaterThan(APPROVE_THRESHOLD_P);
-    expect(to).toBeCloseTo(APPROVE_THRESHOLD_P + (a.to - a.from) * 0.12, 4);
+    expect(to).toBeCloseTo(
+      APPROVE_THRESHOLD_P + (a.to - a.from) * HOLD_LINE_OVERSHOOT,
+      4
+    );
+    expect(cue.split(' ').slice(2).join(' ')).toBe('0.3 0.2');
   });
   it('fades the closing ledger in at the render settle and holds it to the end', () => {
     const parts = closeCue().split(' ');
     expect(parts).toHaveLength(4);
     expect(Number(parts[0])).toBeCloseTo(settleAt('render'), 4);
-    expect(parts.slice(1).join(' ')).toBe('1 0.6 0');
-    expect(closeCue()).toMatch(/ 1 0\.6 0$/);
+    expect(parts.slice(1).join(' ')).toBe('1 0.2 0');
+    expect(closeCue()).toMatch(/ 1 0\.2 0$/);
+  });
+  it('every rail cue is at full opacity on one of the harness sample points', () => {
+    // scroll-craft's cue model (src/vendor/scrollcraft/scrollcraft.js): ramps
+    // are fractions of the window, 0.3 each by default, smoothstepped; between
+    // the ramps the cue sits at 1. The harness (e2e/scroll-craft/shoot.mjs,
+    // --per-act 8) samples p = 0.02 + 0.96 * i/7 and reports a cue that never
+    // reaches 1 at any sample as a defect, so every plateau has to contain a
+    // sample — and with a margin, since the sample lands on a rounded pixel.
+    const opacity = (cue: string, p: number) => {
+      const n = cue.split(' ').map(Number);
+      const from = n[0];
+      const to = n[1];
+      const rIn = n.length > 2 ? n[2] : 0.3;
+      const rOut = n.length > 3 ? n[3] : 0.3;
+      const win = Math.max(to - from, 0.001);
+      const inEnd = from + win * rIn;
+      const outStart = to - win * rOut;
+      if (p < from) return 0;
+      if (p < inEnd) return (p - from) / (inEnd - from);
+      if (p <= outStart) return 1;
+      return 1 - (p - outStart) / (to - outStart);
+    };
+    const samples = Array.from({ length: 8 }, (_, i) => 0.02 + (0.96 * i) / 7);
+    const margin = 0.002; // ≈ 9px of a 4500px travel at 1440×900
+    const cues = {
+      ...Object.fromEntries(STAGE_BEATS.map((b) => [b, cueFor(b)])),
+      hold: holdCue(),
+      close: closeCue(),
+    };
+    for (const [name, cue] of Object.entries(cues)) {
+      const full = samples.filter(
+        (p) => opacity(cue, p - margin) === 1 && opacity(cue, p + margin) === 1
+      );
+      expect(
+        full,
+        `${name} (${cue}) has no harness sample on its plateau`
+      ).not.toHaveLength(0);
+    }
   });
   it('keeps every cue inside the act with from < to', () => {
     const cues = [...STAGE_BEATS.map(cueFor), holdCue(), closeCue()];
