@@ -9,6 +9,7 @@ import {
   createUnsubscribeActionUrl,
   deferLeasedJob,
   failLeasedJob,
+  JobLeaseConflictError,
   loadGrowthTokenKeyring,
   markProviderAcceptanceUnknown,
   markInternalNotificationUnknown,
@@ -17,6 +18,7 @@ import {
   normalizeRecipientEmail,
   persistJobArtifact,
   readLifecycleJobContext,
+  readInstallRuntimeEnrichmentContext,
   recordProviderAcceptance,
   RECIPIENT_EMAIL_SENDER,
   recomputeContactScore,
@@ -92,6 +94,7 @@ interface DeferLeasedJobInput extends LeasedTransitionInput {
 }
 
 export interface LifecycleJobDependencies {
+  readInstallRuntimeEnrichmentContext: typeof readInstallRuntimeEnrichmentContext;
   now: () => Date;
   readJobContext: (
     executor: SqlExecutor,
@@ -552,17 +555,35 @@ export async function dispatchLifecycleAppOwnedJob(
 
   if (job.kind === 'enrich') {
     try {
+      const installRuntime = job.payload['source'] === 'install_runtime';
+      const installContext = installRuntime
+        ? await dependencies.readInstallRuntimeEnrichmentContext(executor, {
+            jobId: job.id,
+            leaseToken,
+            now: dependencies.now(),
+          })
+        : null;
+      if (installRuntime && !installContext) {
+        await dependencies.cancelJob(executor, {
+          jobId: job.id,
+          leaseToken,
+          now: dependencies.now(),
+          errorCode: 'install_runtime_evidence_unavailable',
+        });
+        return 'cancelled';
+      }
+      const companyDomain = installRuntime
+        ? installContext?.companyDomain
+        : context.companyDomain;
       const deterministicScore = await dependencies.readDeterministicScore(
         executor,
         context.contactId
       );
       signal.throwIfAborted();
       const companyPages =
-        context.emailClassification !== 'personal' && context.companyDomain
-          ? await dependencies.fetchCompanyEvidence(
-              context.companyDomain,
-              signal
-            )
+        (installRuntime || context.emailClassification !== 'personal') &&
+        companyDomain
+          ? await dependencies.fetchCompanyEvidence(companyDomain, signal)
           : [];
       signal.throwIfAborted();
       const paper = context.formSubmission['paper'];
@@ -571,40 +592,68 @@ export async function dispatchLifecycleAppOwnedJob(
       const timeline = context.formSubmission['timeline'];
       const researchInput = buildResearchInput({
         formFacts: {
-          source: formSource(context.formSubmission['form_kind']),
-          emailClassification: context.emailClassification,
-          ...(context.displayName ? { displayName: context.displayName } : {}),
-          ...(context.companyName ? { companyName: context.companyName } : {}),
-          ...(context.companyDomain
-            ? { companyDomain: context.companyDomain }
-            : {}),
-          ...(paper === 'overview' ||
-          paper === 'angular' ||
-          paper === 'render' ||
-          paper === 'chat'
-            ? { paper }
-            : {}),
-          ...(pilotInterest === 'yes' ||
-          pilotInterest === 'maybe' ||
-          pilotInterest === 'no'
-            ? { pilotInterest }
-            : {}),
-          ...(teamSize === '1-5' ||
-          teamSize === '6-25' ||
-          teamSize === '26-100' ||
-          teamSize === '100+'
-            ? { teamSize }
-            : {}),
-          ...(timeline === 'this_quarter' ||
-          timeline === 'next_quarter' ||
-          timeline === '6_plus_months' ||
-          timeline === 'exploring'
-            ? { timeline }
-            : {}),
+          ...(installRuntime
+            ? {
+                source: 'install_runtime',
+                emailClassification: 'unknown',
+                companyDomain,
+              }
+            : {
+                source: formSource(context.formSubmission['form_kind']),
+                emailClassification: context.emailClassification,
+                ...(context.displayName
+                  ? { displayName: context.displayName }
+                  : {}),
+                ...(context.companyName
+                  ? { companyName: context.companyName }
+                  : {}),
+                ...(context.companyDomain
+                  ? { companyDomain: context.companyDomain }
+                  : {}),
+                ...(paper === 'overview' ||
+                paper === 'angular' ||
+                paper === 'render' ||
+                paper === 'chat'
+                  ? { paper }
+                  : {}),
+                ...(pilotInterest === 'yes' ||
+                pilotInterest === 'maybe' ||
+                pilotInterest === 'no'
+                  ? { pilotInterest }
+                  : {}),
+                ...(teamSize === '1-5' ||
+                teamSize === '6-25' ||
+                teamSize === '26-100' ||
+                teamSize === '100+'
+                  ? { teamSize }
+                  : {}),
+                ...(timeline === 'this_quarter' ||
+                timeline === 'next_quarter' ||
+                timeline === '6_plus_months' ||
+                timeline === 'exploring'
+                  ? { timeline }
+                  : {}),
+              }),
         },
         deterministicScore,
         companyPages,
       });
+      if (installRuntime) {
+        const current = await dependencies.readInstallRuntimeEnrichmentContext(
+          executor,
+          { jobId: job.id, leaseToken, now: dependencies.now() }
+        );
+        signal.throwIfAborted();
+        if (!current || current.companyDomain !== companyDomain) {
+          await dependencies.cancelJob(executor, {
+            jobId: job.id,
+            leaseToken,
+            now: dependencies.now(),
+            errorCode: 'install_runtime_evidence_unavailable',
+          });
+          return 'cancelled';
+        }
+      }
       const artifact = await dependencies.generateArtifact(
         researchInput,
         signal
@@ -629,6 +678,14 @@ export async function dispatchLifecycleAppOwnedJob(
     } catch (error) {
       signal.throwIfAborted();
       if (error instanceof DeterministicLifecycleJobError) throw error;
+      if (
+        job.payload['source'] === 'install_runtime' &&
+        error instanceof JobLeaseConflictError
+      ) {
+        // Stop/redaction or another worker already owns the durable state.
+        // Cancel this dispatch without attempting another transition on its revoked lease.
+        return 'cancelled';
+      }
       if (job.attempts < 2) {
         const retryAt = dependencies.now();
         await dependencies.deferJob(executor, {
@@ -899,6 +956,7 @@ export function createDefaultLifecycleJobDependencies(
   return {
     now,
     readJobContext: readLifecycleJobContext,
+    readInstallRuntimeEnrichmentContext,
     createUnsubscribeUrl: (input, key) =>
       createUnsubscribeActionUrl(input, key, mailRuntime().publicActionOrigin),
     sendRecipient: (executor, input, policy) => {

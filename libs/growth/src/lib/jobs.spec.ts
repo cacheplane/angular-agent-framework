@@ -48,8 +48,8 @@ function executorWith(
     ): Promise<SqlQueryResult<Row>> {
       const marker = /\/\* growth:([a-z0-9-]+) \*\//u.exec(sql)?.[1];
       if (
-        sql.includes(
-          "pg_advisory_xact_lock_shared(hashtextextended('growth-observation-privacy-v1'"
+        /pg_advisory_xact_lock(?:_shared)?\(hashtextextended\('growth-observation-privacy-v1'/u.test(
+          sql
         )
       )
         return { rows: [] };
@@ -1679,6 +1679,7 @@ describe('job artifacts', () => {
       created_at: now,
     };
     const harness = executorWith({
+      'discover-install-runtime-artifact-job': () => ({ rows: [] }),
       'insert-job-artifact': (parameters, sql) => {
         expect(parameters).toEqual([
           jobRow().id,
@@ -1737,6 +1738,7 @@ describe('job artifacts', () => {
       created_at: now,
     };
     const harness = executorWith({
+      'discover-install-runtime-artifact-job': () => ({ rows: [] }),
       'insert-job-artifact': (parameters, sql) => {
         expect(parameters).toEqual([
           jobRow().id,

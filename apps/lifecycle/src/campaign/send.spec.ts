@@ -1,5 +1,6 @@
 import {
   createUnsubscribeActionUrl,
+  JobLeaseConflictError,
   unsubscribeActionUrlValue,
   type GrowthArtifact,
   type GrowthJob,
@@ -392,6 +393,9 @@ function dependencies(
   return {
     now: () => NOW,
     readJobContext: vi.fn().mockResolvedValue(context()),
+    readInstallRuntimeEnrichmentContext: vi
+      .fn()
+      .mockResolvedValue({ companyDomain: 'example.com' }),
     createUnsubscribeUrl: vi.fn(() => UNSUBSCRIBE),
     sendRecipient: vi.fn().mockResolvedValue({
       accepted: true,
@@ -639,6 +643,120 @@ describe('dispatchLifecycleAppOwnedJob', () => {
       })
     );
     expect(deps.completeJob).toHaveBeenCalledOnce();
+  });
+
+  it('enriches an admitted install domain without inventing a form submission', async () => {
+    const deps = dependencies({
+      readJobContext: vi
+        .fn()
+        .mockResolvedValue(
+          context({
+            formSubmission: {},
+            companyDomain: null,
+            emailClassification: 'unknown',
+          })
+        ),
+      readInstallRuntimeEnrichmentContext: vi
+        .fn()
+        .mockResolvedValue({ companyDomain: 'neon.tech' }),
+    });
+    await expect(
+      dispatchLifecycleAppOwnedJob(
+        {} as SqlExecutor,
+        job('enrich', { source: 'install_runtime' }),
+        {},
+        deps
+      )
+    ).resolves.toBe('completed');
+    expect(deps.fetchCompanyEvidence).toHaveBeenCalledWith(
+      'neon.tech',
+      expect.any(AbortSignal)
+    );
+    expect(deps.generateArtifact).toHaveBeenCalledWith(
+      expect.objectContaining({
+        formFacts: { source: 'install_runtime', companyDomain: 'neon.tech' },
+      }),
+      expect.any(AbortSignal)
+    );
+    expect(deps.readInstallRuntimeEnrichmentContext).toHaveBeenCalledTimes(2);
+    expect(deps.sendRecipient).not.toHaveBeenCalled();
+  });
+
+  it('cancels install enrichment if current evidence or contact eligibility is unavailable', async () => {
+    const deps = dependencies({
+      readInstallRuntimeEnrichmentContext: vi.fn().mockResolvedValue(null),
+    });
+    await expect(
+      dispatchLifecycleAppOwnedJob(
+        {} as SqlExecutor,
+        job('enrich', { source: 'install_runtime' }),
+        {},
+        deps
+      )
+    ).resolves.toBe('cancelled');
+    expect(deps.fetchCompanyEvidence).not.toHaveBeenCalled();
+    expect(deps.generateArtifact).not.toHaveBeenCalled();
+    expect(deps.persistArtifact).not.toHaveBeenCalled();
+  });
+
+  it('rechecks install eligibility after capture before making a model call', async () => {
+    const deps = dependencies({
+      readInstallRuntimeEnrichmentContext: vi
+        .fn()
+        .mockResolvedValueOnce({ companyDomain: 'neon.tech' })
+        .mockResolvedValueOnce(null),
+    });
+    await expect(
+      dispatchLifecycleAppOwnedJob(
+        {} as SqlExecutor,
+        job('enrich', { source: 'install_runtime' }),
+        {},
+        deps
+      )
+    ).resolves.toBe('cancelled');
+    expect(deps.fetchCompanyEvidence).toHaveBeenCalledOnce();
+    expect(deps.generateArtifact).not.toHaveBeenCalled();
+    expect(deps.persistArtifact).not.toHaveBeenCalled();
+  });
+
+  it('abandons install enrichment when a stop has already revoked its lease', async () => {
+    const deps = dependencies({
+      readInstallRuntimeEnrichmentContext: vi
+        .fn()
+        .mockResolvedValueOnce({ companyDomain: 'neon.tech' })
+        .mockResolvedValueOnce(null),
+      cancelJob: vi.fn().mockRejectedValue(new JobLeaseConflictError(job().id)),
+    });
+    await expect(
+      dispatchLifecycleAppOwnedJob(
+        {} as SqlExecutor,
+        job('enrich', { source: 'install_runtime' }),
+        {},
+        deps
+      )
+    ).resolves.toBe('cancelled');
+    expect(deps.cancelJob).toHaveBeenCalledOnce();
+    expect(deps.deferJob).not.toHaveBeenCalled();
+    expect(deps.failJob).not.toHaveBeenCalled();
+    expect(deps.generateArtifact).not.toHaveBeenCalled();
+    expect(deps.persistArtifact).not.toHaveBeenCalled();
+  });
+
+  it('keeps ordinary database cancellation failures on the enrichment retry path', async () => {
+    const deps = dependencies({
+      readInstallRuntimeEnrichmentContext: vi.fn().mockResolvedValue(null),
+      cancelJob: vi.fn().mockRejectedValue(new Error('database unavailable')),
+    });
+    await expect(
+      dispatchLifecycleAppOwnedJob(
+        {} as SqlExecutor,
+        job('enrich', { source: 'install_runtime' }),
+        {},
+        deps
+      )
+    ).resolves.toBe('deferred');
+    expect(deps.deferJob).toHaveBeenCalledOnce();
+    expect(deps.generateArtifact).not.toHaveBeenCalled();
   });
 
   it('does not fetch company pages for the personal-email neutral path', async () => {

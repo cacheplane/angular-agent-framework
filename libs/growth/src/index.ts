@@ -1,4 +1,6 @@
 export * from './lib/contacts.ts';
+export * from './lib/company-domain.ts';
+export { readInstallRuntimeEnrichmentContext } from './lib/observability/install-runtime-enrichment.ts';
 export * from './lib/campaign-analytics.ts';
 export * from './lib/crypto.ts';
 export * from './lib/database.ts';
@@ -44,3 +46,7 @@ export {
   initializeObservationRedactions,
 } from './lib/observability/redaction.ts';
 export type { ObservationEnrichmentReference } from './lib/observability/enrichment-contract.ts';
+export {
+  readGrowthFunnel,
+  readContactJourney,
+} from './lib/observability/journey-report.ts';

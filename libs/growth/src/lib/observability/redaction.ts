@@ -60,6 +60,36 @@ async function redactLocked(
       [key.digest, key.keyVersion, now]
     );
   const ids = rows.rows.map((r) => r.observation_id);
+  // Retire derived research before removing its identity evidence. A redacted
+  // install invalidates every version sharing its token, just as authorization does.
+  await tx.execute(
+    `/* growth:redact-install-runtime-enrichment */
+     with affected as materialized (
+       select j.id from growth_jobs j
+       where j.kind='enrich' and j.payload->>'source'='install_runtime'
+         and (
+           j.payload->>'install_observation_id'=any($1::text[])
+           or j.payload->>'runtime_observation_id'=any($1::text[])
+           or exists (
+             select 1 from growth_observations linked_install
+             join growth_observations removed on removed.installation_token_digest=linked_install.installation_token_digest
+             where linked_install.id::text=j.payload->>'install_observation_id'
+               and removed.id=any($1::uuid[]) and removed.source='install'
+           )
+         )
+       order by j.id for update of j
+     ), scrubbed as (
+       update growth_jobs j set
+         status=case when j.status in ('pending','leased') then 'cancelled' else j.status end,
+         lease_token=null, lease_until=null,
+         payload=jsonb_build_object('source','install_runtime','evidence_redacted',true),
+         last_error_code='install_runtime_evidence_redacted', updated_at=$2
+       where j.id in (select id from affected)
+       returning j.id
+     )
+     delete from growth_artifacts where job_id in (select id from scrubbed)`,
+    [ids, now]
+  );
   await tx.execute(
     'select observation_id from growth_observation_work where observation_id=any($1::uuid[]) order by observation_id for update',
     [ids]

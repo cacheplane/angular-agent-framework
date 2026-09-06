@@ -3,6 +3,7 @@ import { CONTACT_HARD_STOP_REASONS } from './contacts.ts';
 import { normalizeEmail } from './crypto.ts';
 import type { GrowthArtifact, GrowthJob } from './models.ts';
 import { privacyLock } from './observability/store.ts';
+import { installRuntimeEvidenceSql } from './observability/install-runtime-enrichment.ts';
 
 const FULFILLMENT_ALLOWED_PRIOR_STOPS = new Set([
   'unsubscribe',
@@ -1962,6 +1963,48 @@ export async function persistJobArtifact(
   ];
 
   return executor.transaction(async (transaction) => {
+    // Exclude ingest too: it can admit conflicting evidence after authorization.
+    // This short transaction takes privacy before contact/job locks and has no provider calls.
+    await privacyLock(transaction, true);
+    const installJob = await transaction.execute<{ contact_id: string | null }>(
+      `/* growth:discover-install-runtime-artifact-job */
+       select contact_id from growth_jobs where id=$1
+         and (payload->>'source'='install_runtime' or idempotency_key like 'install-runtime:v1:%')`,
+      [input.jobId]
+    );
+    if (installJob.rows.length) {
+      if (!leaseBound || !installJob.rows[0].contact_id)
+        throw new JobLeaseConflictError(input.jobId);
+      await transaction.execute(
+        `/* growth:lock-install-runtime-artifact-contact */
+         select id from growth_contacts where id=$1 for update`,
+        [installJob.rows[0].contact_id]
+      );
+      const authorized = await transaction.execute<{ id: string }>(
+        `/* growth:authorize-install-runtime-artifact */
+         select j.id from growth_jobs j join growth_contacts c on c.id=j.contact_id
+         where j.id=$1 and j.contact_id=$4 and j.kind='enrich'
+           and j.payload->>'source'='install_runtime'
+           and j.payload->>'evidence_redacted' is distinct from 'true'
+           and j.status='leased' and j.lease_token=$2::uuid and j.lease_until>$3
+           and c.deleted_at is null and c.outreach_approved_at is not null
+           and not exists(select 1 from growth_activity stop where stop.contact_id=c.id
+             and stop.kind=any($5::text[]) and stop.occurred_at>=c.outreach_approved_at)
+           and ${installRuntimeEvidenceSql(
+             "j.payload->>'install_observation_id'",
+             "j.payload->>'runtime_observation_id'"
+           )}
+         for update of j`,
+        [
+          input.jobId,
+          leaseToken,
+          now,
+          installJob.rows[0].contact_id,
+          CONTACT_HARD_STOP_REASONS,
+        ]
+      );
+      if (!authorized.rows.length) throw new JobLeaseConflictError(input.jobId);
+    }
     await transaction.execute<ArtifactRow>(
       `/* growth:insert-job-artifact */
        insert into growth_artifacts (

@@ -14,6 +14,8 @@ import {
   type SqlExecutor,
   type EmailHmacKeyring,
   collectionSource,
+  readGrowthFunnel,
+  readContactJourney,
 } from '../libs/growth/src/index.ts';
 import { uuid } from '../libs/growth/src/lib/observability/contracts.ts';
 import { parseEmailHmacKeyringEnvironment } from './growth-control.mts';
@@ -28,6 +30,8 @@ export interface ObservabilityOperatorDependencies {
   writeError(value: string): void;
 }
 const flags: Record<string, readonly string[]> = {
+  funnel: ['from', 'to'],
+  journey: ['contact'],
   health: ['from', 'to'],
   timeline: ['subject', 'cursor', 'limit'],
   detail: ['observation', 'include-identity'],
@@ -77,11 +81,12 @@ function parseArguments(argv: readonly string[]) {
     if (!value || value.startsWith('--')) invalid();
     args[key] = value;
   }
-  if (command === 'health') {
+  if (command === 'health' || command === 'funnel') {
     const from = date(args.from),
       to = date(args.to);
     if (to <= from || to.getTime() - from.getTime() > 31 * 86400000) invalid();
   }
+  if (command === 'journey') uuid(args.contact);
   if (command === 'timeline') {
     uuid(args.subject);
     count(args.limit, 100, 100);
@@ -146,6 +151,15 @@ export async function runGrowthObservability(
     db = deps.createDatabase();
     let result: unknown;
     switch (command) {
+      case 'funnel':
+        result = await readGrowthFunnel(db, {
+          from: date(args.from),
+          to: date(args.to),
+        });
+        break;
+      case 'journey':
+        result = await readContactJourney(db, args.contact);
+        break;
       case 'project-forms':
         result = await projectFormObservations(db, {
           enabled: true,
