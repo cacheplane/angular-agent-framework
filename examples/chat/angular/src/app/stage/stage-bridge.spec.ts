@@ -72,6 +72,33 @@ describe('createStageBridge', () => {
     });
   });
 
+  it('re-posts ready once an empty-referrer frame learns the parent origin from a seek', () => {
+    const e = env('');
+    const bridge = createStageBridge({ referrer: e.referrer, parent: e.parent, self: e.self });
+    const seen: number[] = [];
+    bridge.onSeek((t) => seen.push(t));
+    const ready = {
+      totalMs: 9000,
+      beats: [{ beat: 'stream' as const, startMs: 0, endMs: 1000 }],
+      hold: { startMs: 5000, endMs: 8000 },
+      reloadEndMs: 1600,
+    };
+    bridge.postReady(ready);
+    // Nothing yet: the frame has nowhere to answer.
+    expect(e.parent.postMessage).not.toHaveBeenCalled();
+    e.fire({ type: STAGE_MESSAGE_TYPE, t: 5 }, 'https://evil.example');
+    expect(e.parent.postMessage).not.toHaveBeenCalled();
+    e.fire({ type: STAGE_MESSAGE_TYPE, t: 0 });
+    expect(seen).toEqual([0]);
+    const calls = (e.parent.postMessage as ReturnType<typeof vi.fn>).mock.calls;
+    expect(calls).toHaveLength(1);
+    expect(calls[0][0]).toEqual({ type: STAGE_MESSAGE_TYPE, ready: true, ...ready });
+    expect(calls[0][1]).toBe('https://threadplane.ai');
+    // A second seek does not repeat the handshake.
+    e.fire({ type: STAGE_MESSAGE_TYPE, t: 100 });
+    expect(calls).toHaveLength(1);
+  });
+
   it('posts nothing when not embedded', () => {
     const e = env();
     const bridge = createStageBridge({ referrer: '', parent: e.self, self: e.self });

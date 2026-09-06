@@ -47,17 +47,19 @@ those facts; run them with `--modes desktop,phone,reduced`.
 Build and serve the production site on a free port, then verify:
 
 ```bash
-npx nx build website
-ln -sfn ../../../apps/website/content dist/apps/website/content
 (npx nx serve website --configuration=production --port=4308 --skip-nx-cache &)
 until curl -sf http://127.0.0.1:4308/ > /dev/null; do sleep 2; done
+ln -sfn ../../../apps/website/content dist/apps/website/content
 node apps/website/e2e/scroll-craft/verify-home.mjs --url http://127.0.0.1:4308 --out dist/stage-shots
 ```
 
-The serve skips the Nx cache on purpose: its own build target would otherwise
-restore `dist/apps/website` from the entry the build just wrote and drop the
-`content` symlink. Kill the backgrounded serve when you are done (`lsof
--iTCP:4308 -sTCP:LISTEN -n` names the process).
+The serve's own build dependency emits `dist/apps/website`; there is no
+separate build step. It skips the Nx cache on purpose so that build is a real
+one rather than a cache restore, and the `content` symlink is added only once
+the server answers, so it lands on the directory the build has finished
+writing rather than on one the build is still about to replace. Kill the
+backgrounded serve when you are done (`lsof -iTCP:4308 -sTCP:LISTEN -n` names
+the process).
 
 The Nx build lands in `dist/apps/website` with a rewritten `next.config`, so a
 bare `next start` cannot serve it; `nx serve --configuration=production` can.

@@ -48,6 +48,10 @@ export function createStageBridge(env: BridgeEnv): StageBridge {
   let parentOrigin: string | null =
     fromReferrer !== null && isAllowedParentOrigin(fromReferrer) ? fromReferrer : null;
   const embedded = env.parent !== env.self;
+  // The last `ready` posted (or held back while the parent origin was still
+  // unknown): re-posted the moment the origin is learned, so a parent that
+  // arrived with an empty referrer still receives the handshake.
+  let lastReady: Record<string, unknown> | null = null;
   const post = (msg: Record<string, unknown>) => {
     if (!embedded || parentOrigin === null) return;
     env.parent.postMessage({ type: STAGE_MESSAGE_TYPE, ...msg }, parentOrigin);
@@ -61,20 +65,24 @@ export function createStageBridge(env: BridgeEnv): StageBridge {
         if (!d || d.type !== STAGE_MESSAGE_TYPE || typeof d.t !== 'number' || !Number.isFinite(d.t)) return;
         // Under a strict Referrer-Policy the referrer is empty, so the first
         // allowlisted message is how the frame learns where to answer.
-        if (parentOrigin === null) parentOrigin = e.origin;
+        if (parentOrigin === null) {
+          parentOrigin = e.origin;
+          if (lastReady !== null) post(lastReady);
+        }
         cb(d.t);
       };
       env.self.addEventListener('message', handler);
       return () => env.self.removeEventListener('message', handler);
     },
     postReady(ready) {
-      post({
+      lastReady = {
         ready: true,
         totalMs: ready.totalMs,
         beats: ready.beats,
         hold: ready.hold,
         reloadEndMs: ready.reloadEndMs,
-      });
+      };
+      post(lastReady);
     },
     postState(state) {
       post({ applied: state.applied, phase: state.phase, t: state.t });

@@ -5,6 +5,7 @@ import { useRef } from 'react';
 import {
   createStagePublisher,
   STAGE_DEMO_ORIGIN,
+  STAGE_HELLO_INTERVAL_MS,
   STAGE_MESSAGE_TYPE,
   useStagePublisher,
   type StagePublisher,
@@ -85,8 +86,42 @@ describe('stage publisher', () => {
     });
   });
 
-  it('posts nothing before ready', () => {
+  it('posts no seek before ready, only a throttled hello so the frame learns the origin', () => {
+    let now = 1000;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
     const { section, posted, pub } = setup({ ready: false });
+    section.style.setProperty('--sc-p', '0.3');
+    pub.tick();
+    now += 100;
+    pub.tick();
+    // Two ticks inside the interval: exactly one hello.
+    expect(posted).toEqual([
+      { origin: STAGE_DEMO_ORIGIN, m: { type: STAGE_MESSAGE_TYPE, t: 0 } },
+    ]);
+    now += STAGE_HELLO_INTERVAL_MS;
+    pub.tick();
+    expect(posted).toHaveLength(2);
+    expect(posted[1]).toEqual({
+      origin: STAGE_DEMO_ORIGIN,
+      m: { type: STAGE_MESSAGE_TYPE, t: 0 },
+    });
+    // Once ready arrives the hello stops and the real seek is posted.
+    fromDemo(READY);
+    now += STAGE_HELLO_INTERVAL_MS * 4;
+    pub.tick();
+    pub.tick();
+    expect(posted).toHaveLength(3);
+    expect(posted[2]).toEqual({
+      origin: STAGE_DEMO_ORIGIN,
+      m: { type: STAGE_MESSAGE_TYPE, t: timeAt(0.3, READY) },
+    });
+  });
+
+  it('says no hello while the frame window is not there yet', () => {
+    const { section, posted, pub } = setup({
+      ready: false,
+      frameWindow: () => null,
+    });
     section.style.setProperty('--sc-p', '0.3');
     pub.tick();
     expect(posted).toHaveLength(0);
@@ -200,12 +235,15 @@ describe('stage publisher', () => {
 
   it('ignores a malformed ready: no hold, or a beat with a non-numeric time', () => {
     const { section, posted, onReady, pub } = setup({ ready: false });
+    // A malformed ready leaves the publisher un-ready, so the only thing it
+    // may post is the hello (t: 0), never a seek.
+    const seeks = () => posted.filter((p) => (p.m as { t: number }).t !== 0);
     const { hold: _hold, ...noHold } = READY;
     void _hold;
     fromDemo(noHold);
     section.style.setProperty('--sc-p', '0.1');
     expect(() => pub.tick()).not.toThrow();
-    expect(posted).toHaveLength(0);
+    expect(seeks()).toHaveLength(0);
     expect(onReady).not.toHaveBeenCalled();
 
     fromDemo({
@@ -218,13 +256,18 @@ describe('stage publisher', () => {
     section.style.setProperty('--sc-p', '0.11');
     expect(() => pub.tick()).not.toThrow();
     pub.tick();
-    expect(posted).toHaveLength(0);
+    expect(seeks()).toHaveLength(0);
     expect(onReady).not.toHaveBeenCalled();
 
     // A well-formed ready afterwards still works.
     fromDemo(READY);
     pub.tick();
-    expect(posted).toHaveLength(1);
+    expect(seeks()).toEqual([
+      {
+        origin: STAGE_DEMO_ORIGIN,
+        m: { type: STAGE_MESSAGE_TYPE, t: timeAt(0.11, READY) },
+      },
+    ]);
     expect(onReady).toHaveBeenCalledTimes(1);
   });
 

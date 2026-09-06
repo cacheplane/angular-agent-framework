@@ -127,11 +127,7 @@ export function StageAct({ onFallback }: Props) {
       <div className="stage-pin" data-sc-stage>
         <Container className="stage-pin-inner">
           <div className="stage-frame">
-            <BrowserFrame
-              url="demo.threadplane.ai/stage"
-              elevation="lg"
-              className="stage-frame-chrome"
-            >
+            <BrowserFrame url="demo.threadplane.ai/stage" elevation="lg">
               <div className="stage-frame-stage">
                 <img
                   src={POSTER}
@@ -170,6 +166,7 @@ export function StageAct({ onFallback }: Props) {
             {STAGE_RAIL.map((b) => (
               <div
                 className="stage-rail-beat"
+                data-testid="stage-rail-beat"
                 data-beat={b.beat}
                 data-sc-cue={cueFor(b.beat)}
                 key={b.beat}
@@ -183,9 +180,7 @@ export function StageAct({ onFallback }: Props) {
                     aria-hidden="true"
                   />
                 </div>
-                <h3 className="feature-block-heading stage-rail-heading">
-                  {b.headline}
-                </h3>
+                <h3 className="feature-block-heading">{b.headline}</h3>
                 <p className="feature-block-body">{b.body}</p>
                 <div className="feature-block-rows">
                   {b.rows.map((row) => (
@@ -209,6 +204,7 @@ export function StageAct({ onFallback }: Props) {
             {STAGE_HOLD_LINES.map((line, i) => (
               <p
                 className="stage-rail-hold"
+                data-testid="stage-rail-hold"
                 data-sc-cue={holdCues[i]}
                 key={line}
               >

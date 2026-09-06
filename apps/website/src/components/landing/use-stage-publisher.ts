@@ -5,14 +5,18 @@ import {
   inHold,
   timeAt,
   type StageBeat,
+  type StageMilestone,
   type StageReadyMessage,
 } from '../../lib/stage-beats';
+
+export type { StageMilestone } from '../../lib/stage-beats';
 
 export const STAGE_DEMO_ORIGIN = 'https://demo.threadplane.ai';
 export const STAGE_DEMO_URL = `${STAGE_DEMO_ORIGIN}/stage?t=0`;
 export const STAGE_MESSAGE_TYPE = 'tplane-stage';
 
-export type StageMilestone = 'enter' | 'beat' | 'threshold' | 'complete';
+/** How often the publisher says hello to a frame that has not answered yet. */
+export const STAGE_HELLO_INTERVAL_MS = 500;
 
 export interface StagePublisherDeps {
   section: HTMLElement;
@@ -78,6 +82,7 @@ export function createStagePublisher(deps: StagePublisherDeps): StagePublisher {
   let thresholdSeen = false;
   const beatsSeen = new Set<StageBeat>();
   let disposed = false;
+  let lastHello = -Infinity;
 
   const onMessage = (e: MessageEvent) => {
     if (e.origin !== STAGE_DEMO_ORIGIN) return;
@@ -130,8 +135,21 @@ export function createStagePublisher(deps: StagePublisherDeps): StagePublisher {
         deps.track('complete');
       }
       lastP = p;
+      // Hello. Under a strict Referrer-Policy the frame arrives with no
+      // referrer and posts nothing (it has nowhere to answer) until it hears
+      // from an allowlisted parent; the frame learns the origin from this
+      // message and answers with `ready`. Throttled so a scroll that idles
+      // before the frame boots does not flood it.
+      if (!ready) {
+        const now = performance.now();
+        if (now - lastHello < STAGE_HELLO_INTERVAL_MS) return;
+        const w = deps.frameWindow();
+        if (!w) return;
+        w.postMessage({ type: STAGE_MESSAGE_TYPE, t: 0 }, STAGE_DEMO_ORIGIN);
+        lastHello = now;
+        return;
+      }
       // Seek.
-      if (!ready) return;
       const t = timeAt(p, ready);
       if (t === lastT) return;
       const w = deps.frameWindow();

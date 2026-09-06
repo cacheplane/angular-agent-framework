@@ -66,7 +66,9 @@ test.describe('homepage stage', () => {
     await expect(page.locator('html')).toHaveClass(/sc-ready/);
     await scrollAct(page, 0.05);
     expect(await progress(page)).toBeGreaterThan(0);
-    const stream = page.locator('.stage-rail-beat[data-beat="stream"]');
+    const stream = page
+      .getByTestId('stage-rail-beat')
+      .and(page.locator('[data-beat="stream"]'));
     await expect(stream).toHaveCSS('opacity', '1');
     // Inside the approve hold: approve spans 0.4167..0.8167 of the act and the
     // hold is 35–70% of it (0.5567..0.6967). 0.68 also sits on the last hold
@@ -76,7 +78,7 @@ test.describe('homepage stage', () => {
       'data-sc-verify-hold',
       'true'
     );
-    await expect(page.locator('.stage-rail-hold').last()).toHaveCSS(
+    await expect(page.getByTestId('stage-rail-hold').last()).toHaveCSS(
       'opacity',
       /^(0\.[5-9]\d*|1)$/
     );
@@ -87,7 +89,9 @@ test.describe('homepage stage', () => {
     );
     await scrollAct(page, 1);
     await expect(
-      page.locator('.stage-rail-beat[data-beat="render"]')
+      page
+        .getByTestId('stage-rail-beat')
+        .and(page.locator('[data-beat="render"]'))
     ).toHaveCSS('opacity', '1');
   });
 

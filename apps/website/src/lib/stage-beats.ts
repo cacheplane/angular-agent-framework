@@ -8,6 +8,9 @@
 export const STAGE_BEATS = ['stream', 'persist', 'approve', 'render'] as const;
 export type StageBeat = (typeof STAGE_BEATS)[number];
 
+/** The scroll milestones the publisher reports (`marketing:stage_progress`). */
+export type StageMilestone = 'enter' | 'beat' | 'threshold' | 'complete';
+
 /** Viewport-heights of scroll each beat owns. Approve is the peak by a visible margin. */
 export const STAGE_SHARES: Readonly<Record<StageBeat, number>> = {
   stream: 1.3,

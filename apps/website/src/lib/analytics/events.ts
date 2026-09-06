@@ -1,3 +1,5 @@
+import type { StageBeat, StageMilestone } from '../stage-beats';
+
 export const analyticsEvents = {
   marketingCtaClick: 'marketing:cta_click',
   marketingExternalLinkClick: 'marketing:external_link_click',
@@ -142,7 +144,7 @@ export type AnalyticsProperties = {
   ai_source?: string;
   user_agent?: string;
   /** Homepage stage milestones (`marketing:stage_progress`). */
-  stage_event?: 'enter' | 'beat' | 'threshold' | 'complete';
-  beat?: 'stream' | 'persist' | 'approve' | 'render';
+  stage_event?: StageMilestone;
+  beat?: StageBeat;
   [key: string]: string | number | boolean | undefined;
 };
