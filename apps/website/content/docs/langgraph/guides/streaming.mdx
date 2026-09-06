@@ -207,7 +207,7 @@ export class ChatComponent {
 </Tab>
 </Tabs>
 
-`retry()` clears the error, then re-runs the last submission on the same thread; it is a no-op while a run is already in flight or when there is nothing to retry. `reload()` re-runs the last submission the same way but leaves the error signal alone, which is useful when you want to keep showing the failure state while the retry attempt is in progress. `submit(null)` opens a stream against the current thread state without a new user message and resumes only pending work, such as an interrupted or failed run; otherwise it is a no-op. Pass `submit({ message })` only when you have new input to send.
+`retry()` clears the error, then re-runs the last submission on the same thread; it is a no-op while a run is already in flight or when there is nothing to retry. `reload()` re-runs the last submission the same way but leaves the error signal alone, which is useful when you want to keep showing the failure state while the retry attempt is in progress. `submit(null)` opens a stream against the current thread state without a new user message and resumes only pending work, such as an interrupted run or a failed run that left tasks pending; otherwise it is a no-op. Pass `submit({ message })` only when you have new input to send.
 
 <Callout type="warning" title="Network errors vs agent errors">
 `error()` returns an `AgentError` whose `kind` distinguishes the failure class — `'connection'`, `'auth'`, `'server'`, `'interrupted'`, or `'aborted'` — whose `status` carries the HTTP status code when the failure came from an HTTP response, whose `retryable` says whether attempting the request again could plausibly succeed, and whose `cause` preserves the original raw error for debugging or telemetry.

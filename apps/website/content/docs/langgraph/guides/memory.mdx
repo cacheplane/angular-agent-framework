@@ -56,7 +56,7 @@ The graph is a straight line: generate, then extract, then end. Putting extracti
 
 <ExampleCode file="graph.py" region="graph" title="graph.py — the graph" />
 
-`compile()` is called with no checkpointer, because the LangGraph API server provides persistence and rejects a graph that brings its own. The [Persistence guide](/docs/langgraph/guides/persistence) covers the checkpointer choices for a graph you embed in your own process.
+`compile()` is called with no checkpointer, because the LangGraph API server provides persistence and either rejects or ignores a graph that brings its own, depending on whether it is `langgraph dev` or a deployment. The [Persistence guide](/docs/langgraph/guides/persistence) covers the checkpointer choices for a graph you embed in your own process.
 
 ### The agent provider
 

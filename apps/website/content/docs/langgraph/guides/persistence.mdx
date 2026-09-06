@@ -29,7 +29,7 @@ The backend is a single node. `MessagesState` gives the LangGraph SDK a message 
 Look at the last line of `build_persistence_graph`: it calls `compile()` on the `StateGraph` with no checkpointer at all. Persistence here comes entirely from the LangGraph API server, which is the case whenever you serve a graph with `langgraph dev` or on LangGraph Platform.
 
 <Callout type="warning" title="Serving through langgraph dev or LangGraph Platform? Do not compile a checkpointer.">
-The platform provides persistence itself, and it rejects a graph that brings its own. Call `compile()` on the `StateGraph` with no argument, as the example does.
+The platform provides persistence itself. `langgraph dev` refuses to load a graph that compiles its own saver, and a deployment ignores one, so leave it off in both cases. Call `compile()` on the `StateGraph` with no argument, as the example does.
 
 Passing one is not a soft warning — `langgraph dev` fails to load the graph and exits:
 

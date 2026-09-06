@@ -50,7 +50,7 @@ The graph is a straight line. Three nodes, three edges, and an entry point.
 
 <ExampleCode file="graph.py" region="graph" title="graph.py — the graph" />
 
-`compile()` is called with no checkpointer. That is not a gap: the LangGraph API server provides persistence for every thread it serves and rejects a graph that brings its own. The [Persistence guide](/docs/langgraph/guides/persistence) covers the checkpointer choices for a graph you run inside your own process.
+`compile()` is called with no checkpointer. That is not a gap: the LangGraph API server provides persistence for every thread it serves and either rejects or ignores a graph that brings its own, depending on whether it is `langgraph dev` or a deployment. The [Persistence guide](/docs/langgraph/guides/persistence) covers the checkpointer choices for a graph you run inside your own process.
 
 ### The agent provider
 
@@ -138,6 +138,6 @@ Nothing in this example configures durability. The graph compiles without a chec
     Browse the checkpoints a run leaves behind and fork the thread from any of them.
   </Card>
   <Card title="Interrupts" href="/docs/langgraph/guides/interrupts">
-    Pause a run for human input and resume it with `submit(null, { resume })`.
+    Pause a run for human input and resume it with `submit({ resume })`.
   </Card>
 </CardGroup>
