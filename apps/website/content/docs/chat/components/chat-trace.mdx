@@ -66,7 +66,7 @@ Both components bind to the same injected reference, so the sidebar describes ex
 
 ## Where trace rows appear
 
-`<chat>` never renders `<chat-trace>` directly. Rows reach the transcript through [`<chat-tool-calls>`](/docs/chat/components/chat-tool-calls), which renders each of an assistant message's tool calls as a [`<chat-tool-call-card>`](/docs/chat/components/chat-tool-call-card), or as a [`<chat-subagent-card>`](/docs/chat/components/chat-subagent-card) when the call spawned a subagent. Both cards wrap `<chat-trace>`: the card supplies the label, the status pill and the body, and the trace supplies the button, the chevron and the expansion behavior.
+`<chat>` never renders `<chat-trace>` directly. Rows reach the transcript through [`<chat-tool-calls>`](/docs/chat/components/chat-tool-calls), which renders each of an assistant message's tool calls as a [`<chat-tool-call-card>`](/docs/chat/components/chat-tool-call-card), or as a [`<chat-subagent-card>`](/docs/chat/components/chat-subagent-card) when the call spawned a subagent. Both cards wrap `<chat-trace>`: the card supplies the label, the status pill and the body, and the trace supplies the button, the chevron and the expansion behavior. When a tool call has a registered `chatToolCallTemplate`, that template replaces the card entirely, so those calls produce no trace row at all.
 
 That is why the demo above shows no rows. Its graph calls no tools, so there are no tool calls to render. The tool-calls and subagent pages each run an example whose graph does call tools, and the rows in those transcripts are this component.
 
@@ -126,7 +126,7 @@ Both are the styling hooks: the chevron rotation, the running animation and the 
 
 The row is expanded when the state is `running` or `error`. Otherwise it follows `defaultExpanded`.
 
-Clicking the header sets a manual override that wins over both, so a reader can close a running row or open a finished one. The override is cleared when the state re-enters `running` or `error` from a different state, which means a step that starts again opens again. A row that finishes does not close on its own: it falls back to `defaultExpanded`, and a row left open by a click stays open.
+Clicking the header sets a manual override that wins over both, so a reader can close a running row or open a finished one. The override is cleared when the state re-enters `running` or `error` from a different state, which means a step that starts again opens again. There is no collapse-on-done rule: the row falls back to `defaultExpanded` once the state leaves `running` or `error`, which with the default `false` means an untouched row closes again, while a row left open by a click stays open.
 
 Collapsing removes the body from the DOM rather than hiding it, so a collapsed row costs nothing to keep in a long transcript.
 

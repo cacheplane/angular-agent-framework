@@ -177,7 +177,7 @@ The card reads these CSS custom properties:
 | `--tplane-chat-success` | `complete` status pill |
 | `--tplane-chat-error-bg` / `--tplane-chat-error-text` | `error` status pill |
 
-The outer card chrome — background, border, radius — comes from the wrapping [`<chat-trace>`](/docs/chat/components/chat-trace).
+The card draws no background, border, or radius of its own. The only border anywhere in this pairing is the left rule on the expanded body, drawn by [`<chat-trace>`](/docs/chat/components/chat-trace); any surrounding chrome comes from the host that places the card.
 
 ## Accessibility
 
