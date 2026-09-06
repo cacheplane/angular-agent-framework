@@ -9,19 +9,14 @@ export const REPEAT_LOOPS_SPECS: DemoSpec[] = [
         root: {
           type: 'Heading',
           props: { content: 'Simple List' },
-          children: ['item1', 'item2', 'item3'],
+          children: ['row'],
         },
-        item1: {
+        // One element declaration, one rendered row per entry in /items.
+        // `{ $item: '' }` resolves to the whole item, which here is a string.
+        row: {
           type: 'Text',
-          props: { content: 'Alpha' },
-        },
-        item2: {
-          type: 'Text',
-          props: { content: 'Beta' },
-        },
-        item3: {
-          type: 'Text',
-          props: { content: 'Gamma' },
+          repeat: { statePath: '/items' },
+          props: { content: { $item: '' } },
         },
       },
     }, null, 2),

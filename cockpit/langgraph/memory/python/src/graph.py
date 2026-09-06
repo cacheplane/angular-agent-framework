@@ -1,10 +1,10 @@
 """
 LangGraph Memory Graph
 
-Demonstrates cross-thread persistent context by maintaining a `memory` dict
+Demonstrates thread-scoped persistent context by maintaining a `memory` dict
 in graph state. The agent learns facts from conversation and stores them in
-state so they persist across messages (and across threads when using a
-persistent checkpointer in production).
+state, so they survive reconnects to the same thread. Memory that must follow
+a user across threads belongs in the LangGraph Store API instead.
 
 Two nodes work in tandem:
   - generate: produces a response using full message history and known memory
@@ -14,8 +14,9 @@ Two nodes work in tandem:
 import json
 import re
 from pathlib import Path
-from typing import TypedDict
+from typing import Annotated, TypedDict
 from langgraph.graph import StateGraph, END
+from langgraph.graph.message import add_messages
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, BaseMessage
 
@@ -24,7 +25,9 @@ PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 
 # region state
 class MemoryState(TypedDict):
-    messages: list[BaseMessage]
+    # add_messages appends returned messages instead of replacing the list,
+    # so the transcript accumulates across turns.
+    messages: Annotated[list[BaseMessage], add_messages]
     memory: dict  # {"user_name": "Alice", "preferences": {...}, ...}
 # endregion
 
@@ -70,8 +73,17 @@ def build_memory_graph():
         messages = state.get("messages", [])
         current_memory = state.get("memory", {})
 
-        # Build a summary of the last few exchanges for extraction
-        recent = messages[-4:] if len(messages) >= 4 else messages
+        # Build a summary of the last few exchanges for extraction.
+        recent = list(messages[-4:])
+        # Guarantee the newest human turn is in the excerpt, even when the
+        # tail of the transcript happens to be assistant output only.
+        if not any(getattr(m, "type", None) == "human" for m in recent):
+            latest_human = next(
+                (m for m in reversed(messages) if getattr(m, "type", None) == "human"),
+                None,
+            )
+            if latest_human is not None:
+                recent = [latest_human] + recent
         transcript = "\n".join(
             f"{m.type.upper()}: {m.content}"
             for m in recent
