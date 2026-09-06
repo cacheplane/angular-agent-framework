@@ -9,26 +9,21 @@ import {
   createUnsubscribeActionUrl,
   deferLeasedJob,
   failLeasedJob,
-  JobLeaseConflictError,
   loadGrowthTokenKeyring,
   markProviderAcceptanceUnknown,
   markInternalNotificationUnknown,
   markProviderRejection,
   normalizeGrowthPublicActionOrigin,
   normalizeRecipientEmail,
-  persistJobArtifact,
   readLifecycleJobContext,
-  readInstallRuntimeEnrichmentContext,
   recordProviderAcceptance,
   RECIPIENT_EMAIL_SENDER,
-  recomputeContactScore,
   sendRecipientEmail,
   unsubscribeActionUrlValue,
   type DeliveryEnvironment,
   type GrowthArtifact,
   type GrowthDispatchResult,
   type GrowthJob,
-  type GrowthScoreReason,
   type GrowthTokenKey,
   type RecipientDeliveryPolicy,
   type RecipientEmailInput,
@@ -39,22 +34,17 @@ import {
 } from '../growth.js';
 import { Resend } from 'resend';
 
-import { generateEnrichmentArtifact } from '../enrichment/anthropic.js';
-import { createCompanyCapture } from '../enrichment/company-capture.js';
 import {
   createDawnJobHandlers,
   type DawnJobDependencies,
 } from '../enrichment/dawn-jobs.js';
-import { buildResearchInput } from '../enrichment/research-input.js';
 import {
   EnrichmentArtifactSchema,
-  type CompanyPageEvidence,
   type EnrichmentArtifact,
 } from '../enrichment/schema.js';
 import { renderFulfillmentTemplate } from '../fulfillment/templates.js';
 import { renderInternalNotificationSummary } from '../notifications/templates.js';
 import { DeterministicLifecycleJobError } from '../job-errors.js';
-import { LIFECYCLE_SCORE_CONTENT_REGISTRY_V1 } from '../score-policy.js';
 export { LIFECYCLE_SCORE_CONTENT_REGISTRY_V1 } from '../score-policy.js';
 import {
   renderCampaignTemplate,
@@ -94,7 +84,6 @@ interface DeferLeasedJobInput extends LeasedTransitionInput {
 }
 
 export interface LifecycleJobDependencies {
-  readInstallRuntimeEnrichmentContext: typeof readInstallRuntimeEnrichmentContext;
   now: () => Date;
   readJobContext: (
     executor: SqlExecutor,
@@ -138,33 +127,6 @@ export interface LifecycleJobDependencies {
     executor: SqlExecutor,
     input: LeasedTransitionInput
   ) => Promise<GrowthJob>;
-  fetchCompanyEvidence: (
-    companyDomain: string,
-    signal: AbortSignal
-  ) => Promise<CompanyPageEvidence[]>;
-  readDeterministicScore: (
-    executor: SqlExecutor,
-    contactId: string
-  ) => Promise<{
-    score: number;
-    scoreVersion: string;
-    reasons: GrowthScoreReason[];
-  }>;
-  generateArtifact: (
-    input: ReturnType<typeof buildResearchInput>,
-    signal: AbortSignal
-  ) => Promise<EnrichmentArtifact>;
-  persistArtifact: (
-    executor: SqlExecutor,
-    input: {
-      jobId: string;
-      leaseToken: string;
-      now: Date;
-      kind: string;
-      schemaVersion: number;
-      content: Record<string, unknown>;
-    }
-  ) => Promise<GrowthArtifact>;
   sendInternalNotification: (input: {
     to: string;
     subject: string;
@@ -397,21 +359,6 @@ function fulfillmentInput(payload: Record<string, unknown>): unknown {
   );
 }
 
-function formSource(
-  value: unknown
-): 'whitepaper' | 'newsletter' | 'contact' | 'pricing' | 'project-claim' {
-  if (
-    value === 'whitepaper' ||
-    value === 'newsletter' ||
-    value === 'contact' ||
-    value === 'pricing' ||
-    value === 'project-claim'
-  ) {
-    return value;
-  }
-  throw new DeterministicLifecycleJobError('Persisted form kind is invalid');
-}
-
 function enrichmentDrafts(context: LifecycleJobContext): CampaignDraft[] {
   const artifact = validArtifact(context.enrichmentArtifact, context.contactId);
   return ([1, 2, 3] as const).map((step) => {
@@ -551,160 +498,6 @@ export async function dispatchLifecycleAppOwnedJob(
       dependencies,
       message.template
     );
-  }
-
-  if (job.kind === 'enrich') {
-    try {
-      const installRuntime = job.payload['source'] === 'install_runtime';
-      const installContext = installRuntime
-        ? await dependencies.readInstallRuntimeEnrichmentContext(executor, {
-            jobId: job.id,
-            leaseToken,
-            now: dependencies.now(),
-          })
-        : null;
-      if (installRuntime && !installContext) {
-        await dependencies.cancelJob(executor, {
-          jobId: job.id,
-          leaseToken,
-          now: dependencies.now(),
-          errorCode: 'install_runtime_evidence_unavailable',
-        });
-        return 'cancelled';
-      }
-      const companyDomain = installRuntime
-        ? installContext?.companyDomain
-        : context.companyDomain;
-      const deterministicScore = await dependencies.readDeterministicScore(
-        executor,
-        context.contactId
-      );
-      signal.throwIfAborted();
-      const companyPages =
-        (installRuntime || context.emailClassification !== 'personal') &&
-        companyDomain
-          ? await dependencies.fetchCompanyEvidence(companyDomain, signal)
-          : [];
-      signal.throwIfAborted();
-      const paper = context.formSubmission['paper'];
-      const pilotInterest = context.formSubmission['pilot_interest'];
-      const teamSize = context.formSubmission['team_size'];
-      const timeline = context.formSubmission['timeline'];
-      const researchInput = buildResearchInput({
-        formFacts: {
-          ...(installRuntime
-            ? {
-                source: 'install_runtime',
-                emailClassification: 'unknown',
-                companyDomain,
-              }
-            : {
-                source: formSource(context.formSubmission['form_kind']),
-                emailClassification: context.emailClassification,
-                ...(context.displayName
-                  ? { displayName: context.displayName }
-                  : {}),
-                ...(context.companyName
-                  ? { companyName: context.companyName }
-                  : {}),
-                ...(context.companyDomain
-                  ? { companyDomain: context.companyDomain }
-                  : {}),
-                ...(paper === 'overview' ||
-                paper === 'angular' ||
-                paper === 'render' ||
-                paper === 'chat'
-                  ? { paper }
-                  : {}),
-                ...(pilotInterest === 'yes' ||
-                pilotInterest === 'maybe' ||
-                pilotInterest === 'no'
-                  ? { pilotInterest }
-                  : {}),
-                ...(teamSize === '1-5' ||
-                teamSize === '6-25' ||
-                teamSize === '26-100' ||
-                teamSize === '100+'
-                  ? { teamSize }
-                  : {}),
-                ...(timeline === 'this_quarter' ||
-                timeline === 'next_quarter' ||
-                timeline === '6_plus_months' ||
-                timeline === 'exploring'
-                  ? { timeline }
-                  : {}),
-              }),
-        },
-        deterministicScore,
-        companyPages,
-      });
-      if (installRuntime) {
-        const current = await dependencies.readInstallRuntimeEnrichmentContext(
-          executor,
-          { jobId: job.id, leaseToken, now: dependencies.now() }
-        );
-        signal.throwIfAborted();
-        if (!current || current.companyDomain !== companyDomain) {
-          await dependencies.cancelJob(executor, {
-            jobId: job.id,
-            leaseToken,
-            now: dependencies.now(),
-            errorCode: 'install_runtime_evidence_unavailable',
-          });
-          return 'cancelled';
-        }
-      }
-      const artifact = await dependencies.generateArtifact(
-        researchInput,
-        signal
-      );
-      signal.throwIfAborted();
-      const artifactAt = dependencies.now();
-      await dependencies.persistArtifact(executor, {
-        jobId: job.id,
-        leaseToken,
-        now: artifactAt,
-        kind: 'enrichment.v1',
-        schemaVersion: 1,
-        content: artifact,
-      });
-      signal.throwIfAborted();
-      await dependencies.completeJob(executor, {
-        jobId: job.id,
-        leaseToken,
-        now: dependencies.now(),
-      });
-      return 'completed';
-    } catch (error) {
-      signal.throwIfAborted();
-      if (error instanceof DeterministicLifecycleJobError) throw error;
-      if (
-        job.payload['source'] === 'install_runtime' &&
-        error instanceof JobLeaseConflictError
-      ) {
-        // Stop/redaction or another worker already owns the durable state.
-        // Cancel this dispatch without attempting another transition on its revoked lease.
-        return 'cancelled';
-      }
-      if (job.attempts < 2) {
-        const retryAt = dependencies.now();
-        await dependencies.deferJob(executor, {
-          jobId: job.id,
-          leaseToken,
-          now: retryAt,
-          availableAt: new Date(retryAt.getTime() + RETRY_DELAY_MS),
-          errorCode: 'enrichment_retry',
-        });
-        return 'deferred';
-      }
-      await dependencies.failJob(executor, {
-        jobId: job.id,
-        leaseToken,
-        now: dependencies.now(),
-        errorCode: 'enrichment_failed',
-      });
-      return 'failed';
-    }
   }
 
   if (job.kind === 'notify') {
@@ -956,7 +749,6 @@ export function createDefaultLifecycleJobDependencies(
   return {
     now,
     readJobContext: readLifecycleJobContext,
-    readInstallRuntimeEnrichmentContext,
     createUnsubscribeUrl: (input, key) =>
       createUnsubscribeActionUrl(input, key, mailRuntime().publicActionOrigin),
     sendRecipient: (executor, input, policy) => {
@@ -976,20 +768,6 @@ export function createDefaultLifecycleJobDependencies(
     claimInternalNotification: claimInternalNotificationSubmission,
     markInternalNotificationUnknown,
     failJob: failLeasedJob,
-    fetchCompanyEvidence: createCompanyCapture(environment),
-    async readDeterministicScore(executor, contactId) {
-      const score = await recomputeContactScore(executor, {
-        contactId,
-        contentRegistry: LIFECYCLE_SCORE_CONTENT_REGISTRY_V1,
-      });
-      return {
-        score: score.score,
-        scoreVersion: score.scoreVersion,
-        reasons: score.reasons,
-      };
-    },
-    generateArtifact: generateEnrichmentArtifact,
-    persistArtifact: persistJobArtifact,
     async sendInternalNotification(input) {
       const { founderNotificationEmail, recipientPolicy, resend } =
         mailRuntime();
@@ -1053,15 +831,31 @@ export function createLifecycleAppJobHandlers(
     dispatchLifecycleAppOwnedJob(executor, job, context, dependenciesFactory());
   return {
     fulfill: handler,
-    enrich: (
+    enrich: async (
       executor: SqlExecutor,
       job: GrowthJob,
       context: { signal?: AbortSignal }
-    ) =>
-      (options.environment ?? process.env)['GROWTH_DAWN_ENRICHMENT_ENABLED'] ===
-        'true' || 'research_attempt' in job.payload
-        ? dawn.enrich(executor, job, context)
-        : handler(executor, job, context),
+    ): Promise<GrowthDispatchResult> => {
+      if (
+        (options.environment ?? process.env)[
+          'GROWTH_DAWN_ENRICHMENT_ENABLED'
+        ] !== 'false' ||
+        'research_attempt' in job.payload
+      )
+        return dawn.enrich(executor, job, context);
+      const leaseToken = requireLease(job);
+      context.signal?.throwIfAborted();
+      const dependencies = dependenciesFactory();
+      const now = dependencies.now();
+      await dependencies.deferJob(executor, {
+        jobId: job.id,
+        leaseToken,
+        now,
+        availableAt: new Date(now.getTime() + RETRY_DELAY_MS),
+        errorCode: 'dawn_enrichment_paused',
+      });
+      return 'deferred';
+    },
     research_cleanup: dawn.research_cleanup,
     notify: handler,
     send_step: handler,

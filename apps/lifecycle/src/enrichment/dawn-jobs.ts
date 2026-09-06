@@ -13,6 +13,8 @@ import {
   publishResearchArtifact,
   readResearchCompanyDomain,
   recordResearchCleanupQuiescence,
+  recordResearchCleanupAbsence,
+  finishResearchCleanup,
   recomputeContactScore,
   type GrowthAppJobHandler,
   type SqlExecutor,
@@ -39,6 +41,8 @@ import { createTraceTransport } from '../../../growth-research/src/production/tr
 /* eslint-enable @nx/enforce-module-boundaries */
 
 const TERMINAL = new Set(['success', 'error', 'interrupted', 'timeout']);
+const RECOVERY_GRACE_MS = 5 * 60000;
+const CLEANUP_HORIZON_MS = 7 * 86400000;
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 export interface DawnJobDependencies {
@@ -62,6 +66,8 @@ export interface DawnJobDependencies {
   deleteTraces: (attemptId: string) => Promise<void>;
   tracesAbsent: (attemptId: string) => Promise<boolean>;
   recordCleanupProof: typeof recordResearchCleanupQuiescence;
+  recordCleanupAbsence: typeof recordResearchCleanupAbsence;
+  finishCleanup: typeof finishResearchCleanup;
 }
 
 export function createDefaultDawnJobDependencies(
@@ -119,6 +125,8 @@ export function createDefaultDawnJobDependencies(
     deleteTraces: (attemptId) => traceTransport().requestDeletion(attemptId),
     tracesAbsent: (attemptId) => traceTransport().isAbsent(attemptId),
     recordCleanupProof: recordResearchCleanupQuiescence,
+    recordCleanupAbsence: recordResearchCleanupAbsence,
+    finishCleanup: finishResearchCleanup,
   };
 }
 
@@ -154,6 +162,14 @@ export function createDawnJobHandlers(
     });
     const defer = async (errorCode: string) => {
       const input = lease();
+      const expiresAt = (
+        job.payload['research_attempt'] as { expiresAt?: string } | undefined
+      )?.expiresAt;
+      if (
+        expiresAt &&
+        input.now.getTime() >= Date.parse(expiresAt) + RECOVERY_GRACE_MS
+      )
+        return fail('dawn_recovery_deadline');
       await d.defer(db, {
         ...input,
         errorCode,
@@ -253,8 +269,8 @@ export function createDawnJobHandlers(
         signal
       );
       if (!run) {
-        // Empty reads and execution expiry do not prove the platform rejected
-        // a delayed HTTP admission; outer checkpoint writers can still appear.
+        // Reconcile a lost acknowledgement only within the recovery window;
+        // the durable submission fence is never reset.
         return defer('dawn_submission_ambiguous');
       }
       if (attempt.runId && attempt.runId !== run.runId)
@@ -266,8 +282,6 @@ export function createDawnJobHandlers(
           runId: run.runId,
         });
       if (!TERMINAL.has(run.status)) {
-        if (Date.parse(attempt.expiresAt) <= d.now().getTime())
-          return fail('dawn_attempt_expired');
         return defer('dawn_run_pending');
       }
       if (run.status !== 'success') return fail('dawn_remote_failed');
@@ -323,6 +337,7 @@ export function createDawnJobHandlers(
       return 'deferred' as const;
     };
     const { attemptId, threadId, expiresAt } = job.payload;
+    let checkingTraces = false;
     try {
       if (
         typeof attemptId !== 'string' ||
@@ -331,22 +346,54 @@ export function createDawnJobHandlers(
         !UUID.test(threadId) ||
         typeof expiresAt !== 'string' ||
         !Number.isFinite(Date.parse(expiresAt))
-      )
-        return defer('dawn_cleanup_identity_invalid');
-      const expired = Date.parse(expiresAt) <= d.now().getTime();
+      ) {
+        await d.fail(db, {
+          ...lease(),
+          errorCode: 'dawn_cleanup_identity_invalid',
+        });
+        return 'failed';
+      }
+      const age = d.now().getTime() - Date.parse(expiresAt);
+      if (age >= CLEANUP_HORIZON_MS) {
+        await d.finishCleanup(db, {
+          ...lease(),
+          attemptId,
+          threadId,
+          status: 'failed',
+          errorCode: 'dawn_cleanup_horizon_exceeded',
+        });
+        return 'failed';
+      }
+      const deadline = age >= RECOVERY_GRACE_MS;
       const parentActive = await d.parentActive(db, attemptId);
-      if (!expired && parentActive) return defer('dawn_cleanup_parent_active');
+      if (!deadline && parentActive) return defer('dawn_cleanup_parent_active');
       const client = d.client();
-      const run = await client.findRun(threadId, attemptId, signal);
+      const run = await client
+        .findRun(threadId, attemptId, signal)
+        .catch((error) => {
+          signal.throwIfAborted();
+          if (!deadline || parentActive) throw error;
+          const runId = job.payload['runId'];
+          return typeof runId === 'string' && UUID.test(runId)
+            ? { runId, status: 'unknown' }
+            : null;
+        });
       // Expiry prevents more execution; it does not erase an unconsumed valid
       // result. A delayed active parent must retain the chance to publish it.
       if (parentActive && run?.status === 'success')
         return defer('dawn_cleanup_parent_active');
       if (run && !TERMINAL.has(run.status)) {
-        await client.interrupt(threadId, run.runId, signal);
-        return defer('dawn_cleanup_waiting_terminal');
+        try {
+          await client.interrupt(threadId, run.runId, signal);
+        } catch (error) {
+          signal.throwIfAborted();
+          if (!deadline) throw error;
+        }
+        if (!deadline) return defer('dawn_cleanup_waiting_terminal');
       }
-      const claim = await d.readClaim(attemptId);
+      // At the deadline cleanup no longer depends on a surviving claim writer.
+      // This policy is not evidence that the claim has settled.
+      const claim = deadline ? null : await d.readClaim(attemptId);
       const proof = job.payload['cleanup_quiescence'] as
         | { runId?: unknown; settledAt?: unknown }
         | undefined;
@@ -356,13 +403,13 @@ export function createDawnJobHandlers(
         UUID.test(proof.runId) &&
         typeof proof.settledAt === 'string' &&
         Number.isFinite(Date.parse(proof.settledAt));
-      if (!settled(claim, attemptId, expiresAt))
+      if (!deadline && !recordedProof && !settled(claim, attemptId, expiresAt))
         return defer('dawn_cleanup_writers_unsettled');
-      if (!run && !recordedProof)
+      if (!deadline && !run && !recordedProof)
         return defer('dawn_cleanup_terminal_unproven');
       if (
         recordedProof &&
-        (proof.settledAt !== claim?.settledAt ||
+        ((!deadline && claim && proof.settledAt !== claim.settledAt) ||
           (run && run.runId !== proof.runId))
       )
         return defer('dawn_cleanup_proof_conflict');
@@ -374,21 +421,52 @@ export function createDawnJobHandlers(
           runId: run.runId,
           settledAt: claim.settledAt,
         });
+      const observedAt = job.payload['cleanup_absent_at'];
+      const priorAbsence =
+        typeof observedAt === 'string' &&
+        Number.isFinite(Date.parse(observedAt));
+      const reappeared =
+        priorAbsence && !(await client.threadAbsent(threadId, signal));
+      if (reappeared)
+        await d.recordCleanupAbsence(db, {
+          ...lease(),
+          attemptId,
+          threadId,
+          absent: false,
+        });
       await client.deleteThread(threadId, signal);
-      if (!(await client.threadAbsent(threadId, signal)))
+      if (!(await client.threadAbsent(threadId, signal))) {
+        await d.recordCleanupAbsence(db, {
+          ...lease(),
+          attemptId,
+          threadId,
+          absent: false,
+        });
         return defer('dawn_cleanup_thread_present');
+      }
+      if (!priorAbsence || reappeared) {
+        await d.recordCleanupAbsence(db, { ...lease(), attemptId, threadId });
+        return defer('dawn_cleanup_confirm_absence', 60000);
+      }
+      if (d.now().getTime() - Date.parse(observedAt) < 60000)
+        return defer('dawn_cleanup_confirm_absence', 60000);
+      checkingTraces = true;
       if (!(await d.tracesAbsent(attemptId))) {
         await d.deleteTraces(attemptId);
         // Trace deletion is asynchronous and can queue for days. Keep fast
         // execution reconciliation separate from this hourly absence check.
         return defer('dawn_cleanup_traces_present', 3600000);
       }
-      await d.complete(db, lease());
+      if (parentActive) return defer('dawn_cleanup_parent_active');
+      await d.finishCleanup(db, { ...lease(), attemptId, threadId });
       return 'completed';
     } catch (error) {
       if (error instanceof JobLeaseConflictError) return 'cancelled';
       signal.throwIfAborted();
-      return defer('dawn_cleanup_reconciliation_required');
+      return defer(
+        'dawn_cleanup_reconciliation_required',
+        checkingTraces ? 3600000 : 15000
+      );
     }
   };
   return { enrich, research_cleanup };

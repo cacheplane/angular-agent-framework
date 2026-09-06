@@ -7,6 +7,8 @@ import {
   publishResearchArtifact,
   getResearchInput,
   recordResearchCleanupQuiescence,
+  recordResearchCleanupAbsence,
+  finishResearchCleanup,
 } from '../src/lib/research-jobs.ts';
 import { leaseDueJobs, readLifecycleJobContext } from '../src/lib/jobs.ts';
 import { stopContact } from '../src/lib/stops.ts';
@@ -123,6 +125,131 @@ describe('durable research attempts against TEST_DATABASE_URL', () => {
     );
     return result.rows[0].payload;
   }
+  it('guards absence observations and atomically scrubs only terminal parent evidence on verified completion', async () => {
+    await submit();
+    await publishResearchArtifact(db, {
+      ...input(),
+      content: { profile: { name: 'Example' } },
+    });
+    const result = await db.execute<{ id: string }>(
+      `update growth_jobs set status='leased', lease_token=$2, lease_until=$3 where idempotency_key=$1 returning id`,
+      [
+        `research-cleanup:v1:${attemptId}`,
+        leaseToken,
+        new Date(now.getTime() + 600000),
+      ]
+    );
+    const cleanup = {
+      jobId: result.rows[0].id,
+      leaseToken,
+      now,
+      attemptId,
+      threadId,
+    };
+    await expect(
+      recordResearchCleanupAbsence(db, { ...cleanup, threadId: randomUUID() })
+    ).rejects.toThrow('lease');
+    await recordResearchCleanupAbsence(db, cleanup);
+    await recordResearchCleanupAbsence(db, { ...cleanup, absent: false });
+    expect(
+      (
+        await db.execute<{ payload: Record<string, unknown> }>(
+          'select payload from growth_jobs where id=$1',
+          [cleanup.jobId]
+        )
+      ).rows[0].payload['cleanup_absent_at']
+    ).toBeUndefined();
+    await recordResearchCleanupAbsence(db, cleanup);
+    await expect(finishResearchCleanup(db, cleanup)).rejects.toThrow('lease');
+    expect((await payload())['research_input']).toBeDefined();
+    const later = { ...cleanup, now: new Date(now.getTime() + 60000) };
+    await expect(finishResearchCleanup(db, later)).rejects.toThrow('lease');
+    await db.execute(
+      `update growth_jobs set status='completed', lease_token=null, lease_until=null where id=$1`,
+      [jobId]
+    );
+    await expect(
+      finishResearchCleanup(db, { ...later, leaseToken: randomUUID() })
+    ).rejects.toThrow('lease');
+    expect((await payload())['research_input']).toBeDefined();
+    await finishResearchCleanup(db, later);
+    expect((await payload())['research_input']).toBeUndefined();
+    expect((await payload())['research_attempt']).toBeDefined();
+    expect(
+      (
+        await db.execute<{ content: unknown }>(
+          'select content from growth_artifacts where job_id=$1',
+          [jobId]
+        )
+      ).rows[0].content
+    ).toEqual({ profile: { name: 'Example' } });
+    expect(
+      (
+        await db.execute<{ status: string }>(
+          'select status from growth_jobs where id=$1',
+          [cleanup.jobId]
+        )
+      ).rows[0].status
+    ).toBe('completed');
+  });
+  it.each(['completed', 'leased'])(
+    'scrubs a %s parent at the failed horizon without requiring absence or losing identity',
+    async (status) => {
+      await submit();
+      if (status === 'completed')
+        await db.execute(
+          `update growth_jobs set status='completed',lease_token=null,lease_until=null where id=$1`,
+          [jobId]
+        );
+      const result = await db.execute<{ id: string }>(
+        `update growth_jobs set status='leased',lease_token=$2,lease_until=$3 where idempotency_key=$1 returning id`,
+        [
+          `research-cleanup:v1:${attemptId}`,
+          leaseToken,
+          new Date(now.getTime() + 600000),
+        ]
+      );
+      await finishResearchCleanup(db, {
+        jobId: result.rows[0].id,
+        leaseToken,
+        now,
+        attemptId,
+        threadId,
+        status: 'failed',
+        errorCode: 'dawn_cleanup_horizon_exceeded',
+      });
+      expect((await payload())['research_input']).toBeUndefined();
+      const parent = (
+        await db.execute<{
+          status: string;
+          lease_token: string | null;
+          last_error_code: string | null;
+        }>(
+          'select status,lease_token,last_error_code from growth_jobs where id=$1',
+          [jobId]
+        )
+      ).rows[0];
+      expect(parent.status).toBe(
+        status === 'completed' ? 'completed' : 'failed'
+      );
+      expect(parent.lease_token).toBeNull();
+      if (status === 'leased')
+        expect(parent.last_error_code).toBe('dawn_recovery_deadline');
+      const row = (
+        await db.execute<{
+          status: string;
+          last_error_code: string;
+          payload: Record<string, unknown>;
+        }>(
+          'select status,last_error_code,payload from growth_jobs where id=$1',
+          [result.rows[0].id]
+        )
+      ).rows[0];
+      expect(row.status).toBe('failed');
+      expect(row.last_error_code).toBe('dawn_cleanup_horizon_exceeded');
+      expect(row.payload['threadId']).toBe(threadId);
+    }
+  );
   async function assertCleanupLeasable() {
     const cleanup = (
       await db.execute<{

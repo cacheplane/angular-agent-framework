@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { validateCorpus, corpusHash } from './corpus.js';
-import { runBaseline, BaselineFailure } from './baseline.js';
+import type { runAgent } from './agent-runner.js';
 import { writeRecord, createReviewPacket } from './reports.js';
 import type { PilotCase } from './contracts.js';
 
@@ -8,7 +8,7 @@ type Options = {
   root: string;
   revision: string;
   signal?: AbortSignal;
-  baseline?: typeof runBaseline;
+  agent?: typeof runAgent;
   progress?: (record: {
     runId: string;
     caseId: string;
@@ -17,9 +17,10 @@ type Options = {
 };
 export async function runCorpus(
   input: unknown,
-  approach: 'agent' | 'baseline',
+  approach: 'agent',
   options: Options
 ) {
+  if (approach !== 'agent') throw new Error('pilot_invalid_approach');
   const corpus = validateCorpus(input);
   const hash = corpusHash(corpus);
   const records = [];
@@ -29,13 +30,7 @@ export async function runCorpus(
       const runId = randomUUID(),
         startedAt = new Date().toISOString(),
         start = performance.now();
-      const signal =
-        approach === 'agent'
-          ? options.signal ?? new AbortController().signal
-          : AbortSignal.any([
-              AbortSignal.timeout(90_000),
-              ...(options.signal ? [options.signal] : []),
-            ]);
+      const signal = options.signal ?? new AbortController().signal;
       const record = {
         schemaVersion: 1,
         runId,
@@ -53,10 +48,7 @@ export async function runCorpus(
         elapsedMs: 0,
         outcome: 'failed',
         errorCode: null as string | null,
-        model:
-          approach === 'agent'
-            ? 'gpt-4.1-mini'
-            : process.env['LIFECYCLE_ENRICHMENT_MODEL'] || 'claude-sonnet-4-6',
+        model: 'gpt-4.1-mini',
         modelCalls: null as number | null,
         evidenceReads: null as number | null,
         usage: {
@@ -84,72 +76,46 @@ export async function runCorpus(
       };
       try {
         signal.throwIfAborted();
-        if (approach === 'baseline') {
-          const result = await (options.baseline ?? runBaseline)(
-            company,
-            signal
-          );
-          signal.throwIfAborted();
-          Object.assign(record, result, {
-            outcome: 'completed',
-            evidenceReads: 0,
-            validation: {
-              status: 'legacy_normalized',
-              reasonCodes: result.invalidCitationCount
-                ? ['raw_invalid_citation']
-                : [],
-            },
-          });
-        } else {
-          const { runAgent } = await import('./agent-runner.js');
-          const result = await runAgent(company, { signal });
-          record.outcome = result.outcome;
-          record.modelCalls = result.modelCalls;
-          record.evidenceReads = result.evidenceReads;
-          record.usage = result.usage;
-          record.validation = result.validation;
-          Object.assign(record, { attempts: result.attempts ?? [] });
-          record.invalidCitationCount = (result.attempts ?? []).reduce(
-            (sum, attempt) =>
-              sum +
-              (attempt.candidate?.claims
-                .flatMap((claim) => claim.citations)
-                .filter(
-                  (citation) =>
-                    !record.sources.some(
-                      (source) => source.id === citation.sourceId
-                    )
-                ).length ?? 0),
-            0
-          );
-          if (result.candidate && !signal.aborted) {
-            record.profile = result.candidate.profile;
-            record.claims = result.candidate.claims.map((claim) => ({
-              text: claim.text,
-              sourceIds: claim.citations.map((citation) => citation.sourceId),
-            }));
-            Object.assign(record, { candidate: result.candidate });
-          }
-          signal.throwIfAborted();
+        const run =
+          options.agent ?? (await import('./agent-runner.js')).runAgent;
+        const result = await run(company, { signal });
+        record.outcome = result.outcome;
+        record.model = result.model;
+        record.modelCalls = result.modelCalls;
+        record.evidenceReads = result.evidenceReads;
+        record.usage = result.usage;
+        record.validation = result.validation;
+        Object.assign(record, { attempts: result.attempts ?? [] });
+        record.invalidCitationCount = (result.attempts ?? []).reduce(
+          (sum, attempt) =>
+            sum +
+            (attempt.candidate?.claims
+              .flatMap((claim) => claim.citations)
+              .filter(
+                (citation) =>
+                  !record.sources.some(
+                    (source) => source.id === citation.sourceId
+                  )
+              ).length ?? 0),
+          0
+        );
+        if (result.candidate && !signal.aborted) {
+          record.profile = result.candidate.profile;
+          record.claims = result.candidate.claims.map((claim) => ({
+            text: claim.text,
+            sourceIds: claim.citations.map((citation) => citation.sourceId),
+          }));
+          Object.assign(record, { candidate: result.candidate });
         }
-      } catch (error) {
+        signal.throwIfAborted();
+      } catch {
         record.outcome = signal.aborted
           ? signal.reason instanceof DOMException &&
             signal.reason.name === 'TimeoutError'
             ? 'deadline'
             : 'cancelled'
           : 'failed';
-        record.errorCode = signal.aborted
-          ? record.outcome
-          : error instanceof BaselineFailure
-          ? error.message
-          : 'research_failed';
-        if (error instanceof BaselineFailure) {
-          record.modelCalls = error.modelCalls;
-          record.usage = error.usage;
-          record.invalidCitationCount = error.invalidCitationCount;
-          Object.assign(record, { rejectedClaims: error.claims });
-        }
+        record.errorCode = signal.aborted ? record.outcome : 'research_failed';
         record.profile = { name: null, description: null, industry: null };
         record.claims = [];
         Reflect.deleteProperty(record, 'candidate');

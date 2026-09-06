@@ -42,7 +42,7 @@ export function parsePilotArguments(argv: string[]) {
   }
   if (allowed[command].some((key) => !args[key]) || !isAbsolute(args.output))
     throw new Error('pilot_invalid_arguments');
-  if (command === 'run' && !['agent', 'baseline'].includes(args.approach))
+  if (command === 'run' && args.approach !== 'agent')
     throw new Error('pilot_invalid_arguments');
   if (args.run) z.uuid().parse(args.run);
   if (args.packet) z.uuid().parse(args.packet);
@@ -105,11 +105,7 @@ export async function main(
   } else if (args.command === 'run') {
     if (process.env['GROWTH_RESEARCH_PILOT_MODE'] !== 'local-company-only')
       throw new Error('pilot_mode_required');
-    if (
-      !process.env[
-        args.approach === 'agent' ? 'OPENAI_API_KEY' : 'ANTHROPIC_API_KEY'
-      ]
-    )
+    if (!process.env['OPENAI_API_KEY'])
       throw new Error('pilot_provider_key_required');
     const corpus = validateCorpus(await inputJson(args.corpus));
     log({
@@ -128,7 +124,7 @@ export async function main(
     process.once('SIGINT', cancel);
     try {
       log(
-        await runCorpus(corpus, args.approach as 'agent' | 'baseline', {
+        await runCorpus(corpus, 'agent', {
           root: args.output,
           revision,
           signal: abort.signal,
