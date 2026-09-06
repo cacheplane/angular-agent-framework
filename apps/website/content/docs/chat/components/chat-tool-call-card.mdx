@@ -1,3 +1,7 @@
+---
+description: The ChatToolCallCardComponent status pill, its auto-expand rules and the one case where a user's manual toggle is discarded, plus the ToolCallInfo shape.
+---
+
 # ChatToolCallCardComponent
 
 `ChatToolCallCardComponent` renders a single tool call as an expandable card with a status pill (running / complete / error), inputs, and output.
@@ -14,6 +18,7 @@ import { ChatToolCallCardComponent, type ToolCallInfo } from '@threadplane/chat'
 
 | Status | Visual | aria-label |
 |---|---|---|
+| `pending` | no icon | (empty) |
 | `running` | spinner (animated) | "Running" |
 | `complete` | check (success color) | "Completed" |
 | `error` | exclamation (error color) | "Failed" |
@@ -22,11 +27,12 @@ import { ChatToolCallCardComponent, type ToolCallInfo } from '@threadplane/chat'
 
 | Status | Default state |
 |---|---|
+| `pending` | Collapsed (when `[defaultCollapsed]="true"`, the default) |
 | `running` | Expanded |
 | `error` | Expanded |
 | `complete` | Collapsed (when `[defaultCollapsed]="true"`, the default) |
 
-A user click on the header toggles open/closed. Once toggled, the user choice persists across status changes for the lifetime of the card.
+A user click on the header toggles open and closed. Once toggled, the user choice persists — except when the call re-enters `running` or `error` from another state, which discards the override and restores the automatic expansion.
 
 ## Inputs
 

@@ -1,3 +1,7 @@
+---
+description: The ChatSidebarComponent docked chat panel - overlay and push-content modes, inputs and outputs, projection slots, and the panel-width token.
+---
+
 # ChatSidebarComponent
 
 `ChatSidebarComponent` is a composition that renders a slide-in chat panel anchored to the right edge of the screen. Unlike a popup window, the sidebar can optionally push your app content aside rather than overlaying it, keeping both the chat and your UI visible at the same time.
@@ -56,7 +60,7 @@ When `pushContent` is `true`, the sidebar shifts the projected `<ng-content>` to
 ```
 
 <Callout type="tip" title="Layout requirements">
-In push-content mode, `ChatSidebarComponent` uses `display: flex` on its host. The projected content should be designed to reflow gracefully when its available width is reduced.
+`ChatSidebarComponent` always sets `display: flex` on its host. In push-content mode the projected content is additionally inset by the panel width, so it should be designed to reflow gracefully when its available width is reduced.
 </Callout>
 
 ## API
@@ -86,7 +90,9 @@ In push-content mode, `ChatSidebarComponent` uses `display: flex` on its host. T
 | Slot | Selector | Description |
 |------|----------|-------------|
 | App content | (default) | Projected via `<ng-content>`. Rendered alongside or behind the chat panel |
-| Header content | `[chatHeader]` | Projected into the sidebar header bar. Replaces the default title |
+| Panel title | `[chatSidebarPanelTitle]` | Projected into the sidebar's own header bar, next to the close button. Empty by default |
+| Chat header | `[chatHeader]` | Forwarded to the inner `<chat>` window header bar, which is empty by default |
+| Welcome suggestions | `[chatWelcomeSuggestions]` | Forwarded to the inner `<chat>` welcome-state suggestion area |
 
 ### Methods
 
@@ -139,8 +145,10 @@ Override the sidebar width using a CSS custom property:
 
 ```css
 chat-sidebar {
-  --tplane-chat-sidebar-width: 420px;
+  --tplane-chat-sidebar-width-drawer: 420px;
 }
 ```
+
+The same token drives the panel width and, in push-content mode, the inset applied to the projected content. It defaults to `28rem`.
 
 See [Theming](/docs/chat/guides/theming) for the full token reference.

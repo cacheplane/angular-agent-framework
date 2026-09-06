@@ -1,3 +1,7 @@
+---
+description: The ChatToolCallTemplateDirective that registers a per-tool-name template inside chat-tool-calls, including the wildcard catch-all name.
+---
+
 # ChatToolCallTemplateDirective
 
 `ChatToolCallTemplateDirective` registers a per-tool-name template inside `<chat-tool-calls>`. The primitive collects all directive instances and dispatches each tool call to the template matching its `name`. A literal `"*"` registers a wildcard catch-all for any unmapped name.
