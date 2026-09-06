@@ -59,11 +59,11 @@ provideAgent({
 
 ### The panel in the sidebar
 
-The panel takes one input, the agent, and renders nothing at all while no interrupt is pending, so it is safe to leave mounted permanently. This demo puts it in the sidebar next to the agent status rather than over the transcript.
+The panel takes one input, the agent, and renders nothing at all while no interrupt is pending, so it is safe to leave mounted permanently. This demo puts it in the sidebar next to the agent status rather than over the transcript. There is no interrupted status: a pending interrupt is a separate signal, and the panel is what reads it.
 
 <ExampleCode file="interrupts.component.ts" region="panel" title="interrupts.component.ts — the sidebar" />
 
-The status line beside it reads `agent.status()`, which is `idle`, `running`, or `error`. There is no interrupted status: a pending interrupt is a separate signal, and the panel is what reads it.
+The status line beside it reads `agent.status()`, which is `idle`, `running`, or `error`.
 
 ### Resuming with the decision
 

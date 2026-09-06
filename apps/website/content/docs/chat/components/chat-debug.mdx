@@ -39,7 +39,7 @@ The nodes are registered on a `StateGraph` over `MessagesState` and chained: `ge
 <ExampleCode file="graph.py" region="graph-wiring" title="graph.py — the compiled pipeline" />
 
 <Callout type="info" title="No checkpointer is compiled in">
-The last line calls `compile()` with no checkpointer. The checkpoints the Timeline tab reads come from the LangGraph API server, which persists thread state for every graph it serves. Compiling a checkpointer in as well is an error when the graph is served that way — see [Persistence](/docs/langgraph/guides/persistence).
+The last line calls `compile()` with no checkpointer. The checkpoints the Timeline tab reads come from the LangGraph API server, which persists thread state for every graph it serves. `langgraph dev` refuses to load a graph that compiles its own saver, and a deployment ignores one — see [Persistence](/docs/langgraph/guides/persistence).
 </Callout>
 
 ### The agent provider

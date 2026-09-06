@@ -6,10 +6,6 @@ description: How the threads example lists, switches, creates, and removes conve
 
 A chat that holds more than one conversation needs two things: a store that knows which threads exist, and a single signal that says which one is active. `@threadplane/langgraph` supplies the store, `provideAgent({ threadId })` watches the signal, and `injectThreadRouting()` binds that signal to the Angular Router when you want conversations to survive a reload and travel in a link. The running example wires the store and the signal, and this guide walks its three files before turning to the URL layer.
 
-<Callout type="tip" title="Prerequisites">
-Make sure you have completed the Installation guide first.
-</Callout>
-
 ## What the demo does
 
 The Run tab shows the prebuilt `<chat>` composition with a thread sidebar beside it. Ask the aviation assistant about a route — a flight from LAX to JFK, for instance — and the backend allocates a thread. The sidebar row starts out labeled `Untitled` and picks up a short generated title once the run finishes.
@@ -22,11 +18,11 @@ Three files carry the feature: a graph that writes a readable title into thread 
 
 ### Naming a thread from its first turn
 
-A thread id is a UUID, which makes a poor sidebar label. The `generate_title` node asks a small model to summarize the first human message and writes the result to the thread's `metadata.title`, which is exactly where the thread store looks for a label.
+A thread id is a UUID, which makes a poor sidebar label. The `generate_title` node asks a small model to summarize the first human message and writes the result to the thread's `metadata.title`, which is exactly where the thread store looks for a label. The write itself sits inside a `try`/`except` that swallows failures, so a title write that fails never blocks the run.
 
 <ExampleCode file="graph.py" region="title-write" title="graph.py — the title write" />
 
-The write is idempotent: the node reads the thread first and returns early when a title is already present, so later turns cost nothing. The write itself sits inside a `try`/`except` that swallows failures, so a title write that fails never blocks the run.
+The write is idempotent: the node reads the thread first and returns early when a title is already present, so later turns cost nothing.
 
 ### Wiring the title node into the graph
 
@@ -96,11 +92,11 @@ The store is a snapshot, not a subscription, so something has to re-fetch it. `r
 
 ### Switching and creating
 
-Two handlers close the loop. Selecting a row tells the agent to load that thread and updates the signal; the "+ New" button asks the store for a thread and then activates it.
+Two handlers close the loop. Selecting a row tells the agent to load that thread and updates the signal; the "+ New" button asks the store for a thread and then activates it. `create()` returns `null` when the request fails, which is why the result is checked before it is used.
 
 <ExampleCode file="threads.component.ts" region="switch-and-create" title="threads.component.ts — switching and creating" />
 
-Each handler calls both `agent.switchThread(id)` and `activeThreadId.set(id)` because the two calls serve different consumers: the adapter watches the `activeThreadId` signal to drive the sidebar highlight, while `switchThread(id)` resets the agent's own derived state and re-fetches that thread's server-side history. `create()` returns `null` when the request fails, which is why the result is checked before it is used.
+Each handler calls both `agent.switchThread(id)` and `activeThreadId.set(id)` because the two calls serve different consumers: the adapter watches the `activeThreadId` signal to drive the sidebar highlight, while `switchThread(id)` resets the agent's own derived state and re-fetches that thread's server-side history.
 
 ## Routing a URL to a thread
 
@@ -211,25 +207,13 @@ The AG-UI protocol is event-stream only, and it defines no server-side thread-lo
 ## What's Next
 
 <CardGroup cols={3}>
-  <Card
-    title="LangGraph Persistence"
-    icon="database"
-    href="/docs/langgraph/guides/persistence"
-  >
+  <Card title="LangGraph Persistence" href="/docs/langgraph/guides/persistence">
     Server-side thread store and checkpoint configuration.
   </Card>
-  <Card
-    title="Writing an Adapter"
-    icon="plug"
-    href="/docs/chat/guides/writing-an-adapter"
-  >
+  <Card title="Writing an Adapter" href="/docs/chat/guides/writing-an-adapter">
     Implement custom adapters that support thread switching.
   </Card>
-  <Card
-    title="Lifecycle Signals"
-    icon="activity"
-    href="/docs/chat/guides/lifecycle"
-  >
+  <Card title="Lifecycle Signals" href="/docs/chat/guides/lifecycle">
     Per-instance signals for debugging and observability.
   </Card>
 </CardGroup>

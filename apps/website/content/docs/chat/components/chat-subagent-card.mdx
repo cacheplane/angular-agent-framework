@@ -64,7 +64,7 @@ The system prompt tells the orchestrator to dispatch research, then booking, the
 
 `provideAgent()` registers the agent once for the whole application, and `provideChat({})` registers the chat configuration at its defaults. The one subagent-specific line is `subagentToolNames`. The default is already `['task']`, so this example states explicitly what it would otherwise inherit.
 
-The example resolves its connection at runtime because the host that serves the demo decides which runtime is attached; your own application passes `apiUrl` and `assistantId` directly.
+The example resolves its connection details at runtime from the host that serves the demo, which is why its factory reads them rather than hard-coding them; your own application passes `apiUrl` and `assistantId` directly.
 
 <ExampleCode file="app.config.ts" />
 
@@ -72,11 +72,9 @@ A tool call is registered as a subagent only when its name is in `subagentToolNa
 
 ### Where the card appears
 
-The component is small on purpose. It renders `<chat>`, a welcome suggestion, and a static sidebar note — and nothing about subagents at all.
+The component is small on purpose. It renders `<chat>`, a welcome suggestion, and a static sidebar note — and nothing about subagents at all. Subagent cards appear because `<chat-tool-calls>`, inside the `<chat>` composition, cross-references each tool call against `agent.subagents()`: a call that spawned a subagent renders as a standalone `<chat-subagent-card>` instead of a tool-call card, and never groups with adjacent calls.
 
 <ExampleCode file="subagents.component.ts" region="template" title="subagents.component.ts — the template" />
-
-Subagent cards appear because `<chat-tool-calls>`, inside the `<chat>` composition, cross-references each tool call against `agent.subagents()`: a call that spawned a subagent renders as a standalone `<chat-subagent-card>` instead of a tool-call card, and never groups with adjacent calls.
 
 That cross-reference works because the agent the demo provides exposes `subagents()` for `<chat-tool-calls>` to read.
 

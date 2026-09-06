@@ -36,11 +36,11 @@ The node returns early when this turn produced no `render_spec` result at all; t
 
 ### Rewriting the message in place
 
-The rest of `wrap_spec_into_ai` replaces both messages, keeping their ids so LangGraph's `add_messages` reducer matches and replaces rather than appends.
+The rest of `wrap_spec_into_ai` replaces both messages, keeping their ids so LangGraph's `add_messages` reducer matches and replaces rather than appends. The early return on an already-filled parent message is what stops a second pass from wrapping the same payload twice.
 
 <ExampleCode file="graph.py" region="rewrite-message-content" title="graph.py — rewriting the message content" />
 
-The tool message becomes a short placeholder and the assistant message takes the specification JSON, stripped of a code fence if the model wrapped one around it. The early return on an already-filled parent message is what stops a second pass from wrapping the same payload twice.
+The tool message becomes a short placeholder and the assistant message takes the specification JSON, stripped of a code fence if the model wrapped one around it.
 
 <Callout type="info" title="Why the message and not the state">
 The specification travels as message content because that is what the client classifies. `DashboardState` in this example adds no fields of its own to `MessagesState`: the layout lives in the message, and the numbers arrive as the state updates below.
@@ -86,7 +86,7 @@ Both travel as inputs on `<chat>`: `[views]` for the registry and `[store]` for 
 
 The pieces meet in the browser in a fixed order.
 
-The content classifier in `@threadplane/chat` inspects each assistant message as it streams and decides its type from the first non-whitespace character. A `{` classifies the message as `json-render`; the `---a2ui_JSON---` prefix classifies it as A2UI; anything else is markdown. That single-character rule is why the system prompt insists on raw JSON with no prose and no code fence around it.
+The content classifier in `@threadplane/chat` inspects each assistant message as it streams and decides from the start of the content: a `{` is a json-render specification, the `---a2ui_JSON---` sentinel is A2UI, and anything else is markdown. That is why the system prompt insists on raw JSON with no prose and no code fence around it.
 
 From there the content goes through `@cacheplane/partial-json`, and a `ParseTreeStore` materializes a best-effort `Spec` from the parse tree on every chunk, so a signal holds a usable specification long before the JSON closes. The composition mounts that specification as `<chat-generative-ui>`, which renders it through `<render-spec>` from `@threadplane/render` using the registry you passed. The surface also receives a `loading` input, true while the agent is still streaming, which a view component can read to draw a placeholder.
 

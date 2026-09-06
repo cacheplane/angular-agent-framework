@@ -52,11 +52,11 @@ Every trace row a run produces is rendered inside this element.
 
 ### The timeline sidebar
 
-The sidebar is `<chat-timeline-slider>` under a heading, with a static note beneath it.
+The sidebar is `<chat-timeline-slider>` under a heading, with a static note beneath it. Its Replay and Fork buttons emit `replayRequested` and `forkRequested` with the checkpoint identifier; this example binds neither, so Fork only marks the entry it was pressed on, and dispatching either back to the runtime is the host application's job.
 
 <ExampleCode file="timeline.component.ts" region="timeline-panel" title="timeline.component.ts — the timeline sidebar" />
 
-The slider requires an `AgentWithHistory`, the sub-contract that adds a `history` signal of `AgentCheckpoint` values to `Agent`. Its Replay and Fork buttons emit `replayRequested` and `forkRequested` with the checkpoint identifier; this example binds neither, so Fork only marks the entry it was pressed on, and dispatching either back to the runtime is the host application's job.
+The slider requires an `AgentWithHistory`, the sub-contract that adds a `history` signal of `AgentCheckpoint` values to `Agent`.
 
 ### One agent, two components
 

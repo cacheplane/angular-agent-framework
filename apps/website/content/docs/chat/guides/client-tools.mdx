@@ -48,7 +48,7 @@ The AG-UI twin's sibling graph is a separate file that compiles with `MemorySave
 
 ### Providing the agent
 
-`provideAgent()` from `@threadplane/langgraph` registers the agent at the application root, and `provideChat({})` registers the chat defaults. The example resolves its `apiUrl` and `assistantId` at runtime because the host that serves the demo decides which runtime is attached; your own application passes them directly. The `CLIENT_TOOLS_AGENT_REF` argument is a typed reference, covered under [typed agent state](#typed-agent-state) below.
+`provideAgent()` from `@threadplane/langgraph` registers the agent at the application root, and `provideChat({})` registers the chat defaults. The example resolves its `apiUrl` and `assistantId` at runtime from the host that serves the demo, which is why its factory reads them rather than hard-coding them; your own application passes them directly. The `CLIENT_TOOLS_AGENT_REF` argument is a typed reference, covered under [typed agent state](#typed-agent-state) below.
 
 <ExampleCode file="app.config.ts" />
 
