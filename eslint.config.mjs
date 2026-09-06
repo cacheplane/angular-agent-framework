@@ -14,6 +14,8 @@ export default [
       '**/.vercel/**',
       '**/next-env.d.ts',
       '**/.install-collector/**',
+      // Vendored byte-identical from upstream; its hash is pinned by a spec.
+      'apps/website/src/vendor/scrollcraft/scrollcraft.js',
     ],
   },
   {
