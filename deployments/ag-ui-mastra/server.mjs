@@ -52,15 +52,18 @@ function json(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
+// #region sse-frame
 /** One SSE frame per AG-UI event — the wire shape @ag-ui/client parses. */
 function sseFrame(event) {
   return `data: ${JSON.stringify(event)}\n\n`;
 }
+// #endregion
 
 export function createAgUiServer() {
   return http.createServer(async (req, res) => {
     const path = (req.url ?? '').split('?')[0];
 
+    // #region route-contract
     if (req.method === 'GET' && path === '/ok') {
       json(res, 200, { ok: true });
       return;
@@ -88,6 +91,7 @@ export function createAgUiServer() {
       json(res, 404, { detail: `no such topic: ${topic}` });
       return;
     }
+    // #endregion
 
     let body = '';
     for await (const chunk of req) body += chunk;
@@ -105,6 +109,7 @@ export function createAgUiServer() {
       connection: 'keep-alive',
     });
 
+    // #region run-and-stream
     // One injector per run with two inputs, both writing through the same
     // SSE frame writer:
     // - `chunk()`: raw Mastra fullStream chunks observed through the stream
@@ -147,6 +152,7 @@ export function createAgUiServer() {
     });
 
     req.on('close', () => sub.unsubscribe());
+    // #endregion
   });
 }
 

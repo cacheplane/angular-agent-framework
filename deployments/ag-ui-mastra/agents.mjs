@@ -26,6 +26,7 @@ const MODEL = 'openai/gpt-4o-mini';
 
 const NIGHTLY_RATE_USD = 45;
 
+// #region check-conditions-tool
 /** Deterministic backend tool — no external calls, stable for fixtures. */
 const checkConditionsTool = createTool({
   id: 'check_conditions',
@@ -44,7 +45,9 @@ const checkConditionsTool = createTool({
     low_c: 4,
   }),
 });
+// #endregion
 
+// #region reserve-campsite-tool
 /**
  * Human-in-the-loop tool. First call suspends the run (persisted to LibSQL —
  * suspend/resume REQUIRES persistent storage, a spike finding); the frontend
@@ -83,6 +86,7 @@ const reserveCampsiteTool = createTool({
     return `Reservation for ${inputData.site} was declined by the user. Nothing was booked.`;
   },
 });
+// #endregion
 
 /**
  * Build the Mastra instance for this service.
@@ -95,6 +99,7 @@ const reserveCampsiteTool = createTool({
 export function createMastra(dbUrl) {
   const store = (id) => new LibSQLStore({ id, url: dbUrl });
 
+  // #region weather-forecaster
   /**
    * Sub-agent (spike: wire-capture-subagents.md). Registered on the
    * supervisor via `agents:`; Mastra surfaces it as a backend tool named
@@ -110,7 +115,9 @@ export function createMastra(dbUrl) {
       'You are a weather forecaster. Given a campsite and dates, give a 3-bullet forecast summary. Be concise.',
     model: MODEL,
   });
+  // #endregion
 
+  // #region trip-agent
   const tripAgent = new Agent({
     id: 'mastra',
     name: 'mastra',
@@ -143,6 +150,7 @@ Always answer in one short sentence.`,
       },
     }),
   });
+  // #endregion
 
   return new Mastra({
     agents: { mastra: tripAgent },

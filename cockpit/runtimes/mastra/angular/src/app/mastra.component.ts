@@ -88,6 +88,7 @@ interface PackingList {
           </div>
         </chat>
 
+        <!-- #region shared-state-panel -->
         <aside class="state-panel" data-testid="packing-state">
           <h2 class="state-title">Shared state — packing list</h2>
           @if (packingList(); as list) {
@@ -104,7 +105,9 @@ interface PackingList {
             <p class="state-empty">No list yet — Mastra working memory streams here as STATE_SNAPSHOT + STATE_DELTA patches.</p>
           }
         </aside>
+        <!-- #endregion -->
 
+        <!-- #region approval-card -->
         <chat-approval-card
           [agent]="agent"
           title="Reservation approval required"
@@ -131,6 +134,7 @@ interface PackingList {
             </div>
           </ng-template>
         </chat-approval-card>
+        <!-- #endregion -->
       </div>
     </example-chat-layout>
   `,
@@ -235,6 +239,7 @@ export class MastraComponent {
 
   protected readonly agent = injectAgent();
 
+  // #region packing-list-state
   /** Mastra working memory, bridged into AG-UI shared state. */
   protected readonly packingList = computed(() => {
     // Example apps compile lib source with strict:false — cast at the read site.
@@ -242,7 +247,9 @@ export class MastraComponent {
     const list = state?.packing_list;
     return list && list.title ? list : undefined;
   });
+  // #endregion
 
+  // #region approval-actions
   /**
    * The pending Mastra suspend. The reducer stores the parsed CUSTOM
    * `on_interrupt` payload: `{ type: 'mastra_suspend', toolCallId, toolName,
@@ -272,4 +279,5 @@ export class MastraComponent {
       void this.agent.submit({ resume: { approved: false } });
     }
   }
+  // #endregion
 }

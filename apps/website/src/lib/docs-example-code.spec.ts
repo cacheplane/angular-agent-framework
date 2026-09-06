@@ -34,9 +34,6 @@ const PENDING_PAGES = new Set<string>([
   '/docs/chat/guides/generative-ui',
   '/docs/chat/guides/theming',
   '/docs/chat/guides/thread-routing',
-  '/docs/runtimes/aws-strands/overview',
-  '/docs/runtimes/mastra/overview',
-  '/docs/runtimes/microsoft-agent-framework/overview',
 ]);
 
 const findWorkspaceRoot = (): string => {

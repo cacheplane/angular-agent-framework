@@ -15,7 +15,7 @@
 - Frontmatter `description:` under 180 characters, one sentence.
 - Every API named in a fence is verified against `libs/*/src` before it is written; every hand-written fence is valid in its language.
 - `server.py` files (ag-ui) are 13–19 lines: include whole when the page discusses the wire; otherwise mention by name.
-- Region markers are comments only; inline Angular templates take `<!-- #region -->`; run `npx nx build <example project>` after marking a template. `deployments/ag-ui-dev/deps/<capability>/**` is TRACKED and generated from `cockpit/ag-ui/**`: after marking an ag-ui source run `npx tsx scripts/generate-ag-ui-deployment-config.ts` and stage ONLY `deployments/ag-ui-dev/deps/<own capability>/`. Other products produce no tracked deployments diff (confirm with `git status --short deployments`).
+- Region markers are comments only; inline Angular templates take `<!-- #region -->`; run `npx nx build <example project>` after marking a template. `deployments/ag-ui-dev/deps/<capability>/**` is TRACKED and generated from `cockpit/ag-ui/**`: after marking an ag-ui source run `npx tsx scripts/generate-ag-ui-deployment-config.ts` and stage ONLY `deployments/ag-ui-dev/deps/<own capability>/`. The runtimes examples (aws-strands, microsoft-agent-framework) are ALSO mirrored into `deployments/ag-ui-dev/deps/<capability>/`; render, deep-agents, langgraph and chat produce no tracked deployments diff (confirm with `git status --short deployments`).
 - Local prod build: `rm -rf apps/website/.next dist/apps/website/.next && GROWTH_FORM_POLICY=growth_v1 npx nx build website`; output in `dist/apps/website/.next`.
 - Unit runs: `npx nx test website --skip-nx-cache` from the root (the retirement spec is cwd-coupled).
 
