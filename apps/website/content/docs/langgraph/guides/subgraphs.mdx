@@ -34,7 +34,7 @@ The child is an ordinary graph. One node, one model call, and a `compile()` at t
 
 <ExampleCode file="graph.py" region="research-subgraph" title="graph.py — the child graph" />
 
-Its system prompt restates the structural fact in words, telling the researcher that it cannot see the chat transcript and that its output is an internal brief for the parent to use.
+The module-level `RESEARCH_PROMPT` (not shown) restates the structural fact in words, telling the researcher that it cannot see the chat transcript and that its output is an internal brief for the parent to use.
 
 ### Deciding whether to delegate
 
@@ -66,7 +66,9 @@ The Angular side declares the parent's state once and hands it to a ref that bot
 
 <ExampleCode file="agent-ref.ts" />
 
-The application config registers that ref with `provideAgent()` and adds `provideChat({})` for the chat composition. In your own application the two connection values are literals:
+The application config registers that ref with `provideAgent()` and adds `provideChat({})` for the chat composition.
+
+The running example registers the provider through a factory that reads its connection from the host that serves the demo, which is how the same build runs locally and in production. Your own application passes the two connection values as literals, and keeps `transcriptNodeNames` exactly as the example sets it:
 
 ```typescript
 provideAgent(SUBGRAPHS_AGENT, {
@@ -97,7 +99,7 @@ The sidebar renders `topic()` and `brief()` under the route line, so watching th
 
 <ExampleCode file="subgraphs.component.ts" region="child-streams" title="subgraphs.component.ts — the child as a stream" />
 
-`status()` and `name` come off the `SubagentStreamRef`, which is why the mapped objects carry a called signal rather than the ref itself.
+`status()` and `name` come off each `Subagent` entry in the `subagents()` map, which is why the mapped objects carry a called signal rather than the entry itself.
 
 <Callout type="info" title="Injection context">
 `injectAgent()` must run inside an Angular injection context: a field initializer, as it is here, or a constructor body.
@@ -119,6 +121,8 @@ provideAgent(ORCHESTRATOR, {
   subagentToolNames: ['task', 'delegate_to_researcher'],
 }),
 ```
+
+`ORCHESTRATOR` and `PIPELINE` here stand for agent refs created the same way as `SUBGRAPHS_AGENT`.
 
 With that in place, the same lookups work on either flavor:
 
@@ -150,7 +154,7 @@ Registration is skipped silently unless the tool call also carries a valid `suba
 
 ## Subagent stream details
 
-Each `SubagentStreamRef` exposes its own reactive signals — status, messages, and state — so you can surface granular progress in your UI.
+Each `SubagentStreamRef` exposes its own reactive signals — status, messages, and values — so you can surface granular progress in your UI.
 
 ```typescript
 // Access a specific subagent by its tool call ID
