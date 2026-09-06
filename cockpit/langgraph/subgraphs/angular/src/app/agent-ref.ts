@@ -1,7 +1,7 @@
 import { createAgentRef } from '@threadplane/chat';
 
 /**
- * Parent graph state for the subgraphs cockpit.
+ * Parent graph state for the subgraphs example.
  *
  * `research_topic` and `research_brief` are the two keys the parent shares
  * with the compiled child graph — writing a topic is what routes execution

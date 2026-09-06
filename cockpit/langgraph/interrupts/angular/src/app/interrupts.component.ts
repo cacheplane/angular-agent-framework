@@ -93,6 +93,7 @@ const WELCOME_SUGGESTIONS = [
           </div>
         </chat>
 
+        <!-- #region approval-card -->
         <chat-approval-card
           [agent]="agent"
           matchKind="refund_approval"
@@ -117,6 +118,7 @@ const WELCOME_SUGGESTIONS = [
             </div>
           </ng-template>
         </chat-approval-card>
+        <!-- #endregion -->
       </div>
     </example-chat-layout>
   `,
@@ -132,6 +134,7 @@ export class InterruptsComponent {
     void this.agent.submit({ message: text });
   }
 
+  // #region resume
   protected onAction(action: ChatApprovalAction): void {
     if (action === 'approve') {
       void this.agent.submit({ resume: { approved: true } });
@@ -154,4 +157,5 @@ export class InterruptsComponent {
     this.editing.set(false);
     this.editAmount.set(null);
   }
+  // #endregion
 }

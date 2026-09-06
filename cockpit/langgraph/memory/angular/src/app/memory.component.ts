@@ -42,6 +42,7 @@ import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
   template: `
     <example-chat-layout>
       <chat main [agent]="agent" class="flex-1 min-w-0" />
+      <!-- #region memory-panel -->
       <div sidebar class="panel">
         <h3 class="cap">Learned Facts</h3>
         @if (memoryEntries().length === 0) {
@@ -54,10 +55,12 @@ import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
           </div>
         }
       </div>
+      <!-- #endregion -->
     </example-chat-layout>
   `,
 })
 export class MemoryComponent {
+  // #region memory-signal
   /**
    * The streaming resource connected to the memory graph.
    *
@@ -78,4 +81,5 @@ export class MemoryComponent {
     if (!mem || typeof mem !== 'object') return [];
     return Object.entries(mem as Record<string, string>);
   });
+  // #endregion
 }

@@ -22,9 +22,11 @@ from langchain_core.messages import SystemMessage, BaseMessage
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 
 
+# region state
 class MemoryState(TypedDict):
     messages: list[BaseMessage]
     memory: dict  # {"user_name": "Alice", "preferences": {...}, ...}
+# endregion
 
 
 def build_memory_graph():
@@ -40,6 +42,7 @@ def build_memory_graph():
     llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
     extractor_llm = ChatOpenAI(model="gpt-5-mini", streaming=False)
 
+    # region generate
     async def generate(state: MemoryState) -> dict:
         """Generate a response using current messages and known memory."""
         system_prompt = (PROMPTS_DIR / "memory.md").read_text()
@@ -53,7 +56,9 @@ def build_memory_graph():
         messages = [SystemMessage(content=system_prompt)] + list(state["messages"])
         response = await llm.ainvoke(messages)
         return {"messages": [response]}
+    # endregion
 
+    # region extract-memory
     async def extract_memory(state: MemoryState) -> dict:
         """
         Scan the latest exchange for facts worth remembering.
@@ -101,7 +106,9 @@ Respond with ONLY the JSON object of NEW or UPDATED facts:"""
 
         updated_memory = {**current_memory, **new_facts}
         return {"memory": updated_memory}
+    # endregion
 
+    # region graph
     graph = StateGraph(MemoryState)
     graph.add_node("generate", generate)
     graph.add_node("extract_memory", extract_memory)
@@ -109,6 +116,7 @@ Respond with ONLY the JSON object of NEW or UPDATED facts:"""
     graph.add_edge("generate", "extract_memory")
     graph.add_edge("extract_memory", END)
     return graph.compile()
+    # endregion
 
 
 # The graph instance — referenced by langgraph.json

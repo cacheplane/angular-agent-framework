@@ -19,9 +19,11 @@ from langchain_core.messages import SystemMessage, BaseMessage, HumanMessage
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 
 
+# region state
 class DurableState(TypedDict):
     messages: list
     step: str  # Current execution step name
+# endregion
 
 
 def build_durable_execution_graph():
@@ -35,6 +37,7 @@ def build_durable_execution_graph():
     llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
     system_prompt = (PROMPTS_DIR / "durable-execution.md").read_text()
 
+    # region analyze
     async def analyze(state: DurableState) -> dict:
         """
         Node 1: Analyze the user request.
@@ -48,6 +51,7 @@ def build_durable_execution_graph():
             "messages": state["messages"] + [response],
             "step": "analyze",
         }
+    # endregion
 
     async def plan(state: DurableState) -> dict:
         """
@@ -63,6 +67,7 @@ def build_durable_execution_graph():
             "step": "plan",
         }
 
+    # region generate
     async def generate(state: DurableState) -> dict:
         """
         Node 3: Generate the final response.
@@ -76,7 +81,9 @@ def build_durable_execution_graph():
             "messages": [HumanMessage(content=state["messages"][-1].content if hasattr(state["messages"][-1], "content") else ""), response],
             "step": "generate",
         }
+    # endregion
 
+    # region graph
     graph = StateGraph(DurableState)
     graph.add_node("analyze", analyze)
     graph.add_node("plan", plan)
@@ -88,6 +95,7 @@ def build_durable_execution_graph():
     graph.add_edge("generate", END)
 
     return graph.compile()
+    # endregion
 
 
 # The graph instance — referenced by langgraph.json
