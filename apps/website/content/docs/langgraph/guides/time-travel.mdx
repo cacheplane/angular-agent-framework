@@ -22,7 +22,7 @@ Three files carry the feature: a graph that leaves checkpointing to the platform
 
 ### A graph the platform checkpoints
 
-The backend is a single streaming node over `MessagesState`, with a system prompt read from the capability's prompt file. Nothing in it mentions time travel, because the checkpoints come from the server that runs it.
+The backend is a single streaming node over `MessagesState`, with a system prompt read from the capability's prompt file. No executable line in it concerns time travel, because the checkpoints come from the server that runs it.
 
 <ExampleCode file="graph.py" />
 
@@ -48,11 +48,11 @@ The `<chat>` composition owns the transcript, the input, and the loading and err
 
 <ExampleCode file="time-travel.component.ts" region="timeline" title="time-travel.component.ts — the timeline sidebar" />
 
-`checkpoint_id` is optional on a `ThreadState`, which is why the identifier line and both handlers guard on it.
+`checkpoint_id` is optional on the `Checkpoint` a `ThreadState` carries, which is why the identifier line and both handlers guard on it.
 
 ### Selecting a checkpoint
 
-Replay and Fork run the same two statements: record the clicked row so the sidebar can highlight it, then hand the checkpoint identifier to `setBranch()`.
+Replay and Fork run the same two statements: record the clicked row so the sidebar can highlight it, then hand the checkpoint identifier to `setBranch()`, so the Fork button in the running example does not yet start a forked run; [the section below](#running-from-a-past-checkpoint) shows the call that does.
 
 <ExampleCode file="time-travel.component.ts" region="branch" title="time-travel.component.ts — replay and fork" />
 

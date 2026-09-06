@@ -2,9 +2,8 @@
 LangGraph Time Travel Graph
 
 Demonstrates checkpoint-based time travel. Each message exchange is saved as
-a checkpoint snapshot. The client can read checkpoint history via the LangGraph
-SDK's thread history API and branch the conversation from any past state by
-calling `setBranch(checkpointId)` before the next submit.
+a checkpoint snapshot. The client reads the thread's checkpoint history and can
+start a new run from any past checkpoint by submitting with that checkpoint.
 
 The LangGraph API server provides checkpointing automatically.
 """
@@ -19,7 +18,7 @@ PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 
 def build_time_travel_graph():
     """
-    Constructs a StateGraph with checkpointing enabled for time travel.
+    Constructs a StateGraph that the LangGraph API server checkpoints.
 
     The LangGraph API checkpointer saves a snapshot after each node execution,
     producing a history of ThreadState objects that the client can replay or
