@@ -1,8 +1,12 @@
+---
+description: provideAgent() registers the LangGraph agent configuration for injectAgent() — API URL, assistant id, thread binding, transport, and client tuning.
+---
+
 # provideAgent()
 
-`provideAgent()` registers the singleton agent configuration for every `injectAgent()` call in an Angular application. Call it once in `bootstrapApplication` or an `ApplicationConfig` to wire up the LangGraph API URL, assistant id, thread persistence, and transport.
+`provideAgent()` registers the agent configuration that `injectAgent()` resolves. Call it in `bootstrapApplication`, an `ApplicationConfig`, or a component's `providers` array to wire up the LangGraph API URL, assistant id, thread binding, and transport.
 
-`injectAgent()` itself takes no arguments — all configuration flows through `provideAgent()`.
+`injectAgent()` takes no configuration — it takes at most a typed `AgentRef`; everything else flows through `provideAgent()`.
 
 ```ts
 import { bootstrapApplication } from '@angular/platform-browser';
@@ -27,10 +31,12 @@ bootstrapApplication(AppComponent, {
 
 ## Configuration options
 
+Every field on the config object is optional at the type level, but `assistantId` has to be present by the time the agent is constructed.
+
 | Option | Type | Description |
 |--------|------|-------------|
 | `apiUrl` | `string` | LangGraph Platform API base URL. |
-| `assistantId` | `string` | LangGraph assistant id to bind to. |
+| `assistantId` | `string` | LangGraph assistant id to bind to. The only effectively required field — constructing an agent without it throws. |
 | `threadId` | `Signal<string \| null> \| string \| null` | Thread ID to connect to. Pass a Signal for reactive thread switching. |
 | `onThreadId` | `(id: string) => void` | Called when a new thread is auto-created by the transport. |
 | `initialValues` | `Partial<T>` | Initial state values before the first stream response arrives. |
@@ -38,13 +44,33 @@ bootstrapApplication(AppComponent, {
 | `toMessage` | `(msg: unknown) => BaseMessage` | Custom message deserializer for non-standard message formats. |
 | `transport` | `AgentTransport` | Optional transport instance. Defaults to `FetchStreamTransport` when omitted. |
 | `clientOptions` | `LangGraphClientOptions` | LangGraph SDK client tuning (e.g. `maxRetries`). See [Client tuning](#client-tuning-retry-budget) below. |
-| `telemetry` | `AgentRuntimeTelemetrySink \| false` | Optional app-owned sink. Supply one to receive runtime lifecycle events. |
+| `telemetry` | `AgentRuntimeTelemetrySink \| false` | Omit to enable automatic development-only collection. Set `false` to disable it. An app-owned sink replaces the automatic destination and receives the same runtime lifecycle events. |
 | `subagentToolNames` | `string[]` | Tool names that indicate a subagent invocation. |
 | `transcriptNodeNames` | `string[]` | LangGraph node names whose `messages-tuple` chunks should stream into the main chat transcript. Omit to accept all top-level chunks. |
 
-## Singleton model
+### Factory config
 
-A single `provideAgent({...})` call configures the entire application. Every `injectAgent()` call resolves to the same configured agent.
+`provideAgent()` accepts a config object or a factory that returns one. The factory runs inside an Angular injection context, so it may call `inject()` to read services, route parameters, or component-scoped signals. It is resolved once, lazily — never at decoration time.
+
+```ts
+import { inject } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { provideAgent } from '@threadplane/langgraph';
+
+providers: [
+  provideAgent(() => {
+    const route = inject(ActivatedRoute);
+    return {
+      assistantId: 'chat',
+      threadId: route.snapshot.paramMap.get('threadId'),
+    };
+  }),
+];
+```
+
+## One agent, or several
+
+One `provideAgent({...})` call at the application root configures the whole application, and every `injectAgent()` resolves to that agent.
 
 ```ts
 provideAgent({
@@ -54,6 +80,19 @@ provideAgent({
 
 // Elsewhere, inside an injection context:
 const chat = injectAgent();
+```
+
+Several agents may also coexist at one injector level. Each `provideAgent(ref, …)` call builds its own agent from its own config, so `injectAgent(refA)` and `injectAgent(refB)` return distinct instances. The ref-less `injectAgent()` resolves a single shared token, which can only point at one of them — the last ref-form call at that level wins. Always inject by ref when an injector provides more than one agent.
+
+```ts
+export const LIVE = createAgentRef<ChatState>('live');
+export const REPLAY = createAgentRef<ChatState>('replay');
+
+providers: [
+  provideAgent(LIVE, { assistantId: 'chat' }),
+  provideAgent(REPLAY, { assistantId: 'chat', transport: replayTransport }),
+];
+// injectAgent(LIVE) !== injectAgent(REPLAY)
 ```
 
 ## Transcript node filtering
@@ -121,10 +160,9 @@ bootstrapApplication(AppComponent, {
 
 **Precedence (first defined wins, whole-object — no per-field merge):**
 
-1. A call-site `agent({ clientOptions })`
-2. The per-agent `provideAgent({ clientOptions })`
-3. The app-wide `LANGGRAPH_CLIENT_OPTIONS` token
-4. The SDK default
+1. The per-agent `provideAgent({ clientOptions })`
+2. The app-wide `LANGGRAPH_CLIENT_OPTIONS` token
+3. The SDK default
 
 <Callout type="info" title="Diagnosing slow error surfacing">
   If a dropped connection takes ~15s to show an error, the SDK is exhausting its
@@ -164,21 +202,18 @@ The optional `debugName` (`'trip'` above) is surfaced in Angular DI error messag
 <CardGroup cols={3}>
   <Card
     title="Installation"
-    icon="package"
     href="/docs/langgraph/getting-started/installation"
   >
-    Step-by-step setup guide including peer dependencies and NgModule support.
+    Step-by-step setup guide including the peer-dependency contract.
   </Card>
   <Card
     title="Deployment"
-    icon="server"
     href="/docs/langgraph/guides/deployment"
   >
     Configure transports for production, SSR, and edge runtimes.
   </Card>
   <Card
     title="injectAgent() API"
-    icon="code"
     href="/docs/langgraph/api/inject-agent"
   >
     Full reference for the core primitive you configure here.

@@ -1,3 +1,7 @@
+---
+description: MockAgentTransport is the deterministic AgentTransport for tests — emit LangGraph stream events by hand and assert signal state without a server.
+---
+
 # MockAgentTransport
 
 `MockAgentTransport` is a deterministic `AgentTransport` implementation for tests. It records stream calls, lets tests emit LangGraph stream events manually, and avoids a running LangGraph server.
@@ -9,6 +13,7 @@ The pattern below covers the full lifecycle: provide a transport instance, creat
 ```ts
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { AgentError } from '@threadplane/chat';
 import {
   provideAgent,
   MockAgentTransport,
@@ -46,7 +51,7 @@ describe('ChatComponent', () => {
     transport.emit([
       {
         type: 'values',
-        messages: [{ role: 'assistant', content: 'Hi there' }],
+        messages: [{ type: 'ai', content: 'Hi there' }],
       },
     ]);
     transport.close();
@@ -65,11 +70,11 @@ describe('ChatComponent', () => {
 
     const stream = fixture.componentInstance.chat.submit({ message: 'Hello' });
     transport.emitError(new Error('not found'));
-    await expect(stream).rejects.toThrow('not found');
+    await stream;
     fixture.detectChanges();
 
     expect(fixture.componentInstance.chat.status()).toBe('error');
-    expect(fixture.componentInstance.chat.error()).toBeInstanceOf(Error);
+    expect(fixture.componentInstance.chat.error()).toBeInstanceOf(AgentError);
   });
 });
 ```
@@ -81,9 +86,11 @@ describe('ChatComponent', () => {
 | `constructor(script?: StreamEvent[][])` | Optionally seeds scripted event batches for manual stepping (defaults to `[]`). |
 | `nextBatch()` | Returns the next scripted event batch. |
 | `emit(events)` | Pushes one or more `StreamEvent` objects into the active stream. |
-| `emitError(err)` | Causes the active stream to reject with `err`. |
+| `emitError(err)` | Makes the active stream reject with `err`. The runtime catches it, so `submit()` still resolves — assert on `status()` and `error()` instead of on a rejected promise. |
 | `close()` | Closes the active stream after queued events drain. |
 | `isStreaming()` | Returns whether a stream is currently active. |
+
+Messages inside a `values` event are raw LangGraph messages, so their role comes from `type` (`'human'`, `'ai'`, `'tool'`, `'system'`), not from a `role` field. The projector reads `_getType()` or the raw `type` and falls back to `'ai'`; a `role` key is never read.
 
 The transport also records calls in `streams`, `createdQueuedRuns`, `cancelledRuns`, `joinedRuns`, and `historyCalls`, which is useful for asserting payloads and options.
 
@@ -97,21 +104,18 @@ The transport also records calls in `streams`, `createdQueuedRuns`, `cancelledRu
 <CardGroup cols={3}>
   <Card
     title="Testing Guide"
-    icon="flask"
     href="/docs/langgraph/guides/testing"
   >
     Full testing patterns including component harnesses and multi-stream scenarios.
   </Card>
   <Card
     title="FetchStreamTransport"
-    icon="globe"
     href="/docs/langgraph/api/fetch-stream-transport"
   >
     The production transport that MockAgentTransport replaces in tests.
   </Card>
   <Card
-    title="`injectAgent()` API"
-    icon="code"
+    title="injectAgent() API"
     href="/docs/langgraph/api/inject-agent"
   >
     Full reference for the primitive you are testing against.

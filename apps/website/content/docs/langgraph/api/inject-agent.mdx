@@ -103,14 +103,18 @@ These fields are stable across runtime adapters and are what chat components con
 | `messages()` | `Message[]` | Runtime-neutral chat messages with `role`, `content`, optional `toolCallId`, citations, reasoning, and raw extras. |
 | `status()` | `'idle' \| 'running' \| 'error'` | UI lifecycle status. LangGraph loading and reloading both map to `running`. |
 | `isLoading()` | `boolean` | Convenience signal for active streaming. |
-| `error()` | `unknown` | Latest runtime error, when present. |
+| `error()` | `AgentError \| undefined` | Structured, classified failure — carries `kind`, `retryable`, `status`, and `cause`. |
 | `toolCalls()` | `ToolCall[]` | Tool calls projected into the chat contract. |
 | `state()` | `Record<string, unknown>` | Latest state values projected as a plain object. |
 | `submit(input, opts?)` | `Promise<void>` | Submit a user message, resume payload, and/or state patch. |
 | `stop()` | `Promise<void>` | Stop the active run. |
+| `retry()` | `Promise<void>` | Clear the error and re-run the last submission. No-op while a run is in flight or when there is nothing to retry. |
 | `regenerate(index)` | `Promise<void>` | Remove the assistant message at `index` and all following messages, then rerun from the preceding user message. |
 | `interrupt()` | `AgentInterrupt \| undefined` | Optional current interrupt, when the backend pauses for human input. |
 | `subagents()` | `Map<string, Subagent>` | Optional subagent streams keyed by tool-call id. |
+| `history()` | `AgentCheckpoint[]` | Checkpoint history for the active thread, from the `AgentWithHistory` sub-contract. |
+| `events$` | `Observable<AgentEvent>` | Events that are not derivable from the signals above. |
+| `clientTools` | `ClientToolsCapability \| undefined` | Optional client-declared, client-executed tool registry. |
 
 ## LangGraph-specific surface
 
@@ -118,7 +122,7 @@ These fields are stable across runtime adapters and are what chat components con
 
 - `value()` and `hasValue()` for raw state values.
 - `langGraphMessages()`, `langGraphToolCalls()`, and `langGraphHistory()` for raw SDK-shaped data.
-- `history()`, `branch()`, `setBranch()`, and `experimentalBranchTree()` for checkpoint and time-travel UIs.
+- `branch()`, `setBranch()`, and `experimentalBranchTree()` for checkpoint and time-travel UIs.
 - `queue()`, `joinStream()`, and `switchThread()` for persisted threads and queued runs.
 - `getSubagent()`, `getSubagentsByType()`, and `getSubagentsByMessage()` for subgraph/subagent inspection.
 
@@ -170,21 +174,18 @@ The method throws when the selected index is not an assistant message, when no p
 <CardGroup cols={3}>
   <Card
     title="Quickstart"
-    icon="rocket"
     href="/docs/langgraph/getting-started/quickstart"
   >
     Build your first streaming component end-to-end in under five minutes.
   </Card>
   <Card
     title="Streaming Guide"
-    icon="wave-sine"
     href="/docs/langgraph/guides/streaming"
   >
     Deep dive into SSE lifecycle, error handling, and reconnect strategies.
   </Card>
   <Card
     title="Angular Signals"
-    icon="bolt"
     href="/docs/langgraph/concepts/angular-signals"
   >
     Understand how `injectAgent()` integrates with Angular's reactivity model.
