@@ -17,6 +17,7 @@ interface Thread {
   label: string;
 }
 
+// #region thread-state
 // Per-instance thread bookkeeping shared between the component-scoped
 // provideAgent() config (which owns the onThreadId callback) and the
 // component itself. Module scope is safe here: each demo app bootstraps a
@@ -24,6 +25,7 @@ interface Thread {
 const threadsState = signal<Thread[]>([]);
 const activeThreadIdState = signal<string | null>(null);
 let threadCounter = 0;
+// #endregion
 
 /**
  * PersistenceComponent demonstrates thread persistence with `injectAgent()`.
@@ -40,6 +42,7 @@ let threadCounter = 0;
   selector: 'app-persistence',
   standalone: true,
   imports: [ChatComponent, ChatWelcomeSuggestionComponent, ExampleChatLayoutComponent],
+  // #region agent-provider
   // Scoped agent: the onThreadId callback tracks new thread ids into the
   // module-scoped signals the sidebar reads. Provided at the component (Option
   // B) because the config is genuinely per-instance.
@@ -69,6 +72,7 @@ let threadCounter = 0;
       };
     }),
   ],
+  // #endregion
   styles: `
     .sidebar {
       display: flex;
@@ -150,6 +154,7 @@ let threadCounter = 0;
         </div>
       </chat>
 
+      <!-- #region thread-sidebar -->
       <div sidebar class="sidebar">
         <div class="cap">Threads</div>
 
@@ -170,6 +175,7 @@ let threadCounter = 0;
           <button type="button" class="btn--primary" (click)="newThread()">+ New Thread</button>
         </div>
       </div>
+      <!-- #endregion -->
     </example-chat-layout>
   `,
 })
@@ -178,6 +184,7 @@ export class PersistenceComponent {
   protected readonly activeThreadId = activeThreadIdState;
   protected readonly suggestions = WELCOME_SUGGESTIONS;
 
+  // #region thread-actions
   /**
    * The streaming resource with thread persistence.
    *
@@ -202,4 +209,5 @@ export class PersistenceComponent {
     this.activeThreadId.set(null);
     this.agent.switchThread(null);
   }
+  // #endregion
 }

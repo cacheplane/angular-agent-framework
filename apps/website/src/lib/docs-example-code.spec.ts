@@ -49,7 +49,6 @@ const PENDING_PAGES = new Set<string>([
   '/docs/langgraph/guides/durable-execution',
   '/docs/langgraph/guides/interrupts',
   '/docs/langgraph/guides/memory',
-  '/docs/langgraph/guides/persistence',
   '/docs/langgraph/guides/subgraphs',
   '/docs/langgraph/guides/time-travel',
   '/docs/render/api/provide-render',
