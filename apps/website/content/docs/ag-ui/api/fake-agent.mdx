@@ -1,10 +1,14 @@
+---
+description: FakeAgent and provideFakeAgent() stream a canned AG-UI response in process, with an optional script of raw events for exact test streams.
+---
+
 # FakeAgent
 
 `FakeAgent` is an in-process AG-UI test double that emits a canned streaming response without a real backend. Use it for offline development, CI, and component tests.
 
 ## provideFakeAgent()
 
-`provideFakeAgent()` is the DI-friendly entry point. It is a drop-in replacement for `provideAgent({ url })` when no backend is available.
+`provideFakeAgent()` is the DI-friendly entry point. It is a drop-in replacement for the ref-less `provideAgent({ url })` when no backend is available: it registers the fake under the same shared token, so `injectAgent()` resolves it.
 
 ```ts
 import { bootstrapApplication } from '@angular/platform-browser';
@@ -51,6 +55,23 @@ const agent = toAgent(new FakeAgent({
 ```
 
 `FakeAgent` extends `AbstractAgent` from `@ag-ui/client`. Its `run()` method returns an `Observable<BaseEvent>` that emits the full event sequence — `RUN_STARTED`, optional reasoning events, `TEXT_MESSAGE_START` / `TEXT_MESSAGE_CONTENT` tokens, `TEXT_MESSAGE_END`, `RUN_FINISHED` — then completes.
+
+### script
+
+The constructor accepts a fourth option that `FakeAgentConfig` does not carry, so it is reachable only by constructing `FakeAgent` yourself:
+
+```ts
+script?: readonly {
+  when: 'initial' | { toolMessageFor: string };
+  events: readonly BaseEvent[];
+}[];
+```
+
+Each branch supplies a raw AG-UI event sequence for tests that need an exact stream — tool calls, `STATE_SNAPSHOT`, `CUSTOM` events, anything the protocol defines. `when: 'initial'` matches the first turn; `{ toolMessageFor: id }` matches the turn whose input carries a tool result for that tool call id. The first matching branch wins, and `FakeAgent` wraps its `events` in `RUN_STARTED` and `RUN_FINISHED` for you. When no branch matches, the canned token reply is emitted instead.
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `script` | `readonly { when: 'initial' \| { toolMessageFor: string }; events: readonly BaseEvent[] }[]` | Deterministic event branches. Constructor only — not part of `FakeAgentConfig`, so `provideFakeAgent()` cannot set it. |
 
 ## TestBed example
 
@@ -99,21 +120,18 @@ See also: [Fake Agent guide](/docs/ag-ui/guides/fake-agent) for practical offlin
 <CardGroup cols={3}>
   <Card
     title="Fake Agent guide"
-    icon="flask"
     href="/docs/ag-ui/guides/fake-agent"
   >
     Practical patterns for offline demos and rapid prototyping with FakeAgent.
   </Card>
   <Card
     title="Testing guide"
-    icon="check"
     href="/docs/ag-ui/guides/testing"
   >
     Full testing patterns for components that use `injectAgent()`.
   </Card>
   <Card
     title="provideAgent() API"
-    icon="settings"
     href="/docs/ag-ui/api/provide-agent"
   >
     The production provider `provideFakeAgent()` replaces in tests.

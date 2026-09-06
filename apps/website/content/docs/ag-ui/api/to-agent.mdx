@@ -1,3 +1,7 @@
+---
+description: toAgent() wraps a raw AG-UI AbstractAgent into the runtime-neutral Agent contract, adding customEvents, clientTools, and subagents.
+---
+
 # toAgent()
 
 `toAgent()` is the lower-level adapter function that wraps a raw AG-UI `AbstractAgent` into the runtime-neutral `Agent` contract used by `@threadplane/chat` components.
@@ -21,6 +25,7 @@ const agent = toAgent(source, { telemetry: myTelemetrySink });
 | Option | Type | Description |
 |--------|------|-------------|
 | `telemetry` | `AgentRuntimeTelemetrySink \| false` | Optional app-owned sink. Supply one to receive runtime lifecycle events. |
+| `a2uiClientCapabilities` | `{ supportedCatalogIds: string[]; inlineCatalogs?: unknown[] }` | A2UI catalog negotiation to advertise to the agent. Seeded once into the AG-UI shared state under the `a2ui_client_capabilities` key, so every `RunAgentInput.state` carries it. Use `a2uiClientCapabilities()` from `@threadplane/chat` for the renderer's standard value. |
 
 ## AgUiAgent
 
@@ -30,9 +35,9 @@ const agent = toAgent(source, { telemetry: myTelemetrySink });
 |-------|------|-------------|
 | `customEvents()` | `Signal<CustomStreamEvent[]>` | Custom events accumulated during a run. Resets at the start of each new run. |
 | `clientTools` | `ClientToolsCapability` | Browser client-tool catalog, pending calls, and result resolution. The chat composition uses this when you pass `<chat [clientTools]>`. |
-| `subagents()` | `Signal<Map<string, Subagent>>` | Subagent runs from `SUBAGENT_*` events, keyed by `subagentRunId`, plus the legacy `ACTIVITY_*` convention (`activityType: 'subagent'`, keyed by `messageId`), projected to the neutral subagent contract. |
+| `subagents()` | `Signal<Map<string, Subagent>>` | Subagent runs from `SUBAGENT_*` events, keyed by `subagentRunId`, plus the `ACTIVITY_*` convention (`activityType: 'subagent'`, keyed by `messageId`), projected to the neutral subagent contract. |
 
-The standard `Agent` signals (`messages`, `status`, `isLoading`, `error`, `toolCalls`, `state`, `interrupt`) and actions (`submit`, `stop`, `regenerate`) are all present.
+The standard `Agent` signals (`messages`, `status`, `isLoading`, `error`, `toolCalls`, `state`, `interrupt`) and actions (`submit`, `retry`, `stop`, `regenerate`) are all present.
 
 ## CustomStreamEvent
 
@@ -74,21 +79,18 @@ The returned `AgUiAgent` does not manage its own lifetime. When using DI via `pr
 <CardGroup cols={3}>
   <Card
     title="provideAgent() API"
-    icon="settings"
     href="/docs/ag-ui/api/provide-agent"
   >
     The DI-friendly wrapper around `toAgent()` for most Angular apps.
   </Card>
   <Card
     title="Architecture"
-    icon="diagram"
     href="/docs/ag-ui/concepts/architecture"
   >
     How the AG-UI adapter fits into the broader `@threadplane/chat` design.
   </Card>
   <Card
     title="Event Mapping"
-    icon="list"
     href="/docs/ag-ui/reference/event-mapping"
   >
     Which AG-UI protocol events map to which signals and actions.
