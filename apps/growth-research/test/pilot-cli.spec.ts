@@ -1,6 +1,23 @@
 import { expect, it } from 'vitest';
 import { parsePilotArguments } from '../scripts/research-pilot.mts';
 
+it('rejects the retired baseline execution approach', () => {
+  expect(() =>
+    parsePilotArguments([
+      'run',
+      '--output',
+      '/tmp/pilot',
+      '--corpus',
+      'x',
+      '--approach',
+      'baseline',
+    ])
+  ).toThrow('pilot_invalid_arguments');
+  expect(
+    parsePilotArguments(['synthetic', '--output', '/tmp/pilot'])
+  ).toMatchObject({ command: 'synthetic' });
+});
+
 it('accepts only bounded operator commands with explicit output directory', () => {
   expect(
     parsePilotArguments([

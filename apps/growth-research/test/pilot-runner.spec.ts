@@ -5,6 +5,21 @@ import { expect, it } from 'vitest';
 import { runCorpus } from '../src/pilot/runner.js';
 import { readRecord } from '../src/pilot/reports.js';
 
+it('rejects retired approaches from untyped callers before execution', async () => {
+  let called = false;
+  await expect(
+    runCorpus({}, 'baseline' as 'agent', {
+      root: '/unused',
+      revision: 'test',
+      agent: async () => {
+        called = true;
+        throw new Error('must not execute');
+      },
+    })
+  ).rejects.toThrow('pilot_invalid_approach');
+  expect(called).toBe(false);
+});
+
 it('retains failures and creates independent sequential repetition records', async () => {
   const root = await mkdtemp(join(tmpdir(), 'pilot-runner-'));
   const corpus = {
@@ -26,19 +41,20 @@ it('retains failures and creates independent sequential repetition records', asy
   };
   let active = 0,
     calls = 0;
-  const result = await runCorpus(corpus, 'baseline', {
+  const result = await runCorpus(corpus, 'agent', {
     root,
     revision: 'test',
-    baseline: async () => {
+    agent: async () => {
       expect(active++).toBe(0);
       calls++;
       await Promise.resolve();
       active--;
       if (calls === 1) throw new Error('secret raw message');
       return {
-        profile: { name: null, description: null, industry: null },
-        claims: [],
-        invalidCitationCount: 0,
+        outcome: 'completed',
+        validation: { status: 'structurally_valid', reasonCodes: [] },
+        evidenceReads: 0,
+        tracing: 'unavailable',
         usage: { inputTokens: 2, outputTokens: 3 },
         model: 'fixture',
         modelCalls: 1,
@@ -61,10 +77,10 @@ it('retains failures and creates independent sequential repetition records', asy
 it('fails corpus validation before any model work', async () => {
   let called = false;
   await expect(
-    runCorpus({}, 'baseline', {
+    runCorpus({}, 'agent', {
       root: '/unused',
       revision: 'test',
-      baseline: async () => {
+      agent: async () => {
         called = true;
         throw new Error();
       },
@@ -89,11 +105,11 @@ it('fails corpus validation before any model work', async () => {
         repetitions: 1,
         cases: [empty, { ...empty, id: 'public', kind: 'public' }],
       },
-      'baseline',
+      'agent',
       {
         root: '/unused',
         revision: 'test',
-        baseline: async () => {
+        agent: async () => {
           called = true;
           throw new Error();
         },
@@ -110,11 +126,11 @@ it('fails corpus validation before any model work', async () => {
           id: `case-${i}`,
         })),
       },
-      'baseline',
+      'agent',
       {
         root: '/unused',
         revision: 'test',
-        baseline: async () => {
+        agent: async () => {
           called = true;
           throw new Error();
         },

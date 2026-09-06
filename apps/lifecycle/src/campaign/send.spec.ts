@@ -1,6 +1,5 @@
 import {
   createUnsubscribeActionUrl,
-  JobLeaseConflictError,
   unsubscribeActionUrlValue,
   type GrowthArtifact,
   type GrowthJob,
@@ -405,9 +404,6 @@ function dependencies(
   return {
     now: () => NOW,
     readJobContext: vi.fn().mockResolvedValue(context()),
-    readInstallRuntimeEnrichmentContext: vi
-      .fn()
-      .mockResolvedValue({ companyDomain: 'example.com' }),
     createUnsubscribeUrl: vi.fn(() => UNSUBSCRIBE),
     sendRecipient: vi.fn().mockResolvedValue({
       accepted: true,
@@ -419,20 +415,6 @@ function dependencies(
     claimInternalNotification: vi.fn().mockResolvedValue(true),
     markInternalNotificationUnknown: vi.fn().mockResolvedValue(job()),
     failJob: vi.fn().mockResolvedValue(job()),
-    fetchCompanyEvidence: vi.fn().mockResolvedValue([]),
-    readDeterministicScore: vi.fn().mockResolvedValue({
-      score: 30,
-      scoreVersion: 'growth-score-policy:v1+registry:test',
-      reasons: [
-        {
-          code: 'contact.approved_work_email_form',
-          points: 30,
-          identifiers: ['once'],
-        },
-      ],
-    }),
-    generateArtifact: vi.fn().mockResolvedValue(artifact().content),
-    persistArtifact: vi.fn().mockResolvedValue(artifact()),
     sendInternalNotification: vi.fn().mockResolvedValue({
       outcome: 'accepted',
     }),
@@ -485,8 +467,6 @@ describe('dispatchLifecycleAppOwnedJob', () => {
       deps.recipientPolicy
     );
     expect(deps.deferJob).not.toHaveBeenCalled();
-    expect(deps.fetchCompanyEvidence).not.toHaveBeenCalled();
-    expect(deps.generateArtifact).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -517,7 +497,6 @@ describe('dispatchLifecycleAppOwnedJob', () => {
         expect.anything(),
         expect.objectContaining({ errorCode: reason })
       );
-      expect(deps.generateArtifact).not.toHaveBeenCalled();
     }
   );
 
@@ -609,255 +588,6 @@ describe('dispatchLifecycleAppOwnedJob', () => {
     expect(sent?.text).not.toContain('evil.example');
   });
 
-  it('builds one bounded enrichment artifact and persists it once', async () => {
-    const deps = dependencies();
-    const enrich = job('enrich', {
-      form_kind: 'whitepaper',
-      submission_id: '00000000-0000-4000-8000-000000000012',
-    });
-
-    await expect(
-      dispatchLifecycleAppOwnedJob(
-        {} as SqlExecutor,
-        enrich,
-        { signal: new AbortController().signal },
-        deps
-      )
-    ).resolves.toBe('completed');
-    expect(deps.fetchCompanyEvidence).toHaveBeenCalledOnce();
-    expect(deps.readDeterministicScore).toHaveBeenCalledWith(
-      expect.anything(),
-      CONTACT_ID
-    );
-    expect(deps.generateArtifact).toHaveBeenCalledOnce();
-    expect(deps.generateArtifact).toHaveBeenCalledWith(
-      expect.objectContaining({
-        deterministicScore: {
-          score: 30,
-          scoreVersion: 'growth-score-policy:v1+registry:test',
-          reasons: [
-            {
-              code: 'contact.approved_work_email_form',
-              points: 30,
-              identifiers: ['once'],
-            },
-          ],
-        },
-      }),
-      expect.any(AbortSignal)
-    );
-    expect(deps.persistArtifact).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({
-        jobId: enrich.id,
-        leaseToken: LEASE_TOKEN,
-        now: NOW,
-      })
-    );
-    expect(deps.completeJob).toHaveBeenCalledOnce();
-  });
-
-  it('enriches an admitted install domain without inventing a form submission', async () => {
-    const deps = dependencies({
-      readJobContext: vi.fn().mockResolvedValue(
-        context({
-          formSubmission: {},
-          companyDomain: null,
-          emailClassification: 'unknown',
-        })
-      ),
-      readInstallRuntimeEnrichmentContext: vi
-        .fn()
-        .mockResolvedValue({ companyDomain: 'neon.tech' }),
-    });
-    await expect(
-      dispatchLifecycleAppOwnedJob(
-        {} as SqlExecutor,
-        job('enrich', { source: 'install_runtime' }),
-        {},
-        deps
-      )
-    ).resolves.toBe('completed');
-    expect(deps.fetchCompanyEvidence).toHaveBeenCalledWith(
-      'neon.tech',
-      expect.any(AbortSignal)
-    );
-    expect(deps.generateArtifact).toHaveBeenCalledWith(
-      expect.objectContaining({
-        formFacts: { source: 'install_runtime', companyDomain: 'neon.tech' },
-      }),
-      expect.any(AbortSignal)
-    );
-    expect(deps.readInstallRuntimeEnrichmentContext).toHaveBeenCalledTimes(2);
-    expect(deps.sendRecipient).not.toHaveBeenCalled();
-  });
-
-  it('cancels install enrichment if current evidence or contact eligibility is unavailable', async () => {
-    const deps = dependencies({
-      readInstallRuntimeEnrichmentContext: vi.fn().mockResolvedValue(null),
-    });
-    await expect(
-      dispatchLifecycleAppOwnedJob(
-        {} as SqlExecutor,
-        job('enrich', { source: 'install_runtime' }),
-        {},
-        deps
-      )
-    ).resolves.toBe('cancelled');
-    expect(deps.fetchCompanyEvidence).not.toHaveBeenCalled();
-    expect(deps.generateArtifact).not.toHaveBeenCalled();
-    expect(deps.persistArtifact).not.toHaveBeenCalled();
-  });
-
-  it('rechecks install eligibility after capture before making a model call', async () => {
-    const deps = dependencies({
-      readInstallRuntimeEnrichmentContext: vi
-        .fn()
-        .mockResolvedValueOnce({ companyDomain: 'neon.tech' })
-        .mockResolvedValueOnce(null),
-    });
-    await expect(
-      dispatchLifecycleAppOwnedJob(
-        {} as SqlExecutor,
-        job('enrich', { source: 'install_runtime' }),
-        {},
-        deps
-      )
-    ).resolves.toBe('cancelled');
-    expect(deps.fetchCompanyEvidence).toHaveBeenCalledOnce();
-    expect(deps.generateArtifact).not.toHaveBeenCalled();
-    expect(deps.persistArtifact).not.toHaveBeenCalled();
-  });
-
-  it('abandons install enrichment when a stop has already revoked its lease', async () => {
-    const deps = dependencies({
-      readInstallRuntimeEnrichmentContext: vi
-        .fn()
-        .mockResolvedValueOnce({ companyDomain: 'neon.tech' })
-        .mockResolvedValueOnce(null),
-      cancelJob: vi.fn().mockRejectedValue(new JobLeaseConflictError(job().id)),
-    });
-    await expect(
-      dispatchLifecycleAppOwnedJob(
-        {} as SqlExecutor,
-        job('enrich', { source: 'install_runtime' }),
-        {},
-        deps
-      )
-    ).resolves.toBe('cancelled');
-    expect(deps.cancelJob).toHaveBeenCalledOnce();
-    expect(deps.deferJob).not.toHaveBeenCalled();
-    expect(deps.failJob).not.toHaveBeenCalled();
-    expect(deps.generateArtifact).not.toHaveBeenCalled();
-    expect(deps.persistArtifact).not.toHaveBeenCalled();
-  });
-
-  it('keeps ordinary database cancellation failures on the enrichment retry path', async () => {
-    const deps = dependencies({
-      readInstallRuntimeEnrichmentContext: vi.fn().mockResolvedValue(null),
-      cancelJob: vi.fn().mockRejectedValue(new Error('database unavailable')),
-    });
-    await expect(
-      dispatchLifecycleAppOwnedJob(
-        {} as SqlExecutor,
-        job('enrich', { source: 'install_runtime' }),
-        {},
-        deps
-      )
-    ).resolves.toBe('deferred');
-    expect(deps.deferJob).toHaveBeenCalledOnce();
-    expect(deps.generateArtifact).not.toHaveBeenCalled();
-  });
-
-  it('does not fetch company pages for the personal-email neutral path', async () => {
-    const deps = dependencies({
-      readJobContext: vi.fn().mockResolvedValue(
-        context({
-          emailClassification: 'personal',
-          companyDomain: 'example.com',
-        })
-      ),
-    });
-
-    await expect(
-      dispatchLifecycleAppOwnedJob(
-        {} as SqlExecutor,
-        job('enrich', {
-          form_kind: 'newsletter',
-          submission_id: '00000000-0000-4000-8000-000000000012',
-        }),
-        {},
-        deps
-      )
-    ).resolves.toBe('completed');
-    expect(deps.fetchCompanyEvidence).not.toHaveBeenCalled();
-    expect(deps.generateArtifact).toHaveBeenCalledWith(
-      expect.objectContaining({ researchMode: 'neutral', companyPages: [] }),
-      expect.any(AbortSignal)
-    );
-  });
-
-  it('passes bounded pricing facts into research without the free-text message', async () => {
-    const deps = dependencies({
-      readJobContext: vi.fn().mockResolvedValue(
-        context({
-          formSubmission: {
-            form_kind: 'pricing',
-            submission_id: '00000000-0000-4000-8000-000000000012',
-            pilot_interest: 'yes',
-            team_size: '6-25',
-            timeline: 'this_quarter',
-            message: 'Do not send this free text to the model.',
-          },
-        })
-      ),
-    });
-
-    await dispatchLifecycleAppOwnedJob(
-      {} as SqlExecutor,
-      job('enrich', {
-        form_kind: 'pricing',
-        submission_id: '00000000-0000-4000-8000-000000000012',
-      }),
-      {},
-      deps
-    );
-
-    const researchInput = vi.mocked(deps.generateArtifact).mock.calls[0]?.[0];
-    expect(researchInput?.formFacts).toMatchObject({
-      source: 'pricing',
-      pilotInterest: 'yes',
-      teamSize: '6-25',
-      timeline: 'this_quarter',
-    });
-    expect(researchInput?.formFacts).not.toHaveProperty('message');
-  });
-
-  it('surfaces a corrupt persisted enrichment form kind as deterministic poison without retrying', async () => {
-    const deps = dependencies({
-      readJobContext: vi.fn().mockResolvedValue(
-        context({
-          formSubmission: {
-            form_kind: 'corrupt-value',
-            submission_id: '00000000-0000-4000-8000-000000000012',
-          },
-        })
-      ),
-    });
-
-    await expect(
-      dispatchLifecycleAppOwnedJob(
-        {} as SqlExecutor,
-        job('enrich', { submission_id: 'submission-1' }),
-        {},
-        deps
-      )
-    ).rejects.toBeInstanceOf(DeterministicLifecycleJobError);
-    expect(deps.generateArtifact).not.toHaveBeenCalled();
-    expect(deps.deferJob).not.toHaveBeenCalled();
-    expect(deps.failJob).not.toHaveBeenCalled();
-  });
-
   it('translates corrupt persisted fulfillment input into deterministic poison', async () => {
     const deps = dependencies();
 
@@ -898,32 +628,6 @@ describe('dispatchLifecycleAppOwnedJob', () => {
       )
     ).rejects.toThrow('lease heartbeat failed');
     expect(deps.sendRecipient).not.toHaveBeenCalled();
-  });
-
-  it('does not retry or call the model when cancellation arrives during score preparation', async () => {
-    const controller = new AbortController();
-    const deps = dependencies({
-      readDeterministicScore: vi.fn().mockImplementation(async () => {
-        controller.abort(new Error('cancelled by Dawn'));
-        return {
-          score: 30,
-          scoreVersion: 'growth-score:v1',
-          reasons: [],
-        };
-      }),
-    });
-
-    await expect(
-      dispatchLifecycleAppOwnedJob(
-        {} as SqlExecutor,
-        job('enrich', { submission_id: 'submission-1' }),
-        { signal: controller.signal },
-        deps
-      )
-    ).rejects.toThrow('cancelled by Dawn');
-    expect(deps.generateArtifact).not.toHaveBeenCalled();
-    expect(deps.deferJob).not.toHaveBeenCalled();
-    expect(deps.failJob).not.toHaveBeenCalled();
   });
 
   it('does not claim or notify when cancellation arrives during notification context preparation', async () => {
@@ -1131,41 +835,6 @@ describe('loadLifecycleRuntimeConfiguration', () => {
         })
       ).toThrow(/GROWTH_INSTALL_RUNTIME_HELLO_ENABLED/);
     }
-  });
-
-  it('runs enrichment with every mail environment variable absent and delivery disabled', async () => {
-    const deps = createDefaultLifecycleJobDependencies({
-      CAMPAIGN_ENROLLMENT_ENABLED: 'false',
-      CAMPAIGN_ENABLED: 'false',
-      DELIVERY_ENABLED: 'false',
-    });
-    deps.now = vi.fn(() => NOW);
-    deps.readJobContext = vi.fn().mockResolvedValue(
-      context({
-        companyDomain: null,
-        enrichmentArtifact: null,
-      })
-    );
-    deps.readDeterministicScore = vi.fn().mockResolvedValue({
-      score: 0,
-      scoreVersion: 'growth-score:v1',
-      reasons: [],
-    });
-    deps.generateArtifact = vi.fn().mockResolvedValue(artifact().content);
-    deps.persistArtifact = vi.fn().mockResolvedValue(artifact());
-    deps.completeJob = vi.fn().mockResolvedValue(job('enrich'));
-
-    await expect(
-      dispatchLifecycleAppOwnedJob(
-        {} as SqlExecutor,
-        job('enrich', {
-          form_kind: 'whitepaper',
-          submission_id: '00000000-0000-4000-8000-000000000012',
-        }),
-        {},
-        deps
-      )
-    ).resolves.toBe('completed');
   });
 
   it('rejects invalid booleans and requires a valid immutable cohort timestamp only when enrollment is on', () => {

@@ -5,7 +5,7 @@
 The staged application exposes `growth_company`, a private compiled adapter around
 the generated Dawn company agent. Lifecycle captures bounded company evidence and
 submits `{ request }`; the managed thread returns `values.result`. The agent cannot
-write Growth records or send email. The local comparison harness remains available
+write Growth records or send email. The local agent evaluation harness remains available
 for evaluation, independently of the production rollout switch.
 
 Set `GROWTH_RESEARCH_PRODUCTION_MODE=managed-company-only`, `OPENAI_API_KEY`, and
@@ -17,6 +17,12 @@ An otherwise valid request that expires before execution records an atomic,
 already-settled rejection fence without invoking the agent. This permits cleanup
 after the managed run becomes terminal. A rejection never updates an existing
 fence, so a late replay cannot declare an earlier writer settled.
+
+Lifecycle recovery does not retain crashed research indefinitely. After the
+execution deadline plus five minutes, it may fail the attempt and delete temporary
+state without a settlement receipt. It verifies thread absence on separate ticks
+and verifies trace deletion independently. This V1 policy leaves the duplicate
+fence intact and does not claim that elapsed time proves worker termination.
 
 Configure `GROWTH_RESEARCH_TRACE_PROJECT_ID` for manually exported, sanitized
 model/tool spans. The exporter accepts `GROWTH_RESEARCH_TRACE_API_KEY` and
@@ -38,8 +44,9 @@ checkpoint deletion and sanitized tracing before enabling automatic publication.
 
 ## Local company research pilot
 
-The local pilot compares one bounded Dawn agent with the existing lifecycle enrichment
-generator on identical captured company evidence. It has no Growth database connection,
+The local pilot evaluates one bounded Dawn agent on synthetic or captured company
+evidence. The earlier lifecycle generator comparison is historical. It has no Growth
+database connection,
 does not resolve people or employment, and cannot send email. The company graph is
 private to the managed adapter; evaluation CLI adapters are excluded from staging.
 
@@ -72,13 +79,12 @@ expected claims/unknowns from the actual captured evidence. Save the reviewed co
 under a new name/version. Acquisition is preparation, not a human quality label.
 
 Set `GROWTH_RESEARCH_PILOT_MODE=local-company-only` and configure `OPENAI_API_KEY`
-for the agent or `ANTHROPIC_API_KEY` for the baseline through the operator environment.
+for the agent through the operator environment.
 Never include keys in arguments, fixtures, reports or commits. The local in-process
 case context is also required: an environment flag alone cannot authorize pilot tools.
 
 ```sh
 npx tsx apps/growth-research/scripts/research-pilot.mts run --output /absolute/private/pilot --corpus /absolute/private/pilot/CORPUS_UUID.json --approach agent
-npx tsx apps/growth-research/scripts/research-pilot.mts run --output /absolute/private/pilot --corpus /absolute/private/pilot/CORPUS_UUID.json --approach baseline
 npx tsx apps/growth-research/scripts/research-pilot.mts inspect --output /absolute/private/pilot --run RUN_UUID
 ```
 
@@ -92,13 +98,12 @@ Explicit inspection shows company sources and candidate findings; ordinary progr
 prints only opaque IDs and outcome codes. Reports use restrictive atomic writes and
 refuse overwrites. Preserve the final index and all failed attempts when comparing runs.
 
-The baseline uses its existing provider/model and 1,200-token/30-second request bounds.
-It receives company mode, synthetic adapter form context and zero progress score.
-Its raw citations are captured before production normalization. It does not return
-quotes: `not_provided` is distinct from failing or passing exact-quote validation.
-Provider failure records retain known request/usage/citation diagnostics. Missing usage
-and cost are unavailable, never zero. This comparison measures whole approaches with
-different providers/models; it does not isolate Dawn's causal contribution.
+The lifecycle Anthropic prototype and its baseline execution adapter are retired.
+Current evaluation runs the Dawn agent against synthetic or reviewed public company
+corpora. Historical baseline reports remain readable and can be included in review
+packets; their missing quotes, usage and cost remain unavailable rather than zero.
+Historical comparisons used different providers/models and do not isolate Dawn's
+causal contribution.
 
 Raw automatic tracing is disabled for local pilot runs. The record reports
 `tracing: unavailable`; this slice does not claim sanitized LangSmith tracing is live.
@@ -106,7 +111,7 @@ No research findings are automatically published to Growth or typed memory.
 
 ### Human comparison
 
-Each invocation emits a blinded review packet. To combine baseline and agent results
+Each invocation emits a blinded review packet. To compare historical baseline and agent results
 for the same corpus, pass their index UUIDs; mixed corpus hashes/classes are rejected:
 
 ```sh
@@ -127,20 +132,20 @@ per-approach scores are persisted as a new review artifact. Aggregate quality sc
 remain unavailable while reviews are incomplete, preventing success-only denominators.
 Human semantic review is not replaced by model grading or string matching.
 
-### Dogfooding findings ledger
+### Historical dogfooding findings ledger
 
 | Finding | Evidence / owning layer | Status and next verification |
 | --- | --- | --- |
 | Nullable tool fields become required strings | Dawn 0.8.24 compiler JSON schema conversion; observed generated submit schema and failed unknown-field submissions | Upstream core and LangChain conversion regression/fix in progress. Pilot uses the supported authored Zod schema export; a package upgrade must rerun the original extraction probe before declaring the upstream defect released. |
 | Bound model calls bypass subclass generation hooks | Real bound-model regression in this application | Guards, request counts and JSON usage capture live at the actual provider fetch boundary; generated graph tests verify it. |
 | Page capture yields empty, partial, or mostly navigation evidence | Company-only acquisition against the six documented domains | Outcomes retained. Evaluate extraction improvements separately; do not hide failures by swapping cases. |
-| Baseline provider rejects billing state | Live baseline synthetic calls returned a classified billing rejection | External provider funding/configuration required; no quality comparison can be claimed from failed calls. |
-| Managed interruption precedes later child checkpoint | Recorded local/cloud Agent Server 0.13.4-node24 probe | Still a live-person integration gate; local cancellation tests are not proof of managed cancellation. |
+| Baseline provider rejects billing state | Earlier live baseline synthetic calls returned a classified billing rejection | Historical finding for the retired adapter; failed calls provide no quality comparison. |
+| Managed interruption precedes later child checkpoint | Recorded local/cloud Agent Server 0.13.4-node24 probe | Platform limitation covered by late-result rejection and bounded production cleanup; local cancellation tests do not prove managed cancellation. |
 | Disabled memory and shared harness persistence behavior | Earlier synthetic compatibility probe on Dawn 0.8.24 | Reproduction-needed against current Dawn before assigning a fix. Pilot has no memory and graph tests use isolated state. |
 
-Keep source snapshots, generated reports and review labels outside git. The full growth
-funnel/contact journey and real install/runtime-triggered enrichment are subsequent
-slices, after supported company context and the managed data lifecycle are verified.
+Keep source snapshots, generated reports and review labels outside git. Lifecycle now
+routes form and eligible install/runtime enrichment through the managed company adapter.
+The local evaluation harness remains isolated from those production jobs.
 
 ## Synthetic compatibility deployment
 
@@ -258,9 +263,10 @@ Agent Server `0.13.4-node24` can acknowledge interruption before its JavaScript 
 stops, allowing a later result checkpoint. The generated Dawn graph cancels when a
 live `config.signal` is supplied; the official JS sidecar does not forward that
 signal. No vendor patch is included. Cancellation and protection against writes
-after cancellation remain failed live-use gates. The smoke client's cleanup command
-refuses interrupted threads; an operator must independently establish worker
-quiescence before deleting those records. A terminal run status alone is insufficient.
+after cancellation are a platform limitation. Production rejects late results and
+uses the bounded lifecycle cleanup policy above. The older platform smoke client's
+cleanup command remains conservative about interrupted threads; that diagnostic
+restriction is not the production rollout policy.
 Deploy the verified artifact with the official CLI `0.4.21` source archive layout
 and the LangSmith control-plane source-upload API. Updates should target the existing deployment ID:
 request its upload URL, upload only the verified `.deployment` archive, and submit
@@ -269,8 +275,9 @@ the returned object path with `revision_source: "internal_source"`,
 The signed upload requires `Content-Type: application/gzip` and
 `X-Goog-Content-Length-Range: 0,209715200`. Configure secrets through the deployment
 API; never include an environment file in the archive. Re-enabling synthetic model
-tests requires both a provider key and the explicit fixture-mode value. Do not wire
-real Growth signals into this deployment until its remaining live-use gates pass.
+tests requires both a provider key and the explicit fixture-mode value. Wire
+real Growth signals only through the managed company adapter and lifecycle's
+durable submission, result validation, and cleanup handlers.
 
 The uncached platform smoke target takes positional fixture, thread and correlation
 identifiers. Set `GROWTH_RESEARCH_URL`, `LANGSMITH_API_KEY` when authentication is

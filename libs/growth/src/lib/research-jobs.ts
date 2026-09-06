@@ -331,6 +331,92 @@ export async function acknowledgeResearchRun(
 /** Existing lease deferral preserves payload for both enrichment reconciliation and cleanup. */
 export const deferResearchJob = deferLeasedJob;
 
+/** First observed thread absence; this is not execution-claim settlement. */
+export async function recordResearchCleanupAbsence(
+  db: SqlExecutor,
+  input: LeaseInput & { attemptId: string; threadId: string; absent?: boolean }
+): Promise<void> {
+  const result = await db.execute(
+    `/* growth:research-cleanup-absence */
+     update growth_jobs set payload=case when $6::boolean then jsonb_set(payload,'{cleanup_absent_at}',to_jsonb($3::timestamptz)) else payload-'cleanup_absent_at' end
+     where id=$1 and kind='research_cleanup' and status='leased' and lease_token=$2::uuid and lease_until>$3
+       and payload->>'attemptId'=$4 and payload->>'threadId'=$5
+     returning id`,
+    [
+      input.jobId,
+      input.leaseToken,
+      input.now,
+      input.attemptId,
+      input.threadId,
+      input.absent !== false,
+    ]
+  );
+  if (result.rows.length !== 1) throw new JobLeaseConflictError(input.jobId);
+}
+
+/** Finish cleanup and drop terminal evidence in the same transaction.
+ * Parent-before-cleanup locking matches acknowledgement; artifacts are retained. */
+export async function finishResearchCleanup(
+  db: SqlExecutor,
+  input: LeaseInput & {
+    attemptId: string;
+    threadId: string;
+    status?: 'completed' | 'failed';
+    errorCode?: string;
+  }
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    await privacyLock(tx, true);
+    const parents = await tx.execute<{ status: string }>(
+      `select status from growth_jobs where kind='enrich'
+       and payload->'research_attempt'->>'attemptId'=$1
+       and payload->'research_attempt'->>'threadId'=$2
+       order by id for update`,
+      [input.attemptId, input.threadId]
+    );
+    if (
+      input.status !== 'failed' &&
+      parents.rows.some(
+        (row) => row.status === 'pending' || row.status === 'leased'
+      )
+    )
+      throw new JobLeaseConflictError(input.jobId);
+    const result = await tx.execute(
+      `/* growth:research-cleanup-finish */
+       update growth_jobs set status=$6,lease_token=null,lease_until=null,last_error_code=$7
+       where id=$1 and kind='research_cleanup' and status='leased' and lease_token=$2::uuid and lease_until>$3
+         and payload->>'attemptId'=$4 and payload->>'threadId'=$5
+         and ($6='failed' or (payload->>'cleanup_absent_at')::timestamptz <= $3::timestamptz - interval '60 seconds')
+       returning id`,
+      [
+        input.jobId,
+        input.leaseToken,
+        input.now,
+        input.attemptId,
+        input.threadId,
+        input.status ?? 'completed',
+        input.errorCode ?? null,
+      ]
+    );
+    if (result.rows.length !== 1) throw new JobLeaseConflictError(input.jobId);
+    if (input.status === 'failed')
+      await tx.execute(
+        `update growth_jobs set status='failed',lease_token=null,lease_until=null,last_error_code='dawn_recovery_deadline'
+       where kind='enrich' and status in ('pending','leased')
+         and payload->'research_attempt'->>'attemptId'=$1
+         and payload->'research_attempt'->>'threadId'=$2`,
+        [input.attemptId, input.threadId]
+      );
+    await tx.execute(
+      `/* growth:research-cleanup-scrub */ update growth_jobs set payload=payload-'research_input'
+       where kind='enrich' and status in ('completed','failed','cancelled')
+         and payload->'research_attempt'->>'attemptId'=$1
+         and payload->'research_attempt'->>'threadId'=$2`,
+      [input.attemptId, input.threadId]
+    );
+  });
+}
+
 /** Record observed terminal-run/settled-writer proof before deleting the remote
  * thread, so trace cleanup can resume without fabricating a missing run's fate. */
 export async function recordResearchCleanupQuiescence(

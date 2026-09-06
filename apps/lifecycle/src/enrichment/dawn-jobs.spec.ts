@@ -103,6 +103,8 @@ function fixture() {
     deleteTraces: vi.fn(),
     tracesAbsent: vi.fn().mockResolvedValue(true),
     recordCleanupProof: vi.fn(),
+    recordCleanupAbsence: vi.fn(),
+    finishCleanup: vi.fn(),
   };
   return {
     deps,
@@ -167,7 +169,7 @@ describe('Dawn Growth job orchestration', () => {
       expect(deps.begin).not.toHaveBeenCalled();
     }
   });
-  it('preserves ambiguous submission forever and never recaptures or reposts', async () => {
+  it('reconciles ambiguous submission within its window without recapturing or reposting', async () => {
     const { handlers, deps, client } = fixture();
     client.submit.mockRejectedValueOnce(new Error('lost acknowledgement'));
     expect(await handlers.enrich(db, job, {})).toBe('deferred');
@@ -272,6 +274,81 @@ describe('Dawn Growth job orchestration', () => {
     contactId: null,
     payload: { attemptId, threadId, runId, expiresAt: request.expiresAt },
   };
+  const observedCleanup = {
+    ...cleanup,
+    payload: {
+      ...cleanup.payload,
+      cleanup_absent_at: new Date(now.getTime() - 60000).toISOString(),
+    },
+  };
+  it('fails lost acknowledgement and transient lookup errors at expiry plus five minutes without reposting', async () => {
+    for (const unavailable of [false, true]) {
+      const { handlers, deps, client } = fixture();
+      deps.now = () => new Date(Date.parse(request.expiresAt) + 300000);
+      if (unavailable) client.findRun.mockRejectedValue(new Error('offline'));
+      else client.findRun.mockResolvedValue(null);
+      expect(
+        await handlers.enrich(
+          db,
+          {
+            ...job,
+            payload: {
+              research_attempt: {
+                ...attempt,
+                phase: 'submitting',
+                runId: null,
+              },
+              research_input: request,
+            },
+          },
+          {}
+        )
+      ).toBe('failed');
+      expect(client.submit).not.toHaveBeenCalled();
+      expect(deps.fail).toHaveBeenCalledWith(
+        db,
+        expect.objectContaining({ errorCode: 'dawn_recovery_deadline' })
+      );
+    }
+  });
+  it('deletes unresolved expired state without claiming settlement and confirms absence on a later tick', async () => {
+    const { handlers, deps, client } = fixture();
+    const deadline = new Date(Date.parse(request.expiresAt) + 300000);
+    deps.now = () => deadline;
+    client.findRun.mockResolvedValue(null);
+    deps.readClaim.mockResolvedValue(null);
+    expect(await handlers.research_cleanup(db, cleanup, {})).toBe('deferred');
+    expect(client.deleteThread).toHaveBeenCalledWith(
+      threadId,
+      expect.any(AbortSignal)
+    );
+    expect(deps.recordCleanupProof).not.toHaveBeenCalled();
+    expect(deps.recordCleanupAbsence).toHaveBeenCalled();
+    expect(deps.finishCleanup).not.toHaveBeenCalled();
+    deps.now = () => new Date(deadline.getTime() + 60000);
+    const observed = {
+      ...cleanup,
+      payload: {
+        ...cleanup.payload,
+        cleanup_absent_at: deadline.toISOString(),
+      },
+    };
+    expect(await handlers.research_cleanup(db, observed, {})).toBe('completed');
+    expect(deps.finishCleanup).toHaveBeenCalled();
+  });
+  it('stops unresolved cleanup after seven days with visible failure', async () => {
+    const { handlers, deps, client } = fixture();
+    deps.now = () => new Date(Date.parse(request.expiresAt) + 7 * 86400000);
+    expect(await handlers.research_cleanup(db, cleanup, {})).toBe('failed');
+    expect(deps.finishCleanup).toHaveBeenCalledWith(
+      db,
+      expect.objectContaining({
+        status: 'failed',
+        errorCode: 'dawn_cleanup_horizon_exceeded',
+      })
+    );
+    expect(client.deleteThread).not.toHaveBeenCalled();
+  });
   it('never interprets an expired empty run/claim lookup as permission to delete remote state', async () => {
     const { handlers, deps, client } = fixture();
     deps.now = () => new Date(now.getTime() + 100000);
@@ -299,8 +376,10 @@ describe('Dawn Growth job orchestration', () => {
       payload: {
         ...cleanup.payload,
         cleanup_quiescence: { runId, settledAt: now.toISOString() },
+        cleanup_absent_at: now.toISOString(),
       },
     };
+    deps.now = () => new Date(now.getTime() + 60000);
     expect(await handlers.research_cleanup(db, proved, {})).toBe('completed');
   });
   it('preserves a successful result for an active parent even after execution expiry', async () => {
@@ -332,7 +411,9 @@ describe('Dawn Growth job orchestration', () => {
   it('verifies thread and independent trace absence before completing cleanup', async () => {
     const { handlers, deps, client } = fixture();
     deps.tracesAbsent.mockResolvedValue(false);
-    expect(await handlers.research_cleanup(db, cleanup, {})).toBe('deferred');
+    expect(await handlers.research_cleanup(db, observedCleanup, {})).toBe(
+      'deferred'
+    );
     expect(deps.defer).toHaveBeenLastCalledWith(
       db,
       expect.objectContaining({
@@ -342,14 +423,18 @@ describe('Dawn Growth job orchestration', () => {
     );
     expect(deps.complete).not.toHaveBeenCalled();
     deps.tracesAbsent.mockResolvedValue(true);
-    expect(await handlers.research_cleanup(db, cleanup, {})).toBe('completed');
+    expect(await handlers.research_cleanup(db, observedCleanup, {})).toBe(
+      'completed'
+    );
     expect(client.deleteThread).toHaveBeenCalled();
     expect(client.threadAbsent).toHaveBeenCalled();
     expect(deps.deleteTraces).toHaveBeenCalledWith(attemptId);
   });
   it('does not submit a trace deletion request when exact trace absence is already verified', async () => {
     const { handlers, deps } = fixture();
-    expect(await handlers.research_cleanup(db, cleanup, {})).toBe('completed');
+    expect(await handlers.research_cleanup(db, observedCleanup, {})).toBe(
+      'completed'
+    );
     expect(deps.tracesAbsent).toHaveBeenCalledWith(attemptId);
     expect(deps.deleteTraces).not.toHaveBeenCalled();
   });
@@ -370,14 +455,70 @@ describe('Dawn Growth job orchestration', () => {
     deps.deleteTraces.mockRejectedValue(
       new Error('trace configuration unavailable')
     );
-    expect(await handlers.research_cleanup(db, cleanup, {})).toBe('deferred');
+    expect(await handlers.research_cleanup(db, observedCleanup, {})).toBe(
+      'deferred'
+    );
     expect(deps.complete).not.toHaveBeenCalled();
     expect(deps.fail).not.toHaveBeenCalled();
     expect(deps.defer).toHaveBeenCalledWith(
       db,
       expect.objectContaining({
         errorCode: 'dawn_cleanup_reconciliation_required',
+        availableAt: new Date(now.getTime() + 3600000),
       })
     );
+  });
+  it('cancels a remaining run at the recovery deadline even without settled writers', async () => {
+    const { handlers, deps, client } = fixture();
+    deps.now = () => new Date(Date.parse(request.expiresAt) + 300000);
+    client.findRun.mockResolvedValue({ runId, status: 'running' });
+    deps.readClaim.mockResolvedValue(null);
+    expect(await handlers.research_cleanup(db, cleanup, {})).toBe('deferred');
+    expect(client.interrupt).toHaveBeenCalled();
+    expect(client.deleteThread).toHaveBeenCalled();
+    expect(deps.recordCleanupProof).not.toHaveBeenCalled();
+  });
+  it('restarts the absence confirmation when a thread reappears', async () => {
+    const { handlers, deps, client } = fixture();
+    client.threadAbsent.mockResolvedValueOnce(false).mockResolvedValue(true);
+    expect(await handlers.research_cleanup(db, observedCleanup, {})).toBe(
+      'deferred'
+    );
+    expect(deps.recordCleanupAbsence).toHaveBeenCalled();
+    expect(deps.finishCleanup).not.toHaveBeenCalled();
+  });
+  it('does not let a broken run listing block deadline cleanup after the parent is terminal', async () => {
+    const { handlers, deps, client } = fixture();
+    deps.now = () => new Date(Date.parse(request.expiresAt) + 300000);
+    client.findRun.mockRejectedValue(new Error('offline'));
+    expect(await handlers.research_cleanup(db, cleanup, {})).toBe('deferred');
+    expect(client.interrupt).toHaveBeenCalledWith(
+      threadId,
+      runId,
+      expect.any(AbortSignal)
+    );
+    expect(client.deleteThread).toHaveBeenCalled();
+  });
+  it('clears the old absence timestamp even when deletion still leaves the thread present', async () => {
+    const { handlers, deps, client } = fixture();
+    client.threadAbsent.mockResolvedValue(false);
+    expect(await handlers.research_cleanup(db, observedCleanup, {})).toBe(
+      'deferred'
+    );
+    expect(deps.recordCleanupAbsence).toHaveBeenCalledWith(
+      db,
+      expect.objectContaining({ absent: false })
+    );
+    expect(deps.finishCleanup).not.toHaveBeenCalled();
+  });
+  it('deletes at the deadline even when cancellation fails for an already missing run', async () => {
+    const { handlers, deps, client } = fixture();
+    deps.now = () => new Date(Date.parse(request.expiresAt) + 300000);
+    client.findRun.mockRejectedValue(new Error('offline'));
+    client.interrupt.mockRejectedValue(new Error('404'));
+    expect(await handlers.research_cleanup(db, cleanup, {})).toBe('deferred');
+    expect(client.deleteThread).toHaveBeenCalled();
+    expect(deps.recordCleanupAbsence).toHaveBeenCalled();
+    expect(deps.finishCleanup).not.toHaveBeenCalled();
   });
 });

@@ -17,7 +17,7 @@ Deploy backend observation acceptance and bridge resolution with the rollout swi
 
 All three campaign steps are founder session offers and send without waiting for an enrichment artifact; a cited research angle only selects an angle-flavored version of the same offer. A persisted `install_runtime` enrollment reason keeps all three steps generic even if optional research later becomes available. Form and project-claim enrollments retain their existing behavior. The shared delivery authorization, reply/suppression stops, mailbox recovery guard, unsubscribe links, and once-per-contact three-step enrollment remain in force; install-derived eligibility does not verify identity or employment.
 
-An eligible install/runtime link also queues at most one optional company-enrichment job per contact when the admitted install email has a valid non-personal domain. It uses the existing enrichment worker, capture provider and artifact schema. Its payload contains observation references and an explicit `install_runtime` source; it does not invent a form submission or verified company association. The worker rechecks contact approval, stops, lease, and linked evidence before capture and again before model execution. Persistence checks these controls again, and evidence redaction cancels affected work and removes retained artifacts. A skipped or failed enrichment job does not delay the generic hello sequence.
+An eligible install/runtime link also queues at most one optional company-enrichment job per contact when the admitted install email has a valid non-personal domain. It uses the Dawn company worker, browser capture, and `company_enrichment.v1` artifact. Its payload contains observation references and an explicit `install_runtime` source; it does not invent a form submission or verified company association. The worker rechecks contact approval, stops, lease, and linked evidence before capture and again before model execution. Persistence checks these controls again, and evidence redaction cancels affected work and removes retained artifacts. A skipped or failed enrichment job does not delay the generic hello sequence.
 
 Use the [growth operator reports](../../libs/growth/README.md) for the bounded funnel and contact journey. Collection and activation can precede fact projection; the report exposes pending observation work. Projection currently runs through the existing operator command rather than the lifecycle tick.
 
@@ -33,12 +33,18 @@ Use [DOGFOOD.md](./DOGFOOD.md) for the provider-free setup, probe, and exact cle
 
 ## Company evidence capture
 
-The Dawn production adapter is gated by `GROWTH_DAWN_ENRICHMENT_ENABLED=true`.
+Company enrichment uses Dawn. Set `GROWTH_DAWN_ENRICHMENT_ENABLED=false` to pause
+new work; production uses an explicit `true` value for an enabled rollout.
 Configure the private bare HTTPS `GROWTH_RESEARCH_URL`, `LANGSMITH_API_KEY`,
 `GROWTH_RESEARCH_DATABASE_URL` for its dedicated execution fences, and matching
-`GROWTH_RESEARCH_TRACE_PROJECT_ID`. Keep the switch off until the managed and
-quality proofs pass. Existing persisted Dawn attempts still reconcile when the
-switch is off; they never fall back to another paid generator.
+`GROWTH_RESEARCH_TRACE_PROJECT_ID`. The switch controls new work. Existing
+persisted Dawn attempts and cleanup still reconcile when the switch is off;
+they never fall back to another paid generator.
+
+The former Anthropic lifecycle generator and baseline execution command are
+retired. Lifecycle no longer needs `ANTHROPIC_API_KEY` or
+`LIFECYCLE_ENRICHMENT_MODEL`; keep provider credentials used by unrelated tools
+in their own configuration.
 
 Growth records the immutable captured snapshot and opaque attempt/thread identity
 before submission. A lost acknowledgement triggers lookup of that exact attempt,
@@ -48,14 +54,18 @@ historical campaign drafts for generic fallback; deterministic progress scores r
 separate. Existing legacy artifacts remain readable.
 
 Independent `research_cleanup` jobs remain dispatchable after contact cancellation
-or deletion. They require terminal-run and settled-writer evidence before deleting
-temporary threads, then separately verify trace deletion. Uncertain admission,
-unsettled writers and failed deletion remain visible and retryable. An expired
-request alone is not proof that the server never accepted its input.
-If an admitted request expires before execution, the managed adapter records a
-settled rejection fence without running the agent; a terminal run plus that fence
-allows normal cleanup. Ambiguous submissions and worker crashes without settlement
-still require operator investigation and must not be marked complete by timeout.
+or deletion. V1 gives uncertain submissions and crashed attempts five minutes beyond
+their execution deadline to reconcile, then fails unresolved enrichment and cleans
+up its temporary thread. Cleanup cancels any remaining run, deletes the thread, and
+checks absence again on a later dispatcher tick. This is bounded recovery, not proof
+that the remote worker stopped. The opaque execution fence remains unchanged and
+prevents a replay from starting another paid attempt.
+
+Trace deletion is checked separately and retried hourly. Cleanup has a seven-day
+limit; an unresolved deletion ends visibly failed, never reported as successful.
+Cleanup removes captured research input from terminal parent jobs, including when
+the cleanup limit is reached. That limit also fails any still-active parent attempt.
+Published company artifacts retain their source evidence until contact deletion.
 
 Company capture uses our self-hosted Firecrawl open-source browser scraper. Configure `COMPANY_SCRAPER_URL` as its bare HTTPS origin and supply the shared server-only `COMPANY_SCRAPER_SECRET`. These are our own service settings; no Firecrawl account or hosted API key is used. The former `LIFECYCLE_COMPANY_CAPTURE_PROVIDER` selector and direct HTTP transport are retired. Explicit HTTP loopback IP origins are accepted for local container verification. Configuration is checked only when enrichment needs company evidence and does not gate email delivery. Failures use existing enrichment retry handling, without a direct-fetch fallback.
 
