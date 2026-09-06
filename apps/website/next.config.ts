@@ -24,6 +24,9 @@ export const nextConfig: WithNxOptions = {
       'content/docs/**/*.mdx',
       // Growth validates blog observations against the catalog at request time.
       'content/blog/**/*.mdx',
+      // The homepage stage proof lines are derived from the demo recording at
+      // build time; traced as a safety net so a runtime read cannot 500.
+      '../../examples/chat/angular/public/stage-replay.json',
     ],
   },
   skipTrailingSlashRedirect: true,
@@ -32,8 +35,16 @@ export const nextConfig: WithNxOptions = {
   // deletion, so every retired path lands on /privacy rather than a 404.
   redirects: async () => [
     { source: '/docs/telemetry', destination: '/privacy', permanent: true },
-    { source: '/docs/telemetry/:path*', destination: '/privacy', permanent: true },
-    { source: '/api/markdown/telemetry', destination: '/privacy', permanent: true },
+    {
+      source: '/docs/telemetry/:path*',
+      destination: '/privacy',
+      permanent: true,
+    },
+    {
+      source: '/api/markdown/telemetry',
+      destination: '/privacy',
+      permanent: true,
+    },
     {
       source: '/api/markdown/telemetry/:path*',
       destination: '/privacy',

@@ -1,6 +1,8 @@
+import 'server-only';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { StageBeat } from './stage-beats';
+import { resolveWebsiteDir } from './website-dir';
 
 /**
  * Proof lines for the stage rail (spec §4): counts read from the committed
@@ -17,6 +19,13 @@ interface RecordedRun {
   events: { event: unknown }[];
 }
 
+/**
+ * `histories[i].afterRun` is the number of runs that had COMPLETED when the
+ * snapshot was taken (so the snapshot after `runs[k]` has `afterRun === k + 1`,
+ * and the one the recorder took before `runs[k]` started has `afterRun === k`).
+ * A run that ends interrupted, and a reload, trigger no refresh, so not every
+ * count has a snapshot; look-ups below say which one they want.
+ */
 interface Recording {
   runs: RecordedRun[];
   histories: { afterRun: number; states: unknown[] }[];
@@ -88,6 +97,21 @@ function citationCount(run: RecordedRun): number | null {
   return Array.isArray(citations) ? citations.length : null;
 }
 
+/** Largest `__interrupt__` array any event of the run carried (0 when none). */
+function interruptCount(run: RecordedRun): number {
+  let max = 0;
+  for (const { event } of run.events) {
+    const ev = event as Dict;
+    for (const list of [
+      ev['__interrupt__'],
+      (ev['data'] as Dict | undefined)?.['__interrupt__'],
+    ]) {
+      if (Array.isArray(list) && list.length > max) max = list.length;
+    }
+  }
+  return max;
+}
+
 function countKey(o: unknown, key: string): number {
   if (Array.isArray(o)) return o.reduce((n, v) => n + countKey(v, key), 0);
   if (o && typeof o === 'object') {
@@ -107,8 +131,12 @@ const counted = (n: number | null, w: string) => (n ? plural(n, w) : null);
 export function deriveStageProof(rec: Recording): Record<StageBeat, string> {
   const run = (beat: string, kind: string): RecordedRun | undefined =>
     rec.runs.find((r) => r.beat === beat && r.action.kind === kind);
-  const histAfter = (i: number): number | null =>
-    rec.histories.filter((h) => h.afterRun === i).at(-1)?.states.length ?? null;
+  /** Checkpoint count of the latest snapshot taken with exactly `n` runs completed. */
+  const histAfter = (n: number): number | null =>
+    rec.histories.filter((h) => h.afterRun === n).at(-1)?.states.length ?? null;
+  /** Same, but the latest snapshot with at most `n` runs completed. */
+  const histUpTo = (n: number): number | null =>
+    rec.histories.filter((h) => h.afterRun <= n).at(-1)?.states.length ?? null;
 
   const r0 = run('stream', 'submit');
   const stream = join([
@@ -122,10 +150,17 @@ export function deriveStageProof(rec: Recording): Record<StageBeat, string> {
     (r) => r.action.checkpointIndex !== undefined
   );
   const fork = forkIdx >= 0 ? rec.runs[forkIdx] : undefined;
+  // The count the beat ends on: the snapshot after the fork run completed.
   const checkpoints = fork ? histAfter(forkIdx + 1) : null;
-  // history() is newest-first: index i of n is step n - i.
+  // `checkpointIndex` indexes the history the user forked FROM, i.e. the
+  // snapshot taken before the fork run started (forkIdx runs completed).
+  // That list is newest-first, so index i of n is the chronological
+  // ordinal n - i: "forked at step 1" means the first of the checkpoints
+  // (the devtools label that same row `__start__`; the ordinal is the
+  // count the copy can be checked against, the label is not).
+  const forkFrom = fork ? histAfter(forkIdx) : null;
   const forkStep =
-    fork && checkpoints ? checkpoints - (fork.action.checkpointIndex ?? 0) : 0;
+    fork && forkFrom ? forkFrom - (fork.action.checkpointIndex ?? 0) : 0;
   const persist = join([
     reload ? 'reloaded' : null,
     counted(checkpoints, 'checkpoint'),
@@ -133,18 +168,14 @@ export function deriveStageProof(rec: Recording): Record<StageBeat, string> {
   ]);
 
   const r4 = run('approve', 'submit');
-  const interrupted =
-    r4?.events.some(({ event }) => {
-      const ev = event as Dict;
-      return (
-        Array.isArray(ev['__interrupt__']) ||
-        Array.isArray((ev['data'] as Dict | undefined)?.['__interrupt__'])
-      );
-    }) ?? false;
+  const interrupts = r4 ? interruptCount(r4) : 0;
   const r4i = r4 ? rec.runs.indexOf(r4) : -1;
-  const last = r4 ? histAfter(r4i) ?? histAfter(r4i + 1) : null;
+  // The approve run ends interrupted, so the recorder took no snapshot with
+  // r4i + 1 runs completed; the latest one at or before that count is the
+  // history the interrupt is pending on.
+  const last = r4 ? histUpTo(r4i + 1) : null;
   const approve = join([
-    interrupted ? '1 interrupt pending' : null,
+    interrupts > 0 ? `${plural(interrupts, 'interrupt')} pending` : null,
     last ? `checkpoint ${last} of ${last}` : null,
   ]);
 
@@ -165,27 +196,37 @@ export function deriveStageProof(rec: Recording): Record<StageBeat, string> {
   return { stream, persist, approve, render };
 }
 
-// The cwd differs between `nx build website` (repo root) and
-// `cd apps/website && vitest`; the two candidates cover both.
-const RECORDING_CANDIDATES = [
-  resolve(process.cwd(), 'examples/chat/angular/public/stage-replay.json'),
-  resolve(
-    process.cwd(),
-    '../../examples/chat/angular/public/stage-replay.json'
-  ),
-];
+/**
+ * The committed recording the homepage stage replays; resolved from the app
+ * directory so `nx build website` (repo root) and `cd apps/website && vitest`
+ * read the same file.
+ */
+const RECORDING_PATH = resolve(
+  resolveWebsiteDir(),
+  '../../examples/chat/angular/public/stage-replay.json'
+);
 
 function readRecording(): Recording {
-  for (const p of RECORDING_CANDIDATES) {
-    try {
-      return JSON.parse(readFileSync(p, 'utf8')) as Recording;
-    } catch {
-      /* next candidate */
-    }
+  let raw: string;
+  try {
+    raw = readFileSync(RECORDING_PATH, 'utf8');
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    throw new Error(
+      code === 'ENOENT'
+        ? `stage-replay.json not found at ${RECORDING_PATH}; the website build reads the demo recording for the stage proof lines`
+        : `stage-replay.json at ${RECORDING_PATH} could not be read (${
+            code ?? String(err)
+          })`
+    );
   }
-  throw new Error(
-    'stage-replay.json not found; the website build reads the demo recording for the stage proof lines'
-  );
+  try {
+    return JSON.parse(raw) as Recording;
+  } catch (err) {
+    throw new Error(
+      `stage-replay.json at ${RECORDING_PATH} is not valid JSON: ${String(err)}`
+    );
+  }
 }
 
 export const STAGE_PROOF: Record<StageBeat, string> = deriveStageProof(

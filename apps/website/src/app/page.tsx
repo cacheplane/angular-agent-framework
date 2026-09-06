@@ -7,6 +7,9 @@ import { HomeFAQ } from '../components/landing/HomeFAQ';
 import { FinalCTA } from '../components/landing/FinalCTA';
 import { RecentArticles } from '../components/landing/RecentArticles';
 import { PROVE_IT_ROWS } from '../lib/positioning';
+// The homepage must stay statically rendered (no cookies()/headers()/dynamic):
+// the proof lines are read from the demo recording at build time, and the file
+// is traced into the deployment only as a safety net.
 import { STAGE_PROOF } from '../lib/stage-proof';
 import {
   createPageMetadata,
