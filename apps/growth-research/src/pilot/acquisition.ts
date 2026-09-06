@@ -1,19 +1,19 @@
 import {
-  fetchCompanyEvidence,
-  type CompanyFetchOverrides,
-  type CompanyPageDiagnostic,
-} from '../../../lifecycle/src/enrichment/company-fetch.js';
+  createCompanyCapture,
+  type CompanyCaptureDiagnostic,
+} from '../../../lifecycle/src/enrichment/company-capture.js';
 import type { CompanyPageEvidence } from '../../../lifecycle/src/enrichment/schema.js';
 
-const expectedPaths = ['/', '/about', '/pricing'];
+const expectedPaths = ['/'];
 export async function acquireCompanies(
   domains: string[],
   signal: AbortSignal,
   capture: (
     domain: string,
     signal: AbortSignal,
-    options?: Pick<CompanyFetchOverrides, 'onDiagnostic'>
-  ) => Promise<CompanyPageEvidence[]> = fetchCompanyEvidence
+    options?: { onDiagnostic?: (diagnostic: CompanyCaptureDiagnostic) => void }
+  ) => Promise<CompanyPageEvidence[]> = (domain, signal, options) =>
+    createCompanyCapture(process.env, options?.onDiagnostic)(domain, signal)
 ) {
   if (
     domains.length < 1 ||
@@ -41,14 +41,14 @@ export async function acquireCompanies(
     reason: 'unavailable' | 'capture_failed' | null;
     redirectedPathsIndeterminate: boolean;
     filteredIdentityItems: number;
-    pageDiagnostics: CompanyPageDiagnostic[];
+    pageDiagnostics: CompanyCaptureDiagnostic[];
   }[] = [];
   for (const [index, domain] of domains.entries()) {
     signal.throwIfAborted();
     const id = `public-${index + 1}`;
     let pages: CompanyPageEvidence[] = [],
       failed = false;
-    const pageDiagnostics: CompanyPageDiagnostic[] = [];
+    const pageDiagnostics: CompanyCaptureDiagnostic[] = [];
     try {
       pages = await capture(domain, signal, {
         onDiagnostic: (diagnostic) => pageDiagnostics.push(diagnostic),
@@ -71,9 +71,8 @@ export async function acquireCompanies(
       snippets: page.snippets.filter(safeExcerpt),
     }));
     const paths = pages.map((page) => new URL(page.canonicalUrl).pathname);
-    const unavailablePaths = expectedPaths.filter(
-      (path) => !paths.includes(path)
-    );
+    // A successful browser redirect still fulfills the homepage request.
+    const unavailablePaths = pages.length ? [] : [...expectedPaths];
     cases.push({
       id,
       kind: 'public',
@@ -84,13 +83,7 @@ export async function acquireCompanies(
     });
     captures.push({
       caseId: id,
-      status: failed
-        ? 'failed'
-        : !pages.length
-        ? 'empty'
-        : pages.length === 3
-        ? 'complete'
-        : 'partial',
+      status: failed ? 'failed' : !pages.length ? 'empty' : 'complete',
       unavailablePaths,
       reason: failed
         ? 'capture_failed'

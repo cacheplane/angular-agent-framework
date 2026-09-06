@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url';
 
 const graphId = '/enrichment/research#agent';
 const publicGraphId = 'growth_research';
+const companyGraphId = 'growth_company';
+const companyEntry = './src/production/entry.ts:graph';
 const apiVersion = '0.13.4';
 const deploymentTsConfig = {
   compilerOptions: { target: 'ES2024', module: 'NodeNext', moduleResolution: 'NodeNext', types: ['node'], skipLibCheck: true, noEmit: true },
@@ -44,7 +46,7 @@ async function copySource(root: string, path: string, output: string): Promise<v
   await contained(root, path);
   const name = basename(path);
   const local = relative(root, path);
-  if (local === 'src/app/enrichment/company-pilot') return;
+  if (local.startsWith('src/production/') && !['contracts.ts', 'entry.ts', 'executor.ts', 'claims.ts', 'telemetry.ts', 'tracing.ts'].includes(name)) throw new Error(`Unexpected production source: ${local}`);
   if (local.startsWith('src/pilot/') && !['context.ts', 'contracts.ts', 'validation.ts'].includes(name)) return;
   if (name.startsWith('.') || name === 'node_modules' || /\.(spec|test)\.[cm]?ts$/.test(name)) return;
   if ((await lstat(path)).isDirectory()) {
@@ -91,10 +93,15 @@ export async function verifyLangSmithArtifact(output: string): Promise<void> {
   const root = await realpath(output);
   const config = await readObject(join(root, 'langgraph.json'));
   const graphs = object(config['graphs'], 'graphs');
-  if (Object.keys(graphs).length !== 1 || typeof graphs[publicGraphId] !== 'string' || !/^\.\/\.dawn\/build\/[\w-]+\.ts:graph$/.test(graphs[publicGraphId])) {
-    throw new Error(`Expected exactly the ${publicGraphId} public graph`);
+  if (Object.keys(graphs).some(key => ![publicGraphId, companyGraphId].includes(key)) || typeof graphs[publicGraphId] !== 'string' || !/^\.\/\.dawn\/build\/[\w-]+\.ts:graph$/.test(graphs[publicGraphId])) {
+    throw new Error(`Expected the allowlisted public graphs`);
   }
   await validateReference(root, graphs[publicGraphId], 'graph');
+  if (companyGraphId in graphs) {
+    if (graphs[companyGraphId] !== companyEntry) throw new Error('Unexpected production graph');
+    await validateReference(root, companyEntry, 'company graph');
+    await validateReference(root, './.dawn/build/enrichment-company-pilot.ts:graph', 'private company graph');
+  }
   if (JSON.stringify(await readObject(join(root, 'tsconfig.json'))) !== JSON.stringify(deploymentTsConfig)) throw new Error('Unexpected standalone TypeScript configuration');
   if (config['api_version'] !== apiVersion) throw new Error(`Expected Agent Server API version ${apiVersion}`);
   if (config['node_version'] !== '24' || JSON.stringify(config['env']) !== '{}' || JSON.stringify(config['dependencies']) !== '["."]') {
@@ -122,6 +129,9 @@ export async function stageLangSmith(appRoot: string): Promise<string> {
   const pilotId = '/enrichment/company-pilot#agent';
   if (Object.keys(generatedGraphs).some(key => key !== graphId && key !== specialistId && key !== pilotId)) throw new Error('Unexpected generated graph');
   if (pilotId in generatedGraphs && generatedGraphs[pilotId] !== './.dawn/build/enrichment-company-pilot.ts:graph') throw new Error('Unexpected pilot graph');
+  let hasProduction = false;
+  try { await contained(root, join(root, 'src/production/entry.ts')); hasProduction = true; } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
+  if (hasProduction && !(pilotId in generatedGraphs)) throw new Error('Production requires the generated company graph');
   if (specialistId in generatedGraphs) {
     if (generatedGraphs[specialistId] !== './.dawn/build/enrichment-research-subagents-researcher.ts:graph') throw new Error('Unexpected specialist graph entry');
     await validateReference(root, generatedGraphs[specialistId], 'specialist graph');
@@ -146,7 +156,6 @@ export async function stageLangSmith(appRoot: string): Promise<string> {
   await copyFile(join(root, 'dawn.config.ts'), join(output, 'dawn.config.ts'));
   const copySchemas = async (path: string, target: string): Promise<void> => {
     await contained(root, path);
-    if (['.dawn/routes/enrichment/company-pilot', '.dawn/routes/enrichment-company-pilot'].includes(relative(root, path))) return;
     if ((await lstat(path)).isDirectory()) {
       await mkdir(target, { recursive: true });
       for (const name of await readdir(path)) await copySchemas(join(path, name), join(target, name));
@@ -157,12 +166,11 @@ export async function stageLangSmith(appRoot: string): Promise<string> {
   };
   await copySchemas(join(root, '.dawn/routes'), join(output, '.dawn/routes'));
   for (const name of await readdir(join(root, '.dawn/build'))) {
-    if (name === 'enrichment-company-pilot.ts') continue;
     if (!name.endsWith('.ts')) continue;
     await contained(root, join(root, '.dawn/build', name));
     await copyFile(join(root, '.dawn/build', name), join(output, '.dawn/build', name));
   }
-  for (const [name, value] of Object.entries({ 'package.json': manifest, 'package-lock.json': lock, 'tsconfig.json': deploymentTsConfig, 'langgraph.json': { ...config, graphs: { [publicGraphId]: generatedGraphs[graphId] }, node_version: '24', api_version: apiVersion, dependencies: ['.'], env: {} } })) {
+  for (const [name, value] of Object.entries({ 'package.json': manifest, 'package-lock.json': lock, 'tsconfig.json': deploymentTsConfig, 'langgraph.json': { ...config, graphs: { [publicGraphId]: generatedGraphs[graphId], ...(hasProduction ? { [companyGraphId]: companyEntry } : {}) }, node_version: '24', api_version: apiVersion, dependencies: ['.'], env: {} } })) {
     await writeFile(join(output, name), `${JSON.stringify(value, null, 2)}\n`);
   }
   try { await verifyLangSmithArtifact(output); } catch (error) { await rm(output, { recursive: true, force: true }); throw error; }

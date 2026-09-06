@@ -3,7 +3,7 @@ import {
   CompanyFetchSecurityError,
   extractEvidence,
   validatePublicCompanyHostname,
-  type CompanyFetchDependencies,
+  type CompanyHostnameResolver,
 } from './company-fetch.js';
 import {
   CompanyPageEvidenceSchema,
@@ -33,7 +33,7 @@ export interface FirecrawlOptions {
   secret: string;
   allowLocalHttp?: boolean;
   fetch?: typeof fetch;
-  resolve?: CompanyFetchDependencies['resolve'];
+  resolve?: CompanyHostnameResolver;
   now?: () => Date;
   onDiagnostic?: (diagnostic: FirecrawlDiagnostic) => void;
 }

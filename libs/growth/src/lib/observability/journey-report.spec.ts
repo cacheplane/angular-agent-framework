@@ -6,6 +6,22 @@ function executor(rows: Record<string, unknown>[][] = []) {
   return { execute, transaction: vi.fn() } as unknown as SqlExecutor;
 }
 describe('bounded journey reports', () => {
+  it('reads versioned company artifacts and historical campaign artifacts', async () => {
+    const id = '11111111-1111-4111-8111-111111111111';
+    const db = executor([[{ id }], [{ id, deleted_at: null }]]);
+    await readContactJourney(db, id);
+    const sql = vi
+      .mocked(db.execute)
+      .mock.calls.map((call) => call[0])
+      .join('\n');
+    expect(sql).toContain("'company_enrichment.v1'");
+    expect(sql).toContain("a.content->'profile'");
+    expect(sql).toContain("s->>'canonicalUrl'");
+    expect(sql).toContain("'enrichment.v1'");
+    expect(sql).toContain("a.content->'claims'");
+    expect(sql).toContain("'quote'");
+    expect(sql).toContain("a.content->'execution'");
+  });
   it.each([
     [
       'https://example.invalid/about?email=person%40example.org#private',

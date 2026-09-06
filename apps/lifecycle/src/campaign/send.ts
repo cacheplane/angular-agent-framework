@@ -41,6 +41,10 @@ import { Resend } from 'resend';
 
 import { generateEnrichmentArtifact } from '../enrichment/anthropic.js';
 import { createCompanyCapture } from '../enrichment/company-capture.js';
+import {
+  createDawnJobHandlers,
+  type DawnJobDependencies,
+} from '../enrichment/dawn-jobs.js';
 import { buildResearchInput } from '../enrichment/research-input.js';
 import {
   EnrichmentArtifactSchema,
@@ -50,6 +54,8 @@ import {
 import { renderFulfillmentTemplate } from '../fulfillment/templates.js';
 import { renderInternalNotificationSummary } from '../notifications/templates.js';
 import { DeterministicLifecycleJobError } from '../job-errors.js';
+import { LIFECYCLE_SCORE_CONTENT_REGISTRY_V1 } from '../score-policy.js';
+export { LIFECYCLE_SCORE_CONTENT_REGISTRY_V1 } from '../score-policy.js';
 import {
   renderCampaignTemplate,
   renderEvidenceCampaignTemplate,
@@ -63,12 +69,6 @@ const STEP_NAMES: Record<1 | 2 | 3, CampaignStep> = {
   3: 'day-8',
 };
 const RETRY_DELAY_MS = 60_000;
-// V1 intentionally qualifies no marketing content until a closed repository
-// registry is approved. Verified form and linked-project signals still score.
-export const LIFECYCLE_SCORE_CONTENT_REGISTRY_V1 = {
-  version: 'threadplane-lifecycle-content-registry:v1:no-marketing-content',
-  entries: [],
-} as const;
 
 export interface LifecycleJobContext {
   contactId: string;
@@ -1038,8 +1038,13 @@ export function createDefaultLifecycleJobDependencies(
 
 export function createLifecycleAppJobHandlers(
   dependenciesFactory: () => LifecycleJobDependencies = () =>
-    createDefaultLifecycleJobDependencies()
+    createDefaultLifecycleJobDependencies(),
+  options: {
+    environment?: Record<string, string | undefined>;
+    dawnDependenciesFactory?: () => DawnJobDependencies;
+  } = {}
 ) {
+  const dawn = createDawnJobHandlers(options.dawnDependenciesFactory);
   const handler = (
     executor: SqlExecutor,
     job: GrowthJob,
@@ -1048,7 +1053,16 @@ export function createLifecycleAppJobHandlers(
     dispatchLifecycleAppOwnedJob(executor, job, context, dependenciesFactory());
   return {
     fulfill: handler,
-    enrich: handler,
+    enrich: (
+      executor: SqlExecutor,
+      job: GrowthJob,
+      context: { signal?: AbortSignal }
+    ) =>
+      (options.environment ?? process.env)['GROWTH_DAWN_ENRICHMENT_ENABLED'] ===
+        'true' || 'research_attempt' in job.payload
+        ? dawn.enrich(executor, job, context)
+        : handler(executor, job, context),
+    research_cleanup: dawn.research_cleanup,
     notify: handler,
     send_step: handler,
   };

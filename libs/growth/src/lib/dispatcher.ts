@@ -13,7 +13,12 @@ export type GrowthDispatchResult =
   | 'deferred'
   | 'recovery_paused';
 
-export type GrowthAppJobKind = 'fulfill' | 'enrich' | 'notify' | 'send_step';
+export type GrowthAppJobKind =
+  | 'fulfill'
+  | 'enrich'
+  | 'notify'
+  | 'send_step'
+  | 'research_cleanup';
 
 export interface GrowthAppJobDispatchContext {
   signal?: AbortSignal;

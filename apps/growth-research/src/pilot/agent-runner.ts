@@ -12,6 +12,7 @@ import {
   withPilotContext,
   PilotStop,
   pilotLimits,
+  drainPilotOperations,
 } from './context.js';
 import { validateCandidate } from './validation.js';
 
@@ -43,7 +44,7 @@ type Invocation = (
   }
 ) => Promise<unknown>;
 let running = false;
-async function generatedInvoke(...args: Parameters<Invocation>) {
+export async function generatedInvoke(...args: Parameters<Invocation>) {
   const module = await import(
     pathToFileURL(
       resolve(
@@ -103,18 +104,23 @@ export async function runAgent(
   } catch {
     const reason = context.controller.signal.reason;
     outcome =
-      reason &&
-      [
-        'cancelled',
-        'deadline',
-        'model_limit',
-        'evidence_limit',
-        'submission_limit',
-      ].includes(reason.code)
+      reason?.code === 'submitted' && context.candidate
+        ? 'completed'
+        : reason &&
+          [
+            'cancelled',
+            'deadline',
+            'model_limit',
+            'evidence_limit',
+            'submission_limit',
+          ].includes(reason.code)
         ? (reason.code as AgentResult['outcome'])
         : 'failed';
   } finally {
     context.closed = true;
+    if (!context.controller.signal.aborted)
+      context.controller.abort(new PilotStop('run_closed'));
+    await drainPilotOperations(context);
     clearTimeout(timer);
     options.signal?.removeEventListener('abort', cancel);
     tracingKeys.forEach((key, i) => {
@@ -123,6 +129,10 @@ export async function runAgent(
     });
     running = false;
   }
+  // A submitted abort cannot replace a later cancellation/deadline on the same
+  // controller. Recheck the caller and wall clock after transport quiescence.
+  if (options.signal?.aborted) outcome = 'cancelled';
+  else if (Date.now() >= context.deadline) outcome = 'deadline';
   const candidate = outcome === 'completed' ? context.candidate : undefined;
   return {
     attempts: context.attempts,

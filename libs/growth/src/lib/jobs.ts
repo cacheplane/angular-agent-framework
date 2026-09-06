@@ -683,7 +683,7 @@ export async function readLifecycleJobContext(
        from growth_artifacts stored
        join growth_jobs source on source.id = stored.job_id
        where stored.contact_id = c.id
-         and stored.kind = 'enrichment.v1'
+         and stored.kind in ('enrichment.v1', 'company_enrichment.v1')
          and stored.schema_version = 1
          and source.kind = 'enrich'
          and (
@@ -1925,6 +1925,9 @@ export async function persistJobArtifact(
   }
 ): Promise<GrowthArtifact> {
   const kind = requiredText('kind', input.kind);
+  if (kind === 'company_enrichment.v1') {
+    throw new Error('Company research requires publishResearchArtifact');
+  }
   const schemaVersion = positiveInteger(
     'schemaVersion',
     input.schemaVersion,

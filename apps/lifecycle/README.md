@@ -33,10 +33,34 @@ Use [DOGFOOD.md](./DOGFOOD.md) for the provider-free setup, probe, and exact cle
 
 ## Company evidence capture
 
-`LIFECYCLE_COMPANY_CAPTURE_PROVIDER` defaults to `direct`, preserving the existing company-page fetch. To use our self-hosted Firecrawl open-source browser scraper, set it to exactly `firecrawl`, configure `COMPANY_SCRAPER_URL` as its bare HTTPS origin, and supply the shared server-only `COMPANY_SCRAPER_SECRET`. These are our own service settings; no Firecrawl account or hosted API key is used. Explicit HTTP loopback IP origins are accepted for local container verification. Configuration is checked only when enrichment needs company evidence and does not gate email delivery. Failures use existing enrichment retry handling, without a direct-fetch fallback.
+The Dawn production adapter is gated by `GROWTH_DAWN_ENRICHMENT_ENABLED=true`.
+Configure the private bare HTTPS `GROWTH_RESEARCH_URL`, `LANGSMITH_API_KEY`,
+`GROWTH_RESEARCH_DATABASE_URL` for its dedicated execution fences, and matching
+`GROWTH_RESEARCH_TRACE_PROJECT_ID`. Keep the switch off until the managed and
+quality proofs pass. Existing persisted Dawn attempts still reconcile when the
+switch is off; they never fall back to another paid generator.
 
-The client makes one homepage request with a 15-second total deadline and 2 MiB response limit. The scraper has a shorter 10-second work budget and one active capture; busy requests fail without queueing. The existing HTML extractor produces the same bounded evidence schema. The service returns the requested source and actual final browser URL; the client validates both and checks public input/final hostnames. The browser service owns remote navigation and subresource checks. This service boundary does not provide the direct fetcher's DNS-pinned transport guarantees, and capture is not proof of employment or company ownership. See [the scraper deployment](../../deployments/company-scraper/README.md) for its pinned source, patch, and verification commands.
+Growth records the immutable captured snapshot and opaque attempt/thread identity
+before submission. A lost acknowledgement triggers lookup of that exact attempt,
+never a replacement POST. Validated results become `company_enrichment.v1` artifacts
+with source quotes and execution references. The newest company artifact supersedes
+historical campaign drafts for generic fallback; deterministic progress scores remain
+separate. Existing legacy artifacts remain readable.
 
-Client capture logs contain provider, outcome, status, and byte count where available (direct capture also identifies the fixed requested path). They exclude page text, company URLs, and credentials. Keep the default provider until the self-hosted service is deployed and authenticated capture is verified. Browser rendering does not include Firecrawl Cloud's advanced anti-bot engine.
+Independent `research_cleanup` jobs remain dispatchable after contact cancellation
+or deletion. They require terminal-run and settled-writer evidence before deleting
+temporary threads, then separately verify trace deletion. Uncertain admission,
+unsettled writers and failed deletion remain visible and retryable. An expired
+request alone is not proof that the server never accepted its input.
+If an admitted request expires before execution, the managed adapter records a
+settled rejection fence without running the agent; a terminal run plus that fence
+allows normal cleanup. Ambiguous submissions and worker crashes without settlement
+still require operator investigation and must not be marked complete by timeout.
+
+Company capture uses our self-hosted Firecrawl open-source browser scraper. Configure `COMPANY_SCRAPER_URL` as its bare HTTPS origin and supply the shared server-only `COMPANY_SCRAPER_SECRET`. These are our own service settings; no Firecrawl account or hosted API key is used. The former `LIFECYCLE_COMPANY_CAPTURE_PROVIDER` selector and direct HTTP transport are retired. Explicit HTTP loopback IP origins are accepted for local container verification. Configuration is checked only when enrichment needs company evidence and does not gate email delivery. Failures use existing enrichment retry handling, without a direct-fetch fallback.
+
+The client makes one homepage request with a 15-second total deadline and 2 MiB response limit. The scraper has a shorter 10-second work budget and one active capture; busy requests fail without queueing. The existing HTML extractor produces the same bounded evidence schema. The service returns the requested source and actual final browser URL; the client validates both and checks public input/final hostnames. The browser service owns remote navigation and subresource checks. Client-side DNS checks do not pin the remote browser's connections, and capture is not proof of employment or company ownership. See [the scraper deployment](../../deployments/company-scraper/README.md) for its pinned source, patch, and verification commands.
+
+Client capture logs contain provider, outcome, status, and byte count where available. They exclude page text, company URLs, and credentials. Browser rendering does not include Firecrawl Cloud's advanced anti-bot engine. The [Dawn research app](../growth-research/README.md) retains the bounded research pilot and deployment findings.
 
 Evidence extraction excludes navigation, menu, footer, and header-list subtrees, including nested text. Snippets prefer paragraphs and product lists in `<main>`, falling back to the remaining document when main has no eligible snippets. Title, hero headings and paragraphs, and description metadata remain available. Empty captured pages are omitted from model input. The enrichment prompt requires substantive support for capability claims and explicit first-party attribution for retained promotional rankings or assertions. This improves evidence selection; valid source references alone do not prove a generated claim is true.

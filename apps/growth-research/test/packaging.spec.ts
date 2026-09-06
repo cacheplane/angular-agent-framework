@@ -37,19 +37,20 @@ async function fixture() {
 afterEach(async () => { await Promise.all(roots.splice(0).map(root => rm(root, { recursive: true, force: true }))); });
 
 describe('standalone LangSmith packaging', () => {
-  it('excludes the local pilot route and operator modules from the managed artifact', async () => {
+  it('packages the production adapter and private generated company child, excluding operator modules', async () => {
     const root = await fixture();
     const path = join(root, '.dawn/build/langgraph.json');
     const config = JSON.parse(await readFile(path, 'utf8'));
     config.graphs['/enrichment/company-pilot#agent'] = './.dawn/build/enrichment-company-pilot.ts:graph';
     await writeFile(path, JSON.stringify(config));
-    for (const file of ['.dawn/build/enrichment-company-pilot.ts', 'src/app/enrichment/company-pilot/index.ts', 'src/pilot/baseline.ts']) {
+    for (const file of ['.dawn/build/enrichment-company-pilot.ts', 'src/app/enrichment/company-pilot/index.ts', 'src/production/entry.ts', 'src/pilot/baseline.ts']) {
       await mkdir(dirname(join(root, file)), { recursive: true });
       await writeFile(join(root, file), 'export const privatePilot = true;');
     }
     const output = await stageLangSmith(root);
-    expect(await readdir(join(output, '.dawn/build'))).toEqual(['enrichment-research.ts']);
-    expect(await readdir(join(output, 'src/app/enrichment'))).toEqual(['research']);
+    expect(await readdir(join(output, '.dawn/build'))).toEqual(['enrichment-company-pilot.ts', 'enrichment-research.ts']);
+    expect(await readdir(join(output, 'src/app/enrichment'))).toEqual(['company-pilot', 'research']);
+    expect(JSON.parse(await readFile(join(output, 'langgraph.json'), 'utf8')).graphs).toEqual({ growth_research: graphEntry, growth_company: './src/production/entry.ts:graph' });
     await expect(readFile(join(output, 'src/pilot/baseline.ts'))).rejects.toThrow();
   });
   it('normalizes Node 22 to 24 and clears environment file configuration', async () => {

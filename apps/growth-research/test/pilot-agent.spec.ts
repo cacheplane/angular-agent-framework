@@ -5,7 +5,12 @@ import { tmpdir } from 'node:os';
 import { resolve, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { BoundedChatOpenAI } from '../src/runtime/model-boundary.js';
-import { createPilotContext, withPilotContext } from '../src/pilot/context.js';
+import {
+  createPilotContext,
+  withPilotContext,
+  submitCandidate,
+  getPilotContext,
+} from '../src/pilot/context.js';
 import { syntheticCorpus } from '../src/pilot/fixtures.js';
 import { runAgent } from '../src/pilot/agent-runner.js';
 let sharedMock:
@@ -127,7 +132,7 @@ it('invokes the actual generated local graph with only company tools', async () 
         unknowns: [],
         claims: [
           {
-            text: 'Atlas builds observability software.',
+            text: 'Atlas Synthetic builds observability software.',
             citations: [
               {
                 sourceId: 'source-1',
@@ -145,8 +150,43 @@ it('invokes the actual generated local graph with only company tools', async () 
       invoke: invokeGenerated,
     });
     expect(result.outcome).toBe('completed');
-    expect(result.modelCalls).toBe(3);
+    expect(result.modelCalls).toBe(2);
+    // Authored guidance must reach the actual generated provider request.
+    // This guards prompt delivery, not semantic correctness of model output.
+    const systemMessage = mock
+      .getRequests()[0]
+      ?.body?.messages?.find((message) => message.role === 'system');
+    expect(systemMessage?.content).toContain(
+      'claim.text must equal its sole citation.quote exactly'
+    );
+    expect(systemMessage?.content).toContain(
+      'two or three concrete product capabilities'
+    );
+    expect(systemMessage?.content).toContain('promotional superlatives');
+    expect(systemMessage?.content).toContain('omit disputed claims');
+
     expect(result.evidenceReads).toBe(1);
+    const evidenceMessage = mock
+      .getRequests()
+      .flatMap((request) => request.body?.messages ?? [])
+      .find(
+        (message) =>
+          message.role === 'tool' &&
+          typeof message.content === 'string' &&
+          message.content.includes('Atlas Synthetic builds')
+      );
+    if (typeof evidenceMessage?.content !== 'string')
+      throw new Error('evidence tool message required');
+    expect(JSON.parse(evidenceMessage.content)).toMatchObject({
+      facts: ['Atlas Synthetic builds observability software.'],
+      citationOptions: [
+        {
+          sourceId: 'source-1',
+          quote: 'Atlas Synthetic builds observability software.',
+        },
+      ],
+    });
+
     const names = mock
       .getRequests()[0]
       ?.body?.tools?.map((t) => t.function?.name);
@@ -184,6 +224,37 @@ it('halts a generated graph at six model requests without publishing', async () 
   } finally {
     /* Shared endpoint survives cached generated model instances. */
   }
+}, 60_000);
+it('settles a valid submission on the sixth request without another model request', async () => {
+  const { createAimock, script } = await import('@dawn-ai/testing');
+  const mock =
+    sharedMock ?? (sharedMock = await createAimock({ fixtures: [] }));
+  vi.stubEnv('GROWTH_RESEARCH_PILOT_MODE', 'local-company-only');
+  vi.stubEnv('GROWTH_RESEARCH_FIXTURE_MODE', '');
+  vi.stubEnv('OPENAI_API_KEY', 'test');
+  vi.stubEnv('OPENAI_BASE_URL', mock.baseUrl);
+  const c = { ...fixtureCase(1), id: 'terminal-budget' };
+  let sequence = script().user(
+    'Research company case terminal-budget. Read the company-review skill and captured evidence, then submit a candidate.'
+  );
+  for (let i = 0; i < 5; i++)
+    sequence = sequence.callsTool('readEvidence', { sourceId: 'source-1' });
+  const candidate = {
+    profile: { name: null, description: null, industry: null },
+    unknowns: ['name', 'description', 'industry'],
+    claims: [],
+  };
+  mock.addFixtures(
+    sequence
+      .callsTool('submitCandidate', candidate)
+      .replies('Unnecessary')
+      .build()
+  );
+  const result = await runAgent(c, { invoke: invokeGenerated });
+  expect(result.outcome).toBe('completed');
+  expect(result.modelCalls).toBe(6);
+  expect(result.candidate).toEqual(candidate);
+  expect(result.attempts).toHaveLength(1);
 }, 60_000);
 it('uses the authored Zod schema for actual generated null-field abstention', async () => {
   const { createAimock, script } = await import('@dawn-ai/testing');
@@ -253,3 +324,151 @@ function fixtureCase(index: number) {
   if (!fixture) throw new Error('Synthetic fixture is required');
   return fixture;
 }
+
+it.each(['cancelled', 'deadline'] as const)(
+  'rejects %s while a successful submission is still settling',
+  async (stop) => {
+    vi.stubEnv('GROWTH_RESEARCH_PILOT_MODE', 'local-company-only');
+    const controller = new AbortController();
+    vi.useFakeTimers();
+    try {
+      const result = await runAgent(fixtureCase(0), {
+        signal: controller.signal,
+        invoke: async (_input, { signal }) => {
+          submitCandidate({
+            profile: { name: null, description: null, industry: null },
+            unknowns: ['name', 'description', 'industry'],
+            claims: [],
+          });
+          expect(signal.aborted).toBe(true);
+          if (stop === 'cancelled') controller.abort();
+          else await vi.advanceTimersByTimeAsync(90_000);
+        },
+      });
+      expect(result.outcome).toBe(stop);
+      expect(result.candidate).toBeUndefined();
+      expect(result.attempts).toHaveLength(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  }
+);
+it('does not publish on a generic abort error without a terminal submission', async () => {
+  vi.stubEnv('GROWTH_RESEARCH_PILOT_MODE', 'local-company-only');
+  const result = await runAgent(fixtureCase(0), {
+    invoke: async () => {
+      throw new DOMException('Aborted', 'AbortError');
+    },
+  });
+  expect(result.outcome).toBe('failed');
+  expect(result.candidate).toBeUndefined();
+});
+
+it('waits for outstanding transport settlement after graph abort before returning', async () => {
+  vi.stubEnv('GROWTH_RESEARCH_PILOT_MODE', 'local-company-only');
+  const controller = new AbortController();
+  let release!: () => void;
+  let returned = false;
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const work = runAgent(fixtureCase(0), {
+    signal: controller.signal,
+    invoke: async () => {
+      const context = getPilotContext();
+      if (!context) throw new Error('context required');
+      context.pendingOperations.add(pending);
+      void pending.then(() => context.pendingOperations.delete(pending));
+      controller.abort();
+      throw new DOMException('Aborted', 'AbortError');
+    },
+  }).then((result) => {
+    returned = true;
+    return result;
+  });
+  await new Promise<void>((resolve) => setImmediate(resolve));
+  expect(returned).toBe(false);
+  release();
+  expect((await work).outcome).toBe('cancelled');
+});
+
+it('authorizes production contexts only under the independent managed gate', async () => {
+  vi.stubEnv('GROWTH_RESEARCH_PILOT_MODE', '');
+  vi.stubEnv('GROWTH_RESEARCH_PRODUCTION_MODE', '');
+  const context = createPilotContext(fixtureCase(0), {
+    authorization: 'production',
+    deadline: 123,
+  });
+  expect(context.deadline).toBe(123);
+  const { assertPilotContext } = await import('../src/pilot/context.js');
+  await withPilotContext(context, async () => {
+    expect(() => assertPilotContext()).toThrow(/pilot_mode_required/);
+    vi.stubEnv('GROWTH_RESEARCH_PRODUCTION_MODE', 'managed-company-only');
+    context.deadline = Date.now() + 10_000;
+    expect(assertPilotContext()).toBe(context);
+  });
+});
+
+it('delivers actionable citation repair through the actual generated tool message', async () => {
+  const { createAimock, script } = await import('@dawn-ai/testing');
+  const mock =
+    sharedMock ?? (sharedMock = await createAimock({ fixtures: [] }));
+  vi.stubEnv('GROWTH_RESEARCH_PILOT_MODE', 'local-company-only');
+  vi.stubEnv('GROWTH_RESEARCH_FIXTURE_MODE', '');
+  vi.stubEnv('OPENAI_API_KEY', 'test');
+  vi.stubEnv('OPENAI_BASE_URL', mock.baseUrl);
+  const c = { ...fixtureCase(0), id: 'citation-repair' };
+  const candidate = {
+    profile: { name: 'Atlas Synthetic', description: null, industry: null },
+    unknowns: ['description', 'industry'],
+    claims: [
+      {
+        text: 'Atlas Synthetic builds observability software.',
+        citations: [
+          {
+            sourceId: 'source-1',
+            quote: 'Atlas Synthetic builds observability software.',
+          },
+        ],
+      },
+    ],
+  };
+  const bad = structuredClone(candidate);
+  const claim = bad.claims[0];
+  if (!claim) throw new Error('claim required');
+  claim.citations = [
+    { sourceId: 'source-1', quote: 'Joined missing excerpt.' },
+  ];
+  mock.addFixtures(
+    script()
+      .user(
+        'Research company case citation-repair. Read the company-review skill and captured evidence, then submit a candidate.'
+      )
+      .callsTool('readEvidence', { sourceId: 'source-1' })
+      .callsTool('submitCandidate', bad)
+      .callsTool('submitCandidate', candidate)
+      .replies('Unnecessary.')
+      .build()
+  );
+  const result = await runAgent(c, { invoke: invokeGenerated });
+  expect(result.outcome).toBe('completed');
+  expect(result.modelCalls).toBe(3);
+  expect(result.attempts).toHaveLength(2);
+  const feedback = mock
+    .getRequests()
+    .flatMap((request) => request.body?.messages ?? [])
+    .find(
+      (message) =>
+        message.role === 'tool' &&
+        typeof message.content === 'string' &&
+        message.content.includes('invalidCitations')
+    );
+  if (typeof feedback?.content !== 'string')
+    throw new Error('feedback required');
+  expect(JSON.parse(feedback.content)).toMatchObject({
+    invalidCitations: [
+      { claimIndex: 0, citationIndex: 0, reason: 'quote_not_found' },
+    ],
+    citationInstruction: expect.stringContaining('citationOptions'),
+  });
+}, 60_000);
