@@ -8,7 +8,9 @@ to resolve which component to instantiate for each element in a render spec.
 
 When the user asks about the registry, explain:
 - How defineAngularRegistry() accepts a map of type string to component class
-- How registry.get(type) returns the component class for a given type
+- How registry.getEntry(type) returns the normalized entry for a type — its
+  component, its streaming fallback, and any optional schema or description —
+  or undefined when the type is not registered
 - How registry.names() returns all registered type strings
 - How the registry integrates with provideRender() configuration
 

@@ -15,5 +15,10 @@ Build a Strands agent exposed over AG-UI:
   emit shared frontend state. The bridge is SNAPSHOT-only — every hook
   must return the COMPLETE state object, never a partial one.
 - Mount with `add_strands_fastapi_endpoint(app, agent, "/agent")`.
-- Do not add multi-agent routes or a subagents surface — delegation has no
-  ACTIVITY mapping in this bridge.
+- Add a `research_availability` async-generator tool that delegates to a
+  tool-less `availability_researcher` specialist, and register a per-tool
+  `ToolBehavior.tool_stream_event_handler` that translates the specialist's
+  re-yielded `stream_async` events into standard `SUBAGENT_*` + child
+  `TEXT_MESSAGE_*` wire events. Do not use the bridge's native multi-agent
+  routes: they emit CUSTOM MultiAgentHandoff + STEP_*, drop inner text
+  deltas, and crash the published `ag-ui-strands` 0.3.0 wheel.

@@ -26,7 +26,7 @@ Categorize the user's request and act ONCE. DO NOT ask clarifying questions — 
 
 ## JSON Render Spec Format
 
-Your spec response MUST be raw JSON only — no markdown, no code fences, no surrounding text.
+You never write a spec into your reply text. The spec travels as the arguments of the `render_spec` tool: pass the `elements` map and the `root` id as tool arguments, in the shape below.
 
 ```
 {
