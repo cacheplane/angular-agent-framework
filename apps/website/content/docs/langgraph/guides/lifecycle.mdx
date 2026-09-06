@@ -1,6 +1,10 @@
+---
+description: Eight per-agent lifecycle signals on every LangGraphAgent — first chunk, errors, interrupts, thread creation, and tool-call timings, plus their reset semantics.
+---
+
 # Agent Lifecycle Signals
 
-The `@threadplane/langgraph` library exposes per-agent lifecycle signals on every `LangGraphAgent` returned by `injectAgent()`. They're timestamps and classifications derived from the stream you already have — handy for debugging, custom dashboards, or telemetry integrations.
+The `@threadplane/langgraph` library exposes per-agent lifecycle signals on every `LangGraphAgent` returned by `injectAgent()`. They are timestamps and classifications derived from the stream you already have — handy for debugging, custom dashboards, or telemetry integrations.
 
 ## Interface
 
@@ -31,23 +35,27 @@ export const AGENT_LIFECYCLE = new InjectionToken<AgentLifecycle>('AGENT_LIFECYC
 
 ## Derivation
 
-Five of the eight signals derive directly from existing stream subjects on the agent (`values$`, `messages$`, `error$`, `interrupt$`, `toolCalls$`, `history$`):
+Six of the eight signals derive directly from existing stream subjects on the agent (`values$`, `messages$`, `error$`, `interrupt$`, `toolCalls$`, `history$`):
 
 | Signal | Source |
 |--------|--------|
 | `streamStartedAt` | first non-empty `values$` or `messages$` emission |
 | `streamErrorAt` | `error$` emission, classified |
 | `interruptReceivedAt` | first non-null `interrupt$` value |
+| `threadPersistedAt` | first non-empty `history$` emission |
 | `toolCallStartedAt` | first tool-call append in `toolCalls$` |
 | `toolCallCompletedAt` | first tool-call `result` transition in `toolCalls$` |
 
-Three signals require explicit hook points that the agent already invokes:
+Two signals require explicit hook points that the agent already invokes:
 
 | Signal | Hook |
 |--------|------|
 | `interruptResolvedAt` | `submit({ resume })` |
-| `threadCreatedAt` | the agent's "create new thread" branch |
-| `threadPersistedAt` | restore-from-server path |
+| `threadCreatedAt` | the first `submit()` on an agent that has no thread yet |
+
+<Callout type="info" title="What `classification` actually holds">
+`streamErrorAt().classification` is the error's constructor name, taken from `error.name` (or `'string'` / `'unknown'` for a non-`Error` value). Because the runtime normalizes every failure into an `AgentError`, that value is almost always the literal `'AgentError'`, which makes it a poor discriminator. The actionable one is `agent.error()?.kind` — `connection`, `auth`, `server`, `interrupted`, or `aborted`. See [Error handling](/docs/chat/guides/error-handling).
+</Callout>
 
 ## Subscribing
 
@@ -70,7 +78,7 @@ export class MyComponent {
 }
 ```
 
-For app-wide instrumentation, provide `AgentLifecycleRegistry` and read back the lifecycles registered by agents created in that injection context:
+For application-wide instrumentation, provide `AgentLifecycleRegistry` and read back the lifecycles registered by agents created in that injection context. An agent registers itself at construction, so the registry has to be provided at or above the injector that calls `provideAgent()` — an agent constructed before the registry exists registers nowhere:
 
 ```typescript
 import { ApplicationConfig, inject } from '@angular/core';
@@ -86,7 +94,15 @@ const registry = inject(AgentLifecycleRegistry);
 const lifecycles = registry.lifecycles();
 ```
 
-The exported `AGENT_LIFECYCLE` token is a low-level token for custom integrations. `injectAgent()` does not automatically provide a different token instance for each agent.
+The exported `AGENT_LIFECYCLE` token is a low-level token for custom integrations. The library never provides it — it is an empty token you provide yourself when you want a lifecycle reachable by injection:
+
+```typescript
+import { AGENT_LIFECYCLE, injectAgent } from '@threadplane/langgraph';
+
+providers: [
+  { provide: AGENT_LIFECYCLE, useFactory: () => injectAgent().lifecycle },
+];
+```
 
 ## Reset semantics
 
