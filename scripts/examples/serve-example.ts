@@ -2,9 +2,6 @@ import { spawn, type ChildProcess } from 'child_process';
 import { fileURLToPath } from 'node:url';
 import { capabilities, findCapability, type Capability } from '@threadplane/cockpit-registry';
 
-/** Empty base URL makes resolveRuntimeUrl fall through to http://localhost:<devPort>. */
-export const COCKPIT_RUNTIME_ENV = { NEXT_PUBLIC_COCKPIT_RUNTIME_BASE_URL: '' } as const;
-
 /** Local backend launch command for a capability, derived from the registry. */
 export function backendCommand(cap: Capability): string | null {
   if (!cap.pythonDir) return null;
@@ -16,7 +13,7 @@ export function backendCommand(cap: Capability): string | null {
 }
 
 export function formatAllModeSummary(): string {
-  return `\nStarting cockpit + all ${capabilities.length} examples\n`;
+  return `\nStarting all ${capabilities.length} examples\n`;
 }
 
 // Guard: only execute CLI/orchestration logic when run directly (not imported by tests).
@@ -47,8 +44,6 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   process.on('SIGINT', cleanup);
   process.on('SIGTERM', cleanup);
 
-  run('cockpit', 'npx nx serve cockpit --port 4201', '36', COCKPIT_RUNTIME_ENV);
-
   if (allMode) {
     capabilities.forEach((c) => run(c.id, `npx nx run ${c.angularProject}:serve:cockpit --port ${c.port}`, '33'));
     console.log(formatAllModeSummary());
@@ -59,9 +54,9 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     const backend = backendCommand(cap);
     if (backend) {
       run(`${cap.id}-py`, backend, '35');
-      console.log(`\n🚀 ${cap.id}: cockpit=4201 angular=${cap.port} backend=${cap.pythonPort}\n`);
+      console.log(`\n🚀 ${cap.id}: angular=${cap.port} backend=${cap.pythonPort}\n`);
     } else {
-      console.log(`\n🚀 ${cap.id}: cockpit=4201 angular=${cap.port} (no backend)\n`);
+      console.log(`\n🚀 ${cap.id}: angular=${cap.port} (no backend)\n`);
     }
   }
 }
