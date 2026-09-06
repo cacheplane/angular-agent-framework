@@ -67,6 +67,7 @@ const SUGGESTIONS = [
           }
         </div>
       </chat>
+      <!-- #region memory-panel -->
       <div sidebar class="panel">
         <h3 class="cap">Agent Memory</h3>
         <p class="source" data-testid="memory-source" [attr.data-source]="memorySource()">
@@ -88,6 +89,7 @@ const SUGGESTIONS = [
           new conversation and it will still be here.
         </p>
       </div>
+      <!-- #endregion -->
     </example-chat-layout>
   `,
   styles: [
@@ -159,6 +161,7 @@ export class MemoryComponent {
 
   protected readonly suggestions = SUGGESTIONS;
 
+  // #region memory-sources
   /** Latest `memory_contents` announced on the custom stream. */
   private readonly liveMemory = computed<Record<string, string> | null>(() => {
     for (const event of [...this.agent.customEvents()].reverse()) {
@@ -186,7 +189,9 @@ export class MemoryComponent {
       ? (contents as Record<string, string>)
       : null;
   });
+  // #endregion
 
+  // #region memory-source-label
   /**
    * Which of the two sources the panel is currently showing.
    *
@@ -200,6 +205,7 @@ export class MemoryComponent {
     if (live && Object.keys(live).length > 0) return 'live';
     return this.settledMemory() ? 'checkpoint' : 'none';
   });
+  // #endregion
 
   protected readonly memoryFiles = computed<MemoryFile[]>(() => {
     const live = this.liveMemory();

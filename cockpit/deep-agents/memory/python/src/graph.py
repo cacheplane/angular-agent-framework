@@ -29,6 +29,7 @@ from langgraph.config import get_stream_writer
 
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 
+# region memory-constants
 MEMORY_FILE = "/memories/AGENTS.md"
 
 #: Fixed namespace: every thread of this demo shares one memory. A real
@@ -37,8 +38,10 @@ MEMORY_NAMESPACE = ("cockpit", "deep-agents-memory")
 
 #: Custom stream event name the Angular panel listens for.
 MEMORY_EVENT = "deep_agents.memory"
+# endregion
 
 
+# region visibility-middleware
 class MemoryVisibilityMiddleware(AgentMiddleware):
     """Republish `memory_contents` as a `custom` stream event.
 
@@ -70,8 +73,10 @@ class MemoryVisibilityMiddleware(AgentMiddleware):
     def after_agent(self, state: dict[str, Any], runtime: Any) -> None:  # noqa: ANN401, ARG002
         self._emit(state)
         return None
+# endregion
 
 
+# region memory-agent
 def build_memory_agent():
     """Build the memory agent.
 
@@ -87,6 +92,7 @@ def build_memory_agent():
         memory=[MEMORY_FILE],
         middleware=[MemoryVisibilityMiddleware()],
     )
+# endregion
 
 
 graph = build_memory_agent()

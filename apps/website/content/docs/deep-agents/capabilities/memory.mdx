@@ -1,124 +1,115 @@
 ---
 title: Memory
-description: MemoryMiddleware plus StoreBackend give an agent a cross-thread memory file, and memory_contents is private state that a panel has to reach deliberately.
+description: A Deep Agents memory file the agent writes itself, kept in the LangGraph store so a new thread starts already knowing, and read back through private state.
 ---
 
 # Memory
 
-Memory in Deep Agents is a file the agent maintains about itself. `memory=["/memories/AGENTS.md"]` installs `MemoryMiddleware`, which loads that file into the system prompt at the start of every turn and instructs the model to keep it current with `edit_file`. Nothing in the application parses the conversation for facts. The agent decides what is worth remembering.
+Memory in Deep Agents is a file the agent maintains about you. `memory=["/memories/AGENTS.md"]` installs `MemoryMiddleware`, which loads that file and appends it to the system message with guidance telling the model to keep it current using `edit_file`. Nothing in the application parses the conversation for facts; the agent decides what is worth remembering, and the backend decides how long it lasts. Reading it back is the part that takes work, because `memory_contents` is private state. This page walks the three files of the running example.
 
-The backend decides how long the memory lasts.
+## What the demo does
 
-```python
-from deepagents import create_deep_agent
-from deepagents.backends import StoreBackend
+The Run tab shows a dispatch desk beside a panel titled Agent Memory, which starts out saying that nothing is remembered yet. The first suggested prompt tells the agent that you fly a Citation CJ3 out of KASE and always want briefings in bullet points, and the panel fills in with the lines the agent writes into `/memories/AGENTS.md`.
 
-MEMORY_NAMESPACE = ("cockpit", "deep-agents-memory")
+The second suggestion is the one that matters. Reload the page to start a genuinely new thread, then ask what the agent already knows about your operation: the file is still there, because it came from the LangGraph store rather than from the transcript. A small label under the panel heading says which of two sources the panel is reading, and that label turns out to be the interesting part.
 
-graph = create_deep_agent(
-    model=ChatOpenAI(model="gpt-4.1", temperature=0),
-    system_prompt=(PROMPTS_DIR / "memory.md").read_text(),
-    backend=StoreBackend(namespace=lambda _runtime: MEMORY_NAMESPACE),
-    memory=["/memories/AGENTS.md"],
-)
-```
+## How it is built
 
-`StoreBackend` writes into LangGraph's `BaseStore`, which is shared across threads. `StateBackend` would put the same file on the thread's own state, where a new conversation would never see it. Leaving `store` unset means "resolve the store from the graph execution context", which LangGraph Server supplies.
+Three files carry the capability: a Python graph that builds the agent and republishes one private key, an application config, and the Angular component that renders the file. Open the Code tab to read them in place.
+
+### The names the graph and the panel agree on
+
+The memory file path, the store namespace, and the name of the custom stream event are module constants. The event name is the contract with the Angular panel, which listens for exactly that string.
+
+<ExampleCode file="graph.py" region="memory-constants" title="graph.py — the shared names" />
 
 <Callout type="warning" title="Scope the namespace in anything real">
-The demo uses a fixed namespace tuple, so every visitor shares one memory. That is deliberate for a demo and wrong everywhere else. A real deployment derives the namespace from the caller's identity.
+The namespace factory ignores its runtime argument, so every thread of this demo shares one memory. That is deliberate here and wrong everywhere else. A real deployment derives the namespace from the caller, for example `lambda rt: (rt.server_info.user.identity,)`.
 </Callout>
 
-## What the demo shows
+### An agent that owns its memory file
 
-The demo is the dispatch desk with a memory panel beside it. Tell it your home base is Denver and that you fly a mid-size business jet, and the panel fills in as the agent writes to `/memories/AGENTS.md`. Start a genuinely new thread and the agent already knows both facts, because the file came from the store rather than from the transcript.
+`create_deep_agent` takes the memory sources and the backend. `memory=[...]` installs `MemoryMiddleware` with the agent's own backend, so where the memory lives is decided by the backend argument rather than by the memory argument.
 
-The panel also labels which of two sources it is reading, which turns out to be the interesting part.
+<ExampleCode file="graph.py" region="memory-agent" title="graph.py — building the agent" />
 
-What the agent records is a matter of prompt, not code:
+`StoreBackend` keeps files in LangGraph's `BaseStore`, which is scoped by namespace and shared across every thread. The default backend is `StateBackend`, which would put the same file on the thread's own state, where a new conversation would never see it. Leaving `store` unset means "resolve the store from the graph execution context", which the LangGraph server supplies.
+
+### What the prompt allows into memory
+
+What the agent records is a matter of prompt, not code. The system prompt in `prompts/memory.md` is the whole policy:
 
 ```markdown
 `/memories/AGENTS.md` is yours. It is loaded into your context at the start of
-every conversation, including conversations you have not had yet.
+every conversation, including conversations you have not had yet, and it is the
+only thing about you that survives a new thread.
 
 Write to it with `edit_file` whenever the user tells you something durable:
-a home base, a fleet type, a standing preference, a correction.
 
-Do not record one-off requests, small talk, or anything stale next week.
-Never record credentials of any kind.
+- a home base, a fleet type, an operating limitation
+- a standing preference about how they want briefings written
+- a correction to something you got wrong
+
+Keep it as a short markdown list under a `## Crew notes` heading. One line per
+fact. Do not record one-off requests, small talk, or anything that will be stale
+next week. Never record credentials of any kind.
 ```
 
 The last line is not decoration. A memory file is a persistent, model-writable document, so what must never go into it belongs in the prompt explicitly.
 
-## How it reaches the UI
+### Announcing a private state key
 
-Here the framework constrains the answer, and the constraint is worth stating rather than working around quietly.
+`MemoryMiddleware` annotates `memory_contents` with `PrivateStateAttr`, which is `OmitFromSchema(input=True, output=True)`: the key is deliberately absent from the agent's declared input and output. That is right for a transcript, since the memory file is context for the model rather than conversation, and it is why this example does not leave the panel bound to `agent.value()` alone while a run is in flight. A small middleware announces the key on a channel the client does receive during the run.
 
-`MemoryMiddleware` annotates `memory_contents` with `PrivateStateAttr`. That keeps the key out of the `values` stream — correct for a transcript, since the memory file is context for the model rather than conversation — and it is exactly why a panel bound to `agent.value()` shows nothing while the agent is working. The key **is** written to the checkpoint, so it does arrive, but only once the run settles and the client hydrates the latest state.
+<ExampleCode file="graph.py" region="visibility-middleware" title="graph.py — republishing memory_contents" />
 
-For a live panel, the graph has to announce the key on a channel the client does receive. A small middleware does that:
+This is an application-side shim rather than a framework change: the key stays private on the state and is simply announced alongside it. `get_stream_writer` raises outside a streaming context, which is why the emit is guarded.
 
-```python
-class MemoryVisibilityMiddleware(AgentMiddleware):
-    def _emit(self, state):
-        contents = state.get("memory_contents")
-        if contents is None:
-            return
-        try:
-            writer = get_stream_writer()
-        except (RuntimeError, KeyError):
-            # No streaming context. The value is still on the checkpoint,
-            # which is what the client's settle-time hydration reads.
-            return
-        writer({"name": MEMORY_EVENT, "data": {"memory_contents": contents}})
+### Providing the agent
 
-    def after_model(self, state, runtime):
-        self._emit(state)
-        return None
-```
+`provideAgent()` from `@threadplane/langgraph` registers the agent at the application root, and `provideChat({})` registers the chat defaults. The example resolves its connection at runtime because the host that serves the demo decides which runtime is attached; your own application passes `apiUrl` and `assistantId` directly.
 
-This is an application-side shim, not a framework change. The key stays private on the state; it is simply announced alongside it.
+<ExampleCode file="app.config.ts" />
 
-### Two sources, and knowing which one you are on
+### Two sources for one panel
 
-A custom event is a live signal and is not replayed when a thread is reopened. The checkpoint is durable but arrives only at settle. A panel that wants both reads both, and it is worth telling them apart rather than blending them:
+A custom event is a live signal and is not replayed when a thread is reopened. The thread state is durable but arrives only when the client hydrates it, which the adapter does on first connect and again when a run completes. A panel that wants both reads both.
 
-```ts
-private readonly liveMemory = computed<Record<string, string> | null>(() => {
-  for (const event of [...this.agent.customEvents()].reverse()) {
-    if (event.name !== MEMORY_EVENT) continue;
-    const contents = (event.data as { memory_contents?: unknown } | undefined)?.[
-      'memory_contents'
-    ];
-    if (contents && typeof contents === 'object') return contents as Record<string, string>;
-  }
-  return null;
-});
+<ExampleCode file="memory.component.ts" region="memory-sources" title="memory.component.ts — the two readers" />
 
-private readonly settledMemory = computed<Record<string, string> | null>(() => {
-  const contents = (this.agent.value() as Record<string, unknown> | undefined)?.[
-    'memory_contents'
-  ];
-  return contents && typeof contents === 'object'
-    ? (contents as Record<string, string>)
-    : null;
-});
+`agent.customEvents()` is a signal of every custom event received in this session, so the live reader walks it newest first and takes the most recent payload under the event name the graph emits. `agent.value()` is the agent state the adapter projects from the latest checkpoint, which carries the key even though the run stream does not.
 
-protected readonly memorySource = computed<'live' | 'checkpoint' | 'none'>(() => {
-  const live = this.liveMemory();
-  if (live && Object.keys(live).length > 0) return 'live';
-  return this.settledMemory() ? 'checkpoint' : 'none';
-});
-```
+<ExampleCode file="memory.component.ts" region="memory-source-label" title="memory.component.ts — which source is showing" />
 
-Without the middleware the panel still fills in, just a beat later and only at settle. With it, the panel updates while the agent is still writing. `checkpoint` is also what a reopened thread looks like, so the label is genuinely informative rather than a debug artifact.
+Blending the two would hide the distinction. `live` means the visibility middleware announced the key during this run; `checkpoint` is what a reopened thread looks like, and also what the panel degrades to if the middleware is removed.
 
-<Callout type="tip" title="Test the store, not the panel">
-The only assertion that proves cross-thread memory is a genuinely new thread that already knows. Clearing the panel and watching it refill proves the component works, not the store.
+### Rendering the file
+
+The panel shows the source label, then one block per remembered file: the path, then one row per non-empty line.
+
+<ExampleCode file="memory.component.ts" region="memory-panel" title="memory.component.ts — the panel" />
+
+## Proving the store rather than the panel
+
+The only assertion that proves cross-thread memory is a genuinely new thread that already knows. Clearing the panel and watching it refill proves that the component works, not that the store is doing the remembering. The example's end-to-end test submits the second prompt after a fresh page load, so the file it asserts on was written during a conversation that no longer exists.
+
+<Callout type="tip" title="Assert the label as well as the contents">
+The panel fills in either way, so contents alone do not tell you whether the live path is working. Asserting that the source label reads `live` is what keeps the visibility middleware honest.
 </Callout>
 
-## Next steps
+## What's Next
 
-- [Skills](/docs/deep-agents/capabilities/skills) — the same private-state visibility problem, for `skills_metadata`.
-- [Filesystem](/docs/deep-agents/capabilities/filesystem) — the state-backed workspace that does stream on its own.
-- [Memory](/docs/langgraph/guides/memory) — the LangGraph store this capability is built on.
+<CardGroup cols={2}>
+  <Card title="Skills" href="/docs/deep-agents/capabilities/skills">
+    The same private-state visibility problem, for `skills_metadata`.
+  </Card>
+  <Card title="Filesystem" href="/docs/deep-agents/capabilities/filesystem">
+    The state-backed workspace the agent writes during a run.
+  </Card>
+  <Card title="LangGraph Memory" href="/docs/langgraph/guides/memory">
+    Thread-scoped memory in graph state, and the Store API behind this page.
+  </Card>
+  <Card title="Persistence" href="/docs/langgraph/guides/persistence">
+    Checkpointers and thread storage, which is where the durable source comes from.
+  </Card>
+</CardGroup>
