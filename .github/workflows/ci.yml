@@ -41,7 +41,6 @@ jobs:
       posthog: ${{ steps.scope.outputs.posthog }}
       scripts_tests: ${{ steps.scope.outputs.scripts_tests }}
       growth_lifecycle: ${{ steps.scope.outputs.growth_lifecycle }}
-      growth_research: ${{ steps.scope.outputs.growth_research }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -270,24 +269,6 @@ jobs:
       - run: npx nx test lifecycle
       - run: npx nx run lifecycle:check
       - run: npx nx build lifecycle
-
-  growth-research:
-    name: Growth Research — Node 24
-    needs: ci-scope
-    if: github.event_name == 'push' || needs.ci-scope.outputs.growth_research == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
-        with:
-          node-version: 24
-          cache: npm
-      - run: npm ci --ignore-scripts
-      - run: npx nx lint growth-research
-      - run: npx nx test growth-research
-      - run: npx nx check growth-research
-      - run: npx nx build growth-research
 
   cockpit:
     name: Workspace libraries — lint / test
@@ -805,7 +786,6 @@ jobs:
       - scripts-tests
       - growth-lifecycle
       - lifecycle
-      - growth-research
     # `CI — required` is the only required status context. A merge queue
     # waits on it for each candidate, so it must report on merge_group too —
     # otherwise every queued merge blocks forever on a check that never runs.
@@ -831,7 +811,6 @@ jobs:
           RESULT_SCRIPTS_TESTS: ${{ needs.scripts-tests.result }}
           RESULT_GROWTH_LIFECYCLE: ${{ needs.growth-lifecycle.result }}
           RESULT_LIFECYCLE: ${{ needs.lifecycle.result }}
-          RESULT_GROWTH_RESEARCH: ${{ needs.growth-research.result }}
           SCOPE_LIBRARY: ${{ needs.ci-scope.outputs.library }}
           SCOPE_ANGULAR_COMPATIBILITY: ${{ needs.ci-scope.outputs.angular_compatibility }}
           SCOPE_WEBSITE: ${{ needs.ci-scope.outputs.website }}
@@ -845,7 +824,6 @@ jobs:
           SCOPE_POSTHOG: ${{ needs.ci-scope.outputs.posthog }}
           SCOPE_SCRIPTS_TESTS: ${{ needs.ci-scope.outputs.scripts_tests }}
           SCOPE_GROWTH_LIFECYCLE: ${{ needs.ci-scope.outputs.growth_lifecycle }}
-          SCOPE_GROWTH_RESEARCH: ${{ needs.ci-scope.outputs.growth_research }}
           # The preview lanes need repository secrets, so they skip on fork
           # PRs. Their scope keys are computed from changed files alone, so on
           # a fork they can be in scope yet legitimately skipped. This mirrors
@@ -933,7 +911,6 @@ jobs:
           require_scoped "scripts_tests" "Scripts — generator / proxy vitest suites" "$RESULT_SCRIPTS_TESTS" "$SCOPE_SCRIPTS_TESTS"
           require_scoped "growth_lifecycle" "Growth lifecycle — Node 22" "$RESULT_GROWTH_LIFECYCLE" "$SCOPE_GROWTH_LIFECYCLE"
           require_scoped "growth_lifecycle" "Lifecycle — Node 24" "$RESULT_LIFECYCLE" "$SCOPE_GROWTH_LIFECYCLE"
-          require_scoped "growth_research" "Growth Research — Node 24" "$RESULT_GROWTH_RESEARCH" "$SCOPE_GROWTH_RESEARCH"
 
           if [[ "$failed" -ne 0 ]]; then
             exit 1

@@ -1,62 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { direct, managed } = vi.hoisted(() => ({
-  direct: vi.fn(),
+const { managed } = vi.hoisted(() => ({
   managed: vi.fn(),
 }));
-vi.mock('./company-fetch.js', () => ({ fetchCompanyEvidence: direct }));
 vi.mock('./firecrawl.js', () => ({ fetchFirecrawlCompanyEvidence: managed }));
 
 import { createCompanyCapture } from './company-capture.js';
 
 beforeEach(() => {
-  direct.mockReset().mockResolvedValue([]);
   managed.mockReset().mockResolvedValue([]);
 });
 
 describe('configured company capture', () => {
-  it('reports configuration failures without logging configuration values', async () => {
-    const log = vi.spyOn(console, 'info').mockImplementation(() => undefined);
-    try {
-      await expect(
-        createCompanyCapture({
-          LIFECYCLE_COMPANY_CAPTURE_PROVIDER: 'secret-invalid',
-        })('example.com', new AbortController().signal)
-      ).rejects.toThrow('company_capture_invalid_provider');
-      expect(log).toHaveBeenCalledWith('company_capture', {
-        outcome: 'invalid_provider',
-      });
-      await expect(
-        createCompanyCapture({
-          LIFECYCLE_COMPANY_CAPTURE_PROVIDER: 'firecrawl',
-        })('example.com', new AbortController().signal)
-      ).rejects.toThrow('company_capture_missing_key');
-      expect(log).toHaveBeenCalledWith('company_capture', {
-        provider: 'firecrawl',
-        outcome: 'missing_key',
-      });
-    } finally {
-      log.mockRestore();
-    }
-  });
-  it.each([undefined, 'direct'])(
-    'keeps %s on direct capture',
-    async (provider) => {
-      const signal = new AbortController().signal;
-      await createCompanyCapture({
-        LIFECYCLE_COMPANY_CAPTURE_PROVIDER: provider,
-      })('example.com', signal);
-      expect(direct).toHaveBeenCalledWith('example.com', signal, {
-        onDiagnostic: expect.any(Function),
-      });
-      expect(managed).not.toHaveBeenCalled();
-    }
-  );
-
-  it('selects Firecrawl only with explicit configuration', async () => {
+  it('uses Firecrawl without a provider selector', async () => {
     const signal = new AbortController().signal;
     await createCompanyCapture({
-      LIFECYCLE_COMPANY_CAPTURE_PROVIDER: 'firecrawl',
       COMPANY_SCRAPER_SECRET: 'fixture-key',
       COMPANY_SCRAPER_URL: 'https://scraper.example.com',
     })('example.com', signal);
@@ -66,17 +24,26 @@ describe('configured company capture', () => {
       allowLocalHttp: false,
       onDiagnostic: expect.any(Function),
     });
-    expect(direct).not.toHaveBeenCalled();
   });
-
+  it('reports configuration failures without logging configuration values', async () => {
+    const log = vi.spyOn(console, 'info').mockImplementation(() => undefined);
+    try {
+      await expect(
+        createCompanyCapture({})('example.com', new AbortController().signal)
+      ).rejects.toThrow('company_capture_missing_key');
+      expect(log).toHaveBeenCalledWith('company_capture', {
+        provider: 'firecrawl',
+        outcome: 'missing_key',
+      });
+    } finally {
+      log.mockRestore();
+    }
+  });
   it('validates lazily and never falls back on invalid configuration', async () => {
-    const capture = createCompanyCapture({
-      LIFECYCLE_COMPANY_CAPTURE_PROVIDER: 'invalid-secret-value',
-    });
+    const capture = createCompanyCapture({});
     await expect(
       capture('example.com', new AbortController().signal)
-    ).rejects.toThrow('company_capture_invalid_provider');
-    expect(direct).not.toHaveBeenCalled();
+    ).rejects.toThrow('company_capture_missing_key');
     expect(managed).not.toHaveBeenCalled();
   });
 
@@ -84,7 +51,6 @@ describe('configured company capture', () => {
     'requires a configured key before calling the provider: %s',
     async (key) => {
       const capture = createCompanyCapture({
-        LIFECYCLE_COMPANY_CAPTURE_PROVIDER: 'firecrawl',
         COMPANY_SCRAPER_SECRET: key,
         COMPANY_SCRAPER_URL: 'https://scraper.example.com',
       });
@@ -92,7 +58,6 @@ describe('configured company capture', () => {
         capture('example.com', new AbortController().signal)
       ).rejects.toThrow('company_capture_missing_key');
       expect(managed).not.toHaveBeenCalled();
-      expect(direct).not.toHaveBeenCalled();
     }
   );
 
@@ -100,23 +65,24 @@ describe('configured company capture', () => {
     managed.mockRejectedValue(new Error('firecrawl_provider_error'));
     await expect(
       createCompanyCapture({
-        LIFECYCLE_COMPANY_CAPTURE_PROVIDER: 'firecrawl',
         COMPANY_SCRAPER_SECRET: 'fixture-key',
         COMPANY_SCRAPER_URL: 'https://scraper.example.com',
       })('example.com', new AbortController().signal)
     ).rejects.toThrow('firecrawl_provider_error');
     expect(managed).toHaveBeenCalledTimes(1);
-    expect(direct).not.toHaveBeenCalled();
   });
 
   it('does not return evidence when cancellation arrives during capture', async () => {
     const controller = new AbortController();
-    direct.mockImplementation(async () => {
+    managed.mockImplementation(async () => {
       controller.abort(new Error('cancelled'));
       return [];
     });
     await expect(
-      createCompanyCapture({})('example.com', controller.signal)
+      createCompanyCapture({ COMPANY_SCRAPER_SECRET: 'fixture-key' })(
+        'example.com',
+        controller.signal
+      )
     ).rejects.toThrow('cancelled');
   });
 });

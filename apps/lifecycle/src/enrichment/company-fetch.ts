@@ -1,29 +1,9 @@
-import { createHash } from 'node:crypto';
 import { Resolver } from 'node:dns/promises';
-import type {
-  ClientRequest,
-  IncomingHttpHeaders,
-  IncomingMessage,
-} from 'node:http';
-import {
-  request as nodeHttpsRequest,
-  type RequestOptions as HttpsRequestOptions,
-} from 'node:https';
 import { isIP } from 'node:net';
-import { Readable } from 'node:stream';
 
 import { parse, type DefaultTreeAdapterTypes } from 'parse5';
 
-import {
-  CompanyPageEvidenceSchema,
-  type CompanyPageEvidence,
-} from './schema.js';
-
-const PAGE_PATHS = ['/', '/about', '/pricing'] as const;
-const MAX_REDIRECTS = 3;
-const MAX_PAGE_BYTES = 250 * 1024;
-const REQUEST_TIMEOUT_MS = 5_000;
-const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+import type { CompanyPageEvidence } from './schema.js';
 
 // Raised when a target fails the SSRF controls. Unlike a transport or
 // content failure, a security violation never degrades to "no evidence";
@@ -35,75 +15,10 @@ export class CompanyFetchSecurityError extends Error {
   }
 }
 
-export interface CompanyRequestInit extends RequestInit {
-  resolvedAddresses: readonly string[];
-}
-
-export interface CompanyFetchDependencies {
-  resolve: (
-    hostname: string,
-    signal: AbortSignal
-  ) => Promise<readonly string[]>;
-  fetch: (url: URL, init: CompanyRequestInit) => Promise<Response>;
-  now: () => Date;
-  createTimeoutSignal: (
-    parentSignal: AbortSignal,
-    timeoutMs: number
-  ) => { signal: AbortSignal; clear: () => void };
-}
-
-export type HttpsRequestFactory = (
-  options: HttpsRequestOptions,
-  callback: (response: IncomingMessage) => void
-) => ClientRequest;
-
-export interface CompanyFetchOverrides
-  extends Partial<CompanyFetchDependencies> {
-  request?: HttpsRequestFactory;
-  /** Observational only: observer exceptions never affect capture. */
-  onDiagnostic?: (diagnostic: CompanyPageDiagnostic) => void;
-}
-
-export interface CompanyPageDiagnostic {
-  requestedPath: (typeof PAGE_PATHS)[number];
-  outcome:
-    | 'captured'
-    | 'access_denied'
-    | 'rate_limited'
-    | 'http_error'
-    | 'page_too_large'
-    | 'timeout'
-    | 'transport_failure'
-    | 'redirect_rejected'
-    | 'missing_location'
-    | 'redirect_limit'
-    | 'security_rejected';
-  status?: number;
-  /** Known body bytes read, or advertised bytes when rejected before reading. */
-  bytes?: number;
-}
-
-class CompanyPageTooLargeError extends Error {
-  constructor(readonly bytes: number) {
-    super('Company page exceeds 250 KiB');
-  }
-}
-
-function defaultTimeoutSignal(
-  parentSignal: AbortSignal,
-  timeoutMs: number
-): { signal: AbortSignal; clear: () => void } {
-  const timeout = new AbortController();
-  const timer = setTimeout(() => {
-    timeout.abort(
-      new DOMException('Company request timed out', 'TimeoutError')
-    );
-  }, timeoutMs);
-  return {
-    signal: AbortSignal.any([parentSignal, timeout.signal]),
-    clear: () => clearTimeout(timer),
-  };
-}
+export type CompanyHostnameResolver = (
+  hostname: string,
+  signal: AbortSignal
+) => Promise<readonly string[]>;
 
 export interface NodeResolverLike {
   cancel: () => void;
@@ -163,115 +78,6 @@ export async function resolveWithNodeDns(
       });
     });
   });
-}
-
-function responseHeaders(headers: IncomingHttpHeaders): Headers {
-  const result = new Headers();
-  for (const [name, value] of Object.entries(headers)) {
-    if (Array.isArray(value)) {
-      for (const item of value) result.append(name, item);
-    } else if (value !== undefined) {
-      result.set(name, value);
-    }
-  }
-  return result;
-}
-
-function incomingMessageBody(
-  incoming: IncomingMessage
-): ReadableStream<Uint8Array> {
-  const reader = (
-    Readable.toWeb(incoming) as ReadableStream<Uint8Array>
-  ).getReader();
-  return new ReadableStream<Uint8Array>({
-    async pull(controller) {
-      const { done, value } = await reader.read();
-      if (done) {
-        reader.releaseLock();
-        controller.close();
-        return;
-      }
-      controller.enqueue(value);
-    },
-    async cancel(reason) {
-      try {
-        await reader.cancel(reason);
-      } finally {
-        if (!incoming.destroyed) {
-          incoming.destroy(reason instanceof Error ? reason : undefined);
-        }
-      }
-    },
-  });
-}
-
-function pinnedHttpsFetch(
-  url: URL,
-  init: CompanyRequestInit,
-  request: HttpsRequestFactory
-): Promise<Response> {
-  const address = init.resolvedAddresses[0];
-  if (!address || !isPublicAddress(address)) {
-    throw new CompanyFetchSecurityError(
-      'Pinned HTTPS request requires a validated public address'
-    );
-  }
-  const headers = new Headers(init.headers);
-  headers.set('host', url.hostname);
-
-  return new Promise<Response>((resolve, reject) => {
-    const clientRequest = request(
-      {
-        agent: false,
-        family: isIP(address),
-        headers: Object.fromEntries(headers.entries()),
-        hostname: address,
-        method: init.method ?? 'GET',
-        path: `${url.pathname}${url.search}`,
-        port: 443,
-        rejectUnauthorized: true,
-        servername: url.hostname,
-        signal: init.signal ?? undefined,
-      },
-      (incoming) => {
-        try {
-          const status = incoming.statusCode ?? 502;
-          const body = [204, 205, 304].includes(status)
-            ? null
-            : incomingMessageBody(incoming);
-          resolve(
-            new Response(body, {
-              headers: responseHeaders(incoming.headers),
-              status,
-              statusText: incoming.statusMessage,
-            })
-          );
-        } catch (error) {
-          try {
-            incoming.destroy();
-          } catch {
-            // Cleanup must not replace the response-construction error.
-          }
-          reject(error);
-        }
-      }
-    );
-    clientRequest.once('error', reject);
-    clientRequest.end();
-  });
-}
-
-function completeDependencies(
-  overrides: CompanyFetchOverrides
-): CompanyFetchDependencies {
-  const request = overrides.request ?? nodeHttpsRequest;
-  return {
-    resolve: overrides.resolve ?? resolveWithNodeDns,
-    fetch:
-      overrides.fetch ?? ((url, init) => pinnedHttpsFetch(url, init, request)),
-    now: overrides.now ?? (() => new Date()),
-    createTimeoutSignal: overrides.createTimeoutSignal ?? defaultTimeoutSignal,
-  };
 }
 
 function validatedCompanyHostname(companyDomain: string): string {
@@ -381,9 +187,9 @@ function isPublicAddress(address: string): boolean {
 async function resolvePublicAddresses(
   hostname: string,
   signal: AbortSignal,
-  dependencies: Pick<CompanyFetchDependencies, 'resolve'>
+  resolve: CompanyHostnameResolver
 ): Promise<readonly string[]> {
-  const addresses = await dependencies.resolve(hostname, signal);
+  const addresses = await resolve(hostname, signal);
   signal.throwIfAborted();
   if (addresses.length === 0) throw new Error('Company domain did not resolve');
   for (const address of addresses) {
@@ -396,95 +202,16 @@ async function resolvePublicAddresses(
   return addresses;
 }
 
-/** Reuse the direct fetcher's hostname and public-address policy for providers. */
+/** Validate company hostnames against the shared public-address policy. */
 export async function validatePublicCompanyHostname(
   domain: string,
   signal: AbortSignal,
-  resolve: CompanyFetchDependencies['resolve'] = resolveWithNodeDns
+  resolve: CompanyHostnameResolver = resolveWithNodeDns
 ): Promise<string> {
   const hostname = validatedCompanyHostname(domain);
   signal.throwIfAborted();
-  await resolvePublicAddresses(hostname, signal, { resolve });
+  await resolvePublicAddresses(hostname, signal, resolve);
   return hostname;
-}
-
-function validatedRedirectUrl(
-  location: string,
-  current: URL,
-  hostname: string
-): URL {
-  let redirect: URL;
-  try {
-    redirect = new URL(location, current);
-  } catch {
-    throw new CompanyFetchSecurityError('Invalid company redirect');
-  }
-  if (
-    redirect.protocol !== 'https:' ||
-    redirect.username !== '' ||
-    redirect.password !== '' ||
-    (redirect.port !== '' && redirect.port !== '443') ||
-    redirect.hostname.toLowerCase() !== hostname
-  ) {
-    throw new CompanyFetchSecurityError('Unsafe company redirect');
-  }
-  return redirect;
-}
-
-async function cancelResponseBody(
-  response: Response,
-  reason?: unknown
-): Promise<void> {
-  if (!response.body) return;
-  try {
-    await response.body.cancel(reason);
-  } catch {
-    // Disposal failures must not replace the original fetch policy error.
-  }
-}
-
-async function readBoundedBody(response: Response): Promise<Uint8Array> {
-  const advertisedLength = response.headers.get('content-length');
-  if (
-    advertisedLength !== null &&
-    Number.parseInt(advertisedLength, 10) > MAX_PAGE_BYTES
-  ) {
-    await cancelResponseBody(response);
-    throw new CompanyPageTooLargeError(Number.parseInt(advertisedLength, 10));
-  }
-  if (!response.body) return new Uint8Array();
-
-  const reader = response.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let totalBytes = 0;
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      totalBytes += value.byteLength;
-      if (totalBytes > MAX_PAGE_BYTES) {
-        throw new CompanyPageTooLargeError(totalBytes);
-      }
-      chunks.push(value);
-    }
-  } catch (error) {
-    try {
-      await reader.cancel(error);
-    } catch {
-      // Preserve the read or policy error that caused disposal.
-    }
-    throw error;
-  } finally {
-    reader.releaseLock();
-  }
-
-  const body = new Uint8Array(totalBytes);
-  let offset = 0;
-  for (const chunk of chunks) {
-    body.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return body;
 }
 
 function cleanText(value: string): string {
@@ -633,126 +360,4 @@ export function extractEvidence(
     ? mainSnippets
     : textValues([document], ['p', 'li'], 6);
   return { facts, snippets };
-}
-
-export async function fetchCompanyEvidence(
-  companyDomain: string,
-  signal: AbortSignal,
-  overrides: CompanyFetchOverrides = {}
-): Promise<CompanyPageEvidence[]> {
-  const dependencies = completeDependencies(overrides);
-  const hostname = validatedCompanyHostname(companyDomain);
-  signal.throwIfAborted();
-  let redirects = 0;
-  const evidence: CompanyPageEvidence[] = [];
-
-  for (const path of PAGE_PATHS) {
-    let currentUrl = new URL(path, `https://${hostname}/`);
-    let status: number | undefined;
-    let outcome: CompanyPageDiagnostic['outcome'] | undefined;
-    const report = (
-      result: CompanyPageDiagnostic['outcome'],
-      bytes?: number
-    ) => {
-      try {
-        overrides.onDiagnostic?.({
-          requestedPath: path,
-          outcome: result,
-          ...(status === undefined ? {} : { status }),
-          ...(bytes === undefined || !Number.isSafeInteger(bytes)
-            ? {}
-            : { bytes }),
-        });
-      } catch {
-        // Observers cannot alter evidence, security rejection, or cancellation.
-      }
-    };
-    const timeout = dependencies.createTimeoutSignal(
-      signal,
-      REQUEST_TIMEOUT_MS
-    );
-    try {
-      while (true) {
-        signal.throwIfAborted();
-        const addresses = await resolvePublicAddresses(
-          hostname,
-          timeout.signal,
-          dependencies
-        );
-        const response = await dependencies.fetch(currentUrl, {
-          method: 'GET',
-          redirect: 'manual',
-          signal: timeout.signal,
-          resolvedAddresses: addresses,
-          headers: {
-            accept: 'text/html,text/plain;q=0.8',
-            'user-agent': 'ThreadplaneCompanyResearch/1.0',
-          },
-        });
-        status = response.status;
-        if (REDIRECT_STATUSES.has(response.status)) {
-          const location = response.headers.get('location');
-          await cancelResponseBody(response);
-          if (!location) {
-            outcome = 'missing_location';
-            throw new Error('Company redirect is missing Location');
-          }
-          redirects += 1;
-          if (redirects > MAX_REDIRECTS) {
-            outcome = 'redirect_limit';
-            throw new Error('Company redirect limit exceeded');
-          }
-          try {
-            currentUrl = validatedRedirectUrl(location, currentUrl, hostname);
-          } catch (error) {
-            outcome = 'redirect_rejected';
-            throw error;
-          }
-          status = undefined;
-          continue;
-        }
-        if (!response.ok) {
-          outcome =
-            response.status === 403
-              ? 'access_denied'
-              : response.status === 429
-              ? 'rate_limited'
-              : 'http_error';
-          await cancelResponseBody(response);
-          throw new Error(`Company page returned HTTP ${response.status}`);
-        }
-        const body = await readBoundedBody(response);
-        evidence.push(
-          CompanyPageEvidenceSchema.parse({
-            canonicalUrl: currentUrl.toString(),
-            retrievedAt: dependencies.now().toISOString(),
-            contentHash: createHash('sha256').update(body).digest('hex'),
-            ...extractEvidence(body),
-          })
-        );
-        report('captured', body.byteLength);
-        break;
-      }
-    } catch (error) {
-      // A page that is oversized, missing, slow, or otherwise unusable is
-      // skipped so the remaining pages still yield evidence. The caller's
-      // own abort and any SSRF violation propagate.
-      signal.throwIfAborted();
-      report(
-        outcome ??
-          (error instanceof CompanyFetchSecurityError
-            ? 'security_rejected'
-            : error instanceof CompanyPageTooLargeError
-            ? 'page_too_large'
-            : timeout.signal.aborted
-            ? 'timeout'
-            : 'transport_failure'),
-        error instanceof CompanyPageTooLargeError ? error.bytes : undefined
-      );
-      if (error instanceof CompanyFetchSecurityError) throw error;
-    } finally {
-      timeout.clear();
-    }
-  }
-  return evidence;
 }
