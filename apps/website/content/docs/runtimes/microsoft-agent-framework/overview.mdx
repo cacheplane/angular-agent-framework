@@ -23,7 +23,7 @@ Tools are plain functions decorated with `@tool`. This one is the ordinary case:
 
 <ExampleCode file="agent.py" region="policy-tool" title="agent.py — the policy tool" />
 
-The decorator's `name` and `description` are the model-facing contract, which is why the categories live in the docstring and the module-level policy table rather than only in the system prompt.
+The decorator's `name` and `description` are the model-facing contract, which is why the categories live in the module-level policy table and the `Expense.category` field description rather than only in the system prompt.
 
 ### The tool that requires approval
 
@@ -37,11 +37,15 @@ On the approval-resume path the framework replays the stored tool-call arguments
 
 ### Delegating to a specialist
 
-The third tool delegates. `policy_researcher` is a second `Agent` with its own instructions and no tools of its own, and `research_policy` streams it from inside a tool body.
+The delegation tool is `research_policy`. `policy_researcher` is a second `Agent` with its own instructions and no tools of its own, and `research_policy` streams it from inside a tool body. The bridge forwards nothing from an agent running inside a tool body on its own: only the tool's return string reaches the wire, as a tool result.
+
+<Callout type="info" title="How delegation reaches the wire">
+The `delegation_*` helpers close that gap. They live in `src/subagent_emitter.py`, they build typed `ag_ui.core` events, and they enqueue them onto a queue that a run wrapper merges into the bridge's own event stream, so `SUBAGENT_STARTED`, the specialist's `TEXT_MESSAGE_*` deltas stamped with a `subagentRunId`, and `SUBAGENT_FINISHED` all reach the client while the bridge generator is still suspended inside the tool. Outside that wrapped run the helpers are no-ops, which keeps direct agent runs free of side effects.
+</Callout>
 
 <ExampleCode file="agent.py" region="delegation" title="agent.py — the delegation tool" />
 
-The bridge forwards nothing from an agent running inside a tool body: only the tool's return string reaches the wire, as a tool result. The `delegation_*` helpers close that gap. They live in `src/subagent_emitter.py`, they build typed `ag_ui.core` events, and they enqueue them onto a queue that a run wrapper merges into the bridge's own event stream, so `SUBAGENT_STARTED`, the specialist's `TEXT_MESSAGE_*` deltas stamped with a `subagentRunId`, and `SUBAGENT_FINISHED` all reach the client while the bridge generator is still suspended inside the tool. Outside that wrapped run the helpers are no-ops, which keeps direct agent runs free of side effects. The wire capture behind the design is committed next to the module as `python/docs/wire-capture-subagents.md`.
+The wire capture behind the design is committed next to the module as `python/docs/wire-capture-subagents.md`.
 
 ### Choosing the model client
 
@@ -53,7 +57,7 @@ Passing `azure_endpoint` explicitly is the constructor's strongest Azure signal,
 
 ### Exposing the agent over AG-UI
 
-`AgentFrameworkAgent` wraps the framework agent and is the AG-UI surface. Two of its arguments carry the shared-state behavior: `state_schema` declares the keys the client may see, and `predict_state_config` maps a tool argument onto one of those keys.
+`AgentFrameworkAgent` wraps the framework agent and is the AG-UI surface. Two of its arguments carry the shared-state behavior: `state_schema` declares the shared-state keys the agent exposes; the bridge opens the run with them in the first `STATE_SNAPSHOT`. `predict_state_config` maps a tool argument onto one of those keys.
 
 <ExampleCode file="agent.py" region="bridge" title="agent.py — the AG-UI agent" />
 
@@ -83,17 +87,13 @@ provideAgent({
 
 ### Rendering the streamed expense
 
-The adapter applies every `STATE_SNAPSHOT` and `STATE_DELTA` to one store and projects it as `agent.state()`. The component reads the `expense` key from that signal and holds the draft back until it has a vendor, which keeps the panel from flickering through half a field name while the arguments stream.
+The adapter applies every `STATE_SNAPSHOT` and `STATE_DELTA` to one store and projects it as `agent.state()`. The component reads the `expense` key from that signal and holds the draft back until it has a vendor, which suppresses the panel until the vendor key exists, so it does not flash a half-written draft while the arguments stream. The panel itself is ordinary Angular template code over that signal.
 
 <ExampleCode file="microsoft-agent-framework.component.ts" region="expense-state" title="microsoft-agent-framework.component.ts — reading shared state" />
 
-The panel itself is ordinary Angular template code over that signal.
-
-<ExampleCode file="microsoft-agent-framework.component.ts" region="shared-state-panel" title="microsoft-agent-framework.component.ts — the state panel" />
-
 ### Approving the tool call
 
-`<chat-approval-card>` renders the pending approval as a modal dialog and emits `'approve'` or `'cancel'`. Its body template is yours to write, and this one reads the pending tool call out of `agent.interrupt()`: the adapter stores the interrupt outcome as `{ interrupts: [...], runId }`, and each entry's `metadata.agent_framework.function_call` carries the tool name and its parsed arguments.
+`<chat-approval-card>` renders the pending approval as a modal dialog and emits `'approve'` or `'cancel'`. Its body template is yours to write, and this one reads the pending tool call out of `agent.interrupt()`, whose `value` the adapter sets to `{ interrupts: [...], runId }`, and each entry's `metadata.agent_framework.function_call` carries the tool name and its parsed arguments.
 
 <ExampleCode file="microsoft-agent-framework.component.ts" region="approval-wiring" title="microsoft-agent-framework.component.ts — the approval wiring" />
 
@@ -126,16 +126,16 @@ The resume payload is shaped the same way. Because the interrupt arrived as an o
 ## What's Next
 
 <CardGroup cols={2}>
-  <Card title="Runtimes introduction" href="/docs/runtimes/getting-started/introduction">
-    The measured support table across all four runtimes, and what stays the same in Angular.
+  <Card title="Quickstart" href="/docs/runtimes/microsoft-agent-framework/quickstart">
+    Run this example locally on ports 5330 and 4330, with Azure OpenAI or plain OpenAI.
+  </Card>
+  <Card title="How it connects" href="/docs/runtimes/microsoft-agent-framework/how-it-connects">
+    The measured AG-UI wire behavior: outcome interrupts, resume entries, and real state deltas.
   </Card>
   <Card title="Choosing an adapter" href="/docs/choosing-an-adapter">
     The full matrix with the cause of every gap, including the two adapter defects it found.
   </Card>
   <Card title="Subagents" href="/docs/ag-ui/guides/subagents">
     How the adapter attributes delegated runs and turns them into cards.
-  </Card>
-  <Card title="Event mapping" href="/docs/ag-ui/reference/event-mapping">
-    Every AG-UI event and the adapter state it updates.
   </Card>
 </CardGroup>
