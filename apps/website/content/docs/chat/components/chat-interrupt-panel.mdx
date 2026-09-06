@@ -1,173 +1,195 @@
+---
+description: How the interrupts example pauses a flight booking at interrupt() and resumes it from the panel's Accept and Ignore buttons, plus the component API
+---
+
 # ChatInterruptPanelComponent
 
-`ChatInterruptPanelComponent` is a composition that renders a styled interrupt card when the LangGraph agent pauses for human input. It displays the interrupt payload and provides action buttons for the user to accept, edit, respond to, or ignore the interrupt.
+`ChatInterruptPanelComponent` is a composition that renders an inline card whenever the agent is waiting on a human decision. It reads the pending interrupt off the agent, prints the payload, and offers four buttons: Accept, Edit, Respond, and Ignore. It emits which one was clicked and nothing else, so the resume payload stays yours to choose. The running example is a flight booking that pauses before it completes, and this page walks the four files behind it.
 
 **Selector:** `chat-interrupt-panel`
 
-**Import:**
+## What the demo does
+
+The Run tab shows the prebuilt `<chat>` composition beside a sidebar holding the panel and the agent status. Two welcome suggestions set up the same pause on two different paths. "Book a flight (you confirm)" asks the agent to book UA123, and "Book a flight (you cancel)" asks it to book AA404.
+
+Either request reaches the `book_flight` tool, which stops mid-call. The panel appears in the sidebar with the booking payload and the four buttons.
+
+Accept resumes the run with `confirm`, the tool returns a booking confirmation, and the agent relays it in the transcript. Ignore resumes with `cancel`, and the tool returns "Booking cancelled." instead. Edit and Respond render, because the panel always renders all four, but this example leaves them unhandled: a single-decision booking has nothing to edit.
+
+## How it is built
+
+Four files carry the feature: a Python tool that pauses, the graph that runs it, an application config that registers the agent, and an Angular component that places the panel and maps its buttons onto resume payloads. Open the Code tab to read them in place.
+
+### The tool that pauses
+
+`interrupt()` freezes the run and streams its argument to the client, and that argument is exactly what the panel renders. Here the tool looks the flight up first, builds a one-line summary, and interrupts with a dictionary carrying the summary and the flight record. When the client resumes, the same `interrupt()` call returns the resume value, so the decision is read as an ordinary return value on the next line.
+
+<ExampleCode file="graph.py" region="book-flight" title="graph.py — the booking tool" />
+
+The tool accepts any resume value that starts with `confirm` and treats everything else as a cancellation, which is why the client can answer with a bare string.
+
+<Callout type="warning" title="A resumed tool runs again from the top">
+LangGraph resumes by re-executing the interrupting call, and `interrupt()` returns the resume value rather than pausing a second time. The flight lookup above therefore runs twice. Keep that stretch free of side effects: reading data is safe, charging a card there is not.
+</Callout>
+
+### The graph around it
+
+The graph is an ordinary agent and tool loop. `book_flight` is registered next to the read-only aviation tools, and nothing in the wiring is interrupt-specific, because the pause happens inside the tool rather than in the topology.
+
+<ExampleCode file="graph.py" region="graph" title="graph.py — the agent and tool loop" />
+
+`compile()` is called with no checkpointer here, because this graph is served by the LangGraph API server, which supplies persistence itself.
+
+### The agent provider
+
+`provideAgent()` registers the agent once for the whole application, and `provideChat({})` registers the configuration the `<chat>` composition reads, here left at its defaults. The example passes a factory because it resolves its connection details at runtime from the host that serves the demo.
+
+<ExampleCode file="app.config.ts" />
+
+Your own application does not need the factory. Pass the values directly:
+
+```typescript
+provideAgent({
+  apiUrl: 'https://your-deployment.langgraph.app',
+  assistantId: 'chat-interrupts',
+});
+```
+
+`assistantId` must match the graph name in `langgraph.json`.
+
+### The panel in the sidebar
+
+The panel takes one input, the agent, and renders nothing at all while no interrupt is pending, so it is safe to leave mounted permanently. This demo puts it in the sidebar next to the agent status rather than over the transcript.
+
+<ExampleCode file="interrupts.component.ts" region="panel" title="interrupts.component.ts — the sidebar" />
+
+The status line beside it reads `agent.status()`, which is `idle`, `running`, or `error`. There is no interrupted status: a pending interrupt is a separate signal, and the panel is what reads it.
+
+### Resuming with the decision
+
+The panel emits an `InterruptAction`, and the component turns the two actions it cares about into resume payloads. The graph expects a string, so `accept` submits `'confirm'` and `ignore` submits `'cancel'`.
+
+<ExampleCode file="interrupts.component.ts" region="resume" title="interrupts.component.ts — resuming the run" />
+
+`submit({ resume })` continues the paused run instead of starting a new one, and whatever you put in `resume` is exactly what `interrupt()` returns on the server.
+
+<Callout type="info" title="The panel never resumes for you">
+`chat-interrupt-panel` emits the action and stops there. Leaving an action unhandled, as this example leaves Edit and Respond, means the run stays paused and the panel stays on screen. Handle every button you are willing to show, or wrap the panel in your own template so the unused ones never appear.
+</Callout>
+
+## Import
 
 ```typescript
 import { ChatInterruptPanelComponent } from '@threadplane/chat';
 import type { InterruptAction } from '@threadplane/chat';
 ```
 
-## How It Works
+The component is standalone, so add it to a component's `imports` array.
 
-LangGraph agents can pause execution using interrupts -- checkpoints where the agent waits for human input before proceeding. The `ChatInterruptPanelComponent` reads the interrupt state from an `Agent` and renders a warning card with action buttons.
-
-When no interrupt is active, the component renders nothing.
-
-## Basic Usage
-
-```html
-<chat-interrupt-panel
-  [agent]="chatRef"
-  (action)="handleInterrupt($event)"
-/>
-```
-
-```typescript
-import type { InterruptAction } from '@threadplane/chat';
-
-handleInterrupt(action: InterruptAction) {
-  switch (action) {
-    case 'accept':
-      this.chatRef.submit({ resume: true });
-      break;
-    case 'edit':
-      this.openEditor();
-      break;
-    case 'respond':
-      this.focusInput();
-      break;
-    case 'ignore':
-      // Do nothing, dismiss the panel
-      break;
-  }
-}
-```
-
-<Callout type="info" title="The panel doesn't resume the agent for you">
-`chat-interrupt-panel` only emits which button the user clicked — it never calls `agent.submit()` itself. You own resumption. `openEditor()` and `focusInput()` above are your own helpers (collect an edited proposal or a typed reply); once you have the value, send it back with `agent.submit({ resume })`. The shape of `resume` is whatever your graph's interrupt handler expects.
-
-```typescript
-// After the user edits the agent's proposal:
-async resumeWithEdit(edited: Record<string, unknown>) {
-  await this.chatRef.submit({ resume: { action: 'edit', data: edited } });
-}
-
-// After the user types a free-text reply:
-async resumeWithResponse(text: string) {
-  await this.chatRef.submit({ resume: { action: 'respond', text } });
-}
-```
-</Callout>
-
-## API
-
-### Inputs
+## Inputs
 
 | Input | Type | Default | Description |
 |-------|------|---------|-------------|
-| `agent` | `Agent` | **Required** | The agent providing interrupt state |
+| `agent` | `Agent` | **Required** | The agent whose pending interrupt the panel renders. |
 
-### Outputs
+## Outputs
 
 | Output | Type | Description |
 |--------|------|-------------|
-| `action` | `InterruptAction` | Emits when the user clicks an action button |
+| `action` | `InterruptAction` | Emits the action the user selected. The panel takes no other step. |
 
-## InterruptAction Type
+## The InterruptAction union
 
 ```typescript
 type InterruptAction = 'accept' | 'edit' | 'respond' | 'ignore';
 ```
 
-| Action | Button Label | Typical Use |
-|--------|-------------|-------------|
-| `'accept'` | Accept | Approve the agent's proposed action and resume execution |
-| `'edit'` | Edit | Open an editor to modify the agent's proposal before resuming |
-| `'respond'` | Respond | Send a text response back to the agent |
-| `'ignore'` | Ignore | Dismiss the interrupt without taking action |
+| Action | Button | Typical use |
+|--------|--------|-------------|
+| `'accept'` | Accept | Approve the proposed action and resume the run. |
+| `'edit'` | Edit | Open your own editor, then resume with the edited value. |
+| `'respond'` | Respond | Collect free text, then resume with it. |
+| `'ignore'` | Ignore | Reject or dismiss. The run stays paused until you resume it. |
 
-## Interrupt Payload Display
+All four buttons always render. The union is the whole of the component's contract with your code.
 
-The component extracts the interrupt payload and displays it as text:
+## How the payload is rendered
 
-- If the interrupt value is a `string`, it is displayed directly
-- If the interrupt value is an object, it is serialized with `JSON.stringify()`
+The panel derives one string from the interrupt value and prints it, preserving line breaks:
 
-## Styling
+- An object with a string `reason` field renders that field alone.
+- A string value renders directly.
+- Anything else is rendered as indented JSON.
 
-The panel uses the chat theme's warning variables:
+The example takes the third path, since its payload is a dictionary of `type`, `summary`, and `flight` with no `reason` field, so the card shows the raw booking record.
 
-| Variable | Applied To |
+<Callout type="tip" title="Add a reason field for prose">
+Interrupt with a `reason` string alongside your structured fields and the panel shows the sentence rather than the JSON dump, with no change on the Angular side.
+</Callout>
+
+## Theme variables
+
+The panel reads these from the chat theme:
+
+| Variable | Applied to |
 |----------|-----------|
-| `--tplane-chat-warning-bg` | Panel background |
-| `--tplane-chat-warning-text` | Header and message text |
-| `--tplane-chat-separator` | Panel border |
-| `--tplane-chat-radius-card` | Panel border radius |
-| `--tplane-chat-surface-alt` | Action button backgrounds |
-| `--tplane-chat-text` | Action button text |
-| `--tplane-chat-text-muted` | Ignore button text |
+| `--tplane-chat-surface` | Card background |
+| `--tplane-chat-separator` | Card border and the Edit and Respond button borders |
+| `--tplane-chat-radius-card` | Card corner radius |
+| `--tplane-chat-warning-text` | The "Agent paused" eyebrow and its dot |
+| `--tplane-chat-text` | Payload text and the Edit and Respond button labels |
+| `--tplane-chat-primary` | Accept button background |
+| `--tplane-chat-on-primary` | Accept button label |
+| `--tplane-chat-radius-button` | Button corner radius |
+| `--tplane-chat-text-muted` | Ignore button label |
 
-## Primitive Alternative: ChatInterruptComponent
+The card carries `role="alert"`, so a screen reader announces the pause when it appears.
 
-If you need full control over the interrupt UI, use the lower-level `ChatInterruptComponent` primitive instead. It provides content projection via an `ng-template`:
+## The lower level primitive
+
+When the four buttons are the wrong set, `ChatInterruptComponent` gives you the pause detection without the chrome. It renders its own heading and projects an `ng-template` whose implicit value is the pending interrupt, so the body and every control are yours.
 
 ```html
-<chat-interrupt [agent]="chatRef">
+<chat-interrupt [agent]="agent">
   <ng-template let-interrupt>
-    <div class="my-custom-interrupt">
-      <p>Agent paused: {{ interrupt.value }}</p>
-      <button (click)="resume()">Continue</button>
-    </div>
+    <p>{{ summaryOf(interrupt) }}</p>
+    <button (click)="confirm()">Confirm</button>
   </ng-template>
 </chat-interrupt>
 ```
 
-The primitive also exports a `getInterrupt()` helper function:
+`value` is typed `unknown`, so narrow it in the component rather than in the template:
+
+```typescript
+summaryOf(interrupt: AgentInterrupt): string {
+  const value = interrupt.value as { summary?: string };
+  return value.summary ?? '';
+}
+```
+
+The same module exports the reader both components use:
 
 ```typescript
 import { getInterrupt } from '@threadplane/chat';
 
-const interrupt = getInterrupt(chatRef); // Interrupt<any> | undefined
+const pending = getInterrupt(agent); // AgentInterrupt | undefined
 ```
 
-## Full Example
+An `AgentInterrupt` carries `id`, the opaque `value`, and `resumable`, which is `true` when the runtime supports `submit({ resume })`.
 
-```typescript
-import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { injectAgent, provideAgent } from '@threadplane/langgraph';
-import { ChatComponent, ChatInterruptPanelComponent } from '@threadplane/chat';
-import type { InterruptAction } from '@threadplane/chat';
+## What's Next
 
-@Component({
-  selector: 'app-interrupt-demo',
-  standalone: true,
-  imports: [ChatComponent, ChatInterruptPanelComponent],
-  providers: [provideAgent({ assistantId: 'interrupt_agent', threadId: signal(null) })],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div style="height: 100vh; display: flex; flex-direction: column;">
-      <div style="flex: 1;">
-        <chat [agent]="chatRef" />
-      </div>
-
-      <chat-interrupt-panel
-        [agent]="chatRef"
-        (action)="onInterruptAction($event)"
-      />
-    </div>
-  `,
-})
-export class InterruptDemoComponent {
-  chatRef = injectAgent();
-
-  onInterruptAction(action: InterruptAction) {
-    if (action === 'accept') {
-      this.chatRef.submit({ resume: true });
-    }
-  }
-}
-```
+<CardGroup cols={2}>
+  <Card title="Interrupts" href="/docs/langgraph/guides/interrupts">
+    The interrupt lifecycle, typed payloads, and timeout strategies.
+  </Card>
+  <Card title="Filesystem" href="/docs/deep-agents/capabilities/filesystem">
+    The same panel gating writes behind an approval.
+  </Card>
+  <Card title="ChatComponent" href="/docs/chat/components/chat">
+    The composition the panel sits beside.
+  </Card>
+  <Card title="Theming" href="/docs/chat/guides/theming">
+    Where the variables above come from.
+  </Card>
+</CardGroup>

@@ -75,6 +75,7 @@ async def generate_title(state: MessagesState, config) -> dict:
     return {}
 
 
+# region book-flight
 @tool
 async def book_flight(flight_number: str) -> str:
     """Book a flight by flight number. Pauses for human confirmation.
@@ -113,8 +114,10 @@ async def book_flight(flight_number: str) -> str:
             f"(departs {flight['depart_local']})."
         )
     return "Booking cancelled."
+# endregion
 
 
+# region graph
 def build_interrupts_graph():
     """Agent ↔ ToolNode loop with aviation read tools + book_flight (interrupt)."""
     tools = [book_flight, find_routes, lookup_flight, get_airport_info]
@@ -141,6 +144,7 @@ def build_interrupts_graph():
     graph.add_edge("tools", "agent")
     graph.add_edge("generate_title", END)
     return graph.compile()
+# endregion
 
 
 graph = build_interrupts_graph()
