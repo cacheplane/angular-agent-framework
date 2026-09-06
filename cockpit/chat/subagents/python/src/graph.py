@@ -137,8 +137,10 @@ async def _subagent_node(state: SubagentState) -> dict:
 
 
 # Compiled child graph. Invoking it from inside the `task` tool makes LangGraph
-# nest its run under a `tools:<call_id>` namespace, which the @threadplane/langgraph
-# SubagentTracker matches to the registered `task` dispatch to surface a card.
+# nest its run under a `tools:<uuid>` namespace, where the uuid is a checkpoint
+# id assigned independently — nothing on the wire links it to the `call_*`
+# tool-call id. The @threadplane/langgraph SubagentTracker matches this
+# namespace to the registered `task` dispatch to surface a card.
 _subagent_builder = StateGraph(SubagentState)
 _subagent_builder.add_node("subagent", _subagent_node)
 _subagent_builder.set_entry_point("subagent")

@@ -22,7 +22,7 @@ Send it and the orchestrator calls one `task` tool three times, in that order. E
 
 ## How it is built
 
-Four things carry the feature: a child graph the orchestrator can invoke, a `task` tool that invokes it, one line of adapter configuration that says `task` means delegation, and a component that renders the standard `<chat>` composition. Open the Code tab to read them in place.
+A child graph the orchestrator can invoke, a `task` tool that invokes it, one line of adapter configuration that says `task` means delegation, a helper that binds the child stream to its tool call, the orchestrator's own tool-calling loop, and a component that renders the standard `<chat>` composition carry the feature together. Open the Code tab to read them in place.
 
 ### The subagent subgraph
 
@@ -49,7 +49,7 @@ Nothing on the wire links the child's `tools:<uuid>` namespace to the parent's `
 `@threadplane/langgraph` consumes that event as protocol chatter rather than forwarding it as application data, and replays any chunks that streamed before the binding arrived.
 
 <Callout type="info" title="The binding is authoritative, the fallback is a heuristic">
-Without the announcement the adapter falls back to attributing the first unmapped pending or running child, which is correct only while one dispatch is outstanding at a time. Announcing the binding is what makes parallel fan-out safe. The canonical helper is `threadplane.middleware.langgraph.announce_subagent`; the example inlines it because each example stands alone.
+Without the announcement the adapter falls back to attributing the first unmapped pending or running child, which is correct only while one dispatch is outstanding at a time; with no `description` argument to match on, the ladder lands on its positional rung. Announcing the binding is what makes parallel fan-out safe. The canonical helper is `threadplane.middleware.langgraph.announce_subagent`; the example inlines it because each example stands alone.
 </Callout>
 
 ### The orchestrator
@@ -62,11 +62,13 @@ The system prompt tells the orchestrator to dispatch research, then booking, the
 
 ### Telling the adapter that task means delegation
 
-`provideAgent()` registers the agent once for the whole application, and `provideChat({})` registers the chat configuration at its defaults. The one subagent-specific line is `subagentToolNames`.
+`provideAgent()` registers the agent once for the whole application, and `provideChat({})` registers the chat configuration at its defaults. The one subagent-specific line is `subagentToolNames`. The default is already `['task']`, so this example states explicitly what it would otherwise inherit.
+
+The example resolves its connection at runtime because the host that serves the demo decides which runtime is attached; your own application passes `apiUrl` and `assistantId` directly.
 
 <ExampleCode file="app.config.ts" />
 
-A tool call is registered as a subagent only when its name is in `subagentToolNames` and its arguments carry a plausible `subagent_type`; that argument then becomes `Subagent.name`. The default is already `['task']`, so this example states explicitly what it would otherwise inherit.
+A tool call is registered as a subagent only when its name is in `subagentToolNames` and its arguments carry a plausible `subagent_type`; that argument then becomes `Subagent.name`.
 
 ### Where the card appears
 
@@ -75,6 +77,8 @@ The component is small on purpose. It renders `<chat>`, a welcome suggestion, an
 <ExampleCode file="subagents.component.ts" region="template" title="subagents.component.ts — the template" />
 
 Subagent cards appear because `<chat-tool-calls>`, inside the `<chat>` composition, cross-references each tool call against `agent.subagents()`: a call that spawned a subagent renders as a standalone `<chat-subagent-card>` instead of a tool-call card, and never groups with adjacent calls.
+
+That cross-reference works because the agent the demo provides exposes `subagents()` for `<chat-tool-calls>` to read.
 
 <ExampleCode file="subagents.component.ts" region="agent" title="subagents.component.ts — the agent" />
 
@@ -111,7 +115,7 @@ The `Subagent` type comes from `@threadplane/chat` and is what every adapter map
 
 In the running example `name` is the `subagent_type` argument (`research`, `booking`, `itinerary`), `state` carries the child's state values plus the tool result once it lands, and `toolCalls` is absent, because the LangGraph adapter does not surface a child's own tool calls.
 
-<Callout type="note" title="A dispatch becomes visible when its child stream starts">
+<Callout type="info" title="A dispatch becomes visible when its child stream starts">
 The adapter registers a subagent as `pending` the moment the orchestrator's tool call arrives, and hides `pending` entries from `agent.subagents()`. The entry turns `running` when its child stream is bound, and `complete` (or `error`) when the tool result message lands.
 </Callout>
 
