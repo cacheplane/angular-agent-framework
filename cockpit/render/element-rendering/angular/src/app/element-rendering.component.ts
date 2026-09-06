@@ -38,6 +38,7 @@ class DemoTextComponent {
   readonly loading = input(false);
 }
 
+// #region child-recursion
 @Component({
   selector: 'demo-heading',
   standalone: true,
@@ -63,6 +64,7 @@ class DemoHeadingComponent {
   readonly emit = input<(event: string) => void>(() => {});
   readonly loading = input(false);
 }
+// #endregion
 
 @Component({
   selector: 'demo-card',
@@ -325,6 +327,7 @@ class DemoCardComponent {
       </div>
 
       <!-- Left: live render output -->
+      <!-- #region render-spec-host -->
       <div primary>
         <div class="cap">Live Render Output</div>
         @if (simulator.spec(); as renderedSpec) {
@@ -333,6 +336,7 @@ class DemoCardComponent {
           <div class="placeholder">Press play to start streaming…</div>
         }
       </div>
+      <!-- #endregion -->
 
       <!-- Right: JSON + Controls -->
       <div secondary style="display:flex; flex-direction:column; height:100%">
@@ -370,6 +374,7 @@ export class ElementRenderingComponent implements OnDestroy {
 
   private readonly jsonScroll = viewChild<ElementRef<HTMLElement>>('jsonScroll');
 
+  // #region registry-and-store
   protected readonly registry = defineAngularRegistry({
     Text: DemoTextComponent,
     Heading: DemoHeadingComponent,
@@ -386,6 +391,7 @@ export class ElementRenderingComponent implements OnDestroy {
     this.store.subscribe(() => {
       this.showDetail.set(this.store.get('/showDetail') as boolean ?? true);
     });
+    // #endregion
 
     // Auto-scroll JSON pane
     effect(() => {
@@ -399,11 +405,13 @@ export class ElementRenderingComponent implements OnDestroy {
     });
   }
 
+  // #region visibility-toggle
   protected onToggleDetail(_event: Event): void {
     const current = this.showDetail();
     this.store.set('/showDetail', !current);
     this.showDetail.set(!current);
   }
+  // #endregion
 
   protected percent(): number {
     return Math.round(this.simulator.progress() * 100);

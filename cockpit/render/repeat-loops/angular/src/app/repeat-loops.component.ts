@@ -325,6 +325,7 @@ class DemoCardComponent {
       </div>
 
       <!-- Left: live render output -->
+      <!-- #region render-surface -->
       <div primary>
         <div class="cap">Live Render Output</div>
         @if (simulator.spec(); as renderedSpec) {
@@ -333,6 +334,7 @@ class DemoCardComponent {
           <div class="placeholder">Press play to start streaming…</div>
         }
       </div>
+      <!-- #endregion -->
 
       <!-- Right: syntax-colored streaming JSON + List Controls -->
       <div secondary style="display: flex; flex-direction: column; height: 100%;">
@@ -345,6 +347,7 @@ class DemoCardComponent {
           </div>
         </div>
 
+        <!-- #region list-controls -->
         <div class="controls">
           <div class="cap">List Controls</div>
           <button class="control-btn" type="button" style="width:100%" (click)="addItem()">+ Add Item</button>
@@ -353,8 +356,9 @@ class DemoCardComponent {
               <div class="list-row"><span>{{ item }}</span><button class="list-row__remove" type="button" (click)="removeItem($index)">×</button></div>
             }
           </div>
-          <p class="control-hint">Mutates the <code>/items</code> array in the state store; the rendered list reconciles by key.</p>
+          <p class="control-hint">Mutates the <code>/items</code> array in the state store.</p>
         </div>
+        <!-- #endregion -->
       </div>
 
       <!-- Transport -->
@@ -384,6 +388,7 @@ export class RepeatLoopsComponent implements OnDestroy {
     });
   }
 
+  // #region registry-and-store
   protected readonly registry = defineAngularRegistry({
     Text: DemoTextComponent,
     Heading: DemoHeadingComponent,
@@ -391,7 +396,9 @@ export class RepeatLoopsComponent implements OnDestroy {
   });
 
   protected readonly store = signalStateStore({ items: ['Alpha', 'Beta', 'Gamma'] });
+  // #endregion
 
+  // #region list-state
   private counter = 0;
 
   protected getItems(): string[] {
@@ -408,6 +415,7 @@ export class RepeatLoopsComponent implements OnDestroy {
     const items = this.getItems();
     this.store.set('/items', items.filter((_: string, i: number) => i !== index));
   }
+  // #endregion
 
   protected percent(): number {
     return Math.round(this.simulator.progress() * 100);

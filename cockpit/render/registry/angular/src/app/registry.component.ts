@@ -15,6 +15,7 @@ import { toDisplayText } from '../../../../shared/to-display-text';
 
 // --- Inline view components registered in the demo registry ---
 
+// #region text-view
 @Component({
   selector: 'demo-text',
   standalone: true,
@@ -37,7 +38,9 @@ class DemoTextComponent {
   readonly emit = input<(event: string) => void>(() => {});
   readonly loading = input(false);
 }
+// #endregion
 
+// #region heading-view
 @Component({
   selector: 'demo-heading',
   standalone: true,
@@ -63,6 +66,7 @@ class DemoHeadingComponent {
   readonly emit = input<(event: string) => void>(() => {});
   readonly loading = input(false);
 }
+// #endregion
 
 @Component({
   selector: 'demo-badge',
@@ -273,6 +277,7 @@ class DemoCardComponent {
       </div>
 
       <!-- Left: live render output -->
+      <!-- #region render-surface -->
       <div primary>
         <div class="cap">Live Render Output</div>
         @if (simulator.spec(); as renderedSpec) {
@@ -281,6 +286,7 @@ class DemoCardComponent {
           <div class="placeholder">Press play to start streaming…</div>
         }
       </div>
+      <!-- #endregion -->
 
       <!-- Right: syntax-colored streaming JSON -->
       <div secondary>
@@ -321,6 +327,7 @@ export class RegistryComponent implements OnDestroy {
     });
   }
 
+// #region registry
   protected readonly registry = defineAngularRegistry({
     Text: DemoTextComponent,
     Heading: DemoHeadingComponent,
@@ -329,6 +336,7 @@ export class RegistryComponent implements OnDestroy {
   });
 
   protected readonly store = signalStateStore({});
+// #endregion
 
   protected percent(): number {
     return Math.round(this.simulator.progress() * 100);
