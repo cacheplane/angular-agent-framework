@@ -10,7 +10,7 @@ description: Register the registry, store, computed functions, and handlers that
 
 The Run tab shows a split view. On the left is a live render surface; on the right is the spec JSON that feeds it, arriving character by character. Nothing streams until you press play in the transport bar at the bottom, which also lets you scrub the timeline and change the speed.
 
-Press play and watch the values appear: `hello world` comes out uppercased, `streaming` comes out reversed, an ISO timestamp comes out as a local date, and `7 x 6` comes out as `42`. None of those strings are in the spec. The spec asks for a function by name, and the four functions registered in `provideRender()` produce the text. Use the Spec tabs in the header to switch between three specs -- Text Transforms, Data Display, and Mixed Functions -- and each switch restarts the stream with a different mix of the same four functions.
+Press play and the first spec streams in: `hello world` comes out uppercased and `streaming` comes out reversed. Switch to Data Display and an ISO timestamp comes out as a local date while `7 x 6` comes out as `42`. None of those results are in the spec. The spec asks for a function by name, and the four functions registered in `provideRender()` produce the text. The Spec tabs in the header hold three specs -- Text Transforms, Data Display, and Mixed Functions -- and each tab restarts the stream with a different mix of the same four functions.
 
 ## How it is built
 
@@ -31,11 +31,19 @@ Prop resolution runs whenever the spec or the bound state changes, which during 
 A spec calls one of them with a `$computed` expression in place of a literal prop value. The demo's first spec asks for two of the four:
 
 ```typescript
-const element = {
+const upper = {
   type: 'Value',
   props: {
     label: 'Uppercase',
     value: { $computed: 'uppercase', args: { value: 'hello world' } },
+  },
+};
+
+const reversed = {
+  type: 'Value',
+  props: {
+    label: 'Reversed',
+    value: { $computed: 'reverse', args: { value: 'streaming' } },
   },
 };
 ```
@@ -104,7 +112,7 @@ interface RenderConfig {
 | `registry` | `AngularRegistry` | Default component registry for all `<render-spec>` instances |
 | `store` | `StateStore` | Default state store for all `<render-spec>` instances |
 | `functions` | `Record<string, ComputedFunction>` | Named functions a spec may call through `$computed` |
-| `handlers` | `Record<string, Handler>` | Named action handlers invoked when interactive elements fire |
+| `handlers` | `Record<string, (params: Record<string, unknown>) => unknown \| Promise<unknown>>` | Named action handlers invoked when interactive elements fire |
 
 Every property is optional. Provide only the defaults you need, as the example does with `functions` alone.
 
