@@ -14,8 +14,8 @@ The visibility problem: `MemoryMiddleware` annotates `memory_contents` with
 `PrivateStateAttr`, so it never appears in the `values` stream and a panel bound
 to `agent.value()` would stay empty. `MemoryVisibilityMiddleware` below
 republishes it as a `custom` stream event, which does reach the client. Custom
-events are live-only, so the client also hydrates from `getState` when a thread
-is reopened.
+events are live-only, so when a thread is reopened, the value comes from
+thread history instead, which is what the client's history hydration reads.
 """
 
 from pathlib import Path
@@ -29,6 +29,7 @@ from langgraph.config import get_stream_writer
 
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 
+# region memory-constants
 MEMORY_FILE = "/memories/AGENTS.md"
 
 #: Fixed namespace: every thread of this demo shares one memory. A real
@@ -37,8 +38,10 @@ MEMORY_NAMESPACE = ("cockpit", "deep-agents-memory")
 
 #: Custom stream event name the Angular panel listens for.
 MEMORY_EVENT = "deep_agents.memory"
+# endregion
 
 
+# region visibility-middleware
 class MemoryVisibilityMiddleware(AgentMiddleware):
     """Republish `memory_contents` as a `custom` stream event.
 
@@ -59,7 +62,7 @@ class MemoryVisibilityMiddleware(AgentMiddleware):
             writer = get_stream_writer()
         except (RuntimeError, KeyError):
             # No streaming context. The value is still on the checkpoint, which
-            # is what the client's getState fallback reads.
+            # is what the client's history hydration reads.
             return
         writer({"name": MEMORY_EVENT, "data": {"memory_contents": contents}})
 
@@ -70,8 +73,10 @@ class MemoryVisibilityMiddleware(AgentMiddleware):
     def after_agent(self, state: dict[str, Any], runtime: Any) -> None:  # noqa: ANN401, ARG002
         self._emit(state)
         return None
+# endregion
 
 
+# region memory-agent
 def build_memory_agent():
     """Build the memory agent.
 
@@ -87,6 +92,7 @@ def build_memory_agent():
         memory=[MEMORY_FILE],
         middleware=[MemoryVisibilityMiddleware()],
     )
+# endregion
 
 
 graph = build_memory_agent()

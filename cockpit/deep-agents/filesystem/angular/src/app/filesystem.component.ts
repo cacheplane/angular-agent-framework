@@ -68,6 +68,7 @@ const SUGGESTIONS = [
           }
         </div>
       </chat>
+      <!-- #region workspace-panel -->
       <div sidebar class="panel">
         <h3 class="cap">Workspace</h3>
         @if (files().length === 0) {
@@ -103,6 +104,7 @@ const SUGGESTIONS = [
         <h3 class="cap">Approval</h3>
         <chat-interrupt-panel [agent]="agent" (action)="onInterruptAction($event)" />
       </div>
+      <!-- #endregion -->
     </example-chat-layout>
   `,
   styles: [
@@ -197,6 +199,7 @@ export class FilesystemComponent {
 
   private readonly manualSelection = signal<string | null>(null);
 
+  // #region pending-path
   /**
    * The path a pending `write_file` approval would create.
    *
@@ -215,7 +218,9 @@ export class FilesystemComponent {
     }
     return null;
   });
+  // #endregion
 
+  // #region files
   /** Live projection of `state.files`, plus a ghost row for a pending write. */
   protected readonly files = computed<WorkspaceFile[]>(() => {
     const raw = (this.agent.value() as Record<string, unknown> | undefined)?.['files'];
@@ -241,7 +246,9 @@ export class FilesystemComponent {
       })
       .sort((a, b) => a.path.localeCompare(b.path));
   });
+  // #endregion
 
+  // #region tree
   /** Files grouped by directory, so the panel reads as a tree. */
   protected readonly tree = computed(() => {
     const groups = new Map<string, WorkspaceFile[]>();
@@ -254,6 +261,7 @@ export class FilesystemComponent {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([directory, files]) => ({ directory, files }));
   });
+  // #endregion
 
   /** The clicked file, defaulting to the most recently written one. */
   protected readonly selectedPath = computed<string | null>(() => {
@@ -273,6 +281,7 @@ export class FilesystemComponent {
     this.manualSelection.set(path);
   }
 
+  // #region resume
   protected onInterruptAction(action: InterruptAction): void {
     if (action === 'accept') {
       void this.agent.submit({ resume: { decisions: [{ type: 'approve' }] } });
@@ -281,6 +290,7 @@ export class FilesystemComponent {
     }
     // 'edit' and 'respond' would need the tool args echoed back; out of scope here.
   }
+  // #endregion
 
   protected send(text: string): void {
     void this.agent.submit({ message: text });

@@ -20,11 +20,12 @@ const SUGGESTIONS = [
 /**
  * SubagentsComponent shows real child agents, not a tool-call log.
  *
- * `SubAgentMiddleware` runs each `task` dispatch as its own graph in a
- * `tools:<call_id>` namespace, so a child's tokens arrive tagged with which
- * dispatch produced them. Attribution is therefore structural: the tracker
- * matches namespaces, and does not have to guess from message ordering. That
- * is what makes parallel fan-out render correctly — four children streaming at
+ * `SubAgentMiddleware` runs each `task` dispatch as its own graph in its own
+ * namespace, and seeds it with the dispatch `description`. The tracker
+ * registers the dispatch from the `task` call and attributes the child stream
+ * by matching that description — exact match first, then containment either
+ * way, then a single remaining candidate. Descriptions that name their airport
+ * are what make parallel fan-out render correctly: four children streaming at
  * once land in four separate cards rather than interleaving into one.
  *
  * The cards are rendered inline by the `<chat>` composition and persist after
@@ -49,6 +50,7 @@ const SUGGESTIONS = [
           }
         </div>
       </chat>
+      <!-- #region sidebar-panel -->
       <div sidebar class="panel">
         <h3 class="cap">Dispatches</h3>
         <p class="count" data-testid="dispatch-count">
@@ -60,6 +62,7 @@ const SUGGESTIONS = [
           <li><span class="roster__name">weather-analyst</span> — conditions and operational impact</li>
         </ul>
       </div>
+      <!-- #endregion -->
     </example-chat-layout>
   `,
   styles: [
@@ -114,6 +117,7 @@ export class SubagentsComponent {
 
   protected readonly suggestions = SUGGESTIONS;
 
+  // #region dispatch-signals
   private readonly dispatches = computed(() => [...this.agent.subagents().values()]);
 
   protected readonly dispatchCount = computed(() => this.dispatches().length);
@@ -121,6 +125,7 @@ export class SubagentsComponent {
   protected readonly runningCount = computed(
     () => this.dispatches().filter((subagent) => subagent.status() === 'running').length,
   );
+  // #endregion
 
   protected send(text: string): void {
     void this.agent.submit({ message: text });

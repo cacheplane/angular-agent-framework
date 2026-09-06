@@ -61,6 +61,7 @@ const SUGGESTIONS = [
           }
         </div>
       </chat>
+      <!-- #region skills-panel -->
       <div sidebar class="panel">
         <h3 class="cap">Skill Index</h3>
         <p class="source" data-testid="skills-source" [attr.data-source]="skillsSource()">
@@ -92,6 +93,7 @@ const SUGGESTIONS = [
           read on demand.
         </p>
       </div>
+      <!-- #endregion -->
     </example-chat-layout>
   `,
   styles: [
@@ -180,6 +182,7 @@ export class SkillsComponent {
 
   protected readonly suggestions = SUGGESTIONS;
 
+  // #region skills-sources
   private readonly liveSkills = computed<Record<string, unknown>[] | null>(() => {
     for (const event of [...this.agent.customEvents()].reverse()) {
       if (event.name !== SKILLS_EVENT) continue;
@@ -206,7 +209,9 @@ export class SkillsComponent {
     if (this.liveSkills()) return 'live';
     return this.settledSkills() ? 'checkpoint' : 'none';
   });
+  // #endregion
 
+  // #region opened-paths
   /** Absolute paths the agent has read with `read_file` during this run. */
   private readonly openedPaths = computed<string[]>(() => {
     const paths: string[] = [];
@@ -217,7 +222,9 @@ export class SkillsComponent {
     }
     return paths;
   });
+  // #endregion
 
+  // #region skills-projection
   protected readonly skills = computed<SkillEntry[]>(() => {
     const source = this.liveSkills() ?? this.settledSkills() ?? [];
     const opened = this.openedPaths();
@@ -233,6 +240,7 @@ export class SkillsComponent {
       };
     });
   });
+  // #endregion
 
   protected send(text: string): void {
     void this.agent.submit({ message: text });
