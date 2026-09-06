@@ -4,7 +4,7 @@ description: Declare tools in the browser, ship the catalog to a LangGraph graph
 
 # Client Tools
 
-Client tools are tools you declare in the browser that the model calls and the browser executes, with no server-side implementation. The Angular app declares them, the `@threadplane/langgraph` adapter merges the catalog into every run payload under the `client_tools` key, and the graph binds those declarations onto the model and ends its turn when one is called. The browser then produces the result and hands it back, either as a new run or as a direct write to the thread. This guide walks the running example, from the graph to the components the model fills.
+Client tools are tools you declare in the browser that the model calls and the browser executes, with no server-side implementation. The Angular app declares them, the `@threadplane/langgraph` adapter attaches the catalog to every run it starts under the `client_tools` key, and the graph binds those declarations onto the model and ends its turn when one is called. The browser then produces the result and hands it back, either as a new run or as a direct write to the thread. This guide walks the running example, from the graph to the components the model fills.
 
 | Helper | Kind | What it does |
 |---|---|---|
@@ -26,11 +26,11 @@ Two further prompts exercise the edges. A quiet weather snapshot calls `weather_
 
 ## How it is built
 
-Six files carry the feature: a graph that binds the browser's declarations and ends its turn, an application config, the schemas the registry and its components share, the file that declares the registry and passes it to `<chat>`, and the two components the model fills. Open the Code tab to read them in place.
+Seven files carry the feature: a graph that binds the browser's declarations and ends its turn, an application config, the typed agent reference the config and the component share, the schemas the registry and its components share, the file that declares the registry and passes it to `<chat>`, and the two components the model fills. Open the Code tab to read them in place.
 
 ### The graph binds client stubs and ends the turn
 
-The graph has one node. Its `State` declares a `client_tools` channel alongside `messages`, because that is the key the LangGraph adapter writes the catalog to, and `bind_client_tools` reads it there to bind the declarations onto the model for this invocation. There are no server tools, so `route` returns `END` unconditionally.
+The graph has one node. Its `State` declares a `client_tools` channel alongside `messages`, because that is the key the LangGraph adapter writes the catalog to, and `bind_client_tools` reads it there to bind the declarations onto the model for this invocation. There are no server tools, so `route` returns `END` unconditionally. This graph compiles without a checkpointer, because it runs under the LangGraph server, which provides one.
 
 <ExampleCode file="graph.py" />
 
@@ -44,7 +44,7 @@ The browser, not the graph, produces the result. Ending the run is the signal th
 `bind_client_tools` reads `state["tools"]` first and falls back to `state["client_tools"]`, so one graph serves both adapters. The LangGraph adapter writes `client_tools`; declare that channel or the merged value is dropped, the model is bound with nothing, and the demo goes quiet with no error.
 </Callout>
 
-This graph compiles without a checkpointer, because it runs under the LangGraph server, which provides one. That is the opposite of the AG-UI twin, which serves the same graph from its own FastAPI process and therefore brings its own saver.
+The AG-UI twin's sibling graph is a separate file that compiles with `MemorySaver()`, because `ag-ui-langgraph` reads the thread's state through a checkpointer.
 
 ### Providing the agent
 
@@ -54,7 +54,7 @@ This graph compiles without a checkpointer, because it runs under the LangGraph 
 
 ### Declaring the tool registry
 
-`tools()` builds a name-keyed registry, and each entry is one of three declarations from `@threadplane/chat`. `action()` takes a handler that runs in the browser and may return a promise, `view()` takes a component the model fills, and `ask()` takes a component that reports a value back. Every entry carries a description the model reads and a schema authored with `zod/v4`. The `weather_card`, `weather_snapshot`, and `confirm_booking` entries take their schemas from `schemas.ts`, the file the registry and the two components it points at all import from.
+`tools()` builds a name-keyed registry, and each entry is one of three declarations from `@threadplane/chat`. `action()` takes a handler that runs in the browser and may return a promise, `view()` takes a component the model fills, and `ask()` takes a component that reports a value back. Every entry carries a description the model reads and a schema authored with `zod/v4`.
 
 ```ts
 import { z } from 'zod/v4';
@@ -72,9 +72,11 @@ export const weatherCardSchema = z.object({
 export const confirmBookingSchema = z.object({ summary: z.string() });
 ```
 
+The `weather_card`, `weather_snapshot`, and `confirm_booking` entries take their schemas from `schemas.ts`, the file the registry and the two components it points at all import from. The object keys are the tool names the model sees, and `weather_snapshot` shows the fourth argument: options.
+
 <ExampleCode file="client-tools.component.ts" region="tool-registry" title="client-tools.component.ts — the registry" />
 
-The object keys are the tool names the model sees, and `weather_snapshot` shows the fourth argument: options. It reuses the weather card with `{ followUp: false }`, which is what makes it terminal.
+It reuses the weather card with `{ followUp: false }`, which is what makes it terminal.
 
 <Callout type="warning" title="Author schemas with zod/v4">
 The catalog the model sees is derived by `deriveJsonSchema`, which calls `toJSONSchema` from `zod/v4`. A validator it cannot convert throws with the tool name in the message.
@@ -118,7 +120,7 @@ The executor wraps the agent's `stop`, so pressing stop aborts every in-flight h
 
 <Steps>
 <Step title="The catalog ships with the run">
-The coordinator converts the registry into specs, each with a name, a description, and a JSON Schema, and the adapter merges them into every outbound payload as `client_tools`.
+The coordinator converts the registry into specs, each with a name, a description, and a JSON Schema, and the adapter attaches them to every run it starts as `client_tools`.
 </Step>
 <Step title="The model calls a tool and the graph ends the turn">
 Because the tool has no server implementation, the run finishes with a tool call that carries no result.
@@ -174,6 +176,7 @@ const search = action(
 Runaway loops are capped. A model that keeps calling client tools is stopped after ten continuation groups per user turn. Tune that with `[clientToolContinuationPolicy]`:
 
 ```typescript
+import { Component } from '@angular/core';
 import type { ClientToolContinuationPolicy } from '@threadplane/chat';
 
 @Component({
@@ -246,10 +249,10 @@ const move = action('Move a stop to another day.', moveSchema, moveStop);
 
 ## Reading client-tool results on the server
 
-A client-tool result reaches your graph as a tool message keyed by tool-call id, with no tool name on it. Both adapters send the same minimal shape:
+A client-tool result reaches your graph as a tool message keyed by tool-call id, with no tool name on it. The two adapters do not set identical fields, but the point holds regardless of whatever else the adapter sets: there is no `name` to filter on. Here is the LangGraph adapter's shape:
 
 ```json
-{ "id": "client-tool-result-call_abc", "role": "tool", "tool_call_id": "call_abc", "content": "{\"saved\":1}" }
+{ "id": "client-tool-result-call_abc", "role": "tool", "type": "tool", "tool_call_id": "call_abc", "content": "{\"saved\":1}" }
 ```
 
 That matters the moment a node tries to find those results. The intuitive filter is by name, and it fails silently, matching nothing, forever, with no error:
