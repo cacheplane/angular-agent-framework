@@ -22,12 +22,6 @@ import {
  */
 const PENDING_PAGES = new Set<string>([
   '/docs/a2ui/getting-started/introduction',
-  '/docs/ag-ui/guides/client-tools',
-  '/docs/ag-ui/guides/interrupts',
-  '/docs/ag-ui/guides/json-render',
-  '/docs/ag-ui/guides/subagents',
-  '/docs/ag-ui/guides/tool-views',
-  '/docs/ag-ui/reference/event-mapping',
   '/docs/chat/a2ui/overview',
   '/docs/chat/components/chat-debug',
   '/docs/chat/components/chat-input',
