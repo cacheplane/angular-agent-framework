@@ -56,7 +56,7 @@ After the pause the graph branches. A conditional edge sends an approved refund 
 
 <ExampleCode file="graph.py" region="graph" title="graph.py — issuing and routing" />
 
-The graph compiles with `MemorySaver()`, because a paused graph is a stored checkpoint and this example owns its own process rather than running on a platform that supplies persistence.
+The graph compiles with `MemorySaver()` because `ag-ui-langgraph` reads the thread's graph state through a checkpointer, so a graph served this way needs one; a paused graph is also a stored checkpoint, which is what the resume reads back.
 
 <Callout type="warning" title="MemorySaver is a development choice">
 An in-memory checkpointer loses every paused run when the process restarts. A deployment that must survive a restart needs a durable saver, such as the Postgres checkpointer, behind the same `checkpointer=` argument.
@@ -76,7 +76,7 @@ That wrapper is what turns a LangGraph pause into the AG-UI event described belo
 
 <ExampleCode file="app.config.ts" />
 
-Your own application does not need the factory. Pass the URL of your AG-UI endpoint directly:
+Pass the URL of your AG-UI endpoint directly in your own application, which does not need the factory:
 
 ```typescript
 provideAgent({
@@ -128,11 +128,11 @@ Other runtimes signal a pause differently, and the adapter follows them: a `RUN_
 
 ## Cross-adapter parity
 
-The component code is the same against a LangGraph deployment except for the import:
+The component code is the same; moving this component to a LangGraph deployment changes one import:
 
 ```diff
-- import { injectAgent } from '@threadplane/langgraph';
-+ import { injectAgent } from '@threadplane/ag-ui';
+- import { injectAgent } from '@threadplane/ag-ui';
++ import { injectAgent } from '@threadplane/langgraph';
 ```
 
 The `interrupt()` signal and `submit({ resume })` are part of the runtime-neutral `Agent` contract, and `<chat-approval-card>` is written against it, so switching adapters is a provider change rather than a component rewrite. The [LangGraph interrupts guide](/docs/langgraph/guides/interrupts) covers the parts of the pattern that live above the wire: typed payloads, multi-step approvals, and timeout strategies.

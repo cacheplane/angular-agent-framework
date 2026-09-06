@@ -142,7 +142,7 @@ Three things must hold. The first fails silently, which makes it the one to chec
 The catalog is merged into graph state by `ag-ui-langgraph`. If `State` does not declare a `tools` channel the merged value is dropped, `bind_client_tools` binds nothing, and the model never learns the browser has tools.
 </Callout>
 
-The graph in this example compiles with `MemorySaver()` because `ag-ui-langgraph` reads and writes the thread's graph state through a checkpointer; a graph served this way needs one, and outside development it should be durable. The tool result itself does not depend on it: the browser adds the tool message to its own message list, and the continuation run carries the whole list back.
+The graph in this example compiles with `MemorySaver()` because `ag-ui-langgraph` reads the thread's graph state through a checkpointer; a graph served this way needs one, and outside development it should be durable. The tool result itself does not depend on it: the browser adds the tool message to its own message list, and the continuation run carries the whole list back.
 
 Finally, keep the tool names in the registry and the names in the system prompt aligned. The prompt in this example tells the model which tool to call for each kind of request, and a rename on one side alone is the most common reason a demo goes quiet.
 
