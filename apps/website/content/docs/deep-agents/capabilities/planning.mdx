@@ -5,100 +5,95 @@ description: TodoListMiddleware puts a todos array on the graph state, and an An
 
 # Planning
 
-`TodoListMiddleware` gives the model one tool, `write_todos`, and declares one key on the graph state, `todos`. That is the entire capability. Everything a plan panel needs comes from those two facts.
+Planning in Deep Agents is one tool and one state key. `TodoListMiddleware` registers a `write_todos` tool and declares `todos` on the graph state, and every call to that tool replaces the whole list. A panel that renders `todos` therefore shows the plan the agent is working from, including the revisions it makes while the run is still going. The running example is an aviation dispatch desk, and this page walks the three files behind it.
 
-```python
-from deepagents import create_deep_agent
-from langchain.agents.middleware import TodoListMiddleware
-from langchain_openai import ChatOpenAI
+## What the demo does
 
-graph = create_deep_agent(
-    model=ChatOpenAI(model="gpt-4.1", temperature=0),
-    tools=[lookup_field_elevation, lookup_runway_length, lookup_weather],
-    system_prompt=(PROMPTS_DIR / "planning.md").read_text(),
-    middleware=[TodoListMiddleware()],
-)
-```
+The Run tab shows the prebuilt `<chat>` composition beside a plan panel. The welcome suggestion asks for a dispatch brief from KSFO to KASE, and the agent writes its todo list before it looks anything up: the panel fills with pending rows, one row flips to in progress while the matching lookup runs, then that row completes and the next one starts. Aspen is the interesting half of that route, a field at 7,820 ft with a mountain wave advisory, so the agent usually appends a step once the data comes back and the panel changes shape mid-run. Ask for the same brief on a route with no surprises, such as KLAX to KSFO, to watch a plan run straight through instead.
 
-`create_deep_agent` installs a default middleware set that already includes the todo list. The demo passes it explicitly anyway, so the source states which component owns `todos` rather than leaving a reader to infer it.
+## How it is built
 
-## What the demo shows
+Three files carry the capability: a Python graph holding the lookup tools and the todo middleware, an application config, and the Angular component that projects `todos` into a panel. Open the Code tab to read them in place.
 
-The demo is an aviation dispatch desk. Ask it whether a mid-size business jet can operate out of Aspen and San Francisco on the same day, and the run has a visible shape:
+### The tools the plan is made of
 
-1. The agent writes a plan before it does any work. The panel fills with pending rows.
-2. One row flips to in progress, the corresponding lookup tool runs, and the row completes.
-3. When a lookup returns something the plan did not account for — a mountain wave advisory, a runway shorter than the aircraft needs — the agent rewrites the list mid-run. Rows are added, and the panel changes shape while the run is still going.
+Each lookup answers one question about one airport from a fixed table, so a recorded run stays stable. The plan the agent writes is a sequence of these calls.
 
-Step 3 is the reason the panel is worth building. A plan that only ever appends is a progress bar. A plan the agent revises is a window into what the agent is actually reasoning about.
+<ExampleCode file="graph.py" region="lookup-tools" title="graph.py — the lookup tools" />
 
-Getting there needs a prompt, not more middleware. `TodoListMiddleware` supplies a tool, not a policy, and a model left to itself will fan out six parallel lookups and never write a todo. The demo's system prompt is explicit:
+### Building the agent on TodoListMiddleware
+
+`create_deep_agent` assembles a LangGraph agent from a middleware stack. `TodoListMiddleware` is not one of the entries it assembles on its own, so the demo passes it: that single entry registers the `write_todos` tool and adds `todos` to the state schema.
+
+<ExampleCode file="graph.py" region="deep-agent" title="graph.py — the agent" />
+
+The middleware also appends its own usage guidance to the system message on every model call, so the model receives instructions about the tool that the demo never wrote.
+
+### The prompt that makes the plan visible
+
+The middleware supplies a tool, not a policy, and its own guidance tells the model to skip the list entirely when a request takes fewer than three steps. A demo whose whole point is a visible plan cannot leave that to chance, so the system prompt in `prompts/planning.md` is explicit about when to call the tool and how small each transition should be.
 
 ```markdown
 Your first action on any request is a call to `write_todos`. Do not call a
 lookup tool before the todo list exists. Write one todo per step.
 
 Mark exactly one todo `in_progress` before you start it and mark it `completed`
-the moment it is done. Call `write_todos` again for each transition.
+the moment it is done. Call `write_todos` again for each transition — do not
+batch several completions into one call, and do not call `write_todos` in
+parallel with itself.
 ```
 
-## How it reaches the UI
-
-`todos` is a public key on the graph state, so LangGraph streams it in the `values` channel and `@threadplane/langgraph` projects the latest snapshot into `agent.value()`. The panel is a `computed()` over that snapshot and nothing more.
-
-```ts
-import { Component, computed } from '@angular/core';
-import { injectAgent } from '@threadplane/langgraph';
-
-interface Todo {
-  content: string;
-  status: 'pending' | 'in_progress' | 'completed';
-}
-
-const TODO_STATUSES: Todo['status'][] = ['pending', 'in_progress', 'completed'];
-
-export class PlanningComponent {
-  protected readonly agent = injectAgent();
-
-  protected readonly todos = computed<Todo[]>(() => {
-    const todos = (this.agent.value() as Record<string, unknown> | undefined)?.['todos'];
-    if (!Array.isArray(todos)) return [];
-    return todos.map((todo) => {
-      const entry = todo as Record<string, unknown>;
-      const status = entry['status'] as Todo['status'];
-      return {
-        content: String(entry['content'] ?? ''),
-        status: TODO_STATUSES.includes(status) ? status : 'pending',
-      };
-    });
-  });
-}
-```
-
-Two details in that projection are deliberate.
-
-**The status is normalized.** A graph state key is not a typed contract. Narrowing an unknown status to `pending` keeps an unexpected value from reaching a template that switches on it.
-
-**Every call to `write_todos` replaces the whole list.** There is no partial update and no merge, so the panel never has to reconcile anything. It renders the array it was given.
-
-The template tracks by index, because a todo carries no identifier:
-
-```html
-@for (todo of todos(); track $index) {
-  <div class="todo" [attr.data-status]="todo.status">
-    <span class="todo__text">{{ todo.content }}</span>
-  </div>
-}
-```
-
-Tracking by content would be worse, not better: content is exactly what changes when the agent rewrites a step.
-
-<Callout type="warning" title="The todo shape is minimal">
-In `deepagents` 0.7.11 a todo is exactly `{ content, status }`. There is no identifier, no timestamp, and no separate present-tense label. A panel that depends on any of those will not survive contact with the framework.
+<Callout type="warning" title="One write_todos call per model turn">
+The tool replaces the entire list, so two calls in the same turn would be ambiguous about which one wins. `TodoListMiddleware` checks the assistant message after every model call and, when it finds more than one `write_todos` call, answers all of them with an error instead of applying either. The prompt asking for one transition at a time keeps the run away from that path.
 </Callout>
 
-## Next steps
+### Providing the agent
 
-- [Subagents](/docs/deep-agents/capabilities/subagents) — the same orchestrator delegating each planned step to a child agent.
-- [Filesystem](/docs/deep-agents/capabilities/filesystem) — the workspace the agent writes into while it works through the plan.
-- [Streaming](/docs/langgraph/guides/streaming) — how the `values` channel reaches `agent.value()`.
+`provideAgent()` from `@threadplane/langgraph` registers the agent at the application root, and `provideChat({})` registers the chat defaults with no overrides. The example resolves its connection at runtime because the host that serves the demo decides which runtime is attached; your own application passes `apiUrl` and `assistantId` directly.
+
+<ExampleCode file="app.config.ts" />
+
+### The shape of one todo
+
+A todo is two fields. There is no identifier, no timestamp, and no separate present-tense label, so the component declares the shape it is willing to render and keeps the three valid statuses next to it.
+
+<ExampleCode file="planning.component.ts" region="todo-shape" title="planning.component.ts — the todo shape" />
+
+### Projecting todos into a signal
+
+`injectAgent()` returns the agent, and `agent.value()` is a signal holding the latest graph state, so the panel is a `computed()` over that state and nothing more. The status is narrowed against the known list on the way through, because a graph state key is not a typed contract and an unexpected value would otherwise reach a template that switches on it.
+
+<ExampleCode file="planning.component.ts" region="todos-signal" title="planning.component.ts — the projection" />
+
+`completedCount` derives from `todos` rather than from the state again, so the progress line and the rows can never disagree.
+
+### The plan panel
+
+The panel renders the array it was given: an empty state before the first `write_todos` call, a progress line, and one row per todo. Status drives the icon through a `@switch` and the row styling through a `data-status` attribute, which keeps the status-to-style mapping in CSS instead of spreading a second copy of the enum through the template.
+
+<ExampleCode file="planning.component.ts" region="plan-panel" title="planning.component.ts — the panel" />
+
+Rows track by `$index` because a todo carries no identifier. Tracking by content would be worse rather than better: content is exactly what changes when the agent rewrites a step.
+
+## How todos reach the browser
+
+`todos` travels as graph state, not as a custom event. The adapter subscribes to the `values`, `messages-tuple`, `updates`, and `custom` stream modes by default, and each `values` payload becomes the new `agent.value()`. Nothing in the application subscribes to anything, and nothing merges: because `write_todos` replaces the list, the panel renders whatever the last snapshot held.
+
+The middleware declares `todos` as state the graph emits rather than as input a caller supplies. The plan is therefore something to read and render, never something the panel writes back — the model owns it from the first call to the last.
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="Subagents" href="/docs/deep-agents/capabilities/subagents">
+    The same orchestrator delegating a planned step to a child agent.
+  </Card>
+  <Card title="Filesystem" href="/docs/deep-agents/capabilities/filesystem">
+    The workspace the agent writes into while it works through a plan.
+  </Card>
+  <Card title="Memory" href="/docs/deep-agents/capabilities/memory">
+    A file the agent keeps about itself across threads.
+  </Card>
+  <Card title="Streaming" href="/docs/langgraph/guides/streaming">
+    How the values channel reaches `agent.value()`.
+  </Card>
+</CardGroup>

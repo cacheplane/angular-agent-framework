@@ -48,6 +48,7 @@ WEATHER = {
 }
 
 
+# region lookup-tools
 @tool
 def lookup_field_elevation(airport: str) -> str:
     """Return the field elevation in feet for a four-letter ICAO airport code."""
@@ -75,6 +76,9 @@ def lookup_weather(airport: str) -> str:
     return f"{airport.upper()}: {conditions}"
 
 
+# endregion
+
+
 def build_planning_agent():
     """Build the planning agent.
 
@@ -82,12 +86,14 @@ def build_planning_agent():
     `create_deep_agent` default set so the capability shows exactly which
     middleware puts `todos` on the state.
     """
+    # region deep-agent
     return create_deep_agent(
         model=ChatOpenAI(model="gpt-4.1", temperature=0),
         tools=[lookup_field_elevation, lookup_runway_length, lookup_weather],
         system_prompt=(PROMPTS_DIR / "planning.md").read_text(),
         middleware=[TodoListMiddleware()],
     )
+    # endregion
 
 
 graph = build_planning_agent()
