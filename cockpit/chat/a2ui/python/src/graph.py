@@ -93,6 +93,7 @@ ALLOWED_COMPONENTS = frozenset({
 
 # ── Pydantic schemas ────────────────────────────────────────────────────────
 
+# region component-schema
 class A2uiComponent(BaseModel):
     """Single A2UI v0.9 updateComponents entry.
 
@@ -135,8 +136,10 @@ class A2uiComponent(BaseModel):
                 f"component '{v}' not in catalog. Allowed: {sorted(ALLOWED_COMPONENTS)}"
             )
         return v
+# endregion
 
 
+# region surface-spec
 class _SurfaceSpec(BaseModel):
     """Common shape — both booking and results surfaces produce the same
     triple (surface_id, data_model, components)."""
@@ -156,10 +159,12 @@ class FlightResultsSpec(_SurfaceSpec):
 class ConfirmationSpec(_SurfaceSpec):
     """Booking confirmation surface — selected flight + prior party context."""
     pass
+# endregion
 
 
 # ── Envelope wrapping ───────────────────────────────────────────────────────
 
+# region envelope-wrapping
 # A2UI v0.9 wire format (a2ui.org server_to_client.json): every envelope
 # carries "version": "v0.9". Order matters: createSurface first (surfaceId +
 # catalogId), then updateComponents (flat components; exactly one has id
@@ -188,6 +193,7 @@ def _wrap_envelopes(spec: _SurfaceSpec) -> str:
             "value": spec.data_model,
         }}))
     return A2UI_PREFIX + "\n" + "\n".join(lines) + "\n"
+# endregion
 
 
 # ── LLM + retry ─────────────────────────────────────────────────────────────
@@ -385,6 +391,7 @@ def _build_sentinel_booking_form(defaults: dict[str, Any]) -> BookingFormSpec:
     )
 
 
+# region build-form-node
 async def build_form(state: MessagesState) -> dict:
     """First-turn AND Modify-search node: LLM authors the booking form.
 
@@ -416,6 +423,7 @@ async def build_form(state: MessagesState) -> dict:
         _logger.error("Falling back to sentinel booking form: %s", err)
         spec = _build_sentinel_booking_form(defaults)
     return {"messages": [AIMessage(content=_wrap_envelopes(spec))]}
+# endregion
 
 
 # ── search_flights node ─────────────────────────────────────────────────────
@@ -765,6 +773,7 @@ def _format_party(prior: dict[str, Any]) -> str:
     return "  •  ".join(parts) if parts else "(party details unavailable)"
 
 
+# region route
 def route(state: MessagesState) -> Command[Literal["build_form", "search_flights", "confirm_booking"]]:
     """Inspect the last message — submit event → search_flights, flight-select
     event → confirm_booking, else build_form."""
@@ -774,6 +783,7 @@ def route(state: MessagesState) -> Command[Literal["build_form", "search_flights
     if _is_flight_select_event(last_content):
         return Command(goto="confirm_booking")
     return Command(goto="build_form")
+# endregion
 
 
 # ── generate_title node (inline; matches Pattern D from spec
@@ -832,6 +842,7 @@ async def generate_title(state: MessagesState, config) -> dict:
     return {}
 
 
+# region graph-wiring
 _builder = StateGraph(MessagesState)
 _builder.add_node("route", route)
 _builder.add_node("build_form", build_form)
@@ -845,3 +856,4 @@ _builder.add_edge("confirm_booking", "generate_title")
 _builder.add_edge("generate_title", END)
 
 graph = _builder.compile()
+# endregion
