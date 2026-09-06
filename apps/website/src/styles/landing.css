@@ -1898,3 +1898,16 @@
   letter-spacing: 0.04em;
   color: var(--color-text-muted);
 }
+
+/* The stills form of the beat block and the ledger — StageStills.tsx. The
+ * block mirrors `.stage-rail-beat` without the grid placement; the ending
+ * reuses `.stage-rail-close` (its `grid-area` is inert outside the rail grid)
+ * and only needs room after the last still. */
+.stage-still-text {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.stage-stills-close {
+  margin-top: 64px;
+}

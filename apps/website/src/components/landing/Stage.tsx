@@ -35,7 +35,7 @@ export function Stage({ proof }: Props) {
   useEffect(() => {
     if (actAllowed()) setMode('act');
   }, []);
-  if (mode === 'stills') return <StageStills />;
+  if (mode === 'stills') return <StageStills proof={proof} />;
   return (
     <>
       <StageAct onFallback={() => setMode('stills')} proof={proof} />

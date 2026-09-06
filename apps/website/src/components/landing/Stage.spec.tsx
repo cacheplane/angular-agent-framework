@@ -25,20 +25,6 @@ vi.mock('../../lib/analytics/client', () => ({
   trackStageProgress: vi.fn(),
   track: vi.fn(),
 }));
-// The stills are the server default and have their own spec; here they only
-// need to be tellable apart from the act.
-vi.mock('./StageStills', async () => {
-  const { STAGE_RAIL } = await import('../../lib/positioning');
-  return {
-    StageStills: () => (
-      <div>
-        {STAGE_RAIL.map((b) => (
-          <article data-testid="stage-still-beat" key={b.beat} />
-        ))}
-      </div>
-    ),
-  };
-});
 vi.mock('../ui/BrowserFrame', () => ({
   BrowserFrame: ({ children }: { children: React.ReactNode }) => (
     <div data-frame>{children}</div>
@@ -95,6 +81,13 @@ describe('Stage', () => {
     await flush();
     expect(screen.getAllByTestId('stage-still-beat')).toHaveLength(4);
     expect(document.querySelector('[data-stage-act]')).toBeNull();
+    // The real stills, carrying the same proof and the ledger ending.
+    expect(
+      document.querySelector(
+        '[data-testid="stage-still-beat"][data-beat="stream"] [data-stage-proof]'
+      )!.textContent
+    ).toBe(PROOF.stream);
+    expect(screen.getByTestId('stage-stills-close')).toBeTruthy();
   });
 
   it('keeps the stills under reduced motion on a wide viewport', async () => {
