@@ -10,7 +10,7 @@ A chat that holds more than one conversation needs two things: a store that know
 
 The Run tab shows the prebuilt `<chat>` composition with a thread sidebar beside it. Ask the aviation assistant about a route — a flight from LAX to JFK, for instance — and the backend allocates a thread. The sidebar row starts out labeled `Untitled` and picks up a short generated title once the run finishes.
 
-Press "+ New" above the list to open a second conversation, then move between the rows and watch the transcript swap. Each row also carries a menu with Rename, Archive, and Delete, and every one of those round-trips through the LangGraph Threads API.
+Press "+ New" above the list to open a second conversation, then move between the rows and watch the transcript swap. Each row also carries a menu with Rename, Archive, and Delete, and every one of those round-trips through the LangGraph Threads API. Archiving a thread moves it out of the top list and into a second one headed Archived, whose rows offer Unarchive, so the round trip is reachable from the page.
 
 ## How it is built
 
@@ -64,7 +64,7 @@ Never generate a thread id in the browser. Use the value handed to `onThreadId`,
 
 ### The sidebar and the thread list
 
-The `<chat>` composition owns the transcript, the input, and the loading and error states, so the template adds the list beside it. `<chat>` can also render a `<chat-thread-list>` of its own, in a sidebar shown at widths of 768px and up whenever its `[threads]` input is non-empty, and it re-emits that list's `threadSelected`. The demo leaves those inputs unbound and mounts one explicit list instead, so that the list can carry the row actions shown below.
+The `<chat>` composition owns the transcript, the input, and the loading and error states, so the template adds the lists beside it. `<chat>` can also render a `<chat-thread-list>` of its own, in a sidebar shown at widths of 768px and up whenever its `[threads]` input is non-empty, and it re-emits that list's `threadSelected`. The demo leaves those inputs unbound and mounts explicit lists instead, so that they can carry the row actions shown below: one over `threads()` in the default `active` mode, and a second over `archivedThreads()` in `archived` mode that renders only when something has been archived.
 
 <ExampleCode file="threads.component.ts" region="chat-and-sidebar" title="threads.component.ts — the template" />
 
@@ -79,7 +79,7 @@ Both `<chat>` and `<chat-thread-list>` emit `threadSelected`, so either surface 
 Deleting or archiving the active conversation clears the signal, which returns the surface to its empty state.
 
 <Callout type="info" title="Which menu entries appear">
-`<chat-thread-list>` builds its menu from the keys the adapter defines. The demo's list runs in the default `active` mode, so it offers Rename, Archive, and Delete; `unarchive` surfaces only in a list rendered with `[mode]="'archived'"`. Each adapter method refreshes the store on success, which the framework relies on to clear its optimistic overrides.
+`<chat-thread-list>` builds its menu from the keys the adapter defines, and then filters by mode. The demo's first list runs in the default `active` mode, so it offers Rename, Archive, and Delete; `unarchive` surfaces only in a list rendered with `[mode]="'archived'"`, which is the second list. One adapter serves both. Each adapter method refreshes the store on success, which the framework relies on to clear its optimistic overrides.
 </Callout>
 
 ### Refreshing after a run

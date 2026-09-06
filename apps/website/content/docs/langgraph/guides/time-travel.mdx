@@ -1,5 +1,5 @@
 ---
-description: How the time travel example checkpoints every turn, lists the checkpoints in a timeline sidebar, and selects one, plus the history signals and the branch tree
+description: How the time travel example checkpoints every turn, lists the checkpoints in a timeline sidebar, and selects or forks from one, plus the history signals and the branch tree
 ---
 
 # Time Travel
@@ -12,9 +12,9 @@ Debug agent decisions, explore alternate paths, and build undo/redo experiences 
 
 ## What the demo does
 
-The Run tab shows the prebuilt `<chat>` composition next to a Timeline sidebar. Before you send anything, the sidebar reads "No checkpoints yet. Send a message to begin." Ask the assistant a question and the sidebar fills with numbered rows, each carrying a label, the full checkpoint identifier, and two buttons, Replay and Fork.
+The Run tab shows the prebuilt `<chat>` composition next to a Timeline sidebar. Before you send anything, the sidebar reads "No checkpoints yet. Send a message to begin." Ask the assistant a question and the sidebar fills with numbered rows, each carrying a label, the full checkpoint identifier, and two buttons, Select and Fork.
 
-Send two or three messages so the timeline has entries to move between, then click Replay or Fork on an earlier row: the row highlights, and the component records that checkpoint identifier as the active branch.
+Send two or three messages so the timeline has entries to move between. Select highlights the row and records that checkpoint identifier as the active branch, which starts nothing. Fork highlights the row and submits a new turn from that checkpoint, so a second path grows out of an earlier point in the thread while the original stays intact.
 
 ## How it is built
 
@@ -52,12 +52,12 @@ The `<chat>` composition owns the transcript, the input, and the loading and err
 
 ### Selecting a checkpoint
 
-Replay and Fork run the same two statements: record the clicked row so the sidebar can highlight it, then hand the checkpoint identifier to `setBranch()`, so the Fork button in the running example does not yet start a forked run; [the section below](#running-from-a-past-checkpoint) shows the call that does.
+The two handlers do different work. Select records the clicked row and hands the checkpoint identifier to `setBranch()`, which is a pointer and nothing more. Fork records the row and calls `submit()` with `{ checkpointId }`, which is the call that actually runs from a past checkpoint.
 
-<ExampleCode file="time-travel.component.ts" region="branch" title="time-travel.component.ts — replay and fork" />
+<ExampleCode file="time-travel.component.ts" region="branch" title="time-travel.component.ts — select and fork" />
 
 <Callout type="warning" title="setBranch() records a pointer; it does not start a run">
-`setBranch(id)` writes the identifier into the `branch()` signal, and that is all it does. No run starts, and the next `submit()` continues from the tip of the thread as usual. To run from a past checkpoint, pass that checkpoint to `submit()` yourself, as [Running from a past checkpoint](#running-from-a-past-checkpoint) shows.
+`setBranch(id)` writes the identifier into the `branch()` signal, and that is all it does. No run starts, and the next `submit()` continues from the tip of the thread as usual. Running from a past checkpoint is a `submit()` option, as [Running from a past checkpoint](#running-from-a-past-checkpoint) shows.
 </Callout>
 
 ## Reading the history two ways

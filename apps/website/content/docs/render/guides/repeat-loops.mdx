@@ -4,16 +4,16 @@ description: How a spec element repeats itself over an array in the state store 
 
 # Repeat Loops
 
-A repeat loop lets one spec element stand for a whole list. Instead of naming every row as a child key, the element declares `repeat` with a JSON Pointer into the state store, and the renderer mounts it once per item in the array at that path. The running example holds the array side of that arrangement: a signal-backed store with an `/items` array, and controls that add to it and remove from it while a spec streams in beside it.
+A repeat loop lets one spec element stand for a whole list. Instead of naming every row as a child key, the element declares `repeat` with a JSON Pointer into the state store, and the renderer mounts it once per item in the array at that path. The running example shows both halves: a signal-backed store with an `/items` array, controls that add to it and remove from it, and a streamed spec whose single row element repeats over that array.
 
 ## What the demo does
 
 The Run tab shows a split surface. The rendered output is on the left, the JSON that produced it streams in on the right, and a transport along the bottom scrubs through the stream or replays it at 1x, 2x, or 4x. The tabs at the top switch between three list-shaped specs — Simple List, Task List, and Sections — and picking one restarts the stream against that spec.
 
-Below the JSON is a List Controls panel over the store. **Add Item** appends a new entry to the `/items` array and the small cross beside each row removes it, so the array a repeat would bind to changes while the surface is mounted. The three streamed specs name their rows as explicit children with literal text, which is the enumerated form a repeat replaces.
+Below the JSON is a List Controls panel over the store. **Add Item** appends a new entry to the `/items` array and the small cross beside each row removes it, and because Simple List binds a repeating element to `/items`, the rendered surface on the left gains or loses a row as you do. The other two specs, Task List and Sections, name their rows as explicit children with literal text, which is the enumerated form a repeat replaces.
 
-<Callout type="info" title="The demo ships the array half">
-The example holds the store, the `/items` path, and the immutable writes that a repeat depends on. Its streamed specs enumerate their rows as literal children, which is exactly the shape a `repeat` collapses, and the hand-written specs further down this page show the repeat half. So adding an item changes the List Controls panel, not the rendered surface. The store holds plain strings rather than objects, so `$item: ""` — the whole item — is the form that would bind them.
+<Callout type="info" title="Two shapes, side by side">
+Simple List is the repeat form: one `Text` element with `repeat: { statePath: '/items' }` under a `Heading`, so adding an item adds a rendered row. Task List and Sections are the enumerated form the repeat collapses, so their rows do not move when the array does. The store holds plain strings rather than objects, which is why the repeated element binds `content` to `{ "$item": "" }` — the whole item — rather than to a field on it.
 </Callout>
 
 ## How it is built
@@ -32,7 +32,7 @@ Three type names are registered, and the store is seeded with the array a repeat
 
 <ExampleCode file="repeat-loops.component.ts" region="registry-and-store" title="repeat-loops.component.ts — the registry and the store" />
 
-`/items` is a JSON Pointer, and it is the exact string a `repeat` element would carry as its `statePath`.
+`/items` is a JSON Pointer, and it is the exact string the Simple List spec carries as its `repeat.statePath`.
 
 ### Reading and writing the array
 
@@ -48,7 +48,7 @@ Replacement is what the store expects: `set()` compares the current value by ref
 
 ### The render surface
 
-`<render-spec>` receives the streamed spec, the registry, the store, and a `loading` flag driven by the simulator. The store passed here is the same one the controls write to, which is how a repeat element inside the spec would resolve its array.
+`<render-spec>` receives the streamed spec, the registry, the store, and a `loading` flag driven by the simulator. The store passed here is the same one the controls write to, which is how the repeat element inside the spec resolves its array.
 
 <ExampleCode file="repeat-loops.component.ts" region="render-surface" title="repeat-loops.component.ts — the render surface" />
 

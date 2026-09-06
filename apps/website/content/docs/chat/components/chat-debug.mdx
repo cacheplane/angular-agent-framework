@@ -4,7 +4,7 @@ description: How the debug example mounts the chat-debug panel against a multi-n
 
 # ChatDebugComponent
 
-`ChatDebugComponent` is a docked development panel for inspecting an agent. It reads the agent's checkpoint history and current state and renders them in a floating panel, and it ships from a debug-only secondary entry point so applications can keep the implementation out of production bundles unless they opt in. The running example mounts the panel on its own, which is the clearest way to see what the panel contributes and what it does not.
+`ChatDebugComponent` is a docked development panel for inspecting an agent. It reads the agent's checkpoint history and current state and renders them in a floating panel, and it ships from a debug-only secondary entry point so applications can keep the implementation out of production bundles unless they opt in. The running example mounts it beside the prebuilt `<chat>` composition, which is how it is meant to be used: the chat produces the runs, the panel inspects them.
 
 **Selector:** `chat-debug`
 
@@ -16,9 +16,9 @@ import { ChatDebugComponent } from '@threadplane/chat/debug';
 
 ## What the demo does
 
-The Run tab mounts `<chat-debug>`, bound to a LangGraph agent, inside the shared example layout shell, `<example-chat-layout>`, which contributes only a full-height background. The panel keeps itself out of the layout — its host renders `display: contents`, and the launcher and the panel are both fixed-position — so the page shows nothing but a small round status pill in the top-right corner. Click the pill and the docked Chat Devtools panel opens, with a Timeline tab listing the agent's checkpoints and a State tab pretty-printing the agent's current state under a Copy button. Pressing Escape or clicking outside the panel closes it.
+The Run tab mounts `<chat>` and `<chat-debug>`, both bound to the same LangGraph agent, inside the shared example layout shell, `<example-chat-layout>`. The panel keeps itself out of the layout — its host renders `display: contents`, and the launcher and the panel are both fixed-position — so all it adds to the page is a small round status pill in the top-right corner above the chat. Click the pill and the docked Chat Devtools panel opens, with a Timeline tab listing the agent's checkpoints and a State tab pretty-printing the agent's current state under a Copy button. Pressing Escape or clicking outside the panel closes it.
 
-The demo mounts no chat composition beside the panel, so there is no composer on the page and the Timeline tab shows its empty state: "No checkpoints yet. Send a message to populate the timeline." Everything else is live. The dock buttons in the header move the panel between the left, bottom and right edges, and the choice is persisted, as is the open state and the selected tab.
+Before the first turn the Timeline tab shows its empty state: "No checkpoints yet. Send a message to populate the timeline." Send a message through the composer and it fills, one row per checkpoint the run wrote. The dock buttons in the header move the panel between the left, bottom and right edges, and the choice is persisted, as is the open state and the selected tab.
 
 ## How it is built
 
@@ -26,7 +26,7 @@ Three files carry the example: the graph that produces the checkpoints, the prov
 
 ### A graph with several nodes per turn
 
-The backend is deliberately multi-step, because one node per turn produces one checkpoint and very little to look at. `generate` answers with the model, `process` appends a synthetic message derived from the answer, and `summarize` asks the model for a one-sentence summary of the conversation so far. The system prompt read by `generate` frames the assistant as an aviation helper working over a mock dataset of ten United States airports and four airlines.
+The backend is deliberately multi-step, because one node per turn produces one checkpoint and very little to look at. `generate` answers with the model, `process` appends a synthetic message derived from the answer, and `summarize` asks the model for a one-sentence summary of the conversation so far. The system prompt read by `generate` frames the assistant as an aviation helper; the graph binds no tools, so every answer comes from the model alone.
 
 <ExampleCode file="graph.py" region="pipeline-nodes" title="graph.py — the three pipeline nodes" />
 
@@ -60,7 +60,7 @@ provideChat({}),
 
 ### Mounting the panel
 
-The component wraps `<chat-debug>` in `<example-chat-layout>` and binds one field. `injectAgent()` returns the agent registered above, and it is handed straight to `[agent]`. Nothing else is bound, so the panel runs on its defaults: docked right, closed on first load, with the floating launcher visible.
+The component projects `<chat>` and `<chat-debug>` into `<example-chat-layout>` and binds one field on each. `injectAgent()` returns the agent registered above, and it is handed straight to both `[agent]` inputs. Nothing else is bound, so the panel runs on its defaults: docked right, closed on first load, with the floating launcher visible.
 
 <ExampleCode file="debug.component.ts" />
 
