@@ -4,7 +4,7 @@ description: Render an AG-UI tool call's plain data through a component the fron
 
 # Tool Views
 
-A tool view renders a backend tool call through a component the frontend owns, keyed by the tool's name. The agent runs the tool and returns plain data, such as a weather reading, and the Angular application decides how that data looks. No UI specification crosses the wire. This guide walks the five files of the running example, from the tool to the card it fills.
+A tool view renders a backend tool call through a component the frontend owns, keyed by the tool's name. The agent runs the tool and returns plain data, such as a weather reading, and the Angular application decides how that data looks. No UI specification crosses the wire. This guide walks the five files across six excerpts of the running example, from the tool to the card it fills.
 
 ## What the demo does
 
@@ -28,7 +28,7 @@ The agent node calls a model bound to the tool, and `route` sends a turn that pr
 
 <ExampleCode file="graph.py" region="graph" title="graph.py — the graph" />
 
-The graph compiles with `MemorySaver()`, so the thread's messages survive between turns; use a durable checkpointer outside of development.
+The graph compiles with `MemorySaver()` because `ag-ui-langgraph` reads the thread's graph state through a checkpointer, so a graph served this way needs one; outside development it should be durable.
 
 <Callout type="info" title="This is what separates a tool view from a client tool">
 Here the backend owns the implementation and the browser only draws the result. A [client tool](/docs/ag-ui/guides/client-tools) inverts that: the graph ends its turn on the tool call, and the browser produces the result and submits it back to continue the run.
