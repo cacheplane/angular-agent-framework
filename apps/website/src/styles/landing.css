@@ -23,6 +23,10 @@
   margin-bottom: 24px;
   letter-spacing: -0.02em;
 }
+/* One line per thought; the space between the spans keeps textContent equal to HERO_H1. */
+.hero-heading-line {
+  display: block;
+}
 .hero-subhead {
   font-family: var(--font-inter);
   font-size: var(--text-body-lg);

@@ -3,7 +3,14 @@ import { WEBSITE_SUPPORTED_ANGULAR_MAJORS } from '../components/pricing/angular-
 import type { StageBeat } from './stage-beats';
 
 export const HERO_EYEBROW = 'Angular · LangGraph & AG-UI';
-export const HERO_H1 = 'The open-source thread plane for enterprise agents.';
+export const HERO_H1 = 'The open-source thread-plane for agents.';
+/**
+ * The H1 broken where it is meant to break: three lines, one thought each.
+ * HERO_H1 stays the single source of truth — positioning.spec.ts asserts the
+ * lines join back to it with single spaces, so the rendered heading, the
+ * <title> and the social card cannot drift apart.
+ */
+export const HERO_H1_LINES: readonly string[] = ['The open-source', 'thread-plane', 'for agents.'];
 export const HERO_SUBHEAD =
   'Chat, threads, approvals, and generative UI on Signals and DI. Your backend stays where it is.';
 
@@ -28,13 +35,13 @@ export const HERO_SECONDARY_LABEL = 'See it running in the docs →';
 export const HERO_SECONDARY_HREF = '/docs/chat/guides/generative-ui?mode=run';
 
 /** Kept for layout.tsx default title and the OG image alt. */
-export const PRIMARY_TAGLINE = 'Threadplane — The open-source thread plane for enterprise agents';
+export const PRIMARY_TAGLINE = 'Threadplane — The open-source thread-plane for agents';
 export const HOME_TITLE = PRIMARY_TAGLINE;
 export const HOME_DESCRIPTION =
-  'The open-source thread plane for enterprise agents: chat, durable threads, persistence, human approvals, and generative UI for Angular, on LangGraph and AG-UI.';
+  'The open-source thread-plane for agents: chat, durable threads, persistence, human approvals, and generative UI for Angular, on LangGraph and AG-UI.';
 /** Longer form used by layout.tsx OG/Twitter defaults and the About page. */
 export const LONG_SUBHEAD =
-  'Threadplane is the open-source thread plane for enterprise agents: signal-native chat, durable threads, persistence, human approvals, tool progress, subagents, and generative UI for Angular, on LangGraph and AG-UI — without replacing your backend or design system.';
+  'Threadplane is the open-source thread-plane for agents: signal-native chat, durable threads, persistence, human approvals, tool progress, subagents, and generative UI for Angular, on LangGraph and AG-UI — without replacing your backend or design system.';
 
 // ── Trust line (values verified by positioning.spec.ts + angular-support-copy.spec.ts) ──
 export function formatAngularRange(majors: readonly number[]): string {

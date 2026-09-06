@@ -1,6 +1,6 @@
 # @threadplane/ag-ui
 
-The AG-UI adapter for [Threadplane](https://github.com/cacheplane/angular-agent-framework), the open-source thread plane for enterprise agents. Wraps an [AG-UI](https://github.com/ag-ui-protocol/ag-ui) `AbstractAgent` into the runtime-neutral `Agent` contract that `@threadplane/chat` consumes, so any AG-UI-compatible backend drives the same chat surface.
+The AG-UI adapter for [Threadplane](https://github.com/cacheplane/angular-agent-framework), the open-source thread-plane for agents. Wraps an [AG-UI](https://github.com/ag-ui-protocol/ag-ui) `AbstractAgent` into the runtime-neutral `Agent` contract that `@threadplane/chat` consumes, so any AG-UI-compatible backend drives the same chat surface.
 
 <p align="center">
   <a href="https://www.npmjs.com/package/@threadplane/ag-ui">

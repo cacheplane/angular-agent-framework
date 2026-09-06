@@ -1,7 +1,7 @@
 # @threadplane/middleware
 
 The backend half of client tools in [Threadplane](https://github.com/cacheplane/angular-agent-framework),
-the open-source thread plane for enterprise agents. Client tools are declared in the browser: the model
+the open-source thread-plane for agents. Client tools are declared in the browser: the model
 calls them, and the browser executes them.
 
 The `@threadplane/middleware/langgraph` entrypoint is the LangGraph.js twin of the Python

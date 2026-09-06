@@ -1,6 +1,6 @@
 # @threadplane/chat
 
-The chat surface of [Threadplane](https://github.com/cacheplane/angular-agent-framework), the open-source thread plane for enterprise agents. Headless primitives plus opinionated compositions read a runtime-neutral `Agent` contract, so the UI is built once and runs over LangGraph or AG-UI without changes. Angular 20–22, on Signals and DI.
+The chat surface of [Threadplane](https://github.com/cacheplane/angular-agent-framework), the open-source thread-plane for agents. Headless primitives plus opinionated compositions read a runtime-neutral `Agent` contract, so the UI is built once and runs over LangGraph or AG-UI without changes. Angular 20–22, on Signals and DI.
 
 <p>
   <a href="https://www.npmjs.com/package/@threadplane/chat">
