@@ -14,8 +14,8 @@ The visibility problem: `MemoryMiddleware` annotates `memory_contents` with
 `PrivateStateAttr`, so it never appears in the `values` stream and a panel bound
 to `agent.value()` would stay empty. `MemoryVisibilityMiddleware` below
 republishes it as a `custom` stream event, which does reach the client. Custom
-events are live-only, so the client also hydrates from `getState` when a thread
-is reopened.
+events are live-only, so when a thread is reopened, the value comes from
+thread history instead, which is what the client's history hydration reads.
 """
 
 from pathlib import Path
@@ -62,7 +62,7 @@ class MemoryVisibilityMiddleware(AgentMiddleware):
             writer = get_stream_writer()
         except (RuntimeError, KeyError):
             # No streaming context. The value is still on the checkpoint, which
-            # is what the client's getState fallback reads.
+            # is what the client's history hydration reads.
             return
         writer({"name": MEMORY_EVENT, "data": {"memory_contents": contents}})
 

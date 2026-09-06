@@ -77,7 +77,7 @@ A custom event is a live signal and is not replayed when a thread is reopened. T
 
 <ExampleCode file="memory.component.ts" region="memory-sources" title="memory.component.ts — the two readers" />
 
-`agent.customEvents()` is a signal of every custom event received in this session, so the live reader walks it newest first and takes the most recent payload under the event name the graph emits. `agent.value()` is the agent state the adapter projects from the latest checkpoint, which carries the key even though the run stream does not.
+`agent.customEvents()` holds the custom events of the current run — the adapter clears it when a new run starts — so the live reader walks it newest first and takes the most recent payload under the event name the graph emits. `agent.value()` is the agent state the adapter projects from the latest checkpoint, which carries the key even though the run stream does not.
 
 <ExampleCode file="memory.component.ts" region="memory-source-label" title="memory.component.ts — which source is showing" />
 
@@ -91,7 +91,7 @@ The panel shows the source label, then one block per remembered file: the path, 
 
 ## Proving the store rather than the panel
 
-The only assertion that proves cross-thread memory is a genuinely new thread that already knows. Clearing the panel and watching it refill proves that the component works, not that the store is doing the remembering. The example's end-to-end test submits the second prompt after a fresh page load, so the file it asserts on was written during a conversation that no longer exists.
+The only assertion that proves cross-thread memory is a genuinely new thread that already knows. Clearing the panel and watching it refill proves that the component works, not that the store is doing the remembering. The example's end-to-end test submits the second prompt after a fresh page load, so the file it asserts on was written during a conversation that is no longer open.
 
 <Callout type="tip" title="Assert the label as well as the contents">
 The panel fills in either way, so contents alone do not tell you whether the live path is working. Asserting that the source label reads `live` is what keeps the visibility middleware honest.
