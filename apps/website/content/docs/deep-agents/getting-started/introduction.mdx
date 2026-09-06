@@ -9,11 +9,13 @@ description: Render the Deep Agents middleware capabilities — planning, filesy
 
 | Capability | Middleware | What it puts on the graph |
 |---|---|---|
-| [Planning](/docs/deep-agents/capabilities/planning) | `TodoListMiddleware` | A `todos` array the agent rewrites as it works. |
+| [Planning](/docs/deep-agents/capabilities/planning) | `TodoListMiddleware` (from LangChain) | A `todos` array the agent rewrites as it works. |
 | [Filesystem](/docs/deep-agents/capabilities/filesystem) | `FilesystemMiddleware` | A `files` map, plus write approvals when a permission is set to interrupt. |
 | [Subagents](/docs/deep-agents/capabilities/subagents) | `SubAgentMiddleware` | A `task` tool that dispatches real child graphs. |
 | [Memory](/docs/deep-agents/capabilities/memory) | `MemoryMiddleware` | A memory file the agent maintains, held across threads. |
 | [Skills](/docs/deep-agents/capabilities/skills) | `SkillsMiddleware` | A skill index loaded from `SKILL.md` frontmatter. |
+
+The five capabilities do not all arrive the same way. `create_deep_agent` always installs `FilesystemMiddleware`, and the subagent `task` tool ships with it by default. Memory and skills are switched on by their `create_deep_agent` arguments (`memory=[...]`, `skills=[...]`). Planning is a LangChain middleware — `langchain.agents.middleware.TodoListMiddleware` — that you pass explicitly in `middleware=[...]`; `create_deep_agent` does not install it on its own.
 
 Every page in this section is written against the real `deepagents` package, version 0.7.11, running as a LangGraph graph. Nothing here is a reimplementation of the framework, and nothing here is a mock of it.
 
@@ -36,8 +38,9 @@ import { provideChat } from '@threadplane/chat';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({
-      apiUrl: environment.langGraphApiUrl,
-      assistantId: environment.assistantId,
+      apiUrl: 'http://localhost:2024',
+      // the key this graph is registered under in langgraph.json
+      assistantId: 'agent',
     }),
     provideChat({}),
   ],
@@ -75,7 +78,7 @@ That last row is a real constraint of the framework as it stands, not an oversig
 
 ## The demos
 
-Each capability page describes a standalone example that runs the real framework against a real model. The examples live under [`cockpit/deep-agents`](https://github.com/cacheplane/angular-agent-framework/tree/main/cockpit/deep-agents) and run in the [Threadplane docs workspace](/docs/deep-agents/capabilities/planning?mode=run), which shows the Angular source, the Python graph, and the system prompt beside the running demo.
+Each capability page describes a standalone example that runs the real framework against a real model. The examples live in the [repository's deep-agents examples](https://github.com/cacheplane/angular-agent-framework/tree/main/cockpit/deep-agents) and run in the [Threadplane docs workspace](/docs/deep-agents/capabilities/planning?mode=run), which shows the Angular source, the Python graph, and the system prompt beside the running demo.
 
 All five share one scenario — an aviation dispatch desk with a handful of airport lookup tools — so the difference between two pages is the capability under test and nothing else.
 
