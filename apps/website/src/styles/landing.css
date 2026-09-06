@@ -1284,6 +1284,49 @@
   }
 }
 
+/* Stage — components/landing/Stage.tsx, StageStills.tsx, StageAct.tsx
+ * The stills are the section's default form; the pinned act replaces them on
+ * wide, motion-tolerant viewports after hydration. The stills reuse the
+ * feature-block row grammar so the two forms read as one section. */
+.stage-stills {
+  display: grid;
+  gap: 96px;
+}
+.stage-still {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 48px;
+  align-items: center;
+}
+.stage-still:nth-child(even) .stage-still-visual {
+  order: 2;
+}
+.stage-still-visual {
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0f1116;
+}
+.stage-still-visual picture {
+  display: block;
+}
+.stage-still-img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+@media (max-width: 900px) {
+  .stage-still {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .stage-still:nth-child(even) .stage-still-visual {
+    order: 0;
+  }
+  .stage-stills {
+    gap: 64px;
+  }
+}
+
 /* Shared rail for the three CodeShowcase intros — the last centered kicker
  * grammar, unified with the sitewide rail anatomy. */
 .show-intro-rail {
