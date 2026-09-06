@@ -21,6 +21,7 @@ from langchain_core.messages import SystemMessage, AIMessage
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 
 
+# region state
 class RefundDraft(BaseModel):
     """Structured fields the agent extracts from the refund request."""
 
@@ -36,9 +37,11 @@ class RefundState(TypedDict):
     reason: Optional[str]
     decision_approved: Optional[bool]
     refund_id: Optional[str]
+# endregion
 
 
 def build_interrupts_graph():
+    # region draft
     llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
     extractor = ChatOpenAI(model="gpt-5-mini").with_structured_output(RefundDraft)
 
@@ -65,7 +68,9 @@ def build_interrupts_graph():
             "amount": draft.amount,
             "reason": draft.reason,
         }
+    # endregion
 
+    # region request-approval
     def request_approval(state: RefundState) -> dict:
         """Pause for human approval. Resume value is { approved: bool, amount?: number }."""
         amount = state.get("amount") or 0.0
@@ -91,7 +96,9 @@ def build_interrupts_graph():
             "decision_approved": True,
             "amount": final_amount,
         }
+    # endregion
 
+    # region graph
     def issue_refund(state: RefundState) -> dict:
         """Stand-in for the real Stripe call. Logs a fake refund ID."""
         customer_id = state.get("customer_id") or "anon"
@@ -115,6 +122,7 @@ def build_interrupts_graph():
     graph.add_edge("issue", END)
 
     return graph.compile()
+    # endregion
 
 
 graph = build_interrupts_graph()

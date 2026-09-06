@@ -1,98 +1,110 @@
+---
+description: How the adapter turns AG-UI protocol events into Angular Signals, walked through the streaming example and then listed event by event.
+---
+
 # Event Mapping
 
-`@threadplane/ag-ui` reduces AG-UI protocol events into the `Agent` contract from `@threadplane/chat`.
+`@threadplane/ag-ui` reduces AG-UI protocol events into the runtime-neutral `Agent` contract from `@threadplane/chat`. Every event that reaches the browser lands on a Signal your template already reads, which is why the same `<chat>` composition renders a run from any backend that speaks the protocol. This page is the compatibility map: first the streaming example as the worked case, then every event the adapter handles and the state it changes.
 
-This page is the compatibility map. If your backend emits these events with the expected fields, the chat UI can render the run without knowing which runtime produced it.
+## What the demo does
 
-## Summary
+The Run tab shows the prebuilt `<chat>` composition in front of a one-node LangGraph graph served over AG-UI. The example configures nothing beyond the connection, so the demo opens on the composition's welcome screen — the heading "How can I help?" above a single input, with no suggestions projected into it.
 
-| AG-UI event | Agent field | Behavior |
+Ask anything and the answer arrives a fragment at a time rather than in one block. The end-to-end test for this example asks "Tell me one quick fact about Angular signals in two sentences." Any prompt does the same work: the graph has one node, the node calls the model once, and the tokens reach the transcript while the call is still running.
+
+That is the whole feature. It is also the smallest complete AG-UI run, which makes it the right place to read the event sequence off the wire.
+
+## How it is built
+
+Four files carry the demo: a graph with one node, a FastAPI server that fronts it with the AG-UI protocol, an application config that registers the agent, and a component that hands the agent to `<chat>`. Open the Code tab to read them in place.
+
+### The graph that streams tokens
+
+The graph uses LangGraph's `MessagesState`, so its state is the message list and nothing else. One node reads the system prompt from disk, prepends it to the conversation, and awaits a single model call. The model client is constructed with `streaming=True`, which is what makes the call emit token chunks the adapter can forward while the node is still awaiting its result.
+
+<ExampleCode file="graph.py" />
+
+<Callout type="warning" title="The checkpointer is not optional">
+The graph compiles with `MemorySaver()`. The `ag-ui-langgraph` wrapper calls `graph.aget_state(config)` after the stream drains to build its closing snapshots, and a graph compiled without a checkpointer cannot answer that call. An in-memory saver is a development choice: a deployment that must survive a restart needs a durable one behind the same `checkpointer=` argument.
+</Callout>
+
+### Serving the graph over AG-UI
+
+The backend is a FastAPI application. `LangGraphAgent` wraps the compiled graph, `add_langgraph_fastapi_endpoint` mounts it at `/agent` as an AG-UI event stream, and `/ok` is a plain health check.
+
+<ExampleCode file="server.py" />
+
+That wrapper is the piece that translates LangGraph's own stream into the protocol events listed below.
+
+### Providing the agent
+
+`provideAgent()` from `@threadplane/ag-ui` registers the agent once for the whole application, and `provideChat({})` registers the chat configuration, here left at its defaults. Your own application passes `{ url: 'https://your-backend.example.com/agent' }` directly; this example passes a factory because it resolves its endpoint at runtime from the host that serves the demo.
+
+<ExampleCode file="app.config.ts" />
+
+### The component that reads the Signals
+
+The component is three lines of behavior. `injectAgent()` returns the agent the provider configured, and `<chat>` takes it as an input. Message rendering, the input, the typing indicator, and error display all live inside the composition, which reads the same Signals this page maps.
+
+<ExampleCode file="streaming.component.ts" />
+
+<Callout type="info" title="Injection context">
+`injectAgent()` must run inside an Angular injection context: a field initializer, as it is here, or a constructor body.
+</Callout>
+
+## The events one turn produces
+
+One prompt against this graph produces the following sequence. The order is the wrapper's; the effects are the reducer's.
+
+1. **`RUN_STARTED`.** `status()` becomes `running`, `isLoading()` becomes `true`, and `error()`, `interrupt()`, `customEvents()`, and the subagent map are cleared for the new run. The user message is already in the transcript at this point, because `submit()` appends it optimistically before the run opens.
+2. **`STEP_STARTED`** naming the node, `generate`. The reducer has no case for step events, so this one changes nothing. It is on the wire for consumers that want node boundaries.
+3. **`TEXT_MESSAGE_START`** on the first non-empty token chunk. The reducer creates the assistant message slot and marks it as streaming. This is the moment the empty bubble appears under your prompt.
+4. **`TEXT_MESSAGE_CONTENT`**, once per chunk, each carrying a `delta`. The reducer appends the delta to that message's content, and the composition renders the growing text. This is the streaming the demo exists to show.
+5. **`TEXT_MESSAGE_END`** when the model call ends. The reducer treats it as a no-op: the content is already accumulated in the Signal.
+6. **`STATE_SNAPSHOT`** when the node exits, carrying the graph state. The reducer replaces `state()` with it and runs the citations bridge over the transcript. This graph publishes no `state.citations`, so nothing is attached.
+7. **`STEP_FINISHED`**, then a closing **`STATE_SNAPSHOT`** and **`MESSAGES_SNAPSHOT`** read back from the checkpoint. The snapshot message carries the final message id rather than the streaming chunk id used in step 3, so the reducer maps the in-flight assistant message onto its snapshot counterpart instead of leaving two bubbles, and re-applies citations from `state()` against the new ids.
+8. **`RUN_FINISHED`.** The run is marked complete, `status()` returns to `idle`, and `isLoading()` becomes `false`.
+
+`RAW` events are interleaved through the stream as well, one per upstream LangGraph event. The adapter ignores them, as it ignores any event type it does not know.
+
+## Event reference
+
+The adapter exposes `messages`, `status`, `isLoading`, `error`, `toolCalls`, `state`, `interrupt`, `subagents`, and `customEvents` as Signals, `events$` as an Observable, and `clientTools` as a capability, alongside the `submit`, `retry`, `stop`, and `regenerate` methods. The tables below name the surface each event writes to.
+
+### Run lifecycle
+
+| AG-UI event | Surface | Behavior |
 | --- | --- | --- |
-| `RUN_STARTED` | `status`, `isLoading`, `error`, `interrupt` | Sets `status` to `running`, `isLoading` to `true`, clears `error`, and clears any pending `interrupt`. |
-| `RUN_FINISHED` | `status`, `isLoading` | Sets `status` to `idle` and `isLoading` to `false`. |
-| `RUN_ERROR` | `status`, `isLoading`, `error` | Sets `status` to `error`, stops loading, and stores the event message when present. |
-| `TEXT_MESSAGE_START` | `messages` | Creates or reuses an assistant message slot. |
-| `TEXT_MESSAGE_CONTENT` | `messages` | Appends `delta` to the message content. |
-| `TEXT_MESSAGE_END` | `messages` | No-op today. Content is already accumulated from deltas. |
-| `REASONING_MESSAGE_START` | `messages` | Creates or reuses an assistant message slot with `reasoning`. |
-| `REASONING_MESSAGE_CONTENT` | `messages` | Appends `delta` to `message.reasoning`. |
-| `REASONING_MESSAGE_CHUNK` | `messages` | Treated the same as `REASONING_MESSAGE_CONTENT`. |
-| `REASONING_MESSAGE_END` | `messages` | Adds `reasoningDurationMs` when timing is available. |
-| `TOOL_CALL_START` | `toolCalls`, `messages` | Adds a running tool call; also links the call to its parent assistant message (via `parentMessageId`), creating a message slot if needed. |
-| `TOOL_CALL_ARGS` | `toolCalls` | Accumulates partial JSON fragments, keeps the last-good parsed args, and finalizes parsing on `TOOL_CALL_END`. |
-| `TOOL_CALL_RESULT` | `toolCalls` | Stores the tool result on the matching tool call. |
-| `TOOL_CALL_END` | `toolCalls` | Marks the matching tool call complete. |
-| `STATE_SNAPSHOT` | `state`, `messages` | Replaces state and merges citations from `state.citations`. |
-| `STATE_DELTA` | `state`, `messages` | Applies JSON Patch to state and merges citations from `state.citations`. |
-| `MESSAGES_SNAPSHOT` | `messages`, `toolCalls` | Replaces the message list and merges snapshot-embedded tool calls into `toolCalls` (by id). |
-| `CUSTOM` (name: `on_interrupt`) | `interrupt` | Sets the `interrupt` signal to `{ id, value, resumable: true }`. The value is JSON-parsed when it arrives as a string. |
-| `CUSTOM` (other names) | `events$` | Emits a runtime-neutral custom event. |
-| unknown event | none | Ignored. Future protocol events do not crash the adapter. |
+| `RUN_STARTED` | `status`, `isLoading`, `error`, `interrupt`, `customEvents`, `subagents` | Sets `status` to `running` and `isLoading` to `true`; clears the error, the pending interrupt, the accumulated custom events, the subagent map, and any unfinished tool-argument buffer. Ignored when the event's run id does not match the run already bound to this delivery. |
+| `RUN_FINISHED` (no outcome, or a success outcome) | `status`, `isLoading`, `messages` | Completes the run, sets `status` to `idle` and `isLoading` to `false`, and settles the run's messages. Ignored on the same run-id gate as `RUN_STARTED`. |
+| `RUN_FINISHED` (outcome `{ type: 'interrupt' }`) | `interrupt`, `status`, `isLoading` | Sets `interrupt` to `{ id, value: { interrupts, runId }, resumable: true }`, ends the run as paused, and returns the agent to `idle`. A `CUSTOM` `on_interrupt` that already paused this run keeps its own value. |
+| `RUN_ERROR` | `status`, `isLoading`, `error` | Ends the run as failed, sets `status` to `error`, stops loading, and stores the event's `message` as an error (the raw event when no message is present). Ignored on the same run-id gate as `RUN_STARTED`. |
+| `STEP_STARTED`, `STEP_FINISHED` | none | Not reduced. Node boundaries pass through untouched. |
 
-## Run lifecycle
+### Messages
 
-The adapter exposes lifecycle through `status`, `isLoading`, and `error`.
+| AG-UI event | Surface | Behavior |
+| --- | --- | --- |
+| `TEXT_MESSAGE_START` | `messages` | Creates or reuses the assistant message slot for `messageId` and marks it streaming for this run. |
+| `TEXT_MESSAGE_CONTENT` | `messages` | Appends `delta` to that message's content. |
+| `TEXT_MESSAGE_END` | none | A no-op. The content is already accumulated from the deltas. |
+| `REASONING_MESSAGE_START` | `messages` | Creates or reuses the slot with an empty `reasoning` field and records a start time. |
+| `REASONING_MESSAGE_CONTENT`, `REASONING_MESSAGE_CHUNK` | `messages` | Appends `delta` to `message.reasoning`. Both event names are handled identically. |
+| `REASONING_MESSAGE_END` | `messages` | Sets `reasoningDurationMs` from the browser-measured start and end times. |
+| `MESSAGES_SNAPSHOT` | `messages`, `toolCalls` | Replaces the message list with the snapshot, bridges each assistant message's `toolCalls` onto `toolCallIds`, merges snapshot-only tool calls into `toolCalls` by id, keeps the run's in-flight assistant message aligned across the id change, and re-applies citations from the current `state`. |
 
-```ts
-agent.status();    // 'idle' | 'running' | 'error'
-agent.isLoading(); // boolean
-agent.error();     // unknown
-```
+Reasoning and text write to the same message when they share a `messageId`, so one assistant bubble can carry both `reasoning` and `content`. The duration is measured in the browser between the start and end events: it is useful for display, not for billing or tracing.
 
-`RUN_STARTED` clears a previous error. `RUN_ERROR` and `onRunFailed` both put the agent into the `error` state.
+### Tool calls
 
-`onRunFailed` comes from the AG-UI subscriber API rather than a protocol event. The adapter treats it like a run failure: `status = 'error'`, `isLoading = false`, and `error` is the thrown value.
+| AG-UI event | Surface | Behavior |
+| --- | --- | --- |
+| `TOOL_CALL_START` | `toolCalls`, `messages` | Adds a tool call with status `running`; when `parentMessageId` is present, links the call to that assistant message, creating the message slot if the turn produced no text. |
+| `TOOL_CALL_ARGS` | `toolCalls` | Appends `delta` to a per-call buffer, parses the buffer whenever it becomes valid JSON, and keeps the last good args while more fragments arrive. |
+| `TOOL_CALL_END` | `toolCalls` | Parses the accumulated buffer one final time, discards the buffer, and marks the call `complete`. |
+| `TOOL_CALL_RESULT` | `toolCalls` | Stores the result on the matching call, parsing `content` as JSON when it arrives as a string. |
 
-## Messages
-
-Text messages are accumulated by `messageId`.
-
-```ts
-{ type: 'TEXT_MESSAGE_START', messageId: 'm1', role: 'assistant' }
-{ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: 'Hello' }
-{ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: ' there' }
-{ type: 'TEXT_MESSAGE_END', messageId: 'm1' }
-```
-
-The resulting message is:
-
-```ts
-{ id: 'm1', role: 'assistant', content: 'Hello there' }
-```
-
-`TEXT_MESSAGE_END` does not finalize anything separately. The content already lives in the signal.
-
-`MESSAGES_SNAPSHOT` replaces the full message array. Use it when the backend is authoritative for the whole conversation.
-
-## Reasoning
-
-Reasoning events write to the same assistant message when they share the same `messageId` as the final text response.
-
-```ts
-{ type: 'REASONING_MESSAGE_START', messageId: 'm1', role: 'assistant' }
-{ type: 'REASONING_MESSAGE_CONTENT', messageId: 'm1', delta: 'Checking policy.' }
-{ type: 'REASONING_MESSAGE_END', messageId: 'm1' }
-{ type: 'TEXT_MESSAGE_START', messageId: 'm1', role: 'assistant' }
-{ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: 'Approved.' }
-```
-
-The message keeps both fields:
-
-```ts
-{
-  id: 'm1',
-  role: 'assistant',
-  reasoning: 'Checking policy.',
-  reasoningDurationMs: 12,
-  content: 'Approved.',
-}
-```
-
-The duration is measured in the browser from start to end event. It is useful for display, not billing or tracing.
-
-## Tool calls
-
-Tool calls are stored independently from messages in `agent.toolCalls()`.
+Argument deltas are fragments of one JSON document, not standalone JSON, which is why the reducer buffers rather than parses each delta. If the buffer never parses, `args` stays at the last good value, or `{}` when there was none.
 
 ```ts
 { type: 'TOOL_CALL_START', toolCallId: 'search-1', toolCallName: 'search' }
@@ -101,7 +113,7 @@ Tool calls are stored independently from messages in `agent.toolCalls()`.
 { type: 'TOOL_CALL_END', toolCallId: 'search-1' }
 ```
 
-The resulting tool call is:
+The resulting entry in `agent.toolCalls()`:
 
 ```ts
 {
@@ -113,19 +125,14 @@ The resulting tool call is:
 }
 ```
 
-`TOOL_CALL_ARGS` accepts partial JSON fragments. The reducer appends each `delta` to an internal buffer for the tool call, parses whenever the buffer becomes valid JSON, and keeps the last-good args while more fragments arrive. On `TOOL_CALL_END`, it performs one final parse before marking the call complete.
+### State
 
-If the accumulated buffer never parses, args stay at the last-good value or `{}`.
+| AG-UI event | Surface | Behavior |
+| --- | --- | --- |
+| `STATE_SNAPSHOT` | `state`, `messages` | Replaces `state` with `snapshot` and runs the citations bridge over the transcript. |
+| `STATE_DELTA` | `state`, `messages` | Applies the JSON Patch operations in `delta` to a clone of the current state, then runs the same bridge. |
 
-## State
-
-`STATE_SNAPSHOT` replaces the full state object:
-
-```ts
-{ type: 'STATE_SNAPSHOT', snapshot: { topic: 'billing' } }
-```
-
-`STATE_DELTA` applies JSON Patch operations to the current state:
+`STATE_DELTA` carries standard JSON Patch operations:
 
 ```ts
 {
@@ -137,64 +144,61 @@ If the accumulated buffer never parses, args stay at the last-good value or `{}`
 }
 ```
 
-After either state event, the adapter also runs the citations bridge. If `state.citations` contains entries keyed by message id, those citations are copied onto the matching messages.
+The citations bridge reads `state.citations`, an object keyed by message id, and copies the entries onto the matching messages. See [Citations](/docs/ag-ui/guides/citations) for the accepted shapes.
 
-See [Citations](/docs/ag-ui/guides/citations) for the expected shape.
+### Custom events and interrupts
 
-## Custom events
+| AG-UI event | Surface | Behavior |
+| --- | --- | --- |
+| `CUSTOM` named `on_interrupt` | `interrupt`, `status`, `isLoading` | Sets `interrupt` to `{ id, value, resumable: true }`, ends the run as paused, and returns the agent to `idle`. A string `value` is JSON-parsed first. |
+| `CUSTOM` named `state_update` with an object value | `customEvents`, `events$` | Appends `{ name, data }` to `customEvents` and emits `{ type: 'state_update', data }` on `events$`. |
+| `CUSTOM` (every other name) | `customEvents`, `events$` | Appends `{ name, data }` to `customEvents` and emits `{ type: 'custom', name, data }` on `events$`. |
 
-`CUSTOM` events are exposed through `events$`.
+Every non-interrupt custom event is fanned out to two surfaces, not one. Reach for the `customEvents()` Signal when you want an accumulated per-run snapshot for reactive rendering, and for `events$` when you want a transient stream for side effects or telemetry. The Signal is documented on [`injectAgent()`](/docs/ag-ui/api/inject-agent#ag-ui-specific-surface) and [`toAgent()`](/docs/ag-ui/api/to-agent).
 
-When the custom event name is `state_update` and the value is an object, the adapter emits:
+### Subagents and activity
 
-```ts
-{ type: 'state_update', data: value }
-```
+| AG-UI event | Surface | Behavior |
+| --- | --- | --- |
+| `SUBAGENT_STARTED` | `subagents` | Creates the entry for `subagentRunId` with status `running`, or fills in the identity of an entry a child content event created first. `toolCallId` becomes `parentToolCallId`, else the id an earlier activity entry recorded, else `subagentRunId`. |
+| `SUBAGENT_FINISHED` | `subagents` | Marks the entry `complete` and records `result`. An outcome of `{ type: 'suspended' }` keeps it `running`. |
+| `SUBAGENT_ERROR` | `subagents` | Marks the entry `error` and records `message`. |
+| `ACTIVITY_SNAPSHOT` | `subagents` | Creates or merges an activity entry; `replace: true` overwrites its content rather than merging. Entries with `activityType: 'subagent'` project into `subagents()`. |
+| `ACTIVITY_DELTA` | `subagents` | Applies a JSON Patch to an existing entry's content. An unknown id or a malformed patch is dropped rather than thrown. |
 
-For every other custom event name, it emits:
+Text and tool events may also carry a `subagentRunId`. An attributed content event feeds that child's card and never the parent transcript, and one that arrives before `SUBAGENT_STARTED` still gets a card, which `SUBAGENT_STARTED` then fills in with identity. A suspended outcome keeps the card running: the run resumes under the same id, and the pause itself surfaces through `interrupt()`, not through the card.
 
-```ts
-{ type: 'custom', name, data: value }
-```
+### Everything else
 
-Use `state` for durable UI state. Use `events$` for transient events, observability hooks, or UI side effects that should not be stored as conversation state.
+| AG-UI event | Surface | Behavior |
+| --- | --- | --- |
+| `RAW` and any unrecognized type | none | Ignored. A newer protocol version does not crash the adapter. |
 
-Every non-`on_interrupt` `CUSTOM` event is fanned out to **two** surfaces, not one. Alongside the `events$` emission above, the reducer also appends `{ name, data }` to the AG-UI-specific `customEvents()` signal documented on [`injectAgent()`](/docs/ag-ui/api/inject-agent#ag-ui-specific-surface) and [`toAgent()`](/docs/ag-ui/api/to-agent). Reach for the signal when you want an accumulated per-run snapshot for reactive rendering (for example, `a2ui-partial` generative UI); reach for `events$` when you want a transient stream for side-effects or telemetry.
+## Submit, stop, and failures
 
-## Submit and stop
+`agent.submit({ message })` builds a local user message, appends it to `messages` and to the source agent's own list, and starts the run. When `message` is omitted no user message is appended and the run still starts. `submit({ resume })` is a separate path: it clears the pending interrupt and replays the run with the resume payload, shaped by how that interrupt arrived. `agent.retry()` re-runs the last input without appending the message again, and `agent.regenerate(index)` truncates the transcript back to the preceding user message before re-running.
 
-`agent.submit({ message })` performs three steps:
+`agent.stop()` ends the current run locally as aborted, clears the error, and calls `source.abortRun()`. Whether the backend stops producing depends on the AG-UI source implementation.
 
-1. Builds a local user message.
-2. Appends it to `messages` and calls `source.addMessage()`.
-3. Calls `source.runAgent()`.
-
-If `message` is omitted, no user message is appended, but `runAgent()` still runs.
-
-`agent.stop()` calls `source.abortRun()`. Cancellation depends on the AG-UI source implementation.
-
-## Activity and subagents
-
-`ACTIVITY_SNAPSHOT` and `ACTIVITY_DELTA` events project into the AG-UI-specific `subagents()` signal. Use that signal for progress cards and nested task views backed by AG-UI activity streams.
-
-### `SUBAGENT_*` events
-
-The adapter also consumes the protocol's first-class subagent lifecycle events:
-
-| Event | Required fields | Optional fields | Effect |
-|---|---|---|---|
-| `SUBAGENT_STARTED` | `subagentRunId`, `name` | `description`, `parentSubagentRunId`, `parentToolCallId`, `parentMessageId` | Creates (or fills in) the subagent's entry with status `running`. |
-| `SUBAGENT_FINISHED` | `subagentRunId` | `result`, `outcome` (`{ type: 'success' }` or `{ type: 'suspended', interruptIds? }`) | Marks the entry `complete`; a `suspended` outcome keeps it `running`. |
-| `SUBAGENT_ERROR` | `subagentRunId`, `message` | `code` | Marks the entry `error` and records the message. |
-
-Alongside the lifecycle events, ordinary content events (`TEXT_MESSAGE_START/CONTENT/END` and `TOOL_CALL_START/ARGS/END/RESULT`) may carry a `subagentRunId` attribution field. The routing rule: an attributed text or tool event feeds the child's card, never the parent transcript. An attributed content event that arrives before `SUBAGENT_STARTED` still gets a card, which `SUBAGENT_STARTED` then fills in with identity.
-
-Entries in the `subagents()` map are keyed by `subagentRunId`. The `Subagent.toolCallId` field carries `parentToolCallId ?? subagentRunId` and is what anchors the card to its delegation tool call in `<chat>`.
-
-A `suspended` outcome keeps the card in the `running` state: the subagent run resumes under the same `subagentRunId`, and the interrupt itself surfaces through the runtime-neutral `interrupt()` signal, not through the card.
-
-The legacy convention — `ACTIVITY_SNAPSHOT`/`ACTIVITY_DELTA` with an `activityType` of `subagent` — remains supported and projects into the same signal.
+`onRunFailed` comes from the AG-UI subscriber API rather than from a protocol event. The adapter treats it as a run failure: `status` becomes `error`, `isLoading` becomes `false`, and `error` holds the thrown value. An abort that the component requested is not reported as an error.
 
 ## Unsupported protocol areas
 
-The adapter supports `CUSTOM` `on_interrupt` events for the runtime-neutral `interrupt()` signal, and it supports subagent progress through both the `SUBAGENT_*` events and the ACTIVITY-backed convention. It does not implement history or time-travel. Unknown protocol events are ignored rather than treated as errors.
+The adapter carries interrupts, subagents, activity, state, and client tools. It does not implement history or time travel. Unknown protocol events are ignored rather than treated as errors, so a backend ahead of this adapter degrades to the events it does know.
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="Interrupts" href="/docs/ag-ui/guides/interrupts">
+    Pause a run mid-flight and resume it with a human decision.
+  </Card>
+  <Card title="Client Tools" href="/docs/ag-ui/guides/client-tools">
+    Let the agent call functions that run in the browser.
+  </Card>
+  <Card title="Custom Events" href="/docs/ag-ui/guides/custom-events">
+    Read the custom-event surface from your own components.
+  </Card>
+  <Card title="injectAgent()" href="/docs/ag-ui/api/inject-agent">
+    The full Signal surface the adapter exposes.
+  </Card>
+</CardGroup>

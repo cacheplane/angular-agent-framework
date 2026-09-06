@@ -1,168 +1,155 @@
-# Interrupts (Human-in-the-Loop)
+---
+description: How the AG-UI interrupts example pauses a refund graph, emits a CUSTOM on_interrupt event, and resumes from an approval card in Angular
+---
 
-Interrupts let your AG-UI agent pause mid-run and hand control to a human.
+# Interrupts
 
-The agent proposes an action, the run freezes, your Angular UI shows an approval dialog, the user decides, and the agent resumes with the human's decision.
+Interrupts let an AG-UI agent pause mid-run and hand control to a human. The agent proposes an action, the run freezes, your Angular UI shows an approval card, the person decides, and the agent resumes with that decision. `injectAgent()` from `@threadplane/ag-ui` surfaces the pending interrupt as an Angular Signal, so the approval flow needs no manual event wiring. The running example is a refund authorization, and this guide walks the four files that make it work.
 
-This guide covers the AG-UI adapter specifics. For the broader conceptual model — lifecycle stages, timeout strategies, typed payloads — see the [LangGraph interrupts guide](/docs/langgraph/guides/interrupts).
+<Callout type="info" title="When to use interrupts">
+Use interrupts when an agent action is irreversible (sending an email, placing an order, issuing a refund), when the agent needs a human decision it cannot make on its own, or when compliance requires explicit approval before execution.
+</Callout>
 
-## The Wire Format
+## What the demo does
 
-AG-UI interrupts arrive as a `CUSTOM` event with `name: "on_interrupt"`:
+The Run tab shows the prebuilt `<chat>` composition in front of a refund graph served over AG-UI. Ask for a refund and the agent acknowledges the draft in the transcript, and then the run stops: a modal card appears with the amount, the customer identifier, and the reason the agent extracted from your request, above three buttons — Cancel, Edit, and Approve.
+
+Two welcome suggestions set it up. "Refund a duplicate charge" asks for $47.50 back to customer `cus_a8x2k`, and "Refund a chargeback" asks for $129.00 with a different justification, so you can watch the same pause fire on two different payloads.
+
+Approve resumes the graph, which issues a stand-in refund and posts the refund ID into the transcript. Cancel resumes it with a rejection, and the graph says so and issues nothing. Edit keeps the card open, reveals an amount field, and resumes with an amount the operator chose rather than the one the agent proposed.
+
+## How it is built
+
+Four files carry the feature: a LangGraph graph that stops in the middle of a run, a FastAPI server that fronts it with the AG-UI protocol, an application config that registers the agent, and a component that maps the card's three buttons onto resume payloads. Open the Code tab to read them in place.
+
+### The state behind the approval card
+
+The graph tracks more than a message list. A Pydantic model describes the fields the agent must extract from the conversation, and the state adds the operator's decision and the resulting refund ID to them.
+
+<ExampleCode file="graph.py" region="state" title="graph.py — state" />
+
+`decision_approved` is the field the router reads after the pause, which is why the state carries it rather than deriving it later.
+
+### Drafting the refund
+
+The first node makes two model calls. One is a structured-output extraction that fills `customer_id`, `amount`, and `reason` — the three values the approval card renders. The other is a streaming call that writes a human acknowledgement into the transcript while the operator reads the card.
+
+<ExampleCode file="graph.py" region="draft" title="graph.py — the draft node" />
+
+Splitting extraction from narration is deliberate: the card needs typed fields, and the transcript needs prose.
+
+### Pausing at interrupt()
+
+`interrupt()` freezes the graph and hands its argument to the transport. The argument is any JSON-serializable value, and it becomes the payload your component renders. When the client resumes, that same call returns the resume value, so the node reads like a straight-line function even though a human answered in the middle of it.
+
+<ExampleCode file="graph.py" region="request-approval" title="graph.py — the interrupt" />
+
+Notice the `kind` field on the payload, which is how the frontend tells this interrupt apart from any other one the graph might raise, and notice that the node treats a resume value that is not a dictionary, or whose `approved` is missing or false, as a rejection.
+
+<Callout type="tip" title="A resumed node re-executes from the top">
+LangGraph resumes by running the interrupting node again, and `interrupt()` returns the resume value instead of pausing a second time. Every line above the `interrupt()` call therefore runs twice, so keep that stretch free of side effects. Reading state, as the example does, is safe; charging a card there is not.
+</Callout>
+
+### Routing on the decision
+
+After the pause the graph branches. A conditional edge sends an approved refund to the node that issues it and sends everything else to the end, which is why the rejection message is written by the interrupting node itself.
+
+<ExampleCode file="graph.py" region="graph" title="graph.py — issuing and routing" />
+
+The graph compiles with `MemorySaver()` because `ag-ui-langgraph` reads the thread's graph state through a checkpointer, so a graph served this way needs one; a paused graph is also a stored checkpoint, which is what the resume reads back.
+
+<Callout type="warning" title="MemorySaver is a development choice">
+An in-memory checkpointer loses every paused run when the process restarts. A deployment that must survive a restart needs a durable saver, such as the Postgres checkpointer, behind the same `checkpointer=` argument.
+</Callout>
+
+### Serving the graph over AG-UI
+
+The backend is a FastAPI application. `LangGraphAgent` from the `ag-ui-langgraph` package wraps the compiled graph, and `add_langgraph_fastapi_endpoint` mounts it at a path that speaks the AG-UI event stream.
+
+<ExampleCode file="server.py" />
+
+That wrapper is what turns a LangGraph pause into the AG-UI event described below.
+
+### The agent provider
+
+`provideAgent()` registers the agent once for the whole application, and `provideChat({})` registers the configuration the `<chat>` composition reads, here left at its defaults. The example passes a factory because it resolves its endpoint at runtime from the host that serves the demo.
+
+<ExampleCode file="app.config.ts" />
+
+Pass the URL of your AG-UI endpoint directly in your own application, which does not need the factory:
+
+```typescript
+provideAgent({
+  url: 'https://your-backend.example.com/agent',
+});
+```
+
+### The approval card
+
+`<chat-approval-card>` from `@threadplane/chat` is a prebuilt composition. Give it the agent and it watches `interrupt()` for you: when a matching payload arrives it opens a native modal dialog, and when the interrupt resolves it closes again. `matchKind` compares the payload's `kind` field, so the card ignores any interrupt that is not a refund approval, and `showEdit` adds the third button.
+
+<ExampleCode file="interrupts.component.ts" region="approval-card" title="interrupts.component.ts — the card" />
+
+The card owns the chrome and the buttons; the `#body` template owns the content, and the payload arrives as that template's implicit value.
+
+### Resuming with the decision
+
+The card emits an action rather than resuming by itself, which leaves the resume payload entirely up to the component. Approve and Cancel are terminal, so the card closes and the handler submits the matching decision. Edit is not terminal: it flips a signal, the body template grows an amount field, and the Save button submits the edited value.
+
+<ExampleCode file="interrupts.component.ts" region="resume" title="interrupts.component.ts — resuming the run" />
+
+`submit({ resume })` continues the paused run instead of starting a new one, and whatever you put in `resume` is exactly what `interrupt()` returns on the server.
+
+<Callout type="info" title="Injection context">
+`injectAgent()` must run inside an Angular injection context: a field initializer, as it is here, or a constructor body.
+</Callout>
+
+## The wire format
+
+The example never touches the protocol, but it is worth knowing what crosses it. An interrupt reaches the browser as an AG-UI `CUSTOM` event named `on_interrupt`, carrying the value the graph passed to `interrupt()`:
 
 ```json
 {
   "type": "CUSTOM",
   "name": "on_interrupt",
-  "value": "{\"kind\":\"refund_approval\",\"amount\":47.50,\"customer_id\":\"cus_a8x2k\",\"reason\":\"Duplicate charge\"}"
+  "value": "{\"kind\":\"refund_approval\",\"amount\":47.5,\"customer_id\":\"cus_a8x2k\",\"reason\":\"Duplicate charge\"}"
 }
 ```
 
-Two things to note:
+Two things to note. The `ag-ui-langgraph` package serializes the payload, so `value` arrives as a JSON string rather than an object; the adapter parses a string value before it stores the interrupt, so consumers read the parsed payload rather than a JSON string. And the pause is what the reducer records: it sets the `interrupt()` signal, ends the run as paused, and returns the agent to its idle status.
 
-- The `value` is a **JSON string**, not an object. The `ag-ui-langgraph` Python package serializes the interrupt payload via `dump_json_safe` before emitting the event.
-- The adapter `JSON.parse`s the string automatically. Consumers always see the structured object — you never need to parse it yourself.
+Resuming travels the other way. For a payload shaped like this one — an application object with no runtime-specific identifiers — `submit({ resume })` sends `forwardedProps.command.resume`, the convention `ag-ui-langgraph` reads to resume the checkpoint.
 
-**Structuring the payload:** Use a `kind` field so `<chat-approval-card matchKind="…">` can match the right interrupt:
-
-```python
-decision = interrupt({
-    "kind": "refund_approval",
-    "amount": amount,
-    "customer_id": customer_id,
-    "reason": reason,
-})
-```
-
-## Reading the Interrupt in Your Component
-
-`injectAgent()` exposes a `interrupt()` signal that is populated whenever the adapter receives an `on_interrupt` CUSTOM event. Pair it with `<chat-approval-card>` from `@threadplane/chat` to render an approval dialog without manual event wiring:
-
-```typescript
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { ChatComponent, ChatApprovalCardComponent } from '@threadplane/chat';
-import { injectAgent } from '@threadplane/ag-ui';
-import type { ChatApprovalAction } from '@threadplane/chat';
-
-@Component({
-  standalone: true,
-  imports: [ChatComponent, ChatApprovalCardComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <chat [agent]="agent" />
-    <chat-approval-card
-      [agent]="agent"
-      matchKind="refund_approval"
-      title="Refund approval required"
-      (action)="onAction($event)"
-    />
-  `,
-})
-export class RefundApprovalComponent {
-  protected readonly agent = injectAgent();
-
-  onAction(action: ChatApprovalAction): void {
-    if (action === 'approve') {
-      void this.agent.submit({ resume: { approved: true } });
-    } else if (action === 'cancel') {
-      void this.agent.submit({ resume: { approved: false } });
-    }
-  }
-}
-```
-
-`matchKind` filters on `interrupt().value.kind`. The card renders only when the active interrupt matches — other interrupt kinds are ignored.
-
-## Resuming
-
-Call `agent.submit({ resume })` with your decision object:
-
-```typescript
-// Approve
-void this.agent.submit({ resume: { approved: true } });
-
-// Reject
-void this.agent.submit({ resume: { approved: false } });
-
-// Approve with an edited field
-void this.agent.submit({ resume: { approved: true, amount: 35.00 } });
-```
-
-Under the hood, `submit({ resume })` calls `runAgent({ forwardedProps: { command: { resume } } })`. The server receives `forwarded_props.command.resume` — the convention the [`ag-ui-langgraph`](https://pypi.org/project/ag-ui-langgraph/) package reads to resume the LangGraph checkpoint.
-
-<Callout type="info" title="Backend reads forwarded_props">
-In your LangGraph node, `interrupt({...})` returns the `resume` value directly. You do not need to unwrap `forwarded_props` yourself — `ag-ui-langgraph` does that before resuming the graph.
+<Callout type="info" title="The backend does not unwrap anything">
+In the graph node, `interrupt({...})` returns the resume value directly. The wrapper reads `forwarded_props.command.resume` and applies it before the graph continues.
 </Callout>
 
-## End-to-End Example
+Other runtimes signal a pause differently, and the adapter follows them: a `RUN_FINISHED` event carrying an interrupt outcome sets the same signal, and a resume for one of those goes out as the protocol's top-level `resume` array instead. The [event mapping reference](/docs/ag-ui/reference/event-mapping) covers the event surface in full.
 
-`cockpit/ag-ui/interrupts` is a complete Angular + Python example: a refund-authorization agent that drafts a refund, pauses for operator approval, and issues (or cancels) based on the decision.
+## Cross-adapter parity
 
-**Angular component** (`cockpit/ag-ui/interrupts/angular/src/app/interrupts.component.ts`):
-
-```typescript
-import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
-import {
-  ChatComponent,
-  ChatApprovalCardComponent,
-  type ChatApprovalAction,
-} from '@threadplane/chat';
-import { injectAgent } from '@threadplane/ag-ui';
-
-@Component({
-  standalone: true,
-  imports: [ChatComponent, ChatApprovalCardComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <chat [agent]="agent" />
-    <chat-approval-card
-      [agent]="agent"
-      matchKind="refund_approval"
-      title="Refund approval required"
-      [showEdit]="true"
-      (action)="onAction($event)"
-    />
-  `,
-})
-export class InterruptsComponent {
-  protected readonly agent = injectAgent();
-
-  protected onAction(action: ChatApprovalAction): void {
-    if (action === 'approve') {
-      void this.agent.submit({ resume: { approved: true } });
-    } else if (action === 'cancel') {
-      void this.agent.submit({ resume: { approved: false } });
-    }
-  }
-}
-```
-
-**Python graph** (`cockpit/ag-ui/interrupts/python/src/graph.py`) uses `ag-ui-langgraph` to front a standard LangGraph graph:
-
-```python
-from langgraph.types import interrupt
-from ag_ui_langgraph import LangGraphAgent, add_langgraph_fastapi_endpoint
-
-def request_approval(state):
-    decision = interrupt({
-        "kind": "refund_approval",
-        "amount": state["amount"],
-        "customer_id": state["customer_id"],
-        "reason": state["reason"],
-    })
-    approved = isinstance(decision, dict) and decision.get("approved")
-    return {"decision_approved": approved}
-```
-
-The `LangGraphAgent` wrapper handles streaming the `CUSTOM on_interrupt` event and reading `forwarded_props.command.resume` on resume. Refer to [`ag-ui-langgraph` on PyPI](https://pypi.org/project/ag-ui-langgraph/) for installation and configuration.
-
-## Cross-Adapter Parity
-
-The consumer Angular code is byte-identical except the `injectAgent` import:
+The component code is the same; moving this component to a LangGraph deployment changes one import:
 
 ```diff
-- import { injectAgent } from '@threadplane/langgraph';
-+ import { injectAgent } from '@threadplane/ag-ui';
+- import { injectAgent } from '@threadplane/ag-ui';
++ import { injectAgent } from '@threadplane/langgraph';
 ```
 
-`<chat-approval-card>`, the `interrupt()` signal, and `submit({ resume })` are part of the runtime-neutral `Agent` contract from `@threadplane/chat`. Switching adapters is a provider change, not a component rewrite. See the [LangGraph interrupts guide](/docs/langgraph/guides/interrupts) for the full HITL pattern including multi-step approvals, typed payloads, and timeout strategies.
+The `interrupt()` signal and `submit({ resume })` are part of the runtime-neutral `Agent` contract, and `<chat-approval-card>` is written against it, so switching adapters is a provider change rather than a component rewrite. The [LangGraph interrupts guide](/docs/langgraph/guides/interrupts) covers the parts of the pattern that live above the wire: typed payloads, multi-step approvals, and timeout strategies.
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="Event mapping" href="/docs/ag-ui/reference/event-mapping">
+    Every AG-UI event and the adapter state it updates.
+  </Card>
+  <Card title="Client tools" href="/docs/ag-ui/guides/client-tools">
+    Let the agent call functions that run in the browser.
+  </Card>
+  <Card title="LangGraph interrupts" href="/docs/langgraph/guides/interrupts">
+    Typed payloads, repeated approvals, and timeout strategies.
+  </Card>
+  <Card title="Testing" href="/docs/ag-ui/guides/testing">
+    Script interrupt events deterministically with the fake agent.
+  </Card>
+</CardGroup>

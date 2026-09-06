@@ -1,8 +1,10 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { capabilityModules } from '@threadplane/cockpit-registry';
 import { describe, expect, it } from 'vitest';
 
 const WEBSITE_ROOT = join(process.cwd(), 'apps/website');
+const EXAMPLES_ROOT = join(process.cwd(), 'cockpit');
 const ACTIVE_SURFACES = ['.'] as const;
 const EXCLUDED_DIRECTORIES = new Set([
   '.next',
@@ -257,5 +259,27 @@ describe('Cockpit surface retirement', () => {
     );
 
     expect(violations).toEqual([]);
+  });
+
+  it('ships no example walkthrough; the docs page is the teaching surface', () => {
+    const walkthroughs: string[] = [];
+    const walk = (directory: string): void => {
+      for (const entry of readdirSync(directory, { withFileTypes: true })) {
+        if (EXCLUDED_DIRECTORIES.has(entry.name)) continue;
+        const path = join(directory, entry.name);
+        if (entry.isDirectory()) walk(path);
+        else if (/[\\/]docs[\\/]guide\.md$/.test(path))
+          walkthroughs.push(relative(EXAMPLES_ROOT, path));
+      }
+    };
+    walk(EXAMPLES_ROOT);
+    expect(walkthroughs, 'cockpit/**/docs/guide.md was retired').toEqual([]);
+  });
+
+  it('declares no docs assets on any capability descriptor', () => {
+    const offenders = capabilityModules
+      .filter((descriptor) => 'docsAssetPaths' in descriptor)
+      .map((descriptor) => descriptor.id);
+    expect(offenders, 'docsAssetPaths was retired with the walkthroughs').toEqual([]);
   });
 });

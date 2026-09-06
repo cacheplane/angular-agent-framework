@@ -65,6 +65,7 @@ async def generate_title(state: MessagesState, config) -> dict:
     return {}
 
 
+# region theming-graph
 def build_theming_graph():
     """
     Constructs a simple conversational agent for demonstrating
@@ -87,5 +88,7 @@ def build_theming_graph():
 
     return graph.compile()
 
+
+# endregion
 
 graph = build_theming_graph()

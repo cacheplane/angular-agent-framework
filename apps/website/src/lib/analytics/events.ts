@@ -1,3 +1,5 @@
+import type { StageBeat, StageMilestone } from '../stage-beats';
+
 export const analyticsEvents = {
   marketingCtaClick: 'marketing:cta_click',
   marketingExternalLinkClick: 'marketing:external_link_click',
@@ -26,6 +28,7 @@ export const analyticsEvents = {
   blogCopyCodeClick: 'blog:copy_code_click',
   marketingAiCrawlerVisit: 'marketing:ai_crawler_visit',
   marketingAiReferralVisit: 'marketing:ai_referral_visit',
+  marketingStageProgress: 'marketing:stage_progress',
 } as const;
 
 export type AnalyticsEventName = (typeof analyticsEvents)[keyof typeof analyticsEvents];
@@ -38,6 +41,7 @@ export type AnalyticsSurface =
   | 'home_demo'
   | 'home_whitepaper'
   | 'home_medium_switcher'
+  | 'home_stage'
   | 'pricing'
   | 'docs'
   | 'blog'
@@ -139,5 +143,8 @@ export type AnalyticsProperties = {
   ai_crawler?: string;
   ai_source?: string;
   user_agent?: string;
+  /** Homepage stage milestones (`marketing:stage_progress`). */
+  stage_event?: StageMilestone;
+  beat?: StageBeat;
   [key: string]: string | number | boolean | undefined;
 };

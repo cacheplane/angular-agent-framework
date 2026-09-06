@@ -70,6 +70,7 @@ async def generate_title(state: MessagesState, config) -> dict:
 
 def build_tool_calls_graph():
     """Canonical agent ↔ ToolNode loop with aviation tools bound."""
+    # region bind-tools
     llm = ChatOpenAI(model="gpt-5-mini", streaming=True).bind_tools(AVIATION_TOOLS)
 
     async def agent(state: MessagesState) -> dict:
@@ -78,6 +79,9 @@ def build_tool_calls_graph():
         response = await llm.ainvoke(messages)
         return {"messages": [response]}
 
+    # endregion
+
+    # region tool-loop
     def should_continue(state: MessagesState) -> str:
         last = state["messages"][-1]
         if hasattr(last, "tool_calls") and last.tool_calls:
@@ -94,6 +98,7 @@ def build_tool_calls_graph():
     graph.add_edge("generate_title", END)
 
     return graph.compile()
+    # endregion
 
 
 graph = build_tool_calls_graph()

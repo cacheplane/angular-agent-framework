@@ -45,6 +45,7 @@ import { toDisplayText } from '../../../../shared/to-display-text';
     }
   `,
 })
+// #region value-inputs
 class DemoValueComponent {
   readonly label = input('');
   readonly value = input<unknown>('');
@@ -57,6 +58,7 @@ class DemoValueComponent {
   readonly emit = input<(event: string) => void>(() => {});
   readonly loading = input(false);
 }
+// #endregion
 
 @Component({
   selector: 'demo-heading',
@@ -266,6 +268,7 @@ class DemoCardComponent {
       </div>
 
       <!-- Left: live render output -->
+      <!-- #region live-output -->
       <div primary>
         <div class="cap">Live Render Output</div>
         @if (simulator.spec(); as renderedSpec) {
@@ -274,6 +277,7 @@ class DemoCardComponent {
           <div class="placeholder">Press play to start streaming…</div>
         }
       </div>
+      <!-- #endregion -->
 
       <!-- Right: syntax-colored streaming JSON -->
       <div secondary>
@@ -314,6 +318,7 @@ export class ComputedFunctionsComponent implements OnDestroy {
     });
   }
 
+  // #region registry-and-store
   protected readonly registry = defineAngularRegistry({
     Value: DemoValueComponent,
     Heading: DemoHeadingComponent,
@@ -321,6 +326,7 @@ export class ComputedFunctionsComponent implements OnDestroy {
   });
 
   protected readonly store = signalStateStore({});
+  // #endregion
 
   protected percent(): number {
     return Math.round(this.simulator.progress() * 100);

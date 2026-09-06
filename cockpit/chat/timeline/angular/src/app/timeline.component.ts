@@ -14,7 +14,10 @@ import { injectAgent } from '@threadplane/langgraph';
   imports: [ChatComponent, ChatTimelineSliderComponent, ExampleChatLayoutComponent],
   template: `
     <example-chat-layout sidebarWidth="20rem">
+      <!-- #region chat-surface -->
       <chat main [agent]="agent" class="flex-1 min-w-0" />
+      <!-- #endregion -->
+      <!-- #region timeline-panel -->
       <div sidebar class="panel">
         <h3 class="cap">Timeline</h3>
         <chat-timeline-slider [agent]="agent" />
@@ -26,6 +29,7 @@ import { injectAgent } from '@threadplane/langgraph';
           </p>
         </div>
       </div>
+      <!-- #endregion -->
     </example-chat-layout>
   `,
   styles: [`
@@ -57,5 +61,7 @@ import { injectAgent } from '@threadplane/langgraph';
   `],
 })
 export class TimelineComponent {
+  // #region agent
   protected readonly agent = injectAgent();
+  // #endregion
 }

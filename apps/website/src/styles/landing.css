@@ -269,47 +269,16 @@
     gap: 2px;
   }
 }
-.wp-success {
-  font-family: var(--font-inter);
-  font-size: var(--text-body);
-  color: #1a7a40;
-  margin-bottom: 16px;
-}
-.wp-success-link {
-  color: var(--color-accent);
-}
 .wp-form {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  max-width: 480px;
-}
-.wp-email-input {
-  flex: 1 1 240px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 12px 14px;
-  font-family: var(--font-inter);
-  font-size: var(--text-body);
-  color: var(--color-text-primary);
-  outline: none;
-}
-.wp-error {
-  margin-top: 12px;
-  color: var(--color-angular-red);
-  font-size: 14px;
-}
-.wp-error-link {
-  color: var(--color-accent);
+  max-width: 520px;
 }
 .wp-already {
-  margin-top: 12px;
+  margin-top: 4px;
   font-size: 13px;
   color: var(--color-text-muted);
   font-family: var(--font-inter);
 }
-.wp-already-link {
+.wp-already a {
   color: var(--color-accent);
   text-decoration: underline;
 }
@@ -1313,6 +1282,166 @@
   .proof-strip-cells {
     grid-template-columns: 1fr;
   }
+}
+
+/* Stage — components/landing/Stage.tsx, StageStills.tsx, StageAct.tsx
+ * The stills are the section's default form; the pinned act replaces them on
+ * wide, motion-tolerant viewports after hydration. The stills reuse the
+ * feature-block row grammar so the two forms read as one section. */
+.stage-stills {
+  display: grid;
+  gap: 96px;
+}
+.stage-still {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 48px;
+  align-items: center;
+}
+/* Even beats mirror: the still moves right AND keeps the wide track —
+   `order` alone re-sequences placement without swapping track sizes. */
+.stage-still:nth-child(even) {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+}
+.stage-still:nth-child(even) .stage-still-visual {
+  order: 2;
+}
+.stage-still-visual {
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0f1116;
+}
+.stage-still-visual picture {
+  display: block;
+}
+.stage-still-img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+@media (max-width: 900px) {
+  .stage-still,
+  .stage-still:nth-child(even) {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .stage-still:nth-child(even) .stage-still-visual {
+    order: 0;
+  }
+  .stage-stills {
+    gap: 64px;
+  }
+}
+
+/* The pinned act — StageAct.tsx. The engine sets the act's height inline
+ * (span × 100vh) and requires the stage to be sticky; it only warns when it
+ * is not, so the style-contract spec pins this rule. */
+.stage-act {
+  position: relative;
+}
+.stage-pin {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: clip;
+  display: flex;
+  align-items: center;
+}
+.stage-pin-inner {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 48px;
+  align-items: center;
+  width: 100%;
+}
+.stage-frame {
+  display: grid;
+  gap: 12px;
+}
+.stage-frame-stage {
+  position: relative;
+  aspect-ratio: 1200 / 720;
+  background: #0f1116;
+}
+.stage-frame-poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  transition: opacity 300ms ease;
+}
+/* The stage is a display: the frame's interrupt panel is already inert inside
+ * /stage, and the "Open the live demo" link is the way in. */
+.stage-frame-iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  opacity: 0;
+  transition: opacity 300ms ease;
+  pointer-events: none;
+}
+.stage-act[data-state='ready'] .stage-frame-iframe {
+  opacity: 1;
+}
+.stage-act[data-state='ready'] .stage-frame-poster {
+  opacity: 0;
+}
+.stage-frame-open {
+  font-size: 13px;
+  justify-self: end;
+}
+/* The rail beats stack in one grid cell so cues crossfade in place; the hold
+ * lines share a second cell beneath. */
+.stage-rail {
+  display: grid;
+  grid-template-rows: auto auto;
+  align-content: center;
+  min-height: 60vh;
+}
+.stage-rail-beat {
+  grid-area: 1 / 1;
+}
+.stage-rail-hold {
+  grid-area: 2 / 1;
+  margin: 24px 0 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+/* Cues start hidden; the engine drives opacity and transform per frame. */
+.stage-act [data-sc-cue] {
+  opacity: 0;
+  will-change: opacity, transform;
+}
+/* Keyboard path: the pin holds ~six viewports of scroll with nothing to tab
+ * through, so the first focusable in the act skips past it. Hidden until
+ * focused, then pinned to the top-left of the act. */
+.stage-skip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  z-index: 2;
+}
+.stage-skip:focus {
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  clip-path: none;
+  padding: 10px 14px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }
 
 /* Shared rail for the three CodeShowcase intros — the last centered kicker

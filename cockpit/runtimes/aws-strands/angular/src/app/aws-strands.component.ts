@@ -100,6 +100,7 @@ interface Booking {
           }
         </aside>
 
+        <!-- region approval-card -->
         <chat-approval-card
           [agent]="agent"
           title="Booking approval required"
@@ -122,6 +123,7 @@ interface Booking {
             </div>
           </ng-template>
         </chat-approval-card>
+        <!-- endregion -->
       </div>
     </example-chat-layout>
   `,
@@ -235,6 +237,7 @@ export class AwsStrandsComponent {
 
   protected readonly agent = injectAgent();
 
+  // region shared-state
   /** Shared state snapshotted from the backend (STATE_SNAPSHOT only). */
   private readonly sharedState = computed(() => {
     // Example apps compile lib source with strict:false — cast at the read site.
@@ -250,7 +253,9 @@ export class AwsStrandsComponent {
     const b = this.sharedState()?.booking;
     return b && b.topic !== undefined ? b : undefined;
   });
+  // endregion
 
+  // region approval-wiring
   /**
    * The pending approval request from the protocol-standard interrupt
    * outcome. The reducer stores it as `{ interrupts: [...], runId }`; each
@@ -282,4 +287,5 @@ export class AwsStrandsComponent {
       void this.agent.submit({ resume: { approved: false } });
     }
   }
+  // endregion
 }

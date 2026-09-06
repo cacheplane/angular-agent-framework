@@ -40,7 +40,6 @@
           "define": {
             "THREADPLANE_CHAT_DEBUG": "false"
           },
-          "externalDependencies": ["@threadplane/chat/debug"],
           "budgets": [
             {
               "type": "initial",

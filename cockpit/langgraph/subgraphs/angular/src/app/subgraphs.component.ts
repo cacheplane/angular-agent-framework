@@ -180,6 +180,7 @@ const WELCOME_SUGGESTIONS = [
 export class SubgraphsComponent {
   protected readonly suggestions = WELCOME_SUGGESTIONS;
 
+  // #region agent
   /**
    * Typed agent — `agent.value()` is `Signal<SubgraphsState>`, the parent
    * graph's live state as LangGraph streams `values` events.
@@ -197,7 +198,9 @@ export class SubgraphsComponent {
    * so it doubles as the UI's "did we nest?" signal.
    */
   protected readonly delegated = computed(() => this.topic().length > 0);
+  // #endregion
 
+  // #region child-streams
   /**
    * The same child, seen as a stream. Plain subgraph children appear in
    * `subagents()` keyed by their namespace segment; `name` is the node name
@@ -210,6 +213,7 @@ export class SubgraphsComponent {
       status: ref.status(),
     })),
   );
+  // #endregion
 
   protected send(text: string): void {
     void this.agent.submit({ message: text });

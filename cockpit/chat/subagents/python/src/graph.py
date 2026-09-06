@@ -107,6 +107,7 @@ _SUBAGENT_PROMPTS: dict[str, str] = {
 }
 
 
+# region subagent-graph
 class SubagentState(TypedDict):
     """Child-graph state. `subagent_type` selects the system prompt."""
     messages: Annotated[list, add_messages]
@@ -136,13 +137,16 @@ async def _subagent_node(state: SubagentState) -> dict:
 
 
 # Compiled child graph. Invoking it from inside the `task` tool makes LangGraph
-# nest its run under a `tools:<call_id>` namespace, which the @threadplane/langgraph
-# SubagentTracker matches to the registered `task` dispatch to surface a card.
+# nest its run under a `tools:<uuid>` namespace, where the uuid is a checkpoint
+# id assigned independently — nothing on the wire links it to the `call_*`
+# tool-call id. The @threadplane/langgraph SubagentTracker matches this
+# namespace to the registered `task` dispatch to surface a card.
 _subagent_builder = StateGraph(SubagentState)
 _subagent_builder.add_node("subagent", _subagent_node)
 _subagent_builder.set_entry_point("subagent")
 _subagent_builder.add_edge("subagent", END)
 subagent_subgraph = _subagent_builder.compile()
+# endregion
 
 
 def _final_text(messages: list) -> str:
@@ -158,6 +162,7 @@ def _final_text(messages: list) -> str:
     return "(no subagent output)"
 
 
+# region announce
 def _announce_subagent(config, tool_call_id: str) -> None:
     """Bind this tool call's child stream to its tool-call id, for the UI.
 
@@ -188,8 +193,10 @@ def _announce_subagent(config, tool_call_id: str) -> None:
         )
     except Exception:
         pass
+# endregion
 
 
+# region task-tool
 @tool
 async def task(
     subagent_type: Literal["research", "booking", "itinerary"],
@@ -216,8 +223,10 @@ async def task(
     )
     messages = result.get("messages") if isinstance(result, dict) else None
     return _final_text(messages)
+# endregion
 
 
+# region orchestrator
 def build_subagents_graph():
     """Orchestrator LLM with a single `task` tool that dispatches to subagent functions."""
     llm = ChatOpenAI(model="gpt-5-mini", streaming=True).bind_tools([task])
@@ -243,6 +252,7 @@ def build_subagents_graph():
     graph.add_edge("tools", "orchestrator")
     graph.add_edge("generate_title", END)
     return graph.compile()
+# endregion
 
 
 graph = build_subagents_graph()

@@ -1,41 +1,83 @@
+---
+description: How the deployment example packages a graph and points an Angular app at it, plus authentication, CORS, error handling, CI, and monitoring
+---
+
 # Deployment
 
-Deploy your LangGraph agent to the cloud and ship your Angular frontend to production with environment-based configuration, authentication, error handling, and observability.
+A deployed agent is two independent artifacts: a graph running on LangGraph Platform, and an Angular application that connects to it. The running example is the smallest pair that works — one graph, one provider, one component — and the rest of this guide covers the operational parts the example cannot show: authentication, CORS, error handling, continuous delivery, and monitoring.
 
-## Python: LangGraph Cloud deployment
+<Callout type="tip" title="Prerequisites">
+Make sure you have completed the Installation guide first.
+</Callout>
 
-Your agent code needs a `langgraph.json` manifest at the project root. This file tells LangGraph Cloud how to build and serve your agent.
+## What the demo does
 
-Let's start there.
+The Run tab shows the prebuilt `<chat>` composition and nothing else. Send a message and the answer streams back from the graph, exactly as it would from a local server.
+
+That is the point of this example. Nothing about the deployment is visible in the component: the graph name lives in `langgraph.json`, and the API URL and assistant ID live in the provider. Change those values and the same component talks to a local server, a staging deployment, or production.
+
+## How it is built
+
+Three files carry the deployable unit: the graph packaged for the platform, the provider that holds the connection, and a component that knows neither. Open the Code tab to read them in place.
+
+### The graph you deploy
+
+The backend is a single node. `MessagesState` gives the LangGraph SDK a message list it already understands, the model is constructed with `streaming=True`, and the node prepends a system prompt read from the capability's prompt file before it awaits the model.
+
+<ExampleCode file="graph.py" />
+
+The last line matters more than the graph does: `graph = build_deployment_runtime_graph()` is the module-level symbol `langgraph.json` points at, and `compile()` is called with no checkpointer because the platform provides persistence itself.
+
+### Pointing the app at a deployment
+
+`provideAgent()` registers the agent once for the whole application, which is where every deployment-specific value belongs. The example resolves its connection details at runtime from the host that serves the demo, which is why its factory reads them rather than hard-coding them. It sits alongside `provideChat({})`, which supplies the chat composition's own providers.
+
+<ExampleCode file="app.config.ts" />
+
+Your own application does not need the factory. Pass the values directly:
+
+```typescript
+provideAgent({
+  apiUrl: 'https://your-deployment.langgraph.app',
+  assistantId: 'deployment-runtime',
+}),
+provideChat({}),
+```
+
+`clientOptions` is the third value the example forwards. It tunes the LangGraph SDK client behind the default transport, and it accepts two keys: `apiKey`, and `maxRetries` for how many times a failed request is retried with exponential backoff before the error reaches your UI.
+
+<Callout type="warning" title="assistantId must match the graph key">
+The `assistantId` you pass to `provideAgent()` must exactly match a key in the `graphs` map of `langgraph.json`. A mismatch is not a build error: the application starts normally and the first message fails against the deployment.
+</Callout>
+
+### The component
+
+`injectAgent()` returns the agent registered above and hands it to `<chat>`. The class is one field.
+
+<ExampleCode file="deployment-runtime.component.ts" />
+
+No URL, no assistant ID, no environment check: the same component ships to every environment.
+
+## Deploying the graph
+
+Your agent needs a `langgraph.json` manifest at the project root. This is the example's, and it is the whole file:
 
 ```json
 {
-  "dependencies": ["."],
   "graphs": {
-    "chat": "./agent/graph.py:graph"
+    "deployment-runtime": "./src/graph.py:graph"
   },
+  "dependencies": ["."],
+  "python_version": "3.12",
   "env": ".env"
 }
 ```
 
-The `graphs` key maps an assistant ID (configured via `provideAgent({ assistantId: '...' })` on the Angular side) to the Python module path and graph variable. The `env` key points to a file with secrets like `OPENAI_API_KEY` that will be injected at runtime.
+The `graphs` key maps an assistant ID to a module path and the graph variable inside it. `dependencies` names the packages to install into the image, and `env` points at a file with secrets like `OPENAI_API_KEY` that are injected at runtime.
 
-### Agent entry point
-
-```python
-from langchain_openai import ChatOpenAI
-from langgraph.graph import StateGraph, MessagesState
-
-llm = ChatOpenAI(model="gpt-5-mini")
-
-def call_model(state: MessagesState):
-    return {"messages": [llm.invoke(state["messages"])]}
-
-graph = StateGraph(MessagesState)
-graph.add_node("model", call_model)
-graph.set_entry_point("model")
-graph = graph.compile()
-```
+<Callout type="tip" title="Run it locally first">
+`langgraph dev` serves the same manifest on your machine and speaks the same API a deployment does, so you can point a development build at it before you deploy anything. It refuses a graph that compiles its own checkpointer; a deployment ignores one. Compile with no checkpointer, as the example does.
+</Callout>
 
 ### Push and deploy
 
@@ -78,7 +120,7 @@ Click **Deploy**. Once the build succeeds, you will see a deployment URL like `h
 </Step>
 </Steps>
 
-## Angular: environment configuration
+## Environment configuration
 
 Angular uses file-based environment replacement at build time rather than `process.env`. Create separate environment files for development and production.
 
@@ -115,6 +157,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideAgent({
       apiUrl: environment.langgraphUrl,
+      assistantId: 'deployment-runtime',
     }),
   ],
 };
@@ -126,29 +169,11 @@ Angular CLI replaces `environment.ts` with `environment.prod.ts` during `ng buil
 
 ### Keep LangGraph credentials server-side
 
-Do not ship LangSmith or LangGraph API keys in an Angular bundle. The default `FetchStreamTransport` uses the LangGraph SDK client directly, not Angular `HttpClient`, so Angular HTTP interceptors do not attach headers to `injectAgent()` requests.
+Do not ship LangSmith or LangGraph API keys in an Angular bundle. The default `FetchStreamTransport` uses the LangGraph SDK client directly, not Angular `HttpClient`, so Angular HTTP interceptors do not attach headers to `injectAgent()` requests. `clientOptions.apiKey` does reach the SDK client, but a value passed there is bundled into the browser build like any other constant.
 
-For production, put a same-origin backend route, edge function, or API gateway in front of LangGraph. The browser calls your relative URL, and that server-side layer adds the deployment credentials.
+For production, put a same-origin backend route, edge function, or API gateway in front of LangGraph. The browser calls your relative URL, and that server-side layer adds the deployment credentials. Set `apiUrl` to that relative path, as the production environment file above does.
 
 For me, the same-origin proxy is worth the extra hop. You give up the simplicity of pointing Angular straight at the deployment, but your keys never leave the server, and HTTP-only cookies just work.
-
-```typescript
-// environment.prod.ts
-export const environment = {
-  production: true,
-  langgraphUrl: '/api/langgraph',
-};
-```
-
-```typescript
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideAgent({
-      apiUrl: environment.langgraphUrl,
-    }),
-  ],
-};
-```
 
 <Callout type="warning" title="Never expose API keys">
 Environment files that are bundled into Angular are public. Store LangGraph deployment credentials in your server-side proxy, hosting provider secret store, or CI/CD environment, not in `environment.prod.ts`.
@@ -168,7 +193,7 @@ In `langgraph.json`, add an `http` section:
 {
   "dependencies": ["."],
   "graphs": {
-    "chat": "./agent/graph.py:graph"
+    "deployment-runtime": "./src/graph.py:graph"
   },
   "http": {
     "cors": {
@@ -185,22 +210,13 @@ In `langgraph.json`, add an `http` section:
 During local development with `langgraph dev`, CORS is permissive by default. You only need explicit CORS configuration for production deployments.
 </Callout>
 
-## Error boundaries
+## Error handling
 
-Production apps need graceful error handling. Let's build a reactive error boundary using `injectAgent()` signals.
-
-The transport runs on the LangGraph SDK client, not Angular's `HttpClient`, so `error()` won't be an `HttpErrorResponse`. To branch on HTTP status, read `error()?.cause` — the SDK attaches the underlying status there (see [Streaming](/docs/langgraph/guides/streaming#stream-status)).
+The demo leans on `<chat>`, which renders failures for you. A hand-built UI reads the same two signals the composition does: `status()` flips to `'error'`, and `error()` holds an `AgentError` with a classified `kind`, a `retryable` flag, an optional HTTP `status`, and the original failure on `cause`.
 
 ```typescript
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { injectAgent } from '@threadplane/langgraph';
-
-/** Pull an HTTP status off the error's `cause`, if present. */
-function httpStatus(err: unknown): number | undefined {
-  const cause = (err as { cause?: unknown } | null | undefined)?.cause;
-  const status = (cause as { status?: unknown } | undefined)?.status;
-  return typeof status === 'number' ? status : undefined;
-}
 
 @Component({
   selector: 'app-chat',
@@ -209,57 +225,72 @@ function httpStatus(err: unknown): number | undefined {
     @if (hasError()) {
       <div class="error-banner">
         <p>{{ errorMessage() }}</p>
-        <button (click)="retry()">Try again</button>
+        @if (canRetry()) {
+          <button (click)="retry()">Try again</button>
+        }
       </div>
     }
   `,
 })
 export class ChatComponent {
-  // injectAgent() without a ref returns the default-typed agent (state/value are Record<string, unknown>).
-  // This component only uses status() and error(), so the no-arg form is sufficient.
-  protected readonly chat = injectAgent();
+  protected readonly agent = injectAgent();
 
-  hasError = computed(() => this.chat.status() === 'error');
+  protected readonly hasError = computed(() => this.agent.status() === 'error');
+  protected readonly canRetry = computed(
+    () => this.agent.error()?.retryable === true,
+  );
 
-  errorMessage = computed(() => {
-    const err = this.chat.error();
-    switch (httpStatus(err)) {
-      case 401: return 'Authentication failed. Please check your API key.';
-      case 429: return 'Rate limit exceeded. Please wait a moment.';
-      case 503: return 'Agent is starting up. Please try again shortly.';
+  protected readonly errorMessage = computed(() => {
+    const failure = this.agent.error();
+    if (!failure) return '';
+    switch (failure.kind) {
+      case 'auth':
+        return 'The deployment rejected the request. Check the credentials on your proxy.';
+      case 'connection':
+        return 'The deployment is unreachable. Check your connection and try again.';
+      case 'interrupted':
+        return 'The response was interrupted. Try again.';
+      default:
+        return failure.message;
     }
-    return err instanceof Error ? err.message : 'An unexpected error occurred.';
   });
 
-  retry(): void {
-    this.chat.reload();
+  protected retry(): void {
+    void this.agent.retry();
   }
 }
 ```
 
+Branching on `kind` covers the cases that need different copy without reading HTTP status codes; `failure.status` is there when you want the exact code.
+
 ### Retry with exponential backoff
 
-For automated retries (network blips, transient 5xx errors), wrap `.submit()` with a backoff utility:
+`submit()` resolves whether the run succeeded or failed — a failure lands on `error()` rather than rejecting the promise — so an automated retry reads the signal between attempts and uses `retry()`, which re-runs the last input and clears the error first.
 
 ```typescript
 import type { LangGraphAgent } from '@threadplane/langgraph';
 
-export async function retrySubmit(
-  chat: LangGraphAgent,
+export async function submitWithBackoff(
+  agent: LangGraphAgent,
   input: Record<string, unknown>,
   maxAttempts = 3,
 ): Promise<void> {
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    try {
-      await chat.submit(input);
-      return;
-    } catch {
-      if (attempt === maxAttempts - 1) throw new Error('Max retries exceeded');
-      await new Promise(r => setTimeout(r, 1000 * 2 ** attempt));
-    }
+  await agent.submit(input);
+
+  for (let attempt = 1; attempt < maxAttempts; attempt++) {
+    const failure = agent.error();
+    if (!failure) return;
+    if (!failure.retryable) throw failure;
+    await new Promise((resolve) => setTimeout(resolve, 1000 * 2 ** (attempt - 1)));
+    await agent.retry();
   }
+
+  const failure = agent.error();
+  if (failure) throw failure;
 }
 ```
+
+The `retryable` check is what keeps a wrong API key from being retried three times.
 
 ## Stream recovery
 
@@ -267,7 +298,7 @@ Use `joinStream()` to reconnect to a running agent execution after a network int
 
 ```typescript
 // Store the run ID when LangGraph creates the run
-await this.chat.submit(
+await this.agent.submit(
   { message: input },
   {
     streamResumable: true,
@@ -283,21 +314,34 @@ if (savedRunId) {
   // The second arg is an optional last-event id. Omit it (or pass
   // undefined) to replay the run from the start; pass a stored id to
   // resume only the events after it.
-  await this.chat.joinStream(savedRunId);
+  await this.agent.joinStream(savedRunId);
 }
 ```
 
-`joinStream(runId, lastEventId?)` replays any events the client missed, then switches to live streaming. The second argument is an optional last-event id: omit it (as above) and LangGraph replays from the start of the run; pass a stored id to resume only the events that came after it. Replaying from the start is the safe default — the run's full state is on the Platform, so the client just re-renders from scratch.
-
-This works because all state lives on the LangGraph Platform, and the SSE endpoint supports event ID-based resumption.
+`joinStream(runId, lastEventId?)` replays any events the client missed, then switches to live streaming. Replaying from the start is the safe default — the run's full state is on the Platform, so the client just re-renders from scratch.
 
 <Callout type="tip" title="Stateless client pattern">
 `injectAgent()` is a stateless client. All state lives on the LangGraph Platform. This means your Angular app can be deployed anywhere (CDN, edge, SSR) without state management concerns. Scale your frontend independently of your agent infrastructure.
 </Callout>
 
+## Hosting the Angular app
+
+A built Angular app is static files, so any static host will serve it. Two rules apply: rewrite unknown paths to `index.html` so client-side routing works, and proxy the LangGraph calls through the same origin so the deployment credentials stay on the server. On Vercel both are one file:
+
+```json
+{
+  "rewrites": [
+    { "source": "/api/langgraph/(.*)", "destination": "https://your-deployment.langgraph.app/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
+```
+
+That is the server-side layer the Authentication section describes, and it is why the production environment file sets `langgraphUrl` to `/api/langgraph`.
+
 ## CI/CD pipeline
 
-A typical pipeline deploys the Python agent and Angular frontend in parallel since they are independent artifacts.
+The Python agent and the Angular frontend are independent artifacts, so a pipeline can build them in parallel.
 
 ```yaml
 name: Deploy
@@ -342,6 +386,10 @@ jobs:
           echo "Deploy dist/ to your hosting platform"
 ```
 
+<Callout type="tip" title="Order the jobs when a release spans both">
+Parallel is right when the two artifacts do not depend on each other. When a release changes the graph and the UI together, add `needs: deploy-agent` to the frontend job so the new API is live before any traffic reaches it.
+</Callout>
+
 ## Monitoring
 
 ### LangSmith observability
@@ -363,14 +411,14 @@ Key metrics to track in production:
 Track stream health from your Angular app:
 
 ```typescript
-const status = this.chat.status(); // 'idle' | 'running' | 'error'
-const isStreaming = this.chat.isLoading();
+const status = this.agent.status(); // 'idle' | 'running' | 'error'
+const isStreaming = this.agent.isLoading();
 
 // Log stream lifecycle for your APM tool
 effect(() => {
-  const s = this.chat.status();
-  if (s === 'error') {
-    this.analytics.trackError('stream_error', this.chat.error());
+  const failure = this.agent.error();
+  if (failure) {
+    this.analytics.trackError('stream_error', failure.kind);
   }
 });
 ```
@@ -381,6 +429,9 @@ effect(() => {
 <Step title="Set production apiUrl">
 Point `provideAgent({ apiUrl })` to your same-origin LangGraph proxy, or to a direct LangGraph URL only when that deployment is intentionally public.
 </Step>
+<Step title="Match assistantId to the manifest">
+Pass the `graphs` key from `langgraph.json` as `assistantId`. A mismatch fails on the first message, not at build time.
+</Step>
 <Step title="Configure authentication">
 Route browser traffic through a server-side proxy or gateway that adds LangGraph credentials outside the Angular bundle.
 </Step>
@@ -388,13 +439,13 @@ Route browser traffic through a server-side proxy or gateway that adds LangGraph
 Add your Angular app's origin to the `allow_origins` list in `langgraph.json`.
 </Step>
 <Step title="Handle errors gracefully">
-Show user-friendly error messages for 401, 429, 503, and network failures. Provide retry buttons.
+Branch on `error().kind` for legible copy, and show a retry button only when `error().retryable` is true.
 </Step>
 <Step title="Implement stream recovery">
 Store `runId` and use `joinStream()` to reconnect after network interruptions.
 </Step>
 <Step title="Persist thread IDs">
-Store `threadId` in `localStorage` or a backend so users can resume conversations across sessions.
+Store the server-issued `threadId` in `localStorage` or a backend so users can resume conversations across sessions.
 </Step>
 <Step title="Configure throttle">
 Set the `throttle` option if token-by-token updates are too frequent for your UI rendering.

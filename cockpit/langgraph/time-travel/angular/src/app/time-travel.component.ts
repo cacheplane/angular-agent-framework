@@ -141,6 +141,7 @@ import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
       <!-- Chat panel -->
       <chat main [agent]="agent" class="block flex-1" />
 
+      <!-- #region timeline -->
       <!-- Checkpoint timeline sidebar -->
       <div sidebar class="panel">
         <div class="head">
@@ -189,10 +190,12 @@ import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
           }
         </div>
       </div>
+      <!-- #endregion -->
     </example-chat-layout>
   `,
 })
 export class TimeTravelComponent {
+  // #region history
   protected readonly agent = injectAgent();
 
   /** Index of the currently selected checkpoint in the sidebar. */
@@ -202,6 +205,7 @@ export class TimeTravelComponent {
   protected readonly checkpoints = computed(
     (): ThreadState<any>[] => this.agent.langGraphHistory(),
   );
+  // #endregion
 
   /** Display label for a checkpoint entry. */
   protected checkpointLabel(
@@ -214,6 +218,7 @@ export class TimeTravelComponent {
     return `State ${index + 1}`;
   }
 
+  // #region branch
   /** Replay the conversation from the given checkpoint. */
   protected replay(state: ThreadState<any>, index: number): void {
     if (state.checkpoint?.checkpoint_id) {
@@ -229,4 +234,5 @@ export class TimeTravelComponent {
       this.agent.setBranch(state.checkpoint.checkpoint_id);
     }
   }
+  // #endregion
 }

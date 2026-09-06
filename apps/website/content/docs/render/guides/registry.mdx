@@ -1,59 +1,114 @@
+---
+description: How the registry example maps four type names to Angular components, what a registered component receives as inputs, and how an element resolves at render time.
+---
+
 # Component Registry
 
-The component registry maps element type names from your spec to Angular component classes. It's the bridge between the declarative JSON spec and your Angular component tree.
+A registry maps the `type` string on a spec element to an Angular component class. It is the bridge between a declarative JSON spec and the component tree your application owns. The running example registers four small components, streams three specs through them, and shows exactly what each component receives when it mounts.
 
-## Creating a Registry
+## What the demo does
 
-Let's create a registry with `defineAngularRegistry()` from a plain object that maps type names to component classes:
+The Run tab shows a split surface: the rendered output on the left, the JSON that produced it on the right, and a transport along the bottom. Press play and the spec streams in character by character. The parser materializes it as it arrives, so headings, cards, text, and badges appear as their props complete, with skeleton placeholders standing in until they do.
 
-```typescript
+The tabs at the top switch between three specs — Basic Types, Card Layout, and Mixed Components — and picking one restarts the stream against that spec. All three draw on the same four registered names, so what changes between them is the shape of the element tree, not the components. The transport scrubs to any point in the stream and plays at 1x, 2x, or 4x.
+
+## How it is built
+
+The example is one Angular file and an application config. Open the Code tab to read them in place.
+
+### The application config registers nothing
+
+Most applications register the registry once, at the root. This one calls `provideRender()` with an empty config.
+
+<ExampleCode file="app.config.ts" />
+
+The registry travels as an input on the render surface instead, which is the form that takes precedence anyway.
+
+### What a registered component receives
+
+Every registered component is a plain standalone Angular component. `content` is the element's own prop from the spec; the five framework inputs at the bottom of the class are what the renderer supplies for every element it mounts.
+
+<ExampleCode file="registry.component.ts" region="text-view" title="registry.component.ts — a registered component" />
+
+`loading` is true while the spec is still streaming, which is what selects the skeleton branch in the template.
+
+### Rendering children
+
+An element's `children` arrive as `childKeys`, and the whole `spec` arrives with them. That pair is everything `<render-element>` needs to mount a child by key, which is how a tree of any depth renders.
+
+<ExampleCode file="registry.component.ts" region="heading-view" title="registry.component.ts — recursive children" />
+
+A component renders children only if its template asks for them: the badge in the same file declares `childKeys` and never reads it.
+
+### The registry
+
+`defineAngularRegistry()` takes a plain object whose keys are type names and whose values are component classes.
+
+<ExampleCode file="registry.component.ts" region="registry" title="registry.component.ts — the registry and the store" />
+
+The four keys are exactly the `type` strings the three specs use, and `signalStateStore({})` is the state a spec would bind against with `$bindState`.
+
+<Callout type="tip" title="Type names are a contract">
+The keys are the identifiers a spec author, or a model producing specs, has to write. Keep them descriptive and stable — `stat-card` rather than `c2` — because renaming one silently stops resolving every element that still uses the old name.
+</Callout>
+
+### Mounting the spec
+
+`<render-spec>` receives the materialized spec, the registry, the store, and a `loading` flag driven by the simulator.
+
+<ExampleCode file="registry.component.ts" region="render-surface" title="registry.component.ts — the render surface" />
+
+`loading` reaches every mounted component as its own `loading` input, which is how the skeletons know the stream is still running.
+
+### The agent is not in the render path
+
+The capability also ships a backend, and it is worth being clear about what it does not do. This single-node LangGraph agent answers questions about registries; it never produces the specs on screen, which the example streams locally.
+
+<ExampleCode file="graph.py" />
+
+## What an entry holds
+
+This is an illustrative registry, not the one the demo builds; it exists to show the shape an entry can take. A registered value can be a bare component class or a full entry object. `defineAngularRegistry()` normalizes both into the same shape: a component, a guaranteed fallback, and the optional `schema` and `description` an entry may declare.
+
+```ts
+// component imports omitted
 import { defineAngularRegistry } from '@threadplane/render';
-import { TextComponent } from './text.component';
-import { CardComponent } from './card.component';
-import { ButtonComponent } from './button.component';
-import { ContainerComponent } from './container.component';
 
-export const uiRegistry = defineAngularRegistry({
+const registry = defineAngularRegistry({
   Text: TextComponent,
-  Card: CardComponent,
-  Button: ButtonComponent,
-  Container: ContainerComponent,
+  Card: {
+    component: CardComponent,
+    fallback: CardSkeletonComponent,
+    description: 'A titled container that renders its children.',
+  },
 });
+
+registry.getEntry('Text')?.component; // TextComponent
+registry.getEntry('Text')?.fallback;  // DefaultFallbackComponent
+registry.getEntry('Card')?.fallback;  // CardSkeletonComponent
+registry.getEntry('Unknown');         // undefined
+registry.names();                     // ['Text', 'Card']
 ```
 
-The returned `AngularRegistry` object has two methods:
+`getEntry(name)` returns the normalized entry or `undefined`, and `names()` lists every registered name.
 
-- `getEntry(name: string)` -- returns the fully-normalized entry (`{ component, fallback, schema?, description? }`) for a registered name, or `undefined` if not registered. The resolved `fallback` is the entry's own renderer, or the library's default when the entry omits one.
-- `names()` -- returns an array of all registered type names
+### Fallbacks and unregistered types
 
-```typescript
-uiRegistry.getEntry('Text')?.component; // TextComponent
-uiRegistry.getEntry('Unknown');         // undefined
-uiRegistry.getEntry('Text')?.fallback;  // fallback renderer (or default)
-uiRegistry.names();                     // ['Text', 'Card', 'Button', 'Container']
-```
+An element whose type is not registered has no entry at all, so nothing mounts and the element renders nothing. When the type is registered, the entry's fallback fills the gap while a prop is still resolving to `undefined`, or while a declared `schema` does not yet validate the resolved props. Once the real component mounts it stays mounted: the switch is one-way per element instance, so a prop that later becomes undefined never reverts the element to its fallback.
 
-### Fallback Rendering
+## The component input contract
 
-Fallbacks belong to registered entries. When an element's type is not registered, there is no entry to read and the element renders nothing. When the type is registered, the entry's configured fallback can fill a transient gap while state-bound props are still resolving. Once the real component mounts, it stays mounted -- later re-renders never revert to the fallback.
-
-## The Component Input Contract
-
-Every component rendered by `@threadplane/render` receives inputs conforming to the `AngularComponentInputs` interface. Your custom props from the spec are spread as additional inputs alongside the standard ones.
-
-### Standard Inputs
+Alongside the element's own props, the renderer passes a fixed set of framework inputs.
 
 | Input | Type | Description |
 |-------|------|-------------|
-| `emit` | `(event: string) => void` | Function to dispatch named events |
-| `bindings` | `Record<string, string>` | Two-way binding paths: prop name to absolute state path |
+| `emit` | `(event: string) => void` | Fires the element's `on[event]` handler bindings |
+| `bindings` | `Record<string, string>` | Prop name to the absolute state path it is bound to |
 | `loading` | `boolean` | Whether the spec is currently streaming |
 | `childKeys` | `string[]` | Element keys for recursive child rendering |
-| `spec` | `Spec` | The full spec object (for child resolution) |
+| `spec` | `Spec` | The full spec, for resolving those child keys |
 
-### Custom Props
-
-Any props defined in the element's `props` are resolved and passed as additional inputs. For example, given this element:
+Custom props are resolved from the element and spread alongside them. Given this element:
 
 ```json
 {
@@ -65,173 +120,68 @@ Any props defined in the element's `props` are resolved and passed as additional
 }
 ```
 
-Your component receives `label` and `size` as inputs alongside the standard inputs.
+the component receives `label` and `size` as inputs.
 
-## Writing a Renderable Component
+Every input is then filtered down to the names the target component actually declares, so a component that only wants `label` may declare only `label` and ignore the rest.
 
-Here's a complete component designed to work with the rendering system:
-
-```typescript
-import { Component, ChangeDetectionStrategy, input } from '@angular/core';
-import type { Spec } from '@json-render/core';
-
-@Component({
-  selector: 'app-card',
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div class="card">
-      <h2>{{ title() }}</h2>
-      <p>{{ description() }}</p>
-      @if (loading()) {
-        <div class="loading-indicator">Loading...</div>
-      }
-    </div>
-  `,
-})
-export class CardComponent {
-  // Custom props from the spec
-  readonly title = input<string>('');
-  readonly description = input<string>('');
-
-  // Standard inputs from AngularComponentInputs
-  readonly emit = input<(event: string) => void>(() => {});
-  readonly bindings = input<Record<string, string>>({});
-  readonly loading = input<boolean>(false);
-  readonly childKeys = input<string[]>([]);
-  readonly spec = input<Spec | null>(null);
-}
-```
-
-<Callout type="tip" title="Input defaults">
-Always provide default values for your inputs. The rendering system spreads resolved props onto the component, but not all standard inputs are guaranteed to have values in every context.
+<Callout type="tip" title="Give every input a default">
+Props arrive while the spec is still streaming, so a prop may be missing on the first mount and appear later. A default value keeps that first render valid.
 </Callout>
 
-## Two-Way Bindings
+## Two-way bindings
 
-When a prop uses `$bindState`, the `bindings` input receives a mapping from the prop name to the state path. This enables two-way binding patterns:
+When a prop uses `$bindState`, the prop resolves to the current value at that path and the `bindings` input receives the mapping from prop name to path. Given this element:
 
-```typescript
-// In your spec
+```json
 {
-  type: 'Input',
-  props: {
-    value: { $bindState: '/form/email' },
-    label: 'Email',
-  },
-}
-```
-
-Your component receives:
-
-- `value` resolved to the current state value (e.g., `"test@example.com"`)
-- `bindings` set to `{ value: '/form/email' }`
-
-You can use the bindings map to write back to the store:
-
-```typescript
-import { Component, ChangeDetectionStrategy, input, inject } from '@angular/core';
-import { RENDER_CONTEXT } from '@threadplane/render';
-
-@Component({
-  selector: 'app-input',
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <label>{{ label() }}</label>
-    <input [value]="value()" (input)="onInput($event)" />
-  `,
-})
-export class InputComponent {
-  readonly value = input<string>('');
-  readonly label = input<string>('');
-  readonly bindings = input<Record<string, string>>({});
-  readonly childKeys = input<string[]>([]);
-  readonly spec = input<unknown>(null);
-
-  private readonly ctx = inject(RENDER_CONTEXT);
-
-  onInput(event: Event) {
-    const path = this.bindings()['value'];
-    if (path) {
-      const target = event.target as HTMLInputElement;
-      this.ctx.store.set(path, target.value);
-    }
+  "type": "Input",
+  "props": {
+    "value": { "$bindState": "/form/email" },
+    "label": "Email"
   }
 }
 ```
 
-## RenderHost
+the component receives `value` resolved to the stored value and `bindings` set to `{ value: '/form/email' }`. To write back, read the path out of `bindings` and set it on the store.
 
-Inside a mounted view component, `injectRenderHost()` exposes the element-scoped host:
+## Talking back through the render host
 
-```typescript
-import { Component, inject } from '@angular/core';
+`injectRenderHost()` gives a mounted component the element-scoped host, which is the supported way to write state, fire events, and announce a result.
+
+```ts
+import { Component, input } from '@angular/core';
 import { injectRenderHost } from '@threadplane/render';
 
 @Component({
   selector: 'app-approval',
   standalone: true,
-  template: `
-    <button (click)="approve()">Approve</button>
-  `,
+  template: `<button (click)="approve()">Approve</button>`,
 })
 export class ApprovalComponent {
+  readonly bindings = input<Record<string, string>>({});
+
   private readonly host = injectRenderHost();
 
   approve() {
-    this.host.set('/approved', true);
+    const path = this.bindings()['approved'];
+    if (path) {
+      this.host.set(path, true);
+    }
     this.host.emit('approved');
     this.host.result({ approved: true });
   }
 }
 ```
 
-Use `set(path, value)` for state writes, `emit(event, payload?)` for spec `on` handlers, and `result(value)` when the component has produced a value that the host should observe as a `RenderResultEvent`.
+`set(path, value)` writes to the render state store at a JSON Pointer path, `emit(event, payload?)` routes to the element's `on` handlers, and `result(value)` surfaces the value to the host as a render result event.
 
-## Recursive Children
+## Providing the registry
 
-Container components can render their children by using the `childKeys` and `spec` inputs with `RenderElementComponent`:
+There are two places a registry can come from. The application root is the usual one:
 
-```typescript
-import { Component, ChangeDetectionStrategy, input } from '@angular/core';
-import { RenderElementComponent } from '@threadplane/render';
-import type { Spec } from '@json-render/core';
-
-@Component({
-  selector: 'app-container',
-  standalone: true,
-  imports: [RenderElementComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div class="container">
-      @for (key of childKeys(); track key) {
-        <render-element [elementKey]="key" [spec]="spec()!" />
-      }
-    </div>
-  `,
-})
-export class ContainerComponent {
-  readonly childKeys = input<string[]>([]);
-  readonly spec = input<Spec | null>(null);
-  readonly loading = input<boolean>(false);
-  readonly emit = input<(event: string) => void>(() => {});
-  readonly bindings = input<Record<string, string>>({});
-}
-```
-
-This enables deeply nested component trees -- containers render their children, which can themselves be containers with more children.
-
-## Providing the Registry
-
-Let's provide the registry. You have two ways to do it:
-
-<Tabs>
-<Tab label="Global (provideRender)">
-
-```typescript
-// app.config.ts
-import { provideRender, defineAngularRegistry } from '@threadplane/render';
+```ts
+import { ApplicationConfig } from '@angular/core';
+import { defineAngularRegistry, provideRender } from '@threadplane/render';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -245,33 +195,15 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-```html
-<!-- Registry is resolved from RENDER_CONFIG automatically -->
-<render-spec [spec]="spec" />
-```
-
-</Tab>
-<Tab label="Per-instance (input)">
-
-```typescript
-// component.ts
-registry = defineAngularRegistry({
-  Text: TextComponent,
-  Card: CardComponent,
-});
-```
+The other is the `registry` input on the surface itself, which is what the example uses so that one page can render with a registry of its own:
 
 ```html
-<!-- Registry passed as input takes precedence over global config -->
-<render-spec [spec]="spec" [registry]="registry" />
+<render-spec [spec]="spec()" [registry]="registry" />
 ```
 
-</Tab>
-</Tabs>
+`<render-spec>` resolves its registry in a fixed order: the input first, then the config from `provideRender()`, then a registry supplied through `provideViews()`, and finally an empty registry that resolves nothing.
 
-When both are provided, the input always takes precedence over the global config.
-
-## Next Steps
+## What's Next
 
 <CardGroup cols={2}>
   <Card title="defineAngularRegistry() API" href="/docs/render/api/define-angular-registry">

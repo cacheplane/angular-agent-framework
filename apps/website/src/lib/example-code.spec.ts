@@ -110,7 +110,7 @@ describe('sliceRegion', () => {
     ).toThrow(/unterminated/);
   });
 
-  it('keeps nested regions intact and ends at the matching endregion', () => {
+  it('drops inner marker lines and ends at the matching endregion', () => {
     const source = [
       '// #region outer',
       'const a = 1;',
@@ -121,13 +121,7 @@ describe('sliceRegion', () => {
       '// #endregion',
     ].join('\n');
     expect(sliceRegion(source, 'outer', 'f.ts')).toBe(
-      [
-        'const a = 1;',
-        '// #region inner',
-        'const b = 2;',
-        '// #endregion',
-        'const c = 3;',
-      ].join('\n')
+      ['const a = 1;', 'const b = 2;', 'const c = 3;'].join('\n')
     );
     expect(sliceRegion(source, 'inner', 'f.ts')).toBe('const b = 2;');
   });
@@ -143,13 +137,7 @@ describe('sliceRegion', () => {
       '// #endregion',
     ].join('\n');
     expect(sliceRegion(source, 'outer', 'f.ts')).toBe(
-      [
-        'const a = 1;',
-        '// #region',
-        'const b = 2;',
-        '// #endregion',
-        'const c = 3;',
-      ].join('\n')
+      ['const a = 1;', 'const b = 2;', 'const c = 3;'].join('\n')
     );
   });
 

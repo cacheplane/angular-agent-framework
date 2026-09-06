@@ -32,6 +32,7 @@ const SUGGESTIONS = [
     ExampleChatLayoutComponent,
   ],
   template: `
+    <!-- #region layout -->
     <example-chat-layout sidebarWidth="20rem">
       <chat main [agent]="agent" class="flex-1 min-w-0">
         <div chatWelcomeSuggestions>
@@ -51,13 +52,14 @@ const SUGGESTIONS = [
         <div>
           <h4 class="cap">Available Tools</h4>
           <ul class="info-list">
-            <li>search — Web search</li>
-            <li>calculator — Math expressions</li>
-            <li>weather — City weather</li>
+            <li>lookup_flight — Flight status and gate</li>
+            <li>get_airport_info — Airport details and weather</li>
+            <li>find_routes — Flights between two airports</li>
           </ul>
         </div>
       </div>
     </example-chat-layout>
+    <!-- #endregion -->
   `,
   styles: [`
     .panel {
@@ -92,6 +94,7 @@ const SUGGESTIONS = [
     }
   `],
 })
+// #region component
 export class ToolCallsComponent {
   protected readonly agent = injectAgent();
 
@@ -101,3 +104,4 @@ export class ToolCallsComponent {
     void this.agent.submit({ message: text });
   }
 }
+// #endregion

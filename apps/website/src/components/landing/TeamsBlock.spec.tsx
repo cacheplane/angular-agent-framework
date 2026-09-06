@@ -24,7 +24,7 @@ describe('TeamsBlock', () => {
     expect(screen.getByRole('link', { name: 'Talk to an engineer' }).getAttribute('href')).toBe('/contact?source=home_enterprise&track=enterprise');
     expect(screen.getByRole('link', { name: 'See the pilot program' }).getAttribute('href')).toBe('/pilot-to-prod');
     expect(container.querySelectorAll('form')).toHaveLength(1);
-    expect(screen.getByLabelText('Email address')).toBeTruthy();
+    expect(screen.getByLabelText('Work email')).toBeTruthy();
     expect(screen.getByText('Whitepaper disclosure')).toBeTruthy();
   });
 

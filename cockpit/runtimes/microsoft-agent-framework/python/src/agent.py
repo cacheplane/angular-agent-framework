@@ -55,6 +55,7 @@ class Expense(BaseModel):
     memo: str = Field(..., description="One-line justification, including attendee count for meals.")
 
 
+# region policy-tool
 @tool(
     name="lookup_expense_policy",
     description="Look up the reimbursement policy for an expense category.",
@@ -75,8 +76,10 @@ def lookup_expense_policy(category: str) -> str:
         f"Policy for {category}: limit ${policy['limit_usd']} per expense, "
         f"receipts required over ${policy['receipt_required_over_usd']}. {policy['notes']}"
     )
+# endregion
 
 
+# region approval-tool
 @tool(
     name="submit_expense",
     description="Submit an expense report entry for reimbursement. Requires human approval.",
@@ -99,6 +102,7 @@ def submit_expense(expense: Expense) -> str:
         f"Expense recorded: ${entry.amount_usd:.2f} to {entry.vendor} "
         f"({entry.category}) — queued for reimbursement."
     )
+# endregion
 
 
 _INSTRUCTIONS = """You are an expense approval copilot.
@@ -124,6 +128,7 @@ policy tool.
 """
 
 
+# region model-client
 def build_chat_client() -> OpenAIChatCompletionClient:
     """Azure OpenAI by default; plain OpenAI when Azure env is absent.
 
@@ -146,8 +151,10 @@ def build_chat_client() -> OpenAIChatCompletionClient:
         model=os.environ.get("OPENAI_CHAT_MODEL", "gpt-4o-mini"),
         api_key=os.environ.get("OPENAI_API_KEY", "unset-openai-api-key"),
     )
+# endregion
 
 
+# region delegation
 policy_researcher = Agent(
     name="policy_researcher",
     instructions=(
@@ -197,8 +204,10 @@ async def research_policy(category: str, amount: float) -> str:
         raise
     subagent_emitter.delegation_finished(tid)
     return "".join(parts)
+# endregion
 
 
+# region bridge
 agent = AgentFrameworkAgent(
     agent=Agent(
         name="expense_approval_copilot",
@@ -216,3 +225,4 @@ agent = AgentFrameworkAgent(
     },
     require_confirmation=False,
 )
+# endregion

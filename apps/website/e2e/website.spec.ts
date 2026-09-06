@@ -38,10 +38,7 @@ test('landing page renders the spine in order (live-stage spec §3)', async ({ p
     'hero-heading',
     'proof-heading',
     'why-heading',
-    'stream-heading',
-    'persist-heading',
-    'approve-heading',
-    'render-heading',
+    'stage-heading',
     'final-cta-heading',
     'pilot-heading',
     'faq-heading',
@@ -213,8 +210,8 @@ test('whitepaper signup form posts to /api/whitepaper-signup and renders success
   });
 
   await page.goto('/chat');
-  await page.locator('#whitepaper-block').getByLabel('Email address').fill('reader@acme.com');
-  await page.locator('#whitepaper-block').getByRole('button', { name: 'Download (free)' }).click();
+  await page.locator('#whitepaper-block').getByLabel('Work email').fill('reader@acme.com');
+  await page.locator('#whitepaper-block').getByRole('button', { name: 'Get the field report' }).click();
 
   await expect(page.getByText(/check your inbox/i)).toBeVisible();
   expect(payload).toMatchObject({

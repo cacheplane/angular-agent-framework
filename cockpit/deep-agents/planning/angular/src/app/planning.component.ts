@@ -3,6 +3,7 @@ import { ChatComponent, ChatWelcomeSuggestionComponent } from '@threadplane/chat
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
 import { injectAgent } from '@threadplane/langgraph';
 
+// #region todo-shape
 /**
  * One entry of the `todos` list written by the `write_todos` tool.
  *
@@ -15,6 +16,7 @@ interface Todo {
 }
 
 const TODO_STATUSES: ReadonlyArray<Todo['status']> = ['pending', 'in_progress', 'completed'];
+// #endregion
 
 const SUGGESTIONS = [
   // value matches cockpit/deep-agents/planning/angular/e2e/da-planning.spec.ts PROMPT.
@@ -56,6 +58,7 @@ const SUGGESTIONS = [
           }
         </div>
       </chat>
+      <!-- #region plan-panel -->
       <div sidebar class="panel">
         <h3 class="cap">Plan</h3>
         @if (todos().length === 0) {
@@ -84,6 +87,7 @@ const SUGGESTIONS = [
           </div>
         }
       </div>
+      <!-- #endregion -->
     </example-chat-layout>
   `,
   styles: [
@@ -167,6 +171,7 @@ export class PlanningComponent {
 
   protected readonly suggestions = SUGGESTIONS;
 
+  // #region todos-signal
   /** Live projection of `state.todos`, normalized against unknown statuses. */
   protected readonly todos = computed<Todo[]>(() => {
     const todos = (this.agent.value() as Record<string, unknown> | undefined)?.['todos'];
@@ -184,6 +189,7 @@ export class PlanningComponent {
   protected readonly completedCount = computed(
     () => this.todos().filter((todo) => todo.status === 'completed').length,
   );
+  // #endregion
 
   protected send(text: string): void {
     void this.agent.submit({ message: text });

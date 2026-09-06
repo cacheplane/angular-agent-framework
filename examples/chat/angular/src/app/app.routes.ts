@@ -36,6 +36,11 @@ export const routes: Routes = [
     loadComponent: () => import('./hero/hero-mode.component').then((m) => m.HeroMode),
   },
   {
+    path: 'stage',
+    pathMatch: 'full',
+    loadComponent: () => import('./stage/stage-mode.component').then((m) => m.StageMode),
+  },
+  {
     path: '',
     loadComponent: () =>
       import('./shell/demo-shell.component').then((m) => m.DemoShell),

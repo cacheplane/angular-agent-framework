@@ -107,6 +107,7 @@ what to expect on arrival (weather), and any practical tips. Be helpful and
 concise."""
 
 
+# region run-subagent
 async def _run_subagent(
     role: str,
     task_description: str,
@@ -137,8 +138,10 @@ async def _run_subagent(
         ]
         return "\n".join(parts)
     return ""
+# endregion
 
 
+# region task-tool
 @tool
 async def task(
     role: Literal["research", "booking", "itinerary"],
@@ -194,8 +197,10 @@ async def task(
         raise
     await _emit({"phase": "finished", "status": "complete"})
     return result
+# endregion
 
 
+# region graph
 def build_subagents_graph():
     """Orchestrator LLM with a single `task` tool that dispatches subagents."""
     llm = ChatOpenAI(model="gpt-5-mini", streaming=True).bind_tools([task])
@@ -225,6 +230,7 @@ def build_subagents_graph():
     graph.add_edge("tools", "orchestrator")
     graph.add_edge("generate_title", END)
     return graph.compile(checkpointer=MemorySaver())
+# endregion
 
 
 # The graph instance — referenced by server.py

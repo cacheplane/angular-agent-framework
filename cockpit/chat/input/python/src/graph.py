@@ -65,6 +65,7 @@ async def generate_title(state: MessagesState, config) -> dict:
     return {}
 
 
+# region streaming-graph
 def build_input_graph():
     """
     Constructs an echo agent that streams responses back,
@@ -86,6 +87,7 @@ def build_input_graph():
     graph.add_edge("generate_title", END)
 
     return graph.compile()
+# endregion
 
 
 graph = build_input_graph()

@@ -44,6 +44,7 @@ RUNWAY_LENGTH_FT = {
 }
 
 
+# region lookup-tools
 @tool
 def lookup_field_elevation(airport: str) -> str:
     """Return the field elevation in feet for a four-letter ICAO airport code."""
@@ -60,8 +61,10 @@ def lookup_runway_length(airport: str) -> str:
     if length is None:
         return f"No runway data on file for {airport.upper()}."
     return f"{airport.upper()} longest runway is {length} ft."
+# endregion
 
 
+# region agent
 def build_filesystem_agent():
     """Build the filesystem agent.
 
@@ -80,6 +83,7 @@ def build_filesystem_agent():
             FilesystemPermission(operations=["write"], paths=["/reports/**"], mode="interrupt"),
         ],
     )
+# endregion
 
 
 graph = build_filesystem_agent()

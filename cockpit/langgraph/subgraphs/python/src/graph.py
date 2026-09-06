@@ -73,6 +73,7 @@ class DelegationDecision(BaseModel):
     )
 
 
+# region state
 class ResearchState(TypedDict):
     """Child graph state — deliberately has no `messages` key.
 
@@ -90,6 +91,7 @@ class OrchestratorState(TypedDict):
     messages: Annotated[list, add_messages]
     research_topic: str
     research_brief: str
+# endregion
 
 
 def build_subgraphs_graph():
@@ -98,6 +100,7 @@ def build_subgraphs_graph():
     router = ChatOpenAI(model="gpt-5-mini").with_structured_output(DelegationDecision)
     researcher = ChatOpenAI(model="gpt-5-mini")
 
+    # region research-subgraph
     # ── Child: research subgraph ──────────────────────────────────────────────
 
     async def research_node(state: ResearchState) -> dict:
@@ -118,9 +121,11 @@ def build_subgraphs_graph():
     research_graph.add_edge(START, "research")
     research_graph.add_edge("research", END)
     compiled_research = research_graph.compile()
+    # endregion
 
     # ── Parent: orchestrator graph ────────────────────────────────────────────
 
+    # region orchestrate
     async def orchestrate_node(state: OrchestratorState) -> dict:
         """Classify the request. Writing a topic is what triggers delegation.
 
@@ -136,7 +141,9 @@ def build_subgraphs_graph():
     def route_after_orchestrate(state: OrchestratorState) -> str:
         """The parent's decision: enter the child graph, or skip it."""
         return "research" if state.get("research_topic") else "answer"
+    # endregion
 
+    # region answer
     async def answer_node(state: OrchestratorState) -> dict:
         """The only node that writes to the transcript.
 
@@ -154,7 +161,9 @@ def build_subgraphs_graph():
             [SystemMessage(content=system_prompt), *context, *state["messages"]]
         )
         return {"messages": [response]}
+    # endregion
 
+    # region graph
     parent_graph = StateGraph(OrchestratorState)
     parent_graph.add_node("orchestrate", orchestrate_node)
     # The compiled child graph IS the node — no wrapper function. This is what
@@ -170,6 +179,7 @@ def build_subgraphs_graph():
     parent_graph.add_edge("research", "answer")
     parent_graph.add_edge("answer", END)
     return parent_graph.compile()
+    # endregion
 
 
 # The graph instance — referenced by langgraph.json

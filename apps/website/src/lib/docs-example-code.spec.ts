@@ -14,55 +14,9 @@ import {
  * against the capability's declared assets by the same rule the component
  * uses at build time. Docs-only pages never include.
  *
- * PENDING_PAGES lists mapped pages not yet rewritten. Each product PR removes
- * its pages; a page that gains an include must leave the list in the same PR.
- *
  * The scan is textual: the tag must not appear in prose, fenced code, or MDX
  * comments on any docs page, or it counts as an include.
  */
-const PENDING_PAGES = new Set<string>([
-  '/docs/a2ui/getting-started/introduction',
-  '/docs/ag-ui/guides/client-tools',
-  '/docs/ag-ui/guides/interrupts',
-  '/docs/ag-ui/guides/json-render',
-  '/docs/ag-ui/guides/subagents',
-  '/docs/ag-ui/guides/tool-views',
-  '/docs/ag-ui/reference/event-mapping',
-  '/docs/chat/a2ui/overview',
-  '/docs/chat/components/chat-debug',
-  '/docs/chat/components/chat-input',
-  '/docs/chat/components/chat-interrupt-panel',
-  '/docs/chat/components/chat-subagent-card',
-  '/docs/chat/components/chat-tool-calls',
-  '/docs/chat/components/chat-trace',
-  '/docs/chat/concepts/message-model',
-  '/docs/chat/guides/client-tools',
-  '/docs/chat/guides/generative-ui',
-  '/docs/chat/guides/theming',
-  '/docs/chat/guides/thread-routing',
-  '/docs/deep-agents/capabilities/filesystem',
-  '/docs/deep-agents/capabilities/memory',
-  '/docs/deep-agents/capabilities/planning',
-  '/docs/deep-agents/capabilities/skills',
-  '/docs/deep-agents/capabilities/subagents',
-  '/docs/langgraph/guides/deployment',
-  '/docs/langgraph/guides/durable-execution',
-  '/docs/langgraph/guides/interrupts',
-  '/docs/langgraph/guides/memory',
-  '/docs/langgraph/guides/persistence',
-  '/docs/langgraph/guides/subgraphs',
-  '/docs/langgraph/guides/time-travel',
-  '/docs/render/api/provide-render',
-  '/docs/render/api/render-spec-component',
-  '/docs/render/guides/registry',
-  '/docs/render/guides/repeat-loops',
-  '/docs/render/guides/specs',
-  '/docs/render/guides/state-store',
-  '/docs/runtimes/aws-strands/overview',
-  '/docs/runtimes/mastra/overview',
-  '/docs/runtimes/microsoft-agent-framework/overview',
-]);
-
 const findWorkspaceRoot = (): string => {
   let directory = process.cwd();
   while (directory !== resolve(directory, '..')) {
@@ -151,26 +105,13 @@ describe('docs pages teach through their example', () => {
     }
   });
 
-  it('lists only mapped pages as pending, and none that already include', () => {
-    for (const pending of PENDING_PAGES) {
-      expect(mappedPaths.has(pending), `${pending} is not a mapped page`).toBe(
-        true
-      );
-      expect(
-        includesIn(mdxFor(pending)),
-        `${pending} includes code; remove it from PENDING_PAGES`
-      ).toEqual([]);
-    }
-  });
-
-  it('includes at least one example file on every rewritten mapped page', () => {
+  it('includes at least one example file on every mapped page', () => {
     const missing = pages
-      .filter((page) => !PENDING_PAGES.has(page.docsPath))
       .filter((page) => includesIn(mdxFor(page.docsPath)).length === 0)
       .map((page) => page.docsPath);
     expect(
       missing,
-      'mapped pages with no <ExampleCode>; rewrite them or add them to PENDING_PAGES'
+      'mapped pages with no <ExampleCode>; every mapped page teaches through its example'
     ).toEqual([]);
   });
 

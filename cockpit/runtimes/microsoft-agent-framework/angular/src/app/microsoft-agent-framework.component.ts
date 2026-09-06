@@ -71,6 +71,7 @@ interface ExpenseDraft {
           </div>
         </chat>
 
+        <!-- #region shared-state-panel -->
         <aside class="state-panel" data-testid="expense-state">
           <h2 class="state-title">Shared state — expense</h2>
           @if (expense(); as e) {
@@ -84,6 +85,7 @@ interface ExpenseDraft {
             <p class="state-empty">No expense drafted yet — it streams here while the agent fills in submit_expense.</p>
           }
         </aside>
+        <!-- #endregion -->
 
         <chat-approval-card
           [agent]="agent"
@@ -213,6 +215,7 @@ export class MicrosoftAgentFrameworkComponent {
 
   protected readonly agent = injectAgent();
 
+  // #region expense-state
   /** Shared state streamed from the backend (STATE_SNAPSHOT / STATE_DELTA). */
   protected readonly expense = computed(() => {
     // Example apps compile lib source with strict:false — cast at the read site.
@@ -220,7 +223,9 @@ export class MicrosoftAgentFrameworkComponent {
     const e = state?.expense;
     return e && e.vendor !== undefined ? e : undefined;
   });
+  // #endregion
 
+  // #region approval-wiring
   /**
    * The pending approval request from the protocol-standard interrupt
    * outcome. The reducer stores it as `{ interrupts: [...], runId }`; each
@@ -253,4 +258,5 @@ export class MicrosoftAgentFrameworkComponent {
       void this.agent.submit({ resume: { approved: false } });
     }
   }
+  // #endregion
 }

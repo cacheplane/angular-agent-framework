@@ -5,6 +5,7 @@ import { signalStateStore } from '@threadplane/render';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
 import { StepPipelineComponent } from './views/step-pipeline.component';
 
+// #region steps-model
 /**
  * Pipeline step definition for the vertical progress indicator.
  */
@@ -23,6 +24,7 @@ const STEP_LABELS: Record<string, string> = {
   plan: 'Plan',
   generate: 'Generate',
 };
+// #endregion
 
 /**
  * DurableExecutionComponent demonstrates fault-tolerant multi-step execution
@@ -138,6 +140,7 @@ const STEP_LABELS: Record<string, string> = {
   `,
   template: `
     <example-chat-layout sidebarWidth="16rem">
+      <!-- #region layout -->
       <chat main [agent]="agent" [views]="ui" [store]="uiStore" class="flex-1 min-w-0" />
       <div sidebar class="panel">
         <h3 class="cap">Pipeline</h3>
@@ -186,6 +189,7 @@ const STEP_LABELS: Record<string, string> = {
           }
         </div>
       </div>
+      <!-- #endregion -->
     </example-chat-layout>
   `,
 })
@@ -193,6 +197,7 @@ export class DurableExecutionComponent {
   readonly ui = views({ 'step-pipeline': StepPipelineComponent });
   readonly uiStore = signalStateStore({});
 
+  // #region agent
   protected readonly agent = injectAgent();
 
   /**
@@ -212,4 +217,5 @@ export class DurableExecutionComponent {
       status: activeIndex < 0 ? 'pending' : i < activeIndex ? 'complete' : i === activeIndex ? 'active' : 'pending',
     }));
   });
+  // #endregion
 }
