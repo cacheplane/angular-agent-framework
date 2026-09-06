@@ -447,38 +447,21 @@
   font-size: 0.68rem;
   color: var(--color-text-muted);
   text-decoration: underline;
-  padding: 8px 4px;
+  padding: 8px 6px;
+  min-height: 24px;
 }
 .toast-mt-section {
   margin-top: 8px;
 }
-.toast-input {
-  width: 100%;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 8px 12px;
-  font-size: 0.82rem;
-  color: var(--color-text-primary);
-  font-family: var(--font-inter);
-  outline: none;
-  margin-bottom: 10px;
-}
-.toast-input:focus {
-  border-color: var(--color-accent);
-}
 .toast-download-link {
-  display: inline-block;
-  margin-top: 10px;
-  font-size: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  margin-top: 0;
+  font-size: 12px;
   color: var(--color-text-muted);
   text-decoration: underline;
   font-family: var(--font-inter);
-}
-.toast-success-text {
-  font-size: 0.85rem;
-  color: #1a7a40;
-  line-height: 1.5;
 }
 
 /* Mobile docs-search entry (polish arc PR 3) — button reset to match the

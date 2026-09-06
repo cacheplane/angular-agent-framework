@@ -269,47 +269,16 @@
     gap: 2px;
   }
 }
-.wp-success {
-  font-family: var(--font-inter);
-  font-size: var(--text-body);
-  color: #1a7a40;
-  margin-bottom: 16px;
-}
-.wp-success-link {
-  color: var(--color-accent);
-}
 .wp-form {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  max-width: 480px;
-}
-.wp-email-input {
-  flex: 1 1 240px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 12px 14px;
-  font-family: var(--font-inter);
-  font-size: var(--text-body);
-  color: var(--color-text-primary);
-  outline: none;
-}
-.wp-error {
-  margin-top: 12px;
-  color: var(--color-angular-red);
-  font-size: 14px;
-}
-.wp-error-link {
-  color: var(--color-accent);
+  max-width: 520px;
 }
 .wp-already {
-  margin-top: 12px;
+  margin-top: 4px;
   font-size: 13px;
   color: var(--color-text-muted);
   font-family: var(--font-inter);
 }
-.wp-already-link {
+.wp-already a {
   color: var(--color-accent);
   text-decoration: underline;
 }

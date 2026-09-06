@@ -1,17 +1,21 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import type { PublicFormPolicy } from '../../lib/growth/form-policy';
-import {
-  FORM_POLICY_REFRESH_MESSAGE,
-  growthFormRequestSnapshot,
-  type GrowthFormRequestSnapshot,
-} from '../../lib/growth/form-client';
+import { FORM_POLICY_REFRESH_MESSAGE } from '../../lib/growth/form-client';
 import { analyticsEvents } from '../../lib/analytics/events';
 import {
   track,
   trackWhitepaperDownloadClick,
 } from '../../lib/analytics/client';
 import { Button } from '../ui/Button';
+import {
+  Field,
+  FormStatus,
+  SubmitButton,
+  TextInput,
+  emailError,
+  useGrowthForm,
+} from '../form';
 
 /**
  * Bump this date to re-show the toast for all users.
@@ -32,12 +36,23 @@ export function AnnouncementToast({
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState<Step>('cta');
   const [email, setEmail] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const submissionSnapshot = useRef<GrowthFormRequestSnapshot<{
-    email: string;
-    paper: 'overview';
-  }> | null>(null);
+  const [emailMessage, setEmailMessage] = useState<string | null>(null);
   const disclosureId = 'toast-whitepaper-growth-disclosure';
+
+  const form = useGrowthForm<{ email: string; paper: 'overview' }>({
+    route: '/api/whitepaper-signup',
+    formPolicy,
+    events: {
+      submit: analyticsEvents.marketingWhitepaperSignupSubmit,
+      success: analyticsEvents.marketingWhitepaperSignupSuccess,
+      fail: analyticsEvents.marketingWhitepaperSignupFail,
+    },
+    analytics: {
+      surface: 'toast',
+      source_section: 'announcement-toast',
+      paper: 'overview',
+    },
+  });
 
   const [timerDone, setTimerDone] = useState(false);
   const [scrolledEnough, setScrolledEnough] = useState(false);
@@ -99,58 +114,27 @@ export function AnnouncementToast({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    setSubmitting(true);
-    track(analyticsEvents.marketingWhitepaperSignupSubmit, {
-      surface: 'toast',
-      source_section: 'announcement-toast',
-      paper: 'overview',
-    });
-    try {
-      const snapshot = growthFormRequestSnapshot(submissionSnapshot.current, {
-        email,
-        paper: 'overview' as const,
-      });
-      submissionSnapshot.current = snapshot;
-      const response = await fetch('/api/whitepaper-signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...snapshot.facts,
-          acquisition_session_id: snapshot.acquisition_session_id,
-          submission_id: snapshot.submission_id,
-          policy_version: formPolicy.version,
-        }),
-      });
-      if (response.status === 409) {
-        submissionSnapshot.current = null;
-        setStep('stale');
-        setSubmitting(false);
-        return;
-      }
-      if (response.status >= 400 && response.status < 500) {
-        submissionSnapshot.current = null;
-      }
-      submissionSnapshot.current = null;
-      track(analyticsEvents.marketingWhitepaperSignupSuccess, {
-        surface: 'toast',
-        source_section: 'announcement-toast',
-        paper: 'overview',
-      });
-    } catch {
-      track(analyticsEvents.marketingWhitepaperSignupFail, {
-        surface: 'toast',
-        source_section: 'announcement-toast',
-        paper: 'overview',
-        error_reason: 'api_error',
-      });
+  // Mirror the hook's terminal states onto the toast's step machine.
+  useEffect(() => {
+    if (form.status === 'sent') {
+      setStep('sent');
+      const id = setTimeout(dismiss, 4000);
+      return () => clearTimeout(id);
     }
-    setStep('sent');
-    setSubmitting(false);
-    // Auto-dismiss after showing success
-    setTimeout(dismiss, 4000);
+    if (form.status === 'stale') setStep('stale');
+    return undefined;
+    // dismiss is stable for the component's lifetime; intentionally omitted.
+  }, [form.status]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const problem = emailError(email);
+    setEmailMessage(problem);
+    if (problem) {
+      document.getElementById('toast-email')?.focus();
+      return;
+    }
+    void form.submit({ email: email.trim(), paper: 'overview' });
   };
 
   if (!visible) return null;
@@ -212,35 +196,65 @@ export function AnnouncementToast({
       )}
 
       {step === 'form' && (
-        <form onSubmit={handleSubmit} className="toast-mt-section">
-          <label htmlFor="toast-email" className="sr-only">
-            Email address
-          </label>
-          <input
-            id="toast-email"
-            type="email"
-            placeholder="Email address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            disabled={submitting}
-            autoFocus
-            className="toast-input"
-          />
-          <p id={disclosureId} className="toast-disclosure">
+        <form
+          onSubmit={handleSubmit}
+          className="toast-mt-section"
+          data-ui="form"
+          data-compact=""
+          noValidate
+        >
+          <Field id="toast-email" label="Work email" error={emailMessage}>
+            <TextInput
+              compact
+              type="email"
+              autoComplete="email"
+              inputMode="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (emailMessage) setEmailMessage(emailError(e.target.value));
+              }}
+              onBlur={() => setEmailMessage(emailError(email))}
+              disabled={form.status === 'pending'}
+              autoFocus
+            />
+          </Field>
+          <p id={disclosureId} data-ui="form-disclosure">
             {formPolicy.disclosures.whitepaper}
           </p>
           <div className="toast-button-row">
-            <Button
-              type="submit"
+            <SubmitButton
               variant="primary"
               size="md"
-              disabled={submitting || !email}
+              pending={form.status === 'pending'}
+              pendingLabel="Sending the guide…"
               aria-describedby={disclosureId}
             >
-              {submitting ? 'Sending...' : '↓ Send me the guide'}
-            </Button>
+              Get the field report
+            </SubmitButton>
           </div>
+          {form.status === 'failed' ? (
+            <FormStatus
+              tone="failure"
+              title="That did not send."
+              detail="You can still get the guide."
+            >
+              <a
+                href="/whitepaper.pdf"
+                download="angular-agent-readiness-guide.pdf"
+                onClick={() => {
+                  trackWhitepaperDownloadClick('overview', {
+                    surface: 'toast',
+                    source_section: 'announcement-toast',
+                    cta_id: 'toast_direct_download',
+                  });
+                  dismiss();
+                }}
+              >
+                Download the PDF directly
+              </a>
+            </FormStatus>
+          ) : null}
           <a
             href="/whitepaper.pdf"
             download="angular-agent-readiness-guide.pdf"
@@ -260,9 +274,12 @@ export function AnnouncementToast({
       )}
 
       {step === 'stale' && (
-        <div className="toast-mt-section" role="alert">
-          <p className="toast-disclosure">{FORM_POLICY_REFRESH_MESSAGE}</p>
-          <div className="toast-button-row">
+        <div className="toast-mt-section">
+          <FormStatus
+            tone="stale"
+            title="This page is out of date."
+            detail={FORM_POLICY_REFRESH_MESSAGE}
+          >
             <Button
               type="button"
               variant="primary"
@@ -271,16 +288,17 @@ export function AnnouncementToast({
             >
               Refresh page
             </Button>
-          </div>
+          </FormStatus>
         </div>
       )}
 
       {step === 'sent' && (
         <div className="toast-mt-section">
-          {/* role=status: the step swap is announced without stealing focus. */}
-          <p role="status" className="toast-success-text">
-            ✓ Check your inbox — the guide is on its way!
-          </p>
+          <FormStatus
+            tone="success"
+            title="Check your inbox."
+            detail="The guide is on its way."
+          />
         </div>
       )}
     </div>
