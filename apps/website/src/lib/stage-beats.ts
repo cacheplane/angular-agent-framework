@@ -37,32 +37,44 @@ export interface BeatWindow {
   to: number;
 }
 
-export function beatWindows(): BeatWindow[] {
-  let acc = 0;
-  return STAGE_BEATS.map((beat) => {
-    const from = acc / STAGE_SPAN;
-    acc += STAGE_SHARES[beat];
-    return { beat, from, to: acc / STAGE_SPAN };
-  });
+/** The act partitioned by the shares, built once: every helper below reads it per frame. */
+const WINDOWS: readonly Readonly<BeatWindow>[] = Object.freeze(
+  (() => {
+    let acc = 0;
+    return STAGE_BEATS.map((beat) => {
+      const from = acc / STAGE_SPAN;
+      acc += STAGE_SHARES[beat];
+      return Object.freeze({ beat, from, to: acc / STAGE_SPAN });
+    });
+  })()
+);
+const APPROVE_WINDOW = WINDOWS[STAGE_BEATS.indexOf('approve')];
+const LAST_WINDOW = WINDOWS[WINDOWS.length - 1];
+
+/** Act progress at which the approve hold ends and the recording resumes. */
+export const APPROVE_THRESHOLD_P =
+  APPROVE_WINDOW.from +
+  (APPROVE_WINDOW.to - APPROVE_WINDOW.from) * APPROVE_HOLD.to;
+
+export function beatWindows(): readonly Readonly<BeatWindow>[] {
+  return WINDOWS;
 }
 
 const clamp01 = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x);
 const lerp = (a: number, b: number, f: number) => a + (b - a) * f;
 
+function windowAt(q: number): Readonly<BeatWindow> {
+  return WINDOWS.find((x) => q < x.to) ?? LAST_WINDOW;
+}
+
 export function beatAt(p: number): StageBeat {
-  const q = clamp01(p);
-  const w =
-    beatWindows().find((x) => q < x.to) ??
-    beatWindows()[STAGE_BEATS.length - 1];
-  return w.beat;
+  return windowAt(clamp01(p)).beat;
 }
 
 /** Progress within the beat that owns `p`, 0..1. */
 function local(p: number): { beat: StageBeat; f: number } {
   const q = clamp01(p);
-  const w =
-    beatWindows().find((x) => q < x.to) ??
-    beatWindows()[STAGE_BEATS.length - 1];
+  const w = windowAt(q);
   return { beat: w.beat, f: clamp01((q - w.from) / (w.to - w.from)) };
 }
 
@@ -73,17 +85,19 @@ export function inHold(p: number): boolean {
 
 /** True when scroll moved forward across the approve threshold between two frames. */
 export function crossedThreshold(prevP: number, nextP: number): boolean {
-  const a = beatWindows()[2];
-  const th = a.from + (a.to - a.from) * APPROVE_HOLD.to;
-  return prevP < th && nextP >= th;
+  return prevP < APPROVE_THRESHOLD_P && nextP >= APPROVE_THRESHOLD_P;
 }
 
-/** Piecewise monotonic: recorded milliseconds at act progress `p`. */
+/**
+ * Piecewise monotonic: recorded milliseconds at act progress `p`.
+ * A beat the recording does not know degrades forward to the end of the
+ * recording rather than rewinding to the start.
+ */
 export function timeAt(p: number, ready: StageReadyMessage): number {
   if (p >= 1) return ready.totalMs;
   const { beat, f } = local(p);
   const b = ready.beats.find((x) => x.beat === beat);
-  if (!b) return 0;
+  if (!b) return ready.totalMs;
   switch (beat) {
     case 'persist': {
       const mid = ready.reloadEndMs;
@@ -123,7 +137,7 @@ export function timeAt(p: number, ready: StageReadyMessage): number {
  * the end (no leave ramp), the middle ones fade in and out inside their window.
  */
 export function cueFor(beat: StageBeat): string {
-  const w = beatWindows().find((x) => x.beat === beat)!;
+  const w = WINDOWS[STAGE_BEATS.indexOf(beat)];
   const fmt = (n: number) => String(+n.toFixed(4));
   if (beat === STAGE_BEATS[0]) return `0 ${fmt(w.to)} 0 0.3`;
   if (beat === STAGE_BEATS[STAGE_BEATS.length - 1])
@@ -131,12 +145,17 @@ export function cueFor(beat: StageBeat): string {
   return `${fmt(w.from)} ${fmt(w.to)}`;
 }
 
-/** Cue windows for the three hold lines inside the approve beat, spread across the hold range. */
+/**
+ * Cue windows for the hold lines inside the approve beat, spread across the
+ * hold range. The last cue overshoots the hold by 12% of the approve span so
+ * "Keep scrolling to approve" lingers past the threshold and the instruction
+ * is still readable as the resume begins.
+ */
 export function holdLineCues(count: number): string[] {
-  const a = beatWindows()[2];
+  const a = APPROVE_WINDOW;
   const span = a.to - a.from;
   const start = a.from + span * APPROVE_HOLD.from;
-  const end = a.from + span * APPROVE_HOLD.to;
+  const end = APPROVE_THRESHOLD_P;
   const slot = (end - start) / count;
   return Array.from({ length: count }, (_, i) => {
     const from = start + slot * i;
