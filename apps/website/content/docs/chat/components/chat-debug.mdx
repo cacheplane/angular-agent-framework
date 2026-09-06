@@ -16,7 +16,7 @@ import { ChatDebugComponent } from '@threadplane/chat/debug';
 
 ## What the demo does
 
-The Run tab mounts one component: `<chat-debug>` bound to a LangGraph agent. The panel keeps itself out of the layout — its host renders `display: contents`, and the launcher and the panel are both fixed-position — so the page shows nothing but a small round status pill in the top-right corner. Click the pill and the docked Chat Devtools panel opens, with a Timeline tab listing the agent's checkpoints and a State tab pretty-printing the agent's current state under a Copy button.
+The Run tab mounts `<chat-debug>`, bound to a LangGraph agent, inside the shared example layout shell, `<example-chat-layout>`, which contributes only a full-height background. The panel keeps itself out of the layout — its host renders `display: contents`, and the launcher and the panel are both fixed-position — so the page shows nothing but a small round status pill in the top-right corner. Click the pill and the docked Chat Devtools panel opens, with a Timeline tab listing the agent's checkpoints and a State tab pretty-printing the agent's current state under a Copy button. Pressing Escape or clicking outside the panel closes it.
 
 The demo mounts no chat composition beside the panel, so there is no composer on the page and the Timeline tab shows its empty state: "No checkpoints yet. Send a message to populate the timeline." Everything else is live. The dock buttons in the header move the panel between the left, bottom and right edges, and the choice is persisted, as is the open state and the selected tab.
 
@@ -60,7 +60,7 @@ provideChat({}),
 
 ### Mounting the panel
 
-The component is a template and one field. `injectAgent()` returns the agent registered above, and it is handed straight to `[agent]`. Nothing else is bound, so the panel runs on its defaults: docked right, closed on first load, with the floating launcher visible.
+The component wraps `<chat-debug>` in `<example-chat-layout>` and binds one field. `injectAgent()` returns the agent registered above, and it is handed straight to `[agent]`. Nothing else is bound, so the panel runs on its defaults: docked right, closed on first load, with the floating launcher visible.
 
 <ExampleCode file="debug.component.ts" />
 
@@ -70,8 +70,8 @@ The agent returned by `injectAgent()` exposes a `history()` signal as well as `s
 
 | Input | Type | Default | Description |
 | --- | --- | --- | --- |
-| `agent` | `DebugAgent \| DebugAgentWithHistory \| null` | `null` | Agent to inspect. Nothing renders while this is `null`. An agent that also exposes `history()` enables the Timeline tab. |
-| `dock` | `'right' \| 'bottom' \| 'left'` | `'right'` | Initial dock position, used when no persisted position exists. |
+| `agent` | `DebugAgent \| DebugAgentWithHistory \| null` | `null` | Agent to inspect. The panel renders nothing while this is `null`; the floating launcher still appears, but opening it shows no content. An agent that also exposes `history()` enables the Timeline tab. |
+| `dock` | `'right' \| 'bottom' \| 'left'` | `'right'` | Initial dock position, used when no persisted position exists. When a sibling `<chat-sidebar>` is on the page and the user has not clicked a dock button this session, an auto-dock effect forces `bottom` on open. |
 | `defaultOpen` | `boolean` | `false` | Initial open state, used when no persisted state exists. |
 | `launcher` | `'floating' \| 'none'` | `'floating'` | Shows the built-in floating launcher, or hides it when another surface opens the panel. |
 | `storageKey` | `string` | `'chat-debug'` | Local storage key prefix for the persisted open, dock and tab state. |
