@@ -8,7 +8,7 @@ AG-UI carries subagent activity as first-class events. When an agent delegates, 
 
 ## What the demo does
 
-The Run tab shows the prebuilt `<chat>` composition in front of an orchestrator agent served over AG-UI. There are no starter suggestions here, so type a trip request: "Plan a trip from LAX to JFK" is the shortest one that works, and "I want to fly from Boston to Miami next week" is the other example the system prompt names. If the request is missing an origin or a destination, the orchestrator asks a clarifying question before it delegates anything.
+The Run tab shows the prebuilt `<chat>` composition in front of an orchestrator agent served over AG-UI. There are no starter suggestions here, so type a trip request. Give it the trip details up front, for example "Plan a trip from LAX to JFK, one adult, economy, departing next Tuesday morning and returning Friday evening", because a bare origin-and-destination request usually earns a clarifying question about dates before it delegates anything. If the request is ambiguous, for example it does not mention airports, the orchestrator asks a clarifying question before delegating.
 
 Once it has both airports, the prompt tells it to call the `task` tool three times in a fixed order: research, then booking, then itinerary. Each dispatch appears inline in the transcript as a card carrying that specialist's own answer, streamed token by token inside the card rather than into the parent bubble. The card header shows the role name, the identifier of the tool call it belongs to, a status badge, and a message count.
 
@@ -16,7 +16,7 @@ While a specialist works, its card is expanded and the badge reads `running`. Wh
 
 ## How it is built
 
-Four files carry the feature: a LangGraph graph with a single delegation tool, a FastAPI server that translates the graph's private events into the protocol's subagent events, an application config that registers the agent, and a component that mounts the chat. Open the Code tab to read them in place.
+Four files carry the feature in the Code tab: a LangGraph graph with a single delegation tool, a FastAPI server that mounts the agent, an application config that registers it, and a component that mounts the chat. A fifth file next to the server, `streaming/subagent_emitting_agent.py`, holds the translation from the graph's private events into the protocol's subagent events.
 
 ### Running a specialist as a child LLM
 
@@ -42,8 +42,8 @@ The graph itself is the standard shape: a model node that may emit tool calls, a
 
 The third node, `generate_title`, is unrelated to delegation; it summarizes the first user message into a thread title and swallows its own errors.
 
-<Callout type="warning" title="MemorySaver is a development choice">
-This graph compiles with an in-memory checkpointer, which loses every thread when the process restarts. A deployment that must survive a restart needs a durable saver, such as the Postgres checkpointer, behind the same `checkpointer=` argument.
+<Callout type="warning" title="A checkpointer is required, not optional">
+The bridge reads thread state through `graph.aget_state`, so a compiled graph without a checkpointer cannot be served at all. `MemorySaver` satisfies that but loses every thread when the process restarts; a deployment that must survive a restart needs a durable saver, such as the Postgres checkpointer, behind the same `checkpointer=` argument.
 </Callout>
 
 ### Serving the graph over AG-UI
@@ -56,7 +56,7 @@ The subclass wraps the bridge's `run()` generator, which is the async generator 
 
 ### From custom events to subagent events
 
-The graph cannot reach the wire directly. Its `subagent_activity` events travel out as AG-UI `CUSTOM` events, and the subclass consumes each one and yields typed protocol events in its place. Every other event passes through untouched. Writing `tid` for the `task` call identifier, the expansion is:
+The graph cannot reach the wire directly. Its `subagent_activity` events travel out as AG-UI `CUSTOM` events, and the subclass consumes each one and yields typed protocol events in its place. Every other event passes through untouched. This translation lives in `streaming/subagent_emitting_agent.py`, next to the server rather than in the Code tab. Writing `tid` for the `task` call identifier, the expansion is:
 
 | phase | emitted event |
 | --- | --- |
@@ -66,7 +66,7 @@ The graph cannot reach the wire directly. Its `subagent_activity` events travel 
 | `finished` | `TEXT_MESSAGE_END` for the open child message, then `SUBAGENT_FINISHED` with a success outcome |
 | `error` | `TEXT_MESSAGE_END` for the open child message, then `SUBAGENT_ERROR` carrying the message |
 
-One phase can therefore produce two events, which is why the seam is the `run()` generator rather than a one-event-in, one-event-out hook. Unknown phases and malformed payloads are logged and dropped.
+One phase can therefore produce two events, which is why the seam is the `run()` generator rather than a one-event-in, one-event-out hook. Unknown phases are logged and dropped; a message phase with no text is dropped silently.
 
 <Callout type="info" title="Only typed events may be yielded">
 The AG-UI encoder serializes pydantic `ag_ui.core` event classes, so the subclass constructs `SubagentStartedEvent`, `TextMessageStartEvent` and friends. Yielding a raw dictionary from that generator breaks the stream.
@@ -74,11 +74,11 @@ The AG-UI encoder serializes pydantic `ag_ui.core` event classes, so the subclas
 
 ### The agent provider
 
-`provideAgent()` registers the agent once for the whole application, and `provideChat({})` registers the configuration the `<chat>` composition reads, here left at its defaults. Nothing in either provider is subagent-specific. The example passes a factory because it resolves its endpoint at runtime from the host that serves the demo.
+`provideAgent()` registers the agent once for the whole application, and `provideChat({})` registers the configuration the `<chat>` composition reads, here left at its defaults. Nothing in either provider is subagent-specific. The example passes a factory because it resolves its endpoint at runtime from the host that serves the demo. Your own application does not need the factory.
 
 <ExampleCode file="app.config.ts" />
 
-Your own application does not need the factory. Pass the URL of your AG-UI endpoint directly:
+Pass the URL of your AG-UI endpoint directly:
 
 ```typescript
 provideAgent({
@@ -108,7 +108,7 @@ The `<chat-subagents>` primitive renders the same cards as a standalone list, fi
 
 ## What crosses the wire
 
-One delegation round, captured against this backend with the deltas elided, looks like this:
+One delegation round, captured against this backend with the deltas and the bridge's own step and RAW events elided, looks like this:
 
 ```text
 TOOL_CALL_START       toolCallId: call_CN5…, toolCallName: task
@@ -126,11 +126,11 @@ Two details are worth keeping. The tool call is fully announced — start, argum
 
 ## Cross-adapter parity
 
-The consumer Angular code is the same against a LangGraph deployment except for the import:
+The consumer Angular code is the same; moving this component to a LangGraph deployment changes one import.
 
 ```diff
-- import { injectAgent } from '@threadplane/langgraph';
-+ import { injectAgent } from '@threadplane/ag-ui';
+- import { injectAgent } from '@threadplane/ag-ui';
++ import { injectAgent } from '@threadplane/langgraph';
 ```
 
 Both adapters project their own delegation traffic onto the same `subagents()` signal of runtime-neutral wrappers, and `<chat>` renders whichever it is given. What differs is how the delegation is identified: this example emits protocol subagent events explicitly from a bridge subclass, while the LangGraph adapter recognizes a dispatch tool by name and matches the child run's own namespace.
