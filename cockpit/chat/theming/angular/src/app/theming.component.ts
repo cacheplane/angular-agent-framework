@@ -4,6 +4,7 @@ import { ChatComponent } from '@threadplane/chat';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
 import { injectAgent } from '@threadplane/langgraph';
 
+// #region theme-presets
 const THEMES: Record<string, Record<string, string>> = {
   dark: {
     '--tplane-chat-bg': '#171717',
@@ -46,6 +47,7 @@ const THEMES: Record<string, Record<string, string>> = {
     '--tplane-chat-text-muted': '#6b8f6b',
   },
 };
+// #endregion
 
 /**
  * ThemingComponent demonstrates chat theming with CSS custom properties.
@@ -57,6 +59,7 @@ const THEMES: Record<string, Record<string, string>> = {
   standalone: true,
   imports: [ChatComponent, ExampleChatLayoutComponent, TitleCasePipe],
   template: `
+    <!-- #region theme-picker -->
     <example-chat-layout sidebarWidth="18rem">
       <chat main [agent]="agent" class="flex-1 min-w-0" />
       <div sidebar class="panel">
@@ -86,6 +89,7 @@ const THEMES: Record<string, Record<string, string>> = {
         </div>
       </div>
     </example-chat-layout>
+    <!-- #endregion -->
   `,
   styles: [`
     .panel {
@@ -157,6 +161,7 @@ const THEMES: Record<string, Record<string, string>> = {
     }
   `],
 })
+// #region apply-theme
 export class ThemingComponent {
   protected readonly agent = injectAgent();
 
@@ -172,3 +177,4 @@ export class ThemingComponent {
     });
   }
 }
+// #endregion
