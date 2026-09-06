@@ -12,6 +12,33 @@ beforeEach(() => {
 });
 
 describe('configured company capture', () => {
+  it('preserves diagnostics even when logging fails and isolates observer failures', async () => {
+    const diagnostic = {
+      provider: 'firecrawl' as const,
+      outcome: 'captured' as const,
+    };
+    const observer = vi.fn(() => {
+      throw new Error('observer failed');
+    });
+    const log = vi.spyOn(console, 'info').mockImplementation(() => {
+      throw new Error('log failed');
+    });
+    managed.mockImplementation(async (_domain, _signal, options) => {
+      options.onDiagnostic(diagnostic);
+      return [];
+    });
+    try {
+      await expect(
+        createCompanyCapture(
+          { COMPANY_SCRAPER_SECRET: 'fixture-key' },
+          observer
+        )('example.com', new AbortController().signal)
+      ).resolves.toEqual([]);
+      expect(observer).toHaveBeenCalledWith(diagnostic);
+    } finally {
+      log.mockRestore();
+    }
+  });
   it('uses Firecrawl without a provider selector', async () => {
     const signal = new AbortController().signal;
     await createCompanyCapture({

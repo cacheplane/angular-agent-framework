@@ -18,6 +18,7 @@ export const SCOPE_KEYS = [
   'posthog',
   'scripts_tests',
   'growth_lifecycle',
+  'growth_research',
 ];
 
 const GLOBAL_CI_FILES = new Set([
@@ -74,6 +75,7 @@ const LINT_SCOPE_KEYS = [
   'website',
   'examples_chat',
   'growth_lifecycle',
+  'growth_research',
 ];
 
 /** The per-product `matrix.spec.ts` / `footprint.spec.ts` files sit at

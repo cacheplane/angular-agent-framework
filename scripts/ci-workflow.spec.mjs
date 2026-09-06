@@ -840,17 +840,43 @@ describe('CI workflow', () => {
     );
   });
 
-  it('requires both Growth and Lifecycle success whenever their shared scope is active', async () => {
-    const job = await readRequiredPrChecksJob();
-    assert.ok(readJobNeeds(job).includes('growth-lifecycle'));
-    assert.ok(readJobNeeds(job).includes('lifecycle'));
+  it('exports Growth Research scope and verifies it under Node 24 without paid credentials', async () => {
+    const workflow = await readWorkflow();
+    const scope = readJobBlock(workflow, 'ci-scope');
+    const job = readJobBlock(workflow, 'growth-research');
+    assert.match(
+      scope,
+      /growth_research:\s*\$\{\{ steps\.scope\.outputs\.growth_research \}\}/
+    );
+    assert.deepEqual(readJobNeeds(job), ['ci-scope']);
     assert.match(
       job,
-      /RESULT_LIFECYCLE:\s*\$\{\{\s*needs\.lifecycle\.result\s*\}\}/
+      /if: github\.event_name == 'push' \|\| needs\.ci-scope\.outputs\.growth_research == 'true'/
+    );
+    assert.match(job, /node-version:\s*24(?:\s|$)/m);
+    assert.match(job, /run: npm ci --ignore-scripts(?:\s|$)/m);
+    for (const target of ['lint', 'test', 'check', 'build']) {
+      assert.match(
+        job,
+        new RegExp(`run: npx nx ${target} growth-research(?:\\s|$)`, 'm')
+      );
+    }
+    assert.doesNotMatch(
+      job,
+      /secrets\.|research-pilot|smoke-langsmith|test-memory-integration/
+    );
+  });
+
+  it('requires Growth Research success whenever it is in scope', async () => {
+    const job = await readRequiredPrChecksJob();
+    assert.ok(readJobNeeds(job).includes('growth-research'));
+    assert.match(
+      job,
+      /RESULT_GROWTH_RESEARCH:\s*\$\{\{\s*needs\.growth-research\.result\s*\}\}/
     );
     assert.match(
       job,
-      /SCOPE_GROWTH_LIFECYCLE:\s*\$\{\{\s*needs\.ci-scope\.outputs\.growth_lifecycle\s*\}\}/
+      /SCOPE_GROWTH_RESEARCH:\s*\$\{\{\s*needs\.ci-scope\.outputs\.growth_research\s*\}\}/
     );
     const step = readNamedStep(job, 'Verify scoped CI jobs');
     const script = step
@@ -863,33 +889,26 @@ describe('CI workflow', () => {
       environment[key] = key.startsWith('RESULT_') ? 'skipped' : 'false';
     }
     environment.RESULT_CI_SCOPE = 'success';
-    for (const requiredResult of [
-      'RESULT_GROWTH_LIFECYCLE',
-      'RESULT_LIFECYCLE',
+    for (const [scope, result, expected] of [
+      ['true', 'success', 0],
+      ['true', 'failure', 1],
+      ['true', 'skipped', 1],
+      ['true', 'cancelled', 1],
+      ['false', 'skipped', 0],
     ]) {
-      for (const [scope, result, expected] of [
-        ['true', 'success', 0],
-        ['true', 'failure', 1],
-        ['true', 'skipped', 1],
-        ['true', 'cancelled', 1],
-        ['false', 'skipped', 0],
-      ]) {
-        const run = spawnSync('bash', ['-c', script], {
-          encoding: 'utf8',
-          env: {
-            ...environment,
-            SCOPE_GROWTH_LIFECYCLE: scope,
-            RESULT_GROWTH_LIFECYCLE: 'success',
-            RESULT_LIFECYCLE: 'success',
-            [requiredResult]: result,
-          },
-        });
-        assert.equal(
-          run.status,
-          expected,
-          `${requiredResult}: scope=${scope}, result=${result}: ${run.stdout}\n${run.stderr}`
-        );
-      }
+      const run = spawnSync('bash', ['-c', script], {
+        encoding: 'utf8',
+        env: {
+          ...environment,
+          SCOPE_GROWTH_RESEARCH: scope,
+          RESULT_GROWTH_RESEARCH: result,
+        },
+      });
+      assert.equal(
+        run.status,
+        expected,
+        `scope=${scope}, result=${result}: ${run.stdout}\n${run.stderr}`
+      );
     }
   });
 
@@ -913,6 +932,7 @@ describe('CI workflow', () => {
       'scripts-tests',
       'growth-lifecycle',
       'lifecycle',
+      'growth-research',
     ];
 
     assert.match(requiredPrChecksJob, /name:\s*CI — required/);
