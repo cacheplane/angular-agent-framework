@@ -34,7 +34,7 @@ export interface StageRecording {
   readonly histories: readonly StageHistorySnapshot[];
 }
 
-const KINDS = new Set(['submit', 'resume', 'reload']);
+const KINDS = new Set<StageAction['kind']>(['submit', 'resume', 'reload']);
 
 /** Throws a readable error when the fixture is not a usable recording. */
 export function validateStageRecording(input: unknown): StageRecording {
@@ -44,10 +44,20 @@ export function validateStageRecording(input: unknown): StageRecording {
   if (typeof rec.threadId !== 'string' || !rec.threadId) throw new Error('stage recording needs a threadId');
   if (!Array.isArray(rec.runs) || rec.runs.length === 0) throw new Error('stage recording needs runs');
   if (!Array.isArray(rec.histories)) throw new Error('stage recording needs histories');
+  (rec.histories as readonly Partial<StageHistorySnapshot>[]).forEach((h: Partial<StageHistorySnapshot>, k: number) => {
+    if (typeof h.afterRun !== 'number' || !Number.isInteger(h.afterRun) || h.afterRun < 0) {
+      throw new Error(`history ${k} has no numeric afterRun`);
+    }
+    if (!Array.isArray(h.states)) throw new Error(`history ${k} has no states array`);
+  });
   const beatsSeen: StageBeat[] = [];
   rec.runs.forEach((run: Partial<StageRun>, i: number) => {
     if (!run.beat || !(STAGE_BEATS as readonly string[]).includes(run.beat)) throw new Error(`run ${i} has no beat`);
     if (!run.action || !KINDS.has(run.action.kind)) throw new Error(`run ${i} has no action`);
+    if (run.action.kind === 'submit' && run.action.checkpointIndex !== undefined
+        && (!Number.isInteger(run.action.checkpointIndex) || run.action.checkpointIndex < 0)) {
+      throw new Error(`run ${i} has a bad checkpointIndex`);
+    }
     if (!Array.isArray(run.events)) throw new Error(`run ${i} has no events`);
     if (run.events.length === 0 && run.action.kind !== 'reload') throw new Error(`run ${i} has no events`);
     (run.events as readonly Partial<RecordedEvent>[]).forEach((e: Partial<RecordedEvent>, j: number) => {
