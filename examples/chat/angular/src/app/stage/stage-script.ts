@@ -17,12 +17,13 @@ export const STAGE_PROMPTS = {
 export interface StageScriptHost {
   beginRun(beat: StageBeat, action: StageAction): void;
   /**
-   * Must not resolve until the agent reports it is running: `submit()` is
-   * asynchronous, so a host that resolves early lets the script's
-   * `waitFor(!isRunning())` fall through before the run has even started.
+   * Resolves once the run has CLOSED and its closing history refresh has
+   * landed. Resolving any earlier lets the script start the next run while
+   * the refresh is in flight, which cancels it and leaves this run without a
+   * history snapshot for the replay to serve.
    */
   submit(message: string, checkpointIndex?: number): Promise<void>;
-  /** Must not resolve until the agent reports it is running (see `submit`). */
+  /** Same contract as `submit`. */
   resume(value: string): Promise<void>;
   reload(): Promise<void>;
   isRunning(): boolean;

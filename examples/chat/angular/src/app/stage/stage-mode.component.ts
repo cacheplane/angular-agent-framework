@@ -412,17 +412,32 @@ export class StageMode {
     const rec = this.recording;
     if (!rec) return;
     const agent = this.agent;
+    // A run is only "done" for the recording once its closing history refresh
+    // has landed: the bridge refreshes history after a run closes, and a next
+    // run started before that lands cancels the refresh, leaving the previous
+    // run without a snapshot for the replay's getHistory() to serve. A run
+    // that closes on an interrupt is the exception — the bridge finalizes it
+    // as the interrupt arrives and skips the refresh, in replay as in record.
+    const settle = async (run: Promise<unknown>): Promise<void> => {
+      const before = rec.recording().histories.length;
+      await waitUntil(() => agent.isLoading(), RUN_START_CAP_MS);
+      await run;
+      await waitUntil(
+        () =>
+          !agent.isThreadLoading() &&
+          (rec.recording().histories.length > before || !!agent.interrupt?.()),
+        RELOAD_CAP_MS,
+      );
+    };
     const host: StageScriptHost = {
       beginRun: (beat, action) => rec.beginRun(beat, action),
       submit: async (message, checkpointIndex) => {
         const checkpointId =
           checkpointIndex !== undefined ? agent.history()[checkpointIndex]?.id : undefined;
-        void agent.submit({ message }, checkpointId ? ({ checkpointId } as never) : undefined);
-        await waitUntil(() => agent.isLoading(), RUN_START_CAP_MS);
+        await settle(agent.submit({ message }, checkpointId ? ({ checkpointId } as never) : undefined));
       },
       resume: async (value) => {
-        void agent.submit(null, { command: { resume: value } } as never);
-        await waitUntil(() => agent.isLoading(), RUN_START_CAP_MS);
+        await settle(agent.submit(null, { command: { resume: value } } as never));
       },
       reload: async () => {
         // The reload's snapshot is stamped with the run count at the moment
