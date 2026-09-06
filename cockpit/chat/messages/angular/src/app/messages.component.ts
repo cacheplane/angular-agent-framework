@@ -73,7 +73,7 @@ import { MESSAGES_AGENT, type MessagesState } from './agent-ref';
         <div class="input-strip">
           <!-- #region input-strip -->
           <chat-typing-indicator [agent]="agent" />
-          <chat-input [agent]="agent" (submitted)="submitMessage($event)" />
+          <chat-input [agent]="agent" />
           <!-- #endregion -->
         </div>
       </section>
@@ -165,8 +165,4 @@ export class MessagesComponent {
   protected readonly messageContent = messageContent;
   protected readonly markdownDocument = markdownDocument;
   // #endregion
-
-  submitMessage(content: string) {
-    this.agent.submit({ message: content });
-  }
 }

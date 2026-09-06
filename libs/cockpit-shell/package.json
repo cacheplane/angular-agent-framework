@@ -15,7 +15,6 @@
   "private": true,
   "dependencies": {
     "@threadplane/cockpit-registry": "*",
-    "marked": "^15.0.0",
     "shiki": "^4.0.2"
   }
 }

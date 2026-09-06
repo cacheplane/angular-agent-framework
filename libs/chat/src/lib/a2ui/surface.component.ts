@@ -75,8 +75,9 @@ import type { A2uiViews } from './views';
 })
 /**
  * Renders an A2UI surface. Supports two input shapes:
- * - `state` (preferred): chat-side `A2uiSurfaceState` driving progressive
- *   per-component rendering via `a2uiSlot` + readiness gates.
+ * - `state` (preferred): chat-side `A2uiSurfaceState`, converted to a
+ *   json-render spec whose `$bindState` props defer each component until
+ *   its data has arrived.
  * - `surface` (legacy): wire-format `A2uiSurface` fed into `<render-spec>`;
  *   kept for backwards compatibility.
  *
@@ -172,9 +173,9 @@ export class A2uiSurfaceComponent {
    *  (`childKeys: el.children`) so catalog components receive the
    *  inputs they actually declare.
    *
-   *  This supersedes the earlier slot-based progressive renderer,
-   *  which mounted root components but never populated their
-   *  childKeys input — leaving Columns/Rows/etc. with no children. */
+   *  An earlier slot-based progressive renderer mounted root components
+   *  but never populated their childKeys input, leaving Columns/Rows/etc.
+   *  with no children; the spec conversion replaced it. */
   readonly spec = computed(() => {
     const surf = this.state()?.surface ?? this.surface();
     return surf && surf.components.size > 0 ? surfaceToSpec(surf) : null;
