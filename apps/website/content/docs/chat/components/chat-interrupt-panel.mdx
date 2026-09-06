@@ -4,7 +4,7 @@ description: How the interrupts example pauses a flight booking at interrupt() a
 
 # ChatInterruptPanelComponent
 
-`ChatInterruptPanelComponent` is a composition that renders an inline card whenever the agent is waiting on a human decision. It reads the pending interrupt off the agent, prints the payload, and offers four buttons: Accept, Edit, Respond, and Ignore. It emits which one was clicked and nothing else, so the resume payload stays yours to choose. The running example is a flight booking that pauses before it completes, and this page walks the four files behind it.
+`ChatInterruptPanelComponent` is a composition that renders an inline card whenever the agent is waiting on a human decision. It reads the pending interrupt off the agent, prints a summary of the payload, and offers four buttons: Accept, Edit, Respond, and Ignore. It emits which one was clicked and nothing else, so the resume payload stays yours to choose. The running example is a flight booking that pauses before it completes, and this page walks the four files behind it.
 
 **Selector:** `chat-interrupt-panel`
 
@@ -29,7 +29,7 @@ Four files carry the feature: a Python tool that pauses, the graph that runs it,
 The tool accepts any resume value that starts with `confirm` and treats everything else as a cancellation, which is why the client can answer with a bare string.
 
 <Callout type="warning" title="A resumed tool runs again from the top">
-LangGraph resumes by re-executing the interrupting call, and `interrupt()` returns the resume value rather than pausing a second time. The flight lookup above therefore runs twice. Keep that stretch free of side effects: reading data is safe, charging a card there is not.
+LangGraph resumes by running the interrupting task again, and `interrupt()` returns the resume value rather than pausing a second time. The flight lookup above therefore runs twice. Keep that stretch free of side effects: reading data is safe, charging a card there is not.
 </Callout>
 
 ### The graph around it
@@ -51,7 +51,7 @@ Your own application does not need the factory. Pass the values directly:
 ```typescript
 provideAgent({
   apiUrl: 'https://your-deployment.langgraph.app',
-  assistantId: 'chat-interrupts',
+  assistantId: 'c-interrupts',
 });
 ```
 
@@ -136,8 +136,9 @@ The panel reads these from the chat theme:
 | `--tplane-chat-surface` | Card background |
 | `--tplane-chat-separator` | Card border and the Edit and Respond button borders |
 | `--tplane-chat-radius-card` | Card corner radius |
-| `--tplane-chat-warning-text` | The "Agent paused" eyebrow and its dot |
-| `--tplane-chat-text` | Payload text and the Edit and Respond button labels |
+| `--tplane-chat-warning-text` | The "Agent paused — review needed" eyebrow and its dot |
+| `--tplane-chat-text` | The card's text color, the payload text, and the Edit and Respond button labels |
+| `--tplane-chat-font-size-sm` | The card's base font size, inherited by the payload text |
 | `--tplane-chat-primary` | Accept button background |
 | `--tplane-chat-on-primary` | Accept button label |
 | `--tplane-chat-radius-button` | Button corner radius |
@@ -167,7 +168,7 @@ summaryOf(interrupt: AgentInterrupt): string {
 }
 ```
 
-The same module exports the reader both components use:
+The primitive's module exports the same read as a standalone function:
 
 ```typescript
 import { getInterrupt } from '@threadplane/chat';
