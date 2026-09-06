@@ -14,15 +14,9 @@ import {
  * against the capability's declared assets by the same rule the component
  * uses at build time. Docs-only pages never include.
  *
- * PENDING_PAGES lists mapped pages not yet rewritten. Each product PR removes
- * its pages; a page that gains an include must leave the list in the same PR.
- *
  * The scan is textual: the tag must not appear in prose, fenced code, or MDX
  * comments on any docs page, or it counts as an include.
  */
-const PENDING_PAGES = new Set<string>([
-]);
-
 const findWorkspaceRoot = (): string => {
   let directory = process.cwd();
   while (directory !== resolve(directory, '..')) {
@@ -111,26 +105,13 @@ describe('docs pages teach through their example', () => {
     }
   });
 
-  it('lists only mapped pages as pending, and none that already include', () => {
-    for (const pending of PENDING_PAGES) {
-      expect(mappedPaths.has(pending), `${pending} is not a mapped page`).toBe(
-        true
-      );
-      expect(
-        includesIn(mdxFor(pending)),
-        `${pending} includes code; remove it from PENDING_PAGES`
-      ).toEqual([]);
-    }
-  });
-
-  it('includes at least one example file on every rewritten mapped page', () => {
+  it('includes at least one example file on every mapped page', () => {
     const missing = pages
-      .filter((page) => !PENDING_PAGES.has(page.docsPath))
       .filter((page) => includesIn(mdxFor(page.docsPath)).length === 0)
       .map((page) => page.docsPath);
     expect(
       missing,
-      'mapped pages with no <ExampleCode>; rewrite them or add them to PENDING_PAGES'
+      'mapped pages with no <ExampleCode>; every mapped page teaches through its example'
     ).toEqual([]);
   });
 
