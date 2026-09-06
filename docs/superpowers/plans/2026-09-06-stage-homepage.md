@@ -1044,7 +1044,9 @@ export function StageAct({ onFallback }: Props) {
     let cancelled = false;
     void import('../../vendor/scrollcraft/scrollcraft.js').then(() => {
       if (cancelled || !sectionRef.current || !window.ScrollCraft) return;
-      window.ScrollCraft.mount(sectionRef.current);
+      // Mount on the act's PARENT: the engine collects acts with
+      // root.querySelectorAll('[data-sc-act]'), which matches descendants only.
+      window.ScrollCraft.mount(engineRoot(sectionRef.current));
     });
     return () => { cancelled = true; };
   }, []);

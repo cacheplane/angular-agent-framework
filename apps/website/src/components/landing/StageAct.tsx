@@ -22,6 +22,27 @@ import {
 const READY_TIMEOUT_MS = 8000;
 const POSTER = '/screenshots/stage-stream.webp';
 
+/**
+ * Where the engine mounts. `ScrollCraft.mount(root)` collects acts with
+ * `root.querySelectorAll('[data-sc-act]')`, which matches descendants only —
+ * mounting on the section itself (which IS the act) finds zero acts. So the
+ * engine mounts on the act's parent; `document` when it has none.
+ */
+export const engineRoot = (act: HTMLElement): Element | Document =>
+  act.parentElement ?? document;
+
+/**
+ * Roots the engine has already been mounted on. The engine has no unmount
+ * API: once mounted, its rAF loop and scroll/resize listeners run for the
+ * life of the page, even after `onFallback` swaps the section out for the
+ * stills (they then tick against a detached act — benign, but every extra
+ * mount adds another loop, unbounded). Today only one mount happens anyway:
+ * StrictMode runs effect → cleanup → effect synchronously, and the `cancelled`
+ * flag drops the first effect's import continuation before it reaches
+ * `mount`. This WeakSet is the guard that does not depend on that ordering.
+ */
+const mountedRoots = new WeakSet<Element | Document>();
+
 interface Props {
   onFallback: () => void;
 }
@@ -53,14 +74,20 @@ export function StageAct({ onFallback }: Props) {
     let cancelled = false;
     void import('../../vendor/scrollcraft/scrollcraft.js').then(() => {
       if (cancelled || !sectionRef.current || !window.ScrollCraft) return;
-      window.ScrollCraft.mount(sectionRef.current);
+      const root = engineRoot(sectionRef.current);
+      if (mountedRoots.has(root)) return;
+      mountedRoots.add(root);
+      window.ScrollCraft.mount(root);
     });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  // Ready timeout → the stills.
+  // Ready timeout → the stills. A `ready` message that fails the publisher's
+  // shape check (an older `/stage` build without `hold`/`reloadEndMs`) is
+  // ignored, so this timeout drops to the stills — the intended degradation
+  // while the demo and the website deploy minutes apart.
   useEffect(() => {
     if (ready) return;
     const t = setTimeout(() => onFallbackRef.current(), READY_TIMEOUT_MS);
@@ -92,6 +119,11 @@ export function StageAct({ onFallback }: Props) {
       data-state={ready ? 'ready' : 'mounting'}
       aria-labelledby="stage-heading"
     >
+      {/* The rail cues are hidden by opacity only, so their CTAs are taken
+          out of the tab order (below) and the pin is skippable as a whole. */}
+      <a className="stage-skip" href="#stage-end">
+        Skip the stage
+      </a>
       <div className="stage-pin" data-sc-stage>
         <Container className="stage-pin-inner">
           <div className="stage-frame">
@@ -165,7 +197,11 @@ export function StageAct({ onFallback }: Props) {
                     </div>
                   ))}
                 </div>
-                <Link href={b.cta.href} className="feature-block-cta">
+                <Link
+                  href={b.cta.href}
+                  className="feature-block-cta"
+                  tabIndex={-1}
+                >
                   {b.cta.label} →
                 </Link>
               </div>

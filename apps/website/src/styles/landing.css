@@ -1416,6 +1416,33 @@
   opacity: 0;
   will-change: opacity, transform;
 }
+/* Keyboard path: the pin holds ~six viewports of scroll with nothing to tab
+ * through, so the first focusable in the act skips past it. Hidden until
+ * focused, then pinned to the top-left of the act. */
+.stage-skip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  z-index: 2;
+}
+.stage-skip:focus {
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  clip-path: none;
+  padding: 10px 14px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
 
 /* Shared rail for the three CodeShowcase intros — the last centered kicker
  * grammar, unified with the sitewide rail anatomy. */
