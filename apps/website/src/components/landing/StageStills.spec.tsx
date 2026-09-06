@@ -71,10 +71,11 @@ describe('StageStills', () => {
     ).toBe(STAGE_CLOSE.cta.href);
     expect(close.querySelector('.stage-trust')).not.toBeNull();
     // The stills are the no-JS and phone form: nothing here is hidden, so
-    // nothing is taken out of the tab order.
-    document
-      .querySelectorAll('section#stage a')
-      .forEach((a) => expect(a.hasAttribute('tabindex')).toBe(false));
+    // nothing is taken out of the tab order. Four beat docs links, four
+    // ledger links, one CTA.
+    const anchors = document.querySelectorAll('section#stage a');
+    expect(anchors).toHaveLength(4 + 4 + 1);
+    anchors.forEach((a) => expect(a.hasAttribute('tabindex')).toBe(false));
   });
 
   it('is the section the act replaces, with its anchors', () => {

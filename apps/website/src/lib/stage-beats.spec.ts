@@ -213,8 +213,8 @@ describe('holdCue / closeCue', () => {
     const parts = closeCue().split(' ');
     expect(parts).toHaveLength(4);
     expect(Number(parts[0])).toBeCloseTo(settleAt('render'), 4);
-    expect(parts.slice(1).join(' ')).toBe('1 0.3 0');
-    expect(closeCue()).toMatch(/ 1 0\.3 0$/);
+    expect(parts.slice(1).join(' ')).toBe('1 0.6 0');
+    expect(closeCue()).toMatch(/ 1 0\.6 0$/);
   });
   it('keeps every cue inside the act with from < to', () => {
     const cues = [...STAGE_BEATS.map(cueFor), holdCue(), closeCue()];

@@ -184,10 +184,13 @@ export function StageAct({ onFallback, proof }: Props) {
               Open the live demo →
             </a>
           </div>
-          {/* The rail (stage-rail spec §3): the segment bar, one beat block per
-              beat stacked in a single cell so the cues crossfade in place, the
-              hold line, and the closing ledger. Segment and check state is
-              written by the publisher, not React. */}
+          {/* The rail (stage-rail spec §3): the segment bar, then one cell
+              holding both the cues (one beat block per beat stacked so they
+              crossfade in place, with the hold line beneath) and the closing
+              ledger. The cues and the ledger share a cell rather than rows so
+              the ledger's height cannot push the hold line away from the
+              block. Segment and check state is written by the publisher, not
+              React. */}
           <div className="stage-rail">
             <h2 id="stage-heading" className="sr-only">
               One real run: tools, persist, approve, render
@@ -200,7 +203,6 @@ export function StageAct({ onFallback, proof }: Props) {
                   className="stage-seg"
                   data-stage-segment={b.beat}
                   data-beat-state="todo"
-                  tabIndex={-1}
                   onClick={(e) => {
                     e.preventDefault();
                     scrollToBeat(b.beat);
@@ -210,40 +212,53 @@ export function StageAct({ onFallback, proof }: Props) {
                 </a>
               ))}
             </nav>
-            {STAGE_RAIL.map((b) => (
-              <div
-                className="stage-rail-beat"
-                data-testid="stage-rail-beat"
-                data-beat={b.beat}
-                data-sc-cue={cueFor(b.beat)}
-                key={b.beat}
-              >
-                <span
-                  className="stage-check"
-                  data-stage-check={b.beat}
-                  aria-hidden="true"
-                />
-                <div>
-                  <p className="stage-claim">{b.claim}</p>
-                  <Link href={b.docs.href} className="stage-doc" tabIndex={-1}>
-                    {b.docs.label}
-                  </Link>
-                  <p className="stage-proof" data-stage-proof>
-                    {proof[b.beat]}
-                  </p>
+            {/* Every block shares one cell and is hidden by opacity alone, so
+                the stylesheet drops the pointer on all cues and the publisher
+                hands it back to the block whose beat is `now` (data-beat-state)
+                and to the ledger once render settles (data-active). */}
+            <div className="stage-rail-cues">
+              {STAGE_RAIL.map((b) => (
+                <div
+                  className="stage-rail-beat"
+                  id={`stage-${b.beat}`}
+                  data-testid="stage-rail-beat"
+                  data-beat={b.beat}
+                  data-stage-beat={b.beat}
+                  data-sc-cue={cueFor(b.beat)}
+                  key={b.beat}
+                >
+                  <span
+                    className="stage-check"
+                    data-stage-check={b.beat}
+                    aria-hidden="true"
+                  />
+                  <div>
+                    <p className="stage-claim">{b.claim}</p>
+                    <Link
+                      href={b.docs.href}
+                      className="stage-doc"
+                      tabIndex={-1}
+                    >
+                      {b.docs.label}
+                    </Link>
+                    <p className="stage-proof" data-stage-proof>
+                      {proof[b.beat]}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
-            <p
-              className="stage-rail-hold"
-              data-testid="stage-rail-hold"
-              data-sc-cue={holdCue()}
-            >
-              {STAGE_HOLD_LINE}
-            </p>
+              ))}
+              <p
+                className="stage-rail-hold"
+                data-testid="stage-rail-hold"
+                data-sc-cue={holdCue()}
+              >
+                {STAGE_HOLD_LINE}
+              </p>
+            </div>
             <div
               className="stage-rail-close"
               data-testid="stage-rail-close"
+              data-stage-close
               data-sc-cue={closeCue()}
             >
               <ul className="stage-ledger">
@@ -254,7 +269,7 @@ export function StageAct({ onFallback, proof }: Props) {
                       data-stage-check={b.beat}
                       aria-hidden="true"
                     />
-                    {b.claim}
+                    <span className="stage-ledger-claim">{b.claim}</span>
                     <Link
                       href={b.docs.href}
                       className="stage-doc"

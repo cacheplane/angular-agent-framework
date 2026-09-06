@@ -197,7 +197,11 @@ export function holdCue(): string {
   return `${fmt(from)} ${fmt(to)}`;
 }
 
-/** Cue for the closing ledger: fades in at the render settle and holds to the end. */
+/**
+ * Cue for the closing ledger: fades in at the render settle and holds to the
+ * end. Its window is the render tail alone, so the ramp-in takes 60% of it —
+ * the ledger is fully in well before the act's last pixel of scroll.
+ */
 export function closeCue(): string {
-  return `${fmt(settleAt('render'))} 1 0.3 0`;
+  return `${fmt(settleAt('render'))} 1 0.6 0`;
 }

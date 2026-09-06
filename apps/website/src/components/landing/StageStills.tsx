@@ -86,7 +86,7 @@ export function StageStills({ proof }: Props) {
             {STAGE_RAIL.map((b) => (
               <li key={b.beat}>
                 <span className="stage-check" data-checked aria-hidden="true" />
-                {b.claim}
+                <span className="stage-ledger-claim">{b.claim}</span>
                 <Link href={b.docs.href} className="stage-doc">
                   {b.docs.label}
                 </Link>

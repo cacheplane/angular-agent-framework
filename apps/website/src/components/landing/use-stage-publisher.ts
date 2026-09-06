@@ -51,7 +51,7 @@ const isStageBeat = (v: string | null): v is StageBeat =>
  */
 function railElements(
   section: HTMLElement,
-  attr: 'data-stage-segment' | 'data-stage-check'
+  attr: 'data-stage-segment' | 'data-stage-beat' | 'data-stage-check'
 ): { el: Element; beat: StageBeat }[] {
   const out: { el: Element; beat: StageBeat }[] = [];
   for (const el of section.querySelectorAll(`[${attr}]`)) {
@@ -106,8 +106,17 @@ export function createStagePublisher(deps: StagePublisherDeps): StagePublisher {
   const beatsSeen = new Set<StageBeat>();
   let disposed = false;
   let lastHello = -Infinity;
-  const segments = railElements(deps.section, 'data-stage-segment');
+  // The segment bar and the beat blocks both take `data-beat-state`: the bar
+  // lights, and the block whose beat is `now` gets the pointer back (every
+  // block shares one cell and is hidden by opacity alone).
+  const segments = [
+    ...railElements(deps.section, 'data-stage-segment'),
+    ...railElements(deps.section, 'data-stage-beat'),
+  ];
   const checks = railElements(deps.section, 'data-stage-check');
+  // The closing ledger is on top of that cell; it owns the pointer only once
+  // render has settled and the cue has faded it in.
+  const closes = [...deps.section.querySelectorAll('[data-stage-close]')];
 
   const onMessage = (e: MessageEvent) => {
     if (e.origin !== STAGE_DEMO_ORIGIN) return;
@@ -153,6 +162,13 @@ export function createStagePublisher(deps: StagePublisherDeps): StagePublisher {
         if (on !== el.hasAttribute('data-checked')) {
           if (on) el.setAttribute('data-checked', '');
           else el.removeAttribute('data-checked');
+        }
+      }
+      const closeOn = isChecked('render', p);
+      for (const el of closes) {
+        if (closeOn !== el.hasAttribute('data-active')) {
+          if (closeOn) el.setAttribute('data-active', '');
+          else el.removeAttribute('data-active');
         }
       }
       // Milestones.

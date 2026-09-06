@@ -158,14 +158,32 @@ describe('Stage', () => {
     expect(root).not.toBe(actEl);
     expect(root === document || root.contains(actEl)).toBe(true);
     expect(root.querySelectorAll('[data-sc-act]')).toContain(actEl);
-    // Keyboard path: the pin is skippable, and the opacity-hidden rail CTAs
-    // are out of the tab order.
+    // Keyboard path: the pin is skippable, the segment bar stays in the tab
+    // order (it is always visible), and the opacity-hidden cue CTAs are out.
     const skip = actEl?.querySelector('a.stage-skip');
     expect(skip?.getAttribute('href')).toBe('#stage-end');
     expect(document.getElementById('stage-end')).not.toBeNull();
-    const railLinks = actEl?.querySelectorAll('.stage-rail a');
-    expect(railLinks?.length).toBeGreaterThanOrEqual(4 + 4 + 4 + 1);
-    railLinks?.forEach((a) => expect(a.getAttribute('tabindex')).toBe('-1'));
+    const segments = actEl!.querySelectorAll('a.stage-seg');
+    expect(segments).toHaveLength(4);
+    segments.forEach((a) => expect(a.hasAttribute('tabindex')).toBe(false));
+    const cueLinks = actEl!.querySelectorAll(
+      '.stage-rail-beat a, .stage-rail-close a'
+    );
+    expect(cueLinks).toHaveLength(4 + 4 + 1);
+    cueLinks.forEach((a) => expect(a.getAttribute('tabindex')).toBe('-1'));
+    // Each segment's href resolves to its beat block, so the anchor works
+    // even when the click handler does not run.
+    for (const b of STAGE_BEATS) {
+      const seg = actEl!.querySelector(`[data-stage-segment="${b}"]`);
+      expect(seg?.getAttribute('href')).toBe(`#stage-${b}`);
+      const block = document.getElementById(`stage-${b}`);
+      expect(block?.getAttribute('data-stage-beat')).toBe(b);
+    }
+    expect(
+      actEl!
+        .querySelector('[data-testid="stage-rail-close"]')!
+        .hasAttribute('data-stage-close')
+    ).toBe(true);
     const iframe = actEl?.querySelector('iframe');
     expect(iframe?.getAttribute('src')).toBe(
       'https://demo.threadplane.ai/stage?t=0'

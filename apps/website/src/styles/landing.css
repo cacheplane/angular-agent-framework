@@ -1287,7 +1287,7 @@
 /* Stage — components/landing/Stage.tsx, StageStills.tsx, StageAct.tsx
  * The stills are the section's default form; the pinned act replaces them on
  * wide, motion-tolerant viewports after hydration. The stills reuse the
- * feature-block row grammar so the two forms read as one section. */
+ * rail grammar so the two forms read as one section. */
 .stage-stills {
   display: grid;
   gap: 96px;
@@ -1394,17 +1394,27 @@
   font-size: 13px;
   justify-self: end;
 }
-/* The rail (stage-rail spec §3): the segment bar on top, the beat blocks
- * stacked in one cell so cues crossfade in place, the hold line in a cell
- * beneath, and the closing ledger across both of those cells. Segment and
- * check state arrive as attributes from the publisher; the green is the
- * render token, the one green the site has. */
+/* The rail (stage-rail spec §3): the segment bar on top, then ONE cell that
+ * the cues and the closing ledger share. The cues are their own grid: the
+ * beat blocks stacked in its first row so they crossfade in place, the hold
+ * line in its second. The ledger used to span two rail rows instead, and the
+ * grid split its height across both, so the hold line was pushed ~150px
+ * below the beat block; in one cell the ledger's height sizes the cell and
+ * nothing else. No min-height: the sticky pin already centers the rail.
+ * Segment and check state arrive as attributes from the publisher; the green
+ * is the render token, the one green the site has. */
 .stage-rail {
   display: grid;
-  grid-template-rows: auto auto auto;
+  grid-template-rows: auto auto;
   align-content: center;
-  min-height: 60vh;
-  row-gap: 28px;
+  row-gap: 20px;
+}
+.stage-rail-cues {
+  grid-area: 2 / 1;
+  align-self: start;
+  display: grid;
+  grid-template-rows: auto auto;
+  row-gap: 20px;
 }
 .stage-segs {
   display: flex;
@@ -1446,7 +1456,7 @@
   background: var(--color-text-primary);
 }
 .stage-rail-beat {
-  grid-area: 2 / 1;
+  grid-area: 1 / 1;
   display: flex;
   gap: 14px;
   align-items: flex-start;
@@ -1474,7 +1484,7 @@
 }
 .stage-claim {
   font-family: var(--font-garamond);
-  font-size: 34px;
+  font-size: 30px;
   line-height: 1.08;
   font-weight: 500;
   color: var(--color-text-primary);
@@ -1484,7 +1494,7 @@
   display: inline-block;
   margin-top: 12px;
   font-size: 12px;
-  opacity: 0.55;
+  opacity: 0.72;
   text-decoration: none;
   border-bottom: 1px solid var(--color-border);
   color: inherit;
@@ -1499,14 +1509,15 @@
   color: var(--color-render-green);
 }
 .stage-rail-hold {
-  grid-area: 3 / 1;
+  grid-area: 2 / 1;
+  align-self: start;
   margin: 0;
   font-size: 15px;
   line-height: 1.5;
   opacity: 0.7;
 }
 .stage-rail-close {
-  grid-area: 2 / 1 / span 2;
+  grid-area: 2 / 1;
 }
 .stage-ledger {
   list-style: none;
@@ -1519,15 +1530,21 @@
   gap: 14px;
   padding: 11px 0;
   border-bottom: 1px solid var(--color-border);
-  font-size: 17px;
+  font-size: 16px;
 }
 .stage-ledger .stage-check {
   margin: 0;
   width: 20px;
   height: 20px;
 }
+/* The claim may wrap at the rail's width; the link never does. */
+.stage-ledger-claim {
+  flex: 1;
+  min-width: 0;
+}
 .stage-ledger .stage-doc {
   margin: 0 0 0 auto;
+  white-space: nowrap;
 }
 .stage-rail-close .stage-claim {
   font-size: 30px;
@@ -1549,7 +1566,7 @@
   font-size: 13px;
   line-height: 1.5;
   white-space: pre-wrap;
-  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 .stage-install-cta {
   font-size: 13px;
@@ -1559,12 +1576,23 @@
 .stage-trust {
   margin: 12px 0 0;
   font-size: 12px;
-  opacity: 0.5;
+  opacity: 0.7;
 }
-/* Cues start hidden; the engine drives opacity and transform per frame. */
+/* Cues start hidden; the engine drives opacity and transform per frame. The
+ * beat blocks, the hold line and the ledger stack in one cell, so a hidden
+ * cue would still sit over the visible one and take its clicks: no cue owns
+ * the pointer until the publisher marks it the current beat or, for the
+ * ledger, active past the render settle. */
 .stage-act [data-sc-cue] {
   opacity: 0;
   will-change: opacity, transform;
+  pointer-events: none;
+}
+.stage-rail-beat[data-beat-state='now'] {
+  pointer-events: auto;
+}
+.stage-rail-close[data-active] {
+  pointer-events: auto;
 }
 /* Keyboard path: the pin holds ~six viewports of scroll with nothing to tab
  * through, so the first focusable in the act skips past it. Hidden until

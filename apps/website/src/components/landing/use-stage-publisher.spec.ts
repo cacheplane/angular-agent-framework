@@ -13,6 +13,7 @@ import {
 import {
   APPROVE_HOLD,
   beatWindows,
+  settleAt,
   STAGE_BEATS,
   timeAt,
 } from '../../lib/stage-beats';
@@ -69,16 +70,22 @@ function setup(
   return { section, posted, track, onReady, pub, frame };
 }
 
-/** One segment and one check per beat, as the act renders them. */
+/** One segment, one beat block and one check per beat, plus the ledger, as the act renders them. */
 function fullRail(section: HTMLElement) {
   for (const b of STAGE_BEATS) {
     const seg = document.createElement('a');
     seg.setAttribute('data-stage-segment', b);
     section.appendChild(seg);
+    const block = document.createElement('div');
+    block.setAttribute('data-stage-beat', b);
+    section.appendChild(block);
     const chk = document.createElement('span');
     chk.setAttribute('data-stage-check', b);
     section.appendChild(chk);
   }
+  const close = document.createElement('div');
+  close.setAttribute('data-stage-close', '');
+  section.appendChild(close);
 }
 
 afterEach(() => {
@@ -236,6 +243,40 @@ describe('stage publisher', () => {
     ).toHaveLength(4);
   });
 
+  it('marks the current beat block `now` so the visible cue owns the pointer', () => {
+    const { section, pub } = setup({ rail: fullRail });
+    const block = (b: string) =>
+      section
+        .querySelector(`[data-stage-beat="${b}"]`)
+        ?.getAttribute('data-beat-state');
+    section.style.setProperty('--sc-p', '0.05');
+    pub.tick();
+    expect(block('stream')).toBe('now');
+    expect(block('persist')).toBe('todo');
+    section.style.setProperty('--sc-p', String(beatWindows()[1].from + 0.01));
+    pub.tick();
+    expect(block('stream')).toBe('done');
+    expect(block('persist')).toBe('now');
+  });
+
+  it('activates the closing ledger only past the render settle, and deactivates it on rewind', () => {
+    const { section, pub } = setup({ rail: fullRail });
+    const close = section.querySelector('[data-stage-close]')!;
+    const settle = settleAt('render');
+    section.style.setProperty('--sc-p', String(settle - 0.01));
+    pub.tick();
+    expect(close.hasAttribute('data-active')).toBe(false);
+    section.style.setProperty('--sc-p', String(settle));
+    pub.tick();
+    expect(close.hasAttribute('data-active')).toBe(true);
+    section.style.setProperty('--sc-p', '1');
+    pub.tick();
+    expect(close.hasAttribute('data-active')).toBe(true);
+    section.style.setProperty('--sc-p', '0.5');
+    pub.tick();
+    expect(close.hasAttribute('data-active')).toBe(false);
+  });
+
   it('un-fills the checks and resets the segments on a rewind, as the frame rewinds', () => {
     const { section, pub } = setup({ rail: fullRail });
     section.style.setProperty('--sc-p', '1');
@@ -290,9 +331,11 @@ describe('stage publisher', () => {
   it('a second tick at the same progress writes no segment or check attributes', () => {
     const { section, pub } = setup({ rail: fullRail });
     const els = [
-      ...section.querySelectorAll('[data-stage-segment], [data-stage-check]'),
+      ...section.querySelectorAll(
+        '[data-stage-segment], [data-stage-beat], [data-stage-check], [data-stage-close]'
+      ),
     ];
-    expect(els).toHaveLength(8);
+    expect(els).toHaveLength(13);
     section.style.setProperty('--sc-p', String(beatWindows()[1].from + 0.01));
     pub.tick();
     const sets = els.map((el) => vi.spyOn(el, 'setAttribute'));

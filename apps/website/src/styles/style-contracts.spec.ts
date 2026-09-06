@@ -486,18 +486,36 @@ describe('style contracts', () => {
     });
 
     /**
+     * The cues stack in one grid cell and are hidden by opacity alone, so a
+     * hidden ledger sits over the visible beat block and would take the click
+     * meant for its docs link. No cue owns the pointer until the publisher
+     * marks the block `now` or the ledger active.
+     */
+    it("a hidden cue does not intercept the visible one's clicks", () => {
+      expect(declarationsFor(css, '.stage-act [data-sc-cue]')).toMatch(/pointer-events:\s*none/);
+      expect(declarationsFor(css, ".stage-rail-beat[data-beat-state='now']")).toMatch(
+        /pointer-events:\s*auto/
+      );
+      expect(declarationsFor(css, '.stage-rail-close[data-active]')).toMatch(/pointer-events:\s*auto/);
+    });
+
+    /**
      * The rail's state is written as attributes by the publisher, not React,
      * so nothing in a component test notices when the attribute has no rule
      * behind it: the segment bar would never light and the checks never fill,
-     * and the ledger (which shares the beat blocks' cell and the hold line's)
-     * would overlap them unless it spans both rows.
+     * and the ledger must share the cues' one cell: when it spanned two rail
+     * rows instead, the grid split its height across both and pushed the hold
+     * line ~150px below the beat block.
      */
-    it('the segment bar and the checks have a visible state, and the ledger spans both rows', () => {
+    it('the segment bar and the checks have a visible state, and the ledger shares the cues cell', () => {
       expect(declarationsFor(css, ".stage-seg[data-beat-state='now']::before")).toMatch(
         /background:/
       );
       expect(declarationsFor(css, '.stage-check[data-checked]')).toMatch(/background:/);
-      expect(declarationsFor(css, '.stage-rail-close')).toMatch(/grid-area:\s*2\s*\/\s*1\s*\/\s*span 2/);
+      expect(declarationsFor(css, '.stage-rail-cues')).toMatch(/grid-area:\s*2\s*\/\s*1\s*;/);
+      expect(declarationsFor(css, '.stage-rail-close')).toMatch(/grid-area:\s*2\s*\/\s*1\s*;/);
+      expect(declarationsFor(css, '.stage-rail-beat')).toMatch(/grid-area:\s*1\s*\/\s*1\s*;/);
+      expect(declarationsFor(css, '.stage-rail-hold')).toMatch(/grid-area:\s*2\s*\/\s*1\s*;/);
     });
   });
 });
