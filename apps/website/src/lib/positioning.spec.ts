@@ -19,7 +19,8 @@ import {
   HOME_DESCRIPTION,
   HOME_TITLE,
   INSTALL_OPTIONS,
-  STAGE_HOLD_LINES,
+  STAGE_CLOSE,
+  STAGE_HOLD_LINE,
   STAGE_RAIL,
 } from './positioning';
 import { STAGE_BEATS } from './stage-beats';
@@ -195,28 +196,33 @@ describe('homepage restructure copy (live-stage spec §3)', () => {
 });
 
 describe('STAGE_RAIL', () => {
-  it('has one entry per beat in the beat map\'s order, three rows each, a cta, and still alt text', () => {
+  it('has one entry per beat in the beat map order, each a short claim with one docs link', () => {
     expect(STAGE_RAIL.map((b) => b.beat)).toEqual([...STAGE_BEATS]);
     for (const b of STAGE_RAIL) {
-      // The eyebrow is the beat's name; copy swapped between entries would break this.
-      expect(b.eyebrow.toLowerCase()).toBe(b.beat);
-      expect(b.headline.length).toBeGreaterThan(20);
-      expect(b.body.length).toBeGreaterThan(40);
-      expect(b.rows).toHaveLength(3);
-      for (const row of b.rows) {
-        expect(row.claim).not.toBe('');
-        expect(row.api).not.toBe('');
-      }
-      expect(b.cta.label).not.toBe('');
-      expect(b.cta.href).toMatch(/^\//);
+      expect(b.label.length).toBeLessThanOrEqual(8);
+      expect(b.claim.length).toBeLessThanOrEqual(40);
+      expect(b.claim.endsWith('.')).toBe(true);
+      expect(b.docs.label).not.toBe('');
+      expect(b.docs.href).toMatch(/^\//);
       expect(b.stillAlt.length).toBeGreaterThan(40);
     }
+    expect(STAGE_RAIL.map((b) => b.label)).toEqual(['Tools', 'Persist', 'Approve', 'Render']);
   });
-  it('carries the three hold lines from the spec, ending on the threshold instruction', () => {
-    expect(STAGE_HOLD_LINES).toEqual([
-      'The pause is a checkpoint, not a modal',
-      'The run is frozen in durable state. Scroll all you like; nothing happens until someone decides',
-      'Keep scrolling to approve',
-    ]);
+  it('carries one hold line and the closing ledger copy', () => {
+    expect(STAGE_HOLD_LINE).toBe('Keep scrolling to approve.');
+    expect(STAGE_CLOSE.claim).toBe('Feature complete for the final mile.');
+    // The fake-agent install command is a single line, so the ending shows it whole (derived, never retyped).
+    expect(INSTALL_OPTIONS[0].command).not.toContain('\n');
+    expect(STAGE_CLOSE.install).toBe(INSTALL_OPTIONS[0].command);
+    expect(STAGE_CLOSE.cta.href).toBe(INSTALL_OPTIONS[0].quickstartHref);
+  });
+  it('keeps the rail under the word budget: four beats plus the ending', () => {
+    const words = (s: string) => s.trim().split(/\s+/).length;
+    const total =
+      STAGE_RAIL.reduce((n, b) => n + words(b.claim) + words(b.docs.label), 0) +
+      words(STAGE_HOLD_LINE) +
+      words(STAGE_CLOSE.claim) +
+      words(STAGE_CLOSE.cta.label);
+    expect(total).toBeLessThan(90);
   });
 });
