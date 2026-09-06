@@ -1,5 +1,6 @@
 // ── Homepage copy (spec 2026-09-02-homepage-rebuild-design.md §4.1) ──────────
 import { WEBSITE_SUPPORTED_ANGULAR_MAJORS } from '../components/pricing/angular-support.mjs';
+import type { StageBeat } from './stage-beats';
 
 export const HERO_EYEBROW = 'Open-source · Angular · LangGraph & AG-UI';
 export const HERO_H1 = 'The AI agent UI framework for Angular.';
@@ -87,16 +88,17 @@ export const PROVE_IT_ROWS = [
 // ── The stage rail (live-stage spec §4–6): the copy that stacks beside the
 // pinned demo. Strings are verbatim from the four capability acts; the still
 // alt text describes public/screenshots/stage-<beat>.webp at the beat's settle.
-export type StageBeatKey = 'stream' | 'persist' | 'approve' | 'render';
+/** The beat map (`stage-beats.ts`) owns the beat names; the rail copy keys off it so the two cannot drift. */
+export type StageBeatKey = StageBeat;
 export interface StageRailBeat {
-  beat: StageBeatKey;
-  eyebrow: string;
-  headline: string;
-  body: string;
-  rows: readonly { claim: string; api: string }[];
-  cta: { label: string; href: string };
+  readonly beat: StageBeatKey;
+  readonly eyebrow: string;
+  readonly headline: string;
+  readonly body: string;
+  readonly rows: readonly { readonly claim: string; readonly api: string }[];
+  readonly cta: { readonly label: string; readonly href: string };
   /** Alt text for the fallback still: what the frame shows at this beat's settle. */
-  stillAlt: string;
+  readonly stillAlt: string;
 }
 
 export const STAGE_RAIL: readonly StageRailBeat[] = [
