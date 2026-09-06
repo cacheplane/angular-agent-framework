@@ -93,6 +93,7 @@ const WELCOME_SUGGESTIONS = [
           </div>
         </chat>
 
+        <!-- #region approval-card -->
         <chat-approval-card
           [agent]="agent"
           matchKind="refund_approval"
@@ -117,12 +118,14 @@ const WELCOME_SUGGESTIONS = [
             </div>
           </ng-template>
         </chat-approval-card>
+        <!-- #endregion -->
       </div>
     </example-chat-layout>
   `,
 })
 export class InterruptsComponent {
   protected readonly suggestions = WELCOME_SUGGESTIONS;
+  // #region resume
   protected readonly editing = signal(false);
   protected readonly editAmount = signal<number | null>(null);
 
@@ -154,4 +157,5 @@ export class InterruptsComponent {
     this.editing.set(false);
     this.editAmount.set(null);
   }
+  // #endregion
 }
