@@ -12,7 +12,7 @@ The running example is an airline operations dashboard, and this guide walks the
 
 The Run tab shows the prebuilt `<chat>` composition. Choose the welcome suggestion "Airline operations dashboard" and the agent authors a layout of KPI cards, a line chart, a bar chart, and a table, then calls the data tools that fill it. The cards render as skeletons first and take their values when the state arrives.
 
-The second suggestion, "Filter to only the cancelled flights", is the follow-up worth trying. The agent does not author a new layout for it. It calls one data tool again with new arguments, the new results replace that slice of state, and the dashboard already on screen re-renders in place.
+The second suggestion, "Filter to cancelled flights", is the follow-up worth trying. The agent does not author a new layout for it. It calls one data tool again with new arguments, the new results replace that slice of state, and the dashboard already on screen re-renders in place.
 
 ## How it is built
 
@@ -52,7 +52,11 @@ The rest of the node replaces both messages, keeping their ids so LangGraph's `a
 
 <ExampleCode file="graph.py" region="rewrite-assistant-content" title="graph.py — rewriting the message content" />
 
-The tool message becomes a short placeholder and the assistant message takes the specification JSON. On the client the content classifier in `@threadplane/chat` sees content that begins with `{`, classifies it as `json-render`, and mounts `<chat-generative-ui>`, which renders it through `<render-spec>` from `@threadplane/render`.
+The tool message becomes a short placeholder and the assistant message takes the specification JSON.
+
+<Callout type="info" title="How the client recognizes it">
+On the client the content classifier in `@threadplane/chat` sees content that begins with `{`, classifies it as `json-render`, and mounts `<chat-generative-ui>`, which renders it through `<render-spec>` from `@threadplane/render`.
+</Callout>
 
 ### Returning the tool data as state
 
@@ -64,7 +68,7 @@ Returning a field from a node is all that is required: `ag-ui-langgraph` emits t
 
 ### The graph and its checkpointer
 
-The wiring shows the loop. `agent` runs the tools, `wrap_spec_into_ai` post-processes the result and returns to the agent, and the turn ends through `emit_state`, a short conversational summary, and background title generation.
+The wiring shows the loop. `agent` calls the tools and the `tools` node runs them; `wrap_spec_into_ai` post-processes the result and returns to the agent, and the turn ends through `emit_state`, a short conversational summary, and background title generation.
 
 <ExampleCode file="graph.py" region="graph-wiring" title="graph.py — graph wiring" />
 
@@ -74,11 +78,11 @@ The wiring shows the loop. `agent` runs the tools, `wrap_spec_into_ai` post-proc
 
 ### Serving the graph over AG-UI
 
-The server is the standard `ag-ui-langgraph` mount: wrap the compiled graph in a `LangGraphAgent` and attach it to a FastAPI application at a path.
+The server is the standard `ag-ui-langgraph` mount: wrap the compiled graph in a `LangGraphAgent` and attach it to a FastAPI application at a path. The state events that carry the dashboard data are emitted by the adapter because the graph returns those fields.
 
 <ExampleCode file="server.py" title="server.py" />
 
-Nothing in this file is specific to generative UI. The state events that carry the dashboard data are emitted by the adapter because the graph returns those fields.
+Nothing in this file is specific to generative UI.
 
 ### Registering the AG-UI agent
 
@@ -94,7 +98,11 @@ The component supplies the two things the specification needs: a `views` registr
 
 <ExampleCode file="json-render.component.ts" title="json-render.component.ts" />
 
-The `[store]` input is what makes the dashboard live. `<chat>` forwards only an explicit store to the generative-UI surface; without one, the surface seeds a private store from the specification and backend state never reaches it.
+The `[store]` input is what makes the dashboard live.
+
+<Callout type="info" title="Why an explicit store matters">
+`<chat>` forwards only an explicit store to the generative-UI surface; without one, the surface falls back to a private store of its own, and backend state never reaches it.
+</Callout>
 
 ## How a binding resolves
 
