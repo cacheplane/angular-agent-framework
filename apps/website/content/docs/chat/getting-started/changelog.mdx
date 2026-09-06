@@ -1,7 +1,80 @@
+---
+description: Highlight releases of @threadplane/chat since 0.0.19 — client tools, A2UI v0.9.1, citations, streaming tables, math, the MIT relicense and Angular 22 support.
+---
+
 # Changelog
 
 <Callout type="info" title="Highlight releases only">
-This changelog tracks selected highlight releases, not every patch. The published package is at `0.0.52` — see the entry below for the notable additions since `0.0.19`.
+This changelog tracks selected highlight releases, not every patch. The published package is at `0.0.66` — the entries below cover the notable changes since `0.0.19`.
+</Callout>
+
+## 0.0.66
+
+### Install telemetry
+
+- The package now declares a peer dependency on `@threadplane/telemetry` and ships a `postinstall` step plus a `@threadplane/chat/development-install` subpath. Collection is inert in contributor workspaces and excludes automated browsers.
+- The published package surface was realigned to the Angular AI agent UI category, with a check that keeps it there.
+
+## 0.0.64
+
+### Angular 22
+
+- Angular 22 joins 20 and 21 in every peer range. See [Installation](/docs/chat/getting-started/installation) for the supported majors.
+
+## 0.0.63
+
+### MIT license
+
+- Every Threadplane package moved to MIT for commercial and noncommercial use. `@threadplane/chat` no longer accepts or checks an activation token.
+
+## 0.0.58
+
+### A2UI v0.9.1
+
+- `@threadplane/a2ui` migrated to the A2UI v0.9.1 stable wire format. This is a breaking protocol change: surfaces authored against the pre-1.0 draft need regenerating.
+- Client-side functions, validation checks with a client error message, and a live `sendDataModel` round-trip landed alongside the migration, together with a capabilities helper.
+- `<chat>` renders A2UI surface theme chrome, so an `agentDisplayName` and `iconUrl` on the surface show up in the rendered card. See the [A2UI guide](/docs/chat/a2ui/overview).
+
+## 0.0.57
+
+### Client tools
+
+- Client-tool continuation is now batched, policy-driven, and bounded: pass `[clientToolContinuationPolicy]` to cap continuation groups per user turn and listen on `(clientToolContinuationLimit)` when the cap trips.
+- Client-tool execution claims arrived as the optional `[clientToolExecutionGuard]` input, so a non-idempotent browser tool is not executed twice, together with an abort signal passed to executing tools.
+- A client tool call is never left unanswered on the server. The `settle` / `flush` / `resolve` trio on the adapter capability keeps the thread free of a tool call with no matching result. See [Client Tools](/docs/chat/guides/client-tools) and [Writing an Adapter](/docs/chat/guides/writing-an-adapter).
+
+### Streaming lifecycle
+
+- `<chat-streaming-md>` gained an explicit lifecycle contract driven by the atomic `[document]` input rather than a debounce. See [Markdown Rendering](/docs/chat/guides/markdown).
+- Run lifecycle moved into one place across the adapters, and the library builds with Angular strict templates.
+
+## 0.0.56
+
+### Citations
+
+- A visual and interaction system for citations and sources, including source-type visual language on the citation cards.
+
+## 0.0.54
+
+### Streaming tables
+
+- Markdown tables render while they stream instead of appearing as raw pipe characters. The built-in `'table'` renderer emits native `<tr>` / `<th>` / `<td>` elements so streamed rows stay attached to the same browser table.
+- `<chat-sidebar>` content layout and destroy-time cleanup were fixed.
+
+## 0.0.53
+
+### Math and reasoning
+
+- LaTeX and math render through a lazily-loaded KaTeX. `katex` is an optional peer dependency; without it, math nodes fall back to their source text.
+- Consecutive reasoning steps merge into one pill, so a multi-step agent shows a single "Thought for Ns · N steps" chip instead of a stack.
+- Message action controls are suppressed on content-less messages, keeping a bare tool call or a subagent delegation card compact.
+
+### A2UI icons
+
+- A2UI renders real Material Symbols icons rather than the icon name as text, and normalizes camelCase icon names to the snake_case ligature form.
+
+<Callout type="info" title="0.0.55, 0.0.59 through 0.0.62, and 0.0.65">
+These releases carry no user-facing `@threadplane/chat` change. They ship fixes in the adapters, test hardening, and coordinated version bumps across the publishable packages.
 </Callout>
 
 ## 0.0.52

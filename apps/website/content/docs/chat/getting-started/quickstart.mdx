@@ -1,6 +1,10 @@
+---
+description: Install @threadplane/chat, register a LangGraph agent provider, and render a streaming chat surface — with a no-backend variant using mockAgent().
+---
+
 # Quick Start
 
-Let's build a streaming chat UI with `@threadplane/chat` in 5 minutes.
+Build a streaming chat UI with `@threadplane/chat` in 5 minutes.
 
 <Callout type="info" title="Prerequisites">
 Angular 20–22 project with an agent provider configured. See [Agent Installation](/docs/langgraph/getting-started/installation) if you need help.
@@ -30,7 +34,6 @@ npm install @threadplane/chat @threadplane/langgraph @langchain/core @langchain/
 // app.config.ts
 import { ApplicationConfig, signal } from '@angular/core';
 import { provideAgent } from '@threadplane/langgraph';
-import { provideChat } from '@threadplane/chat';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -39,10 +42,11 @@ export const appConfig: ApplicationConfig = {
       apiUrl: 'http://localhost:2024',
       threadId: signal(null),
     }),
-    provideChat({ assistantName: 'Assistant' }),
   ],
 };
 ```
+
+`provideAgent()` is the only provider `<chat>` requires. `provideChat()` exists too, but it only parks values on the `CHAT_CONFIG` token for your own components to read — no built-in component injects it, so adding it changes nothing about what renders.
 
 </Step>
 <Step title="Render the chat">
@@ -65,12 +69,12 @@ export class ChatPageComponent {
 }
 ```
 
-`injectAgent()` returns the singleton wired up in Step 2 — no extra provider needed here. To host several `<chat>` surfaces that share a backend URL but target different graphs, re-provide `provideAgent({...})` in a component's `providers: []` array; Angular's hierarchical DI scopes that override to the subtree. See the [Multiple agents](/docs/chat/getting-started/installation) note in Installation for the full pattern.
+`injectAgent()` returns the singleton wired up in Step 2 — no extra provider needed here. To host several `<chat>` surfaces that share a backend URL but target different graphs, re-provide `provideAgent({...})` in a component's `providers: []` array; Angular's hierarchical DI scopes that override to the subtree.
 
 </Step>
 </Steps>
 
-That's it — no Tailwind setup, no PostCSS config, no global stylesheet import. The chat ships with its own design tokens and component-scoped styles.
+That is it — no Tailwind setup, no PostCSS config, no global stylesheet import. The chat ships with its own design tokens and component-scoped styles.
 
 ## Run with no backend
 
@@ -107,21 +111,21 @@ export class ChatPageComponent {
 }
 ```
 
-With `mockAgent()` you can drop both `provideAgent()` calls — the agent is constructed directly in the component, no DI wiring or `apiUrl` required. Swap it for `injectAgent()` once your backend is up.
+With `mockAgent()` you can drop the `provideAgent()` call — the agent is constructed directly in the component, no DI wiring or `apiUrl` required. Swap it for `injectAgent()` once your backend is up.
 
 ## What's Next
 
 <CardGroup cols={3}>
-  <Card title="Layout Modes" icon="layout" href="/docs/chat/guides/layout-modes">
+  <Card title="Layout Modes" href="/docs/chat/guides/layout-modes">
     Embedded, popup, or sidebar.
   </Card>
-  <Card title="Theming" icon="palette" href="/docs/chat/guides/theming">
+  <Card title="Theming" href="/docs/chat/guides/theming">
     Customize colors, fonts, and shapes.
   </Card>
-  <Card title="Components" icon="components" href="/docs/chat/components/chat">
+  <Card title="Components" href="/docs/chat/components/chat">
     Full primitive and composition reference.
   </Card>
-  <Card title="Going to production" icon="rocket" href="/docs/chat/getting-started/installation">
+  <Card title="Going to production" href="/docs/chat/getting-started/installation">
     Swap the mock for a real adapter, review the production checklist, and deploy your backend — see [Installation](/docs/chat/getting-started/installation) and [Agent deployment](/docs/langgraph/guides/deployment).
   </Card>
 </CardGroup>
