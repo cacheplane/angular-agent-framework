@@ -469,4 +469,20 @@ describe('style contracts', () => {
       expect(phone).toContain('.hero-demo-stage');
     });
   });
+
+  describe('landing.css stage act', () => {
+    const css = loadStylesheet('landing.css');
+
+    /**
+     * The engine sets the act's inline height and sticks `[data-sc-stage]`
+     * only if the stylesheet already makes it sticky; when it is not, the
+     * engine warns to the console and the act scrolls straight through.
+     * Cues start hidden so the engine's per-frame opacity is the only thing
+     * that reveals a rail block.
+     */
+    it('the stage pin is sticky — the engine only warns when it is not', () => {
+      expect(declarationsFor(css, '.stage-pin')).toMatch(/position:\s*sticky/);
+      expect(declarationsFor(css, '.stage-act [data-sc-cue]')).toMatch(/opacity:\s*0/);
+    });
+  });
 });

@@ -365,9 +365,19 @@ export class StageMode {
         await this.replayTransport.recordingData(),
       );
       this.controller.set(controller);
-      this.bridge.postReady({ totalMs: tl.totalMs, beats: tl.beats });
+      // Seeks are subscribed before `ready` is posted: with an empty referrer
+      // the bridge learns the parent origin from the parent's first message
+      // and re-posts `ready` from inside that handler, so the listener must
+      // already exist. The controller is set above, so an early seek applies.
       const off = this.bridge.onSeek((t) => this.requestSeek(t));
       this.destroyRef.onDestroy(off);
+      const reload = tl.runs.find((r) => r.run.action.kind === 'reload');
+      this.bridge.postReady({
+        totalMs: tl.totalMs,
+        beats: tl.beats,
+        hold: tl.hold,
+        reloadEndMs: reload ? reload.endMs : null,
+      });
       await controller.seek(Number(params.get('t')) || 0);
       // Published here as well as from the effect: `await boot()` must imply
       // the applied state is observable, without waiting on a render pass.

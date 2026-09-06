@@ -19,7 +19,10 @@ import {
   HOME_DESCRIPTION,
   HOME_TITLE,
   INSTALL_OPTIONS,
+  STAGE_HOLD_LINES,
+  STAGE_RAIL,
 } from './positioning';
+import { STAGE_BEATS } from './stage-beats';
 import { WEBSITE_SUPPORTED_ANGULAR_MAJORS } from '../components/pricing/angular-support.mjs';
 import { resolveWebsiteDir } from './website-dir';
 
@@ -187,6 +190,33 @@ describe('homepage restructure copy (live-stage spec §3)', () => {
       { claim: 'No key, no server, no network', api: 'provideFakeAgent()' },
       { claim: 'Script tool calls and interrupts', api: 'mockLangGraphAgent()' },
       { claim: 'Same UI code in test and production', api: 'Agent' },
+    ]);
+  });
+});
+
+describe('STAGE_RAIL', () => {
+  it('has one entry per beat in the beat map\'s order, three rows each, a cta, and still alt text', () => {
+    expect(STAGE_RAIL.map((b) => b.beat)).toEqual([...STAGE_BEATS]);
+    for (const b of STAGE_RAIL) {
+      // The eyebrow is the beat's name; copy swapped between entries would break this.
+      expect(b.eyebrow.toLowerCase()).toBe(b.beat);
+      expect(b.headline.length).toBeGreaterThan(20);
+      expect(b.body.length).toBeGreaterThan(40);
+      expect(b.rows).toHaveLength(3);
+      for (const row of b.rows) {
+        expect(row.claim).not.toBe('');
+        expect(row.api).not.toBe('');
+      }
+      expect(b.cta.label).not.toBe('');
+      expect(b.cta.href).toMatch(/^\//);
+      expect(b.stillAlt.length).toBeGreaterThan(40);
+    }
+  });
+  it('carries the three hold lines from the spec, ending on the threshold instruction', () => {
+    expect(STAGE_HOLD_LINES).toEqual([
+      'The pause is a checkpoint, not a modal',
+      'The run is frozen in durable state. Scroll all you like; nothing happens until someone decides',
+      'Keep scrolling to approve',
     ]);
   });
 });

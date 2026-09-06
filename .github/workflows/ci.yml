@@ -672,6 +672,34 @@ jobs:
           GROWTH_FORM_POLICY: growth_v1
           WEBSITE_E2E_MODE: production
         run: npx nx e2e website --skip-nx-cache --grep "public copy boundary|canonical policy surface"
+      # Spec §8: scroll-craft's own harness walks the homepage's pinned stage
+      # act and fails on dead scroll outside the declared hold and on cues that
+      # never peak. The Nx build lands in dist/apps/website with a rewritten
+      # next.config, which only `nx serve --configuration=production` can
+      # start, and the serve's own build dependency is the one build here:
+      # it runs with --skip-nx-cache (the earlier e2e builds wrote no cache
+      # entry either) so it emits dist rather than restoring it. The content
+      # symlink, which mirrors playwright.config.ts's production mode, is
+      # added only after the server answers, so it lands on the dist the
+      # build has finished writing rather than on one it is about to replace.
+      - name: Stage scroll verification (scroll-craft harness)
+        env:
+          GROWTH_FORM_POLICY: growth_v1
+          SCROLLCRAFT_CHROME: /usr/bin/google-chrome
+        run: |
+          command -v ffmpeg > /dev/null || (sudo apt-get update && sudo apt-get install -y ffmpeg)
+          (npx nx serve website --configuration=production --port=4308 --skip-nx-cache > /tmp/next-start.log 2>&1 &)
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:4308/ > /dev/null && break; sleep 2; done
+          curl -sf http://127.0.0.1:4308/ > /dev/null || { cat /tmp/next-start.log; exit 1; }
+          ln -sfn ../../../apps/website/content dist/apps/website/content
+          node apps/website/e2e/scroll-craft/verify-home.mjs --url http://127.0.0.1:4308 --out dist/stage-shots
+      - name: Upload stage contact sheets
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: stage-shots
+          path: dist/stage-shots/**/sheet.png
+          if-no-files-found: ignore
       # The production-smoke spec is testIgnore'd outside PRODUCTION_SMOKE mode,
       # so a module-load error in it is invisible until the post-merge Production
       # smoke job runs against main — too late to gate a PR. Collect it here:
