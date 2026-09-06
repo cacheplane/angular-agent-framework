@@ -58,6 +58,7 @@ async def generate_title(state: MessagesState, config) -> dict:
     sdk_url = os.environ.get("LANGGRAPH_API_URL")
     try:
         client = get_client(url=sdk_url)
+        # region title-write
         thread = await client.threads.get(thread_id)
         if (thread.get("metadata") or {}).get("title"):
             return {}
@@ -78,6 +79,7 @@ async def generate_title(state: MessagesState, config) -> dict:
         title = (response.content or "").strip().strip('"').strip("'")[:80]
         if title:
             await client.threads.update(thread_id, metadata={"title": title})
+        # endregion
     except Exception as e:  # noqa: BLE001 — title is a UX nicety; never block
         # Don't break the run, but DO log. A bare pass has hidden a prod
         # bug in the sibling examples/chat graph where the title write was
@@ -102,12 +104,14 @@ def build_threads_graph():
         response = await llm.ainvoke(messages)
         return {"messages": [response]}
 
+    # region graph-wiring
     graph = StateGraph(MessagesState)
     graph.add_node("generate", generate)
     graph.add_node("generate_title", generate_title)
     graph.set_entry_point("generate")
     graph.add_edge("generate", "generate_title")
     graph.add_edge("generate_title", END)
+    # endregion
 
     return graph.compile()
 
