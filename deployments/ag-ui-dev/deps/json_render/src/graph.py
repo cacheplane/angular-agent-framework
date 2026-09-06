@@ -44,6 +44,7 @@ _PROMPT = (Path(__file__).parent.parent / "prompts" / "json-render.md").read_tex
 _MAX_TOOL_ITERATIONS = 6
 
 
+# region dashboard-state
 class DashboardState(TypedDict):
     """Graph state for the airline KPI dashboard.
 
@@ -60,8 +61,9 @@ class DashboardState(TypedDict):
     on_time_trend: Optional[list]
     flights_by_airline: Optional[list]
     recent_disruptions: Optional[list]
+# endregion
 
-
+# region render-spec-tool
 @tool
 async def render_spec(elements: dict, root: str) -> str:
     """Render an interactive dashboard layout.
@@ -84,6 +86,7 @@ async def render_spec(elements: dict, root: str) -> str:
         chat-lib's content-classifier picks it up.
     """
     return json.dumps({"elements": elements, "root": root})
+# endregion
 
 
 _ALL_TOOLS = [render_spec, *_DATA_TOOLS]
@@ -194,6 +197,7 @@ async def finalize(state: DashboardState) -> dict:
     return {"messages": [AIMessage(**replacement_kwargs)]}
 
 
+# region wrap-spec-into-ai
 async def wrap_spec_into_ai(state: DashboardState) -> dict:
     """Post-process that wraps the most recent render_spec ToolMessage
     payload into the parent AI tool-call message's content (in place via
@@ -232,7 +236,9 @@ async def wrap_spec_into_ai(state: DashboardState) -> dict:
     payload = render_tool_msg.content if isinstance(render_tool_msg.content, str) else ""
     if not payload:
         return {}
+# endregion
 
+    # region rewrite-assistant-content
     stripped = payload.strip()
     if stripped.startswith("```"):
         lines = stripped.split("\n")
@@ -260,8 +266,10 @@ async def wrap_spec_into_ai(state: DashboardState) -> dict:
     out.append(AIMessage(**replacement_kwargs))
 
     return {"messages": out}
+    # endregion
 
 
+# region emit-state
 async def emit_state(state: DashboardState) -> dict:
     """Accumulate this turn's tool results into graph state so ag-ui-langgraph
     emits them as STATE_SNAPSHOT. Walk messages in reverse to the most recent
@@ -285,6 +293,7 @@ async def emit_state(state: DashboardState) -> dict:
         elif getattr(msg, "type", None) == "human":
             break
     return updates
+# endregion
 
 
 async def respond(state: DashboardState) -> dict:
@@ -302,6 +311,7 @@ async def respond(state: DashboardState) -> dict:
     return {"messages": [response]}
 
 
+# region graph-wiring
 _builder = StateGraph(DashboardState)
 _builder.add_node("agent", agent)
 _builder.add_node("tools", ToolNode(_ALL_TOOLS))
@@ -324,3 +334,4 @@ _builder.add_edge("generate_title", END)
 # The chat example omits it because LangGraph Cloud provides one at runtime,
 # but the ag-ui-langgraph/uvicorn runtime needs it explicitly.
 graph = _builder.compile(checkpointer=MemorySaver())
+# endregion
