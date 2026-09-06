@@ -90,6 +90,59 @@ describe('FinalCTA', () => {
     expect(caption.textContent).toBe('MIT · no account, no cloud · Talk to an engineer');
     expect(screen.getByRole('link', { name: 'Talk to an engineer' }).getAttribute('href')).toBe('/contact');
   });
+
+  it('renders optional rows above the headline in the claim/api grammar', () => {
+    render(
+      <FinalCTA
+        rows={[
+          { claim: 'No key, no server, no network', api: 'provideFakeAgent()' },
+          { claim: 'Same UI code in test and production', api: 'Agent' },
+        ]}
+      />,
+    );
+    const list = screen.getByRole('list', { name: 'What you can prove first' });
+    expect(list.querySelectorAll('li')).toHaveLength(2);
+    expect(screen.getByText('provideFakeAgent()')).toBeTruthy();
+    const heading = screen.getByRole('heading', { level: 2 });
+    expect(list.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(list.querySelector('.final-cta-prove-row-claim')?.textContent).toBe('No key, no server, no network');
+    expect(list.querySelector('.final-cta-prove-row-api')?.textContent).toBe('provideFakeAgent()');
+  });
+
+  it('renders no rows list when rows are omitted', () => {
+    render(<FinalCTA />);
+    expect(screen.queryByRole('list', { name: 'What you can prove first' })).toBeNull();
+  });
+
+  it('renders extra caption links after the first, separated by " · "', () => {
+    render(
+      <FinalCTA
+        primary={{ label: 'Go', href: '/go' }}
+        caption="MIT · no account, no cloud"
+        captionLink={{ label: 'Talk to an engineer', href: '/contact' }}
+        captionLinks={[{ label: 'Setup prompt for coding agents', href: '/docs/chat/getting-started/coding-agents' }]}
+      />,
+    );
+    expect(screen.getByText(/MIT · no account, no cloud/).textContent).toBe(
+      'MIT · no account, no cloud · Talk to an engineer · Setup prompt for coding agents',
+    );
+    expect(screen.getByRole('link', { name: 'Setup prompt for coding agents' }).getAttribute('href')).toBe(
+      '/docs/chat/getting-started/coding-agents',
+    );
+  });
+
+  it('does not lead with a separator when captionLinks is the only caption content', () => {
+    const { container } = render(
+      <FinalCTA
+        primary={{ label: 'Go', href: '/go' }}
+        captionLinks={[
+          { label: 'A', href: '/a' },
+          { label: 'B', href: '/b' },
+        ]}
+      />,
+    );
+    expect(container.querySelector('.final-cta-caption')?.textContent).toBe('A · B');
+  });
 });
 
 describe('FinalCTA caption surface', () => {

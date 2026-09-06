@@ -1,22 +1,15 @@
 import { Hero } from '../components/landing/Hero';
-import { LogoRibbon } from '../components/landing/LogoRibbon';
-import { ProofStrip } from '../components/landing/ProofStrip';
-import { RuntimeParity } from '../components/landing/RuntimeParity';
-import { ThreeSteps } from '../components/landing/ThreeSteps';
-import { FeatureBlock } from '../components/landing/FeatureBlock';
-import { DemoShowcase } from '../components/landing/DemoShowcase';
-import { MediumSwitcher } from '../components/landing/MediumSwitcher';
-import { CodingAgentQuickstart } from '../components/landing/CodingAgentQuickstart';
+import { Reliability } from '../components/landing/Reliability';
 import { ScopeTable } from '../components/landing/ScopeTable';
+import { FeatureBlock } from '../components/landing/FeatureBlock';
+import { MediumSwitcher } from '../components/landing/MediumSwitcher';
 import { SECTION_MEDIA } from '../lib/section-media';
 import { buildPanes } from '../lib/build-panes';
-import { PilotBlock } from '../components/landing/PilotBlock';
-import { WhitePaperBlock } from '../components/landing/WhitePaperBlock';
+import { TeamsBlock } from '../components/landing/TeamsBlock';
 import { HomeFAQ } from '../components/landing/HomeFAQ';
 import { FinalCTA } from '../components/landing/FinalCTA';
 import { RecentArticles } from '../components/landing/RecentArticles';
-import { Section } from '../components/ui/Section';
-import { Container } from '../components/ui/Container';
+import { PROVE_IT_ROWS } from '../lib/positioning';
 import {
   createPageMetadata,
   HERO_SECONDARY_HREF,
@@ -35,8 +28,8 @@ export const metadata = createPageMetadata({
 
 export default async function HomePage() {
   const formPolicy = getFormPolicy();
-  const [streamPanes, persistPanes, approvePanes, renderPanes, testPanes] = await Promise.all(
-    (['stream', 'persist', 'approve', 'render', 'test'] as const).map((key) =>
+  const [streamPanes, persistPanes, approvePanes, renderPanes] = await Promise.all(
+    (['stream', 'persist', 'approve', 'render'] as const).map((key) =>
       buildPanes(SECTION_MEDIA[key], SECTION_MEDIA[key].video?.url ?? ''),
     ),
   );
@@ -44,11 +37,11 @@ export default async function HomePage() {
   return (
     <>
       <Hero />
-      <LogoRibbon />
-      <ProofStrip />
-      <RuntimeParity />
-      <ThreeSteps />
+      <Reliability />
+      <ScopeTable />
 
+      {/* The four capability acts stay as FeatureBlocks until plan 3 replaces
+          them with the live stage (spec §4). */}
       {/* Stream */}
       <FeatureBlock
         id="stream"
@@ -122,47 +115,19 @@ export default async function HomePage() {
         visual={<MediumSwitcher sectionId="render" panes={renderPanes} />}
       />
 
-      {/* Test */}
-      <FeatureBlock
-        id="test"
-        eyebrow="Test"
-        headline="Verify UI behavior without a model or backend."
-        body={
-          <>
-            <code className="home-code">provideFakeAgent()</code> streams canned tokens in-process; mock transports
-            script tool calls and interrupts. Your component specs stay deterministic and fast.
-          </>
-        }
-        rows={[
-          { claim: 'No key, no server, no network', api: 'provideFakeAgent()' },
-          { claim: 'Script tool calls and interrupts', api: 'mockLangGraphAgent()' },
-          { claim: 'Same UI code in test and production', api: 'Agent' },
-        ]}
-        cta={{ label: 'Try without a backend', href: INSTALL_OPTIONS[0].quickstartHref }}
-        visual={<MediumSwitcher sectionId="test" panes={testPanes} />}
-      />
-
-      {/* Interactive demo showcase */}
-      <Section surface="canvas">
-        <Container>
-          <DemoShowcase />
-        </Container>
-      </Section>
-
-      <CodingAgentQuickstart />
-      <ScopeTable />
-      <WhitePaperBlock formPolicy={formPolicy} />
-      <PilotBlock />
-      <HomeFAQ />
       <FinalCTA
         variant="dark"
+        rows={PROVE_IT_ROWS}
         headline="Prove the Angular UI before you connect the backend."
         subtext="Start with a fake agent, render a real Threadplane surface, then swap in LangGraph or AG-UI when the integration is ready."
         primary={{ label: 'Start the quickstart', href: INSTALL_OPTIONS[0].quickstartHref, ctaId: 'hero_quickstart' }}
         secondary={{ label: 'Run live examples', href: HERO_SECONDARY_HREF, ctaId: 'hero_live_demo' }}
         caption="MIT · no account, no cloud"
         captionLink={{ label: 'Talk to an engineer', href: '/contact' }}
+        captionLinks={[{ label: 'Setup prompt for coding agents', href: '/docs/chat/getting-started/coding-agents' }]}
       />
+      <TeamsBlock formPolicy={formPolicy} />
+      <HomeFAQ />
       <RecentArticles />
     </>
   );

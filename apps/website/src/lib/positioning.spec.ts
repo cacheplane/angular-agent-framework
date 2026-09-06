@@ -19,8 +19,6 @@ import {
   HOME_DESCRIPTION,
   HOME_TITLE,
   INSTALL_OPTIONS,
-  PARITY_SNIPPETS,
-  PINNED_COMPONENT_SNIPPET,
 } from './positioning';
 import { WEBSITE_SUPPORTED_ANGULAR_MAJORS } from '../components/pricing/angular-support.mjs';
 import { resolveWebsiteDir } from './website-dir';
@@ -118,14 +116,7 @@ describe('positioning: install options', () => {
   it('snippets parse as TypeScript', () => {
     expect(parses(COMPONENT_SNIPPET)).toBe(true);
     expect(parses(RENDER_SNIPPET)).toBe(true);
-    expect(parses(PINNED_COMPONENT_SNIPPET)).toBe(true);
     for (const opt of INSTALL_OPTIONS) expect(parses(opt.providerSnippet), opt.key).toBe(true);
-    for (const s of Object.values(PARITY_SNIPPETS)) expect(parses(s)).toBe(true);
-  });
-
-  it('the pinned runtime-parity pane is adapter-neutral', () => {
-    expect(PINNED_COMPONENT_SNIPPET).not.toContain('@threadplane/langgraph');
-    expect(PINNED_COMPONENT_SNIPPET).not.toContain('@threadplane/ag-ui');
   });
 
   it('pins the fake-agent quickstart href the homepage CTAs link to', () => {
@@ -150,5 +141,52 @@ describe('positioning: coding-agent prompt', () => {
     expect(CODING_AGENT_PROMPT).toContain('https://threadplane.ai/AGENTS.md');
     expect(CODING_AGENT_PROMPT).toContain('provideFakeAgent()');
     expect(CODING_AGENT_PROMPT).not.toMatch(/api[_ -]?key/i);
+  });
+});
+
+describe('homepage restructure copy (live-stage spec §3)', () => {
+  it('pins the final-mile eyebrow, heading and aside', async () => {
+    const { FINAL_MILE_EYEBROW, FINAL_MILE_HEADING, FINAL_MILE_ASIDE } = await import('./positioning');
+    expect(FINAL_MILE_EYEBROW).toBe('Where Threadplane fits');
+    expect(FINAL_MILE_HEADING).toBe('Angular teams are building agents. The last mile is still messy.');
+    expect(FINAL_MILE_ASIDE).toBe('What you start with, and what Threadplane adds.');
+  });
+
+  it('carries three reliability receipts, each linking a human-readable page', async () => {
+    const { RELIABILITY_RECEIPTS } = await import('./positioning');
+    expect(RELIABILITY_RECEIPTS.map((r) => r.claim)).toEqual([
+      'Signed provenance on every release',
+      'Three runtimes exercised end to end',
+      'No content telemetry, no cloud',
+    ]);
+    for (const r of RELIABILITY_RECEIPTS) {
+      expect(r.sourceLabel.length).toBeGreaterThan(0);
+      const { hostname, pathname } = new URL(r.sourceHref, 'https://threadplane.ai');
+      expect(hostname.startsWith('api.'), r.sourceHref).toBe(false);
+      expect(pathname.startsWith('/api/'), r.sourceHref).toBe(false);
+
+      if (r.sourceHref.startsWith('/docs/')) {
+        const slug = pathname.replace(/^\/docs\//, '');
+        const candidates = [
+          path.join(resolveWebsiteDir(), 'content', 'docs', `${slug}.mdx`),
+          path.join(resolveWebsiteDir(), 'content', 'docs', slug, 'index.mdx'),
+        ];
+        expect(candidates.some((p) => fs.existsSync(p)), r.sourceHref).toBe(true);
+      } else if (r.sourceHref.startsWith('/')) {
+        expect(
+          fs.existsSync(path.join(resolveWebsiteDir(), 'src', 'app', r.sourceHref.slice(1), 'page.tsx')),
+          r.sourceHref,
+        ).toBe(true);
+      }
+    }
+  });
+
+  it('carries the three prove-it rows the final CTA absorbs from the Test section', async () => {
+    const { PROVE_IT_ROWS } = await import('./positioning');
+    expect(PROVE_IT_ROWS).toEqual([
+      { claim: 'No key, no server, no network', api: 'provideFakeAgent()' },
+      { claim: 'Script tool calls and interrupts', api: 'mockLangGraphAgent()' },
+      { claim: 'Same UI code in test and production', api: 'Agent' },
+    ]);
   });
 });

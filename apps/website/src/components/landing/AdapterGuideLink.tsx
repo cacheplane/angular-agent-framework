@@ -9,11 +9,11 @@ import { trackCtaClick } from '../../lib/analytics/client';
  * `data-cta` attribute on a server-rendered `<Link>` has no handler wired to
  * it and never tracks.
  */
-export function AdapterGuideLink() {
+export function AdapterGuideLink({ className = 'parity-cta' }: { className?: string }) {
   return (
     <Link
       href="/docs/choosing-an-adapter"
-      className="parity-cta"
+      className={className}
       data-cta="home_adapter_guide"
       onClick={() =>
         trackCtaClick({

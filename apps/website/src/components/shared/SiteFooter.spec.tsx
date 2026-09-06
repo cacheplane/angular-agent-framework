@@ -112,6 +112,8 @@ describe('SiteFooter', () => {
   );
 
   it('hands the server-owned policy through to the footer newsletter form', () => {
+    pathname.current = '/pricing';
+
     render(<SiteFooter formPolicy={formPolicy} />);
 
     const disclosure = screen.getByText(formPolicy.disclosures.newsletter);
@@ -120,5 +122,13 @@ describe('SiteFooter', () => {
         .getByRole('button', { name: /subscribe/i })
         .getAttribute('aria-describedby')
     ).toBe(disclosure.id);
+  });
+
+  it('hides the newsletter form on the homepage, whose field report form is the one form', () => {
+    pathname.current = '/';
+    render(<SiteFooter formPolicy={formPolicy} />);
+    expect(screen.queryByRole('button', { name: /subscribe/i })).toBeNull();
+    expect(screen.queryByText(formPolicy.disclosures.newsletter)).toBeNull();
+    expect(document.querySelector('footer')).not.toBeNull();
   });
 });

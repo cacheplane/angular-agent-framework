@@ -42,6 +42,48 @@ export function formatAngularRange(majors: readonly number[]): string {
 }
 export const HERO_TRUST_LINE = `MIT · ${formatAngularRange(WEBSITE_SUPPORTED_ANGULAR_MAJORS)} · no account, no cloud`;
 
+// ── The final mile (live-stage spec §3, block 3) ─────────────────────────────
+export const FINAL_MILE_EYEBROW = 'Where Threadplane fits';
+export const FINAL_MILE_HEADING = 'Angular teams are building agents. The last mile is still messy.';
+export const FINAL_MILE_ASIDE = 'What you start with, and what Threadplane adds.';
+
+// ── Reliability receipts (spec §3, block 2). Each links a page a human can read;
+// the sourced numbers stay in Reliability.tsx beside them. ───────────────────
+export interface ReliabilityReceipt {
+  readonly claim: string;
+  readonly detail: string;
+  readonly sourceLabel: string;
+  readonly sourceHref: string;
+}
+export const RELIABILITY_RECEIPTS: readonly ReliabilityReceipt[] = [
+  {
+    claim: 'Signed provenance on every release',
+    detail: 'npm provenance attestations from OIDC trusted publishing, and a SLSA provenance file on each GitHub release.',
+    sourceLabel: 'npmjs.com · provenance',
+    sourceHref: 'https://www.npmjs.com/package/@threadplane/chat',
+  },
+  {
+    claim: 'Three runtimes exercised end to end',
+    detail: 'LangGraph, Mastra and AWS Strands backends, each driven by browser tests on every merge against one Angular contract.',
+    sourceLabel: 'runtime portability matrix',
+    sourceHref: '/docs/choosing-an-adapter#measured-runtime-support',
+  },
+  {
+    claim: 'No content telemetry, no cloud',
+    detail: 'Operational facts about how the product runs, never prompts, messages or tool data. MIT, self-hosted, no account.',
+    sourceLabel: 'privacy policy',
+    sourceHref: '/privacy',
+  },
+];
+
+// ── Prove it without a backend (spec §3, block 5): the Test rows the final CTA
+// absorbs. ────────────────────────────────────────────────────────────────────
+export const PROVE_IT_ROWS = [
+  { claim: 'No key, no server, no network', api: 'provideFakeAgent()' },
+  { claim: 'Script tool calls and interrupts', api: 'mockLangGraphAgent()' },
+  { claim: 'Same UI code in test and production', api: 'Agent' },
+] as const;
+
 // ── Install variants: the ONE place install commands live on the website ─────
 export type InstallVariant = 'fake' | 'langgraph' | 'ag_ui';
 
@@ -65,25 +107,6 @@ import { ChatComponent } from '@threadplane/chat';
 })
 export class SupportAgentComponent {
   protected readonly agent = injectAgent();
-}`;
-
-/**
- * Pinned "what does not change" pane of the runtime-parity section. Unlike
- * COMPONENT_SNIPPET (used for the dialog/three-steps), this must not import
- * from an adapter package — `injectAgent` comes from whichever adapter you
- * picked, so the pinned pane stays adapter-neutral and true under AG-UI too.
- */
-export const PINNED_COMPONENT_SNIPPET = `import { Component } from '@angular/core';
-import { ChatComponent, type Agent } from '@threadplane/chat';
-
-@Component({
-  imports: [ChatComponent],
-  template: \`<chat [agent]="agent" />\`,
-})
-export class SupportAgentComponent {
-  // injectAgent() comes from the adapter you chose above;
-  // the component only depends on the runtime-neutral Agent contract.
-  protected readonly agent: Agent = injectAgent();
 }`;
 
 /**
@@ -156,12 +179,6 @@ export const appConfig: ApplicationConfig = {
     quickstartHref: '/docs/ag-ui/getting-started/quickstart',
   },
 ];
-
-/** Runtime-parity section: only the config pane differs. */
-export const PARITY_SNIPPETS = {
-  langgraph: INSTALL_OPTIONS[1].providerSnippet,
-  ag_ui: INSTALL_OPTIONS[2].providerSnippet,
-} as const;
 
 // ── Coding-agent quickstart prompt ───────────────────────────────────────────
 export const CODING_AGENT_PROMPT = `Add Threadplane to this Angular application.

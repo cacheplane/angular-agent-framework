@@ -2,6 +2,8 @@ import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { SectionHeader } from '../ui/SectionHeader';
 import { WEBSITE_SUPPORTED_ANGULAR_MAJORS } from '../pricing/angular-support.mjs';
+import { RELIABILITY_RECEIPTS } from '../../lib/positioning';
+import { AdapterGuideLink } from './AdapterGuideLink';
 
 interface ProofCell {
   /** Big Garamond numeral, or null when the cell renders a live badge. */
@@ -47,8 +49,7 @@ export const PROOF_CELLS: readonly ProofCell[] = [
     sourceHref: 'https://hvtracker.net/agents/threadplane/',
   },
   {
-    // Revived per the homepage design spec's condition: npm @latest publishes
-    // ^20 || ^21 || ^22 (verified 2026-08-31). Derived, never hardcoded.
+    // Derived from the published peer range, never hardcoded.
     value: `${WEBSITE_SUPPORTED_ANGULAR_MAJORS[0]}–${WEBSITE_SUPPORTED_ANGULAR_MAJORS.at(-1)}`,
     caption: 'Angular majors supported, CI-tested',
     sourceLabel: 'npmjs.com',
@@ -56,7 +57,38 @@ export const PROOF_CELLS: readonly ProofCell[] = [
   },
 ];
 
-export function ProofStrip() {
+interface RibbonItem {
+  name: string;
+  logoSrc: string;
+}
+
+export const RIBBON_ITEMS: readonly RibbonItem[] = [
+  { name: 'OpenAI', logoSrc: '/logos/providers/openai.svg' },
+  { name: 'Anthropic', logoSrc: '/logos/providers/anthropic.svg' },
+  { name: 'Gemini', logoSrc: '/logos/providers/google.svg' },
+  { name: 'Bedrock', logoSrc: '/logos/providers/bedrock.svg' },
+  { name: 'LangGraph', logoSrc: '/logos/langgraph.svg' },
+  { name: 'AG-UI', logoSrc: '/logos/ag-ui.svg' },
+  { name: 'CrewAI', logoSrc: '/logos/runtimes/crewai.svg' },
+  { name: 'Mastra', logoSrc: '/logos/runtimes/mastra.svg' },
+];
+/** Azure OpenAI, Pydantic AI, Microsoft Agent Framework, AWS Strands. */
+export const RIBBON_MORE_COUNT = 4;
+
+/**
+ * The reliability section (homepage design spec §3, block 2): the sourced
+ * proof band, a second line of receipts in the same grammar, and the
+ * works-with line as its footer, so the multi-runtime claim sits inside the
+ * trust argument instead of floating above it as a separate strip.
+ *
+ * Replaces ProofStrip and LogoRibbon, both deleted with the homepage
+ * restructure.
+ *
+ * "Works with" is a compatibility claim, never a customer claim: logos are
+ * `alt="" aria-hidden` beside visible names, and no wording may imply these
+ * companies use Threadplane. Reliability.spec.tsx guards that.
+ */
+export function Reliability() {
   return (
     <Section surface="dark" id="proof" ariaLabelledBy="proof-heading">
       <Container>
@@ -108,6 +140,50 @@ export function ProofStrip() {
                   </a>
                 </li>
               ))}
+            </ul>
+            <ul className="reliability-receipts" role="list" aria-label="Receipts">
+              {RELIABILITY_RECEIPTS.map((r) => {
+                const external = r.sourceHref.startsWith('http');
+                return (
+                  <li className="reliability-receipt" key={r.claim}>
+                    <p className="reliability-receipt-claim">{r.claim}</p>
+                    <p className="reliability-receipt-detail">{r.detail}</p>
+                    <a
+                      className="proof-strip-source"
+                      href={r.sourceHref}
+                      {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                    >
+                      {r.sourceLabel}
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+            <ul
+              className="reliability-works-with"
+              role="list"
+              aria-labelledby="reliability-works-with-label"
+            >
+              <li className="reliability-works-with-label" id="reliability-works-with-label">
+                Works with
+              </li>
+              {RIBBON_ITEMS.map((item) => (
+                <li className="reliability-works-with-item" key={item.name}>
+                  <img
+                    src={item.logoSrc}
+                    alt=""
+                    aria-hidden="true"
+                    loading="lazy"
+                    decoding="async"
+                    className="reliability-logo"
+                  />
+                  <span className="reliability-works-with-name">{item.name}</span>
+                </li>
+              ))}
+              <li className="reliability-works-with-more">+ {RIBBON_MORE_COUNT} more</li>
+              <li className="reliability-works-with-cta">
+                <AdapterGuideLink className="reliability-works-with-link" />
+              </li>
             </ul>
           </div>
         </div>

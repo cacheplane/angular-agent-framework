@@ -1,6 +1,7 @@
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { SectionHeader } from '../ui/SectionHeader';
+import { FINAL_MILE_ASIDE, FINAL_MILE_EYEBROW, FINAL_MILE_HEADING } from '../../lib/positioning';
 
 const ROWS = [
   {
@@ -31,9 +32,10 @@ export function ScopeTable() {
       <Container>
         <SectionHeader
           variant="rail"
-          eyebrow="Why Threadplane"
-          heading="What you start with, and what Threadplane adds."
+          eyebrow={FINAL_MILE_EYEBROW}
+          heading={FINAL_MILE_HEADING}
           headingId="why-heading"
+          aside={FINAL_MILE_ASIDE}
         />
         <div className="scope-table-wrap">
           <table className="scope-table">

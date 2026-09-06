@@ -5,8 +5,9 @@ import type { DemoClip } from '../../lib/demo-media';
 interface ClipPlayerProps {
   clip: DemoClip;
   /**
-   * Overlay drawn on top of the video — the homepage showcase puts its
-   * "Launch live demo" button here. Absent everywhere else.
+   * Overlay drawn on top of the video. The homepage demo showcase put its
+   * "Launch live demo" button here; that showcase was retired by the homepage
+   * restructure, so no caller passes an overlay today.
    */
   overlay?: ReactNode;
   /** Address-bar text, when it should differ from the clip's own. */
@@ -17,7 +18,8 @@ interface ClipPlayerProps {
  * A recorded clip in a browser frame.
  *
  * Extracted after the same markup reached three call sites — the homepage
- * sections, the homepage demo showcase, and the solutions pages — identical
+ * sections, the (since retired) homepage demo showcase, and the solutions
+ * pages — identical
  * down to the inline styles. `DemoClip` already gave them a common shape, so
  * the duplication bought nothing.
  *
