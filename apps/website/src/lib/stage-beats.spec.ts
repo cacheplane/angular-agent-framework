@@ -218,8 +218,8 @@ describe('holdCue / closeCue', () => {
     const parts = closeCue().split(' ');
     expect(parts).toHaveLength(4);
     expect(Number(parts[0])).toBeCloseTo(settleAt('render'), 4);
-    expect(parts.slice(1).join(' ')).toBe('1 0.2 0');
-    expect(closeCue()).toMatch(/ 1 0\.2 0$/);
+    expect(parts.slice(1).join(' ')).toBe('1 0.1 0');
+    expect(closeCue()).toMatch(/ 1 0\.1 0$/);
   });
   it('every rail cue is at full opacity on one of the harness sample points', () => {
     // scroll-craft's cue model (src/vendor/scrollcraft/scrollcraft.js): ramps
@@ -257,6 +257,15 @@ describe('holdCue / closeCue', () => {
         full,
         `${name} (${cue}) has no harness sample on its plateau`
       ).not.toHaveLength(0);
+      // Sample-independent: a plateau a reader can see. The closing ledger's
+      // window is the render tail, so its floor is lower; the engine keeps it
+      // at 1 while the pinned act scrolls away.
+      const n = cue.split(' ').map(Number);
+      const win = n[1] - n[0];
+      const plateau = win * (1 - (n[2] ?? 0.3) - (n[3] ?? 0.3));
+      expect(plateau, `${name} plateau`).toBeGreaterThanOrEqual(
+        name === 'close' ? 0.02 : 0.04
+      );
     }
   });
   it('keeps every cue inside the act with from < to', () => {

@@ -216,5 +216,7 @@ export function holdCue(): string {
  * 2% of the act's scroll still to go rather than on its last pixel.
  */
 export function closeCue(): string {
-  return `${fmt(settleAt('render'))} 1 0.2 0`;
+  // rIn 0.1: the ledger's window is short (the render tail), so a wider ramp
+  // leaves its plateau with no margin around the harness's last sample.
+  return `${fmt(settleAt('render'))} 1 0.1 0`;
 }

@@ -144,8 +144,9 @@ export function StageAct({ onFallback, proof }: Props) {
       data-state={ready ? 'ready' : 'mounting'}
       aria-labelledby="stage-heading"
     >
-      {/* The rail cues are hidden by opacity only, so their CTAs are taken
-          out of the tab order (below) and the pin is skippable as a whole. */}
+      {/* The rail cues are hidden by opacity only, so the links inside them
+          are out of the tab order (below); the segment bar is always visible
+          and stays keyboardable, and the pin is skippable as a whole. */}
       <a className="stage-skip" href="#stage-end">
         Skip the stage
       </a>
