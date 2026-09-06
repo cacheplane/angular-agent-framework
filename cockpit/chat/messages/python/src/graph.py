@@ -72,6 +72,7 @@ def build_messages_graph():
     The agent responds with various message styles to showcase
     ChatMessageListComponent, ChatInputComponent, and ChatTypingIndicatorComponent.
     """
+    # region generate-node
     llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
 
     async def generate(state: MessagesState) -> dict:
@@ -79,6 +80,8 @@ def build_messages_graph():
         messages = [SystemMessage(content=system_prompt)] + state["messages"]
         response = await llm.ainvoke(messages)
         return {"messages": [response]}
+
+    # endregion
 
     graph = StateGraph(MessagesState)
     graph.add_node("generate", generate)

@@ -8,12 +8,14 @@ import {
 import { injectAgent, provideAgent, LangGraphThreadsAdapter, refreshOnRunEnd } from '@threadplane/langgraph';
 import { ExampleChatLayoutComponent } from '@threadplane/example-layouts';
 
+// #region active-thread-signal
 // Writable signal the agent watches — assigning to it switches the active
 // thread without forcing a full agent rebuild. Shared between the
 // component-scoped provideAgent() config (threadId + onThreadId) and the
 // component. Module scope is safe: each demo app bootstraps one
 // ThreadsComponent instance.
-const activeThreadIdState = signal<string | null>(null);
+export const activeThreadIdState = signal<string | null>(null);
+// #endregion
 
 /**
  * ThreadsComponent demonstrates multi-thread conversation management
@@ -29,6 +31,7 @@ const activeThreadIdState = signal<string | null>(null);
   selector: 'app-threads',
   standalone: true,
   imports: [ChatComponent, ChatThreadListComponent, ExampleChatLayoutComponent],
+  // #region agent-provider
   // Scoped agent (Option B): threadId + onThreadId are per-instance, so the
   // agent is provided at the component rather than in app.config.ts.
   providers: [
@@ -49,7 +52,9 @@ const activeThreadIdState = signal<string | null>(null);
       };
     }),
   ],
+  // #endregion
   template: `
+    <!-- #region chat-and-sidebar -->
     <example-chat-layout sidebarPosition="left" sidebarWidth="16rem">
       <chat main
         [agent]="agent"
@@ -71,6 +76,7 @@ const activeThreadIdState = signal<string | null>(null);
           (threadSelected)="onThreadSelected($event)" />
       </div>
     </example-chat-layout>
+    <!-- #endregion -->
   `,
   styles: [`
     .panel {
@@ -126,6 +132,7 @@ export class ThreadsComponent {
 
   protected readonly agent = injectAgent();
 
+  // #region thread-actions
   /** Action adapter: framework calls these on rename / delete / archive
    *  after confirmation. Adapter handles SDK round-trip + refresh. */
   protected readonly threadActions: ThreadActionAdapter = {
@@ -140,7 +147,9 @@ export class ThreadsComponent {
     },
     unarchive: (id) => this.threadsSvc.unarchive(id),
   };
+  // #endregion
 
+  // #region refresh-on-run-end
   constructor() {
     // Initial fetch.
     void this.threadsSvc.refresh();
@@ -151,7 +160,9 @@ export class ThreadsComponent {
     // without a manual reload.
     refreshOnRunEnd(this.agent, () => this.threadsSvc.refresh());
   }
+  // #endregion
 
+  // #region switch-and-create
   protected onThreadSelected(threadId: string): void {
     // switchThread is the LangGraph adapter's canonical thread-switch API
     // (resets derived state + reloads server messages for the new thread).
@@ -166,4 +177,5 @@ export class ThreadsComponent {
       this.activeThreadId.set(id);
     }
   }
+  // #endregion
 }

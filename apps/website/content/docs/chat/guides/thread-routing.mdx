@@ -1,68 +1,122 @@
+---
+description: How the threads example lists, switches, creates, and removes conversations, and how injectThreadRouting binds the active thread to the URL
+---
+
 # Thread Routing
 
-`injectThreadRouting()` binds an app-owned active-thread signal to the Angular Router: it restores the thread id from the URL on load, stamps signal changes back into the URL, validates stale links, and treats a bare URL as "no thread" (the welcome state). **The URL is the sole source of truth — nothing is written to localStorage**, so links remain shareable without any extra plumbing.
+A chat that holds more than one conversation needs two things: a store that knows which threads exist, and a single signal that says which one is active. `@threadplane/langgraph` supplies the store, `provideAgent({ threadId })` watches the signal, and `injectThreadRouting()` binds that signal to the Angular Router when you want conversations to survive a reload and travel in a link. The running example wires the store and the signal, and this guide walks its three files before turning to the URL layer.
 
-<Callout type="info" title="Prerequisites">
-  Call `injectThreadRouting()` from an injection context (a component constructor or field initializer), and declare the active-thread signal at module scope so your `provideAgent({ threadId })` provider can reference it.
+## What the demo does
+
+The Run tab shows the prebuilt `<chat>` composition with a thread sidebar beside it. Ask the aviation assistant about a route — a flight from LAX to JFK, for instance — and the backend allocates a thread. The sidebar row starts out labeled `Untitled` and picks up a short generated title once the run finishes.
+
+Press "+ New" above the list to open a second conversation, then move between the rows and watch the transcript swap. Each row also carries a menu with Rename, Archive, and Delete, and every one of those round-trips through the LangGraph Threads API.
+
+## How it is built
+
+Three files carry the feature: a graph that writes a readable title into thread metadata, an application config that registers the thread store, and a component that owns the active-thread signal and the sidebar. Open the Code tab to read them in place.
+
+### Naming a thread from its first turn
+
+A thread id is a UUID, which makes a poor sidebar label. The `generate_title` node asks a small model to summarize the first human message and writes the result to the thread's `metadata.title`, which is exactly where the thread store looks for a label. The write itself sits inside a `try`/`except` that swallows failures, so a title write that fails never blocks the run.
+
+<ExampleCode file="graph.py" region="title-write" title="graph.py — the title write" />
+
+The write is idempotent: the node reads the thread first and returns early when a title is already present, so later turns cost nothing.
+
+### Wiring the title node into the graph
+
+The title node runs after the user-visible turn, never before it, so nothing about the response waits on it.
+
+<ExampleCode file="graph.py" region="graph-wiring" title="graph.py — the graph" />
+
+<Callout type="warning" title="Serving through langgraph dev or LangGraph Platform? Do not compile a checkpointer.">
+This graph calls `compile()` with no checkpointer, because the LangGraph API server provides persistence itself. `langgraph dev` refuses to load a graph that compiles its own saver, and a deployment ignores one. See [LangGraph persistence](/docs/langgraph/guides/persistence) for the full story and for the cases where you do supply a saver.
 </Callout>
 
-## What it does
+### Registering the thread store
+
+`LangGraphThreadsAdapter` is a root-provided service that wraps `client.threads.*` from `@langchain/langgraph-sdk`. It reads its base URL from `LANGGRAPH_THREADS_CONFIG`, and that token is the reason this application config is longer than most. The second root token, `LANGGRAPH_CLIENT_OPTIONS`, carries the client options — auth headers, retries — that both the adapter and the component-scoped `provideAgent` read.
+
+<ExampleCode file="app.config.ts" />
+
+`provideChat({})` is the only other root provider, because the agent itself is registered at the component instead.
+
+### The active-thread signal
+
+One writable signal is the source of truth for the active thread. It lives at module scope so the component's `provideAgent()` factory, which runs at provider registration time, can close over it.
+
+<ExampleCode file="threads.component.ts" region="active-thread-signal" title="threads.component.ts — the active-thread signal" />
+
+Module scope is safe here because the demo bootstraps exactly one instance of the component; an application that mounts several should move the signal into a service.
+
+### The agent provider
+
+`provideAgent()` sits in the component's `providers` array rather than in the application config, because `threadId` and `onThreadId` are per-instance configuration.
+
+<ExampleCode file="threads.component.ts" region="agent-provider" title="threads.component.ts — the agent provider" />
+
+The adapter watches `threadId`, so assigning to the signal switches conversations, and `onThreadId` fires when the backend allocates a thread on first submit, which keeps the signal in step without a round-trip through the sidebar.
+
+<Callout type="warning" title="Thread ids come from the server">
+Never generate a thread id in the browser. Use the value handed to `onThreadId`, or one the LangGraph Threads API returned earlier.
+</Callout>
+
+### The sidebar and the thread list
+
+The `<chat>` composition owns the transcript, the input, and the loading and error states. It also renders its own `<chat-thread-list>` in a sidebar, shown at widths of 768px and up whenever the `[threads]` input it receives is non-empty. The same `[threads]` and `[activeThreadId]` inputs that feed the template's explicit list also feed that built-in one, which is why `<chat>` re-emits `threadSelected` — it is passing along the selection its own internal list produced. Because the demo passes `[threads]` to both `<chat>` and the explicit `<chat-thread-list>` in the template, a desktop viewport shows two thread lists side by side; that is a defect in the example, not a pattern to copy.
+
+<ExampleCode file="threads.component.ts" region="chat-and-sidebar" title="threads.component.ts — the template" />
+
+Both `<chat>` and `<chat-thread-list>` emit `threadSelected`, so either surface can drive the switch.
+
+### Row actions
+
+`ThreadActionAdapter` is how the list asks the application to perform a rename, an archive, or a delete. The framework owns the row interactions around each call — the inline rename field, the delete confirmation dialog, and the optimistic row update — so the adapter only has to perform the write.
+
+<ExampleCode file="threads.component.ts" region="thread-actions" title="threads.component.ts — the action adapter" />
+
+Deleting or archiving the active conversation clears the signal, which returns the surface to its empty state.
+
+<Callout type="info" title="Which menu entries appear">
+`<chat-thread-list>` builds its menu from the keys the adapter defines. The demo's list runs in the default `active` mode, so it offers Rename, Archive, and Delete; `unarchive` surfaces only in a list rendered with `[mode]="'archived'"`. Each adapter method refreshes the store on success, which the framework relies on to clear its optimistic overrides.
+</Callout>
+
+### Refreshing after a run
+
+The store is a snapshot, not a subscription, so something has to re-fetch it. `refreshOnRunEnd()` calls back on every transition out of the running state, which is precisely when the title node has finished writing.
+
+<ExampleCode file="threads.component.ts" region="refresh-on-run-end" title="threads.component.ts — initial fetch and refresh" />
+
+`refreshOnRunEnd()` must run inside an injection context, because it uses an Angular effect; `refresh()` is a plain async call.
+
+### Switching and creating
+
+Two handlers close the loop. Selecting a row tells the agent to load that thread and updates the signal; the "+ New" button asks the store for a thread and then activates it. `create()` returns `null` when the request fails, which is why the result is checked before it is used.
+
+<ExampleCode file="threads.component.ts" region="switch-and-create" title="threads.component.ts — switching and creating" />
+
+Each handler calls both `agent.switchThread(id)` and `activeThreadId.set(id)` because the two calls serve different consumers: the adapter watches the `activeThreadId` signal to drive the sidebar highlight, while `switchThread(id)` resets the agent's own derived state and re-fetches that thread's server-side history.
+
+## Routing a URL to a thread
+
+The example stops at an in-memory signal, which is the right choice for a surface with no visible URL. When the address bar is visible and the user may share it, `injectThreadRouting()` binds the same signal to the Angular Router: it restores the thread id from the URL on load, stamps signal changes back into the URL, validates stale links, and treats a bare URL as "no thread". The URL is the sole source of truth, and nothing is written to `localStorage`.
 
 | Behavior | Detail |
 |---|---|
 | Restore on load | Reads the thread id from the URL on startup and seeds the signal |
-| Signal → URL | When the signal changes (e.g. after the agent allocates a new thread), navigates to the matching URL |
-| URL → signal | On every `NavigationEnd` keeps the signal in sync with the current URL |
-| Validate stale links | If `validate` returns `false`, redirects to the bare path (`replaceUrl: true`) |
-| Bare URL = welcome | When the URL holds no thread segment, the signal is `null` and the chat shows its welcome state |
+| Signal to URL | When the signal changes, navigates to the matching URL |
+| URL to signal | On every `NavigationEnd`, keeps the signal in sync with the current URL |
+| Validate stale links | When `validate` resolves `false`, redirects to the bare path with `replaceUrl: true` |
+| Bare URL is the welcome state | When the URL holds no thread segment, the signal is `null` |
 
-Because the URL carries the id, browser reload, forward/back, and shared links all land in the correct conversation — as long as the backend has a durable store (see [When to use it](#when-to-use-it) below).
-
-## Canonical usage
-
-The `examples/chat` app is the reference implementation. The pattern has three moving pieces:
-
-**1. A module-scope signal**
+Given the module-scoped signal and the store the example already has, adding the URL layer is one call from an injection context:
 
 ```typescript
-// app.config.ts (or a shared token file)
-import { signal } from '@angular/core';
-
-export const ACTIVE_THREAD = signal<string | null>(null);
-```
-
-The signal lives at module scope (outside any class) so `provideAgent()` — which runs at provider registration time, before component construction — can reference it directly. A component-class field would not exist yet when the provider config is evaluated.
-
-**2. `provideAgent()` wires the signal**
-
-```typescript
-// app.config.ts
-import { ApplicationConfig } from '@angular/core';
-import { provideAgent } from '@threadplane/langgraph';
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideAgent({
-      apiUrl: 'https://your-langgraph-server/api',
-      assistantId: 'chat',
-      threadId: ACTIVE_THREAD,
-      onThreadId: (id) => ACTIVE_THREAD.set(id),
-    }),
-  ],
-};
-```
-
-- `threadId: ACTIVE_THREAD` — the adapter watches this signal; changing it switches threads.
-- `onThreadId` — called when the adapter auto-creates a new thread. Setting the signal here lets the `signal → URL` effect in `injectThreadRouting` pick up the new id and stamp it into the URL automatically.
-
-**3. `injectThreadRouting()` in the shell component**
-
-```typescript
-// shell.component.ts
 import { Component, inject } from '@angular/core';
-import { LangGraphThreadsAdapter } from '@threadplane/langgraph';
 import { injectThreadRouting } from '@threadplane/chat';
-import { ACTIVE_THREAD } from '../app.config';
+import { LangGraphThreadsAdapter } from '@threadplane/langgraph';
+import { activeThreadIdState } from './threads.component';
 
 @Component({ /* ... */ })
 export class ShellComponent {
@@ -70,23 +124,22 @@ export class ShellComponent {
 
   constructor() {
     injectThreadRouting({
-      threadId: ACTIVE_THREAD,
+      threadId: activeThreadIdState,
       validate: (id) => this.threads.getThread(id).then(Boolean),
     });
   }
 }
 ```
 
-Call `injectThreadRouting()` inside the constructor (or any injection context such as a factory function). It must run in an injection context because it calls `inject(Router)` internally.
+`injectThreadRouting()` calls `inject(Router)` internally, so it must run in an injection context: a constructor body, as above, or a field initializer. The `validate` callback receives every candidate id the URL produces. `getThread()` resolves `null` for both outcomes the server reports as "missing" — a 404 for a thread it does not have (a deleted id, or one pasted from another environment) and a 422 for an id that is not even a valid UUID — and rethrows genuine network errors, so a redirect happens only when the thread is really gone.
 
-The `validate` callback receives a candidate id whenever one appears in the URL. If the thread no longer exists on the server (deleted, expired, or from a different environment) the helper redirects to the bare path with `replaceUrl: true`, which replaces the stale URL in history rather than pushing a new entry.
+### Custom URL shapes
 
-## Custom URL shapes
-
-The defaults (`/` for welcome, `/<threadId>` for a thread) work for simple apps. For mode-prefixed or nested paths, supply `toCommands` and `threadIdFromUrl`:
+The defaults are `/` for the welcome state and `/<threadId>` for a conversation. Supply `toCommands` and `threadIdFromUrl` for mode-prefixed or nested paths:
 
 ```typescript
-// examples/chat pattern: /embed, /embed/<id>, /popup/<id>, /sidebar/<id>
+import { activeThreadIdState } from './threads.component';
+
 const MODES = ['embed', 'popup', 'sidebar'] as const;
 type DemoMode = (typeof MODES)[number];
 
@@ -101,19 +154,21 @@ function parseUrl(url: string): { mode: DemoMode; threadId: string | null } {
 
 // Inside the shell constructor — `this.mode()` reads the current mode signal:
 injectThreadRouting({
-  threadId: ACTIVE_THREAD,
+  threadId: activeThreadIdState,
   threadIdFromUrl: (url) => parseUrl(url).threadId,
   toCommands: (id) => (id ? ['/', this.mode(), id] : ['/', this.mode()]),
   validate: (id) => this.threads.getThread(id).then(Boolean),
 });
 ```
 
-`threadIdFromUrl` extracts the id from any URL the router lands on. `toCommands` builds the router-navigate command array for a given id (or `null` for the bare path). Both receive the current URL string and thread id respectively; neither needs to touch the router directly.
+`threadIdFromUrl` extracts the id from whatever URL the router lands on, and `toCommands` builds the navigate command array for an id, or for `null` when the conversation is cleared.
 
-## Full API reference
+### Configuration reference
 
 ```typescript
 import { injectThreadRouting, type ThreadRoutingConfig } from '@threadplane/chat';
+import { WritableSignal } from '@angular/core';
+import { NavigationExtras } from '@angular/router';
 
 export interface ThreadRoutingConfig {
   /** App-owned signal that is the source of truth for the active thread. */
@@ -135,52 +190,30 @@ export interface ThreadRoutingConfig {
 function injectThreadRouting(config: ThreadRoutingConfig): void;
 ```
 
-## When to use it
+## When to use URL-backed threads
 
-URL-as-source-of-truth thread routing is the right choice when two conditions are both true:
+Reach for `injectThreadRouting()` when both of these hold:
 
-1. **The user sees and can share the URL.** A standalone app at its own domain or route is the typical case. If the app runs inside an iframe (e.g. an embedded docs widget) and the URL is never surfaced to the user, URL persistence adds friction without benefit — keep the active thread in an in-memory signal instead.
+1. **The user sees the URL and may share it.** A standalone application at its own route is the typical case. Inside an iframe whose address is never surfaced, URL persistence adds plumbing and buys nothing; keep the active thread in a plain signal, as the example does.
 
-2. **The backend can actually restore the conversation from the id.** LangGraph with a Postgres or Redis checkpointer satisfies this. An in-process `MemorySaver` does not — a restored id points at ephemeral state that disappears on server restart, so the UI would show an empty welcome surface even though the URL looks correct.
+2. **The backend can restore the conversation from the id.** A LangGraph server backed by a durable checkpointer satisfies this. An in-process `MemorySaver` does not: the id survives the reload but the state behind it does not, so the surface comes back empty while the URL still looks correct.
 
-The underlying principle: **persistence UI should match what the backend can actually restore.** When the backend is stateless, don't surface stateful affordances like bookmarkable thread URLs.
-
-**Use `injectThreadRouting()` when:**
-- Building a standalone chat app at a user-visible URL
-- The backend uses a durable checkpointer (Postgres, Redis, Neon, etc.)
-- You want reload-survival, shareable links, and validated stale-link redirects for free
-
-**Keep threads in memory / ephemeral when:**
-- The app is embedded and the URL is not user-visible
-- The server is stateless or uses an in-memory `MemorySaver`
-- The chat is a short-lived session and persistence would be surprising to users
+The principle underneath is that persistence in the interface should match what the backend can actually restore. A stateless server should not offer bookmarkable conversation links.
 
 <Callout type="info" title="AG-UI backends">
-The AG-UI protocol is event-stream-only — it does not define a server-side thread-lookup endpoint, so `validate` is not available. When using `@threadplane/ag-ui`, pass no `validate` callback and manage thread switching at the host-service level before the agent boots. See [AG-UI architecture](/docs/ag-ui/concepts/architecture) for details.
+The AG-UI protocol is event-stream only, and it defines no server-side thread-lookup endpoint, so there is nothing for `validate` to call. With `@threadplane/ag-ui`, pass no `validate` callback and handle thread switching in your own host service before the agent boots. See [AG-UI architecture](/docs/ag-ui/concepts/architecture) for details.
 </Callout>
 
-## What's next
+## What's Next
 
 <CardGroup cols={3}>
-  <Card
-    title="LangGraph Persistence"
-    icon="database"
-    href="/docs/langgraph/guides/persistence"
-  >
+  <Card title="LangGraph Persistence" href="/docs/langgraph/guides/persistence">
     Server-side thread store and checkpoint configuration.
   </Card>
-  <Card
-    title="Writing an Adapter"
-    icon="plug"
-    href="/docs/chat/guides/writing-an-adapter"
-  >
+  <Card title="Writing an Adapter" href="/docs/chat/guides/writing-an-adapter">
     Implement custom adapters that support thread switching.
   </Card>
-  <Card
-    title="Lifecycle Signals"
-    icon="activity"
-    href="/docs/chat/guides/lifecycle"
-  >
+  <Card title="Lifecycle Signals" href="/docs/chat/guides/lifecycle">
     Per-instance signals for debugging and observability.
   </Card>
 </CardGroup>

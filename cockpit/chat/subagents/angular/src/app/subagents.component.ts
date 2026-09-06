@@ -34,6 +34,7 @@ const SUGGESTIONS = [
     ExampleChatLayoutComponent,
   ],
   template: `
+    <!-- #region template -->
     <example-chat-layout sidebarWidth="20rem">
       <chat main [agent]="agent" class="flex-1 min-w-0">
         <div chatWelcomeSuggestions>
@@ -57,6 +58,7 @@ const SUGGESTIONS = [
         </ol>
       </div>
     </example-chat-layout>
+    <!-- #endregion -->
   `,
   styles: [`
     .panel {
@@ -92,6 +94,7 @@ const SUGGESTIONS = [
   `],
 })
 export class SubagentsComponent {
+  // #region agent
   protected readonly agent = injectAgent();
 
   protected readonly suggestions = SUGGESTIONS;
@@ -99,4 +102,5 @@ export class SubagentsComponent {
   protected send(text: string): void {
     void this.agent.submit({ message: text });
   }
+  // #endregion
 }

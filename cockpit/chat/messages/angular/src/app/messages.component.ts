@@ -45,10 +45,12 @@ import { MESSAGES_AGENT, type MessagesState } from './agent-ref';
           <h1 class="demo-title">Chat Messages Primitives</h1>
         </header>
         <div class="message-scroll">
+          <!-- #region message-templates -->
           <chat-message-list [agent]="agent">
             <ng-template chatMessageTemplate="human" let-message>
               <chat-message [role]="'user'">{{ messageContent(message) }}</chat-message>
             </ng-template>
+            <!-- #region assistant-template -->
             <ng-template chatMessageTemplate="ai" let-message let-i="index">
               <chat-message
                 [role]="'assistant'"
@@ -60,15 +62,19 @@ import { MESSAGES_AGENT, type MessagesState } from './agent-ref';
                 />
               </chat-message>
             </ng-template>
+            <!-- #endregion -->
             <ng-template chatMessageTemplate="tool" let-message><!-- hidden --></ng-template>
             <ng-template chatMessageTemplate="system" let-message>
               <chat-message [role]="'system'">{{ messageContent(message) }}</chat-message>
             </ng-template>
           </chat-message-list>
+          <!-- #endregion -->
         </div>
         <div class="input-strip">
+          <!-- #region input-strip -->
           <chat-typing-indicator [agent]="agent" />
           <chat-input [agent]="agent" (submitted)="submitMessage($event)" />
+          <!-- #endregion -->
         </div>
       </section>
       <div sidebar class="panel">
@@ -151,12 +157,14 @@ import { MESSAGES_AGENT, type MessagesState } from './agent-ref';
   `],
 })
 export class MessagesComponent {
+  // #region component-class
   protected readonly agent = injectAgent(MESSAGES_AGENT);
   // Typed read: prove MessagesState flows through DI.
   protected readonly _typedState: MessagesState = this.agent.value();
 
   protected readonly messageContent = messageContent;
   protected readonly markdownDocument = markdownDocument;
+  // #endregion
 
   submitMessage(content: string) {
     this.agent.submit({ message: content });

@@ -39,6 +39,7 @@ class DashboardState(MessagesState):
     pass
 
 
+# region render-spec-tool
 @tool
 async def render_spec(elements: dict, root: str) -> str:
     """Render an interactive dashboard layout.
@@ -61,6 +62,7 @@ async def render_spec(elements: dict, root: str) -> str:
         chat-lib's content-classifier picks it up.
     """
     return json.dumps({"elements": elements, "root": root})
+# endregion
 
 
 _ALL_TOOLS = [render_spec, *_DATA_TOOLS]
@@ -171,6 +173,7 @@ async def finalize(state: DashboardState) -> dict:
     return {"messages": [AIMessage(**replacement_kwargs)]}
 
 
+# region wrap-spec-into-ai
 async def wrap_spec_into_ai(state: DashboardState) -> dict:
     """Post-process that wraps the most recent render_spec ToolMessage
     payload into the parent AI tool-call message's content (in place via
@@ -201,7 +204,9 @@ async def wrap_spec_into_ai(state: DashboardState) -> dict:
 
     if render_tool_msg is None or parent_ai is None:
         return {}
+# endregion
 
+# region rewrite-message-content
     existing = parent_ai.content
     if isinstance(existing, str) and existing.strip():
         return {}
@@ -237,8 +242,10 @@ async def wrap_spec_into_ai(state: DashboardState) -> dict:
     out.append(AIMessage(**replacement_kwargs))
 
     return {"messages": out}
+# endregion
 
 
+# region emit-state
 async def emit_state(state: DashboardState) -> DashboardState:
     """Emit state_update custom events from data tool results. Walks
     state["messages"] in reverse, accumulates state patches from
@@ -278,6 +285,7 @@ async def emit_state(state: DashboardState) -> DashboardState:
         writer({"name": "state_update", "data": tool_results})
 
     return state
+# endregion
 
 
 async def respond(state: DashboardState) -> dict:
@@ -295,6 +303,7 @@ async def respond(state: DashboardState) -> dict:
     return {"messages": [response]}
 
 
+# region graph-wiring
 _builder = StateGraph(DashboardState)
 _builder.add_node("agent", agent)
 _builder.add_node("tools", ToolNode(_ALL_TOOLS))
@@ -314,3 +323,4 @@ _builder.add_edge("respond", "generate_title")
 _builder.add_edge("generate_title", END)
 
 graph = _builder.compile()
+# endregion

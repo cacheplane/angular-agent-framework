@@ -1,207 +1,194 @@
+---
+description: How the generative UI example authors a dashboard spec as message content, streams the data as state updates, and renders it through a views registry.
+---
+
 # Generative UI
 
-Generative UI lets your agent return structured JSON specs that render as Angular components in the chat. `ChatComponent` auto-detects JSON specs in AI messages and renders them — no manual wiring needed.
+An agent can return the interface rather than describe it. It writes a declarative json-render specification as the assistant message content, and the `<chat>` composition detects that content, parses it while it is still streaming, and mounts it through the `views` registry you supply. The running example is an airline operations dashboard, and this guide walks the three files that build it.
 
-The detection and rendering are adapter-neutral: the same `[views]` path works whether the agent is driven by the LangGraph adapter or the [AG-UI adapter](/docs/ag-ui/guides/custom-events). The examples below use `@threadplane/langgraph`, but only the `provideAgent`/`injectAgent` imports change for AG-UI.
+The detection and the rendering are adapter-neutral. This page uses `@threadplane/langgraph`; the same registry and the same store work over the [AG-UI adapter](/docs/ag-ui/guides/json-render), where only the way the backend delivers the data differs.
 
-## How It Works
+## What the demo does
 
-When AI messages stream token-by-token, the `ChatComponent` classifies each message's content automatically:
+The Run tab shows the prebuilt `<chat>` composition. Choose the welcome suggestion "Airline operations dashboard" and the agent calls one tool to author the layout — four KPI cards, a line chart, a bar chart, and a table — and, in the same turn, the data tools that back it. The cards mount as skeletons and take their values when the data arrives.
 
-```
-AI message content (token by token)
-  → ContentClassifier (auto-detect per message)
-    → First non-whitespace is { → JSON spec path
-    → Anything else → Markdown path
-  → ChatComponent template renders both:
-    → Markdown prose via renderMarkdown()
-    → JSON specs via RenderSpecComponent + your view registry
-```
+The second suggestion, "Filter to cancelled flights", is the follow-up worth trying. The agent does not author a new layout for it. It calls one data tool again with new arguments, the new result replaces that slice of the store, and the dashboard already on screen updates in place.
 
-The JSON path uses `@cacheplane/partial-json` to parse incomplete JSON character-by-character, producing a live `Spec` signal with structural sharing — unchanged elements keep the same object reference so Angular skips re-rendering them.
+## How it is built
 
-## Setup
+Three files carry the feature: a LangGraph graph that authors the layout and streams the data, an application config that registers the agent, and a component that supplies the view registry and the store. Open the Code tab to read them in full.
 
-Pass a `ViewRegistry` via the `[views]` input on `ChatComponent`:
+### The tool that authors the layout
+
+The layout arrives as a tool call. `render_spec` takes the flat element dictionary and the id of the root element, and returns them serialized as JSON.
+
+<ExampleCode file="graph.py" region="render-spec-tool" title="graph.py — the render_spec tool" />
+
+The docstring is the contract the model reads, which is why it says to call the tool at most once per turn: layout changes go through this tool, and data refreshes go through the data tools instead.
+
+### Moving the specification into the message
+
+A tool result is not message content, so a post-processing node moves it. `wrap_spec_into_ai` finds the most recent `render_spec` tool message and the assistant message whose tool call produced it.
+
+<ExampleCode file="graph.py" region="wrap-spec-into-ai" title="graph.py — locating the specification" />
+
+The node returns early when this turn produced no `render_spec` result at all; the guard that makes it safe on every pass of the loop is the content check in the next region.
+
+### Rewriting the message in place
+
+The rest of `wrap_spec_into_ai` replaces both messages, keeping their ids so LangGraph's `add_messages` reducer matches and replaces rather than appends. The early return on an already-filled parent message is what stops a second pass from wrapping the same payload twice.
+
+<ExampleCode file="graph.py" region="rewrite-message-content" title="graph.py — rewriting the message content" />
+
+The tool message becomes a short placeholder and the assistant message takes the specification JSON, stripped of a code fence if the model wrapped one around it.
+
+<Callout type="info" title="Why the message and not the state">
+The specification travels as message content because that is what the client classifies. `DashboardState` in this example adds no fields of its own to `MessagesState`: the layout lives in the message, and the numbers arrive as the state updates below.
+</Callout>
+
+### Sending the tool data as state updates
+
+The data tools return their results as tool messages, which the browser would otherwise only see as tool output. `emit_state` walks this turn's messages back to the most recent user message, turns each known tool result into JSON Pointer paths, and writes them to the stream as one custom event named `state_update`.
+
+<ExampleCode file="graph.py" region="emit-state" title="graph.py — emit_state" />
+
+The keys it builds, such as `/on_time/value` and `/recent_disruptions`, are exactly the pointers the specification binds to with `$state`.
+
+### The graph wiring
+
+The wiring shows the loop. `agent` calls the tools and the `tools` node runs them; `wrap_spec_into_ai` post-processes the result and returns to the agent; the turn ends through `emit_state`, a short conversational summary, and background title generation. `should_continue` routes to `finalize` instead of `tools` when the six-iteration cap is hit, so orphaned `tool_calls` are stripped from the last AI message before the turn ends. See the [persistence guide](/docs/langgraph/guides/persistence) for the no-checkpointer rule the last line follows and its one exception.
+
+<ExampleCode file="graph.py" region="graph-wiring" title="graph.py — graph wiring" />
+
+The last line calls `compile()` with no checkpointer, because this graph is served by the LangGraph API server, which supplies persistence itself.
+
+### Registering the agent
+
+`provideAgent()` from `@threadplane/langgraph` needs the API URL and the assistant id. The example passes a factory because it resolves both at runtime from the host that serves the demo; an application of your own passes the values directly.
+
+<ExampleCode file="app.config.ts" title="app.config.ts" />
+
+`provideChat({})` registers the chat composition defaults alongside it.
+
+### The view registry and the shared store
+
+The component supplies the two things the specification needs. `views()` maps each `type` a specification can name to an Angular component, and `signalStateStore({})` is the store the `$state` bindings resolve against.
+
+<ExampleCode file="generative-ui.component.ts" title="generative-ui.component.ts" />
+
+Both travel as inputs on `<chat>`: `[views]` for the registry and `[store]` for the store.
+
+<Callout type="warning" title="Pass an explicit store or the data never lands">
+`<chat>` forwards only an explicit `[store]` to the generative-UI surface. Without one, the surface falls back to a private store seeded from the specification itself, so the `state_update` payloads never reach the bound props and every card stays a skeleton.
+</Callout>
+
+## How a specification reaches the screen
+
+The pieces meet in the browser in a fixed order.
+
+The content classifier in `@threadplane/chat` inspects each assistant message as it streams and decides from the start of the content: a `{` is a json-render specification, the `---a2ui_JSON---` sentinel is A2UI, and anything else is markdown. That is why the system prompt insists on raw JSON with no prose and no code fence around it.
+
+From there the content goes through `@cacheplane/partial-json`, and a `ParseTreeStore` materializes a best-effort `Spec` from the parse tree on every chunk, so a signal holds a usable specification long before the JSON closes. The composition mounts that specification as `<chat-generative-ui>`, which renders it through `<render-spec>` from `@threadplane/render` using the registry you passed. The surface also receives a `loading` input, true while the agent is still streaming, which a view component can read to draw a placeholder.
+
+The data takes the other path. The LangGraph adapter surfaces a custom event named `state_update` on the agent's event stream, and the composition writes its payload straight into the render store, keys included. Because `emit_state` already emits JSON Pointer keys, a binding of `{ "$state": "/on_time/value" }` resolves the moment the event lands.
+
+<Callout type="info" title="Pointers, not top-level keys">
+This is the one place the LangGraph path differs from AG-UI. An AG-UI agent puts its data in graph state, and the composition maps each top-level key `k` of any adapter's `state()` to the pointer `/k`. Here the graph names the pointers itself, so a nested value like `/on_time/value` needs no state field to hold it.
+</Callout>
+
+## Writing a view component
+
+Each registered component receives the element's resolved props as Angular inputs, keyed by prop name. The example's `stat_card` shows the shape, including the skeleton it draws before its value exists:
 
 ```typescript
-import { Component, signal } from '@angular/core';
-import { injectAgent, provideAgent } from '@threadplane/langgraph';
-import { ChatComponent, views } from '@threadplane/chat';
-import { WeatherCardComponent } from './weather-card.component';
-import { ChartComponent } from './chart.component';
-
-const myViews = views({
-  weather_card: WeatherCardComponent,
-  chart: ChartComponent,
-});
-
 @Component({
-  selector: 'app-chat',
+  selector: 'app-stat-card',
   standalone: true,
-  imports: [ChatComponent],
-  providers: [
-    provideAgent({
-      apiUrl: 'http://localhost:2024',
-      assistantId: 'gen_ui_agent',
-      threadId: signal(null),
-    }),
-  ],
   template: `
-    <div style="height: 100vh;">
-      <chat [agent]="chatRef" [views]="myViews" />
+    <div class="stat-card">
+      <div class="stat-card__label">{{ label() }}</div>
+      @if (isSkeleton()) {
+        <div class="skeleton skeleton-value"></div>
+      } @else {
+        <div class="stat-card__value">{{ formattedValue() }}</div>
+      }
     </div>
   `,
 })
-export class ChatPageComponent {
-  chatRef = injectAgent();
+export class StatCardComponent {
+  readonly label = input<string>('');
+  readonly value = input<string | number | null>(null);
+  readonly delta = input<string | null>(null);
 
-  myViews = myViews;
+  readonly isSkeleton = computed(() => this.value() == null);
+
+  readonly formattedValue = computed(() => {
+    const v = this.value();
+    if (v == null) return '';
+    if (typeof v === 'number') return v.toLocaleString();
+    return String(v);
+  });
 }
 ```
 
-That's it. When the agent returns a JSON spec as a message, `ChatComponent` detects it and renders it through your view registry.
+Give every input a default. A prop bound with `$state` is `undefined` until its event arrives, and a prop that is still streaming can be a partial string, so a component that requires its inputs will fail on the first frame.
 
-## Creating View Components
-
-Each view component receives its props as Angular inputs. The component name in the spec's `type` field maps to the key in your `views()` call.
-
-```typescript
-// weather-card.component.ts
-import { Component, input } from '@angular/core';
-
-@Component({
-  selector: 'app-weather-card',
-  standalone: true,
-  template: `
-    <div class="p-4 rounded-lg border">
-      <h3 class="font-bold">{{ city() }}</h3>
-      <p>{{ temperature() }}°F — {{ condition() }}</p>
-    </div>
-  `,
-})
-export class WeatherCardComponent {
-  readonly city = input.required<string>();
-  readonly temperature = input.required<number>();
-  readonly condition = input.required<string>();
-}
-```
-
-When the agent returns:
+The specification that drives it is flat. One `root` id and one `elements` map, each element naming a `type`, optional `props`, and optional `children` as an array of ids:
 
 ```json
 {
-  "root": "r1",
+  "root": "stats_row",
   "elements": {
-    "r1": {
-      "type": "weather_card",
+    "stats_row": {
+      "type": "container",
+      "props": { "direction": "row" },
+      "children": ["on_time_card"]
+    },
+    "on_time_card": {
+      "type": "stat_card",
       "props": {
-        "city": "Seattle",
-        "temperature": 62,
-        "condition": "Cloudy"
+        "label": "On-time %",
+        "value": { "$state": "/on_time/value" },
+        "delta": { "$state": "/on_time/delta" }
       }
     }
   }
 }
 ```
 
-The render pipeline instantiates `WeatherCardComponent` with those props.
+The full format, including `$bindState`, `$computed` and visibility conditions, is covered in [Specs and elements](/docs/render/guides/specs).
 
-## Streaming Behavior
+## Event handlers
 
-Because the JSON is parsed character-by-character as tokens arrive:
-
-- Components render as soon as enough of the spec is available
-- String props grow visibly as tokens stream (e.g., a title filling in letter by letter)
-- Completed elements keep their object reference — only the currently-streaming element triggers re-renders
-- The `loading` input is `true` while the agent is still streaming
-
-## State Store
-
-For interactive generative UI — forms, selections — pass a `StateStore` via the `[store]` input:
+An element can also fire actions. A spec's `on` map binds an event name to an action binding, and the named action is looked up in the `[handlers]` map you pass to `<chat>`:
 
 ```typescript
-import { signalStateStore } from '@threadplane/render';
-
-@Component({
-  template: `
-    <chat [agent]="chatRef" [views]="myViews" [store]="store" />
-  `,
-})
-export class InteractiveChatComponent {
-  store = signalStateStore({ selectedItem: null });
-  // ...
-}
+protected readonly handlers = {
+  submitForm: (params: Record<string, unknown>) => {
+    console.log('form submitted', params);
+  },
+};
 ```
 
-The store enables two-way data binding between generative UI components and your application via `$state` and `$bindState` prop expressions in specs.
+An element wires it as `"on": { "click": { "action": "submitForm", "params": {} } }`. Handlers may return a value or a `Promise`, which lets an action await a network call before the surface advances. The dashboard example registers no handlers, because its dashboard is read-only. See [Events and actions](/docs/render/guides/events) for the dispatch rules.
 
-## Event Handlers
+## A2UI protocol
 
-When a spec wires an `on` event binding (for example a button's `on: { click: 'submitForm' }`), the named handler is looked up in the `[handlers]` map you pass to `<chat>`. The map is `Record<string, (params) => unknown | Promise<unknown>>` — each key is a handler name a spec can reference, and the value runs when the event fires.
-
-```typescript
-import { Component, signal } from '@angular/core';
-import { injectAgent, provideAgent } from '@threadplane/langgraph';
-import { ChatComponent, views } from '@threadplane/chat';
-import { ContactFormComponent } from './contact-form.component';
-
-@Component({
-  selector: 'app-chat',
-  standalone: true,
-  imports: [ChatComponent],
-  providers: [
-    provideAgent({
-      apiUrl: 'http://localhost:2024',
-      assistantId: 'gen_ui_agent',
-      threadId: signal(null),
-    }),
-  ],
-  template: `
-    <div style="height: 100vh;">
-      <chat [agent]="chatRef" [views]="myViews" [handlers]="handlers" />
-    </div>
-  `,
-})
-export class ChatPageComponent {
-  protected readonly chatRef = injectAgent();
-
-  protected readonly myViews = views({ contact_form: ContactFormComponent });
-
-  // A spec's `on` binding referencing "submitForm" invokes this function,
-  // passing the element's resolved params.
-  protected readonly handlers = {
-    submitForm: (params: Record<string, unknown>) => {
-      console.log('form submitted', params);
-    },
-  };
-}
-```
-
-Handlers can return a value or a `Promise` — async handlers let a spec await a result (such as a network call) before the UI advances.
-
-## A2UI Protocol
-
-For agents that emit A2UI JSONL payloads, `ChatComponent` auto-detects content prefixed with `---a2ui_JSON---`. Pass `a2uiBasicCatalog()` to `[views]` when you want those surfaces rendered with the built-in components. See the [A2UI guide](/docs/chat/a2ui/overview) for details.
+For agents that emit A2UI payloads, the same classifier detects content prefixed with `---a2ui_JSON---` and renders it as A2UI surfaces instead. Pass `a2uiBasicCatalog()` from `@threadplane/chat` as the registry when you want those surfaces drawn with the built-in components.
 
 ## What's Next
 
 <CardGroup cols={2}>
-  <Card
-    title="Streaming Guide"
-    icon="zap"
-    href="/docs/chat/guides/streaming"
-  >
-    Deep dive into content classification, partial JSON parsing, and the streaming pipeline.
+  <Card title="Streaming" href="/docs/chat/guides/streaming">
+    Content classification, partial JSON parsing, and the rest of the streaming pipeline.
   </Card>
-  <Card
-    title="Specs & Elements"
-    icon="code"
-    href="/docs/render/guides/specs"
-  >
-    Full reference for the JSON spec format, prop expressions, and element types.
+  <Card title="Specs and elements" href="/docs/render/guides/specs">
+    The full reference for the spec format, prop expressions, and element types.
   </Card>
-  <Card title="A2UI Protocol" icon="layers" href="/docs/chat/a2ui/overview">
-    Render A2UI surfaces with the built-in 18-component catalog.
+  <Card title="State store" href="/docs/render/guides/state-store">
+    How JSON Pointer paths resolve, and how components write back to the store.
+  </Card>
+  <Card title="A2UI protocol" href="/docs/chat/a2ui/overview">
+    Render A2UI surfaces with the built-in component catalog.
   </Card>
 </CardGroup>

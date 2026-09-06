@@ -73,6 +73,7 @@ def build_debug_graph():
     """
     llm = ChatOpenAI(model="gpt-5-mini", streaming=True)
 
+    # region pipeline-nodes
     async def generate(state: MessagesState) -> dict:
         system_prompt = (PROMPTS_DIR / "debug.md").read_text()
         messages = [SystemMessage(content=system_prompt)] + state["messages"]
@@ -94,6 +95,9 @@ def build_debug_graph():
         response = await llm.ainvoke(messages)
         return {"messages": [response]}
 
+    # endregion
+
+    # region graph-wiring
     graph = StateGraph(MessagesState)
     graph.add_node("generate", generate)
     graph.add_node("process", process)
@@ -106,6 +110,7 @@ def build_debug_graph():
     graph.add_edge("generate_title", END)
 
     return graph.compile()
+    # endregion
 
 
 graph = build_debug_graph()

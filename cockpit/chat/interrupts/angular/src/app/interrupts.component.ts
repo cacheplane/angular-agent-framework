@@ -60,6 +60,7 @@ const SUGGESTIONS = [
           }
         </div>
       </chat>
+      <!-- #region panel -->
       <div sidebar class="panel">
         <h3 class="cap">Interrupt Panel</h3>
         <chat-interrupt-panel [agent]="agent" (action)="onInterruptAction($event)" />
@@ -68,6 +69,7 @@ const SUGGESTIONS = [
           <p class="metric-value">{{ streamStatus() }}</p>
         </div>
       </div>
+      <!-- #endregion -->
     </example-chat-layout>
   `,
   styles: [`
@@ -105,6 +107,7 @@ export class InterruptsComponent {
   protected readonly streamStatus = computed(() => this.agent.status());
   protected readonly suggestions = SUGGESTIONS;
 
+  // #region resume
   protected onInterruptAction(action: InterruptAction): void {
     if (action === 'accept') {
       this.agent.submit({ resume: 'confirm' });
@@ -113,6 +116,7 @@ export class InterruptsComponent {
     }
     // 'edit' and 'respond' are intentionally unhandled for the booking flow.
   }
+  // #endregion
 
   protected send(text: string): void {
     void this.agent.submit({ message: text });

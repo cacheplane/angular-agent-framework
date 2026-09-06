@@ -65,6 +65,7 @@ async def generate_title(state: MessagesState, config) -> dict:
     return {}
 
 
+# region conversation-graph
 def build_timeline_graph():
     """
     Constructs a standard conversational agent.
@@ -86,6 +87,9 @@ def build_timeline_graph():
     graph.add_edge("generate_title", END)
 
     return graph.compile()
+
+
+# endregion
 
 
 graph = build_timeline_graph()
