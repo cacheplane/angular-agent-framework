@@ -9,11 +9,11 @@ Planning in Deep Agents is one tool and one state key. `TodoListMiddleware` regi
 
 ## What the demo does
 
-The Run tab shows the prebuilt `<chat>` composition beside a plan panel. The welcome suggestion asks for a dispatch brief from KSFO to KASE, and the agent writes its todo list before it looks anything up: the panel fills with pending rows, one row flips to in progress while the matching lookup runs, then that row completes and the next one starts. Aspen is the interesting half of that route, a field at 7,820 ft with a mountain wave advisory, so the agent usually appends a step once the data comes back and the panel changes shape mid-run. Ask for the same brief on a route with no surprises, such as KLAX to KSFO, to watch a plan run straight through instead.
+The Run tab shows the prebuilt `<chat>` composition beside a plan panel. The welcome suggestion asks for a dispatch brief from KSFO to KASE, and the agent writes its todo list before it looks anything up: the panel fills with pending rows, one row flips to in progress while the matching lookup runs, then that row completes and the next one starts. Aspen is the interesting half of that route, a field at 7,820 ft with a mountain wave advisory, so the agent usually appends a step once the data comes back and the panel changes shape mid-run. A route with no notable constraints usually produces a short list, so ask for a brief on such a route to watch a plan run straight through instead.
 
 ## How it is built
 
-Three files carry the capability: a Python graph holding the lookup tools and the todo middleware, an application config, and the Angular component that projects `todos` into a panel. Open the Code tab to read them in place.
+Three files plus the system prompt carry the capability: a Python graph holding the lookup tools and the todo middleware, an application config, and the Angular component that projects `todos` into a panel. Open the Code tab to read them in place.
 
 ### The tools the plan is made of
 
@@ -31,7 +31,7 @@ The middleware also appends its own usage guidance to the system message on ever
 
 ### The prompt that makes the plan visible
 
-The middleware supplies a tool, not a policy, and its own guidance tells the model to skip the list entirely when a request takes fewer than three steps. A demo whose whole point is a visible plan cannot leave that to chance, so the system prompt in `prompts/planning.md` is explicit about when to call the tool and how small each transition should be.
+The middleware supplies a tool, not a policy, and its tool description tells the model to skip the list when a request takes fewer than three steps. A demo whose whole point is a visible plan cannot leave that to chance, so the system prompt in `prompts/planning.md` is explicit about when to call the tool and how small each transition should be.
 
 ```markdown
 Your first action on any request is a call to `write_todos`. Do not call a
@@ -44,7 +44,7 @@ parallel with itself.
 ```
 
 <Callout type="warning" title="One write_todos call per model turn">
-The tool replaces the entire list, so two calls in the same turn would be ambiguous about which one wins. `TodoListMiddleware` checks the assistant message after every model call and, when it finds more than one `write_todos` call, answers all of them with an error instead of applying either. The prompt asking for one transition at a time keeps the run away from that path.
+The tool replaces the entire list, so two calls in the same turn would be ambiguous about which one wins. `TodoListMiddleware` checks the assistant message after every model call and, when it finds more than one `write_todos` call, answers all of them with an error instead of applying any of them. The prompt asking for one transition at a time keeps the run away from that path.
 </Callout>
 
 ### Providing the agent
@@ -69,11 +69,9 @@ A todo is two fields. There is no identifier, no timestamp, and no separate pres
 
 ### The plan panel
 
-The panel renders the array it was given: an empty state before the first `write_todos` call, a progress line, and one row per todo. Status drives the icon through a `@switch` and the row styling through a `data-status` attribute, which keeps the status-to-style mapping in CSS instead of spreading a second copy of the enum through the template.
+The panel renders the array it was given: an empty state before the first `write_todos` call, a progress line, and one row per todo. Status drives the icon through a `@switch` and the row styling through a `data-status` attribute, which keeps the status-to-style mapping in CSS instead of spreading a second copy of the enum through the template. Rows track by `$index` because a todo carries no identifier; tracking by content would be worse rather than better, since content is exactly what changes when the agent rewrites a step.
 
 <ExampleCode file="planning.component.ts" region="plan-panel" title="planning.component.ts — the panel" />
-
-Rows track by `$index` because a todo carries no identifier. Tracking by content would be worse rather than better: content is exactly what changes when the agent rewrites a step.
 
 ## How todos reach the browser
 

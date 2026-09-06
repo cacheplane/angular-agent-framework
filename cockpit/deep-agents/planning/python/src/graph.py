@@ -79,14 +79,13 @@ def lookup_weather(airport: str) -> str:
 # endregion
 
 
+# region deep-agent
 def build_planning_agent():
     """Build the planning agent.
 
-    `TodoListMiddleware` is passed explicitly rather than relying on the
-    `create_deep_agent` default set so the capability shows exactly which
-    middleware puts `todos` on the state.
+    `TodoListMiddleware` is passed explicitly; `create_deep_agent` does not
+    install it on its own.
     """
-    # region deep-agent
     return create_deep_agent(
         model=ChatOpenAI(model="gpt-4.1", temperature=0),
         tools=[lookup_field_elevation, lookup_runway_length, lookup_weather],
