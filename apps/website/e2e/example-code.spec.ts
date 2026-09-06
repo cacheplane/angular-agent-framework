@@ -28,6 +28,11 @@ test.describe('ExampleCode on a docs page', () => {
     await expect(block).toHaveAttribute('role', 'group');
 
     // Highlighted: shiki emits per-token spans with inline colour.
+    //
+    // rehype-pretty-code is configured with a single theme (tokyo-night, see
+    // mdx-options.ts), which emits inline `color:` per token. A light/dark
+    // theme pair would switch to `--shiki-*` custom properties instead, and
+    // this count would then need `span[style*="--shiki"]`.
     const pre = block.locator('pre').first();
     await expect(pre).toBeVisible();
     expect(await pre.locator('span[style*="color"]').count()).toBeGreaterThan(
@@ -39,6 +44,6 @@ test.describe('ExampleCode on a docs page', () => {
     await block.locator('button[aria-label="Copy code"]').click();
     const copied = await page.evaluate(() => navigator.clipboard.readText());
     expect(copied).toContain('export class StreamingComponent');
-    expect(copied).not.toContain('streaming.component.ts\n');
+    expect(copied).toBe(await pre.textContent());
   });
 });
